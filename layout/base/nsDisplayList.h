@@ -815,7 +815,7 @@ public:
    * items by z-index and content order and for some other uses. Never
    * returns null.
    */
-  inline nsIFrame* GetUnderlyingFrame() const { return mFrame; }
+  inline nsIFrame* Frame() const { return mFrame; }
   /**
    * The default bounds is the frame border rect.
    * @param aSnap *aSnap is set to true if the returned rect will be
@@ -830,7 +830,7 @@ public:
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap)
   {
     *aSnap = false;
-    return nsRect(ToReferenceFrame(), GetUnderlyingFrame()->GetSize());
+    return nsRect(ToReferenceFrame(), Frame()->GetSize());
   }
   /**
    * Returns the result of GetBounds intersected with the item's clip.
@@ -839,13 +839,13 @@ public:
    */
   nsRect GetClippedBounds(nsDisplayListBuilder* aBuilder);
   nsRect GetBorderRect() {
-    return nsRect(ToReferenceFrame(), GetUnderlyingFrame()->GetSize());
+    return nsRect(ToReferenceFrame(), Frame()->GetSize());
   }
   nsRect GetPaddingRect() {
-    return GetUnderlyingFrame()->GetPaddingRectRelativeToSelf() + ToReferenceFrame();
+    return Frame()->GetPaddingRectRelativeToSelf() + ToReferenceFrame();
   }
   nsRect GetContentRect() {
-    return GetUnderlyingFrame()->GetContentRectRelativeToSelf() + ToReferenceFrame();
+    return Frame()->GetContentRectRelativeToSelf() + ToReferenceFrame();
   }
 
   /**
@@ -918,7 +918,7 @@ public:
     if (!aGeometry->mBounds.IsEqualInterior(bounds)) {
       nscoord radii[8];
       if (aGeometry->mHasRoundedCorners ||
-          GetUnderlyingFrame()->GetBorderRadii(radii)) {
+          Frame()->GetBorderRadii(radii)) {
         aInvalidRegion->Or(aGeometry->mBounds, bounds);
       } else {
         aInvalidRegion->Xor(aGeometry->mBounds, bounds);
@@ -2055,7 +2055,7 @@ public:
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) MOZ_OVERRIDE
   {
     *aSnap = true;
-    return nsRect(ToReferenceFrame(), GetUnderlyingFrame()->GetSize());
+    return nsRect(ToReferenceFrame(), Frame()->GetSize());
   }
 
   virtual nsDisplayItemGeometry* AllocateGeometry(nsDisplayListBuilder* aBuilder) MOZ_OVERRIDE
@@ -2953,7 +2953,7 @@ public:
   struct ClipEdges {
     ClipEdges(const nsDisplayItem& aItem,
               nscoord aLeftEdge, nscoord aRightEdge) {
-      nsRect r = aItem.GetUnderlyingFrame()->GetScrollableOverflowRect() +
+      nsRect r = aItem.Frame()->GetScrollableOverflowRect() +
                  aItem.ToReferenceFrame();
       mX = aLeftEdge > 0 ? r.x + aLeftEdge : nscoord_MIN;
       mXMost = aRightEdge > 0 ? std::max(r.XMost() - aRightEdge, mX) : nscoord_MAX;

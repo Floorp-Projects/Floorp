@@ -4334,7 +4334,7 @@ public:
   nsDisplayTextGeometry(nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder)
     : nsDisplayItemGenericGeometry(aItem, aBuilder)
   {
-    nsTextFrame* f = static_cast<nsTextFrame*>(aItem->GetUnderlyingFrame());
+    nsTextFrame* f = static_cast<nsTextFrame*>(aItem->Frame());
     f->GetTextDecorations(f->PresContext(), nsTextFrame::eResolvedColors, mDecorations);
   }
  

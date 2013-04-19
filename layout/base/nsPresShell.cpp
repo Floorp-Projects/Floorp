@@ -4492,7 +4492,7 @@ PresShell::ClipListToRange(nsDisplayListBuilder *aBuilder,
     // itemToInsert indiciates the item that should be inserted into the
     // temporary list. If null, no item should be inserted.
     nsDisplayItem* itemToInsert = nullptr;
-    nsIFrame* frame = i->GetUnderlyingFrame();
+    nsIFrame* frame = i->Frame();
     nsIContent* content = frame->GetContent();
     if (content) {
       bool atStart = (content == aRange->GetStartParent());
@@ -4872,7 +4872,7 @@ AddCanvasBackgroundColor(const nsDisplayList& aList, nsIFrame* aCanvasFrame,
                          nscolor aColor)
 {
   for (nsDisplayItem* i = aList.GetBottom(); i; i = i->GetAbove()) {
-    if (i->GetUnderlyingFrame() == aCanvasFrame &&
+    if (i->Frame() == aCanvasFrame &&
         i->GetType() == nsDisplayItem::TYPE_CANVAS_BACKGROUND_COLOR) {
       nsDisplayCanvasBackgroundColor* bg = static_cast<nsDisplayCanvasBackgroundColor*>(i);
       bg->SetExtraBackgroundColor(aColor);
@@ -5277,7 +5277,7 @@ PresShell::MarkImagesInListVisible(const nsDisplayList& aList)
       MarkImagesInListVisible(*sublist);
       continue;
     }
-    nsIFrame* f = item->GetUnderlyingFrame();
+    nsIFrame* f = item->Frame();
     // We could check the type of the display item, only a handful can hold an
     // image loading content.
     // dont bother nscomptr here, it is wasteful

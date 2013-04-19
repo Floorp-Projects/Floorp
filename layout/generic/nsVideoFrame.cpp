@@ -375,7 +375,7 @@ public:
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap)
   {
     *aSnap = true;
-    nsIFrame* f = GetUnderlyingFrame();
+    nsIFrame* f = Frame();
     return f->GetContentRect() - f->GetPosition() + ToReferenceFrame();
   }
 
