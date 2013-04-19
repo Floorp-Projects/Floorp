@@ -5737,7 +5737,6 @@ IonBuilder::jsop_intrinsic(HandlePropertyName name)
 
         RootedScript scriptRoot(cx, script());
         types::StackTypeSet *barrier = oracle->propertyReadBarrier(scriptRoot, pc);
-        monitorResult(ins, barrier, types);
         return pushTypeBarrier(ins, types, barrier);
     }
 
