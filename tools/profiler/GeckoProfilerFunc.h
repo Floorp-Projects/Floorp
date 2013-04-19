@@ -61,6 +61,8 @@ void mozilla_sampler_unlock();
 bool mozilla_sampler_register_thread(const char* name);
 void mozilla_sampler_unregister_thread();
 
+double mozilla_sampler_time();
+
 /* Returns true if env var SPS_NEW is set to anything, else false. */
 extern bool sps_version2();
 
