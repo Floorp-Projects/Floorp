@@ -5908,6 +5908,9 @@ class MCallGetIntrinsicValue : public MNullaryInstruction
     PropertyName *name() const {
         return name_;
     }
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
 };
 
 class MCallsiteCloneCache
