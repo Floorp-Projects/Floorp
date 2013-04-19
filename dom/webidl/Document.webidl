@@ -292,11 +292,7 @@ partial interface Document {
   // from our xpidl for now.
   [Creator, Func="nsGenericHTMLElement::TouchEventsEnabled"]
   Touch createTouch(optional Window? view = null,
-                    // Nasty hack, because we can't do EventTarget arguments yet
-                    // (they would need to be non-castable, but trying to do
-                    // XPConnect unwrapping with nsDOMEventTargetHelper fails).
-                    // optional EventTarget? target = null,
-                    optional nsISupports? target = null,
+                    optional EventTarget? target = null,
                     optional long identifier = 0,
                     optional long pageX = 0,
                     optional long pageY = 0,
