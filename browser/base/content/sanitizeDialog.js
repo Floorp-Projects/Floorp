@@ -47,11 +47,13 @@ var gSanitizePromptDialog = {
     for (let i = 0; i < sanitizeItemList.length; i++) {
       let prefItem = sanitizeItemList[i];
       let name = s.getNameFromPreference(prefItem.getAttribute("preference"));
-      if (!s.canClearItem(name)) {
-        prefItem.preference = null;
-        prefItem.checked = false;
-        prefItem.disabled = true;
-      }
+      s.canClearItem(name, function canClearCallback(aItem, aCanClear, aPrefItem) {
+        if (!aCanClear) {
+          aPrefItem.preference = null;
+          aPrefItem.checked = false;
+          aPrefItem.disabled = true;
+        }
+      }, prefItem);
     }
 
     document.documentElement.getButton("accept").label =
@@ -281,11 +283,13 @@ var gSanitizePromptDialog = {
     for (let i = 0; i < sanitizeItemList.length; i++) {
       let prefItem = sanitizeItemList[i];
       let name = s.getNameFromPreference(prefItem.getAttribute("preference"));
-      if (!s.canClearItem(name)) {
-        prefItem.preference = null;
-        prefItem.checked = false;
-        prefItem.disabled = true;
-      }
+      s.canClearItem(name, function canClearCallback(aCanClear) {
+        if (!aCanClear) {
+          prefItem.preference = null;
+          prefItem.checked = false;
+          prefItem.disabled = true;
+        }
+      });
     }
 
     document.documentElement.getButton("accept").label =

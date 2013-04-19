@@ -65,13 +65,13 @@ var input = $_(1, "field1");
 var rect = input.getBoundingClientRect();
 
 // Get the form history service
-var fh = SpecialPowers.Cc["@mozilla.org/satchel/form-history;1"].
-         getService(SpecialPowers.Ci.nsIFormHistory2);
-ok(fh != null, "got form history service");
-
-fh.removeAllEntries();
-fh.addEntry("field1", "value1");
-fh.addEntry("field1", "value2");
+function setupFormHistory() {
+  updateFormHistory([
+    { op : "remove" },
+    { op : "add", fieldname : "field1", value : "value1" },
+    { op : "add", fieldname : "field1", value : "value2" },
+  ], function() runTest(1));
+}
 
 function checkForm(expectedValue) {
   var formID = input.parentNode.id;
@@ -172,7 +172,7 @@ function runTest(testNum) {
 }
 
 function startTest() {
-  runTest(1);
+  setupFormHistory();
 }
 
 window.onload = startTest;
