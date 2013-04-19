@@ -56,6 +56,13 @@ const PanelUI = {
     this.clickCapturer.addEventListener("click", this._onCapturerClick,
                                         true);
 
+    var self = this;
+    this.subViews.addEventListener("overflow", function() {
+      // Resize the subview on the next tick.
+      Services.tm.currentThread.dispatch(self._syncContainerWithSubView.bind(self),
+        Ci.nsIThread.DISPATCH_NORMAL);
+    });
+
     // Get a MutationObserver ready to react to subview size changes. We
     // only attach this MutationObserver when a subview is being displayed.
     this._subViewObserver = new MutationObserver(function(aMutations) {
