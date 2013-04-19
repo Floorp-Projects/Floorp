@@ -18,7 +18,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsPIWindowRoot.h"
 #include "nsIFocusManager.h"
-#include "nsIDOMEventTarget.h"
 
 #include "nsCOMArray.h"
 

@@ -14,7 +14,6 @@
 #include "mozilla/dom/XMLDocument.h"
 #include "nsForwardReference.h"
 #include "nsIContent.h"
-#include "nsIDOMEventTarget.h"
 #include "nsIDOMXULCommandDispatcher.h"
 #include "nsIDOMXULDocument.h"
 #include "nsCOMArray.h"

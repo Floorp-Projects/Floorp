@@ -52,7 +52,6 @@ class nsIDocumentObserver;
 class nsIDOMDocument;
 class nsIDOMDocumentFragment;
 class nsIDOMEvent;
-class nsIDOMEventTarget;
 class nsIDOMHTMLFormElement;
 class nsIDOMHTMLInputElement;
 class nsIDOMKeyEvent;
@@ -954,7 +953,7 @@ public:
                                        bool aCanBubble,
                                        bool aCancelable,
                                        bool *aDefaultAction = nullptr);
-                                       
+
   /**
    * This method creates and dispatches a untrusted event.
    * Works only with events which can be created by calling

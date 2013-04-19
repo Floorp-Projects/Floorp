@@ -16,7 +16,6 @@
 #include "nsIVariant.h"
 
 #include "nsIDOMEvent.h"
-#include "nsIDOMEventTarget.h"
 #include "nsIDOMDataContainerEvent.h"
 
 #include "mozilla/Preferences.h"

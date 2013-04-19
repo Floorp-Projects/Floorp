@@ -34,7 +34,6 @@
 #include "nsIDOMApplicationRegistry.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEvent.h"
-#include "nsIDOMEventTarget.h"
 #include "nsIDOMHTMLFrameElement.h"
 #include "nsIDOMWindow.h"
 #include "nsIDialogCreator.h"
