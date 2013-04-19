@@ -707,10 +707,6 @@ nsDisplayListBuilder::~nsDisplayListBuilder() {
 
   nsCSSRendering::EndFrameTreesLocked();
 
-  for (uint32_t i = 0; i < mDisplayItemClipsToDestroy.Length(); ++i) {
-    mDisplayItemClipsToDestroy[i]->DisplayItemClip::~DisplayItemClip();
-  }
-
   PL_FinishArenaPool(&mPool);
   MOZ_COUNT_DTOR(nsDisplayListBuilder);
 }
@@ -870,15 +866,6 @@ nsDisplayListBuilder::Allocate(size_t aSize) {
     NS_RUNTIMEABORT("out of memory");
   }
   return tmp;
-}
-
-DisplayItemClip*
-nsDisplayListBuilder::AllocateDisplayItemClip(const DisplayItemClip& aOriginal)
-{
-  void* p = Allocate(sizeof(DisplayItemClip));
-  DisplayItemClip* c = new (p) DisplayItemClip(aOriginal);
-  mDisplayItemClipsToDestroy.AppendElement(c);
-  return c;
 }
 
 void nsDisplayListSet::MoveTo(const nsDisplayListSet& aDestination) const
