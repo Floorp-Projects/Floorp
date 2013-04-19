@@ -172,11 +172,6 @@ public:
   virtual void MaybeUpdateTouchState() {}
   virtual void UpdateTouchState() {}
 
-  // GetExtantDocument provides a backdoor to the DOM GetDocument accessor
-  nsIDOMDocument* GetExtantDocument() const
-  {
-    return mDocument;
-  }
   nsIDocument* GetExtantDoc() const
   {
     return mDoc;

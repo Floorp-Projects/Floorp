@@ -481,7 +481,7 @@ Navigator::GetCookieEnabled(bool* aCookieEnabled)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(win->GetExtantDocument());
+  nsCOMPtr<nsIDocument> doc = win->GetExtantDoc();
   if (!doc) {
     return NS_OK;
   }
@@ -626,17 +626,16 @@ namespace {
 class VibrateWindowListener : public nsIDOMEventListener
 {
 public:
-  VibrateWindowListener(nsIDOMWindow *aWindow, nsIDOMDocument *aDocument)
+  VibrateWindowListener(nsIDOMWindow* aWindow, nsIDocument* aDocument)
   {
     mWindow = do_GetWeakReference(aWindow);
     mDocument = do_GetWeakReference(aDocument);
 
-    nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(aDocument);
     NS_NAMED_LITERAL_STRING(visibilitychange, "visibilitychange");
-    target->AddSystemEventListener(visibilitychange,
-                                   this, /* listener */
-                                   true, /* use capture */
-                                   false /* wants untrusted */);
+    aDocument->AddSystemEventListener(visibilitychange,
+                                      this, /* listener */
+                                      true, /* use capture */
+                                      false /* wants untrusted */);
   }
 
   virtual ~VibrateWindowListener()
@@ -754,12 +753,9 @@ Navigator::Vibrate(const JS::Value& aPattern, JSContext* cx)
   nsCOMPtr<nsPIDOMWindow> win = do_QueryReferent(mWindow);
   NS_ENSURE_TRUE(win, NS_OK);
 
-  nsCOMPtr<nsIDOMDocument> domDoc = win->GetExtantDocument();
-  NS_ENSURE_TRUE(domDoc, NS_ERROR_FAILURE);
-
-  bool hidden = true;
-  domDoc->GetHidden(&hidden);
-  if (hidden) {
+  nsCOMPtr<nsIDocument> doc = win->GetExtantDoc();
+  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+  if (doc->Hidden()) {
     // Hidden documents cannot start or stop a vibration.
     return NS_OK;
   }
@@ -819,7 +815,7 @@ Navigator::Vibrate(const JS::Value& aPattern, JSContext* cx)
   else {
     gVibrateWindowListener->RemoveListener();
   }
-  gVibrateWindowListener = new VibrateWindowListener(win, domDoc);
+  gVibrateWindowListener = new VibrateWindowListener(win, doc);
 
   nsCOMPtr<nsIDOMWindow> domWindow =
     do_QueryInterface(static_cast<nsIDOMWindow*>(win));

@@ -933,8 +933,7 @@ nsDocumentViewer::InitInternal(nsIWidget* aParentWidget,
                             getter_AddRefs(window));
 
     if (window) {
-      nsCOMPtr<nsIDocument> curDoc =
-        do_QueryInterface(window->GetExtantDocument());
+      nsCOMPtr<nsIDocument> curDoc = window->GetExtantDoc();
       if (aForceSetNewDocument || curDoc != mDocument) {
         window->SetNewDocument(mDocument, aState, false);
         nsJSContext::LoadStart();
@@ -3343,7 +3342,7 @@ nsDocumentViewer::GetPopupNode(nsIDOMNode** aNode)
     if (!node) {
       nsPIDOMWindow* rootWindow = root->GetWindow();
       if (rootWindow) {
-        nsCOMPtr<nsIDocument> rootDoc = do_QueryInterface(rootWindow->GetExtantDocument());
+        nsCOMPtr<nsIDocument> rootDoc = rootWindow->GetExtantDoc();
         if (rootDoc) {
           nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
           if (pm) {

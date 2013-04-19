@@ -345,7 +345,7 @@ nsClipboardCommand::IsCommandEnabled(const char* aCommandName, nsISupports *aCon
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aContext);
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(window->GetExtantDocument());
+  nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
   *outCmdEnabled = nsCopySupport::CanCopy(doc);
   return NS_OK;
 }
