@@ -576,9 +576,9 @@ TCPSocket.prototype = {
   // nsIStreamListener (Triggered by _inputStreamPump.asyncRead)
   onDataAvailable: function ts_onDataAvailable(request, context, inputStream, offset, count) {
     if (this._binaryType === "arraybuffer") {
-      let ua = this.useWin ? new this.useWin.Uint8Array(count)
-                           : new Uint8Array(count);
-      ua.set(this._inputStreamBinary.readByteArray(count));
+      let buffer = this._inputStreamBinary.readArrayBuffer(count);
+      let constructor = this.useWin ? this.useWin.Uint8Array : Uint8Array;
+      let ua = new constructor(buffer);
       this.callListener("data", ua);
     } else {
       this.callListener("data", this._inputStreamScriptable.read(count));
