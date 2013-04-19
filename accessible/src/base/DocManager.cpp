@@ -20,6 +20,7 @@
 
 #include "nsCURILoader.h"
 #include "nsDocShellLoadTypes.h"
+#include "nsDOMEvent.h"
 #include "nsIChannel.h"
 #include "nsIContentViewer.h"
 #include "nsIDOMDocument.h"
@@ -252,10 +253,8 @@ DocManager::HandleEvent(nsIDOMEvent* aEvent)
   nsAutoString type;
   aEvent->GetType(type);
 
-  nsCOMPtr<nsIDOMEventTarget> target;
-  aEvent->GetTarget(getter_AddRefs(target));
-
-  nsCOMPtr<nsIDocument> document(do_QueryInterface(target));
+  nsCOMPtr<nsIDocument> document =
+    do_QueryInterface(aEvent->InternalDOMEvent()->GetTarget());
   NS_ASSERTION(document, "pagehide or DOMContentLoaded for non document!");
   if (!document)
     return NS_OK;

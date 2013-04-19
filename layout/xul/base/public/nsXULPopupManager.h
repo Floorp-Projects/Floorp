@@ -716,7 +716,7 @@ protected:
   bool IsChildOfDocShell(nsIDocument* aDoc, nsIDocShellTreeItem* aExpected);
 
   // the document the key event listener is attached to
-  nsCOMPtr<nsIDOMEventTarget> mKeyListener;
+  nsCOMPtr<mozilla::dom::EventTarget> mKeyListener;
 
   // widget that is currently listening to rollup events
   nsCOMPtr<nsIWidget> mWidget;
