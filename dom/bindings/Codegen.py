@@ -4005,6 +4005,9 @@ if (global.Failed()) {
             # We better be returning addrefed things!
             assert(isResultAlreadyAddRefed(self.descriptor,
                                            self.extendedAttributes) or
+                   # Creators can return raw pointers to owned objects
+                   (self.returnType.isGeckoInterface() and
+                    self.descriptor.getDescriptor(self.returnType.unroll().inner.identifier.name).nativeOwnership == 'owned') or
                    # Workers use raw pointers for new-object return
                    # values or something
                    self.descriptor.workers)
