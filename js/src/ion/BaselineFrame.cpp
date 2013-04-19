@@ -20,7 +20,7 @@ using namespace js::ion;
 void
 BaselineFrame::trace(JSTracer *trc)
 {
-    MarkCalleeToken(trc, calleeToken());
+    replaceCalleeToken(MarkCalleeToken(trc, calleeToken()));
 
     gc::MarkValueRoot(trc, &thisValue(), "baseline-this");
 

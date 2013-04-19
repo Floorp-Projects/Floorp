@@ -102,6 +102,7 @@ namespace ion {
     _(FunctionEnvironment)                                                  \
     _(TypeBarrier)                                                          \
     _(MonitorTypes)                                                         \
+    _(PostWriteBarrier)                                                     \
     _(GetPropertyCache)                                                     \
     _(GetPropertyPolymorphic)                                               \
     _(SetPropertyPolymorphic)                                               \

@@ -24,6 +24,11 @@ namespace gc {
 class MinorCollectionTracer;
 } /* namespace gc */
 
+namespace ion {
+class CodeGenerator;
+class MacroAssembler;
+}
+
 class Nursery
 {
   public:
@@ -139,8 +144,13 @@ class Nursery
         JS_ASSERT(runtime_);
         return ((JS::shadow::Runtime *)runtime_)->gcNurseryEnd_;
     }
+    void *addressOfCurrentEnd() const {
+        JS_ASSERT(runtime_);
+        return (void*)&((JS::shadow::Runtime *)runtime_)->gcNurseryEnd_;
+    }
 
     uintptr_t position() const { return position_; }
+    void *addressOfPosition() const { return (void*)&position_; }
 
     JSRuntime *runtime() const { return runtime_; }
 
@@ -177,6 +187,8 @@ class Nursery
     static void MinorFallbackFixupCallback(JSTracer *trc, void **thingp, JSGCTraceKind kind);
 
     friend class gc::MinorCollectionTracer;
+    friend class ion::CodeGenerator;
+    friend class ion::MacroAssembler;
 };
 
 } /* namespace js */
