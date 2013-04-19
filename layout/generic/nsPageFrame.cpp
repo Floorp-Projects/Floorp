@@ -420,7 +420,7 @@ PruneDisplayListForExtraPage(nsDisplayListBuilder* aBuilder,
       PruneDisplayListForExtraPage(aBuilder, aPage, aExtraPage, subList);
       i->UpdateBounds(aBuilder);
     } else {
-      nsIFrame* f = i->GetUnderlyingFrame();
+      nsIFrame* f = i->Frame();
       if (!nsLayoutUtils::IsProperAncestorFrameCrossDoc(aPage, f)) {
         // We're throwing this away so call its destructor now. The memory
         // is owned by aBuilder which destroys all items at once.

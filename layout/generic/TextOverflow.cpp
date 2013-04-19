@@ -626,7 +626,7 @@ TextOverflow::PruneDisplayListContents(nsDisplayList*        aList,
   nsDisplayList saved;
   nsDisplayItem* item;
   while ((item = aList->RemoveBottom())) {
-    nsIFrame* itemFrame = item->GetUnderlyingFrame();
+    nsIFrame* itemFrame = item->Frame();
     if (IsFrameDescendantOfAny(itemFrame, aFramesToHide, mBlock)) {
       item->~nsDisplayItem();
       continue;
