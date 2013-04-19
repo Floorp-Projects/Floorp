@@ -63,6 +63,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
             if (!ret.booleanValue()) {
                 geckoReadyExpector.blockForEvent();
             }
+            geckoReadyExpector.unregisterListener();
         } catch (Exception e) {
             mAsserter.dumpLog("Exception in blockForGeckoReady", e);
         }
@@ -214,6 +215,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         mActions.sendSpecialKey(Actions.SpecialKey.ENTER);
         // wait for screen to load
         contentEventExpecter.blockForEvent();
+        contentEventExpecter.unregisterListener();
     }
 
     protected final void loadUrl(String url) {
