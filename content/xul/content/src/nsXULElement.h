@@ -19,6 +19,7 @@
 #include "nsINodeInfo.h"
 #include "nsIControllers.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIDOMXULElement.h"
 #include "nsIDOMXULMultSelectCntrlEl.h"
 #include "nsEventListenerManager.h"

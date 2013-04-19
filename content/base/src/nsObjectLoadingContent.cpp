@@ -18,6 +18,7 @@
 #include "nsIDocument.h"
 #include "nsIDOMDataContainerEvent.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIExternalProtocolHandler.h"
 #include "nsEventStates.h"
 #include "nsIObjectFrame.h"

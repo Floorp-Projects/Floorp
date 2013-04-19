@@ -27,6 +27,7 @@
 #include "nsWeakReference.h"
 #include "nsIWebBrowser.h"
 #include "nsIObserverService.h"
+#include "nsIDOMEventTarget.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMCompositionListener.h"
@@ -76,7 +77,7 @@ public:
 private:
   nsresult Init(void);
   void RemoveWindowListeners(nsIDOMWindow *aDOMWin);
-  EventTarget* GetChromeEventHandler(nsIDOMWindow *aDOMWin);
+  void GetChromeEventHandler(nsIDOMWindow *aDOMWin, nsIDOMEventTarget **aChromeTarget);
   void AttachWindowListeners(nsIDOMWindow *aDOMWin);
   bool IsXULNode(nsIDOMNode *aNode, uint32_t *aType = 0);
   nsresult GetDOMWindowByNode(nsIDOMNode *aNode, nsIDOMWindow * *aDOMWindow);
@@ -127,10 +128,10 @@ nsWidgetUtils::UpdateFromEvent(nsIDOMEvent *aDOMEvent)
   nsCOMPtr<nsIDOMNode> mOrigNode;
 
   uint32_t type = 0;
-  nsDOMEvent* event = aDOMEvent->InternalDOMEvent();
   bool isXul = false;
   {
-    nsCOMPtr<EventTarget> eventOrigTarget = event->GetOriginalTarget();
+    nsCOMPtr<nsIDOMEventTarget> eventOrigTarget;
+    aDOMEvent->GetOriginalTarget(getter_AddRefs(eventOrigTarget));
     if (eventOrigTarget)
       mOrigNode = do_QueryInterface(eventOrigTarget);
     isXul = IsXULNode(mOrigNode, &type);
@@ -139,7 +140,8 @@ nsWidgetUtils::UpdateFromEvent(nsIDOMEvent *aDOMEvent)
   if (isXul)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<EventTarget> eventTarget = event->GetTarget();
+  nsCOMPtr<nsIDOMEventTarget> eventTarget;
+  aDOMEvent->GetTarget(getter_AddRefs(eventTarget));
   if (eventTarget)
     mNode = do_QueryInterface(eventTarget);
 
@@ -362,18 +364,25 @@ nsWidgetUtils::GetDOMWindowByNode(nsIDOMNode* aNode, nsIDOMWindow** aDOMWindow)
   return rv;
 }
 
-EventTarget*
-nsWidgetUtils::GetChromeEventHandler(nsIDOMWindow* aDOMWin)
+void
+nsWidgetUtils::GetChromeEventHandler(nsIDOMWindow *aDOMWin,
+                                     nsIDOMEventTarget **aChromeTarget)
 {
-  nsCOMPtr<nsPIDOMWindow> privateDOMWindow = do_QueryInterface(aDOMWin);
-  return privateDOMWindow ? privateDOMWindow->GetChromeEventHandler() : nullptr;
+    nsCOMPtr<nsPIDOMWindow> privateDOMWindow(do_QueryInterface(aDOMWin));
+    nsIDOMEventTarget* chromeEventHandler = nullptr;
+    if (privateDOMWindow) {
+        chromeEventHandler = privateDOMWindow->GetChromeEventHandler();
+    }
+
+    NS_IF_ADDREF(*aChromeTarget = chromeEventHandler);
 }
 
 void
 nsWidgetUtils::RemoveWindowListeners(nsIDOMWindow *aDOMWin)
 {
     nsresult rv;
-    EventTarget* chromeEventHandler = GetChromeEventHandler(aDOMWin);
+    nsCOMPtr<nsIDOMEventTarget> chromeEventHandler;
+    GetChromeEventHandler(aDOMWin, getter_AddRefs(chromeEventHandler));
     if (!chromeEventHandler) {
         return;
     }
@@ -393,7 +402,8 @@ void
 nsWidgetUtils::AttachWindowListeners(nsIDOMWindow *aDOMWin)
 {
     nsresult rv;
-    EventHandler* chromeEventHandler = GetChromeEventHandler(aDOMWin);
+    nsCOMPtr<nsIDOMEventTarget> chromeEventHandler;
+    GetChromeEventHandler(aDOMWin, getter_AddRefs(chromeEventHandler));
     if (!chromeEventHandler) {
         return;
     }

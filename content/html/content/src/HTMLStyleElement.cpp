@@ -5,6 +5,7 @@
 #include "mozilla/dom/HTMLStyleElement.h"
 #include "mozilla/dom/HTMLStyleElementBinding.h"
 #include "nsIDOMLinkStyle.h"
+#include "nsIDOMEventTarget.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsIDOMStyleSheet.h"

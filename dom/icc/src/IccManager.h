@@ -40,6 +40,13 @@ public:
 private:
   nsCOMPtr<nsIIccProvider> mProvider;
   nsRefPtr<Listener> mListener;
+
+  nsIDOMEventTarget*
+  ToIDOMEventTarget() const
+  {
+    return static_cast<nsDOMEventTargetHelper*>(
+           const_cast<IccManager*>(this));
+  }
 };
 
 } // namespace icc

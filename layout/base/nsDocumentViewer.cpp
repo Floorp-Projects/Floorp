@@ -1564,8 +1564,14 @@ nsDocumentViewer::Destroy()
 
     // This is after Hide() so that the user doesn't see the inputs clear.
     if (mDocument) {
-      mDocument->Sanitize();
+      nsresult rv = mDocument->Sanitize();
+      if (NS_FAILED(rv)) {
+        // If we failed to sanitize, don't save presentation.
+        // XXX Shouldn't we run all the stuff after the |if (mSHEntry)| then?
+        savePresentation = false;
+      }
     }
+
 
     // Reverse ownership. Do this *after* calling sanitize so that sanitize
     // doesn't cause mutations that make the SHEntry drop the presentation

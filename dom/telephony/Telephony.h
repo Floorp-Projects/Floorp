@@ -55,10 +55,17 @@ public:
   static already_AddRefed<Telephony>
   Create(nsPIDOMWindow* aOwner, nsITelephonyProvider* aProvider);
 
-  nsISupports*
-  ToISupports()
+  nsIDOMEventTarget*
+  ToIDOMEventTarget() const
   {
-    return static_cast<EventTarget*>(this);
+    return static_cast<nsDOMEventTargetHelper*>(
+             const_cast<Telephony*>(this));
+  }
+
+  nsISupports*
+  ToISupports() const
+  {
+    return ToIDOMEventTarget();
   }
 
   void

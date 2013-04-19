@@ -12,6 +12,7 @@
 #include "mozilla/dom/SVGTests.h"
 #include "nsICSSDeclaration.h"
 #include "nsIDocument.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsMutationEvent.h"
 #include "nsError.h"

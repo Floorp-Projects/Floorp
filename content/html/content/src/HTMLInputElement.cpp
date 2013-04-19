@@ -57,6 +57,7 @@
 #include "nsLayoutUtils.h"
 
 #include "nsIDOMMutationEvent.h"
+#include "nsIDOMEventTarget.h"
 #include "nsMutationEvent.h"
 #include "nsEventListenerManager.h"
 
@@ -2784,7 +2785,7 @@ IsLTR(Element* aElement)
 }
 
 bool
-HTMLInputElement::ShouldPreventDOMActivateDispatch(EventTarget* aOriginalTarget)
+HTMLInputElement::ShouldPreventDOMActivateDispatch(nsIDOMEventTarget* aOriginalTarget)
 {
   /*
    * For the moment, there is only one situation where we actually want to

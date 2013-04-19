@@ -54,6 +54,7 @@
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIDOMWheelEvent.h"
 #include "nsIDOMDragEvent.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIDOMUIEvent.h"
 #include "nsDOMDragEvent.h"
 #include "nsIDOMNSEditableElement.h"

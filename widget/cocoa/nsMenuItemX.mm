@@ -19,6 +19,7 @@
 #include "nsIWidget.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIDOMElement.h"
 
 nsMenuItemX::nsMenuItemX()
@@ -343,13 +344,14 @@ nsresult nsMenuItemX::DispatchDOMEvent(const nsString &eventName, bool *preventD
   event->SetTrusted(true);
 
   // send DOM event
-  rv = mContent->DispatchEvent(event, preventDefaultCalled);
+  nsCOMPtr<nsIDOMEventTarget> eventTarget = do_QueryInterface(mContent);
+  rv = eventTarget->DispatchEvent(event, preventDefaultCalled);
   if (NS_FAILED(rv)) {
-    NS_WARNING("Failed to send DOM event via EventTarget");
+    NS_WARNING("Failed to send DOM event via nsIDOMEventTarget");
     return rv;
   }
 
-  return NS_OK;
+  return NS_OK;  
 }
 
 // Walk the sibling list looking for nodes with the same name and
@@ -360,7 +362,7 @@ void nsMenuItemX::UncheckRadioSiblings(nsIContent* inCheckedContent)
   inCheckedContent->GetAttr(kNameSpaceID_None, nsGkAtoms::name, myGroupName);
   if (!myGroupName.Length()) // no groupname, nothing to do
     return;
-
+  
   nsCOMPtr<nsIContent> parent = inCheckedContent->GetParent();
   if (!parent)
     return;

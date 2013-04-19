@@ -23,6 +23,7 @@
 #include "nsStubDocumentObserver.h"
 #include "nsIDOMStyleSheetList.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIContent.h"
 #include "nsEventListenerManager.h"
 #include "nsIDOMNodeSelector.h"
@@ -816,7 +817,7 @@ public:
                               int32_t aNamespaceID,
                               nsIContent **aResult);
 
-  virtual NS_HIDDEN_(void) Sanitize();
+  virtual NS_HIDDEN_(nsresult) Sanitize();
 
   virtual NS_HIDDEN_(void) EnumerateSubDocuments(nsSubDocEnumFunc aCallback,
                                                  void *aData);
@@ -1154,7 +1155,7 @@ protected:
 
   // Return whether all the presshells for this document are safe to flush
   bool IsSafeToFlush() const;
-
+  
   void DispatchPageTransition(mozilla::dom::EventTarget* aDispatchTarget,
                               const nsAString& aType,
                               bool aPersisted);
@@ -1167,7 +1168,7 @@ protected:
 #define NS_DOCUMENT_NOTIFY_OBSERVERS(func_, params_)                        \
   NS_OBSERVER_ARRAY_NOTIFY_XPCOM_OBSERVERS(mObservers, nsIDocumentObserver, \
                                            func_, params_);
-
+  
 #ifdef DEBUG
   void VerifyRootContentState();
 #endif

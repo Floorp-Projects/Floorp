@@ -18,6 +18,7 @@
 #include "nsIJSNativeInitializer.h"
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/EventBinding.h"
+#include "mozilla/dom/BindingUtils.h"
 #include "nsIScriptGlobalObject.h"
 
 class nsIContent;
