@@ -11,7 +11,8 @@
 %define glassInactiveBorderColor rgb(102, 102, 102)
 
 @media not all and (-moz-windows-classic) {
-  #main-window[sizemode="normal"] > #titlebar > #titlebar-content > #appmenu-button-container {
+  #main-window[sizemode="normal"] > #titlebar > #titlebar-content > #appmenu-button-container,
+  #main-window[sizemode="normal"] > #tab-view-deck > #browser-panel > #navigator-toolbox > #toolbar-menubar {
     margin-top: 1px;
   }
 
@@ -47,27 +48,15 @@
     background-color: @customToolbarColor@;
   }
 
-  .tabbrowser-tab:not(:-moz-lwtheme),
-  .tabs-newtab-button:not(:-moz-lwtheme) {
-    background-image: @toolbarShadowOnTab@, @bgTabTexture@,
-                      linear-gradient(@customToolbarColor@, @customToolbarColor@);
+  .tab-background-start[selected=true]:not(:-moz-lwtheme)::before,
+  .tab-background-end[selected=true]:not(:-moz-lwtheme)::before {
+    background-color: @customToolbarColor@;
+    background-image: @fgTabTexture@;
   }
 
-  .tabbrowser-tab:not(:-moz-lwtheme):hover,
-  .tabs-newtab-button:not(:-moz-lwtheme):hover {
-    background-image: @toolbarShadowOnTab@, @bgTabTextureHover@,
-                      linear-gradient(@customToolbarColor@, @customToolbarColor@);
-  }
-
-  .tabbrowser-tab[selected="true"]:not(:-moz-lwtheme) {
-    background-image: linear-gradient(#fff, @toolbarHighlight@ 50%),
-                      linear-gradient(@customToolbarColor@, @customToolbarColor@);
-  }
-
-  #main-window[tabsontop=false]:not([disablechrome]) .tabbrowser-tab[selected=true]:not(:-moz-lwtheme) {
-    background-image: @toolbarShadowOnTab@,
-                      linear-gradient(#fff, @toolbarHighlight@ 50%),
-                      linear-gradient(@customToolbarColor@, @customToolbarColor@);
+  .tab-background-middle[selected=true]:not(:-moz-lwtheme) {
+    background-image: url(chrome://browser/skin/tabbrowser/tab-active-middle.png),
+                      linear-gradient(transparent, transparent 2px, @customToolbarColor@ 2px, @customToolbarColor@);
   }
 
   #navigator-toolbox:not(:-moz-lwtheme)::after {
@@ -137,10 +126,6 @@
     -moz-appearance: -moz-win-exclude-glass;
   }
 
-  #main-window[chromemargin^="0,"][sizemode=normal] #navigator-toolbox {
-    margin-top: -7px;
-  }
-
   /* Artificially draw window borders that are covered by lwtheme, see bug 591930. */
   #main-window[sizemode="normal"] > #titlebar > #titlebar-content:-moz-lwtheme {
     border-top: 2px solid;
@@ -163,11 +148,6 @@
     margin-bottom: -1px; /* compensate white outer border */
   }
 
-  #main-window[sizemode=fullscreen]:not(:-moz-lwtheme) {
-    -moz-appearance: none;
-    background-color: #556;
-  }
-
   #toolbar-menubar:not(:-moz-lwtheme),
   #TabsToolbar[tabsontop=true]:not(:-moz-lwtheme),
   #nav-bar[tabsontop=false]:not(:-moz-lwtheme),
@@ -179,14 +159,13 @@
     border-right-style: none !important;
   }
 
-  :-moz-any(#toolbar-menubar, #nav-bar[tabsontop=false]) :-moz-any(@primaryToolbarButtons@):not(:-moz-any(#alltabs-button,#tabview-button,#sync-button[status])) > .toolbarbutton-icon:not(:-moz-lwtheme),
-  #TabsToolbar[tabsontop=true] :-moz-any(@primaryToolbarButtons@):not(:-moz-any(#alltabs-button,#tabview-button,#new-tab-button,#sync-button[status])) > .toolbarbutton-icon:not(:-moz-lwtheme),
+  #navigator-toolbox[tabsontop=false] > :-moz-any(#toolbar-menubar, #nav-bar) :-moz-any(@primaryToolbarButtons@):not(:-moz-any(#alltabs-button,#tabview-button,#sync-button[status])) > .toolbarbutton-icon:not(:-moz-lwtheme),
   #nav-bar + #customToolbars + #PersonalToolbar[collapsed=true] + #TabsToolbar[tabsontop=false]:last-child :-moz-any(@primaryToolbarButtons@):not(:-moz-any(#alltabs-button,#tabview-button,#new-tab-button,#sync-button[status])) > .toolbarbutton-icon:not(:-moz-lwtheme) {
     list-style-image: url("chrome://browser/skin/Toolbar-inverted.png");
   }
 
-  :-moz-any(#toolbar-menubar, #TabsToolbar[tabsontop=true], #nav-bar[tabsontop=false]) .toolbarbutton-1 > .toolbarbutton-menu-dropmarker:not(:-moz-lwtheme),
-  :-moz-any(#toolbar-menubar, #TabsToolbar[tabsontop=true], #nav-bar[tabsontop=false]) .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker:not(:-moz-lwtheme),
+  #navigator-toolbox[tabsontop=false] > :-moz-any(#toolbar-menubar, #nav-bar) .toolbarbutton-1 > .toolbarbutton-menu-dropmarker:not(:-moz-lwtheme),
+  #navigator-toolbox[tabsontop=false] > :-moz-any(#toolbar-menubar, #nav-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker:not(:-moz-lwtheme),
   #nav-bar + #customToolbars + #PersonalToolbar[collapsed=true] + #TabsToolbar[tabsontop=false]:last-child .toolbarbutton-1 > .toolbarbutton-menu-dropmarker:not(:-moz-lwtheme),
   #nav-bar + #customToolbars + #PersonalToolbar[collapsed=true] + #TabsToolbar[tabsontop=false]:last-child .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker:not(:-moz-lwtheme) {
     list-style-image: url("chrome://browser/skin/toolbarbutton-dropdown-arrow-inverted.png");
@@ -221,6 +200,16 @@
   }
 
   /* Toolbar shadow behind tabs */
+  #nav-bar[tabsontop=true]:not(:-moz-lwtheme),
+  #main-window[disablechrome] #navigator-toolbox[tabsontop=true]:not(:-moz-lwtheme)::after {
+    border-top: 1px solid @toolbarShadowColor@;
+    background-clip: padding-box;
+  }
+
+  #main-window[disablechrome] #navigator-toolbox[tabsontop=true]:not(:-moz-lwtheme)::after {
+    visibility: visible;
+  }
+
   /* This code is only needed for restored windows (i.e. sizemode=normal)
      because of the border radius on the toolbar below the tab bar. */
   #main-window[sizemode=normal] #nav-bar[tabsontop=true]:not(:-moz-lwtheme),
@@ -232,12 +221,9 @@
     border-top-right-radius: 2.5px;
     background-clip: padding-box;
   }
-  #main-window[sizemode=normal] #TabsToolbar[tabsontop=true]:not(:-moz-lwtheme) {
+
+  #TabsToolbar[tabsontop=true]:not(:-moz-lwtheme) {
     margin-bottom: -1px;
-    background-image: none !important;
-  }
-  #main-window[sizemode=normal] #tabbrowser-tabs[tabsontop=true] > .tabbrowser-arrowscrollbox > .arrowscrollbox-scrollbox > .scrollbox-innerbox:not(:-moz-lwtheme) {
-    position: relative;
   }
 
   #navigator-toolbox[tabsontop=false] > #PersonalToolbar {
@@ -334,6 +320,41 @@
     background-attachment: fixed;
   }
 }
+
+@media (-moz-windows-glass) {
+  #main-window[sizemode=fullscreen]:not(:-moz-lwtheme) {
+    -moz-appearance: none;
+    background-color: #556;
+  }
+
+  /* Glass Fog */
+
+  #TabsToolbar:not(:-moz-lwtheme) {
+    background-image: none;
+    position: relative;
+  }
+
+  #TabsToolbar:not(:-moz-lwtheme)::before {
+    box-shadow: 0 0 30px 30px rgb(174,189,204);
+    content: "";
+    display: -moz-box;
+    height: 0;
+    margin: 0 60px; /* (30px + 30px) from box-shadow */
+    opacity: 0.85;
+    position: absolute;
+    pointer-events: none;
+    top: 50%;
+    width: -moz-available;
+    z-index: -1;
+  }
+
+  #main-window[sizemode=normal] #tabbrowser-tabs[tabsontop=true] > .tabbrowser-arrowscrollbox > .arrowscrollbox-scrollbox > .scrollbox-innerbox:not(:-moz-lwtheme) {
+    position: relative;
+  }
+
+  /* End Glass Fog */
+}
+
 
 @media not all and (-moz-windows-compositor) {
   @media (-moz-windows-default-theme) {

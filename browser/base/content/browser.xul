@@ -9,6 +9,7 @@
 <?xml-stylesheet href="chrome://browser/content/browser.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/places/places.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/devtools/common.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/panelUIOverlay.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
@@ -22,6 +23,7 @@
 <window id="main-window"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns:svg="http://www.w3.org/2000/svg"
+        xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="gBrowserInit.onLoad()" onunload="gBrowserInit.onUnload()" onclose="return WindowIsClosing();"
         title="&mainWindow.title;@PRE_RELEASE_SUFFIX@"
@@ -32,6 +34,7 @@
         titlemodifier=""
         titlemodifier_normal=""
         titlemodifier_privatebrowsing="&mainWindow.titlePrivateBrowsingSuffix;"
+        chromemargin="0,-1,-1,-1"
 #else
         title_privatebrowsing="&mainWindow.titlemodifier;@PRE_RELEASE_SUFFIX@ &mainWindow.titlePrivateBrowsingSuffix;"
         titlemodifier="&mainWindow.titlemodifier;@PRE_RELEASE_SUFFIX@"
@@ -464,6 +467,7 @@
       </popupnotificationcontent>
     </popupnotification>
 
+#include panelUI.inc
   </popupset>
 
 #ifdef CAN_DRAW_IN_TITLEBAR
@@ -524,6 +528,7 @@
              fullscreentoolbar="true" mode="icons" customizable="true"
              iconsize="large"
              defaultset="unified-back-forward-button,urlbar-container,reload-button,stop-button,search-container,webrtc-status-button,downloads-button,home-button,bookmarks-menu-button-container,window-controls"
+             customizationtarget="nav-bar-customizationtarget"
              context="toolbar-context-menu">
 
       <toolbaritem id="unified-back-forward-button" class="chromeclass-toolbar-additional"
@@ -655,11 +660,7 @@
                      command="Browser:Stop"
                      tooltiptext="&stopButton.tooltip;"/>
 
-      <toolbaritem id="search-container" title="&searchItem.title;"
-                   align="center" class="chromeclass-toolbar-additional"
-                   flex="100" persist="width" removable="true">
-        <searchbar id="searchbar" flex="1"/>
-      </toolbaritem>
+      <hbox id="nav-bar-customizationtarget" class="customization-target" flex="100"/>
 
       <toolbarbutton id="webrtc-status-button"
                      class="toolbarbutton-1 chromeclass-toolbar-additional"
@@ -673,147 +674,15 @@
                    oncommand="WebrtcIndicator.menuCommand(event.target);"/>
       </toolbarbutton>
 
-      <toolbarbutton id="home-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     persist="class" removable="true"
-                     label="&homeButton.label;"
-                     ondragover="homeButtonObserver.onDragOver(event)"
-                     ondragenter="homeButtonObserver.onDragOver(event)"
-                     ondrop="homeButtonObserver.onDrop(event)"
-                     ondragexit="homeButtonObserver.onDragExit(event)"
-                     onclick="BrowserGoHome(event);"
-                     aboutHomeOverrideTooltip="&abouthome.pageTitle;"/>
-
-      <toolbaritem id="social-toolbar-item"
+      <toolbaritem id="PanelUI-button"
                    class="chromeclass-toolbar-additional"
                    removable="false"
-                   title="&socialToolbar.title;"
-                   hidden="true"
-                   skipintoolbarset="true"
-                   observes="socialActiveBroadcaster">
-        <toolbarbutton id="social-provider-button"
+                   title="&appmenu.title;">
+        <toolbarbutton id="PanelUI-menu-button"
                        class="toolbarbutton-1"
-                       type="menu">
-          <menupopup id="social-statusarea-popup">
-            <menuitem class="social-statusarea-user menuitem-iconic" pack="start" align="center"
-                      observes="socialBroadcaster_userDetails"
-                      oncommand="SocialUI.showProfile(); document.getElementById('social-statusarea-popup').hidePopup();">
-              <image class="social-statusarea-user-portrait"
-                     observes="socialBroadcaster_userDetails"/>
-              <vbox>
-                <label class="social-statusarea-loggedInStatus"
-                       observes="socialBroadcaster_userDetails"/>
-              </vbox>
-            </menuitem>
-#ifndef XP_WIN
-            <menuseparator class="social-statusarea-separator"/>
-#endif
-            <menuitem class="social-toggle-sidebar-menuitem"
-                      type="checkbox"
-                      autocheck="false"
-                      command="Social:ToggleSidebar"
-                      label="&social.toggleSidebar.label;"
-                      accesskey="&social.toggleSidebar.accesskey;"/>
-            <menuitem class="social-toggle-notifications-menuitem"
-                      type="checkbox"
-                      autocheck="false"
-                      command="Social:ToggleNotifications"
-                      label="&social.toggleNotifications.label;"
-                      accesskey="&social.toggleNotifications.accesskey;"/>
-            <menuitem class="social-toggle-menuitem" command="Social:Toggle"/>
-            <menuseparator class="social-statusarea-separator"/>
-            <menuseparator class="social-provider-menu" hidden="true"/>
-            <menuitem class="social-addons-menuitem" command="Social:Addons"
-                      label="&social.addons.label;"/>
-            <menuitem label="&social.learnMore.label;"
-                      accesskey="&social.learnMore.accesskey;"
-                      oncommand="SocialUI.showLearnMore();"/>
-          </menupopup>
-        </toolbarbutton>
-      </toolbaritem>
-
-      <toolbaritem id="bookmarks-menu-button-container"
-                   class="chromeclass-toolbar-additional"
-                   removable="true"
-                   title="&bookmarksMenuButton.label;">
-        <toolbarbutton id="bookmarks-menu-button"
-                       type="menu"
-                       class="toolbarbutton-1"
-                       label="&bookmarksMenuButton.label;"
-                       tooltiptext="&bookmarksMenuButton.tooltip;"
-                       ondragenter="PlacesMenuDNDHandler.onDragEnter(event);"
-                       ondragover="PlacesMenuDNDHandler.onDragOver(event);"
-                       ondragexit="PlacesMenuDNDHandler.onDragExit(event);"
-                       ondrop="PlacesMenuDNDHandler.onDrop(event);">
-          <menupopup id="BMB_bookmarksPopup"
-                     placespopup="true"
-                     context="placesContext"
-                     openInTabs="children"
-                     oncommand="BookmarksEventHandler.onCommand(event, this.parentNode._placesView);"
-                     onclick="BookmarksEventHandler.onClick(event, this.parentNode._placesView);"
-                     onpopupshowing="BookmarksMenuButton.onPopupShowing(event);
-                                     if (!this.parentNode._placesView)
-                                       new PlacesMenu(event, 'place:folder=BOOKMARKS_MENU');"
-                     tooltip="bhTooltip" popupsinherittooltip="true">
-            <menuitem id="BMB_viewBookmarksToolbar"
-                      placesanonid="view-toolbar"
-                      toolbarId="PersonalToolbar"
-                      type="checkbox"
-                      oncommand="onViewToolbarCommand(event)"
-                      label="&viewBookmarksToolbar.label;"/>
-            <menuseparator/>
-            <menuitem id="BMB_bookmarksShowAll"
-                      label="&showAllBookmarks2.label;"
-                      command="Browser:ShowAllBookmarks"
-                      key="manBookmarkKb"/>
-            <menuseparator/>
-            <menuitem id="BMB_bookmarkThisPage"
-#ifndef XP_MACOSX
-                      class="menuitem-iconic"
-#endif
-                      label="&bookmarkThisPageCmd.label;"
-                      command="Browser:AddBookmarkAs"
-                      key="addBookmarkAsKb"/>
-            <menuitem id="BMB_subscribeToPageMenuitem"
-#ifndef XP_MACOSX
-                      class="menuitem-iconic"
-#endif
-                      label="&subscribeToPageMenuitem.label;"
-                      oncommand="return FeedHandler.subscribeToFeed(null, event);"
-                      onclick="checkForMiddleClick(this, event);"
-                      observes="singleFeedMenuitemState"/>
-            <menu id="BMB_subscribeToPageMenupopup"
-#ifndef XP_MACOSX
-                  class="menu-iconic"
-#endif
-                  label="&subscribeToPageMenupopup.label;"
-                  observes="multipleFeedsMenuState">
-              <menupopup id="BMB_subscribeToPageSubmenuMenupopup"
-                         onpopupshowing="return FeedHandler.buildFeedList(event.target);"
-                         oncommand="return FeedHandler.subscribeToFeed(null, event);"
-                         onclick="checkForMiddleClick(this, event);"/>
-            </menu>
-            <menuseparator/>
-            <menu id="BMB_bookmarksToolbar"
-                  placesanonid="toolbar-autohide"
-                  class="menu-iconic bookmark-item"
-                  label="&personalbarCmd.label;"
-                  container="true">
-              <menupopup id="BMB_bookmarksToolbarPopup"
-                         placespopup="true"
-                         context="placesContext"
-                         onpopupshowing="if (!this.parentNode._placesView)
-                                           new PlacesMenu(event, 'place:folder=TOOLBAR');"/>
-            </menu>
-            <menuseparator/>
-            <!-- Bookmarks menu items -->
-            <menuseparator builder="end"
-                           class="hide-if-empty-places-result"/>
-            <menuitem id="BMB_unsortedBookmarks"
-                      label="&bookmarksMenuButton.unsorted.label;"
-                      oncommand="PlacesCommandHook.showPlacesOrganizer('UnfiledBookmarks');"
-                      class="menuitem-iconic"/>
-          </menupopup>
-        </toolbarbutton>
+                       label="&brandShortName;"
+                       tooltiptext="&appmenu.title;"
+                       oncommand="PanelUI.toggle(event);"/>
       </toolbaritem>
 
       <hbox id="window-controls" hidden="true" pack="end">
@@ -970,6 +839,155 @@
 # Update primaryToolbarButtons in browser/themes/shared/browser.inc when adding
 # or removing default items with the toolbarbutton-1 class.
 
+      <toolbaritem id="search-container" title="&searchItem.title;"
+                   align="center" class="chromeclass-toolbar-additional"
+                   flex="100" persist="width" removable="true">
+        <searchbar id="searchbar" flex="1"/>
+      </toolbaritem>
+
+      <toolbarbutton id="home-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     persist="class" removable="true"
+                     label="&homeButton.label;"
+                     ondragover="homeButtonObserver.onDragOver(event)"
+                     ondragenter="homeButtonObserver.onDragOver(event)"
+                     ondrop="homeButtonObserver.onDrop(event)"
+                     ondragexit="homeButtonObserver.onDragExit(event)"
+                     onclick="BrowserGoHome(event);"
+                     aboutHomeOverrideTooltip="&abouthome.pageTitle;"/>
+
+      <toolbaritem id="social-toolbar-item"
+                   class="chromeclass-toolbar-additional"
+                   removable="false"
+                   title="&socialToolbar.title;"
+                   hidden="true"
+                   skipintoolbarset="true"
+                   observes="socialActiveBroadcaster">
+        <toolbarbutton id="social-provider-button"
+                       class="toolbarbutton-1"
+                       type="menu">
+          <menupopup id="social-statusarea-popup">
+            <menuitem class="social-statusarea-user menuitem-iconic" pack="start" align="center"
+                      observes="socialBroadcaster_userDetails"
+                      oncommand="SocialUI.showProfile(); document.getElementById('social-statusarea-popup').hidePopup();">
+              <image class="social-statusarea-user-portrait"
+                     observes="socialBroadcaster_userDetails"/>
+              <vbox>
+                <label class="social-statusarea-loggedInStatus"
+                       observes="socialBroadcaster_userDetails"/>
+              </vbox>
+            </menuitem>
+#ifndef XP_WIN
+            <menuseparator class="social-statusarea-separator"/>
+#endif
+            <menuitem class="social-toggle-sidebar-menuitem"
+                      type="checkbox"
+                      autocheck="false"
+                      command="Social:ToggleSidebar"
+                      label="&social.toggleSidebar.label;"
+                      accesskey="&social.toggleSidebar.accesskey;"/>
+            <menuitem class="social-toggle-notifications-menuitem"
+                      type="checkbox"
+                      autocheck="false"
+                      command="Social:ToggleNotifications"
+                      label="&social.toggleNotifications.label;"
+                      accesskey="&social.toggleNotifications.accesskey;"/>
+            <menuitem class="social-toggle-menuitem" command="Social:Toggle"/>
+            <menuseparator class="social-statusarea-separator"/>
+            <menuseparator class="social-provider-menu" hidden="true"/>
+            <menuitem class="social-addons-menuitem" command="Social:Addons"
+                      label="&social.addons.label;"/>
+            <menuitem label="&social.learnMore.label;"
+                      accesskey="&social.learnMore.accesskey;"
+                      oncommand="SocialUI.showLearnMore();"/>
+          </menupopup>
+        </toolbarbutton>
+      </toolbaritem>
+
+      <toolbaritem id="bookmarks-menu-button-container"
+                   class="chromeclass-toolbar-additional"
+                   removable="true"
+                   title="&bookmarksMenuButton.label;">
+        <toolbarbutton id="bookmarks-menu-button"
+                       type="menu"
+                       class="toolbarbutton-1"
+                       label="&bookmarksMenuButton.label;"
+                       tooltiptext="&bookmarksMenuButton.tooltip;"
+                       ondragenter="PlacesMenuDNDHandler.onDragEnter(event);"
+                       ondragover="PlacesMenuDNDHandler.onDragOver(event);"
+                       ondragexit="PlacesMenuDNDHandler.onDragExit(event);"
+                       ondrop="PlacesMenuDNDHandler.onDrop(event);">
+          <menupopup id="BMB_bookmarksPopup"
+                     placespopup="true"
+                     context="placesContext"
+                     openInTabs="children"
+                     oncommand="BookmarksEventHandler.onCommand(event, this.parentNode._placesView);"
+                     onclick="BookmarksEventHandler.onClick(event, this.parentNode._placesView);"
+                     onpopupshowing="BookmarksMenuButton.onPopupShowing(event);
+                                     if (!this.parentNode._placesView)
+                                       new PlacesMenu(event, 'place:folder=BOOKMARKS_MENU');"
+                     tooltip="bhTooltip" popupsinherittooltip="true">
+            <menuitem id="BMB_viewBookmarksToolbar"
+                      placesanonid="view-toolbar"
+                      toolbarId="PersonalToolbar"
+                      type="checkbox"
+                      oncommand="onViewToolbarCommand(event)"
+                      label="&viewBookmarksToolbar.label;"/>
+            <menuseparator/>
+            <menuitem id="BMB_bookmarksShowAll"
+                      label="&showAllBookmarks2.label;"
+                      command="Browser:ShowAllBookmarks"
+                      key="manBookmarkKb"/>
+            <menuseparator/>
+            <menuitem id="BMB_bookmarkThisPage"
+#ifndef XP_MACOSX
+                      class="menuitem-iconic"
+#endif
+                      label="&bookmarkThisPageCmd.label;"
+                      command="Browser:AddBookmarkAs"
+                      key="addBookmarkAsKb"/>
+            <menuitem id="BMB_subscribeToPageMenuitem"
+#ifndef XP_MACOSX
+                      class="menuitem-iconic"
+#endif
+                      label="&subscribeToPageMenuitem.label;"
+                      oncommand="return FeedHandler.subscribeToFeed(null, event);"
+                      onclick="checkForMiddleClick(this, event);"
+                      observes="singleFeedMenuitemState"/>
+            <menu id="BMB_subscribeToPageMenupopup"
+#ifndef XP_MACOSX
+                  class="menu-iconic"
+#endif
+                  label="&subscribeToPageMenupopup.label;"
+                  observes="multipleFeedsMenuState">
+              <menupopup id="BMB_subscribeToPageSubmenuMenupopup"
+                         onpopupshowing="return FeedHandler.buildFeedList(event.target);"
+                         oncommand="return FeedHandler.subscribeToFeed(null, event);"
+                         onclick="checkForMiddleClick(this, event);"/>
+            </menu>
+            <menuseparator/>
+            <menu id="BMB_bookmarksToolbar"
+                  placesanonid="toolbar-autohide"
+                  class="menu-iconic bookmark-item"
+                  label="&personalbarCmd.label;"
+                  container="true">
+              <menupopup id="BMB_bookmarksToolbarPopup"
+                         placespopup="true"
+                         context="placesContext"
+                         onpopupshowing="if (!this.parentNode._placesView)
+                                           new PlacesMenu(event, 'place:folder=TOOLBAR');"/>
+            </menu>
+            <menuseparator/>
+            <!-- Bookmarks menu items -->
+            <menuseparator builder="end"
+                           class="hide-if-empty-places-result"/>
+            <menuitem id="BMB_unsortedBookmarks"
+                      label="&bookmarksMenuButton.unsorted.label;"
+                      oncommand="PlacesCommandHook.showPlacesOrganizer('UnfiledBookmarks');"
+                      class="menuitem-iconic"/>
+          </menupopup>
+        </toolbarbutton>
+      </toolbaritem>
+
       <toolbarbutton id="print-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                      label="&printButton.label;" command="cmd_print"
                      tooltiptext="&printButton.tooltip;"/>
@@ -1076,45 +1094,49 @@
 
   <hbox id="fullscr-toggler" collapsed="true"/>
 
-  <hbox flex="1" id="browser">
-    <vbox id="browser-border-start" hidden="true" layer="true"/>
-    <vbox id="sidebar-box" hidden="true" class="chromeclass-extrachrome">
-      <sidebarheader id="sidebar-header" align="center">
-        <label id="sidebar-title" persist="value" flex="1" crop="end" control="sidebar"/>
-        <image id="sidebar-throbber"/>
-        <toolbarbutton class="tabs-closebutton" tooltiptext="&sidebarCloseButton.tooltip;" oncommand="toggleSidebar();"/>
-      </sidebarheader>
-      <browser id="sidebar" flex="1" autoscroll="false" disablehistory="true"
-                style="min-width: 14em; width: 18em; max-width: 36em;"/>
-    </vbox>
+  <deck id="content-deck" flex="1">
+    <hbox flex="1" id="browser">
+      <vbox id="browser-border-start" hidden="true" layer="true"/>
+      <vbox id="sidebar-box" hidden="true" class="chromeclass-extrachrome">
+        <sidebarheader id="sidebar-header" align="center">
+          <label id="sidebar-title" persist="value" flex="1" crop="end" control="sidebar"/>
+          <image id="sidebar-throbber"/>
+          <toolbarbutton class="tabs-closebutton" tooltiptext="&sidebarCloseButton.tooltip;" oncommand="toggleSidebar();"/>
+        </sidebarheader>
+        <browser id="sidebar" flex="1" autoscroll="false" disablehistory="true"
+                  style="min-width: 14em; width: 18em; max-width: 36em;"/>
+      </vbox>
 
-    <splitter id="sidebar-splitter" class="chromeclass-extrachrome sidebar-splitter" hidden="true"/>
-    <vbox id="appcontent" flex="1">
-      <tabbrowser id="content" disablehistory="true"
-                  flex="1" contenttooltip="aHTMLTooltip"
-                  tabcontainer="tabbrowser-tabs"
-                  contentcontextmenu="contentAreaContextMenu"
-                  autocompletepopup="PopupAutoComplete"/>
-      <chatbar id="pinnedchats" layer="true" mousethrough="always" hidden="true"/>
-      <statuspanel id="statusbar-display" inactive="true"/>
-    </vbox>
-    <splitter id="social-sidebar-splitter"
-              class="chromeclass-extrachrome sidebar-splitter"
-              observes="socialSidebarBroadcaster"/>
-    <vbox id="social-sidebar-box"
-          class="chromeclass-extrachrome"
-          observes="socialSidebarBroadcaster"
-          persist="width">
-      <browser id="social-sidebar-browser"
-               type="content"
-               context="contentAreaContextMenu"
-               disableglobalhistory="true"
-               tooltip="aHTMLTooltip"
-               flex="1"
-               style="min-width: 14em; width: 18em; max-width: 36em;"/>
-    </vbox>
-    <vbox id="browser-border-end" hidden="true" layer="true"/>
-  </hbox>
+      <splitter id="sidebar-splitter" class="chromeclass-extrachrome sidebar-splitter" hidden="true"/>
+      <vbox id="appcontent" flex="1">
+        <tabbrowser id="content" disablehistory="true"
+                    flex="1" contenttooltip="aHTMLTooltip"
+                    tabcontainer="tabbrowser-tabs"
+                    contentcontextmenu="contentAreaContextMenu"
+                    autocompletepopup="PopupAutoComplete"
+                    onclick="contentAreaClick(event, false);"/>
+        <chatbar id="pinnedchats" layer="true" mousethrough="always" hidden="true"/>
+        <statuspanel id="statusbar-display" inactive="true"/>
+      </vbox>
+      <splitter id="social-sidebar-splitter"
+                class="chromeclass-extrachrome sidebar-splitter"
+                observes="socialSidebarBroadcaster"/>
+      <vbox id="social-sidebar-box"
+            class="chromeclass-extrachrome"
+            observes="socialSidebarBroadcaster"
+            persist="width">
+        <browser id="social-sidebar-browser"
+                 type="content"
+                 context="contentAreaContextMenu"
+                 disableglobalhistory="true"
+                 tooltip="aHTMLTooltip"
+                 flex="1"
+                 style="min-width: 14em; width: 18em; max-width: 36em;"/>
+      </vbox>
+      <vbox id="browser-border-end" hidden="true" layer="true"/>
+    </hbox>
+#include customize.inc
+  </deck>
 
   <hbox id="full-screen-warning-container" hidden="true" fadeout="true">
     <hbox style="width: 100%;" pack="center"> <!-- Inner hbox needed due to bug 579776. -->
@@ -1184,38 +1206,34 @@
     </toolbar>
   </vbox>
 
-#ifndef XP_UNIX
   <svg:svg height="0">
+    <svg:clipPath id="tab-curve-clip-path-start" clipPathUnits="userSpaceOnUse">
+      <svg:path d="M 30,2 C 17.049,2.104,15.508,11.669,14.511,17 c -1.565,8.376,-4.276,13,-13,13 L 0,31 H 31 V 2 z"/>
+    </svg:clipPath>
+    <svg:clipPath id="tab-curve-clip-path-end" clipPathUnits="userSpaceOnUse">
+      <svg:path d="M -1,2 C 12.951,2.104,14.492,11.669,15.489,17 c +1.565,8.376,+4.276,13,+13,13 L 30,31 H -1 V 2 z"/>
+    </svg:clipPath>
+    <svg:clipPath id="tab-clip-path-outer" clipPathUnits="userSpaceOnUse">
+      <svg:path d="M 30,0 C 24,0 17.78,2.58 15.10,8.09 12.05,13.46 13.14,20.37 9.18,25.3 7.1,27.7 3.8,28 0.8,28 c -0.4,0.6 -2.09,1.11 -1.46,1.80 l 2.45,2.72 61.60,0 2.59,-3.06 C 65.15,28.96 64.57,27.80 63.5,28 60.13,28.13 56.33,27.03 54.74,23.78 51.85,18.44 52.65,11.81 49.09,6.73 45.88,1.65 39.54,-0.26 33.8,0 32.5,0 31.7,0 30,0 z"/>
+    </svg:clipPath>
+
+#ifndef XP_UNIX
     <svg:clipPath id="windows-keyhole-forward-clip-path" clipPathUnits="objectBoundingBox">
       <svg:path d="M 0,0 C 0.16,0.11 0.28,0.29 0.28,0.5 0.28,0.71 0.16,0.89 0,1 L 1,1 1,0 0,0 z"/>
     </svg:clipPath>
     <svg:clipPath id="windows-urlbar-back-button-clip-path" clipPathUnits="userSpaceOnUse">
       <svg:path d="M 0,0 0,7.8 C 2.5,11 4,14 4,18 4,22 2.5,25 0,28 l 0,22 10000,0 0,-50 L 0,0 z"/>
     </svg:clipPath>
-  </svg:svg>
 #endif
 #ifdef XP_MACOSX
-  <svg:svg height="0">
     <svg:clipPath id="osx-keyhole-forward-clip-path" clipPathUnits="objectBoundingBox">
       <svg:path d="M 0,0 C 0.15,0.12 0.25,0.3 0.25,0.5 0.25,0.7 0.15,0.88 0,1 L 1,1 1,0 0,0 z"/>
     </svg:clipPath>
     <svg:clipPath id="osx-urlbar-back-button-clip-path" clipPathUnits="userSpaceOnUse">
       <svg:path d="m 0,-5 0,4.03 C 3.6,1.8 6,6.1 6,11 6,16 3.6,20 0,23 l 0,27 10000,0 0,-55 L 0,-5 z"/>
     </svg:clipPath>
-    <svg:clipPath id="osx-tab-ontop-left-curve-clip-path" clipPathUnits="userSpaceOnUse">
-      <svg:path d="M 9,0 C 7.3,0 6,1.3 6,3 l 0,14 c 0,3 -2.2,5 -5,5 l -1,0 0,1 12,0 0,-1 0,-19 0,-3 -3,0 z"/>
-    </svg:clipPath>
-    <svg:clipPath id="osx-tab-ontop-right-curve-clip-path" clipPathUnits="userSpaceOnUse">
-      <svg:path d="m 0,0 0,3 0,19 0,1 12,0 0,-1 -1,0 C 8.2,22 6,20 6,17 L 6,3 C 6,1.3 4.7,0 3,0 L 0,0 z"/>
-    </svg:clipPath>
-    <svg:clipPath id="osx-tab-onbottom-left-curve-clip-path" clipPathUnits="userSpaceOnUse">
-      <svg:path d="m 0,0 0,1 1,0 c 2.8,0 5,2.2 5,5 l 0,14 c 0,2 1.3,3 3,3 l 3,0 0,-3 L 12,1 12,0 0,0 z"/>
-    </svg:clipPath>
-    <svg:clipPath id="osx-tab-onbottom-right-curve-clip-path" clipPathUnits="userSpaceOnUse">
-      <svg:path d="m 0,0 0,1 0,19 0,3 3,0 c 1.7,0 3,-1 3,-3 L 6,6 C 6,3.2 8.2,1 11,1 L 12,1 12,0 0,0 z"/>
-    </svg:clipPath>
-  </svg:svg>
 #endif
+  </svg:svg>
 
 </vbox>
 # <iframe id="tab-view"> is dynamically appended as the 2nd child of #tab-view-deck.
