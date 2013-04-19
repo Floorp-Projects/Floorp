@@ -24,7 +24,7 @@ ImageHostSingle::SetCompositor(Compositor* aCompositor) {
   }
 }
 
-void
+bool
 ImageHostSingle::EnsureTextureHost(TextureIdentifier aTextureId,
                                    const SurfaceDescriptor& aSurface,
                                    ISurfaceAllocator* aAllocator,
@@ -33,19 +33,19 @@ ImageHostSingle::EnsureTextureHost(TextureIdentifier aTextureId,
   if (mTextureHost &&
       mTextureHost->GetBuffer() &&
       mTextureHost->GetBuffer()->type() == aSurface.type()) {
-    return;
+    return false;
   }
 
   mTextureHost = TextureHost::CreateTextureHost(aSurface.type(),
                                                 mTextureInfo.mTextureHostFlags,
                                                 mTextureInfo.mTextureFlags);
 
-  NS_ASSERTION(mTextureHost, "Failed to create texture host");
-
   Compositor* compositor = GetCompositor();
-  if (compositor && mTextureHost) {
+  if (compositor) {
     mTextureHost->SetCompositor(compositor);
   }
+
+  return true;
 }
 
 void
@@ -149,19 +149,21 @@ ImageHostBuffered::Update(const SurfaceDescriptor& aImage,
   return GetTextureHost()->IsValid();
 }
 
-void
+bool
 ImageHostBuffered::EnsureTextureHost(TextureIdentifier aTextureId,
                                      const SurfaceDescriptor& aSurface,
                                      ISurfaceAllocator* aAllocator,
                                      const TextureInfo& aTextureInfo)
 {
-  ImageHostSingle::EnsureTextureHost(aTextureId,
-                                     aSurface,
-                                     aAllocator,
-                                     aTextureInfo);
-  if (mTextureHost) {
+  bool result = ImageHostSingle::EnsureTextureHost(aTextureId,
+                                                   aSurface,
+                                                   aAllocator,
+                                                   aTextureInfo);
+  if (result) {
     mTextureHost->SetBuffer(new SurfaceDescriptor(null_t()), aAllocator);
   }
+
+  return result;
 }
 
 }
