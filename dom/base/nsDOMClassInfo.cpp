@@ -4259,7 +4259,7 @@ LocationSetterGuts(JSContext *cx, JSObject *obj, jsval *vp)
 {
   // This function duplicates some of the logic in XPC_WN_HelperSetProperty
   obj = js::CheckedUnwrap(obj, /* stopAtOuter = */ false);
-  if (!IS_WN_WRAPPER(obj))
+  if (!IS_WN_REFLECTOR(obj))
       return NS_ERROR_XPC_BAD_CONVERT_JS;
   XPCWrappedNative *wrapper = XPCWrappedNative::Get(obj);
 

@@ -42,10 +42,6 @@
  * pointers are smooshed together in a tagged union.) Either way it can reach
  * its scope.
  *
- * In the case of slim wrappers (where there is no XPCWrappedNative), the
- * flattened JS object has a pointer to the XPCWrappedNativeProto stored in a
- * reserved slot.
- *
  * An XPCWrappedNativeProto keeps track of the set of interfaces implemented by
  * the C++ object in an XPCNativeSet. (The list of interfaces is obtained by
  * calling a method on the nsIClassInfo.) An XPCNativeSet is a collection of
@@ -287,13 +283,13 @@ extern const char XPC_XPCONNECT_CONTRACTID[];
 
 inline void SetWNExpandoChain(JSObject *obj, JSObject *chain)
 {
-    MOZ_ASSERT(IS_WN_WRAPPER(obj));
+    MOZ_ASSERT(IS_WN_REFLECTOR(obj));
     JS_SetReservedSlot(obj, WRAPPER_MULTISLOT, JS::ObjectOrNullValue(chain));
 }
 
 inline JSObject* GetWNExpandoChain(JSObject *obj)
 {
-    MOZ_ASSERT(IS_WN_WRAPPER(obj));
+    MOZ_ASSERT(IS_WN_REFLECTOR(obj));
     return JS_GetReservedSlot(obj, WRAPPER_MULTISLOT).toObjectOrNull();
 }
 
@@ -1937,13 +1933,10 @@ public:
         {return mJSClass.interfacesBitmap;}
     JSClass*                        GetJSClass()
         {return Jsvalify(&mJSClass.base);}
-    JSClass*                        GetSlimJSClass()
-        {if (mCanBeSlim) return GetJSClass(); return nullptr;}
 
     XPCNativeScriptableShared(uint32_t aFlags, char* aName,
                               uint32_t interfacesBitmap)
-        : mFlags(aFlags),
-          mCanBeSlim(false)
+        : mFlags(aFlags)
         {memset(&mJSClass, 0, sizeof(mJSClass));
          mJSClass.base.name = aName;  // take ownership
          mJSClass.interfacesBitmap = interfacesBitmap;
@@ -1966,7 +1959,6 @@ public:
 private:
     XPCNativeScriptableFlags mFlags;
     XPCWrappedNativeJSClass  mJSClass;
-    JSBool                   mCanBeSlim;
 };
 
 /***************************************************************************/
@@ -1990,9 +1982,6 @@ public:
 
     JSClass*
     GetJSClass()          {return mShared->GetJSClass();}
-
-    JSClass*
-    GetSlimJSClass()      {return mShared->GetSlimJSClass();}
 
     XPCNativeScriptableShared*
     GetScriptableShared() {return mShared;}
@@ -2398,7 +2387,7 @@ public:
     SetSet(XPCNativeSet* set) {XPCAutoLock al(GetLock()); mSet = set;}
 
     static XPCWrappedNative* Get(JSObject *obj) {
-        MOZ_ASSERT(IS_WN_WRAPPER(obj));
+        MOZ_ASSERT(IS_WN_REFLECTOR(obj));
         return (XPCWrappedNative*)js::GetObjectPrivate(obj);
     }
 

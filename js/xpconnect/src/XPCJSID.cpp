@@ -476,7 +476,7 @@ static JSObject *
 FindObjectForHasInstance(JSContext *cx, HandleObject objArg)
 {
     RootedObject obj(cx, objArg), proto(cx);
-    while (obj && !IS_WRAPPER_CLASS(js::GetObjectClass(obj)) && !IsDOMObject(obj)) {
+    while (obj && !IS_WN_REFLECTOR(obj) && !IsDOMObject(obj)) {
         if (js::IsWrapper(obj)) {
             obj = js::CheckedUnwrap(obj, /* stopAtOuter = */ false);
             continue;
@@ -524,7 +524,7 @@ nsJSIID::HasInstance(nsIXPConnectWrappedNative *wrapper,
             return NS_OK;
         }
 
-        MOZ_ASSERT(IS_WN_WRAPPER(obj));
+        MOZ_ASSERT(IS_WN_REFLECTOR(obj));
         XPCWrappedNative* other_wrapper = XPCWrappedNative::Get(obj);
         if (!other_wrapper)
             return NS_OK;
@@ -841,7 +841,7 @@ nsJSCID::HasInstance(nsIXPConnectWrappedNative *wrapper,
         // is this really a native xpcom object with a wrapper?
         nsIClassInfo* ci = nullptr;
         obj = FindObjectForHasInstance(cx, obj);
-        if (!obj || !IS_WRAPPER_CLASS(js::GetObjectClass(obj)))
+        if (!obj || !IS_WN_REFLECTOR(obj))
             return rv;
         if (XPCWrappedNative* other_wrapper = XPCWrappedNative::Get(obj))
             ci = other_wrapper->GetClassInfo();
@@ -893,7 +893,7 @@ xpc_JSObjectToID(JSContext *cx, JSObject* obj)
     // NOTE: this call does NOT addref
     XPCWrappedNative* wrapper = nullptr;
     obj = js::CheckedUnwrap(obj);
-    if (obj && IS_WN_WRAPPER(obj))
+    if (obj && IS_WN_REFLECTOR(obj))
         wrapper = XPCWrappedNative::Get(obj);
     if (wrapper &&
         (wrapper->HasInterfaceNoQI(NS_GET_IID(nsIJSID))  ||
@@ -911,7 +911,7 @@ xpc_JSObjectIsID(JSContext *cx, JSObject* obj)
     // NOTE: this call does NOT addref
     XPCWrappedNative* wrapper = nullptr;
     obj = js::CheckedUnwrap(obj);
-    if (obj && IS_WN_WRAPPER(obj))
+    if (obj && IS_WN_REFLECTOR(obj))
         wrapper = XPCWrappedNative::Get(obj);
     return wrapper &&
            (wrapper->HasInterfaceNoQI(NS_GET_IID(nsIJSID))  ||
