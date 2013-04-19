@@ -204,7 +204,7 @@ ContentHostSingleBuffered::~ContentHostSingleBuffered()
   DestroyFrontHost();
 }
 
-bool
+void
 ContentHostSingleBuffered::EnsureTextureHost(TextureIdentifier aTextureId,
                                              const SurfaceDescriptor& aSurface,
                                              ISurfaceAllocator* aAllocator,
@@ -220,8 +220,6 @@ ContentHostSingleBuffered::EnsureTextureHost(TextureIdentifier aTextureId,
   if (compositor) {
     mNewFrontHost->SetCompositor(compositor);
   }
-
-  return true;
 }
 
 void
@@ -287,7 +285,7 @@ ContentHostDoubleBuffered::~ContentHostDoubleBuffered()
   DestroyFrontHost();
 }
 
-bool
+void
 ContentHostDoubleBuffered::EnsureTextureHost(TextureIdentifier aTextureId,
                                              const SurfaceDescriptor& aSurface,
                                              ISurfaceAllocator* aAllocator,
@@ -306,17 +304,16 @@ ContentHostDoubleBuffered::EnsureTextureHost(TextureIdentifier aTextureId,
 
   if (aTextureId == TextureFront) {
     mNewFrontHost = newHost;
-    return true;
+    return;
   }
   if (aTextureId == TextureBack) {
     mBackHost = newHost;
     mBufferRect = nsIntRect();
     mBufferRotation = nsIntPoint();
-    return true;
+    return;
   }
 
   NS_ERROR("Bad texture identifier");
-  return false;
 }
 
 void
