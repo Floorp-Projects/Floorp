@@ -135,7 +135,7 @@ this.Toolbox = function Toolbox(target, selectedTool, hostType) {
     selectedTool = Services.prefs.getCharPref(this._prefs.LAST_TOOL);
   }
   let definitions = gDevTools.getToolDefinitionMap();
-  if (!definitions.get(selectedTool)) {
+  if (!definitions.get(selectedTool) && selectedTool != "options") {
     selectedTool = "webconsole";
   }
   this._defaultToolId = selectedTool;
@@ -263,6 +263,7 @@ Toolbox.prototype = {
         closeButton.addEventListener("command", this.destroy, true);
 
         this._buildDockButtons();
+        this._buildOptions();
         this._buildTabs();
         this._buildButtons();
         this._addKeysToWindow();
@@ -280,6 +281,21 @@ Toolbox.prototype = {
     return deferred.promise;
   },
 
+  _buildOptions: function TBOX__buildOptions() {
+    this.optionsButton = this.doc.getElementById("toolbox-tab-options");
+    this.optionsButton.addEventListener("command", function() {
+      this.selectTool("options");
+    }.bind(this), false);
+
+    let iframe = this.doc.getElementById("toolbox-panel-iframe-options");
+    this._toolPanels.set("options", iframe);
+
+    let key = this.doc.getElementById("toolbox-options-key");
+    key.addEventListener("command", function(toolId) {
+      this.selectTool(toolId);
+    }.bind(this, "options"), true);
+  },
+
   /**
    * Adds the keys and commands to the Toolbox Window in window mode.
    */
@@ -288,7 +304,7 @@ Toolbox.prototype = {
       return;
     }
     let doc = this.doc.defaultView.parent.document;
-    for (let [id, toolDefinition] of gDevTools._tools) {
+    for (let [id, toolDefinition] of gDevTools.getToolDefinitionMap()) {
       if (toolDefinition.key) {
         // Prevent multiple entries for the same tool.
         if (doc.getElementById("key_" + id)) {
@@ -475,15 +491,29 @@ Toolbox.prototype = {
         break;
       }
     }
-    tabstrip.selectedIndex = index;
+    tabstrip.selectedItem = tab;
 
     // and select the right iframe
     let deck = this.doc.getElementById("toolbox-deck");
-    deck.selectedIndex = index;
+    // offset by 1 due to options panel
+    if (id == "options") {
+      deck.selectedIndex = 0;
+      this.optionsButton.setAttribute("checked", true);
+    }
+    else {
+      deck.selectedIndex = index != -1 ? index + 1: -1;
+      this.optionsButton.removeAttribute("checked");
+    }
 
     let definition = gDevTools.getToolDefinitionMap().get(id);
 
     this._currentToolId = id;
+
+    let resolveSelected = panel => {
+      this.emit("select", id);
+      this.emit(id + "-selected", panel);
+      deferred.resolve(panel);
+    };
 
     let iframe = this.doc.getElementById("toolbox-panel-iframe-" + id);
     if (!iframe) {
@@ -505,11 +535,9 @@ Toolbox.prototype = {
           this._toolPanels.set(id, panel);
 
           this.emit(id + "-ready", panel);
-          this.emit("select", id);
-          this.emit(id + "-selected", panel);
           gDevTools.emit(id + "-ready", this, panel);
 
-          deferred.resolve(panel);
+          resolveSelected(panel);
         }.bind(this));
       }.bind(this);
 
@@ -518,14 +546,22 @@ Toolbox.prototype = {
     } else {
       let panel = this._toolPanels.get(id);
       // only emit 'select' event if the iframe has been loaded
-      if (panel) {
-        this.emit("select", id);
-        this.emit(id + "-selected", panel);
-        deferred.resolve(panel);
+      if (panel && (!panel.contentDocument ||
+                    panel.contentDocument.readyState == "complete")) {
+        resolveSelected(panel);
+      }
+      else if (panel) {
+        let boundLoad = function() {
+          panel.removeEventListener("DOMContentLoaded", boundLoad, true);
+          resolveSelected(panel);
+        };
+        panel.addEventListener("DOMContentLoaded", boundLoad, true);
       }
     }
 
-    Services.prefs.setCharPref(this._prefs.LAST_TOOL, id);
+    if (id != "options") {
+      Services.prefs.setCharPref(this._prefs.LAST_TOOL, id);
+    }
 
     return deferred.promise;
   },
@@ -543,8 +579,8 @@ Toolbox.prototype = {
   _refreshHostTitle: function TBOX_refreshHostTitle() {
     let toolName;
     let toolId = this.currentToolId;
-    if (toolId) {
-      let toolDef = gDevTools.getToolDefinitionMap().get(toolId);
+    let toolDef = gDevTools.getToolDefinitionMap().get(toolId);
+    if (toolDef) {
       toolName = toolDef.label;
     } else {
       // no tool is selected
@@ -638,6 +674,12 @@ Toolbox.prototype = {
    *         Id of the tool that was unregistered
    */
   _toolUnregistered: function TBOX_toolUnregistered(event, toolId) {
+    if (this._toolPanels.has(toolId)) {
+      let instance = this._toolPanels.get(toolId);
+      instance.destroy();
+      this._toolPanels.delete(toolId);
+    }
+
     let radio = this.doc.getElementById("toolbox-tab-" + toolId);
     let panel = this.doc.getElementById("toolbox-panel-" + toolId);
 
@@ -667,12 +709,6 @@ Toolbox.prototype = {
       if (key) {
         key.parentNode.removeChild(key);
       }
-    }
-
-    if (this._toolPanels.has(toolId)) {
-      let instance = this._toolPanels.get(toolId);
-      instance.destroy();
-      this._toolPanels.delete(toolId);
     }
   },
 
@@ -710,6 +746,7 @@ Toolbox.prototype = {
 
     let outstanding = [];
 
+    this._toolPanels.delete("options");
     for (let [id, panel] of this._toolPanels) {
       outstanding.push(panel.destroy());
     }

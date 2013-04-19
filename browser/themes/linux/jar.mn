@@ -131,6 +131,8 @@ browser.jar:
   skin/classic/browser/devtools/webconsole.css                  (devtools/webconsole.css)
   skin/classic/browser/devtools/webconsole_networkpanel.css     (devtools/webconsole_networkpanel.css)
   skin/classic/browser/devtools/webconsole.png                  (devtools/webconsole.png)
+  skin/classic/browser/devtools/checkbox-dark.png     (devtools/checkbox-dark.png)
+  skin/classic/browser/devtools/checkbox-light.png    (devtools/checkbox-light.png)
   skin/classic/browser/devtools/commandline.css              (devtools/commandline.css)
   skin/classic/browser/devtools/markup-view.css      (devtools/markup-view.css)
   skin/classic/browser/devtools/orion.css             (devtools/orion.css)
