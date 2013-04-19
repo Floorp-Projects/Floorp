@@ -939,7 +939,7 @@ TreatAsOpaque(nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder)
     // be treated as opaque (and their bounds is just the union of their
     // children, which might be a large area their contents don't really cover).
     nsIFrame* f = aItem->GetUnderlyingFrame();
-    if (f && f->PresContext()->IsChrome() && !aItem->GetChildren() &&
+    if (f->PresContext()->IsChrome() && !aItem->GetChildren() &&
         f->StyleDisplay()->mOpacity != 0.0) {
       opaque = aItem->GetBounds(aBuilder, &snap);
     }
@@ -1440,8 +1440,7 @@ static bool IsContentLEQ(nsDisplayItem* aItem1, nsDisplayItem* aItem2,
 
 static bool IsZOrderLEQ(nsDisplayItem* aItem1, nsDisplayItem* aItem2,
                         void* aClosure) {
-  // These GetUnderlyingFrame calls return non-null because we're only used
-  // in sorting.  Note that we can't just take the difference of the two
+  // Note that we can't just take the difference of the two
   // z-indices here, because that might overflow a 32-bit int.
   int32_t index1 = nsLayoutUtils::GetZIndex(aItem1->GetUnderlyingFrame());
   int32_t index2 = nsLayoutUtils::GetZIndex(aItem2->GetUnderlyingFrame());
@@ -2649,11 +2648,10 @@ nsDisplayWrapList::RequiredLayerStateForChildren(nsDisplayListBuilder* aBuilder,
   LayerState result = LAYER_INACTIVE;
   for (nsDisplayItem* i = aList.GetBottom(); i; i = i->GetAbove()) {
     nsIFrame* f = i->GetUnderlyingFrame();
-    if (f) {
-      nsIFrame* activeScrolledRoot =
-        nsLayoutUtils::GetActiveScrolledRootFor(f, nullptr);
-      if (activeScrolledRoot != aActiveScrolledRoot && result == LAYER_INACTIVE)
-        result = LAYER_ACTIVE;
+    nsIFrame* activeScrolledRoot =
+      nsLayoutUtils::GetActiveScrolledRootFor(f, nullptr);
+    if (activeScrolledRoot != aActiveScrolledRoot && result == LAYER_INACTIVE) {
+      result = LAYER_ACTIVE;
     }
 
     LayerState state = i->GetLayerState(aBuilder, aManager, aParameters);

@@ -1128,23 +1128,21 @@ FrameLayerBuilder::GetOldLayerFor(nsDisplayItem* aItem,
   uint32_t key = aItem->GetPerFrameKey();
   nsIFrame* frame = aItem->GetUnderlyingFrame();
 
-  if (frame) {
-    DisplayItemData* oldData = GetOldLayerForFrame(frame, key);
-    if (oldData) {
-      if (aOldGeometry) {
-        *aOldGeometry = oldData->mGeometry.get();
-      }
-      if (aOldClip) {
-        *aOldClip = &oldData->mClip;
-      }
-      if (aChangedFrames) {
-        oldData->GetFrameListChanges(aItem, *aChangedFrames); 
-      }
-      if (aIsInvalid) {
-        *aIsInvalid = oldData->mIsInvalid;
-      }
-      return oldData->mLayer;
+  DisplayItemData* oldData = GetOldLayerForFrame(frame, key);
+  if (oldData) {
+    if (aOldGeometry) {
+      *aOldGeometry = oldData->mGeometry.get();
     }
+    if (aOldClip) {
+      *aOldClip = &oldData->mClip;
+    }
+    if (aChangedFrames) {
+      oldData->GetFrameListChanges(aItem, *aChangedFrames);
+    }
+    if (aIsInvalid) {
+      *aIsInvalid = oldData->mIsInvalid;
+    }
+    return oldData->mLayer;
   }
 
   return nullptr;
@@ -2233,8 +2231,6 @@ ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem,
                                          const nsPoint& aTopLeft,
                                          nsDisplayItemGeometry *aGeometry)
 {
-  NS_ASSERTION(aItem->GetUnderlyingFrame(),
-               "Display items that render using Thebes must have a frame");
   NS_ASSERTION(aItem->GetPerFrameKey(),
                "Display items that render using Thebes must have a key");
   nsDisplayItemGeometry *oldGeometry = NULL;
@@ -2383,7 +2379,6 @@ FrameLayerBuilder::AddThebesDisplayItem(ThebesLayer* aLayer,
     if (entry->mContainerLayerGeneration == 0) {
       entry->mContainerLayerGeneration = mContainerLayerGeneration;
     }
-    NS_ASSERTION(aItem->GetUnderlyingFrame(), "Must have frame");
     if (tempManager) {
       FrameLayerBuilder* layerBuilder = new FrameLayerBuilder();
       layerBuilder->Init(mDisplayListBuilder, tempManager);
@@ -2960,8 +2955,6 @@ Layer*
 FrameLayerBuilder::GetLeafLayerFor(nsDisplayListBuilder* aBuilder,
                                    nsDisplayItem* aItem)
 {
-  NS_ASSERTION(aItem->GetUnderlyingFrame(),
-               "Can only call GetLeafLayerFor on items that have a frame");
   Layer* layer = GetOldLayerFor(aItem);
   if (!layer)
     return nullptr;
@@ -3293,9 +3286,7 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
       PaintInactiveLayer(builder, cdi->mInactiveLayerManager, cdi->mItem, aContext, rc);
     } else {
       nsIFrame* frame = cdi->mItem->GetUnderlyingFrame();
-      if (frame) {
-        frame->AddStateBits(NS_FRAME_PAINTED_THEBES);
-      }
+      frame->AddStateBits(NS_FRAME_PAINTED_THEBES);
 #ifdef MOZ_DUMP_PAINTING
 
       if (gfxUtils::sDumpPainting) {
