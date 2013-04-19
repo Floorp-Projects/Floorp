@@ -390,7 +390,7 @@ nsXMLHttpRequest::InitParameters(bool aAnon, bool aSystem)
   // Chrome is always allowed access, so do the permission check only
   // for non-chrome pages.
   if (!nsContentUtils::IsCallerChrome()) {
-    nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(window->GetExtantDocument());
     if (!doc) {
       return;
     }
@@ -560,7 +560,7 @@ static void LogMessage(const char* aWarning, nsPIDOMWindow* aWindow)
 {
   nsCOMPtr<nsIDocument> doc;
   if (aWindow) {
-    doc = aWindow->GetExtantDoc();
+    doc = do_QueryInterface(aWindow->GetExtantDocument());
   }
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                   "DOM", doc,
@@ -2861,7 +2861,7 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
         nsCOMPtr<nsPIDOMWindow> suspendedWindow(do_QueryInterface(topWindow));
         if (suspendedWindow &&
             (suspendedWindow = suspendedWindow->GetCurrentInnerWindow())) {
-          suspendedDoc = suspendedWindow->GetExtantDoc();
+          suspendedDoc = do_QueryInterface(suspendedWindow->GetExtantDocument());
           if (suspendedDoc) {
             suspendedDoc->SuppressEventHandling();
           }

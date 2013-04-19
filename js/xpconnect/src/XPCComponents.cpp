@@ -4934,7 +4934,8 @@ ContentComponentsGetterOp(JSContext *cx, JSHandleObject obj, JSHandleId id,
     nsCOMPtr<nsPIDOMWindow> win =
         do_QueryInterface(nsJSUtils::GetStaticScriptGlobal(obj));
     if (win) {
-        nsCOMPtr<nsIDocument> doc = win->GetExtantDoc();
+        nsCOMPtr<nsIDocument> doc =
+            do_QueryInterface(win->GetExtantDocument());
         if (doc)
             doc->WarnOnceAbout(nsIDocument::eComponents, /* asError = */ true);
     }
