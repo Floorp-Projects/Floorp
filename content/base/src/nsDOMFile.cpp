@@ -260,7 +260,8 @@ nsDOMFileBase::MozSlice(int64_t aStart, int64_t aEnd,
   if (sgo) {
     nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(sgo);
     if (window) {
-      nsCOMPtr<nsIDocument> document = window->GetExtantDoc();
+      nsCOMPtr<nsIDocument> document =
+        do_QueryInterface(window->GetExtantDocument());
       if (document) {
         document->WarnOnceAbout(nsIDocument::eMozSlice);
       }
@@ -275,7 +276,7 @@ nsDOMFileBase::GetInternalStream(nsIInputStream **aStream)
 {
   // Must be overridden
   NS_NOTREACHED("Must override GetInternalStream");
-
+  
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

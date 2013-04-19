@@ -2505,7 +2505,7 @@ WorkerPrivate::Create(JSContext* aCx, JSObject* aObj, WorkerPrivate* aParent,
 
       // If we're called from a window then we can dig out the principal and URI
       // from the document.
-      document = window->GetExtantDoc();
+      document = do_QueryInterface(window->GetExtantDocument());
       if (!document) {
         JS_ReportError(aCx, "No document in this window!");
         return nullptr;
@@ -3114,7 +3114,7 @@ WorkerPrivate::CheckXHRParamsAllowed(nsPIDOMWindow* aWindow)
     return false;
   }
 
-  nsCOMPtr<nsIDocument> doc = aWindow->GetExtantDoc();
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aWindow->GetExtantDocument());
   if (!doc) {
     return false;
   }

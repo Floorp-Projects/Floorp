@@ -265,7 +265,13 @@ static nsIDocument *
 GetDocumentFromWindow(nsIDOMWindow *aWindow)
 {
   nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aWindow);
-  return win ? win->GetExtantDoc() : nullptr;
+  nsCOMPtr<nsIDocument> doc;
+
+  if (win) {
+    doc = do_QueryInterface(win->GetExtantDocument());
+  }
+
+  return doc;
 }
 
 static int32_t
@@ -3251,7 +3257,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
             currentWindow->GetTop(getter_AddRefs(currentTop));
             mDocument->GetWindow()->GetTop(getter_AddRefs(newTop));
             nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(currentWindow);
-            nsCOMPtr<nsIDocument> currentDoc = win->GetExtantDoc();
+            nsCOMPtr<nsIDocument> currentDoc = do_QueryInterface(win->GetExtantDocument());
             if (nsContentUtils::IsChromeDoc(currentDoc) ||
                 (currentTop && newTop && currentTop != newTop)) {
               fm->SetFocusedWindow(mDocument->GetWindow());

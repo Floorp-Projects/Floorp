@@ -11295,7 +11295,7 @@ nsAutoSyncOperation::nsAutoSyncOperation(nsIDocument* aDoc)
       win->GetTop(getter_AddRefs(topWindow));
       nsCOMPtr<nsPIDOMWindow> top = do_QueryInterface(topWindow);
       if (top) {
-        nsCOMPtr<nsIDocument> doc = top->GetExtantDoc();
+        nsCOMPtr<nsIDocument> doc = do_QueryInterface(top->GetExtantDocument());
         MarkDocumentTreeToBeInSyncOperation(doc, &mDocuments);
       }
     }

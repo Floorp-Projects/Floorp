@@ -321,7 +321,7 @@ nsDOMEvent::Initialize(nsISupports* aOwner, JSContext* aCx, JSObject* aObj,
   bool trusted = false;
   nsCOMPtr<nsPIDOMWindow> w = do_QueryInterface(aOwner);
   if (w) {
-    nsCOMPtr<nsIDocument> d = w->GetExtantDoc();
+    nsCOMPtr<nsIDocument> d = do_QueryInterface(w->GetExtantDocument());
     if (d) {
       trusted = nsContentUtils::IsChromeDoc(d);
       nsIPresShell* s = d->GetShell();
@@ -369,7 +369,7 @@ nsDOMEvent::Init(mozilla::dom::EventTarget* aGlobal)
   bool trusted = false;
   nsCOMPtr<nsPIDOMWindow> w = do_QueryInterface(aGlobal);
   if (w) {
-    nsCOMPtr<nsIDocument> d = w->GetExtantDoc();
+    nsCOMPtr<nsIDocument> d = do_QueryInterface(w->GetExtantDocument());
     if (d) {
       trusted = nsContentUtils::IsChromeDoc(d);
       nsIPresShell* s = d->GetShell();
@@ -521,7 +521,7 @@ nsDOMEvent::PreventDefault()
       if (!node) {
         nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(mEvent->currentTarget);
         if (win) {
-          node = win->GetExtantDoc();
+          node = do_QueryInterface(win->GetExtantDocument());
         }
       }
       if (node && !nsContentUtils::IsChromeDoc(node->OwnerDoc())) {
