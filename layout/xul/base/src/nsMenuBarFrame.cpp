@@ -12,7 +12,6 @@
 #include "nsCSSRendering.h"
 #include "nsINameSpaceManager.h"
 #include "nsIDocument.h"
-#include "nsIDOMEventTarget.h"
 #include "nsGkAtoms.h"
 #include "nsMenuFrame.h"
 #include "nsMenuPopupFrame.h"

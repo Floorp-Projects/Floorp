@@ -1296,7 +1296,7 @@ IPCOpenDatabaseHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 nsresult
 IPCOpenDatabaseHelper::GetSuccessResult(JSContext* aCx, jsval* aVal)
 {
-  return WrapNative(aCx, NS_ISUPPORTS_CAST(nsIDOMEventTarget*, mDatabase),
+  return WrapNative(aCx, NS_ISUPPORTS_CAST(EventTarget*, mDatabase),
                     aVal);
 }
 
@@ -1335,7 +1335,7 @@ IPCSetVersionHelper::GetSuccessResult(JSContext* aCx, jsval* aVal)
 {
   mOpenRequest->SetTransaction(mTransaction);
 
-  return WrapNative(aCx, NS_ISUPPORTS_CAST(nsIDOMEventTarget*, mDatabase),
+  return WrapNative(aCx, NS_ISUPPORTS_CAST(EventTarget*, mDatabase),
                     aVal);
 }
 

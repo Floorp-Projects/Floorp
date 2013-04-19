@@ -1070,7 +1070,7 @@ protected:
    * This is used in situations where the anonymous subtree should already have
    * sent a DOMActivate and prevents firing more than once.
    */
-  bool ShouldPreventDOMActivateDispatch(nsIDOMEventTarget* aOriginalTarget);
+  bool ShouldPreventDOMActivateDispatch(EventTarget* aOriginalTarget);
 
   nsCOMPtr<nsIControllers> mControllers;
 

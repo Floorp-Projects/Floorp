@@ -1418,7 +1418,7 @@ TabChild::DispatchMessageManagerMessage(const nsAString& aMessageName,
     // content manipulate the frame state.
     nsRefPtr<nsFrameMessageManager> mm =
       static_cast<nsFrameMessageManager*>(mTabChildGlobal->mMessageManager.get());
-    mm->ReceiveMessage(static_cast<nsIDOMEventTarget*>(mTabChildGlobal),
+    mm->ReceiveMessage(static_cast<EventTarget*>(mTabChildGlobal),
                        aMessageName, false, &cloneData, nullptr, nullptr);
 }
 
@@ -1956,7 +1956,7 @@ TabChild::RecvAsyncMessage(const nsString& aMessage,
     StructuredCloneData cloneData = UnpackClonedMessageDataForChild(aData);
     nsRefPtr<nsFrameMessageManager> mm =
       static_cast<nsFrameMessageManager*>(mTabChildGlobal->mMessageManager.get());
-    mm->ReceiveMessage(static_cast<nsIDOMEventTarget*>(mTabChildGlobal),
+    mm->ReceiveMessage(static_cast<EventTarget*>(mTabChildGlobal),
                        aMessage, false, &cloneData, nullptr, nullptr);
   }
   return true;
@@ -2054,7 +2054,7 @@ TabChild::InitTabChildGlobal(FrameScriptLoading aScriptLoading)
     nsRefPtr<TabChildGlobal> scope = new TabChildGlobal(this);
     mTabChildGlobal = scope;
 
-    nsISupports* scopeSupports = NS_ISUPPORTS_CAST(nsIDOMEventTarget*, scope);
+    nsISupports* scopeSupports = NS_ISUPPORTS_CAST(EventTarget*, scope);
 
     NS_NAMED_LITERAL_CSTRING(globalId, "outOfProcessTabChildGlobal");
     NS_ENSURE_TRUE(InitTabChildGlobalInternal(scopeSupports, globalId), false);
