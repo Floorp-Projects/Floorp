@@ -43,7 +43,7 @@ TCPSocketParentIntermediary.prototype = {
   },
 
   sendArrayBuffer: function(aData) {
-    return this._socket.send(aData);
+    return this._socket.send(aData, 0, aData.byteLength);
   },
 
   classID: Components.ID("{afa42841-a6cb-4a91-912f-93099f6a3d18}"),
