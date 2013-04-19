@@ -1324,38 +1324,6 @@ CodeGeneratorX86Shared::visitGuardClass(LGuardClass *guard)
     return true;
 }
 
-class OutOfLineTruncate : public OutOfLineCodeBase<CodeGeneratorX86Shared>
-{
-    LTruncateDToInt32 *ins_;
-
-  public:
-    OutOfLineTruncate(LTruncateDToInt32 *ins)
-      : ins_(ins)
-    { }
-
-    bool accept(CodeGeneratorX86Shared *codegen) {
-        return codegen->visitOutOfLineTruncate(this);
-    }
-    LTruncateDToInt32 *ins() const {
-        return ins_;
-    }
-};
-
-bool
-CodeGeneratorX86Shared::visitTruncateDToInt32(LTruncateDToInt32 *ins)
-{
-    FloatRegister input = ToFloatRegister(ins->input());
-    Register output = ToRegister(ins->output());
-
-    OutOfLineTruncate *ool = new OutOfLineTruncate(ins);
-    if (!addOutOfLineCode(ool))
-        return false;
-
-    masm.branchTruncateDouble(input, output, ool->entry());
-    masm.bind(ool->rejoin());
-    return true;
-}
-
 bool
 CodeGeneratorX86Shared::visitEffectiveAddress(LEffectiveAddress *ins)
 {
@@ -1364,62 +1332,6 @@ CodeGeneratorX86Shared::visitEffectiveAddress(LEffectiveAddress *ins)
     Register index = ToRegister(ins->index());
     Register output = ToRegister(ins->output());
     masm.leal(Operand(base, index, mir->scale(), mir->displacement()), output);
-    return true;
-}
-
-bool
-CodeGeneratorX86Shared::visitOutOfLineTruncate(OutOfLineTruncate *ool)
-{
-    LTruncateDToInt32 *ins = ool->ins();
-    FloatRegister input = ToFloatRegister(ins->input());
-    FloatRegister temp = ToFloatRegister(ins->tempFloat());
-    Register output = ToRegister(ins->output());
-
-    // Try to convert doubles representing integers within 2^32 of a signed
-    // integer, by adding/subtracting 2^32 and then trying to convert to int32.
-    // This has to be an exact conversion, as otherwise the truncation works
-    // incorrectly on the modified value.
-    Label fail;
-    masm.xorpd(ScratchFloatReg, ScratchFloatReg);
-    masm.ucomisd(input, ScratchFloatReg);
-    masm.j(Assembler::Parity, &fail);
-
-    {
-        Label positive;
-        masm.j(Assembler::Above, &positive);
-
-        static const double shiftNeg = 4294967296.0;
-        masm.loadStaticDouble(&shiftNeg, temp);
-        Label skip;
-        masm.jmp(&skip);
-
-        masm.bind(&positive);
-        static const double shiftPos = -4294967296.0;
-        masm.loadStaticDouble(&shiftPos, temp);
-        masm.bind(&skip);
-    }
-
-    masm.addsd(input, temp);
-    masm.cvttsd2si(temp, output);
-    masm.cvtsi2sd(output, ScratchFloatReg);
-
-    masm.ucomisd(temp, ScratchFloatReg);
-    masm.j(Assembler::Parity, &fail);
-    masm.j(Assembler::Equal, ool->rejoin());
-
-    masm.bind(&fail);
-    {
-        saveVolatile(output);
-
-        masm.setupUnalignedABICall(1, output);
-        masm.passABIArg(input);
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, js::ToInt32));
-        masm.storeCallResult(output);
-
-        restoreVolatile(output);
-    }
-
-    masm.jump(ool->rejoin());
     return true;
 }
 
