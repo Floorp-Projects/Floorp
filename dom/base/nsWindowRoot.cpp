@@ -78,7 +78,7 @@ nsWindowRoot::DispatchEvent(nsIDOMEvent* aEvt, bool *aRetVal)
 {
   nsEventStatus status = nsEventStatus_eIgnore;
   nsresult rv =  nsEventDispatcher::DispatchDOMEvent(
-    static_cast<nsIDOMEventTarget*>(this), nullptr, aEvt, nullptr, &status);
+    static_cast<EventTarget*>(this), nullptr, aEvt, nullptr, &status);
   *aRetVal = (status != nsEventStatus_eConsumeNoDefault);
   return rv;
 }
@@ -89,7 +89,7 @@ nsWindowRoot::DispatchDOMEvent(nsEvent* aEvent,
                                nsPresContext* aPresContext,
                                nsEventStatus* aEventStatus)
 {
-  return nsEventDispatcher::DispatchDOMEvent(static_cast<nsIDOMEventTarget*>(this),
+  return nsEventDispatcher::DispatchDOMEvent(static_cast<EventTarget*>(this),
                                              aEvent, aDOMEvent,
                                              aPresContext, aEventStatus);
 }
@@ -149,7 +149,7 @@ nsWindowRoot::GetListenerManager(bool aCreateIfNotFound)
 {
   if (!mListenerManager && aCreateIfNotFound) {
     mListenerManager =
-      new nsEventListenerManager(static_cast<nsIDOMEventTarget*>(this));
+      new nsEventListenerManager(static_cast<EventTarget*>(this));
   }
 
   return mListenerManager;

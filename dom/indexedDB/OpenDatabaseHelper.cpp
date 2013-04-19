@@ -25,6 +25,7 @@
 #include <algorithm>
 
 using namespace mozilla;
+using namespace mozilla::dom;
 USING_INDEXEDDB_NAMESPACE
 USING_QUOTA_NAMESPACE
 
@@ -2247,7 +2248,7 @@ OpenDatabaseHelper::GetSuccessResult(JSContext* aCx,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  return WrapNative(aCx, NS_ISUPPORTS_CAST(nsIDOMEventTarget*, mDatabase),
+  return WrapNative(aCx, NS_ISUPPORTS_CAST(EventTarget*, mDatabase),
                     aVal);
 }
 
@@ -2382,7 +2383,7 @@ SetVersionHelper::GetSuccessResult(JSContext* aCx,
 
   mOpenRequest->SetTransaction(mTransaction);
 
-  return WrapNative(aCx, NS_ISUPPORTS_CAST(nsIDOMEventTarget*, mDatabase),
+  return WrapNative(aCx, NS_ISUPPORTS_CAST(EventTarget*, mDatabase),
                     aVal);
 }
 
