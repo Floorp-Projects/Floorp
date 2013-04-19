@@ -1405,8 +1405,9 @@ abstract public class GeckoApp
         // check if the last run was exited due to a normal kill while
         // we were in the background, or a more harsh kill while we were
         // active
-        mRestoreMode = getSessionRestoreState(savedInstanceState);
-        if (mRestoreMode == RESTORE_OOM) {
+        if (savedInstanceState != null) {
+            mRestoreMode = RESTORE_OOM;
+
             boolean wasInBackground =
                 savedInstanceState.getBoolean(SAVED_STATE_IN_BACKGROUND, false);
 
@@ -1474,6 +1475,10 @@ abstract public class GeckoApp
         String uri = getURIFromIntent(intent);
         if (uri != null && uri.length() > 0) {
             passedUri = uri;
+        }
+
+        if (mRestoreMode == RESTORE_NONE && shouldRestoreSession()) {
+            mRestoreMode = RESTORE_CRASH;
         }
 
         final boolean isExternalURL = passedUri != null && !passedUri.equals("about:home");
@@ -1709,32 +1714,20 @@ abstract public class GeckoApp
         return mProfile;
     }
 
-    protected int getSessionRestoreState(Bundle savedInstanceState) {
-        if (savedInstanceState != null) {
-            return RESTORE_OOM;
-        }
-
-        final SharedPreferences prefs = GeckoApp.mAppContext.getSharedPreferences(PREFS_NAME, 0);
+    protected boolean shouldRestoreSession() {
+        SharedPreferences prefs = GeckoApp.mAppContext.getSharedPreferences(PREFS_NAME, 0);
 
         // We record crashes in the crash reporter. If sessionstore.js
         // exists, but we didn't flag a crash in the crash reporter, we
         // were probably just force killed by the user, so we shouldn't do
         // a restore.
         if (prefs.getBoolean(PREFS_CRASHED, false)) {
-            ThreadUtils.postToBackgroundThread(new Runnable() {
-                @Override
-                public void run() {
-                    prefs.edit()
-                         .putBoolean(GeckoApp.PREFS_CRASHED, false)
-                         .commit();
-                }
-            });
-
+            prefs.edit().putBoolean(GeckoApp.PREFS_CRASHED, false).commit();
             if (getProfile().shouldRestoreSession()) {
-                return RESTORE_CRASH;
+                return true;
             }
         }
-        return RESTORE_NONE;
+        return false;
     }
 
     /**
