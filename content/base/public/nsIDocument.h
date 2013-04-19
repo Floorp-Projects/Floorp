@@ -1184,7 +1184,7 @@ public:
    * Sanitize the document by resetting all input elements and forms that have
    * autocomplete=off to their default values.
    */
-  virtual nsresult Sanitize() = 0;
+  virtual void Sanitize() = 0;
 
   /**
    * Enumerate all subdocuments.
@@ -2091,7 +2091,7 @@ public:
              nsISupports* aResult, mozilla::ErrorResult& rv);
   // Touch event handlers already on nsINode
   already_AddRefed<nsIDOMTouch>
-    CreateTouch(nsIDOMWindow* aView, nsISupports* aTarget,
+    CreateTouch(nsIDOMWindow* aView, mozilla::dom::EventTarget* aTarget,
                 int32_t aIdentifier, int32_t aPageX, int32_t aPageY,
                 int32_t aScreenX, int32_t aScreenY, int32_t aClientX,
                 int32_t aClientY, int32_t aRadiusX, int32_t aRadiusY,
@@ -2103,7 +2103,7 @@ public:
   already_AddRefed<nsIDOMTouchList>
     CreateTouchList(const mozilla::dom::Sequence<nsRefPtr<nsIDOMTouch> >& aTouches);
 
-  nsHTMLDocument* AsHTMLDocument();
+  virtual nsHTMLDocument* AsHTMLDocument() { return nullptr; }
 
 private:
   uint64_t mWarnedAbout;

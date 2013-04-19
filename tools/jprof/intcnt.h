@@ -17,8 +17,19 @@ public:
     int getCount(int pos);
     int getIndex(int pos);
 
+    IntCount(const IntCount&old)
+    {
+      numInts = old.numInts;
+      if (numInts > 0) {
+        iPair = new IntPair[numInts];
+        for (int i = 0; i < numInts; i++) {
+          iPair[i] = old.iPair[i];
+        }
+      } else {
+        iPair = nullptr;
+      }
+    }
 private:
-    IntCount(const IntCount&); // No copy constructor
 
     int    numInts;
     struct IntPair{int idx; int cnt;} *iPair;

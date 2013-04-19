@@ -139,6 +139,13 @@ class Actions(object):
         self.action_chain.append(['cancel'])
         return self
 
+    def long_press(self, element, time_in_seconds):
+        element = element.id
+        self.action_chain.append(['press', element])
+        self.action_chain.append(['wait', time_in_seconds])
+        self.action_chain.append(['release'])
+        return self
+
     def perform(self):
         self.current_id = self.marionette._send_message('actionChain', 'value', chain=self.action_chain, nextId=self.current_id)
         self.action_chain = []

@@ -691,29 +691,21 @@ nsChildView::ReparentNativeWidget(nsIWidget* aNewParent)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-void
-nsChildView::WillPaint()
+CGContextRef
+nsChildView::GetCGContextForTitlebarDrawing(NSSize aSize)
 {
-  if (!mView || ![mView isKindOfClass:[ChildView class]])
-    return;
-  NSWindow* win = [mView window];
-  if (!win || ![win isKindOfClass:[ToolbarWindow class]])
-    return;
-  if (![(ToolbarWindow*)win drawsContentsIntoWindowFrame])
-    return;
-
-  NSRect titlebarRect = [(ToolbarWindow*)win titlebarRect];
-  gfxSize titlebarSize(titlebarRect.size.width, titlebarRect.size.height);
+  gfxSize titlebarSize(aSize.width, aSize.height);
   if (!mTitlebarSurf || mTitlebarSize != titlebarSize) {
     mTitlebarSize = titlebarSize;
     mTitlebarSurf = new gfxQuartzSurface(titlebarSize, gfxASurface::ImageFormatARGB32);
   }
-  NSRect flippedTitlebarRect = { NSZeroPoint, titlebarRect.size };
-  CGContextRef context = mTitlebarSurf->GetCGContext();
+  return mTitlebarSurf->GetCGContext();
+}
 
-  CGContextSaveGState(context);
-  [(ChildView*)mView drawRect:flippedTitlebarRect inTitlebarContext:context];
-  CGContextRestoreGState(context);
+void
+nsChildView::WillPaint()
+{
+  [mView maybeDrawInTitlebar];
 }
 
 void
@@ -2661,6 +2653,41 @@ NSEvent* gLastDragMouseDownEvent = nil;
     // the backing scale factor and comparing to the old value
     mGeckoChild->BackingScaleFactorChanged();
   }
+}
+
+- (void)maybeDrawInTitlebar
+{
+  if (!mGeckoChild) {
+    return;
+  }
+  ToolbarWindow* win = [self window];
+  if (!win || ![win isKindOfClass:[ToolbarWindow class]]) {
+    return;
+  }
+  if (![win drawsContentsIntoWindowFrame]) {
+    return;
+  }
+
+  // Check the parts of the frame view occupied by the titlebar to see if all
+  // or part of it is "dirty" (needs to be redrawn).  This is effectively the
+  // top 22 pixels of the frame view, and is not the same thing as the
+  // "unified toolbar".  Our ChildView ('self') is the same size as the frame
+  // view and covers it.  Our ChildView has a flipped coordinate system, but
+  // the frame view doesn't.
+  NSRect titlebarRect = [win titlebarRect];
+  NSView* frameView = [[win contentView] superview];
+  NSRect dirtyRect = NSIntersectionRect([frameView _dirtyRect], titlebarRect);
+  // Flip dirtyRect's coordinate system.
+  dirtyRect.origin.y = [frameView bounds].size.height -
+    dirtyRect.origin.y - dirtyRect.size.height;
+  if (NSIsEmptyRect(dirtyRect)) {
+    return;
+  }
+
+  CGContextRef context = mGeckoChild->GetCGContextForTitlebarDrawing(titlebarRect.size);
+  CGContextSaveGState(context);
+  [self drawRect:dirtyRect inTitlebarContext:context];
+  CGContextRestoreGState(context);
 }
 
 - (void)drawTitlebar:(NSRect)aRect inTitlebarContext:(CGContextRef)aContext

@@ -447,7 +447,7 @@ static void startSignalCounter(unsigned long millisec)
     }
 }
 
-static long timerMiliSec = 50;
+static long timerMilliSec = 50;
 
 #if defined(linux)
 static int setupRTCSignals(int hz, struct sigaction *sap)
@@ -569,7 +569,7 @@ void *ucontext)
 #endif
 
     if (!rtcHz)
-        startSignalCounter(timerMiliSec);
+        startSignalCounter(timerMilliSec);
 }
 
 NS_EXPORT_(void) setupProfilingStuff(void)
@@ -621,12 +621,12 @@ NS_EXPORT_(void) setupProfilingStuff(void)
 	    if(delay) {
                 double tmp = strtod(delay+strlen("JP_PERIOD="), NULL);
                 if (tmp>=1e-3) {
-		    timerMiliSec = static_cast<unsigned long>(1000 * tmp);
+		    timerMilliSec = static_cast<unsigned long>(1000 * tmp);
                 } else {
                     fprintf(stderr,
                             "JP_PERIOD of %g less than 0.001 (1ms), using 1ms\n",
                             tmp);
-                    timerMiliSec = 1;
+                    timerMilliSec = 1;
                 }
 	    }
 
@@ -653,7 +653,7 @@ NS_EXPORT_(void) setupProfilingStuff(void)
             if (rtc) {
 #if defined(linux)
                 rtcHz = atol(rtc+strlen("JP_RTC_HZ="));
-                timerMiliSec = 0; /* This makes JP_FIRST work right. */
+                timerMilliSec = 0; /* This makes JP_FIRST work right. */
                 realTime = 1; /* It's the _R_TC and all.  ;) */
 
 #define IS_POWER_OF_TWO(x) (((x) & ((x) - 1)) == 0)
@@ -754,7 +754,7 @@ NS_EXPORT_(void) setupProfilingStuff(void)
                     printf("Jprof: Initialized signal handler and set "
                            "timer for %lu %s, %d s "
                            "initial delay\n",
-                           rtcHz ? rtcHz : timerMiliSec, 
+                           rtcHz ? rtcHz : timerMilliSec, 
                            rtcHz ? "Hz" : "ms",
                            firstDelay);
 
@@ -771,7 +771,7 @@ NS_EXPORT_(void) setupProfilingStuff(void)
 #endif
                         {
                             puts("Jprof: started timer");
-                            startSignalCounter(firstDelay*1000 + timerMiliSec);
+                            startSignalCounter(firstDelay*1000 + timerMilliSec);
                         }
 		    }
 		}

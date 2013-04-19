@@ -227,6 +227,7 @@ public class testHistoryTab extends PixelTest {
         } else {
             mAsserter.ok(false, "waiting for history item", "history item available");
         }
+        contentEventExpecter.unregisterListener();
     }
 
     @Override

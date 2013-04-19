@@ -636,6 +636,41 @@ WrapNewBindingNonWrapperCachedObject(JSContext* cx, JSObject* scope, T* value,
   return JS_WrapValue(cx, vp);
 }
 
+// Create a JSObject wrapping "value", for cases when "value" is a
+// non-wrapper-cached owned object using WebIDL bindings.  "value" must implement a
+// WrapObject() method taking a JSContext, a scope, and a boolean outparam that
+// is true if the JSObject took ownership
+template <class T>
+inline bool
+WrapNewBindingNonWrapperCachedOwnedObject(JSContext* cx, JSObject* scope,
+                                          nsAutoPtr<T>& value, JS::Value* vp)
+{
+  // We try to wrap in the compartment of the underlying object of "scope"
+  JSObject* obj;
+  {
+    // scope for the JSAutoCompartment so that we restore the compartment
+    // before we call JS_WrapValue.
+    Maybe<JSAutoCompartment> ac;
+    if (js::IsWrapper(scope)) {
+      scope = js::CheckedUnwrap(scope, /* stopAtOuter = */ false);
+      if (!scope)
+        return false;
+      ac.construct(cx, scope);
+    }
+
+    bool tookOwnership = false;
+    obj = value->WrapObject(cx, scope, &tookOwnership);
+    if (tookOwnership) {
+      value.forget();
+    }
+  }
+
+  // We can end up here in all sorts of compartments, per above.  Make
+  // sure to JS_WrapValue!
+  *vp = JS::ObjectValue(*obj);
+  return JS_WrapValue(cx, vp);
+}
+
 // Helper for smart pointers (nsAutoPtr/nsRefPtr/nsCOMPtr).
 template <template <typename> class SmartPtr, typename T>
 inline bool

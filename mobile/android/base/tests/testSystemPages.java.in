@@ -73,6 +73,8 @@ public class testSystemPages extends PixelTest {
                 // Wait for the new tab and page to load
                 tabEventExpecter.blockForEvent();
                 contentEventExpecter.blockForEvent();
+                tabEventExpecter.unregisterListener();
+                contentEventExpecter.unregisterListener();
 
                 verifyTabCount(expectedTabCount);
                 verifyUrl(expectedUrls[i]);
@@ -84,6 +86,7 @@ public class testSystemPages extends PixelTest {
                 paintExpecter = mActions.expectPaint(); // Set up listener to catch the page load
                 mSolo.clickOnText("About");
                 waitForPaint(paintExpecter); // Waiting for the page to load
+                paintExpecter.unregisterListener();
 
                 expectedTabCount--; // Decreasing since we don't expect this in a new tab
                 verifyTabCount(expectedTabCount);
