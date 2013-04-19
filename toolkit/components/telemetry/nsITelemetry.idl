@@ -85,6 +85,12 @@ interface nsITelemetry : nsISupports
   [implicit_jscontext]
   readonly attribute jsval debugSlowSQL;
 
+  /**
+   * A number representing the highest number of concurrent threads
+   * reached during this session.
+   */
+  readonly attribute uint32_t maximalNumberOfConcurrentThreads;
+
   /*
    * An array of chrome hang reports. Each element is a hang report represented
    * as an object containing the hang duration, call stack PCs and information
