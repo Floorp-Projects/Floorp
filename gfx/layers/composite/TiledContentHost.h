@@ -184,12 +184,13 @@ public:
 
   virtual TiledLayerComposer* AsTiledLayerComposer() MOZ_OVERRIDE { return this; }
 
-  virtual void EnsureTextureHost(TextureIdentifier aTextureId,
+  virtual bool EnsureTextureHost(TextureIdentifier aTextureId,
                                  const SurfaceDescriptor& aSurface,
                                  ISurfaceAllocator* aAllocator,
                                  const TextureInfo& aTextureInfo) MOZ_OVERRIDE
   {
     MOZ_NOT_REACHED("Does nothing");
+    return false;
   }
 
   virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE
