@@ -18,10 +18,6 @@ var ContextMenuHandler = {
     // Messages we receive from browser
     // Command sent over from browser that only we can handle.
     addMessageListener("Browser:ContextCommand", this, false);
-    // InvokeContextAtPoint is sent to us from browser's selection
-    // overlay when it traps a contextmenu event. In response we
-    // should invoke context menu logic at the point specified.
-    addMessageListener("Browser:InvokeContextAtPoint", this, false);
 
     this.popupNode = null;
   },
