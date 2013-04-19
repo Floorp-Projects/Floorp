@@ -43,8 +43,8 @@ static JSClass self_hosting_global_class = {
     JS_ConvertStub,   NULL
 };
 
-static JSBool
-intrinsic_ToObject(JSContext *cx, unsigned argc, Value *vp)
+JSBool
+js::intrinsic_ToObject(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     RootedValue val(cx, args[0]);
@@ -66,8 +66,8 @@ intrinsic_ToInteger(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-static JSBool
-intrinsic_IsCallable(JSContext *cx, unsigned argc, Value *vp)
+JSBool
+js::intrinsic_IsCallable(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     Value val = args[0];

@@ -438,4 +438,13 @@ LIRGeneratorARM::visitAsmJSLoadFuncPtr(MAsmJSLoadFuncPtr *ins)
     return define(new LAsmJSLoadFuncPtr(useRegister(ins->index()), temp()), ins);
 }
 
+bool
+LIRGeneratorARM::lowerTruncateDToInt32(MTruncateToInt32 *ins)
+{
+    MDefinition *opd = ins->input();
+    JS_ASSERT(opd->type() == MIRType_Double);
+
+    return define(new LTruncateDToInt32(useRegister(opd), LDefinition::BogusTemp()), ins);
+}
+
 //__aeabi_uidiv

@@ -35,6 +35,9 @@ const PR_CREATE_FILE = 0x8;
 const PR_TRUNCATE = 0x20;
 const RW_OWNER = 0600;
 
+const NUMBER_OF_THREADS_TO_LAUNCH = 30;
+var gNumberOfThreadsLaunched = 0;
+
 const BinaryInputStream = Components.Constructor(
   "@mozilla.org/binaryinputstream;1",
   "nsIBinaryInputStream",
@@ -185,6 +188,8 @@ function checkPayload(request, reason, successfulPings) {
   do_check_true(payload.simpleMeasurements.startupInterrupted === 1);
   do_check_eq(payload.simpleMeasurements.shutdownDuration, SHUTDOWN_TIME);
   do_check_eq(payload.simpleMeasurements.savedPings, 1);
+  do_check_true("maximalNumberOfConcurrentThreads" in payload.simpleMeasurements);
+  do_check_true(payload.simpleMeasurements.maximalNumberOfConcurrentThreads >= gNumberOfThreadsLaunched);
 
   do_check_eq(payload.simpleMeasurements.failedProfileLockCount,
               FAILED_PROFILE_LOCK_ATTEMPTS);
@@ -478,6 +483,28 @@ function run_test() {
 
   // Make it look like we've shutdown before.
   write_fake_shutdown_file();
+
+  let currentMaxNumberOfThreads = Telemetry.maximalNumberOfConcurrentThreads;
+  do_check_true(currentMaxNumberOfThreads > 0);
+
+  // Try to augment the maximal number of threads currently launched
+  let threads = [];
+  try {
+    for (let i = 0; i < currentMaxNumberOfThreads + 10; ++i) {
+      threads.push(Services.tm.newThread(0));
+    }
+  } catch (ex) {
+    // If memory is too low, it is possible that not all threads will be launched.
+  }
+  gNumberOfThreadsLaunched = threads.length;
+
+  do_check_true(Telemetry.maximalNumberOfConcurrentThreads >= gNumberOfThreadsLaunched);
+
+  do_register_cleanup(function() {
+    threads.forEach(function(thread) {
+      thread.shutdown();
+    });
+  });
 
   Telemetry.asyncFetchTelemetryData(function () {
     actualTest();

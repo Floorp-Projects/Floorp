@@ -473,9 +473,22 @@ richgriditem .richgrid-item-content {
   background: #fff;
 }
 
-richgriditem[selected] .richgrid-item-content {
-  border: @metro_border_xthick@ solid @selected_color@;
-  padding: @metro_spacing_xxsmall@;
+richgriditem[selected] .richgrid-item-content::after {
+    content: "";
+    pointer-events: none;
+    display: block;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background-image: url(chrome://browser/skin/images/tile-selected-check-hdpi.png);
+    background-origin: border-box;
+    background-position: right 0 top 0;
+    background-repeat: no-repeat;
+    /* scale the image whatever the dppx */
+    background-size: 35px 35px;
+    border: @metro_border_xthick@ solid @selected_color@;
 }
 
 richgriditem .richgrid-icon-container {
@@ -487,18 +500,38 @@ richgriditem .richgrid-icon-box {
   background: #fff;
   opacity: 1.0;
 }
-/* <sfoster> placeholder pinned-state indication, tracked as 854960 */
-richgriditem[pinned] .richgrid-item-content:after {
-    content: "\2193";
-    text-align: center;
-    position: absolute;
-    width: 16px;
-    right: 0;
-    top: 0;
-    outline: 1px solid rgb(255,153,0);
-    background-color: rgba(255,153,0,0.6);
-    color: rgb(153,51,0);
+
+
+/* tile pinned-state indication */
+richgriditem[pinned] .richgrid-item-content::before {
+  pointer-events:none;
+  content: "";
+  display: block;
+  position: absolute;
+  width: 35px;
+  height: 35px;
+  right: 0;
+  left: auto;
+  top: 0;
+  background-image: url(chrome://browser/skin/images/pinned-hdpi.png);
+  background-position: center;
+  background-repeat: no-repeat;
+  /* scale the image whatever the dppx */
+  background-size: 70px 70px;
 }
+
+/* Selected _and_ pinned tiles*/
+richgriditem[selected][pinned] .richgrid-item-content::before {
+  background-position: right -@metro_border_xthick@ top -@metro_border_xthick@;
+  width: 70px;
+  height: 70px;
+}
+
+richgriditem[pinned]:-moz-locale-dir(rtl) .richgrid-item-content::before {
+  left: 0;
+  right: auto;
+}
+
 richgriditem[customColor] {
   color: #f1f1f1;
 }
