@@ -1184,7 +1184,7 @@ public:
    * Sanitize the document by resetting all input elements and forms that have
    * autocomplete=off to their default values.
    */
-  virtual nsresult Sanitize() = 0;
+  virtual void Sanitize() = 0;
 
   /**
    * Enumerate all subdocuments.
