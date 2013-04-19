@@ -474,7 +474,7 @@ richgriditem .richgrid-item-content {
 }
 
 richgriditem[selected] .richgrid-item-content::after {
-    richgrid-item-content: "";
+    content: "";
     pointer-events: none;
     display: block;
     position: absolute;
