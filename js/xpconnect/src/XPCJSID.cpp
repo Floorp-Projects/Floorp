@@ -843,9 +843,7 @@ nsJSCID::HasInstance(nsIXPConnectWrappedNative *wrapper,
         obj = FindObjectForHasInstance(cx, obj);
         if (!obj || !IS_WRAPPER_CLASS(js::GetObjectClass(obj)))
             return rv;
-        if (IS_SLIM_WRAPPER_OBJECT(obj))
-            ci = GetSlimWrapperProto(obj)->GetClassInfo();
-        else if (XPCWrappedNative* other_wrapper = XPCWrappedNative::Get(obj))
+        if (XPCWrappedNative* other_wrapper = XPCWrappedNative::Get(obj))
             ci = other_wrapper->GetClassInfo();
 
         // We consider CID equality to be the thing that matters here.
