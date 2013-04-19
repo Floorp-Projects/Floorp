@@ -22,7 +22,6 @@
 #include "nsWeakReference.h"
 #include "nsIScriptSecurityManager.h"
 #ifndef MOZ_DISABLE_CRYPTOLEGACY
-#include "nsIDOMEventTarget.h"
 #include "nsSmartCardMonitor.h"
 #endif
 #include "nsINSSErrorsService.h"

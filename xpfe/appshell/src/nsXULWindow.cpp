@@ -29,7 +29,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMEventTarget.h"
 #include "nsIDOMXULElement.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMScreen.h"
@@ -53,6 +52,7 @@
 #include "nsPresContext.h"
 #include "nsContentUtils.h"
 #include "nsWebShellWindow.h" // get rid of this one, too...
+#include "nsDOMEvent.h"
 
 #include "prenv.h"
 #include "mozilla/Preferences.h"
@@ -225,20 +225,17 @@ NS_IMETHODIMP nsXULWindow::SetZLevel(uint32_t aLevel)
   nsCOMPtr<nsIContentViewer> cv;
   mDocShell->GetContentViewer(getter_AddRefs(cv));
   if (cv) {
-    nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(cv->GetDocument());
-    if (domDoc) {
-      nsCOMPtr<nsIDOMEvent> event;
-      domDoc->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
+    nsCOMPtr<nsIDocument> doc = cv->GetDocument();
+    if (doc) {
+      ErrorResult rv;
+      nsRefPtr<nsDOMEvent> event = doc->CreateEvent(NS_LITERAL_STRING("Events"),rv);
       if (event) {
         event->InitEvent(NS_LITERAL_STRING("windowZLevel"), true, false);
 
         event->SetTrusted(true);
 
-        nsCOMPtr<nsIDOMEventTarget> targ = do_QueryInterface(domDoc);
-        if (targ) {
-          bool defaultActionEnabled;
-          targ->DispatchEvent(event, &defaultActionEnabled);
-        }
+        bool defaultActionEnabled;
+        doc->DispatchEvent(event, &defaultActionEnabled);
       }
     }
   }
