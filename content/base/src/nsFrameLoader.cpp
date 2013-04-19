@@ -1095,8 +1095,10 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
                SameCOMIdentity(otherChromeEventHandler, otherContent),
                "How did that happen, exactly?");
 
-  nsCOMPtr<nsIDocument> ourChildDocument = ourWindow->GetExtantDoc();
-  nsCOMPtr<nsIDocument> otherChildDocument = otherWindow ->GetExtantDoc();
+  nsCOMPtr<nsIDocument> ourChildDocument =
+    do_QueryInterface(ourWindow->GetExtantDocument());
+  nsCOMPtr<nsIDocument> otherChildDocument =
+    do_QueryInterface(otherWindow->GetExtantDocument());
   if (!ourChildDocument || !otherChildDocument) {
     // This shouldn't be happening
     return NS_ERROR_NOT_IMPLEMENTED;

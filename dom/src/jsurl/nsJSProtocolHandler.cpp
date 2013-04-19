@@ -641,7 +641,8 @@ nsJSChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext)
         }
     }
 
-    mDocumentOnloadBlockedOn = mOriginalInnerWindow->GetExtantDoc();
+    mDocumentOnloadBlockedOn =
+        do_QueryInterface(mOriginalInnerWindow->GetExtantDocument());
     if (mDocumentOnloadBlockedOn) {
         // If we're a document channel, we need to actually block onload on our
         // _parent_ document.  This is because we don't actually set our
@@ -666,7 +667,7 @@ nsJSChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext)
     if (mIsAsync) {
         // post an event to do the rest
         method = &nsJSChannel::EvaluateScript;
-    } else {
+    } else {   
         EvaluateScript();
         if (mOpenedStreamChannel) {
             // That will handle notifying things

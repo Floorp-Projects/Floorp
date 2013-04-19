@@ -2143,7 +2143,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
   }
 
   NS_ASSERTION(!GetCurrentInnerWindow() ||
-               GetCurrentInnerWindow()->GetExtantDoc() == mDoc,
+               GetCurrentInnerWindow()->GetExtantDocument() == mDocument,
                "Uh, mDocument doesn't match the current inner window "
                "document!");
 
@@ -6137,7 +6137,7 @@ nsGlobalWindow::SetResizable(bool aResizable)
 static void
 ReportUseOfDeprecatedMethod(nsGlobalWindow* aWindow, const char* aWarning)
 {
-  nsCOMPtr<nsIDocument> doc = aWindow->GetExtantDoc();
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aWindow->GetExtantDocument());
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                   "DOM Events", doc,
                                   nsContentUtils::eDOM_PROPERTIES,
@@ -6200,7 +6200,7 @@ bool IsPopupBlocked(nsIDOMDocument* aDoc)
 
 /* static */
 void 
-nsGlobalWindow::FirePopupBlockedEvent(nsIDocument* aDoc,
+nsGlobalWindow::FirePopupBlockedEvent(nsIDOMDocument* aDoc,
                                       nsIDOMWindow *aRequestingWindow, nsIURI *aPopupURI,
                                       const nsAString &aPopupWindowName,
                                       const nsAString &aPopupWindowFeatures)
@@ -6208,9 +6208,9 @@ nsGlobalWindow::FirePopupBlockedEvent(nsIDocument* aDoc,
   if (aDoc) {
     // Fire a "DOMPopupBlocked" event so that the UI can hear about
     // blocked popups.
-    ErrorResult rv;
-    nsCOMPtr<nsIDOMEvent> event =
-      aDoc->CreateEvent(NS_LITERAL_STRING("PopupBlockedEvents"), rv);
+    nsCOMPtr<nsIDOMEvent> event;
+    aDoc->CreateEvent(NS_LITERAL_STRING("PopupBlockedEvents"),
+                      getter_AddRefs(event));
     if (event) {
       nsCOMPtr<nsIDOMPopupBlockedEvent> pbev(do_QueryInterface(event));
       pbev->InitPopupBlockedEvent(NS_LITERAL_STRING("DOMPopupBlocked"),
@@ -6219,8 +6219,9 @@ nsGlobalWindow::FirePopupBlockedEvent(nsIDocument* aDoc,
                                   aPopupWindowFeatures);
       event->SetTrusted(true);
 
+      nsCOMPtr<nsIDOMEventTarget> targ(do_QueryInterface(aDoc));
       bool defaultActionEnabled;
-      aDoc->DispatchEvent(event, &defaultActionEnabled);
+      targ->DispatchEvent(event, &defaultActionEnabled);
     }
   }
 }
@@ -6361,11 +6362,9 @@ nsGlobalWindow::FireAbuseEvents(bool aBlocked, bool aWindow,
                 getter_AddRefs(popupURI));
 
   // fire an event chock full of informative URIs
-  if (aBlocked) {
-    nsCOMPtr<nsIDocument> topDocument = do_QueryInterface(topDoc);
-    FirePopupBlockedEvent(topDocument, this, popupURI, aPopupWindowName,
+  if (aBlocked)
+    FirePopupBlockedEvent(topDoc, this, popupURI, aPopupWindowName,
                           aPopupWindowFeatures);
-  }
   if (aWindow)
     FirePopupWindowEvent(topDoc);
 }
@@ -6892,7 +6891,7 @@ nsGlobalWindow::PostMessageMoz(const JS::Value& aMessage,
   }
   else if (callerInnerWin) {
     // otherwise use the URI of the document to generate origin
-    nsCOMPtr<nsIDocument> doc = callerInnerWin->GetExtantDoc();
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(callerInnerWin->GetExtantDocument());
     if (!doc)
       return NS_OK;
     callerOuterURI = doc->GetDocumentURI();
@@ -7212,7 +7211,7 @@ nsGlobalWindow::EnterModalState()
   if (topWin->mModalStateDepth == 0) {
     NS_ASSERTION(!mSuspendedDoc, "Shouldn't have mSuspendedDoc here!");
 
-    mSuspendedDoc = topWin->GetExtantDoc();
+    mSuspendedDoc = do_QueryInterface(topWin->GetExtantDocument());
     if (mSuspendedDoc && mSuspendedDoc->EventHandlingSuppressed()) {
       mSuspendedDoc->SuppressEventHandling();
     } else {
@@ -7325,7 +7324,8 @@ nsGlobalWindow::LeaveModalState(nsIDOMWindow *aCallerWin)
       NS_WARNING("failed to dispatch pending timeout runnable");
 
     if (mSuspendedDoc) {
-      nsCOMPtr<nsIDocument> currentDoc = topWin->GetExtantDoc();
+      nsCOMPtr<nsIDocument> currentDoc =
+        do_QueryInterface(topWin->GetExtantDocument());
       mSuspendedDoc->UnsuppressEventHandlingAndFireEvents(currentDoc == mSuspendedDoc);
       mSuspendedDoc = nullptr;
     }
@@ -7815,7 +7815,7 @@ nsGlobalWindow::UpdateCommands(const nsAString& anAction)
     return NS_OK;
 
   nsCOMPtr<nsIDOMXULDocument> xulDoc =
-    do_QueryInterface(rootWindow->GetExtantDoc());
+    do_QueryInterface(rootWindow->GetExtantDocument());
   // See if we contain a XUL document.
   if (xulDoc) {
     // Retrieve the command dispatcher and call updateCommands on it.
@@ -9960,7 +9960,10 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
 #ifdef DEBUG_jst
       {
         nsCOMPtr<nsPIDOMWindow> pidomwin(do_QueryInterface(*aReturn));
-        NS_ASSERTION(pidomwin->GetExtantDoc(), "No document in new window!!!");
+
+        nsIDOMDocument *temp = pidomwin->GetExtantDocument();
+
+        NS_ASSERTION(temp, "No document in new window!!!");
       }
 #endif
 
@@ -9968,7 +9971,7 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
       (*aReturn)->GetDocument(getter_AddRefs(doc));
     }
   }
-
+    
   if (checkForPopup) {
     if (abuseLevel >= openControlled) {
       nsGlobalWindow *opened = static_cast<nsGlobalWindow *>(*aReturn);

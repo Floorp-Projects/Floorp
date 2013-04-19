@@ -7048,7 +7048,10 @@ nsDocShell::CanSavePresentation(uint32_t aLoadType,
 
     // If the document does not want its presentation cached, then don't.
     nsCOMPtr<nsIDocument> doc = mScriptGlobal->GetExtantDoc();
-    return doc && doc->CanSavePresentation(aNewRequest);
+    if (!doc || !doc->CanSavePresentation(aNewRequest))
+        return false;
+
+    return true;
 }
 
 void
@@ -8674,7 +8677,8 @@ nsDocShell::InternalLoad(nsIURI * aURI,
             // document in |newWin|, if any.
             nsCOMPtr<nsPIDOMWindow> piNewWin = do_QueryInterface(newWin);
             if (piNewWin) {
-                nsCOMPtr<nsIDocument> newDoc = piNewWin->GetExtantDoc();
+                nsCOMPtr<nsIDocument> newDoc =
+                    do_QueryInterface(piNewWin->GetExtantDocument());
                 if (!newDoc || newDoc->IsInitialDocument()) {
                     isNewWindow = true;
                     aFlags |= INTERNAL_LOAD_FLAGS_FIRST_LOAD;

@@ -772,7 +772,8 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
       nsCOMPtr<nsIDocShellTreeItem> callerItem = GetCallerTreeItem(parentItem);
       nsCOMPtr<nsPIDOMWindow> callerWin = do_GetInterface(callerItem);
       if (callerWin) {
-        nsCOMPtr<nsIDocument> doc = callerWin->GetExtantDoc();
+        nsCOMPtr<nsIDocument> doc =
+          do_QueryInterface(callerWin->GetExtantDocument());
         if (doc) {
           newMuCV->SetDefaultCharacterSet(doc->GetDocumentCharacterSet());
         }
@@ -910,8 +911,8 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
            Also using GetDocument to force document creation seems to
            screw up focus in the hidden window; see bug 36016.
         */
-        nsCOMPtr<nsIDocument> doc = w->GetExtantDoc();
-        if (doc) {
+        nsCOMPtr<nsIDocument> doc(do_QueryInterface(w->GetExtantDocument()));
+        if (doc) { 
           // Set the referrer
           loadInfo->SetReferrer(doc->GetDocumentURI());
         }
@@ -1798,7 +1799,8 @@ nsWindowWatcher::ReadyOpenedDocShellItem(nsIDocShellTreeItem *aOpenedItem,
         NS_ASSERTION(!chan, "Why is there a document channel?");
 #endif
 
-        nsCOMPtr<nsIDocument> doc = piOpenedWindow->GetExtantDoc();
+        nsCOMPtr<nsIDocument> doc =
+          do_QueryInterface(piOpenedWindow->GetExtantDocument());
         if (doc) {
           doc->SetIsInitialDocument(true);
         }

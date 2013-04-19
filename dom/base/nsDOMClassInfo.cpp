@@ -3284,7 +3284,7 @@ nsWindowSH::GlobalScopePolluterNewResolve(JSContext *cx, JSHandleObject obj,
   // The rest of this function is for HTML documents only.
   //
   nsCOMPtr<nsIHTMLDocument> htmlDoc =
-    do_QueryInterface(win->GetExtantDoc());
+    do_QueryInterface(win->GetExtantDocument());
   if (!htmlDoc)
     return true;
   nsHTMLDocument *document = static_cast<nsHTMLDocument*>(htmlDoc.get());
@@ -6216,7 +6216,7 @@ nsDocumentSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     return NS_OK;
   }
 
-  nsIDocument* currentDoc = win->GetExtantDoc();
+  nsIDOMDocument* currentDoc = win->GetExtantDocument();
 
   if (SameCOMIdentity(doc, currentDoc)) {
     jsval winVal;
