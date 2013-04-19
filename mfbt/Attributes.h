@@ -32,13 +32,22 @@
  * otherwise.  This is only a (much) stronger version of the MOZ_INLINE hint:
  * compilers are not guaranteed to respect it (although they're much more likely
  * to do so).
+ *
+ * The MOZ_ALWAYS_INLINE_EVEN_DEBUG macro is yet stronger. It tells the
+ * compiler to inline even in DEBUG builds. It should be used very rarely.
  */
 #if defined(_MSC_VER)
-#  define MOZ_ALWAYS_INLINE     __forceinline
+#  define MOZ_ALWAYS_INLINE_EVEN_DEBUG     __forceinline
 #elif defined(__GNUC__)
-#  define MOZ_ALWAYS_INLINE     __attribute__((always_inline)) MOZ_INLINE
+#  define MOZ_ALWAYS_INLINE_EVEN_DEBUG     __attribute__((always_inline)) MOZ_INLINE
 #else
+#  define MOZ_ALWAYS_INLINE_EVEN_DEBUG     MOZ_INLINE
+#endif
+
+#if defined(DEBUG)
 #  define MOZ_ALWAYS_INLINE     MOZ_INLINE
+#else
+#  define MOZ_ALWAYS_INLINE     MOZ_ALWAYS_INLINE_EVEN_DEBUG
 #endif
 
 /*
