@@ -385,11 +385,7 @@ AlphaBoxBlur::AlphaBoxBlur(const Rect& aRect,
     // in our blurring code.
     CheckedInt<int32_t> size = CheckedInt<int32_t>(mStride) * mRect.height + 3;
     if (size.isValid()) {
-      mData = new (nothrow) uint8_t[size.value()];
-      if (!mData) {
-        return;
-      }
-
+      mData = new uint8_t[size.value()];
       memset(mData, 0, size.value());
     }
   }
