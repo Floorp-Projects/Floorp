@@ -786,13 +786,6 @@ BluetoothHfpManager::ReceiveSocketData(BluetoothSocket* aSocket,
       goto respond_with_ok;
     }
 
-    char chld = atCommandValues[0][0];
-    if (chld < '0' || chld > '4') {
-      NS_WARNING("Wrong value of command [AT+CHLD]");
-      SendLine("ERROR");
-      return;
-    }
-
     /**
      * The following two cases are supported:
      * AT+CHLD=1 - Releases active calls and accepts the other (held or
@@ -805,19 +798,26 @@ BluetoothHfpManager::ReceiveSocketData(BluetoothSocket* aSocket,
      * Please see 4.33.2 in Bluetooth hands-free profile 1.6 for more
      * information.
      */
-
-    // No idx shall be included
+    char chld = atCommandValues[0][0];
+    bool valid = true;
     if (atCommandValues[0].Length() > 1) {
-      SendLine("ERROR");
-      return;
-    }
-
-    if (chld == '1') {
+      NS_WARNING("No index should be included in command [AT+CHLD]");
+      valid = false;
+    } else if (chld == '0' || chld == '3' || chld == '4') {
+      NS_WARNING("The value of command [AT+CHLD] is not supported");
+      valid = false;
+    } else if (chld == '1') {
       NotifyDialer(NS_LITERAL_STRING("CHUP+ATA"));
     } else if (chld == '2') {
       NotifyDialer(NS_LITERAL_STRING("CHLD+ATA"));
     } else {
-      NS_WARNING("Not handling chld value");
+      NS_WARNING("Wrong value of command [AT+CHLD]");
+      valid = false;
+    }
+
+    if (!valid) {
+      SendLine("ERROR");
+      return;
     }
   } else if (msg.Find("AT+VGS=") != -1) {
     // Adjust volume by headset
