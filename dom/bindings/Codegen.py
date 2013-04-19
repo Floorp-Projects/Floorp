@@ -6623,6 +6623,11 @@ class CGDescriptor(CGThing):
 
         assert not descriptor.concrete or descriptor.interface.hasInterfacePrototypeObject()
 
+        if descriptor.nativeOwnership == 'owned' and (
+           descriptor.interface.hasChildInterfaces() or
+           descriptor.interface.parent):
+           raise TypeError("Owned interface cannot have a parent or children")
+
         self._deps = descriptor.interface.getDeps()
 
         cgThings = []
