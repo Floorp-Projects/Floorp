@@ -191,9 +191,8 @@ IndexedDatabaseManager::FireWindowOnError(nsPIDOMWindow* aOwner,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMEventTarget> eventTarget;
-  rv = aVisitor.mDOMEvent->GetTarget(getter_AddRefs(eventTarget));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<EventTarget> eventTarget =
+    aVisitor.mDOMEvent->InternalDOMEvent()->GetTarget();
 
   nsCOMPtr<nsIIDBRequest> strongRequest = do_QueryInterface(eventTarget);
   IDBRequest* request = static_cast<IDBRequest*>(strongRequest.get());
