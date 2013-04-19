@@ -18,18 +18,6 @@
     </content>
 
     <implementation implements="nsIDOMEventListener">
-      <constructor>
-        <![CDATA[
-          this._selectionOverlay.addEventListener('contextmenu', this);
-        ]]>
-      </constructor>
-
-      <destructor>
-        <![CDATA[
-          this._selectionOverlay.removeEventListener('contextmenu', this);
-        ]]>
-      </destructor>
-
       <field name="_selectionOverlay" readonly="true">document.getAnonymousElementByAttribute(this, "anonid", "selection-overlay-inner").parentNode;</field>
       <field name="_selectionDebugOverlay" readonly="true">document.getAnonymousElementByAttribute(this, "anonid", "selection-overlay-debug");</field>
 
