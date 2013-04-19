@@ -255,6 +255,8 @@ public:
     return nsIDocument::GetLocation();
   }
 
+  virtual nsHTMLDocument* AsHTMLDocument() { return this; }
+
 protected:
   nsresult GetBodySize(int32_t* aWidth,
                        int32_t* aHeight);
