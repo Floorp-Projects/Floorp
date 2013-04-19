@@ -7992,9 +7992,7 @@ ${nativeType}::${nativeType}()
 ${nativeType}::~${nativeType}()
 {
 }
-"""
-        if self.descriptor.wrapperCache:
-            classImpl += """
+
 JSObject*
 ${nativeType}::WrapObject(JSContext* aCx, JSObject* aScope)
 {
@@ -8002,16 +8000,6 @@ ${nativeType}::WrapObject(JSContext* aCx, JSObject* aScope)
 }
 
 """
-        else:
-            classImpl += """
-JSObject*
-${nativeType}::WrapObject(JSContext* aCx, JSObject* aScope)
-{
-  return ${ifaceName}Binding::Wrap(aCx, aScope, this);
-}
-
-"""
-
         return string.Template(classImpl).substitute(
             { "ifaceName": self.descriptor.name,
               "nativeType": self.descriptor.nativeType.split('::')[-1] }
