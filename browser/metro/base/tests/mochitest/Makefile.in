@@ -34,6 +34,13 @@ BROWSER_TESTS = \
   browser_tabs.js \
   $(NULL)
 
+ifndef MOZ_DEBUG
+BROWSER_TESTS += \
+  browser_selection_basic.js \
+  browser_selection_basic.html \
+  $(NULL)
+endif
+
 BROWSER_TEST_RESOURCES = \
   res/image01.png \
   $(NULL)
