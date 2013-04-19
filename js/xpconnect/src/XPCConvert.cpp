@@ -887,17 +887,6 @@ XPCConvert::NativeInterface2JSObject(jsval* d,
             wrapper->FindTearOff(iface, false, &rv);
         else
             rv = NS_OK;
-    } else {
-        NS_ASSERTION(IS_SLIM_WRAPPER(flat),
-                     "What kind of wrapper is this?");
-
-        SLIM_LOG(("***** morphing from XPCConvert::NativeInterface2JSObject"
-                  "(%p)\n",
-                  static_cast<nsISupports*>(xpc_GetJSPrivate(flat))));
-
-        rv = XPCWrappedNative::Morph(flat, iface, cache,
-                                     getter_AddRefs(strongWrapper));
-        wrapper = strongWrapper;
     }
 
     if (NS_FAILED(rv) && pErr)

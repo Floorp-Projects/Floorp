@@ -505,7 +505,6 @@ nsJSIID::HasInstance(nsIXPConnectWrappedNative *wrapper,
 
         NS_ASSERTION(obj, "when is an object not an object?");
 
-        nsISupports *identity = nullptr;
         // is this really a native xpcom object with a wrapper?
         const nsIID* iid;
         mInfo->GetIIDShared(&iid);
@@ -514,30 +513,16 @@ nsJSIID::HasInstance(nsIXPConnectWrappedNative *wrapper,
         if (!obj)
             return NS_OK;
 
-        if (IS_SLIM_WRAPPER(obj)) {
-            XPCWrappedNativeProto* proto = GetSlimWrapperProto(obj);
-            if (proto->GetSet()->HasInterfaceWithAncestor(iid)) {
-                *bp = true;
+        if (IsDOMObject(obj)) {
+            // Not all DOM objects implement nsISupports. But if they don't,
+            // there's nothing to do in this HasInstance hook.
+            nsISupports *identity = UnwrapDOMObjectToISupports(obj);
+            if (!identity)
                 return NS_OK;
-            }
-
-#ifdef DEBUG_slimwrappers
-            char foo[NSID_LENGTH];
-            iid->ToProvidedString(foo);
-            SLIM_LOG_WILL_MORPH_FOR_PROP(cx, obj, foo);
-#endif
-            if (!MorphSlimWrapper(cx, obj))
-                return NS_ERROR_FAILURE;
-        } else if (IsDOMObject(obj)) {
-              // Not all DOM objects implement nsISupports. But if they don't,
-              // there's nothing to do in this HasInstance hook.
-              identity = UnwrapDOMObjectToISupports(obj);
-              if (!identity)
-                  return NS_OK;
-              nsCOMPtr<nsISupports> supp;
-              identity->QueryInterface(*iid, getter_AddRefs(supp));
-              *bp = supp;
-              return NS_OK;
+            nsCOMPtr<nsISupports> supp;
+            identity->QueryInterface(*iid, getter_AddRefs(supp));
+            *bp = supp;
+            return NS_OK;
         }
 
         MOZ_ASSERT(IS_WN_WRAPPER(obj));

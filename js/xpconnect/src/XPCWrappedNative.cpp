@@ -532,15 +532,8 @@ XPCWrappedNative::GetNewOrUsed(xpcObjectHelper& helper,
 
         if (cache) {
             RootedObject cached(cx, cache->GetWrapper());
-            if (cached) {
-                if (IS_SLIM_WRAPPER_OBJECT(cached)) {
-                    if (NS_FAILED(XPCWrappedNative::Morph(cached,
-                          Interface, cache, getter_AddRefs(wrapper))))
-                        return NS_ERROR_FAILURE;
-                } else {
-                    wrapper = static_cast<XPCWrappedNative*>(xpc_GetJSPrivate(cached));
-                }
-            }
+            if (cached)
+                wrapper = static_cast<XPCWrappedNative*>(xpc_GetJSPrivate(cached));
         } else {
             // scoped lock
             XPCAutoLock lock(mapLock);
@@ -713,67 +706,6 @@ FinishCreate(XPCWrappedNativeScope* Scope,
 
 // static
 nsresult
-XPCWrappedNative::Morph(HandleObject existingJSObject,
-                        XPCNativeInterface* Interface,
-                        nsWrapperCache *cache,
-                        XPCWrappedNative** resultWrapper)
-{
-    AutoJSContext cx;
-    NS_ASSERTION(IS_SLIM_WRAPPER(existingJSObject),
-                 "Trying to morph a JSObject that's not a slim wrapper?");
-
-    nsISupports *identity =
-        static_cast<nsISupports*>(xpc_GetJSPrivate(existingJSObject));
-    XPCWrappedNativeProto *proto = GetSlimWrapperProto(existingJSObject);
-
-#if DEBUG
-    // FIXME Can't assert this until
-    //       https://bugzilla.mozilla.org/show_bug.cgi?id=343141 is fixed.
-#if 0
-    if (proto->GetScriptableInfo()->GetFlags().WantPreCreate()) {
-        JSObject* parent = JS_GetParent(existingJSObject);
-        JSObject* plannedParent = parent;
-        nsresult rv =
-            proto->GetScriptableInfo()->GetCallback()->PreCreate(identity, ccx,
-                                                                 parent,
-                                                                 &parent);
-        if (NS_FAILED(rv))
-            return rv;
-
-        NS_ASSERTION(parent == plannedParent,
-                     "PreCreate returned a different parent");
-    }
-#endif
-#endif
-
-    nsRefPtr<XPCWrappedNative> wrapper = new XPCWrappedNative(dont_AddRef(identity), proto);
-    if (!wrapper)
-        return NS_ERROR_FAILURE;
-
-    NS_ASSERTION(!xpc::WrapperFactory::IsXrayWrapper(js::GetObjectParent(existingJSObject)),
-                 "Xray wrapper being used to parent XPCWrappedNative?");
-
-    // We use an AutoMarkingPtr here because it is possible for JS gc to happen
-    // after we have Init'd the wrapper but *before* we add it to the hashtable.
-    // This would cause the mSet to get collected and we'd later crash. I've
-    // *seen* this happen.
-    AutoMarkingWrappedNativePtr wrapperMarker(cx, wrapper);
-
-    JSAutoCompartment ac(cx, existingJSObject);
-    if (!wrapper->Init(existingJSObject))
-        return NS_ERROR_FAILURE;
-
-    nsresult rv;
-    if (Interface && !wrapper->FindTearOff(Interface, false, &rv)) {
-        NS_ASSERTION(NS_FAILED(rv), "returning NS_OK on failure");
-        return rv;
-    }
-
-    return FinishCreate(wrapper->GetScope(), Interface, cache, wrapper, resultWrapper);
-}
-
-// static
-nsresult
 XPCWrappedNative::GetUsedOnly(nsISupports* Object,
                               XPCWrappedNativeScope* Scope,
                               XPCNativeInterface* Interface,
@@ -787,17 +719,11 @@ XPCWrappedNative::GetUsedOnly(nsISupports* Object,
     CallQueryInterface(Object, &cache);
     if (cache) {
         RootedObject flat(cx, cache->GetWrapper());
-        if (flat && IS_SLIM_WRAPPER_OBJECT(flat) && !MorphSlimWrapper(cx, flat))
-           return NS_ERROR_FAILURE;
-
-        wrapper = flat ?
-                  static_cast<XPCWrappedNative*>(xpc_GetJSPrivate(flat)) :
-                  nullptr;
-
-        if (!wrapper) {
+        if (!flat) {
             *resultWrapper = nullptr;
             return NS_OK;
         }
+        wrapper = static_cast<XPCWrappedNative*>(xpc_GetJSPrivate(flat));
         NS_ADDREF(wrapper);
     } else {
         nsCOMPtr<nsISupports> identity = do_QueryInterface(Object);
@@ -1067,10 +993,6 @@ XPCWrappedNative::GatherScriptableCreateInfo(nsISupports* obj,
     return sciProto;
 }
 
-#ifdef DEBUG_slimwrappers
-static uint32_t sMorphedSlimWrappers;
-#endif
-
 JSBool
 XPCWrappedNative::Init(HandleObject parent,
                        const XPCNativeScriptableCreateInfo* sci)
@@ -1130,32 +1052,11 @@ XPCWrappedNative::Init(HandleObject parent,
 }
 
 JSBool
-XPCWrappedNative::Init(JSObject *existingJSObject)
-{
-    // Set up the private to point to the WN.
-    JS_SetPrivate(existingJSObject, this);
-
-    // Officially mark us as non-slim.
-    MorphMultiSlot(existingJSObject);
-
-    mScriptableInfo = GetProto()->GetScriptableInfo();
-    mFlatJSObject = existingJSObject;
-
-    SLIM_LOG(("----- %i morphed slim wrapper (mFlatJSObject: %p, %p)\n",
-              ++sMorphedSlimWrappers, mFlatJSObject,
-              static_cast<nsISupports*>(xpc_GetJSPrivate(mFlatJSObject))));
-
-    return FinishInit();
-}
-
-JSBool
 XPCWrappedNative::FinishInit()
 {
     AutoJSContext cx;
 
     // For all WNs, we want to make sure that the multislot starts out as null.
-    // This happens explicitly when morphing a slim wrapper, but we need to
-    // make sure it happens in the other cases too.
     JS_SetReservedSlot(mFlatJSObject, WRAPPER_MULTISLOT, JSVAL_NULL);
 
     // This reference will be released when mFlatJSObject is finalized.
@@ -1691,12 +1592,6 @@ RescueOrphans(HandleObject obj)
             const DOMClass* domClass = GetDOMClass(obj);
             parentObj = domClass->mGetParent(cx, obj);
         }
-    }
-
-    // Morph any slim wrappers, lest they confuse us.
-    if (IS_SLIM_WRAPPER(parentObj)) {
-        bool ok = MorphSlimWrapper(cx, parentObj);
-        NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
     }
 
     // Recursively fix up orphans on the parent chain.
@@ -3552,19 +3447,4 @@ XPCJSObjectHolder::newHolder(JSObject* obj)
         return nullptr;
     }
     return new XPCJSObjectHolder(obj);
-}
-
-JSBool
-MorphSlimWrapper(JSContext *cx, HandleObject obj)
-{
-    SLIM_LOG(("***** morphing from MorphSlimToWrapper (%p, %p)\n",
-              obj, static_cast<nsISupports*>(xpc_GetJSPrivate(obj))));
-
-    nsISupports* object = static_cast<nsISupports*>(xpc_GetJSPrivate(obj));
-    nsWrapperCache *cache = nullptr;
-    CallQueryInterface(object, &cache);
-    nsRefPtr<XPCWrappedNative> wn;
-    nsresult rv = XPCWrappedNative::Morph(obj, nullptr, cache,
-                                          getter_AddRefs(wn));
-    return NS_SUCCEEDED(rv);
 }
