@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -24,21 +26,21 @@ namespace gfx {
  * would be obtained using a different (rotated) set of axes.  A triple
  * box blur is a very close approximation of a Gaussian.
  *
- * Creates an 8-bit alpha channel context for callers to draw in,
- * spreads the contents of that context, and blurs the contents.
+ * This is a "service" class; the constructors set up all the information
+ * based on the values and compute the minimum size for an 8-bit alpha
+ * channel context.
+ * The callers are responsible for creating and managing the backing surface
+ * and passing the pointer to the data to the Blur() method.  This class does
+ * not retain the pointer to the data outside of the Blur() call.
  *
  * A spread N makes each output pixel the maximum value of all source
  * pixels within a square of side length 2N+1 centered on the output pixel.
- *
- * A temporary surface is created in the Init function. The caller then draws
- * any desired content onto the context acquired through GetContext, and lastly
- * calls Paint to apply the blurred content as an alpha mask.
  */
 class GFX2D_API AlphaBoxBlur
 {
 public:
 
-  /** Constructs a box blur and initializes the backing surface.
+  /** Constructs a box blur and computes the backing surface size.
    *
    * @param aRect The coordinates of the surface to create in device units.
    *
@@ -62,29 +64,19 @@ public:
                const Rect* aDirtyRect,
                const Rect* aSkipRect);
 
-  AlphaBoxBlur(uint8_t* aData,
-               const Rect& aRect,
+  AlphaBoxBlur(const Rect& aRect,
                int32_t aStride,
                float aSigma);
 
   ~AlphaBoxBlur();
 
   /**
-   * Return the pointer to memory allocated by the constructor for the 8-bit
-   * alpha surface you need to be blurred. After you draw to this surface, call
-   * Blur(), below, to have its contents blurred.
-   */
-  unsigned char* GetData();
-
-  /**
-   * Return the size, in pixels, of the 8-bit alpha surface backed by the
-   * pointer returned by GetData().
+   * Return the size, in pixels, of the 8-bit alpha surface we'd use.
    */
   IntSize GetSize();
 
   /**
-   * Return the stride, in bytes, of the 8-bit alpha surface backed by the
-   * pointer returned by GetData().
+   * Return the stride, in bytes, of the 8-bit alpha surface we'd use.
    */
   int32_t GetStride();
 
@@ -100,10 +92,20 @@ public:
   Rect* GetDirtyRect();
 
   /**
-   * Perform the blur in-place on the surface backed by the pointer returned by
-   * GetData().
+   * Return the minimum buffer size that should be given to Blur() method.  If
+   * negative, the class is not properly setup for blurring.  Note that this
+   * includes the extra three bytes on top of the stride*width, where something
+   * like gfxImageSurface::GetDataSize() would report without it, even if it 
+   * happens to have the extra bytes.
    */
-  void Blur();
+  int32_t GetSurfaceAllocationSize() const;
+
+  /**
+   * Perform the blur in-place on the surface backed by specified 8-bit
+   * alpha surface data. The size must be at least that returned by
+   * GetSurfaceAllocationSize() or bad things will happen.
+   */
+  void Blur(uint8_t* aData);
 
   /**
    * Calculates a blur radius that, when used with box blur, approximates a
@@ -115,9 +117,11 @@ public:
 
 private:
 
-  void BoxBlur_C(int32_t aLeftLobe, int32_t aRightLobe, int32_t aTopLobe,
+  void BoxBlur_C(uint8_t* aData,
+                 int32_t aLeftLobe, int32_t aRightLobe, int32_t aTopLobe,
                  int32_t aBottomLobe, uint32_t *aIntegralImage, size_t aIntegralImageStride);
-  void BoxBlur_SSE2(int32_t aLeftLobe, int32_t aRightLobe, int32_t aTopLobe,
+  void BoxBlur_SSE2(uint8_t* aData,
+                    int32_t aLeftLobe, int32_t aRightLobe, int32_t aTopLobe,
                     int32_t aBottomLobe, uint32_t *aIntegralImage, size_t aIntegralImageStride);
 
   static CheckedInt<int32_t> RoundUpToMultipleOf4(int32_t aVal);
@@ -150,19 +154,14 @@ private:
   IntSize mBlurRadius;
 
   /**
-   * A pointer to the backing 8-bit alpha surface.
-   */
-  uint8_t* mData;
-
-  /**
-   * True if we need to dispose the data.
-   */
-  bool mFreeData;
-
-  /**
-   * The stride of the data contained in mData.
+   * The stride of the data passed to Blur()
    */
   int32_t mStride;
+
+  /**
+   * The minimum size of the buffer needed for the Blur() operation.
+   */
+  int32_t mSurfaceAllocationSize;
 
   /**
    * Whether mDirtyRect contains valid data.
