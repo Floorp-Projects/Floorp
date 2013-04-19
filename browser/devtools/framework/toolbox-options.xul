@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE window [
+<!ENTITY % toolboxDTD SYSTEM "chrome://browser/locale/devtools/toolbox.dtd" >
+ %toolboxDTD;
+]>
+<?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
+<?xml-stylesheet rel="stylesheet" href="chrome://browser/content/devtools/framework/toolbox.css" type="text/css"?>
+<?xml-stylesheet rel="stylesheet" href="chrome://browser/skin/devtools/toolbox.css" type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript;version=1.8" src="toolbox-options.js"></script>
+  <hbox id="options-panel-container" flex="1">
+    <hbox id="options-panel" flex="1">
+      <vbox id="tools-box" class="options-vertical-pane" flex="1">
+        <label value="&options.selectDefaultTools.label;"/>
+        <vbox id="default-tools-box" class="options-groupbox" tabindex="0"/>
+        <label value="&options.selectAdditionalTools.label;"/>
+        <vbox id="additional-tools-box" class="options-groupbox"/>
+      </vbox>
+      <vbox class="options-vertical-pane" flex="1">
+        <label value="&options.selectDevToolsTheme.label;"/>
+        <radiogroup id="devtools-theme-box"
+                    class="options-groupbox"
+                    data-pref="devtools.theme"
+                    orient="horizontal">
+          <radio value="light" label="&options.lightTheme.label;"/>
+          <radio value="dark" label="&options.darkTheme.label;"/>
+        </radiogroup>
+        <label value="&options.context.label;"/>
+        <vbox id="context-options" class="options-groupbox">
+          <checkbox label="&options.enableChrome.label;"
+                    tooltiptext="&options.enableChrome.tooltip;"
+                    data-pref="devtools.chrome.enabled"/>
+          <checkbox label="&options.enableRemote.label;"
+                    tooltiptext="&options.enableRemote.tooltip;"
+                    data-pref="devtools.debugger.remote-enabled"/>
+        </vbox>
+      </vbox>
+    </hbox>
+  </hbox>
+</window>
