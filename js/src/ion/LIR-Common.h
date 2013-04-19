@@ -4162,6 +4162,22 @@ class LFunctionBoundary : public LInstructionHelper<0, 0, 1>
     }
 };
 
+class LIsCallable : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(IsCallable);
+    LIsCallable(const LAllocation &object) {
+        setOperand(0, object);
+    }
+
+    const LAllocation *object() {
+        return getOperand(0);
+    }
+    MIsCallable *mir() const {
+        return mir_->toIsCallable();
+    }
+};
+
 class LAsmJSLoadHeap : public LInstructionHelper<1, 1, 0>
 {
   public:

@@ -6103,6 +6103,28 @@ CodeGenerator::visitOutOfLineParallelAbort(OutOfLineParallelAbort *ool)
 }
 
 bool
+CodeGenerator::visitIsCallable(LIsCallable *ins)
+{
+    Register object = ToRegister(ins->object());
+    Register output = ToRegister(ins->output());
+
+    masm.loadObjClass(object, output);
+
+    // An object is callable iff (isFunction() || getClass()->call).
+    Label notFunction, done;
+    masm.branchPtr(Assembler::NotEqual, output, ImmWord(&js::FunctionClass), &notFunction);
+    masm.move32(Imm32(1), output);
+    masm.jump(&done);
+
+    masm.bind(&notFunction);
+    masm.cmpPtr(Address(output, offsetof(js::Class, call)), ImmWord((void *)NULL));
+    masm.emitSet(Assembler::NonZero, output);
+    masm.bind(&done);
+
+    return true;
+}
+
+bool
 CodeGenerator::visitAsmJSCall(LAsmJSCall *ins)
 {
     MAsmJSCall *mir = ins->mir();

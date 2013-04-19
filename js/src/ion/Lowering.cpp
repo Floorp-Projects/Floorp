@@ -2462,6 +2462,14 @@ LIRGenerator::visitFunctionBoundary(MFunctionBoundary *ins)
 }
 
 bool
+LIRGenerator::visitIsCallable(MIsCallable *ins)
+{
+    JS_ASSERT(ins->object()->type() == MIRType_Object);
+    JS_ASSERT(ins->type() == MIRType_Boolean);
+    return define(new LIsCallable(useRegister(ins->object())), ins);
+}
+
+bool
 LIRGenerator::visitAsmJSLoadHeap(MAsmJSLoadHeap *ins)
 {
     LAsmJSLoadHeap *lir = new LAsmJSLoadHeap(useRegisterAtStart(ins->ptr()));
