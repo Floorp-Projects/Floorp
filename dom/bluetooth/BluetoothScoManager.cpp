@@ -105,7 +105,7 @@ BluetoothScoManagerObserver::Observe(nsISupports* aSubject,
                                      const PRUnichar* aData)
 {
   MOZ_ASSERT(gBluetoothScoManager);
-  if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {    
+  if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
     return gBluetoothScoManager->HandleShutdown();
   }
 
