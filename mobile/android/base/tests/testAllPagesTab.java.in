@@ -142,6 +142,7 @@ public class testAllPagesTab extends BaseTest {
         }
         mSolo.clickOnView(child);
         contentEventExpecter.blockForEvent();
+        contentEventExpecter.unregisterListener();
         verifyUrl(url);
     }
 

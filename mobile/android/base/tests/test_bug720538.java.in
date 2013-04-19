@@ -42,6 +42,7 @@ public class test_bug720538 extends PixelTest {
         MotionEventHelper meh = new MotionEventHelper(getInstrumentation(), mDriver.getGeckoLeft(), mDriver.getGeckoTop());
         meh.doubleTap(100, 100);
         painted = waitForPaint(paintExpecter);
+        paintExpecter.unregisterListener();
 
         try {
             // check a few points to ensure that we did a good zoom-to-block on the iframe. this checks that
@@ -59,6 +60,7 @@ public class test_bug720538 extends PixelTest {
         paintExpecter = mActions.expectPaint();
         meh.doubleTap(100, mDriver.getGeckoWidth() / 2);
         painted = waitForPaint(paintExpecter);
+        paintExpecter.unregisterListener();
 
         try {
             // and now we check a pixel at the bottom of the view to ensure that we have the page
