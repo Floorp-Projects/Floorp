@@ -1176,6 +1176,10 @@ this.PlacesUtils = {
    *          eg: [[[oldFolder1, newFolder1]], [search1]]
    */
   importJSONNode: function PU_importJSONNode(aData, aContainer, aIndex, aGrandParentId) {
+    Deprecated.warning(
+      "importJSONNode is deprecated and will be removed in a future version",
+      "https://bugzilla.mozilla.org/show_bug.cgi?id=855842");
+
     var folderIdMap = [];
     var searchIds = [];
     var id = -1;
