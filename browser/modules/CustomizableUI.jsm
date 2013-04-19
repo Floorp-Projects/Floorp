@@ -123,7 +123,7 @@ XPCOMUtils.defineLazyGetter(this, "gBuiltInWidgets", function() {
     },
     onViewShowing: function(aEvent) {
       // Populate our list of history
-      const kMaxResults = 10;
+      const kMaxResults = 15;
       let doc = aEvent.detail.ownerDocument;
 
       let options = PlacesUtils.history.getNewQueryOptions();
