@@ -2118,6 +2118,114 @@ class MCreateThis
     }
 };
 
+// Eager initialization of arguments object.
+class MCreateArgumentsObject
+  : public MUnaryInstruction,
+    public ObjectPolicy<0>
+{
+    MCreateArgumentsObject(MDefinition *callObj)
+      : MUnaryInstruction(callObj)
+    {
+        setResultType(MIRType_Object);
+        setGuard();
+    }
+
+  public:
+    INSTRUCTION_HEADER(CreateArgumentsObject)
+    static MCreateArgumentsObject *New(MDefinition *callObj) {
+        return new MCreateArgumentsObject(callObj);
+    }
+
+    MDefinition *getCallObject() const {
+        return getOperand(0);
+    }
+
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+};
+
+class MGetArgumentsObjectArg
+  : public MUnaryInstruction,
+    public ObjectPolicy<0>
+{
+    size_t argno_;
+
+    MGetArgumentsObjectArg(MDefinition *argsObject, size_t argno)
+      : MUnaryInstruction(argsObject),
+        argno_(argno)
+    {
+        setResultType(MIRType_Value);
+    }
+
+  public:
+    INSTRUCTION_HEADER(GetArgumentsObjectArg)
+    static MGetArgumentsObjectArg *New(MDefinition *argsObj, size_t argno)
+    {
+        return new MGetArgumentsObjectArg(argsObj, argno);
+    }
+
+    MDefinition *getArgsObject() const {
+        return getOperand(0);
+    }
+
+    size_t argno() const {
+        return argno_;
+    }
+
+    AliasSet getAliasSet() const {
+        return AliasSet::Load(AliasSet::Any);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+};
+
+class MSetArgumentsObjectArg
+  : public MBinaryInstruction,
+    public MixPolicy<ObjectPolicy<0>, BoxPolicy<1> >
+{
+    size_t argno_;
+
+    MSetArgumentsObjectArg(MDefinition *argsObj, size_t argno, MDefinition *value)
+      : MBinaryInstruction(argsObj, value),
+        argno_(argno)
+    {
+    }
+
+  public:
+    INSTRUCTION_HEADER(SetArgumentsObjectArg)
+    static MSetArgumentsObjectArg *New(MDefinition *argsObj, size_t argno, MDefinition *value)
+    {
+        return new MSetArgumentsObjectArg(argsObj, argno, value);
+    }
+
+    MDefinition *getArgsObject() const {
+        return getOperand(0);
+    }
+
+    size_t argno() const {
+        return argno_;
+    }
+
+    MDefinition *getValue() const {
+        return getOperand(1);
+    }
+
+    AliasSet getAliasSet() const {
+        return AliasSet::Store(AliasSet::Any);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+};
+
 // Given a MIRType_Value A and a MIRType_Object B:
 // If the Value may be safely unboxed to an Object, return Object(A).
 // Otherwise, return B.
@@ -5800,6 +5908,9 @@ class MCallGetIntrinsicValue : public MNullaryInstruction
     PropertyName *name() const {
         return name_;
     }
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
 };
 
 class MCallsiteCloneCache
@@ -7061,6 +7172,29 @@ class FlattenedMResumePointIter
 
     size_t numOperands() const {
         return numOperands_;
+    }
+};
+
+class MIsCallable
+  : public MUnaryInstruction,
+    public SingleObjectPolicy
+{
+    MIsCallable(MDefinition *object)
+      : MUnaryInstruction(object)
+    {
+        setResultType(MIRType_Boolean);
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(IsCallable);
+
+    static MIsCallable *New(MDefinition *obj) {
+        return new MIsCallable(obj);
+    }
+
+    MDefinition *object() const {
+        return getOperand(0);
     }
 };
 

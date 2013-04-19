@@ -75,7 +75,8 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
                                              MBasicBlock *pred, jsbytecode *entryPc);
     static MBasicBlock *NewSplitEdge(MIRGraph &graph, CompileInfo &info, MBasicBlock *pred);
     static MBasicBlock *NewParBailout(MIRGraph &graph, CompileInfo &info,
-                                      MBasicBlock *pred, jsbytecode *entryPc);
+                                      MBasicBlock *pred, jsbytecode *entryPc,
+                                      MResumePoint *resumePoint);
 
     bool dominates(MBasicBlock *other);
 
@@ -101,6 +102,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     MDefinition *peek(int32_t depth);
 
     MDefinition *scopeChain();
+    MDefinition *argumentsObject();
 
     // Increase the number of slots available
     bool increaseSlots(size_t num);
@@ -136,6 +138,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     void pushLocal(uint32_t local);
     void pushSlot(uint32_t slot);
     void setScopeChain(MDefinition *ins);
+    void setArgumentsObject(MDefinition *ins);
 
     // Returns the top of the stack, then decrements the virtual stack pointer.
     MDefinition *pop();

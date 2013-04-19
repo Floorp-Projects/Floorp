@@ -804,6 +804,17 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         cond = testMagic(cond, t);
         ma_b(label, cond);
     }
+    void branchTestMagicValue(Condition cond, const ValueOperand &val, JSWhyMagic why,
+                              Label *label) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        // Test for magic
+        Label notmagic;
+        Condition testCond = testMagic(cond, val);
+        ma_b(&notmagic, InvertCondition(testCond));
+        // Test magic value
+        branch32(cond, val.payloadReg(), Imm32(static_cast<int32_t>(why)), label);
+        bind(&notmagic);
+    }
     template<typename T>
     void branchTestBooleanTruthy(bool b, const T & t, Label *label) {
         Condition c = testBooleanTruthy(b, t);

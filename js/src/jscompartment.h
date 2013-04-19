@@ -212,6 +212,7 @@ struct JSCompartment
     /* Set of initial shapes in the compartment. */
     js::InitialShapeSet          initialShapes;
     void sweepInitialShapeTable();
+    void markAllInitialShapeTableEntries(JSTracer *trc);
 
     /* Set of default 'new' or lazy types in the compartment. */
     js::types::TypeObjectSet     newTypeObjects;
@@ -262,6 +263,7 @@ struct JSCompartment
 
     /* Mark cross-compartment wrappers. */
     void markCrossCompartmentWrappers(JSTracer *trc);
+    void markAllCrossCompartmentWrappers(JSTracer *trc);
 
     bool wrap(JSContext *cx, JS::MutableHandleValue vp, JS::HandleObject existing = js::NullPtr());
     bool wrap(JSContext *cx, JSString **strp);

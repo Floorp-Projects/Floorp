@@ -180,27 +180,32 @@ DataViewObject::is(const Value &v)
 }
 
 #ifdef JSGC_GENERATIONAL
-class TypedArrayPrivateRef : public gc::BufferableRef
+class ArrayBufferViewByteOffsetRef : public gc::BufferableRef
 {
     JSObject *obj;
-    ArrayBufferObject *buffer;
-    size_t byteOffset;
 
   public:
-    TypedArrayPrivateRef(JSObject *obj, ArrayBufferObject *buffer, size_t byteOffset)
-      : obj(obj), buffer(buffer), byteOffset(byteOffset) {}
+    explicit ArrayBufferViewByteOffsetRef(JSObject *obj) : obj(obj) {}
 
     bool match(void *location) {
-        // The private field  of obj is not traced, but needs to be updated by mark.
+        /* The private field  of obj is not traced, but needs to be updated by mark. */
         return false;
     }
 
-    void mark(JSTracer *trc) {}
+    void mark(JSTracer *trc) {
+        /* Update obj's private to point to the moved buffer's array data. */
+        MarkObjectUnbarriered(trc, &obj, "TypedArray");
+        HeapSlot &bufSlot = obj->getReservedSlotRef(BufferView::BUFFER_SLOT);
+        gc::MarkSlot(trc, &bufSlot, "TypedArray::BUFFER_SLOT");
+        ArrayBufferObject &buf = bufSlot.toObject().asArrayBuffer();
+        int32_t offset = obj->getReservedSlot(BufferView::BYTEOFFSET_SLOT).toInt32();
+        obj->initPrivate(buf.dataPointer() + offset);
+    }
 };
 #endif
 
 static inline void
-InitTypedArrayDataPointer(JSObject *obj, ArrayBufferObject *buffer, size_t byteOffset)
+InitArrayBufferViewDataPointer(JSObject *obj, ArrayBufferObject *buffer, size_t byteOffset)
 {
     /*
      * N.B. The base of the array's data is stored in the object's
@@ -209,8 +214,8 @@ InitTypedArrayDataPointer(JSObject *obj, ArrayBufferObject *buffer, size_t byteO
      */
     obj->initPrivate(buffer->dataPointer() + byteOffset);
 #ifdef JSGC_GENERATIONAL
-    if (IsInsideNursery(obj->runtime(), buffer))
-        obj->runtime()->gcStoreBuffer.putGeneric(TypedArrayPrivateRef(obj, buffer, byteOffset));
+    if (IsInsideNursery(obj->runtime(), buffer) && buffer->hasFixedElements())
+        obj->runtime()->gcStoreBuffer.putGeneric(ArrayBufferViewByteOffsetRef(obj));
 #endif
 }
 
@@ -267,7 +272,7 @@ DataViewObject::create(JSContext *cx, uint32_t byteOffset, uint32_t byteLength,
     dvobj.setFixedSlot(BUFFER_SLOT, ObjectValue(*arrayBuffer));
     dvobj.setFixedSlot(NEXT_VIEW_SLOT, PrivateValue(NULL));
     dvobj.setFixedSlot(NEXT_BUFFER_SLOT, PrivateValue(UNSET_BUFFER_LINK));
-    InitTypedArrayDataPointer(obj, arrayBuffer, byteOffset);
+    InitArrayBufferViewDataPointer(obj, arrayBuffer, byteOffset);
     JS_ASSERT(byteOffset + byteLength <= arrayBuffer->byteLength());
 
     // Verify that the private slot is at the expected place

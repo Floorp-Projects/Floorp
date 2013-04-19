@@ -94,8 +94,9 @@ EnterBaseline(JSContext *cx, StackFrame *fp, void *jitcode, bool osr)
 
     void *calleeToken;
     if (fp->isNonEvalFunctionFrame()) {
-        // CountArgSlot include |this| and the |scopeChain|.
-        maxArgc = CountArgSlots(fp->fun()) - 1; // -1 = discard |scopeChain|
+        // CountArgSlot include |this| and the |scopeChain|, and maybe |argumentsObj|
+        // Want to keep including this, but remove the scopeChain and any argumentsObj.
+        maxArgc = CountArgSlots(fp->script(), fp->fun()) - StartArgSlot(fp->script(), fp->fun());
         maxArgv = fp->formals() - 1;            // -1 = include |this|
 
         // Formal arguments are the argument corresponding to the function
