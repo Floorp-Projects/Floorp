@@ -8,10 +8,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class testAddonManager extends PixelTest  {
-    Actions.EventExpecter tabEventExpecter;
-    Actions.EventExpecter contentEventExpecter;
-    String url = "about:addons";
-
     @Override
     protected int getTestType() {
         return TEST_MOCHITEST;
@@ -24,6 +20,10 @@ public class testAddonManager extends PixelTest  {
     With the Addons Manager open the test will verify that when it is opened again from the menu no new tab will be opened*/
 
     public void testAddonManager() {
+        Actions.EventExpecter tabEventExpecter;
+        Actions.EventExpecter contentEventExpecter;
+        String url = "about:addons";
+
         blockForGeckoReady();
 
         // Use the menu to open the Addon Manger
@@ -36,6 +36,9 @@ public class testAddonManager extends PixelTest  {
         // Wait for the new tab and page to load
         tabEventExpecter.blockForEvent();
         contentEventExpecter.blockForEvent();
+
+        tabEventExpecter.unregisterListener();
+        contentEventExpecter.unregisterListener();
 
         // Verify the url
         verifyPageTitle("Add-ons");
@@ -72,6 +75,7 @@ public class testAddonManager extends PixelTest  {
                 data = new JSONObject(eventExpecter.blockForEventData());
                 requestId = data.getString("requestId");
             }
+            eventExpecter.unregisterListener();
 
         } catch (Exception ex) { 
             mAsserter.ok(false, "exception in testAddonManager", ex.toString());
@@ -97,6 +101,9 @@ public class testAddonManager extends PixelTest  {
         // Wait for the new tab and page to load
         tabEventExpecter.blockForEvent();
         contentEventExpecter.blockForEvent();
+
+        tabEventExpecter.unregisterListener();
+        contentEventExpecter.unregisterListener();
 
         // Verify tab count has increased
         verifyTabCount(2);

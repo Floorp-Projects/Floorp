@@ -17,6 +17,7 @@
 #include "base/pickle.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
+#include "nsThreadManager.h"
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsXPCOMPrivate.h"
@@ -32,7 +33,7 @@
 #include "nsIFileStreams.h"
 #include "nsIMemoryReporter.h"
 #include "nsISeekableStream.h"
-#include "Telemetry.h" 
+#include "Telemetry.h"
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
 #include "nsBaseHashtable.h"
@@ -1475,6 +1476,13 @@ TelemetryImpl::GetDebugSlowSQL(JSContext *cx, JS::Value *ret)
   if (GetSQLStats(cx, ret, revealPrivateSql))
     return NS_OK;
   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+TelemetryImpl::GetMaximalNumberOfConcurrentThreads(uint32_t *ret)
+{
+  *ret = nsThreadManager::get()->GetHighestNumberOfThreads();
+  return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -220,7 +220,7 @@ nsDisplayCanvasBackgroundImage::Paint(nsDisplayListBuilder* aBuilder,
     // Snap image rectangle to nearest pixel boundaries. This is the right way
     // to snap for this context, because we checked HasNonIntegerTranslation above.
     destRect.Round();
-    surf = static_cast<gfxASurface*>(GetUnderlyingFrame()->Properties().Get(nsIFrame::CachedBackgroundImage()));
+    surf = static_cast<gfxASurface*>(Frame()->Properties().Get(nsIFrame::CachedBackgroundImage()));
     nsRefPtr<gfxASurface> destSurf = dest->CurrentSurface();
     if (surf && surf->GetType() == destSurf->GetType()) {
       BlitSurface(dest, destRect, surf);

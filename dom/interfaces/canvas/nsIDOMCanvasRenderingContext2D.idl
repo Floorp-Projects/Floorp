@@ -11,17 +11,6 @@ interface nsIDOMCanvasGradient : nsISupports
   void addColorStop(in float offset, in DOMString color);
 };
 
-[scriptable, uuid(21dea65c-5c08-4eb1-ac82-81fe95be77b8)]
-interface nsIDOMCanvasPattern : nsISupports
-{
-};
-
-[scriptable, uuid(2d01715c-ec7d-424a-ab85-e0fd70c8665c)]
-interface nsIDOMTextMetrics : nsISupports
-{
-  readonly attribute float width;
-};
-
 /**
  * This interface remains only for the constants, for a context, use the
  * WebIDL/Paris bindings instead (CanvasRenderingContext2D.webidl).

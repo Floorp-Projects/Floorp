@@ -64,6 +64,7 @@ var SelectionHandler = {
     addMessageListener("Browser:CaretUpdate", this);
     addMessageListener("Browser:SelectionSwitchMode", this);
     addMessageListener("Browser:RepositionInfoRequest", this);
+    addMessageListener("Browser:SelectionHandlerPing", this);
   },
 
   shutdown: function shutdown() {
@@ -82,6 +83,7 @@ var SelectionHandler = {
     removeMessageListener("Browser:CaretUpdate", this);
     removeMessageListener("Browser:SelectionSwitchMode", this);
     removeMessageListener("Browser:RepositionInfoRequest", this);
+    removeMessageListener("Browser:SelectionHandlerPing", this);
   },
 
   /*************************************************
@@ -436,6 +438,10 @@ var SelectionHandler = {
     });
   },
 
+  _onPing: function _onPing(aId) {
+    sendAsyncMessage("Content:SelectionHandlerPong", { id: aId });
+  },
+
   /*************************************************
    * Selection helpers
    */
@@ -474,6 +480,7 @@ var SelectionHandler = {
     this._contentOffset = null;
     this._domWinUtils = null;
     this._targetIsEditable = false;
+    sendSyncMessage("Content:HandlerShutdown", {});
   },
 
   /*
@@ -1220,6 +1227,10 @@ var SelectionHandler = {
 
       case "Browser:RepositionInfoRequest":
         this._repositionInfoRequest(json);
+        break;
+
+      case "Browser:SelectionHandlerPing":
+        this._onPing(json.id);
         break;
     }
   },

@@ -12,6 +12,7 @@
 #include "jslock.h"
 
 #include "gc/Barrier.h"
+#include "gc/Nursery.h"
 #include "js/TemplateLib.h"
 #include "ion/IonCode.h"
 
@@ -28,6 +29,7 @@ class JSLinearString;
 namespace js {
 
 class ArgumentsObject;
+class ArrayBufferObject;
 class BaseShape;
 class GlobalObject;
 class UnownedBaseShape;
@@ -92,12 +94,12 @@ DeclMarker(BaseShape, BaseShape)
 DeclMarker(BaseShape, UnownedBaseShape)
 DeclMarker(IonCode, ion::IonCode)
 DeclMarker(Object, ArgumentsObject)
+DeclMarker(Object, ArrayBufferObject)
 DeclMarker(Object, DebugScopeObject)
 DeclMarker(Object, GlobalObject)
 DeclMarker(Object, JSObject)
 DeclMarker(Object, JSFunction)
 DeclMarker(Object, ScopeObject)
-DeclMarker(Object, ArrayBufferObject)
 DeclMarker(Script, JSScript)
 DeclMarker(Shape, Shape)
 DeclMarker(String, JSAtom)
@@ -279,10 +281,18 @@ Mark(JSTracer *trc, HeapPtr<ion::IonCode> *code, const char *name)
     MarkIonCode(trc, code, name);
 }
 
+/* For use by WeakMap's HashKeyRef instantiation. */
 inline void
 Mark(JSTracer *trc, JSObject **objp, const char *name)
 {
     MarkObjectUnbarriered(trc, objp, name);
+}
+
+/* For use by Debugger::WeakMap's proxiedScopes HashKeyRef instantiation. */
+inline void
+Mark(JSTracer *trc, ScopeObject **obj, const char *name)
+{
+    MarkObjectUnbarriered(trc, obj, name);
 }
 
 bool

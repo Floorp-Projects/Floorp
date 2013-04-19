@@ -34,7 +34,7 @@ nsDisplayItemBoundsGeometry::nsDisplayItemBoundsGeometry(nsDisplayItem* aItem, n
   : nsDisplayItemGeometry(aItem, aBuilder)
 {
   nscoord radii[8];
-  mHasRoundedCorners = aItem->GetUnderlyingFrame()->GetBorderRadii(radii);
+  mHasRoundedCorners = aItem->Frame()->GetBorderRadii(radii);
 }
 
 void
