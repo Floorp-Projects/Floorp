@@ -610,7 +610,7 @@ MarkWrappedNative(JSTracer *trc, JSObject *obj)
     if (clazz->flags & JSCLASS_DOM_GLOBAL) {
         mozilla::dom::TraceProtoAndIfaceCache(trc, obj);
     }
-    MOZ_ASSERT(IS_WRAPPER_CLASS(clazz));
+    MOZ_ASSERT(IS_WN_CLASS(clazz));
 
     XPCWrappedNative *wrapper = XPCWrappedNative::Get(obj);
     if (wrapper && wrapper->IsValid())
@@ -795,7 +795,7 @@ XPC_WN_MaybeResolvingDeletePropertyStub(JSContext *cx, JSHandleObject obj, JSHan
         JS_ReportError(cx, "Permission denied to operate on object.");        \
         return false;                                                         \
     }                                                                         \
-    if (!IS_WRAPPER_CLASS(js::GetObjectClass(unwrapped))) {                   \
+    if (!IS_WN_REFLECTOR(unwrapped)) {                                        \
         return Throw(NS_ERROR_XPC_BAD_OP_ON_WN_PROTO, cx);                    \
     }                                                                         \
     XPCWrappedNative *wrapper = XPCWrappedNative::Get(unwrapped);             \
@@ -1038,7 +1038,7 @@ XPC_WN_JSOp_Enumerate(JSContext *cx, JSHandleObject obj, JSIterateOp enum_op,
                       JSMutableHandleValue statep, MutableHandleId idp)
 {
     js::Class *clazz = js::GetObjectClass(obj);
-    if (!IS_WRAPPER_CLASS(clazz) || clazz == &XPC_WN_NoHelper_JSClass.base) {
+    if (!IS_WN_CLASS(clazz) || clazz == &XPC_WN_NoHelper_JSClass.base) {
         // obj must be a prototype object or a wrapper w/o a
         // helper. Short circuit this call to the default
         // implementation.

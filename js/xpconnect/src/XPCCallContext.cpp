@@ -98,7 +98,7 @@ XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
         }
     } else {
         js::Class *clasp = js::GetObjectClass(unwrapped);
-        if (IS_WRAPPER_CLASS(clasp)) {
+        if (IS_WN_CLASS(clasp)) {
             mWrapper = XPCWrappedNative::Get(unwrapped);
         } else if (IS_TEAROFF_CLASS(clasp)) {
             mTearOff = (XPCWrappedNativeTearOff*)js::GetObjectPrivate(unwrapped);
@@ -421,8 +421,7 @@ XPCCallContext::UnwrapThisIfAllowed(HandleObject obj, HandleObject fun, unsigned
     MOZ_ASSERT(unwrapped == JS_ObjectToInnerObject(mJSContext, js::Wrapper::wrappedObject(obj)));
 
     // Make sure we have an XPCWN, and grab it.
-    MOZ_ASSERT(!IS_SLIM_WRAPPER(unwrapped), "security wrapping morphs slim wrappers");
-    if (!IS_WRAPPER_CLASS(js::GetObjectClass(unwrapped)))
+    if (!IS_WN_REFLECTOR(unwrapped))
         return nullptr;
     XPCWrappedNative *wn = (XPCWrappedNative*)js::GetObjectPrivate(unwrapped);
 
