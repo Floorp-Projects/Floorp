@@ -2941,11 +2941,11 @@ nsIDocument::GetActiveElement()
   }
 
   // No focused element anywhere in this document.  Try to get the BODY.
-  nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryObject(this);
+  nsRefPtr<nsHTMLDocument> htmlDoc = AsHTMLDocument();
   if (htmlDoc) {
     // Because of IE compatibility, return null when html document doesn't have
     // a body.
-    return static_cast<nsHTMLDocument*>(htmlDoc.get())->GetBody();
+    return htmlDoc->GetBody();
   }
 
   // If we couldn't get a BODY, return the root element.
@@ -3115,7 +3115,7 @@ nsIDocument::ReleaseCapture() const
 {
   // only release the capture if the caller can access it. This prevents a
   // page from stopping a scrollbar grab for example.
-  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(nsIPresShell::GetCapturingContent());
+  nsCOMPtr<nsINode> node = nsIPresShell::GetCapturingContent();
   if (node && nsContentUtils::CanCallerAccess(node)) {
     nsIPresShell::SetCapturingContent(nullptr, 0);
   }
@@ -7445,7 +7445,7 @@ nsDocument::IsSafeToFlush() const
   return shell->IsSafeToFlush();
 }
 
-nsresult
+void
 nsDocument::Sanitize()
 {
   // Sanitize the document by resetting all password fields and any form
@@ -7457,24 +7457,16 @@ nsDocument::Sanitize()
   // First locate all input elements, regardless of whether they are
   // in a form, and reset the password and autocomplete=off elements.
 
-  nsCOMPtr<nsIDOMNodeList> nodes;
-  nsresult rv = GetElementsByTagName(NS_LITERAL_STRING("input"),
-                                     getter_AddRefs(nodes));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsRefPtr<nsContentList> nodes = GetElementsByTagName(NS_LITERAL_STRING("input"));
 
-  uint32_t length = 0;
-  if (nodes)
-    nodes->GetLength(&length);
-
-  nsCOMPtr<nsIDOMNode> item;
+  nsCOMPtr<nsIContent> item;
   nsAutoString value;
-  uint32_t i;
 
-  for (i = 0; i < length; ++i) {
-    nodes->Item(i, getter_AddRefs(item));
-    NS_ASSERTION(item, "null item in node list!");
+  uint32_t length = nodes->Length(true);
+  for (uint32_t i = 0; i < length; ++i) {
+    NS_ASSERTION(nodes->Item(i), "null item in node list!");
 
-    nsCOMPtr<nsIDOMHTMLInputElement> input = do_QueryInterface(item);
+    nsCOMPtr<nsIDOMHTMLInputElement> input = do_QueryInterface(nodes->Item(i));
     if (!input)
       continue;
 
@@ -7496,18 +7488,13 @@ nsDocument::Sanitize()
   }
 
   // Now locate all _form_ elements that have autocomplete=off and reset them
-  rv = GetElementsByTagName(NS_LITERAL_STRING("form"), getter_AddRefs(nodes));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nodes = GetElementsByTagName(NS_LITERAL_STRING("form"));
 
-  length = 0;
-  if (nodes)
-    nodes->GetLength(&length);
+  length = nodes->Length(true);
+  for (uint32_t i = 0; i < length; ++i) {
+    NS_ASSERTION(nodes->Item(i), "null item in nodelist");
 
-  for (i = 0; i < length; ++i) {
-    nodes->Item(i, getter_AddRefs(item));
-    NS_ASSERTION(item, "null item in nodelist");
-
-    nsCOMPtr<nsIDOMHTMLFormElement> form = do_QueryInterface(item);
+    nsCOMPtr<nsIDOMHTMLFormElement> form = do_QueryInterface(nodes->Item(i));
     if (!form)
       continue;
 
@@ -7515,8 +7502,6 @@ nsDocument::Sanitize()
     if (value.LowerCaseEqualsLiteral("off"))
       form->Reset();
   }
-
-  return NS_OK;
 }
 
 struct SubDocEnumArgs
