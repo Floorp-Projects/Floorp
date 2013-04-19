@@ -36,7 +36,7 @@ bool
 xpc_OkToHandOutWrapper(nsWrapperCache *cache)
 {
     NS_ABORT_IF_FALSE(cache->GetWrapper(), "Must have wrapper");
-    NS_ABORT_IF_FALSE(IS_WN_WRAPPER(cache->GetWrapper()),
+    NS_ABORT_IF_FALSE(IS_WN_REFLECTOR(cache->GetWrapper()),
                       "Must have XPCWrappedNative wrapper");
     return
         !static_cast<XPCWrappedNative*>(xpc_GetJSPrivate(cache->GetWrapper()))->
@@ -1358,10 +1358,8 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCWrappedNativeScope* aOldScope,
                    js::GetObjectCompartment(aNewScope->GetGlobalJSObject()));
         NS_ASSERTION(aNewParent, "won't be able to find the new parent");
 
-        if (wrapper->HasProto())
+        if (wrapper->HasProto()) {
             oldProto = wrapper->GetProto();
-
-        if (oldProto) {
             XPCNativeScriptableInfo *info = oldProto->GetScriptableInfo();
             XPCNativeScriptableCreateInfo ci(*info);
             newProto =
@@ -1509,10 +1507,8 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCWrappedNativeScope* aOldScope,
         if (!JS_SetParent(cx, flat, aNewParent))
             MOZ_CRASH();
 
-        JSObject *nw;
-        if (wrapper &&
-            (nw = wrapper->GetWrapper()) &&
-            !JS_SetParent(cx, nw, JS_GetGlobalForObject(cx, aNewParent))) {
+        JSObject *nw = wrapper->GetWrapper();
+        if (nw && !JS_SetParent(cx, nw, JS_GetGlobalForObject(cx, aNewParent))) {
             MOZ_CRASH();
         }
     }
@@ -1560,7 +1556,7 @@ RescueOrphans(HandleObject obj)
     // PreCreate may touch dead compartments.
     js::AutoMaybeTouchDeadZones agc(parentObj);
 
-    bool isWN = IS_WRAPPER_CLASS(js::GetObjectClass(obj));
+    bool isWN = IS_WN_REFLECTOR(obj);
 
     // There's one little nasty twist here. For reasons described in bug 752764,
     // we nuke SOW-ed objects after transplanting them. This means that nodes

@@ -3312,7 +3312,7 @@ xpc_CreateSandboxObject(JSContext *cx, jsval *vp, nsISupports *prinOrSop, Sandbo
             // Now check what sort of thing we've got in |proto|
             JSObject *unwrappedProto = js::UncheckedUnwrap(options.proto, false);
             js::Class *unwrappedClass = js::GetObjectClass(unwrappedProto);
-            if (IS_WRAPPER_CLASS(unwrappedClass) ||
+            if (IS_WN_CLASS(unwrappedClass) ||
                 mozilla::dom::IsDOMClass(Jsvalify(unwrappedClass))) {
                 // Wrap it up in a proxy that will do the right thing in terms
                 // of this-binding for methods.

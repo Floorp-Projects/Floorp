@@ -862,8 +862,7 @@ XPCConvert::NativeInterface2JSObject(jsval* d,
         }
     }
 
-    NS_ASSERTION(!flat || IS_WRAPPER_CLASS(js::GetObjectClass(flat)),
-                 "What kind of wrapper is this?");
+    NS_ASSERTION(!flat || IS_WN_REFLECTOR(flat), "What kind of wrapper is this?");
 
     nsresult rv;
     XPCWrappedNative* wrapper;
@@ -874,7 +873,7 @@ XPCConvert::NativeInterface2JSObject(jsval* d,
 
         wrapper = strongWrapper;
     } else {
-        MOZ_ASSERT(IS_WN_WRAPPER_OBJECT(flat));
+        MOZ_ASSERT(IS_WN_REFLECTOR(flat));
 
         wrapper = static_cast<XPCWrappedNative*>(xpc_GetJSPrivate(flat));
 
@@ -985,7 +984,7 @@ XPCConvert::JSObject2NativeInterface(void** dest, HandleObject src,
 
         // Is this really a native xpcom object with a wrapper?
         XPCWrappedNative* wrappedNative = nullptr;
-        if (IS_WN_WRAPPER(inner))
+        if (IS_WN_REFLECTOR(inner))
             wrappedNative = XPCWrappedNative::Get(inner);
         if (wrappedNative) {
             iface = wrappedNative->GetIdentityObject();
@@ -1116,8 +1115,8 @@ XPCConvert::JSValToXPCException(jsval sArg,
         JSObject *unwrapped = js::CheckedUnwrap(obj, /* stopAtOuter = */ false);
         if (!unwrapped)
             return NS_ERROR_XPC_SECURITY_MANAGER_VETO;
-        XPCWrappedNative* wrapper = IS_WN_WRAPPER(unwrapped) ? XPCWrappedNative::Get(unwrapped)
-                                                             : nullptr;
+        XPCWrappedNative* wrapper = IS_WN_REFLECTOR(unwrapped) ? XPCWrappedNative::Get(unwrapped)
+                                                               : nullptr;
         if (wrapper) {
             nsISupports* supports = wrapper->GetIdentityObject();
             nsCOMPtr<nsIException> iface = do_QueryInterface(supports);

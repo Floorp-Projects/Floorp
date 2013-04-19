@@ -2537,7 +2537,7 @@ PreserveWrapper(JSContext *cx, JSObject *objArg)
     if (!ccx.IsValid())
         return false;
 
-    if (!IS_WRAPPER_CLASS(js::GetObjectClass(obj)))
+    if (!IS_WN_REFLECTOR(obj))
         return mozilla::dom::TryPreserveWrapper(obj);
 
     nsISupports *supports = XPCWrappedNative::Get(obj)->Native();

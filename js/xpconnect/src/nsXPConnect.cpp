@@ -1222,7 +1222,7 @@ nsXPConnect::GetWrappedNativeOfJSObject(JSContext * aJSContext,
 
     RootedObject aJSObj(aJSContext, aJSObjArg);
     aJSObj = js::CheckedUnwrap(aJSObj, /* stopAtOuter = */ false);
-    if (aJSObj && IS_WN_WRAPPER(aJSObj)) {
+    if (aJSObj && IS_WN_REFLECTOR(aJSObj)) {
         NS_IF_ADDREF(*_retval = XPCWrappedNative::Get(aJSObj));
         return NS_OK;
     }
@@ -1245,7 +1245,7 @@ nsXPConnect::GetNativeOfWrapper(JSContext * aJSContext,
         JS_ReportError(aJSContext, "Permission denied to get native of security wrapper");
         return nullptr;
     }
-    if (IS_WRAPPER_CLASS(js::GetObjectClass(aJSObj))) {
+    if (IS_WN_REFLECTOR(aJSObj)) {
         if (XPCWrappedNative *wn = XPCWrappedNative::Get(aJSObj))
             return wn->Native();
         return nullptr;
@@ -1918,28 +1918,25 @@ IsJSContextOnStack(JSContext *aCx)
 nsIPrincipal*
 nsXPConnect::GetPrincipal(JSObject* obj, bool allowShortCircuit) const
 {
-    NS_ASSERTION(IS_WRAPPER_CLASS(js::GetObjectClass(obj)),
-                 "What kind of wrapper is this?");
+    NS_ASSERTION(IS_WN_REFLECTOR(obj), "What kind of wrapper is this?");
 
-    if (IS_WN_WRAPPER_OBJECT(obj)) {
-        XPCWrappedNative *xpcWrapper =
-            (XPCWrappedNative *)xpc_GetJSPrivate(obj);
-        if (xpcWrapper) {
-            if (allowShortCircuit) {
-                nsIPrincipal *result = xpcWrapper->GetObjectPrincipal();
-                if (result) {
-                    return result;
-                }
+    XPCWrappedNative *xpcWrapper =
+        (XPCWrappedNative *)xpc_GetJSPrivate(obj);
+    if (xpcWrapper) {
+        if (allowShortCircuit) {
+            nsIPrincipal *result = xpcWrapper->GetObjectPrincipal();
+            if (result) {
+                return result;
             }
+        }
 
-            // If not, check if it points to an nsIScriptObjectPrincipal
-            nsCOMPtr<nsIScriptObjectPrincipal> objPrin =
-                do_QueryInterface(xpcWrapper->Native());
-            if (objPrin) {
-                nsIPrincipal *result = objPrin->GetPrincipal();
-                if (result) {
-                    return result;
-                }
+        // If not, check if it points to an nsIScriptObjectPrincipal
+        nsCOMPtr<nsIScriptObjectPrincipal> objPrin =
+            do_QueryInterface(xpcWrapper->Native());
+        if (objPrin) {
+            nsIPrincipal *result = objPrin->GetPrincipal();
+            if (result) {
+                return result;
             }
         }
     }
