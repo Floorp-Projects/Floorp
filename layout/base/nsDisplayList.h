@@ -478,13 +478,7 @@ public:
    * destructors are called as soon as the item is no longer used.
    */
   void* Allocate(size_t aSize);
-
-  /**
-   * Allocate a new DisplayListClip in the arena. Will be cleaned up
-   * automatically when the arena goes away.
-   */
-  DisplayItemClip* AllocateDisplayItemClip(const DisplayItemClip& aOriginal);
-
+  
   /**
    * A helper class to temporarily set the value of
    * mIsAtRootOfPseudoStackingContext and mIsInFixedPosition, and temporarily
@@ -652,7 +646,6 @@ private:
   nsRegion                       mExcludedGlassRegion;
   // The display item for the Windows window glass background, if any
   nsDisplayItem*                 mGlassDisplayItem;
-  nsTArray<DisplayItemClip*>     mDisplayItemClipsToDestroy;
   Mode                           mMode;
   bool                           mBuildCaret;
   bool                           mIgnoreSuppression;
@@ -753,7 +746,12 @@ public:
 #endif
   {
   }
-  virtual ~nsDisplayItem() {}
+  virtual ~nsDisplayItem()
+  {
+    if (mClip) {
+      mClip->MaybeDestroy();
+    }
+  }
   
   void* operator new(size_t aSize,
                      nsDisplayListBuilder* aBuilder) CPP_THROW_NEW {
@@ -1195,11 +1193,17 @@ public:
   }
   void SetClip(nsDisplayListBuilder* aBuilder, const DisplayItemClip& aClip)
   {
+    if (mClip) {
+      mClip->MaybeDestroy();
+    }
     if (!aClip.HasClip()) {
       mClip = nullptr;
       return;
     }
-    mClip = aBuilder->AllocateDisplayItemClip(aClip);
+    void* mem = aBuilder->Allocate(sizeof(DisplayItemClip));
+    DisplayItemClip* clip = new (mem) DisplayItemClip();
+    *clip = aClip;
+    mClip = clip;
   }
 
 protected:
