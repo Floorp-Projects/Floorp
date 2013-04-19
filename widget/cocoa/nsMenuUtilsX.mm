@@ -11,6 +11,7 @@
 #include "nsObjCExceptions.h"
 #include "nsCocoaUtils.h"
 #include "nsCocoaWindow.h"
+#include "nsDOMEvent.h"
 #include "nsGkAtoms.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
@@ -18,18 +19,18 @@
 #include "nsIDOMXULCommandEvent.h"
 #include "nsPIDOMWindow.h"
 
+using namespace mozilla;
+
 void nsMenuUtilsX::DispatchCommandTo(nsIContent* aTargetContent)
 {
   NS_PRECONDITION(aTargetContent, "null ptr");
 
   nsIDocument* doc = aTargetContent->OwnerDoc();
-  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(doc);
-  nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(aTargetContent);
-  if (domDoc && target) {
-    nsCOMPtr<nsIDOMEvent> event;
-    domDoc->CreateEvent(NS_LITERAL_STRING("xulcommandevent"),
-                        getter_AddRefs(event));
-    nsCOMPtr<nsIDOMXULCommandEvent> command = do_QueryInterface(event);
+  if (doc) {
+    ErrorResult rv;
+    nsRefPtr<nsDOMEvent> event =
+      doc->CreateEvent(NS_LITERAL_STRING("xulcommandevent"), rv);
+    nsCOMPtr<nsIDOMXULCommandEvent> command = do_QueryObject(event);
 
     // FIXME: Should probably figure out how to init this with the actual
     // pressed keys, but this is a big old edge case anyway. -dwh
@@ -41,7 +42,7 @@ void nsMenuUtilsX::DispatchCommandTo(nsIContent* aTargetContent)
                                                false, nullptr))) {
       event->SetTrusted(true);
       bool dummy;
-      target->DispatchEvent(event, &dummy);
+      aTargetContent->DispatchEvent(event, &dummy);
     }
   }
 }
