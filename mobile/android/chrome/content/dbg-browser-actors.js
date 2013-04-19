@@ -45,15 +45,6 @@ DeviceRootActor.prototype.onListTabs = function DRA_onListTabs() {
   let actorPool = new ActorPool(this.conn);
   let tabActorList = [];
 
-  // Get the chrome debugger actor.
-  let actor = this._chromeDebugger;
-  if (!actor) {
-    actor = new ChromeDebuggerActor(this);
-    actor.parentID = this.actorID;
-    this._chromeDebugger = actor;
-    actorPool.addActor(actor);
-  }
-
   let win = windowMediator.getMostRecentWindow("navigator:browser");
   this.browser = win.BrowserApp.selectedBrowser;
 
@@ -97,8 +88,7 @@ DeviceRootActor.prototype.onListTabs = function DRA_onListTabs() {
   let response = {
     "from": "root",
     "selected": selected,
-    "tabs": [actor.grip() for (actor of tabActorList)],
-    "chromeDebugger": this._chromeDebugger.actorID
+    "tabs": [actor.grip() for (actor of tabActorList)]
   };
   this._appendExtraActors(response);
   return response;
