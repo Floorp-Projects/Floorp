@@ -285,18 +285,6 @@ extern const char XPC_XPCONNECT_CONTRACTID[];
 
 #define INVALID_OBJECT ((JSObject *)1)
 
-inline void SetSlimWrapperProto(JSObject *obj, XPCWrappedNativeProto *proto)
-{
-    JS_SetReservedSlot(obj, WRAPPER_MULTISLOT, PRIVATE_TO_JSVAL(proto));
-}
-
-inline XPCWrappedNativeProto* GetSlimWrapperProto(JSObject *obj)
-{
-    MOZ_ASSERT(IS_SLIM_WRAPPER(obj));
-    const JS::Value &v = js::GetReservedSlot(obj, WRAPPER_MULTISLOT);
-    return static_cast<XPCWrappedNativeProto*>(v.toPrivate());
-}
-
 inline void SetWNExpandoChain(JSObject *obj, JSObject *chain)
 {
     MOZ_ASSERT(IS_WN_WRAPPER(obj));

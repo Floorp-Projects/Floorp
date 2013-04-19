@@ -74,32 +74,6 @@ XPC_WN_Shared_ToString(JSContext *cx, unsigned argc, jsval *vp)
     if (!obj)
         return false;
 
-    if (IS_SLIM_WRAPPER(obj)) {
-        XPCNativeScriptableInfo *si =
-            GetSlimWrapperProto(obj)->GetScriptableInfo();
-#ifdef DEBUG
-#  define FMT_ADDR " @ 0x%p"
-#  define FMT_STR(str) str
-#  define PARAM_ADDR(w) , w
-#else
-#  define FMT_ADDR ""
-#  define FMT_STR(str)
-#  define PARAM_ADDR(w)
-#endif
-        char *sz = JS_smprintf("[object %s" FMT_ADDR FMT_STR(" (native") FMT_ADDR FMT_STR(")") "]", si->GetJSClass()->name PARAM_ADDR(obj.get()) PARAM_ADDR(xpc_GetJSPrivate(obj)));
-        if (!sz)
-            return false;
-
-        JSString* str = JS_NewStringCopyZ(cx, sz);
-        JS_smprintf_free(sz);
-        if (!str)
-            return false;
-
-        *vp = STRING_TO_JSVAL(str);
-
-        return true;
-    }
-
     XPCCallContext ccx(JS_CALLER, cx, obj);
     if (!ccx.IsValid())
         return Throw(NS_ERROR_XPC_BAD_OP_ON_WN_PROTO, cx);
@@ -816,9 +790,7 @@ XPC_WN_MaybeResolvingDeletePropertyStub(JSContext *cx, JSHandleObject obj, JSHan
 
 // macro fun!
 #define PRE_HELPER_STUB                                                       \
-    XPCWrappedNative* wrapper;                                                \
-    nsIXPCScriptable* si;                                                     \
-    JSObject *unwrapped = js::CheckedUnwrap(obj, false);                \
+    JSObject *unwrapped = js::CheckedUnwrap(obj, false);                      \
     if (!unwrapped) {                                                         \
         JS_ReportError(cx, "Permission denied to operate on object.");        \
         return false;                                                         \
@@ -826,18 +798,10 @@ XPC_WN_MaybeResolvingDeletePropertyStub(JSContext *cx, JSHandleObject obj, JSHan
     if (!IS_WRAPPER_CLASS(js::GetObjectClass(unwrapped))) {                   \
         return Throw(NS_ERROR_XPC_BAD_OP_ON_WN_PROTO, cx);                    \
     }                                                                         \
-    if (IS_SLIM_WRAPPER_OBJECT(unwrapped)) {                                  \
-        wrapper = nullptr;                                                    \
-        si = GetSlimWrapperProto(unwrapped)->GetScriptableInfo()              \
-                                           ->GetCallback();                   \
-    } else {                                                                  \
-        MOZ_ASSERT(IS_WN_WRAPPER_OBJECT(unwrapped));                          \
-        wrapper = XPCWrappedNative::Get(unwrapped);                           \
-        THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper);                         \
-        si = wrapper->GetScriptableCallback();                                \
-    }                                                                         \
+    XPCWrappedNative *wrapper = XPCWrappedNative::Get(unwrapped);             \
+    THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper);                             \
     bool retval = true;                                                       \
-    nsresult rv = si->
+    nsresult rv = wrapper->GetScriptableCallback()->
 
 #define POST_HELPER_STUB                                                      \
     if (NS_FAILED(rv))                                                        \
@@ -959,27 +923,6 @@ XPC_WN_Helper_NewResolve(JSContext *cx, JSHandleObject obj, JSHandleId id, unsig
     nsresult rv = NS_OK;
     bool retval = true;
     RootedObject obj2FromScriptable(cx);
-    if (IS_SLIM_WRAPPER(obj)) {
-        XPCNativeScriptableInfo *si =
-            GetSlimWrapperProto(obj)->GetScriptableInfo();
-        if (!si->GetFlags().WantNewResolve())
-            return retval;
-
-        NS_ASSERTION(si->GetFlags().AllowPropModsToPrototype() &&
-                     !si->GetFlags().AllowPropModsDuringResolve(),
-                     "We don't support these flags for slim wrappers!");
-
-        rv = si->GetCallback()->NewResolve(nullptr, cx, obj, id, flags,
-                                           obj2FromScriptable.address(), &retval);
-        if (NS_FAILED(rv))
-            return Throw(rv, cx);
-
-        if (obj2FromScriptable)
-            objp.set(obj2FromScriptable);
-
-        return retval;
-    }
-
     XPCCallContext ccx(JS_CALLER, cx, obj);
     XPCWrappedNative* wrapper = ccx.GetWrapper();
     THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper);

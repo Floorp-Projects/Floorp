@@ -1942,23 +1942,6 @@ nsXPConnect::GetPrincipal(JSObject* obj, bool allowShortCircuit) const
                 }
             }
         }
-    } else {
-        if (allowShortCircuit) {
-            nsIPrincipal *result =
-                GetSlimWrapperProto(obj)->GetScope()->GetPrincipal();
-            if (result) {
-                return result;
-            }
-        }
-
-        nsCOMPtr<nsIScriptObjectPrincipal> objPrin =
-            do_QueryInterface((nsISupports*)xpc_GetJSPrivate(obj));
-        if (objPrin) {
-            nsIPrincipal *result = objPrin->GetPrincipal();
-            if (result) {
-                return result;
-            }
-        }
     }
 
     return nullptr;
