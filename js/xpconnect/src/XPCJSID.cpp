@@ -470,8 +470,7 @@ nsJSIID::Enumerate(nsIXPConnectWrappedNative *wrapper,
  *     there's chrome code that relies on this.
  *
  * This static method handles both complexities, returning either an XPCWN, a
- * slim wrapper, a DOM object, or null. The object may well be cross-compartment
- * from |cx|.
+ * DOM object, or null. The object may well be cross-compartment from |cx|.
  */
 static JSObject *
 FindObjectForHasInstance(JSContext *cx, HandleObject objArg)
