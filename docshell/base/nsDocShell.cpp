@@ -11416,9 +11416,8 @@ nsDocShell::EnsureScriptEnvironment()
     uint32_t chromeFlags;
     browserChrome->GetChromeFlags(&chromeFlags);
 
-    bool isModalContentWindow =
-        (chromeFlags & nsIWebBrowserChrome::CHROME_MODAL) &&
-        !(chromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME);
+    bool isModalContentWindow = (mItemType == typeContent) &&
+        (chromeFlags & nsIWebBrowserChrome::CHROME_MODAL);
 
     // If our window is modal and we're not opened as chrome, make
     // this window a modal content window.
