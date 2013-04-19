@@ -16,12 +16,6 @@ interface nsIDOMCanvasPattern : nsISupports
 {
 };
 
-[scriptable, uuid(2d01715c-ec7d-424a-ab85-e0fd70c8665c)]
-interface nsIDOMTextMetrics : nsISupports
-{
-  readonly attribute float width;
-};
-
 /**
  * This interface remains only for the constants, for a context, use the
  * WebIDL/Paris bindings instead (CanvasRenderingContext2D.webidl).

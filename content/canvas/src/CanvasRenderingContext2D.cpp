@@ -95,6 +95,7 @@
 #include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/HTMLVideoElement.h"
 #include "mozilla/dom/CanvasRenderingContext2DBinding.h"
+#include "mozilla/dom/TextMetrics.h"
 
 #ifdef USE_SKIA_GPU
 #include "GLContext.h"
@@ -2206,7 +2207,7 @@ CanvasRenderingContext2D::StrokeText(const nsAString& text, double x,
   error = DrawOrMeasureText(text, x, y, maxWidth, TEXT_DRAW_OPERATION_STROKE, nullptr);
 }
 
-already_AddRefed<nsIDOMTextMetrics>
+TextMetrics*
 CanvasRenderingContext2D::MeasureText(const nsAString& rawText,
                                       ErrorResult& error)
 {
@@ -2217,9 +2218,7 @@ CanvasRenderingContext2D::MeasureText(const nsAString& rawText,
     return nullptr;
   }
 
-  nsRefPtr<nsIDOMTextMetrics> textMetrics = new TextMetrics(width);
-
-  return textMetrics.forget();
+  return new TextMetrics(width);
 }
 
 /**
