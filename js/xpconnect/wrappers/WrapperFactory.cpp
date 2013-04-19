@@ -152,11 +152,6 @@ WrapperFactory::PrepareForWrapping(JSContext *cx, HandleObject scope,
     // We should never get a proxy here (the JS engine unwraps those for us).
     MOZ_ASSERT(!IsWrapper(obj));
 
-    // As soon as an object is wrapped in a security wrapper, it morphs to be
-    // a fat wrapper. (see also: bug XXX).
-    if (IS_SLIM_WRAPPER(obj) && !MorphSlimWrapper(cx, obj))
-        return nullptr;
-
     // If the object being wrapped is a prototype for a standard class and the
     // wrapper does not subsumes the wrappee, use the one from the content
     // compartment. This is generally safer all-around, and in the COW case this

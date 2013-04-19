@@ -30,13 +30,6 @@ static JSBool Throw(nsresult errNum, JSContext* cx)
 
 // Handy macro used in many callback stub below.
 
-#define MORPH_SLIM_WRAPPER(cx, obj)                                           \
-    PR_BEGIN_MACRO                                                            \
-    SLIM_LOG_WILL_MORPH(cx, obj);                                             \
-    if (IS_SLIM_WRAPPER(obj) && !MorphSlimWrapper(cx, obj))                   \
-        return Throw(NS_ERROR_XPC_BAD_OP_ON_WN_PROTO, cx);                    \
-    PR_END_MACRO
-
 #define THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper)                          \
     PR_BEGIN_MACRO                                                            \
     if (!wrapper)                                                             \
@@ -173,7 +166,6 @@ XPC_WN_DoubleWrappedGetter(JSContext *cx, unsigned argc, jsval *vp)
     if (!obj)
         return false;
 
-    MORPH_SLIM_WRAPPER(cx, obj);
     XPCCallContext ccx(JS_CALLER, cx, obj);
     XPCWrappedNative* wrapper = ccx.GetWrapper();
     THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper);
@@ -513,7 +505,6 @@ XPC_WN_Shared_Convert(JSContext *cx, JSHandleObject obj, JSType type, JSMutableH
         return true;
     }
 
-    MORPH_SLIM_WRAPPER(cx, obj);
     XPCCallContext ccx(JS_CALLER, cx, obj);
     XPCWrappedNative* wrapper = ccx.GetWrapper();
     THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper);
@@ -566,7 +557,6 @@ XPC_WN_Shared_Convert(JSContext *cx, JSHandleObject obj, JSType type, JSMutableH
 static JSBool
 XPC_WN_Shared_Enumerate(JSContext *cx, JSHandleObject obj)
 {
-    MORPH_SLIM_WRAPPER(cx, obj);
     XPCCallContext ccx(JS_CALLER, cx, obj);
     XPCWrappedNative* wrapper = ccx.GetWrapper();
     THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper);
@@ -693,7 +683,6 @@ XPC_WN_NoHelper_Trace(JSTracer *trc, JSObject *obj)
 static JSBool
 XPC_WN_NoHelper_Resolve(JSContext *cx, JSHandleObject obj, JSHandleId id)
 {
-    MORPH_SLIM_WRAPPER(cx, obj);
     XPCCallContext ccx(JS_CALLER, cx, obj, NullPtr(), id);
     XPCWrappedNative* wrapper = ccx.GetWrapper();
     THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper);
@@ -826,7 +815,6 @@ XPCWrappedNativeJSClass XPC_WN_NoHelper_JSClass = {
 static JSBool
 XPC_WN_MaybeResolvingPropertyStub(JSContext *cx, JSHandleObject obj, JSHandleId id, JSMutableHandleValue vp)
 {
-    MORPH_SLIM_WRAPPER(cx, obj);
     XPCCallContext ccx(JS_CALLER, cx, obj);
     XPCWrappedNative* wrapper = ccx.GetWrapper();
     THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper);
@@ -846,7 +834,6 @@ XPC_WN_MaybeResolvingStrictPropertyStub(JSContext *cx, JSHandleObject obj, JSHan
 static JSBool
 XPC_WN_MaybeResolvingDeletePropertyStub(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool *succeeded)
 {
-    MORPH_SLIM_WRAPPER(cx, obj);
     XPCCallContext ccx(JS_CALLER, cx, obj);
     XPCWrappedNative* wrapper = ccx.GetWrapper();
     THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper);
@@ -859,13 +846,6 @@ XPC_WN_MaybeResolvingDeletePropertyStub(JSContext *cx, JSHandleObject obj, JSHan
 }
 
 // macro fun!
-#define PRE_HELPER_STUB_NO_SLIM                                               \
-    XPCWrappedNative* wrapper =                                               \
-        XPCWrappedNative::GetAndMorphWrappedNativeOfJSObject(cx, obj);        \
-    THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper);                             \
-    bool retval = true;                                                       \
-    nsresult rv = wrapper->GetScriptableCallback()->
-
 #define PRE_HELPER_STUB                                                       \
     XPCWrappedNative* wrapper;                                                \
     nsIXPCScriptable* si;                                                     \
@@ -934,8 +914,7 @@ XPC_WN_Helper_SetProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBo
 static JSBool
 XPC_WN_Helper_Convert(JSContext *cx, JSHandleObject obj, JSType type, JSMutableHandleValue vp)
 {
-    SLIM_LOG_WILL_MORPH(cx, obj);
-    PRE_HELPER_STUB_NO_SLIM
+    PRE_HELPER_STUB
     Convert(wrapper, cx, obj, type, vp.address(), &retval);
     POST_HELPER_STUB
 }
@@ -963,8 +942,7 @@ XPC_WN_Helper_Call(JSContext *cx, unsigned argc, jsval *vp)
 
     MOZ_ASSERT(obj == ccx.GetFlattenedJSObject());
 
-    SLIM_LOG_WILL_MORPH(cx, obj);
-    PRE_HELPER_STUB_NO_SLIM
+    PRE_HELPER_STUB
     Call(wrapper, cx, obj, args, &retval);
     POST_HELPER_STUB
 }
@@ -984,8 +962,7 @@ XPC_WN_Helper_Construct(JSContext *cx, unsigned argc, jsval *vp)
 
     MOZ_ASSERT(obj == ccx.GetFlattenedJSObject());
 
-    SLIM_LOG_WILL_MORPH(cx, obj);
-    PRE_HELPER_STUB_NO_SLIM
+    PRE_HELPER_STUB
     Construct(wrapper, cx, obj, args, &retval);
     POST_HELPER_STUB
 }
@@ -993,9 +970,8 @@ XPC_WN_Helper_Construct(JSContext *cx, unsigned argc, jsval *vp)
 static JSBool
 XPC_WN_Helper_HasInstance(JSContext *cx, JSHandleObject obj, JSMutableHandleValue valp, JSBool *bp)
 {
-    SLIM_LOG_WILL_MORPH(cx, obj);
     bool retval2;
-    PRE_HELPER_STUB_NO_SLIM
+    PRE_HELPER_STUB
     HasInstance(wrapper, cx, obj, valp, &retval2, &retval);
     *bp = retval2;
     POST_HELPER_STUB
@@ -1157,8 +1133,6 @@ XPC_WN_JSOp_Enumerate(JSContext *cx, JSHandleObject obj, JSIterateOp enum_op,
 
         return JS_EnumerateState(cx, obj, enum_op, statep, idp);
     }
-
-    MORPH_SLIM_WRAPPER(cx, obj);
 
     XPCCallContext ccx(JS_CALLER, cx, obj);
     XPCWrappedNative* wrapper = ccx.GetWrapper();
@@ -1453,18 +1427,6 @@ XPC_WN_CallMethod(JSContext *cx, unsigned argc, jsval *vp)
     if (!obj)
         return false;
 
-#ifdef DEBUG_slimwrappers
-    {
-        JSFunction* fun = funobj->getFunctionPrivate();
-        JSString *funid = JS_GetFunctionDisplayId(fun);
-        JSAutoByteString bytes;
-        const char *funname = !funid ? "" : bytes.encodeLatin1(cx, funid) ? bytes.ptr() : "<error>";
-        SLIM_LOG_WILL_MORPH_FOR_PROP(cx, obj, funname);
-    }
-#endif
-    if (IS_SLIM_WRAPPER(obj) && !MorphSlimWrapper(cx, obj))
-        return Throw(NS_ERROR_XPC_BAD_OP_ON_WN_PROTO, cx);
-
     obj = FixUpThisIfBroken(obj, funobj);
     XPCCallContext ccx(JS_CALLER, cx, obj, funobj, JSID_VOIDHANDLE, argc,
                        JS_ARGV(cx, vp), vp);
@@ -1489,21 +1451,6 @@ XPC_WN_GetterSetter(JSContext *cx, unsigned argc, jsval *vp)
     RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
     if (!obj)
         return false;
-
-#ifdef DEBUG_slimwrappers
-    {
-        const char* funname = nullptr;
-        JSAutoByteString bytes;
-        if (JS_TypeOfValue(cx, JS_CALLEE(cx, vp)) == JSTYPE_FUNCTION) {
-            JSString *funid = JS_GetFunctionDisplayId(funobj->getFunctionPrivate());
-            funname = !funid ? "" : bytes.encodeLatin1(cx, funid) ? bytes.ptr() : "<error>";
-        }
-        SLIM_LOG_WILL_MORPH_FOR_PROP(cx, obj, funname);
-    }
-#endif
-    if (IS_SLIM_WRAPPER(obj) && !MorphSlimWrapper(cx, obj))
-        return Throw(NS_ERROR_XPC_BAD_OP_ON_WN_PROTO, cx);
-
 
     obj = FixUpThisIfBroken(obj, funobj);
     XPCCallContext ccx(JS_CALLER, cx, obj, funobj, JSID_VOIDHANDLE, argc,
@@ -1787,7 +1734,6 @@ js::Class XPC_WN_NoMods_NoCall_Proto_JSClass = {
 static JSBool
 XPC_WN_TearOff_Enumerate(JSContext *cx, JSHandleObject obj)
 {
-    MORPH_SLIM_WRAPPER(cx, obj);
     XPCCallContext ccx(JS_CALLER, cx, obj);
     XPCWrappedNative* wrapper = ccx.GetWrapper();
     THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper);
@@ -1810,7 +1756,6 @@ XPC_WN_TearOff_Enumerate(JSContext *cx, JSHandleObject obj)
 static JSBool
 XPC_WN_TearOff_Resolve(JSContext *cx, JSHandleObject obj, JSHandleId id)
 {
-    MORPH_SLIM_WRAPPER(cx, obj);
     XPCCallContext ccx(JS_CALLER, cx, obj);
     XPCWrappedNative* wrapper = ccx.GetWrapper();
     THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper);
