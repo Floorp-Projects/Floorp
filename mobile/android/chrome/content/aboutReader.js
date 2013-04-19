@@ -29,6 +29,8 @@ let AboutReader = function(doc, win) {
   this._winRef = Cu.getWeakReference(win);
 
   Services.obs.addObserver(this, "Reader:FaviconReturn", false);
+  Services.obs.addObserver(this, "Reader:Add", false);
+  Services.obs.addObserver(this, "Reader:Remove", false);
 
   this._article = null;
 
@@ -49,6 +51,7 @@ let AboutReader = function(doc, win) {
   body.addEventListener("touchstart", this, false);
   body.addEventListener("click", this, false);
 
+  win.addEventListener("unload", this, false);
   win.addEventListener("scroll", this, false);
   win.addEventListener("popstate", this, false);
   win.addEventListener("resize", this, false);
@@ -155,9 +158,30 @@ AboutReader.prototype = {
   observe: function Reader_observe(aMessage, aTopic, aData) {
     switch(aTopic) {
       case "Reader:FaviconReturn": {
-        let info = JSON.parse(aData);
-        this._loadFavicon(info.url, info.faviconUrl);
+        let args = JSON.parse(aData);
+        this._loadFavicon(args.url, args.faviconUrl);
         Services.obs.removeObserver(this, "Reader:FaviconReturn");
+        break;
+      }
+
+      case "Reader:Add": {
+        let args = JSON.parse(aData);
+        if (args.url == this._article.url) {
+          if (!this._isReadingListItem) {
+            this._isReadingListItem = true;
+            this._updateToggleButton();
+          }
+        }
+        break;
+      }
+
+      case "Reader:Remove": {
+        if (aData == this._article.url) {
+          if (this._isReadingListItem) {
+            this._isReadingListItem = false;
+            this._updateToggleButton();
+          }
+        }
         break;
       }
     }
@@ -188,6 +212,11 @@ AboutReader.prototype = {
       case "resize":
         this._updateImageMargins();
         break;
+
+      case "unload":
+        Services.obs.removeObserver(this, "Reader:Add");
+        Services.obs.removeObserver(this, "Reader:Remove");
+        break;
     }
   },
 
@@ -215,6 +244,9 @@ AboutReader.prototype = {
         let result = (success ? gChromeWin.Reader.READER_ADD_SUCCESS :
             gChromeWin.Reader.READER_ADD_FAILED);
 
+        let json = JSON.stringify({ fromAboutReader: true, url: this._article.url });
+        Services.obs.notifyObservers(null, "Reader:Add", json);
+
         gChromeWin.sendMessageToJava({
           type: "Reader:Added",
           result: result,
@@ -225,6 +257,8 @@ AboutReader.prototype = {
     } else {
       gChromeWin.Reader.removeArticleFromCache(this._article.url , function(success) {
         dump("Reader:Remove (in reader) success=" + success);
+
+        Services.obs.notifyObservers(null, "Reader:Remove", this._article.url);
 
         gChromeWin.sendMessageToJava({
           type: "Reader:Removed",
