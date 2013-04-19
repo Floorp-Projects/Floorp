@@ -31,6 +31,9 @@ public interface Actions {
 
         /** Polls to see if the event has been received. Once this returns true, subsequent calls will also return true. */
         public boolean eventReceived();
+
+        /** Stop listening for events. */
+        public void unregisterListener();
     }
 
     public interface RepeatedEventExpecter extends EventExpecter {
