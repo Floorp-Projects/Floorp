@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "nsHTMLFormElement.h"
 #include "nsIHTMLDocument.h"
+#include "nsIDOMEventTarget.h"
 #include "nsEventStateManager.h"
 #include "nsEventStates.h"
 #include "nsGkAtoms.h"

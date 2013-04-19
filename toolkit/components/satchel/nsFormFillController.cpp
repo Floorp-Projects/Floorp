@@ -17,6 +17,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIWebNavigation.h"
 #include "nsIContentViewer.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
@@ -34,9 +35,6 @@
 #include "nsIDOMNSEditableElement.h"
 #include "mozilla/dom/Element.h"
 #include "nsContentUtils.h"
-#include "nsDOMEvent.h"
-
-using namespace mozilla::dom;
 
 NS_IMPL_ISUPPORTS5(nsFormFillController,
                    nsIFormFillController,
@@ -545,7 +543,7 @@ nsFormFillController::OnTextEntered(bool* aPrevent)
   // code.
   event->SetTrusted(true);
 
-  nsCOMPtr<EventTarget> targ = do_QueryInterface(mFocusedInput);
+  nsCOMPtr<nsIDOMEventTarget> targ = do_QueryInterface(mFocusedInput);
 
   bool defaultActionEnabled;
   targ->DispatchEvent(event, &defaultActionEnabled);
@@ -757,17 +755,21 @@ nsFormFillController::HandleEvent(nsIDOMEvent* aEvent)
     return NS_OK;
   }
   if (type.EqualsLiteral("pagehide")) {
+    nsCOMPtr<nsIDOMEventTarget> target;
+    aEvent->GetTarget(getter_AddRefs(target));
 
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(
-      aEvent->InternalDOMEvent()->GetTarget());
-    if (!doc)
+    nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(target);
+    if (!domDoc)
       return NS_OK;
 
     if (mFocusedInput) {
-      if (doc == mFocusedInputNode->OwnerDoc())
+      nsCOMPtr<nsIDOMDocument> inputDoc;
+      mFocusedInput->GetOwnerDocument(getter_AddRefs(inputDoc));
+      if (domDoc == inputDoc)
         StopControllingInput();
     }
 
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
     PwmgrInputsEnumData ed(this, doc);
     mPwmgrInputs.Enumerate(RemoveForDocumentEnumerator, &ed);
   }
@@ -795,9 +797,11 @@ nsFormFillController::RemoveForDocumentEnumerator(const nsINode* aKey,
 nsresult
 nsFormFillController::Focus(nsIDOMEvent* aEvent)
 {
-  nsCOMPtr<nsIDOMHTMLInputElement> input = do_QueryInterface(
-    aEvent->InternalDOMEvent()->GetTarget());
-  nsCOMPtr<nsINode> inputNode = do_QueryInterface(input);
+  nsCOMPtr<nsIDOMEventTarget> target;
+  aEvent->GetTarget(getter_AddRefs(target));
+
+  nsCOMPtr<nsIDOMHTMLInputElement> input = do_QueryInterface(target);
+  nsCOMPtr<nsINode> inputNode = do_QueryInterface(input); 
   if (!inputNode)
     return NS_OK;
 
@@ -905,8 +909,9 @@ nsFormFillController::MouseDown(nsIDOMEvent* aEvent)
   if (!mouseEvent)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDOMHTMLInputElement> targetInput = do_QueryInterface(
-    aEvent->InternalDOMEvent()->GetTarget());
+  nsCOMPtr<nsIDOMEventTarget> target;
+  aEvent->GetTarget(getter_AddRefs(target));
+  nsCOMPtr<nsIDOMHTMLInputElement> targetInput = do_QueryInterface(target);
   if (!targetInput)
     return NS_OK;
 
@@ -951,7 +956,7 @@ nsFormFillController::AddWindowListeners(nsIDOMWindow *aWindow)
     return;
 
   nsCOMPtr<nsPIDOMWindow> privateDOMWindow(do_QueryInterface(aWindow));
-  EventTarget* target = nullptr;
+  nsIDOMEventTarget* target = nullptr;
   if (privateDOMWindow)
     target = privateDOMWindow->GetChromeEventHandler();
 
@@ -994,7 +999,7 @@ nsFormFillController::RemoveWindowListeners(nsIDOMWindow *aWindow)
   mPwmgrInputs.Enumerate(RemoveForDocumentEnumerator, &ed);
 
   nsCOMPtr<nsPIDOMWindow> privateDOMWindow(do_QueryInterface(aWindow));
-  EventTarget* target = nullptr;
+  nsIDOMEventTarget* target = nullptr;
   if (privateDOMWindow)
     target = privateDOMWindow->GetChromeEventHandler();
 
@@ -1014,19 +1019,25 @@ nsFormFillController::RemoveWindowListeners(nsIDOMWindow *aWindow)
 }
 
 void
-nsFormFillController::AddKeyListener(nsINode* aInput)
+nsFormFillController::AddKeyListener(nsIDOMHTMLInputElement *aInput)
 {
-  aInput->AddEventListener(NS_LITERAL_STRING("keypress"), this,
+  if (!aInput)
+    return;
+
+  nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(aInput);
+
+  target->AddEventListener(NS_LITERAL_STRING("keypress"), this,
                            true, false);
 }
 
 void
 nsFormFillController::RemoveKeyListener()
 {
-  if (!mFocusedInputNode)
+  if (!mFocusedInput)
     return;
 
-  mFocusedInputNode->RemoveEventListener(NS_LITERAL_STRING("keypress"), this, true);
+  nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mFocusedInput);
+  target->RemoveEventListener(NS_LITERAL_STRING("keypress"), this, true);
 }
 
 void
@@ -1049,8 +1060,8 @@ nsFormFillController::StartControllingInput(nsIDOMHTMLInputElement *aInput)
     return;
   }
 
-  AddKeyListener(node);
-
+  AddKeyListener(aInput);
+  
   node->AddMutationObserverUnlessExists(this);
   mFocusedInputNode = node;
   mFocusedInput = aInput;

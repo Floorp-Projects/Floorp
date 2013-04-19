@@ -246,9 +246,10 @@ nsInProcessTabChildGlobal::DelayedDisconnect()
   if (mListenerManager) {
     mListenerManager->Disconnect();
   }
-
+  
   if (!mLoadingScript) {
-    nsContentUtils::ReleaseWrapper(static_cast<EventTarget*>(this), this);
+    nsContentUtils::ReleaseWrapper(static_cast<nsIDOMEventTarget*>(this),
+                                   this);
     if (mCx) {
       DestroyCx();
     }
@@ -308,7 +309,8 @@ nsInProcessTabChildGlobal::InitTabChildGlobal()
     id.AppendLiteral("?ownedBy=");
     id.Append(u);
   }
-  nsISupports* scopeSupports = NS_ISUPPORTS_CAST(EventTarget*, this);
+  nsISupports* scopeSupports =
+    NS_ISUPPORTS_CAST(nsIDOMEventTarget*, this);
   NS_ENSURE_STATE(InitTabChildGlobalInternal(scopeSupports, id));
   return NS_OK;
 }

@@ -42,10 +42,17 @@ public:
 
   void Notify(const BluetoothSignal& aParam);
 
-  nsISupports*
-  ToISupports()
+  nsIDOMEventTarget*
+  ToIDOMEventTarget() const
   {
-    return static_cast<EventTarget*>(this);
+    return static_cast<nsDOMEventTargetHelper*>(
+      const_cast<BluetoothDevice*>(this));
+  }
+
+  nsISupports*
+  ToISupports() const
+  {
+    return ToIDOMEventTarget();
   }
 
   void SetPropertyByValue(const BluetoothNamedValue& aValue);
@@ -56,7 +63,7 @@ private:
                   const BluetoothValue& aValue);
   ~BluetoothDevice();
   void Root();
-
+  
   JSObject* mJsUuids;
   JSObject* mJsServices;
 

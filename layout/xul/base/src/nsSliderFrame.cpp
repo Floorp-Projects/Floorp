@@ -21,6 +21,7 @@
 #include "nsIPresShell.h"
 #include "nsCSSRendering.h"
 #include "nsEventListenerManager.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsScrollbarButtonFrame.h"
 #include "nsISliderListener.h"

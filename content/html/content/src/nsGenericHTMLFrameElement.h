@@ -80,7 +80,7 @@ protected:
   {
   public:
     TitleChangedListener(nsGenericHTMLFrameElement *aElement,
-                         mozilla::dom::EventTarget *aChromeHandler);
+                         nsIDOMEventTarget *aChromeHandler);
 
     /* Unregister this listener. */
     void Unregister();
@@ -90,7 +90,7 @@ protected:
 
   private:
     nsWeakPtr mElement; /* nsGenericHTMLFrameElement */
-    nsWeakPtr mChromeHandler; /* EventTarget */
+    nsWeakPtr mChromeHandler; /* nsIDOMEventTarget */
   };
 
   // This doesn't really ensure a frame loade in all cases, only when
