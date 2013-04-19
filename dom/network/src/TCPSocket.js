@@ -23,6 +23,8 @@ const InputStreamPump = CC(
         "@mozilla.org/binaryinputstream;1", "nsIBinaryInputStream", "setInputStream"),
       StringInputStream = CC(
         '@mozilla.org/io/string-input-stream;1', 'nsIStringInputStream'),
+      ArrayBufferInputStream = CC(
+        '@mozilla.org/io/arraybuffer-input-stream;1', 'nsIArrayBufferInputStream'),
       MultiplexInputStream = CC(
         '@mozilla.org/io/multiplex-input-stream;1', 'nsIMultiplexInputStream');
 
@@ -89,13 +91,6 @@ function TCPSocket() {
   this._port = 0;
   this._ssl = false;
 
-  // As a workaround for bug https://bugzilla.mozilla.org/show_bug.cgi?id=786639
-  // we want to create any Uint8Array's off of the owning window so that there
-  // is no need for a wrapper to exist around the typed array from the
-  // perspective of content.  (The wrapper is bad because it only lets content
-  // see length, and forbids access to the array indices unless we excplicitly
-  // list them all.)  We will then access the array through a wrapper, but
-  // since we are chrome-privileged, this does not pose a problem.
   this.useWin = null;
 }
 
@@ -436,43 +431,35 @@ TCPSocket.prototype = {
     this._socketInputStream.close();
   },
 
-  send: function ts_send(data) {
+  send: function ts_send(data, byteOffset, byteLength) {
     if (this._readyState !== kOPEN) {
       throw new Error("Socket not open.");
     }
 
-    if (this._inChild) {
-      this._socketBridge.send(data);
-    }
-
-    let new_stream = new StringInputStream();
     if (this._binaryType === "arraybuffer") {
-      // It would be really nice if there were an interface
-      // that took an ArrayBuffer like StringInputStream takes
-      // a string. There is one, but only in C++ and not exposed
-      // to js as far as I can tell
-      var dataLen = data.length;
-      var offset = 0;
-      var result = "";
-      while (dataLen) {
-        var fragmentLen = dataLen;
-        if (fragmentLen > 32768)
-          fragmentLen = 32768;
-        dataLen -= fragmentLen;
-
-        var fragment = data.subarray(offset, offset + fragmentLen);
-        offset += fragmentLen;
-        result += String.fromCharCode.apply(null, fragment);
-      }
-      data = result;
+      byteLength = byteLength || data.byteLength;
     }
-    var newBufferedAmount = this.bufferedAmount + data.length;
+
+    if (this._inChild) {
+      this._socketBridge.send(data, byteOffset, byteLength);
+    }
+
+    let length = this._binaryType === "arraybuffer" ? byteLength : data.length;
+
+    var newBufferedAmount = this.bufferedAmount + length;
     var bufferNotFull = newBufferedAmount < BUFFER_SIZE;
     if (this._inChild) {
       return bufferNotFull;
     }
 
-    new_stream.setData(data, data.length);
+    let new_stream;
+    if (this._binaryType === "arraybuffer") {
+      new_stream = new ArrayBufferInputStream();
+      new_stream.setData(data, byteOffset, byteLength);
+    } else {
+      new_stream = new StringInputStream();
+      new_stream.setData(data, length);
+    }
     this._multiplexStream.appendStream(new_stream);
 
     if (newBufferedAmount >= BUFFER_SIZE) {
@@ -576,10 +563,7 @@ TCPSocket.prototype = {
   // nsIStreamListener (Triggered by _inputStreamPump.asyncRead)
   onDataAvailable: function ts_onDataAvailable(request, context, inputStream, offset, count) {
     if (this._binaryType === "arraybuffer") {
-      let ua = this.useWin ? new this.useWin.Uint8Array(count)
-                           : new Uint8Array(count);
-      ua.set(this._inputStreamBinary.readByteArray(count));
-      this.callListener("data", ua);
+      this.callListener("data", this._inputStreamBinary.readArrayBuffer(count));
     } else {
       this.callListener("data", this._inputStreamScriptable.read(count));
     }

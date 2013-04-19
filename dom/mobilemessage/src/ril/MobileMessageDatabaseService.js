@@ -21,7 +21,7 @@ const RIL_GETTHREADSCURSOR_CID =
 
 const DEBUG = false;
 const DB_NAME = "sms";
-const DB_VERSION = 9;
+const DB_VERSION = 10;
 const MESSAGE_STORE_NAME = "sms";
 const THREAD_STORE_NAME = "thread";
 const PARTICIPANT_STORE_NAME = "participant";
@@ -204,6 +204,10 @@ MobileMessageDatabaseService.prototype = {
           case 8:
             if (DEBUG) debug("Upgrade to version 9. Add transactionId index for incoming MMS.");
             self.upgradeSchema8(event.target.transaction);
+            break;
+          case 9:
+            if (DEBUG) debug("Upgrade to version 10. Upgrade type if it's not existing.");
+            self.upgradeSchema9(event.target.transaction);
             break;
           default:
             event.target.transaction.abort();
@@ -597,6 +601,25 @@ MobileMessageDatabaseService.prototype = {
     };
   },
 
+  upgradeSchema9: function upgradeSchema9(transaction) {
+    let messageStore = transaction.objectStore(MESSAGE_STORE_NAME);
+
+    // Update type attributes.
+    messageStore.openCursor().onsuccess = function(event) {
+      let cursor = event.target.result;
+      if (!cursor) {
+        return;
+      }
+
+      let messageRecord = cursor.value;
+      if (messageRecord.type == undefined) {
+        messageRecord.type = "sms";
+        cursor.update(messageRecord);
+      }
+      cursor.continue();
+    };
+  },
+
   createDomMessageFromRecord: function createDomMessageFromRecord(aMessageRecord) {
     if (DEBUG) {
       debug("createDomMessageFromRecord: " + JSON.stringify(aMessageRecord));
@@ -894,6 +917,7 @@ MobileMessageDatabaseService.prototype = {
           if (threadRecord.lastTimestamp <= timestamp) {
             threadRecord.lastTimestamp = timestamp;
             threadRecord.subject = aMessageRecord.body;
+            threadRecord.lastMessageId = aMessageRecord.id;
             needsUpdate = true;
           }
 
@@ -1260,10 +1284,12 @@ MobileMessageDatabaseService.prototype = {
   },
 
   deleteMessage: function deleteMessage(messageId, aRequest) {
+    if (DEBUG) debug("deleteMessage: message id " + messageId);
     let deleted = false;
     let self = this;
     this.newTxn(READ_WRITE, function (error, txn, stores) {
       if (error) {
+        if (DEBUG) debug("deleteMessage: failed to open transaction");
         aRequest.notifyDeleteMessageFailed(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
         return;
       }
@@ -1290,6 +1316,7 @@ MobileMessageDatabaseService.prototype = {
 
           // First actually delete the message.
           messageStore.delete(messageId).onsuccess = function(event) {
+            if (DEBUG) debug("Message id " + messageId + " deleted");
             deleted = true;
 
             // Then update unread count and most recent message.
@@ -1298,6 +1325,7 @@ MobileMessageDatabaseService.prototype = {
             threadStore.get(threadId).onsuccess = function(event) {
               // This must exist.
               let threadRecord = event.target.result;
+              if (DEBUG) debug("Updating thread record " + JSON.stringify(threadRecord));
 
               if (!messageRecord.read) {
                 threadRecord.unreadCount--;
@@ -2057,15 +2085,15 @@ GetThreadsCursor.prototype = {
   collector: null,
 
   getThreadTxn: function getThreadTxn(threadStore, threadId) {
-    if (DEBUG) debug ("Fetching message " + threadId);
+    if (DEBUG) debug ("Fetching thread " + threadId);
 
     let getRequest = threadStore.get(threadId);
     let self = this;
     getRequest.onsuccess = function onsuccess(event) {
-      if (DEBUG) {
-        debug("notifyCursorResult - threadId: " + threadId);
-      }
       let threadRecord = event.target.result;
+      if (DEBUG) {
+        debug("notifyCursorResult: " + JSON.stringify(threadRecord));
+      }
       let thread =
         gMobileMessageService.createThread(threadRecord.id,
                                            threadRecord.participantAddresses,
