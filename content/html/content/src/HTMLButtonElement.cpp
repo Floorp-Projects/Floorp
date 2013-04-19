@@ -7,7 +7,6 @@
 
 #include "mozilla/dom/HTMLButtonElementBinding.h"
 #include "nsIDOMHTMLFormElement.h"
-#include "nsIDOMEventTarget.h"
 #include "nsAttrValueInlines.h"
 #include "nsGkAtoms.h"
 #include "nsIPresShell.h"

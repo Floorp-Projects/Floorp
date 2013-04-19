@@ -11,7 +11,6 @@
 #include "nsCOMArray.h"
 #include "nsPoint.h"
 #include "nsRect.h"
-#include "nsRegion.h"
 #include "nsEvent.h"
 #include "nsStringGlue.h"
 #include "nsCOMPtr.h"

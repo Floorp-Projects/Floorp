@@ -57,7 +57,6 @@
 #include "nsLayoutUtils.h"
 
 #include "nsIDOMMutationEvent.h"
-#include "nsIDOMEventTarget.h"
 #include "nsMutationEvent.h"
 #include "nsEventListenerManager.h"
 

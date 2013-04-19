@@ -66,20 +66,22 @@
 #include "nsIDOMDragEvent.h"
 #include "nsIConstraintValidation.h"
 #include "mozilla/Attributes.h"
+#include "nsDOMEvent.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 //
 // GetEventReceiver
 //
 // A helper routine that navigates the tricky path from a |nsWebBrowser| to
-// a |nsIDOMEventTarget| via the window root and chrome event handler.
+// a |EventTarget| via the window root and chrome event handler.
 //
 static nsresult
-GetDOMEventTarget( nsWebBrowser* inBrowser, nsIDOMEventTarget** aTarget)
+GetDOMEventTarget(nsWebBrowser* inBrowser, EventTarget** aTarget)
 {
   NS_ENSURE_ARG_POINTER(inBrowser);
-  
+
   nsCOMPtr<nsIDOMWindow> domWindow;
   inBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
   NS_ENSURE_TRUE(domWindow, NS_ERROR_FAILURE);
@@ -88,11 +90,11 @@ GetDOMEventTarget( nsWebBrowser* inBrowser, nsIDOMEventTarget** aTarget)
   NS_ENSURE_TRUE(domWindowPrivate, NS_ERROR_FAILURE);
   nsPIDOMWindow *rootWindow = domWindowPrivate->GetPrivateRoot();
   NS_ENSURE_TRUE(rootWindow, NS_ERROR_FAILURE);
-  nsCOMPtr<nsIDOMEventTarget> target =
+  nsCOMPtr<EventTarget> target =
     rootWindow->GetChromeEventHandler();
   NS_ENSURE_TRUE(target, NS_ERROR_FAILURE);
   target.forget(aTarget);
-  
+
   return NS_OK;
 }
 
@@ -852,7 +854,7 @@ nsDocShellTreeOwner::AddChromeListeners()
   }
 
   // register dragover and drop event listeners with the listener manager
-  nsCOMPtr<nsIDOMEventTarget> target;
+  nsCOMPtr<EventTarget> target;
   GetDOMEventTarget(mWebBrowser, getter_AddRefs(target));
 
   nsEventListenerManager* elmP = target->GetListenerManager(true);
@@ -864,7 +866,7 @@ nsDocShellTreeOwner::AddChromeListeners()
   }
 
   return rv;
-  
+
 } // AddChromeListeners
 
 
@@ -880,7 +882,7 @@ nsDocShellTreeOwner::RemoveChromeListeners()
     NS_RELEASE(mChromeContextMenuListener);
   }
 
-  nsCOMPtr<nsIDOMEventTarget> piTarget;
+  nsCOMPtr<EventTarget> piTarget;
   GetDOMEventTarget(mWebBrowser, getter_AddRefs(piTarget));
   if (!piTarget)
     return NS_OK;
@@ -1159,10 +1161,10 @@ ChromeTooltipListener::~ChromeTooltipListener()
 //
 NS_IMETHODIMP
 ChromeTooltipListener::AddChromeListeners()
-{  
+{
   if (!mEventTarget)
     GetDOMEventTarget(mWebBrowser, getter_AddRefs(mEventTarget));
-  
+
   // Register the appropriate events for tooltips, but only if
   // the embedding chrome cares.
   nsresult rv = NS_OK;
@@ -1172,9 +1174,9 @@ ChromeTooltipListener::AddChromeListeners()
     if ( NS_FAILED(rv) )
       return rv;
   }
-  
+
   return rv;
-  
+
 } // AddChromeListeners
 
 
@@ -1314,8 +1316,7 @@ ChromeTooltipListener::MouseMove(nsIDOMEvent* aMouseEvent)
 
   mTooltipTimer = do_CreateInstance("@mozilla.org/timer;1");
   if ( mTooltipTimer ) {
-    nsCOMPtr<nsIDOMEventTarget> eventTarget;
-    aMouseEvent->GetTarget(getter_AddRefs(eventTarget));
+    nsCOMPtr<EventTarget> eventTarget = aMouseEvent->InternalDOMEvent()->GetTarget();
     if ( eventTarget )
       mPossibleTooltipNode = do_QueryInterface(eventTarget);
     if ( mPossibleTooltipNode ) {
@@ -1329,9 +1330,9 @@ ChromeTooltipListener::MouseMove(nsIDOMEvent* aMouseEvent)
   }
   else
     NS_WARNING ( "Could not create a timer for tooltip tracking" );
-    
+
   return NS_OK;
-  
+
 } // MouseMove
 
 
@@ -1588,10 +1589,10 @@ ChromeContextMenuListener::RemoveContextMenuListener()
 //
 NS_IMETHODIMP
 ChromeContextMenuListener::AddChromeListeners()
-{  
+{
   if (!mEventTarget)
     GetDOMEventTarget(mWebBrowser, getter_AddRefs(mEventTarget));
-  
+
   // Register the appropriate events for context menus, but only if
   // the embedding chrome cares.
   nsresult rv = NS_OK;
@@ -1602,7 +1603,7 @@ ChromeContextMenuListener::AddChromeListeners()
     rv = AddContextMenuListener();
 
   return rv;
-  
+
 } // AddChromeListeners
 
 
@@ -1645,10 +1646,7 @@ ChromeContextMenuListener::HandleEvent(nsIDOMEvent* aMouseEvent)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMEventTarget> targetNode;
-  nsresult res = aMouseEvent->GetTarget(getter_AddRefs(targetNode));
-  if (NS_FAILED(res))
-    return res;
+  nsCOMPtr<EventTarget> targetNode = aMouseEvent->InternalDOMEvent()->GetTarget();
   if (!targetNode)
     return NS_ERROR_NULL_POINTER;
 
@@ -1659,7 +1657,7 @@ ChromeContextMenuListener::HandleEvent(nsIDOMEvent* aMouseEvent)
 
   // Stop the context menu event going to other windows (bug 78396)
   aMouseEvent->PreventDefault();
-  
+
   // If the listener is a nsIContextMenuListener2, create the info object
   nsCOMPtr<nsIContextMenuListener2> menuListener2(do_QueryInterface(mWebBrowserChrome));
   nsContextMenuInfo *menuInfoImpl = nullptr;
@@ -1675,7 +1673,7 @@ ChromeContextMenuListener::HandleEvent(nsIDOMEvent* aMouseEvent)
   // XXX test for selected text
 
   uint16_t nodeType;
-  res = node->GetNodeType(&nodeType);
+  nsresult res = node->GetNodeType(&nodeType);
   NS_ENSURE_SUCCESS(res, res);
 
   // First, checks for nodes that never have children.
