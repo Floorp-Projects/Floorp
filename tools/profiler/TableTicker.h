@@ -30,7 +30,6 @@ class TableTicker: public Sampler {
               const char** aFeatures, uint32_t aFeatureCount)
     : Sampler(aInterval, true, aEntrySize)
     , mPrimaryThreadProfile(nullptr)
-    , mStartTime(TimeStamp::Now())
     , mSaveRequested(false)
     , mUnwinderThread(false)
   {
@@ -39,9 +38,12 @@ class TableTicker: public Sampler {
     //XXX: It's probably worth splitting the jank profiler out from the regular profiler at some point
     mJankOnly = hasFeature(aFeatures, aFeatureCount, "jank");
     mProfileJS = hasFeature(aFeatures, aFeatureCount, "js");
-    mProfileThreads = true || hasFeature(aFeatures, aFeatureCount, "threads");
+    mProfileJava = hasFeature(aFeatures, aFeatureCount, "java");
+    mProfileThreads = hasFeature(aFeatures, aFeatureCount, "threads");
     mUnwinderThread = hasFeature(aFeatures, aFeatureCount, "unwinder") || sps_version2();
     mAddLeafAddresses = hasFeature(aFeatures, aFeatureCount, "leaf");
+
+    sStartTime = TimeStamp::Now();
 
     {
       mozilla::MutexAutoLock lock(*sRegisteredThreadsMutex);
@@ -123,6 +125,7 @@ class TableTicker: public Sampler {
 
   bool HasUnwinderThread() const { return mUnwinderThread; }
   bool ProfileJS() const { return mProfileJS; }
+  bool ProfileJava() const { return mProfileJava; }
   bool ProfileThreads() const { return mProfileThreads; }
 
 protected:
@@ -139,7 +142,6 @@ protected:
 
   // This represent the application's main thread (SAMPLER_INIT)
   ThreadProfile* mPrimaryThreadProfile;
-  TimeStamp mStartTime;
   bool mSaveRequested;
   bool mAddLeafAddresses;
   bool mUseStackWalk;
@@ -147,5 +149,6 @@ protected:
   bool mProfileJS;
   bool mProfileThreads;
   bool mUnwinderThread;
+  bool mProfileJava;
 };
 
