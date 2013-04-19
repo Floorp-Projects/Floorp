@@ -1,0 +1,359 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Popup Anchor Tests"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <title>Popup Popup Tests</title>
+
+  <panel id="testPanel"
+         type="arrow"
+         noautohide="true">
+  </panel>
+
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>      
+
+<script>
+<![CDATA[
+var anchor, panel, arrow;
+
+function isArrowPositionedOn(side, offset) {
+  var arrowRect = arrow.getBoundingClientRect();
+  var arrowMidX = (arrowRect.left + arrowRect.right) / 2;
+  var arrowMidY = (arrowRect.top + arrowRect.bottom) / 2;
+  var panelRect = panel.getBoundingClientRect();
+  var panelMidX = (panelRect.left + panelRect.right) / 2;
+  var panelMidY = (panelRect.top + panelRect.bottom) / 2;
+  // First check the "flip" of the panel is correct.  If we are expecting the
+  // arrow to be pointing to the left side of the anchor, the arrow must
+  // also be on the left side of the panel (and vice-versa)
+  // XXX - on OSX, the arrow seems to always be exactly in the center, hence
+  // the 'equals' sign in the "<=" and ">=" comparisons.  NFI why though...
+  switch (side) {
+    case "left":
+      ok(arrowMidX <= panelMidX, "arrow should be on the left of the panel");
+      break;
+    case "right":
+      ok(arrowMidX >= panelMidX, "arrow should be on the right of the panel");
+      break;
+    case "top":
+      ok(arrowMidY <= panelMidY, "arrow should be on the top of the panel");
+      break;
+    case "bottom":
+      ok(arrowMidY >= panelMidY, "arrow should be on the bottom of the panel");
+      break;
+    default:
+      ok(false, "invalid position " + where);
+      break;
+  }
+  function is_close(got, exp, msg) {
+    // on some platforms we see differences of a fraction of a pixel - so
+    // allow any difference of < 1 pixels as being OK.
+    ok(Math.abs(got - exp) < 1, msg + ": " + got + " should be equal to " + exp);
+  }
+  // Now check the arrow really is pointing where we expect.  The middle of
+  // the arrow should be pointing exactly to the left (or right) side of the
+  // anchor rect, +- any offsets.
+  if (offset === null) // special case - explicit 'null' means 'don't check offset'
+    return;
+  offset = offset || 0; // no param means no offset expected.
+  var anchorRect = anchor.getBoundingClientRect();
+  var anchorPos = anchorRect[side];
+  switch (side) {
+    case "left":
+    case "right":
+      is_close(arrowMidX - anchorPos, offset, "arrow should be " + offset + "px from " + side + " side of anchor");
+      is_close(panelRect.top, anchorRect.bottom, "top of panel should be at bottom of anchor");
+      break;
+    case "top":
+    case "bottom":
+      is_close(arrowMidY - anchorPos, offset, "arrow should be " + offset + "px from " + side + " side of anchor");
+      is_close(panelRect.right, anchorRect.left, "right of panel should be left of anchor");
+      break;
+    default:
+      ok(false, "unknown side " + side);
+      break;
+  }
+}
+
+function openPopup(position, callback) {
+  // this is very ugly: the panel CSS sets the arrow's list-style-image based
+  // on the 'side' attribute.  If the setting of the 'side' attribute causes
+  // the image to change, we may get the popupshown event before the new
+  // image has loaded - which causes the size of the arrow to be incorrect
+  // for a brief moment - right when we are measuring it!
+  // So we work around this in 2 steps:
+  // * Force the 'side' attribute to a value which causes the CSS to not
+  //   specify an image - then when the popup gets shown, the correct image
+  //   is set, causing a load() event on the image element.
+  // * Listen to *both* popupshown and the image load event.  When both have
+  //   fired (the order is indeterminate) we start the test.
+  panel.setAttribute("side", "noside");
+  var numEvents = 0;
+  function onEvent() {
+    if (++numEvents == 2) // after both panel 'popupshown' and image 'load'
+      callback();
+  };
+  panel.addEventListener("popupshown", function popupshown() {
+    panel.removeEventListener("popupshown", popupshown);
+    onEvent();
+  });
+  arrow.addEventListener("load", function imageload() {
+    arrow.removeEventListener("load", imageload);
+    onEvent();
+  });
+  panel.openPopup(anchor, position);
+}
+
+var tests = [
+  // A panel with the anchor after_end - the anchor should not move on resize
+  ['simpleResizeHorizontal', 'middle', function(next) {
+    openPopup("after_end", function() {
+      isArrowPositionedOn("right");
+      var origPanelRect = panel.getBoundingClientRect();
+      panel.sizeTo(100, 100);
+      isArrowPositionedOn("right"); // should not have flipped, so still "right"
+      panel.sizeTo(origPanelRect.width, origPanelRect.height);
+      isArrowPositionedOn("right"); // should not have flipped, so still "right"
+      next();
+    });
+  }],
+
+  ['simpleResizeVertical', 'middle', function(next) {
+    openPopup("start_after", function() {
+      isArrowPositionedOn("bottom");
+      var origPanelRect = panel.getBoundingClientRect();
+      panel.sizeTo(100, 100);
+      isArrowPositionedOn("bottom"); // should not have flipped
+      panel.sizeTo(origPanelRect.width, origPanelRect.height);
+      isArrowPositionedOn("bottom"); // should not have flipped
+      next();
+    });
+  }],
+
+  ['flippingResizeHorizontal', 'middle', function(next) {
+    openPopup("after_end", function() {
+      isArrowPositionedOn("right");
+      panel.sizeTo(anchor.getBoundingClientRect().left + 50, 50);
+      todo(false, "Bug 798226 - panel doesn't handle resize/moves correctly while open")
+      // isArrowPositionedOn("left"); // check it flipped and has zero offset.
+      next();
+    });
+  }],
+
+  ['flippingResizeVertical', 'middle', function(next) {
+    openPopup("start_after", function() {
+      isArrowPositionedOn("bottom");
+      panel.sizeTo(50, anchor.getBoundingClientRect().top + 50);
+      todo(false, "Bug 798226 - panel doesn't handle resize/moves correctly while open")
+      //isArrowPositionedOn("top"); // check it flipped and has zero offset.
+      next();
+    });
+  }],
+
+  ['simpleMoveToAnchorHorizontal', 'middle', function(next) {
+    openPopup("after_end", function() {
+      isArrowPositionedOn("right");
+      panel.moveToAnchor(anchor, "after_end", 20, 0);
+      // the anchor and the panel should have moved 20px right without flipping.
+      isArrowPositionedOn("right", 20);
+      panel.moveToAnchor(anchor, "after_end", -20, 0);
+      // the anchor and the panel should have moved 20px left without flipping.
+      isArrowPositionedOn("right", -20);
+      next();
+    });
+  }],
+
+  ['simpleMoveToAnchorVertical', 'middle', function(next) {
+    openPopup("start_after", function() {
+      isArrowPositionedOn("bottom");
+      panel.moveToAnchor(anchor, "start_after", 0, 20);
+      // the anchor and the panel should have moved 20px down without flipping.
+      isArrowPositionedOn("bottom", 20);
+      panel.moveToAnchor(anchor, "start_after", 0, -20);
+      // the anchor and the panel should have moved 20px up without flipping.
+      isArrowPositionedOn("bottom", -20);
+      next();
+    });
+  }],
+
+  // Do a moveToAnchor that causes the panel to flip horizontally
+  ['flippingMoveToAnchorHorizontal', 'middle', function(next) {
+    var anchorRight = anchor.getBoundingClientRect().right;
+    // Size the panel such that it only just fits from the left-hand side of
+    // the window to the right of the anchor - thus, it will fit when
+    // anchored to the right-hand side of the anchor.
+    panel.sizeTo(anchorRight - 10, 100);
+    openPopup("after_end", function() {
+      isArrowPositionedOn("right");
+      // Ask for it to be anchored 1/2 way between the left edge of the window
+      // and the anchor right - it can't fit with the panel on the left/arrow
+      // on the right, so it must flip (arrow on the left, panel on the right)
+      var offset = Math.floor(-anchorRight / 2);
+      panel.moveToAnchor(anchor, "after_end", offset, 0);
+      todo(false, "Bug 798226 - panel doesn't handle resize/moves correctly while open")
+      //isArrowPositionedOn("left", offset); // should have flipped and have the offset.
+      // resize back to original and move to a zero offset - it should flip back.
+      panel.sizeTo(anchorRight - 10, 100);
+      panel.moveToAnchor(anchor, "after_end", 0, 0);
+      isArrowPositionedOn("right"); // should have flipped back and no offset
+      next();
+    });
+  }],
+
+  // Do a moveToAnchor that causes the panel to flip vertically
+  ['flippingMoveToAnchorVertical', 'middle', function(next) {
+    var anchorBottom = anchor.getBoundingClientRect().bottom;
+    // See comments above in flippingMoveToAnchorHorizontal, but read
+    // "top/bottom" instead of "left/right"
+    panel.sizeTo(100, anchorBottom - 10);
+    openPopup("start_after", function() {
+      isArrowPositionedOn("bottom");
+      var offset = Math.floor(-anchorBottom / 2);
+      panel.moveToAnchor(anchor, "start_after", 0, offset);
+      todo(false, "Bug 798226 - panel doesn't handle resize/moves correctly while open")
+      //isArrowPositionedOn("top", offset);
+      panel.sizeTo(100, anchorBottom - 10);
+      panel.moveToAnchor(anchor, "start_after", 0, 0);
+      isArrowPositionedOn("bottom");
+      next();
+    });
+  }],
+
+  ['veryWidePanel', 'middle', function(next) {
+    openPopup("after_end", function() {
+      var origArrowRect = arrow.getBoundingClientRect();
+      // Now move it such that the arrow can't be at either end of the panel but
+      // instead somewhere in the middle as that is the only way things fit.
+      // XXX - these tests might not be quite correct even when bug 812943
+      // is fixed.
+      panel.sizeTo(window.innerWidth - 10, 60);
+      todo_is(panel.getBoundingClientRect().width, window.innerWidth - 10, "Bug 812943 - width is what we requested.")
+      // the arrow should not have moved.
+      var curArrowRect = arrow.getBoundingClientRect();
+      todo_is(curArrowRect.left, origArrowRect.left, "Bug 812943 - arrow should not have moved");
+      is(curArrowRect.top, origArrowRect.top, "arrow should not have moved up or down");
+      next();
+    });
+  }],
+
+  // Tests against the anchor at the right-hand side of the window
+  ['afterend', 'right', function(next) {
+    openPopup("after_end", function() {
+      // when we request too far to the right/bottom, the panel gets shrunk
+      // and moved.  The amount it is shrunk by is how far it is moved.
+      var panelRect = panel.getBoundingClientRect();
+      // panel was requested 100px wide - calc offset based on actual width.
+      var offset = panelRect.width - 100;
+      isArrowPositionedOn("right", offset);
+      next();
+    });
+  }],
+
+  ['after_start', 'right', function(next) {
+    openPopup("after_start", function() {
+      // See above - we are still too far to the right, but the anchor is
+      // on the other side.
+      var panelRect = panel.getBoundingClientRect();
+      var offset = panelRect.width - 100;
+      isArrowPositionedOn("right", offset);
+      next();
+    });
+  }],
+
+  // Tests against the anchor at the left-hand side of the window
+  ['after_start', 'left', function(next) {
+    openPopup("after_start", function() {
+      var panelRect = panel.getBoundingClientRect();
+      is(panelRect.left, 0, "panel remains within the screen");
+      // not sure how to determine the offset here, so given we have checked
+      // the panel is as left as possible while still being inside the window,
+      // we just don't check the offset.
+      isArrowPositionedOn("left", null);
+      next();
+    });
+  }],
+]
+
+function runTests() {
+  var testIter = Iterator(tests);
+  function runNextTest() {
+    let name, anchorPos, test;
+    try {
+      let index;
+      [index, [name, anchorPos, test]] = testIter.next();
+    } catch (err if err instanceof StopIteration) {
+      // out of tests
+      panel.hidePopup();
+      SimpleTest.finish();
+      return;
+    }
+    SimpleTest.info("sub-test " + anchorPos + "." + name + " starting");
+    // first arrange for the anchor to be where the test requires it.
+    panel.hidePopup();
+    panel.sizeTo(100, 50);
+    // hide all the anchors here, then later we make one of them visible.
+    document.getElementById("anchor-left-wrapper").style.display = "none";
+    document.getElementById("anchor-middle-wrapper").style.display = "none";
+    document.getElementById("anchor-right-wrapper").style.display = "none";
+    switch(anchorPos) {
+      case 'middle':
+        anchor = document.getElementById("anchor-middle");
+        document.getElementById("anchor-middle-wrapper").style.display = "block";
+        break;
+      case 'left':
+        anchor = document.getElementById("anchor-left");
+        document.getElementById("anchor-left-wrapper").style.display = "block";
+        break;
+      case 'right':
+        anchor = document.getElementById("anchor-right");
+        document.getElementById("anchor-right-wrapper").style.display = "block";
+        break;
+      default:
+        SimpleTest.ok(false, "Bad anchorPos: " + anchorPos);
+        runNextTest();
+        return;
+    }
+    try {
+      test(runNextTest);
+    } catch (ex) {
+      SimpleTest.ok(false, "sub-test " + anchorPos + "." + name + " failed: " + ex.toString() + "\n" + ex.stack);
+      runNextTest();
+    }
+  }
+  runNextTest();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+addEventListener("load", function() {
+  // anchor is set by the test runner above
+  panel = document.getElementById("testPanel");
+  arrow = document.getAnonymousElementByAttribute(panel, "anonid", "arrow");
+  // Cancel the arrow panel slide-in transition (bug 767133) so the size and
+  // position are "stable" enough to test without jumping through hoops...
+  arrow.style.transition = "none";
+  runTests();
+});
+
+]]>
+</script>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<!-- Our tests assume at least 100px around the anchor on all sides, else the
+     panel may flip when we don't expect it to
+-->
+<div id="anchor-middle-wrapper" style="margin: 100px 100px 100px 100px;">
+  <p>The anchor --&gt; <span id="anchor-middle">v</span> &lt;--</p>
+</div>
+<div id="anchor-left-wrapper" style="text-align: left; display: none;">
+  <p><span id="anchor-left">v</span> &lt;-- The anchor;</p>
+</div>
+<div id="anchor-right-wrapper" style="text-align: right; display: none;">
+  <p>The anchor --&gt; <span id="anchor-right">v</span></p>
+</div>
+</body>
+
+</window>
