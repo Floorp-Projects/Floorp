@@ -23,11 +23,11 @@ interface nsIDOMMozSmsFilter : nsISupports
   [Null(Empty)]
   attribute DOMString delivery;
 
-  // A read flag that can be a boolean or undefined.
+  // A read flag that can return and be set to a boolean or null.
   [implicit_jscontext]
   attribute jsval read;
 
-  // A thread id that can be a numeric value or undefined.
+  // A thread id that can return and be set to a numeric value or null.
   [implicit_jscontext]
   attribute jsval threadId;
 };
