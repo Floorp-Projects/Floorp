@@ -220,6 +220,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitInstanceOf(MInstanceOf *ins);
     bool visitCallInstanceOf(MCallInstanceOf *ins);
     bool visitFunctionBoundary(MFunctionBoundary *ins);
+    bool visitIsCallable(MIsCallable *ins);
     bool visitAsmJSLoadHeap(MAsmJSLoadHeap *ins);
     bool visitAsmJSLoadGlobalVar(MAsmJSLoadGlobalVar *ins);
     bool visitAsmJSStoreGlobalVar(MAsmJSStoreGlobalVar *ins);

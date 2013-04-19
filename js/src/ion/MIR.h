@@ -7172,6 +7172,29 @@ class FlattenedMResumePointIter
     }
 };
 
+class MIsCallable
+  : public MUnaryInstruction,
+    public SingleObjectPolicy
+{
+    MIsCallable(MDefinition *object)
+      : MUnaryInstruction(object)
+    {
+        setResultType(MIRType_Boolean);
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(IsCallable);
+
+    static MIsCallable *New(MDefinition *obj) {
+        return new MIsCallable(obj);
+    }
+
+    MDefinition *object() const {
+        return getOperand(0);
+    }
+};
+
 class MAsmJSNeg : public MUnaryInstruction
 {
     MAsmJSNeg(MDefinition *op, MIRType type)

@@ -156,6 +156,7 @@ namespace ion {
     _(FunctionBoundary)                                                     \
     _(GetDOMProperty)                                                       \
     _(SetDOMProperty)                                                       \
+    _(IsCallable)                                                           \
     _(AsmJSNeg)                                                             \
     _(AsmJSUDiv)                                                            \
     _(AsmJSUMod)                                                            \
