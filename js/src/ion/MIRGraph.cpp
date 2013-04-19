@@ -161,17 +161,21 @@ MBasicBlock::NewSplitEdge(MIRGraph &graph, CompileInfo &info, MBasicBlock *pred)
 
 MBasicBlock *
 MBasicBlock::NewParBailout(MIRGraph &graph, CompileInfo &info,
-                           MBasicBlock *pred, jsbytecode *entryPc)
+                           MBasicBlock *pred, jsbytecode *entryPc,
+                           MResumePoint *resumePoint)
 {
-    MBasicBlock *block = MBasicBlock::New(graph, info, pred, entryPc, NORMAL);
-    if (!block)
+    MBasicBlock *block = new MBasicBlock(graph, info, entryPc, NORMAL);
+
+    resumePoint->block_ = block;
+    block->entryResumePoint_ = resumePoint;
+
+    if (!block->init())
         return NULL;
 
-    MParBailout *bailout = new MParBailout();
-    if (!bailout)
+    if (!block->addPredecessorWithoutPhis(pred))
         return NULL;
 
-    block->end(bailout);
+    block->end(new MParBailout());
     return block;
 }
 
