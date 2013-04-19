@@ -15,7 +15,6 @@
 #include "nsGkAtoms.h"
 #include "nsCOMPtr.h"
 #include "nsMenuFrame.h"
-#include "nsIDOMEventTarget.h"
 
 #include "nsBoxFrame.h"
 #include "nsMenuParent.h"

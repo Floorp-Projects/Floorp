@@ -21,6 +21,7 @@
 #include "nsIPermissionManager.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 using namespace hal;
 
 #undef near
@@ -217,8 +218,8 @@ nsDeviceSensors::Notify(const mozilla::hal::SensorData& aSensorData)
 
     if (domdoc) {
       nsCOMPtr<mozilla::dom::EventTarget> target = do_QueryInterface(windowListeners[i]);
-      if (type == nsIDeviceSensorData::TYPE_ACCELERATION || 
-        type == nsIDeviceSensorData::TYPE_LINEAR_ACCELERATION || 
+      if (type == nsIDeviceSensorData::TYPE_ACCELERATION ||
+        type == nsIDeviceSensorData::TYPE_LINEAR_ACCELERATION ||
         type == nsIDeviceSensorData::TYPE_GYROSCOPE)
         FireDOMMotionEvent(domdoc, target, type, x, y, z);
       else if (type == nsIDeviceSensorData::TYPE_ORIENTATION)
@@ -305,8 +306,8 @@ nsDeviceSensors::FireDOMUserProximityEvent(mozilla::dom::EventTarget* aTarget,
 }
 
 void
-nsDeviceSensors::FireDOMOrientationEvent(nsIDOMDocument *domdoc,
-                                         nsIDOMEventTarget *target,
+nsDeviceSensors::FireDOMOrientationEvent(nsIDOMDocument* domdoc,
+                                         EventTarget* target,
                                          double alpha,
                                          double beta,
                                          double gamma)
@@ -330,18 +331,19 @@ nsDeviceSensors::FireDOMOrientationEvent(nsIDOMDocument *domdoc,
                                  true);
 
   event->SetTrusted(true);
-  
+
   target->DispatchEvent(event, &defaultActionEnabled);
 }
 
 
 void
 nsDeviceSensors::FireDOMMotionEvent(nsIDOMDocument *domdoc,
-                                   nsIDOMEventTarget *target,
-                                   uint32_t type,
-                                   double x,
-                                   double y,
-                                   double z) {
+                                    EventTarget* target,
+                                    uint32_t type,
+                                    double x,
+                                    double y,
+                                    double z)
+{
   // Attempt to coalesce events
   bool fireEvent = TimeStamp::Now() > mLastDOMMotionEventTime + TimeDuration::FromMilliseconds(DEFAULT_SENSOR_POLL);
 
