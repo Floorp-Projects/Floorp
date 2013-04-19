@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>testing contextual kerning with spaces</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+<style type="text/css">
+
+body {
+  margin: 5px;
+}
+
+div#test, div#test pre {
+  font-family: Arial, sans-serif;
+  font-size: 150%;
+  line-height: 1.1em;
+  -moz-font-feature-settings: "kern" on;
+  -webkit-font-feature-settings: "kern" on;
+  font-feature-settings: "kern" on;
+}
+
+pre {
+  margin: 0;
+  padding: 0;
+}
+
+</style>
+</head>
+<body>
+<div id="test">
+<pre><span>Q A Q</span></pre>
+<pre><span>Q L Q</span></pre>
+<pre><span>Q P Q</span></pre>
+<pre><span>Q T Q</span></pre>
+<pre><span>Q Y Q</span></pre>
+<pre><span>Q Α Q</span></pre>
+<pre><span>Q Δ Q</span></pre>
+<pre><span>Q Λ Q</span></pre>
+<pre><span>Q Ρ Q</span></pre>
+<pre><span>Q Τ Q</span></pre>
+<pre><span>Q Υ Q</span></pre>
+<pre><span>Q Ϋ Q</span></pre>
+<pre><span>Q ’ Q</span></pre>
+</div>
+</body>
+</html>

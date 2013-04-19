@@ -30,13 +30,17 @@ TextureHost::CreateTextureHost(SurfaceDescriptorType aDescriptorType,
                                uint32_t aTextureFlags)
 {
   switch (Compositor::GetBackend()) {
-    case LAYERS_OPENGL : return CreateTextureHostOGL(aDescriptorType,
-                                                     aTextureHostFlags,
-                                                     aTextureFlags);
-    case LAYERS_D3D9 : return CreateTextureHostD3D9(aDescriptorType,
-                                                    aTextureHostFlags,
-                                                    aTextureFlags);
-    default : return nullptr;
+    case LAYERS_OPENGL:
+      return CreateTextureHostOGL(aDescriptorType,
+                                  aTextureHostFlags,
+                                  aTextureFlags);
+    case LAYERS_D3D9:
+      return CreateTextureHostD3D9(aDescriptorType,
+                                   aTextureHostFlags,
+                                   aTextureFlags);
+    default:
+      MOZ_NOT_REACHED("Couldn't create texture host");
+      return nullptr;
   }
 }
 
