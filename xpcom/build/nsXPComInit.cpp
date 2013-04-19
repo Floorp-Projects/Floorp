@@ -479,6 +479,10 @@ NS_InitXPCOM2(nsIServiceManager* *result,
     // to the directory service.
     nsDirectoryService::gService->RegisterCategoryProviders();
 
+    // Force layout to spin up so that nsContentUtils is available for cx stack
+    // munging.
+    nsCOMPtr<nsISupports> componentLoader = do_GetService("@mozilla.org/moz/jsloader;1");
+
     mozilla::scache::StartupCache::GetSingleton();
     mozilla::AvailableMemoryTracker::Activate();
 
