@@ -72,27 +72,24 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
         RenderTraceInvalidateStart(layer, "FF00FF", layer->GetVisibleRegion().GetBounds());
       }
 
-      if (compositable) {
-        const SurfaceDescriptor& descriptor = op.image();
-        compositable->EnsureTextureHost(op.textureId(),
-                                        descriptor,
-                                        compositableParent->GetCompositableManager(),
-                                        TextureInfo());
-        MOZ_ASSERT(compositable->GetTextureHost());
+      const SurfaceDescriptor& descriptor = op.image();
+      compositable->EnsureTextureHost(op.textureId(),
+                                      descriptor,
+                                      compositableParent->GetCompositableManager(),
+                                      TextureInfo());
+      MOZ_ASSERT(compositable->GetTextureHost());
 
-        SurfaceDescriptor newBack;
-        bool shouldRecomposite = compositable->Update(descriptor, &newBack);
-        if (IsSurfaceDescriptorValid(newBack)) {
-          replyv.push_back(OpTextureSwap(compositableParent, nullptr,
-                                         op.textureId(), newBack));
-        }
+      SurfaceDescriptor newBack;
+      bool shouldRecomposite = compositable->Update(descriptor, &newBack);
+      if (IsSurfaceDescriptorValid(newBack)) {
+        replyv.push_back(OpTextureSwap(compositableParent, nullptr, op.textureId(), newBack));
+      }
 
-        if (shouldRecomposite && compositableParent->GetCompositorID()) {
-          CompositorParent* cp
-            = CompositorParent::GetCompositor(compositableParent->GetCompositorID());
-          if (cp) {
-            cp->ScheduleComposition();
-          }
+      if (shouldRecomposite && compositableParent->GetCompositorID()) {
+        CompositorParent* cp
+          = CompositorParent::GetCompositor(compositableParent->GetCompositorID());
+        if (cp) {
+          cp->ScheduleComposition();
         }
       }
 
