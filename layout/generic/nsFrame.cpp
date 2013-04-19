@@ -1673,8 +1673,7 @@ WrapPreserve3DListInternal(nsIFrame* aFrame, nsDisplayListBuilder *aBuilder, nsD
     // and then flush this list into aOutput by wrapping the whole lot with a single
     // nsDisplayTransform.
 
-    if (childFrame &&
-        childFrame->GetParent() &&
+    if (childFrame->GetParent() &&
         (childFrame->GetParent()->Preserves3DChildren() || childFrame == aFrame)) {
       switch (item->GetType()) {
         case nsDisplayItem::TYPE_TRANSFORM: {
@@ -1869,7 +1868,6 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     nsDisplayItem* item = set.PositionedDescendants()->GetBottom();
     if (item) {
       nsIFrame* f = item->GetUnderlyingFrame();
-      NS_ASSERTION(f, "After sorting, every item in the list should have an underlying frame");
       if (nsLayoutUtils::GetZIndex(f) < 0) {
         set.PositionedDescendants()->RemoveBottom();
         resultList.AppendToTop(item);
