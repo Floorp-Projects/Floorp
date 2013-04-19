@@ -843,7 +843,7 @@ DataChannelConnection::FindFreeStream()
           break;
         }
       }
-      if (j = mStreamsResetting.Length())
+      if (j == mStreamsResetting.Length())
         break;
     }
   }

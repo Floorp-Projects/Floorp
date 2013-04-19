@@ -53,9 +53,7 @@ members = [
     # dom/interfaces/canvas
     #
     # canvas friends
-    'nsIDOMTextMetrics.*',
     'nsIDOMCanvasGradient.*',
-    'nsIDOMCanvasPattern.*',
 
     # dom/interfaces/core
     'nsIDOMMozNamedAttrMap.item',
@@ -147,9 +145,7 @@ members = [
 #
 irregularFilenames = {
     # stowaways
-    'nsIDOMTextMetrics': 'nsIDOMCanvasRenderingContext2D',
     'nsIDOMCanvasGradient': 'nsIDOMCanvasRenderingContext2D',
-    'nsIDOMCanvasPattern': 'nsIDOMCanvasRenderingContext2D',
 
     'nsIDOMBlob': 'nsIDOMFile',
 
@@ -178,7 +174,6 @@ customIncludes = [
     ]
 
 customReturnInterfaces = [
-    'nsIDOMCanvasPattern',
     'nsIDOMCanvasGradient',
     ]
 

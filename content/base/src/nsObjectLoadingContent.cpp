@@ -556,6 +556,19 @@ IsPluginEnabledForType(const nsCString& aMIMEType)
 /// Member Functions
 ///
 
+// Helper to queue a CheckPluginStopEvent for a OBJLC object
+void
+nsObjectLoadingContent::QueueCheckPluginStopEvent()
+{
+  nsCOMPtr<nsIRunnable> event = new CheckPluginStopEvent(this);
+  mPendingCheckPluginStopEvent = event;
+
+  nsCOMPtr<nsIAppShell> appShell = do_GetService(kAppShellCID);
+  if (appShell) {
+    appShell->RunInStableState(event);
+  }
+}
+
 // Tedious syntax to create a plugin stream listener with checks and put it in
 // mFinalListener
 bool
@@ -659,13 +672,7 @@ nsObjectLoadingContent::UnbindFromTree(bool aDeep, bool aNullParent)
     // the event loop. If we get back to the event loop and the node
     // has still not been added back to the document then we tear down the
     // plugin
-    nsCOMPtr<nsIRunnable> event = new CheckPluginStopEvent(this);
-    mPendingCheckPluginStopEvent = event;
-
-    nsCOMPtr<nsIAppShell> appShell = do_GetService(kAppShellCID);
-    if (appShell) {
-      appShell->RunInStableState(event);
-    }
+    QueueCheckPluginStopEvent();
   } else if (mType != eType_Image) {
     // nsImageLoadingContent handles the image case.
     // Reset state and clear pending events
@@ -690,8 +697,8 @@ nsObjectLoadingContent::nsObjectLoadingContent()
 
 nsObjectLoadingContent::~nsObjectLoadingContent()
 {
-  // Should have been unbound from the tree at this point, and CheckPluginStopEvent
-  // keeps us alive
+  // Should have been unbound from the tree at this point, and
+  // CheckPluginStopEvent keeps us alive
   if (mFrameLoader) {
     NS_NOTREACHED("Should not be tearing down frame loaders at this point");
     mFrameLoader->Destroy();
@@ -820,16 +827,11 @@ nsObjectLoadingContent::InstantiatePluginInstance(bool aIsLoading)
 void
 nsObjectLoadingContent::NotifyOwnerDocumentActivityChanged()
 {
-  if (!mInstanceOwner) {
-    return;
-  }
 
-  nsCOMPtr<nsIContent> thisContent =
-    do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
-  nsIDocument* ownerDoc = thisContent->OwnerDoc();
-  if (!ownerDoc->IsActive()) {
-    StopPluginInstance();
-  }
+  // If we have a plugin we want to queue an event to stop it unless we are
+  // moved into an active document before returning to the event loop.
+  if (mInstanceOwner)
+    QueueCheckPluginStopEvent();
 }
 
 // nsIRequestObserver
@@ -995,15 +997,7 @@ nsObjectLoadingContent::HasNewFrame(nsIObjectFrame* aFrame)
     // CheckPluginStopEvent
     if (mInstanceOwner) {
       mInstanceOwner->SetFrame(nullptr);
-
-      nsCOMPtr<nsIRunnable> event = new CheckPluginStopEvent(this);
-      mPendingCheckPluginStopEvent = event;
-      nsCOMPtr<nsIAppShell> appShell = do_GetService(kAppShellCID);
-      if (appShell) {
-        appShell->RunInStableState(event);
-      } else {
-        NS_NOTREACHED("No app shell?");
-      }
+      QueueCheckPluginStopEvent();
     }
     return NS_OK;
   }

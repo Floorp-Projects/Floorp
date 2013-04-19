@@ -1085,6 +1085,13 @@ function actions(finger, touchId, command_id, i){
   i++;
   switch(command) {
     case 'press':
+      if (lastTouch != null) {
+        touch = lastTouch;
+        emitTouchEvent('touchcancel', touch);
+        lastTouch = null;
+        sendError("Invalid Command: long_press cannot follow an active touch event", 500, null, command_id);
+        return;
+      }
       el = elementManager.getKnownElement(pack[1], curWindow);
       corx = pack[2];
       cory = pack[3];

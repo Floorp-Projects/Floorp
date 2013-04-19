@@ -19,6 +19,7 @@ import android.os.SystemClock;
 import android.test.ActivityInstrumentationTestCase2;
 import android.util.DisplayMetrics;
 import android.view.View;
+import android.widget.ListAdapter;
 import android.widget.ListView;
 import java.io.File;
 import java.io.InputStream;
@@ -63,6 +64,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
             if (!ret.booleanValue()) {
                 geckoReadyExpector.blockForEvent();
             }
+            geckoReadyExpector.unregisterListener();
         } catch (Exception e) {
             mAsserter.dumpLog("Exception in blockForGeckoReady", e);
         }
@@ -214,6 +216,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         mActions.sendSpecialKey(Actions.SpecialKey.ENTER);
         // wait for screen to load
         contentEventExpecter.blockForEvent();
+        contentEventExpecter.unregisterListener();
     }
 
     protected final void loadUrl(String url) {
@@ -425,7 +428,12 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
                 for (ListView view : views) {
                     if (view.getTag().equals(tagName)) {
                         tabView = view;
-                        childCount = view.getAdapter().getCount();
+                        ListAdapter adapter = view.getAdapter();
+                        if (adapter != null) {
+                            childCount = adapter.getCount();
+                        } else {
+                            childCount = 0;
+                        }
                         if (expectedChildCount < 0 || expectedChildCount == childCount) {
                             return view;
                         }

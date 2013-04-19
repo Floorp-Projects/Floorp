@@ -5305,7 +5305,7 @@ main(int argc, char **argv, char **envp)
         || !op.addBoolOption('\0', "no-fpu", "Pretend CPU does not support floating-point operations "
                              "to test JIT codegen (no-op on platforms other than x86).")
 #ifdef JSGC_GENERATIONAL
-        || !op.addBoolOption('\0', "ggc", "Enable Generational GC")
+        || !op.addBoolOption('\0', "no-ggc", "Disable Generational GC")
 #endif
     )
     {
@@ -5355,7 +5355,7 @@ main(int argc, char **argv, char **envp)
 
     JS_SetGCParameter(rt, JSGC_MAX_BYTES, 0xffffffff);
 #ifdef JSGC_GENERATIONAL
-    if (!op.getBoolOption("ggc"))
+    if (op.getBoolOption("no-ggc"))
         JS::DisableGenerationalGC(rt);
 #endif
 

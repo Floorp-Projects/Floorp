@@ -43,6 +43,7 @@ public class testSearchSuggestions extends BaseTest {
         Actions.EventExpecter enginesEventExpecter = mActions.expectGeckoEvent("SearchEngines:Data");
         final Activity awesomeBarActivity = clickOnAwesomeBar();
         enginesEventExpecter.blockForEvent();
+        enginesEventExpecter.unregisterListener();
         connectSuggestClient(awesomeBarActivity);
 
         for (int i = 0; i < TEST_QUERY.length(); i++) {

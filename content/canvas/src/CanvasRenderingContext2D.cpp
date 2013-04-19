@@ -95,6 +95,7 @@
 #include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/HTMLVideoElement.h"
 #include "mozilla/dom/CanvasRenderingContext2DBinding.h"
+#include "mozilla/dom/TextMetrics.h"
 
 #ifdef USE_SKIA_GPU
 #include "GLContext.h"
@@ -117,9 +118,6 @@ using namespace mozilla::ipc;
 using namespace mozilla::layers;
 
 namespace mgfx = mozilla::gfx;
-
-#define NS_TEXTMETRICSAZURE_PRIVATE_IID \
-  {0x9793f9e7, 0x9dc1, 0x4e9c, {0x81, 0xc8, 0xfc, 0xa7, 0x14, 0xf4, 0x30, 0x79}}
 
 namespace mozilla {
 namespace dom {
@@ -412,44 +410,6 @@ NS_IMPL_RELEASE(CanvasPattern)
 
 NS_INTERFACE_MAP_BEGIN(CanvasPattern)
   NS_INTERFACE_MAP_ENTRY(mozilla::dom::CanvasPattern)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMCanvasPattern)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CanvasPattern)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-
-/**
- ** TextMetrics
- **/
-class TextMetrics : public nsIDOMTextMetrics
-{
-public:
-  TextMetrics(float w) : width(w) { }
-
-  virtual ~TextMetrics() { }
-
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_TEXTMETRICSAZURE_PRIVATE_IID)
-
-  NS_IMETHOD GetWidth(float* w)
-  {
-    *w = width;
-    return NS_OK;
-  }
-
-  NS_DECL_ISUPPORTS
-
-private:
-  float width;
-};
-
-NS_DEFINE_STATIC_IID_ACCESSOR(TextMetrics, NS_TEXTMETRICSAZURE_PRIVATE_IID)
-
-NS_IMPL_ADDREF(TextMetrics)
-NS_IMPL_RELEASE(TextMetrics)
-
-NS_INTERFACE_MAP_BEGIN(TextMetrics)
-  NS_INTERFACE_MAP_ENTRY(mozilla::dom::TextMetrics)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMTextMetrics)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(TextMetrics)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
@@ -1401,7 +1361,7 @@ CanvasRenderingContext2D::CreateRadialGradient(double x0, double y0, double r0,
   return grad.forget();
 }
 
-already_AddRefed<nsIDOMCanvasPattern>
+already_AddRefed<CanvasPattern>
 CanvasRenderingContext2D::CreatePattern(const HTMLImageOrCanvasOrVideoElement& element,
                                         const nsAString& repeat,
                                         ErrorResult& error)
@@ -2245,7 +2205,7 @@ CanvasRenderingContext2D::StrokeText(const nsAString& text, double x,
   error = DrawOrMeasureText(text, x, y, maxWidth, TEXT_DRAW_OPERATION_STROKE, nullptr);
 }
 
-already_AddRefed<nsIDOMTextMetrics>
+TextMetrics*
 CanvasRenderingContext2D::MeasureText(const nsAString& rawText,
                                       ErrorResult& error)
 {
@@ -2256,9 +2216,7 @@ CanvasRenderingContext2D::MeasureText(const nsAString& rawText,
     return nullptr;
   }
 
-  nsRefPtr<nsIDOMTextMetrics> textMetrics = new TextMetrics(width);
-
-  return textMetrics.forget();
+  return new TextMetrics(width);
 }
 
 /**
@@ -3829,8 +3787,6 @@ CanvasRenderingContext2D::ShouldForceInactiveLayer(LayerManager *aManager)
 }
 }
 
-DOMCI_DATA(TextMetrics, mozilla::dom::TextMetrics)
 DOMCI_DATA(CanvasGradient, mozilla::dom::CanvasGradient)
-DOMCI_DATA(CanvasPattern, mozilla::dom::CanvasPattern)
 DOMCI_DATA(CanvasRenderingContext2D, mozilla::dom::CanvasRenderingContext2D)
 

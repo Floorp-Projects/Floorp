@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=862092
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 862092</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 862092 **/
+
+  SimpleTest.waitForExplicitFinish();
+  function runTest()
+  {
+    var frameDoc = document.getElementById("f").contentDocument;
+    var a = document.createElement("select");
+    a.expando = "test";
+    a = frameDoc.adoptNode(a)
+    is(a.expando, "test", "adoptNode needs to preserve expandos");
+    SimpleTest.finish();
+  }
+
+  </script>
+</head>
+<body onload="runTest();">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=862092">Mozilla Bug 862092</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<iframe id="f"></iframe>
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

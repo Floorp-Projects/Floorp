@@ -2493,7 +2493,11 @@ Parser<ParseHandler>::bindVarOrConst(JSContext *cx, BindData<ParseHandler> *data
              * declarations, so make sure to indicate the need to deoptimize
              * the script's arguments object.
              */
-            if (name == cx->names().arguments) {
+            HandlePropertyName arguments = cx->names().arguments;
+            if (name == arguments) {
+                Node pn = parser->handler.newName(arguments, pc);
+                if (!pc->define(parser->context, arguments, pn, Definition::VAR))
+                    return false;
                 funbox->setArgumentsHasLocalBinding();
                 funbox->setDefinitelyNeedsArgsObj();
             }

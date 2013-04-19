@@ -245,6 +245,10 @@ TelemetryPing.prototype = {
     if (failedProfileLockCount)
       ret.failedProfileLockCount = failedProfileLockCount;
 
+    let maximalNumberOfConcurrentThreads = Telemetry.maximalNumberOfConcurrentThreads;
+    if (maximalNumberOfConcurrentThreads)
+      ret.maximalNumberOfConcurrentThreads = maximalNumberOfConcurrentThreads;
+
     for (let ioCounter in this._startupIO)
       ret[ioCounter] = this._startupIO[ioCounter];
 
@@ -567,10 +571,10 @@ TelemetryPing.prototype = {
     };
 
     if (Object.keys(this._slowSQLStartup.mainThread).length
-	|| Object.keys(this._slowSQLStartup.otherThreads).length) {
+      || Object.keys(this._slowSQLStartup.otherThreads).length) {
       payloadObj.slowSQLStartup = this._slowSQLStartup;
     }
-    
+
     return payloadObj;
   },
 

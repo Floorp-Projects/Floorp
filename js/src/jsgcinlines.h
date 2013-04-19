@@ -190,6 +190,7 @@ IsInsideNursery(JSRuntime *rt, const void *thing)
     if (rt->gcVerifyPostData)
         return rt->gcVerifierNursery.isInside(thing);
 #endif
+    return rt->gcNursery.isInside(thing);
 #endif
     return false;
 }
@@ -463,13 +464,41 @@ class GCZoneGroupIter {
 
 typedef CompartmentsIterT<GCZoneGroupIter> GCCompartmentGroupIter;
 
+#ifdef JSGC_GENERATIONAL
+/*
+ * Attempt to allocate a new GC thing out of the nursery. If there is not enough
+ * room in the nursery or there is an OOM, this method will return NULL.
+ */
+template <typename T, AllowGC allowGC>
+inline T *
+TryNewNurseryGCThing(JSContext *cx, size_t thingSize)
+{
+    JS_ASSERT(!IsAtomsCompartment(cx->compartment));
+    JSRuntime *rt = cx->runtime;
+    Nursery &nursery = rt->gcNursery;
+    T *t = static_cast<T *>(nursery.allocate(thingSize));
+    if (t)
+        return t;
+    if (allowGC && !rt->mainThread.suppressGC) {
+        MinorGC(rt, JS::gcreason::OUT_OF_NURSERY);
+
+        /* Exceeding gcMaxBytes while tenuring can disable the Nursery. */
+        if (nursery.isEnabled()) {
+            t = static_cast<T *>(nursery.allocate(thingSize));
+            JS_ASSERT(t);
+            return t;
+        }
+    }
+    return NULL;
+}
+#endif /* JSGC_GENERATIONAL */
+
 /*
  * Allocates a new GC thing. After a successful allocation the caller must
  * fully initialize the thing before calling any function that can potentially
  * trigger GC. This will ensure that GC tracing never sees junk values stored
  * in the partially initialized thing.
  */
-
 template <typename T, AllowGC allowGC>
 inline T *
 NewGCThing(JSContext *cx, AllocKind kind, size_t thingSize, InitialHeap heap)
@@ -492,6 +521,14 @@ NewGCThing(JSContext *cx, AllocKind kind, size_t thingSize, InitialHeap heap)
 
     if (allowGC)
         MaybeCheckStackRoots(cx);
+
+#if defined(JSGC_GENERATIONAL)
+    if (ShouldNurseryAllocate(cx->runtime->gcNursery, kind, heap)) {
+        T *t = TryNewNurseryGCThing<T, allowGC>(cx, thingSize);
+        if (t)
+            return t;
+    }
+#endif
 
     JS::Zone *zone = cx->zone();
     T *t = static_cast<T *>(zone->allocator.arenas.allocateFromFreeList(kind, thingSize));

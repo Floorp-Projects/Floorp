@@ -22,6 +22,11 @@ const kDefaultInterval = 50;
   Metro ui helpers
 =============================================================================*/
 
+function isLandscapeMode()
+{
+  return (MetroUtils.snappedState == Ci.nsIWinMetroUtils.fullScreenLandscape);
+}
+
 function checkContextUIMenuItemCount(aCount)
 {
   let visibleCount = 0;
@@ -92,6 +97,40 @@ function showNotification()
   });
 }
 
+function getSelection(aElement) {
+  if (!aElement)
+    return null;
+  // editable element
+  if (aElement instanceof Ci.nsIDOMNSEditableElement) {
+    return aElement.QueryInterface(Ci.nsIDOMNSEditableElement)
+                 .editor.selection;
+  }
+  // document or window
+  if (aElement instanceof HTMLDocument || aElement instanceof Window) {
+    return aElement.getSelection();
+  }
+  // browser
+  return aElement.contentWindow.getSelection();
+};
+
+function getTrimmedSelection(aElement) {
+  let sel = getSelection(aElement);
+  if (!sel)
+    return "";
+  return sel.toString().trim();
+}
+
+/*
+ * clearSelection(aTarget) - clears the current selection in
+ * aTarget, shuts down the selection manager and purges all
+ * message manager events to insure a reset state for the ui.
+ */
+function clearSelection(aTarget) {
+  SelectionHelperUI.closeEditSession(true);
+  getSelection(aTarget).removeAllRanges();
+  purgeEventQueue();
+}
+
 /*=============================================================================
   Asynchronous Metro ui helpers
 =============================================================================*/
@@ -105,6 +144,25 @@ function hideContextUI()
     ContextUI.dismiss();
     return promise;
   }
+}
+
+function showNavBar()
+{
+  let promise = waitForEvent(Elements.tray, "transitionend");
+  if (!ContextUI.isVisible) {
+    ContextUI.displayNavbar();
+    return promise;
+  }
+}
+
+function fireAppBarDisplayEvent()
+{
+  let promise = waitForEvent(Elements.tray, "transitionend");
+  let event = document.createEvent("Events");
+  event.initEvent("MozEdgeUIGesture", true, false);
+  gWindow.dispatchEvent(event);
+  purgeEventQueue();
+  return promise;
 }
 
 /*=============================================================================
@@ -448,9 +506,103 @@ function sendContextMenuClickToElement(aWindow, aElement, aX, aY) {
                                 1, Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH);
 }
 
+/*
+ * sendDoubleTap - simulates a double click or double tap.
+ */
+function sendDoubleTap(aWindow, aX, aY) {
+  EventUtils.synthesizeMouseAtPoint(aX, aY, {
+      clickCount: 1,
+      inputSource: Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH
+    }, aWindow);
+
+  EventUtils.synthesizeMouseAtPoint(aX, aY, {
+      clickCount: 2,
+      inputSource: Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH
+    }, aWindow);
+}
+
+function sendTap(aWindow, aX, aY) {
+  EventUtils.synthesizeMouseAtPoint(aX, aY, {
+      clickCount: 1,
+      inputSource: Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH
+    }, aWindow);
+}
+
+/*
+ * sendTouchDrag - sends a touch series composed of a touchstart,
+ * touchmove, and touchend w3c event.
+ */
+function sendTouchDrag(aWindow, aStartX, aStartY, aEndX, aEndY) {
+  EventUtils.synthesizeTouchAtPoint(aStartX, aStartY, { type: "touchstart" }, aWindow);
+  EventUtils.synthesizeTouchAtPoint(aEndX, aEndY, { type: "touchmove" }, aWindow);
+  EventUtils.synthesizeTouchAtPoint(aEndX, aEndY, { type: "touchend" }, aWindow);
+}
+
+/*
+ * TouchDragAndHold - simulates a drag and hold sequence of events.
+ */
+function TouchDragAndHold() {
+}
+
+TouchDragAndHold.prototype = {
+  _timeoutStep: 2,
+  _numSteps: 50,
+  _debug: false,
+
+  callback: function callback() {
+    if (++this._step.steps >= this._numSteps) {
+      EventUtils.synthesizeTouchAtPoint(this._endPoint.xPos, this._endPoint.yPos,
+                                        { type: "touchmove" }, this._win);
+      this._defer.resolve();
+      return;
+    }
+    this._currentPoint.xPos += this._step.x;
+    this._currentPoint.yPos += this._step.y;
+    if (this._debug) {
+      info("[" + this._step.steps + "] touchmove " + this._currentPoint.xPos + " x " + this._currentPoint.yPos);
+    }
+    EventUtils.synthesizeTouchAtPoint(this._currentPoint.xPos, this._currentPoint.yPos,
+                                      { type: "touchmove" }, this._win);
+    let self = this;
+    setTimeout(function () { self.callback(); }, this._timeoutStep);
+  },
+
+  start: function start(aWindow, aStartX, aStartY, aEndX, aEndY) {
+    this._defer = Promise.defer();
+    this._win = aWindow;
+    this._endPoint = { xPos: aEndX, yPos: aEndY };
+    this._currentPoint = { xPos: aStartX, yPos: aStartY };
+    this._step = { steps: 0, x: (aEndX - aStartX) / this._numSteps, y: (aEndY - aStartY) / this._numSteps };
+    if (this._debug) {
+      info("[0] touchstart " + aStartX + " x " + aStartY);
+    }
+    EventUtils.synthesizeTouchAtPoint(aStartX, aStartY, { type: "touchstart" }, aWindow);
+    let self = this;
+    setTimeout(function () { self.callback(); }, this._timeoutStep);
+    return this._defer.promise;
+  },
+
+  end: function start() {
+    if (this._debug) {
+      info("[" + this._step.steps + "] touchend " + this._endPoint.xPos + " x " + this._endPoint.yPos);
+    }
+    EventUtils.synthesizeTouchAtPoint(this._endPoint.xPos, this._endPoint.yPos,
+                                      { type: "touchend" }, this._win);
+    this._win = null;
+  },
+};
+
 /*=============================================================================
   System utilities
 =============================================================================*/
+
+ /*
+ * emptyClipboard - clear the windows clipbaord.
+ */
+function emptyClipboard() {
+  Cc["@mozilla.org/widget/clipboard;1"].getService(Ci.nsIClipboard)
+                                       .emptyClipboard(Ci.nsIClipboard.kGlobalClipboard);
+}
 
 /*
  * purgeEventQueue - purges the event queue on the calling thread.
