@@ -6,48 +6,40 @@
 #ifndef mozilla_dom_TextMetrics_h
 #define mozilla_dom_TextMetrics_h
 
-#include "nsIDOMTextMetrics.h"
-
-#define NS_TEXTMETRICSAZURE_PRIVATE_IID \
-  {0x9793f9e7, 0x9dc1, 0x4e9c, {0x81, 0xc8, 0xfc, 0xa7, 0x14, 0xf4, 0x30, 0x79}}
+#include "mozilla/dom/CanvasRenderingContext2DBinding.h"
+#include "mozilla/dom/NonRefcountedDOMObject.h"
 
 namespace mozilla {
 namespace dom {
 
-class TextMetrics : public nsIDOMTextMetrics
+class TextMetrics MOZ_FINAL : public NonRefcountedDOMObject
 {
 public:
-  TextMetrics(float w) : width(w) { }
-
-  virtual ~TextMetrics() { }
-
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_TEXTMETRICSAZURE_PRIVATE_IID)
-
-  NS_IMETHOD GetWidth(float* w)
+  TextMetrics(float w) : width(w)
   {
-    *w = width;
-    return NS_OK;
+    MOZ_COUNT_CTOR(TextMetrics);
   }
 
-  NS_DECL_ISUPPORTS
+  ~TextMetrics()
+  {
+    MOZ_COUNT_DTOR(TextMetrics);
+  }
+
+  float Width() const
+  {
+    return width;
+  }
+
+  JSObject* WrapObject(JSContext* aCx, JSObject* aScope, bool* aTookOwnership)
+  {
+    return TextMetricsBinding::Wrap(aCx, aScope, this, aTookOwnership);
+  }
 
 private:
   float width;
 };
 
-NS_IMPL_ADDREF(TextMetrics)
-NS_IMPL_RELEASE(TextMetrics)
-
-NS_INTERFACE_MAP_BEGIN(TextMetrics)
-  NS_INTERFACE_MAP_ENTRY(mozilla::dom::TextMetrics)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMTextMetrics)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(TextMetrics)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-
 } // namespace dom
 } // namespace mozilla
-
-DOMCI_DATA(TextMetrics, mozilla::dom::TextMetrics)
 
 #endif // mozilla_dom_TextMetrics_h

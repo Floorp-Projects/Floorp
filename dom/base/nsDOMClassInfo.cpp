@@ -733,8 +733,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(CanvasPattern, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(TextMetrics, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(MozCanvasPrintState, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
@@ -2030,10 +2028,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(CanvasPattern, nsIDOMCanvasPattern)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCanvasPattern)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(TextMetrics, nsIDOMTextMetrics)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMTextMetrics)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(MozCanvasPrintState, nsIDOMMozCanvasPrintState)
