@@ -43,7 +43,6 @@
 #include "nsIDOMHTMLEmbedElement.h"
 #include "nsIDOMHTMLAppletElement.h"
 #include "nsIDOMWindow.h"
-#include "nsIDOMEventTarget.h"
 #include "nsIDocumentEncoder.h"
 #include "nsXPIDLString.h"
 #include "nsIDOMRange.h"
