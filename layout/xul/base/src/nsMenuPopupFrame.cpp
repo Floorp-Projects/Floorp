@@ -1010,14 +1010,19 @@ nsMenuPopupFrame::FlipOrResize(nscoord& aScreenPoint, nscoord aSize,
         popupSize = startpos - aScreenPoint - aMarginEnd;
       }
       else {
-        // flip such that the popup is to the right or bottom of the anchor
-        // point instead. However, when flipping use the same margin size.
-        *aFlipSide = true;
-        aScreenPoint = endpos + aMarginEnd;
-        // check if the new position is still off the right or bottom edge of
-        // the screen. If so, resize the popup.
-        if (aScreenPoint + aSize > aScreenEnd) {
-          popupSize = aScreenEnd - aScreenPoint;
+        // If the newly calculated position is different than the existing
+        // position, flip such that the popup is to the right or bottom of the
+        // anchor point instead . However, when flipping use the same margin
+        // size.
+        nscoord newScreenPoint = endpos + aMarginEnd;
+        if (newScreenPoint != aScreenPoint) {
+          *aFlipSide = true;
+          aScreenPoint = newScreenPoint;
+          // check if the new position is still off the right or bottom edge of
+          // the screen. If so, resize the popup.
+          if (aScreenPoint + aSize > aScreenEnd) {
+            popupSize = aScreenEnd - aScreenPoint;
+          }
         }
       }
     }
@@ -1045,17 +1050,21 @@ nsMenuPopupFrame::FlipOrResize(nscoord& aScreenPoint, nscoord aSize,
         }
       }
       else {
-        // flip such that the popup is to the left or top of the anchor point
-        // instead.
-        *aFlipSide = true;
-        aScreenPoint = startpos - aSize - aMarginBegin - aOffsetForContextMenu;
+        // if the newly calculated position is different than the existing
+        // position, we flip such that the popup is to the left or top of the
+        // anchor point instead.
+        nscoord newScreenPoint = startpos - aSize - aMarginBegin - aOffsetForContextMenu;
+        if (newScreenPoint != aScreenPoint) {
+          *aFlipSide = true;
+          aScreenPoint = newScreenPoint;
 
-        // check if the new position is still off the left or top edge of the
-        // screen. If so, resize the popup.
-        if (aScreenPoint < aScreenBegin) {
-          aScreenPoint = aScreenBegin;
-          if (!mIsContextMenu) {
-            popupSize = startpos - aScreenPoint - aMarginBegin;
+          // check if the new position is still off the left or top edge of the
+          // screen. If so, resize the popup.
+          if (aScreenPoint < aScreenBegin) {
+            aScreenPoint = aScreenBegin;
+            if (!mIsContextMenu) {
+              popupSize = startpos - aScreenPoint - aMarginBegin;
+            }
           }
         }
       }
