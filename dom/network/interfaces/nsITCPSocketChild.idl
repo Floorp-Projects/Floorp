@@ -18,7 +18,7 @@ interface nsITCPSocketChild : nsISupports
             in nsIDOMWindow window, in jsval socketVal);
 
   // Tell the chrome process to perform equivalent operations to all following methods
-  [implicit_jscontext] void send(in jsval data);
+  [implicit_jscontext] void send(in jsval data, in unsigned long byteOffset, in unsigned long byteLength);
   void resume();
   void suspend();
   void close();
