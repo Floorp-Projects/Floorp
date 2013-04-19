@@ -109,6 +109,7 @@ private:
   bool mCLIP;
   bool mCMEE;
   bool mCMER;
+  bool mFirstCKPD;
   int mNetworkSelectionMode;
   bool mReceiveVgsFlag;
   nsString mDevicePath;
