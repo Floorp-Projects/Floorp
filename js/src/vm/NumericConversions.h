@@ -41,13 +41,7 @@ ToIntWidth(double d)
 {
 #if defined(__i386__) || defined(__i386) || defined(__x86_64__) || \
     defined(_M_IX86) || defined(_M_X64)
-
-#ifdef __clang__
-    /* volatile to keep Clang from miscompiling, see bug 859257. */
-    volatile detail::DoublePun du, duh, twoWidth;
-#else
     detail::DoublePun du, duh, twoWidth;
-#endif
     uint32_t di_h, u_tmp, expon, shift_amount;
     int32_t mask32;
 
