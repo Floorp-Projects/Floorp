@@ -53,8 +53,4 @@
 
     <item android:id="@+id/settings"
           android:title="@string/settings" />
-
-    <item android:id="@+id/toggle_profiling"
-          android:visible="false"
-          android:title="@string/toggle_profiling" />
 </menu>
