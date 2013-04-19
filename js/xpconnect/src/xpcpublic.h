@@ -82,9 +82,6 @@ xpc_LocalizeRuntime(JSRuntime *rt);
 NS_EXPORT_(void)
 xpc_DelocalizeRuntime(JSRuntime *rt);
 
-nsresult
-xpc_MorphSlimWrapper(JSContext *cx, nsISupports *tomorph);
-
 static inline bool IS_WRAPPER_CLASS(js::Class* clazz)
 {
     return clazz->ext.isWrappedNative;

@@ -401,13 +401,6 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
 
   AutoJSContext cx;
   nsresult rv;
-  JS::RootedObject wrapper(cx);
-  bool isDOMBinding;
-  if (aReparentScope && (wrapper = aNode->GetWrapper()) &&
-      !(isDOMBinding = IsDOMObject(wrapper))) {
-      rv = xpc_MorphSlimWrapper(cx, aNode);
-      NS_ENSURE_SUCCESS(rv, rv);
-  }
 
   nsNodeInfoManager *nodeInfoManager = aNewNodeInfoManager;
 
@@ -523,19 +516,22 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
       elem->RecompileScriptEventListeners();
     }
 
-    if (aReparentScope && wrapper) {
-      if (isDOMBinding) {
-        rv = ReparentWrapper(cx, wrapper);
-      } else {
-        nsIXPConnect *xpc = nsContentUtils::XPConnect();
-        if (xpc) {
-          rv = xpc->ReparentWrappedNativeIfFound(cx, wrapper, aReparentScope, aNode);
+    if (aReparentScope) {
+      JS::Rooted<JSObject*> wrapper(cx);
+      if ((wrapper = aNode->GetWrapper())) {
+        if (IsDOMObject(wrapper)) {
+          rv = ReparentWrapper(cx, wrapper);
+        } else {
+          nsIXPConnect *xpc = nsContentUtils::XPConnect();
+          if (xpc) {
+            rv = xpc->ReparentWrappedNativeIfFound(cx, wrapper, aReparentScope, aNode);
+          }
         }
-      }
-      if (NS_FAILED(rv)) {
-        aNode->mNodeInfo.swap(nodeInfo);
+        if (NS_FAILED(rv)) {
+          aNode->mNodeInfo.swap(nodeInfo);
 
-        return rv;
+          return rv;
+        }
       }
     }
   }

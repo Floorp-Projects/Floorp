@@ -304,16 +304,6 @@ inline XPCWrappedNativeProto* GetSlimWrapperProto(JSObject *obj)
     return static_cast<XPCWrappedNativeProto*>(v.toPrivate());
 }
 
-// A slim wrapper is identified by having a native pointer in its reserved slot.
-// This function, therefore, does the official transition from a slim wrapper to
-// a non-slim wrapper.
-inline void MorphMultiSlot(JSObject *obj)
-{
-    MOZ_ASSERT(IS_SLIM_WRAPPER(obj));
-    JS_SetReservedSlot(obj, WRAPPER_MULTISLOT, JSVAL_NULL);
-    MOZ_ASSERT(!IS_SLIM_WRAPPER(obj));
-}
-
 inline void SetWNExpandoChain(JSObject *obj, JSObject *chain)
 {
     MOZ_ASSERT(IS_WN_WRAPPER(obj));
@@ -2241,8 +2231,6 @@ private:
     XPCNativeScriptableInfo* mScriptableInfo;
 };
 
-extern JSBool MorphSlimWrapper(JSContext *cx, JS::HandleObject obj);
-
 /***********************************************/
 // XPCWrappedNativeTearOff represents the info needed to make calls to one
 // interface on the underlying native object of a XPCWrappedNative.
@@ -2489,22 +2477,6 @@ public:
                 XPCNativeInterface* Interface,
                 XPCWrappedNative** wrapper);
 
-    static XPCWrappedNative*
-    GetAndMorphWrappedNativeOfJSObject(JSContext* cx, JSObject* obj_)
-    {
-        JS::RootedObject obj(cx, obj_);
-        obj = js::CheckedUnwrap(obj, /* stopAtOuter = */ false);
-        if (!obj)
-            return nullptr;
-        if (!IS_WRAPPER_CLASS(js::GetObjectClass(obj)))
-            return nullptr;
-
-        if (IS_SLIM_WRAPPER_OBJECT(obj) && !MorphSlimWrapper(cx, obj))
-            return nullptr;
-        MOZ_ASSERT(IS_WN_WRAPPER(obj));
-        return XPCWrappedNative::Get(obj);
-    }
-
     static nsresult
     ReparentWrapperIfFound(XPCWrappedNativeScope* aOldScope,
                            XPCWrappedNativeScope* aNewScope,
@@ -2668,7 +2640,6 @@ private:
 private:
 
     JSBool Init(JS::HandleObject parent, const XPCNativeScriptableCreateInfo* sci);
-    JSBool Init(JSObject *existingJSObject);
     JSBool FinishInit();
 
     JSBool ExtendSet(XPCNativeInterface* aInterface);
