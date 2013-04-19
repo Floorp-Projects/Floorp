@@ -429,6 +429,8 @@ void leaky::open(char *logFile)
       {
         fprintf(outputfd,"   <a href=\"#thread_%d\">%d</a>  ",
                 threadArray[i],threadArray[i]);
+        if ((i+1)%10 == 0)
+          fprintf(outputfd,"<br>\n");
       }
       fprintf(outputfd,"</pre>");
     }
@@ -453,10 +455,10 @@ void leaky::open(char *logFile)
 
 static int symbolOrder(void const* a, void const* b)
 {
-  Symbol const* ap = (Symbol const *)a;
-  Symbol const* bp = (Symbol const *)b;
-  return ap->address == bp->address ? 0 :
-    (ap->address > bp->address ? 1 : -1);
+  Symbol const** ap = (Symbol const **)a;
+  Symbol const** bp = (Symbol const **)b;
+  return (*ap)->address == (*bp)->address ? 0 :
+    ((*ap)->address > (*bp)->address ? 1 : -1);
 }
 
 void leaky::ReadSharedLibrarySymbols()
@@ -484,9 +486,9 @@ void leaky::setupSymbols(const char *fileName)
     }
 
     // Now sort them
-    qsort(externalSymbols, usefulSymbols, sizeof(Symbol), symbolOrder);
-    lowestSymbolAddr = externalSymbols[0].address;
-    highestSymbolAddr = externalSymbols[usefulSymbols-1].address;
+    qsort(externalSymbols, usefulSymbols, sizeof(Symbol *), symbolOrder);
+    lowestSymbolAddr = externalSymbols[0]->address;
+    highestSymbolAddr = externalSymbols[usefulSymbols-1]->address;
   }
 }
 
@@ -496,18 +498,18 @@ int leaky::findSymbolIndex(u_long addr)
 {
   u_int base = 0;
   u_int limit = usefulSymbols - 1;
-  Symbol* end = &externalSymbols[limit];
+  Symbol** end = &externalSymbols[limit];
   while (base <= limit) {
     u_int midPoint = (base + limit)>>1;
-    Symbol* sp = &externalSymbols[midPoint];
-    if (addr < sp->address) {
+    Symbol** sp = &externalSymbols[midPoint];
+    if (addr < (*sp)->address) {
       if (midPoint == 0) {
 	return -1;
       }
       limit = midPoint - 1;
     } else {
       if (sp+1 < end) {
-	if (addr < (sp+1)->address) {
+	if (addr < (*(sp+1))->address) {
 	  return midPoint;
 	}
       } else {
@@ -526,7 +528,7 @@ Symbol* leaky::findSymbol(u_long addr)
   if(idx<0) {
     return NULL;
   } else {
-    return &externalSymbols[idx];
+    return externalSymbols[idx];
   }
 }
 
@@ -644,22 +646,22 @@ void leaky::generateReportHTML(FILE *fp, int *countArray, int count, int thread)
           "index", "Count", "Hits", "Function Name");
 
   for(i=0; i<usefulSymbols && countArray[rankingTable[i]]>0; i++) {
-    Symbol *sp=&externalSymbols[rankingTable[i]];
+    Symbol **sp=&externalSymbols[rankingTable[i]];
     
-    sp->cntP.printReport(fp, this, rankingTable[i], totalTimerHits);
+    (*sp)->cntP.printReport(fp, this, rankingTable[i], totalTimerHits);
 
-    char *symname = htmlify(sp->name);
+    char *symname = htmlify((*sp)->name);
     fprintf(fp, "%6d %6d (%3.1f%%)%s <a name=%d>%8d (%3.1f%%)</a>%s <b>%s</b>\n", 
             rankingTable[i],
-            sp->timerHit, (sp->timerHit*1000/totalTimerHits)/10.0,
-            (sp->timerHit*1000/totalTimerHits)/10.0 >= 10.0 ? "" : " ",
+            (*sp)->timerHit, ((*sp)->timerHit*1000/totalTimerHits)/10.0,
+            ((*sp)->timerHit*1000/totalTimerHits)/10.0 >= 10.0 ? "" : " ",
             rankingTable[i], countArray[rankingTable[i]],
             (countArray[rankingTable[i]]*1000/totalTimerHits)/10.0,
             (countArray[rankingTable[i]]*1000/totalTimerHits)/10.0 >= 10.0 ? "" : " ",
             symname);
     delete [] symname;
 
-    sp->cntC.printReport(fp, this, rankingTable[i], totalTimerHits);
+    (*sp)->cntC.printReport(fp, this, rankingTable[i], totalTimerHits);
 
     fprintf(fp, "<hr>\n");
   }
@@ -673,9 +675,9 @@ void leaky::generateReportHTML(FILE *fp, int *countArray, int count, int thread)
   for(mx=usefulSymbols/9, h=581130733; h>0; h/=3) {
     if(h<mx) {
       for(i = h-1; i<usefulSymbols; i++) {
-	int j, tmp=rankingTable[i], val = externalSymbols[tmp].timerHit;
+	int j, tmp=rankingTable[i], val = externalSymbols[tmp]->timerHit;
 	for(j = i;
-	  (j>=h) && (externalSymbols[rankingTable[j-h]].timerHit<val); j-=h) {
+	  (j>=h) && (externalSymbols[rankingTable[j-h]]->timerHit<val); j-=h) {
 	  rankingTable[j] = rankingTable[j-h];
 	}
 	rankingTable[j] = tmp;
@@ -689,9 +691,9 @@ void leaky::generateReportHTML(FILE *fp, int *countArray, int count, int thread)
   // do single-pass and print this out after the loop finishes.
   totalTimerHits = 0;
   for(i=0;
-    i<usefulSymbols && externalSymbols[rankingTable[i]].timerHit>0; i++) {
-    Symbol *sp=&externalSymbols[rankingTable[i]];
-    totalTimerHits += sp->timerHit;
+      i<usefulSymbols && externalSymbols[rankingTable[i]]->timerHit>0; i++) {
+    Symbol **sp=&externalSymbols[rankingTable[i]];
+    totalTimerHits += (*sp)->timerHit;
   }
   if (totalTimerHits == 0)
     totalTimerHits = 1;
@@ -708,14 +710,14 @@ void leaky::generateReportHTML(FILE *fp, int *countArray, int count, int thread)
   fprintf(fp, "Count %%Total  Function Name\n");
   // Now loop for as long as we have timer hits
   for(i=0;
-    i<usefulSymbols && externalSymbols[rankingTable[i]].timerHit>0; i++) {
+      i<usefulSymbols && externalSymbols[rankingTable[i]]->timerHit>0; i++) {
 
-    Symbol *sp=&externalSymbols[rankingTable[i]];
+    Symbol **sp=&externalSymbols[rankingTable[i]];
     
-    char *symname = htmlify(sp->name);
+    char *symname = htmlify((*sp)->name);
     fprintf(fp, "<a href=\"#%d\">%3d   %-2.1f     %s</a>\n",
-            rankingTable[i], sp->timerHit,
-            ((float)sp->timerHit/(float)totalTimerHits)*100.0, symname);
+            rankingTable[i], (*sp)->timerHit,
+            ((float)(*sp)->timerHit/(float)totalTimerHits)*100.0, symname);
     delete [] symname;
   }
 }
@@ -730,8 +732,8 @@ void leaky::analyze(int thread)
 
   // reset hit counts
   for(int i=0; i<usefulSymbols; i++) {
-    externalSymbols[i].timerHit = 0;
-    externalSymbols[i].regClear();
+    externalSymbols[i]->timerHit = 0;
+    externalSymbols[i]->regClear();
   }
 
   // The flag array is used to prevent counting symbols multiple times
@@ -773,7 +775,7 @@ void leaky::analyze(int thread)
         if(idx>=0) {
           // Skip over bogus __restore_rt frames that realtime profiling
           // can introduce.
-          if (i > 0 && !strcmp(externalSymbols[idx].name, "__restore_rt")) {
+          if (i > 0 && !strcmp(externalSymbols[idx]->name, "__restore_rt")) {
             --pcp;
             --i;
             idx = findSymbolIndex(reinterpret_cast<u_long>(*pcp));
@@ -781,8 +783,8 @@ void leaky::analyze(int thread)
               continue;
             }
           }
-          Symbol *sp=&externalSymbols[idx];
-          char *symname = htmlify(sp->name);
+          Symbol **sp=&externalSymbols[idx];
+          char *symname = htmlify((*sp)->name);
           fprintf(outputfd,"%c-%s\n",type,symname);
           delete [] symname;
         }
@@ -798,7 +800,7 @@ void leaky::analyze(int thread)
         if(idx>=0) {
           // Skip over bogus __restore_rt frames that realtime profiling
           // can introduce.
-          if (i > 0 && !strcmp(externalSymbols[idx].name, "__restore_rt")) {
+          if (i > 0 && !strcmp(externalSymbols[idx]->name, "__restore_rt")) {
             --pcp;
             --i;
             idx = findSymbolIndex(reinterpret_cast<u_long>(*pcp));
@@ -814,8 +816,8 @@ void leaky::analyze(int thread)
 
           // We know who we are and we know who our parrent is.  Count this
           if(parrentIdx>=0) {
-            externalSymbols[parrentIdx].regChild(idx);
-            externalSymbols[idx].regParrent(parrentIdx);
+            externalSymbols[parrentIdx]->regChild(idx);
+            externalSymbols[idx]->regParrent(parrentIdx);
           }
           // inside if() so an unknown in the middle of a stack won't break
           // the link!
@@ -825,7 +827,7 @@ void leaky::analyze(int thread)
 
       // idx should be the function that we were in when we received the signal.
       if(idx>=0) {
-        ++externalSymbols[idx].timerHit;
+        ++externalSymbols[idx]->timerHit;
       }
 
     }
