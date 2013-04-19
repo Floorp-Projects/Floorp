@@ -738,6 +738,13 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         movsd(dp, dest);
     }
 
+    void branchTruncateDouble(const FloatRegister &src, const Register &dest, Label *fail) {
+        JS_STATIC_ASSERT(INT_MIN == int(0x80000000));
+        cvttsd2si(src, dest);
+        cmpl(dest, Imm32(INT_MIN));
+        j(Assembler::Equal, fail);
+    }
+
     Condition testInt32Truthy(bool truthy, const ValueOperand &operand) {
         testl(operand.payloadReg(), operand.payloadReg());
         return truthy ? NonZero : Zero;
