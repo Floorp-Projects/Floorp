@@ -11,7 +11,6 @@
 #include "nsError.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMEvent.h"
-#include "nsIDOMDocument.h"
 #include "nsIDOMEventTarget.h"
 #include "nsPIDOMWindow.h"
 #include "PowerManager.h"
@@ -69,9 +68,9 @@ WakeLock::Init(const nsAString &aTopic, nsIDOMWindow *aWindow)
    * is always considered invisible.
    */
   if (window) {
-    nsCOMPtr<nsIDOMDocument> domDoc = window->GetExtantDocument();
-    NS_ENSURE_STATE(domDoc);
-    domDoc->GetHidden(&mHidden);
+    nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+    NS_ENSURE_STATE(doc);
+    mHidden = doc->Hidden();
   }
 
   AttachEventListener();
@@ -168,17 +167,16 @@ void
 WakeLock::AttachEventListener()
 {
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
-  
-  if (window) {
-    nsCOMPtr<nsIDOMDocument> domDoc = window->GetExtantDocument();
-    if (domDoc) {
-      nsCOMPtr<EventTarget> target = do_QueryInterface(domDoc);
-      target->AddSystemEventListener(NS_LITERAL_STRING("visibilitychange"),
-                                     this,
-                                     /* useCapture = */ true,
-                                     /* wantsUntrusted = */ false);
 
-      target = do_QueryInterface(window);
+  if (window) {
+    nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+    if (doc) {
+      doc->AddSystemEventListener(NS_LITERAL_STRING("visibilitychange"),
+                                  this,
+                                  /* useCapture = */ true,
+                                  /* wantsUntrusted = */ false);
+
+      nsCOMPtr<EventTarget> target = do_QueryInterface(window);
       target->AddSystemEventListener(NS_LITERAL_STRING("pagehide"),
                                      this,
                                      /* useCapture = */ true,
@@ -197,13 +195,12 @@ WakeLock::DetachEventListener()
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
 
   if (window) {
-    nsCOMPtr<nsIDOMDocument> domDoc = window->GetExtantDocument();
-    if (domDoc) {
-      nsCOMPtr<EventTarget> target = do_QueryInterface(domDoc);
-      target->RemoveSystemEventListener(NS_LITERAL_STRING("visibilitychange"),
-                                        this,
-                                        /* useCapture = */ true);
-      target = do_QueryInterface(window);
+    nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+    if (doc) {
+      doc->RemoveSystemEventListener(NS_LITERAL_STRING("visibilitychange"),
+                                     this,
+                                     /* useCapture = */ true);
+      nsCOMPtr<EventTarget> target = do_QueryInterface(window);
       target->RemoveSystemEventListener(NS_LITERAL_STRING("pagehide"),
                                         this,
                                         /* useCapture = */ true);
