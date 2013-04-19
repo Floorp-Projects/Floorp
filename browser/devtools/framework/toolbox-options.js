@@ -32,7 +32,7 @@ function setupToolsList() {
     else {
       disabledTools.push(id);
       Services.prefs.setCharPref(DISABLED_TOOLS, JSON.stringify(disabledTools));
-      gDevTools.emit("tool-unregistered", id);
+      gDevTools.emit("tool-unregistered", gDevTools._tools.get(id));
     }
   };
 

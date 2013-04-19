@@ -670,10 +670,15 @@ Toolbox.prototype = {
    * Handler for the tool-unregistered event.
    * @param  {string} event
    *         Name of the event ("tool-unregistered")
-   * @param  {string} toolId
-   *         Id of the tool that was unregistered
+   * @param  {string|object} toolId
+   *         Definition or id of the tool that was unregistered. Passing the
+   *         tool id should be avoided as it is a temporary measure.
    */
   _toolUnregistered: function TBOX_toolUnregistered(event, toolId) {
+    if (typeof toolId != "string") {
+      toolId = toolId.id;
+    }
+
     if (this._toolPanels.has(toolId)) {
       let instance = this._toolPanels.get(toolId);
       instance.destroy();
