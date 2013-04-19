@@ -29,6 +29,7 @@ public class testPanCorrectness extends PixelTest {
         Actions.RepeatedEventExpecter paintExpecter = mActions.expectPaint();
         meh.dragSync(10, 150, 10, 50);
         PaintedSurface painted = waitForPaint(paintExpecter);
+        paintExpecter.unregisterListener();
         try {
             checkScrollWithBoxes(painted, 0, 100);
         } finally {
@@ -39,6 +40,7 @@ public class testPanCorrectness extends PixelTest {
         paintExpecter = mActions.expectPaint();
         meh.dragSync(150, 10, 50, 10);
         painted = waitForPaint(paintExpecter);
+        paintExpecter.unregisterListener();
         try {
             checkScrollWithBoxes(painted, 100, 100);
         } finally {
