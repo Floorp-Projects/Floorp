@@ -14,6 +14,7 @@
 
 using namespace js;
 using namespace js::ion;
+using namespace mozilla;
 
 #ifdef JS_ASMJS
 
@@ -660,6 +661,12 @@ HandleMachException(JSRuntime *rt, const ExceptionRequest &request)
 #  endif
 }
 
+// Taken from mach_exc in /usr/include/mach/mach_exc.defs.
+static const mach_msg_id_t sExceptionId = 2405;
+
+// The choice of id here is arbitrary, the only constraint is that sQuitId != sExceptionId.
+static const mach_msg_id_t sQuitId = 42;
+
 void *
 AsmJSMachExceptionHandlerThread(void *threadArg)
 {
@@ -676,6 +683,16 @@ AsmJSMachExceptionHandlerThread(void *threadArg)
         // Rather than hanging the faulting thread (hanging the browser), crash.
         if (kret != KERN_SUCCESS) {
             fprintf(stderr, "AsmJSMachExceptionHandlerThread: mach_msg failed with %d\n", (int)kret);
+            MOZ_CRASH();
+        }
+
+        // There are only two messages we should be receiving: an exception
+        // message that occurs when the runtime's thread faults and the quit
+        // message sent when the runtime is shutting down.
+        if (request.body.Head.msgh_id == sQuitId)
+            break;
+        if (request.body.Head.msgh_id != sExceptionId) {
+            fprintf(stderr, "Unexpected msg header id %d\n", (int)request.body.Head.msgh_bits);
             MOZ_CRASH();
         }
 
@@ -702,7 +719,6 @@ AsmJSMachExceptionHandlerThread(void *threadArg)
                  MACH_MSG_TIMEOUT_NONE, MACH_PORT_NULL);
     }
 
-    JS_NOT_REACHED("The exception handler thread should never return");
     return NULL;
 }
 
@@ -720,11 +736,28 @@ AsmJSMachExceptionHandler::release()
         installed_ = false;
     }
     if (thread_ != NULL) {
-        pthread_cancel(thread_);
+        // Break the handler thread out of the mach_msg loop.
+        mach_msg_header_t msg;
+        msg.msgh_bits = MACH_MSGH_BITS(MACH_MSG_TYPE_COPY_SEND, 0);
+        msg.msgh_size = sizeof(msg);
+        msg.msgh_remote_port = port_;
+        msg.msgh_local_port = MACH_PORT_NULL;
+        msg.msgh_reserved = 0;
+        msg.msgh_id = sQuitId;
+        kern_return_t kret = mach_msg(&msg, MACH_SEND_MSG, sizeof(msg), 0, MACH_PORT_NULL,
+                                      MACH_MSG_TIMEOUT_NONE, MACH_PORT_NULL);
+        if (kret != KERN_SUCCESS) {
+            fprintf(stderr, "AsmJSMachExceptionHandler: failed to send quit message: %d\n", (int)kret);
+            MOZ_CRASH();
+        }
+
+        // Wait for the handler thread to complete before deallocating the port.
+        pthread_join(thread_, NULL);
         thread_ = NULL;
     }
     if (port_ != MACH_PORT_NULL) {
-        mach_port_deallocate(mach_task_self(), port_);
+        DebugOnly<kern_return_t> kret = mach_port_destroy(mach_task_self(), port_);
+        JS_ASSERT(kret == KERN_SUCCESS);
         port_ = MACH_PORT_NULL;
     }
 }
@@ -735,11 +768,13 @@ AsmJSMachExceptionHandler::clearCurrentThread()
     if (!installed_)
         return;
 
-    kern_return_t kret = thread_set_exception_ports(mach_thread_self(),
+    thread_port_t thread = mach_thread_self();
+    kern_return_t kret = thread_set_exception_ports(thread,
                                                     EXC_MASK_BAD_ACCESS,
                                                     MACH_PORT_NULL,
                                                     EXCEPTION_DEFAULT | MACH_EXCEPTION_CODES,
                                                     THREAD_STATE_NONE);
+    mach_port_deallocate(mach_task_self(), thread);
     if (kret != KERN_SUCCESS)
         MOZ_CRASH();
 }
@@ -750,11 +785,13 @@ AsmJSMachExceptionHandler::setCurrentThread()
     if (!installed_)
         return;
 
-    kern_return_t kret = thread_set_exception_ports(mach_thread_self(),
+    thread_port_t thread = mach_thread_self();
+    kern_return_t kret = thread_set_exception_ports(thread,
                                                     EXC_MASK_BAD_ACCESS,
                                                     port_,
                                                     EXCEPTION_DEFAULT | MACH_EXCEPTION_CODES,
                                                     THREAD_STATE_NONE);
+    mach_port_deallocate(mach_task_self(), thread);
     if (kret != KERN_SUCCESS)
         MOZ_CRASH();
 }
@@ -764,6 +801,7 @@ AsmJSMachExceptionHandler::install(JSRuntime *rt)
 {
     JS_ASSERT(!installed());
     kern_return_t kret;
+    mach_port_t thread;
 
     // Get a port which can send and receive data.
     kret = mach_port_allocate(mach_task_self(), MACH_PORT_RIGHT_RECEIVE, &port_);
@@ -774,10 +812,7 @@ AsmJSMachExceptionHandler::install(JSRuntime *rt)
         goto error;
 
     // Create a thread to block on reading port_.
-    pthread_attr_t attrs;
-    pthread_attr_init(&attrs);
-    pthread_attr_setdetachstate(&attrs, PTHREAD_CREATE_DETACHED);
-    if (pthread_create(&thread_, &attrs, AsmJSMachExceptionHandlerThread, rt))
+    if (pthread_create(&thread_, NULL, AsmJSMachExceptionHandlerThread, rt))
         goto error;
 
     // Direct exceptions on this thread to port_ (and thus our handler thread).
@@ -785,11 +820,13 @@ AsmJSMachExceptionHandler::install(JSRuntime *rt)
     // not even attempting to forward. Breakpad and gdb both use the *process*
     // exception ports which are only called if the thread doesn't handle the
     // exception, so we should be fine.
-    kret = thread_set_exception_ports(mach_thread_self(),
+    thread = mach_thread_self();
+    kret = thread_set_exception_ports(thread,
                                       EXC_MASK_BAD_ACCESS,
                                       port_,
                                       EXCEPTION_DEFAULT | MACH_EXCEPTION_CODES,
                                       THREAD_STATE_NONE);
+    mach_port_deallocate(mach_task_self(), thread);
     if (kret != KERN_SUCCESS)
         goto error;
 
