@@ -126,7 +126,7 @@ function getTrimmedSelection(aElement) {
  * message manager events to insure a reset state for the ui.
  */
 function clearSelection(aTarget) {
-  SelectionHelperUI.closeEditSessionAndClear();
+  SelectionHelperUI.closeEditSession(true);
   getSelection(aTarget).removeAllRanges();
   purgeEventQueue();
 }
