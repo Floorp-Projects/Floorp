@@ -334,7 +334,9 @@ private:
         GROUP5_OP_JMPN  = 4,
         GROUP5_OP_PUSH  = 6,
 
-        FPU6_OP_FSTP = 3,
+        FPU6_OP_FLD     = 0,
+        FPU6_OP_FISTTP  = 1,
+        FPU6_OP_FSTP    = 3,
 
         GROUP11_MOV = 0
     } GroupOpcodeID;
@@ -658,9 +660,20 @@ public:
     }
 #endif
 
+    void fld_m(int offset, RegisterID base)
+    {
+        spew("fld        %s0x%x(%s)", PRETTY_PRINT_OFFSET(offset), nameIReg(base));
+        m_formatter.oneByteOp(OP_FPU6, FPU6_OP_FLD, base, offset);
+    }
+    void fisttp_m(int offset, RegisterID base)
+    {
+        spew("fisttp     %s0x%x(%s)", PRETTY_PRINT_OFFSET(offset), nameIReg(base));
+        m_formatter.oneByteOp(OP_FPU6, FPU6_OP_FISTTP, base, offset);
+    }
     void fstp_m(int offset, RegisterID base)
     {
-	   m_formatter.oneByteOp(OP_FPU6, FPU6_OP_FSTP, base, offset);
+        spew("fstp       %s0x%x(%s)", PRETTY_PRINT_OFFSET(offset), nameIReg(base));
+        m_formatter.oneByteOp(OP_FPU6, FPU6_OP_FSTP, base, offset);
     }
 
     void negl_r(RegisterID dst)

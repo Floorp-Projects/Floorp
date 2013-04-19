@@ -705,6 +705,19 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         cond = testMagic(cond, t);
         j(cond, label);
     }
+    void branchTestMagicValue(Condition cond, const ValueOperand &val, JSWhyMagic why,
+                              Label *label)
+    {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        // Test for magic
+        Label notmagic;
+        Condition testCond = testMagic(cond, val);
+        j(InvertCondition(testCond), &notmagic);
+        // Test magic value
+        unboxMagic(val, ScratchReg);
+        branch32(cond, ScratchReg, Imm32(static_cast<int32_t>(why)), label);
+        bind(&notmagic);
+    }
     Condition testMagic(Condition cond, const ValueOperand &src) {
         splitTag(src, ScratchReg);
         return testMagic(cond, ScratchReg);
@@ -766,6 +779,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
     void unboxBoolean(const Address &src, const Register &dest) {
         unboxBoolean(Operand(src), dest);
+    }
+
+    void unboxMagic(const ValueOperand &src, const Register &dest) {
+        movl(Operand(src.valueReg()), dest);
     }
 
     void unboxDouble(const ValueOperand &src, const FloatRegister &dest) {
@@ -876,6 +893,16 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
     void loadStaticDouble(const double *dp, const FloatRegister &dest) {
         loadConstantDouble(*dp, dest);
+    }
+
+    void branchTruncateDouble(const FloatRegister &src, const Register &dest, Label *fail) {
+        JS_STATIC_ASSERT(INT64_MIN == 0x8000000000000000);
+        JS_ASSERT(dest != ScratchReg);
+        cvttsd2sq(src, dest);
+        movq(ImmWord(INT64_MIN), ScratchReg);
+        cmpq(dest, ScratchReg);
+        j(Assembler::Equal, fail);
+        movl(dest, dest); // Zero upper 32-bits.
     }
 
     Condition testInt32Truthy(bool truthy, const ValueOperand &operand) {

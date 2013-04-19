@@ -13,7 +13,7 @@ class testSingleFinger(MarionetteTestCase):
         self.marionette.navigate(testTouch)
         button = self.marionette.find_element("id", "mozLinkCopy")
         action = Actions(self.marionette)
-        action.press(button).wait(5).release()
+        action.press(button).wait(0.2).release()
         action.perform()
         time.sleep(15)
         self.assertEqual("End", self.marionette.execute_script("return document.getElementById('mozLinkCopy').innerHTML;"))
@@ -120,7 +120,24 @@ class testSingleFinger(MarionetteTestCase):
         self.assertEqual("Context", self.marionette.execute_script("return document.getElementById('mozLinkCopy').innerHTML;"))
         action.release().perform()
         time.sleep(10)
-        self.assertEqual("End", self.marionette.execute_script("return document.getElementById('mozLinkCopy').innerHTML;"))
+        self.assertEqual("ContextEnd", self.marionette.execute_script("return document.getElementById('mozLinkCopy').innerHTML;"))
+
+    def test_long_press_action(self):
+        testTouch = self.marionette.absolute_url("testAction.html")
+        self.marionette.navigate(testTouch)
+        button = self.marionette.find_element("id", "mozLinkCopy")
+        action = Actions(self.marionette)
+        action.long_press(button, 5).perform()
+        time.sleep(10)
+        self.assertEqual("ContextEnd", self.marionette.execute_script("return document.getElementById('mozLinkCopy').innerHTML;"))
+
+    def test_long_press_fail(self):
+        testTouch = self.marionette.absolute_url("testAction.html")
+        self.marionette.navigate(testTouch)
+        button = self.marionette.find_element("id", "mozLinkCopy")
+        action = Actions(self.marionette)
+        action.press(button).long_press(button, 5)
+        self.assertRaises(MarionetteException, action.perform)
 
     def test_wrong_value(self):
         testTouch = self.marionette.absolute_url("testAction.html")
