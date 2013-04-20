@@ -31,8 +31,10 @@ NS_IMPL_RELEASE_INHERITED(DynamicsCompressorNode, AudioNode)
 class DynamicsCompressorNodeEngine : public AudioNodeEngine
 {
 public:
-  explicit DynamicsCompressorNodeEngine(AudioDestinationNode* aDestination)
-    : mSource(nullptr)
+  explicit DynamicsCompressorNodeEngine(AudioNode* aNode,
+                                        AudioDestinationNode* aDestination)
+    : AudioNodeEngine(aNode)
+    , mSource(nullptr)
     , mDestination(static_cast<AudioNodeStream*> (aDestination->Stream()))
     // Keep the default value in sync with the default value in
     // DynamicsCompressorNode::DynamicsCompressorNode.
@@ -120,7 +122,7 @@ DynamicsCompressorNode::DynamicsCompressorNode(AudioContext* aContext)
   , mAttack(new AudioParam(this, SendAttackToStream, 0.003f))
   , mRelease(new AudioParam(this, SendReleaseToStream, 0.25f))
 {
-  DynamicsCompressorNodeEngine* engine = new DynamicsCompressorNodeEngine(aContext->Destination());
+  DynamicsCompressorNodeEngine* engine = new DynamicsCompressorNodeEngine(this, aContext->Destination());
   mStream = aContext->Graph()->CreateAudioNodeStream(engine, MediaStreamGraph::INTERNAL_STREAM);
   engine->SetSourceStream(static_cast<AudioNodeStream*> (mStream.get()));
 }
