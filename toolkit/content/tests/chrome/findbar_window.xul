@@ -41,7 +41,6 @@
       },
 
       setJSStatus: function() { },
-      setJSDefaultStatus: function() { },
 
       setOverLink: function(aStatusText, aLink) {
         gStatusText = aStatusText;

@@ -525,7 +525,6 @@ nsHelpStatusHandler.prototype = {
     destroy : function() {},
 
     setJSStatus : function(status) {},
-    setJSDefaultStatus : function(status) {},
     setOverLink : function(link, context) {},
     onBeforeLinkTraversal: function(originalTarget, linkURI, linkNode, isAppTab) {}
 }
