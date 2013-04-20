@@ -463,42 +463,6 @@ public:
     }
 #endif
 
-
-    bool BindExternalBuffer(GLuint texture, void* buffer) MOZ_OVERRIDE
-    {
-#ifdef MOZ_WIDGET_GONK
-        EGLImage image = CreateEGLImageForNativeBuffer(buffer);
-        // FIXME [bjacob] There is a bug here: GL_TEXTURE_EXTERNAL here is incompatible
-        // with GL_TEXTURE_2D in UnbindExternalBuffer. Specifically, binding a texture to
-        // two different texture targets in a GL_INVALID_OPERATION.
-        fBindTexture(LOCAL_GL_TEXTURE_EXTERNAL, texture);
-        fEGLImageTargetTexture2D(LOCAL_GL_TEXTURE_EXTERNAL, image);
-        DestroyEGLImage(image);
-        return true;
-#else
-        return false;
-#endif
-    }
-
-    bool UnbindExternalBuffer(GLuint texture) MOZ_OVERRIDE
-    {
-#if defined(MOZ_WIDGET_GONK)
-        fActiveTexture(LOCAL_GL_TEXTURE0);
-        // FIXME [bjacob] There is a bug here: GL_TEXTURE_2D here is incompatible
-        // with GL_TEXTURE_EXTERNAL in BindExternalBuffer. Specifically, binding a texture to
-        // two different texture targets in a GL_INVALID_OPERATION.
-        fBindTexture(LOCAL_GL_TEXTURE_2D, texture);
-        fTexImage2D(LOCAL_GL_TEXTURE_2D, 0,
-                    LOCAL_GL_RGBA,
-                    1, 1, 0,
-                    LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE,
-                    nullptr);
-        return true;
-#else
-        return false;
-#endif
-    }
-
 #ifdef MOZ_WIDGET_GONK
     virtual already_AddRefed<TextureImage>
     CreateDirectTextureImage(GraphicBuffer* aBuffer, GLenum aWrapMode) MOZ_OVERRIDE;
@@ -711,6 +675,16 @@ protected:
     bool mShareWithEGLImage;
 #ifdef MOZ_WIDGET_GONK
     nsRefPtr<HwcComposer2D> mHwc;
+
+    /* mNullEGLImage and mNullGraphicBuffer are a hack to unattach a gralloc buffer
+     * from a texture, which we don't know how to do otherwise (at least in the
+     * TEXTURE_EXTERNAL case --- in the TEXTURE_2D case we could also use TexImage2D).
+     *
+     * So mNullGraphicBuffer will be initialized once to be a 1x1 gralloc buffer,
+     * and mNullEGLImage will be initialized once to be an EGLImage wrapping it.
+     *
+     * This happens in GetNullEGLImage().
+     */
     EGLImage mNullEGLImage;
     android::sp<android::GraphicBuffer> mNullGraphicBuffer;
 #endif
