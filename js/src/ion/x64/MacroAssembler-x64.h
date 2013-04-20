@@ -926,10 +926,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
 
     void branchTruncateDouble(const FloatRegister &src, const Register &dest, Label *fail) {
-        JS_STATIC_ASSERT(INT64_MIN == 0x8000000000000000);
+        const uint64_t IndefiniteIntegerValue = 0x8000000000000000;
         JS_ASSERT(dest != ScratchReg);
         cvttsd2sq(src, dest);
-        movq(ImmWord(INT64_MIN), ScratchReg);
+        movq(ImmWord(IndefiniteIntegerValue), ScratchReg);
         cmpq(dest, ScratchReg);
         j(Assembler::Equal, fail);
         movl(dest, dest); // Zero upper 32-bits.
