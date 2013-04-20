@@ -8957,18 +8957,36 @@ nsGlobalWindow::GetIndexedDB(nsISupports** _retval)
     }
 
     if (!IsChromeWindow()) {
-      nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
-        do_GetService(THIRDPARTYUTIL_CONTRACTID);
-      NS_ENSURE_TRUE(thirdPartyUtil, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+      // Whitelist about:home, since it doesn't have a base domain it would not
+      // pass the thirdPartyUtil check, though it should be able to use
+      // indexedDB.
+      bool skipThirdPartyCheck = false;
+      nsIPrincipal *principal = GetPrincipal();
+      if (principal) {
+        nsCOMPtr<nsIURI> uri;
+        principal->GetURI(getter_AddRefs(uri));
+        bool isAbout = false;
+        if (uri && NS_SUCCEEDED(uri->SchemeIs("about", &isAbout)) && isAbout) {
+          nsAutoCString path;
+          skipThirdPartyCheck = NS_SUCCEEDED(uri->GetPath(path)) &&
+                                path.EqualsLiteral("home");
+        }
+      }
 
-      bool isThirdParty;
-      rv = thirdPartyUtil->IsThirdPartyWindow(this, nullptr, &isThirdParty);
-      NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+      if (!skipThirdPartyCheck) {
+        nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
+          do_GetService(THIRDPARTYUTIL_CONTRACTID);
+        NS_ENSURE_TRUE(thirdPartyUtil, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-      if (isThirdParty) {
-        NS_WARNING("IndexedDB is not permitted in a third-party window.");
-        *_retval = nullptr;
-        return NS_OK;
+        bool isThirdParty;
+        rv = thirdPartyUtil->IsThirdPartyWindow(this, nullptr, &isThirdParty);
+        NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+        if (isThirdParty) {
+          NS_WARNING("IndexedDB is not permitted in a third-party window.");
+          *_retval = nullptr;
+          return NS_OK;
+        }
       }
     }
 
