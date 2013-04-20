@@ -398,8 +398,14 @@ IonCache::linkAndAttachStub(JSContext *cx, MacroAssembler &masm, StubAttacher &a
 
     attachStub(masm, attacher, code);
 
-    IonSpew(IonSpew_InlineCaches, "Generated %s %s stub at %p",
-            attachKind, CacheName(kind()), code->raw());
+    if (pc) {
+        IonSpew(IonSpew_InlineCaches, "Cache %p(%s:%d/%d) generated %s %s stub at %p",
+                this, script->filename(), script->lineno, pc - script->code,
+                attachKind, CacheName(kind()), code->raw());
+    } else {
+        IonSpew(IonSpew_InlineCaches, "Cache %p generated %s %s stub at %p",
+                this, attachKind, CacheName(kind()), code->raw());
+    }
     return true;
 }
 
@@ -538,6 +544,39 @@ IsCacheableNoProperty(JSObject *obj, JSObject *holder, RawShape shape, jsbytecod
     // TI has not yet monitored an Undefined value. The fallback path will
     // monitor and invalidate the script.
     if (!output.hasValue())
+        return false;
+
+    return true;
+}
+
+static bool
+IsOptimizableArgumentsObjectForLength(JSObject *obj)
+{
+    if (!obj->isArguments())
+        return false;
+
+    if (obj->asArguments().hasOverriddenLength())
+        return false;
+
+    return true;
+}
+
+static bool
+IsOptimizableArgumentsObjectForGetElem(JSObject *obj, Value idval)
+{
+    if (!IsOptimizableArgumentsObjectForLength(obj))
+        return false;
+
+    ArgumentsObject &argsObj = obj->asArguments();
+
+    if (argsObj.isAnyElementDeleted())
+        return false;
+
+    if (!idval.isInt32())
+        return false;
+
+    int32_t idint = idval.toInt32();
+    if (idint < 0 || idint >= argsObj.initialLength())
         return false;
 
     return true;
@@ -1076,6 +1115,61 @@ GetPropertyIC::attachTypedArrayLength(JSContext *cx, IonScript *ion, JSObject *o
     return linkAndAttachStub(cx, masm, attacher, ion, "typed array length");
 }
 
+bool
+GetPropertyIC::attachArgumentsLength(JSContext *cx, IonScript *ion, JSObject *obj)
+{
+    JS_ASSERT(obj->isArguments());
+    JS_ASSERT(!idempotent());
+
+    Label failures;
+    MacroAssembler masm(cx);
+    RepatchStubAppender attacher(*this);
+
+    Register tmpReg;
+    if (output().hasValue()) {
+        tmpReg = output().valueReg().scratchReg();
+    } else {
+        JS_ASSERT(output().type() == MIRType_Int32);
+        tmpReg = output().typedReg().gpr();
+    }
+    JS_ASSERT(object() != tmpReg);
+
+    Class *clasp = obj->isStrictArguments() ? &StrictArgumentsObjectClass
+                                            : &NormalArgumentsObjectClass;
+
+    Label fail;
+    Label pass;
+    masm.branchTestObjClass(Assembler::NotEqual, object(), tmpReg, clasp, &failures);
+
+    // Get initial ArgsObj length value, test if length has been overridden.
+    masm.unboxInt32(Address(object(), ArgumentsObject::getInitialLengthSlotOffset()), tmpReg);
+    masm.branchTest32(Assembler::NonZero, tmpReg, Imm32(ArgumentsObject::LENGTH_OVERRIDDEN_BIT),
+                      &failures);
+
+    masm.rshiftPtr(Imm32(ArgumentsObject::PACKED_BITS_COUNT), tmpReg);
+
+    // If output is Int32, result is already in right place, otherwise box it into output.
+    if (output().hasValue())
+        masm.tagValue(JSVAL_TYPE_INT32, tmpReg, output().valueReg());
+
+    // Success.
+    attacher.jumpRejoin(masm);
+
+    // Failure.
+    masm.bind(&failures);
+    attacher.jumpNextStub(masm);
+
+    if (obj->isStrictArguments()) {
+        JS_ASSERT(!hasStrictArgumentsLengthStub_);
+        hasStrictArgumentsLengthStub_ = true;
+        return linkAndAttachStub(cx, masm, attacher, ion, "ArgsObj length (strict)");
+    }
+
+    JS_ASSERT(!hasNormalArgumentsLengthStub_);
+    hasNormalArgumentsLengthStub_ = true;
+    return linkAndAttachStub(cx, masm, attacher, ion, "ArgsObj length (normal)");
+}
+
 static bool
 IsIdempotentAndMaybeHasHooks(IonCache &cache, JSObject *obj)
 {
@@ -1146,6 +1240,7 @@ TryAttachNativeGetPropStub(JSContext *cx, IonScript *ion,
                            void *returnAddr, bool *isCacheable)
 {
     JS_ASSERT(!*isCacheable);
+    JS_ASSERT(cache.canAttachStub());
 
     RootedObject checkObj(cx, obj);
     if (IsCacheableListBase(obj)) {
@@ -1186,10 +1281,6 @@ TryAttachNativeGetPropStub(JSContext *cx, IonScript *ion,
 
     *isCacheable = true;
 
-    // Falback to the interpreter function.
-    if (!cache.canAttachStub())
-        return true;
-
     if (readSlot)
         return cache.attachReadSlot(cx, ion, obj, holder, shape);
     else if (obj->isArray() && !cache.hasArrayLengthStub() && cx->names().length == name)
@@ -1221,24 +1312,34 @@ GetPropertyIC::update(JSContext *cx, size_t cacheIndex,
     // limit. Once we can make calls from within generated stubs, a new call
     // stub will be generated instead and the previous stubs unlinked.
     bool isCacheable = false;
-    if (!TryAttachNativeGetPropStub(cx, ion, cache, obj, name,
-                                    safepointIndex, returnAddr,
-                                    &isCacheable))
-    {
-        return false;
-    }
-
-    if (!isCacheable && cache.canAttachStub() &&
-        !cache.idempotent() && cx->names().length == name)
-    {
-        if (cache.output().type() != MIRType_Value && cache.output().type() != MIRType_Int32) {
-            // The next execution should cause an invalidation because the type
-            // does not fit.
-            isCacheable = false;
-        } else if (obj->isTypedArray() && !cache.hasTypedArrayLengthStub()) {
+    if (cache.canAttachStub()) {
+        if (name == cx->names().length &&
+            IsOptimizableArgumentsObjectForLength(obj) &&
+            (cache.output().type() == MIRType_Value || cache.output().type() == MIRType_Int32) &&
+            !cache.hasArgumentsLengthStub(obj->isStrictArguments()))
+        {
             isCacheable = true;
-            if (!cache.attachTypedArrayLength(cx, ion, obj))
+            if (!cache.attachArgumentsLength(cx, ion, obj))
                 return false;
+        }
+
+        if (!isCacheable && !TryAttachNativeGetPropStub(cx, ion, cache, obj, name,
+                                                        safepointIndex, returnAddr,
+                                                        &isCacheable))
+        {
+            return false;
+        }
+
+        if (!isCacheable && !cache.idempotent() && cx->names().length == name) {
+            if (cache.output().type() != MIRType_Value && cache.output().type() != MIRType_Int32) {
+                // The next execution should cause an invalidation because the type
+                // does not fit.
+                isCacheable = false;
+            } else if (obj->isTypedArray() && !cache.hasTypedArrayLengthStub()) {
+                isCacheable = true;
+                if (!cache.attachTypedArrayLength(cx, ion, obj))
+                    return false;
+            }
         }
     }
 
@@ -2116,6 +2217,114 @@ GetElementIC::attachTypedArrayElement(JSContext *cx, IonScript *ion, JSObject *o
 }
 
 bool
+GetElementIC::attachArgumentsElement(JSContext *cx, IonScript *ion, JSObject *obj)
+{
+    JS_ASSERT(obj->isArguments());
+
+    Label failures;
+    MacroAssembler masm(cx);
+    RepatchStubAppender attacher(*this);
+
+    Register tmpReg = output().scratchReg().gpr();
+    JS_ASSERT(tmpReg != InvalidReg);
+
+    Class *clasp = obj->isStrictArguments() ? &StrictArgumentsObjectClass
+                                            : &NormalArgumentsObjectClass;
+
+    Label fail;
+    Label pass;
+    masm.branchTestObjClass(Assembler::NotEqual, object(), tmpReg, clasp, &failures);
+
+    // Get initial ArgsObj length value, test if length has been overridden.
+    masm.unboxInt32(Address(object(), ArgumentsObject::getInitialLengthSlotOffset()), tmpReg);
+    masm.branchTest32(Assembler::NonZero, tmpReg, Imm32(ArgumentsObject::LENGTH_OVERRIDDEN_BIT),
+                      &failures);
+
+    // Decide to what type index the stub should be optimized
+    Register indexReg;
+    JS_ASSERT(!index().constant());
+
+    // Check index against length.
+    Label failureRestoreIndex;
+    if (index().reg().hasValue()) {
+        ValueOperand val = index().reg().valueReg();
+        masm.branchTestInt32(Assembler::NotEqual, val, &failures);
+        indexReg = val.scratchReg();
+
+        masm.unboxInt32(val, indexReg);
+        masm.branch32(Assembler::AboveOrEqual, indexReg, tmpReg, &failureRestoreIndex);
+    } else {
+        JS_ASSERT(index().reg().type() == MIRType_Int32);
+        indexReg = index().reg().typedReg().gpr();
+        masm.branch32(Assembler::AboveOrEqual, indexReg, tmpReg, &failures);
+    }
+    // Save indexReg because it needs to be clobbered to check deleted bit.
+    Label failurePopIndex;
+    masm.push(indexReg);
+
+    // Check if property was deleted on arguments object.
+    masm.loadPrivate(Address(object(), ArgumentsObject::getDataSlotOffset()), tmpReg);
+    masm.loadPtr(Address(tmpReg, offsetof(ArgumentsData, deletedBits)), tmpReg);
+
+    // In tempReg, calculate index of word containing bit: (idx >> logBitsPerWord)
+    masm.rshiftPtr(Imm32(JS_BITS_PER_WORD_LOG2), indexReg);
+    masm.loadPtr(BaseIndex(tmpReg, indexReg, ScaleFromElemWidth(sizeof(size_t))), tmpReg);
+
+    // Don't bother testing specific bit, if any bit is set in the word, fail.
+    masm.branchPtr(Assembler::NotEqual, tmpReg, ImmWord((size_t)0), &failurePopIndex);
+
+    // Get the address to load from into tmpReg
+    masm.loadPrivate(Address(object(), ArgumentsObject::getDataSlotOffset()), tmpReg);
+    masm.addPtr(Imm32(ArgumentsData::offsetOfArgs()), tmpReg);
+
+    // Restore original index register value, to use for indexing element.
+    masm.pop(indexReg);
+    BaseIndex elemIdx(tmpReg, indexReg, ScaleFromElemWidth(sizeof(Value)));
+
+    // Ensure result is not magic value, and type-check result.
+    masm.branchTestMagic(Assembler::Equal, elemIdx, &failureRestoreIndex);
+
+    if (output().hasTyped()) {
+        JS_ASSERT(!output().typedReg().isFloat());
+        JS_ASSERT(index().reg().type() == MIRType_Boolean ||
+                  index().reg().type() == MIRType_Int32 ||
+                  index().reg().type() == MIRType_String ||
+                  index().reg().type() == MIRType_Object);
+        masm.branchTestMIRType(Assembler::NotEqual, elemIdx, index().reg().type(),
+                               &failureRestoreIndex);
+    }
+
+    masm.loadTypedOrValue(elemIdx, output());
+
+    // indexReg may need to be reconstructed if it was originally a value.
+    if (index().reg().hasValue())
+        masm.tagValue(JSVAL_TYPE_INT32, indexReg, index().reg().valueReg());
+
+    // Success.
+    attacher.jumpRejoin(masm);
+
+    // Restore the object before continuing to the next stub.
+    masm.bind(&failurePopIndex);
+    masm.pop(indexReg);
+    masm.bind(&failureRestoreIndex);
+    if (index().reg().hasValue())
+        masm.tagValue(JSVAL_TYPE_INT32, indexReg, index().reg().valueReg());
+    masm.bind(&failures);
+    attacher.jumpNextStub(masm);
+
+
+    if (obj->isStrictArguments()) {
+        JS_ASSERT(!hasStrictArgumentsStub_);
+        hasStrictArgumentsStub_ = true;
+        return linkAndAttachStub(cx, masm, attacher, ion, "ArgsObj element (strict)");
+    }
+
+    JS_ASSERT(!hasNormalArgumentsStub_);
+    hasNormalArgumentsStub_ = true;
+    return linkAndAttachStub(cx, masm, attacher, ion, "ArgsObj element (normal)");
+}
+
+bool
 GetElementIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
                      HandleValue idval, MutableHandleValue res)
 {
@@ -2143,7 +2352,17 @@ GetElementIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
 
     bool attachedStub = false;
     if (cache.canAttachStub()) {
-        if (obj->isNative() && cache.monitoredResult()) {
+        if (IsOptimizableArgumentsObjectForGetElem(obj, idval) &&
+            !cache.hasArgumentsStub(obj->isStrictArguments()) &&
+            !cache.index().constant() &&
+            (cache.index().reg().hasValue() ||
+             cache.index().reg().type() == MIRType_Int32) &&
+            (cache.output().hasValue() || !cache.output().typedReg().isFloat()))
+        {
+            if (!cache.attachArgumentsElement(cx, ion, obj))
+                return false;
+            attachedStub = true;
+        } else if (obj->isNative() && cache.monitoredResult()) {
             uint32_t dummy;
             if (idval.isString() && JSID_IS_ATOM(id) && !JSID_TO_ATOM(id)->isIndex(&dummy)) {
                 RootedPropertyName name(cx, JSID_TO_ATOM(id)->asPropertyName());
