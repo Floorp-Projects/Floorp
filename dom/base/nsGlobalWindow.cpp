@@ -2587,7 +2587,6 @@ void
 nsGlobalWindow::ClearStatus()
 {
   SetStatus(EmptyString());
-  SetDefaultStatus(EmptyString());
 }
 
 void
@@ -3909,43 +3908,6 @@ nsGlobalWindow::SetStatus(const nsAString& aStatus)
   if(browserChrome) {
     browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_SCRIPT,
                              PromiseFlatString(aStatus).get());
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGlobalWindow::GetDefaultStatus(nsAString& aDefaultStatus)
-{
-  FORWARD_TO_OUTER(GetDefaultStatus, (aDefaultStatus),
-                   NS_ERROR_NOT_INITIALIZED);
-
-  aDefaultStatus = mDefaultStatus;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGlobalWindow::SetDefaultStatus(const nsAString& aDefaultStatus)
-{
-  FORWARD_TO_OUTER(SetDefaultStatus, (aDefaultStatus),
-                   NS_ERROR_NOT_INITIALIZED);
-
-  /*
-   * If caller is not chrome and dom.disable_window_status_change is true,
-   * prevent setting window.defaultStatus by exiting early
-   */
-
-  if (!CanSetProperty("dom.disable_window_status_change")) {
-    return NS_OK;
-  }
-
-  mDefaultStatus = aDefaultStatus;
-
-  nsCOMPtr<nsIWebBrowserChrome> browserChrome;
-  GetWebBrowserChrome(getter_AddRefs(browserChrome));
-  if (browserChrome) {
-    browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_SCRIPT_DEFAULT,
-                             PromiseFlatString(aDefaultStatus).get());
   }
 
   return NS_OK;
