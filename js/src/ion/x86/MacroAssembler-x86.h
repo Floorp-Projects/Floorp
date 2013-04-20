@@ -779,9 +779,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     }
 
     void branchTruncateDouble(const FloatRegister &src, const Register &dest, Label *fail) {
-        JS_STATIC_ASSERT(INT_MIN == int(0x80000000));
+        const uint32_t IndefiniteIntegerValue = 0x80000000;
         cvttsd2si(src, dest);
-        cmpl(dest, Imm32(INT_MIN));
+        cmpl(dest, Imm32(IndefiniteIntegerValue));
         j(Assembler::Equal, fail);
     }
 
