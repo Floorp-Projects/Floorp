@@ -419,6 +419,12 @@ class CGIfWrapper(CGWrapper):
         CGWrapper.__init__(self, CGIndenter(child), pre=pre.define(),
                            post="\n}")
 
+class CGIfElseWrapper(CGList):
+    def __init__(self, condition, ifTrue, ifFalse):
+        kids = [ CGIfWrapper(ifTrue, condition),
+                 CGWrapper(CGIndenter(ifFalse), pre=" else {\n", post="\n}") ]
+        CGList.__init__(self, kids)
+
 class CGTemplatedType(CGWrapper):
     def __init__(self, templateName, child, isConst=False, isReference=False):
         const = "const " if isConst else ""
@@ -2929,10 +2935,16 @@ for (uint32_t i = 0; i < length; ++i) {
     if type.isEnum():
         assert not isEnforceRange and not isClamp
 
+        enumName = type.unroll().inner.identifier.name
+        declType = CGGeneric(enumName)
         if type.nullable():
-            raise TypeError("We don't support nullable enumerated arguments "
-                            "yet")
-        enum = type.inner.identifier.name
+            declType = CGTemplatedType("Nullable", declType)
+            declType = declType.define()
+            enumLoc = "const_cast<%s&>(${declName}).SetValue()" % declType
+        else:
+            enumLoc = "${declName}"
+            declType = declType.define()
+
         if invalidEnumValueFatal:
             handleInvalidEnumValueCode = "  MOZ_ASSERT(index >= 0);\n"
         else:
@@ -2954,20 +2966,36 @@ for (uint32_t i = 0; i < length; ++i) {
             "%(exceptionCode)s\n"
             "  }\n"
             "%(handleInvalidEnumValueCode)s"
-            "  ${declName} = static_cast<%(enumtype)s>(index);\n"
-            "}" % { "enumtype" : enum,
-                      "values" : enum + "Values::strings",
+            "  %(enumLoc)s = static_cast<%(enumtype)s>(index);\n"
+            "}" % { "enumtype" : enumName,
+                      "values" : enumName + "Values::strings",
        "invalidEnumValueFatal" : toStringBool(invalidEnumValueFatal),
   "handleInvalidEnumValueCode" : handleInvalidEnumValueCode,
-               "exceptionCode" : CGIndenter(exceptionCodeIndented).define() })
+               "exceptionCode" : CGIndenter(exceptionCodeIndented).define(),
+                     "enumLoc" : enumLoc,
+                    })
+
+        setNull = "const_cast<%s&>(${declName}).SetNull();" % declType
+
+        if type.nullable():
+            template = CGIfElseWrapper("${val}.isNullOrUndefined()",
+                                       CGGeneric(setNull),
+                                       CGGeneric(template)).define()
 
         if defaultValue is not None:
-            assert(defaultValue.type.tag() == IDLType.Tags.domstring)
-            template = handleDefault(template,
-                                     ("${declName} = %sValues::%s" %
-                                      (enum,
-                                       getEnumValueName(defaultValue.value))))
-        return (template, CGGeneric(enum), None, isOptional)
+            if isinstance(defaultValue, IDLNullValue):
+                assert type.nullable()
+                template = handleDefault(template, setNull)
+            else:
+                assert(defaultValue.type.tag() == IDLType.Tags.domstring)
+                template = handleDefault(template,
+                                         ("%s = %sValues::%s" %
+                                          (enumLoc, enumName,
+                                           getEnumValueName(defaultValue.value))))
+        if type.nullable() and not isOptional:
+            # isOptional will handle the const bits itself
+            declType = "const " + declType
+        return (template, CGGeneric(declType), None, isOptional)
 
     if type.isCallback():
         assert not isEnforceRange and not isClamp
@@ -3586,18 +3614,28 @@ if (!returnArray) {
 
     if type.isEnum():
         if type.nullable():
-            raise TypeError("We don't support nullable enumerated return types "
-                            "yet")
-        return ("""MOZ_ASSERT(uint32_t(%(result)s) < ArrayLength(%(strings)s));
-JSString* %(resultStr)s = JS_NewStringCopyN(cx, %(strings)s[uint32_t(%(result)s)].value, %(strings)s[uint32_t(%(result)s)].length);
-if (!%(resultStr)s) {
+            resultLoc = "%s.Value()" % result
+        else:
+            resultLoc = result
+        conversion = ("""{
+  // Scope for resultStr
+  MOZ_ASSERT(uint32_t(%(result)s) < ArrayLength(%(strings)s));
+  JSString* resultStr = JS_NewStringCopyN(cx, %(strings)s[uint32_t(%(result)s)].value, %(strings)s[uint32_t(%(result)s)].length);
+  if (!resultStr) {
 %(exceptionCode)s
-}
-""" % { "result" : result,
-        "resultStr" : result + "_str",
-        "strings" : type.inner.identifier.name + "Values::strings",
-        "exceptionCode" : exceptionCodeIndented.define() } +
-        setValue("JS::StringValue(%s_str)" % result), False)
+  }
+""" % { "result" : resultLoc,
+        "strings" : type.unroll().inner.identifier.name + "Values::strings",
+        "exceptionCode" : CGIndenter(exceptionCodeIndented).define() } +
+        CGIndenter(CGGeneric(setValue("JS::StringValue(resultStr)"))).define() +
+                      "\n}")
+
+        if type.nullable():
+            conversion = CGIfElseWrapper(
+                "%s.IsNull()" % result,
+                CGGeneric(setValue("JS::NullValue()", False)),
+                CGGeneric(conversion)).define()
+        return conversion, False
 
     if type.isCallback() or type.isCallbackInterface():
         # See comments in WrapNewBindingObject explaining why we need
@@ -3778,9 +3816,10 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
             return CGGeneric("nsString"), True
         return CGGeneric("DOMString"), True
     if returnType.isEnum():
+        result = CGGeneric(returnType.unroll().inner.identifier.name)
         if returnType.nullable():
-            raise TypeError("We don't support nullable enum return values")
-        return CGGeneric(returnType.inner.identifier.name), False
+            result = CGTemplatedType("Nullable", result)
+        return result, False
     if returnType.isGeckoInterface():
         result = CGGeneric(descriptorProvider.getDescriptor(
             returnType.unroll().inner.identifier.name).nativeType)
@@ -7516,10 +7555,14 @@ class CGNativeMember(ClassMethod):
             # Outparam
             return "void", "", "retval = ${declName};"
         if type.isEnum():
+            enumName = type.unroll().inner.identifier.name
             if type.nullable():
-                raise TypeError("We don't support nullable enum return values")
-            typeName = type.inner.identifier.name
-            return typeName, "%s(0)" % typeName, "return ${declName};"
+                enumName = CGTemplatedType("Nullable",
+                                           CGGeneric(enumName)).define()
+                defaultValue = "%s()" % enumName
+            else:
+                defaultValue = "%s(0)" % enumName
+            return enumName, defaultValue, "return ${declName};"
         if type.isGeckoInterface():
             iface = type.unroll().inner;
             nativeType = self.descriptor.getDescriptor(
@@ -7709,7 +7752,7 @@ class CGNativeMember(ClassMethod):
             return declType, True, False
 
         if type.isEnum():
-            return type.inner.identifier.name, False, True
+            return type.unroll().inner.identifier.name, False, True
 
         if type.isCallback() or type.isCallbackInterface():
             forceOwningType = optional or isMember
