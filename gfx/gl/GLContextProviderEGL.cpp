@@ -1076,43 +1076,6 @@ GLFormatForImage(gfxASurface::gfxImageFormat aFormat)
     return 0;
 }
 
-#ifdef MOZ_WIDGET_GONK
-static PixelFormat
-PixelFormatForImage(gfxASurface::gfxImageFormat aFormat)
-{
-    switch (aFormat) {
-    case gfxASurface::ImageFormatARGB32:
-        return PIXEL_FORMAT_RGBA_8888;
-    case gfxASurface::ImageFormatRGB24:
-        return PIXEL_FORMAT_RGBX_8888;
-    case gfxASurface::ImageFormatRGB16_565:
-        return PIXEL_FORMAT_RGB_565;
-    case gfxASurface::ImageFormatA8:
-        return PIXEL_FORMAT_L_8;
-    default:
-        MOZ_NOT_REACHED("Unknown gralloc pixel format for Image format");
-    }
-    return 0;
-}
-
-static gfxASurface::gfxContentType
-ContentTypeForPixelFormat(PixelFormat aFormat)
-{
-    switch (aFormat) {
-    case PIXEL_FORMAT_L_8:
-        return gfxASurface::CONTENT_ALPHA;
-    case PIXEL_FORMAT_RGBA_8888:
-        return gfxASurface::CONTENT_COLOR_ALPHA;
-    case PIXEL_FORMAT_RGBX_8888:
-    case PIXEL_FORMAT_RGB_565:
-        return gfxASurface::CONTENT_COLOR;
-    default:
-        MOZ_NOT_REACHED("Unknown content type for gralloc pixel format");
-    }
-    return gfxASurface::CONTENT_COLOR;
-}
-#endif
-
 static GLenum
 GLTypeForImage(gfxASurface::gfxImageFormat aFormat)
 {
