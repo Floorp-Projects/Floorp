@@ -625,6 +625,8 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
     }
 
     JSContext *context = GetContextFromObject(self->GetJSObject());
+    if (!context)
+        context = XPCCallContext::GetDefaultJSContext();
     XPCCallContext ccx(NATIVE_CALLER, context);
     if (!ccx.IsValid()) {
         *aInstancePtr = nullptr;
@@ -1142,6 +1144,8 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
     // convert natives to JSObjects, but we do NOT plan to pass those JSObjects
     // to our real callee.
     JSContext *context = GetContextFromObject(wrapper->GetJSObject());
+    if (!context)
+        context = XPCCallContext::GetDefaultJSContext();
     XPCCallContext ccx(NATIVE_CALLER, context);
     if (!ccx.IsValid())
         return retval;

@@ -837,9 +837,8 @@ nsJSCID::Construct(nsIXPConnectWrappedNative *wrapper,
         return NS_ERROR_FAILURE;
 
     // 'push' a call context and call on it
-    XPCCallContext ccx(JS_CALLER, cx, obj, nullptr,
-                       rt->GetStringID(XPCJSRuntime::IDX_CREATE_INSTANCE),
-                       argc, argv, vp);
+    RootedId name(cx, rt->GetStringID(XPCJSRuntime::IDX_CREATE_INSTANCE));
+    XPCCallContext ccx(JS_CALLER, cx, obj, NullPtr(), name, argc, argv, vp);
 
     *_retval = XPCWrappedNative::CallMethod(ccx);
     return NS_OK;
