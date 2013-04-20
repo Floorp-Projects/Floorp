@@ -640,19 +640,11 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     Condition testPrimitive(Condition cond, const Register &tag);
 
     Condition testGCThing(Condition cond, const Address &address);
+    Condition testGCThing(Condition cond, const BaseIndex &address);
     Condition testMagic(Condition cond, const Address &address);
+    Condition testMagic(Condition cond, const BaseIndex &address);
     Condition testInt32(Condition cond, const Address &address);
     Condition testDouble(Condition cond, const Address &address);
-
-    Condition testUndefined(Condition cond, const BaseIndex &src);
-    Condition testNull(Condition cond, const BaseIndex &src);
-    Condition testBoolean(Condition cond, const BaseIndex &src);
-    Condition testString(Condition cond, const BaseIndex &src);
-    Condition testInt32(Condition cond, const BaseIndex &src);
-    Condition testObject(Condition cond, const BaseIndex &src);
-    Condition testDouble(Condition cond, const BaseIndex &src);
-    Condition testMagic(Condition cond, const BaseIndex &src);
-    Condition testGCThing(Condition cond, const BaseIndex &src);
 
     template <typename T>
     void branchTestGCThing(Condition cond, const T &t, Label *label) {
