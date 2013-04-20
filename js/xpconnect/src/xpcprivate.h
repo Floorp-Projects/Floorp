@@ -1202,7 +1202,7 @@ public:
     inline void     SetDestroyJSContextInDestructor(JSBool b);
 
     inline jsid GetResolveName() const;
-    inline jsid SetResolveName(jsid name);
+    inline jsid SetResolveName(JS::HandleId name);
 
     inline XPCWrappedNative* GetResolvingWrapper() const;
     inline XPCWrappedNative* SetResolvingWrapper(XPCWrappedNative* w);
@@ -3836,7 +3836,7 @@ private:
 class MOZ_STACK_CLASS AutoResolveName
 {
 public:
-    AutoResolveName(XPCCallContext& ccx, jsid name
+    AutoResolveName(XPCCallContext& ccx, JS::HandleId name
                     MOZ_GUARD_OBJECT_NOTIFIER_PARAM) :
           mOld(ccx, XPCJSRuntime::Get()->SetResolveName(name))
 #ifdef DEBUG
