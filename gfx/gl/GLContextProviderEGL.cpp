@@ -681,10 +681,6 @@ public:
     static already_AddRefed<GLContextEGL>
     CreateEGLPBufferOffscreenContext(const gfxIntSize& size);
 
-    virtual bool HasLockSurface() {
-        return sEGLLibrary.HasKHRLockSurface();
-    }
-
     virtual SharedTextureHandle CreateSharedHandle(SharedTextureShareType shareType,
                                                    void* buffer,
                                                    SharedTextureBufferType bufferType);
@@ -1184,7 +1180,6 @@ public:
         , mConfig(nullptr)
         , mTextureState(aTextureState)
         , mBound(false)
-        , mIsLocked(false)
     {
         mUpdateFormat = gfxPlatform::GetPlatform()->OptimalFormatForContent(GetContentType());
 
@@ -1290,21 +1285,8 @@ public:
             return NULL;
         }
 
-#ifdef MOZ_WIDGET_GONK
-        if (mGraphicBuffer != nullptr) {
-            mUpdateSurface = GetLockSurface();
-
-            return mUpdateSurface;
-        }
-#endif
-
         if (mBackingSurface) {
-            if (sEGLLibrary.HasKHRLockSurface()) {
-                mUpdateSurface = GetLockSurface();
-            } else {
-                mUpdateSurface = mBackingSurface;
-            }
-
+            mUpdateSurface = mBackingSurface;
             return mUpdateSurface;
         }
 
@@ -1322,13 +1304,6 @@ public:
     virtual void EndUpdate()
     {
         NS_ASSERTION(!!mUpdateSurface, "EndUpdate() without BeginUpdate()?");
-
-        if (mIsLocked) {
-            UnlockSurface();
-            mTextureState = Valid;
-            mUpdateSurface = nullptr;
-            return;
-        }
 
         if (mBackingSurface && mUpdateSurface == mBackingSurface) {
 #ifdef MOZ_X11
@@ -1413,30 +1388,13 @@ public:
             region = aRegion;
         }
 
-        if ((mBackingSurface && sEGLLibrary.HasKHRLockSurface())
-#ifdef MOZ_WIDGET_GONK
-            || (mGraphicBuffer != nullptr)
-#endif
-            ) {
-            mUpdateSurface = GetLockSurface();
-            if (mUpdateSurface) {
-                nsRefPtr<gfxContext> ctx = new gfxContext(mUpdateSurface);
-                gfxUtils::ClipToRegion(ctx, aRegion);
-                ctx->SetSource(aSurf, gfxPoint(-aFrom.x, -aFrom.y));
-                ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
-                ctx->Paint();
-                mUpdateSurface = nullptr;
-                UnlockSurface();
-            }
-        } else {
-            mShaderType =
-              mGLContext->UploadSurfaceToTexture(aSurf,
-                                                 region,
-                                                 mTexture,
-                                                 mTextureState == Created,
-                                                 bounds.TopLeft() + aFrom,
-                                                 false);
-        }
+        mShaderType =
+          mGLContext->UploadSurfaceToTexture(aSurf,
+                                              region,
+                                              mTexture,
+                                              mTextureState == Created,
+                                              bounds.TopLeft() + aFrom,
+                                              false);
 
         mTextureState = Valid;
         return true;
@@ -1541,96 +1499,6 @@ public:
 
         mBound = false;
         return true;
-    }
-
-    virtual already_AddRefed<gfxImageSurface> GetLockSurface()
-    {
-        if (mIsLocked) {
-            NS_WARNING("Can't lock surface twice");
-            return nullptr;
-        }
-
-#ifdef MOZ_WIDGET_GONK
-        if (mGraphicBuffer != nullptr) {
-            // Unset the EGLImage target so that we don't get clashing locks
-            mGLContext->MakeCurrent(true);
-            mGLContext->UnbindExternalBuffer(mTexture);
-
-            void *vaddr;
-            if (mGraphicBuffer->lock(GraphicBuffer::USAGE_SW_READ_OFTEN |
-                                     GraphicBuffer::USAGE_SW_WRITE_OFTEN,
-                                     &vaddr) != OK) {
-                LOG("Could not lock GraphicBuffer");
-                return nullptr;
-            }
-
-            nsRefPtr<gfxImageSurface> surface =
-                new gfxImageSurface(reinterpret_cast<unsigned char *>(vaddr),
-                                    gfxIntSize(mSize.width, mSize.height),
-                                    mGraphicBuffer->getStride() * gfxUtils::ImageFormatToDepth(mUpdateFormat) / 8,
-                                    mUpdateFormat);
-
-            mIsLocked = true;
-
-            return surface.forget();
-        }
-#endif
-
-        if (!sEGLLibrary.HasKHRLockSurface()) {
-            NS_WARNING("GetLockSurface called, but no EGL_KHR_lock_surface extension!");
-            return nullptr;
-        }
-
-        if (!CreateEGLSurface(mBackingSurface)) {
-            NS_WARNING("Failed to create EGL surface");
-            return nullptr;
-        }
-
-        static EGLint lock_attribs[] = {
-            LOCAL_EGL_MAP_PRESERVE_PIXELS_KHR, LOCAL_EGL_TRUE,
-            LOCAL_EGL_LOCK_USAGE_HINT_KHR, LOCAL_EGL_READ_SURFACE_BIT_KHR | LOCAL_EGL_WRITE_SURFACE_BIT_KHR,
-            LOCAL_EGL_NONE
-        };
-
-        sEGLLibrary.fLockSurface(EGL_DISPLAY(), mSurface, lock_attribs);
-
-        mIsLocked = true;
-
-        unsigned char *data = nullptr;
-        int pitch = 0;
-        int pixsize = 0;
-
-        sEGLLibrary.fQuerySurface(EGL_DISPLAY(), mSurface, LOCAL_EGL_BITMAP_POINTER_KHR, (EGLint*)&data);
-        sEGLLibrary.fQuerySurface(EGL_DISPLAY(), mSurface, LOCAL_EGL_BITMAP_PITCH_KHR, &pitch);
-        sEGLLibrary.fQuerySurface(EGL_DISPLAY(), mSurface, LOCAL_EGL_BITMAP_PIXEL_SIZE_KHR, &pixsize);
-
-        nsRefPtr<gfxImageSurface> sharedImage =
-            new gfxImageSurface(data,
-                                mBackingSurface->GetSize(),
-                                pitch,
-                                mUpdateFormat);
-
-        return sharedImage.forget();
-    }
-
-    virtual void UnlockSurface()
-    {
-        if (!mIsLocked) {
-            NS_WARNING("UnlockSurface called, surface not locked!");
-            return;
-        }
-
-        mIsLocked = false;
-
-#ifdef MOZ_WIDGET_GONK
-        if (mGraphicBuffer != nullptr) {
-            mGraphicBuffer->unlock();
-
-            return;
-        }
-#endif
-
-        sEGLLibrary.fUnlockSurface(EGL_DISPLAY(), mSurface);
     }
 
     virtual already_AddRefed<gfxASurface> GetBackingSurface()
@@ -1795,7 +1663,6 @@ protected:
     TextureState mTextureState;
 
     bool mBound;
-    bool mIsLocked;
 
     virtual void ApplyFilter()
     {
@@ -2222,17 +2089,8 @@ CreateEGLSurfaceForXSurface(gfxASurface* aSurface, EGLConfig* aConfig)
         LOCAL_EGL_NONE
     };
 
-    static EGLint pixmap_lock_config[] = {
-        LOCAL_EGL_SURFACE_TYPE,         LOCAL_EGL_PIXMAP_BIT | LOCAL_EGL_LOCK_SURFACE_BIT_KHR,
-        LOCAL_EGL_RENDERABLE_TYPE,      LOCAL_EGL_OPENGL_ES2_BIT,
-        LOCAL_EGL_DEPTH_SIZE,           0,
-        LOCAL_EGL_BIND_TO_TEXTURE_RGB,  LOCAL_EGL_TRUE,
-        LOCAL_EGL_NONE
-    };
-
     if (!sEGLLibrary.fChooseConfig(EGL_DISPLAY(),
-                                   sEGLLibrary.HasKHRLockSurface() ?
-                                       pixmap_lock_config : pixmap_config,
+                                   pixmap_config,
                                    configs, numConfigs, &numConfigs)
         || numConfigs == 0)
     {

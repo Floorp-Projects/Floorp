@@ -428,10 +428,6 @@ public:
         return IsExtensionSupported(KHR_gl_texture_2D_image);
     }
 
-    bool HasKHRLockSurface() {
-        return IsExtensionSupported(KHR_lock_surface);
-    }
-
     bool HasANGLESurfaceD3DTexture2DShareHandle() {
         return IsExtensionSupported(ANGLE_surface_d3d_texture_2d_share_handle);
     }
