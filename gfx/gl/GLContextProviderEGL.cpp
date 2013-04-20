@@ -463,11 +463,6 @@ public:
     }
 #endif
 
-#ifdef MOZ_WIDGET_GONK
-    virtual already_AddRefed<TextureImage>
-    CreateDirectTextureImage(GraphicBuffer* aBuffer, GLenum aWrapMode) MOZ_OVERRIDE;
-#endif
-
     virtual void MakeCurrent_EGLSurface(void* surf) {
         EGLSurface eglSurface = (EGLSurface)surf;
         if (!eglSurface)
@@ -1158,31 +1153,11 @@ public:
         mUpdateFormat = gfxPlatform::GetPlatform()->OptimalFormatForContent(GetContentType());
 
         if (gUseBackingSurface) {
-#ifdef MOZ_WIDGET_GONK
-            switch (mUpdateFormat) {
-            case gfxASurface::ImageFormatARGB32:
-                mShaderType = BGRALayerProgramType;
-                break;
-            case gfxASurface::ImageFormatRGB24:
-                mUpdateFormat = gfxASurface::ImageFormatARGB32;
-                mShaderType = BGRXLayerProgramType;
-                break;
-            case gfxASurface::ImageFormatRGB16_565:
-                mShaderType = RGBXLayerProgramType;
-                break;
-            case gfxASurface::ImageFormatA8:
-                mShaderType = RGBALayerProgramType;
-                break;
-            default:
-                MOZ_NOT_REACHED("Unknown update format");
-            }
-#else
             if (mUpdateFormat != gfxASurface::ImageFormatARGB32) {
                 mShaderType = RGBXLayerProgramType;
             } else {
                 mShaderType = RGBALayerProgramType;
             }
-#endif
             Resize(aSize);
         } else {
             if (mUpdateFormat == gfxASurface::ImageFormatRGB16_565) {
@@ -1219,10 +1194,6 @@ public:
 
     bool UsingDirectTexture()
     {
-#ifdef MOZ_WIDGET_GONK
-        if (mGraphicBuffer != nullptr)
-            return true;
-#endif
         return !!mBackingSurface;
     }
 
@@ -1381,21 +1352,9 @@ public:
             Resize(mSize);
         }
 
-#ifdef MOZ_WIDGET_GONK
-        if (UsingDirectTexture()) {
-            mGLContext->fActiveTexture(aTextureUnit);
-            mGLContext->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
-            mGLContext->fEGLImageTargetTexture2D(LOCAL_GL_TEXTURE_2D, mEGLImage);
-            if (sEGLLibrary.fGetError() != LOCAL_EGL_SUCCESS) {
-               LOG("Could not set image target texture. ERROR (0x%04x)", sEGLLibrary.fGetError());
-            }
-        } else
-#endif
-        {
-            mGLContext->fActiveTexture(aTextureUnit);
-            mGLContext->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
-            mGLContext->fActiveTexture(LOCAL_GL_TEXTURE0);
-        }
+        mGLContext->fActiveTexture(aTextureUnit);
+        mGLContext->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
+        mGLContext->fActiveTexture(LOCAL_GL_TEXTURE0);
     }
 
     virtual GLuint GetTextureID() 
@@ -1514,15 +1473,6 @@ public:
 
     virtual void DestroyEGLSurface(void)
     {
-#ifdef MOZ_WIDGET_GONK
-        mGraphicBuffer.clear();
-
-        if (mEGLImage) {
-            sEGLLibrary.fDestroyImage(EGL_DISPLAY(), mEGLImage);
-            mEGLImage = nullptr;
-        }
-#endif
-
         if (!mSurface)
             return;
 
@@ -1584,36 +1534,6 @@ public:
         return mBackingSurface != nullptr;
 #endif
 
-#ifdef MOZ_WIDGET_GONK
-        if (gUseBackingSurface && aSize.width >= 64) {
-            mGLContext->MakeCurrent(true);
-            PixelFormat format = PixelFormatForImage(mUpdateFormat);
-            uint32_t usage = GraphicBuffer::USAGE_HW_TEXTURE |
-                             GraphicBuffer::USAGE_SW_READ_OFTEN |
-                             GraphicBuffer::USAGE_SW_WRITE_OFTEN;
-            mGraphicBuffer = new GraphicBuffer(aSize.width, aSize.height, format, usage);
-            if (mGraphicBuffer->initCheck() == OK) {
-                const int eglImageAttributes[] = { LOCAL_EGL_IMAGE_PRESERVED, LOCAL_EGL_TRUE,
-                                                   LOCAL_EGL_NONE, LOCAL_EGL_NONE };
-                mEGLImage = sEGLLibrary.fCreateImage(EGL_DISPLAY(),
-                                                        EGL_NO_CONTEXT,
-                                                        LOCAL_EGL_NATIVE_BUFFER_ANDROID,
-                                                        (EGLClientBuffer) mGraphicBuffer->getNativeBuffer(),
-                                                        eglImageAttributes);
-                if (!mEGLImage) {
-                    mGraphicBuffer = nullptr;
-                    LOG("Could not create EGL images: ERROR (0x%04x)", sEGLLibrary.fGetError());
-                    return false;
-                }
-
-                return true;
-            }
-
-            mGraphicBuffer = nullptr;
-            LOG("GraphicBufferAllocator::alloc failed");
-            return false;
-        }
-#endif
         return mBackingSurface != nullptr;
     }
 
@@ -1627,9 +1547,6 @@ protected:
     bool mUsingDirectTexture;
     nsRefPtr<gfxASurface> mBackingSurface;
     nsRefPtr<gfxASurface> mUpdateSurface;
-#ifdef MOZ_WIDGET_GONK
-    sp<GraphicBuffer> mGraphicBuffer;
-#endif
     EGLImage mEGLImage;
     GLuint mTexture;
     EGLSurface mSurface;
@@ -1644,43 +1561,6 @@ protected:
     }
 };
 
-#ifdef MOZ_WIDGET_GONK
-
-class DirectTextureImageEGL
-    : public TextureImageEGL
-{
-public:
-    DirectTextureImageEGL(GLuint aTexture,
-                          sp<GraphicBuffer> aGraphicBuffer,
-                          GLenum aWrapMode,
-                          GLContext* aContext)
-        : TextureImageEGL(aTexture,
-                          nsIntSize(aGraphicBuffer->getWidth(), aGraphicBuffer->getHeight()),
-                          aWrapMode,
-                          ContentTypeForPixelFormat(aGraphicBuffer->getPixelFormat()),
-                          aContext,
-                          ForceSingleTile,
-                          Valid)
-    {
-        mGraphicBuffer = aGraphicBuffer;
-
-        const int eglImageAttributes[] =
-            { LOCAL_EGL_IMAGE_PRESERVED, LOCAL_EGL_TRUE,
-              LOCAL_EGL_NONE, LOCAL_EGL_NONE };
-
-        mEGLImage = sEGLLibrary.fCreateImage(EGL_DISPLAY(),
-                                             EGL_NO_CONTEXT,
-                                             LOCAL_EGL_NATIVE_BUFFER_ANDROID,
-                                             mGraphicBuffer->getNativeBuffer(),
-                                             eglImageAttributes);
-        if (!mEGLImage) {
-            LOG("Could not create EGL images: ERROR (0x%04x)", sEGLLibrary.fGetError());
-        }
-    }
-};
-
-#endif  // MOZ_WIDGET_GONK
-
 already_AddRefed<TextureImage>
 GLContextEGL::CreateTextureImage(const nsIntSize& aSize,
                                  TextureImage::ContentType aContentType,
@@ -1690,30 +1570,6 @@ GLContextEGL::CreateTextureImage(const nsIntSize& aSize,
     nsRefPtr<TextureImage> t = new gl::TiledTextureImage(this, aSize, aContentType, aFlags);
     return t.forget();
 }
-
-#ifdef MOZ_WIDGET_GONK
-already_AddRefed<TextureImage>
-GLContextEGL::CreateDirectTextureImage(GraphicBuffer* aBuffer,
-                                       GLenum aWrapMode)
-{
-    MakeCurrent();
-
-    GLuint texture;
-    fGenTextures(1, &texture);
-
-    nsRefPtr<TextureImage> texImage(
-        new DirectTextureImageEGL(texture, aBuffer, aWrapMode, this));
-    texImage->BindTexture(LOCAL_GL_TEXTURE0);
-
-    GLint texfilter = LOCAL_GL_LINEAR;
-    fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, texfilter);
-    fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, texfilter);
-    fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, aWrapMode);
-    fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, aWrapMode);
-
-    return texImage.forget();
-}
-#endif  // MOZ_WIDGET_GONK
 
 already_AddRefed<TextureImage>
 GLContextEGL::TileGenFunc(const nsIntSize& aSize,
