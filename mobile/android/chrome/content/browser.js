@@ -1299,8 +1299,6 @@ var BrowserApp = {
         let storage = Cc["@mozilla.org/login-manager/storage/mozStorage;1"].
                       getService(Ci.nsILoginManagerStorage);
         storage.init();
-
-        sendMessageToJava({ type: "Passwords:Init:Return" });
         Services.obs.removeObserver(this, "Passwords:Init");
         break;
       }
@@ -1309,7 +1307,6 @@ var BrowserApp = {
         let fh = Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
         // Force creation/upgrade of formhistory.sqlite
         let db = fh.DBConnection;
-        sendMessageToJava({ type: "FormHistory:Init:Return" });
         Services.obs.removeObserver(this, "FormHistory:Init");
         break;
       }
