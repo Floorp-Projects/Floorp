@@ -3893,16 +3893,16 @@ nsGlobalWindow::SetStatus(const nsAString& aStatus)
 {
   FORWARD_TO_OUTER(SetStatus, (aStatus), NS_ERROR_NOT_INITIALIZED);
 
+  mStatus = aStatus;
+
   /*
    * If caller is not chrome and dom.disable_window_status_change is true,
-   * prevent setting window.status by exiting early
+   * prevent propagating window.status to the UI by exiting early
    */
 
   if (!CanSetProperty("dom.disable_window_status_change")) {
     return NS_OK;
   }
-
-  mStatus = aStatus;
 
   nsCOMPtr<nsIWebBrowserChrome> browserChrome;
   GetWebBrowserChrome(getter_AddRefs(browserChrome));
