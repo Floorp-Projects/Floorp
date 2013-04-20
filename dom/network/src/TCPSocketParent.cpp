@@ -109,7 +109,7 @@ TCPSocketParent::RecvData(const SendableData& aData)
       break;
 
     default:
-      MOZ_NOT_REACHED();
+      MOZ_NOT_REACHED("unexpected SendableData type");
       return false;
   }
   return true;
