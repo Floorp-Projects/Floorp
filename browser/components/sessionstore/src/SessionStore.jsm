@@ -49,19 +49,6 @@ const WINDOW_HIDEABLE_FEATURES = [
   "menubar", "toolbar", "locationbar", "personalbar", "statusbar", "scrollbars"
 ];
 
-/*
-docShell capabilities to (re)store
-Restored in restoreHistory()
-eg: browser.docShell["allow" + aCapability] = false;
-
-XXX keep these in sync with all the attributes starting
-    with "allow" in /docshell/base/nsIDocShell.idl
-*/
-const CAPABILITIES = [
-  "Subframes", "Plugins", "Javascript", "MetaRedirects", "Images",
-  "DNSPrefetch", "Auth", "WindowControl"
-];
-
 const MESSAGES = [
   // The content script tells us that its form data (or that of one of its
   // subframes) might have changed. This can be the contents or values of
@@ -96,6 +83,23 @@ Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", this);
 
 XPCOMUtils.defineLazyServiceGetter(this, "gSessionStartup",
   "@mozilla.org/browser/sessionstartup;1", "nsISessionStartup");
+
+// List of docShell capabilities to (re)store. These are automatically
+// retrieved from a given docShell if not already collected before.
+// This is made so they're automatically in sync with all nsIDocShell.allow*
+// properties.
+let gDocShellCapabilities = (function () {
+  let caps;
+
+  return docShell => {
+    if (!caps) {
+      let keys = Object.keys(docShell);
+      caps = keys.filter(k => k.startsWith("allow")).map(k => k.slice(5));
+    }
+
+    return caps;
+  };
+})();
 
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
   "resource://gre/modules/NetUtil.jsm");
@@ -1983,9 +1987,9 @@ let SessionStoreInternal = {
     tabData.hidden = aTab.hidden;
 
     var disallow = [];
-    for (var i = 0; i < CAPABILITIES.length; i++)
-      if (!browser.docShell["allow" + CAPABILITIES[i]])
-        disallow.push(CAPABILITIES[i]);
+    for (let cap of gDocShellCapabilities(browser.docShell))
+      if (!browser.docShell["allow" + cap])
+        disallow.push(cap);
     if (disallow.length > 0)
       tabData.disallow = disallow.join(",");
     else if (tabData.disallow)
@@ -3106,10 +3110,10 @@ let SessionStoreInternal = {
     }
 
     // make sure to reset the capabilities and attributes, in case this tab gets reused
-    var disallow = (tabData.disallow)?tabData.disallow.split(","):[];
-    CAPABILITIES.forEach(function(aCapability) {
-      browser.docShell["allow" + aCapability] = disallow.indexOf(aCapability) == -1;
-    });
+    let disallow = new Set(tabData.disallow && tabData.disallow.split(","));
+    for (let cap of gDocShellCapabilities(browser.docShell))
+      browser.docShell["allow" + cap] = !disallow.has(cap);
+
     for (let name in this.xulAttributes)
       tab.removeAttribute(name);
     for (let name in tabData.attributes)
