@@ -10,5 +10,11 @@ interface CaretPosition {
   readonly attribute Node? offsetNode;
   readonly attribute unsigned long offset;
 
-  ClientRect getClientRect();
+};
+
+/**
+ * Gecko specific methods and properties for CaretPosition.
+ */
+partial interface CaretPosition {
+  ClientRect? getClientRect();
 };

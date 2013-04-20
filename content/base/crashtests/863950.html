@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html style="position: fixed;">
+<head>
+<meta charset="UTF-8">
+<script>
+
+function boom()
+{
+  var cp = document.caretPositionFromPoint(0, 1);
+  document.documentElement.removeChild(document.body);
+  cp.getClientRect();
+}
+
+</script>
+</head>
+
+<body style="margin: 0;" onload="boom();"></body>
+</html>
