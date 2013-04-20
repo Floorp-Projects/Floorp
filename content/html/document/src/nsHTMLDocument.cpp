@@ -2385,10 +2385,8 @@ static PLDHashOperator
 IdentifierMapEntryAddNames(nsIdentifierMapEntry* aEntry, void* aArg)
 {
   nsTArray<nsString>* aNames = static_cast<nsTArray<nsString>*>(aArg);
-  Element* idElement;
   if (aEntry->HasNameElement() ||
-      ((idElement = aEntry->GetIdElement()) &&
-       nsGenericHTMLElement::ShouldExposeIdAsHTMLDocumentProperty(idElement))) {
+      aEntry->HasIdElementExposedAsHTMLDocumentProperty()) {
     aNames->AppendElement(aEntry->GetKey());
   }
   return PL_DHASH_NEXT;
