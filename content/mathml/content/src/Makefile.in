@@ -12,9 +12,7 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= gkcontentmathml_s
 LIBXUL_LIBRARY	= 1
-ifndef _MSC_VER
 FAIL_ON_WARNINGS = 1
-endif # !_MSC_VER
 
 CPPSRCS		= \
 		nsMathMLElement.cpp               \
@@ -22,6 +20,7 @@ CPPSRCS		= \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 # we don't want the shared lib, but we want to force the creation of a static 
 # lib.
