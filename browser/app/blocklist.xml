@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1364316540000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1366143901000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -83,7 +83,7 @@
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                   </emItem>
-      <emItem  blockID="i101" id="{3a12052a-66ef-49db-8c39-e5b0bd5c83fa}">
+      <emItem  blockID="i84" id="pink@rosaplugin.info">
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
                   </emItem>
@@ -358,6 +358,10 @@
                         <versionRange  minVersion="0.1" maxVersion="5.2.0.7164" severity="1">
                     </versionRange>
                   </emItem>
+      <emItem  blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                  </emItem>
       <emItem  blockID="i47" id="youtube@youtube2.com">
                         </emItem>
       <emItem  blockID="i103" id="kdrgun@gmail.com">
@@ -429,7 +433,7 @@
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                   </emItem>
-      <emItem  blockID="i84" id="pink@rosaplugin.info">
+      <emItem  blockID="i101" id="{3a12052a-66ef-49db-8c39-e5b0bd5c83fa}">
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
                   </emItem>
@@ -567,7 +571,7 @@
       <pluginItem  blockID="p94">
                   <match name="filename" exp="Flash\ Player\.plugin" />                                    <versionRange  minVersion="0" maxVersion="10.2.159.1" severity="0">
                                 <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-                              <versionRange  minVersion="0" maxVersion="17.*" />
+                              <versionRange  minVersion="0.1" maxVersion="17.0.1" />
                           </targetApplication>
                   </versionRange>
                   </pluginItem>
@@ -656,14 +660,14 @@
                   </versionRange>
                   </pluginItem>
       <pluginItem  blockID="p178">
-                  <match name="filename" exp="(NPSWF[0-9_]*\.dll)|(Flash\ Player\.plugin)" />                                    <versionRange  minVersion="11.0" maxVersion="11.2.202.274.9999" severity="0" vulnerabilitystatus="1">
+                  <match name="filename" exp="(NPSWF[0-9_]*\.dll)|(Flash\ Player\.plugin)" />                                    <versionRange  minVersion="11.0" maxVersion="11.4.*" severity="0" vulnerabilitystatus="1">
                                 <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
                               <versionRange  minVersion="19.0a1" maxVersion="*" />
                           </targetApplication>
                   </versionRange>
                   </pluginItem>
       <pluginItem  blockID="p178">
-                  <match name="filename" exp="(NPSWF[0-9_]*\.dll)|(Flash\ Player\.plugin)" />                                    <versionRange  minVersion="11.0" maxVersion="11.2.202.274.9999" severity="0" vulnerabilitystatus="1">
+                  <match name="filename" exp="(NPSWF[0-9_]*\.dll)|(Flash\ Player\.plugin)" />                                    <versionRange  minVersion="11.0" maxVersion="11.4.*" severity="0" vulnerabilitystatus="1">
                                 <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
                               <versionRange  minVersion="17.0.4" maxVersion="17.0.*" />
                           </targetApplication>
@@ -825,13 +829,6 @@
       <match name="name" exp="Java\(TM\) Plug-in 1\.6\.0_(39|40|41)([^\d\._]|$)" />            <match name="filename" exp="libnpjp2\.so" />                                    <versionRange  severity="0" vulnerabilitystatus="2">
                                 <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
                               <versionRange  minVersion="17.0" maxVersion="*" />
-                          </targetApplication>
-                  </versionRange>
-                  </pluginItem>
-      <pluginItem  blockID="p316">
-                  <match name="filename" exp="(NPSWF[0-9_]*\.dll)|(Flash\ Player\.plugin)" />                                    <versionRange  minVersion="11.2.202.275" maxVersion="11.4.402.286.9999" severity="0" vulnerabilitystatus="1">
-                                <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-                              <versionRange  minVersion="21.0a1" maxVersion="*" />
                           </targetApplication>
                   </versionRange>
                   </pluginItem>
