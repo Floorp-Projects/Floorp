@@ -3190,7 +3190,8 @@ bool BindPropertyOp(JSContext *cx, Op &op, PropertyDescriptor *desc, HandleId id
         // We have an actual property op.  For getters, we use 0
         // args, for setters we use 1 arg.
         uint32_t args = (attrFlag == JSPROP_GETTER) ? 0 : 1;
-        func = GeneratePropertyOp(cx, desc->obj, id, args, op);
+        RootedObject obj(cx, desc->obj);
+        func = GeneratePropertyOp(cx, obj, id, args, op);
         if (!func)
             return false;
     }
