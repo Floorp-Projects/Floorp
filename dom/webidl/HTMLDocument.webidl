@@ -6,6 +6,7 @@
 
 interface Selection;
 
+[OverrideBuiltins]
 interface HTMLDocument : Document {
            [Throws]
            attribute DOMString? domain;
