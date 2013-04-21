@@ -9,12 +9,10 @@
 
 %include ../shared/browser.inc
 %filter substitution
-%define toolbarHighlight rgba(255,255,255,.5)
-%define selectedTabHighlight rgba(255,255,255,.7)
-%define toolbarShadowColor rgba(10%,10%,10%,.4)
-%define toolbarShadowOnTab linear-gradient(to top, rgba(10%,10%,10%,.4) 1px, transparent 1px)
-%define bgTabTexture linear-gradient(transparent, hsla(0,0%,45%,.1) 1px, hsla(0,0%,32%,.2) 80%, hsla(0,0%,0%,.2))
-%define bgTabTextureHover linear-gradient(hsla(0,0%,100%,.3) 1px, hsla(0,0%,75%,.2) 80%, hsla(0,0%,60%,.2))
+%define toolbarHighlight rgba(253,253,253,0.45)
+%define toolbarShadowColor hsla(209,67%,12%,0.35)
+%define fgTabTexture linear-gradient(rgba(254,254,254,0.72), rgba(254,254,254,0.72) 0px, rgba(250,250,250,0.88) 1px, rgba(250,250,250,0.88) 1px, rgba(254,254,254,0.72) 2px, @toolbarHighlight@)
+%define fgTabBackgroundMiddle linear-gradient(transparent, transparent 2px, -moz-dialog 2px, -moz-dialog)
 %define navbarTextboxCustomBorder border-color: rgba(0,0,0,.32);
 %define navbarLargeIcons #navigator-toolbox[iconsize=large][mode=icons] > #nav-bar
 %define forwardTransitionLength 150ms
@@ -37,6 +35,21 @@
 
 #main-menubar {
   -moz-box-flex: 1; /* make menu items expand to fill toolbar height */
+}
+
+#main-window[tabsintitlebar][sizemode="normal"] #toolbar-menubar[autohide="true"][inactive="true"]:not([customizing="true"]) {
+  visibility: hidden;
+}
+
+#main-window[sizemode="normal"] #toolbar-menubar,
+/* We want a 4px gap between the TabsToolbar and the toolbar-menubar when the
+   toolbar-menu is displayed in either restored or maximized mode. */
+#main-window:not([sizemode="fullscreen"]) #toolbar-menubar:-moz-any(:not([autohide="true"]), :not([inactive="true"])) {
+  margin-bottom: 4px;
+}
+
+#toolbar-menubar:not([autohide="true"]) {
+  -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbar-drag");
 }
 
 #navigator-toolbox {
@@ -66,12 +79,16 @@
 %ifdef WINDOWS_AERO
 @media not all and (-moz-windows-compositor) {
 %endif
-  #main-window[tabsintitlebar]:not([inFullscreen]) #toolbar-menubar[inactive] ~ #TabsToolbar:not(:-moz-lwtheme) {
+  #toolbar-menubar {
+    background-color: transparent !important;
+  }
+
+  #main-window[tabsintitlebar][sizemode="maximized"] #toolbar-menubar[inactive] ~ #TabsToolbar:not(:-moz-lwtheme) {
     background: linear-gradient(to top, @toolbarShadowColor@ 1px, transparent 1px),
                 linear-gradient(rgba(50%,50%,50%,0), ActiveCaption 85%);
     color: CaptionText;
   }
-  #main-window[tabsintitlebar]:not([inFullscreen]) #toolbar-menubar[inactive] ~ #TabsToolbar:not(:-moz-lwtheme):-moz-window-inactive {
+  #main-window[tabsintitlebar][sizemode="maximized"] #toolbar-menubar[inactive] ~ #TabsToolbar:not(:-moz-lwtheme):-moz-window-inactive {
     background: linear-gradient(to top, @toolbarShadowColor@ 1px, transparent 1px),
                 linear-gradient(rgba(50%,50%,50%,0), InactiveCaption 85%);
     color: InactiveCaptionText;
@@ -108,6 +125,16 @@
 
 /* ::::: app menu button ::::: */
 
+/* The app menu button must appear on top of the navigator-toolbox in order
+ * for click and hover mouse events to work properly for the button in the
+ * restored window state. Otherwise, elements in the navigator-toolbox, like the
+ * menubar can swallow these events. It will also place the button above the
+ * fog on themes with Aero Glass.
+ */
+#main-window[tabsintitlebar] #appmenu-button-container {
+  z-index: 1;
+}
+
 #appmenu-button {
   -moz-appearance: none;
   background-clip: padding-box;
@@ -130,6 +157,10 @@
 
 %ifndef WINDOWS_AERO
 @media (-moz-windows-default-theme) {
+  #main-window[tabsintitlebar][sizemode="normal"] #toolbar-menubar {
+    margin-top: 4px;
+  }
+
   #main-window[sizemode="normal"] #appmenu-button {
     margin-bottom: 5px;
   }
@@ -543,13 +574,21 @@
 }
 
 @media (-moz-windows-classic) {
-  #main-window[sizemode="normal"] > #titlebar > #titlebar-content > #appmenu-button-container {
+  #main-window[tabsintitlebar][sizemode="normal"] > #titlebar > #titlebar-content > #appmenu-button-container,
+  #main-window[tabsintitlebar][sizemode="normal"] > #tab-view-deck > #browser-panel > #navigator-toolbox > #toolbar-menubar {
     margin-top: 4px;
   }
 }
 
+/* The button box must appear on top of the navigator-toolbox in order for
+ * click and hover mouse events to work properly for the button in the restored
+ * window state. Otherwise, elements in the navigator-toolbox, like the menubar,
+ * can swallow those events. It will also place the buttons above the fog on
+ * themes with Aero Glass.
+ */
 #titlebar-buttonbox {
   -moz-appearance: -moz-window-button-box;
+  z-index: 1;
 }
 
 #main-window[sizemode="maximized"] #titlebar-buttonbox {
@@ -772,7 +811,7 @@ toolbar[mode=full] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   -moz-box-pack: center;
 }
 
-@navbarLargeIcons@ .toolbarbutton-1[type=menu]:not(#back-button):not(#forward-button):not(#feed-button):not(#social-provider-button) {
+@navbarLargeIcons@ .toolbarbutton-1[type=menu]:not(#back-button):not(#forward-button):not(#feed-button):not(#social-provider-button):not(#PanelUI-menu-button) {
   padding-left: 5px;
   padding-right: 5px;
 }
@@ -812,7 +851,7 @@ toolbar[mode=full] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   padding: 3px 7px;
 }
 
-@navbarLargeIcons@ .toolbarbutton-1[type=menu]:not(#back-button):not(#forward-button):not(#feed-button):not(#social-provider-button) > .toolbarbutton-icon,
+@navbarLargeIcons@ .toolbarbutton-1[type=menu]:not(#back-button):not(#forward-button):not(#feed-button):not(#social-provider-button):not(#PanelUI-menu-button) > .toolbarbutton-icon,
 @navbarLargeIcons@ .toolbarbutton-1[type=menu] > .toolbarbutton-text /* hack for add-ons that forcefully display the label */ {
   -moz-padding-end: 17px;
 }
@@ -1145,10 +1184,6 @@ toolbar[mode=full] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   list-style-image: url(chrome://browser/skin/tabview/tabview.png);
 }
 
-%ifdef WINDOWS_AERO
-:-moz-any(#TabsToolbar, #nav-bar[tabsontop=false], #toolbar-menubar) > #tabview-button:-moz-system-metric(windows-compositor):not(:-moz-lwtheme),
-:-moz-any(#TabsToolbar, #nav-bar[tabsontop=false], #toolbar-menubar) > toolbarpaletteitem > #tabview-button:-moz-system-metric(windows-compositor):not(:-moz-lwtheme),
-%endif
 #tabview-button:-moz-lwtheme-brighttext {
   list-style-image: url(chrome://browser/skin/tabview/tabview-inverted.png);
 }
@@ -1887,6 +1922,10 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   background-image: linear-gradient(to top, @toolbarShadowColor@ 1px, rgba(0,0,0,.05) 1px, transparent 50%);
 }
 
+#main-window[tabsintitlebar] #TabsToolbar {
+  background-color: transparent;
+}
+
 %ifndef WINDOWS_AERO
 @media (-moz-windows-default-theme) {
   #main-window[sizemode=normal] #TabsToolbar {
@@ -1896,90 +1935,46 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 }
 %endif
 
-.tabbrowser-tab,
-.tabs-newtab-button {
-  -moz-appearance: none;
-  background: @toolbarShadowOnTab@, @bgTabTexture@,
-              linear-gradient(-moz-dialog, -moz-dialog);
-  background-origin: border-box;
-  background-position: 1px 2px;
-  background-size: calc(100% - 2px) calc(100% - 2px);
-  background-repeat: no-repeat;
-  margin: 0;
-  padding: 2px 0 4px;
-  border-width: 4px 3px 0;
-  border-style: solid;
-  border-image: url(tabbrowser/tab.png) 4 3 0 fill repeat stretch;
-  border-radius: 0;
-}
-
-.tabbrowser-tab:hover,
-.tabs-newtab-button:hover {
-  background-image: @toolbarShadowOnTab@, @bgTabTextureHover@,
-                    linear-gradient(-moz-dialog, -moz-dialog);
-}
+%include ../shared/tabs.inc.css
 
 %ifndef WINDOWS_AERO
+/* Use lighter colors of buttons and text in the titlebar on luna-blue */
 @media (-moz-windows-theme: luna-blue) {
-  .tabbrowser-tab,
-  .tabs-newtab-button {
-    background-image: @toolbarShadowOnTab@,
-                      linear-gradient(hsla(51,34%,89%,.9), hsla(51,15%,79%,.9) 1px, hsla(51,9%,68%,.9));
+  #main-window[tabsintitlebar] #main-menubar > menu {
+    color: white;
   }
 
-  .tabbrowser-tab:hover,
-  .tabs-newtab-button:hover {
-    background-image: @toolbarShadowOnTab@,
-                      linear-gradient(hsla(51,34%,100%,.9), hsla(51,15%,94%,.9) 1px, hsla(51,9%,83%,.9));
+  #main-window[tabsintitlebar]:not([inFullscreen]) .tabbrowser-arrowscrollbox > .scrollbutton-up,
+  #main-window[tabsintitlebar]:not([inFullscreen]) .tabbrowser-arrowscrollbox > .scrollbutton-down {
+    list-style-image: url(chrome://browser/skin/tabbrowser/tab-arrow-left-inverted.png);
+  }
+
+  #main-window[tabsintitlebar]:not([inFullscreen]) .tabs-newtab-button,
+  #main-window[tabsintitlebar]:not([inFullscreen]) #TabsToolbar > #new-tab-button,
+  #main-window[tabsintitlebar]:not([inFullscreen]) #TabsToolbar > toolbarpaletteitem > #new-tab-button {
+    list-style-image: url(chrome://browser/skin/tabbrowser/newtab-inverted.png);
+  }
+
+  #main-window[tabsintitlebar]:not([inFullscreen]) #TabsToolbar > #alltabs-button {
+    list-style-image: url("chrome://browser/skin/toolbarbutton-dropdown-arrow-inverted.png");
+  }
+
+  #main-window[tabsintitlebar]:not([inFullscreen]) #TabsToolbar > #tabview-button {
+    list-style-image: url(chrome://browser/skin/tabview/tabview-inverted.png);
+  }
+
+  #main-window[tabsintitlebar]:not([inFullscreen]) .tab-close-button:not(:hover):not([selected="true"]) {
+    -moz-image-region: rect(0, 64px, 16px, 48px);
   }
 }
 %endif
 
-.tabbrowser-tab[selected="true"] {
-  background-image: linear-gradient(@selectedTabHighlight@, @toolbarHighlight@ 50%),
-                    linear-gradient(-moz-dialog, -moz-dialog);
-}
-
-#main-window[tabsontop=false]:not([disablechrome]) .tabbrowser-tab[selected=true]:not(:-moz-lwtheme) {
-  background-image: @toolbarShadowOnTab@,
-                    linear-gradient(@selectedTabHighlight@, @toolbarHighlight@ 50%),
-                    linear-gradient(-moz-dialog, -moz-dialog);
+#main-window[tabsintitlebar]:not([inFullscreen]) .tabbrowser-tab:not([selected]):not(:-moz-lwtheme) {
+  color: CaptionText;
 }
 
 .tabbrowser-tab:-moz-lwtheme {
   color: inherit;
-}
-
-.tabbrowser-tab[selected="true"]:-moz-lwtheme {
-  background-image: linear-gradient(@selectedTabHighlight@, @toolbarHighlight@ 50%);
-}
-
-.tabbrowser-tab:-moz-lwtheme-brighttext:not([selected="true"]),
-.tabs-newtab-button:-moz-lwtheme-brighttext {
-  background-image: linear-gradient(hsla(0,0%,40%,.6), hsla(0,0%,30%,.6) 80%);
-}
-
-.tabbrowser-tab:-moz-lwtheme-brighttext:not([selected="true"]):hover,
-.tabs-newtab-button:-moz-lwtheme-brighttext:hover {
-  background-image: linear-gradient(hsla(0,0%,60%,.6), hsla(0,0%,45%,.6) 80%);
-}
-
-.tabbrowser-tab:-moz-lwtheme-darktext:not([selected="true"]),
-.tabs-newtab-button:-moz-lwtheme-darktext {
-  background-image: linear-gradient(hsla(0,0%,60%,.5), hsla(0,0%,45%,.5) 80%);
-}
-
-.tabbrowser-tab:-moz-lwtheme-darktext:not([selected="true"]):hover,
-.tabs-newtab-button:-moz-lwtheme-darktext:hover {
-  background-image: linear-gradient(hsla(0,0%,80%,.5), hsla(0,0%,60%,.5) 80%);
-}
-
-.tabbrowser-tab[pinned][titlechanged]:not([selected="true"]) {
-  background-image: radial-gradient(circle farthest-corner at 50% 3px, rgba(255,255,255,1) 3%, rgba(186,221,251,.75) 40%, rgba(127,179,255,.5) 80%, rgba(127,179,255,.25));
-}
-.tabbrowser-tab[pinned][titlechanged]:not([selected="true"]):hover {
-  background-image: linear-gradient(hsla(0,0%,100%,.4), hsla(0,0%,75%,.4) 80%),
-                    radial-gradient(circle farthest-corner at 50% 3px, rgba(255,255,255,1) 3%, rgba(186,221,251,.75) 40%, rgba(127,179,255,.5) 80%, rgba(127,179,255,.25));
 }
 
 .tab-throbber,
@@ -1987,8 +1982,6 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   width: 16px;
   height: 16px;
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
-  -moz-margin-start: 2px;
-  -moz-margin-end: 3px;
 }
 
 .tab-throbber {
@@ -1999,14 +1992,13 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   list-style-image: url("chrome://browser/skin/tabbrowser/loading.png");
 }
 
-.tab-throbber[pinned],
-.tab-icon-image[pinned] {
-  -moz-margin-start: 5px;
-  -moz-margin-end: 5px;
+.tab-throbber:not([pinned]),
+.tab-icon-image:not([pinned]) {
+  -moz-margin-end: 6px;
 }
 
 /* tabbrowser-tab focus ring */
-.tabbrowser-tab:focus > .tab-stack {
+.tabbrowser-tab:focus > .tab-stack > .tab-content > .tab-label {
   outline: 1px dotted;
 }
 
@@ -2019,7 +2011,8 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 /* Tab close button */
 .tab-close-button {
   -moz-appearance: none;
-  -moz-image-region: rect(0, 64px, 16px, 48px);
+  -moz-image-region: rect(0, 16px, 16px, 0);
+  -moz-margin-start: 6px;
   border: none;
   padding: 0px;
   list-style-image: url("chrome://global/skin/icons/close.png");
@@ -2050,10 +2043,6 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   background-origin: border-box;
 }
 
-%ifdef WINDOWS_AERO
-.tabbrowser-arrowscrollbox > .scrollbutton-up:-moz-system-metric(windows-compositor):not(:-moz-lwtheme),
-.tabbrowser-arrowscrollbox > .scrollbutton-down:-moz-system-metric(windows-compositor):not(:-moz-lwtheme),
-%endif
 .tabbrowser-arrowscrollbox > .scrollbutton-up:-moz-lwtheme-brighttext,
 .tabbrowser-arrowscrollbox > .scrollbutton-down:-moz-lwtheme-brighttext {
   list-style-image: url(chrome://browser/skin/tabbrowser/tab-arrow-left-inverted.png);
@@ -2097,18 +2086,10 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   -moz-image-region: auto;
 }
 
-%ifdef WINDOWS_AERO
-#TabsToolbar > #new-tab-button:-moz-system-metric(windows-compositor):not(:-moz-lwtheme),
-#TabsToolbar > toolbarpaletteitem > #new-tab-button:-moz-system-metric(windows-compositor):not(:-moz-lwtheme),
-%endif
 .tabs-newtab-button:-moz-lwtheme-brighttext,
 #TabsToolbar > #new-tab-button:-moz-lwtheme-brighttext,
 #TabsToolbar > toolbarpaletteitem > #new-tab-button:-moz-lwtheme-brighttext {
   list-style-image: url(chrome://browser/skin/tabbrowser/newtab-inverted.png);
-}
-
-.tabs-newtab-button {
-  width: 28px;
 }
 
 #TabsToolbar > #new-tab-button {
@@ -2119,10 +2100,6 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   list-style-image: url("chrome://browser/skin/toolbarbutton-dropdown-arrow.png");
 }
 
-%ifdef WINDOWS_AERO
-:-moz-any(#TabsToolbar, #nav-bar[tabsontop=false], #toolbar-menubar) > #alltabs-button:-moz-system-metric(windows-compositor):not(:-moz-lwtheme),
-:-moz-any(#TabsToolbar, #nav-bar[tabsontop=false], #toolbar-menubar) > toolbarpaletteitem > #alltabs-button:-moz-system-metric(windows-compositor):not(:-moz-lwtheme),
-%endif
 #alltabs-button:-moz-lwtheme-brighttext {
   list-style-image: url("chrome://browser/skin/toolbarbutton-dropdown-arrow-inverted.png");
 }
@@ -2951,6 +2928,12 @@ chatbox {
   border-top-left-radius: 2.5px;
   border-top-right-radius: 2.5px;
 }
+
+/* Customization mode */
+
+%include ../shared/customization.inc.css
+
+/* End customization mode */
 
 .click-to-play-plugins-notification-content {
   margin: -10px;
