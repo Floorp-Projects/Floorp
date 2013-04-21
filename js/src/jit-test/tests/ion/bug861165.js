@@ -1,5 +1,3 @@
-// |jit-test| no-jm
-
 // IM has the following fastpaths:
 // - constant index (constant)
 // - need negative int check (neg)

@@ -9,6 +9,7 @@
 
 #include <cmath>
 #include "AudioParamTimeline.h"
+#include "MediaSegment.h"
 
 namespace mozilla {
 
@@ -73,6 +74,14 @@ struct WebAudioUtils {
       aDouble = 0.0;
     }
   }
+
+  /**
+   * Convert a stream position into the time coordinate of the destination
+   * stream.
+   */
+  static double StreamPositionToDestinationTime(TrackTicks aSourcePosition,
+                                                AudioNodeStream* aSource,
+                                                AudioNodeStream* aDestination);
 };
 
 }

@@ -116,7 +116,7 @@ protected:
   // be null if no menu is active.
   nsMenuFrame* mCurrentMenu;
 
-  nsIDOMEventTarget* mTarget;
+  mozilla::dom::EventTarget* mTarget;
 
 }; // class nsMenuBarFrame
 
