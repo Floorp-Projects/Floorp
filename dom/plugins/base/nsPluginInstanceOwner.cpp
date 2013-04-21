@@ -101,15 +101,14 @@ using namespace mozilla::layers;
 class nsPluginDOMContextMenuListener : public nsIDOMEventListener
 {
 public:
-  nsPluginDOMContextMenuListener();
+  nsPluginDOMContextMenuListener(nsIContent* aContent);
   virtual ~nsPluginDOMContextMenuListener();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMEVENTLISTENER
 
-  nsresult Init(nsIContent* aContent);
-  nsresult Destroy(nsIContent* aContent);
-  
+  void Destroy(nsIContent* aContent);
+
   nsEventStatus ProcessEvent(const nsGUIEvent& anEvent)
   {
     return nsEventStatus_eConsumeNoDefault;
@@ -2512,7 +2511,7 @@ nsPluginInstanceOwner::Destroy()
 #ifdef XP_MACOSX
   RemoveFromCARefreshTimer();
   if (mColorProfile)
-    ::CGColorSpaceRelease(mColorProfile);  
+    ::CGColorSpaceRelease(mColorProfile);
 #endif
 
   // unregister context menu listener
@@ -2939,10 +2938,7 @@ nsresult nsPluginInstanceOwner::Init(nsIContent* aContent)
   }
 
   // register context menu listener
-  mCXMenuListener = new nsPluginDOMContextMenuListener();
-  if (mCXMenuListener) {    
-    mCXMenuListener->Init(aContent);
-  }
+  mCXMenuListener = new nsPluginDOMContextMenuListener(aContent);
 
   mContent->AddEventListener(NS_LITERAL_STRING("focus"), this, false,
                              false);
@@ -3424,8 +3420,9 @@ already_AddRefed<nsIURI> nsPluginInstanceOwner::GetBaseURI() const
 
 // nsPluginDOMContextMenuListener class implementation
 
-nsPluginDOMContextMenuListener::nsPluginDOMContextMenuListener()
+nsPluginDOMContextMenuListener::nsPluginDOMContextMenuListener(nsIContent* aContent)
 {
+  aContent->AddEventListener(NS_LITERAL_STRING("contextmenu"), this, true);
 }
 
 nsPluginDOMContextMenuListener::~nsPluginDOMContextMenuListener()
@@ -3439,28 +3436,12 @@ NS_IMETHODIMP
 nsPluginDOMContextMenuListener::HandleEvent(nsIDOMEvent* aEvent)
 {
   aEvent->PreventDefault(); // consume event
-  
+
   return NS_OK;
 }
 
-nsresult nsPluginDOMContextMenuListener::Init(nsIContent* aContent)
-{
-  nsCOMPtr<nsIDOMEventTarget> receiver(do_QueryInterface(aContent));
-  if (receiver) {
-    receiver->AddEventListener(NS_LITERAL_STRING("contextmenu"), this, true);
-    return NS_OK;
-  }
-  
-  return NS_ERROR_NO_INTERFACE;
-}
-
-nsresult nsPluginDOMContextMenuListener::Destroy(nsIContent* aContent)
+void nsPluginDOMContextMenuListener::Destroy(nsIContent* aContent)
 {
   // Unregister context menu listener
-  nsCOMPtr<nsIDOMEventTarget> receiver(do_QueryInterface(aContent));
-  if (receiver) {
-    receiver->RemoveEventListener(NS_LITERAL_STRING("contextmenu"), this, true);
-  }
-  
-  return NS_OK;
+  aContent->RemoveEventListener(NS_LITERAL_STRING("contextmenu"), this, true);
 }

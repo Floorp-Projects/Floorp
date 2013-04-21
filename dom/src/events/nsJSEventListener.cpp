@@ -164,7 +164,7 @@ nsJSEventListener::IsBlackForCC()
 nsresult
 nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
 {
-  nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mTarget);
+  nsCOMPtr<EventTarget> target = do_QueryInterface(mTarget);
   if (!target || !mHandler.HasEventHandler())
     return NS_ERROR_FAILURE;
 

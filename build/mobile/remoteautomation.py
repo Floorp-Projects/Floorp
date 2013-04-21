@@ -121,13 +121,20 @@ class RemoteAutomation(Automation):
         javaException = self.checkForJavaException(logcat)
         if javaException:
             return True
+
+        # If crash reporting is disabled (MOZ_CRASHREPORTER!=1), we can't say
+        # anything.
+        if not self.CRASHREPORTER:
+            return False
+
         try:
             dumpDir = tempfile.mkdtemp()
             remoteCrashDir = self._remoteProfile + '/minidumps/'
             if not self._devicemanager.dirExists(remoteCrashDir):
-                # As of this writing, the minidumps directory is automatically
-                # created when fennec (first) starts, so its lack of presence
-                # is a hint that something went wrong.
+                # If crash reporting is enabled (MOZ_CRASHREPORTER=1), the
+                # minidumps directory is automatically created when Fennec
+                # (first) starts, so its lack of presence is a hint that
+                # something went wrong.
                 print "Automation Error: No crash directory (%s) found on remote device" % remoteCrashDir
                 # Whilst no crash was found, the run should still display as a failure
                 return True

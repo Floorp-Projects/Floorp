@@ -201,5 +201,14 @@ AudioNode::Disconnect(uint32_t aOutput, ErrorResult& aRv)
   Context()->UpdatePannerSource();
 }
 
+void
+AudioNode::UnbindFromEngine()
+{
+  AudioNodeStream* ns = static_cast<AudioNodeStream*>(mStream.get());
+  MOZ_ASSERT(ns, "How come we don't have a stream here?");
+  MOZ_ASSERT(ns->Engine()->mNode == this, "Invalid node reference");
+  ns->Engine()->mNode = nullptr;
+}
+
 }
 }

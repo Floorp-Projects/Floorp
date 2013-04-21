@@ -378,9 +378,14 @@ public:
 
   // Enumerated types
   void PassEnum(TestEnum);
+  void PassNullableEnum(const Nullable<TestEnum>&);
   void PassOptionalEnum(const Optional<TestEnum>&);
   void PassEnumWithDefault(TestEnum);
+  void PassOptionalNullableEnum(const Optional<Nullable<TestEnum> >&);
+  void PassOptionalNullableEnumWithDefaultValue(const Nullable<TestEnum>&);
+  void PassOptionalNullableEnumWithDefaultValue2(const Nullable<TestEnum>&);
   TestEnum ReceiveEnum();
+  Nullable<TestEnum> ReceiveNullableEnum();
   TestEnum EnumAttribute();
   TestEnum ReadonlyEnumAttribute();
   void SetEnumAttribute(TestEnum);

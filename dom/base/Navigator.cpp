@@ -660,16 +660,10 @@ StaticRefPtr<VibrateWindowListener> gVibrateWindowListener;
 NS_IMETHODIMP
 VibrateWindowListener::HandleEvent(nsIDOMEvent* aEvent)
 {
-  nsCOMPtr<nsIDOMEventTarget> target;
-  aEvent->GetTarget(getter_AddRefs(target));
-  nsCOMPtr<nsIDOMDocument> doc = do_QueryInterface(target);
+  nsCOMPtr<nsIDocument> doc =
+    do_QueryInterface(aEvent->InternalDOMEvent()->GetTarget());
 
-  bool hidden = true;
-  if (doc) {
-    doc->GetHidden(&hidden);
-  }
-
-  if (hidden) {
+  if (!doc || doc->Hidden()) {
     // It's important that we call CancelVibrate(), not Vibrate() with an
     // empty list, because Vibrate() will fail if we're no longer focused, but
     // CancelVibrate() will succeed, so long as nobody else has started a new
@@ -687,7 +681,7 @@ VibrateWindowListener::HandleEvent(nsIDOMEvent* aEvent)
 void
 VibrateWindowListener::RemoveListener()
 {
-  nsCOMPtr<nsIDOMEventTarget> target = do_QueryReferent(mDocument);
+  nsCOMPtr<EventTarget> target = do_QueryReferent(mDocument);
   if (!target) {
     return;
   }
