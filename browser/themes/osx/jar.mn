@@ -21,7 +21,7 @@ browser.jar:
   skin/classic/browser/appmenu.png
 * skin/classic/browser/browser.css                          (browser.css)
   skin/classic/browser/click-to-play-warning-stripes.png
-  skin/classic/browser/customization/customization-mode-background.jpg (customization/customization-mode-background.jpg)
+  skin/classic/browser/customizationui/customization-mode-background.jpg (customizationui/customization-mode-background.jpg)
 * skin/classic/browser/engineManager.css                    (engineManager.css)
   skin/classic/browser/Geolocation-16.png
   skin/classic/browser/Geolocation-16@2x.png
@@ -60,7 +60,6 @@ browser.jar:
   skin/classic/browser/page-livemarks.png
   skin/classic/browser/page-livemarks@2x.png
   skin/classic/browser/pageInfo.css
-* skin/classic/browser/panelUIOverlay.css
   skin/classic/browser/pointerLock-16.png
   skin/classic/browser/pointerLock-16@2x.png
   skin/classic/browser/pointerLock-64.png
@@ -93,6 +92,7 @@ browser.jar:
   skin/classic/browser/webRTC-shareDevice-64@2x.png
   skin/classic/browser/webRTC-sharingDevice-16.png
   skin/classic/browser/webRTC-sharingDevice-16@2x.png
+* skin/classic/browser/customizableui/panelUIOverlay.css    (customizableui/panelUIOverlay.css)
   skin/classic/browser/downloads/buttons.png                (downloads/buttons.png)
   skin/classic/browser/downloads/buttons@2x.png             (downloads/buttons@2x.png)
   skin/classic/browser/downloads/download-glow.png          (downloads/download-glow.png)
