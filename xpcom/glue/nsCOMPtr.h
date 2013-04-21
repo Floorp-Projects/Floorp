@@ -176,6 +176,32 @@ struct already_AddRefed
       return tmp;
     }
 
+    /**
+     * This helper provides a static_cast replacement for already_AddRefed, so
+     * if you have
+     *
+     *   already_AddRefed<Parent> F();
+     *
+     * you can write
+     *
+     *   already_AddRefed<Child>
+     *   G()
+     *   {
+     *     return F().downcast<Child>();
+     *   }
+     *
+     * instead of
+     *
+     *     return dont_AddRef(static_cast<Child*>(F().get()));
+     */
+    template<class U>
+    already_AddRefed<U> downcast()
+    {
+      U* tmp = static_cast<U*>(mRawPtr);
+      mRawPtr = nullptr;
+      return already_AddRefed<U>(tmp);
+    }
+
     T* mRawPtr;
   };
 
