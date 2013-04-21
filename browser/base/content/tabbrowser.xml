@@ -3451,9 +3451,7 @@
               if (aEvent.target != window)
                 break;
 
-              let sizemode = document.documentElement.getAttribute("sizemode");
-              TabsInTitlebar.allowedBy("sizemode",
-                                       sizemode == "maximized" || sizemode == "fullscreen");
+              TabsInTitlebar.updateAppearance();
 
               var width = this.mTabstrip.boxObject.width;
               if (width != this.mTabstripWidth) {
