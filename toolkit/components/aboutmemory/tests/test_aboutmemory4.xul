@@ -89,6 +89,16 @@
   // the loading of data from file.  If we got this far, we're doing fine.
   let expectedGood =
 "\
+Explicit-only process\n\
+\n\
+WARNING: the 'heap-allocated' memory reporter does not work for this platform and/or configuration. This means that 'heap-unclassified' is not shown and the 'explicit' tree shows less memory than it should.\n\
+Explicit Allocations\n\
+\n\
+0.10 MB (100.0%) -- explicit\n\
+└──0.10 MB (100.0%) ── a/b\n\
+\n\
+Other Measurements\n\
+\n\
 Main Process (pid NNN)\n\
 Explicit Allocations\n\
 \n\
@@ -103,6 +113,19 @@ Other Measurements\n\
 └──0.10 MB (33.33%) ── b\n\
 \n\
 250.00 MB ── heap-allocated\n\
+\n\
+Other-only process\n\
+\n\
+WARNING: the 'heap-allocated' memory reporter does not work for this platform and/or configuration. This means that 'heap-unclassified' is not shown and the 'explicit' tree shows less memory than it should.\n\
+Explicit Allocations\n\
+\n\
+Other Measurements\n\
+\n\
+0.19 MB (100.0%) -- a\n\
+├──0.10 MB (50.00%) ── b\n\
+└──0.10 MB (50.00%) ── c\n\
+\n\
+0.48 MB ── heap-allocated\n\
 \n\
 ";
 
