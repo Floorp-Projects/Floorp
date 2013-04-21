@@ -9,8 +9,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=553917
     <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
     <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
     <script type="application/javascript">
-      SimpleTest.expectAssertions(204);
-
       var stringBundleService = 
         SpecialPowers.Cc["@mozilla.org/intl/stringbundle;1"]
                     .getService(SpecialPowers.Ci.nsIStringBundleService);
@@ -78,11 +76,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=553917
       function getErrorMessage(name,idx)
       {
         if (name != "MMultiscriptsErrors") {
-          return g_bundl.formatStringFromName(name,g_errorInfo[name].args[idx], 
-                                            g_errorInfo[name].args[idx].length);
-        }
-        else {
-          return g_bundl.formatStringFromName(g_errorInfo[name].args[idx],[],0);
+          var formatParams = g_errorInfo[name].args[idx];
+          if (formatParams.length > 0) {
+            return g_bundl.formatStringFromName(name,formatParams,formatParams.length);
+          } else {
+            return g_bundl.GetStringFromName(name);
+          }
+        } else {
+          return g_bundl.GetStringFromName(g_errorInfo[name].args[idx]);
         }
       }
     
