@@ -29,32 +29,35 @@ class DelayNodeEngine : public AudioNodeEngine
   {
   public:
     enum ChangeType { ADDREF, RELEASE };
-    PlayingRefChanged(DelayNode& aNode, ChangeType aChange)
-      : mNode(aNode)
+    PlayingRefChanged(AudioNodeStream* aStream, ChangeType aChange)
+      : mStream(aStream)
       , mChange(aChange)
     {
     }
 
     NS_IMETHOD Run()
     {
-      if (mChange == ADDREF) {
-        mNode.mPlayingRef.Take(&mNode);
-      } else if (mChange == RELEASE) {
-        mNode.mPlayingRef.Drop(&mNode);
+      nsRefPtr<DelayNode> node = static_cast<DelayNode*>(mStream->Engine()->Node());
+      if (node) {
+        if (mChange == ADDREF) {
+          node->mPlayingRef.Take(node);
+        } else if (mChange == RELEASE) {
+          node->mPlayingRef.Drop(node);
+        }
       }
       return NS_OK;
     }
 
   private:
-    DelayNode& mNode;
+    nsRefPtr<AudioNodeStream> mStream;
     ChangeType mChange;
   };
 
 public:
-  DelayNodeEngine(AudioDestinationNode* aDestination, DelayNode& aDelay)
-    : mSource(nullptr)
+  DelayNodeEngine(AudioNode* aNode, AudioDestinationNode* aDestination)
+    : AudioNodeEngine(aNode)
+    , mSource(nullptr)
     , mDestination(static_cast<AudioNodeStream*> (aDestination->Stream()))
-    , mDelayNode(aDelay)
     // Keep the default value in sync with the default value in DelayNode::DelayNode.
     , mDelay(0.f)
     , mMaxDelay(0.)
@@ -136,7 +139,7 @@ public:
       mLeftOverData = static_cast<int32_t>(mCurrentDelayTime * IdealAudioRate());
 
       nsRefPtr<PlayingRefChanged> refchanged =
-        new PlayingRefChanged(mDelayNode, PlayingRefChanged::ADDREF);
+        new PlayingRefChanged(aStream, PlayingRefChanged::ADDREF);
       NS_DispatchToMainThread(refchanged);
     } else if (mLeftOverData != INT32_MIN) {
       mLeftOverData -= WEBAUDIO_BLOCK_SIZE;
@@ -145,7 +148,7 @@ public:
         playedBackAllLeftOvers = true;
 
         nsRefPtr<PlayingRefChanged> refchanged =
-          new PlayingRefChanged(mDelayNode, PlayingRefChanged::RELEASE);
+          new PlayingRefChanged(aStream, PlayingRefChanged::RELEASE);
         NS_DispatchToMainThread(refchanged);
       }
     }
@@ -244,7 +247,6 @@ public:
 
   AudioNodeStream* mSource;
   AudioNodeStream* mDestination;
-  DelayNode& mDelayNode;
   AudioParamTimeline mDelay;
   // Maximum delay time in seconds
   double mMaxDelay;
@@ -264,7 +266,7 @@ DelayNode::DelayNode(AudioContext* aContext, double aMaxDelay)
   : AudioNode(aContext)
   , mDelay(new AudioParam(this, SendDelayToStream, 0.0f))
 {
-  DelayNodeEngine* engine = new DelayNodeEngine(aContext->Destination(), *this);
+  DelayNodeEngine* engine = new DelayNodeEngine(this, aContext->Destination());
   mStream = aContext->Graph()->CreateAudioNodeStream(engine, MediaStreamGraph::INTERNAL_STREAM);
   engine->SetSourceStream(static_cast<AudioNodeStream*> (mStream.get()));
   AudioNodeStream* ns = static_cast<AudioNodeStream*>(mStream.get());

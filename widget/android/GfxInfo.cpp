@@ -355,7 +355,8 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
           cHardware.Equals("harmony") ||
           cHardware.Equals("picasso") ||
           cHardware.Equals("picasso_e") ||
-          cHardware.Equals("ventana"))
+          cHardware.Equals("ventana") ||
+          cHardware.Equals("rk30board"))
       {
         *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
         return NS_OK;

@@ -26,7 +26,6 @@
 #include "nsIFilePicker.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsINodeInfo.h"
-#include "nsIDOMEventTarget.h"
 #include "nsIFile.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "nsNodeInfoManager.h"

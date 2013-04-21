@@ -13,6 +13,7 @@ webidl_files = \
   AnimationEvent.webidl \
   ArchiveReader.webidl \
   ArchiveRequest.webidl \
+  Attr.webidl \
   AudioBuffer.webidl \
   AudioBufferSourceNode.webidl \
   AudioContext.webidl \
@@ -20,7 +21,7 @@ webidl_files = \
   AudioListener.webidl \
   AudioNode.webidl \
   AudioParam.webidl \
-  Attr.webidl \
+  AudioProcessingEvent.webidl \
   BatteryManager.webidl \
   BeforeUnloadEvent.webidl \
   BiquadFilterNode.webidl \
@@ -150,6 +151,7 @@ webidl_files = \
   IDBVersionChangeEvent.webidl \
   ImageData.webidl \
   InspectorUtils.webidl \
+  KeyEvent.webidl \
   LinkStyle.webidl \
   LocalMediaStream.webidl \
   Location.webidl \
@@ -182,6 +184,7 @@ webidl_files = \
   RGBColor.webidl \
   RTCConfiguration.webidl \
   Screen.webidl \
+  ScriptProcessorNode.webidl \
   ScrollAreaEvent.webidl \
   SimpleGestureEvent.webidl \
   StyleSheet.webidl \

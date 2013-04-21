@@ -1787,11 +1787,11 @@ NS_IMETHODIMP
 nsDocShell::SetChromeEventHandler(nsIDOMEventTarget* aChromeEventHandler)
 {
     // Weak reference. Don't addref.
-    mChromeEventHandler = aChromeEventHandler;
     nsCOMPtr<EventTarget> handler = do_QueryInterface(aChromeEventHandler);
+    mChromeEventHandler = handler.get();
 
     if (mScriptGlobal) {
-        mScriptGlobal->SetChromeEventHandler(handler);
+        mScriptGlobal->SetChromeEventHandler(mChromeEventHandler);
     }
 
     return NS_OK;
@@ -1801,8 +1801,8 @@ NS_IMETHODIMP
 nsDocShell::GetChromeEventHandler(nsIDOMEventTarget** aChromeEventHandler)
 {
     NS_ENSURE_ARG_POINTER(aChromeEventHandler);
-    nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mChromeEventHandler);
-    target.swap(*aChromeEventHandler);
+    nsCOMPtr<EventTarget> handler = mChromeEventHandler;
+    handler.forget(aChromeEventHandler);
     return NS_OK;
 }
 
@@ -9716,6 +9716,11 @@ nsDocShell::ScrollToAnchor(nsACString & aCurHash, nsACString & aNewHash,
         // If we failed to get the shell, or if there is no shell,
         // nothing left to do here.
         return NS_OK;
+    }
+
+    nsIScrollableFrame* rootScroll = shell->GetRootScrollFrameAsScrollable();
+    if (rootScroll) {
+        rootScroll->ClearDidHistoryRestore();
     }
 
     // If we have no new anchor, we do not want to scroll, unless there is a
