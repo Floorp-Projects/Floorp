@@ -9,7 +9,7 @@
 <?xml-stylesheet href="chrome://browser/content/browser.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/places/places.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/devtools/common.css" type="text/css"?>
-<?xml-stylesheet href="chrome://browser/skin/panelUIOverlay.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/customizableui/panelUIOverlay.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
@@ -467,7 +467,7 @@
       </popupnotificationcontent>
     </popupnotification>
 
-#include panelUI.inc
+#include ../../components/customizableui/content/panelUI.inc.xul
   </popupset>
 
 #ifdef CAN_DRAW_IN_TITLEBAR
@@ -1135,7 +1135,7 @@
       </vbox>
       <vbox id="browser-border-end" hidden="true" layer="true"/>
     </hbox>
-#include customize.inc
+#include ../../components/customizableui/content/customizeMode.inc.xul
   </deck>
 
   <hbox id="full-screen-warning-container" hidden="true" fadeout="true">
