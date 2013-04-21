@@ -288,6 +288,7 @@ webidl_files = \
   TextDecoder.webidl \
   TextEncoder.webidl \
   TimeRanges.webidl \
+  Touch.webidl \
   TouchEvent.webidl \
   TransitionEvent.webidl \
   TreeWalker.webidl \
