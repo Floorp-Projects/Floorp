@@ -26,20 +26,17 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "config.h"
-
-#if ENABLE(WEB_AUDIO)
-
 #include "DynamicsCompressor.h"
+#include "AudioSegment.h"
 
-#include "AudioBus.h"
-#include "AudioUtilities.h"
-#include <wtf/MathExtras.h>
+#include <cmath>
+#include "AudioNodeEngine.h"
+#include "nsDebug.h"
+
+using mozilla::WEBAUDIO_BLOCK_SIZE;
 
 namespace WebCore {
 
-using namespace AudioUtilities;
-    
 DynamicsCompressor::DynamicsCompressor(float sampleRate, unsigned numberOfChannels)
     : m_numberOfChannels(numberOfChannels)
     , m_sampleRate(sampleRate)
@@ -56,7 +53,7 @@ DynamicsCompressor::DynamicsCompressor(float sampleRate, unsigned numberOfChanne
 
 void DynamicsCompressor::setParameterValue(unsigned parameterID, float value)
 {
-    ASSERT(parameterID < ParamLast);
+    MOZ_ASSERT(parameterID < ParamLast);
     if (parameterID < ParamLast)
         m_parameters[parameterID] = value;
 }
@@ -91,7 +88,7 @@ void DynamicsCompressor::initializeParameters()
 
 float DynamicsCompressor::parameterValue(unsigned parameterID)
 {
-    ASSERT(parameterID < ParamLast);
+    MOZ_ASSERT(parameterID < ParamLast);
     return m_parameters[parameterID];
 }
 
@@ -100,10 +97,10 @@ void DynamicsCompressor::setEmphasisStageParameters(unsigned stageIndex, float g
     float gk = 1 - gain / 20;
     float f1 = normalizedFrequency * gk;
     float f2 = normalizedFrequency / gk;
-    float r1 = expf(-f1 * piFloat);
-    float r2 = expf(-f2 * piFloat);
+    float r1 = expf(-f1 * M_PI);
+    float r2 = expf(-f2 * M_PI);
 
-    ASSERT(m_numberOfChannels == m_preFilterPacks.size());
+    MOZ_ASSERT(m_numberOfChannels == m_preFilterPacks.Length());
 
     for (unsigned i = 0; i < m_numberOfChannels; ++i) {
         // Set pre-filter zero and pole to create an emphasis filter.
@@ -127,28 +124,28 @@ void DynamicsCompressor::setEmphasisParameters(float gain, float anchorFreq, flo
     setEmphasisStageParameters(3, gain, anchorFreq / (filterStageRatio * filterStageRatio * filterStageRatio));
 }
 
-void DynamicsCompressor::process(const AudioBus* sourceBus, AudioBus* destinationBus, unsigned framesToProcess)
+void DynamicsCompressor::process(const AudioChunk* sourceChunk, AudioChunk* destinationChunk, unsigned framesToProcess)
 {
     // Though numberOfChannels is retrived from destinationBus, we still name it numberOfChannels instead of numberOfDestinationChannels.
     // It's because we internally match sourceChannels's size to destinationBus by channel up/down mix. Thus we need numberOfChannels
     // to do the loop work for both m_sourceChannels and m_destinationChannels.
 
-    unsigned numberOfChannels = destinationBus->numberOfChannels();
-    unsigned numberOfSourceChannels = sourceBus->numberOfChannels();
+    unsigned numberOfChannels = destinationChunk->mChannelData.Length();
+    unsigned numberOfSourceChannels = sourceChunk->mChannelData.Length();
 
-    ASSERT(numberOfChannels == m_numberOfChannels && numberOfSourceChannels);
+    MOZ_ASSERT(numberOfChannels == m_numberOfChannels && numberOfSourceChannels);
 
     if (numberOfChannels != m_numberOfChannels || !numberOfSourceChannels) {
-        destinationBus->zero();
+        destinationChunk->SetNull(WEBAUDIO_BLOCK_SIZE);
         return;
     }
 
     switch (numberOfChannels) {
     case 2: // stereo
-        m_sourceChannels[0] = sourceBus->channel(0)->data();
+        m_sourceChannels[0] = static_cast<const float*>(sourceChunk->mChannelData[0]);
 
         if (numberOfSourceChannels > 1)
-            m_sourceChannels[1] = sourceBus->channel(1)->data();
+            m_sourceChannels[1] = static_cast<const float*>(sourceChunk->mChannelData[1]);
         else
             // Simply duplicate mono channel input data to right channel for stereo processing.
             m_sourceChannels[1] = m_sourceChannels[0];
@@ -156,13 +153,14 @@ void DynamicsCompressor::process(const AudioBus* sourceBus, AudioBus* destinatio
         break;
     default:
         // FIXME : support other number of channels.
-        ASSERT_NOT_REACHED();
-        destinationBus->zero();
+        NS_NOTREACHED("Support other number of channels");
+        destinationChunk->SetNull(WEBAUDIO_BLOCK_SIZE);
         return;
     }
 
     for (unsigned i = 0; i < numberOfChannels; ++i)
-        m_destinationChannels[i] = destinationBus->channel(i)->mutableData();
+        m_destinationChannels[i] = const_cast<float*>(static_cast<const float*>(
+            destinationChunk->mChannelData[i]));
 
     float filterStageGain = parameterValue(ParamFilterStageGain);
     float filterStageRatio = parameterValue(ParamFilterStageRatio);
@@ -264,23 +262,21 @@ void DynamicsCompressor::reset()
 
 void DynamicsCompressor::setNumberOfChannels(unsigned numberOfChannels)
 {
-    if (m_preFilterPacks.size() == numberOfChannels)
+    if (m_preFilterPacks.Length() == numberOfChannels)
         return;
 
-    m_preFilterPacks.clear();
-    m_postFilterPacks.clear();
+    m_preFilterPacks.Clear();
+    m_postFilterPacks.Clear();
     for (unsigned i = 0; i < numberOfChannels; ++i) {
-        m_preFilterPacks.append(adoptPtr(new ZeroPoleFilterPack4()));
-        m_postFilterPacks.append(adoptPtr(new ZeroPoleFilterPack4()));
+        m_preFilterPacks.AppendElement(new ZeroPoleFilterPack4());
+        m_postFilterPacks.AppendElement(new ZeroPoleFilterPack4());
     }
 
-    m_sourceChannels = adoptArrayPtr(new const float* [numberOfChannels]);
-    m_destinationChannels = adoptArrayPtr(new float* [numberOfChannels]);
+    m_sourceChannels = new const float* [numberOfChannels];
+    m_destinationChannels = new float* [numberOfChannels];
 
     m_compressor.setNumberOfChannels(numberOfChannels);
     m_numberOfChannels = numberOfChannels;
 }
 
 } // namespace WebCore
-
-#endif // ENABLE(WEB_AUDIO)

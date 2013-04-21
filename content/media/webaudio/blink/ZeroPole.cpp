@@ -26,10 +26,6 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "config.h"
-
-#if ENABLE(WEB_AUDIO)
-
 #include "ZeroPole.h"
 
 #include "DenormalDisabler.h"
@@ -70,5 +66,3 @@ void ZeroPole::process(const float *source, float *destination, unsigned framesT
 }
 
 } // namespace WebCore
-
-#endif // ENABLE(WEB_AUDIO)
