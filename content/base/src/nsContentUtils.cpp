@@ -4233,7 +4233,7 @@ nsContentUtils::CreateContextualFragment(nsINode* aContextNode,
   nsCOMPtr<nsIDOMDocumentFragment> frag;
   aRv = ParseFragmentXML(aFragment, document, tagStack,
                          aPreventScriptExecution, getter_AddRefs(frag));
-  return static_cast<DocumentFragment*>(frag.forget().get());
+  return frag.forget().downcast<DocumentFragment>();
 }
 
 /* static */
