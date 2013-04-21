@@ -291,6 +291,7 @@ webidl_files = \
   Touch.webidl \
   TouchEvent.webidl \
   TransitionEvent.webidl \
+  TreeColumns.webidl \
   TreeWalker.webidl \
   UIEvent.webidl \
   URL.webidl \
