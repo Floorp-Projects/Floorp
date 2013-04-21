@@ -2248,7 +2248,7 @@ class XPCJSRuntimeStats : public JS::RuntimeStats
             }
         }
 
-        extras->pathPrefix += nsPrintfCString("zone(%p)/", (void *)zone);
+        extras->pathPrefix += nsPrintfCString("zone(0x%p)/", (void *)zone);
 
         zStats->extra = extras;
     }
