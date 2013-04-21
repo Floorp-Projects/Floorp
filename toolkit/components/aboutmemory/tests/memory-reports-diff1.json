@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "hasMozMallocUsableSize": true,
+  "reports": [
+    {"process": "P", "path": "explicit/xpcom/category-manager", "kind": 1, "units": 0, "amount": 56848, "description": "Desc."},
+    {"process": "P", "path": "explicit/storage/prefixset/goog-phish-shavar", "kind": 1, "units": 0, "amount": 680000, "description": "Desc."},
+
+    {"process": "P", "path": "explicit/spell-check", "kind": 1, "units": 0, "amount": 4, "description": "Desc."},
+    {"process": "P", "path": "explicit/spell-check", "kind": 1, "units": 0, "amount": 5, "description": "Desc."},
+
+    {"process": "P", "path": "page-faults-soft", "kind": 2, "units": 2, "amount": 61013, "description": "Desc."},
+
+    {"process": "P", "path": "foobar", "kind": 2, "units": 0, "amount": 100, "description": "Desc."},
+    {"process": "P", "path": "zero1", "kind": 2, "units": 0, "amount": 0, "description": "Desc."},
+
+    {"process": "P2 (pid 22)", "path": "z 0x1234", "kind": 2, "units": 0, "amount": 33, "description": "Desc."},
+
+    {"process": "P3", "path": "p3", "kind": 2, "units": 0, "amount": 55, "description": "Desc."},
+
+    {"process": "P5", "path": "p5", "kind": 2, "units": 0, "amount": 0, "description": "Desc."}
+  ]
+}
+
