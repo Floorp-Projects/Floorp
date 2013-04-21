@@ -104,6 +104,11 @@ if CONFIG['MOZ_X11']:
         'ShadowLayerUtilsX11.h'
     ]
 
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    EXPORTS.mozilla.layers += [
+        'GLManager.h'
+    ]
+
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     EXPORTS.mozilla.layers += [
         'ShadowLayerUtilsGralloc.h'
