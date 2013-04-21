@@ -688,9 +688,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
 #ifdef MOZ_XUL
   NS_DEFINE_CLASSINFO_DATA(TreeColumn, nsDOMGenericSH,
                            DEFAULT_SCRIPTABLE_FLAGS)
-
-  NS_DEFINE_CLASSINFO_DATA(TreeColumns, nsTreeColumnsSH,
-                           ARRAY_SCRIPTABLE_FLAGS)
 #endif
 
   NS_DEFINE_CLASSINFO_DATA(CSSMozDocumentRule, nsDOMGenericSH,
@@ -1945,10 +1942,6 @@ nsDOMClassInfo::Init()
 #ifdef MOZ_XUL
   DOM_CLASSINFO_MAP_BEGIN(TreeColumn, nsITreeColumn)
     DOM_CLASSINFO_MAP_ENTRY(nsITreeColumn)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(TreeColumns, nsITreeColumns)
-    DOM_CLASSINFO_MAP_ENTRY(nsITreeColumns)
   DOM_CLASSINFO_MAP_END
 #endif
 
@@ -7208,30 +7201,6 @@ nsCSSRuleListSH::GetItemAt(nsISupports *aNative, uint32_t aIndex,
 
   return list->GetItemAt(aIndex, aResult);
 }
-
-#ifdef MOZ_XUL
-// TreeColumns helper
-
-nsISupports*
-nsTreeColumnsSH::GetItemAt(nsISupports *aNative, uint32_t aIndex,
-                           nsWrapperCache **aCache, nsresult *aResult)
-{
-  nsTreeColumns* columns = nsTreeColumns::FromSupports(aNative);
-
-  return columns->GetColumnAt(aIndex);
-}
-
-nsISupports*
-nsTreeColumnsSH::GetNamedItem(nsISupports *aNative,
-                              const nsAString& aName,
-                              nsWrapperCache **aCache,
-                              nsresult *aResult)
-{
-  nsTreeColumns* columns = nsTreeColumns::FromSupports(aNative);
-
-  return columns->GetNamedColumn(aName);
-}
-#endif
 
 
 // Storage2SH

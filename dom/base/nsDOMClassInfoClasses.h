@@ -96,7 +96,6 @@ DOMCI_CLASS(DOMStringList)
 
 #ifdef MOZ_XUL
 DOMCI_CLASS(TreeColumn)
-DOMCI_CLASS(TreeColumns)
 #endif
 
 DOMCI_CLASS(CSSMozDocumentRule)
