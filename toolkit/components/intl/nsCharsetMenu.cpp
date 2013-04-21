@@ -1883,7 +1883,7 @@ NS_IMETHODIMP nsCharsetMenu::GetAllCmds(
                              nsIRDFResource* source,
                              nsISimpleEnumerator/*<nsIRDFResource>*/** commands)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
+  NS_NOTYETIMPLEMENTED("nsCharsetMenu::GetAllCmds");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -1893,7 +1893,7 @@ NS_IMETHODIMP nsCharsetMenu::IsCommandEnabled(
                              nsISupportsArray/*<nsIRDFResource>*/* aArguments,
                              bool* aResult)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
+  NS_NOTYETIMPLEMENTED("nsCharsetMenu::IsCommandEnabled");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -1901,7 +1901,7 @@ NS_IMETHODIMP nsCharsetMenu::DoCommand(nsISupportsArray* aSources,
                                        nsIRDFResource*   aCommand,
                                        nsISupportsArray* aArguments)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
+  NS_NOTYETIMPLEMENTED("nsCharsetMenu::DoCommand");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
