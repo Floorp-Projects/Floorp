@@ -511,6 +511,8 @@ function onLoadAboutMemory()
   }
 }
 
+//---------------------------------------------------------------------------
+
 function doGC()
 {
   Cu.forceGC();
@@ -541,8 +543,6 @@ function doMeasure()
 {
   addChildObserversAndUpdate(updateAboutMemoryFromReporters);
 }
-
-//---------------------------------------------------------------------------
 
 /**
  * Top-level function that does the work of generating the page from the memory
@@ -690,6 +690,16 @@ function updateAboutMemoryFromClipboard()
   }
 }
 
+//---------------------------------------------------------------------------
+
+// |PColl| is short for "process collection".
+function PColl()
+{
+  this._trees = {};
+  this._degenerates = {};
+  this._heapTotal = 0;
+}
+
 /**
  * Processes reports (whether from reporters or from a file) and append the
  * main part of the page.
@@ -706,12 +716,10 @@ function updateAboutMemoryFromClipboard()
 function appendAboutMemoryMain(aProcess, aHasMozMallocUsableSize,
                                aForceShowSmaps)
 {
-  let treesByProcess = {}, degeneratesByProcess = {}, heapTotalByProcess = {};
-  getTreesByProcess(aProcess, treesByProcess, degeneratesByProcess,
-                    heapTotalByProcess, aForceShowSmaps);
+  let pcollsByProcess = getPCollsByProcess(aProcess, aForceShowSmaps);
 
-  // Sort our list of processes.
-  let processes = Object.keys(treesByProcess);
+  // Sort the processes.
+  let processes = Object.keys(pcollsByProcess);
   processes.sort(function(aProcessA, aProcessB) {
     assert(aProcessA != aProcessB,
            "Elements of Object.keys() should be unique, but " +
@@ -726,8 +734,8 @@ function appendAboutMemoryMain(aProcess, aHasMozMallocUsableSize,
     }
 
     // Then sort by resident size.
-    let nodeA = degeneratesByProcess[aProcessA]['resident'];
-    let nodeB = degeneratesByProcess[aProcessB]['resident'];
+    let nodeA = pcollsByProcess[aProcessA]._degenerates['resident'];
+    let nodeB = pcollsByProcess[aProcessB]._degenerates['resident'];
     let residentA = nodeA ? nodeA._amount : -1;
     let residentB = nodeB ? nodeB._amount : -1;
 
@@ -755,19 +763,12 @@ function appendAboutMemoryMain(aProcess, aHasMozMallocUsableSize,
     let section = appendElement(gMain, 'div', 'section');
 
     appendProcessAboutMemoryElements(section, process,
-                                     treesByProcess[process],
-                                     degeneratesByProcess[process],
-                                     heapTotalByProcess[process],
+                                     pcollsByProcess[process]._trees,
+                                     pcollsByProcess[process]._degenerates,
+                                     pcollsByProcess[process]._heapTotal,
                                      aHasMozMallocUsableSize);
   }
 }
-
-//---------------------------------------------------------------------------
-
-// This regexp matches sentences and sentence fragments, i.e. strings that
-// start with a capital letter and ends with a '.'.  (The final sentence may be
-// in parentheses, so a ')' might appear after the '.'.)
-const gSentenceRegExp = /^[A-Z].*\.\)?$/m;
 
 /**
  * This function reads all the memory reports, and puts that data in structures
@@ -776,23 +777,20 @@ const gSentenceRegExp = /^[A-Z].*\.\)?$/m;
  * @param aProcessMemoryReports
  *        Function that extracts the memory reports from the reporters or from
  *        file.
- * @param aTreesByProcess
- *        Table of non-degenerate trees, indexed by process, which this
- *        function appends to.
- * @param aDegeneratesByProcess
- *        Table of degenerate trees, indexed by process, which this function
- *        appends to.
- * @param aHeapTotalByProcess
- *        Table of heap total counts, indexed by process, which this function
- *        appends to.
  * @param aForceShowSmaps
  *        True if we should show the smaps memory reporters even if we're not
  *        in verbose mode.
+ * @return The table of PColls by process.
  */
-function getTreesByProcess(aProcessMemoryReports, aTreesByProcess,
-                           aDegeneratesByProcess, aHeapTotalByProcess,
-                           aForceShowSmaps)
+function getPCollsByProcess(aProcessMemoryReports, aForceShowSmaps)
 {
+  let pcollsByProcess = {};
+
+  // This regexp matches sentences and sentence fragments, i.e. strings that
+  // start with a capital letter and ends with a '.'.  (The final sentence may
+  // be in parentheses, so a ')' might appear after the '.'.)
+  const gSentenceRegExp = /^[A-Z].*\.\)?$/m;
+
   // Ignore the "smaps" multi-reporter in non-verbose mode unless we're reading
   // from a file or the clipboard, and ignore the "compartments" and
   // "ghost-windows" multi-reporters all the time.  (Note that reports from
@@ -849,20 +847,17 @@ function getTreesByProcess(aProcessMemoryReports, aTreesByProcess,
     let unsafeName0 = unsafeNames[0];
     let isDegenerate = unsafeNames.length === 1;
 
-    // Get the appropriate trees table (non-degenerate or degenerate) for the
-    // process, creating it if necessary.
-    let t;
-    let thingsByProcess =
-      isDegenerate ? aDegeneratesByProcess : aTreesByProcess;
-    let things = thingsByProcess[process];
-    if (!thingsByProcess[process]) {
-      things = thingsByProcess[process] = {};
+    // Get the PColl table for the process, creating it if necessary.
+    let pcoll = pcollsByProcess[process];
+    if (!pcollsByProcess[process]) {
+      pcoll = pcollsByProcess[process] = new PColl();
     }
 
     // Get the root node, creating it if necessary.
-    t = things[unsafeName0];
+    let psubcoll = isDegenerate ? pcoll._degenerates : pcoll._trees;
+    let t = psubcoll[unsafeName0];
     if (!t) {
-      t = things[unsafeName0] =
+      t = psubcoll[unsafeName0] =
         new TreeNode(unsafeName0, aUnits, isDegenerate);
     }
 
@@ -884,10 +879,7 @@ function getTreesByProcess(aProcessMemoryReports, aTreesByProcess,
 
       // Update the heap total if necessary.
       if (unsafeName0 === "explicit" && aKind == KIND_HEAP) {
-        if (!aHeapTotalByProcess[process]) {
-          aHeapTotalByProcess[process] = 0;
-        }
-        aHeapTotalByProcess[process] += aAmount;
+        pcollsByProcess[process]._heapTotal += aAmount;
       }
     }
 
@@ -903,6 +895,8 @@ function getTreesByProcess(aProcessMemoryReports, aTreesByProcess,
   }
 
   aProcessMemoryReports(ignoreSingle, ignoreMulti, handleReport);
+
+  return pcollsByProcess;
 }
 
 //---------------------------------------------------------------------------
@@ -1221,18 +1215,19 @@ function appendProcessAboutMemoryElements(aP, aProcess, aTrees, aDegenerates,
   let hasKnownHeapAllocated;
   {
     let treeName = "explicit";
-    let t = aTrees[treeName];
-    assertInput(t, "no explicit reports");
-    fillInTree(t);
-    hasKnownHeapAllocated =
-      aDegenerates &&
-      addHeapUnclassifiedNode(t, aDegenerates["heap-allocated"], aHeapTotal);
-    sortTreeAndInsertAggregateNodes(t._amount, t);
-    t._description = kTreeDescriptions[treeName];
     let pre = appendSectionHeader(aP, kSectionNames[treeName]);
-    appendTreeElements(pre, t, aProcess, "");
+    let t = aTrees[treeName];
+    if (t) {
+      fillInTree(t);
+      hasKnownHeapAllocated =
+        aDegenerates &&
+        addHeapUnclassifiedNode(t, aDegenerates["heap-allocated"], aHeapTotal);
+      sortTreeAndInsertAggregateNodes(t._amount, t);
+      t._description = kTreeDescriptions[treeName];
+      appendTreeElements(pre, t, aProcess, "");
+      delete aTrees[treeName];
+    }
     appendTextNode(aP, "\n");  // gives nice spacing when we cut and paste
-    delete aTrees[treeName];
   }
 
   // The smaps trees, which are only present in aTrees in verbose mode or when
@@ -1242,14 +1237,14 @@ function appendProcessAboutMemoryElements(aP, aProcess, aTrees, aDegenerates,
     // unsafePath.
     let t = aTrees[aTreeName];
     if (t) {
+      let pre = appendSectionHeader(aP, kSectionNames[aTreeName]);
       fillInTree(t);
       sortTreeAndInsertAggregateNodes(t._amount, t);
       t._description = kTreeDescriptions[aTreeName];
       t._hideKids = true;   // smaps trees are always initially collapsed
-      let pre = appendSectionHeader(aP, kSectionNames[aTreeName]);
       appendTreeElements(pre, t, aProcess, "");
-      appendTextNode(aP, "\n");  // gives nice spacing when we cut and paste
       delete aTrees[aTreeName];
+      appendTextNode(aP, "\n");  // gives nice spacing when we cut and paste
     }
   });
 
