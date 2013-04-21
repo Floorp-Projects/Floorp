@@ -211,7 +211,6 @@ DOMCI_CLASS(IDBIndex)
 DOMCI_CLASS(IDBVersionChangeEvent)
 DOMCI_CLASS(IDBOpenDBRequest)
 
-DOMCI_CLASS(Touch)
 DOMCI_CLASS(TouchList)
 DOMCI_CLASS(TouchEvent)
 
