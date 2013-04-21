@@ -65,7 +65,6 @@ private:
   static void SendThresholdToStream(AudioNode* aNode);
   static void SendKneeToStream(AudioNode* aNode);
   static void SendRatioToStream(AudioNode* aNode);
-  static void SendReductionToStream(AudioNode* aNode);
   static void SendAttackToStream(AudioNode* aNode);
   static void SendReleaseToStream(AudioNode* aNode);
 
