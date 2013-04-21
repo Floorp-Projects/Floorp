@@ -29,10 +29,8 @@
 #ifndef DynamicsCompressorKernel_h
 #define DynamicsCompressorKernel_h
 
-#include "AudioArray.h"
-
-#include <wtf/OwnPtr.h>
-#include <wtf/PassOwnPtr.h>
+#include "nsTArray.h"
+#include "nsAutoPtr.h"
 
 namespace WebCore {
 
@@ -88,7 +86,7 @@ protected:
     unsigned m_lastPreDelayFrames;
     void setPreDelayTime(float);
 
-    Vector<OwnPtr<AudioFloatArray> > m_preDelayBuffers;
+    nsTArray<nsAutoArrayPtr<float> > m_preDelayBuffers;
     int m_preDelayReadIndex;
     int m_preDelayWriteIndex;
 
