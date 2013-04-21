@@ -265,6 +265,7 @@ webidl_files = \
   SVGScriptElement.webidl \
   SVGSetElement.webidl \
   SVGStopElement.webidl \
+  SVGStringList.webidl \
   SVGStyleElement.webidl \
   SVGSVGElement.webidl \
   SVGSwitchElement.webidl \
