@@ -78,6 +78,8 @@ public:
   virtual ~AudioNode();
 
   // This should be idempotent (safe to call multiple times).
+  // This should be called in the destructor of every class that overrides
+  // this method.
   virtual void DestroyMediaStream()
   {
     if (mStream) {

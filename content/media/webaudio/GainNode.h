@@ -19,6 +19,7 @@ class GainNode : public AudioNode
 {
 public:
   explicit GainNode(AudioContext* aContext);
+  virtual ~GainNode();
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(GainNode, AudioNode)

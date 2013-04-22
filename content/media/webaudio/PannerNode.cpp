@@ -184,6 +184,7 @@ PannerNode::~PannerNode()
   if (Context()) {
     Context()->UnregisterPannerNode(this);
   }
+  DestroyMediaStream();
 }
 
 JSObject*

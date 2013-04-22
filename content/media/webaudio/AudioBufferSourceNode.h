@@ -20,6 +20,7 @@ class AudioBufferSourceNode : public AudioNode,
 {
 public:
   explicit AudioBufferSourceNode(AudioContext* aContext);
+  virtual ~AudioBufferSourceNode();
 
   virtual void DestroyMediaStream() MOZ_OVERRIDE
   {
