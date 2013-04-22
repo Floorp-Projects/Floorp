@@ -357,11 +357,6 @@ ScriptProcessorNode::ScriptProcessorNode(AudioContext* aContext,
   engine->SetSourceStream(static_cast<AudioNodeStream*> (mStream.get()));
 }
 
-ScriptProcessorNode::~ScriptProcessorNode()
-{
-  DestroyMediaStream();
-}
-
 JSObject*
 ScriptProcessorNode::WrapObject(JSContext* aCx, JSObject* aScope)
 {
