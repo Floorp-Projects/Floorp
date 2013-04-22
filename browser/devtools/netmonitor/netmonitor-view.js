@@ -103,6 +103,7 @@ let NetMonitorView = {
     this._expandPaneString = L10N.getStr("expandDetailsPane");
 
     this._detailsPane.setAttribute("width", Prefs.networkDetailsWidth);
+    this._detailsPane.setAttribute("height", Prefs.networkDetailsHeight);
     this.toggleDetailsPane({ visible: false });
   },
 
@@ -113,6 +114,7 @@ let NetMonitorView = {
     dumpn("Destroying the NetMonitorView panes");
 
     Prefs.networkDetailsWidth = this._detailsPane.getAttribute("width");
+    Prefs.networkDetailsHeight = this._detailsPane.getAttribute("height");
 
     this._detailsPane = null;
     this._detailsPaneToggleButton = null;
