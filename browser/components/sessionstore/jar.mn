@@ -5,3 +5,4 @@
 browser.jar:
 *   content/browser/aboutSessionRestore.xhtml             (content/aboutSessionRestore.xhtml)
 *   content/browser/aboutSessionRestore.js                (content/aboutSessionRestore.js)
+    content/browser/content-sessionStore.js               (content/content-sessionStore.js)
