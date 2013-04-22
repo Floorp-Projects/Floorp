@@ -271,6 +271,7 @@ pref(svg.paint-order.enabled,true) == paint-order-03.svg paint-order-03-ref.svg
 == suspend-06.svg pass.svg
 == suspend-07.svg pass.svg
 == suspend-08.svg pass.svg
+== svg-transform-01.svg pass.svg
 == symbol-01.svg symbol-01-ref.svg
 == text-font-size-01.svg pass.svg
 random-if(gtk2Widget) == text-font-weight-01.svg text-font-weight-01-ref.svg # bug 386713
