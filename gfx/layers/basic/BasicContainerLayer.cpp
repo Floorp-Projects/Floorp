@@ -87,6 +87,15 @@ public:
     BasicShadowableLayer::Disconnect();
   }
 
+  virtual void ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface) MOZ_OVERRIDE
+  {
+    if (HasShadow()) {
+      DefaultComputeEffectiveTransforms(aTransformToSurface);
+    } else {
+      BasicContainerLayer::ComputeEffectiveTransforms(aTransformToSurface);
+    }
+  }
+
 private:
   BasicShadowLayerManager* ShadowManager()
   {
