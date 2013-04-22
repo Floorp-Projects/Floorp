@@ -165,7 +165,8 @@ StealJSArrayDataIntoThreadSharedFloatArrayBufferList(JSContext* aJSContext,
 }
 
 ThreadSharedFloatArrayBufferList*
-AudioBuffer::GetThreadSharedChannelsForRate(JSContext* aJSContext)
+AudioBuffer::GetThreadSharedChannelsForRate(JSContext* aJSContext, uint32_t* aRate,
+                                            uint32_t* aLength)
 {
   if (!mSharedChannels) {
     // Steal JS data
@@ -173,6 +174,8 @@ AudioBuffer::GetThreadSharedChannelsForRate(JSContext* aJSContext)
       StealJSArrayDataIntoThreadSharedFloatArrayBufferList(aJSContext, mJSChannels);
   }
 
+  *aLength = mLength;
+  *aRate = mSampleRate;
   return mSharedChannels;
 }
 

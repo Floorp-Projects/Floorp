@@ -19,6 +19,7 @@ class DynamicsCompressorNode : public AudioNode
 {
 public:
   explicit DynamicsCompressorNode(AudioContext* aContext);
+  ~DynamicsCompressorNode();
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DynamicsCompressorNode, AudioNode)

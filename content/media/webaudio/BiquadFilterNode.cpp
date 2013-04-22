@@ -109,6 +109,11 @@ BiquadFilterNode::BiquadFilterNode(AudioContext* aContext)
   engine->SetSourceStream(static_cast<AudioNodeStream*> (mStream.get()));
 }
 
+BiquadFilterNode::~BiquadFilterNode()
+{
+  DestroyMediaStream();
+}
+
 JSObject*
 BiquadFilterNode::WrapObject(JSContext* aCx, JSObject* aScope)
 {
