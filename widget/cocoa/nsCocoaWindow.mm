@@ -993,7 +993,7 @@ nsCocoaWindow::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
 }
 
 LayerManager*
-nsCocoaWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
+nsCocoaWindow::GetLayerManager(PLayersChild* aShadowManager,
                                LayersBackend aBackendHint,
                                LayerManagerPersistence aPersistence,
                                bool* aAllowRetaining)

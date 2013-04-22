@@ -3210,7 +3210,7 @@ nsWindow::ShouldUseOffMainThreadCompositing()
 }
 
 LayerManager*
-nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
+nsWindow::GetLayerManager(PLayersChild* aShadowManager,
                           LayersBackend aBackendHint,
                           LayerManagerPersistence aPersistence,
                           bool* aAllowRetaining)

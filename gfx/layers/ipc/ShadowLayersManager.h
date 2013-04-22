@@ -11,12 +11,12 @@ namespace mozilla {
 namespace layers {
 
 class TargetConfig;
-class LayerTransactionParent;
+class ShadowLayersParent;
 
 class ShadowLayersManager
 {
 public:
-    virtual void ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
+    virtual void ShadowLayersUpdated(ShadowLayersParent* aLayerTree,
                                      const TargetConfig& aTargetConfig,
                                      bool isFirstPaint) = 0;
 };
