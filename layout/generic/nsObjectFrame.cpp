@@ -308,18 +308,13 @@ nsObjectFrame::DestroyFrom(nsIFrame* aDestructRoot)
   // Tell content owner of the instance to disconnect its frame.
   nsCOMPtr<nsIObjectLoadingContent> objContent(do_QueryInterface(mContent));
   NS_ASSERTION(objContent, "Why not an object loading content?");
-
-  // The content might not have a reference to the instance owner any longer in
-  // the case of re-entry during instantiation or teardown, so make sure we're
-  // dissociated.
-  if (mInstanceOwner) {
-    mInstanceOwner->SetFrame(nullptr);
-  }
   objContent->HasNewFrame(nullptr);
 
   if (mBackgroundSink) {
     mBackgroundSink->Destroy();
   }
+
+  SetInstanceOwner(nullptr);
 
   nsObjectFrameSuper::DestroyFrom(aDestructRoot);
 }
@@ -780,10 +775,6 @@ nsObjectFrame::UnregisterPluginForGeometryUpdates()
 void
 nsObjectFrame::SetInstanceOwner(nsPluginInstanceOwner* aOwner)
 {
-  // The ownership model here is historically fuzzy. This should only be called
-  // by nsPluginInstanceOwner when it is given a new frame, and
-  // nsObjectLoadingContent should be arbitrating frame-ownership via its
-  // HasNewFrame callback.
   mInstanceOwner = aOwner;
   if (mInstanceOwner) {
     return;
@@ -883,7 +874,7 @@ nsObjectFrame::DidReflow(nsPresContext*            aPresContext,
 
   // The view is created hidden; once we have reflowed it and it has been
   // positioned then we show it.
-  if (aStatus != nsDidReflowStatus::FINISHED)
+  if (aStatus != nsDidReflowStatus::FINISHED) 
     return rv;
 
   if (HasView()) {

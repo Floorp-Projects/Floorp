@@ -799,14 +799,6 @@ nsObjectLoadingContent::InstantiatePluginInstance(bool aIsLoading)
 
   mInstanceOwner = newOwner;
 
-  // Ensure the frame did not change during instantiation re-entry (common).
-  // HasNewFrame would not have mInstanceOwner yet, so the new frame would be
-  // dangling. (Bug 854082)
-  nsIFrame* frame = thisContent->GetPrimaryFrame();
-  if (frame && mInstanceOwner) {
-    mInstanceOwner->SetFrame(static_cast<nsObjectFrame*>(frame));
-  }
-
   // Set up scripting interfaces.
   NotifyContentObjectWrapper();
 
@@ -1039,9 +1031,15 @@ nsObjectLoadingContent::HasNewFrame(nsIObjectFrame* aFrame)
   }
 
   // Otherwise, we're just changing frames
+  mInstanceOwner->SetFrame(nullptr);
+
   // Set up relationship between instance owner and frame.
   nsObjectFrame *objFrame = static_cast<nsObjectFrame*>(aFrame);
   mInstanceOwner->SetFrame(objFrame);
+
+  // Set up new frame to draw.
+  objFrame->FixupWindow(objFrame->GetContentRectRelativeToSelf().Size());
+  objFrame->InvalidateFrame();
 
   return NS_OK;
 }
@@ -2320,6 +2318,7 @@ nsObjectLoadingContent::PluginDestroyed()
   // plugins in plugin host. Invalidate instance owner / prototype but otherwise
   // don't take any action.
   TeardownProtoChain();
+  mInstanceOwner->SetFrame(nullptr);
   mInstanceOwner->Destroy();
   mInstanceOwner = nullptr;
   return NS_OK;
@@ -2603,8 +2602,6 @@ nsObjectLoadingContent::StopPluginInstance()
     CloseChannel();
   }
 
-  // We detach the instance owner's frame before destruction, but don't destroy
-  // the instance owner until the plugin is stopped.
   mInstanceOwner->SetFrame(nullptr);
 
   bool delayedStop = false;
