@@ -39,7 +39,7 @@ using mozilla::unused;
 #include "Layers.h"
 #include "BasicLayers.h"
 #include "LayerManagerOGL.h"
-#include "LayerManagerComposite.h"
+#include "mozilla/layers/LayerManagerComposite.h"
 #include "GLContext.h"
 #include "GLContextProvider.h"
 

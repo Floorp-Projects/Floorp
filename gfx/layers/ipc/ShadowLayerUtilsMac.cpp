@@ -7,6 +7,7 @@
 
 #include "mozilla/layers/PLayerTransaction.h"
 #include "mozilla/layers/ShadowLayers.h"
+#include "mozilla/layers/CompositorTypes.h"
 
 #include "gfxPlatform.h"
 
@@ -72,7 +73,7 @@ ShadowLayerForwarder::PlatformSyncBeforeUpdate()
 }
 
 /*static*/ void
-ShadowLayerManager::PlatformSyncBeforeReplyUpdate()
+LayerManagerComposite::PlatformSyncBeforeReplyUpdate()
 {
 }
 
@@ -83,15 +84,15 @@ ISurfaceAllocator::PlatformDestroySharedSurface(SurfaceDescriptor*)
 }
 
 /*static*/ already_AddRefed<TextureImage>
-ShadowLayerManager::OpenDescriptorForDirectTexturing(GLContext*,
-                                                     const SurfaceDescriptor&,
-                                                     GLenum)
+LayerManagerComposite::OpenDescriptorForDirectTexturing(GLContext*,
+                                                        const SurfaceDescriptor&,
+                                                        GLenum)
 {
   return nullptr;
 }
 
 /*static*/ bool
-ShadowLayerManager::SupportsDirectTexturing()
+LayerManagerComposite::SupportsDirectTexturing()
 {
   return false;
 }
