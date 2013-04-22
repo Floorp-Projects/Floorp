@@ -294,9 +294,9 @@ ContainerRender(Container* aContainer,
     aManager->SetupPipeline(viewport.width, viewport.height,
                             LayerManagerOGL::ApplyWorldTransform);
     aContainer->gl()->PopScissorRect();
-    aContainer->gl()->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, aPreviousFrameBuffer);
 
     if (!aManager->CompositingDisabled()) {
+      aContainer->gl()->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, aPreviousFrameBuffer);
       aContainer->gl()->fDeleteFramebuffers(1, &frameBuffer);
 
       aContainer->gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
