@@ -58,12 +58,13 @@ const RWX_OWNER = 0700;
 //   * MEMORY_JS_GC_HEAP, and
 //   * MEMORY_JS_COMPARTMENTS_SYSTEM.
 //
+// We used to measure "explicit" too, but it could cause hangs, and the data
+// was always really noisy anyway.  See bug 859657.
 const MEM_HISTOGRAMS = {
   "js-gc-heap": "MEMORY_JS_GC_HEAP",
   "js-compartments/system": "MEMORY_JS_COMPARTMENTS_SYSTEM",
   "js-compartments/user": "MEMORY_JS_COMPARTMENTS_USER",
   "js-main-runtime-temporary-peak": "MEMORY_JS_MAIN_RUNTIME_TEMPORARY_PEAK",
-  "explicit": "MEMORY_EXPLICIT",
   "resident-fast": "MEMORY_RESIDENT",
   "vsize": "MEMORY_VSIZE",
   "storage-sqlite": "MEMORY_STORAGE_SQLITE",
@@ -244,6 +245,10 @@ TelemetryPing.prototype = {
     if (failedProfileLockCount)
       ret.failedProfileLockCount = failedProfileLockCount;
 
+    let maximalNumberOfConcurrentThreads = Telemetry.maximalNumberOfConcurrentThreads;
+    if (maximalNumberOfConcurrentThreads)
+      ret.maximalNumberOfConcurrentThreads = maximalNumberOfConcurrentThreads;
+
     for (let ioCounter in this._startupIO)
       ret[ioCounter] = this._startupIO[ioCounter];
 
@@ -419,7 +424,7 @@ TelemetryPing.prototype = {
                      "adapterDriverDate", "adapterDescription2",
                      "adapterVendorID2", "adapterDeviceID2", "adapterRAM2",
                      "adapterDriver2", "adapterDriverVersion2",
-                     "adapterDriverDate2", "isGPU2Active", "D2DEnabled;",
+                     "adapterDriverDate2", "isGPU2Active", "D2DEnabled",
                      "DWriteEnabled", "DWriteVersion"
                     ];
 
@@ -566,10 +571,10 @@ TelemetryPing.prototype = {
     };
 
     if (Object.keys(this._slowSQLStartup.mainThread).length
-	|| Object.keys(this._slowSQLStartup.otherThreads).length) {
+      || Object.keys(this._slowSQLStartup.otherThreads).length) {
       payloadObj.slowSQLStartup = this._slowSQLStartup;
     }
-    
+
     return payloadObj;
   },
 

@@ -24,6 +24,11 @@ this.EXPORTED_SYMBOLS = [ "console" ];
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "Services",
+                                  "resource://gre/modules/Services.jsm");
+
+let gTimerRegistry = new Map();
+
 /**
  * String utility to ensure that strings are a specified length. Strings
  * that are too long are truncated to the max length and the last char is
@@ -250,7 +255,7 @@ function logProperty(aProp, aValue) {
 
 /**
  * Parse a stack trace, returning an array of stack frame objects, where
- * each has file/line/call members
+ * each has filename/lineNumber/functionName members
  *
  * @param {string} aStack
  *        The serialized stack trace
@@ -266,35 +271,42 @@ function parseStack(aStack) {
     let at = line.lastIndexOf("@");
     let posn = line.substring(at + 1);
     trace.push({
-      file: posn.split(":")[0],
-      line: posn.split(":")[1],
-      call: line.substring(0, at)
+      filename: posn.split(":")[0],
+      lineNumber: posn.split(":")[1],
+      functionName: line.substring(0, at)
     });
   });
   return trace;
 }
 
 /**
- * parseStack() takes output from an exception from which it creates the an
- * array of stack frame objects, this has the same output but using data from
- * Components.stack
+ * Format a frame coming from Components.stack such that it can be used by the
+ * Browser Console, via console-api-log-event notifications.
  *
- * @param {string} aFrame
- *        The stack frame from which to begin the walk
+ * @param {object} aFrame
+ *        The stack frame from which to begin the walk.
+ * @param {number=0} aMaxDepth
+ *        Maximum stack trace depth. Default is 0 - no depth limit.
  * @return {object[]}
- *        Array of { file: "...", line: NNN, call: "..." } objects
+ *         An array of {filename, lineNumber, functionName, language} objects.
+ *         These objects follow the same format as other console-api-log-event
+ *         messages.
  */
-function getStack(aFrame) {
+function getStack(aFrame, aMaxDepth = 0) {
   if (!aFrame) {
     aFrame = Components.stack.caller;
   }
   let trace = [];
   while (aFrame) {
     trace.push({
-      file: aFrame.filename,
-      line: aFrame.lineNumber,
-      call: aFrame.name
+      filename: aFrame.filename,
+      lineNumber: aFrame.lineNumber,
+      functionName: aFrame.name,
+      language: aFrame.language,
     });
+    if (aMaxDepth == trace.length) {
+      break;
+    }
     aFrame = aFrame.caller;
   }
   return trace;
@@ -311,11 +323,50 @@ function getStack(aFrame) {
 function formatTrace(aTrace) {
   let reply = "";
   aTrace.forEach(function(frame) {
-    reply += fmt(frame.file, 20, 20, { truncate: "start" }) + " " +
-             fmt(frame.line, 5, 5) + " " +
-             fmt(frame.call, 75, 75) + "\n";
+    reply += fmt(frame.filename, 20, 20, { truncate: "start" }) + " " +
+             fmt(frame.lineNumber, 5, 5) + " " +
+             fmt(frame.functionName, 75, 75) + "\n";
   });
   return reply;
+}
+
+/**
+ * Create a new timer by recording the current time under the specified name.
+ *
+ * @param {string} aName
+ *        The name of the timer.
+ * @param {number} [aTimestamp=Date.now()]
+ *        Optional timestamp that tells when the timer was originally started.
+ * @return {object}
+ *         The name property holds the timer name and the started property
+ *         holds the time the timer was started. In case of error, it returns
+ *         an object with the single property "error" that contains the key
+ *         for retrieving the localized error message.
+ */
+function startTimer(aName, aTimestamp) {
+  let key = aName.toString();
+  if (!gTimerRegistry.has(key)) {
+    gTimerRegistry.set(key, aTimestamp || Date.now());
+  }
+  return { name: aName, started: gTimerRegistry.get(key) };
+}
+
+/**
+ * Stop the timer with the specified name and retrieve the elapsed time.
+ *
+ * @param {string} aName
+ *        The name of the timer.
+ * @param {number} [aTimestamp=Date.now()]
+ *        Optional timestamp that tells when the timer was originally stopped.
+ * @return {object}
+ *         The name property holds the timer name and the duration property
+ *         holds the number of milliseconds since the timer was started.
+ */
+function stopTimer(aName, aTimestamp) {
+  let key = aName.toString();
+  let duration = (aTimestamp || Date.now()) - gTimerRegistry.get(key);
+  gTimerRegistry.delete(key);
+  return { name: aName, duration: duration };
 }
 
 /**
@@ -332,6 +383,8 @@ function formatTrace(aTrace) {
 function createDumper(aLevel) {
   return function() {
     let args = Array.prototype.slice.call(arguments, 0);
+    let frame = getStack(Components.stack.caller, 1)[0];
+    sendConsoleAPIMessage(aLevel, frame, args);
     let data = args.map(function(arg) {
       return stringify(arg);
     });
@@ -354,10 +407,70 @@ function createMultiLineDumper(aLevel) {
   return function() {
     dump("console." + aLevel + ": \n");
     let args = Array.prototype.slice.call(arguments, 0);
+    let frame = getStack(Components.stack.caller, 1)[0];
+    sendConsoleAPIMessage(aLevel, frame, args);
     args.forEach(function(arg) {
       dump(log(arg));
     });
   };
+}
+
+/**
+ * Send a Console API message. This function will send a console-api-log-event
+ * notification through the nsIObserverService.
+ *
+ * @param {string} aLevel
+ *        Message severity level. This is usually the name of the console method
+ *        that was called.
+ * @param {object} aFrame
+ *        The youngest stack frame coming from Components.stack, as formatted by
+ *        getStack().
+ * @param {array} aArgs
+ *        The arguments given to the console method.
+ * @param {object} aOptions
+ *        Object properties depend on the console method that was invoked:
+ *        - timer: for time() and timeEnd(). Holds the timer information.
+ *        - groupName: for group(), groupCollapsed() and groupEnd().
+ *        - stacktrace: for trace(). Holds the array of stack frames as given by
+ *        getStack().
+ */
+function sendConsoleAPIMessage(aLevel, aFrame, aArgs, aOptions = {})
+{
+  let consoleEvent = {
+    ID: aFrame.filename,
+    level: aLevel,
+    filename: aFrame.filename,
+    lineNumber: aFrame.lineNumber,
+    functionName: aFrame.functionName,
+    timeStamp: Date.now(),
+    arguments: aArgs,
+  };
+
+  consoleEvent.wrappedJSObject = consoleEvent;
+
+  switch (aLevel) {
+    case "trace":
+      consoleEvent.stacktrace = aOptions.stacktrace;
+      break;
+    case "time":
+    case "timeEnd":
+      consoleEvent.timer = aOptions.timer;
+      break;
+    case "group":
+    case "groupCollapsed":
+    case "groupEnd":
+      try {
+        consoleEvent.groupName = Array.prototype.join.call(aArgs, " ");
+      }
+      catch (ex) {
+        Cu.reportError(ex);
+        Cu.reportError(ex.stack);
+        return;
+      }
+      break;
+  }
+
+  Services.obs.notifyObservers(consoleEvent, "console-api-log-event", null);
 }
 
 /**
@@ -373,13 +486,32 @@ this.console = {
   error: createMultiLineDumper("error"),
 
   trace: function Console_trace() {
+    let args = Array.prototype.slice.call(arguments, 0);
     let trace = getStack(Components.stack.caller);
-    dump(formatTrace(trace) + "\n");
+    sendConsoleAPIMessage("trace", trace[0], args,
+                          { stacktrace: trace });
+    dump("console.trace:\n" + formatTrace(trace) + "\n");
   },
   clear: function Console_clear() {},
 
   dir: createMultiLineDumper("dir"),
   dirxml: createMultiLineDumper("dirxml"),
   group: createDumper("group"),
-  groupEnd: createDumper("groupEnd")
+  groupEnd: createDumper("groupEnd"),
+
+  time: function Console_time() {
+    let args = Array.prototype.slice.call(arguments, 0);
+    let frame = getStack(Components.stack.caller, 1)[0];
+    let timer = startTimer(args[0]);
+    sendConsoleAPIMessage("time", frame, args, { timer: timer });
+    dump("console.time: '" + timer.name + "' @ " + (new Date()) + "\n");
+  },
+
+  timeEnd: function Console_timeEnd() {
+    let args = Array.prototype.slice.call(arguments, 0);
+    let frame = getStack(Components.stack.caller, 1)[0];
+    let timer = stopTimer(args[0]);
+    sendConsoleAPIMessage("timeEnd", frame, args, { timer: timer });
+    dump("console.timeEnd: '" + timer.name + "' " + timer.duration + "ms\n");
+  },
 };

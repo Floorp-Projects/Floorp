@@ -10,13 +10,5 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXPORTS		= \
-		nsIUnicodeDecoder.h \
-		nsIUnicodeEncoder.h \
-		uconvutil.h \
-		nsEncoderDecoderUtils.h \
-		nsUConvCID.h \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 

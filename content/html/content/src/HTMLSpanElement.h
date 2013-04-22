@@ -7,7 +7,6 @@
 #define mozilla_dom_HTMLSpanElement_h
 
 #include "nsIDOMHTMLElement.h"
-#include "nsIDOMEventTarget.h"
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"

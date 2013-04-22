@@ -48,6 +48,7 @@ class DynamicsCompressorNode;
 class GainNode;
 class GlobalObject;
 class PannerNode;
+class ScriptProcessorNode;
 
 class AudioContext MOZ_FINAL : public nsWrapperCache,
                                public EnableWebAudioCheck
@@ -99,6 +100,22 @@ public:
                uint32_t aLength, float aSampleRate,
                ErrorResult& aRv);
 
+  already_AddRefed<ScriptProcessorNode>
+  CreateScriptProcessor(uint32_t aBufferSize,
+                        uint32_t aNumberOfInputChannels,
+                        uint32_t aNumberOfOutputChannels,
+                        ErrorResult& aRv);
+
+  already_AddRefed<ScriptProcessorNode>
+  CreateJavaScriptNode(uint32_t aBufferSize,
+                       uint32_t aNumberOfInputChannels,
+                       uint32_t aNumberOfOutputChannels,
+                       ErrorResult& aRv)
+  {
+    return CreateScriptProcessor(aBufferSize, aNumberOfInputChannels,
+                                 aNumberOfOutputChannels, aRv);
+  }
+
   already_AddRefed<AnalyserNode>
   CreateAnalyser();
 
@@ -140,6 +157,8 @@ public:
   void UnregisterAudioBufferSourceNode(AudioBufferSourceNode* aNode);
   void UnregisterPannerNode(PannerNode* aNode);
   void UpdatePannerSource();
+
+  JSContext* GetJSContext() const;
 
 private:
   void RemoveFromDecodeQueue(WebAudioDecodeJob* aDecodeJob);

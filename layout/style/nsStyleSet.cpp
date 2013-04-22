@@ -1726,6 +1726,14 @@ nsStyleSet::ReparentStyleContext(nsStyleContext* aStyleContext,
     flags |= eDoAnimation;
   }
 
+  if (aElement && aElement->IsRootOfAnonymousSubtree()) {
+    // For anonymous subtree roots, don't tweak "display" value based on
+    // whether or not the parent is styled as a flex container. (If the parent
+    // has anonymous-subtree kids, then we know it's not actually going to get
+    // a flex container frame, anyway.)
+    flags |= eSkipFlexItemStyleFixup;
+  }
+
   return GetContext(aNewParentContext, ruleNode, visitedRuleNode,
                     pseudoTag, pseudoType,
                     aElement, flags);

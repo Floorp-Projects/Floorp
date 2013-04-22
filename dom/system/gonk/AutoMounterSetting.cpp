@@ -11,7 +11,7 @@
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsIObserverService.h"
-#include "nsIJSContextStack.h"
+#include "nsContentUtils.h"
 #include "nsISettingsService.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
@@ -109,17 +109,7 @@ AutoMounterSetting::Observe(nsISupports* aSubject,
   // The string that we're interested in will be a JSON string that looks like:
   //  {"key":"ums.autoMount","value":true}
 
-  nsCOMPtr<nsIThreadJSContextStack> stack =
-    do_GetService("@mozilla.org/js/xpc/ContextStack;1");
-  if (!stack) {
-    ERR("Failed to get JSContextStack");
-    return NS_OK;
-  }
-  JSContext* cx = stack->GetSafeJSContext();
-  if (!cx) {
-    ERR("Failed to GetSafeJSContext");
-    return NS_OK;
-  }
+  mozilla::SafeAutoJSContext cx;
   nsDependentString dataStr(aData);
   JS::Value val;
   if (!JS_ParseJSON(cx, dataStr.get(), dataStr.Length(), &val) ||

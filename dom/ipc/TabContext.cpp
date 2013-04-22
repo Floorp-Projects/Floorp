@@ -294,6 +294,32 @@ TabContext::GetAppForId(uint32_t aAppId) const
     return nullptr;
   }
 
+  // This application caching is needed to avoid numerous unecessary application clones.
+  // See Bug 853632 for details.
+
+  if (aAppId == mOwnAppId) {
+    if (!mOwnApp) {
+      mOwnApp = GetAppForIdNoCache(aAppId);
+    }
+    nsCOMPtr<mozIApplication> ownApp = mOwnApp;
+    return ownApp.forget();
+  }
+
+  if (aAppId == mContainingAppId) {
+    if (!mContainingApp) {
+      mContainingApp = GetAppForIdNoCache(mContainingAppId);
+    }
+    nsCOMPtr<mozIApplication> containingApp = mContainingApp;
+    return containingApp.forget();
+  }
+  // We need the fallthrough here because mOwnAppId/mContainingAppId aren't always
+  // set before calling GetAppForId().
+  return GetAppForIdNoCache(aAppId);
+}
+
+already_AddRefed<mozIApplication>
+TabContext::GetAppForIdNoCache(uint32_t aAppId) const
+{
   nsCOMPtr<nsIAppsService> appsService = do_GetService(APPS_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(appsService, nullptr);
 

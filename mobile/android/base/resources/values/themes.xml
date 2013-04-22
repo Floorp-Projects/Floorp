@@ -28,7 +28,6 @@
 
     <style name="GeckoPreferencesBase" parent="GeckoBase">
         <item name="android:windowNoTitle">false</item>
-        <item name="android:windowBackground">@color/background_normal</item>
     </style>
 
     <!--
@@ -79,7 +78,10 @@
     <style name="Gecko.App">
         <item name="android:windowBackground">@color/background_normal</item>
         <item name="android:buttonStyle">@style/Widget.Button</item>
+        <item name="android:dropDownItemStyle">@style/Widget.DropDownItem</item>
         <item name="android:editTextStyle">@style/Widget.EditText</item>
+        <item name="android:spinnerDropDownItemStyle">@style/TextAppearance.Widget.TextView</item>
+        <item name="android:spinnerItemStyle">@style/Widget.TextView.SpinnerItem</item>
         <item name="android:textViewStyle">@style/Widget.TextView</item>
     </style>
 
@@ -88,9 +90,6 @@
         <item name="android:expandableListViewStyle">@style/Widget.ExpandableListView</item>
     </style>
 
-    <style name="Gecko.Preferences" parent="GeckoPreferencesBase">
-        <item name="android:listViewStyle">@style/PreferencesListView</item>
-        <item name="android:expandableListViewStyle">@style/PreferencesExpandableListView</item>
-    </style>
+    <style name="Gecko.Preferences" parent="GeckoPreferencesBase"/>
 
 </resources>

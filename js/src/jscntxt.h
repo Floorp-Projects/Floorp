@@ -1,6 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=78:
- *
+ * vim: set ts=8 sts=4 et sw=4 tw=99:
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -30,6 +29,7 @@
 #include "prmjtime.h"
 
 #include "ds/LifoAlloc.h"
+#include "gc/Nursery.h"
 #include "gc/Statistics.h"
 #include "gc/StoreBuffer.h"
 #include "js/HashTable.h"
@@ -93,6 +93,7 @@ RawFunction CloneFunctionAtCallsite(JSContext *cx, HandleFunction fun,
                                     HandleScript script, jsbytecode *pc);
 
 typedef HashSet<JSObject *> ObjectSet;
+typedef HashSet<Shape *> ShapeSet;
 
 /* Detects cycles when traversing an object graph. */
 class AutoCycleDetector
@@ -603,8 +604,12 @@ struct MallocProvider
 
     void *realloc_(void *p, size_t oldBytes, size_t newBytes) {
         Client *client = static_cast<Client *>(this);
-        JS_ASSERT(oldBytes < newBytes);
-        client->updateMallocCounter(newBytes - oldBytes);
+        /*
+         * For compatibility we do not account for realloc that decreases
+         * previously allocated memory.
+         */
+        if (newBytes > oldBytes)
+            client->updateMallocCounter(newBytes - oldBytes);
         void *p2 = js_realloc(p, newBytes);
         return JS_LIKELY(!!p2) ? p2 : client->onOutOfMemory(p, newBytes);
     }
@@ -664,7 +669,7 @@ typedef Vector<JS::Zone *, 1, SystemAllocPolicy> ZoneVector;
 
 } // namespace js
 
-struct JSRuntime : private JS::shadow::Runtime,
+struct JSRuntime : public JS::shadow::Runtime,
                    public js::MallocProvider<JSRuntime>
 {
     /*
@@ -937,7 +942,7 @@ struct JSRuntime : private JS::shadow::Runtime,
     uint64_t            gcStartNumber;
 
     /* Whether the currently running GC can finish in multiple slices. */
-    int                 gcIsIncremental;
+    bool                gcIsIncremental;
 
     /* Whether all compartments are being collected in first GC slice. */
     bool                gcIsFull;
@@ -1042,13 +1047,15 @@ struct JSRuntime : private JS::shadow::Runtime,
     volatile js::HeapState heapState;
 
     bool isHeapBusy() { return heapState != js::Idle; }
-
-    bool isHeapCollecting() { return heapState == js::Collecting; }
+    bool isHeapMajorCollecting() { return heapState == js::MajorCollecting; }
+    bool isHeapMinorCollecting() { return heapState == js::MinorCollecting; }
+    bool isHeapCollecting() { return isHeapMajorCollecting() || isHeapMinorCollecting(); }
 
 #ifdef JSGC_GENERATIONAL
 # ifdef JS_GC_ZEAL
     js::gc::VerifierNursery      gcVerifierNursery;
 # endif
+    js::Nursery                  gcNursery;
     js::gc::StoreBuffer          gcStoreBuffer;
 #endif
 
@@ -1202,8 +1209,6 @@ struct JSRuntime : private JS::shadow::Runtime,
 #ifdef XP_MACOSX
     js::AsmJSMachExceptionHandler asmJSMachExceptionHandler;
 #endif
-
-    size_t              sizeOfNonHeapAsmJSArrays_;
 
 #ifdef JS_THREADSAFE
 # ifdef JS_ION
@@ -1404,7 +1409,6 @@ struct JSRuntime : private JS::shadow::Runtime,
     }
 
     void sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf, JS::RuntimeSizes *runtime);
-    size_t sizeOfExplicitNonHeap();
 
   private:
 
@@ -2389,6 +2393,8 @@ class ContextAllocPolicy
     void reportAllocOverflow() const { js_ReportAllocationOverflow(cx_); }
 };
 
+JSBool intrinsic_ToObject(JSContext *cx, unsigned argc, Value *vp);
+JSBool intrinsic_IsCallable(JSContext *cx, unsigned argc, Value *vp);
 JSBool intrinsic_ThrowError(JSContext *cx, unsigned argc, Value *vp);
 JSBool intrinsic_NewDenseArray(JSContext *cx, unsigned argc, Value *vp);
 JSBool intrinsic_UnsafeSetElement(JSContext *cx, unsigned argc, Value *vp);

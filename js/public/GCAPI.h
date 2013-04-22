@@ -1,8 +1,8 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- */
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * vim: set ts=8 sts=4 et sw=4 tw=99:
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifndef js_gc_api_h___
 #define js_gc_api_h___
@@ -24,6 +24,31 @@ namespace JS {
     D(DEBUG_MODE_GC)                            \
     D(TRANSPLANT)                               \
     D(RESET)                                    \
+    D(OUT_OF_NURSERY)                           \
+    D(EVICT_NURSERY)                            \
+    D(FULL_STORE_BUFFER)                        \
+                                                \
+    /* These are reserved for future use. */    \
+    D(RESERVED0)                                \
+    D(RESERVED1)                                \
+    D(RESERVED2)                                \
+    D(RESERVED3)                                \
+    D(RESERVED4)                                \
+    D(RESERVED5)                                \
+    D(RESERVED6)                                \
+    D(RESERVED7)                                \
+    D(RESERVED8)                                \
+    D(RESERVED9)                                \
+    D(RESERVED10)                               \
+    D(RESERVED11)                               \
+    D(RESERVED12)                               \
+    D(RESERVED13)                               \
+    D(RESERVED14)                               \
+    D(RESERVED15)                               \
+    D(RESERVED16)                               \
+    D(RESERVED17)                               \
+    D(RESERVED18)                               \
+    D(RESERVED19)                               \
                                                 \
     /* Reasons from Firefox */                  \
     D(DOM_WINDOW_UTILS)                         \

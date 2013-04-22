@@ -37,10 +37,13 @@
 #include "nsAlgorithm.h"
 #include "ASpdySession.h"
 #include "mozIApplicationClearPrivateDataParams.h"
+#include "nsICancelable.h"
+#include "EventTokenBucket.h"
 
 #include "nsIXULAppInfo.h"
 
 #include "mozilla/net/NeckoChild.h"
+#include "mozilla/Telemetry.h"
 
 #if defined(XP_UNIX)
 #include <sys/utsname.h>
@@ -186,6 +189,12 @@ nsHttpHandler::nsHttpHandler()
     , mSpdyPingTimeout(PR_SecondsToInterval(8))
     , mConnectTimeout(90000)
     , mParallelSpeculativeConnectLimit(6)
+    , mRequestTokenBucketEnabled(false)
+    , mRequestTokenBucketABTestEnabled(false)
+    , mRequestTokenBucketABTestProfile(0)
+    , mRequestTokenBucketMinParallelism(6)
+    , mRequestTokenBucketHz(100)
+    , mRequestTokenBucketBurst(32)
     , mCritialRequestPrioritization(true)
 {
 #if defined(PR_LOGGING)
@@ -331,7 +340,20 @@ nsHttpHandler::Init()
         mObserverService->AddObserver(this, "webapps-clear-data", true);
     }
 
+    MakeNewRequestTokenBucket();
     return NS_OK;
+}
+
+void
+nsHttpHandler::MakeNewRequestTokenBucket()
+{
+    if (!mConnMgr)
+        return;
+
+    nsRefPtr<mozilla::net::EventTokenBucket> tokenBucket =
+        new mozilla::net::EventTokenBucket(RequestTokenBucketHz(),
+                                           RequestTokenBucketBurst());
+    mConnMgr->UpdateRequestTokenBucket(tokenBucket);
 }
 
 nsresult
@@ -753,6 +775,53 @@ nsHttpHandler::MaxSocketCount()
         maxCount -= 8;
 
     return maxCount;
+}
+
+// Different profiles for when the Token Bucket ABTest is enabled
+static const uint32_t sNumberTokenBucketProfiles = 7;
+static const uint32_t sTokenBucketProfiles[sNumberTokenBucketProfiles][4] = {
+    // burst, hz, min-parallelism
+    { 32, 100, 6, Telemetry::HTTP_PLT_RATE_PACING_0 }, // balanced
+    { 16, 100, 6, Telemetry::HTTP_PLT_RATE_PACING_1 }, // start earlier
+    { 32, 200, 6, Telemetry::HTTP_PLT_RATE_PACING_2 }, // run faster
+    { 32, 50, 6, Telemetry::HTTP_PLT_RATE_PACING_3 },  // run slower
+    { 32, 1, 8, Telemetry::HTTP_PLT_RATE_PACING_4 },   // allow only min-parallelism
+    { 32, 1, 16, Telemetry::HTTP_PLT_RATE_PACING_5 },  // allow only min-parallelism (larger)
+    { 1000, 1000, 1000, Telemetry::HTTP_PLT_RATE_PACING_6 }, // unlimited
+};
+
+uint32_t
+nsHttpHandler::RequestTokenBucketBurst()
+{
+    return AllowExperiments() && mRequestTokenBucketABTestEnabled ?
+        sTokenBucketProfiles[mRequestTokenBucketABTestProfile][0] :
+        mRequestTokenBucketBurst;
+}
+
+uint32_t
+nsHttpHandler::RequestTokenBucketHz()
+{
+    return AllowExperiments() && mRequestTokenBucketABTestEnabled ?
+        sTokenBucketProfiles[mRequestTokenBucketABTestProfile][1] :
+        mRequestTokenBucketHz;
+}
+
+uint16_t
+nsHttpHandler::RequestTokenBucketMinParallelism()
+{
+    uint32_t rv =
+        AllowExperiments() && mRequestTokenBucketABTestEnabled ?
+        sTokenBucketProfiles[mRequestTokenBucketABTestProfile][2] :
+        mRequestTokenBucketMinParallelism;
+    return static_cast<uint16_t>(rv);
+}
+
+uint32_t
+nsHttpHandler::PacingTelemetryID()
+{
+    if (!mRequestTokenBucketEnabled || !mRequestTokenBucketABTestEnabled)
+        return 0;
+    return sTokenBucketProfiles[mRequestTokenBucketABTestProfile][3];
 }
 
 void
@@ -1216,12 +1285,17 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         }
     }
 
+    // toggle to true anytime a token bucket related pref is changed.. that
+    // includes telemetry and allow-experiments because of the abtest profile
+    bool requestTokenBucketUpdated = false;
+
     //
     // Telemetry
     //
 
     if (PREF_CHANGED(TELEMETRY_ENABLED)) {
         cVar = false;
+        requestTokenBucketUpdated = true;
         rv = prefs->GetBoolPref(TELEMETRY_ENABLED, &cVar);
         if (NS_SUCCEEDED(rv)) {
             mTelemetryEnabled = cVar;
@@ -1231,9 +1305,9 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     //
     // network.allow-experiments
     //
-
     if (PREF_CHANGED(ALLOW_EXPERIMENTS)) {
         cVar = true;
+        requestTokenBucketUpdated = true;
         rv = prefs->GetBoolPref(ALLOW_EXPERIMENTS, &cVar);
         if (NS_SUCCEEDED(rv)) {
             mAllowExperiments = cVar;
@@ -1269,6 +1343,57 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
                 }
             }
         }
+    }
+    if (requestTokenBucketUpdated) {
+        MakeNewRequestTokenBucket();
+    }
+
+    if (PREF_CHANGED(HTTP_PREF("pacing.requests.enabled"))) {
+        rv = prefs->GetBoolPref(HTTP_PREF("pacing.requests.enabled"),
+                                &cVar);
+        if (NS_SUCCEEDED(rv)){
+            requestTokenBucketUpdated = true;
+            mRequestTokenBucketEnabled = cVar;
+        }
+    }
+
+    if (PREF_CHANGED(HTTP_PREF("pacing.requests.abtest"))) {
+        rv = prefs->GetBoolPref(HTTP_PREF("pacing.requests.abtest"),
+                                &cVar);
+        if (NS_SUCCEEDED(rv)) {
+            mRequestTokenBucketABTestEnabled = cVar;
+            requestTokenBucketUpdated = true;
+            if (mRequestTokenBucketABTestEnabled) {
+                // just taking the remainder is not perfectly uniform but it doesn't
+                // matter here.
+                mRequestTokenBucketABTestProfile = rand() % sNumberTokenBucketProfiles;
+            }
+        }
+    }
+
+    if (PREF_CHANGED(HTTP_PREF("pacing.requests.min-parallelism"))) {
+        rv = prefs->GetIntPref(HTTP_PREF("pacing.requests.min-parallelism"), &val);
+        if (NS_SUCCEEDED(rv))
+            mRequestTokenBucketMinParallelism = static_cast<uint16_t>(clamped(val, 1, 1024));
+    }
+    if (PREF_CHANGED(HTTP_PREF("pacing.requests.hz"))) {
+        rv = prefs->GetIntPref(HTTP_PREF("pacing.requests.hz"), &val);
+        if (NS_SUCCEEDED(rv)) {
+            mRequestTokenBucketHz = static_cast<uint32_t>(clamped(val, 1, 10000));
+            requestTokenBucketUpdated = true;
+        }
+    }
+    if (PREF_CHANGED(HTTP_PREF("pacing.requests.burst"))) {
+        rv = prefs->GetIntPref(HTTP_PREF("pacing.requests.burst"), &val);
+        if (NS_SUCCEEDED(rv)) {
+            mRequestTokenBucketBurst = val ? val : 1;
+            requestTokenBucketUpdated = true;
+        }
+    }
+    if (requestTokenBucketUpdated) {
+        mRequestTokenBucket =
+            new mozilla::net::EventTokenBucket(RequestTokenBucketHz(),
+                                               RequestTokenBucketBurst());
     }
 
 #undef PREF_CHANGED

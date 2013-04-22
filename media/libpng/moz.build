@@ -6,3 +6,9 @@
 
 MODULE = 'png'
 
+EXPORTS += [
+    'mozpngconf.h',
+    'png.h',
+    'pngconf.h',
+]
+

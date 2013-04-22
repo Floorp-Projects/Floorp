@@ -1,6 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=4 sw=4 et tw=99:
- *
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sts=4 et sw=4 tw=99:
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -132,14 +131,10 @@ Wrapper Wrapper::singletonWithPrototype((unsigned)0, true);
 /* Compartments. */
 
 extern JSObject *
-js::TransparentObjectWrapper(JSContext *cx, JSObject *existing, JSObject *objArg,
-                             JSObject *wrappedProtoArg, JSObject *parentArg,
+js::TransparentObjectWrapper(JSContext *cx, HandleObject existing, HandleObject obj,
+                             HandleObject wrappedProto, HandleObject parent,
                              unsigned flags)
 {
-    RootedObject obj(cx, objArg);
-    RootedObject wrappedProto(cx, wrappedProtoArg);
-    RootedObject parent(cx, parentArg);
-
     // Allow wrapping outer window proxies.
     JS_ASSERT(!obj->isWrapper() || obj->getClass()->ext.innerObject);
     return Wrapper::New(cx, obj, wrappedProto, parent, &CrossCompartmentWrapper::singleton);

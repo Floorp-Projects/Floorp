@@ -28,6 +28,7 @@ import android.text.InputType;
 import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.util.AttributeSet;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
@@ -40,13 +41,18 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.ListView;
 import android.widget.TabWidget;
 import android.widget.Toast;
 
 import java.net.URLEncoder;
 
-public class AwesomeBar extends GeckoActivity {
+interface AutocompleteHandler {
+    void onAutocomplete(String res);
+}
+
+public class AwesomeBar extends GeckoActivity
+                        implements AutocompleteHandler,
+                                   TextWatcher {
     private static final String LOGTAG = "GeckoAwesomeBar";
 
     public static final String URL_KEY = "url";
@@ -65,14 +71,19 @@ public class AwesomeBar extends GeckoActivity {
     private ContextMenuSubject mContextMenuSubject;
     private boolean mIsUsingGestureKeyboard;
     private boolean mDelayRestartInput;
+    // The previous autocomplete result returned to us
+    private String mAutoCompleteResult = "";
+    // The user typed part of the autocomplete result
+    private String mAutoCompletePrefix = null;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        LayoutInflater.from(this).setFactory(this);
+
         super.onCreate(savedInstanceState);
 
         Log.d(LOGTAG, "creating awesomebar");
 
-        LayoutInflater.from(this).setFactory(GeckoViewsFactory.getInstance());
         setContentView(R.layout.awesomebar);
 
         mGoButton = (ImageButton) findViewById(R.id.awesomebar_button);
@@ -167,35 +178,7 @@ public class AwesomeBar extends GeckoActivity {
             }
         });
 
-        mText.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void afterTextChanged(Editable s) {
-                String text = s.toString();
-                mAwesomeTabs.filter(text);
-
-                // If the AwesomeBar has a composition string, don't call updateGoButton().
-                // That method resets IME and composition state will be broken.
-                if (!hasCompositionString(s)) {
-                    updateGoButton(text);
-                }
-
-                if (Build.VERSION.SDK_INT >= 11) {
-                    getActionBar().hide();
-                }
-            }
-
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count,
-                                          int after) {
-                // do nothing
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before,
-                                      int count) {
-                // do nothing
-            }
-        });
+        mText.addTextChangedListener(this);
 
         mText.setOnKeyListener(new View.OnKeyListener() {
             @Override
@@ -265,6 +248,21 @@ public class AwesomeBar extends GeckoActivity {
         }
     }
 
+    /*
+     * Only one factory can be set on the inflater; however, we want to use two
+     * factories (GeckoViewsFactory and the FragmentActivity factory).
+     * Overriding onCreateView() here allows us to dispatch view creation to
+     * both factories.
+     */
+    @Override
+    public View onCreateView(String name, Context context, AttributeSet attrs) {
+        View view = GeckoViewsFactory.getInstance().onCreateView(name, context, attrs);
+        if (view == null) {
+            view = super.onCreateView(name, context, attrs);
+        }
+        return view;
+    }
+
     private boolean handleBackKey() {
         // Let mAwesomeTabs try to handle the back press, since we may be in a
         // bookmarks sub-folder.
@@ -292,14 +290,9 @@ public class AwesomeBar extends GeckoActivity {
 
         boolean wasUsingGestureKeyboard = mIsUsingGestureKeyboard;
         mIsUsingGestureKeyboard = InputMethods.isGestureKeyboard(this);
-        if (mIsUsingGestureKeyboard == wasUsingGestureKeyboard)
-            return;
-
-        int currentInputType = mText.getInputType();
-        int newInputType = mIsUsingGestureKeyboard
-                           ? (currentInputType & ~InputType.TYPE_TEXT_VARIATION_URI) // Text mode
-                           : (currentInputType | InputType.TYPE_TEXT_VARIATION_URI); // URL mode
-        mText.setRawInputType(newInputType);
+        if (mIsUsingGestureKeyboard != wasUsingGestureKeyboard) {
+            updateKeyboardInputType();
+        }
     }
 
     @Override
@@ -354,9 +347,24 @@ public class AwesomeBar extends GeckoActivity {
             restartInput = true;
         }
         if (restartInput) {
+            updateKeyboardInputType();
             imm.restartInput(mText);
             mGoButton.setImageResource(imageResource);
             mGoButton.setContentDescription(contentDescription);
+        }
+    }
+
+    private void updateKeyboardInputType() {
+        // If the user enters a space, then we know they are entering search terms, not a URL. If
+        // we're using a gesture keyboard, we can then switch to text mode so the IME auto-inserts
+        // spaces between words.
+        String text = mText.getText().toString();
+        int currentInputType = mText.getInputType();
+        int newInputType = mIsUsingGestureKeyboard && StringUtils.isSearchQuery(text, false)
+                           ? (currentInputType & ~InputType.TYPE_TEXT_VARIATION_URI) // Text mode
+                           : (currentInputType | InputType.TYPE_TEXT_VARIATION_URI); // URL mode
+        if (newInputType != currentInputType) {
+            mText.setRawInputType(newInputType);
         }
     }
 
@@ -527,7 +535,6 @@ public class AwesomeBar extends GeckoActivity {
     @Override
     public void onCreateContextMenu(ContextMenu menu, View view, ContextMenuInfo menuInfo) {
         super.onCreateContextMenu(menu, view, menuInfo);
-        ListView list = (ListView) view;
         AwesomeBarTab tab = mAwesomeTabs.getAwesomeBarTabForView(view);
         mContextMenuSubject = tab.getSubject(menu, view, menuInfo);
     }
@@ -542,7 +549,6 @@ public class AwesomeBar extends GeckoActivity {
         final byte[] b = mContextMenuSubject.favicon;
         final String title = mContextMenuSubject.title;
         final String keyword = mContextMenuSubject.keyword;
-        final int display = mContextMenuSubject.display;
 
         switch (item.getItemId()) {
             case R.id.open_in_reader: {
@@ -712,5 +718,76 @@ public class AwesomeBar extends GeckoActivity {
             }
         }
         return false;
+    }
+
+    // return early if we're backspacing through the string, or have no autocomplete results
+    public void onAutocomplete(final String result) {
+        final String text = mText.getText().toString();
+
+        if (result == null) {
+            mAutoCompleteResult = "";
+            return;
+        }
+
+        if (!result.startsWith(text) || text.equals(result)) {
+            return;
+        }
+
+        mAutoCompleteResult = result;
+        mText.getText().append(result.substring(text.length()));
+        mText.setSelection(text.length(), result.length());
+    }
+
+    @Override
+    public void afterTextChanged(final Editable s) {
+        final String text = s.toString();
+        boolean useHandler = false;
+        boolean reuseAutocomplete = false;
+        if (!hasCompositionString(s) && !StringUtils.isSearchQuery(text, false)) {
+            useHandler = true;
+
+            // If you're hitting backspace (the string is getting smaller
+            // or is unchanged), don't autocomplete.
+            if (mAutoCompletePrefix != null && (mAutoCompletePrefix.length() >= text.length())) {
+                useHandler = false;
+            } else if (mAutoCompleteResult != null && mAutoCompleteResult.startsWith(text)) {
+                // If this text already matches our autocomplete text, autocomplete likely
+                // won't change. Just reuse the old autocomplete value.
+                useHandler = false;
+                reuseAutocomplete = true;
+            }
+        }
+
+        // If this is the autocomplete text being set, don't run the filter.
+        if (mAutoCompleteResult == null || !mAutoCompleteResult.equals(text)) {
+            mAwesomeTabs.filter(text, useHandler ? this : null);
+            mAutoCompletePrefix = text;
+
+            if (reuseAutocomplete) {
+                onAutocomplete(mAutoCompleteResult);
+            }
+        }
+
+        // If the AwesomeBar has a composition string, don't call updateGoButton().
+        // That method resets IME and composition state will be broken.
+        if (!hasCompositionString(s)) {
+            updateGoButton(text);
+        }
+
+        if (Build.VERSION.SDK_INT >= 11) {
+            getActionBar().hide();
+        }
+    }
+
+    @Override
+    public void beforeTextChanged(CharSequence s, int start, int count,
+                                  int after) {
+        // do nothing
+    }
+
+    @Override
+    public void onTextChanged(CharSequence s, int start, int before,
+                              int count) {
+        // do nothing
     }
 }

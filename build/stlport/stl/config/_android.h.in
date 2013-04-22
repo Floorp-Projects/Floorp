@@ -24,4 +24,8 @@
 #undef _STLP_NATIVE_CPP_RUNTIME_HEADER
 #define _STLP_NATIVE_CPP_RUNTIME_HEADER(header) <../../system/include/header>
 
+// Use operator new instead of stlport own node allocator
+#undef _STLP_USE_NEWALLOC
+#define _STLP_USE_NEWALLOC 1
+
 #endif /* mozilla_stl_config__android_h */

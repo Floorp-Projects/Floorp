@@ -6,3 +6,9 @@
 
 MODULE = 'accessibility'
 
+EXPORTS.mozilla.a11y += [
+    'Accessible.h',
+    'DocAccessible.h',
+    'HyperTextAccessible.h',
+]
+

@@ -4334,7 +4334,7 @@ public:
   nsDisplayTextGeometry(nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder)
     : nsDisplayItemGenericGeometry(aItem, aBuilder)
   {
-    nsTextFrame* f = static_cast<nsTextFrame*>(aItem->GetUnderlyingFrame());
+    nsTextFrame* f = static_cast<nsTextFrame*>(aItem->Frame());
     f->GetTextDecorations(f->PresContext(), nsTextFrame::eResolvedColors, mDecorations);
   }
  
@@ -7659,8 +7659,8 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
     EnsureTextRun(nsTextFrame::eInflated, ctx,
                   lineContainer, aLineLayout.GetLine(), &flowEndInTextRun);
 
-  NS_ABORT_IF_FALSE(IsCurrentFontInflation(fontSizeInflation),
-                    "EnsureTextRun should have set font size inflation");
+  NS_ASSERTION(IsCurrentFontInflation(fontSizeInflation),
+               "EnsureTextRun should have set font size inflation");
 
   if (mTextRun && iter.GetOriginalEnd() < offset + length) {
     // The textrun does not map enough text for this frame. This can happen

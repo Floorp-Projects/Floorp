@@ -514,7 +514,7 @@ int main(int argc, char** argv)
   JSAutoRequest req(cx);
   static JSClass global_class = {
     "global", JSCLASS_NEW_RESOLVE | JSCLASS_GLOBAL_FLAGS | JSCLASS_HAS_PRIVATE,
-    JS_PropertyStub,  JS_PropertyStub,
+    JS_PropertyStub,  JS_DeletePropertyStub,
     JS_PropertyStub,  JS_StrictPropertyStub,
     JS_EnumerateStub, JS_ResolveStub,
     JS_ConvertStub

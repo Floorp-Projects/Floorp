@@ -67,33 +67,6 @@ ASFLAGS=$(VPX_ASFLAGS) -I. -I$(topsrcdir)/media/libvpx/ -I$(topsrcdir)/media/lib
 AS_DASH_C_FLAG=$(VPX_DASH_C_FLAG)
 ASM_SUFFIX=$(VPX_ASM_SUFFIX)
 
-EXPORTS_NAMESPACES = vpx
-
-EXPORTS_vpx = \
-  vp8.h \
-  vp8cx.h \
-  vp8dx.h \
-  vp8e.h \
-  vpx_codec.h \
-  vpx_codec_impl_bottom.h \
-  vpx_codec_impl_top.h \
-  vpx_decoder.h \
-  vpx_decoder_compat.h \
-  vpx_encoder.h\
-  vpx_image.h \
-  vpx_mem_intrnl.h \
-  vpx_mem.h \
-  mem.h \
-  vpx_integer.h \
-  vpx_timer.h \
-  arm.h \
-  x86.h \
-  scale_mode.h \
-  vpxscale.h \
-  yv12config.h \
-  yv12extend.h \
-  $(NULL)
-
 CSRCS += \
   vpx_config_c.c \
   vp8_dx_iface.c \

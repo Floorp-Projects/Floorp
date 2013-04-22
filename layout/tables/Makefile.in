@@ -18,10 +18,6 @@ endif # !_MSC_VER
 
 
 
-EXPORTS		= \
-		nsITableCellLayout.h \
-		$(NULL)
-
 CPPSRCS		= \
 		BasicTableLayoutStrategy.cpp \
 		FixedTableLayoutStrategy.cpp \

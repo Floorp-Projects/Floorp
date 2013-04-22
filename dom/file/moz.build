@@ -21,3 +21,23 @@ XPIDL_FLAGS += [
 
 MODULE = 'dom'
 
+EXPORTS += [
+    'nsIFileStorage.h',
+]
+
+EXPORTS.mozilla.dom.file += [
+    'ArchiveEvent.h',
+    'ArchiveReader.h',
+    'ArchiveRequest.h',
+    'ArchiveZipEvent.h',
+    'ArchiveZipFile.h',
+    'DOMFileHandle.h',
+    'DOMFileRequest.h',
+    'File.h',
+    'FileCommon.h',
+    'FileHandle.h',
+    'FileHelper.h',
+    'FileService.h',
+    'LockedFile.h',
+]
+

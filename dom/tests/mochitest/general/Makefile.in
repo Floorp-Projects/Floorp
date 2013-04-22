@@ -55,6 +55,14 @@ MOCHITEST_FILES = \
 # Disable this test until bug 795711 is fixed.
 #		test_network_events.html \
 
+# Don't run modal dialog tests on mobile.
+ifneq ($(OS_TARGET),Android)
+MOCHITEST_FILES += \
+		test_showModalDialog.html \
+		file_showModalDialog.html \
+		$(NULL)
+endif
+
 MOCHITEST_CHROME_FILES = \
 		test_innerScreen.xul \
 		test_offsets.xul \

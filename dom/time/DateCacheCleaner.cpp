@@ -7,7 +7,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "DateCacheCleaner.h"
 
-#include "nsIJSContextStack.h"
+#include "nsContentUtils.h"
 #include "mozilla/StaticPtr.h"
 
 using namespace mozilla::hal;
@@ -30,15 +30,7 @@ public:
   }
   void Notify(const SystemTimezoneChangeInformation& aSystemTimezoneChangeInfo)
   {
-    nsCOMPtr<nsIThreadJSContextStack> stack =
-      do_GetService("@mozilla.org/js/xpc/ContextStack;1");
-    if (!stack) {
-      NS_WARNING("Failed to get JSContextStack");
-    }
-    JSContext *cx = stack->GetSafeJSContext();
-    if (!cx) {
-      NS_WARNING("Failed to GetSafeJSContext");
-    }
+    mozilla::SafeAutoJSContext cx;
     JSAutoRequest ar(cx);
     JS_ClearDateCaches(cx);
   }

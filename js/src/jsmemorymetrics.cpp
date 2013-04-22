@@ -1,6 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=4 sw=4 et tw=99:
- *
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sts=4 et sw=4 tw=99:
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -373,29 +372,6 @@ JS::CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats, ObjectPrivateVisit
                                   rtStats->zTotals.gcHeapArenaAdmin -
                                   rtStats->gcHeapGcThings;
     return true;
-}
-
-JS_PUBLIC_API(int64_t)
-JS::GetExplicitNonHeapForRuntime(JSRuntime *rt, JSMallocSizeOfFun mallocSizeOf)
-{
-    // explicit/*/gc-heap/*
-    size_t n = size_t(JS_GetGCParameter(rt, JSGC_TOTAL_CHUNKS)) * gc::ChunkSize;
-
-    // Subtract decommitted arenas, which aren't included in "explicit".
-    size_t decommittedArenas = 0;
-    IterateChunks(rt, &decommittedArenas, DecommittedArenasChunkCallback);
-    n -= decommittedArenas;
-
-    // explicit/*/objects-extra/elements/asm.js (64-bit platforms only)
-    n += rt->sizeOfNonHeapAsmJSArrays_;
-
-    // explicit/runtime/mjit-code
-    // explicit/runtime/regexp-code
-    // explicit/runtime/stack-committed
-    // explicit/runtime/unused-code-memory
-    n += rt->sizeOfExplicitNonHeap();
-
-    return int64_t(n);
 }
 
 JS_PUBLIC_API(size_t)

@@ -155,10 +155,13 @@ int NR_async_schedule(NR_async_cb cb, void *arg, char *func, int l) {
 }
 
 int NR_async_timer_cancel(void *handle) {
-  CheckSTSThread();
-
+  // Check for the handle being nonzero because sometimes we get
+  // no-op cancels that aren't on the STS thread. This can be
+  // non-racy as long as the upper-level code is careful.
   if (!handle)
     return 0;
+
+  CheckSTSThread();
 
   nsITimer *timer = static_cast<nsITimer *>(handle);
 

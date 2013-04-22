@@ -1,0 +1,26 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIInputStream.idl"
+
+/**
+ * nsIArrayBufferInputStream
+ *
+ * Provides scriptable methods for initializing a nsIInputStream
+ * implementation with an ArrayBuffer.
+ */
+[scriptable, uuid(3014dde6-aa1c-41db-87d0-48764a3710f6)]
+interface nsIArrayBufferInputStream : nsIInputStream
+{
+    /**
+     * SetData - assign an ArrayBuffer to the input stream.
+     *
+     * @param buffer    - stream data
+     * @param byteOffset - stream data offset
+     * @param byteLen - stream data length
+     */
+    [implicit_jscontext]
+    void setData(in jsval buffer, in unsigned long byteOffset, in unsigned long byteLen);
+};

@@ -6,3 +6,29 @@
 
 MODULE = 'protobuf'
 
+EXPORTS.protobuf.google.protobuf += [
+    'extension_set.h',
+    'generated_message_util.h',
+    'message_lite.h',
+    'repeated_field.h',
+    'wire_format_lite.h',
+    'wire_format_lite_inl.h',
+]
+
+EXPORTS.protobuf.google.protobuf.stubs += [
+    'common.h',
+    'hash.h',
+    'map-util.h',
+    'once.h',
+    'stl_util-inl.h',
+]
+
+EXPORTS.protobuf.google.protobuf.io += [
+    'coded_stream.h',
+    'coded_stream_inl.h',
+    'package_info.h',
+    'zero_copy_stream.h',
+    'zero_copy_stream_impl.h',
+    'zero_copy_stream_impl_lite.h',
+]
+

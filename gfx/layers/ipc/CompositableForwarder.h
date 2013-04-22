@@ -20,6 +20,7 @@ class TextureFactoryIdentifier;
 class SurfaceDescriptor;
 class ThebesBufferData;
 class TextureClient;
+class BasicTiledLayerBuffer;
 
 /**
  * A transaction is a set of changes that happenned on the content side, that
@@ -57,17 +58,23 @@ public:
    */
   virtual void CreatedSingleBuffer(CompositableClient* aCompositable,
                                    const SurfaceDescriptor& aDescriptor,
-                                   const TextureInfo& aTextureInfo) = 0;
+                                   const TextureInfo& aTextureInfo,
+                                   const SurfaceDescriptor* aDescriptorOnWhite = nullptr) = 0;
   virtual void CreatedDoubleBuffer(CompositableClient* aCompositable,
                                    const SurfaceDescriptor& aFrontDescriptor,
                                    const SurfaceDescriptor& aBackDescriptor,
-                                   const TextureInfo& aTextureInfo) = 0;
+                                   const TextureInfo& aTextureInfo,
+                                   const SurfaceDescriptor* aFrontDescriptorOnWhite = nullptr,
+                                   const SurfaceDescriptor* aBackDescriptorOnWhite = nullptr) = 0;
 
   /**
    * Tell the compositor that a Compositable is killing its buffer(s),
    * that is TextureClient/Hosts.
    */
   virtual void DestroyThebesBuffer(CompositableClient* aCompositable) = 0;
+
+  virtual void PaintedTiledLayerBuffer(CompositableClient* aCompositable,
+                                       BasicTiledLayerBuffer* aTiledLayerBuffer) = 0;
 
   /**
    * Communicate to the compositor that the texture identified by aCompositable

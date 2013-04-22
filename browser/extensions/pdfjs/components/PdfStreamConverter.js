@@ -101,23 +101,6 @@ function getDOMWindow(aChannel) {
   return win;
 }
 
-function isEnabled() {
-  if (MOZ_CENTRAL) {
-    var disabled = getBoolPref(PREF_PREFIX + '.disabled', false);
-    if (disabled)
-      return false;
-    // To also be considered enabled the "Preview in Firefox" option must be
-    // selected in the Application preferences.
-    var handlerInfo = Svc.mime
-                         .getFromTypeAndExtension('application/pdf', 'pdf');
-    return !handlerInfo.alwaysAskBeforeHandling &&
-           handlerInfo.preferredAction == Ci.nsIHandlerInfo.handleInternally;
-  }
-  // Always returns true for the extension since enabling/disabling is handled
-  // by the add-on manager.
-  return true;
-}
-
 function getLocalizedStrings(path) {
   var stringBundle = Cc['@mozilla.org/intl/stringbundle;1'].
       getService(Ci.nsIStringBundleService).
@@ -268,10 +251,13 @@ ChromeActions.prototype = {
       var channel = Cc['@mozilla.org/network/input-stream-channel;1'].
                        createInstance(Ci.nsIInputStreamChannel);
       channel.QueryInterface(Ci.nsIChannel);
-      channel.contentDisposition = Ci.nsIChannel.DISPOSITION_ATTACHMENT;
-      if (self.contentDispositionFilename) {
-        channel.contentDispositionFilename = self.contentDispositionFilename;
-      }
+      try {
+        // contentDisposition/contentDispositionFilename is readonly before FF18
+        channel.contentDisposition = Ci.nsIChannel.DISPOSITION_ATTACHMENT;
+        if (self.contentDispositionFilename) {
+           channel.contentDispositionFilename = self.contentDispositionFilename;
+        }
+      } catch (e) {}
       channel.setURI(originalUri);
       channel.contentStream = aInputStream;
       if ('nsIPrivateBrowsingChannel' in Ci &&
@@ -379,6 +365,9 @@ ChromeActions.prototype = {
     var prefBrowser = getIntPref('browser.display.use_document_fonts', 1);
     var prefGfx = getBoolPref('gfx.downloadable_fonts.enabled', true);
     return (!!prefBrowser && prefGfx);
+  },
+  supportsDocumentColors: function() {
+    return getBoolPref('browser.display.use_document_colors', true);
   },
   fallback: function(url, sendResponse) {
     var self = this;
@@ -577,9 +566,6 @@ PdfStreamConverter.prototype = {
 
   // nsIStreamConverter::asyncConvertData
   asyncConvertData: function(aFromType, aToType, aListener, aCtxt) {
-    if (!isEnabled())
-      throw Cr.NS_ERROR_NOT_IMPLEMENTED;
-
     // Store the listener passed to us
     this.listener = aListener;
   },

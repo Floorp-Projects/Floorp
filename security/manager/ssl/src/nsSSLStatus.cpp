@@ -212,8 +212,6 @@ nsSSLStatus::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
   return NS_OK;
 }
 
-
-
 nsSSLStatus::nsSSLStatus()
 : mKeyLength(0), mSecretKeyLength(0)
 , mIsDomainMismatch(false)

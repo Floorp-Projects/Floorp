@@ -16,8 +16,6 @@ LIBXUL_LIBRARY = 1
 
 FORCE_STATIC_LIB = 1
 
-EXPORTS = nsAboutProtocolUtils.h
-
 CPPSRCS = \
   nsAboutProtocolHandler.cpp \
   nsAboutBlank.cpp \

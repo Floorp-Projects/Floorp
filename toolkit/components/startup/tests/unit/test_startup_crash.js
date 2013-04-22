@@ -15,8 +15,11 @@ let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].
 const pref_last_success = "toolkit.startup.last_success";
 const pref_recent_crashes = "toolkit.startup.recent_crashes";
 const pref_max_resumed_crashes = "toolkit.startup.max_resumed_crashes";
+const pref_always_use_safe_mode = "toolkit.startup.always_use_safe_mode";
 
 function run_test() {
+  prefService.setBoolPref(pref_always_use_safe_mode, true);
+
   resetTestEnv(0);
 
   test_trackStartupCrashBegin();
@@ -25,6 +28,8 @@ function run_test() {
   test_trackStartupCrashEnd_safeMode();
   test_maxResumed();
   resetTestEnv(0);
+
+  prefService.clearUserPref(pref_always_use_safe_mode);
 }
 
 // reset prefs to default

@@ -6,3 +6,47 @@
 
 MODULE = 'content'
 
+EXPORTS += [
+    'nsAtomListUtils.h',
+    'nsAttrName.h',
+    'nsContentList.h',
+    'nsContentListDeclarations.h',
+    'nsContentSink.h',
+    'nsGkAtomList.h',
+    'nsGkAtoms.h',
+    'nsNodeInfoManager.h',
+    'nsNodeUtils.h',
+    'nsPropertyTable.h',
+    'nsRange.h',
+    'nsScriptLoader.h',
+    'nsStubDocumentObserver.h',
+    'nsStubMutationObserver.h',
+    'nsTextFragment.h',
+    'mozAutoDocUpdate.h',
+    'nsFrameMessageManager.h',
+    'nsAttrAndChildArray.h',
+    'nsAttrValue.h',
+    'nsAttrValueInlines.h',
+    'nsCrossSiteListenerProxy.h',
+    'nsDOMAttributeMap.h',
+    'nsMappedAttributeElement.h',
+    'nsStyledElement.h',
+    'nsSandboxFlags.h',
+]
+
+if CONFIG['MOZ_WEBRTC']:
+    EXPORTS += ['nsDOMDataChannel.h']
+
+EXPORTS.mozilla.dom += [
+    'Attr.h',
+    'Comment.h',
+    'DocumentFragment.h',
+    'DocumentType.h',
+    'DOMImplementation.h',
+    'EventSource.h',
+    'Link.h',
+    'NodeIterator.h',
+    'Text.h',
+    'TreeWalker.h',
+]
+

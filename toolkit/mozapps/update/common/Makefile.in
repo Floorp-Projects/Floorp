@@ -21,21 +21,10 @@ CPPSRCS = \
   readstrings.cpp \
   $(NULL)
 
-EXPORTS = updatelogging.h \
-  updatedefines.h \
-  readstrings.h \
-  $(NULL)
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 CPPSRCS += updatehelper.cpp \
   uachelper.cpp \
   pathhash.cpp \
-  $(NULL)
-
-EXPORTS = updatehelper.h \
-  updatehelper.cpp \
-  uachelper.h \
-  pathhash.h \
   $(NULL)
 endif
 

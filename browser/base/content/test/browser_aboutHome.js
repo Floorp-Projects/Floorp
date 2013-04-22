@@ -25,9 +25,9 @@ let gTests = [
   desc: "Check that clearing cookies does not clear storage",
   setup: function ()
   {
-    Cc["@mozilla.org/dom/storagemanager;1"]
-      .getService(Ci.nsIObserver)
-      .observe(null, "cookie-changed", "cleared");
+    Cc["@mozilla.org/observer-service;1"]
+      .getService(Ci.nsIObserverService)
+      .notifyObservers(null, "cookie-changed", "cleared");
   },
   run: function (aSnippetsMap)
   {
@@ -250,6 +250,7 @@ let gTests = [
 function test()
 {
   waitForExplicitFinish();
+  requestLongerTimeout(2);
 
   Task.spawn(function () {
     for (let test of gTests) {

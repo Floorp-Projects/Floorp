@@ -8,7 +8,6 @@
 
 #include "IDBFactory.h"
 #include "nsIFile.h"
-#include "nsIJSContextStack.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptContext.h"
 #include "nsIXPConnect.h"
@@ -202,20 +201,7 @@ IDBFactory::Create(ContentParent* aContentParent,
   NS_ASSERTION(nsContentUtils::IsCallerChrome(), "Only for chrome!");
   NS_ASSERTION(aContentParent, "Null ContentParent!");
 
-#ifdef DEBUG
-  {
-    nsIThreadJSContextStack* cxStack = nsContentUtils::ThreadJSContextStack();
-    NS_ASSERTION(cxStack, "Couldn't get ThreadJSContextStack!");
-
-    JSContext* lastCx;
-    if (NS_SUCCEEDED(cxStack->Peek(&lastCx))) {
-      NS_ASSERTION(!lastCx, "We should only be called from C++!");
-    }
-    else {
-      NS_ERROR("nsIThreadJSContextStack::Peek should never fail!");
-    }
-  }
-#endif
+  NS_ASSERTION(!nsContentUtils::GetCurrentJSContext(), "Should be called from C++");
 
   nsCOMPtr<nsIPrincipal> principal =
     do_CreateInstance("@mozilla.org/nullprincipal;1");

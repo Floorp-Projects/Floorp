@@ -6,3 +6,13 @@
 
 MODULE = 'accessibility'
 
+EXPORTS += [
+    'nsAccessNodeWrap.h',
+]
+
+EXPORTS.mozilla.a11y += [
+    'AccessibleWrap.h',
+    'Compatibility.h',
+    'HyperTextAccessibleWrap.h',
+]
+

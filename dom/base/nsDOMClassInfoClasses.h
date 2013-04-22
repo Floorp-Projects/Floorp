@@ -96,7 +96,6 @@ DOMCI_CLASS(DOMStringList)
 
 #ifdef MOZ_XUL
 DOMCI_CLASS(TreeColumn)
-DOMCI_CLASS(TreeColumns)
 #endif
 
 DOMCI_CLASS(CSSMozDocumentRule)
@@ -115,13 +114,11 @@ DOMCI_CLASS(SVGAnimatedString)
 DOMCI_CLASS(SVGLength)
 DOMCI_CLASS(SVGNumber)
 DOMCI_CLASS(SVGRect)
-DOMCI_CLASS(SVGStringList)
 DOMCI_CLASS(SVGZoomEvent)
 
 // Canvas
 DOMCI_CLASS(CanvasGradient)
 DOMCI_CLASS(CanvasPattern)
-DOMCI_CLASS(TextMetrics)
 DOMCI_CLASS(MozCanvasPrintState)
 
 // WindowUtils
@@ -136,9 +133,7 @@ DOMCI_CLASS(XPathNSResolver)
 DOMCI_CLASS(XPathResult)
 
 // WhatWG WebApps Objects
-DOMCI_CLASS(StorageObsolete)
 DOMCI_CLASS(Storage)
-DOMCI_CLASS(StorageItem)
 
 DOMCI_CLASS(XULCommandEvent)
 DOMCI_CLASS(CommandEvent)
@@ -216,7 +211,6 @@ DOMCI_CLASS(IDBIndex)
 DOMCI_CLASS(IDBVersionChangeEvent)
 DOMCI_CLASS(IDBOpenDBRequest)
 
-DOMCI_CLASS(Touch)
 DOMCI_CLASS(TouchList)
 DOMCI_CLASS(TouchEvent)
 

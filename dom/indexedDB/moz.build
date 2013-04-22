@@ -31,3 +31,25 @@ XPIDL_FLAGS += [
 
 MODULE = 'dom'
 
+EXPORTS.mozilla.dom.indexedDB += [
+    'Client.h',
+    'DatabaseInfo.h',
+    'FileInfo.h',
+    'FileManager.h',
+    'IDBCursor.h',
+    'IDBDatabase.h',
+    'IDBEvents.h',
+    'IDBFactory.h',
+    'IDBFileHandle.h',
+    'IDBIndex.h',
+    'IDBKeyRange.h',
+    'IDBObjectStore.h',
+    'IDBRequest.h',
+    'IDBTransaction.h',
+    'IDBWrapperCache.h',
+    'IndexedDatabase.h',
+    'IndexedDatabaseManager.h',
+    'Key.h',
+    'KeyPath.h',
+]
+

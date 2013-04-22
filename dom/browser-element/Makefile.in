@@ -16,16 +16,6 @@ FAIL_ON_WARNINGS := 1
 
 include $(topsrcdir)/dom/dom-config.mk
 
-EXPORTS = \
-  nsOpenWindowEventDetail.h \
-  nsAsyncScrollEventDetail.h \
-  $(NULL)
-
-EXPORTS_NAMESPACES = mozilla
-EXPORTS_mozilla = \
-  BrowserElementParent.h \
-  $(NULL)
-
 CPPSRCS = \
   nsOpenWindowEventDetail.cpp \
   nsAsyncScrollEventDetail.cpp \

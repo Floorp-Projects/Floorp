@@ -5,8 +5,8 @@
 
 #include "nsJSInspector.h"
 #include "nsIXPConnect.h"
-#include "nsIJSContextStack.h"
 #include "nsThreadUtils.h"
+#include "nsContentUtils.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "jsdbgapi.h"
@@ -42,26 +42,18 @@ nsJSInspector::~nsJSInspector()
 NS_IMETHODIMP
 nsJSInspector::EnterNestedEventLoop(const JS::Value& requestor, uint32_t *out)
 {
-  nsresult rv;
-  nsCOMPtr<nsIJSContextStack> stack =
-    do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv = NS_OK;
 
   mLastRequestor = requestor;
   mRequestors.AppendElement(requestor);
 
-  uint32_t nestLevel = ++mNestedLoopLevel;
-  if (NS_SUCCEEDED(stack->Push(nullptr))) {
-    while (NS_SUCCEEDED(rv) && mNestedLoopLevel >= nestLevel) {
-      if (!NS_ProcessNextEvent())
-        rv = NS_ERROR_UNEXPECTED;
-    }
+  nsCxPusher pusher;
+  pusher.PushNull();
 
-    JSContext *cx;
-    stack->Pop(&cx);
-    NS_ASSERTION(cx == nullptr, "JSContextStack mismatch");
-  } else {
-    rv = NS_ERROR_FAILURE;
+  uint32_t nestLevel = ++mNestedLoopLevel;
+  while (NS_SUCCEEDED(rv) && mNestedLoopLevel >= nestLevel) {
+    if (!NS_ProcessNextEvent())
+      rv = NS_ERROR_UNEXPECTED;
   }
 
   NS_ASSERTION(mNestedLoopLevel <= nestLevel,

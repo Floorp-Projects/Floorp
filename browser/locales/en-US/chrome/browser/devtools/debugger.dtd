@@ -65,6 +65,12 @@
 <!ENTITY debuggerUI.showOnlyEnum        "Show only enumerable properties">
 <!ENTITY debuggerUI.showOnlyEnum.key    "P">
 
+<!-- LOCALIZATION NOTE (debuggerUI.showOriginalSource): This is the label for
+  -  the checkbox that toggles the display of original or sourcemap-derived
+  -  sources. -->
+<!ENTITY debuggerUI.showOriginalSource      "Show original sources">
+<!ENTITY debuggerUI.showOriginalSource.key  "O">
+
 <!-- LOCALIZATION NOTE (debuggerUI.searchPanelTitle): This is the text that
   -  appears in the filter panel popup as a description. -->
 <!ENTITY debuggerUI.searchPanelTitle    "Operators">
@@ -84,7 +90,6 @@
   -  in the source editor's context menu for the function search operation. -->
 <!ENTITY debuggerUI.searchFunction      "Search for function definition">
 <!ENTITY debuggerUI.searchFunction.key  "D">
-<!ENTITY debuggerUI.searchFunction.altkey "O">
 
 <!-- LOCALIZATION NOTE (debuggerUI.searchToken): This is the text that appears
   -  in the source editor's context menu for the token search operation. -->

@@ -47,7 +47,6 @@ load 387033-1.xhtml
 load 387080-1.xul
 load 391974-1.html
 load 394120-1.xhtml
-skip-if(B2G||browserIsRemote) load 395609.xul # bug 844549
 load 397304-1.html
 load 398326-1.xhtml
 load 399013.xul

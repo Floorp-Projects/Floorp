@@ -11,3 +11,23 @@ XPIDL_SOURCES += [
 
 MODULE = 'htmlparser'
 
+EXPORTS += [
+    'nsHTMLTagList.h',
+    'nsHTMLTags.h',
+    'nsHTMLTokens.h',
+    'nsIContentSink.h',
+    'nsIDTD.h',
+    'nsIElementObserver.h',
+    'nsIFragmentContentSink.h',
+    'nsIHTMLContentSink.h',
+    'nsIParser.h',
+    'nsIParserNode.h',
+    'nsIParserService.h',
+    'nsITokenizer.h',
+    'nsParserBase.h',
+    'nsParserCIID.h',
+    'nsParserConstants.h',
+    'nsScannerString.h',
+    'nsToken.h',
+]
+

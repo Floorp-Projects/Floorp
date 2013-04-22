@@ -1,6 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=4 sw=4 et tw=99:
- *
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sts=4 et sw=4 tw=99:
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -36,8 +35,13 @@ C1Spewer::beginFunction(MIRGraph *graph, HandleScript script)
     this->script = script;
 
     fprintf(spewout_, "begin_compilation\n");
-    fprintf(spewout_, "  name \"%s:%d\"\n", script->filename(), script->lineno);
-    fprintf(spewout_, "  method \"%s:%d\"\n", script->filename(), script->lineno);
+    if (script) {
+        fprintf(spewout_, "  name \"%s:%d\"\n", script->filename(), script->lineno);
+        fprintf(spewout_, "  method \"%s:%d\"\n", script->filename(), script->lineno);
+    } else {
+        fprintf(spewout_, "  name \"asm.js compilation\"\n");
+        fprintf(spewout_, "  method \"asm.js compilation\"\n");
+    }
     fprintf(spewout_, "  date %d\n", (int)time(NULL));
     fprintf(spewout_, "end_compilation\n");
 }
@@ -177,21 +181,22 @@ C1Spewer::spewPass(FILE *fp, MBasicBlock *block)
 
     fprintf(fp, "    begin_states\n");
 
-    fprintf(fp, "      begin_locals\n");
-    fprintf(fp, "        size %d\n", (int)block->numEntrySlots());
-    fprintf(fp, "        method \"None\"\n");
-    for (uint32_t i = 0; i < block->numEntrySlots(); i++) {
-        MDefinition *ins = block->getEntrySlot(i);
-        fprintf(fp, "        ");
-        fprintf(fp, "%d ", i);
-        if (ins->isUnused())
-            fprintf(fp, "unused");
-        else
-            ins->printName(fp);
-        fprintf(fp, "\n");
+    if (block->entryResumePoint()) {
+        fprintf(fp, "      begin_locals\n");
+        fprintf(fp, "        size %d\n", (int)block->numEntrySlots());
+        fprintf(fp, "        method \"None\"\n");
+        for (uint32_t i = 0; i < block->numEntrySlots(); i++) {
+            MDefinition *ins = block->getEntrySlot(i);
+            fprintf(fp, "        ");
+            fprintf(fp, "%d ", i);
+            if (ins->isUnused())
+                fprintf(fp, "unused");
+            else
+                ins->printName(fp);
+            fprintf(fp, "\n");
+        }
+        fprintf(fp, "      end_locals\n");
     }
-    fprintf(fp, "      end_locals\n");
-
     fprintf(fp, "    end_states\n");
 
     fprintf(fp, "    begin_HIR\n");

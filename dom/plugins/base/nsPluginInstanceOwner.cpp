@@ -34,7 +34,6 @@ using mozilla::DefaultXDisplay;
 #include "nsDisplayList.h"
 #include "ImageLayers.h"
 #include "SharedTextureImage.h"
-#include "nsIDOMEventTarget.h"
 #include "nsObjectFrame.h"
 #include "nsIPluginDocument.h"
 #include "nsIStringStream.h"
@@ -101,15 +100,14 @@ using namespace mozilla::layers;
 class nsPluginDOMContextMenuListener : public nsIDOMEventListener
 {
 public:
-  nsPluginDOMContextMenuListener();
+  nsPluginDOMContextMenuListener(nsIContent* aContent);
   virtual ~nsPluginDOMContextMenuListener();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMEVENTLISTENER
 
-  nsresult Init(nsIContent* aContent);
-  nsresult Destroy(nsIContent* aContent);
-  
+  void Destroy(nsIContent* aContent);
+
   nsEventStatus ProcessEvent(const nsGUIEvent& anEvent)
   {
     return nsEventStatus_eConsumeNoDefault;
@@ -148,22 +146,6 @@ nsPluginInstanceOwner::NotifyPaintWaiter(nsDisplayListBuilder* aBuilder)
     mWaitingForPaint = nsContentUtils::AddScriptRunner(event);
   }
 }
-
-#ifdef XP_MACOSX
-static void DrawPlugin(ImageContainer* aContainer, void* aPluginInstanceOwner)
-{
-  nsObjectFrame* frame = static_cast<nsPluginInstanceOwner*>(aPluginInstanceOwner)->GetFrame();
-  if (frame) {
-    frame->UpdateImageLayer(gfxRect(0,0,0,0));
-  }
-}
-
-static void OnDestroyImage(void* aPluginInstanceOwner)
-{
-  nsPluginInstanceOwner* owner = static_cast<nsPluginInstanceOwner*>(aPluginInstanceOwner);
-  NS_IF_RELEASE(owner);
-}
-#endif // XP_MACOSX
 
 already_AddRefed<ImageContainer>
 nsPluginInstanceOwner::GetImageContainer()
@@ -206,22 +188,7 @@ nsPluginInstanceOwner::GetImageContainer()
 #endif
 
   mInstance->GetImageContainer(getter_AddRefs(container));
-  if (container) {
-#ifdef XP_MACOSX
-    AutoLockImage autoLock(container);
-    Image* image = autoLock.GetImage();
-    if (image && image->GetFormat() == MAC_IO_SURFACE && mObjectFrame) {
-      // With this drawing model, every call to
-      // nsIPluginInstance::GetImage() creates a new image.
-      MacIOSurfaceImage *oglImage = static_cast<MacIOSurfaceImage*>(image);
-      NS_ADDREF_THIS();
-      oglImage->SetUpdateCallback(&DrawPlugin, this);
-      oglImage->SetDestroyCallback(&OnDestroyImage);
-    }
-#endif
-    return container.forget();
-  }
-  return nullptr;
+  return container.forget();
 }
 
 void
@@ -634,7 +601,6 @@ NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRect(NPRect *invalidRect)
 #if defined(XP_MACOSX) || defined(MOZ_WIDGET_ANDROID)
   // Each time an asynchronously-drawing plugin sends a new surface to display,
   // the image in the ImageContainer is updated and InvalidateRect is called.
-  // MacIOSurfaceImages callbacks are attached here.
   // There are different side effects for (sync) Android plugins.
   nsRefPtr<ImageContainer> container;
   mInstance->GetImageContainer(getter_AddRefs(container));
@@ -2544,7 +2510,7 @@ nsPluginInstanceOwner::Destroy()
 #ifdef XP_MACOSX
   RemoveFromCARefreshTimer();
   if (mColorProfile)
-    ::CGColorSpaceRelease(mColorProfile);  
+    ::CGColorSpaceRelease(mColorProfile);
 #endif
 
   // unregister context menu listener
@@ -2971,10 +2937,7 @@ nsresult nsPluginInstanceOwner::Init(nsIContent* aContent)
   }
 
   // register context menu listener
-  mCXMenuListener = new nsPluginDOMContextMenuListener();
-  if (mCXMenuListener) {    
-    mCXMenuListener->Init(aContent);
-  }
+  mCXMenuListener = new nsPluginDOMContextMenuListener(aContent);
 
   mContent->AddEventListener(NS_LITERAL_STRING("focus"), this, false,
                              false);
@@ -3456,8 +3419,9 @@ already_AddRefed<nsIURI> nsPluginInstanceOwner::GetBaseURI() const
 
 // nsPluginDOMContextMenuListener class implementation
 
-nsPluginDOMContextMenuListener::nsPluginDOMContextMenuListener()
+nsPluginDOMContextMenuListener::nsPluginDOMContextMenuListener(nsIContent* aContent)
 {
+  aContent->AddEventListener(NS_LITERAL_STRING("contextmenu"), this, true);
 }
 
 nsPluginDOMContextMenuListener::~nsPluginDOMContextMenuListener()
@@ -3471,28 +3435,12 @@ NS_IMETHODIMP
 nsPluginDOMContextMenuListener::HandleEvent(nsIDOMEvent* aEvent)
 {
   aEvent->PreventDefault(); // consume event
-  
+
   return NS_OK;
 }
 
-nsresult nsPluginDOMContextMenuListener::Init(nsIContent* aContent)
-{
-  nsCOMPtr<nsIDOMEventTarget> receiver(do_QueryInterface(aContent));
-  if (receiver) {
-    receiver->AddEventListener(NS_LITERAL_STRING("contextmenu"), this, true);
-    return NS_OK;
-  }
-  
-  return NS_ERROR_NO_INTERFACE;
-}
-
-nsresult nsPluginDOMContextMenuListener::Destroy(nsIContent* aContent)
+void nsPluginDOMContextMenuListener::Destroy(nsIContent* aContent)
 {
   // Unregister context menu listener
-  nsCOMPtr<nsIDOMEventTarget> receiver(do_QueryInterface(aContent));
-  if (receiver) {
-    receiver->RemoveEventListener(NS_LITERAL_STRING("contextmenu"), this, true);
-  }
-  
-  return NS_OK;
+  aContent->RemoveEventListener(NS_LITERAL_STRING("contextmenu"), this, true);
 }

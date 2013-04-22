@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=841941
+-->
+<head>
+  <title>Test @min/@max/@step order for range</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <meta charset="UTF-8">
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=841941">Mozilla Bug 841941</a>
+<p id="display"></p>
+<div id="content">
+  <input type=range value=2 max=1.5 step=0.5>
+  <input type=range value=2 step=0.5 max=1.5>
+  <input type=range value=2 max=1.5 step=0.5>
+  <input type=range value=2 step=0.5 max=1.5>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/**
+ * Test for Bug 841941
+ * This test checks that the order in which @min/@max/@step are specified in
+ * markup makes no difference to the value that <input type=range> will be
+ * given. Basically this checks that sanitization of the value does not occur
+ * until after the parser has finished with the element.
+ */
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  test();
+  SimpleTest.finish();
+});
+
+function test() {
+  var ranges = document.querySelectorAll("input[type=range]");
+  for (var i = 0; i < ranges.length; i++) {
+    is(ranges.item(i).value, "1.5", "Check sanitization order for range " + i);
+  }
+}
+
+</script>
+</pre>
+</body>
+</html>

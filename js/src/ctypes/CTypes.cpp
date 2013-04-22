@@ -1,5 +1,6 @@
-/* -*-  Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2; -*- */
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sts=4 et sw=4 tw=99:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -444,14 +445,14 @@ namespace UInt64 {
 static JSClass sCTypesGlobalClass = {
   "ctypes",
   JSCLASS_HAS_RESERVED_SLOTS(CTYPESGLOBAL_SLOTS),
-  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+  JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
   JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub
 };
 
 static JSClass sCABIClass = {
   "CABI",
   JSCLASS_HAS_RESERVED_SLOTS(CABI_SLOTS),
-  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+  JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
   JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub
 };
 
@@ -461,7 +462,7 @@ static JSClass sCABIClass = {
 static JSClass sCTypeProtoClass = {
   "CType",
   JSCLASS_HAS_RESERVED_SLOTS(CTYPEPROTO_SLOTS),
-  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+  JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
   JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, CType::FinalizeProtoClass,
   NULL, ConstructAbstract, NULL, ConstructAbstract
 };
@@ -471,14 +472,14 @@ static JSClass sCTypeProtoClass = {
 static JSClass sCDataProtoClass = {
   "CData",
   0,
-  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+  JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
   JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub
 };
 
 static JSClass sCTypeClass = {
   "CType",
   JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_HAS_RESERVED_SLOTS(CTYPE_SLOTS),
-  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+  JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
   JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, CType::Finalize,
   NULL, CType::ConstructData, CType::HasInstance, CType::ConstructData,
   CType::Trace
@@ -487,7 +488,7 @@ static JSClass sCTypeClass = {
 static JSClass sCDataClass = {
   "CData",
   JSCLASS_HAS_RESERVED_SLOTS(CDATA_SLOTS),
-  JS_PropertyStub, JS_PropertyStub, ArrayType::Getter, ArrayType::Setter,
+  JS_PropertyStub, JS_DeletePropertyStub, ArrayType::Getter, ArrayType::Setter,
   JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, CData::Finalize,
   NULL, FunctionType::Call, NULL, FunctionType::Call
 };
@@ -495,7 +496,7 @@ static JSClass sCDataClass = {
 static JSClass sCClosureClass = {
   "CClosure",
   JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_HAS_RESERVED_SLOTS(CCLOSURE_SLOTS),
-  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+  JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
   JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, CClosure::Finalize,
   NULL, NULL, NULL, NULL, CClosure::Trace
 };
@@ -506,7 +507,7 @@ static JSClass sCClosureClass = {
 static JSClass sCDataFinalizerProtoClass = {
   "CDataFinalizer",
   0,
-  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+  JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
   JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub
 };
 
@@ -519,7 +520,7 @@ static JSClass sCDataFinalizerProtoClass = {
 static JSClass sCDataFinalizerClass = {
   "CDataFinalizer",
   JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(CDATAFINALIZER_SLOTS),
-  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+  JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
   JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, CDataFinalizer::Finalize,
 };
 
@@ -679,28 +680,28 @@ static JSFunctionSpec sFunctionInstanceFunctions[] = {
 static JSClass sInt64ProtoClass = {
   "Int64",
   0,
-  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+  JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
   JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub
 };
 
 static JSClass sUInt64ProtoClass = {
   "UInt64",
   0,
-  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+  JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
   JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub
 };
 
 static JSClass sInt64Class = {
   "Int64",
   JSCLASS_HAS_RESERVED_SLOTS(INT64_SLOTS),
-  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+  JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
   JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, Int64Base::Finalize
 };
 
 static JSClass sUInt64Class = {
   "UInt64",
   JSCLASS_HAS_RESERVED_SLOTS(INT64_SLOTS),
-  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+  JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
   JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, Int64Base::Finalize
 };
 

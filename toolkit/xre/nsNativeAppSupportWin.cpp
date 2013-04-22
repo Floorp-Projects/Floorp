@@ -33,7 +33,6 @@
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsIDOMLocation.h"
-#include "nsIJSContextStack.h"
 #include "nsIWebNavigation.h"
 #include "nsIWindowMediator.h"
 #include "nsNativeCharsetUtils.h"
@@ -1453,50 +1452,6 @@ HWND hwndForDOMWindow( nsISupports *window ) {
 
     return (HWND)( ppWidget->GetNativeData( NS_NATIVE_WIDGET ) );
 }
-
-static const char sJSStackContractID[] = "@mozilla.org/js/xpc/ContextStack;1";
-
-class SafeJSContext {
-public:
-  SafeJSContext();
-  ~SafeJSContext();
-
-  nsresult   Push();
-  JSContext *get() { return mContext; }
-
-protected:
-  nsCOMPtr<nsIThreadJSContextStack>  mService;
-  JSContext                         *mContext;
-};
-
-SafeJSContext::SafeJSContext() : mContext(nullptr) {
-}
-
-SafeJSContext::~SafeJSContext() {
-  JSContext *cx;
-  DebugOnly<nsresult> rv;
-
-  if(mContext) {
-    rv = mService->Pop(&cx);
-    NS_ASSERTION(NS_SUCCEEDED(rv) && cx == mContext, "JSContext push/pop mismatch");
-  }
-}
-
-nsresult SafeJSContext::Push() {
-  if (mContext) // only once
-    return NS_ERROR_FAILURE;
-
-  mService = do_GetService(sJSStackContractID);
-  if (mService) {
-    JSContext* cx = mService->GetSafeJSContext();
-    if (cx && NS_SUCCEEDED(mService->Push(cx))) {
-      // Save cx in mContext to indicate need to pop.
-      mContext = cx;
-    }
-  }
-  return mContext ? NS_OK : NS_ERROR_FAILURE;
-}
-
 
 nsresult
 nsNativeAppSupportWin::OpenBrowserWindow()

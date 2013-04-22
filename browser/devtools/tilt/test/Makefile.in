@@ -41,6 +41,7 @@ MOCHITEST_BROWSER_FILES = \
 	browser_tilt_math06.js \
 	browser_tilt_math07.js \
 	browser_tilt_picking.js \
+	browser_tilt_picking_inspector.js \
 	browser_tilt_picking_delete.js \
 	browser_tilt_picking_highlight01-offs.js \
 	browser_tilt_picking_highlight01.js \

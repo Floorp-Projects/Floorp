@@ -55,6 +55,13 @@ MOCHITEST_FILES += test_menubar.xul \
                window_menubar.xul
 endif
 
+# popup anchor tests don't work on android.
+ifneq (android,$(MOZ_WIDGET_TOOLKIT))
+MOCHITEST_FILES += \
+		test_popupanchor.xul \
+		$(NULL)
+endif
+
 libs:: $(_CHROME_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)/../chrome
 

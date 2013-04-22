@@ -10,7 +10,6 @@
 #include "nsAutoPtr.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMEventTarget.h"
 #include "nsDOMGamepad.h"
 #include "nsIDOMGamepadButtonEvent.h"
 #include "nsIDOMGamepadAxisMoveEvent.h"

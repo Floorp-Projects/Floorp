@@ -245,7 +245,7 @@ DebuggerClient.requester = function DC_requester(aPacketSkeleton, { telemetry,
   return function (...args) {
     let histogram, startTime;
     if (telemetry) {
-      let transportType = this._transport instanceof LocalDebuggerTransport
+      let transportType = this._transport.onOutputStreamReady === undefined
         ? "LOCAL_"
         : "REMOTE_";
       let histogramId = "DEVTOOLS_DEBUGGER_RDP_"
@@ -253,7 +253,6 @@ DebuggerClient.requester = function DC_requester(aPacketSkeleton, { telemetry,
       histogram = Services.telemetry.getHistogramById(histogramId);
       startTime = +new Date;
     }
-
     let outgoingPacket = {
       to: aPacketSkeleton.to || this.actor
     };
@@ -413,7 +412,10 @@ DebuggerClient.prototype = {
    */
   attachTab: function DC_attachTab(aTabActor, aOnResponse) {
     let self = this;
-    let packet = { to: aTabActor, type: "attach" };
+    let packet = {
+      to: aTabActor,
+      type: "attach"
+    };
     this.request(packet, function(aResponse) {
       let tabClient;
       if (!aResponse.error) {
@@ -463,10 +465,17 @@ DebuggerClient.prototype = {
    * @param function aOnResponse
    *        Called with the response packet and a ThreadClient
    *        (which will be undefined on error).
+   * @param object aOptions
+   *        Configuration options.
+   *        - useSourceMaps: whether to use source maps or not.
    */
-  attachThread: function DC_attachThread(aThreadActor, aOnResponse) {
+  attachThread: function DC_attachThread(aThreadActor, aOnResponse, aOptions={}) {
     let self = this;
-    let packet = { to: aThreadActor, type: "attach" };
+    let packet = {
+      to: aThreadActor,
+      type: "attach",
+      options: aOptions
+    };
     this.request(packet, function(aResponse) {
       if (!aResponse.error) {
         var threadClient = new ThreadClient(self, aThreadActor);
@@ -475,6 +484,23 @@ DebuggerClient.prototype = {
       }
       aOnResponse(aResponse, threadClient);
     });
+  },
+
+  /**
+   * Reconfigure a thread actor.
+   *
+   * @param boolean aUseSourceMaps
+   *        A flag denoting whether to use source maps or not.
+   * @param function aOnResponse
+   *        Called with the response packet.
+   */
+  reconfigureThread: function DC_reconfigureThread(aUseSourceMaps, aOnResponse) {
+    let packet = {
+      to: this.activeThread._actor,
+      type: "reconfigure",
+      options: { useSourceMaps: aUseSourceMaps }
+    };
+    this.request(packet, aOnResponse);
   },
 
   /**
@@ -523,7 +549,7 @@ DebuggerClient.prototype = {
    */
   _sendRequests: function DC_sendRequests() {
     let self = this;
-    this._pendingRequests = this._pendingRequests.filter(function(request) {
+    this._pendingRequests = this._pendingRequests.filter(function (request) {
       if (request.to in self._activeRequests) {
         return true;
       }
@@ -550,7 +576,7 @@ DebuggerClient.prototype = {
       ? aPacket
       : this.compat.onPacket(aPacket);
 
-    resolve(packet).then(function (aPacket) {
+    resolve(packet).then((aPacket) => {
       if (!this._connected) {
         // Hello packet.
         this._connected = true;
@@ -560,55 +586,53 @@ DebuggerClient.prototype = {
         return;
       }
 
-      try {
-        if (!aPacket.from) {
-          let msg = "Server did not specify an actor, dropping packet: " +
-                    JSON.stringify(aPacket);
-          Cu.reportError(msg);
-          dumpn(msg);
-          return;
-        }
+      if (!aPacket.from) {
+        let msg = "Server did not specify an actor, dropping packet: " +
+                  JSON.stringify(aPacket);
+        Cu.reportError(msg);
+        dumpn(msg);
+        return;
+      }
 
-        let onResponse;
-        // Don't count unsolicited notifications or pauses as responses.
-        if (aPacket.from in this._activeRequests &&
-            !(aPacket.type in UnsolicitedNotifications) &&
-            !(aPacket.type == ThreadStateTypes.paused &&
-              aPacket.why.type in UnsolicitedPauses)) {
-          onResponse = this._activeRequests[aPacket.from].onResponse;
-          delete this._activeRequests[aPacket.from];
-        }
+      let onResponse;
+      // Don't count unsolicited notifications or pauses as responses.
+      if (aPacket.from in this._activeRequests &&
+          !(aPacket.type in UnsolicitedNotifications) &&
+          !(aPacket.type == ThreadStateTypes.paused &&
+            aPacket.why.type in UnsolicitedPauses)) {
+        onResponse = this._activeRequests[aPacket.from].onResponse;
+        delete this._activeRequests[aPacket.from];
+      }
 
-        // Packets that indicate thread state changes get special treatment.
-        if (aPacket.type in ThreadStateTypes &&
-            aPacket.from in this._threadClients) {
-          this._threadClients[aPacket.from]._onThreadState(aPacket);
-        }
-        // On navigation the server resumes, so the client must resume as well.
-        // We achieve that by generating a fake resumption packet that triggers
-        // the client's thread state change listeners.
-        if (this.activeThread &&
-            aPacket.type == UnsolicitedNotifications.tabNavigated &&
-            aPacket.from in this._tabClients) {
-          let resumption = { from: this.activeThread._actor, type: "resumed" };
-          this.activeThread._onThreadState(resumption);
-        }
-        // Only try to notify listeners on events, not responses to requests
-        // that lack a packet type.
-        if (aPacket.type) {
-          this.notify(aPacket.type, aPacket);
-        }
+      // Packets that indicate thread state changes get special treatment.
+      if (aPacket.type in ThreadStateTypes &&
+          aPacket.from in this._threadClients) {
+        this._threadClients[aPacket.from]._onThreadState(aPacket);
+      }
+      // On navigation the server resumes, so the client must resume as well.
+      // We achieve that by generating a fake resumption packet that triggers
+      // the client's thread state change listeners.
+      if (this.activeThread &&
+          aPacket.type == UnsolicitedNotifications.tabNavigated &&
+          aPacket.from in this._tabClients) {
+        let resumption = { from: this.activeThread._actor, type: "resumed" };
+        this.activeThread._onThreadState(resumption);
+      }
+      // Only try to notify listeners on events, not responses to requests
+      // that lack a packet type.
+      if (aPacket.type) {
+        this.notify(aPacket.type, aPacket);
+      }
 
-        if (onResponse) {
-          onResponse(aPacket);
-        }
-      } catch(ex) {
-        dumpn("Error handling response: " + ex + " - stack:\n" + ex.stack);
-        Cu.reportError(ex + "\n" + ex.stack);
+      if (onResponse) {
+        onResponse(aPacket);
       }
 
       this._sendRequests();
-    }.bind(this));
+    }, function (ex) {
+      dumpn("Error handling response: " + ex + " - stack:\n" + ex.stack);
+      Cu.reportError(ex.message + "\n" + ex.stack);
+    });
   },
 
   /**
@@ -831,6 +855,7 @@ function TabClient(aClient, aActor) {
 
 TabClient.prototype = {
   get actor() { return this._actor },
+  get _transport() { return this._client._transport; },
 
   /**
    * Detach the client from the tab actor.
@@ -885,6 +910,7 @@ ThreadClient.prototype = {
   get actor() { return this._actor; },
 
   get compat() { return this._client.compat; },
+  get _transport() { return this._client._transport; },
 
   _assertPaused: function TC_assertPaused(aCommand) {
     if (!this.paused) {
@@ -1410,6 +1436,7 @@ function GripClient(aClient, aGrip)
 
 GripClient.prototype = {
   get actor() { return this._grip.actor },
+  get _transport() { return this._client._transport; },
 
   valid: true,
 
@@ -1500,6 +1527,7 @@ LongStringClient.prototype = {
   get actor() { return this._grip.actor; },
   get length() { return this._grip.length; },
   get initial() { return this._grip.initial; },
+  get _transport() { return this._client._transport; },
 
   valid: true,
 
@@ -1536,6 +1564,8 @@ function SourceClient(aClient, aForm) {
 }
 
 SourceClient.prototype = {
+  get _transport() { return this._client._transport; },
+
   /**
    * Get a long string grip for this SourceClient's source.
    */
@@ -1593,6 +1623,7 @@ BreakpointClient.prototype = {
 
   _actor: null,
   get actor() { return this._actor; },
+  get _transport() { return this._client._transport; },
 
   /**
    * Remove the breakpoint from the server.

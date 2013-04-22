@@ -6,3 +6,7 @@
 
 MODULE = 'libbz2'
 
+EXPORTS += [
+    'bzlib.h',
+]
+

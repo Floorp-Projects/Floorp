@@ -28,6 +28,9 @@
 #include "gfxUtils.h"
 #include "nsNPAPIPluginInstance.h"
 #include "Layers.h"
+#include "SharedTextureImage.h"
+#include "GLContext.h"
+#include "GLContextProvider.h"
 
 #if defined(OS_WIN)
 #include <windowsx.h>
@@ -47,6 +50,7 @@ extern const PRUnichar* kFlashFullscreenClass;
 
 using namespace mozilla::plugins;
 using namespace mozilla::layers;
+using namespace mozilla::gl;
 
 bool
 StreamNotifyParent::RecvRedirectNotifyResponse(const bool& allow)
@@ -739,18 +743,26 @@ PluginInstanceParent::GetImageContainer(ImageContainer** aContainer)
 
 #ifdef XP_MACOSX
     if (ioSurface) {
-        ImageFormat format = MAC_IO_SURFACE;
+        ImageFormat format = SHARED_TEXTURE;
         nsRefPtr<Image> image = container->CreateImage(&format, 1);
         if (!image) {
             return NS_ERROR_FAILURE;
         }
 
-        NS_ASSERTION(image->GetFormat() == MAC_IO_SURFACE, "Wrong format?");
-        MacIOSurfaceImage* ioImage = static_cast<MacIOSurfaceImage*>(image.get());
-        MacIOSurfaceImage::Data ioData;
-        ioData.mIOSurface = ioSurface;
-        ioImage->SetData(ioData);
-        container->SetCurrentImageInTransaction(ioImage);
+        NS_ASSERTION(image->GetFormat() == SHARED_TEXTURE, "Wrong format?");
+
+        SharedTextureImage::Data data;
+        data.mShareType = GLContext::SameProcess;
+        data.mHandle = GLContextProviderCGL::CreateSharedHandle(data.mShareType,
+                                                                ioSurface,
+                                                                GLContext::IOSurface);
+        data.mInverted = false;
+        data.mSize = gfxIntSize(ioSurface->GetWidth(), ioSurface->GetHeight());
+
+        SharedTextureImage* pluginImage = static_cast<SharedTextureImage*>(image.get());
+        pluginImage->SetData(data);
+
+        container->SetCurrentImageInTransaction(pluginImage);
 
         NS_IF_ADDREF(container);
         *aContainer = container;

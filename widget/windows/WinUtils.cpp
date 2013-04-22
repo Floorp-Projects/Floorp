@@ -75,6 +75,23 @@ WinUtils::GetWindowsVersion()
 
 /* static */
 bool
+WinUtils::GetWindowsServicePackVersion(UINT& aOutMajor, UINT& aOutMinor)
+{
+  OSVERSIONINFOEX osInfo;
+  osInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+  // This cast is safe and supposed to be here, don't worry
+  if (!::GetVersionEx((OSVERSIONINFO*)&osInfo)) {
+    return false;
+  }
+  
+  aOutMajor = osInfo.wServicePackMajor;
+  aOutMinor = osInfo.wServicePackMinor;
+
+  return true;
+}
+
+/* static */
+bool
 WinUtils::PeekMessage(LPMSG aMsg, HWND aWnd, UINT aFirstMessage,
                       UINT aLastMessage, UINT aOption)
 {

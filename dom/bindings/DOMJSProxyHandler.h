@@ -54,6 +54,7 @@ public:
     JS::Value v = js::GetProxyExtra(obj, JSPROXYSLOT_EXPANDO);
     return v.isUndefined() ? NULL : v.toObjectOrNull();
   }
+  static JSObject* GetAndClearExpandoObject(JSObject* obj);
   static JSObject* EnsureExpandoObject(JSContext* cx, JSObject* obj);
 
   const DOMClass& mClass;

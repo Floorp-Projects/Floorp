@@ -29,7 +29,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMEventTarget.h"
 #include "nsIDOMXULElement.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMScreen.h"
@@ -37,7 +36,6 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIIOService.h"
-#include "nsIJSContextStack.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIObserverService.h"
 #include "nsIWindowMediator.h"
@@ -54,6 +52,7 @@
 #include "nsPresContext.h"
 #include "nsContentUtils.h"
 #include "nsWebShellWindow.h" // get rid of this one, too...
+#include "nsDOMEvent.h"
 
 #include "prenv.h"
 #include "mozilla/Preferences.h"
@@ -226,20 +225,17 @@ NS_IMETHODIMP nsXULWindow::SetZLevel(uint32_t aLevel)
   nsCOMPtr<nsIContentViewer> cv;
   mDocShell->GetContentViewer(getter_AddRefs(cv));
   if (cv) {
-    nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(cv->GetDocument());
-    if (domDoc) {
-      nsCOMPtr<nsIDOMEvent> event;
-      domDoc->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
+    nsCOMPtr<nsIDocument> doc = cv->GetDocument();
+    if (doc) {
+      ErrorResult rv;
+      nsRefPtr<nsDOMEvent> event = doc->CreateEvent(NS_LITERAL_STRING("Events"),rv);
       if (event) {
         event->InitEvent(NS_LITERAL_STRING("windowZLevel"), true, false);
 
         event->SetTrusted(true);
 
-        nsCOMPtr<nsIDOMEventTarget> targ = do_QueryInterface(domDoc);
-        if (targ) {
-          bool defaultActionEnabled;
-          targ->DispatchEvent(event, &defaultActionEnabled);
-        }
+        bool defaultActionEnabled;
+        doc->DispatchEvent(event, &defaultActionEnabled);
       }
     }
   }
@@ -360,16 +356,14 @@ NS_IMETHODIMP nsXULWindow::ShowModal()
   mContinueModalLoop = true;
   EnableParent(false);
 
-  nsCOMPtr<nsIJSContextStack> stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1"));
-  if (stack && NS_SUCCEEDED(stack->Push(nullptr))) {
+  {
+    nsCxPusher pusher;
+    pusher.PushNull();
     nsIThread *thread = NS_GetCurrentThread();
     while (mContinueModalLoop) {
       if (!NS_ProcessNextEvent(thread))
         break;
     }
-    JSContext* cx;
-    stack->Pop(&cx);
-    NS_ASSERTION(cx == nullptr, "JSContextStack mismatch");
   }
 
   mContinueModalLoop = false;
@@ -1815,17 +1809,15 @@ NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(int32_t aChromeFlags,
   xulWin->LockUntilChromeLoad();
 
   // Push nullptr onto the JSContext stack before we dispatch a native event.
-  nsCOMPtr<nsIJSContextStack> stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1"));
-  if (stack && NS_SUCCEEDED(stack->Push(nullptr))) {
+  {
+    nsCxPusher pusher;
+    pusher.PushNull();
     nsIThread *thread = NS_GetCurrentThread();
     while (xulWin->IsLocked()) {
       if (!NS_ProcessNextEvent(thread))
         break;
     }
-    JSContext *cx;
-    stack->Pop(&cx);
-    NS_ASSERTION(cx == nullptr, "JSContextStack mismatch");
-  }
+ }
 
   NS_ENSURE_STATE(xulWin->mPrimaryContentShell);
 

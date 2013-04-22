@@ -18,11 +18,14 @@ namespace layers {
 
 struct FPSState;
 class CompositingRenderTargetOGL;
+class GLManagerCompositor;
 
 class CompositorOGL : public Compositor
 {
   typedef mozilla::gl::GLContext GLContext;
   typedef mozilla::gl::ShaderProgramType ProgramType;
+  
+  friend class GLManagerCompositor;
 
 public:
   CompositorOGL(nsIWidget *aWidget, int aSurfaceWidth = -1, int aSurfaceHeight = -1,
@@ -137,6 +140,12 @@ private:
 
   /** The size of the surface we are rendering to */
   nsIntSize mSurfaceSize;
+
+  /** Helper-class used by Initialize **/
+  class ReadDrawFPSPref MOZ_FINAL : public nsRunnable {
+  public:
+    NS_IMETHOD Run() MOZ_OVERRIDE;
+  };
 
   already_AddRefed<mozilla::gl::GLContext> CreateContext();
 

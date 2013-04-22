@@ -16,7 +16,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsFrameLoader.h"
 #include "nsDOMTouchEvent.h"
-#include "nsDOMStorage.h"
 #include "GeckoProfiler.h"
 #include "GeneratedEvents.h"
 #include "mozilla/dom/EventTarget.h"
