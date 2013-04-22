@@ -46,7 +46,9 @@ ContentHostBase::Composite(EffectChain& aEffectChain,
 {
   NS_ASSERTION(aVisibleRegion, "Requires a visible region");
 
-  if (!mTextureHost || !mTextureHost->Lock()) {
+  AutoLockTextureHost lock(mTextureHost);
+
+  if (!mTextureHost || !lock->IsValid()) {
     return;
   }
 
@@ -81,7 +83,6 @@ ContentHostBase::Composite(EffectChain& aEffectChain,
   subregion.And(region, textureRect);
   if (subregion.IsEmpty()) {
     // Region is empty, nothing to draw
-    mTextureHost->Unlock();
     return;
   }
 
@@ -182,8 +183,6 @@ ContentHostBase::Composite(EffectChain& aEffectChain,
   if (iterOnWhite) {
     iterOnWhite->EndTileIteration();
   }
-
-  mTextureHost->Unlock();
 }
 
 void
