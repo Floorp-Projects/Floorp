@@ -470,6 +470,13 @@ double
 js::ecmaPow(double x, double y)
 {
     /*
+     * Use powi if the exponent is an integer-valued double. We don't have to
+     * check for NaN since a comparison with NaN is always false.
+     */
+    if (int32_t(y) == y)
+        return powi(x, int32_t(y));
+
+    /*
      * Because C99 and ECMA specify different behavior for pow(),
      * we need to wrap the libm call to make it ECMA compliant.
      */
@@ -491,7 +498,7 @@ js::ecmaPow(double x, double y)
 JSBool
 js_math_pow(JSContext *cx, unsigned argc, Value *vp)
 {
-    double x, y, z;
+    double x, y;
 
     if (argc <= 1) {
         vp->setDouble(js_NaN);
@@ -519,15 +526,7 @@ js_math_pow(JSContext *cx, unsigned argc, Value *vp)
         return JS_TRUE;
     }
 
-    /*
-     * Use powi if the exponent is an integer or an integer-valued double.
-     * We don't have to check for NaN since a comparison with NaN is always
-     * false.
-     */
-    if (int32_t(y) == y)
-        z = powi(x, int32_t(y));
-    else
-        z = ecmaPow(x, y);
+    double z = ecmaPow(x, y);
 
     vp->setNumber(z);
     return JS_TRUE;
