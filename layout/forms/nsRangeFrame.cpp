@@ -8,6 +8,7 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsContentList.h"
 #include "nsContentUtils.h"
+#include "nsCSSRenderingBorders.h"
 #include "nsFontMetrics.h"
 #include "nsFormControlFrame.h"
 #include "nsIContent.h"
@@ -158,6 +159,59 @@ nsRangeFrame::AppendAnonymousContentTo(nsBaseContentList& aElements,
   aElements.MaybeAppendElement(mThumbDiv);
 }
 
+class nsDisplayRangeFocusRing : public nsDisplayItem
+{
+public:
+  nsDisplayRangeFocusRing(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
+    : nsDisplayItem(aBuilder, aFrame) {
+    MOZ_COUNT_CTOR(nsDisplayRangeFocusRing);
+  }
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayRangeFocusRing() {
+    MOZ_COUNT_DTOR(nsDisplayRangeFocusRing);
+  }
+#endif
+  
+  virtual void Paint(nsDisplayListBuilder* aBuilder, nsRenderingContext* aCtx) MOZ_OVERRIDE;
+  NS_DISPLAY_DECL_NAME("RangeFocusRing", TYPE_OUTLINE)
+};
+
+void
+nsDisplayRangeFocusRing::Paint(nsDisplayListBuilder* aBuilder,
+                               nsRenderingContext* aCtx)
+{
+  nsPresContext *presContext = mFrame->PresContext();
+  nscoord appUnitsPerDevPixel = presContext->DevPixelsToAppUnits(1);
+  gfxContext* ctx = aCtx->ThebesContext();
+  nsRect r = nsRect(ToReferenceFrame(), mFrame->GetSize());
+  gfxRect pxRect(nsLayoutUtils::RectToGfxRect(r, appUnitsPerDevPixel));
+  uint8_t borderStyles[4] = { NS_STYLE_BORDER_STYLE_DOTTED,
+                              NS_STYLE_BORDER_STYLE_DOTTED,
+                              NS_STYLE_BORDER_STYLE_DOTTED,
+                              NS_STYLE_BORDER_STYLE_DOTTED };
+  gfxFloat borderWidths[4] = { 1, 1, 1, 1 };
+  gfxCornerSizes borderRadii(0);
+  nscolor borderColors[4] = { NS_RGB(0, 0, 0), NS_RGB(0, 0, 0),
+                              NS_RGB(0, 0, 0), NS_RGB(0, 0, 0) };
+  nsStyleContext* bgContext = mFrame->StyleContext();
+  nscolor bgColor =
+    bgContext->GetVisitedDependentColor(eCSSProperty_background_color);
+
+  ctx->Save();
+  nsCSSBorderRenderer br(appUnitsPerDevPixel,
+                         ctx,
+                         pxRect,
+                         borderStyles,
+                         borderWidths,
+                         borderRadii,
+                         borderColors,
+                         nullptr,
+                         0,
+                         bgColor);
+  br.DrawBorders();
+  ctx->Restore();
+}
+
 void
 nsRangeFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                const nsRect&           aDirtyRect,
@@ -179,6 +233,22 @@ nsRangeFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     }
   } else {
     BuildDisplayListForInline(aBuilder, aDirtyRect, aLists);
+  }
+
+  // Draw a focus outline if appropriate:
+  nsEventStates eventStates = mContent->AsElement()->State();
+  if (!eventStates.HasState(NS_EVENT_STATE_FOCUSRING) ||
+      eventStates.HasState(NS_EVENT_STATE_DISABLED)) {
+    return;
+  }
+  nsPresContext *presContext = PresContext();
+  const nsStyleDisplay *disp = StyleDisplay();
+  if ((!IsThemed(disp) ||
+       !presContext->GetTheme()->
+         ThemeDrawsFocusForWidget(presContext, this, disp->mAppearance)) &&
+      IsVisibleForPainting(aBuilder)) {
+    aLists.Content()->AppendNewToTop(
+      new (aBuilder) nsDisplayRangeFocusRing(aBuilder, this));
   }
 }
 
