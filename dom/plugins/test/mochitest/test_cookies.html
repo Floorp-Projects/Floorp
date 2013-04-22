@@ -7,9 +7,6 @@
 <body onload="runTests()">
   <embed id="plugin1" type="application/x-test" width="400" height="400"></embed>
   <script class="testbody" type="application/javascript">
-if (!navigator.platform.startsWith("Mac")) {
-  SimpleTest.expectAssertions(1);
-}
     SimpleTest.waitForExplicitFinish();
     function runTests() {
       var pluginElement = document.getElementById("plugin1");
