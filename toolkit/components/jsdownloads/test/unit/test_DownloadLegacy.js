@@ -33,7 +33,14 @@ function promiseStartLegacyDownload(aSourceURI, aOutPersist) {
 
   let persist = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"]
                   .createInstance(Ci.nsIWebBrowserPersist);
-  let transfer = Cc["@mozilla.org/transfer;1"].createInstance(Ci.nsITransfer);
+
+  // We must create the nsITransfer implementation using its class ID because
+  // the "@mozilla.org/transfer;1" contract is currently implemented in
+  // "toolkit/components/downloads".  When the other folder is not included in
+  // builds anymore (bug 851471), we'll be able to use the contract ID.
+  let transfer =
+      Components.classesByID["{1b4c85df-cbdd-4bb6-b04e-613caece083c}"]
+                .createInstance(Ci.nsITransfer);
 
   if (aOutPersist) {
     aOutPersist.value = persist;
@@ -78,18 +85,20 @@ function promiseStartLegacyDownload(aSourceURI, aOutPersist) {
  */
 add_task(function test_basic()
 {
-  let targetFile = getTempFile(TEST_TARGET_FILE_NAME);
+  let tempDirectory = FileUtils.getDir("TmpD", []);
 
   let download = yield promiseStartLegacyDownload();
 
   // Checks the generated DownloadSource and DownloadTarget properties.
   do_check_true(download.source.uri.equals(TEST_SOURCE_URI));
-  do_check_true(download.target.file.equals(targetFile));
+  do_check_true(download.target.file.parent.equals(tempDirectory));
 
-  // The download is already started, just wait for completion.
-  yield download.whenSucceeded();
+  // The download is already started, wait for completion and report any errors.
+  if (!download.stopped) {
+    yield download.start();
+  }
 
-  yield promiseVerifyContents(targetFile, TEST_DATA_SHORT);
+  yield promiseVerifyContents(download.target.file, TEST_DATA_SHORT);
 });
 
 /**
@@ -99,8 +108,10 @@ add_task(function test_final_state()
 {
   let download = yield promiseStartLegacyDownload();
 
-  // The download is already started, just wait for completion.
-  yield download.whenSucceeded();
+  // The download is already started, wait for completion and report any errors.
+  if (!download.stopped) {
+    yield download.start();
+  }
 
   do_check_true(download.stopped);
   do_check_true(download.succeeded);
@@ -134,8 +145,10 @@ add_task(function test_intermediate_progress()
   download.onchange = onchange;
   onchange();
 
-  // The download is already started, just wait for completion.
-  yield download.whenSucceeded();
+  // The download is already started, wait for completion and report any errors.
+  if (!download.stopped) {
+    yield download.start();
+  }
 
   do_check_true(download.stopped);
   do_check_eq(download.progress, 100);
@@ -151,7 +164,10 @@ add_task(function test_empty_progress()
 {
   let download = yield promiseStartLegacyDownload(TEST_EMPTY_URI);
 
-  yield download.whenSucceeded();
+  // The download is already started, wait for completion and report any errors.
+  if (!download.stopped) {
+    yield download.start();
+  }
 
   do_check_true(download.stopped);
   do_check_true(download.hasProgress);
@@ -184,9 +200,12 @@ add_task(function test_empty_noprogress()
   do_check_eq(download.currentBytes, 0);
   do_check_eq(download.totalBytes, 0);
 
-  // Now allow the response to finish, and wait for the download to complete.
+  // Now allow the response to finish, and wait for the download to complete,
+  // while reporting any errors that may occur.
   deferResponse.resolve();
-  yield download.whenSucceeded();
+  if (!download.stopped) {
+    yield download.start();
+  }
 
   // Verify the state of the completed download.
   do_check_true(download.stopped);
