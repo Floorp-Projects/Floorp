@@ -16,6 +16,7 @@ namespace layers {
 class ContainerLayer;
 class Layer;
 class LayerManager;
+class ShadowLayersParent;
 
 class ShadowLayerParent : public PLayerParent
 {

@@ -143,7 +143,7 @@ public:
   { return eTransparencyTransparent; }
 
   virtual LayerManager*
-  GetLayerManager(PLayerTransactionChild* aShadowManager = nullptr,
+  GetLayerManager(PLayersChild* aShadowManager = nullptr,
                   LayersBackend aBackendHint = mozilla::layers::LAYERS_NONE,
                   LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT,
                   bool* aAllowRetaining = nullptr);

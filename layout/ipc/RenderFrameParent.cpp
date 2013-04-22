@@ -17,7 +17,7 @@
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/layers/AsyncPanZoomController.h"
 #include "mozilla/layers/CompositorParent.h"
-#include "mozilla/layers/LayerTransactionParent.h"
+#include "mozilla/layers/ShadowLayersParent.h"
 #include "nsContentUtils.h"
 #include "nsFrameLoader.h"
 #include "nsIObserver.h"
@@ -629,13 +629,13 @@ RenderFrameParent::~RenderFrameParent()
 void
 RenderFrameParent::Destroy()
 {
-  size_t numChildren = ManagedPLayerTransactionParent().Length();
+  size_t numChildren = ManagedPLayersParent().Length();
   NS_ABORT_IF_FALSE(0 == numChildren || 1 == numChildren,
                     "render frame must only have 0 or 1 layer manager");
 
   if (numChildren) {
-    LayerTransactionParent* layers =
-      static_cast<LayerTransactionParent*>(ManagedPLayerTransactionParent()[0]);
+    ShadowLayersParent* layers =
+      static_cast<ShadowLayersParent*>(ManagedPLayersParent()[0]);
     layers->Destroy();
   }
 
@@ -657,7 +657,7 @@ RenderFrameParent::ContentViewScaleChanged(nsContentView* aView)
 }
 
 void
-RenderFrameParent::ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
+RenderFrameParent::ShadowLayersUpdated(ShadowLayersParent* aLayerTree,
                                        const TargetConfig& aTargetConfig,
                                        bool isFirstPaint)
 {
@@ -846,18 +846,18 @@ RenderFrameParent::RecvDetectScrollableSubframe()
   return true;
 }
 
-PLayerTransactionParent*
-RenderFrameParent::AllocPLayerTransaction()
+PLayersParent*
+RenderFrameParent::AllocPLayers()
 {
   if (!mFrameLoader || mFrameLoaderDestroyed) {
     return nullptr;
   }
   nsRefPtr<LayerManager> lm = GetFrom(mFrameLoader);
-  return new LayerTransactionParent(lm->AsShadowManager(), this, 0);
+  return new ShadowLayersParent(lm->AsShadowManager(), this, 0);
 }
 
 bool
-RenderFrameParent::DeallocPLayerTransaction(PLayerTransactionParent* aLayers)
+RenderFrameParent::DeallocPLayers(PLayersParent* aLayers)
 {
   delete aLayers;
   return true;
@@ -915,14 +915,14 @@ RenderFrameParent::TriggerRepaint()
   docFrame->SchedulePaint();
 }
 
-LayerTransactionParent*
+ShadowLayersParent*
 RenderFrameParent::GetShadowLayers() const
 {
-  const InfallibleTArray<PLayerTransactionParent*>& shadowParents = ManagedPLayerTransactionParent();
+  const InfallibleTArray<PLayersParent*>& shadowParents = ManagedPLayersParent();
   NS_ABORT_IF_FALSE(shadowParents.Length() <= 1,
-                    "can only support at most 1 LayerTransactionParent");
+                    "can only support at most 1 ShadowLayersParent");
   return (shadowParents.Length() == 1) ?
-    static_cast<LayerTransactionParent*>(shadowParents[0]) : nullptr;
+    static_cast<ShadowLayersParent*>(shadowParents[0]) : nullptr;
 }
 
 uint64_t
@@ -934,7 +934,7 @@ RenderFrameParent::GetLayerTreeId() const
 ContainerLayer*
 RenderFrameParent::GetRootLayer() const
 {
-  LayerTransactionParent* shadowLayers = GetShadowLayers();
+  ShadowLayersParent* shadowLayers = GetShadowLayers();
   return shadowLayers ? shadowLayers->GetRoot() : nullptr;
 }
 

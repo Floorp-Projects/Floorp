@@ -15,7 +15,7 @@
 #include "mozilla/unused.h"
 #include "RenderTrace.h"
 #include "ShadowLayerParent.h"
-#include "LayerTransactionParent.h"
+#include "ShadowLayersParent.h"
 #include "ShadowLayers.h"
 #include "ShadowLayerUtils.h"
 #include "TiledLayerBuffer.h"
@@ -124,25 +124,25 @@ ShadowChild(const OpRaiseToTopChild& op)
 }
 
 //--------------------------------------------------
-// LayerTransactionParent
-LayerTransactionParent::LayerTransactionParent(ShadowLayerManager* aManager,
-                                               ShadowLayersManager* aLayersManager,
-                                               uint64_t aId)
+// ShadowLayersParent
+ShadowLayersParent::ShadowLayersParent(ShadowLayerManager* aManager,
+                                       ShadowLayersManager* aLayersManager,
+                                       uint64_t aId)
   : mLayerManager(aManager)
   , mShadowLayersManager(aLayersManager)
   , mId(aId)
   , mDestroyed(false)
 {
-  MOZ_COUNT_CTOR(LayerTransactionParent);
+  MOZ_COUNT_CTOR(ShadowLayersParent);
 }
 
-LayerTransactionParent::~LayerTransactionParent()
+ShadowLayersParent::~ShadowLayersParent()
 {
-  MOZ_COUNT_DTOR(LayerTransactionParent);
+  MOZ_COUNT_DTOR(ShadowLayersParent);
 }
 
 void
-LayerTransactionParent::Destroy()
+ShadowLayersParent::Destroy()
 {
   mDestroyed = true;
   for (size_t i = 0; i < ManagedPLayerParent().Length(); ++i) {
@@ -154,18 +154,18 @@ LayerTransactionParent::Destroy()
 
 /* virtual */
 bool
-LayerTransactionParent::RecvUpdateNoSwap(const InfallibleTArray<Edit>& cset,
-                                         const TargetConfig& targetConfig,
-                                         const bool& isFirstPaint)
+ShadowLayersParent::RecvUpdateNoSwap(const InfallibleTArray<Edit>& cset,
+                                     const TargetConfig& targetConfig,
+                                     const bool& isFirstPaint)
 {
   return RecvUpdate(cset, targetConfig, isFirstPaint, nullptr);
 }
 
 bool
-LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
-                                   const TargetConfig& targetConfig,
-                                   const bool& isFirstPaint,
-                                   InfallibleTArray<EditReply>* reply)
+ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
+                               const TargetConfig& targetConfig,
+                               const bool& isFirstPaint,
+                               InfallibleTArray<EditReply>* reply)
 {
 #ifdef COMPOSITOR_PERFORMANCE_WARNING
   TimeStamp updateStart = TimeStamp::Now();
@@ -421,7 +421,7 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
 }
 
 void
-LayerTransactionParent::Attach(ShadowLayerParent* aLayerParent, CompositableParent* aCompositable)
+ShadowLayersParent::Attach(ShadowLayerParent* aLayerParent, CompositableParent* aCompositable)
 {
   ShadowLayer* layer = aLayerParent->AsLayer()->AsShadowLayer();
   MOZ_ASSERT(layer);
@@ -437,7 +437,7 @@ LayerTransactionParent::Attach(ShadowLayerParent* aLayerParent, CompositablePare
 }
 
 bool
-LayerTransactionParent::RecvClearCachedResources()
+ShadowLayersParent::RecvClearCachedResources()
 {
   if (mRoot) {
     // NB: |mRoot| here is the *child* context's root.  In this parent
@@ -449,9 +449,9 @@ LayerTransactionParent::RecvClearCachedResources()
 }
 
 PGrallocBufferParent*
-LayerTransactionParent::AllocPGrallocBuffer(const gfxIntSize& aSize,
-                                            const gfxContentType& aContent,
-                                            MaybeMagicGrallocBufferHandle* aOutHandle)
+ShadowLayersParent::AllocPGrallocBuffer(const gfxIntSize& aSize,
+                                        const gfxContentType& aContent,
+                                        MaybeMagicGrallocBufferHandle* aOutHandle)
 {
 #ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
   return GrallocBufferActor::Create(aSize, aContent, aOutHandle);
@@ -462,7 +462,7 @@ LayerTransactionParent::AllocPGrallocBuffer(const gfxIntSize& aSize,
 }
 
 bool
-LayerTransactionParent::DeallocPGrallocBuffer(PGrallocBufferParent* actor)
+ShadowLayersParent::DeallocPGrallocBuffer(PGrallocBufferParent* actor)
 {
 #ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
   delete actor;
@@ -474,26 +474,26 @@ LayerTransactionParent::DeallocPGrallocBuffer(PGrallocBufferParent* actor)
 }
 
 PLayerParent*
-LayerTransactionParent::AllocPLayer()
+ShadowLayersParent::AllocPLayer()
 {
   return new ShadowLayerParent();
 }
 
 bool
-LayerTransactionParent::DeallocPLayer(PLayerParent* actor)
+ShadowLayersParent::DeallocPLayer(PLayerParent* actor)
 {
   delete actor;
   return true;
 }
 
 PCompositableParent*
-LayerTransactionParent::AllocPCompositable(const TextureInfo& aInfo)
+ShadowLayersParent::AllocPCompositable(const TextureInfo& aInfo)
 {
   return new CompositableParent(this, aInfo);
 }
 
 bool
-LayerTransactionParent::DeallocPCompositable(PCompositableParent* actor)
+ShadowLayersParent::DeallocPCompositable(PCompositableParent* actor)
 {
   delete actor;
   return true;

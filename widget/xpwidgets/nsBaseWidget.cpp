@@ -896,9 +896,9 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
   mCompositorChild->Open(parentChannel, childMessageLoop, childSide);
 
   TextureFactoryIdentifier textureFactoryIdentifier;
-  PLayerTransactionChild* shadowManager;
+  PLayersChild* shadowManager;
   mozilla::layers::LayersBackend backendHint = mozilla::layers::LAYERS_OPENGL;
-  shadowManager = mCompositorChild->SendPLayerTransactionConstructor(
+  shadowManager = mCompositorChild->SendPLayersConstructor(
     backendHint, 0, &textureFactoryIdentifier);
 
   if (shadowManager) {
@@ -927,7 +927,7 @@ bool nsBaseWidget::ShouldUseOffMainThreadCompositing()
   return CompositorParent::CompositorLoop() && !isSmallPopup;
 }
 
-LayerManager* nsBaseWidget::GetLayerManager(PLayerTransactionChild* aShadowManager,
+LayerManager* nsBaseWidget::GetLayerManager(PLayersChild* aShadowManager,
                                             LayersBackend aBackendHint,
                                             LayerManagerPersistence aPersistence,
                                             bool* aAllowRetaining)

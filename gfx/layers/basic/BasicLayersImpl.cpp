@@ -6,7 +6,7 @@
 #include "mozilla/DebugOnly.h"
 
 #include "BasicLayersImpl.h"
-#include "mozilla/layers/PLayerTransaction.h"
+#include "mozilla/layers/PLayers.h"
 
 using namespace mozilla::gfx;
 

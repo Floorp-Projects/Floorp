@@ -6,7 +6,7 @@
 #ifndef GFX_IMAGELAYEROGL_H
 #define GFX_IMAGELAYEROGL_H
 
-#include "mozilla/layers/PLayerTransaction.h"
+#include "mozilla/layers/PLayers.h"
 
 #include "LayerManagerOGL.h"
 #include "ImageLayers.h"
