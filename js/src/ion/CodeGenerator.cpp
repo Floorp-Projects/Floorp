@@ -1807,19 +1807,21 @@ CodeGenerator::generateArgumentsChecks()
 
     CompileInfo &info = gen->info();
 
+    // Indexes need to be shifted by one, to skip the scope chain slot.
+    JS_ASSERT(info.scopeChainSlot() == 0);
+    static const uint32_t START_SLOT = 1;
+
     Label miss;
-    for (uint32_t i = info.startArgSlot(); i < info.endArgSlot(); i++) {
+    for (uint32_t i = START_SLOT; i < CountArgSlots(info.fun()); i++) {
         // All initial parameters are guaranteed to be MParameters.
         MParameter *param = rp->getOperand(i)->toParameter();
         const types::TypeSet *types = param->typeSet();
         if (!types || types->unknown())
             continue;
 
-        // Calculate the offset on the stack of the argument.
-        // (i - info.startArgSlot())    - Compute index of arg within arg vector.
-        // ... * sizeof(Value)          - Scale by value size.
-        // ArgToStackOffset(...)        - Compute displacement within arg vector.
-        int32_t offset = ArgToStackOffset((i - info.startArgSlot()) * sizeof(Value));
+        // Use ReturnReg as a scratch register here, since not all platforms
+        // have an actual ScratchReg.
+        int32_t offset = ArgToStackOffset((i - START_SLOT) * sizeof(Value));
         Label matched;
         masm.guardTypeSet(Address(StackPointer, offset), types, temp, &matched, &miss);
         masm.jump(&miss);
@@ -2845,66 +2847,6 @@ CodeGenerator::visitCreateThisWithTemplate(LCreateThisWithTemplate *lir)
     masm.bind(ool->rejoin());
     masm.initGCThing(objReg, templateObject);
 
-    return true;
-}
-
-typedef JSObject *(*NewIonArgumentsObjectFn)(JSContext *cx, IonJSFrameLayout *frame, HandleObject);
-static const VMFunction NewIonArgumentsObjectInfo =
-    FunctionInfo<NewIonArgumentsObjectFn>((NewIonArgumentsObjectFn) ArgumentsObject::createForIon);
-
-bool
-CodeGenerator::visitCreateArgumentsObject(LCreateArgumentsObject *lir)
-{
-    // This should be getting constructed in the first block only, and not any OSR entry blocks.
-    JS_ASSERT(lir->mir()->block()->id() == 0);
-
-    const LAllocation *callObj = lir->getCallObject();
-    Register temp = ToRegister(lir->getTemp(0));
-
-    masm.movePtr(StackPointer, temp);
-    masm.addPtr(Imm32(frameSize()), temp);
-
-    pushArg(ToRegister(callObj));
-    pushArg(temp);
-    return callVM(NewIonArgumentsObjectInfo, lir);
-}
-
-bool
-CodeGenerator::visitGetArgumentsObjectArg(LGetArgumentsObjectArg *lir)
-{
-    Register temp = ToRegister(lir->getTemp(0));
-    Register argsObj = ToRegister(lir->getArgsObject());
-    ValueOperand out = ToOutValue(lir);
-
-    masm.loadPrivate(Address(argsObj, ArgumentsObject::getDataSlotOffset()), temp);
-    Address argAddr(temp, ArgumentsData::offsetOfArgs() + lir->mir()->argno() * sizeof(Value));
-    masm.loadValue(argAddr, out);
-#ifdef DEBUG
-    Label success;
-    masm.branchTestMagic(Assembler::NotEqual, out, &success);
-    masm.breakpoint();
-    masm.bind(&success);
-#endif
-    return true;
-}
-
-bool
-CodeGenerator::visitSetArgumentsObjectArg(LSetArgumentsObjectArg *lir)
-{
-    Register temp = ToRegister(lir->getTemp(0));
-    Register argsObj = ToRegister(lir->getArgsObject());
-    ValueOperand value = ToValue(lir, LSetArgumentsObjectArg::ValueIndex);
-
-    masm.loadPrivate(Address(argsObj, ArgumentsObject::getDataSlotOffset()), temp);
-    Address argAddr(temp, ArgumentsData::offsetOfArgs() + lir->mir()->argno() * sizeof(Value));
-    emitPreBarrier(argAddr, MIRType_Value);
-#ifdef DEBUG
-    Label success;
-    masm.branchTestMagic(Assembler::NotEqual, argAddr, &success);
-    masm.breakpoint();
-    masm.bind(&success);
-#endif
-    masm.storeValue(value, argAddr);
     return true;
 }
 
