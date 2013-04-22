@@ -241,9 +241,12 @@ nsChildView::nsChildView() : nsBaseWidget()
 , mView(nullptr)
 , mParentView(nullptr)
 , mParentWidget(nullptr)
-, mBackingScaleFactor(0.0)
+, mEffectsLock("WidgetEffects")
+, mShowsResizeIndicator(false)
+, mHasRoundedBottomCorners(false)
 , mFailedResizerImage(false)
 , mFailedCornerMaskImage(false)
+, mBackingScaleFactor(0.0)
 , mVisible(false)
 , mDrawing(false)
 , mPluginDrawing(false)
@@ -271,8 +274,7 @@ nsChildView::~nsChildView()
   
   NS_WARN_IF_FALSE(mOnDestroyCalled, "nsChildView object destroyed without calling Destroy()");
 
-  mResizerImage = nullptr;
-  mCornerMaskImage = nullptr;
+  DestroyCompositor();
 
   // An nsChildView object that was in use can be destroyed without Destroy()
   // ever being called on it.  So we also need to do a quick, safe cleanup
@@ -1852,6 +1854,24 @@ nsChildView::GetThebesSurface()
 }
 
 void
+nsChildView::PrepareWindowEffects()
+{
+  MutexAutoLock lock(mEffectsLock);
+  mShowsResizeIndicator = ShowsResizeIndicator(&mResizeIndicatorRect);
+  mHasRoundedBottomCorners = [mView isKindOfClass:[ChildView class]] &&
+                             [(ChildView*)mView hasRoundedBottomCorners];
+  CGFloat cornerRadius = [(ChildView*)mView bottomCornerRadius];
+  mDevPixelCornerRadius = cornerRadius * BackingScaleFactor();
+}
+
+void
+nsChildView::CleanupWindowEffects()
+{
+  mResizerImage = nullptr;
+  mCornerMaskImage = nullptr;
+}
+
+void
 nsChildView::DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect)
 {
   if (!aManager) {
@@ -1899,14 +1919,15 @@ DrawResizer(CGContextRef aCtx)
 void
 nsChildView::MaybeDrawResizeIndicator(GLManager* aManager, nsIntRect aRect)
 {
-  nsIntRect resizeRect;
-  if (!ShowsResizeIndicator(&resizeRect) || mFailedResizerImage) {
+  if (!mShowsResizeIndicator || mFailedResizerImage) {
     return;
   }
 
   if (!mResizerImage) {
+    MutexAutoLock lock(mEffectsLock);
     mResizerImage =
-      aManager->gl()->CreateTextureImage(nsIntSize(resizeRect.width, resizeRect.height),
+      aManager->gl()->CreateTextureImage(nsIntSize(mResizeIndicatorRect.width,
+                                                   mResizeIndicatorRect.height),
                                          gfxASurface::CONTENT_COLOR_ALPHA,
                                          LOCAL_GL_CLAMP_TO_EDGE,
                                          TextureImage::UseNearestFilter);
@@ -1915,7 +1936,7 @@ nsChildView::MaybeDrawResizeIndicator(GLManager* aManager, nsIntRect aRect)
     if (!mResizerImage)
       return;
 
-    nsIntRegion update(nsIntRect(0, 0, resizeRect.width, resizeRect.height));
+    nsIntRegion update(nsIntRect(0, 0, mResizeIndicatorRect.width, mResizeIndicatorRect.height));
     gfxASurface *asurf = mResizerImage->BeginUpdate(update);
     if (!asurf) {
       mResizerImage = nullptr;
@@ -1970,17 +1991,16 @@ DrawTopLeftCornerMask(CGContextRef aCtx, int aRadius)
 void
 nsChildView::MaybeDrawRoundedBottomCorners(GLManager* aManager, nsIntRect aRect)
 {
-  if (![mView isKindOfClass:[ChildView class]] ||
-      ![(ChildView*)mView hasRoundedBottomCorners] ||
+  if (!mHasRoundedBottomCorners ||
       mFailedCornerMaskImage)
     return;
   
-  CGFloat cornerRadius = [(ChildView*)mView bottomCornerRadius];
-  int devPixelCornerRadius = cornerRadius * BackingScaleFactor();
+  MutexAutoLock lock(mEffectsLock);
   
   if (!mCornerMaskImage) {
     mCornerMaskImage =
-      aManager->gl()->CreateTextureImage(nsIntSize(devPixelCornerRadius, devPixelCornerRadius),
+      aManager->gl()->CreateTextureImage(nsIntSize(mDevPixelCornerRadius,
+                                                   mDevPixelCornerRadius),
                                          gfxASurface::CONTENT_COLOR_ALPHA,
                                          LOCAL_GL_CLAMP_TO_EDGE,
                                          TextureImage::UseNearestFilter);
@@ -1989,7 +2009,7 @@ nsChildView::MaybeDrawRoundedBottomCorners(GLManager* aManager, nsIntRect aRect)
     if (!mCornerMaskImage)
       return;
 
-    nsIntRegion update(nsIntRect(0, 0, devPixelCornerRadius, devPixelCornerRadius));
+    nsIntRegion update(nsIntRect(0, 0, mDevPixelCornerRadius, mDevPixelCornerRadius));
     gfxASurface *asurf = mCornerMaskImage->BeginUpdate(update);
     if (!asurf) {
       mCornerMaskImage = nullptr;
@@ -2007,7 +2027,7 @@ nsChildView::MaybeDrawRoundedBottomCorners(GLManager* aManager, nsIntRect aRect)
     }
     nsRefPtr<gfxQuartzSurface> image = static_cast<gfxQuartzSurface*>(asurf);
     
-    DrawTopLeftCornerMask(image->GetCGContext(), devPixelCornerRadius);
+    DrawTopLeftCornerMask(image->GetCGContext(), mDevPixelCornerRadius);
     
     mCornerMaskImage->EndUpdate();
   }
@@ -2019,8 +2039,8 @@ nsChildView::MaybeDrawRoundedBottomCorners(GLManager* aManager, nsIntRect aRect)
   ShaderProgramOGL *program = aManager->GetProgram(mCornerMaskImage->GetShaderProgramType());
   program->Activate();
   program->SetLayerQuadRect(nsIntRect(0, 0, // aRect.x, aRect.y,
-                                      devPixelCornerRadius,
-                                      devPixelCornerRadius));
+                                      mDevPixelCornerRadius,
+                                      mDevPixelCornerRadius));
   program->SetLayerOpacity(1.0);
   program->SetRenderOffset(nsIntPoint(0,0));
   program->SetTextureUnit(0);

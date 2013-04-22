@@ -523,7 +523,9 @@ public:
 
   virtual void CreateCompositor();
   virtual gfxASurface* GetThebesSurface();
-  virtual void DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect);
+  virtual void PrepareWindowEffects() MOZ_OVERRIDE;
+  virtual void CleanupWindowEffects() MOZ_OVERRIDE;
+  virtual void DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect) MOZ_OVERRIDE;
 
   virtual void UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries);
 
@@ -610,7 +612,21 @@ protected:
   nsWeakPtr             mAccessible;
 #endif
 
+
   nsRefPtr<gfxASurface> mTempThebesSurface;
+
+  mozilla::Mutex mEffectsLock;
+
+  // May be accessed from any thread, protected
+  // by mEffectsLock.
+  bool mShowsResizeIndicator;
+  nsIntRect mResizeIndicatorRect;
+  bool mHasRoundedBottomCorners;
+  int mDevPixelCornerRadius;
+
+  // Compositor thread only
+  bool                  mFailedResizerImage;
+  bool                  mFailedCornerMaskImage;
   nsRefPtr<mozilla::gl::TextureImage> mResizerImage;
   nsRefPtr<mozilla::gl::TextureImage> mCornerMaskImage;
 
@@ -623,8 +639,6 @@ protected:
   // ** We'll need to reinitialize this if the backing resolution changes. **
   CGFloat               mBackingScaleFactor;
 
-  bool                  mFailedResizerImage;
-  bool                  mFailedCornerMaskImage;
   bool                  mVisible;
   bool                  mDrawing;
   bool                  mPluginDrawing;
