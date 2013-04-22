@@ -1046,7 +1046,7 @@ JSFunctionSpec MapObject::methods[] = {
 
 static JSObject *
 InitClass(JSContext *cx, Handle<GlobalObject*> global, Class *clasp, JSProtoKey key, Native construct,
-          JSPropertySpec *properties, JSFunctionSpec *methods)
+          const JSPropertySpec *properties, const JSFunctionSpec *methods)
 {
     Rooted<JSObject*> proto(cx, global->createBlankPrototype(cx, clasp));
     if (!proto)
