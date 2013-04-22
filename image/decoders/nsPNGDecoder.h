@@ -90,6 +90,20 @@ public:
   uint32_t mCMSMode;
   bool mDisablePremultipliedAlpha;
 
+  struct AnimFrameInfo
+  {
+    AnimFrameInfo();
+#ifdef PNG_APNG_SUPPORTED
+    AnimFrameInfo(png_structp aPNG, png_infop aInfo);
+#endif
+
+    RasterImage::FrameDisposalMethod mDispose;
+    RasterImage::FrameBlendMethod mBlend;
+    int32_t mTimeout;
+  };
+
+  AnimFrameInfo mAnimInfo;
+
   // The number of frames we've finished.
   uint32_t mNumFrames;
   
