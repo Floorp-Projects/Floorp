@@ -138,9 +138,7 @@ nsXBLPrototypeHandler::GetHandlerElement()
 {
   if (mType & NS_HANDLER_TYPE_XUL) {
     nsCOMPtr<nsIContent> element = do_QueryReferent(mHandlerElement);
-    nsIContent* el = nullptr;
-    element.swap(el);
-    return el;
+    return element.forget();
   }
 
   return nullptr;
@@ -574,9 +572,8 @@ nsXBLPrototypeHandler::DispatchXULKeyCommand(nsIDOMEvent* aEvent)
 already_AddRefed<nsIAtom>
 nsXBLPrototypeHandler::GetEventName()
 {
-  nsIAtom* eventName = mEventName;
-  NS_IF_ADDREF(eventName);
-  return eventName;
+  nsCOMPtr<nsIAtom> eventName = mEventName;
+  return eventName.forget();
 }
 
 already_AddRefed<nsIController>
@@ -611,13 +608,12 @@ nsXBLPrototypeHandler::GetController(EventTarget* aTarget)
   // Return the first controller.
   // XXX This code should be checking the command name and using supportscommand and
   // iscommandenabled.
-  nsIController* controller;
+  nsCOMPtr<nsIController> controller;
   if (controllers) {
-    controllers->GetControllerAt(0, &controller);  // return reference
+    controllers->GetControllerAt(0, getter_AddRefs(controller));
   }
-  else controller = nullptr;
 
-  return controller;
+  return controller.forget();
 }
 
 bool

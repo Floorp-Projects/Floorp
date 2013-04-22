@@ -5940,7 +5940,7 @@ nsWindow::GetSurfaceForGdkDrawable(GdkDrawable* aDrawable,
     Display* xDisplay = DisplayOfScreen(xScreen);
     Drawable xDrawable = gdk_x11_drawable_get_xid(aDrawable);
 
-    gfxASurface* result = nullptr;
+    nsRefPtr<gfxASurface> result;
 
     if (visual) {
         Visual* xVisual = gdk_x11_visual_get_xvisual(visual);
@@ -5967,8 +5967,7 @@ nsWindow::GetSurfaceForGdkDrawable(GdkDrawable* aDrawable,
                                     gfxIntSize(aSize.width, aSize.height));
     }
 
-    NS_IF_ADDREF(result);
-    return result;
+    return result.forget();
 }
 #endif
 

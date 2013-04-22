@@ -339,10 +339,9 @@ HTMLAnchorElement::GetLinkState() const
 already_AddRefed<nsIURI>
 HTMLAnchorElement::GetHrefURI() const
 {
-  nsIURI* uri = Link::GetCachedURI();
+  nsCOMPtr<nsIURI> uri = Link::GetCachedURI();
   if (uri) {
-    NS_ADDREF(uri);
-    return uri;
+    return uri.forget();
   }
 
   return GetHrefURIForAnchors();

@@ -517,9 +517,9 @@ nsCoreUtils::GetTreeBodyBoxObject(nsITreeBoxObject *aTreeBoxObj)
   if (!tcXULElm)
     return nullptr;
 
-  nsIBoxObject *boxObj = nullptr;
-  tcXULElm->GetBoxObject(&boxObj);
-  return boxObj;
+  nsCOMPtr<nsIBoxObject> boxObj;
+  tcXULElm->GetBoxObject(getter_AddRefs(boxObj));
+  return boxObj.forget();
 }
 
 already_AddRefed<nsITreeBoxObject>

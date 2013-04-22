@@ -240,10 +240,10 @@ do_get_db()
   nsCOMPtr<nsPIPlacesDatabase> database = do_QueryInterface(history);
   do_check_true(database);
 
-  mozIStorageConnection* dbConn;
-  nsresult rv = database->GetDBConnection(&dbConn);
+  nsCOMPtr<mozIStorageConnection> dbConn;
+  nsresult rv = database->GetDBConnection(getter_AddRefs(dbConn));
   do_check_success(rv);
-  return dbConn;
+  return dbConn.forget();
 }
 
 /**

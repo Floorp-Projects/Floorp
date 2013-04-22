@@ -5261,12 +5261,12 @@ nsContentUtils::HidePopupsInDocument(nsIDocument* aDocument)
 already_AddRefed<nsIDragSession>
 nsContentUtils::GetDragSession()
 {
-  nsIDragSession* dragSession = nullptr;
+  nsCOMPtr<nsIDragSession> dragSession;
   nsCOMPtr<nsIDragService> dragService =
     do_GetService("@mozilla.org/widget/dragservice;1");
   if (dragService)
-    dragService->GetCurrentSession(&dragSession);
-  return dragSession;
+    dragService->GetCurrentSession(getter_AddRefs(dragSession));
+  return dragSession.forget();
 }
 
 /* static */
@@ -5836,15 +5836,13 @@ nsContentUtils::GetDocumentFromScriptContext(nsIScriptContext *aScriptContext)
 
   nsCOMPtr<nsIDOMWindow> window =
     do_QueryInterface(aScriptContext->GetGlobalObject());
-  nsIDocument *doc = nullptr;
+  nsCOMPtr<nsIDocument> doc;
   if (window) {
     nsCOMPtr<nsIDOMDocument> domdoc;
     window->GetDocument(getter_AddRefs(domdoc));
-    if (domdoc) {
-      CallQueryInterface(domdoc, &doc);
-    }
+    doc = do_QueryInterface(domdoc);
   }
-  return doc;
+  return doc.forget();
 }
 
 /* static */

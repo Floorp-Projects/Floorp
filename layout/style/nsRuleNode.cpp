@@ -3616,7 +3616,8 @@ nsRuleNode::GetShadowData(const nsCSSValueList* aList,
 
   NS_ABORT_IF_FALSE(arrayLength > 0,
                     "Non-null text-shadow list, yet we counted 0 items.");
-  nsCSSShadowArray* shadowList = new(arrayLength) nsCSSShadowArray(arrayLength);
+  nsRefPtr<nsCSSShadowArray> shadowList =
+    new(arrayLength) nsCSSShadowArray(arrayLength);
 
   if (!shadowList)
     return nullptr;
@@ -3682,8 +3683,7 @@ nsRuleNode::GetShadowData(const nsCSSValueList* aList,
     }
   }
 
-  NS_ADDREF(shadowList);
-  return shadowList;
+  return shadowList.forget();
 }
 
 const void*

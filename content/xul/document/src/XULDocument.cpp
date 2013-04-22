@@ -1249,7 +1249,7 @@ XULDocument::GetElementsByAttribute(const nsAString& aAttribute,
 {
     nsCOMPtr<nsIAtom> attrAtom(do_GetAtom(aAttribute));
     void* attrValue = new nsString(aValue);
-    nsContentList *list = new nsContentList(this,
+    nsRefPtr<nsContentList> list = new nsContentList(this,
                                             MatchAttribute,
                                             nsContentUtils::DestroyMatchString,
                                             attrValue,
@@ -1257,8 +1257,7 @@ XULDocument::GetElementsByAttribute(const nsAString& aAttribute,
                                             attrAtom,
                                             kNameSpaceID_Unknown);
     
-    NS_ADDREF(list);
-    return list;
+    return list.forget();
 }
 
 NS_IMETHODIMP
@@ -1293,15 +1292,14 @@ XULDocument::GetElementsByAttributeNS(const nsAString& aNamespaceURI,
       }
     }
 
-    nsContentList *list = new nsContentList(this,
+    nsRefPtr<nsContentList> list = new nsContentList(this,
                                             MatchAttribute,
                                             nsContentUtils::DestroyMatchString,
                                             attrValue,
                                             true,
                                             attrAtom,
                                             nameSpaceId);
-    NS_ADDREF(list);
-    return list;
+    return list.forget();
 }
 
 NS_IMETHODIMP

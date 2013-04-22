@@ -2816,16 +2816,15 @@ WebGLContext::GetUniformLocation(WebGLProgram *prog, const nsAString& name)
     MakeContextCurrent();
     GLint intlocation = gl->fGetUniformLocation(progname, mappedName.get());
 
-    WebGLUniformLocation *loc = nullptr;
+    nsRefPtr<WebGLUniformLocation> loc;
     if (intlocation >= 0) {
         WebGLUniformInfo info = prog->GetUniformInfoForMappedIdentifier(mappedName);
         loc = new WebGLUniformLocation(this,
                                        prog,
                                        intlocation,
                                        info);
-        NS_ADDREF(loc);
     }
-    return loc;
+    return loc.forget();
 }
 
 JS::Value
@@ -4674,10 +4673,9 @@ WebGLContext::GetShaderPrecisionFormat(WebGLenum shadertype, WebGLenum precision
     GLint range[2], precision;
     gl->fGetShaderPrecisionFormat(shadertype, precisiontype, range, &precision);
 
-    WebGLShaderPrecisionFormat *retShaderPrecisionFormat
+    nsRefPtr<WebGLShaderPrecisionFormat> retShaderPrecisionFormat
         = new WebGLShaderPrecisionFormat(this, range[0], range[1], precision);
-    NS_ADDREF(retShaderPrecisionFormat);
-    return retShaderPrecisionFormat;
+    return retShaderPrecisionFormat.forget();
 }
 
 void

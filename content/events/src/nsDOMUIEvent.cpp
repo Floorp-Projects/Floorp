@@ -274,7 +274,7 @@ nsDOMUIEvent::GetRangeParent()
           !nsContentUtils::CanAccessNativeAnon()) {
         return nullptr;
       }
-      return parent.forget().get();
+      return parent.forget();
     }
   }
 

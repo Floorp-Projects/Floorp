@@ -67,9 +67,7 @@ NS_METHOD_(already_AddRefed<nsIPrivateTextRangeList>) nsDOMTextEvent::GetInputRa
 {
   if (mEvent->message == NS_TEXT_TEXT) {
     nsRefPtr<nsPrivateTextRangeList> textRange = mTextRange;
-    nsPrivateTextRangeList *textRangePtr = nullptr;
-    textRange.swap(textRangePtr);
-    return textRangePtr;
+    return textRange.forget();
   }
   return nullptr;
 }
