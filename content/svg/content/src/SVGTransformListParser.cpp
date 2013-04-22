@@ -85,7 +85,7 @@ SVGTransformListParser::GetTransformToken(nsIAtom** aKeyAtom,
 
     uint32_t len;
     if ((len = strlen(mTokenPos)) > 0) {
-      *aKeyAtom = NS_NewAtom(Substring(mTokenPos, mTokenPos + len));
+      *aKeyAtom = NS_NewAtom(Substring(mTokenPos, mTokenPos + len)).get();
 
       if (aAdvancePos) {
          mInputPos = mTokenPos + len;
