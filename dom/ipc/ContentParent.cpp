@@ -1133,9 +1133,11 @@ ContentParent::ContentParent(mozIApplication* aApp,
     if (gAppData) {
         nsCString version(gAppData->version);
         nsCString buildID(gAppData->buildID);
+        nsCString name(gAppData->name);
+        nsCString UAName(gAppData->UAName);
 
         //Sending all information to content process
-        unused << SendAppInfo(version, buildID);
+        unused << SendAppInfo(version, buildID, name, UAName);
     }
 }
 
