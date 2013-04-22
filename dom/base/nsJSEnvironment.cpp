@@ -2150,7 +2150,7 @@ TraceMallocDumpAllocations(JSContext *cx, unsigned argc, JS::Value *vp)
     return JS_TRUE;
 }
 
-static JSFunctionSpec TraceMallocFunctions[] = {
+static const JSFunctionSpec TraceMallocFunctions[] = {
     JS_FS("TraceMallocDisable",         TraceMallocDisable,         0, 0),
     JS_FS("TraceMallocEnable",          TraceMallocEnable,          0, 0),
     JS_FS("TraceMallocOpenLogFile",     TraceMallocOpenLogFile,     1, 0),
@@ -2205,7 +2205,7 @@ ReportAndDump(JSContext *cx, unsigned argc, JS::Value *vp)
 } // namespace dmd
 } // namespace mozilla
 
-static JSFunctionSpec DMDFunctions[] = {
+static const JSFunctionSpec DMDFunctions[] = {
     JS_FS("DMDReportAndDump", dmd::ReportAndDump, 1, 0),
     JS_FS_END
 };
@@ -2306,7 +2306,7 @@ JProfSaveCircularJS(JSContext *cx, unsigned argc, JS::Value *vp)
   return JS_TRUE;
 }
 
-static JSFunctionSpec JProfFunctions[] = {
+static const JSFunctionSpec JProfFunctions[] = {
     JS_FS("JProfStartProfiling",        JProfStartProfilingJS,      0, 0),
     JS_FS("JProfStopProfiling",         JProfStopProfilingJS,       0, 0),
     JS_FS("JProfClearCircular",         JProfClearCircularJS,       0, 0),

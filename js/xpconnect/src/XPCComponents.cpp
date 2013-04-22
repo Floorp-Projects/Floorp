@@ -3057,7 +3057,7 @@ static JSClass SandboxClass = {
     NULL, NULL, NULL, NULL, TraceXPCGlobal
 };
 
-static JSFunctionSpec SandboxFunctions[] = {
+static const JSFunctionSpec SandboxFunctions[] = {
     JS_FS("dump",    SandboxDump,    1,0),
     JS_FS("debug",   SandboxDebug,   1,0),
     JS_FS("importFunction", SandboxImport, 1,0),

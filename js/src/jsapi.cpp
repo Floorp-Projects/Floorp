@@ -5023,7 +5023,7 @@ js_generic_native_method_dispatcher(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    JSFunctionSpec *fs = (JSFunctionSpec *)
+    const JSFunctionSpec *fs = (JSFunctionSpec *)
         vp->toObject().toFunction()->getExtendedSlot(0).toPrivate();
     JS_ASSERT((fs->flags & JSFUN_GENERIC_NATIVE) != 0);
 

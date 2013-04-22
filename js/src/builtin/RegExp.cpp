@@ -381,7 +381,7 @@ regexp_toString(JSContext *cx, unsigned argc, Value *vp)
     return CallNonGenericMethod<IsRegExp, regexp_toString_impl>(cx, args);
 }
 
-static JSFunctionSpec regexp_methods[] = {
+static const JSFunctionSpec regexp_methods[] = {
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str,  regexp_toString,    0,0),
 #endif

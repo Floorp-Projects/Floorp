@@ -32,7 +32,7 @@ class Worker
   static DOMJSClass sClass;
   static DOMIfaceAndProtoJSClass sProtoClass;
   static const JSPropertySpec sProperties[];
-  static JSFunctionSpec sFunctions[];
+  static const JSFunctionSpec sFunctions[];
 
   enum
   {
@@ -262,7 +262,7 @@ private:
       return false;
     }
 
-    const char*& name = sFunctions[0].name;
+    const char* name = sFunctions[0].name;
     WorkerPrivate* worker = GetInstancePrivate(aCx, obj, name);
     if (!worker) {
       return !JS_IsExceptionPending(aCx);
@@ -279,7 +279,7 @@ private:
       return false;
     }
 
-    const char*& name = sFunctions[1].name;
+    const char* name = sFunctions[1].name;
     WorkerPrivate* worker = GetInstancePrivate(aCx, obj, name);
     if (!worker) {
       return !JS_IsExceptionPending(aCx);
@@ -350,7 +350,7 @@ const JSPropertySpec Worker::sProperties[] = {
   { 0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER }
 };
 
-JSFunctionSpec Worker::sFunctions[] = {
+const JSFunctionSpec Worker::sFunctions[] = {
   JS_FN("terminate", Terminate, 0, FUNCTION_FLAGS),
   JS_FN("postMessage", PostMessage, 1, FUNCTION_FLAGS),
   JS_FS_END

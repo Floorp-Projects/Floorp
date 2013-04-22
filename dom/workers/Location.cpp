@@ -21,7 +21,7 @@ class Location
 {
   static JSClass sClass;
   static const JSPropertySpec sProperties[];
-  static JSFunctionSpec sFunctions[];
+  static const JSFunctionSpec sFunctions[];
 
   enum SLOT {
     SLOT_href = 0,
@@ -173,7 +173,7 @@ const JSPropertySpec Location::sProperties[] = {
   { 0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER }
 };
 
-JSFunctionSpec Location::sFunctions[] = {
+const JSFunctionSpec Location::sFunctions[] = {
   JS_FN("toString", ToString, 0, 0),
   JS_FS_END
 };
