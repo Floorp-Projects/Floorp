@@ -16,7 +16,6 @@
 #include "mozilla/layers/TextureClient.h"
 #include "mozilla/layers/ImageClient.h"
 #include "mozilla/layers/LayersTypes.h"
-#include "ShadowLayers.h"
 
 using namespace base;
 using namespace mozilla::ipc;

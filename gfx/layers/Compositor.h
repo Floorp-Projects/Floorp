@@ -26,7 +26,7 @@
  *
  * # Main interfaces and abstractions
  *
- *  - Layer, ShadowableLayer and LayerComposite
+ *  - Layer, ShadowableLayer and ShadowLayer
  *    (see Layers.h and ipc/ShadowLayers.h)
  *  - CompositableClient and CompositableHost
  *    (client/CompositableClient.h composite/CompositableHost.h)

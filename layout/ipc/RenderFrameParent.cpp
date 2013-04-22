@@ -254,7 +254,7 @@ TransformShadowTree(nsDisplayListBuilder* aBuilder, nsFrameLoader* aFrameLoader,
                     float aTempScaleDiffX = 1.0,
                     float aTempScaleDiffY = 1.0)
 {
-  LayerComposite* shadow = aLayer->AsLayerComposite();
+  ShadowLayer* shadow = aLayer->AsShadowLayer();
   shadow->SetShadowClipRect(aLayer->GetClipRect());
   shadow->SetShadowVisibleRegion(aLayer->GetVisibleRegion());
   shadow->SetShadowOpacity(aLayer->GetOpacity());
@@ -435,7 +435,7 @@ BuildBackgroundPatternFor(ContainerLayer* aContainer,
                           LayerManager* aManager,
                           nsIFrame* aFrame)
 {
-  LayerComposite* shadowRoot = aShadowRoot->AsLayerComposite();
+  ShadowLayer* shadowRoot = aShadowRoot->AsShadowLayer();
   gfxMatrix t;
   if (!shadowRoot->GetShadowTransform().Is2D(&t)) {
     return;
@@ -603,7 +603,7 @@ RenderFrameParent::RenderFrameParent(nsFrameLoader* aFrameLoader,
 
   nsRefPtr<LayerManager> lm = GetFrom(mFrameLoader);
   // Perhaps the document containing this frame currently has no presentation?
-  if (lm && lm->AsLayerManagerComposite()) {
+  if (lm && lm->AsShadowManager()) {
     *aTextureFactoryIdentifier = lm->GetTextureFactoryIdentifier();
   } else {
     *aTextureFactoryIdentifier = TextureFactoryIdentifier();
@@ -853,7 +853,7 @@ RenderFrameParent::AllocPLayerTransaction()
     return nullptr;
   }
   nsRefPtr<LayerManager> lm = GetFrom(mFrameLoader);
-  return new LayerTransactionParent(lm->AsLayerManagerComposite(), this, 0);
+  return new LayerTransactionParent(lm->AsShadowManager(), this, 0);
 }
 
 bool
