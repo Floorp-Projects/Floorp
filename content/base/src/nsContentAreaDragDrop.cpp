@@ -274,8 +274,8 @@ DragDataProducer::FindParentLinkNode(nsIContent* inNode)
 
   for (; content; content = content->GetParent()) {
     if (nsContentUtils::IsDraggableLink(content)) {
-      NS_ADDREF(content);
-      return content;
+      nsCOMPtr<nsIContent> ret = content;
+      return ret.forget();
     }
   }
 

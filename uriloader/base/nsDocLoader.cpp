@@ -235,13 +235,8 @@ NS_IMETHODIMP nsDocLoader::GetInterface(const nsIID& aIID, void** aSink)
 already_AddRefed<nsDocLoader>
 nsDocLoader::GetAsDocLoader(nsISupports* aSupports)
 {
-  if (!aSupports) {
-    return nullptr;
-  }
-  
-  nsDocLoader* ptr;
-  CallQueryInterface(aSupports, &ptr);
-  return ptr;
+  nsRefPtr<nsDocLoader> ret = do_QueryObject(aSupports);
+  return ret.forget();
 }
 
 /* static */

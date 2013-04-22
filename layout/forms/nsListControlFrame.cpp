@@ -1018,17 +1018,13 @@ nsListControlFrame::Init(nsIContent*     aContent,
 already_AddRefed<nsIContent> 
 nsListControlFrame::GetOptionAsContent(nsIDOMHTMLOptionsCollection* aCollection, int32_t aIndex) 
 {
-  nsIContent * content = nullptr;
   nsCOMPtr<nsIDOMHTMLOptionElement> optionElement = GetOption(aCollection,
                                                               aIndex);
 
   NS_ASSERTION(optionElement != nullptr, "could not get option element by index!");
 
-  if (optionElement) {
-    CallQueryInterface(optionElement, &content);
-  }
- 
-  return content;
+  nsCOMPtr<nsIContent> content = do_QueryInterface(optionElement);
+  return content.forget();
 }
 
 already_AddRefed<nsIContent> 
@@ -1047,13 +1043,13 @@ nsListControlFrame::GetOptionContent(int32_t aIndex) const
 already_AddRefed<nsIDOMHTMLOptionsCollection>
 nsListControlFrame::GetOptions(nsIContent * aContent)
 {
-  nsIDOMHTMLOptionsCollection* options = nullptr;
+  nsCOMPtr<nsIDOMHTMLOptionsCollection> options;
   nsCOMPtr<nsIDOMHTMLSelectElement> selectElement = do_QueryInterface(aContent);
   if (selectElement) {
-    selectElement->GetOptions(&options);  // AddRefs (1)
+    selectElement->GetOptions(getter_AddRefs(options));
   }
 
-  return options;
+  return options.forget();
 }
 
 already_AddRefed<nsIDOMHTMLOptionElement>
@@ -1065,10 +1061,9 @@ nsListControlFrame::GetOption(nsIDOMHTMLOptionsCollection* aCollection,
     NS_ASSERTION(node,
                  "Item was successful, but node from collection was null!");
     if (node) {
-      nsIDOMHTMLOptionElement* option = nullptr;
-      CallQueryInterface(node, &option);
+      nsCOMPtr<nsIDOMHTMLOptionElement> option = do_QueryInterface(node);
 
-      return option;
+      return option.forget();
     }
   } else {
     NS_ERROR("Couldn't get option by index from collection!");

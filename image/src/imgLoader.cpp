@@ -611,9 +611,7 @@ already_AddRefed<imgCacheEntry> imgCacheQueue::Pop()
   mQueue.pop_back();
 
   mSize -= entry->GetDataSize();
-  imgCacheEntry *ret = entry;
-  NS_ADDREF(ret);
-  return ret;
+  return entry.forget();
 }
 
 void imgCacheQueue::Refresh()

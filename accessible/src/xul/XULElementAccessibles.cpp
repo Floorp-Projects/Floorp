@@ -300,10 +300,10 @@ XULLinkAccessible::AnchorURIAt(uint32_t aAnchorIndex)
   nsCOMPtr<nsIURI> baseURI = mContent->GetBaseURI();
   nsIDocument* document = mContent->OwnerDoc();
 
-  nsIURI* anchorURI = nullptr;
-  NS_NewURI(&anchorURI, href,
+  nsCOMPtr<nsIURI> anchorURI;
+  NS_NewURI(getter_AddRefs(anchorURI), href,
             document->GetDocumentCharacterSet().get(),
             baseURI);
 
-  return anchorURI;
+  return anchorURI.forget();
 }

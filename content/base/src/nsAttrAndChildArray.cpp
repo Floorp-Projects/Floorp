@@ -209,7 +209,7 @@ nsAttrAndChildArray::TakeChildAt(uint32_t aPos)
   memmove(pos, pos + 1, (childCount - aPos - 1) * sizeof(nsIContent*));
   SetChildCount(childCount - 1);
 
-  return child;
+  return dont_AddRef(child);
 }
 
 int32_t

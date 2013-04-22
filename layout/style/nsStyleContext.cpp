@@ -156,7 +156,7 @@ nsStyleContext::FindChildWithRules(const nsIAtom* aPseudoTag,
   uint32_t threshold = 10; // The # of siblings we're willing to examine
                            // before just giving this whole thing up.
 
-  nsStyleContext* result = nullptr;
+  nsRefPtr<nsStyleContext> result;
   nsStyleContext *list = aRuleNode->IsRoot() ? mEmptyChild : mChild;
 
   if (list) {
@@ -191,12 +191,9 @@ nsStyleContext::FindChildWithRules(const nsIAtom* aPseudoTag,
       RemoveChild(result);
       AddChild(result);
     }
-
-    // Add reference for the caller.
-    result->AddRef();
   }
 
-  return result;
+  return result.forget();
 }
 
 const void* nsStyleContext::GetCachedStyleData(nsStyleStructID aSID)
@@ -720,12 +717,11 @@ NS_NewStyleContext(nsStyleContext* aParentContext,
                    nsRuleNode* aRuleNode,
                    bool aSkipFlexItemStyleFixup)
 {
-  nsStyleContext* context =
+  nsRefPtr<nsStyleContext> context =
     new (aRuleNode->PresContext())
     nsStyleContext(aParentContext, aPseudoTag, aPseudoType, aRuleNode,
                    aSkipFlexItemStyleFixup);
-  context->AddRef();
-  return context;
+  return context.forget();
 }
 
 static inline void

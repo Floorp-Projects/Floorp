@@ -37,9 +37,9 @@ doc_viewer(nsIDocShell *aDocShell)
 {
     if (!aDocShell)
         return nullptr;
-    nsIContentViewer *result = nullptr;
-    aDocShell->GetContentViewer(&result);
-    return result;
+    nsCOMPtr<nsIContentViewer> result;
+    aDocShell->GetContentViewer(getter_AddRefs(result));
+    return result.forget();
 }
 
 static already_AddRefed<nsIPresShell>
@@ -73,9 +73,8 @@ document(nsIDocShell *aDocShell)
     cv->GetDOMDocument(getter_AddRefs(domDoc));
     if (!domDoc)
         return nullptr;
-    nsIDocument *result = nullptr;
-    CallQueryInterface(domDoc, &result);
-    return result;
+    nsCOMPtr<nsIDocument> result = do_QueryInterface(domDoc);
+    return result.forget();
 }
 #endif
 

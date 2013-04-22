@@ -4828,18 +4828,16 @@ static already_AddRefed<nsIDocShellTreeItem>
 GetCallerDocShellTreeItem()
 {
   JSContext *cx = nsContentUtils::GetCurrentJSContext();
-  nsIDocShellTreeItem *callerItem = nullptr;
+  nsCOMPtr<nsIDocShellTreeItem> callerItem;
 
   if (cx) {
     nsCOMPtr<nsIWebNavigation> callerWebNav =
       do_GetInterface(nsJSUtils::GetDynamicScriptGlobal(cx));
 
-    if (callerWebNav) {
-      CallQueryInterface(callerWebNav, &callerItem);
-    }
+    callerItem = do_QueryInterface(callerWebNav);
   }
 
-  return callerItem;
+  return callerItem.forget();
 }
 
 bool
@@ -4869,13 +4867,13 @@ nsGlobalWindow::GetMainWidget()
 {
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin = GetTreeOwnerWindow();
 
-  nsIWidget *widget = nullptr;
+  nsCOMPtr<nsIWidget> widget;
 
   if (treeOwnerAsWin) {
-    treeOwnerAsWin->GetMainWidget(&widget);
+    treeOwnerAsWin->GetMainWidget(getter_AddRefs(widget));
   }
 
-  return widget;
+  return widget.forget();
 }
 
 nsIWidget*

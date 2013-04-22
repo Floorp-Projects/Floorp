@@ -173,7 +173,7 @@ struct already_AddRefed
     {
       U* tmp = mRawPtr;
       mRawPtr = NULL;
-      return tmp;
+      return already_AddRefed<U>(tmp);
     }
 
     /**
@@ -781,7 +781,7 @@ class nsCOMPtr MOZ_FINAL
         {
           T* temp = 0;
           swap(temp);
-          return temp;
+          return already_AddRefed<T>(temp);
         }
 
       template <typename I>
@@ -1088,7 +1088,7 @@ class nsCOMPtr<nsISupports>
         {
           nsISupports* temp = 0;
           swap(temp);
-          return temp;
+          return already_AddRefed<nsISupports>(temp);
         }
 
       void

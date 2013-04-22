@@ -1718,22 +1718,20 @@ already_AddRefed<nsIDocShellTreeItem>
 nsWindowWatcher::GetCallerTreeItem(nsIDocShellTreeItem* aParentItem)
 {
   JSContext *cx = nsContentUtils::GetCurrentJSContext();
-  nsIDocShellTreeItem* callerItem = nullptr;
+  nsCOMPtr<nsIDocShellTreeItem> callerItem;
 
   if (cx) {
     nsCOMPtr<nsIWebNavigation> callerWebNav =
       do_GetInterface(nsJSUtils::GetDynamicScriptGlobal(cx));
 
-    if (callerWebNav) {
-      CallQueryInterface(callerWebNav, &callerItem);
-    }
+    callerItem = do_QueryInterface(callerWebNav);
   }
 
   if (!callerItem) {
-    NS_IF_ADDREF(callerItem = aParentItem);
+    callerItem = aParentItem;
   }
 
-  return callerItem;
+  return callerItem.forget();
 }
 
 nsresult
