@@ -624,10 +624,9 @@ nsCSSValue::EqualsFunction(nsCSSKeyword aFunctionId) const
 already_AddRefed<nsStringBuffer>
 nsCSSValue::BufferFromString(const nsString& aValue)
 {
-  nsStringBuffer* buffer = nsStringBuffer::FromString(aValue);
+  nsRefPtr<nsStringBuffer> buffer = nsStringBuffer::FromString(aValue);
   if (buffer) {
-    buffer->AddRef();
-    return buffer;
+    return buffer.forget();
   }
 
   nsString::size_type length = aValue.Length();
@@ -643,7 +642,7 @@ nsCSSValue::BufferFromString(const nsString& aValue)
   nsCharTraits<PRUnichar>::copy(data, aValue.get(), length);
   // Null-terminate.
   data[length] = 0;
-  return buffer;
+  return buffer.forget();
 }
 
 namespace {
