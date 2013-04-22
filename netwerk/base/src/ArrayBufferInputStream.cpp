@@ -11,11 +11,20 @@
 NS_IMPL_ISUPPORTS2(ArrayBufferInputStream, nsIArrayBufferInputStream, nsIInputStream);
 
 ArrayBufferInputStream::ArrayBufferInputStream()
-: mBuffer(nullptr)
+: mRt(nullptr)
+, mArrayBuffer(JSVAL_VOID)
+, mBuffer(nullptr)
 , mBufferLength(0)
 , mOffset(0)
 , mClosed(false)
 {
+}
+
+ArrayBufferInputStream::~ArrayBufferInputStream()
+{
+  if (mRt) {
+    JS_RemoveValueRootRT(mRt, &mArrayBuffer);
+  }
 }
 
 NS_IMETHODIMP
@@ -27,14 +36,19 @@ ArrayBufferInputStream::SetData(const JS::Value& aBuffer,
   if (!aBuffer.isObject()) {
     return NS_ERROR_FAILURE;
   }
-  mArrayBuffer.construct(aCx, &aBuffer.toObject());
-  if (!JS_IsArrayBufferObject(mArrayBuffer.ref())) {
+  JS::RootedObject arrayBuffer(aCx, &aBuffer.toObject());
+  if (!JS_IsArrayBufferObject(arrayBuffer)) {
     return NS_ERROR_FAILURE;
   }
-  uint32_t buflen = JS_GetArrayBufferByteLength(mArrayBuffer.ref());
+
+  mRt = JS_GetRuntime(aCx);
+  mArrayBuffer = aBuffer;
+  JS_AddNamedValueRootRT(mRt, &mArrayBuffer, "mArrayBuffer");
+
+  uint32_t buflen = JS_GetArrayBufferByteLength(arrayBuffer);
   mOffset = std::min(buflen, aByteOffset);
   mBufferLength = std::min(buflen - mOffset, aLength);
-  mBuffer = JS_GetArrayBufferData(mArrayBuffer.ref());
+  mBuffer = JS_GetArrayBufferData(arrayBuffer);
   return NS_OK;
 }
 
