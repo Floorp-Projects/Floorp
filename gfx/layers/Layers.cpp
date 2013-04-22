@@ -8,7 +8,7 @@
 #include "mozilla/DebugOnly.h"
 
 #include "mozilla/layers/PLayerTransaction.h"
-#include "mozilla/layers/ShadowLayers.h"
+#include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/Telemetry.h"
 
 #include "ImageLayers.h"
@@ -460,7 +460,7 @@ Layer::CanUseOpaqueSurface()
 const nsIntRect*
 Layer::GetEffectiveClipRect()
 {
-  if (ShadowLayer* shadow = AsShadowLayer()) {
+  if (LayerComposite* shadow = AsLayerComposite()) {
     return shadow->GetShadowClipRect();
   }
   return GetClipRect();
@@ -469,7 +469,7 @@ Layer::GetEffectiveClipRect()
 const nsIntRegion&
 Layer::GetEffectiveVisibleRegion()
 {
-  if (ShadowLayer* shadow = AsShadowLayer()) {
+  if (LayerComposite* shadow = AsLayerComposite()) {
     return shadow->GetShadowVisibleRegion();
   }
   return GetVisibleRegion();
@@ -640,7 +640,7 @@ const gfx3DMatrix
 Layer::GetLocalTransform()
 {
   gfx3DMatrix transform;
-  if (ShadowLayer* shadow = AsShadowLayer())
+  if (LayerComposite* shadow = AsLayerComposite())
     transform = shadow->GetShadowTransform();
   else
     transform = mTransform;
@@ -665,7 +665,7 @@ Layer::ApplyPendingUpdatesForThisTransaction()
 const float
 Layer::GetLocalOpacity()
 {
-   if (ShadowLayer* shadow = AsShadowLayer())
+   if (LayerComposite* shadow = AsLayerComposite())
     return shadow->GetShadowOpacity();
   return mOpacity;
 }
@@ -975,7 +975,7 @@ LayerManager::BeginTabSwitch()
 
 #ifdef MOZ_LAYERS_HAVE_LOG
 
-static nsACString& PrintInfo(nsACString& aTo, ShadowLayer* aShadowLayer);
+static nsACString& PrintInfo(nsACString& aTo, LayerComposite* aLayerComposite);
 
 #ifdef MOZ_DUMP_PAINTING
 template <typename T>
@@ -1101,7 +1101,7 @@ Layer::PrintInfo(nsACString& aTo, const char* aPrefix)
   aTo += aPrefix;
   aTo += nsPrintfCString("%s%s (0x%p)", mManager->Name(), Name(), this);
 
-  ::PrintInfo(aTo, AsShadowLayer());
+  ::PrintInfo(aTo, AsLayerComposite());
 
   if (mUseClipRect) {
     AppendToString(aTo, mClipRect, " [clip=", "]");
@@ -1312,19 +1312,19 @@ LayerManager::IsLogEnabled()
 }
 
 static nsACString&
-PrintInfo(nsACString& aTo, ShadowLayer* aShadowLayer)
+PrintInfo(nsACString& aTo, LayerComposite* aLayerComposite)
 {
-  if (!aShadowLayer) {
+  if (!aLayerComposite) {
     return aTo;
   }
-  if (const nsIntRect* clipRect = aShadowLayer->GetShadowClipRect()) {
+  if (const nsIntRect* clipRect = aLayerComposite->GetShadowClipRect()) {
     AppendToString(aTo, *clipRect, " [shadow-clip=", "]");
   }
-  if (!aShadowLayer->GetShadowTransform().IsIdentity()) {
-    AppendToString(aTo, aShadowLayer->GetShadowTransform(), " [shadow-transform=", "]");
+  if (!aLayerComposite->GetShadowTransform().IsIdentity()) {
+    AppendToString(aTo, aLayerComposite->GetShadowTransform(), " [shadow-transform=", "]");
   }
-  if (!aShadowLayer->GetShadowVisibleRegion().IsEmpty()) {
-    AppendToString(aTo, aShadowLayer->GetShadowVisibleRegion(), " [shadow-visible=", "]");
+  if (!aLayerComposite->GetShadowVisibleRegion().IsEmpty()) {
+    AppendToString(aTo, aLayerComposite->GetShadowVisibleRegion(), " [shadow-visible=", "]");
   }
   return aTo;
 }

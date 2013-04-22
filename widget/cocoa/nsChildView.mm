@@ -2844,7 +2844,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   // Mac OS X bug that stops windows updating on OS X when we use OpenGL.
   LayerManager *layerManager = mGeckoChild->GetLayerManager(nullptr);
   if (mUsingOMTCompositor && painted && !mDidForceRefreshOpenGL &&
-      layerManager->AsShadowManager()) {
+      layerManager->AsManagerComposite()) {
     if (!mDidForceRefreshOpenGL) {
       [self performSelector:@selector(forceRefreshOpenGL) withObject:nil afterDelay:0];
       mDidForceRefreshOpenGL = YES;
