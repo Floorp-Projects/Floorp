@@ -1160,6 +1160,9 @@ BasicShadowLayerManager::EndTransaction(DrawThebesLayerCallback aCallback,
                                         void* aCallbackData,
                                         EndTransactionFlags aFlags)
 {
+  if (mWidget) {
+    mWidget->PrepareWindowEffects();
+  }
   BasicLayerManager::EndTransaction(aCallback, aCallbackData, aFlags);
   ForwardTransaction();
 

@@ -1154,12 +1154,34 @@ class nsIWidget : public nsISupports {
                                           bool* aAllowRetaining = nullptr) = 0;
 
     /**
+     * Called before each layer manager transaction to allow any preparation
+     * for DrawWindowUnderlay/Overlay that needs to be on the main thread.
+     *
+     * Always called on the main thread.
+     */
+    virtual void PrepareWindowEffects() = 0;
+
+    /**
+     * Called when shutting down the LayerManager to clean-up any cached resources.
+     *
+     * Always called from the compositing thread, which may be the main-thread if
+     * OMTC is not enabled.
+     */
+    virtual void CleanupWindowEffects() = 0;
+
+    /**
      * Called before the LayerManager draws the layer tree.
+     *
+     * Always called from the compositing thread, which may be the main-thread if
+     * OMTC is not enabled.
      */
     virtual void DrawWindowUnderlay(LayerManager* aManager, nsIntRect aRect) = 0;
 
     /**
      * Called after the LayerManager draws the layer tree
+     *
+     * Always called from the compositing thread, which may be the main-thread if
+     * OMTC is not enabled.
      */
     virtual void DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect) = 0;
 
