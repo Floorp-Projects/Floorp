@@ -98,6 +98,7 @@ void
 LayerManagerComposite::Destroy()
 {
   if (!mDestroyed) {
+    mCompositor->GetWidget()->CleanupWindowEffects();
     if (mRoot) {
       RootLayer()->Destroy();
     }
