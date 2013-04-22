@@ -86,7 +86,7 @@ ContentClientRemote::BeginPaint()
   // XXX: So we might not have a TextureClient yet.. because it will
   // only be created by CreateBuffer.. which will deliver a locked surface!.
   if (mTextureClient) {
-    SetTextureClientForBuffer(mTextureClient);
+    SetBufferProvider(mTextureClient);
   }
 }
 
@@ -95,7 +95,7 @@ ContentClientRemote::EndPaint()
 {
   // XXX: We might still not have a texture client if PaintThebes
   // decided we didn't need one yet because the region to draw was empty.
-  SetTextureClientForBuffer(nullptr);
+  SetBufferProvider(nullptr);
   mOldTextures.Clear();
 
   if (mTextureClient) {

@@ -130,7 +130,6 @@ public:
 
   ThebesLayerBuffer(BufferSizePolicy aBufferSizePolicy)
     : mBufferProvider(nullptr)
-    , mTextureClientForBuffer(nullptr)
     , mBufferSizePolicy(aBufferSizePolicy)
   {
     MOZ_COUNT_CTOR(ThebesLayerBuffer);
@@ -149,7 +148,6 @@ public:
     mBuffer = nullptr;
     mDTBuffer = nullptr;
     mBufferProvider = nullptr;
-    mTextureClientForBuffer = nullptr;
     mBufferRect.SetEmpty();
   }
 
@@ -241,42 +239,27 @@ protected:
   }
 
   /**
-   * Set the buffer provider only.  This is used with surfaces that
-   * require explicit map/unmap, which |aProvider| is used to do on
+   * Set the texture client only.  This is used with surfaces that
+   * require explicit lock/unlock, which |aClient| is used to do on
    * demand in this code.
    *
-   * It's the caller's responsibility to ensure |aProvider| is valid
+   * It's the caller's responsibility to ensure |aClient| is valid
    * for the duration of operations it requests of this
    * ThebesLayerBuffer.  It's also the caller's responsibility to
    * unset the provider when inactive, by calling
    * SetBufferProvider(nullptr).
    */
-  void SetBufferProvider(AutoOpenSurface* aProvider)
+  void SetBufferProvider(TextureClient* aClient)
   {
-    NS_ASSERTION(!mTextureClientForBuffer, "Can't have a TextureClient and a buffer provider");
-    mBufferProvider = aProvider;
+    // Only this buffer provider can give us a buffer.  If we
+    // already have one, something has gone wrong.
+    MOZ_ASSERT(!aClient || (!mBuffer && !mDTBuffer));
+
+    mBufferProvider = aClient;
     if (!mBufferProvider) {
       mBuffer = nullptr;
-    } else {
-      // Only this buffer provider can give us a buffer.  If we
-      // already have one, something has gone wrong.
-      MOZ_ASSERT(!mBuffer);
-    }
-  }
-
-  // As SetBufferProvider, but using a texture client as the provider
-  void SetTextureClientForBuffer(TextureClient* aClient)
-  {
-    NS_ASSERTION(!mBufferProvider, "Can't have a TextureClient and a buffer provider");
-    mTextureClientForBuffer = aClient;
-    if (!mTextureClientForBuffer) {
-      mBuffer = nullptr;
       mDTBuffer = nullptr;
-    } else {
-      // Only this buffer provider can give us a buffer.  If we
-      // already have one, something has gone wrong.
-      MOZ_ASSERT(!mBuffer && !mDTBuffer);
-    }
+    } 
   }
 
   /**
@@ -313,8 +296,7 @@ protected:
    * when we're using surfaces that require explicit map/unmap. Only one
    * may be used at a time.
    */
-  AutoOpenSurface* mBufferProvider;
-  TextureClient* mTextureClientForBuffer;
+  TextureClient* mBufferProvider;
 
   BufferSizePolicy      mBufferSizePolicy;
 };

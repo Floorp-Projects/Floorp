@@ -294,10 +294,7 @@ ThebesLayerBuffer::BufferContentType()
     return mBuffer->GetContentType();
   }
   if (mBufferProvider) {
-    return mBufferProvider->ContentType();
-  }
-  if (mTextureClientForBuffer) {
-    return mTextureClientForBuffer->GetContentType();
+    return mBufferProvider->GetContentType();
   }
   if (mDTBuffer) {
     switch (mDTBuffer->GetFormat()) {
@@ -324,16 +321,11 @@ ThebesLayerBuffer::BufferSizeOkFor(const nsIntSize& aSize)
 void
 ThebesLayerBuffer::EnsureBuffer()
 {
-  MOZ_ASSERT(!mBufferProvider || !mTextureClientForBuffer,
-             "Can't have both kinds of buffer provider.");
-  if (!mBuffer && mBufferProvider) {
-    mBuffer = mBufferProvider->Get();
-  }
-  if ((!mBuffer && !mDTBuffer) && mTextureClientForBuffer) {
+  if ((!mBuffer && !mDTBuffer) && mBufferProvider) {
     if (SupportsAzureContent()) {
-      mDTBuffer = mTextureClientForBuffer->LockDrawTarget();
+      mDTBuffer = mBufferProvider->LockDrawTarget();
     } else {
-      mBuffer = mTextureClientForBuffer->LockSurface();
+      mBuffer = mBufferProvider->LockSurface();
     }
   }
 }
@@ -341,7 +333,7 @@ ThebesLayerBuffer::EnsureBuffer()
 bool
 ThebesLayerBuffer::HaveBuffer()
 {
-  return mDTBuffer || mBuffer || mBufferProvider || mTextureClientForBuffer;
+  return mDTBuffer || mBuffer || mBufferProvider;
 }
 
 static void
