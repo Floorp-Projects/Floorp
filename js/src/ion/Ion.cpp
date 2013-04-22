@@ -1448,11 +1448,11 @@ CheckFrame(AbstractFramePtr fp)
 }
 
 static bool
-CheckScript(RawScript script, bool osr)
+CheckScript(RawScript script)
 {
-    if (osr && script->needsArgsObj()) {
-        // OSR-ing into functions with arguments objects is not supported.
-        IonSpew(IonSpew_Abort, "OSR script has argsobj");
+    if (script->needsArgsObj()) {
+        // Functions with arguments objects, are not supported yet.
+        IonSpew(IonSpew_Abort, "script has argsobj");
         return false;
     }
 
@@ -1508,9 +1508,9 @@ SequentialCompileContext::checkScriptSize(JSContext *cx, RawScript script)
 }
 
 bool
-CanIonCompileScript(JSContext *cx, HandleScript script, bool osr)
+CanIonCompileScript(JSContext *cx, HandleScript script)
 {
-    if (!script->canIonCompile() || !CheckScript(script, osr))
+    if (!script->canIonCompile() || !CheckScript(script))
         return false;
 
     SequentialCompileContext compileContext;
@@ -1519,8 +1519,8 @@ CanIonCompileScript(JSContext *cx, HandleScript script, bool osr)
 
 template <typename CompileContext>
 static MethodStatus
-Compile(JSContext *cx, HandleScript script, HandleFunction fun, jsbytecode *osrPc,
-        bool constructing, CompileContext &compileContext)
+Compile(JSContext *cx, HandleScript script, HandleFunction fun, jsbytecode *osrPc, bool constructing,
+        CompileContext &compileContext)
 {
     JS_ASSERT(ion::IsEnabled(cx));
     JS_ASSERT_IF(osrPc != NULL, (JSOp)*osrPc == JSOP_LOOPENTRY);
@@ -1540,7 +1540,7 @@ Compile(JSContext *cx, HandleScript script, HandleFunction fun, jsbytecode *osrP
         return Method_CantCompile;
     }
 
-    if (!CheckScript(script, bool(osrPc))) {
+    if (!CheckScript(script)) {
         IonSpew(IonSpew_Abort, "Aborted compilation of %s:%d", script->filename(), script->lineno);
         return Method_CantCompile;
     }
@@ -1922,9 +1922,8 @@ EnterIon(JSContext *cx, StackFrame *fp, void *jitcode)
     if (fp->isFunctionFrame()) {
         fp->cleanupTornValues();
 
-        // CountArgSlot include |this| and the |scopeChain| and maybe |argumentsObj|.
-        // Keep |this|, but discard the others.
-        maxArgc = CountArgSlots(fp->script(), fp->fun()) - StartArgSlot(fp->script(), fp->fun());
+        // CountArgSlot include |this| and the |scopeChain|.
+        maxArgc = CountArgSlots(fp->fun()) - 1; // -1 = discard |scopeChain|
         maxArgv = fp->formals() - 1;            // -1 = include |this|
 
         // Formal arguments are the argument corresponding to the function

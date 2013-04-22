@@ -102,7 +102,6 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     MDefinition *peek(int32_t depth);
 
     MDefinition *scopeChain();
-    MDefinition *argumentsObject();
 
     // Increase the number of slots available
     bool increaseSlots(size_t num);
@@ -138,7 +137,6 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     void pushLocal(uint32_t local);
     void pushSlot(uint32_t slot);
     void setScopeChain(MDefinition *ins);
-    void setArgumentsObject(MDefinition *ins);
 
     // Returns the top of the stack, then decrements the virtual stack pointer.
     MDefinition *pop();
