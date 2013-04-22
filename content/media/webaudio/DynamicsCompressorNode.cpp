@@ -127,6 +127,11 @@ DynamicsCompressorNode::DynamicsCompressorNode(AudioContext* aContext)
   engine->SetSourceStream(static_cast<AudioNodeStream*> (mStream.get()));
 }
 
+DynamicsCompressorNode::~DynamicsCompressorNode()
+{
+  DestroyMediaStream();
+}
+
 JSObject*
 DynamicsCompressorNode::WrapObject(JSContext* aCx, JSObject* aScope)
 {

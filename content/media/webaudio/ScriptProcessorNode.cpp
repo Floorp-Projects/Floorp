@@ -13,6 +13,7 @@
 #include "AudioProcessingEvent.h"
 #include "WebAudioUtils.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/unused.h"
 #include "mozilla/PodOperations.h"
 #include <deque>
 
@@ -303,7 +304,10 @@ private:
           // Steal the output buffers
           nsRefPtr<ThreadSharedFloatArrayBufferList> output;
           if (event->HasOutputBuffer()) {
-            output = event->OutputBuffer()->GetThreadSharedChannelsForRate(cx);
+            uint32_t rate, length;
+            output = event->OutputBuffer()->GetThreadSharedChannelsForRate(cx, &rate, &length);
+            unused << rate;
+            unused << length;
           }
 
           // Append it to our output buffer queue
@@ -355,6 +359,11 @@ ScriptProcessorNode::ScriptProcessorNode(AudioContext* aContext,
   mStream = aContext->Graph()->CreateAudioNodeStream(engine, MediaStreamGraph::INTERNAL_STREAM,
                                                      aNumberOfInputChannels);
   engine->SetSourceStream(static_cast<AudioNodeStream*> (mStream.get()));
+}
+
+ScriptProcessorNode::~ScriptProcessorNode()
+{
+  DestroyMediaStream();
 }
 
 JSObject*

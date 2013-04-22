@@ -18,6 +18,7 @@ class AnalyserNode : public AudioNode
 {
 public:
   explicit AnalyserNode(AudioContext* aContext);
+  virtual ~AnalyserNode();
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -27,6 +28,8 @@ public:
   {
     return true;
   }
+
+  virtual void DestroyMediaStream() MOZ_OVERRIDE;
 
   void GetFloatFrequencyData(Float32Array& aArray);
   void GetByteFrequencyData(Uint8Array& aArray);

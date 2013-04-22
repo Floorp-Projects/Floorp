@@ -77,6 +77,11 @@ AnalyserNode::AnalyserNode(AudioContext* aContext)
   AllocateBuffer();
 }
 
+AnalyserNode::~AnalyserNode()
+{
+  DestroyMediaStream();
+}
+
 JSObject*
 AnalyserNode::WrapObject(JSContext* aCx, JSObject* aScope)
 {
@@ -236,6 +241,12 @@ AnalyserNode::ApplyBlackmanWindow(float* aBuffer, uint32_t aSize)
     double window = a0 - a1 * cos(2 * M_PI * x) + a2 * cos(4 * M_PI * x);
     aBuffer[i] *= window;
   }
+}
+
+void
+AnalyserNode::DestroyMediaStream()
+{
+  AudioNode::DestroyMediaStream();
 }
 
 bool
