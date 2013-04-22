@@ -34,6 +34,8 @@ const TextureFlags AllowRepeat        = 0x8;
 const TextureFlags NewTile            = 0x10;
 // The host is responsible for tidying up any shared resources.
 const TextureFlags HostRelease        = 0x20;
+// The texture is part of a component-alpha pair
+const TextureFlags ComponentAlpha     = 0x40;
 
 /**
  * The kind of memory held by the texture client/host pair. This will
