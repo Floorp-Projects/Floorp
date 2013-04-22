@@ -793,7 +793,7 @@ MetroWidget::ShouldUseBasicManager()
 }
 
 LayerManager*
-MetroWidget::GetLayerManager(PLayersChild* aShadowManager,
+MetroWidget::GetLayerManager(PLayerTransactionChild* aShadowManager,
                              LayersBackend aBackendHint,
                              LayerManagerPersistence aPersistence,
                              bool* aAllowRetaining)
