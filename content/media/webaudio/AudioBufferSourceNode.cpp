@@ -12,6 +12,7 @@
 #include "AudioDestinationNode.h"
 #include "PannerNode.h"
 #include "speex/speex_resampler.h"
+#include <limits>
 
 namespace mozilla {
 namespace dom {
@@ -400,10 +401,13 @@ AudioBufferSourceNode::AudioBufferSourceNode(AudioContext* aContext)
   : AudioNode(aContext)
   , mLoopStart(0.0)
   , mLoopEnd(0.0)
+  , mOffset(0.0)
+  , mDuration(std::numeric_limits<double>::min())
   , mPlaybackRate(new AudioParam(this, SendPlaybackRateToStream, 1.0f))
   , mPannerNode(nullptr)
   , mLoop(false)
   , mStartCalled(false)
+  , mOffsetAndDurationRemembered(false)
 {
   mStream = aContext->Graph()->CreateAudioNodeStream(
       new AudioBufferSourceNodeEngine(this, aContext->Destination()),
@@ -425,7 +429,7 @@ AudioBufferSourceNode::WrapObject(JSContext* aCx, JSObject* aScope)
 }
 
 void
-AudioBufferSourceNode::Start(JSContext* aCx, double aWhen, double aOffset,
+AudioBufferSourceNode::Start(double aWhen, double aOffset,
                              const Optional<double>& aDuration, ErrorResult& aRv)
 {
   if (mStartCalled) {
@@ -435,40 +439,77 @@ AudioBufferSourceNode::Start(JSContext* aCx, double aWhen, double aOffset,
   mStartCalled = true;
 
   AudioNodeStream* ns = static_cast<AudioNodeStream*>(mStream.get());
-  if (!mBuffer || !ns) {
+  if (!ns) {
     // Nothing to play, or we're already dead for some reason
     return;
   }
 
-  float rate = mBuffer->SampleRate();
-  int32_t lengthSamples = mBuffer->Length();
-  nsRefPtr<ThreadSharedFloatArrayBufferList> data =
-    mBuffer->GetThreadSharedChannelsForRate(aCx);
+  if (mBuffer) {
+    double duration = aDuration.WasPassed() ?
+                      aDuration.Value() :
+                      std::numeric_limits<double>::min();
+    SendOffsetAndDurationParametersToStream(ns, aOffset, duration);
+  } else {
+    // Remember our argument so that we can use them once we have a buffer
+    mOffset = aOffset;
+    mDuration = aDuration.WasPassed() ?
+                aDuration.Value() :
+                std::numeric_limits<double>::min();
+    mOffsetAndDurationRemembered = true;
+  }
+
+  // Don't set parameter unnecessarily
+  if (aWhen > 0.0) {
+    ns->SetStreamTimeParameter(START, Context()->DestinationStream(), aWhen);
+  }
+
+  MOZ_ASSERT(!mPlayingRef, "We can only accept a successful start() call once");
+  mPlayingRef.Take(this);
+}
+
+void
+AudioBufferSourceNode::SendBufferParameterToStream(JSContext* aCx)
+{
+  AudioNodeStream* ns = static_cast<AudioNodeStream*>(mStream.get());
+  MOZ_ASSERT(ns, "Why don't we have a stream here?");
+
+  if (mBuffer) {
+    float rate = mBuffer->SampleRate();
+    nsRefPtr<ThreadSharedFloatArrayBufferList> data =
+      mBuffer->GetThreadSharedChannelsForRate(aCx);
+    ns->SetBuffer(data.forget());
+    ns->SetInt32Parameter(SAMPLE_RATE, rate);
+  } else {
+    ns->SetBuffer(nullptr);
+  }
+
+  if (mOffsetAndDurationRemembered) {
+    SendOffsetAndDurationParametersToStream(ns, mOffset, mDuration);
+  }
+}
+
+void
+AudioBufferSourceNode::SendOffsetAndDurationParametersToStream(AudioNodeStream* aStream,
+                                                               double aOffset,
+                                                               double aDuration)
+{
+  float rate = mBuffer ? mBuffer->SampleRate() : Context()->SampleRate();
+  int32_t lengthSamples = mBuffer ? mBuffer->Length() : 0;
   double length = double(lengthSamples) / rate;
   double offset = std::max(0.0, aOffset);
-  double endOffset = aDuration.WasPassed() ?
-      std::min(aOffset + aDuration.Value(), length) : length;
+  double endOffset = aDuration == std::numeric_limits<double>::min() ?
+                     length : std::min(aOffset + aDuration, length);
 
   if (offset >= endOffset) {
     return;
   }
 
-  ns->SetBuffer(data.forget());
-  // Don't set parameter unnecessarily
-  if (aWhen > 0.0) {
-    ns->SetStreamTimeParameter(START, Context()->DestinationStream(), aWhen);
-  }
   int32_t offsetTicks = NS_lround(offset*rate);
   // Don't set parameter unnecessarily
   if (offsetTicks > 0) {
-    ns->SetInt32Parameter(OFFSET, offsetTicks);
+    aStream->SetInt32Parameter(OFFSET, offsetTicks);
   }
-  ns->SetInt32Parameter(DURATION,
-      NS_lround(endOffset*rate) - offsetTicks);
-  ns->SetInt32Parameter(SAMPLE_RATE, rate);
-
-  MOZ_ASSERT(!mPlayingRef, "We can only accept a successful start() call once");
-  mPlayingRef.Take(this);
+  aStream->SetInt32Parameter(DURATION, NS_lround(endOffset*rate) - offsetTicks);
 }
 
 void
@@ -477,6 +518,12 @@ AudioBufferSourceNode::Stop(double aWhen, ErrorResult& aRv)
   if (!mStartCalled) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
+  }
+
+  if (!mBuffer) {
+    // We don't have a buffer, so the stream is never marked as finished.
+    // Therefore we need to drop our playing ref right now.
+    mPlayingRef.Drop(this);
   }
 
   AudioNodeStream* ns = static_cast<AudioNodeStream*>(mStream.get());
