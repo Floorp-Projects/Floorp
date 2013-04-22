@@ -6,7 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ShadowLayerChild.h"
-#include "LayerTransactionChild.h"
+#include "ShadowLayersChild.h"
 #include "ShadowLayerUtils.h"
 #include "mozilla/layers/CompositableClient.h"
 
@@ -14,16 +14,16 @@ namespace mozilla {
 namespace layers {
 
 void
-LayerTransactionChild::Destroy()
+ShadowLayersChild::Destroy()
 {
   NS_ABORT_IF_FALSE(0 == ManagedPLayerChild().Length(),
                     "layers should have been cleaned up by now");
-  PLayerTransactionChild::Send__delete__(this);
+  PLayersChild::Send__delete__(this);
   // WARNING: |this| has gone to the great heap in the sky
 }
 
 PGrallocBufferChild*
-LayerTransactionChild::AllocPGrallocBuffer(const gfxIntSize&,
+ShadowLayersChild::AllocPGrallocBuffer(const gfxIntSize&,
                                        const gfxContentType&,
                                        MaybeMagicGrallocBufferHandle*)
 {
@@ -36,7 +36,7 @@ LayerTransactionChild::AllocPGrallocBuffer(const gfxIntSize&,
 }
 
 bool
-LayerTransactionChild::DeallocPGrallocBuffer(PGrallocBufferChild* actor)
+ShadowLayersChild::DeallocPGrallocBuffer(PGrallocBufferChild* actor)
 {
 #ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
   delete actor;
@@ -48,7 +48,7 @@ LayerTransactionChild::DeallocPGrallocBuffer(PGrallocBufferChild* actor)
 }
 
 PLayerChild*
-LayerTransactionChild::AllocPLayer()
+ShadowLayersChild::AllocPLayer()
 {
   // we always use the "power-user" ctor
   NS_RUNTIMEABORT("not reached");
@@ -56,30 +56,30 @@ LayerTransactionChild::AllocPLayer()
 }
 
 bool
-LayerTransactionChild::DeallocPLayer(PLayerChild* actor)
+ShadowLayersChild::DeallocPLayer(PLayerChild* actor)
 {
   delete actor;
   return true;
 }
 
 PCompositableChild*
-LayerTransactionChild::AllocPCompositable(const TextureInfo& aInfo)
+ShadowLayersChild::AllocPCompositable(const TextureInfo& aInfo)
 {
   return new CompositableChild();
 }
 
 bool
-LayerTransactionChild::DeallocPCompositable(PCompositableChild* actor)
+ShadowLayersChild::DeallocPCompositable(PCompositableChild* actor)
 {
   delete actor;
   return true;
 }
 
 void
-LayerTransactionChild::ActorDestroy(ActorDestroyReason why)
+ShadowLayersChild::ActorDestroy(ActorDestroyReason why)
 {
   if (why == AbnormalShutdown) {
-    NS_RUNTIMEABORT("ActorDestroy by IPC channel failure at LayerTransactionChild");
+    NS_RUNTIMEABORT("ActorDestroy by IPC channel failure at ShadowLayersChild");
   }
 }
 
