@@ -21,6 +21,8 @@ window.addEventListener('load', parent.testFramesLoaded, false);
 <iframe id="mixedpolicy" src="http://mochi.test:8888/tests/content/base/test/file_x-frame-options_page.sjs?testid=mixedpolicy&xfo=mixedpolicy"></iframe><br>
 <iframe id="allow-from-allow" src="http://example.com/tests/content/base/test/file_x-frame-options_page.sjs?testid=allow-from-allow&xfo=afa"></iframe><br>
 <iframe id="allow-from-deny" src="http://example.com/tests/content/base/test/file_x-frame-options_page.sjs?testid=allow-from-deny&xfo=afd"></iframe><br>
+<iframe id="sameorigin-multipart" src="http://example.com/tests/content/base/test/file_x-frame-options_page.sjs?testid=sameorigin-multipart&xfo=sameorigin&multipart=1"></iframe><br>
+<iframe id="sameorigin-multipart2" src="http://mochi.test:8888/tests/content/base/test/file_x-frame-options_page.sjs?testid=sameorigin-multipart2&xfo=sameorigin&multipart=1"></iframe><br>
 
 <!-- added for bug 836132 -->
 <script type="text/javascript">
