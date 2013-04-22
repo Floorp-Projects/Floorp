@@ -23,6 +23,8 @@ MOCHITEST_FILES := \
   test_AudioListener.html \
   test_AudioParam.html \
   test_audioBufferSourceNode.html \
+  test_audioBufferSourceNodeLoop.html \
+  test_audioBufferSourceNodeLoopStartEnd.html \
   test_badConnect.html \
   test_biquadFilterNode.html \
   test_currentTime.html \
