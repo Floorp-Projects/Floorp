@@ -10,6 +10,7 @@ EXPORTS_NAMESPACES += mozilla
 
 EXPORTS_mozilla += \
   Assertions.h \
+  Atomics.h \
   Attributes.h \
   BloomFilter.h \
   Casting.h \
