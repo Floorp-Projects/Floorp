@@ -102,6 +102,7 @@ FENNEC_JAVA_FILES = \
   GeckoMessageReceiver.java \
   GeckoSubMenu.java \
   GeckoPreferences.java \
+  GeckoPreferenceFragment.java \
   GeckoProfile.java \
   GeckoPopupMenu.java \
   GeckoSmsManager.java \
@@ -523,7 +524,10 @@ RES_VALUES_V14 = \
   $(NULL)
 
 RES_XML = \
-  res/xml/preferences.xml \
+  res/xml/preference_headers.xml \
+  res/xml/preferences_general.xml \
+  res/xml/preferences_privacy.xml \
+  res/xml/preferences_content.xml \
   $(SYNC_RES_XML) \
   $(NULL)
 
