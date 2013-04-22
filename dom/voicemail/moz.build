@@ -22,3 +22,7 @@ XPIDL_FLAGS += [
 
 MODULE = 'dom'
 
+EXPORTS.mozilla.dom += [
+    'Voicemail.h',
+]
+

@@ -5,7 +5,7 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.gfx.LayerView;
-import org.mozilla.gecko.widget.AboutHomeContent;
+import org.mozilla.gecko.widget.AboutHomeView;
 import org.mozilla.gecko.widget.AddonsSection;
 import org.mozilla.gecko.widget.IconTabWidget;
 import org.mozilla.gecko.widget.LastTabsSection;
@@ -46,7 +46,7 @@ public final class GeckoViewsFactory implements LayoutInflater.Factory {
         Class<Context> arg1Class = Context.class;
         Class<AttributeSet> arg2Class = AttributeSet.class;
         try {
-            mFactoryMap.put("AboutHomeContent", AboutHomeContent.class.getConstructor(arg1Class, arg2Class));
+            mFactoryMap.put("AboutHomeView", AboutHomeView.class.getConstructor(arg1Class, arg2Class));
             mFactoryMap.put("AddonsSection", AddonsSection.class.getConstructor(arg1Class, arg2Class));
             mFactoryMap.put("LastTabsSection", LastTabsSection.class.getConstructor(arg1Class, arg2Class));
             mFactoryMap.put("PromoBox", PromoBox.class.getConstructor(arg1Class, arg2Class));

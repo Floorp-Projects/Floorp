@@ -6,3 +6,13 @@
 
 MODULE = 'accessibility'
 
+EXPORTS += [
+    'ia2AccessibleAction.h',
+    'ia2AccessibleComponent.h',
+    'ia2AccessibleEditableText.h',
+    'ia2AccessibleHyperlink.h',
+    'ia2AccessibleHypertext.h',
+    'ia2AccessibleText.h',
+    'ia2AccessibleValue.h',
+]
+

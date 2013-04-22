@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "nsHTMLFormElement.h"
 #include "nsIHTMLDocument.h"
-#include "nsIDOMEventTarget.h"
 #include "nsEventStateManager.h"
 #include "nsEventStates.h"
 #include "nsGkAtoms.h"
@@ -2197,16 +2196,6 @@ nsFormControlList::FlushPendingNotifications()
       doc->FlushPendingNotifications(Flush_Content);
     }
   }
-}
-
-static PLDHashOperator
-ControlTraverser(const nsAString& key, nsISupports* control, void* userArg)
-{
-  nsCycleCollectionTraversalCallback *cb = 
-    static_cast<nsCycleCollectionTraversalCallback*>(userArg);
- 
-  cb->NoteXPCOMChild(control);
-  return PL_DHASH_NEXT;
 }
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsFormControlList)

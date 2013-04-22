@@ -13,3 +13,10 @@ XPIDL_MODULE = 'necko_websocket'
 
 MODULE = 'necko'
 
+EXPORTS.mozilla.net += [
+    'BaseWebSocketChannel.h',
+    'WebSocketChannel.h',
+    'WebSocketChannelChild.h',
+    'WebSocketChannelParent.h',
+]
+

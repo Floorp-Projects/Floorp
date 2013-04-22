@@ -1,6 +1,6 @@
-/* -*- Mode: C++; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: nil -*- */
-/* vim: set ts=4 sw=4 et tw=99: */
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sts=4 et sw=4 tw=99:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -119,15 +119,12 @@ class ArrayBufferObject : public JSObject
     static JSBool obj_setSpecialAttributes(JSContext *cx, HandleObject obj,
                                            HandleSpecialId sid, unsigned *attrsp);
 
-    static JSBool obj_deleteProperty(JSContext *cx, HandleObject obj,
-                                     HandlePropertyName name, MutableHandleValue rval,
-                                     JSBool strict);
-    static JSBool obj_deleteElement(JSContext *cx, HandleObject obj,
-                                    uint32_t index, MutableHandleValue rval,
-                                    JSBool strict);
-    static JSBool obj_deleteSpecial(JSContext *cx, HandleObject obj,
-                                    HandleSpecialId sid, MutableHandleValue rval,
-                                    JSBool strict);
+    static JSBool obj_deleteProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,
+                                     JSBool *succeeded);
+    static JSBool obj_deleteElement(JSContext *cx, HandleObject obj, uint32_t index,
+                                    JSBool *succeeded);
+    static JSBool obj_deleteSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid,
+                                    JSBool *succeeded);
 
     static JSBool obj_enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
                                 MutableHandleValue statep, MutableHandleId idp);

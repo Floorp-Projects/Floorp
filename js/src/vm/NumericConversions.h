@@ -1,9 +1,8 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=78:
- *
+ * vim: set ts=8 sts=4 et sw=4 tw=99:
  * This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifndef NumericConversions_h___
 #define NumericConversions_h___
@@ -23,7 +22,7 @@ namespace detail {
 
 union DoublePun {
     struct {
-#if defined(IS_LITTLE_ENDIAN) && !defined(FPU_IS_ARM_FPA)
+#if defined(IS_LITTLE_ENDIAN)
         uint32_t lo, hi;
 #else
         uint32_t hi, lo;
@@ -42,13 +41,7 @@ ToIntWidth(double d)
 {
 #if defined(__i386__) || defined(__i386) || defined(__x86_64__) || \
     defined(_M_IX86) || defined(_M_X64)
-
-#ifdef __clang__
-    /* volatile to keep Clang from miscompiling, see bug 859257. */
-    volatile detail::DoublePun du, duh, twoWidth;
-#else
     detail::DoublePun du, duh, twoWidth;
-#endif
     uint32_t di_h, u_tmp, expon, shift_amount;
     int32_t mask32;
 

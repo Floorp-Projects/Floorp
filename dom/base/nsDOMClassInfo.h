@@ -989,37 +989,6 @@ class nsDOMTouchListSH : public nsArraySH
   }
 };
 
-#ifdef MOZ_XUL
-// TreeColumns helper
-
-class nsTreeColumnsSH : public nsNamedArraySH
-{
-protected:
-  nsTreeColumnsSH(nsDOMClassInfoData* aData) : nsNamedArraySH(aData)
-  {
-  }
-
-  virtual ~nsTreeColumnsSH()
-  {
-  }
-
-  virtual nsISupports* GetItemAt(nsISupports *aNative, uint32_t aIndex,
-                                 nsWrapperCache **aCache, nsresult *aResult);
-
-  // Override nsNamedArraySH::GetNamedItem()
-  virtual nsISupports* GetNamedItem(nsISupports *aNative,
-                                    const nsAString& aName,
-                                    nsWrapperCache **cache,
-                                    nsresult *aResult);
-
-public:
-  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
-  {
-    return new nsTreeColumnsSH(aData);
-  }
-};
-#endif
-
 // WebApps Storage helpers
 
 class nsStorage2SH : public nsDOMGenericSH
@@ -1041,7 +1010,7 @@ protected:
   NS_IMETHOD GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          JSObject *obj, jsid id, jsval *vp, bool *_retval);
   NS_IMETHOD DelProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                         JSObject *obj, jsid id, jsval *vp, bool *_retval);
+                         JSObject *obj, jsid id, bool *_retval);
   NS_IMETHOD NewEnumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                           JSObject *obj, uint32_t enum_op, jsval *statep,
                           jsid *idp, bool *_retval);
@@ -1172,29 +1141,6 @@ public:
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
     return new nsOfflineResourceListSH(aData);
-  }
-};
-
-// SVGStringList helper
-
-class nsSVGStringListSH : public nsStringArraySH
-{
-protected:
-  nsSVGStringListSH(nsDOMClassInfoData* aData) : nsStringArraySH(aData)
-  {
-  }
-  
-  virtual ~nsSVGStringListSH()
-  {
-  }
-  
-  virtual nsresult GetStringAt(nsISupports *aNative, int32_t aIndex,
-                               nsAString& aResult);
-  
-public:
-  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
-  {
-    return new nsSVGStringListSH(aData);
   }
 };
 

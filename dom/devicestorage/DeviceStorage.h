@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -80,6 +82,15 @@ public:
 
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIDOMEVENTTARGET
+  virtual void AddEventListener(const nsAString& aType,
+                                nsIDOMEventListener* aListener,
+                                bool aUseCapture,
+                                const mozilla::dom::Nullable<bool>& aWantsUntrusted,
+                                mozilla::ErrorResult& aRv) MOZ_OVERRIDE;
+  virtual void RemoveEventListener(const nsAString& aType,
+                                   nsIDOMEventListener* aListener,
+                                   bool aUseCapture,
+                                   mozilla::ErrorResult& aRv) MOZ_OVERRIDE;
 
   nsDOMDeviceStorage();
 

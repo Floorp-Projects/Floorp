@@ -4,25 +4,29 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/Touch.h"
-#include "nsGUIEvent.h"
-#include "nsDOMClassInfoID.h"
-#include "nsIClassInfo.h"
-#include "nsIXPCScriptable.h"
-#include "nsContentUtils.h"
-#include "mozilla/Preferences.h"
-#include "nsPresContext.h"
 
-DOMCI_DATA(Touch, mozilla::dom::Touch)
+#include "mozilla/dom/TouchBinding.h"
+#include "mozilla/Preferences.h"
+#include "nsContentUtils.h"
+#include "nsDOMTouchEvent.h"
+#include "nsGUIEvent.h"
+#include "nsPresContext.h"
 
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_1(Touch, mTarget)
+/* static */ bool
+Touch::PrefEnabled()
+{
+  return nsDOMTouchEvent::PrefEnabled();
+}
+
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(Touch, mTarget)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Touch)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMTouch)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsIDOMTouch)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Touch)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Touch)
@@ -31,91 +35,96 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(Touch)
 NS_IMETHODIMP
 Touch::GetIdentifier(int32_t* aIdentifier)
 {
-  *aIdentifier = mIdentifier;
+  *aIdentifier = Identifier();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 Touch::GetTarget(nsIDOMEventTarget** aTarget)
 {
+  NS_ADDREF(*aTarget = Target());
+  return NS_OK;
+}
+
+EventTarget*
+Touch::Target() const
+{
   nsCOMPtr<nsIContent> content = do_QueryInterface(mTarget);
   if (content && content->ChromeOnlyAccess() &&
       !nsContentUtils::CanAccessNativeAnon()) {
-    content = content->FindFirstNonChromeOnlyAccessContent();
-    *aTarget = content.forget().get();
-    return NS_OK;
+    return content->FindFirstNonChromeOnlyAccessContent();
   }
-  NS_IF_ADDREF(*aTarget = mTarget);
-  return NS_OK;
+
+  return mTarget;
 }
 
 NS_IMETHODIMP
 Touch::GetScreenX(int32_t* aScreenX)
 {
-  *aScreenX = mScreenPoint.x;
+  *aScreenX = ScreenX();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 Touch::GetScreenY(int32_t* aScreenY)
 {
-  *aScreenY = mScreenPoint.y;
+  *aScreenY = ScreenY();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 Touch::GetClientX(int32_t* aClientX)
 {
-  *aClientX = mClientPoint.x;
+  *aClientX = ClientX();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 Touch::GetClientY(int32_t* aClientY)
 {
-  *aClientY = mClientPoint.y;
+  *aClientY = ClientY();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 Touch::GetPageX(int32_t* aPageX)
 {
-  *aPageX = mPagePoint.x;
+  *aPageX = PageX();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 Touch::GetPageY(int32_t* aPageY)
 {
-  *aPageY = mPagePoint.y;
+  *aPageY = PageY();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 Touch::GetRadiusX(int32_t* aRadiusX)
 {
-  *aRadiusX = mRadius.x;
+  *aRadiusX = RadiusX();
   return NS_OK;
 }
                                              
 NS_IMETHODIMP
 Touch::GetRadiusY(int32_t* aRadiusY)
 {
-  *aRadiusY = mRadius.y;
+  *aRadiusY = RadiusY();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 Touch::GetRotationAngle(float* aRotationAngle)
 {
-  *aRotationAngle = mRotationAngle;
+  *aRotationAngle = RotationAngle();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 Touch::GetForce(float* aForce)
 {
-  *aForce = mForce;
+  *aForce = Force();
   return NS_OK;
 }
 
@@ -133,6 +142,12 @@ Touch::Equals(nsIDOMTouch* aTouch)
          (mForce != force) ||
          (mRotationAngle != orientation) ||
          (mRadius.x != radiusX) || (mRadius.y != radiusY);
+}
+
+/* virtual */ JSObject*
+Touch::WrapObject(JSContext* aCx, JSObject* aScope)
+{
+  return TouchBinding::Wrap(aCx, aScope, this);
 }
 
 } // namespace dom

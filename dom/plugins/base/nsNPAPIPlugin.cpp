@@ -1264,16 +1264,7 @@ _getstringidentifier(const NPUTF8* name)
     NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_getstringidentifier called from the wrong thread\n"));
   }
 
-  nsCOMPtr<nsIThreadJSContextStack> stack =
-    do_GetService("@mozilla.org/js/xpc/ContextStack;1");
-  if (!stack)
-    return NULL;
-
-  JSContext* cx = stack->GetSafeJSContext();
-  if (!cx) {
-    return NULL;
-  }
-
+  SafeAutoJSContext cx;
   JSAutoRequest ar(cx);
   return doGetIdentifier(cx, name);
 }
@@ -1285,16 +1276,8 @@ _getstringidentifiers(const NPUTF8** names, int32_t nameCount,
   if (!NS_IsMainThread()) {
     NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_getstringidentifiers called from the wrong thread\n"));
   }
-  nsCOMPtr<nsIThreadJSContextStack> stack =
-    do_GetService("@mozilla.org/js/xpc/ContextStack;1");
-  if (!stack)
-    return;
 
-  JSContext* cx = stack->GetSafeJSContext();
-  if (!cx) {
-    return;
-  }
-
+  SafeAutoJSContext cx;
   JSAutoRequest ar(cx);
 
   for (int32_t i = 0; i < nameCount; ++i) {

@@ -12,8 +12,5 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 
-EXPORTS		= nsPromptUtils.h \
-                  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 

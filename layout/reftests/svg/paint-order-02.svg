@@ -4,9 +4,17 @@
 -->
 <svg xmlns="http://www.w3.org/2000/svg">
   <title>Test that the paint-order property works</title>
-  <!-- https://bugzilla.mozilla.org/show_bug.cgi?id=XXXXXX -->
+  <!-- https://bugzilla.mozilla.org/show_bug.cgi?id=828805 -->
 
-  <g fill="gold" stroke="black" stroke-width="8" paint-order="stroke">
+  <linearGradient id="gold">
+    <stop stop-color="gold"/>
+  </linearGradient>
+
+  <linearGradient id="black">
+    <stop stop-color="black"/>
+  </linearGradient>
+
+  <g fill="url(#gold)" stroke="url(#black)" stroke-width="8" paint-order="stroke">
     <ellipse cx="50" cy="50" rx="40" ry="20"/>
     <path d="M 50,100 h 40 v 30 z"/>
     <polygon points="50,150 90,150 90,180"/>

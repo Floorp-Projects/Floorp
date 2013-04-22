@@ -442,6 +442,14 @@ function doTest() {
 }
 document.addEventListener("MozReftestInvalidate", doTest, false);
 
+Painting Tests
+==============
+
+If an element shouldn't be painted, set the class "reftest-no-paint" on it
+when doing an invalidation test. Causing a repaint in your
+MozReftestInvalidate handler (for example, by changing the body's background
+colour) will accurately test whether the element is painted.
+
 Zoom Tests
 ==========
 

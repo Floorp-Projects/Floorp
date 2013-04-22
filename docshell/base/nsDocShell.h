@@ -23,6 +23,7 @@
 #include "nsITextScroll.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIContentViewerContainer.h"
+#include "nsIDOMStorageManager.h"
 
 #include "nsDocLoader.h"
 #include "nsIURILoader.h"
@@ -69,7 +70,6 @@
 #include "nsISecureBrowserUI.h"
 #include "nsIObserver.h"
 #include "nsDocShellLoadTypes.h"
-#include "nsIDOMEventTarget.h"
 #include "nsILoadContext.h"
 #include "nsIWidget.h"
 #include "nsIWebShellServices.h"
@@ -77,6 +77,12 @@
 #include "nsIClipboardCommands.h"
 #include "nsICommandManager.h"
 #include "nsCRT.h"
+
+namespace mozilla {
+namespace dom {
+class EventTarget;
+}
+}
 
 class nsDocShell;
 class nsDOMNavigationTiming;
@@ -146,7 +152,8 @@ class nsDocShell : public nsDocLoader,
                    public nsILoadContext,
                    public nsIWebShellServices,
                    public nsILinkHandler,
-                   public nsIClipboardCommands
+                   public nsIClipboardCommands,
+                   public nsIDOMStorageManager
 {
     friend class nsDSURIContentListener;
 
@@ -178,6 +185,7 @@ public:
     NS_DECL_NSIOBSERVER
     NS_DECL_NSICLIPBOARDCOMMANDS
     NS_DECL_NSIWEBSHELLSERVICES
+    NS_FORWARD_SAFE_NSIDOMSTORAGEMANAGER(TopSessionStorageManager())
 
     NS_IMETHOD Stop() {
         // Need this here because otherwise nsIWebNavigation::Stop
@@ -628,10 +636,8 @@ protected:
     
     void ReattachEditorToWindow(nsISHEntry *aSHEntry);
 
-    nsresult GetSessionStorageForURI(nsIURI* aURI,
-                                     const nsSubstring& aDocumentURI,
-                                     bool create,
-                                     nsIDOMStorage** aStorage);
+    nsCOMPtr<nsIDOMStorageManager> mSessionStorageManager;
+    nsIDOMStorageManager* TopSessionStorageManager();
 
     // helpers for executing commands
     nsresult GetControllerForCommand(const char *inCommand,
@@ -675,9 +681,6 @@ protected:
     FrameType GetInheritedFrameType();
 
     bool HasUnloadedParent();
-
-    // hash of session storages, keyed by domain
-    nsInterfaceHashtable<nsCStringHashKey, nsIDOMStorage> mStorages;
 
     // Dimensions of the docshell
     nsIntRect                  mBounds;
@@ -753,7 +756,7 @@ protected:
     // For that reasons don't use nsCOMPtr.
 
     nsIDocShellTreeOwner *     mTreeOwner; // Weak Reference
-    nsIDOMEventTarget *        mChromeEventHandler; //Weak Reference
+    mozilla::dom::EventTarget* mChromeEventHandler; //Weak Reference
 
     eCharsetReloadState        mCharsetReloadState;
 

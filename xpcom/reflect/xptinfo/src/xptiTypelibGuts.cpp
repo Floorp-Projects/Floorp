@@ -6,6 +6,7 @@
 /* Implementation of xptiTypelibGuts. */
 
 #include "xptiprivate.h"
+#include "mozilla/XPTInterfaceInfoManager.h"
 
 using namespace mozilla;
 
@@ -38,15 +39,15 @@ xptiTypelibGuts::GetEntryAt(uint16_t i)
 
     XPTInterfaceDirectoryEntry* iface = mHeader->interface_directory + i;
 
-    xptiWorkingSet* set =
-        xptiInterfaceInfoManager::GetSingleton()->GetWorkingSet();
+    XPTInterfaceInfoManager::xptiWorkingSet& set =
+        XPTInterfaceInfoManager::GetSingleton()->mWorkingSet;
 
     {
-        ReentrantMonitorAutoEnter monitor(set->mTableReentrantMonitor);
+        ReentrantMonitorAutoEnter monitor(set.mTableReentrantMonitor);
         if (iface->iid.Equals(zeroIID))
-            r = set->mNameTable.Get(iface->name);
+            r = set.mNameTable.Get(iface->name);
         else
-            r = set->mIIDTable.Get(iface->iid);
+            r = set.mIIDTable.Get(iface->iid);
     }
 
     if (r)

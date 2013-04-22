@@ -26,6 +26,8 @@ function run_test() {
              createInstance(Ci.nsISupportsString);
   let active = {};
   active[manifest.origin] = 1;
+  // bad.origin tests that a missing manifest does not break migration, bug 859715
+  active["bad.origin"] = 1;
   activeVal.data = JSON.stringify(active);
   Services.prefs.setComplexValue("social.activeProviders",
                                  Ci.nsISupportsString, activeVal);
@@ -57,4 +59,7 @@ function testMigration(manifest, next) {
   do_check_true(activeProviders[manifest.origin]);
   do_check_true(MANIFEST_PREFS.prefHasUserValue(manifest.origin));
   do_check_true(JSON.parse(DEFAULT_PREFS.getCharPref(manifest.origin)).builtin);
+
+  // bug 859715, this should have been removed during migration
+  do_check_false(!!activeProviders["bad.origin"]);
 }

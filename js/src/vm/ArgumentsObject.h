@@ -1,6 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=78:
- *
+ * vim: set ts=8 sts=4 et sw=4 tw=99:
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -100,9 +99,11 @@ class ArgumentsObject : public JSObject
     static const uint32_t DATA_SLOT = 1;
     static const uint32_t MAYBE_CALL_SLOT = 2;
 
+  public:
     static const uint32_t LENGTH_OVERRIDDEN_BIT = 0x1;
     static const uint32_t PACKED_BITS_COUNT = 1;
 
+  protected:
     template <typename CopyArgs>
     static ArgumentsObject *create(JSContext *cx, HandleScript script, HandleFunction callee,
                                    unsigned numActuals, CopyArgs &copy);
@@ -124,6 +125,10 @@ class ArgumentsObject : public JSObject
      */
     static ArgumentsObject *createUnexpected(JSContext *cx, StackIter &iter);
     static ArgumentsObject *createUnexpected(JSContext *cx, AbstractFramePtr frame);
+#if defined(JS_ION)
+    static ArgumentsObject *createForIon(JSContext *cx, ion::IonJSFrameLayout *frame,
+                                         HandleObject scopeChain);
+#endif
 
     /*
      * Return the initial length of the arguments.  This may differ from the
@@ -201,8 +206,15 @@ class ArgumentsObject : public JSObject
     static size_t getDataSlotOffset() {
         return getFixedSlotOffset(DATA_SLOT);
     }
+    static size_t getInitialLengthSlotOffset() {
+        return getFixedSlotOffset(INITIAL_LENGTH_SLOT);
+    }
 
     static void MaybeForwardToCallObject(AbstractFramePtr frame, JSObject *obj, ArgumentsData *data);
+#if defined(JS_ION)
+    static void MaybeForwardToCallObject(ion::IonJSFrameLayout *frame, HandleObject callObj,
+                                         JSObject *obj, ArgumentsData *data);
+#endif
 };
 
 class NormalArgumentsObject : public ArgumentsObject

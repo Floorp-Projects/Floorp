@@ -161,7 +161,6 @@ ImageHostBuffered::EnsureTextureHost(TextureIdentifier aTextureId,
                                                    aTextureInfo);
   if (result) {
     mTextureHost->SetBuffer(new SurfaceDescriptor(null_t()), aAllocator);
-    mPictureRect = nsIntRect(0, 0, -1, -1);
   }
 
   return result;

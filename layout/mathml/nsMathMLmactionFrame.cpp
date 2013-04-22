@@ -21,8 +21,6 @@
 #include "nsIDOMElement.h"
 #include "nsTextFragment.h"
 
-#include "nsIDOMEventTarget.h"
-
 #include "nsMathMLmactionFrame.h"
 #include "nsAutoPtr.h"
 #include "nsStyleSet.h"

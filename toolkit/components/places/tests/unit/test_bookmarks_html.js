@@ -306,9 +306,8 @@ function testImportedBookmarksToFolder(aFolder)
 function checkItem(aExpected, aNode)
 {
   let id = aNode.itemId;
-  let deferred = Promise.defer();
 
-  Task.spawn(function() {
+  return Task.spawn(function() {
     for (prop in aExpected) {
       switch (prop) {
         case "type":
@@ -401,7 +400,5 @@ function checkItem(aExpected, aNode)
           throw new Error("Unknown property");
       }
     }
-  }).then(deferred.resolve);
-
-  return deferred.promise;
+  });
 }

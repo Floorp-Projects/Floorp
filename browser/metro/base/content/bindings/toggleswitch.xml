@@ -20,8 +20,8 @@
         <xul:description anonid="onlabel" class="onlabel" value="&checkbox.on.label;" xbl:inherits="value=onlabel"/>
         <xul:description anonid="offlabel" class="offlabel" value="&checkbox.off.label;" xbl:inherits="value=offlabel"/>
         <xul:radiogroup anonid="group" xbl:inherits="disabled">
-          <xul:radio anonid="on" class="checkbox-radio-on"/>
-          <xul:radio anonid="off" class="checkbox-radio-off"/>
+          <xul:radio type="toggle" anonid="on" class="checkbox-radio-on"/>
+          <xul:radio type="toggle" anonid="off" class="checkbox-radio-off"/>
         </xul:radiogroup>
       </xul:hbox>
     </content>

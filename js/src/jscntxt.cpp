@@ -1,6 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=80:
- *
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sts=4 et sw=4 tw=99:
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -141,24 +140,6 @@ JSRuntime::sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf, JS::RuntimeSizes 
     rtSizes->scriptData = scriptDataTable.sizeOfExcludingThis(mallocSizeOf);
     for (ScriptDataTable::Range r = scriptDataTable.all(); !r.empty(); r.popFront())
         rtSizes->scriptData += mallocSizeOf(r.front());
-}
-
-size_t
-JSRuntime::sizeOfExplicitNonHeap()
-{
-    size_t n = stackSpace.sizeOf();
-
-    if (execAlloc_) {
-        JS::CodeSizes sizes;
-        execAlloc_->sizeOfCode(&sizes);
-        n += sizes.jaeger + sizes.ion + sizes.baseline + sizes.asmJS +
-            sizes.regexp + sizes.other + sizes.unused;
-    }
-
-    if (bumpAlloc_)
-        n += bumpAlloc_->sizeOfNonHeapData();
-
-    return n;
 }
 
 void

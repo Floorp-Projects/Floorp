@@ -21,15 +21,6 @@ CPPSRCS = \
   DesktopNotification.cpp \
   $(NULL)
 
-EXPORTS_NAMESPACES = \
-  mozilla/dom \
-  $(NULL)
-
-EXPORTS_mozilla/dom = \
-  Notification.h \
-  DesktopNotification.h \
-  $(NULL)
-
 LOCAL_INCLUDES = \
   -I$(topsrcdir)/dom/base \
   -I$(topsrcdir)/dom/ipc \

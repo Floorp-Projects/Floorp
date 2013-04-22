@@ -13,6 +13,7 @@ webidl_files = \
   AnimationEvent.webidl \
   ArchiveReader.webidl \
   ArchiveRequest.webidl \
+  Attr.webidl \
   AudioBuffer.webidl \
   AudioBufferSourceNode.webidl \
   AudioContext.webidl \
@@ -20,7 +21,7 @@ webidl_files = \
   AudioListener.webidl \
   AudioNode.webidl \
   AudioParam.webidl \
-  Attr.webidl \
+  AudioProcessingEvent.webidl \
   BatteryManager.webidl \
   BeforeUnloadEvent.webidl \
   BiquadFilterNode.webidl \
@@ -46,6 +47,7 @@ webidl_files = \
   CSSValueList.webidl \
   DelayNode.webidl \
   DesktopNotification.webidl \
+  DeviceMotionEvent.webidl \
   Document.webidl \
   DocumentFragment.webidl \
   DocumentType.webidl \
@@ -57,6 +59,7 @@ webidl_files = \
   DOMStringMap.webidl \
   DOMTokenList.webidl \
   DOMTransaction.webidl \
+  DragEvent.webidl \
   DummyBinding.webidl \
   DynamicsCompressorNode.webidl \
   Element.webidl \
@@ -148,6 +151,7 @@ webidl_files = \
   IDBVersionChangeEvent.webidl \
   ImageData.webidl \
   InspectorUtils.webidl \
+  KeyEvent.webidl \
   LinkStyle.webidl \
   LocalMediaStream.webidl \
   Location.webidl \
@@ -155,6 +159,7 @@ webidl_files = \
   MediaStream.webidl \
   MessageEvent.webidl \
   MouseEvent.webidl \
+  MouseScrollEvent.webidl \
   MozActivity.webidl \
   MutationEvent.webidl \
   MutationObserver.webidl \
@@ -164,6 +169,7 @@ webidl_files = \
   NodeIterator.webidl \
   NodeList.webidl \
   Notification.webidl \
+  NotifyPaintEvent.webidl \
   PaintRequest.webidl \
   PaintRequestList.webidl \
   PannerNode.webidl \
@@ -178,6 +184,7 @@ webidl_files = \
   RGBColor.webidl \
   RTCConfiguration.webidl \
   Screen.webidl \
+  ScriptProcessorNode.webidl \
   ScrollAreaEvent.webidl \
   SimpleGestureEvent.webidl \
   StyleSheet.webidl \
@@ -261,6 +268,7 @@ webidl_files = \
   SVGScriptElement.webidl \
   SVGSetElement.webidl \
   SVGStopElement.webidl \
+  SVGStringList.webidl \
   SVGStyleElement.webidl \
   SVGSVGElement.webidl \
   SVGSwitchElement.webidl \
@@ -283,7 +291,10 @@ webidl_files = \
   TextDecoder.webidl \
   TextEncoder.webidl \
   TimeRanges.webidl \
+  Touch.webidl \
+  TouchEvent.webidl \
   TransitionEvent.webidl \
+  TreeColumns.webidl \
   TreeWalker.webidl \
   UIEvent.webidl \
   URL.webidl \

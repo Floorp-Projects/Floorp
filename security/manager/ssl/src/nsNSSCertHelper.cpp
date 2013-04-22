@@ -2088,7 +2088,9 @@ nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence **retSequence,
 
   }
   if (mCert->extensions) {
-    SECOidTag ev_oid_tag;
+    SECOidTag ev_oid_tag = SEC_OID_UNKNOWN;
+
+#ifndef NSS_NO_LIBPKIX
     bool validEV;
     rv = hasValidEVOidTag(ev_oid_tag, validEV);
     if (NS_FAILED(rv))
@@ -2096,6 +2098,7 @@ nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence **retSequence,
 
     if (!validEV)
       ev_oid_tag = SEC_OID_UNKNOWN;
+#endif
 
     rv = ProcessExtensions(mCert->extensions, sequence, ev_oid_tag, nssComponent);
     if (NS_FAILED(rv))

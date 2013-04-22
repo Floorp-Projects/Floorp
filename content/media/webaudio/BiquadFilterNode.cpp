@@ -26,8 +26,9 @@ NS_IMPL_RELEASE_INHERITED(BiquadFilterNode, AudioNode)
 class BiquadFilterNodeEngine : public AudioNodeEngine
 {
 public:
-  explicit BiquadFilterNodeEngine(AudioDestinationNode* aDestination)
-    : mSource(nullptr)
+  BiquadFilterNodeEngine(AudioNode* aNode, AudioDestinationNode* aDestination)
+    : AudioNodeEngine(aNode)
+    , mSource(nullptr)
     , mDestination(static_cast<AudioNodeStream*> (aDestination->Stream()))
     // Keep the default values in sync with the default values in
     // BiquadFilterNode::BiquadFilterNode
@@ -103,7 +104,7 @@ BiquadFilterNode::BiquadFilterNode(AudioContext* aContext)
   , mQ(new AudioParam(this, SendQToStream, 1.f))
   , mGain(new AudioParam(this, SendGainToStream, 0.f))
 {
-  BiquadFilterNodeEngine* engine = new BiquadFilterNodeEngine(aContext->Destination());
+  BiquadFilterNodeEngine* engine = new BiquadFilterNodeEngine(this, aContext->Destination());
   mStream = aContext->Graph()->CreateAudioNodeStream(engine, MediaStreamGraph::INTERNAL_STREAM);
   engine->SetSourceStream(static_cast<AudioNodeStream*> (mStream.get()));
 }

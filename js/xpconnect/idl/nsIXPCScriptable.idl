@@ -19,7 +19,7 @@
  * boolean to PR_TRUE before making the call.  Implementations may skip writing
  * to *_retval unless they want to return PR_FALSE.
  */
-[uuid(1236e34a-21e0-423c-a8c8-9b3f1e6d7060)]
+[uuid(33b9d098-e680-4e4c-88a2-57cccceac145)]
 interface nsIXPCScriptable : nsISupports
 {
     /* bitflags used for 'flags' (only 32 bits available!) */
@@ -84,8 +84,7 @@ interface nsIXPCScriptable : nsISupports
                        in JSValPtr vp);
 
     boolean delProperty(in nsIXPConnectWrappedNative wrapper,
-                       in JSContextPtr cx, in JSObjectPtr obj, in jsid id,
-                       in JSValPtr vp);
+                       in JSContextPtr cx, in JSObjectPtr obj, in jsid id);
 
     // The returnCode should be set to NS_SUCCESS_I_DID_SOMETHING if
     // this method does something.

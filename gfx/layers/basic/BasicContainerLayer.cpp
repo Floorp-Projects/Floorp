@@ -87,6 +87,15 @@ public:
     BasicShadowableLayer::Disconnect();
   }
 
+  virtual void ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface) MOZ_OVERRIDE
+  {
+    if (HasShadow()) {
+      DefaultComputeEffectiveTransforms(aTransformToSurface);
+    } else {
+      BasicContainerLayer::ComputeEffectiveTransforms(aTransformToSurface);
+    }
+  }
+
 private:
   BasicShadowLayerManager* ShadowManager()
   {
@@ -131,45 +140,6 @@ BasicShadowableContainerLayer::RepositionChild(Layer* aChild, Layer* aAfter)
   }
   BasicContainerLayer::RepositionChild(aChild, aAfter);
 }
-
-class BasicShadowContainerLayer : public ShadowContainerLayer, public BasicImplData {
-  template<class Container>
-  friend void ContainerInsertAfter(Layer* aChild, Layer* aAfter, Container* aContainer);
-  template<class Container>
-  friend void ContainerRemoveChild(Layer* aChild, Container* aContainer);
-  template<class Container>
-  friend void ContainerRepositionChild(Layer* aChild, Layer* aAfter, Container* aContainer);
-  template<class Container>
-  friend void ContainerComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface,
-                                                  Container* aContainer);
-
-public:
-  BasicShadowContainerLayer(BasicShadowLayerManager* aLayerManager) :
-    ShadowContainerLayer(aLayerManager, static_cast<BasicImplData*>(this))
-  {
-    MOZ_COUNT_CTOR(BasicShadowContainerLayer);
-  }
-  virtual ~BasicShadowContainerLayer()
-  {
-    while (mFirstChild) {
-      ContainerRemoveChild(mFirstChild, this);
-    }
-
-    MOZ_COUNT_DTOR(BasicShadowContainerLayer);
-  }
-
-  virtual void InsertAfter(Layer* aChild, Layer* aAfter)
-  { ContainerInsertAfter(aChild, aAfter, this); }
-  virtual void RemoveChild(Layer* aChild)
-  { ContainerRemoveChild(aChild, this); }
-  virtual void RepositionChild(Layer* aChild, Layer* aAfter)
-  { ContainerRepositionChild(aChild, aAfter, this); }
-
-  virtual void ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface)
-  {
-    ContainerComputeEffectiveTransforms(aTransformToSurface, this);
-  }
-};
 
 class BasicShadowableRefLayer : public RefLayer, public BasicImplData,
                                 public BasicShadowableLayer {

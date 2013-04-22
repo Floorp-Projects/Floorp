@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <html>
 <!--
-https://bugzilla.mozilla.org/show_bug.cgi?id={678695}
+https://bugzilla.mozilla.org/show_bug.cgi?id=678695
 -->
 <head>
-  <title>Test for Bug {678695} Settings API</title>
+  <title>Test for Bug 678695 Settings API</title>
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
 
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id={678695}">Mozilla Bug {678695}</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=678695">Mozilla Bug 678695</a>
 <p id="display"></p>
 <div id="content" style="display: none">
 
@@ -28,6 +28,8 @@ if (!SpecialPowers.getBoolPref("dom.mozSettings.enabled")) {
 
 SpecialPowers.addPermission("settings-write", true, document);
 SpecialPowers.addPermission("settings-read", true, document);
+
+function tests() {
 
 var screenBright = {"screen.brightness": 0.7};
 
@@ -280,9 +282,12 @@ function permissionTest() {
   }
 }
 
+permissionTest();
+}
+
 var gSettingsEnabled = SpecialPowers.getBoolPref("dom.mozSettings.enabled");
+addLoadEvent(tests);
 SimpleTest.waitForExplicitFinish();
-addLoadEvent(permissionTest);
 
 ok(true, "test passed");
 </script>

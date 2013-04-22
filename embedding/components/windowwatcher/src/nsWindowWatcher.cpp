@@ -48,9 +48,8 @@
 #include "nsIWindowProvider.h"
 #include "nsIMutableArray.h"
 #include "nsISupportsArray.h"
-#include "nsIDOMStorageObsolete.h"
 #include "nsIDOMStorage.h"
-#include "nsPIDOMStorage.h"
+#include "nsIDOMStorageManager.h"
 #include "nsIWidget.h"
 #include "nsFocusManager.h"
 #include "nsIPresShell.h"
@@ -860,15 +859,6 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
     }
   }
 
-  if (isNewToplevelWindow) {
-    // Notify observers that the window is open and ready.
-    // The window has not yet started to load a document.
-    nsCOMPtr<nsIObserverService> obsSvc =
-      mozilla::services::GetObserverService();
-    if (obsSvc)
-      obsSvc->NotifyObservers(*_retval, "toplevel-window-ready", nullptr);
-  }
-
   // Now we have to set the right opener principal on the new window.  Note
   // that we have to do this _before_ starting any URI loads, thanks to the
   // sync nature of javascript: loads.  Since this is the only place where we
@@ -935,6 +925,7 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
     }
   }
 
+  nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
   if (uriToLoad && aNavigate) { // get the script principal and pass it to docshell
     JSContextAutoPopper contextGuard;
 
@@ -950,7 +941,6 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
       cx = contextGuard.get();
     }
 
-    nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
     newDocShell->CreateLoadInfo(getter_AddRefs(loadInfo));
     NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
 
@@ -984,7 +974,18 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
         }
       }
     }
+  }
 
+  if (isNewToplevelWindow) {
+    // Notify observers that the window is open and ready.
+    // The window has not yet started to load a document.
+    nsCOMPtr<nsIObserverService> obsSvc =
+      mozilla::services::GetObserverService();
+    if (obsSvc)
+      obsSvc->NotifyObservers(*_retval, "toplevel-window-ready", nullptr);
+  }
+
+  if (uriToLoad && aNavigate) {
     newDocShell->LoadURI(uriToLoad,
                          loadInfo,
                          windowIsNew
@@ -1000,17 +1001,14 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
     parentDocShell = piWindow->GetDocShell();
 
   if (subjectPrincipal && parentDocShell) {
-    nsCOMPtr<nsIDOMStorage> storage;
-    parentDocShell->GetSessionStorageForPrincipal(subjectPrincipal,
-                                                  EmptyString(), false,
-                                                  getter_AddRefs(storage));
-    nsCOMPtr<nsPIDOMStorage> piStorage =
-      do_QueryInterface(storage);
-    if (piStorage){
-      storage = piStorage->Clone();
-      newDocShell->AddSessionStorage(
-        piStorage->Principal(),
-        storage);
+    nsCOMPtr<nsIDOMStorageManager> parentStorageManager = do_QueryInterface(parentDocShell);
+    nsCOMPtr<nsIDOMStorageManager> newStorageManager = do_QueryInterface(newDocShell);
+
+    if (parentStorageManager && newStorageManager) {
+      nsCOMPtr<nsIDOMStorage> storage;
+      parentStorageManager->GetStorage(subjectPrincipal, isPrivateBrowsingWindow, getter_AddRefs(storage));
+      if (storage)
+        newStorageManager->CloneStorage(storage);
     }
   }
 

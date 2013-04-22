@@ -64,6 +64,7 @@ var SelectionHandler = {
     addMessageListener("Browser:CaretUpdate", this);
     addMessageListener("Browser:SelectionSwitchMode", this);
     addMessageListener("Browser:RepositionInfoRequest", this);
+    addMessageListener("Browser:SelectionHandlerPing", this);
   },
 
   shutdown: function shutdown() {
@@ -82,6 +83,7 @@ var SelectionHandler = {
     removeMessageListener("Browser:CaretUpdate", this);
     removeMessageListener("Browser:SelectionSwitchMode", this);
     removeMessageListener("Browser:RepositionInfoRequest", this);
+    removeMessageListener("Browser:SelectionHandlerPing", this);
   },
 
   /*************************************************
@@ -436,6 +438,10 @@ var SelectionHandler = {
     });
   },
 
+  _onPing: function _onPing(aId) {
+    sendAsyncMessage("Content:SelectionHandlerPong", { id: aId });
+  },
+
   /*************************************************
    * Selection helpers
    */
@@ -474,6 +480,7 @@ var SelectionHandler = {
     this._contentOffset = null;
     this._domWinUtils = null;
     this._targetIsEditable = false;
+    sendSyncMessage("Content:HandlerShutdown", {});
   },
 
   /*
@@ -842,13 +849,16 @@ var SelectionHandler = {
 
     let orientation = this._pointOrientationToRect(aClientPoint);
     let result = { speed: 1, trigger: false, start: false, end: false };
+    let ml = Util.isMultilineInput(this._targetElement);
 
-    if (orientation.left || orientation.top) {
+    // This could be improved such that we only select to the beginning of
+    // the line when dragging left but not up.
+    if (orientation.left || (ml && orientation.top)) {
       this._addEditSelection(kSelectionNodeAnchor);
       result.speed = orientation.left + orientation.top;
       result.trigger = true;
       result.end = true;
-    } else if (orientation.right || orientation.bottom) {
+    } else if (orientation.right || (ml && orientation.bottom)) {
       this._addEditSelection(kSelectionNodeFocus);
       result.speed = orientation.right + orientation.bottom;
       result.trigger = true;
@@ -1217,6 +1227,10 @@ var SelectionHandler = {
 
       case "Browser:RepositionInfoRequest":
         this._repositionInfoRequest(json);
+        break;
+
+      case "Browser:SelectionHandlerPing":
+        this._onPing(json.id);
         break;
     }
   },

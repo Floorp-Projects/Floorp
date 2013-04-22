@@ -8,6 +8,7 @@
 #include "nsImageMap.h"
 
 #include "nsString.h"
+#include "nsDOMEvent.h"
 #include "nsReadableUtils.h"
 #include "nsRenderingContext.h"
 #include "nsPresContext.h"
@@ -19,7 +20,6 @@
 #include "nsIDocument.h"
 #include "nsINameSpaceManager.h"
 #include "nsGkAtoms.h"
-#include "nsIDOMEventTarget.h"
 #include "nsIPresShell.h"
 #include "nsImageFrame.h"
 #include "nsCoord.h"
@@ -969,23 +969,22 @@ nsImageMap::HandleEvent(nsIDOMEvent* aEvent)
                     "Unexpected event type");
 
   //Set which one of our areas changed focus
-  nsCOMPtr<nsIDOMEventTarget> target;
-  if (NS_SUCCEEDED(aEvent->GetTarget(getter_AddRefs(target))) && target) {
-    nsCOMPtr<nsIContent> targetContent(do_QueryInterface(target));
-    if (targetContent) {
-      uint32_t i, n = mAreas.Length();
-      for (i = 0; i < n; i++) {
-        Area* area = mAreas.ElementAt(i);
-        if (area->mArea == targetContent) {
-          //Set or Remove internal focus
-          area->HasFocus(focus);
-          //Now invalidate the rect
-          if (mImageFrame) {
-            mImageFrame->InvalidateFrame();
-          }
-          break;
-        }
+  nsCOMPtr<nsIContent> targetContent = do_QueryInterface(
+    aEvent->InternalDOMEvent()->GetTarget());
+  if (!targetContent) {
+    return NS_OK;
+  }
+  uint32_t i, n = mAreas.Length();
+  for (i = 0; i < n; i++) {
+    Area* area = mAreas.ElementAt(i);
+    if (area->mArea == targetContent) {
+      //Set or Remove internal focus
+      area->HasFocus(focus);
+      //Now invalidate the rect
+      if (mImageFrame) {
+        mImageFrame->InvalidateFrame();
       }
+      break;
     }
   }
   return NS_OK;

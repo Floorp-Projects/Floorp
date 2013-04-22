@@ -21,12 +21,6 @@ CPPSRCS		= \
 		nsSAXXMLReader.cpp \
 		$(NULL)
 
-EXPORTS		= \
-		nsSAXAttributes.h \
-		nsSAXLocator.h \
-		nsSAXXMLReader.h \
-		$(NULL)
-
 FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk

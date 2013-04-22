@@ -19,19 +19,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=478911
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-function toggleGeolocationSetting(value, callback) {
-  var mozSettings = window.navigator.mozSettings;
-  var lock = mozSettings.createLock();
-
-  var geoenabled = {"geolocation.enabled": value};
-
-  req = lock.set(geoenabled);
-  req.onsuccess = function () {
-    ok(true, "set done");
-    callback();
-  }
-}
-
 SimpleTest.waitForExplicitFinish();
 resume_geolocationProvider();
 force_prompt(true);

@@ -296,6 +296,31 @@ protected:
   ISurfaceAllocator* mDeAllocator;
 };
 
+class AutoLockTextureHost
+{
+public:
+  AutoLockTextureHost(TextureHost* aHost)
+    : mTextureHost(aHost)
+    , mIsValid(true)
+  {
+    if (mTextureHost) {
+      mIsValid = mTextureHost->Lock();
+    }
+  }
+
+  ~AutoLockTextureHost()
+  {
+    if (mTextureHost && mIsValid) {
+      mTextureHost->Unlock();
+    }
+  }
+
+  bool IsValid() { return mIsValid; }
+
+private:
+  TextureHost *mTextureHost;
+  bool mIsValid;
+};
 
 /**
  * This can be used as an offscreen rendering target by the compositor, and

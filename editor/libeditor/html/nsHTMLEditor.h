@@ -14,7 +14,6 @@
 #include "nsITableEditor.h"
 #include "nsIEditorMailSupport.h"
 #include "nsIEditorStyleSheets.h"
-#include "nsITextServicesDocument.h"
 
 #include "nsEditor.h"
 #include "nsIDOMElement.h"
@@ -566,7 +565,6 @@ protected:
                                      nsIDOMNode **aTargetNode,       
                                      int32_t *aTargetOffset,   
                                      bool *aDoContinue);
-  nsresult   GetAttributeToModifyOnNode(nsIDOMNode *aNode, nsAString &aAttrib);
 
   bool       IsInLink(nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *outLink = nullptr);
   nsresult   StripFormattingNodes(nsIDOMNode *aNode, bool aOnlyList = false);
@@ -765,9 +763,6 @@ protected:
   
   // an array for holding default style settings
   nsTArray<PropItem*> mDefaultStyles;
-
-   // for real-time spelling
-   nsCOMPtr<nsITextServicesDocument> mTextServices;
 
 protected:
 

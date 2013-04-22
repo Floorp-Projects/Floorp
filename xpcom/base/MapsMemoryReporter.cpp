@@ -128,13 +128,6 @@ public:
   CollectReports(nsIMemoryMultiReporterCallback *aCb,
                  nsISupports *aClosure);
 
-  NS_IMETHOD
-  GetExplicitNonHeap(int64_t *aAmount) {
-    // This reporter doesn't do any "explicit" measurements.
-    *aAmount = 0;
-    return NS_OK;
-  }
-
 private:
   // Search through /proc/self/maps for libxul.so, and set mLibxulDir to the
   // the directory containing libxul.

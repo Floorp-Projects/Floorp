@@ -12,7 +12,6 @@
 
 class nsAttrValue;
 class nsIAtom;
-class nsIDOMSVGStringList;
 class nsString;
 
 namespace mozilla {
@@ -91,9 +90,9 @@ public:
   void MaybeInvalidate();
 
   // WebIDL
-  already_AddRefed<nsIDOMSVGStringList> RequiredFeatures();
-  already_AddRefed<nsIDOMSVGStringList> RequiredExtensions();
-  already_AddRefed<nsIDOMSVGStringList> SystemLanguage();
+  already_AddRefed<DOMSVGStringList> RequiredFeatures();
+  already_AddRefed<DOMSVGStringList> RequiredExtensions();
+  already_AddRefed<DOMSVGStringList> SystemLanguage();
   bool HasExtension(const nsAString& aExtension);
 
 private:

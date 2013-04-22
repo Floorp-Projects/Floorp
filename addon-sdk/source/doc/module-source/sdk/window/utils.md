@@ -79,6 +79,22 @@ to support private browsing, refer to the
   @returns {nsIBaseWindow}
 </api>
 
+<api name="getToplevelWindow">
+  @function
+  Returns the toplevel
+  [`nsIDOMWindow`](https://developer.mozilla.org/en-US/docs/XPCOM_Interface_Reference/nsIDOMWindow)
+  for the given child [`nsIDOMWindow`](https://developer.mozilla.org/en/nsIDOMWindow):
+
+      var { Ci } = require('chrome');
+      var utils = require('sdk/window/utils');
+      var browserWindow = utils.getMostRecentBrowserWindow();
+      var window = browserWindow.content; // `window` object for the current webpage
+      utils.getToplevelWindw(window) == browserWindow // => true
+
+  @param window {nsIDOMWindow}
+  @returns {nsIDOMWindow}
+</api>
+
 <api name="getWindowDocShell">
   @function
   Returns the

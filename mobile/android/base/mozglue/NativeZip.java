@@ -7,8 +7,6 @@ package org.mozilla.gecko.mozglue;
 
 import java.io.InputStream;
 import java.nio.ByteBuffer;
-import java.util.zip.Inflater;
-import java.util.zip.InflaterInputStream;
 
 public class NativeZip implements NativeReference {
     private static final int DEFLATE = 8;
@@ -23,12 +21,12 @@ public class NativeZip implements NativeReference {
     }
 
     public NativeZip(InputStream input) {
-        if (input instanceof ByteBufferInputStream) {
-            ByteBufferInputStream bbinput = (ByteBufferInputStream)input;
-            mObj = getZipFromByteBuffer(bbinput.mBuf);
-        } else {
-            throw new RuntimeException("Only ByteBufferInputStream is supported");
+        if (!(input instanceof ByteBufferInputStream)) {
+            throw new IllegalArgumentException("Got " + input.getClass()
+                                               + ", but expected ByteBufferInputStream!");
         }
+        ByteBufferInputStream bbinput = (ByteBufferInputStream)input;
+        mObj = getZipFromByteBuffer(bbinput.mBuf);
         mInput = input;
     }
 
@@ -56,8 +54,9 @@ public class NativeZip implements NativeReference {
     }
 
     public InputStream getInputStream(String path) {
-        if (mObj == 0) {
-            throw new RuntimeException("NativeZip is closed");
+        if (isReleased()) {
+            throw new IllegalStateException("Can't get path \"" + path
+                                            + "\" because NativeZip is closed!");
         }
         return _getInputStream(mObj, path);
     }
@@ -68,11 +67,9 @@ public class NativeZip implements NativeReference {
     private native InputStream _getInputStream(long obj, String path);
 
     private InputStream createInputStream(ByteBuffer buffer, int compression) {
-        InputStream input = new ByteBufferInputStream(buffer, this);
-        if (compression == DEFLATE) {
-            Inflater inflater = new Inflater(true);
-            input = new InflaterInputStream(input, inflater);
+        if (compression != STORE) {
+            throw new IllegalArgumentException("Got compression " + compression + ", but expected 0 (STORE)!");
         }
-        return input;
+        return new ByteBufferInputStream(buffer, this);
     }
 }

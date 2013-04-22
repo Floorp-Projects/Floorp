@@ -1,6 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=99:
- *
+ * vim: set ts=8 sts=4 et sw=4 tw=99:
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -18,6 +17,8 @@
 #include "gc/Barrier-inl.h"
 #include "vm/Stack-inl.h"
 #include "vm/ArgumentsObject-inl.h"
+
+#include "ion/IonFrames.h"
 
 using namespace js;
 using namespace js::gc;
@@ -46,7 +47,8 @@ CopyStackFrameArguments(const AbstractFramePtr frame, HeapValue *dst)
 }
 
 /* static */ void
-ArgumentsObject::MaybeForwardToCallObject(AbstractFramePtr frame, JSObject *obj, ArgumentsData *data)
+ArgumentsObject::MaybeForwardToCallObject(AbstractFramePtr frame, JSObject *obj,
+                                          ArgumentsData *data)
 {
     RawScript script = frame.script();
     if (frame.fun()->isHeavyweight() && script->argsObjAliasesFormals()) {
@@ -55,6 +57,22 @@ ArgumentsObject::MaybeForwardToCallObject(AbstractFramePtr frame, JSObject *obj,
             data->args[fi.frameIndex()] = MagicValue(JS_FORWARD_TO_CALL_OBJECT);
     }
 }
+
+#if defined(JS_ION)
+/* static */ void
+ArgumentsObject::MaybeForwardToCallObject(ion::IonJSFrameLayout *frame, HandleObject callObj,
+                                          JSObject *obj, ArgumentsData *data)
+{
+    RawFunction callee = ion::CalleeTokenToFunction(frame->calleeToken());
+    RawScript script = callee->nonLazyScript();
+    if (callee->isHeavyweight() && script->argsObjAliasesFormals()) {
+        JS_ASSERT(callObj && callObj->isCall());
+        obj->initFixedSlot(MAYBE_CALL_SLOT, ObjectValue(*callObj.get()));
+        for (AliasedFormalIter fi(script); fi; fi++)
+            data->args[fi.frameIndex()] = MagicValue(JS_FORWARD_TO_CALL_OBJECT);
+    }
+}
+#endif
 
 struct CopyFrameArgs
 {
@@ -76,6 +94,36 @@ struct CopyFrameArgs
         ArgumentsObject::MaybeForwardToCallObject(frame_, obj, data);
     }
 };
+
+#if defined(JS_ION)
+struct CopyIonJSFrameArgs
+{
+    ion::IonJSFrameLayout *frame_;
+    HandleObject callObj_;
+
+    CopyIonJSFrameArgs(ion::IonJSFrameLayout *frame, HandleObject callObj)
+      : frame_(frame), callObj_(callObj)
+    { }
+
+    void copyArgs(JSContext *, HeapValue *dst) const {
+        unsigned numActuals = frame_->numActualArgs();
+
+        /* Copy all arguments. */
+        Value *src = frame_->argv() + 1;  /* +1 to skip this. */
+        Value *end = src + numActuals;
+        while (src != end)
+            (dst++)->init(*src++);
+    }
+
+    /*
+     * If a call object exists and the arguments object aliases formals, the
+     * call object is the canonical location for formals.
+     */
+    void maybeForwardToCallObject(JSObject *obj, ArgumentsData *data) {
+        ArgumentsObject::MaybeForwardToCallObject(frame_, callObj_, obj, data);
+    }
+};
+#endif
 
 struct CopyStackIterArgs
 {
@@ -209,8 +257,22 @@ ArgumentsObject::createUnexpected(JSContext *cx, AbstractFramePtr frame)
     return create(cx, script, callee, frame.numActualArgs(), copy);
 }
 
+#if defined(JS_ION)
+ArgumentsObject *
+ArgumentsObject::createForIon(JSContext *cx, ion::IonJSFrameLayout *frame, HandleObject scopeChain)
+{
+    ion::CalleeToken token = frame->calleeToken();
+    JS_ASSERT(ion::CalleeTokenIsFunction(token));
+    RootedScript script(cx, ion::ScriptFromCalleeToken(token));
+    RootedFunction callee(cx, ion::CalleeTokenToFunction(token));
+    RootedObject callObj(cx, scopeChain->isCall() ? scopeChain.get() : NULL);
+    CopyIonJSFrameArgs copy(frame, callObj);
+    return create(cx, script, callee, frame->numActualArgs(), copy);
+}
+#endif
+
 static JSBool
-args_delProperty(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp)
+args_delProperty(JSContext *cx, HandleObject obj, HandleId id, JSBool *succeeded)
 {
     ArgumentsObject &argsobj = obj->asArguments();
     if (JSID_IS_INT(id)) {
@@ -222,6 +284,7 @@ args_delProperty(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValu
     } else if (JSID_IS_ATOM(id, cx->names().callee)) {
         argsobj.asNormalArguments().clearCallee();
     }
+    *succeeded = true;
     return true;
 }
 
@@ -289,8 +352,8 @@ ArgSetter(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, MutableHa
      * of setting it in case the user has changed the prototype to an object
      * that has a setter for this id.
      */
-    RootedValue value(cx);
-    return baseops::DeleteGeneric(cx, obj, id, &value, false) &&
+    JSBool succeeded;
+    return baseops::DeleteGeneric(cx, obj, id, &succeeded) &&
            baseops::DefineGeneric(cx, obj, id, vp, NULL, NULL, attrs);
 }
 
@@ -408,8 +471,8 @@ StrictArgSetter(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, Mut
      * args_delProperty to clear the corresponding reserved slot so the GC can
      * collect its value.
      */
-    RootedValue value(cx);
-    return baseops::DeleteGeneric(cx, argsobj, id, &value, strict) &&
+    JSBool succeeded;
+    return baseops::DeleteGeneric(cx, argsobj, id, &succeeded) &&
            baseops::DefineGeneric(cx, argsobj, id, vp, NULL, NULL, attrs);
 }
 

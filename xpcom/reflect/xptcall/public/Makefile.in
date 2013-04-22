@@ -10,11 +10,5 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXPORTS		= \
-		xptcall.h \
-		xptcstubsdecl.inc \
-		xptcstubsdef.inc \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 

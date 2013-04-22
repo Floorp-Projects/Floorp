@@ -1,7 +1,7 @@
 // Binary: cache/js-dbg-64-e69034463eeb-linux
 // Flags: -j
 //
-/* vim: set ts=4 sw=4 tw=99 et: */
+/* vim: set ts=8 sts=4 et sw=4 tw=99: */
 function f() {
     this.search = function(a, b, c) {
         arguments[3] = { }

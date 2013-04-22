@@ -16,30 +16,6 @@ IS_COMPONENT    = 1
 MODULE_NAME	= nsPluginModule
 LIBXUL_LIBRARY = 1
 
-EXPORTS_NAMESPACES = mozilla
-
-EXPORTS = \
-  npapi.h \
-  npfunctions.h \
-  nptypes.h \
-  npruntime.h \
-  nsPluginLogging.h \
-  nsPluginNativeWindow.h \
-  nsPluginsCID.h \
-  nsNPAPIPluginInstance.h \
-  nsPluginsDir.h \
-  nsPluginTags.h \
-  nsPluginDirServiceProvider.h \
-  nsPluginHost.h \
-  nsJSNPRuntime.h \
-  nsPluginInstanceOwner.h \
-  nsPluginPlayPreviewInfo.h \
-  $(NULL)
-
-EXPORTS_mozilla = \
-  PluginPRLibrary.h \
-  $(NULL)
-
 CPPSRCS		= \
 		nsNPAPIPlugin.cpp \
 		nsNPAPIPluginInstance.cpp \

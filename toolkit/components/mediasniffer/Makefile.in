@@ -21,9 +21,5 @@ CPPSRCS = \
     nsMediaSnifferModule.cpp \
     $(NULL)
 
-EXPORTS = \
-    nsMediaSniffer.h \
-    $(NULL)
-
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk

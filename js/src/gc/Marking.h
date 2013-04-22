@@ -1,9 +1,8 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=4 sw=4 et tw=99:
- */
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sts=4 et sw=4 tw=99:
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifndef gc_marking_h___
 #define gc_marking_h___
@@ -13,6 +12,7 @@
 #include "jslock.h"
 
 #include "gc/Barrier.h"
+#include "gc/Nursery.h"
 #include "js/TemplateLib.h"
 #include "ion/IonCode.h"
 
@@ -29,6 +29,7 @@ class JSLinearString;
 namespace js {
 
 class ArgumentsObject;
+class ArrayBufferObject;
 class BaseShape;
 class GlobalObject;
 class UnownedBaseShape;
@@ -93,12 +94,12 @@ DeclMarker(BaseShape, BaseShape)
 DeclMarker(BaseShape, UnownedBaseShape)
 DeclMarker(IonCode, ion::IonCode)
 DeclMarker(Object, ArgumentsObject)
+DeclMarker(Object, ArrayBufferObject)
 DeclMarker(Object, DebugScopeObject)
 DeclMarker(Object, GlobalObject)
 DeclMarker(Object, JSObject)
 DeclMarker(Object, JSFunction)
 DeclMarker(Object, ScopeObject)
-DeclMarker(Object, ArrayBufferObject)
 DeclMarker(Script, JSScript)
 DeclMarker(Shape, Shape)
 DeclMarker(String, JSAtom)
@@ -280,10 +281,18 @@ Mark(JSTracer *trc, HeapPtr<ion::IonCode> *code, const char *name)
     MarkIonCode(trc, code, name);
 }
 
+/* For use by WeakMap's HashKeyRef instantiation. */
 inline void
 Mark(JSTracer *trc, JSObject **objp, const char *name)
 {
     MarkObjectUnbarriered(trc, objp, name);
+}
+
+/* For use by Debugger::WeakMap's proxiedScopes HashKeyRef instantiation. */
+inline void
+Mark(JSTracer *trc, ScopeObject **obj, const char *name)
+{
+    MarkObjectUnbarriered(trc, obj, name);
 }
 
 bool

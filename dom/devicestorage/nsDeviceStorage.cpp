@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -360,11 +362,12 @@ DeviceStorageFile::IsSafePath()
   mPath.BeginReading(start);
   mPath.EndReading(end);
 
-  // if the path has a ~ or \ in it, return false.
+  // if the path is a '~' or starts with '~/', return false.
   NS_NAMED_LITERAL_STRING(tilde, "~");
-  NS_NAMED_LITERAL_STRING(bslash, "\\");
-  if (FindInReadable(tilde, start, end) ||
-      FindInReadable(bslash, start, end)) {
+  NS_NAMED_LITERAL_STRING(tildeSlash, "~/");
+  if (mPath.Equals(tilde) ||
+      StringBeginsWith(mPath, tildeSlash)) {
+    NS_WARNING("Path name starts with tilde!");
     return false;
    }
   // split on /.  if any token is "", ., or .., return false.
@@ -1527,15 +1530,14 @@ public:
                          nsIPrincipal *aPrincipal,
                          DeviceStorageFile *aFile,
                          DOMRequest* aRequest,
-                         nsDOMDeviceStorage *aDeviceStorage,
-                         nsIDOMEventListener *aListener)
+                         nsDOMDeviceStorage *aDeviceStorage)
       : mRequestType(aRequestType)
       , mWindow(aWindow)
       , mPrincipal(aPrincipal)
       , mFile(aFile)
       , mRequest(aRequest)
       , mDeviceStorage(aDeviceStorage)
-      , mListener(aListener) {}
+    {}
 
     DeviceStorageRequest(const DeviceStorageRequestType aRequestType,
                          nsPIDOMWindow *aWindow,
@@ -1821,7 +1823,6 @@ private:
   nsRefPtr<DOMRequest> mRequest;
   nsCOMPtr<nsIDOMBlob> mBlob;
   nsRefPtr<nsDOMDeviceStorage> mDeviceStorage;
-  nsCOMPtr<nsIDOMEventListener> mListener;
 };
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DeviceStorageRequest)
@@ -1833,12 +1834,11 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(DeviceStorageRequest)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(DeviceStorageRequest)
 
-NS_IMPL_CYCLE_COLLECTION_5(DeviceStorageRequest,
+NS_IMPL_CYCLE_COLLECTION_4(DeviceStorageRequest,
                            mRequest,
                            mWindow,
                            mBlob,
-                           mDeviceStorage,
-                           mListener)
+                           mDeviceStorage)
 
 
 DOMCI_DATA(DeviceStorage, nsDOMDeviceStorage)
@@ -2455,9 +2455,30 @@ nsDOMDeviceStorage::AddEventListener(const nsAString & aType,
   nsRefPtr<DOMRequest> request = new DOMRequest(win);
   nsRefPtr<DeviceStorageFile> dsf = new DeviceStorageFile(mStorageType, mRootDirectory);
   nsCOMPtr<nsIRunnable> r = new DeviceStorageRequest(DEVICE_STORAGE_REQUEST_WATCH,
-                                                     win, mPrincipal, dsf, request, this, aListener);
+                                                     win, mPrincipal, dsf, request, this);
   NS_DispatchToMainThread(r);
   return nsDOMEventTargetHelper::AddEventListener(aType, aListener, aUseCapture, aWantsUntrusted, aArgc);
+}
+
+void
+nsDOMDeviceStorage::AddEventListener(const nsAString & aType,
+                                     nsIDOMEventListener *aListener,
+                                     bool aUseCapture,
+                                     const Nullable<bool>& aWantsUntrusted,
+                                     ErrorResult& aRv)
+{
+  nsCOMPtr<nsPIDOMWindow> win = GetOwner();
+  if (!win) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return;
+  }
+
+  nsRefPtr<DOMRequest> request = new DOMRequest(win);
+  nsRefPtr<DeviceStorageFile> dsf = new DeviceStorageFile(mStorageType, mRootDirectory);
+  nsCOMPtr<nsIRunnable> r = new DeviceStorageRequest(DEVICE_STORAGE_REQUEST_WATCH,
+                                                     win, mPrincipal, dsf, request, this);
+  NS_DispatchToMainThread(r);
+  nsDOMEventTargetHelper::AddEventListener(aType, aListener, aUseCapture, aWantsUntrusted, aRv);
 }
 
 NS_IMETHODIMP
@@ -2489,6 +2510,21 @@ nsDOMDeviceStorage::RemoveEventListener(const nsAString & aType,
     obs->RemoveObserver(this, "file-watcher-update");
   }
   return NS_OK;
+}
+
+void
+nsDOMDeviceStorage::RemoveEventListener(const nsAString& aType,
+                                        nsIDOMEventListener* aListener,
+                                        bool aCapture,
+                                        ErrorResult& aRv)
+{
+  nsDOMEventTargetHelper::RemoveEventListener(aType, aListener, aCapture, aRv);
+
+  if (mIsWatchingFile && !HasListenersFor(nsGkAtoms::onchange)) {
+    mIsWatchingFile = false;
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    obs->RemoveObserver(this, "file-watcher-update");
+  }
 }
 
 NS_IMETHODIMP

@@ -49,17 +49,16 @@ const WINDOW_HIDEABLE_FEATURES = [
   "menubar", "toolbar", "locationbar", "personalbar", "statusbar", "scrollbars"
 ];
 
-/*
-docShell capabilities to (re)store
-Restored in restoreHistory()
-eg: browser.docShell["allow" + aCapability] = false;
+const MESSAGES = [
+  // The content script tells us that its form data (or that of one of its
+  // subframes) might have changed. This can be the contents or values of
+  // standard form fields or of ContentEditables.
+  "SessionStore:input",
 
-XXX keep these in sync with all the attributes starting
-    with "allow" in /docshell/base/nsIDocShell.idl
-*/
-const CAPABILITIES = [
-  "Subframes", "Plugins", "Javascript", "MetaRedirects", "Images",
-  "DNSPrefetch", "Auth", "WindowControl"
+  // The content script has received a pageshow event. This happens when a
+  // page is loaded from bfcache without any network activity, i.e. when
+  // clicking the back or forward button.
+  "SessionStore:pageshow"
 ];
 
 // These are tab events that we listen to.
@@ -84,6 +83,23 @@ Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", this);
 
 XPCOMUtils.defineLazyServiceGetter(this, "gSessionStartup",
   "@mozilla.org/browser/sessionstartup;1", "nsISessionStartup");
+
+// List of docShell capabilities to (re)store. These are automatically
+// retrieved from a given docShell if not already collected before.
+// This is made so they're automatically in sync with all nsIDocShell.allow*
+// properties.
+let gDocShellCapabilities = (function () {
+  let caps;
+
+  return docShell => {
+    if (!caps) {
+      let keys = Object.keys(docShell);
+      caps = keys.filter(k => k.startsWith("allow")).map(k => k.slice(5));
+    }
+
+    return caps;
+  };
+})();
 
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
   "resource://gre/modules/NetUtil.jsm");
@@ -609,6 +625,29 @@ let SessionStoreInternal = {
     }
   },
 
+  /**
+   * This method handles incoming messages sent by the session store content
+   * script and thus enables communication with OOP tabs.
+   */
+  receiveMessage: function ssi_receiveMessage(aMessage) {
+    var browser = aMessage.target;
+    var win = browser.ownerDocument.defaultView;
+
+    switch (aMessage.name) {
+      case "SessionStore:pageshow":
+        this.onTabLoad(win, browser);
+        break;
+      case "SessionStore:input":
+        this.onTabInput(win, browser);
+        break;
+      default:
+        debug("received unknown message '" + aMessage.name + "'");
+        break;
+    }
+
+    this._clearRestoringWindows();
+  },
+
   /* ........ Window Event Handlers .............. */
 
   /**
@@ -621,16 +660,10 @@ let SessionStoreInternal = {
         // If __SS_restore_data is set, then we need to restore the document
         // (form data, scrolling, etc.). This will only happen when a tab is
         // first restored.
-        if (aEvent.currentTarget.__SS_restore_data)
-          this.restoreDocument(win, aEvent.currentTarget, aEvent);
-        // We still need to call onTabLoad, so fall through to "pageshow" case.
-      case "pageshow":
-        this.onTabLoad(win, aEvent.currentTarget, aEvent);
-        break;
-      case "change":
-      case "input":
-      case "DOMAutoComplete":
-        this.onTabInput(win, aEvent.currentTarget);
+        let browser = aEvent.currentTarget;
+        if (browser.__SS_restore_data)
+          this.restoreDocument(win, browser, aEvent);
+        this.onTabLoad(win, browser);
         break;
       case "TabOpen":
         this.onTabAdd(win, aEvent.originalTarget);
@@ -1193,10 +1226,9 @@ let SessionStoreInternal = {
   onTabAdd: function ssi_onTabAdd(aWindow, aTab, aNoNotification) {
     let browser = aTab.linkedBrowser;
     browser.addEventListener("load", this, true);
-    browser.addEventListener("pageshow", this, true);
-    browser.addEventListener("change", this, true);
-    browser.addEventListener("input", this, true);
-    browser.addEventListener("DOMAutoComplete", this, true);
+
+    let mm = browser.messageManager;
+    MESSAGES.forEach(msg => mm.addMessageListener(msg, this));
 
     if (!aNoNotification) {
       this.saveStateDelayed(aWindow);
@@ -1217,10 +1249,9 @@ let SessionStoreInternal = {
   onTabRemove: function ssi_onTabRemove(aWindow, aTab, aNoNotification) {
     let browser = aTab.linkedBrowser;
     browser.removeEventListener("load", this, true);
-    browser.removeEventListener("pageshow", this, true);
-    browser.removeEventListener("change", this, true);
-    browser.removeEventListener("input", this, true);
-    browser.removeEventListener("DOMAutoComplete", this, true);
+
+    let mm = browser.messageManager;
+    MESSAGES.forEach(msg => mm.removeMessageListener(msg, this));
 
     delete browser.__SS_data;
     delete browser.__SS_tabStillLoading;
@@ -1289,17 +1320,14 @@ let SessionStoreInternal = {
    *        Window reference
    * @param aBrowser
    *        Browser reference
-   * @param aEvent
-   *        Event obj
    */
-  onTabLoad: function ssi_onTabLoad(aWindow, aBrowser, aEvent) {
+  onTabLoad: function ssi_onTabLoad(aWindow, aBrowser) {
     // react on "load" and solitary "pageshow" events (the first "pageshow"
     // following "load" is too late for deleting the data caches)
     // It's possible to get a load event after calling stop on a browser (when
     // overwriting tabs). We want to return early if the tab hasn't been restored yet.
-    if ((aEvent.type != "load" && !aEvent.persisted) ||
-        (aBrowser.__SS_restoreState &&
-         aBrowser.__SS_restoreState == TAB_STATE_NEEDS_RESTORE)) {
+    if (aBrowser.__SS_restoreState &&
+        aBrowser.__SS_restoreState == TAB_STATE_NEEDS_RESTORE) {
       return;
     }
 
@@ -1959,9 +1987,9 @@ let SessionStoreInternal = {
     tabData.hidden = aTab.hidden;
 
     var disallow = [];
-    for (var i = 0; i < CAPABILITIES.length; i++)
-      if (!browser.docShell["allow" + CAPABILITIES[i]])
-        disallow.push(CAPABILITIES[i]);
+    for (let cap of gDocShellCapabilities(browser.docShell))
+      if (!browser.docShell["allow" + cap])
+        disallow.push(cap);
     if (disallow.length > 0)
       tabData.disallow = disallow.join(",");
     else if (tabData.disallow)
@@ -2236,16 +2264,8 @@ let SessionStoreInternal = {
       }
 
       // designMode is undefined e.g. for XUL documents (as about:config)
-      if ((aContent.document.designMode || "") == "on" && aContent.document.body) {
-        if (aData.innerHTML === undefined && !aFullData) {
-          // we get no "input" events from iframes - listen for keypress here
-          let _this = this;
-          aContent.addEventListener("keypress", function(aEvent) {
-            _this.saveStateDelayed(aWindow, 3000);
-          }, true);
-        }
+      if ((aContent.document.designMode || "") == "on" && aContent.document.body)
         aData.innerHTML = aContent.document.body.innerHTML;
-      }
     }
 
     // get scroll position from nsIDOMWindowUtils, since it allows avoiding a
@@ -3090,10 +3110,10 @@ let SessionStoreInternal = {
     }
 
     // make sure to reset the capabilities and attributes, in case this tab gets reused
-    var disallow = (tabData.disallow)?tabData.disallow.split(","):[];
-    CAPABILITIES.forEach(function(aCapability) {
-      browser.docShell["allow" + aCapability] = disallow.indexOf(aCapability) == -1;
-    });
+    let disallow = new Set(tabData.disallow && tabData.disallow.split(","));
+    for (let cap of gDocShellCapabilities(browser.docShell))
+      browser.docShell["allow" + cap] = !disallow.has(cap);
+
     for (let name in this.xulAttributes)
       tab.removeAttribute(name);
     for (let name in tabData.attributes)

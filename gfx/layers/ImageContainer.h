@@ -20,10 +20,6 @@ struct ID3D10Device;
 struct ID3D10ShaderResourceView;
 #endif
 
-#ifdef XP_MACOSX
-#include "mozilla/gfx/MacIOSurface.h"
-#endif
-
 #ifdef MOZ_WIDGET_GONK
 # include <ui/GraphicBuffer.h>
 #endif
@@ -795,76 +791,6 @@ public:
   nsCountedRef<nsMainThreadSurfaceRef> mSurface;
   gfxIntSize mSize;
 };
-
-#ifdef XP_MACOSX
-class THEBES_API MacIOSurfaceImage : public Image {
-public:
-  struct Data {
-    MacIOSurface* mIOSurface;
-  };
-
-  MacIOSurfaceImage()
-    : Image(NULL, MAC_IO_SURFACE)
-    , mSize(0, 0)
-    , mPluginInstanceOwner(NULL)
-    , mUpdateCallback(NULL)
-    , mDestroyCallback(NULL)
-    {}
-
-  virtual ~MacIOSurfaceImage()
-  {
-    if (mDestroyCallback) {
-      mDestroyCallback(mPluginInstanceOwner);
-    }
-  }
-
- /**
-  * This can only be called on the main thread. It may add a reference
-  * to the surface (which will eventually be released on the main thread).
-  * The surface must not be modified after this call!!!
-  */
-  virtual void SetData(const Data& aData);
-
-  /**
-   * Temporary hacks to force plugin drawing during an empty transaction.
-   * This should not be used for anything else, and will be removed
-   * when async plugin rendering is complete.
-   */
-  typedef void (*UpdateSurfaceCallback)(ImageContainer* aContainer, void* aInstanceOwner);
-  virtual void SetUpdateCallback(UpdateSurfaceCallback aCallback, void* aInstanceOwner)
-  {
-    mUpdateCallback = aCallback;
-    mPluginInstanceOwner = aInstanceOwner;
-  }
-
-  typedef void (*DestroyCallback)(void* aInstanceOwner);
-  virtual void SetDestroyCallback(DestroyCallback aCallback)
-  {
-    mDestroyCallback = aCallback;
-  }
-
-  virtual gfxIntSize GetSize()
-  {
-    return mSize;
-  }
-
-  MacIOSurface* GetIOSurface()
-  {
-    return mIOSurface;
-  }
-
-  void Update(ImageContainer* aContainer);
-
-  virtual already_AddRefed<gfxASurface> GetAsSurface();
-
-private:
-  gfxIntSize mSize;
-  RefPtr<MacIOSurface> mIOSurface;
-  void* mPluginInstanceOwner;
-  UpdateSurfaceCallback mUpdateCallback;
-  DestroyCallback mDestroyCallback;
-};
-#endif
 
 class RemoteBitmapImage : public Image {
 public:

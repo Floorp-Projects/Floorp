@@ -1,6 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=4 sw=4 et tw=99:
- *
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sts=4 et sw=4 tw=99:
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -131,6 +130,9 @@ class ParallelArrayVisitor : public MInstructionVisitor
     UNSAFE_OP(CreateThis)
     UNSAFE_OP(CreateThisWithTemplate)
     UNSAFE_OP(CreateThisWithProto)
+    UNSAFE_OP(CreateArgumentsObject)
+    UNSAFE_OP(GetArgumentsObjectArg)
+    UNSAFE_OP(SetArgumentsObjectArg)
     SAFE_OP(PrepareCall)
     SAFE_OP(PassArg)
     CUSTOM_OP(Call)
@@ -173,6 +175,7 @@ class ParallelArrayVisitor : public MInstructionVisitor
     CUSTOM_OP(NewObject)
     CUSTOM_OP(NewCallObject)
     CUSTOM_OP(NewParallelArray)
+    UNSAFE_OP(InitElem)
     UNSAFE_OP(InitProp)
     SAFE_OP(Start)
     UNSAFE_OP(OsrEntry)
@@ -261,6 +264,7 @@ class ParallelArrayVisitor : public MInstructionVisitor
     SAFE_OP(PolyInlineDispatch)
     SAFE_OP(FunctionDispatch)
     SAFE_OP(TypeObjectDispatch)
+    SAFE_OP(IsCallable)
     UNSAFE_OP(EffectiveAddress)
     UNSAFE_OP(AsmJSUnsignedToDouble)
     UNSAFE_OP(AsmJSNeg)
@@ -504,11 +508,6 @@ ParallelArrayVisitor::convertToBailout(MBasicBlock *block, MInstruction *ins)
     // This block is no longer reachable.
     block->unmark();
 
-    // Determine the best PC to use for the bailouts we'll be creating.
-    jsbytecode *pc = block->pc();
-    if (!pc)
-        pc = block->pc();
-
     // Create a bailout block for each predecessor.  In principle, we
     // only need one bailout block--in fact, only one per graph! But I
     // found this approach easier to implement given the design of the
@@ -524,7 +523,8 @@ ParallelArrayVisitor::convertToBailout(MBasicBlock *block, MInstruction *ins)
             continue;
 
         // create bailout block to insert on this edge
-        MBasicBlock *bailBlock = MBasicBlock::NewParBailout(graph_, pred->info(), pred, pc);
+        MBasicBlock *bailBlock = MBasicBlock::NewParBailout(graph_, block->info(), pred,
+                                                            block->pc(), block->entryResumePoint());
         if (!bailBlock)
             return false;
 

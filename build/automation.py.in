@@ -968,6 +968,10 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
       os.kill(pid, signal.SIGKILL)
 
   def dumpScreen(self, utilityPath):
+    if self.haveDumpedScreen:
+      self.log.info("Not taking screenshot here: see the one that was previously logged")
+      return
+
     self.haveDumpedScreen = True;
 
     # Need to figure out what tool and whether it write to a file or stdout
@@ -1017,10 +1021,7 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
   def killAndGetStack(self, processPID, utilityPath, debuggerInfo):
     """Kill the process, preferrably in a way that gets us a stack trace."""
     if not debuggerInfo:
-      if self.haveDumpedScreen:
-        self.log.info("Not taking screenshot here: see the one that was previously logged")
-      else:
-        self.dumpScreen(utilityPath)
+      self.dumpScreen(utilityPath)
 
     if self.CRASHREPORTER and not debuggerInfo:
       if self.UNIXISH:
@@ -1076,10 +1077,7 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
         if "TEST-START" in line and "|" in line:
           self.lastTestSeen = line.split("|")[1].strip()
         if not debuggerInfo and "TEST-UNEXPECTED-FAIL" in line and "Test timed out" in line:
-          if self.haveDumpedScreen:
-            self.log.info("Not taking screenshot here: see the one that was previously logged")
-          else:
-            self.dumpScreen(utilityPath)
+          self.dumpScreen(utilityPath)
 
         (line, didTimeout) = self.readWithTimeout(logsource, timeout)
         if not hitMaxTime and maxTime and datetime.now() - startTime > timedelta(seconds = maxTime):

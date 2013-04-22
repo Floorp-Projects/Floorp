@@ -67,7 +67,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsXHREventTarget,
                                            nsDOMEventTargetHelper)
   NS_DECL_NSIXMLHTTPREQUESTEVENTTARGET
-  NS_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetHelper::)
+  NS_REALLY_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetHelper)
 
   IMPL_EVENT_HANDLER(loadstart)
   IMPL_EVENT_HANDLER(progress)
@@ -91,7 +91,7 @@ public:
   }                                         
   NS_DECL_ISUPPORTS_INHERITED
   NS_FORWARD_NSIXMLHTTPREQUESTEVENTTARGET(nsXHREventTarget::)
-  NS_FORWARD_NSIDOMEVENTTARGET(nsXHREventTarget::)
+  NS_REALLY_FORWARD_NSIDOMEVENTTARGET(nsXHREventTarget)
   NS_DECL_NSIXMLHTTPREQUESTUPLOAD
 
   virtual JSObject* WrapObject(JSContext *cx, JSObject *scope) MOZ_OVERRIDE
@@ -226,7 +226,7 @@ public:
   virtual size_t
     SizeOfEventTargetIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
 
-  NS_FORWARD_NSIDOMEVENTTARGET(nsXHREventTarget::)
+  NS_REALLY_FORWARD_NSIDOMEVENTTARGET(nsXHREventTarget)
 
 #ifdef DEBUG
   void StaticAssertions();

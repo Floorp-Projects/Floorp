@@ -111,7 +111,7 @@ function getTestGlobalContext(aClient, aName, aCallback) {
 
 function attachTestGlobalClient(aClient, aName, aCallback) {
   getTestGlobalContext(aClient, aName, function(aContext) {
-    aClient.attachThread(aContext.actor, aCallback);
+    aClient.attachThread(aContext.actor, aCallback, { useSourceMaps: true });
   });
 }
 
@@ -147,7 +147,7 @@ function attachTestTabAndResume(aClient, aName, aCallback) {
       aThreadClient.resume(function (aResponse) {
         aCallback(aResponse, aTabClient, aThreadClient);
       });
-    });
+    }, { useSourceMaps: true });
   });
 }
 
@@ -176,6 +176,14 @@ function finishClient(aClient)
 }
 
 /**
+ * Takes a relative file path and returns the absolute file url for it.
+ */
+function getFileUrl(aName) {
+  let file = do_get_file(aName);
+  return Services.io.newFileURI(file).spec;
+}
+
+/**
  * Returns the full path of the file with the specified name in a
  * platform-independent and URL-like form.
  */
@@ -189,4 +197,21 @@ function getFilePath(aName)
     filePrePath += "/";
   }
   return path.slice(filePrePath.length);
+}
+
+Cu.import("resource://gre/modules/NetUtil.jsm");
+
+/**
+ * Returns the full text contents of the given file.
+ */
+function readFile(aFileName) {
+  let f = do_get_file(aFileName);
+  let s = Cc["@mozilla.org/network/file-input-stream;1"]
+    .createInstance(Ci.nsIFileInputStream);
+  s.init(f, -1, -1, false);
+  try {
+    return NetUtil.readInputStreamToString(s, s.available());
+  } finally {
+    s.close();
+  }
 }

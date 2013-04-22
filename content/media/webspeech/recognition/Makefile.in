@@ -34,18 +34,6 @@ CPPSRCS := \
   FakeSpeechRecognitionService.cpp \
   $(NULL)
 
-EXPORTS_NAMESPACES := mozilla/dom
-EXPORTS_mozilla/dom := \
-  FakeSpeechRecognitionService.h \
-  SpeechGrammar.h \
-  SpeechGrammarList.h \
-  SpeechRecognitionAlternative.h \
-  SpeechRecognition.h \
-  SpeechRecognitionResult.h \
-  SpeechRecognitionResultList.h \
-  SpeechStreamListener.h \
-  $(NULL)
-
 FORCE_STATIC_LIB := 1
 
 include $(topsrcdir)/config/config.mk

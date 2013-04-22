@@ -1,6 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=4 sw=4 et tw=99:
- *
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sts=4 et sw=4 tw=99:
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -197,17 +196,20 @@ IsPhiObservable(MPhi *phi, Observability observe)
 
     // If the Phi is of the |this| value, it must always be observable.
     uint32_t slot = phi->slot();
-    if (slot == 1)
+    CompileInfo &info = phi->block()->info();
+    if (info.fun() && slot == info.thisSlot())
         return true;
 
     // If the Phi is one of the formal argument, and we are using an argument
     // object in the function. The phi might be observable after a bailout.
     // For inlined frames this is not needed, as they are captured in the inlineResumePoint.
-    CompileInfo &info = phi->block()->info();
     if (info.fun() && info.hasArguments()) {
-        uint32_t first = info.firstArgSlot();
-        if (first <= slot && slot - first < info.nargs())
+        uint32_t first = info.firstActualArgSlot();
+        if (first <= slot && slot - first < info.nargs()) {
+            // If arguments obj aliases formals, then no arguments slots should ever be phis.
+            JS_ASSERT(!info.argsObjAliasesFormals());
             return true;
+        }
     }
     return false;
 }

@@ -16,22 +16,10 @@ FAIL_ON_WARNINGS := 1
 
 include $(topsrcdir)/dom/dom-config.mk
 
-EXPORTS_NAMESPACES = mozilla/dom/devicestorage
-
-EXPORTS_mozilla/dom/devicestorage = \
-  DeviceStorageRequestChild.h \
-  DeviceStorageRequestParent.h \
-  $(NULL)
-
 CPPSRCS		= \
 		nsDeviceStorage.cpp \
 		DeviceStorageRequestParent.cpp \
 		DeviceStorageRequestChild.cpp \
-		$(NULL)
-
-EXPORTS         = \
-		DeviceStorage.h \
-		nsDeviceStorage.h \
 		$(NULL)
 
 LOCAL_INCLUDES = \

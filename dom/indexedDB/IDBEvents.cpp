@@ -15,13 +15,14 @@
 #include "IDBTransaction.h"
 
 USING_INDEXEDDB_NAMESPACE
+using namespace mozilla::dom;
 
 namespace {
 
 class EventFiringRunnable : public nsRunnable
 {
 public:
-  EventFiringRunnable(nsIDOMEventTarget* aTarget,
+  EventFiringRunnable(EventTarget* aTarget,
                       nsIDOMEvent* aEvent)
   : mTarget(aTarget), mEvent(aEvent)
   { }
@@ -32,7 +33,7 @@ public:
   }
 
 private:
-  nsCOMPtr<nsIDOMEventTarget> mTarget;
+  nsCOMPtr<EventTarget> mTarget;
   nsCOMPtr<nsIDOMEvent> mEvent;
 };
 

@@ -12,3 +12,17 @@ XPIDL_MODULE = 'content_canvas'
 
 MODULE = 'content'
 
+EXPORTS += [
+    'nsICanvasElementExternal.h',
+    'nsICanvasRenderingContextInternal.h',
+]
+
+EXPORTS.mozilla.ipc += [
+    'DocumentRendererChild.h',
+    'DocumentRendererNativeIDChild.h',
+    'DocumentRendererNativeIDParent.h',
+    'DocumentRendererParent.h',
+    'DocumentRendererShmemChild.h',
+    'DocumentRendererShmemParent.h',
+]
+

@@ -300,6 +300,31 @@ MobileConnection::SetCallForwardingOption(nsIDOMMozMobileCFInfo* aCFInfo,
   return mProvider->SetCallForwardingOption(GetOwner(), aCFInfo, aRequest);
 }
 
+NS_IMETHODIMP
+MobileConnection::GetCallWaitingOption(nsIDOMDOMRequest** aRequest)
+{
+  *aRequest = nullptr;
+
+  if (!mProvider) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return mProvider->GetCallWaitingOption(GetOwner(), aRequest);
+}
+
+NS_IMETHODIMP
+MobileConnection::SetCallWaitingOption(bool aEnabled,
+                                       nsIDOMDOMRequest** aRequest)
+{
+  *aRequest = nullptr;
+
+  if (!mProvider) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return mProvider->SetCallWaitingOption(GetOwner(), aEnabled, aRequest);
+}
+
 // nsIMobileConnectionListener
 
 NS_IMETHODIMP

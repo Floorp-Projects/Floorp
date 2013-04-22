@@ -38,21 +38,19 @@ NS_INTERFACE_MAP_END
 ////////////////////////////////////////////////////////////////////////
 // Exported creation functions:
 
-nsresult
-NS_NewSVGRect(mozilla::dom::SVGRect** result, float x, float y,
-              float width, float height)
+already_AddRefed<mozilla::dom::SVGRect>
+NS_NewSVGRect(float x, float y, float width, float height)
 {
-  *result = new mozilla::dom::SVGRect(x, y, width, height);
-  if (!*result) return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(*result);
-  return NS_OK;
+  nsRefPtr<mozilla::dom::SVGRect> rect =
+    new mozilla::dom::SVGRect(x, y, width, height);
+
+  return rect.forget();
 }
 
-nsresult
-NS_NewSVGRect(mozilla::dom::SVGRect** result, const gfxRect& rect)
+already_AddRefed<mozilla::dom::SVGRect>
+NS_NewSVGRect(const gfxRect& rect)
 {
-  return NS_NewSVGRect(result,
-                       rect.X(), rect.Y(),
+  return NS_NewSVGRect(rect.X(), rect.Y(),
                        rect.Width(), rect.Height());
 }
 

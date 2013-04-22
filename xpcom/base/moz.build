@@ -26,7 +26,7 @@ XPIDL_SOURCES += [
     'nsITraceRefcnt.idl',
     'nsIUUIDGenerator.idl',
     'nsIVersionComparator.idl',
-		'nsIVisualEventTracer.idl',
+    'nsIVisualEventTracer.idl',
     'nsIWeakReference.idl',
     'nsrootidl.idl',
 ]
@@ -39,4 +39,33 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
 XPIDL_MODULE = 'xpcom_base'
 
 MODULE = 'xpcom'
+
+EXPORTS += [
+    'nsAgg.h',
+    'nsAutoRef.h',
+    'nsCom.h',
+    'nsDebugImpl.h',
+    'nsGZFileWriter.h',
+    'nsIAllocator.h',
+    'nsIID.h',
+    'nsISizeOf.h',
+    'nsISupportsObsolete.h',
+    'nsInterfaceRequestorAgg.h',
+    'nsStackWalk.h',
+    'nsTraceRefcntImpl.h',
+    'nsWeakPtr.h',
+]
+
+if CONFIG['MOZ_DEBUG']:
+    EXPORTS += ['pure.h']
+
+EXPORTS.mozilla += [
+    'AvailableMemoryTracker.h',
+    'ClearOnShutdown.h',
+    'MapsMemoryReporter.h',
+    'StackWalk.h',
+    'StaticPtr.h',
+    'VisualEventTracer.h',
+    'nsMemoryInfoDumper.h',
+]
 

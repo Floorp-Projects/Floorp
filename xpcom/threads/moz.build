@@ -22,3 +22,15 @@ XPIDL_MODULE = 'xpcom_threads'
 
 MODULE = 'xpcom'
 
+EXPORTS += [
+    'nsEventQueue.h',
+    'nsProcess.h',
+    'nsThread.h',
+]
+
+EXPORTS.mozilla += [
+    'HangMonitor.h',
+    'LazyIdleThread.h',
+    'SyncRunnable.h',
+]
+

@@ -132,6 +132,20 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
       compositable->SetPictureRect(op.picture());
       break;
     }
+    case CompositableOperation::TOpPaintTiledLayerBuffer: {
+      MOZ_LAYERS_LOG(("[ParentSide] Paint TiledLayerBuffer"));
+      const OpPaintTiledLayerBuffer& op = aEdit.get_OpPaintTiledLayerBuffer();
+      CompositableParent* compositableParent = static_cast<CompositableParent*>(op.compositableParent());
+      CompositableHost* compositable =
+        compositableParent->GetCompositableHost();
+
+      TiledLayerComposer* tileComposer = compositable->AsTiledLayerComposer();
+      NS_ASSERTION(tileComposer, "compositable is not a tile composer");
+
+      BasicTiledLayerBuffer* p = reinterpret_cast<BasicTiledLayerBuffer*>(op.tiledLayerBuffer());
+      tileComposer->PaintedTiledLayerBuffer(p);
+      break;
+    }
     default: {
       MOZ_ASSERT(false, "bad type");
     }

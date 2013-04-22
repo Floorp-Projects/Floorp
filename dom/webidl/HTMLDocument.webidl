@@ -12,7 +12,8 @@ interface HTMLDocument : Document {
            [Throws]
            attribute DOMString cookie;
   // DOM tree accessors
-  //(Not proxy yet)getter object (DOMString name);
+  [Throws]
+  getter object (DOMString name);
            [SetterThrows]
            attribute HTMLElement? body;
   readonly attribute HTMLHeadElement? head;

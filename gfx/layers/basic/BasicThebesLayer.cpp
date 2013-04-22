@@ -254,7 +254,7 @@ BasicShadowableThebesLayer::PaintThebes(gfxContext* aContext,
   }
   
   if (!mContentClient) {
-    mContentClient = BasicManager()->CreateContentClientFor(this);
+    mContentClient = ContentClient::CreateContentClient(BasicManager());
     if (!mContentClient) {
       return;
     }
@@ -278,11 +278,8 @@ BasicShadowableThebesLayer::PaintBuffer(gfxContext* aContext,
                                         void* aCallbackData)
 {
   ContentClientRemote* contentClientRemote = static_cast<ContentClientRemote*>(mContentClient.get());
-  if (HasShadow() && !mContentClient->GetIPDLActor()) {
-    mContentClient->Connect();
-    BasicManager()->Attach(mContentClient, this);
-  }
   MOZ_ASSERT(contentClientRemote->GetIPDLActor() || !HasShadow());
+
   // NB: this just throws away the entire valid region if there are
   // too many rects.
   mValidRegion.SimplifyInward(8);
@@ -350,7 +347,7 @@ public:
 
 protected:
   virtual already_AddRefed<gfxASurface>
-  CreateBuffer(ContentType, const nsIntRect&, uint32_t)
+  CreateBuffer(ContentType, const nsIntRect&, uint32_t, gfxASurface**)
   {
     NS_RUNTIMEABORT("ShadowThebesLayer can't paint content");
     return nullptr;

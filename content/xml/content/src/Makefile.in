@@ -14,14 +14,6 @@ LIBRARY_NAME	= gkconxmlcon_s
 LIBXUL_LIBRARY	= 1
 FAIL_ON_WARNINGS = 1
 
-EXPORTS_NAMESPACES = mozilla/dom
-
-EXPORTS_mozilla/dom = \
-  CDATASection.h \
-  ProcessingInstruction.h \
-  XMLStylesheetProcessingInstruction.h \
-  $(NULL)
-
 CPPSRCS		= \
 		nsXMLElement.cpp \
 		CDATASection.cpp \

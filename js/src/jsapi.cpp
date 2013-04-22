@@ -1,6 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=4 sw=4 et tw=99 ft=cpp:
- *
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sts=4 et sw=4 tw=99:
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -242,7 +241,7 @@ AssertHeapIsIdle(JSContext *cx)
 static void
 AssertHeapIsIdleOrIterating(JSRuntime *rt)
 {
-    JS_ASSERT(rt->heapState != js::Collecting);
+    JS_ASSERT(!rt->isHeapCollecting());
 }
 
 static void
@@ -844,6 +843,7 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
 # ifdef JS_GC_ZEAL
     gcVerifierNursery(),
 # endif
+    gcNursery(thisFromCtor()),
     gcStoreBuffer(thisFromCtor()),
 #endif
 #ifdef JS_GC_ZEAL
@@ -880,7 +880,6 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     data(NULL),
     gcLock(NULL),
     gcHelperThread(thisFromCtor()),
-    sizeOfNonHeapAsmJSArrays_(0),
 #ifdef JS_THREADSAFE
 #ifdef JS_ION
     workerThreadState(NULL),
@@ -1076,6 +1075,11 @@ JSRuntime::~JSRuntime()
 
     if (ionPcScriptCache)
         js_delete(ionPcScriptCache);
+
+#ifdef JSGC_GENERATIONAL
+    gcStoreBuffer.disable();
+    gcNursery.disable();
+#endif
 }
 
 #ifdef JS_THREADSAFE
@@ -3198,6 +3202,13 @@ JS_StrictPropertyStub(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool s
 }
 
 JS_PUBLIC_API(JSBool)
+JS_DeletePropertyStub(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool *succeeded)
+{
+    *succeeded = true;
+    return true;
+}
+
+JS_PUBLIC_API(JSBool)
 JS_EnumerateStub(JSContext *cx, JSHandleObject obj)
 {
     return JS_TRUE;
@@ -4432,16 +4443,17 @@ JS_DeletePropertyById2(JSContext *cx, JSObject *objArg, jsid id, jsval *rval)
 
     RootedValue value(cx);
 
+    JSBool succeeded;
     if (JSID_IS_SPECIAL(id)) {
         Rooted<SpecialId> sid(cx, JSID_TO_SPECIALID(id));
-        if (!JSObject::deleteSpecial(cx, obj, sid, &value, false))
+        if (!JSObject::deleteSpecial(cx, obj, sid, &succeeded))
             return false;
     } else {
-        if (!JSObject::deleteByValue(cx, obj, IdToValue(id), &value, false))
+        if (!JSObject::deleteByValue(cx, obj, IdToValue(id), &succeeded))
             return false;
     }
 
-    *rval = value;
+    *rval = BooleanValue(succeeded);
     return true;
 }
 
@@ -4454,11 +4466,11 @@ JS_DeleteElement2(JSContext *cx, JSObject *objArg, uint32_t index, jsval *rval)
     assertSameCompartment(cx, obj);
     JSAutoResolveFlags rf(cx, 0);
 
-    RootedValue value(cx);
-    if (!JSObject::deleteElement(cx, obj, index, &value, false))
+    JSBool succeeded;
+    if (!JSObject::deleteElement(cx, obj, index, &succeeded))
         return false;
 
-    *rval = value;
+    *rval = BooleanValue(succeeded);
     return true;
 }
 
@@ -4474,11 +4486,11 @@ JS_DeleteProperty2(JSContext *cx, JSObject *objArg, const char *name, jsval *rva
     if (!atom)
         return false;
 
-    RootedValue value(cx);
-    if (!JSObject::deleteByValue(cx, obj, StringValue(atom), &value, false))
+    JSBool succeeded;
+    if (!JSObject::deleteByValue(cx, obj, StringValue(atom), &succeeded))
         return false;
 
-    *rval = value;
+    *rval = BooleanValue(succeeded);
     return true;
 }
 
@@ -4494,11 +4506,11 @@ JS_DeleteUCProperty2(JSContext *cx, JSObject *objArg, const jschar *name, size_t
     if (!atom)
         return false;
 
-    RootedValue value(cx);
-    if (!JSObject::deleteByValue(cx, obj, StringValue(atom), &value, false))
+    JSBool succeeded;
+    if (!JSObject::deleteByValue(cx, obj, StringValue(atom), &succeeded))
         return false;
 
-    *rval = value;
+    *rval = BooleanValue(succeeded);
     return true;
 }
 
@@ -4650,7 +4662,7 @@ static Class prop_iter_class = {
     "PropertyIterator",
     JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_HAS_RESERVED_SLOTS(1),
     JS_PropertyStub,         /* addProperty */
-    JS_PropertyStub,         /* delProperty */
+    JS_DeletePropertyStub,   /* delProperty */
     JS_PropertyStub,         /* getProperty */
     JS_StrictPropertyStub,   /* setProperty */
     JS_EnumerateStub,

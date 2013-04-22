@@ -15,13 +15,6 @@ ifeq (WINNT,$(OS_TARGET))
 VISIBILITY_FLAGS =
 endif
 
-EXPORTS_NAMESPACES = angle
-
-EXPORTS_angle = \
-  include/GLSLANG/ShaderLang.h \
-  include/KHR/khrplatform.h \
-  $(NULL)
-
 # The below is a rough translation of build_angle.gypi:
 DEFINES += -DANGLE_DISABLE_TRACE
 DEFINES += -DANGLE_COMPILE_OPTIMIZATION_LEVEL=D3DCOMPILE_OPTIMIZATION_LEVEL0
