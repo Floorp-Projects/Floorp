@@ -101,6 +101,8 @@ struct TextureFactoryIdentifier
 typedef uint32_t TextureIdentifier;
 const TextureIdentifier TextureFront = 1;
 const TextureIdentifier TextureBack = 2;
+const TextureIdentifier TextureOnWhiteFront = 3;
+const TextureIdentifier TextureOnWhiteBack = 4;
 
 /**
  * Information required by the compositor from the content-side for creating or
