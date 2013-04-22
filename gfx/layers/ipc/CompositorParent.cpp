@@ -24,7 +24,7 @@
 #include "nsGkAtoms.h"
 #include "nsIWidget.h"
 #include "RenderTrace.h"
-#include "LayerTransactionParent.h"
+#include "ShadowLayersParent.h"
 #include "BasicLayers.h"
 #include "nsIWidget.h"
 #include "nsGkAtoms.h"
@@ -207,8 +207,8 @@ CompositorParent::~CompositorParent()
 void
 CompositorParent::Destroy()
 {
-  NS_ABORT_IF_FALSE(ManagedPLayerTransactionParent().Length() == 0,
-                    "CompositorParent destroyed before managed PLayerTransactionParent");
+  NS_ABORT_IF_FALSE(ManagedPLayersParent().Length() == 0,
+                    "CompositorParent destroyed before managed PLayersParent");
 
   // Ensure that the layer manager is destructed on the compositor thread.
   mLayerManager = NULL;
@@ -688,7 +688,7 @@ CompositorParent::TransformFixedLayers(Layer* aLayer,
 static void
 SetShadowProperties(Layer* aLayer)
 {
-  // FIXME: Bug 717688 -- Do these updates in LayerTransactionParent::RecvUpdate.
+  // FIXME: Bug 717688 -- Do these updates in ShadowLayersParent::RecvUpdate.
   ShadowLayer* shadow = aLayer->AsShadowLayer();
   // Set the shadow's base transform to the layer's base transform.
   shadow->SetShadowTransform(aLayer->GetBaseTransform());
@@ -1037,7 +1037,7 @@ CompositorParent::TransformShadowTree(TimeStamp aCurrentFrame)
 }
 
 void
-CompositorParent::ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
+CompositorParent::ShadowLayersUpdated(ShadowLayersParent* aLayerTree,
                                       const TargetConfig& aTargetConfig,
                                       bool isFirstPaint)
 {
@@ -1099,10 +1099,10 @@ CompositorParent::SyncViewportInfo(const nsIntRect& aDisplayPort,
 #endif
 }
 
-PLayerTransactionParent*
-CompositorParent::AllocPLayerTransaction(const LayersBackend& aBackendHint,
-                                         const uint64_t& aId,
-                                         TextureFactoryIdentifier* aTextureFactoryIdentifier)
+PLayersParent*
+CompositorParent::AllocPLayers(const LayersBackend& aBackendHint,
+                               const uint64_t& aId,
+                               TextureFactoryIdentifier* aTextureFactoryIdentifier)
 {
   MOZ_ASSERT(aId == 0);
 
@@ -1126,7 +1126,7 @@ CompositorParent::AllocPLayerTransaction(const LayersBackend& aBackendHint,
     }
 
     *aTextureFactoryIdentifier = mLayerManager->GetTextureFactoryIdentifier();
-    return new LayerTransactionParent(mLayerManager, this, 0);
+    return new ShadowLayersParent(mLayerManager, this, 0);
   // Basic layers compositor not yet implemented
   /*} else if (aBackendHint == mozilla::layers::LAYERS_BASIC) {
     nsRefPtr<LayerManager> layerManager = new BasicShadowLayerManager(mWidget);
@@ -1137,7 +1137,7 @@ CompositorParent::AllocPLayerTransaction(const LayersBackend& aBackendHint,
       return NULL;
     }
     *aTextureFactoryIdentifier = layerManager->GetTextureFactoryIdentifier();
-    return new LayerTransactionParent(slm, this, 0); */
+    return new ShadowLayersParent(slm, this, 0); */
   } else {
     NS_ERROR("Unsupported backend selected for Async Compositor");
     return NULL;
@@ -1145,7 +1145,7 @@ CompositorParent::AllocPLayerTransaction(const LayersBackend& aBackendHint,
 }
 
 bool
-CompositorParent::DeallocPLayerTransaction(PLayerTransactionParent* actor)
+CompositorParent::DeallocPLayers(PLayersParent* actor)
 {
   delete actor;
   return true;
@@ -1280,14 +1280,12 @@ public:
                                 SurfaceDescriptor* aOutSnapshot)
   { return true; }
 
-  virtual PLayerTransactionParent*
-    AllocPLayerTransaction(const LayersBackend& aBackendType,
-                           const uint64_t& aId,
-                           TextureFactoryIdentifier* aTextureFactoryIdentifier) MOZ_OVERRIDE;
+  virtual PLayersParent* AllocPLayers(const LayersBackend& aBackendType,
+                                      const uint64_t& aId,
+                                      TextureFactoryIdentifier* aTextureFactoryIdentifier) MOZ_OVERRIDE;
+  virtual bool DeallocPLayers(PLayersParent* aLayers) MOZ_OVERRIDE;
 
-  virtual bool DeallocPLayerTransaction(PLayerTransactionParent* aLayers) MOZ_OVERRIDE;
-
-  virtual void ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
+  virtual void ShadowLayersUpdated(ShadowLayersParent* aLayerTree,
                                    const TargetConfig& aTargetConfig,
                                    bool isFirstPaint) MOZ_OVERRIDE;
 
@@ -1366,22 +1364,22 @@ CrossProcessCompositorParent::ActorDestroy(ActorDestroyReason aWhy)
     NewRunnableMethod(this, &CrossProcessCompositorParent::DeferredDestroy));
 }
 
-PLayerTransactionParent*
-CrossProcessCompositorParent::AllocPLayerTransaction(const LayersBackend& aBackendType,
-                                                     const uint64_t& aId,
-                                                     TextureFactoryIdentifier* aTextureFactoryIdentifier)
+PLayersParent*
+CrossProcessCompositorParent::AllocPLayers(const LayersBackend& aBackendType,
+                                           const uint64_t& aId,
+                                           TextureFactoryIdentifier* aTextureFactoryIdentifier)
 {
   MOZ_ASSERT(aId != 0);
 
   nsRefPtr<LayerManager> lm = sCurrentCompositor->GetLayerManager();
   *aTextureFactoryIdentifier = lm->GetTextureFactoryIdentifier();
-  return new LayerTransactionParent(lm->AsShadowManager(), this, aId);
+  return new ShadowLayersParent(lm->AsShadowManager(), this, aId);
 }
 
 bool
-CrossProcessCompositorParent::DeallocPLayerTransaction(PLayerTransactionParent* aLayers)
+CrossProcessCompositorParent::DeallocPLayers(PLayersParent* aLayers)
 {
-  LayerTransactionParent* slp = static_cast<LayerTransactionParent*>(aLayers);
+  ShadowLayersParent* slp = static_cast<ShadowLayersParent*>(aLayers);
   RemoveIndirectTree(slp->GetId());
   delete aLayers;
   return true;
@@ -1389,7 +1387,7 @@ CrossProcessCompositorParent::DeallocPLayerTransaction(PLayerTransactionParent* 
 
 void
 CrossProcessCompositorParent::ShadowLayersUpdated(
-  LayerTransactionParent* aLayerTree,
+  ShadowLayersParent* aLayerTree,
   const TargetConfig& aTargetConfig,
   bool isFirstPaint)
 {
