@@ -5,17 +5,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-include protocol PLayers;
+include protocol PLayerTransaction;
 include protocol PImageBridge;
-include "mozilla/layers/CompositorTypes.h";
 include protocol PCompositor;
+include "mozilla/layers/CompositorTypes.h";
 
 namespace mozilla {
 namespace layers {
 
 async protocol PCompositable
 {
-    manager PImageBridge or PLayers;
+    manager PImageBridge or PLayerTransaction;
 parent:
     async __delete__();
 };

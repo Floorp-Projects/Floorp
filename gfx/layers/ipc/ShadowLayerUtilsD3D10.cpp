@@ -8,7 +8,7 @@
 #include <d3d10_1.h>
 #include <dxgi.h>
 
-#include "mozilla/layers/PLayers.h"
+#include "mozilla/layers/PLayerTransaction.h"
 #include "ShadowLayers.h"
 
 using namespace mozilla::gl;

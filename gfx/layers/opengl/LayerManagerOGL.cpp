@@ -5,10 +5,10 @@
 
 #include "LayerManagerOGL.h"
 
-#include "mozilla/layers/PLayers.h"
+#include "mozilla/layers/PLayerTransaction.h"
 #include <algorithm>
 
-/* This must occur *after* layers/PLayers.h to avoid typedefs conflicts. */
+/* This must occur *after* layers/PLayerTransaction.h to avoid typedefs conflicts. */
 #include "mozilla/Util.h"
 
 #include "Composer2D.h"

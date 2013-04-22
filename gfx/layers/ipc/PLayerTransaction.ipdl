@@ -32,7 +32,7 @@ using mozilla::layers::TextureInfo;
 namespace mozilla {
 namespace layers {
 
-sync protocol PLayers {
+sync protocol PLayerTransaction {
   manager PRenderFrame or PCompositor;
   manages PLayer;
   manages PCompositable;

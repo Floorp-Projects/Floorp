@@ -233,12 +233,12 @@ private:
  * the layer.
  *
  * CompositableMap must be global because the image bridge doesn't have any
- * reference to whatever we have created with PLayers. So, the only way to
+ * reference to whatever we have created with PLayerTransaction. So, the only way to
  * actually connect these two worlds is to have something global that they can
  * both query (in the same  thread). The map is not allocated the map on the 
  * stack to avoid the badness of static initialization.
  *
- * Also, we have a compositor/PLayers protocol/etc. per layer manager, and the
+ * Also, we have a compositor/PLayerTransaction protocol/etc. per layer manager, and the
  * ImageBridge is used by all the existing compositors that have a video, so
  * there isn't an instance or "something" that lives outside the boudaries of a
  * given layer manager on the compositor thread except the image bridge and the
