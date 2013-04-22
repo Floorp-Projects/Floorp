@@ -12,7 +12,6 @@
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMEventTarget.h"
 #include "nsIServiceManager.h"
 #include "nsIServiceManager.h"
 #include "GeneratedEvents.h"

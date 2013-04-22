@@ -11,7 +11,6 @@
 #include "nsINameSpaceManager.h"
 #include "nsIURI.h"
 #include "nsIURL.h"
-#include "nsIDOMEventTarget.h"
 #include "nsIChannel.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"

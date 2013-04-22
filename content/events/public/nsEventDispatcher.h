@@ -12,7 +12,6 @@
 
 class nsEventTargetChainItem;
 class nsIDOMEvent;
-class nsIDOMEventTarget;
 class nsIScriptGlobalObject;
 class nsPresContext;
 

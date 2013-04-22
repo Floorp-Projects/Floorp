@@ -21,7 +21,6 @@
 #include "nsGUIEvent.h"
 #include "nsIComboboxControlFrame.h"
 #include "nsIDocument.h"
-#include "nsIDOMEventTarget.h"
 #include "nsIFormControlFrame.h"
 #include "nsIForm.h"
 #include "nsIFormProcessor.h"

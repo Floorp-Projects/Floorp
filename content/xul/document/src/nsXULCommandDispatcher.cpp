@@ -26,7 +26,6 @@
 #include "nsRDFCID.h"
 #include "nsXULCommandDispatcher.h"
 #include "prlog.h"
-#include "nsIDOMEventTarget.h"
 #include "nsGUIEvent.h"
 #include "nsContentUtils.h"
 #include "nsReadableUtils.h"
