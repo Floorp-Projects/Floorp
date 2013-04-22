@@ -13,17 +13,9 @@ namespace js {
 namespace ion {
 
 inline unsigned
-StartArgSlot(RawScript script, JSFunction *fun)
+CountArgSlots(JSFunction *fun)
 {
-    // First slot is for scope chain.
-    // Second one may be for arguments object.
-    return 1 + (script->argumentsHasVarBinding() ? 1 : 0);
-}
-
-inline unsigned
-CountArgSlots(RawScript script, JSFunction *fun)
-{
-    return StartArgSlot(script, fun) + (fun ? fun->nargs + 1 : 0);
+    return fun ? fun->nargs + 2 : 1; // +2 for |scopeChain| and |this|, or +1 for |scopeChain|
 }
 
 enum ExecutionMode {
@@ -45,8 +37,7 @@ class CompileInfo
         executionMode_(executionMode)
     {
         JS_ASSERT_IF(osrPc, JSOp(*osrPc) == JSOP_LOOPENTRY);
-        nimplicit_ = StartArgSlot(script, fun)              /* scope chain and argument obj */
-                   + (fun ? 1 : 0);                         /* this */
+        nimplicit_ = 1 /* scope chain */ + (fun ? 1 /* this */: 0);
         nargs_ = fun ? fun->nargs : 0;
         nlocals_ = script->nfixed;
         nstack_ = script->nslots - script->nfixed;
@@ -126,29 +117,16 @@ class CompileInfo
         JS_ASSERT(script());
         return 0;
     }
-    uint32_t argsObjSlot() const {
-        JS_ASSERT(hasArguments());
-        return 1;
-    }
     uint32_t thisSlot() const {
         JS_ASSERT(fun());
-        return hasArguments() ? 2 : 1;
+        return 1;
     }
-    uint32_t firstActualArgSlot() const {
+    uint32_t firstArgSlot() const {
         return nimplicit_;
     }
-    uint32_t argSlotUnchecked(uint32_t i) const {
-        // During initialization, some routines need to get at arg
-        // slots regardless of how regular argument access is done.
+    uint32_t argSlot(uint32_t i) const {
         JS_ASSERT(i < nargs_);
         return nimplicit_ + i;
-    }
-    uint32_t argSlot(uint32_t i) const {
-        // This should only be accessed when compiling functions for
-        // which argument accesses don't need to go through the
-        // argument object.
-        JS_ASSERT(!argsObjAliasesFormals());
-        return argSlotUnchecked(i);
     }
     uint32_t firstLocalSlot() const {
         return nimplicit_ + nargs_;
@@ -163,27 +141,8 @@ class CompileInfo
         return firstStackSlot() + i;
     }
 
-    uint32_t startArgSlot() const {
-        JS_ASSERT(scopeChainSlot() == 0);
-        return StartArgSlot(script(), fun());
-    }
-    uint32_t endArgSlot() const {
-        JS_ASSERT(scopeChainSlot() == 0);
-        return CountArgSlots(script(), fun());
-    }
-
-    uint32_t totalSlots() const {
-        return 2 + (hasArguments() ? 1 : 0) + nargs() + nlocals();
-    }
-
-    bool hasArguments() const {
+    bool hasArguments() {
         return script()->argumentsHasVarBinding();
-    }
-    bool needsArgsObj() const {
-        return script()->needsArgsObj();
-    }
-    bool argsObjAliasesFormals() const {
-        return script()->argsObjAliasesFormals();
     }
 
     ExecutionMode executionMode() const {
