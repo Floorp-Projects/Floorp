@@ -821,7 +821,7 @@ Btoa(JSContext *cx, unsigned argc, jsval *vp)
   return xpc::Base64Encode(cx, JS_ARGV(cx, vp)[0], &JS_RVAL(cx, vp));
 }
 
-static JSFunctionSpec glob_functions[] = {
+static const JSFunctionSpec glob_functions[] = {
     JS_FS("print",           Print,          0,0),
     JS_FS("readline",        ReadLine,       1,0),
     JS_FS("load",            Load,           1,0),

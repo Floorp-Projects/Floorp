@@ -36,7 +36,7 @@ class Event : public PrivatizableBase
   static JSClass sMainRuntimeClass;
 
   static const JSPropertySpec sProperties[];
-  static JSFunctionSpec sFunctions[];
+  static const JSFunctionSpec sFunctions[];
   static const JSPropertySpec sStaticProperties[];
 
 protected:
@@ -362,7 +362,7 @@ const JSPropertySpec Event::sProperties[] = {
   { 0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER }
 };
 
-JSFunctionSpec Event::sFunctions[] = {
+const JSFunctionSpec Event::sFunctions[] = {
   JS_FN("stopPropagation", StopPropagation, 0, FUNCTION_FLAGS),
   JS_FN("preventDefault", PreventDefault, 0, FUNCTION_FLAGS),
   JS_FN("initEvent", InitEvent, 3, FUNCTION_FLAGS),
@@ -385,7 +385,7 @@ class MessageEvent : public Event
   static JSClass sMainRuntimeClass;
 
   static const JSPropertySpec sProperties[];
-  static JSFunctionSpec sFunctions[];
+  static const JSFunctionSpec sFunctions[];
 
 protected:
   uint64_t* mData;
@@ -605,7 +605,7 @@ const JSPropertySpec MessageEvent::sProperties[] = {
   { 0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER }
 };
 
-JSFunctionSpec MessageEvent::sFunctions[] = {
+const JSFunctionSpec MessageEvent::sFunctions[] = {
   JS_FN("initMessageEvent", InitMessageEvent, 6, FUNCTION_FLAGS),
   JS_FS_END
 };
@@ -616,7 +616,7 @@ class ErrorEvent : public Event
   static JSClass sMainRuntimeClass;
 
   static const JSPropertySpec sProperties[];
-  static JSFunctionSpec sFunctions[];
+  static const JSFunctionSpec sFunctions[];
 
 public:
   static bool
@@ -791,7 +791,7 @@ const JSPropertySpec ErrorEvent::sProperties[] = {
   { 0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER }
 };
 
-JSFunctionSpec ErrorEvent::sFunctions[] = {
+const JSFunctionSpec ErrorEvent::sFunctions[] = {
   JS_FN("initErrorEvent", InitErrorEvent, 6, FUNCTION_FLAGS),
   JS_FS_END
 };
@@ -800,7 +800,7 @@ class ProgressEvent : public Event
 {
   static JSClass sClass;
   static const JSPropertySpec sProperties[];
-  static JSFunctionSpec sFunctions[];
+  static const JSFunctionSpec sFunctions[];
 
 public:
   static JSClass*
@@ -965,7 +965,7 @@ const JSPropertySpec ProgressEvent::sProperties[] = {
   { 0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER }
 };
 
-JSFunctionSpec ProgressEvent::sFunctions[] = {
+const JSFunctionSpec ProgressEvent::sFunctions[] = {
   JS_FN("initProgressEvent", InitProgressEvent, 6, FUNCTION_FLAGS),
   JS_FS_END
 };

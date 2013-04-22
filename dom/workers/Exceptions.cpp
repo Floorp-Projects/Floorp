@@ -30,7 +30,7 @@ class DOMException : public PrivatizableBase
 {
   static JSClass sClass;
   static const JSPropertySpec sProperties[];
-  static JSFunctionSpec sFunctions[];
+  static const JSFunctionSpec sFunctions[];
   static const JSPropertySpec sStaticProperties[];
 
   enum SLOT {
@@ -171,7 +171,7 @@ const JSPropertySpec DOMException::sProperties[] = {
   { 0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER }
 };
 
-JSFunctionSpec DOMException::sFunctions[] = {
+const JSFunctionSpec DOMException::sFunctions[] = {
   JS_FN("toString", ToString, 0, 0),
   JS_FS_END
 };

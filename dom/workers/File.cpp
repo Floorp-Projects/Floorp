@@ -37,7 +37,7 @@ class Blob
 
   static JSClass sClass;
   static const JSPropertySpec sProperties[];
-  static JSFunctionSpec sFunctions[];
+  static const JSFunctionSpec sFunctions[];
 
 public:
   static JSObject*
@@ -213,7 +213,7 @@ const JSPropertySpec Blob::sProperties[] = {
   { 0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER }
 };
 
-JSFunctionSpec Blob::sFunctions[] = {
+const JSFunctionSpec Blob::sFunctions[] = {
   JS_FN("slice", Slice, 1, JSPROP_ENUMERATE),
   JS_FS_END
 };

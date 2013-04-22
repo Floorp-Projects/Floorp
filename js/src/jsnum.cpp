@@ -397,7 +397,7 @@ js::num_parseInt(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-static JSFunctionSpec number_functions[] = {
+static const JSFunctionSpec number_functions[] = {
     JS_FN(js_isNaN_str,         num_isNaN,           1,0),
     JS_FN(js_isFinite_str,      num_isFinite,        1,0),
     JS_FN(js_parseFloat_str,    num_parseFloat,      1,0),
@@ -891,7 +891,7 @@ num_toPrecision(JSContext *cx, unsigned argc, Value *vp)
     return CallNonGenericMethod<IsNumber, num_toPrecision_impl>(cx, args);
 }
 
-static JSFunctionSpec number_methods[] = {
+static const JSFunctionSpec number_methods[] = {
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str,       num_toSource,          0, 0),
 #endif
@@ -969,7 +969,7 @@ Number_toInteger(JSContext *cx, unsigned argc, Value *vp)
 }
 
 
-static JSFunctionSpec number_static_methods[] = {
+static const JSFunctionSpec number_static_methods[] = {
     JS_FN("isFinite", Number_isFinite, 1, 0),
     JS_FN("isInteger", Number_isInteger, 1, 0),
     JS_FN("isNaN", Number_isNaN, 1, 0),

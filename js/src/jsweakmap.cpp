@@ -412,7 +412,7 @@ Class js::WeakMapClass = {
     WeakMap_mark
 };
 
-static JSFunctionSpec weak_map_methods[] = {
+static const JSFunctionSpec weak_map_methods[] = {
     JS_FN("has",    WeakMap_has, 1, 0),
     JS_FN("get",    WeakMap_get, 2, 0),
     JS_FN("delete", WeakMap_delete, 1, 0),

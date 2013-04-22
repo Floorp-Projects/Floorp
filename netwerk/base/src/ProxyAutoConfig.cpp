@@ -447,7 +447,7 @@ JSBool PACProxyAlert(JSContext *cx, unsigned int argc, JS::Value *vp)
   return true;
 }
 
-static JSFunctionSpec PACGlobalFunctions[] = {
+static const JSFunctionSpec PACGlobalFunctions[] = {
   JS_FS("dnsResolve", PACDnsResolve, 1, 0),
   JS_FS("myIpAddress", PACMyIpAddress, 0, 0),
   JS_FS("alert", PACProxyAlert, 1, 0),

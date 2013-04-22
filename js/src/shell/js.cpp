@@ -4603,7 +4603,7 @@ static const JSPropertySpec dom_props[] = {
     {NULL,0,0,JSOP_NULLWRAPPER, JSOP_NULLWRAPPER}
 };
 
-static JSFunctionSpec dom_methods[] = {
+static const JSFunctionSpec dom_methods[] = {
     JS_FNINFO("doFoo", dom_genericMethod, &doFoo_methodinfo, 3, JSPROP_ENUMERATE),
     JS_FS_END
 };
