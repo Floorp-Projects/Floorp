@@ -21,11 +21,11 @@ namespace mozilla {
 namespace layers {
 
 class BasicShadowableLayer;
-class ThebesLayerComposite;
-class ContainerLayerComposite;
-class ImageLayerComposite;
-class CanvasLayerComposite;
-class ColorLayerComposite;
+class ShadowThebesLayer;
+class ShadowContainerLayer;
+class ShadowImageLayer;
+class ShadowCanvasLayer;
+class ShadowColorLayer;
 class ReadbackProcessor;
 class ImageFactory;
 class PaintLayerContext;

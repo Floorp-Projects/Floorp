@@ -11,7 +11,6 @@
 #include "mozilla/layers/PGrallocBufferParent.h"
 #include "mozilla/layers/PLayerTransactionChild.h"
 #include "mozilla/layers/ShadowLayers.h"
-#include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/unused.h"
 #include "nsXULAppAPI.h"
 
@@ -221,11 +220,11 @@ GrallocBufferActor::Create(const gfxIntSize& aSize,
 }
 
 /*static*/ already_AddRefed<TextureImage>
-LayerManagerComposite::OpenDescriptorForDirectTexturing(GLContext* aGL,
-                                                        const SurfaceDescriptor& aDescriptor,
-                                                        GLenum aWrapMode)
+ShadowLayerManager::OpenDescriptorForDirectTexturing(GLContext* aGL,
+                                                     const SurfaceDescriptor& aDescriptor,
+                                                     GLenum aWrapMode)
 {
-  PROFILER_LABEL("LayerManagerComposite", "OpenDescriptorForDirectTexturing");
+  PROFILER_LABEL("ShadowLayerManager", "OpenDescriptorForDirectTexturing");
   if (SurfaceDescriptor::TSurfaceDescriptorGralloc != aDescriptor.type()) {
     return nullptr;
   }
@@ -234,13 +233,13 @@ LayerManagerComposite::OpenDescriptorForDirectTexturing(GLContext* aGL,
 }
 
 /*static*/ bool
-LayerManagerComposite::SupportsDirectTexturing()
+ShadowLayerManager::SupportsDirectTexturing()
 {
   return true;
 }
 
 /*static*/ void
-LayerManagerComposite::PlatformSyncBeforeReplyUpdate()
+ShadowLayerManager::PlatformSyncBeforeReplyUpdate()
 {
   // Nothing to be done for gralloc.
 }

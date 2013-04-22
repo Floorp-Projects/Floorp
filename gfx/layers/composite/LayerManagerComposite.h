@@ -6,9 +6,10 @@
 #ifndef GFX_LayerManagerComposite_H
 #define GFX_LayerManagerComposite_H
 
+#include "mozilla/layers/Compositor.h"
+#include "mozilla/layers/ShadowLayers.h"
 #include "Composer2D.h"
 #include "mozilla/TimeStamp.h"
-#include "Layers.h"
 
 #ifdef XP_WIN
 #include <windows.h>
@@ -21,23 +22,43 @@ namespace mozilla {
 namespace layers {
 
 class LayerComposite;
-class ThebesLayerComposite;
-class ContainerLayerComposite;
-class ImageLayerComposite;
-class CanvasLayerComposite;
-class ColorLayerComposite;
-class RefLayerComposite;
+class ShadowThebesLayer;
+class ShadowContainerLayer;
+class ShadowImageLayer;
+class ShadowCanvasLayer;
+class ShadowColorLayer;
 class CompositableHost;
-class EffectChain;
-class TiledLayerComposer;
 
-class THEBES_API LayerManagerComposite : public LayerManager
+/**
+ * Composite layers are for use with OMTC on the compositor thread only. There
+ * must be corresponding Basic layers on the content thread. For composite
+ * layers, the layer manager only maintains the layer tree, all rendering is
+ * done by a Compositor (see Compositor.h). As such, composite layers are
+ * platform-independent and can be used on any platform for which there is a
+ * Compositor implementation.
+ *
+ * The composite layer tree reflects exactly the basic layer tree. To
+ * composite to screen, the layer manager walks the layer tree calling render
+ * methods which in turn call into their CompositableHosts' Composite methods.
+ * These call Compositor::DrawQuad to do the rendering.
+ *
+ * Mostly, layers are updated during the layers transaction. This is done from
+ * CompositableClient to CompositableHost without interacting with the layer.
+ *
+ * mCompositor is stored in ShadowLayerManager.
+ *
+ * Post-landing TODO: merge LayerComposite with ShadowLayer
+ */
+class THEBES_API LayerManagerComposite : public ShadowLayerManager
 {
 public:
   LayerManagerComposite(Compositor* aCompositor);
-  ~LayerManagerComposite();
+  virtual ~LayerManagerComposite()
+  {
+    Destroy();
+  }
 
-  virtual void Destroy() MOZ_OVERRIDE;
+  virtual void Destroy();
 
   /**
    * return True if initialization was succesful, false when it was not.
@@ -61,7 +82,7 @@ public:
   /**
    * LayerManager implementation.
    */
-  virtual LayerManagerComposite* AsLayerManagerComposite() MOZ_OVERRIDE
+  virtual ShadowLayerManager* AsShadowManager() MOZ_OVERRIDE
   {
     return this;
   }
@@ -71,7 +92,10 @@ public:
   void BeginTransaction() MOZ_OVERRIDE;
   void BeginTransactionWithTarget(gfxContext* aTarget) MOZ_OVERRIDE;
 
-  void NotifyShadowTreeTransaction();
+  virtual void NotifyShadowTreeTransaction() MOZ_OVERRIDE
+  {
+    mCompositor->NotifyLayersTransaction();
+  }
 
   virtual bool EndEmptyTransaction(EndTransactionFlags aFlags = END_DEFAULT) MOZ_OVERRIDE;
   virtual void EndTransaction(DrawThebesLayerCallback aCallback,
@@ -80,11 +104,20 @@ public:
 
   virtual void SetRoot(Layer* aLayer) MOZ_OVERRIDE { mRoot = aLayer; }
 
-  virtual bool CanUseCanvasLayerForSize(const gfxIntSize &aSize) MOZ_OVERRIDE;
+  virtual bool CanUseCanvasLayerForSize(const gfxIntSize &aSize) MOZ_OVERRIDE
+  {
+    return mCompositor->CanUseCanvasLayerForSize(aSize);
+  }
 
-  virtual TextureFactoryIdentifier GetTextureFactoryIdentifier() MOZ_OVERRIDE;
+  virtual TextureFactoryIdentifier GetTextureFactoryIdentifier() MOZ_OVERRIDE
+  {
+    return mCompositor->GetTextureFactoryIdentifier();
+  }
 
-  virtual int32_t GetMaxTextureSize() const MOZ_OVERRIDE;
+  virtual int32_t GetMaxTextureSize() const MOZ_OVERRIDE
+  {
+    return mCompositor->GetMaxTextureSize();
+  }
 
   virtual void ClearCachedResources(Layer* aSubtree = nullptr) MOZ_OVERRIDE;
 
@@ -93,12 +126,12 @@ public:
   virtual already_AddRefed<ImageLayer> CreateImageLayer() MOZ_OVERRIDE;
   virtual already_AddRefed<ColorLayer> CreateColorLayer() MOZ_OVERRIDE;
   virtual already_AddRefed<CanvasLayer> CreateCanvasLayer() MOZ_OVERRIDE;
-  already_AddRefed<ThebesLayerComposite> CreateThebesLayerComposite();
-  already_AddRefed<ContainerLayerComposite> CreateContainerLayerComposite();
-  already_AddRefed<ImageLayerComposite> CreateImageLayerComposite();
-  already_AddRefed<ColorLayerComposite> CreateColorLayerComposite();
-  already_AddRefed<CanvasLayerComposite> CreateCanvasLayerComposite();
-  already_AddRefed<RefLayerComposite> CreateRefLayerComposite();
+  virtual already_AddRefed<ShadowThebesLayer> CreateShadowThebesLayer() MOZ_OVERRIDE;
+  virtual already_AddRefed<ShadowContainerLayer> CreateShadowContainerLayer() MOZ_OVERRIDE;
+  virtual already_AddRefed<ShadowImageLayer> CreateShadowImageLayer() MOZ_OVERRIDE;
+  virtual already_AddRefed<ShadowColorLayer> CreateShadowColorLayer() MOZ_OVERRIDE;
+  virtual already_AddRefed<ShadowCanvasLayer> CreateShadowCanvasLayer() MOZ_OVERRIDE;
+  virtual already_AddRefed<ShadowRefLayer> CreateShadowRefLayer() MOZ_OVERRIDE;
 
   virtual LayersBackend GetBackendType() MOZ_OVERRIDE
   {
@@ -163,7 +196,10 @@ public:
     CreateDrawTarget(const mozilla::gfx::IntSize &aSize,
                      mozilla::gfx::SurfaceFormat aFormat) MOZ_OVERRIDE;
 
-  const nsIntSize& GetWidgetSize();
+  const nsIntSize& GetWidgetSize()
+  {
+    return mCompositor->GetWidgetSize();
+  }
 
   /**
    * Calculates the 'completeness' of the rendering that intersected with the
@@ -173,34 +209,6 @@ public:
    * complexity of individual layers' valid regions.
    */
   float ComputeRenderIntegrity();
-
-  /**
-   * Try to open |aDescriptor| for direct texturing.  If the
-   * underlying surface supports direct texturing, a non-null
-   * TextureImage is returned.  Otherwise null is returned.
-   */
-  static already_AddRefed<gl::TextureImage>
-  OpenDescriptorForDirectTexturing(gl::GLContext* aContext,
-                                   const SurfaceDescriptor& aDescriptor,
-                                   GLenum aWrapMode);
-
-  /**
-   * returns true if PlatformAllocBuffer will return a buffer that supports
-   * direct texturing
-   */
-  static bool SupportsDirectTexturing();
-
-  static void PlatformSyncBeforeReplyUpdate();
-
-  void SetCompositorID(uint32_t aID);
-
-  Compositor* GetCompositor() const
-  {
-    return mCompositor;
-  }
-
-  bool PlatformDestroySharedSurface(SurfaceDescriptor* aSurface);
-  RefPtr<Compositor> mCompositor;
 
 private:
   /** Region we're clipping our current drawing to. */
@@ -239,32 +247,24 @@ private:
   bool mInTransaction;
 };
 
+
+
+
 /**
- * Composite layers are for use with OMTC on the compositor thread only. There
- * must be corresponding Basic layers on the content thread. For composite
- * layers, the layer manager only maintains the layer tree, all rendering is
- * done by a Compositor (see Compositor.h). As such, composite layers are
- * platform-independent and can be used on any platform for which there is a
- * Compositor implementation.
- *
- * The composite layer tree reflects exactly the basic layer tree. To
- * composite to screen, the layer manager walks the layer tree calling render
- * methods which in turn call into their CompositableHosts' Composite methods.
- * These call Compositor::DrawQuad to do the rendering.
- *
- * Mostly, layers are updated during the layers transaction. This is done from
- * CompositableClient to CompositableHost without interacting with the layer.
- *
- * A reference to the Compositor is stored in LayerManagerComposite.
+ * General information and tree management for layers.
  */
 class LayerComposite
 {
 public:
-  LayerComposite(LayerManagerComposite* aManager);
+  LayerComposite(LayerManagerComposite *aManager)
+    : mCompositeManager(aManager)
+    , mCompositor(aManager->GetCompositor())
+    , mDestroyed(false)
+  { }
 
-  virtual ~LayerComposite();
+  virtual ~LayerComposite() {}
 
-  virtual LayerComposite* GetFirstChildComposite()
+  virtual LayerComposite *GetFirstChildComposite()
   {
     return nullptr;
   }
@@ -289,53 +289,9 @@ public:
 
   virtual TiledLayerComposer* GetTiledLayerComposer() { return nullptr; }
 
-
-  virtual void DestroyFrontBuffer() { }
-
-  /**
-   * The following methods are
-   *
-   * CONSTRUCTION PHASE ONLY
-   *
-   * They are analogous to the Layer interface.
-   */
-  void SetShadowVisibleRegion(const nsIntRegion& aRegion)
-  {
-    mShadowVisibleRegion = aRegion;
-  }
-
-  void SetShadowOpacity(float aOpacity)
-  {
-    mShadowOpacity = aOpacity;
-  }
-
-  void SetShadowClipRect(const nsIntRect* aRect)
-  {
-    mUseShadowClipRect = aRect != nullptr;
-    if (aRect) {
-      mShadowClipRect = *aRect;
-    }
-  }
-
-  void SetShadowTransform(const gfx3DMatrix& aMatrix)
-  {
-    mShadowTransform = aMatrix;
-  }
-
-  // These getters can be used anytime.
-  float GetShadowOpacity() { return mShadowOpacity; }
-  const nsIntRect* GetShadowClipRect() { return mUseShadowClipRect ? &mShadowClipRect : nullptr; }
-  const nsIntRegion& GetShadowVisibleRegion() { return mShadowVisibleRegion; }
-  const gfx3DMatrix& GetShadowTransform() { return mShadowTransform; }
-
 protected:
-  gfx3DMatrix mShadowTransform;
-  nsIntRegion mShadowVisibleRegion;
-  nsIntRect mShadowClipRect;
   LayerManagerComposite* mCompositeManager;
   RefPtr<Compositor> mCompositor;
-  float mShadowOpacity;
-  bool mUseShadowClipRect;
   bool mDestroyed;
 };
 
