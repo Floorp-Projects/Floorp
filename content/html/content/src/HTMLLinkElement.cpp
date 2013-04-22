@@ -20,7 +20,6 @@
 #include "nsNetUtil.h"
 #include "nsIDocument.h"
 #include "nsIDOMEvent.h"
-#include "nsIDOMEventTarget.h"
 #include "nsContentUtils.h"
 #include "nsPIDOMWindow.h"
 #include "nsAsyncDOMEvent.h"

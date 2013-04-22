@@ -21,7 +21,6 @@
 
 #include "nsEscape.h"
 #include "nsPIDOMWindow.h"
-#include "nsIDOMEventTarget.h"
 #include "nsIWebNavigation.h"
 #include "nsIWindowWatcher.h"
 
@@ -77,6 +76,7 @@
 #endif
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 /* Define Class IDs */
 static NS_DEFINE_CID(kWindowCID,           NS_WINDOW_CID);
@@ -294,7 +294,7 @@ nsWebShellWindow::RequestWindowClose(nsIWidget* aWidget)
   nsCOMPtr<nsIXULWindow> xulWindow(this);
 
   nsCOMPtr<nsPIDOMWindow> window(do_GetInterface(mDocShell));
-  nsCOMPtr<nsIDOMEventTarget> eventTarget = do_QueryInterface(window);
+  nsCOMPtr<EventTarget> eventTarget = do_QueryInterface(window);
 
   nsCOMPtr<nsIPresShell> presShell = mDocShell->GetPresShell();
 
@@ -682,7 +682,7 @@ bool nsWebShellWindow::ExecuteCloseHandler()
   nsCOMPtr<nsIXULWindow> kungFuDeathGrip(this);
 
   nsCOMPtr<nsPIDOMWindow> window(do_GetInterface(mDocShell));
-  nsCOMPtr<nsIDOMEventTarget> eventTarget = do_QueryInterface(window);
+  nsCOMPtr<EventTarget> eventTarget = do_QueryInterface(window);
 
   if (eventTarget) {
     nsCOMPtr<nsIContentViewer> contentViewer;
