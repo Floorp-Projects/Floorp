@@ -7,7 +7,6 @@
 MODULE = 'content'
 
 EXPORTS.mozilla.dom += [
-    'CanvasPattern.h',
     'CanvasRenderingContext2D.h',
     'CanvasUtils.h',
     'ImageData.h',

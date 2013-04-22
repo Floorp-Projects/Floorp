@@ -94,7 +94,6 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/HTMLVideoElement.h"
-#include "mozilla/dom/CanvasPattern.h"
 #include "mozilla/dom/CanvasRenderingContext2DBinding.h"
 #include "mozilla/dom/TextMetrics.h"
 
