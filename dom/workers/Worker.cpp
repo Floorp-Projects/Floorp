@@ -31,7 +31,7 @@ class Worker
 {
   static DOMJSClass sClass;
   static DOMIfaceAndProtoJSClass sProtoClass;
-  static JSPropertySpec sProperties[];
+  static const JSPropertySpec sProperties[];
   static JSFunctionSpec sFunctions[];
 
   enum
@@ -342,7 +342,7 @@ DOMIfaceAndProtoJSClass Worker::sProtoClass = {
   0
 };
 
-JSPropertySpec Worker::sProperties[] = {
+const JSPropertySpec Worker::sProperties[] = {
   { sEventStrings[STRING_onerror], STRING_onerror, PROPERTY_FLAGS,
     JSOP_WRAPPER(GetEventListener), JSOP_WRAPPER(SetEventListener) },
   { sEventStrings[STRING_onmessage], STRING_onmessage, PROPERTY_FLAGS,

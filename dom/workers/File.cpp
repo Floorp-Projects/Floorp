@@ -36,7 +36,7 @@ class Blob
   ~Blob();
 
   static JSClass sClass;
-  static JSPropertySpec sProperties[];
+  static const JSPropertySpec sProperties[];
   static JSFunctionSpec sFunctions[];
 
 public:
@@ -207,7 +207,7 @@ JSClass Blob::sClass = {
   JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, Finalize
 };
 
-JSPropertySpec Blob::sProperties[] = {
+const JSPropertySpec Blob::sProperties[] = {
   { "size", 0, PROPERTY_FLAGS, JSOP_WRAPPER(GetSize), JSOP_WRAPPER(js_GetterOnlyPropertyStub) },
   { "type", 0, PROPERTY_FLAGS, JSOP_WRAPPER(GetType), JSOP_WRAPPER(js_GetterOnlyPropertyStub) },
   { 0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER }
@@ -225,7 +225,7 @@ class File : public Blob
   ~File();
 
   static JSClass sClass;
-  static JSPropertySpec sProperties[];
+  static const JSPropertySpec sProperties[];
 
 public:
   static JSObject*
@@ -374,7 +374,7 @@ JSClass File::sClass = {
   JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, Finalize
 };
 
-JSPropertySpec File::sProperties[] = {
+const JSPropertySpec File::sProperties[] = {
   { "name", 0, PROPERTY_FLAGS, JSOP_WRAPPER(GetName),
     JSOP_WRAPPER(js_GetterOnlyPropertyStub) },
   { "lastModifiedDate", 0, PROPERTY_FLAGS, JSOP_WRAPPER(GetLastModifiedDate),
