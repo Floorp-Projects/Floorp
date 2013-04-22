@@ -275,6 +275,20 @@ AudioContext::CurrentTime() const
 }
 
 void
+AudioContext::Shutdown()
+{
+  Suspend();
+  mDecoder.Shutdown();
+
+  // Stop all audio buffer source nodes, to make sure that they release
+  // their self-references.
+  for (uint32_t i = 0; i < mAudioBufferSourceNodes.Length(); ++i) {
+    ErrorResult rv;
+    mAudioBufferSourceNodes[i]->Stop(0.0, rv);
+  }
+}
+
+void
 AudioContext::Suspend()
 {
   MediaStream* ds = DestinationStream();
