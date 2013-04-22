@@ -7,9 +7,9 @@
 #include "CompositorChild.h"
 #include "CompositorParent.h"
 #include "LayerManagerOGL.h"
-#include "mozilla/layers/LayerTransactionChild.h"
+#include "mozilla/layers/ShadowLayersChild.h"
 
-using mozilla::layers::LayerTransactionChild;
+using mozilla::layers::ShadowLayersChild;
 
 namespace mozilla {
 namespace layers {
@@ -32,9 +32,9 @@ CompositorChild::Destroy()
 {
   mLayerManager->Destroy();
   mLayerManager = NULL;
-  while (size_t len = ManagedPLayerTransactionChild().Length()) {
-    LayerTransactionChild* layers =
-      static_cast<LayerTransactionChild*>(ManagedPLayerTransactionChild()[len - 1]);
+  while (size_t len = ManagedPLayersChild().Length()) {
+    ShadowLayersChild* layers =
+      static_cast<ShadowLayersChild*>(ManagedPLayersChild()[len - 1]);
     layers->Destroy();
   }
   SendStop();
@@ -70,16 +70,16 @@ CompositorChild::Get()
   return sCompositor;
 }
 
-PLayerTransactionChild*
-CompositorChild::AllocPLayerTransaction(const LayersBackend& aBackendHint,
-                                        const uint64_t& aId,
-                                        TextureFactoryIdentifier*)
+PLayersChild*
+CompositorChild::AllocPLayers(const LayersBackend& aBackendHint,
+                              const uint64_t& aId,
+                              TextureFactoryIdentifier* aTextureFactoryIdentifier)
 {
-  return new LayerTransactionChild();
+  return new ShadowLayersChild();
 }
 
 bool
-CompositorChild::DeallocPLayerTransaction(PLayerTransactionChild* actor)
+CompositorChild::DeallocPLayers(PLayersChild* actor)
 {
   delete actor;
   return true;

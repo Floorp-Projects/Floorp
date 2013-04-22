@@ -114,9 +114,9 @@ CPPSRCS += \
         ImageBridgeParent.cpp \
         ShadowLayers.cpp \
         ShadowLayerChild.cpp \
+        ShadowLayersChild.cpp \
         ShadowLayerParent.cpp \
-        LayerTransactionChild.cpp \
-        LayerTransactionParent.cpp \
+        ShadowLayersParent.cpp \
         SharedPlanarYCbCrImage.cpp \
         ShmemYCbCrImage.cpp \
         SharedRGBImage.cpp \
