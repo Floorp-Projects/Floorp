@@ -426,13 +426,23 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
       else if (CompareVersions(mOSVersion.get(), "4.1.0") < 0)
       {
         // Whitelist:
-        //   All Samsung ICS devices
+        //   All Samsung ICS devices, except for:
+        //     Samsing SGH-I717 (Bug 845729)
+        //     Samsing SGH-I727 (Bug 845729)
+        //     Samsing SGH-T989 (Bug 845729)
         //   All Galaxy nexus ICS devices
         //   Sony Xperia Ion (LT28) ICS devices
         bool isWhitelisted =
           cModel.Equals("LT28h", nsCaseInsensitiveCStringComparator()) ||
           cManufacturer.Equals("samsung", nsCaseInsensitiveCStringComparator()) ||
           cModel.Equals("galaxy nexus", nsCaseInsensitiveCStringComparator()); // some Galaxy Nexus have manufacturer=amazon
+
+        if (cModel.Equals("SGH-I717", nsCaseInsensitiveCStringComparator()) ||
+            cModel.Equals("SGH-I727", nsCaseInsensitiveCStringComparator()) ||
+            cModel.Equals("SGH-T989", nsCaseInsensitiveCStringComparator()))
+        {
+          isWhitelisted = false;
+        }
 
         if (!isWhitelisted) {
           *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
