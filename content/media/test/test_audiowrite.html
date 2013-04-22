@@ -20,6 +20,11 @@ var rate = 44100;
 
 function runTests() {
   var a1 = new Audio();
+
+  ok("mozSetup" in a1, "mozSetup should be supported");
+  ok("mozWriteAudio" in a1, "mozWriteAudio should be supported");
+  ok("mozCurrentSampleOffset" in a1, "mozCurrentSampleOffset should be supported");
+
   try {
     a1.mozSetup(channels, rate);
   } catch (ex) {

@@ -19,7 +19,6 @@ static const unsigned short SVG_ZOOMANDPAN_MAGNIFY = 2;
 typedef nsSVGElement SVGViewElementBase;
 
 class nsSVGOuterSVGFrame;
-class nsIDOMSVGStringList;
 
 nsresult NS_NewSVGViewElement(nsIContent **aResult,
                               already_AddRefed<nsINodeInfo> aNodeInfo);
@@ -49,7 +48,7 @@ public:
   void SetZoomAndPan(uint16_t aZoomAndPan, ErrorResult& rv);
   already_AddRefed<nsIDOMSVGAnimatedRect> ViewBox();
   already_AddRefed<DOMSVGAnimatedPreserveAspectRatio> PreserveAspectRatio();
-  already_AddRefed<nsIDOMSVGStringList> ViewTarget();
+  already_AddRefed<DOMSVGStringList> ViewTarget();
 
 private:
 

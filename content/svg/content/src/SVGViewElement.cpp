@@ -82,7 +82,7 @@ SVGViewElement::PreserveAspectRatio()
 
 //----------------------------------------------------------------------
 
-already_AddRefed<nsIDOMSVGStringList>
+already_AddRefed<DOMSVGStringList>
 SVGViewElement::ViewTarget()
 {
   return DOMSVGStringList::GetDOMWrapper(

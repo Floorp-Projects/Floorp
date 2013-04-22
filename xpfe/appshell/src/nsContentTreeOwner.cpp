@@ -452,9 +452,6 @@ NS_IMETHODIMP nsContentTreeOwner::SetStatusWithContext(uint32_t aStatusType,
     case STATUS_SCRIPT:
       xulBrowserWindow->SetJSStatus(aStatusText);
       break;
-    case STATUS_SCRIPT_DEFAULT:
-      xulBrowserWindow->SetJSDefaultStatus(aStatusText);
-      break;
     case STATUS_LINK:
       {
         nsCOMPtr<nsIDOMElement> element = do_QueryInterface(aStatusContext);

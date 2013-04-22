@@ -287,14 +287,14 @@ interface TestJSImplInterface {
 
   // Enumerated types
   void passEnum(MyTestEnum arg);
-  // No support for nullable enums yet
-  // void passNullableEnum(MyTestEnum? arg);
-  // Optional enum arg doesn't work with callback interfaces. See bug 843355.
-  //void passOptionalEnum(optional MyTestEnum arg);
+  void passNullableEnum(MyTestEnum? arg);
+  void passOptionalEnum(optional MyTestEnum arg);
   void passEnumWithDefault(optional MyTestEnum arg = "a");
-  // void passOptionalNullableEnum(optional MyTestEnum? arg);
-  // void passOptionalNullableEnumWithDefaultValue(optional MyTestEnum? arg = null);
+  void passOptionalNullableEnum(optional MyTestEnum? arg);
+  void passOptionalNullableEnumWithDefaultValue(optional MyTestEnum? arg = null);
+  void passOptionalNullableEnumWithDefaultValue2(optional MyTestEnum? arg = "a");
   MyTestEnum receiveEnum();
+  MyTestEnum? receiveNullableEnum();
   attribute MyTestEnum enumAttribute;
   readonly attribute MyTestEnum readonlyEnumAttribute;
 
