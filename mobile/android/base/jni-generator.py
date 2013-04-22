@@ -69,7 +69,7 @@ class Generator:
                     returnValue = ''
                 elif returnType == 'jobject':
                     returnValue = 'NULL'
-                elif returnType in ('jint', 'jfloat', 'jdouble'):
+                elif returnType in ('jint', 'jfloat'):
                     returnValue = '0'
                 else:
                     raise Exception(('Unsupported JNI return type %s found; '
