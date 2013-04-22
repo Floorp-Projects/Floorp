@@ -131,16 +131,27 @@ SmsFilter::GetNumbers(JSContext* aCx, JS::Value* aNumbers)
     return NS_OK;
   }
 
-  JS::Value* numbers = new JS::Value[length];
-
-  for (uint32_t i=0; i<length; ++i) {
-    numbers[i].setString(JS_NewUCStringCopyN(aCx, mData.numbers()[i].get(),
-                                             mData.numbers()[i].Length()));
+  JS::AutoValueVector numbers(aCx);
+  if (!numbers.resize(length)) {
+    return NS_ERROR_FAILURE;
   }
 
-  aNumbers->setObjectOrNull(JS_NewArrayObject(aCx, length, numbers));
-  NS_ENSURE_TRUE(aNumbers->isObject(), NS_ERROR_FAILURE);
+  for (uint32_t i = 0; i < length; ++i) {
+    JSString* str = JS_NewUCStringCopyN(aCx, mData.numbers()[i].get(),
+                                        mData.numbers()[i].Length());
+    if (!str) {
+      return NS_ERROR_FAILURE;
+    }
 
+    numbers[i].setString(str);
+  }
+
+  JSObject* obj = JS_NewArrayObject(aCx, numbers.length(), numbers.begin());
+  if (!obj) {
+    return NS_ERROR_FAILURE;
+  }
+
+  aNumbers->setObject(*obj);
   return NS_OK;
 }
 
