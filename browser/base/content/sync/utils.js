@@ -2,6 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// Equivalent to 0600 permissions; used for saved Sync Recovery Key.
+// This constant can be replaced when the equivalent values are available to
+// chrome JS; see Bug 433295 and Bug 757351.
+const PERMISSIONS_RWUSR = 0x180;
+
 // Weave should always exist before before this file gets included.
 let gSyncUtils = {
   get bundle() {
@@ -157,7 +162,7 @@ let gSyncUtils = {
             aResult == Ci.nsIFilePicker.returnReplace) {
           let stream = Cc["@mozilla.org/network/file-output-stream;1"].
                        createInstance(Ci.nsIFileOutputStream);
-          stream.init(fp.file, -1, 0600, 0);
+          stream.init(fp.file, -1, PERMISSIONS_RWUSR, 0);
 
           let serializer = new XMLSerializer();
           let output = serializer.serializeToString(iframe.contentDocument);
