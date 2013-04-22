@@ -101,9 +101,8 @@ already_AddRefed<nsIThread>
 nsSocketTransportService::GetThreadSafely()
 {
     MutexAutoLock lock(mLock);
-    nsIThread* result = mThread;
-    NS_IF_ADDREF(result);
-    return result;
+    nsCOMPtr<nsIThread> result = mThread;
+    return result.forget();
 }
 
 NS_IMETHODIMP

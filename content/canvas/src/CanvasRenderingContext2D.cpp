@@ -3715,8 +3715,8 @@ CanvasRenderingContext2D::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
       static_cast<CanvasRenderingContext2DUserData*>(
         aOldLayer->GetUserData(&g2DContextLayerUserData));
     if (userData && userData->IsForContext(this)) {
-      NS_ADDREF(aOldLayer);
-      return aOldLayer;
+      nsRefPtr<CanvasLayer> ret = aOldLayer;
+      return ret.forget();
     }
   }
 

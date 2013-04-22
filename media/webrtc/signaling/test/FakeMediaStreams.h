@@ -198,11 +198,10 @@ public:
   CreateSourceStream(nsIDOMWindow* aWindow, uint32_t aHintContents) {
     Fake_SourceMediaStream *source = new Fake_SourceMediaStream();
 
-    Fake_DOMMediaStream *ds = new Fake_DOMMediaStream(source);
+    nsRefPtr<Fake_DOMMediaStream> ds = new Fake_DOMMediaStream(source);
     ds->SetHintContents(aHintContents);
-    ds->AddRef();
 
-    return ds;
+    return ds.forget();
   }
 
   Fake_MediaStream *GetStream() { return mMediaStream; }

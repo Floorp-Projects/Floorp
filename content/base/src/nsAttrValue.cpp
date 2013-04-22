@@ -739,9 +739,8 @@ nsAttrValue::GetAsAtom() const
 
     case eAtom:
       {
-        nsIAtom* atom = GetAtomValue();
-        NS_ADDREF(atom);
-        return atom;
+        nsCOMPtr<nsIAtom> atom = GetAtomValue();
+        return atom.forget();
       }
 
     default:

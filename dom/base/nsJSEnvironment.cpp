@@ -679,13 +679,9 @@ GetPromptFromContext(nsJSContext* ctx)
   nsIDocShell *docShell = win->GetDocShell();
   NS_ENSURE_TRUE(docShell, nullptr);
 
-  nsCOMPtr<nsIInterfaceRequestor> ireq(do_QueryInterface(docShell));
-  NS_ENSURE_TRUE(ireq, nullptr);
-
   // Get the nsIPrompt interface from the docshell
-  nsIPrompt* prompt;
-  ireq->GetInterface(NS_GET_IID(nsIPrompt), (void**)&prompt);
-  return prompt;
+  nsCOMPtr<nsIPrompt> prompt = do_GetInterface(docShell);
+  return prompt.forget();
 }
 
 JSBool

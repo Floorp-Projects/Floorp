@@ -346,10 +346,8 @@ txXPathNodeUtils::getLocalName(const txXPathNode& aNode)
 
     if (aNode.isContent()) {
         if (aNode.mNode->IsElement()) {
-            nsIAtom* localName = aNode.Content()->Tag();
-            NS_ADDREF(localName);
-
-            return localName;
+            nsCOMPtr<nsIAtom> localName = aNode.Content()->Tag();
+            return localName.forget();
         }
 
         if (aNode.mNode->IsNodeOfType(nsINode::ePROCESSING_INSTRUCTION)) {
@@ -363,11 +361,10 @@ txXPathNodeUtils::getLocalName(const txXPathNode& aNode)
         return nullptr;
     }
 
-    nsIAtom* localName = aNode.Content()->
+    nsCOMPtr<nsIAtom> localName = aNode.Content()->
         GetAttrNameAt(aNode.mIndex)->LocalName();
-    NS_ADDREF(localName);
 
-    return localName;
+    return localName.forget();
 }
 
 nsIAtom*

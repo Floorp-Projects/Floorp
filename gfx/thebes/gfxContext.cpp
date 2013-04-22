@@ -148,9 +148,8 @@ gfxContext::CurrentSurface(gfxFloat *dx, gfxFloat *dy)
     if (s == mSurface->CairoSurface()) {
         if (dx && dy)
             cairo_surface_get_device_offset(s, dx, dy);
-        gfxASurface *ret = mSurface;
-        NS_ADDREF(ret);
-        return ret;
+        nsRefPtr<gfxASurface> ret = mSurface;
+        return ret.forget();
     }
 
     if (dx && dy)
@@ -1374,14 +1373,13 @@ gfxContext::GetPattern()
     cairo_pattern_t *pat = cairo_get_source(mCairo);
     NS_ASSERTION(pat, "I was told this couldn't be null");
 
-    gfxPattern *wrapper = nullptr;
+    nsRefPtr<gfxPattern> wrapper;
     if (pat)
         wrapper = new gfxPattern(pat);
     else
         wrapper = new gfxPattern(gfxRGBA(0,0,0,0));
 
-    NS_IF_ADDREF(wrapper);
-    return wrapper;
+    return wrapper.forget();
   } else {
     nsRefPtr<gfxPattern> pat;
     
@@ -1557,10 +1555,9 @@ gfxContext::PopGroup()
 {
   if (mCairo) {
     cairo_pattern_t *pat = cairo_pop_group(mCairo);
-    gfxPattern *wrapper = new gfxPattern(pat);
+    nsRefPtr<gfxPattern> wrapper = new gfxPattern(pat);
     cairo_pattern_destroy(pat);
-    NS_IF_ADDREF(wrapper);
-    return wrapper;
+    return wrapper.forget();
   } else {
     RefPtr<SourceSurface> src = mDT->Snapshot();
     Point deviceOffset = CurrentState().deviceOffset;
@@ -1664,10 +1661,9 @@ already_AddRefed<gfxFlattenedPath>
 gfxContext::GetFlattenedPath()
 {
   if (mCairo) {
-    gfxFlattenedPath *path =
+    nsRefPtr<gfxFlattenedPath> path =
         new gfxFlattenedPath(cairo_copy_path_flat(mCairo));
-    NS_IF_ADDREF(path);
-    return path;
+    return path.forget();
   } else {
     // XXX - Used by SVG, needs fixing.
     return NULL;
