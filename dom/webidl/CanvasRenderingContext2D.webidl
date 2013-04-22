@@ -12,6 +12,7 @@
  */
 
 interface CanvasGradient;
+interface CanvasPattern;
 interface HitRegionOptions;
 interface Window;
 
@@ -55,7 +56,7 @@ interface CanvasRenderingContext2D {
   CanvasGradient createLinearGradient(double x0, double y0, double x1, double y1);
   [Throws]
   CanvasGradient createRadialGradient(double x0, double y0, double r0, double x1, double y1, double r1);
-  [Creator, Throws]
+  [Throws]
   CanvasPattern createPattern((HTMLImageElement or HTMLCanvasElement or HTMLVideoElement) image, [TreatNullAs=EmptyString] DOMString repetition);
 
   // shadows
@@ -261,11 +262,6 @@ interface CanvasPathMethods {
   [Throws, LenientFloat]
   void arc(double x, double y, double radius, double startAngle, double endAngle, optional boolean anticlockwise = false); 
 // NOT IMPLEMENTED  [LenientFloat] void ellipse(double x, double y, double radiusX, double radiusY, double rotation, double startAngle, double endAngle, boolean anticlockwise);
-};
-
-interface CanvasPattern {
-  // opaque object
-  // void setTransform(SVGMatrix transform);
 };
 
 interface TextMetrics {
