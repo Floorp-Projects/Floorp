@@ -1,4 +1,4 @@
 component {49507fe5-2cee-4824-b6a3-e999150ce9b8} DownloadsStartup.js
 contract @mozilla.org/browser/downloadsstartup;1 {49507fe5-2cee-4824-b6a3-e999150ce9b8}
-category app-startup DownloadsStartup service,@mozilla.org/browser/downloadsstartup;1
+category profile-after-change DownloadsStartup @mozilla.org/browser/downloadsstartup;1
 component {4d99321e-d156-455b-81f7-e7aa2308134f} DownloadsUI.js
