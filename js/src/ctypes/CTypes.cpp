@@ -936,11 +936,11 @@ InitTypeConstructor(JSContext* cx,
                     HandleObject parent,
                     HandleObject CTypeProto,
                     HandleObject CDataProto,
-                    JSFunctionSpec spec,
-                    JSFunctionSpec* fns,
-                    JSPropertySpec* props,
-                    JSFunctionSpec* instanceFns,
-                    JSPropertySpec* instanceProps,
+                    const JSFunctionSpec spec,
+                    const JSFunctionSpec* fns,
+                    const JSPropertySpec* props,
+                    const JSFunctionSpec* instanceFns,
+                    const JSPropertySpec* instanceProps,
                     MutableHandleObject typeProto,
                     MutableHandleObject dataProto)
 {
@@ -1010,8 +1010,8 @@ InitInt64Class(JSContext* cx,
                HandleObject parent,
                JSClass* clasp,
                JSNative construct,
-               JSFunctionSpec* fs,
-               JSFunctionSpec* static_fs)
+               const JSFunctionSpec* fs,
+               const JSFunctionSpec* static_fs)
 {
   // Init type class and constructor
   RootedObject prototype(cx, JS_InitClass(cx, parent, NULL, clasp, construct,
