@@ -111,7 +111,9 @@ static const mozilla::Module::CIDEntry kToolkitCIDs[] = {
   { &kNS_PARENTALCONTROLSSERVICE_CID, false, NULL, nsParentalControlsServiceWinConstructor },
 #endif
   { &kNS_DOWNLOADMANAGER_CID, false, NULL, nsDownloadManagerConstructor },
+#ifndef MOZ_JSDOWNLOADS
   { &kNS_DOWNLOAD_CID, false, NULL, nsDownloadProxyConstructor },
+#endif
   { &kNS_FIND_SERVICE_CID, false, NULL, nsFindServiceConstructor },
   { &kNS_TYPEAHEADFIND_CID, false, NULL, nsTypeAheadFindConstructor },
 #ifdef MOZ_URL_CLASSIFIER
@@ -136,7 +138,9 @@ static const mozilla::Module::ContractIDEntry kToolkitContracts[] = {
   { NS_PARENTALCONTROLSSERVICE_CONTRACTID, &kNS_PARENTALCONTROLSSERVICE_CID },
 #endif
   { NS_DOWNLOADMANAGER_CONTRACTID, &kNS_DOWNLOADMANAGER_CID },
+#ifndef MOZ_JSDOWNLOADS
   { NS_TRANSFER_CONTRACTID, &kNS_DOWNLOAD_CID },
+#endif
   { NS_FIND_SERVICE_CONTRACTID, &kNS_FIND_SERVICE_CID },
   { NS_TYPEAHEADFIND_CONTRACTID, &kNS_TYPEAHEADFIND_CID },
 #ifdef MOZ_URL_CLASSIFIER

@@ -27,6 +27,9 @@
  *
  * DownloadCopySaver
  * Saver object that simply copies the entire source file to the target.
+ *
+ * DownloadLegacySaver
+ * Saver object that integrates with the legacy nsITransfer interface.
  */
 
 "use strict";
@@ -38,6 +41,7 @@ this.EXPORTED_SYMBOLS = [
   "DownloadError",
   "DownloadSaver",
   "DownloadCopySaver",
+  "DownloadLegacySaver",
 ];
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -52,6 +56,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "OS",
+                                  "resource://gre/modules/osfile.jsm")
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/commonjs/sdk/core/promise.js");
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
@@ -652,5 +658,149 @@ DownloadCopySaver.prototype = {
       this._backgroundFileSaver.finish(Cr.NS_ERROR_FAILURE);
       this._backgroundFileSaver = null;
     }
+  },
+};
+
+////////////////////////////////////////////////////////////////////////////////
+//// DownloadLegacySaver
+
+/**
+ * Saver object that integrates with the legacy nsITransfer interface.
+ *
+ * For more background on the process, see the DownloadLegacyTransfer object.
+ */
+function DownloadLegacySaver()
+{
+  this.deferExecuted = Promise.defer();
+  this.deferCanceled = Promise.defer();
+}
+
+DownloadLegacySaver.prototype = {
+  __proto__: DownloadSaver.prototype,
+
+  /**
+   * nsIRequest object associated to the status and progress updates we
+   * received.  This object is null before we receive the first status and
+   * progress update, and is also reset to null when the download is stopped.
+   */
+  request: null,
+
+  /**
+   * This deferred object contains a promise that is resolved as soon as this
+   * download finishes successfully, and is rejected in case the download is
+   * canceled or receives a failure notification through nsITransfer.
+   */
+  deferExecuted: null,
+
+  /**
+   * This deferred object contains a promise that is resolved if the download
+   * receives a cancellation request through the "cancel" method, and is never
+   * rejected.  The nsITransfer implementation will register a handler that
+   * actually causes the download cancellation.
+   */
+  deferCanceled: null,
+
+  /**
+   * This is populated with the value of the aSetProgressBytesFn argument of the
+   * "execute" method, and is null before the method is called.
+   */
+  setProgressBytesFn: null,
+
+  /**
+   * Called by the nsITransfer implementation while the download progresses.
+   *
+   * @param aCurrentBytes
+   *        Number of bytes transferred until now.
+   * @param aTotalBytes
+   *        Total number of bytes to be transferred, or -1 if unknown.
+   */
+  onProgressBytes: function DLS_onProgressBytes(aCurrentBytes, aTotalBytes)
+  {
+    // Ignore progress notifications until we are ready to process them.
+    if (!this.setProgressBytesFn) {
+      return;
+    }
+
+    this.progressWasNotified = true;
+    this.setProgressBytesFn(aCurrentBytes, aTotalBytes);
+  },
+
+  /**
+   * Whether the onProgressBytes function has been called at least once.
+   */
+  progressWasNotified: false,
+
+  /**
+   * Called by the nsITransfer implementation when the request has finished.
+   *
+   * @param aRequest
+   *        nsIRequest associated to the status update.
+   * @param aStatus
+   *        Status code received by the nsITransfer implementation.
+   */
+  onTransferFinished: function DLS_onTransferFinished(aRequest, aStatus)
+  {
+    // Store a reference to the request, used when handling completion.
+    this.request = aRequest;
+
+    if (Components.isSuccessCode(aStatus)) {
+      this.deferExecuted.resolve();
+    } else {
+      // Infer the origin of the error from the failure code, because more
+      // specific data is not available through the nsITransfer implementation.
+      this.deferExecuted.reject(new DownloadError(aStatus, null, true));
+    }
+  },
+
+  /**
+   * Implements "DownloadSaver.execute".
+   */
+  execute: function DLS_execute(aSetProgressBytesFn)
+  {
+    this.setProgressBytesFn = aSetProgressBytesFn;
+
+    return Task.spawn(function task_DLS_execute() {
+      try {
+        // Wait for the component that executes the download to finish.
+        yield this.deferExecuted.promise;
+
+        // At this point, the "request" property has been populated.  Ensure we
+        // report the value of "Content-Length", if available, even if the
+        // download didn't generate any progress events.
+        if (!this.progressWasNotified &&
+            this.request instanceof Ci.nsIChannel &&
+            this.request.contentLength >= 0) {
+          aSetProgressBytesFn(0, this.request.contentLength);
+        }
+
+        // The download implementation may not have created the target file if
+        // no data was received from the source.  In this case, ensure that an
+        // empty file is created as expected.
+        try {
+          // This atomic operation is more efficient than an existence check.
+          let file = yield OS.File.open(this.download.target.file.path,
+                                        { create: true });
+          yield file.close();
+        } catch (ex if ex instanceof OS.File.Error && ex.becauseExists) { }
+      } finally {
+        // We don't need the reference to the request anymore.
+        this.request = null;
+      }
+    }.bind(this));
+  },
+
+  /**
+   * Implements "DownloadSaver.cancel".
+   */
+  cancel: function DLS_cancel()
+  {
+    // Synchronously cancel the operation as soon as the object is connected.
+    this.deferCanceled.resolve();
+
+    // We don't necessarily receive status notifications after we call "cancel",
+    // but cancellation through nsICancelable should be synchronous, thus force
+    // the rejection of the execution promise immediately.
+    this.deferExecuted.reject(new DownloadError(Cr.NS_ERROR_FAILURE,
+                                                "Download canceled."));
   },
 };
