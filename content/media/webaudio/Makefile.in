@@ -24,6 +24,7 @@ CPPSRCS := \
   AudioListener.cpp \
   AudioNode.cpp \
   AudioParam.cpp \
+  AudioProcessingEvent.cpp \
   BiquadFilterNode.cpp \
   DelayNode.cpp \
   DynamicsCompressorNode.cpp \
@@ -31,6 +32,7 @@ CPPSRCS := \
   GainNode.cpp \
   MediaBufferDecoder.cpp \
   PannerNode.cpp \
+  ScriptProcessorNode.cpp \
   ThreeDPoint.cpp \
   WebAudioUtils.cpp \
   $(NULL)

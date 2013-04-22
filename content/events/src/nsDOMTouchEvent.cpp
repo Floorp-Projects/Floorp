@@ -14,6 +14,7 @@
 #include "mozilla/dom/Touch.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 // TouchList
 nsDOMTouchList::nsDOMTouchList(nsTArray<nsCOMPtr<nsIDOMTouch> > &aTouches)
@@ -195,7 +196,7 @@ nsDOMTouchEvent::GetTargetTouches(nsIDOMTouchList** aTargetTouches)
     // touch that is ending
     if ((mEvent->message != NS_TOUCH_END &&
          mEvent->message != NS_TOUCH_CANCEL) || !touches[i]->mChanged) {
-      nsIDOMEventTarget* targetPtr = touches[i]->GetTarget();
+      EventTarget* targetPtr = touches[i]->GetTarget();
       if (targetPtr == mEvent->originalTarget) {
         targetTouches.AppendElement(touches[i]);
       }

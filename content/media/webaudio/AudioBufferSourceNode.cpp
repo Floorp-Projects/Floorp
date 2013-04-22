@@ -38,7 +38,9 @@ NS_IMPL_RELEASE_INHERITED(AudioBufferSourceNode, AudioNode)
 class AudioBufferSourceNodeEngine : public AudioNodeEngine
 {
 public:
-  explicit AudioBufferSourceNodeEngine(AudioDestinationNode* aDestination) :
+  explicit AudioBufferSourceNodeEngine(AudioNode* aNode,
+                                       AudioDestinationNode* aDestination) :
+    AudioNodeEngine(aNode),
     mStart(0), mStop(TRACK_TICKS_MAX),
     mResampler(nullptr),
     mOffset(0), mDuration(0),
@@ -419,7 +421,7 @@ AudioBufferSourceNode::AudioBufferSourceNode(AudioContext* aContext)
   , mStartCalled(false)
 {
   mStream = aContext->Graph()->CreateAudioNodeStream(
-      new AudioBufferSourceNodeEngine(aContext->Destination()),
+      new AudioBufferSourceNodeEngine(this, aContext->Destination()),
       MediaStreamGraph::INTERNAL_STREAM);
   mStream->AddMainThreadListener(this);
 }

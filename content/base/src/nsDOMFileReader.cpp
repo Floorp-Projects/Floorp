@@ -95,7 +95,7 @@ void
 nsDOMFileReader::RootResultArrayBuffer()
 {
   nsContentUtils::PreserveWrapper(
-    static_cast<nsIDOMEventTarget*>(
+    static_cast<EventTarget*>(
       static_cast<nsDOMEventTargetHelper*>(this)), this);
 }
 
@@ -104,7 +104,7 @@ nsDOMFileReader::RootResultArrayBuffer()
 nsDOMFileReader::nsDOMFileReader()
   : mFileData(nullptr),
     mDataLen(0), mDataFormat(FILE_AS_BINARY),
-    mResultArrayBuffer(nullptr)     
+    mResultArrayBuffer(nullptr)
 {
   nsLayoutStatics::AddRef();
   SetDOMStringToNull(mResult);

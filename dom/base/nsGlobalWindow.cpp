@@ -2587,7 +2587,6 @@ void
 nsGlobalWindow::ClearStatus()
 {
   SetStatus(EmptyString());
-  SetDefaultStatus(EmptyString());
 }
 
 void
@@ -3893,59 +3892,22 @@ nsGlobalWindow::SetStatus(const nsAString& aStatus)
 {
   FORWARD_TO_OUTER(SetStatus, (aStatus), NS_ERROR_NOT_INITIALIZED);
 
+  mStatus = aStatus;
+
   /*
    * If caller is not chrome and dom.disable_window_status_change is true,
-   * prevent setting window.status by exiting early
+   * prevent propagating window.status to the UI by exiting early
    */
 
   if (!CanSetProperty("dom.disable_window_status_change")) {
     return NS_OK;
   }
-
-  mStatus = aStatus;
 
   nsCOMPtr<nsIWebBrowserChrome> browserChrome;
   GetWebBrowserChrome(getter_AddRefs(browserChrome));
   if(browserChrome) {
     browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_SCRIPT,
                              PromiseFlatString(aStatus).get());
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGlobalWindow::GetDefaultStatus(nsAString& aDefaultStatus)
-{
-  FORWARD_TO_OUTER(GetDefaultStatus, (aDefaultStatus),
-                   NS_ERROR_NOT_INITIALIZED);
-
-  aDefaultStatus = mDefaultStatus;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGlobalWindow::SetDefaultStatus(const nsAString& aDefaultStatus)
-{
-  FORWARD_TO_OUTER(SetDefaultStatus, (aDefaultStatus),
-                   NS_ERROR_NOT_INITIALIZED);
-
-  /*
-   * If caller is not chrome and dom.disable_window_status_change is true,
-   * prevent setting window.defaultStatus by exiting early
-   */
-
-  if (!CanSetProperty("dom.disable_window_status_change")) {
-    return NS_OK;
-  }
-
-  mDefaultStatus = aDefaultStatus;
-
-  nsCOMPtr<nsIWebBrowserChrome> browserChrome;
-  GetWebBrowserChrome(getter_AddRefs(browserChrome));
-  if (browserChrome) {
-    browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_SCRIPT_DEFAULT,
-                             PromiseFlatString(aDefaultStatus).get());
   }
 
   return NS_OK;
@@ -8071,7 +8033,7 @@ nsGlobalWindow::GetListenerManager(bool aCreateIfNotFound)
 
   if (!mListenerManager && aCreateIfNotFound) {
     mListenerManager =
-      new nsEventListenerManager(static_cast<nsIDOMEventTarget*>(this));
+      new nsEventListenerManager(static_cast<EventTarget*>(this));
   }
 
   return mListenerManager;
@@ -8685,7 +8647,7 @@ nsGlobalWindow::DispatchSyncPopState()
 
   domEvent->SetTrusted(true);
 
-  nsCOMPtr<nsIDOMEventTarget> outerWindow =
+  nsCOMPtr<EventTarget> outerWindow =
     do_QueryInterface(GetOuterWindow());
   NS_ENSURE_TRUE(outerWindow, NS_ERROR_UNEXPECTED);
 
@@ -8995,18 +8957,36 @@ nsGlobalWindow::GetIndexedDB(nsISupports** _retval)
     }
 
     if (!IsChromeWindow()) {
-      nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
-        do_GetService(THIRDPARTYUTIL_CONTRACTID);
-      NS_ENSURE_TRUE(thirdPartyUtil, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+      // Whitelist about:home, since it doesn't have a base domain it would not
+      // pass the thirdPartyUtil check, though it should be able to use
+      // indexedDB.
+      bool skipThirdPartyCheck = false;
+      nsIPrincipal *principal = GetPrincipal();
+      if (principal) {
+        nsCOMPtr<nsIURI> uri;
+        principal->GetURI(getter_AddRefs(uri));
+        bool isAbout = false;
+        if (uri && NS_SUCCEEDED(uri->SchemeIs("about", &isAbout)) && isAbout) {
+          nsAutoCString path;
+          skipThirdPartyCheck = NS_SUCCEEDED(uri->GetPath(path)) &&
+                                path.EqualsLiteral("home");
+        }
+      }
 
-      bool isThirdParty;
-      rv = thirdPartyUtil->IsThirdPartyWindow(this, nullptr, &isThirdParty);
-      NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+      if (!skipThirdPartyCheck) {
+        nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
+          do_GetService(THIRDPARTYUTIL_CONTRACTID);
+        NS_ENSURE_TRUE(thirdPartyUtil, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-      if (isThirdParty) {
-        NS_WARNING("IndexedDB is not permitted in a third-party window.");
-        *_retval = nullptr;
-        return NS_OK;
+        bool isThirdParty;
+        rv = thirdPartyUtil->IsThirdPartyWindow(this, nullptr, &isThirdParty);
+        NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+        if (isThirdParty) {
+          NS_WARNING("IndexedDB is not permitted in a third-party window.");
+          *_retval = nullptr;
+          return NS_OK;
+        }
       }
     }
 
