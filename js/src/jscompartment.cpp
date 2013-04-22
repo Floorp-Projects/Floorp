@@ -822,7 +822,7 @@ void
 JSCompartment::sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf, size_t *compartmentObject,
                                    JS::TypeInferenceSizes *tiSizes, size_t *shapesCompartmentTables,
                                    size_t *crossCompartmentWrappersArg, size_t *regexpCompartment,
-                                   size_t *debuggeesSet, size_t *baselineOptimizedStubs)
+                                   size_t *debuggeesSet, size_t *baselineStubsOptimized)
 {
     *compartmentObject = mallocSizeOf(this);
     sizeOfTypeInferenceData(tiSizes, mallocSizeOf);
@@ -834,11 +834,11 @@ JSCompartment::sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf, size_t *compa
     *regexpCompartment = regExps.sizeOfExcludingThis(mallocSizeOf);
     *debuggeesSet = debuggees.sizeOfExcludingThis(mallocSizeOf);
 #ifdef JS_ION
-    *baselineOptimizedStubs = ionCompartment()
+    *baselineStubsOptimized = ionCompartment()
         ? ionCompartment()->optimizedStubSpace()->sizeOfExcludingThis(mallocSizeOf)
         : 0;
 #else
-    *baselineOptimizedStubs = 0;
+    *baselineStubsOptimized = 0;
 #endif
 }
 
