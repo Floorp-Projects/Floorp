@@ -32,6 +32,7 @@ ContentHostBase::DestroyFrontHost()
   MOZ_ASSERT(!mTextureHost || mTextureHost->GetDeAllocator(),
              "We won't be able to destroy our SurfaceDescriptor");
   mTextureHost = nullptr;
+  mTextureHostOnWhite = nullptr;
 }
 
 void
@@ -47,13 +48,16 @@ ContentHostBase::Composite(EffectChain& aEffectChain,
   NS_ASSERTION(aVisibleRegion, "Requires a visible region");
 
   AutoLockTextureHost lock(mTextureHost);
+  AutoLockTextureHost lockOnWhite(mTextureHostOnWhite);
 
-  if (!mTextureHost || !lock->IsValid()) {
+  if (!mTextureHost ||
+      !lock.IsValid() ||
+      !lockOnWhite.IsValid()) {
     return;
   }
 
   RefPtr<TexturedEffect> effect =
-    CreateTexturedEffect(mTextureHost, aFilter);
+    CreateTexturedEffect(mTextureHost, mTextureHostOnWhite, aFilter);
 
   aEffectChain.mPrimaryEffect = effect;
 
