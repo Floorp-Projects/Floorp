@@ -3028,8 +3028,10 @@ class MAdd : public MBinaryArithInstruction
         MAdd *add = new MAdd(left, right);
         add->specialization_ = type;
         add->setResultType(type);
-        if (type == MIRType_Int32)
+        if (type == MIRType_Int32) {
             add->setTruncated(true);
+            add->setCommutative();
+        }
         return add;
     }
     void analyzeTruncateBackward();
@@ -3101,6 +3103,7 @@ class MMul : public MBinaryArithInstruction
             // can never fail and always truncates its output to int32.
             canBeNegativeZero_ = false;
             setTruncated(true);
+            setCommutative();
         }
         JS_ASSERT_IF(mode != Integer, mode == Normal);
 
