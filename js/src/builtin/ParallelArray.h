@@ -20,7 +20,7 @@ namespace js {
 class ParallelArrayObject : public JSObject
 {
     static Class protoClass;
-    static JSFunctionSpec methods[];
+    static const JSFunctionSpec methods[];
     static const uint32_t NumFixedSlots = 4;
     static const uint32_t NumCtors = 4;
     static FixedHeapPtr<PropertyName> ctorNames[NumCtors];

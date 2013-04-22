@@ -324,7 +324,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     static JSBool wrap(JSContext *cx, unsigned argc, Value *vp);
     static JSBool construct(JSContext *cx, unsigned argc, Value *vp);
     static const JSPropertySpec properties[];
-    static JSFunctionSpec methods[];
+    static const JSFunctionSpec methods[];
 
     JSObject *getHook(Hook hook) const;
     bool hasAnyLiveHooks() const;

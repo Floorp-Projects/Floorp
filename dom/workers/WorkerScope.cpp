@@ -60,7 +60,7 @@ class WorkerGlobalScope : public workers::EventTarget
 {
   static JSClass sClass;
   static const JSPropertySpec sProperties[];
-  static JSFunctionSpec sFunctions[];
+  static const JSFunctionSpec sFunctions[];
 
   enum
   {
@@ -629,7 +629,7 @@ const JSPropertySpec WorkerGlobalScope::sProperties[] = {
   { 0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER }
 };
 
-JSFunctionSpec WorkerGlobalScope::sFunctions[] = {
+const JSFunctionSpec WorkerGlobalScope::sFunctions[] = {
   JS_FN("close", Close, 0, FUNCTION_FLAGS),
   JS_FN("importScripts", ImportScripts, 1, FUNCTION_FLAGS),
   JS_FN("setTimeout", SetTimeout, 1, FUNCTION_FLAGS),
@@ -652,7 +652,7 @@ class DedicatedWorkerGlobalScope : public WorkerGlobalScope
   static DOMJSClass sClass;
   static DOMIfaceAndProtoJSClass sProtoClass;
   static const JSPropertySpec sProperties[];
-  static JSFunctionSpec sFunctions[];
+  static const JSFunctionSpec sFunctions[];
 
   enum
   {
@@ -854,7 +854,7 @@ private:
       return false;
     }
 
-    const char*& name = sFunctions[0].name;
+    const char* name = sFunctions[0].name;
     DedicatedWorkerGlobalScope* scope = GetInstancePrivate(aCx, obj, name);
     if (!scope) {
       return false;
@@ -925,7 +925,7 @@ const JSPropertySpec DedicatedWorkerGlobalScope::sProperties[] = {
   { 0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER }
 };
 
-JSFunctionSpec DedicatedWorkerGlobalScope::sFunctions[] = {
+const JSFunctionSpec DedicatedWorkerGlobalScope::sFunctions[] = {
   JS_FN("postMessage", PostMessage, 1, FUNCTION_FLAGS),
   JS_FS_END
 };
