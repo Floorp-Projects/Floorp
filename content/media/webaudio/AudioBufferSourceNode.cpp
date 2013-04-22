@@ -428,11 +428,9 @@ AudioBufferSourceNode::AudioBufferSourceNode(AudioContext* aContext)
 
 AudioBufferSourceNode::~AudioBufferSourceNode()
 {
-  // 
   if (Context()) {
     Context()->UnregisterAudioBufferSourceNode(this);
   }
-  DestroyMediaStream();
 }
 
 JSObject*
