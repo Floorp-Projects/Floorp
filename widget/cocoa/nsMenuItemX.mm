@@ -19,7 +19,6 @@
 #include "nsIWidget.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMEventTarget.h"
 #include "nsIDOMElement.h"
 
 nsMenuItemX::nsMenuItemX()
@@ -346,7 +345,7 @@ nsresult nsMenuItemX::DispatchDOMEvent(const nsString &eventName, bool *preventD
   // send DOM event
   rv = mContent->DispatchEvent(event, preventDefaultCalled);
   if (NS_FAILED(rv)) {
-    NS_WARNING("Failed to send DOM event via nsIDOMEventTarget");
+    NS_WARNING("Failed to send DOM event via EventTarget");
     return rv;
   }
 

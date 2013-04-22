@@ -15,7 +15,6 @@
 #include "nsGkAtoms.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMEventTarget.h"
 #include "nsIDOMXULCommandEvent.h"
 #include "nsPIDOMWindow.h"
 

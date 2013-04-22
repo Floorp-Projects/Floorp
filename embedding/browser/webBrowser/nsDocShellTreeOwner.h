@@ -28,8 +28,13 @@
 #include "nsITooltipTextProvider.h"
 #include "nsCTooltipTextProvider.h"
 #include "nsIDroppedLinkHandler.h"
-#include "nsIDOMEventTarget.h"
 #include "nsCommandHandler.h"
+
+namespace mozilla {
+namespace dom {
+class EventTarget;
+}
+}
 
 class nsWebBrowser;
 class ChromeTooltipListener;
@@ -169,9 +174,9 @@ private:
   NS_IMETHOD HideTooltip ( ) ;
 
   nsWebBrowser* mWebBrowser;
-  nsCOMPtr<nsIDOMEventTarget> mEventTarget;
+  nsCOMPtr<mozilla::dom::EventTarget> mEventTarget;
   nsCOMPtr<nsITooltipTextProvider> mTooltipTextProvider;
-  
+
     // This must be a strong ref in order to make sure we can hide the tooltip
     // if the window goes away while we're displaying one. If we don't hold
     // a strong ref, the chrome might have been disposed of before we get a chance
@@ -235,7 +240,7 @@ private:
   bool mContextMenuListenerInstalled;
 
   nsWebBrowser* mWebBrowser;
-  nsCOMPtr<nsIDOMEventTarget> mEventTarget;
+  nsCOMPtr<mozilla::dom::EventTarget> mEventTarget;
   nsCOMPtr<nsIWebBrowserChrome> mWebBrowserChrome;
 
 }; // class ChromeContextMenuListener
