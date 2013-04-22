@@ -734,12 +734,10 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, HandleValue s,
                 return false;
             }
             uint32_t length = JS_GetStringLength(str);
-            nsIAtom* atom = NS_NewAtom(nsDependentSubstring(chars,
-                                                            chars + length));
-            if (!atom && pErr)
-                *pErr = NS_ERROR_OUT_OF_MEMORY;
-            *((nsISupports**)d) = atom;
-            return atom != nullptr;
+            nsCOMPtr<nsIAtom> atom =
+                NS_NewAtom(nsDependentSubstring(chars, chars + length));
+            atom.forget((nsISupports**)d);
+            return true;
         }
         //else ...
 
