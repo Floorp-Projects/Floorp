@@ -847,7 +847,8 @@ MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
         load32(Address(temp, BaselineFrame::reverseOffsetOfFrameSize()), temp);
         makeFrameDescriptor(temp, IonFrame_BaselineJS);
         push(temp);
-        push(Imm32(0)); // Fake return address.
+        loadPtr(Address(bailoutInfo, offsetof(BaselineBailoutInfo, resumeAddr)), temp);
+        push(temp);
         enterFakeExitFrame();
 
         // If monitorStub is non-null, handle resumeAddr appropriately.
