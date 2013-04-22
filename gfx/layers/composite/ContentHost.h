@@ -125,6 +125,7 @@ protected:
   // the old one which might still be used for compositing. So we store it
   // here and move it to mTextureHost once we do the first buffer swap.
   RefPtr<TextureHost> mNewFrontHost;
+  RefPtr<TextureHost> mNewFrontHostOnWhite;
   bool mPaintWillResample;
   bool mInitialised;
 };
@@ -163,6 +164,7 @@ protected:
   // only swap it with the front buffer (mTextureHost) when we are told by the
   // content thread.
   RefPtr<TextureHost> mBackHost;
+  RefPtr<TextureHost> mBackHostOnWhite;
 };
 
 /**
