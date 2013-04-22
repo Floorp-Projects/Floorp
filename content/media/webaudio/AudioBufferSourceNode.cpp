@@ -58,25 +58,10 @@ public:
     }
   }
 
-  // START, OFFSET and DURATION are always set by start() (along with setting
-  // mBuffer to something non-null).
-  // STOP is set by stop().
-  enum Parameters {
-    SAMPLE_RATE,
-    START,
-    STOP,
-    OFFSET,
-    DURATION,
-    LOOP,
-    LOOPSTART,
-    LOOPEND,
-    PLAYBACKRATE,
-    DOPPLERSHIFT
-  };
   virtual void SetTimelineParameter(uint32_t aIndex, const dom::AudioParamTimeline& aValue)
   {
     switch (aIndex) {
-    case PLAYBACKRATE:
+    case AudioBufferSourceNode::PLAYBACKRATE:
       mPlaybackRateTimeline = aValue;
       // If we have a simple value that is 1.0 (i.e. intrinsic speed), and our
       // input buffer is already at the ideal audio rate, and we have a
@@ -96,8 +81,8 @@ public:
   virtual void SetStreamTimeParameter(uint32_t aIndex, TrackTicks aParam)
   {
     switch (aIndex) {
-    case START: mStart = aParam; break;
-    case STOP: mStop = aParam; break;
+    case AudioBufferSourceNode::START: mStart = aParam; break;
+    case AudioBufferSourceNode::STOP: mStop = aParam; break;
     default:
       NS_ERROR("Bad AudioBufferSourceNodeEngine StreamTimeParameter");
     }
@@ -105,7 +90,7 @@ public:
   virtual void SetDoubleParameter(uint32_t aIndex, double aParam)
   {
     switch (aIndex) {
-      case DOPPLERSHIFT:
+      case AudioBufferSourceNode::DOPPLERSHIFT:
         mDopplerShift = aParam;
         break;
       default:
@@ -115,12 +100,12 @@ public:
   virtual void SetInt32Parameter(uint32_t aIndex, int32_t aParam)
   {
     switch (aIndex) {
-    case SAMPLE_RATE: mSampleRate = aParam; break;
-    case OFFSET: mOffset = aParam; break;
-    case DURATION: mDuration = aParam; break;
-    case LOOP: mLoop = !!aParam; break;
-    case LOOPSTART: mLoopStart = aParam; break;
-    case LOOPEND: mLoopEnd = aParam; break;
+    case AudioBufferSourceNode::SAMPLE_RATE: mSampleRate = aParam; break;
+    case AudioBufferSourceNode::OFFSET: mOffset = aParam; break;
+    case AudioBufferSourceNode::DURATION: mDuration = aParam; break;
+    case AudioBufferSourceNode::LOOP: mLoop = !!aParam; break;
+    case AudioBufferSourceNode::LOOPSTART: mLoopStart = aParam; break;
+    case AudioBufferSourceNode::LOOPEND: mLoopEnd = aParam; break;
     default:
       NS_ERROR("Bad AudioBufferSourceNodeEngine Int32Parameter");
     }
@@ -468,40 +453,19 @@ AudioBufferSourceNode::Start(JSContext* aCx, double aWhen, double aOffset,
     return;
   }
 
-  // Don't compute and set the loop parameters unnecessarily
-  if (mLoop) {
-    double actualLoopStart, actualLoopEnd;
-    if (((mLoopStart != 0.0) || (mLoopEnd != 0.0)) &&
-        mLoopStart >= 0.0 && mLoopEnd > 0.0 &&
-        mLoopStart < mLoopEnd) {
-      actualLoopStart = (mLoopStart > length) ? 0.0 : mLoopStart;
-      actualLoopEnd = std::min(mLoopEnd, length);
-    } else {
-      actualLoopStart = 0.0;
-      actualLoopEnd = length;
-    }
-    int32_t loopStartTicks = NS_lround(actualLoopStart * rate);
-    int32_t loopEndTicks = NS_lround(actualLoopEnd * rate);
-    ns->SetInt32Parameter(AudioBufferSourceNodeEngine::LOOP, 1);
-    ns->SetInt32Parameter(AudioBufferSourceNodeEngine::LOOPSTART, loopStartTicks);
-    ns->SetInt32Parameter(AudioBufferSourceNodeEngine::LOOPEND, loopEndTicks);
-  }
-
   ns->SetBuffer(data.forget());
   // Don't set parameter unnecessarily
   if (aWhen > 0.0) {
-    ns->SetStreamTimeParameter(AudioBufferSourceNodeEngine::START,
-                               Context()->DestinationStream(),
-                               aWhen);
+    ns->SetStreamTimeParameter(START, Context()->DestinationStream(), aWhen);
   }
   int32_t offsetTicks = NS_lround(offset*rate);
   // Don't set parameter unnecessarily
   if (offsetTicks > 0) {
-    ns->SetInt32Parameter(AudioBufferSourceNodeEngine::OFFSET, offsetTicks);
+    ns->SetInt32Parameter(OFFSET, offsetTicks);
   }
-  ns->SetInt32Parameter(AudioBufferSourceNodeEngine::DURATION,
+  ns->SetInt32Parameter(DURATION,
       NS_lround(endOffset*rate) - offsetTicks);
-  ns->SetInt32Parameter(AudioBufferSourceNodeEngine::SAMPLE_RATE, rate);
+  ns->SetInt32Parameter(SAMPLE_RATE, rate);
 
   MOZ_ASSERT(!mPlayingRef, "We can only accept a successful start() call once");
   mPlayingRef.Take(this);
@@ -521,8 +485,7 @@ AudioBufferSourceNode::Stop(double aWhen, ErrorResult& aRv)
     return;
   }
 
-  ns->SetStreamTimeParameter(AudioBufferSourceNodeEngine::STOP,
-                             Context()->DestinationStream(),
+  ns->SetStreamTimeParameter(STOP, Context()->DestinationStream(),
                              std::max(0.0, aWhen));
 }
 
@@ -540,13 +503,39 @@ void
 AudioBufferSourceNode::SendPlaybackRateToStream(AudioNode* aNode)
 {
   AudioBufferSourceNode* This = static_cast<AudioBufferSourceNode*>(aNode);
-  SendTimelineParameterToStream(This, AudioBufferSourceNodeEngine::PLAYBACKRATE, *This->mPlaybackRate);
+  SendTimelineParameterToStream(This, PLAYBACKRATE, *This->mPlaybackRate);
 }
 
 void
 AudioBufferSourceNode::SendDopplerShiftToStream(double aDopplerShift)
 {
-  SendDoubleParameterToStream(AudioBufferSourceNodeEngine::DOPPLERSHIFT, aDopplerShift);
+  SendDoubleParameterToStream(DOPPLERSHIFT, aDopplerShift);
+}
+
+void
+AudioBufferSourceNode::SendLoopParametersToStream()
+{
+  SendInt32ParameterToStream(LOOP, mLoop ? 1 : 0);
+
+  // Don't compute and set the loop parameters unnecessarily
+  if (mLoop && mBuffer) {
+    float rate = mBuffer->SampleRate();
+    double length = (double(mBuffer->Length()) / mBuffer->SampleRate());
+    double actualLoopStart, actualLoopEnd;
+    if (((mLoopStart != 0.0) || (mLoopEnd != 0.0)) &&
+        mLoopStart >= 0.0 && mLoopEnd > 0.0 &&
+        mLoopStart < mLoopEnd) {
+      actualLoopStart = (mLoopStart > length) ? 0.0 : mLoopStart;
+      actualLoopEnd = std::min(mLoopEnd, length);
+    } else {
+      actualLoopStart = 0.0;
+      actualLoopEnd = length;
+    }
+    int32_t loopStartTicks = NS_lround(actualLoopStart * rate);
+    int32_t loopEndTicks = NS_lround(actualLoopEnd * rate);
+    SendInt32ParameterToStream(LOOPSTART, loopStartTicks);
+    SendInt32ParameterToStream(LOOPEND, loopEndTicks);
+  }
 }
 
 }
