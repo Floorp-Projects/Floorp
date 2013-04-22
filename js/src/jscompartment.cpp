@@ -213,15 +213,7 @@ JSCompartment::wrap(JSContext *cx, MutableHandleValue vp, HandleObject existingA
 
     JS_CHECK_CHROME_RECURSION(cx, return false);
 
-#ifdef DEBUG
-    struct AutoDisableProxyCheck {
-        JSRuntime *runtime;
-        AutoDisableProxyCheck(JSRuntime *rt) : runtime(rt) {
-            runtime->gcDisableStrictProxyCheckingCount++;
-        }
-        ~AutoDisableProxyCheck() { runtime->gcDisableStrictProxyCheckingCount--; }
-    } adpc(rt);
-#endif
+    AutoDisableProxyCheck adpc(rt);
 
     /* Only GC things have to be wrapped or copied. */
     if (!vp.isMarkable())
