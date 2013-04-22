@@ -95,32 +95,18 @@ StackFrame::initFromBailout(JSContext *cx, SnapshotIterator &iter)
     if (iter.bailoutKind() == Bailout_ArgumentCheck) {
         // Temporary hack -- skip the (unused) scopeChain, because it could be
         // bogus (we can fail before the scope chain slot is set). Strip the
-        // hasScopeChain flag.  If a call object is needed, it will get handled later
-        // by |ThunkToInterpreter| which call |EnsureHasScopeObjects|.
+        // hasScopeChain flag and we'll check this later to run prologue().
         iter.skip();
         flags_ &= ~StackFrame::HAS_SCOPECHAIN;
-
-        // If the script binds arguments, then skip the snapshot slot reserved to hold
-        // its value.
-        if (script()->argumentsHasVarBinding())
-            iter.skip();
-        flags_ &= ~StackFrame::HAS_ARGS_OBJ;
     } else {
-        Value scopeChain = iter.read();
-        JS_ASSERT(scopeChain.isObject() || scopeChain.isUndefined());
-        if (scopeChain.isObject()) {
-            scopeChain_ = &scopeChain.toObject();
+        Value v = iter.read();
+        if (v.isObject()) {
+            scopeChain_ = &v.toObject();
             flags_ |= StackFrame::HAS_SCOPECHAIN;
             if (isFunctionFrame() && fun()->isHeavyweight())
                 flags_ |= StackFrame::HAS_CALL_OBJ;
-        }
-
-        // The second slot will be an arguments object if the script needs one.
-        if (script()->argumentsHasVarBinding()) {
-            Value argsObj = iter.read();
-            JS_ASSERT(argsObj.isObject() || argsObj.isUndefined());
-            if (argsObj.isObject())
-                initArgsObj(argsObj.toObject().asArguments());
+        } else {
+            JS_ASSERT(v.isUndefined());
         }
     }
 
@@ -139,7 +125,7 @@ StackFrame::initFromBailout(JSContext *cx, SnapshotIterator &iter)
         if (isConstructing())
             JS_ASSERT(!thisv.isPrimitive());
 
-        JS_ASSERT(iter.slots() >= CountArgSlots(script(), fun()));
+        JS_ASSERT(iter.slots() >= CountArgSlots(fun()));
         IonSpew(IonSpew_Bailouts, " frame slots %u, nargs %u, nfixed %u",
                 iter.slots(), fun()->nargs, script()->nfixed);
 
@@ -148,7 +134,7 @@ StackFrame::initFromBailout(JSContext *cx, SnapshotIterator &iter)
             formals()[i] = arg;
         }
     }
-    exprStackSlots -= CountArgSlots(script(), maybeFun());
+    exprStackSlots -= CountArgSlots(maybeFun());
 
     for (uint32_t i = 0; i < script()->nfixed; i++) {
         Value slot = iter.read();
@@ -512,7 +498,7 @@ ion::ReflowTypeInfo(uint32_t bailoutResult)
     return true;
 }
 
-// Initialize the decl env Object, call object, and any arguments obj of the current frame.
+// Initialize the decl env Object and the call object of the current frame.
 bool
 ion::EnsureHasScopeObjects(JSContext *cx, AbstractFramePtr fp)
 {
@@ -617,22 +603,20 @@ ion::ThunkToInterpreter(Value *vp)
             fp = iter.interpFrame();
             script = iter.script();
             if (script->needsArgsObj()) {
-                ArgumentsObject *argsObj;
-                if (fp->hasArgsObj()) {
-                    argsObj = &fp->argsObj();
-                } else {
-                    argsObj = ArgumentsObject::createExpected(cx, fp);
-                    if (!argsObj) {
-                        resumeMode = JSINTERP_RETHROW;
-                        break;
-                    }
+                // Currently IonMonkey does not compile if the script needs an
+                // arguments object, so the frame should not have any argument
+                // object yet.
+                JS_ASSERT(!fp->hasArgsObj());
+                ArgumentsObject *argsobj = ArgumentsObject::createExpected(cx, fp);
+                if (!argsobj) {
+                    resumeMode = JSINTERP_RETHROW;
+                    break;
                 }
-
                 // The arguments is a local binding and needsArgsObj does not
                 // check if it is clobbered. Ensure that the local binding
                 // restored during bailout before storing the arguments object
                 // to the slot.
-                SetFrameArgumentsObject(cx, fp, script, argsObj);
+                SetFrameArgumentsObject(cx, fp, script, argsobj);
             }
             ++iter;
         } while (fp != br->entryfp());

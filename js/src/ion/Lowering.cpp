@@ -321,34 +321,6 @@ LIRGenerator::visitCreateThis(MCreateThis *ins)
 }
 
 bool
-LIRGenerator::visitCreateArgumentsObject(MCreateArgumentsObject *ins)
-{
-    // LAllocation callObj = useRegisterAtStart(ins->getCallObject());
-    LAllocation callObj = useFixed(ins->getCallObject(), CallTempReg0);
-    LCreateArgumentsObject *lir = new LCreateArgumentsObject(callObj, tempFixed(CallTempReg1));
-    return defineReturn(lir, ins) && assignSafepoint(lir, ins);
-}
-
-bool
-LIRGenerator::visitGetArgumentsObjectArg(MGetArgumentsObjectArg *ins)
-{
-    LAllocation argsObj = useRegister(ins->getArgsObject());
-    LGetArgumentsObjectArg *lir = new LGetArgumentsObjectArg(argsObj, temp());
-    return defineBox(lir, ins);
-}
-
-bool
-LIRGenerator::visitSetArgumentsObjectArg(MSetArgumentsObjectArg *ins)
-{
-    LAllocation argsObj = useRegister(ins->getArgsObject());
-    LSetArgumentsObjectArg *lir = new LSetArgumentsObjectArg(argsObj, temp());
-    if (!useBox(lir, LSetArgumentsObjectArg::ValueIndex, ins->getValue()))
-        return false;
-
-    return add(lir, ins);
-}
-
-bool
 LIRGenerator::visitReturnFromCtor(MReturnFromCtor *ins)
 {
     LReturnFromCtor *lir = new LReturnFromCtor(useRegister(ins->getObject()));

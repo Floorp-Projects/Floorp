@@ -298,16 +298,15 @@ SnapshotWriter::startSnapshot(uint32_t frameCount, BailoutKind kind, bool resume
 void
 SnapshotWriter::startFrame(JSFunction *fun, RawScript script, jsbytecode *pc, uint32_t exprStack)
 {
-    JS_ASSERT(CountArgSlots(script, fun) < SNAPSHOT_MAX_NARGS);
+    JS_ASSERT(CountArgSlots(fun) < SNAPSHOT_MAX_NARGS);
 
-    uint32_t implicit = StartArgSlot(script, fun);
-    uint32_t formalArgs = CountArgSlots(script, fun);
+    uint32_t formalArgs = CountArgSlots(fun);
 
     nslots_ = formalArgs + script->nfixed + exprStack;
     slotsWritten_ = 0;
 
-    IonSpew(IonSpew_Snapshots, "Starting frame; implicit %u, formals %u, fixed %u, exprs %u",
-            implicit, formalArgs - implicit, script->nfixed, exprStack);
+    IonSpew(IonSpew_Snapshots, "Starting frame; formals %u, fixed %u, exprs %u",
+            formalArgs, script->nfixed, exprStack);
 
     JS_ASSERT(script->code <= pc && pc <= script->code + script->length);
 
