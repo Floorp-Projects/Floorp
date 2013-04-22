@@ -403,9 +403,9 @@ void
 CompositorParent::NotifyShadowTreeTransaction()
 {
   if (mLayerManager) {
-    LayerManagerComposite* managerComposite = mLayerManager->AsLayerManagerComposite();
-    if (managerComposite) {
-      managerComposite->NotifyShadowTreeTransaction();
+    ShadowLayerManager *shadow = mLayerManager->AsShadowManager();
+    if (shadow) {
+      shadow->NotifyShadowTreeTransaction();
     }
   }
   ScheduleComposition();
@@ -662,14 +662,14 @@ CompositorParent::TransformFixedLayers(Layer* aLayer,
     layerTransform.ScalePost(1.0f/aLayer->GetPostXScale(),
                              1.0f/aLayer->GetPostYScale(),
                              1);
-    LayerComposite* layerComposite = aLayer->AsLayerComposite();
-    layerComposite->SetShadowTransform(layerTransform);
+    ShadowLayer* shadow = aLayer->AsShadowLayer();
+    shadow->SetShadowTransform(layerTransform);
 
     const nsIntRect* clipRect = aLayer->GetClipRect();
     if (clipRect) {
       nsIntRect transformedClipRect(*clipRect);
       transformedClipRect.MoveBy(translation.x, translation.y);
-      layerComposite->SetShadowClipRect(&transformedClipRect);
+      shadow->SetShadowClipRect(&transformedClipRect);
     }
 
     // The transform has now been applied, so there's no need to iterate over
@@ -683,18 +683,18 @@ CompositorParent::TransformFixedLayers(Layer* aLayer,
   }
 }
 
-// Go down the composite layer tree, setting properties to match their
-// content-side counterparts.
+// Go down shadow layer tree, setting properties to match their non-shadow
+// counterparts.
 static void
 SetShadowProperties(Layer* aLayer)
 {
   // FIXME: Bug 717688 -- Do these updates in LayerTransactionParent::RecvUpdate.
-  LayerComposite* layerComposite = aLayer->AsLayerComposite();
-  // Set the layerComposite's base transform to the layer's base transform.
-  layerComposite->SetShadowTransform(aLayer->GetBaseTransform());
-  layerComposite->SetShadowVisibleRegion(aLayer->GetVisibleRegion());
-  layerComposite->SetShadowClipRect(aLayer->GetClipRect());
-  layerComposite->SetShadowOpacity(aLayer->GetOpacity());
+  ShadowLayer* shadow = aLayer->AsShadowLayer();
+  // Set the shadow's base transform to the layer's base transform.
+  shadow->SetShadowTransform(aLayer->GetBaseTransform());
+  shadow->SetShadowVisibleRegion(aLayer->GetVisibleRegion());
+  shadow->SetShadowClipRect(aLayer->GetClipRect());
+  shadow->SetShadowOpacity(aLayer->GetOpacity());
 
   for (Layer* child = aLayer->GetFirstChild();
       child; child = child->GetNextSibling()) {
@@ -793,11 +793,11 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
     Animatable interpolatedValue;
     SampleValue(portion, animation, animData.mStartValues[segmentIndex],
                 animData.mEndValues[segmentIndex], &interpolatedValue);
-    LayerComposite* layerComposite = aLayer->AsLayerComposite();
+    ShadowLayer* shadow = aLayer->AsShadowLayer();
     switch (animation.property()) {
     case eCSSProperty_opacity:
     {
-      layerComposite->SetShadowOpacity(interpolatedValue.get_float());
+      shadow->SetShadowOpacity(interpolatedValue.get_float());
       break;
     }
     case eCSSProperty_transform:
@@ -809,7 +809,7 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
                          1);
       }
       NS_ASSERTION(!aLayer->GetIsFixedPosition(), "Can't animate transforms on fixed-position layers");
-      layerComposite->SetShadowTransform(matrix);
+      shadow->SetShadowTransform(matrix);
       break;
     }
     default:
@@ -843,7 +843,7 @@ CompositorParent::ApplyAsyncContentTransformToTree(TimeStamp aCurrentFrame,
   }
 
   if (AsyncPanZoomController* controller = aLayer->GetAsyncPanZoomController()) {
-    LayerComposite* layerComposite = aLayer->AsLayerComposite();
+    ShadowLayer* shadow = aLayer->AsShadowLayer();
 
     ViewTransform treeTransform;
     *aWantNextFrame |=
@@ -861,7 +861,7 @@ CompositorParent::ApplyAsyncContentTransformToTree(TimeStamp aCurrentFrame,
     transform.ScalePost(1.0f/aLayer->GetPostXScale(),
                         1.0f/aLayer->GetPostYScale(),
                         1);
-    layerComposite->SetShadowTransform(transform);
+    shadow->SetShadowTransform(transform);
 
     gfx::Margin fixedLayerMargins(0, 0, 0, 0);
     TransformFixedLayers(
@@ -879,7 +879,7 @@ CompositorParent::ApplyAsyncContentTransformToTree(TimeStamp aCurrentFrame,
 void
 CompositorParent::TransformScrollableLayer(Layer* aLayer, const gfx3DMatrix& aRootTransform)
 {
-  LayerComposite* layerComposite = aLayer->AsLayerComposite();
+  ShadowLayer* shadow = aLayer->AsShadowLayer();
   ContainerLayer* container = aLayer->AsContainerLayer();
 
   const FrameMetrics& metrics = container->GetFrameMetrics();
@@ -991,7 +991,7 @@ CompositorParent::TransformScrollableLayer(Layer* aLayer, const gfx3DMatrix& aRo
   computedTransform.ScalePost(1.0f/container->GetPostXScale(),
                               1.0f/container->GetPostYScale(),
                               1);
-  layerComposite->SetShadowTransform(computedTransform);
+  shadow->SetShadowTransform(computedTransform);
   TransformFixedLayers(aLayer, offset, scaleDiff, fixedLayerMargins);
 }
 
@@ -1063,9 +1063,9 @@ CompositorParent::ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
     SetShadowProperties(root);
   }
   ScheduleComposition();
-  LayerManagerComposite *layerComposite = mLayerManager->AsLayerManagerComposite();
-  if (layerComposite) {
-    layerComposite->NotifyShadowTreeTransaction();
+  ShadowLayerManager *shadow = mLayerManager->AsShadowManager();
+  if (shadow) {
+    shadow->NotifyShadowTreeTransaction();
   }
 }
 
@@ -1132,7 +1132,7 @@ CompositorParent::AllocPLayerTransaction(const LayersBackend& aBackendHint,
     nsRefPtr<LayerManager> layerManager = new BasicShadowLayerManager(mWidget);
     mWidget = NULL;
     mLayerManager = layerManager;
-    LayerManagerComposite* slm = layerManager->AsLayerManagerComposite();
+    ShadowLayerManager* slm = layerManager->AsShadowManager();
     if (!slm) {
       return NULL;
     }
@@ -1375,7 +1375,7 @@ CrossProcessCompositorParent::AllocPLayerTransaction(const LayersBackend& aBacke
 
   nsRefPtr<LayerManager> lm = sCurrentCompositor->GetLayerManager();
   *aTextureFactoryIdentifier = lm->GetTextureFactoryIdentifier();
-  return new LayerTransactionParent(lm->AsLayerManagerComposite(), this, aId);
+  return new LayerTransactionParent(lm->AsShadowManager(), this, aId);
 }
 
 bool

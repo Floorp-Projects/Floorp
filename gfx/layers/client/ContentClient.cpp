@@ -9,7 +9,6 @@
 #include "nsIWidget.h"
 #include "gfxUtils.h"
 #include "gfxPlatform.h"
-#include "mozilla/layers/LayerManagerComposite.h"
 
 namespace mozilla {
 
@@ -23,7 +22,7 @@ ContentClient::CreateContentClient(CompositableForwarder* aForwarder)
   if (aForwarder->GetCompositorBackendType() != LAYERS_OPENGL) {
     return nullptr;
   }
-  if (LayerManagerComposite::SupportsDirectTexturing() ||
+  if (ShadowLayerManager::SupportsDirectTexturing() ||
       PR_GetEnv("MOZ_FORCE_DOUBLE_BUFFERING")) {
     return new ContentClientDoubleBuffered(aForwarder);
   }

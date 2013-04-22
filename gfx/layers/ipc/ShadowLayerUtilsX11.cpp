@@ -6,11 +6,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/layers/PLayerTransaction.h"
-#include "mozilla/layers/LayerManagerComposite.h"
-#include "mozilla/layers/CompositorTypes.h"
-#include "mozilla/layers/ISurfaceAllocator.h"
 #include "mozilla/layers/ShadowLayers.h"
-
+ 
 #include "gfxPlatform.h"
 
 #include "gfxXlibSurface.h"
@@ -187,7 +184,7 @@ ShadowLayerForwarder::PlatformSyncBeforeUpdate()
 }
 
 /*static*/ void
-LayerManagerComposite::PlatformSyncBeforeReplyUpdate()
+ShadowLayerManager::PlatformSyncBeforeReplyUpdate()
 {
   if (UsingXCompositing()) {
     // If we're using X surfaces, we need to finish all pending
@@ -200,16 +197,16 @@ LayerManagerComposite::PlatformSyncBeforeReplyUpdate()
 }
 
 /*static*/ already_AddRefed<TextureImage>
-LayerManagerComposite::OpenDescriptorForDirectTexturing(GLContext*,
-                                                        const SurfaceDescriptor&,
-                                                        GLenum)
+ShadowLayerManager::OpenDescriptorForDirectTexturing(GLContext*,
+                                                     const SurfaceDescriptor&,
+                                                     GLenum)
 {
   // FIXME/bug XXXXXX: implement this using texture-from-pixmap
   return nullptr;
 }
 
 /*static*/ bool
-LayerManagerComposite::SupportsDirectTexturing()
+ShadowLayerManager::SupportsDirectTexturing()
 {
   return false;
 }

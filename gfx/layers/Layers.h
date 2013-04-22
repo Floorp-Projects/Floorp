@@ -60,10 +60,10 @@ class CanvasLayer;
 class ReadbackLayer;
 class ReadbackProcessor;
 class RefLayer;
-class LayerComposite;
+class ShadowLayer;
 class ShadowableLayer;
 class ShadowLayerForwarder;
-class LayerManagerComposite;
+class ShadowLayerManager;
 class SpecificLayerAttributes;
 class SurfaceDescriptor;
 class Compositor;
@@ -168,7 +168,7 @@ public:
   virtual ShadowLayerForwarder* AsShadowForwarder()
   { return nullptr; }
 
-  virtual LayerManagerComposite* AsLayerManagerComposite()
+  virtual ShadowLayerManager* AsShadowManager()
   { return nullptr; }
 
   /**
@@ -1015,16 +1015,22 @@ public:
   virtual ColorLayer* AsColorLayer() { return nullptr; }
 
   /**
-   * Dynamic cast to a LayerComposite.  Return null if this is not a
-   * LayerComposite.  Can be used anytime.
+   * Dynamic cast to a ShadowLayer.  Return null if this is not a
+   * ShadowLayer.  Can be used anytime.
    */
-  virtual LayerComposite* AsLayerComposite() { return nullptr; }
+  virtual ShadowLayer* AsShadowLayer() { return nullptr; }
 
   /**
    * Dynamic cast to a ShadowableLayer.  Return null if this is not a
    * ShadowableLayer.  Can be used anytime.
    */
   virtual ShadowableLayer* AsShadowableLayer() { return nullptr; }
+
+  /**
+   * Dynamic cast to a LayerComposite.  Return null if this is not a
+   * ShadowableLayer.  Can be used anytime.
+   */
+  virtual LayerComposite* AsLayerComposite() { return nullptr; }
 
   // These getters can be used anytime.  They return the effective
   // values that should be used when drawing this layer to screen,
