@@ -9171,7 +9171,7 @@ nsDocument::CreateTouch(nsIDOMWindow* aView,
   return NS_OK;
 }
 
-already_AddRefed<nsIDOMTouch>
+already_AddRefed<Touch>
 nsIDocument::CreateTouch(nsIDOMWindow* aView,
                          EventTarget* aTarget,
                          int32_t aIdentifier,
@@ -9182,14 +9182,14 @@ nsIDocument::CreateTouch(nsIDOMWindow* aView,
                          float aRotationAngle,
                          float aForce)
 {
-  nsCOMPtr<nsIDOMTouch> touch = new Touch(aTarget,
-                                          aIdentifier,
-                                          aPageX, aPageY,
-                                          aScreenX, aScreenY,
-                                          aClientX, aClientY,
-                                          aRadiusX, aRadiusY,
-                                          aRotationAngle,
-                                          aForce);
+  nsRefPtr<Touch> touch = new Touch(aTarget,
+                                    aIdentifier,
+                                    aPageX, aPageY,
+                                    aScreenX, aScreenY,
+                                    aClientX, aClientY,
+                                    aRadiusX, aRadiusY,
+                                    aRotationAngle,
+                                    aForce);
   return touch.forget();
 }
 
@@ -9242,23 +9242,23 @@ nsIDocument::CreateTouchList()
 }
 
 already_AddRefed<nsIDOMTouchList>
-nsIDocument::CreateTouchList(nsIDOMTouch* aTouch,
-                             const Sequence<nsRefPtr<nsIDOMTouch> >& aTouches)
+nsIDocument::CreateTouchList(Touch& aTouch,
+                             const Sequence<OwningNonNull<Touch> >& aTouches)
 {
   nsRefPtr<nsDOMTouchList> retval = new nsDOMTouchList();
-  retval->Append(aTouch);
+  retval->Append(&aTouch);
   for (uint32_t i = 0; i < aTouches.Length(); ++i) {
-    retval->Append(aTouches[i]);
+    retval->Append(aTouches[i].get());
   }
   return retval.forget();
 }
 
 already_AddRefed<nsIDOMTouchList>
-nsIDocument::CreateTouchList(const Sequence<nsRefPtr<nsIDOMTouch> >& aTouches)
+nsIDocument::CreateTouchList(const Sequence<OwningNonNull<Touch> >& aTouches)
 {
   nsRefPtr<nsDOMTouchList> retval = new nsDOMTouchList();
   for (uint32_t i = 0; i < aTouches.Length(); ++i) {
-    retval->Append(aTouches[i]);
+    retval->Append(aTouches[i].get());
   }
   return retval.forget();
 }

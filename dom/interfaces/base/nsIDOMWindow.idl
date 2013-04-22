@@ -25,7 +25,7 @@ interface nsIVariant;
  * @see <http://www.whatwg.org/html/#window>
  */
 
-[scriptable, uuid(39cb59d4-fba9-48a9-b70b-570a7ec2ebfa)]
+[scriptable, uuid(67af2eda-4a0d-4a08-8a97-81b8fd46f1f4)]
 interface nsIDOMWindow : nsISupports
 {
   // the current browsing context
@@ -366,8 +366,6 @@ interface nsIDOMWindow : nsISupports
   // XXX Shouldn't this be in nsIDOMChromeWindow?
   /* [replaceable] controllers */
   readonly attribute nsIControllers                     controllers;
-
-           attribute DOMString                          defaultStatus;
 
   readonly attribute float                              mozInnerScreenX;
   readonly attribute float                              mozInnerScreenY;

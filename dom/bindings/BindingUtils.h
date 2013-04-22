@@ -630,6 +630,10 @@ WrapNewBindingNonWrapperCachedObject(JSContext* cx, JSObject* scope, T* value,
     obj = value->WrapObject(cx, scope);
   }
 
+  if (!obj) {
+    return false;
+  }
+
   // We can end up here in all sorts of compartments, per above.  Make
   // sure to JS_WrapValue!
   *vp = JS::ObjectValue(*obj);
@@ -660,9 +664,16 @@ WrapNewBindingNonWrapperCachedOwnedObject(JSContext* cx, JSObject* scope,
 
     bool tookOwnership = false;
     obj = value->WrapObject(cx, scope, &tookOwnership);
+    if (obj) {
+      MOZ_ASSERT(tookOwnership);
+    }
     if (tookOwnership) {
       value.forget();
     }
+  }
+
+  if (!obj) {
+    return false;
   }
 
   // We can end up here in all sorts of compartments, per above.  Make
@@ -1733,6 +1744,15 @@ InterfaceHasInstance(JSContext* cx, JSHandleObject obj, JSMutableHandleValue vp,
 // Helper for lenient getters/setters to report to console
 void
 ReportLenientThisUnwrappingFailure(JSContext* cx, JS::Handle<JSObject*> obj);
+
+inline JSObject*
+GetUnforgeableHolder(JSObject* aGlobal, prototypes::ID aId)
+{
+  JSObject** protoAndIfaceArray = GetProtoAndIfaceArray(aGlobal);
+  JSObject* interfaceProto = protoAndIfaceArray[aId];
+  return &js::GetReservedSlot(interfaceProto,
+                              DOM_INTERFACE_PROTO_SLOTS_BASE).toObject();
+}
 
 } // namespace dom
 } // namespace mozilla

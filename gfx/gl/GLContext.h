@@ -324,7 +324,6 @@ public:
     bool CanUploadNonPowerOfTwo();
 
     bool WantsSmallTiles();
-    virtual bool HasLockSurface() { return false; }
 
     /**
      * If this context wraps a double-buffered target, swap the back
