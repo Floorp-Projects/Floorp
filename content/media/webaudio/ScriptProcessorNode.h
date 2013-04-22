@@ -27,7 +27,6 @@ public:
                       uint32_t aBufferSize,
                       uint32_t aNumberOfInputChannels,
                       uint32_t aNumberOfOutputChannels);
-  virtual ~ScriptProcessorNode();
 
   NS_DECL_ISUPPORTS_INHERITED
 
