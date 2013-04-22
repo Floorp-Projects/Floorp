@@ -35,9 +35,9 @@ class Event : public PrivatizableBase
   static JSClass sClass;
   static JSClass sMainRuntimeClass;
 
-  static JSPropertySpec sProperties[];
+  static const JSPropertySpec sProperties[];
   static JSFunctionSpec sFunctions[];
-  static JSPropertySpec sStaticProperties[];
+  static const JSPropertySpec sStaticProperties[];
 
 protected:
   bool mStopPropagationCalled;
@@ -226,7 +226,7 @@ private:
 
     int32_t slot = JSID_TO_INT(aIdval);
 
-    const char*& name = sProperties[slot - SLOT_FIRST].name;
+    const char* name = sProperties[slot - SLOT_FIRST].name;
     if (!GetInstancePrivate(aCx, aObj, name)) {
       return false;
     }
@@ -340,7 +340,7 @@ DECL_EVENT_CLASS(Event::sMainRuntimeClass, "WorkerEvent")
 
 #undef DECL_EVENT_CLASS
 
-JSPropertySpec Event::sProperties[] = {
+const JSPropertySpec Event::sProperties[] = {
   { "type", SLOT_type, PROPERTY_FLAGS, JSOP_WRAPPER(GetProperty),
     JSOP_WRAPPER(js_GetterOnlyPropertyStub) },
   { "target", SLOT_target, PROPERTY_FLAGS, JSOP_WRAPPER(GetProperty),
@@ -370,7 +370,7 @@ JSFunctionSpec Event::sFunctions[] = {
   JS_FS_END
 };
 
-JSPropertySpec Event::sStaticProperties[] = {
+const JSPropertySpec Event::sStaticProperties[] = {
   { "CAPTURING_PHASE", CAPTURING_PHASE, CONSTANT_FLAGS,
     JSOP_WRAPPER(GetConstant), JSOP_NULLWRAPPER },
   { "AT_TARGET", AT_TARGET, CONSTANT_FLAGS, JSOP_WRAPPER(GetConstant), JSOP_NULLWRAPPER },
@@ -384,7 +384,7 @@ class MessageEvent : public Event
   static JSClass sClass;
   static JSClass sMainRuntimeClass;
 
-  static JSPropertySpec sProperties[];
+  static const JSPropertySpec sProperties[];
   static JSFunctionSpec sFunctions[];
 
 protected:
@@ -521,7 +521,7 @@ private:
 
     JS_ASSERT(slot >= SLOT_data && slot < SLOT_COUNT);
 
-    const char*& name = sProperties[slot - SLOT_FIRST].name;
+    const char* name = sProperties[slot - SLOT_FIRST].name;
     MessageEvent* event = GetInstancePrivate(aCx, aObj, name);
     if (!event) {
       return false;
@@ -595,7 +595,7 @@ DECL_MESSAGEEVENT_CLASS(MessageEvent::sMainRuntimeClass, "WorkerMessageEvent")
 
 #undef DECL_MESSAGEEVENT_CLASS
 
-JSPropertySpec MessageEvent::sProperties[] = {
+const JSPropertySpec MessageEvent::sProperties[] = {
   { "data", SLOT_data, PROPERTY_FLAGS, JSOP_WRAPPER(GetProperty),
     JSOP_WRAPPER(js_GetterOnlyPropertyStub) },
   { "origin", SLOT_origin, PROPERTY_FLAGS, JSOP_WRAPPER(GetProperty),
@@ -615,7 +615,7 @@ class ErrorEvent : public Event
   static JSClass sClass;
   static JSClass sMainRuntimeClass;
 
-  static JSPropertySpec sProperties[];
+  static const JSPropertySpec sProperties[];
   static JSFunctionSpec sFunctions[];
 
 public:
@@ -730,7 +730,7 @@ private:
 
     JS_ASSERT(slot >= SLOT_message && slot < SLOT_COUNT);
 
-    const char*& name = sProperties[slot - SLOT_FIRST].name;
+    const char* name = sProperties[slot - SLOT_FIRST].name;
     ErrorEvent* event = GetInstancePrivate(aCx, aObj, name);
     if (!event) {
       return false;
@@ -781,7 +781,7 @@ DECL_ERROREVENT_CLASS(ErrorEvent::sMainRuntimeClass, "WorkerErrorEvent")
 
 #undef DECL_ERROREVENT_CLASS
 
-JSPropertySpec ErrorEvent::sProperties[] = {
+const JSPropertySpec ErrorEvent::sProperties[] = {
   { "message", SLOT_message, PROPERTY_FLAGS, JSOP_WRAPPER(GetProperty),
     JSOP_WRAPPER(js_GetterOnlyPropertyStub) },
   { "filename", SLOT_filename, PROPERTY_FLAGS, JSOP_WRAPPER(GetProperty),
@@ -799,7 +799,7 @@ JSFunctionSpec ErrorEvent::sFunctions[] = {
 class ProgressEvent : public Event
 {
   static JSClass sClass;
-  static JSPropertySpec sProperties[];
+  static const JSPropertySpec sProperties[];
   static JSFunctionSpec sFunctions[];
 
 public:
@@ -910,7 +910,7 @@ private:
 
     JS_ASSERT(slot >= SLOT_lengthComputable && slot < SLOT_COUNT);
 
-    const char*& name = sProperties[slot - SLOT_FIRST].name;
+    const char* name = sProperties[slot - SLOT_FIRST].name;
     ProgressEvent* event = GetInstancePrivate(aCx, aObj, name);
     if (!event) {
       return false;
@@ -955,7 +955,7 @@ JSClass ProgressEvent::sClass = {
   JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, Finalize
 };
 
-JSPropertySpec ProgressEvent::sProperties[] = {
+const JSPropertySpec ProgressEvent::sProperties[] = {
   { "lengthComputable", SLOT_lengthComputable, PROPERTY_FLAGS,
     JSOP_WRAPPER(GetProperty), JSOP_WRAPPER(js_GetterOnlyPropertyStub) },
   { "loaded", SLOT_loaded, PROPERTY_FLAGS, JSOP_WRAPPER(GetProperty),

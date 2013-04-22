@@ -4009,7 +4009,7 @@ its_get_customNative(JSContext *cx, unsigned argc, jsval *vp);
 static JSBool
 its_set_customNative(JSContext *cx, unsigned argc, jsval *vp);
 
-static JSPropertySpec its_props[] = {
+static const JSPropertySpec its_props[] = {
     {"color",           ITS_COLOR,      JSPROP_ENUMERATE,       JSOP_NULLWRAPPER, JSOP_NULLWRAPPER},
     {"height",          ITS_HEIGHT,     JSPROP_ENUMERATE,       JSOP_NULLWRAPPER, JSOP_NULLWRAPPER},
     {"width",           ITS_WIDTH,      JSPROP_ENUMERATE,       JSOP_NULLWRAPPER, JSOP_NULLWRAPPER},
@@ -4594,7 +4594,7 @@ const JSJitInfo doFoo_methodinfo = {
     false     /* isConstant. Only relevant for getters. */
 };
 
-static JSPropertySpec dom_props[] = {
+static const JSPropertySpec dom_props[] = {
     {"x", 0,
      JSPROP_SHARED | JSPROP_ENUMERATE | JSPROP_NATIVE_ACCESSORS,
      { (JSPropertyOp)dom_genericGetter, &dom_x_getterinfo },

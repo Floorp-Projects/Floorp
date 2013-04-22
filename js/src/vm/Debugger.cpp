@@ -2636,7 +2636,7 @@ Debugger::findAllGlobals(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-JSPropertySpec Debugger::properties[] = {
+const JSPropertySpec Debugger::properties[] = {
     JS_PSGS("enabled", Debugger::getEnabled, Debugger::setEnabled, 0),
     JS_PSGS("onDebuggerStatement", Debugger::getOnDebuggerStatement,
             Debugger::setOnDebuggerStatement, 0),
@@ -3456,7 +3456,7 @@ DebuggerScript_construct(JSContext *cx, unsigned argc, Value *vp)
     return false;
 }
 
-static JSPropertySpec DebuggerScript_properties[] = {
+static const JSPropertySpec DebuggerScript_properties[] = {
     JS_PSG("url", DebuggerScript_getUrl, 0),
     JS_PSG("startLine", DebuggerScript_getStartLine, 0),
     JS_PSG("lineCount", DebuggerScript_getLineCount, 0),
@@ -4049,7 +4049,7 @@ DebuggerFrame_construct(JSContext *cx, unsigned argc, Value *vp)
     return false;
 }
 
-static JSPropertySpec DebuggerFrame_properties[] = {
+static const JSPropertySpec DebuggerFrame_properties[] = {
     JS_PSG("arguments", DebuggerFrame_getArguments, 0),
     JS_PSG("callee", DebuggerFrame_getCallee, 0),
     JS_PSG("constructing", DebuggerFrame_getConstructing, 0),
@@ -4829,7 +4829,7 @@ DebuggerObject_unsafeDereference(JSContext *cx, unsigned argc, Value *vp)
     return cx->compartment->wrap(cx, args.rval());
 }
 
-static JSPropertySpec DebuggerObject_properties[] = {
+static const JSPropertySpec DebuggerObject_properties[] = {
     JS_PSG("proto", DebuggerObject_getProto, 0),
     JS_PSG("class", DebuggerObject_getClass, 0),
     JS_PSG("callable", DebuggerObject_getCallable, 0),
@@ -5167,7 +5167,7 @@ DebuggerEnv_setVariable(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-static JSPropertySpec DebuggerEnv_properties[] = {
+static const JSPropertySpec DebuggerEnv_properties[] = {
     JS_PSG("type", DebuggerEnv_getType, 0),
     JS_PSG("object", DebuggerEnv_getObject, 0),
     JS_PSG("parent", DebuggerEnv_getParent, 0),

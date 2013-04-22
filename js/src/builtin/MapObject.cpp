@@ -1026,7 +1026,7 @@ Class MapObject::class_ = {
     mark
 };
 
-JSPropertySpec MapObject::properties[] = {
+const JSPropertySpec MapObject::properties[] = {
     JS_PSG("size", size, 0),
     JS_PS_END
 };
@@ -1569,7 +1569,7 @@ Class SetObject::class_ = {
     mark
 };
 
-JSPropertySpec SetObject::properties[] = {
+const JSPropertySpec SetObject::properties[] = {
     JS_PSG("size", size, 0),
     JS_PS_END
 };

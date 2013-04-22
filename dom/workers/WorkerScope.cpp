@@ -59,7 +59,7 @@ namespace {
 class WorkerGlobalScope : public workers::EventTarget
 {
   static JSClass sClass;
-  static JSPropertySpec sProperties[];
+  static const JSPropertySpec sProperties[];
   static JSFunctionSpec sFunctions[];
 
   enum
@@ -616,7 +616,7 @@ JSClass WorkerGlobalScope::sClass = {
   JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub
 };
 
-JSPropertySpec WorkerGlobalScope::sProperties[] = {
+const JSPropertySpec WorkerGlobalScope::sProperties[] = {
   { "location", SLOT_location, PROPERTY_FLAGS, JSOP_WRAPPER(GetLocation),
     JSOP_WRAPPER(js_GetterOnlyPropertyStub) },
   { sEventStrings[STRING_onerror], STRING_onerror, PROPERTY_FLAGS,
@@ -651,7 +651,7 @@ class DedicatedWorkerGlobalScope : public WorkerGlobalScope
 {
   static DOMJSClass sClass;
   static DOMIfaceAndProtoJSClass sProtoClass;
-  static JSPropertySpec sProperties[];
+  static const JSPropertySpec sProperties[];
   static JSFunctionSpec sFunctions[];
 
   enum
@@ -919,7 +919,7 @@ DOMIfaceAndProtoJSClass DedicatedWorkerGlobalScope::sProtoClass = {
   0
 };
 
-JSPropertySpec DedicatedWorkerGlobalScope::sProperties[] = {
+const JSPropertySpec DedicatedWorkerGlobalScope::sProperties[] = {
   { sEventStrings[STRING_onmessage], STRING_onmessage, PROPERTY_FLAGS,
     JSOP_WRAPPER(GetEventListener), JSOP_WRAPPER(SetEventListener) },
   { 0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER }
