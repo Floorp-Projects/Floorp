@@ -605,7 +605,7 @@ private:
    *     <g transform="scale(2)">
    *       <text font-size="10">abc</text>
    *     </g>
-   *  </svg>
+   *   </svg>
    *
    * a font size of 20 would be used.  It's preferable to use a font size that
    * is identical or close to the size that the text will appear on the screen,

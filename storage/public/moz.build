@@ -29,3 +29,18 @@ XPIDL_SOURCES += [
 
 MODULE = 'storage'
 
+EXPORTS += [
+    'mozStorageHelper.h',
+]
+
+EXPORTS.mozilla += [
+    'storage.h',
+]
+
+# NOTE When adding something to this list, you probably need to add it to the
+#      storage.h file too.
+EXPORTS.mozilla.storage += [
+    'StatementCache.h',
+]
+# SEE ABOVE NOTE!
+

@@ -13,6 +13,9 @@ if CONFIG['MOZ_XUL']:
     XPIDL_SOURCES += [
         'nsIXULOverlayProvider.idl',
     ]
+    EXPORTS += [
+        'nsIXULDocument.h',
+    ]
 
 MODULE = 'xuldoc'
 

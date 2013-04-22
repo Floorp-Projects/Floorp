@@ -56,7 +56,6 @@
 #include "nsStyleStructInlines.h"
 #include "nsIAppShell.h"
 #include "prenv.h"
-#include "nsIDOMEventTarget.h"
 #include "nsObjectFrame.h"
 #include "nsTransitionManager.h"
 #include "nsAnimationManager.h"
@@ -2136,7 +2135,7 @@ MayHavePaintEventListener(nsPIDOMWindow* aInnerWindow)
   if (aInnerWindow->HasPaintEventListeners())
     return true;
 
-  nsIDOMEventTarget* parentTarget = aInnerWindow->GetParentTarget();
+  EventTarget* parentTarget = aInnerWindow->GetParentTarget();
   if (!parentTarget)
     return false;
 
@@ -2166,7 +2165,7 @@ MayHavePaintEventListener(nsPIDOMWindow* aInnerWindow)
     return MayHavePaintEventListener(window);
 
   nsCOMPtr<nsPIWindowRoot> root = do_QueryInterface(parentTarget);
-  nsIDOMEventTarget* tabChildGlobal;
+  EventTarget* tabChildGlobal;
   return root &&
          (tabChildGlobal = root->GetParentTarget()) &&
          (manager = tabChildGlobal->GetListenerManager(false)) &&

@@ -6,7 +6,9 @@ import shutil
 import tempfile
 import unittest
 
+
 here = os.path.dirname(os.path.abspath(__file__))
+
 
 class Bug758250(unittest.TestCase):
     """
@@ -17,7 +19,7 @@ class Bug758250(unittest.TestCase):
     def test_profile_addon_cleanup(self):
 
         # sanity check: the empty addon should be here
-        empty = os.path.join(here, 'empty')
+        empty = os.path.join(here, 'addons', 'empty')
         self.assertTrue(os.path.exists(empty))
         self.assertTrue(os.path.isdir(empty))
         self.assertTrue(os.path.exists(os.path.join(empty, 'install.rdf')))

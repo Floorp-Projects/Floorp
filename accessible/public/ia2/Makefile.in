@@ -22,6 +22,8 @@ FORCE_SHARED_LIB = 1
 
 SRCS_IN_OBJDIR   = 1
 
+# Please keep this list in sync with the moz.build file until the rest of this
+# Makefile is ported over.
 MIDL_INTERFACES = \
   Accessible2.idl \
   AccessibleAction.idl \
@@ -39,17 +41,13 @@ MIDL_INTERFACES = \
   AccessibleValue.idl \
   $(NULL)
 
+# Please keep this list in sync with the moz.build file until the rest of this
+# Makefile is ported over.
 MIDL_ENUMS = \
   AccessibleEventId.idl \
   AccessibleRole.idl \
   AccessibleStates.idl \
   IA2CommonTypes.idl \
-  $(NULL)
-
-EXPORTS = \
-  $(MIDL_INTERFACES:%.idl=%.h) \
-  $(MIDL_INTERFACES:%.idl=%_i.c) \
-  $(MIDL_ENUMS:%.idl=%.h) \
   $(NULL)
 
 CSRCS	= \

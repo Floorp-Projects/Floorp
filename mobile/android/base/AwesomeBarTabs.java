@@ -173,7 +173,7 @@ public class AwesomeBarTabs extends TabHost
         }
 
         // Initialize "All Pages" list with no filter
-        filter("");
+        filter("", null);
     }
 
     @Override
@@ -308,7 +308,7 @@ public class AwesomeBarTabs extends TabHost
         return (HistoryTab)getAwesomeBarTabForTag("history");
     }
 
-    public void filter(String searchTerm) {
+    public void filter(String searchTerm, AutocompleteHandler handler) {
 
         // If searching, disable left / right tab swipes
         mSearching = searchTerm.length() != 0;
@@ -322,7 +322,7 @@ public class AwesomeBarTabs extends TabHost
         styleSelectedTab();
 
         // Perform the actual search
-        allPages.filter(searchTerm);
+        allPages.filter(searchTerm, handler);
 
         // If searching, hide the tabs bar
         findViewById(R.id.tab_widget_container).setVisibility(mSearching ? View.GONE : View.VISIBLE);

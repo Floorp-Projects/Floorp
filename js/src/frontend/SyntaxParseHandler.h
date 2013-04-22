@@ -1,6 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=4 sw=4 et tw=78:
- *
+ * vim: set ts=8 sts=4 et sw=4 tw=99:
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -27,7 +26,7 @@ class SyntaxParseHandler
         NodeStringExprStatement,
         NodeLValue
     };
-    typedef Node DefinitionNode;
+    typedef Definition::Kind DefinitionNode;
 
     SyntaxParseHandler(JSContext *cx, TokenStream &tokenStream, bool foldConstants)
       : lastAtom(NULL),
@@ -42,6 +41,9 @@ class SyntaxParseHandler
                  ParseNodeKind kind = PNK_NAME) {
         lastAtom = name;
         return NodeName;
+    }
+    DefinitionNode newPlaceholder(Node pn, ParseContext<SyntaxParseHandler> *pc) {
+        return Definition::PLACEHOLDER;
     }
     Node newAtom(ParseNodeKind kind, JSAtom *atom, JSOp op = JSOP_NOP) {
         if (kind == PNK_STRING) {
@@ -102,6 +104,7 @@ class SyntaxParseHandler
     Node newFunctionDefinition() { return NodeGeneric; }
     void setFunctionBody(Node pn, Node kid) {}
     void setFunctionBox(Node pn, FunctionBox *funbox) {}
+    void addFunctionArgument(Node pn, Node argpn) {}
     Node newLexicalScope(ObjectBox *blockbox) { return NodeGeneric; }
     bool isOperationWithoutParens(Node pn, ParseNodeKind kind) {
         // It is OK to return false here, callers should only use this method
@@ -119,6 +122,8 @@ class SyntaxParseHandler
     void setEndPosition(Node pn, Node oth) {}
     void setEndPosition(Node pn, uint32_t end) {}
 
+
+    void setPosition(Node pn, const TokenPos &pos) {}
     TokenPos getPosition(Node pn) {
         return tokenStream.currentToken().pos;
     }
@@ -154,6 +159,29 @@ class SyntaxParseHandler
     bool isEmptySemicolon(Node pn) { return false; }
 
     Node makeAssignment(Node pn, Node rhs) { return NodeGeneric; }
+
+    static Node getDefinitionNode(DefinitionNode dn) { return NodeGeneric; }
+    static Definition::Kind getDefinitionKind(DefinitionNode dn) { return dn; }
+    void linkUseToDef(Node pn, DefinitionNode dn) {}
+    DefinitionNode resolve(DefinitionNode dn) { return dn; }
+    void deoptimizeUsesWithin(DefinitionNode dn, const TokenPos &pos) {}
+    bool dependencyCovered(Node pn, unsigned blockid, bool functionScope) {
+        // Only resolve lexical dependencies in cases where a definition covers
+        // the entire function. Not enough information is kept to compare the
+        // dependency location with blockid.
+        return functionScope;
+    }
+
+    static uintptr_t definitionToBits(DefinitionNode dn) {
+        // Use a shift, as DefinitionList tags the lower bit of its associated union.
+        return uintptr_t(dn << 1);
+    }
+    static DefinitionNode definitionFromBits(uintptr_t bits) {
+        return (DefinitionNode) (bits >> 1);
+    }
+    static DefinitionNode nullDefinition() {
+        return Definition::MISSING;
+    }
 };
 
 } // namespace frontend

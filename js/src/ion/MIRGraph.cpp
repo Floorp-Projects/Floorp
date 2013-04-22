@@ -1,6 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=4 sw=4 et tw=99:
- *
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sts=4 et sw=4 tw=99:
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -162,17 +161,21 @@ MBasicBlock::NewSplitEdge(MIRGraph &graph, CompileInfo &info, MBasicBlock *pred)
 
 MBasicBlock *
 MBasicBlock::NewParBailout(MIRGraph &graph, CompileInfo &info,
-                           MBasicBlock *pred, jsbytecode *entryPc)
+                           MBasicBlock *pred, jsbytecode *entryPc,
+                           MResumePoint *resumePoint)
 {
-    MBasicBlock *block = MBasicBlock::New(graph, info, pred, entryPc, NORMAL);
-    if (!block)
+    MBasicBlock *block = new MBasicBlock(graph, info, entryPc, NORMAL);
+
+    resumePoint->block_ = block;
+    block->entryResumePoint_ = resumePoint;
+
+    if (!block->init())
         return NULL;
 
-    MParBailout *bailout = new MParBailout();
-    if (!bailout)
+    if (!block->addPredecessorWithoutPhis(pred))
         return NULL;
 
-    block->end(bailout);
+    block->end(new MParBailout());
     return block;
 }
 
@@ -349,6 +352,8 @@ MBasicBlock::linkOsrValues(MStart *start)
         MDefinition *def = slots_[i];
         if (i == info().scopeChainSlot())
             def->toOsrScopeChain()->setResumePoint(res);
+        else if (info().hasArguments() && i == info().argsObjSlot())
+            JS_ASSERT(def->isConstant() && def->toConstant()->value() == UndefinedValue());
         else
             def->toOsrValue()->setResumePoint(res);
     }
@@ -451,10 +456,22 @@ MBasicBlock::scopeChain()
     return getSlot(info().scopeChainSlot());
 }
 
+MDefinition *
+MBasicBlock::argumentsObject()
+{
+    return getSlot(info().argsObjSlot());
+}
+
 void
 MBasicBlock::setScopeChain(MDefinition *scopeObj)
 {
     setSlot(info().scopeChainSlot(), scopeObj);
+}
+
+void
+MBasicBlock::setArgumentsObject(MDefinition *argsObj)
+{
+    setSlot(info().argsObjSlot(), argsObj);
 }
 
 void

@@ -7,13 +7,20 @@
 
 /* arena allocation for the frame tree and closely-related objects */
 
+// Even on 32-bit systems, we allocate objects from the frame arena
+// that require 8-byte alignment.  The cast to uintptr_t is needed
+// because plarena isn't as careful about mask construction as it
+// ought to be.
+#define ALIGN_SHIFT 3
+#define PL_ARENA_CONST_ALIGN_MASK ((uintptr_t(1) << ALIGN_SHIFT) - 1)
+#include "plarena.h"
+// plarena.h needs to be included first to make it use the above
+// PL_ARENA_CONST_ALIGN_MASK in this file.
+
 #include "nsPresArena.h"
 #include "nsCRT.h"
 #include "nsDebug.h"
-#include "nsTArray.h"
-#include "nsTHashtable.h"
 #include "prinit.h"
-#include "prlog.h"
 #include "nsArenaMemoryStats.h"
 #include "nsCOMPtr.h"
 #include "nsServiceManagerUtils.h"
@@ -22,17 +29,6 @@
 #ifdef MOZ_CRASHREPORTER
 #include "nsICrashReporter.h"
 #endif
-
-#include "mozilla/StandardInteger.h"
-#include "mozilla/MemoryChecking.h"
-
-// Even on 32-bit systems, we allocate objects from the frame arena
-// that require 8-byte alignment.  The cast to uintptr_t is needed
-// because plarena isn't as careful about mask construction as it
-// ought to be.
-#define ALIGN_SHIFT 3
-#define PL_ARENA_CONST_ALIGN_MASK ((uintptr_t(1) << ALIGN_SHIFT) - 1)
-#include "plarena.h"
 
 #ifdef _WIN32
 # include <windows.h>
@@ -239,309 +235,183 @@ ARENA_POISON_init()
   return PR_SUCCESS;
 }
 
-#ifndef DEBUG_TRACEMALLOC_PRESARENA
-
-// All keys to this hash table fit in 32 bits (see below) so we do not
-// bother actually hashing them.
-
-namespace {
-
-class FreeList : public PLDHashEntryHdr
+nsPresArena::nsPresArena()
 {
-public:
-  typedef uint32_t KeyType;
-  nsTArray<void *> mEntries;
-  size_t mEntrySize;
-  size_t mEntriesEverAllocated;
-
-  typedef const void* KeyTypePointer;
-  KeyTypePointer mKey;
-
-  FreeList(KeyTypePointer aKey)
-  : mEntrySize(0), mEntriesEverAllocated(0), mKey(aKey) {}
-  // Default copy constructor and destructor are ok.
-
-  bool KeyEquals(KeyTypePointer const aKey) const
-  { return mKey == aKey; }
-
-  static KeyTypePointer KeyToPointer(KeyType aKey)
-  { return NS_INT32_TO_PTR(aKey); }
-
-  static PLDHashNumber HashKey(KeyTypePointer aKey)
-  { return NS_PTR_TO_INT32(aKey); }
-
-  enum { ALLOW_MEMMOVE = false };
-};
-
+  mFreeLists.Init();
+  PL_INIT_ARENA_POOL(&mPool, "PresArena", ARENA_PAGE_SIZE);
+  PR_CallOnce(&ARENA_POISON_guard, ARENA_POISON_init);
 }
 
-struct nsPresArena::State {
-  nsTHashtable<FreeList> mFreeLists;
-  PLArenaPool mPool;
-
-  State()
-  {
-    mFreeLists.Init();
-    PL_INIT_ARENA_POOL(&mPool, "PresArena", ARENA_PAGE_SIZE);
-    PR_CallOnce(&ARENA_POISON_guard, ARENA_POISON_init);
-  }
-
+nsPresArena::~nsPresArena()
+{
 #if defined(MOZ_HAVE_MEM_CHECKS)
-  static PLDHashOperator UnpoisonFreeList(FreeList* aEntry, void*)
-  {
-    nsTArray<void*>::index_type len;
-    while ((len = aEntry->mEntries.Length())) {
-      void* result = aEntry->mEntries.ElementAt(len - 1);
-      aEntry->mEntries.RemoveElementAt(len - 1);
-      MOZ_MAKE_MEM_UNDEFINED(result, aEntry->mEntrySize);
-    }
-    return PL_DHASH_NEXT;
-  }
+  mFreeLists.EnumerateEntries(UnpoisonFreeList, nullptr);
 #endif
+  PL_FinishArenaPool(&mPool);
+}
 
-  ~State()
-  {
-#if defined(MOZ_HAVE_MEM_CHECKS)
-    mFreeLists.EnumerateEntries(UnpoisonFreeList, nullptr);
-#endif
-    PL_FinishArenaPool(&mPool);
+NS_HIDDEN_(void*)
+nsPresArena::Allocate(uint32_t aCode, size_t aSize)
+{
+  NS_ABORT_IF_FALSE(aSize > 0, "PresArena cannot allocate zero bytes");
+
+  // We only hand out aligned sizes
+  aSize = PL_ARENA_ALIGN(&mPool, aSize);
+
+  // If there is no free-list entry for this type already, we have
+  // to create one now, to record its size.
+  FreeList* list = mFreeLists.PutEntry(aCode);
+
+  nsTArray<void*>::index_type len = list->mEntries.Length();
+  if (list->mEntrySize == 0) {
+    NS_ABORT_IF_FALSE(len == 0, "list with entries but no recorded size");
+    list->mEntrySize = aSize;
+  } else {
+    NS_ABORT_IF_FALSE(list->mEntrySize == aSize,
+                      "different sizes for same object type code");
   }
 
-  void* Allocate(uint32_t aCode, size_t aSize)
-  {
-    NS_ABORT_IF_FALSE(aSize > 0, "PresArena cannot allocate zero bytes");
-
-    // We only hand out aligned sizes
-    aSize = PL_ARENA_ALIGN(&mPool, aSize);
-
-    // If there is no free-list entry for this type already, we have
-    // to create one now, to record its size.
-    FreeList* list = mFreeLists.PutEntry(aCode);
-
-    nsTArray<void*>::index_type len = list->mEntries.Length();
-    if (list->mEntrySize == 0) {
-      NS_ABORT_IF_FALSE(len == 0, "list with entries but no recorded size");
-      list->mEntrySize = aSize;
-    } else {
-      NS_ABORT_IF_FALSE(list->mEntrySize == aSize,
-                        "different sizes for same object type code");
-    }
-
-    void* result;
-    if (len > 0) {
-      // LIFO behavior for best cache utilization
-      result = list->mEntries.ElementAt(len - 1);
-      list->mEntries.RemoveElementAt(len - 1);
+  void* result;
+  if (len > 0) {
+    // LIFO behavior for best cache utilization
+    result = list->mEntries.ElementAt(len - 1);
+    list->mEntries.RemoveElementAt(len - 1);
 #if defined(DEBUG)
-      {
-        MOZ_MAKE_MEM_DEFINED(result, list->mEntrySize);
-        char* p = reinterpret_cast<char*>(result);
-        char* limit = p + list->mEntrySize;
-        for (; p < limit; p += sizeof(uintptr_t)) {
-          uintptr_t val = *reinterpret_cast<uintptr_t*>(p);
-          NS_ABORT_IF_FALSE(val == ARENA_POISON,
-                            nsPrintfCString("PresArena: poison overwritten; "
-                                            "wanted %.16llx "
-                                            "found %.16llx "
-                                            "errors in bits %.16llx",
-                                            uint64_t(ARENA_POISON),
-                                            uint64_t(val),
-                                            uint64_t(ARENA_POISON ^ val)
-                                            ).get());
-        }
+    {
+      MOZ_MAKE_MEM_DEFINED(result, list->mEntrySize);
+      char* p = reinterpret_cast<char*>(result);
+      char* limit = p + list->mEntrySize;
+      for (; p < limit; p += sizeof(uintptr_t)) {
+        uintptr_t val = *reinterpret_cast<uintptr_t*>(p);
+        NS_ABORT_IF_FALSE(val == ARENA_POISON,
+                          nsPrintfCString("PresArena: poison overwritten; "
+                                          "wanted %.16llx "
+                                          "found %.16llx "
+                                          "errors in bits %.16llx",
+                                          uint64_t(ARENA_POISON),
+                                          uint64_t(val),
+                                          uint64_t(ARENA_POISON ^ val)
+                                          ).get());
       }
+    }
 #endif
-      MOZ_MAKE_MEM_UNDEFINED(result, list->mEntrySize);
-      return result;
-    }
-
-    // Allocate a new chunk from the arena
-    list->mEntriesEverAllocated++;
-    PL_ARENA_ALLOCATE(result, &mPool, aSize);
-    if (!result) {
-      NS_RUNTIMEABORT("out of memory");
-    }
+    MOZ_MAKE_MEM_UNDEFINED(result, list->mEntrySize);
     return result;
   }
 
-  void Free(uint32_t aCode, void* aPtr)
-  {
-    // Try to recycle this entry.
-    FreeList* list = mFreeLists.GetEntry(aCode);
-    NS_ABORT_IF_FALSE(list, "no free list for pres arena object");
-    NS_ABORT_IF_FALSE(list->mEntrySize > 0, "PresArena cannot free zero bytes");
+  // Allocate a new chunk from the arena
+  list->mEntriesEverAllocated++;
+  PL_ARENA_ALLOCATE(result, &mPool, aSize);
+  if (!result) {
+    NS_RUNTIMEABORT("out of memory");
+  }
+  return result;
+}
 
-    char* p = reinterpret_cast<char*>(aPtr);
-    char* limit = p + list->mEntrySize;
-    for (; p < limit; p += sizeof(uintptr_t)) {
-      *reinterpret_cast<uintptr_t*>(p) = ARENA_POISON;
-    }
+NS_HIDDEN_(void)
+nsPresArena::Free(uint32_t aCode, void* aPtr)
+{
+  // Try to recycle this entry.
+  FreeList* list = mFreeLists.GetEntry(aCode);
+  NS_ABORT_IF_FALSE(list, "no free list for pres arena object");
+  NS_ABORT_IF_FALSE(list->mEntrySize > 0, "PresArena cannot free zero bytes");
 
-    MOZ_MAKE_MEM_NOACCESS(aPtr, list->mEntrySize);
-    list->mEntries.AppendElement(aPtr);
+  char* p = reinterpret_cast<char*>(aPtr);
+  char* limit = p + list->mEntrySize;
+  for (; p < limit; p += sizeof(uintptr_t)) {
+    *reinterpret_cast<uintptr_t*>(p) = ARENA_POISON;
   }
 
-  static size_t SizeOfFreeListEntryExcludingThis(FreeList* aEntry,
-                                                 nsMallocSizeOfFun aMallocSizeOf,
-                                                 void *)
-  {
-    return aEntry->mEntries.SizeOfExcludingThis(aMallocSizeOf);
+  MOZ_MAKE_MEM_NOACCESS(aPtr, list->mEntrySize);
+  list->mEntries.AppendElement(aPtr);
+}
+
+/* static */ size_t
+nsPresArena::SizeOfFreeListEntryExcludingThis(
+  FreeList* aEntry, nsMallocSizeOfFun aMallocSizeOf, void*)
+{
+  return aEntry->mEntries.SizeOfExcludingThis(aMallocSizeOf);
+}
+
+struct EnumerateData {
+  nsArenaMemoryStats* stats;
+  size_t total;
+};
+
+#if defined(MOZ_HAVE_MEM_CHECKS)
+/* static */ PLDHashOperator
+nsPresArena::UnpoisonFreeList(FreeList* aEntry, void*)
+{
+  nsTArray<void*>::index_type len;
+  while ((len = aEntry->mEntries.Length())) {
+    void* result = aEntry->mEntries.ElementAt(len - 1);
+    aEntry->mEntries.RemoveElementAt(len - 1);
+    MOZ_MAKE_MEM_UNDEFINED(result, aEntry->mEntrySize);
   }
+  return PL_DHASH_NEXT;
+}
+#endif
 
-  size_t SizeOfIncludingThisFromMalloc(nsMallocSizeOfFun aMallocSizeOf) const
-  {
-    size_t n = aMallocSizeOf(this);
-    n += PL_SizeOfArenaPoolExcludingPool(&mPool, aMallocSizeOf);
-    n += mFreeLists.SizeOfExcludingThis(SizeOfFreeListEntryExcludingThis,
-                                        aMallocSizeOf);
-    return n;
-  }
+/* static */ PLDHashOperator
+nsPresArena::FreeListEnumerator(FreeList* aEntry, void* aData)
+{
+  EnumerateData* data = static_cast<EnumerateData*>(aData);
+  // Note that we're not measuring the size of the entries on the free
+  // list here.  The free list knows how many objects we've allocated
+  // ever (which includes any objects that may be on the FreeList's
+  // |mEntries| at this point) and we're using that to determine the
+  // total size of objects allocated with a given ID.
+  size_t totalSize = aEntry->mEntrySize * aEntry->mEntriesEverAllocated;
+  size_t* p;
 
-  struct EnumerateData {
-    nsArenaMemoryStats* stats;
-    size_t total;
-  };
-
-  static PLDHashOperator FreeListEnumerator(FreeList* aEntry, void* aData)
-  {
-    EnumerateData* data = static_cast<EnumerateData*>(aData);
-    // Note that we're not measuring the size of the entries on the free
-    // list here.  The free list knows how many objects we've allocated
-    // ever (which includes any objects that may be on the FreeList's
-    // |mEntries| at this point) and we're using that to determine the
-    // total size of objects allocated with a given ID.
-    size_t totalSize = aEntry->mEntrySize * aEntry->mEntriesEverAllocated;
-    size_t* p;
-
-    switch (NS_PTR_TO_INT32(aEntry->mKey)) {
-#define FRAME_ID(classname)                                        \
-      case nsQueryFrame::classname##_id:                           \
-        p = &data->stats->FRAME_ID_STAT_FIELD(classname);          \
-        break;
+  switch (NS_PTR_TO_INT32(aEntry->mKey)) {
+#define FRAME_ID(classname)                                      \
+    case nsQueryFrame::classname##_id:                           \
+      p = &data->stats->FRAME_ID_STAT_FIELD(classname);          \
+      break;
 #include "nsFrameIdList.h"
 #undef FRAME_ID
-    case nsLineBox_id:
-      p = &data->stats->mLineBoxes;
-      break;
-    case nsRuleNode_id:
-      p = &data->stats->mRuleNodes;
-      break;
-    case nsStyleContext_id:
-      p = &data->stats->mStyleContexts;
-      break;
-    default:
-      return PL_DHASH_NEXT;
-    }
-
-    *p += totalSize;
-    data->total += totalSize;
-
+  case nsLineBox_id:
+    p = &data->stats->mLineBoxes;
+    break;
+  case nsRuleNode_id:
+    p = &data->stats->mRuleNodes;
+    break;
+  case nsStyleContext_id:
+    p = &data->stats->mStyleContexts;
+    break;
+  default:
     return PL_DHASH_NEXT;
   }
 
-  void SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
-                           nsArenaMemoryStats* aArenaStats)
-  {
-    // We do a complicated dance here because we want to measure the
-    // space taken up by the different kinds of objects in the arena,
-    // but we don't have pointers to those objects.  And even if we did,
-    // we wouldn't be able to use aMallocSizeOf on them, since they were
-    // allocated out of malloc'd chunks of memory.  So we compute the
-    // size of the arena as known by malloc and we add up the sizes of
-    // all the objects that we care about.  Subtracting these two
-    // quantities gives us a catch-all "other" number, which includes
-    // slop in the arena itself as well as the size of objects that
-    // we've not measured explicitly.
+  *p += totalSize;
+  data->total += totalSize;
 
-    size_t mallocSize = SizeOfIncludingThisFromMalloc(aMallocSizeOf);
-    EnumerateData data = { aArenaStats, 0 };
-    mFreeLists.EnumerateEntries(FreeListEnumerator, &data);
-    aArenaStats->mOther = mallocSize - data.total;
-  }
-};
+  return PL_DHASH_NEXT;
+}
 
 void
 nsPresArena::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
                                  nsArenaMemoryStats* aArenaStats)
 {
-  mState->SizeOfIncludingThis(aMallocSizeOf, aArenaStats);
-}
+  // We do a complicated dance here because we want to measure the
+  // space taken up by the different kinds of objects in the arena,
+  // but we don't have pointers to those objects.  And even if we did,
+  // we wouldn't be able to use aMallocSizeOf on them, since they were
+  // allocated out of malloc'd chunks of memory.  So we compute the
+  // size of the arena as known by malloc and we add up the sizes of
+  // all the objects that we care about.  Subtracting these two
+  // quantities gives us a catch-all "other" number, which includes
+  // slop in the arena itself as well as the size of objects that
+  // we've not measured explicitly.
 
-#else
-// Stub implementation that forwards everything to malloc and does not
-// poison allocations (it still initializes the poison value though,
-// for external use through GetPoisonValue()).
+  size_t mallocSize = PL_SizeOfArenaPoolExcludingPool(&mPool, aMallocSizeOf);
+  mallocSize += mFreeLists.SizeOfExcludingThis(SizeOfFreeListEntryExcludingThis,
+                                               aMallocSizeOf);
 
-struct nsPresArena::State
-{
-
-  State()
-  {
-    PR_CallOnce(&ARENA_POISON_guard, ARENA_POISON_init);
-  }
-
-  void* Allocate(uint32_t /* unused */, size_t aSize)
-  {
-    return moz_malloc(aSize);
-  }
-
-  void Free(uint32_t /* unused */, void* aPtr)
-  {
-    moz_free(aPtr);
-  }
-};
-
-void
-nsPresArena::SizeOfExcludingThis(nsMallocSizeOfFun, nsArenaMemoryStats*)
-{}
-
-#endif // DEBUG_TRACEMALLOC_PRESARENA
-
-// Public interface
-nsPresArena::nsPresArena()
-  : mState(new nsPresArena::State())
-{}
-
-nsPresArena::~nsPresArena()
-{
-  delete mState;
-}
-
-void*
-nsPresArena::AllocateBySize(size_t aSize)
-{
-  return mState->Allocate(uint32_t(aSize) | uint32_t(NON_OBJECT_MARKER),
-                          aSize);
-}
-
-void
-nsPresArena::FreeBySize(size_t aSize, void* aPtr)
-{
-  mState->Free(uint32_t(aSize) | uint32_t(NON_OBJECT_MARKER), aPtr);
-}
-
-void*
-nsPresArena::AllocateByFrameID(nsQueryFrame::FrameIID aID, size_t aSize)
-{
-  return mState->Allocate(aID, aSize);
-}
-
-void
-nsPresArena::FreeByFrameID(nsQueryFrame::FrameIID aID, void* aPtr)
-{
-  mState->Free(aID, aPtr);
-}
-
-void*
-nsPresArena::AllocateByObjectID(ObjectID aID, size_t aSize)
-{
-  return mState->Allocate(aID, aSize);
-}
-
-void
-nsPresArena::FreeByObjectID(ObjectID aID, void* aPtr)
-{
-  mState->Free(aID, aPtr);
+  EnumerateData data = { aArenaStats, 0 };
+  mFreeLists.EnumerateEntries(FreeListEnumerator, &data);
+  aArenaStats->mOther = mallocSize - data.total;
 }
 
 /* static */ uintptr_t

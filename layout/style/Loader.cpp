@@ -663,9 +663,8 @@ SheetLoadData::OnDetermineCharset(nsIUnicharStreamLoader* aLoader,
   if (nsContentUtils::CheckForBOM((const unsigned char*)aSegment.BeginReading(),
                                   aSegment.Length(),
                                   aCharset)) {
-    // aCharset is now either "UTF-16" or "UTF-8".
-    // The UTF-16 decoder will re-sniff and swallow the BOM.
-    // The UTF-8 decoder will swallow the BOM.
+    // aCharset is now either "UTF-16BE", "UTF-16BE" or "UTF-8"
+    // which will swallow the BOM.
     mCharset.Assign(aCharset);
 #ifdef PR_LOGGING
     LOG(("  Setting from BOM to: %s", PromiseFlatCString(aCharset).get()));

@@ -634,12 +634,6 @@ public:
 
         return NS_OK;
     }
-
-    NS_IMETHOD GetExplicitNonHeap(int64_t *n)
-    {
-        *n = 0; // this reporter makes neither "explicit" non NONHEAP reports
-        return NS_OK;
-    }
 };
 
 NS_IMPL_ISUPPORTS1(SurfaceMemoryReporter, nsIMemoryMultiReporter)

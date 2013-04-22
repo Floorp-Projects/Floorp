@@ -90,7 +90,7 @@ class TextureImage;
 }
 
 namespace layers {
-class LayerManagerOGL;
+class GLManager;
 }
 }
 
@@ -100,6 +100,19 @@ class LayerManagerOGL;
 // synthetic events) until the OS actually "sends" the event.  This method
 // has been present in the same form since at least OS X 10.2.8.
 - (EventRef)_eventRef;
+
+@end
+
+@interface NSView (Undocumented)
+
+// Returns an NSRect that is the bounding box for all an NSView's dirty
+// rectangles (ones that need to be redrawn).  The full list of dirty
+// rectangles can be obtained by calling -[NSView _dirtyRegion] and then
+// calling -[NSRegion getRects:count:] on what it returns.  Both these
+// methods have been present in the same form since at least OS X 10.5.
+// Unlike -[NSView getRectsBeingDrawn:count:], these methods can be called
+// outside a call to -[NSView drawRect:].
+- (NSRect)_dirtyRect;
 
 @end
 
@@ -297,6 +310,8 @@ typedef NSInteger NSEventGestureAxis;
 - (void)handleMouseMoved:(NSEvent*)aEvent;
 
 - (void)updateWindowDraggableStateOnMouseMove:(NSEvent*)theEvent;
+
+- (void)maybeDrawInTitlebar;
 
 - (void)drawRect:(NSRect)aRect inTitlebarContext:(CGContextRef)aContext;
 
@@ -508,7 +523,9 @@ public:
 
   virtual void CreateCompositor();
   virtual gfxASurface* GetThebesSurface();
-  virtual void DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect);
+  virtual void PrepareWindowEffects() MOZ_OVERRIDE;
+  virtual void CleanupWindowEffects() MOZ_OVERRIDE;
+  virtual void DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect) MOZ_OVERRIDE;
 
   virtual void UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries);
 
@@ -531,6 +548,8 @@ public:
   nsCocoaWindow*    GetXULWindowWidget();
 
   NS_IMETHOD        ReparentNativeWidget(nsIWidget* aNewParent);
+
+  CGContextRef      GetCGContextForTitlebarDrawing(NSSize aSize);
 
   virtual void      WillPaint() MOZ_OVERRIDE;
 
@@ -573,8 +592,8 @@ protected:
     return widget.forget();
   }
 
-  void MaybeDrawResizeIndicator(mozilla::layers::LayerManagerOGL* aManager, nsIntRect aRect);
-  void MaybeDrawRoundedBottomCorners(mozilla::layers::LayerManagerOGL* aManager, nsIntRect aRect);
+  void MaybeDrawResizeIndicator(mozilla::layers::GLManager* aManager, nsIntRect aRect);
+  void MaybeDrawRoundedBottomCorners(mozilla::layers::GLManager* aManager, nsIntRect aRect);
 
   nsIWidget* GetWidgetForListenerEvents();
 
@@ -593,7 +612,21 @@ protected:
   nsWeakPtr             mAccessible;
 #endif
 
+
   nsRefPtr<gfxASurface> mTempThebesSurface;
+
+  mozilla::Mutex mEffectsLock;
+
+  // May be accessed from any thread, protected
+  // by mEffectsLock.
+  bool mShowsResizeIndicator;
+  nsIntRect mResizeIndicatorRect;
+  bool mHasRoundedBottomCorners;
+  int mDevPixelCornerRadius;
+
+  // Compositor thread only
+  bool                  mFailedResizerImage;
+  bool                  mFailedCornerMaskImage;
   nsRefPtr<mozilla::gl::TextureImage> mResizerImage;
   nsRefPtr<mozilla::gl::TextureImage> mCornerMaskImage;
 
@@ -606,8 +639,6 @@ protected:
   // ** We'll need to reinitialize this if the backing resolution changes. **
   CGFloat               mBackingScaleFactor;
 
-  bool                  mFailedResizerImage;
-  bool                  mFailedCornerMaskImage;
   bool                  mVisible;
   bool                  mDrawing;
   bool                  mPluginDrawing;

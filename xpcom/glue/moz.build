@@ -13,3 +13,35 @@ if CONFIG['OS_ARCH'] == 'WINNT':
 
 MODULE = 'xpcom'
 
+EXPORTS += [
+    'nsCycleCollectionNoteChild.h',
+    'nsCycleCollectionTraversalCallback.h',
+    'nsCycleCollectorUtils.h',
+    'nsProxyRelease.h',
+    'nsTPriorityQueue.h',
+    'nsThreadUtils.h',
+    'nsXPTCUtils.h',
+]
+
+EXPORTS.mozilla += [
+    'AppData.h',
+    'AutoRestore.h',
+    'BlockingResourceBase.h',
+    'CondVar.h',
+    'DeadlockDetector.h',
+    'FileUtils.h',
+    'GenericFactory.h',
+    'IntentionalCrash.h',
+    'Monitor.h',
+    'Mutex.h',
+    'Observer.h',
+    'ReentrantMonitor.h',
+    'SSE.h',
+    'arm.h',
+    'unused.h',
+]
+
+EXPORTS.mozilla.threads += [
+    'nsThreadIDs.h',
+]
+

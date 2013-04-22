@@ -1099,10 +1099,10 @@ WebSocket::UpdateMustKeepAlive()
 
   if (mKeepingAlive && !shouldKeepAlive) {
     mKeepingAlive = false;
-    static_cast<nsIDOMEventTarget*>(this)->Release();
+    static_cast<EventTarget*>(this)->Release();
   } else if (!mKeepingAlive && shouldKeepAlive) {
     mKeepingAlive = true;
-    static_cast<nsIDOMEventTarget*>(this)->AddRef();
+    static_cast<EventTarget*>(this)->AddRef();
   }
 }
 
@@ -1112,7 +1112,7 @@ WebSocket::DontKeepAliveAnyMore()
   NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
   if (mKeepingAlive) {
     mKeepingAlive = false;
-    static_cast<nsIDOMEventTarget*>(this)->Release();
+    static_cast<EventTarget*>(this)->Release();
   }
   mCheckMustKeepAlive = false;
 }
@@ -1153,6 +1153,20 @@ WebSocket::RemoveEventListener(const nsAString& aType,
   return rv;
 }
 
+void
+WebSocket::RemoveEventListener(const nsAString& aType,
+                               nsIDOMEventListener* aListener,
+                               bool aUseCapture,
+                               ErrorResult& aRv)
+{
+  NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
+  nsDOMEventTargetHelper::RemoveEventListener(aType, aListener,
+                                              aUseCapture, aRv);
+  if (!aRv.Failed()) {
+    UpdateMustKeepAlive();
+  }
+}
+
 NS_IMETHODIMP
 WebSocket::AddEventListener(const nsAString& aType,
                             nsIDOMEventListener *aListener,
@@ -1172,6 +1186,20 @@ WebSocket::AddEventListener(const nsAString& aType,
   return rv;
 }
 
+void
+WebSocket::AddEventListener(const nsAString& aType,
+                            nsIDOMEventListener* aListener,
+                            bool aUseCapture,
+                            const Nullable<bool>& aWantsUntrusted,
+                            ErrorResult& aRv)
+{
+  NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
+  nsDOMEventTargetHelper::AddEventListener(aType, aListener, aUseCapture,
+                                           aWantsUntrusted, aRv);
+  if (!aRv.Failed()) {
+    UpdateMustKeepAlive();
+  }
+}
 //-----------------------------------------------------------------------------
 // WebSocket - methods
 //-----------------------------------------------------------------------------

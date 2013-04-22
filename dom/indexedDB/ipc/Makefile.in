@@ -15,14 +15,10 @@ LIBRARY_NAME = dom_indexeddb_ipc_s
 LIBXUL_LIBRARY = 1
 FORCE_STATIC_LIB = 1
 
-EXPORTS_NAMESPACES = mozilla/dom/indexedDB
-
 CPPSRCS += \
   IndexedDBChild.cpp \
   IndexedDBParent.cpp \
   $(NULL)
-
-EXPORTS_mozilla/dom/indexedDB = SerializationHelpers.h
 
 LOCAL_INCLUDES += \
   -I$(topsrcdir)/dom/indexedDB \

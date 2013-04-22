@@ -1101,8 +1101,7 @@ RuleEditor.prototype = {
 
     // Add the source link.
     let source = createChild(this.element, "div", {
-      class: "ruleview-rule-source theme-link",
-      textContent: this.rule.title
+      class: "ruleview-rule-source theme-link"
     });
     source.addEventListener("click", function() {
       let rule = this.rule;
@@ -1112,6 +1111,11 @@ RuleEditor.prototype = {
       });
       this.element.dispatchEvent(evt);
     }.bind(this));
+    let sourceLabel = this.doc.createElementNS(XUL_NS, "label");
+    sourceLabel.setAttribute("crop", "center");
+    sourceLabel.setAttribute("value", this.rule.title);
+    sourceLabel.setAttribute("tooltiptext", this.rule.title);
+    source.appendChild(sourceLabel);
 
     let code = createChild(this.element, "div", {
       class: "ruleview-code"

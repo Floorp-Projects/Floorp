@@ -105,7 +105,7 @@ function defer(prototype) {
   // `null` promise is not resolved yet.
   var result = null;
 
-  prototype = (prototype || prototype === null) ? prototype : Object.prototype
+  prototype = (prototype || prototype === null) ? prototype : Object.prototype;
 
   // Create an object implementing promise API.
   var promise = Object.create(prototype, {
@@ -137,7 +137,7 @@ function defer(prototype) {
         }
         catch(error) {
           if (exports._reportErrors && typeof(console) === 'object')
-            console.error(error)
+            console.error(error);
           deferred.resolve(rejected(error));
         }
       }
@@ -244,8 +244,8 @@ var promised = (function() {
   // slower property accesses and unnecessary closure creations on each
   // call of this popular function.
 
-  var call = Function.call
-  var concat = Array.prototype.concat
+  var call = Function.call;
+  var concat = Array.prototype.concat;
 
   // Utility function that does following:
   // execute([ f, self, args...]) => f.apply(self, args)
@@ -256,9 +256,9 @@ var promised = (function() {
   function promisedConcat(promises, unknown) {
     return promises.then(function(values) {
       return resolve(unknown).then(function(value) {
-        return values.concat([ value ])
-      })
-    })
+        return values.concat([ value ]);
+      });
+    });
   }
 
   return function promised(f, prototype) {
@@ -280,10 +280,10 @@ var promised = (function() {
         // reduce it via `promisedConcat` to get promised array of fulfillments
         reduce(promisedConcat, resolve([], prototype)).
         // finally map that to promise of `f.apply(this, args...)`
-        then(execute)
-    }
+        then(execute);
+    };
   }
-})()
+})();
 exports.promised = promised;
 
 var all = promised(Array);

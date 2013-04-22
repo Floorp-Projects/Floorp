@@ -59,6 +59,13 @@ add_task(function test_get_sqlite_backend() {
 
   do_check_neq(backend._connection, null);
 
+  // Ensure WAL and auto checkpoint are enabled.
+  do_check_neq(backend._enabledWALCheckpointPages, null);
+  let rows = yield backend._connection.execute("PRAGMA journal_mode");
+  do_check_eq(rows[0].getResultByIndex(0), "wal");
+  rows = yield backend._connection.execute("PRAGMA wal_autocheckpoint");
+  do_check_eq(rows[0].getResultByIndex(0), backend._enabledWALCheckpointPages);
+
   yield backend.close();
   do_check_null(backend._connection);
 });
@@ -87,6 +94,34 @@ add_task(function test_future_schema_errors() {
 
   do_check_null(backend2);
   do_check_true(failed);
+});
+
+add_task(function test_checkpoint_apis() {
+  let backend = yield Metrics.Storage("checkpoint_apis");
+  let c = backend._connection;
+  let count = c._statementCounter;
+
+  yield backend.setAutoCheckpoint(0);
+  do_check_eq(c._statementCounter, count + 1);
+
+  let rows = yield c.execute("PRAGMA wal_autocheckpoint");
+  do_check_eq(rows[0].getResultByIndex(0), 0);
+  count = c._statementCounter;
+
+  yield backend.setAutoCheckpoint(1);
+  do_check_eq(c._statementCounter, count + 1);
+
+  rows = yield c.execute("PRAGMA wal_autocheckpoint");
+  do_check_eq(rows[0].getResultByIndex(0), backend._enabledWALCheckpointPages);
+  count = c._statementCounter;
+
+  yield backend.checkpoint();
+  do_check_eq(c._statementCounter, count + 1);
+
+  yield backend.checkpoint();
+  do_check_eq(c._statementCounter, count + 2);
+
+  yield backend.close();
 });
 
 add_task(function test_measurement_registration() {

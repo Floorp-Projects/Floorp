@@ -1,6 +1,5 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=4 sw=4 et tw=79 ft=cpp:
- *
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sts=4 et sw=4 tw=99:
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -1133,7 +1132,7 @@ ContextStack::pushBailoutArgs(JSContext *cx, const ion::IonBailoutIterator &it, 
     CopyTo dst(iag->array());
     Value *src = it.actualArgs();
     Value thisv = iag->thisv();
-    s.readFrameArgs(dst, src, NULL, &thisv, 0, fun->nargs, argc);
+    s.readFrameArgs(dst, src, NULL, &thisv, 0, fun->nargs, argc, it.script());
     return true;
 }
 
@@ -1209,7 +1208,6 @@ ContextStack::popGeneratorFrame(const GeneratorFrameGuard &gfg)
 {
     JSGenerator *gen = gfg.gen_;
     HeapValue *genvp = gen->stackSnapshot;
-    JS_ASSERT(genvp == HeapValueify(gen->fp->generatorArgsSnapshotBegin()));
 
     const FrameRegs &stackRegs = gfg.regs_;
     StackFrame *stackfp = stackRegs.fp();

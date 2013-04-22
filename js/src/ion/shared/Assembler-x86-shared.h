@@ -1,6 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=4 sw=4 et tw=99:
- *
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sts=4 et sw=4 tw=99:
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -667,6 +666,9 @@ class AssemblerX86Shared
     static bool HasSSE2() {
         return JSC::MacroAssembler::getSSEState() >= JSC::MacroAssembler::HasSSE2;
     }
+    static bool HasSSE3() {
+        return JSC::MacroAssembler::getSSEState() >= JSC::MacroAssembler::HasSSE3;
+    }
     static bool HasSSE41() {
         return JSC::MacroAssembler::getSSEState() >= JSC::MacroAssembler::HasSSE4_1;
     }
@@ -1240,14 +1242,33 @@ class AssemblerX86Shared
         JS_ASSERT(HasSSE41());
         masm.roundsd_rr(src.code(), dest.code(), mode);
     }
+    void fisttp(const Operand &dest) {
+        JS_ASSERT(HasSSE3());
+        switch (dest.kind()) {
+          case Operand::REG_DISP:
+            masm.fisttp_m(dest.disp(), dest.base());
+            break;
+          default:
+            JS_NOT_REACHED("unexpected operand kind");
+        }
+    }
+    void fld(const Operand &dest) {
+        switch (dest.kind()) {
+          case Operand::REG_DISP:
+            masm.fld_m(dest.disp(), dest.base());
+            break;
+          default:
+            JS_NOT_REACHED("unexpected operand kind");
+        }
+    }
     void fstp(const Operand &src) {
-         switch (src.kind()) {
-           case Operand::REG_DISP:
-             masm.fstp_m(src.disp(), src.base());
-             break;
-           default:
-             JS_NOT_REACHED("unexpected operand kind");
-         }
+        switch (src.kind()) {
+          case Operand::REG_DISP:
+            masm.fstp_m(src.disp(), src.base());
+            break;
+          default:
+            JS_NOT_REACHED("unexpected operand kind");
+        }
     }
 
     // Defined for compatibility with ARM's assembler

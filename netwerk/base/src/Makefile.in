@@ -15,20 +15,8 @@ LIBRARY_NAME	= neckobase_s
 LIBXUL_LIBRARY  = 1
 FAIL_ON_WARNINGS := 1
 
-EXPORTS = \
-		nsMIMEInputStream.h \
-		nsURLHelper.h \
-		nsFileStreams.h \
-		$(NULL)
-
-EXPORTS_NAMESPACES = mozilla/net
-
-EXPORTS_mozilla/net = \
-		Dashboard.h \
-		DashboardTypes.h \
-		$(NULL)
-
 CPPSRCS		= \
++		ArrayBufferInputStream.cpp \
 		BackgroundFileSaver.cpp \
 		nsTransportUtils.cpp \
 		nsAsyncStreamCopier.cpp \
@@ -79,6 +67,7 @@ CPPSRCS		= \
 		ProxyAutoConfig.cpp \
 		Dashboard.cpp \
 		NetworkActivityMonitor.cpp \
+		EventTokenBucket.cpp \
 		$(NULL)
 
 LOCAL_INCLUDES	+= -I$(topsrcdir)/dom/base

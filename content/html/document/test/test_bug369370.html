@@ -46,18 +46,23 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=369370
 
         // ========== test 1 ==========
         // Click in the upper left to zoom in
-        var event = makeClickFor(25,25);
+        var event = makeClickFor(25, 25);
         img.dispatchEvent(event);
         ok(true, "----- click 1 -----");
 
         is(img.width,  800, "image width");
         is(img.height, 600, "image height");
-        is(kidDoc.body.scrollLeft,  0, "Checking scrollLeft");
-        is(kidDoc.body.scrollTop,   0, "Checking scrollTop");
+
+        // The image pixel at (25, 25) in the scaled image will be
+        // (50, 50) in the original image. To maintain its screen
+        // location, the image should have been scrolled up and left
+        // by (25, 25) px at its new size.
+        is(kidDoc.body.scrollLeft,  25, "Checking scrollLeft");
+        is(kidDoc.body.scrollTop,   25, "Checking scrollTop");
 
         // ========== test 2 ==========
         // Click there again to zoom out
-        event = makeClickFor(25,25);
+        event = makeClickFor(25, 25);
         img.dispatchEvent(event);
         ok(true, "----- click 2 -----");
 
@@ -74,8 +79,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=369370
 
         is(img.width,  800, "image width");
         is(img.height, 600, "image height");
-        is(kidDoc.body.scrollLeft,  400, "Checking scrollLeft");
-        is(kidDoc.body.scrollTop,   300, "Checking scrollTop");
+
+        // The image pixel at (350, 250) in the scaled image will be
+        // (700, 500) in the original image. To maintain its screen
+        // location, the image should have been scrolled up and left
+        // by (350, 250) px at its new size.
+
+        is(kidDoc.body.scrollLeft,  350, "Checking scrollLeft");
+        is(kidDoc.body.scrollTop,   250, "Checking scrollTop");
 
         // ========== test 4 ==========
         // Click there again to zoom out

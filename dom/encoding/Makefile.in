@@ -14,15 +14,6 @@ LIBRARY_NAME	= domencoding_s
 LIBXUL_LIBRARY	= 1
 FORCE_STATIC_LIB = 1
 
-EXPORTS_NAMESPACES = mozilla/dom
-EXPORTS_mozilla/dom = \
-  EncodingUtils.h \
-  TextDecoder.h \
-  TextDecoderBase.h \
-  TextEncoder.h \
-  TextEncoderBase.h \
-  $(NULL)
-
 CPPSRCS = \
 	EncodingUtils.cpp \
 	TextDecoder.cpp \

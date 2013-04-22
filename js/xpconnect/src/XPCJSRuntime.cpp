@@ -2150,14 +2150,6 @@ class JSCompartmentsMultiReporter MOZ_FINAL : public nsIMemoryMultiReporter
 
         return NS_OK;
     }
-
-    NS_IMETHOD
-    GetExplicitNonHeap(int64_t *n)
-    {
-        // This reporter does neither "explicit" nor NONHEAP measurements.
-        *n = 0;
-        return NS_OK;
-    }
 };
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(JSCompartmentsMultiReporter
@@ -2422,14 +2414,6 @@ JSMemoryMultiReporter::CollectReports(WindowPaths *windowPaths,
                  nsIMemoryReporter::KIND_HEAP, xpconnect,
                  "Memory used by XPConnect.");
 
-    return NS_OK;
-}
-
-nsresult
-JSMemoryMultiReporter::GetExplicitNonHeap(int64_t *n)
-{
-    JSRuntime *rt = nsXPConnect::GetRuntimeInstance()->GetJSRuntime();
-    *reinterpret_cast<int64_t*>(n) = JS::GetExplicitNonHeapForRuntime(rt, JsMallocSizeOf);
     return NS_OK;
 }
 

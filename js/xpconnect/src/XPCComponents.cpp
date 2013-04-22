@@ -2769,15 +2769,15 @@ nsXPCComponents_Utils::LookupMethod(const JS::Value& object,
 
         // Alright, now do the lookup.
         *retval = JSVAL_VOID;
-        JSPropertyDescriptor desc;
-        if (!JS_GetPropertyDescriptorById(cx, xray, methodId, 0, &desc))
+        Rooted<JSPropertyDescriptor> desc(cx);
+        if (!JS_GetPropertyDescriptorById(cx, xray, methodId, 0, desc.address()))
             return NS_ERROR_FAILURE;
 
         // First look for a method value. If that's not there, try a getter,
         // since historically lookupMethod also works for getters.
-        JSObject *methodObj = desc.value.isObject() ? &desc.value.toObject() : NULL;
-        if (!methodObj && (desc.attrs & JSPROP_GETTER))
-            methodObj = JS_FUNC_TO_DATA_PTR(JSObject *, desc.getter);
+        JSObject *methodObj = desc.value().isObject() ? &desc.value().toObject() : NULL;
+        if (!methodObj && desc.hasGetterObject())
+            methodObj = desc.getterObject();
 
         // Callers of this function seem to expect bound methods. Make it happen.
         // Note that this is unnecessary until bug 658909 is fixed.
@@ -3052,7 +3052,7 @@ sandbox_convert(JSContext *cx, JSHandleObject obj, JSType type, JSMutableHandleV
 static JSClass SandboxClass = {
     "Sandbox",
     XPCONNECT_GLOBAL_FLAGS,
-    JS_PropertyStub,   JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+    JS_PropertyStub,   JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
     sandbox_enumerate, sandbox_resolve, sandbox_convert,  sandbox_finalize,
     NULL, NULL, NULL, NULL, TraceXPCGlobal
 };
@@ -4450,12 +4450,12 @@ nsXPCComponents_Utils::GetComponentsForScope(const jsval &vscope, JSContext *cx,
 }
 
 NS_IMETHODIMP
-nsXPCComponents_Utils::Dispatch(const jsval &runnable_, const jsval &scope,
+nsXPCComponents_Utils::Dispatch(const jsval &runnableArg, const jsval &scope,
                                 JSContext *cx)
 {
     // Enter the given compartment, if any, and rewrap runnable.
     Maybe<JSAutoCompartment> ac;
-    RootedValue runnable(cx, runnable_);
+    RootedValue runnable(cx, runnableArg);
     if (scope.isObject()) {
         JSObject *scopeObj = js::UncheckedUnwrap(&scope.toObject());
         if (!scopeObj)
@@ -4584,6 +4584,19 @@ nsXPCComponents_Utils::IsXrayWrapper(const JS::Value &obj, bool* aRetval)
 {
     *aRetval =
         obj.isObject() && xpc::WrapperFactory::IsXrayWrapper(&obj.toObject());
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPCComponents_Utils::GetClassName(const JS::Value &aObj, bool aUnwrap, JSContext *aCx, char **aRv)
+{
+    if (!aObj.isObject())
+        return NS_ERROR_INVALID_ARG;
+    RootedObject obj(aCx, &aObj.toObject());
+    if (aUnwrap)
+        obj = js::UncheckedUnwrap(obj, /* stopAtOuter = */ false);
+    *aRv = NS_strdup(js::GetObjectClass(obj)->name);
+    NS_ENSURE_TRUE(*aRv, NS_ERROR_OUT_OF_MEMORY);
     return NS_OK;
 }
 

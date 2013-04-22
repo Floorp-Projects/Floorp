@@ -53,7 +53,6 @@ members = [
     # dom/interfaces/canvas
     #
     # canvas friends
-    'nsIDOMTextMetrics.*',
     'nsIDOMCanvasGradient.*',
     'nsIDOMCanvasPattern.*',
 
@@ -64,16 +63,12 @@ members = [
 
     'nsIDOMKeyEvent.*',
     'nsIDOMDragEvent.*',
-    'nsIDOMNotifyPaintEvent.*',
-    'nsIDOMMouseScrollEvent.*',
     'nsIDOMProgressEvent.lengthComputable',
     'nsIDOMProgressEvent.loaded',
     'nsIDOMProgressEvent.total',
     #XXX Can't quickstub initProgressEvent because it has long long parameters.
 
-    'nsIDOMTouch.*',
     'nsIDOMTouchList.*',
-    'nsIDOMTouchEvent.*',
 
     # dom/interfaces/html
     'nsIDOMHTMLFormElement.elements',
@@ -91,7 +86,6 @@ members = [
     'nsIDOMStorage.key',
     'nsIDOMStorage.removeItem',
     'nsIDOMStorage.clear',
-    'nsIDOMStorageItem.value',
 
     # dom/interfaces/xpath
     'nsIDOMXPathExpression.evaluate',
@@ -151,7 +145,6 @@ members = [
 #
 irregularFilenames = {
     # stowaways
-    'nsIDOMTextMetrics': 'nsIDOMCanvasRenderingContext2D',
     'nsIDOMCanvasGradient': 'nsIDOMCanvasRenderingContext2D',
     'nsIDOMCanvasPattern': 'nsIDOMCanvasRenderingContext2D',
 

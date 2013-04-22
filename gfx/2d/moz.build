@@ -6,3 +6,27 @@
 
 MODULE = 'gfx2d'
 
+EXPORTS.mozilla.gfx += [
+    '2D.h',
+    'BaseMargin.h',
+    'BasePoint.h',
+    'BasePoint3D.h',
+    'BasePoint4D.h',
+    'BaseRect.h',
+    'BaseSize.h',
+    'Blur.h',
+    'Matrix.h',
+    'PathHelpers.h',
+    'Point.h',
+    'Rect.h',
+    'Scale.h',
+    'Tools.h',
+    'Types.h',
+    'UserData.h',
+]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    EXPORTS.mozilla.gfx += [
+        'QuartzSupport.h',
+        'MacIOSurface.h',
+    ]

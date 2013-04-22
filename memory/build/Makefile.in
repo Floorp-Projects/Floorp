@@ -24,11 +24,6 @@ CSRCS = \
   jemalloc_config.c \
   $(NULL)
 
-EXPORTS = \
-  mozmemory.h \
-  mozmemory_wrap.h \
-  $(NULL)
-
 ifdef MOZ_JEMALLOC3
 CSRCS += mozjemalloc_compat.c
 LOCAL_INCLUDES += -I../jemalloc/src/include
@@ -46,11 +41,6 @@ endif
 ifdef MOZ_REPLACE_MALLOC
 DEFINES += -DMOZ_REPLACE_MALLOC
 CSRCS += replace_malloc.c
-
-EXPORTS += \
-  replace_malloc.h \
-  malloc_decls.h \
-  $(NULL)
 
 # The zone allocator for OSX needs some jemalloc internal functions
 ifeq (Darwin,$(OS_TARGET))

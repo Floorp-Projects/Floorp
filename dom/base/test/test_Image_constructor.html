@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=862702
+-->
+<head>
+  <meta charset="utf-8">
+  <!-- Make sure our script runs before anything else -->
+  <script>
+   var img = new Image;
+  </script>
+  <title>Test for Bug 862702</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 862702 **/
+  is(Object.getPrototypeOf(img), HTMLImageElement.prototype,
+     "Wrong prototype object");
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=862702">Mozilla Bug 862702</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

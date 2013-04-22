@@ -64,6 +64,8 @@ public class testWebContentContextMenu extends PixelTest {
                 // Wait for the new tab and page to load
                 tabEventExpecter.blockForEvent();
                 contentEventExpecter.blockForEvent();
+                tabEventExpecter.unregisterListener();
+                contentEventExpecter.unregisterListener();
 
                 // See tab count
                 Element tabCount = mDriver.findElement(getActivity(), "tabs_count");

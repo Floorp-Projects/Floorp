@@ -11,20 +11,9 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME      = webvtt
 
-EXPORTS_NAMESPACES = webvtt
-
 DEFINES += \
   -DWEBVTT_NO_CONFIG_H=1 \
   -DWEBVTT_STATIC=1 \
-  $(NULL)
-
-EXPORTS_webvtt = \
-  include/webvtt/cue.h \
-  include/webvtt/error.h \
-  include/webvtt/node.h \
-  include/webvtt/parser.h \
-  include/webvtt/string.h \
-  include/webvtt/util.h \
   $(NULL)
 
 CSRCS = \

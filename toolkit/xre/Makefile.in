@@ -40,7 +40,6 @@ endif
 
 ifdef MOZ_INSTRUMENT_EVENT_LOOP
 CPPSRCS += EventTracer.cpp
-EXPORTS += EventTracer.h
 endif
 
 DEFINES += -DIMPL_XREAPI \
@@ -58,11 +57,9 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 CPPSRCS += nsNativeAppSupportWin.cpp
 CPPSRCS += nsWindowsDllBlocklist.cpp
 DEFINES += -DWIN32_LEAN_AND_MEAN -DUNICODE -D_UNICODE
-EXPORTS += nsWindowsDllInterceptor.h
 else
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 CMMSRCS = nsNativeAppSupportCocoa.mm
-EXPORTS += MacQuirks.h
 else
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 CPPSRCS += nsNativeAppSupportOS2.cpp
@@ -75,7 +72,6 @@ MOCSRCS += moc_nsNativeAppSupportQt.cpp
 CPPSRCS += $(MOCSRCS)
 CPPSRCS += nsNativeAppSupportQt.cpp
 CPPSRCS += nsQAppInstance.cpp
-EXPORTS += nsQAppInstance.h
 else
 CPPSRCS += nsNativeAppSupportDefault.cpp
 endif

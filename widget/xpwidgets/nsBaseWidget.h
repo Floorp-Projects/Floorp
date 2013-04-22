@@ -110,14 +110,27 @@ public:
                                           LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT,
                                           bool* aAllowRetaining = nullptr);
 
+  virtual CompositorParent* NewCompositorParent(int aSurfaceWidth, int aSurfaceHeight);
   virtual void            CreateCompositor();
   virtual void            CreateCompositor(int aWidth, int aHeight);
+  virtual void            PrepareWindowEffects() {}
+  virtual void            CleanupWindowEffects() {}
   virtual void            DrawWindowUnderlay(LayerManager* aManager, nsIntRect aRect) {}
   virtual void            DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect) {}
   virtual void            UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries) {}
   virtual gfxASurface*    GetThebesSurface();
   NS_IMETHOD              SetModal(bool aModal); 
   NS_IMETHOD              SetWindowClass(const nsAString& xulWinType);
+  // Return whether this widget interprets parameters to Move and Resize APIs
+  // as "global display pixels" rather than "device pixels", and therefore
+  // applies its GetDefaultScale() value to them before using them as mBounds
+  // etc (which are always stored in device pixels).
+  // Note that APIs that -get- the widget's position/size/bounds, rather than
+  // -setting- them (i.e. moving or resizing the widget) will always return
+  // values in the widget's device pixels.
+  bool                    BoundsUseDisplayPixels() const {
+    return mWindowType <= eWindowType_popup;
+  }
   NS_IMETHOD              MoveClient(double aX, double aY);
   NS_IMETHOD              ResizeClient(double aWidth, double aHeight, bool aRepaint);
   NS_IMETHOD              ResizeClient(double aX, double aY, double aWidth, double aHeight, bool aRepaint);

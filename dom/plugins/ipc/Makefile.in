@@ -11,44 +11,6 @@ include $(DEPTH)/config/autoconf.mk
 
 FAIL_ON_WARNINGS := 1
 
-EXPORTS_NAMESPACES = mozilla
-
-EXPORTS_mozilla = \
-  PluginLibrary.h \
-  $(NULL)
-
-EXPORTS_NAMESPACES = mozilla mozilla/plugins
-
-EXPORTS_mozilla/plugins = \
-  BrowserStreamChild.h \
-  BrowserStreamParent.h \
-  ChildAsyncCall.h \
-  ChildTimer.h \
-  NPEventOSX.h \
-  NPEventWindows.h \
-  NPEventUnix.h \
-  NPEventAndroid.h \
-  PluginIdentifierChild.h \
-  PluginIdentifierParent.h \
-  PluginInstanceChild.h \
-  PluginInstanceParent.h \
-  PluginMessageUtils.h \
-  PluginModuleChild.h \
-  PluginModuleParent.h \
-  PluginProcessParent.h \
-  PluginScriptableObjectChild.h \
-  PluginScriptableObjectParent.h \
-  PluginScriptableObjectUtils.h \
-  PluginScriptableObjectUtils-inl.h \
-  PluginUtilsOSX.h \
-  AStream.h \
-  PluginStreamChild.h \
-  PluginStreamParent.h \
-  PluginProcessChild.h \
-  StreamNotifyChild.h \
-  StreamNotifyParent.h \
-  $(NULL)
-
 LIBRARY_NAME     = domplugins_s
 LIBXUL_LIBRARY   = 1
 FORCE_STATIC_LIB = 1
@@ -97,20 +59,12 @@ CPPSRCS += \
 DEFINES += \
   -DMOZ_HANGUI_PROCESS_NAME=\"plugin-hang-ui$(BIN_SUFFIX)\" \
   $(NULL)
-
-EXPORTS_mozilla/plugins += \
-  PluginSurfaceParent.h \
-  $(NULL)
 endif
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 CMMSRCS   += \
     PluginUtilsOSX.mm \
     PluginInterposeOSX.mm \
-    $(NULL)
-
-EXPORTS_mozilla/plugins += \
-    PluginInterposeOSX.h \
     $(NULL)
 endif
 

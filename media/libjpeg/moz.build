@@ -8,3 +8,12 @@ DIRS += ['simd']
 
 MODULE = 'jpeg'
 
+EXPORTS += [
+    'jconfig.h',
+    'jerror.h',
+    'jinclude.h',
+    'jmorecfg.h',
+    'jpegint.h',
+    'jpeglib.h',
+]
+

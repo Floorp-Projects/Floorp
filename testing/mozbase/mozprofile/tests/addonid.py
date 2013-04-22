@@ -6,16 +6,20 @@ import unittest
 import shutil
 from mozprofile import addons
 
+
+here = os.path.dirname(os.path.abspath(__file__))
+
+
 class AddonIDTest(unittest.TestCase):
     """ Test finding the addon id in a variety of install.rdf styles """
-    
+
     def make_install_rdf(self, filecontents):
         path = tempfile.mkdtemp()
         f = open(os.path.join(path, "install.rdf"), "w")
         f.write(filecontents)
         f.close()
         return path
- 
+
     def test_addonID(self):
         testlist = self.get_test_list()
         for t in testlist:
@@ -23,9 +27,14 @@ class AddonIDTest(unittest.TestCase):
                 p = self.make_install_rdf(t)
                 a = addons.AddonManager(os.path.join(p, "profile"))
                 addon_id = a.addon_details(p)['id']
-                self.assertTrue(addon_id == "winning", "We got the addon id")
+                self.assertEqual(addon_id, "winning", "We got the addon id")
             finally:
                 shutil.rmtree(p)
+
+    def test_addonID_xpi(self):
+        a = addons.AddonManager("profile")
+        addon = a.addon_details(os.path.join(here, "addons", "empty.xpi"))
+        self.assertEqual(addon['id'], "test-empty@quality.mozilla.org", "We got the addon id")
 
     def get_test_list(self):
         """ This just returns a hardcoded list of install.rdf snippets for testing.

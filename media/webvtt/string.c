@@ -84,8 +84,6 @@ webvtt_create_string( webvtt_uint32 alloc, webvtt_string *result )
 WEBVTT_EXPORT webvtt_status
 webvtt_create_string_with_text( webvtt_string *result, const webvtt_byte *init_text, int len )
 {
-  webvtt_uint pos = 0;
-
   if( !result ) {
     return WEBVTT_INVALID_PARAM;
   }
@@ -200,7 +198,7 @@ webvtt_string_text(const webvtt_string *str)
   return str->d->text;
 }
 
-WEBVTT_EXPORT const webvtt_uint32
+WEBVTT_EXPORT webvtt_uint32
 webvtt_string_length(const webvtt_string *str)
 {
   if( !str || !str->d )
@@ -211,7 +209,7 @@ webvtt_string_length(const webvtt_string *str)
   return str->d->length;
 }
 
-WEBVTT_EXPORT const webvtt_uint32
+WEBVTT_EXPORT webvtt_uint32
 webvtt_string_capacity(const webvtt_string *str)
 {
   if( !str || !str->d )
@@ -287,14 +285,15 @@ grow( webvtt_string *str, webvtt_uint need )
 
 WEBVTT_EXPORT int
 webvtt_string_getline( webvtt_string *src, const webvtt_byte *buffer,
-    webvtt_uint *pos, webvtt_uint len, int *truncate, webvtt_bool finish, webvtt_bool retain_new_line )
+                       webvtt_uint *pos, int len, int *truncate,
+                       webvtt_bool finish )
 {
   int ret = 0;
   webvtt_string *str = src;
   webvtt_string_data *d = 0;
   const webvtt_byte *s = buffer + *pos;
   const webvtt_byte *p = s;
-  const webvtt_byte *n = buffer + len;
+  const webvtt_byte *n;
 
   /**
    *if this is public now, maybe we should return webvtt_status so we can
@@ -312,13 +311,13 @@ webvtt_string_getline( webvtt_string *src, const webvtt_byte *buffer,
     }
     d = str->d;
   }
-
-  while( p < n && *p != UTF8_CARRIAGE_RETURN && *p != UTF8_LINE_FEED ) {
-    ++p;
+  if( len < 0 ) {
+    len = strlen( (const char *)buffer );
   }
-  /* Retain the new line character. */
-  if( p < n && retain_new_line ) {
-    p++;
+  n = buffer + len;
+
+  while( p < n && *p != '\r' && *p != '\n' ) {
+    ++p;
   }
 
   if( p < n || finish ) {
@@ -371,11 +370,21 @@ webvtt_string_putc( webvtt_string *str, webvtt_byte to_append )
 }
 
 WEBVTT_EXPORT webvtt_bool
-webvtt_string_is_equal( webvtt_string *str, webvtt_byte *to_compare, webvtt_uint len )
+webvtt_string_is_equal( const webvtt_string *str, const webvtt_byte *to_compare,
+                        int len )
 {
-  if( !str || !to_compare || webvtt_string_length( str ) != len ) {
+  if( !str || !to_compare ) {
     return 0;
   }
+
+  if( len < 0 ) {
+    len = strlen( (const char *)to_compare );
+  }
+
+  if( str->d->length != (unsigned)len ) {
+    return 0;
+  }
+
   return memcmp( webvtt_string_text( str ), to_compare, len ) == 0;
 }
 
@@ -584,8 +593,8 @@ WEBVTT_EXPORT webvtt_uint16
 webvtt_utf8_to_utf16( const webvtt_byte *utf8, const webvtt_byte *end,
   webvtt_uint16 *high_surrogate )
 {
-  int need = 0, min = 0;
-  webvtt_uint32 uc = 0;
+  int need = 0;
+  webvtt_uint32 uc = 0, min = 0;
   
   /* We're missing our pointers */
   if( !utf8 ) {
@@ -625,7 +634,8 @@ webvtt_utf8_to_utf16( const webvtt_byte *utf8, const webvtt_byte *end,
               *high_surrogate = UTF_HIGH_SURROGATE( uc );
             }
             return UTF_LOW_SURROGATE( uc );
-          } else if ( ( uc < min ) || ( uc >= 0xD800 && uc <= 0xDFFF ) || nc || uc >= 0x110000) {
+          } else if ( ( uc < min ) || ( uc >= 0xD800 && uc <= 0xDFFF ) || nc
+                      || uc >= 0x110000) {
             /* Non-character, overlong sequence, or utf16 surrogate */
             return 0xFFFD;  
           } else {

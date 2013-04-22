@@ -14,3 +14,21 @@ XPIDL_MODULE = 'dom_quota'
 
 MODULE = 'dom'
 
+EXPORTS += [
+    'nsIOfflineStorage.h',
+]
+
+EXPORTS.mozilla.dom.quota += [
+    'AcquireListener.h',
+    'ArrayCluster.h',
+    'Client.h',
+    'FileStreams.h',
+    'OriginOrPatternString.h',
+    'QuotaCommon.h',
+    'QuotaManager.h',
+    'QuotaObject.h',
+    'StoragePrivilege.h',
+    'UsageRunnable.h',
+    'Utilities.h',
+]
+

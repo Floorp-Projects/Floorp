@@ -10,8 +10,6 @@
  * liability, trademark and document use rules apply.
  */
 
-interface Touch;
-
 interface TouchList {
   readonly attribute unsigned long length;
   getter Touch? item(unsigned long index);

@@ -6,3 +6,10 @@
 
 MODULE = 'unicharutil'
 
+EXPORTS += [
+    'nsICaseConversion.h',
+    'nsIUGenCategory.h',
+    'nsUnicharUtilCIID.h',
+    'nsUnicodeNormalizer.h',
+]
+

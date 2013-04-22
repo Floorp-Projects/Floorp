@@ -9,4 +9,14 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
     XPIDL_SOURCES += [
         'nsIProfiler.idl',
     ]
+    EXPORTS += [
+        'GeckoProfilerImpl.h',
+        'GeckoProfilerFunc.h',
+        'PseudoStack.h',
+        'shared-libraries.h',
+    ]
+
+EXPORTS += [
+    'GeckoProfiler.h',
+]
 

@@ -30,7 +30,7 @@ public:
   NS_DECL_NSIDOMMOZICCMANAGER
   NS_DECL_NSIICCLISTENER
 
-  NS_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetHelper::)
+  NS_REALLY_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetHelper)
 
   IccManager();
 
@@ -40,13 +40,6 @@ public:
 private:
   nsCOMPtr<nsIIccProvider> mProvider;
   nsRefPtr<Listener> mListener;
-
-  nsIDOMEventTarget*
-  ToIDOMEventTarget() const
-  {
-    return static_cast<nsDOMEventTargetHelper*>(
-           const_cast<IccManager*>(this));
-  }
 };
 
 } // namespace icc

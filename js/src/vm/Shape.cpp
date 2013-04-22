@@ -1,6 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=78:
- *
+ * vim: set ts=8 sts=4 et sw=4 tw=99:
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -1340,6 +1339,30 @@ EmptyShape::insertInitialShape(JSContext *cx, HandleShape shape, HandleObject pr
      * this duplicate regeneration.
      */
     cx->runtime->newObjectCache.invalidateEntriesForShape(cx, shape, proto);
+}
+
+/*
+ * This is called by the minor GC to ensure that any relocated proto objects
+ * get updated in the shape table.
+ */
+void
+JSCompartment::markAllInitialShapeTableEntries(JSTracer *trc)
+{
+    if (!initialShapes.initialized())
+        return;
+
+    for (InitialShapeSet::Enum e(initialShapes); !e.empty(); e.popFront()) {
+        if (!e.front().proto.isObject())
+            continue;
+        JSObject *proto = e.front().proto.toObject();
+        JS_SET_TRACING_LOCATION(trc, (void*)&e.front().proto);
+        MarkObjectRoot(trc, &proto, "InitialShapeSet proto");
+        if (proto != e.front().proto.toObject()) {
+            InitialShapeEntry moved = e.front();
+            moved.proto = TaggedProto(proto);
+            e.rekeyFront(e.front().getLookup(), moved);
+        }
+    }
 }
 
 void

@@ -1,2 +1,3 @@
+include $(DEPTH)/config/emptyvars.mk
 @ALLSUBSTS@
 include $(topsrcdir)/config/baseconfig.mk

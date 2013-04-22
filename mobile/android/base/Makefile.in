@@ -161,8 +161,8 @@ FENNEC_JAVA_FILES = \
   TouchEventInterceptor.java \
   UpdateServiceHelper.java \
   VideoPlayer.java \
-  WebApp.java \
   WebAppAllocator.java \
+  WebAppImpl.java \
   ZoomConstraints.java \
   db/BrowserContract.java \
   db/BrowserProvider.java \
@@ -209,7 +209,8 @@ FENNEC_JAVA_FILES = \
   gfx/TouchEventHandler.java \
   gfx/ViewTransform.java \
   gfx/VirtualLayer.java \
-  widget/AboutHomeContent.java \
+  widget/AboutHome.java \
+  widget/AboutHomeView.java \
   widget/AboutHomeSection.java \
   widget/AddonsSection.java \
   widget/DateTimePicker.java \
@@ -260,6 +261,7 @@ FENNEC_PP_JAVA_VIEW_FILES = \
 FENNEC_PP_JAVA_FILES = \
   App.java \
   AppConstants.java \
+  WebApp.java \
   WebApps.java \
   $(NULL)
 
@@ -430,6 +432,8 @@ RES_LAYOUT = \
   res/layout/list_item_header.xml \
   res/layout/select_dialog_list.xml \
   res/layout/select_dialog_multichoice.xml \
+  res/layout/select_dialog_singlechoice.xml \
+  res/layout/simple_dropdown_item_1line.xml \
   res/layout/abouthome_addon_row.xml \
   res/layout/abouthome_last_tabs_row.xml \
   res/layout/abouthome_section.xml \

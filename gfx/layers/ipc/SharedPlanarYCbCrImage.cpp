@@ -103,7 +103,6 @@ SharedPlanarYCbCrImage::Allocate(PlanarYCbCrImage::Data& aData)
 {
   NS_ABORT_IF_FALSE(!mAllocated, "This image already has allocated data");
 
-  SharedMemory::SharedMemoryType shmType = OptimalShmemType();
   size_t size = ShmemYCbCrImage::ComputeMinBufferSize(aData.mYSize,
                                                       aData.mCbCrSize);
 

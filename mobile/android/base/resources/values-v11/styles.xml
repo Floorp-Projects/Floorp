@@ -15,6 +15,8 @@
     -->
     <style name="Widget.BaseButton" parent="android:style/Widget.Holo.Light.Button"/>
 
+    <style name="Widget.BaseDropDownItem" parent="android:style/Widget.Holo.Light.DropDownItem"/>
+
     <style name="Widget.BaseEditText" parent="android:style/Widget.Holo.Light.EditText"/>
 
     <style name="Widget.BaseListView" parent="android:style/Widget.Holo.ListView"/>
@@ -56,7 +58,6 @@
  
     <!-- GeckoPreferences ActionBar -->
     <style name="ActionBar.GeckoPreferences">
-         <item name="android:background">@color/background_normal</item>
          <item name="android:displayOptions">showHome|homeAsUp|showTitle</item>
     </style>
  

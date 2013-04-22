@@ -163,6 +163,10 @@ private:
   virtual nsresult
   StopInternal() MOZ_OVERRIDE;
 
+  // This method should never be called.
+  virtual bool
+  IsEnabledInternal() MOZ_OVERRIDE;
+
   // Should never be called from the child
   virtual nsresult
   GetDevicePropertiesInternal(const BluetoothSignal& aSignal) MOZ_OVERRIDE;
@@ -170,6 +174,11 @@ private:
   // This method should never be called from the child.
   virtual nsresult
   PrepareAdapterInternal() MOZ_OVERRIDE;
+
+  bool
+  IsSignalRegistered(const nsAString& aNodeName) {
+    return !!mBluetoothSignalObserverTable.Get(aNodeName);
+  }
 };
 
 END_BLUETOOTH_NAMESPACE

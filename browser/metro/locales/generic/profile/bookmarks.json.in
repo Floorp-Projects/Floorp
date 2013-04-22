@@ -9,7 +9,7 @@
        {"index":2,"title":"@getting_started@",  "type":"text/x-moz-place", "uri":"http://www.mozilla.org/@AB_CD@/firefox/central/",
         "iconUri":"chrome://branding/content/favicon32.png"
        },
-       {"index":3,"title":"@firefox_community@",  "type":"text/x-moz-place", "uri":"http://www.mozilla.org/@AB_CD@/firefox/community/",
+       {"index":3,"title":"@firefox_community@",  "type":"text/x-moz-place", "uri":"http://www.mozilla.org/@AB_CD@/contribute/",
         "iconUri":"chrome://branding/content/favicon32.png"
        },
      ]

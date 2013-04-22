@@ -98,8 +98,16 @@ def build_one_stage_aux(stage_dir, is_stage_one):
     build_dir = stage_dir + "/build"
     inst_dir = stage_dir + "/clang"
 
+    targets = ["x86", "x86_64"]
+    # The Darwin equivalents of binutils appear to have intermittent problems
+    # with objects in compiler-rt that are compiled for arm.  Since the arm
+    # support is only necessary for iOS (which we don't support), only enable
+    # arm support on Linux.
+    if not isDarwin:
+        targets.append("arm")
+
     configure_opts = ["--enable-optimized",
-                      "--enable-targets=x86,x86_64,arm",
+                      "--enable-targets=" + ",".join(targets),
                       "--disable-assertions",
                       "--prefix=%s" % inst_dir,
                       "--with-gcc-toolchain=/tools/gcc-4.7.2-0moz1"]

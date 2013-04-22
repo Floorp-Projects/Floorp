@@ -386,31 +386,30 @@ public final class ANRReporter extends BroadcastReceiver
             // Nothing to do
             return 0;
         }
-        if (prevIndex == 0) {
-            // Did not find pattern in last block; see if entire pattern is inside this block
-            int index = block.indexOf(pattern);
-            if (index >= 0) {
-                // Found pattern; return index at end of the pattern
-                return index + pattern.length();
-            }
-            // Block does not contain the entire pattern, but see if the end of the block
-            // contains the start of pattern. To do that, we see if block ends with the
-            // first 1 character of pattern, the first 2 characters of pattern, first 3,
-            // and so on.
-            for (index = block.length() - 1; index > block.length() - pattern.length(); index--) {
-                // Using index as a start, see if the rest of block contains the start of pattern
-                if (block.charAt(index) == pattern.charAt(0) &&
-                    block.endsWith(pattern.substring(0, block.length() - index))) {
-                    // Found partial match; return -(number of characters matched),
-                    // i.e. -1 for 1 character matched, -2 for 2 characters matched, etc.
-                    return index - block.length();
-                }
-            }
-        } else if (prevIndex < 0) {
+        if (prevIndex < 0) {
             // Last block ended with a partial start; now match start of block to rest of pattern
             if (block.startsWith(pattern.substring(-prevIndex, pattern.length()))) {
                 // Rest of pattern matches; return index at end of pattern
                 return pattern.length() + prevIndex;
+            }
+            // Not a match; continue with normal search
+        }
+        // Did not find pattern in last block; see if entire pattern is inside this block
+        int index = block.indexOf(pattern);
+        if (index >= 0) {
+            // Found pattern; return index at end of the pattern
+            return index + pattern.length();
+        }
+        // Block does not contain the entire pattern, but see if the end of the block
+        // contains the start of pattern. To do that, we see if block ends with the
+        // first n-1 characters of pattern, the first n-2 characters of pattern, etc.
+        for (index = block.length() - pattern.length() + 1; index < block.length(); index++) {
+            // Using index as a start, see if the rest of block contains the start of pattern
+            if (block.charAt(index) == pattern.charAt(0) &&
+                block.endsWith(pattern.substring(0, block.length() - index))) {
+                // Found partial match; return -(number of characters matched),
+                // i.e. -1 for 1 character matched, -2 for 2 characters matched, etc.
+                return index - block.length();
             }
         }
         return 0;

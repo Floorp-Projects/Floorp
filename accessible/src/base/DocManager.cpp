@@ -20,11 +20,11 @@
 
 #include "nsCURILoader.h"
 #include "nsDocShellLoadTypes.h"
+#include "nsDOMEvent.h"
 #include "nsIChannel.h"
 #include "nsIContentViewer.h"
 #include "nsIDOMDocument.h"
 #include "nsEventListenerManager.h"
-#include "nsIDOMEventTarget.h"
 #include "nsIDOMWindow.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIWebNavigation.h"
@@ -32,6 +32,7 @@
 
 using namespace mozilla;
 using namespace mozilla::a11y;
+using namespace mozilla::dom;
 
 ////////////////////////////////////////////////////////////////////////////////
 // DocManager
@@ -252,10 +253,8 @@ DocManager::HandleEvent(nsIDOMEvent* aEvent)
   nsAutoString type;
   aEvent->GetType(type);
 
-  nsCOMPtr<nsIDOMEventTarget> target;
-  aEvent->GetTarget(getter_AddRefs(target));
-
-  nsCOMPtr<nsIDocument> document(do_QueryInterface(target));
+  nsCOMPtr<nsIDocument> document =
+    do_QueryInterface(aEvent->InternalDOMEvent()->GetTarget());
   NS_ASSERTION(document, "pagehide or DOMContentLoaded for non document!");
   if (!document)
     return NS_OK;
@@ -327,8 +326,8 @@ void
 DocManager::AddListeners(nsIDocument* aDocument,
                          bool aAddDOMContentLoadedListener)
 {
-  nsPIDOMWindow *window = aDocument->GetWindow();
-  nsIDOMEventTarget *target = window->GetChromeEventHandler();
+  nsPIDOMWindow* window = aDocument->GetWindow();
+  EventTarget* target = window->GetChromeEventHandler();
   nsEventListenerManager* elm = target->GetListenerManager(true);
   elm->AddEventListenerByType(this, NS_LITERAL_STRING("pagehide"),
                               dom::TrustedEventsAtCapture());
@@ -355,7 +354,7 @@ DocManager::RemoveListeners(nsIDocument* aDocument)
   if (!window)
     return;
 
-  nsIDOMEventTarget* target = window->GetChromeEventHandler();
+  EventTarget* target = window->GetChromeEventHandler();
   nsEventListenerManager* elm = target->GetListenerManager(true);
   elm->RemoveEventListenerByType(this, NS_LITERAL_STRING("pagehide"),
                                  dom::TrustedEventsAtCapture());

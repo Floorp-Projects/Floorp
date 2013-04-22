@@ -11,6 +11,7 @@
 #include "nsTArray.h"
 #include "mozilla/Attributes.h"
 #include "nsJSEnvironment.h"
+#include "mozilla/dom/TouchEventBinding.h"
 
 class nsDOMTouchList MOZ_FINAL : public nsIDOMTouchList
 {
@@ -52,6 +53,71 @@ public:
   NS_DECL_NSIDOMTOUCHEVENT
 
   NS_FORWARD_TO_NSDOMUIEVENT
+
+  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope)
+  {
+    return mozilla::dom::TouchEventBinding::Wrap(aCx, aScope, this);
+  }
+
+  already_AddRefed<nsIDOMTouchList> GetTouches()
+  {
+    nsCOMPtr<nsIDOMTouchList> t;
+    GetTouches(getter_AddRefs(t));
+    return t.forget();
+  }
+
+  already_AddRefed<nsIDOMTouchList> GetTargetTouches()
+  {
+    nsCOMPtr<nsIDOMTouchList> t;
+    GetTargetTouches(getter_AddRefs(t));
+    return t.forget();
+  }
+
+  already_AddRefed<nsIDOMTouchList> GetChangedTouches()
+  {
+    nsCOMPtr<nsIDOMTouchList> t;
+    GetChangedTouches(getter_AddRefs(t));
+    return t.forget();
+  }
+
+  bool AltKey()
+  {
+    return static_cast<nsInputEvent*>(mEvent)->IsAlt();
+  }
+
+  bool MetaKey()
+  {
+    return static_cast<nsInputEvent*>(mEvent)->IsMeta();
+  }
+
+  bool CtrlKey()
+  {
+    return static_cast<nsInputEvent*>(mEvent)->IsControl();
+  }
+
+  bool ShiftKey()
+  {
+    return static_cast<nsInputEvent*>(mEvent)->IsShift();
+  }
+
+  void InitTouchEvent(const nsAString& aType,
+                      bool aCanBubble,
+                      bool aCancelable,
+                      nsIDOMWindow* aView,
+                      int32_t aDetail,
+                      bool aCtrlKey,
+                      bool aAltKey,
+                      bool aShiftKey,
+                      bool aMetaKey,
+                      nsIDOMTouchList* aTouches,
+                      nsIDOMTouchList* aTargetTouches,
+                      nsIDOMTouchList* aChangedTouches,
+                      mozilla::ErrorResult& aRv)
+  {
+    aRv = InitTouchEvent(aType, aCanBubble, aCancelable, aView, aDetail,
+                         aCtrlKey, aAltKey, aShiftKey, aMetaKey,
+                         aTouches, aTargetTouches, aChangedTouches);
+  }
 
   static bool PrefEnabled();
 protected:

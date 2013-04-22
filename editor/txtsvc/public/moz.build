@@ -11,3 +11,10 @@ XPIDL_SOURCES += [
 
 MODULE = 'txtsvc'
 
+EXPORTS += [
+    'nsISpellChecker.h',
+    'nsITextService.h',
+    'nsITextServicesDocument.h',
+    'nsTextServicesCID.h',
+]
+

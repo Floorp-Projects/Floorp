@@ -18,47 +18,6 @@ endif # !_MSC_VER
 
 
 
-EXPORTS_NAMESPACES = mozilla
-
-EXPORTS		= \
-		DisplayItemClip.h \
-		DisplayListClipState.h \
-		FrameLayerBuilder.h \
-		FramePropertyTable.h \
-		nsArenaMemoryStats.h \
-		nsBidi.h \
-		nsBidiPresUtils.h \
-		nsCaret.h \
-		nsCSSFrameConstructor.h \
-		nsChangeHint.h \
-		nsCompatibility.h \
-		nsDisplayItemTypes.h \
-		nsDisplayItemTypesList.h \
-		nsDisplayList.h \
-		nsDisplayListInvalidation.h \
-		nsFrameManager.h \
-		nsFrameManagerBase.h \
-		nsFrameTraversal.h \
-		nsIFrameTraversal.h \
-		nsILayoutDebugger.h \
-		nsILayoutHistoryState.h \
-		nsIPercentHeightObserver.h  \
-		nsIPresShell.h \
-		nsIReflowCallback.h \
-		nsLayoutUtils.h \
-		nsPresArena.h \
-		nsPresContext.h \
-		nsPresState.h \
-		nsRefreshDriver.h \
-		nsStyleChangeList.h \
-		nsStyleConsts.h \
-		StackArena.h \
-		$(NULL)
-
-EXPORTS_mozilla = \
-  PaintTracker.h \
-  $(NULL)
-
 CPPSRCS		= \
 		DisplayItemClip.cpp \
 		DisplayListClipState.cpp \
@@ -95,9 +54,6 @@ CPPSRCS		= \
 		$(NULL)
 
 ifndef MOZ_XUL
-EXPORTS    += \
-		nsPIBoxObject.h \
-		$(NULL)
 CPPSRCS    += \
 		nsBoxObject.cpp \
 		$(NULL)

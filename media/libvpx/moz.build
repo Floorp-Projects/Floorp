@@ -6,3 +6,28 @@
 
 MODULE = 'vpx'
 
+EXPORTS.vpx += [
+    'arm.h',
+    'mem.h',
+    'scale_mode.h',
+    'vp8.h',
+    'vp8cx.h',
+    'vp8dx.h',
+    'vp8e.h',
+    'vpx_codec.h',
+    'vpx_codec_impl_bottom.h',
+    'vpx_codec_impl_top.h',
+    'vpx_decoder.h',
+    'vpx_decoder_compat.h',
+    'vpx_encoder.h',
+    'vpx_image.h',
+    'vpx_integer.h',
+    'vpx_mem.h',
+    'vpx_mem_intrnl.h',
+    'vpx_timer.h',
+    'vpxscale.h',
+    'x86.h',
+    'yv12config.h',
+    'yv12extend.h',
+]
+

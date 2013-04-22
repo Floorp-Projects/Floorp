@@ -14,16 +14,7 @@ XPCSHELL_TESTS = tests
 
 include $(DEPTH)/config/autoconf.mk
 
-EXPORTS = GeckoProfiler.h
-
 ifdef MOZ_ENABLE_PROFILER_SPS
-EXPORTS += \
-  GeckoProfilerImpl.h \
-  GeckoProfilerFunc.h \
-  PseudoStack.h \
-  shared-libraries.h \
-  $(NULL)
-
 LOCAL_INCLUDES += \
   -I$(topsrcdir)/mozglue/linker \
   -I$(topsrcdir)/ipc/chromium/src \
@@ -42,6 +33,9 @@ IS_COMPONENT    = 1
 ifndef _MSC_VER
 FAIL_ON_WARNINGS = 1
 endif # !_MSC_VER
+
+# Uncomment for better debugging in opt builds
+#MOZ_OPTIMIZE_FLAGS += -O0 -g
 
 CPPSRCS		= \
   platform.cpp \

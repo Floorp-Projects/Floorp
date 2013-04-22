@@ -21,25 +21,24 @@ namespace mozilla {
 namespace layers {
 
 /* static */ TemporaryRef<ImageClient>
-ImageClient::CreateImageClient(LayersBackend aParentBackend,
-                               CompositableType aCompositableHostType,
+ImageClient::CreateImageClient(CompositableType aCompositableHostType,
                                CompositableForwarder* aForwarder,
                                TextureFlags aFlags)
 {
   RefPtr<ImageClient> result = nullptr;
   switch (aCompositableHostType) {
   case BUFFER_IMAGE_SINGLE:
-    if (aParentBackend == LAYERS_OPENGL) {
+    if (aForwarder->GetCompositorBackendType() == LAYERS_OPENGL) {
       result = new ImageClientSingle(aForwarder, aFlags, BUFFER_IMAGE_SINGLE);
     }
     break;
   case BUFFER_IMAGE_BUFFERED:
-    if (aParentBackend == LAYERS_OPENGL) {
+    if (aForwarder->GetCompositorBackendType() == LAYERS_OPENGL) {
       result = new ImageClientSingle(aForwarder, aFlags, BUFFER_IMAGE_BUFFERED);
     }
     break;
   case BUFFER_BRIDGE:
-    if (aParentBackend == LAYERS_OPENGL) {
+    if (aForwarder->GetCompositorBackendType() == LAYERS_OPENGL) {
       result = new ImageClientBridge(aForwarder, aFlags);
     }
     break;
@@ -160,6 +159,23 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer,
       return false;
     }
     mTextureClient->SetDescriptor(desc);
+#ifdef MOZ_WIDGET_GONK
+  } else if (image->GetFormat() == GONK_IO_SURFACE) {
+    EnsureTextureClient(TEXTURE_SHARED_GL_EXTERNAL);
+
+    nsIntRect rect(0, 0,
+                   image->GetSize().width,
+                   image->GetSize().height);
+    UpdatePictureRect(rect);
+
+    AutoLockTextureClient lock(mTextureClient);
+
+    SurfaceDescriptor desc = static_cast<GonkIOSurfaceImage*>(image)->GetSurfaceDescriptor();
+    if (!IsSurfaceDescriptorValid(desc)) {
+      return false;
+    }
+    mTextureClient->SetDescriptor(desc);
+#endif
   } else {
     nsRefPtr<gfxASurface> surface = image->GetAsSurface();
     MOZ_ASSERT(surface);

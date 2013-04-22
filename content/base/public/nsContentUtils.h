@@ -52,7 +52,6 @@ class nsIDocumentObserver;
 class nsIDOMDocument;
 class nsIDOMDocumentFragment;
 class nsIDOMEvent;
-class nsIDOMEventTarget;
 class nsIDOMHTMLFormElement;
 class nsIDOMHTMLInputElement;
 class nsIDOMKeyEvent;
@@ -510,7 +509,7 @@ public:
    * @return boolean indicating whether a BOM was detected.
    */
   static bool CheckForBOM(const unsigned char* aBuffer, uint32_t aLength,
-                          nsACString& aCharset, bool *bigEndian = nullptr);
+                          nsACString& aCharset);
 
   static nsresult GuessCharset(const char *aData, uint32_t aDataLen,
                                nsACString &aCharset);
@@ -954,7 +953,7 @@ public:
                                        bool aCanBubble,
                                        bool aCancelable,
                                        bool *aDefaultAction = nullptr);
-                                       
+
   /**
    * This method creates and dispatches a untrusted event.
    * Works only with events which can be created by calling

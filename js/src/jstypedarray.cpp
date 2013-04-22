@@ -1,6 +1,6 @@
-/* -*- Mode: C++; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: nil -*- */
-/* vim: set ts=4 sw=4 et tw=99: */
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sts=4 et sw=4 tw=99:
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -259,7 +259,7 @@ NextView(JSObject *obj)
     return static_cast<JSObject*>(obj->getFixedSlot(BufferView::NEXT_VIEW_SLOT).toPrivate());
 }
 
-static JSObject **
+static HeapPtrObject *
 GetViewList(ArrayBufferObject *obj)
 {
 #if USE_NEW_OBJECT_REPRESENTATION
@@ -275,7 +275,7 @@ GetViewList(ArrayBufferObject *obj)
     struct OldObjectRepresentationHack {
             uint32_t capacity;
             uint32_t initializedLength;
-            JSObject *views;
+            HeapPtrObject views;
     };
     return &reinterpret_cast<OldObjectRepresentationHack*>(obj->getElementsHeader())->views;
 #endif
@@ -379,11 +379,6 @@ ArrayBufferObject::prepareForAsmJS(JSContext *cx, Handle<ArrayBufferObject*> buf
     }
 # endif
 
-    // We don't include the PageSize at the front so that when we sum the
-    // individual asm.js arrays for all the compartments in the runtime, they
-    // match this number.
-    buffer->runtime()->sizeOfNonHeapAsmJSArrays_ += buffer->byteLength();
-
     // Copy over the current contents of the typed array.
     uint8_t *data = reinterpret_cast<uint8_t*>(p) + PageSize;
     memcpy(data, buffer->dataPointer(), buffer->byteLength());
@@ -406,8 +401,6 @@ ArrayBufferObject::releaseAsmJSArrayBuffer(FreeOp *fop, RawObject obj)
 {
     ArrayBufferObject &buffer = obj->asArrayBuffer();
     JS_ASSERT(buffer.isAsmJSArrayBuffer());
-
-    buffer.runtime()->sizeOfNonHeapAsmJSArrays_ -= buffer.byteLength();
 
     uint8_t *p = buffer.dataPointer() - PageSize ;
     JS_ASSERT(uintptr_t(p) % PageSize == 0);
@@ -475,8 +468,10 @@ class WeakObjectSlotRef : public js::gc::BufferableRef
     }
 
     virtual void mark(JSTracer *trc) {
+        MarkObjectUnbarriered(trc, &owner, "weak TypeArrayView ref");
         JSObject *obj = static_cast<JSObject*>(owner->getFixedSlot(slot).toPrivate());
-        MarkObjectUnbarriered(trc, &obj, desc);
+        if (obj && obj != UNSET_BUFFER_LINK)
+            MarkObjectUnbarriered(trc, &obj, desc);
         owner->setFixedSlot(slot, PrivateValue(obj));
     }
 };
@@ -515,7 +510,7 @@ ArrayBufferObject::addView(RawObject view)
     // list was nonempty and will be made weak during this call (and weak
     // pointers cannot violate the snapshot-at-the-beginning invariant.)
 
-    JSObject **views = GetViewList(this);
+    HeapPtrObject *views = GetViewList(this);
     if (*views == NULL) {
         // This ArrayBuffer will have a single view at this point, so it is a
         // strong pointer (it will be marked during tracing.)
@@ -645,7 +640,7 @@ ArrayBufferObject::stealContents(JSContext *cx, JSObject *obj, void **contents,
 
     // Neuter the donor ArrayBuffer and all views of it
     ArrayBufferObject::setElementsHeader(header, 0);
-    *GetViewList(&buffer) = views;
+    GetViewList(&buffer)->init(views);
     for (JSObject *view = views; view; view = NextView(view))
         TypedArray::neuter(view);
 
@@ -678,9 +673,22 @@ ArrayBufferObject::obj_trace(JSTracer *trc, RawObject obj)
     // linked list during collection, and then swept to prune out their dead
     // views.
 
-    JSObject **views = GetViewList(&obj->asArrayBuffer());
+    HeapPtrObject *views = GetViewList(&obj->asArrayBuffer());
     if (!*views)
         return;
+
+    // During minor collections, these edges are normally kept alive by the
+    // store buffer. If the store buffer overflows, fallback marking should
+    // just treat these as strong references for simplicity.
+    if (trc->runtime->isHeapMinorCollecting()) {
+        MarkObject(trc, views, "arraybuffer.viewlist");
+        JSObject *prior = views->get();
+        for (JSObject *view = NextView(prior); view; prior = view, view = NextView(view)) {
+            MarkObjectUnbarriered(trc, &view, "arraybuffer.views");
+            prior->setFixedSlot(BufferView::NEXT_VIEW_SLOT, PrivateValue(view));
+        }
+        return;
+    }
 
     JSObject *firstView = *views;
     if (NextView(firstView) == NULL) {
@@ -688,10 +696,9 @@ ArrayBufferObject::obj_trace(JSTracer *trc, RawObject obj)
         // right now. Otherwise, the tracing pass for barrier verification will
         // fail if we add another view and the pointer becomes weak.
         if (IS_GC_MARKING_TRACER(trc))
-            MarkObjectUnbarriered(trc, views, "arraybuffer.singleview");
+            MarkObject(trc, views, "arraybuffer.singleview");
     } else {
         // Multiple views: do not mark, but append buffer to list.
-
         if (IS_GC_MARKING_TRACER(trc)) {
             // obj_trace may be called multiple times before sweep(), so avoid
             // adding this buffer to the list multiple times.
@@ -722,7 +729,7 @@ ArrayBufferObject::sweep(JSCompartment *compartment)
     compartment->gcLiveArrayBuffers = NULL;
 
     while (buffer) {
-        JSObject **views = GetViewList(&buffer->asArrayBuffer());
+        HeapPtrObject *views = GetViewList(&buffer->asArrayBuffer());
         JS_ASSERT(*views);
 
         JSObject *nextBuffer = BufferLink(*views);
@@ -742,7 +749,7 @@ ArrayBufferObject::sweep(JSCompartment *compartment)
             }
             view = nextView;
         }
-        *views = prevLiveView;
+        *(views->unsafeGet()) = prevLiveView;
 
         buffer = nextBuffer;
     }
@@ -1087,33 +1094,33 @@ ArrayBufferObject::obj_setSpecialAttributes(JSContext *cx, HandleObject obj,
 }
 
 JSBool
-ArrayBufferObject::obj_deleteProperty(JSContext *cx, HandleObject obj,
-                                      HandlePropertyName name, MutableHandleValue rval, JSBool strict)
+ArrayBufferObject::obj_deleteProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,
+                                      JSBool *succeeded)
 {
     RootedObject delegate(cx, ArrayBufferDelegate(cx, obj));
     if (!delegate)
         return false;
-    return baseops::DeleteProperty(cx, delegate, name, rval, strict);
+    return baseops::DeleteProperty(cx, delegate, name, succeeded);
 }
 
 JSBool
-ArrayBufferObject::obj_deleteElement(JSContext *cx, HandleObject obj,
-                                     uint32_t index, MutableHandleValue rval, JSBool strict)
+ArrayBufferObject::obj_deleteElement(JSContext *cx, HandleObject obj, uint32_t index,
+                                     JSBool *succeeded)
 {
     RootedObject delegate(cx, ArrayBufferDelegate(cx, obj));
     if (!delegate)
         return false;
-    return baseops::DeleteElement(cx, delegate, index, rval, strict);
+    return baseops::DeleteElement(cx, delegate, index, succeeded);
 }
 
 JSBool
-ArrayBufferObject::obj_deleteSpecial(JSContext *cx, HandleObject obj,
-                                     HandleSpecialId sid, MutableHandleValue rval, JSBool strict)
+ArrayBufferObject::obj_deleteSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid,
+                                     JSBool *succeeded)
 {
     RootedObject delegate(cx, ArrayBufferDelegate(cx, obj));
     if (!delegate)
         return false;
-    return baseops::DeleteSpecial(cx, delegate, sid, rval, strict);
+    return baseops::DeleteSpecial(cx, delegate, sid, succeeded);
 }
 
 JSBool
@@ -1628,33 +1635,30 @@ class TypedArrayTemplate
     }
 
     static JSBool
-    obj_deleteProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,
-                       MutableHandleValue rval, JSBool strict)
+    obj_deleteProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, JSBool *succeeded)
     {
-        rval.setBoolean(true);
+        *succeeded = true;
         return true;
     }
 
     static JSBool
-    obj_deleteElement(JSContext *cx, HandleObject tarray, uint32_t index,
-                      MutableHandleValue rval, JSBool strict)
+    obj_deleteElement(JSContext *cx, HandleObject tarray, uint32_t index, JSBool *succeeded)
     {
         JS_ASSERT(tarray->isTypedArray());
 
         if (index < length(tarray)) {
-            rval.setBoolean(false);
+            *succeeded = false;
             return true;
         }
 
-        rval.setBoolean(true);
+        *succeeded = true;
         return true;
     }
 
     static JSBool
-    obj_deleteSpecial(JSContext *cx, HandleObject tarray, HandleSpecialId sid,
-                      MutableHandleValue rval, JSBool strict)
+    obj_deleteSpecial(JSContext *cx, HandleObject tarray, HandleSpecialId sid, JSBool *succeeded)
     {
-        rval.setBoolean(true);
+        *succeeded = true;
         return true;
     }
 
@@ -1751,7 +1755,7 @@ class TypedArrayTemplate
         JS_ASSERT(bufobj->isArrayBuffer());
         Rooted<ArrayBufferObject *> buffer(cx, &bufobj->asArrayBuffer());
 
-        InitTypedArrayDataPointer(obj, buffer, byteOffset);
+        InitArrayBufferViewDataPointer(obj, buffer, byteOffset);
         obj->setSlot(LENGTH_SLOT, Int32Value(len));
         obj->setSlot(BYTEOFFSET_SLOT, Int32Value(byteOffset));
         obj->setSlot(BYTELENGTH_SLOT, Int32Value(len * sizeof(NativeType)));
@@ -3279,7 +3283,7 @@ Class ArrayBufferObject::protoClass = {
     JSCLASS_HAS_RESERVED_SLOTS(ARRAYBUFFER_RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_ArrayBuffer),
     JS_PropertyStub,         /* addProperty */
-    JS_PropertyStub,         /* delProperty */
+    JS_DeletePropertyStub,   /* delProperty */
     JS_PropertyStub,         /* getProperty */
     JS_StrictPropertyStub,   /* setProperty */
     JS_EnumerateStub,
@@ -3295,7 +3299,7 @@ Class js::ArrayBufferClass = {
     JSCLASS_HAS_RESERVED_SLOTS(ARRAYBUFFER_RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_ArrayBuffer),
     JS_PropertyStub,         /* addProperty */
-    JS_PropertyStub,         /* delProperty */
+    JS_DeletePropertyStub,   /* delProperty */
     JS_PropertyStub,         /* getProperty */
     JS_StrictPropertyStub,   /* setProperty */
     JS_EnumerateStub,
@@ -3443,7 +3447,7 @@ IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Float64, double, double)
     JSCLASS_HAS_PRIVATE |                                                      \
     JSCLASS_HAS_CACHED_PROTO(JSProto_##_typedArray),                           \
     JS_PropertyStub,         /* addProperty */                                 \
-    JS_PropertyStub,         /* delProperty */                                 \
+    JS_DeletePropertyStub,   /* delProperty */                                 \
     JS_PropertyStub,         /* getProperty */                                 \
     JS_StrictPropertyStub,   /* setProperty */                                 \
     JS_EnumerateStub,                                                          \
@@ -3459,7 +3463,7 @@ IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Float64, double, double)
     JSCLASS_HAS_CACHED_PROTO(JSProto_##_typedArray) |                          \
     Class::NON_NATIVE,                                                         \
     JS_PropertyStub,         /* addProperty */                                 \
-    JS_PropertyStub,         /* delProperty */                                 \
+    JS_DeletePropertyStub,   /* delProperty */                                 \
     JS_PropertyStub,         /* getProperty */                                 \
     JS_StrictPropertyStub,   /* setProperty */                                 \
     JS_EnumerateStub,                                                          \
@@ -3659,7 +3663,7 @@ Class js::DataViewObject::protoClass = {
     JSCLASS_HAS_RESERVED_SLOTS(DataViewObject::RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_DataView),
     JS_PropertyStub,         /* addProperty */
-    JS_PropertyStub,         /* delProperty */
+    JS_DeletePropertyStub,   /* delProperty */
     JS_PropertyStub,         /* getProperty */
     JS_StrictPropertyStub,   /* setProperty */
     JS_EnumerateStub,
@@ -3674,7 +3678,7 @@ Class js::DataViewClass = {
     JSCLASS_HAS_RESERVED_SLOTS(DataViewObject::RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_DataView),
     JS_PropertyStub,         /* addProperty */
-    JS_PropertyStub,         /* delProperty */
+    JS_DeletePropertyStub,   /* delProperty */
     JS_PropertyStub,         /* getProperty */
     JS_StrictPropertyStub,   /* setProperty */
     JS_EnumerateStub,

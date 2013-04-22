@@ -135,7 +135,7 @@ MarkMessageManagers()
         static_cast<nsFrameMessageManager*>(tabMM)->GetCallback();
       if (cb) {
         nsFrameLoader* fl = static_cast<nsFrameLoader*>(cb);
-        nsIDOMEventTarget* et = fl->GetTabChildGlobalAsEventTarget();
+        EventTarget* et = fl->GetTabChildGlobalAsEventTarget();
         if (!et) {
           continue;
         }

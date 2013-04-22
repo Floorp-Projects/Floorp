@@ -239,19 +239,51 @@ DOMRequestService::FireError(nsIDOMDOMRequest* aRequest,
 
 class FireSuccessAsyncTask : public nsRunnable
 {
-public:
+
   FireSuccessAsyncTask(DOMRequest* aRequest,
                        const JS::Value& aResult) :
     mReq(aRequest),
-    mResult(aResult)
+    mResult(aResult),
+    mIsSetup(false)
   {
-    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  }
+
+public:
+
+  nsresult
+  Setup()
+  {
     nsresult rv;
     nsIScriptContext* sc = mReq->GetContextForEventHandlers(&rv);
+    if (!NS_SUCCEEDED(rv)) {
+      return rv;
+    }
     AutoPushJSContext cx(sc->GetNativeContext());
-    MOZ_ASSERT(NS_SUCCEEDED(rv) && cx);
+    if (!cx) {
+      return NS_ERROR_FAILURE;
+    }
     JSAutoRequest ar(cx);
     JS_AddValueRoot(cx, &mResult);
+    mIsSetup = true;
+    return NS_OK;
+  }
+
+  // Due to the fact that initialization can fail during shutdown (since we
+  // can't fetch a js context), set up an initiatization function to make sure
+  // we can return the failure appropriately
+  static nsresult
+  Dispatch(DOMRequest* aRequest,
+           const JS::Value& aResult)
+  {
+    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+    nsRefPtr<FireSuccessAsyncTask> asyncTask = new FireSuccessAsyncTask(aRequest, aResult);
+    nsresult rv = asyncTask->Setup();
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(NS_DispatchToMainThread(asyncTask))) {
+      NS_WARNING("Failed to dispatch to main thread!");
+      return NS_ERROR_FAILURE;
+    }
+    return NS_OK;
   }
 
   NS_IMETHODIMP
@@ -264,10 +296,15 @@ public:
   ~FireSuccessAsyncTask()
   {
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+    if(!mIsSetup) {
+      // If we never set up, no reason to unroot
+      return;
+    }
     nsresult rv;
     nsIScriptContext* sc = mReq->GetContextForEventHandlers(&rv);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
     AutoPushJSContext cx(sc->GetNativeContext());
-    MOZ_ASSERT(NS_SUCCEEDED(rv) && cx);
+    MOZ_ASSERT(cx);
 
     // We need to build a new request, otherwise we assert since there won't be
     // a request available yet.
@@ -277,6 +314,7 @@ public:
 private:
   nsRefPtr<DOMRequest> mReq;
   JS::Value mResult;
+  bool mIsSetup;
 };
 
 class FireErrorAsyncTask : public nsRunnable
@@ -305,13 +343,7 @@ DOMRequestService::FireSuccessAsync(nsIDOMDOMRequest* aRequest,
                                     const JS::Value& aResult)
 {
   NS_ENSURE_STATE(aRequest);
-  nsCOMPtr<nsIRunnable> asyncTask =
-    new FireSuccessAsyncTask(static_cast<DOMRequest*>(aRequest), aResult);
-  if (NS_FAILED(NS_DispatchToMainThread(asyncTask))) {
-    NS_WARNING("Failed to dispatch to main thread!");
-    return NS_ERROR_FAILURE;
-  }
-  return NS_OK;
+  return FireSuccessAsyncTask::Dispatch(static_cast<DOMRequest*>(aRequest), aResult);
 }
 
 NS_IMETHODIMP

@@ -11,21 +11,4 @@ VPATH   = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 
-# NOTE When adding something to this list, you probably need to add it to the
-#      storage.h file too.
-EXPORTS_NAMESPACES = mozilla mozilla/storage
-
-EXPORTS = \
-	mozStorageHelper.h \
-	$(NULL)
-
-EXPORTS_mozilla = storage.h
-
-# NOTE When adding something to this list, you probably need to add it to the
-#      storage.h file too.
-EXPORTS_mozilla/storage = \
-  StatementCache.h \
-  $(NULL)
-# SEE ABOVE NOTE!
-
 include $(topsrcdir)/config/rules.mk

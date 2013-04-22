@@ -15,3 +15,7 @@ XPIDL_SOURCES += [
 
 MODULE = 'pref'
 
+EXPORTS.mozilla += [
+    'Preferences.h',
+]
+

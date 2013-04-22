@@ -6,3 +6,10 @@
 
 MODULE = 'soundtouch'
 
+EXPORTS.soundtouch += [
+    'FIFOSamplePipe.h',
+    'STTypes.h',
+    'SoundTouch.h',
+    'soundtouch_config.h',
+]
+

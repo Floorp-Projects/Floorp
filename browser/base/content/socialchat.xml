@@ -63,7 +63,8 @@
           return this.getAttribute("minimized") == "true";
         </getter>
         <setter><![CDATA[
-          this.isActive = !val;
+          // Note that this.isActive is set via our transitionend handler so
+          // the content doesn't see intermediate values.
           let parent = this.parentNode;
           if (val) {
             this.setAttribute("minimized", "true");
@@ -144,6 +145,10 @@
         this.setAttribute('image', uri.spec);
         this.parentNode.updateTitlebar(this);
       ]]></handler>
+      <handler event="transitionend">
+        if (this.isActive == this.minimized)
+          this.isActive = !this.minimized;
+      </handler>
     </handlers>
   </binding>
 
@@ -160,9 +165,7 @@
 
     <implementation implements="nsIDOMEventListener">
       <constructor>
-        // to avoid reflows we cache the values for various widths.
-        this.cachedWidthOpen = 0;
-        this.cachedWidthMinimized = 0;
+        // to avoid reflows we cache the width of the nub.
         this.cachedWidthNub = 0;
         this._selectedChat = null;
       </constructor>
@@ -326,25 +329,11 @@
       <method name="getTotalChildWidth">
         <parameter name="aChatbox"/>
         <body><![CDATA[
-          // gets the width of a child, using/setting the cached value for
-          // children of this type.
-          // DOES NOT take collapsed into account - ie, this is the width
-          // of a child assuming it is *not* collapsed.  (collapsed chats
-          // have a width of zero as they are not shown).
-          if (aChatbox.minimized) {
-            if (!this.cachedWidthMinimized) {
-              if (aChatbox.collapsed)
-                throw new Error("can't calculate size of collapsed chat!");
-              this.cachedWidthMinimized = this.calcTotalWidthOf(aChatbox);
-            }
-            return this.cachedWidthMinimized;
-          }
-          if (!this.cachedWidthOpen) {
-            if (aChatbox.collapsed)
-              throw new Error("can't calculate size of collapsed chat!");
-            this.cachedWidthOpen = this.calcTotalWidthOf(aChatbox);
-          }
-          return this.cachedWidthOpen;
+          // These are from the CSS for the chatbox and must be kept in sync.
+          // We can't use calcTotalWidthOf due to the transitions...
+          const CHAT_WIDTH_OPEN = 260;
+          const CHAT_WIDTH_MINIMIZED = 160;
+          return aChatbox.minimized ? CHAT_WIDTH_MINIMIZED : CHAT_WIDTH_OPEN;
         ]]></body>
       </method>
 

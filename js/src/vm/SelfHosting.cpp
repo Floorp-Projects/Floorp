@@ -1,6 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=4 sw=4 et tw=99 ft=cpp:
- *
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sts=4 et sw=4 tw=99:
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -38,14 +37,14 @@ selfHosting_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *rep
 
 static JSClass self_hosting_global_class = {
     "self-hosting-global", JSCLASS_GLOBAL_FLAGS,
-    JS_PropertyStub,  JS_PropertyStub,
+    JS_PropertyStub,  JS_DeletePropertyStub,
     JS_PropertyStub,  JS_StrictPropertyStub,
     JS_EnumerateStub, JS_ResolveStub,
     JS_ConvertStub,   NULL
 };
 
-static JSBool
-intrinsic_ToObject(JSContext *cx, unsigned argc, Value *vp)
+JSBool
+js::intrinsic_ToObject(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     RootedValue val(cx, args[0]);
@@ -67,8 +66,8 @@ intrinsic_ToInteger(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-static JSBool
-intrinsic_IsCallable(JSContext *cx, unsigned argc, Value *vp)
+JSBool
+js::intrinsic_IsCallable(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     Value val = args[0];
