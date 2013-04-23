@@ -82,6 +82,7 @@ public:
   {
     mBuffer = aBuffer;
     SendBufferParameterToStream(aCx);
+    SendLoopParametersToStream();
   }
   AudioParam* PlaybackRate() const
   {
