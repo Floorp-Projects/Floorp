@@ -51,6 +51,7 @@ _SUBDIR_CONFIG_ARGS="$ac_configure_args"
 dnl Set the version number of the libs included with mozilla
 dnl ========================================================
 NSPR_VERSION=4
+NSPR_MINVER=4.9.2
 
 dnl Set the minimum version of toolkit libs used by mozilla
 dnl ========================================================
@@ -215,6 +216,35 @@ if test -n "$gonkdir" ; then
 else
     MOZ_ANDROID_NDK
 fi
+
+dnl ==============================================================
+dnl Get mozilla version from central milestone file
+dnl ==============================================================
+MOZILLA_VERSION=`$PERL $srcdir/config/milestone.pl -topsrcdir $srcdir`
+MOZILLA_UAVERSION=`$PERL $srcdir/config/milestone.pl -topsrcdir $srcdir -uaversion`
+
+AC_DEFINE_UNQUOTED(MOZILLA_VERSION,"$MOZILLA_VERSION")
+AC_DEFINE_UNQUOTED(MOZILLA_VERSION_U,$MOZILLA_VERSION)
+AC_DEFINE_UNQUOTED(MOZILLA_UAVERSION,"$MOZILLA_UAVERSION")
+
+# Separate version into components for use in shared object naming etc
+changequote(,)
+MOZJS_MAJOR_VERSION=`echo $MOZILLA_VERSION | sed "s|\(^[0-9]*\)\.[0-9]*.*|\1|"`
+MOZJS_MINOR_VERSION=`echo $MOZILLA_VERSION | sed "s|^[0-9]*\.\([0-9]*\).*|\1|"`
+MOZJS_PATCH_VERSION=`echo $MOZILLA_VERSION | sed "s|^[0-9]*\.[0-9]*[^0-9]*||"`
+IS_ALPHA=`echo $MOZILLA_VERSION | grep [ab]`
+changequote([,])
+if test -n "$IS_ALPHA"; then
+  changequote(,)
+  MOZJS_ALPHA=`echo $MOZILLA_VERSION | sed "s|^[0-9]*\.[0-9\.]*\([^0-9]\).*|\1|"`
+  changequote([,])
+fi
+AC_DEFINE_UNQUOTED(MOZJS_MAJOR_VERSION,"$MOZJS_MAJOR_VERSION")
+AC_DEFINE_UNQUOTED(MOZJS_MINOR_VERSION,"$MOZJS_MINOR_VERSION")
+AC_SUBST(MOZJS_MAJOR_VERSION)
+AC_SUBST(MOZJS_MINOR_VERSION)
+AC_SUBST(MOZJS_PATCH_VERSION)
+AC_SUBST(MOZJS_ALPHA)
 
 dnl ========================================================
 dnl Checks for compilers.
@@ -3139,13 +3169,16 @@ if test "$_USE_SYSTEM_NSPR" && (test "$NSPR_CFLAGS" -o "$NSPR_LIBS"); then
 See 'configure --help'.])
 fi
 
-dnl Top-level Mozilla switched to requiring NSPR 4.8.6 (bug 560582), but we don't need it in JS.
 if test -n "$_USE_SYSTEM_NSPR"; then
     MOZ_NATIVE_NSPR=
-    AM_PATH_NSPR(4.9.2, [MOZ_NATIVE_NSPR=1], [AC_MSG_ERROR([your don't have NSPR installed or your version is too old])])
+    AM_PATH_NSPR($NSPR_MINVER, [MOZ_NATIVE_NSPR=1], [AC_MSG_ERROR([your don't have NSPR installed or your version is too old])])
 fi
 
+NSPR_PKGCONF_CHECK="nspr"
 if test -n "$MOZ_NATIVE_NSPR"; then
+    # piggy back on $MOZ_NATIVE_NSPR to set a variable for the nspr check for js.pc
+    NSPR_PKGCONF_CHECK="nspr >= $NSPR_MINVER"
+
     _SAVE_CFLAGS=$CFLAGS
     CFLAGS="$CFLAGS $NSPR_CFLAGS"
     AC_TRY_COMPILE([#include "prlog.h"],
@@ -3156,6 +3189,7 @@ if test -n "$MOZ_NATIVE_NSPR"; then
                 AC_MSG_ERROR([system NSPR does not support PR_STATIC_ASSERT]))
     CFLAGS=$_SAVE_CFLAGS
 fi
+AC_SUBST(NSPR_PKGCONF_CHECK)
 
 dnl ========================================================
 dnl system zlib Support
