@@ -547,8 +547,11 @@ TouchDragAndHold.prototype = {
   _timeoutStep: 2,
   _numSteps: 50,
   _debug: false,
+  _win: null,
 
   callback: function callback() {
+    if (this._win == null)
+      return;
     if (++this._step.steps >= this._numSteps) {
       EventUtils.synthesizeTouchAtPoint(this._endPoint.xPos, this._endPoint.yPos,
                                         { type: "touchmove" }, this._win);

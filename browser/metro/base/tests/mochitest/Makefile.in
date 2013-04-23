@@ -42,6 +42,8 @@ BROWSER_TESTS += \
   browser_selection_textarea.html \
   browser_selection_frame_content.js \
   browser_selection_frame_content.html \
+  browser_selection_inputs.js \
+  browser_selection_inputs.html \
   $(NULL)
 endif
 
