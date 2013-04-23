@@ -7,6 +7,8 @@ package org.mozilla.gecko.mozglue;
 
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.zip.Inflater;
+import java.util.zip.InflaterInputStream;
 
 public class NativeZip implements NativeReference {
     private static final int DEFLATE = 8;
@@ -67,9 +69,16 @@ public class NativeZip implements NativeReference {
     private native InputStream _getInputStream(long obj, String path);
 
     private InputStream createInputStream(ByteBuffer buffer, int compression) {
-        if (compression != STORE) {
-            throw new IllegalArgumentException("Got compression " + compression + ", but expected 0 (STORE)!");
+        if (compression != STORE && compression != DEFLATE) {
+            throw new IllegalArgumentException("Unexpected compression: " + compression);
         }
-        return new ByteBufferInputStream(buffer, this);
+
+        InputStream input = new ByteBufferInputStream(buffer, this);
+        if (compression == DEFLATE) {
+            Inflater inflater = new Inflater(true);
+            input = new InflaterInputStream(input, inflater);
+        }
+
+        return input;
     }
 }
