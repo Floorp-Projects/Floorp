@@ -78,14 +78,7 @@ public:
   virtual ~AudioNode();
 
   // This should be idempotent (safe to call multiple times).
-  virtual void DestroyMediaStream()
-  {
-    if (mStream) {
-      UnbindFromEngine();
-      mStream->Destroy();
-      mStream = nullptr;
-    }
-  }
+  virtual void DestroyMediaStream();
 
   // This method should be overridden to return true in nodes
   // which support being hooked up to the Media Stream graph.
@@ -150,8 +143,6 @@ public:
 private:
   // This could possibly delete 'this'.
   void DisconnectFromGraph();
-
-  void UnbindFromEngine();
 
 protected:
   static void Callback(AudioNode* aNode) { /* not implemented */ }
