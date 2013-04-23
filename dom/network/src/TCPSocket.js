@@ -375,7 +375,7 @@ TCPSocket.prototype = {
       that._socketBridge = Cc["@mozilla.org/tcp-socket-child;1"]
                              .createInstance(Ci.nsITCPSocketChild);
       that._socketBridge.open(that, host, port, !!that._ssl,
-                              that._binaryType, this.useWin, this);
+                              that._binaryType, this.useWin, this.useWin || this);
       return that;
     }
 
