@@ -305,6 +305,7 @@ class AsmJSModule
 #if defined(JS_CPU_ARM)
     typedef Vector<ion::AsmJSBoundsCheck, 0, SystemAllocPolicy> BoundsCheckVector;
 #endif
+    typedef Vector<ion::IonScriptCounts *, 0, SystemAllocPolicy> FunctionCountsVector;
 
     GlobalVector                          globals_;
     ExitVector                            exits_;
@@ -334,6 +335,8 @@ class AsmJSModule
 
     PostLinkFailureInfo                   postLinkFailureInfo_;
 
+    FunctionCountsVector                  functionCounts_;
+
   public:
     explicit AsmJSModule(JSContext *cx)
       : numGlobalVars_(0),
@@ -349,6 +352,8 @@ class AsmJSModule
         maybeHeap_(),
         postLinkFailureInfo_(cx)
     {}
+
+    ~AsmJSModule();
 
     void trace(JSTracer *trc) {
         for (unsigned i = 0; i < globals_.length(); i++)
@@ -425,6 +430,9 @@ class AsmJSModule
         *exitIndex = unsigned(exits_.length());
         return exits_.append(Exit(ffiIndex));
     }
+    bool addFunctionCounts(ion::IonScriptCounts *counts) {
+        return functionCounts_.append(counts);
+    }
 
     bool addExportedFunction(RawFunction fun, PropertyName *maybeFieldName,
                              MoveRef<ArgCoercionVector> argCoercions, ReturnType returnType)
@@ -467,6 +475,12 @@ class AsmJSModule
     }
     const Exit &exit(unsigned i) const {
         return exits_[i];
+    }
+    unsigned numFunctionCounts() const {
+        return functionCounts_.length();
+    }
+    ion::IonScriptCounts *functionCounts(unsigned i) {
+        return functionCounts_[i];
     }
 
     // An Exit holds bookkeeping information about an exit; the ExitDatum
@@ -660,6 +674,9 @@ class AsmJSModule
 // 'trace' and the destructor on finalization.
 extern AsmJSModule &
 AsmJSModuleObjectToModule(JSObject *obj);
+
+extern bool
+IsAsmJSModuleObject(JSObject *obj);
 
 extern JSObject &
 AsmJSModuleObject(JSFunction *moduleFun);
