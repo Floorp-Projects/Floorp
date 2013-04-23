@@ -20,21 +20,27 @@
         role: ROLE_LISTBOX,
         children: [
           {
-            role: ROLE_HEADING
-          },
-          {
-            role: ROLE_OPTION,
+            role: ROLE_GROUPING,
             children: [
               {
-                role: ROLE_TEXT_LEAF
-              }
-            ]
-          },
-          {
-            role: ROLE_OPTION,
-            children: [
+                role: ROLE_STATICTEXT,
+                children: [ ]
+              },
               {
-                role: ROLE_TEXT_LEAF
+                role: ROLE_OPTION,
+                children: [
+                  {
+                    role: ROLE_TEXT_LEAF
+                  }
+                ]
+              },
+              {
+                role: ROLE_OPTION,
+                children: [
+                  {
+                    role: ROLE_TEXT_LEAF
+                  }
+                ]
               }
             ]
           },
@@ -57,24 +63,30 @@
             role: ROLE_COMBOBOX_LIST,
             children: [
               {
-                role: ROLE_HEADING
-              },
-              {
-                role: ROLE_COMBOBOX_OPTION,
+                role: ROLE_GROUPING,
                 children: [
                   {
-                    role: ROLE_TEXT_LEAF
-                  }
-                ]
-              },
-              {
-                role: ROLE_COMBOBOX_OPTION,
-                children: [
+                    role: ROLE_STATICTEXT,
+                    children: [ ]
+                  },
                   {
-                    role: ROLE_TEXT_LEAF
-                  }
+                    role: ROLE_COMBOBOX_OPTION,
+                    children: [
+                      {
+                        role: ROLE_TEXT_LEAF
+                      }
+                    ]
+                  },
+                  {
+                    role: ROLE_COMBOBOX_OPTION,
+                    children: [
+                      {
+                        role: ROLE_TEXT_LEAF
+                      }
+                    ]
+                  },
                 ]
-              },
+},
               {
                 role: ROLE_COMBOBOX_OPTION,
                 children: [
