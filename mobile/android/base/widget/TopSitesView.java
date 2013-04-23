@@ -619,6 +619,11 @@ public class TopSitesView extends GridView {
                 String title = data.getStringExtra(AwesomeBar.TITLE_KEY);
                 String url = data.getStringExtra(AwesomeBar.URL_KEY);
 
+                // Bail if the user entered an empty string.
+                if (TextUtils.isEmpty(url)) {
+                    return;
+                }
+
                 // If the user manually entered a search term or URL, wrap the value in
                 // a special URI until we can get a valid URL for this bookmark.
                 if (data.getBooleanExtra(AwesomeBar.USER_ENTERED_KEY, false)) {
