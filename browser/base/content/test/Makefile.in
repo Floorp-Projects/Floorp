@@ -36,7 +36,6 @@ MOCHITEST_FILES = \
 		gZipOfflineChild.html^headers^ \
 		gZipOfflineChild.cacheManifest \
 		gZipOfflineChild.cacheManifest^headers^ \
-		test_bug787619.html \
 		$(NULL)
 
 # test_contextmenu.html is disabled on Linux due to bug 513558
@@ -275,6 +274,7 @@ _BROWSER_FILES = \
                  plugin_clickToPlayDeny.html \
                  plugin_bug744745.html \
                  plugin_bug749455.html \
+                 plugin_bug787619.html \
                  plugin_bug797677.html \
                  plugin_bug818009.html \
                  plugin_bug820497.html \
@@ -304,6 +304,7 @@ _BROWSER_FILES = \
                  browser_lastAccessedTab.js \
                  browser_bug734076.js \
                  browser_bug744745.js \
+                 browser_bug787619.js \
                  browser_bug812562.js \
                  browser_bug818009.js \
                  browser_bug818118.js \

@@ -140,8 +140,13 @@ function test_disable_blocklist() {
   do_check_false(gPluginHost.isPluginClickToPlayForType("application/x-test"));
 
   // it should still be possible to make a plugin click-to-play via the pref
+  // and setting that plugin's enabled state to click-to-play
   Services.prefs.setBoolPref("plugins.click_to_play", true);
+  let previousEnabledState = plugin.enabledState;
+  plugin.enabledState = Components.interfaces.nsIPluginTag.STATE_CLICKTOPLAY;
   do_check_true(gPluginHost.isPluginClickToPlayForType("application/x-test"));
+  // clean up plugin state
+  plugin.enabledState = previousEnabledState;
 
   gServer.stop(do_test_finished);
 }
