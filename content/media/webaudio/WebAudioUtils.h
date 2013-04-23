@@ -61,6 +61,14 @@ struct WebAudioUtils {
   }
 
   /**
+   * Converts a decibel value to a linear value.
+   */
+  static float ConvertDecibelsToLinear(float aDecibels)
+  {
+    return std::pow(10.0f, 0.05f * aDecibels);
+  }
+
+  /**
    * Converts a decibel to a linear value.
    */
   static float ConvertDecibelToLinear(float aDecibel)
@@ -73,6 +81,11 @@ struct WebAudioUtils {
     if (MOZ_DOUBLE_IS_NaN(aDouble) || MOZ_DOUBLE_IS_INFINITE(aDouble)) {
       aDouble = 0.0;
     }
+  }
+
+  static double DiscreteTimeConstantForSampleRate(double timeConstant, double sampleRate)
+  {
+    return 1.0 - std::exp(-1.0 / (sampleRate * timeConstant));
   }
 
   /**

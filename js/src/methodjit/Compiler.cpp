@@ -995,7 +995,7 @@ mjit::CanMethodJIT(JSContext *cx, JSScript *script, jsbytecode *pc,
         return Compile_Abort;
 
 #ifdef JS_ION
-    if (ion::IsBaselineEnabled(cx))
+    if (ion::IsBaselineEnabled(cx) || ion::IsEnabled(cx))
         return Compile_Abort;
 #endif
 

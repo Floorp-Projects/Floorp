@@ -67,4 +67,7 @@ else if (isTabPBSupported) {
   };
 }
 
+// Test disabled because of bug 855771
+module.exports = {};
+
 require('test').run(exports);

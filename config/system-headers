@@ -1073,6 +1073,8 @@ conic/conicstatisticsevent.h
 #endif
 #if MOZ_NATIVE_LIBEVENT==1
 event.h
+#else
+sys/event.h
 #endif
 #ifdef MOZ_ENABLE_LIBPROXY
 proxy.h

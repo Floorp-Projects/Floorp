@@ -93,11 +93,13 @@
 }
 
 .requests-menu-file {
-  width: 14em;
+  width: 20vw;
+  min-width: 4em;
 }
 
 .requests-menu-domain {
-  width: 14em;
+  width: 14vw;
+  min-width: 10em;
 }
 
 .requests-menu-type {
@@ -303,13 +305,44 @@
   #details-pane {
     max-width: none;
     margin: 0 !important;
-    /* To prevent all the margin hacks to hide the sidebar */
+    /* To prevent all the margin hacks to hide the sidebar. */
+  }
+
+  .requests-menu-status-and-method {
+    width: 14vw;
+  }
+
+  .requests-menu-file,
+  .requests-menu-domain {
+    width: 30vw;
+    min-width: 10em;
+  }
+
+  .requests-menu-type {
+    width: 8vw;
   }
 
   .requests-menu-size {
-    border-width: 0px !important;
+    width: 16vw;
+    border-width: 0 !important;
     box-shadow: none !important;
-    /* !important are required here because Timeline is not visible and thus
-       the right border and box-shadow of Size column should be hidden */
+    /* The "Timeline" header is not visible anymore, and thus the
+       right border and box-shadow of "Size" column should be hidden. */
+  }
+}
+
+@media (min-width: 701px) {
+  #network-table[type-overflows] .requests-menu-domain {
+    border-width: 0 !important;
+    box-shadow: none !important;
+    /* The "Type" header is not visible anymore, and thus the
+       right border and box-shadow of "Domain" column should be hidden. */
+  }
+
+  #network-table[domain-overflows] .requests-menu-file {
+    border-width: 0 !important;
+    box-shadow: none !important;
+    /* The "Domain" header is not visible anymore, and thus the
+       right border and box-shadow of "File" column should be hidden. */
   }
 }

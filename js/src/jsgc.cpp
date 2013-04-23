@@ -5112,3 +5112,11 @@ AutoSuppressGC::AutoSuppressGC(JSCompartment *comp)
 {
     suppressGC_++;
 }
+
+#ifdef DEBUG
+AutoDisableProxyCheck::AutoDisableProxyCheck(JSRuntime *rt)
+  : count(rt->gcDisableStrictProxyCheckingCount)
+{
+    count++;
+}
+#endif

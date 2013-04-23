@@ -33,6 +33,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Promise",
 
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "CrossSlide",
+                                  "resource:///modules/CrossSlide.jsm");
 
 /*
  * Services

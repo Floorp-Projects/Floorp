@@ -63,46 +63,45 @@ struct FontListEntry {
 struct DeviceStorageFreeSpaceParams
 {
   nsString type;
-  nsString fullpath;
+  nsString relpath;
 };
 
 struct DeviceStorageUsedSpaceParams
 {
   nsString type;
-  nsString fullpath;
+  nsString relpath;
 };
 
 struct DeviceStorageAvailableParams
 {
   nsString type;
-  nsString fullpath;
+  nsString relpath;
 };
 
 struct DeviceStorageAddParams
 {
   nsString type;
+  nsString relpath;
   PBlob blob;
-  nsString name;
-  nsString fullpath;
 };
 
 struct DeviceStorageGetParams
 {
   nsString type;
-  nsString name;
-  nsString fullpath;
+  nsString rootDir;
+  nsString relpath;
 };
 
 struct DeviceStorageDeleteParams
 {
   nsString type;
-  nsString fullpath;
+  nsString relpath;
 };
 
 struct DeviceStorageEnumerationParams
 {
   nsString type;
-  nsString fullpath;
+  nsString relpath;
   uint64_t since;
 };
 

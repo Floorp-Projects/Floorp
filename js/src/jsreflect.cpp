@@ -3094,7 +3094,7 @@ reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
     return JS_TRUE;
 }
 
-static JSFunctionSpec static_methods[] = {
+static const JSFunctionSpec static_methods[] = {
     JS_FN("parse", reflect_parse, 1, 0),
     JS_FS_END
 };
