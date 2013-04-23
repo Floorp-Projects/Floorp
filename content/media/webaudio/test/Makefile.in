@@ -37,6 +37,7 @@ MOCHITEST_FILES := \
   test_pannerNode.html \
   test_scriptProcessorNode.html \
   test_singleSourceDest.html \
+  test_audioBufferSourceNodeLazyLoopParam.html \
   ting.ogg \
   ting-expected.wav \
   ting-dualchannel44.1.ogg \
