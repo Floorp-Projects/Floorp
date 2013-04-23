@@ -141,6 +141,7 @@ AudioContext::CreateScriptProcessor(uint32_t aBufferSize,
   nsRefPtr<ScriptProcessorNode> scriptProcessor =
     new ScriptProcessorNode(this, aBufferSize, aNumberOfInputChannels,
                             aNumberOfOutputChannels);
+  mScriptProcessorNodes.AppendElement(scriptProcessor);
   return scriptProcessor.forget();
 }
 
@@ -246,6 +247,12 @@ AudioContext::UnregisterPannerNode(PannerNode* aNode)
 }
 
 void
+AudioContext::UnregisterScriptProcessorNode(ScriptProcessorNode* aNode)
+{
+  mScriptProcessorNodes.RemoveElement(aNode);
+}
+
+void
 AudioContext::UpdatePannerSource()
 {
   for (unsigned i = 0; i < mAudioBufferSourceNodes.Length(); i++) {
@@ -285,6 +292,11 @@ AudioContext::Shutdown()
   for (uint32_t i = 0; i < mAudioBufferSourceNodes.Length(); ++i) {
     ErrorResult rv;
     mAudioBufferSourceNodes[i]->Stop(0.0, rv);
+  }
+  // Stop all script processor nodes, to make sure that they release
+  // their self-references.
+  for (uint32_t i = 0; i < mScriptProcessorNodes.Length(); ++i) {
+    mScriptProcessorNodes[i]->Stop();
   }
 }
 
