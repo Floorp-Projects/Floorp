@@ -574,7 +574,8 @@ var SelectionHandler = {
   _restrictSelectionRectToEditBounds: function _restrictSelectionRectToEditBounds() {
     if (!this._targetIsEditable)
       return;
-    let bounds = this._getTargetClientRect();
+
+    let bounds = this._getTargetBrowserRect();
     if (this._cache.start.xPos < bounds.left)
       this._cache.start.xPos = bounds.left;
     if (this._cache.end.xPos < bounds.left)
@@ -794,7 +795,7 @@ var SelectionHandler = {
    * @return new constrained point struct
    */
   _constrainPointWithinControl: function _cpwc(aPoint, aHalfLineHeight) {
-    let bounds = this._getTargetClientRect();
+    let bounds = this._getTargetBrowserRect();
     let point = { xPos: aPoint.xPos, yPos: aPoint.yPos };
     if (point.xPos <= bounds.left)
       point.xPos = bounds.left + 2;
@@ -815,7 +816,7 @@ var SelectionHandler = {
    * Works on client coordinates.
    */
   _pointOrientationToRect: function _pointOrientationToRect(aPoint) {
-    let bounds = this._targetElement.getBoundingClientRect();
+    let bounds = this._getTargetBrowserRect();
     let result = { left: 0, right: 0, top: 0, bottom: 0 };
     if (aPoint.xPos <= bounds.left)
       result.left = bounds.left - aPoint.xPos;
@@ -1103,7 +1104,7 @@ var SelectionHandler = {
     // height of the target element
     let targetHeight = this._cache.element.bottom - this._cache.element.top;
     // height of the browser view.
-    let viewBottom = this._targetElement.ownerDocument.defaultView.innerHeight;
+    let viewBottom = content.innerHeight;
 
     // If the target is shorter than the new content height, we can go ahead
     // and center it.
@@ -1294,8 +1295,25 @@ var SelectionHandler = {
     return seldata;
   },
 
+  /*
+   * Returns bounds of the element relative to the inner sub frame it sits
+   * in.
+   */
   _getTargetClientRect: function _getTargetClientRect() {
     return this._targetElement.getBoundingClientRect();
+  },
+
+  /*
+   * Returns bounds of the element relative to the top level browser.
+   */
+  _getTargetBrowserRect: function _getTargetBrowserRect() {
+    let client = this._getTargetClientRect();
+    return {
+      left: client.left +  this._contentOffset.x,
+      top: client.top +  this._contentOffset.y,
+      right: client.right +  this._contentOffset.x,
+      bottom: client.bottom +  this._contentOffset.y
+    };
   },
 
    /*
