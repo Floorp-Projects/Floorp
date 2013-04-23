@@ -145,7 +145,7 @@ CrossSlideHandler.prototype = {
     }
   },
 
-  cancel: function(){
+  cancel: function(aEvent){
     this._fireProgressEvent("cancelled", aEvent);
     this.drag = null;
   },
@@ -183,7 +183,7 @@ CrossSlideHandler.prototype = {
 
     if (aEvent.touches.length!==1) {
       // cancel if another touch point gets involved
-      return this.cancel();
+      return this.cancel(aEvent);
     }
 
     let startPt = this.drag.origin;
@@ -202,7 +202,7 @@ CrossSlideHandler.prototype = {
 
     if (-1 == newState) {
       // out of bounds, cancel the event always
-      return this.cancel();
+      return this.cancel(aEvent);
     }
 
     let isWithinCone = withinCone(crossAxisDistance, scrollAxisDistance);
@@ -213,7 +213,7 @@ CrossSlideHandler.prototype = {
     if (currState >= CrossSlidingState.SELECTING && !isWithinCone) {
       // we're committed to a cross-slide gesture,
       // so going out of bounds at this point means aborting
-      return this.cancel();
+      return this.cancel(aEvent);
     }
 
     if (currState > newState) {
@@ -232,7 +232,7 @@ CrossSlideHandler.prototype = {
     aEvent.stopPropagation();
 
     if (this.drag.state < CrossSlidingState.SELECTING) {
-      return this.cancel();
+      return this.cancel(aEvent);
     }
 
     this._fireProgressEvent("completed", aEvent);
