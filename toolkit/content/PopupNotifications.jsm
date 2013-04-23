@@ -540,9 +540,12 @@ PopupNotifications.prototype = {
     // On OS X and Linux we need a different panel arrow color for
     // click-to-play plugins, so copy the popupid and use css.
     this.panel.setAttribute("popupid", this.panel.firstChild.getAttribute("popupid"));
+    notificationsToShow.forEach(function (n) {
+      // Remember the time the notification was shown for the security delay.
+      n.timeShown = this.window.performance.now();
+    }, this);
     this.panel.openPopup(anchorElement, "bottomcenter topleft");
     notificationsToShow.forEach(function (n) {
-      n.timeShown = Date.now();
       this._fireCallback(n, NOTIFICATION_EVENT_SHOWN);
     }, this);
   },
@@ -725,7 +728,7 @@ PopupNotifications.prototype = {
       throw "PopupNotifications_onButtonCommand: couldn't find notification";
 
     let notification = notificationEl.notification;
-    let timeSinceShown = Date.now() - notification.timeShown;
+    let timeSinceShown = this.window.performance.now() - notification.timeShown;
 
     // Only report the first time mainAction is triggered and remember that this occurred.
     if (!notification.timeMainActionFirstTriggered) {
