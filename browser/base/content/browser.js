@@ -1040,6 +1040,7 @@ var gBrowserInit = {
     gFormSubmitObserver.init();
     PanelUI.init();
     SocialUI.init();
+    LightweightThemeListener.init();
     AddonManager.addAddonListener(AddonsMgrListener);
     WebrtcIndicator.init();
 
@@ -1376,6 +1377,7 @@ var gBrowserInit = {
       IndexedDBPromptHelper.uninit();
       AddonManager.removeAddonListener(AddonsMgrListener);
       SocialUI.uninit();
+      LightweightThemeListener.uninit();
       gCustomizeMode.uninit();
       PanelUI.uninit();
     }

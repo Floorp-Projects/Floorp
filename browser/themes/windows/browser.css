@@ -8,10 +8,9 @@
 @namespace html url("http://www.w3.org/1999/xhtml");
 
 %include ../shared/browser.inc
+%include windowsShared.inc
 %filter substitution
-%define toolbarHighlight rgba(253,253,253,0.45)
 %define toolbarShadowColor hsla(209,67%,12%,0.35)
-%define fgTabTexture linear-gradient(rgba(254,254,254,0.72), rgba(254,254,254,0.72) 0px, rgba(250,250,250,0.88) 1px, rgba(250,250,250,0.88) 1px, rgba(254,254,254,0.72) 2px, @toolbarHighlight@)
 %define fgTabBackgroundMiddle linear-gradient(transparent, transparent 2px, -moz-dialog 2px, -moz-dialog)
 %define navbarTextboxCustomBorder border-color: rgba(0,0,0,.32);
 %define navbarLargeIcons #navigator-toolbox[iconsize=large][mode=icons] > #nav-bar
@@ -93,7 +92,9 @@
                 linear-gradient(rgba(50%,50%,50%,0), InactiveCaption 85%);
     color: InactiveCaptionText;
   }
-
+  #TabsToolbar:-moz-lwtheme {
+    background: linear-gradient(to top, @toolbarShadowColor@ 1px, transparent 1px);
+  }
   #main-window[tabsintitlebar] #titlebar:-moz-lwtheme {
     visibility: hidden;
   }
@@ -1973,8 +1974,14 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   color: CaptionText;
 }
 
-.tabbrowser-tab:-moz-lwtheme {
+/* The selected tab should keep dark text with lightweight themes */
+.tabbrowser-tab:-moz-lwtheme:not([selected=true]) {
   color: inherit;
+}
+
+.tabbrowser-tab[selected=true]:-moz-lwtheme {
+  /* Copied from :root:-moz-lwtheme-darktext in global.css */
+  text-shadow: 0 -0.5px 1.5px white;
 }
 
 .tab-throbber,
@@ -3058,4 +3065,3 @@ chatbox {
   width: 20px;
   height: 16px;
 }
-

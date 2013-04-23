@@ -110,13 +110,13 @@
   background-repeat: no-repeat;
 }
 
-.tab-background-start[selected=true]:not(:-moz-lwtheme):-moz-locale-dir(ltr)::after,
-.tab-background-end[selected=true]:not(:-moz-lwtheme):-moz-locale-dir(rtl)::after {
+.tab-background-start[selected=true]:-moz-locale-dir(ltr)::after,
+.tab-background-end[selected=true]:-moz-locale-dir(rtl)::after {
   background-image: url(chrome://browser/skin/tabbrowser/tab-stroke-start.png);
 }
 
-.tab-background-end[selected=true]:not(:-moz-lwtheme):-moz-locale-dir(ltr)::after,
-.tab-background-start[selected=true]:not(:-moz-lwtheme):-moz-locale-dir(rtl)::after {
+.tab-background-end[selected=true]:-moz-locale-dir(ltr)::after,
+.tab-background-start[selected=true]:-moz-locale-dir(rtl)::after {
   background-image: url(chrome://browser/skin/tabbrowser/tab-stroke-end.png);
 }
 
@@ -134,13 +134,15 @@
   background-repeat: repeat-x;
 }
 
+.tab-background-middle[selected=true]:-moz-lwtheme {
+  background-image: url(chrome://browser/skin/tabbrowser/tab-active-middle.png);
+}
+
 /* Same as above but without border or -moz-dialog background */
 .tab-background-start[selected=true]:-moz-lwtheme::before,
 .tab-background-end[selected=true]:-moz-lwtheme::before,
 .tab-background-middle[selected=true]:-moz-lwtheme {
   background-color: transparent;
-  background-image: @fgTabTexture@;
-  background-position: left 0 top 2px;
 }
 
 /* End selected tab */
