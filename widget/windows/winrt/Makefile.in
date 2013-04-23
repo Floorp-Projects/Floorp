@@ -15,21 +15,6 @@ IS_COMPONENT		= 1
 MODULE_NAME			= WidgetWinRTModule
 LIBXUL_LIBRARY	= 1
 
-CPPSRCS		= \
-		MetroApp.cpp \
-		MetroWidget.cpp \
-		MetroAppShell.cpp \
-		MetroUtils.cpp \
-		FrameworkView.cpp \
-		FrameworkViewGfx.cpp \
-		nsWinMetroUtils.cpp \
-		MetroInput.cpp \
-		UIABridge.cpp \
-		UIAAccessibilityBridge.cpp \
-		MetroContracts.cpp \
-		nsMetroFilePicker.cpp \
-		$(NULL)
-
 DEFINES		+= -D_IMPL_NS_WIDGET -DMOZ_UNICODE
 
 ifdef MOZ_ENABLE_D3D9_LAYER

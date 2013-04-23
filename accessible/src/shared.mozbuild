@@ -4,10 +4,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'test_xulapp'
+a11y_log = 0
+if CONFIG['MOZ_DEBUG']:
+    a11y_log = 1
 
-CPP_SOURCES += [
-    'TestDllInterceptor.cpp',
-    'TestXREMakeCommandLineWin.cpp',
-]
-
+if CONFIG['MOZ_UPDATE_CHANNEL'] not in ('aurora', 'beta', 'release', 'esr'):
+    a11y_log = 1

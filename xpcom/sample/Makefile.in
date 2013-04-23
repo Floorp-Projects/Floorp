@@ -26,11 +26,6 @@ IS_COMPONENT	= 1
 MODULE_NAME	= nsSampleModule
 
 # CPPSRCS specifies C++ files to be built into a library.
-CPPSRCS		=		   \
-		nsSample.cpp	   \
-		nsSampleModule.cpp \
-		$(NULL)
-
 include $(topsrcdir)/config/config.mk
 
 # EXTRA_COMPONENTS installs components written JavaScript to

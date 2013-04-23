@@ -14,10 +14,6 @@ XPI_NAME 	= crashreporter
 
 LOCAL_INCLUDES 	= -I$(srcdir)/..
 
-CPPSRCS	= \
-  minidump_file_writer.cc \
-  $(NULL)
-
 # need static lib
 FORCE_STATIC_LIB = 1
 

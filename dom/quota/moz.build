@@ -32,3 +32,10 @@ EXPORTS.mozilla.dom.quota += [
     'Utilities.h',
 ]
 
+CPP_SOURCES += [
+    'CheckQuotaHelper.cpp',
+    'FileStreams.cpp',
+    'QuotaManager.cpp',
+    'QuotaObject.cpp',
+]
+

@@ -15,8 +15,6 @@ LIBXUL_LIBRARY = 1
 EXPORT_LIBRARY = 1
 FAIL_ON_WARNINGS = 1
 
-CPPSRCS += UnixSocket.cpp
-
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
