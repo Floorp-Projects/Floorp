@@ -401,6 +401,10 @@ NetworkManager.prototype = {
     debug("NetworkManager received message from worker: " + JSON.stringify(e.data));
     let response = e.data;
     let id = response.id;
+    if (id == 'broadcast') {
+      Services.obs.notifyObservers(null, response.topic, response.reason);
+      return;
+    }
     let callback = this.controlCallbacks[id];
     if (callback) {
       callback.call(this, response);
