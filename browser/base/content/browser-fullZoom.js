@@ -40,6 +40,10 @@ var FullZoom = {
   // Initialization & Destruction
 
   init: function FullZoom_init() {
+    // Bug 691614 - zooming support for electrolysis
+    if (gMultiProcessBrowser)
+      return;
+
     // Listen for scrollwheel events so we can save scrollwheel-based changes.
     window.addEventListener("DOMMouseScroll", this, false);
 
@@ -58,6 +62,10 @@ var FullZoom = {
   },
 
   destroy: function FullZoom_destroy() {
+    // Bug 691614 - zooming support for electrolysis
+    if (gMultiProcessBrowser)
+      return;
+
     gPrefService.removeObserver("browser.zoom.", this);
     this._cps2.removeObserverForName(this.name, this);
     window.removeEventListener("DOMMouseScroll", this, false);
@@ -210,6 +218,10 @@ var FullZoom = {
    *        (optional) browser object displaying the document
    */
   onLocationChange: function FullZoom_onLocationChange(aURI, aIsTabSwitch, aBrowser) {
+    // Bug 691614 - zooming support for electrolysis
+    if (gMultiProcessBrowser)
+      return;
+
     if (!aURI || (aIsTabSwitch && !this.siteSpecific)) {
       this._notifyOnLocationChange();
       return;
