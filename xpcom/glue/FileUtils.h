@@ -145,7 +145,14 @@ NS_COM_GLUE void ReadAhead(filedesc_t aFd, const size_t aOffset = 0,
                            const size_t aCount = SIZE_MAX);
 
 
-#ifdef MOZ_WIDGET_GONK
+/* Define ReadSysFile() only on GONK to avoid unnecessary lubxul bloat.
+Also define it in debug builds, so that unit tests for it can be written
+and run in non-GONK builds. */
+#if (defined(MOZ_WIDGET_GONK) || defined(DEBUG)) && defined(XP_UNIX)
+
+#ifndef ReadSysFile_PRESENT
+#define ReadSysFile_PRESENT
+#endif /* ReadSysFile_PRESENT */
 
 /**
  * Read the contents of a file.
@@ -184,7 +191,7 @@ ReadSysFile(
   const char* aFilename,
   bool* aVal);
 
-#endif /* MOZ_WIDGET_GONK */
+#endif /* (MOZ_WIDGET_GONK || DEBUG) && XP_UNIX */
 
 } // namespace mozilla
 #endif
