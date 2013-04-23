@@ -137,6 +137,10 @@ public:
     virtual bool resolveNativeProperty(JSContext *cx, HandleObject wrapper,
                                        HandleObject holder, HandleId id,
                                        JSPropertyDescriptor *desc, unsigned flags) = 0;
+    // NB: resolveOwnProperty may decide whether or not to cache what it finds
+    // on the holder. If the result is not cached, the lookup will happen afresh
+    // for each access, which is the right thing for things like dynamic NodeList
+    // properties.
     virtual bool resolveOwnProperty(JSContext *cx, Wrapper &jsWrapper,
                                     HandleObject wrapper, HandleObject holder,
                                     HandleId id, JSPropertyDescriptor *desc, unsigned flags);
@@ -1039,7 +1043,19 @@ XPCWrappedNativeXrayTraits::resolveOwnProperty(JSContext *cx, Wrapper &jsWrapper
 #endif
     }
 
-    return true;
+    // resolveOwnProperty must return a non-empty |desc| if and only if an |own|
+    // property was found on the object. However, given how the NewResolve setup
+    // works, we can't run the resolve hook if the holder already has a property
+    // of the same name. So if there was a pre-existing property on the holder,
+    // we have to use it. But we have no way of knowing if it corresponded to an
+    // |own| or non-|own| property, since both get cached on the holder and the
+    // |own|-ness information is lost.
+    //
+    // So we just over-zealously call things |own| here. This can cause us to
+    // return non-|own| properties from Object.getOwnPropertyDescriptor if
+    // lookups are performed in a certain order, but we can probably live with
+    // that until XPCWN Xrays go away with the new DOM bindings.
+    return JS_GetPropertyDescriptorById(cx, holder, id, 0, desc);
 }
 
 bool
@@ -1473,9 +1489,28 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, HandleObject wra
         return true;
     }
 
+    // Ordering is important here.
+    //
+    // We first need to call resolveOwnProperty, even before checking the holder,
+    // because there might be a new dynamic |own| property that appears and
+    // shadows a previously-resolved non-own property that we cached on the
+    // holder. This can happen with indexed properties on NodeLists, for example,
+    // which are |own| value props.
+    //
+    // resolveOwnProperty may or may not cache what it finds on the holder,
+    // depending on how ephemeral it decides the property is. XPCWN |own|
+    // properties generally end up on the holder via NewResolve, whereas
+    // NodeList |own| properties don't get defined on the holder, since they're
+    // supposed to be dynamic. This means that we have to first check the result
+    // of resolveOwnProperty, and _then_, if that comes up blank, check the
+    // holder for any cached native properties.
+    //
+    // Finally, we call resolveNativeProperty, which checks non-own properties,
+    // and unconditionally caches what it finds on the holder.
+
+    // Check resolveOwnProperty.
     if (!Traits::singleton.resolveOwnProperty(cx, *this, wrapper, holder, id, desc, flags))
         return false;
-
     if (desc->obj) {
         desc->obj = wrapper;
         return true;
@@ -1504,6 +1539,7 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, HandleObject wra
         }
     }
 
+    // Check the holder.
     if (!JS_GetPropertyDescriptorById(cx, holder, id, 0, desc))
         return false;
     if (desc->obj) {
@@ -1598,19 +1634,8 @@ XrayWrapper<Base, Traits>::getOwnPropertyDescriptor(JSContext *cx, HandleObject 
 
     if (!Traits::singleton.resolveOwnProperty(cx, *this, wrapper, holder, id, desc, flags))
         return false;
-
-    if (desc->obj) {
-        desc->obj = wrapper;
-        return true;
-    }
-
-    if (!JS_GetPropertyDescriptorById(cx, holder, id, flags, desc))
-        return false;
-
-    // Pretend we found the property on the wrapper, not the holder.
     if (desc->obj)
         desc->obj = wrapper;
-
     return true;
 }
 
