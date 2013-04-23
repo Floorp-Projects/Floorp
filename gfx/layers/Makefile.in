@@ -141,10 +141,10 @@ DEFINES	+= -DMOZ_ENABLE_D3D10_LAYER
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-EXPORTS_mozilla/layers += GLManager.h
-CPPSRCS += ShadowLayerUtilsMac.cpp \
-           GLManager.cpp \
-           $(NULL)
+CPPSRCS += \
+  ShadowLayerUtilsMac.cpp \
+  GLManager.cpp \
+  $(NULL)
 endif
 
 # NB: Gralloc is available on other platforms that use the android GL

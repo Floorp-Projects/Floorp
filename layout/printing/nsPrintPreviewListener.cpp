@@ -7,6 +7,7 @@
 #include "nsPrintPreviewListener.h"
 
 #include "mozilla/dom/Element.h"
+#include "nsDOMEvent.h"
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMElement.h"
@@ -19,6 +20,7 @@
 #include "nsLiteralString.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 NS_IMPL_ISUPPORTS1(nsPrintPreviewListener, nsIDOMEventListener)
 
@@ -26,7 +28,7 @@ NS_IMPL_ISUPPORTS1(nsPrintPreviewListener, nsIDOMEventListener)
 //
 // nsPrintPreviewListener ctor
 //
-nsPrintPreviewListener::nsPrintPreviewListener (nsIDOMEventTarget* aTarget)
+nsPrintPreviewListener::nsPrintPreviewListener(EventTarget* aTarget)
   : mEventTarget(aTarget)
 {
   NS_ADDREF_THIS();
@@ -138,10 +140,8 @@ GetActionForEvent(nsIDOMEvent* aEvent)
 NS_IMETHODIMP
 nsPrintPreviewListener::HandleEvent(nsIDOMEvent* aEvent)
 {
-  nsCOMPtr<nsIDOMEventTarget> target;
-  if (aEvent)
-    aEvent->GetOriginalTarget(getter_AddRefs(target));
-  nsCOMPtr<nsIContent> content(do_QueryInterface(target));
+  nsCOMPtr<nsIContent> content = do_QueryInterface(
+    aEvent ? aEvent->InternalDOMEvent()->GetOriginalTarget() : nullptr);
   if (content && !content->IsXUL()) {
     eEventAction action = ::GetActionForEvent(aEvent);
     switch (action) {
@@ -185,5 +185,5 @@ nsPrintPreviewListener::HandleEvent(nsIDOMEvent* aEvent)
         break;
     }
   }
-  return NS_OK; 
+  return NS_OK;
 }

@@ -7,6 +7,7 @@
 #define nsDOMMutationEvent_h__
 
 #include "nsIDOMMutationEvent.h"
+#include "nsINode.h"
 #include "nsDOMEvent.h"
 #include "nsMutationEvent.h"
 #include "mozilla/dom/MutationEventBinding.h"

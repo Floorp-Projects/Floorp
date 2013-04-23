@@ -411,7 +411,7 @@ class RunProgram(MachCommandBase):
         help='Command-line arguments to pass to the program.')
     def run(self, params):
         try:
-            args = [self.get_binary_path('app')]
+            args = [self.get_binary_path('app'), '-no-remote']
         except Exception as e:
             print("It looks like your program isn't built.",
                 "You can run |mach build| to build it.")
@@ -438,14 +438,13 @@ class DebugProgram(MachCommandBase):
             print(e)
             return 1
         try:
-            args = [debugger, self.get_binary_path('app')]
+            args = [debugger, '--args', self.get_binary_path('app'), '-no-remote']
         except Exception as e:
             print("It looks like your program isn't built.",
                 "You can run |mach build| to build it.")
             print(e)
             return 1
         if params:
-            args.insert(1, '--args')
             args.extend(params)
         return self.run_process(args=args, ensure_exit_code=False,
             pass_thru=True)

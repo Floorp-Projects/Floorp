@@ -1513,10 +1513,6 @@ abstract public class BrowserApp extends GeckoApp
         // In ICS+, it's easy to kill an app through the task switcher.
         aMenu.findItem(R.id.quit).setVisible(Build.VERSION.SDK_INT < 14 || HardwareUtils.isTelevision());
 
-        if (AppConstants.MOZ_PROFILING) {
-            aMenu.findItem(R.id.toggle_profiling).setVisible(true);
-        }
-
         if (tab == null || tab.getURL() == null) {
             bookmark.setEnabled(false);
             forward.setEnabled(false);
@@ -1561,11 +1557,6 @@ abstract public class BrowserApp extends GeckoApp
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == R.id.toggle_profiling) {
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("ToggleProfiling", null));
-            return true;
-        }
-
         Tab tab = null;
         Intent intent = null;
         switch (item.getItemId()) {

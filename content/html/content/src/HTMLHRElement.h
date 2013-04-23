@@ -9,7 +9,6 @@
 
 #include "nsGenericHTMLElement.h"
 #include "nsIDOMHTMLHRElement.h"
-#include "nsIDOMEventTarget.h"
 #include "nsMappedAttributes.h"
 #include "nsAttrValueInlines.h"
 #include "nsRuleData.h"

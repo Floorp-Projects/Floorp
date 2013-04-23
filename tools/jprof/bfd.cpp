@@ -100,31 +100,49 @@ static bfd *find_debug_file(bfd *lib, const char *aFileName)
   return debugFile;
 }
 
-#define NEXT_SYMBOL \
-  sp++; \
-  if (sp >= lastSymbol) { \
-    long n = numExternalSymbols + 10000; \
-    externalSymbols = (Symbol*) \
-      realloc(externalSymbols, (size_t) (sizeof(Symbol) * n)); \
-    lastSymbol = externalSymbols + n; \
-    sp = externalSymbols + numExternalSymbols; \
-    numExternalSymbols = n; \
+
+// Use an indirect array to avoid copying tons of objects
+Symbol ** leaky::ExtendSymbols(int num)
+{
+  long n = numExternalSymbols + num;
+
+  externalSymbols = (Symbol**)
+                    realloc(externalSymbols,
+                            (size_t) (sizeof(externalSymbols[0]) * n));
+  Symbol *new_array = new Symbol[n];
+  for (int i = 0; i < num; i++) {
+    externalSymbols[i + numExternalSymbols] = &new_array[i];
   }
+  lastSymbol = externalSymbols + n;
+  Symbol **sp = externalSymbols + numExternalSymbols;
+  numExternalSymbols = n;
+  return sp;
+}
+
+#define NEXT_SYMBOL do { sp++; \
+                         if (sp >= lastSymbol) { \
+                           sp = ExtendSymbols(16384); \
+                         } \
+                       } while (0)
 
 void leaky::ReadSymbols(const char *aFileName, u_long aBaseAddress)
 {
   int initialSymbols = usefulSymbols;
   if (NULL == externalSymbols) {
-    externalSymbols = (Symbol*) malloc(sizeof(Symbol) * 10000);
+    externalSymbols = (Symbol**) calloc(sizeof(Symbol*),10000);
+    Symbol *new_array = new Symbol[10000];
+    for (int i = 0; i < 10000; i++) {
+      externalSymbols[i] = &new_array[i];
+    }
     numExternalSymbols = 10000;
   }
-  Symbol* sp = externalSymbols + usefulSymbols;
-  Symbol* lastSymbol = externalSymbols + numExternalSymbols;
+  Symbol** sp = externalSymbols + usefulSymbols;
+  lastSymbol = externalSymbols + numExternalSymbols;
 
   // Create a dummy symbol for the library so, if it doesn't have any
   // symbols, we show it by library.
-  sp->Init(aFileName, aBaseAddress);
-  NEXT_SYMBOL
+  (*sp)->Init(aFileName, aBaseAddress);
+  NEXT_SYMBOL;
 
   bfd_boolean kDynamic = (bfd_boolean) false;
 
@@ -184,12 +202,12 @@ void leaky::ReadSymbols(const char *aFileName, u_long aBaseAddress)
 //    if ((syminfo.type == 'T') || (syminfo.type == 't')) {
       const char* nm = bfd_asymbol_name(sym);
       if (nm && nm[0]) {
-	char* dnm = NULL;
-	if (strncmp("__thunk", nm, 7)) {
-	  dnm = cplus_demangle(nm, 1);
-	}
-	sp->Init(dnm ? dnm : nm, syminfo.value + aBaseAddress);
-        NEXT_SYMBOL
+        char* dnm = NULL;
+        if (strncmp("__thunk", nm, 7)) {
+          dnm = cplus_demangle(nm, 1);
+        }
+        (*sp)->Init(dnm ? dnm : nm, syminfo.value + aBaseAddress);
+        NEXT_SYMBOL;
       }
 //    }
   }
@@ -199,7 +217,7 @@ void leaky::ReadSymbols(const char *aFileName, u_long aBaseAddress)
   int interesting = sp - externalSymbols;
   if (!quiet) {
     printf("%s provided %d symbols\n", aFileName,
-	   interesting - initialSymbols);
+           interesting - initialSymbols);
   }
   usefulSymbols = interesting;
 }

@@ -40,8 +40,8 @@
 #endif
 
 
-#if defined(MOZ_ALWAYS_INLINE)
-#  define MOZALLOC_INLINE MOZ_ALWAYS_INLINE
+#if defined(MOZ_ALWAYS_INLINE_EVEN_DEBUG)
+#  define MOZALLOC_INLINE MOZ_ALWAYS_INLINE_EVEN_DEBUG
 #elif defined(HAVE_FORCEINLINE)
 #  define MOZALLOC_INLINE __forceinline
 #else

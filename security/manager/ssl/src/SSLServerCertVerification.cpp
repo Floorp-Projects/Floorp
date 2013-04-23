@@ -476,14 +476,6 @@ CreateCertErrorRunnable(PRErrorCode defaultErrorCodeToReport,
     return nullptr;
   }
 
-  RefPtr<nsCERTValInParamWrapper> survivingParams;
-  nsrv = inss->GetDefaultCERTValInParam(survivingParams);
-  if (NS_FAILED(nsrv)) {
-    NS_ERROR("GetDefaultCERTValInParam failed");
-    PR_SetError(defaultErrorCodeToReport, 0);
-    return nullptr;
-  }
-  
   PLArenaPool *log_arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
   PLArenaPoolCleanerFalseParam log_arena_cleaner(log_arena);
   if (!log_arena) {
@@ -499,13 +491,24 @@ CreateCertErrorRunnable(PRErrorCode defaultErrorCodeToReport,
   CERTVerifyLogContentsCleaner verify_log_cleaner(verify_log);
   verify_log->arena = log_arena;
 
+#ifndef NSS_NO_LIBPKIX
   if (!nsNSSComponent::globalConstFlagUsePKIXVerification) {
+#endif
     srv = CERT_VerifyCertificate(CERT_GetDefaultCertDB(), cert,
                                 true, certificateUsageSSLServer,
                                 PR_Now(), static_cast<void*>(infoObject),
                                 verify_log, nullptr);
+#ifndef NSS_NO_LIBPKIX
   }
   else {
+    RefPtr<nsCERTValInParamWrapper> survivingParams;
+    nsrv = inss->GetDefaultCERTValInParam(survivingParams);
+    if (NS_FAILED(nsrv)) {
+      NS_ERROR("GetDefaultCERTValInParam failed");
+      PR_SetError(defaultErrorCodeToReport, 0);
+      return nullptr;
+    }
+
     CERTValOutParam cvout[2];
     cvout[0].type = cert_po_errorLog;
     cvout[0].value.pointer.log = verify_log;
@@ -515,6 +518,7 @@ CreateCertErrorRunnable(PRErrorCode defaultErrorCodeToReport,
                               survivingParams->GetRawPointerForNSS(),
                               cvout, static_cast<void*>(infoObject));
   }
+#endif
 
   // We ignore the result code of the cert verification.
   // Either it is a failure, which is expected, and we'll process the
@@ -666,9 +670,12 @@ PSM_SSL_PKIX_AuthCertificate(CERTCertificate *peerCert, void * pinarg,
 {
     SECStatus          rv;
     
+#ifndef NSS_NO_LIBPKIX
     if (!nsNSSComponent::globalConstFlagUsePKIXVerification) {
+#endif
         rv = CERT_VerifyCertNow(CERT_GetDefaultCertDB(), peerCert, true,
                                 certUsageSSLServer, pinarg);
+#ifndef NSS_NO_LIBPKIX
     }
     else {
         nsresult nsrv;
@@ -686,6 +693,7 @@ PSM_SSL_PKIX_AuthCertificate(CERTCertificate *peerCert, void * pinarg,
                                 survivingParams->GetRawPointerForNSS(),
                                 cvout, pinarg);
     }
+#endif
 
     if (rv == SECSuccess) {
         /* cert is OK.  This is the client side of an SSL connection.
@@ -1073,12 +1081,16 @@ SSLServerCertVerificationJob::Run()
     if (rv == SECSuccess) {
       uint32_t interval = (uint32_t) ((TimeStamp::Now() - mJobStartTime).ToMilliseconds());
       Telemetry::ID telemetryID;
+#ifndef NSS_NO_LIBPKIX
       if(nsNSSComponent::globalConstFlagUsePKIXVerification){
         telemetryID = Telemetry::SSL_SUCCESFUL_CERT_VALIDATION_TIME_LIBPKIX;
       }
       else{
+#endif
         telemetryID = Telemetry::SSL_SUCCESFUL_CERT_VALIDATION_TIME_CLASSIC;
+#ifndef NSS_NO_LIBPKIX
       }
+#endif
       RefPtr<SSLServerCertVerificationResult> restart(
         new SSLServerCertVerificationResult(mInfoObject, 0,
                                             telemetryID, interval));
@@ -1092,12 +1104,16 @@ SSLServerCertVerificationJob::Run()
     {
       TimeStamp now = TimeStamp::Now();
       Telemetry::ID telemetryID;
+#ifndef NSS_NO_LIBPKIX
       if(nsNSSComponent::globalConstFlagUsePKIXVerification){
         telemetryID = Telemetry::SSL_INITIAL_FAILED_CERT_VALIDATION_TIME_LIBPKIX;
       }
       else{
+#endif
         telemetryID = Telemetry::SSL_INITIAL_FAILED_CERT_VALIDATION_TIME_CLASSIC;
+#ifndef NSS_NO_LIBPKIX
       }
+#endif
       MutexAutoLock telemetryMutex(*gSSLVerificationTelemetryMutex);
       Telemetry::AccumulateTimeDelta(telemetryID,
                                      mJobStartTime,
@@ -1274,6 +1290,7 @@ AuthCertificateHook(void *arg, PRFileDesc *fd, PRBool checkSig, PRBool isServer)
   return SECFailure;
 }
 
+#ifndef NSS_NO_LIBPKIX
 class InitializeIdentityInfo : public nsRunnable
                              , public nsNSSShutDownObject
 {
@@ -1302,9 +1319,11 @@ private:
       shutdown(calledFromObject);
   }
 };
+#endif
 
 void EnsureServerVerificationInitialized()
 {
+#ifndef NSS_NO_LIBPKIX
   // Should only be called from socket transport thread due to the static
   // variable and the reference to gCertVerificationThreadPool
 
@@ -1316,6 +1335,7 @@ void EnsureServerVerificationInitialized()
   RefPtr<InitializeIdentityInfo> initJob = new InitializeIdentityInfo();
   if (gCertVerificationThreadPool)
     gCertVerificationThreadPool->Dispatch(initJob, NS_DISPATCH_NORMAL);
+#endif
 }
 
 SSLServerCertVerificationResult::SSLServerCertVerificationResult(

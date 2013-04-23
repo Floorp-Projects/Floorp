@@ -75,25 +75,29 @@ function run_tests()
   is(strings.numberOfItems, 3, 'numberOfItems should be 3');
 
 
-  ok(initializeThrowsFor(strings, null),
-     "SVGStringList.initialize() should throw when passed null");
+  ok(!initializeThrowsFor(strings, null),
+     "SVGStringList.initialize() should not throw when passed null");
   ok(initializeThrowsFor(strings, ""),
      "SVGStringList.initialize() should throw when passed the empty string");
+  is(strings.length, 0, 'length should be 0');
 
-  ok(insertItemBeforeThrowsFor(strings, null),
-     "SVGStringList.insertItemBefore() should throw when passed null");
+  ok(!insertItemBeforeThrowsFor(strings, null),
+     "SVGStringList.insertItemBefore() should not throw when passed null");
   ok(insertItemBeforeThrowsFor(strings, ""),     
      "SVGStringList.insertItemBefore() should throw when passed the empty string");
+  is(strings.length, 1, 'length should be 1');
 
-  ok(replaceItemThrowsFor(strings, null),
-     "SVGStringList.replaceItem() should throw when passed null");
+  ok(!replaceItemThrowsFor(strings, null),
+     "SVGStringList.replaceItem() should not throw when passed null");
   ok(replaceItemThrowsFor(strings, ""),     
      "SVGStringList.replaceItem() should throw when passed the empty string");
+  is(strings.length, 1, 'length should be 1');
 
-  ok(appendItemThrowsFor(strings, null),
-     "SVGStringList.appendItem() should throw when passed null");
+  ok(!appendItemThrowsFor(strings, null),
+     "SVGStringList.appendItem() should not throw when passed null");
   ok(appendItemThrowsFor(strings, ""),     
      "SVGStringList.appendItem() should throw when passed the empty string");
+  is(strings.length, 2, 'length should be 2');
 
 
   // more sanity checks:

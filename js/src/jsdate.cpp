@@ -2986,14 +2986,14 @@ date_valueOf(JSContext *cx, unsigned argc, Value *vp)
     return CallNonGenericMethod<IsDate, date_valueOf_impl>(cx, args);
 }
 
-static JSFunctionSpec date_static_methods[] = {
+static const JSFunctionSpec date_static_methods[] = {
     JS_FN("UTC",                 date_UTC,                MAXARGS,0),
     JS_FN("parse",               date_parse,              1,0),
     JS_FN("now",                 date_now,                0,0),
     JS_FS_END
 };
 
-static JSFunctionSpec date_methods[] = {
+static const JSFunctionSpec date_methods[] = {
     JS_FN("getTime",             date_getTime,            0,0),
     JS_FN("getTimezoneOffset",   date_getTimezoneOffset,  0,0),
     JS_FN("getYear",             date_getYear,            0,0),

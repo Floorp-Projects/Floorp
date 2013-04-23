@@ -1081,7 +1081,7 @@ nsDisplayTableBorderBackground::Paint(nsDisplayListBuilder* aBuilder,
 
 static int32_t GetTablePartRank(nsDisplayItem* aItem)
 {
-  nsIAtom* type = aItem->GetUnderlyingFrame()->GetType();
+  nsIAtom* type = aItem->Frame()->GetType();
   if (type == nsGkAtoms::tableFrame)
     return 0;
   if (type == nsGkAtoms::tableRowGroupFrame)

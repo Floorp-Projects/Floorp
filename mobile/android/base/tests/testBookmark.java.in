@@ -95,6 +95,7 @@ public class testBookmark extends PixelTest  {
         mAsserter.ok(child != null, "list item can be retrieved", child != null ? child.toString() : "null!");
         mSolo.clickOnView(child);
         paintExpecter.blockUntilClear(PAINT_CLEAR_DELAY);
+        paintExpecter.unregisterListener();
 
         // Clean up the bookmark we created
         deleteBookmark();

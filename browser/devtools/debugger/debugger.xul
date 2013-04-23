@@ -200,10 +200,6 @@
          key="&debuggerUI.searchFunction.key;"
          modifiers="accel"
          command="functionSearchCommand"/>
-    <key id="functionSearchKey"
-         key="&debuggerUI.searchFunction.altkey;"
-         modifiers="accel shift"
-         command="functionSearchCommand"/>
     <key id="tokenSearchKey"
          key="&debuggerUI.searchToken.key;"
          modifiers="accel"

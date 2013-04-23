@@ -41,6 +41,7 @@ public class testVkbOverlap extends PixelTest {
         int greenPixelCount = 0;
 
         PaintedSurface painted = waitForPaint(paintExpecter);
+        paintExpecter.unregisterListener();
         try {
             greenPixelCount = countGreenPixels(painted);
         } finally {
@@ -66,6 +67,7 @@ public class testVkbOverlap extends PixelTest {
         // now that the focus is in the text field we will repaint every 500ms as the cursor blinks, so we need to use a smaller
         // "no paints" threshold to consider the page painted
         paintExpecter.blockUntilClear(LESS_THAN_CURSOR_BLINK_PERIOD);
+        paintExpecter.unregisterListener();
         painted = mDriver.getPaintedSurface();
         try {
             // if the vkb scrolled into view as expected, then the number of green pixels now visible should be about the

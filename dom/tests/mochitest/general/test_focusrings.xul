@@ -49,7 +49,6 @@ function runTest()
 
   var isMac = (navigator.platform.indexOf("Mac") >= 0);
   var isWin = (navigator.platform.indexOf("Win") >= 0);
-  var isLinux = (navigator.platform.indexOf("Linux") >= 0);
 
   function checkFocus(element, visible, testid)
   {
@@ -101,7 +100,7 @@ function runTest()
   checkFocus($("l2"), true, "appearance on list after mouse focus with :focus");
 
   synthesizeMouse($("b1"), 4, 4, { });
-  checkFocus($("b1"), !isMac && !isLinux && expectedVisible, "appearance on button after mouse focus with :moz-focusring");
+  checkFocus($("b1"), !isMac && expectedVisible, "appearance on button after mouse focus with :moz-focusring");
   if (navigator.platform.indexOf("Mac") >= 0) {
     ok(compareSnapshots(snapShot($("b1")), snapShot($("b2")), false)[0], "focus after mouse shows no ring");
   }

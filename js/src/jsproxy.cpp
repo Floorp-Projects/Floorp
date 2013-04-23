@@ -3443,7 +3443,7 @@ proxy_createFunction(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-static JSFunctionSpec static_methods[] = {
+static const JSFunctionSpec static_methods[] = {
     JS_FN("create",         proxy_create,          2, 0),
     JS_FN("createFunction", proxy_createFunction,  3, 0),
     JS_FS_END

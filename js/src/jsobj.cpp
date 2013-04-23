@@ -1773,6 +1773,12 @@ bool
 JSObject::ReserveForTradeGuts(JSContext *cx, JSObject *aArg, JSObject *bArg,
                               TradeGutsReserved &reserved)
 {
+    /*
+     * Avoid GC in here to avoid confusing the tracing code with our
+     * intermediate state.
+     */
+    AutoSuppressGC suppress(cx);
+
     RootedObject a(cx, aArg);
     RootedObject b(cx, bArg);
     JS_ASSERT(a->compartment() == b->compartment());
@@ -1783,19 +1789,6 @@ JSObject::ReserveForTradeGuts(JSContext *cx, JSObject *aArg, JSObject *bArg,
      * numbers of fixed slots, we reserve all space ahead of time so that the
      * swaps can be performed infallibly.
      */
-
-#ifdef JSGC_INCREMENTAL
-    /*
-     * We need a write barrier here. If |a| was marked and |b| was not, then
-     * after the swap, |b|'s guts would never be marked. The write barrier
-     * solves this.
-     */
-    JS::Zone *zone = a->zone();
-    if (zone->needsBarrier()) {
-        MarkChildren(zone->barrierTracer(), a);
-        MarkChildren(zone->barrierTracer(), b);
-    }
-#endif
 
     /*
      * Swap prototypes and classes on the two objects, so that TradeGuts can
@@ -2015,6 +2008,24 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
         a->lastProperty()->listp = &a->shape_;
     if (b->inDictionaryMode())
         b->lastProperty()->listp = &b->shape_;
+
+#ifdef JSGC_INCREMENTAL
+    /*
+     * We need a write barrier here. If |a| was marked and |b| was not, then
+     * after the swap, |b|'s guts would never be marked. The write barrier
+     * solves this.
+     *
+     * Normally write barriers happen before the write. However, that's not
+     * necessary here because nothing is being destroyed. We're just swapping.
+     * We don't do the barrier before TradeGuts because ReserveForTradeGuts
+     * makes changes to the objects that might confuse the tracing code.
+     */
+    JS::Zone *zone = a->zone();
+    if (zone->needsBarrier()) {
+        MarkChildren(zone->barrierTracer(), a);
+        MarkChildren(zone->barrierTracer(), b);
+    }
+#endif
 }
 
 /* Use this method with extreme caution. It trades the guts of two objects. */
@@ -2100,8 +2111,8 @@ JSObject *
 js::DefineConstructorAndPrototype(JSContext *cx, HandleObject obj, JSProtoKey key, HandleAtom atom,
                                   JSObject *protoProto, Class *clasp,
                                   Native constructor, unsigned nargs,
-                                  JSPropertySpec *ps, JSFunctionSpec *fs,
-                                  JSPropertySpec *static_ps, JSFunctionSpec *static_fs,
+                                  const JSPropertySpec *ps, const JSFunctionSpec *fs,
+                                  const JSPropertySpec *static_ps, const JSFunctionSpec *static_fs,
                                   JSObject **ctorp, AllocKind ctorKind)
 {
     /*
@@ -2265,8 +2276,8 @@ js::MarkStandardClassInitializedNoProto(JSObject *obj, js::Class *clasp)
 JSObject *
 js_InitClass(JSContext *cx, HandleObject obj, JSObject *protoProto_,
              Class *clasp, Native constructor, unsigned nargs,
-             JSPropertySpec *ps, JSFunctionSpec *fs,
-             JSPropertySpec *static_ps, JSFunctionSpec *static_fs,
+             const JSPropertySpec *ps, const JSFunctionSpec *fs,
+             const JSPropertySpec *static_ps, const JSFunctionSpec *static_fs,
              JSObject **ctorp, AllocKind ctorKind)
 {
     RootedObject protoProto(cx, protoProto_);
@@ -2365,6 +2376,28 @@ JSObject::setSlotSpan(JSContext *cx, HandleObject obj, uint32_t span)
     return true;
 }
 
+static HeapSlot *
+AllocateSlots(JSContext *cx, JSObject *obj, uint32_t nslots)
+{
+#ifdef JSGC_GENERATIONAL
+    return cx->runtime->gcNursery.allocateSlots(cx, obj, nslots);
+#else
+    return cx->pod_malloc<HeapSlot>(nslots);
+#endif
+}
+
+static HeapSlot *
+ReallocateSlots(JSContext *cx, JSObject *obj, HeapSlot *oldSlots,
+                uint32_t oldCount, uint32_t newCount)
+{
+#ifdef JSGC_GENERATIONAL
+    return cx->runtime->gcNursery.reallocateSlots(cx, obj, oldSlots, oldCount, newCount);
+#else
+    return (HeapSlot *)cx->realloc_(oldSlots, oldCount * sizeof(HeapSlot),
+                                    newCount * sizeof(HeapSlot));
+#endif
+}
+
 /* static */ bool
 JSObject::growSlots(JSContext *cx, HandleObject obj, uint32_t oldCount, uint32_t newCount)
 {
@@ -2403,15 +2436,14 @@ JSObject::growSlots(JSContext *cx, HandleObject obj, uint32_t oldCount, uint32_t
     }
 
     if (!oldCount) {
-        obj->slots = cx->pod_malloc<HeapSlot>(newCount);
+        obj->slots = AllocateSlots(cx, obj, newCount);
         if (!obj->slots)
             return false;
         Debug_SetSlotRangeToCrashOnTouch(obj->slots, newCount);
         return true;
     }
 
-    HeapSlot *newslots = (HeapSlot*) cx->realloc_(obj->slots, oldCount * sizeof(HeapSlot),
-                                                  newCount * sizeof(HeapSlot));
+    HeapSlot *newslots = ReallocateSlots(cx, obj, obj->slots, oldCount, newCount);
     if (!newslots)
         return false;  /* Leave slots at its old size. */
 
@@ -2425,6 +2457,15 @@ JSObject::growSlots(JSContext *cx, HandleObject obj, uint32_t oldCount, uint32_t
         types::MarkObjectStateChange(cx, obj);
 
     return true;
+}
+
+static void
+FreeSlots(JSContext *cx, HeapSlot *slots)
+{
+#ifdef JSGC_GENERATIONAL
+    if (!cx->runtime->gcNursery.isInside(slots))
+#endif
+        js_free(slots);
 }
 
 /* static */ void
@@ -2442,14 +2483,14 @@ JSObject::shrinkSlots(JSContext *cx, HandleObject obj, uint32_t oldCount, uint32
         return;
 
     if (newCount == 0) {
-        js_free(obj->slots);
+        FreeSlots(cx, obj->slots);
         obj->slots = NULL;
         return;
     }
 
     JS_ASSERT(newCount >= SLOT_CAPACITY_MIN);
 
-    HeapSlot *newslots = (HeapSlot *) cx->realloc_(obj->slots, newCount * sizeof(HeapSlot));
+    HeapSlot *newslots = ReallocateSlots(cx, obj, obj->slots, oldCount, newCount);
     if (!newslots)
         return;  /* Leave slots at its old size. */
 
@@ -2652,27 +2693,43 @@ JSObject::maybeDensifySparseElements(JSContext *cx, HandleObject obj)
     return ED_OK;
 }
 
-bool
-JSObject::growElements(JSContext *cx, unsigned newcap)
+ObjectElements *
+AllocateElements(JSObject::MaybeContext maybecx, JSObject *obj, uint32_t nelems)
 {
-    if (!growElements(&cx->zone()->allocator, newcap)) {
-        JS_ReportOutOfMemory(cx);
-        return false;
+    if (JSContext *cx = maybecx.context) {
+#ifdef JSGC_GENERATIONAL
+        return cx->runtime->gcNursery.allocateElements(cx, obj, nelems);
+#else
+        return static_cast<js::ObjectElements *>(cx->malloc_(nelems * sizeof(HeapValue)));
+#endif
     }
 
-    return true;
+    Allocator *alloc = maybecx.allocator;
+    return static_cast<js::ObjectElements *>(alloc->malloc_(nelems * sizeof(HeapValue)));
+}
+
+ObjectElements *
+ReallocateElements(JSObject::MaybeContext maybecx, JSObject *obj, ObjectElements *oldHeader,
+                   uint32_t oldCount, uint32_t newCount)
+{
+    if (JSContext *cx = maybecx.context) {
+#ifdef JSGC_GENERATIONAL
+        return cx->runtime->gcNursery.reallocateElements(cx, obj, oldHeader, oldCount, newCount);
+#else
+        return static_cast<js::ObjectElements *>(cx->realloc_(oldHeader,
+                                                              oldCount * sizeof(HeapValue),
+                                                              newCount * sizeof(HeapSlot)));
+#endif
+    }
+
+    Allocator *alloc = maybecx.allocator;
+    return static_cast<js::ObjectElements *>(alloc->realloc_(oldHeader, oldCount * sizeof(HeapSlot),
+                                                             newCount * sizeof(HeapSlot)));
 }
 
 bool
-JSObject::growElements(js::Allocator *alloc, unsigned newcap)
+JSObject::growElements(MaybeContext cx, unsigned newcap)
 {
-    /*
-     * This version of |growElements()|, which takes a
-     * |js::Allocator*| as opposed to a |JSContext*|, is intended to
-     * run either during sequential or parallel execution.  As per
-     * convention, since it does not take a JSContext*, it does not
-     * report an error on out of memory but simply returns false.
-     */
     JS_ASSERT(isExtensible());
 
     /*
@@ -2704,20 +2761,18 @@ JSObject::growElements(js::Allocator *alloc, unsigned newcap)
     }
 
     uint32_t initlen = getDenseInitializedLength();
+    uint32_t oldAllocated = oldcap + ObjectElements::VALUES_PER_HEADER;
     uint32_t newAllocated = actualCapacity + ObjectElements::VALUES_PER_HEADER;
 
     ObjectElements *newheader;
     if (hasDynamicElements()) {
-        uint32_t oldAllocated = oldcap + ObjectElements::VALUES_PER_HEADER;
-        newheader = (ObjectElements *)
-            alloc->realloc_(getElementsHeader(), oldAllocated * sizeof(Value),
-                            newAllocated * sizeof(Value));
+        newheader = ReallocateElements(cx, this, getElementsHeader(), oldAllocated, newAllocated);
         if (!newheader)
-            return false;  /* Leave elements as its old size. */
+            return false; /* Leave elements as its old size. */
     } else {
-        newheader = (ObjectElements *) alloc->malloc_(newAllocated * sizeof(Value));
+        newheader = AllocateElements(cx, this, newAllocated);
         if (!newheader)
-            return false;  /* Ditto. */
+            return false; /* Leave elements as its old size. */
         js_memcpy(newheader, getElementsHeader(),
                   (ObjectElements::VALUES_PER_HEADER + initlen) * sizeof(Value));
     }
@@ -2742,10 +2797,11 @@ JSObject::shrinkElements(JSContext *cx, unsigned newcap)
 
     newcap = Max(newcap, SLOT_CAPACITY_MIN);
 
+    uint32_t oldAllocated = oldcap + ObjectElements::VALUES_PER_HEADER;
     uint32_t newAllocated = newcap + ObjectElements::VALUES_PER_HEADER;
 
-    ObjectElements *newheader = (ObjectElements *)
-        cx->realloc_(getElementsHeader(), newAllocated * sizeof(Value));
+    ObjectElements *newheader = ReallocateElements(cx, this, getElementsHeader(),
+                                                   oldAllocated, newAllocated);
     if (!newheader)
         return;  /* Leave elements at its old size. */
 

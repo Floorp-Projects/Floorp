@@ -53,7 +53,7 @@ netscape_security_enablePrivilege(JSContext *cx, unsigned argc, JS::Value *vp)
     return xpc::EnableUniversalXPConnect(cx);
 }
 
-static JSFunctionSpec PrivilegeManager_static_methods[] = {
+static const JSFunctionSpec PrivilegeManager_static_methods[] = {
     JS_FS("enablePrivilege", netscape_security_enablePrivilege, 1, 0),
     JS_FS_END
 };

@@ -3053,8 +3053,10 @@ class MAdd : public MBinaryArithInstruction
         MAdd *add = new MAdd(left, right);
         add->specialization_ = type;
         add->setResultType(type);
-        if (type == MIRType_Int32)
+        if (type == MIRType_Int32) {
             add->setTruncated(true);
+            add->setCommutative();
+        }
         return add;
     }
     void analyzeTruncateBackward();
@@ -3126,6 +3128,7 @@ class MMul : public MBinaryArithInstruction
             // can never fail and always truncates its output to int32.
             canBeNegativeZero_ = false;
             setTruncated(true);
+            setCommutative();
         }
         JS_ASSERT_IF(mode != Integer, mode == Normal);
 
@@ -5844,6 +5847,9 @@ class MCallGetIntrinsicValue : public MNullaryInstruction
     PropertyName *name() const {
         return name_;
     }
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
 };
 
 class MCallsiteCloneCache
@@ -7140,6 +7146,29 @@ class FlattenedMResumePointIter
 
     size_t numOperands() const {
         return numOperands_;
+    }
+};
+
+class MIsCallable
+  : public MUnaryInstruction,
+    public SingleObjectPolicy
+{
+    MIsCallable(MDefinition *object)
+      : MUnaryInstruction(object)
+    {
+        setResultType(MIRType_Boolean);
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(IsCallable);
+
+    static MIsCallable *New(MDefinition *obj) {
+        return new MIsCallable(obj);
+    }
+
+    MDefinition *object() const {
+        return getOperand(0);
     }
 };
 

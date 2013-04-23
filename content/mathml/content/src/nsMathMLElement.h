@@ -24,12 +24,7 @@ class nsMathMLElement : public nsMathMLElementBase,
                         public mozilla::dom::Link
 {
 public:
-  nsMathMLElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-    : nsMathMLElementBase(aNodeInfo), Link(this),
-      mIncrementScriptLevel(false)
-  {
-    SetIsDOMBinding();
-  }
+  nsMathMLElement(already_AddRefed<nsINodeInfo> aNodeInfo);
 
   // Implementation of nsISupports is inherited from nsMathMLElementBase
   NS_DECL_ISUPPORTS_INHERITED

@@ -760,6 +760,7 @@ var gBrowserInit = {
     window.addEventListener("AppCommand", HandleAppCommandEvent, true);
 
     messageManager.loadFrameScript("chrome://browser/content/content.js", true);
+    messageManager.loadFrameScript("chrome://browser/content/content-sessionStore.js", true);
 
     // initialize observers and listeners
     // and give C++ access to gBrowser
@@ -974,7 +975,7 @@ var gBrowserInit = {
     gBrowser.addEventListener("pageshow", function(event) {
       // Filter out events that are not about the document load we are interested in
       if (content && event.target == content.document)
-        setTimeout(pageShowEventHandlers, 0, event);
+        setTimeout(pageShowEventHandlers, 0, event.persisted);
     }, true);
 
     if (uriToLoad && uriToLoad != "about:blank") {
@@ -3645,10 +3646,6 @@ var XULBrowserWindow = {
   },
 
   setJSStatus: function () {
-    // unsupported
-  },
-
-  setJSDefaultStatus: function () {
     // unsupported
   },
 

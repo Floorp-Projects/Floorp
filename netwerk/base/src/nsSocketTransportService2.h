@@ -192,6 +192,9 @@ private:
                            SocketContext *context, bool aActive);
 
     void ClosePrivateConnections();
+    void DetachSocketWithGuard(bool aGuardLocals,
+                               SocketContext *socketList,
+                               int32_t index);
 };
 
 extern nsSocketTransportService *gSocketTransportService;

@@ -21,6 +21,7 @@ PARALLEL_DIRS += [
     'filepicker',
     'find',
     'intl',
+    'jsdownloads',
     'mediasniffer',
     'microformats',
     'osfile',
@@ -50,9 +51,6 @@ if CONFIG['MOZ_FEEDS']:
 
 if CONFIG['MOZ_HELP_VIEWER']:
     PARALLEL_DIRS += ['help']
-
-if CONFIG['MOZ_JSDOWNLOADS']:
-    PARALLEL_DIRS += ['jsdownloads']
 
 if CONFIG['NS_PRINTING']:
     PARALLEL_DIRS += ['printing']

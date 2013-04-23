@@ -393,6 +393,15 @@ void doSampleStackTrace(PseudoStack *aStack, ThreadProfile &aProfile, TickSample
 
 void TableTicker::Tick(TickSample* sample)
 {
+  if (HasUnwinderThread()) {
+    UnwinderTick(sample);
+  } else {
+    InplaceTick(sample);
+  }
+}
+
+void TableTicker::InplaceTick(TickSample* sample)
+{
   ThreadProfile& currThreadProfile = *sample->threadProfile;
 
   // Marker(s) come before the sample

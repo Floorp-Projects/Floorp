@@ -543,7 +543,7 @@ static JSClass sCDataFinalizerClass = {
 #define CDATAFINALIZERFN_FLAGS \
   (JSPROP_READONLY | JSPROP_PERMANENT)
 
-static JSPropertySpec sCTypeProps[] = {
+static const JSPropertySpec sCTypeProps[] = {
   { "name", 0, CTYPESPROP_FLAGS, JSOP_WRAPPER(CType::NameGetter), JSOP_NULLWRAPPER },
   { "size", 0, CTYPESPROP_FLAGS, JSOP_WRAPPER(CType::SizeGetter), JSOP_NULLWRAPPER },
   { "ptr", 0, CTYPESPROP_FLAGS, JSOP_WRAPPER(CType::PtrGetter), JSOP_NULLWRAPPER },
@@ -551,26 +551,26 @@ static JSPropertySpec sCTypeProps[] = {
   { 0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER }
 };
 
-static JSFunctionSpec sCTypeFunctions[] = {
+static const JSFunctionSpec sCTypeFunctions[] = {
   JS_FN("array", CType::CreateArray, 0, CTYPESFN_FLAGS),
   JS_FN("toString", CType::ToString, 0, CTYPESFN_FLAGS),
   JS_FN("toSource", CType::ToSource, 0, CTYPESFN_FLAGS),
   JS_FS_END
 };
 
-static JSFunctionSpec sCABIFunctions[] = {
+static const JSFunctionSpec sCABIFunctions[] = {
   JS_FN("toSource", ABI::ToSource, 0, CABIFN_FLAGS),
   JS_FN("toString", ABI::ToSource, 0, CABIFN_FLAGS),
   JS_FS_END
 };
 
-static JSPropertySpec sCDataProps[] = {
+static const JSPropertySpec sCDataProps[] = {
   { "value", 0, JSPROP_SHARED | JSPROP_PERMANENT,
     JSOP_WRAPPER(CData::ValueGetter), JSOP_WRAPPER(CData::ValueSetter) },
   { 0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER }
 };
 
-static JSFunctionSpec sCDataFunctions[] = {
+static const JSFunctionSpec sCDataFunctions[] = {
   JS_FN("address", CData::Address, 0, CDATAFN_FLAGS),
   JS_FN("readString", CData::ReadString, 0, CDATAFN_FLAGS),
   JS_FN("readStringReplaceMalformed", CData::ReadStringReplaceMalformed, 0, CDATAFN_FLAGS),
@@ -579,11 +579,11 @@ static JSFunctionSpec sCDataFunctions[] = {
   JS_FS_END
 };
 
-static JSPropertySpec sCDataFinalizerProps[] = {
+static const JSPropertySpec sCDataFinalizerProps[] = {
   { 0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER }
 };
 
-static JSFunctionSpec sCDataFinalizerFunctions[] = {
+static const JSFunctionSpec sCDataFinalizerFunctions[] = {
   JS_FN("dispose",  CDataFinalizer::Methods::Dispose,  0, CDATAFINALIZERFN_FLAGS),
   JS_FN("forget",   CDataFinalizer::Methods::Forget,   0, CDATAFINALIZERFN_FLAGS),
   JS_FN("readString",CData::ReadString, 0, CDATAFINALIZERFN_FLAGS),
@@ -592,33 +592,33 @@ static JSFunctionSpec sCDataFinalizerFunctions[] = {
   JS_FS_END
 };
 
-static JSFunctionSpec sPointerFunction =
+static const JSFunctionSpec sPointerFunction =
   JS_FN("PointerType", PointerType::Create, 1, CTYPESCTOR_FLAGS);
 
-static JSPropertySpec sPointerProps[] = {
+static const JSPropertySpec sPointerProps[] = {
   { "targetType", 0, CTYPESPROP_FLAGS,
     JSOP_WRAPPER(PointerType::TargetTypeGetter), JSOP_NULLWRAPPER },
   { 0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER }
 };
 
-static JSFunctionSpec sPointerInstanceFunctions[] = {
+static const JSFunctionSpec sPointerInstanceFunctions[] = {
   JS_FN("isNull", PointerType::IsNull, 0, CTYPESFN_FLAGS),
   JS_FN("increment", PointerType::Increment, 0, CTYPESFN_FLAGS),
   JS_FN("decrement", PointerType::Decrement, 0, CTYPESFN_FLAGS),
   JS_FS_END
 };
 
-static JSPropertySpec sPointerInstanceProps[] = {
+static const JSPropertySpec sPointerInstanceProps[] = {
   { "contents", 0, JSPROP_SHARED | JSPROP_PERMANENT,
     JSOP_WRAPPER(PointerType::ContentsGetter),
     JSOP_WRAPPER(PointerType::ContentsSetter) },
   { 0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER }
 };
 
-static JSFunctionSpec sArrayFunction =
+static const JSFunctionSpec sArrayFunction =
   JS_FN("ArrayType", ArrayType::Create, 1, CTYPESCTOR_FLAGS);
 
-static JSPropertySpec sArrayProps[] = {
+static const JSPropertySpec sArrayProps[] = {
   { "elementType", 0, CTYPESPROP_FLAGS,
     JSOP_WRAPPER(ArrayType::ElementTypeGetter), JSOP_NULLWRAPPER },
   { "length", 0, CTYPESPROP_FLAGS,
@@ -626,40 +626,40 @@ static JSPropertySpec sArrayProps[] = {
   { 0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER }
 };
 
-static JSFunctionSpec sArrayInstanceFunctions[] = {
+static const JSFunctionSpec sArrayInstanceFunctions[] = {
   JS_FN("addressOfElement", ArrayType::AddressOfElement, 1, CDATAFN_FLAGS),
   JS_FS_END
 };
 
-static JSPropertySpec sArrayInstanceProps[] = {
+static const JSPropertySpec sArrayInstanceProps[] = {
   { "length", 0, JSPROP_SHARED | JSPROP_READONLY | JSPROP_PERMANENT,
     JSOP_WRAPPER(ArrayType::LengthGetter), JSOP_NULLWRAPPER },
   { 0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER }
 };
 
-static JSFunctionSpec sStructFunction =
+static const JSFunctionSpec sStructFunction =
   JS_FN("StructType", StructType::Create, 2, CTYPESCTOR_FLAGS);
 
-static JSPropertySpec sStructProps[] = {
+static const JSPropertySpec sStructProps[] = {
   { "fields", 0, CTYPESPROP_FLAGS,
     JSOP_WRAPPER(StructType::FieldsArrayGetter), JSOP_NULLWRAPPER },
   { 0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER }
 };
 
-static JSFunctionSpec sStructFunctions[] = {
+static const JSFunctionSpec sStructFunctions[] = {
   JS_FN("define", StructType::Define, 1, CDATAFN_FLAGS),
   JS_FS_END
 };
 
-static JSFunctionSpec sStructInstanceFunctions[] = {
+static const JSFunctionSpec sStructInstanceFunctions[] = {
   JS_FN("addressOfField", StructType::AddressOfField, 1, CDATAFN_FLAGS),
   JS_FS_END
 };
 
-static JSFunctionSpec sFunctionFunction =
+static const JSFunctionSpec sFunctionFunction =
   JS_FN("FunctionType", FunctionType::Create, 2, CTYPESCTOR_FLAGS);
 
-static JSPropertySpec sFunctionProps[] = {
+static const JSPropertySpec sFunctionProps[] = {
   { "argTypes", 0, CTYPESPROP_FLAGS,
     JSOP_WRAPPER(FunctionType::ArgTypesGetter), JSOP_NULLWRAPPER },
   { "returnType", 0, CTYPESPROP_FLAGS,
@@ -671,7 +671,7 @@ static JSPropertySpec sFunctionProps[] = {
   { 0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER }
 };
 
-static JSFunctionSpec sFunctionInstanceFunctions[] = {
+static const JSFunctionSpec sFunctionInstanceFunctions[] = {
   JS_FN("call", js_fun_call, 1, CDATAFN_FLAGS),
   JS_FN("apply", js_fun_apply, 2, CDATAFN_FLAGS),
   JS_FS_END
@@ -705,7 +705,7 @@ static JSClass sUInt64Class = {
   JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, Int64Base::Finalize
 };
 
-static JSFunctionSpec sInt64StaticFunctions[] = {
+static const JSFunctionSpec sInt64StaticFunctions[] = {
   JS_FN("compare", Int64::Compare, 2, CTYPESFN_FLAGS),
   JS_FN("lo", Int64::Lo, 1, CTYPESFN_FLAGS),
   JS_FN("hi", Int64::Hi, 1, CTYPESFN_FLAGS),
@@ -713,7 +713,7 @@ static JSFunctionSpec sInt64StaticFunctions[] = {
   JS_FS_END
 };
 
-static JSFunctionSpec sUInt64StaticFunctions[] = {
+static const JSFunctionSpec sUInt64StaticFunctions[] = {
   JS_FN("compare", UInt64::Compare, 2, CTYPESFN_FLAGS),
   JS_FN("lo", UInt64::Lo, 1, CTYPESFN_FLAGS),
   JS_FN("hi", UInt64::Hi, 1, CTYPESFN_FLAGS),
@@ -721,19 +721,19 @@ static JSFunctionSpec sUInt64StaticFunctions[] = {
   JS_FS_END
 };
 
-static JSFunctionSpec sInt64Functions[] = {
+static const JSFunctionSpec sInt64Functions[] = {
   JS_FN("toString", Int64::ToString, 0, CTYPESFN_FLAGS),
   JS_FN("toSource", Int64::ToSource, 0, CTYPESFN_FLAGS),
   JS_FS_END
 };
 
-static JSFunctionSpec sUInt64Functions[] = {
+static const JSFunctionSpec sUInt64Functions[] = {
   JS_FN("toString", UInt64::ToString, 0, CTYPESFN_FLAGS),
   JS_FN("toSource", UInt64::ToSource, 0, CTYPESFN_FLAGS),
   JS_FS_END
 };
 
-static JSPropertySpec sModuleProps[] = {
+static const JSPropertySpec sModuleProps[] = {
   { "errno", 0, JSPROP_SHARED | JSPROP_PERMANENT,
     JSOP_WRAPPER(CData::ErrnoGetter), JSOP_NULLWRAPPER },
 #if defined(XP_WIN)
@@ -743,7 +743,7 @@ static JSPropertySpec sModuleProps[] = {
   { 0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER }
 };
 
-static JSFunctionSpec sModuleFunctions[] = {
+static const JSFunctionSpec sModuleFunctions[] = {
   JS_FN("CDataFinalizer", CDataFinalizer::Construct, 2, CTYPESFN_FLAGS),
   JS_FN("open", Library::Open, 1, CTYPESFN_FLAGS),
   JS_FN("cast", CData::Cast, 2, CTYPESFN_FLAGS),
@@ -936,11 +936,11 @@ InitTypeConstructor(JSContext* cx,
                     HandleObject parent,
                     HandleObject CTypeProto,
                     HandleObject CDataProto,
-                    JSFunctionSpec spec,
-                    JSFunctionSpec* fns,
-                    JSPropertySpec* props,
-                    JSFunctionSpec* instanceFns,
-                    JSPropertySpec* instanceProps,
+                    const JSFunctionSpec spec,
+                    const JSFunctionSpec* fns,
+                    const JSPropertySpec* props,
+                    const JSFunctionSpec* instanceFns,
+                    const JSPropertySpec* instanceProps,
                     MutableHandleObject typeProto,
                     MutableHandleObject dataProto)
 {
@@ -1010,8 +1010,8 @@ InitInt64Class(JSContext* cx,
                HandleObject parent,
                JSClass* clasp,
                JSNative construct,
-               JSFunctionSpec* fs,
-               JSFunctionSpec* static_fs)
+               const JSFunctionSpec* fs,
+               const JSFunctionSpec* static_fs)
 {
   // Init type class and constructor
   RootedObject prototype(cx, JS_InitClass(cx, parent, NULL, clasp, construct,

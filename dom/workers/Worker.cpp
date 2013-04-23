@@ -31,8 +31,8 @@ class Worker
 {
   static DOMJSClass sClass;
   static DOMIfaceAndProtoJSClass sProtoClass;
-  static JSPropertySpec sProperties[];
-  static JSFunctionSpec sFunctions[];
+  static const JSPropertySpec sProperties[];
+  static const JSFunctionSpec sFunctions[];
 
   enum
   {
@@ -262,7 +262,7 @@ private:
       return false;
     }
 
-    const char*& name = sFunctions[0].name;
+    const char* name = sFunctions[0].name;
     WorkerPrivate* worker = GetInstancePrivate(aCx, obj, name);
     if (!worker) {
       return !JS_IsExceptionPending(aCx);
@@ -279,7 +279,7 @@ private:
       return false;
     }
 
-    const char*& name = sFunctions[1].name;
+    const char* name = sFunctions[1].name;
     WorkerPrivate* worker = GetInstancePrivate(aCx, obj, name);
     if (!worker) {
       return !JS_IsExceptionPending(aCx);
@@ -342,7 +342,7 @@ DOMIfaceAndProtoJSClass Worker::sProtoClass = {
   0
 };
 
-JSPropertySpec Worker::sProperties[] = {
+const JSPropertySpec Worker::sProperties[] = {
   { sEventStrings[STRING_onerror], STRING_onerror, PROPERTY_FLAGS,
     JSOP_WRAPPER(GetEventListener), JSOP_WRAPPER(SetEventListener) },
   { sEventStrings[STRING_onmessage], STRING_onmessage, PROPERTY_FLAGS,
@@ -350,7 +350,7 @@ JSPropertySpec Worker::sProperties[] = {
   { 0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER }
 };
 
-JSFunctionSpec Worker::sFunctions[] = {
+const JSFunctionSpec Worker::sFunctions[] = {
   JS_FN("terminate", Terminate, 0, FUNCTION_FLAGS),
   JS_FN("postMessage", PostMessage, 1, FUNCTION_FLAGS),
   JS_FS_END

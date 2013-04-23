@@ -28,6 +28,13 @@ void utb__addEntry(/*MOD*/UnwinderThreadBuffer* utb,
 void uwt__init();
 
 // Request the unwinder thread to exit, and wait until it has done so.
+// This must be called before stopping the profiler because we hold a
+// reference to the profile which is owned by the profiler.
+void uwt__stop();
+
+// Release the unwinder resources. This must be called after profiling
+// has stop. At this point we know the profiler doesn't hold any buffer
+// and can safely release any resources.
 void uwt__deinit();
 
 // Registers a sampler thread for profiling.  Threads must be registered
