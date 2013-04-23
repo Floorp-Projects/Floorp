@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<preference-headers xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <header android:fragment="org.mozilla.gecko.GeckoPreferenceFragment"
+            android:title="@string/pref_header_general">
+        <extra android:name="resource"
+               android:value="preferences_general"/>
+    </header>
+
+    <header android:fragment="org.mozilla.gecko.GeckoPreferenceFragment"
+            android:title="@string/pref_header_content">
+        <extra android:name="resource"
+               android:value="preferences_content"/>
+    </header>
+
+    <header android:fragment="org.mozilla.gecko.GeckoPreferenceFragment"
+            android:title="@string/pref_header_privacy">
+        <extra android:name="resource"
+               android:value="preferences_privacy"/>
+    </header>
+
+</preference-headers>

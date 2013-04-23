@@ -50,9 +50,6 @@
     _(CreateThis)                   \
     _(CreateThisWithProto)          \
     _(CreateThisWithTemplate)       \
-    _(CreateArgumentsObject)        \
-    _(GetArgumentsObjectArg)        \
-    _(SetArgumentsObjectArg)        \
     _(ReturnFromCtor)               \
     _(BitNotI)                      \
     _(BitNotV)                      \
@@ -133,7 +130,7 @@
     _(LoadSlotT)                    \
     _(StoreSlotV)                   \
     _(StoreSlotT)                   \
-    _(GuardShape)                   \
+    _(GuardShapeOrType)             \
     _(GuardClass)                   \
     _(ParWriteGuard)                \
     _(ParDump)                      \
@@ -181,6 +178,7 @@
     _(CallsiteCloneCache)           \
     _(CallGetElement)               \
     _(CallSetElement)               \
+    _(CallInitElementArray)         \
     _(CallSetProperty)              \
     _(CallDeleteProperty)           \
     _(SetPropertyCacheV)            \

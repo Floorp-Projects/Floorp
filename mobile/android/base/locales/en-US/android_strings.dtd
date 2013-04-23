@@ -65,11 +65,15 @@
 <!ENTITY pref_category_general "General">
 <!ENTITY pref_category_privacy "Privacy &amp; Security">
 <!ENTITY pref_category_content "Content">
-<!ENTITY pref_category_importexport "Import &amp; Export">
 <!ENTITY pref_about_firefox "About &brandShortName;">
 <!ENTITY pref_do_not_track "Tell sites not to track me">
 <!ENTITY pref_telemetry "Send performance data">
 <!ENTITY pref_remember_signons "Remember passwords">
+
+<!-- Localization note: These are shown in the left sidebar on tablets -->
+<!ENTITY pref_header_general "General">
+<!ENTITY pref_header_privacy "Privacy &amp; Security">
+<!ENTITY pref_header_content "Content">
 
 <!ENTITY pref_cookies_menu "Cookies">
 <!ENTITY pref_cookies_accept_all "Enabled">

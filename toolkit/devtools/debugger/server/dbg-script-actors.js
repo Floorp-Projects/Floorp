@@ -597,6 +597,7 @@ ThreadActor.prototype = {
   _setBreakpoint: function TA__setBreakpoint(aLocation) {
     let breakpoints = this._breakpointStore[aLocation.url];
 
+    // Get or create the breakpoint actor for the given location
     let actor;
     if (breakpoints[aLocation.line].actor) {
       actor = breakpoints[aLocation.line].actor;
@@ -608,6 +609,7 @@ ThreadActor.prototype = {
       this._hooks.addToParentPool(actor);
     }
 
+    // Find all scripts matching the given location
     let scripts = this.dbg.findScripts(aLocation);
     if (scripts.length == 0) {
       return {
@@ -616,6 +618,10 @@ ThreadActor.prototype = {
       };
     }
 
+   /**
+     * For each script, if the given line has at least one entry point, set
+     * breakpoint on the bytecode offet for each of them.
+     */
     let found = false;
     for (let script of scripts) {
       let offsets = script.getLineOffsets(aLocation.line);
@@ -633,12 +639,25 @@ ThreadActor.prototype = {
       };
     }
 
+   /**
+     * If we get here, no breakpoint was set. This is because the given line
+     * has no entry points, for example because it is empty. As a fallback
+     * strategy, we try to set the breakpoint on the smallest line greater
+     * than or equal to the given line that as at least one entry point.
+     */
+
+    // Find all innermost scripts matching the given location
     let scripts = this.dbg.findScripts({
       url: aLocation.url,
       line: aLocation.line,
       innermost: true
     });
 
+    /**
+     * For each innermost script, look for the smallest line greater than or
+     * equal to the given line that has one or more entry points. If found, set
+     * a breakpoint on the bytecode offset for each of its entry points.
+     */
     let actualLocation;
     let found = false;
     for (let script of scripts) {
@@ -653,7 +672,7 @@ ThreadActor.prototype = {
             actualLocation = {
               url: aLocation.url,
               line: line,
-              column: aLocation.column
+              column: 0
             };
           }
           found = true;
@@ -664,6 +683,11 @@ ThreadActor.prototype = {
     if (found) {
       if (breakpoints[actualLocation.line] &&
           breakpoints[actualLocation.line].actor) {
+        /**
+         * We already have a breakpoint actor for the actual location, so
+         * actor we created earlier is now redundant. Delete it, update the
+         * breakpoint store, and return the actor for the actual location.
+         */
         actor.onDelete();
         delete breakpoints[aLocation.line];
         return {
@@ -671,10 +695,16 @@ ThreadActor.prototype = {
           actualLocation: actualLocation
         };
       } else {
+        /**
+         * We don't have a breakpoint actor for the actual location yet.
+         * Instead or creating a new actor, reuse the actor we created earlier,
+         * and update the breakpoint store.
+         */
         actor.location = actualLocation;
         breakpoints[actualLocation.line] = breakpoints[aLocation.line];
-        breakpoints[actualLocation.line].line = actualLocation.line;
         delete breakpoints[aLocation.line];
+        // WARNING: This overwrites aLocation.line
+        breakpoints[actualLocation.line].line = actualLocation.line;
         return {
           actor: actor.actorID,
           actualLocation: actualLocation
@@ -682,6 +712,10 @@ ThreadActor.prototype = {
       }
     }
 
+    /**
+     * If we get here, no line matching the given line was found, so just
+     * epically.
+     */
     return {
       error: "noCodeAtLineColumn",
       actor: actor.actorID

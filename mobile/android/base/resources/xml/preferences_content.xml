@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+   
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+                  android:enabled="false">
+
+    <PreferenceCategory android:title="@string/pref_category_content">
+
+        <ListPreference android:key="browser.menu.showCharacterEncoding"
+                        android:title="@string/pref_char_encoding"
+                        android:entries="@array/pref_char_encoding_entries"
+                        android:entryValues="@array/pref_char_encoding_values"
+                        android:persistent="false" />
+
+        <ListPreference android:key="plugin.enable"
+                        android:title="@string/pref_plugins"
+                        android:entries="@array/pref_plugins_entries"
+                        android:entryValues="@array/pref_plugins_values"
+                        android:persistent="false" />
+
+        <org.mozilla.gecko.FontSizePreference
+                        android:key="font.size.inflation.minTwips"
+                        android:title="@string/pref_text_size"
+                        android:positiveButtonText="@string/pref_font_size_set"
+                        android:negativeButtonText="@string/button_cancel"
+                        android:persistent="false" />
+
+        <CheckBoxPreference
+                        android:key="browser.zoom.reflowOnZoom"
+                        android:title="@string/pref_reflow_on_zoom"
+                        android:defaultValue="false"
+                        android:persistent="false" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

@@ -326,7 +326,7 @@ Blob(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
-static JSFunctionSpec gGlobalFun[] = {
+static const JSFunctionSpec gGlobalFun[] = {
     JS_FS("dump",    Dump,   1,0),
     JS_FS("debug",   Debug,  1,0),
     JS_FS("atob",    Atob,   1,0),

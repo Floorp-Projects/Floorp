@@ -359,7 +359,7 @@ DumpCallgrind(JSContext *cx, unsigned argc, jsval *vp)
 }
 #endif
 
-static JSFunctionSpec profiling_functions[] = {
+static const JSFunctionSpec profiling_functions[] = {
     JS_FN("startProfiling",  StartProfiling,      1,0),
     JS_FN("stopProfiling",   StopProfiling,       1,0),
     JS_FN("pauseProfilers",  PauseProfilers,      1,0),

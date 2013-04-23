@@ -269,8 +269,7 @@ class SnapshotIterator : public SnapshotReader
 
     template <class Op>
     inline void readFrameArgs(Op &op, const Value *argv, Value *scopeChain, Value *thisv,
-                              unsigned start, unsigned formalEnd, unsigned iterEnd,
-                              RawScript script);
+                              unsigned start, unsigned formalEnd, unsigned iterEnd);
 
     Value maybeReadSlotByIndex(size_t index) {
         while (index--) {

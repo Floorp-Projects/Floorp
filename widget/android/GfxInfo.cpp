@@ -381,6 +381,7 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
         // Gingerbread HTC devices are whitelisted.
         // Gingerbread Samsung devices are whitelisted except for:
         //   Samsung devices identified in Bug 847837
+        //   Samsung SGH-T989 (Bug 818363)
         // All other Gingerbread devices are blacklisted.
         bool isWhitelisted =
           cManufacturer.Equals("htc", nsCaseInsensitiveCStringComparator()) ||
@@ -395,7 +396,8 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
             cModel.Equals("GT-S7500", nsCaseInsensitiveCStringComparator()) ||
             cModel.Equals("GT-S7500T", nsCaseInsensitiveCStringComparator()) ||
             cModel.Equals("GT-S7500L", nsCaseInsensitiveCStringComparator()) ||
-            cModel.Equals("GT-S6500T", nsCaseInsensitiveCStringComparator()))
+            cModel.Equals("GT-S6500T", nsCaseInsensitiveCStringComparator()) ||
+            cModel.Equals("SGH-T989", nsCaseInsensitiveCStringComparator()))
         {
           isWhitelisted = false;
         }
@@ -426,13 +428,23 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
       else if (CompareVersions(mOSVersion.get(), "4.1.0") < 0)
       {
         // Whitelist:
-        //   All Samsung ICS devices
+        //   All Samsung ICS devices, except for:
+        //     Samsing SGH-I717 (Bug 845729)
+        //     Samsing SGH-I727 (Bug 845729)
+        //     Samsing SGH-T989 (Bug 845729)
         //   All Galaxy nexus ICS devices
         //   Sony Xperia Ion (LT28) ICS devices
         bool isWhitelisted =
           cModel.Equals("LT28h", nsCaseInsensitiveCStringComparator()) ||
           cManufacturer.Equals("samsung", nsCaseInsensitiveCStringComparator()) ||
           cModel.Equals("galaxy nexus", nsCaseInsensitiveCStringComparator()); // some Galaxy Nexus have manufacturer=amazon
+
+        if (cModel.Equals("SGH-I717", nsCaseInsensitiveCStringComparator()) ||
+            cModel.Equals("SGH-I727", nsCaseInsensitiveCStringComparator()) ||
+            cModel.Equals("SGH-T989", nsCaseInsensitiveCStringComparator()))
+        {
+          isWhitelisted = false;
+        }
 
         if (!isWhitelisted) {
           *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
@@ -450,13 +462,16 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
         //   Samsung GT-I8190 (Bug 812881)
         //   Samsung SGH-I747M (Bug 812881)
         //   Samsung SGH-I747 (Bug 812881)
+        //   All Sony devices (Bug 845734)
+
         bool isBlocklisted =
           cModel.Equals("SAMSUNG-SPH-L710", nsCaseInsensitiveCStringComparator()) ||
           cModel.Equals("SAMSUNG-SGH-T999", nsCaseInsensitiveCStringComparator()) ||
           cModel.Equals("SAMSUNG-SCH-I535", nsCaseInsensitiveCStringComparator()) ||
           cModel.Equals("SAMSUNG-GT-I8190", nsCaseInsensitiveCStringComparator()) ||
           cModel.Equals("SAMSUNG-SGH-I747M", nsCaseInsensitiveCStringComparator()) ||
-          cModel.Equals("SAMSUNG-SGH-I747", nsCaseInsensitiveCStringComparator());
+          cModel.Equals("SAMSUNG-SGH-I747", nsCaseInsensitiveCStringComparator()) ||
+          cManufacturer.Equals("Sony", nsCaseInsensitiveCStringComparator());
 
         if (isBlocklisted) {
           *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;

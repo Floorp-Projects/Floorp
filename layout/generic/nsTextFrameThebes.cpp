@@ -7533,7 +7533,7 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   }
 
   uint32_t flowEndInTextRun;
-  nsIFrame* lineContainer = aLineLayout.GetLineContainerFrame();
+  nsIFrame* lineContainer = aLineLayout.LineContainerFrame();
   gfxContext* ctx = aRenderingContext->ThebesContext();
   const nsTextFragment* frag = mContent->GetText();
 
@@ -7884,7 +7884,7 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   // When we have text decorations, we don't need to compute their overflow now
   // because we're guaranteed to do it later
   // (see nsLineLayout::RelativePositionFrames)
-  UnionAdditionalOverflow(presContext, *aLineLayout.GetLineContainerRS(),
+  UnionAdditionalOverflow(presContext, *aLineLayout.LineContainerRS(),
                           provider, &aMetrics.VisualOverflow(), false);
 
   /////////////////////////////////////////////////////////////////////

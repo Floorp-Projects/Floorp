@@ -292,10 +292,8 @@ public:
    * some other kind of frame when inline frames are reflowed in a non-block
    * context (e.g. MathML or floating first-letter).
    */
-  nsIFrame* GetLineContainerFrame() const { return mBlockReflowState->frame; }
-  const nsHTMLReflowState* GetLineContainerRS() const {
-    return mBlockReflowState;
-  }
+  nsIFrame* LineContainerFrame() const { return mBlockReflowState->frame; }
+  const nsHTMLReflowState* LineContainerRS() const { return mBlockReflowState; }
   const nsLineList::iterator* GetLine() const {
     return mGotLineBox ? &mLineBox : nullptr;
   }

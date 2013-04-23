@@ -73,7 +73,7 @@ function test() {
 
       is(responseScope.querySelector(".name").getAttribute("value"),
         L10N.getStr("responseHeaders") + " (" +
-        L10N.getFormatStr("networkMenu.sizeKB", L10N.numberWithDecimals(0.168, 3)) + ")",
+        L10N.getFormatStr("networkMenu.sizeKB", L10N.numberWithDecimals(173/1024, 3)) + ")",
         "The response headers scope doesn't have the correct title.");
 
       ok(requestScope.querySelector(".name").getAttribute("value").contains(

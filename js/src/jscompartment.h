@@ -198,7 +198,7 @@ struct JSCompartment
                              JS::TypeInferenceSizes *tiSizes,
                              size_t *shapesCompartmentTables, size_t *crossCompartmentWrappers,
                              size_t *regexpCompartment, size_t *debuggeesSet,
-                             size_t *baselineOptimizedStubs);
+                             size_t *baselineStubsOptimized);
 
     /*
      * Shared scope property tree, and arena-pool for allocating its nodes.

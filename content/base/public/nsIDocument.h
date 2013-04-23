@@ -23,7 +23,6 @@
 #include "nsPIDOMWindow.h"               // for use in inline functions
 #include "nsPropertyTable.h"             // for member
 #include "nsTHashtable.h"                // for member
-#include "mozilla/dom/DirectionalityUtils.h"
 #include "mozilla/dom/DocumentBinding.h"
 
 class imgIRequest;
@@ -523,10 +522,6 @@ public:
     mSandboxFlags = sandboxFlags;
   }
 
-  inline mozilla::Directionality GetDocumentDirectionality() {
-    return mDirectionality;
-  }
-  
   /**
    * Access HTTP header data (this may also get set from other
    * sources, like HTML META tags).
@@ -641,7 +636,7 @@ protected:
 public:
   // Get the root <html> element, or return null if there isn't one (e.g.
   // if the root isn't <html>)
-  Element* GetHtmlElement();
+  Element* GetHtmlElement() const;
   // Returns the first child of GetHtmlContent which has the given tag,
   // or nullptr if that doesn't exist.
   Element* GetHtmlChildElement(nsIAtom* aTag);
@@ -2001,7 +1996,7 @@ public:
   virtual void GetTitle(nsString& aTitle) = 0;
   virtual void SetTitle(const nsAString& aTitle, mozilla::ErrorResult& rv) = 0;
   void GetDir(nsAString& aDirection) const;
-  void SetDir(const nsAString& aDirection, mozilla::ErrorResult& rv);
+  void SetDir(const nsAString& aDirection);
   nsIDOMWindow* GetDefaultView() const
   {
     return GetWindow();
@@ -2148,12 +2143,6 @@ protected:
   nsCString GetContentTypeInternal() const
   {
     return mContentType;
-  }
-
-  inline void
-  SetDocumentDirectionality(mozilla::Directionality aDir)
-  {
-    mDirectionality = aDir;
   }
 
   // All document WrapNode implementations MUST call this method.  A
@@ -2334,9 +2323,6 @@ protected:
   // associated IFRAME or CSP-protectable content, if existent. These are set at load time and
   // are immutable - see nsSandboxFlags.h for the possible flags.
   uint32_t mSandboxFlags;
-
-  // The root directionality of this document.
-  mozilla::Directionality mDirectionality;
 
   nsCString mContentLanguage;
 private:

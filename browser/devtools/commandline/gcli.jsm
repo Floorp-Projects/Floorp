@@ -7308,12 +7308,10 @@ exports.Output = Output;
  * Functions and data related to the execution of a command
  */
 exports.createExecutionContext = function(requisition) {
-  return {
+  var context = {
     exec: requisition.exec.bind(requisition),
     update: requisition.update.bind(requisition),
     updateExec: requisition.updateExec.bind(requisition),
-    document: requisition.document,
-    environment: requisition.environment,
     createView: view.createView,
     typedData: function(data, type) {
       return {
@@ -7334,6 +7332,18 @@ exports.createExecutionContext = function(requisition) {
       return Promise.defer();
     }
   };
+
+  Object.defineProperty(context, 'environment', {
+    get: function() { return requisition.environment; },
+    enumerable : true
+  });
+
+  Object.defineProperty(context, 'document', {
+    get: function() { return requisition.document; },
+    enumerable : true
+  });
+
+  return context;
 };
 
 

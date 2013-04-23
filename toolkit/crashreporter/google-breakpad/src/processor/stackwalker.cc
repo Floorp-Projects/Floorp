@@ -57,6 +57,7 @@ namespace google_breakpad {
 
 const int Stackwalker::kRASearchWords = 30;
 uint32_t Stackwalker::max_frames_ = 1024;
+bool Stackwalker::max_frames_set_ = false;
 
 Stackwalker::Stackwalker(const SystemInfo* system_info,
                          MemoryRegion* memory,
@@ -125,7 +126,10 @@ bool Stackwalker::Walk(CallStack* stack,
     // over the frame, because the stack now owns it.
     stack->frames_.push_back(frame.release());
     if (stack->frames_.size() > max_frames_) {
-      BPLOG(ERROR) << "The stack is over " << max_frames_ << " frames.";
+      // Only emit an error message in the case where the limit that we
+      // reached is the default limit, not set by the user.
+      if (!max_frames_set_)
+        BPLOG(ERROR) << "The stack is over " << max_frames_ << " frames.";
       break;
     }
 
