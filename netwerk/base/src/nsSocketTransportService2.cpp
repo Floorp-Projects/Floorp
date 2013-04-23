@@ -686,30 +686,30 @@ nsSocketTransportService::Run()
 }
 
 void
+nsSocketTransportService::DetachSocketWithGuard(bool aGuardLocals,
+                                                SocketContext *socketList,
+                                                int32_t index)
+{
+    bool isGuarded = false;
+    if (aGuardLocals) {
+        socketList[index].mHandler->IsLocal(&isGuarded);
+        if (!isGuarded)
+            socketList[index].mHandler->KeepWhenOffline(&isGuarded);
+    }
+    if (!isGuarded)
+        DetachSocket(socketList, &socketList[index]);
+}
+
+void
 nsSocketTransportService::Reset(bool aGuardLocals)
 {
     // detach any sockets
     int32_t i;
-    bool isGuarded;
     for (i = mActiveCount - 1; i >= 0; --i) {
-        isGuarded = false;
-        if (aGuardLocals) {
-            mActiveList[i].mHandler->IsLocal(&isGuarded);
-            if (!isGuarded)
-                mActiveList[i].mHandler->KeepWhenOffline(&isGuarded);
-        }
-        if (!isGuarded)
-            DetachSocket(mActiveList, &mActiveList[i]);
+        DetachSocketWithGuard(aGuardLocals, mActiveList, i);
     }
     for (i = mIdleCount - 1; i >= 0; --i) {
-        isGuarded = false;
-        if (aGuardLocals) {
-            mIdleList[i].mHandler->IsLocal(&isGuarded);
-            if (!isGuarded)
-                mIdleList[i].mHandler->KeepWhenOffline(&isGuarded);
-        }
-        if (!isGuarded)
-            DetachSocket(mIdleList, &mIdleList[i]);
+        DetachSocketWithGuard(aGuardLocals, mIdleList, i);
     }
 }
 

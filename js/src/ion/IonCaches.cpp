@@ -576,7 +576,7 @@ IsOptimizableArgumentsObjectForGetElem(JSObject *obj, Value idval)
         return false;
 
     int32_t idint = idval.toInt32();
-    if (idint < 0 || idint >= argsObj.initialLength())
+    if (idint < 0 || static_cast<uint32_t>(idint) >= argsObj.initialLength())
         return false;
 
     return true;

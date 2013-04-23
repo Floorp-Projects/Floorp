@@ -281,9 +281,13 @@ bool ExceptionHandler::WriteMinidump(bool write_exception_stream) {
   if (pthread_mutex_lock(&minidump_write_mutex_) == 0) {
     // Send an empty message to the handle port so that a minidump will
     // be written
-    SendMessageToHandlerThread(write_exception_stream ?
-                                   kWriteDumpWithExceptionMessage :
-                                   kWriteDumpMessage);
+    bool result = SendMessageToHandlerThread(write_exception_stream ?
+                                             kWriteDumpWithExceptionMessage :
+                                             kWriteDumpMessage);
+    if (!result) {
+      pthread_mutex_unlock(&minidump_write_mutex_);
+      return false;
+    }
 
     // Wait for the minidump writer to complete its writing.  It will unlock
     // the mutex when completed

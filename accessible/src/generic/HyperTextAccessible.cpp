@@ -1829,8 +1829,10 @@ void
 HyperTextAccessible::GetSelectionDOMRanges(int16_t aType,
                                            nsTArray<nsRange*>* aRanges)
 {
+  // Ignore selection if it is not visible.
   nsRefPtr<nsFrameSelection> frameSelection = FrameSelection();
-  if (!frameSelection)
+  if (!frameSelection ||
+      frameSelection->GetDisplaySelection() <= nsISelectionController::SELECTION_HIDDEN)
     return;
 
   Selection* domSel = frameSelection->GetSelection(aType);
