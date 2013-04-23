@@ -13,6 +13,8 @@ include $(topsrcdir)/config/config.mk
 
 EXTRA_JS_MODULES = \
 	BrowserNewTabPreloader.jsm \
+	CustomizableUI.jsm \
+	CustomizeMode.jsm \
 	openLocationLastURL.jsm \
 	NetworkPrioritizer.jsm \
 	offlineAppCache.jsm \
