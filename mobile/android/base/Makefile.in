@@ -69,6 +69,7 @@ FENNEC_JAVA_FILES = \
   CameraVideoResultHandler.java \
   CanvasDelegate.java \
   CheckableLinearLayout.java \
+  ClickableWhenDisabledEditText.java \
   SyncPreference.java \
   db/BrowserDB.java \
   db/LocalBrowserDB.java \
@@ -1044,6 +1045,7 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/tab_thumbnail.xml                      \
   mobile/android/base/resources/drawable/tabs_level.xml                         \
   mobile/android/base/resources/drawable/tabs_panel_indicator.xml               \
+  mobile/android/base/resources/drawable/textbox_bg.xml                         \
   mobile/android/base/resources/drawable/webapp_titlebar_bg.xml                 \
   $(NULL)
 

@@ -5,61 +5,118 @@
 
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
             android:layout_width="fill_parent"
-            android:layout_height="fill_parent">
+            android:layout_height="fill_parent"
+            android:fillViewport="true">
 
     <LinearLayout android:layout_width="fill_parent"
-                  android:layout_height="fill_parent"
+                  android:layout_height="wrap_content"
                   android:orientation="vertical"
-                  android:padding="10dip">
+                  android:background="@color/background_normal">
         
-        <TextView android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:padding="10dip"
-                  android:textAppearance="?android:attr/textAppearanceMedium"
-                  android:textStyle="bold"
-                  android:text="@string/crash_message"/>
+        <LinearLayout android:layout_width="fill_parent"
+                      android:layout_height="0dp"
+                      android:orientation="vertical"
+                      android:padding="10dp"
+                      android:layout_weight="1">
+
+            <TextView android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:padding="10dip"
+                      android:textSize="30sp"
+                      android:textColor="#000"
+                      android:layout_gravity="center_horizontal"
+                      android:fontFamily="sans-serif-light"
+                      android:text="@string/crash_sorry"/>
+
+            <TextView android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:padding="10dip"
+                      android:textAppearance="@style/TextAppearance"
+                      android:text="@string/crash_message2"/>
+
+            <CheckBox android:id="@+id/send_report"
+                      android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:checked="true"
+                      android:textColor="@color/primary_text"
+                      android:layout_marginBottom="10dp"
+                      android:text="@string/crash_send_report_message2"/>
+
+            <EditText android:id="@+id/comment"
+                      style="@style/CrashReporter.EditText"
+                      android:layout_width="fill_parent"
+                      android:layout_height="wrap_content"
+                      android:ems="10"
+                      android:inputType="textMultiLine"
+                      android:lines="5"
+                      android:gravity="top"
+                      android:layout_marginLeft="8dp"
+                      android:layout_marginRight="8dp"
+                      android:layout_marginBottom="10dp"
+                      android:hint="@string/crash_comment" />
+
+            <CheckBox android:id="@+id/include_url"
+                      android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:textColor="@color/primary_text"
+                      android:textAppearance="@style/TextAppearance"
+                      android:layout_marginBottom="10dp"
+                      android:text="@string/crash_include_url2"/>
+
+            <CheckBox android:id="@+id/allow_contact"
+                      android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:textColor="@color/primary_text"
+                      android:textAppearance="@style/TextAppearance"
+                      android:layout_marginBottom="10dp"
+                      android:text="@string/crash_allow_contact"/>
+
+            <org.mozilla.gecko.ClickableWhenDisabledEditText
+                    android:id="@+id/email"
+                    style="@style/CrashReporter.EditText"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:ems="10"
+                    android:inputType="textEmailAddress"
+                    android:layout_marginLeft="8dp"
+                    android:layout_marginRight="8dp"
+                    android:enabled="false"
+                    android:clickable="true"
+                    android:hint="@string/crash_email" />
+
+        </LinearLayout>
         
-        <TextView android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:padding="10dip"
-                  android:textAppearance="?android:attr/textAppearanceMedium"
-                  android:text="@string/crash_help_message"/>
-        
-        <CheckBox android:id="@+id/send_report"
-                  android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:checked="true"
-                  android:textAppearance="?android:attr/textAppearanceMedium"
-                  android:text="@string/crash_send_report_message"/>
-        
-        <CheckBox android:id="@+id/include_url"
-                  android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:textAppearance="?android:attr/textAppearanceMedium"
-                  android:text="@string/crash_include_url"/>
-        
+        <View android:layout_width="fill_parent"
+              android:layout_height="1dp"
+              android:background="#999" />
+
         <LinearLayout android:layout_width="fill_parent"
                       android:layout_height="wrap_content"
                       android:orientation="horizontal"
-                      android:padding="10dip"
-                      android:gravity="center_horizontal">
-        
+                      android:layout_gravity="bottom">
+
             <Button android:id="@+id/close"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginRight="10px"
-                    android:minWidth="120sp"
+                    android:layout_weight="1.0"
                     android:onClick="onCloseClick"
-                    android:text="@string/crash_close_label"/>
+                    android:text="@string/crash_close_label"
+                    android:textAppearance="?android:attr/textAppearance"
+                    android:background="@drawable/action_bar_button"/>
+
+            <View android:layout_width="1dp"
+                  android:layout_height="fill_parent"
+                  android:background="#999" />
         
             <Button android:id="@+id/restart"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="10px"
-                    android:minWidth="120sp"
+                    android:layout_weight="1.0"
                     android:onClick="onRestartClick"
-                    android:text="@string/crash_restart_label"/>
-        
+                    android:text="@string/crash_restart_label"
+                    android:textAppearance="?android:attr/textAppearance"
+                    android:background="@drawable/action_bar_button"/>
+
         </LinearLayout>
    
     </LinearLayout>
