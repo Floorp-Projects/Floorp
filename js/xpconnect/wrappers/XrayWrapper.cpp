@@ -1551,19 +1551,27 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, HandleObject wra
     // Check resolveOwnProperty.
     if (!Traits::singleton.resolveOwnProperty(cx, *this, wrapper, holder, id, desc, flags))
         return false;
+
+    // Check the holder.
+    if (!desc->obj && !JS_GetPropertyDescriptorById(cx, holder, id, 0, desc))
+        return false;
     if (desc->obj) {
         desc->obj = wrapper;
         return true;
     }
 
+    // Nothing in the cache. Call through, and cache the result.
+    if (!Traits::singleton.resolveNativeProperty(cx, wrapper, holder, id, desc, flags))
+        return false;
+
     // We need to handle named access on the Window somewhere other than
     // Traits::resolveOwnProperty, because per spec it happens on the Global
     // Scope Polluter and thus the resulting properties are non-|own|. However,
-    // we're set up (below) to cache (on the holder) anything that comes out of
+    // we're set up (above) to cache (on the holder) anything that comes out of
     // resolveNativeProperty, which we don't want for something dynamic like
-    // named access. So we just handle it here.
+    // named access. So we just handle it separately here.
     nsGlobalWindow *win;
-    if (Traits::Type == XrayForWrappedNative && JSID_IS_STRING(id) &&
+    if (!desc->obj && Traits::Type == XrayForWrappedNative && JSID_IS_STRING(id) &&
         (win = static_cast<nsGlobalWindow*>(As<nsPIDOMWindow>(wrapper))))
     {
         nsCOMPtr<nsIDOMWindow> childDOMWin = win->GetChildWindow(id);
@@ -1578,18 +1586,6 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, HandleObject wra
             return JS_WrapPropertyDescriptor(cx, desc);
         }
     }
-
-    // Check the holder.
-    if (!JS_GetPropertyDescriptorById(cx, holder, id, 0, desc))
-        return false;
-    if (desc->obj) {
-        desc->obj = wrapper;
-        return true;
-    }
-
-    // Nothing in the cache. Call through, and cache the result.
-    if (!Traits::singleton.resolveNativeProperty(cx, wrapper, holder, id, desc, flags))
-        return false;
 
     if (!desc->obj &&
         id == nsXPConnect::GetRuntimeInstance()->GetStringID(XPCJSRuntime::IDX_TO_STRING))
