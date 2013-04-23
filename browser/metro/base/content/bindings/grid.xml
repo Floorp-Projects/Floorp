@@ -412,7 +412,7 @@
           if (this.controller && this.controller.gridBoundCallback != undefined)
             this.controller.gridBoundCallback();
           // set up cross-slide gesture handling for multiple-selection grids
-          if (CrossSlide && "multiple" == this.getAttribute("seltype")) {
+          if ("undefined" !== typeof CrossSlide && "multiple" == this.getAttribute("seltype")) {
             this._xslideHandler = new CrossSlide.Handler(this, {
                   REARRANGESTART: this.crossSlideBoundary
             });
