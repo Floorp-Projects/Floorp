@@ -102,7 +102,7 @@ function initialize(event) {
 
   // Allow passing in a view through the window arguments
   if ("arguments" in window && window.arguments.length > 0 &&
-      "view" in window.arguments[0]) {
+      window.arguments[0] !== null && "view" in window.arguments[0]) {
     view = window.arguments[0].view;
   }
 
