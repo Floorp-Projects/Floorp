@@ -259,7 +259,7 @@ XPCCallContext::GetResolveName() const
 }
 
 inline jsid
-XPCCallContext::SetResolveName(jsid name)
+XPCCallContext::SetResolveName(JS::HandleId name)
 {
     CHECK_STATE(HAVE_CONTEXT);
     return XPCJSRuntime::Get()->SetResolveName(name);
