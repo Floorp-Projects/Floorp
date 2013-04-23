@@ -213,11 +213,6 @@ gTests.push({
 });
 
 function test() {
-  if (isDebugBuild()) {
-    todo(false, "selection tests can't run in debug builds.");
-    return;
-  }
-
   if (!isLandscapeMode()) {
     todo(false, "browser_selection_tests need landscape mode to run.");
     return;
