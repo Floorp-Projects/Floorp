@@ -62,8 +62,8 @@
       <menuitem id="menu_copyURL" label="&copyURLCmd.label;"
                 accesskey="&copyURLCmd.accesskey;" command="consoleCmd_copyURL"
                 selection="network" selectionType="single"/>
-      <menuitem id="menu_copy"/>
-      <menuitem id="menu_selectAll"/>
+      <menuitem id="cMenu_copy"/>
+      <menuitem id="cMenu_selectAll"/>
     </menupopup>
   </popupset>
 
@@ -101,6 +101,16 @@
                       autocheck="false" prefKey="exception"/>
             <menuitem label="&btnConsoleWarnings;" type="checkbox"
                       autocheck="false" prefKey="jswarn"/>
+          </menupopup>
+        </toolbarbutton>
+        <toolbarbutton label="&btnPageSecurity.label;" type="menu-button"
+                       category="security" class="devtools-toolbarbutton webconsole-filter-button"
+                       tooltiptext="&btnPageSecurity.tooltip;">
+          <menupopup>
+            <menuitem label="&btnConsoleErrors;" type="checkbox"
+                      autocheck="false" prefKey="secerror"/>
+            <menuitem label="&btnConsoleWarnings;" type="checkbox"
+                      autocheck="false" prefKey="secwarn"/>
           </menupopup>
         </toolbarbutton>
         <toolbarbutton label="&btnPageLogging.label;" type="menu-button"

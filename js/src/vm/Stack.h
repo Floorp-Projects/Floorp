@@ -227,12 +227,11 @@ class AbstractFramePtr
 {
     uintptr_t ptr_;
 
-  protected:
+  public:
     AbstractFramePtr()
       : ptr_(0)
     {}
 
-  public:
     AbstractFramePtr(StackFrame *fp)
         : ptr_(fp ? uintptr_t(fp) | 0x1 : 0)
     {

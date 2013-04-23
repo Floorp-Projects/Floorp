@@ -65,12 +65,7 @@ public:
     return mWindow;
   }
 
-  void Shutdown()
-  {
-    Suspend();
-    mDecoder.Shutdown();
-  }
-
+  void Shutdown();
   void Suspend();
   void Resume();
 
@@ -156,6 +151,7 @@ public:
   MediaStream* DestinationStream() const;
   void UnregisterAudioBufferSourceNode(AudioBufferSourceNode* aNode);
   void UnregisterPannerNode(PannerNode* aNode);
+  void UnregisterScriptProcessorNode(ScriptProcessorNode* aNode);
   void UpdatePannerSource();
 
   JSContext* GetJSContext() const;
@@ -175,6 +171,7 @@ private:
   // to compute the doppler shift. Those are weak pointers.
   nsTArray<PannerNode*> mPannerNodes;
   nsTArray<AudioBufferSourceNode*> mAudioBufferSourceNodes;
+  nsTArray<ScriptProcessorNode*> mScriptProcessorNodes;
 };
 
 }

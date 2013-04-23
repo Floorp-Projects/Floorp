@@ -402,22 +402,41 @@
       <property name="suppressOnSelect"
                   onget="return this.getAttribute('suppressonselect') == 'true';"
                   onset="this.setAttribute('suppressonselect', val);"/>
+      <property name="crossSlideBoundary"
+          onget="return this.hasAttribute('crossslideboundary')? this.getAttribute('crossslideboundary') : Infinity;"/>
 
     <!-- Internal methods -->
-
+      <field name="_xslideHandler"/>
       <constructor>
         <![CDATA[
           if (this.controller && this.controller.gridBoundCallback != undefined)
             this.controller.gridBoundCallback();
-
+          // set up cross-slide gesture handling for multiple-selection grids
+          if (CrossSlide && "multiple" == this.getAttribute("seltype")) {
+            this._xslideHandler = new CrossSlide.Handler(this, {
+                  REARRANGESTART: this.crossSlideBoundary
+            });
+            this.addEventListener("touchstart", this._xslideHandler, false);
+            this.addEventListener("touchmove", this._xslideHandler, false);
+            this.addEventListener("touchend", this._xslideHandler, false);
+          }
           // XXX This event was never actually implemented (bug 223411).
           var event = document.createEvent("Events");
           event.initEvent("contentgenerated", true, true);
           this.dispatchEvent(event);
         ]]>
       </constructor>
-
-        <method name="_isIndexInBounds">
+      <destructor>
+        <![CDATA[
+          if (this._xslideHandler) {
+            this.removeEventListener("touchstart", this._xslideHandler);
+            this.removeEventListener("touchmove", this._xslideHandler);
+            this.removeEventListener("touchend", this._xslideHandler);
+            this._xslideHandler = null;
+          }
+        ]]>
+      </destructor>
+      <method name="_isIndexInBounds">
         <parameter name="anIndex"/>
         <body>
           <![CDATA[
@@ -482,6 +501,56 @@
                 this.controller.doActionOnSelectedTiles(event.action, event);
               }
           }
+        ]]>
+      </handler>
+      <handler event="MozCrossSliding">
+        <![CDATA[
+          // MozCrossSliding is swipe gesture across a tile
+          // The tile should follow the drag to reinforce the gesture
+          // (with inertia/speedbump behavior)
+          let state = event.crossSlidingState;
+          let thresholds = this._xslideHandler.thresholds;
+          let transformValue;
+          switch(state) {
+            case "cancelled":
+              // hopefully nothing else is transform-ing the tile
+              event.target.removeAttribute('crosssliding');
+              event.target.style.removeProperty('transform');
+              break;
+            case "dragging":
+            case "selecting":
+              event.target.setAttribute("crosssliding", true);
+              // just track the mouse in the initial phases of the drag gesture
+              transformValue = (event.direction=='x') ?
+                                      'translateX('+event.delta+'px)' :
+                                      'translateY('+event.delta+'px)';
+              event.target.style.transform = transformValue;
+              break;
+            case "selectSpeedBumping":
+            case "speedBumping":
+              event.target.setAttribute('crosssliding', true);
+              // in speed-bump phase, we add inertia to the drag
+              let offset = CrossSlide.speedbump(
+                event.delta,
+                thresholds.SPEEDBUMPSTART,
+                thresholds.SPEEDBUMPEND
+              );
+              transformValue = (event.direction=='x') ?
+                                      'translateX('+offset+'px)' :
+                                      'translateY('+offset+'px)';
+              event.target.style.transform = transformValue;
+              break;
+            // "rearranging" case not used or implemented here
+            case "completed":
+              event.target.removeAttribute('crosssliding');
+              event.target.style.removeProperty('transform');
+              break;
+          }
+        ]]>
+      </handler>
+      <handler event="MozCrossSlideSelect">
+        <![CDATA[
+          this.toggleItemSelection(event.target);
         ]]>
       </handler>
     </handlers>

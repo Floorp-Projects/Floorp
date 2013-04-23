@@ -103,11 +103,6 @@ GainNode::GainNode(AudioContext* aContext)
   engine->SetSourceStream(static_cast<AudioNodeStream*> (mStream.get()));
 }
 
-GainNode::~GainNode()
-{
-  DestroyMediaStream();
-}
-
 JSObject*
 GainNode::WrapObject(JSContext* aCx, JSObject* aScope)
 {

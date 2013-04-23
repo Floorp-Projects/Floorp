@@ -118,20 +118,25 @@ nsDOMFileReader::~nsDOMFileReader()
   nsLayoutStatics::Release();
 }
 
+
+/**
+ * This Init method is called from the factory constructor.
+ */
 nsresult
 nsDOMFileReader::Init()
 {
-  nsDOMEventTargetHelper::Init();
-
-  nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
-  nsCOMPtr<nsIPrincipal> subjectPrincipal;
+  nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
+  nsCOMPtr<nsIPrincipal> principal;
   if (secMan) {
-    nsresult rv = secMan->GetSubjectPrincipal(getter_AddRefs(subjectPrincipal));
-    NS_ENSURE_SUCCESS(rv, rv);
+    secMan->GetSystemPrincipal(getter_AddRefs(principal));
   }
-  NS_ENSURE_STATE(subjectPrincipal);
-  mPrincipal.swap(subjectPrincipal);
+  NS_ENSURE_STATE(principal);
+  mPrincipal.swap(principal);
 
+  // Instead of grabbing some random global from the context stack,
+  // let's use the default one (junk drawer) for now.
+  // We should move away from this Init...
+  BindToOwner(xpc::GetNativeForGlobal(xpc::GetJunkScope()));
   return NS_OK;
 }
 

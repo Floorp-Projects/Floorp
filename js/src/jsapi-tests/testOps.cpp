@@ -42,7 +42,7 @@ createMyObject(JSContext* context, unsigned argc, jsval *vp)
     return JS_TRUE;
 }
 
-static JSFunctionSpec s_functions[] =
+static const JSFunctionSpec s_functions[] =
 {
     JS_FN("createMyObject", createMyObject, 0, 0),
     JS_FS_END

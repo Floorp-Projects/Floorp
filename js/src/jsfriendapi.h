@@ -453,8 +453,8 @@ NewFunctionByIdWithReserved(JSContext *cx, JSNative native, unsigned nargs, unsi
 JS_FRIEND_API(JSObject *)
 InitClassWithReserved(JSContext *cx, JSObject *obj, JSObject *parent_proto,
                       JSClass *clasp, JSNative constructor, unsigned nargs,
-                      JSPropertySpec *ps, JSFunctionSpec *fs,
-                      JSPropertySpec *static_ps, JSFunctionSpec *static_fs);
+                      const JSPropertySpec *ps, const JSFunctionSpec *fs,
+                      const JSPropertySpec *static_ps, const JSFunctionSpec *static_fs);
 
 JS_FRIEND_API(const Value &)
 GetFunctionNativeReserved(RawObject fun, size_t which);

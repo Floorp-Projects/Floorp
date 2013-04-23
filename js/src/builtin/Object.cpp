@@ -976,7 +976,7 @@ obj_isSealed(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-JSFunctionSpec js::object_methods[] = {
+const JSFunctionSpec js::object_methods[] = {
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str,             obj_toSource,                0,0),
 #endif
@@ -999,7 +999,7 @@ JSFunctionSpec js::object_methods[] = {
     JS_FS_END
 };
 
-JSFunctionSpec js::object_static_methods[] = {
+const JSFunctionSpec js::object_static_methods[] = {
     JS_FN("getPrototypeOf",            obj_getPrototypeOf,          1,0),
     JS_FN("getOwnPropertyDescriptor",  obj_getOwnPropertyDescriptor,2,0),
     JS_FN("keys",                      obj_keys,                    1,0),

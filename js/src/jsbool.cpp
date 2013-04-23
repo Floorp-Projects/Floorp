@@ -118,7 +118,7 @@ bool_valueOf(JSContext *cx, unsigned argc, Value *vp)
     return CallNonGenericMethod<IsBoolean, bool_valueOf_impl>(cx, args);
 }
 
-static JSFunctionSpec boolean_methods[] = {
+static const JSFunctionSpec boolean_methods[] = {
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str,  bool_toSource,  0, 0),
 #endif

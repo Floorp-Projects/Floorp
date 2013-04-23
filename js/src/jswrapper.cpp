@@ -953,6 +953,8 @@ js::RemapWrapper(JSContext *cx, JSObject *wobjArg, JSObject *newTargetArg)
     Value origv = ObjectValue(*origTarget);
     JSCompartment *wcompartment = wobj->compartment();
 
+    AutoDisableProxyCheck adpc(cx->runtime);
+
     // If we're mapping to a different target (as opposed to just recomputing
     // for the same target), we must not have an existing wrapper for the new
     // target, otherwise this will break.

@@ -18,8 +18,7 @@ namespace ion {
 template <class Op>
 inline void
 SnapshotIterator::readFrameArgs(Op &op, const Value *argv, Value *scopeChain, Value *thisv,
-                                unsigned start, unsigned formalEnd, unsigned iterEnd,
-                                RawScript script)
+                                unsigned start, unsigned formalEnd, unsigned iterEnd)
 {
     if (scopeChain)
         *scopeChain = read();
@@ -29,10 +28,6 @@ SnapshotIterator::readFrameArgs(Op &op, const Value *argv, Value *scopeChain, Va
     if (thisv)
         *thisv = read();
     else
-        skip();
-
-    // Skip slot for arguments object.
-    if (script->argumentsHasVarBinding())
         skip();
 
     unsigned i = 0;
@@ -108,28 +103,26 @@ InlineFrameIteratorMaybeGC<allowGC>::forEachCanonicalActualArg(
         // Get the non overflown arguments
         unsigned formal_end = (end < nformal) ? end : nformal;
         SnapshotIterator s(si_);
-        s.readFrameArgs(op, NULL, NULL, NULL, start, nformal, formal_end, script());
+        s.readFrameArgs(op, NULL, NULL, NULL, start, nformal, formal_end);
 
         // The overflown arguments are not available in current frame.
         // They are the last pushed arguments in the parent frame of this inlined frame.
         InlineFrameIteratorMaybeGC it(cx, this);
-        ++it;
-        unsigned argsObjAdj = it.script()->argumentsHasVarBinding() ? 1 : 0;
-        SnapshotIterator parent_s(it.snapshotIterator());
+        SnapshotIterator parent_s((++it).snapshotIterator());
 
         // Skip over all slots untill we get to the last slots (= arguments slots of callee)
-        // the +2 is for [this] and [scopechain], and maybe +1 for [argsObj]
-        JS_ASSERT(parent_s.slots() >= nactual + 2 + argsObjAdj);
-        unsigned skip = parent_s.slots() - nactual - 2 - argsObjAdj;
+        // the +2 is for [this] and [scopechain]
+        JS_ASSERT(parent_s.slots() >= nactual + 2);
+        unsigned skip = parent_s.slots() - nactual - 2;
         for (unsigned j = 0; j < skip; j++)
             parent_s.skip();
 
         // Get the overflown arguments
-        parent_s.readFrameArgs(op, NULL, NULL, NULL, nformal, nactual, end, it.script());
+        parent_s.readFrameArgs(op, NULL, NULL, NULL, nformal, nactual, end);
     } else {
         SnapshotIterator s(si_);
         Value *argv = frame_->actualArgs();
-        s.readFrameArgs(op, argv, NULL, NULL, start, nformal, end, script());
+        s.readFrameArgs(op, argv, NULL, NULL, start, nformal, end);
     }
 }
  

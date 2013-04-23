@@ -59,8 +59,8 @@ namespace {
 class WorkerGlobalScope : public workers::EventTarget
 {
   static JSClass sClass;
-  static JSPropertySpec sProperties[];
-  static JSFunctionSpec sFunctions[];
+  static const JSPropertySpec sProperties[];
+  static const JSFunctionSpec sFunctions[];
 
   enum
   {
@@ -616,7 +616,7 @@ JSClass WorkerGlobalScope::sClass = {
   JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub
 };
 
-JSPropertySpec WorkerGlobalScope::sProperties[] = {
+const JSPropertySpec WorkerGlobalScope::sProperties[] = {
   { "location", SLOT_location, PROPERTY_FLAGS, JSOP_WRAPPER(GetLocation),
     JSOP_WRAPPER(js_GetterOnlyPropertyStub) },
   { sEventStrings[STRING_onerror], STRING_onerror, PROPERTY_FLAGS,
@@ -629,7 +629,7 @@ JSPropertySpec WorkerGlobalScope::sProperties[] = {
   { 0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER }
 };
 
-JSFunctionSpec WorkerGlobalScope::sFunctions[] = {
+const JSFunctionSpec WorkerGlobalScope::sFunctions[] = {
   JS_FN("close", Close, 0, FUNCTION_FLAGS),
   JS_FN("importScripts", ImportScripts, 1, FUNCTION_FLAGS),
   JS_FN("setTimeout", SetTimeout, 1, FUNCTION_FLAGS),
@@ -651,8 +651,8 @@ class DedicatedWorkerGlobalScope : public WorkerGlobalScope
 {
   static DOMJSClass sClass;
   static DOMIfaceAndProtoJSClass sProtoClass;
-  static JSPropertySpec sProperties[];
-  static JSFunctionSpec sFunctions[];
+  static const JSPropertySpec sProperties[];
+  static const JSFunctionSpec sFunctions[];
 
   enum
   {
@@ -854,7 +854,7 @@ private:
       return false;
     }
 
-    const char*& name = sFunctions[0].name;
+    const char* name = sFunctions[0].name;
     DedicatedWorkerGlobalScope* scope = GetInstancePrivate(aCx, obj, name);
     if (!scope) {
       return false;
@@ -919,13 +919,13 @@ DOMIfaceAndProtoJSClass DedicatedWorkerGlobalScope::sProtoClass = {
   0
 };
 
-JSPropertySpec DedicatedWorkerGlobalScope::sProperties[] = {
+const JSPropertySpec DedicatedWorkerGlobalScope::sProperties[] = {
   { sEventStrings[STRING_onmessage], STRING_onmessage, PROPERTY_FLAGS,
     JSOP_WRAPPER(GetEventListener), JSOP_WRAPPER(SetEventListener) },
   { 0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER }
 };
 
-JSFunctionSpec DedicatedWorkerGlobalScope::sFunctions[] = {
+const JSFunctionSpec DedicatedWorkerGlobalScope::sFunctions[] = {
   JS_FN("postMessage", PostMessage, 1, FUNCTION_FLAGS),
   JS_FS_END
 };

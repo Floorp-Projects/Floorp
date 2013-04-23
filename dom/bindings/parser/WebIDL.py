@@ -839,7 +839,7 @@ class IDLInterface(IDLObjectWithScope):
 
                 self._noInterfaceObject = True
             elif identifier == "Constructor" or identifier == "NamedConstructor":
-                if not self.hasInterfaceObject():
+                if identifier == "Constructor" and not self.hasInterfaceObject():
                     raise WebIDLError(str(identifier) + " and NoInterfaceObject are incompatible",
                                       [self.location])
 
