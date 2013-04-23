@@ -163,6 +163,12 @@ void profiler_js_operation_callback()
   stack->jsOperationCallback();
 }
 
+static inline
+double profiler_time()
+{
+  return mozilla_sampler_time();
+}
+
 // we want the class and function name but can't easily get that using preprocessor macros
 // __func__ doesn't have the class name and __PRETTY_FUNCTION__ has the parameters
 
