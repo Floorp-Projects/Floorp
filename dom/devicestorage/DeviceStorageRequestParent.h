@@ -105,10 +105,15 @@ private:
   class PostEnumerationSuccessEvent : public CancelableRunnable
   {
     public:
-      PostEnumerationSuccessEvent(DeviceStorageRequestParent* aParent, InfallibleTArray<DeviceStorageFileValue>& aPaths);
+      PostEnumerationSuccessEvent(DeviceStorageRequestParent* aParent,
+                                  const nsAString& aStorageType,
+                                  const nsAString& aRelPath,
+                                  InfallibleTArray<DeviceStorageFileValue>& aPaths);
       virtual ~PostEnumerationSuccessEvent();
       virtual nsresult CancelableRun();
     private:
+      const nsString mStorageType;
+      const nsString mRelPath;
       InfallibleTArray<DeviceStorageFileValue> mPaths;
   };
 
@@ -211,11 +216,11 @@ private:
  class PostAvailableResultEvent : public CancelableRunnable
  {
     public:
-      PostAvailableResultEvent(DeviceStorageRequestParent* aParent, const nsAString& aPath);
+      PostAvailableResultEvent(DeviceStorageRequestParent* aParent, DeviceStorageFile* aFile);
       virtual ~PostAvailableResultEvent();
       virtual nsresult CancelableRun();
     private:
-      nsString mPath;
+      nsRefPtr<DeviceStorageFile> mFile;
  };
 
 protected:

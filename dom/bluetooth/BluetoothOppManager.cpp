@@ -29,7 +29,9 @@
 #include "nsIOutputStream.h"
 #include "nsNetUtil.h"
 
-#define TARGET_FOLDER "/sdcard/downloads/bluetooth/"
+#define TARGET_ROOT   "/sdcard/"
+#define TARGET_SUBDIR "downloads/bluetooth/"
+#define TARGET_FOLDER TARGET_ROOT TARGET_SUBDIR
 
 USING_BLUETOOTH_NAMESPACE
 using namespace mozilla;
@@ -561,6 +563,11 @@ BluetoothOppManager::CreateFile()
    */
   f->GetLeafName(sFileName);
 
+  nsString fullFileName;
+  f->GetPath(fullFileName);
+  MOZ_ASSERT(StringBeginsWith(fullFileName, NS_LITERAL_STRING(TARGET_ROOT)));
+  nsDependentSubstring storagePath = Substring(fullFileName, strlen(TARGET_ROOT));
+
   mDsFile = nullptr;
 
   nsCOMPtr<nsIMIMEService> mimeSvc = do_GetService(NS_MIMESERVICE_CONTRACTID);
@@ -570,11 +577,11 @@ BluetoothOppManager::CreateFile()
 
     if (NS_SUCCEEDED(rv)) {
       if (StringBeginsWith(mimeType, NS_LITERAL_CSTRING("image/"))) {
-        mDsFile = new DeviceStorageFile(NS_LITERAL_STRING("pictures"), f);
+        mDsFile = new DeviceStorageFile(NS_LITERAL_STRING("pictures"), storagePath);
       } else if (StringBeginsWith(mimeType, NS_LITERAL_CSTRING("video/"))) {
-        mDsFile = new DeviceStorageFile(NS_LITERAL_STRING("movies"), f);
+        mDsFile = new DeviceStorageFile(NS_LITERAL_STRING("movies"), storagePath);
       } else if (StringBeginsWith(mimeType, NS_LITERAL_CSTRING("audio/"))) {
-        mDsFile = new DeviceStorageFile(NS_LITERAL_STRING("music"), f);
+        mDsFile = new DeviceStorageFile(NS_LITERAL_STRING("music"), storagePath);
       } else {
         NS_WARNING("Couldn't recognize the mimetype of received file.");
       }

@@ -111,26 +111,19 @@ var SelectionHandler = {
       }
       case "TextSelection:Position": {
         if (this._activeType == this.TYPE_SELECTION) {
-          let data = JSON.parse(aData);
-
-          // Reverse the handles if necessary.
-          let selectionReversed = this._updateCacheForSelection(data.handleType == this.HANDLE_TYPE_START);
+          // Check to see if the handles should be reversed.
+          let isStartHandle = JSON.parse(aData).handleType == this.HANDLE_TYPE_START;
+          let selectionReversed = this._updateCacheForSelection(isStartHandle);
           if (selectionReversed) {
-            // Re-send mouse events to update the selection corresponding to the new handles.
-            if (this._isRTL) {
-              this._sendMouseEvents(this._cache.end.x, this._cache.end.y, false);
-              this._sendMouseEvents(this._cache.start.x, this._cache.start.y, true);
-            } else {
-              this._sendMouseEvents(this._cache.start.x, this._cache.start.y, false);
-              this._sendMouseEvents(this._cache.end.x, this._cache.end.y, true);
-            }
+            // Reverse the anchor and focus to correspond to the new start and end handles.
+            let selection = this._getSelection();
+            let anchorNode = selection.anchorNode;
+            let anchorOffset = selection.anchorOffset;
+            selection.collapse(selection.focusNode, selection.focusOffset);
+            selection.extend(anchorNode, anchorOffset);
           }
-
-          // Position the handles to align with the edges of the selection.
-          this._positionHandles();
-        } else if (this._activeType == this.TYPE_CURSOR) {
-          this._positionHandles();
         }
+        this._positionHandles();
         break;
       }
     }
@@ -151,28 +144,6 @@ var SelectionHandler = {
         }
         break;
     }
-  },
-
-  _ignoreCollapsedSelection: false,
-
-  notifySelectionChanged: function sh_notifySelectionChanged(aDoc, aSel, aReason) {
-    if (aSel.isCollapsed) {
-      // Bail if we're ignoring events for a collapsed selection.
-      if (this._ignoreCollapsedSelection)
-        return;
-
-      // If the selection is collapsed because of one of the mouse events we
-      // sent while moving the handle, don't get rid of the selection handles.
-      if (aReason & Ci.nsISelectionListener.MOUSEDOWN_REASON) {
-        this._ignoreCollapsedSelection = true;
-        return;
-      }
-
-      // Otherwise, we do want to close the selection.
-      this._closeSelection();
-    }
-
-    this._ignoreCollapsedSelection = false;
   },
 
   /** Returns true if the provided element can be selected in text selection, false otherwise. */
@@ -211,9 +182,6 @@ var SelectionHandler = {
       this._onFail("no selection was present");
       return;
     }
-
-    // Add a listener to end the selection if it's removed programatically
-    selection.QueryInterface(Ci.nsISelectionPrivate).addSelectionListener(this);
 
     // Initialize the cache
     this._cache = { start: {}, end: {}};
@@ -302,10 +270,25 @@ var SelectionHandler = {
     this._positionHandles();
   },
 
-  // Moves the ends of the selection in the page. aX/aY are in top-level window
-  // browser coordinates.
+  /*
+   * Moves the selection as the user drags a selection handle.
+   *
+   * @param aIsStartHandle whether the user is moving the start handle (as opposed to the end handle)
+   * @param aX, aY selection point in client coordinates
+   */
   _moveSelection: function sh_moveSelection(aIsStartHandle, aX, aY) {
-    // Update the handle position as it's dragged.
+    // XXX We should be smarter about the coordinates we pass to caretPositionFromPoint, especially
+    // in editable targets. We should factor out the logic that's currently in _sendMouseEvents.
+    let viewOffset = this._getViewOffset();
+    let caretPos = this._contentWindow.document.caretPositionFromPoint(aX - viewOffset.x, aY - viewOffset.y);
+
+    // Constrain text selection within editable elements.
+    let targetIsEditable = this._targetElement instanceof Ci.nsIDOMNSEditableElement;
+    if (targetIsEditable && (caretPos.offsetNode != this._targetElement)) {
+      return;
+    }
+
+    // Update the cache as the handle is dragged (keep the cache in client coordinates).
     if (aIsStartHandle) {
       this._cache.start.x = aX;
       this._cache.start.y = aY;
@@ -314,22 +297,27 @@ var SelectionHandler = {
       this._cache.end.y = aY;
     }
 
-    // The handles work the same on both LTR and RTL pages, but the underlying selection
-    // works differently, so we need to reverse how we send mouse events on RTL pages.
-    if (this._isRTL) {
-      // Position the caret at the end handle using a fake mouse click
-      if (!aIsStartHandle)
-        this._sendMouseEvents(this._cache.end.x, this._cache.end.y, false);
+    let selection = this._getSelection();
 
-      // Selects text between the carat and the start handle using a fake shift+click
-      this._sendMouseEvents(this._cache.start.x, this._cache.start.y, true);
+    // The handles work the same on both LTR and RTL pages, but the anchor/focus nodes
+    // are reversed, so we need to reverse the logic to extend the selection.
+    if ((aIsStartHandle && !this._isRTL) || (!aIsStartHandle && this._isRTL)) {
+      if (targetIsEditable) {
+        // XXX This will just collapse the selection if the start handle goes past the end handle.
+        this._targetElement.selectionStart = caretPos.offset;
+      } else {
+        let focusNode = selection.focusNode;
+        let focusOffset = selection.focusOffset;
+        selection.collapse(caretPos.offsetNode, caretPos.offset);
+        selection.extend(focusNode, focusOffset);
+      }
     } else {
-      // Position the caret at the start handle using a fake mouse click
-      if (aIsStartHandle)
-        this._sendMouseEvents(this._cache.start.x, this._cache.start.y, false);
-
-      // Selects text between the carat and the end handle using a fake shift+click
-      this._sendMouseEvents( this._cache.end.x, this._cache.end.y, true);
+      if (targetIsEditable) {
+        // XXX This will just collapse the selection if the end handle goes past the start handle.
+        this._targetElement.selectionEnd = caretPos.offset;
+      } else {
+        selection.extend(caretPos.offsetNode, caretPos.offset);
+      }
     }
   },
 
@@ -421,9 +409,6 @@ var SelectionHandler = {
     if (this._activeType == this.TYPE_SELECTION) {
       let selection = this._getSelection();
       if (selection) {
-        // Remove the listener before calling removeAllRanges() to avoid
-        // recursively notifying the listener.
-        selection.QueryInterface(Ci.nsISelectionPrivate).removeSelectionListener(this);
         selection.removeAllRanges();
       }
     }

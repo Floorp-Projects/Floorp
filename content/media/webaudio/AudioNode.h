@@ -78,16 +78,7 @@ public:
   virtual ~AudioNode();
 
   // This should be idempotent (safe to call multiple times).
-  // This should be called in the destructor of every class that overrides
-  // this method.
-  virtual void DestroyMediaStream()
-  {
-    if (mStream) {
-      UnbindFromEngine();
-      mStream->Destroy();
-      mStream = nullptr;
-    }
-  }
+  virtual void DestroyMediaStream();
 
   // This method should be overridden to return true in nodes
   // which support being hooked up to the Media Stream graph.
@@ -114,10 +105,10 @@ public:
     return mContext;
   }
 
-  void Connect(AudioNode& aDestination, uint32_t aOutput,
-               uint32_t aInput, ErrorResult& aRv);
+  virtual void Connect(AudioNode& aDestination, uint32_t aOutput,
+                       uint32_t aInput, ErrorResult& aRv);
 
-  void Disconnect(uint32_t aOutput, ErrorResult& aRv);
+  virtual void Disconnect(uint32_t aOutput, ErrorResult& aRv);
 
   // The following two virtual methods must be implemented by each node type
   // to provide their number of input and output ports. These numbers are
@@ -152,8 +143,6 @@ public:
 private:
   // This could possibly delete 'this'.
   void DisconnectFromGraph();
-
-  void UnbindFromEngine();
 
 protected:
   static void Callback(AudioNode* aNode) { /* not implemented */ }

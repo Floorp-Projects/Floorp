@@ -34,7 +34,7 @@ class ArrayBufferObject : public JSObject
 
   public:
     static Class protoClass;
-    static JSFunctionSpec jsfuncs[];
+    static const JSFunctionSpec jsfuncs[];
 
     static JSBool byteLengthGetter(JSContext *cx, unsigned argc, Value *vp);
 
@@ -438,7 +438,7 @@ private:
     static bool write(JSContext *cx, Handle<DataViewObject*> obj,
                       CallArgs &args, const char *method);
   private:
-    static JSFunctionSpec jsfuncs[];
+    static const JSFunctionSpec jsfuncs[];
 };
 
 bool

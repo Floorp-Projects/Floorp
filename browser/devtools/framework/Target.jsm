@@ -275,25 +275,31 @@ TabTarget.prototype = {
 
     this._setupRemoteListeners();
 
-    if (this.isRemote) {
-      // In the remote debugging case, the protocol connection will have been
-      // already initialized in the connection screen code.
-      this._remote.resolve(null);
-    } else {
+    let attachTab = () => {
+      this._client.attachTab(this._form.actor, (aResponse, aTabClient) => {
+        if (!aTabClient) {
+          this._remote.reject("Unable to attach to the tab");
+          return;
+        }
+        this.threadActor = aResponse.threadActor;
+        this._remote.resolve(null);
+      });
+    };
+
+    if (this.isLocalTab) {
       this._client.connect((aType, aTraits) => {
         this._client.listTabs(aResponse => {
           this._form = aResponse.tabs[aResponse.selected];
-
-          this._client.attachTab(this._form.actor, (aResponse, aTabClient) => {
-            if (!aTabClient) {
-              this._remote.reject("Unable to attach to the tab");
-              return;
-            }
-            this.threadActor = aResponse.threadActor;
-            this._remote.resolve(null);
-          });
+          attachTab();
         });
       });
+    } else if (!this.chrome) {
+      // In the remote debugging case, the protocol connection will have been
+      // already initialized in the connection screen code.
+      attachTab();
+    } else {
+      // Remote chrome debugging doesn't need anything at this point.
+      this._remote.resolve(null);
     }
 
     return this._remote.promise;

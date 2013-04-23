@@ -222,10 +222,34 @@ ion::ParallelAbort(JSScript *script)
 void
 ion::ParCallToUncompiledScript(JSFunction *func)
 {
+    static const int max_bound_function_unrolling = 5;
+
     JS_ASSERT(InParallelSection());
 
 #ifdef DEBUG
-    RawScript script = func->nonLazyScript();
-    Spew(SpewBailouts, "Call to uncompiled script: %p:%s:%d", script, script->filename(), script->lineno);
+    if (func->hasScript()) {
+        JSScript *script = func->nonLazyScript();
+        Spew(SpewBailouts, "Call to uncompiled script: %p:%s:%d",
+             script, script->filename(), script->lineno);
+    } else if (func->isBoundFunction()) {
+        int depth = 0;
+        JSFunction *target = func->getBoundFunctionTarget()->toFunction();
+        while (depth < max_bound_function_unrolling) {
+            if (target->hasScript())
+                break;
+            if (target->isBoundFunction())
+                target = target->getBoundFunctionTarget()->toFunction();
+            depth--;
+        }
+        if (target->hasScript()) {
+            JSScript *script = target->nonLazyScript();
+            Spew(SpewBailouts, "Call to bound function leading (depth: %d) to script: %p:%s:%d",
+                 depth, script, script->filename(), script->lineno);
+        } else {
+            Spew(SpewBailouts, "Call to bound function (excessive depth: %d)", depth);
+        }
+    } else {
+        JS_NOT_REACHED("ParCall'ed functions must have scripts or be ES6 bound functions.");
+    }
 #endif
 }

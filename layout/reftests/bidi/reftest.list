@@ -54,6 +54,17 @@ fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azur
 fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azureSkia,111,7) == 83958-2c.html 83958-2-ref.html
 == 115921-1.html 115921-1-ref.html
 == 115921-2.html 115921-2-ref.html
+== 151407-1.html 151407-1-ref.html
+== 151407-1a.html 151407-1-ref.html
+== 151407-2-ltr.html 151407-2-ltr-ref.html
+== 151407-2-rtl.html 151407-2-rtl-ref.html
+== 151407-2-auto.html 151407-2-auto-ref.html
+== 151407-2-empty.html 151407-2-empty-ref.html
+== 151407-2-foopy.html 151407-2-empty-ref.html
+== 151407-3-ltr.html 151407-3-ltr-ref.html
+== 151407-3-rtl.html 151407-3-rtl-ref.html
+== 151407-3-auto.html 151407-3-auto-ref.html
+== 151407-3-foopy.html 151407-3-empty-ref.html
 == 229367-1.html 229367-1-ref.html
 == 229367-2.html 229367-2-ref.html
 == 229367-3.html 229367-3-ref.html

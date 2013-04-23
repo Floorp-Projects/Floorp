@@ -710,71 +710,6 @@ class LCreateThisWithTemplate : public LInstructionHelper<1, 0, 0>
     }
 };
 
-// Allocate a new arguments object for the frame.
-class LCreateArgumentsObject : public LCallInstructionHelper<1, 1, 1>
-{
-  public:
-    LIR_HEADER(CreateArgumentsObject)
-
-    LCreateArgumentsObject(const LAllocation &callObj, const LDefinition &temp)
-    {
-        setOperand(0, callObj);
-        setTemp(0, temp);
-    }
-
-    const LAllocation *getCallObject() {
-        return getOperand(0);
-    }
-
-    MCreateArgumentsObject *mir() const {
-        return mir_->toCreateArgumentsObject();
-    }
-};
-
-// Get argument from arguments object.
-class LGetArgumentsObjectArg : public LInstructionHelper<BOX_PIECES, 1, 1>
-{
-  public:
-    LIR_HEADER(GetArgumentsObjectArg)
-
-    LGetArgumentsObjectArg(const LAllocation &argsObj, const LDefinition &temp)
-    {
-        setOperand(0, argsObj);
-        setTemp(0, temp);
-    }
-
-    const LAllocation *getArgsObject() {
-        return getOperand(0);
-    }
-
-    MGetArgumentsObjectArg *mir() const {
-        return mir_->toGetArgumentsObjectArg();
-    }
-};
-
-// Set argument on arguments object.
-class LSetArgumentsObjectArg : public LInstructionHelper<0, 1 + BOX_PIECES, 1>
-{
-  public:
-    LIR_HEADER(SetArgumentsObjectArg)
-
-    LSetArgumentsObjectArg(const LAllocation &argsObj, const LDefinition &temp)
-    {
-        setOperand(0, argsObj);
-        setTemp(0, temp);
-    }
-
-    const LAllocation *getArgsObject() {
-        return getOperand(0);
-    }
-
-    MSetArgumentsObjectArg *mir() const {
-        return mir_->toSetArgumentsObjectArg();
-    }
-
-    static const size_t ValueIndex = 1;
-};
-
 // If the Value is an Object, return unbox(Value).
 // Otherwise, return the other Object.
 class LReturnFromCtor : public LInstructionHelper<1, BOX_PIECES + 1, 0>
@@ -3688,6 +3623,19 @@ class LCallSetElement : public LCallInstructionHelper<0, 1 + 2 * BOX_PIECES, 0>
 
     static const size_t Index = 1;
     static const size_t Value = 1 + BOX_PIECES;
+};
+
+// Call js::InitElementArray.
+class LCallInitElementArray : public LCallInstructionHelper<0, 1 + BOX_PIECES, 0>
+{
+public:
+    LIR_HEADER(CallInitElementArray)
+
+    static const size_t Value = 1;
+
+    const MCallInitElementArray *mir() const {
+        return mir_->toCallInitElementArray();
+    }
 };
 
 // Call a VM function to perform a property or name assignment of a generic value.

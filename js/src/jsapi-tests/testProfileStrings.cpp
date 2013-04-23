@@ -70,7 +70,7 @@ Prof(JSContext* cx, unsigned argc, jsval *vp)
     return JS_TRUE;
 }
 
-static JSFunctionSpec ptestFunctions[] = {
+static const JSFunctionSpec ptestFunctions[] = {
     JS_FS("test_fn", test_fn, 0, 0),
     JS_FS("test_fn2", test_fn2, 0, 0),
     JS_FS("enable", enable, 0, 0),

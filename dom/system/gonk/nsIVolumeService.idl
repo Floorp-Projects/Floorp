@@ -12,11 +12,12 @@
 %}
 [ref] native nsStringTArrayRef(nsTArray<nsString>);
 
-[scriptable, uuid(fc4e6449-922e-463d-880b-bfbab4909114)]
+[scriptable, uuid(7c179fb7-67a0-43a3-9337-294e0360b858)]
 interface nsIVolumeService : nsISupports
 {
     nsIVolume getVolumeByName(in DOMString volName);
     nsIVolume getVolumeByPath(in DOMString path);
+    nsIVolume createOrGetVolumeByPath(in DOMString path);
 
     void BroadcastVolume(in DOMString volName);
 
@@ -27,6 +28,6 @@ interface nsIVolumeService : nsISupports
 
 %{C++
 #define NS_VOLUMESERVICE_CID \
-  {0x597403c6, 0x5ba4, 0x4e7b, {0xb3, 0xf4, 0xed, 0x3f, 0x05, 0xf7, 0x75, 0xd8}}
+  {0x7c179fb7, 0x67a0, 0x43a3, {0x93, 0x37, 0x29, 0x4e, 0x03, 0x60, 0xb8, 0x58}}
 #define NS_VOLUMESERVICE_CONTRACTID "@mozilla.org/telephony/volume-service;1"
 %}

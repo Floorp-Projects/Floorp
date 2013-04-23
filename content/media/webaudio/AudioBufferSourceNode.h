@@ -93,6 +93,7 @@ public:
   void SetLoop(bool aLoop)
   {
     mLoop = aLoop;
+    SendLoopParametersToStream();
   }
   double LoopStart() const
   {
@@ -101,6 +102,7 @@ public:
   void SetLoopStart(double aStart)
   {
     mLoopStart = aStart;
+    SendLoopParametersToStream();
   }
   double LoopEnd() const
   {
@@ -109,13 +111,34 @@ public:
   void SetLoopEnd(double aEnd)
   {
     mLoopEnd = aEnd;
+    SendLoopParametersToStream();
   }
   void SendDopplerShiftToStream(double aDopplerShift);
 
   virtual void NotifyMainThreadStateChanged() MOZ_OVERRIDE;
 
 private:
+  friend class AudioBufferSourceNodeEngine;
+  // START, OFFSET and DURATION are always set by start() (along with setting
+  // mBuffer to something non-null).
+  // STOP is set by stop().
+  enum EngineParameters {
+    SAMPLE_RATE,
+    START,
+    STOP,
+    OFFSET,
+    DURATION,
+    LOOP,
+    LOOPSTART,
+    LOOPEND,
+    PLAYBACKRATE,
+    DOPPLERSHIFT
+  };
+
+  void SendLoopParametersToStream();
   static void SendPlaybackRateToStream(AudioNode* aNode);
+
+private:
   double mLoopStart;
   double mLoopEnd;
   nsRefPtr<AudioBuffer> mBuffer;
