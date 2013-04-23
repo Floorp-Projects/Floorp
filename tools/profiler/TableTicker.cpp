@@ -34,7 +34,7 @@
 #include "mozilla/Services.h"
 #include "PlatformMacros.h"
 
-#ifdef ANDROID
+#if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
   #include "AndroidBridge.h"
 #endif
 
@@ -164,7 +164,7 @@ JSObject* TableTicker::ToJSObject(JSContext *aCx)
   return jsProfile;
 }
 
-#ifdef ANDROID
+#if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
 static
 JSCustomObject* BuildJavaThreadJSObject(JSAObjectBuilder& b)
 {
@@ -243,7 +243,7 @@ void TableTicker::BuildJSObject(JSAObjectBuilder& b, JSCustomObject* profile)
     }
   }
 
-#ifdef ANDROID
+#if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
   if (ProfileJava()) {
     AndroidBridge::Bridge()->PauseJavaProfiling();
 
