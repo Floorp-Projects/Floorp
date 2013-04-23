@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "BaselineInspector.h"
 #include "IonBuilder.h"
 #include "LICM.h" // For LinearSum
 #include "MIR.h"
@@ -182,22 +183,26 @@ MDefinition::analyzeEdgeCasesBackward()
 }
 
 static bool
-MaybeEmulatesUndefined(types::StackTypeSet *types, JSContext *cx)
+MaybeEmulatesUndefined(JSContext *cx, MDefinition *op)
 {
+    if (!op->mightBeType(MIRType_Object))
+        return false;
+
+    types::StackTypeSet *types = op->resultTypeSet();
+    if (!types)
+        return true;
+
     if (!types->maybeObject())
         return false;
     return types->hasObjectFlags(cx, types::OBJECT_FLAG_EMULATES_UNDEFINED);
 }
 
 void
-MTest::infer(const TypeOracle::UnaryTypes &u, JSContext *cx)
+MTest::infer(JSContext *cx)
 {
-    if (!u.inTypes)
-        return;
-
     JS_ASSERT(operandMightEmulateUndefined());
 
-    if (!MaybeEmulatesUndefined(u.inTypes, cx))
+    if (!MaybeEmulatesUndefined(cx, getOperand(0)))
         markOperandCantEmulateUndefined();
 }
 
@@ -319,10 +324,28 @@ MConstant::New(const Value &v)
     return new MConstant(v);
 }
 
+types::StackTypeSet *
+ion::MakeSingletonTypeSet(JSObject *obj)
+{
+    LifoAlloc *alloc = GetIonContext()->temp->lifoAlloc();
+    types::StackTypeSet *types = alloc->new_<types::StackTypeSet>();
+    if (!types)
+        return NULL;
+    types::Type objectType = types::Type::ObjectType(obj);
+    types->addObject(objectType.objectKey(), alloc);
+    return types;
+}
+
 MConstant::MConstant(const js::Value &vp)
   : value_(vp)
 {
     setResultType(MIRTypeFromValue(vp));
+    if (vp.isObject()) {
+        // Create a singleton type set for the object. This isn't necessary for
+        // other types as the result type encodes all needed information.
+        setResultTypeSet(MakeSingletonTypeSet(&vp.toObject()));
+    }
+
     setMovable();
 }
 
@@ -402,7 +425,7 @@ MConstantElements::printOpcode(FILE *fp)
 }
 
 MParameter *
-MParameter::New(int32_t index, const types::StackTypeSet *types)
+MParameter::New(int32_t index, types::StackTypeSet *types)
 {
     return new MParameter(index, types);
 }
@@ -430,11 +453,10 @@ MParameter::congruentTo(MDefinition * const &ins) const
 }
 
 MCall *
-MCall::New(JSFunction *target, size_t maxArgc, size_t numActualArgs, bool construct,
-           types::StackTypeSet *calleeTypes)
+MCall::New(JSFunction *target, size_t maxArgc, size_t numActualArgs, bool construct)
 {
     JS_ASSERT(maxArgc >= numActualArgs);
-    MCall *ins = new MCall(target, numActualArgs, construct, calleeTypes);
+    MCall *ins = new MCall(target, numActualArgs, construct);
     if (!ins->init(maxArgc + NumNonArgumentOperands))
         return NULL;
     return ins;
@@ -601,6 +623,120 @@ MPhi::reserveLength(size_t length)
     return inputs_.reserve(length);
 }
 
+static inline types::StackTypeSet *
+MakeMIRTypeSet(MIRType type)
+{
+    JS_ASSERT(type != MIRType_Value);
+    types::Type ntype = type == MIRType_Object
+                        ? types::Type::AnyObjectType()
+                        : types::Type::PrimitiveType(ValueTypeFromMIRType(type));
+    return GetIonContext()->temp->lifoAlloc()->new_<types::StackTypeSet>(ntype);
+}
+
+void
+ion::MergeTypes(MIRType *ptype, types::StackTypeSet **ptypeSet,
+                MIRType newType, types::StackTypeSet *newTypeSet)
+{
+    if (newTypeSet && newTypeSet->empty())
+        return;
+    if (newType != *ptype) {
+        if (IsNumberType(newType) && IsNumberType(*ptype)) {
+            *ptype = MIRType_Double;
+        } else if (*ptype != MIRType_Value) {
+            if (!*ptypeSet)
+                *ptypeSet = MakeMIRTypeSet(*ptype);
+            *ptype = MIRType_Value;
+        }
+    }
+    if (*ptypeSet) {
+        LifoAlloc *alloc = GetIonContext()->temp->lifoAlloc();
+        if (!newTypeSet && newType != MIRType_Value)
+            newTypeSet = MakeMIRTypeSet(newType);
+        if (newTypeSet) {
+            if (!newTypeSet->isSubset(*ptypeSet))
+                *ptypeSet = types::TypeSet::unionSets(*ptypeSet, newTypeSet, alloc);
+        } else {
+            *ptypeSet = NULL;
+        }
+    }
+}
+
+void
+MPhi::specializeType()
+{
+#ifdef DEBUG
+    JS_ASSERT(!specialized_);
+    specialized_ = true;
+#endif
+
+    JS_ASSERT(!inputs_.empty());
+
+    size_t start;
+    if (hasBackedgeType_) {
+        // The type of this phi has already been populated with potential types
+        // that could come in via loop backedges.
+        start = 0;
+    } else {
+        setResultType(getOperand(0)->type());
+        setResultTypeSet(getOperand(0)->resultTypeSet());
+        start = 1;
+    }
+
+    MIRType resultType = this->type();
+    types::StackTypeSet *resultTypeSet = this->resultTypeSet();
+
+    for (size_t i = start; i < inputs_.length(); i++) {
+        MDefinition *def = getOperand(i);
+        MergeTypes(&resultType, &resultTypeSet, def->type(), def->resultTypeSet());
+    }
+
+    setResultType(resultType);
+    setResultTypeSet(resultTypeSet);
+}
+
+void
+MPhi::addBackedgeType(MIRType type, types::StackTypeSet *typeSet)
+{
+    JS_ASSERT(!specialized_);
+
+    if (hasBackedgeType_) {
+        MIRType resultType = this->type();
+        types::StackTypeSet *resultTypeSet = this->resultTypeSet();
+
+        MergeTypes(&resultType, &resultTypeSet, type, typeSet);
+
+        setResultType(resultType);
+        setResultTypeSet(resultTypeSet);
+    } else {
+        setResultType(type);
+        setResultTypeSet(typeSet);
+        hasBackedgeType_ = true;
+    }
+}
+
+bool
+MPhi::typeIncludes(MDefinition *def)
+{
+    if (def->type() == MIRType_Int32 && this->type() == MIRType_Double)
+        return true;
+
+    if (types::StackTypeSet *types = def->resultTypeSet()) {
+        if (this->resultTypeSet())
+            return types->isSubset(this->resultTypeSet());
+        if (this->type() == MIRType_Value || types->empty())
+            return true;
+        return this->type() == MIRTypeFromValueType(types->getKnownTypeTag());
+    }
+
+    if (def->type() == MIRType_Value) {
+        // This phi must be able to be any value.
+        return this->type() == MIRType_Value
+            && (!this->resultTypeSet() || this->resultTypeSet()->unknown());
+    }
+
+    return this->mightBeType(def->type());
+}
+
 void
 MPhi::addInput(MDefinition *ins)
 {
@@ -614,7 +750,7 @@ MPhi::addInput(MDefinition *ins)
 }
 
 bool
-MPhi::addInputSlow(MDefinition *ins)
+MPhi::addInputSlow(MDefinition *ins, bool *ptypeChange)
 {
     // The list of inputs to an MPhi is given as a vector of MUse nodes,
     // each of which is in the list of the producer MDefinition.
@@ -636,7 +772,21 @@ MPhi::addInputSlow(MDefinition *ins)
     // Insert the new input.
     if (!inputs_.append(MUse()))
         return false;
+
     MPhi::setOperand(index, ins);
+
+    if (ptypeChange) {
+        MIRType resultType = this->type();
+        types::StackTypeSet *resultTypeSet = this->resultTypeSet();
+
+        MergeTypes(&resultType, &resultTypeSet, ins->type(), ins->resultTypeSet());
+
+        if (resultType != this->type() || resultTypeSet != this->resultTypeSet()) {
+            *ptypeChange = true;
+            setResultType(resultType);
+            setResultTypeSet(resultTypeSet);
+        }
+    }
 
     // Add all previously-removed MUses back.
     if (performingRealloc) {
@@ -679,9 +829,9 @@ MCall::addArg(size_t argnum, MPassArg *arg)
 }
 
 void
-MBitNot::infer(const TypeOracle::UnaryTypes &u)
+MBitNot::infer()
 {
-    if (u.inTypes->maybeObject())
+    if (getOperand(0)->mightBeType(MIRType_Object))
         specialization_ = MIRType_None;
     else
         specialization_ = MIRType_Int32;
@@ -724,9 +874,9 @@ MBinaryBitwiseInstruction::foldsTo(bool useValueNumbers)
 }
 
 void
-MBinaryBitwiseInstruction::infer(const TypeOracle::BinaryTypes &b)
+MBinaryBitwiseInstruction::infer()
 {
-    if (b.lhsTypes->maybeObject() || b.rhsTypes->maybeObject()) {
+    if (getOperand(0)->mightBeType(MIRType_Object) || getOperand(1)->mightBeType(MIRType_Object)) {
         specialization_ = MIRType_None;
     } else {
         specialization_ = MIRType_Int32;
@@ -743,31 +893,30 @@ MBinaryBitwiseInstruction::specializeForAsmJS()
 }
 
 void
-MShiftInstruction::infer(const TypeOracle::BinaryTypes &b)
+MShiftInstruction::infer()
 {
-    if (b.lhsTypes->maybeObject() || b.rhsTypes->maybeObject())
+    if (getOperand(0)->mightBeType(MIRType_Object) || getOperand(1)->mightBeType(MIRType_Object))
         specialization_ = MIRType_None;
     else
         specialization_ = MIRType_Int32;
 }
 
 void
-MUrsh::infer(const TypeOracle::BinaryTypes &b)
+MUrsh::infer()
 {
-    if (b.lhsTypes->maybeObject() || b.rhsTypes->maybeObject()) {
+    if (getOperand(0)->mightBeType(MIRType_Object) || getOperand(1)->mightBeType(MIRType_Object)) {
         specialization_ = MIRType_None;
         setResultType(MIRType_Value);
         return;
     }
 
-    if (b.outTypes->getKnownTypeTag() == JSVAL_TYPE_DOUBLE) {
-        specialization_ = MIRType_Double;
-        setResultType(MIRType_Double);
+    if (type() == MIRType_Int32) {
+        specialization_ = MIRType_Int32;
         return;
     }
 
-    specialization_ = MIRType_Int32;
-    JS_ASSERT(type() == MIRType_Int32);
+    specialization_ = MIRType_Double;
+    setResultType(MIRType_Double);
 }
 
 static inline bool
@@ -1078,41 +1227,46 @@ MMul::canOverflow()
     return !range() || !range()->isInt32();
 }
 
-void
-MBinaryArithInstruction::infer(const TypeOracle::BinaryTypes &b, JSContext *cx)
+static inline bool
+KnownNonStringPrimitive(MDefinition *op)
 {
-    // Retrieve type information of lhs and rhs
-    // Rhs is defaulted to int32 first,
-    // because in some cases there is no rhs type information
-    MIRType lhs = MIRTypeFromValueType(b.lhsTypes->getKnownTypeTag());
-    MIRType rhs = MIRType_Int32;
+    return !op->mightBeType(MIRType_Object)
+        && !op->mightBeType(MIRType_String)
+        && !op->mightBeType(MIRType_Magic);
+}
 
-    // Test if types coerces to doubles
-    bool lhsCoerces = b.lhsTypes->knownNonStringPrimitive();
-    bool rhsCoerces = true;
+void
+MBinaryArithInstruction::infer(bool overflowed)
+{
+    JS_ASSERT(this->type() == MIRType_Value);
 
-    // Use type information provided by oracle if available.
-    if (b.rhsTypes) {
-        rhs = MIRTypeFromValueType(b.rhsTypes->getKnownTypeTag());
-        rhsCoerces = b.rhsTypes->knownNonStringPrimitive();
-    }
+    specialization_ = MIRType_None;
 
-    MIRType rval = MIRTypeFromValueType(b.outTypes->getKnownTypeTag());
-
-    // Don't specialize for neither-integer-nor-double results.
-    if (rval != MIRType_Int32 && rval != MIRType_Double) {
-        specialization_ = MIRType_None;
-        return;
-    }
+    // Retrieve type information of lhs and rhs.
+    MIRType lhs = getOperand(0)->type();
+    MIRType rhs = getOperand(1)->type();
 
     // Anything complex - strings and objects - are not specialized.
-    if (!lhsCoerces || !rhsCoerces) {
-        specialization_ = MIRType_None;
+    if (!KnownNonStringPrimitive(getOperand(0)) || !KnownNonStringPrimitive(getOperand(1)))
         return;
-    }
+
+    // Guess a result type based on the inputs.
+    // Don't specialize for neither-integer-nor-double results.
+    if (lhs == MIRType_Int32 && rhs == MIRType_Int32)
+        setResultType(MIRType_Int32);
+    else if (lhs == MIRType_Double || rhs == MIRType_Double)
+        setResultType(MIRType_Double);
+    else
+        return;
+
+    // If the operation has ever overflowed, use a double specialization.
+    if (overflowed)
+        setResultType(MIRType_Double);
 
     JS_ASSERT(lhs < MIRType_String || lhs == MIRType_Value);
     JS_ASSERT(rhs < MIRType_String || rhs == MIRType_Value);
+
+    MIRType rval = this->type();
 
     // Don't specialize values when result isn't double
     if (lhs == MIRType_Value || rhs == MIRType_Value) {
@@ -1137,47 +1291,33 @@ MBinaryArithInstruction::infer(const TypeOracle::BinaryTypes &b, JSContext *cx)
 }
 
 static bool
-SafelyCoercesToDouble(JSContext *cx, types::StackTypeSet *types)
+SafelyCoercesToDouble(MDefinition *op)
 {
-    types::TypeFlags flags = types->baseFlags();
-
     // Strings are unhandled -- visitToDouble() doesn't support them yet.
     // Null is unhandled -- ToDouble(null) == 0, but (0 == null) is false.
-    types::TypeFlags converts = types::TYPE_FLAG_UNDEFINED | types::TYPE_FLAG_DOUBLE |
-                                types::TYPE_FLAG_INT32 | types::TYPE_FLAG_BOOLEAN;
-
-    if ((flags & converts) == flags)
-        return true;
-
-    return false;
+    return KnownNonStringPrimitive(op) && !op->mightBeType(MIRType_Null);
 }
 
 static bool
-CanDoValueBitwiseCmp(JSContext *cx, types::StackTypeSet *lhs, types::StackTypeSet *rhs, bool looseEq)
+ObjectOrSimplePrimitive(MDefinition *op)
+{
+    // Return true if op is either undefined/null/bolean/int32 or an object.
+    return !op->mightBeType(MIRType_String)
+        && !op->mightBeType(MIRType_Double)
+        && !op->mightBeType(MIRType_Magic);
+}
+
+static bool
+CanDoValueBitwiseCmp(JSContext *cx, MDefinition *lhs, MDefinition *rhs, bool looseEq)
 {
     // Only primitive (not double/string) or objects are supported.
     // I.e. Undefined/Null/Boolean/Int32 and Object
-    if (!lhs->knownPrimitiveOrObject() ||
-        lhs->hasAnyFlag(types::TYPE_FLAG_STRING) ||
-        lhs->hasAnyFlag(types::TYPE_FLAG_DOUBLE) ||
-        !rhs->knownPrimitiveOrObject() ||
-        rhs->hasAnyFlag(types::TYPE_FLAG_STRING) ||
-        rhs->hasAnyFlag(types::TYPE_FLAG_DOUBLE))
-    {
+    if (!ObjectOrSimplePrimitive(lhs) || !ObjectOrSimplePrimitive(rhs))
         return false;
-    }
 
     // Objects that emulate undefined are not supported.
-    if (lhs->maybeObject() &&
-        lhs->hasObjectFlags(cx, types::OBJECT_FLAG_EMULATES_UNDEFINED))
-    {
+    if (MaybeEmulatesUndefined(cx, lhs) || MaybeEmulatesUndefined(cx, rhs))
         return false;
-    }
-    if (rhs->maybeObject() &&
-        rhs->hasObjectFlags(cx, types::OBJECT_FLAG_EMULATES_UNDEFINED))
-    {
-        return false;
-    }
 
     // In the loose comparison more values could be the same,
     // but value comparison reporting otherwise.
@@ -1185,30 +1325,26 @@ CanDoValueBitwiseCmp(JSContext *cx, types::StackTypeSet *lhs, types::StackTypeSe
 
         // Undefined compared loosy to Null is not supported,
         // because tag is different, but value can be the same (undefined == null).
-        if ((lhs->hasAnyFlag(types::TYPE_FLAG_UNDEFINED) &&
-             rhs->hasAnyFlag(types::TYPE_FLAG_NULL)) ||
-            (lhs->hasAnyFlag(types::TYPE_FLAG_NULL) &&
-             rhs->hasAnyFlag(types::TYPE_FLAG_UNDEFINED)))
+        if ((lhs->mightBeType(MIRType_Undefined) && rhs->mightBeType(MIRType_Null)) ||
+            (lhs->mightBeType(MIRType_Null) && rhs->mightBeType(MIRType_Undefined)))
         {
             return false;
         }
 
         // Int32 compared loosy to Boolean is not supported,
         // because tag is different, but value can be the same (1 == true).
-        if ((lhs->hasAnyFlag(types::TYPE_FLAG_INT32) &&
-             rhs->hasAnyFlag(types::TYPE_FLAG_BOOLEAN)) ||
-            (lhs->hasAnyFlag(types::TYPE_FLAG_BOOLEAN) &&
-             rhs->hasAnyFlag(types::TYPE_FLAG_INT32)))
+        if ((lhs->mightBeType(MIRType_Int32) && rhs->mightBeType(MIRType_Boolean)) ||
+            (lhs->mightBeType(MIRType_Boolean) && rhs->mightBeType(MIRType_Int32)))
         {
             return false;
         }
 
         // For loosy comparison of an object with a Boolean/Number/String
         // the valueOf the object is taken. Therefore not supported.
-        types::TypeFlags numbers = types::TYPE_FLAG_BOOLEAN |
-                                   types::TYPE_FLAG_INT32;
-        if ((lhs->maybeObject() && rhs->hasAnyFlag(numbers)) ||
-            (rhs->maybeObject() && lhs->hasAnyFlag(numbers)))
+        bool simpleLHS = lhs->mightBeType(MIRType_Boolean) || lhs->mightBeType(MIRType_Int32);
+        bool simpleRHS = rhs->mightBeType(MIRType_Boolean) || rhs->mightBeType(MIRType_Int32);
+        if ((lhs->mightBeType(MIRType_Object) && simpleRHS) ||
+            (rhs->mightBeType(MIRType_Object) && simpleLHS))
         {
             return false;
         }
@@ -1247,18 +1383,15 @@ MCompare::inputType()
 }
 
 void
-MCompare::infer(const TypeOracle::BinaryTypes &b, JSContext *cx)
+MCompare::infer(JSContext *cx, BaselineInspector *inspector, jsbytecode *pc)
 {
-    if (!b.lhsTypes || !b.rhsTypes)
-        return;
-
     JS_ASSERT(operandMightEmulateUndefined());
 
-    if (!MaybeEmulatesUndefined(b.lhsTypes, cx) && !MaybeEmulatesUndefined(b.rhsTypes, cx))
+    if (!MaybeEmulatesUndefined(cx, getOperand(0)) && !MaybeEmulatesUndefined(cx, getOperand(1)))
         markNoOperandEmulatesUndefined();
 
-    MIRType lhs = MIRTypeFromValueType(b.lhsTypes->getKnownTypeTag());
-    MIRType rhs = MIRTypeFromValueType(b.rhsTypes->getKnownTypeTag());
+    MIRType lhs = getOperand(0)->type();
+    MIRType rhs = getOperand(1)->type();
 
     bool looseEq = jsop() == JSOP_EQ || jsop() == JSOP_NE;
     bool strictEq = jsop() == JSOP_STRICTEQ || jsop() == JSOP_STRICTNE;
@@ -1289,8 +1422,8 @@ MCompare::infer(const TypeOracle::BinaryTypes &b, JSContext *cx)
 
     // Any comparison is allowed except strict eq.
     if (!strictEq &&
-        ((lhs == MIRType_Double && SafelyCoercesToDouble(cx, b.rhsTypes)) ||
-         (rhs == MIRType_Double && SafelyCoercesToDouble(cx, b.lhsTypes))))
+        ((lhs == MIRType_Double && SafelyCoercesToDouble(getOperand(1))) ||
+         (rhs == MIRType_Double && SafelyCoercesToDouble(getOperand(0)))))
     {
         compareType_ = Compare_Double;
         return;
@@ -1352,10 +1485,19 @@ MCompare::infer(const TypeOracle::BinaryTypes &b, JSContext *cx)
     }
 
     // Determine if we can do the compare based on a quick value check.
-    if (!relationalEq && CanDoValueBitwiseCmp(cx, b.lhsTypes, b.rhsTypes, looseEq)) {
+    if (!relationalEq && CanDoValueBitwiseCmp(cx, getOperand(0), getOperand(1), looseEq)) {
         compareType_ = Compare_Value;
         return;
     }
+
+    // Type information is not good enough to pick out a particular type of
+    // comparison we can do here. Try to specialize based on any baseline
+    // caches that have been generated for the opcode. These will cause the
+    // instruction's type policy to insert fallible unboxes to the appropriate
+    // input types.
+
+    if (!strictEq)
+        compareType_ = inspector->expectedCompareType(pc);
 }
 
 MBitNot *
@@ -1838,14 +1980,11 @@ MCompare::foldsTo(bool useValueNumbers)
 }
 
 void
-MNot::infer(const TypeOracle::UnaryTypes &u, JSContext *cx)
+MNot::infer(JSContext *cx)
 {
-    if (!u.inTypes)
-        return;
-
     JS_ASSERT(operandMightEmulateUndefined());
 
-    if (!MaybeEmulatesUndefined(u.inTypes, cx))
+    if (!MaybeEmulatesUndefined(cx, getOperand(0)))
         markOperandCantEmulateUndefined();
 }
 
@@ -2007,6 +2146,22 @@ InlinePropertyTable::hasFunction(JSFunction *func) const
     return false;
 }
 
+types::StackTypeSet *
+InlinePropertyTable::buildTypeSetForFunction(JSFunction *func) const
+{
+    LifoAlloc *alloc = GetIonContext()->temp->lifoAlloc();
+    types::StackTypeSet *types = alloc->new_<types::StackTypeSet>();
+    if (!types)
+        return NULL;
+    for (size_t i = 0; i < numEntries(); i++) {
+        if (entries_[i]->func == func) {
+            if (!types->addObject(types::Type::ObjectType(entries_[i]->typeObj).objectKey(), alloc))
+                return NULL;
+        }
+    }
+    return types;
+}
+
 bool
 MInArray::needsNegativeIntCheck() const
 {
@@ -2052,3 +2207,375 @@ MAsmJSCall::New(Callee callee, const Args &args, MIRType resultType, size_t spIn
     return call;
 }
 
+bool
+ion::ElementAccessIsDenseNative(MDefinition *obj, MDefinition *id)
+{
+    if (obj->mightBeType(MIRType_String))
+        return false;
+
+    if (id->type() != MIRType_Int32 && id->type() != MIRType_Double)
+        return false;
+
+    types::StackTypeSet *types = obj->resultTypeSet();
+    if (!types)
+        return false;
+
+    Class *clasp = types->getKnownClass();
+    return clasp && clasp->isNative();
+}
+
+bool
+ion::ElementAccessIsTypedArray(MDefinition *obj, MDefinition *id, int *arrayType)
+{
+    if (obj->mightBeType(MIRType_String))
+        return false;
+
+    if (id->type() != MIRType_Int32 && id->type() != MIRType_Double)
+        return false;
+
+    types::StackTypeSet *types = obj->resultTypeSet();
+    if (!types)
+        return false;
+
+    *arrayType = types->getTypedArrayType();
+    return *arrayType != TypedArray::TYPE_MAX;
+}
+
+bool
+ion::ElementAccessIsPacked(JSContext *cx, MDefinition *obj)
+{
+    types::StackTypeSet *types = obj->resultTypeSet();
+    return types && !types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_PACKED);
+}
+
+bool
+ion::ElementAccessHasExtraIndexedProperty(JSContext *cx, MDefinition *obj)
+{
+    types::StackTypeSet *types = obj->resultTypeSet();
+
+    if (!types || types->hasObjectFlags(cx, types::OBJECT_FLAG_LENGTH_OVERFLOW))
+        return true;
+
+    return types::TypeCanHaveExtraIndexedProperties(cx, types);
+}
+
+MIRType
+ion::DenseNativeElementType(JSContext *cx, MDefinition *obj)
+{
+    types::StackTypeSet *types = obj->resultTypeSet();
+    MIRType elementType = MIRType_None;
+    unsigned count = types->getObjectCount();
+
+    for (unsigned i = 0; i < count; i++) {
+        if (types->getSingleObject(i))
+            return MIRType_None;
+
+        if (types::TypeObject *object = types->getTypeObject(i)) {
+            if (object->unknownProperties())
+                return MIRType_None;
+
+            types::HeapTypeSet *elementTypes = object->getProperty(cx, JSID_VOID, false);
+            if (!elementTypes)
+                return MIRType_None;
+
+            MIRType type = MIRTypeFromValueType(elementTypes->getKnownTypeTag(cx));
+            if (type == MIRType_None)
+                return MIRType_None;
+
+            if (elementType == MIRType_None)
+                elementType = type;
+            else if (elementType != type)
+                return MIRType_None;
+        }
+    }
+
+    return elementType;
+}
+
+bool
+ion::PropertyReadNeedsTypeBarrier(JSContext *cx, types::TypeObject *object, PropertyName *name,
+                                  types::StackTypeSet *observed)
+{
+    // If the object being read from has types for the property which haven't
+    // been observed at this access site, the read could produce a new type and
+    // a barrier is needed. Note that this only covers reads from properties
+    // which are accounted for by type information, i.e. native data properties
+    // and elements.
+
+    if (object->unknownProperties())
+        return true;
+
+    jsid id = name ? types::IdToTypeId(NameToId(name)) : JSID_VOID;
+
+    types::HeapTypeSet *property = object->getProperty(cx, id, false);
+    if (!property)
+        return true;
+
+    // We need to consider possible types for the property both as an 'own'
+    // property on the object and as inherited from any prototype. Type sets
+    // for a property do not, however, reflect inherited types until a
+    // getFromPrototypes() call has been performed.
+    if (!property->hasPropagatedProperty())
+        object->getFromPrototypes(cx, id, property);
+
+    if (!TypeSetIncludes(observed, MIRType_Value, property))
+        return true;
+
+    // Type information for global objects does not reflect the initial
+    // 'undefined' value of variables declared with 'var'. Until the variable
+    // is assigned a value other than undefined, a barrier is required.
+    if (property->empty() && name && object->singleton && object->singleton->isNative()) {
+        Shape *shape = object->singleton->nativeLookup(cx, name);
+        if (shape && shape->hasDefaultGetter()) {
+            JS_ASSERT(object->singleton->nativeGetSlot(shape->slot()).isUndefined());
+            return true;
+        }
+    }
+
+    property->addFreeze(cx);
+    return false;
+}
+
+bool
+ion::PropertyReadNeedsTypeBarrier(JSContext *cx, MDefinition *obj, PropertyName *name,
+                                  types::StackTypeSet *observed)
+{
+    if (observed->unknown())
+        return false;
+
+    types::TypeSet *types = obj->resultTypeSet();
+    if (!types || types->unknownObject())
+        return true;
+
+    for (size_t i = 0; i < types->getObjectCount(); i++) {
+        types::TypeObject *object = types->getTypeObject(i);
+        if (!object) {
+            JSObject *singleton = types->getSingleObject(i);
+            if (!singleton)
+                continue;
+            object = singleton->getType(cx);
+            if (!object)
+                return true;
+        }
+
+        if (PropertyReadNeedsTypeBarrier(cx, object, name, observed))
+            return true;
+    }
+
+    return false;
+}
+
+bool
+ion::PropertyReadIsIdempotent(JSContext *cx, MDefinition *obj, PropertyName *name)
+{
+    // Determine if reading a property from obj is likely to be idempotent.
+
+    jsid id = types::IdToTypeId(NameToId(name));
+
+    types::TypeSet *types = obj->resultTypeSet();
+    if (!types || types->unknownObject())
+        return false;
+
+    for (size_t i = 0; i < types->getObjectCount(); i++) {
+        if (types->getSingleObject(i))
+            return false;
+
+        if (types::TypeObject *object = types->getTypeObject(i)) {
+            if (object->unknownProperties())
+                return false;
+
+            // Check if the property has been reconfigured or is a getter.
+            types::HeapTypeSet *property = object->getProperty(cx, id, false);
+            if (!property || property->isOwnProperty(cx, object, true))
+                return false;
+        }
+    }
+
+    return true;
+}
+
+static bool
+TryAddTypeBarrierForWrite(JSContext *cx, MBasicBlock *current, types::StackTypeSet *objTypes,
+                          jsid id, MDefinition **pvalue)
+{
+    // Return whether pvalue was modified to include a type barrier ensuring
+    // that writing the value to objTypes/id will not require changing type
+    // information.
+
+    // All objects in the set must have the same types for id. Otherwise, we
+    // could bail out without subsequently triggering a type change that
+    // invalidates the compiled code.
+    types::HeapTypeSet *aggregateProperty = NULL;
+
+    for (size_t i = 0; i < objTypes->getObjectCount(); i++) {
+        types::TypeObject *object = objTypes->getTypeObject(i);
+        if (!object) {
+            JSObject *singleton = objTypes->getSingleObject(i);
+            if (!singleton)
+                continue;
+            object = singleton->getType(cx);
+            if (!object)
+                return false;
+        }
+
+        if (object->unknownProperties())
+            return false;
+
+        types::HeapTypeSet *property = object->getProperty(cx, id, false);
+        if (!property)
+            return false;
+
+        if (TypeSetIncludes(property, (*pvalue)->type(), (*pvalue)->resultTypeSet()))
+            return false;
+
+        // This freeze is not required for correctness, but ensures that we
+        // will recompile if the property types change and the barrier can
+        // potentially be removed.
+        property->addFreeze(cx);
+
+        if (aggregateProperty) {
+            if (!aggregateProperty->isSubset(property) || !property->isSubset(aggregateProperty))
+                return false;
+        } else {
+            aggregateProperty = property;
+        }
+    }
+
+    JS_ASSERT(aggregateProperty);
+
+    MIRType propertyType = MIRTypeFromValueType(aggregateProperty->getKnownTypeTag(cx));
+    switch (propertyType) {
+      case MIRType_Boolean:
+      case MIRType_Int32:
+      case MIRType_Double:
+      case MIRType_String: {
+        // The property is a particular primitive type, guard by unboxing the
+        // value before the write.
+        if ((*pvalue)->type() != MIRType_Value) {
+            // The value is a different primitive, just do a VM call as it will
+            // always trigger invalidation of the compiled code.
+            JS_ASSERT((*pvalue)->type() != propertyType);
+            return false;
+        }
+        MInstruction *ins = MUnbox::New(*pvalue, propertyType, MUnbox::Fallible);
+        current->add(ins);
+        *pvalue = ins;
+        return true;
+      }
+      default:;
+    }
+
+    if ((*pvalue)->type() != MIRType_Value)
+        return false;
+
+    types::StackTypeSet *types = aggregateProperty->clone(GetIonContext()->temp->lifoAlloc());
+    if (!types)
+        return false;
+
+    MInstruction *ins = MTypeBarrier::New(*pvalue, types, Bailout_Normal);
+    current->add(ins);
+    *pvalue = ins;
+    return true;
+}
+
+static MInstruction *
+AddTypeGuard(MBasicBlock *current, MDefinition *obj, types::TypeObject *typeObject,
+             bool bailOnEquality, BailoutKind bailoutKind)
+{
+    MGuardShapeOrType *guard = MGuardShapeOrType::New(obj, NULL, typeObject,
+                                                      bailOnEquality, bailoutKind);
+    current->add(guard);
+
+    // For now, never move type guards.
+    guard->setNotMovable();
+
+    return guard;
+}
+
+bool
+ion::PropertyWriteNeedsTypeBarrier(JSContext *cx, MBasicBlock *current, MDefinition **pobj,
+                                   PropertyName *name, MDefinition **pvalue)
+{
+    // If any value being written is not reflected in the type information for
+    // objects which obj could represent, a type barrier is needed when writing
+    // the value. As for propertyReadNeedsTypeBarrier, this only applies for
+    // properties that are accounted for by type information, i.e. normal data
+    // properties and elements.
+
+    types::StackTypeSet *types = (*pobj)->resultTypeSet();
+    if (!types || types->unknownObject())
+        return true;
+
+    jsid id = name ? types::IdToTypeId(NameToId(name)) : JSID_VOID;
+
+    // If all of the objects being written to have property types which already
+    // reflect the value, no barrier at all is needed. Additionally, if all
+    // objects being written to have the same types for the property, and those
+    // types do *not* reflect the value, add a type barrier for the value.
+
+    bool success = true;
+    for (size_t i = 0; i < types->getObjectCount(); i++) {
+        types::TypeObject *object = types->getTypeObject(i);
+        if (!object) {
+            JSObject *singleton = types->getSingleObject(i);
+            if (!singleton)
+                continue;
+            object = singleton->getType(cx);
+            if (!object) {
+                success = false;
+                break;
+            }
+        }
+
+        if (object->unknownProperties())
+            continue;
+
+        types::HeapTypeSet *property = object->getProperty(cx, id, false);
+        if (!property) {
+            success = false;
+            break;
+        }
+        if (!TypeSetIncludes(property, (*pvalue)->type(), (*pvalue)->resultTypeSet())) {
+            success = TryAddTypeBarrierForWrite(cx, current, types, id, pvalue);
+            break;
+        }
+    }
+
+    if (success)
+        return false;
+
+    // If all of the objects except one have property types which reflect the
+    // value, and the remaining object has no types at all for the property,
+    // add a guard that the object does not have that remaining object's type.
+
+    if (types->getObjectCount() <= 1)
+        return true;
+
+    types::TypeObject *excluded = NULL;
+    for (size_t i = 0; i < types->getObjectCount(); i++) {
+        types::TypeObject *object = types->getTypeObject(i);
+        if (!object) {
+            if (types->getSingleObject(i))
+                return true;
+            continue;
+        }
+        if (object->unknownProperties())
+            continue;
+
+        types::HeapTypeSet *property = object->getProperty(cx, id, false);
+        if (!property)
+            return true;
+
+        if (TypeSetIncludes(property, (*pvalue)->type(), (*pvalue)->resultTypeSet()))
+            continue;
+
+        if (!property->empty() || excluded)
+            return true;
+        excluded = object;
+    }
+
+    JS_ASSERT(excluded);
+
+    *pobj = AddTypeGuard(current, *pobj, excluded, /* bailOnEquality = */ true, Bailout_Normal);
+    return false;
+}

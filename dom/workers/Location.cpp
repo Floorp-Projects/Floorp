@@ -20,8 +20,8 @@ namespace {
 class Location
 {
   static JSClass sClass;
-  static JSPropertySpec sProperties[];
-  static JSFunctionSpec sFunctions[];
+  static const JSPropertySpec sProperties[];
+  static const JSFunctionSpec sFunctions[];
 
   enum SLOT {
     SLOT_href = 0,
@@ -153,7 +153,7 @@ JSClass Location::sClass = {
   JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, Finalize
 };
 
-JSPropertySpec Location::sProperties[] = {
+const JSPropertySpec Location::sProperties[] = {
   { "href", SLOT_href, PROPERTY_FLAGS, JSOP_WRAPPER(GetProperty),
     JSOP_WRAPPER(js_GetterOnlyPropertyStub) },
   { "protocol", SLOT_protocol, PROPERTY_FLAGS, JSOP_WRAPPER(GetProperty),
@@ -173,7 +173,7 @@ JSPropertySpec Location::sProperties[] = {
   { 0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER }
 };
 
-JSFunctionSpec Location::sFunctions[] = {
+const JSFunctionSpec Location::sFunctions[] = {
   JS_FN("toString", ToString, 0, 0),
   JS_FS_END
 };

@@ -5187,23 +5187,6 @@ fi
 AC_SUBST(MOZ_IPDL_TESTS)
 
 dnl ========================================================
-dnl = Turns off code necessary for e10s compatibility
-dnl ========================================================
-dnl This is a temporary flag to be removed in bug 662601 when
-dnl it's no longer needed
-
-MOZ_E10S_COMPAT=
-
-MOZ_ARG_ENABLE_BOOL(e10s-compat,
-[  --enable-e10s-compat     Turns off code for e10s compat],
-    MOZ_E10S_COMPAT=1,
-    MOZ_E10S_COMPAT=)
-
-if test -n "$MOZ_E10S_COMPAT"; then
-    AC_DEFINE(MOZ_E10S_COMPAT)
-fi
-
-dnl ========================================================
 dnl = Disable building dbm
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(dbm,

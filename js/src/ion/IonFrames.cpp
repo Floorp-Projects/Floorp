@@ -193,8 +193,25 @@ IonFrameIterator::baselineScriptAndPc(JSScript **scriptRes, jsbytecode **pcRes) 
     if (scriptRes)
         *scriptRes = script;
     uint8_t *retAddr = returnAddressToFp();
-    if (pcRes)
-        *pcRes = script->baselineScript()->icEntryFromReturnAddress(retAddr).pc(script);
+    if (pcRes) {
+        // If the return address is into the prologue entry addr, then assume PC 0.
+        if (retAddr == script->baselineScript()->prologueEntryAddr()) {
+            *pcRes = 0;
+            return;
+        }
+
+        // The return address _may_ be a return from a callVM or IC chain call done for
+        // some op.
+        ICEntry *icEntry = script->baselineScript()->maybeICEntryFromReturnAddress(retAddr);
+        if (icEntry) {
+            *pcRes = icEntry->pc(script);
+            return;
+        }
+
+        // If not, the return address _must_ be the start address of an op, which can
+        // be computed from the pc mapping table.
+        *pcRes = script->baselineScript()->pcForReturnAddress(script, retAddr);
+    }
 }
 
 Value *
@@ -287,7 +304,7 @@ CloseLiveIterator(JSContext *cx, const InlineFrameIterator &frame, uint32_t loca
     SnapshotIterator si = frame.snapshotIterator();
 
     // Skip stack slots until we reach the iterator object.
-    uint32_t base = CountArgSlots(frame.script(), frame.maybeCallee()) + frame.script()->nfixed;
+    uint32_t base = CountArgSlots(frame.maybeCallee()) + frame.script()->nfixed;
     uint32_t skipSlots = base + localSlot - 1;
 
     for (unsigned i = 0; i < skipSlots; i++)

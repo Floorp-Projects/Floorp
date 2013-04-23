@@ -375,7 +375,7 @@ TCPSocket.prototype = {
       that._socketBridge = Cc["@mozilla.org/tcp-socket-child;1"]
                              .createInstance(Ci.nsITCPSocketChild);
       that._socketBridge.open(that, host, port, !!that._ssl,
-                              that._binaryType, this.useWin, this);
+                              that._binaryType, this.useWin, this.useWin || this);
       return that;
     }
 
@@ -563,7 +563,9 @@ TCPSocket.prototype = {
   // nsIStreamListener (Triggered by _inputStreamPump.asyncRead)
   onDataAvailable: function ts_onDataAvailable(request, context, inputStream, offset, count) {
     if (this._binaryType === "arraybuffer") {
-      this.callListener("data", this._inputStreamBinary.readArrayBuffer(count));
+      let buffer = new (this.useWin ? this.useWin.ArrayBuffer : ArrayBuffer)(count);
+      this._inputStreamBinary.readArrayBuffer(count, buffer);
+      this.callListener("data", buffer);
     } else {
       this.callListener("data", this._inputStreamScriptable.read(count));
     }

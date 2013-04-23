@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test AudioBufferSourceNode looping</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="webaudio.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  SpecialPowers.setBoolPref("media.webaudio.enabled", true);
+
+  var context = new AudioContext();
+  var buffer = context.createBuffer(1, 2048, context.sampleRate);
+  for (var i = 0; i < 2048; ++i) {
+    buffer.getChannelData(0)[i] = Math.sin(440 * 2 * Math.PI * i / context.sampleRate);
+  }
+
+  var expectedBuffer = context.createBuffer(1, 2048 * 4, context.sampleRate);
+  for (var i = 0; i < 4; ++i) {
+    for (var j = 0; j < 2048; ++j) {
+      expectedBuffer.getChannelData(0)[i * 2048 + j] = buffer.getChannelData(0)[j];
+    }
+  }
+
+  var source = context.createBufferSource();
+  source.buffer = buffer;
+
+  var sp = context.createScriptProcessor(2048 * 4, 1);
+  source.start(0);
+  source.loop = true;
+  source.connect(sp);
+  sp.connect(context.destination);
+  sp.onaudioprocess = function(e) {
+    is(e.inputBuffer.numberOfChannels, 1, "input buffer must have only one channel");
+    compareBuffers(e.inputBuffer.getChannelData(0), expectedBuffer.getChannelData(0));
+
+    sp.onaudioprocess = null;
+
+    SpecialPowers.clearUserPref("media.webaudio.enabled");
+    SimpleTest.finish();
+  };
+});
+
+</script>
+</pre>
+</body>
+</html>

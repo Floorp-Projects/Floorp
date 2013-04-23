@@ -1302,11 +1302,17 @@ CodeGeneratorX86Shared::visitRound(LRound *lir)
 }
 
 bool
-CodeGeneratorX86Shared::visitGuardShape(LGuardShape *guard)
+CodeGeneratorX86Shared::visitGuardShapeOrType(LGuardShapeOrType *guard)
 {
     Register obj = ToRegister(guard->input());
-    masm.cmpPtr(Operand(obj, JSObject::offsetOfShape()), ImmGCPtr(guard->mir()->shape()));
-    if (!bailoutIf(Assembler::NotEqual, guard->snapshot()))
+    if (guard->mir()->shape())
+        masm.cmpPtr(Operand(obj, JSObject::offsetOfShape()), ImmGCPtr(guard->mir()->shape()));
+    else
+        masm.cmpPtr(Operand(obj, JSObject::offsetOfType()), ImmGCPtr(guard->mir()->typeObject()));
+
+    Assembler::Condition cond =
+        guard->mir()->bailOnEquality() ? Assembler::Equal : Assembler::NotEqual;
+    if (!bailoutIf(cond, guard->snapshot()))
         return false;
     return true;
 }

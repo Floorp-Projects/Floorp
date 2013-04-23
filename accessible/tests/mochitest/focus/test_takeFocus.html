@@ -57,6 +57,10 @@
       gQueue.push(new takeFocusInvoker("plugin"));
       gQueue.push(new takeFocusInvoker(document));
       gQueue.push(new takeFocusInvoker("lb_item2"));
+      gQueue.push(new takeFocusInvoker(document));
+      gQueue.push(new takeFocusInvoker("lb_item3.2"));
+      gQueue.push(new takeFocusInvoker(document));
+      gQueue.push(new takeFocusInvoker("lb_item3.1"));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
@@ -114,6 +118,10 @@
   <select id="listbox" size="5">
     <option id="lb_item1">item1</option>
     <option id="lb_item2">item2</option>
+    <optgroup>
+      <option id="lb_item3.1">item 3.1</option>
+      <option id="lb_item3.2">item 3.2</option>
+    </optgroup>
   </select>
 </body>
 </html>

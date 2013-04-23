@@ -594,7 +594,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         mAsserter.ok(child != null, "edit item can be retrieved", child != null ? child.toString() : "null!");
         waitForText("about:home|Firefox");
         mSolo.clickLongOnView(child);
-        waitForText("Open in New Tab");
+        waitForText("Share");
         mSolo.clickOnText("Edit");
         waitForText("Edit Bookmark");
 
@@ -618,7 +618,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         mAsserter.ok(child != null, "check item can be retrieved", child != null ? child.toString() : "null!");
         waitForText("about:home|Firefox");
         mSolo.clickLongOnView(child);
-        waitForText("Open in New Tab");
+        waitForText("Share");
         mSolo.clickOnText("Edit");
         waitForText("Edit Bookmark");
 
@@ -642,24 +642,18 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     }
 
     class Device {
-        Build.VERSION mBuildVersion;
-        public String version; // 2.x or 3.x or 4.x
+        public final String version; // 2.x or 3.x or 4.x
         public String type; // "tablet" or "phone"
-        public int width;
-        public int height;
+        public final int width;
+        public final int height;
 
         public Device() {
-            detectDevice();
-        }
-
-        private void detectDevice() {
             // Determine device version
-            mBuildVersion = new Build.VERSION();
-            int mSDK = mBuildVersion.SDK_INT;
-            if (mSDK < Build.VERSION_CODES.HONEYCOMB) {
+            int sdk = Build.VERSION.SDK_INT;
+            if (sdk < Build.VERSION_CODES.HONEYCOMB) {
                 version = "2.x";
             } else {
-                if (mSDK > Build.VERSION_CODES.HONEYCOMB_MR2) {
+                if (sdk > Build.VERSION_CODES.HONEYCOMB_MR2) {
                     version = "4.x";
                 } else {
                     version = "3.x";

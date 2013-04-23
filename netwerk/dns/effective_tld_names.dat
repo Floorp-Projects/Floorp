@@ -6561,6 +6561,10 @@ xxx
 // Requested by Donavan Miller <donavanm@amazon.com> 2013-03-22
 cloudfront.net
 
+// Amazon Elastic Beanstalk : https://aws.amazon.com/elasticbeanstalk/ 
+// Requested by Adam Stein <astein@amazon.com> 2013-04-02
+elasticbeanstalk.com
+
 // Amazon Elastic Load Balancing : https://aws.amazon.com/elasticloadbalancing/
 // Requested by Scott Vidmar <svidmar@amazon.com> 2013-03-27
 elb.amazonaws.com
@@ -6915,6 +6919,10 @@ webhop.net
 webhop.org
 worse-than.tv
 writesthisblog.com
+
+// GitHub, Inc.
+// Requested by Ben Toews <btoews@github.com> 2013-04-18
+github.io
 
 // Google, Inc.
 // Requested by Eduardo Vela <evn@google.com> 2012-10-24

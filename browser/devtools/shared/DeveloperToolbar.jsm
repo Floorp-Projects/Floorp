@@ -506,7 +506,7 @@ DeveloperToolbar.prototype.destroy = function DT_destroy()
   let tabbrowser = this._chromeWindow.getBrowser();
   tabbrowser.tabContainer.removeEventListener("TabSelect", this, false);
   tabbrowser.tabContainer.removeEventListener("TabClose", this, false);
-  tabbrowser.removeEventListener("load", this, true); 
+  tabbrowser.removeEventListener("load", this, true);
   tabbrowser.removeEventListener("beforeunload", this, true);
 
   Array.prototype.forEach.call(tabbrowser.tabs, this._stopErrorsCount, this);

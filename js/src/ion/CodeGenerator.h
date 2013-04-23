@@ -121,9 +121,6 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitCreateThis(LCreateThis *lir);
     bool visitCreateThisWithProto(LCreateThisWithProto *lir);
     bool visitCreateThisWithTemplate(LCreateThisWithTemplate *lir);
-    bool visitCreateArgumentsObject(LCreateArgumentsObject *lir);
-    bool visitGetArgumentsObjectArg(LGetArgumentsObjectArg *lir);
-    bool visitSetArgumentsObjectArg(LSetArgumentsObjectArg *lir);
     bool visitReturnFromCtor(LReturnFromCtor *lir);
     bool visitArrayLength(LArrayLength *lir);
     bool visitTypedArrayLength(LTypedArrayLength *lir);
@@ -168,6 +165,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitCallGetProperty(LCallGetProperty *lir);
     bool visitCallGetElement(LCallGetElement *lir);
     bool visitCallSetElement(LCallSetElement *lir);
+    bool visitCallInitElementArray(LCallInitElementArray *lir);
     bool visitThrow(LThrow *lir);
     bool visitTypeOfV(LTypeOfV *lir);
     bool visitOutOfLineTypeOfV(OutOfLineTypeOfV *ool);

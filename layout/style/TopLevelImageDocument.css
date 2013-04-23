@@ -22,16 +22,8 @@
     bottom: 0;
     left: 0;
   }
-}
 
-@media print {
-  /* We must declare the image as a block element. If we stay as
-  an inline element, our parent LineBox will be inline too and
-  ignore the available height during reflow.
-  This is bad during printing, it means tall image frames won't know
-  the size of the paper and cannot break into continuations along
-  multiple pages. */
-  img {
-    display: block;
+  .completeRotation {
+    transition: transform 0.3s ease 0s;
   }
 }
