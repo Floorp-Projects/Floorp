@@ -27,6 +27,7 @@
 
 using namespace mozilla::dom;
 using namespace JS;
+using namespace mozilla;
 
 using js::PropertyDescriptor;
 using js::Wrapper;
@@ -1348,6 +1349,45 @@ IsXrayResolving(JSContext *cx, HandleObject wrapper, HandleId id)
     JSObject *holder =
       XPCWrappedNativeXrayTraits::singleton.ensureHolder(cx, wrapper);
     return XPCWrappedNativeXrayTraits::isResolving(cx, holder, id);
+}
+
+bool
+HasNativeProperty(JSContext *cx, HandleObject wrapper, HandleId id, bool *hasProp)
+{
+    MOZ_ASSERT(WrapperFactory::IsXrayWrapper(wrapper));
+    XrayTraits *traits = GetXrayTraits(wrapper);
+    MOZ_ASSERT(traits);
+    RootedObject holder(cx, traits->ensureHolder(cx, wrapper));
+    NS_ENSURE_TRUE(holder, false);
+    *hasProp = false;
+    JSPropertyDescriptor desc;
+    Wrapper *handler = Wrapper::wrapperHandler(wrapper);
+
+    // Try resolveOwnProperty.
+    Maybe<ResolvingId> resolvingId;
+    if (traits == &XPCWrappedNativeXrayTraits::singleton)
+        resolvingId.construct(wrapper, id);
+    if (!traits->resolveOwnProperty(cx, *handler, wrapper, holder, id, &desc, 0))
+        return false;
+    if (desc.obj) {
+        *hasProp = true;
+        return true;
+    }
+
+    // Try the holder.
+    JSBool found = false;
+    if (!JS_AlreadyHasOwnPropertyById(cx, holder, id, &found))
+        return false;
+    if (found) {
+        *hasProp = true;
+        return true;
+    }
+
+    // Try resolveNativeProperty.
+    if (!traits->resolveNativeProperty(cx, wrapper, holder, id, &desc, 0))
+        return false;
+    *hasProp = !!desc.obj;
+    return true;
 }
 
 } // namespace XrayUtils
