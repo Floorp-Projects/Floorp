@@ -393,7 +393,7 @@ IonBuilder::analyzeNewLoopTypes(MBasicBlock *entry, jsbytecode *start, jsbytecod
 }
 
 bool
-IonBuilder::pushLoop(CFGState::State initial, jsbytecode *stopAt, MBasicBlock *entry,
+IonBuilder::pushLoop(CFGState::State initial, jsbytecode *stopAt, MBasicBlock *entry, bool osr,
                      jsbytecode *loopHead, jsbytecode *initialPc,
                      jsbytecode *bodyStart, jsbytecode *bodyEnd, jsbytecode *exitpc,
                      jsbytecode *continuepc)
@@ -413,6 +413,7 @@ IonBuilder::pushLoop(CFGState::State initial, jsbytecode *stopAt, MBasicBlock *e
     state.loop.exitpc = exitpc;
     state.loop.continuepc = continuepc;
     state.loop.entry = entry;
+    state.loop.osr = osr;
     state.loop.successor = NULL;
     state.loop.breaks = NULL;
     state.loop.continues = NULL;
@@ -765,6 +766,121 @@ IonBuilder::initScopeChain()
     return true;
 }
 
+bool
+IonBuilder::addOsrValueTypeBarrier(uint32_t slot, MInstruction **def_,
+                                   MIRType type, types::StackTypeSet *typeSet)
+{
+    MInstruction *&def = *def_;
+    MBasicBlock *osrBlock = def->block();
+
+    // Clear bogus type information added in newOsrPreheader().
+    def->setResultType(MIRType_Value);
+    def->setResultTypeSet(NULL);
+
+    if (typeSet && !typeSet->unknown()) {
+        MInstruction *barrier = MTypeBarrier::New(def, typeSet);
+        osrBlock->insertBefore(osrBlock->lastIns(), barrier);
+        osrBlock->rewriteSlot(slot, barrier);
+        def = barrier;
+    } else if (type == MIRType_Null ||
+               type == MIRType_Undefined ||
+               type == MIRType_Magic)
+    {
+        // No unbox instruction will be added below, so check the type by
+        // adding a type barrier for a singleton type set.
+        types::Type ntype = types::Type::PrimitiveType(ValueTypeFromMIRType(type));
+        typeSet = GetIonContext()->temp->lifoAlloc()->new_<types::StackTypeSet>(ntype);
+        if (!typeSet)
+            return false;
+        MInstruction *barrier = MTypeBarrier::New(def, typeSet);
+        osrBlock->insertBefore(osrBlock->lastIns(), barrier);
+        osrBlock->rewriteSlot(slot, barrier);
+        def = barrier;
+    }
+
+    switch (type) {
+      case MIRType_Boolean:
+      case MIRType_Int32:
+      case MIRType_Double:
+      case MIRType_String:
+      case MIRType_Object:
+      {
+        MUnbox *unbox = MUnbox::New(def, type, MUnbox::Fallible);
+        osrBlock->insertBefore(osrBlock->lastIns(), unbox);
+        osrBlock->rewriteSlot(slot, unbox);
+        def = unbox;
+        break;
+      }
+
+      case MIRType_Null:
+      {
+        MConstant *c = MConstant::New(NullValue());
+        osrBlock->insertBefore(osrBlock->lastIns(), c);
+        osrBlock->rewriteSlot(slot, c);
+        def = c;
+        break;
+      }
+
+      case MIRType_Undefined:
+      {
+        MConstant *c = MConstant::New(UndefinedValue());
+        osrBlock->insertBefore(osrBlock->lastIns(), c);
+        osrBlock->rewriteSlot(slot, c);
+        def = c;
+        break;
+      }
+
+      case MIRType_Magic:
+        JS_ASSERT(lazyArguments_);
+        osrBlock->rewriteSlot(slot, lazyArguments_);
+        def = lazyArguments_;
+        break;
+
+      default:
+        break;
+    }
+
+    JS_ASSERT(def == osrBlock->getSlot(slot));
+    return true;
+}
+
+bool
+IonBuilder::maybeAddOsrTypeBarriers()
+{
+    if (!info().osrPc())
+        return true;
+
+    // The loop has successfully been processed, and the loop header phis
+    // have their final type. Add unboxes and type barriers in the OSR
+    // block to check that the values have the appropriate type, and update
+    // the types in the preheader.
+
+    MBasicBlock *osrBlock = graph().osrBlock();
+    MBasicBlock *preheader = osrBlock->getSuccessor(0);
+    MBasicBlock *header = preheader->getSuccessor(0);
+    static const size_t OSR_PHI_POSITION = 1;
+    JS_ASSERT(preheader->getPredecessor(OSR_PHI_POSITION) == osrBlock);
+
+    for (uint32_t i = 1; i < osrBlock->stackDepth(); i++) {
+        MInstruction *def = osrBlock->getSlot(i)->toOsrValue();
+
+        MPhi *headerPhi = header->getSlot(i)->toPhi();
+        MPhi *preheaderPhi = preheader->getSlot(i)->toPhi();
+
+        MIRType type = headerPhi->type();
+        types::StackTypeSet *typeSet = headerPhi->resultTypeSet();
+
+        if (!addOsrValueTypeBarrier(i, &def, type, typeSet))
+            return false;
+
+        preheaderPhi->replaceOperand(OSR_PHI_POSITION, def);
+        preheaderPhi->setResultType(type);
+        preheaderPhi->setResultTypeSet(typeSet);
+    }
+
+    return true;
+}
+
 // We try to build a control-flow graph in the order that it would be built as
 // if traversing the AST. This leads to a nice ordering and lets us build SSA
 // in one pass, since the bytecode is structured.
@@ -812,7 +928,7 @@ IonBuilder::traverseBytecode()
                 if (status == ControlStatus_Abort)
                     return abort("Aborted while processing control flow");
                 if (!current)
-                    return true;
+                    return maybeAddOsrTypeBarriers();
                 continue;
             }
 
@@ -838,7 +954,7 @@ IonBuilder::traverseBytecode()
             if (status == ControlStatus_Error)
                 return false;
             if (!current)
-                return true;
+                return maybeAddOsrTypeBarriers();
         }
 
         // Nothing in inspectOpcode() is allowed to advance the pc.
@@ -852,7 +968,7 @@ IonBuilder::traverseBytecode()
 #endif
     }
 
-    return true;
+    return maybeAddOsrTypeBarriers();
 }
 
 IonBuilder::ControlStatus
@@ -1514,6 +1630,7 @@ IonBuilder::finishLoop(CFGState &state, MBasicBlock *successor)
         // loop body and restart with the new types.
         return restartLoop(state);
     }
+
     if (successor) {
         graph().moveBlockToEnd(successor);
         successor->inheritPhis(state.loop.entry);
@@ -1574,7 +1691,7 @@ IonBuilder::restartLoop(CFGState state)
 
     loopDepth_++;
 
-    if (!pushLoop(state.loop.initialState, state.loop.initialStopAt, header,
+    if (!pushLoop(state.loop.initialState, state.loop.initialStopAt, header, state.loop.osr,
                   state.loop.loopHead, state.loop.initialPc,
                   state.loop.bodyStart, state.loop.bodyEnd,
                   state.loop.exitpc, state.loop.continuepc))
@@ -2158,7 +2275,9 @@ IonBuilder::doWhileLoop(JSOp op, jssrcnote *sn)
     JS_ASSERT(loopHead == ifne + GetJumpOffset(ifne));
 
     jsbytecode *loopEntry = GetNextPc(loopHead);
-    if (info().hasOsrAt(loopEntry)) {
+    bool osr = info().hasOsrAt(loopEntry);
+
+    if (osr) {
         MBasicBlock *preheader = newOsrPreheader(current, loopEntry);
         if (!preheader)
             return ControlStatus_Error;
@@ -2166,7 +2285,7 @@ IonBuilder::doWhileLoop(JSOp op, jssrcnote *sn)
         setCurrentAndSpecializePhis(preheader);
     }
 
-    MBasicBlock *header = newPendingLoopHeader(current, pc);
+    MBasicBlock *header = newPendingLoopHeader(current, pc, osr);
     if (!header)
         return ControlStatus_Error;
     current->end(MGoto::New(header));
@@ -2176,7 +2295,7 @@ IonBuilder::doWhileLoop(JSOp op, jssrcnote *sn)
     jsbytecode *bodyEnd = conditionpc;
     jsbytecode *exitpc = GetNextPc(ifne);
     analyzeNewLoopTypes(header, bodyStart, exitpc);
-    if (!pushLoop(CFGState::DO_WHILE_LOOP_BODY, conditionpc, header,
+    if (!pushLoop(CFGState::DO_WHILE_LOOP_BODY, conditionpc, header, osr,
                   loopHead, bodyStart, bodyStart, bodyEnd, exitpc, conditionpc))
     {
         return ControlStatus_Error;
@@ -2216,7 +2335,9 @@ IonBuilder::whileOrForInLoop(jssrcnote *sn)
     JS_ASSERT(GetNextPc(pc) == ifne + GetJumpOffset(ifne));
 
     jsbytecode *loopEntry = pc + GetJumpOffset(pc);
-    if (info().hasOsrAt(loopEntry)) {
+    bool osr = info().hasOsrAt(loopEntry);
+
+    if (osr) {
         MBasicBlock *preheader = newOsrPreheader(current, loopEntry);
         if (!preheader)
             return ControlStatus_Error;
@@ -2224,7 +2345,7 @@ IonBuilder::whileOrForInLoop(jssrcnote *sn)
         setCurrentAndSpecializePhis(preheader);
     }
 
-    MBasicBlock *header = newPendingLoopHeader(current, pc);
+    MBasicBlock *header = newPendingLoopHeader(current, pc, osr);
     if (!header)
         return ControlStatus_Error;
     current->end(MGoto::New(header));
@@ -2235,7 +2356,7 @@ IonBuilder::whileOrForInLoop(jssrcnote *sn)
     jsbytecode *bodyEnd = pc + GetJumpOffset(pc);
     jsbytecode *exitpc = GetNextPc(ifne);
     analyzeNewLoopTypes(header, bodyStart, exitpc);
-    if (!pushLoop(CFGState::WHILE_LOOP_COND, ifne, header,
+    if (!pushLoop(CFGState::WHILE_LOOP_COND, ifne, header, osr,
                   loopHead, bodyEnd, bodyStart, bodyEnd, exitpc))
     {
         return ControlStatus_Error;
@@ -2298,7 +2419,9 @@ IonBuilder::forLoop(JSOp op, jssrcnote *sn)
     JS_ASSERT(ifne + GetJumpOffset(ifne) == bodyStart);
     bodyStart = GetNextPc(bodyStart);
 
-    if (info().hasOsrAt(loopEntry)) {
+    bool osr = info().hasOsrAt(loopEntry);
+
+    if (osr) {
         MBasicBlock *preheader = newOsrPreheader(current, loopEntry);
         if (!preheader)
             return ControlStatus_Error;
@@ -2306,7 +2429,7 @@ IonBuilder::forLoop(JSOp op, jssrcnote *sn)
         setCurrentAndSpecializePhis(preheader);
     }
 
-    MBasicBlock *header = newPendingLoopHeader(current, pc);
+    MBasicBlock *header = newPendingLoopHeader(current, pc, osr);
     if (!header)
         return ControlStatus_Error;
     current->end(MGoto::New(header));
@@ -2326,8 +2449,11 @@ IonBuilder::forLoop(JSOp op, jssrcnote *sn)
     }
 
     analyzeNewLoopTypes(header, bodyStart, exitpc);
-    if (!pushLoop(initial, stopAt, header, loopHead, pc, bodyStart, bodyEnd, exitpc, updatepc))
+    if (!pushLoop(initial, stopAt, header, osr,
+                  loopHead, pc, bodyStart, bodyEnd, exitpc, updatepc))
+    {
         return ControlStatus_Error;
+    }
 
     CFGState &state = cfgStack_.back();
     state.loop.condpc = (condpc != ifne) ? condpc : NULL;
@@ -5164,110 +5290,17 @@ IonBuilder::newOsrPreheader(MBasicBlock *predecessor, jsbytecode *loopEntry)
     JS_ASSERT(predecessor->stackDepth() == osrBlock->stackDepth());
     JS_ASSERT(info().scopeChainSlot() == 0);
 
-    // Unbox the MOsrValue if it is known to be unboxable.
+    // Treat the OSR values as having the same type as the existing values
+    // coming in to the loop. These will be fixed up with appropriate
+    // unboxing and type barriers in finishLoop, once the possible types
+    // at the loop header are known.
     for (uint32_t i = 1; i < osrBlock->stackDepth(); i++) {
         MDefinition *existing = current->getSlot(i);
         MDefinition *def = osrBlock->getSlot(i);
         JS_ASSERT(def->type() == MIRType_Value);
 
-        MIRType existingType = existing->type();
-        types::StackTypeSet *existingTypeSet = existing->resultTypeSet();
-
-        // The existing slot only reflects types for variables on entry to the
-        // loop, not those resulting from writes within the loop. Moreover,
-        // there may be types for variables not known at all to the compiler,
-        // either from values assigned to variables before the baseline
-        // compiler originally ran or from other value transformations such as
-        // using undefined values in bailouts for dead variables.
-        //
-        // Address all of these issues by incorporating the variable's type
-        // from the OSR frame into the types used for unboxing the OSR value.
-
-        bool haveValue = false;
-        Value existingValue;
-        {
-            uint32_t arg = i - info().firstArgSlot();
-            uint32_t var = i - info().firstLocalSlot();
-            if (arg < info().nargs()) {
-                if (!script()->formalIsAliased(arg)) {
-                    haveValue = true;
-                    existingValue = fp.unaliasedFormal(arg);
-                }
-            } else if (var < info().nlocals()) {
-                if (!script()->varIsAliased(var)) {
-                    haveValue = true;
-                    existingValue = fp.unaliasedVar(var);
-                }
-            }
-        }
-        if (haveValue) {
-            MIRType type = existingValue.isDouble()
-                           ? MIRType_Double
-                           : MIRTypeFromValueType(existingValue.extractNonDoubleType());
-            types::Type ntype = types::GetValueType(cx, existingValue);
-            types::StackTypeSet *typeSet =
-                GetIonContext()->temp->lifoAlloc()->new_<types::StackTypeSet>(ntype);
-            MergeTypes(&existingType, &existingTypeSet, type, typeSet);
-        }
-
-        if (existingTypeSet && !existingTypeSet->unknown()) {
-            MInstruction *barrier = MTypeBarrier::New(def, existingTypeSet);
-            osrBlock->add(barrier);
-            osrBlock->rewriteSlot(i, barrier);
-            def = barrier;
-        } else if (existingType == MIRType_Null ||
-                   existingType == MIRType_Undefined ||
-                   existingType == MIRType_Magic)
-        {
-            // No unbox instruction will be added below, so check the type by
-            // adding a type barrier for a singleton type set.
-            types::Type ntype = types::Type::PrimitiveType(ValueTypeFromMIRType(existingType));
-            existingTypeSet = GetIonContext()->temp->lifoAlloc()->new_<types::StackTypeSet>(ntype);
-            if (!existingTypeSet)
-                return NULL;
-            MInstruction *barrier = MTypeBarrier::New(def, existingTypeSet);
-            osrBlock->add(barrier);
-            osrBlock->rewriteSlot(i, barrier);
-            def = barrier;
-        }
-
-        switch (existingType) {
-          case MIRType_Boolean:
-          case MIRType_Int32:
-          case MIRType_Double:
-          case MIRType_String:
-          case MIRType_Object:
-          {
-            MInstruction *actual = MUnbox::New(def, existingType, MUnbox::Fallible);
-            osrBlock->add(actual);
-            osrBlock->rewriteSlot(i, actual);
-            break;
-          }
-
-          case MIRType_Null:
-          {
-            MConstant *c = MConstant::New(NullValue());
-            osrBlock->add(c);
-            osrBlock->rewriteSlot(i, c);
-            break;
-          }
-
-          case MIRType_Undefined:
-          {
-            MConstant *c = MConstant::New(UndefinedValue());
-            osrBlock->add(c);
-            osrBlock->rewriteSlot(i, c);
-            break;
-          }
-
-          case MIRType_Magic:
-            JS_ASSERT(lazyArguments_);
-            osrBlock->rewriteSlot(i, lazyArguments_);
-            break;
-
-          default:
-            break;
-        }
+        def->setResultType(existing->type());
+        def->setResultTypeSet(existing->resultTypeSet());
     }
 
     // Finish the osrBlock.
@@ -5284,11 +5317,54 @@ IonBuilder::newOsrPreheader(MBasicBlock *predecessor, jsbytecode *loopEntry)
 }
 
 MBasicBlock *
-IonBuilder::newPendingLoopHeader(MBasicBlock *predecessor, jsbytecode *pc)
+IonBuilder::newPendingLoopHeader(MBasicBlock *predecessor, jsbytecode *pc, bool osr)
 {
     loopDepth_++;
     MBasicBlock *block = MBasicBlock::NewPendingLoopHeader(graph(), info(), predecessor, pc);
-    return addBlock(block, loopDepth_);
+    if (!addBlock(block, loopDepth_))
+        return NULL;
+
+    if (osr) {
+        // Incorporate type information from the OSR frame into the loop
+        // header. The OSR frame may have unexpected types due to type changes
+        // within the loop body or due to incomplete profiling information,
+        // in which case this may avoid restarts of loop analysis or bailouts
+        // during the OSR itself.
+
+        // Unbox the MOsrValue if it is known to be unboxable.
+        for (uint32_t i = 1; i < block->stackDepth(); i++) {
+            MPhi *phi = block->getSlot(i)->toPhi();
+
+            bool haveValue = false;
+            Value existingValue;
+            {
+                uint32_t arg = i - info().firstArgSlot();
+                uint32_t var = i - info().firstLocalSlot();
+                if (arg < info().nargs()) {
+                    if (!script()->formalIsAliased(arg)) {
+                        haveValue = true;
+                        existingValue = fp.unaliasedFormal(arg);
+                    }
+                } else if (var < info().nlocals()) {
+                    if (!script()->varIsAliased(var)) {
+                        haveValue = true;
+                        existingValue = fp.unaliasedVar(var);
+                    }
+                }
+            }
+            if (haveValue) {
+                MIRType type = existingValue.isDouble()
+                             ? MIRType_Double
+                             : MIRTypeFromValueType(existingValue.extractNonDoubleType());
+                types::Type ntype = types::GetValueType(cx, existingValue);
+                types::StackTypeSet *typeSet =
+                    GetIonContext()->temp->lifoAlloc()->new_<types::StackTypeSet>(ntype);
+                phi->addBackedgeType(type, typeSet);
+            }
+        }
+    }
+
+    return block;
 }
 
 // A resume point is a mapping of stack slots to MDefinitions. It is used to
