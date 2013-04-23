@@ -473,9 +473,15 @@ nsTreeContentView::SetTree(nsITreeBoxObject* aTree)
 
   mBoxObject = aTree;
 
-  if (aTree && !mRoot) {
+  MOZ_ASSERT(!mRoot, "mRoot should have been cleared out by ClearRows");
+
+  if (aTree) {
     // Get our root element
     nsCOMPtr<nsIBoxObject> boxObject = do_QueryInterface(mBoxObject);
+    if (!boxObject) {
+      mBoxObject = nullptr;
+      return NS_ERROR_INVALID_ARG;
+    }
     nsCOMPtr<nsIDOMElement> element;
     boxObject->GetElement(getter_AddRefs(element));
 
