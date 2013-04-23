@@ -56,6 +56,9 @@ public class testAboutPage extends PixelTest {
         tabEventExpecter.blockForEvent();
         contentEventExpecter.blockForEvent();
 
+        tabEventExpecter.unregisterListener();
+        contentEventExpecter.unregisterListener();
+
         // Grab the title to make sure the about: page was loaded
         awesomebar = mDriver.findElement(getActivity(), "awesome_bar_title");
         mAsserter.isnot(awesomebar, null, "Got the awesomebar");

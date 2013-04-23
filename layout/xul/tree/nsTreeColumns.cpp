@@ -14,6 +14,10 @@
 #include "nsINodeInfo.h"
 #include "nsContentUtils.h"
 #include "nsTreeBodyFrame.h"
+#include "mozilla/dom/Element.h"
+#include "mozilla/dom/TreeColumnsBinding.h"
+
+using namespace mozilla;
 
 // Column class that caches all the info about our column.
 nsTreeColumn::nsTreeColumn(nsTreeColumns* aColumns, nsIContent* aContent)
@@ -343,6 +347,7 @@ nsTreeColumns::nsTreeColumns(nsTreeBodyFrame* aTree)
   : mTree(aTree),
     mFirstColumn(nullptr)
 {
+  SetIsDOMBinding();
 }
 
 nsTreeColumns::~nsTreeColumns()
@@ -350,40 +355,66 @@ nsTreeColumns::~nsTreeColumns()
   nsTreeColumns::InvalidateColumns();
 }
 
-DOMCI_DATA(TreeColumns, nsTreeColumns)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(nsTreeColumns)
 
 // QueryInterface implementation for nsTreeColumns
-NS_INTERFACE_MAP_BEGIN(nsTreeColumns)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsTreeColumns)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsITreeColumns)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(TreeColumns)
 NS_INTERFACE_MAP_END
                                                                                 
-NS_IMPL_ADDREF(nsTreeColumns)
-NS_IMPL_RELEASE(nsTreeColumns)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsTreeColumns)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsTreeColumns)
+
+nsIContent*
+nsTreeColumns::GetParentObject() const
+{
+  return mTree ? mTree->GetBaseElement() : nullptr;
+}
+
+/* virtual */ JSObject*
+nsTreeColumns::WrapObject(JSContext* aCx, JSObject* aScope)
+{
+  return dom::TreeColumnsBinding::Wrap(aCx, aScope, this);
+}
+
+nsITreeBoxObject*
+nsTreeColumns::GetTree() const
+{
+  return mTree ? mTree->GetTreeBoxObject() : nullptr;
+}
 
 NS_IMETHODIMP
 nsTreeColumns::GetTree(nsITreeBoxObject** _retval)
 {
-  NS_IF_ADDREF(*_retval = mTree ? mTree->GetTreeBoxObject() : nullptr);
+  NS_IF_ADDREF(*_retval = GetTree());
   return NS_OK;
+}
+
+uint32_t
+nsTreeColumns::Count()
+{
+  EnsureColumns();
+  uint32_t count = 0;
+  for (nsTreeColumn* currCol = mFirstColumn; currCol; currCol = currCol->GetNext()) {
+    ++count;
+  }
+  return count;
 }
 
 NS_IMETHODIMP
 nsTreeColumns::GetCount(int32_t* _retval)
 {
-  EnsureColumns();
-  *_retval = 0;
-  for (nsTreeColumn* currCol = mFirstColumn; currCol; currCol = currCol->GetNext()) {
-    ++(*_retval);
-  }
+  *_retval = Count();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsTreeColumns::GetLength(int32_t* _retval)
 {
-  return GetCount(_retval);
+  *_retval = Length();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -393,20 +424,25 @@ nsTreeColumns::GetFirstColumn(nsITreeColumn** _retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsTreeColumns::GetLastColumn(nsITreeColumn** _retval)
+nsTreeColumn*
+nsTreeColumns::GetLastColumn()
 {
   EnsureColumns();
-  *_retval = nullptr;
   nsTreeColumn* currCol = mFirstColumn;
   while (currCol) {
     nsTreeColumn* next = currCol->GetNext();
     if (!next) {
-      NS_ADDREF(*_retval = currCol);
-      break;
+      return currCol;
     }
     currCol = next;
   }
+  return nullptr;
+}
+
+NS_IMETHODIMP
+nsTreeColumns::GetLastColumn(nsITreeColumn** _retval)
+{
+  NS_IF_ADDREF(*_retval = GetLastColumn());
   return NS_OK;
 }
 
@@ -417,32 +453,35 @@ nsTreeColumns::GetPrimaryColumn(nsITreeColumn** _retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsTreeColumns::GetSortedColumn(nsITreeColumn** _retval)
+nsTreeColumn*
+nsTreeColumns::GetSortedColumn()
 {
   EnsureColumns();
-  *_retval = nullptr;
   for (nsTreeColumn* currCol = mFirstColumn; currCol; currCol = currCol->GetNext()) {
     if (currCol->mContent &&
         nsContentUtils::HasNonEmptyAttr(currCol->mContent, kNameSpaceID_None,
                                         nsGkAtoms::sortDirection)) {
-      NS_ADDREF(*_retval = currCol);
-      return NS_OK;
+      return currCol;
     }
   }
-  return NS_OK;
+  return nullptr;
 }
 
 NS_IMETHODIMP
-nsTreeColumns::GetKeyColumn(nsITreeColumn** _retval)
+nsTreeColumns::GetSortedColumn(nsITreeColumn** _retval)
+{
+  NS_IF_ADDREF(*_retval = GetSortedColumn());
+  return NS_OK;
+}
+
+nsTreeColumn*
+nsTreeColumns::GetKeyColumn()
 {
   EnsureColumns();
-  *_retval = nullptr;
 
-  nsTreeColumn* first;
-  nsTreeColumn* primary;
-  nsTreeColumn* sorted;
-  first = primary = sorted = nullptr;
+  nsTreeColumn* first = nullptr;
+  nsTreeColumn* primary = nullptr;
+  nsTreeColumn* sorted = nullptr;
 
   for (nsTreeColumn* currCol = mFirstColumn; currCol; currCol = currCol->GetNext()) {
     // Skip hidden columns.
@@ -471,42 +510,58 @@ nsTreeColumns::GetKeyColumn(nsITreeColumn** _retval)
   }
 
   if (sorted)
-    *_retval = sorted;
-  else if (primary)
-    *_retval = primary;
-  else
-    *_retval = first;
+    return sorted;
+  if (primary)
+    return primary;
+  return first;
+}
 
-  NS_IF_ADDREF(*_retval);
+NS_IMETHODIMP
+nsTreeColumns::GetKeyColumn(nsITreeColumn** _retval)
+{
+  NS_IF_ADDREF(*_retval = GetKeyColumn());
   return NS_OK;
+}
+
+nsTreeColumn*
+nsTreeColumns::GetColumnFor(dom::Element* aElement)
+{
+  EnsureColumns();
+  for (nsTreeColumn* currCol = mFirstColumn; currCol; currCol = currCol->GetNext()) {
+    if (currCol->mContent == aElement) {
+      return currCol;
+    }
+  }
+  return nullptr;
 }
 
 NS_IMETHODIMP
 nsTreeColumns::GetColumnFor(nsIDOMElement* aElement, nsITreeColumn** _retval)
 {
-  EnsureColumns();
-  *_retval = nullptr;
-  nsCOMPtr<nsIContent> element = do_QueryInterface(aElement);
-  for (nsTreeColumn* currCol = mFirstColumn; currCol; currCol = currCol->GetNext()) {
-    if (currCol->mContent == element) {
-      NS_ADDREF(*_retval = currCol);
-      break;
-    }
-  }
-
+  nsCOMPtr<dom::Element> element = do_QueryInterface(aElement);
+  NS_ADDREF(*_retval = GetColumnFor(element));
   return NS_OK;
 }
 
-nsITreeColumn*
-nsTreeColumns::GetNamedColumn(const nsAString& aId)
+nsTreeColumn*
+nsTreeColumns::NamedGetter(const nsAString& aId, bool& aFound)
 {
   EnsureColumns();
   for (nsTreeColumn* currCol = mFirstColumn; currCol; currCol = currCol->GetNext()) {
     if (currCol->GetId().Equals(aId)) {
+      aFound = true;
       return currCol;
     }
   }
+  aFound = false;
   return nullptr;
+}
+
+nsTreeColumn*
+nsTreeColumns::GetNamedColumn(const nsAString& aId)
+{
+  bool dummy;
+  return NamedGetter(aId, dummy);
 }
 
 NS_IMETHODIMP
@@ -516,22 +571,40 @@ nsTreeColumns::GetNamedColumn(const nsAString& aId, nsITreeColumn** _retval)
   return NS_OK;
 }
 
-nsITreeColumn*
-nsTreeColumns::GetColumnAt(int32_t aIndex)
+void
+nsTreeColumns::GetSupportedNames(nsTArray<nsString>& aNames)
+{
+  for (nsTreeColumn* currCol = mFirstColumn; currCol; currCol = currCol->GetNext()) {
+    aNames.AppendElement(currCol->GetId());
+  }
+}
+
+
+nsTreeColumn*
+nsTreeColumns::IndexedGetter(uint32_t aIndex, bool& aFound)
 {
   EnsureColumns();
   for (nsTreeColumn* currCol = mFirstColumn; currCol; currCol = currCol->GetNext()) {
-    if (currCol->GetIndex() == aIndex) {
+    if (currCol->GetIndex() == static_cast<int32_t>(aIndex)) {
+      aFound = true;
       return currCol;
     }
   }
+  aFound = false;
   return nullptr;
+}
+
+nsTreeColumn*
+nsTreeColumns::GetColumnAt(uint32_t aIndex)
+{
+  bool dummy;
+  return IndexedGetter(aIndex, dummy);
 }
 
 NS_IMETHODIMP
 nsTreeColumns::GetColumnAt(int32_t aIndex, nsITreeColumn** _retval)
 {
-  NS_IF_ADDREF(*_retval = GetColumnAt(aIndex));
+  NS_IF_ADDREF(*_retval = GetColumnAt(static_cast<uint32_t>(aIndex)));
   return NS_OK;
 }
 

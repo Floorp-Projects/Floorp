@@ -28,22 +28,18 @@ MediaStreamList::~MediaStreamList()
 }
 
 JSObject*
-MediaStreamList::WrapObject(JSContext* cx, ErrorResult& error)
+MediaStreamList::WrapObject(JSContext* cx, bool* aTookOwnership)
 {
 #ifdef MOZILLA_INTERNAL_API
   nsCOMPtr<nsIScriptGlobalObject> global =
     do_QueryInterface(mPeerConnection->GetWindow());
   JSObject* scope = global->GetGlobalJSObject();
   if (!scope) {
-    error.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
 
   JSAutoCompartment ac(cx, scope);
-  JSObject* obj = MediaStreamListBinding::Wrap(cx, scope, this);
-  if (!obj) {
-    error.Throw(NS_ERROR_FAILURE);
-  }
+  JSObject* obj = MediaStreamListBinding::Wrap(cx, scope, this, aTookOwnership);
   return obj;
 #else
   return nullptr;

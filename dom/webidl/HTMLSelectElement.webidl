@@ -30,9 +30,9 @@ interface HTMLSelectElement : HTMLElement {
   readonly attribute HTMLOptionsCollection options;
   [SetterThrows, Pure]
            attribute unsigned long length;
-  getter Element item(unsigned long index);
+  getter Element? item(unsigned long index);
   [Throws]
-  object namedItem(DOMString name);
+  object? namedItem(DOMString name);
   [Throws]
   void add((HTMLOptionElement or HTMLOptGroupElement) element, optional (HTMLElement or long)? before = null);
   void remove(long index);

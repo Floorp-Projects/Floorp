@@ -116,6 +116,20 @@
   -moz-image-region: rect(0px, 48px, 16px, 32px);
 }
 
+#toolbox-tab-options {
+  list-style-image: url("chrome://browser/skin/devtools/option-icon.png");
+  -moz-image-region: rect(0px 16px 16px 0px);
+  border-left: 1px solid hsla(206,37%,4%,.45);
+}
+
+#toolbox-tab-options[checked=true] {
+  -moz-image-region: rect(0px 32px 16px 16px);
+}
+
+#toolbox-tab-options > image {
+  opacity: 1;
+  -moz-margin-start: 0;
+}
 
 /* Tabs */
 
@@ -134,7 +148,6 @@
 
 #toolbox-tabs {
   margin: 0;
-  border-left: 1px solid hsla(206,37%,4%,.45);
 }
 
 .devtools-tab {
@@ -210,4 +223,29 @@
                      repeat-x;
   background-position: top right, top left, left, right;
   box-shadow: 1px -1px 0 hsla(206,37%,4%,.2) inset;
+}
+
+#options-panel {
+  background-image: url("chrome://browser/skin/newtab/noise.png");
+}
+
+.options-vertical-pane {
+  margin: 15px;
+  width: calc(50% - 30px);
+  min-width: 400px;
+  -moz-padding-start: 5px;
+}
+
+.options-vertical-pane > label {
+  padding: 5px 0;
+  font-size: 1.4rem;
+}
+
+.options-groupbox {
+  -moz-margin-start: 15px;
+  padding: 4px;
+}
+
+.options-groupbox > * {
+  padding: 2px;
 }

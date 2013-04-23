@@ -39,7 +39,7 @@ interface nsIDOMTCPSocket : nsISupports
    *
    *        useSSL: true to create an SSL socket. Defaults to false.
    *
-   *        binaryType: "arraybuffer" to use UInt8 array
+   *        binaryType: "arraybuffer" to use ArrayBuffer
    *          instances in the ondata callback and as the argument
    *          to send. Defaults to "string", to use JavaScript strings.
    *
@@ -89,10 +89,14 @@ interface nsIDOMTCPSocket : nsISupports
    *
    * @param data The data to write to the socket. If
    *             binaryType: "arraybuffer" was passed in the options
-   *             object, then this object should be an Uint8Array instance.
+   *             object, then this object should be an ArrayBuffer instance.
    *             If binaryType: "string" was passed, or if no binaryType
    *             option was specified, then this object should be an
    *             ordinary JavaScript string.
+   * @param byteOffset The offset within the data from which to begin writing.
+   *                   Has no effect on non-ArrayBuffer data.
+   * @param byteLength The number of bytes to write. Has no effect on
+   *                   non-ArrayBuffer data.
    *
    * @return Send returns true or false as a hint to the caller that
    *         they may either continue sending more data immediately, or
@@ -105,7 +109,7 @@ interface nsIDOMTCPSocket : nsISupports
    *         handler has been called before buffering more data by more
    *         calls to send.
    */
-  boolean send(in jsval data);
+  boolean send(in jsval data, [optional] in unsigned long byteOffset, [optional] in unsigned long byteLength);
 
   /**
    * The readyState attribute indicates which state the socket is currently
@@ -143,7 +147,7 @@ interface nsIDOMTCPSocket : nsISupports
    * The ondata handler will be called repeatedly and asynchronously after
    * onopen has been called, every time some data was available from the server
    * and was read. If binaryType: "arraybuffer" was passed to open, the data
-   * attribute of the event object will be an Uint8Array. If not, it will be a
+   * attribute of the event object will be an ArrayBuffer. If not, it will be a
    * normal JavaScript string.
    *
    * At any time, the client may choose to pause reading and receiving ondata
@@ -188,7 +192,7 @@ interface nsITCPSocketInternal : nsISupports {
   // Trigger the callback for |type| and provide a string argument
   void callListenerData(in DOMString type, in DOMString data);
 
-  // Trigger the callback for |type| and provide a Uint8Array argument
+  // Trigger the callback for |type| and provide an ArrayBuffer argument
   void callListenerArrayBuffer(in DOMString type, in jsval data);
 
   // Trigger the callback for |type| with no argument
@@ -226,7 +230,7 @@ interface nsITCPSocketEvent : nsISupports {
   /**
    * The data related to this event, if any. In the ondata callback,
    * data will be the bytes read from the network; if the binaryType
-   * of the socket was "arraybuffer", this value will be of type Uint8Array;
+   * of the socket was "arraybuffer", this value will be of type ArrayBuffer;
    * otherwise, it will be a normal JavaScript string.
    *
    * In the onerror callback, data will be a string with a description

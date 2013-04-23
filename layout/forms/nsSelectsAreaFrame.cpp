@@ -76,7 +76,7 @@ public:
   }
   virtual nsDisplayItem* WrapItem(nsDisplayListBuilder* aBuilder,
                                   nsDisplayItem* aItem) {
-    return new (aBuilder) nsDisplayOptionEventGrabber(aBuilder, aItem->GetUnderlyingFrame(), aItem);
+    return new (aBuilder) nsDisplayOptionEventGrabber(aBuilder, aItem->Frame(), aItem);
   }
 };
 
@@ -108,13 +108,13 @@ public:
     *aSnap = false;
     // override bounds because the list item focus ring may extend outside
     // the nsSelectsAreaFrame
-    nsListControlFrame* listFrame = GetEnclosingListFrame(GetUnderlyingFrame());
+    nsListControlFrame* listFrame = GetEnclosingListFrame(Frame());
     return listFrame->GetVisualOverflowRectRelativeToSelf() +
            listFrame->GetOffsetToCrossDoc(ReferenceFrame());
   }
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsRenderingContext* aCtx) {
-    nsListControlFrame* listFrame = GetEnclosingListFrame(GetUnderlyingFrame());
+    nsListControlFrame* listFrame = GetEnclosingListFrame(Frame());
     // listFrame must be non-null or we wouldn't get called.
     listFrame->PaintFocus(*aCtx, aBuilder->ToReferenceFrame(listFrame));
   }

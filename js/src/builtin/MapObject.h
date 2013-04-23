@@ -86,8 +86,8 @@ class MapObject : public JSObject {
     static JSObject *initClass(JSContext *cx, JSObject *obj);
     static Class class_;
   private:
-    static JSPropertySpec properties[];
-    static JSFunctionSpec methods[];
+    static const JSPropertySpec properties[];
+    static const JSFunctionSpec methods[];
     ValueMap *getData() { return static_cast<ValueMap *>(getPrivate()); }
     static ValueMap & extract(CallReceiver call);
     static void mark(JSTracer *trc, RawObject obj);
@@ -123,8 +123,8 @@ class SetObject : public JSObject {
     static JSObject *initClass(JSContext *cx, JSObject *obj);
     static Class class_;
   private:
-    static JSPropertySpec properties[];
-    static JSFunctionSpec methods[];
+    static const JSPropertySpec properties[];
+    static const JSFunctionSpec methods[];
     ValueSet *getData() { return static_cast<ValueSet *>(getPrivate()); }
     static ValueSet & extract(CallReceiver call);
     static void mark(JSTracer *trc, RawObject obj);

@@ -353,7 +353,7 @@ str_uneval(JSContext *cx, unsigned argc, Value *vp)
 }
 #endif
 
-static JSFunctionSpec string_functions[] = {
+static const JSFunctionSpec string_functions[] = {
     JS_FN(js_escape_str,             str_escape,                1,0),
     JS_FN(js_unescape_str,           str_unescape,              1,0),
 #if JS_HAS_UNEVAL
@@ -3356,7 +3356,7 @@ str_sub(JSContext *cx, unsigned argc, Value *vp)
 }
 #endif /* JS_HAS_STR_HTML_HELPERS */
 
-static JSFunctionSpec string_methods[] = {
+static const JSFunctionSpec string_methods[] = {
 #if JS_HAS_TOSOURCE
     JS_FN("quote",             str_quote,             0,JSFUN_GENERIC_NATIVE),
     JS_FN(js_toSource_str,     str_toSource,          0,0),
@@ -3482,7 +3482,7 @@ js::str_fromCharCode(JSContext *cx, unsigned argc, Value *vp)
     return JS_TRUE;
 }
 
-static JSFunctionSpec string_static_methods[] = {
+static const JSFunctionSpec string_static_methods[] = {
     JS_FN("fromCharCode", js::str_fromCharCode, 1, 0),
 
     // This must be at the end because of bug 853075: functions listed after

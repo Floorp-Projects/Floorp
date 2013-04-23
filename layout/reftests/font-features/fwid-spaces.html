@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html lang="ja">
+<head>
+<title>Full-width variations of regular spaces</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+<style type="text/css">
+
+body {
+  margin: 5px;
+}
+
+#test, #test pre {
+  font: 150% Hiragino Kaku Gothic ProN, Meiryo, sans-serif;
+  -moz-font-feature-settings: "fwid" on;
+  -webkit-font-feature-settings: "fwid" on;
+  font-feature-settings: "fwid" on;
+}
+
+#test pre span {
+  background-color: red;
+}
+
+pre {
+  margin: 0;
+  padding: 0;
+}
+</style>
+
+</head>
+<body>
+<p>Rows should all be the same length:</p>
+<div id="test">
+<pre><span> a b c A B C </span></pre>
+<pre><span>&#x3000;a&#x3000;b&#x3000;c&#x3000;A&#x3000;B&#x3000;C&#x3000;</span></pre>
+<pre><span>ba bA bb bB c</span></pre>
+<pre><span>ba&#x3000;bA&#x3000;bb&#x3000;bB&#x3000;c</span></pre>
+</div>
+</body>
+</html>

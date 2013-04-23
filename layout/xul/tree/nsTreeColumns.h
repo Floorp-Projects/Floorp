@@ -12,12 +12,19 @@
 #include "nsCoord.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsAutoPtr.h"
+#include "nsWrapperCache.h"
 
 class nsTreeBodyFrame;
 class nsTreeColumns;
 class nsIFrame;
 class nsIContent;
 struct nsRect;
+
+namespace mozilla {
+namespace dom {
+class Element;
+} // namespace dom
+} // namespace mozilla
 
 #define NS_TREECOLUMN_IMPL_CID                       \
 { /* 02cd1963-4b5d-4a6c-9223-814d3ade93a3 */         \
@@ -115,33 +122,45 @@ private:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsTreeColumn, NS_TREECOLUMN_IMPL_CID)
 
-class nsTreeColumns MOZ_FINAL : public nsITreeColumns {
+class nsTreeColumns MOZ_FINAL : public nsITreeColumns
+                              , public nsWrapperCache
+{
 public:
   nsTreeColumns(nsTreeBodyFrame* aTree);
   ~nsTreeColumns();
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsTreeColumns)
   NS_DECL_NSITREECOLUMNS
 
-  nsITreeColumn* GetColumnAt(int32_t aIndex);
-  nsITreeColumn* GetNamedColumn(const nsAString& aId);
+  nsIContent* GetParentObject() const;
+  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
 
-  static nsTreeColumns* FromSupports(nsISupports* aSupports)
+  // WebIDL
+  nsITreeBoxObject* GetTree() const;
+  uint32_t Count();
+  uint32_t Length()
   {
-#ifdef DEBUG
-    {
-      nsCOMPtr<nsITreeColumns> columns_qi = do_QueryInterface(aSupports);
-
-      // If this assertion fires the QI implementation for the object in
-      // question doesn't use the nsITreeColumns pointer as the nsISupports
-      // pointer. That must be fixed, or we'll crash...
-      NS_ASSERTION(columns_qi == static_cast<nsITreeColumns*>(aSupports),
-                   "Uh, fix QI!");
-    }
-#endif
-
-    return static_cast<nsTreeColumns*>(aSupports);
+    return Count();
   }
+
+  nsTreeColumn* GetFirstColumn() { EnsureColumns(); return mFirstColumn; }
+  nsTreeColumn* GetLastColumn();
+
+  nsTreeColumn* GetPrimaryColumn();
+  nsTreeColumn* GetSortedColumn();
+  nsTreeColumn* GetKeyColumn();
+
+  nsTreeColumn* GetColumnFor(mozilla::dom::Element* aElement);
+
+  nsTreeColumn* IndexedGetter(uint32_t aIndex, bool& aFound);
+  nsTreeColumn* GetColumnAt(uint32_t aIndex);
+  nsTreeColumn* NamedGetter(const nsAString& aId, bool& aFound);
+  nsTreeColumn* GetNamedColumn(const nsAString& aId);
+  void GetSupportedNames(nsTArray<nsString>& aNames);
+
+  // Uses XPCOM InvalidateColumns().
+  // Uses XPCOM RestoreNaturalOrder().
 
   friend class nsTreeBodyFrame;
 protected:
@@ -149,9 +168,6 @@ protected:
 
   // Builds our cache of column info.
   void EnsureColumns();
-
-  nsTreeColumn* GetFirstColumn() { EnsureColumns(); return mFirstColumn; }
-  nsTreeColumn* GetPrimaryColumn();
 
 private:
   nsTreeBodyFrame* mTree;

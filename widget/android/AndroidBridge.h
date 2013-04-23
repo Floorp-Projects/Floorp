@@ -124,6 +124,7 @@ public:
                 __android_log_print(ANDROID_LOG_INFO, "AndroidBridge",
                                     "###!!!!!!! Something's grabbing the JNIEnv from the wrong thread! (thr %p should be %p)",
                                     (void*)pthread_self(), (void*)sBridge->mThread);
+                MOZ_ASSERT(false, "###!!!!!!! Something's grabbing the JNIEnv from the wrong thread!");
                 return nullptr;
             }
             return sBridge->mJNIEnv;
@@ -131,7 +132,7 @@ public:
         }
         return nullptr;
     }
-    
+
     static jclass GetGeckoAppShellClass() {
         return sBridge->mGeckoAppShellClass;
     }

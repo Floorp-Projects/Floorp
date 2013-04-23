@@ -1123,7 +1123,7 @@ private:
 //
 // Note that most accessors are inlined.
 
-class XPCCallContext : public nsAXPCNativeCallContext
+class MOZ_STACK_CLASS XPCCallContext : public nsAXPCNativeCallContext
 {
 public:
     NS_IMETHOD GetCallee(nsISupports **aResult);

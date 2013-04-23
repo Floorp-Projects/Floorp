@@ -41,6 +41,7 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class GeckoPreferences
     extends PreferenceActivity
@@ -52,6 +53,7 @@ public class GeckoPreferences
     private PreferenceScreen mPreferenceScreen;
     private static boolean sIsCharEncodingEnabled = false;
     private static final String NON_PREF_PREFIX = "android.not_a_preference.";
+    private boolean mInitialized = false;
 
     // These match keys in resources/xml/preferences.xml.in.
     private static String PREFS_ANNOUNCEMENTS_ENABLED = NON_PREF_PREFIX + "privacy.announcements.enabled";
@@ -66,38 +68,36 @@ public class GeckoPreferences
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        addPreferencesFromResource(R.xml.preferences);
+
+        // If this is a smaller screen
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB || !onIsMultiPane()) {
+            addPreferencesFromResource(R.xml.preferences_general);
+            addPreferencesFromResource(R.xml.preferences_content);
+            addPreferencesFromResource(R.xml.preferences_privacy);
+        }
+
         registerEventListener("Sanitize:Finished");
 
         if (Build.VERSION.SDK_INT >= 14)
             getActionBar().setHomeButtonEnabled(true);
+    }
 
-        mPreferenceScreen = getPreferenceScreen();
-        if (!AppConstants.MOZ_UPDATER) {
-            ((PreferenceGroup) mPreferenceScreen.findPreference(PREFS_CATEGORY_GENERAL))
-                    .removePreference(findPreference(PREFS_UPDATER_AUTODOWNLOAD));
-        }
-
-        Preference telemetryPref = findPreference(PREFS_TELEMETRY_ENABLED);
-        if (AppConstants.MOZ_TELEMETRY_REPORTING) {
-            if (AppConstants.MOZ_TELEMETRY_ON_BY_DEFAULT) {
-                telemetryPref.setKey(PREFS_TELEMETRY_ENABLED_PRERELEASE);
-            }
-        } else {
-            ((PreferenceGroup) mPreferenceScreen.findPreference(PREFS_CATEGORY_PRIVACY))
-                    .removePreference(telemetryPref);
-        }
-
+    @Override
+    public void onBuildHeaders(List<Header> target) {
+        if (onIsMultiPane())
+            loadHeadersFromResource(R.xml.preference_headers, target);
     }
 
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
-        if (!hasFocus)
+        if (!hasFocus || mInitialized)
             return;
 
-        mPreferencesList = new ArrayList<String>();
-        initGroups(mPreferenceScreen);
-        initValues();
+        mInitialized = true;
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB || !onIsMultiPane()) {
+            PreferenceScreen screen = getPreferenceScreen();
+            setupPreferences(screen);
+        }
     }
 
     @Override
@@ -143,14 +143,37 @@ public class GeckoPreferences
         }
     }
 
-    private void initGroups(PreferenceGroup preferences) {
-        final int count = preferences.getPreferenceCount();
-        for (int i = 0; i < count; i++) {
+    public void setupPreferences(PreferenceGroup prefs) {
+        ArrayList<String> list = new ArrayList<String>();
+        setupPreferences(prefs, list);
+        getGeckoPreferences(prefs, list);
+    }
+
+    private void setupPreferences(PreferenceGroup preferences, ArrayList<String> prefs) {
+        for (int i = 0; i < preferences.getPreferenceCount(); i++) {
             Preference pref = preferences.getPreference(i);
-            if (pref instanceof PreferenceGroup)
-                initGroups((PreferenceGroup)pref);
-            else {
+            if (pref instanceof PreferenceGroup) {
+                setupPreferences((PreferenceGroup)pref, prefs);
+            } else {
+                String key = pref.getKey();
+
                 pref.setOnPreferenceChangeListener(this);
+                if (PREFS_UPDATER_AUTODOWNLOAD.equals(key) && !AppConstants.MOZ_UPDATER) {
+                    preferences.removePreference(pref);
+                    i--;
+                    continue;
+                } else if (PREFS_TELEMETRY_ENABLED.equals(key)) {
+                    if (AppConstants.MOZ_TELEMETRY_REPORTING) {
+                        if (AppConstants.MOZ_TELEMETRY_ON_BY_DEFAULT) {
+                            pref.setKey(PREFS_TELEMETRY_ENABLED_PRERELEASE);
+                            key = PREFS_TELEMETRY_ENABLED_PRERELEASE;
+                        }
+                    } else {
+                        preferences.removePreference(pref);
+                        i--;
+                        continue;
+                    }
+                }
 
                 // Some Preference UI elements are not actually preferences,
                 // but they require a key to work correctly. For example,
@@ -158,9 +181,8 @@ public class GeckoPreferences
                 // saved when the orientation changes. It uses the
                 // "android.not_a_preference.privacy.clear" key - which doesn't
                 // exist in Gecko - to satisfy this requirement.
-                String key = pref.getKey();
                 if (key != null && !key.startsWith(NON_PREF_PREFIX)) {
-                    mPreferencesList.add(pref.getKey());
+                    prefs.add(key);
                 }
             }
         }
@@ -246,16 +268,16 @@ public class GeckoPreferences
     @Override
     public boolean onPreferenceChange(Preference preference, Object newValue) {
         String prefName = preference.getKey();
-        if (prefName != null && prefName.equals(PREFS_MP_ENABLED)) {
+        if (PREFS_MP_ENABLED.equals(prefName)) {
             showDialog((Boolean) newValue ? DIALOG_CREATE_MASTER_PASSWORD : DIALOG_REMOVE_MASTER_PASSWORD);
             return false;
-        } else if (prefName != null && prefName.equals(PREFS_MENU_CHAR_ENCODING)) {
+        } else if (PREFS_MENU_CHAR_ENCODING.equals(prefName)) {
             setCharEncodingState(((String) newValue).equals("true"));
-        } else if (prefName != null && prefName.equals(PREFS_ANNOUNCEMENTS_ENABLED)) {
+        } else if (PREFS_ANNOUNCEMENTS_ENABLED.equals(prefName)) {
             // Send a broadcast intent to the product announcements service, either to start or
             // to stop the repeated background checks.
             broadcastAnnouncementsPref(GeckoApp.mAppContext, ((Boolean) newValue).booleanValue());
-        } else if (prefName != null && prefName.equals(PREFS_UPDATER_AUTODOWNLOAD)) {
+        } else if (PREFS_UPDATER_AUTODOWNLOAD.equals(prefName)) {
             org.mozilla.gecko.updater.UpdateServiceHelper.registerForUpdates(GeckoApp.mAppContext, (String)newValue);
         }
 
@@ -434,14 +456,16 @@ public class GeckoPreferences
     }
 
     // Initialize preferences by requesting the preference values from Gecko
-    private void initValues() {
-        JSONArray jsonPrefs = new JSONArray(mPreferencesList);
+    private void getGeckoPreferences(final PreferenceGroup screen, ArrayList<String> prefs) {
+        JSONArray jsonPrefs = new JSONArray(prefs);
+
         PrefsHelper.getPrefs(jsonPrefs, new PrefsHelper.PrefHandlerBase() {
             private Preference getField(String prefName) {
-                return (mPreferenceScreen == null ? null : mPreferenceScreen.findPreference(prefName));
+                return screen.findPreference(prefName);
             }
 
-            @Override public void prefValue(String prefName, final boolean value) {
+            @Override
+            public void prefValue(String prefName, final boolean value) {
                 final Preference pref = getField(prefName);
                 if (pref instanceof CheckBoxPreference) {
                     ThreadUtils.postToUiThread(new Runnable() {
@@ -454,7 +478,8 @@ public class GeckoPreferences
                 }
             }
 
-            @Override public void prefValue(String prefName, final String value) {
+            @Override
+            public void prefValue(String prefName, final String value) {
                 final Preference pref = getField(prefName);
                 if (pref instanceof EditTextPreference) {
                     ThreadUtils.postToUiThread(new Runnable() {
@@ -486,12 +511,13 @@ public class GeckoPreferences
                 }
             }
 
-            @Override public void finish() {
+            @Override
+            public void finish() {
                 // enable all preferences once we have them from gecko
                 ThreadUtils.postToUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        mPreferenceScreen.setEnabled(true);
+                        screen.setEnabled(true);
                     }
                 });
             }

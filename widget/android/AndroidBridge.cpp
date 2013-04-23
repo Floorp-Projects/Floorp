@@ -2311,7 +2311,8 @@ AndroidBridge::RegisterSurfaceTextureFrameListener(jobject surfaceTexture, int i
 void
 AndroidBridge::UnregisterSurfaceTextureFrameListener(jobject surfaceTexture)
 {
-    JNIEnv* env = GetJNIEnv();
+    // This function is called on a worker thread when the Flash plugin is unloaded.
+    JNIEnv* env = GetJNIForThread();
     if (!env)
         return;
 

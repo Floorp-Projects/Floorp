@@ -5,7 +5,6 @@
 #include "nsCOMPtr.h"
 #include "nsReadableUtils.h"
 #include "nsComboboxControlFrame.h"
-#include "nsIDOMEventTarget.h"
 #include "nsFocusManager.h"
 #include "nsFormControlFrame.h"
 #include "nsFrameManager.h"

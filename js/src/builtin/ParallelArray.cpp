@@ -26,7 +26,7 @@ using namespace js;
 
 FixedHeapPtr<PropertyName> ParallelArrayObject::ctorNames[NumCtors];
 
-JSFunctionSpec ParallelArrayObject::methods[] = {
+const JSFunctionSpec ParallelArrayObject::methods[] = {
     { "map",       JSOP_NULLWRAPPER, 2, 0, "ParallelArrayMap"       },
     { "reduce",    JSOP_NULLWRAPPER, 2, 0, "ParallelArrayReduce"    },
     { "scan",      JSOP_NULLWRAPPER, 2, 0, "ParallelArrayScan"      },

@@ -12,9 +12,7 @@ include $(DEPTH)/config/autoconf.mk
 LIBRARY_NAME     = dom_power_s
 LIBXUL_LIBRARY   = 1
 FORCE_STATIC_LIB = 1
-ifndef _MSC_VER
 FAIL_ON_WARNINGS := 1
-endif # !_MSC_VER
 
 include $(topsrcdir)/dom/dom-config.mk
 

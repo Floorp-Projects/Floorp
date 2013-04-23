@@ -21,36 +21,32 @@ class AnalyserNodeEngine : public AudioNodeEngine
   class TransferBuffer : public nsRunnable
   {
   public:
-    TransferBuffer(AnalyserNode* aNode,
+    TransferBuffer(AudioNodeStream* aStream,
                    const AudioChunk& aChunk)
-      : mNode(aNode)
+      : mStream(aStream)
       , mChunk(aChunk)
     {
     }
 
     NS_IMETHOD Run()
     {
-      mNode->AppendChunk(mChunk);
+      nsRefPtr<AnalyserNode> node = static_cast<AnalyserNode*>(mStream->Engine()->Node());
+      if (node) {
+        node->AppendChunk(mChunk);
+      }
       return NS_OK;
     }
 
   private:
-    AnalyserNode* mNode;
+    nsRefPtr<AudioNodeStream> mStream;
     AudioChunk mChunk;
   };
 
 public:
-  explicit AnalyserNodeEngine(AnalyserNode& aNode)
-    : mMutex("AnalyserNodeEngine")
-    , mNode(&aNode)
+  explicit AnalyserNodeEngine(AnalyserNode* aNode)
+    : AudioNodeEngine(aNode)
   {
     MOZ_ASSERT(NS_IsMainThread());
-  }
-
-  void DisconnectFromNode()
-  {
-    MutexAutoLock lock(mMutex);
-    mNode = nullptr;
   }
 
   virtual void ProduceAudioBlock(AudioNodeStream* aStream,
@@ -60,17 +56,12 @@ public:
   {
     *aOutput = aInput;
 
-    MutexAutoLock lock(mMutex);
     if (mNode &&
         aInput.mChannelData.Length() > 0) {
-      nsRefPtr<TransferBuffer> transfer = new TransferBuffer(mNode, aInput);
+      nsRefPtr<TransferBuffer> transfer = new TransferBuffer(aStream, aInput);
       NS_DispatchToMainThread(transfer);
     }
   }
-
-private:
-  Mutex mMutex;
-  AnalyserNode* mNode; // weak pointer, cleared by AnalyserNode::DestroyMediaStream
 };
 
 AnalyserNode::AnalyserNode(AudioContext* aContext)
@@ -81,14 +72,9 @@ AnalyserNode::AnalyserNode(AudioContext* aContext)
   , mSmoothingTimeConstant(.8)
   , mWriteIndex(0)
 {
-  mStream = aContext->Graph()->CreateAudioNodeStream(new AnalyserNodeEngine(*this),
+  mStream = aContext->Graph()->CreateAudioNodeStream(new AnalyserNodeEngine(this),
                                                      MediaStreamGraph::INTERNAL_STREAM);
   AllocateBuffer();
-}
-
-AnalyserNode::~AnalyserNode()
-{
-  DestroyMediaStream();
 }
 
 JSObject*
@@ -250,17 +236,6 @@ AnalyserNode::ApplyBlackmanWindow(float* aBuffer, uint32_t aSize)
     double window = a0 - a1 * cos(2 * M_PI * x) + a2 * cos(4 * M_PI * x);
     aBuffer[i] *= window;
   }
-}
-
-void
-AnalyserNode::DestroyMediaStream()
-{
-  if (mStream) {
-    AudioNodeStream* ns = static_cast<AudioNodeStream*>(mStream.get());
-    AnalyserNodeEngine* engine = static_cast<AnalyserNodeEngine*>(ns->Engine());
-    engine->DisconnectFromNode();
-  }
-  AudioNode::DestroyMediaStream();
 }
 
 bool

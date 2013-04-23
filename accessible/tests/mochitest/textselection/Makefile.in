@@ -13,6 +13,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_A11Y_FILES = \
 		test_general.html \
+		test_userinput.html \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

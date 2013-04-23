@@ -3247,15 +3247,15 @@ gsmsdp_negotiate_codec (fsmdef_dcb_t *dcb_p, cc_sdp_t *sdp_p,
 
 
                 found_codec = TRUE;
-                if(media->num_payloads >= payload_types_count) {
-                    /* We maxed our allocated memory -- processing is done. */
-                    return codec;
-                }
 
                 /* Incrementing this number serves as a "commit" for the
                    payload_info. If we bail out of the loop before this
                    happens, then the collected information is abandoned. */
                 media->num_payloads++;
+                if(media->num_payloads >= payload_types_count) {
+                    /* We maxed our allocated memory -- processing is done. */
+                    return codec;
+                }
 
                 if(offer) {
                     /* If we are creating an answer, return after the first match.

@@ -11,6 +11,7 @@
 #include "mozilla/dom/HTMLOptionElement.h"
 #include "mozilla/dom/HTMLSelectElementBinding.h"
 #include "mozilla/Util.h"
+#include "base/compiler_specific.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsError.h"
 #include "nsEventDispatcher.h"
@@ -20,7 +21,6 @@
 #include "nsGUIEvent.h"
 #include "nsIComboboxControlFrame.h"
 #include "nsIDocument.h"
-#include "nsIDOMEventTarget.h"
 #include "nsIFormControlFrame.h"
 #include "nsIForm.h"
 #include "nsIFormProcessor.h"
@@ -104,7 +104,7 @@ SafeOptionListMutation::~SafeOptionListMutation()
 HTMLSelectElement::HTMLSelectElement(already_AddRefed<nsINodeInfo> aNodeInfo,
                                      FromParser aFromParser)
   : nsGenericHTMLFormElement(aNodeInfo),
-    mOptions(new HTMLOptionsCollection(this)),
+    ALLOW_THIS_IN_INITIALIZER_LIST(mOptions(new HTMLOptionsCollection(this))),
     mIsDoneAddingChildren(!aFromParser),
     mDisabledChanged(false),
     mMutating(false),

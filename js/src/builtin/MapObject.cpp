@@ -847,7 +847,7 @@ class js::MapIteratorObject : public JSObject
 {
   public:
     enum { TargetSlot, KindSlot, RangeSlot, SlotCount };
-    static JSFunctionSpec methods[];
+    static const JSFunctionSpec methods[];
     static MapIteratorObject *create(JSContext *cx, HandleObject mapobj, ValueMap *data,
                                      MapObject::IteratorKind kind);
     static void finalize(FreeOp *fop, RawObject obj);
@@ -881,7 +881,7 @@ Class js::MapIteratorClass = {
     MapIteratorObject::finalize
 };
 
-JSFunctionSpec MapIteratorObject::methods[] = {
+const JSFunctionSpec MapIteratorObject::methods[] = {
     JS_FN("next", next, 0, 0),
     JS_FS_END
 };
@@ -1026,12 +1026,12 @@ Class MapObject::class_ = {
     mark
 };
 
-JSPropertySpec MapObject::properties[] = {
+const JSPropertySpec MapObject::properties[] = {
     JS_PSG("size", size, 0),
     JS_PS_END
 };
 
-JSFunctionSpec MapObject::methods[] = {
+const JSFunctionSpec MapObject::methods[] = {
     JS_FN("get", get, 1, 0),
     JS_FN("has", has, 1, 0),
     JS_FN("set", set, 2, 0),
@@ -1046,7 +1046,7 @@ JSFunctionSpec MapObject::methods[] = {
 
 static JSObject *
 InitClass(JSContext *cx, Handle<GlobalObject*> global, Class *clasp, JSProtoKey key, Native construct,
-          JSPropertySpec *properties, JSFunctionSpec *methods)
+          const JSPropertySpec *properties, const JSFunctionSpec *methods)
 {
     Rooted<JSObject*> proto(cx, global->createBlankPrototype(cx, clasp));
     if (!proto)
@@ -1422,7 +1422,7 @@ class js::SetIteratorObject : public JSObject
 {
   public:
     enum { TargetSlot, RangeSlot, SlotCount };
-    static JSFunctionSpec methods[];
+    static const JSFunctionSpec methods[];
     static SetIteratorObject *create(JSContext *cx, HandleObject setobj, ValueSet *data);
     static void finalize(FreeOp *fop, RawObject obj);
 
@@ -1454,7 +1454,7 @@ Class js::SetIteratorClass = {
     SetIteratorObject::finalize
 };
 
-JSFunctionSpec SetIteratorObject::methods[] = {
+const JSFunctionSpec SetIteratorObject::methods[] = {
     JS_FN("next", next, 0, 0),
     JS_FS_END
 };
@@ -1569,12 +1569,12 @@ Class SetObject::class_ = {
     mark
 };
 
-JSPropertySpec SetObject::properties[] = {
+const JSPropertySpec SetObject::properties[] = {
     JS_PSG("size", size, 0),
     JS_PS_END
 };
 
-JSFunctionSpec SetObject::methods[] = {
+const JSFunctionSpec SetObject::methods[] = {
     JS_FN("has", has, 1, 0),
     JS_FN("add", add, 1, 0),
     JS_FN("delete", delete_, 1, 0),

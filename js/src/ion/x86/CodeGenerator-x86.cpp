@@ -575,3 +575,128 @@ ParallelGetPropertyIC::initializeAddCacheState(LInstruction *ins, AddCacheState 
     else
         addState->dispatchScratch = ToRegister(ins->toGetPropertyCacheT()->temp());
 }
+
+namespace js {
+namespace ion {
+
+class OutOfLineTruncate : public OutOfLineCodeBase<CodeGeneratorX86>
+{
+    LTruncateDToInt32 *ins_;
+
+  public:
+    OutOfLineTruncate(LTruncateDToInt32 *ins)
+      : ins_(ins)
+    { }
+
+    bool accept(CodeGeneratorX86 *codegen) {
+        return codegen->visitOutOfLineTruncate(this);
+    }
+    LTruncateDToInt32 *ins() const {
+        return ins_;
+    }
+};
+
+} // namespace ion
+} // namespace js
+
+bool
+CodeGeneratorX86::visitTruncateDToInt32(LTruncateDToInt32 *ins)
+{
+    FloatRegister input = ToFloatRegister(ins->input());
+    Register output = ToRegister(ins->output());
+
+    OutOfLineTruncate *ool = new OutOfLineTruncate(ins);
+    if (!addOutOfLineCode(ool))
+        return false;
+
+    masm.branchTruncateDouble(input, output, ool->entry());
+    masm.bind(ool->rejoin());
+    return true;
+}
+
+bool
+CodeGeneratorX86::visitOutOfLineTruncate(OutOfLineTruncate *ool)
+{
+    LTruncateDToInt32 *ins = ool->ins();
+    FloatRegister input = ToFloatRegister(ins->input());
+    Register output = ToRegister(ins->output());
+
+    Label fail;
+
+    if (Assembler::HasSSE3()) {
+        // Push double.
+        masm.subl(Imm32(sizeof(double)), esp);
+        masm.movsd(input, Operand(esp, 0));
+
+        static const uint32_t EXPONENT_MASK = 0x7ff00000;
+        static const uint32_t EXPONENT_SHIFT = MOZ_DOUBLE_EXPONENT_SHIFT - 32;
+        static const uint32_t TOO_BIG_EXPONENT = (MOZ_DOUBLE_EXPONENT_BIAS + 63) << EXPONENT_SHIFT;
+
+        // Check exponent to avoid fp exceptions.
+        Label failPopDouble;
+        masm.movl(Operand(esp, 4), output);
+        masm.and32(Imm32(EXPONENT_MASK), output);
+        masm.branch32(Assembler::GreaterThanOrEqual, output, Imm32(TOO_BIG_EXPONENT), &failPopDouble);
+
+        // Load double, perform 64-bit truncation.
+        masm.fld(Operand(esp, 0));
+        masm.fisttp(Operand(esp, 0));
+
+        // Load low word, pop double and jump back.
+        masm.movl(Operand(esp, 0), output);
+        masm.addl(Imm32(sizeof(double)), esp);
+        masm.jump(ool->rejoin());
+
+        masm.bind(&failPopDouble);
+        masm.addl(Imm32(sizeof(double)), esp);
+        masm.jump(&fail);
+    } else {
+        FloatRegister temp = ToFloatRegister(ins->tempFloat());
+
+        // Try to convert doubles representing integers within 2^32 of a signed
+        // integer, by adding/subtracting 2^32 and then trying to convert to int32.
+        // This has to be an exact conversion, as otherwise the truncation works
+        // incorrectly on the modified value.
+        masm.xorpd(ScratchFloatReg, ScratchFloatReg);
+        masm.ucomisd(input, ScratchFloatReg);
+        masm.j(Assembler::Parity, &fail);
+
+        {
+            Label positive;
+            masm.j(Assembler::Above, &positive);
+
+            static const double shiftNeg = 4294967296.0;
+            masm.loadStaticDouble(&shiftNeg, temp);
+            Label skip;
+            masm.jmp(&skip);
+
+            masm.bind(&positive);
+            static const double shiftPos = -4294967296.0;
+            masm.loadStaticDouble(&shiftPos, temp);
+            masm.bind(&skip);
+        }
+
+        masm.addsd(input, temp);
+        masm.cvttsd2si(temp, output);
+        masm.cvtsi2sd(output, ScratchFloatReg);
+
+        masm.ucomisd(temp, ScratchFloatReg);
+        masm.j(Assembler::Parity, &fail);
+        masm.j(Assembler::Equal, ool->rejoin());
+    }
+
+    masm.bind(&fail);
+    {
+        saveVolatile(output);
+
+        masm.setupUnalignedABICall(1, output);
+        masm.passABIArg(input);
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, js::ToInt32));
+        masm.storeCallResult(output);
+
+        restoreVolatile(output);
+    }
+
+    masm.jump(ool->rejoin());
+    return true;
+}

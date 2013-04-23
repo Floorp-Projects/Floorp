@@ -52,13 +52,6 @@ public class AppConstants {
     null;
 #endif
 
-    public static final boolean MOZ_PROFILING =
-#ifdef MOZ_PROFILING
-    true;
-#else
-    false;
-#endif
-
     public static final boolean MOZ_TELEMETRY_ON_BY_DEFAULT =
 #ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
     true;

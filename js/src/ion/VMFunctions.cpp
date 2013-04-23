@@ -517,7 +517,17 @@ OperatorInI(JSContext *cx, uint32_t index, HandleObject obj, JSBool *out)
 bool
 GetIntrinsicValue(JSContext *cx, HandlePropertyName name, MutableHandleValue rval)
 {
-    return cx->global()->getIntrinsicValue(cx, name, rval);
+    if (!cx->global()->getIntrinsicValue(cx, name, rval))
+        return false;
+
+    // This function is called when we try to compile a cold getintrinsic
+    // op. MCallGetIntrinsicValue has an AliasSet of None for optimization
+    // purposes, as its side effect is not observable from JS. We are
+    // guaranteed to bail out after this function, but because of its AliasSet,
+    // type info will not be reflowed. Manually monitor here.
+    types::TypeScript::Monitor(cx, rval);
+
+    return true;
 }
 
 bool

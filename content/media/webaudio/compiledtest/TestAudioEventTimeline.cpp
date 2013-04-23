@@ -213,6 +213,8 @@ void TestEventRemoval()
   is(timeline.GetEventCount(), 3u, "Should successfully delete one event");
   timeline.CancelScheduledValues(0.12);
   is(timeline.GetEventCount(), 1u, "Should successfully delete two events");
+  timeline.CancelAllEvents();
+  ok(timeline.HasSimpleValue(), "No event should remain scheduled");
 }
 
 void TestBeforeFirstEventSetValue()

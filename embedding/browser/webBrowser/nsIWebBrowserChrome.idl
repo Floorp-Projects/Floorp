@@ -18,7 +18,6 @@ interface nsIDocShellTreeItem;
 interface nsIWebBrowserChrome : nsISupports
 {
     const unsigned long STATUS_SCRIPT         = 0x00000001;
-    const unsigned long STATUS_SCRIPT_DEFAULT = 0x00000002;
     const unsigned long STATUS_LINK           = 0x00000003;
 
     /**

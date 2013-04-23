@@ -214,12 +214,6 @@ class MacroAssemblerX86Shared : public Assembler
         ucomisd(ScratchFloatReg, reg);
         return truthy ? NonZero : Zero;
     }
-    void branchTruncateDouble(const FloatRegister &src, const Register &dest, Label *fail) {
-        JS_STATIC_ASSERT(INT_MIN == int(0x80000000));
-        cvttsd2si(src, dest);
-        cmpl(dest, Imm32(INT_MIN));
-        j(Assembler::Equal, fail);
-    }
     void load8ZeroExtend(const Address &src, const Register &dest) {
         movzbl(Operand(src), dest);
     }

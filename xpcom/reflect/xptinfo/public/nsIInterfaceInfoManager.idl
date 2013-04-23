@@ -12,7 +12,7 @@
 #include "nsISimpleEnumerator.idl"
 
 /* this is NOT intended to be scriptable */
-[uuid(1d53d8d9-1d92-428f-b5cc-198b55e897d7)]
+[uuid(8B161900-BE2B-11d2-9831-006008962422)]
 interface nsIInterfaceInfoManager : nsISupports
 {
     nsIInterfaceInfo getInfoForIID(in nsIIDPtr iid);
@@ -20,6 +20,8 @@ interface nsIInterfaceInfoManager : nsISupports
 
     nsIIDPtr getIIDForName(in string name);
     string   getNameForIID(in nsIIDPtr iid);
+
+    nsIEnumerator enumerateInterfaces();
 
     void autoRegisterInterfaces();
 

@@ -1418,7 +1418,7 @@ TabChild::DispatchMessageManagerMessage(const nsAString& aMessageName,
     // content manipulate the frame state.
     nsRefPtr<nsFrameMessageManager> mm =
       static_cast<nsFrameMessageManager*>(mTabChildGlobal->mMessageManager.get());
-    mm->ReceiveMessage(static_cast<nsIDOMEventTarget*>(mTabChildGlobal),
+    mm->ReceiveMessage(static_cast<EventTarget*>(mTabChildGlobal),
                        aMessageName, false, &cloneData, nullptr, nullptr);
 }
 
@@ -1910,11 +1910,10 @@ TabChild::RecvActivateFrameEvent(const nsString& aType, const bool& capture)
 {
   nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(mWebNav);
   NS_ENSURE_TRUE(window, true);
-  nsCOMPtr<nsIDOMEventTarget> chromeHandler =
+  nsCOMPtr<EventTarget> chromeHandler =
     do_QueryInterface(window->GetChromeEventHandler());
   NS_ENSURE_TRUE(chromeHandler, true);
   nsRefPtr<ContentListener> listener = new ContentListener(this);
-  NS_ENSURE_TRUE(listener, true);
   chromeHandler->AddEventListener(aType, listener, capture);
   return true;
 }
@@ -1957,7 +1956,7 @@ TabChild::RecvAsyncMessage(const nsString& aMessage,
     StructuredCloneData cloneData = UnpackClonedMessageDataForChild(aData);
     nsRefPtr<nsFrameMessageManager> mm =
       static_cast<nsFrameMessageManager*>(mTabChildGlobal->mMessageManager.get());
-    mm->ReceiveMessage(static_cast<nsIDOMEventTarget*>(mTabChildGlobal),
+    mm->ReceiveMessage(static_cast<EventTarget*>(mTabChildGlobal),
                        aMessage, false, &cloneData, nullptr, nullptr);
   }
   return true;
@@ -2048,16 +2047,14 @@ TabChild::InitTabChildGlobal(FrameScriptLoading aScriptLoading)
   if (!mCx && !mTabChildGlobal) {
     nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(mWebNav);
     NS_ENSURE_TRUE(window, false);
-    nsCOMPtr<nsIDOMEventTarget> chromeHandler =
+    nsCOMPtr<EventTarget> chromeHandler =
       do_QueryInterface(window->GetChromeEventHandler());
     NS_ENSURE_TRUE(chromeHandler, false);
 
     nsRefPtr<TabChildGlobal> scope = new TabChildGlobal(this);
-    NS_ENSURE_TRUE(scope, false);
-
     mTabChildGlobal = scope;
 
-    nsISupports* scopeSupports = NS_ISUPPORTS_CAST(nsIDOMEventTarget*, scope);
+    nsISupports* scopeSupports = NS_ISUPPORTS_CAST(EventTarget*, scope);
 
     NS_NAMED_LITERAL_CSTRING(globalId, "outOfProcessTabChildGlobal");
     NS_ENSURE_TRUE(InitTabChildGlobalInternal(scopeSupports, globalId), false);

@@ -42,6 +42,10 @@ public:
   // Returns true if the WMF backend is preffed on, and we're running on a
   // version of Windows which is likely to support WMF.
   static bool IsEnabled();
+
+  // Returns true if MP3 decoding is enabled on this system. We block
+  // MP3 playback on Windows 7 SP0, since it's crashy on that platform.
+  static bool IsMP3Supported();
 };
 
 } // namespace mozilla

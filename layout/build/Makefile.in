@@ -45,6 +45,7 @@ SHARED_LIBRARY_LIBS = \
 	$(DEPTH)/content/html/document/src/$(LIB_PREFIX)gkconhtmldoc_s.$(LIB_SUFFIX) \
 	$(DEPTH)/content/media/$(LIB_PREFIX)gkconmedia_s.$(LIB_SUFFIX) \
 	$(DEPTH)/content/media/webaudio/$(LIB_PREFIX)gkconwebaudio_s.$(LIB_SUFFIX) \
+	$(DEPTH)/content/media/webaudio/blink/$(LIB_PREFIX)gkconwebaudio_blink_s.$(LIB_SUFFIX) \
 	$(DEPTH)/content/media/webrtc/$(LIB_PREFIX)gkconwebrtc_s.$(LIB_SUFFIX) \
 	$(DEPTH)/content/xml/content/src/$(LIB_PREFIX)gkconxmlcon_s.$(LIB_SUFFIX) \
 	$(DEPTH)/content/xml/document/src/$(LIB_PREFIX)gkconxmldoc_s.$(LIB_SUFFIX) \

@@ -640,11 +640,19 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     Condition testPrimitive(Condition cond, const Register &tag);
 
     Condition testGCThing(Condition cond, const Address &address);
-    Condition testGCThing(Condition cond, const BaseIndex &address);
     Condition testMagic(Condition cond, const Address &address);
-    Condition testMagic(Condition cond, const BaseIndex &address);
     Condition testInt32(Condition cond, const Address &address);
     Condition testDouble(Condition cond, const Address &address);
+
+    Condition testUndefined(Condition cond, const BaseIndex &src);
+    Condition testNull(Condition cond, const BaseIndex &src);
+    Condition testBoolean(Condition cond, const BaseIndex &src);
+    Condition testString(Condition cond, const BaseIndex &src);
+    Condition testInt32(Condition cond, const BaseIndex &src);
+    Condition testObject(Condition cond, const BaseIndex &src);
+    Condition testDouble(Condition cond, const BaseIndex &src);
+    Condition testMagic(Condition cond, const BaseIndex &src);
+    Condition testGCThing(Condition cond, const BaseIndex &src);
 
     template <typename T>
     void branchTestGCThing(Condition cond, const T &t, Label *label) {
@@ -803,6 +811,17 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void branchTestMagic(Condition cond, const T &t, Label *label) {
         cond = testMagic(cond, t);
         ma_b(label, cond);
+    }
+    void branchTestMagicValue(Condition cond, const ValueOperand &val, JSWhyMagic why,
+                              Label *label) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        // Test for magic
+        Label notmagic;
+        Condition testCond = testMagic(cond, val);
+        ma_b(&notmagic, InvertCondition(testCond));
+        // Test magic value
+        branch32(cond, val.payloadReg(), Imm32(static_cast<int32_t>(why)), label);
+        bind(&notmagic);
     }
     template<typename T>
     void branchTestBooleanTruthy(bool b, const T & t, Label *label) {

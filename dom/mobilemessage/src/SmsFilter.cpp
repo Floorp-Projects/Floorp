@@ -234,7 +234,7 @@ NS_IMETHODIMP
 SmsFilter::GetRead(JSContext* aCx, JS::Value* aRead)
 {
   if (mData.read() == eReadState_Unknown) {
-    *aRead = JSVAL_VOID;
+    *aRead = JSVAL_NULL;
     return NS_OK;
   }
 
@@ -246,7 +246,7 @@ SmsFilter::GetRead(JSContext* aCx, JS::Value* aRead)
 NS_IMETHODIMP
 SmsFilter::SetRead(JSContext* aCx, const JS::Value& aRead)
 {
-  if (aRead == JSVAL_VOID) {
+  if (aRead == JSVAL_NULL) {
     mData.read() = eReadState_Unknown;
     return NS_OK;
   }
@@ -263,7 +263,7 @@ NS_IMETHODIMP
 SmsFilter::GetThreadId(JSContext* aCx, JS::Value* aThreadId)
 {
   if (!mData.threadId()) {
-    *aThreadId = JSVAL_VOID;
+    *aThreadId = JSVAL_NULL;
     return NS_OK;
   }
 
@@ -275,7 +275,7 @@ SmsFilter::GetThreadId(JSContext* aCx, JS::Value* aThreadId)
 NS_IMETHODIMP
 SmsFilter::SetThreadId(JSContext* aCx, const JS::Value& aThreadId)
 {
-  if (aThreadId == JSVAL_VOID) {
+  if (aThreadId == JSVAL_NULL) {
     mData.threadId() = 0;
     return NS_OK;
   }
