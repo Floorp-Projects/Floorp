@@ -148,7 +148,7 @@ if (typeof Components != "undefined") {
    */
   Object.defineProperty(OSError.prototype, "becauseClosed", {
     get: function becauseClosed() {
-      return this.winLastError == exports.OS.Constants.Win.INVALID_HANDLE_VALUE;
+      return this.winLastError == exports.OS.Constants.Win.ERROR_INVALID_HANDLE;
     }
   });
 
@@ -159,7 +159,7 @@ if (typeof Components != "undefined") {
   OSError.toMsg = function toMsg(error) {
     return {
       operation: error.operation,
-     winLastError: error.winLastError
+      winLastError: error.winLastError
     };
   };
 
@@ -336,7 +336,7 @@ if (typeof Components != "undefined") {
 
   // Special constructors that need to be defined on all threads
   OSError.closed = function closed(operation) {
-    return new OSError(operation, exports.OS.Constants.Win.INVALID_HANDLE_VALUE);
+    return new OSError(operation, exports.OS.Constants.Win.ERROR_INVALID_HANDLE);
   };
 
   OSError.exists = function exists(operation) {

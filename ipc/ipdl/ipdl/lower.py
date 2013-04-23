@@ -4653,9 +4653,15 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         actorvar = md.actorDecl().var()
         type = md.decl.type.constructedType()
         failif = StmtIf(cond)
-        failif.addifstmts(self.destroyActor(md, actorvar,
-                                            why=_DestroyReason.FailedConstructor)
-                          + [ StmtReturn(ExprLiteral.NULL) ])
+        
+        if self.side=='child':
+            # in the child process this should not fail
+            failif.addifstmt(_runtimeAbort('constructor for actor failed'))
+        else:
+            failif.addifstmts(self.destroyActor(md, actorvar,
+                              why=_DestroyReason.FailedConstructor))
+
+        failif.addifstmt(StmtReturn(ExprLiteral.NULL))
         return [ failif ]
 
     def genHelperCtor(self, md):

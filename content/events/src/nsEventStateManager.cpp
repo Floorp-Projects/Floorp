@@ -4561,7 +4561,9 @@ nsEventStateManager::CheckForAndDispatchClick(nsPresContext* aPresContext,
     nsCOMPtr<nsIPresShell> presShell = mPresContext->GetPresShell();
     if (presShell) {
       nsCOMPtr<nsIContent> mouseContent = GetEventTargetContent(aEvent);
-
+      if (!mouseContent && !mCurrentTarget) {
+        return NS_OK;
+      }
       ret = presShell->HandleEventWithTarget(&event, mCurrentTarget,
                                              mouseContent, aStatus);
       if (NS_SUCCEEDED(ret) && aEvent->clickCount == 2) {

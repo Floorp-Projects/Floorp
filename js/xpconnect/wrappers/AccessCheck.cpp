@@ -166,8 +166,11 @@ IsPermitted(const char *name, JSFlatString *prop, bool set)
 #undef W
 
 static bool
-IsFrameId(JSContext *cx, JSObject *obj, jsid id)
+IsFrameId(JSContext *cx, JSObject *objArg, jsid idArg)
 {
+    RootedObject obj(cx, objArg);
+    RootedId id(cx, idArg);
+
     obj = JS_ObjectToInnerObject(cx, obj);
     MOZ_ASSERT(!js::IsWrapper(obj));
     XPCWrappedNative *wn = IS_WN_WRAPPER(obj) ? XPCWrappedNative::Get(obj)
@@ -279,14 +282,16 @@ EnterAndThrow(JSContext *cx, JSObject *wrapper, const char *msg)
 }
 
 bool
-ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapper, jsid id, Wrapper::Action act)
+ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapperArg, jsid idArg, Wrapper::Action act)
 {
-    JSObject *wrappedObject = Wrapper::wrappedObject(wrapper);
+    RootedObject wrapper(cx, wrapperArg);
+    RootedId id(cx, idArg);
+    RootedObject wrappedObject(cx, Wrapper::wrappedObject(wrapper));
 
     if (act == Wrapper::CALL)
         return true;
 
-    jsid exposedPropsId = GetRTIdByIndex(cx, XPCJSRuntime::IDX_EXPOSEDPROPS);
+    RootedId exposedPropsId(cx, GetRTIdByIndex(cx, XPCJSRuntime::IDX_EXPOSEDPROPS));
 
     // We need to enter the wrappee's compartment to look at __exposedProps__,
     // but we want to be in the wrapper's compartment if we call Deny().
@@ -314,8 +319,8 @@ ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapper, jsid id, Wrapper:
     if (id == JSID_VOID)
         return true;
 
-    JS::Value exposedProps;
-    if (!JS_LookupPropertyById(cx, wrappedObject, exposedPropsId, &exposedProps))
+    RootedValue exposedProps(cx);
+    if (!JS_LookupPropertyById(cx, wrappedObject, exposedPropsId, exposedProps.address()))
         return false;
 
     if (exposedProps.isNullOrUndefined())
@@ -398,8 +403,10 @@ ExposedPropertiesOnly::allowNativeCall(JSContext *cx, JS::IsAcceptableThis test,
 }
 
 bool
-ComponentsObjectPolicy::check(JSContext *cx, JSObject *wrapper, jsid id, Wrapper::Action act)
+ComponentsObjectPolicy::check(JSContext *cx, JSObject *wrapperArg, jsid idArg, Wrapper::Action act)
 {
+    RootedObject wrapper(cx, wrapperArg);
+    RootedId id(cx, idArg);
     JSAutoCompartment ac(cx, wrapper);
 
     if (JSID_IS_STRING(id) && act == Wrapper::GET) {

@@ -14,17 +14,4 @@
     background: hsl(0,0%,90%) url("chrome://global/skin/media/imagedoc-lightnoise.png");
     color: #222;
   }
-
-  .overflowing {
-    cursor: -moz-zoom-out;
-  }
-
-  .shrinkToFit,
-  .scaleTodevicePixels {
-    cursor: -moz-zoom-in;
-  }
-
-  .completeRotation {
-    transition: transform 0.3s ease 0s;
-  }
 }

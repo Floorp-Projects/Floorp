@@ -2310,6 +2310,16 @@ LIRGenerator::visitCallSetElement(MCallSetElement *ins)
 }
 
 bool
+LIRGenerator::visitCallInitElementArray(MCallInitElementArray *ins)
+{
+    LCallInitElementArray *lir = new LCallInitElementArray();
+    lir->setOperand(0, useRegisterAtStart(ins->object()));
+    if (!useBoxAtStart(lir, LCallInitElementArray::Value, ins->value()))
+        return false;
+    return add(lir, ins) && assignSafepoint(lir, ins);
+}
+
+bool
 LIRGenerator::visitIteratorStart(MIteratorStart *ins)
 {
     // Call a stub if this is not a simple for-in loop.
