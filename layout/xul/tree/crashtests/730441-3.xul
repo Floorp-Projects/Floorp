@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<!--
+###!!! ASSERTION: You can't dereference a NULL nsCOMPtr with operator->().: 'mRawPtr != 0', file ../../../../dist/include/nsCOMPtr.h, line 796
+
+Program received signal SIGSEGV, Segmentation fault.
+0xb6b7463a in nsTreeContentView::SetTree (this=0xb0ba2510, aTree=0xaaecece0) at layout/xul/base/src/tree/src/nsTreeContentView.cpp:571
+571        boxObject->GetElement(getter_AddRefs(element));
+(gdb) bt 3
+#0  0xb6b7463a in nsTreeContentView::SetTree (this=0xb0ba2510, aTree=0xaaecece0) at layout/xul/base/src/tree/src/nsTreeContentView.cpp:571
+#1  0xb736c76f in NS_InvokeByIndex_P () at xpcom/reflect/xptcall/src/md/unix/xptcinvoke_gcc_x86_unix.cpp:69
+#2  0xb6171901 in XPCWrappedNative::CallMethod (ccx=..., mode=XPCWrappedNative::CALL_METHOD)
+    at js/src/xpconnect/src/xpcwrappednative.cpp:2722
+(More stack frames follow...)
+(gdb) list 566
+561    nsTreeContentView::SetTree(nsITreeBoxObject* aTree)
+562    {
+563      ClearRows();
+564
+565      mBoxObject = aTree;
+566
+567      if (aTree && !mRoot) {
+568        // Get our root element
+569        nsCOMPtr<nsIBoxObject> boxObject = do_QueryInterface(mBoxObject);
+570        nsCOMPtr<nsIDOMElement> element;
+571        boxObject->GetElement(getter_AddRefs(element));
+(gdb) p boxObject
+$16 = {mRawPtr = 0x0}
+
+|aTree| does not implement |nsIBoxObject|, so |do_QueryInterface(mBoxObject)|
+returns null. Then we have |null->GetElement()|.
+-->
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="document.getElementById('tree').view.setTree({});">
+<tree id="tree">
+  <treechildren/>
+</tree>
+</window>
+
