@@ -57,7 +57,7 @@ nsWebNavigationInfo::IsTypeSupported(const nsACString& aType,
   if (pluginHost) {
     // false will ensure that currently running plugins will not
     // be shut down
-    rv = pluginHost->ReloadPlugins(false);
+    rv = pluginHost->ReloadPlugins();
     if (NS_SUCCEEDED(rv)) {
       // OK, we reloaded plugins and there were new ones
       // (otherwise NS_ERROR_PLUGINS_PLUGINSNOTCHANGED would have
