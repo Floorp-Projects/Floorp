@@ -171,6 +171,38 @@ template<> struct IsPod<double>             : TrueType {};
 template<> struct IsPod<wchar_t>            : TrueType {};
 template<typename T> struct IsPod<T*>       : TrueType {};
 
+/**
+ * IsSigned determines whether a type is a signed arithmetic type.
+ *
+ * Don't use this if the type might be user-defined!  You might or might not get
+ * a compile error, depending.
+ *
+ * mozilla::IsSigned<int>::value is true;
+ * mozilla::IsSigned<const unsigned int>::value is false;
+ * mozilla::IsSigned<unsigned char>::value is false;
+ * mozilla::IsSigned<float>::value is true.
+ */
+template<typename T>
+struct IsSigned
+  : IntegralConstant<bool, IsArithmetic<T>::value && T(-1) < T(0)>
+{};
+
+/**
+ * IsUnsigned determines whether a type is an unsigned arithmetic type.
+ *
+ * Don't use this if the type might be user-defined!  You might or might not get
+ * a compile error, depending.
+ *
+ * mozilla::IsUnsigned<int>::value is false;
+ * mozilla::IsUnsigned<const unsigned int>::value is true;
+ * mozilla::IsUnsigned<unsigned char>::value is true;
+ * mozilla::IsUnsigned<float>::value is false.
+ */
+template<typename T>
+struct IsUnsigned
+  : IntegralConstant<bool, IsArithmetic<T>::value && T(0) < T(-1)>
+{};
+
 /* 20.9.5 Type property queries [meta.unary.prop.query] */
 
 /* 20.9.6 Relationships between types [meta.rel] */
