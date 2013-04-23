@@ -150,6 +150,24 @@ function sendMessageToJava(aMessage) {
   return getBridge().handleGeckoMessage(JSON.stringify(aMessage));
 }
 
+function doChangeMaxLineBoxWidth(aWidth) {
+  gReflowPending = null;
+  let webNav = BrowserApp.selectedTab.window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation);
+  let docShell = webNav.QueryInterface(Ci.nsIDocShell);
+  let docViewer = docShell.contentViewer.QueryInterface(Ci.nsIMarkupDocumentViewer);
+
+  let range = null;
+  if (BrowserApp.selectedTab._mReflozPoint) {
+    range = BrowserApp.selectedTab._mReflozPoint.range;
+  }
+
+  docViewer.changeMaxLineBoxWidth(aWidth);
+
+  if (range) {
+    BrowserEventHandler._zoomInAndSnapToRange(range);
+  }
+}
+
 function fuzzyEquals(a, b) {
   return (Math.abs(a - b) < 1e-6);
 }
@@ -2301,6 +2319,7 @@ nsBrowserAccess.prototype = {
 // get created with the right size rather than being 1x1
 let gScreenWidth = 1;
 let gScreenHeight = 1;
+let gReflowPending = null;
 
 // The margins that should be applied to the viewport for fixed position
 // children. This is used to avoid browser chrome permanently obscuring
@@ -2480,14 +2499,18 @@ Tab.prototype = {
   },
 
   performReflowOnZoom: function(aViewport) {
-      let webNav = this.window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation);
-      let docShell = webNav.QueryInterface(Ci.nsIDocShell);
-      let docViewer = docShell.contentViewer.QueryInterface(Ci.nsIMarkupDocumentViewer);
       let viewportWidth = gScreenWidth / aViewport.zoom;
+      let reflozTimeout = Services.prefs.getIntPref("browser.zoom.reflowZoom.reflowTimeout");
+
+      if (gReflowPending) {
+        clearTimeout(gReflowPending);
+      }
 
       // We add in a bit of fudge just so that the end characters don't accidentally
       // get clipped. 15px is an arbitrary choice.
-      docViewer.changeMaxLineBoxWidth(viewportWidth - 15);
+      gReflowPending = setTimeout(doChangeMaxLineBoxWidth,
+                                  reflozTimeout,
+                                  viewportWidth - 15);
   },
 
   /** 
@@ -3890,12 +3913,6 @@ var BrowserEventHandler = {
         this.onPinch(aData);
         break;
 
-      case "MozMagnifyGesture":
-        if (BrowserEventHandler.mReflozPref) {
-          this.onPinchFinish(aData, BrowserApp.selectedTab._mReflozPoint.x, BrowserApp.selectedTab._mReflozPoint.y);
-        }
-        break;
-
       default:
         dump('BrowserEventHandler.handleUserEvent: unexpected topic "' + aTopic + '"');
         break;
@@ -4039,6 +4056,7 @@ var BrowserEventHandler = {
     rect.h = viewport.cssHeight;
 
     sendMessageToJava(rect);
+    BrowserApp.selectedTab._mReflozPoint = null;
    },
 
    onPinch: function(aData) {
@@ -4052,15 +4070,6 @@ var BrowserEventHandler = {
        BrowserApp.selectedTab._mReflozPoint = { x: zoomPointX, y: zoomPointY,
          range: BrowserApp.selectedBrowser.contentDocument.caretPositionFromPoint(zoomPointX, zoomPointY) };
          BrowserApp.selectedTab.probablyNeedRefloz = true;
-     }
-   },
-
-   onPinchFinish: function(aData, aX, aY) {
-     // We only want to do this if reflow-on-zoom is enabled.
-     if (BrowserEventHandler.mReflozPref) {
-       let range = BrowserApp.selectedTab._mReflozPoint.range;
-       this._zoomInAndSnapToRange(range);
-       BrowserApp.selectedTab._mReflozPoint = null;
      }
    },
 
