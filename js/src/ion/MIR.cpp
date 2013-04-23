@@ -2480,13 +2480,12 @@ TryAddTypeBarrierForWrite(JSContext *cx, MBasicBlock *current, types::StackTypeS
 
 static MInstruction *
 AddTypeGuard(MBasicBlock *current, MDefinition *obj, types::TypeObject *typeObject,
-             bool bailOnEquality, BailoutKind bailoutKind)
+             bool bailOnEquality)
 {
-    MGuardShapeOrType *guard = MGuardShapeOrType::New(obj, NULL, typeObject,
-                                                      bailOnEquality, bailoutKind);
+    MGuardObjectType *guard = MGuardObjectType::New(obj, typeObject, bailOnEquality);
     current->add(guard);
 
-    // For now, never move type guards.
+    // For now, never move type object guards.
     guard->setNotMovable();
 
     return guard;
@@ -2576,6 +2575,6 @@ ion::PropertyWriteNeedsTypeBarrier(JSContext *cx, MBasicBlock *current, MDefinit
 
     JS_ASSERT(excluded);
 
-    *pobj = AddTypeGuard(current, *pobj, excluded, /* bailOnEquality = */ true, Bailout_Normal);
+    *pobj = AddTypeGuard(current, *pobj, excluded, /* bailOnEquality = */ true);
     return false;
 }
