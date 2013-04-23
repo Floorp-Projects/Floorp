@@ -459,3 +459,4 @@ test-pref(layout.css.flexbox.enabled,true) load 847211-1.html
 load 849603.html
 test-pref(layout.css.flexbox.enabled,true) load 851396-1.html
 test-pref(layout.css.flexbox.enabled,true) load 854263-1.html
+test-pref(layout.css.flexbox.enabled,true) load 862947-1.html
