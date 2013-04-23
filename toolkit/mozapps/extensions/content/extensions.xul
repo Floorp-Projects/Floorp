@@ -110,6 +110,9 @@
     <command id="cmd_cancelUninstallItem"/>
     <command id="cmd_cancelOperation"/>
     <command id="cmd_contribute"/>
+    <command id="cmd_askToActivateItem"/>
+    <command id="cmd_alwaysActivateItem"/>
+    <command id="cmd_neverActivateItem"/>
   </commandset>
 
   <keyset>
@@ -619,6 +622,27 @@
                             label="&cmd.installAddon.label;"
                             accesskey="&cmd.installAddon.accesskey;"
                             command="cmd_installItem"/>
+                    <menulist id="detail-tristate-menulist"
+                              crop="none" sizetopopup="always"
+                              tooltiptext="&cmd.tristateMenu.tooltip;">
+                      <menupopup>
+                        <menuitem id="detail-ask-to-activate-menuitem"
+                                  class="addon-control"
+                                  label="&cmd.askToActivate.label;"
+                                  tooltiptext="&cmd.askToActivate.tooltip;"
+                                  command="cmd_askToActivateItem"/>
+                        <menuitem id="detail-always-activate-menuitem"
+                                  class="addon-control"
+                                  label="&cmd.alwaysActivate.label;"
+                                  tooltiptext="&cmd.alwaysActivate.tooltip;"
+                                  command="cmd_alwaysActivateItem"/>
+                        <menuitem id="detail-never-activate-menuitem"
+                                  class="addon-control"
+                                  label="&cmd.neverActivate.label;"
+                                  tooltiptext="&cmd.neverActivate.tooltip;"
+                                  command="cmd_neverActivateItem"/>
+                      </menupopup>
+                    </menulist>
                   </hbox>
                 </vbox>
               </hbox>

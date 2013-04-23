@@ -58,8 +58,14 @@ TabOpenListener.prototype = {
 
 function test() {
   waitForExplicitFinish();
-  registerCleanupFunction(function() { Services.prefs.clearUserPref("plugins.click_to_play"); });
+  registerCleanupFunction(function() {
+    Services.prefs.clearUserPref("plugins.click_to_play");
+    getTestPlugin().enabledState = Ci.nsIPluginTag.STATE_ENABLED;
+    getTestPlugin("Second Test Plug-in").enabledState = Ci.nsIPluginTag.STATE_ENABLED;
+  });
   Services.prefs.setBoolPref("plugins.click_to_play", false);
+  var plugin = getTestPlugin();
+  plugin.enabledState = Ci.nsIPluginTag.STATE_ENABLED;
 
   var newTab = gBrowser.addTab();
   gBrowser.selectedTab = newTab;
@@ -196,10 +202,11 @@ function test7() {
   ok(gTestBrowser.missingPlugins.has("application/x-unknown"), "Test 7, Should know about application/x-unknown");
   ok(gTestBrowser.missingPlugins.has("application/x-test"), "Test 7, Should know about application/x-test");
 
-  var plugin = getTestPlugin();
-  plugin.enabledState = Ci.nsIPluginTag.STATE_ENABLED;
-  plugin.blocklisted = false;
   Services.prefs.setBoolPref("plugins.click_to_play", true);
+  var plugin = getTestPlugin();
+  plugin.blocklisted = false;
+  plugin.enabledState = Ci.nsIPluginTag.STATE_CLICKTOPLAY;
+  getTestPlugin("Second Test Plug-in").enabledState = Ci.nsIPluginTag.STATE_CLICKTOPLAY;
 
   prepareTest(test8, gTestRoot + "plugin_test.html");
 }
@@ -513,6 +520,8 @@ function test13e() {
 
   Services.perms.remove("127.0.0.1:8888", gPluginHost.getPermissionStringForType("application/x-test"));
   Services.prefs.setBoolPref("plugins.click_to_play", false);
+  var plugin = getTestPlugin();
+  plugin.enabledState = Ci.nsIPluginTag.STATE_ENABLED;
   prepareTest(test14, gTestRoot + "plugin_test2.html");
 }
 
@@ -522,10 +531,11 @@ function test14() {
   var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
   ok(objLoadingContent.activated, "Test 14, Plugin should be activated");
 
-  var plugin = getTestPlugin();
-  plugin.enabledState = Ci.nsIPluginTag.STATE_ENABLED;
-  plugin.blocklisted = false;
   Services.prefs.setBoolPref("plugins.click_to_play", true);
+  var plugin = getTestPlugin();
+  plugin.blocklisted = false;
+  plugin.enabledState = Ci.nsIPluginTag.STATE_CLICKTOPLAY;
+  getTestPlugin("Second Test Plug-in").enabledState = Ci.nsIPluginTag.STATE_CLICKTOPLAY;
   prepareTest(test15, gTestRoot + "plugin_alternate_content.html");
 }
 
@@ -964,6 +974,8 @@ function test21e() {
   }
 
   Services.prefs.setBoolPref("plugins.click_to_play", true);
+  getTestPlugin().enabledState = Ci.nsIPluginTag.STATE_CLICKTOPLAY;
+  getTestPlugin("Second Test Plug-in").enabledState = Ci.nsIPluginTag.STATE_CLICKTOPLAY;
   prepareTest(test22, gTestRoot + "plugin_test.html");
 }
 
