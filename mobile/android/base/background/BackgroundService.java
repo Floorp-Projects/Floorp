@@ -27,6 +27,13 @@ public abstract class BackgroundService extends IntentService {
     super(threadName);
   }
 
+  public static void runIntentInService(Context context, Intent intent, Class<? extends BackgroundService> serviceClass) {
+    Intent service = new Intent(context, serviceClass);
+    service.setAction(intent.getAction());
+    service.putExtras(intent);
+    context.startService(service);
+  }
+
   /**
    * Returns true if the OS will allow us to perform background
    * data operations. This logic varies by OS version.
