@@ -949,7 +949,7 @@ js::TriggerOperationCallbackForAsmJSCode(JSRuntime *rt)
 
 # if defined(XP_WIN)
     DWORD oldProtect;
-    if (!VirtualProtect(module.functionCode(), 4096, PAGE_NOACCESS, &oldProtect))
+    if (!VirtualProtect(module.functionCode(), module.functionBytes(), PAGE_NOACCESS, &oldProtect))
         MOZ_CRASH();
 # else  // assume Unix
     if (mprotect(module.functionCode(), module.functionBytes(), PROT_NONE))
