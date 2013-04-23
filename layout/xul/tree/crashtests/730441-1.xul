@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<!--
+Program received signal SIGSEGV, Segmentation fault.
+0xb6457185 in nsIContent::SetAttr (this=0x0, aNameSpaceID=0, aName=0xb0cb064c, aValue=..., aNotify=1) at ../../dist/include/nsIContent.h:285
+285	    return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
+(gdb) p this
+$6 = (nsIContent * const) 0x0
+(gdb) bt 3
+#0  0xb6457185 in nsIContent::SetAttr (this=0x0, aNameSpaceID=0, aName=0xb0cb064c, aValue=..., aNotify=1) at ../../dist/include/nsIContent.h:285
+#1  0xb6b72072 in nsTreeColumns::RestoreNaturalOrder (this=0xaaf83cc0) at layout/xul/base/src/tree/src/nsTreeColumns.cpp:605
+#2  0xb736c76f in NS_InvokeByIndex_P () at xpcom/reflect/xptcall/src/md/unix/xptcinvoke_gcc_x86_unix.cpp:69
+(More stack frames follow...)
+(gdb) frame 1
+#1  0xb6b72072 in nsTreeColumns::RestoreNaturalOrder (this=0xaaf83cc0) at layout/xul/base/src/tree/src/nsTreeColumns.cpp:605
+605	    child->SetAttr(kNameSpaceID_None, nsGkAtoms::ordinal, ordinal, PR_TRUE);
+(gdb) list
+600	  PRUint32 numChildren = colsContent->GetChildCount();
+601	  for (PRUint32 i = 0; i < numChildren; ++i) {
+602	    nsIContent *child = colsContent->GetChildAt(i);
+603	    nsAutoString ordinal;
+604	    ordinal.AppendInt(i);
+605	    child->SetAttr(kNameSpaceID_None, nsGkAtoms::ordinal, ordinal, PR_TRUE);
+606	  }
+(gdb) p child
+$7 = (nsIContent *) 0x0
+
+First loop iteration: |child->SetAttr()| dispatches "DOMAttrModified" event.
+Event listener removes next column. Second loop iteration: |colsContent->GetChildAt(i)|
+returns null. Then we have |null->SetAttr()|.
+-->
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="run();">
+<tree id="tree">
+  <treecols>
+    <treecol id="col1"/>
+    <treecol id="col2"/>
+  </treecols>
+  <treechildren/>
+</tree>
+<script type="text/javascript"><![CDATA[
+function listener() {
+  var col2 = document.getElementById("col2");
+  col2.parentNode.removeChild(col2);
+}
+
+function run() {
+  var col1 = document.getElementById("col1");
+  col1.addEventListener("DOMAttrModified", listener, true);
+  var tree = document.getElementById("tree");
+  tree.columns.restoreNaturalOrder();
+}
+]]></script>
+</window>
+
