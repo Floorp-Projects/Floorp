@@ -152,6 +152,14 @@ public:
 
     static void NotifyIMEChange(const PRUnichar *aText, uint32_t aTextLen, int aStart, int aEnd, int aNewEnd);
 
+    void StartJavaProfiling(int aInterval, int aSamples);
+    void StopJavaProfiling();
+    void PauseJavaProfiling();
+    void UnpauseJavaProfiling();
+    bool GetThreadNameJavaProfiling(uint32_t aThreadId, nsCString & aResult);
+    bool GetFrameNameJavaProfiling(uint32_t aThreadId, uint32_t aSampleId, uint32_t aFrameId, nsCString & aResult);
+    double GetSampleTimeJavaProfiling(uint32_t aThreadId, uint32_t aSampleId);
+
     nsresult CaptureThumbnail(nsIDOMWindow *window, int32_t bufW, int32_t bufH, int32_t tabId, jobject buffer);
     void SendThumbnail(jobject buffer, int32_t tabId, bool success);
     nsresult GetDisplayPort(bool aPageSizeUpdate, bool aIsBrowserContentDisplayed, int32_t tabId, nsIAndroidViewport* metrics, nsIAndroidDisplayport** displayPort);
@@ -359,6 +367,15 @@ public:
     void ScheduleComposite();
     void RegisterSurfaceTextureFrameListener(jobject surfaceTexture, int id);
     void UnregisterSurfaceTextureFrameListener(jobject surfaceTexture);
+
+    jclass jGeckoJavaSamplerClass;
+    jmethodID jStart;
+    jmethodID jStop;
+    jmethodID jPause;
+    jmethodID jUnpause;
+    jmethodID jGetThreadName;
+    jmethodID jGetFrameName;
+    jmethodID jGetSampleTime;
 
     void GetGfxInfoData(nsACString& aRet);
     nsresult GetProxyForURI(const nsACString & aSpec,
