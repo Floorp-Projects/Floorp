@@ -46,7 +46,7 @@
                class="plain requests-menu-header requests-menu-waterfall"
                value="&netmonitorUI.toolbar.waterfall;"
                crop="end"/>
-        <spacer flex="1"/>
+        <spacer id="toolbar-spacer" flex="1"/>
         <toolbarbutton id="details-pane-toggle"
                        class="devtools-toolbarbutton"
                        tooltiptext="&netmonitorUI.panesButton.tooltip;"

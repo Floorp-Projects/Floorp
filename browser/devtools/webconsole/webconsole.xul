@@ -62,8 +62,8 @@
       <menuitem id="menu_copyURL" label="&copyURLCmd.label;"
                 accesskey="&copyURLCmd.accesskey;" command="consoleCmd_copyURL"
                 selection="network" selectionType="single"/>
-      <menuitem id="menu_copy"/>
-      <menuitem id="menu_selectAll"/>
+      <menuitem id="cMenu_copy"/>
+      <menuitem id="cMenu_selectAll"/>
     </menupopup>
   </popupset>
 
