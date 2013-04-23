@@ -15,8 +15,6 @@ LIBRARY_NAME    = simpletest
 SHORT_LIBNAME = simpltst
 IS_COMPONENT	= 1
 
-CPPSRCS		= SimpleTest.cpp
-
 EXTRA_DSO_LDOPTS = \
 	$(XPCOM_GLUE_LDOPTS) \
 	$(NSPR_LIBS) \

@@ -19,12 +19,6 @@ LOCAL_INCLUDES	= \
 	-I$(srcdir)/../../../build \
 	$(NULL)
 
-CPPSRCS		= \
-	$(XPCOM_GLUE_SRC_LCPPSRCS)   \
-	nsXPCOMGlue.cpp              \
-	nsStringAPI.cpp              \
-	$(NULL)
-
 SDK_LIBRARY     	= \
 	$(LIB_PREFIX)xpcomglue_staticruntime.$(LIB_SUFFIX) \
 	$(NULL)

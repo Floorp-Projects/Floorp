@@ -39,3 +39,21 @@ EXPORTS.mozilla += [
     'ProcessPriorityManager.h',
 ]
 
+CPP_SOURCES += [
+    'AppProcessChecker.cpp',
+    'Blob.cpp',
+    'ContentProcess.cpp',
+    'ContentParent.cpp',
+    'ContentChild.cpp',
+    'CrashReporterParent.cpp',
+    'CrashReporterChild.cpp',
+    'PermissionMessageUtils.cpp',
+    'PreallocatedProcessManager.cpp',
+    'ProcessPriorityManager.cpp',
+    'StructuredCloneUtils.cpp',
+    'TabParent.cpp',
+    'TabChild.cpp',
+    'TabContext.cpp',
+    'TabMessageUtils.cpp',
+]
+

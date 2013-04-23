@@ -6,3 +6,7 @@
 
 MODULE = 'alerts'
 
+CPP_SOURCES += [
+    'nsAccessibilityFactory.cpp',
+]
+

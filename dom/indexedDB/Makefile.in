@@ -14,31 +14,6 @@ LIBXUL_LIBRARY = 1
 FORCE_STATIC_LIB = 1
 FAIL_ON_WARNINGS := 1
 
-CPPSRCS = \
-  AsyncConnectionHelper.cpp \
-  CheckPermissionsHelper.cpp \
-  Client.cpp \
-  DatabaseInfo.cpp \
-  FileInfo.cpp \
-  FileManager.cpp \
-  IDBCursor.cpp \
-  IDBDatabase.cpp \
-  IDBEvents.cpp \
-  IDBFactory.cpp \
-  IDBFileHandle.cpp \
-  IDBIndex.cpp \
-  IDBKeyRange.cpp \
-  IDBObjectStore.cpp \
-  IDBRequest.cpp \
-  IDBTransaction.cpp \
-  IDBWrapperCache.cpp \
-  IndexedDatabaseManager.cpp \
-  Key.cpp \
-  KeyPath.cpp \
-  OpenDatabaseHelper.cpp \
-  TransactionThreadPool.cpp \
-  $(NULL)
-
 LOCAL_INCLUDES = \
   -I$(topsrcdir)/caps/include \
   -I$(topsrcdir)/content/base/src \

@@ -30,8 +30,6 @@ include $(topsrcdir)/dom/webidl/WebIDL.mk
 # But the webidl actually lives in our parent dir
 test_webidl_files := $(addprefix ../,$(test_webidl_files))
 
-CPPSRCS := $(subst .webidl,Binding.cpp,$(test_webidl_files))
-
 LOCAL_INCLUDES += \
   -I$(topsrcdir)/js/xpconnect/src \
   -I$(topsrcdir)/js/xpconnect/wrappers \

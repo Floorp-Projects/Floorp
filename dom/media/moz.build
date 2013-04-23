@@ -23,3 +23,7 @@ EXPORTS.mozilla += [
     'MediaManager.h',
 ]
 
+CPP_SOURCES += [
+    'MediaManager.cpp',
+]
+

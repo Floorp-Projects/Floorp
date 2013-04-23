@@ -8,3 +8,27 @@ TEST_DIRS += ['tests']
 
 MODULE = 'editor'
 
+CPP_SOURCES += [
+    'TextEditorTest.cpp',
+    'TypeInState.cpp',
+    'nsEditProperty.cpp',
+    'nsHTMLAbsPosition.cpp',
+    'nsHTMLAnonymousUtils.cpp',
+    'nsHTMLCSSUtils.cpp',
+    'nsHTMLDataTransfer.cpp',
+    'nsHTMLEditRules.cpp',
+    'nsHTMLEditUtils.cpp',
+    'nsHTMLEditor.cpp',
+    'nsHTMLEditorEventListener.cpp',
+    'nsHTMLEditorStyle.cpp',
+    'nsHTMLInlineTableEditor.cpp',
+    'nsHTMLObjectResizer.cpp',
+    'nsHTMLURIRefObject.cpp',
+    'nsTableEditor.cpp',
+    'nsWSRunObject.cpp',
+]
+
+if CONFIG['ENABLE_EDITOR_API_LOG']:
+    CPP_SOURCES += [
+        'nsEditorTxnLog.cpp',
+    ]

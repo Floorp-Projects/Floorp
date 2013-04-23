@@ -18,16 +18,6 @@ ifeq ($(MOZ_WIDGET_TOOLKIT), qt)
 OS_INCLUDES	+= $(MOZ_QT_CFLAGS)
 endif
 
-CPPSRCS		= \
-		nsCollation.cpp \
-		nsScriptableDateFormat.cpp \
-		nsLanguageAtomService.cpp \
-		nsLocale.cpp \
-		nsLocaleService.cpp \
-		nsCharsetAlias.cpp \
-		nsUConvPropertySearch.cpp \
-		$(NULL)
-
 EXPORT_RESOURCE = \
 		$(srcdir)/langGroups.properties \
 		$(srcdir)/language.properties \

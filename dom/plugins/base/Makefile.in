@@ -17,20 +17,6 @@ IS_COMPONENT    = 1
 MODULE_NAME	= nsPluginModule
 LIBXUL_LIBRARY = 1
 
-CPPSRCS		= \
-		nsNPAPIPlugin.cpp \
-		nsNPAPIPluginInstance.cpp \
-		nsNPAPIPluginStreamListener.cpp \
-		nsPluginStreamListenerPeer.cpp \
-		nsPluginHost.cpp \
-		nsPluginModule.cpp \
-		nsJSNPRuntime.cpp \
-		nsPluginTags.cpp \
-		PluginPRLibrary.cpp \
-		nsPluginInstanceOwner.cpp \
-		nsPluginPlayPreviewInfo.cpp \
-		$(NULL)
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),android)
 LOCAL_INCLUDES += -I$(topsrcdir)/dom/plugins/base/android
 else
@@ -41,31 +27,7 @@ FAIL_ON_WARNINGS := 1
 endif
 
 ifeq ($(OS_ARCH),WINNT)
-	CPPSRCS += nsPluginsDirWin.cpp
-	CPPSRCS += nsPluginNativeWindowWin.cpp
-	CPPSRCS += nsPluginDirServiceProvider.cpp
 	LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/base
-else
-ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
-	CPPSRCS += nsPluginsDirOS2.cpp
-	CPPSRCS += nsPluginNativeWindowOS2.cpp
-else
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-	CPPSRCS += nsPluginsDirDarwin.cpp
-	CPPSRCS += nsPluginNativeWindow.cpp
-else
-	CPPSRCS += nsPluginsDirUnix.cpp
-ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
-	CPPSRCS += nsPluginNativeWindowGtk2.cpp
-else
-ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
-	CPPSRCS += nsPluginNativeWindowQt.cpp
-else
-	CPPSRCS += nsPluginNativeWindow.cpp
-endif
-endif
-endif
-endif
 endif
 
 LOCAL_INCLUDES += \

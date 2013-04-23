@@ -8,3 +8,6 @@ MODULE = 'xpcshell'
 
 PROGRAM = 'xpcshell'
 
+CPP_SOURCES += [
+    'xpcshell.cpp',
+]

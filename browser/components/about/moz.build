@@ -10,3 +10,7 @@ EXPORTS.mozilla.browser += [
     'AboutRedirector.h',
 ]
 
+CPP_SOURCES += [
+    'AboutRedirector.cpp',
+]
+

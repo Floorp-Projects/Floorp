@@ -26,3 +26,11 @@ CSRCS += [
     'punycode.c',
     'race.c',
 ]
+
+CPP_SOURCES += [
+    'DNS.cpp',
+    'nsDNSService2.cpp',
+    'nsEffectiveTLDService.cpp',
+    'nsHostResolver.cpp',
+    'nsIDNService.cpp',
+]
