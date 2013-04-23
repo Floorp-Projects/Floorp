@@ -2242,11 +2242,7 @@ static JSBool
 BuildDate(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    char version[20] = "\n";
-#if JS_VERSION < 150
-    sprintf(version, " for version %d\n", JS_VERSION);
-#endif
-    fprintf(gOutFile, "built on %s at %s%s", __DATE__, __TIME__, version);
+    fprintf(gOutFile, "built on %s at %s\n", __DATE__, __TIME__);
     args.rval().setUndefined();
     return true;
 }
