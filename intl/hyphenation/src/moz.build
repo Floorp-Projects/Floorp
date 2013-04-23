@@ -6,3 +6,9 @@
 
 MODULE = 'hyphenation'
 
+CPP_SOURCES += [
+    'hnjstdio.cpp',
+    'nsHyphenationManager.cpp',
+    'nsHyphenator.cpp',
+]
+

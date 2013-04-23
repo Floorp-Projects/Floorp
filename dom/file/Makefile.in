@@ -16,25 +16,5 @@ FAIL_ON_WARNINGS := 1
 
 include $(topsrcdir)/dom/dom-config.mk
 
-CPPSRCS = \
-  AsyncHelper.cpp \
-  DOMFileHandle.cpp \
-  DOMFileRequest.cpp \
-  File.cpp \
-  FileHandle.cpp \
-  FileHelper.cpp \
-  FileRequest.cpp \
-  FileService.cpp \
-  FileStreamWrappers.cpp \
-  LockedFile.cpp \
-  MemoryStreams.cpp \
-  MetadataHelper.cpp \
-  ArchiveEvent.cpp \
-  ArchiveZipEvent.cpp \
-  ArchiveZipFile.cpp \
-  ArchiveReader.cpp \
-  ArchiveRequest.cpp \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 

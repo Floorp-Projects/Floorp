@@ -14,15 +14,6 @@ LIBRARY_NAME = neckoipc_s
 LIBXUL_LIBRARY = 1
 FORCE_STATIC_LIB = 1
 EXPORT_LIBRARY = 1
-CPPSRCS =               \
-  NeckoCommon.cpp       \
-  NeckoChild.cpp        \
-  NeckoParent.cpp       \
-  ChannelEventQueue.cpp \
-  RemoteOpenFileParent.cpp \
-  RemoteOpenFileChild.cpp  \
-  $(NULL)
-
 LOCAL_INCLUDES +=                  \
   -I$(srcdir)/../protocol/http \
   -I$(srcdir)/../base/src          \

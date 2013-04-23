@@ -15,26 +15,6 @@ MSVC_ENABLE_PGO := 1
 LIBXUL_LIBRARY	= 1
 FAIL_ON_WARNINGS = 1
 
-CPPSRCS		= \
-		nsButtonFrameRenderer.cpp \
-		nsComboboxControlFrame.cpp \
-		nsFieldSetFrame.cpp \
-		nsFileControlFrame.cpp \
-		nsFormControlFrame.cpp \
-		nsGfxButtonControlFrame.cpp \
-		nsGfxCheckboxControlFrame.cpp \
-		nsGfxRadioControlFrame.cpp \
-		nsProgressFrame.cpp \
-		nsRangeFrame.cpp \
-		nsMeterFrame.cpp \
-		nsTextControlFrame.cpp \
-		nsHTMLButtonControlFrame.cpp \
-		nsImageControlFrame.cpp \
-		nsLegendFrame.cpp \
-		nsListControlFrame.cpp \
-		nsSelectsAreaFrame.cpp \
-		$(NULL)
-
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
 

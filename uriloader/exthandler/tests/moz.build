@@ -13,3 +13,7 @@ XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 #FIXME/bug 575918: out-of-process xpcshell is broken on OS X
 if CONFIG['OS_ARCH'] != 'Darwin':
     XPCSHELL_TESTS_MANIFESTS += ['unit_ipc/xpcshell.ini']
+
+CPP_SOURCES += [
+    'WriteArgument.cpp',
+]

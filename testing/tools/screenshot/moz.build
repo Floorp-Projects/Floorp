@@ -6,5 +6,11 @@
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk2' and CONFIG['MOZ_X11']:
     PROGRAM = 'screentopng'
+    CPP_SOURCES += [
+        'gdk-screenshot.cpp',
+    ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     PROGRAM = 'screenshot'
+    CPP_SOURCES += [
+        'win32-screenshot.cpp',
+    ]

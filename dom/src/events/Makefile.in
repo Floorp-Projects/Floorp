@@ -15,11 +15,6 @@ LIBRARY_NAME	= jsdomevents_s
 MSVC_ENABLE_PGO := 1
 LIBXUL_LIBRARY	= 1
 
-
-CPPSRCS =				\
-	nsJSEventListener.cpp		\
-	$(NULL)
-
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
 

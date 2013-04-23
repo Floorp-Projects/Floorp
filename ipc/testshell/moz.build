@@ -15,3 +15,9 @@ EXPORTS.mozilla.ipc += [
 # FIXME/bug 575918: out-of-process xpcshell is broken on OS X
 if CONFIG['OS_ARCH'] != 'Darwin':
     XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell.ini']
+
+CPP_SOURCES += [
+    'TestShellChild.cpp',
+    'TestShellParent.cpp',
+    'XPCShellEnvironment.cpp',
+]

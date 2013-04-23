@@ -12,3 +12,41 @@ EXPORTS += [
     'nsQtKeyUtils.h',
 ]
 
+CPP_SOURCES += [
+    'moc_moziqwidget.cpp',
+    'moc_mozqwidget.cpp',
+    'moc_nsAppShell.cpp',
+    'mozSwipeGesture.cpp',
+    'mozqglwidgetwrapper.cpp',
+    'mozqwidget.cpp',
+    'nsAppShell.cpp',
+    'nsBidiKeyboard.cpp',
+    'nsClipboard.cpp',
+    'nsDeviceContextSpecQt.cpp',
+    'nsDragService.cpp',
+    'nsFilePicker.cpp',
+    'nsIdleServiceQt.cpp',
+    'nsLookAndFeel.cpp',
+    'nsNativeThemeQt.cpp',
+    'nsPrintDialogQt.cpp',
+    'nsPrintOptionsQt.cpp',
+    'nsPrintSettingsQt.cpp',
+    'nsQtKeyUtils.cpp',
+    'nsScreenManagerQt.cpp',
+    'nsScreenQt.cpp',
+    'nsSound.cpp',
+    'nsWidgetFactory.cpp',
+    'nsWindow.cpp',
+]
+
+if CONFIG['MOZ_ENABLE_CONTENTMANAGER']:
+    CPP_SOURCES += [
+        'moc_nsMFilePicker.cpp',
+        'nsMFilePicker.cpp',
+    ]
+
+if CONFIG[' MOZ_ENABLE_QTMOBILITY']:
+    CPP_SOURCES += [
+        'moc_mozqorientationsensorfilter.cpp',
+        'mozqorientationsensorfilter.cpp',
+    ]

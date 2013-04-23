@@ -24,3 +24,29 @@ EXPORTS.mozilla += [
 
 if CONFIG['OS_ARCH'] == 'WINNT':
     EXPORTS.mozilla += ['perfprobe.h']
+    CPP_SOURCES += [
+        'mozPoisonWriteBase.cpp',
+        'mozPoisonWriteWin.cpp',
+        'perfprobe.cpp',
+    ]
+elif CONFIG['OS_ARCH'] == 'Darwin':
+    CPP_SOURCES += [
+        'mozPoisonWriteBase.cpp',
+        'mozPoisonWriteMac.cpp',
+    ]
+else:
+    CPP_SOURCES += [
+        'mozPoisonWriteStub.cpp',
+    ]
+
+CPP_SOURCES += [
+    '$(XPCOM_GLUENS_SRC_LCPPSRCS)',
+    '$(XPCOM_GLUE_SRC_LCPPSRCS)',
+    'FileLocation.cpp',
+    'FrozenFunctions.cpp',
+    'Omnijar.cpp',
+    'Services.cpp',
+    'nsXPCOMStrings.cpp',
+    'nsXPComInit.cpp',
+]
+

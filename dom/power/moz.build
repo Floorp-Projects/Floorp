@@ -21,3 +21,9 @@ EXPORTS.mozilla.dom.power += [
     'Types.h',
 ]
 
+CPP_SOURCES += [
+    'PowerManager.cpp',
+    'PowerManagerService.cpp',
+    'WakeLock.cpp',
+]
+

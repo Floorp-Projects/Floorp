@@ -13,42 +13,6 @@ LIBRARY_NAME	= html5p_s
 MSVC_ENABLE_PGO := 1
 LIBXUL_LIBRARY	= 1
 
-CPPSRCS		= \
-		nsHtml5Atoms.cpp \
-		nsHtml5Atom.cpp \
-		nsHtml5AtomTable.cpp \
-		nsHtml5Parser.cpp \
-		nsHtml5AttributeName.cpp \
-		nsHtml5ElementName.cpp \
-		nsHtml5HtmlAttributes.cpp \
-		nsHtml5StackNode.cpp \
-		nsHtml5UTF16Buffer.cpp \
-		nsHtml5DependentUTF16Buffer.cpp \
-		nsHtml5OwningUTF16Buffer.cpp \
-		nsHtml5NamedCharacters.cpp \
-		nsHtml5NamedCharactersAccel.cpp \
-		nsHtml5Tokenizer.cpp \
-		nsHtml5TreeBuilder.cpp \
-		nsHtml5Portability.cpp \
-		nsHtml5Module.cpp \
-		nsHtml5ReleasableAttributeName.cpp \
-		nsHtml5ReleasableElementName.cpp \
-		nsHtml5MetaScanner.cpp \
-		nsHtml5TreeOperation.cpp \
-		nsHtml5TreeOpStage.cpp \
-		nsHtml5StateSnapshot.cpp \
-		nsHtml5TreeOpExecutor.cpp \
-		nsHtml5StreamParser.cpp \
-		nsHtml5Speculation.cpp \
-		nsHtml5SpeculativeLoad.cpp \
-		nsHtml5SVGLoadDispatcher.cpp \
-		nsHtml5Highlighter.cpp \
-		nsHtml5PlainTextUtils.cpp \
-		nsHtml5ViewSourceUtils.cpp \
-		nsHtml5StringParser.cpp \
-		nsParserUtils.cpp \
-		$(NULL)
-
 FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk

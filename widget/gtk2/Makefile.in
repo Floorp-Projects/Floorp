@@ -27,54 +27,12 @@ CSRCS		= \
 ifdef ACCESSIBILITY
 CSRCS += maiRedundantObjectFactory.c
 endif
-
-CPPSRCS = \
-  nsWindow.cpp \
-  nsAppShell.cpp \
-  nsWidgetFactory.cpp \
-  nsToolkit.cpp \
-  nsBidiKeyboard.cpp \
-  nsLookAndFeel.cpp \
-  nsGtkKeyUtils.cpp \
-  nsFilePicker.cpp \
-  nsSound.cpp \
-  nsNativeKeyBindings.cpp \
-  nsScreenGtk.cpp \
-  nsScreenManagerGtk.cpp \
-  nsImageToPixbuf.cpp \
-  nsGtkIMModule.cpp \
-  WidgetTraceEvent.cpp \
-  $(NULL)
-
-ifdef MOZ_X11
-CPPSRCS         += nsIdleServiceGTK.cpp
-endif
-
-ifdef NS_PRINTING
-CPPSRCS		+= \
-		nsDeviceContextSpecG.cpp \
-		nsPrintOptionsGTK.cpp \
-		nsPrintDialogGTK.cpp \
-		nsPrintSettingsGTK.cpp \
-		nsCUPSShim.cpp \
-		nsPaperPS.cpp \
-		nsPSPrinters.cpp \
-		$(NULL)
-endif
-
-ifdef MOZ_X11
-CPPSRCS += 	nsClipboard.cpp \
-		nsDragService.cpp \
-		$(NULL)
-endif
-
 # build our subdirs, too
 
 SHARED_LIBRARY_LIBS = ../xpwidgets/libxpwidgets_s.a
 
 ifdef NATIVE_THEME_SUPPORT
 CSRCS		+= gtk2drawing.c
-CPPSRCS		+= nsNativeThemeGTK.cpp
 DEFINES		+= -DNATIVE_THEME_SUPPORT
 endif
 
