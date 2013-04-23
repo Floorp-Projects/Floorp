@@ -650,7 +650,8 @@
                 // Tabs in private windows aren't registered as "Open" so
                 // that they don't appear as switch-to-tab candidates.
                 if (!isBlankPageURL(aLocation.spec) &&
-                    !PrivateBrowsingUtils.isWindowPrivate(window)) {
+                    (!PrivateBrowsingUtils.isWindowPrivate(window) ||
+                    PrivateBrowsingUtils.permanentPrivateBrowsing)) {
                   autocomplete.registerOpenPage(aLocation);
                   this.mBrowser.registeredOpenURI = aLocation;
                 }

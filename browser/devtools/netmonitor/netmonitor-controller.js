@@ -515,7 +515,8 @@ let L10N = new ViewHelpers.L10N(NET_STRINGS_URI);
  * Shortcuts for accessing various network monitor preferences.
  */
 let Prefs = new ViewHelpers.Prefs("devtools.netmonitor", {
-  networkDetailsWidth: ["Int", "panes-network-details-width"]
+  networkDetailsWidth: ["Int", "panes-network-details-width"],
+  networkDetailsHeight: ["Int", "panes-network-details-height"]
 });
 
 /**
