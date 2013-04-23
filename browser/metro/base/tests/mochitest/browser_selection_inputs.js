@@ -25,7 +25,6 @@ function setUpAndTearDown() {
   yield waitForCondition(function () {
       return !SelectionHelperUI.isSelectionUIVisible;
     }, kCommonWaitMs, kCommonPollMs);
-  yield hideContextUI();
 }
 
 /*
@@ -45,6 +44,8 @@ gTests.push({
     yield waitForCondition(function () {
       return !StartUI.isStartPageVisible;
       }, 10000, 100);
+
+    yield hideContextUI();
 
     gWindow = Browser.selectedTab.browser.contentWindow;
     gInput = gWindow.document.getElementById("a");
