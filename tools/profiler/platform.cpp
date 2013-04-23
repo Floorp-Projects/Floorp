@@ -20,7 +20,7 @@
 #include "mozilla/Services.h"
 #include "nsThreadUtils.h"
 
-#ifdef ANDROID
+#if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
   #include "AndroidBridge.h"
 #endif
 
@@ -451,7 +451,7 @@ void mozilla_sampler_start(int aProfileEntries, int aInterval,
       }
   }
 
-#ifdef ANDROID
+#if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
   if (t->ProfileJava()) {
     int javaInterval = aInterval;
     // Java sampling doesn't accuratly keep up with 1ms sampling
