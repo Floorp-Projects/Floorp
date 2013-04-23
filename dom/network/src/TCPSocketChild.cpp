@@ -83,7 +83,7 @@ TCPSocketChild::Open(nsITCPSocketInternal* aSocket, const nsAString& aHost,
 {
   mSocket = aSocket;
   MOZ_ASSERT(aSocketObj.isObject());
-  mSocketObj = js::UnwrapObjectChecked(aCx, &aSocketObj.toObject());
+  mSocketObj = js::CheckedUnwrap(&aSocketObj.toObject());
   if (!mSocketObj) {
     return NS_ERROR_FAILURE;
   }
