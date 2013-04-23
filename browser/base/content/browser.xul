@@ -523,7 +523,7 @@
              toolbarname="&navbarCmd.label;" accesskey="&navbarCmd.accesskey;"
              fullscreentoolbar="true" mode="icons" customizable="true"
              iconsize="large"
-             defaultset="unified-back-forward-button,urlbar-container,reload-button,stop-button,search-container,webrtc-status-button,downloads-button,home-button,bookmarks-menu-button-container,window-controls"
+             defaultset="unified-back-forward-button,urlbar-container,reload-button,stop-button,search-container,webrtc-status-button,bookmarks-menu-button,downloads-button,home-button,window-controls"
              context="toolbar-context-menu">
 
       <toolbaritem id="unified-back-forward-button" class="chromeclass-toolbar-additional"
@@ -620,9 +620,6 @@
                    hidden="true"
                    onclick="SocialShareButton.onClick(event);"/>
 
-            <image id="star-button"
-                   class="urlbar-icon"
-                   onclick="PlacesStarButton.onClick(event);"/>
             <image id="go-button"
                    class="urlbar-icon"
                    tooltiptext="&goEndCap.tooltip;"
@@ -671,6 +668,82 @@
         <menupopup onpopupshowing="WebrtcIndicator.fillPopup(this);"
                    onpopuphiding="WebrtcIndicator.clearPopup(this);"
                    oncommand="WebrtcIndicator.menuCommand(event.target);"/>
+      </toolbarbutton>
+
+      <toolbarbutton id="bookmarks-menu-button"
+                     class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     persist="class"
+                     removable="true"
+                     type="menu-button"
+                     label="&bookmarksMenuButton.label;"
+                     tooltiptext="&bookmarksMenuButton.tooltip;"
+                     ondragenter="PlacesMenuDNDHandler.onDragEnter(event);"
+                     ondragover="PlacesMenuDNDHandler.onDragOver(event);"
+                     ondragleave="PlacesMenuDNDHandler.onDragLeave(event);"
+                     ondrop="PlacesMenuDNDHandler.onDrop(event);"
+                     oncommand="BookmarksMenuButton.onCommand(event);">
+        <menupopup id="BMB_bookmarksPopup"
+                   placespopup="true"
+                   context="placesContext"
+                   openInTabs="children"
+                   oncommand="BookmarksEventHandler.onCommand(event, this.parentNode._placesView);"
+                   onclick="BookmarksEventHandler.onClick(event, this.parentNode._placesView);"
+                   onpopupshowing="BookmarksMenuButton.onPopupShowing(event);
+                                   if (!this.parentNode._placesView)
+                                     new PlacesMenu(event, 'place:folder=BOOKMARKS_MENU');"
+                   tooltip="bhTooltip" popupsinherittooltip="true">
+          <menuitem id="BMB_viewBookmarksToolbar"
+                    placesanonid="view-toolbar"
+                    toolbarId="PersonalToolbar"
+                    type="checkbox"
+                    oncommand="onViewToolbarCommand(event)"
+                    label="&viewBookmarksToolbar.label;"/>
+          <menuseparator/>
+          <menuitem id="BMB_bookmarksShowAll"
+                    label="&showAllBookmarks2.label;"
+                    command="Browser:ShowAllBookmarks"
+                    key="manBookmarkKb"/>
+          <menuseparator/>
+          <menuitem id="BMB_subscribeToPageMenuitem"
+#ifndef XP_MACOSX
+                    class="menuitem-iconic"
+#endif
+                    label="&subscribeToPageMenuitem.label;"
+                    oncommand="return FeedHandler.subscribeToFeed(null, event);"
+                    onclick="checkForMiddleClick(this, event);"
+                    observes="singleFeedMenuitemState"/>
+          <menu id="BMB_subscribeToPageMenupopup"
+#ifndef XP_MACOSX
+                class="menu-iconic"
+#endif
+                label="&subscribeToPageMenupopup.label;"
+                observes="multipleFeedsMenuState">
+            <menupopup id="BMB_subscribeToPageSubmenuMenupopup"
+                       onpopupshowing="return FeedHandler.buildFeedList(event.target);"
+                       oncommand="return FeedHandler.subscribeToFeed(null, event);"
+                       onclick="checkForMiddleClick(this, event);"/>
+          </menu>
+          <menuseparator/>
+          <menu id="BMB_bookmarksToolbar"
+                placesanonid="toolbar-autohide"
+                class="menu-iconic bookmark-item"
+                label="&personalbarCmd.label;"
+                container="true">
+            <menupopup id="BMB_bookmarksToolbarPopup"
+                       placespopup="true"
+                       context="placesContext"
+                       onpopupshowing="if (!this.parentNode._placesView)
+                                         new PlacesMenu(event, 'place:folder=TOOLBAR');"/>
+          </menu>
+          <menuseparator/>
+          <!-- Bookmarks menu items -->
+          <menuseparator builder="end"
+                         class="hide-if-empty-places-result"/>
+          <menuitem id="BMB_unsortedBookmarks"
+                    label="&bookmarksMenuButton.unsorted.label;"
+                    oncommand="PlacesCommandHook.showPlacesOrganizer('UnfiledBookmarks');"
+                    class="menuitem-iconic"/>
+        </menupopup>
       </toolbarbutton>
 
       <toolbarbutton id="home-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
@@ -727,91 +800,6 @@
             <menuitem label="&social.learnMore.label;"
                       accesskey="&social.learnMore.accesskey;"
                       oncommand="SocialUI.showLearnMore();"/>
-          </menupopup>
-        </toolbarbutton>
-      </toolbaritem>
-
-      <toolbaritem id="bookmarks-menu-button-container"
-                   class="chromeclass-toolbar-additional"
-                   removable="true"
-                   title="&bookmarksMenuButton.label;">
-        <toolbarbutton id="bookmarks-menu-button"
-                       type="menu"
-                       class="toolbarbutton-1"
-                       label="&bookmarksMenuButton.label;"
-                       tooltiptext="&bookmarksMenuButton.tooltip;"
-                       ondragenter="PlacesMenuDNDHandler.onDragEnter(event);"
-                       ondragover="PlacesMenuDNDHandler.onDragOver(event);"
-                       ondragexit="PlacesMenuDNDHandler.onDragExit(event);"
-                       ondrop="PlacesMenuDNDHandler.onDrop(event);">
-          <menupopup id="BMB_bookmarksPopup"
-                     placespopup="true"
-                     context="placesContext"
-                     openInTabs="children"
-                     oncommand="BookmarksEventHandler.onCommand(event, this.parentNode._placesView);"
-                     onclick="BookmarksEventHandler.onClick(event, this.parentNode._placesView);"
-                     onpopupshowing="BookmarksMenuButton.onPopupShowing(event);
-                                     if (!this.parentNode._placesView)
-                                       new PlacesMenu(event, 'place:folder=BOOKMARKS_MENU');"
-                     tooltip="bhTooltip" popupsinherittooltip="true">
-            <menuitem id="BMB_viewBookmarksToolbar"
-                      placesanonid="view-toolbar"
-                      toolbarId="PersonalToolbar"
-                      type="checkbox"
-                      oncommand="onViewToolbarCommand(event)"
-                      label="&viewBookmarksToolbar.label;"/>
-            <menuseparator/>
-            <menuitem id="BMB_bookmarksShowAll"
-                      label="&showAllBookmarks2.label;"
-                      command="Browser:ShowAllBookmarks"
-                      key="manBookmarkKb"/>
-            <menuseparator/>
-            <menuitem id="BMB_bookmarkThisPage"
-#ifndef XP_MACOSX
-                      class="menuitem-iconic"
-#endif
-                      label="&bookmarkThisPageCmd.label;"
-                      command="Browser:AddBookmarkAs"
-                      key="addBookmarkAsKb"/>
-            <menuitem id="BMB_subscribeToPageMenuitem"
-#ifndef XP_MACOSX
-                      class="menuitem-iconic"
-#endif
-                      label="&subscribeToPageMenuitem.label;"
-                      oncommand="return FeedHandler.subscribeToFeed(null, event);"
-                      onclick="checkForMiddleClick(this, event);"
-                      observes="singleFeedMenuitemState"/>
-            <menu id="BMB_subscribeToPageMenupopup"
-#ifndef XP_MACOSX
-                  class="menu-iconic"
-#endif
-                  label="&subscribeToPageMenupopup.label;"
-                  observes="multipleFeedsMenuState">
-              <menupopup id="BMB_subscribeToPageSubmenuMenupopup"
-                         onpopupshowing="return FeedHandler.buildFeedList(event.target);"
-                         oncommand="return FeedHandler.subscribeToFeed(null, event);"
-                         onclick="checkForMiddleClick(this, event);"/>
-            </menu>
-            <menuseparator/>
-            <menu id="BMB_bookmarksToolbar"
-                  placesanonid="toolbar-autohide"
-                  class="menu-iconic bookmark-item"
-                  label="&personalbarCmd.label;"
-                  container="true">
-              <menupopup id="BMB_bookmarksToolbarPopup"
-                         placespopup="true"
-                         context="placesContext"
-                         onpopupshowing="if (!this.parentNode._placesView)
-                                           new PlacesMenu(event, 'place:folder=TOOLBAR');"/>
-            </menu>
-            <menuseparator/>
-            <!-- Bookmarks menu items -->
-            <menuseparator builder="end"
-                           class="hide-if-empty-places-result"/>
-            <menuitem id="BMB_unsortedBookmarks"
-                      label="&bookmarksMenuButton.unsorted.label;"
-                      oncommand="PlacesCommandHook.showPlacesOrganizer('UnfiledBookmarks');"
-                      class="menuitem-iconic"/>
           </menupopup>
         </toolbarbutton>
       </toolbaritem>
