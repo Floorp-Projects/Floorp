@@ -1,0 +1,104 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<bindings id="browserToolbarBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="toolbar">
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessibleType" readonly="true">
+        <getter>
+          return Components.interfaces.nsIAccessibleProvider.XULToolbar;
+        </getter>
+      </property>
+
+      <constructor><![CDATA[
+          if (document.readyState == "complete") {
+            this._init();
+          } else {
+            // Need to wait until XUL overlays are loaded. See bug 554279.
+            let self = this;
+            document.addEventListener("readystatechange", function onReadyStateChange() {
+              if (document.readyState != "complete")
+                return;
+              document.removeEventListener("readystatechange", onReadyStateChange, false);
+              self._init();
+            }, false);
+          }
+      ]]></constructor>
+
+      <method name="_init">
+        <body><![CDATA[
+          let scope = {};
+          Cu.import("resource:///modules/CustomizableUI.jsm", scope);
+          let CustomizableUI = scope.CustomizableUI;
+
+          // Searching for the toolbox palette in the toolbar binding because
+          // toolbars are constructed first.
+          let toolbox = this.toolbox;
+          if (toolbox && !toolbox.palette) {
+            for (let node of toolbox.children) {
+              if (node.localName == "toolbarpalette") {
+                // Hold on to the palette but remove it from the document.
+                toolbox.palette = node;
+                toolbox.removeChild(node);
+              }
+            }
+          }
+
+          CustomizableUI.registerToolbar(this);
+        ]]></body>
+      </method>
+
+      <property name="toolbarName"
+                onget="return this.getAttribute('toolbarname');"
+                onset="this.setAttribute('toolbarname', val); return val;"/>
+
+      <property name="customizationTarget" readonly="true">
+        <getter><![CDATA[
+          if (this._customizationTarget)
+            return this._customizationTarget;
+
+          let id = this.getAttribute("customizationtarget");
+          if (id)
+            this._customizationTarget = document.getElementById(id);
+          
+          if (!this._customizationTarget)
+            this._customizationTarget = this;
+
+          return this._customizationTarget;
+        ]]></getter>
+      </property>
+
+      <property name="toolbox" readonly="true">
+        <getter><![CDATA[
+          if (this._toolbox)
+            return this._toolbox;
+
+          let toolboxId = this.getAttribute("toolboxid");
+          if (toolboxId) {
+            let toolbox = document.getElementById(toolboxId);
+            if (toolbox) {
+              if (toolbox.externalToolbars.indexOf(this) == -1)
+                toolbox.externalToolbars.push(this);
+
+              this._toolbox = toolbox;
+            }
+          }
+
+          if (!this._toolbox && this.parentNode &&
+              this.parentNode.localName == "toolbox") {
+            this._toolbox = this.parentNode;
+          }
+
+          return this._toolbox;
+        ]]></getter>
+      </property>
+    </implementation>
+  </binding>
+
+</bindings>
