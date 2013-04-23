@@ -1541,24 +1541,29 @@ CodeGeneratorARM::storeElementTyped(const LAllocation *value, MIRType valueType,
 }
 
 bool
-CodeGeneratorARM::visitGuardShapeOrType(LGuardShapeOrType *guard)
+CodeGeneratorARM::visitGuardShape(LGuardShape *guard)
 {
     Register obj = ToRegister(guard->input());
     Register tmp = ToRegister(guard->tempInt());
 
-    if (guard->mir()->shape()) {
-        masm.ma_ldr(DTRAddr(obj, DtrOffImm(JSObject::offsetOfShape())), tmp);
-        masm.ma_cmp(tmp, ImmGCPtr(guard->mir()->shape()));
-    } else {
-        masm.ma_ldr(DTRAddr(obj, DtrOffImm(JSObject::offsetOfType())), tmp);
-        masm.ma_cmp(tmp, ImmGCPtr(guard->mir()->typeObject()));
-    }
+    masm.ma_ldr(DTRAddr(obj, DtrOffImm(JSObject::offsetOfShape())), tmp);
+    masm.ma_cmp(tmp, ImmGCPtr(guard->mir()->shape()));
+
+    return bailoutIf(Assembler::NotEqual, guard->snapshot());
+}
+
+bool
+CodeGeneratorARM::visitGuardObjectType(LGuardObjectType *guard)
+{
+    Register obj = ToRegister(guard->input());
+    Register tmp = ToRegister(guard->tempInt());
+
+    masm.ma_ldr(DTRAddr(obj, DtrOffImm(JSObject::offsetOfType())), tmp);
+    masm.ma_cmp(tmp, ImmGCPtr(guard->mir()->typeObject()));
 
     Assembler::Condition cond =
         guard->mir()->bailOnEquality() ? Assembler::Equal : Assembler::NotEqual;
-    if (!bailoutIf(cond, guard->snapshot()))
-        return false;
-    return true;
+    return bailoutIf(cond, guard->snapshot());
 }
 
 bool

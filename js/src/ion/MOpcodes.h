@@ -102,7 +102,8 @@ namespace ion {
     _(GetPropertyCache)                                                     \
     _(GetElementCache)                                                      \
     _(BindNameCache)                                                        \
-    _(GuardShapeOrType)                                                     \
+    _(GuardShape)                                                           \
+    _(GuardObjectType)                                                      \
     _(GuardClass)                                                           \
     _(ArrayLength)                                                          \
     _(TypedArrayLength)                                                     \

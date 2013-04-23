@@ -5525,37 +5525,29 @@ class MBindNameCache
     }
 };
 
-// Guard on an object's shape or type, either inclusively or exclusively.
-class MGuardShapeOrType
+// Guard on an object's shape.
+class MGuardShape
   : public MUnaryInstruction,
     public SingleObjectPolicy
 {
     CompilerRootShape shape_;
-    CompilerRoot<types::TypeObject*> typeObject_;
-    bool bailOnEquality_;
     BailoutKind bailoutKind_;
 
-    MGuardShapeOrType(MDefinition *obj, Shape *shape, types::TypeObject *typeObject,
-                      bool bailOnEquality, BailoutKind bailoutKind)
+    MGuardShape(MDefinition *obj, Shape *shape, BailoutKind bailoutKind)
       : MUnaryInstruction(obj),
         shape_(shape),
-        typeObject_(typeObject),
-        bailOnEquality_(bailOnEquality),
         bailoutKind_(bailoutKind)
     {
-        // Exactly one of the shape or type object to guard on must be specified.
-        JS_ASSERT(!!shape != !!typeObject);
         setGuard();
         setMovable();
         setResultType(MIRType_Object);
     }
 
   public:
-    INSTRUCTION_HEADER(GuardShapeOrType)
+    INSTRUCTION_HEADER(GuardShape)
 
-    static MGuardShapeOrType *New(MDefinition *obj, Shape *shape, types::TypeObject *typeObject,
-                                  bool bailOnEquality, BailoutKind bailoutKind) {
-        return new MGuardShapeOrType(obj, shape, typeObject, bailOnEquality, bailoutKind);
+    static MGuardShape *New(MDefinition *obj, Shape *shape, BailoutKind bailoutKind) {
+        return new MGuardShape(obj, shape, bailoutKind);
     }
 
     TypePolicy *typePolicy() {
@@ -5567,25 +5559,67 @@ class MGuardShapeOrType
     const RawShape shape() const {
         return shape_;
     }
-    types::TypeObject *typeObject() const {
+    BailoutKind bailoutKind() const {
+        return bailoutKind_;
+    }
+    bool congruentTo(MDefinition * const &ins) const {
+        if (!ins->isGuardShape())
+            return false;
+        if (shape() != ins->toGuardShape()->shape())
+            return false;
+        if (bailoutKind() != ins->toGuardShape()->bailoutKind())
+            return false;
+        return congruentIfOperandsEqual(ins);
+    }
+    AliasSet getAliasSet() const {
+        return AliasSet::Load(AliasSet::ObjectFields);
+    }
+};
+
+// Guard on an object's type, inclusively or exclusively.
+class MGuardObjectType
+  : public MUnaryInstruction,
+    public SingleObjectPolicy
+{
+    CompilerRoot<types::TypeObject *> typeObject_;
+    bool bailOnEquality_;
+
+    MGuardObjectType(MDefinition *obj, types::TypeObject *typeObject, bool bailOnEquality)
+      : MUnaryInstruction(obj),
+        typeObject_(typeObject),
+        bailOnEquality_(bailOnEquality)
+    {
+        setGuard();
+        setMovable();
+        setResultType(MIRType_Object);
+    }
+
+  public:
+    INSTRUCTION_HEADER(GuardObjectType)
+
+    static MGuardObjectType *New(MDefinition *obj, types::TypeObject *typeObject,
+                                 bool bailOnEquality) {
+        return new MGuardObjectType(obj, typeObject, bailOnEquality);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    MDefinition *obj() const {
+        return getOperand(0);
+    }
+    const types::TypeObject *typeObject() const {
         return typeObject_;
     }
     bool bailOnEquality() const {
         return bailOnEquality_;
     }
-    BailoutKind bailoutKind() const {
-        return bailoutKind_;
-    }
     bool congruentTo(MDefinition * const &ins) const {
-        if (!ins->isGuardShapeOrType())
+        if (!ins->isGuardObjectType())
             return false;
-        if (shape() != ins->toGuardShapeOrType()->shape())
+        if (typeObject() != ins->toGuardObjectType()->typeObject())
             return false;
-        if (typeObject() != ins->toGuardShapeOrType()->typeObject())
-            return false;
-        if (bailOnEquality() != ins->toGuardShapeOrType()->bailOnEquality())
-            return false;
-        if (bailoutKind() != ins->toGuardShapeOrType()->bailoutKind())
+        if (bailOnEquality() != ins->toGuardObjectType()->bailOnEquality())
             return false;
         return congruentIfOperandsEqual(ins);
     }
