@@ -43,8 +43,6 @@ endif #} LIBXUL_SDK
 
 # Build a binary bootstrapping with XRE_main
 
-CPPSRCS = nsBrowserApp.cpp
-
 LOCAL_INCLUDES += \
   -I$(topsrcdir)/toolkit/xre \
   -I$(topsrcdir)/xpcom/base \

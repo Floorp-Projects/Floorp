@@ -19,10 +19,6 @@ LOCAL_INCLUDES = \
   -I$(srcdir)/../build \
   $(NULL)
 
-CPPSRCS = \
-  nsFormFillController.cpp \
-  $(NULL)
-
 EXTRA_COMPONENTS = \
   nsFormAutoComplete.js \
   FormHistoryStartup.js \

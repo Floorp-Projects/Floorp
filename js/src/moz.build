@@ -81,3 +81,260 @@ EXPORTS.js += [
     'Vector.h',
 ]
 
+CPP_SOURCES += [
+    'ArgumentsObject.cpp',
+    'BytecodeCompiler.cpp',
+    'BytecodeEmitter.cpp',
+    'CharacterEncoding.cpp',
+    'DateTime.cpp',
+    'Debugger.cpp',
+    'Eval.cpp',
+    'ExecutableAllocator.cpp',
+    'FoldConstants.cpp',
+    'ForkJoin.cpp',
+    'GlobalObject.cpp',
+    'Intl.cpp',
+    'Iteration.cpp',
+    'LifoAlloc.cpp',
+    'MapObject.cpp',
+    'Marking.cpp',
+    'Memory.cpp',
+    'Module.cpp',
+    'Monitor.cpp',
+    'NameFunctions.cpp',
+    'Nursery.cpp',
+    'Object.cpp',
+    'ObjectImpl.cpp',
+    'PageBlock.cpp',
+    'ParallelArray.cpp',
+    'ParseMaps.cpp',
+    'ParseNode.cpp',
+    'Parser.cpp',
+    'Profilers.cpp',
+    'PropertyKey.cpp',
+    'RegExp.cpp',
+    'RegExpObject.cpp',
+    'RegExpStatics.cpp',
+    'RootMarking.cpp',
+    'SPSProfiler.cpp',
+    'ScopeObject.cpp',
+    'SelfHosting.cpp',
+    'Shape.cpp',
+    'Stack.cpp',
+    'Statistics.cpp',
+    'StoreBuffer.cpp',
+    'String.cpp',
+    'StringBuffer.cpp',
+    'TestingFunctions.cpp',
+    'ThreadPool.cpp',
+    'TokenStream.cpp',
+    'Unicode.cpp',
+    'Verifier.cpp',
+    'Xdr.cpp',
+    'YarrCanonicalizeUCS2.cpp',
+    'YarrInterpreter.cpp',
+    'YarrPattern.cpp',
+    'YarrSyntaxChecker.cpp',
+    'Zone.cpp',
+    'jsalloc.cpp',
+    'jsanalyze.cpp',
+    'jsapi.cpp',
+    'jsarray.cpp',
+    'jsatom.cpp',
+    'jsbool.cpp',
+    'jsclone.cpp',
+    'jscntxt.cpp',
+    'jscompartment.cpp',
+    'jscrashreport.cpp',
+    'jsdate.cpp',
+    'jsdbgapi.cpp',
+    'jsdhash.cpp',
+    'jsdtoa.cpp',
+    'jsexn.cpp',
+    'jsfriendapi.cpp',
+    'jsfun.cpp',
+    'jsgc.cpp',
+    'jsinfer.cpp',
+    'jsinterp.cpp',
+    'jsiter.cpp',
+    'jslog2.cpp',
+    'jsmath.cpp',
+    'jsmemorymetrics.cpp',
+    'jsnativestack.cpp',
+    'jsnum.cpp',
+    'jsobj.cpp',
+    'json.cpp',
+    'jsonparser.cpp',
+    'jsopcode.cpp',
+    'jsperf.cpp',
+    'jsprf.cpp',
+    'jsprobes.cpp',
+    'jspropertycache.cpp',
+    'jspropertytree.cpp',
+    'jsproxy.cpp',
+    'jsreflect.cpp',
+    'jsscript.cpp',
+    'jsstr.cpp',
+    'jstypedarray.cpp',
+    'jsutil.cpp',
+    'jswatchpoint.cpp',
+    'jsweakmap.cpp',
+    'jsworkers.cpp',
+    'jswrapper.cpp',
+    'prmjtime.cpp',
+    'sharkctl.cpp',
+]
+
+if CONFIG['MOZ_INSTRUMENTS']:
+    CPP_SOURCES += [
+        'Instruments.cpp',
+    ]
+
+if CONFIG['ENABLE_TRACE_LOGGING']:
+    CPP_SOURCES += [
+        'TraceLogging.cpp',
+    ]
+
+if CONFIG['ENABLE_ION']:
+    CPP_SOURCES += [
+        'AliasAnalysis.cpp',
+        'AsmJS.cpp',
+        'AsmJSLink.cpp',
+        'AsmJSSignalHandlers.cpp',
+        'BacktrackingAllocator.cpp',
+        'Bailouts.cpp',
+        'BaselineBailouts.cpp',
+        'BaselineCompiler-shared.cpp',
+        'BaselineCompiler.cpp',
+        'BaselineFrame.cpp',
+        'BaselineFrameInfo.cpp',
+        'BaselineIC.cpp',
+        'BaselineInspector.cpp',
+        'BaselineJIT.cpp',
+        'BitSet.cpp',
+        'BytecodeAnalysis.cpp',
+        'C1Spewer.cpp',
+        'CodeGenerator-shared.cpp',
+        'CodeGenerator.cpp',
+        'EdgeCaseAnalysis.cpp',
+        'EffectiveAddressAnalysis.cpp',
+        'Ion.cpp',
+        'IonAnalysis.cpp',
+        'IonBuilder.cpp',
+        'IonCaches.cpp',
+        'IonFrames.cpp',
+        'IonMacroAssembler.cpp',
+        'IonSpewer.cpp',
+        'JSONSpewer.cpp',
+        'PerfSpewer.cpp',
+        'LICM.cpp',
+        'LIR.cpp',
+        'LinearScan.cpp',
+        'LiveRangeAllocator.cpp',
+        'Lowering-shared.cpp',
+        'Lowering.cpp',
+        'MCallOptimize.cpp',
+        'MIR.cpp',
+        'MIRGraph.cpp',
+        'MoveResolver.cpp',
+        'ParallelArrayAnalysis.cpp',
+        'ParallelFunctions.cpp',
+        'RangeAnalysis.cpp',
+        'RegisterAllocator.cpp',
+        'Safepoints.cpp',
+        'Snapshots.cpp',
+        'StupidAllocator.cpp',
+        'TypePolicy.cpp',
+        'UnreachableCodeElimination.cpp',
+        'VMFunctions.cpp',
+        'ValueNumbering.cpp',
+    ]
+    if CONFIG['TARGET_CPU'].find('86') != -1:
+        CPP_SOURCES += [
+            'Assembler-x86-shared.cpp',
+            'BaselineCompiler-x86-shared.cpp',
+            'BaselineIC-x86-shared.cpp',
+            'CodeGenerator-x86-shared.cpp',
+            'IonFrames-x86-shared.cpp',
+            'Lowering-x86-shared.cpp',
+            'MoveEmitter-x86-shared.cpp',
+        ]
+        if CONFIG['TARGET_CPU'] == 'x86_64':
+            CPP_SOURCES += [
+                'Assembler-x64.cpp',
+                'Bailouts-x64.cpp',
+                'BaselineCompiler-x64.cpp',
+                'BaselineIC-x64.cpp',
+                'CodeGenerator-x64.cpp',
+                'Lowering-x64.cpp',
+                'MacroAssembler-x64.cpp',
+                'Trampoline-x64.cpp',
+            ]
+        else:
+            CPP_SOURCES += [
+                'Assembler-x86.cpp',
+                'Bailouts-x86.cpp',
+                'BaselineCompiler-x86.cpp',
+                'BaselineIC-x86.cpp',
+                'CodeGenerator-x86.cpp',
+                'Lowering-x86.cpp',
+                'MacroAssembler-x86.cpp',
+                'Trampoline-x86.cpp',
+            ]
+    elif CONFIG['TARGET_CPU'].find('arm') != -1:
+        CPP_SOURCES += [
+            'Architecture-arm.cpp',
+            'Assembler-arm.cpp',
+            'Bailouts-arm.cpp',
+            'BaselineCompiler-arm.cpp',
+            'BaselineIC-arm.cpp',
+            'CodeGenerator-arm.cpp',
+            'IonFrames-arm.cpp',
+            'Lowering-arm.cpp',
+            'MacroAssembler-arm.cpp',
+            'MoveEmitter-arm.cpp',
+            'Trampoline-arm.cpp',
+        ]
+
+if CONFIG['OS_ARCH'] == 'WINNT':
+    CPP_SOURCES += [
+        'ExecutableAllocatorWin.cpp',
+        'OSAllocatorWin.cpp',
+    ]
+elif CONFIG['OS_ARCH'] == 'OS2':
+    CPP_SOURCES += [
+        'ExecutableAllocatorOS2.cpp',
+        'OSAllocatorOS2.cpp',
+    ]
+else:
+    CPP_SOURCES += [
+        'ExecutableAllocatorPosix.cpp',
+        'OSAllocatorPosix.cpp',
+    ]
+
+if CONFIG['ENABLE_ION'] or CONFIG['ENABLE_YARR_JIT']:
+    CPP_SOURCES += [
+        'ARMAssembler.cpp',
+        'MacroAssemblerARM.cpp',
+        'MacroAssemblerX86Common.cpp',
+    ]
+
+if CONFIG['ENABLE_YARR_JIT']:
+    CPP_SOURCES += [
+        'YarrJIT.cpp'
+    ]
+
+if CONFIG['JS_HAS_CTYPES']:
+    CPP_SOURCES += [
+        'CTypes.cpp',
+        'Library.cpp',
+    ]
+
+if CONFIG['HAVE_LINUX_PERF_EVENT_H']:
+    CPP_SOURCES += [
+        'pm_linux.cpp'
+    ]
+else:
+    CPP_SOURCES += [
+        'pm_stub.cpp'
+    ]

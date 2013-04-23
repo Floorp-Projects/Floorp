@@ -12,3 +12,46 @@ EXPORTS += [
     'nsIImageToPixbuf.h',
 ]
 
+CPP_SOURCES += [
+    'WidgetTraceEvent.cpp',
+    'nsAppShell.cpp',
+    'nsBidiKeyboard.cpp',
+    'nsFilePicker.cpp',
+    'nsGtkIMModule.cpp',
+    'nsGtkKeyUtils.cpp',
+    'nsImageToPixbuf.cpp',
+    'nsLookAndFeel.cpp',
+    'nsNativeKeyBindings.cpp',
+    'nsNativeThemeGTK.cpp',
+    'nsScreenGtk.cpp',
+    'nsScreenManagerGtk.cpp',
+    'nsSound.cpp',
+    'nsToolkit.cpp',
+    'nsWidgetFactory.cpp',
+    'nsWindow.cpp',
+]
+
+if CONFIG['MOZ_X11']:
+    CPP_SOURCES += [
+        'nsIdleServiceGTK.cpp',
+    ]
+
+if CONFIG['NS_PRINTING']:
+    CPP_SOURCES += [
+        'nsDeviceContextSpecG.cpp',
+        'nsPrintOptionsGTK.cpp',
+        'nsPrintDialogGTK.cpp',
+        'nsPrintSettingsGTK.cpp',
+        'nsCUPSShim.cpp',
+        'nsPaperPS.cpp',
+        'nsPSPrinters.cpp',
+    ]
+
+if CONFIG['MOZ_X11']:
+    CPP_SOURCES += [
+        'nsClipboard.cpp',
+        'nsDragService.cpp',
+    ]
+
+CPP_SOURCES += [
+]

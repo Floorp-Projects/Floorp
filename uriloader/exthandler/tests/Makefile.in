@@ -12,10 +12,6 @@ include $(DEPTH)/config/autoconf.mk
 
 FAIL_ON_WARNINGS = 1
 
-CPPSRCS =	\
-		WriteArgument.cpp \
-		$(NULL)
-
 SIMPLE_PROGRAMS = $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
 include $(topsrcdir)/config/config.mk

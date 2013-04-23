@@ -10,3 +10,47 @@ EXPORTS += [
     'GfxInfoCollector.h',
 ]
 
+CPP_SOURCES += [
+    'GfxDriverInfo.cpp',
+    'GfxInfoBase.cpp',
+    'GfxInfoWebGL.cpp',
+    'InputData.cpp',
+    'PuppetWidget.cpp',
+    'WidgetUtils.cpp',
+    'nsBaseAppShell.cpp',
+    'nsBaseDragService.cpp',
+    'nsBaseScreen.cpp',
+    'nsBaseWidget.cpp',
+    'nsClipboardHelper.cpp',
+    'nsClipboardPrivacyHandler.cpp',
+    'nsFilePickerProxy.cpp',
+    'nsHTMLFormatConverter.cpp',
+    'nsIdleService.cpp',
+    'nsPrimitiveHelpers.cpp',
+    'nsPrintOptionsImpl.cpp',
+    'nsPrintSession.cpp',
+    'nsPrintSettingsImpl.cpp',
+    'nsTransferable.cpp',
+    'nsXPLookAndFeel.cpp',
+]
+
+if CONFIG['MOZ_X11']:
+    CPP_SOURCES += [
+        'GfxInfoX11.cpp'
+    ]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('os2', 'cocoa', 'windows'):
+    CPP_SOURCES += [
+        'nsBaseClipboard.cpp',
+    ]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('qt', 'gtk2', 'os2', 'cocoa', 'windows',
+                                    'android', 'gonk'):
+    CPP_SOURCES += [
+        'nsBaseFilePicker.cpp',
+    ]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('qt', 'gtk2', 'windows', 'cocoa'):
+    CPP_SOURCES += [
+        'nsNativeTheme.cpp',
+    ]

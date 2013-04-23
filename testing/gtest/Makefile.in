@@ -23,12 +23,6 @@ EXPORT_LIBRARY = 1
 LIBXUL_LIBRARY = 1
 IS_COMPONENT = 1
 
-CPPSRCS = \
-  gmock-all.cc \
-  gtest-all.cc \
-  GTestRunner.cpp \
-  $(NULL)
-
 GTEST_CPPSRCS = \
   SanityTest.cpp \
   $(NULL)

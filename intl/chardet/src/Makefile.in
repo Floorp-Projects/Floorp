@@ -17,9 +17,4 @@ MODULE_NAME = nsChardetModule
 LIBXUL_LIBRARY  = 1
 
 
-CPPSRCS		= \
-		nsCyrillicDetector.cpp \
-		nsChardetModule.cpp \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk

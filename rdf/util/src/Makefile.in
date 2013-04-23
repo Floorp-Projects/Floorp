@@ -21,9 +21,6 @@ EXTRA_DEPS += $(srcdir)/objs.mk
 LIBRARY_NAME	= rdfutil_external_s
 DIST_INSTALL = 1
 
-
-CPPSRCS		= $(RDF_UTIL_SRC_LCPPSRCS)
-
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
 

@@ -6,3 +6,7 @@
 
 MODULE = 'TestXPTC'
 
+CPP_SOURCES += [
+    'TestXPTCInvoke.cpp',
+]
+
