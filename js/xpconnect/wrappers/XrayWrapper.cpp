@@ -756,7 +756,8 @@ XPCWrappedNativeXrayTraits::resolveNativeProperty(JSContext *cx, HandleObject wr
     desc->obj = NULL;
 
     // This will do verification and the method lookup for us.
-    XPCCallContext ccx(JS_CALLER, cx, getTargetObject(wrapper), nullptr, id);
+    RootedObject target(cx, getTargetObject(wrapper));
+    XPCCallContext ccx(JS_CALLER, cx, target, NullPtr(), id);
 
     // There are no native numeric properties, so we can shortcut here. We will
     // not find the property. However we want to support non shadowing dom
@@ -1115,8 +1116,8 @@ XPCWrappedNativeXrayTraits::call(JSContext *cx, HandleObject wrapper,
     // Run the resolve hook of the wrapped native.
     XPCWrappedNative *wn = getWN(wrapper);
     if (NATIVE_HAS_FLAG(wn, WantCall)) {
-        XPCCallContext ccx(JS_CALLER, cx, wrapper, nullptr, JSID_VOID, args.length(), args.array(),
-                           args.rval().address());
+        XPCCallContext ccx(JS_CALLER, cx, wrapper, NullPtr(), JSID_VOIDHANDLE, args.length(),
+                           args.array(), args.rval().address());
         if (!ccx.IsValid())
             return false;
         bool ok = true;
@@ -1140,8 +1141,8 @@ XPCWrappedNativeXrayTraits::construct(JSContext *cx, HandleObject wrapper,
     // Run the resolve hook of the wrapped native.
     XPCWrappedNative *wn = getWN(wrapper);
     if (NATIVE_HAS_FLAG(wn, WantConstruct)) {
-        XPCCallContext ccx(JS_CALLER, cx, wrapper, nullptr, JSID_VOID, args.length(), args.array(),
-                           args.rval().address());
+        XPCCallContext ccx(JS_CALLER, cx, wrapper, NullPtr(), JSID_VOIDHANDLE, args.length(),
+                           args.array(), args.rval().address());
         if (!ccx.IsValid())
             return false;
         bool ok = true;

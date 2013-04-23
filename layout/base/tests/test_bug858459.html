@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=858459
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 858459</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 858459 **/
+
+var result = "";
+var timeout = null;
+var clicks = 0;
+const EXPECTED_RESULT = "change select";
+
+function logEvent(ev,msg) {
+  result += ev.type + ' ' + msg;
+  ++clicks;
+  if (result.length > EXPECTED_RESULT.length)
+    finishTest();
+}
+
+document.onclick = function(event) { logEvent(event,"document"); }
+
+SimpleTest.waitForExplicitFinish();
+
+function finishTest() {
+  if (!timeout) return;
+  clearTimeout(timeout);
+  timeout = null;
+  is(result,EXPECTED_RESULT,"");
+  SimpleTest.finish();
+}
+
+function runTest() {
+  // Need a timeout to check that an event has _not_ occurred.
+  timeout = setTimeout(finishTest, 5000);
+  synthesizeMouseAtCenter(document.getElementById('test858459'), { });
+}
+
+  </script>
+</head>
+<body onload="SimpleTest.waitForFocus(runTest)">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=858459">Mozilla Bug 858459</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test"><div><select id="test858459" size=4 onclick="logEvent(event,'select');" onchange="logEvent(event,'select');var div = document.querySelector('#test div'); div.innerHTML='<p>'+div.innerHTML; document.body.offsetHeight;"><option>1111111111111111<option>2<option>3</select></div>
+
+</pre>
+</body>
+</html>
