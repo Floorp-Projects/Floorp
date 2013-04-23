@@ -23,6 +23,9 @@ if CONFIG['OS_ARCH'] != 'ANDROID':
 TEST_DIRS += ['tests', 'gdb']
 
 MODULE = 'js'
+if CONFIG['JS_STANDALONE']:
+    MODULE = 'js-%s.%s%s' % (CONFIG['MOZJS_MAJOR_VERSION'], CONFIG['MOZJS_MINOR_VERSION'],
+                             CONFIG['MOZJS_ALPHA'])
 
 CONFIGURE_SUBST_FILES += ['devtools/rootAnalysis/Makefile']
 
