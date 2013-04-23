@@ -510,8 +510,7 @@ toolbar:not([mode="icons"]) #restore-button {
 }
 
 .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
-  width: 14px;
-  padding-top: 2px;
+  padding: 2px 4px 0;
   -moz-border-start: none !important;
 }
 
@@ -2704,10 +2703,14 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 :-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1:not([type="menu-button"]),
-:-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-button,
-:-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
+:-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   margin: 0;
   padding: 0 1px;
+}
+
+:-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
+  padding-left: 4px;
+  padding-right: 4px;
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled]):hover,
