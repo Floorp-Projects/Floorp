@@ -28,7 +28,7 @@ namespace layers {
 class AsyncPanZoomController;
 class GestureEventListener;
 class TargetConfig;
-class ShadowLayersParent;
+class LayerTransactionParent;
 struct TextureFactoryIdentifier;
 }
 
@@ -44,7 +44,7 @@ class RenderFrameParent : public PRenderFrameParent,
   typedef mozilla::layers::Layer Layer;
   typedef mozilla::layers::LayerManager LayerManager;
   typedef mozilla::layers::TargetConfig TargetConfig;
-  typedef mozilla::layers::ShadowLayersParent ShadowLayersParent;
+  typedef mozilla::layers::LayerTransactionParent LayerTransactionParent;
   typedef mozilla::FrameLayerBuilder::ContainerParameters ContainerParameters;
   typedef mozilla::layers::TextureFactoryIdentifier TextureFactoryIdentifier;
   typedef FrameMetrics::ViewID ViewID;
@@ -73,7 +73,7 @@ public:
 
   void ContentViewScaleChanged(nsContentView* aView);
 
-  virtual void ShadowLayersUpdated(ShadowLayersParent* aLayerTree,
+  virtual void ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
                                    const TargetConfig& aTargetConfig,
                                    bool isFirstPaint) MOZ_OVERRIDE;
 
@@ -112,15 +112,15 @@ protected:
   virtual bool RecvCancelDefaultPanZoom() MOZ_OVERRIDE;
   virtual bool RecvDetectScrollableSubframe() MOZ_OVERRIDE;
 
-  virtual PLayersParent* AllocPLayers() MOZ_OVERRIDE;
-  virtual bool DeallocPLayers(PLayersParent* aLayers) MOZ_OVERRIDE;
+  virtual PLayerTransactionParent* AllocPLayerTransaction() MOZ_OVERRIDE;
+  virtual bool DeallocPLayerTransaction(PLayerTransactionParent* aLayers) MOZ_OVERRIDE;
 
 private:
   void BuildViewMap();
   void TriggerRepaint();
   void DispatchEventForPanZoomController(const InputEvent& aEvent);
 
-  ShadowLayersParent* GetShadowLayers() const;
+  LayerTransactionParent* GetShadowLayers() const;
   uint64_t GetLayerTreeId() const;
   ContainerLayer* GetRootLayer() const;
 

@@ -38,10 +38,12 @@ public:
 
   static bool ChildProcessHasCompositor() { return sCompositor != nullptr; }
 protected:
-  virtual PLayersChild* AllocPLayers(const LayersBackend& aBackendHint,
-                                     const uint64_t& aId,
-                                     TextureFactoryIdentifier* aTextureFactoryIdentifier) MOZ_OVERRIDE;
-  virtual bool DeallocPLayers(PLayersChild *aChild) MOZ_OVERRIDE;
+  virtual PLayerTransactionChild*
+    AllocPLayerTransaction(const LayersBackend& aBackendHint,
+                           const uint64_t& aId,
+                           TextureFactoryIdentifier* aTextureFactoryIdentifier) MOZ_OVERRIDE;
+
+  virtual bool DeallocPLayerTransaction(PLayerTransactionChild *aChild) MOZ_OVERRIDE;
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
 

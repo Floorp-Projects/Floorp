@@ -21,7 +21,7 @@
 #include "mozilla/ipc/FileDescriptorUtils.h"
 #include "mozilla/layers/AsyncPanZoomController.h"
 #include "mozilla/layers/CompositorChild.h"
-#include "mozilla/layers/PLayersChild.h"
+#include "mozilla/layers/PLayerTransactionChild.h"
 #include "mozilla/layout/RenderFrameChild.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/unused.h"
@@ -2095,7 +2095,7 @@ TabChild::InitRenderingState()
       return false;
     }
 
-    PLayersChild* shadowManager = nullptr;
+    PLayerTransactionChild* shadowManager = nullptr;
     if (id != 0) {
         // Pushing layers transactions directly to a separate
         // compositor context.
@@ -2105,11 +2105,11 @@ TabChild::InitRenderingState()
           return false;
         }
         shadowManager =
-            compositorChild->SendPLayersConstructor(textureFactoryIdentifier.mParentBackend,
-                                                    id, &textureFactoryIdentifier);
+            compositorChild->SendPLayerTransactionConstructor(textureFactoryIdentifier.mParentBackend,
+                                                              id, &textureFactoryIdentifier);
     } else {
         // Pushing transactions to the parent content.
-        shadowManager = remoteFrame->SendPLayersConstructor();
+        shadowManager = remoteFrame->SendPLayerTransactionConstructor();
     }
 
     if (!shadowManager) {

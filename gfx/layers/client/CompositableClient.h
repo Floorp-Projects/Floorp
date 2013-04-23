@@ -16,7 +16,6 @@ namespace layers {
 class CompositableChild;
 class CompositableClient;
 class TextureClient;
-class ShadowLayersChild;
 class ImageBridgeChild;
 class ShadowableLayer;
 class CompositableForwarder;
