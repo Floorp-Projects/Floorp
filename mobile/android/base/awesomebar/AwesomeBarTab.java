@@ -7,13 +7,13 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.AwesomeBar.ContextMenuSubject;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
+import org.mozilla.gecko.gfx.BitmapUtils;
 
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.text.TextUtils;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
@@ -91,8 +91,8 @@ abstract public class AwesomeBarTab {
         byte[] b = cursor.getBlob(cursor.getColumnIndexOrThrow(URLColumns.FAVICON));
         Bitmap favicon = null;
         if (b != null) {
-            Bitmap bitmap = BitmapFactory.decodeByteArray(b, 0, b.length);
-            if (bitmap != null && bitmap.getWidth() > 0 && bitmap.getHeight() > 0) {
+            Bitmap bitmap = BitmapUtils.decodeByteArray(b);
+            if (bitmap != null) {
                 favicon = Favicons.getInstance().scaleImage(bitmap);
             }
         }
