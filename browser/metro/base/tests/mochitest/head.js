@@ -184,7 +184,7 @@ function addTab(aUrl) {
   return Task.spawn(function() {
     info("Opening "+aUrl+" in a new tab");
     let tab = Browser.addTab(aUrl, true);
-    yield waitForEvent(tab.browser, "pageshow");
+    yield tab.pageShowPromise;
 
     is(tab.browser.currentURI.spec, aUrl, aUrl + " is loaded");
     registerCleanupFunction(function() Browser.closeTab(tab));
@@ -213,7 +213,6 @@ function addTab(aUrl) {
  * @returns a Promise that resolves to the received event, or to an Error
  */
 function waitForEvent(aSubject, aEventName, aTimeoutMs) {
-  info("waitForEvent: on " + aSubject + " event: " + aEventName);
   let eventDeferred = Promise.defer();
   let timeoutMs = aTimeoutMs || kDefaultWait;
   let timerID = setTimeout(function wfe_canceller() {
