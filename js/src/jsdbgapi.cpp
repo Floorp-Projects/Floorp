@@ -36,6 +36,10 @@
 #include "vm/Debugger.h"
 #include "vm/Shape.h"
 
+#ifdef JS_ASMJS
+#include "ion/AsmJSModule.h"
+#endif
+
 #include "jsatominlines.h"
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
@@ -917,6 +921,34 @@ JS_DumpCompartmentPCCounts(JSContext *cx)
         if (script->hasScriptCounts && script->enclosingScriptsCompiledSuccessfully())
             JS_DumpPCCounts(cx, script);
     }
+
+#if defined(JS_ASMJS) && defined(DEBUG)
+    for (unsigned thingKind = FINALIZE_OBJECT0; thingKind < FINALIZE_OBJECT_LIMIT; thingKind++) {
+        for (CellIter i(cx->zone(), (AllocKind) thingKind); !i.done(); i.next()) {
+            JSObject *obj = i.get<JSObject>();
+            if (obj->compartment() != cx->compartment)
+                continue;
+
+            if (IsAsmJSModuleObject(obj)) {
+                AsmJSModule &module = AsmJSModuleObjectToModule(obj);
+
+                Sprinter sprinter(cx);
+                if (!sprinter.init())
+                    return;
+
+                fprintf(stdout, "--- Asm.js Module ---\n");
+
+                for (size_t i = 0; i < module.numFunctionCounts(); i++) {
+                    ion::IonScriptCounts *counts = module.functionCounts(i);
+                    DumpIonScriptCounts(&sprinter, counts);
+                }
+
+                fputs(sprinter.string(), stdout);
+                fprintf(stdout, "--- END Asm.js Module ---\n");
+            }
+        }
+    }
+#endif
 }
 
 JS_PUBLIC_API(JSObject *)
