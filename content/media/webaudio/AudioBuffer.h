@@ -89,12 +89,9 @@ public:
   }
 
   /**
-   * Returns a ThreadSharedFloatArrayBufferList containing the sample data
-   * at aRate. Sets *aLength to the number of samples per channel.
+   * Returns a ThreadSharedFloatArrayBufferList containing the sample data.
    */
-  ThreadSharedFloatArrayBufferList* GetThreadSharedChannelsForRate(JSContext* aContext,
-                                                                   uint32_t* aRate,
-                                                                   uint32_t* aLength);
+  ThreadSharedFloatArrayBufferList* GetThreadSharedChannelsForRate(JSContext* aContext);
 
   // aContents should either come from JS_AllocateArrayBufferContents or
   // JS_StealArrayBufferContents.

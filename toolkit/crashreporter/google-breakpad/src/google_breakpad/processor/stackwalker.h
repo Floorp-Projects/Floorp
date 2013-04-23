@@ -88,7 +88,10 @@ class Stackwalker {
      const CodeModules* modules,
      StackFrameSymbolizer* resolver_helper);
 
-  static void set_max_frames(uint32_t max_frames) { max_frames_ = max_frames; }
+  static void set_max_frames(uint32_t max_frames) {
+    max_frames_ = max_frames;
+    max_frames_set_ = true;
+  }
   static uint32_t max_frames() { return max_frames_; }
 
  protected:
@@ -196,6 +199,11 @@ class Stackwalker {
   // The maximum number of frames Stackwalker will walk through.
   // This defaults to 1024 to prevent infinite loops.
   static uint32_t max_frames_;
+
+  // Keep track of whether max_frames_ has been set by the user, since
+  // it affects whether or not an error message is printed in the case
+  // where an unwind got stopped by the limit.
+  static bool max_frames_set_;
 };
 
 }  // namespace google_breakpad

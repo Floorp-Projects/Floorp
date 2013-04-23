@@ -8,6 +8,7 @@ let port = 2929;
 
 function run_test()
 {
+  do_print("Starting test at " + new Date().toTimeString());
   // Allow incoming connections.
   DebuggerServer.init(function () true);
   DebuggerServer.addActors("resource://test/testactors.js");
@@ -37,6 +38,7 @@ function test_socket_conn()
   do_check_true(DebuggerServer.openListener(port));
   do_check_eq(DebuggerServer._socketConnections, 1);
 
+  do_print("Starting long and unicode tests at " + new Date().toTimeString());
   let unicodeString = "(╯°□°）╯︵ ┻━┻";
   let transport = debuggerSocketConnect("127.0.0.1", port);
   transport.hooks = {
@@ -69,6 +71,7 @@ function test_socket_shutdown()
   do_check_false(DebuggerServer.closeListener());
   do_check_eq(DebuggerServer._socketConnections, 0);
 
+  do_print("Connecting to a server socket at " + new Date().toTimeString());
   let transport = debuggerSocketConnect("127.0.0.1", port);
   transport.hooks = {
     onPacket: function(aPacket) {
@@ -77,11 +80,13 @@ function test_socket_shutdown()
     },
 
     onClosed: function(aStatus) {
-      do_check_eq(aStatus, Components.results.NS_ERROR_CONNECTION_REFUSED);
+      do_print("test_socket_shutdown onClosed called at " + new Date().toTimeString());
+      do_check_eq(aStatus, Cr.NS_ERROR_CONNECTION_REFUSED);
       run_next_test();
     }
   };
 
+  do_print("Initializing input stream at " + new Date().toTimeString());
   transport.ready();
 }
 

@@ -1646,6 +1646,12 @@ void do_breakpad_unwind_Buffer(/*OUT*/PCandSP** pairs,
 
   std::vector<const google_breakpad::CodeModule*>* modules_without_symbols
     = new std::vector<const google_breakpad::CodeModule*>();
+
+  // Set the max number of frames to a reasonably low level.  By
+  // default Breakpad's limit is 1024, which means it can wind up
+  // spending a lot of time looping on corrupted stacks.
+  sw->set_max_frames(256);
+
   bool b = sw->Walk(stack, modules_without_symbols);
   (void)b;
   delete modules_without_symbols;

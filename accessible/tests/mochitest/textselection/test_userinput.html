@@ -1,0 +1,95 @@
+<html>
+
+<head>
+  <title>Text selection by user input</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+    /**
+     * Invokers
+     */
+    function synthTabAndCheckPrevTabbed(aID, aPrevID)
+    {
+      this.__proto__ = new synthTab(aID, new focusChecker(aID));
+
+      this.finalCheck = function changeSelection_finalCheck()
+      {
+        var prevTabbed = getAccessible(aPrevID, [ nsIAccessibleText ]);
+        is(prevTabbed.selectionCount, 0,
+           "Wrong selection count for " + aPrevID);
+
+        var exceptionCaught = false;
+        try {
+          var startOffsetObj = {}, endOffsetObj = {};
+          prevTabbed.getSelectionBounds(0, startOffsetObj, endOffsetObj);
+        } catch (e) {
+          exceptionCaught = true;
+        }
+
+        ok(exceptionCaught, "No selection was expected for " + aPrevID);
+      }
+
+      this.getID = function changeSelection_getID()
+      {
+        return "Hidden selection check for " + aPrevID;
+      }
+    }
+
+    /**
+     * Do tests
+     */
+
+    //gA11yEventDumpToConsole = true; // debug stuff
+
+    var gQueue = null;
+    function doTests()
+    {
+      gQueue = new eventQueue();
+
+      // Tab to 't2' and then tab out it: it must has no selection.
+      gQueue.push(new synthFocus("t1"));
+      gQueue.push(new synthTab("t2", new focusChecker("t2")));
+      gQueue.push(new synthTabAndCheckPrevTabbed("t3", "t2"));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=440590"
+     title="Text selection information is not updated when HTML and XUL entries lose focus">
+    Bug 440590
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <input type="text" id="t1" maxlength="3" size="3" value="1">
+  <input type="text" id="t2" maxlength="3" size="3" value="1">
+  <input type="text" id="t3" maxlength="3" size="3" value="1">
+
+</body>
+</html>

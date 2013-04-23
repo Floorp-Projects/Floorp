@@ -1295,26 +1295,22 @@ PushService.prototype = {
    */
   _getNetworkState: function() {
     debug("getNetworkState()");
-
-    var networkManager = Cc["@mozilla.org/network/manager;1"]
-                           .getService(Ci.nsINetworkManager);
-    if (networkManager.active &&
-        networkManager.active.type ==
-                      Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE) {
-      debug("Running on mobile data");
-      var mcp = Cc["@mozilla.org/ril/content-helper;1"]
-                  .getService(Ci.nsIMobileConnectionProvider);
-      if (mcp.iccInfo) {
-        return {
-          mcc: mcp.iccInfo.mcc,
-          mnc: mcp.iccInfo.mnc,
-          ip: networkManager.active.ip
+    try {
+      var nm = Cc["@mozilla.org/network/manager;1"].getService(Ci.nsINetworkManager);
+      if (nm.active && nm.active.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE) {
+        var mcp = Cc["@mozilla.org/ril/content-helper;1"].getService(Ci.nsIMobileConnectionProvider);
+        if (mcp.iccInfo) {
+          debug("Running on mobile data");
+          return {
+            mcc: mcp.iccInfo.mcc,
+            mnc: mcp.iccInfo.mnc,
+            ip:  nm.active.ip
+          }
         }
       }
-    }
-    else {
-      debug("Running on wifi");
-    }
+    } catch (e) {}
+
+    debug("Running on wifi");
 
     return {
       mcc: 0,
