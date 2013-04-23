@@ -1145,7 +1145,7 @@ _reloadplugins(NPBool reloadPages)
   if (!pluginHost)
     return;
 
-  pluginHost->ReloadPlugins(reloadPages);
+  pluginHost->ReloadPlugins();
 }
 
 void NP_CALLBACK
