@@ -29,6 +29,7 @@ MOCHITEST_FILES := \
   test_biquadFilterNode.html \
   test_currentTime.html \
   test_delayNode.html \
+  test_delayNodeWithGain.html \
   test_decodeAudioData.html \
   test_dynamicsCompressorNode.html \
   test_gainNode.html \

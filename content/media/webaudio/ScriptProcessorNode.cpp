@@ -201,9 +201,10 @@ public:
                 aInput.GetDuration());
       } else {
         mSeenNonSilenceInput = true;
-        PodCopy(mInputChannels[i] + mInputWriteIndex,
-                static_cast<const float*>(aInput.mChannelData[i]),
-                aInput.GetDuration());
+        MOZ_ASSERT(aInput.GetDuration() == WEBAUDIO_BLOCK_SIZE, "sanity check");
+        AudioBlockCopyChannelWithScale(static_cast<const float*>(aInput.mChannelData[i]),
+                                       aInput.mVolume,
+                                       mInputChannels[i] + mInputWriteIndex);
       }
     }
     mInputWriteIndex += aInput.GetDuration();

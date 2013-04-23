@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>Test DelayNode</title>
+  <title>Test DelayNode with a GainNode</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
@@ -21,7 +21,7 @@ addLoadEvent(function() {
   }
   var expectedBuffer = context.createBuffer(1, 2048 * 2, context.sampleRate);
   for (var i = 2048; i < 2048 * 2; ++i) {
-    expectedBuffer.getChannelData(0)[i] = buffer.getChannelData(0)[i - 2048];
+    expectedBuffer.getChannelData(0)[i] = buffer.getChannelData(0)[i - 2048] / 2;
   }
 
   var destination = context.destination;
@@ -30,43 +30,16 @@ addLoadEvent(function() {
 
   var delay = context.createDelay();
 
-  var delay2 = context.createDelayNode();
-  isnot(delay, delay2, "createDelayNode should create a different delay node");
-
   source.buffer = buffer;
 
-  source.connect(delay);
+  var gain = context.createGain();
+  gain.gain.value = 0.5;
+
+  source.connect(gain);
+  gain.connect(delay);
   var sp = context.createScriptProcessor(2048 * 2, 1);
   delay.connect(sp);
   sp.connect(destination);
-
-  ok(delay.delayTime, "The audioparam member must exist");
-  is(delay.delayTime.value, 0, "Correct initial value");
-  is(delay.delayTime.defaultValue, 0, "Correct default value");
-  delay.delayTime.value = 0.5;
-  is(delay.delayTime.value, 0.5, "Correct initial value");
-  is(delay.delayTime.defaultValue, 0, "Correct default value");
-
-  var delay2 = context.createDelay(2);
-  is(delay2.delayTime.value, 0, "Correct initial value");
-  is(delay2.delayTime.defaultValue, 0, "Correct default value");
-  delay2.delayTime.value = 0.5;
-  is(delay2.delayTime.value, 0.5, "Correct initial value");
-  is(delay2.delayTime.defaultValue, 0, "Correct default value");
-
-  expectException(function() {
-    context.createDelay(0);
-  }, DOMException.NOT_SUPPORTED_ERR);
-  expectException(function() {
-    context.createDelay(180);
-  }, DOMException.NOT_SUPPORTED_ERR);
-  expectTypeError(function() {
-    context.createDelay(NaN);
-  }, DOMException.NOT_SUPPORTED_ERR);
-  expectException(function() {
-    context.createDelay(-1);
-  }, DOMException.NOT_SUPPORTED_ERR);
-  context.createDelay(1); // should not throw
 
   // Delay the source stream by 2048 frames
   delay.delayTime.value = 2048 / context.sampleRate;
