@@ -133,8 +133,12 @@ let WebAppRT = {
   handleEvent: function(event) {
     let target = event.target;
   
-    if (!(target instanceof HTMLAnchorElement) ||
-        target.getAttribute("target") != "_blank") {
+    // walk up the tree to find the nearest link tag
+    while(target && !(target instanceof HTMLAnchorElement)) {
+      target = target.parentNode;
+    }
+
+    if (!target || target.getAttribute("target") != "_blank") {
       return;
     }
   
