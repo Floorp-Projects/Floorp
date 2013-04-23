@@ -11,7 +11,8 @@ function test() {
   tab.linkedBrowser.addEventListener("load", (function(event) {
     tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
 
-    is(PlacesStarButton._starIcon.getAttribute("tooltiptext"), PlacesStarButton._unstarredTooltip,
+    is(BookmarksMenuButton.button.getAttribute("tooltiptext"),
+       BookmarksMenuButton._unstarredTooltip,
        "Star icon should have the unstarred tooltip text");
   
     gBrowser.removeCurrentTab();

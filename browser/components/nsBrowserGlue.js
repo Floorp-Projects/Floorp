@@ -1170,7 +1170,7 @@ BrowserGlue.prototype = {
   },
 
   _migrateUI: function BG__migrateUI() {
-    const UI_VERSION = 11;
+    const UI_VERSION = 12;
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul#";
     let currentUIVersion = 0;
     try {
@@ -1334,6 +1334,33 @@ BrowserGlue.prototype = {
       Services.prefs.clearUserPref("dom.event.contextmenu.enabled");
       Services.prefs.clearUserPref("javascript.enabled");
       Services.prefs.clearUserPref("permissions.default.image");
+    }
+
+    if (currentUIVersion < 12) {
+      // Remove bookmarks-menu-button-container, then place
+      // bookmarks-menu-button into its position.
+      let currentsetResource = this._rdf.GetResource("currentset");
+      let toolbarResource = this._rdf.GetResource(BROWSER_DOCURL + "nav-bar");
+      let currentset = this._getPersist(toolbarResource, currentsetResource);
+      // Need to migrate only if toolbar is customized.
+      if (currentset) {
+        if (currentset.contains("bookmarks-menu-button-container"))
+          currentset = currentset.replace(/(^|,)bookmarks-menu-button-container($|,)/,"$2");
+
+        // Now insert the new button.
+        if (currentset.contains("downloads-button")) {
+          currentset = currentset.replace(/(^|,)downloads-button($|,)/,
+                                          "$1bookmarks-menu-button,downloads-button$2");
+        } else if (currentset.contains("home-button")) {
+          currentset = currentset.replace(/(^|,)home-button($|,)/,
+                                          "$1bookmarks-menu-button,home-button$2");
+        } else {
+          // Just append.
+          currentset = currentset.replace(/(^|,)window-controls($|,)/,
+                                          "$1bookmarks-menu-button,window-controls$2")
+        }
+        this._setPersist(toolbarResource, currentsetResource, currentset);
+      }
     }
 
     if (this._dirty)

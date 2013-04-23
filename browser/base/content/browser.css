@@ -304,17 +304,18 @@ toolbarbutton.bookmark-item {
   max-width: 13em;
 }
 
-%ifdef MENUBAR_CAN_AUTOHIDE
-#toolbar-menubar:not([autohide="true"]) ~ #nav-bar > #bookmarks-menu-button-container,
-#toolbar-menubar:not([autohide="true"]) ~ toolbar > #personal-bookmarks > #bookmarks-menu-button,
-#toolbar-menubar:not([autohide="true"]) > #personal-bookmarks > #bookmarks-menu-button {
-  display: none;
-}
-%endif
-
 #editBMPanel_tagsSelector {
   /* override default listbox width from xul.css */
   width: auto;
+}
+
+/* The star doesn't make sense as text */
+toolbar[mode="text"] #bookmarks-menu-button > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
+  display: -moz-box !important;
+}
+toolbar[mode="text"] #bookmarks-menu-button > .toolbarbutton-menubutton-button > .toolbarbutton-text,
+toolbar[mode="full"] #bookmarks-menu-button.bookmark-item > .toolbarbutton-menubutton-button > .toolbarbutton-text {
+  display: none;
 }
 
 menupopup[emptyplacesresult="true"] > .hide-if-empty-places-result {
