@@ -59,6 +59,7 @@
       gQueue.push(new takeFocusInvoker("lb_item2"));
       gQueue.push(new takeFocusInvoker(document));
       gQueue.push(new takeFocusInvoker("lb_item3.2"));
+      gQueue.push(new takeFocusInvoker(document));
       gQueue.push(new takeFocusInvoker("lb_item3.1"));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
