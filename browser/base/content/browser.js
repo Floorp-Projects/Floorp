@@ -4581,11 +4581,11 @@ var TabsInTitlebar = {
     let titlebarContent = $("titlebar-content");
     let menubar = $("toolbar-menubar");
 
-    // Reset the margins that _update modifies so that we can take accurate
-    // measurements.
+    // Reset the margins and padding that _update modifies so that we can take
+    // accurate measurements.
     titlebarContent.style.marginBottom = "";
     titlebar.style.marginBottom = "";
-    menubar.style.marginBottom = "";
+    menubar.style.paddingBottom = "";
 
     if (allowed) {
       // We set the tabsintitlebar attribute first so that our CSS for
@@ -4608,7 +4608,7 @@ var TabsInTitlebar = {
       // bottom of the menubar so that it matches.
       if (menuHeight && titlebarContentHeight > menuHeight) {
         let menuTitlebarDelta = titlebarContentHeight - menuHeight;
-        menubar.style.marginBottom = menuTitlebarDelta + "px";
+        menubar.style.paddingBottom = menuTitlebarDelta + "px";
         menuHeight += menuTitlebarDelta;
       }
 
