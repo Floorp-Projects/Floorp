@@ -30,6 +30,7 @@ public:
   virtual ~ScriptProcessorNode();
 
   NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ScriptProcessorNode, AudioNode)
 
   IMPL_EVENT_HANDLER(audioprocess)
 
@@ -38,6 +39,23 @@ public:
   virtual bool SupportsMediaStreams() const MOZ_OVERRIDE
   {
     return true;
+  }
+
+  virtual void Connect(AudioNode& aDestination, uint32_t aOutput,
+                       uint32_t aInput, ErrorResult& aRv) MOZ_OVERRIDE
+  {
+    AudioNode::Connect(aDestination, aOutput, aInput, aRv);
+    if (!aRv.Failed()) {
+      mPlayingRef.Take(this);
+    }
+  }
+
+  virtual void Disconnect(uint32_t aOutput, ErrorResult& aRv) MOZ_OVERRIDE
+  {
+    AudioNode::Disconnect(aOutput, aRv);
+    if (!aRv.Failed()) {
+      mPlayingRef.Drop(this);
+    }
   }
 
   uint32_t BufferSize() const
@@ -57,10 +75,16 @@ public:
 
   using nsDOMEventTargetHelper::DispatchTrustedEvent;
 
+  void Stop()
+  {
+    mPlayingRef.Drop(this);
+  }
+
 private:
   nsAutoPtr<SharedBuffers> mSharedBuffers;
   const uint32_t mBufferSize;
   const uint32_t mNumberOfOutputChannels;
+  SelfReference<ScriptProcessorNode> mPlayingRef; // a reference to self while planing
 };
 
 }

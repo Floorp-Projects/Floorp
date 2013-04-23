@@ -54,60 +54,53 @@ GetPNGDecoderAccountingLog()
 #define HEIGHT_OFFSET (WIDTH_OFFSET + 4)
 #define BYTES_NEEDED_FOR_DIMENSIONS (HEIGHT_OFFSET + 4)
 
-struct AnimFrameInfo
-{
-  AnimFrameInfo()
-   : mDispose(RasterImage::kDisposeKeep)
-   , mBlend(RasterImage::kBlendOver)
-   , mTimeout(0)
-  {}
+nsPNGDecoder::AnimFrameInfo::AnimFrameInfo()
+ : mDispose(RasterImage::kDisposeKeep)
+ , mBlend(RasterImage::kBlendOver)
+ , mTimeout(0)
+{}
 
 #ifdef PNG_APNG_SUPPORTED
-  AnimFrameInfo(png_structp aPNG, png_infop aInfo)
-   : mDispose(RasterImage::kDisposeKeep)
-   , mBlend(RasterImage::kBlendOver)
-   , mTimeout(0)
-  {
-    png_uint_16 delay_num, delay_den;
-    /* delay, in seconds is delay_num/delay_den */
-    png_byte dispose_op;
-    png_byte blend_op;
-    delay_num = png_get_next_frame_delay_num(aPNG, aInfo);
-    delay_den = png_get_next_frame_delay_den(aPNG, aInfo);
-    dispose_op = png_get_next_frame_dispose_op(aPNG, aInfo);
-    blend_op = png_get_next_frame_blend_op(aPNG, aInfo);
+nsPNGDecoder::AnimFrameInfo::AnimFrameInfo(png_structp aPNG, png_infop aInfo)
+ : mDispose(RasterImage::kDisposeKeep)
+ , mBlend(RasterImage::kBlendOver)
+ , mTimeout(0)
+{
+  png_uint_16 delay_num, delay_den;
+  /* delay, in seconds is delay_num/delay_den */
+  png_byte dispose_op;
+  png_byte blend_op;
+  delay_num = png_get_next_frame_delay_num(aPNG, aInfo);
+  delay_den = png_get_next_frame_delay_den(aPNG, aInfo);
+  dispose_op = png_get_next_frame_dispose_op(aPNG, aInfo);
+  blend_op = png_get_next_frame_blend_op(aPNG, aInfo);
 
-    if (delay_num == 0) {
-      mTimeout = 0; // SetFrameTimeout() will set to a minimum
-    } else {
-      if (delay_den == 0)
-        delay_den = 100; // so says the APNG spec
+  if (delay_num == 0) {
+    mTimeout = 0; // SetFrameTimeout() will set to a minimum
+  } else {
+    if (delay_den == 0)
+      delay_den = 100; // so says the APNG spec
 
-      // Need to cast delay_num to float to have a proper division and
-      // the result to int to avoid compiler warning
-      mTimeout = static_cast<int32_t>(static_cast<double>(delay_num) * 1000 / delay_den);
-    }
-
-    if (dispose_op == PNG_DISPOSE_OP_PREVIOUS) {
-      mDispose = RasterImage::kDisposeRestorePrevious;
-    } else if (dispose_op == PNG_DISPOSE_OP_BACKGROUND) {
-      mDispose = RasterImage::kDisposeClear;
-    } else {
-      mDispose = RasterImage::kDisposeKeep;
-    }
-
-    if (blend_op == PNG_BLEND_OP_SOURCE) {
-      mBlend = RasterImage::kBlendSource;
-    } else {
-      mBlend = RasterImage::kBlendOver;
-    }
+    // Need to cast delay_num to float to have a proper division and
+    // the result to int to avoid compiler warning
+    mTimeout = static_cast<int32_t>(static_cast<double>(delay_num) * 1000 / delay_den);
   }
-#endif
 
-  RasterImage::FrameDisposalMethod mDispose;
-  RasterImage::FrameBlendMethod mBlend;
-  int32_t mTimeout;
-};
+  if (dispose_op == PNG_DISPOSE_OP_PREVIOUS) {
+    mDispose = RasterImage::kDisposeRestorePrevious;
+  } else if (dispose_op == PNG_DISPOSE_OP_BACKGROUND) {
+    mDispose = RasterImage::kDisposeClear;
+  } else {
+    mDispose = RasterImage::kDisposeKeep;
+  }
+
+  if (blend_op == PNG_BLEND_OP_SOURCE) {
+    mBlend = RasterImage::kBlendSource;
+  } else {
+    mBlend = RasterImage::kBlendOver;
+  }
+}
+#endif
 
 // First 8 bytes of a PNG file
 const uint8_t 
@@ -163,6 +156,12 @@ void nsPNGDecoder::CreateFrame(png_uint_32 x_offset, png_uint_32 y_offset,
           &mImage));
 
   mFrameHasNoAlpha = true;
+
+#ifdef PNG_APNG_SUPPORTED
+  if (png_get_valid(mPNG, mInfo, PNG_INFO_acTL)) {
+    mAnimInfo = AnimFrameInfo(mPNG, mInfo);
+  }
+#endif
 }
 
 // set timeout and frame disposal method for the current frame
@@ -179,8 +178,6 @@ void nsPNGDecoder::EndImageFrame()
   else
     alpha = RasterImage::kFrameHasAlpha;
 
-  AnimFrameInfo animInfo;
-
 #ifdef PNG_APNG_SUPPORTED
   uint32_t numFrames = GetFrameCount();
 
@@ -188,13 +185,9 @@ void nsPNGDecoder::EndImageFrame()
   if (numFrames > 1) {
     PostInvalidation(mFrameRect);
   }
-
-  if (png_get_valid(mPNG, mInfo, PNG_INFO_acTL)) {
-    animInfo = AnimFrameInfo(mPNG, mInfo);
-  }
 #endif
 
-  PostFrameStop(alpha, animInfo.mDispose, animInfo.mTimeout, animInfo.mBlend);
+  PostFrameStop(alpha, mAnimInfo.mDispose, mAnimInfo.mTimeout, mAnimInfo.mBlend);
 }
 
 void

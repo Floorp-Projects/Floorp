@@ -2535,7 +2535,7 @@ array_isArray(JSContext *cx, unsigned argc, Value *vp)
 
 #define GENERIC JSFUN_GENERIC_NATIVE
 
-static JSFunctionSpec array_methods[] = {
+static const JSFunctionSpec array_methods[] = {
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str,      array_toSource,     0,0),
 #endif
@@ -2570,7 +2570,7 @@ static JSFunctionSpec array_methods[] = {
     JS_FS_END
 };
 
-static JSFunctionSpec array_static_methods[] = {
+static const JSFunctionSpec array_static_methods[] = {
     JS_FN("isArray",            array_isArray,      1,0),
          {"lastIndexOf",        {NULL, NULL},       2,0, "ArrayStaticLastIndexOf"},
          {"indexOf",            {NULL, NULL},       2,0, "ArrayStaticIndexOf"},

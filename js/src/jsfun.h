@@ -440,7 +440,7 @@ ReportIncompatible(JSContext *cx, CallReceiver call);
 JSBool
 CallOrConstructBoundFunction(JSContext *, unsigned, js::Value *);
 
-extern JSFunctionSpec function_methods[];
+extern const JSFunctionSpec function_methods[];
 
 } /* namespace js */
 

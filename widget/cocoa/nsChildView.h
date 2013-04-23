@@ -267,18 +267,10 @@ typedef NSInteger NSEventGestureAxis;
     eGestureState_None,
     eGestureState_StartGesture,
     eGestureState_MagnifyGesture,
-    eGestureState_RotateGesture,
-    eGestureState_TapGesture
+    eGestureState_RotateGesture
   } mGestureState;
   float mCumulativeMagnification;
   float mCumulativeRotation;
-
-  // Custom double tap gesture support
-  //
-  // mFirstTapTime keeps track of the time when the first tap occured
-  // and is used to check whether second tap should be recognized as
-  // a double tap gesture.
-  NSTimeInterval mFirstTapTime;
 
   BOOL mDidForceRefreshOpenGL;
   BOOL mWaitingForPaint;
@@ -348,10 +340,6 @@ typedef NSInteger NSEventGestureAxis;
 - (void)magnifyWithEvent:(NSEvent *)anEvent;
 - (void)rotateWithEvent:(NSEvent *)anEvent;
 - (void)endGestureWithEvent:(NSEvent *)anEvent;
-
-// Not a genuine nsResponder method, but called by touchesBeganWithEvent
-// to simulate double-tap recognition
-- (void)tapWithEvent:(NSEvent *)anEvent;
 
 // Support for fluid swipe tracking.
 #ifdef __LP64__

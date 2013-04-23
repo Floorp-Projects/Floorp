@@ -33,9 +33,6 @@ namespace ion {
     _(CreateThis)                                                           \
     _(CreateThisWithProto)                                                  \
     _(CreateThisWithTemplate)                                               \
-    _(CreateArgumentsObject)                                                \
-    _(GetArgumentsObjectArg)                                                \
-    _(SetArgumentsObjectArg)                                                \
     _(PrepareCall)                                                          \
     _(PassArg)                                                              \
     _(Call)                                                                 \
@@ -105,7 +102,7 @@ namespace ion {
     _(GetPropertyCache)                                                     \
     _(GetElementCache)                                                      \
     _(BindNameCache)                                                        \
-    _(GuardShape)                                                           \
+    _(GuardShapeOrType)                                                     \
     _(GuardClass)                                                           \
     _(ArrayLength)                                                          \
     _(TypedArrayLength)                                                     \
@@ -138,6 +135,7 @@ namespace ion {
     _(CallGetElement)                                                       \
     _(CallSetElement)                                                       \
     _(CallSetProperty)                                                      \
+    _(CallInitElementArray)                                                 \
     _(DeleteProperty)                                                       \
     _(SetPropertyCache)                                                     \
     _(IteratorStart)                                                        \

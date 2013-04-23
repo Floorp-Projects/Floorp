@@ -1308,97 +1308,97 @@ nsWindow::DispatchMotionEvent(nsInputEvent &event, AndroidGeckoEvent *ae,
 static unsigned int ConvertAndroidKeyCodeToDOMKeyCode(int androidKeyCode)
 {
     // Special-case alphanumeric keycodes because they are most common.
-    if (androidKeyCode >= AndroidKeyEvent::KEYCODE_A &&
-        androidKeyCode <= AndroidKeyEvent::KEYCODE_Z) {
-        return androidKeyCode - AndroidKeyEvent::KEYCODE_A + NS_VK_A;
+    if (androidKeyCode >= AKEYCODE_A &&
+        androidKeyCode <= AKEYCODE_Z) {
+        return androidKeyCode - AKEYCODE_A + NS_VK_A;
     }
 
-    if (androidKeyCode >= AndroidKeyEvent::KEYCODE_0 &&
-        androidKeyCode <= AndroidKeyEvent::KEYCODE_9) {
-        return androidKeyCode - AndroidKeyEvent::KEYCODE_0 + NS_VK_0;
+    if (androidKeyCode >= AKEYCODE_0 &&
+        androidKeyCode <= AKEYCODE_9) {
+        return androidKeyCode - AKEYCODE_0 + NS_VK_0;
     }
 
     switch (androidKeyCode) {
         // KEYCODE_UNKNOWN (0) ... KEYCODE_HOME (3)
-        case AndroidKeyEvent::KEYCODE_BACK:               return NS_VK_ESCAPE;
+        case AKEYCODE_BACK:               return NS_VK_ESCAPE;
         // KEYCODE_CALL (5) ... KEYCODE_POUND (18)
-        case AndroidKeyEvent::KEYCODE_DPAD_UP:            return NS_VK_UP;
-        case AndroidKeyEvent::KEYCODE_DPAD_DOWN:          return NS_VK_DOWN;
-        case AndroidKeyEvent::KEYCODE_DPAD_LEFT:          return NS_VK_LEFT;
-        case AndroidKeyEvent::KEYCODE_DPAD_RIGHT:         return NS_VK_RIGHT;
-        case AndroidKeyEvent::KEYCODE_DPAD_CENTER:        return NS_VK_RETURN;
-        case AndroidKeyEvent::KEYCODE_VOLUME_UP:          return NS_VK_VOLUME_UP;
-        case AndroidKeyEvent::KEYCODE_VOLUME_DOWN:        return NS_VK_VOLUME_DOWN;
+        case AKEYCODE_DPAD_UP:            return NS_VK_UP;
+        case AKEYCODE_DPAD_DOWN:          return NS_VK_DOWN;
+        case AKEYCODE_DPAD_LEFT:          return NS_VK_LEFT;
+        case AKEYCODE_DPAD_RIGHT:         return NS_VK_RIGHT;
+        case AKEYCODE_DPAD_CENTER:        return NS_VK_RETURN;
+        case AKEYCODE_VOLUME_UP:          return NS_VK_VOLUME_UP;
+        case AKEYCODE_VOLUME_DOWN:        return NS_VK_VOLUME_DOWN;
         // KEYCODE_VOLUME_POWER (26) ... KEYCODE_Z (54)
-        case AndroidKeyEvent::KEYCODE_COMMA:              return NS_VK_COMMA;
-        case AndroidKeyEvent::KEYCODE_PERIOD:             return NS_VK_PERIOD;
-        case AndroidKeyEvent::KEYCODE_ALT_LEFT:           return NS_VK_ALT;
-        case AndroidKeyEvent::KEYCODE_ALT_RIGHT:          return NS_VK_ALT;
-        case AndroidKeyEvent::KEYCODE_SHIFT_LEFT:         return NS_VK_SHIFT;
-        case AndroidKeyEvent::KEYCODE_SHIFT_RIGHT:        return NS_VK_SHIFT;
-        case AndroidKeyEvent::KEYCODE_TAB:                return NS_VK_TAB;
-        case AndroidKeyEvent::KEYCODE_SPACE:              return NS_VK_SPACE;
+        case AKEYCODE_COMMA:              return NS_VK_COMMA;
+        case AKEYCODE_PERIOD:             return NS_VK_PERIOD;
+        case AKEYCODE_ALT_LEFT:           return NS_VK_ALT;
+        case AKEYCODE_ALT_RIGHT:          return NS_VK_ALT;
+        case AKEYCODE_SHIFT_LEFT:         return NS_VK_SHIFT;
+        case AKEYCODE_SHIFT_RIGHT:        return NS_VK_SHIFT;
+        case AKEYCODE_TAB:                return NS_VK_TAB;
+        case AKEYCODE_SPACE:              return NS_VK_SPACE;
         // KEYCODE_SYM (63) ... KEYCODE_ENVELOPE (65)
-        case AndroidKeyEvent::KEYCODE_ENTER:              return NS_VK_RETURN;
-        case AndroidKeyEvent::KEYCODE_DEL:                return NS_VK_BACK; // Backspace
-        case AndroidKeyEvent::KEYCODE_GRAVE:              return NS_VK_BACK_QUOTE;
+        case AKEYCODE_ENTER:              return NS_VK_RETURN;
+        case AKEYCODE_DEL:                return NS_VK_BACK; // Backspace
+        case AKEYCODE_GRAVE:              return NS_VK_BACK_QUOTE;
         // KEYCODE_MINUS (69)
-        case AndroidKeyEvent::KEYCODE_EQUALS:             return NS_VK_EQUALS;
-        case AndroidKeyEvent::KEYCODE_LEFT_BRACKET:       return NS_VK_OPEN_BRACKET;
-        case AndroidKeyEvent::KEYCODE_RIGHT_BRACKET:      return NS_VK_CLOSE_BRACKET;
-        case AndroidKeyEvent::KEYCODE_BACKSLASH:          return NS_VK_BACK_SLASH;
-        case AndroidKeyEvent::KEYCODE_SEMICOLON:          return NS_VK_SEMICOLON;
+        case AKEYCODE_EQUALS:             return NS_VK_EQUALS;
+        case AKEYCODE_LEFT_BRACKET:       return NS_VK_OPEN_BRACKET;
+        case AKEYCODE_RIGHT_BRACKET:      return NS_VK_CLOSE_BRACKET;
+        case AKEYCODE_BACKSLASH:          return NS_VK_BACK_SLASH;
+        case AKEYCODE_SEMICOLON:          return NS_VK_SEMICOLON;
         // KEYCODE_APOSTROPHE (75)
-        case AndroidKeyEvent::KEYCODE_SLASH:              return NS_VK_SLASH;
+        case AKEYCODE_SLASH:              return NS_VK_SLASH;
         // KEYCODE_AT (77) ... KEYCODE_MEDIA_FAST_FORWARD (90)
-        case AndroidKeyEvent::KEYCODE_MUTE:               return NS_VK_VOLUME_MUTE;
-        case AndroidKeyEvent::KEYCODE_PAGE_UP:            return NS_VK_PAGE_UP;
-        case AndroidKeyEvent::KEYCODE_PAGE_DOWN:          return NS_VK_PAGE_DOWN;
+        case AKEYCODE_MUTE:               return NS_VK_VOLUME_MUTE;
+        case AKEYCODE_PAGE_UP:            return NS_VK_PAGE_UP;
+        case AKEYCODE_PAGE_DOWN:          return NS_VK_PAGE_DOWN;
         // KEYCODE_PICTSYMBOLS (94) ... KEYCODE_BUTTON_MODE (110)
-        case AndroidKeyEvent::KEYCODE_ESCAPE:             return NS_VK_ESCAPE;
-        case AndroidKeyEvent::KEYCODE_FORWARD_DEL:        return NS_VK_DELETE;
-        case AndroidKeyEvent::KEYCODE_CTRL_LEFT:          return NS_VK_CONTROL;
-        case AndroidKeyEvent::KEYCODE_CTRL_RIGHT:         return NS_VK_CONTROL;
-        case AndroidKeyEvent::KEYCODE_CAPS_LOCK:          return NS_VK_CAPS_LOCK;
-        case AndroidKeyEvent::KEYCODE_SCROLL_LOCK:        return NS_VK_SCROLL_LOCK;
+        case AKEYCODE_ESCAPE:             return NS_VK_ESCAPE;
+        case AKEYCODE_FORWARD_DEL:        return NS_VK_DELETE;
+        case AKEYCODE_CTRL_LEFT:          return NS_VK_CONTROL;
+        case AKEYCODE_CTRL_RIGHT:         return NS_VK_CONTROL;
+        case AKEYCODE_CAPS_LOCK:          return NS_VK_CAPS_LOCK;
+        case AKEYCODE_SCROLL_LOCK:        return NS_VK_SCROLL_LOCK;
         // KEYCODE_META_LEFT (117) ... KEYCODE_FUNCTION (119)
-        case AndroidKeyEvent::KEYCODE_SYSRQ:              return NS_VK_PRINTSCREEN;
-        case AndroidKeyEvent::KEYCODE_BREAK:              return NS_VK_PAUSE;
-        case AndroidKeyEvent::KEYCODE_MOVE_HOME:          return NS_VK_HOME;
-        case AndroidKeyEvent::KEYCODE_MOVE_END:           return NS_VK_END;
-        case AndroidKeyEvent::KEYCODE_INSERT:             return NS_VK_INSERT;
+        case AKEYCODE_SYSRQ:              return NS_VK_PRINTSCREEN;
+        case AKEYCODE_BREAK:              return NS_VK_PAUSE;
+        case AKEYCODE_MOVE_HOME:          return NS_VK_HOME;
+        case AKEYCODE_MOVE_END:           return NS_VK_END;
+        case AKEYCODE_INSERT:             return NS_VK_INSERT;
         // KEYCODE_FORWARD (125) ... KEYCODE_MEDIA_RECORD (130)
-        case AndroidKeyEvent::KEYCODE_F1:                 return NS_VK_F1;
-        case AndroidKeyEvent::KEYCODE_F2:                 return NS_VK_F2;
-        case AndroidKeyEvent::KEYCODE_F3:                 return NS_VK_F3;
-        case AndroidKeyEvent::KEYCODE_F4:                 return NS_VK_F4;
-        case AndroidKeyEvent::KEYCODE_F5:                 return NS_VK_F5;
-        case AndroidKeyEvent::KEYCODE_F6:                 return NS_VK_F6;
-        case AndroidKeyEvent::KEYCODE_F7:                 return NS_VK_F7;
-        case AndroidKeyEvent::KEYCODE_F8:                 return NS_VK_F8;
-        case AndroidKeyEvent::KEYCODE_F9:                 return NS_VK_F9;
-        case AndroidKeyEvent::KEYCODE_F10:                return NS_VK_F10;
-        case AndroidKeyEvent::KEYCODE_F11:                return NS_VK_F11;
-        case AndroidKeyEvent::KEYCODE_F12:                return NS_VK_F12;
-        case AndroidKeyEvent::KEYCODE_NUM_LOCK:           return NS_VK_NUM_LOCK;
-        case AndroidKeyEvent::KEYCODE_NUMPAD_0:           return NS_VK_NUMPAD0;
-        case AndroidKeyEvent::KEYCODE_NUMPAD_1:           return NS_VK_NUMPAD1;
-        case AndroidKeyEvent::KEYCODE_NUMPAD_2:           return NS_VK_NUMPAD2;
-        case AndroidKeyEvent::KEYCODE_NUMPAD_3:           return NS_VK_NUMPAD3;
-        case AndroidKeyEvent::KEYCODE_NUMPAD_4:           return NS_VK_NUMPAD4;
-        case AndroidKeyEvent::KEYCODE_NUMPAD_5:           return NS_VK_NUMPAD5;
-        case AndroidKeyEvent::KEYCODE_NUMPAD_6:           return NS_VK_NUMPAD6;
-        case AndroidKeyEvent::KEYCODE_NUMPAD_7:           return NS_VK_NUMPAD7;
-        case AndroidKeyEvent::KEYCODE_NUMPAD_8:           return NS_VK_NUMPAD8;
-        case AndroidKeyEvent::KEYCODE_NUMPAD_9:           return NS_VK_NUMPAD9;
-        case AndroidKeyEvent::KEYCODE_NUMPAD_DIVIDE:      return NS_VK_DIVIDE;
-        case AndroidKeyEvent::KEYCODE_NUMPAD_MULTIPLY:    return NS_VK_MULTIPLY;
-        case AndroidKeyEvent::KEYCODE_NUMPAD_SUBTRACT:    return NS_VK_SUBTRACT;
-        case AndroidKeyEvent::KEYCODE_NUMPAD_ADD:         return NS_VK_ADD;
-        case AndroidKeyEvent::KEYCODE_NUMPAD_DOT:         return NS_VK_DECIMAL;
-        case AndroidKeyEvent::KEYCODE_NUMPAD_COMMA:       return NS_VK_SEPARATOR;
-        case AndroidKeyEvent::KEYCODE_NUMPAD_ENTER:       return NS_VK_RETURN;
-        case AndroidKeyEvent::KEYCODE_NUMPAD_EQUALS:      return NS_VK_EQUALS;
+        case AKEYCODE_F1:                 return NS_VK_F1;
+        case AKEYCODE_F2:                 return NS_VK_F2;
+        case AKEYCODE_F3:                 return NS_VK_F3;
+        case AKEYCODE_F4:                 return NS_VK_F4;
+        case AKEYCODE_F5:                 return NS_VK_F5;
+        case AKEYCODE_F6:                 return NS_VK_F6;
+        case AKEYCODE_F7:                 return NS_VK_F7;
+        case AKEYCODE_F8:                 return NS_VK_F8;
+        case AKEYCODE_F9:                 return NS_VK_F9;
+        case AKEYCODE_F10:                return NS_VK_F10;
+        case AKEYCODE_F11:                return NS_VK_F11;
+        case AKEYCODE_F12:                return NS_VK_F12;
+        case AKEYCODE_NUM_LOCK:           return NS_VK_NUM_LOCK;
+        case AKEYCODE_NUMPAD_0:           return NS_VK_NUMPAD0;
+        case AKEYCODE_NUMPAD_1:           return NS_VK_NUMPAD1;
+        case AKEYCODE_NUMPAD_2:           return NS_VK_NUMPAD2;
+        case AKEYCODE_NUMPAD_3:           return NS_VK_NUMPAD3;
+        case AKEYCODE_NUMPAD_4:           return NS_VK_NUMPAD4;
+        case AKEYCODE_NUMPAD_5:           return NS_VK_NUMPAD5;
+        case AKEYCODE_NUMPAD_6:           return NS_VK_NUMPAD6;
+        case AKEYCODE_NUMPAD_7:           return NS_VK_NUMPAD7;
+        case AKEYCODE_NUMPAD_8:           return NS_VK_NUMPAD8;
+        case AKEYCODE_NUMPAD_9:           return NS_VK_NUMPAD9;
+        case AKEYCODE_NUMPAD_DIVIDE:      return NS_VK_DIVIDE;
+        case AKEYCODE_NUMPAD_MULTIPLY:    return NS_VK_MULTIPLY;
+        case AKEYCODE_NUMPAD_SUBTRACT:    return NS_VK_SUBTRACT;
+        case AKEYCODE_NUMPAD_ADD:         return NS_VK_ADD;
+        case AKEYCODE_NUMPAD_DOT:         return NS_VK_DECIMAL;
+        case AKEYCODE_NUMPAD_COMMA:       return NS_VK_SEPARATOR;
+        case AKEYCODE_NUMPAD_ENTER:       return NS_VK_RETURN;
+        case AKEYCODE_NUMPAD_EQUALS:      return NS_VK_EQUALS;
         // KEYCODE_NUMPAD_LEFT_PAREN (162) ... KEYCODE_CALCULATOR (210)
 
         default:
@@ -1489,41 +1489,41 @@ nsWindow::HandleSpecialKey(AndroidGeckoEvent *ae)
 {
     nsRefPtr<nsWindow> kungFuDeathGrip(this);
     nsCOMPtr<nsIAtom> command;
-    bool isDown = ae->Action() == AndroidKeyEvent::ACTION_DOWN;
-    bool isLongPress = !!(ae->Flags() & AndroidKeyEvent::FLAG_LONG_PRESS);
+    bool isDown = ae->Action() == AKEY_EVENT_ACTION_DOWN;
+    bool isLongPress = !!(ae->Flags() & AKEY_EVENT_FLAG_LONG_PRESS);
     bool doCommand = false;
     uint32_t keyCode = ae->KeyCode();
 
     if (isDown) {
         switch (keyCode) {
-            case AndroidKeyEvent::KEYCODE_BACK:
+            case AKEYCODE_BACK:
                 if (isLongPress) {
                     command = nsGkAtoms::Clear;
                     doCommand = true;
                 }
                 break;
-            case AndroidKeyEvent::KEYCODE_MENU:
+            case AKEYCODE_MENU:
                 gMenu = true;
                 gMenuConsumed = isLongPress;
                 break;
         }
     } else {
         switch (keyCode) {
-            case AndroidKeyEvent::KEYCODE_BACK: {
+            case AKEYCODE_BACK: {
                 nsKeyEvent pressEvent(true, NS_KEY_PRESS, this);
                 ANPEvent pluginEvent;
                 InitKeyEvent(pressEvent, *ae, &pluginEvent);
                 DispatchEvent(&pressEvent);
                 return;
             }
-            case AndroidKeyEvent::KEYCODE_MENU:
+            case AKEYCODE_MENU:
                 gMenu = false;
                 if (!gMenuConsumed) {
                     command = nsGkAtoms::Menu;
                     doCommand = true;
                 }
                 break;
-            case AndroidKeyEvent::KEYCODE_SEARCH:
+            case AKEYCODE_SEARCH:
                 command = nsGkAtoms::Search;
                 doCommand = true;
                 break;
@@ -1546,13 +1546,13 @@ nsWindow::OnKeyEvent(AndroidGeckoEvent *ae)
     RemoveIMEComposition();
     uint32_t msg;
     switch (ae->Action()) {
-    case AndroidKeyEvent::ACTION_DOWN:
+    case AKEY_EVENT_ACTION_DOWN:
         msg = NS_KEY_DOWN;
         break;
-    case AndroidKeyEvent::ACTION_UP:
+    case AKEY_EVENT_ACTION_UP:
         msg = NS_KEY_UP;
         break;
-    case AndroidKeyEvent::ACTION_MULTIPLE:
+    case AKEY_EVENT_ACTION_MULTIPLE:
         {
             nsTextEvent event(true, NS_TEXT_TEXT, this);
             event.theText.Assign(ae->Characters());
@@ -1564,19 +1564,19 @@ nsWindow::OnKeyEvent(AndroidGeckoEvent *ae)
         return;
     }
 
-    bool firePress = ae->Action() == AndroidKeyEvent::ACTION_DOWN;
+    bool firePress = ae->Action() == AKEY_EVENT_ACTION_DOWN;
     switch (ae->KeyCode()) {
-    case AndroidKeyEvent::KEYCODE_SHIFT_LEFT:
-    case AndroidKeyEvent::KEYCODE_SHIFT_RIGHT:
-    case AndroidKeyEvent::KEYCODE_ALT_LEFT:
-    case AndroidKeyEvent::KEYCODE_ALT_RIGHT:
-    case AndroidKeyEvent::KEYCODE_CTRL_LEFT:
-    case AndroidKeyEvent::KEYCODE_CTRL_RIGHT:
+    case AKEYCODE_SHIFT_LEFT:
+    case AKEYCODE_SHIFT_RIGHT:
+    case AKEYCODE_ALT_LEFT:
+    case AKEYCODE_ALT_RIGHT:
+    case AKEYCODE_CTRL_LEFT:
+    case AKEYCODE_CTRL_RIGHT:
         firePress = false;
         break;
-    case AndroidKeyEvent::KEYCODE_BACK:
-    case AndroidKeyEvent::KEYCODE_MENU:
-    case AndroidKeyEvent::KEYCODE_SEARCH:
+    case AKEYCODE_BACK:
+    case AKEYCODE_MENU:
+    case AKEYCODE_SEARCH:
         HandleSpecialKey(ae);
         return;
     }

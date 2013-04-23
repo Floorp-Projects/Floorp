@@ -11,8 +11,8 @@
 
 namespace js {
 
-extern JSFunctionSpec object_methods[];
-extern JSFunctionSpec object_static_methods[];
+extern const JSFunctionSpec object_methods[];
+extern const JSFunctionSpec object_static_methods[];
 
 /* Object constructor native. Exposed only so the JIT can know its address. */
 extern JSBool

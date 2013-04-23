@@ -600,12 +600,12 @@ collator_toSource(JSContext *cx, unsigned argc, Value *vp)
 }
 #endif
 
-static JSFunctionSpec collator_static_methods[] = {
+static const JSFunctionSpec collator_static_methods[] = {
     {"supportedLocalesOf", JSOP_NULLWRAPPER, 1, JSFunction::INTERPRETED, "Intl_Collator_supportedLocalesOf"},
     JS_FS_END
 };
 
-static JSFunctionSpec collator_methods[] = {
+static const JSFunctionSpec collator_methods[] = {
     {"resolvedOptions", JSOP_NULLWRAPPER, 0, JSFunction::INTERPRETED, "Intl_Collator_resolvedOptions"},
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str, collator_toSource, 0, 0),
@@ -1078,12 +1078,12 @@ numberFormat_toSource(JSContext *cx, unsigned argc, Value *vp)
 }
 #endif
 
-static JSFunctionSpec numberFormat_static_methods[] = {
+static const JSFunctionSpec numberFormat_static_methods[] = {
     {"supportedLocalesOf", JSOP_NULLWRAPPER, 1, JSFunction::INTERPRETED, "Intl_NumberFormat_supportedLocalesOf"},
     JS_FS_END
 };
 
-static JSFunctionSpec numberFormat_methods[] = {
+static const JSFunctionSpec numberFormat_methods[] = {
     {"resolvedOptions", JSOP_NULLWRAPPER, 0, JSFunction::INTERPRETED, "Intl_NumberFormat_resolvedOptions"},
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str, numberFormat_toSource, 0, 0),
@@ -1527,12 +1527,12 @@ dateTimeFormat_toSource(JSContext *cx, unsigned argc, Value *vp)
 }
 #endif
 
-static JSFunctionSpec dateTimeFormat_static_methods[] = {
+static const JSFunctionSpec dateTimeFormat_static_methods[] = {
     {"supportedLocalesOf", JSOP_NULLWRAPPER, 1, JSFunction::INTERPRETED, "Intl_DateTimeFormat_supportedLocalesOf"},
     JS_FS_END
 };
 
-static JSFunctionSpec dateTimeFormat_methods[] = {
+static const JSFunctionSpec dateTimeFormat_methods[] = {
     {"resolvedOptions", JSOP_NULLWRAPPER, 0, JSFunction::INTERPRETED, "Intl_DateTimeFormat_resolvedOptions"},
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str, dateTimeFormat_toSource, 0, 0),
@@ -2002,7 +2002,7 @@ intl_toSource(JSContext *cx, unsigned argc, Value *vp)
 }
 #endif
 
-static JSFunctionSpec intl_static_methods[] = {
+static const JSFunctionSpec intl_static_methods[] = {
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str,  intl_toSource,        0, 0),
 #endif

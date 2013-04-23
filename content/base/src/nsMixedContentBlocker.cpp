@@ -25,6 +25,7 @@
 #include "nsIDocumentLoader.h"
 #include "nsIWebNavigation.h"
 #include "nsLoadGroup.h"
+#include "nsIScriptError.h"
 
 #include "prlog.h"
 
@@ -145,6 +146,24 @@ nsMixedContentBlocker::~nsMixedContentBlocker()
 }
 
 NS_IMPL_ISUPPORTS1(nsMixedContentBlocker, nsIContentPolicy)
+
+void
+LogBlockingMixedContent(MixedContentTypes classification,
+                        nsIURI* aContentLocation,
+                        nsIDocument* aRootDoc)
+{
+  nsAutoCString locationSpec;
+  aContentLocation->GetSpec(locationSpec);
+  NS_ConvertUTF8toUTF16 locationSpecUTF16(locationSpec);
+
+  const PRUnichar* strings[] = { locationSpecUTF16.get() };
+  nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
+                                  "Mixed Content Blocker",
+                                  aRootDoc,
+                                  nsContentUtils::eSECURITY_PROPERTIES,
+                                  classification == eMixedDisplay ? "BlockMixedDisplayContent" : "BlockMixedActiveContent",
+                                  strings, ArrayLength(strings));
+}
 
 NS_IMETHODIMP
 nsMixedContentBlocker::ShouldLoad(uint32_t aContentType,
@@ -441,6 +460,7 @@ nsMixedContentBlocker::ShouldLoad(uint32_t aContentType,
       }
     } else {
       *aDecision = nsIContentPolicy::REJECT_REQUEST;
+      LogBlockingMixedContent(classification, aContentLocation, rootDoc);
       if (!rootDoc->GetHasMixedDisplayContentBlocked() && NS_SUCCEEDED(stateRV)) {
         eventSink->OnSecurityChange(aRequestingContext, (State | nsIWebProgressListener::STATE_BLOCKED_MIXED_DISPLAY_CONTENT));
       }
@@ -481,6 +501,7 @@ nsMixedContentBlocker::ShouldLoad(uint32_t aContentType,
     } else {
        //User has not overriden the pref by Disabling protection. Reject the request and update the security state.
        *aDecision = nsIContentPolicy::REJECT_REQUEST;
+       LogBlockingMixedContent(classification, aContentLocation, rootDoc);
        // See if the pref will change here. If it will, only then do we need to call OnSecurityChange() to update the UI.
        if (rootDoc->GetHasMixedActiveContentBlocked()) {
          return NS_OK;
