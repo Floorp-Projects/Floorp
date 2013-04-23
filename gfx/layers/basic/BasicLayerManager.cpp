@@ -6,8 +6,8 @@
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/Hal.h"
 #include "mozilla/layers/PLayerChild.h"
-#include "mozilla/layers/PLayersChild.h"
-#include "mozilla/layers/PLayersParent.h"
+#include "mozilla/layers/PLayerTransactionChild.h"
+#include "mozilla/layers/PLayerTransactionParent.h"
 
 #include "gfxSharedImageSurface.h"
 #include "gfxImageSurface.h"
@@ -1333,7 +1333,7 @@ void
 BasicShadowLayerManager::ClearCachedResources(Layer* aSubtree)
 {
   MOZ_ASSERT(!HasShadowManager() || !aSubtree);
-  if (PLayersChild* manager = GetShadowManager()) {
+  if (PLayerTransactionChild* manager = GetShadowManager()) {
     manager->SendClearCachedResources();
   }
   BasicLayerManager::ClearCachedResources(aSubtree);

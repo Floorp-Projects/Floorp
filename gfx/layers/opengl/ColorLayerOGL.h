@@ -6,7 +6,7 @@
 #ifndef GFX_COLORLAYEROGL_H
 #define GFX_COLORLAYEROGL_H
 
-#include "mozilla/layers/PLayers.h"
+#include "mozilla/layers/PLayerTransaction.h"
 #include "mozilla/layers/ShadowLayers.h"
 
 #include "LayerManagerOGL.h"

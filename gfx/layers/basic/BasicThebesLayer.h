@@ -6,7 +6,7 @@
 #ifndef GFX_BASICTHEBESLAYER_H
 #define GFX_BASICTHEBESLAYER_H
 
-#include "mozilla/layers/PLayersParent.h"
+#include "mozilla/layers/PLayerTransactionParent.h"
 #include "BasicLayersImpl.h"
 #include "mozilla/layers/ContentClient.h"
 

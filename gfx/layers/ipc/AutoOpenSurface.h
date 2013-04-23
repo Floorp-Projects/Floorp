@@ -11,7 +11,7 @@
 #include "base/basictypes.h"
 
 #include "gfxASurface.h"
-#include "mozilla/layers/PLayers.h"
+#include "mozilla/layers/PLayerTransaction.h"
 #include "ShadowLayers.h"
 
 namespace mozilla {
