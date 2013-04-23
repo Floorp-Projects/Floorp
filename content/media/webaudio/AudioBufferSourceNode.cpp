@@ -428,11 +428,9 @@ AudioBufferSourceNode::AudioBufferSourceNode(AudioContext* aContext)
 
 AudioBufferSourceNode::~AudioBufferSourceNode()
 {
-  // 
   if (Context()) {
     Context()->UnregisterAudioBufferSourceNode(this);
   }
-  DestroyMediaStream();
 }
 
 JSObject*
@@ -457,10 +455,10 @@ AudioBufferSourceNode::Start(JSContext* aCx, double aWhen, double aOffset,
     return;
   }
 
-  uint32_t rate;
-  uint32_t lengthSamples;
+  float rate = mBuffer->SampleRate();
+  int32_t lengthSamples = mBuffer->Length();
   nsRefPtr<ThreadSharedFloatArrayBufferList> data =
-    mBuffer->GetThreadSharedChannelsForRate(aCx, &rate, &lengthSamples);
+    mBuffer->GetThreadSharedChannelsForRate(aCx);
   double length = double(lengthSamples) / rate;
   double offset = std::max(0.0, aOffset);
   double endOffset = aDuration.WasPassed() ?

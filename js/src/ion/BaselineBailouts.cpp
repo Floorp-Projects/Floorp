@@ -1164,6 +1164,13 @@ ion::FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo)
 
     IonSpew(IonSpew_BaselineBailouts, "  Done restoring frames");
 
+    // Check that we can get the current script's PC.
+#ifdef DEBUG
+    jsbytecode *pc;
+    cx->stack.currentScript(&pc);
+    IonSpew(IonSpew_BaselineBailouts, "  Got pc=%p", pc);
+#endif
+
     uint32_t numFrames = bailoutInfo->numFrames;
     JS_ASSERT(numFrames > 0);
     BailoutKind bailoutKind = bailoutInfo->bailoutKind;
