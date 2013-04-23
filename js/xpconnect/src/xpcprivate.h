@@ -1139,14 +1139,16 @@ public:
 
     enum {NO_ARGS = (unsigned) -1};
 
+    static JSContext* GetDefaultJSContext();
+
     XPCCallContext(XPCContext::LangType callerLanguage,
-                   JSContext* cx    = nullptr,
-                   JSObject* obj    = nullptr,
-                   JSObject* funobj = nullptr,
-                   jsid id          = JSID_VOID,
-                   unsigned argc    = NO_ARGS,
-                   jsval *argv      = nullptr,
-                   jsval *rval      = nullptr);
+                   JSContext* cx           = GetDefaultJSContext(),
+                   JS::HandleObject obj    = JS::NullPtr(),
+                   JS::HandleObject funobj = JS::NullPtr(),
+                   JS::HandleId id         = JS::JSID_VOIDHANDLE,
+                   unsigned argc           = NO_ARGS,
+                   jsval *argv             = nullptr,
+                   jsval *rval             = nullptr);
 
     virtual ~XPCCallContext();
 
@@ -1200,7 +1202,7 @@ public:
     inline void     SetDestroyJSContextInDestructor(JSBool b);
 
     inline jsid GetResolveName() const;
-    inline jsid SetResolveName(jsid name);
+    inline jsid SetResolveName(JS::HandleId name);
 
     inline XPCWrappedNative* GetResolvingWrapper() const;
     inline XPCWrappedNative* SetResolvingWrapper(XPCWrappedNative* w);
@@ -1228,8 +1230,8 @@ private:
     XPCCallContext(XPCContext::LangType callerLanguage,
                    JSContext* cx,
                    JSBool callBeginRequest,
-                   JSObject* obj,
-                   JSObject* flattenedJSObject,
+                   JS::HandleObject obj,
+                   JS::HandleObject flattenedJSObject,
                    XPCWrappedNative* wn,
                    XPCWrappedNativeTearOff* tearoff);
 
@@ -1240,15 +1242,15 @@ private:
 
     void Init(XPCContext::LangType callerLanguage,
               JSBool callBeginRequest,
-              JSObject* obj,
-              JSObject* funobj,
+              JS::HandleObject obj,
+              JS::HandleObject funobj,
               WrapperInitOptions wrapperInitOptions,
-              jsid name,
+              JS::HandleId name,
               unsigned argc,
               jsval *argv,
               jsval *rval);
 
-    XPCWrappedNative* UnwrapThisIfAllowed(JSObject *obj, JSObject *fun,
+    XPCWrappedNative* UnwrapThisIfAllowed(JS::HandleObject obj, JS::HandleObject fun,
                                           unsigned argc);
 
 private:
@@ -1399,12 +1401,14 @@ public:
     {
         if (!mCcx) {
             XPCCallContext *data = mData.addr();
+            xpc_UnmarkGrayObject(mObj);
+            xpc_UnmarkGrayObject(mFlattenedJSObject);
             mCcxToDestroy = mCcx =
                 new (data) XPCCallContext(mCallerLanguage, mCx,
                                           mCallBeginRequest == CALL_BEGINREQUEST,
-                                           xpc_UnmarkGrayObject(mObj),
-                                           xpc_UnmarkGrayObject(mFlattenedJSObject),
-                                           mWrapper,
+                                          mObj,
+                                          mFlattenedJSObject,
+                                          mWrapper,
                                           mTearOff);
             if (!mCcx->IsValid()) {
                 NS_ERROR("This is not supposed to fail!");
@@ -2516,7 +2520,7 @@ class xpcObjectHelper;
 extern JSBool ConstructSlimWrapper(XPCCallContext &ccx,
                                    xpcObjectHelper &aHelper,
                                    XPCWrappedNativeScope* xpcScope,
-                                   jsval *rval);
+                                   JS::MutableHandleValue rval);
 extern JSBool MorphSlimWrapper(JSContext *cx, JS::HandleObject obj);
 
 /***********************************************/
@@ -3301,7 +3305,7 @@ public:
                                 const void* s, const nsXPTType& type,
                                 const nsID* iid, nsresult* pErr);
 
-    static JSBool JSData2Native(JSContext* cx, void* d, jsval s,
+    static JSBool JSData2Native(JSContext* cx, void* d, JS::HandleValue s,
                                 const nsXPTType& type,
                                 JSBool useAllocator, const nsID* iid,
                                 nsresult* pErr);
@@ -3349,7 +3353,7 @@ public:
                                                  const nsID* iid,
                                                  nsresult* pErr);
     static JSBool JSObject2NativeInterface(JSContext* cx,
-                                           void** dest, JSObject* src,
+                                           void** dest, JS::HandleObject src,
                                            const nsID* iid,
                                            nsISupports* aOuter,
                                            nsresult* pErr);
@@ -3832,7 +3836,7 @@ private:
 class MOZ_STACK_CLASS AutoResolveName
 {
 public:
-    AutoResolveName(XPCCallContext& ccx, jsid name
+    AutoResolveName(XPCCallContext& ccx, JS::HandleId name
                     MOZ_GUARD_OBJECT_NOTIFIER_PARAM) :
           mOld(ccx, XPCJSRuntime::Get()->SetResolveName(name))
 #ifdef DEBUG

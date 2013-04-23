@@ -50,11 +50,13 @@ function runTest() {
   
   // A couple of tests that don't quite fit in the framework.
   var doc = iframes[0].contentDocument;
+
+  // Setting document.dir does nothing in a document without an <html> element
   doc.dir="rtl";
   var docclone = doc.cloneNode(false);
   
   // doc.dir
-  ok(docclone.dir == "rtl", "dir not preserved correctly");
+  ok(docclone.dir == "", "dir set on doc without html element");
   
   // document.querySelectorAll(":lang(ja)")
   docclone.appendChild(docclone.createElement("html"));
@@ -63,6 +65,13 @@ function runTest() {
   docclone.documentElement.innerHTML="<body><p><a href='a.html' id=a>asf</a></body>";
   ok(docclone.getElementById('a').href == "http://www.mozilla.org/a.html",
      "base not preserved correctly");
+
+  // Now that we have an <html> element, deep cloning preserves document.dir
+  docclone.dir="rtl";
+  var cloneclone = docclone.cloneNode(true);
+
+  // doc.dir
+  ok(cloneclone.dir == "rtl", "dir not preserved correctly");
 
   SimpleTest.finish();
 }
