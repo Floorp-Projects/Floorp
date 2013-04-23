@@ -420,4 +420,12 @@
 
     <style name="GeckoDialogTitle.SubTitle" />
 
+    <style name="CrashReporter" />
+
+    <style name="CrashReporter.EditText">
+        <item name="android:background">@drawable/textbox_bg</item>
+        <item name="android:padding">10dp</item>
+        <item name="android:textAppearance">@style/TextAppearance</item>
+    </style>
+
 </resources>

@@ -22,16 +22,20 @@ import java.nio.channels.FileChannel;
 import java.util.zip.GZIPOutputStream;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.EditText;
 
 public class CrashReporter extends Activity
 {
@@ -108,8 +112,6 @@ public class CrashReporter extends Activity
         mProgressDialog = new ProgressDialog(this);
         mProgressDialog.setMessage(getString(R.string.sending_crash_report));
 
-        final Button restartButton = (Button) findViewById(R.id.restart);
-        final Button closeButton = (Button) findViewById(R.id.close);
         String passedMinidumpPath = getIntent().getStringExtra(PASSED_MINI_DUMP_KEY);
         File passedMinidumpFile = new File(passedMinidumpPath);
         File pendingDir = new File(getFilesDir(), PENDING_SUFFIX);
@@ -132,6 +134,66 @@ public class CrashReporter extends Activity
         editor.putBoolean(GeckoApp.PREFS_WAS_STOPPED, true);
         editor.putBoolean(GeckoApp.PREFS_CRASHED, true);
         editor.commit();
+
+        final CheckBox allowContactCheckBox = (CheckBox) findViewById(R.id.allow_contact);
+        final CheckBox includeUrlCheckBox = (CheckBox) findViewById(R.id.include_url);
+        final CheckBox sendReportCheckBox = (CheckBox) findViewById(R.id.send_report);
+        final EditText commentsEditText = (EditText) findViewById(R.id.comment);
+        final EditText emailEditText = (EditText) findViewById(R.id.email);
+
+        sendReportCheckBox.setOnCheckedChangeListener(new CheckBox.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton checkbox, boolean isChecked) {
+                commentsEditText.setEnabled(isChecked);
+                commentsEditText.requestFocus();
+
+                includeUrlCheckBox.setEnabled(isChecked);
+                allowContactCheckBox.setEnabled(isChecked);
+                emailEditText.setEnabled(isChecked && allowContactCheckBox.isChecked());
+            }
+        });
+
+        allowContactCheckBox.setOnCheckedChangeListener(new CheckBox.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton checkbox, boolean isChecked) {
+                // We need to check isEnabled() here because this listener is
+                // fired on rotation -- even when the checkbox is disabled.
+                emailEditText.setEnabled(checkbox.isEnabled() && isChecked);
+                emailEditText.requestFocus();
+            }
+        });
+
+        emailEditText.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Even if the email EditText is disabled, allow it to be
+                // clicked and focused.
+                if (sendReportCheckBox.isChecked() && !v.isEnabled()) {
+                    allowContactCheckBox.setChecked(true);
+                    v.setEnabled(true);
+                    v.requestFocus();
+                }
+            }
+        });
+    }
+
+    @Override
+    public void onBackPressed() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(R.string.crash_closing_alert);
+        builder.setNegativeButton(R.string.button_cancel, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+        builder.setPositiveButton(R.string.button_ok, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                CrashReporter.this.finish();
+            }
+        });
+        builder.show();
     }
 
     private void backgroundSendReport() {
@@ -302,6 +364,16 @@ public class CrashReporter extends Activity
             sendPart(os, boundary, "Android_Version",  Build.VERSION.SDK_INT + " (" + Build.VERSION.CODENAME + ")");
             if (Build.VERSION.SDK_INT >= 16 && includeURLCheckbox.isChecked()) {
                 sendPart(os, boundary, "Android_Logcat", readLogcat());
+            }
+
+            String comment = ((EditText) findViewById(R.id.comment)).getText().toString();
+            if (!TextUtils.isEmpty(comment)) {
+                sendPart(os, boundary, "Comments", comment);
+            }
+
+            if (((CheckBox) findViewById(R.id.allow_contact)).isChecked()) {
+                String email = ((EditText) findViewById(R.id.email)).getText().toString();
+                sendPart(os, boundary, "Email", email);
             }
 
             sendFile(os, boundary, MINI_DUMP_PATH_KEY, minidumpFile);

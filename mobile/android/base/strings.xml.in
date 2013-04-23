@@ -28,15 +28,18 @@
   <string name="awesomebar_history_title">&awesomebar_history_title;</string>
 
   <string name="crash_reporter_title">&crash_reporter_title;</string>
-  <string name="crash_message">&crash_message;</string>
-  <string name="crash_help_message">&crash_help_message;</string>
-  <string name="crash_send_report_message">&crash_send_report_message;</string>
-  <string name="crash_include_url">&crash_include_url;</string>
+  <string name="crash_message2">&crash_message2;</string>
+  <string name="crash_send_report_message2">&crash_send_report_message2;</string>
+  <string name="crash_include_url2">&crash_include_url2;</string>
+  <string name="crash_sorry">&crash_sorry;</string>
+  <string name="crash_comment">&crash_comment;</string>
+  <string name="crash_allow_contact">&crash_allow_contact;</string>
+  <string name="crash_email">&crash_email;</string>
+  <string name="crash_closing_alert">&crash_closing_alert;</string>
+  <string name="sending_crash_report">&sending_crash_report;</string>
   <string name="crash_close_label">&crash_close_label;</string>
   <string name="crash_restart_label">&crash_restart_label;</string>
-  <string name="sending_crash_report">&sending_crash_report;</string>
   <string name="exit_label">&exit_label;</string>
-  <string name="continue_label">&continue_label;</string>
 
   <string name="launcher_shortcuts_title">&launcher_shortcuts_title;</string>
   <string name="launcher_shortcuts_empty">&launcher_shortcuts_empty;</string>
