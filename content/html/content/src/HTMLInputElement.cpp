@@ -1277,6 +1277,13 @@ HTMLInputElement::SetValue(const nsAString& aValue, ErrorResult& aRv)
 
       SetValueInternal(aValue, false, true);
 
+      if (mType == NS_FORM_INPUT_RANGE) {
+        nsRangeFrame* frame = do_QueryFrame(GetPrimaryFrame());
+        if (frame) {
+          frame->UpdateForValueChange();
+        }
+      }
+
       if (mFocusedValue.Equals(currentValue)) {
         GetValueInternal(mFocusedValue);
       }
