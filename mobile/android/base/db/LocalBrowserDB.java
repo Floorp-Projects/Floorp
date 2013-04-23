@@ -14,6 +14,7 @@ import org.mozilla.gecko.db.BrowserContract.History;
 import org.mozilla.gecko.db.BrowserContract.SyncColumns;
 import org.mozilla.gecko.db.BrowserContract.Thumbnails;
 import org.mozilla.gecko.db.BrowserContract.URLColumns;
+import org.mozilla.gecko.gfx.BitmapUtils;
 
 import android.content.ContentProviderOperation;
 import android.content.ContentResolver;
@@ -22,7 +23,6 @@ import android.database.ContentObserver;
 import android.database.Cursor;
 import android.database.CursorWrapper;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.provider.Browser;
@@ -707,14 +707,13 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         }
 
         int faviconIndex = c.getColumnIndexOrThrow(Combined.FAVICON);
-
         byte[] b = c.getBlob(faviconIndex);
         c.close();
 
         if (b == null)
             return null;
 
-        return BitmapFactory.decodeByteArray(b, 0, b.length);
+        return BitmapUtils.decodeByteArray(b);
     }
 
     @Override

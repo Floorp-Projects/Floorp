@@ -6,11 +6,11 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.IntSize;
 import org.mozilla.gecko.mozglue.DirectBufferAllocator;
 
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.util.Log;
 
 import java.nio.ByteBuffer;
@@ -187,18 +187,14 @@ public final class ThumbnailHelper {
     }
 
     private void setTabThumbnail(Tab tab, Bitmap bitmap, byte[] compressed) {
-        try {
-            if (bitmap == null) {
-                if (compressed == null) {
-                    Log.w(LOGTAG, "setTabThumbnail: one of bitmap or compressed must be non-null!");
-                    return;
-                }
-                bitmap = BitmapFactory.decodeByteArray(compressed, 0, compressed.length);
+        if (bitmap == null) {
+            if (compressed == null) {
+                Log.w(LOGTAG, "setTabThumbnail: one of bitmap or compressed must be non-null!");
+                return;
             }
-            tab.updateThumbnail(bitmap);
-        } catch (OutOfMemoryError ome) {
-            Log.w(LOGTAG, "setTabThumbnail: decoding byte array of length " + compressed.length + " ran out of memory");
+            bitmap = BitmapUtils.decodeByteArray(compressed);
         }
+        tab.updateThumbnail(bitmap);
     }
 
     private boolean shouldUpdateThumbnail(Tab tab) {
