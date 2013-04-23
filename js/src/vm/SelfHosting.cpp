@@ -19,6 +19,8 @@
 #include "jsfuninlines.h"
 #include "jstypedarrayinlines.h"
 
+#include "ion/BaselineJIT.h"
+
 #include "vm/BooleanObject-inl.h"
 #include "vm/NumberObject-inl.h"
 #include "vm/RegExpObject-inl.h"
@@ -415,7 +417,9 @@ intrinsic_ParallelTestsShouldPass(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 #if defined(JS_THREADSAFE) && defined(JS_ION)
     args.rval().setBoolean(ion::IsEnabled(cx) &&
-                           !ion::js_IonOptions.eagerCompilation);
+                           ion::IsBaselineEnabled(cx) &&
+                           !ion::js_IonOptions.eagerCompilation &&
+                           ion::js_IonOptions.baselineUsesBeforeCompile != 0);
 #else
     args.rval().setBoolean(false);
 #endif

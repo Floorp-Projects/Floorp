@@ -191,7 +191,7 @@ class ParallelArrayVisitor : public MInstructionVisitor
     SAFE_OP(GetPropertyCache)
     UNSAFE_OP(GetElementCache)
     UNSAFE_OP(BindNameCache)
-    SAFE_OP(GuardShape)
+    SAFE_OP(GuardShapeOrType)
     SAFE_OP(GuardClass)
     SAFE_OP(ArrayLength)
     SAFE_OP(TypedArrayLength)
@@ -220,6 +220,7 @@ class ParallelArrayVisitor : public MInstructionVisitor
     UNSAFE_OP(CallsiteCloneCache)
     UNSAFE_OP(CallGetElement)
     UNSAFE_OP(CallSetElement)
+    UNSAFE_OP(CallInitElementArray)
     UNSAFE_OP(CallSetProperty)
     UNSAFE_OP(DeleteProperty)
     UNSAFE_OP(SetPropertyCache)
@@ -725,9 +726,7 @@ static bool
 GetPossibleCallees(JSContext *cx, HandleScript script, jsbytecode *pc,
                    types::StackTypeSet *calleeTypes, MIRGraph &graph)
 {
-    JS_ASSERT(calleeTypes);
-
-    if (calleeTypes->baseFlags() != 0)
+    if (!calleeTypes || calleeTypes->baseFlags() != 0)
         return true;
 
     unsigned objCount = calleeTypes->getObjectCount();
@@ -768,8 +767,6 @@ GetPossibleCallees(JSContext *cx, HandleScript script, jsbytecode *pc,
 bool
 ParallelArrayVisitor::visitCall(MCall *ins)
 {
-    JS_ASSERT(ins->getSingleTarget() || ins->calleeTypes());
-
     // DOM? Scary.
     if (ins->isDOMFunction()) {
         SpewMIR(ins, "call to dom function");
@@ -791,9 +788,11 @@ ParallelArrayVisitor::visitCall(MCall *ins)
         return markUnsafe();
     }
 
+    types::StackTypeSet *calleeTypes = ins->getFunction()->resultTypeSet();
+
     RootedScript script(cx_, ins->block()->info().script());
     return GetPossibleCallees(cx_, script, ins->resumePoint()->pc(),
-                              ins->calleeTypes(), graph_);
+                              calleeTypes, graph_);
 }
 
 /////////////////////////////////////////////////////////////////////////////
