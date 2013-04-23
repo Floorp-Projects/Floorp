@@ -309,7 +309,7 @@ nsInlineFrame::Reflow(nsPresContext*          aPresContext,
 
   bool    lazilySetParentPointer = false;
 
-  nsIFrame* lineContainer = aReflowState.mLineLayout->GetLineContainerFrame();
+  nsIFrame* lineContainer = aReflowState.mLineLayout->LineContainerFrame();
 
    // Check for an overflow list with our prev-in-flow
   nsInlineFrame* prevInFlow = (nsInlineFrame*)GetPrevInFlow();
@@ -976,7 +976,7 @@ nsFirstLineFrame::Reflow(nsPresContext* aPresContext,
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsIFrame* lineContainer = aReflowState.mLineLayout->GetLineContainerFrame();
+  nsIFrame* lineContainer = aReflowState.mLineLayout->LineContainerFrame();
 
   // Check for an overflow list with our prev-in-flow
   nsFirstLineFrame* prevInFlow = (nsFirstLineFrame*)GetPrevInFlow();
