@@ -6,3 +6,24 @@
 
 MODULE = 'widget'
 
+CPP_SOURCES += [
+    'nsAppShell.cpp',
+    'nsBidiKeyboard.cpp',
+    'nsClipboard.cpp',
+    'nsDeviceContextSpecOS2.cpp',
+    'nsDragService.cpp',
+    'nsFilePicker.cpp',
+    'nsIdleServiceOS2.cpp',
+    'nsLookAndFeel.cpp',
+    'nsOS2Uni.cpp',
+    'nsPrintOS2.cpp',
+    'nsPrintOptionsOS2.cpp',
+    'nsRwsService.cpp',
+    'nsScreenManagerOS2.cpp',
+    'nsScreenOS2.cpp',
+    'nsSound.cpp',
+    'nsWidgetFactory.cpp',
+    'nsWindow.cpp',
+    'os2FrameWindow.cpp',
+]
+

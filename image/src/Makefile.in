@@ -16,29 +16,6 @@ MODULE_NAME	= nsImageLib2Module
 LIBXUL_LIBRARY  = 1
 FAIL_ON_WARNINGS = 1
 
-
-CPPSRCS		= \
-			Image.cpp \
-			ImageFactory.cpp \
-                        ImageMetadata.cpp \
-			ImageOps.cpp \
-			ImageWrapper.cpp \
-			ClippedImage.cpp \
-			Decoder.cpp \
-			DiscardTracker.cpp \
-			FrozenImage.cpp \
-			RasterImage.cpp \
-			ScriptedNotificationObserver.cpp \
-			SVGDocumentWrapper.cpp \
-			VectorImage.cpp \
-			imgFrame.cpp \
-			imgLoader.cpp    \
-			imgRequest.cpp   \
-			imgRequestProxy.cpp \
-			imgTools.cpp \
-			imgStatusTracker.cpp \
-			$(NULL)
-
 # We need to instantiate the decoders
 LOCAL_INCLUDES += -I$(topsrcdir)/image/decoders
 

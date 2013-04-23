@@ -16,51 +16,6 @@ FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1
 EXPORT_LIBRARY = 1
 
-CPPSRCS += \
-  AsyncChannel.cpp \
-  BrowserProcessSubThread.cpp \
-  FileDescriptor.cpp \
-  FileDescriptorUtils.cpp \
-  GeckoChildProcessHost.cpp \
-  InputStreamUtils.cpp \
-  MessagePump.cpp \
-  ProcessChild.cpp \
-  ProtocolUtils.cpp \
-  RPCChannel.cpp \
-  ScopedXREEmbed.cpp \
-  SharedMemory.cpp \
-  Shmem.cpp \
-  StringUtil.cpp \
-  SyncChannel.cpp \
-  URIUtils.cpp \
-  $(NULL)
-
-ifeq ($(OS_ARCH),WINNT) #{
-CPPSRCS += \
-  SharedMemory_windows.cpp \
-  Transport_win.cpp \
-  WindowsMessageLoop.cpp \
-  CrossProcessMutex_windows.cpp \
-  $(NULL)
-else
-# POSIX
-CPPSRCS += \
-  SharedMemory_posix.cpp \
-  Transport_posix.cpp \
-  CrossProcessMutex_unimplemented.cpp \
-  $(NULL)
-endif #}
-
-ifeq ($(OS_TARGET),Android)
-CPPSRCS += SharedMemoryBasic_android.cpp
-endif #}
-
-ifeq ($(OS_ARCH),Linux)
-CPPSRCS += ProcessUtils_linux.cpp
-else
-CPPSRCS += ProcessUtils_none.cpp
-endif
-
 DEFINES += -DMOZ_CHILD_PROCESS_NAME=\"$(MOZ_CHILD_PROCESS_NAME)\"
 DEFINES += -DMOZ_CHILD_PROCESS_BUNDLE=\"$(MOZ_CHILD_PROCESS_BUNDLE)\"
 

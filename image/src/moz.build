@@ -13,3 +13,25 @@ EXPORTS += [
     'imgRequestProxy.h',
 ]
 
+CPP_SOURCES += [
+    'ClippedImage.cpp',
+    'Decoder.cpp',
+    'DiscardTracker.cpp',
+    'FrozenImage.cpp',
+    'Image.cpp',
+    'ImageFactory.cpp',
+    'ImageMetadata.cpp',
+    'ImageOps.cpp',
+    'ImageWrapper.cpp',
+    'RasterImage.cpp',
+    'SVGDocumentWrapper.cpp',
+    'ScriptedNotificationObserver.cpp',
+    'VectorImage.cpp',
+    'imgFrame.cpp',
+    'imgLoader.cpp',
+    'imgRequest.cpp',
+    'imgRequestProxy.cpp',
+    'imgStatusTracker.cpp',
+    'imgTools.cpp',
+]
+

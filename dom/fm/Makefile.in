@@ -15,11 +15,6 @@ FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/dom/dom-config.mk
 
-CPPSRCS += \
-  FMRadio.cpp \
-  nsFMRadioSettings.cpp \
-  $(NULL)
-
 EXTRA_COMPONENTS =      \
   DOMFMRadioChild.js       \
   DOMFMRadio.manifest \

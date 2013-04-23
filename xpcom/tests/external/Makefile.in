@@ -9,10 +9,6 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-CPPSRCS = \
-	TestMinStringAPI.cpp \
-	$(NULL)
-
 SIMPLE_PROGRAMS = $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
 include $(topsrcdir)/config/rules.mk

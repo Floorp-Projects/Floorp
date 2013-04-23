@@ -15,43 +15,6 @@ FORCE_STATIC_LIB = 1
 FAIL_ON_WARNINGS := 1
 
 include $(topsrcdir)/dom/dom-config.mk
-
-CPPSRCS = \
-  DOMCameraManager.cpp \
-  DOMCameraControl.cpp \
-  DOMCameraPreview.cpp \
-  DOMCameraCapabilities.cpp \
-  CameraControlImpl.cpp \
-  CameraRecorderProfiles.cpp \
-  CameraPreviewMediaStream.cpp \
-  $(NULL)
-
-ifeq ($(MOZ_B2G_CAMERA),1)
-CPPSRCS += \
-  GonkCameraManager.cpp \
-  GonkCameraControl.cpp \
-  GonkCameraHwMgr.cpp \
-  GonkNativeWindow.cpp \
-  GonkNativeWindowClient.cpp \
-  GonkRecorder.cpp \
-  GonkCameraSource.cpp \
-  AudioParameter.cpp \
-  GonkRecorderProfiles.cpp \
-  $(NULL)
-else ifeq ($(MOZ_OMX_DECODER),1)
-CPPSRCS += \
-  FallbackCameraManager.cpp \
-  FallbackCameraControl.cpp \
-  GonkNativeWindow.cpp \
-  GonkNativeWindowClient.cpp \
-  $(NULL)
-else
-CPPSRCS += \
-  FallbackCameraManager.cpp \
-  FallbackCameraControl.cpp \
-  $(NULL)
-endif
-
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 

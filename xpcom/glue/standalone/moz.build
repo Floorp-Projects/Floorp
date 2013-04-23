@@ -11,3 +11,9 @@ if CONFIG['OS_ARCH'] == 'WINNT':
 
 MODULE = 'xpcom'
 
+CPP_SOURCES += [
+    '$(XPCOM_GLUE_SRC_LCPPSRCS)',
+    'nsStringAPI.cpp',
+    'nsXPCOMGlue.cpp',
+]
+
