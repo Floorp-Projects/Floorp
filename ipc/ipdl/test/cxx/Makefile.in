@@ -61,13 +61,6 @@ IPDLTESTHDRS = $(addprefix $(srcdir)/,$(addsuffix .h,$(IPDLTESTS)))
 TESTER_TEMPLATE := $(srcdir)/IPDLUnitTests.template.cpp
 GENTESTER := $(srcdir)/genIPDLUnitTests.py
 
-CPPSRCS =  \
-  IPDLUnitTests.cpp  \
-  IPDLUnitTestSubprocess.cpp  \
-  IPDLUnitTestProcessChild.cpp  \
-  $(IPDLTESTSRCS)  \
-  $(NULL)
-
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk

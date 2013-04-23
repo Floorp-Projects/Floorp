@@ -13,15 +13,6 @@ include $(DEPTH)/config/autoconf.mk
 LIBRARY_NAME	= gkconwmf_s
 LIBXUL_LIBRARY 	= 1
 
-CPPSRCS		= \
-		DXVA2Manager.cpp \
-		WMFByteStream.cpp \
-		WMFDecoder.cpp \
-		WMFReader.cpp \
-		WMFUtils.cpp \
-		WMFSourceReaderCallback.cpp \
-		$(NULL)
-
 ifeq ($(OS_ARCH),WINNT)
 OS_CXXFLAGS += -DNOMINMAX
 endif

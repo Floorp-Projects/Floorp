@@ -10,3 +10,10 @@ EXPORTS += [
     'nsSHEntryShared.h',
 ]
 
+CPP_SOURCES += [
+    'nsSHEntry.cpp',
+    'nsSHEntryShared.cpp',
+    'nsSHTransaction.cpp',
+    'nsSHistory.cpp',
+]
+

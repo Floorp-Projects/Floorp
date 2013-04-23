@@ -15,3 +15,10 @@ EXPORTS += [
     'nsUnicodeScriptCodes.h',
 ]
 
+CPP_SOURCES += [
+    'nsBidiUtils.cpp',
+    'nsSpecialCasingData.cpp',
+    'nsUnicharUtils.cpp',
+    'nsUnicodeProperties.cpp',
+]
+

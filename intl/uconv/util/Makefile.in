@@ -23,12 +23,5 @@ CSRCS		= \
 		umap.c \
 		$(NULL)
 
-CPPSRCS		= \
-		nsUCSupport.cpp \
-		nsUCConstructors.cpp \
-		nsUnicodeDecodeHelper.cpp \
-		nsUnicodeEncodeHelper.cpp \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 

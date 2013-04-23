@@ -14,11 +14,6 @@ LIBRARY_NAME	= find_s
 LIBXUL_LIBRARY	= 1
 FAIL_ON_WARNINGS = 1
 
-
-CPPSRCS		= nsWebBrowserFind.cpp \
-		  nsFind.cpp \
-                  $(NULL)
-
 # we don't want the shared lib, but we want to force the creation of a
 # static lib.
 FORCE_STATIC_LIB = 1
