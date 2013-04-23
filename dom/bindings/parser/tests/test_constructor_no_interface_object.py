@@ -26,3 +26,11 @@ def WebIDLTest(parser, harness):
         threw = True
 
     harness.ok(threw, "Should have thrown.")
+
+    parser.parse("""
+        [NoInterfaceObject, NamedConstructor=FooBar]
+        interface TestNamedConstructorNoInterfaceObject {
+        };
+    """)
+
+    parser = parser.reset()
