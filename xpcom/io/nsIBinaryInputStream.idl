@@ -73,11 +73,14 @@ interface nsIBinaryInputStream : nsIInputStream {
      * Read opaque bytes from the stream, storing the results in an ArrayBuffer.
      *
      * @param aLength the number of bytes that must be read
+     * @param aArrayBuffer the arraybuffer in which to store the results
+     * Note: passing view.buffer, where view is an ArrayBufferView of an
+     *       ArrayBuffer, is not valid unless view.byteOffset == 0.
      *
      * @throws NS_ERROR_FAILURE if it can't read aLength bytes
      */
     [implicit_jscontext]
-    jsval readArrayBuffer(in uint32_t aLength);
+    void readArrayBuffer(in uint32_t aLength, in jsval aArrayBuffer);
 };
 
 %{C++
