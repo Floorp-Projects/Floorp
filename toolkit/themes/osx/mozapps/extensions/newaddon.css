@@ -38,6 +38,8 @@
 
 #icon {
   -moz-margin-end: 10px;
+  max-width: 64px;
+  max-height: 64px;
   list-style-image: url("chrome://mozapps/skin/extensions/extensionGeneric.png");
 }
 
