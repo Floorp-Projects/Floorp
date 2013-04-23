@@ -151,6 +151,14 @@ MOCHITEST_FILES =	\
 		  bug851445_helper.html \
 		$(NULL)
 
+ifeq (,$(filter gonk,$(MOZ_WIDGET_TOOLKIT)))
+# THESE TESTS (BELOW) DO NOT RUN ON B2G
+MOCHITEST_FILES += \
+		test_bug858459.html \
+		$(NULL)
+# THESE TESTS (ABOVE) DO NOT RUN ON B2G
+endif
+
 # Tests for bugs 441782, 467672 and 570378 don't pass reliably on Windows, because of bug 469208
 ifeq (,$(filter windows,$(MOZ_WIDGET_TOOLKIT)))
 # THESE TESTS (BELOW) DO NOT RUN ON WINDOWS
