@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<!--
+Program received signal SIGSEGV, Segmentation fault.
+0xb6b720a6 in nsTreeColumns::RestoreNaturalOrder (this=0xa947a580) at layout/xul/base/src/tree/src/nsTreeColumns.cpp:610
+610	  mTree->Invalidate();
+(gdb) bt 3
+#0  0xb6b720a6 in nsTreeColumns::RestoreNaturalOrder (this=0xa947a580) at layout/xul/base/src/tree/src/nsTreeColumns.cpp:610
+#1  0xb736c76f in NS_InvokeByIndex_P () at xpcom/reflect/xptcall/src/md/unix/xptcinvoke_gcc_x86_unix.cpp:69
+#2  0xb6171901 in XPCWrappedNative::CallMethod (ccx=..., mode=XPCWrappedNative::CALL_METHOD)
+    at js/src/xpconnect/src/xpcwrappednative.cpp:2722
+(More stack frames follow...)
+(gdb) list
+605	    child->SetAttr(kNameSpaceID_None, nsGkAtoms::ordinal, ordinal, PR_TRUE);
+606	  }
+607	
+608	  nsTreeColumns::InvalidateColumns();
+609	
+610	  mTree->Invalidate();
+611	
+612	  return NS_OK;
+613	}
+614	
+(gdb) p mTree
+$9 = (nsITreeBoxObject *) 0x0
+
+|child->SetAttr()| dispatches "DOMAttrModified" event. Event listener removes
+whole tree, |mTree| is being set to null. Then we have |null->Invalidate()|.
+-->
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="run();">
+<tree id="tree">
+  <treecols>
+    <treecol id="col"/>
+  </treecols>
+  <treechildren/>
+</tree>
+<script type="text/javascript"><![CDATA[
+var tree = null;
+
+function listener() {
+  tree.parentNode.removeChild(tree);
+}
+
+function run() {
+  col = document.getElementById("col");
+  col.addEventListener("DOMAttrModified", listener, true);
+  tree = document.getElementById("tree");
+  tree.columns.restoreNaturalOrder();
+}
+]]></script>
+</window>
+
