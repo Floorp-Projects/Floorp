@@ -3,9 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/layers/PLayers.h"
+#include "mozilla/layers/PLayerTransaction.h"
 
-/* This must occur *after* layers/PLayers.h to avoid typedefs conflicts. */
+// This must occur *after* layers/PLayerTransaction.h to avoid
+// typedefs conflicts.
 #include "mozilla/Util.h"
 
 #include "ipc/AutoOpenSurface.h"

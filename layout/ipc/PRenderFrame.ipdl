@@ -6,7 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PBrowser;
-include protocol PLayers;
+include protocol PLayerTransaction;
 
 namespace mozilla {
 namespace layout {
@@ -23,7 +23,7 @@ namespace layout {
 sync protocol PRenderFrame
 {
     manager PBrowser;
-    manages PLayers;
+    manages PLayerTransaction;
 
 parent:
     /**
@@ -37,7 +37,7 @@ parent:
      * |id| is set to 0 in the "direct" case, and to a whole number
      * in the "indirect" case.
      */
-    async PLayers();
+    async PLayerTransaction();
 
     async NotifyCompositorTransaction();
 
@@ -47,7 +47,7 @@ parent:
     async __delete__();
 
 state EMPTY_OR_DIRECT_COMPOSITOR:
-    recv PLayers goto HAVE_CONTENT;
+    recv PLayerTransaction goto HAVE_CONTENT;
     recv NotifyCompositorTransaction goto EMPTY_OR_DIRECT_COMPOSITOR;
     recv __delete__;
 

@@ -7,7 +7,7 @@
 
 include protocol PCompositor;
 include protocol PImageBridge;
-include protocol PLayers;
+include protocol PLayerTransaction;
 
 namespace mozilla {
 namespace layers {
@@ -20,7 +20,7 @@ namespace layers {
  */
 async protocol PGrallocBuffer {
   // FIXME: Bug 783451: shouldn't be managed by PCompositor or PImageContainer
-  manager PImageBridge or PLayers;
+  manager PImageBridge or PLayerTransaction;
 
   /** Gralloc buffers can be "owned" by either parent or child. */
 both:
