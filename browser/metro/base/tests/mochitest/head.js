@@ -55,6 +55,24 @@ function checkContextUIMenuItemVisibility(aVisibleList)
   is(errors, 0, "context menu item list visibility");
 }
 
+function checkMonoclePositionRange(aMonocle, aMinX, aMaxX, aMinY, aMaxY)
+{
+  let monocle = null;
+  if (aMonocle == "start")
+    monocle = SelectionHelperUI._startMark;
+  else if (aMonocle == "end")
+    monocle = SelectionHelperUI._endMark;
+  else if (aMonocle == "caret")
+    monocle = SelectionHelperUI._caretMark;
+  else
+    ok(false, "bad monocle id");
+
+  ok(monocle.xPos > aMinX && monocle.xPos < aMaxX,
+    "X position is " + monocle.xPos + ", expected between " + aMinX + " and " + aMaxX);
+  ok(monocle.yPos > aMinY && monocle.yPos < aMaxY,
+    "Y position is " + monocle.yPos + ", expected between " + aMinY + " and " + aMaxY);
+}
+
 /*
  * showNotification - displays a test notification with the current
  * browser and waits for the noticiation to be fully displayed.
