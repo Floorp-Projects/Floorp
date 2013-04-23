@@ -134,6 +134,9 @@ public:
         return js::UncheckedUnwrap(wrapper, /* stopAtOuter = */ false);
     }
 
+    virtual bool resolveNativeProperty(JSContext *cx, HandleObject wrapper,
+                                       HandleObject holder, HandleId id,
+                                       JSPropertyDescriptor *desc, unsigned flags) = 0;
     virtual bool resolveOwnProperty(JSContext *cx, Wrapper &jsWrapper,
                                     HandleObject wrapper, HandleObject holder,
                                     HandleId id, JSPropertyDescriptor *desc, unsigned flags);
@@ -179,9 +182,9 @@ class XPCWrappedNativeXrayTraits : public XrayTraits
 public:
     static const XrayType Type = XrayForWrappedNative;
 
-    static bool resolveNativeProperty(JSContext *cx, HandleObject wrapper,
-                                      HandleObject holder, HandleId id,
-                                      JSPropertyDescriptor *desc, unsigned flags);
+    virtual bool resolveNativeProperty(JSContext *cx, HandleObject wrapper,
+                                       HandleObject holder, HandleId id,
+                                       JSPropertyDescriptor *desc, unsigned flags);
     virtual bool resolveOwnProperty(JSContext *cx, Wrapper &jsWrapper, HandleObject wrapper,
                                     HandleObject holder, HandleId id,
                                     JSPropertyDescriptor *desc, unsigned flags);
@@ -223,9 +226,9 @@ class DOMXrayTraits : public XrayTraits
 public:
     static const XrayType Type = XrayForDOMObject;
 
-    static bool resolveNativeProperty(JSContext *cx, HandleObject wrapper,
-                                      HandleObject holder, HandleId id,
-                                      JSPropertyDescriptor *desc, unsigned flags);
+    virtual bool resolveNativeProperty(JSContext *cx, HandleObject wrapper,
+                                       HandleObject holder, HandleId id,
+                                       JSPropertyDescriptor *desc, unsigned flags);
     virtual bool resolveOwnProperty(JSContext *cx, Wrapper &jsWrapper, HandleObject wrapper,
                                     HandleObject holder, HandleId id,
                                     JSPropertyDescriptor *desc, unsigned flags);
@@ -1509,7 +1512,7 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, HandleObject wra
     }
 
     // Nothing in the cache. Call through, and cache the result.
-    if (!Traits::resolveNativeProperty(cx, wrapper, holder, id, desc, flags))
+    if (!Traits::singleton.resolveNativeProperty(cx, wrapper, holder, id, desc, flags))
         return false;
 
     if (!desc->obj &&
