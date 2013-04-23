@@ -6239,8 +6239,6 @@ nsDocument::GetAnimationController()
   return mAnimationController;
 }
 
-static const char* dirAttributes[] = { "ltr", "rtl", "auto", 0 };
-
 /**
  * Retrieve the "direction" property of the document.
  *
@@ -6259,14 +6257,7 @@ nsIDocument::GetDir(nsAString& aDirection) const
   aDirection.Truncate();
   Element* rootElement = GetHtmlElement();
   if (rootElement) {
-    nsAutoString dir;
-    rootElement->GetAttr(kNameSpaceID_None, nsGkAtoms::dir, dir);
-    for (uint32_t i = 0; dirAttributes[i]; ++i) {
-      if (dir.LowerCaseEqualsASCII(dirAttributes[i])) {
-        aDirection.AssignASCII(dirAttributes[i]);
-        return;
-      }
-    }
+    static_cast<nsGenericHTMLElement*>(rootElement)->GetDir(aDirection);
   }
 }
 
