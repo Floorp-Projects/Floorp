@@ -302,13 +302,27 @@ LIRGeneratorARM::newLGetPropertyCacheT(MGetPropertyCache *ins)
 }
 
 bool
-LIRGeneratorARM::visitGuardShapeOrType(MGuardShapeOrType *ins)
+LIRGeneratorARM::visitGuardShape(MGuardShape *ins)
 {
     JS_ASSERT(ins->obj()->type() == MIRType_Object);
 
     LDefinition tempObj = temp(LDefinition::OBJECT);
-    LGuardShapeOrType *guard = new LGuardShapeOrType(useRegister(ins->obj()), tempObj);
+    LGuardShape *guard = new LGuardShape(useRegister(ins->obj()), tempObj);
     if (!assignSnapshot(guard, ins->bailoutKind()))
+        return false;
+    if (!add(guard, ins))
+        return false;
+    return redefine(ins, ins->obj());
+}
+
+bool
+LIRGeneratorARM::visitGuardObjectType(MGuardObjectType *ins)
+{
+    JS_ASSERT(ins->obj()->type() == MIRType_Object);
+
+    LDefinition tempObj = temp(LDefinition::OBJECT);
+    LGuardObjectType *guard = new LGuardObjectType(useRegister(ins->obj()), tempObj);
+    if (!assignSnapshot(guard))
         return false;
     if (!add(guard, ins))
         return false;

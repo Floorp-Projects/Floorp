@@ -6728,7 +6728,7 @@ IonBuilder::TestCommonPropFunc(JSContext *cx, types::StackTypeSet *types, Handle
 
     // Pass the guard back so it can be an operand.
     if (isGetter) {
-        JS_ASSERT(wrapper->isGuardShapeOrType());
+        JS_ASSERT(wrapper->isGuardShape());
         *guardOut = wrapper;
     }
 
@@ -7746,7 +7746,7 @@ IonBuilder::addBoundsCheck(MDefinition *index, MDefinition *length)
 MInstruction *
 IonBuilder::addShapeGuard(MDefinition *obj, const RawShape shape, BailoutKind bailoutKind)
 {
-    MGuardShapeOrType *guard = MGuardShapeOrType::New(obj, shape, NULL, false, bailoutKind);
+    MGuardShape *guard = MGuardShape::New(obj, shape, bailoutKind);
     current->add(guard);
 
     // If a shape guard failed in the past, don't optimize shape guard.
