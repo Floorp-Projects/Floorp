@@ -138,7 +138,7 @@ TCPSocketChild::RecvCallback(const nsString& aType,
     if (data.type() == SendableData::TArrayOfuint8_t) {
       JS::Value val;
       bool ok = IPC::DeserializeArrayBuffer(mSocketObj, data.get_ArrayOfuint8_t(), &val);
-      NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
+      NS_ENSURE_TRUE(ok, true);
       rv = mSocket->CallListenerArrayBuffer(aType, val);
 
     } else if (data.type() == SendableData::TnsString) {
