@@ -9,9 +9,8 @@ VPATH      = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/config.mk
-
 EXTRA_JS_MODULES = \
   colorUtils.jsm \
+  CrossSlide.jsm \
   $(NULL)
-
 include $(topsrcdir)/config/rules.mk

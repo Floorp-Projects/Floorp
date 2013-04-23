@@ -121,18 +121,6 @@ static void SetThreadName(const char* name) {
 
 static void* ThreadEntry(void* arg) {
   Thread* thread = reinterpret_cast<Thread*>(arg);
-  // This is also initialized by the first argument to pthread_create() but we
-  // don't know which thread will run first (the original thread or the new
-  // one) so we initialize it here too.
-
-  // BEGIN temp hack for SPS v1-vs-v2
-  extern bool sps_version2();
-  if (sps_version2()) {
-    // Register this thread for profiling.
-    int aLocal;
-    uwt__register_thread_for_profiling( &aLocal );
-  }
-  // END temp hack for SPS v1-vs-v2
 
   thread->thread_ = pthread_self();
   SetThreadName(thread->name());

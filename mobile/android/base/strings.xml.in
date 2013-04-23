@@ -77,7 +77,9 @@
   <string name="pref_category_general">&pref_category_general;</string>
   <string name="pref_category_privacy">&pref_category_privacy;</string>
   <string name="pref_category_content">&pref_category_content;</string>
-  <string name="pref_category_importexport">&pref_category_importexport;</string>
+  <string name="pref_header_general">&pref_header_general;</string>
+  <string name="pref_header_privacy">&pref_header_privacy;</string>
+  <string name="pref_header_content">&pref_header_content;</string>
   <string name="pref_about_firefox">&pref_about_firefox;</string>
   <string name="pref_do_not_track">&pref_do_not_track;</string>
   <string name="pref_telemetry">&pref_telemetry;</string>
@@ -145,9 +147,6 @@
   <string name="tabs_normal">&tabs_normal;</string>
   <string name="tabs_private">&tabs_private;</string>
   <string name="tabs_synced">&tabs_synced;</string>
-  <!-- This string only appears in developer builds, which
-       is why it is not localizable. -->
-  <string name="toggle_profiling">Toggle Profiling</string>
 
   <string name="site_settings_title">&site_settings_title2;</string>
   <string name="site_settings_cancel">&site_settings_cancel;</string>

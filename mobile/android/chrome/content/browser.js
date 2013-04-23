@@ -212,6 +212,12 @@ var BrowserApp = {
     return this.isTablet = sysInfo.get("tablet");
   },
 
+  get isOnLowMemoryPlatform() {
+    let memory = Cc["@mozilla.org/xpcom/memory-service;1"].getService(Ci.nsIMemory);
+    delete this.isOnLowMemoryPlatform;
+    return this.isOnLowMemoryPlatform = memory.isLowMemoryPlatform();
+  },
+
   deck: null,
 
   startup: function startup() {
@@ -246,7 +252,6 @@ var BrowserApp = {
     Services.obs.addObserver(this, "Viewport:FixedMarginsChanged", false);
     Services.obs.addObserver(this, "Passwords:Init", false);
     Services.obs.addObserver(this, "FormHistory:Init", false);
-    Services.obs.addObserver(this, "ToggleProfiling", false);
     Services.obs.addObserver(this, "gather-telemetry", false);
     Services.obs.addObserver(this, "keyword-search", false);
 
@@ -1299,8 +1304,6 @@ var BrowserApp = {
         let storage = Cc["@mozilla.org/login-manager/storage/mozStorage;1"].
                       getService(Ci.nsILoginManagerStorage);
         storage.init();
-
-        sendMessageToJava({ type: "Passwords:Init:Return" });
         Services.obs.removeObserver(this, "Passwords:Init");
         break;
       }
@@ -1309,7 +1312,6 @@ var BrowserApp = {
         let fh = Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
         // Force creation/upgrade of formhistory.sqlite
         let db = fh.DBConnection;
-        sendMessageToJava({ type: "FormHistory:Init:Return" });
         Services.obs.removeObserver(this, "FormHistory:Init");
         break;
       }
@@ -1317,17 +1319,6 @@ var BrowserApp = {
       case "sessionstore-state-purge-complete":
         sendMessageToJava({ type: "Session:StatePurged" });
         break;
-
-      case "ToggleProfiling": {
-        let profiler = Cc["@mozilla.org/tools/profiler;1"].
-                       getService(Ci.nsIProfiler);
-        if (profiler.IsActive()) {
-          profiler.StopProfiler();
-        } else {
-          profiler.StartProfiler(100000, 25, ["stackwalk"], 1);
-        }
-        break;
-      }
 
       case "gather-telemetry":
         sendMessageToJava({ type: "Telemetry:Gather" });
@@ -3221,7 +3212,7 @@ Tab.prototype = {
 
         // For low-memory devices, don't allow reader mode since it takes up a lot of memory.
         // See https://bugzilla.mozilla.org/show_bug.cgi?id=792603 for details.
-        if (Cc["@mozilla.org/xpcom/memory-service;1"].getService(Ci.nsIMemory).isLowMemoryPlatform())
+        if (BrowserApp.isOnLowMemoryPlatform)
           return;
 
         // Once document is fully loaded, parse it
@@ -6542,6 +6533,10 @@ let Reader = {
     switch(aTopic) {
       case "Reader:Add": {
         let args = JSON.parse(aData);
+        if ('fromAboutReader' in args) {
+          // Ignore adds initiated from aboutReader menu banner
+          break;
+        }
 
         let tabID = null;
         let url, urlWithoutRef;
@@ -7205,7 +7200,7 @@ var Tabs = {
   init: function() {
     // on low-memory platforms, always allow tab expiration. on high-mem
     // platforms, allow it to be turned on once we hit a low-mem situation
-    if (Cc["@mozilla.org/xpcom/memory-service;1"].getService(Ci.nsIMemory).isLowMemoryPlatform()) {
+    if (BrowserApp.isOnLowMemoryPlatform) {
       this._enableTabExpiration = true;
     } else {
       Services.obs.addObserver(this, "memory-pressure", false);

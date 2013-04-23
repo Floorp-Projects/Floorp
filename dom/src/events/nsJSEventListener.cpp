@@ -17,7 +17,6 @@
 #include "nsVariant.h"
 #include "nsIDOMBeforeUnloadEvent.h"
 #include "nsGkAtoms.h"
-#include "nsIDOMEventTarget.h"
 #include "nsIJSContextStack.h"
 #include "xpcpublic.h"
 #include "nsJSEnvironment.h"
@@ -164,7 +163,7 @@ nsJSEventListener::IsBlackForCC()
 nsresult
 nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
 {
-  nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mTarget);
+  nsCOMPtr<EventTarget> target = do_QueryInterface(mTarget);
   if (!target || !mHandler.HasEventHandler())
     return NS_ERROR_FAILURE;
 

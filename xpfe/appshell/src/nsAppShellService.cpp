@@ -41,6 +41,7 @@
 #include "nsILoadContext.h"
 #include "nsIWebNavigation.h"
 
+#include "mozilla/Attributes.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StartupTimeline.h"
 
@@ -317,8 +318,8 @@ WebBrowserChrome2Stub::GetInterface(const nsIID & aIID, void **aSink)
 // This is the "stub" we return from CreateWindowlessBrowser - it exists
 // purely to keep a strong reference to the browser and the container to
 // prevent the container being collected while the stub remains alive.
-class WindowlessBrowserStub: public nsIWebNavigation,
-                             public nsIInterfaceRequestor {
+class WindowlessBrowserStub MOZ_FINAL : public nsIWebNavigation,
+                                        public nsIInterfaceRequestor {
 public:
   WindowlessBrowserStub(nsIWebBrowser *aBrowser, nsISupports *aContainer) {
     mBrowser = aBrowser;

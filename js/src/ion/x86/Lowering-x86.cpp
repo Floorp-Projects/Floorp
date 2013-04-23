@@ -299,3 +299,13 @@ LIRGeneratorX86::newLGetPropertyCacheT(MGetPropertyCache *ins)
         scratch = LDefinition::BogusTemp();
     return new LGetPropertyCacheT(useRegister(ins->object()), scratch);
 }
+
+bool
+LIRGeneratorX86::lowerTruncateDToInt32(MTruncateToInt32 *ins)
+{
+    MDefinition *opd = ins->input();
+    JS_ASSERT(opd->type() == MIRType_Double);
+
+    LDefinition maybeTemp = Assembler::HasSSE3() ? LDefinition::BogusTemp() : tempFloat();
+    return define(new LTruncateDToInt32(useRegister(opd), maybeTemp), ins);
+}

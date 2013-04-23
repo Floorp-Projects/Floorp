@@ -10,8 +10,6 @@
  * liability, trademark and document use rules apply.
  */
 
-interface SVGStringList;
-
 [NoInterfaceObject]
 interface SVGTests {
 

@@ -76,6 +76,13 @@ StoreBuffer::MonoTypeBuffer<T>::disable()
 }
 
 template <typename T>
+void
+StoreBuffer::MonoTypeBuffer<T>::clear()
+{
+    pos = base;
+}
+
+template <typename T>
 template <typename NurseryType>
 void
 StoreBuffer::MonoTypeBuffer<T>::compactNotInSet(NurseryType *nursery)
@@ -95,7 +102,9 @@ StoreBuffer::MonoTypeBuffer<T>::compact()
 #ifdef JS_GC_ZEAL
     if (owner->runtime->gcVerifyPostData)
         compactNotInSet(&owner->runtime->gcVerifierNursery);
+    else
 #endif
+        compactNotInSet(&owner->runtime->gcNursery);
 }
 
 template <typename T>
@@ -113,8 +122,27 @@ StoreBuffer::MonoTypeBuffer<T>::put(const T &v)
      */
     *pos++ = v;
     if (isFull()) {
-        owner->setOverflowed();
-        pos = base;
+        compact();
+        if (isFull()) {
+            owner->setOverflowed();
+            pos = base;
+        }
+    }
+}
+
+template <typename T>
+void
+StoreBuffer::MonoTypeBuffer<T>::mark(JSTracer *trc)
+{
+    compact();
+    T *cursor = base;
+    while (cursor != pos) {
+        T edge = *cursor++;
+
+        if (edge.isNullEdge())
+            continue;
+
+        edge.mark(trc);
     }
 }
 
@@ -196,6 +224,27 @@ StoreBuffer::GenericBuffer::disable()
     base = pos = top = NULL;
 }
 
+void
+StoreBuffer::GenericBuffer::clear()
+{
+    pos = base;
+}
+
+void
+StoreBuffer::GenericBuffer::mark(JSTracer *trc)
+{
+    uint8_t *p = base;
+    while (p < pos) {
+        unsigned size = *((unsigned *)p);
+        p += sizeof(unsigned);
+
+        BufferableRef *edge = reinterpret_cast<BufferableRef *>(p);
+        edge->mark(trc);
+
+        p += size;
+    }
+}
+
 bool
 StoreBuffer::GenericBuffer::containsEdge(void *location) const
 {
@@ -212,11 +261,37 @@ StoreBuffer::GenericBuffer::containsEdge(void *location) const
     return false;
 }
 
+/*** Edges ***/
+
+void
+StoreBuffer::CellPtrEdge::mark(JSTracer *trc)
+{
+    MarkObjectRoot(trc, reinterpret_cast<JSObject**>(edge), "store buffer edge");
+}
+
+void
+StoreBuffer::ValueEdge::mark(JSTracer *trc)
+{
+    MarkValueRoot(trc, edge, "store buffer edge");
+}
+
+void
+StoreBuffer::SlotEdge::mark(JSTracer *trc)
+{
+    if (kind == HeapSlot::Element)
+        MarkSlot(trc, (HeapSlot*)&object->getDenseElement(offset), "store buffer edge");
+    else
+        MarkSlot(trc, &object->getSlotRef(offset), "store buffer edge");
+}
+
 /*** StoreBuffer ***/
 
 bool
 StoreBuffer::enable()
 {
+    if (enabled)
+        return true;
+
     buffer = js_malloc(TotalSize);
     if (!buffer)
         return false;
@@ -271,6 +346,43 @@ StoreBuffer::disable()
     js_free(buffer);
     enabled = false;
     overflowed = false;
+}
+
+bool
+StoreBuffer::clear()
+{
+    if (!enabled)
+        return true;
+
+    bufferVal.clear();
+    bufferCell.clear();
+    bufferSlot.clear();
+    bufferRelocVal.clear();
+    bufferRelocCell.clear();
+    bufferGeneric.clear();
+
+    return true;
+}
+
+void
+StoreBuffer::mark(JSTracer *trc)
+{
+    JS_ASSERT(isEnabled());
+    JS_ASSERT(!overflowed);
+
+    bufferVal.mark(trc);
+    bufferCell.mark(trc);
+    bufferSlot.mark(trc);
+    bufferRelocVal.mark(trc);
+    bufferRelocCell.mark(trc);
+    bufferGeneric.mark(trc);
+}
+
+void
+StoreBuffer::setOverflowed()
+{
+    JS_ASSERT(enabled);
+    overflowed = true;
 }
 
 bool

@@ -17,8 +17,11 @@ namespace mozilla {
 namespace dom {
 
 class Touch MOZ_FINAL : public nsIDOMTouch
+                      , public nsWrapperCache
 {
 public:
+  static bool PrefEnabled();
+
   Touch(mozilla::dom::EventTarget* aTarget,
         int32_t aIdentifier,
         int32_t aPageX,
@@ -32,6 +35,7 @@ public:
         float aRotationAngle,
         float aForce)
     {
+      SetIsDOMBinding();
       mTarget = aTarget;
       mIdentifier = aIdentifier;
       mPagePoint = nsIntPoint(aPageX, aPageY);
@@ -54,6 +58,7 @@ public:
         float aRotationAngle,
         float aForce)
     {
+      SetIsDOMBinding();
       mIdentifier = aIdentifier;
       mPagePoint = nsIntPoint(0, 0);
       mScreenPoint = nsIntPoint(0, 0);
@@ -69,7 +74,7 @@ public:
       nsJSContext::LikelyShortLivingObjectCreated();
     }
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(Touch)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Touch)
   NS_DECL_NSIDOMTOUCH
   void InitializePoints(nsPresContext* aPresContext, nsEvent* aEvent)
   {
@@ -92,6 +97,23 @@ public:
     mTarget = aTarget;
   }
   bool Equals(nsIDOMTouch* aTouch);
+
+  JSObject* WrapObject(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
+  EventTarget* GetParentObject() { return mTarget; }
+
+  // WebIDL
+  int32_t Identifier() const { return mIdentifier; }
+  EventTarget* Target() const;
+  int32_t ScreenX() const { return mScreenPoint.x; }
+  int32_t ScreenY() const { return mScreenPoint.y; }
+  int32_t ClientX() const { return mClientPoint.x; }
+  int32_t ClientY() const { return mClientPoint.y; }
+  int32_t PageX() const { return mPagePoint.x; }
+  int32_t PageY() const { return mPagePoint.y; }
+  int32_t RadiusX() const { return mRadius.x; }
+  int32_t RadiusY() const { return mRadius.y; }
+  float RotationAngle() const { return mRotationAngle; }
+  float Force() const { return mForce; }
 
   int32_t mIdentifier;
   nsIntPoint mPagePoint;

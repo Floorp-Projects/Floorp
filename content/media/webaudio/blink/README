@@ -1,0 +1,24 @@
+This directory contains the code originally borrowed from the Blink Web Audio
+implementation.  We are forking the code here because in many cases the burden
+of adopting Blink specific utilities is too large compared to the prospect of
+importing upstream fixes by just copying newer versions of the code in the
+future.
+
+The process of borrowing code from Blink is as follows:
+
+* Try to borrow utility classes only, and avoid borrowing code which depends
+  too much on the Blink specific utilities.
+* First, import the pristine files from the Blink repository before adding
+  them to the build system, noting the SVN revision of Blink from which the
+  original files were copied in the commit message.
+* In a separate commit, add the imported source files to the build system,
+  and apply the necessary changes to make it build successfully.
+* Use the code in a separate commit.
+* Never add headers as exported headers.  All headers should be included
+  using the following convention: #include "blink/Header.h".
+* Leave the imported code in the WebCore namespace, and import the needed
+  names into the Mozilla code via `using'.
+* Cherry-pick upsteam fixes manually when needed.  In case you fix a problem
+  that is not Mozilla specific locally, try to upstream your changes into
+  Blink.
+* Ping ehsan for any questions.

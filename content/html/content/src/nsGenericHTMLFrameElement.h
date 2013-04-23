@@ -71,28 +71,6 @@ public:
   void SwapFrameLoaders(nsXULElement& aOtherOwner, mozilla::ErrorResult& aError);
 
 protected:
-  /**
-   * Listens to titlechanged events from the document inside the iframe and
-   * forwards them along to the iframe so it can fire a mozbrowsertitlechange
-   * event if appropriate.
-   */
-  class TitleChangedListener MOZ_FINAL : public nsIDOMEventListener
-  {
-  public:
-    TitleChangedListener(nsGenericHTMLFrameElement *aElement,
-                         nsIDOMEventTarget *aChromeHandler);
-
-    /* Unregister this listener. */
-    void Unregister();
-
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIDOMEVENTLISTENER
-
-  private:
-    nsWeakPtr mElement; /* nsGenericHTMLFrameElement */
-    nsWeakPtr mChromeHandler; /* nsIDOMEventTarget */
-  };
-
   // This doesn't really ensure a frame loade in all cases, only when
   // it makes sense.
   void EnsureFrameLoader();

@@ -21,10 +21,14 @@ XPCSHELL_TESTS = \
 
 MOCHITEST_BROWSER_FILES = \
 	head.js \
+	browser_capabilities.js \
 	browser_form_restore_events.js \
 	browser_form_restore_events_sample.html \
 	browser_formdata_format.js \
 	browser_formdata_format_sample.html \
+	browser_input.js \
+	browser_input_sample.html \
+	browser_pageshow.js \
 	browser_248970_b_perwindowpb.js \
 	browser_248970_b_sample.html \
 	browser_339445.js \
@@ -73,7 +77,6 @@ MOCHITEST_BROWSER_FILES = \
 	browser_490040.js \
 	browser_491168.js \
 	browser_491577.js \
-	browser_493467.js \
 	browser_495495.js \
 	browser_500328.js \
 	browser_514751.js \

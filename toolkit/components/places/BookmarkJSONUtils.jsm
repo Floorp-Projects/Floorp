@@ -65,6 +65,35 @@ this.BookmarkJSONUtils = Object.freeze({
   exportToFile: function BJU_exportToFile(aLocalFile) {
     let exporter = new BookmarkExporter();
     return exporter.exportToFile(aLocalFile);
+  },
+
+  /**
+   * Takes a JSON-serialized node and inserts it into the db.
+   *
+   * @param aData
+   *        The unwrapped data blob of dropped or pasted data.
+   * @param aContainer
+   *        The container the data was dropped or pasted into
+   * @param aIndex
+   *        The index within the container the item was dropped or pasted at
+   * @return {Promise}
+   * @resolves an array containing of maps of old folder ids to new folder ids,
+   *           and an array of saved search ids that need to be fixed up.
+   *           eg: [[[oldFolder1, newFolder1]], [search1]]
+   * @rejects JavaScript exception.
+   */
+  importJSONNode: function BJU_importJSONNode(aData, aContainer, aIndex,
+                                              aGrandParentId) {
+    let deferred = Promise.defer();
+    Services.tm.mainThread.dispatch(function() {
+      try {
+        let importer = new BookmarkImporter();
+        deferred.resolve(importer.importJSONNode(aData, aContainer, aIndex, aGrandParentId));
+      } catch (ex) {
+        deferred.reject(ex);
+      }
+    }, Ci.nsIThread.DISPATCH_NORMAL);
+    return deferred.promise;
   }
 });
 

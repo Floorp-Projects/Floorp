@@ -83,18 +83,41 @@ DevTools.prototype = {
    * Removes all tools that match the given |toolId|
    * Needed so that add-ons can remove themselves when they are deactivated
    *
-   * @param {string} toolId
-   *        id of the tool to unregister
+   * @param {string|object} tool
+   *        Definition or the id of the tool to unregister. Passing the
+   *        tool id should be avoided as it is a temporary measure.
    * @param {boolean} isQuitApplication
    *        true to indicate that the call is due to app quit, so we should not
    *        cause a cascade of costly events
    */
-  unregisterTool: function DT_unregisterTool(toolId, isQuitApplication) {
+  unregisterTool: function DT_unregisterTool(tool, isQuitApplication) {
+    let toolId = null;
+    if (typeof tool == "string") {
+      toolId = tool;
+      tool = this._tools.get(tool);
+    }
+    else {
+      toolId = tool.id;
+    }
     this._tools.delete(toolId);
 
     if (!isQuitApplication) {
-      this.emit("tool-unregistered", toolId);
+      this.emit("tool-unregistered", tool);
     }
+  },
+
+  getDefaultTools: function DT_getDefaultTools() {
+    return defaultTools;
+  },
+
+  getAdditionalTools: function DT_getAdditionalTools() {
+    let tools = [];
+    for (let [key, value] of this._tools) {
+      if (defaultTools.indexOf(value) == -1) {
+        tools.push(value);
+      }
+    }
+    return tools;
   },
 
   /**
@@ -106,6 +129,10 @@ DevTools.prototype = {
    */
   getToolDefinitionMap: function DT_getToolDefinitionMap() {
     let tools = new Map();
+    let disabledTools = [];
+    try {
+      disabledTools = JSON.parse(Services.prefs.getCharPref("devtools.toolbox.disabledTools"));
+    } catch(ex) {}
 
     for (let [key, value] of this._tools) {
       let enabled;
@@ -116,7 +143,7 @@ DevTools.prototype = {
         enabled = true;
       }
 
-      if (enabled) {
+      if (enabled && disabledTools.indexOf(key) == -1) {
         tools.set(key, value);
       }
     }
@@ -364,12 +391,16 @@ let gDevToolsBrowser = {
   },
 
   /**
-   * Add the menuitem for a tool to all open browser windows.
+   * Add the menuitem for a tool to all open browser windows. Also toggles the
+   * kill switch preference of the tool.
    *
    * @param {object} toolDefinition
    *        properties of the tool to add
    */
   _addToolToWindows: function DT_addToolToWindows(toolDefinition) {
+    // Set the kill switch pref boolean to true
+    Services.prefs.setBoolPref(toolDefinition.killswitch, true);
+
     // We need to insert the new tool in the right place, which means knowing
     // the tool that comes before the tool that we're trying to add
     let allDefs = gDevTools.getToolDefinitionArray();
@@ -549,12 +580,16 @@ let gDevToolsBrowser = {
   },
 
   /**
-   * Remove the menuitem for a tool to all open browser windows.
+   * Remove the menuitem for a tool to all open browser windows. Also sets the
+   * kill switch boolean pref to false.
    *
    * @param {object} toolId
    *        id of the tool to remove
+   * @param {string} killswitch
+   *        The kill switch preference string of the tool
    */
-  _removeToolFromWindows: function DT_removeToolFromWindows(toolId) {
+  _removeToolFromWindows: function DT_removeToolFromWindows(toolId, killswitch) {
+    Services.prefs.setBoolPref(killswitch, false);
     for (let win of gDevToolsBrowser._trackedBrowserWindows) {
       gDevToolsBrowser._removeToolFromMenu(toolId, win.document);
     }
@@ -632,7 +667,15 @@ gDevTools.on("tool-registered", function(ev, toolId) {
 });
 
 gDevTools.on("tool-unregistered", function(ev, toolId) {
-  gDevToolsBrowser._removeToolFromWindows(toolId);
+  let killswitch;
+  if (typeof toolId == "string") {
+    killswitch = "devtools." + toolId + ".enabled";
+  }
+  else {
+    killswitch = toolId.killswitch;
+    toolId = toolId.id;
+  }
+  gDevToolsBrowser._removeToolFromWindows(toolId, killswitch);
 });
 
 gDevTools.on("toolbox-ready", gDevToolsBrowser._updateMenuCheckbox);

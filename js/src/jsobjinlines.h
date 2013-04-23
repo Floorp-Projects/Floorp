@@ -594,9 +594,10 @@ JSObject::ensureDenseInitializedLength(JSContext *cx, uint32_t index, uint32_t e
     }
 }
 
-template<typename CONTEXT>
+template<typename MallocProviderType>
 JSObject::EnsureDenseResult
-JSObject::extendDenseElements(CONTEXT *cx, unsigned requiredCapacity, unsigned extra)
+JSObject::extendDenseElements(MallocProviderType *cx,
+                              unsigned requiredCapacity, unsigned extra)
 {
     /*
      * Don't grow elements for non-extensible objects or watched objects. Dense
@@ -948,6 +949,10 @@ JSObject::create(JSContext *cx, js::gc::AllocKind kind, js::gc::InitialHeap heap
         js_free(slots);
         return NULL;
     }
+
+#ifdef JSGC_GENERATIONAL
+    cx->runtime->gcNursery.notifyInitialSlots(obj, slots);
+#endif
 
     obj->shape_.init(shape);
     obj->type_.init(type);
@@ -1761,8 +1766,8 @@ JSObject *
 DefineConstructorAndPrototype(JSContext *cx, HandleObject obj, JSProtoKey key, HandleAtom atom,
                               JSObject *protoProto, Class *clasp,
                               Native constructor, unsigned nargs,
-                              JSPropertySpec *ps, JSFunctionSpec *fs,
-                              JSPropertySpec *static_ps, JSFunctionSpec *static_fs,
+                              const JSPropertySpec *ps, const JSFunctionSpec *fs,
+                              const JSPropertySpec *static_ps, const JSFunctionSpec *static_fs,
                               JSObject **ctorp = NULL,
                               gc::AllocKind ctorKind = JSFunction::FinalizeKind);
 
@@ -1771,8 +1776,8 @@ DefineConstructorAndPrototype(JSContext *cx, HandleObject obj, JSProtoKey key, H
 extern JSObject *
 js_InitClass(JSContext *cx, js::HandleObject obj, JSObject *parent_proto,
              js::Class *clasp, JSNative constructor, unsigned nargs,
-             JSPropertySpec *ps, JSFunctionSpec *fs,
-             JSPropertySpec *static_ps, JSFunctionSpec *static_fs,
+             const JSPropertySpec *ps, const JSFunctionSpec *fs,
+             const JSPropertySpec *static_ps, const JSFunctionSpec *static_fs,
              JSObject **ctorp = NULL,
              js::gc::AllocKind ctorKind = JSFunction::FinalizeKind);
 

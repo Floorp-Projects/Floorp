@@ -22,6 +22,9 @@ MOCHITEST_FILES := \
   test_AudioContext.html \
   test_AudioListener.html \
   test_AudioParam.html \
+  test_audioBufferSourceNode.html \
+  test_audioBufferSourceNodeLoop.html \
+  test_audioBufferSourceNodeLoopStartEnd.html \
   test_badConnect.html \
   test_biquadFilterNode.html \
   test_currentTime.html \
@@ -30,6 +33,7 @@ MOCHITEST_FILES := \
   test_dynamicsCompressorNode.html \
   test_gainNode.html \
   test_pannerNode.html \
+  test_scriptProcessorNode.html \
   test_singleSourceDest.html \
   ting.ogg \
   ting-expected.wav \

@@ -40,17 +40,10 @@ public:
   Create(Telephony* aTelephony, const nsAString& aNumber, uint16_t aCallState,
          uint32_t aCallIndex = kOutgoingPlaceholderCallIndex);
 
-  nsIDOMEventTarget*
-  ToIDOMEventTarget() const
-  {
-    return static_cast<nsDOMEventTargetHelper*>(
-             const_cast<TelephonyCall*>(this));
-  }
-
   nsISupports*
-  ToISupports() const
+  ToISupports()
   {
-    return ToIDOMEventTarget();
+    return static_cast<EventTarget*>(this);
   }
 
   void

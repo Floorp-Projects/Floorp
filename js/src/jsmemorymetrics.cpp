@@ -120,7 +120,7 @@ StatsCompartmentCallback(JSRuntime *rt, void *data, JSCompartment *compartment)
                                      &cStats.crossCompartmentWrappersTable,
                                      &cStats.regexpCompartment,
                                      &cStats.debuggeesSet,
-                                     &cStats.baselineOptimizedStubs);
+                                     &cStats.baselineStubsOptimized);
 }
 
 static void
@@ -257,11 +257,11 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
 #ifdef JS_METHODJIT
         cStats->jaegerData += script->sizeOfJitScripts(rtStats->mallocSizeOf_);
 # ifdef JS_ION
-        size_t baselineData = 0, baselineFallbackStubs = 0;
+        size_t baselineData = 0, baselineStubsFallback = 0;
         ion::SizeOfBaselineData(script, rtStats->mallocSizeOf_, &baselineData,
-                                &baselineFallbackStubs);
+                                &baselineStubsFallback);
         cStats->baselineData += baselineData;
-        cStats->baselineFallbackStubs += baselineFallbackStubs;
+        cStats->baselineStubsFallback += baselineStubsFallback;
         cStats->ionData += ion::SizeOfIonData(script, rtStats->mallocSizeOf_);
 # endif
 #endif

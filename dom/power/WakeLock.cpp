@@ -12,7 +12,6 @@
 #include "nsIDOMWindow.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMEventTarget.h"
 #include "nsPIDOMWindow.h"
 #include "PowerManager.h"
 
@@ -172,7 +171,7 @@ WakeLock::AttachEventListener()
   if (window) {
     nsCOMPtr<nsIDOMDocument> domDoc = window->GetExtantDocument();
     if (domDoc) {
-      nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(domDoc);
+      nsCOMPtr<EventTarget> target = do_QueryInterface(domDoc);
       target->AddSystemEventListener(NS_LITERAL_STRING("visibilitychange"),
                                      this,
                                      /* useCapture = */ true,
@@ -199,7 +198,7 @@ WakeLock::DetachEventListener()
   if (window) {
     nsCOMPtr<nsIDOMDocument> domDoc = window->GetExtantDocument();
     if (domDoc) {
-      nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(domDoc);
+      nsCOMPtr<EventTarget> target = do_QueryInterface(domDoc);
       target->RemoveSystemEventListener(NS_LITERAL_STRING("visibilitychange"),
                                         this,
                                         /* useCapture = */ true);
@@ -244,12 +243,12 @@ WakeLock::HandleEvent(nsIDOMEvent *aEvent)
   aEvent->GetType(type);
 
   if (type.EqualsLiteral("visibilitychange")) {
-    nsCOMPtr<nsIDOMEventTarget> target;
-    aEvent->GetTarget(getter_AddRefs(target));
-    nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(target);
-    NS_ENSURE_STATE(domDoc);
+    nsCOMPtr<nsIDocument> doc =
+      do_QueryInterface(aEvent->InternalDOMEvent()->GetTarget());
+    NS_ENSURE_STATE(doc);
+
     bool oldHidden = mHidden;
-    domDoc->GetHidden(&mHidden);
+    mHidden = doc->Hidden();
 
     if (mLocked && oldHidden != mHidden) {
       hal::ModifyWakeLock(mTopic,

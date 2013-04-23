@@ -1787,11 +1787,11 @@ NS_IMETHODIMP
 nsDocShell::SetChromeEventHandler(nsIDOMEventTarget* aChromeEventHandler)
 {
     // Weak reference. Don't addref.
-    mChromeEventHandler = aChromeEventHandler;
     nsCOMPtr<EventTarget> handler = do_QueryInterface(aChromeEventHandler);
+    mChromeEventHandler = handler.get();
 
     if (mScriptGlobal) {
-        mScriptGlobal->SetChromeEventHandler(handler);
+        mScriptGlobal->SetChromeEventHandler(mChromeEventHandler);
     }
 
     return NS_OK;
@@ -1801,8 +1801,8 @@ NS_IMETHODIMP
 nsDocShell::GetChromeEventHandler(nsIDOMEventTarget** aChromeEventHandler)
 {
     NS_ENSURE_ARG_POINTER(aChromeEventHandler);
-    nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mChromeEventHandler);
-    target.swap(*aChromeEventHandler);
+    nsCOMPtr<EventTarget> handler = mChromeEventHandler;
+    handler.forget(aChromeEventHandler);
     return NS_OK;
 }
 
@@ -9718,6 +9718,11 @@ nsDocShell::ScrollToAnchor(nsACString & aCurHash, nsACString & aNewHash,
         return NS_OK;
     }
 
+    nsIScrollableFrame* rootScroll = shell->GetRootScrollFrameAsScrollable();
+    if (rootScroll) {
+        rootScroll->ClearDidHistoryRestore();
+    }
+
     // If we have no new anchor, we do not want to scroll, unless there is a
     // current anchor and we are doing a history load.  So return if we have no
     // new anchor, and there is no current anchor or the load is not a history
@@ -11416,9 +11421,17 @@ nsDocShell::EnsureScriptEnvironment()
     uint32_t chromeFlags;
     browserChrome->GetChromeFlags(&chromeFlags);
 
-    bool isModalContentWindow =
-        (chromeFlags & nsIWebBrowserChrome::CHROME_MODAL) &&
-        !(chromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME);
+    bool isModalContentWindow = (mItemType == typeContent) &&
+        (chromeFlags & nsIWebBrowserChrome::CHROME_MODAL);
+    // There can be various other content docshells associated with the
+    // top-level window, like sidebars. Make sure that we only create an
+    // nsGlobalModalWindow for the primary content shell.
+    if (isModalContentWindow) {
+        nsCOMPtr<nsIDocShellTreeItem> primaryItem;
+        nsresult rv = mTreeOwner->GetPrimaryContentShell(getter_AddRefs(primaryItem));
+        NS_ENSURE_SUCCESS(rv, rv);
+        isModalContentWindow = (primaryItem == this);
+    }
 
     // If our window is modal and we're not opened as chrome, make
     // this window a modal content window.

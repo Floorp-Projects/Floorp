@@ -21,7 +21,7 @@ menulist:-moz-focusring:not([open="true"]):not(.menulist-compact) > .menulist-la
     -moz-margin-start: 0 !important;
   }
 
-  .menulist-dropmarker {
+  menulist:not([editable="true"]) > .menulist-dropmarker {
     margin-top: -2px;
     -moz-margin-start: 3px;
     -moz-margin-end: -3px;

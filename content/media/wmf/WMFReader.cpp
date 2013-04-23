@@ -388,6 +388,28 @@ WMFReader::ConfigureVideoDecoder()
   return S_OK;
 }
 
+static void
+GetSupportedAudioCodecs(const GUID** aCodecs, uint32_t* aNumCodecs)
+{
+  MOZ_ASSERT(aCodecs);
+  MOZ_ASSERT(aNumCodecs);
+
+  if (WMFDecoder::IsMP3Supported()) {
+    static const GUID codecs[] = {
+      MFAudioFormat_AAC,
+      MFAudioFormat_MP3
+    };
+    *aCodecs = codecs;
+    *aNumCodecs = NS_ARRAY_LENGTH(codecs);
+  } else {
+    static const GUID codecs[] = {
+      MFAudioFormat_AAC
+    };
+    *aCodecs = codecs;
+    *aNumCodecs = NS_ARRAY_LENGTH(codecs);
+  }
+}
+
 HRESULT
 WMFReader::ConfigureAudioDecoder()
 {
@@ -399,15 +421,15 @@ WMFReader::ConfigureAudioDecoder()
     return S_OK;
   }
 
-  static const GUID MP4AudioTypes[] = {
-    MFAudioFormat_AAC,
-    MFAudioFormat_MP3
-  };
+  const GUID* codecs;
+  uint32_t numCodecs = 0;
+  GetSupportedAudioCodecs(&codecs, &numCodecs);
+
   HRESULT hr = ConfigureSourceReaderStream(mSourceReader,
                                            MF_SOURCE_READER_FIRST_AUDIO_STREAM,
                                            MFAudioFormat_Float,
-                                           MP4AudioTypes,
-                                           NS_ARRAY_LENGTH(MP4AudioTypes));
+                                           codecs,
+                                           numCodecs);
   if (FAILED(hr)) {
     NS_WARNING("Failed to configure WMF Audio decoder for PCM output");
     return hr;

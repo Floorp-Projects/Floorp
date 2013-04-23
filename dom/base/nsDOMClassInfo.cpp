@@ -268,8 +268,6 @@
 #include "mozilla/dom/Element.h"
 #include "HTMLLegendElement.h"
 
-#include "DOMSVGStringList.h"
-
 #include "mozilla/dom/indexedDB/IDBWrapperCache.h"
 #include "mozilla/dom/indexedDB/IDBFileHandle.h"
 #include "mozilla/dom/indexedDB/IDBRequest.h"
@@ -690,9 +688,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
 #ifdef MOZ_XUL
   NS_DEFINE_CLASSINFO_DATA(TreeColumn, nsDOMGenericSH,
                            DEFAULT_SCRIPTABLE_FLAGS)
-
-  NS_DEFINE_CLASSINFO_DATA(TreeColumns, nsTreeColumnsSH,
-                           ARRAY_SCRIPTABLE_FLAGS)
 #endif
 
   NS_DEFINE_CLASSINFO_DATA(CSSMozDocumentRule, nsDOMGenericSH,
@@ -724,16 +719,12 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGRect, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(SVGStringList, nsSVGStringListSH,
-                           ARRAY_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGZoomEvent, nsEventSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(CanvasGradient, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(CanvasPattern, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(TextMetrics, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(MozCanvasPrintState, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -897,8 +888,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(IDBOpenDBRequest, IDBEventTargetSH,
                            IDBEVENTTARGET_SCRIPTABLE_FLAGS)
 
-  NS_DEFINE_CLASSINFO_DATA(Touch, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(TouchList, nsDOMTouchListSH,
                            ARRAY_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(TouchEvent, nsEventSH,
@@ -1956,10 +1945,6 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(TreeColumn, nsITreeColumn)
     DOM_CLASSINFO_MAP_ENTRY(nsITreeColumn)
   DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(TreeColumns, nsITreeColumns)
-    DOM_CLASSINFO_MAP_ENTRY(nsITreeColumns)
-  DOM_CLASSINFO_MAP_END
 #endif
 
   DOM_CLASSINFO_MAP_BEGIN(CSSMozDocumentRule, nsIDOMCSSMozDocumentRule)
@@ -2015,10 +2000,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGRect)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(SVGStringList, nsIDOMSVGStringList)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGStringList)
-  DOM_CLASSINFO_MAP_END
-
   DOM_CLASSINFO_MAP_BEGIN(SVGZoomEvent, nsIDOMSVGZoomEvent)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGZoomEvent)
     DOM_CLASSINFO_UI_EVENT_MAP_ENTRIES
@@ -2030,10 +2011,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(CanvasPattern, nsIDOMCanvasPattern)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCanvasPattern)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(TextMetrics, nsIDOMTextMetrics)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMTextMetrics)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(MozCanvasPrintState, nsIDOMMozCanvasPrintState)
@@ -2297,11 +2274,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIIDBOpenDBRequest)
     DOM_CLASSINFO_MAP_ENTRY(nsIIDBRequest)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN_MAYBE_DISABLE(Touch, nsIDOMTouch,
-                                        !nsDOMTouchEvent::PrefEnabled())
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMTouch)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN_MAYBE_DISABLE(TouchList, nsIDOMTouchList,
@@ -7236,30 +7208,6 @@ nsCSSRuleListSH::GetItemAt(nsISupports *aNative, uint32_t aIndex,
   return list->GetItemAt(aIndex, aResult);
 }
 
-#ifdef MOZ_XUL
-// TreeColumns helper
-
-nsISupports*
-nsTreeColumnsSH::GetItemAt(nsISupports *aNative, uint32_t aIndex,
-                           nsWrapperCache **aCache, nsresult *aResult)
-{
-  nsTreeColumns* columns = nsTreeColumns::FromSupports(aNative);
-
-  return columns->GetColumnAt(aIndex);
-}
-
-nsISupports*
-nsTreeColumnsSH::GetNamedItem(nsISupports *aNative,
-                              const nsAString& aName,
-                              nsWrapperCache **aCache,
-                              nsresult *aResult)
-{
-  nsTreeColumns* columns = nsTreeColumns::FromSupports(aNative);
-
-  return columns->GetNamedColumn(aName);
-}
-#endif
-
 
 // Storage2SH
 
@@ -7490,9 +7438,8 @@ nsEventListenerThisTranslator::TranslateThis(nsISupports *aInitialThis,
   nsCOMPtr<nsIDOMEvent> event(do_QueryInterface(aInitialThis));
   NS_ENSURE_TRUE(event, NS_ERROR_UNEXPECTED);
 
-  nsCOMPtr<nsIDOMEventTarget> target;
-  event->GetCurrentTarget(getter_AddRefs(target));
-  target.forget(_retval);
+  nsCOMPtr<EventTarget> target = event->InternalDOMEvent()->GetCurrentTarget();
+  *_retval = target.forget().get();
   return NS_OK;
 }
 
@@ -7640,44 +7587,5 @@ nsOfflineResourceListSH::GetStringAt(nsISupports *aNative, int32_t aIndex,
     NS_ASSERTION(uint32_t(aIndex) >= length, "MozItem should only return null for out-of-bounds access");
   }
 #endif
-  return rv;
-}
-
-// SVGStringList helper
-
-nsresult
-nsSVGStringListSH::GetStringAt(nsISupports *aNative, int32_t aIndex,
-                               nsAString& aResult)
-{
-  if (aIndex < 0) {
-    SetDOMStringToNull(aResult);
-    return NS_OK;
-  }
-
-  DOMSVGStringList* list = static_cast<DOMSVGStringList*>(
-                             static_cast<nsIDOMSVGStringList*>(aNative));
-#ifdef DEBUG
-  {
-    nsCOMPtr<nsIDOMSVGStringList> list_qi = do_QueryInterface(aNative);
-
-    // If this assertion fires the QI implementation for the object in
-    // question doesn't use the nsIDOMDOMSVGStringList pointer as the
-    // nsISupports pointer. That must be fixed, or we'll crash...
-    NS_ABORT_IF_FALSE(list_qi == list, "Uh, fix QI!");
-  }
-#endif
-
-  nsresult rv = list->GetItem(aIndex, aResult);
-#ifdef DEBUG
-  if (DOMStringIsNull(aResult)) {
-    uint32_t length = 0;
-    list->GetLength(&length);
-    NS_ASSERTION(uint32_t(aIndex) >= length, "Item should only return null for out-of-bounds access");
-  }
-#endif
-  if (rv == NS_ERROR_DOM_INDEX_SIZE_ERR) {
-    SetDOMStringToNull(aResult);
-    rv = NS_OK;
-  }
   return rv;
 }

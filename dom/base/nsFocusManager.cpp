@@ -104,7 +104,7 @@ struct nsDelayedBlurOrFocusEvent
   nsDelayedBlurOrFocusEvent(uint32_t aType,
                             nsIPresShell* aPresShell,
                             nsIDocument* aDocument,
-                            nsIDOMEventTarget* aTarget)
+                            EventTarget* aTarget)
    : mType(aType),
      mPresShell(aPresShell),
      mDocument(aDocument),
@@ -119,7 +119,7 @@ struct nsDelayedBlurOrFocusEvent
   uint32_t mType;
   nsCOMPtr<nsIPresShell> mPresShell;
   nsCOMPtr<nsIDocument> mDocument;
-  nsCOMPtr<nsIDOMEventTarget> mTarget;
+  nsCOMPtr<EventTarget> mTarget;
 };
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsFocusManager)
@@ -999,7 +999,7 @@ nsFocusManager::FireDelayedEvents(nsIDocument* aDocument)
     if (mDelayedBlurFocusEvents[i].mDocument == aDocument &&
         !aDocument->EventHandlingSuppressed()) {
       uint32_t type = mDelayedBlurFocusEvents[i].mType;
-      nsCOMPtr<nsIDOMEventTarget> target = mDelayedBlurFocusEvents[i].mTarget;
+      nsCOMPtr<EventTarget> target = mDelayedBlurFocusEvents[i].mTarget;
       nsCOMPtr<nsIPresShell> presShell = mDelayedBlurFocusEvents[i].mPresShell;
       mDelayedBlurFocusEvents.RemoveElementAt(i);
       SendFocusOrBlurEvent(type, presShell, aDocument, target, 0, false);
@@ -1018,23 +1018,6 @@ nsFocusManager::FocusPlugin(nsIContent* aContent)
   return NS_OK;
 }
 
-/* static */ bool
-nsFocusManager::ThemeDisplaysFocusForContent(nsIContent* aContent)
-{
-  // We don't want to draw the focusring if the element is themed and
-  // the theme displays an indication of focus for the element.
-  nsIFrame* frame = aContent->GetPrimaryFrame();
-  if (frame) {
-    nsPresContext *presContext = frame->PresContext();
-    const nsStyleDisplay *disp = frame->StyleDisplay();
-    if (frame->IsThemed(disp) &&
-        presContext->GetTheme()->ThemeDrawsFocusForWidget(presContext, frame, disp->mAppearance)) {
-      return true;
-    }
-  }
-  return false;
-}
-
 /* static */
 void
 nsFocusManager::NotifyFocusStateChange(nsIContent* aContent,
@@ -1045,9 +1028,7 @@ nsFocusManager::NotifyFocusStateChange(nsIContent* aContent,
     return;
   }
   nsEventStates eventState = NS_EVENT_STATE_FOCUS;
-  if (!aGettingFocus ||
-      (aWindowShouldShowFocusRing &&
-       !ThemeDisplaysFocusForContent(aContent))) {
+  if (aWindowShouldShowFocusRing) {
     eventState |= NS_EVENT_STATE_FOCUSRING;
   }
   if (aGettingFocus) {
@@ -1900,7 +1881,7 @@ nsFocusManager::SendFocusOrBlurEvent(uint32_t aType,
   NS_ASSERTION(aType == NS_FOCUS_CONTENT || aType == NS_BLUR_CONTENT,
                "Wrong event type for SendFocusOrBlurEvent");
 
-  nsCOMPtr<nsIDOMEventTarget> eventTarget = do_QueryInterface(aTarget);
+  nsCOMPtr<EventTarget> eventTarget = do_QueryInterface(aTarget);
 
   // for focus events, if this event was from a mouse or key and event
   // handling on the document is suppressed, queue the event and fire it

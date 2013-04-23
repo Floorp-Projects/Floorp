@@ -57,7 +57,6 @@
 #include "nsLayoutUtils.h"
 
 #include "nsIDOMMutationEvent.h"
-#include "nsIDOMEventTarget.h"
 #include "nsMutationEvent.h"
 #include "nsEventListenerManager.h"
 
@@ -1225,11 +1224,9 @@ HTMLInputElement::ConvertStringToNumber(nsAString& aValue,
       aResultValue = static_cast<double>(milliseconds);
       return true;
     default:
+      MOZ_ASSERT(false, "Unrecognized input type");
       return false;
   }
-
-  MOZ_NOT_REACHED();
-  return false;
 }
 
 double
@@ -1429,7 +1426,7 @@ HTMLInputElement::ConvertNumberToString(double aValue,
         return true;
       }
     default:
-      MOZ_NOT_REACHED();
+      MOZ_ASSERT(false, "Unrecognized input type");
       return false;
   }
 }
@@ -1488,7 +1485,7 @@ HTMLInputElement::GetValueAsDate(JSContext* aCx, ErrorResult& aRv)
     }
   }
 
-  MOZ_NOT_REACHED();
+  MOZ_ASSERT(false, "Unrecognized input type");
   aRv.Throw(NS_ERROR_UNEXPECTED);
   return JS::NullValue();
 }
@@ -2787,7 +2784,7 @@ IsLTR(Element* aElement)
 }
 
 bool
-HTMLInputElement::ShouldPreventDOMActivateDispatch(nsIDOMEventTarget* aOriginalTarget)
+HTMLInputElement::ShouldPreventDOMActivateDispatch(EventTarget* aOriginalTarget)
 {
   /*
    * For the moment, there is only one situation where we actually want to
@@ -6076,7 +6073,7 @@ HTMLInputElement::GetStepScaleFactor() const
     case NS_FORM_INPUT_TIME:
       return kStepScaleFactorTime;
     default:
-      MOZ_NOT_REACHED();
+      MOZ_ASSERT(false, "Unrecognized input type");
       return MOZ_DOUBLE_NaN();
   }
 }
@@ -6094,7 +6091,7 @@ HTMLInputElement::GetDefaultStep() const
     case NS_FORM_INPUT_TIME:
       return kDefaultStepTime;
     default:
-      MOZ_NOT_REACHED();
+      MOZ_ASSERT(false, "Unrecognized input type");
       return MOZ_DOUBLE_NaN();
   }
 }

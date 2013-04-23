@@ -1640,7 +1640,7 @@ ReportZoneStats(const JS::ZoneStats &zStats,
                       zStats.gcHeapIonCodes,
                       "Memory on the garbage-collected JavaScript "
                       "heap that holds references to executable code pools "
-                      "used by IonMonkey.");
+                      "used by the IonMonkey JIT.");
 
     ZCREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("type-objects"),
                    zStats.typeObjects,
@@ -1859,18 +1859,20 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
                    "Memory used by the JaegerMonkey JIT for compilation data: "
                    "JITScripts, native maps, and inline cache structs.");
 
-    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("baseline-data"),
+    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("baseline/data"),
                    cStats.baselineData,
                    "Memory used by the Baseline JIT for compilation data: "
                    "BaselineScripts.");
 
-    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("baseline-fallback-stubs"),
-                   cStats.baselineFallbackStubs,
-                   "Memory used by Baseline fallback IC stubs (excluding code).");
+    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("baseline/stubs/fallback"),
+                   cStats.baselineStubsFallback,
+                   "Memory used by the Baseline JIT for fallback IC stubs "
+                   "(excluding code).");
 
-    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("baseline-optimized-stubs"),
-                   cStats.baselineOptimizedStubs,
-                   "Memory used by Baseline optimized IC stubs (excluding code).");
+    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("baseline/stubs/optimized"),
+                   cStats.baselineStubsOptimized,
+                   "Memory used by the Baseline JIT for optimized IC stubs "
+                   "(excluding code).");
 
     ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("ion-data"),
                    cStats.ionData,

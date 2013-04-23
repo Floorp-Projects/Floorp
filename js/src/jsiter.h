@@ -144,7 +144,7 @@ class ElementIteratorObject : public JSObject
 {
   public:
     static JSObject *create(JSContext *cx, Handle<Value> target);
-    static JSFunctionSpec methods[];
+    static const JSFunctionSpec methods[];
 
     enum {
         TargetSlot,

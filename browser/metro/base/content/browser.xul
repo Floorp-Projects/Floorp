@@ -335,7 +335,7 @@
       </hbox>
     </appbar>
 
-    <vbox id="panel-container" hidden="true" class="window-width window-height meta">
+    <vbox id="panel-container" hidden="true" class="window-width window-height meta" observes="bcast_windowState">
       <hbox id="panel-header">
         <toolbarbutton id="panel-close-button" command="cmd_panel"/>
 
@@ -350,18 +350,18 @@
         </menulist>
       </hbox>
 
-      <deck id="panel-items" selectedIndex="0" flex="1">
+      <deck id="panel-items" selectedIndex="0" flex="1" >
         <scrollbox id="bookmarks-container" flex="1">
-          <richgrid id="bookmarks-list" seltype="single" flex="1"/>
+          <richgrid id="bookmarks-list" class="canSnapTiles" seltype="single" flex="1"/>
         </scrollbox>
         <scrollbox id="history-container" flex="1">
-          <richgrid id="history-list" seltype="single" flex="1"/>
+          <richgrid id="history-list" class="canSnapTiles" seltype="single" flex="1"/>
         </scrollbox>
         <scrollbox id="downloads-container" flex="1">
-          <richgrid id="downloads-list" seltype="single" flex="1"/>
+          <richgrid id="downloads-list" class="canSnapTiles" seltype="single" flex="1"/>
         </scrollbox>
         <scrollbox id="remotetabs-container" flex="1">
-          <richgrid id="remotetabs-list" seltype="single" flex="1"/>
+          <richgrid id="remotetabs-list" class="canSnapTiles" seltype="single" flex="1"/>
         </scrollbox>
         <vbox id="console-container" flex="1">
           <vbox id="console-header" class="panel-list">

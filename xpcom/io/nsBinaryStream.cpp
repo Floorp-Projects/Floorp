@@ -28,6 +28,9 @@
 #include "nsComponentManagerUtils.h"
 #include "nsIURI.h" // for NS_IURI_IID
 
+#include "jsapi.h"
+#include "jsfriendapi.h"
+
 NS_IMPL_ISUPPORTS3(nsBinaryOutputStream, nsIObjectOutputStream, nsIBinaryOutputStream, nsIOutputStream)
 
 NS_IMETHODIMP
@@ -713,6 +716,32 @@ NS_IMETHODIMP
 nsBinaryInputStream::ReadByteArray(uint32_t aLength, uint8_t* *_rval)
 {
     return ReadBytes(aLength, reinterpret_cast<char **>(_rval));
+}
+
+NS_IMETHODIMP
+nsBinaryInputStream::ReadArrayBuffer(uint32_t aLength, const JS::Value& aBuffer, JSContext* cx)
+{
+    JSAutoRequest ar(cx);
+    if (!aBuffer.isObject()) {
+        return NS_ERROR_FAILURE;
+    }
+    JS::RootedObject buffer(cx, &aBuffer.toObject());
+    if (!JS_IsArrayBufferObject(buffer) ||
+        JS_GetArrayBufferByteLength(buffer) < aLength) {
+        return NS_ERROR_FAILURE;
+    }
+    uint8_t* data = JS_GetArrayBufferData(&aBuffer.toObject());
+    if (!data) {
+        return NS_ERROR_FAILURE;
+    }
+
+    uint32_t bytesRead;
+    nsresult rv = Read(reinterpret_cast<char*>(data), aLength, &bytesRead);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (bytesRead != aLength) {
+        return NS_ERROR_FAILURE;
+    }
+    return NS_OK;
 }
 
 NS_IMETHODIMP

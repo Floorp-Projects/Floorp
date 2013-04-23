@@ -34,6 +34,17 @@ struct ConvertTimeToTickHelper
   }
 };
 
+double
+WebAudioUtils::StreamPositionToDestinationTime(TrackTicks aSourcePosition,
+                                               AudioNodeStream* aSource,
+                                               AudioNodeStream* aDestination)
+{
+  StreamTime sourceTime = TicksToTimeRoundDown(IdealAudioRate(), aSourcePosition);
+  GraphTime graphTime = aSource->StreamTimeToGraphTime(sourceTime);
+  StreamTime destinationTime = aDestination->GraphTimeToStreamTimeOptimistic(graphTime);
+  return MediaTimeToSeconds(destinationTime);
+}
+
 void
 WebAudioUtils::ConvertAudioParamToTicks(AudioParamTimeline& aParam,
                                         AudioNodeStream* aSource,
