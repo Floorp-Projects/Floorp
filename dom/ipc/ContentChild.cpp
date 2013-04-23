@@ -1176,10 +1176,7 @@ ContentChild::RecvLastPrivateDocShellDestroyed()
 bool
 ContentChild::RecvFilePathUpdate(const nsString& type, const nsString& path, const nsCString& aReason)
 {
-    nsCOMPtr<nsIFile> file;
-    NS_NewLocalFile(path, false, getter_AddRefs(file));
-
-    nsRefPtr<DeviceStorageFile> dsf = new DeviceStorageFile(type, file);
+    nsRefPtr<DeviceStorageFile> dsf = new DeviceStorageFile(type, path);
 
     nsString reason;
     CopyASCIItoUTF16(aReason, reason);
