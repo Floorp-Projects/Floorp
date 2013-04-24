@@ -595,7 +595,7 @@ function runKeyEventTests()
     testKey({layout:"US", keyCode:MAC_VK_ANSI_E, ctrl:1, chars:"\u0005", unmodifiedChars:"e"},
             nsIDOMKeyEvent.DOM_VK_E, "e", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     testKey({layout:"US", keyCode:MAC_VK_ANSI_E, alt:1, chars:"", unmodifiedChars:"e"},
-            nsIDOMKeyEvent.DOM_VK_E, "", SHOULD_DELIVER_NONE, KeyboardEvent.DOM_KEY_LOCATION_STANDARD); // dead key
+            nsIDOMKeyEvent.DOM_VK_E, "", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD); // dead key
     testKey({layout:"US", keyCode:MAC_VK_ANSI_E, command:1, chars:"e", unmodifiedChars:"e"},
             nsIDOMKeyEvent.DOM_VK_E, "e", SHOULD_DELIVER_KEYDOWN_KEYPRESS, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     testKey({layout:"US", keyCode:MAC_VK_ANSI_F, chars:"f", unmodifiedChars:"f"},
@@ -636,7 +636,7 @@ function runKeyEventTests()
     testKey({layout:"US", keyCode:MAC_VK_ANSI_I, ctrl:1, chars:"\u0009", unmodifiedChars:"i"},
             nsIDOMKeyEvent.DOM_VK_I, "i", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     testKey({layout:"US", keyCode:MAC_VK_ANSI_I, alt:1, chars:"", unmodifiedChars:"i"},
-            nsIDOMKeyEvent.DOM_VK_I, "", SHOULD_DELIVER_NONE, KeyboardEvent.DOM_KEY_LOCATION_STANDARD); // dead key
+            nsIDOMKeyEvent.DOM_VK_I, "", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD); // dead key
     // XXX This test causes memory leak.
     // testKey({layout:"US", keyCode:MAC_VK_ANSI_I, command:1, chars:"i", unmodifiedChars:"i"},
     //         nsIDOMKeyEvent.DOM_VK_I, "i", SHOULD_DELIVER_KEYDOWN_KEYPRESS, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
@@ -687,7 +687,7 @@ function runKeyEventTests()
     testKey({layout:"US", keyCode:MAC_VK_ANSI_N, ctrl:1, chars:"\u000E", unmodifiedChars:"n"},
             nsIDOMKeyEvent.DOM_VK_N, "n", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     testKey({layout:"US", keyCode:MAC_VK_ANSI_N, alt:1, chars:"", unmodifiedChars:"n"},
-            nsIDOMKeyEvent.DOM_VK_N, "", SHOULD_DELIVER_NONE, KeyboardEvent.DOM_KEY_LOCATION_STANDARD); // dead key
+            nsIDOMKeyEvent.DOM_VK_N, "", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD); // dead key
     testKey({layout:"US", keyCode:MAC_VK_ANSI_N, command:1, chars:"n", unmodifiedChars:"n"},
             nsIDOMKeyEvent.DOM_VK_N, "n", SHOULD_DELIVER_KEYDOWN_KEYPRESS, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     testKey({layout:"US", keyCode:MAC_VK_ANSI_O, chars:"o", unmodifiedChars:"o"},
@@ -759,7 +759,7 @@ function runKeyEventTests()
     testKey({layout:"US", keyCode:MAC_VK_ANSI_U, ctrl:1, chars:"\u0015", unmodifiedChars:"u"},
             nsIDOMKeyEvent.DOM_VK_U, "u", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     testKey({layout:"US", keyCode:MAC_VK_ANSI_U, alt:1, chars:"", unmodifiedChars:"u"},
-            nsIDOMKeyEvent.DOM_VK_U, "", SHOULD_DELIVER_NONE, KeyboardEvent.DOM_KEY_LOCATION_STANDARD); // dead key
+            nsIDOMKeyEvent.DOM_VK_U, "", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD); // dead key
     testKey({layout:"US", keyCode:MAC_VK_ANSI_U, command:1, chars:"u", unmodifiedChars:"u"},
             nsIDOMKeyEvent.DOM_VK_U, "u", SHOULD_DELIVER_KEYDOWN_KEYPRESS, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     testKey({layout:"US", keyCode:MAC_VK_ANSI_V, chars:"v", unmodifiedChars:"v"},
@@ -923,7 +923,7 @@ function runKeyEventTests()
     testKey({layout:"US", keyCode:MAC_VK_ANSI_Grave, ctrl:1, chars:"`", unmodifiedChars:"`"},
             nsIDOMKeyEvent.DOM_VK_BACK_QUOTE, "`", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     testKey({layout:"US", keyCode:MAC_VK_ANSI_Grave, alt:1, chars:"", unmodifiedChars:"`"},
-            nsIDOMKeyEvent.DOM_VK_BACK_QUOTE, "", SHOULD_DELIVER_NONE, KeyboardEvent.DOM_KEY_LOCATION_STANDARD); // dead key
+            nsIDOMKeyEvent.DOM_VK_BACK_QUOTE, "", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD); // dead key
     testKey({layout:"US", keyCode:MAC_VK_ANSI_Grave, command:1, chars:"`", unmodifiedChars:"`"},
             nsIDOMKeyEvent.DOM_VK_BACK_QUOTE, "`", SHOULD_DELIVER_KEYDOWN_KEYPRESS, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     testKey({layout:"US", keyCode:MAC_VK_ANSI_Minus, chars:"-", unmodifiedChars:"-"},
@@ -1328,7 +1328,7 @@ function runKeyEventTests()
     testKey({layout:"Dvorak-Qwerty", keyCode:MAC_VK_ANSI_D, ctrl:1, chars:"\u0005", unmodifiedChars:"e"},
             nsIDOMKeyEvent.DOM_VK_E, "e", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     testKey({layout:"Dvorak-Qwerty", keyCode:MAC_VK_ANSI_D, alt:1, chars:"", unmodifiedChars:"e"},
-            nsIDOMKeyEvent.DOM_VK_E, "", SHOULD_DELIVER_NONE, KeyboardEvent.DOM_KEY_LOCATION_STANDARD); // dead key
+            nsIDOMKeyEvent.DOM_VK_E, "", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD); // dead key
     testKey({layout:"Dvorak-Qwerty", keyCode:MAC_VK_ANSI_D, command:1, chars:"d", unmodifiedChars:"e"},
             nsIDOMKeyEvent.DOM_VK_D, "d", SHOULD_DELIVER_KEYDOWN_KEYPRESS, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     testKey({layout:"Dvorak-Qwerty", keyCode:MAC_VK_ANSI_I, command:1, alt:1, chars:"^", unmodifiedChars:"c"},
