@@ -196,17 +196,20 @@ IsPhiObservable(MPhi *phi, Observability observe)
 
     // If the Phi is of the |this| value, it must always be observable.
     uint32_t slot = phi->slot();
-    if (slot == 1)
+    CompileInfo &info = phi->block()->info();
+    if (info.fun() && slot == info.thisSlot())
         return true;
 
     // If the Phi is one of the formal argument, and we are using an argument
     // object in the function. The phi might be observable after a bailout.
     // For inlined frames this is not needed, as they are captured in the inlineResumePoint.
-    CompileInfo &info = phi->block()->info();
     if (info.fun() && info.hasArguments()) {
-        uint32_t first = info.firstArgSlot();
-        if (first <= slot && slot - first < info.nargs())
+        uint32_t first = info.firstActualArgSlot();
+        if (first <= slot && slot - first < info.nargs()) {
+            // If arguments obj aliases formals, then no arguments slots should ever be phis.
+            JS_ASSERT(!info.argsObjAliasesFormals());
             return true;
+        }
     }
     return false;
 }
