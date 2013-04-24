@@ -24,7 +24,7 @@ ImageHostSingle::SetCompositor(Compositor* aCompositor) {
   }
 }
 
-bool
+void
 ImageHostSingle::EnsureTextureHost(TextureIdentifier aTextureId,
                                    const SurfaceDescriptor& aSurface,
                                    ISurfaceAllocator* aAllocator,
@@ -33,19 +33,31 @@ ImageHostSingle::EnsureTextureHost(TextureIdentifier aTextureId,
   if (mTextureHost &&
       mTextureHost->GetBuffer() &&
       mTextureHost->GetBuffer()->type() == aSurface.type()) {
-    return false;
+    return;
   }
 
+  MakeTextureHost(aTextureId,
+                  aSurface,
+                  aAllocator,
+                  aTextureInfo);
+}
+
+void
+ImageHostSingle::MakeTextureHost(TextureIdentifier aTextureId,
+                                 const SurfaceDescriptor& aSurface,
+                                 ISurfaceAllocator* aAllocator,
+                                 const TextureInfo& aTextureInfo)
+{
   mTextureHost = TextureHost::CreateTextureHost(aSurface.type(),
                                                 mTextureInfo.mTextureHostFlags,
                                                 mTextureInfo.mTextureFlags);
 
+  NS_ASSERTION(mTextureHost, "Failed to create texture host");
+
   Compositor* compositor = GetCompositor();
-  if (compositor) {
+  if (compositor && mTextureHost) {
     mTextureHost->SetCompositor(compositor);
   }
-
-  return true;
 }
 
 void
@@ -149,21 +161,19 @@ ImageHostBuffered::Update(const SurfaceDescriptor& aImage,
   return GetTextureHost()->IsValid();
 }
 
-bool
-ImageHostBuffered::EnsureTextureHost(TextureIdentifier aTextureId,
-                                     const SurfaceDescriptor& aSurface,
-                                     ISurfaceAllocator* aAllocator,
-                                     const TextureInfo& aTextureInfo)
+void
+ImageHostBuffered::MakeTextureHost(TextureIdentifier aTextureId,
+                                   const SurfaceDescriptor& aSurface,
+                                   ISurfaceAllocator* aAllocator,
+                                   const TextureInfo& aTextureInfo)
 {
-  bool result = ImageHostSingle::EnsureTextureHost(aTextureId,
-                                                   aSurface,
-                                                   aAllocator,
-                                                   aTextureInfo);
-  if (result) {
+  ImageHostSingle::MakeTextureHost(aTextureId,
+                                   aSurface,
+                                   aAllocator,
+                                   aTextureInfo);
+  if (mTextureHost) {
     mTextureHost->SetBuffer(new SurfaceDescriptor(null_t()), aAllocator);
   }
-
-  return result;
 }
 
 }
