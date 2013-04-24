@@ -94,6 +94,7 @@ endif
 endif
 
 LOCAL_INCLUDES	+= \
+		   -I$(topsrcdir)/widget/shared \
 		   -I$(topsrcdir)/widget/xpwidgets \
 		   -I$(topsrcdir)/widget/qt/faststartupqt \
 		   -I$(srcdir) \
