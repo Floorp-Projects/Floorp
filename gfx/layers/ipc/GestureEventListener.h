@@ -201,15 +201,21 @@ protected:
    * Task used to timeout a double tap. This gets posted to the UI thread such
    * that it runs a short time after a single tap happens. We cache it so that
    * we can cancel it if a double tap actually comes in.
+   * CancelDoubleTapTimeoutTask: Cancel the mDoubleTapTimeoutTask and also set
+   * it to null.
    */
   CancelableTask *mDoubleTapTimeoutTask;
+  inline void CancelDoubleTapTimeoutTask();
 
   /**
    * Task used to timeout a long tap. This gets posted to the UI thread such
    * that it runs a time when a single tap happens. We cache it so that
    * we can cancel it if any other touch event happens.
+   * CancelLongTapTimeoutTask: Cancel the mLongTapTimeoutTask and also set
+   * it to null.
    */
   CancelableTask *mLongTapTimeoutTask;
+  inline void CancelLongTapTimeoutTask();
 
   /**
    * Position of the last touch starting. This is only valid during an attempt
