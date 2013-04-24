@@ -121,7 +121,8 @@ public:
     EVENT_AUDIO_ERROR,
     EVENT_RECOGNITIONSERVICE_INTERMEDIATE_RESULT,
     EVENT_RECOGNITIONSERVICE_FINAL_RESULT,
-    EVENT_RECOGNITIONSERVICE_ERROR
+    EVENT_RECOGNITIONSERVICE_ERROR,
+    EVENT_COUNT
   };
 
   void DispatchError(EventType aErrorType, int aErrorCode, const nsAString& aMessage);
@@ -166,6 +167,7 @@ private:
     STATE_WAITING_FOR_SPEECH,
     STATE_RECOGNIZING,
     STATE_WAITING_FOR_RESULT,
+    STATE_COUNT
   };
 
   class GetUserMediaStreamOptions : public nsIMediaStreamOptions
@@ -253,6 +255,9 @@ private:
   nsCOMPtr<nsITimer> mSpeechDetectionTimer;
 
   void ProcessTestEventRequest(nsISupports* aSubject, const nsAString& aEventName);
+
+  const char* GetName(FSMState aId);
+  const char* GetName(SpeechEvent* aId);
 };
 
 class SpeechEvent : public nsRunnable
