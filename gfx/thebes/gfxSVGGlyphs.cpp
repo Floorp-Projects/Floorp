@@ -402,7 +402,7 @@ gfxSVGGlyphsDocument::InsertGlyphId(Element *aGlyphElement)
     }
 
     nsresult rv;
-    uint32_t glyphId = glyphIdStr.ToInteger(&rv, kRadix10);
+    uint32_t glyphId = glyphIdStr.ToInteger(&rv);
 
     if (NS_FAILED(rv)) {
         return;
