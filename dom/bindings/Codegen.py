@@ -6469,7 +6469,6 @@ class CGDOMJSProxyHandler_delete(ClassMethod):
                     setBp = "*bp = true;"
                 else:
                     setBp = ("if (found) {\n"
-                             "  // XXXbz we should throw as needed if Throw is true\n"
                              "  *bp = result;\n"
                              "} else {\n"
                              "  *bp = true;\n"
@@ -6479,7 +6478,6 @@ class CGDOMJSProxyHandler_delete(ClassMethod):
             elif eval("self.descriptor.supports%sProperties()" % type):
                 body = (eval("CGProxy%sPresenceChecker" % type)(self.descriptor).define() +
                         "if (found) {\n"
-                        "  // XXXbz we should throw if Throw is true!\n"
                         "  *bp = false;\n"
                         "} else {\n"
                         "  *bp = true;\n"
@@ -6508,7 +6506,6 @@ class CGDOMJSProxyHandler_delete(ClassMethod):
                            "  return false;\n"
                            "}\n"
                            "if (hasUnforgeable) {\n"
-                           "  // We should throw if Throw is true!\n"
                            "  *bp = false;\n"
                            "  return true;\n"
                            "}")
