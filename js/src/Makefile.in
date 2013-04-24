@@ -752,6 +752,11 @@ endif
 # - OS_LIBS includes libraries selected by the configure script.
 # - EXTRA_LIBS includes libraries selected by this Makefile.
 JS_CONFIG_LIBS=$(EXTRA_DSO_LDOPTS) $(OS_LIBS) $(EXTRA_LIBS)
+ifdef GNU_CC
+JS_CONFIG_MOZ_JS_LIBS=-L$(libdir) -l$(LIBRARY_NAME)
+else
+JS_CONFIG_MOZ_JS_LIBS=$(libdir)/$(LIBRARY_NAME).lib
+endif
 
 # The configure script invokes this rule explicitly at configure time!
 # It's important that js-config be ready by the time we're done
@@ -777,7 +782,7 @@ JS_CONFIG_SUBSTITUTIONS=\
 	-DMOZILLA_VERSION="$(MOZILLA_VERSION)" \
 	-DLIBRARY_NAME="$(LIBRARY_NAME)" \
 	-DJS_CONFIG_LIBS="$(JS_CONFIG_LIBS)" \
-	-DMOZ_JS_LIBS="$(MOZ_JS_LIBS)" \
+	-DJS_CONFIG_MOZ_JS_LIBS="$(JS_CONFIG_MOZ_JS_LIBS)" \
 	-DMOZJS_MAJOR_VERSION="$(MOZJS_MAJOR_VERSION)" \
 	-DMOZJS_MINOR_VERSION="$(MOZJS_MINOR_VERSION)" \
 	-DMOZJS_PATCH_VERSION="$(MOZJS_PATCH_VERSION)" \
