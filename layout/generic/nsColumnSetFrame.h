@@ -137,13 +137,14 @@ protected:
     // The maximum "content height" of all columns that overflowed
     // their available height
     nscoord mMaxOverflowingHeight;
-    // Whether or not we should revert back to 'auto' setting for column-fill.
-    // This happens if we overflow our columns such that we no longer have
-    // enough room to keep balancing.
-    bool mShouldRevertToAuto;
+    // This flag determines whether the last reflow of children exceeded the
+    // computed height of the column set frame. If so, we set the height to
+    // this maximum allowable height, and continue reflow without balancing.
+    bool mHasExcessHeight;
+
     void Reset() {
       mMaxHeight = mSumHeight = mLastHeight = mMaxOverflowingHeight = 0;
-      mShouldRevertToAuto = false;
+      mHasExcessHeight = false;
     }
   };
 
@@ -153,6 +154,14 @@ protected:
    * overflow list, and put them in our primary child list for reflowing.
    */
   void DrainOverflowColumns();
+
+  bool ReflowColumns(nsHTMLReflowMetrics& aDesiredSize,
+                     const nsHTMLReflowState& aReflowState,
+                     nsReflowStatus& aReflowStatus,
+                     ReflowConfig& aConfig,
+                     bool aLastColumnUnbounded,
+                     nsCollapsingMargin* aCarriedOutBottomMargin,
+                     ColumnBalanceData& aColData);
 
   /**
    * The basic reflow strategy is to call this function repeatedly to
