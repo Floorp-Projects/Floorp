@@ -13,13 +13,6 @@
 
 #include <gdk/gdk.h>
 
-// ISO level5 shift is supported on GTK3
-#ifndef GDK_ISO_Level5_Shift
-#define GDK_ISO_Level5_Shift 0xFE11
-#define GDK_ISO_Level5_Latch 0xFE12
-#define GDK_ISO_Level5_Lock  0xFE13
-#endif // #ifndef GDK_ISO_Level5_Shift
-
 namespace mozilla {
 namespace widget {
 
@@ -41,6 +34,11 @@ public:
      * Compute an our DOM keycode from a GDK keyval.
      */
     static uint32_t ComputeDOMKeyCode(const GdkEventKey* aGdkKeyEvent);
+
+    /**
+     * Compute a DOM key name index from aGdkKeyEvent.
+     */
+    KeyNameIndex ComputeDOMKeyNameIndex(const GdkEventKey* aGdkKeyEvent);
 
     /**
      * Returns a GDK keyval which is related to the aDOMKeyCode.  However,
