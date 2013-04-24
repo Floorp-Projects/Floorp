@@ -155,7 +155,8 @@ class TextSelectionHandle extends ImageView implements View.OnTouchListener {
         }
 
         ImmutableViewportMetrics metrics = layerView.getViewportMetrics();
-        repositionWithViewport(metrics.viewportRectLeft, metrics.viewportRectTop, metrics.zoomFactor);
+        PointF offset = metrics.getMarginOffset();
+        repositionWithViewport(metrics.viewportRectLeft - offset.x, metrics.viewportRectTop - offset.y, metrics.zoomFactor);
     }
 
     void repositionWithViewport(float x, float y, float zoom) {
