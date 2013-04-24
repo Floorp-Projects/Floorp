@@ -7,6 +7,7 @@
 #include "nsSVGContainerFrame.h"
 
 // Keep others in (case-insensitive) order:
+#include "nsCSSFrameConstructor.h"
 #include "nsSVGEffects.h"
 #include "nsSVGElement.h"
 #include "nsSVGUtils.h"
@@ -152,7 +153,14 @@ NS_IMETHODIMP
 nsSVGDisplayContainerFrame::RemoveFrame(ChildListID aListID,
                                         nsIFrame* aOldFrame)
 {
-  nsSVGUtils::InvalidateBounds(aOldFrame);
+  nsSVGEffects::InvalidateRenderingObservers(aOldFrame);
+
+  // nsSVGContainerFrame::RemoveFrame doesn't call down into
+  // nsContainerFrame::RemoveFrame, so it doesn't call FrameNeedsReflow. We
+  // need to schedule a repaint and schedule an update to our overflow rects.
+  SchedulePaint();
+  PresContext()->PresShell()->FrameConstructor()->PostRestyleEvent(
+    mContent->AsElement(), nsRestyleHint(0), nsChangeHint_UpdateOverflow);
 
   nsresult rv = nsSVGContainerFrame::RemoveFrame(aListID, aOldFrame);
 
