@@ -21,6 +21,7 @@
 .tabbrowser-tab,
 .tabs-newtab-button {
   -moz-appearance: none;
+  -moz-box-align: stretch;
   background-color: transparent;
   border-radius: 0;
   border-width: 0;
@@ -200,7 +201,6 @@
   background-size: 3px 100%;
   content: '';
   display: -moz-box;
-  height: @tabHeight@;
   width: 3px;
 }
 
