@@ -4,166 +4,121 @@
 
 const TESTCASE_URI = TEST_BASE + "simple.html";
 
-const TRANSITION_CLASS = "moz-styleeditor-transitioning";
-const TESTCASE_CSS_SOURCE = "body{background-color:red;";
+let TRANSITION_CLASS = "moz-styleeditor-transitioning";
+let TESTCASE_CSS_SOURCE = "body{background-color:red;";
+
+let gUI;
 
 function test()
 {
   waitForExplicitFinish();
 
-  addTabAndLaunchStyleEditorChromeWhenLoaded(function (aChrome) {
-    aChrome.addChromeListener({
-      onEditorAdded: testEditorAdded
-    });
-    run(aChrome);
+  addTabAndOpenStyleEditor(function(panel) {
+    gUI = panel.UI;
+    gUI.on("editor-added", testEditorAdded);
   });
 
   content.location = TESTCASE_URI;
 }
 
-function run(aChrome)
-{
-  is(aChrome.editors.length, 2,
-     "there is 2 stylesheets initially");
-}
-
 let gAddedCount = 0;  // to add new stylesheet after the 2 initial stylesheets
 let gNewEditor;       // to make sure only one new stylesheet got created
-let gUpdateCount = 0; // to make sure only one Update event is triggered
-let gCommitCount = 0; // to make sure only one Commit event is triggered
-let gTransitionEndCount = 0;
-let gOriginalStyleSheet;
-let gOriginalOwnerNode;
 let gOriginalHref;
 
-
-function finishOnTransitionEndAndCommit() {
-  if (gCommitCount && gTransitionEndCount) {
-    is(gUpdateCount, 1, "received one Update event");
-    is(gCommitCount, 1, "received one Commit event");
-    is(gTransitionEndCount, 1, "received one transitionend event");
-
-    if (gNewEditor) {
-      is(gNewEditor.styleSheet, gOriginalStyleSheet,
-         "style sheet object did not change");
-      is(gNewEditor.styleSheet.ownerNode, gOriginalOwnerNode,
-         "style sheet owner node did not change");
-      is(gNewEditor.styleSheet.href, gOriginalHref,
-         "style sheet href did not change");
-
-      gNewEditor = null;
-      finish();
-    }
-  }
-}
-
-function testEditorAdded(aChrome, aEditor)
+function testEditorAdded(aEvent, aEditor)
 {
   gAddedCount++;
   if (gAddedCount == 2) {
-    waitForFocus(function () { // create a new style sheet
-      let newButton = gChromeWindow.document.querySelector(".style-editor-newButton");
-      EventUtils.synthesizeMouseAtCenter(newButton, {}, gChromeWindow);
-    }, gChromeWindow);
+    waitForFocus(function () {// create a new style sheet
+      let newButton = gPanelWindow.document.querySelector(".style-editor-newButton");
+      ok(newButton, "'new' button exists");
+
+      EventUtils.synthesizeMouseAtCenter(newButton, {}, gPanelWindow);
+    }, gPanelWindow);
   }
-  if (gAddedCount != 3) {
+  if (gAddedCount < 3) {
     return;
   }
 
   ok(!gNewEditor, "creating a new stylesheet triggers one EditorAdded event");
   gNewEditor = aEditor; // above test will fail if we get a duplicate event
 
-  is(aChrome.editors.length, 3,
+  is(gUI.editors.length, 3,
      "creating a new stylesheet added a new StyleEditor instance");
 
-  let listener = {
-    onAttach: function (aEditor) {
-      waitForFocus(function () {
-        gOriginalStyleSheet = aEditor.styleSheet;
-        gOriginalOwnerNode = aEditor.styleSheet.ownerNode;
-        gOriginalHref = aEditor.styleSheet.href;
+  aEditor.getSourceEditor().then(testEditor);
 
-        ok(aEditor.isLoaded,
-           "new editor is loaded when attached");
-        ok(aEditor.hasFlag("new"),
-           "new editor has NEW flag");
-        ok(aEditor.hasFlag("unsaved"),
-           "new editor has UNSAVED flag");
+  aEditor.styleSheet.once("style-applied", function() {
+    // when changes have been completely applied to live stylesheet after transisiton
+    let summary = aEditor.summary;
+    let ruleCount = summary.querySelector(".stylesheet-rule-count").textContent;
+    is(parseInt(ruleCount), 1,
+       "new editor shows 1 rule after modification");
 
-        ok(aEditor.inputElement,
-           "new editor has an input element attached");
+    ok(!content.document.documentElement.classList.contains(TRANSITION_CLASS),
+       "StyleEditor's transition class has been removed from content");
+  });
+}
 
-        ok(aEditor.sourceEditor.hasFocus(),
-           "new editor has focus");
+function testEditor(aEditor) {
+  waitForFocus(function () {
+  gOriginalHref = aEditor.styleSheet.href;
 
-        let summary = aChrome.getSummaryElementForEditor(aEditor);
-        let ruleCount = summary.querySelector(".stylesheet-rule-count").textContent;
-        is(parseInt(ruleCount), 0,
-           "new editor initially shows 0 rules");
+  let summary = aEditor.summary;
 
-        let computedStyle = content.getComputedStyle(content.document.body, null);
-        is(computedStyle.backgroundColor, "rgb(255, 255, 255)",
-           "content's background color is initially white");
+  ok(aEditor.sourceLoaded,
+     "new editor is loaded when attached");
+  ok(aEditor.isNew,
+     "new editor has isNew flag");
 
-        EventUtils.synthesizeKey("[", {accelKey: true}, gChromeWindow);
-        is(aEditor.sourceEditor.getText(), "",
-           "Nothing happened as it is a known shortcut in source editor");
+  ok(aEditor.sourceEditor.hasFocus(),
+     "new editor has focus");
 
-        EventUtils.synthesizeKey("]", {accelKey: true}, gChromeWindow);
-        is(aEditor.sourceEditor.getText(), "",
-           "Nothing happened as it is a known shortcut in source editor");
+  let summary = aEditor.summary;
+  let ruleCount = summary.querySelector(".stylesheet-rule-count").textContent;
+  is(parseInt(ruleCount), 0,
+     "new editor initially shows 0 rules");
 
-        for each (let c in TESTCASE_CSS_SOURCE) {
-          EventUtils.synthesizeKey(c, {}, gChromeWindow);
-        }
+  let computedStyle = content.getComputedStyle(content.document.body, null);
+  is(computedStyle.backgroundColor, "rgb(255, 255, 255)",
+     "content's background color is initially white");
 
-        is(aEditor.sourceEditor.getText(), TESTCASE_CSS_SOURCE + "}",
-           "rule bracket has been auto-closed");
+  EventUtils.synthesizeKey("[", {accelKey: true}, gPanelWindow);
+  is(aEditor.sourceEditor.getText(), "",
+     "Nothing happened as it is a known shortcut in source editor");
 
-        // we know that the testcase above will start a CSS transition
-        content.addEventListener("transitionend", function () {
-          gTransitionEndCount++;
+  EventUtils.synthesizeKey("]", {accelKey: true}, gPanelWindow);
+  is(aEditor.sourceEditor.getText(), "",
+     "Nothing happened as it is a known shortcut in source editor");
 
-          let computedStyle = content.getComputedStyle(content.document.body, null);
-          is(computedStyle.backgroundColor, "rgb(255, 0, 0)",
-             "content's background color has been updated to red");
+  for each (let c in TESTCASE_CSS_SOURCE) {
+    EventUtils.synthesizeKey(c, {}, gPanelWindow);
+  }
 
-          executeSoon(finishOnTransitionEndAndCommit);
-        }, false);
-      }, gChromeWindow) ;
-    },
+  is(aEditor.sourceEditor.getText(), TESTCASE_CSS_SOURCE + "}",
+     "rule bracket has been auto-closed");
 
-    onUpdate: function (aEditor) {
-      gUpdateCount++;
+  ok(aEditor.unsaved,
+     "new editor has unsaved flag");
 
-      ok(content.document.documentElement.classList.contains(TRANSITION_CLASS),
-         "StyleEditor's transition class has been added to content");
-    },
+  // we know that the testcase above will start a CSS transition
+  content.addEventListener("transitionend", onTransitionEnd, false);
+}, gPanelWindow) ;
+}
 
-    onCommit: function (aEditor) {
-      gCommitCount++;
+function onTransitionEnd() {
+  content.removeEventListener("transitionend", onTransitionEnd, false);
 
-      ok(aEditor.hasFlag("new"),
-         "new editor still has NEW flag");
-      ok(aEditor.hasFlag("unsaved"),
-         "new editor has UNSAVED flag after modification");
+  let computedStyle = content.getComputedStyle(content.document.body, null);
+  is(computedStyle.backgroundColor, "rgb(255, 0, 0)",
+     "content's background color has been updated to red");
 
-      let summary = aChrome.getSummaryElementForEditor(aEditor);
-      let ruleCount = summary.querySelector(".stylesheet-rule-count").textContent;
-      is(parseInt(ruleCount), 1,
-         "new editor shows 1 rule after modification");
+  if (gNewEditor) {
+    is(gNewEditor.styleSheet.href, gOriginalHref,
+       "style sheet href did not change");
 
-      ok(!content.document.documentElement.classList.contains(TRANSITION_CLASS),
-         "StyleEditor's transition class has been removed from content");
-
-      aEditor.removeActionListener(listener);
-
-      executeSoon(finishOnTransitionEndAndCommit);
-    }
-  };
-
-  aEditor.addActionListener(listener);
-  if (aEditor.sourceEditor) {
-    listener.onAttach(aEditor);
+    gNewEditor = null;
+    gUI = null;
+    finish();
   }
 }
