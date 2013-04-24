@@ -581,7 +581,7 @@ endif
 check-jit-test::
 	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/jit-test/jit_test.py \
 	        --no-slow --no-progress --tinderbox --tbpl $(JITTEST_VALGRIND_FLAG) \
-	        $(DIST)/bin/js$(BIN_SUFFIX)
+	        $(DIST)/bin/$(JS_SHELL_NAME)$(BIN_SUFFIX)
 
 check:: check-jit-test
 
@@ -598,7 +598,7 @@ check-jstests:
 				--no-extensions \
 				--timeout 300 \
 				--args="`echo $$f | sed 's/\(.\)/ -\1/g'`" \
-				$(DIST)/bin/js$(BIN_SUFFIX); \
+				$(DIST)/bin/$(JS_SHELL_NAME)$(BIN_SUFFIX); \
 			RC=$$(( $$RC || $$?)); \
 		done; \
 	exit $$RC
@@ -625,7 +625,7 @@ endif
 
 DIST_GARBAGE = config.cache config.log config.status* \
    config/autoconf.mk \
-   unallmakefiles js-config js-config.h js-confdefs.h
+   unallmakefiles $(JS_CONFIG_NAME) js-config.h js-confdefs.h
 
 distclean::
 	cat unallmakefiles | $(XARGS) rm -f
@@ -785,13 +785,13 @@ JS_CONFIG_SUBSTITUTIONS=\
 	-DNSPR_CFLAGS="$(NSPR_CFLAGS)" \
 	-DNSPR_PKGCONF_CHECK="$(NSPR_PKGCONF_CHECK)"
 
-js-config: js-config.in Makefile $(DEPTH)/config/autoconf.mk $(topsrcdir)/config/config.mk $(topsrcdir)/config/rules.mk
+$(JS_CONFIG_NAME): js-config.in Makefile $(DEPTH)/config/autoconf.mk $(topsrcdir)/config/config.mk $(topsrcdir)/config/rules.mk
 	$(RM) $@.tmp
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py --marker % $(JS_CONFIG_SUBSTITUTIONS) $< > $@.tmp \
 	&& mv $@.tmp $@ && chmod +x $@
 
-SCRIPTS = js-config
-SDK_BINARY = js-config
+SCRIPTS = $(JS_CONFIG_NAME)
+SDK_BINARY = $(JS_CONFIG_NAME)
 
 $(LIBRARY_NAME).pc: js.pc.in
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(JS_CONFIG_SUBSTITUTIONS) $< > $@

@@ -11,7 +11,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-PROGRAM         = js$(BIN_SUFFIX)
+PROGRAM         = $(JS_SHELL_NAME)$(BIN_SUFFIX)
 CPPSRCS		= \
   js.cpp \
   jsoptparse.cpp \
