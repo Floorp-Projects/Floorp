@@ -24,7 +24,20 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(AudioNode, nsDOMEventTargetHel
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_ADDREF_INHERITED(AudioNode, nsDOMEventTargetHelper)
-NS_IMPL_RELEASE_INHERITED(AudioNode, nsDOMEventTargetHelper)
+
+NS_IMETHODIMP_(nsrefcnt)
+AudioNode::Release()
+{
+  if (mRefCnt.get() == 1) {
+    // We are about to be deleted, disconnect the object from the graph before
+    // the derived type is destroyed.
+    DisconnectFromGraph();
+  }
+  nsrefcnt r = nsDOMEventTargetHelper::Release();
+  NS_LOG_RELEASE(this, r, "AudioNode");
+  return r;
+}
+
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(AudioNode)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 
@@ -38,7 +51,6 @@ AudioNode::AudioNode(AudioContext* aContext)
 
 AudioNode::~AudioNode()
 {
-  DisconnectFromGraph();
   MOZ_ASSERT(mInputNodes.IsEmpty());
   MOZ_ASSERT(mOutputNodes.IsEmpty());
 }
