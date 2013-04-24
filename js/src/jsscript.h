@@ -595,6 +595,12 @@ class JSScript : public js::gc::Cell
     /* Information attached by Ion for parallel mode execution */
     js::ion::IonScript *parallelIon;
 
+    /*
+     * Pointer to either baseline->method()->raw() or ion->method()->raw(), or NULL
+     * if there's no Baseline or Ion script.
+     */
+    uint8_t *baselineOrIonRaw;
+
   public:
     bool hasIonScript() const {
         return ion && ion != ION_DISABLED_SCRIPT && ion != ION_COMPILING_SCRIPT;
@@ -619,6 +625,7 @@ class JSScript : public js::gc::Cell
     }
     void setIonScript(js::ion::IonScript *ionScript) {
         ion = ionScript;
+        updateBaselineOrIonRaw();
     }
 
     bool hasBaselineScript() const {
@@ -633,9 +640,10 @@ class JSScript : public js::gc::Cell
     }
     void setBaselineScript(js::ion::BaselineScript *baselineScript) {
         baseline = baselineScript;
+        updateBaselineOrIonRaw();
     }
 
-    uint32_t padding0;
+    void updateBaselineOrIonRaw();
 
     bool hasParallelIonScript() const {
         return parallelIon && parallelIon != ION_DISABLED_SCRIPT && parallelIon != ION_COMPILING_SCRIPT;
@@ -668,6 +676,9 @@ class JSScript : public js::gc::Cell
     }
     static size_t offsetOfParallelIonScript() {
         return offsetof(JSScript, parallelIon);
+    }
+    static size_t offsetOfBaselineOrIonRaw() {
+        return offsetof(JSScript, baselineOrIonRaw);
     }
 
     /*

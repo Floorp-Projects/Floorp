@@ -380,13 +380,7 @@ IonRuntime::generateArgumentsRectifier(JSContext *cx, ExecutionMode mode, void *
     // Call the target function.
     // Note that this assumes the function is JITted.
     masm.movl(Operand(eax, offsetof(JSFunction, u.i.script_)), eax);
-    if (mode == SequentialExecution) {
-        masm.loadBaselineOrIonCode(eax, ebx, NULL);
-    } else {
-        masm.movl(Operand(eax, OffsetOfIonInJSScript(mode)), eax);
-        masm.movl(Operand(eax, IonScript::offsetOfMethod()), eax);
-    }
-    masm.movl(Operand(eax, IonCode::offsetOfCode()), eax);
+    masm.loadBaselineOrIonRaw(eax, eax, mode, NULL);
     masm.call(eax);
     uint32_t returnOffset = masm.currentOffset();
 
