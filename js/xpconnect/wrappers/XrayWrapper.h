@@ -169,7 +169,7 @@ class XPCWrappedNativeXrayTraits;
 
 class MOZ_STACK_CLASS ResolvingId {
 public:
-    ResolvingId(JSContext *cx, JSObject *wrapper, jsid id);
+    ResolvingId(JSContext *cx, JS::HandleObject wrapper, JS::HandleId id);
     ~ResolvingId();
 
     bool isXrayShadowing(jsid id);
@@ -182,7 +182,7 @@ private:
     friend class AutoSetWrapperNotShadowing;
     friend class XPCWrappedNativeXrayTraits;
 
-    JS::RootedId mId;
+    JS::HandleId mId;
     JS::RootedObject mHolder;
     ResolvingId *mPrev;
     bool mXrayShadowing;
