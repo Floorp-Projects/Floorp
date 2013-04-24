@@ -21,7 +21,7 @@
         <org.mozilla.gecko.BrowserToolbarBackground android:id="@+id/address_bar_bg"
                                                     android:layout_width="fill_parent"
                                                     android:layout_height="fill_parent"
-                                                    android:layout_marginRight="66dip"
+                                                    android:layout_marginRight="18dip"
                                                     android:layout_alignParentTop="true"
                                                     android:layout_alignParentRight="true"
                                                     gecko:curveTowards="right"
@@ -41,7 +41,7 @@
                            android:duplicateParentState="true"
                            android:layout_marginTop="5dp"
                            android:layout_marginBottom="5dp"
-                           android:layout_marginRight="100dp"
+                           android:layout_marginRight="52dp"
                            android:clickable="false"
                            android:focusable="false"
                            android:background="@drawable/address_bar_url"/>
@@ -55,7 +55,7 @@
                       android:paddingBottom="5dp"
                       android:layout_centerVertical="true"
                       android:layout_alignParentRight="true"
-                      android:layout_marginRight="75dp"
+                      android:layout_marginRight="27dp"
                       android:duplicateParentState="true"
                       android:visibility="invisible"
                       android:background="@drawable/address_bar_bg">
@@ -74,7 +74,7 @@
             </Gecko.RelativeLayout>
 
             <LinearLayout style="@style/AddressBar.Button"
-                          android:paddingRight="100dp"
+                          android:paddingRight="52dp"
                           android:orientation="horizontal">
 
                 <ImageButton android:id="@+id/favicon"
@@ -132,18 +132,11 @@
                       android:visibility="gone"/>
 
         <Gecko.ShapedButton android:id="@+id/menu"
-                            style="@style/AddressBar.ImageButton"
-                            android:layout_width="48dip"
-                            android:layout_alignParentRight="true"
-                            android:gravity="center_vertical"
-                            android:src="@drawable/menu_level"
-                            android:contentDescription="@string/menu"
-                            android:background="@drawable/shaped_button"/>
+                            style="@style/AddressBar.ImageButton.Unused"/>
 
         <Gecko.ShapedButton android:id="@+id/tabs"
                             style="@style/AddressBar.ImageButton"
                             android:layout_width="72dip"
-                            android:layout_marginRight="48dip"
                             android:layout_alignParentRight="true"
                             gecko:curveTowards="right"
                             android:background="@drawable/shaped_button"
