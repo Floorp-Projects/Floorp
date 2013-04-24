@@ -3,37 +3,45 @@
 
 const TESTCASE_URI = TEST_BASE + "four.html";
 
+let gUI;
+
 function test() {
   waitForExplicitFinish();
 
-  addTabAndLaunchStyleEditorChromeWhenLoaded(function (aChrome) {
-    run(aChrome);
+  let count = 0;
+  addTabAndOpenStyleEditor(function(panel) {
+    gUI = panel.UI;
+    gUI.on("editor-added", function(event, editor) {
+      count++;
+      if (count == 2) {
+        runTests();
+      }
+    })
   });
 
   content.location = TESTCASE_URI;
 }
 
-let gSEChrome, timeoutID;
+let timeoutID;
 
-function run(aChrome) {
-  gSEChrome = aChrome;
+function runTests() {
   gBrowser.tabContainer.addEventListener("TabOpen", onTabAdded, false);
-  aChrome.editors[0].addActionListener({onAttach: onEditor0Attach});
-  aChrome.editors[1].addActionListener({onAttach: onEditor1Attach});
+  gUI.editors[0].getSourceEditor().then(onEditor0Attach);
+  gUI.editors[1].getSourceEditor().then(onEditor1Attach);
 }
 
 function getStylesheetNameLinkFor(aEditor) {
-  return gSEChrome.getSummaryElementForEditor(aEditor).querySelector(".stylesheet-name");
+  return aEditor.summary.querySelector(".stylesheet-name");
 }
 
 function onEditor0Attach(aEditor) {
   waitForFocus(function () {
     // left mouse click should focus editor 1
     EventUtils.synthesizeMouseAtCenter(
-      getStylesheetNameLinkFor(gSEChrome.editors[1]),
+      getStylesheetNameLinkFor(gUI.editors[1]),
       {button: 0},
-      gChromeWindow);
-  }, gChromeWindow);
+      gPanelWindow);
+  }, gPanelWindow);
 }
 
 function onEditor1Attach(aEditor) {
@@ -42,9 +50,9 @@ function onEditor1Attach(aEditor) {
 
   // right mouse click should not open a new tab
   EventUtils.synthesizeMouseAtCenter(
-    getStylesheetNameLinkFor(gSEChrome.editors[2]),
+    getStylesheetNameLinkFor(gUI.editors[2]),
     {button: 1},
-    gChromeWindow);
+    gPanelWindow);
 
   setTimeout(finish, 0);
 }
@@ -56,5 +64,5 @@ function onTabAdded() {
 
 registerCleanupFunction(function () {
   gBrowser.tabContainer.removeEventListener("TabOpen", onTabAdded, false);
-  gSEChrome = null;
+  gUI = null;
 });
