@@ -630,7 +630,7 @@ HTMLSelectElement::Add(nsGenericHTMLElement& aElement,
   // Just in case we're not the parent, get the parent of the reference
   // element
   nsINode* parent = aBefore->GetParentNode();
-  if (!nsContentUtils::ContentIsDescendantOf(parent, this)) {
+  if (!parent || !nsContentUtils::ContentIsDescendantOf(parent, this)) {
     // NOT_FOUND_ERR: Raised if before is not a descendant of the SELECT
     // element.
     aError.Throw(NS_ERROR_DOM_NOT_FOUND_ERR);
