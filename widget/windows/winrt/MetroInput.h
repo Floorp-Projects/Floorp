@@ -244,7 +244,8 @@ private:
   static bool sIsVirtualKeyMapInitialized;
   static void InitializeVirtualKeyMap();
   static uint32_t GetMozKeyCode(uint32_t aKey);
-
+  // Computes DOM key name index for the aVirtualKey.
+  static KeyNameIndex GetDOMKeyNameIndex(uint32_t aVirtualKey);
   // These registration tokens are set when we register ourselves to receive
   // events from our window.  We must hold on to them for the entire duration
   // that we want to receive these events.  When we are done, we must
