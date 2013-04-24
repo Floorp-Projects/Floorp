@@ -422,7 +422,8 @@ toolbarbutton.bookmark-item > menupopup {
     list-style-image: url("chrome://browser/skin/Toolbar@2x.png");
   }
 
-  :-moz-any(@primaryToolbarButtons@):not(#tabview-button) > .toolbarbutton-icon {
+  :-moz-any(@primaryToolbarButtons@):not(#tabview-button) > .toolbarbutton-icon,
+  :-moz-any(@primaryToolbarButtons@):not(#tabview-button) > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
     width: 20px;
   }
 }
@@ -458,7 +459,7 @@ toolbar:not([mode="icons"]) #restore-button {
 
 .toolbarbutton-1[disabled="true"] > .toolbarbutton-icon,
 .toolbarbutton-1[disabled="true"] > .toolbarbutton-badge-container > .toolbarbutton-icon,
-.toolbarbutton-1[type="menu-button"] > .toolbarbutton-menubutton-button[disabled="true"] > .toolbarbutton-icon,
+.toolbarbutton-1 > .toolbarbutton-menubutton-button[disabled="true"] > .toolbarbutton-icon,
 #restore-button[disabled="true"] > .toolbarbutton-icon {
   opacity: .4;
 }
@@ -466,7 +467,7 @@ toolbar:not([mode="icons"]) #restore-button {
 @media (-moz-mac-lion-theme) {
   .toolbarbutton-1[disabled="true"] > .toolbarbutton-icon,
   .toolbarbutton-1[disabled="true"] > .toolbarbutton-badge-container > .toolbarbutton-icon,
-  .toolbarbutton-1[type="menu-button"] > .toolbarbutton-menubutton-button[disabled="true"] > .toolbarbutton-icon,
+  .toolbarbutton-1 > .toolbarbutton-menubutton-button[disabled="true"] > .toolbarbutton-icon,
   #restore-button[disabled="true"] > .toolbarbutton-icon,
   .toolbarbutton-1[disabled="true"] > .toolbarbutton-menu-dropmarker,
   .toolbarbutton-1[disabled="true"] > .toolbarbutton-menubutton-dropmarker,
@@ -474,13 +475,14 @@ toolbar:not([mode="icons"]) #restore-button {
   .toolbarbutton-1:not(:hover):-moz-window-inactive > .toolbarbutton-badge-container > .toolbarbutton-icon,
   #restore-button:not(:hover):-moz-window-inactive > .toolbarbutton-icon,
   .toolbarbutton-1:not(:hover):-moz-window-inactive > .toolbarbutton-menu-dropmarker,
-  .toolbarbutton-1:not(:hover):-moz-window-inactive > .toolbarbutton-menubutton-dropmarker {
+  .toolbarbutton-1:not(:hover):-moz-window-inactive > .toolbarbutton-menubutton-dropmarker,
+  .toolbarbutton-1:not(:hover):-moz-window-inactive > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
     opacity: .5;
   }
 
   .toolbarbutton-1:-moz-window-inactive[disabled="true"] > .toolbarbutton-icon,
   .toolbarbutton-1:-moz-window-inactive[disabled="true"] > .toolbarbutton-badge-container > .toolbarbutton-icon,
-  .toolbarbutton-1:-moz-window-inactive[type="menu-button"] > .toolbarbutton-menubutton-button[disabled="true"] > .toolbarbutton-icon,
+  .toolbarbutton-1:-moz-window-inactive > .toolbarbutton-menubutton-button[disabled="true"] > .toolbarbutton-icon,
   #restore-button:-moz-window-inactive[disabled="true"] > .toolbarbutton-icon {
     opacity: .25;
   }
@@ -508,8 +510,7 @@ toolbar:not([mode="icons"]) #restore-button {
 }
 
 .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
-  width: 14px;
-  padding-top: 2px;
+  padding: 2px 4px 0;
   -moz-border-start: none !important;
 }
 
@@ -900,8 +901,7 @@ toolbar[mode="icons"] #forward-button:-moz-lwtheme {
 
 /* bookmark sidebar & menu buttons */
 
-#bookmarks-button,
-#bookmarks-menu-button {
+#bookmarks-button {
   -moz-image-region: rect(0, 180px, 20px, 160px);
 }
 
@@ -909,33 +909,14 @@ toolbar[mode="icons"] #forward-button:-moz-lwtheme {
   -moz-image-region: rect(20px, 180px, 40px, 160px);
 }
 
-#bookmarks-menu-button.bookmark-item {
-  -moz-image-region: rect(2px, 178px, 18px, 162px);
-  list-style-image: url("chrome://browser/skin/Toolbar.png");
-}
-
 @media (min-resolution: 2dppx) {
-  #bookmarks-button,
-  #bookmarks-menu-button {
+  #bookmarks-button {
     -moz-image-region: rect(0, 360px, 40px, 320px);
   }
 
   #bookmarks-button[checked="true"] {
     -moz-image-region: rect(40px, 360px, 80px, 320px);
   }
-
-  #bookmarks-menu-button.bookmark-item {
-    -moz-image-region: rect(4px, 356px, 36px, 324px);
-    list-style-image: url("chrome://browser/skin/Toolbar@2x.png");
-  }
-
-  #bookmarks-menu-button.bookmark-item > .toolbarbutton-icon {
-    width: 16px;
-  }
-}
-
-#bookmarks-menu-button.toolbarbutton-1 {
-  -moz-box-orient: horizontal;
 }
 
 /* print button */
@@ -1720,35 +1701,49 @@ window[tabsontop="false"] richlistitem[type~="action"][actiontype="switchtab"][s
   margin-top: 1em;
 }
 
-/* STAR BUTTON */
-#star-button {
+/* bookmarks menu-button */
+
+#bookmarks-menu-button {
+  -moz-image-region: rect(0px 500px 20px 480px);
+}
+
+#bookmarks-menu-button[starred] {
+  -moz-image-region: rect(20px 500px 40px 480px);
+}
+
+#bookmarks-menu-button.bookmark-item {
   list-style-image: url("chrome://browser/skin/places/star-icons.png");
-  -moz-image-region: rect(0, 16px, 16px, 0);
+  -moz-image-region: rect(0px 16px 16px 0px);
 }
 
-#star-button:hover:active,
-#star-button[starred="true"] {
-  -moz-image-region: rect(0, 32px, 16px, 16px);
+#bookmarks-menu-button.bookmark-item[starred] {
+  -moz-image-region: rect(0px 32px 16px 16px);
 }
 
-#star-button:hover:active[starred="true"] {
-  -moz-image-region: rect(0, 48px, 16px, 32px);
+#bookmarks-menu-button.bookmark-item > .toolbarbutton-menubutton-button {
+  padding: 0;
 }
 
 @media (min-resolution: 2dppx) {
-  #star-button {
+  #bookmarks-menu-button {
+    -moz-image-region: rect(0px, 1000px, 40px, 960px);
+  }
+
+  #bookmarks-menu-button[starred] {
+    -moz-image-region: rect(40px, 1000px, 80px, 960px);
+  }
+
+  #bookmarks-menu-button.bookmark-item {
     list-style-image: url("chrome://browser/skin/places/star-icons@2x.png");
-    -moz-image-region: rect(0, 32px, 32px, 0);
-    width: 22px;
+    -moz-image-region: rect(0px 32px 32px 0px);
   }
 
-  #star-button:hover:active,
-  #star-button[starred="true"] {
-    -moz-image-region: rect(0, 64px, 32px, 32px);
+  #bookmarks-menu-button.bookmark-item[starred] {
+    -moz-image-region: rect(0px 64px 32px 32px);
   }
 
-  #star-button:hover:active[starred="true"] {
-    -moz-image-region: rect(0, 96px, 32px, 64px);
+  #bookmarks-menu-button.bookmark-item > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
+    width: 16px;
   }
 }
 
@@ -2708,10 +2703,14 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 :-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1:not([type="menu-button"]),
-:-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-button,
-:-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
+:-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   margin: 0;
   padding: 0 1px;
+}
+
+:-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
+  padding-left: 4px;
+  padding-right: 4px;
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled]):hover,

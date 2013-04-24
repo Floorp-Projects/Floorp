@@ -94,7 +94,7 @@ toolbarbutton[type="menu-button"][disabled="true"]:hover:active {
   background-color: transparent !important;
   list-style-image: url("chrome://global/skin/arrow/arrow-dn.png");
   width: auto;
-  padding: 0;
+  padding: 0 5px;
 }
 
 .toolbarbutton-menubutton-dropmarker[disabled="true"] {

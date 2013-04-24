@@ -245,7 +245,7 @@ void TableTicker::UnwinderTick(TickSample* sample)
   }
 
   if (sample) {
-    TimeDuration delta = sample->timestamp - mStartTime;
+    TimeDuration delta = sample->timestamp - sStartTime;
     utb__addEntry( utb, ProfileEntry('t', delta.ToMilliseconds()) );
   }
 

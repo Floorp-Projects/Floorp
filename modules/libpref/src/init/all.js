@@ -3837,6 +3837,13 @@ pref("toolkit.zoomManager.zoomValues", ".3,.5,.67,.8,.9,1,1.1,1.2,1.33,1.5,1.7,2
 pref("browser.zoom.reflowOnZoom", false);
 
 /**
+ * Specifies the number of milliseconds to wait after a given reflow-on-zoom
+ * operation has completed before allowing another one to be triggered. This
+ * is to prevent a buildup of reflow-zoom events.
+ */
+pref("browser.zoom.reflowZoom.reflowTimeout", 500);
+
+/**
  * Controls whether or not the reflow-on-zoom behavior happens on page load.
  * This can be enabled in conjunction with the above preference (reflowOnZoom),
  * but has no effect if browser.zoom.reflowOnZoom is disabled.

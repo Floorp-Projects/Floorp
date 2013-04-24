@@ -189,12 +189,12 @@ class NunboxAssembler : public JSC::MacroAssembler
      * offset.
      */
     DataLabel32 storeValueWithAddressOffsetPatch(RegisterID treg, RegisterID dreg, Address address) {
-        DataLabel32 start = dataLabel32();
 #if defined JS_CPU_X86
         /*
          * On x86 there are two stores to patch and they both encode the offset
          * in-line.
          */
+        DataLabel32 start = dataLabel32();
         storeTypeTag(treg, address);
         DBGLABEL_NOMASM(endType);
         storePayload(dreg, address);
@@ -208,6 +208,7 @@ class NunboxAssembler : public JSC::MacroAssembler
         /*
          * On MIPS there are LUI/ORI to patch.
          */
+        DataLabel32 start = dataLabel32();
         store64WithPatch(address, treg, dreg, TAG_OFFSET, PAYLOAD_OFFSET);
         return start;
 #endif
@@ -215,8 +216,8 @@ class NunboxAssembler : public JSC::MacroAssembler
 
     /* Overloaded for storing a constant type. */
     DataLabel32 storeValueWithAddressOffsetPatch(ImmType type, RegisterID dreg, Address address) {
-        DataLabel32 start = dataLabel32();
 #if defined JS_CPU_X86
+        DataLabel32 start = dataLabel32();
         storeTypeTag(type, address);
         DBGLABEL_NOMASM(endType);
         storePayload(dreg, address);
@@ -230,6 +231,7 @@ class NunboxAssembler : public JSC::MacroAssembler
         /*
          * On MIPS there are LUI/ORI to patch.
          */
+        DataLabel32 start = dataLabel32();
         store64WithPatch(address, type, dreg, TAG_OFFSET, PAYLOAD_OFFSET);
         return start;
 #endif
@@ -240,8 +242,8 @@ class NunboxAssembler : public JSC::MacroAssembler
         jsval_layout jv = JSVAL_TO_IMPL(v);
         ImmTag type(jv.s.tag);
         Imm32 payload(jv.s.payload.u32);
-        DataLabel32 start = dataLabel32();
 #if defined JS_CPU_X86
+        DataLabel32 start = dataLabel32();
         store32(type, tagOf(address));
         DBGLABEL_NOMASM(endType);
         store32(payload, payloadOf(address));
@@ -255,6 +257,7 @@ class NunboxAssembler : public JSC::MacroAssembler
         /*
          * On MIPS there are LUI/ORI to patch.
          */
+        DataLabel32 start = dataLabel32();
         store64WithPatch(address, type, payload, TAG_OFFSET, PAYLOAD_OFFSET);
         return start;
 #endif

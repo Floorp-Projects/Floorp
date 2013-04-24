@@ -176,6 +176,15 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jLockScreenOrientation = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "lockScreenOrientation", "(I)V");
     jUnlockScreenOrientation = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "unlockScreenOrientation", "()V");
 
+    jGeckoJavaSamplerClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("org/mozilla/gecko/GeckoJavaSampler"));
+    jStart = jEnv->GetStaticMethodID(jGeckoJavaSamplerClass, "start", "(II)V");
+    jStop = jEnv->GetStaticMethodID(jGeckoJavaSamplerClass, "stop", "()V");
+    jPause = jEnv->GetStaticMethodID(jGeckoJavaSamplerClass, "pause", "()V");
+    jUnpause = jEnv->GetStaticMethodID(jGeckoJavaSamplerClass, "unpause", "()V");
+    jGetThreadName = jEnv->GetStaticMethodID(jGeckoJavaSamplerClass, "getThreadName", "(I)Ljava/lang/String;");
+    jGetFrameName = jEnv->GetStaticMethodID(jGeckoJavaSamplerClass, "getFrameName", "(III)Ljava/lang/String;");
+    jGetSampleTime = jEnv->GetStaticMethodID(jGeckoJavaSamplerClass, "getSampleTime", "(II)D");
+
     jThumbnailHelperClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("org/mozilla/gecko/ThumbnailHelper"));
     jNotifyThumbnail = jEnv->GetStaticMethodID(jThumbnailHelperClass, "notifyThumbnail", "(Ljava/nio/ByteBuffer;IZ)V");
 
@@ -2413,6 +2422,120 @@ __attribute__ ((visibility("default")))
 jobject JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_allocateDirectBuffer(JNIEnv *env, jclass, jlong size);
 
+void
+AndroidBridge::StartJavaProfiling(int aInterval, int aSamples)
+{
+    JNIEnv* env = GetJNIForThread();
+    if (!env)
+        return;
+
+    AutoLocalJNIFrame jniFrame(env);
+
+    env->CallStaticVoidMethod(AndroidBridge::Bridge()->jGeckoJavaSamplerClass,
+                              AndroidBridge::Bridge()->jStart,
+                              aInterval, aSamples);
+}
+
+void
+AndroidBridge::StopJavaProfiling()
+{
+    JNIEnv* env = GetJNIForThread();
+    if (!env)
+        return;
+
+    AutoLocalJNIFrame jniFrame(env);
+
+    env->CallStaticVoidMethod(AndroidBridge::Bridge()->jGeckoJavaSamplerClass,
+                              AndroidBridge::Bridge()->jStop);
+}
+
+void
+AndroidBridge::PauseJavaProfiling()
+{
+    JNIEnv* env = GetJNIForThread();
+    if (!env)
+        return;
+
+    AutoLocalJNIFrame jniFrame(env);
+
+    env->CallStaticVoidMethod(AndroidBridge::Bridge()->jGeckoJavaSamplerClass,
+                              AndroidBridge::Bridge()->jPause);
+}
+
+void
+AndroidBridge::UnpauseJavaProfiling()
+{
+    JNIEnv* env = GetJNIForThread();
+    if (!env)
+        return;
+
+    AutoLocalJNIFrame jniFrame(env);
+
+    env->CallStaticVoidMethod(AndroidBridge::Bridge()->jGeckoJavaSamplerClass,
+                              AndroidBridge::Bridge()->jUnpause);
+}
+
+bool
+AndroidBridge::GetThreadNameJavaProfiling(uint32_t aThreadId, nsCString & aResult)
+{
+    JNIEnv* env = GetJNIForThread();
+    if (!env)
+        return false;
+
+    AutoLocalJNIFrame jniFrame(env);
+
+    jstring jstrThreadName = static_cast<jstring>(
+        env->CallStaticObjectMethod(AndroidBridge::Bridge()->jGeckoJavaSamplerClass,
+                                    AndroidBridge::Bridge()->jGetThreadName,
+                                    aThreadId));
+
+    if (!jstrThreadName)
+        return false;
+
+    nsJNIString jniStr(jstrThreadName, env);
+    CopyUTF16toUTF8(jniStr.get(), aResult);
+    return true;
+}
+
+bool
+AndroidBridge::GetFrameNameJavaProfiling(uint32_t aThreadId, uint32_t aSampleId,
+                                          uint32_t aFrameId, nsCString & aResult)
+{
+    JNIEnv* env = GetJNIForThread();
+    if (!env)
+        return false;
+
+    AutoLocalJNIFrame jniFrame(env);
+
+    jstring jstrSampleName = static_cast<jstring>(
+        env->CallStaticObjectMethod(AndroidBridge::Bridge()->jGeckoJavaSamplerClass,
+                                    AndroidBridge::Bridge()->jGetFrameName,
+                                    aThreadId, aSampleId, aFrameId));
+
+    if (!jstrSampleName)
+        return false;
+
+    nsJNIString jniStr(jstrSampleName, env);
+    CopyUTF16toUTF8(jniStr.get(), aResult);
+    return true;
+}
+
+double
+AndroidBridge::GetSampleTimeJavaProfiling(uint32_t aThreadId, uint32_t aSampleId)
+{
+    JNIEnv* env = GetJNIForThread();
+    if (!env)
+        return 0;
+
+    AutoLocalJNIFrame jniFrame(env);
+
+    jdouble jSampleTime =
+        env->CallStaticDoubleMethod(AndroidBridge::Bridge()->jGeckoJavaSamplerClass,
+                                    AndroidBridge::Bridge()->jGetSampleTime,
+                                    aThreadId, aSampleId);
+
+    return jSampleTime;
+}
 
 void
 AndroidBridge::SendThumbnail(jobject buffer, int32_t tabId, bool success) {

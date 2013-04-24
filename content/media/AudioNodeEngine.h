@@ -100,10 +100,12 @@ void AudioBlockAddChannelWithScale(const float aInput[WEBAUDIO_BLOCK_SIZE],
 
 /**
  * Pointwise copy-scaled operation. aScale == 1.0f should be optimized.
+ *
+ * Buffer size is implicitly assumed to be WEBAUDIO_BLOCK_SIZE.
  */
-void AudioBlockCopyChannelWithScale(const float aInput[WEBAUDIO_BLOCK_SIZE],
+void AudioBlockCopyChannelWithScale(const float* aInput,
                                     float aScale,
-                                    float aOutput[WEBAUDIO_BLOCK_SIZE]);
+                                    float* aOutput);
 
 /**
  * Vector copy-scaled operation.

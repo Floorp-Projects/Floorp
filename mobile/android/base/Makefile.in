@@ -107,6 +107,7 @@ FENNEC_JAVA_FILES = \
   GeckoPopupMenu.java \
   GeckoSmsManager.java \
   GeckoThread.java \
+  GeckoJavaSampler.java \
   GlobalHistory.java \
   GeckoViewsFactory.java \
   HeightChangeAnimation.java \
@@ -1152,6 +1153,7 @@ jars:
 
 CLASSES_WITH_JNI= \
     org.mozilla.gecko.GeckoAppShell \
+		org.mozilla.gecko.GeckoJavaSampler \
     $(NULL)
 
 ifdef MOZ_WEBSMS_BACKEND

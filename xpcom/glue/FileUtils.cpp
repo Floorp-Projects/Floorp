@@ -117,7 +117,7 @@ mozilla::fallocate(PRFileDesc *aFD, int64_t aLength)
   return false;
 }
 
-#ifdef MOZ_WIDGET_GONK
+#ifdef ReadSysFile_PRESENT
 
 #undef TEMP_FAILURE_RETRY
 #define TEMP_FAILURE_RETRY(exp) (__extension__({ \
@@ -188,7 +188,7 @@ mozilla::ReadSysFile(
   return true;
 }
 
-#endif /* MOZ_WIDGET_GONK */
+#endif /* ReadSysFile_PRESENT */
 
 void
 mozilla::ReadAheadLib(nsIFile* aFile)

@@ -108,7 +108,7 @@ toolbarbutton[type="menu-button"][disabled="true"]:hover:active {
 /* .......... dropmarker .......... */
 
 .toolbarbutton-menubutton-dropmarker {
-  padding: 3px;
+  margin: 0 3px;
   -moz-appearance: toolbarbutton-dropdown !important;
   list-style-image: none;
   -moz-image-region: auto;
