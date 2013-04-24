@@ -19,7 +19,7 @@
 #include "Framebuffer.h"
 #include "HwcComposer2D.h"
 #include "LayerManagerOGL.h"
-#include "mozilla/layers/PLayers.h"
+#include "mozilla/layers/PLayerTransaction.h"
 #include "mozilla/layers/ShadowLayerUtilsGralloc.h"
 #include "mozilla/StaticPtr.h"
 #include "cutils/properties.h"

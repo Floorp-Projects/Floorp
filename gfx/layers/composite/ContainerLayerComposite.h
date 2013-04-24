@@ -6,7 +6,7 @@
 #ifndef GFX_ContainerLayerComposite_H
 #define GFX_ContainerLayerComposite_H
 
-#include "mozilla/layers/PLayers.h"
+#include "mozilla/layers/PLayerTransaction.h"
 #include "mozilla/layers/ShadowLayers.h"
 
 #include "Layers.h"

@@ -134,7 +134,7 @@ public:
                                      uint32_t aNewEnd) MOZ_OVERRIDE;
     virtual nsIMEUpdatePreference GetIMEUpdatePreference();
 
-    LayerManager* GetLayerManager (PLayersChild* aShadowManager = nullptr,
+    LayerManager* GetLayerManager (PLayerTransactionChild* aShadowManager = nullptr,
                                    LayersBackend aBackendHint = mozilla::layers::LAYERS_NONE,
                                    LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT,
                                    bool* aAllowRetaining = nullptr);

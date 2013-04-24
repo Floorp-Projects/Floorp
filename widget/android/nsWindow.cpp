@@ -65,7 +65,7 @@ static gfxIntSize gAndroidScreenBounds;
 #include "mozilla/layers/AsyncPanZoomController.h"
 #include "mozilla/layers/CompositorChild.h"
 #include "mozilla/layers/CompositorParent.h"
-#include "mozilla/layers/ShadowLayersParent.h"
+#include "mozilla/layers/LayerTransactionParent.h"
 #include "mozilla/Mutex.h"
 #include "nsThreadUtils.h"
 
@@ -683,7 +683,7 @@ nsWindow::SetWindowClass(const nsAString& xulWinType)
 }
 
 mozilla::layers::LayerManager*
-nsWindow::GetLayerManager(PLayersChild*, LayersBackend, LayerManagerPersistence, 
+nsWindow::GetLayerManager(PLayerTransactionChild*, LayersBackend, LayerManagerPersistence,
                           bool* aAllowRetaining)
 {
     if (aAllowRetaining) {
@@ -2479,7 +2479,7 @@ public:
         }
     }
 
-    virtual void ShadowLayersUpdated(mozilla::layers::ShadowLayersParent* aLayerTree,
+    virtual void ShadowLayersUpdated(mozilla::layers::LayerTransactionParent* aLayerTree,
                                      const mozilla::layers::TargetConfig& aTargetConfig,
                                      bool isFirstPaint) MOZ_OVERRIDE
     {
