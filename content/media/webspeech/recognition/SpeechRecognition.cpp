@@ -121,14 +121,16 @@ SpeechRecognition::GetParentObject() const
 void
 SpeechRecognition::ProcessEvent(SpeechEvent* aEvent)
 {
-  SR_LOG("Processing event %d", aEvent->mType);
+  SR_LOG("Processing %s, current state is %s",
+         GetName(aEvent),
+         GetName(mCurrentState));
 
   MOZ_ASSERT(!mProcessingEvent, "Event dispatch should be sequential!");
   mProcessingEvent = true;
 
-  SR_LOG("Current state: %d", mCurrentState);
   mCurrentState = TransitionAndGetNextState(aEvent);
-  SR_LOG("Transitioned to state: %d", mCurrentState);
+  SR_LOG("Transitioned to state: %s", GetName(mCurrentState));
+
   mProcessingEvent = false;
 }
 
@@ -151,6 +153,8 @@ SpeechRecognition::TransitionAndGetNextState(SpeechEvent* aEvent)
         case EVENT_AUDIO_ERROR:
         case EVENT_RECOGNITIONSERVICE_ERROR:
           return AbortError(aEvent);
+        case EVENT_COUNT:
+          MOZ_NOT_REACHED("Invalid event EVENT_COUNT");
       }
     case STATE_STARTING:
       switch (aEvent->mType) {
@@ -167,8 +171,10 @@ SpeechRecognition::TransitionAndGetNextState(SpeechEvent* aEvent)
         case EVENT_RECOGNITIONSERVICE_FINAL_RESULT:
           return DoNothing(aEvent);
         case EVENT_START:
-          SR_LOG("STATE_STARTING: Unhandled event %d", aEvent->mType);
+          SR_LOG("STATE_STARTING: Unhandled event %s", GetName(aEvent));
           MOZ_NOT_REACHED("");
+        case EVENT_COUNT:
+          MOZ_NOT_REACHED("Invalid event EVENT_COUNT");
       }
     case STATE_ESTIMATING:
       switch (aEvent->mType) {
@@ -187,6 +193,8 @@ SpeechRecognition::TransitionAndGetNextState(SpeechEvent* aEvent)
         case EVENT_START:
           SR_LOG("STATE_ESTIMATING: Unhandled event %d", aEvent->mType);
           MOZ_NOT_REACHED("");
+        case EVENT_COUNT:
+          MOZ_NOT_REACHED("Invalid event EVENT_COUNT");
       }
     case STATE_WAITING_FOR_SPEECH:
       switch (aEvent->mType) {
@@ -203,8 +211,10 @@ SpeechRecognition::TransitionAndGetNextState(SpeechEvent* aEvent)
         case EVENT_RECOGNITIONSERVICE_ERROR:
           return DoNothing(aEvent);
         case EVENT_START:
-          SR_LOG("STATE_STARTING: Unhandled event %d", aEvent->mType);
+          SR_LOG("STATE_STARTING: Unhandled event %s", GetName(aEvent));
           MOZ_NOT_REACHED("");
+        case EVENT_COUNT:
+          MOZ_NOT_REACHED("Invalid event EVENT_COUNT");
       }
     case STATE_RECOGNIZING:
       switch (aEvent->mType) {
@@ -221,8 +231,10 @@ SpeechRecognition::TransitionAndGetNextState(SpeechEvent* aEvent)
         case EVENT_RECOGNITIONSERVICE_INTERMEDIATE_RESULT:
           return DoNothing(aEvent);
         case EVENT_START:
-          SR_LOG("STATE_RECOGNIZING: Unhandled aEvent %d", aEvent->mType);
+          SR_LOG("STATE_RECOGNIZING: Unhandled aEvent %s", GetName(aEvent));
           MOZ_NOT_REACHED("");
+        case EVENT_COUNT:
+          MOZ_NOT_REACHED("Invalid event EVENT_COUNT");
       }
     case STATE_WAITING_FOR_RESULT:
       switch (aEvent->mType) {
@@ -239,11 +251,15 @@ SpeechRecognition::TransitionAndGetNextState(SpeechEvent* aEvent)
           return AbortSilently(aEvent);
         case EVENT_START:
         case EVENT_RECOGNITIONSERVICE_INTERMEDIATE_RESULT:
-          SR_LOG("STATE_WAITING_FOR_RESULT: Unhandled aEvent %d", aEvent->mType);
+          SR_LOG("STATE_WAITING_FOR_RESULT: Unhandled aEvent %s", GetName(aEvent));
           MOZ_NOT_REACHED("");
+        case EVENT_COUNT:
+          MOZ_NOT_REACHED("Invalid event EVENT_COUNT");
       }
+    case STATE_COUNT:
+      MOZ_NOT_REACHED("Invalid state STATE_COUNT");
   }
-  SR_LOG("Unhandled state %d", mCurrentState);
+  SR_LOG("Unhandled state %s", GetName(mCurrentState));
   MOZ_NOT_REACHED("");
   return mCurrentState;
 }
@@ -803,6 +819,42 @@ SpeechRecognition::FeedAudioData(already_AddRefed<SharedBuffer> aSamples,
   NS_DispatchToMainThread(event);
 
   return;
+}
+
+const char*
+SpeechRecognition::GetName(FSMState aId)
+{
+  static const char* names[] = {
+    "STATE_IDLE",
+    "STATE_STARTING",
+    "STATE_ESTIMATING",
+    "STATE_WAITING_FOR_SPEECH",
+    "STATE_RECOGNIZING",
+    "STATE_WAITING_FOR_RESULT"
+  };
+
+  MOZ_ASSERT(aId < STATE_COUNT);
+  MOZ_ASSERT(ArrayLength(names) == STATE_COUNT);
+  return names[aId];
+}
+
+const char*
+SpeechRecognition::GetName(SpeechEvent* aEvent)
+{
+  static const char* names[] = {
+    "EVENT_START",
+    "EVENT_STOP",
+    "EVENT_ABORT",
+    "EVENT_AUDIO_DATA",
+    "EVENT_AUDIO_ERROR",
+    "EVENT_RECOGNITIONSERVICE_INTERMEDIATE_RESULT",
+    "EVENT_RECOGNITIONSERVICE_FINAL_RESULT",
+    "EVENT_RECOGNITIONSERVICE_ERROR"
+  };
+
+  MOZ_ASSERT(aEvent->mType < EVENT_COUNT);
+  MOZ_ASSERT(ArrayLength(names) == EVENT_COUNT);
+  return names[aEvent->mType];
 }
 
 NS_IMPL_ISUPPORTS1(SpeechRecognition::GetUserMediaStreamOptions, nsIMediaStreamOptions)
