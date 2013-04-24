@@ -2077,6 +2077,10 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   border-image: url("chrome://browser/skin/tabbrowser/tab-overflow-border.png") 0 2 0 2 fill;
 }
 
+.tabs-newtab-button {
+  -moz-box-align: center;
+}
+
 .tabs-newtab-button > .toolbarbutton-icon {
   margin-top: -1px;
   margin-bottom: -1px;
