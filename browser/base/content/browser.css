@@ -140,11 +140,10 @@ toolbar[printpreview="true"] {
 #urlbar-container:not([combined]) > #urlbar > toolbarbutton,
 #urlbar-container[combined] + #reload-button + #stop-button,
 #urlbar-container[combined] + #reload-button,
-toolbar:not([mode="icons"]) > #urlbar-container > #urlbar > toolbarbutton,
-toolbar[mode="icons"] > #urlbar-container > #urlbar > #urlbar-reload-button:not([displaystop]) + #urlbar-stop-button,
-toolbar[mode="icons"] > #urlbar-container > #urlbar > #urlbar-reload-button[displaystop],
-toolbar[mode="icons"] > #reload-button:not([displaystop]) + #stop-button,
-toolbar[mode="icons"] > #reload-button[displaystop] {
+#urlbar-reload-button:not([displaystop]) + #urlbar-stop-button,
+#urlbar-reload-button[displaystop],
+#reload-button:not([displaystop]) + #stop-button,
+#reload-button[displaystop] {
   visibility: collapse;
 }
 
@@ -437,14 +436,6 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
   word-wrap: break-word;
   /* We must specify a min-width, otherwise word-wrap:break-word doesn't work. Bug 630864. */
   min-width: 1px;
-}
-
-#nav-bar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-icon {
-  display: -moz-box;
-}
-
-#nav-bar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
-  display: none;
 }
 
 /* ::::: Ctrl-Tab Panel ::::: */
