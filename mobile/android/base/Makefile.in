@@ -401,7 +401,7 @@ RES_LAYOUT = \
   res/layout/awesomebar_tab_indicator.xml \
   res/layout/awesomebar_tabs.xml \
   res/layout/bookmark_edit.xml \
-  res/layout/browser_toolbar_menu.xml \
+  res/layout/browser_toolbar.xml \
   res/layout/datetime_picker.xml \
   res/layout/doorhangerpopup.xml \
   res/layout/doorhanger.xml \
@@ -448,7 +448,7 @@ RES_LAYOUT = \
 
 RES_LAYOUT_LARGE_V11 = \
   res/layout-large-v11/awesomebar_search.xml \
-  res/layout-large-v11/browser_toolbar_menu.xml \
+  res/layout-large-v11/browser_toolbar.xml \
   $(NULL)
 
 RES_LAYOUT_LARGE_LAND_V11 = \
