@@ -77,7 +77,7 @@ public:
       float computedGain[WEBAUDIO_BLOCK_SIZE];
       for (size_t counter = 0; counter < WEBAUDIO_BLOCK_SIZE; ++counter) {
         TrackTicks tick = aStream->GetCurrentPosition() + counter;
-        computedGain[counter] = mGain.GetValueAtTime<TrackTicks>(tick);
+        computedGain[counter] = mGain.GetValueAtTime<TrackTicks>(tick) * aInput.mVolume;
       }
 
       // Apply the gain to the output buffer

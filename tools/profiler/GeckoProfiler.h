@@ -142,6 +142,8 @@ static inline void profiler_unregister_thread() {}
 // profiling on auxilerary threads.
 static inline void profiler_js_operation_callback() {}
 
+static inline double profiler_time() { return 0; }
+
 #else
 
 #include "GeckoProfilerImpl.h"

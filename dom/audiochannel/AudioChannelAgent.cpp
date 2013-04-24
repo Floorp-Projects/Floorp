@@ -8,7 +8,15 @@
 
 using namespace mozilla::dom;
 
-NS_IMPL_ISUPPORTS1(AudioChannelAgent, nsIAudioChannelAgent)
+NS_IMPL_CYCLE_COLLECTION_1(AudioChannelAgent, mCallback)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AudioChannelAgent)
+  NS_INTERFACE_MAP_ENTRY(nsIAudioChannelAgent)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(AudioChannelAgent)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(AudioChannelAgent)
 
 AudioChannelAgent::AudioChannelAgent()
   : mAudioChannelType(AUDIO_AGENT_CHANNEL_ERROR)

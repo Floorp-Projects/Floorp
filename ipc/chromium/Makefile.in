@@ -338,10 +338,6 @@ endif # }
 endif # }
 endif # }
 
-ifdef MOZ_DEBUG
-OS_CFLAGS += -DUSE_DEBUG
-endif
-
 OS_CXXFLAGS += $(TK_CFLAGS)
 
 include $(topsrcdir)/config/rules.mk
