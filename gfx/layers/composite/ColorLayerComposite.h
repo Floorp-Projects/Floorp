@@ -9,18 +9,18 @@
 #include "mozilla/layers/PLayerTransaction.h"
 #include "mozilla/layers/ShadowLayers.h"
 
-#include "LayerManagerComposite.h"
+#include "mozilla/layers/LayerManagerComposite.h"
 
 namespace mozilla {
 namespace layers {
 
 
-class ColorLayerComposite : public ShadowColorLayer,
+class ColorLayerComposite : public ColorLayer,
                             public LayerComposite
 {
 public:
   ColorLayerComposite(LayerManagerComposite *aManager)
-    : ShadowColorLayer(aManager, nullptr)
+    : ColorLayer(aManager, nullptr)
     , LayerComposite(aManager)
   {
     MOZ_COUNT_CTOR(ColorLayerComposite);
