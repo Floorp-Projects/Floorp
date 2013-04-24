@@ -1,7 +1,7 @@
 #include "GLManager.h"
 #include "LayerManagerOGL.h"
 #include "CompositorOGL.h"
-#include "mozilla/layers/LayerManagerComposite.h"
+#include "LayerManagerComposite.h"
 #include "GLContext.h"
 
 using namespace mozilla::gl;

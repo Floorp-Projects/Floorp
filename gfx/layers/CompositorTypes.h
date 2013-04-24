@@ -136,15 +136,6 @@ struct TextureInfo
   }
 };
 
-/**
- * How a SurfaceDescriptor will be opened.
- *
- * See ShadowLayerForwarder::OpenDescriptor for example.
- */
-enum OpenMode {
-  OPEN_READ_ONLY,
-  OPEN_READ_WRITE
-};
 
 } // namespace layers
 } // namespace mozilla

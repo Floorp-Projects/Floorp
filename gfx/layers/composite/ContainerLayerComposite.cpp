@@ -152,7 +152,7 @@ ContainerRender(ContainerT* aContainer,
 }
 
 ContainerLayerComposite::ContainerLayerComposite(LayerManagerComposite *aManager)
-  : ContainerLayer(aManager, nullptr)
+  : ShadowContainerLayer(aManager, nullptr)
   , LayerComposite(aManager)
 {
   MOZ_COUNT_CTOR(ContainerLayerComposite);
@@ -329,7 +329,7 @@ ContainerLayerComposite::CleanupResources()
 }
 
 RefLayerComposite::RefLayerComposite(LayerManagerComposite* aManager)
-  : RefLayer(aManager, nullptr)
+  : ShadowRefLayer(aManager, nullptr)
   , LayerComposite(aManager)
 {
   mImplData = static_cast<LayerComposite*>(this);
