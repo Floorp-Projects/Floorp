@@ -12,6 +12,7 @@ import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.util.GamepadUtils;
 import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.gecko.util.UiAsyncTask;
 
 import android.content.ContentResolver;
 import android.content.Context;
@@ -19,6 +20,7 @@ import android.graphics.Bitmap;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -27,22 +29,34 @@ import java.util.ArrayList;
 public class LastTabsSection extends AboutHomeSection {
     private Context mContext;
 
+    private class TabInfo {
+        final String url;
+        final String title;
+        final Bitmap favicon;
+
+        TabInfo(String url, String title, Bitmap favicon) {
+            this.url = url;
+            this.title = title;
+            this.favicon = favicon;
+        }
+    }
+
     public LastTabsSection(Context context, AttributeSet attrs) {
         super(context, attrs);
         mContext = context;
     }
 
     public void readLastTabs() {
-        ThreadUtils.postToBackgroundThread(new Runnable() {
+        new UiAsyncTask<Void, Void, ArrayList<TabInfo>>(ThreadUtils.getBackgroundHandler()) {
             @Override
-            public void run() {
+            protected ArrayList<TabInfo> doInBackground(Void... params) {
                 String jsonString = GeckoProfile.get(mContext).readSessionFile(true);
                 if (jsonString == null) {
                     // no previous session data
-                    return;
+                    return null;
                 }
 
-                final ArrayList<String> lastTabUrlsList = new ArrayList<String>();
+                final ArrayList<TabInfo> lastTabs = new ArrayList<TabInfo>();
                 new SessionParser() {
                     @Override
                     public void onTabRead(final SessionTab tab) {
@@ -54,61 +68,74 @@ public class LastTabsSection extends AboutHomeSection {
 
                         ContentResolver resolver = mContext.getContentResolver();
                         final Bitmap favicon = BrowserDB.getFaviconForUrl(resolver, url);
-                        lastTabUrlsList.add(url);
-
-                        LastTabsSection.this.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                View container = LayoutInflater.from(mContext).inflate(R.layout.abouthome_last_tabs_row, getItemsContainer(), false);
-                                ((TextView) container.findViewById(R.id.last_tab_title)).setText(tab.getSelectedTitle());
-                                ((TextView) container.findViewById(R.id.last_tab_url)).setText(tab.getSelectedUrl());
-                                if (favicon != null) {
-                                    ((ImageView) container.findViewById(R.id.last_tab_favicon)).setImageBitmap(favicon);
-                                }
-
-                                container.setOnClickListener(new View.OnClickListener() {
-                                    @Override
-                                    public void onClick(View v) {
-                                        int flags = Tabs.LOADURL_NEW_TAB;
-                                        if (Tabs.getInstance().getSelectedTab().isPrivate())
-                                            flags |= Tabs.LOADURL_PRIVATE;
-                                        Tabs.getInstance().loadUrl(url, flags);
-                                    }
-                                });
-                                container.setOnKeyListener(GamepadUtils.getClickDispatcher());
-
-                                addItem(container);
-                            }
-                        });
+                        final String title = tab.getSelectedTitle();
+                        lastTabs.add(new TabInfo(url, title, favicon));
                     }
                 }.parse(jsonString);
 
-                final int nu = lastTabUrlsList.size();
-                if (nu >= 1) {
-                    post(new Runnable() {
+                return lastTabs;
+            }
+
+            @Override
+            public void onPostExecute(final ArrayList<TabInfo> lastTabs) {
+                if (lastTabs == null) {
+                    return;
+                }
+
+                for (TabInfo tab : lastTabs) {
+                    final View tabView = createTabView(tab, getItemsContainer());
+                    addItem(tabView);
+                }
+
+                // If we have at least one tab from last time, show the
+                // container view.
+                final int numTabs = lastTabs.size();
+                if (numTabs > 1) {
+                    // If we have more than one tab from last time, show the
+                    // "Open all tabs" button
+                    showMoreText();
+                    setOnMoreTextClickListener(new View.OnClickListener() {
                         @Override
-                        public void run() {
-                            if (nu > 1) {
-                                showMoreText();
-                                setOnMoreTextClickListener(new View.OnClickListener() {
-                                    @Override
-                                    public void onClick(View v) {
-                                        int flags = Tabs.LOADURL_NEW_TAB;
-                                        if (Tabs.getInstance().getSelectedTab().isPrivate())
-                                            flags |= Tabs.LOADURL_PRIVATE;
-                                        for (String url : lastTabUrlsList) {
-                                            Tabs.getInstance().loadUrl(url, flags);
-                                        }
-                                    }
-                                });
-                            } else if (nu == 1) {
-                                hideMoreText();
+                        public void onClick(View v) {
+                            int flags = Tabs.LOADURL_NEW_TAB;
+                            if (Tabs.getInstance().getSelectedTab().isPrivate())
+                                flags |= Tabs.LOADURL_PRIVATE;
+                            for (TabInfo tab : lastTabs) {
+                                Tabs.getInstance().loadUrl(tab.url, flags);
                             }
-                            show();
                         }
                     });
+                    show();
+                } else if (numTabs == 1) {
+                    hideMoreText();
+                    show();
                 }
             }
+        }.execute();
+    }
+
+    View createTabView(final TabInfo tab, ViewGroup parent) {
+        final String url = tab.url;
+        final Bitmap favicon = tab.favicon;
+
+        View tabView = LayoutInflater.from(mContext).inflate(R.layout.abouthome_last_tabs_row, parent, false);
+        ((TextView) tabView.findViewById(R.id.last_tab_title)).setText(tab.title);
+        ((TextView) tabView.findViewById(R.id.last_tab_url)).setText(url);
+        if (favicon != null) {
+            ((ImageView) tabView.findViewById(R.id.last_tab_favicon)).setImageBitmap(favicon);
+        }
+
+        tabView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int flags = Tabs.LOADURL_NEW_TAB;
+                if (Tabs.getInstance().getSelectedTab().isPrivate())
+                    flags |= Tabs.LOADURL_PRIVATE;
+                Tabs.getInstance().loadUrl(url, flags);
+            }
         });
+        tabView.setOnKeyListener(GamepadUtils.getClickDispatcher());
+
+        return tabView;
     }
 }
