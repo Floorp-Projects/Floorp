@@ -12,6 +12,7 @@
 #include "nsTArray.h"
 #include "nsTHashtable.h"
 #include "nsISupportsImpl.h"
+#include "prbit.h" // for PR_ROTATE_LEFT32
 
 #include <fontconfig/fontconfig.h>
 

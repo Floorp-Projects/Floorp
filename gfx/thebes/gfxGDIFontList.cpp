@@ -281,10 +281,12 @@ GDIFontEntry::GetFontTable(uint32_t aTableTag,
     AutoSelectFont font(dc.GetDC(), &mLogFont);
     if (font.IsValid()) {
         uint32_t tableSize =
-            ::GetFontData(dc.GetDC(), NS_SWAP32(aTableTag), 0, NULL, 0);
+            ::GetFontData(dc.GetDC(),
+                          NativeEndian::swapToBigEndian(aTableTag), 0, NULL, 0);
         if (tableSize != GDI_ERROR) {
             if (aBuffer.SetLength(tableSize)) {
-                ::GetFontData(dc.GetDC(), NS_SWAP32(aTableTag), 0,
+                ::GetFontData(dc.GetDC(),
+                              NativeEndian::swapToBigEndian(aTableTag), 0,
                               aBuffer.Elements(), tableSize);
                 return NS_OK;
             }
