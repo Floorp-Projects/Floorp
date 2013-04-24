@@ -50,6 +50,12 @@ this.AccessFu = {
       this._activatePref = ACCESSFU_DISABLE;
     }
 
+    try {
+      this._notifyOutput = this.prefsBranch.getBoolPref('notify_output');
+    } catch (x) {
+      this._notifyOutput = false;
+    }
+
     Input.quickNavMode.updateModes(this.prefsBranch);
 
     this._enableOrDisable();
@@ -188,16 +194,21 @@ this.AccessFu = {
   },
 
   _output: function _output(aPresentationData, aBrowser) {
-      try {
-        for each (let presenter in aPresentationData) {
-          if (!presenter)
-            continue;
+    for each (let presenter in aPresentationData) {
+      if (!presenter)
+        continue;
 
-          Output[presenter.type](presenter.details, aBrowser);
-        }
+      try {
+        Output[presenter.type](presenter.details, aBrowser);
       } catch (x) {
         Logger.logException(x);
       }
+    }
+
+    if (this._notifyOutput) {
+      Services.obs.notifyObservers(null, 'accessfu-output',
+                                   JSON.stringify(aPresentationData));
+    }
   },
 
   _loadFrameScript: function _loadFrameScript(aMessageManager) {
@@ -253,11 +264,19 @@ this.AccessFu = {
         }
         break;
       case 'nsPref:changed':
-        if (aData == 'activate') {
-          this._activatePref = this.prefsBranch.getIntPref('activate');
-          this._enableOrDisable();
-        } else if (aData == 'quicknav_modes') {
-          Input.quickNavMode.updateModes(this.prefsBranch);
+        switch (aData) {
+          case 'activate':
+            this._activatePref = this.prefsBranch.getIntPref('activate');
+            this._enableOrDisable();
+            break;
+          case 'quicknav_modes':
+            Input.quickNavMode.updateModes(this.prefsBranch);
+            break;
+          case 'notify_output':
+            this._notifyOutput = this.prefsBranch.getBoolPref('notify_output');
+            break;
+          default:
+            break;
         }
         break;
       case 'remote-browser-frame-shown':
