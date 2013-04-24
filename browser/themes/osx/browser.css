@@ -2181,11 +2181,13 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 %include ../shared/tabs.inc.css
 
+.tab-label {
+  margin: 0;
+}
+
 .tab-throbber,
 .tab-icon-image {
-  width: 16px;
-  height: 16px;
-  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
+  -moz-margin-end: 6px;
 }
 
 .tab-throbber {
