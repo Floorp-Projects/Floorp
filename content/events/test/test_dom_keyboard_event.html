@@ -120,6 +120,9 @@ function testInitializingUntrustedEvent()
     }
     is(e.isTrusted, false, description + "isTrusted returns wrong value");
 
+    // Currently, there is no way to initialize char and key attribute values.
+    ok(e.key === "", description + "key must return empty string - got " + e.key);
+
     // getModifierState() tests
     is(e.getModifierState("Shift"), kTest.shiftKey,
        description + "getModifierState(\"Shift\") returns wrong value");
