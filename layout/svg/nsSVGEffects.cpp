@@ -280,7 +280,7 @@ nsSVGMarkerProperty::DoUpdate()
   if (!(mFrame->GetStateBits() & NS_FRAME_IN_REFLOW)) {
     // XXXjwatt: We need to unify SVG into standard reflow so we can just use
     // nsChangeHint_NeedReflow | nsChangeHint_NeedDirtyReflow here.
-    nsSVGUtils::InvalidateBounds(mFrame, false);
+    nsSVGEffects::InvalidateRenderingObservers(mFrame);
     // XXXSDL KILL THIS!!!
     nsSVGUtils::ScheduleReflowSVG(mFrame);
   }
@@ -337,7 +337,8 @@ nsSVGPaintingProperty::DoUpdate()
     return;
 
   if (mFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT) {
-    nsSVGUtils::InvalidateBounds(mFrame);
+    nsSVGEffects::InvalidateRenderingObservers(mFrame);
+    mFrame->InvalidateFrameSubtree();
   } else {
     InvalidateAllContinuations(mFrame);
   }
