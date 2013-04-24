@@ -9,7 +9,7 @@
 %define fgTabTexture linear-gradient(hsla(0,0%,100%,0.6), hsla(0,0%,100%,0.6) 0px, hsl(0,0%,99%) 1px, hsl(0,0%,92%))
 %define fgTabBackgroundMiddle linear-gradient(transparent, transparent)
 %define forwardTransitionLength 150ms
-%define conditionalForwardWithUrlbar window:not([chromehidden~=toolbar]) #navigator-toolbox[iconsize=large][mode=icons] > :-moz-any(#nav-bar[currentset*="unified-back-forward-button,urlbar-container"],#nav-bar:not([currentset])) > #unified-back-forward-button
+%define conditionalForwardWithUrlbar window:not([chromehidden~=toolbar]) #navigator-toolbox[iconsize=large] > :-moz-any(#nav-bar[currentset*="unified-back-forward-button,urlbar-container"],#nav-bar:not([currentset])) > #unified-back-forward-button
 %define conditionalForwardWithUrlbarWidth 27
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
@@ -78,11 +78,6 @@ toolbox[tabsontop=true] > toolbar:not(#TabsToolbar):not(#nav-bar):not(:-moz-lwth
   background: url(chrome://browser/skin/Toolbar-background-noise.png) hsl(0,0%,83%);
 }
 
-/* We need more height when toolbar buttons show both icon and text. */
-toolbar[mode="full"] toolbarseparator {
-  min-height: 36px;
-}
-
 #nav-bar {
   padding-bottom: 4px !important;
 }
@@ -139,10 +134,6 @@ toolbarbutton.chevron > .toolbarbutton-text {
   display: none;
 }
 
-toolbar[mode="text"] toolbarbutton.chevron > .toolbarbutton-icon {
-  display: -moz-box; /* display chevron icon in text mode */
-}
-
 toolbarbutton.chevron:-moz-locale-dir(rtl) > .toolbarbutton-icon {
   transform: scaleX(-1);
 }
@@ -188,7 +179,7 @@ toolbarbutton.bookmark-item {
 }
 
 .bookmark-item > .toolbarbutton-text {
-  display: -moz-box !important; /* prevent [mode="icons"] from hiding the label */
+  display: -moz-box !important; /* Force the display of the label for bookmarks */
   margin: 0 !important;
 }
 
@@ -444,28 +435,10 @@ toolbarbutton.bookmark-item > menupopup {
   }
 }
 
-toolbar:not([mode="icons"]) .toolbarbutton-1:not([type="menu-button"]),
-toolbar:not([mode="icons"]) .toolbarbutton-1 > .toolbarbutton-menubutton-button,
-toolbar:not([mode="icons"]) .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker,
-toolbar:not([mode="icons"]) #restore-button {
-  -moz-appearance: none;
-  padding: 0;
-  height: auto;
-  border: none;
-  box-shadow: none;
-  background: none;
-}
-
 .toolbarbutton-1:not([type="menu-button"]),
 .toolbarbutton-1 > .toolbarbutton-menubutton-button,
 #restore-button {
   min-width: 28px;
-}
-
-toolbar:not([mode="icons"]) .toolbarbutton-1:not([type="menu-button"]),
-toolbar:not([mode="icons"]) .toolbarbutton-1 > .toolbarbutton-menubutton-button,
-toolbar:not([mode="icons"]) #restore-button {
-  min-width: 0;
 }
 
 .toolbarbutton-1:not(:-moz-any(@primaryToolbarButtons@)) > .toolbarbutton-icon,
@@ -530,11 +503,6 @@ toolbar:not([mode="icons"]) #restore-button {
   -moz-border-start: none !important;
 }
 
-toolbar:not([mode="icons"]) .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
-  width: auto;
-  padding-top: 0;
-}
-
 .toolbarbutton-1 > .toolbarbutton-menubutton-button:-moz-locale-dir(rtl),
 .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker:-moz-locale-dir(ltr) {
   border-top-left-radius: 0;
@@ -547,36 +515,32 @@ toolbar:not([mode="icons"]) .toolbarbutton-1 > .toolbarbutton-menubutton-dropmar
   border-bottom-right-radius: 0;
 }
 
-toolbar:not([mode="icons"]) .toolbarbutton-1:not([open="true"]) > .toolbarbutton-menubutton-dropmarker {
-  opacity: .7;
-}
-
 .toolbarbutton-1 > .toolbarbutton-text,
 .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-text {
   margin: 2px 0 0;
 }
 
-toolbar[mode="icons"] .toolbarbutton-1:not([type="menu-button"]):not([disabled="true"]):active:hover:-moz-lwtheme,
-toolbar[mode="icons"] .toolbarbutton-1:not([type="menu-button"])[open="true"]:-moz-lwtheme,
-toolbar[mode="icons"] .toolbarbutton-1:not([disabled="true"]) > .toolbarbutton-menubutton-button:active:hover:-moz-lwtheme,
-toolbar[mode="icons"] .toolbarbutton-1[open="true"] > .toolbarbutton-menubutton-dropmarker:-moz-lwtheme,
-toolbar[mode="icons"] #restore-button:not([disabled="true"]):active:hover:-moz-lwtheme {
+.toolbarbutton-1:not([type="menu-button"]):not([disabled="true"]):active:hover:-moz-lwtheme,
+.toolbarbutton-1:not([type="menu-button"])[open="true"]:-moz-lwtheme,
+.toolbarbutton-1:not([disabled="true"]) > .toolbarbutton-menubutton-button:active:hover:-moz-lwtheme,
+.toolbarbutton-1[open="true"] > .toolbarbutton-menubutton-dropmarker:-moz-lwtheme,
+#restore-button:not([disabled="true"]):active:hover:-moz-lwtheme {
   text-shadow: @loweredShadow@;
   background-color: rgba(0,0,0,0.2);
   box-shadow: inset 0 2px 5px rgba(0,0,0,0.6), 0 1px rgba(255,255,255,0.2);
 }
 
-toolbar[mode="icons"] .toolbarbutton-1:not([type="menu-button"]):not(#fullscreen-button)[checked="true"]:-moz-lwtheme {
+.toolbarbutton-1:not([type="menu-button"]):not(#fullscreen-button)[checked="true"]:-moz-lwtheme {
   background-color: rgba(0,0,0,0.4);
   box-shadow: inset 0 2px 5px rgba(0,0,0,0.7), 0 1px rgba(255,255,255,0.2);
 }
 
-toolbar[mode="icons"] .toolbarbutton-1:not([type="menu-button"]):not(#fullscreen-button)[checked="true"]:not([disabled="true"]):active:hover:-moz-lwtheme {
+.toolbarbutton-1:not([type="menu-button"]):not(#fullscreen-button)[checked="true"]:not([disabled="true"]):active:hover:-moz-lwtheme {
   background-color: rgba(0, 0, 0, 0.6);
   box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.8), 0 1px rgba(255, 255, 255, 0.2);
 }
 
-toolbar[mode="icons"] .toolbarbutton-1 > menupopup {
+.toolbarbutton-1 > menupopup {
   margin-top: 1px;
 }
 
@@ -593,42 +557,42 @@ toolbar[mode="icons"] .toolbarbutton-1 > menupopup {
 
 #back-button,
 #forward-button:-moz-locale-dir(rtl),
-toolbar[mode="icons"] #back-button:-moz-locale-dir(rtl):-moz-lwtheme {
+#back-button:-moz-locale-dir(rtl):-moz-lwtheme {
   -moz-image-region: rect(0, 40px, 20px, 20px);
 }
 
 @media (min-resolution: 2dppx) {
   #back-button,
   #forward-button:-moz-locale-dir(rtl),
-  toolbar[mode="icons"] #back-button:-moz-locale-dir(rtl):-moz-lwtheme {
+  #back-button:-moz-locale-dir(rtl):-moz-lwtheme {
     -moz-image-region: rect(0, 80px, 40px, 40px);
   }
 }
 
 #forward-button,
 #back-button:-moz-locale-dir(rtl),
-#navigator-toolbox[iconsize="large"][mode="icons"] > #nav-bar #forward-button:-moz-locale-dir(rtl),
-toolbar[mode="icons"] #forward-button:-moz-locale-dir(rtl):-moz-lwtheme {
+#navigator-toolbox[iconsize="large"] > #nav-bar #forward-button:-moz-locale-dir(rtl),
+#forward-button:-moz-locale-dir(rtl):-moz-lwtheme {
   -moz-image-region: rect(0, 60px, 20px, 40px);
 }
 
 @media (min-resolution: 2dppx) {
   #forward-button,
   #back-button:-moz-locale-dir(rtl),
-  #navigator-toolbox[iconsize="large"][mode="icons"] > #nav-bar #forward-button:-moz-locale-dir(rtl),
-  toolbar[mode="icons"] #forward-button:-moz-locale-dir(rtl):-moz-lwtheme {
+  #navigator-toolbox[iconsize="large"] > #nav-bar #forward-button:-moz-locale-dir(rtl),
+  #forward-button:-moz-locale-dir(rtl):-moz-lwtheme {
     -moz-image-region: rect(0, 120px, 40px, 80px);
   }
 }
 
-#navigator-toolbox[iconsize="large"][mode="icons"] > #nav-bar #back-button:-moz-locale-dir(rtl),
-#navigator-toolbox[iconsize="large"][mode="icons"] > #nav-bar #forward-button:-moz-locale-dir(rtl),
-toolbar[mode="icons"] #back-button:-moz-locale-dir(rtl):-moz-lwtheme,
-toolbar[mode="icons"] #forward-button:-moz-locale-dir(rtl):-moz-lwtheme {
+#navigator-toolbox[iconsize="large"] > #nav-bar #back-button:-moz-locale-dir(rtl),
+#navigator-toolbox[iconsize="large"] > #nav-bar #forward-button:-moz-locale-dir(rtl),
+#back-button:-moz-locale-dir(rtl):-moz-lwtheme,
+#forward-button:-moz-locale-dir(rtl):-moz-lwtheme {
   transform: scaleX(-1);
 }
 
-#navigator-toolbox[iconsize="large"][mode="icons"] > #nav-bar #back-button {
+#navigator-toolbox[iconsize="large"] > #nav-bar #back-button {
   -moz-appearance: none;
   -moz-margin-end: -7px;
   position: relative;
@@ -641,12 +605,12 @@ toolbar[mode="icons"] #forward-button:-moz-locale-dir(rtl):-moz-lwtheme {
 }
 
 @media (min-resolution: 2dppx) {
-  #navigator-toolbox[iconsize="large"][mode="icons"] > #nav-bar #back-button {
+  #navigator-toolbox[iconsize="large"] > #nav-bar #back-button {
     -moz-image-region: rect(0, 40px, 40px, 0);
   }
 }
 
-#navigator-toolbox[iconsize="large"][mode="icons"] > #nav-bar #back-button:not(:-moz-lwtheme) {
+#navigator-toolbox[iconsize="large"] > #nav-bar #back-button:not(:-moz-lwtheme) {
   height: 31px;
   padding: 4px 5px 5px 3px;
   margin-bottom: -1px;
@@ -655,32 +619,32 @@ toolbar[mode="icons"] #forward-button:-moz-locale-dir(rtl):-moz-lwtheme {
 }
 
 @media (min-resolution: 2dppx) {
-  #navigator-toolbox[iconsize="large"][mode="icons"] > #nav-bar #back-button:not(:-moz-lwtheme) {
+  #navigator-toolbox[iconsize="large"] > #nav-bar #back-button:not(:-moz-lwtheme) {
     background-image: url(chrome://browser/skin/keyhole-circle@2x.png);
     background-size: 90px;
   }
 }
 
-#navigator-toolbox[iconsize="large"][mode="icons"] > #nav-bar #back-button:-moz-window-inactive:not(:-moz-lwtheme) {
+#navigator-toolbox[iconsize="large"] > #nav-bar #back-button:-moz-window-inactive:not(:-moz-lwtheme) {
   background-position: -60px 0;
 }
 
-#navigator-toolbox[iconsize="large"][mode="icons"] > #nav-bar #back-button:not([disabled="true"]):active:hover:not(:-moz-lwtheme),
-#navigator-toolbox[iconsize="large"][mode="icons"] > #nav-bar #back-button[open="true"]:not(:-moz-lwtheme) {
+#navigator-toolbox[iconsize="large"] > #nav-bar #back-button:not([disabled="true"]):active:hover:not(:-moz-lwtheme),
+#navigator-toolbox[iconsize="large"] > #nav-bar #back-button[open="true"]:not(:-moz-lwtheme) {
   background-position: -30px 0;
 }
 
-toolbar[mode="icons"] #forward-button {
+#forward-button {
   -moz-margin-start: 0;
 }
 
-#navigator-toolbox[iconsize="large"][mode="icons"] > #nav-bar #forward-button > .toolbarbutton-icon {
+#navigator-toolbox[iconsize="large"] > #nav-bar #forward-button > .toolbarbutton-icon {
   /* shift the icon away from the back button */
   margin-left: 3px;
   margin-right: -1px;
 }
 
-#navigator-toolbox[iconsize="large"][mode="icons"] > #nav-bar #forward-button {
+#navigator-toolbox[iconsize="large"] > #nav-bar #forward-button {
   clip-path: url(chrome://browser/content/browser.xul#osx-keyhole-forward-clip-path);
 }
 
@@ -749,25 +713,25 @@ toolbar[mode="icons"] #forward-button {
   }
 }
 
-#navigator-toolbox[iconsize="small"][mode="icons"] > #nav-bar #forward-button {
+#navigator-toolbox[iconsize="small"] > #nav-bar #forward-button {
   width: 27px;
 }
 
-#navigator-toolbox[iconsize="small"][mode="icons"] > #nav-bar #forward-button:-moz-lwtheme {
+#navigator-toolbox[iconsize="small"] > #nav-bar #forward-button:-moz-lwtheme {
   padding-left: 2px;
 }
 
-toolbar[mode="icons"] #forward-button:-moz-lwtheme {
+#forward-button:-moz-lwtheme {
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
 }
 
-#navigator-toolbox[iconsize="small"][mode="icons"] > #nav-bar #back-button {
+#navigator-toolbox[iconsize="small"] > #nav-bar #back-button {
   -moz-margin-end: 0;
   width: 26px;
 }
 
-#navigator-toolbox[iconsize="small"][mode="icons"] > #nav-bar #back-button:-moz-lwtheme {
+#navigator-toolbox[iconsize="small"] > #nav-bar #back-button:-moz-lwtheme {
   padding-right: 2px;
   border-right-width: 0;
   border-top-right-radius: 0;
@@ -1065,11 +1029,11 @@ toolbar[mode="icons"] #forward-button:-moz-lwtheme {
   }
 }
 
-toolbar[mode="icons"] #zoom-out-button {
+#zoom-out-button {
   -moz-margin-end: 0;
 }
 
-toolbar[mode="icons"] #zoom-in-button {
+#zoom-in-button {
   -moz-border-start: none;
   -moz-margin-start: 0;
 }
@@ -3497,11 +3461,11 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   right: auto;
 }
 
-toolbar[mode="icons"] > *|* > .toolbarbutton-badge[badge]:not([badge=""])::after {
+.toolbarbutton-badge[badge]:not([badge=""])::after {
   right: -2px;
 }
 
-toolbar[mode="icons"] > *|* > .toolbarbutton-badge[badge]:not([badge=""]):-moz-locale-dir(rtl)::after {
+.toolbarbutton-badge[badge]:not([badge=""]):-moz-locale-dir(rtl)::after {
   left: -2px;
 }
 
@@ -3609,7 +3573,7 @@ chatbox {
 
 /* Customization mode */
 
-%include ../shared/customization.inc.css
+%include ../shared/customizableui/customizeMode.inc.css
 
 /* End customization mode */
 
