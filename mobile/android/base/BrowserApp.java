@@ -683,7 +683,7 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     public View getActionBarLayout() {
-        RelativeLayout actionBar = (RelativeLayout) LayoutInflater.from(this).inflate(R.layout.browser_toolbar_menu, null);
+        RelativeLayout actionBar = (RelativeLayout) LayoutInflater.from(this).inflate(R.layout.browser_toolbar, null);
         actionBar.setLayoutParams(new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.FILL_PARENT,
                                                                   (int) getResources().getDimension(R.dimen.browser_toolbar_height)));
         return actionBar;
