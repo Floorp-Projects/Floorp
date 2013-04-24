@@ -227,3 +227,10 @@
 #PanelUI-historyItems > toolbarbutton {
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
 }
+
+#PanelUI-contents > toolbarbutton.panelui-mainview-anchor {
+  background-color: Highlight;
+  background-image: linear-gradient(rgba(255,255,255,0.3), rgba(255,255,255,0));
+  background-repeat: repeat-x;
+  color: HighlightText;
+}
