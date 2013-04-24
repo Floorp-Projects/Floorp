@@ -1432,8 +1432,7 @@ pre_call_clean_up:
 
     RootedValue rval(cx);
     if (XPT_MD_IS_GETTER(info->flags)) {
-        success = JS_GetProperty(cx, obj, name, argv);
-        rval = *argv;
+        success = JS_GetProperty(cx, obj, name, rval.address());
     } else if (XPT_MD_IS_SETTER(info->flags)) {
         success = JS_SetProperty(cx, obj, name, argv);
         rval = *argv;
