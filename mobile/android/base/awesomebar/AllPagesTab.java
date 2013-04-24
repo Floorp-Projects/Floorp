@@ -24,6 +24,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Handler;
@@ -897,8 +898,8 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
                 if (b == null)
                     continue;
 
-                Bitmap favicon = BitmapUtils.decodeByteArray(b);
-                if (favicon == null)
+                Bitmap favicon = BitmapFactory.decodeByteArray(b, 0, b.length);
+                if (favicon == null || favicon.getWidth() <= 0 || favicon.getHeight() <= 0)
                     continue;
 
                 favicon = Favicons.getInstance().scaleImage(favicon);

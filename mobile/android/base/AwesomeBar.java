@@ -7,7 +7,6 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserDB;
-import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.util.GamepadUtils;
 import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -20,6 +19,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -677,9 +677,8 @@ public class AwesomeBar extends GeckoActivity
                 }
 
                 Bitmap bitmap = null;
-                if (b != null) {
-                    bitmap = BitmapUtils.decodeByteArray(b);
-                }
+                if (b != null)
+                    bitmap = BitmapFactory.decodeByteArray(b, 0, b.length);
 
                 String shortcutTitle = TextUtils.isEmpty(title) ? url.replaceAll("^([a-z]+://)?(www\\.)?", "") : title;
                 GeckoAppShell.createShortcut(shortcutTitle, url, bitmap, "");
