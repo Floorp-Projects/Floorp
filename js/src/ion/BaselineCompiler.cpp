@@ -411,7 +411,7 @@ BaselineCompiler::emitUseCountIncrement()
     // Emit no use count increments or bailouts if Ion is not
     // enabled, or if the script will never be Ion-compileable
 
-    if (!ionCompileable_)
+    if (!ionCompileable_ && !ionOSRCompileable_)
         return true;
 
     Register scriptReg = R2.scratchReg();
