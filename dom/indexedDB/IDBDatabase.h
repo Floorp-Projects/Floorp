@@ -102,8 +102,7 @@ public:
       return nullptr;
     }
 
-    nsCOMPtr<nsIDocument> doc =
-      do_QueryInterface(GetOwner()->GetExtantDocument());
+    nsCOMPtr<nsIDocument> doc = GetOwner()->GetExtantDoc();
     return doc.forget();
   }
 

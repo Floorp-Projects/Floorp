@@ -58,7 +58,7 @@ GetWindowURI(nsIDOMWindow *aWindow)
   nsCOMPtr<nsPIDOMWindow> pWindow = do_QueryInterface(aWindow);
   NS_ENSURE_TRUE(pWindow, NULL);
 
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(pWindow->GetExtantDocument());
+  nsCOMPtr<nsIDocument> doc = pWindow->GetExtantDoc();
   nsCOMPtr<nsIURI> uri;
 
   if (doc) {

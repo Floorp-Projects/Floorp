@@ -787,7 +787,7 @@ nsLocation::Reload(bool aForceget)
     // page since some sites may use this trick to work around gecko
     // reflow bugs, and this should have the same effect.
 
-    nsCOMPtr<nsIDocument> doc(do_QueryInterface(window->GetExtantDocument()));
+    nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
 
     nsIPresShell *shell;
     nsPresContext *pcx;

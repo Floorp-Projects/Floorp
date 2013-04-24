@@ -231,8 +231,7 @@ nsHistory::Go(int32_t aDelta)
       // trick to work around gecko reflow bugs, and this should have
       // the same effect.
 
-      nsCOMPtr<nsIDocument> doc =
-        do_QueryInterface(window->GetExtantDocument());
+      nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
 
       nsIPresShell *shell;
       nsPresContext *pcx;
@@ -338,8 +337,7 @@ nsHistory::GetState(nsIVariant **aState)
   if (!nsContentUtils::CanCallerAccess(win->GetOuterWindow()))
     return NS_ERROR_DOM_SECURITY_ERR;
 
-  nsCOMPtr<nsIDocument> doc =
-    do_QueryInterface(win->GetExtantDocument());
+  nsCOMPtr<nsIDocument> doc = win->GetExtantDoc();
   if (!doc)
     return NS_ERROR_NOT_AVAILABLE;
 

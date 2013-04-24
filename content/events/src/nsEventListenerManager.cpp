@@ -282,7 +282,7 @@ nsEventListenerManager::AddEventListenerInternal(
     // Go from our target to the nearest enclosing DOM window.
     nsPIDOMWindow* window = GetInnerWindowForTarget();
     if (window) {
-      nsCOMPtr<nsIDocument> doc = do_QueryInterface(window->GetExtantDocument());
+      nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
       if (doc) {
         doc->WarnOnceAbout(nsIDocument::eMutationEvent);
       }
@@ -336,7 +336,7 @@ nsEventListenerManager::AddEventListenerInternal(
     nsPIDOMWindow* window = GetInnerWindowForTarget();
     if (window) {
 #ifdef DEBUG
-      nsCOMPtr<nsIDocument> d = do_QueryInterface(window->GetExtantDocument());
+      nsCOMPtr<nsIDocument> d = window->GetExtantDoc();
       NS_WARN_IF_FALSE(!nsContentUtils::IsChromeDoc(d),
                        "Please do not use mouseenter/leave events in chrome. "
                        "They are slower than mouseover/out!");
@@ -828,7 +828,7 @@ nsEventListenerManager::CompileEventHandlerInternal(nsListenerStruct *aListenerS
     } else {
       win = do_QueryInterface(mTarget);
       if (win) {
-        doc = do_QueryInterface(win->GetExtantDocument());
+        doc = win->GetExtantDoc();
       }
     }
 
