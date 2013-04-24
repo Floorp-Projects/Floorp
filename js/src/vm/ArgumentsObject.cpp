@@ -24,12 +24,15 @@ using namespace js;
 using namespace js::gc;
 
 static void
-CopyStackFrameArguments(const AbstractFramePtr frame, HeapValue *dst)
+CopyStackFrameArguments(const AbstractFramePtr frame, HeapValue *dst, unsigned totalArgs)
 {
     JS_ASSERT_IF(frame.isStackFrame(), !frame.asStackFrame()->runningInIon());
 
     unsigned numActuals = frame.numActualArgs();
     unsigned numFormals = frame.callee()->nargs;
+    JS_ASSERT(numActuals <= totalArgs);
+    JS_ASSERT(numFormals <= totalArgs);
+    JS_ASSERT(Max(numActuals, numFormals) == totalArgs);
 
     /* Copy formal arguments. */
     Value *src = frame.formals();
@@ -82,8 +85,8 @@ struct CopyFrameArgs
       : frame_(frame)
     { }
 
-    void copyArgs(JSContext *, HeapValue *dst) const {
-        CopyStackFrameArguments(frame_, dst);
+    void copyArgs(JSContext *, HeapValue *dst, unsigned totalArgs) const {
+        CopyStackFrameArguments(frame_, dst, totalArgs);
     }
 
     /*
@@ -105,14 +108,25 @@ struct CopyIonJSFrameArgs
       : frame_(frame), callObj_(callObj)
     { }
 
-    void copyArgs(JSContext *, HeapValue *dst) const {
+    void copyArgs(JSContext *, HeapValue *dstBase, unsigned totalArgs) const {
         unsigned numActuals = frame_->numActualArgs();
+        unsigned numFormals = ion::CalleeTokenToFunction(frame_->calleeToken())->nargs;
+        JS_ASSERT(numActuals <= totalArgs);
+        JS_ASSERT(numFormals <= totalArgs);
+        JS_ASSERT(Max(numActuals, numFormals) == totalArgs);
 
         /* Copy all arguments. */
         Value *src = frame_->argv() + 1;  /* +1 to skip this. */
         Value *end = src + numActuals;
+        HeapValue *dst = dstBase;
         while (src != end)
             (dst++)->init(*src++);
+
+        if (numActuals < numFormals) {
+            HeapValue *dstEnd = dstBase + totalArgs;
+            while (dst != dstEnd)
+                (dst++)->init(UndefinedValue());
+        }
     }
 
     /*
@@ -133,9 +147,9 @@ struct CopyStackIterArgs
       : iter_(iter)
     { }
 
-    void copyArgs(JSContext *cx, HeapValue *dstBase) const {
+    void copyArgs(JSContext *cx, HeapValue *dstBase, unsigned totalArgs) const {
         if (!iter_.isIon()) {
-            CopyStackFrameArguments(iter_.abstractFramePtr(), dstBase);
+            CopyStackFrameArguments(iter_.abstractFramePtr(), dstBase, totalArgs);
             return;
         }
 
@@ -145,8 +159,12 @@ struct CopyStackIterArgs
         /* Define formals which are not part of the actuals. */
         unsigned numActuals = iter_.numActualArgs();
         unsigned numFormals = iter_.callee()->nargs;
+        JS_ASSERT(numActuals <= totalArgs);
+        JS_ASSERT(numFormals <= totalArgs);
+        JS_ASSERT(Max(numActuals, numFormals) == totalArgs);
+
         if (numActuals < numFormals) {
-            HeapValue *dst = dstBase + numActuals, *dstEnd = dstBase + numFormals;
+            HeapValue *dst = dstBase + numActuals, *dstEnd = dstBase + totalArgs;
             while (dst != dstEnd)
                 (dst++)->init(UndefinedValue());
         }
@@ -201,7 +219,7 @@ ArgumentsObject::create(JSContext *cx, HandleScript script, HandleFunction calle
 
     /* Copy [0, numArgs) into data->slots. */
     HeapValue *dst = data->args, *dstEnd = data->args + numArgs;
-    copy.copyArgs(cx, dst);
+    copy.copyArgs(cx, dst, numArgs);
 
     data->deletedBits = reinterpret_cast<size_t *>(dstEnd);
     ClearAllBitArrayElements(data->deletedBits, numDeletedWords);
