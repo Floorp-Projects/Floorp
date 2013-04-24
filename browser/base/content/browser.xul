@@ -929,13 +929,6 @@
                      onclick="BrowserGoHome(event);"
                      aboutHomeOverrideTooltip="&abouthome.pageTitle;"/>
 
-      <toolbaritem id="social-toolbar-item"
-                   class="chromeclass-toolbar-additional"
-                   removable="false"
-                   title="&socialToolbar.title;"
-                   hidden="true"
-                   skipintoolbarset="true"
-                   observes="socialActiveBroadcaster">
         <toolbarbutton id="social-provider-button"
                        class="toolbarbutton-1"
                        type="menu">
