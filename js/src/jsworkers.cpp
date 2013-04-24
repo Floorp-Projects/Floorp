@@ -4,11 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/DebugOnly.h"
-
 #include "jsworkers.h"
 
-#if JS_ION
+#include "mozilla/DebugOnly.h"
+
+#ifdef JS_PARALLEL_COMPILATION
 # include "ion/AsmJS.h"
 # include "ion/IonBuilder.h"
 # include "ion/ExecutionModeInlines.h"

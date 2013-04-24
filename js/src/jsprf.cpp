@@ -9,16 +9,15 @@
 **
 ** Author: Kipp E.B. Hickman
 */
+#include "jsprf.h"
+
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "jsprf.h"
 #include "jsutil.h"
 #include "jspubtd.h"
 #include "jsstr.h"
-
-#include "js/CharacterEncoding.h"
 
 using namespace js;
 

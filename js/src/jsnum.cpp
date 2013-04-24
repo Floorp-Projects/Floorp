@@ -8,6 +8,8 @@
  * JS number type and wrapper class.
  */
 
+#include "jsnum.h"
+
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/RangedPtr.h"
@@ -24,7 +26,6 @@
 #include <locale.h>
 #include <limits.h>
 #include <math.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include "jstypes.h"
@@ -34,22 +35,14 @@
 #include "jscntxt.h"
 #include "jsversion.h"
 #include "jsdtoa.h"
-#include "jsgc.h"
-#include "jsinterp.h"
-#include "jsnum.h"
 #include "jsobj.h"
-#include "jsopcode.h"
-#include "jsprf.h"
 #include "jsstr.h"
-#include "jslibmath.h"
 
 #include "vm/GlobalObject.h"
 #include "vm/NumericConversions.h"
-#include "vm/Shape.h"
 #include "vm/StringBuffer.h"
 
 #include "jsatominlines.h"
-#include "jsinferinlines.h"
 #include "jsnuminlines.h"
 #include "jsobjinlines.h"
 

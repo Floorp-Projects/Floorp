@@ -7,6 +7,8 @@
 /*
  * JS function support.
  */
+#include "jsfun.h"
+
 #include <string.h>
 
 #include "mozilla/PodOperations.h"
@@ -14,22 +16,12 @@
 #include "mozilla/Util.h"
 
 #include "jstypes.h"
-#include "jsutil.h"
 #include "jsapi.h"
 #include "jsarray.h"
 #include "jsatom.h"
-#include "jsbool.h"
 #include "jscntxt.h"
-#include "jsexn.h"
-#include "jsfun.h"
-#include "jsgc.h"
 #include "jsinterp.h"
-#include "jsiter.h"
-#include "jslock.h"
-#include "jsnum.h"
 #include "jsobj.h"
-#include "jsopcode.h"
-#include "jspropertytree.h"
 #include "jsproxy.h"
 #include "jsscript.h"
 #include "jsstr.h"
@@ -38,8 +30,6 @@
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/TokenStream.h"
 #include "gc/Marking.h"
-#include "vm/Debugger.h"
-#include "vm/ScopeObject.h"
 #include "vm/Shape.h"
 #include "vm/StringBuffer.h"
 #include "vm/Xdr.h"
@@ -48,15 +38,12 @@
 #include "methodjit/MethodJIT.h"
 #endif
 
-#include "jsatominlines.h"
 #include "jsfuninlines.h"
 #include "jsinferinlines.h"
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 
-#include "vm/ArgumentsObject-inl.h"
-#include "vm/ScopeObject-inl.h"
 #include "vm/Stack-inl.h"
 
 #ifdef JS_ION
