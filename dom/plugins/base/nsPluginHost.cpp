@@ -268,52 +268,6 @@ bool ReadSectionHeader(nsPluginManifestLineReader& reader, const char *token)
   return false;
 }
 
-// Little helper struct to asynchronously reframe any presentations (embedded)
-// or reload any documents (full-page), that contained plugins
-// which were shutdown as a result of a plugins.refresh(1)
-class nsPluginDocReframeEvent: public nsRunnable {
-public:
-  nsPluginDocReframeEvent(nsTArray<nsCOMPtr<nsIDocument> >& aDocs) { mDocs.SwapElements(aDocs); }
-
-  NS_DECL_NSIRUNNABLE
-
-  nsTArray<nsCOMPtr<nsIDocument> > mDocs;
-};
-
-NS_IMETHODIMP nsPluginDocReframeEvent::Run() {
-  uint32_t c = mDocs.Length();
-
-  // for each document (which previously had a running instance), tell
-  // the frame constructor to rebuild
-  for (uint32_t i = 0; i < c; i++) {
-    nsIDocument* doc = mDocs[i];
-    if (doc) {
-      nsIPresShell *shell = doc->GetShell();
-
-      // if this document has a presentation shell, then it has frames and can be reframed
-      if (shell) {
-        /* A reframe will cause a fresh object frame, instance owner, and instance
-         * to be created. Reframing of the entire document is necessary as we may have
-         * recently found new plugins and we want a shot at trying to use them instead
-         * of leaving alternate renderings.
-         * We do not want to completely reload all the documents that had running plugins
-         * because we could possibly trigger a script to run in the unload event handler
-         * which may want to access our defunct plugin and cause us to crash.
-         */
-
-        shell->ReconstructFrames(); // causes reframe of document
-      } else {  // no pres shell --> full-page plugin
-
-        NS_NOTREACHED("all plugins should have a pres shell!");
-
-      }
-    }
-  }
-
-  mDocs.Clear();
-  return NS_OK;
-}
-
 static bool UnloadPluginsASAP()
 {
   return Preferences::GetBool("dom.ipc.plugins.unloadASAP", false);
@@ -404,11 +358,10 @@ bool nsPluginHost::IsRunningPlugin(nsPluginTag * aPluginTag)
   return false;
 }
 
-nsresult nsPluginHost::ReloadPlugins(bool reloadPages)
+nsresult nsPluginHost::ReloadPlugins()
 {
   PLUGIN_LOG(PLUGIN_LOG_NORMAL,
-  ("nsPluginHost::ReloadPlugins Begin reloadPages=%d, active_instance_count=%d\n",
-  reloadPages, mInstances.Length()));
+  ("nsPluginHost::ReloadPlugins Begin\n"));
 
   nsresult rv = NS_OK;
 
@@ -431,14 +384,6 @@ nsresult nsPluginHost::ReloadPlugins(bool reloadPages)
   // if no changed detected, return an appropriate error code
   if (!pluginschanged)
     return NS_ERROR_PLUGINS_PLUGINSNOTCHANGED;
-
-  nsTArray<nsCOMPtr<nsIDocument> > instsToReload;
-  if (reloadPages) {
-
-    // Then stop any running plugin instances but hold on to the documents in the array
-    // We are going to need to restart the instances in these documents later
-    DestroyRunningInstances(&instsToReload, nullptr);
-  }
 
   // shutdown plugins and kill the list if there are no running plugins
   nsRefPtr<nsPluginTag> prev;
@@ -473,18 +418,8 @@ nsresult nsPluginHost::ReloadPlugins(bool reloadPages)
   // load them again
   rv = LoadPlugins();
 
-  // If we have shut down any plugin instances, we've now got to restart them.
-  // Post an event to do the rest as we are going to be destroying the frame tree and we also want
-  // any posted unload events to finish
-  if (reloadPages && !instsToReload.IsEmpty()){
-    nsCOMPtr<nsIRunnable> ev = new nsPluginDocReframeEvent(instsToReload);
-    if (ev)
-      NS_DispatchToCurrentThread(ev);
-  }
-
   PLUGIN_LOG(PLUGIN_LOG_NORMAL,
-  ("nsPluginHost::ReloadPlugins End active_instance_count=%d\n",
-  mInstances.Length()));
+  ("nsPluginHost::ReloadPlugins End\n"));
 
   return rv;
 }
@@ -794,7 +729,7 @@ nsresult nsPluginHost::UnloadPlugins()
 
   // we should call nsIPluginInstance::Stop and nsIPluginInstance::SetWindow
   // for those plugins who want it
-  DestroyRunningInstances(nullptr, nullptr);
+  DestroyRunningInstances(nullptr);
 
   nsPluginTag *pluginTag;
   for (pluginTag = mPlugins; pluginTag; pluginTag = pluginTag->mNext) {
@@ -1027,7 +962,7 @@ nsresult nsPluginHost::SetUpPluginInstance(const char *aMimeType,
   mCurrentDocument = do_GetWeakReference(document);
 
   // Don't try to set up an instance again if nothing changed.
-  if (ReloadPlugins(false) == NS_ERROR_PLUGINS_PLUGINSNOTCHANGED) {
+  if (ReloadPlugins() == NS_ERROR_PLUGINS_PLUGINSNOTCHANGED) {
     return rv;
   }
 
@@ -2397,15 +2332,6 @@ nsPluginHost::UpdatePluginInfo(nsPluginTag* aPluginTag)
     return NS_OK;
   }
 
-  nsTArray<nsCOMPtr<nsIDocument> > instsToReload;
-  DestroyRunningInstances(&instsToReload, aPluginTag);
-  
-  if (!instsToReload.IsEmpty()) {
-    nsCOMPtr<nsIRunnable> ev = new nsPluginDocReframeEvent(instsToReload);
-    if (ev)
-      NS_DispatchToCurrentThread(ev);
-  }
-
   return NS_OK;
 }
 
@@ -3765,27 +3691,13 @@ nsPluginHost::InstanceArray()
 }
 
 void 
-nsPluginHost::DestroyRunningInstances(nsTArray<nsCOMPtr<nsIDocument> >* aReloadDocs,
-                                      nsPluginTag* aPluginTag)
+nsPluginHost::DestroyRunningInstances(nsPluginTag* aPluginTag)
 {
   for (int32_t i = mInstances.Length(); i > 0; i--) {
     nsNPAPIPluginInstance *instance = mInstances[i - 1];
     if (instance->IsRunning() && (!aPluginTag || aPluginTag == TagForPlugin(instance->GetPlugin()))) {
       instance->SetWindow(nullptr);
       instance->Stop();
-
-      // If we've been passed an array to return, lets collect all our documents,
-      // removing duplicates. These will be reframed (embedded) or reloaded (full-page) later
-      // to kickstart our instances.
-      if (aReloadDocs) {
-        nsRefPtr<nsPluginInstanceOwner> owner = instance->GetOwner();
-        if (owner) {
-          nsCOMPtr<nsIDocument> doc;
-          owner->GetDocument(getter_AddRefs(doc));
-          if (doc && !aReloadDocs->Contains(doc))  // don't allow for duplicates
-            aReloadDocs->AppendElement(doc);
-        }
-      }
 
       // Get rid of all the instances without the possibility of caching.
       nsPluginTag* pluginTag = TagForPlugin(instance->GetPlugin());

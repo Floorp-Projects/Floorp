@@ -463,7 +463,7 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
     if (!node) {
       nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aTarget);
       if (win) {
-        node = do_QueryInterface(win->GetExtantDocument());
+        node = win->GetExtantDoc();
       }
     }
 

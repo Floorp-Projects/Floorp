@@ -127,8 +127,14 @@ MNewStringObject::templateObj() const {
 }
 
 CodeGenerator::CodeGenerator(MIRGenerator *gen, LIRGraph *graph, MacroAssembler *masm)
-  : CodeGeneratorSpecific(gen, graph, masm)
+  : CodeGeneratorSpecific(gen, graph, masm),
+    unassociatedScriptCounts_(NULL)
 {
+}
+
+CodeGenerator::~CodeGenerator()
+{
+    js_delete(unassociatedScriptCounts_);
 }
 
 bool
@@ -990,7 +996,7 @@ CodeGenerator::visitTypeBarrier(LTypeBarrier *lir)
     Register scratch = ToRegister(lir->temp());
 
     Label matched, miss;
-    masm.guardTypeSet(operand, lir->mir()->typeSet(), scratch, &matched, &miss);
+    masm.guardTypeSet(operand, lir->mir()->resultTypeSet(), scratch, &matched, &miss);
     masm.jump(&miss);
     if (!bailoutFrom(&miss, lir->snapshot()))
         return false;
@@ -1815,7 +1821,7 @@ CodeGenerator::generateArgumentsChecks()
     for (uint32_t i = START_SLOT; i < CountArgSlots(info.fun()); i++) {
         // All initial parameters are guaranteed to be MParameters.
         MParameter *param = rp->getOperand(i)->toParameter();
-        const types::TypeSet *types = param->typeSet();
+        const types::TypeSet *types = param->resultTypeSet();
         if (!types || types->unknown())
             continue;
 
@@ -2093,15 +2099,12 @@ CodeGenerator::maybeCreateScriptCounts()
     CompileInfo *outerInfo = &gen->info();
     RawScript script = outerInfo->script();
 
-    if (!script)
-        return NULL;
-
-    if (cx->runtime->profilingScripts && !script->hasScriptCounts) {
-        if (!script->initScriptCounts(cx))
+    if (cx->runtime->profilingScripts) {
+        if (script && !script->hasScriptCounts && !script->initScriptCounts(cx))
             return NULL;
     }
 
-    if (!script->hasScriptCounts)
+    if (script && !script->hasScriptCounts)
         return NULL;
 
     counts = js_new<IonScriptCounts>();
@@ -2110,24 +2113,34 @@ CodeGenerator::maybeCreateScriptCounts()
         return NULL;
     }
 
-    script->addIonCounts(counts);
+    if (script)
+        script->addIonCounts(counts);
 
     for (size_t i = 0; i < graph.numBlocks(); i++) {
         MBasicBlock *block = graph.getBlock(i)->mir();
 
-        // Find a PC offset in the outermost script to use. If this block is
-        // from an inlined script, find a location in the outer script to
-        // associate information about the inling with.
-        MResumePoint *resume = block->entryResumePoint();
-        while (resume->caller())
-            resume = resume->caller();
-        uint32_t offset = resume->pc() - script->code;
-        JS_ASSERT(offset < script->length);
+        uint32_t offset = 0;
+        if (script) {
+            // Find a PC offset in the outermost script to use. If this block
+            // is from an inlined script, find a location in the outer script
+            // to associate information about the inlining with.
+            MResumePoint *resume = block->entryResumePoint();
+            while (resume->caller())
+                resume = resume->caller();
+            uint32_t offset = resume->pc() - script->code;
+            JS_ASSERT(offset < script->length);
+        }
 
         if (!counts->block(i).init(block->id(), offset, block->numSuccessors()))
             return NULL;
         for (size_t j = 0; j < block->numSuccessors(); j++)
             counts->block(i).setSuccessor(j, block->getSuccessor(j)->id());
+    }
+
+    if (!script) {
+        // Compiling code for Asm.js. Leave the counts on the CodeGenerator to
+        // be picked up by the AsmJSModule after generation finishes.
+        unassociatedScriptCounts_ = counts;
     }
 
     return counts;
@@ -4750,6 +4763,19 @@ CodeGenerator::visitCallSetElement(LCallSetElement *lir)
     pushArg(ToValue(lir, LCallSetElement::Index));
     pushArg(ToRegister(lir->getOperand(0)));
     return callVM(SetObjectElementInfo, lir);
+}
+
+typedef bool (*InitElementArrayFn)(JSContext *, jsbytecode *, HandleObject, uint32_t, HandleValue);
+static const VMFunction InitElementArrayInfo = FunctionInfo<InitElementArrayFn>(js::InitElementArray);
+
+bool
+CodeGenerator::visitCallInitElementArray(LCallInitElementArray *lir)
+{
+    pushArg(ToValue(lir, LCallInitElementArray::Value));
+    pushArg(Imm32(lir->mir()->index()));
+    pushArg(ToRegister(lir->getOperand(0)));
+    pushArg(ImmWord(lir->mir()->resumePoint()->pc()));
+    return callVM(InitElementArrayInfo, lir);
 }
 
 bool

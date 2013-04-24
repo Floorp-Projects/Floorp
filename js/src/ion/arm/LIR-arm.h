@@ -7,7 +7,7 @@
 #ifndef jsion_lir_arm_h__
 #define jsion_lir_arm_h__
 
-#include "ion/TypeOracle.h"
+#include "ion/LIR.h"
 
 namespace js {
 namespace ion {
@@ -262,7 +262,6 @@ class LTableSwitchV : public LInstructionHelper<0, BOX_PIECES, 2>
     }
 };
 
-// Guard against an object's shape.
 class LGuardShape : public LInstructionHelper<0, 1, 1>
 {
   public:
@@ -274,6 +273,23 @@ class LGuardShape : public LInstructionHelper<0, 1, 1>
     }
     const MGuardShape *mir() const {
         return mir_->toGuardShape();
+    }
+    const LAllocation *tempInt() {
+        return getTemp(0)->output();
+    }
+};
+
+class LGuardObjectType : public LInstructionHelper<0, 1, 1>
+{
+  public:
+    LIR_HEADER(GuardObjectType);
+
+    LGuardObjectType(const LAllocation &in, const LDefinition &temp) {
+        setOperand(0, in);
+        setTemp(0, temp);
+    }
+    const MGuardObjectType *mir() const {
+        return mir_->toGuardObjectType();
     }
     const LAllocation *tempInt() {
         return getTemp(0)->output();

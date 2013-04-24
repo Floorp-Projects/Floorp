@@ -317,6 +317,14 @@ CSRCS += \
   $(NULL)
 endif # }
 
+ifdef OS_BSD # {
+ifneq (,$(OS_DRAGONFLY)$(OS_FREEBSD)) # {
+DEFINES += -D_EVENT_HAVE_SENDFILE
+endif # }
+LOCAL_INCLUDES += -I$(srcdir)/src/third_party/libevent/bsd
+CSRCS += kqueue.c
+endif # }
+
 endif # }
 
 endif # }
@@ -329,10 +337,6 @@ CPPSRCS += atomicops_internals_mutex.cc
 endif # }
 endif # }
 endif # }
-
-ifdef MOZ_DEBUG
-OS_CFLAGS += -DUSE_DEBUG
-endif
 
 OS_CXXFLAGS += $(TK_CFLAGS)
 

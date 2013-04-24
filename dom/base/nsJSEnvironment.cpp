@@ -620,7 +620,7 @@ PrintWinURI(nsGlobalWindow *win)
     return;
   }
 
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(win->GetExtantDocument());
+  nsCOMPtr<nsIDocument> doc = win->GetExtantDoc();
   if (!doc) {
     printf("No document in the window.\n");
     return;

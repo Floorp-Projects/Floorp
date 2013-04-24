@@ -12,6 +12,7 @@
 #include "nsGUIEvent.h"
 
 using namespace mozilla;
+using namespace mozilla::widget;
 
 struct nsKeyConverter
 {
@@ -217,3 +218,287 @@ DOMKeyCodeToQtKeyCode(int aKeysym)
 
     return 0;
 }
+
+KeyNameIndex
+QtKeyCodeToDOMKeyNameIndex(int aKeysym)
+{
+    switch (aKeysym) {
+
+#define NS_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX(aNativeKey, aKeyNameIndex) \
+        case aNativeKey: return aKeyNameIndex;
+
+#include "NativeKeyToDOMKeyName.h"
+
+#undef NS_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX
+
+        case Qt::Key_Exclam:
+        case Qt::Key_QuoteDbl:
+        case Qt::Key_NumberSign:
+        case Qt::Key_Dollar:
+        case Qt::Key_Percent:
+        case Qt::Key_Ampersand:
+        case Qt::Key_Apostrophe:
+        case Qt::Key_ParenLeft:
+        case Qt::Key_ParenRight:
+        case Qt::Key_Asterisk:
+        case Qt::Key_Plus:
+        case Qt::Key_Comma:
+        case Qt::Key_Minus:
+        case Qt::Key_Period:
+        case Qt::Key_Slash:
+        case Qt::Key_0:
+        case Qt::Key_1:
+        case Qt::Key_2:
+        case Qt::Key_3:
+        case Qt::Key_4:
+        case Qt::Key_5:
+        case Qt::Key_6:
+        case Qt::Key_7:
+        case Qt::Key_8:
+        case Qt::Key_9:
+        case Qt::Key_Colon:
+        case Qt::Key_Semicolon:
+        case Qt::Key_Less:
+        case Qt::Key_Equal:
+        case Qt::Key_Greater:
+        case Qt::Key_Question:
+        case Qt::Key_At:
+        case Qt::Key_A:
+        case Qt::Key_B:
+        case Qt::Key_C:
+        case Qt::Key_D:
+        case Qt::Key_E:
+        case Qt::Key_F:
+        case Qt::Key_G:
+        case Qt::Key_H:
+        case Qt::Key_I:
+        case Qt::Key_J:
+        case Qt::Key_K:
+        case Qt::Key_L:
+        case Qt::Key_M:
+        case Qt::Key_N:
+        case Qt::Key_O:
+        case Qt::Key_P:
+        case Qt::Key_Q:
+        case Qt::Key_R:
+        case Qt::Key_S:
+        case Qt::Key_T:
+        case Qt::Key_U:
+        case Qt::Key_V:
+        case Qt::Key_W:
+        case Qt::Key_X:
+        case Qt::Key_Y:
+        case Qt::Key_Z:
+        case Qt::Key_BracketLeft:
+        case Qt::Key_Backslash:
+        case Qt::Key_BracketRight:
+        case Qt::Key_AsciiCircum:
+        case Qt::Key_Underscore:
+        case Qt::Key_QuoteLeft:
+        case Qt::Key_BraceLeft:
+        case Qt::Key_Bar:
+        case Qt::Key_BraceRight:
+        case Qt::Key_AsciiTilde:
+        case Qt::Key_exclamdown:
+        case Qt::Key_cent:
+        case Qt::Key_sterling:
+        case Qt::Key_currency:
+        case Qt::Key_yen:
+        case Qt::Key_brokenbar:
+        case Qt::Key_section:
+        case Qt::Key_diaeresis:
+        case Qt::Key_copyright:
+        case Qt::Key_ordfeminine:
+        case Qt::Key_guillemotleft:
+        case Qt::Key_notsign:
+        case Qt::Key_hyphen:
+        case Qt::Key_registered:
+        case Qt::Key_macron:
+        case Qt::Key_degree:
+        case Qt::Key_plusminus:
+        case Qt::Key_twosuperior:
+        case Qt::Key_threesuperior:
+        case Qt::Key_acute:
+        case Qt::Key_mu:
+        case Qt::Key_paragraph:
+        case Qt::Key_periodcentered:
+        case Qt::Key_cedilla:
+        case Qt::Key_onesuperior:
+        case Qt::Key_masculine:
+        case Qt::Key_guillemotright:
+        case Qt::Key_onequarter:
+        case Qt::Key_onehalf:
+        case Qt::Key_threequarters:
+        case Qt::Key_questiondown:
+        case Qt::Key_Agrave:
+        case Qt::Key_Aacute:
+        case Qt::Key_Acircumflex:
+        case Qt::Key_Atilde:
+        case Qt::Key_Adiaeresis:
+        case Qt::Key_Aring:
+        case Qt::Key_AE:
+        case Qt::Key_Ccedilla:
+        case Qt::Key_Egrave:
+        case Qt::Key_Eacute:
+        case Qt::Key_Ecircumflex:
+        case Qt::Key_Ediaeresis:
+        case Qt::Key_Igrave:
+        case Qt::Key_Iacute:
+        case Qt::Key_Icircumflex:
+        case Qt::Key_Idiaeresis:
+        case Qt::Key_ETH:
+        case Qt::Key_Ntilde:
+        case Qt::Key_Ograve:
+        case Qt::Key_Oacute:
+        case Qt::Key_Ocircumflex:
+        case Qt::Key_Otilde:
+        case Qt::Key_Odiaeresis:
+        case Qt::Key_multiply:
+        case Qt::Key_Ooblique:
+        case Qt::Key_Ugrave:
+        case Qt::Key_Uacute:
+        case Qt::Key_Ucircumflex:
+        case Qt::Key_Udiaeresis:
+        case Qt::Key_Yacute:
+        case Qt::Key_THORN:
+        case Qt::Key_ssharp:
+        case Qt::Key_division:
+        case Qt::Key_ydiaeresis:
+            return KEY_NAME_INDEX_PrintableKey;
+
+        case Qt::Key_Backtab:
+        case Qt::Key_Print:
+        case Qt::Key_Direction_L:
+        case Qt::Key_Direction_R:
+        case Qt::Key_SingleCandidate:
+        case Qt::Key_Hiragana_Katakana:
+        case Qt::Key_Zenkaku_Hankaku:
+        case Qt::Key_Touroku:
+        case Qt::Key_Massyo:
+        case Qt::Key_Hangul:
+        case Qt::Key_Hangul_Start:
+        case Qt::Key_Hangul_End:
+        case Qt::Key_Hangul_Hanja:
+        case Qt::Key_Hangul_Jamo:
+        case Qt::Key_Hangul_Romaja:
+        case Qt::Key_Hangul_Jeonja:
+        case Qt::Key_Hangul_Banja:
+        case Qt::Key_Hangul_PreHanja:
+        case Qt::Key_Hangul_PostHanja:
+        case Qt::Key_Hangul_Special:
+        case Qt::Key_Dead_Belowdot:
+        case Qt::Key_Dead_Hook:
+        case Qt::Key_Dead_Horn:
+        case Qt::Key_TrebleUp:
+        case Qt::Key_TrebleDown:
+        case Qt::Key_Standby:
+        case Qt::Key_OpenUrl:
+        case Qt::Key_LaunchMedia:
+        case Qt::Key_KeyboardLightOnOff:
+        case Qt::Key_KeyboardBrightnessUp:
+        case Qt::Key_KeyboardBrightnessDown:
+        case Qt::Key_WakeUp:
+        case Qt::Key_ScreenSaver:
+        case Qt::Key_WWW:
+        case Qt::Key_Memo:
+        case Qt::Key_LightBulb:
+        case Qt::Key_Shop:
+        case Qt::Key_History:
+        case Qt::Key_AddFavorite:
+        case Qt::Key_HotLinks:
+        case Qt::Key_Finance:
+        case Qt::Key_Community:
+        case Qt::Key_BackForward:
+        case Qt::Key_ApplicationLeft:
+        case Qt::Key_ApplicationRight:
+        case Qt::Key_Book:
+        case Qt::Key_CD:
+        case Qt::Key_Calculator:
+        case Qt::Key_ToDoList:
+        case Qt::Key_ClearGrab:
+        case Qt::Key_Close:
+        case Qt::Key_Display:
+        case Qt::Key_DOS:
+        case Qt::Key_Documents:
+        case Qt::Key_Excel:
+        case Qt::Key_Explorer:
+        case Qt::Key_Game:
+        case Qt::Key_Go:
+        case Qt::Key_iTouch:
+        case Qt::Key_LogOff:
+        case Qt::Key_Market:
+        case Qt::Key_Meeting:
+        case Qt::Key_MenuKB:
+        case Qt::Key_MenuPB:
+        case Qt::Key_MySites:
+        case Qt::Key_News:
+        case Qt::Key_OfficeHome:
+        case Qt::Key_Option:
+        case Qt::Key_Phone:
+        case Qt::Key_Calendar:
+        case Qt::Key_Reply:
+        case Qt::Key_RotateWindows:
+        case Qt::Key_RotationPB:
+        case Qt::Key_RotationKB:
+        case Qt::Key_Save:
+        case Qt::Key_Send:
+        case Qt::Key_Spell:
+        case Qt::Key_SplitScreen:
+        case Qt::Key_Support:
+        case Qt::Key_TaskPane:
+        case Qt::Key_Terminal:
+        case Qt::Key_Tools:
+        case Qt::Key_Travel:
+        case Qt::Key_Video:
+        case Qt::Key_Word:
+        case Qt::Key_Xfer:
+        case Qt::Key_ZoomIn:
+        case Qt::Key_ZoomOut:
+        case Qt::Key_Away:
+        case Qt::Key_Messenger:
+        case Qt::Key_WebCam:
+        case Qt::Key_MailForward:
+        case Qt::Key_Pictures:
+        case Qt::Key_Music:
+        case Qt::Key_Battery:
+        case Qt::Key_Bluetooth:
+        case Qt::Key_WLAN:
+        case Qt::Key_UWB:
+        case Qt::Key_AudioRepeat:
+        case Qt::Key_AudioCycleTrack:
+        case Qt::Key_Time:
+        case Qt::Key_Hibernate:
+        case Qt::Key_View:
+        case Qt::Key_TopMenu:
+        case Qt::Key_PowerDown:
+        case Qt::Key_Suspend:
+        case Qt::Key_ContrastAdjust:
+
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
+        case Qt::Key_TouchpadToggle:
+        case Qt::Key_TouchpadOn:
+        case Qt::Key_TouchpadOff:
+#endif
+
+        case Qt::Key_unknown:
+        case Qt::Key_Call:
+        case Qt::Key_CameraFocus:
+        case Qt::Key_Context1:
+        case Qt::Key_Context2:
+        case Qt::Key_Context3:
+        case Qt::Key_Context4:
+        case Qt::Key_Flip:
+        case Qt::Key_Hangup:
+        case Qt::Key_No:
+        case Qt::Key_Select:
+        case Qt::Key_Yes:
+        case Qt::Key_ToggleCallHangup:
+        case Qt::Key_VoiceDial:
+        case Qt::Key_LastNumberRedial:
+        case Qt::Key_Printer:
+        case Qt::Key_Sleep:
+        default:
+            return KEY_NAME_INDEX_Unidentified;
+    }
+}
+

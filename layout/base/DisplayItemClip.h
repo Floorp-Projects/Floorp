@@ -53,15 +53,7 @@ public:
   };
 
   // Constructs a DisplayItemClip that does no clipping at all.
-  DisplayItemClip() : mHaveClipRect(false), mHasBeenDestroyed(false) {}
-  ~DisplayItemClip() { mHasBeenDestroyed = true; }
-
-  void MaybeDestroy() const
-  {
-    if (!mHasBeenDestroyed) {
-      this->~DisplayItemClip();
-    }
-  }
+  DisplayItemClip() : mHaveClipRect(false) {}
 
   void SetTo(const nsRect& aRect);
   void SetTo(const nsRect& aRect, const nscoord* aRadii);
@@ -176,9 +168,6 @@ private:
   // If mHaveClipRect is false then this object represents no clipping at all
   // and mRoundedClipRects must be empty.
   bool mHaveClipRect;
-  // Set to true when the destructor has run. This is a bit of a hack
-  // to ensure that we can easily share arena-allocated DisplayItemClips.
-  bool mHasBeenDestroyed;
 };
 
 }

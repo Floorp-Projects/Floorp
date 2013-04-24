@@ -241,7 +241,7 @@ nsJSScriptTimeoutHandler::Init(nsGlobalWindow *aWindow, bool *aIsInterval,
   if (expr) {
     // if CSP is enabled, and setTimeout/setInterval was called with a string
     // or object, disable the registration and log an error
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(aWindow->GetExtantDocument());
+    nsCOMPtr<nsIDocument> doc = aWindow->GetExtantDoc();
 
     if (doc) {
       nsCOMPtr<nsIContentSecurityPolicy> csp;

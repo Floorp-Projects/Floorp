@@ -29,6 +29,13 @@ this.Utils = {
     this._win = Cu.getWeakReference(aWindow);
   },
 
+  uninit: function Utils_uninit() {
+    if (!this._win) {
+      return;
+    }
+    delete this._win;
+  },
+
   get win() {
     return this._win.get();
   },
@@ -178,13 +185,25 @@ this.Logger = {
 
   logLevel: 1, // INFO;
 
+  test: false,
+
   log: function log(aLogLevel) {
     if (aLogLevel < this.logLevel)
       return;
 
     let message = Array.prototype.slice.call(arguments, 1).join(' ');
-    dump('[' + Utils.ScriptName + '] ' +
-         this._LEVEL_NAMES[aLogLevel] +' ' + message + '\n');
+    message = '[' + Utils.ScriptName + '] ' + this._LEVEL_NAMES[aLogLevel] +
+      ' ' + message + '\n';
+    dump(message);
+    // Note: used for testing purposes. If |this.test| is true, also log to
+    // the console service.
+    if (this.test) {
+      try {
+        Services.console.logStringMessage(message);
+      } catch (ex) {
+        // There was an exception logging to the console service.
+      }
+    }
   },
 
   info: function info() {

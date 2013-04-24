@@ -1709,7 +1709,7 @@ nsContentUtils::GetWindowFromCaller()
   return nullptr;
 }
 
-nsIDOMDocument *
+nsIDocument*
 nsContentUtils::GetDocumentFromCaller()
 {
   JSContext *cx = nullptr;
@@ -1725,10 +1725,10 @@ nsContentUtils::GetDocumentFromCaller()
     return nullptr;
   }
 
-  return win->GetExtantDocument();
+  return win->GetExtantDoc();
 }
 
-nsIDOMDocument *
+nsIDocument*
 nsContentUtils::GetDocumentFromContext()
 {
   JSContext *cx = nullptr;
@@ -1740,7 +1740,7 @@ nsContentUtils::GetDocumentFromContext()
     if (sgo) {
       nsCOMPtr<nsPIDOMWindow> pwin = do_QueryInterface(sgo);
       if (pwin) {
-        return pwin->GetExtantDocument();
+        return pwin->GetExtantDoc();
       }
     }
   }

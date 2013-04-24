@@ -1401,10 +1401,159 @@ static unsigned int ConvertAndroidKeyCodeToDOMKeyCode(int androidKeyCode)
         case AKEYCODE_NUMPAD_EQUALS:      return NS_VK_EQUALS;
         // KEYCODE_NUMPAD_LEFT_PAREN (162) ... KEYCODE_CALCULATOR (210)
 
+        // Needs to confirm the behavior.  If the key switches the open state
+        // of Japanese IME (or switches input character between Hiragana and
+        // Roman numeric characters), then, it might be better to use
+        // NS_VK_KANJI which is used for Alt+Zenkaku/Hankaku key on Windows.
+        case AKEYCODE_ZENKAKU_HANKAKU:    return 0;
+        case AKEYCODE_EISU:               return NS_VK_EISU;
+        case AKEYCODE_MUHENKAN:           return NS_VK_NONCONVERT;
+        case AKEYCODE_HENKAN:             return NS_VK_CONVERT;
+        case AKEYCODE_KATAKANA_HIRAGANA:  return 0;
+        case AKEYCODE_YEN:                return NS_VK_BACK_SLASH; // Same as other platforms.
+        case AKEYCODE_RO:                 return NS_VK_BACK_SLASH; // Same as other platforms.
+        case AKEYCODE_KANA:               return NS_VK_KANA;
+        case AKEYCODE_ASSIST:             return NS_VK_HELP;
+
         default:
             ALOG("ConvertAndroidKeyCodeToDOMKeyCode: "
                  "No DOM keycode for Android keycode %d", androidKeyCode);
         return 0;
+    }
+}
+
+static KeyNameIndex ConvertAndroidKeyCodeToKeyNameIndex(int aAndroidKeyCode)
+{
+    // Special-case alphanumeric keycodes because they are most common.
+    if (aAndroidKeyCode >= AKEYCODE_A && aAndroidKeyCode <= AKEYCODE_Z) {
+        return KEY_NAME_INDEX_PrintableKey;
+    }
+
+    if (aAndroidKeyCode >= AKEYCODE_0 && aAndroidKeyCode <= AKEYCODE_9) {
+        return KEY_NAME_INDEX_PrintableKey;
+    }
+
+    switch (aAndroidKeyCode) {
+
+#define NS_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX(aNativeKey, aKeyNameIndex) \
+        case aNativeKey: return aKeyNameIndex;
+
+#include "NativeKeyToDOMKeyName.h"
+
+#undef NS_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX
+
+        // KEYCODE_0 (7) ... KEYCODE_9 (16)
+        case AKEYCODE_STAR:               // '*' key
+        case AKEYCODE_POUND:              // '#' key
+
+        // KEYCODE_A (29) ... KEYCODE_Z (54)
+
+        case AKEYCODE_COMMA:              // ',' key
+        case AKEYCODE_PERIOD:             // '.' key
+        case AKEYCODE_GRAVE:              // '`' key
+        case AKEYCODE_MINUS:              // '-' key
+        case AKEYCODE_EQUALS:             // '=' key
+        case AKEYCODE_LEFT_BRACKET:       // '[' key
+        case AKEYCODE_RIGHT_BRACKET:      // ']' key
+        case AKEYCODE_BACKSLASH:          // '\' key
+        case AKEYCODE_SEMICOLON:          // ';' key
+        case AKEYCODE_APOSTROPHE:         // ''' key
+        case AKEYCODE_SLASH:              // '/' key
+        case AKEYCODE_AT:                 // '@' key
+        case AKEYCODE_PLUS:               // '+' key
+
+        case AKEYCODE_UNKNOWN:
+        case AKEYCODE_NUMPAD_0:
+        case AKEYCODE_NUMPAD_1:
+        case AKEYCODE_NUMPAD_2:
+        case AKEYCODE_NUMPAD_3:
+        case AKEYCODE_NUMPAD_4:
+        case AKEYCODE_NUMPAD_5:
+        case AKEYCODE_NUMPAD_6:
+        case AKEYCODE_NUMPAD_7:
+        case AKEYCODE_NUMPAD_8:
+        case AKEYCODE_NUMPAD_9:
+
+        case AKEYCODE_NUMPAD_LEFT_PAREN:
+        case AKEYCODE_NUMPAD_RIGHT_PAREN:
+
+        case AKEYCODE_YEN:                // yen sign key
+        case AKEYCODE_RO:                 // Japanese Ro key
+            return KEY_NAME_INDEX_PrintableKey;
+
+        case AKEYCODE_SOFT_LEFT:
+        case AKEYCODE_SOFT_RIGHT:
+        case AKEYCODE_CALL:
+        case AKEYCODE_ENDCALL:
+        case AKEYCODE_SYM:                // Symbol modifier
+        case AKEYCODE_NUM:                // XXX Not sure
+        case AKEYCODE_HEADSETHOOK:
+        case AKEYCODE_FOCUS:
+        case AKEYCODE_NOTIFICATION:       // XXX Not sure
+        case AKEYCODE_PICTSYMBOLS:
+
+        case AKEYCODE_BUTTON_A:
+        case AKEYCODE_BUTTON_B:
+        case AKEYCODE_BUTTON_C:
+        case AKEYCODE_BUTTON_X:
+        case AKEYCODE_BUTTON_Y:
+        case AKEYCODE_BUTTON_Z:
+        case AKEYCODE_BUTTON_L1:
+        case AKEYCODE_BUTTON_R1:
+        case AKEYCODE_BUTTON_L2:
+        case AKEYCODE_BUTTON_R2:
+        case AKEYCODE_BUTTON_THUMBL:
+        case AKEYCODE_BUTTON_THUMBR:
+        case AKEYCODE_BUTTON_START:
+        case AKEYCODE_BUTTON_SELECT:
+        case AKEYCODE_BUTTON_MODE:
+
+        case AKEYCODE_MUTE: // mutes the microphone
+        case AKEYCODE_MEDIA_CLOSE:
+
+        case AKEYCODE_ZOOM_IN:
+        case AKEYCODE_ZOOM_OUT:
+        case AKEYCODE_DVR:
+        case AKEYCODE_TV_POWER:
+        case AKEYCODE_TV_INPUT:
+        case AKEYCODE_STB_POWER:
+        case AKEYCODE_STB_INPUT:
+        case AKEYCODE_AVR_POWER:
+        case AKEYCODE_AVR_INPUT:
+
+        case AKEYCODE_BUTTON_1:
+        case AKEYCODE_BUTTON_2:
+        case AKEYCODE_BUTTON_3:
+        case AKEYCODE_BUTTON_4:
+        case AKEYCODE_BUTTON_5:
+        case AKEYCODE_BUTTON_6:
+        case AKEYCODE_BUTTON_7:
+        case AKEYCODE_BUTTON_8:
+        case AKEYCODE_BUTTON_9:
+        case AKEYCODE_BUTTON_10:
+        case AKEYCODE_BUTTON_11:
+        case AKEYCODE_BUTTON_12:
+        case AKEYCODE_BUTTON_13:
+        case AKEYCODE_BUTTON_14:
+        case AKEYCODE_BUTTON_15:
+        case AKEYCODE_BUTTON_16:
+
+        case AKEYCODE_LANGUAGE_SWITCH:
+        case AKEYCODE_MANNER_MODE:
+        case AKEYCODE_3D_MODE:
+        case AKEYCODE_CONTACTS:
+        case AKEYCODE_CALENDAR:
+        case AKEYCODE_MUSIC:
+        case AKEYCODE_CALCULATOR:
+
+        case AKEYCODE_ZENKAKU_HANKAKU:
+        case AKEYCODE_KATAKANA_HIRAGANA:
+            return KEY_NAME_INDEX_Unidentified;
+
+        default:
+            ALOG("ConvertAndroidKeyCodeToKeyNameIndex: "
+                 "No DOM key name index for Android keycode %d", aAndroidKeyCode);
+            return KEY_NAME_INDEX_Unidentified;
     }
 }
 
@@ -1435,6 +1584,7 @@ nsWindow::InitKeyEvent(nsKeyEvent& event, AndroidGeckoEvent& key,
                        ANPEvent* pluginEvent)
 {
     int androidKeyCode = key.KeyCode();
+    event.mKeyNameIndex = ConvertAndroidKeyCodeToKeyNameIndex(androidKeyCode);
     uint32_t domKeyCode = ConvertAndroidKeyCodeToDOMKeyCode(androidKeyCode);
 
     if (event.message == NS_KEY_PRESS) {

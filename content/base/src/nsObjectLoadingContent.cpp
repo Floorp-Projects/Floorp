@@ -745,6 +745,8 @@ nsObjectLoadingContent::InstantiatePluginInstance(bool aIsLoading)
   // Flush layout so that the frame is created if possible and the plugin is
   // initialized with the latest information.
   doc->FlushPendingNotifications(Flush_Layout);
+  // Flushing layout may have re-entered and loaded something underneath us
+  NS_ENSURE_TRUE(mInstantiating, NS_OK);
 
   if (!thisContent->GetPrimaryFrame()) {
     LOG(("OBJLC [%p]: Not instantiating plugin with no frame", this));
@@ -767,16 +769,42 @@ nsObjectLoadingContent::InstantiatePluginInstance(bool aIsLoading)
     appShell->SuspendNative();
   }
 
+  nsRefPtr<nsPluginInstanceOwner> newOwner;
   rv = pluginHost->InstantiatePluginInstance(mContentType.get(),
                                              mURI.get(), this,
-                                             getter_AddRefs(mInstanceOwner));
+                                             getter_AddRefs(newOwner));
 
+  // XXX(johns): We don't suspend native inside stopping plugins...
   if (appShell) {
     appShell->ResumeNative();
   }
 
-  if (NS_FAILED(rv)) {
-    return rv;
+  if (!mInstantiating || NS_FAILED(rv)) {
+    LOG(("OBJLC [%p]: Plugin instantiation failed or re-entered, "
+         "killing old instance", this));
+    // XXX(johns): This needs to be de-duplicated with DoStopPlugin, but we
+    //             don't want to touch the protochain or delayed stop.
+    //             (Bug 767635)
+    if (newOwner) {
+      nsRefPtr<nsNPAPIPluginInstance> inst;
+      newOwner->GetInstance(getter_AddRefs(inst));
+      newOwner->SetFrame(nullptr);
+      if (inst) {
+        pluginHost->StopPluginInstance(inst);
+      }
+      newOwner->Destroy();
+    }
+    return NS_OK;
+  }
+
+  mInstanceOwner = newOwner;
+
+  // Ensure the frame did not change during instantiation re-entry (common).
+  // HasNewFrame would not have mInstanceOwner yet, so the new frame would be
+  // dangling. (Bug 854082)
+  nsIFrame* frame = thisContent->GetPrimaryFrame();
+  if (frame && mInstanceOwner) {
+    mInstanceOwner->SetFrame(static_cast<nsObjectFrame*>(frame));
   }
 
   // Set up scripting interfaces.
@@ -1011,15 +1039,9 @@ nsObjectLoadingContent::HasNewFrame(nsIObjectFrame* aFrame)
   }
 
   // Otherwise, we're just changing frames
-  mInstanceOwner->SetFrame(nullptr);
-
   // Set up relationship between instance owner and frame.
   nsObjectFrame *objFrame = static_cast<nsObjectFrame*>(aFrame);
   mInstanceOwner->SetFrame(objFrame);
-
-  // Set up new frame to draw.
-  objFrame->FixupWindow(objFrame->GetContentRectRelativeToSelf().Size());
-  objFrame->InvalidateFrame();
 
   return NS_OK;
 }
@@ -2156,6 +2178,10 @@ nsObjectLoadingContent::UnloadObject(bool aResetState)
     mOriginalContentType.Truncate();
   }
 
+  // InstantiatePluginInstance checks this after re-entrant calls and aborts if
+  // it was cleared from under it
+  mInstantiating = false;
+
   mScriptRequested = false;
 
   // This call should be last as it may re-enter
@@ -2294,7 +2320,6 @@ nsObjectLoadingContent::PluginDestroyed()
   // plugins in plugin host. Invalidate instance owner / prototype but otherwise
   // don't take any action.
   TeardownProtoChain();
-  mInstanceOwner->SetFrame(nullptr);
   mInstanceOwner->Destroy();
   mInstanceOwner = nullptr;
   return NS_OK;
@@ -2578,6 +2603,8 @@ nsObjectLoadingContent::StopPluginInstance()
     CloseChannel();
   }
 
+  // We detach the instance owner's frame before destruction, but don't destroy
+  // the instance owner until the plugin is stopped.
   mInstanceOwner->SetFrame(nullptr);
 
   bool delayedStop = false;

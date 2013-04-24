@@ -514,6 +514,7 @@ MetroInput::OnCharacterReceived(uint32_t aCharCode,
   keyEvent.time = ::GetMessageTime();
   keyEvent.isChar = true;
   keyEvent.charCode = aCharCode;
+  keyEvent.mKeyNameIndex = KEY_NAME_INDEX_PrintableKey;
 
   NPEvent pluginEvent;
   pluginEvent.event = WM_CHAR;
@@ -557,6 +558,7 @@ MetroInput::OnKeyDown(uint32_t aVKey,
   mModifierKeyState.InitInputEvent(keyEvent);
   keyEvent.time = ::GetMessageTime();
   keyEvent.keyCode = mozKey;
+  keyEvent.mKeyNameIndex = GetDOMKeyNameIndex(aVKey);
 
   NPEvent pluginEvent;
   pluginEvent.event = WM_KEYDOWN;
@@ -619,6 +621,7 @@ MetroInput::OnKeyUp(uint32_t aVKey,
   mModifierKeyState.InitInputEvent(keyEvent);
   keyEvent.time = ::GetMessageTime();
   keyEvent.keyCode = mozKey;
+  keyEvent.mKeyNameIndex = GetDOMKeyNameIndex(aVKey);
 
   NPEvent pluginEvent;
   pluginEvent.event = WM_KEYUP;
@@ -1404,6 +1407,7 @@ bool MetroInput::sIsVirtualKeyMapInitialized = false;
 // References
 //   nsVKList.h - defines NS_VK_*
 //   nsIDOMKeyEvent.idl - defines the values that NS_VK_* are based on
+//   nsDOMKeyNameList.h - defines KeyNameIndex values
 void
 MetroInput::InitializeVirtualKeyMap() {
   sVirtualKeyMap[System::VirtualKey::VirtualKey_Cancel] = NS_VK_CANCEL;
@@ -1411,9 +1415,8 @@ MetroInput::InitializeVirtualKeyMap() {
   sVirtualKeyMap[System::VirtualKey::VirtualKey_Back] = NS_VK_BACK;
   sVirtualKeyMap[System::VirtualKey::VirtualKey_Tab] = NS_VK_TAB;
   sVirtualKeyMap[System::VirtualKey::VirtualKey_Clear] = NS_VK_CLEAR;
-  // XXX: Do we want RETURN or ENTER here?
   sVirtualKeyMap[System::VirtualKey::VirtualKey_Enter] = NS_VK_RETURN;
-  // NS_VK_ENTER
+  // NS_VK_ENTER is never used.
   sVirtualKeyMap[System::VirtualKey::VirtualKey_Shift] = NS_VK_SHIFT;
   sVirtualKeyMap[System::VirtualKey::VirtualKey_Control] = NS_VK_CONTROL;
   sVirtualKeyMap[System::VirtualKey::VirtualKey_Menu] = NS_VK_ALT;
@@ -1583,6 +1586,84 @@ MetroInput::GetMozKeyCode(uint32_t aKey)
   return sVirtualKeyMap[aKey];
 }
 
+KeyNameIndex
+MetroInput::GetDOMKeyNameIndex(uint32_t aVirtualKey)
+{
+  switch (aVirtualKey) {
+
+#define NS_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX(aNativeKey, aKeyNameIndex) \
+    case aNativeKey: return aKeyNameIndex;
+
+#include "NativeKeyToDOMKeyName.h"
+
+#undef NS_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX
+
+    // printable keys:
+    case System::VirtualKey::VirtualKey_Number0:
+    case System::VirtualKey::VirtualKey_Number1:
+    case System::VirtualKey::VirtualKey_Number2:
+    case System::VirtualKey::VirtualKey_Number3:
+    case System::VirtualKey::VirtualKey_Number4:
+    case System::VirtualKey::VirtualKey_Number5:
+    case System::VirtualKey::VirtualKey_Number6:
+    case System::VirtualKey::VirtualKey_Number7:
+    case System::VirtualKey::VirtualKey_Number8:
+    case System::VirtualKey::VirtualKey_Number9:
+    case System::VirtualKey::VirtualKey_A:
+    case System::VirtualKey::VirtualKey_B:
+    case System::VirtualKey::VirtualKey_C:
+    case System::VirtualKey::VirtualKey_D:
+    case System::VirtualKey::VirtualKey_E:
+    case System::VirtualKey::VirtualKey_F:
+    case System::VirtualKey::VirtualKey_G:
+    case System::VirtualKey::VirtualKey_H:
+    case System::VirtualKey::VirtualKey_I:
+    case System::VirtualKey::VirtualKey_J:
+    case System::VirtualKey::VirtualKey_K:
+    case System::VirtualKey::VirtualKey_L:
+    case System::VirtualKey::VirtualKey_M:
+    case System::VirtualKey::VirtualKey_N:
+    case System::VirtualKey::VirtualKey_O:
+    case System::VirtualKey::VirtualKey_P:
+    case System::VirtualKey::VirtualKey_Q:
+    case System::VirtualKey::VirtualKey_R:
+    case System::VirtualKey::VirtualKey_S:
+    case System::VirtualKey::VirtualKey_T:
+    case System::VirtualKey::VirtualKey_U:
+    case System::VirtualKey::VirtualKey_V:
+    case System::VirtualKey::VirtualKey_W:
+    case System::VirtualKey::VirtualKey_X:
+    case System::VirtualKey::VirtualKey_Y:
+    case System::VirtualKey::VirtualKey_Z:
+    case VK_NUMPAD0:
+    case VK_NUMPAD1:
+    case VK_NUMPAD2:
+    case VK_NUMPAD3:
+    case VK_NUMPAD4:
+    case VK_NUMPAD5:
+    case VK_NUMPAD6:
+    case VK_NUMPAD7:
+    case VK_NUMPAD8:
+    case VK_NUMPAD9:
+    case VK_OEM_1:
+    case VK_OEM_PLUS:
+    case VK_OEM_COMMA:
+    case VK_OEM_MINUS:
+    case VK_OEM_PERIOD:
+    case VK_OEM_2:
+    case VK_OEM_3:
+    case VK_OEM_4:
+    case VK_OEM_5:
+    case VK_OEM_6:
+    case VK_OEM_7:
+    case VK_OEM_8:
+    case VK_OEM_102:
+      return KEY_NAME_INDEX_PrintableKey;
+
+    default:
+      return KEY_NAME_INDEX_Unidentified;
+  }
+}
 void
 MetroInput::RegisterInputEvents()
 {

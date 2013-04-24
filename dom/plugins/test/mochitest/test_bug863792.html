@@ -1,0 +1,38 @@
+<!doctype html>
+<html>
+<head>
+  <title>Test for Bug 863792</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+</head>
+<body>
+<script type="application/javascript">
+
+// A plugin that removes itself from the document and inactivates said document
+// inside NPP_New. We should not leak the instance. See also test_bug854082
+
+SimpleTest.waitForExplicitFinish();
+
+var i = document.createElement("iframe");
+i.src = "file_bug863792.html";
+i.width = 500;
+i.height = 500;
+document.body.appendChild(i);
+
+i.addEventListener("load", function() {
+  SpecialPowers.forceGC();
+  SpecialPowers.forceCC();
+  SimpleTest.executeSoon(function() {
+    SpecialPowers.forceGC();
+    SpecialPowers.forceCC();
+    SimpleTest.executeSoon(function() {
+      ok(true, "Didn't crash");
+      SimpleTest.finish();
+    });
+  });
+}, false);
+</script>
+</body>
+</html>

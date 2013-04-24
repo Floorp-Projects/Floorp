@@ -76,6 +76,8 @@ skip-if(B2G) random-if(winWidget) HTTP(..) == corner-joins-2.xhtml corner-joins-
 
 skip-if(B2G) fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,20) fuzzy-if(Android&&browserIsRemote,7,146) fuzzy-if(Android&&!browserIsRemote,166,248) == scroll-1.html scroll-1-ref.html # see bug 732535
 
+== transforms-1.html transforms-1-ref.html
+
 == zero-radius-clip-1.html zero-radius-clip-ref.html
 
 == iframe-1.html iframe-1-ref.html

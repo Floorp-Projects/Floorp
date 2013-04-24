@@ -363,7 +363,8 @@ js::DestroyContext(JSContext *cx, DestroyContextMode mode)
     JS_AbortIfWrongThread(rt);
 
 #ifdef JS_THREADSAFE
-    JS_ASSERT(cx->outstandingRequests == 0);
+    if (cx->outstandingRequests != 0)
+        MOZ_CRASH();
 #endif
 
     if (mode != DCM_NEW_FAILED) {

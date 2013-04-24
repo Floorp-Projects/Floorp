@@ -7,6 +7,7 @@
 #ifndef jsion_types_h_
 #define jsion_types_h_
 
+#include "js/Value.h"
 #include <jstypes.h>
 
 namespace js {
@@ -93,6 +94,114 @@ enum MIRType
     MIRType_Shape,        // A Shape pointer.
     MIRType_ForkJoinSlice // js::ForkJoinSlice*
 };
+
+static inline MIRType
+MIRTypeFromValueType(JSValueType type)
+{
+    switch (type) {
+      case JSVAL_TYPE_DOUBLE:
+        return MIRType_Double;
+      case JSVAL_TYPE_INT32:
+        return MIRType_Int32;
+      case JSVAL_TYPE_UNDEFINED:
+        return MIRType_Undefined;
+      case JSVAL_TYPE_STRING:
+        return MIRType_String;
+      case JSVAL_TYPE_BOOLEAN:
+        return MIRType_Boolean;
+      case JSVAL_TYPE_NULL:
+        return MIRType_Null;
+      case JSVAL_TYPE_OBJECT:
+        return MIRType_Object;
+      case JSVAL_TYPE_MAGIC:
+        return MIRType_Magic;
+      case JSVAL_TYPE_UNKNOWN:
+        return MIRType_Value;
+      default:
+        JS_NOT_REACHED("unexpected jsval type");
+        return MIRType_None;
+    }
+}
+
+static inline JSValueType
+ValueTypeFromMIRType(MIRType type)
+{
+  switch (type) {
+    case MIRType_Undefined:
+      return JSVAL_TYPE_UNDEFINED;
+    case MIRType_Null:
+      return JSVAL_TYPE_NULL;
+    case MIRType_Boolean:
+      return JSVAL_TYPE_BOOLEAN;
+    case MIRType_Int32:
+      return JSVAL_TYPE_INT32;
+    case MIRType_Double:
+      return JSVAL_TYPE_DOUBLE;
+    case MIRType_String:
+      return JSVAL_TYPE_STRING;
+    case MIRType_Magic:
+      return JSVAL_TYPE_MAGIC;
+    default:
+      JS_ASSERT(type == MIRType_Object);
+      return JSVAL_TYPE_OBJECT;
+  }
+}
+
+static inline JSValueTag
+MIRTypeToTag(MIRType type)
+{
+    return JSVAL_TYPE_TO_TAG(ValueTypeFromMIRType(type));
+}
+
+static inline const char *
+StringFromMIRType(MIRType type)
+{
+  switch (type) {
+    case MIRType_Undefined:
+      return "Undefined";
+    case MIRType_Null:
+      return "Null";
+    case MIRType_Boolean:
+      return "Bool";
+    case MIRType_Int32:
+      return "Int32";
+    case MIRType_Double:
+      return "Double";
+    case MIRType_String:
+      return "String";
+    case MIRType_Object:
+      return "Object";
+    case MIRType_Magic:
+      return "Magic";
+    case MIRType_Value:
+      return "Value";
+    case MIRType_None:
+      return "None";
+    case MIRType_Slots:
+      return "Slots";
+    case MIRType_Elements:
+      return "Elements";
+    case MIRType_Pointer:
+      return "Pointer";
+    case MIRType_ForkJoinSlice:
+      return "ForkJoinSlice";
+    default:
+      JS_NOT_REACHED("Unknown MIRType.");
+      return "";
+  }
+}
+
+static inline bool
+IsNumberType(MIRType type)
+{
+    return type == MIRType_Int32 || type == MIRType_Double;
+}
+
+static inline bool
+IsNullOrUndefined(MIRType type)
+{
+    return type == MIRType_Null || type == MIRType_Undefined;
+}
 
 #ifdef DEBUG
 // Track the pipeline of opcodes which has produced a snapshot.

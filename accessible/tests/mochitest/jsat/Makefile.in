@@ -12,6 +12,8 @@ relativesrcdir = @relativesrcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_A11Y_FILES =\
+jsatcommon.js \
+test_alive.html \
 test_utterance_order.html \
 $(NULL)
 

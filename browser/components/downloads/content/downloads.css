@@ -91,6 +91,11 @@ richlistitem[type="download"]:not([selected]) button {
   visibility: hidden;
 }
 
+.download-state[state="1"]:not([exists]) .downloadShow
+{
+  display: none;
+}
+
 #downloadsSummary:not([inprogress]) > vbox > #downloadsSummaryProgress,
 #downloadsSummary:not([inprogress]) > vbox > #downloadsSummaryDetails,
 #downloadsFooter[showingsummary] > #downloadsHistory,
