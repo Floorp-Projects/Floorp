@@ -19,6 +19,8 @@
 == column-box-alignment-rtl.html column-box-alignment-rtl-ref.html
 HTTP(..) == columnfill-balance.html columnfill-balance-ref.html
 HTTP(..) == columnfill-auto.html columnfill-auto-ref.html
+HTTP(..) == columnfill-auto-2.html columnfill-auto-2-ref.html
+HTTP(..) == columnfill-auto-3.html columnfill-auto-2-ref.html
 skip-if(B2G) == columnrule-basic.html columnrule-basic-ref.html # bug 773482
 skip-if(B2G) == columnrule-complex.html columnrule-complex-ref.html # bug 773482
 != columnrule-linestyles.html columnrule-linestyles-notref.html
