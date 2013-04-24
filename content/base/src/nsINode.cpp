@@ -1396,7 +1396,7 @@ nsINode::doInsertChildAt(nsIContent* aKid, uint32_t aIndex,
 void
 nsINode::Remove()
 {
-  nsINode* parent = GetParentNode();
+  nsCOMPtr<nsINode> parent = GetParentNode();
   if (!parent) {
     return;
   }
