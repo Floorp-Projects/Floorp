@@ -3259,7 +3259,7 @@ IonBuilder::jsop_binary(JSOp op, MDefinition *left, MDefinition *right)
     bool overflowed = types::HasOperationOverflowed(script(), pc);
 
     current->add(ins);
-    ins->infer(overflowed);
+    ins->infer(inspector, pc, overflowed);
     current->push(ins);
 
     if (ins->isEffectful())

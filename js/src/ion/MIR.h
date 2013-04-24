@@ -2839,6 +2839,8 @@ class MBinaryArithInstruction
     // analysis detect a precision loss in the multiplication.
     bool implicitTruncate_;
 
+    void inferFallback(BaselineInspector *inspector, jsbytecode *pc);
+
   public:
     MBinaryArithInstruction(MDefinition *left, MDefinition *right)
       : MBinaryInstruction(left, right),
@@ -2858,7 +2860,8 @@ class MBinaryArithInstruction
 
     virtual double getIdentity() = 0;
 
-    void infer(bool overflowed);
+    void infer(BaselineInspector *inspector,
+               jsbytecode *pc, bool overflowed);
 
     void setInt32() {
         specialization_ = MIRType_Int32;
