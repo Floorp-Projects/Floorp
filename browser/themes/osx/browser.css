@@ -2232,12 +2232,10 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 .tabbrowser-tab,
 .tabs-newtab-button {
-  -moz-appearance: none;
   font: message-box;
   font-weight: bold;
   text-shadow: @loweredShadow@;
   border: none;
-  -moz-box-align: stretch;
 }
 
 .tabbrowser-tab {
