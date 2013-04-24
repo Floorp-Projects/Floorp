@@ -195,6 +195,9 @@ var DebuggerServer = {
 #endif
     if ("nsIProfiler" in Ci)
       this.addActors("chrome://global/content/devtools/dbg-profiler-actors.js");
+
+    this.addActors("chrome://global/content/devtools/dbg-styleeditor-actors.js");
+    this.addTabActor(this.StyleEditorActor, "styleEditorActor");
   },
 
   /**
