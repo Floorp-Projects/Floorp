@@ -200,7 +200,7 @@ public:
 
         // Write the input sample to the correct location in our buffer
         if (input) {
-          buffer[writeIndex] = input[i];
+          buffer[writeIndex] = input[i] * aInput.mVolume;
         }
 
         // Now, determine the correct read position.  We adjust the read position to be

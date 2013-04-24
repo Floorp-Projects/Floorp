@@ -34,6 +34,7 @@
 #include "nsDebug.h"
 
 using mozilla::WEBAUDIO_BLOCK_SIZE;
+using mozilla::AudioBlockCopyChannelWithScale;
 
 namespace WebCore {
 
@@ -174,10 +175,22 @@ void DynamicsCompressor::process(const AudioChunk* sourceChunk, AudioChunk* dest
         setEmphasisParameters(filterStageGain, anchor, filterStageRatio);
     }
 
+    float sourceWithVolume[WEBAUDIO_BLOCK_SIZE];
+
     // Apply pre-emphasis filter.
     // Note that the final three stages are computed in-place in the destination buffer.
     for (unsigned i = 0; i < numberOfChannels; ++i) {
-        const float* sourceData = m_sourceChannels[i];
+        const float* sourceData;
+        if (sourceChunk->mVolume == 1.0f) {
+          // Fast path, the volume scale doesn't need to get taken into account
+          sourceData = m_sourceChannels[i];
+        } else {
+          AudioBlockCopyChannelWithScale(m_sourceChannels[i],
+                                         sourceChunk->mVolume,
+                                         sourceWithVolume);
+          sourceData = sourceWithVolume;
+        }
+
         float* destinationData = m_destinationChannels[i];
         ZeroPole* preFilters = m_preFilterPacks[i]->filters;
 

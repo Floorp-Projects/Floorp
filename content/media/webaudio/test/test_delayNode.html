@@ -19,6 +19,10 @@ addLoadEvent(function() {
   for (var i = 0; i < 2048; ++i) {
     buffer.getChannelData(0)[i] = Math.sin(440 * 2 * Math.PI * i / context.sampleRate);
   }
+  var expectedBuffer = context.createBuffer(1, 2048 * 2, context.sampleRate);
+  for (var i = 2048; i < 2048 * 2; ++i) {
+    expectedBuffer.getChannelData(0)[i] = buffer.getChannelData(0)[i - 2048];
+  }
 
   var destination = context.destination;
 
@@ -32,7 +36,9 @@ addLoadEvent(function() {
   source.buffer = buffer;
 
   source.connect(delay);
-  delay.connect(destination);
+  var sp = context.createScriptProcessor(2048 * 2, 1);
+  delay.connect(sp);
+  sp.connect(destination);
 
   ok(delay.delayTime, "The audioparam member must exist");
   is(delay.delayTime.value, 0, "Correct initial value");
@@ -62,15 +68,19 @@ addLoadEvent(function() {
   }, DOMException.NOT_SUPPORTED_ERR);
   context.createDelay(1); // should not throw
 
+  // Delay the source stream by 2048 frames
+  delay.delayTime.value = 2048 / context.sampleRate;
+
   source.start(0);
-  SimpleTest.executeSoon(function() {
-    source.stop(0);
-    source.disconnect();
-    delay.disconnect();
+  sp.onaudioprocess = function(e) {
+    is(e.inputBuffer.numberOfChannels, 1, "Correct input channel count");
+    compareBuffers(e.inputBuffer.getChannelData(0), expectedBuffer.getChannelData(0));
+
+    sp.onaudioprocess = null;
 
     SpecialPowers.clearUserPref("media.webaudio.enabled");
     SimpleTest.finish();
-  });
+  };
 });
 
 </script>

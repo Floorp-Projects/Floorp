@@ -371,6 +371,8 @@ private:
     transferMultipleByRunsImpl(FloatRegisterSet set, LoadStore ls,
                                Register rm, DTMMode mode, int32_t sign)
     {
+        JS_ASSERT(sign == 1 || sign == -1);
+
         int32_t delta = sign * sizeof(double);
         int32_t offset = 0;
         RegisterIterator iter(set);
@@ -384,7 +386,7 @@ private:
             finishFloatTransfer();
         }
 
-        JS_ASSERT(offset == set.size() * sizeof(double) * sign);
+        JS_ASSERT(offset == static_cast<int32_t>(set.size() * sizeof(double)) * sign);
         return offset;
     }
 };

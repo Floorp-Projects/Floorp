@@ -216,15 +216,16 @@ function scroll(aMessage) {
   }
 }
 
-addMessageListener('AccessFu:VirtualCursor', virtualCursorControl);
-addMessageListener('AccessFu:Activate', activateCurrent);
-addMessageListener('AccessFu:Scroll', scroll);
-
 addMessageListener(
   'AccessFu:Start',
   function(m) {
+    Logger.debug('AccessFu:Start');
     if (m.json.buildApp)
       Utils.MozBuildApp = m.json.buildApp;
+
+    addMessageListener('AccessFu:VirtualCursor', virtualCursorControl);
+    addMessageListener('AccessFu:Activate', activateCurrent);
+    addMessageListener('AccessFu:Scroll', scroll);
 
     EventManager.start(
       function sendMessage(aName, aDetails) {
@@ -246,6 +247,10 @@ addMessageListener(
   'AccessFu:Stop',
   function(m) {
     Logger.debug('AccessFu:Stop');
+
+    removeMessageListener('AccessFu:VirtualCursor', virtualCursorControl);
+    removeMessageListener('AccessFu:Activate', activateCurrent);
+    removeMessageListener('AccessFu:Scroll', scroll);
 
     EventManager.stop();
 
