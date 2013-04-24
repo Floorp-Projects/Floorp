@@ -493,9 +493,13 @@ bool
 ParallelArrayVisitor::visitCompare(MCompare *compare)
 {
     MCompare::CompareType type = compare->compareType();
-    return type == MCompare::Compare_Int32 ||
-           type == MCompare::Compare_Double ||
-           type == MCompare::Compare_String;
+    if (type != MCompare::Compare_Int32 &&
+        type != MCompare::Compare_Double &&
+        type != MCompare::Compare_String)
+    {
+        return markUnsafe();
+    }
+    return true;
 }
 
 bool
