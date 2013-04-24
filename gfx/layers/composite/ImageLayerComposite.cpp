@@ -22,7 +22,7 @@ namespace mozilla {
 namespace layers {
 
 ImageLayerComposite::ImageLayerComposite(LayerManagerComposite* aManager)
-  : ShadowImageLayer(aManager, nullptr)
+  : ImageLayer(aManager, nullptr)
   , LayerComposite(aManager)
   , mImageHost(nullptr)
 {

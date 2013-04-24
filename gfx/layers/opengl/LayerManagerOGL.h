@@ -32,11 +32,11 @@ namespace layers {
 
 class Composer2D;
 class LayerOGL;
-class ShadowThebesLayer;
-class ShadowContainerLayer;
-class ShadowImageLayer;
-class ShadowCanvasLayer;
-class ShadowColorLayer;
+class ThebesLayerComposite;
+class ContainerLayerComposite;
+class ImageLayerComposite;
+class CanvasLayerComposite;
+class ColorLayerComposite;
 struct FPSState;
 
 /**

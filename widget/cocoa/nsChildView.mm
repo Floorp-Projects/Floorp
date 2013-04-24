@@ -51,7 +51,7 @@
 #include "nsRegion.h"
 #include "Layers.h"
 #include "LayerManagerOGL.h"
-#include "LayerManagerComposite.h"
+#include "mozilla/layers/LayerManagerComposite.h"
 #include "GLTextureImage.h"
 #include "mozilla/layers/GLManager.h"
 #include "mozilla/layers/CompositorCocoaWidgetHelper.h"
@@ -2842,7 +2842,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   // Mac OS X bug that stops windows updating on OS X when we use OpenGL.
   LayerManager *layerManager = mGeckoChild->GetLayerManager(nullptr);
   if (mUsingOMTCompositor && painted && !mDidForceRefreshOpenGL &&
-      layerManager->AsShadowManager()) {
+      layerManager->AsLayerManagerComposite()) {
     if (!mDidForceRefreshOpenGL) {
       [self performSelector:@selector(forceRefreshOpenGL) withObject:nil afterDelay:0];
       mDidForceRefreshOpenGL = YES;

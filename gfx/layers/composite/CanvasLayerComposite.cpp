@@ -17,7 +17,7 @@ using namespace mozilla;
 using namespace mozilla::layers;
 
 CanvasLayerComposite::CanvasLayerComposite(LayerManagerComposite* aManager)
-  : ShadowCanvasLayer(aManager, nullptr)
+  : CanvasLayer(aManager, nullptr)
   , LayerComposite(aManager)
   , mImageHost(nullptr)
 {
