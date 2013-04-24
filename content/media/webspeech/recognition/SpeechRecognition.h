@@ -167,8 +167,12 @@ private:
     STATE_WAITING_FOR_SPEECH,
     STATE_RECOGNIZING,
     STATE_WAITING_FOR_RESULT,
+    STATE_ABORTING,
     STATE_COUNT
   };
+
+  void SetState(FSMState state);
+  bool StateBetween(FSMState begin, FSMState end);
 
   class GetUserMediaStreamOptions : public nsIMediaStreamOptions
   {
@@ -219,19 +223,20 @@ private:
   void NotifyError(SpeechEvent* aEvent);
 
   void ProcessEvent(SpeechEvent* aEvent);
-  FSMState TransitionAndGetNextState(SpeechEvent* aEvent);
+  void Transition(SpeechEvent* aEvent);
 
-  FSMState Reset();
-  FSMState ResetAndEnd();
-  FSMState StartedAudioCapture(SpeechEvent* aEvent);
-  FSMState StopRecordingAndRecognize(SpeechEvent* aEvent);
-  FSMState WaitForEstimation(SpeechEvent* aEvent);
-  FSMState DetectSpeech(SpeechEvent* aEvent);
-  FSMState WaitForSpeechEnd(SpeechEvent* aEvent);
-  FSMState NotifyFinalResult(SpeechEvent* aEvent);
-  FSMState DoNothing(SpeechEvent* aEvent);
-  FSMState AbortSilently(SpeechEvent* aEvent);
-  FSMState AbortError(SpeechEvent* aEvent);
+  void Reset();
+  void ResetAndEnd();
+  void WaitForAudioData(SpeechEvent* aEvent);
+  void StartedAudioCapture(SpeechEvent* aEvent);
+  void StopRecordingAndRecognize(SpeechEvent* aEvent);
+  void WaitForEstimation(SpeechEvent* aEvent);
+  void DetectSpeech(SpeechEvent* aEvent);
+  void WaitForSpeechEnd(SpeechEvent* aEvent);
+  void NotifyFinalResult(SpeechEvent* aEvent);
+  void DoNothing(SpeechEvent* aEvent);
+  void AbortSilently(SpeechEvent* aEvent);
+  void AbortError(SpeechEvent* aEvent);
 
   nsRefPtr<DOMMediaStream> mDOMStream;
   nsRefPtr<SpeechStreamListener> mSpeechListener;
@@ -240,7 +245,7 @@ private:
   void GetRecognitionServiceCID(nsACString& aResultCID);
 
   FSMState mCurrentState;
-  bool mProcessingEvent;
+  nsTArray<nsRefPtr<SpeechEvent> > mPriorityEvents;
 
   Endpointer mEndpointer;
   uint32_t mEstimationSamples;

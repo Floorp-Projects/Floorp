@@ -159,7 +159,9 @@ function performTest(options) {
 
     em.doneFunc = function() {
       em.requestTestEnd();
-      options.doneFunc();
+      if (options.doneFunc) {
+        options.doneFunc();
+      }
     }
 
     em.audioSampleFile = DEFAULT_AUDIO_SAMPLE_FILE;
