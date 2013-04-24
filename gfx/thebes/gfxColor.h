@@ -8,32 +8,10 @@
 
 #include "gfxTypes.h"
 
-#include "prbit.h" // for PR_ROTATE_(LEFT,RIGHT)32
-#include "prio.h"  // for ntohl
-
 #include "mozilla/Attributes.h" // for MOZ_ALWAYS_INLINE
+#include "mozilla/Endian.h" // for mozilla::NativeEndian::swapToBigEndian
 
 #define GFX_UINT32_FROM_BPTR(pbptr,i) (((uint32_t*)(pbptr))[i])
-
-#if defined(IS_BIG_ENDIAN)
-  #define GFX_NTOHL(x) (x)
-  #define GFX_HAVE_CHEAP_NTOHL
-#elif defined(_WIN32)
-  #if (_MSC_VER >= 1300) // also excludes MinGW
-    #include <stdlib.h>
-    #pragma intrinsic(_byteswap_ulong)
-    #define GFX_NTOHL(x) _byteswap_ulong(x)
-    #define GFX_HAVE_CHEAP_NTOHL
-  #else
-    // A reasonably fast generic little-endian implementation.
-    #define GFX_NTOHL(x) \
-         ( (PR_ROTATE_RIGHT32((x),8) & 0xFF00FF00) | \
-           (PR_ROTATE_LEFT32((x),8)  & 0x00FF00FF) )
-  #endif
-#else
-  #define GFX_NTOHL(x) ntohl(x)
-  #define GFX_HAVE_CHEAP_NTOHL
-#endif
 
 /**
  * GFX_0XFF_PPIXEL_FROM_BPTR(x)
@@ -45,14 +23,8 @@
  * Attempt to use fast byte-swapping instruction(s), e.g. bswap on x86, in
  *   preference to a sequence of shift/or operations.
  */
-#if defined(GFX_HAVE_CHEAP_NTOHL)
-  #define GFX_0XFF_PPIXEL_FROM_UINT32(x) \
-       ( (GFX_NTOHL(x) >> 8) | (0xFF << 24) )
-#else
-  // A reasonably fast generic little-endian implementation.
-  #define GFX_0XFF_PPIXEL_FROM_UINT32(x) \
-       ( (PR_ROTATE_LEFT32((x),16) | 0xFF00FF00) & ((x) | 0xFFFF00FF) )
-#endif
+#define GFX_0XFF_PPIXEL_FROM_UINT32(x) \
+  ( (mozilla::NativeEndian::swapToBigEndian(uint32_t(x)) >> 8) | (0xFFU << 24) )
 
 #define GFX_0XFF_PPIXEL_FROM_BPTR(x) \
      ( GFX_0XFF_PPIXEL_FROM_UINT32(GFX_UINT32_FROM_BPTR((x),0)) )
@@ -70,9 +42,9 @@
     uint32_t m0 = GFX_UINT32_FROM_BPTR(from,0), \
              m1 = GFX_UINT32_FROM_BPTR(from,1), \
              m2 = GFX_UINT32_FROM_BPTR(from,2), \
-             rgbr = GFX_NTOHL(m0), \
-             gbrg = GFX_NTOHL(m1), \
-             brgb = GFX_NTOHL(m2), \
+             rgbr = mozilla::NativeEndian::swapToBigEndian(m0), \
+             gbrg = mozilla::NativeEndian::swapToBigEndian(m1), \
+             brgb = mozilla::NativeEndian::swapToBigEndian(m2), \
              p0, p1, p2, p3; \
     p0 = 0xFF000000 | ((rgbr) >>  8); \
     p1 = 0xFF000000 | ((rgbr) << 16) | ((gbrg) >> 16); \
