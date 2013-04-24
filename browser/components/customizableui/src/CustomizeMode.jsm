@@ -531,6 +531,12 @@ CustomizeMode.prototype = {
       return;
     }
 
+    // Do nothing if the target was dropped onto itself (ie, no change in area
+    // or position).
+    if (draggedWrapper == targetNode) {
+      return;
+    }
+
     // Is the target area the customization palette? If so, we have two cases -
     // either the originArea was the palette, or a customizable area.
     if (targetArea.id == kPaletteId) {
