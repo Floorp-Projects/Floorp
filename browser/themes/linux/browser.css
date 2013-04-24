@@ -15,8 +15,8 @@
 %define fgTabTexture linear-gradient(transparent 0px, transparent 1px, hsla(0,0%,100%,0.35) 1px, hsla(0,0%,100%,0.35) 2px, hsla(0,0%,100%,0.65) 2px, hsla(0,0%,100%,0.65) 3px, @toolbarHighlight@)
 %define fgTabBackgroundMiddle @fgTabTexture@, linear-gradient(transparent 0px, transparent 2px, -moz-dialog 2px, -moz-dialog)
 %define forwardTransitionLength 150ms
-%define conditionalForwardWithUrlbar       window:not([chromehidden~=toolbar]) :-moz-any(#nav-bar[currentset*="unified-back-forward-button,urlbar-container"][mode=icons],                #nav-bar:not([currentset])[mode=icons])                 > #unified-back-forward-button
-%define conditionalForwardWithUrlbar_small window:not([chromehidden~=toolbar]) :-moz-any(#nav-bar[currentset*="unified-back-forward-button,urlbar-container"][mode=icons][iconsize=small],#nav-bar:not([currentset])[mode=icons][iconsize=small]) > #unified-back-forward-button
+%define conditionalForwardWithUrlbar       window:not([chromehidden~=toolbar]) :-moz-any(#nav-bar[currentset*="unified-back-forward-button,urlbar-container"],                #nav-bar:not([currentset]))                 > #unified-back-forward-button
+%define conditionalForwardWithUrlbar_small window:not([chromehidden~=toolbar]) :-moz-any(#nav-bar[currentset*="unified-back-forward-button,urlbar-container"][iconsize=small],#nav-bar:not([currentset])[iconsize=small]) > #unified-back-forward-button
 %define conditionalForwardWithUrlbarWidth 32
 %define conditionalForwardWithUrlbarWidth_small 24
 
@@ -92,7 +92,7 @@ toolbarbutton.bookmark-item[open="true"] {
   height: 16px;
 }
 
-/* Prevent [mode="icons"] from hiding the label */
+/* Force the display of the label for bookmarks */
 .bookmark-item > .toolbarbutton-text {
   display: -moz-box !important;
 }
@@ -536,11 +536,6 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
 
 .toolbarbutton-1 > .toolbarbutton-icon {
   -moz-margin-end: 0;
-}
-
-toolbar[mode="full"] .toolbarbutton-1:not([type="menu-button"]),
-toolbar[mode="full"] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
-  min-width: 57px;
 }
 
 .toolbarbutton-1:not([type="menu-button"]),
@@ -1792,10 +1787,6 @@ toolbarbutton.chevron > .toolbarbutton-icon {
   margin: 0;
 }
 
-toolbar[mode="text"] toolbarbutton.chevron > .toolbarbutton-icon {
-  display: -moz-box; /* display chevron icon in text mode */
-}
-
 /* Ctrl-Tab */
 
 .ctrlTab-preview {
@@ -2175,7 +2166,7 @@ chatbox {
 
 /* Customization mode */
 
-%include ../shared/customization.inc.css
+%include ../shared/customizableui/customizeMode.inc.css
 
 /* End customization mode */
 
