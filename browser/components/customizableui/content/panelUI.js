@@ -56,6 +56,13 @@ const PanelUI = {
     this.clickCapturer.addEventListener("click", this._onCapturerClick,
                                         true);
 
+    var self = this;
+    this.subViews.addEventListener("overflow", function() {
+      // Resize the subview on the next tick.
+      Services.tm.currentThread.dispatch(self._syncContainerWithSubView.bind(self),
+        Ci.nsIThread.DISPATCH_NORMAL);
+    });
+
     // Get a MutationObserver ready to react to subview size changes. We
     // only attach this MutationObserver when a subview is being displayed.
     this._subViewObserver = new MutationObserver(function(aMutations) {
@@ -250,6 +257,11 @@ const PanelUI = {
   },
 
   /**
+   * Used to keep a reference to the toolbarbutton that the subview spawned from.
+   */
+  anchorElement: null,
+
+  /**
    * If aAnchor is not null, this shifts the main view content so that it is
    * partially clipped by the panel boundaries, placing the center of aAnchor
    * at the clipping edge. If aAnchor is undefined or null, the main view
@@ -263,12 +275,16 @@ const PanelUI = {
       let anchorRect = aAnchor.getBoundingClientRect();
       let mainViewRect = this.mainView.getBoundingClientRect();
       let leftEdge = anchorRect.left - mainViewRect.left;
-      let center = (anchorRect.width / 2);
+      let center = aAnchor.clientWidth / 2;
       let target = leftEdge + center;
       this.mainView.style.transform = "translateX(-" + target + "px)";
+      aAnchor.classList.add("panelui-mainview-anchor");
     } else {
       this.mainView.style.transform = "";
+      if (this.anchorElement)
+        this.anchorElement.classList.remove("panelui-mainview-anchor");
     }
+    this.anchorElement = aAnchor;
   },
 
   /**
