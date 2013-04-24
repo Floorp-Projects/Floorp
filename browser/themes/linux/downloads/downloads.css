@@ -155,7 +155,7 @@ richlistitem[type="download"]:last-child {
 
 /*** Highlighted list items ***/
 
-#downloadsPanel:not([keyfocus]) > #downloadsListBox > richlistitem[type="download"][state="1"]:hover {
+#downloadsPanel:not([keyfocus]) > #downloadsListBox > richlistitem[type="download"][state="1"][exists]:hover {
   border-radius: 3px;
   border-top: 1px solid hsla(0,0%,100%,.3);
   border-bottom: 1px solid hsla(0,0%,0%,.2);
