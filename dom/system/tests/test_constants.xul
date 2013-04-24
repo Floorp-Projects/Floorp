@@ -59,6 +59,11 @@ function test_Win() {
   }
 }
 
+// Test that OS.Constants.Sys.DEBUG is set properly on main thread
+function test_debugBuildMainThread(isDebugBuild) {
+  is(isDebugBuild, !!OS.Constants.Sys.DEBUG, "OS.Constants.Sys.DEBUG is set properly on main thread");
+}
+
 function test() {
   ok(true, "test_constants.xul: Starting test");
 
@@ -70,6 +75,10 @@ function test() {
   test_xul();
   test_libc();
   test_Win();
+
+  let isDebugBuild = Components.classes["@mozilla.org/xpcom/debug;1"]
+                            .getService(Components.interfaces.nsIDebug2).isDebugBuild;
+  test_debugBuildMainThread(isDebugBuild);
 
   // Test 2: Load libxul from chrome thread
   worker = new ChromeWorker("worker_constants.js");
@@ -98,7 +107,9 @@ function test() {
       return;
     }
   };
-  worker.postMessage(0);
+
+  // nsIDebug2 is inaccessible from ChromeWorker. We need to pass isDebugBuild to the worker
+  worker.postMessage(isDebugBuild);
   ok(true, "test_constants.xul: Test in progress");
 };
 ]]>
