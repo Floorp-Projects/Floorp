@@ -294,7 +294,7 @@ UpgradeSchemaFrom4To5(mozIStorageConnection* aConnection)
     rv = stmt->GetString(1, version);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    intVersion = version.ToInteger(&rv, 10);
+    intVersion = version.ToInteger(&rv);
     if (NS_FAILED(rv)) {
       intVersion = 0;
     }
