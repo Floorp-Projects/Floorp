@@ -455,13 +455,13 @@ GonkGPSGeolocationProvider::SetReferenceLocation()
       iccInfo->GetMcc(mcc);
       iccInfo->GetMnc(mnc);
 
-      location.u.cellID.mcc = mcc.ToInteger(&result, 10);
+      location.u.cellID.mcc = mcc.ToInteger(&result);
       if (result != NS_OK) {
         NS_WARNING("Cannot parse mcc to integer");
         location.u.cellID.mcc = 0;
       }
 
-      location.u.cellID.mnc = mnc.ToInteger(&result, 10);
+      location.u.cellID.mnc = mnc.ToInteger(&result);
       if (result != NS_OK) {
         NS_WARNING("Cannot parse mnc to integer");
         location.u.cellID.mnc = 0;
