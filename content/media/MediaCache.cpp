@@ -1834,14 +1834,25 @@ MediaCacheStream::AreAllStreamsForResourceSuspended(MediaResource** aActiveStrea
 {
   ReentrantMonitorAutoEnter mon(gMediaCache->GetReentrantMonitor());
   MediaCache::ResourceStreamIterator iter(mResourceID);
+  // Look for a stream that's able to read the data we need
+  int64_t dataOffset = -1;
   while (MediaCacheStream* stream = iter.Next()) {
-    if (!stream->mCacheSuspended && !stream->mChannelEnded && !stream->mClosed) {
-      if (aActiveStream) {
-        *aActiveStream = stream->mClient;
-      }
-      return false;
+    if (stream->mCacheSuspended || stream->mChannelEnded || stream->mClosed) {
+      continue;
     }
+    if (dataOffset < 0) {
+      dataOffset = GetCachedDataEndInternal(mStreamOffset);
+    }
+    // Ignore streams that are reading beyond the data we need
+    if (stream->mChannelOffset > dataOffset) {
+      continue;
+    }
+    if (aActiveStream) {
+      *aActiveStream = stream->mClient;
+    }
+    return false;
   }
+
   if (aActiveStream) {
     *aActiveStream = nullptr;
   }
