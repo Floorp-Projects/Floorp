@@ -930,15 +930,38 @@ TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
     InitKeyPressEvent(aNativeKeyEvent,
                       insertString.IsEmpty() ? 0 : insertString[0],
                       aKeyEvent, kbType);
-    return;
+  } else {
+    aKeyEvent.charCode = 0;
+    aKeyEvent.isChar = false; // XXX not used in XP level
+
+    PR_LOG(gLog, PR_LOG_ALWAYS,
+      ("%p TISInputSourceWrapper::InitKeyEvent, keyCode=0x%X charCode=0x0",
+       this, aKeyEvent.keyCode));
   }
 
-  aKeyEvent.charCode = 0;
-  aKeyEvent.isChar = false; // XXX not used in XP level
-
-  PR_LOG(gLog, PR_LOG_ALWAYS,
-    ("%p TISInputSourceWrapper::InitKeyEvent, keyCode=0x%X charCode=0x0",
-     this, aKeyEvent.keyCode));
+  // Compute the key for non-printable keys and some special printable keys.
+  aKeyEvent.mKeyNameIndex = ComputeGeckoKeyNameIndex(nativeKeyCode);
+  if (isPrintableKey &&
+      aKeyEvent.mKeyNameIndex == KEY_NAME_INDEX_Unidentified) {
+    // If the key name isn't in the list and the key is a printable key but
+    // inserting no characters without control key nor command key, then,
+    // check if the key is dead key.
+    if (insertString.IsEmpty() &&
+        !aKeyEvent.IsControl() && !aKeyEvent.IsMeta()) {
+      UInt32 state =
+        nsCocoaUtils::ConvertToCarbonModifier([aNativeKeyEvent modifierFlags]);
+      uint32_t ch = TranslateToChar(nativeKeyCode, state, kbType);
+      if (ch) {
+        aKeyEvent.mKeyNameIndex =
+          WidgetUtils::GetDeadKeyNameIndex(static_cast<PRUnichar>(ch));
+      }
+    }
+    // If the printable key isn't a dead key, we should set printable key name
+    // for now.
+    if (aKeyEvent.mKeyNameIndex == KEY_NAME_INDEX_Unidentified) {
+      aKeyEvent.mKeyNameIndex = KEY_NAME_INDEX_PrintableKey;
+    }
+  }
 
   NS_OBJC_END_TRY_ABORT_BLOCK
 }
@@ -1281,6 +1304,24 @@ TISInputSourceWrapper::ComputeGeckoKeyCode(UInt32 aNativeKeyCode,
           (keyCode >= NS_VK_0 && keyCode <= NS_VK_9)) ? keyCode : 0;
 }
 
+// static
+KeyNameIndex
+TISInputSourceWrapper::ComputeGeckoKeyNameIndex(UInt32 aNativeKeyCode)
+{
+  switch (aNativeKeyCode) {
+
+#define NS_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX(aNativeKey, aKeyNameIndex) \
+    case aNativeKey: return aKeyNameIndex;
+
+#include "NativeKeyToDOMKeyName.h"
+
+#undef NS_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX
+
+    default:
+      return KEY_NAME_INDEX_Unidentified;
+  }
+}
+
 
 #pragma mark -
 
@@ -1386,8 +1427,7 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
   KeyEventState* currentKeyEvent = PushKeyEvent(aNativeEvent);
   AutoKeyEventStateCleaner remover(this);
 
-  BOOL nonDeadKeyPress = [[aNativeEvent characters] length] > 0;
-  if (nonDeadKeyPress && !IsIMEComposing()) {
+  if (!IsIMEComposing()) {
     NSResponder* firstResponder = [[mView window] firstResponder];
 
     nsKeyEvent keydownEvent(true, NS_KEY_DOWN, mWidget);
@@ -1459,7 +1499,7 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
      "IsIMEComposing()=%s",
      this, TrueOrFalse(wasComposing), TrueOrFalse(IsIMEComposing())));
 
-  if (!currentKeyEvent->mKeyPressDispatched && nonDeadKeyPress &&
+  if (!currentKeyEvent->mKeyPressDispatched &&
       !wasComposing && !IsIMEComposing()) {
     nsKeyEvent keypressEvent(true, NS_KEY_PRESS, mWidget);
     InitKeyEvent(aNativeEvent, keypressEvent);
@@ -1529,7 +1569,7 @@ TextInputHandler::HandleKeyUpEvent(NSEvent* aNativeEvent)
   }
 
   // if we don't have any characters we can't generate a keyUp event
-  if ([[aNativeEvent characters] length] == 0 || IsIMEComposing()) {
+  if (IsIMEComposing()) {
     return;
   }
 
