@@ -298,7 +298,7 @@ nsresult OggReader::ReadMetadata(VideoInfo* aInfo,
   if (mVorbisState && ReadHeaders(mVorbisState)) {
     mInfo.mHasAudio = true;
     mInfo.mAudioRate = mVorbisState->mInfo.rate;
-    mInfo.mAudioChannels = mVorbisState->mInfo.channels;
+    mInfo.mAudioChannels = mVorbisState->mInfo.channels > 2 ? 2 : mVorbisState->mInfo.channels;
     // Copy Vorbis info data for time computations on other threads.
     memcpy(&mVorbisInfo, &mVorbisState->mInfo, sizeof(mVorbisInfo));
     mVorbisInfo.codec_setup = NULL;
@@ -402,6 +402,15 @@ nsresult OggReader::DecodeVorbis(ogg_packet* aPacket) {
       for (uint32_t i = 0; i < uint32_t(frames); ++i) {
         buffer[i*channels + j] = MOZ_CONVERT_VORBIS_SAMPLE(channel[i]);
       }
+    }
+
+    // More than 2 decoded channels must be downmixed to stereo.
+    if (channels > 2) {
+      if (channels > 8) {
+        // No channel mapping for more than 8 channels.
+        return NS_ERROR_FAILURE;
+      }
+      DownmixToStereo(buffer, channels, frames);
     }
 
     int64_t duration = mVorbisState->Time((int64_t)frames);
@@ -520,57 +529,7 @@ nsresult OggReader::DecodeOpus(ogg_packet* aPacket) {
     // so we can't downmix more than that.
     if (channels > 8)
       return NS_ERROR_FAILURE;
-
-    uint32_t out_channels;
-    out_channels = 2;
-    // dBuffer stores the downmixed sample data.
-    nsAutoArrayPtr<AudioDataValue> dBuffer(new AudioDataValue[frames * out_channels]);
-#ifdef MOZ_SAMPLE_TYPE_FLOAT32
-    // Downmix matrix. Per-row normalization 1 for rows 3,4 and 2 for rows 5-8.
-    static const float dmatrix[6][8][2]= {
-        /*3*/{ {0.5858f,0}, {0.4142f,0.4142f}, {0,0.5858f}},
-        /*4*/{ {0.4226f,0}, {0,0.4226f}, {0.366f,0.2114f}, {0.2114f,0.366f}},
-        /*5*/{ {0.651f,0}, {0.46f,0.46f}, {0,0.651f}, {0.5636f,0.3254f}, {0.3254f,0.5636f}},
-        /*6*/{ {0.529f,0}, {0.3741f,0.3741f}, {0,0.529f}, {0.4582f,0.2645f}, {0.2645f,0.4582f}, {0.3741f,0.3741f}},
-        /*7*/{ {0.4553f,0}, {0.322f,0.322f}, {0,0.4553f}, {0.3943f,0.2277f}, {0.2277f,0.3943f}, {0.2788f,0.2788f}, {0.322f,0.322f}},
-        /*8*/{ {0.3886f,0}, {0.2748f,0.2748f}, {0,0.3886f}, {0.3366f,0.1943f}, {0.1943f,0.3366f}, {0.3366f,0.1943f}, {0.1943f,0.3366f}, {0.2748f,0.2748f}},
-    };
-    for (int32_t i = 0; i < frames; i++) {
-      float sampL = 0.0;
-      float sampR = 0.0;
-      for (uint32_t j = 0; j < channels; j++) {
-        sampL+=buffer[i*channels+j]*dmatrix[channels-3][j][0];
-        sampR+=buffer[i*channels+j]*dmatrix[channels-3][j][1];
-      }
-      dBuffer[i*out_channels]=sampL;
-      dBuffer[i*out_channels+1]=sampR;
-    }
-#else
-    // Downmix matrix. Per-row normalization 1 for rows 3,4 and 2 for rows 5-8.
-    // Coefficients in Q14.
-    static const int16_t dmatrix[6][8][2]= {
-        /*3*/{{9598, 0},{6786,6786},{0,   9598}},
-        /*4*/{{6925, 0},{0,   6925},{5997,3462},{3462,5997}},
-        /*5*/{{10663,0},{7540,7540},{0,  10663},{9234,5331},{5331,9234}},
-        /*6*/{{8668, 0},{6129,6129},{0,   8668},{7507,4335},{4335,7507},{6129,6129}},
-        /*7*/{{7459, 0},{5275,5275},{0,   7459},{6460,3731},{3731,6460},{4568,4568},{5275,5275}},
-        /*8*/{{6368, 0},{4502,4502},{0,   6368},{5514,3184},{3184,5514},{5514,3184},{3184,5514},{4502,4502}}
-    };
-    for (int32_t i = 0; i < frames; i++) {
-      int32_t sampL = 0;
-      int32_t sampR = 0;
-      for (uint32_t j = 0; j < channels; j++) {
-        sampL+=buffer[i*channels+j]*dmatrix[channels-3][j][0];
-        sampR+=buffer[i*channels+j]*dmatrix[channels-3][j][1];
-      }
-      sampL = (sampL + 8192)>>14;
-      dBuffer[i*out_channels]   = static_cast<AudioDataValue>(MOZ_CLIP_TO_15(sampL));
-      sampR = (sampR + 8192)>>14;
-      dBuffer[i*out_channels+1] = static_cast<AudioDataValue>(MOZ_CLIP_TO_15(sampR));
-    }
-#endif
-    channels = out_channels;
-    buffer = dBuffer;
+    DownmixToStereo(buffer, channels, frames);
   }
 
   LOG(PR_LOG_DEBUG, ("Opus decoder pushing %d frames", frames));
@@ -588,6 +547,61 @@ nsresult OggReader::DecodeOpus(ogg_packet* aPacket) {
   return NS_OK;
 }
 #endif /* MOZ_OPUS */
+
+void OggReader::DownmixToStereo(nsAutoArrayPtr<AudioDataValue>& buffer,
+                              uint32_t& channels, int32_t frames)
+{
+  uint32_t out_channels;
+  out_channels = 2;
+  // dBuffer stores the downmixed samples.
+  nsAutoArrayPtr<AudioDataValue> dBuffer(new AudioDataValue[frames * out_channels]);
+#ifdef MOZ_SAMPLE_TYPE_FLOAT32
+  // Downmix matrix. Per-row normalization 1 for rows 3,4 and 2 for rows 5-8.
+  static const float dmatrix[6][8][2]= {
+      /*3*/{{0.5858f,0},{0.4142f,0.4142f},{0,     0.5858f}},
+      /*4*/{{0.4226f,0},{0,      0.4226f},{0.366f,0.2114f},{0.2114f,0.366f}},
+      /*5*/{{0.6510f,0},{0.4600f,0.4600f},{0,     0.6510f},{0.5636f,0.3254f},{0.3254f,0.5636f}},
+      /*6*/{{0.5290f,0},{0.3741f,0.3741f},{0,     0.5290f},{0.4582f,0.2645f},{0.2645f,0.4582f},{0.3741f,0.3741f}},
+      /*7*/{{0.4553f,0},{0.3220f,0.3220f},{0,     0.4553f},{0.3943f,0.2277f},{0.2277f,0.3943f},{0.2788f,0.2788f},{0.3220f,0.3220f}},
+      /*8*/{{0.3886f,0},{0.2748f,0.2748f},{0,     0.3886f},{0.3366f,0.1943f},{0.1943f,0.3366f},{0.3366f,0.1943f},{0.1943f,0.3366f},{0.2748f,0.2748f}},
+  };
+  for (int32_t i = 0; i < frames; i++) {
+    float sampL = 0.0;
+    float sampR = 0.0;
+    for (uint32_t j = 0; j < channels; j++) {
+      sampL+=buffer[i*channels+j]*dmatrix[channels-3][j][0];
+      sampR+=buffer[i*channels+j]*dmatrix[channels-3][j][1];
+    }
+    dBuffer[i*out_channels]=sampL;
+    dBuffer[i*out_channels+1]=sampR;
+  }
+#else
+  // Downmix matrix. Per-row normalization 1 for rows 3,4 and 2 for rows 5-8.
+  // Coefficients in Q14.
+  static const int16_t dmatrix[6][8][2]= {
+      /*3*/{{9598, 0},{6786,6786},{0,   9598}},
+      /*4*/{{6925, 0},{0,   6925},{5997,3462},{3462,5997}},
+      /*5*/{{10663,0},{7540,7540},{0,  10663},{9234,5331},{5331,9234}},
+      /*6*/{{8668, 0},{6129,6129},{0,   8668},{7507,4335},{4335,7507},{6129,6129}},
+      /*7*/{{7459, 0},{5275,5275},{0,   7459},{6460,3731},{3731,6460},{4568,4568},{5275,5275}},
+      /*8*/{{6368, 0},{4502,4502},{0,   6368},{5514,3184},{3184,5514},{5514,3184},{3184,5514},{4502,4502}}
+  };
+  for (int32_t i = 0; i < frames; i++) {
+    int32_t sampL = 0;
+    int32_t sampR = 0;
+    for (uint32_t j = 0; j < channels; j++) {
+      sampL+=buffer[i*channels+j]*dmatrix[channels-3][j][0];
+      sampR+=buffer[i*channels+j]*dmatrix[channels-3][j][1];
+    }
+    sampL = (sampL + 8192)>>14;
+    dBuffer[i*out_channels]   = static_cast<AudioDataValue>(MOZ_CLIP_TO_15(sampL));
+    sampR = (sampR + 8192)>>14;
+    dBuffer[i*out_channels+1] = static_cast<AudioDataValue>(MOZ_CLIP_TO_15(sampR));
+  }
+#endif
+  channels = out_channels;
+  buffer = dBuffer;
+}
 
 bool OggReader::DecodeAudioData()
 {
