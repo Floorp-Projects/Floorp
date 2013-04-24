@@ -1074,8 +1074,7 @@ nsXULTemplateBuilder::Observe(nsISupports* aSubject,
     if (!strcmp(aTopic, DOM_WINDOW_DESTROYED_TOPIC)) {
         nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aSubject);
         if (window) {
-            nsCOMPtr<nsIDocument> doc =
-                do_QueryInterface(window->GetExtantDocument());
+            nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
             if (doc && doc == mObservedDocument)
                 NodeWillBeDestroyed(doc);
         }

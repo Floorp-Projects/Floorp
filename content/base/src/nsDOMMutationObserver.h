@@ -408,7 +408,7 @@ protected:
   bool Suppressed()
   {
     if (mOwner) {
-      nsCOMPtr<nsIDocument> d = do_QueryInterface(mOwner->GetExtantDocument());
+      nsCOMPtr<nsIDocument> d = mOwner->GetExtantDoc();
       return d && d->IsInSyncOperation();
     }
     return false;
