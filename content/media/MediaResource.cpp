@@ -187,7 +187,11 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest)
       // suspend and resume, the resume reopens the channel and we seek to
       // offset N, but there are no more bytes, so we get a 416
       // "Requested Range Not Satisfiable".
-      if (responseStatus != HTTP_REQUESTED_RANGE_NOT_SATISFIABLE_CODE) {
+      if (responseStatus == HTTP_REQUESTED_RANGE_NOT_SATISFIABLE_CODE) {
+        // OnStopRequest will not be fired, so we need to do some of its
+        // work here.
+        mCacheStream.NotifyDataEnded(status);
+      } else {
         mDecoder->NetworkError();
       }
 
