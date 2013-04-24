@@ -13,9 +13,11 @@ self.onmessage = function(msg) {
   self.onmessage = function(msg) {
     log("ignored message "+JSON.stringify(msg.data));
   };
+  let isDebugBuild = msg.data;
   try {
     test_name();
     test_xul();
+    test_debugBuildWorkerThread(isDebugBuild);
   } catch (x) {
     log("Catching error: " + x);
     log("Stack: " + x.stack);
@@ -42,6 +44,11 @@ function isnot(a, b, description) {
 // Test that OS.Constants.Sys.Name is defined
 function test_name() {
   isnot(null, OS.Constants.Sys.Name, "OS.Constants.Sys.Name is defined");
+}
+
+// Test that OS.Constants.Sys.DEBUG is set properly in ChromeWorker thread
+function test_debugBuildWorkerThread(isDebugBuild) {
+  is(isDebugBuild, !!OS.Constants.Sys.DEBUG, "OS.Constants.Sys.DEBUG is set properly on worker thread");
 }
 
 // Test that OS.Constants.Path.libxul lets us open libxul
