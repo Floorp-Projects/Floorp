@@ -197,11 +197,7 @@ add_task(function test_pull_only_providers() {
     do_check_neq(reporter.getProvider("DummyProvider"), null);
     do_check_null(reporter.getProvider("DummyConstantProvider"));
 
-    yield reporter._providerManager.ensurePullOnlyProvidersRegistered();
-    do_check_eq(reporter._providerManager._providers.size, 2);
-    do_check_true(reporter._storage.hasProvider("DummyConstantProvider"));
     yield reporter.collectMeasurements();
-    yield reporter._providerManager.ensurePullOnlyProvidersUnregistered();
 
     do_check_eq(reporter._providerManager._providers.size, 1);
     do_check_true(reporter._storage.hasProvider("DummyConstantProvider"));
