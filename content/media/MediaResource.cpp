@@ -727,7 +727,7 @@ MediaResource* ChannelMediaResource::CloneData(MediaDecoder* aDecoder)
     // we don't have a channel. If the cache needs to read data from the clone
     // it will call CacheClientResume (or CacheClientSeek with aResume true)
     // which will recreate the channel. This way, if all of the media data
-    // is already in the cache we don't create an unneccesary HTTP channel
+    // is already in the cache we don't create an unnecessary HTTP channel
     // and perform a useless HTTP transaction.
     resource->mSuspendCount = 1;
     resource->mCacheStream.InitAsClone(&mCacheStream);
