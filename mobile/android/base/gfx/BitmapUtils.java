@@ -14,42 +14,6 @@ import android.util.Log;
 public final class BitmapUtils {
     private static final String LOGTAG = "GeckoBitmapUtils";
 
-    private BitmapUtils() {}
-
-    public static Bitmap decodeByteArray(byte[] bytes) {
-        return decodeByteArray(bytes, null);
-    }
-
-    public static Bitmap decodeByteArray(byte[] bytes, BitmapFactory.Options options) {
-        if (bytes.length <= 0) {
-            throw new IllegalArgumentException("bytes.length " + bytes.length
-                                               + " must be a positive number");
-        }
-
-        Bitmap bitmap = null;
-        try {
-            bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length, options);
-        } catch (OutOfMemoryError e) {
-            Log.e(LOGTAG, "decodeByteArray(bytes.length=" + bytes.length
-                          + ", options= " + options + ") OOM!", e);
-            return null;
-        }
-
-        if (bitmap == null) {
-            Log.w(LOGTAG, "decodeByteArray() returning null because BitmapFactory returned null");
-            return null;
-        }
-
-        if (bitmap.getWidth() <= 0 || bitmap.getHeight() <= 0) {
-            Log.w(LOGTAG, "decodeByteArray() returning null because BitmapFactory returned "
-                          + "a bitmap with dimensions " + bitmap.getWidth()
-                          + "x" + bitmap.getHeight());
-            return null;
-        }
-
-        return bitmap;
-    }
-
     public static int getDominantColor(Bitmap source) {
         return getDominantColor(source, true);
     }
@@ -110,7 +74,7 @@ public final class BitmapUtils {
         String base64 = dataURI.substring(dataURI.indexOf(',') + 1);
         try {
             byte[] raw = Base64.decode(base64, Base64.DEFAULT);
-            return BitmapUtils.decodeByteArray(raw);
+            return BitmapFactory.decodeByteArray(raw, 0, raw.length);
         } catch (Exception e) {
             Log.e(LOGTAG, "exception decoding bitmap from data URI: " + dataURI, e);
         }
