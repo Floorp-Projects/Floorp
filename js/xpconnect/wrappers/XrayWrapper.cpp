@@ -66,8 +66,8 @@ GetXrayType(JSObject *obj)
     return NotXray;
 }
 
-ResolvingId::ResolvingId(JSContext *cx, JSObject *wrapper, jsid id)
-  : mId(cx, id),
+ResolvingId::ResolvingId(JSContext *cx, HandleObject wrapper, HandleId id)
+  : mId(id),
     mHolder(cx, getHolderObject(wrapper)),
     mPrev(getResolvingId(mHolder)),
     mXrayShadowing(false)
@@ -123,7 +123,7 @@ ResolvingId::getResolvingIdFromWrapper(JSObject *wrapper)
 class MOZ_STACK_CLASS ResolvingIdDummy
 {
 public:
-    ResolvingIdDummy(JSContext *cx, JSObject *wrapper, jsid id)
+    ResolvingIdDummy(JSContext *cx, HandleObject wrapper, HandleId id)
     {
     }
 };
@@ -1183,7 +1183,7 @@ DOMXrayTraits::resolveNativeProperty(JSContext *cx, HandleObject wrapper,
                                      HandleObject holder, HandleId id,
                                      JSPropertyDescriptor *desc, unsigned flags)
 {
-    JSObject *obj = getTargetObject(wrapper);
+    RootedObject obj(cx, getTargetObject(wrapper));
     if (!XrayResolveNativeProperty(cx, wrapper, obj, id, desc))
         return false;
 
@@ -1204,7 +1204,7 @@ DOMXrayTraits::resolveOwnProperty(JSContext *cx, Wrapper &jsWrapper, HandleObjec
     if (!ok || desc->obj)
         return ok;
 
-    JSObject *obj = getTargetObject(wrapper);
+    RootedObject obj(cx, getTargetObject(wrapper));
     if (!XrayResolveOwnProperty(cx, wrapper, obj, id, desc, flags))
         return false;
 
@@ -1222,7 +1222,7 @@ DOMXrayTraits::defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
     if (!existingDesc.obj())
         return true;
 
-    JSObject *obj = getTargetObject(wrapper);
+    RootedObject obj(cx, getTargetObject(wrapper));
     if (!js::IsProxy(obj))
         return true;
 
@@ -1694,7 +1694,7 @@ XrayWrapper<Base, Traits>::defineProperty(JSContext *cx, HandleObject wrapper,
     if (!getOwnPropertyDescriptor(cx, wrapper, id, existing_desc.address(), JSRESOLVE_ASSIGNING))
         return false;
 
-    if (existing_desc.object() && (existing_desc.get().attrs & JSPROP_PERMANENT))
+    if (existing_desc.object() && existing_desc.isPermanent())
         return true; // silently ignore attempt to overwrite native property
 
     bool defined = false;
@@ -1907,7 +1907,7 @@ do_QueryInterfaceNative(JSContext* cx, HandleObject wrapper)
 {
     nsISupports* nativeSupports;
     if (IsWrapper(wrapper) && WrapperFactory::IsXrayWrapper(wrapper)) {
-        JSObject* target = XrayTraits::getTargetObject(wrapper);
+        RootedObject target(cx, XrayTraits::getTargetObject(wrapper));
         if (GetXrayType(target) == XrayForDOMObject) {
             if (!UnwrapDOMObjectToISupports(target, nativeSupports)) {
                 nativeSupports = nullptr;
