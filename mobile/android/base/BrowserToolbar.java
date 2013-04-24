@@ -114,19 +114,10 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
 
     private PropertyAnimator mVisibilityAnimator;
 
-    private enum ToolbarVisibility {
-        VISIBLE,
-        HIDDEN,
-        INCONSISTENT
-    };
-    private ToolbarVisibility mVisibility;
-
     private static final int TABS_CONTRACTED = 1;
     private static final int TABS_EXPANDED = 2;
 
     private static final int FORWARD_ANIMATION_DURATION = 450;
-
-    private static final int VISIBILITY_ANIMATION_DURATION = 250;
 
     public BrowserToolbar(BrowserApp activity) {
         // BrowserToolbar is attached to BrowserApp only.
@@ -138,8 +129,6 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         mAnimateSiteSecurity = true;
 
         mAnimatingEntry = false;
-
-        mVisibility = ToolbarVisibility.INCONSISTENT;
     }
 
     public void from(LinearLayout layout) {
@@ -505,71 +494,8 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         }
     }
 
-    private boolean canToolbarHide() {
-        // Forbid the toolbar from hiding if hiding the toolbar would cause
-        // the page to go into overscroll.
-        LayerView layerView = GeckoApp.mAppContext.getLayerView();
-        if (layerView != null) {
-            ImmutableViewportMetrics metrics = layerView.getViewportMetrics();
-            return (metrics.getPageHeight() >= metrics.getHeight());
-        }
-        return false;
-    }
-
-    public void animateVisibility(boolean show) {
-        // Do nothing if there's a delayed animation pending that does the
-        // same thing and this request also has a delay.
-        if (mVisibility != ToolbarVisibility.INCONSISTENT &&
-            show == isVisible()) {
-            return;
-        }
-
-        cancelVisibilityAnimation();
-        mVisibility = show ? ToolbarVisibility.VISIBLE : ToolbarVisibility.HIDDEN;
-
-        mVisibilityAnimator = new PropertyAnimator(VISIBILITY_ANIMATION_DURATION);
-        mVisibilityAnimator.attach(mLayout, PropertyAnimator.Property.SCROLL_Y,
-                                   show ? 0 : mLayout.getHeight());
-
-        // Only start the animation if we're showing the toolbar, or it's ok
-        // to hide it.
-        if (mVisibility == ToolbarVisibility.VISIBLE ||
-            canToolbarHide()) {
-            mVisibilityAnimator.start();
-        }
-    }
-
-    /**
-     * Animate the visibility of the toolbar, but take into account the
-     * velocity of what's moving underneath the toolbar. If that velocity
-     * is greater than the default animation velocity, it will determine
-     * the direction of the toolbar animation. Velocity is specified in
-     * pixels per 1/60 seconds (a 60Hz frame).
-     */
-    public void animateVisibilityWithVelocityBias(boolean show, float velocity) {
-        // Work out the default animation velocity. This assumes a linear
-        // animation which is incorrect, but the animation is short enough that
-        // there's very little difference.
-        float defaultVelocity =
-            mLayout.getHeight() / ((VISIBILITY_ANIMATION_DURATION / 1000.0f) * 60);
-
-        if (Math.abs(velocity) > defaultVelocity) {
-            show = (velocity > 0) ? false : true;
-        }
-
-        animateVisibility(show);
-    }
-
-    public void cancelVisibilityAnimation() {
-        if (mVisibilityAnimator != null) {
-            mVisibility = ToolbarVisibility.INCONSISTENT;
-            mVisibilityAnimator.stop(false);
-            mVisibilityAnimator = null;
-        }
-    }
-
     public boolean isVisible() {
-        return mVisibility == ToolbarVisibility.VISIBLE;
+        return mLayout.getScrollY() == 0;
     }
 
     public void setNextFocusDownId(int nextId) {
