@@ -712,6 +712,13 @@ bool DefineOSFileConstants(JSContext *cx, JSObject *global)
     }
   }
 
+#if defined(DEBUG)
+  JS::Value valDebug = JSVAL_TRUE;
+  if (!JS_SetProperty(cx, objSys, "DEBUG", &valDebug)) {
+    return false;
+  }
+#endif
+
   // Build OS.Constants.Path
 
   JSObject *objPath;
