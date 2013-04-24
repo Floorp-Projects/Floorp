@@ -5,12 +5,17 @@
 
 #include "nsAutoWindowStateHelper.h"
 
+#include "nsDOMEvent.h"
+#include "nsGUIEvent.h"
+#include "nsIDocument.h"
+#include "nsIDOMEvent.h"
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
-#include "nsIDOMEventTarget.h"
-#include "nsIDOMEvent.h"
 #include "nsString.h"
 #include "nsGUIEvent.h"
+
+using namespace mozilla;
+using namespace mozilla::dom;
 
 /****************************************************************
  ****************** nsAutoWindowStateHelper *********************
@@ -50,18 +55,21 @@ nsAutoWindowStateHelper::DispatchEventToChrome(const char *aEventName)
 
   // The functions of nsContentUtils do not provide the required behavior,
   // so the following is inlined.
-  nsIDOMDocument* doc = window->GetExtantDocument();
+  nsIDocument* doc = window->GetExtantDoc();
   if (!doc) {
     return true;
   }
 
-  nsCOMPtr<nsIDOMEvent> event;
-  doc->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
+  ErrorResult rv;
+  nsRefPtr<nsDOMEvent> event = doc->CreateEvent(NS_LITERAL_STRING("Events"), rv);
+  if (rv.Failed()) {
+    return false;
+  }
   NS_ENSURE_TRUE(NS_SUCCEEDED(event->InitEvent(NS_ConvertASCIItoUTF16(aEventName), true, true)), false);
   event->SetTrusted(true);
   event->GetInternalNSEvent()->mFlags.mOnlyChromeDispatch = true;
 
-  nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(window));
+  nsCOMPtr<EventTarget> target = do_QueryInterface(window);
   bool defaultActionEnabled;
   target->DispatchEvent(event, &defaultActionEnabled);
   return defaultActionEnabled;

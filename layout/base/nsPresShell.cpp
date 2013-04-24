@@ -5980,7 +5980,7 @@ PresShell::HandleEvent(nsIFrame        *aFrame,
         return NS_OK;
       }
 
-      retargetEventDoc = do_QueryInterface(window->GetExtantDocument());
+      retargetEventDoc = window->GetExtantDoc();
       if (!retargetEventDoc)
         return NS_OK;
     } else if (capturingContent) {
