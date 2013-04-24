@@ -141,15 +141,14 @@ interface TestJSImplInterface {
   [Creator]
   TestNonWrapperCacheInterface? receiveNullableNonWrapperCacheInterface();
 
-  // Can't return sequences of interfaces from callback interface methods.  See bug 843264.
-  //[Creator]
-  //sequence<TestNonWrapperCacheInterface> receiveNonWrapperCacheInterfaceSequence();
-  //[Creator]
-  //sequence<TestNonWrapperCacheInterface?> receiveNullableNonWrapperCacheInterfaceSequence();
-  //[Creator]
-  //sequence<TestNonWrapperCacheInterface>? receiveNonWrapperCacheInterfaceNullableSequence();
-  //[Creator]
-  //sequence<TestNonWrapperCacheInterface?>? receiveNullableNonWrapperCacheInterfaceNullableSequence();
+  [Creator]
+  sequence<TestNonWrapperCacheInterface> receiveNonWrapperCacheInterfaceSequence();
+  [Creator]
+  sequence<TestNonWrapperCacheInterface?> receiveNullableNonWrapperCacheInterfaceSequence();
+  [Creator]
+  sequence<TestNonWrapperCacheInterface>? receiveNonWrapperCacheInterfaceNullableSequence();
+  [Creator]
+  sequence<TestNonWrapperCacheInterface?>? receiveNullableNonWrapperCacheInterfaceNullableSequence();
 
   // Non-castable interface types
   IndirectlyImplementedInterface receiveOther();
@@ -220,18 +219,16 @@ interface TestJSImplInterface {
   void passSequenceOfNullableInts(sequence<long?> arg);
   void passOptionalSequenceOfNullableInts(optional sequence<long?> arg);
   void passOptionalNullableSequenceOfNullableInts(optional sequence<long?>? arg);
-  // Can't return sequences of interfaces from callback interface methods.  See bug 843264.
-  //sequence<TestJSImplInterface> receiveCastableObjectSequence();
-  //sequence<TestCallbackInterface> receiveCallbackObjectSequence();
-  //sequence<TestJSImplInterface?> receiveNullableCastableObjectSequence();
-  //sequence<TestCallbackInterface?> receiveNullableCallbackObjectSequence();
-  //sequence<TestJSImplInterface>? receiveCastableObjectNullableSequence();
-  //sequence<TestJSImplInterface?>? receiveNullableCastableObjectNullableSequence();
-  // Callback interface ignores 'resultNotAddRefed'. See bug 843272.
-  //sequence<TestJSImplInterface> receiveWeakCastableObjectSequence();
-  //sequence<TestJSImplInterface?> receiveWeakNullableCastableObjectSequence();
-  //sequence<TestJSImplInterface>? receiveWeakCastableObjectNullableSequence();
-  //sequence<TestJSImplInterface?>? receiveWeakNullableCastableObjectNullableSequence();
+  sequence<TestJSImplInterface> receiveCastableObjectSequence();
+  sequence<TestCallbackInterface> receiveCallbackObjectSequence();
+  sequence<TestJSImplInterface?> receiveNullableCastableObjectSequence();
+  sequence<TestCallbackInterface?> receiveNullableCallbackObjectSequence();
+  sequence<TestJSImplInterface>? receiveCastableObjectNullableSequence();
+  sequence<TestJSImplInterface?>? receiveNullableCastableObjectNullableSequence();
+  sequence<TestJSImplInterface> receiveWeakCastableObjectSequence();
+  sequence<TestJSImplInterface?> receiveWeakNullableCastableObjectSequence();
+  sequence<TestJSImplInterface>? receiveWeakCastableObjectNullableSequence();
+  sequence<TestJSImplInterface?>? receiveWeakNullableCastableObjectNullableSequence();
   void passCastableObjectSequence(sequence<TestJSImplInterface> arg);
   void passNullableCastableObjectSequence(sequence<TestJSImplInterface?> arg);
   void passCastableObjectNullableSequence(sequence<TestJSImplInterface>? arg);
@@ -243,8 +240,7 @@ interface TestJSImplInterface {
   void passExternalInterfaceSequence(sequence<TestExternalInterface> arg);
   void passNullableExternalInterfaceSequence(sequence<TestExternalInterface?> arg);
 
-  // Can't return sequences of interfaces from callback interface methods.  See bug 843264.
-  //sequence<DOMString> receiveStringSequence();
+  sequence<DOMString> receiveStringSequence();
   // Callback interface problem.  See bug 843261.
   //void passStringSequence(sequence<DOMString> arg);
   // "Can't handle sequence member 'any'; need to sort out rooting issues"
