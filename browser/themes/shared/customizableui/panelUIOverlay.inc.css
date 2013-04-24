@@ -84,6 +84,7 @@
   margin-left: 38px;
   transform: translateX(@menuPanelWidth@);
   transition: transform 150ms;
+  overflow-y: hidden;
 }
 
 #PanelUI-subViews > .PanelUI-subView:not([current]) {
