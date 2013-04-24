@@ -8,6 +8,8 @@
  * JavaScript API.
  */
 
+#include "jsapi.h"
+
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/PodOperations.h"
@@ -18,11 +20,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+
 #include "jstypes.h"
 #include "jsutil.h"
 #include "jsclist.h"
 #include "jsprf.h"
-#include "jsapi.h"
 #include "jsarray.h"
 #include "jsatom.h"
 #include "jsbool.h"
@@ -43,28 +45,26 @@
 #include "json.h"
 #include "jsobj.h"
 #include "jsopcode.h"
-#include "jsprobes.h"
 #include "jsproxy.h"
 #include "jsscript.h"
 #include "jsstr.h"
 #include "prmjtime.h"
 #include "jsweakmap.h"
-#include "jsworkers.h"
 #include "jswrapper.h"
 #include "jstypedarray.h"
+#ifdef JS_THREADSAFE
+#include "jsworkers.h"
+#endif
 
 #include "builtin/Eval.h"
-#include "builtin/Intl.h"
 #include "builtin/MapObject.h"
 #include "builtin/RegExp.h"
 #include "builtin/ParallelArray.h"
-#include "ds/LifoAlloc.h"
 #include "frontend/BytecodeCompiler.h"
 #include "gc/Marking.h"
 #include "gc/Memory.h"
 #include "ion/AsmJS.h"
 #include "js/CharacterEncoding.h"
-#include "js/MemoryMetrics.h"
 #include "vm/Debugger.h"
 #include "vm/NumericConversions.h"
 #include "vm/Shape.h"
@@ -82,7 +82,6 @@
 #include "vm/RegExpObject-inl.h"
 #include "vm/RegExpStatics-inl.h"
 #include "vm/Shape-inl.h"
-#include "vm/Stack-inl.h"
 #include "vm/String-inl.h"
 
 #if ENABLE_YARR_JIT

@@ -4,44 +4,33 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "jsarray.h"
+
 #include "mozilla/DebugOnly.h"
 #include "mozilla/FloatingPoint.h"
-#include "mozilla/RangedPtr.h"
 #include "mozilla/Util.h"
 
-#include <limits.h>
 #include <stdlib.h>
-#include <string.h>
 
 #include "jsapi.h"
-#include "jsarray.h"
 #include "jsatom.h"
-#include "jsbool.h"
 #include "jscntxt.h"
 #include "jsfriendapi.h"
 #include "jsfun.h"
-#include "jsgc.h"
 #include "jsinterp.h"
 #include "jsiter.h"
-#include "jslock.h"
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jstypes.h"
 #include "jsutil.h"
-#include "jsversion.h"
-#include "jswrapper.h"
-
 #include "ds/Sort.h"
-#include "gc/Marking.h"
 #include "methodjit/MethodJIT.h"
-#include "methodjit/StubCalls.h"
 #include "methodjit/StubCalls-inl.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/ForkJoin.h"
 #include "vm/NumericConversions.h"
 #include "vm/Shape.h"
 #include "vm/StringBuffer.h"
-#include "vm/ThreadPool.h"
 
 #include "jsatominlines.h"
 #include "jscntxtinlines.h"
@@ -51,8 +40,6 @@
 
 #include "vm/ArgumentsObject-inl.h"
 #include "vm/ObjectImpl-inl.h"
-#include "vm/Shape-inl.h"
-#include "vm/Stack-inl.h"
 
 using namespace js;
 using namespace js::gc;

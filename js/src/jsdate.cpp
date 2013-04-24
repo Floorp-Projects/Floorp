@@ -8,6 +8,8 @@
  * JS date methods.
  */
 
+#include "jsdate.h"
+
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Util.h"
 
@@ -23,7 +25,6 @@
 #include <ctype.h>
 #include <locale.h>
 #include <math.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include "jstypes.h"
@@ -33,12 +34,10 @@
 #include "jsapi.h"
 #include "jsversion.h"
 #include "jscntxt.h"
-#include "jsdate.h"
 #include "jsinterp.h"
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsstr.h"
-#include "jslibmath.h"
 
 #include "vm/DateTime.h"
 #include "vm/GlobalObject.h"
@@ -46,10 +45,7 @@
 #include "vm/String.h"
 #include "vm/StringBuffer.h"
 
-#include "jsinferinlines.h"
 #include "jsobjinlines.h"
-
-#include "vm/Stack-inl.h"
 
 using namespace js;
 using namespace js::types;

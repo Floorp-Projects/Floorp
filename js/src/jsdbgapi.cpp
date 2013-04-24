@@ -8,21 +8,16 @@
  * JS debugging API.
  */
 
-#include "mozilla/DebugOnly.h"
+#include "jsdbgapi.h"
 
 #include <string.h>
 #include "jsprvtd.h"
 #include "jstypes.h"
-#include "jsutil.h"
-#include "jsclist.h"
 #include "jsapi.h"
 #include "jscntxt.h"
-#include "jsversion.h"
-#include "jsdbgapi.h"
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsinterp.h"
-#include "jslock.h"
 #include "jsobj.h"
 #include "jsopcode.h"
 #include "jsscript.h"
@@ -30,9 +25,7 @@
 #include "jswatchpoint.h"
 #include "jswrapper.h"
 
-#include "gc/Marking.h"
 #include "frontend/BytecodeEmitter.h"
-#include "frontend/Parser.h"
 #include "vm/Debugger.h"
 #include "vm/Shape.h"
 
@@ -46,15 +39,11 @@
 #include "jsinterpinlines.h"
 #include "jsscriptinlines.h"
 
-#include "vm/Shape-inl.h"
 #include "vm/Stack-inl.h"
-
-#include "jsautooplen.h"
 
 using namespace js;
 using namespace js::gc;
 
-using mozilla::DebugOnly;
 using mozilla::PodZero;
 
 JS_PUBLIC_API(JSBool)
