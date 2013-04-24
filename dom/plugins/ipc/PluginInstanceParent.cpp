@@ -757,7 +757,9 @@ PluginInstanceParent::GetImageContainer(ImageContainer** aContainer)
                                                                 ioSurface,
                                                                 GLContext::IOSurface);
         data.mInverted = false;
-        data.mSize = gfxIntSize(ioSurface->GetWidth(), ioSurface->GetHeight());
+        // Use the device pixel size of the IOSurface, since layers handles resolution scaling
+        // already.
+        data.mSize = gfxIntSize(ioSurface->GetDevicePixelWidth(), ioSurface->GetDevicePixelHeight());
 
         SharedTextureImage* pluginImage = static_cast<SharedTextureImage*>(image.get());
         pluginImage->SetData(data);
