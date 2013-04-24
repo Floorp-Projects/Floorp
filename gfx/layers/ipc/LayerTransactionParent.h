@@ -22,7 +22,7 @@ class RenderFrameParent;
 namespace layers {
 
 class Layer;
-class LayerManagerComposite;
+class ShadowLayerManager;
 class ShadowLayerParent;
 class CompositableParent;
 
@@ -34,14 +34,14 @@ class LayerTransactionParent : public PLayerTransactionParent,
   typedef InfallibleTArray<EditReply> EditReplyArray;
 
 public:
-  LayerTransactionParent(LayerManagerComposite* aManager,
+  LayerTransactionParent(ShadowLayerManager* aManager,
                          ShadowLayersManager* aLayersManager,
                          uint64_t aId);
   ~LayerTransactionParent();
 
   void Destroy();
 
-  LayerManagerComposite* layer_manager() const { return mLayerManager; }
+  ShadowLayerManager* layer_manager() const { return mLayerManager; }
 
   uint64_t GetId() const { return mId; }
   ContainerLayer* GetRoot() const { return mRoot; }
@@ -88,11 +88,11 @@ protected:
 
   virtual PCompositableParent* AllocPCompositable(const TextureInfo& aInfo) MOZ_OVERRIDE;
   virtual bool DeallocPCompositable(PCompositableParent* actor) MOZ_OVERRIDE;
-
+  
   void Attach(ShadowLayerParent* aLayerParent, CompositableParent* aCompositable);
 
 private:
-  nsRefPtr<LayerManagerComposite> mLayerManager;
+  nsRefPtr<ShadowLayerManager> mLayerManager;
   ShadowLayersManager* mShadowLayersManager;
   // Hold the root because it might be grafted under various
   // containers in the "real" layer tree
