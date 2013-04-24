@@ -15,7 +15,7 @@
 #include "mozilla/dom/PBrowserChild.h"
 #include "mozilla/dom/TabChild.h"
 
-#include "mozilla/layers/PLayers.h"
+#include "mozilla/layers/PLayerTransaction.h"
 
 #include "nsDisplayList.h"
 

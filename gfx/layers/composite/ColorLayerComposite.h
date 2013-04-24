@@ -6,7 +6,7 @@
 #ifndef GFX_ColorLayerComposite_H
 #define GFX_ColorLayerComposite_H
 
-#include "mozilla/layers/PLayers.h"
+#include "mozilla/layers/PLayerTransaction.h"
 #include "mozilla/layers/ShadowLayers.h"
 
 #include "LayerManagerComposite.h"
