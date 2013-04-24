@@ -253,6 +253,7 @@ struct ParamTraits<nsKeyEvent>
   static void Write(Message* aMsg, const paramType& aParam)
   {
     WriteParam(aMsg, static_cast<nsInputEvent>(aParam));
+    WriteParam(aMsg, static_cast<uint32_t>(aParam.mKeyNameIndex));
     WriteParam(aMsg, aParam.keyCode);
     WriteParam(aMsg, aParam.charCode);
     WriteParam(aMsg, aParam.isChar);
@@ -261,11 +262,17 @@ struct ParamTraits<nsKeyEvent>
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
-    return ReadParam(aMsg, aIter, static_cast<nsInputEvent*>(aResult)) &&
-           ReadParam(aMsg, aIter, &aResult->keyCode) &&
-           ReadParam(aMsg, aIter, &aResult->charCode) &&
-           ReadParam(aMsg, aIter, &aResult->isChar) &&
-           ReadParam(aMsg, aIter, &aResult->location);
+    bool rv;
+    uint32_t keyNameIndex;
+    rv = ReadParam(aMsg, aIter, static_cast<nsInputEvent*>(aResult)) &&
+         ReadParam(aMsg, aIter, &keyNameIndex) &&
+         ReadParam(aMsg, aIter, &aResult->keyCode) &&
+         ReadParam(aMsg, aIter, &aResult->charCode) &&
+         ReadParam(aMsg, aIter, &aResult->isChar) &&
+         ReadParam(aMsg, aIter, &aResult->location);
+    aResult->mKeyNameIndex =
+      static_cast<mozilla::widget::KeyNameIndex>(keyNameIndex);
+    return rv;
   }
 };
 
