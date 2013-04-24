@@ -166,5 +166,76 @@ WidgetUtils::GetLatinCharCodeForKeyCode(uint32_t aKeyCode,
   }
 }
 
+// static
+KeyNameIndex
+WidgetUtils::GetDeadKeyNameIndex(PRUnichar aChar)
+{
+  switch (aChar) {
+    case '`':
+    case 0x02CB: // MODIFIER LETTER GRAVE ACCENT
+    case 0x0300: // COMBINING GRAVE ACCENT
+      return KEY_NAME_INDEX_DeadGrave;
+    case '\'':
+    case 0x00B4: // ACUTE ACCENT
+    case 0x02B9: // MODIFIER LETTER PRIME
+    case 0x02CA: // MODIFIER LETTER ACUTE ACCENT
+    case 0x0301: // COMBINING ACUTE ACCENT
+    case 0x0384: // GREEK TONOS
+      return KEY_NAME_INDEX_DeadAcute;
+    case '^':
+    case 0x02C6: // MODIFIER LETTER CIRCUMFLEX ACCENT
+    case 0x0302: // COMBINING CIRCUMFLEX ACCENT
+      return KEY_NAME_INDEX_DeadCircumflex;
+    case '~':
+    case 0x02DC: // SMALL TILDE
+    case 0x0303: // COMBINING TILDE
+      return KEY_NAME_INDEX_DeadTilde;
+    case 0x00AF: // MACRON
+    case 0x02C9: // MODIFIER LETTER MACRON
+    case 0x0304: // COMBINING MACRON
+      return KEY_NAME_INDEX_DeadMacron;
+    case 0x02D8: // BRAVE
+    case 0xA67C: // COMBINING CYRILLIC KAVYKA
+    case 0x0306: // COMBINING BRAVE
+      return KEY_NAME_INDEX_DeadBreve;
+    case 0x02D9: // DOT ABOVE
+    case 0x0307: // COMBINING DOT ABOVE
+      return KEY_NAME_INDEX_DeadAboveDot;
+    case 0x00A8: // DIAERESIS
+    case 0x0308: // COMBINING DIAERESIS
+      return KEY_NAME_INDEX_DeadUmlaut;
+    case 0x00B0: // DEGREE SIGN
+    case 0x02DA: // RING ABOVE
+    case 0x030A: // COMBINING RING ABOVE
+      return KEY_NAME_INDEX_DeadAboveRing;
+    case '"':
+    case 0x02BA: // MODIFIER LETTER DOUBLE PRIME
+    case 0x02DD: // DOUBLE ACUTE ACCENT
+    case 0x030B: // COMBINING DOUBLE ACUTE ACCENT
+      return KEY_NAME_INDEX_DeadDoubleacute;
+    case 0x02C7: // CARON
+    case 0x030C: // COMBINING CARON
+      return KEY_NAME_INDEX_DeadCaron;
+    case 0x00B8: // CEDILLA
+    case 0x0327: // COMBINING CEDILLA
+      return KEY_NAME_INDEX_DeadCedilla;
+    case 0x02DB: // OGONEK
+    case 0x0328: // COMBINING OGONEK
+      return KEY_NAME_INDEX_DeadOgonek;
+    case 0x0345: // COMBINING GREEK YPOGEGRAMMENI
+    case 0x037A: // GREEK YPOGEGRAMMENI
+    case 0x0399: // GREEK CAPITAL LETTER IOTA
+      return KEY_NAME_INDEX_DeadIota;
+    case 0x3099: // COMBINING KATAKANA-HIRAGANA VOICED SOUND MARK
+    case 0x309B: // KATAKANA-HIRAGANA VOICED SOUND MARK
+      return KEY_NAME_INDEX_DeadVoicedSound;
+    case 0x309A: // COMBINING KATAKANA-HIRAGANA SEMI-VOICED SOUND MARK
+    case 0x309C: // KATAKANA-HIRAGANA SEMI-VOICED SOUND MARK
+      return KEY_NAME_INDEX_DeadSemivoicedSound;
+    default:
+      return KEY_NAME_INDEX_Unidentified;
+  }
+}
+
 } // namespace widget
 } // namespace mozilla

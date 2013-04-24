@@ -620,6 +620,7 @@ nsDOMEvent::DuplicatePrivateData()
       keyEvent->charCode = oldKeyEvent->charCode;
       keyEvent->location = oldKeyEvent->location;
       keyEvent->isChar = oldKeyEvent->isChar;
+      keyEvent->mKeyNameIndex = oldKeyEvent->mKeyNameIndex;
       newEvent = keyEvent;
       break;
     }
