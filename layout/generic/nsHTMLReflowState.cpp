@@ -1793,6 +1793,27 @@ GetFlexContainer(nsIFrame* aFrame)
 }
 #endif // MOZ_FLEXBOX
 
+// Flex items resolve percentage margin & padding against the flex
+// container's height (which is the containing block height).
+// For everything else: the CSS21 spec requires that margin and padding
+// percentage values are calculated with respect to the *width* of the
+// containing block, even for margin & padding in the vertical axis.
+static nscoord
+VerticalOffsetPercentBasis(const nsIFrame* aFrame,
+                           nscoord aContainingBlockWidth,
+                           nscoord aContainingBlockHeight)
+{
+  if (!aFrame->IsFlexItem()) {
+    return aContainingBlockWidth;
+  }
+
+  if (aContainingBlockHeight == NS_AUTOHEIGHT) {
+    return 0;
+  }
+
+  return aContainingBlockHeight;
+}
+
 // XXX refactor this code to have methods for each set of properties
 // we are computing: width,height,line-height; margin; offsets
 
@@ -1808,19 +1829,13 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
                            aContainingBlockWidth, aContainingBlockHeight,
                            aBorder, aPadding);
 
-  // If this is the root frame, then set the computed width and
+  // If this is a reflow root, then set the computed width and
   // height equal to the available space
   if (nullptr == parentReflowState) {
-    MOZ_ASSERT(!frame->IsFlexItem(),
-               "the root frame can't be a flex item, since being a flex item "
-               "requires that you have a parent");
-    // Note that we pass the containing block width as the percent basis for
-    // both horizontal *and* vertical margins & padding, in our InitOffsets
-    // call here. This is correct per CSS 2.1; it'd be incorrect for e.g. flex
-    // items and grid items, but the root frame can't be either of those.
     // XXXldb This doesn't mean what it used to!
     InitOffsets(aContainingBlockWidth,
-                aContainingBlockWidth,
+                VerticalOffsetPercentBasis(frame, aContainingBlockWidth,
+                                           aContainingBlockHeight),
                 aFrameType, aBorder, aPadding);
     // Override mComputedMargin since reflow roots start from the
     // frame's boundary, which is inside the margin.
@@ -1868,19 +1883,11 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
       }
     }
 
-    // Flex containers resolve percentage margin & padding against the flex
-    // container's height (which is the containing block height).
-    // For everything else: the CSS21 spec requires that margin and padding
-    // percentage values are calculated with respect to the *width* of the
-    // containing block, even for margin & padding in the vertical axis.
     // XXX Might need to also pass the CB height (not width) for page boxes,
     // too, if we implement them.
-    nscoord verticalPercentBasis = aContainingBlockWidth;
-    if (frame->IsFlexItem()) {
-      verticalPercentBasis =
-        aContainingBlockHeight == NS_AUTOHEIGHT ? 0 : aContainingBlockHeight;
-    }
-    InitOffsets(aContainingBlockWidth, verticalPercentBasis,
+    InitOffsets(aContainingBlockWidth,
+                VerticalOffsetPercentBasis(frame, aContainingBlockWidth,
+                                           aContainingBlockHeight),
                 aFrameType, aBorder, aPadding);
 
     const nsStyleCoord &height = mStylePosition->mHeight;

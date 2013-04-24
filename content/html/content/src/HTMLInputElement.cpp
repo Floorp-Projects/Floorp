@@ -396,8 +396,7 @@ HTMLInputElement::AsyncClickHandler::Run()
     uint32_t permission;
     pm->TestPermission(doc->NodePrincipal(), &permission);
     if (permission == nsIPopupWindowManager::DENY_POPUP) {
-      nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(doc);
-      nsGlobalWindow::FirePopupBlockedEvent(domDoc, win, nullptr, EmptyString(), EmptyString());
+      nsGlobalWindow::FirePopupBlockedEvent(doc, win, nullptr, EmptyString(), EmptyString());
       return NS_OK;
     }
   }
@@ -1276,6 +1275,13 @@ HTMLInputElement::SetValue(const nsAString& aValue, ErrorResult& aRv)
       GetValueInternal(currentValue);
 
       SetValueInternal(aValue, false, true);
+
+      if (mType == NS_FORM_INPUT_RANGE) {
+        nsRangeFrame* frame = do_QueryFrame(GetPrimaryFrame());
+        if (frame) {
+          frame->UpdateForValueChange();
+        }
+      }
 
       if (mFocusedValue.Equals(currentValue)) {
         GetValueInternal(mFocusedValue);

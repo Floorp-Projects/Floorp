@@ -3,6 +3,7 @@
 <head>
   <title>Test GainNode</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="webaudio.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
@@ -18,6 +19,10 @@ addLoadEvent(function() {
   for (var i = 0; i < 2048; ++i) {
     buffer.getChannelData(0)[i] = Math.sin(440 * 2 * Math.PI * i / context.sampleRate);
   }
+  var expectedBuffer = context.createBuffer(1, 2048, context.sampleRate);
+  for (var i = 0; i < 2048; ++i) {
+    expectedBuffer.getChannelData(0)[i] = buffer.getChannelData(0)[i] / 2;
+  }
 
   var destination = context.destination;
 
@@ -31,7 +36,9 @@ addLoadEvent(function() {
   source.buffer = buffer;
 
   source.connect(gain);
-  gain.connect(destination);
+  var sp = context.createScriptProcessor(2048, 1);
+  gain.connect(sp);
+  sp.connect(destination);
 
   ok(gain.gain, "The audioparam member must exist");
   is(gain.gain.value, 1.0, "Correct initial value");
@@ -41,14 +48,15 @@ addLoadEvent(function() {
   is(gain.gain.defaultValue, 1.0, "Correct default value");
 
   source.start(0);
-  SimpleTest.executeSoon(function() {
-    source.stop(0);
-    source.disconnect();
-    gain.disconnect();
+  sp.onaudioprocess = function(e) {
+    is(e.inputBuffer.numberOfChannels, 1, "Correct input channel count");
+    compareBuffers(e.inputBuffer.getChannelData(0), expectedBuffer.getChannelData(0));
+
+    sp.onaudioprocess = null;
 
     SpecialPowers.clearUserPref("media.webaudio.enabled");
     SimpleTest.finish();
-  });
+  };
 });
 
 </script>

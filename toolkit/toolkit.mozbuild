@@ -130,6 +130,7 @@ if CONFIG['ENABLE_TESTS']:
 
 if CONFIG['MOZ_ENABLE_GTEST']:
     add_tier_dir('platform', 'testing/gtest')
+    add_tier_dir('platform', 'xpcom/glue/tests/gtest')
 
 add_tier_dir('platform', [
     'uriloader',

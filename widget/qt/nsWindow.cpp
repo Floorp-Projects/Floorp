@@ -1610,6 +1610,10 @@ nsWindow::OnKeyPressEvent(QKeyEvent *aEvent)
     if (aEvent->text().length() && aEvent->text()[0].isPrint())
         domCharCode = (int32_t) aEvent->text()[0].unicode();
 
+    KeyNameIndex keyNameIndex =
+        domCharCode ? KEY_NAME_INDEX_PrintableKey :
+                      QtKeyCodeToDOMKeyNameIndex(aEvent->key());
+
     // If the key isn't autorepeat, we need to send the initial down event
     if (!aEvent->isAutoRepeat() && !IsKeyDown(domKeyCode)) {
         // send the key down event
@@ -1620,6 +1624,7 @@ nsWindow::OnKeyPressEvent(QKeyEvent *aEvent)
         InitKeyEvent(downEvent, aEvent);
 
         downEvent.keyCode = domKeyCode;
+        downEvent.mKeyNameIndex = keyNameIndex;
 
         nsEventStatus status = DispatchEvent(&downEvent);
 
@@ -1829,6 +1834,7 @@ nsWindow::OnKeyPressEvent(QKeyEvent *aEvent)
     }
 
     event.keyCode = domCharCode ? 0 : domKeyCode;
+    event.mKeyNameIndex = keyNameIndex;
     // send the key press event
     return DispatchEvent(&event);
 #else
@@ -1852,6 +1858,10 @@ nsWindow::OnKeyPressEvent(QKeyEvent *aEvent)
     if (aEvent->text().length() && aEvent->text()[0].isPrint())
         domCharCode = (int32_t) aEvent->text()[0].unicode();
 
+    KeyNameIndex keyNameIndex =
+        domCharCode ? KEY_NAME_INDEX_PrintableKey :
+                      QtKeyCodeToDOMKeyNameIndex(aEvent->key());
+
     // If the key isn't autorepeat, we need to send the initial down event
     if (!aEvent->isAutoRepeat() && !IsKeyDown(domKeyCode)) {
         // send the key down event
@@ -1862,6 +1872,7 @@ nsWindow::OnKeyPressEvent(QKeyEvent *aEvent)
         InitKeyEvent(downEvent, aEvent);
 
         downEvent.keyCode = domKeyCode;
+        downEvent.mKeyNameIndex = keyNameIndex;
 
         nsEventStatus status = DispatchEvent(&downEvent);
 
@@ -1876,6 +1887,7 @@ nsWindow::OnKeyPressEvent(QKeyEvent *aEvent)
     event.charCode = domCharCode;
 
     event.keyCode = domCharCode ? 0 : domKeyCode;
+    event.mKeyNameIndex = keyNameIndex;
 
     if (setNoDefault)
         event.mFlags.mDefaultPrevented = true;
@@ -1932,6 +1944,10 @@ nsWindow::OnKeyReleaseEvent(QKeyEvent *aEvent)
     }
 
     event.keyCode = domKeyCode;
+    event.mKeyNameIndex =
+        (aEvent->text().length() && aEvent->text()[0].isPrint()) ?
+            KEY_NAME_INDEX_PrintableKey :
+            QtKeyCodeToDOMKeyNameIndex(aEvent->key());
 
     // unset the key down flag
     ClearKeyDownFlag(event.keyCode);

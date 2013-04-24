@@ -175,7 +175,7 @@ public:
 
   nsTArray< nsRefPtr<nsNPAPIPluginInstance> > *InstanceArray();
 
-  void DestroyRunningInstances(nsTArray<nsCOMPtr<nsIDocument> >* aReloadDocs, nsPluginTag* aPluginTag);
+  void DestroyRunningInstances(nsPluginTag* aPluginTag);
 
   // Return the tag for |aLibrary| if found, nullptr if not.
   nsPluginTag* FindTagForLibrary(PRLibrary* aLibrary);

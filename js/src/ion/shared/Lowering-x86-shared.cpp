@@ -49,6 +49,19 @@ LIRGeneratorX86Shared::visitGuardShape(MGuardShape *ins)
 }
 
 bool
+LIRGeneratorX86Shared::visitGuardObjectType(MGuardObjectType *ins)
+{
+    JS_ASSERT(ins->obj()->type() == MIRType_Object);
+
+    LGuardObjectType *guard = new LGuardObjectType(useRegister(ins->obj()));
+    if (!assignSnapshot(guard))
+        return false;
+    if (!add(guard, ins))
+        return false;
+    return redefine(ins, ins->obj());
+}
+
+bool
 LIRGeneratorX86Shared::visitPowHalf(MPowHalf *ins)
 {
     MDefinition *input = ins->input();

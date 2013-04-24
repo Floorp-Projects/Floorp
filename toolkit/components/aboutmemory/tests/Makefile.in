@@ -18,6 +18,7 @@ MOCHITEST_CHROME_FILES	= \
 		test_aboutmemory.xul \
 		test_aboutmemory2.xul \
 		test_aboutmemory3.xul \
+		test_aboutmemory4.xul \
 		test_memoryReporters.xul \
 		test_sqliteMultiReporter.xul \
 		$(NULL)

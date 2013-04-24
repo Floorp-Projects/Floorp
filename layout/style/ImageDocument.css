@@ -1,0 +1,32 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/*
+ * This CSS stylesheet defines the rules to be applied to any ImageDocuments,
+ * including those in frames.
+*/
+
+@media not print {
+  .overflowing {
+    cursor: -moz-zoom-out;
+  }
+
+  .shrinkToFit,
+  .scaleToDevicePixels {
+    cursor: -moz-zoom-in;
+  }
+}
+
+@media print {
+  /* We must declare the image as a block element. If we stay as
+  an inline element, our parent LineBox will be inline too and
+  ignore the available height during reflow.
+  This is bad during printing, it means tall image frames won't know
+  the size of the paper and cannot break into continuations along
+  multiple pages. */
+  img {
+    display: block;
+  }
+}

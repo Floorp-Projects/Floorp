@@ -22,7 +22,7 @@ function handleRequest(request, response) {
   response.setHeader("Content-Type", "text/html", false);
   response.setHeader("Cache-Control", "no-cache", false);
   response.write('<html>');
-  response.write('<head><title>' + type + '</title></head>');
+  response.write('<head><title>' + type + '</title> <meta charset="utf-8"> </head>');
   response.write('<body style="background-color: ' + color + '"></body>');
   response.write('</html>');
 }

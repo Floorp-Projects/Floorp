@@ -153,7 +153,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(VibratorRunnable, nsIRunnable, nsIObserver);
 
 bool VibratorRunnable::sShuttingDown = false;
 
-static nsRefPtr<VibratorRunnable> sVibratorRunnable;
+static StaticRefPtr<VibratorRunnable> sVibratorRunnable;
 
 NS_IMETHODIMP
 VibratorRunnable::Run()

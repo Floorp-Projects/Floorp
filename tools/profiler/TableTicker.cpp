@@ -34,6 +34,10 @@
 #include "mozilla/Services.h"
 #include "PlatformMacros.h"
 
+#if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
+  #include "AndroidBridge.h"
+#endif
+
 // JS
 #include "jsdbgapi.h"
 
@@ -160,6 +164,54 @@ JSObject* TableTicker::ToJSObject(JSContext *aCx)
   return jsProfile;
 }
 
+#if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
+static
+JSCustomObject* BuildJavaThreadJSObject(JSAObjectBuilder& b)
+{
+  JSCustomObject* javaThread = b.CreateObject();
+  b.DefineProperty(javaThread, "name", "Java Main Thread");
+
+  JSCustomArray *samples = b.CreateArray();
+  b.DefineProperty(javaThread, "samples", samples);
+
+  int sampleId = 0;
+  while (true) {
+    int frameId = 0;
+    JSCustomObject *sample = nullptr;
+    JSCustomArray *frames = nullptr;
+    while (true) {
+      nsCString result;
+      bool hasFrame = AndroidBridge::Bridge()->GetFrameNameJavaProfiling(0, sampleId, frameId, result);
+      if (!hasFrame) {
+        if (frames) {
+          b.DefineProperty(sample, "frames", frames);
+        }
+        break;
+      }
+      if (!sample) {
+        sample = b.CreateObject();
+        frames = b.CreateArray();
+        b.DefineProperty(sample, "frames", frames);
+        b.ArrayPush(samples, sample);
+
+        double sampleTime = AndroidBridge::Bridge()->GetSampleTimeJavaProfiling(0, sampleId);
+        b.DefineProperty(sample, "time", sampleTime);
+      }
+      JSCustomObject *frame = b.CreateObject();
+      b.DefineProperty(frame, "location", result.BeginReading());
+      b.ArrayPush(frames, frame);
+      frameId++;
+    }
+    if (frameId == 0) {
+      break;
+    }
+    sampleId++;
+  }
+
+  return javaThread;
+}
+#endif
+
 void TableTicker::BuildJSObject(JSAObjectBuilder& b, JSCustomObject* profile)
 {
   // Put shared library info
@@ -191,8 +243,19 @@ void TableTicker::BuildJSObject(JSAObjectBuilder& b, JSCustomObject* profile)
     }
   }
 
+#if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
+  if (ProfileJava()) {
+    AndroidBridge::Bridge()->PauseJavaProfiling();
+
+    JSCustomObject* javaThread = BuildJavaThreadJSObject(b);
+    b.ArrayPush(threads, javaThread);
+
+    AndroidBridge::Bridge()->UnpauseJavaProfiling();
+  }
+#endif
+
   SetPaused(false);
-} 
+}
 
 // END SaveProfileTask et al
 ////////////////////////////////////////////////////////////////////////
@@ -452,7 +515,7 @@ void TableTicker::InplaceTick(TickSample* sample)
   }
 
   if (sample) {
-    TimeDuration delta = sample->timestamp - mStartTime;
+    TimeDuration delta = sample->timestamp - sStartTime;
     currThreadProfile.addTag(ProfileEntry('t', delta.ToMilliseconds()));
   }
 

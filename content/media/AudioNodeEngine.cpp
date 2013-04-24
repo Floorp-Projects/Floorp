@@ -56,9 +56,9 @@ AudioBlockAddChannelWithScale(const float aInput[WEBAUDIO_BLOCK_SIZE],
 }
 
 void
-AudioBlockCopyChannelWithScale(const float aInput[WEBAUDIO_BLOCK_SIZE],
+AudioBlockCopyChannelWithScale(const float* aInput,
                                float aScale,
-                               float aOutput[WEBAUDIO_BLOCK_SIZE])
+                               float* aOutput)
 {
   if (aScale == 1.0f) {
     memcpy(aOutput, aInput, WEBAUDIO_BLOCK_SIZE*sizeof(float));

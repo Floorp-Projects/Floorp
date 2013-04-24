@@ -237,7 +237,7 @@ File.prototype = {
    * @rejects {OS.File.Error}
    */
   close: function close() {
-    if (this._fdmsg) {
+    if (this._fdmsg != null) {
       let msg = this._fdmsg;
       this._fdmsg = null;
       return this._closeResult =
@@ -254,9 +254,6 @@ File.prototype = {
    * @rejects {OS.File.Error}
    */
   stat: function stat() {
-    if (!this._fdmsg) {
-      return Promise.reject(OSError.closed("accessing file"));
-    }
     return Scheduler.post("File_prototype_stat", [this._fdmsg], this).then(
       File.Info.fromMsg
     );

@@ -188,14 +188,14 @@ nsDOMWindowUtils::GetDocumentMetadata(const nsAString& aName,
 
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
   if (window) {
-    nsCOMPtr<nsIDocument> doc(do_QueryInterface(window->GetExtantDocument()));
+    nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
     if (doc) {
       nsCOMPtr<nsIAtom> name = do_GetAtom(aName);
       doc->GetHeaderData(name, aValue);
       return NS_OK;
     }
   }
-  
+
   aValue.Truncate();
   return NS_OK;
 }
@@ -266,7 +266,7 @@ nsDOMWindowUtils::GetViewportInfo(uint32_t aDisplayWidth,
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
   NS_ENSURE_STATE(window);
 
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(window->GetExtantDocument()));
+  nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
   NS_ENSURE_STATE(doc);
 
   nsViewportInfo info = nsContentUtils::GetViewportInfo(doc, aDisplayWidth, aDisplayHeight);
@@ -1247,7 +1247,7 @@ nsDOMWindowUtils::ElementFromPoint(float aX, float aY,
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
   NS_ENSURE_STATE(window);
 
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(window->GetExtantDocument()));
+  nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
   NS_ENSURE_STATE(doc);
 
   Element* el =
@@ -1272,7 +1272,7 @@ nsDOMWindowUtils::NodesFromRect(float aX, float aY,
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
   NS_ENSURE_STATE(window);
 
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(window->GetExtantDocument()));
+  nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
   NS_ENSURE_STATE(doc);
 
   return doc->NodesFromRectHelper(aX, aY, aTopSize, aRightSize, aBottomSize, aLeftSize, 
@@ -1424,7 +1424,7 @@ nsDOMWindowUtils::SuppressEventHandling(bool aSuppress)
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
   NS_ENSURE_STATE(window);
 
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(window->GetExtantDocument()));
+  nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
   NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
   if (aSuppress) {
@@ -1446,7 +1446,7 @@ nsDOMWindowUtils::GetScrollXY(bool aFlushLayout, int32_t* aScrollX, int32_t* aSc
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
   NS_ENSURE_STATE(window);
 
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(window->GetExtantDocument()));
+  nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
   NS_ENSURE_STATE(doc);
 
   if (aFlushLayout) {
@@ -2460,15 +2460,15 @@ nsDOMWindowUtils::GetCursorType(int16_t *aCursor)
   NS_ENSURE_ARG_POINTER(aCursor);
 
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
-  NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);  
+  NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
   bool isSameDoc = false;
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(window->GetExtantDocument()));
+  nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
 
   NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
   do {
-    if (nsEventStateManager::sMouseOverDocument == doc.get()) {
+    if (nsEventStateManager::sMouseOverDocument == doc) {
       isSameDoc = true;
       break;
     }
@@ -2937,17 +2937,13 @@ nsDOMWindowUtils::GetPlugins(JSContext* cx, JS::Value* aPlugins)
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
   NS_ENSURE_STATE(window);
 
-  nsIDOMDocument* ddoc = window->GetExtantDocument();
-
-  nsresult rv;
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(ddoc, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
 
   nsTArray<nsIObjectLoadingContent*> plugins;
   doc->GetPlugins(plugins);
 
   JSObject* jsPlugins = nullptr;
-  rv = nsTArrayToJSArray(cx, plugins, &jsPlugins);
+  nsresult rv = nsTArrayToJSArray(cx, plugins, &jsPlugins);
   NS_ENSURE_SUCCESS(rv, rv);
 
   *aPlugins = OBJECT_TO_JSVAL(jsPlugins);
@@ -3014,7 +3010,7 @@ nsDOMWindowUtils::RemoteFrameFullscreenChanged(nsIDOMElement* aFrameElement,
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
   NS_ENSURE_STATE(window);
 
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(window->GetExtantDocument()));
+  nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
   NS_ENSURE_STATE(doc);
 
   doc->RemoteFrameFullscreenChanged(aFrameElement, aNewOrigin);
@@ -3031,7 +3027,7 @@ nsDOMWindowUtils::RemoteFrameFullscreenReverted()
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
   NS_ENSURE_STATE(window);
 
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(window->GetExtantDocument()));
+  nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
   NS_ENSURE_STATE(doc);
 
   doc->RemoteFrameFullscreenReverted();

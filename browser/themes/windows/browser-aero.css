@@ -159,8 +159,8 @@
     border-right-style: none !important;
   }
 
-  #navigator-toolbox[tabsontop=false] > :-moz-any(#toolbar-menubar, #nav-bar) :-moz-any(@primaryToolbarButtons@):not(:-moz-any(#alltabs-button,#tabview-button,#sync-button[status])) > .toolbarbutton-icon:not(:-moz-lwtheme),
-  #nav-bar + #customToolbars + #PersonalToolbar[collapsed=true] + #TabsToolbar[tabsontop=false]:last-child :-moz-any(@primaryToolbarButtons@):not(:-moz-any(#alltabs-button,#tabview-button,#new-tab-button,#sync-button[status])) > .toolbarbutton-icon:not(:-moz-lwtheme) {
+  #navigator-toolbox[tabsontop=false] > :-moz-any(#toolbar-menubar, #nav-bar) :-moz-any(@primaryToolbarButtons@):not(:-moz-any(#alltabs-button,#tabview-button,#sync-button[status],#bookmarks-menu-button)) > .toolbarbutton-icon:not(:-moz-lwtheme),
+  #nav-bar + #customToolbars + #PersonalToolbar[collapsed=true] + #TabsToolbar[tabsontop=false]:last-child :-moz-any(@primaryToolbarButtons@):not(:-moz-any(#alltabs-button,#tabview-button,#new-tab-button,#sync-button[status],#bookmarks-menu-button)) > .toolbarbutton-icon:not(:-moz-lwtheme) {
     list-style-image: url("chrome://browser/skin/Toolbar-inverted.png");
   }
 

@@ -57,3 +57,90 @@ BaselineInspector::maybeMonomorphicShapeForPropertyOp(jsbytecode *pc)
 
     return NULL;
 }
+
+ICStub::Kind
+BaselineInspector::monomorphicStubKind(jsbytecode *pc)
+{
+    if (!hasBaselineScript())
+        return ICStub::INVALID;
+
+    const ICEntry &entry = icEntryFromPC(pc);
+
+    ICStub *stub = entry.firstStub();
+    ICStub *next = stub->next();
+
+    if (!next || !next->isFallback())
+        return ICStub::INVALID;
+
+    return stub->kind();
+}
+
+bool
+BaselineInspector::dimorphicStubKind(jsbytecode *pc, ICStub::Kind *pfirst, ICStub::Kind *psecond)
+{
+    if (!hasBaselineScript())
+        return false;
+
+    const ICEntry &entry = icEntryFromPC(pc);
+
+    ICStub *stub = entry.firstStub();
+    ICStub *next = stub->next();
+    ICStub *after = next ? next->next() : NULL;
+
+    if (!after || !after->isFallback())
+        return false;
+
+    *pfirst = stub->kind();
+    *psecond = next->kind();
+    return true;
+}
+
+MIRType
+BaselineInspector::expectedResultType(jsbytecode *pc)
+{
+    // Look at the IC entries for this op to guess what type it will produce,
+    // returning MIRType_None otherwise.
+
+    ICStub::Kind kind = monomorphicStubKind(pc);
+
+    switch (kind) {
+      case ICStub::BinaryArith_Int32:
+      case ICStub::BinaryArith_BooleanWithInt32:
+      case ICStub::UnaryArith_Int32:
+        return MIRType_Int32;
+      case ICStub::BinaryArith_Double:
+      case ICStub::BinaryArith_DoubleWithInt32:
+      case ICStub::UnaryArith_Double:
+        return MIRType_Double;
+      case ICStub::BinaryArith_StringConcat:
+      case ICStub::BinaryArith_StringObjectConcat:
+        return MIRType_String;
+      default:
+        return MIRType_None;
+    }
+}
+
+// Whether a baseline stub kind is suitable for a double comparison that
+// converts its operands to doubles.
+static bool
+CanUseDoubleCompare(ICStub::Kind kind)
+{
+    return kind == ICStub::Compare_Double || kind == ICStub::Compare_NumberWithUndefined;
+}
+
+MCompare::CompareType
+BaselineInspector::expectedCompareType(jsbytecode *pc)
+{
+    ICStub::Kind kind = monomorphicStubKind(pc);
+
+    if (CanUseDoubleCompare(kind))
+        return MCompare::Compare_Double;
+
+    ICStub::Kind first, second;
+    if (dimorphicStubKind(pc, &first, &second)) {
+        if (CanUseDoubleCompare(first) && CanUseDoubleCompare(second))
+            return MCompare::Compare_Double;
+    }
+
+    return MCompare::Compare_Unknown;
+}

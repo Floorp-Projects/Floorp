@@ -71,6 +71,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "DownloadUtils",
                                   "resource://gre/modules/DownloadUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DownloadsCommon",
                                   "resource:///modules/DownloadsCommon.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "OS",
+                                  "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                                   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
@@ -551,6 +553,14 @@ const DownloadsPanel = {
         DownloadsButton.releaseAnchor();
         this._state = this.kStateHidden;
         return;
+      }
+
+      // When the panel is opened, we check if the target files of visible items
+      // still exist, and update the allowed items interactions accordingly.  We
+      // do these checks on a background thread, and don't prevent the panel to
+      // be displayed while these checks are being performed.
+      for each (let viewItem in DownloadsView._viewItems) {
+        viewItem.verifyTargetExists();
       }
 
       if (aAnchor) {
@@ -1074,6 +1084,7 @@ function DownloadsViewItem(aDataItem, aElement)
   // Initialize more complex attributes.
   this._updateProgress();
   this._updateStatusLine();
+  this.verifyTargetExists();
 }
 
 DownloadsViewItem.prototype = {
@@ -1111,6 +1122,12 @@ DownloadsViewItem.prototype = {
     if (aOldState != Ci.nsIDownloadManager.DOWNLOAD_FINISHED &&
         aOldState != this.dataItem.state) {
       this._element.setAttribute("image", this.image + "&state=normal");
+
+      // We assume the existence of the target of a download that just completed
+      // successfully, without checking the condition in the background.  If the
+      // panel is already open, this will take effect immediately.  If the panel
+      // is opened later, a new background existence check will be performed.
+      this._element.setAttribute("exists", "true");
     }
 
     // Update the user interface after switching states.
@@ -1252,7 +1269,33 @@ DownloadsViewItem.prototype = {
     }
     let [size, unit] = DownloadUtils.convertByteUnits(fileSize);
     return DownloadsCommon.strings.sizeWithUnits(size, unit);
-  }
+  },
+
+  //////////////////////////////////////////////////////////////////////////////
+  //// Functions called by the panel
+
+  /**
+   * Starts checking whether the target file of a finished download is still
+   * available on disk, and sets an attribute that controls how the item is
+   * presented visually.
+   *
+   * The existence check is executed on a background thread.
+   */
+  verifyTargetExists: function DVI_verifyTargetExists() {
+    // We don't need to check if the download is not finished successfully.
+    if (!this.dataItem.openable) {
+      return;
+    }
+
+    OS.File.exists(this.dataItem.localFile.path).then(
+      function DVI_RTE_onSuccess(aExists) {
+        if (aExists) {
+          this._element.setAttribute("exists", "true");
+        } else {
+          this._element.removeAttribute("exists");
+        }
+      }.bind(this), Cu.reportError);
+  },
 };
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -172,11 +172,6 @@ public:
   virtual void MaybeUpdateTouchState() {}
   virtual void UpdateTouchState() {}
 
-  // GetExtantDocument provides a backdoor to the DOM GetDocument accessor
-  nsIDOMDocument* GetExtantDocument() const
-  {
-    return mDocument;
-  }
   nsIDocument* GetExtantDoc() const
   {
     return mDoc;
@@ -675,8 +670,7 @@ protected:
   // value on both the outer window and the current inner window. Make
   // sure you keep them in sync!
   nsCOMPtr<mozilla::dom::EventTarget> mChromeEventHandler; // strong
-  nsCOMPtr<nsIDOMDocument> mDocument; // strong
-  nsCOMPtr<nsIDocument> mDoc; // strong, for fast access
+  nsCOMPtr<nsIDocument> mDoc; // strong
   // Cache the URI when mDoc is cleared.
   nsCOMPtr<nsIURI> mDocumentURI; // strong
   nsCOMPtr<nsIURI> mDocBaseURI; // strong
