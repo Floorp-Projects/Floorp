@@ -6,7 +6,8 @@
 
 /* JS Mark-and-Sweep Garbage Collector. */
 
-#include "mozilla/Attributes.h"
+#include "jsgc.h"
+
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Util.h"
 
@@ -39,61 +40,38 @@
  * barriers on them.
  */
 
-#include <math.h>
 #include <string.h>     /* for memset used when DEBUG */
 
 #include "jstypes.h"
 #include "jsutil.h"
-#include "jsclist.h"
-#include "jsprf.h"
 #include "jsapi.h"
 #include "jsatom.h"
 #include "jscompartment.h"
-#include "jscrashreport.h"
-#include "jscrashformat.h"
 #include "jscntxt.h"
-#include "jsversion.h"
-#include "jsdbgapi.h"
-#include "jsexn.h"
-#include "jsfun.h"
-#include "jsgc.h"
-#include "jsinterp.h"
-#include "jsiter.h"
-#include "jslock.h"
-#include "jsnum.h"
 #include "jsobj.h"
-#include "jsprobes.h"
 #include "jsproxy.h"
 #include "jsscript.h"
 #include "jswatchpoint.h"
 #include "jsweakmap.h"
 
-#include "builtin/MapObject.h"
-#include "frontend/Parser.h"
 #include "gc/FindSCCs.h"
 #include "gc/GCInternals.h"
 #include "gc/Marking.h"
 #include "gc/Memory.h"
 #include "methodjit/MethodJIT.h"
 #include "vm/Debugger.h"
-#include "vm/ForkJoin.h"
 #include "vm/Shape.h"
 #include "vm/String.h"
 #include "vm/ForkJoin.h"
 #include "ion/IonCode.h"
 #ifdef JS_ION
 # include "ion/BaselineJIT.h"
-# include "ion/IonMacroAssembler.h"
-#include "ion/IonFrameIterator.h"
 #endif
 
 #include "jsgcinlines.h"
-#include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 
 #include "gc/FindSCCs-inl.h"
-#include "gc/Nursery-inl.h"
-#include "vm/ScopeObject-inl.h"
 #include "vm/String-inl.h"
 
 #ifdef XP_WIN

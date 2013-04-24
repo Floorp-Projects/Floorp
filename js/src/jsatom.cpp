@@ -7,31 +7,25 @@
 /*
  * JS atom table.
  */
+#include "jsatom.h"
+
 #include <stdlib.h>
 #include <string.h>
 
 #include "mozilla/RangedPtr.h"
 #include "mozilla/Util.h"
 
-#include "jstypes.h"
-#include "jsutil.h"
-#include "jsprf.h"
 #include "jsapi.h"
-#include "jsatom.h"
 #include "jscntxt.h"
-#include "jsgc.h"
 #include "jslock.h"
-#include "jsnum.h"
 #include "jsstr.h"
+#include "jstypes.h"
 #include "jsversion.h"
 
-#include "frontend/Parser.h"
 #include "gc/Marking.h"
 #include "vm/Xdr.h"
 
-#include "jsstrinlines.h"
 #include "jsatominlines.h"
-#include "jsobjinlines.h"
 
 #include "vm/String-inl.h"
 

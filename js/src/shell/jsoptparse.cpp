@@ -5,8 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jsoptparse.h"
+
 #include <ctype.h>
 #include <stdarg.h>
+
+#include "jsutil.h"
 
 using namespace js;
 using namespace js::cli;

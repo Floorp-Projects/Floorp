@@ -8,30 +8,25 @@
  * JavaScript bytecode interpreter.
  */
 
+#include "jsinterp.h"
+
 #include "mozilla/DebugOnly.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/PodOperations.h"
 
 #include <stdio.h>
 #include <string.h>
-#include <math.h>
 #include "jstypes.h"
-#include "jsutil.h"
 #include "jsprf.h"
 #include "jsapi.h"
 #include "jsarray.h"
 #include "jsatom.h"
-#include "jsbool.h"
 #include "jscntxt.h"
-#include "jsdate.h"
 #include "jsversion.h"
 #include "jsdbgapi.h"
 #include "jsfun.h"
 #include "jsgc.h"
-#include "jsinterp.h"
 #include "jsiter.h"
-#include "jslibmath.h"
-#include "jslock.h"
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsopcode.h"
@@ -40,8 +35,6 @@
 #include "jsstr.h"
 
 #include "builtin/Eval.h"
-#include "gc/Marking.h"
-#include "ion/AsmJS.h"
 #include "vm/Debugger.h"
 #include "vm/Shape.h"
 
@@ -63,20 +56,12 @@
 #include "jsobjinlines.h"
 #include "jsopcodeinlines.h"
 #include "jsprobes.h"
-#include "jspropertycacheinlines.h"
 #include "jsscriptinlines.h"
-#include "jstypedarrayinlines.h"
 
 #include "builtin/Iterator-inl.h"
-#include "vm/Shape-inl.h"
 #include "vm/Stack-inl.h"
-#include "vm/String-inl.h"
 
 #include "jsautooplen.h"
-
-#if defined(JS_METHODJIT) && defined(JS_MONOIC)
-#include "methodjit/MonoIC.h"
-#endif
 
 #if JS_TRACE_LOGGING
 #include "TraceLogging.h"

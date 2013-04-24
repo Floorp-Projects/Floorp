@@ -4,21 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "jsapi.h"
-#include "jsutil.h"
-#include "jsatom.h"
-#include "jscntxt.h"
-#include "jsdbgapi.h"
-#include "jsfun.h"
-#include "jsinterp.h"
-#include "jsobj.h"
 #include "jsprobes.h"
+
+#include "jscntxt.h"
 #include "jsscript.h"
-#include "jsstr.h"
 
-#include "methodjit/Compiler.h"
-
-#include "jsobjinlines.h"
+#ifdef INCLUDE_MOZILLA_DTRACE
+#include "jsscriptinlines.h" 
+#endif
 
 #define TYPEOF(cx,v)    (JSVAL_IS_NULL(v) ? JSTYPE_NULL : JS_TypeOfValue(cx,v))
 
