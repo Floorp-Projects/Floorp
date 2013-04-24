@@ -35,7 +35,7 @@ void RenderTraceLayers(Layer *aLayer, const char *aColor, const gfx3DMatrix aRoo
   trans.TransformBounds(rect);
 
   if (strcmp(aLayer->Name(), "ContainerLayer") != 0 &&
-      strcmp(aLayer->Name(), "ShadowContainerLayer") != 0) {
+      strcmp(aLayer->Name(), "ContainerLayerComposite") != 0) {
     printf_stderr("%s RENDERTRACE %u rect #%02X%s %i %i %i %i\n",
       aLayer->Name(), (int)PR_IntervalNow(),
       colorId, aColor,

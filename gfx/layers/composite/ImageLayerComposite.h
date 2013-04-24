@@ -9,7 +9,7 @@
 #include "mozilla/layers/PLayerTransaction.h"
 #include "mozilla/layers/ShadowLayers.h"
 
-#include "LayerManagerComposite.h"
+#include "mozilla/layers/LayerManagerComposite.h"
 #include "ImageLayers.h"
 #include "mozilla/Mutex.h"
 
@@ -18,23 +18,17 @@ namespace layers {
 
 class ImageHost;
 
-class ImageLayerComposite : public ShadowImageLayer,
+class ImageLayerComposite : public ImageLayer,
                             public LayerComposite
 {
   typedef gl::TextureImage TextureImage;
 
 public:
   ImageLayerComposite(LayerManagerComposite* aManager);
+
   virtual ~ImageLayerComposite();
 
   virtual LayerRenderState GetRenderState() MOZ_OVERRIDE;
-
-  // ShadowImageLayer impl
-  virtual void Swap(const SurfaceDescriptor& aFront,
-                    SurfaceDescriptor* aNewBack)
-  {
-    NS_ERROR("Not implemented");
-  }
 
   virtual void Disconnect() MOZ_OVERRIDE;
 
