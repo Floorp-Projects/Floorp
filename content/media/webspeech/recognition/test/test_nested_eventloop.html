@@ -1,0 +1,89 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=650295
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 650295 -- Spin the event loop from inside a callback</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="head.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=650295">Mozilla Bug 650295</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="text/javascript">
+  SimpleTest.waitForExplicitFinish();
+
+  /*
+   * window.showModalDialog() can be used to spin the event loop, causing
+   * queued SpeechEvents (such as those created by calls to start(), stop()
+   * or abort()) to be processed immediately.
+   * When this is done from inside DOM event handlers, it is possible to
+   * cause reentrancy in our C++ code, which we should be able to withstand.
+   */
+
+  // Garbage collecting the windows created in this test can
+  // cause assertions (Bug 600703).
+  if (!navigator.platform.startsWith("Win")) {
+    SimpleTest.expectAssertions(2);
+  }
+
+  function abortAndSpinEventLoop(evt, sr) {
+    sr.abort();
+    window.showModalDialog("javascript:window.close()");
+  }
+
+  function doneFunc() {
+    // Trigger gc now and wait some time to make sure this test gets the blame
+    // for any assertions caused by showModalDialog
+    var count = 0, GC_COUNT = 4;
+
+    function triggerGCOrFinish() {
+      SpecialPowers.gc();
+      count++;
+
+      if (count == GC_COUNT) {
+        SimpleTest.finish();
+      }
+    }
+
+    for (var i = 0; i < GC_COUNT; i++) {
+      setTimeout(triggerGCOrFinish, 0);
+    }
+  }
+
+  /*
+   * We start by performing a normal start, then abort from the audiostart
+   * callback and force the EVENT_ABORT to be processed while still inside
+   * the event handler. This causes the recording to stop, which raises
+   * the audioend and (later on) end events.
+   * Then, we abort (once again spinning the event loop) from the audioend
+   * handler, attempting to cause a re-entry into the abort code. This second
+   * call should be ignored, and we get the end callback and finish.
+   */
+
+  performTest({
+    eventsToRequest: [
+      "EVENT_START",
+      "EVENT_AUDIO_DATA",
+    ],
+    expectedEvents: {
+      "audiostart": abortAndSpinEventLoop,
+      "audioend": abortAndSpinEventLoop,
+      "end": null
+    },
+    doneFunc: doneFunc,
+    prefs: [["media.webspeech.test.fake_fsm_events", true],
+            ["media.webspeech.test.fake_recognition_service", true]]
+  });
+
+</script>
+</pre>
+</body>
+</html>
