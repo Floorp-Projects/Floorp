@@ -12,10 +12,12 @@ NSPR_CFLAGS='@NSPR_CFLAGS@'
 JS_CONFIG_LIBS='@JS_CONFIG_LIBS@'
 MOZ_JS_LIBS='@MOZ_JS_LIBS@'
 
+FILENAME=`basename "$0"`
+
 usage()
 {
 	cat <<EOF
-Usage: js-config [OPTIONS]
+Usage: $FILENAME [OPTIONS]
 Options:
 	[--prefix[=DIR]]
 	[--exec-prefix[=DIR]]
