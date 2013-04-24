@@ -3625,6 +3625,19 @@ class LCallSetElement : public LCallInstructionHelper<0, 1 + 2 * BOX_PIECES, 0>
     static const size_t Value = 1 + BOX_PIECES;
 };
 
+// Call js::InitElementArray.
+class LCallInitElementArray : public LCallInstructionHelper<0, 1 + BOX_PIECES, 0>
+{
+public:
+    LIR_HEADER(CallInitElementArray)
+
+    static const size_t Value = 1;
+
+    const MCallInitElementArray *mir() const {
+        return mir_->toCallInitElementArray();
+    }
+};
+
 // Call a VM function to perform a property or name assignment of a generic value.
 class LCallSetProperty : public LCallInstructionHelper<0, 1 + BOX_PIECES, 0>
 {

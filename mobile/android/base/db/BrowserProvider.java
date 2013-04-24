@@ -73,7 +73,7 @@ public class BrowserProvider extends ContentProvider {
 
     static final String DATABASE_NAME = "browser.db";
 
-    static final int DATABASE_VERSION = 14;
+    static final int DATABASE_VERSION = 15;
 
     // Maximum age of deleted records to be cleaned up (20 days in ms)
     static final long MAX_AGE_OF_DELETED_RECORDS = 86400000 * 20;
@@ -1676,6 +1676,37 @@ public class BrowserProvider extends ContentProvider {
                 R.string.bookmarks_folder_pinned, 6);
         }
 
+        private void upgradeDatabaseFrom14to15(SQLiteDatabase db) {
+            Cursor c = null;
+            try {
+                // Get all the pinned bookmarks
+                c = db.query(TABLE_BOOKMARKS,
+                             new String[] { Bookmarks._ID, Bookmarks.URL },
+                             Bookmarks.PARENT + " = ?",
+                             new String[] { Integer.toString(Bookmarks.FIXED_PINNED_LIST_ID) },
+                             null, null, null);
+
+                while (c.moveToNext()) {
+                    // Check if this URL can be parsed as a URI with a valid scheme.
+                    String url = c.getString(c.getColumnIndexOrThrow(Bookmarks.URL));
+                    if (Uri.parse(url).getScheme() != null) {
+                        continue;
+                    }
+
+                    // If it can't, update the URL to be an encoded "user-entered" value.
+                    ContentValues values = new ContentValues(1);
+                    String newUrl = Uri.fromParts("user-entered", url, null).toString();
+                    values.put(Bookmarks.URL, newUrl);
+                    db.update(TABLE_BOOKMARKS, values, Bookmarks._ID + " = ?",
+                              new String[] { Integer.toString(c.getInt(c.getColumnIndexOrThrow(Bookmarks._ID))) });
+                }
+            } finally {
+                if (c != null) {
+                    c.close();
+                }
+            }
+        }
+
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
             debug("Upgrading browser.db: " + db.getPath() + " from " +
@@ -1735,6 +1766,10 @@ public class BrowserProvider extends ContentProvider {
 
                     case 14:
                         upgradeDatabaseFrom13to14(db);
+                        break;
+
+                    case 15:
+                        upgradeDatabaseFrom14to15(db);
                         break;
                 }
             }

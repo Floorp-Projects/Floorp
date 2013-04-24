@@ -3622,6 +3622,7 @@ void nsWindow::InitKeyEvent(nsKeyEvent& aKeyEvent,
 {
   nsIntPoint point(0, 0);
   InitEvent(aKeyEvent, &point);
+  aKeyEvent.mKeyNameIndex = aNativeKey.GetKeyNameIndex();
   aKeyEvent.location = aNativeKey.GetKeyLocation();
   aModKeyState.InitInputEvent(aKeyEvent);
 }
@@ -5654,6 +5655,7 @@ LRESULT nsWindow::ProcessCharMessage(const MSG &aMsg, bool *aEventDispatched)
   // if a child window didn't handle it (for example Alt+Space in a content window)
   ModifierKeyState modKeyState;
   NativeKey nativeKey(gKbdLayout, this, aMsg);
+  gKbdLayout.InitNativeKey(nativeKey, modKeyState);
   return OnChar(aMsg, nativeKey, modKeyState, aEventDispatched);
 }
 
@@ -6461,12 +6463,9 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
                             nsFakeCharMessage* aFakeCharMessage)
 {
   NativeKey nativeKey(gKbdLayout, this, aMsg);
-  UINT virtualKeyCode = nativeKey.GetOriginalVirtualKeyCode();
+  gKbdLayout.InitNativeKey(nativeKey, aModKeyState);
   UniCharsAndModifiers inputtingChars =
-    gKbdLayout.OnKeyDown(virtualKeyCode, aModKeyState);
-
-  // Use only DOMKeyCode for XP processing.
-  // Use virtualKeyCode for gKbdLayout and native processing.
+    nativeKey.GetCommittedCharsAndModifiers();
   uint32_t DOMKeyCode = nativeKey.GetDOMKeyCode();
 
 #ifdef DEBUG
@@ -6554,6 +6553,7 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
       return noDefault;
   }
 
+  UINT virtualKeyCode = nativeKey.GetOriginalVirtualKeyCode();
   bool isDeadKey = gKbdLayout.IsDeadKey(virtualKeyCode, aModKeyState);
   EventFlags extraFlags;
   extraFlags.mDefaultPrevented = noDefault;
@@ -6830,6 +6830,7 @@ LRESULT nsWindow::OnKeyUp(const MSG &aMsg,
     *aEventDispatched = true;
   nsKeyEvent keyupEvent(true, NS_KEY_UP, this);
   NativeKey nativeKey(gKbdLayout, this, aMsg);
+  gKbdLayout.InitNativeKey(nativeKey, aModKeyState);
   keyupEvent.keyCode = nativeKey.GetDOMKeyCode();
   InitKeyEvent(keyupEvent, nativeKey, aModKeyState);
   // Set defaultPrevented of the key event if the VK_MENU is not a system key

@@ -120,9 +120,8 @@ Module::Call(nsIXPConnectWrappedNative* wrapper,
              JS::Value* vp,
              bool* _retval)
 {
-  JSObject* targetObj = nullptr;
-
   mozJSComponentLoader* loader = mozJSComponentLoader::Get();
+  JS::Rooted<JSObject*> targetObj(cx);
   nsresult rv = loader->FindTargetObject(cx, &targetObj);
   NS_ENSURE_SUCCESS(rv, rv);
 

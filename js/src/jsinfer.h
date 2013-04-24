@@ -437,6 +437,8 @@ class TypeSet
         : flags(0), objectSet(NULL), constraintList(NULL)
     {}
 
+    TypeSet(Type type);
+
     void print();
 
     inline void sweep(JS::Zone *zone);
@@ -468,7 +470,10 @@ class TypeSet
      * Clone a type set into an arbitrary allocator. The result should not be
      * modified further.
      */
-    const StackTypeSet *clone(LifoAlloc *alloc) const;
+    StackTypeSet *clone(LifoAlloc *alloc) const;
+
+    /* Join two type sets into a new set. The result should not be modified further. */
+    static StackTypeSet *unionSets(TypeSet *a, TypeSet *b, LifoAlloc *alloc);
 
     /*
      * Add a type to this set, calling any constraint handlers if this is a new
@@ -478,6 +483,12 @@ class TypeSet
 
     /* Mark this type set as representing an own property or configured property. */
     inline void setOwnProperty(JSContext *cx, bool configured);
+
+    /*
+     * Add an object to this set using the specified allocator, without
+     * triggering constraints.
+     */
+    bool addObject(TypeObjectKey *key, LifoAlloc *alloc);
 
     /*
      * Iterate through the objects in this set. getObjectCount overapproximates
@@ -542,6 +553,9 @@ class StackTypeSet : public TypeSet
 {
   public:
 
+    StackTypeSet() : TypeSet() {}
+    StackTypeSet(Type type) : TypeSet(type) {}
+
     /*
      * Make a type set with the specified debugging name, not embedded in
      * another structure.
@@ -576,6 +590,9 @@ class StackTypeSet : public TypeSet
 
     /* Get any type tag which all values in this set must have. */
     JSValueType getKnownTypeTag();
+
+    /* Whether any values in this set might have the specified type. */
+    bool mightBeType(JSValueType type);
 
     bool isMagicArguments() { return getKnownTypeTag() == JSVAL_TYPE_MAGIC; }
 
@@ -627,14 +644,6 @@ class StackTypeSet : public TypeSet
      * null/undefined/int/double, or some combination of those.
      */
     bool knownNonStringPrimitive();
-
-    bool knownPrimitiveOrObject() {
-        TypeFlags flags = TYPE_FLAG_PRIMITIVE | TYPE_FLAG_ANYOBJECT;
-        if (baseFlags() & (~flags & TYPE_FLAG_BASE_MASK))
-            return false;
-
-        return true;
-    }
 
     enum DoubleConversion {
         /* All types in the set should use eager double conversion. */
@@ -1192,12 +1201,6 @@ class TypeScript
     /* Follows slot layout in jsanalyze.h, can get this/arg/local type sets. */
     static inline StackTypeSet *SlotTypes(RawScript script, unsigned slot);
 
-#ifdef DEBUG
-    /* Check that correct types were inferred for the values pushed by this bytecode. */
-    static void CheckBytecode(JSContext *cx, HandleScript script, jsbytecode *pc,
-                              const js::Value *sp);
-#endif
-
     /* Get the default 'new' object for a given standard class, per the script's global. */
     static inline TypeObject *StandardType(JSContext *cx, JSProtoKey kind);
 
@@ -1242,7 +1245,7 @@ class TypeScript
     static inline void SetArgument(JSContext *cx, JSScript *script, unsigned arg,
                                    const js::Value &value);
 
-    static void AddFreezeConstraints(JSContext *cx, HandleScript script);
+    static void AddFreezeConstraints(JSContext *cx, JSScript *script);
     static void Purge(JSContext *cx, HandleScript script);
 
     static void Sweep(FreeOp *fop, RawScript script);

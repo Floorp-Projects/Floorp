@@ -250,9 +250,9 @@
   ]]>
   </script>
 
-  <iframe id="amFrame"  height="400" src="about:memory"></iframe>
+  <iframe id="amFrame"  height="300" src="about:memory"></iframe>
   <!-- vary the capitalization to make sure that works -->
-  <iframe id="amvFrame" height="400" src="About:Memory?verbose"></iframe>
+  <iframe id="amvFrame" height="300" src="About:Memory"></iframe>
 
   <script type="application/javascript">
   <![CDATA[
@@ -609,11 +609,20 @@ Other Measurements\n\
   // Cut+paste the entire page and check that the cut text matches what we
   // expect.  This tests the output in general and also that the cutting and
   // pasting works as expected.
-  function test(aFrameId, aExpected, aNext) {
+  function test(aFrameId, aVerbose, aExpected, aNext) {
     SimpleTest.executeSoon(function() {
       ok(document.title === "about:memory", "document.title is correct");
       let mostRecentActual;
-      document.getElementById(aFrameId).focus();
+      let frame = document.getElementById(aFrameId);
+      frame.focus();
+        
+      // Set the verbose checkbox value and click the go button.
+      let doc = frame.contentWindow.document;
+      let measureButton = doc.getElementById("measureButton");
+      let verbose = doc.getElementById("verbose");
+      verbose.checked = aVerbose;
+      measureButton.click();
+
       SimpleTest.waitForClipboard(
         function(aActual) {
           mostRecentActual = aActual;
@@ -640,10 +649,12 @@ Other Measurements\n\
   SimpleTest.waitForFocus(function() {
     test(
       "amFrame",
+      /* verbose = */ false,
       amExpectedText,
       function() {
         test(
           "amvFrame",
+          /* verbose = */ true,
           amvExpectedText,
           function() {
             finish()

@@ -1,0 +1,81 @@
+<html>
+
+<head>
+  <title>AccessFu test for enabling</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="./jsatcommon.js"></script>
+  <script type="application/javascript">
+
+    function confirmAccessFuStart() {
+      ok(AccessFu._enabled, "AccessFu was started and enabled.");
+      AccessFuTest.nextTest();
+    }
+
+    function makeEventManagerListener(waitForMessage, callback) {
+      return {
+        observe: function observe(aMessage) {
+          // Ignore unexpected messages.
+          if (!(aMessage instanceof Components.interfaces.nsIConsoleMessage)) {
+            return;
+          }
+          if (aMessage.message.indexOf(waitForMessage) < 0) {
+            return;
+          }
+          Services.console.unregisterListener(this);
+          callback();
+        }
+      };
+    }
+
+    function testEventManagerStartStop() {
+      // Firs listen for initial 'EventManager.start' and disable AccessFu.
+      var initialStartListener = makeEventManagerListener("EventManager.start",
+        function () {
+          ok(EventManager._started, "EventManager was started.");
+          Services.console.registerListener(stopListener);
+          AccessFu._disable();
+        });
+      // Listen for 'EventManager.stop' and enable AccessFu again.
+      var stopListener = makeEventManagerListener("EventManager.stop",
+        function () {
+          isnot(EventManager._started, true, "EventManager was stopped.");
+          Services.console.registerListener(finalStartListener);
+          AccessFu._enable();
+        });
+      // Make sure EventManager is started again.
+      var finalStartListener = makeEventManagerListener("EventManager.start",
+        function () {
+          ok(EventManager._started, "EventManager was started again.");
+          AccessFuTest.finish();
+        });
+
+      Services.console.registerListener(initialStartListener);
+    }
+
+    function doTest() {
+      AccessFuTest.addFunc(confirmAccessFuStart);
+      AccessFuTest.addFunc(testEventManagerStartStop);
+      AccessFuTest.waitForExplicitFinish();
+      AccessFuTest.runTests();  // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+
+</head>
+<body>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=811307"
+     title="[AccessFu] Add mochitest for enabling">
+    Mozilla Bug 811307
+  </a>
+</body>
+</html>

@@ -804,17 +804,20 @@ abstract public class BrowserApp extends GeckoApp
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        // Don't update the url in the toolbar if the activity was cancelled, or if it was launched to pick
-        //  a site. The order of these checks matters because data will be null if the activity was cancelled.
-        if (resultCode != Activity.RESULT_OK ||
-            data.getStringExtra(AwesomeBar.TARGET_KEY).equals(AwesomeBar.Target.PICK_SITE.toString())) {
-            // We still need to call fromAwesomeBarSearch to perform the toolbar animation.
-            mBrowserToolbar.fromAwesomeBarSearch(null);
-            return;
+        String url = null;
+
+        // Don't update the url in the toolbar if the activity was cancelled.
+        if (resultCode == Activity.RESULT_OK && data != null) {
+            // Don't update the url if the activity was launched to pick a site.
+            String targetKey = data.getStringExtra(AwesomeBar.TARGET_KEY);
+            if (!AwesomeBar.Target.PICK_SITE.toString().equals(targetKey)) {
+                // Update the toolbar with the url that was just entered.
+                url = data.getStringExtra(AwesomeBar.URL_KEY);
+            }
         }
 
-        // Otherwise, update the toolbar with the url that was just entered.
-        mBrowserToolbar.fromAwesomeBarSearch(data.getStringExtra(AwesomeBar.URL_KEY));
+        // We always need to call fromAwesomeBarSearch to perform the toolbar animation.
+        mBrowserToolbar.fromAwesomeBarSearch(url);
     }
 
     public View getActionBarLayout() {

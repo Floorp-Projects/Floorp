@@ -19,6 +19,15 @@
 namespace mozilla {
 namespace dom {
 
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(ScriptProcessorNode, AudioNode)
+  if (tmp->Context()) {
+    tmp->Context()->UnregisterScriptProcessorNode(tmp);
+  }
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ScriptProcessorNode, AudioNode)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(ScriptProcessorNode)
 NS_INTERFACE_MAP_END_INHERITING(AudioNode)
 
@@ -192,9 +201,10 @@ public:
                 aInput.GetDuration());
       } else {
         mSeenNonSilenceInput = true;
-        PodCopy(mInputChannels[i] + mInputWriteIndex,
-                static_cast<const float*>(aInput.mChannelData[i]),
-                aInput.GetDuration());
+        MOZ_ASSERT(aInput.GetDuration() == WEBAUDIO_BLOCK_SIZE, "sanity check");
+        AudioBlockCopyChannelWithScale(static_cast<const float*>(aInput.mChannelData[i]),
+                                       aInput.mVolume,
+                                       mInputChannels[i] + mInputWriteIndex);
       }
     }
     mInputWriteIndex += aInput.GetDuration();
@@ -355,6 +365,13 @@ ScriptProcessorNode::ScriptProcessorNode(AudioContext* aContext,
   mStream = aContext->Graph()->CreateAudioNodeStream(engine, MediaStreamGraph::INTERNAL_STREAM,
                                                      aNumberOfInputChannels);
   engine->SetSourceStream(static_cast<AudioNodeStream*> (mStream.get()));
+}
+
+ScriptProcessorNode::~ScriptProcessorNode()
+{
+  if (Context()) {
+    Context()->UnregisterScriptProcessorNode(this);
+  }
 }
 
 JSObject*
