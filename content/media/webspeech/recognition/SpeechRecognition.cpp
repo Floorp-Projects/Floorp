@@ -182,8 +182,9 @@ SpeechRecognition::TransitionAndGetNextState(SpeechEvent* aEvent)
         case EVENT_RECOGNITIONSERVICE_FINAL_RESULT:
         case EVENT_RECOGNITIONSERVICE_ERROR:
           return DoNothing(aEvent);
-        case EVENT_START:
         case EVENT_AUDIO_ERROR:
+          return AbortError(aEvent);
+        case EVENT_START:
           SR_LOG("STATE_ESTIMATING: Unhandled event %d", aEvent->mType);
           MOZ_NOT_REACHED("");
       }
