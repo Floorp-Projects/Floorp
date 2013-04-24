@@ -123,6 +123,10 @@ abstract public class BrowserApp extends GeckoApp
 
     private Integer mPrefObserverId;
 
+    // Tag for the AboutHome fragment. The fragment is automatically attached
+    // after restoring from a saved state, so we use this tag to identify it.
+    private static final String ABOUTHOME_TAG = "abouthome";
+
     @Override
     public void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
         switch(msg) {
@@ -358,13 +362,18 @@ abstract public class BrowserApp extends GeckoApp
             }
         });
 
-        // AboutHome will be dynamically attached and detached as
-        // about:home is shown. Adding/removing the fragment is not synchronous,
-        // so we can't use Fragment#isVisible() to determine whether the
-        // about:home is shown. Instead, we use Fragment#getUserVisibleHint()
-        // with the hint we set ourselves.
-        mAboutHome = AboutHome.newInstance();
-        mAboutHome.setUserVisibleHint(false);
+        // Find the Fragment if it was already added from a restored instance state.
+        mAboutHome = (AboutHome) getSupportFragmentManager().findFragmentByTag(ABOUTHOME_TAG);
+
+        if (mAboutHome == null) {
+            // AboutHome will be dynamically attached and detached as
+            // about:home is shown. Adding/removing the fragment is not synchronous,
+            // so we can't use Fragment#isVisible() to determine whether the
+            // about:home is shown. Instead, we use Fragment#getUserVisibleHint()
+            // with the hint we set ourselves.
+            mAboutHome = AboutHome.newInstance();
+            mAboutHome.setUserVisibleHint(false);
+        }
 
         mBrowserToolbar = new BrowserToolbar(this);
         mBrowserToolbar.from(actionBar);
@@ -1092,7 +1101,7 @@ abstract public class BrowserApp extends GeckoApp
         // it can't be used between the Activity's onSaveInstanceState() and
         // onResume().
         getSupportFragmentManager().beginTransaction()
-                .add(R.id.gecko_layout, mAboutHome).commitAllowingStateLoss();
+                .add(R.id.gecko_layout, mAboutHome, ABOUTHOME_TAG).commitAllowingStateLoss();
         mAboutHome.setUserVisibleHint(true);
 
         mBrowserToolbar.setNextFocusDownId(R.id.abouthome_content);
