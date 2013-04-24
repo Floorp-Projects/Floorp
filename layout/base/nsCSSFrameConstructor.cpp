@@ -7733,7 +7733,8 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
         } else {
           needInvalidatingPaint = true;
           // Just invalidate our area:
-          nsSVGUtils::InvalidateBounds(aFrame);
+          nsSVGEffects::InvalidateRenderingObservers(aFrame);
+          aFrame->InvalidateFrameSubtree();
         }
       } else {
         needInvalidatingPaint = true;
