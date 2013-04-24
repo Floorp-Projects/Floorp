@@ -561,8 +561,7 @@ IonScript::IonScript()
     callTargetEntries_(0),
     refcount_(0),
     recompileInfo_(),
-    osrPcMismatchCounter_(0),
-    slowCallCount(0)
+    osrPcMismatchCounter_(0)
 {
 }
 

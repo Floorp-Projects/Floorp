@@ -245,6 +245,7 @@ ConvertFrames(JSContext *cx, IonActivation *activation, IonBailoutIterator &it)
     // Set a flag to avoid bailing out on every iteration or function call. Ion can
     // compile and run the script again after an invalidation.
     it.ionScript()->setBailoutExpected();
+    it.script()->updateBaselineOrIonRaw();
 
     // We use OffTheBooks instead of cx because at this time we cannot iterate
     // on the stack safely and the reported error attempts to walk the IonMonkey

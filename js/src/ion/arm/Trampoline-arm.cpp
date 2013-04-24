@@ -417,13 +417,7 @@ IonRuntime::generateArgumentsRectifier(JSContext *cx, ExecutionMode mode, void *
     // Call the target function.
     // Note that this code assumes the function is JITted.
     masm.ma_ldr(DTRAddr(r1, DtrOffImm(offsetof(JSFunction, u.i.script_))), r3);
-    if (mode == SequentialExecution) {
-        masm.loadBaselineOrIonCode(r3, r6, NULL);
-    } else {
-        masm.ma_ldr(DTRAddr(r3, DtrOffImm(OffsetOfIonInJSScript(mode))), r3);
-        masm.ma_ldr(DTRAddr(r3, DtrOffImm(IonScript::offsetOfMethod())), r3);
-    }
-    masm.ma_ldr(DTRAddr(r3, DtrOffImm(IonCode::offsetOfCode())), r3);
+    masm.loadBaselineOrIonRaw(r3, r3, mode, NULL);
     masm.ma_callIonHalfPush(r3);
 
     uint32_t returnOffset = masm.currentOffset();
