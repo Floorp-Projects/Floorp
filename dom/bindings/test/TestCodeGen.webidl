@@ -20,6 +20,15 @@ callback interface TestCallbackInterface {
   long doSomethingElse(DOMString arg, TestInterface otherArg);
   void doSequenceLongArg(sequence<long> arg);
   void doSequenceStringArg(sequence<DOMString> arg);
+  sequence<long> getSequenceOfLong();
+  sequence<TestInterface> getSequenceOfInterfaces();
+  sequence<TestInterface>? getNullableSequenceOfInterfaces();
+  sequence<TestInterface?> getSequenceOfNullableInterfaces();
+  sequence<TestInterface?>? getNullableSequenceOfNullableInterfaces();
+  sequence<TestCallbackInterface> getSequenceOfCallbackInterfaces();
+  sequence<TestCallbackInterface>? getNullableSequenceOfCallbackInterfaces();
+  sequence<TestCallbackInterface?> getSequenceOfNullableCallbackInterfaces();
+  sequence<TestCallbackInterface?>? getNullableSequenceOfNullableCallbackInterfaces();
 };
 
 callback interface TestSingleOperationCallbackInterface {
