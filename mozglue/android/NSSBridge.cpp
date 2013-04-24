@@ -13,6 +13,13 @@
 
 #include "ElfLoader.h"
 
+#ifdef MOZ_MEMORY
+// libc's free().
+extern "C" void __real_free(void *);
+#else
+#define __real_free(a) free(a)
+#endif
+
 #ifdef DEBUG
 #define LOG(x...) __android_log_print(ANDROID_LOG_INFO, "GeckoJNI", x)
 #else
@@ -84,7 +91,8 @@ throwError(JNIEnv* jenv, const char * funcString) {
     LOG("Throwing error: %s\n", msg);
 
     JNI_Throw(jenv, "java/lang/Exception", msg);
-    free(msg);
+    // msg is allocated by asprintf, it needs to be freed by libc.
+    __real_free(msg);
     LOG("Error thrown\n");
 }
 
