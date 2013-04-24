@@ -233,6 +233,15 @@ MOZJS_MAJOR_VERSION=`echo $MOZILLA_VERSION | sed "s|\(^[0-9]*\)\.[0-9]*.*|\1|"`
 MOZJS_MINOR_VERSION=`echo $MOZILLA_VERSION | sed "s|^[0-9]*\.\([0-9]*\).*|\1|"`
 MOZJS_PATCH_VERSION=`echo $MOZILLA_VERSION | sed "s|^[0-9]*\.[0-9]*[^0-9]*||"`
 IS_ALPHA=`echo $MOZILLA_VERSION | grep [ab]`
+
+if test -n "$JS_STANDALONE"; then
+JS_SHELL_NAME=js$MOZJS_MAJOR_VERSION
+JS_CONFIG_NAME=js$MOZJS_MAJOR_VERSION-config
+else
+JS_SHELL_NAME=js
+JS_CONFIG_NAME=js-config
+fi
+
 changequote([,])
 if test -n "$IS_ALPHA"; then
   changequote(,)
@@ -241,6 +250,8 @@ if test -n "$IS_ALPHA"; then
 fi
 AC_DEFINE_UNQUOTED(MOZJS_MAJOR_VERSION,"$MOZJS_MAJOR_VERSION")
 AC_DEFINE_UNQUOTED(MOZJS_MINOR_VERSION,"$MOZJS_MINOR_VERSION")
+AC_SUBST(JS_SHELL_NAME)
+AC_SUBST(JS_CONFIG_NAME)
 AC_SUBST(MOZJS_MAJOR_VERSION)
 AC_SUBST(MOZJS_MINOR_VERSION)
 AC_SUBST(MOZJS_PATCH_VERSION)
@@ -4421,9 +4432,9 @@ dnl ========================================================
 AC_OUTPUT([js-confdefs.h Makefile config/autoconf.mk config/emptyvars.mk])
 
 # Produce the js-config script at configure time; see the comments for
-# 'js-config' in Makefile.in.
-AC_MSG_RESULT(invoking $MAKE to create js-config script)
-$MAKE js-config
+# 'js*-config' in Makefile.in.
+AC_MSG_RESULT(invoking $MAKE to create $JS_CONFIG_NAME script)
+$MAKE $JS_CONFIG_NAME
 
 # Build jsctypes if it's enabled.
 if test "$JS_HAS_CTYPES" -a -z "$MOZ_NATIVE_FFI"; then
