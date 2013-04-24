@@ -2793,11 +2793,8 @@ for (uint32_t i = 0; i < length; ++i) {
                 else:
                     declType = CGGeneric("OwningNonNull<%s>" % name)
                 conversion = (
-                    "  bool inited;\n"
-                    "  ${declName} = new %s(cx, ${obj}, &${val}.toObject(), &inited);\n"
-                    "  if (!inited) {\n"
-                    "%s\n"
-                    "  }\n" % (name, CGIndenter(exceptionCodeIndented).define()))
+                    "  ${declName} = new %s(&${val}.toObject());\n" % name)
+
             template = wrapObjectTemplate(conversion, type,
                                           "${declName} = nullptr",
                                           failureCode)
@@ -3112,11 +3109,7 @@ for (uint32_t i = 0; i < length; ++i) {
             else:
                 declType = CGGeneric("OwningNonNull<%s>" % name)
             conversion = (
-                "  bool inited;\n"
-                "  ${declName} = new %s(cx, ${obj}, &${val}.toObject(), &inited);\n"
-                "  if (!inited) {\n"
-                "%s\n"
-                "  }\n" % (name, CGIndenter(exceptionCodeIndented).define()))
+                "  ${declName} = new %s(&${val}.toObject());\n" % name)
 
         if allowTreatNonCallableAsNull and type.treatNonCallableAsNull():
             haveCallable = "JS_ObjectIsCallable(cx, &${val}.toObject())"
@@ -8508,14 +8501,12 @@ class CGCallback(CGClass):
 
     def getConstructors(self):
         return [ClassConstructor(
-            [Argument("JSContext*", "cx"),
-             Argument("JSObject*", "aOwner"),
-             Argument("JSObject*", "aCallback"),
-             Argument("bool*", "aInited")],
+            [Argument("JSObject*", "aCallback")],
             bodyInHeader=True,
             visibility="public",
+            explicit=True,
             baseConstructors=[
-                "%s(cx, aOwner, aCallback, aInited)" % self.baseName
+                "%s(aCallback)" % self.baseName
                 ])]
 
     def getMethodImpls(self, method):
@@ -8607,16 +8598,6 @@ class CGCallbackInterface(CGCallback):
                    for sig in m.signatures()]
         CGCallback.__init__(self, iface, descriptor, "CallbackInterface",
                             methods, getters=getters, setters=setters)
-
-    def getConstructors(self):
-        return CGCallback.getConstructors(self) + [
-            ClassConstructor(
-                [Argument("JSObject*", "aCallback")],
-                bodyInHeader=True,
-                visibility="public",
-                explicit=True,
-                baseConstructors=["CallbackInterface(aCallback)"])
-            ]
 
 class FakeMember():
     def __init__(self):

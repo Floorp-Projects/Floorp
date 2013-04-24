@@ -11799,20 +11799,11 @@ nsGlobalWindow::DisableNetworkEvent(uint32_t aType)
   }                                                                          \
   NS_IMETHODIMP nsGlobalWindow::SetOn##name_(JSContext *cx,                  \
                                              const JS::Value &v) {           \
-    JSObject *obj = mJSObject;                                               \
-    if (!obj) {                                                              \
-      /* Just silently do nothing */                                         \
-      return NS_OK;                                                          \
-    }                                                                        \
     nsRefPtr<EventHandlerNonNull> handler;                                   \
     JSObject *callable;                                                      \
     if (v.isObject() &&                                                      \
         JS_ObjectIsCallable(cx, callable = &v.toObject())) {                 \
-      bool ok;                                                               \
-      handler = new EventHandlerNonNull(cx, obj, callable, &ok);             \
-      if (!ok) {                                                             \
-        return NS_ERROR_OUT_OF_MEMORY;                                       \
-      }                                                                      \
+      handler = new EventHandlerNonNull(callable);                           \
     }                                                                        \
     ErrorResult rv;                                                          \
     SetOn##name_(handler, rv);                                               \
@@ -11839,19 +11830,11 @@ nsGlobalWindow::DisableNetworkEvent(uint32_t aType)
       return NS_ERROR_OUT_OF_MEMORY;                                         \
     }                                                                        \
                                                                              \
-    JSObject *obj = mJSObject;                                               \
-    if (!obj) {                                                              \
-      return NS_ERROR_UNEXPECTED;                                            \
-    }                                                                        \
     nsRefPtr<OnErrorEventHandlerNonNull> handler;                            \
     JSObject *callable;                                                      \
     if (v.isObject() &&                                                      \
         JS_ObjectIsCallable(cx, callable = &v.toObject())) {                 \
-      bool ok;                                                               \
-      handler = new OnErrorEventHandlerNonNull(cx, obj, callable, &ok);      \
-      if (!ok) {                                                             \
-        return NS_ERROR_OUT_OF_MEMORY;                                       \
-      }                                                                      \
+      handler = new OnErrorEventHandlerNonNull(callable);                    \
     }                                                                        \
     return elm->SetEventHandler(handler);                                    \
   }
@@ -11877,19 +11860,11 @@ nsGlobalWindow::DisableNetworkEvent(uint32_t aType)
       return NS_ERROR_OUT_OF_MEMORY;                                         \
     }                                                                        \
                                                                              \
-    JSObject *obj = mJSObject;                                               \
-    if (!obj) {                                                              \
-      return NS_ERROR_UNEXPECTED;                                            \
-    }                                                                        \
     nsRefPtr<BeforeUnloadEventHandlerNonNull> handler;                       \
     JSObject *callable;                                                      \
     if (v.isObject() &&                                                      \
         JS_ObjectIsCallable(cx, callable = &v.toObject())) {                 \
-      bool ok;                                                               \
-      handler = new BeforeUnloadEventHandlerNonNull(cx, obj, callable, &ok); \
-      if (!ok) {                                                             \
-        return NS_ERROR_OUT_OF_MEMORY;                                       \
-      }                                                                      \
+      handler = new BeforeUnloadEventHandlerNonNull(callable);               \
     }                                                                        \
     return elm->SetEventHandler(handler);                                    \
   }
