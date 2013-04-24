@@ -189,14 +189,14 @@ nsDOMMultipartFile::InitBlob(JSContext* aCx,
   if (aArgc > 1) {
     if (NS_IsMainThread()) {
       BlobPropertyBag d;
-      if (!d.Init(aCx, JS::NullPtr(), aArgv[1])) {
+      if (!d.Init(aCx, aArgv[1])) {
         return NS_ERROR_TYPE_ERR;
       }
       mContentType = d.mType;
       nativeEOL = d.mEndings == EndingTypesValues::Native;
     } else {
       BlobPropertyBagWorkers d;
-      if (!d.Init(aCx, JS::NullPtr(), aArgv[1])) {
+      if (!d.Init(aCx, aArgv[1])) {
         return NS_ERROR_TYPE_ERR;
       }
       mContentType = d.mType;
@@ -283,7 +283,7 @@ nsDOMMultipartFile::InitFile(JSContext* aCx,
 
   if (aArgc > 1) {
     FilePropertyBag d;
-    if (!d.Init(aCx, JS::NullPtr(), aArgv[1])) {
+    if (!d.Init(aCx, aArgv[1])) {
       return NS_ERROR_TYPE_ERR;
     }
     mName = d.mName;
