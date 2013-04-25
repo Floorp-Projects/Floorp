@@ -4341,7 +4341,8 @@ nsGlobalWindow::MozRequestAnimationFrame(nsIFrameRequestCallback* aCallback,
   if (mJSObject)
     js::NotifyAnimationActivity(mJSObject);
 
-  return mDoc->ScheduleFrameRequestCallback(aCallback, aHandle);
+  nsIDocument::FrameRequestCallbackHolder holder(aCallback);
+  return mDoc->ScheduleFrameRequestCallback(holder, aHandle);
 }
 
 NS_IMETHODIMP
