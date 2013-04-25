@@ -1968,7 +1968,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   #tabbrowser-tabs[movingtab] > .tabbrowser-tab[beforeselected]:not([last-visible-tab])::after,
   .tabbrowser-tab:not([selected]):not([afterselected-visible]):not([afterhovered]):not([first-visible-tab]):not(:hover)::before,
   #tabbrowser-tabs:not([overflow]) > .tabbrowser-tab[last-visible-tab]:not([selected]):not([beforehovered]):not(:hover)::after {
-    background-image: url("chrome://browser/skin/tabbrowser/tab-separator-luna-blue.png");
+    content: url("chrome://browser/skin/tabbrowser/tab-separator-luna-blue.png");
   }
 }
 %endif
