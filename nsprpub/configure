@@ -735,8 +735,8 @@ test "$host_alias" != "$target_alias" &&
 
 
 MOD_MAJOR_VERSION=4
-MOD_MINOR_VERSION=9
-MOD_PATCH_VERSION=6
+MOD_MINOR_VERSION=10
+MOD_PATCH_VERSION=0
 NSPR_MODNAME=nspr20
 _HAVE_PTHREADS=
 USE_PTHREADS=
@@ -1017,10 +1017,6 @@ echo "configure:961: checking for android platform directory" >&5
 
     cat >> confdefs.h <<\EOF
 #define ANDROID 1
-EOF
-
-    cat >> confdefs.h <<EOF
-#define ANDROID_VERSION $android_version
 EOF
 
     ;;
@@ -1449,12 +1445,12 @@ echo "configure:1447: checking whether the $host compiler ($HOST_CC $HOST_CFLAGS
 #include "confdefs.h"
 
 int main() {
-return(0);
+return 0;
 ; return 0; }
 EOF
 if { (eval echo configure:1456: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   rm -rf conftest*
-  ac_cv_prog_host_cc_works=1 echo "$ac_t""yes" 1>&6
+  echo "$ac_t""yes" 1>&6
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5

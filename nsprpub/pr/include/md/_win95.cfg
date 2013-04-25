@@ -14,14 +14,8 @@
 #define WIN32
 #endif
 
-#ifdef _WIN32_WCE
-#ifndef WINCE
-#define WINCE
-#endif
-#else
 #ifndef WIN95
 #define WIN95
-#endif
 #endif
 
 #define PR_AF_INET6 23  /* same as AF_INET6 */
@@ -214,7 +208,7 @@
 #define PR_ALIGN_OF_FLOAT   4
 #define PR_ALIGN_OF_WORD    4
 #define PR_ALIGN_OF_DWORD   8
-#define PR_ALIGN_OF_DOUBLE  4
+#define PR_ALIGN_OF_DOUBLE  8
 #define PR_ALIGN_OF_POINTER 4
 
 #define PR_BYTES_PER_WORD_LOG2  2
