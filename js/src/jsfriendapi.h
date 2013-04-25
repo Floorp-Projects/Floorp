@@ -1454,4 +1454,7 @@ extern JS_FRIEND_API(JSBool)
 js_DefineOwnProperty(JSContext *cx, JSObject *objArg, jsid idArg,
                      const js::PropertyDescriptor& descriptor, JSBool *bp);
 
+extern JS_FRIEND_API(JSBool)
+js_ReportIsNotFunction(JSContext *cx, const JS::Value& v);
+
 #endif /* jsfriendapi_h___ */

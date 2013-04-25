@@ -265,6 +265,11 @@ public:
     return mImpl.ref();
   }
 
+  Optional& AsMutable() const
+  {
+    return *const_cast<Optional*>(this);
+  }
+
   // If we ever decide to add conversion operators for optional arrays
   // like the ones Nullable has, we'll need to ensure that Maybe<> has
   // the boolean before the actual data.
@@ -377,6 +382,16 @@ public:
   operator JS::Value() const
   {
     return mValue;
+  }
+
+  JS::Value* operator&()
+  {
+    return &mValue;
+  }
+
+  const JS::Value* operator&() const
+  {
+    return &mValue;
   }
 
 private:

@@ -64,6 +64,10 @@ public:
     return mIsNull;
   }
 
+  Nullable& AsMutable() const {
+    return *const_cast<Nullable*>(this);
+  }
+
   // Make it possible to use a const Nullable of an array type with other
   // array types.
   template<typename U>

@@ -1431,6 +1431,11 @@ public:
     MOZ_ASSERT(!empty() && ref(), "Can not alias null.");
     return *ref();
   }
+
+  JSObject** Slot() { // To make us look like a NonNull
+    // Assert if we're empty, on purpose
+    return ref().address();
+  }
 };
 
 class LazyRootedObject : public Maybe<JS::RootedObject>
@@ -1438,6 +1443,12 @@ class LazyRootedObject : public Maybe<JS::RootedObject>
 public:
   operator JSObject*() const {
     return empty() ? (JSObject*) nullptr : ref();
+  }
+
+  JSObject** operator&()
+  {
+    // Assert if we're empty, on purpose
+    return ref().address();
   }
 };
 
