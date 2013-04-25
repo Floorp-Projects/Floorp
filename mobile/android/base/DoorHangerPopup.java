@@ -54,6 +54,8 @@ public class DoorHangerPopup extends PopupWindow
         registerEventListener("Doorhanger:Add");
         registerEventListener("Doorhanger:Remove");
         Tabs.registerOnTabsChangedListener(this);
+
+        setAnimationStyle(R.style.PopupAnimation);
     }
 
     void destroy() {
