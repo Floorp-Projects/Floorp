@@ -1741,8 +1741,10 @@ IonBuilder::restartLoop(CFGState state)
     // of the appropriate type and incoming edges to preserve.
     graph().removeBlocksAfter(header);
 
-    // Remove all instructions from the header itself.
+    // Remove all instructions from the header itself, and all resume points
+    // except the entry resume point.
     header->discardAllInstructions();
+    header->discardAllResumePoints(/* discardEntry = */ false);
     header->setStackDepth(header->getPredecessor(0)->stackDepth());
 
     popCfgStack();

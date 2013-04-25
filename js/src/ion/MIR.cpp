@@ -1674,6 +1674,7 @@ MResumePoint::MResumePoint(MBasicBlock *block, jsbytecode *pc, MResumePoint *cal
     instruction_(NULL),
     mode_(mode)
 {
+    block->addResumePoint(this);
 }
 
 void
