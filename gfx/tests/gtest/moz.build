@@ -9,9 +9,17 @@ MODULE = 'gfxtest'
 LIBRARY_NAME = 'gfxtest'
 
 GTEST_CPP_SOURCES += [
+    # Hangs on linux in ApplyGdkScreenFontOptions
+    #'gfxFontSelectionTest.cpp',
+    'gfxSurfaceRefCountTest.cpp',
+    # Test works but it doesn't assert anything
+    #'gfxTextRunPerfTest.cpp',
+    'gfxWordCacheTest.cpp',
     'TestAsyncPanZoomController.cpp',
     'TestLayers.cpp',
     'TestTiledLayerBuffer.cpp',
+    'TestRegion.cpp',
+    'TestColorNames.cpp',
 ]
 
 # Because of gkmedia on windows we wont find these
@@ -20,6 +28,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'windows':
     GTEST_CPP_SOURCES += [
         'TestBase.cpp',
         'TestMoz2D.cpp',
+        'TestRect.cpp',
         'TestPoint.cpp',
         'TestScaling.cpp',
     ]

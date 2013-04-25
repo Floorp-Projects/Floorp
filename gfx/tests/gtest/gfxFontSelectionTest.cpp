@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "gtest/gtest.h"
+
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
 #include "nsString.h"
@@ -15,14 +17,6 @@
 #include "gfxPlatform.h"
 
 #include "gfxFontTest.h"
-
-#if defined(XP_MACOSX)
-#include "gfxTestCocoaHelper.h"
-#endif
-
-#ifdef MOZ_WIDGET_GTK
-#include "gtk/gtk.h"
-#endif
 
 using namespace mozilla;
 
@@ -122,7 +116,7 @@ struct TestEntry {
         nsCString fontName;
         LiteralArray glyphs;
     };
-    
+
     void SetRTL()
     {
         isRTL = true;
@@ -186,9 +180,7 @@ struct TestEntry {
     nsTArray<ExpectItem> expectItems;
 };
 
-nsTArray<TestEntry> testList;
-
-already_AddRefed<gfxContext>
+static already_AddRefed<gfxContext>
 MakeContext ()
 {
     const int size = 200;
@@ -198,13 +190,13 @@ MakeContext ()
     surface = gfxPlatform::GetPlatform()->
         CreateOffscreenSurface(gfxIntSize(size, size),
                                gfxASurface::ContentFromFormat(gfxASurface::ImageFormatRGB24));
-    gfxContext *ctx = new gfxContext(surface);
-    NS_IF_ADDREF(ctx);
-    return ctx;
+    nsRefPtr<gfxContext> ctx = new gfxContext(surface);
+    return ctx.forget();
 }
 
 TestEntry*
-AddTest (const char *utf8FamilyString,
+AddTest (nsTArray<TestEntry>& testList,
+         const char *utf8FamilyString,
          const gfxFontStyle& fontStyle,
          int stringType,
          const char *string)
@@ -219,8 +211,6 @@ AddTest (const char *utf8FamilyString,
     return &(testList[testList.Length()-1]);
 }
 
-void SetupTests();
-
 void
 DumpStore (gfxFontTestStore *store) {
     if (store->items.Length() == 0) {
@@ -231,7 +221,7 @@ DumpStore (gfxFontTestStore *store) {
          i < store->items.Length();
          i++)
     {
-        printf ("Run[% 2d]: '%s' ", i, nsPromiseFlatCString(store->items[i].platformFont).get());
+        printf ("Run[% 2d]: '%s' ", i, store->items[i].platformFont.BeginReading());
 
         for (int j = 0; j < store->items[i].num_glyphs; j++)
             printf ("%d ", int(store->items[i].glyphs[j].index));
@@ -243,7 +233,7 @@ DumpStore (gfxFontTestStore *store) {
 void
 DumpTestExpect (TestEntry *test) {
     for (uint32_t i = 0; i < test->expectItems.Length(); i++) {
-        printf ("Run[% 2d]: '%s' ", i, nsPromiseFlatCString(test->expectItems[i].fontName).get());
+        printf ("Run[% 2d]: '%s' ", i, test->expectItems[i].fontName.BeginReading());
         for (uint32_t j = 0; j < test->expectItems[i].glyphs.data.Length(); j++)
             printf ("%d ", int(test->expectItems[i].glyphs.data[j]));
 
@@ -251,7 +241,9 @@ DumpTestExpect (TestEntry *test) {
     }
 }
 
-bool
+void SetupTests(nsTArray<TestEntry>& testList);
+
+static bool
 RunTest (TestEntry *test, gfxContext *ctx) {
     nsRefPtr<gfxFontGroup> fontGroup;
 
@@ -277,76 +269,44 @@ RunTest (TestEntry *test, gfxContext *ctx) {
     }
 
     gfxFontTestStore::NewStore();
-    textRun->Draw(ctx, gfxPoint(0,0), 0, length, nullptr, nullptr);
+    textRun->Draw(ctx, gfxPoint(0,0), gfxFont::GLYPH_FILL, 0, length, nullptr, nullptr, nullptr);
     gfxFontTestStore *s = gfxFontTestStore::CurrentStore();
-
-    gTextRunCache->RemoveTextRun(textRun);
 
     if (!test->Check(s)) {
         DumpStore(s);
         printf ("  expected:\n");
         DumpTestExpect(test);
+        gfxFontTestStore::DeleteStore();
         return false;
     }
+
+    gfxFontTestStore::DeleteStore();
 
     return true;
 }
 
-int
-main (int argc, char **argv) {
+TEST(Gfx, FontSelection) {
     int passed = 0;
     int failed = 0;
 
-#ifdef MOZ_WIDGET_GTK
-    gtk_init(&argc, &argv); 
-#endif
-#ifdef XP_MACOSX
-    CocoaPoolInit();
-#endif
-
-    // Initialize XPCOM
-    nsresult rv = NS_InitXPCOM2(nullptr, nullptr, nullptr);
-    if (NS_FAILED(rv))
-        return -1;
-
-    if (!gfxPlatform::GetPlatform())
-        return -1;
-
-    // let's get all the xpcom goop out of the system
-    fflush (stderr);
-    fflush (stdout);
-
-    // don't need to query, we might need to set up some prefs later
-    if (0) {
-        nsresult rv;
-
-        nsAdoptingCString str = Preferences::GetCString("font.name.sans-serif.x-western");
-        printf ("sans-serif.x-western: %s\n", nsPromiseFlatCString(str).get());
-    }
-
     // set up the tests
-    SetupTests();
+    nsTArray<TestEntry> testList;
+    SetupTests(testList);
 
     nsRefPtr<gfxContext> context = MakeContext();
 
-    for (uint test = 0;
+    for (uint32_t test = 0;
          test < testList.Length();
          test++)
     {
-        printf ("==== Test %d\n", test);
         bool result = RunTest (&testList[test], context);
         if (result) {
-            printf ("Test %d succeeded\n", test);
             passed++;
         } else {
             printf ("Test %d failed\n", test);
             failed++;
         }
     }
-
-    printf ("PASSED: %d FAILED: %d\n", passed, failed);
-    fflush (stderr);
-    fflush (stdout);
 }
 
 // The tests themselves

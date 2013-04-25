@@ -1,9 +1,11 @@
 #include <stdio.h>
 
+#include "gtest/gtest.h"
+
 #include "gfxASurface.h"
 #include "gfxImageSurface.h"
 
-#include "cairo.h"
+#include "cairo/cairo.h"
 
 int
 GetASurfaceRefCount(gfxASurface *s) {
@@ -138,13 +140,12 @@ TestExistingSurface () {
     return failures;
 }
 
-int
-main (int argc, char **argv) {
+TEST(Gfx, SurfaceRefCount) {
     int fail;
 
     fail = TestNewSurface();
-    fprintf (stderr, "TestNewSurface: %d failures\n", fail);
+    EXPECT_TRUE(fail == 0) << "TestNewSurface: " << fail << " failures";
     fail = TestExistingSurface();
-    fprintf (stderr, "TestExistingSurface: %d failures\n", fail);
+    EXPECT_TRUE(fail == 0) << "TestExistingSurface: " << fail << " failures";
 }
 
