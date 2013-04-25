@@ -57,7 +57,7 @@ native nsSize(nsSize);
  *
  * Internally, imgIContainer also manages animation of images.
  */
-[scriptable, builtinclass, uuid(55531bcd-7d4a-4da0-ab87-7c64c5ae5e12)]
+[scriptable, builtinclass, uuid(e385f907-9a59-419b-8e15-e2a96d8ce044)]
 interface imgIContainer : nsISupports
 {
   /**
@@ -279,4 +279,18 @@ interface imgIContainer : nsISupports
 
   /* Methods to control animation */
   void resetAnimation();
+
+  /*
+   * Returns an index for the requested animation frame (either FRAME_FIRST or
+   * FRAME_CURRENT).
+   *
+   * The units of the index aren't specified, and may vary between different
+   * types of images. What you can rely on is that on all occasions when
+   * getFrameIndex(FRAME_CURRENT) returns a certain value,
+   * draw(..FRAME_CURRENT..) will draw the same frame. The same holds for
+   * FRAME_FIRST as well.
+   *
+   * @param aWhichFrame Frame specifier of the FRAME_* variety.
+   */
+  [notxpcom] float getFrameIndex(in uint32_t aWhichFrame);
 };
