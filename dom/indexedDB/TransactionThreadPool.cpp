@@ -38,7 +38,7 @@ public:
   NS_DECL_NSITHREADPOOLLISTENER
 
 private:
-  ~TransactionThreadPoolListener()
+  virtual ~TransactionThreadPoolListener()
   { }
 };
 
