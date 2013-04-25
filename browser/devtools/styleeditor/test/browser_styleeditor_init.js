@@ -4,52 +4,71 @@
 
 const TESTCASE_URI = TEST_BASE + "simple.html";
 
-let gUI;
 
 function test()
 {
   waitForExplicitFinish();
 
-  addTabAndOpenStyleEditor(function(panel) {
-    gUI = panel.UI;
-    gUI.on("editor-added", testEditorAdded);
+  launchStyleEditorChrome(function(aChrome) {
+    aChrome.addChromeListener({
+      onEditorAdded: testEditorAdded
+    });
+    run(aChrome);
   });
-
   content.location = TESTCASE_URI;
 }
 
-let gEditorAddedCount = 0;
-function testEditorAdded(aEvent, aEditor)
+function run(aChrome)
 {
-  if (aEditor.styleSheet.styleSheetIndex == 0) {
+  is(aChrome.contentWindow.document.readyState, "complete",
+     "content document is complete");
+
+  let SEC = gChromeWindow.styleEditorChrome;
+  is(SEC, aChrome, "StyleEditorChrome object exists as new window property");
+
+  // check editors are instantiated
+  is(SEC.editors.length, 2,
+     "there is two StyleEditor instances managed");
+  ok(SEC.editors[0].styleSheetIndex < SEC.editors[1].styleSheetIndex,
+     "editors are ordered by styleSheetIndex");
+}
+
+let gEditorAddedCount = 0;
+function testEditorAdded(aChrome, aEditor)
+{
+  if (aEditor.styleSheetIndex == 0) {
     gEditorAddedCount++;
-    testFirstStyleSheetEditor(aEditor);
+    testFirstStyleSheetEditor(aChrome, aEditor);
   }
-  if (aEditor.styleSheet.styleSheetIndex == 1) {
+  if (aEditor.styleSheetIndex == 1) {
     gEditorAddedCount++;
-    testSecondStyleSheetEditor(aEditor);
+    testSecondStyleSheetEditor(aChrome, aEditor);
   }
 
   if (gEditorAddedCount == 2) {
-    gUI = null;
     finish();
   }
 }
 
-function testFirstStyleSheetEditor(aEditor)
+function testFirstStyleSheetEditor(aChrome, aEditor)
 {
   // Note: the html <link> contains charset="UTF-8".
   ok(aEditor._state.text.indexOf("\u263a") >= 0,
      "stylesheet is unicode-aware.");
 
   //testing TESTCASE's simple.css stylesheet
-  is(aEditor.styleSheet.styleSheetIndex, 0,
+  is(aEditor.styleSheetIndex, 0,
      "first stylesheet is at index 0");
 
-  is(aEditor, gUI.editors[0],
+  is(aEditor, aChrome.editors[0],
      "first stylesheet corresponds to StyleEditorChrome.editors[0]");
 
-  let summary = aEditor.summary;
+  ok(!aEditor.hasFlag("inline"),
+     "first stylesheet does not have INLINE flag");
+
+  let summary = aChrome.getSummaryElementForEditor(aEditor);
+  ok(!summary.classList.contains("inline"),
+     "first stylesheet UI does not have INLINE class");
 
   let name = summary.querySelector(".stylesheet-name > label").getAttribute("value");
   is(name, "simple.css",
@@ -63,16 +82,21 @@ function testFirstStyleSheetEditor(aEditor)
      "first stylesheet UI is focused/active");
 }
 
-function testSecondStyleSheetEditor(aEditor)
+function testSecondStyleSheetEditor(aChrome, aEditor)
 {
   //testing TESTCASE's inline stylesheet
-  is(aEditor.styleSheet.styleSheetIndex, 1,
+  is(aEditor.styleSheetIndex, 1,
      "second stylesheet is at index 1");
 
-  is(aEditor, gUI.editors[1],
+  is(aEditor, aChrome.editors[1],
      "second stylesheet corresponds to StyleEditorChrome.editors[1]");
 
-  let summary = aEditor.summary;
+  ok(aEditor.hasFlag("inline"),
+     "second stylesheet has INLINE flag");
+
+  let summary = aChrome.getSummaryElementForEditor(aEditor);
+  ok(summary.classList.contains("inline"),
+     "second stylesheet UI has INLINE class");
 
   let name = summary.querySelector(".stylesheet-name > label").getAttribute("value");
   ok(/^<.*>$/.test(name),

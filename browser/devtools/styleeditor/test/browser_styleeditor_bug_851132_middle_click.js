@@ -3,45 +3,37 @@
 
 const TESTCASE_URI = TEST_BASE + "four.html";
 
-let gUI;
-
 function test() {
   waitForExplicitFinish();
 
-  let count = 0;
-  addTabAndOpenStyleEditor(function(panel) {
-    gUI = panel.UI;
-    gUI.on("editor-added", function(event, editor) {
-      count++;
-      if (count == 2) {
-        runTests();
-      }
-    })
+  addTabAndLaunchStyleEditorChromeWhenLoaded(function (aChrome) {
+    run(aChrome);
   });
 
   content.location = TESTCASE_URI;
 }
 
-let timeoutID;
+let gSEChrome, timeoutID;
 
-function runTests() {
+function run(aChrome) {
+  gSEChrome = aChrome;
   gBrowser.tabContainer.addEventListener("TabOpen", onTabAdded, false);
-  gUI.editors[0].getSourceEditor().then(onEditor0Attach);
-  gUI.editors[1].getSourceEditor().then(onEditor1Attach);
+  aChrome.editors[0].addActionListener({onAttach: onEditor0Attach});
+  aChrome.editors[1].addActionListener({onAttach: onEditor1Attach});
 }
 
 function getStylesheetNameLinkFor(aEditor) {
-  return aEditor.summary.querySelector(".stylesheet-name");
+  return gSEChrome.getSummaryElementForEditor(aEditor).querySelector(".stylesheet-name");
 }
 
 function onEditor0Attach(aEditor) {
   waitForFocus(function () {
     // left mouse click should focus editor 1
     EventUtils.synthesizeMouseAtCenter(
-      getStylesheetNameLinkFor(gUI.editors[1]),
+      getStylesheetNameLinkFor(gSEChrome.editors[1]),
       {button: 0},
-      gPanelWindow);
-  }, gPanelWindow);
+      gChromeWindow);
+  }, gChromeWindow);
 }
 
 function onEditor1Attach(aEditor) {
@@ -50,9 +42,9 @@ function onEditor1Attach(aEditor) {
 
   // right mouse click should not open a new tab
   EventUtils.synthesizeMouseAtCenter(
-    getStylesheetNameLinkFor(gUI.editors[2]),
+    getStylesheetNameLinkFor(gSEChrome.editors[2]),
     {button: 1},
-    gPanelWindow);
+    gChromeWindow);
 
   setTimeout(finish, 0);
 }
@@ -64,5 +56,5 @@ function onTabAdded() {
 
 registerCleanupFunction(function () {
   gBrowser.tabContainer.removeEventListener("TabOpen", onTabAdded, false);
-  gUI = null;
+  gSEChrome = null;
 });

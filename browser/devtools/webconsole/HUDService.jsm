@@ -340,14 +340,20 @@ WebConsole.prototype = {
   viewSourceInStyleEditor:
   function WC_viewSourceInStyleEditor(aSourceURL, aSourceLine)
   {
-    gDevTools.showToolbox(this.target, "styleeditor").then(function(toolbox) {
-      try {
-        toolbox.getCurrentPanel().selectStyleSheet(aSourceURL, aSourceLine);
-      } catch(e) {
-        // Open view source if style editor fails.
-        this.viewSource(aSourceURL, aSourceLine);
+    let styleSheets = {};
+    if (this.target.isLocalTab) {
+      styleSheets = this.target.window.document.styleSheets;
+    }
+    for each (let style in styleSheets) {
+      if (style.href == aSourceURL) {
+        gDevTools.showToolbox(this.target, "styleeditor").then(function(toolbox) {
+          toolbox.getCurrentPanel().selectStyleSheet(style, aSourceLine);
+        });
+        return;
       }
-    });
+    }
+    // Open view source if style editor fails.
+    this.viewSource(aSourceURL, aSourceLine);
   },
 
   /**
