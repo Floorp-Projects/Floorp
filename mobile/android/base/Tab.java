@@ -56,6 +56,7 @@ public class Tab {
     private String mContentType;
     private boolean mHasTouchListeners;
     private ZoomConstraints mZoomConstraints;
+    private boolean mIsRTL;
     private ArrayList<View> mPluginViews;
     private HashMap<Object, Layer> mPluginLayers;
     private int mBackgroundColor;
@@ -293,6 +294,14 @@ public class Tab {
 
     public ZoomConstraints getZoomConstraints() {
         return mZoomConstraints;
+    }
+
+    public void setIsRTL(boolean aIsRTL) {
+        mIsRTL = aIsRTL;
+    }
+
+    public boolean getIsRTL() {
+        return mIsRTL;
     }
 
     public void setHasTouchListeners(boolean aValue) {
