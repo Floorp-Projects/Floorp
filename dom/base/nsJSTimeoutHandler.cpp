@@ -241,7 +241,7 @@ nsJSScriptTimeoutHandler::Init(nsGlobalWindow *aWindow, bool *aIsInterval,
   if (expr) {
     // if CSP is enabled, and setTimeout/setInterval was called with a string
     // or object, disable the registration and log an error
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(aWindow->GetExtantDocument());
+    nsCOMPtr<nsIDocument> doc = aWindow->GetExtantDoc();
 
     if (doc) {
       nsCOMPtr<nsIContentSecurityPolicy> csp;
@@ -293,12 +293,7 @@ nsJSScriptTimeoutHandler::Init(nsGlobalWindow *aWindow, bool *aIsInterval,
   } else if (funobj) {
     NS_HOLD_JS_OBJECTS(this, nsJSScriptTimeoutHandler);
 
-    bool ok;
-    mFunction = new Function(cx, aWindow->FastGetGlobalJSObject(), funobj, &ok);
-    if (!ok) {
-      NS_DROP_JS_OBJECTS(this, nsJSScriptTimeoutHandler);
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    mFunction = new Function(funobj);
 
     // Create our arg array.  argc is the number of arguments passed
     // to setTimeout or setInterval; the first two are our callback

@@ -78,61 +78,6 @@ interface nsIStreamBufferAccess : nsISupports
 
 %{C++
 
-// Swap macros, used to convert to/from canonical (big-endian) format
-#if defined IS_LITTLE_ENDIAN
-
-# define NS_SWAP16(x) ((((x) & 0xff) << 8) | (((x) >> 8) & 0xff))
-# define NS_SWAP32(x) ((NS_SWAP16((x) & 0xffff) << 16) | (NS_SWAP16((x) >> 16)))
-
-// We want to avoid casting to 32-bit types if possible, since that violates
-// aliasing rules (a standard compiler may assume that pointers of two types
-// do not address overlapping storage).
-//
-// XXX What if we have a compiler that follows aliasing rules strictly but
-// doesn't have a 64-bit int type?
-//
-// XXXbe shouldn't NSPR's LL_INIT work for non-constant arguments in all cases?
-
-# if defined HAVE_LONG_LONG
-#  if PR_BYTES_PER_LONG == 8
-#   define ULL_(x)     x ## UL
-#  elif defined WIN32 && defined _MSC_VER
-#   define ULL_(x)     x ## ui64
-#  else
-#   define ULL_(x)     x ## ULL
-#  endif
-
-#  define NS_SWAP64(x) ((((x)    & ULL_(0xff00000000000000))    >> 56) |      \
-                        (((x)    & ULL_(0x00ff000000000000))    >> 40) |      \
-                        (((x)    & ULL_(0x0000ff0000000000))    >> 24) |      \
-                        (((x)    & ULL_(0x000000ff00000000))    >> 8)  |      \
-                        (((x)    & ULL_(0x00000000ff000000))    << 8)  |      \
-                        (((x)    & ULL_(0x0000000000ff0000))    << 24) |      \
-                        (((x)    & ULL_(0x000000000000ff00))    << 40) |      \
-                        (((x) /* & ULL_(0x00000000000000ff) */) << 56))
-# else
-#  define NS_SWAP64(x) LL_INIT((((x).lo /* & 0xff000000ul */) >> 24) |        \
-                               (((x).lo    & 0x00ff0000ul)    >> 8)  |        \
-                               (((x).lo    & 0x0000ff00ul)    << 8)  |        \
-                               (((x).lo /* & 0x000000fful */) << 24),         \
-                               (((x).hi /* & 0xff000000ul */) >> 24) |        \
-                               (((x).hi    & 0x00ff0000ul)    >> 8)  |        \
-                               (((x).hi    & 0x0000ff00ul)    << 8)  |        \
-                               (((x).hi /* & 0x000000fful */) << 24))
-# endif
-
-#elif defined IS_BIG_ENDIAN
-
-# define NS_SWAP16(x) (x)
-# define NS_SWAP32(x) (x)
-# define NS_SWAP64(x) (x)
-
-#else
-
-# error "Unknown byte order"
-
-#endif
-
 /**
  * These macros get and put a buffer given either an sba parameter that may
  * point to an object implementing nsIStreamBufferAccess, nsIObjectInputStream,
@@ -140,15 +85,5 @@ interface nsIStreamBufferAccess : nsISupports
  */
 #define NS_GET_BUFFER(sba,n,a)  ((sba)->GetBuffer(n, a))
 #define NS_PUT_BUFFER(sba,p,n)  ((sba)->PutBuffer(p, n))
-
-#define NS_GET8(p)              (*(uint8_t*)(p))
-#define NS_GET16(p)             NS_SWAP16(*(uint16_t*)(p))
-#define NS_GET32(p)             NS_SWAP32(*(uint32_t*)(p))
-#define NS_GET64(p)             NS_SWAP64(*(uint64_t*)(p))
-
-#define NS_PUT8(p,x)            (*(uint8_t*)(p) = (x))
-#define NS_PUT16(p,x)           (*(uint16_t*)(p) = NS_SWAP16(x))
-#define NS_PUT32(p,x)           (*(uint32_t*)(p) = NS_SWAP32(x))
-#define NS_PUT64(p,x)           (*(uint64_t*)(p) = NS_SWAP64(x))
 
 %}

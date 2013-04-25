@@ -581,7 +581,8 @@ JSRuntime::finishSelfHosting()
 void
 JSRuntime::markSelfHostingGlobal(JSTracer *trc)
 {
-    MarkObjectRoot(trc, &selfHostingGlobal_, "self-hosting global");
+    if (selfHostingGlobal_)
+        MarkObjectRoot(trc, &selfHostingGlobal_, "self-hosting global");
 }
 
 typedef AutoObjectObjectHashMap CloneMemory;

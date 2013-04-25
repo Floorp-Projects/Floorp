@@ -90,6 +90,13 @@
 <!ENTITY cmd.enableTheme.accesskey            "W">
 <!ENTITY cmd.disableTheme.label               "Stop Wearing Theme">
 <!ENTITY cmd.disableTheme.accesskey           "W">
+<!ENTITY cmd.askToActivate.label              "Ask to Activate">
+<!ENTITY cmd.askToActivate.tooltip            "Ask to use this add-on each time">
+<!ENTITY cmd.alwaysActivate.label             "Always Activate">
+<!ENTITY cmd.alwaysActivate.tooltip           "Always use this add-on">
+<!ENTITY cmd.neverActivate.label              "Never Activate">
+<!ENTITY cmd.neverActivate.tooltip            "Never use this add-on">
+<!ENTITY cmd.tristateMenu.tooltip             "Change when this add-on runs">
 <!ENTITY cmd.installAddon.label               "Install">
 <!ENTITY cmd.installAddon.accesskey           "I">
 <!ENTITY cmd.uninstallAddon.label             "Remove">

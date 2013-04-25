@@ -103,7 +103,7 @@
     let frame = document.getElementById(aFrameId);
     frame.focus();
 
-    let file = Components.classes["@mozilla.org/file/directory_service;1"]
+    let file = Cc["@mozilla.org/file/directory_service;1"]
                .getService(Components.interfaces.nsIProperties)
                .get("CurWorkD", Components.interfaces.nsIFile);
     file.append("chrome");
@@ -122,7 +122,7 @@
                                             /* dumpChildProcesses = */ false);
     }
 
-    let input = frame.contentWindow.document.getElementById("fileInput");
+    let input = frame.contentWindow.document.getElementById("filePickerInput");
     input.value = file.path;    // this works because it's a chrome test
 
     var e = document.createEvent('Event');
@@ -199,8 +199,7 @@ Other Measurements\n\
   // This is the output for a malformed data file.
   let expectedBad =
 "\
-Invalid memory report(s): missing 'hasMozMallocUsableSize' property\n\
-";
+Invalid memory report(s): missing 'hasMozMallocUsableSize' property";
 
   let frames = [
     // This loads a pre-existing file that is valid.

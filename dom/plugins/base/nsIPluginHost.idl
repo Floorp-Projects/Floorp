@@ -20,17 +20,14 @@ interface nsIPluginPlayPreviewInfo : nsISupports
   readonly attribute AUTF8String redirectURL;
 };
 
-[scriptable, uuid(67ebff01-0dce-48f7-b6a5-6235fc78382b)]
+[scriptable, uuid(15f97490-7bdf-4947-885c-9258072af878)]
 interface nsIPluginHost : nsISupports
 {
   /**
    * Causes the plugins directory to be searched again for new plugin 
    * libraries.
-   *
-   * @param reloadPages - indicates whether currently visible pages should 
-   * also be reloaded
    */
-  void reloadPlugins(in boolean reloadPages);
+  void reloadPlugins();
 
   void getPluginTags([optional] out unsigned long aPluginCount,
     [retval, array, size_is(aPluginCount)] out nsIPluginTag aResults);

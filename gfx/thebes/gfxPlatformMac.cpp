@@ -387,8 +387,8 @@ gfxPlatformMac::CreateThebesSurfaceAliasForDrawTarget_hack(mozilla::gfx::DrawTar
     size_t stride = CGBitmapContextGetBytesPerRow(cg);
     gfxIntSize size(aTarget->GetSize().width, aTarget->GetSize().height);
     nsRefPtr<gfxImageSurface> imageSurface = new gfxImageSurface(data, size, stride, bpp == 2
-                                                                                     ? gfxImageFormat::ImageFormatRGB16_565
-                                                                                     : gfxImageFormat::ImageFormatARGB32);
+                                                                                     ? gfxASurface::ImageFormatRGB16_565
+                                                                                     : gfxASurface::ImageFormatARGB32);
     // Here we should return a gfxQuartzImageSurface but quartz will assumes that image surfaces
     // don't change which wont create a proper alias to the draw target, therefore we have to
     // return a plain image surface.

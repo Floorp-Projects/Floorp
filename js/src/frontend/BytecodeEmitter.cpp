@@ -1158,12 +1158,12 @@ TryConvertToGname(BytecodeEmitter *bce, ParseNode *pn, JSOp *op)
 }
 
 /*
- * BindNameToSlot attempts to optimize name gets and sets to stack slot loads
- * and stores, given the compile-time information in bce and a PNK_NAME node pn.
- * It returns false on error, true on success.
+ * BindNameToSlotHelper attempts to optimize name gets and sets to stack slot
+ * loads and stores, given the compile-time information in bce and a PNK_NAME
+ * node pn.  It returns false on error, true on success.
  *
  * The caller can test pn->pn_cookie.isFree() to tell whether optimization
- * occurred, in which case BindNameToSlot also updated pn->pn_op.  If
+ * occurred, in which case BindNameToSlotHelper also updated pn->pn_op.  If
  * pn->pn_cookie.isFree() is still true on return, pn->pn_op still may have
  * been optimized, e.g., from JSOP_NAME to JSOP_CALLEE.  Whether or not
  * pn->pn_op was modified, if this function finds an argument or local variable
@@ -1175,7 +1175,7 @@ TryConvertToGname(BytecodeEmitter *bce, ParseNode *pn, JSOp *op)
  * op=, e.g. +=).
  */
 static bool
-BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
+BindNameToSlotHelper(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
     JS_ASSERT(pn->isKind(PNK_NAME));
 
@@ -1408,6 +1408,25 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         return false;
 
     pn->pn_dflags |= PND_BOUND;
+    return true;
+}
+
+/*
+ * Attempts to bind the name, then checks that no dynamic scope lookup ops are
+ * emitted in self-hosting mode. NAME ops do lookups off current scope chain,
+ * and we do not want to allow self-hosted code to use the dynamic scope.
+ */
+static bool
+BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
+{
+    if (!BindNameToSlotHelper(cx, bce, pn))
+        return false;
+
+    if (bce->selfHostingMode && !pn->isBound()) {
+        bce->reportError(pn, JSMSG_SELFHOSTED_UNBOUND_NAME);
+        return false;
+    }
+
     return true;
 }
 

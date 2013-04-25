@@ -8,6 +8,7 @@
 
 #include "AudioSegment.h"
 #include "mozilla/dom/AudioParam.h"
+#include "mozilla/Mutex.h"
 
 namespace mozilla {
 
@@ -100,10 +101,12 @@ void AudioBlockAddChannelWithScale(const float aInput[WEBAUDIO_BLOCK_SIZE],
 
 /**
  * Pointwise copy-scaled operation. aScale == 1.0f should be optimized.
+ *
+ * Buffer size is implicitly assumed to be WEBAUDIO_BLOCK_SIZE.
  */
-void AudioBlockCopyChannelWithScale(const float aInput[WEBAUDIO_BLOCK_SIZE],
+void AudioBlockCopyChannelWithScale(const float* aInput,
                                     float aScale,
-                                    float aOutput[WEBAUDIO_BLOCK_SIZE]);
+                                    float* aOutput);
 
 /**
  * Vector copy-scaled operation.
@@ -149,6 +152,7 @@ class AudioNodeEngine {
 public:
   explicit AudioNodeEngine(dom::AudioNode* aNode)
     : mNode(aNode)
+    , mNodeMutex("AudioNodeEngine::mNodeMutex")
   {
     MOZ_ASSERT(mNode, "The engine is constructed with a null node");
     MOZ_COUNT_CTOR(AudioNodeEngine);
@@ -204,15 +208,25 @@ public:
     *aOutput = aInput;
   }
 
+  Mutex& NodeMutex() { return mNodeMutex;}
+
   dom::AudioNode* Node() const
   {
-    MOZ_ASSERT(NS_IsMainThread());
+    mNodeMutex.AssertCurrentThreadOwns();
     return mNode;
   }
 
-protected:
-  friend class dom::AudioNode;
+  void ClearNode()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(mNode != nullptr);
+    mNodeMutex.AssertCurrentThreadOwns();
+    mNode = nullptr;
+  }
+
+private:
   dom::AudioNode* mNode;
+  Mutex mNodeMutex;
 };
 
 }

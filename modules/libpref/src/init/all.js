@@ -3288,6 +3288,8 @@ pref("font.name-list.monospace.ja", "MotoyaLMaru, MotoyaLCedar, Droid Sans Mono"
 pref("font.name.serif.ko", "Charis SIL Compact");
 pref("font.name.sans-serif.ko", "Open Sans");
 pref("font.name.monospace.ko", "Droid Sans Mono");
+pref("font.name-list.serif.ko", "HYSerif");
+pref("font.name-list.sans-serif.ko", "SmartGothic, DroidSansFallback, Droid Sans Fallback");
 
 pref("font.name.serif.th", "Charis SIL Compact");
 pref("font.name.sans-serif.th", "Open Sans");
@@ -3835,6 +3837,13 @@ pref("toolkit.zoomManager.zoomValues", ".3,.5,.67,.8,.9,1,1.1,1.2,1.33,1.5,1.7,2
  * By default, this is not enabled.
  */
 pref("browser.zoom.reflowOnZoom", false);
+
+/**
+ * Specifies the number of milliseconds to wait after a given reflow-on-zoom
+ * operation has completed before allowing another one to be triggered. This
+ * is to prevent a buildup of reflow-zoom events.
+ */
+pref("browser.zoom.reflowZoom.reflowTimeout", 500);
 
 /**
  * Controls whether or not the reflow-on-zoom behavior happens on page load.

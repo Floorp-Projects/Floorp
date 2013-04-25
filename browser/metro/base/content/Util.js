@@ -315,6 +315,30 @@ let Util = {
    * Screen and layout utilities
    */
 
+   /*
+    * translateToTopLevelWindow - Given an element potentially within
+    * a subframe, calculate the offsets up to the top level browser.
+    */
+  translateToTopLevelWindow: function translateToTopLevelWindow(aElement) {
+    let offsetX = 0;
+    let offsetY = 0;
+    let element = aElement;
+    while (element &&
+           element.ownerDocument &&
+           element.ownerDocument.defaultView != content) {
+      element = element.ownerDocument.defaultView.frameElement;
+      let rect = element.getBoundingClientRect();
+      offsetX += rect.left;
+      offsetY += rect.top;
+    }
+    let win = null;
+    if (element == aElement)
+      win = content;
+    else
+      win = element.contentDocument.defaultView;
+    return { targetWindow: win, offsetX: offsetX, offsetY: offsetY };
+  },
+
   get displayDPI() {
     delete this.displayDPI;
     return this.displayDPI = this.getWindowUtils(window).displayDPI;

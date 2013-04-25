@@ -320,8 +320,7 @@ XMLDocument::Load(const nsAString& aUrl, ErrorResult& aRv)
 
   ReportUseOfDeprecatedMethod(this, "UseOfDOM3LoadMethodWarning");
 
-  nsCOMPtr<nsIDocument> callingDoc =
-    do_QueryInterface(nsContentUtils::GetDocumentFromContext());
+  nsCOMPtr<nsIDocument> callingDoc = nsContentUtils::GetDocumentFromContext();
 
   nsIURI *baseURI = mDocumentURI;
   nsAutoCString charset;

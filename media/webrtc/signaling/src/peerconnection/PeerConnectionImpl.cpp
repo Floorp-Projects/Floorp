@@ -364,23 +364,6 @@ PeerConnectionImpl::CreateRemoteSourceStreamInfo(nsRefPtr<RemoteSourceStreamInfo
   return NS_OK;
 }
 
-#ifdef MOZILLA_INTERNAL_API
-static void
-Warn(JSContext* aCx, const nsCString& aMsg) {
-  CSFLogError(logTag, "Warning: %s", aMsg.get());
-  nsIScriptContext* sc = GetScriptContextFromJSContext(aCx);
-  if (sc) {
-    nsCOMPtr<nsIDocument> doc;
-    doc = nsContentUtils::GetDocumentFromScriptContext(sc);
-    if (doc) {
-      // Passing in line-# 1 hides peerconnection.js (shows document instead)
-      nsContentUtils::ReportToConsoleNonLocalized(NS_ConvertUTF8toUTF16 (aMsg),
-          nsIScriptError::warningFlag, logTag, doc, nullptr, EmptyString(), 1);
-    }
-  }
-}
-#endif
-
 /**
  * In JS, an RTCConfiguration looks like this:
  *
@@ -401,7 +384,7 @@ PeerConnectionImpl::ConvertRTCConfiguration(const JS::Value& aSrc,
   }
   JSAutoCompartment ac(aCx, &aSrc.toObject());
   RTCConfiguration config;
-  if (!(config.Init(aCx, JS::NullPtr(), aSrc) && config.mIceServers.WasPassed())) {
+  if (!(config.Init(aCx, aSrc) && config.mIceServers.WasPassed())) {
     return NS_ERROR_FAILURE;
   }
   for (uint32_t i = 0; i < config.mIceServers.Value().Length(); i++) {

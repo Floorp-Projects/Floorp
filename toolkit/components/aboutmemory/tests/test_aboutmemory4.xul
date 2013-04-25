@@ -1,0 +1,127 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<window title="about:memory"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <!-- This file tests the loading of memory reports from file when specified
+       in about:memory's URL (via the "file=" suffix). -->
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml"></body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  "use strict";
+
+  function makePathname(aFilename) {
+    let file = Components.classes["@mozilla.org/file/directory_service;1"]
+               .getService(Components.interfaces.nsIProperties)
+               .get("CurWorkD", Components.interfaces.nsIFile);
+    file.append("chrome");
+    file.append("toolkit");
+    file.append("components");
+    file.append("aboutmemory");
+    file.append("tests");
+    file.append(aFilename);
+    return file.path;
+  }
+
+  // Load the given file into the frame, then copy+paste the entire frame and
+  // check that the cut text matches what we expect.
+  function test(aFilename, aExpected, aNext) {
+    let frame = document.createElementNS("http://www.w3.org/1999/xhtml", "iframe")
+    frame.height = 300;
+    frame.src = "about:memory?file=" + makePathname(aFilename);
+    document.documentElement.appendChild(frame);
+    frame.focus();
+
+    // Initialize the clipboard contents.
+    SpecialPowers.clipboardCopyString("initial clipboard value");
+
+    let numFailures = 0, maxFailures = 30;
+
+    // Because the file load is async, we don't know when it will finish and
+    // the output will show up.  So we poll.
+    function copyPasteAndCheck() {
+      // Copy and paste frame contents, and filter out non-deterministic
+      // differences.
+      synthesizeKey("A", {accelKey: true});
+      synthesizeKey("C", {accelKey: true});
+      let actual = SpecialPowers.getClipboardData("text/unicode");
+      actual = actual.replace(/\(pid \d+\)/, "(pid NNN)");
+
+      if (actual === aExpected) {
+        SimpleTest.ok(true, "Clipboard has the expected contents");
+        aNext();
+      } else {
+        numFailures++;
+        if (numFailures === maxFailures) {
+          ok(false, "pasted text doesn't match");
+          dump("******EXPECTED******\n");
+          dump(aExpected);
+          dump("*******ACTUAL*******\n");
+          dump(actual);
+          dump("********************\n");
+          SimpleTest.finish();
+        } else {
+          setTimeout(copyPasteAndCheck, 100);
+        }
+      }
+    }
+    copyPasteAndCheck();
+  }
+
+  // Returns a function that chains together multiple test() calls.
+  function chain(aFrameIds) {
+    let x = aFrameIds.shift();
+    if (x) {
+      return function() { test(x.filename, x.expected, chain(aFrameIds)); }
+    } else {
+      return function() { SimpleTest.finish(); };
+    }
+  }
+
+  // This is pretty simple output, but that's ok;  this file is about testing
+  // the loading of data from file.  If we got this far, we're doing fine.
+  let expectedGood =
+"\
+Main Process (pid NNN)\n\
+Explicit Allocations\n\
+\n\
+250.00 MB (100.0%) -- explicit\n\
+├──200.00 MB (80.00%) ── heap-unclassified\n\
+└───50.00 MB (20.00%) ── a/b\n\
+\n\
+Other Measurements\n\
+\n\
+0.30 MB (100.0%) -- other\n\
+├──0.20 MB (66.67%) ── a\n\
+└──0.10 MB (33.33%) ── b\n\
+\n\
+250.00 MB ── heap-allocated\n\
+\n\
+";
+
+  // This is the output for a malformed data file.
+  let expectedBad =
+"\
+Invalid memory report(s): missing 'hasMozMallocUsableSize' property";
+
+  let frames = [
+    // This loads a pre-existing file that is valid.
+    { filename: "memory-reports-good.json", expected: expectedGood },
+
+    // This loads a pre-existing file that is valid.
+    { filename: "memory-reports-bad.json", expected: expectedBad }
+  ];
+
+  SimpleTest.waitForFocus(chain(frames));
+
+  SimpleTest.waitForExplicitFinish();
+  ]]>
+  </script>
+</window>

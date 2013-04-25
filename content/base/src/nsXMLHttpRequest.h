@@ -169,7 +169,7 @@ public:
   {
     // Pretend like someone passed null, so we can pick up the default values
     mozilla::dom::MozXMLHttpRequestParameters params;
-    if (!params.Init(aCx, JS::NullPtr(), JS::NullValue())) {
+    if (!params.Init(aCx, JS::NullValue())) {
       aRv.Throw(NS_ERROR_UNEXPECTED);
       return nullptr;
     }

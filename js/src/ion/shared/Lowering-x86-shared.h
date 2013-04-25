@@ -24,7 +24,8 @@ class LIRGeneratorX86Shared : public LIRGeneratorShared
     LTableSwitchV *newLTableSwitchV(MTableSwitch *ins);
 
     bool visitInterruptCheck(MInterruptCheck *ins);
-    bool visitGuardShapeOrType(MGuardShapeOrType *ins);
+    bool visitGuardShape(MGuardShape *ins);
+    bool visitGuardObjectType(MGuardObjectType *ins);
     bool visitPowHalf(MPowHalf *ins);
     bool visitConstant(MConstant *ins);
     bool visitAsmJSNeg(MAsmJSNeg *ins);

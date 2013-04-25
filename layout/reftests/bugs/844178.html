@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait"><head>
+    <meta charset="utf-8">
+    <title>Testcase for bug 844178</title>
+    <style type="text/css">
+
+        html,body {
+            color:black; background-color:white; font-size:16px; padding:0; margin:0;
+        }
+	
+body {
+  position: fixed;
+  right: 0px;
+  top: 100px;
+  width: 100px;
+  height: 10px;
+  margin:0;
+  padding:0;
+}
+
+:root { overflow:scroll; }
+
+span {
+    background:lime;
+    display:inline-block;
+    width:100px;
+}
+
+</style>
+<script>
+function doTest() {
+  document.body.style.right='5px';
+  document.body.offsetHeight;
+  document.documentElement.removeAttribute('class');
+}
+document.addEventListener("MozReftestInvalidate", doTest, false);
+</script>
+</head>
+<body><span>Hello</span></body>
+</html>
