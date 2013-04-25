@@ -475,12 +475,18 @@ var Input = {
   editState: {},
 
   start: function start() {
-    Utils.win.document.addEventListener('keypress', this, true);
+    // XXX: This is too disruptive on desktop for now.
+    // Might need to add special modifiers.
+    if (Utils.MozBuildApp != 'browser') {
+      Utils.win.document.addEventListener('keypress', this, true);
+    }
     Utils.win.addEventListener('mozAccessFuGesture', this, true);
   },
 
   stop: function stop() {
-    Utils.win.document.removeEventListener('keypress', this, true);
+    if (Utils.MozBuildApp != 'browser') {
+      Utils.win.document.removeEventListener('keypress', this, true);
+    }
     Utils.win.removeEventListener('mozAccessFuGesture', this, true);
   },
 
