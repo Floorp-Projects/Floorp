@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsARIAMap.h"
+#include "ARIAMap.h"
 
 #include "Accessible.h"
 #include "nsAccUtils.h"
@@ -634,7 +634,7 @@ static nsRoleMapEntry sLandmarkRoleMap = {
   kNoReqStates
 };
 
-nsRoleMapEntry nsARIAMap::gEmptyRoleMap = {
+nsRoleMapEntry aria::gEmptyRoleMap = {
   &nsGkAtoms::_empty,
   roles::NOTHING,
   kUseMapRole,
@@ -662,11 +662,17 @@ static const EStateRule sWAIUnivStateMap[] = {
 
 
 /**
- * ARIA attribute map for attribute characteristics
- * 
- * @note ARIA attributes that don't have any flags are not included here
+ * ARIA attribute map for attribute characteristics.
+ * @note ARIA attributes that don't have any flags are not included here.
  */
-nsAttributeCharacteristics nsARIAMap::gWAIUnivAttrMap[] = {
+
+struct AttrCharacteristics
+{
+  nsIAtom** attributeName;
+  const uint8_t characteristics;
+};
+
+static const AttrCharacteristics gWAIUnivAttrMap[] = {
   {&nsGkAtoms::aria_activedescendant,  ATTR_BYPASSOBJ                               },
   {&nsGkAtoms::aria_atomic,                             ATTR_VALTOKEN | ATTR_GLOBAL },
   {&nsGkAtoms::aria_busy,                               ATTR_VALTOKEN | ATTR_GLOBAL },
@@ -702,9 +708,6 @@ nsAttributeCharacteristics nsARIAMap::gWAIUnivAttrMap[] = {
   {&nsGkAtoms::aria_valuemax,          ATTR_BYPASSOBJ                               },
   {&nsGkAtoms::aria_valuetext,         ATTR_BYPASSOBJ                               }
 };
-
-uint32_t
-nsARIAMap::gWAIUnivAttrMapLength = NS_ARRAY_LENGTH(nsARIAMap::gWAIUnivAttrMap);
 
 nsRoleMapEntry*
 aria::GetRoleMap(nsINode* aNode)
@@ -753,6 +756,16 @@ aria::UniversalStatesFor(mozilla::dom::Element* aElement)
   return state;
 }
 
+uint8_t
+aria::AttrCharacteristicsFor(nsIAtom* aAtom)
+{
+  for (uint32_t i = 0; i < ArrayLength(gWAIUnivAttrMap); i++)
+    if (*gWAIUnivAttrMap[i].attributeName == aAtom)
+      return gWAIUnivAttrMap[i].characteristics;
+
+  return 0;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // AttrIterator class
 
@@ -768,7 +781,7 @@ AttrIterator::Next(nsAString& aAttrName, nsAString& aAttrValue)
       if (!StringBeginsWith(attrStr, NS_LITERAL_STRING("aria-")))
         continue; // Not ARIA
 
-      uint8_t attrFlags = nsAccUtils::GetAttributeCharacteristics(attrAtom);
+      uint8_t attrFlags = aria::AttrCharacteristicsFor(attrAtom);
       if (attrFlags & ATTR_BYPASSOBJ)
         continue; // No need to handle exposing as obj attribute here
 

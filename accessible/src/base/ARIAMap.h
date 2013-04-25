@@ -5,8 +5,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _nsARIAMap_H_
-#define _nsARIAMap_H_
+#ifndef mozilla_a11y_aria_ARIAMap_h_
+#define mozilla_a11y_aria_ARIAMap_h_
 
 #include "ARIAStateMap.h"
 #include "mozilla/a11y/AccTypes.h"
@@ -112,16 +112,6 @@ const uint8_t ATTR_VALTOKEN = 0x1 << 2;
  */
 const uint8_t ATTR_GLOBAL = 0x1 << 3;
 
-/**
- * Small footprint storage of persistent aria attribute characteristics.
- */
-struct nsAttributeCharacteristics
-{
-  nsIAtom** attributeName;
-  const uint8_t characteristics;
-};
-
-
 ////////////////////////////////////////////////////////////////////////////////
 // State map entry
 
@@ -130,12 +120,6 @@ struct nsAttributeCharacteristics
  * a given role.
  */
 #define kNoReqStates 0
-
-enum EDefaultStateRule
-{
-  //eNoDefaultState,
-  eUseFirstState
-};
 
 ////////////////////////////////////////////////////////////////////////////////
 // Role map entry
@@ -203,29 +187,19 @@ struct nsRoleMapEntry
 // ARIA map
 
 /**
- *  These are currently initialized (hardcoded) in nsARIAMap.cpp, 
- *  and provide the mappings for WAI-ARIA roles and properties using the 
- *  structs defined in this file.
+ *  These provide the mappings for WAI-ARIA roles, states and properties using
+ *  the structs defined in this file and ARIAStateMap files.
  */
-struct nsARIAMap
-{
-  /**
-   * Empty role map entry. Used by accessibility service to create an accessible
-   * if the accessible can't use role of used accessible class. For example,
-   * it is used for table cells that aren't contained by table.
-   */
-  static nsRoleMapEntry gEmptyRoleMap;
-
-  /**
-   * Map of attribute to attribute characteristics.
-   */
-  static nsAttributeCharacteristics gWAIUnivAttrMap[];
-  static uint32_t gWAIUnivAttrMapLength;
-};
-
 namespace mozilla {
 namespace a11y {
 namespace aria {
+
+/**
+ * Empty role map entry. Used by accessibility service to create an accessible
+ * if the accessible can't use role of used accessible class. For example,
+ * it is used for table cells that aren't contained by table.
+ */
+extern nsRoleMapEntry gEmptyRoleMap;
 
 /**
  * Get the role map entry for a given DOM node. This will use the first
@@ -242,6 +216,15 @@ nsRoleMapEntry* GetRoleMap(nsINode* aNode);
  * element.
  */
 uint64_t UniversalStatesFor(mozilla::dom::Element* aElement);
+
+/**
+ * Get the ARIA attribute characteristics for a given ARIA attribute.
+ *
+ * @param aAtom  ARIA attribute
+ * @return       A bitflag representing the attribute characteristics
+ *               (see above for possible bit masks, prefixed "ATTR_")
+ */
+uint8_t AttrCharacteristicsFor(nsIAtom* aAtom);
 
  /**
   * Represents a simple enumerator for iterating through ARIA attributes 
