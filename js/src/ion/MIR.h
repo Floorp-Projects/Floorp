@@ -101,6 +101,9 @@ class MUse : public TempObject, public InlineListNode<MUse>
         JS_ASSERT(producer_ != NULL);
         return producer_;
     }
+    bool hasProducer() const {
+        return producer_ != NULL;
+    }
     MNode *consumer() const {
         JS_ASSERT(consumer_ != NULL);
         return consumer_;
@@ -7171,7 +7174,7 @@ class MParNewDenseArray : public MBinaryInstruction
 // A resume point contains the information needed to reconstruct the interpreter
 // state from a position in the JIT. See the big comment near resumeAfter() in
 // IonBuilder.cpp.
-class MResumePoint : public MNode
+class MResumePoint : public MNode, public InlineForwardListNode<MResumePoint>
 {
   public:
     enum Mode {
@@ -7205,6 +7208,11 @@ class MResumePoint : public MNode
         JS_ASSERT(index < stackDepth_);
         operands_[index].set(operand, this, index);
         operand->addUse(&operands_[index]);
+    }
+
+    void clearOperand(size_t index) {
+        JS_ASSERT(index < stackDepth_);
+        operands_[index].set(NULL, this, index);
     }
 
     MUse *getUseFor(size_t index) {
@@ -7250,6 +7258,13 @@ class MResumePoint : public MNode
     }
     Mode mode() const {
         return mode_;
+    }
+
+    void discardUses() {
+        for (size_t i = 0; i < stackDepth_; i++) {
+            if (operands_[i].hasProducer())
+                operands_[i].producer()->removeUse(&operands_[i]);
+        }
     }
 };
 
