@@ -1679,10 +1679,6 @@ toolbar[iconsize="small"] #bookmarks-menu-button[starred],
   -moz-image-region: auto;
 }
 
-.tabs-newtab-button {
-  -moz-box-align: center;
-}
-
 /* Tabstrip close button */
 .tabs-closebutton {
   list-style-image: url("moz-icon://stock/gtk-close?size=menu");
