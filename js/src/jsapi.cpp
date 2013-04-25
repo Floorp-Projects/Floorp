@@ -1445,7 +1445,7 @@ JS_SetJitHardening(JSRuntime *rt, JSBool enabled)
 JS_PUBLIC_API(const char *)
 JS_GetImplementationVersion(void)
 {
-    return "JavaScript-C 1.8.5+ 2011-04-16";
+    return "JavaScript-C" MOZILLA_VERSION;
 }
 
 JS_PUBLIC_API(void)
