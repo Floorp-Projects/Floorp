@@ -532,145 +532,145 @@
              customizationtarget="nav-bar-customizationtarget"
              context="toolbar-context-menu">
 
-      <toolbaritem id="unified-back-forward-button" class="chromeclass-toolbar-additional"
-                   context="backForwardMenu" removable="true"
-                   forwarddisabled="true"
-                   title="&backForwardItem.title;">
-        <toolbarbutton id="back-button" class="toolbarbutton-1"
-                       label="&backCmd.label;"
-                       command="Browser:BackOrBackDuplicate"
-                       onclick="checkForMiddleClick(this, event);"
-                       tooltip="back-button-tooltip"/>
-        <toolbarbutton id="forward-button" class="toolbarbutton-1"
-                       label="&forwardCmd.label;"
-                       command="Browser:ForwardOrForwardDuplicate"
-                       onclick="checkForMiddleClick(this, event);"
-                       tooltip="forward-button-tooltip"/>
-        <dummyobservertarget hidden="true"
-                             onbroadcast="if (this.getAttribute('disabled') == 'true')
-                                            this.parentNode.setAttribute('forwarddisabled', 'true');
-                                          else
-                                            this.parentNode.removeAttribute('forwarddisabled');">
-          <observes element="Browser:ForwardOrForwardDuplicate" attribute="disabled"/>
-        </dummyobservertarget>
-      </toolbaritem>
-
-      <toolbaritem id="urlbar-container" align="center" flex="400" persist="width" combined="true"
-                   title="&locationItem.title;" class="chromeclass-location" removable="true">
-        <textbox id="urlbar" flex="1"
-                 placeholder="&urlbar.placeholder2;"
-                 type="autocomplete"
-                 autocompletesearch="urlinline history"
-                 autocompletesearchparam="enable-actions"
-                 autocompletepopup="PopupAutoCompleteRichResult"
-                 completeselectedindex="true"
-                 tabscrolling="true"
-                 showcommentcolumn="true"
-                 showimagecolumn="true"
-                 enablehistory="true"
-                 maxrows="6"
-                 newlines="stripsurroundingwhitespace"
-                 oninput="gBrowser.userTypedValue = this.value;"
-                 ontextentered="this.handleCommand(param);"
-                 ontextreverted="return this.handleRevert();"
-                 pageproxystate="invalid"
-                 onfocus="document.getElementById('identity-box').style.MozUserFocus= 'normal'"
-                 onblur="setTimeout(function() document.getElementById('identity-box').style.MozUserFocus = '', 0);">
-          <box id="notification-popup-box" hidden="true" align="center">
-            <image id="default-notification-icon" class="notification-anchor-icon" role="button"/>
-            <image id="identity-notification-icon" class="notification-anchor-icon" role="button"/>
-            <image id="geo-notification-icon" class="notification-anchor-icon" role="button"/>
-            <image id="addons-notification-icon" class="notification-anchor-icon" role="button"/>
-            <image id="indexedDB-notification-icon" class="notification-anchor-icon" role="button"/>
-            <image id="password-notification-icon" class="notification-anchor-icon" role="button"/>
-            <image id="webapps-notification-icon" class="notification-anchor-icon" role="button"/>
-            <image id="plugins-notification-icon" class="notification-anchor-icon" role="button"/>
-            <image id="web-notifications-notification-icon" class="notification-anchor-icon" role="button"/>
-            <image id="blocked-plugins-notification-icon" class="notification-anchor-icon" role="button"/>
-            <image id="mixed-content-blocked-notification-icon" class="notification-anchor-icon" role="button"/>
-            <image id="webRTC-shareDevices-notification-icon" class="notification-anchor-icon" role="button"/>
-            <image id="webRTC-sharingDevices-notification-icon" class="notification-anchor-icon" role="button"/>
-            <image id="pointerLock-notification-icon" class="notification-anchor-icon" role="button"/>
-            <image id="servicesInstall-notification-icon" class="notification-anchor-icon" role="button"/>
-          </box>
-          <!-- Use onclick instead of normal popup= syntax since the popup
-               code fires onmousedown, and hence eats our favicon drag events.
-               We only add the identity-box button to the tab order when the location bar
-               has focus, otherwise pressing F6 focuses it instead of the location bar -->
-          <box id="identity-box" role="button"
-               align="center"
-               onclick="gIdentityHandler.handleIdentityButtonEvent(event);"
-               onkeypress="gIdentityHandler.handleIdentityButtonEvent(event);"
-               ondragstart="gIdentityHandler.onDragStart(event);">
-            <image id="page-proxy-favicon"
-                   onclick="PageProxyClickHandler(event);"
-                   pageproxystate="invalid"/>
-            <hbox id="identity-icon-labels">
-              <label id="identity-icon-label" class="plain" flex="1"/>
-              <label id="identity-icon-country-label" class="plain"/>
-            </hbox>
-          </box>
-          <box id="urlbar-display-box" align="center">
-            <label id="urlbar-display" value="&urlbar.switchToTab.label;"/>
-          </box>
-          <hbox id="urlbar-icons">
-            <image id="page-report-button"
-                   class="urlbar-icon"
-                   hidden="true"
-                   tooltiptext="&pageReportIcon.tooltip;"
-                   onclick="gPopupBlockerObserver.onReportButtonClick(event);"/>
-
-            <label id="share-button-status" collapsed="true" role="status"/>
-            <image id="share-button"
-                   class="urlbar-icon"
-                   hidden="true"
-                   onclick="SocialShareButton.onClick(event);"/>
-
-            <image id="go-button"
-                   class="urlbar-icon"
-                   tooltiptext="&goEndCap.tooltip;"
-                   onclick="gURLBar.handleCommand(event);"/>
-          </hbox>
-          <toolbarbutton id="urlbar-go-button"
-                         class="chromeclass-toolbar-additional"
-                         onclick="gURLBar.handleCommand(event);"
-                         tooltiptext="&goEndCap.tooltip;"/>
-          <toolbarbutton id="urlbar-reload-button"
-                         class="chromeclass-toolbar-additional"
-                         command="Browser:ReloadOrDuplicate"
+      <hbox id="nav-bar-customizationtarget" class="customization-target" flex="0">
+        <toolbaritem id="unified-back-forward-button" class="chromeclass-toolbar-additional"
+                     context="backForwardMenu" removable="true"
+                     forwarddisabled="true"
+                     title="&backForwardItem.title;">
+          <toolbarbutton id="back-button" class="toolbarbutton-1"
+                         label="&backCmd.label;"
+                         command="Browser:BackOrBackDuplicate"
                          onclick="checkForMiddleClick(this, event);"
-                         tooltiptext="&reloadButton.tooltip;"/>
-          <toolbarbutton id="urlbar-stop-button"
-                         class="chromeclass-toolbar-additional"
-                         command="Browser:Stop"
-                         tooltiptext="&stopButton.tooltip;"/>
-        </textbox>
-      </toolbaritem>
+                         tooltip="back-button-tooltip"/>
+          <toolbarbutton id="forward-button" class="toolbarbutton-1"
+                         label="&forwardCmd.label;"
+                         command="Browser:ForwardOrForwardDuplicate"
+                         onclick="checkForMiddleClick(this, event);"
+                         tooltip="forward-button-tooltip"/>
+          <dummyobservertarget hidden="true"
+                               onbroadcast="if (this.getAttribute('disabled') == 'true')
+                                              this.parentNode.setAttribute('forwarddisabled', 'true');
+                                            else
+                                              this.parentNode.removeAttribute('forwarddisabled');">
+            <observes element="Browser:ForwardOrForwardDuplicate" attribute="disabled"/>
+          </dummyobservertarget>
+        </toolbaritem>
 
-      <toolbarbutton id="reload-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     label="&reloadCmd.label;" removable="true"
-                     command="Browser:ReloadOrDuplicate"
-                     onclick="checkForMiddleClick(this, event);"
-                     tooltiptext="&reloadButton.tooltip;"/>
-
-      <toolbarbutton id="stop-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     label="&stopCmd.label;" removable="true"
-                     command="Browser:Stop"
-                     tooltiptext="&stopButton.tooltip;"/>
-
-      <hbox id="nav-bar-customizationtarget" class="customization-target" flex="100"/>
-
-      <toolbarbutton id="webrtc-status-button"
-                     class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     type="menu"
+        <toolbaritem id="urlbar-container" align="center" flex="400" persist="width" combined="true"
+                     title="&locationItem.title;" class="chromeclass-location" removable="true">
+          <textbox id="urlbar" flex="1"
+                   placeholder="&urlbar.placeholder2;"
+                   type="autocomplete"
+                   autocompletesearch="urlinline history"
+                   autocompletesearchparam="enable-actions"
+                   autocompletepopup="PopupAutoCompleteRichResult"
+                   completeselectedindex="true"
+                   tabscrolling="true"
+                   showcommentcolumn="true"
+                   showimagecolumn="true"
+                   enablehistory="true"
+                   maxrows="6"
+                   newlines="stripsurroundingwhitespace"
+                   oninput="gBrowser.userTypedValue = this.value;"
+                   ontextentered="this.handleCommand(param);"
+                   ontextreverted="return this.handleRevert();"
+                   pageproxystate="invalid"
+                   onfocus="document.getElementById('identity-box').style.MozUserFocus= 'normal'"
+                   onblur="setTimeout(function() document.getElementById('identity-box').style.MozUserFocus = '', 0);">
+            <box id="notification-popup-box" hidden="true" align="center">
+              <image id="default-notification-icon" class="notification-anchor-icon" role="button"/>
+              <image id="identity-notification-icon" class="notification-anchor-icon" role="button"/>
+              <image id="geo-notification-icon" class="notification-anchor-icon" role="button"/>
+              <image id="addons-notification-icon" class="notification-anchor-icon" role="button"/>
+              <image id="indexedDB-notification-icon" class="notification-anchor-icon" role="button"/>
+              <image id="password-notification-icon" class="notification-anchor-icon" role="button"/>
+              <image id="webapps-notification-icon" class="notification-anchor-icon" role="button"/>
+              <image id="plugins-notification-icon" class="notification-anchor-icon" role="button"/>
+              <image id="web-notifications-notification-icon" class="notification-anchor-icon" role="button"/>
+              <image id="blocked-plugins-notification-icon" class="notification-anchor-icon" role="button"/>
+              <image id="mixed-content-blocked-notification-icon" class="notification-anchor-icon" role="button"/>
+              <image id="webRTC-shareDevices-notification-icon" class="notification-anchor-icon" role="button"/>
+              <image id="webRTC-sharingDevices-notification-icon" class="notification-anchor-icon" role="button"/>
+              <image id="pointerLock-notification-icon" class="notification-anchor-icon" role="button"/>
+              <image id="servicesInstall-notification-icon" class="notification-anchor-icon" role="button"/>
+            </box>
+            <!-- Use onclick instead of normal popup= syntax since the popup
+                 code fires onmousedown, and hence eats our favicon drag events.
+                 We only add the identity-box button to the tab order when the location bar
+                 has focus, otherwise pressing F6 focuses it instead of the location bar -->
+            <box id="identity-box" role="button"
+                 align="center"
+                 onclick="gIdentityHandler.handleIdentityButtonEvent(event);"
+                 onkeypress="gIdentityHandler.handleIdentityButtonEvent(event);"
+                 ondragstart="gIdentityHandler.onDragStart(event);">
+              <image id="page-proxy-favicon"
+                     onclick="PageProxyClickHandler(event);"
+                     pageproxystate="invalid"/>
+              <hbox id="identity-icon-labels">
+                <label id="identity-icon-label" class="plain" flex="1"/>
+                <label id="identity-icon-country-label" class="plain"/>
+              </hbox>
+            </box>
+            <box id="urlbar-display-box" align="center">
+              <label id="urlbar-display" value="&urlbar.switchToTab.label;"/>
+            </box>
+            <hbox id="urlbar-icons">
+              <image id="page-report-button"
+                     class="urlbar-icon"
                      hidden="true"
-                     orient="horizontal"
-                     label="&webrtcIndicatorButton.label;"
-                     tooltiptext="&webrtcIndicatorButton.tooltip;">
-        <menupopup onpopupshowing="WebrtcIndicator.fillPopup(this);"
-                   onpopuphiding="WebrtcIndicator.clearPopup(this);"
-                   oncommand="WebrtcIndicator.menuCommand(event.target);"/>
-      </toolbarbutton>
+                     tooltiptext="&pageReportIcon.tooltip;"
+                     onclick="gPopupBlockerObserver.onReportButtonClick(event);"/>
+
+              <label id="share-button-status" collapsed="true" role="status"/>
+              <image id="share-button"
+                     class="urlbar-icon"
+                     hidden="true"
+                     onclick="SocialShareButton.onClick(event);"/>
+
+              <image id="go-button"
+                     class="urlbar-icon"
+                     tooltiptext="&goEndCap.tooltip;"
+                     onclick="gURLBar.handleCommand(event);"/>
+            </hbox>
+            <toolbarbutton id="urlbar-go-button"
+                           class="chromeclass-toolbar-additional"
+                           onclick="gURLBar.handleCommand(event);"
+                           tooltiptext="&goEndCap.tooltip;"/>
+            <toolbarbutton id="urlbar-reload-button"
+                           class="chromeclass-toolbar-additional"
+                           command="Browser:ReloadOrDuplicate"
+                           onclick="checkForMiddleClick(this, event);"
+                           tooltiptext="&reloadButton.tooltip;"/>
+            <toolbarbutton id="urlbar-stop-button"
+                           class="chromeclass-toolbar-additional"
+                           command="Browser:Stop"
+                           tooltiptext="&stopButton.tooltip;"/>
+          </textbox>
+        </toolbaritem>
+
+        <toolbarbutton id="reload-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                       label="&reloadCmd.label;" removable="true"
+                       command="Browser:ReloadOrDuplicate"
+                       onclick="checkForMiddleClick(this, event);"
+                       tooltiptext="&reloadButton.tooltip;"/>
+
+        <toolbarbutton id="stop-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                       label="&stopCmd.label;" removable="true"
+                       command="Browser:Stop"
+                       tooltiptext="&stopButton.tooltip;"/>
+
+        <toolbarbutton id="webrtc-status-button"
+                       class="toolbarbutton-1 chromeclass-toolbar-additional"
+                       type="menu"
+                       hidden="true"
+                       orient="horizontal"
+                       label="&webrtcIndicatorButton.label;"
+                       tooltiptext="&webrtcIndicatorButton.tooltip;">
+          <menupopup onpopupshowing="WebrtcIndicator.fillPopup(this);"
+                     onpopuphiding="WebrtcIndicator.clearPopup(this);"
+                     oncommand="WebrtcIndicator.menuCommand(event.target);"/>
+        </toolbarbutton>
+      </hbox>
 
       <toolbaritem id="PanelUI-button"
                    class="chromeclass-toolbar-additional"
