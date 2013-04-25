@@ -149,6 +149,7 @@ class HGRepoInfo:
                 repository, or you have not specified SRCSRV_ROOT, or the clone is corrupt.""") % path
             sys.exit(1)
         self.rev = rev
+        self.root = root
         self.cleanroot = cleanroot
 
     def GetFileInfo(self, file):
@@ -161,7 +162,7 @@ class HGFileInfo(VCSFileInfo):
         self.file = os.path.relpath(file, repo.path)
 
     def GetRoot(self):
-        return self.repo.path
+        return self.repo.root
 
     def GetCleanRoot(self):
         return self.repo.cleanroot
