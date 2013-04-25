@@ -30,13 +30,13 @@ void addCcappListener(appListener* listener, int type) {
 
    if (listener == NULL)
    {
-       CCAPP_ERROR(DEB_F_PREFIX"listener is NULL, returning\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "addCcappListener"));
+       CCAPP_ERROR(DEB_F_PREFIX"listener is NULL, returning", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "addCcappListener"));
        return;
    }
 
    alistener = cpr_malloc(sizeof(listener_t));
    if (alistener == NULL) {
-       CCAPP_ERROR(DEB_F_PREFIX"alistener is NULL, returning\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "addCcappListener"));
+       CCAPP_ERROR(DEB_F_PREFIX"alistener is NULL, returning", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "addCcappListener"));
        return;
    }
 
@@ -53,7 +53,7 @@ appListener *getCcappListener(int type) {
     listener_t *temp_info;
     sll_lite_node_t *iterator;
 
-    CCAPP_DEBUG(DEB_F_PREFIX"entered: for app[%d]\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname),
+    CCAPP_DEBUG(DEB_F_PREFIX"entered: for app[%d]", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname),
             type);
 
     iterator = sll_list.head_p;
@@ -92,7 +92,7 @@ cpr_status_e ccappTaskPostMsg(unsigned int msgId, void * data, uint16_t len, int
 
     msg = (cprBuffer_t *) cpr_malloc(len);
     if (msg == NULL) {
-        CCAPP_ERROR(DEB_F_PREFIX"failed to allocate message.\n",
+        CCAPP_ERROR(DEB_F_PREFIX"failed to allocate message.",
                DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
         return CPR_FAILURE;
     }
@@ -176,14 +176,14 @@ void CCApp_task(void * arg)
     while (1) {
         msg = cprGetMessage(ccapp_msgq, TRUE, (void **) &syshdr);
         if ( msg) {
-            CCAPP_DEBUG(DEB_F_PREFIX"Received Cmd[%d] for app[%d]\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname),
+            CCAPP_DEBUG(DEB_F_PREFIX"Received Cmd[%d] for app[%d]", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname),
                     syshdr->Cmd, syshdr->Usr.UsrInfo);
 
             listener = getCcappListener(syshdr->Usr.UsrInfo);
             if (listener != NULL) {
                 (* ((appListener)(listener)))(msg, syshdr->Cmd);
             } else {
-                CCAPP_DEBUG(DEB_F_PREFIX"Event[%d] doesn't have a dedicated listener.\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname),
+                CCAPP_DEBUG(DEB_F_PREFIX"Event[%d] doesn't have a dedicated listener.", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname),
                         syshdr->Usr.UsrInfo);
             }
             cprReleaseSysHeader(syshdr);

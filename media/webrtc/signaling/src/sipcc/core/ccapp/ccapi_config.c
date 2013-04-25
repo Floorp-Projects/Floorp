@@ -29,7 +29,7 @@ void CCAPI_Start_response(int device_handle, const char *device_name, const char
     static const char fname[] = "CCAPI_Start_response";
 
     if (is_empty_str((char*)sipUser) || is_empty_str((char*)sipDomain)) {
-        CCAPP_ERROR(DEB_F_PREFIX" invalid registration details user=%s, domain=%s\n", DEB_F_PREFIX_ARGS(CC_API, fname), sipUser, sipDomain);
+        CCAPP_ERROR(DEB_F_PREFIX" invalid registration details user=%s, domain=%s", DEB_F_PREFIX_ARGS(CC_API, fname), sipUser, sipDomain);
         return;
     }
 

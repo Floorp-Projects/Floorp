@@ -84,6 +84,6 @@ platform_apply_config (char * configVersionStamp,
     msg.data.config.ppid = ppid;
 
     if ( ccappTaskPostMsg(CCAPP_SESSION_MGMT, &msg, sizeof(session_mgmt_t), CCAPP_CCPROVIER) != CPR_SUCCESS ) {
-        CCAPP_DEBUG(DEB_F_PREFIX"failed to send platform_apply_config msg\n", DEB_F_PREFIX_ARGS(PLAT_API, fname));
+        CCAPP_DEBUG(DEB_F_PREFIX"failed to send platform_apply_config msg", DEB_F_PREFIX_ARGS(PLAT_API, fname));
     }
 }

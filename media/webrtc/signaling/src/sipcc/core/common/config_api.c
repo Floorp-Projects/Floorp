@@ -49,16 +49,16 @@ config_get_string (int id, char *buffer, int buffer_len)
     if ((id >= 0) && (id < CFGID_PROTOCOL_MAX)) {
         entry = &prot_cfg_table[id];
         if (entry->length > buffer_len) {
-            CONFIG_ERROR(CFG_F_PREFIX"insufficient buffer: %d\n", "config_get_string",
+            CONFIG_ERROR(CFG_F_PREFIX"insufficient buffer: %d", "config_get_string",
                     id);
         } else {
             buf_start = buffer;
             entry->print_func(entry, buffer, buffer_len);
-            CONFIG_DEBUG(DEB_F_PREFIX"CFGID %d: get str: %s = %s\n", DEB_F_PREFIX_ARGS(CONFIG_API, "config_get_string"), id, entry->name,
+            CONFIG_DEBUG(DEB_F_PREFIX"CFGID %d: get str: %s = %s", DEB_F_PREFIX_ARGS(CONFIG_API, "config_get_string"), id, entry->name,
                          buf_start);
         }
     } else {
-        CONFIG_ERROR(CFG_F_PREFIX"Invalid ID: %d\n", "config_get_string", id);
+        CONFIG_ERROR(CFG_F_PREFIX"Invalid ID: %d", "config_get_string", id);
     }
 }
 
@@ -82,13 +82,13 @@ config_set_string (int id, char *buffer)
         entry = &prot_cfg_table[id];
         if (entry->parse_func(entry, buffer)) {
             /* Parse function returned an error */
-            CONFIG_ERROR(CFG_F_PREFIX"Parse function failed. ID: %d %s:%s\n", "config_set_string", id, entry->name, buffer);
+            CONFIG_ERROR(CFG_F_PREFIX"Parse function failed. ID: %d %s:%s", "config_set_string", id, entry->name, buffer);
         } else {
-            CONFIG_DEBUG(DEB_F_PREFIX"CFGID %d: %s set str to %s\n", DEB_F_PREFIX_ARGS(CONFIG_API, "config_set_string"), id, entry->name,
+            CONFIG_DEBUG(DEB_F_PREFIX"CFGID %d: %s set str to %s", DEB_F_PREFIX_ARGS(CONFIG_API, "config_set_string"), id, entry->name,
                          buffer);
         }
     } else {
-        CONFIG_ERROR(CFG_F_PREFIX"Invalid ID: %d\n", "config_set_string", id);
+        CONFIG_ERROR(CFG_F_PREFIX"Invalid ID: %d", "config_set_string", id);
     }
 }
 
@@ -129,21 +129,21 @@ print_config_value (int id, char *get_set, const char *entry_name,
     if (length == sizeof(char)) {
         char_val = *(char *) buffer;
         long_val = (long) char_val;
-        CONFIG_DEBUG(DEB_F_PREFIX"CFGID %d: %s: %s = %ld\n", DEB_F_PREFIX_ARGS(CONFIG_API, "print_config_value"), id, get_set, entry_name,
+        CONFIG_DEBUG(DEB_F_PREFIX"CFGID %d: %s: %s = %ld", DEB_F_PREFIX_ARGS(CONFIG_API, "print_config_value"), id, get_set, entry_name,
                      long_val);
     } else if (length == sizeof(short)) {
         short_val = *(short *) buffer;
         long_val = (long) short_val;
-        CONFIG_DEBUG(DEB_F_PREFIX"CFGID %d: %s: %s = %ld\n", DEB_F_PREFIX_ARGS(CONFIG_API, "print_config_value"), id, get_set, entry_name,
+        CONFIG_DEBUG(DEB_F_PREFIX"CFGID %d: %s: %s = %ld", DEB_F_PREFIX_ARGS(CONFIG_API, "print_config_value"), id, get_set, entry_name,
                      long_val);
     } else if (length == sizeof(int)) {
         int_val = *(int *) buffer;
         long_val = (long) int_val;
-        CONFIG_DEBUG(DEB_F_PREFIX"CFGID %d: %s: %s = %ld\n", DEB_F_PREFIX_ARGS(CONFIG_API, "print_config_value"), id, get_set, entry_name,
+        CONFIG_DEBUG(DEB_F_PREFIX"CFGID %d: %s: %s = %ld", DEB_F_PREFIX_ARGS(CONFIG_API, "print_config_value"), id, get_set, entry_name,
                      long_val);
     } else if (length == sizeof(long)) {
         long_val = *(long *) buffer;
-        CONFIG_DEBUG(DEB_F_PREFIX"CFGID %d: %s: %s = %ld\n", DEB_F_PREFIX_ARGS(CONFIG_API, "print_config_value"), id, get_set, entry_name,
+        CONFIG_DEBUG(DEB_F_PREFIX"CFGID %d: %s: %s = %ld", DEB_F_PREFIX_ARGS(CONFIG_API, "print_config_value"), id, get_set, entry_name,
                      long_val);
     } else if (length < MAX_CONFIG_VAL_PRINT_LEN / 2) {
 
@@ -154,9 +154,9 @@ print_config_value (int id, char *get_set, const char *entry_name,
             str_ptr++;
         }
         *str_ptr = '\0';
-        CONFIG_DEBUG(DEB_F_PREFIX"CFGID %d: %s: %s = %s\n", DEB_F_PREFIX_ARGS(CONFIG_API, "print_config_value"), id, get_set, entry_name, str);
+        CONFIG_DEBUG(DEB_F_PREFIX"CFGID %d: %s: %s = %s", DEB_F_PREFIX_ARGS(CONFIG_API, "print_config_value"), id, get_set, entry_name, str);
     } else {
-        CONFIG_ERROR(CFG_F_PREFIX"cfg_id = %d length too long -> %d\n", "print_config_value",
+        CONFIG_ERROR(CFG_F_PREFIX"cfg_id = %d length too long -> %d", "print_config_value",
                 id, length);
     }
 }
@@ -191,11 +191,11 @@ config_get_value (int id, void *buffer, int length)
                 print_config_value(id, "Get Val", entry->name, buffer, length);
             }
         } else {
-            CONFIG_ERROR(CFG_F_PREFIX"%s size error\n", "config_get_value",
+            CONFIG_ERROR(CFG_F_PREFIX"%s size error", "config_get_value",
                     entry->name);
         }
     } else {
-        CONFIG_ERROR(CFG_F_PREFIX"Invalid ID: %d\n", "config_get_value", id);
+        CONFIG_ERROR(CFG_F_PREFIX"Invalid ID: %d", "config_get_value", id);
     }
 }
 
@@ -224,7 +224,7 @@ config_set_value (int id, void *buffer, int length)
     if ((id >= 0) && (id < CFGID_PROTOCOL_MAX)) {
         entry = &prot_cfg_table[id];
         if (entry->length != length) {
-            CONFIG_ERROR(CFG_F_PREFIX" %s size error entry size=%d, len=%d\n",
+            CONFIG_ERROR(CFG_F_PREFIX" %s size error entry size=%d, len=%d",
                     "config_set_value", entry->name, entry->length, length);
             return;
         }
@@ -233,7 +233,7 @@ config_set_value (int id, void *buffer, int length)
             print_config_value(id, "Set Val", entry->name, buffer, length);
         }
     } else {
-        CONFIG_ERROR(CFG_F_PREFIX"Invalid ID: %d\n", "config_set_value", id);
+        CONFIG_ERROR(CFG_F_PREFIX"Invalid ID: %d", "config_set_value", id);
     }
 }
 
@@ -372,7 +372,7 @@ config_get_line_id (int id, int line)
     if ((line == 0) || (line > MAX_REG_LINES)) {
         entry = &prot_cfg_table[id];  // XXX set but not used
         (void) entry;
-        CONFIG_ERROR(CFG_F_PREFIX"ID=%d- line %d out of range\n", "config_get_line_id", id, line);
+        CONFIG_ERROR(CFG_F_PREFIX"ID=%d- line %d out of range", "config_get_line_id", id, line);
         return (0);
     }
     line_id = id + line - 1;

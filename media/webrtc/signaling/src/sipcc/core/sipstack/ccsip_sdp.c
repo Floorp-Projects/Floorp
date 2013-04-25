@@ -117,7 +117,7 @@ sipsdp_create (const char *peerconnection)
 
     sdp = sdp_init_description(peerconnection, ccsip_sdp_config);
     if (!sdp) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"SDP allocation failure\n", __FUNCTION__);
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"SDP allocation failure", __FUNCTION__);
         return (NULL);
     }
 
@@ -170,14 +170,14 @@ sipsdp_free (cc_sdp_t **sip_sdp)
     if ((*sip_sdp)->src_sdp) {
         sdp_ret = sdp_free_description((*sip_sdp)->src_sdp);
         if (sdp_ret != SDP_SUCCESS) {
-            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"%d while freeing src_sdp\n",
+            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"%d while freeing src_sdp",
                           fname, sdp_ret);
         }
     }
     if ((*sip_sdp)->dest_sdp) {
         sdp_ret = sdp_free_description((*sip_sdp)->dest_sdp);
         if (sdp_ret != SDP_SUCCESS) {
-            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"%d while freeing dest_sdp\n",
+            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"%d while freeing dest_sdp",
                           fname, sdp_ret);
         }
     }
@@ -236,7 +236,7 @@ sipsdp_src_dest_free (uint16_t flags, cc_sdp_t **sdp_info)
         if ((*sdp_info)->src_sdp) {
             sdp_ret = sdp_free_description((*sdp_info)->src_sdp);
             if (sdp_ret != SDP_SUCCESS) {
-                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"%d while freeing src_sdp\n",
+                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"%d while freeing src_sdp",
                               fname, sdp_ret);
             }
             (*sdp_info)->src_sdp = NULL;
@@ -247,7 +247,7 @@ sipsdp_src_dest_free (uint16_t flags, cc_sdp_t **sdp_info)
         if ((*sdp_info)->dest_sdp) {
             sdp_ret = sdp_free_description((*sdp_info)->dest_sdp);
             if (sdp_ret != SDP_SUCCESS) {
-                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"%d while freeing dest_sdp\n",
+                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"%d while freeing dest_sdp",
                               fname, sdp_ret);
             }
             (*sdp_info)->dest_sdp = NULL;
@@ -331,13 +331,13 @@ sipsdp_write_to_buf (sdp_t *sdp_info, uint32_t *retbytes)
     flex_string_init(&fs);
 
     if (!sdp_info) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"NULL sdp_info or src_sdp\n", __FUNCTION__);
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"NULL sdp_info or src_sdp", __FUNCTION__);
         return (NULL);
     }
 
     if ((rc = sdp_build(sdp_info, &fs))
         != SDP_SUCCESS) {
-        CCSIP_DEBUG_TASK(DEB_F_PREFIX"sdp_build rc=%s\n", DEB_F_PREFIX_ARGS(SIP_SDP, __FUNCTION__),
+        CCSIP_DEBUG_TASK(DEB_F_PREFIX"sdp_build rc=%s", DEB_F_PREFIX_ARGS(SIP_SDP, __FUNCTION__),
                          sdp_get_result_name(rc));
 
         flex_string_free(&fs);

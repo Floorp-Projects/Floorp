@@ -166,7 +166,7 @@ handle_range_selector (char *str, unsigned long *bitmask)
         /* make sure there is only 1 char after '-' */
         char_ptr++;
         if (*char_ptr != ']') {
-            KPML_DEBUG(DEB_F_PREFIX"The Regex format %s is not supported.\n",
+            KPML_DEBUG(DEB_F_PREFIX"The Regex format %s is not supported.",
                        DEB_F_PREFIX_ARGS(KPML_INFO, fname), str);
             rc = KPML_ERROR_INVALID_VALUE;
 
@@ -177,7 +177,7 @@ handle_range_selector (char *str, unsigned long *bitmask)
             rc = KPML_ERROR_INVALID_VALUE;
         }
     } else {
-        KPML_DEBUG(DEB_F_PREFIX"The Regex format %s is not supported.\n",
+        KPML_DEBUG(DEB_F_PREFIX"The Regex format %s is not supported.",
                    DEB_F_PREFIX_ARGS(KPML_INFO, fname), str);
         rc = KPML_ERROR_INVALID_VALUE;
     }
@@ -267,7 +267,7 @@ handle_character_selector (char *str, unsigned long *bitmask)
             /* There should not be any characters after the ']' */
             char_ptr++;
             if (*char_ptr) {
-                KPML_DEBUG(DEB_F_PREFIX"The Regex format %s is not supported.\n",
+                KPML_DEBUG(DEB_F_PREFIX"The Regex format %s is not supported.",
                             DEB_F_PREFIX_ARGS(KPML_INFO, fname), str);
                 rc = KPML_ERROR_INVALID_VALUE;
             }
@@ -284,7 +284,7 @@ handle_character_selector (char *str, unsigned long *bitmask)
         }
     }
 
-    KPML_DEBUG(DEB_F_PREFIX"bitmask=%lu, return status = %d\n",
+    KPML_DEBUG(DEB_F_PREFIX"bitmask=%lu, return status = %d",
                 DEB_F_PREFIX_ARGS(KPML_INFO, fname), *bitmask, rc);
 
     return (rc);
@@ -318,7 +318,7 @@ kpml_parse_regex_str (char *regex_str, kpml_regex_match_t *regex_match)
     kpml_status_type_t rc = KPML_STATUS_OK;
 
     if (!regex_str || !regex_match) {
-        KPML_DEBUG(DEB_F_PREFIX"Invalid input params. \n", DEB_F_PREFIX_ARGS(KPML_INFO, fname));
+        KPML_DEBUG(DEB_F_PREFIX"Invalid input params.", DEB_F_PREFIX_ARGS(KPML_INFO, fname));
         return (KPML_ERROR_INTERNAL);
     }
 
@@ -350,7 +350,7 @@ kpml_parse_regex_str (char *regex_str, kpml_regex_match_t *regex_match)
                 single_char = TRUE;
             } else {
 
-                KPML_DEBUG(DEB_F_PREFIX"The Regex format %s is not supported.\n",
+                KPML_DEBUG(DEB_F_PREFIX"The Regex format %s is not supported.",
                            DEB_F_PREFIX_ARGS(KPML_INFO, fname), regex_str);
                 return (KPML_ERROR_INVALID_VALUE);
             }
@@ -379,7 +379,7 @@ kpml_parse_regex_str (char *regex_str, kpml_regex_match_t *regex_match)
 
     } else {
         /* The regex format is not supported. */
-        KPML_DEBUG(DEB_F_PREFIX"The Regex format %s is not supported.\n",
+        KPML_DEBUG(DEB_F_PREFIX"The Regex format %s is not supported.",
                 DEB_F_PREFIX_ARGS(KPML_INFO, fname), regex_str);
         rc = KPML_ERROR_INVALID_VALUE;
     }

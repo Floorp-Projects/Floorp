@@ -58,7 +58,7 @@ dp_int_message (line_t line, callid_t call_id, char digit,
     pmsg = (dp_int_t *) cc_get_msg_buf(sizeof(dp_int_t));
 
     if (!pmsg) {
-        err_msg(get_debug_string(CC_NO_MSG_BUFFER), fname);
+        CSFLogError("src-common", get_debug_string(CC_NO_MSG_BUFFER), fname);
         return;
     }
 
@@ -77,7 +77,7 @@ dp_int_message (line_t line, callid_t call_id, char digit,
     pmsg->monitor_mode = monitor_mode;
     if (gsm_send_msg(msg_id, (cprBuffer_t) pmsg, sizeof(dp_int_t)) !=
         CPR_SUCCESS) {
-        err_msg(get_debug_string(CC_SEND_FAILURE), fname);
+        CSFLogError("src-common", get_debug_string(CC_SEND_FAILURE), fname);
     }
 }
 
@@ -91,7 +91,7 @@ dp_int_init_dialing_data (line_t line, callid_t call_id)
 void
 dp_dial_timeout (void *data)
 {
-    DPINT_DEBUG(DEB_F_PREFIX"\n", DEB_F_PREFIX_ARGS(DIALPLAN, "dp_dial_timeout"));
+    DPINT_DEBUG(DEB_F_PREFIX"", DEB_F_PREFIX_ARGS(DIALPLAN, "dp_dial_timeout"));
     dp_int_message(0, 0, 0, NULL, FALSE, &data, DP_MSG_DIGIT_TIMER, NULL, CC_MONITOR_NONE);
 }
 
@@ -287,12 +287,12 @@ dp_update_keypress (line_t line, callid_t call_id, unsigned char digit)
     lsm_states_t lsm_state;
     int skMask[MAX_SOFT_KEYS];
 
-    DEF_DEBUG(DEB_L_C_F_PREFIX"KEY .\n", DEB_L_C_F_PREFIX_ARGS(DP_API, line, call_id, fname) );
+    DEF_DEBUG(DEB_L_C_F_PREFIX"KEY .", DEB_L_C_F_PREFIX_ARGS(DP_API, line, call_id, fname) );
 
     lsm_state = lsm_get_state(call_id);
 
     if (lsm_state == LSM_S_NONE) {
-        DPINT_DEBUG(DEB_F_PREFIX"call not found\n", DEB_F_PREFIX_ARGS(DIALPLAN, fname));
+        DPINT_DEBUG(DEB_F_PREFIX"call not found", DEB_F_PREFIX_ARGS(DIALPLAN, fname));
         return;
     }
 
@@ -302,7 +302,7 @@ dp_update_keypress (line_t line, callid_t call_id, unsigned char digit)
     if (lsm_state == LSM_S_RINGOUT ||
         lsm_state == LSM_S_CONNECTED || lsm_state == LSM_S_HOLDING) {
 
-        DPINT_DEBUG(DEB_F_PREFIX"digit received in LSM state %s\n",
+        DPINT_DEBUG(DEB_F_PREFIX"digit received in LSM state %s",
                     DEB_F_PREFIX_ARGS(DIALPLAN, fname), lsm_state_name(lsm_state));
         cc_digit_begin(CC_SRC_GSM, g_dp_int.call_id, g_dp_int.line, digit);
         if (!kpml_update_dialed_digits(line, call_id, digit)) {
@@ -312,18 +312,18 @@ dp_update_keypress (line_t line, callid_t call_id, unsigned char digit)
     }
 
     if (g_dp_int.line != line) {
-        DPINT_DEBUG(DEB_F_PREFIX"line %d does not match dialplan line %d\n", DEB_F_PREFIX_ARGS(DIALPLAN, fname),
+        DPINT_DEBUG(DEB_F_PREFIX"line %d does not match dialplan line %d", DEB_F_PREFIX_ARGS(DIALPLAN, fname),
                     line, g_dp_int.line);
         return;
     }
 
     if (dp_check_plar_warmline(line, call_id)) {
-        DPINT_DEBUG(DEB_F_PREFIX"warm line\n", DEB_F_PREFIX_ARGS(DIALPLAN, fname));
+        DPINT_DEBUG(DEB_F_PREFIX"warm line", DEB_F_PREFIX_ARGS(DIALPLAN, fname));
         return;
     }
 
     if (digit == 0) {
-        DPINT_DEBUG(DEB_F_PREFIX"digit is 0\n", DEB_F_PREFIX_ARGS(DIALPLAN, fname));
+        DPINT_DEBUG(DEB_F_PREFIX"digit is 0", DEB_F_PREFIX_ARGS(DIALPLAN, fname));
         return;
     }
 
@@ -435,7 +435,7 @@ dp_dial_timeout_event (void *data)
 {
     const char fname[] = "dp_dial_timeout_event";
 
-    DPINT_DEBUG(DEB_F_PREFIX"line=%d call_id=%d dialed digits=%s\n", DEB_F_PREFIX_ARGS(DIALPLAN, fname),
+    DPINT_DEBUG(DEB_F_PREFIX"line=%d call_id=%d dialed digits=%s", DEB_F_PREFIX_ARGS(DIALPLAN, fname),
                 g_dp_int.line, g_dp_int.call_id, g_dp_int.gDialed);
 
 
@@ -500,7 +500,7 @@ dp_restart_dial_timer (line_t line, callid_t call_id, int timeout)
 {
     const char fname[] = "dp_restart_dial_timer";
 
-    DPINT_DEBUG(DEB_F_PREFIX"line=%d call_id=%d timeout=%u\n", DEB_F_PREFIX_ARGS(DIALPLAN, fname), line,
+    DPINT_DEBUG(DEB_F_PREFIX"line=%d call_id=%d timeout=%u", DEB_F_PREFIX_ARGS(DIALPLAN, fname), line,
                 call_id, timeout);
 
     g_dp_int.timer_info.index.line = line;
@@ -567,7 +567,7 @@ dp_check_dialplan (line_t line, callid_t call_id, unsigned char digit)
     switch (action) {
 
     case DIAL_FULLPATTERN:
-        DPINT_DEBUG(DEB_F_PREFIX"Full pattern match\n", DEB_F_PREFIX_ARGS(DIALPLAN, fname));
+        DPINT_DEBUG(DEB_F_PREFIX"Full pattern match", DEB_F_PREFIX_ARGS(DIALPLAN, fname));
 
         if (timeout <= 0) {
             cc_dialstring(CC_SRC_GSM, g_dp_int.call_id, g_dp_int.line,
@@ -585,7 +585,7 @@ dp_check_dialplan (line_t line, callid_t call_id, unsigned char digit)
         break;
 
     case DIAL_IMMEDIATELY:
-        DPINT_DEBUG(DEB_F_PREFIX"Dial immediately\n", DEB_F_PREFIX_ARGS(DIALPLAN, fname));
+        DPINT_DEBUG(DEB_F_PREFIX"Dial immediately", DEB_F_PREFIX_ARGS(DIALPLAN, fname));
         /*
          * The user pressed the # key and the phone should dial immediately
          */
@@ -602,13 +602,13 @@ dp_check_dialplan (line_t line, callid_t call_id, unsigned char digit)
         return;
 
     case DIAL_GIVETONE:
-        DPINT_DEBUG(DEB_F_PREFIX"Give tone\n", DEB_F_PREFIX_ARGS(DIALPLAN, fname));
+        DPINT_DEBUG(DEB_F_PREFIX"Give tone", DEB_F_PREFIX_ARGS(DIALPLAN, fname));
 
         /* we need new dial tone */
         lsm_state = lsm_get_state(call_id);
 
         if (lsm_state == LSM_S_NONE) {
-            DPINT_DEBUG(DEB_F_PREFIX"call not found\n", DEB_F_PREFIX_ARGS(DIALPLAN, fname));
+            DPINT_DEBUG(DEB_F_PREFIX"call not found", DEB_F_PREFIX_ARGS(DIALPLAN, fname));
             return;
         }
 
@@ -618,7 +618,7 @@ dp_check_dialplan (line_t line, callid_t call_id, unsigned char digit)
         break;
 
     default:
-        DPINT_DEBUG(DEB_F_PREFIX"No match\n", DEB_F_PREFIX_ARGS(DIALPLAN, fname));
+        DPINT_DEBUG(DEB_F_PREFIX"No match", DEB_F_PREFIX_ARGS(DIALPLAN, fname));
         cc_digit_begin(CC_SRC_GSM, call_id, line, digit);
         break;
     }
@@ -676,7 +676,7 @@ dp_get_gdialed_digits (void)
 {
     const char fname[] = "dp_get_gdialed_digits";
 
-    DPINT_DEBUG(DEB_F_PREFIX"Dialed digits:%s\n", DEB_F_PREFIX_ARGS(DIALPLAN, fname), g_dp_int.gDialed);
+    DPINT_DEBUG(DEB_F_PREFIX"Dialed digits:%s", DEB_F_PREFIX_ARGS(DIALPLAN, fname), g_dp_int.gDialed);
 
     /* Digits are copied to Redial buffer after 180 is received
      * after dp_update (). Afterthat gDialed buffer is cleared. So the dialed
@@ -712,23 +712,23 @@ dp_do_redial (line_t line, callid_t call_id)
 {
     const char fname[] = "dp_do_redial";
 
-    DPINT_DEBUG(DEB_F_PREFIX"line=%d call_id=%d\n", DEB_F_PREFIX_ARGS(DIALPLAN, fname), line, call_id);
+    DPINT_DEBUG(DEB_F_PREFIX"line=%d call_id=%d", DEB_F_PREFIX_ARGS(DIALPLAN, fname), line, call_id);
 
     if (line == 0) {
         line = dp_get_redial_line();
     }
     //CSCsz63263, use prime line instead if last redialed line is unregistered
     if(ccsip_is_line_registered(line) == FALSE) {
-         DPINT_DEBUG(DEB_F_PREFIX"line %d unregistered, use line %d instead \n", DEB_F_PREFIX_ARGS(DIALPLAN, fname), line,
+         DPINT_DEBUG(DEB_F_PREFIX"line %d unregistered, use line %d instead", DEB_F_PREFIX_ARGS(DIALPLAN, fname), line,
         		 PRIME_LINE_ID);
          line = PRIME_LINE_ID;
          if( ccsip_is_line_registered(line) == FALSE) {
-            DPINT_DEBUG(DEB_F_PREFIX" prime line %d unregistered\n", DEB_F_PREFIX_ARGS(DIALPLAN, fname), line);
+            DPINT_DEBUG(DEB_F_PREFIX" prime line %d unregistered", DEB_F_PREFIX_ARGS(DIALPLAN, fname), line);
             return;
        }
      }
     if (g_dp_int.gReDialed[0] == NUL) {
-        DPINT_DEBUG(DEB_F_PREFIX"NO DIAL STRING line=%d call_id=%d\n", DEB_F_PREFIX_ARGS(DIALPLAN, fname), line,
+        DPINT_DEBUG(DEB_F_PREFIX"NO DIAL STRING line=%d call_id=%d", DEB_F_PREFIX_ARGS(DIALPLAN, fname), line,
                     call_id);
 
         return;
@@ -771,7 +771,7 @@ dp_init_dialing_data (line_t line, callid_t call_id)
 {
     const char fname[] = "dp_init_dialing_data";
 
-    DPINT_DEBUG(DEB_F_PREFIX"line=%d call_id=%d\n", DEB_F_PREFIX_ARGS(DIALPLAN, fname), line, call_id);
+    DPINT_DEBUG(DEB_F_PREFIX"line=%d call_id=%d", DEB_F_PREFIX_ARGS(DIALPLAN, fname), line, call_id);
 
     g_dp_int.call_id = call_id;
     g_dp_int.line = line;
@@ -808,7 +808,7 @@ dp_clear_dialing_data (line_t line, callid_t call_id)
 {
     const char fname[] = "dp_clear_dialing_data";
 
-    DPINT_DEBUG(DEB_F_PREFIX"line=%d call_id=%d\n", DEB_F_PREFIX_ARGS(DIALPLAN, fname), line, call_id);
+    DPINT_DEBUG(DEB_F_PREFIX"line=%d call_id=%d", DEB_F_PREFIX_ARGS(DIALPLAN, fname), line, call_id);
 
     g_dp_int.call_id = 0;
     g_dp_int.line = 0;
@@ -873,7 +873,7 @@ dp_check_for_plar_line (line_t line)
          */
         if (timeout <= 0) {
 
-            DPINT_DEBUG(DEB_F_PREFIX"line=%d PLAR line\n", DEB_F_PREFIX_ARGS(DIALPLAN, fname), line);
+            DPINT_DEBUG(DEB_F_PREFIX"line=%d PLAR line", DEB_F_PREFIX_ARGS(DIALPLAN, fname), line);
             return (TRUE);
 
         }
@@ -949,7 +949,7 @@ boolean dp_offhook (line_t line, callid_t call_id)
 {
     const char fname[] = "dp_offhook";
 
-    DPINT_DEBUG(DEB_F_PREFIX"line=%d call_id=%d\n", DEB_F_PREFIX_ARGS(DIALPLAN, fname), line, call_id);
+    DPINT_DEBUG(DEB_F_PREFIX"line=%d call_id=%d", DEB_F_PREFIX_ARGS(DIALPLAN, fname), line, call_id);
 
     /*
      * If this line and call_id is same that means
@@ -1013,7 +1013,7 @@ dp_dial_immediate (line_t line, callid_t call_id, boolean collect_more,
         return;
     }
 
-    DPINT_DEBUG(DEB_F_PREFIX"line=%d call_id=%d dialed digits=%s\n",
+    DPINT_DEBUG(DEB_F_PREFIX"line=%d call_id=%d dialed digits=%s",
                 DEB_F_PREFIX_ARGS(DIALPLAN, fname), line, call_id, g_dp_int.gDialed);
 
     /* Do not dial anything else even if UI asks to do so, if the line is PLAR */
@@ -1137,7 +1137,7 @@ dp_update (line_t line, callid_t call_id, string_t called_num)
 void
 dp_reset (void)
 {
-    DPINT_DEBUG(DEB_F_PREFIX"Reset dp_int module\n", DEB_F_PREFIX_ARGS(DIALPLAN, "dp_reset"));
+    DPINT_DEBUG(DEB_F_PREFIX"Reset dp_int module", DEB_F_PREFIX_ARGS(DIALPLAN, "dp_reset"));
     /* cleanup redial buffer */
     memset(g_dp_int.gReDialed, 0, sizeof(g_dp_int.gReDialed));
 }
@@ -1197,7 +1197,7 @@ int dp_init_template(const char * dial_plan_string, int length) {
     static const char fname[] = "dp_init_template";
     char *TemplateData = (char *) &dpLoadArea;
 
-    DPINT_DEBUG(DEB_F_PREFIX"Reading Dialplan string.  Length=[%d]\n", DEB_F_PREFIX_ARGS(DIALPLAN, fname), length);
+    DPINT_DEBUG(DEB_F_PREFIX"Reading Dialplan string.  Length=[%d]", DEB_F_PREFIX_ARGS(DIALPLAN, fname), length);
 
 
     /* Clear existing dialplan templates before building a new one */
@@ -1234,7 +1234,7 @@ int dp_init_template(const char * dial_plan_string, int length) {
         return (-1);
     }
 
-    DPINT_DEBUG(DEB_F_PREFIX"Successfully Parsed Dialplan.  \n", DEB_F_PREFIX_ARGS(DIALPLAN, fname));
+    DPINT_DEBUG(DEB_F_PREFIX"Successfully Parsed Dialplan.", DEB_F_PREFIX_ARGS(DIALPLAN, fname));
     return (0);
 }
 
@@ -1288,7 +1288,7 @@ dp_process_msg (uint32_t cmd, void *msg)
     static const char fname[] = "dp_process_msg";
     dp_int_t *dp_int_msg = (dp_int_t *) msg;
 
-    DPINT_DEBUG(DEB_F_PREFIX"cmd= %s\n", DEB_F_PREFIX_ARGS(DIALPLAN, fname), dp_get_msg_string(cmd));
+    DPINT_DEBUG(DEB_F_PREFIX"cmd= %s", DEB_F_PREFIX_ARGS(DIALPLAN, fname), dp_get_msg_string(cmd));
 
     switch (cmd) {
 

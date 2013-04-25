@@ -291,7 +291,7 @@ sdp_result_e sdp_parse_attr_simple_u32 (sdp_t *sdp_p, sdp_attr_t *attr_p,
         return (SDP_INVALID_PARAMETER);
     } else {
         if (sdp_p->debug_flag[SDP_DEBUG_TRACE]) {
-            SDP_PRINT("%s Parsed a=%s, %lu", sdp_p->debug_str,
+            SDP_PRINT("%s Parsed a=%s, %u", sdp_p->debug_str,
                       sdp_get_attr_name(attr_p->type), attr_p->attr.u32_val);
         }
         return (SDP_SUCCESS);
@@ -1782,7 +1782,7 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
     if (codec_info_found) {
 
         if (sdp_p->debug_flag[SDP_DEBUG_TRACE]) {
-            SDP_PRINT("%s Parsed a=%s, payload type %u, bitrate %lu, mode %u QCIF = %u, CIF = %u, MAXBR= %u, SQCIF=%u, CIF4= %u, CIF16=%u, CUSTOM=%u,%u,%u , PAR=%u:%u,CPCF=%u, BPP=%u, HRD=%u \n",
+            SDP_PRINT("%s Parsed a=%s, payload type %u, bitrate %u, mode %u QCIF = %u, CIF = %u, MAXBR= %u, SQCIF=%u, CIF4= %u, CIF16=%u, CUSTOM=%u,%u,%u , PAR=%u:%u,CPCF=%u, BPP=%u, HRD=%u \n",
                       sdp_p->debug_str,
                       sdp_get_attr_name(attr_p->type),
                       attr_p->attr.fmtp.payload_num,
@@ -1815,7 +1815,7 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
         }
 
 	if (sdp_p->debug_flag[SDP_DEBUG_TRACE]) {
-            SDP_PRINT("%s Parsed H.264 attributes: profile-level-id=%s, parameter-sets=%s, packetization-mode=%d level-asymmetry-allowed=%d interleaving-depth=%d deint-buf-req=%lu max-don-diff=%lu, init_buf-time=%lu\n",
+            SDP_PRINT("%s Parsed H.264 attributes: profile-level-id=%s, parameter-sets=%s, packetization-mode=%d level-asymmetry-allowed=%d interleaving-depth=%d deint-buf-req=%u max-don-diff=%u, init_buf-time=%u\n",
                       sdp_p->debug_str,
                       attr_p->attr.fmtp.profile_level_id,
                       attr_p->attr.fmtp.parameter_sets,
@@ -1829,7 +1829,7 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
         }
 
 	if (sdp_p->debug_flag[SDP_DEBUG_TRACE]) {
-            SDP_PRINT("\n%s Parsed H.264 opt attributes: max-mbps=%lu, max-fs=%lu, max-cpb=%lu max-dpb=%lu max-br=%lu redundant-pic-cap=%d, deint-buf-cap=%lu, max-rcmd-nalu-size=%lu , parameter-add=%d\n",
+            SDP_PRINT("\n%s Parsed H.264 opt attributes: max-mbps=%u, max-fs=%u, max-cpb=%u max-dpb=%u max-br=%u redundant-pic-cap=%d, deint-buf-cap=%u, max-rcmd-nalu-size=%u , parameter-add=%d\n",
                       sdp_p->debug_str,
                       attr_p->attr.fmtp.max_mbps,
                       attr_p->attr.fmtp.max_fs,
@@ -2641,7 +2641,7 @@ sdp_result_e sdp_parse_attr_transport_map (sdp_t *sdp_p, sdp_attr_t *attr_p,
 
     if (sdp_p->debug_flag[SDP_DEBUG_TRACE]) {
         SDP_PRINT("%s Parsed a=%s, payload type %u, encoding name %s, "
-                  "clockrate %lu", sdp_p->debug_str,
+                  "clockrate %u", sdp_p->debug_str,
                   sdp_get_attr_name(attr_p->type),
                   attr_p->attr.transport_map.payload_num,
                   attr_p->attr.transport_map.encname,

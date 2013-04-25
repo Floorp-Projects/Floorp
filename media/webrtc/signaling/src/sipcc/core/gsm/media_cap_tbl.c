@@ -35,7 +35,7 @@ static boolean g_natve_txCap_enabled = FALSE;
 void escalateDeescalate() {
     g_media_table.id++;
     if ( ccapp_get_state() != CC_INSERVICE ) {
-        VCM_DEBUG(MED_F_PREFIX"Ignoring video cap update\n", "escalateDeescalate");
+        VCM_DEBUG(MED_F_PREFIX"Ignoring video cap update", "escalateDeescalate");
         return;
     }
 
@@ -81,7 +81,7 @@ static void updateVidCapTbl(){
         }
     }  else {
         // disable vid cap
-        DEF_DEBUG(MED_F_PREFIX"video capability disabled \n", "updateVidCapTbl");
+        DEF_DEBUG(MED_F_PREFIX"video capability disabled", "updateVidCapTbl");
 
         if ( g_media_table.cap[CC_VIDEO_1].enabled ) {
             g_media_table.cap[CC_VIDEO_1].enabled = FALSE;
@@ -96,7 +96,7 @@ static void updateVidCapTbl(){
  * expected to be called once in the beginning only
  */
 void cc_media_update_native_video_support(boolean val) {
-    DEF_DEBUG(MED_F_PREFIX"Setting native video support val=%d\n", "cc_media_update_native_video_support", val);
+    DEF_DEBUG(MED_F_PREFIX"Setting native video support val=%d", "cc_media_update_native_video_support", val);
     g_nativeVidSupported = val;
     updateVidCapTbl();
 }
@@ -106,7 +106,7 @@ void cc_media_update_native_video_support(boolean val) {
  * API to update video capability on the device based on config
  */
 void cc_media_update_video_cap(boolean val) {
-    DEF_DEBUG(MED_F_PREFIX"Setting video cap val=%d\n", "cc_media_update_video_cap", val);
+    DEF_DEBUG(MED_F_PREFIX"Setting video cap val=%d", "cc_media_update_video_cap", val);
     g_vidCapEnabled = val;
     updateVidCapTbl();
     if ( g_nativeVidSupported ) {
@@ -121,7 +121,7 @@ void cc_media_update_video_cap(boolean val) {
 
 void cc_media_update_native_video_txcap(boolean enable) {
 
-    VCM_DEBUG(MED_F_PREFIX"Setting txcap val=%d\n", "cc_media_update_video_txcap", enable);
+    VCM_DEBUG(MED_F_PREFIX"Setting txcap val=%d", "cc_media_update_video_txcap", enable);
 
     if ( g_natve_txCap_enabled == enable ) {
         // nothing to do

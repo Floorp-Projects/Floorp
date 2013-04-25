@@ -16,7 +16,7 @@ void cc_invokeDeviceFeature(session_feature_t *feature) {
 
     if (ccappTaskPostMsg(CCAPP_INVOKEPROVIDER_FEATURE, feature,
                        sizeof(session_feature_t), CCAPP_CCPROVIER) == CPR_FAILURE) {
-        CCAPP_DEBUG(DEB_F_PREFIX"cc_invokeDeviceFeature failed\n",
+        CCAPP_DEBUG(DEB_F_PREFIX"cc_invokeDeviceFeature failed",
                 DEB_F_PREFIX_ARGS("cc_device_feature", "cc_invokeDeviceFeature"));
     }
 

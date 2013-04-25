@@ -612,7 +612,7 @@ httpish_msg_get_header_val (httpishMsg_t *msg,
         this_line = ((httpish_header *)p)->header;
 
         if (httpish_header_name_val(headerName, this_line)) {
-            CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Invalid Header Passed %s\n", DEB_F_PREFIX_ARGS(HTTPISH, fname), this_line);
+            CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Invalid Header Passed %s", DEB_F_PREFIX_ARGS(HTTPISH, fname), this_line);
             return (NULL);
         }
 
@@ -914,7 +914,7 @@ httpish_cache_header_val (httpishMsg_t *hmsg,
     hdr_start = this_line;
 
     if (httpish_header_name_val(headerName, this_line)) {
-        CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Invalid Header %s\n", DEB_F_PREFIX_ARGS(HTTPISH, fname), this_line);
+        CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Invalid Header %s", DEB_F_PREFIX_ARGS(HTTPISH, fname), this_line);
         return (SIP_ERROR);
     }
 
@@ -1118,7 +1118,7 @@ msg_process_one_body (httpishMsg_t *hmsg,
                 hmsg->mesg_body[current_body_part].msgContentType =
                              (char *) cpr_malloc((nbytes)*sizeof(char));
                 if (hmsg->mesg_body[current_body_part].msgContentType == NULL) {
-                   CCSIP_DEBUG_ERROR(SIP_F_PREFIX"malloc failed\n", fname);
+                   CCSIP_DEBUG_ERROR(SIP_F_PREFIX"malloc failed", fname);
                 } else {
                     memcpy(hmsg->mesg_body[current_body_part].msgContentType,
                            content_type, nbytes);
@@ -1134,7 +1134,7 @@ msg_process_one_body (httpishMsg_t *hmsg,
                 hmsg->mesg_body[current_body_part].msgContentId =
                              (char *) cpr_malloc((nbytes)*sizeof(char));
                 if (hmsg->mesg_body[current_body_part].msgContentId == NULL) {
-                   CCSIP_DEBUG_ERROR(SIP_F_PREFIX"malloc failed\n", fname);
+                   CCSIP_DEBUG_ERROR(SIP_F_PREFIX"malloc failed", fname);
                 }
                 memcpy(hmsg->mesg_body[current_body_part].msgContentId,
                           content_id, nbytes);
@@ -1190,7 +1190,7 @@ msg_process_one_body (httpishMsg_t *hmsg,
                 }
             } else {
                 // Unhandled header type
-                CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Unrecognized header in body\n", DEB_F_PREFIX_ARGS(HTTPISH, fname));
+                CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Unrecognized header in body", DEB_F_PREFIX_ARGS(HTTPISH, fname));
             }
             // Free the read line
             cpr_free(line);
@@ -1300,10 +1300,10 @@ httpish_msg_process_network_msg (httpishMsg_t *hmsg,
             *nbytes = rs->bytes_read;
             if (rs->eof == TRUE) {
                 retval = HSTATUS_SUCCESS;
-                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Msg line read failure due to RS->EOF\n", fname);
+                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Msg line read failure due to RS->EOF", fname);
             } else {
                 retval = HSTATUS_FAILURE;
-                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Msg line read failure\n", fname);
+                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Msg line read failure", fname);
             }
             pmhutils_rstream_delete(rs, FALSE);
             cpr_free(rs);
@@ -1325,10 +1325,10 @@ httpish_msg_process_network_msg (httpishMsg_t *hmsg,
             *nbytes = rs->bytes_read;
             if (rs->eof == TRUE) {
                 retval = HSTATUS_SUCCESS;
-                CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Header line read failure due to RS->EOF\n", DEB_F_PREFIX_ARGS(HTTPISH, fname));
+                CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Header line read failure due to RS->EOF", DEB_F_PREFIX_ARGS(HTTPISH, fname));
             } else {
                 retval = HSTATUS_FAILURE;
-                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Header line read failure\n", fname);
+                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Header line read failure", fname);
             }
             pmhutils_rstream_delete(rs, FALSE);
             cpr_free(rs);
@@ -1374,20 +1374,20 @@ httpish_msg_process_network_msg (httpishMsg_t *hmsg,
          * but we will ignore this possibility for now (assume content-length will always be there)
          * since we don't know if we have a complete message or a fragmented one
          */
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Content-Length header not received\n", fname);
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Content-Length header not received", fname);
         hmsg->content_length = bytes_remaining;
     }
 
     delta = bytes_remaining - hmsg->content_length;
     if (delta) {
-        CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX "Content Length %d, Bytes Remaining %d.\n", DEB_F_PREFIX_ARGS(HTTPISH, fname),
+        CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX "Content Length %d, Bytes Remaining %d.", DEB_F_PREFIX_ARGS(HTTPISH, fname),
                             hmsg->content_length, bytes_remaining);
     }
     if (delta < 0) {
         /* We have fewer bytes than specified by Content-Length header */
         hmsg->content_length = bytes_remaining;
         hmsg->is_complete = FALSE;
-        CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Partial body received\n", DEB_F_PREFIX_ARGS(HTTPISH, fname));
+        CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Partial body received", DEB_F_PREFIX_ARGS(HTTPISH, fname));
     } else {
         hmsg->is_complete = TRUE;
     }
@@ -1427,13 +1427,13 @@ httpish_msg_process_network_msg (httpishMsg_t *hmsg,
                 }
 
                 if (num_bodies == 0) {
-                    CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Error in decoding multipart messages\n", fname);
+                    CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Error in decoding multipart messages", fname);
                 } else {
                     hmsg->num_body_parts = (uint8_t) num_bodies;
                 }
             } else {
                 // No boundary specified!
-                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Error in decoding multipart messages: No body delimiter\n", fname);
+                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Error in decoding multipart messages: No body delimiter", fname);
             }
             hmsg->raw_body = raw_body;
 
@@ -1443,7 +1443,7 @@ httpish_msg_process_network_msg (httpishMsg_t *hmsg,
             hmsg->mesg_body[0].msgBody = (char *)
                 cpr_malloc(hmsg->content_length + 1);
             if (hmsg->mesg_body[0].msgBody == NULL) {
-                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Unable to get memory\n", fname);
+                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Unable to get memory", fname);
                 pmhutils_rstream_delete(rs, FALSE);
                 cpr_free(rs);
                 cpr_free(raw_body);
@@ -1461,7 +1461,7 @@ httpish_msg_process_network_msg (httpishMsg_t *hmsg,
                 hmsg->mesg_body[0].msgContentId = (char *)
                        cpr_malloc(contentid_len * sizeof(char));
                 if (hmsg->mesg_body[0].msgContentId == NULL) {
-                   CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Unable to get memory\n", fname);
+                   CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Unable to get memory", fname);
                     pmhutils_rstream_delete(rs, FALSE);
                     cpr_free(rs);
                     cpr_free(raw_body);
@@ -1476,7 +1476,7 @@ httpish_msg_process_network_msg (httpishMsg_t *hmsg,
             hmsg->mesg_body[0].msgContentType = (char *)
                    cpr_malloc(contenttype_len * sizeof(char));
             if (hmsg->mesg_body[0].msgContentType == NULL) {
-                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Unable to get memory\n", fname);
+                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Unable to get memory", fname);
                 pmhutils_rstream_delete(rs, FALSE);
                 cpr_free(rs);
                 cpr_free(raw_body);
@@ -1497,7 +1497,7 @@ httpish_msg_process_network_msg (httpishMsg_t *hmsg,
         // as an error
         hmsg->is_complete = FALSE;
         hmsg->content_length = -1;
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Body found without content-type\n", fname);
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Body found without content-type", fname);
         UTILFREE(raw_body);
         pmhutils_rstream_delete(rs, FALSE);
         cpr_free(rs);
@@ -1539,7 +1539,7 @@ httpish_msg_add_body (httpishMsg_t *msg,
     msg->mesg_body[current_body_part].msgContentType = (char *)
             cpr_malloc(contenttype_len * sizeof(char));
     if (msg->mesg_body[current_body_part].msgContentType == NULL) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Unable to get memory\n", fname);
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Unable to get memory", fname);
         return HSTATUS_FAILURE;
     }
 

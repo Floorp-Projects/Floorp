@@ -46,7 +46,7 @@ sip_regmgr_send_status (reg_srcs_t src_id, reg_status_t msg_id)
     if (msg_id == REG_ALL_FAIL) {
         //All failed ind to platform
         ui_reg_all_failed();
-        CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"REG ALL FAILED \n", DEB_F_PREFIX_ARGS(SIP_REG, fname));
+        CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"REG ALL FAILED", DEB_F_PREFIX_ARGS(SIP_REG, fname));
     }
     return;
 }
@@ -183,12 +183,12 @@ sip_platform_set_ccm_status (void)
     ti_config_table_t *ccm_table_entry;
     char dest_addr_str[MAX_IPADDR_STR_LEN];
 
-    CCSIP_DEBUG_STATE(DEB_F_PREFIX"\n", DEB_F_PREFIX_ARGS(SIP_REG, fname));
+    CCSIP_DEBUG_STATE(DEB_F_PREFIX"", DEB_F_PREFIX_ARGS(SIP_REG, fname));
     ccm_table_entry = CCM_Active_Standby_Table.active_ccm_entry;
     if (ccm_table_entry) {
         sstrncpy(dest_addr_str, ccm_table_entry->ti_common.addr_str,
                  MAX_IPADDR_STR_LEN);
-        CCSIP_DEBUG_STATE(DEB_F_PREFIX"addr str1 %s\n", DEB_F_PREFIX_ARGS(SIP_REG, fname), dest_addr_str);
+        CCSIP_DEBUG_STATE(DEB_F_PREFIX"addr str1 %s", DEB_F_PREFIX_ARGS(SIP_REG, fname), dest_addr_str);
 
         ui_set_ccm_conn_status(dest_addr_str, CCM_STATUS_ACTIVE);
     }
