@@ -20,7 +20,7 @@ interface nsIDOMContact : nsIContactProperties
   void init(in nsIContactProperties properties);  // Workaround BUG 723206
 };
 
-[scriptable, uuid(4efae3f8-dd69-4622-97c8-f16e4d38d95c)]
+[scriptable, uuid(7bfb6481-f946-4254-afc5-d7fe9f5c45a3)]
 interface nsIDOMContactManager : nsISupports
 {
   nsIDOMDOMRequest find(in nsIContactFindOptions options);
@@ -36,4 +36,6 @@ interface nsIDOMContactManager : nsISupports
   nsIDOMDOMRequest getSimContacts(in DOMString type);
 
   attribute nsIDOMEventListener oncontactchange;
+
+  nsIDOMDOMRequest getRevision();
 };

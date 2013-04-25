@@ -246,25 +246,44 @@ function tests() {
 var req;
 var index = 0;
 
+var initialRev;
+
+function checkRevision(revision, msg, then) {
+  var revReq = mozContacts.getRevision();
+  revReq.onsuccess = function(e) {
+    is(e.target.result, initialRev+revision, msg);
+    then();
+  };
+  revReq.onerror = onFailure;
+}
+
 var mozContacts = window.navigator.mozContacts;
 ok(mozContacts, "mozContacts exists");
 ok("mozContact" in window, "mozContact exists");
 var steps = [
-  function () {
-    ok(true, "Deleting database");
-    req = mozContacts.clear();
-    req.onsuccess = function () {
-      ok(true, "Deleted the database");
+  function() {
+    mozContacts.getRevision().onsuccess = function(e) {
+      initialRev = e.target.result;
       next();
     };
-    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Deleting database");
+    checkRevision(0, "Initial revision is 0", function() {
+      req = mozContacts.clear();
+      req.onsuccess = function () {
+        ok(true, "Deleted the database");
+        checkRevision(1, "Revision was incremented on clear", next);
+      };
+      req.onerror = onFailure;
+    });
   },
   function () {
     ok(true, "Retrieving all contacts");
     req = mozContacts.find({});
     req.onsuccess = function () {
       is(req.result.length, 0, "Empty database.");
-      next();
+      checkRevision(1, "Revision was not incremented on find", next);
     };
     req.onerror = onFailure;
   },
@@ -276,7 +295,7 @@ var steps = [
     req.onsuccess = function () {
       ok(createResult1.id, "The contact now has an ID.");
       sample_id1 = createResult1.id;
-      next();
+      checkRevision(2, "Revision was incremented on save", next);
     };
     req.onerror = onFailure;
   },
@@ -298,7 +317,7 @@ var steps = [
       req2.onsuccess = function () {
         is(req2.result.length, 0, "Empty Database.");
         clearTemps();
-        next();
+        checkRevision(3, "Revision was incremented on remove", next);
       }
       req2.onerror = onFailure;
     }
