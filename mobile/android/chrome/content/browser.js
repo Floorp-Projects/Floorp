@@ -3462,8 +3462,6 @@ Tab.prototype = {
     if (aMetadata.maxZoom > 0)
       aMetadata.maxZoom *= scaleRatio;
 
-    aMetadata.isRTL = this.browser.contentDocument.documentElement.dir == "rtl";
-
     ViewportHandler.setMetadataForDocument(this.browser.contentDocument, aMetadata);
     this.updateViewportSize(gScreenWidth, aInitialLoad);
     this.sendViewportMetadata();
@@ -3592,7 +3590,6 @@ Tab.prototype = {
       defaultZoom: metadata.defaultZoom || metadata.scaleRatio,
       minZoom: metadata.minZoom || 0,
       maxZoom: metadata.maxZoom || 0,
-      isRTL: metadata.isRTL,
       tabID: this.id
     });
   },
@@ -5114,8 +5111,6 @@ var ViewportHandler = {
                   (!widthStr && (heightStr == "device-height" || scale == 1.0)));
     }
 
-    let isRTL = aWindow.document.documentElement.dir == "rtl";
-
     return new ViewportMetadata({
       defaultZoom: scale,
       minZoom: minScale,
@@ -5124,8 +5119,7 @@ var ViewportHandler = {
       height: height,
       autoSize: autoSize,
       allowZoom: allowZoom,
-      isSpecified: hasMetaViewport,
-      isRTL: isRTL
+      isSpecified: hasMetaViewport
     });
   },
 
@@ -5197,7 +5191,6 @@ function ViewportMetadata(aMetadata = {}) {
   this.allowZoom = ("allowZoom" in aMetadata) ? aMetadata.allowZoom : true;
   this.isSpecified = ("isSpecified" in aMetadata) ? aMetadata.isSpecified : false;
   this.scaleRatio = ViewportHandler.getScaleRatio();
-  this.isRTL = ("isRTL" in aMetadata) ? aMetadata.isRTL : false;
   Object.seal(this);
 }
 
@@ -5211,7 +5204,6 @@ ViewportMetadata.prototype = {
   allowZoom: null,
   isSpecified: null,
   scaleRatio: null,
-  isRTL: null,
 };
 
 

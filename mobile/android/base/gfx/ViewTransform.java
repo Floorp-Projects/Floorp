@@ -13,8 +13,6 @@ public class ViewTransform {
     public float fixedLayerMarginTop;
     public float fixedLayerMarginRight;
     public float fixedLayerMarginBottom;
-    public float offsetX;
-    public float offsetY;
 
     public ViewTransform(float inX, float inY, float inScale) {
         x = inX;
@@ -24,8 +22,6 @@ public class ViewTransform {
         fixedLayerMarginTop = 0;
         fixedLayerMarginRight = 0;
         fixedLayerMarginBottom = 0;
-        offsetX = 0;
-        offsetY = 0;
     }
 }
 
