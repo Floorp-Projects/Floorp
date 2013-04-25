@@ -25,7 +25,7 @@ interface nsIVariant;
  * @see <http://www.whatwg.org/html/#window>
  */
 
-[scriptable, uuid(67af2eda-4a0d-4a08-8a97-81b8fd46f1f4)]
+[scriptable, uuid(5928408e-aca6-4681-ab62-024ac6b13888)]
 interface nsIDOMWindow : nsISupports
 {
   // the current browsing context
@@ -443,6 +443,9 @@ interface nsIDOMWindow : nsISupports
   // Argument is optional only so we can warn when it's null
   long
     mozRequestAnimationFrame([optional] in nsIFrameRequestCallback aCallback);
+  // jsval because we want a WebIDL callback here
+  [implicit_jscontext]
+  long requestAnimationFrame(in jsval aCallback);
 
   /**
    * Cancel a refresh callback.
