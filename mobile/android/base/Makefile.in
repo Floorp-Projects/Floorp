@@ -402,6 +402,7 @@ RES_LAYOUT = \
   res/layout/awesomebar_tabs.xml \
   res/layout/bookmark_edit.xml \
   res/layout/browser_toolbar.xml \
+  res/layout/browser_toolbar_menu.xml \
   res/layout/datetime_picker.xml \
   res/layout/doorhangerpopup.xml \
   res/layout/doorhanger.xml \
@@ -448,7 +449,7 @@ RES_LAYOUT = \
 
 RES_LAYOUT_LARGE_V11 = \
   res/layout-large-v11/awesomebar_search.xml \
-  res/layout-large-v11/browser_toolbar.xml \
+  res/layout-large-v11/browser_toolbar_menu.xml \
   $(NULL)
 
 RES_LAYOUT_LARGE_LAND_V11 = \
@@ -999,7 +1000,6 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/address_bar_bg.xml                     \
   mobile/android/base/resources/drawable/address_bar_bg_shadow_repeat.xml       \
   mobile/android/base/resources/drawable/address_bar_nav_button.xml             \
-  mobile/android/base/resources/drawable/address_bar_right_edge.xml             \
   mobile/android/base/resources/drawable/address_bar_url.xml                    \
   mobile/android/base/resources/drawable/awesomebar_header_row.xml              \
   mobile/android/base/resources/drawable/awesomebar_row_favicon_bg.xml          \
