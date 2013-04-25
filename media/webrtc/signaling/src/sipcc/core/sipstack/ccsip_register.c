@@ -794,7 +794,7 @@ ccsip_handle_ev_2xx (ccsipCCB_t *ccb, sipSMEvent_t *event)
 
     if (ccb->dn_line == PRIMARY_LINE && ccsip_check_ccm_restarted(contact_info)) {
         /* CCM has restarted detected */
-        CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Detected server has restarted via line %d\n",
+        CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Detected server has restarted via line %d",
                             DEB_F_PREFIX_ARGS(SIP_CCM_RESTART, fname), ccb->dn_line);
         sip_regmgr_ccm_restarted(ccb);
     }
@@ -849,7 +849,7 @@ ccsip_handle_ev_2xx (ccsipCCB_t *ccb, sipSMEvent_t *event)
            if (ccb->index != REG_BACKUP_CCB) {
            	   registration_reject = FALSE;
                ui_set_sip_registration_state(ccb->dn_line, TRUE);
-               CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"Setting Reg state to TRUE for line=%d\n",
+               CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"Setting Reg state to TRUE for line=%d",
                               DEB_F_PREFIX_ARGS(SIP_REG_STATE, fname), ccb->dn_line);
               /* Get supported options from the supported header from the response */
                sip_get_supported_options_2xx(ccb, response);
@@ -1116,7 +1116,7 @@ ccsip_handle_ev_4xx (ccsipCCB_t *ccb, sipSMEvent_t *event)
      */
     if (ccm_table_ptr &&
         ccb->index != REG_BACKUP_CCB) {
-    	DEF_DEBUG(DEB_F_PREFIX"Receive 4xx in ccm mode. set registration_reject to TRUE.\n",
+    	DEF_DEBUG(DEB_F_PREFIX"Receive 4xx in ccm mode. set registration_reject to TRUE.",
             DEB_F_PREFIX_ARGS(SIP_REG, fname));
     	registration_reject = TRUE;
     }
@@ -1130,7 +1130,7 @@ ccsip_handle_ev_4xx (ccsipCCB_t *ccb, sipSMEvent_t *event)
                           "SIP", status_code);
 
         if (cred_get_credentials_r(ccb, &credentials) == FALSE) {
-            CCSIP_DEBUG_REG_STATE(DEB_L_C_F_PREFIX"no more credentials, retry %d, %d\n",
+            CCSIP_DEBUG_REG_STATE(DEB_L_C_F_PREFIX"no more credentials, retry %d, %d",
                                   DEB_L_C_F_PREFIX_ARGS(SIP_CRED, ccb->index, ccb->dn_line, fname),
                                   ccb->authen.retries_401_407,
                                   MAX_RETRIES_401);
@@ -1213,7 +1213,7 @@ ccsip_handle_ev_4xx (ccsipCCB_t *ccb, sipSMEvent_t *event)
                     log_msg(LOG_REG_AUTH_HDR_MSG);
                 }
             } else {
-                CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"auth scheme unsupported= %d\n",
+                CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"auth scheme unsupported= %d",
                                       DEB_F_PREFIX_ARGS(SIP_AUTH, fname), sip_authen->scheme);
 
                 ccsip_register_cleanup(ccb, TRUE);
@@ -1377,7 +1377,7 @@ ccsip_handle_ev_failure_response (ccsipCCB_t *ccb, sipSMEvent_t *event)
     if (ccm_table_ptr &&
         ccb->index != REG_BACKUP_CCB) {
         registration_reject = TRUE;
-        DEF_DEBUG(DEB_F_PREFIX"registration has been rejected. Set registration_reject to TRUE.\n",
+        DEF_DEBUG(DEB_F_PREFIX"registration has been rejected. Set registration_reject to TRUE.",
             DEB_F_PREFIX_ARGS(SIP_REG, fname));
     }
 
@@ -1525,7 +1525,7 @@ ccsip_handle_ev_tmr_retry (ccsipCCB_t *ccb, sipSMEvent_t *event)
             /*
              * regmgr - Send event to the regmgr
              */
-            CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"Reached here for ccb->index=%d \n",
+            CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"Reached here for ccb->index=%d",
                     DEB_F_PREFIX_ARGS(SIP_MSG_SEND, fname), ccb->index);
             sip_regmgr_ev_tmr_ack_retry(ccb, event);
             return;
@@ -1614,7 +1614,7 @@ ccsip_handle_ev_tmr_retry (ccsipCCB_t *ccb, sipSMEvent_t *event)
          * the event has come due to race condition
          */
         ccb->retx_counter++;
-        CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"Resending message: #%d\n",
+        CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"Resending message: #%d",
                               DEB_F_PREFIX_ARGS(SIP_MSG_SEND, fname), ccb->retx_counter);
 
         if (sipSPISendLastMessage(ccb) != TRUE) {
@@ -1692,7 +1692,7 @@ ccsip_handle_ev_unreg_2xx (ccsipCCB_t *ccb, sipSMEvent_t *event)
 
             timeout = sip_config_get_keepalive_expires();
 
-            CCSIP_DEBUG_REG_STATE(DEB_L_C_F_PREFIX"Keep alive timer (%d sec)\n",
+            CCSIP_DEBUG_REG_STATE(DEB_L_C_F_PREFIX"Keep alive timer (%d sec)",
                     DEB_L_C_F_PREFIX_ARGS(SIP_TIMER, ccb->index, ccb->dn_line, fname), timeout);
             (void) sip_platform_standby_keepalive_timer_start(timeout * 1000);
         } else {
@@ -1710,7 +1710,7 @@ ccsip_handle_ev_unreg_2xx (ccsipCCB_t *ccb, sipSMEvent_t *event)
                  */
             }
             platSetSISProtocolVer(1,0,0,NULL);
-            CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"set[1] the SIS protocol ver to 1.0.0\n",
+            CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"set[1] the SIS protocol ver to 1.0.0",
                                   DEB_F_PREFIX_ARGS(SIP_REG, fname));
         }
     } else {
@@ -1734,7 +1734,7 @@ ccsip_handle_ev_unreg_2xx (ccsipCCB_t *ccb, sipSMEvent_t *event)
             }
         }
         platSetSISProtocolVer(1,0,0,NULL);
-        CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"set[2] the SIS protocol ver to 1.0.0\n",
+        CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"set[2] the SIS protocol ver to 1.0.0",
                               DEB_F_PREFIX_ARGS(SIP_REG, fname));
     }
 }
@@ -1812,7 +1812,7 @@ sip_reg_sm_process_event (sipSMEvent_t *pEvent)
     if ((REG_CHECK_EVENT_SANITY((int) ccb->state, (int) pEvent->type)) &&
         (REG_EVENT_ACTION(ccb->state, (int) pEvent->type))) {
         if (dump_reg_msg == TRUE) {
-            DEF_DEBUG(DEB_L_C_F_PREFIX"%s <- %s\n",
+            DEF_DEBUG(DEB_L_C_F_PREFIX"%s <- %s",
                     DEB_L_C_F_PREFIX_ARGS(SIP_REG_STATE, ccb->dn_line, ccb->index, fname),
                     sip_util_reg_state2string((sipRegSMStateType_t)ccb->state),
                     sip_util_reg_event2string((sipRegSMEventType_t)pEvent->type));
@@ -1820,7 +1820,7 @@ sip_reg_sm_process_event (sipSMEvent_t *pEvent)
         REG_EVENT_ACTION(ccb->state, pEvent->type) (ccb, pEvent);
     } else {
         /* Invalid State/Event pair */
-        CCSIP_DEBUG_ERROR("%s: Error: illegal state/event pair: (%d <-- %d)\n",
+        CCSIP_DEBUG_ERROR("%s: Error: illegal state/event pair: (%d <-- %d)",
                           fname, ccb->state, pEvent->type);
         return (-1);
     }
@@ -1935,7 +1935,7 @@ ccsip_register_sip2sipreg_event (int sip_event)
         break;
 
     default:
-        CCSIP_DEBUG_ERROR("%s: Error: Unknown event.\n", fname);
+        CCSIP_DEBUG_ERROR("%s: Error: Unknown event.", fname);
         reg_event = E_SIP_REG_NONE;
         break;
     }
@@ -1949,7 +1949,7 @@ ccsip_register_timeout_retry (void *data)
     static const char fname[] = "ccsip_register_timeout_retry";
     ccsipCCB_t *ccb;
 
-    CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"\n", DEB_F_PREFIX_ARGS(SIP_REG, fname));
+    CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"", DEB_F_PREFIX_ARGS(SIP_REG, fname));
 
     ccb = (ccsipCCB_t *) data;
     if (ccb == NULL) {
@@ -1998,17 +1998,17 @@ ccsip_register_send_msg (uint32_t cmd, line_t ndx)
                 ccm_id = cc_cfg_table->ti_specific.ti_ccm.ccm_id;
             }
             else {
-                CCSIP_DEBUG_ERROR("%s: Error: cc_cfg_table is null.\n", fname);
+                CCSIP_DEBUG_ERROR("%s: Error: cc_cfg_table is null.", fname);
                 return SIP_ERROR;
             }
         }
         else {
-            CCSIP_DEBUG_ERROR("%s: Error: ccb is null.\n", fname);
+            CCSIP_DEBUG_ERROR("%s: Error: ccb is null.", fname);
             return SIP_ERROR;
         }
     }
 
-    CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"cmd=%d=%s ccb->index=%d ccm_id=%s\n",
+    CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"cmd=%d=%s ccb->index=%d ccm_id=%s",
         DEB_F_PREFIX_ARGS(SIP_MSG_SEND, fname),
         cmd, REG_CMD_PRINT(cmd), ndx, CCM_ID_PRINT(ccm_id));
 
@@ -2016,7 +2016,7 @@ ccsip_register_send_msg (uint32_t cmd, line_t ndx)
         SIPTaskGetBuffer(sizeof(ccsip_registration_msg_t));
 
     if (!register_msg) {
-        CCSIP_DEBUG_ERROR("%s: Error: get buffer failed.\n", fname);
+        CCSIP_DEBUG_ERROR("%s: Error: get buffer failed.", fname);
         return SIP_ERROR;
     }
     register_msg->ccb_index = ndx;
@@ -2025,7 +2025,7 @@ ccsip_register_send_msg (uint32_t cmd, line_t ndx)
     if (SIPTaskSendMsg(cmd, register_msg, sizeof(ccsip_registration_msg_t), NULL)
             == CPR_FAILURE) {
         cpr_free(register_msg);
-        CCSIP_DEBUG_ERROR("%s: Error: send buffer failed.\n", fname);
+        CCSIP_DEBUG_ERROR("%s: Error: send buffer failed.", fname);
         return SIP_ERROR;
     }
 
@@ -2049,7 +2049,7 @@ ccsip_register_retry_timer_start (ccsipCCB_t *ccb)
     if (timeout > time_t2) {
         timeout = time_t2;
     }
-    CCSIP_DEBUG_REG_STATE(DEB_L_C_F_PREFIX"Starting reTx timer (%d msec)\n",
+    CCSIP_DEBUG_REG_STATE(DEB_L_C_F_PREFIX"Starting reTx timer (%d msec)",
                           DEB_L_C_F_PREFIX_ARGS(SIP_TIMER, ccb->index, ccb->dn_line, fname), timeout);
 
     ccb->retx_flag = TRUE;
@@ -2467,7 +2467,7 @@ ccsip_register_init (void)
         ack_tmrs[i] = cprCreateTimer(sipAckTimerName, SIP_ACK_TIMER,
                                      TIMER_EXPIRATION, sip_msgq);
         if (ack_tmrs[i] == NULL) {
-            CCSIP_DEBUG_ERROR("%s: timer NOT created: %d\n",
+            CCSIP_DEBUG_ERROR("%s: timer NOT created: %d",
                               fname, i);
             return SIP_ERROR;
         }
@@ -2504,7 +2504,7 @@ ccsip_register_cancel (boolean cancel_reg, boolean backup_proxy)
     line_t     line_end;
 
 
-    CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"\n", DEB_F_PREFIX_ARGS(SIP_REG, fname));
+    CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"", DEB_F_PREFIX_ARGS(SIP_REG, fname));
 
     if (ccsip_register_get_register_state() == SIP_REG_IDLE) {
         return;
@@ -2516,7 +2516,7 @@ ccsip_register_cancel (boolean cancel_reg, boolean backup_proxy)
 
     ui_set_sip_registration_state((line_t) (line_end + 1), FALSE);
 
-    CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"unregistering %d lines\n", DEB_F_PREFIX_ARGS(SIP_REG, fname), line_end);
+    CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"unregistering %d lines", DEB_F_PREFIX_ARGS(SIP_REG, fname), line_end);
 
     /*
      * REG CCBs start after the TEL CCBs.
@@ -2534,7 +2534,7 @@ ccsip_register_cancel (boolean cancel_reg, boolean backup_proxy)
             }
             ui_set_sip_registration_state(ccb->dn_line, FALSE);
 
-            CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"cancelling timers, line= %d\n",
+            CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"cancelling timers, line= %d",
                                   DEB_F_PREFIX_ARGS(SIP_TIMER, fname), ccb->index);
             (void) sip_platform_register_expires_timer_stop(ccb->index);
             sip_stop_ack_timer(ccb);
@@ -2569,7 +2569,7 @@ ccsip_register_cancel (boolean cancel_reg, boolean backup_proxy)
     /* cancel backup registration as well */
     ccb = sip_sm_get_ccb_by_index(REG_BACKUP_CCB);
 
-    CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"cancelling timers, line= %d\n",
+    CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"cancelling timers, line= %d",
                           DEB_F_PREFIX_ARGS(SIP_TIMER, fname), ccb->index);
 
     (void) sip_platform_register_expires_timer_stop(ccb->index);
@@ -2598,7 +2598,7 @@ ccsip_register_all_lines (void)
     int             value = 0;
     char            proxyaddress[MAX_IPADDR_STR_LEN];
 
-    CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"\n", DEB_F_PREFIX_ARGS(SIP_REG, fname));
+    CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"", DEB_F_PREFIX_ARGS(SIP_REG, fname));
 
     /* Do not register if
      * - no need to register
@@ -2620,7 +2620,7 @@ ccsip_register_all_lines (void)
         ccsip_register_reset_proxy();
         return;
     } else if (ccsip_register_get_register_state() == SIP_REG_REGISTERED) {
-        CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"lines already registered\n", DEB_F_PREFIX_ARGS(SIP_REG, fname));
+        CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"lines already registered", DEB_F_PREFIX_ARGS(SIP_REG, fname));
 
         return;
     }
@@ -2629,7 +2629,7 @@ ccsip_register_all_lines (void)
     ccsip_register_reset_proxy();
     ccsip_register_set_register_state(SIP_REG_REGISTERING);
 
-    CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"registering %d line%c\n",
+    CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"registering %d line%c",
                           DEB_F_PREFIX_ARGS(SIP_REG, fname), line_end, line_end > 1 ? 's' : ' ');
 
     /* register line 1 to the backup proxy.
@@ -2653,7 +2653,7 @@ ccsip_register_all_lines (void)
 
             sip_regmgr_setup_new_standby_ccb(ti_ccm->ccm_id);
         } else {
-            CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"ERROR: Standby ccm entry is NULL\n",
+            CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"ERROR: Standby ccm entry is NULL",
                                   DEB_F_PREFIX_ARGS(SIP_REG, fname));
         }
     } else {
@@ -2678,7 +2678,7 @@ ccsip_register_all_lines (void)
                 ccsip_register_cleanup(ccb, TRUE);
             }
         } else {
-            CCSIP_DEBUG_REG_STATE(DEB_L_C_F_PREFIX"%d: Backup Proxy not configured\n",
+            CCSIP_DEBUG_REG_STATE(DEB_L_C_F_PREFIX"%d: Backup Proxy not configured",
                                   DEB_L_C_F_PREFIX_ARGS(SIP_REG, ccb->index, ccb->dn_line, fname), ndx);
         }
     }
@@ -2813,7 +2813,7 @@ ccsip_register_commit (void)
     static const char fname[] = "ccsip_register_commit";
     int register_get;
 
-    CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"\n", DEB_F_PREFIX_ARGS(SIP_REG, fname));
+    CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"", DEB_F_PREFIX_ARGS(SIP_REG, fname));
 
     /*
      * Determine if lines need to register or unregister
@@ -2832,7 +2832,7 @@ ccsip_register_commit (void)
         if (ccsip_register_get_register_state() != SIP_REG_IDLE) {
             ccsip_register_cancel(TRUE, TRUE);
         } else {
-            CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"lines already unregistered.\n", DEB_F_PREFIX_ARGS(SIP_REG, fname));
+            CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"lines already unregistered.", DEB_F_PREFIX_ARGS(SIP_REG, fname));
         }
 
         break;
@@ -2842,12 +2842,12 @@ ccsip_register_commit (void)
             ccsip_register_cancel(FALSE, TRUE);
             ccsip_register_all_lines();
         } else {
-            CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"lines already registered.\n", DEB_F_PREFIX_ARGS(SIP_REG, fname));
+            CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"lines already registered.", DEB_F_PREFIX_ARGS(SIP_REG, fname));
         }
         break;
 
     default:
-        CCSIP_DEBUG_ERROR(DEB_F_PREFIX"Error: invalid register_get= %d\n", DEB_F_PREFIX_ARGS(SIP_REG, fname),
+        CCSIP_DEBUG_ERROR(DEB_F_PREFIX"Error: invalid register_get= %d", DEB_F_PREFIX_ARGS(SIP_REG, fname),
                           register_get);
     }
 }
@@ -2859,14 +2859,14 @@ ccsip_backup_register_commit (void)
     line_t ndx;
     ccsipCCB_t *ccb = 0;
 
-    CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"\n", DEB_F_PREFIX_ARGS(SIP_REG, fname));
+    CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"", DEB_F_PREFIX_ARGS(SIP_REG, fname));
 
     ndx = REG_BACKUP_CCB;
     ccb = sip_sm_get_ccb_by_index(ndx);
 
     /* cancel an existing registration if it exists */
     if (util_check_if_ip_valid(&(ccb->reg.addr))) {
-        CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"cancelling registration, line= %d\n",
+        CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"cancelling registration, line= %d",
                               DEB_F_PREFIX_ARGS(SIP_REG, fname), ccb->index);
         if (ccsip_register_send_msg(SIP_REG_CANCEL, ndx) != SIP_REG_OK) {
             ccsip_register_cleanup(ccb, FALSE);
@@ -3065,7 +3065,7 @@ process_retry_after (ccsipCCB_t *ccb, sipMessage_t *response)
         sip_stop_ack_timer(ccb);
         (void) sip_platform_register_expires_timer_start(retry_after * 1000,
                                                          ccb->index);
-        CCSIP_DEBUG_REG_STATE(DEB_L_C_F_PREFIX"Retrying after %d\n",
+        CCSIP_DEBUG_REG_STATE(DEB_L_C_F_PREFIX"Retrying after %d",
                               DEB_L_C_F_PREFIX_ARGS(SIP_REG, ccb->index, ccb->dn_line, fname), retry_after);
         return (TRUE);
     } else {

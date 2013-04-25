@@ -18,7 +18,7 @@
 #include "configapp.h"
 #include "platform_api.h"
 
-#define MISC_ERROR err_msg
+#define MISC_ERROR(format, ...) CSFLogError("misc" , format , ## __VA_ARGS__ )
 
 cprMsgQueue_t s_misc_msg_queue;
 void destroy_misc_app_thread(void);
@@ -56,12 +56,12 @@ void MiscAppTask (void *arg)
      */
     s_misc_msg_queue  = (cprMsgQueue_t)arg;
     if (!s_misc_msg_queue) {
-        MISC_ERROR(MISC_F_PREFIX"invalid input, exiting\n", fname);
+        MISC_ERROR(MISC_F_PREFIX"invalid input, exiting", fname);
         return;
     }
 
     if (platThreadInit("MiscAppTask") != 0) {
-        MISC_ERROR(MISC_F_PREFIX"Failed to Initialize the thread, exiting\n",
+        MISC_ERROR(MISC_F_PREFIX"Failed to Initialize the thread, exiting",
                 fname);
         return;
     }
@@ -70,7 +70,7 @@ void MiscAppTask (void *arg)
      * Create retry-after timers.
      */
     if (pres_create_retry_after_timers() == CPR_FAILURE) {
-        MISC_ERROR(MISC_F_PREFIX"failed to create retry-after Timers, exiting\n",
+        MISC_ERROR(MISC_F_PREFIX"failed to create retry-after Timers, exiting",
                fname);
         return;
     }
@@ -104,7 +104,7 @@ void MiscAppTask (void *arg)
                 break;
 
             default:
-                MISC_ERROR(MISC_F_PREFIX"invalid msg <%d> received\n",
+                MISC_ERROR(MISC_F_PREFIX"invalid msg <%d> received",
                         fname, syshdr_p->Cmd);
                 break;
             }
@@ -140,7 +140,7 @@ void MiscAppTaskShutdown (void)
 void destroy_misc_app_thread()
 {
     static const char fname[] = "destroy_misc_app_thread";
-    DEF_DEBUG(DEB_F_PREFIX"Unloading Misc app and destroying Misc app thread\n",
+    DEF_DEBUG(DEB_F_PREFIX"Unloading Misc app and destroying Misc app thread",
         DEB_F_PREFIX_ARGS(SIP_CC_INIT, fname));
     configapp_shutdown();
     MiscAppTaskShutdown();

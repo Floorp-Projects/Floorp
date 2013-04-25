@@ -24,20 +24,25 @@
 static void
 sub_print_msg (char *pData, int len)
 {
-    int ix;
+    int row = 0;
+    int col;
+#define BYTES_PER_LINE 24
+    char buffer[3 * BYTES_PER_LINE + 1];
     int msg_id = *((int *)pData);
 
-    buginf("\nCCAPI: cc_msg= %s, 0x=", cc_msg_name((cc_msgs_t)msg_id));
-    for (ix = 0; ix < len; ix++) {
-        if ((ix % 8 == 0) && ix) {
-            buginf("  ");
+    CSFLogDebug("gsm", "CCAPI: cc_msg=%s, len=%d",
+                cc_msg_name((cc_msgs_t)msg_id), len);
+
+    while (len) {
+        buffer[0] = '\0';
+        for (col = 0; (col < BYTES_PER_LINE) && len; col++) {
+            snprintf(buffer + (3 * col), 4, "%02X ", *pData);
+            pData++;
+            len--;
         }
-        if (ix % 24 == 0) {
-            buginf("\n");
-        }
-        buginf("%02x ", *pData++);
+        CSFLogObnoxious("gsm", "%04X %s", row * BYTES_PER_LINE, buffer);
+        row++;
     }
-    buginf("\n");
 }
 
 cc_rcs_t

@@ -207,14 +207,14 @@ get_ua_model_and_device (char sipHdrUserAgent[])
                     SIP_PHONE_MODEL_NUMBER_LEN);
         } else {
             // Default to 7970
-            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"unknown model,defaulting to model 7970: %s\n", fname, model);
+            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"unknown model,defaulting to model 7970: %s", fname, model);
             sstrncat(sipHdrUserAgent, CCSIP_SIP_7970_USER_AGENT,
                     SIP_HEADER_SERVER_LEN - strlen(sipHdrUserAgent));
             sstrncpy(sipPhoneModelNumber, PHONE_MODEL_NUMBER_7970,
                     SIP_PHONE_MODEL_NUMBER_LEN);
         }
     } else {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"could not obtain model information\n", fname);
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"could not obtain model information", fname);
         sstrncat(sipHdrUserAgent, CCSIP_SIP_7970_USER_AGENT,
                 SIP_HEADER_SERVER_LEN - strlen(sipHdrUserAgent));
         sstrncpy(sipPhoneModelNumber, PHONE_MODEL_NUMBER_7970,
@@ -264,7 +264,7 @@ SIPTaskInit (void)
     /************************
     // Move all initialization to sip_sm_init called after config
     if (ccsip_register_init() == SIP_ERROR) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"ccsip_register_init() failed.\n", fname);
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"ccsip_register_init() failed.", fname);
         return SIP_ERROR;
     }
 
@@ -272,7 +272,7 @@ SIPTaskInit (void)
      * Allocate timers for CCBs
      *
     if (sip_platform_timers_init() == SIP_ERROR) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"sip_platform_timers_init() failed\n", fname);
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"sip_platform_timers_init() failed", fname);
         return SIP_ERROR;
     }
     *************************/
@@ -386,7 +386,7 @@ SIPTaskProcessListEvent (uint32_t cmd, void *msg, void *pUsr, uint16_t len)
     CCM_ID ccm_id;
 
     timerMsg = (cprCallBackTimerMsg_t *) msg;
-    CCSIP_DEBUG_TASK(DEB_F_PREFIX"cmd = 0x%x\n", DEB_F_PREFIX_ARGS(SIP_EVT, fname), cmd);
+    CCSIP_DEBUG_TASK(DEB_F_PREFIX"cmd = 0x%x", DEB_F_PREFIX_ARGS(SIP_EVT, fname), cmd);
 
     /*
      * Loop and wait until we get a TCP_PHN_CFG_TCP_DONE or a RESTART
@@ -402,7 +402,7 @@ SIPTaskProcessListEvent (uint32_t cmd, void *msg, void *pUsr, uint16_t len)
          (cmd != TIMER_EXPIRATION) &&
          (cmd != THREAD_UNLOAD)) ) {
         cpr_free(msg);
-        DEF_DEBUG(DEB_F_PREFIX" !!!sip.taskInited  is false. So not executing cmd=0x%x\n",
+        DEF_DEBUG(DEB_F_PREFIX" !!!sip.taskInited  is false. So not executing cmd=0x%x",
             DEB_F_PREFIX_ARGS(SIP_EVT, fname), cmd);
         return;
     }
@@ -474,14 +474,14 @@ SIPTaskProcessListEvent (uint32_t cmd, void *msg, void *pUsr, uint16_t len)
          * Initialize SAPP.
          */
         if (sapp_init() != 0) {
-            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"sapp_init() failed.\n", fname);
+            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"sapp_init() failed.", fname);
             break;
         }
         /*
          * Start SAPP. SAPP will register with the CCM.
          */
         if (sapp_test() != 0) {
-            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"sapp_test() failed.\n", fname);
+            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"sapp_test() failed.", fname);
             break;
         }
 #endif
@@ -834,7 +834,7 @@ SIPTaskProcessListEvent (uint32_t cmd, void *msg, void *pUsr, uint16_t len)
             // Handle restart event from platform
             cpr_free(msg);
 
-            CCSIP_DEBUG_TASK(DEB_F_PREFIX"Received SIP_RESTART event restartCmd = (%d)\n",
+            CCSIP_DEBUG_TASK(DEB_F_PREFIX"Received SIP_RESTART event restartCmd = (%d)",
                 DEB_F_PREFIX_ARGS(SIP_EVT, fname), restartCmd);
             SIPTaskProcessRestart(restartCmd);
             break;
@@ -855,7 +855,7 @@ SIPTaskProcessListEvent (uint32_t cmd, void *msg, void *pUsr, uint16_t len)
 
             cpr_free(msg);
 
-            CCSIP_DEBUG_TASK(DEB_F_PREFIX"Received SIP_TMR_SHUTDOWN_PHASE2 event action= (%d)\n",
+            CCSIP_DEBUG_TASK(DEB_F_PREFIX"Received SIP_TMR_SHUTDOWN_PHASE2 event action= (%d)",
                              DEB_F_PREFIX_ARGS(SIP_EVT, fname),  action);
             sip_shutdown_phase2(action);
         }
@@ -870,7 +870,7 @@ SIPTaskProcessListEvent (uint32_t cmd, void *msg, void *pUsr, uint16_t len)
             action = req->action;
             reason = req->reason;
             cpr_free(msg);
-            CCSIP_DEBUG_TASK(DEB_F_PREFIX"Received SIP_SHUTDOWN message\n",
+            CCSIP_DEBUG_TASK(DEB_F_PREFIX"Received SIP_SHUTDOWN message",
                 DEB_F_PREFIX_ARGS(SIP_EVT, fname));
             SIPTaskProcessShutdown(action, reason);
         }
@@ -926,7 +926,7 @@ SIPTaskCheckSource (cpr_sockaddr_storage from)
     // If not registered, return ok
     config_get_value(CFGID_PROXY_REGISTER, &regConfigValue, sizeof(regConfigValue));
     if (regConfigValue == 0) {
-        CCSIP_DEBUG_TASK(DEB_F_PREFIX"CFGID_PROXY_REGISTER is false\n",
+        CCSIP_DEBUG_TASK(DEB_F_PREFIX"CFGID_PROXY_REGISTER is false",
             DEB_F_PREFIX_ARGS(SIP_IP_MATCH, fname));
         return SIP_OK;
     }
@@ -940,7 +940,7 @@ SIPTaskCheckSource (cpr_sockaddr_storage from)
     fromIPAddrStr[0] = '\0';
     ipaddr2dotted(fromIPAddrStr, &fromIPAddr);
 
-    CCSIP_DEBUG_TASK(DEB_F_PREFIX"Attempting to recognize \"%s\"\n",
+    CCSIP_DEBUG_TASK(DEB_F_PREFIX"Attempting to recognize \"%s\"",
         DEB_F_PREFIX_ARGS(SIP_IP_MATCH, fname), fromIPAddrStr);
     // Get the proxy configured for all lines and check against those
     for (line_index = REG_CCB_START; line_index <= line_end; line_index++) {
@@ -948,7 +948,7 @@ SIPTaskCheckSource (cpr_sockaddr_storage from)
         if (sip_config_check_line((line_t)(line_index - TEL_CCB_END))) {
             ccb = sip_sm_get_ccb_by_index(line_index);
             if (ccb && util_compare_ip(&(ccb->reg.addr), &fromIPAddr)) {
-                CCSIP_DEBUG_TASK(DEB_F_PREFIX"Found server IP match\n",
+                CCSIP_DEBUG_TASK(DEB_F_PREFIX"Found server IP match",
                     DEB_F_PREFIX_ARGS(SIP_IP_MATCH, fname));
                 retval = SIP_OK;
                 break;
@@ -961,7 +961,7 @@ SIPTaskCheckSource (cpr_sockaddr_storage from)
     // Not found - continue to check backup CCBs
     ccb = sip_sm_get_ccb_by_index(REG_BACKUP_CCB);
     if (ccb && util_compare_ip(&(ccb->reg.addr), &fromIPAddr)) {
-        CCSIP_DEBUG_TASK(DEB_F_PREFIX"Found backup server IP match\n",
+        CCSIP_DEBUG_TASK(DEB_F_PREFIX"Found backup server IP match",
             DEB_F_PREFIX_ARGS(SIP_IP_MATCH, fname));
         retval = SIP_OK;
     }
@@ -974,7 +974,7 @@ SIPTaskCheckSource (cpr_sockaddr_storage from)
     ccb = sip_regmgr_get_fallback_ccb_list(data_p);
     while ((ccb != NULL) && (retval != SIP_OK)) {
         if (util_compare_ip(&(ccb->reg.addr), &fromIPAddr)) {
-            CCSIP_DEBUG_TASK(DEB_F_PREFIX"Found fallback server IP match\n",
+            CCSIP_DEBUG_TASK(DEB_F_PREFIX"Found fallback server IP match",
                 DEB_F_PREFIX_ARGS(SIP_IP_MATCH, fname));
             retval = SIP_OK;
         }
@@ -1072,7 +1072,7 @@ SIPTaskProcessUDPMessage (cprBuffer_t msg,
      */
     pSipMessage = sippmh_message_create();
     if (!pSipMessage) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"sippmh_message_create() failed\n", fname);
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"sippmh_message_create() failed", fname);
         return SIP_ERROR;
     }
 
@@ -1243,7 +1243,7 @@ SIPTaskProcessTimerExpiration (void *msg, uint32_t *cmd)
     uint32_t handle;
 
     timerMsg = (cprCallBackTimerMsg_t *) msg;
-    TMR_DEBUG(DEB_F_PREFIX"Timer %s expired. Id is %d\n", DEB_F_PREFIX_ARGS(SIP_TIMER, fname),
+    TMR_DEBUG(DEB_F_PREFIX"Timer %s expired. Id is %d", DEB_F_PREFIX_ARGS(SIP_TIMER, fname),
               timerMsg->expiredTimerName, timerMsg->expiredTimerId);
 
     /* The REGALLFAIL Timer message could come in before the task has
@@ -1336,7 +1336,7 @@ SIPTaskProcessTimerExpiration (void *msg, uint32_t *cmd)
         break;
 
 	case SIP_PASSTHROUGH_TIMER:
-		CCSIP_DEBUG_ERROR("%s: Pass Through Timer fired ! \n", fname);
+		CCSIP_DEBUG_ERROR("%s: Pass Through Timer fired !", fname);
 		break;
 
     case SIP_REGALLFAIL_TIMER:
@@ -1344,7 +1344,8 @@ SIPTaskProcessTimerExpiration (void *msg, uint32_t *cmd)
         break;
 
     default:
-        err_msg("%s: unknown timer %s\n", fname, timerMsg->expiredTimerName);
+        CSFLogError("sipstack", "%s: unknown timer %s", fname,
+           timerMsg->expiredTimerName);
         break;
     }
     return (returnCode);
@@ -1424,7 +1425,7 @@ SIPTaskProcessSIPMessage (sipMessage_t *pSipMessage)
         if (max_fwd_hdr) {
             max_fwd_hdr_val = sippmh_parse_max_forwards(max_fwd_hdr);
             if (max_fwd_hdr_val < 0) {
-                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Invalid Max Fwd Value detected\n",
+                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Invalid Max Fwd Value detected",
                                   fname);
                 /* Send 483 error */
                 if (sipSPISendErrorResponse(pSipMessage, SIP_CLI_ERR_MANY_HOPS,
@@ -1458,7 +1459,7 @@ SIPTaskProcessSIPMessage (sipMessage_t *pSipMessage)
             return;
 
         case sipMethodUnknown:
-            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"SIP method not implemented\n", fname);
+            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"SIP method not implemented", fname);
             // Send 501 error
             if (sipSPISendErrorResponse(pSipMessage, SIP_SERV_ERR_NOT_IMPLEM,
                                         SIP_SERV_ERR_NOT_IMPLEM_PHRASE, 0,
@@ -1473,7 +1474,7 @@ SIPTaskProcessSIPMessage (sipMessage_t *pSipMessage)
         case sipMethodPrack:
         case sipMethodComet:
         case sipMethodMessage:
-            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"SIP method not allowed\n", fname);
+            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"SIP method not allowed", fname);
             // Send 405 error
             if (sipSPISendErrorResponse(pSipMessage, SIP_CLI_ERR_NOT_ALLOWED,
                                         SIP_CLI_ERR_NOT_ALLOWED_PHRASE, 0,
@@ -1537,7 +1538,7 @@ SIPTaskProcessSIPMessage (sipMessage_t *pSipMessage)
 
     pCallID = sippmh_get_cached_header_val(pSipMessage, CALLID);
     if (!pCallID) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Cannot obtain SIP Call ID.\n", fname);
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Cannot obtain SIP Call ID.", fname);
         /*
          * Since we have no Call-ID, we can't create a response;
          * therefore, we drop it.
@@ -1599,7 +1600,7 @@ SIPTaskProcessSIPMessage (sipMessage_t *pSipMessage)
     if (is_request == FALSE) {
         switch (method) {
         case sipMethodSubscribe:
-            CCSIP_DEBUG_TASK(DEB_F_PREFIX"Recv Subs Response.\n",
+            CCSIP_DEBUG_TASK(DEB_F_PREFIX"Recv Subs Response.",
                 DEB_F_PREFIX_ARGS(SIP_MSG_RECV, fname));
             (void) subsmanager_handle_ev_sip_response(pSipMessage);
             cpr_free(sipCseq);
@@ -1609,7 +1610,7 @@ SIPTaskProcessSIPMessage (sipMessage_t *pSipMessage)
         case sipMethodNotify:
             scbp = find_scb_by_callid(pCallID, &scb_index);
             if (scbp != NULL) {
-                CCSIP_DEBUG_TASK(DEB_F_PREFIX"Recv Notify response\n",
+                CCSIP_DEBUG_TASK(DEB_F_PREFIX"Recv Notify response",
                     DEB_F_PREFIX_ARGS(SIP_MSG_RECV, fname));
                 (void) subsmanager_handle_ev_sip_response(pSipMessage);
                 cpr_free(sipCseq);
@@ -1618,7 +1619,7 @@ SIPTaskProcessSIPMessage (sipMessage_t *pSipMessage)
             } else {
                 tcbp = find_tcb_by_sip_callid(pCallID);
                 if (tcbp != NULL) {
-                    CCSIP_DEBUG_TASK(DEB_F_PREFIX"Recv Unsolicited Notify response\n",
+                    CCSIP_DEBUG_TASK(DEB_F_PREFIX"Recv Unsolicited Notify response",
                         DEB_F_PREFIX_ARGS(SIP_MSG_RECV, fname));
                     (void) subsmanager_handle_ev_sip_unsolicited_notify_response(pSipMessage, tcbp);
                     cpr_free(sipCseq);
@@ -1629,7 +1630,7 @@ SIPTaskProcessSIPMessage (sipMessage_t *pSipMessage)
             break;
 
         case sipMethodPublish:
-            CCSIP_DEBUG_TASK(DEB_F_PREFIX"Recv PUBLISH Response.\n",
+            CCSIP_DEBUG_TASK(DEB_F_PREFIX"Recv PUBLISH Response.",
                 DEB_F_PREFIX_ARGS(SIP_MSG_RECV, fname));
             (void) publish_handle_ev_sip_response(pSipMessage);
             cpr_free(sipCseq);
@@ -1638,7 +1639,7 @@ SIPTaskProcessSIPMessage (sipMessage_t *pSipMessage)
 
         case sipMethodInfo:
             // XXX FIXME see the comments in sipSPISendInfo()
-            CCSIP_DEBUG_TASK(DEB_F_PREFIX"Recv INFO Response (silently dropped).\n",
+            CCSIP_DEBUG_TASK(DEB_F_PREFIX"Recv INFO Response (silently dropped).",
                 DEB_F_PREFIX_ARGS(SIP_MSG_RECV, fname));
             cpr_free(sipCseq);
             free_sip_message(pSipMessage);
@@ -1681,7 +1682,7 @@ SIPTaskProcessSIPMessage (sipMessage_t *pSipMessage)
             // This may be a response for a request generated via sub/not i/f
             scbp = find_scb_by_callid(pCallID, &scb_index);
             if (scbp != NULL) {
-                CCSIP_DEBUG_TASK(DEB_F_PREFIX"Recv Refer Response.\n",
+                CCSIP_DEBUG_TASK(DEB_F_PREFIX"Recv Refer Response.",
                     DEB_F_PREFIX_ARGS(SIP_MSG_RECV, fname));
                 (void) subsmanager_handle_ev_sip_response(pSipMessage);
             } else {
@@ -1708,7 +1709,7 @@ SIPTaskProcessSIPMessage (sipMessage_t *pSipMessage)
          * Unsolicited options processing
          */
         if ((is_request) && (method == sipMethodOptions)) {
-            CCSIP_DEBUG_TASK(DEB_F_PREFIX"recv SIP OPTIONS (outside of dialog) message.\n",
+            CCSIP_DEBUG_TASK(DEB_F_PREFIX"recv SIP OPTIONS (outside of dialog) message.",
                 DEB_F_PREFIX_ARGS(SIP_MSG_RECV, fname)); //
             /*
              * Send an options request to the gsm for this out of call
@@ -1723,7 +1724,7 @@ SIPTaskProcessSIPMessage (sipMessage_t *pSipMessage)
          * Unsolicited INFO processing
          */
         if ((is_request) && (method == sipMethodInfo)) {
-            CCSIP_DEBUG_ERROR("%s: Error: recv out-of-dialog SIP INFO message.\n", fname); //
+            CCSIP_DEBUG_ERROR("%s: Error: recv out-of-dialog SIP INFO message.", fname); //
             /* Send 481 Call Leg/Transaction Does Not Exist */
             if (sipSPISendErrorResponse(pSipMessage, SIP_CLI_ERR_CALLEG,
                                         SIP_CLI_ERR_CALLEG_PHRASE,
@@ -1765,7 +1766,7 @@ SIPTaskProcessSIPMessage (sipMessage_t *pSipMessage)
             	 * it's risky to accept new incoming call.
             	 * just ignore the INVITE message to save CPU time so that the messages in gsm_msgq can be processed faster.
             	 */
-            	CCSIP_DEBUG_ERROR(DEB_F_PREFIX"gsm msgq depth too large, drop incoming INVITEs!!!\n",
+            	CCSIP_DEBUG_ERROR(DEB_F_PREFIX"gsm msgq depth too large, drop incoming INVITEs!!!",
                                      DEB_F_PREFIX_ARGS(SIP_MSG_RECV, fname));
                 cpr_free(sipCseq);
                 free_sip_message(pSipMessage);
@@ -1804,7 +1805,7 @@ SIPTaskProcessSIPMessage (sipMessage_t *pSipMessage)
              * Detect whether the message is a non-ACK request addressing the
              * previous call. If so, reTx the stored response.
              */
-            CCSIP_DEBUG_TASK(DEB_F_PREFIX"Line filter: Previous Call ID.\n",
+            CCSIP_DEBUG_TASK(DEB_F_PREFIX"Line filter: Previous Call ID.",
                 DEB_F_PREFIX_ARGS(SIP_ID, fname));
             if (SipRelDevEnabled) {
                 if (SIPTaskRetransmitPreviousResponse(pSipMessage, fname,
@@ -1843,7 +1844,7 @@ SIPTaskProcessSIPMessage (sipMessage_t *pSipMessage)
                 sip_sm_check_retx_timers(sip_sm_get_ccb_by_index(previous_call_index),
                                          pSipMessage);
             }
-            CCSIP_DEBUG_TASK(DEB_F_PREFIX"Not forwarding response to SIP SM.\n",
+            CCSIP_DEBUG_TASK(DEB_F_PREFIX"Not forwarding response to SIP SM.",
                 DEB_F_PREFIX_ARGS(SIP_FWD, fname));
             cpr_free(sipCseq);
             free_sip_message(pSipMessage);
@@ -1869,7 +1870,7 @@ SIPTaskProcessSIPMessage (sipMessage_t *pSipMessage)
                     return;
                 }
             }
-            CCSIP_DEBUG_TASK(DEB_F_PREFIX"Not forwarding response to SIP SM.\n",
+            CCSIP_DEBUG_TASK(DEB_F_PREFIX"Not forwarding response to SIP SM.",
                 DEB_F_PREFIX_ARGS(SIP_FWD, fname));
 
             if (method == sipMethodBye) {
@@ -1889,14 +1890,14 @@ SIPTaskProcessSIPMessage (sipMessage_t *pSipMessage)
         } else {
             if (method == sipMethodRefer) {
                 if (is_request) {
-                        CCSIP_DEBUG_TASK(DEB_F_PREFIX"Received OOD Refer.\n",
+                        CCSIP_DEBUG_TASK(DEB_F_PREFIX"Received OOD Refer.",
                             DEB_F_PREFIX_ARGS(SIP_MSG_RECV, fname));
                         if (subsmanager_handle_ev_sip_subscribe(pSipMessage, sipMethodRefer, FALSE) != SIP_ERROR) {
                             // Successfully handled
-                            CCSIP_DEBUG_TASK(DEB_F_PREFIX"Successfully handled OOD Refer.\n",
+                            CCSIP_DEBUG_TASK(DEB_F_PREFIX"Successfully handled OOD Refer.",
                                 DEB_F_PREFIX_ARGS(SIP_MSG_RECV, fname));
                         } else {
-                            CCSIP_DEBUG_TASK(DEB_F_PREFIX"Not able to handle OOD Refer.\n",
+                            CCSIP_DEBUG_TASK(DEB_F_PREFIX"Not able to handle OOD Refer.",
                                 DEB_F_PREFIX_ARGS(SIP_MSG_RECV, fname));
                         }
                 } else {
@@ -1904,7 +1905,7 @@ SIPTaskProcessSIPMessage (sipMessage_t *pSipMessage)
                     // interface
                     scbp = find_scb_by_callid(pCallID, &scb_index);
                     if (scbp != NULL) {
-                        CCSIP_DEBUG_TASK(DEB_F_PREFIX"Recv Refer Response\n",
+                        CCSIP_DEBUG_TASK(DEB_F_PREFIX"Recv Refer Response",
                             DEB_F_PREFIX_ARGS(SIP_MSG_RECV, fname));
                         (void) subsmanager_handle_ev_sip_response(pSipMessage);
                     }
@@ -2114,7 +2115,7 @@ SIPTaskProcessSIPMessage (sipMessage_t *pSipMessage)
             return;
             break;
         default:
-            CCSIP_DEBUG_TASK(DEB_F_PREFIX"Received unknown SIP request message.\n",
+            CCSIP_DEBUG_TASK(DEB_F_PREFIX"Received unknown SIP request message.",
                              DEB_F_PREFIX_ARGS(SIP_MSG_RECV, fname));
             /* The message must be deallocated here */
             cpr_free(sipCseq);
@@ -2127,7 +2128,7 @@ SIPTaskProcessSIPMessage (sipMessage_t *pSipMessage)
         /*
          * Process response
          */
-        CCSIP_DEBUG_TASK(DEB_F_PREFIX"Received SIP response.\n",
+        CCSIP_DEBUG_TASK(DEB_F_PREFIX"Received SIP response.",
             DEB_F_PREFIX_ARGS(SIP_MSG_RECV, fname));
         responseStatus = sipSPICheckResponse(ccb, pSipMessage);
         if (responseStatus != SIP_MESSAGING_OK) {
@@ -2141,7 +2142,7 @@ SIPTaskProcessSIPMessage (sipMessage_t *pSipMessage)
                 // This may be a response for a request generated via sub/not i/f
                 scbp = find_scb_by_callid(pCallID, &scb_index);
                 if (scbp != NULL) {
-                    CCSIP_DEBUG_TASK(DEB_F_PREFIX"Recv Refer Response.\n",
+                    CCSIP_DEBUG_TASK(DEB_F_PREFIX"Recv Refer Response.",
                         DEB_F_PREFIX_ARGS(SIP_MSG_RECV, fname));
                     (void) subsmanager_handle_ev_sip_response(pSipMessage);
                 }
@@ -2173,19 +2174,19 @@ SIPTaskProcessSIPMessage (sipMessage_t *pSipMessage)
 
         switch (code_class) {
         case codeClass1xx:
-            CCSIP_DEBUG_TASK(DEB_F_PREFIX"Recv 1xx message.\n",
+            CCSIP_DEBUG_TASK(DEB_F_PREFIX"Recv 1xx message.",
                 DEB_F_PREFIX_ARGS(SIP_MSG_RECV, fname));
             sip_sm_event.type = E_SIP_1xx;
             break;
 
         case codeClass2xx:
-            CCSIP_DEBUG_TASK(DEB_F_PREFIX"Recv 2xx message.\n",
+            CCSIP_DEBUG_TASK(DEB_F_PREFIX"Recv 2xx message.",
                 DEB_F_PREFIX_ARGS(SIP_MSG_RECV, fname));
             sip_sm_event.type = E_SIP_2xx;
             break;
 
         case codeClass3xx:
-            CCSIP_DEBUG_TASK(DEB_F_PREFIX"Recv 3xx message.\n",
+            CCSIP_DEBUG_TASK(DEB_F_PREFIX"Recv 3xx message.",
                 DEB_F_PREFIX_ARGS(SIP_MSG_RECV, fname));
             sip_sm_event.type = E_SIP_3xx;
             break;
@@ -2193,7 +2194,7 @@ SIPTaskProcessSIPMessage (sipMessage_t *pSipMessage)
         case codeClass4xx:
         case codeClass5xx:
         case codeClass6xx:
-            CCSIP_DEBUG_TASK(DEB_F_PREFIX"Recv 4xx/5xx/6xx message.\n",
+            CCSIP_DEBUG_TASK(DEB_F_PREFIX"Recv 4xx/5xx/6xx message.",
                 DEB_F_PREFIX_ARGS(SIP_MSG_RECV, fname));
             sip_sm_event.type = E_SIP_FAILURE_RESPONSE;
             switch (response_code) {
@@ -2215,7 +2216,7 @@ SIPTaskProcessSIPMessage (sipMessage_t *pSipMessage)
         default:
             /* unknown response, keep re-transmitting */
             ccb->retx_flag = TRUE;
-            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Unknown response class.\n", fname);
+            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Unknown response class.", fname);
             cpr_free(sipCseq);
             free_sip_message(pSipMessage);
             return;
@@ -2239,7 +2240,7 @@ SIPTaskProcessSIPMessage (sipMessage_t *pSipMessage)
             sip_sm_event.type = (sipSMEventType_t) E_SIP_REG_FAILURE_RESPONSE;
         }
 
-        CCSIP_DEBUG_TASK(DEB_F_PREFIX"Register response does not have a body %d\n",
+        CCSIP_DEBUG_TASK(DEB_F_PREFIX"Register response does not have a body %d",
         DEB_F_PREFIX_ARGS(SIP_MSG_RECV, fname),
         (pSipMessage->mesg_body[0].msgBody == NULL) ? -1: pSipMessage->mesg_body[0].msgContentTypeValue);
 
@@ -2263,7 +2264,7 @@ SIPTaskProcessSIPMessage (sipMessage_t *pSipMessage)
                 return;
             }
         }
-        CCSIP_DEBUG_TASK(DEB_F_PREFIX"Ignoring non-register event= %d\n",
+        CCSIP_DEBUG_TASK(DEB_F_PREFIX"Ignoring non-register event= %d",
                          DEB_F_PREFIX_ARGS(SIP_EVT, fname), sip_sm_event.type);
         cpr_free(sipCseq);
         free_sip_message(pSipMessage);
@@ -2307,7 +2308,7 @@ SIPTaskProcessConfigChangeNotify (int32_t notify_type)
     static const char *fname = "SIPTaskProcessConfigChangeNotify";
     int retval = 0;
 
-    CCSIP_DEBUG_TASK(DEB_F_PREFIX"Notify received type=%d\n",
+    CCSIP_DEBUG_TASK(DEB_F_PREFIX"Notify received type=%d",
         DEB_F_PREFIX_ARGS(SIP_NOTIFY, fname), notify_type);
 
     if (notify_type & AA_RELOAD) {
@@ -2383,7 +2384,7 @@ SIPTaskProcessSIPNotify (sipMessage_t *pSipMessage)
                                   SIP_C_HEADER_EVENT);
 
     if (event == NULL) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Missing Event header\n", fname);
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Missing Event header", fname);
         (void) sipSPISendErrorResponse(pSipMessage, SIP_CLI_ERR_BAD_REQ,
                                        SIP_CLI_ERR_BAD_REQ_PHRASE,
                                        0, NULL, NULL);
@@ -2419,7 +2420,7 @@ SIPTaskProcessSIPNotify (sipMessage_t *pSipMessage)
     }
 
     if (request_uri_error) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"NOTIFY has error in Req-URI!\n", fname);
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"NOTIFY has error in Req-URI!", fname);
         (void) sipSPISendErrorResponse(pSipMessage, SIP_CLI_ERR_BAD_REQ,
                                        SIP_CLI_ERR_BAD_REQ_PHRASE,
                                        SIP_WARN_MISC,
@@ -2428,7 +2429,7 @@ SIPTaskProcessSIPNotify (sipMessage_t *pSipMessage)
     }
 
     if (cpr_strncasecmp(event, "refer", 5) == 0) {
-        CCSIP_DEBUG_TASK(DEB_F_PREFIX"NOTIFY: refer\n", DEB_F_PREFIX_ARGS(SIP_NOTIFY, fname));
+        CCSIP_DEBUG_TASK(DEB_F_PREFIX"NOTIFY: refer", DEB_F_PREFIX_ARGS(SIP_NOTIFY, fname));
         SIPTaskProcessSIPNotifyRefer(pSipMessage);
         sippmh_free_location(uri_loc);
         SIPPMH_FREE_REQUEST_LINE(requestURI);
@@ -2448,7 +2449,7 @@ SIPTaskProcessSIPNotify (sipMessage_t *pSipMessage)
     }
 
     if (dn_line == 0) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"NOTIFY has unknown user in Req-URI!\n",
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"NOTIFY has unknown user in Req-URI!",
                           fname);
         (void) sipSPISendErrorResponse(pSipMessage, SIP_CLI_ERR_NOT_FOUND,
                                        SIP_CLI_ERR_NOT_FOUND_PHRASE,
@@ -2490,7 +2491,7 @@ SIPTaskProcessSIPNotify (sipMessage_t *pSipMessage)
     }
 
     if (to_header_error) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"NOTIFY has error in To header\n", fname);
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"NOTIFY has error in To header", fname);
         (void) sipSPISendErrorResponse(pSipMessage, SIP_CLI_ERR_BAD_REQ,
                                        SIP_CLI_ERR_BAD_REQ_PHRASE,
                                        SIP_WARN_MISC,
@@ -2504,9 +2505,9 @@ SIPTaskProcessSIPNotify (sipMessage_t *pSipMessage)
      */
     if ((cpr_strcasecmp(event, "message-summary") == 0) ||
         (cpr_strcasecmp(event, "simple-message-summary") == 0)) {
-        CCSIP_DEBUG_TASK(DEB_F_PREFIX"NOTIFY: MWI\n", DEB_F_PREFIX_ARGS(SIP_NOTIFY, fname));
+        CCSIP_DEBUG_TASK(DEB_F_PREFIX"NOTIFY: MWI", DEB_F_PREFIX_ARGS(SIP_NOTIFY, fname));
         if (SIPTaskProcessSIPNotifyMWI(pSipMessage, dn_line) != 0) {
-            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Bad MWI NOTIFY!\n", fname);
+            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Bad MWI NOTIFY!", fname);
             (void) sipSPISendErrorResponse(pSipMessage, SIP_CLI_ERR_BAD_REQ,
                                            SIP_CLI_ERR_BAD_REQ_PHRASE,
                                            SIP_WARN_MISC,
@@ -2514,25 +2515,25 @@ SIPTaskProcessSIPNotify (sipMessage_t *pSipMessage)
             return SIP_OK;
         }
     } else if (cpr_strcasecmp(event, "check-sync") == 0) {
-        CCSIP_DEBUG_TASK(DEB_F_PREFIX"NOTIFY: check-sync\n", DEB_F_PREFIX_ARGS(SIP_NOTIFY, fname));
+        CCSIP_DEBUG_TASK(DEB_F_PREFIX"NOTIFY: check-sync", DEB_F_PREFIX_ARGS(SIP_NOTIFY, fname));
         SIPTaskProcessSIPNotifyCheckSync(pSipMessage);
     } else if (cpr_strcasecmp(event, "service-control") == 0) {
-        CCSIP_DEBUG_TASK(DEB_F_PREFIX"NOTIFY: service-control\n", DEB_F_PREFIX_ARGS(SIP_NOTIFY, fname));
+        CCSIP_DEBUG_TASK(DEB_F_PREFIX"NOTIFY: service-control", DEB_F_PREFIX_ARGS(SIP_NOTIFY, fname));
         return SIPTaskProcessSIPNotifyServiceControl(pSipMessage);
     } else if (cpr_strcasecmp(event, SIP_EVENT_DIALOG) == 0) {
-        CCSIP_DEBUG_TASK(DEB_F_PREFIX"NOTIFY: %s\n", DEB_F_PREFIX_ARGS(SIP_NOTIFY, fname), SIP_EVENT_DIALOG);
+        CCSIP_DEBUG_TASK(DEB_F_PREFIX"NOTIFY: %s", DEB_F_PREFIX_ARGS(SIP_NOTIFY, fname), SIP_EVENT_DIALOG);
         return (2);
     } else if (cpr_strcasecmp(event, SIP_EVENT_CONFIG) == 0) {
-        CCSIP_DEBUG_TASK(DEB_F_PREFIX"NOTIFY: %s\n", DEB_F_PREFIX_ARGS(SIP_NOTIFY, fname), SIP_EVENT_CONFIG);
+        CCSIP_DEBUG_TASK(DEB_F_PREFIX"NOTIFY: %s", DEB_F_PREFIX_ARGS(SIP_NOTIFY, fname), SIP_EVENT_CONFIG);
         return (2);
     } else if (cpr_strcasecmp(event, SIP_EVENT_KPML) == 0) {
-        CCSIP_DEBUG_TASK(DEB_F_PREFIX"NOTIFY: %s\n", DEB_F_PREFIX_ARGS(SIP_NOTIFY, fname), SIP_EVENT_KPML);
+        CCSIP_DEBUG_TASK(DEB_F_PREFIX"NOTIFY: %s", DEB_F_PREFIX_ARGS(SIP_NOTIFY, fname), SIP_EVENT_KPML);
         return (2);
     } else if (cpr_strcasecmp(event, SIP_EVENT_PRESENCE) == 0) {
-        CCSIP_DEBUG_TASK(DEB_F_PREFIX"NOTIFY: %s\n", DEB_F_PREFIX_ARGS(SIP_NOTIFY, fname), SIP_EVENT_PRESENCE);
+        CCSIP_DEBUG_TASK(DEB_F_PREFIX"NOTIFY: %s", DEB_F_PREFIX_ARGS(SIP_NOTIFY, fname), SIP_EVENT_PRESENCE);
         return (2);
     } else {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Unrecognized Event header\n", fname);
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Unrecognized Event header", fname);
         (void) sipSPISendErrorResponse(pSipMessage, SIP_CLI_ERR_BAD_REQ,
                                        SIP_CLI_ERR_BAD_REQ_PHRASE,
                                        0, NULL, NULL);
@@ -2602,7 +2603,7 @@ SIPTaskProcessSIPNotifyRefer (sipMessage_t *pSipMessage)
 
     pCallID = sippmh_get_cached_header_val(pSipMessage, CALLID);
     if (!pCallID) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Cannot obtain SIP Call ID.\n", fname);
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Cannot obtain SIP Call ID.", fname);
         return;
     }
 
@@ -2614,12 +2615,12 @@ SIPTaskProcessSIPNotifyRefer (sipMessage_t *pSipMessage)
         CCSIP_DEBUG_TASK(DEB_F_PREFIX"Line filter: Call ID match:  Destination line = "
                          "<%d/%d>.\n", DEB_F_PREFIX_ARGS(SIP_ID, fname), ccb->index, ccb->dn_line);
     } else {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"ccb is NULL\n", fname);
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"ccb is NULL", fname);
         // Check if this should be sent to the SM by looking up its callid
         // If found, the we return from here
         scbp = find_scb_by_callid(pCallID, &scb_index);
         if (scbp != NULL) {
-            CCSIP_DEBUG_TASK(DEB_F_PREFIX"Recv Notify.\n", DEB_F_PREFIX_ARGS(SIP_NOTIFY, fname));
+            CCSIP_DEBUG_TASK(DEB_F_PREFIX"Recv Notify.", DEB_F_PREFIX_ARGS(SIP_NOTIFY, fname));
             (void) subsmanager_handle_ev_sip_subscribe_notify(pSipMessage);
             return;
         }
@@ -2649,7 +2650,7 @@ SIPTaskProcessSIPNotifyRefer (sipMessage_t *pSipMessage)
                    (strstr(pSipMessage->mesg_body[0].msgBody, "181")) ||
                    (strstr(pSipMessage->mesg_body[0].msgBody, "182")) ||
                    (strstr(pSipMessage->mesg_body[0].msgBody, "183"))) {
-            CCSIP_DEBUG_TASK(DEB_F_PREFIX"Ignoring Notify w/Progression\n",
+            CCSIP_DEBUG_TASK(DEB_F_PREFIX"Ignoring Notify w/Progression",
                               DEB_F_PREFIX_ARGS(SIP_NOTIFY, fname));
             return;
         } else if (strstr(pSipMessage->mesg_body[0].msgBody, "200")) {
@@ -2917,7 +2918,7 @@ SIPTaskPostRestart (boolean restart)
 
     msg = (ccsip_restart_req *) SIPTaskGetBuffer(sizeof(ccsip_restart_req));
     if (msg == NULL) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"failed to allocate IPC msg ccip_restart_req\n", fname);
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"failed to allocate IPC msg ccip_restart_req", fname);
         return;
     }
     if (restart) {
@@ -2941,13 +2942,13 @@ SIPTaskProcessRestart (ccsip_restart_cmd cmd)
     static const char fname[] = "SIPTaskProcessRestart";
 
     if (cmd == SIP_RESTART_REQ_RESTART) {
-        CCSIP_DEBUG_TASK(DEB_F_PREFIX"Starting Restart Process\n",
+        CCSIP_DEBUG_TASK(DEB_F_PREFIX"Starting Restart Process",
             DEB_F_PREFIX_ARGS(SIP_TASK, fname));
 
         /* Restart SIP task */
         sip_restart();
     } else if (cmd == SIP_RESTART_REQ_REINIT) {
-        CCSIP_DEBUG_TASK(DEB_F_PREFIX"Starting Re-init Process\n",
+        CCSIP_DEBUG_TASK(DEB_F_PREFIX"Starting Re-init Process",
             DEB_F_PREFIX_ARGS(SIP_TASK, fname));
 
         // Re-initialize the various components
@@ -2971,12 +2972,12 @@ SIPTaskReinitialize (boolean checkConfig)
 
     // If the config has changed, or if the check is being bypassed, re-init reg-mgr
     if ( !checkConfig || sip_regmgr_check_config_change() ) {
-        CCSIP_DEBUG_TASK(DEB_F_PREFIX"Config change detected: Restarting\n",
+        CCSIP_DEBUG_TASK(DEB_F_PREFIX"Config change detected: Restarting",
             DEB_F_PREFIX_ARGS(SIP_TASK, fname));
         sip_regmgr_process_config_change();
         return;
     } else {
-        CCSIP_DEBUG_TASK(DEB_F_PREFIX"No config change detected\n",
+        CCSIP_DEBUG_TASK(DEB_F_PREFIX"No config change detected",
             DEB_F_PREFIX_ARGS(SIP_TASK, fname));
     }
 }
@@ -2989,7 +2990,7 @@ SIPTaskPostShutdown (int action, int reason, const char *reasonInfo)
 
     msg = (ccsip_shutdown_req_t *) SIPTaskGetBuffer(sizeof(ccsip_shutdown_req_t));
     if (msg == NULL) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"failed to allocate IPC msg SIP_SHUTDOWN_REQ_SHUT\n", fname);
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"failed to allocate IPC msg SIP_SHUTDOWN_REQ_SHUT", fname);
         return;
     }
     msg->cmd = SIP_SHUTDOWN_REQ_SHUT;
@@ -3012,7 +3013,7 @@ SIPTaskProcessShutdown (int action, int reason)
 {
     static const char fname[] = "SIPTaskProcessShutdown";
 
-    CCSIP_DEBUG_TASK(DEB_F_PREFIX"Starting Shutdown Process\n", DEB_F_PREFIX_ARGS(SIP_TASK, fname));
+    CCSIP_DEBUG_TASK(DEB_F_PREFIX"Starting Shutdown Process", DEB_F_PREFIX_ARGS(SIP_TASK, fname));
     sip_mode_quiet = TRUE;
     /* Shutdown SIP components */
     sip_shutdown_phase1(action, reason);
@@ -3026,7 +3027,7 @@ SIPTaskProcessShutdown (int action, int reason)
 void destroy_sip_thread()
 {
     static const char fname[] = "destroy_sip_thread";
-    DEF_DEBUG(DEB_F_PREFIX"Unloading SIP and destroying sip thread\n",
+    DEF_DEBUG(DEB_F_PREFIX"Unloading SIP and destroying sip thread",
         DEB_F_PREFIX_ARGS(SIP_CC_INIT, fname));
 
     /* kill msgQ thread first, then itself */

@@ -319,12 +319,12 @@ ccsip_register_info_package_handler(const char *info_package,
     handler_record_t *record;
 
     if (s_handler_registry == NULL) {
-        CCSIP_DEBUG_TASK("%s: Info Package handler was not initialized\n", fname);
+        CCSIP_DEBUG_TASK("%s: Info Package handler was not initialized", fname);
         return SIP_ERROR;
     }
 
     if ((info_package == NULL) || (content_type == NULL) || (handler == NULL)) {
-        CCSIP_DEBUG_ERROR("%s: invalid parameter\n", fname);
+        CCSIP_DEBUG_ERROR("%s: invalid parameter", fname);
         return SIP_ERROR;
     }
 
@@ -336,13 +336,13 @@ ccsip_register_info_package_handler(const char *info_package,
         info_index = find_next_available_info_index();
 
         if (info_index == INDEX_NOT_FOUND) {
-            CCSIP_DEBUG_ERROR("%s: maximum reached\n", fname);
+            CCSIP_DEBUG_ERROR("%s: maximum reached", fname);
             return SIP_ERROR;
         }
 
         tmp_info = cpr_strdup(info_package);
         if (tmp_info == NULL) {
-            CCSIP_DEBUG_ERROR("%s: failed to duplicate info_package string\n", fname);
+            CCSIP_DEBUG_ERROR("%s: failed to duplicate info_package string", fname);
             return SIP_ERROR;
         }
     }
@@ -355,7 +355,7 @@ ccsip_register_info_package_handler(const char *info_package,
         type_index = find_next_available_type_index();
 
         if (type_index == INDEX_NOT_FOUND) {
-            CCSIP_DEBUG_ERROR("%s: maximum reached\n", fname);
+            CCSIP_DEBUG_ERROR("%s: maximum reached", fname);
             if (tmp_info != NULL) {
                 cpr_free(tmp_info);
             }
@@ -364,7 +364,7 @@ ccsip_register_info_package_handler(const char *info_package,
 
         tmp_type = cpr_strdup(content_type);
         if (tmp_type == NULL) {
-            CCSIP_DEBUG_ERROR("%s: failed to duplicate info_package string\n", fname);
+            CCSIP_DEBUG_ERROR("%s: failed to duplicate info_package string", fname);
             if (tmp_info != NULL) {
                 cpr_free(tmp_info);
             }
@@ -374,7 +374,7 @@ ccsip_register_info_package_handler(const char *info_package,
 
     /* Check to see if the info/type tuple has been registered before */
     if (find_handler_record(info_index, type_index) != NULL) {
-        CCSIP_DEBUG_ERROR("%s: Info Package handler already registered\n", fname);
+        CCSIP_DEBUG_ERROR("%s: Info Package handler already registered", fname);
         return SIP_ERROR;
     }
 
@@ -397,7 +397,7 @@ ccsip_register_info_package_handler(const char *info_package,
         if (tmp_info != NULL) {
             cpr_free(tmp_info);
         }
-        CCSIP_DEBUG_ERROR("%s: failed to allocate info handler record\n", fname);
+        CCSIP_DEBUG_ERROR("%s: failed to allocate info handler record", fname);
         return SIP_ERROR;
     }
 
@@ -413,7 +413,7 @@ ccsip_register_info_package_handler(const char *info_package,
         if (tmp_info != NULL) {
             cpr_free(tmp_info);
         }
-        CCSIP_DEBUG_ERROR("%s: failed to insert to the registry\n", fname);
+        CCSIP_DEBUG_ERROR("%s: failed to insert to the registry", fname);
         return SIP_ERROR;
     }
 
@@ -453,14 +453,14 @@ ccsip_deregister_info_package_handler(const char *info_package,
     handler_record_t *record;
 
     if (s_handler_registry == NULL) {
-        CCSIP_DEBUG_TASK("%s: Info Package handler was not initialized\n", fname);
+        CCSIP_DEBUG_TASK("%s: Info Package handler was not initialized", fname);
         return SIP_ERROR;
     }
 
     /* Find the info_index for the info_package */
     info_index = find_info_index(info_package);
     if (info_index == INDEX_NOT_FOUND) {
-        CCSIP_DEBUG_ERROR("%s: handler was not registered (%s)\n",
+        CCSIP_DEBUG_ERROR("%s: handler was not registered (%s)",
                           fname, info_package);
         return SIP_ERROR;
     }
@@ -468,7 +468,7 @@ ccsip_deregister_info_package_handler(const char *info_package,
     /* Find the type_index for the content_type */
     type_index = find_type_index(content_type);
     if (type_index == INDEX_NOT_FOUND) {
-        CCSIP_DEBUG_ERROR("%s: handler was not registered (%s)\n",
+        CCSIP_DEBUG_ERROR("%s: handler was not registered (%s)",
                           fname, content_type);
         return SIP_ERROR;
     }
@@ -476,7 +476,7 @@ ccsip_deregister_info_package_handler(const char *info_package,
     /* Find the handler record */
     record = find_handler_record(info_index, type_index);
     if ((record == NULL) || (record->handler != handler)) {
-        CCSIP_DEBUG_ERROR("%s: handler was not registered (%p)\n",
+        CCSIP_DEBUG_ERROR("%s: handler was not registered (%p)",
                           fname, handler);
         return SIP_ERROR;
     }
@@ -527,7 +527,7 @@ update_recv_info_list(const char *header_field_value, string_t *info_packages)
 
     if ((header_field_value == NULL) || (info_packages == NULL) ||
         (*info_packages == NULL)) {
-        CCSIP_DEBUG_ERROR("%s: invalid parameter\n", fname);
+        CCSIP_DEBUG_ERROR("%s: invalid parameter", fname);
         return;
     }
 
@@ -665,12 +665,12 @@ ccsip_handle_info_package(ccsipCCB_t *ccb, sipMessage_t *pSipMessage)
 
     if (info_package == NULL) {
         /* No Info-Package header */
-        CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Missing Info-Package header\n",
+        CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Missing Info-Package header",
                             DEB_F_PREFIX_ARGS(SIP_INFO_PACKAGE, fname));
 
         if (pSipMessage->num_body_parts == 0) {
             /* No Info-Package header, and no body poarts */
-            CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Missing message body\n",
+            CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Missing message body",
                                 DEB_F_PREFIX_ARGS(SIP_INFO_PACKAGE, fname));
             /* Send 200 OK for legacy UA support */
             status_code = 200;
@@ -686,7 +686,7 @@ ccsip_handle_info_package(ccsipCCB_t *ccb, sipMessage_t *pSipMessage)
             type_index = find_type_index(pSipMessage->mesg_body[0].msgContentType);
             if (type_index == INDEX_NOT_FOUND) {
                 /* No Info-Package header, and Content-Type is not supported */
-                CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Unsupported Content Type\n",
+                CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Unsupported Content Type",
                                     DEB_F_PREFIX_ARGS(SIP_INFO_PACKAGE, fname));
                 /* Send 415 Unsupported Media Type */
                 status_code = SIP_CLI_ERR_MEDIA;
@@ -703,7 +703,7 @@ ccsip_handle_info_package(ccsipCCB_t *ccb, sipMessage_t *pSipMessage)
         /* With Info-Package header */
         if (pSipMessage->num_body_parts == 0) {
             /* With Info-Package header, but no body parts */
-            CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Missing message body\n",
+            CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Missing message body",
                                 DEB_F_PREFIX_ARGS(SIP_INFO_PACKAGE, fname));
 
             /* ? */
@@ -722,7 +722,7 @@ ccsip_handle_info_package(ccsipCCB_t *ccb, sipMessage_t *pSipMessage)
             info_index = find_info_index(info_package);
             if (info_index == INDEX_NOT_FOUND) {
                 /* Info-Package is not supported */
-                CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Unsupported Info Package\n",
+                CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Unsupported Info Package",
                                     DEB_F_PREFIX_ARGS(SIP_INFO_PACKAGE, fname));
 
                 /* Send 489 Bad Event */
@@ -735,7 +735,7 @@ ccsip_handle_info_package(ccsipCCB_t *ccb, sipMessage_t *pSipMessage)
                 record = find_handler_record(info_index, type_index);
                 if (record == NULL) {
                     /* Info-Package header is supported, but Content-Type is not */
-                    CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Unsupported Content Type\n",
+                    CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Unsupported Content Type",
                                         DEB_F_PREFIX_ARGS(SIP_INFO_PACKAGE, fname));
                     /* Send 415 Unsupported Media Type */
                     status_code = SIP_CLI_ERR_MEDIA;
@@ -782,7 +782,7 @@ conf_info_package_handler(line_t line, callid_t call_id,
 {
     static const char *fname = "conf_info_package_handler";
 
-    CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"info_package: %s content_type: %s\n",
+    CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"info_package: %s content_type: %s",
                         DEB_F_PREFIX_ARGS(SIP_INFO_PACKAGE, fname),
                         info_package, content_type);
 
@@ -813,14 +813,14 @@ ccsip_info_package_handler_init(void)
 
     if (s_handler_registry != NULL) {
         // Is this considered an error?
-        CCSIP_DEBUG_TASK("%s: Info Package handler already initialized\n", fname);
+        CCSIP_DEBUG_TASK("%s: Info Package handler already initialized", fname);
         return SIP_OK;
     }
 
     /* Create the SLL */
     s_handler_registry = sll_create(is_matching_type);
     if (s_handler_registry == NULL) {
-        CCSIP_DEBUG_ERROR("%s: failed to create the registry\n", fname);
+        CCSIP_DEBUG_ERROR("%s: failed to create the registry", fname);
         return SIP_ERROR;
     }
 
@@ -867,7 +867,7 @@ ccsip_info_package_handler_shutdown(void)
 
     if (s_handler_registry == NULL) {
         // Is this considered an error?
-        CCSIP_DEBUG_TASK("%s: Info Package handler was not initialized\n", fname);
+        CCSIP_DEBUG_TASK("%s: Info Package handler was not initialized", fname);
         return;
     }
 

@@ -13,7 +13,7 @@
 #include "phone_debug.h"
 
 
-#define SDP_PRINT     buginf
+#define SDP_PRINT(format, ...) CSFLogError("sdp" , format , ## __VA_ARGS__ )
 #define SDP_MALLOC(x) cpr_calloc(1, (x))
 #define SDP_FREE      cpr_free
 

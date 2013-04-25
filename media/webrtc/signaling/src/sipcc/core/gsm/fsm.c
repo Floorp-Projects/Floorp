@@ -338,7 +338,7 @@ void
 fsm_change_state (fsm_fcb_t *fcb, int fname, int new_state)
 {
 
-    DEF_DEBUG(DEB_L_C_F_PREFIX"%s: %s -> %s\n",
+    DEF_DEBUG(DEB_L_C_F_PREFIX"%s: %s -> %s",
                  DEB_L_C_F_PREFIX_ARGS(FSM, ((fcb->dcb == NULL)? CC_NO_LINE: fcb->dcb->line),
                  fcb->call_id, "fsm_change_state"),
                  fsm_type_name(fcb->fsm_type),
@@ -438,7 +438,7 @@ fsm_init (void)
      */
     fsm_fcbs = (fsm_fcb_t *) cpr_calloc(FSM_MAX_FCBS, sizeof(fsm_fcb_t));
     if (fsm_fcbs == NULL) {
-        GSM_ERR_MSG(GSM_F_PREFIX"Failed to allcoate FSM FCBs.\n", "fsm_init");
+        GSM_ERR_MSG(GSM_F_PREFIX"Failed to allcoate FSM FCBs.", "fsm_init");
         return;
     }
 
@@ -960,7 +960,7 @@ fsmutil_clear_feature_invocation_state (fsmdef_dcb_t *dcb,
 {
     if ((feature_id < CC_FEATURE_NONE) || (feature_id >= CC_FEATURE_MAX)) {
         /* Log Error */
-        GSM_ERR_MSG(GSM_L_C_F_PREFIX"Invalid feature id -> %d\n", dcb->line, dcb->call_id, "fsmutil_clear_feature_invocation_state", feature_id);
+        GSM_ERR_MSG(GSM_L_C_F_PREFIX"Invalid feature id -> %d", dcb->line, dcb->call_id, "fsmutil_clear_feature_invocation_state", feature_id);
         return;
     }
 
@@ -1028,7 +1028,7 @@ fsmutil_init_feature_invocation_state (fsmdef_dcb_t *dcb)
     dcb->feature_invocation_state = rm_create(CC_FEATURE_MAX);
 
     if (!dcb->feature_invocation_state) {
-        GSM_ERR_MSG(GSM_L_C_F_PREFIX"failed to allocate feature invocation state table\n", dcb->line, dcb->call_id,
+        GSM_ERR_MSG(GSM_L_C_F_PREFIX"failed to allocate feature invocation state table", dcb->line, dcb->call_id,
                      fname);
     }
 }
@@ -1100,12 +1100,12 @@ fsmutil_free_ci_id (uint16_t id, line_t line)
     static const char fname[] = "fsmutil_free_ci_id";
 
     if (id < 1 || id > MAX_CALLS) {
-        GSM_ERR_MSG(GSM_F_PREFIX"specified id %d is invalid\n", fname, id);
+        GSM_ERR_MSG(GSM_F_PREFIX"specified id %d is invalid", fname, id);
         return;
     }
 
     if (line < 1 || line > MAX_REG_LINES) {
-        GSM_ERR_MSG(GSM_F_PREFIX"specified line %d is invalid\n", fname, line);
+        GSM_ERR_MSG(GSM_F_PREFIX"specified line %d is invalid", fname, line);
         return;
     }
 
@@ -1144,7 +1144,7 @@ fsmutil_get_ci_id (line_t line)
     uint16_t        return_id = 0;
 
     if (line < 1 || line > MAX_REG_LINES) {
-        GSM_ERR_MSG("specified line %d is invalid\n", fname, line);
+        GSM_ERR_MSG("specified line %d is invalid", fname, line);
         return 0;
     }
 
@@ -1183,12 +1183,12 @@ fsmutil_set_ci_id (uint16_t id, line_t line)
     static const char fname[] = "fsmutil_set_ci_id";
 
     if (id < 1 || id > MAX_CALLS) {
-        GSM_ERR_MSG(GSM_F_PREFIX"specified id %d is invalid\n", fname, id);
+        GSM_ERR_MSG(GSM_F_PREFIX"specified id %d is invalid", fname, id);
         return;
     }
 
     if (line < 1 || line > MAX_REG_LINES) {
-        GSM_ERR_MSG(GSM_F_PREFIX"specified line %d is invalid\n", fname, line);
+        GSM_ERR_MSG(GSM_F_PREFIX"specified line %d is invalid", fname, line);
         return;
     }
 
@@ -1270,12 +1270,12 @@ void fsmutil_clear_shown_calls_ci_element (uint16_t id, line_t line)
     static const char fname[] = "fsmutil_clear_shown_calls_ci_element";
 
     if (id < 1 || id > MAX_CALLS) {
-        GSM_ERR_MSG(GSM_F_PREFIX"specified id %d is invalid\n", fname, id);
+        GSM_ERR_MSG(GSM_F_PREFIX"specified id %d is invalid", fname, id);
         return;
     }
 
     if (line < 1 || line > MAX_REG_LINES) {
-        GSM_ERR_MSG(GSM_F_PREFIX"specified line %d is invalid\n", fname, line);
+        GSM_ERR_MSG(GSM_F_PREFIX"specified line %d is invalid", fname, line);
         return;
     }
 
@@ -1295,12 +1295,12 @@ void fsmutil_set_shown_calls_ci_element (uint16_t id, line_t line)
     static const char fname[] = "fsmutil_set_shown_calls_ci_element";
 
     if (id < 1 || id > MAX_CALLS) {
-        GSM_ERR_MSG(GSM_F_PREFIX"specified id %d is invalid\n", fname, id);
+        GSM_ERR_MSG(GSM_F_PREFIX"specified id %d is invalid", fname, id);
         return;
     }
 
     if (line < 1 || line > MAX_REG_LINES) {
-        GSM_ERR_MSG(GSM_F_PREFIX"specified line %d is invalid\n", fname, line);
+        GSM_ERR_MSG(GSM_F_PREFIX"specified line %d is invalid", fname, line);
         return;
     }
 
@@ -1320,12 +1320,12 @@ boolean fsmutil_is_shown_calls_ci_element_set (uint16_t id, line_t line)
     static const char fname[] = "fsmutil_is_shown_calls_ci_element_set";
 
     if (id < 1 || id > MAX_CALLS) {
-        GSM_ERR_MSG(GSM_F_PREFIX"specified id %d is invalid\n", fname, id);
+        GSM_ERR_MSG(GSM_F_PREFIX"specified id %d is invalid", fname, id);
         return FALSE;
     }
 
     if (line < 1 || line > MAX_REG_LINES) {
-        GSM_ERR_MSG(GSM_F_PREFIX"specified line %d is invalid\n", fname, line);
+        GSM_ERR_MSG(GSM_F_PREFIX"specified line %d is invalid", fname, line);
         return FALSE;
     }
 

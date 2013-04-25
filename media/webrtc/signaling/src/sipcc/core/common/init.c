@@ -209,7 +209,7 @@ int
 ccInit ()
 {
 
-    TNP_DEBUG(DEB_F_PREFIX"started init of SIP call control\n", DEB_F_PREFIX_ARGS(SIP_CC_INIT, "ccInit"));
+    TNP_DEBUG(DEB_F_PREFIX"started init of SIP call control", DEB_F_PREFIX_ARGS(SIP_CC_INIT, "ccInit"));
 
     platInit();
 
@@ -272,7 +272,7 @@ thread_init ()
     if (ccapp_thread) {
         thread_started(THREADMON_CCAPP, ccapp_thread);
     } else {
-        err_msg("failed to create CCAPP task \n");
+        CSFLogError("common", "failed to create CCAPP task");
     }
 
 #ifdef JINDO_DEBUG_SUPPORTED
@@ -282,7 +282,7 @@ thread_init ()
                                    0 /*pri */ , debug_msgq);
 
     if (debug_thread == NULL) {
-        err_msg("failed to create debug task\n");
+        CSFLogError("common", "failed to create debug task");
     }
 #endif
 #endif
@@ -295,7 +295,7 @@ thread_init ()
     if (sip_thread) {
         thread_started(THREADMON_SIP, sip_thread);
     } else {
-        err_msg("failed to create sip task \n");
+        CSFLogError("common", "failed to create sip task");
     }
 
 #ifdef NO_SOCKET_POLLING
@@ -308,7 +308,7 @@ thread_init ()
     if (sip_msgqwait_thread) {
         thread_started(THREADMON_MSGQ, sip_msgqwait_thread);
     } else {
-        err_msg("failed to create sip message queue wait task\n");
+        CSFLogError("common", "failed to create sip message queue wait task");
     }
 #endif
 
@@ -319,7 +319,7 @@ thread_init ()
     if (gsm_thread) {
         thread_started(THREADMON_GSM, gsm_thread);
     } else {
-        err_msg("failed to create gsm task \n");
+        CSFLogError("common", "failed to create gsm task");
     }
 
     if (FALSE == gHardCodeSDPMode) {
@@ -327,7 +327,7 @@ thread_init ()
     			(cprThreadStartRoutine) MiscAppTask,
     			STKSZ, 0 /* pri */, misc_app_msgq);
     	if (misc_app_thread == NULL) {
-    		err_msg("failed to create MiscApp task \n");
+    		CSFLogError("common", "failed to create MiscApp task");
     	}
     }
 
@@ -336,7 +336,7 @@ thread_init ()
                                     (cprThreadStartRoutine) TickerTask,
                                     STKSZ, 0, ticker_msgq);
     if (ticker_thread == NULL) {
-        err_msg("failed to create ticker task \n");
+        CSFLogError("common", "failed to create ticker task");
     }
 #endif
 
@@ -410,7 +410,7 @@ MAIN0Timer (void)
 int
 TickerTask (void *a)
 {
-    TNP_DEBUG(DEB_F_PREFIX"Ticker Task initialized..\n", DEB_F_PREFIX_ARGS(SIP_CC_INIT, "TickerTask"));
+    TNP_DEBUG(DEB_F_PREFIX"Ticker Task initialized..", DEB_F_PREFIX_ARGS(SIP_CC_INIT, "TickerTask"));
     while (FALSE == gStopTickTask) {
         cprSleep(20);
         MAIN0Timer();
@@ -425,16 +425,16 @@ send_protocol_config_msg (void)
     const char *fname = "send_protocol_config_msg";
     char *msg;
 
-    TNP_DEBUG(DEB_F_PREFIX"send TCP_DONE message to sip thread..\n", DEB_F_PREFIX_ARGS(SIP_CC_INIT, fname));
+    TNP_DEBUG(DEB_F_PREFIX"send TCP_DONE message to sip thread..", DEB_F_PREFIX_ARGS(SIP_CC_INIT, fname));
 
     msg = (char *) SIPTaskGetBuffer(4);
     if (msg == NULL) {
-        TNP_DEBUG(DEB_F_PREFIX"failed to allocate message..\n", DEB_F_PREFIX_ARGS(SIP_CC_INIT, fname));
+        TNP_DEBUG(DEB_F_PREFIX"failed to allocate message..", DEB_F_PREFIX_ARGS(SIP_CC_INIT, fname));
         return;
     }
     /* send a config done message to the SIP Task */
     if (SIPTaskSendMsg(TCP_PHN_CFG_TCP_DONE, msg, 0, NULL) == CPR_FAILURE) {
-        err_msg("%s: notify SIP stack ready failed", fname);
+        CSFLogError("common", "%s: notify SIP stack ready failed", fname);
         cpr_free(msg);
     }
     gsm_set_initialized();
@@ -467,11 +467,12 @@ send_task_unload_msg(cc_srcs_t dest_id)
     config_get_value(CFGID_SDPMODE, &sdpmode, sizeof(sdpmode));
 
     if (msg == NULL) {
-        err_msg("%s: failed to allocate  msg cprBuffer_t\n", fname);
+        CSFLogError("common", "%s: failed to allocate  msg cprBuffer_t",
+                    fname);
         return;
     }
 
-    DEF_DEBUG(DEB_F_PREFIX"send Unload message to %s task ..\n",
+    DEF_DEBUG(DEB_F_PREFIX"send Unload message to %s task ..",
         DEB_F_PREFIX_ARGS(SIP_CC_INIT, fname),
         dest_id == CC_SRC_SIP ? "SIP" :
         dest_id == CC_SRC_GSM ? "GSM" :
@@ -491,14 +492,16 @@ send_task_unload_msg(cc_srcs_t dest_id)
             /* send a unload message to the SIP Task to kill sip thread*/
             msg =  SIPTaskGetBuffer(len);
             if (msg == NULL) {
-                err_msg("%s:%d: failed to allocate sip msg buffer\n", fname);
+                CSFLogError("common",
+                  "%s: failed to allocate sip msg buffer\n", fname);
                 return;
             }
 
             if (SIPTaskSendMsg(THREAD_UNLOAD, (cprBuffer_t)msg, len, NULL) == CPR_FAILURE)
             {
                 cpr_free(msg);
-                err_msg("%s: Unable to send THREAD_UNLOAD msg to sip thread", fname);
+                CSFLogError("common",
+                  "%s: Unable to send THREAD_UNLOAD msg to sip thread", fname);
             }
         }
         break;
@@ -506,11 +509,13 @@ send_task_unload_msg(cc_srcs_t dest_id)
         {
             msg =  gsm_get_buffer(len);
             if (msg == NULL) {
-                err_msg("%s: failed to allocate  gsm msg cprBuffer_t\n", fname);
+                CSFLogError("common",
+                  "%s: failed to allocate  gsm msg cprBuffer_t\n", fname);
                 return;
             }
             if (CPR_FAILURE == gsm_send_msg(THREAD_UNLOAD, msg, len)) {
-                err_msg("%s: Unable to send THREAD_UNLOAD msg to gsm thread", fname);
+                CSFLogError("common",
+                  "%s: Unable to send THREAD_UNLOAD msg to gsm thread", fname);
             }
         }
         break;
@@ -518,11 +523,14 @@ send_task_unload_msg(cc_srcs_t dest_id)
         {
             msg = cpr_malloc(len);
             if (msg == NULL) {
-                err_msg("%s: failed to allocate  misc msg cprBuffer_t\n", fname);
+                CSFLogError("common",
+                  "%s: failed to allocate  misc msg cprBuffer_t\n", fname);
                 return;
             }
             if (CPR_FAILURE == MiscAppTaskSendMsg(THREAD_UNLOAD, msg, len)) {
-                err_msg("%s: Unable to send THREAD_UNLOAD msg to Misc App thread", fname);
+                CSFLogError("common",
+                  "%s: Unable to send THREAD_UNLOAD msg to Misc App thread",
+                  fname);
             }
         }
         break;
@@ -530,19 +538,24 @@ send_task_unload_msg(cc_srcs_t dest_id)
         {
             msg = cpr_malloc(len);
             if (msg == NULL) {
-                err_msg("%s: failed to allocate  ccapp msg cprBuffer_t\n", fname);
+                CSFLogError("common",
+                  "%s: failed to allocate  ccapp msg cprBuffer_t\n", fname);
                 return;
             }
             if (ccappTaskPostMsg(CCAPP_THREAD_UNLOAD, msg, len, CCAPP_CCPROVIER) == CPR_FAILURE )
             {
-                err_msg("%s: Unable to send THREAD_UNLOAD msg to CCapp thread", fname);
+                CSFLogError("common",
+                  "%s: Unable to send THREAD_UNLOAD msg to CCapp thread",
+                  fname);
             }
-            err_msg("%s:  send UNLOAD msg to CCapp thread good", fname);
+            CSFLogError("common", "%s:  send UNLOAD msg to CCapp thread good",
+              fname);
         }
         break;
 
         default:
-            err_msg("%s: Unknown destination task passed=%d.", fname, dest_id);
+            CSFLogError("common", "%s: Unknown destination task passed=%d.",
+              fname, dest_id);
         break;
     }
 }
@@ -564,10 +577,10 @@ ccUnload (void)
 {
     static const char fname[] = "ccUnload";
 
-    DEF_DEBUG(DEB_F_PREFIX"ccUnload called..\n", DEB_F_PREFIX_ARGS(SIP_CC_INIT, fname));
+    DEF_DEBUG(DEB_F_PREFIX"ccUnload called..", DEB_F_PREFIX_ARGS(SIP_CC_INIT, fname));
     if (platform_initialized == FALSE)
     {
-        TNP_DEBUG(DEB_F_PREFIX"system is not loaded, ignore unload\n", DEB_F_PREFIX_ARGS(SIP_CC_INIT, fname));
+        TNP_DEBUG(DEB_F_PREFIX"system is not loaded, ignore unload", DEB_F_PREFIX_ARGS(SIP_CC_INIT, fname));
         return;
     }
     /*

@@ -485,7 +485,7 @@ ccsip_encode_call_info_hdr (cc_call_info_t *call_info_p,
                     MAX_SIP_HEADER_LENGTH - strlen(header));
             break;
         default:
-            CCSIP_DEBUG_ERROR(SIP_F_PREFIX  "unsupported hold_resume_reason\n",
+            CCSIP_DEBUG_ERROR(SIP_F_PREFIX  "unsupported hold_resume_reason",
                               fname);
             cpr_free(header);
             return NULL;
