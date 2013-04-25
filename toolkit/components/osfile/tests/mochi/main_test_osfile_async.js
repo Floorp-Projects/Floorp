@@ -644,6 +644,11 @@ let test_iter = maketest("iter", function iter(test) {
     test.is(referenceEntries.size, allFiles1.length, "All the entries in the directory have been listed");
     for (let entry of allFiles1) {
       test.ok(referenceEntries.has(entry.path), "File " + entry.path + " effectively exists");
+      // Ensure that we have correct isDir and isSymLink
+      // Current directory is {objdir}/_tests/testing/mochitest/, assume it has some dirs and symlinks.
+      var f = new FileUtils.File(entry.path);
+      test.is(entry.isDir, f.isDirectory(), "Get file " + entry.path + " isDir correctly");
+      test.is(entry.isSymLink, f.isSymlink(), "Get file " + entry.path + " isSymLink correctly");
     }
 
     yield iterator.close();
