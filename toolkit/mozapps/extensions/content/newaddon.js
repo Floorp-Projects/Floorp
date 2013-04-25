@@ -51,7 +51,7 @@ function initialize() {
     gAddon = aAddon;
 
     document.getElementById("addon-info").setAttribute("type", aAddon.type);
-    
+
     let icon = document.getElementById("icon");
     if (aAddon.icon64URL)
       icon.src = aAddon.icon64URL;
@@ -60,7 +60,7 @@ function initialize() {
 
     let name = bundle.formatStringFromName("name", [aAddon.name, aAddon.version],
                                            2);
-    document.getElementById("name").value = name
+    document.getElementById("name").value = name;
 
     if (aAddon.creator) {
       let creator = bundle.formatStringFromName("author", [aAddon.creator], 1);
