@@ -33,10 +33,6 @@ healthreport_depends = \
   $(NULL)
 
 
-ifneq (,$(findstring a,$(GRE_MILESTONE)))
-extra_pp_flags := -DPRERELEASE_BUILD
-endif
-
 MAIN_JS_MODULE := HealthReport.jsm
 MAIN_JS_MODULE_PATH = $(FINAL_TARGET)/modules
 MAIN_JS_MODULE_FLAGS := $(extra_pp_flags)
