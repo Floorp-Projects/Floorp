@@ -194,46 +194,43 @@ public class TopSitesView extends GridView {
     }
 
     public void loadTopSites() {
-        ThreadUtils.postToBackgroundThread(new Runnable() {
+        final ContentResolver resolver = mContext.getContentResolver();
+        final Cursor oldCursor = (mTopSitesAdapter != null) ? mTopSitesAdapter.getCursor() : null;
+
+        new UiAsyncTask<Void, Void, Cursor>(ThreadUtils.getBackgroundHandler()) {
             @Override
-            public void run() {
-                final ContentResolver resolver = mContext.getContentResolver();
-
-                // Swap in the new cursor.
-                final Cursor oldCursor = (mTopSitesAdapter != null) ? mTopSitesAdapter.getCursor() : null;
-                final Cursor newCursor = BrowserDB.getTopSites(resolver, mNumberOfTopSites);
-
-                post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (mTopSitesAdapter == null) {
-                            mTopSitesAdapter = new TopSitesCursorAdapter(mContext,
-                                                                         R.layout.abouthome_topsite_item,
-                                                                         newCursor,
-                                                                         new String[] { URLColumns.TITLE },
-                                                                         new int[] { R.id.title });
-
-                            setAdapter(mTopSitesAdapter);
-                        } else {
-                            mTopSitesAdapter.changeCursor(newCursor);
-                        }
-
-                        if (mTopSitesAdapter.getCount() > 0)
-                            loadTopSitesThumbnails(resolver);
-
-                        // Free the old Cursor in the right thread now.
-                        if (oldCursor != null && !oldCursor.isClosed())
-                            oldCursor.close();
-
-                        // Even if AboutHome isn't necessarily entirely loaded if we
-                        // get here, for phones this is the part the user initially sees,
-                        // so it's the one we will care about for now.
-                        if (mLoadCompleteListener != null)
-                            mLoadCompleteListener.onAboutHomeLoadComplete();
-                    }
-                });
+            protected Cursor doInBackground(Void... params) {
+                return BrowserDB.getTopSites(resolver, mNumberOfTopSites);
             }
-        });
+
+            @Override
+            protected void onPostExecute(Cursor newCursor) {
+                if (mTopSitesAdapter == null) {
+                    mTopSitesAdapter = new TopSitesCursorAdapter(mContext,
+                                                                 R.layout.abouthome_topsite_item,
+                                                                 newCursor,
+                                                                 new String[] { URLColumns.TITLE },
+                                                                 new int[] { R.id.title });
+
+                    setAdapter(mTopSitesAdapter);
+                } else {
+                    mTopSitesAdapter.changeCursor(newCursor);
+                }
+
+                if (mTopSitesAdapter.getCount() > 0)
+                    loadTopSitesThumbnails(resolver);
+
+                // Free the old Cursor in the right thread now.
+                if (oldCursor != null && !oldCursor.isClosed())
+                    oldCursor.close();
+
+                // Even if AboutHome isn't necessarily entirely loaded if we
+                // get here, for phones this is the part the user initially sees,
+                // so it's the one we will care about for now.
+                if (mLoadCompleteListener != null)
+                    mLoadCompleteListener.onAboutHomeLoadComplete();
+            }
+        }.execute();
     }
 
     @Override
@@ -331,18 +328,23 @@ public class TopSitesView extends GridView {
     }
 
     private void loadTopSitesThumbnails(final ContentResolver cr) {
-        final List<String> urls = getTopSitesUrls();
-        if (urls.size() == 0)
-            return;
-
         (new UiAsyncTask<Void, Void, Map<String, Bitmap> >(ThreadUtils.getBackgroundHandler()) {
             @Override
             public Map<String, Bitmap> doInBackground(Void... params) {
+                final List<String> urls = getTopSitesUrls();
+                if (urls.size() == 0) {
+                    return null;
+                }
+
                 return getThumbnailsFromCursor(BrowserDB.getThumbnailsForUrls(cr, urls));
             }
 
             @Override
             public void onPostExecute(Map<String, Bitmap> thumbnails) {
+                if (thumbnails == null) {
+                    return;
+                }
+
                 // If we're waiting for a layout to happen, the GridView may be
                 // stale, so store the pending thumbnails here. They will be
                 // shown on the next layout pass.

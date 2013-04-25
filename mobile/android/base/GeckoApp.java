@@ -766,10 +766,12 @@ abstract public class GeckoApp
                 if (tab == null)
                     return;
                 tab.setZoomConstraints(new ZoomConstraints(message));
+                tab.setIsRTL(message.getBoolean("isRTL"));
                 // Sync up the layer view and the tab if the tab is currently displayed.
                 LayerView layerView = mLayerView;
                 if (layerView != null && Tabs.getInstance().isSelectedTab(tab)) {
                     layerView.setZoomConstraints(tab.getZoomConstraints());
+                    layerView.setIsRTL(tab.getIsRTL());
                 }
             } else if (event.equals("Session:StatePurged")) {
                 onStatePurged();

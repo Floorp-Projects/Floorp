@@ -1234,3 +1234,30 @@ MockInstall.prototype = {
   }
 };
 
+function waitForCondition(condition, nextTest, errorMsg) {
+  let tries = 0;
+  let interval = setInterval(function() {
+    if (tries >= 30) {
+      ok(false, errorMsg);
+      moveOn();
+    }
+    if (condition()) {
+      moveOn();
+    }
+    tries++;
+  }, 100);
+  let moveOn = function() { clearInterval(interval); nextTest(); };
+}
+
+function getTestPluginTag() {
+  let ph = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
+  let tags = ph.getPluginTags();
+
+  // Find the test plugin
+  for (let i = 0; i < tags.length; i++) {
+    if (tags[i].name == "Test Plug-in")
+      return tags[i];
+  }
+  ok(false, "Unable to find plugin");
+  return null;
+}
