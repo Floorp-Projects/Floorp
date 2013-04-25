@@ -11,6 +11,7 @@
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Likely.h"
+#include "mozilla/Util.h"
 
 #include "nsCOMPtr.h"
 #include "nsBlockFrame.h"
@@ -974,7 +975,7 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
 #endif
 
   const nsHTMLReflowState *reflowState = &aReflowState;
-  nsAutoPtr<nsHTMLReflowState> mutableReflowState;
+  Maybe<nsHTMLReflowState> mutableReflowState;
   // If we have non-auto height, we're clipping our kids and we fit,
   // make sure our kids fit too.
   if (aReflowState.availableHeight != NS_UNCONSTRAINEDSIZE &&
@@ -991,9 +992,9 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
 
     if (GetEffectiveComputedHeight(aReflowState) + heightExtras.TopBottom() <=
         aReflowState.availableHeight) {
-      mutableReflowState = new nsHTMLReflowState(aReflowState);
-      mutableReflowState->availableHeight = NS_UNCONSTRAINEDSIZE;
-      reflowState = mutableReflowState;
+      mutableReflowState.construct(aReflowState);
+      mutableReflowState.ref().availableHeight = NS_UNCONSTRAINEDSIZE;
+      reflowState = mutableReflowState.addr();
     }
   }
 
