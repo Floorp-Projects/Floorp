@@ -810,12 +810,9 @@ var gBrowserInit = {
       Cu.reportError("Places database may be locked: " + ex);
     }
 
-    // Bug 666801 - WebProgress support for e10s
-    if (!gMultiProcessBrowser) {
-      // hook up UI through progress listener
-      gBrowser.addProgressListener(window.XULBrowserWindow);
-      gBrowser.addTabsProgressListener(window.TabsProgressListener);
-    }
+    // hook up UI through progress listener
+    gBrowser.addProgressListener(window.XULBrowserWindow);
+    gBrowser.addTabsProgressListener(window.TabsProgressListener);
 
     // setup our common DOMLinkAdded listener
     gBrowser.addEventListener("DOMLinkAdded", DOMLinkHandler, false);

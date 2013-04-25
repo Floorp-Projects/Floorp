@@ -928,20 +928,17 @@
             // Update the URL bar.
             var loc = this.mCurrentBrowser.currentURI;
 
-            // Bug 666801 - WebProgress support for e10s and
             // Bug 666809 - SecurityUI support for e10s
-            if (!gMultiProcessBrowser) {
-              var webProgress = this.mCurrentBrowser.webProgress;
-              var securityUI = this.mCurrentBrowser.securityUI;
+            var webProgress = this.mCurrentBrowser.webProgress;
+            var securityUI = this.mCurrentBrowser.securityUI;
 
-              this._callProgressListeners(null, "onLocationChange",
-                                          [webProgress, null, loc, 0], true,
-                                          false);
+            this._callProgressListeners(null, "onLocationChange",
+                                        [webProgress, null, loc, 0], true,
+                                        false);
 
-              if (securityUI) {
-                this._callProgressListeners(null, "onSecurityChange",
-                                            [webProgress, null, securityUI.state], true, false);
-              }
+            if (securityUI) {
+              this._callProgressListeners(null, "onSecurityChange",
+                                          [webProgress, null, securityUI.state], true, false);
             }
 
             var listener = this.mTabListeners[this.tabContainer.selectedIndex] || null;
@@ -1400,9 +1397,7 @@
             const filter = Components.classes["@mozilla.org/appshell/component/browser-status-filter;1"]
                                      .createInstance(Components.interfaces.nsIWebProgress);
             filter.addProgressListener(tabListener, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
-            // Bug 666801 - WebProgress support for e10s
-            if (!gMultiProcessBrowser)
-              b.webProgress.addProgressListener(filter, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
+            b.webProgress.addProgressListener(filter, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
             this.mTabListeners[position] = tabListener;
             this.mTabFilters[position] = filter;
 
@@ -1707,9 +1702,7 @@
             // Remove the tab's filter and progress listener.
             const filter = this.mTabFilters[aTab._tPos];
 
-            // Bug 666801 - WebProgress support for e10s
-            if (!gMultiProcessBrowser)
-              browser.webProgress.removeProgressListener(filter);
+            browser.webProgress.removeProgressListener(filter);
 
             filter.removeProgressListener(this.mTabListeners[aTab._tPos]);
             this.mTabListeners[aTab._tPos].destroy();
