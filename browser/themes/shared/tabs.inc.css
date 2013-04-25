@@ -21,12 +21,15 @@
 .tabbrowser-tab,
 .tabs-newtab-button {
   -moz-appearance: none;
-  -moz-box-align: stretch;
   background-color: transparent;
   border-radius: 0;
   border-width: 0;
   margin: 0;
   padding: 0;
+}
+
+.tabbrowser-tab {
+  -moz-box-align: stretch;
 }
 
 /* The selected tab should appear above adjacent tabs and .tabs-newtab-button */
