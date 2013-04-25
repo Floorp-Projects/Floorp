@@ -42,8 +42,8 @@ ContentDispatchChooser.prototype =
     aHandler = this.protoSvc.getProtocolHandlerInfoFromOS(aURI.spec, {});
 
     // The first handler in the set is the Android Application Chooser (which will fall back to a default if one is set)
-    // If we have more than one option, show a list so the user can choose what to launch with.
-    if(aHandler.possibleApplicationHandlers.length > 1) {
+    // If we have more than one option, let the OS handle showing a list (if needed).
+    if (aHandler.possibleApplicationHandlers.length > 1) {
       aHandler.launchWithURI(aURI, aWindowContext);
     } else {
       let win = this._getChromeWin();
