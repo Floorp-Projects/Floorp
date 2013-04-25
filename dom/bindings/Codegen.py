@@ -669,6 +669,9 @@ class CGHeaders(CGWrapper):
                 parentDesc = jsImplemented.getDescriptor(jsParent.identifier.name)
                 declareIncludes.add(parentDesc.jsImplParentHeader)
 
+        if len(jsImplementedDescriptors) != 0:
+            bindingHeaders.add("nsIDOMGlobalPropertyInitializer.h")
+
         # Let the machinery do its thing.
         def _includeString(includes):
             return ''.join(['#include "%s"\n' % i for i in includes]) + '\n'
@@ -8346,19 +8349,32 @@ class CGJSImplMethod(CGNativeMember):
             raise TypeError("Constructors with arguments are unsupported. See bug 851178.")
 
         return string.Template(
-"""  // Get the window to use as a parent.
+"""  // Get the window to use as a parent and for initialization.
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(global.Get());
   if (!window) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
-  // Get the JS implementation for the WebIDL interface.
+  // Get the XPCOM component containing the JS implementation.
   nsCOMPtr<nsISupports> implISupports = do_CreateInstance("${contractId}");
   MOZ_ASSERT(implISupports, "Failed to get JS implementation instance from contract ID.");
   if (!implISupports) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
+  // Initialize the object, if it implements nsIDOMGlobalPropertyInitializer.
+  nsCOMPtr<nsIDOMGlobalPropertyInitializer> gpi = do_QueryInterface(implISupports);
+  if (gpi) {
+    JS::Value initReturn = JSVAL_VOID;
+    nsresult rv = gpi->Init(window, &initReturn);
+    if (NS_FAILED(rv)) {
+      aRv.Throw(rv);
+      return nullptr;
+    }
+    MOZ_ASSERT(initReturn.isUndefined(),
+               "Expected nsIDOMGlobalPropertyInitializer to return undefined");
+  }
+  // Extract the JS implementation from the XPCOM object.
   nsCOMPtr<nsIXPConnectWrappedJS> implWrapped = do_QueryInterface(implISupports);
   MOZ_ASSERT(implWrapped, "Failed to get wrapped JS from XPCOM component.");
   if (!implWrapped) {
