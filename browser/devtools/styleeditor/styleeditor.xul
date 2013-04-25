@@ -51,11 +51,13 @@
           <xul:toolbarbutton class="style-editor-newButton devtools-toolbarbutton"
                       accesskey="&newButton.accesskey;"
                       tooltiptext="&newButton.tooltip;"
-                      label="&newButton.label;"/>
+                      label="&newButton.label;"
+                      disabled="true"/>
           <xul:toolbarbutton class="style-editor-importButton devtools-toolbarbutton"
                       accesskey="&importButton.accesskey;"
                       tooltiptext="&importButton.tooltip;"
-                      label="&importButton.label;"/>
+                      label="&importButton.label;"
+                      disabled="true"/>
         </xul:toolbar>
       </xul:box>
       <xul:box id="splitview-resizer-target" class="splitview-nav-container"

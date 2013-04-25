@@ -5,39 +5,30 @@
 // http rather than chrome to improve coverage
 const TESTCASE_URI = TEST_BASE_HTTP + "import.html";
 
-let gUI;
-
 function test()
 {
   waitForExplicitFinish();
 
-  addTabAndOpenStyleEditor(function(panel) {
-    gUI = panel.UI;
-    gUI.on("editor-added", onEditorAdded);
+  addTabAndLaunchStyleEditorChromeWhenLoaded(function (aChrome) {
+    run(aChrome);
   });
 
   content.location = TESTCASE_URI;
 }
 
-let gAddedCount = 0;
-function onEditorAdded()
+function run(aChrome)
 {
-  if (++gAddedCount != 3) {
-    return;
-  }
-
-  is(gUI.editors.length, 3,
+  is(aChrome.editors.length, 3,
     "there are 3 stylesheets after loading @imports");
 
-  is(gUI.editors[0].styleSheet.href, TEST_BASE_HTTP + "simple.css",
+  is(aChrome.editors[0]._styleSheet.href, TEST_BASE_HTTP + "simple.css",
     "stylesheet 1 is simple.css");
 
-  is(gUI.editors[1].styleSheet.href, TEST_BASE_HTTP + "import.css",
+  is(aChrome.editors[1]._styleSheet.href, TEST_BASE_HTTP + "import.css",
     "stylesheet 2 is import.css");
 
-  is(gUI.editors[2].styleSheet.href, TEST_BASE_HTTP + "import2.css",
+  is(aChrome.editors[2]._styleSheet.href, TEST_BASE_HTTP + "import2.css",
     "stylesheet 3 is import2.css");
 
-  gUI = null;
   finish();
 }

@@ -88,10 +88,8 @@ function testInlineStyleSheet()
   info("clicking an inline stylesheet");
 
   toolbox.once("styleeditor-ready", function(id, aToolbox) {
-    let panel = toolbox.getCurrentPanel();
-
-    panel.UI.on("editor-added", (event, editor) => {
-     validateStyleEditorSheet(editor);
+    aToolbox.panelWindow.styleEditorChrome.addChromeListener({
+      onEditorAdded: validateStyleEditorSheet
     });
   });
 
@@ -100,13 +98,13 @@ function testInlineStyleSheet()
   link.click();
 }
 
-function validateStyleEditorSheet(aEditor)
+function validateStyleEditorSheet(aChrome, aEditor)
 {
   info("validating style editor stylesheet");
 
   let sheet = doc.styleSheets[0];
 
-  is(aEditor.styleSheet.href, sheet.href, "loaded stylesheet matches document stylesheet");
+  is(aEditor.styleSheet, sheet, "loaded stylesheet matches document stylesheet");
   win.close();
 
   finishup();
