@@ -149,6 +149,9 @@ using namespace mozilla;
 
 //#define COLLECT_TIME_DEBUG
 
+// Enable assertions that are useful for diagnosing errors in graph construction.
+//#define DEBUG_CC_GRAPH
+
 #define DEFAULT_SHUTDOWN_COLLECTIONS 5
 #define SHUTDOWN_COLLECTIONS(params) DEFAULT_SHUTDOWN_COLLECTIONS
 
@@ -336,6 +339,13 @@ public:
         bool operator!=(const Iterator& aOther) const
             { return mPointer != aOther.mPointer; }
 
+#ifdef DEBUG_CC_GRAPH
+        bool Initialized() const
+        {
+            return mPointer != nullptr;
+        }
+#endif
+
     private:
         PtrInfoOrBlock *mPointer;
     };
@@ -385,6 +395,12 @@ public:
     }
 };
 
+#ifdef DEBUG_CC_GRAPH
+#define CC_GRAPH_ASSERT(b) MOZ_ASSERT(b)
+#else
+#define CC_GRAPH_ASSERT(b)
+#endif
+
 enum NodeColor { black, white, grey };
 
 // This structure should be kept as small as possible; we may expect
@@ -421,23 +437,27 @@ public:
 
     EdgePool::Iterator FirstChild()
     {
+        CC_GRAPH_ASSERT(mFirstChild.Initialized());
         return mFirstChild;
     }
 
     // this PtrInfo must be part of a NodePool
     EdgePool::Iterator LastChild()
     {
+        CC_GRAPH_ASSERT((this + 1)->mFirstChild.Initialized());
         return (this + 1)->mFirstChild;
     }
 
     void SetFirstChild(EdgePool::Iterator aFirstChild)
     {
+        CC_GRAPH_ASSERT(aFirstChild.Initialized());
         mFirstChild = aFirstChild;
     }
 
     // this PtrInfo must be part of a NodePool
     void SetLastChild(EdgePool::Iterator aLastChild)
     {
+        CC_GRAPH_ASSERT(aLastChild.Initialized());
         (this + 1)->mFirstChild = aLastChild;
     }
 };
