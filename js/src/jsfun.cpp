@@ -176,11 +176,11 @@ fun_getProperty(JSContext *cx, HandleObject obj_, HandleId id, MutableHandleValu
         /*
          * Censor the caller if we don't have full access to it.
          */
-        JSObject &caller = vp.toObject();
-        if (caller.isWrapper() && !Wrapper::wrapperHandler(&caller)->isSafeToUnwrap()) {
+        RootedObject caller(cx, &vp.toObject());
+        if (caller->isWrapper() && !Wrapper::wrapperHandler(caller)->isSafeToUnwrap()) {
             vp.setNull();
-        } else if (caller.isFunction()) {
-            JSFunction *callerFun = caller.toFunction();
+        } else if (caller->isFunction()) {
+            JSFunction *callerFun = caller->toFunction();
             if (callerFun->isInterpreted() && callerFun->strict()) {
                 JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage, NULL,
                                              JSMSG_CALLER_IS_STRICT);
