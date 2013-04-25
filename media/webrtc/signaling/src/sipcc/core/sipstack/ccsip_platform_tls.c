@@ -121,7 +121,7 @@ sip_tls_create_connection (sipSPIMessage_t *spi_msg, boolean blocking,
                           "Secure connect failed!!\n",fname);
         return INVALID_SOCKET;
     }
-    CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX "Secure connect ok\n", DEB_F_PREFIX_ARGS(SIP_TLS, fname));
+    CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX "Secure connect ok", DEB_F_PREFIX_ARGS(SIP_TLS, fname));
     if (!blocking) {
         /* should not call this api in blocking mode */
         conn_status = platSecSockIsConnected(sock);
@@ -136,7 +136,7 @@ sip_tls_create_connection (sipSPIMessage_t *spi_msg, boolean blocking,
         conn_status = PLAT_SOCK_CONN_OK;
     }
     if (sip_tcp_set_sock_options(sock) != TRUE) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX "Socket set option failure\n",
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX "Socket set option failure",
                           fname);
     }
 

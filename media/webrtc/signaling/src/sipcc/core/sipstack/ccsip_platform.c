@@ -64,7 +64,7 @@ sip_platform_init (void)
         ccsip_register_all_lines();
         ui_sip_config_done();
     } else {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX "IP Stack Not Initialized.\n", "sip_platform_init");
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX "IP Stack Not Initialized.", "sip_platform_init");
     }
 }
 

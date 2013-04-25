@@ -30,7 +30,7 @@ configapp_init (void)
 {
     static const char fname[] = "configapp_init";
 
-    CONFIGAPP_DEBUG(DEB_F_PREFIX"Subscribing to SUB/NOT manager.\n",
+    CONFIGAPP_DEBUG(DEB_F_PREFIX"Subscribing to SUB/NOT manager.",
                     DEB_F_PREFIX_ARGS(CONFIG_APP, fname));
 
     (void) sub_int_subnot_register(CC_SRC_MISC_APP, CC_SRC_SIP,
@@ -101,7 +101,7 @@ configapp_process_request (ccsip_sub_not_data_t *msg)
     configdata = &(msg->u.subs_ind_data.eventData->u.configapp_data);
 
     update_kpmlconfig(configdata->sip_profile.kpml_val);
-    CONFIGAPP_DEBUG(DEB_F_PREFIX"Updated kpml config value to %d.\n",
+    CONFIGAPP_DEBUG(DEB_F_PREFIX"Updated kpml config value to %d.",
                            DEB_F_PREFIX_ARGS(CONFIG_APP, fname),
                            configdata->sip_profile.kpml_val);
 
@@ -136,7 +136,7 @@ configapp_process_msg (uint32_t cmd, void *msg)
     case SUB_MSG_CONFIGAPP_TERMINATE:
          break;
     default:
-         CONFIGAPP_DEBUG(DEB_F_PREFIX"Received invalid event.\n",
+         CONFIGAPP_DEBUG(DEB_F_PREFIX"Received invalid event.",
                          DEB_F_PREFIX_ARGS(CONFIG_APP, fname));
          break;
     }

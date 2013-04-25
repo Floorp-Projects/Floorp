@@ -50,7 +50,7 @@ extern cc_action_t pending_action_type;
  * @return
  */
 cc_return_t CCAPI_Service_create() {
-    CCAPP_ERROR("CCAPI_Service_create - calling CC_Service_create \n");
+    CCAPP_ERROR("CCAPI_Service_create - calling CC_Service_create");
 
     registration_processEvent(EV_CC_CREATE);
     return (CC_SUCCESS);
@@ -62,7 +62,7 @@ cc_return_t CCAPI_Service_create() {
  * @return
  */
 cc_return_t CCAPI_Service_destroy() {
-    CCAPP_ERROR("CCAPI_Service_destroy - calling CC_Service_destroy \n");
+    CCAPP_ERROR("CCAPI_Service_destroy - calling CC_Service_destroy");
 
  //   if (is_action_to_be_deferred(STOP_ACTION) == TRUE) {
  //       return CC_SUCCESS;
@@ -81,11 +81,11 @@ cc_return_t CCAPI_Service_destroy() {
 cc_return_t CCAPI_Service_start() {
 
     if (isServiceStartRequestPending == TRUE) {
-        DEF_DEBUG("CCAPI_Service_start request is already pending. Ignoring this.\n");
+        DEF_DEBUG("CCAPI_Service_start request is already pending. Ignoring this.");
         return CC_SUCCESS;
     }
 
-    DEF_DEBUG("CCAPI_Service_start - \n");
+    DEF_DEBUG("CCAPI_Service_start -");
     isServiceStartRequestPending = TRUE;
 
     registration_processEvent(EV_CC_START);
@@ -101,7 +101,7 @@ cc_return_t CCAPI_Service_stop() {
 
 	int  sdpmode = 0;
 
-    CCAPP_ERROR("CCAPI_Service_stop - calling registration stop \n");
+    CCAPP_ERROR("CCAPI_Service_stop - calling registration stop");
 
     config_get_value(CFGID_SDPMODE, &sdpmode, sizeof(sdpmode));
     if (!sdpmode) {
@@ -124,25 +124,25 @@ cc_return_t CCAPI_Service_reregister(int device_handle, const char *device_name,
                              const char *cfg,
                              int complete_config)
 {
-    CCAPP_ERROR("CCAPI_Service_reregister - initiate reregister \n");
+    CCAPP_ERROR("CCAPI_Service_reregister - initiate reregister");
 
     if (is_action_to_be_deferred(RE_REGISTER_ACTION) == TRUE) {
         return CC_SUCCESS;
     }
     if (pending_action_type != NO_ACTION) {
-        CCAPP_ERROR("Reset/Restart is pending, reregister Ignored! \n");
+        CCAPP_ERROR("Reset/Restart is pending, reregister Ignored!");
         return CC_FAILURE;
     }
 
     if (is_empty_str((char*)cfg)) {
-        CCAPP_ERROR("Reregister request with empty config.  Exiting.\n");
+        CCAPP_ERROR("Reregister request with empty config.  Exiting.");
         return CC_FAILURE;
     }
 
     g_dev_hdl = device_handle;
     sstrncpy(g_dev_name, device_name, sizeof(g_dev_name));
     sstrncpy(g_cfg_p, cfg, sizeof(g_cfg_p));
-    CCAPP_DEBUG("CCAPI_Service_reregister - devce name [%s], cfg [%s] \n", g_dev_name, g_cfg_p);
+    CCAPP_DEBUG("CCAPI_Service_reregister - devce name [%s], cfg [%s]", g_dev_name, g_cfg_p);
     g_compl_cfg  = complete_config;
 
         registration_processEvent(EV_CC_RE_REGISTER);

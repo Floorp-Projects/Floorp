@@ -131,7 +131,7 @@ sip_platform_task_loop (void *arg)
 
     sip_msgq = (cprMsgQueue_t) arg;
     if (!sip_msgq) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"sip_msgq is null, exiting\n", fname);
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"sip_msgq is null, exiting", fname);
         return;
     }
     sip.msgQueue = sip_msgq;
@@ -143,7 +143,7 @@ sip_platform_task_loop (void *arg)
     SIPTaskInit();
 
     if (platThreadInit("sip_platform_task_loop") != 0) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"failed to attach thread to JVM\n", fname);
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"failed to attach thread to JVM", fname);
         return;
     }
 
@@ -181,7 +181,7 @@ sip_platform_task_loop (void *arg)
                                        NULL,
                                        NULL, &timeout);
         if (pending_operations == SOCKET_ERROR) {
-            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"cprSelect() failed: errno=%d\n",
+            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"cprSelect() failed: errno=%d",
                               fname, cpr_errno);
         } else if (pending_operations) {
             /*

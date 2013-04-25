@@ -24,7 +24,7 @@ void CC_Info_sendInfo(cc_call_handle_t call_handle,
     static const char *fname = "CC_Info_sendInfo";
     session_send_info_t send_info;
 
-    CCAPP_DEBUG(DEB_F_PREFIX"entry... call_handle=0x%x\n",
+    CCAPP_DEBUG(DEB_F_PREFIX"entry... call_handle=0x%x",
                 DEB_F_PREFIX_ARGS(SIP_CC_SES, fname), call_handle);
 
     send_info.sessionID= (SESSIONTYPE_CALLCONTROL << CC_SID_TYPE_SHIFT) + call_handle;;
@@ -36,7 +36,7 @@ void CC_Info_sendInfo(cc_call_handle_t call_handle,
     // ccappTaskPostMsg does a shallow copy of *send_info
     if (ccappTaskPostMsg(CCAPP_SEND_INFO, &send_info,
                          sizeof(session_send_info_t), CCAPP_CCPROVIER) != CPR_SUCCESS) {
-        CCAPP_ERROR(DEB_F_PREFIX"ccappTaskPostMsg failed\n",
+        CCAPP_ERROR(DEB_F_PREFIX"ccappTaskPostMsg failed",
                     DEB_F_PREFIX_ARGS(SIP_CC_SES, fname));
     }
 

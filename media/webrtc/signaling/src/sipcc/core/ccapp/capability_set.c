@@ -44,7 +44,7 @@ static int                              fcp_index = -1;
  */
 static void capset_set_fcp_forwardall (cc_boolean state)
 {
-   CONFIG_DEBUG(DEB_F_PREFIX"FCP Setting CALLFWD Capability to [%d]\n", DEB_F_PREFIX_ARGS(JNI, "capset_set_fcp_forwardall"), (unsigned int)state);
+   CONFIG_DEBUG(DEB_F_PREFIX"FCP Setting CALLFWD Capability to [%d]", DEB_F_PREFIX_ARGS(JNI, "capset_set_fcp_forwardall"), (unsigned int)state);
 
    capability_idleset[CCAPI_CALL_CAP_CALLFWD]       = state;
    capability_set[OFFHOOK][CCAPI_CALL_CAP_CALLFWD]  = state;
@@ -56,7 +56,7 @@ static void capset_set_fcp_forwardall (cc_boolean state)
  */
 static void capset_set_fcp_redial (cc_boolean state)
 {
-   CONFIG_DEBUG(DEB_F_PREFIX"FCP Setting REDIAL capability to [%d]\n", DEB_F_PREFIX_ARGS(JNI, "capset_set_fcp_redial"), (unsigned int)state);
+   CONFIG_DEBUG(DEB_F_PREFIX"FCP Setting REDIAL capability to [%d]", DEB_F_PREFIX_ARGS(JNI, "capset_set_fcp_redial"), (unsigned int)state);
 
    capability_idleset[CCAPI_CALL_CAP_REDIAL]        = state;
    capability_set[OFFHOOK][CCAPI_CALL_CAP_REDIAL]   = state;
@@ -78,7 +78,7 @@ static void fcp_set_index (unsigned int fcpCapabilityId, cc_boolean state)
    // range check the capability index
    if ((fcpCapabilityId <= 0) || (fcpCapabilityId > FCP_FEATURE_MAX))
    {
-        CONFIG_ERROR(CFG_F_PREFIX "Unable to set capability of unknown feature [%d] in FCP \n", "fcp_set_index", fcpCapabilityId);
+        CONFIG_ERROR(CFG_F_PREFIX "Unable to set capability of unknown feature [%d] in FCP", "fcp_set_index", fcpCapabilityId);
         return;
    }
 
@@ -93,7 +93,7 @@ static void fcp_set_index (unsigned int fcpCapabilityId, cc_boolean state)
        case CCAPI_CALL_CAP_REDIAL   :  capset_set_fcp_redial (state);          break;
        default :
        {
-           CONFIG_ERROR(CFG_F_PREFIX "Unable to update settings for capability [%d]\n", "fcp_set_index", (int)capabilityId);
+           CONFIG_ERROR(CFG_F_PREFIX "Unable to update settings for capability [%d]", "fcp_set_index", (int)capabilityId);
            break;
        }
     }
@@ -113,7 +113,7 @@ static void capset_init ()
    // FCP based capabilities
    // ----------------------------------------------------------------------
 
-   CONFIG_DEBUG(DEB_F_PREFIX"FCP Initializing Capabilities to default\n", DEB_F_PREFIX_ARGS(JNI, "capset_init"));
+   CONFIG_DEBUG(DEB_F_PREFIX"FCP Initializing Capabilities to default", DEB_F_PREFIX_ARGS(JNI, "capset_init"));
 
    // ----------------------------------------------------------------------
    // Non-FCP-based Capabilities
@@ -229,7 +229,7 @@ static void fcp_set_capabilities()
 
     if ( (fcp_index+1) >= FCP_FEATURE_MAX) {
         fcp_index = (FCP_FEATURE_MAX -1);
-        CONFIG_ERROR(CFG_F_PREFIX "Received more than the maximum supported features [%d] in FCP \n", "fcp_set_capabilities", FCP_FEATURE_MAX);
+        CONFIG_ERROR(CFG_F_PREFIX "Received more than the maximum supported features [%d] in FCP", "fcp_set_capabilities", FCP_FEATURE_MAX);
 
     }
    // loop over all the FCP features parsed, and for each one, based on ID, and enabled settings,

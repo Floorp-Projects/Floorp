@@ -53,7 +53,7 @@ convertStringToParticipantSecurity(const char *data)
 
 void conf_roster_init_call_conference (cc_call_conference_Info_t *info)
 {
-    CCAPP_DEBUG(DEB_F_PREFIX"in init_call_conference \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI-CONFPARSE"));
+    CCAPP_DEBUG(DEB_F_PREFIX"in init_call_conference", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI-CONFPARSE"));
 
     info->participantMax = 0;
     info->participantCount = 0;
@@ -66,7 +66,7 @@ void conf_roster_free_call_conference (cc_call_conference_Info_t *confInfo)
 {
     cc_call_conferenceParticipant_Info_t *participant;
 
-    CCAPP_DEBUG(DEB_F_PREFIX"in free_call_confrerence \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI-CONFPARSE"));
+    CCAPP_DEBUG(DEB_F_PREFIX"in free_call_confrerence", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI-CONFPARSE"));
 
     while((participant=(cc_call_conferenceParticipant_Info_t *)
                 sll_lite_unlink_head(&confInfo->currentParticipantsList)) != NULL)
@@ -95,7 +95,7 @@ void conf_roster_copy_call_conferance (cc_call_conference_Info_t *dest, cc_call_
     sll_lite_node_t *iterator;
     sll_lite_return_e sll_ret_val;
 
-    CCAPP_DEBUG(DEB_F_PREFIX"in copy_call_confrerence \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI-CONFPARSE"));
+    CCAPP_DEBUG(DEB_F_PREFIX"in copy_call_confrerence", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI-CONFPARSE"));
 
     iterator = src->currentParticipantsList.head_p;
     conf_roster_init_call_conference(dest);
@@ -109,7 +109,7 @@ void conf_roster_copy_call_conferance (cc_call_conference_Info_t *dest, cc_call_
 
         destParticipant = cpr_malloc(sizeof(cc_call_conferenceParticipant_Info_t));
         if (destParticipant == NULL) {
-            CCAPP_ERROR(DEB_F_PREFIX" Malloc failure for participant\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI-CONFPARSE"));
+            CCAPP_ERROR(DEB_F_PREFIX" Malloc failure for participant", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI-CONFPARSE"));
             return;
         } else {
             destParticipant->participantName = strlib_copy(srcParticipant->participantName);
@@ -124,7 +124,7 @@ void conf_roster_copy_call_conferance (cc_call_conference_Info_t *dest, cc_call_
 
         sll_ret_val = sll_lite_link_tail(&dest->currentParticipantsList, (sll_lite_node_t *)destParticipant);
         if (sll_ret_val != SLL_LITE_RET_SUCCESS) {
-            CCAPP_ERROR(DEB_F_PREFIX" Error while trying to insert in the linked list\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI-CONFPARSE"));
+            CCAPP_ERROR(DEB_F_PREFIX" Error while trying to insert in the linked list", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI-CONFPARSE"));
             cpr_free(destParticipant);
             return;
         }
@@ -151,19 +151,19 @@ void CCAPI_CallInfo_getConfParticipants (cc_callinfo_ref_t handle, cc_participan
    cc_uint16_t                           participantIndex = 0;       // participant index
    cc_uint16_t                           nodeCount        = 0;       // linked list node count
 
-   CCAPP_DEBUG(DEB_F_PREFIX"Entering:  CCAPI_CallInfo_getConfParticipants\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI-CONF"));
+   CCAPP_DEBUG(DEB_F_PREFIX"Entering:  CCAPI_CallInfo_getConfParticipants", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI-CONF"));
 
    // get conference reference from the call info
    callConference = getCallConferenceRef(handle);
    if (callConference == NULL)
    {
-      CCAPP_ERROR(DEB_F_PREFIX"Unable to get conference handle\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI-CONF"));
+      CCAPP_ERROR(DEB_F_PREFIX"Unable to get conference handle", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI-CONF"));
       *count = 0;
       return;
    }
 
    nodeCount = SLL_LITE_NODE_COUNT(&(callConference->currentParticipantsList));
-   CCAPP_DEBUG(DEB_F_PREFIX"SLL NODE COUNT = [%d]\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI-CONF"), nodeCount);
+   CCAPP_DEBUG(DEB_F_PREFIX"SLL NODE COUNT = [%d]", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI-CONF"), nodeCount);
    if (nodeCount <= 0)
    {
       *count = 0;
@@ -190,7 +190,7 @@ void CCAPI_CallInfo_getConfParticipants (cc_callinfo_ref_t handle, cc_participan
    // sanity check
    if (participantIndex != nodeCount)
    {  // did not find the expected number of participants!
-       CCAPP_ERROR(DEB_F_PREFIX"Detected mismatch between counted participants [%d] and SLL returned nodecount [%d]\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI-CONF"),
+       CCAPP_ERROR(DEB_F_PREFIX"Detected mismatch between counted participants [%d] and SLL returned nodecount [%d]", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI-CONF"),
                 participantIndex, nodeCount);
        *count = 0;
        return;
@@ -210,14 +210,14 @@ cc_uint16_t CCAPI_CallInfo_getConfParticipantMax (cc_callinfo_ref_t handle)
 {  //
    cc_call_conference_ref_t callConference;    // conference reference (from call info)
 
-   CCAPP_DEBUG(DEB_F_PREFIX"Entering:  CCAPI_CallInfo_getConfParticipantMax\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI-CONF"));
+   CCAPP_DEBUG(DEB_F_PREFIX"Entering:  CCAPI_CallInfo_getConfParticipantMax", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI-CONF"));
 
    // get conference reference from the call info
    callConference = getCallConferenceRef(handle);
    if (callConference == NULL)
    {
       // no conference reference available
-      CCAPP_ERROR(DEB_F_PREFIX"Unable to get conference reference\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI-CONF"));
+      CCAPP_ERROR(DEB_F_PREFIX"Unable to get conference reference", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI-CONF"));
       return (0);
    }
 
@@ -304,7 +304,7 @@ cc_boolean CCAPI_CallInfo_isConfSelfParticipant (cc_callinfo_ref_t handle, cc_pa
    if (callConference == NULL)
    {
       // error - log
-      CCAPP_ERROR(DEB_F_PREFIX"Unable to get conference reference\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI-CONF"));
+      CCAPP_ERROR(DEB_F_PREFIX"Unable to get conference reference", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI-CONF"));
       return (FALSE);
    }
 
@@ -322,7 +322,7 @@ cc_participant_ref_t CCAPI_CallInfo_getConfSelfParticipant (cc_callinfo_ref_t ha
    if (callConference == NULL)
    {
       // unexpected error
-      CCAPP_ERROR(DEB_F_PREFIX"Unable to get conference reference\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI-CONF"));
+      CCAPP_ERROR(DEB_F_PREFIX"Unable to get conference reference", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI-CONF"));
       return strlib_empty();
    }
 
@@ -341,7 +341,7 @@ cc_call_conference_ref_t  getCallConferenceRef(cc_callinfo_ref_t handle)
 
   if (!CCAPI_CallInfo_getIsConference(handle))
   {
-      CCAPP_ERROR(DEB_F_PREFIX"Conference API Invoked, but Not In Conference Call\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI-CONF"));
+      CCAPP_ERROR(DEB_F_PREFIX"Conference API Invoked, but Not In Conference Call", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI-CONF"));
       return (NULL);
   };
 
@@ -366,20 +366,20 @@ cc_call_conference_participant_ref_t getConferenceParticipantRef(cc_callinfo_ref
    if (callConference == NULL)
    {
       // no conference reference available
-      CCAPP_ERROR(DEB_F_PREFIX"Unable to get conference reference\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI-CONF"));
+      CCAPP_ERROR(DEB_F_PREFIX"Unable to get conference reference", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI-CONF"));
       return (NULL);
    }
 
    // see if participantHandle is legit...
    if (participantHandle == NULL)
    {
-       CCAPP_DEBUG(DEB_F_PREFIX"Received query for null participant\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI-CONF"));
+       CCAPP_DEBUG(DEB_F_PREFIX"Received query for null participant", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI-CONF"));
        return (NULL);
    }
 
    if (SLL_LITE_NODE_COUNT(&(callConference->currentParticipantsList)) <= 0)
    {
-      CCAPP_ERROR(DEB_F_PREFIX"Participant list node count is 0, returning NULL\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI-CONF"));
+      CCAPP_ERROR(DEB_F_PREFIX"Participant list node count is 0, returning NULL", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI-CONF"));
       return (NULL);
    }
 
@@ -396,6 +396,6 @@ cc_call_conference_participant_ref_t getConferenceParticipantRef(cc_callinfo_ref
       participant = (cc_call_conference_participant_ref_t)SLL_LITE_LINK_NEXT_NODE(participant);
    }
 
-   CCAPP_ERROR(DEB_F_PREFIX"    Did Not Find participant!\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI-CONF"));
+   CCAPP_ERROR(DEB_F_PREFIX"    Did Not Find participant!", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI-CONF"));
    return (NULL);
 }

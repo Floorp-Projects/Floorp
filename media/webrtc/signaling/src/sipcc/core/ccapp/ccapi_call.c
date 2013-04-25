@@ -72,7 +72,7 @@ cc_lineid_t CCAPI_Call_getLine(cc_call_handle_t call_handle){
 
 	if ( call_handle != 0 ) {
     	cc_lineid_t lineid = GET_LINE_ID(call_handle);
-    	CCAPP_DEBUG(DEB_F_PREFIX"returned %u\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), lineid);
+    	CCAPP_DEBUG(DEB_F_PREFIX"returned %u", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), lineid);
     	return lineid;
 	}
 	return 0;
