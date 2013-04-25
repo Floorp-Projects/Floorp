@@ -1434,8 +1434,78 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 
 /* social recommending panel */
 
-#social-mark-button {
+#share-button {
   -moz-image-region: rect(0, 16px, 16px, 0);
+}
+
+#socialUserPortrait {
+  width: 48px;
+  height: 48px;
+  list-style-image:url("chrome://global/skin/icons/information-32.png");
+}
+
+#socialUserDisplayName,
+#socialUserPortrait {
+  cursor: pointer;
+}
+
+#socialUserDisplayName {
+  -moz-appearance: none;
+  border: none;
+  background-color: transparent;
+  margin-top: 0;
+  padding-top: 0;
+  font-size: 130%;
+  font-weight: bold;
+}
+
+#socialUserDisplayName > .button-box {
+  -moz-padding-start: 0;
+  padding-top: 0;
+  border-top-width: 0;
+}
+
+#socialUserDisplayName:hover {
+  color: -moz-nativehyperlinktext;
+  text-decoration: underline;
+}
+
+#unsharePopupText {
+  height: 48px;
+}
+
+#unsharePopupBottomButtons {
+  margin-top: 1em;
+}
+
+/* bookmarks menu-button */
+
+#bookmarks-menu-button {
+  list-style-image: url("chrome://browser/skin/Toolbar.png");
+  -moz-image-region: rect(0px 216px 24px 192px);
+}
+
+#bookmarks-menu-button[starred] {
+  -moz-image-region: rect(24px 216px 48px 192px);
+}
+
+toolbar[iconsize="small"] #bookmarks-menu-button,
+#bookmarks-menu-button.bookmark-item {
+  list-style-image: url("chrome://browser/skin/Toolbar-small.png");
+  -moz-image-region: rect(0px 144px 16px 128px);
+}
+
+toolbar[iconsize="small"] #bookmarks-menu-button[starred],
+#bookmarks-menu-button.bookmark-item[starred] {
+  -moz-image-region: rect(16px 144px 32px 128px);
+}
+
+#bookmarks-menu-button[disabled] > .toolbarbutton-icon,
+#bookmarks-menu-button[disabled] > .toolbarbutton-menu-dropmarker,
+#bookmarks-menu-button[disabled] > .toolbarbutton-menubutton-dropmarker,
+#bookmarks-menu-button[disabled] > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
+#bookmarks-menu-button > .toolbarbutton-menubutton-button[disabled] > .toolbarbutton-icon {
+  opacity: .4;
 }
 
 /* Bookmarking panel */
