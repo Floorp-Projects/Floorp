@@ -145,6 +145,8 @@ JSRuntime::sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf, JS::RuntimeSizes 
 void
 JSRuntime::triggerOperationCallback()
 {
+    AutoLockForOperationCallback lock(this);
+
     /*
      * Invalidate ionTop to trigger its over-recursion check. Note this must be
      * set before interrupt, to avoid racing with js_InvokeOperationCallback,
