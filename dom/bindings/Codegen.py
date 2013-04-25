@@ -3614,7 +3614,7 @@ if (%s.IsNull()) {
         innerTemplate = CGIndenter(CGGeneric(innerTemplate), 6).define()
         return (("""
 uint32_t length = %s.Length();
-JSObject *returnArray = JS_NewArrayObject(cx, length, NULL);
+JS::Rooted<JSObject*> returnArray(cx, JS_NewArrayObject(cx, length, nullptr));
 if (!returnArray) {
 %s
 }
@@ -7068,7 +7068,7 @@ class CGDictionary(CGThing):
                 "struct ${selfName} ${inheritance}{\n"
                 "  ${selfName}() {}\n"
                 "  bool Init(JSContext* cx, const JS::Value& val);\n"
-                "  bool ToObject(JSContext* cx, JSObject* parentObject, JS::Value *vp);\n"
+                "  bool ToObject(JSContext* cx, JS::Handle<JSObject*> parentObject, JS::Value *vp);\n"
                 "\n" +
                 ("  bool Init(const nsAString& aJSON)\n"
                  "  {\n"
@@ -7173,7 +7173,7 @@ class CGDictionary(CGThing):
             "}\n"
             "\n"
             "bool\n"
-            "${selfName}::ToObject(JSContext* cx, JSObject* parentObject, JS::Value *vp)\n"
+            "${selfName}::ToObject(JSContext* cx, JS::Handle<JSObject*> parentObject, JS::Value *vp)\n"
             "{\n" +
             # NOTE: jsids are per-runtime, so don't use them in workers
             ("  if (!initedIds && !InitIds(cx)) {\n"
