@@ -4229,16 +4229,17 @@
          */
         var clickedOnce = false;
         function enableDblClick(event) {
-          if (event.detail == 1 && !clickedOnce) {
+          var target = event.originalTarget;
+          if (target.className == 'tab-close-button')
+            target._ignoredClick = true;
+          if (!clickedOnce) {
             clickedOnce = true;
             return;
           }
-          setTimeout(function() {
-            tabContainer._blockDblClick = false;
-          }, 0);
-          tabContainer.removeEventListener("click", enableDblClick, false);
+          tabContainer._blockDblClick = false;
+          tabContainer.removeEventListener("click", enableDblClick, true);
         }
-        tabContainer.addEventListener("click", enableDblClick, false);
+        tabContainer.addEventListener("click", enableDblClick, true);
       ]]></handler>
 
       <handler event="dblclick" button="0" phase="capturing">
