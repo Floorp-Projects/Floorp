@@ -493,13 +493,26 @@ bool
 ParallelArrayVisitor::visitCompare(MCompare *compare)
 {
     MCompare::CompareType type = compare->compareType();
-    if (type != MCompare::Compare_Int32 &&
-        type != MCompare::Compare_Double &&
-        type != MCompare::Compare_String)
-    {
+    MBox *lhsBox, *rhsBox;
+    MBasicBlock *block;
+
+    switch (type) {
+      case MCompare::Compare_Int32:
+      case MCompare::Compare_Double:
+      case MCompare::Compare_Null:
+      case MCompare::Compare_Undefined:
+      case MCompare::Compare_Boolean:
+      case MCompare::Compare_Object:
+      case MCompare::Compare_Value:
+      case MCompare::Compare_Unknown:
+      case MCompare::Compare_String:
+        // These paths through compare are ok in any mode.
+        return true;
+
+      default:
+        SpewMIR(compare, "unsafe compareType=%d\n", type);
         return markUnsafe();
     }
-    return true;
 }
 
 bool

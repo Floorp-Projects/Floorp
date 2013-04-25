@@ -743,24 +743,10 @@ LIRGenerator::visitCompare(MCompare *comp)
     // LCompareSAndBranch. Doing this now wouldn't be wrong, but doesn't
     // make sense and avoids confusion.
     if (comp->compareType() == MCompare::Compare_String) {
-        switch (comp->block()->info().executionMode()) {
-          case SequentialExecution:
-          {
-              LCompareS *lir = new LCompareS(useRegister(left), useRegister(right), temp());
-              if (!define(lir, comp))
-                  return false;
-              return assignSafepoint(lir, comp);
-          }
-
-          case ParallelExecution:
-          {
-              LParCompareS *lir = new LParCompareS(useFixed(left, CallTempReg0),
-                                                   useFixed(right, CallTempReg1));
-              return defineReturn(lir, comp);
-          }
-        }
-
-        JS_NOT_REACHED("Unexpected execution mode");
+        LCompareS *lir = new LCompareS(useRegister(left), useRegister(right), temp());
+        if (!define(lir, comp))
+            return false;
+        return assignSafepoint(lir, comp);
     }
 
     // Strict compare between value and string

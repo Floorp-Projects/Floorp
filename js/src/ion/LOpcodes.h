@@ -76,7 +76,6 @@
     _(CompareDAndBranch)            \
     _(CompareS)                     \
     _(CompareStrictS)               \
-    _(ParCompareS)                  \
     _(CompareB)                     \
     _(CompareBAndBranch)            \
     _(CompareV)                     \

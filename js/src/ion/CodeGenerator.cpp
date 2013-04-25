@@ -3176,39 +3176,17 @@ CodeGenerator::visitBinaryV(LBinaryV *lir)
     }
 }
 
-bool
-CodeGenerator::visitParCompareS(LParCompareS *lir)
-{
-    JSOp op = lir->mir()->jsop();
-    Register left = ToRegister(lir->left());
-    Register right = ToRegister(lir->right());
-
-    JS_ASSERT((op == JSOP_EQ || op == JSOP_STRICTEQ) ||
-              (op == JSOP_NE || op == JSOP_STRICTNE));
-
-    masm.setupUnalignedABICall(2, CallTempReg2);
-    masm.passABIArg(left);
-    masm.passABIArg(right);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ParCompareStrings));
-    masm.and32(Imm32(0xF), ReturnReg); // The C functions return an enum whose size is undef
-
-    // Check for cases that we do not currently handle in par exec
-    Label *bail;
-    if (!ensureOutOfLineParallelAbort(&bail))
-        return false;
-    masm.branch32(Assembler::Equal, ReturnReg, Imm32(ParCompareUnknown), bail);
-
-    if (op == JSOP_NE || op == JSOP_STRICTNE)
-        masm.xor32(Imm32(1), ReturnReg);
-
-    return true;
-}
-
 typedef bool (*StringCompareFn)(JSContext *, HandleString, HandleString, JSBool *);
 static const VMFunction stringsEqualInfo =
     FunctionInfo<StringCompareFn>(ion::StringsEqual<true>);
 static const VMFunction stringsNotEqualInfo =
     FunctionInfo<StringCompareFn>(ion::StringsEqual<false>);
+
+typedef ParallelResult (*ParStringCompareFn)(ForkJoinSlice *, HandleString, HandleString, JSBool *);
+static const VMFunction parStringsEqualInfo =
+    FunctionInfo<ParStringCompareFn>(ion::ParStringsEqual);
+static const VMFunction parStringsNotEqualInfo =
+    FunctionInfo<ParStringCompareFn>(ion::ParStringsUnequal);
 
 bool
 CodeGenerator::emitCompareS(LInstruction *lir, JSOp op, Register left, Register right,
@@ -3217,11 +3195,25 @@ CodeGenerator::emitCompareS(LInstruction *lir, JSOp op, Register left, Register 
     JS_ASSERT(lir->isCompareS() || lir->isCompareStrictS());
 
     OutOfLineCode *ool = NULL;
-    if (op == JSOP_EQ || op == JSOP_STRICTEQ) {
-        ool = oolCallVM(stringsEqualInfo, lir, (ArgList(), left, right),  StoreRegisterTo(output));
-    } else {
-        JS_ASSERT(op == JSOP_NE || op == JSOP_STRICTNE);
-        ool = oolCallVM(stringsNotEqualInfo, lir, (ArgList(), left, right), StoreRegisterTo(output));
+
+    switch (gen->info().executionMode()) {
+      case SequentialExecution:
+        if (op == JSOP_EQ || op == JSOP_STRICTEQ) {
+            ool = oolCallVM(stringsEqualInfo, lir, (ArgList(), left, right),  StoreRegisterTo(output));
+        } else {
+            JS_ASSERT(op == JSOP_NE || op == JSOP_STRICTNE);
+            ool = oolCallVM(stringsNotEqualInfo, lir, (ArgList(), left, right), StoreRegisterTo(output));
+        }
+        break;
+
+      case ParallelExecution:
+        if (op == JSOP_EQ || op == JSOP_STRICTEQ) {
+            ool = oolCallVM(parStringsEqualInfo, lir, (ArgList(), left, right),  StoreRegisterTo(output));
+        } else {
+            JS_ASSERT(op == JSOP_NE || op == JSOP_STRICTNE);
+            ool = oolCallVM(parStringsNotEqualInfo, lir, (ArgList(), left, right), StoreRegisterTo(output));
+        }
+        break;
     }
 
     if (!ool)
@@ -3282,41 +3274,87 @@ static const VMFunction LeInfo = FunctionInfo<CompareFn>(ion::LessThanOrEqual);
 static const VMFunction GtInfo = FunctionInfo<CompareFn>(ion::GreaterThan);
 static const VMFunction GeInfo = FunctionInfo<CompareFn>(ion::GreaterThanOrEqual);
 
+typedef ParallelResult (*ParCompareFn)(ForkJoinSlice *, MutableHandleValue, MutableHandleValue, JSBool *);
+static const VMFunction ParLooselyEqInfo = FunctionInfo<ParCompareFn>(ion::ParLooselyEqual);
+static const VMFunction ParStrictlyEqInfo = FunctionInfo<ParCompareFn>(ion::ParStrictlyEqual);
+static const VMFunction ParLooselyNeInfo = FunctionInfo<ParCompareFn>(ion::ParLooselyUnequal);
+static const VMFunction ParStrictlyNeInfo = FunctionInfo<ParCompareFn>(ion::ParStrictlyUnequal);
+static const VMFunction ParLtInfo = FunctionInfo<ParCompareFn>(ion::ParLessThan);
+static const VMFunction ParLeInfo = FunctionInfo<ParCompareFn>(ion::ParLessThanOrEqual);
+static const VMFunction ParGtInfo = FunctionInfo<ParCompareFn>(ion::ParGreaterThan);
+static const VMFunction ParGeInfo = FunctionInfo<ParCompareFn>(ion::ParGreaterThanOrEqual);
+
 bool
 CodeGenerator::visitCompareVM(LCompareVM *lir)
 {
     pushArg(ToValue(lir, LBinaryV::RhsInput));
     pushArg(ToValue(lir, LBinaryV::LhsInput));
 
-    switch (lir->mir()->jsop()) {
-      case JSOP_EQ:
-        return callVM(EqInfo, lir);
+    switch (gen->info().executionMode()) {
+      case SequentialExecution:
+        switch (lir->mir()->jsop()) {
+          case JSOP_EQ:
+            return callVM(EqInfo, lir);
 
-      case JSOP_NE:
-        return callVM(NeInfo, lir);
+          case JSOP_NE:
+            return callVM(NeInfo, lir);
 
-      case JSOP_STRICTEQ:
-        return callVM(StrictEqInfo, lir);
+          case JSOP_STRICTEQ:
+            return callVM(StrictEqInfo, lir);
 
-      case JSOP_STRICTNE:
-        return callVM(StrictNeInfo, lir);
+          case JSOP_STRICTNE:
+            return callVM(StrictNeInfo, lir);
 
-      case JSOP_LT:
-        return callVM(LtInfo, lir);
+          case JSOP_LT:
+            return callVM(LtInfo, lir);
 
-      case JSOP_LE:
-        return callVM(LeInfo, lir);
+          case JSOP_LE:
+            return callVM(LeInfo, lir);
 
-      case JSOP_GT:
-        return callVM(GtInfo, lir);
+          case JSOP_GT:
+            return callVM(GtInfo, lir);
 
-      case JSOP_GE:
-        return callVM(GeInfo, lir);
+          case JSOP_GE:
+            return callVM(GeInfo, lir);
 
-      default:
-        JS_NOT_REACHED("Unexpected compare op");
-        return false;
+          default:
+            JS_NOT_REACHED("Unexpected compare op");
+            return false;
+        }
+
+      case ParallelExecution:
+        switch (lir->mir()->jsop()) {
+          case JSOP_EQ:
+            return callVM(ParLooselyEqInfo, lir);
+
+          case JSOP_STRICTEQ:
+            return callVM(ParStrictlyEqInfo, lir);
+
+          case JSOP_NE:
+            return callVM(ParLooselyNeInfo, lir);
+
+          case JSOP_STRICTNE:
+            return callVM(ParStrictlyNeInfo, lir);
+
+          case JSOP_LT:
+            return callVM(ParLtInfo, lir);
+
+          case JSOP_LE:
+            return callVM(ParLeInfo, lir);
+
+          case JSOP_GT:
+            return callVM(ParGtInfo, lir);
+
+          case JSOP_GE:
+            return callVM(ParGeInfo, lir);
+
+          default:
+            JS_NOT_REACHED("Unexpected compare op");
+            return false;
+        }
     }
+
+    JS_NOT_REACHED("Unexpected exec mode");
 }
 
 bool
