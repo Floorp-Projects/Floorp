@@ -8,11 +8,10 @@
 this.EXPORTED_SYMBOLS = [
   "_",
   "assert",
-  "attr", // XXXkhuey unused?
-  "getCurrentBrowserTabContentWindow", // XXXkhuey unused?
   "log",
   "text",
-  "wire"
+  "wire",
+  "showFilePicker"
 ];
 
 const Cc = Components.classes;
@@ -108,7 +107,7 @@ function forEach(aObject, aCallback)
 
 /**
  * Log a message to the console.
- * 
+ *
  * @param ...rest
  *        One or multiple arguments to log.
  *        If multiple arguments are given, they will be joined by " " in the log.
@@ -162,3 +161,63 @@ this.wire = function wire(aRoot, aSelectorOrElement, aDescriptor)
   }
 }
 
+/**
+ * Show file picker and return the file user selected.
+ *
+ * @param mixed file
+ *        Optional nsIFile or string representing the filename to auto-select.
+ * @param boolean toSave
+ *        If true, the user is selecting a filename to save.
+ * @param nsIWindow parentWindow
+ *        Optional parent window. If null the parent window of the file picker
+ *        will be the window of the attached input element.
+ * @param callback
+ *        The callback method, which will be called passing in the selected
+ *        file or null if the user did not pick one.
+ */
+this.showFilePicker = function showFilePicker(path, toSave, parentWindow, callback)
+{
+  if (typeof(path) == "string") {
+    try {
+      if (Services.io.extractScheme(path) == "file") {
+        let uri = Services.io.newURI(path, null, null);
+        let file = uri.QueryInterface(Ci.nsIFileURL).file;
+        callback(file);
+        return;
+      }
+    } catch (ex) {
+      callback(null);
+      return;
+    }
+    try {
+      let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+      file.initWithPath(path);
+      callback(file);
+      return;
+    } catch (ex) {
+      callback(null);
+      return;
+    }
+  }
+  if (path) { // "path" is an nsIFile
+    callback(path);
+    return;
+  }
+
+  let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+  let mode = toSave ? fp.modeSave : fp.modeOpen;
+  let key = toSave ? "saveStyleSheet" : "importStyleSheet";
+  let fpCallback = function(result) {
+    if (result == Ci.nsIFilePicker.returnCancel) {
+      callback(null);
+    } else {
+      callback(fp.file);
+    }
+  };
+
+  fp.init(parentWindow, _(key + ".title"), mode);
+  fp.appendFilters(_(key + ".filter"), "*.css");
+  fp.appendFilters(fp.filterAll);
+  fp.open(fpCallback);
+  return;
+}
