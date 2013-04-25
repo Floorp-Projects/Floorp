@@ -84,10 +84,22 @@ function testInlineStyleSheet()
   let target = TargetFactory.forTab(gBrowser.selectedTab);
   gDevTools.showToolbox(target, "styleeditor").then(function(toolbox) {
     let panel = toolbox.getCurrentPanel();
+    let win = panel._panelWin;
 
-    panel.UI.on("editor-added", (event, editor) => {
-      validateStyleEditorSheet(editor);
-    })
+    win.styleEditorChrome.addChromeListener({
+      onEditorAdded: function checkEditor(aChrome, aEditor) {
+        if (!aEditor.sourceEditor) {
+          aEditor.addActionListener({
+            onAttach: function (aEditor) {
+              aEditor.removeActionListener(this);
+              validateStyleEditorSheet(aEditor);
+            }
+          });
+        } else {
+          validateStyleEditorSheet(aEditor);
+        }
+      }
+    });
   });
 
   let link = getLinkByIndex(1);
@@ -99,7 +111,7 @@ function validateStyleEditorSheet(aEditor)
   info("validating style editor stylesheet");
 
   let sheet = doc.styleSheets[0];
-  is(aEditor.styleSheet.href, sheet.href, "loaded stylesheet matches document stylesheet");
+  is(aEditor.styleSheet, sheet, "loaded stylesheet matches document stylesheet");
 
   finishUp();
 }

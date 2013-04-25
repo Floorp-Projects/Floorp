@@ -21,28 +21,39 @@ function test()
 
   copy(TESTCASE_URI_HTML, "simple.html", function(htmlFile) {
     copy(TESTCASE_URI_CSS, "simple.css", function(cssFile) {
-      addTabAndOpenStyleEditor(function(panel) {
-        let UI = panel.UI;
-        UI.on("editor-added", function(event, editor) {
-          if (editor.styleSheet.styleSheetIndex != 0) {
-            return;  // we want to test against the first stylesheet
+
+      addTabAndLaunchStyleEditorChromeWhenLoaded(function (aChrome) {
+        aChrome.addChromeListener({
+          onEditorAdded: function (aChrome, aEditor) {
+            if (aEditor.styleSheetIndex != 0) {
+              return; // we want to test against the first stylesheet
+            }
+
+            if (aEditor.sourceEditor) {
+              run(aEditor); // already attached to input element
+            } else {
+              aEditor.addActionListener({
+                onAttach: run
+              });
+            }
           }
-          let editor = UI.editors[0];
-          editor.getSourceEditor().then(runTests.bind(this, editor));
-        })
+        });
       });
 
       let uri = Services.io.newFileURI(htmlFile);
       let filePath = uri.resolve("");
+
       content.location = filePath;
     });
   });
 }
 
-function runTests(editor)
+function run(aEditor)
 {
-  editor.saveToFile(null, function (file) {
-    ok(file, "file should get saved directly when using a file:// URI");
+  aEditor.saveToFile(null, function (aFile) {
+    ok(aFile, "file should get saved directly when using a file:// URI");
+
+    gChromeWindow.close();
     finish();
   });
 }

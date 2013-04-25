@@ -8,5 +8,4 @@ PARALLEL_DIRS += [
     'debugger',
     'sourcemap',
     'webconsole',
-    'styleeditor'
 ]
