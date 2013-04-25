@@ -2913,15 +2913,15 @@ for (uint32_t i = 0; i < length; ++i) {
         constructInternal = "ref"
         if type.nullable():
             if isOptional:
-                declType = "const Optional<" + name + "*>"
+                declType = "Optional<" + name + "*>"
             else:
                 declType = name + "*"
         else:
             if isOptional:
-                declType = "const Optional<" + name + ">"
+                declType = "Optional<" + name + ">"
                 # We don't need a holder in this case
                 holderType = None
-                constructLoc = "(const_cast<Optional<" + name + ">& >(${declName}))"
+                constructLoc = "${declName}"
                 constructMethod = "Construct"
                 constructInternal = "Value"
             else:
@@ -2936,9 +2936,8 @@ for (uint32_t i = 0; i < length; ++i) {
         nullableTarget = ""
         if type.nullable():
             if isOptional:
-                mutableDecl = "(const_cast<Optional<" + name + "*>& >(${declName}))"
-                template += "%s.Construct();\n" % mutableDecl
-                nullableTarget = "%s.Value()" % mutableDecl
+                template += "${declName}.Construct();\n"
+                nullableTarget = "${declName}.Value()"
             else:
                 nullableTarget = "${declName}"
             template += "%s = ${holderName}.addr();" % nullableTarget
@@ -3331,11 +3330,8 @@ def instantiateJSToNativeConversionTemplate(templateTuple, replacements,
     originalHolderName = replacements["holderName"]
     if holderType is not None:
         if dealWithOptional:
-            replacements["holderName"] = (
-                "const_cast< %s & >(%s.Value())" %
-                (holderType.define(), originalHolderName))
-            mutableHolderType = CGTemplatedType("Optional", holderType)
-            holderType = CGWrapper(mutableHolderType, pre="const ")
+            replacements["holderName"] = "%s.Value()" % originalHolderName
+            holderType = CGTemplatedType("Optional", holderType)
         result.append(
             CGList([holderType, CGGeneric(" "),
                     CGGeneric(originalHolderName),
@@ -3344,11 +3340,8 @@ def instantiateJSToNativeConversionTemplate(templateTuple, replacements,
     originalDeclName = replacements["declName"]
     if declType is not None:
         if dealWithOptional:
-            replacements["declName"] = (
-                "const_cast< %s & >(%s.Value())" %
-                (declType.define(), originalDeclName))
-            mutableDeclType = CGTemplatedType("Optional", declType)
-            declType = CGWrapper(mutableDeclType, pre="const ")
+            replacements["declName"] = "%s.Value()" % originalDeclName
+            declType = CGTemplatedType("Optional", declType)
         result.append(
             CGList([declType, CGGeneric(" "),
                     CGGeneric(originalDeclName),
@@ -3361,12 +3354,10 @@ def instantiateJSToNativeConversionTemplate(templateTuple, replacements,
     if argcAndIndex is not None:
         if dealWithOptional:
             declConstruct = CGIndenter(
-                CGGeneric("const_cast< %s &>(%s).Construct();" %
-                          (mutableDeclType.define(), originalDeclName)))
+                CGGeneric("%s.Construct();" % originalDeclName))
             if holderType is not None:
                 holderConstruct = CGIndenter(
-                    CGGeneric("const_cast< %s &>(%s).Construct();" %
-                              (mutableHolderType.define(), originalHolderName)))
+                    CGGeneric("%s.Construct();" % originalHolderName))
             else:
                 holderConstruct = None
         else:
@@ -3984,6 +3975,10 @@ class CGCallGenerator(CGThing):
                 if a.type.nullable():
                     return True
                 if a.type.isString():
+                    return True
+                if a.optional and not a.defaultValue:
+                    # If a.defaultValue, then it's not going to use an Optional,
+                    # so doesn't need to be const just due to being optional.
                     return True
                 return False
             if needsConst(a):
