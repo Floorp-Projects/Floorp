@@ -241,6 +241,59 @@ class TestRepoManifest(HelperMixin, unittest.TestCase):
         self.assertEqual("git:example.com/bar/something_else:src3.c:00000000",
                          symbolstore.GetVCSFilename(file3, d.srcdirs)[0])
 
+if platform.system() in ("Windows", "Microsoft"):
+    class TestSourceServer(HelperMixin, unittest.TestCase):
+        @patch("subprocess.call")
+        @patch("subprocess.Popen")
+        def test_HGSERVER(self, mock_Popen, mock_call):
+            """
+            Test that HGSERVER gets set correctly in the source server index.
+            """
+            symbolpath = os.path.join(self.test_dir, "symbols")
+            os.makedirs(symbolpath)
+            srcdir = os.path.join(self.test_dir, "srcdir")
+            os.makedirs(os.path.join(srcdir, ".hg"))
+            sourcefile = os.path.join(srcdir, "foo.c")
+            test_files = add_extension(["foo"])
+            self.add_test_files(test_files)
+            # srcsrv needs PDBSTR_PATH set
+            os.environ["PDBSTR_PATH"] = "pdbstr"
+            # mock calls to `dump_syms`, `hg parent` and
+            # `hg showconfig paths.default`
+            mock_Popen.return_value.stdout = iter([
+                    "MODULE os x86 %s %s" % ("X" * 33, test_files[0]),
+                    "FILE 0 %s" % sourcefile,
+                    "PUBLIC xyz 123"
+                    ])
+            mock_communicate = mock_Popen.return_value.communicate
+            mock_communicate.side_effect = [("abcd1234", ""),
+                                            ("http://example.com/repo", ""),
+                                            ]
+            # And mock the call to pdbstr to capture the srcsrv stream data.
+            global srcsrv_stream
+            srcsrv_stream = None
+            def mock_pdbstr(args, cwd="", **kwargs):
+                for arg in args:
+                    if arg.startswith("-i:"):
+                        global srcsrv_stream
+                        srcsrv_stream = open(os.path.join(cwd, arg[3:]), 'r').read()
+                return 0
+            mock_call.side_effect = mock_pdbstr
+            d = symbolstore.GetPlatformSpecificDumper(dump_syms="dump_syms",
+                                                      symbol_path=symbolpath,
+                                                      srcdirs=[srcdir],
+                                                      vcsinfo=True,
+                                                      srcsrv=True,
+                                                      copy_debug=True)
+            # stub out CopyDebug
+            d.CopyDebug = lambda *args: True
+            d.Process(self.test_dir)
+            d.Finish(stop_pool=False)
+            self.assertNotEqual(srcsrv_stream, None)
+            hgserver = [x.rstrip() for x in srcsrv_stream.splitlines() if x.startswith("HGSERVER=")]
+            self.assertEqual(len(hgserver), 1)
+            self.assertEqual(hgserver[0].split("=")[1], "http://example.com/repo")
+
 if __name__ == '__main__':
     # use the multiprocessing.dummy module to use threading wrappers so
     # that our mocking/module-patching works
