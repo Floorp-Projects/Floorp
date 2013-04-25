@@ -8441,7 +8441,7 @@ class CGJSImplClass(CGBindingImplClass):
 
         constructor = ClassConstructor(
             [Argument("JSObject*", "aJSImplObject"),
-             Argument("nsISupports*", "aParent")],
+             Argument("nsPIDOMWindow*", "aParent")],
             visibility="public",
             baseConstructors=baseConstructors,
             body=constructorBody)
