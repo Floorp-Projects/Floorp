@@ -601,7 +601,7 @@ var steps = [
       next();
     };
     req.onerror = onFailure;
-  }
+  },
   function () {
     ok(true, "Retrieving by match with field other than tel");
     var options = {filterBy: ["givenName"],
