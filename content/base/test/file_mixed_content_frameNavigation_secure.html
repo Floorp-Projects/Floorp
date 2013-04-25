@@ -60,16 +60,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=840388
 
   setTimeout(navigationStatus, TIMEOUT_INTERVAL, iframe_test1);
 
-  // Test 2: Navigate secure grandchild iframe to insecure grandchild iframe on a page that has at least one secure parent (in this example, both the parent and grandparent are https)
-
-  var iframe_test2 = document.createElement("iframe");
-  iframe_test2.src = "https://example.com/tests/content/base/test/file_mixed_content_frameNavigation_secure_grandchild.html";
-  iframe_test2.onerror = function() {
-    parent.postMessage({"test": "securePage_navigate_grandchild", "msg": "got an onerror event when loading or navigating testing iframe"}, "http://mochi.test:8888");
-  };
-  testContent.appendChild(iframe_test2);
-
-  // Test 3: Open an http page in a new tab from a link click with target=_blank.
+  // Test 2: Open an http page in a new tab from a link click with target=_blank.
   var iframe_test3 = document.createElement("iframe");
   iframe_test3.src = "https://example.com/tests/content/base/test/file_mixed_content_frameNavigation_blankTarget.html";
   iframe_test3.onerror = function() {
