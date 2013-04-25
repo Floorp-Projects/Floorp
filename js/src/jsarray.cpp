@@ -234,13 +234,13 @@ GetElement(JSContext *cx, HandleObject obj, IndexType index, JSBool *hole, Mutab
     if (obj->isNative() && index < obj->getDenseInitializedLength()) {
         vp.set(obj->getDenseElement(uint32_t(index)));
         if (!vp.isMagic(JS_ELEMENTS_HOLE)) {
-            *hole = JS_FALSE;
-            return JS_TRUE;
+            *hole = false;
+            return true;
         }
     }
     if (obj->isArguments()) {
         if (obj->asArguments().maybeGetElement(uint32_t(index), vp)) {
-            *hole = JS_FALSE;
+            *hole = false;
             return true;
         }
     }
@@ -2107,7 +2107,7 @@ array_unshift(JSContext *cx, unsigned argc, Value *vp)
 
     uint32_t length;
     if (!GetLengthProperty(cx, obj, &length))
-        return JS_FALSE;
+        return false;
 
     double newlen = length;
     if (args.length() > 0) {
@@ -2158,16 +2158,16 @@ array_unshift(JSContext *cx, unsigned argc, Value *vp)
 
         /* Copy from args to the bottom of the array. */
         if (!InitArrayElements(cx, obj, 0, args.length(), args.array(), UpdateTypes))
-            return JS_FALSE;
+            return false;
 
         newlen += args.length();
     }
     if (!SetLengthProperty(cx, obj, newlen))
-        return JS_FALSE;
+        return false;
 
     /* Follow Perl by returning the new array length. */
     args.rval().setNumber(newlen);
-    return JS_TRUE;
+    return true;
 }
 
 static inline void
@@ -2505,18 +2505,18 @@ js::array_concat(JSContext *cx, unsigned argc, Value *vp)
         uint32_t initlen = aobj->getDenseInitializedLength();
         nobj = NewDenseCopiedArray(cx, initlen, aobj, 0);
         if (!nobj)
-            return JS_FALSE;
+            return false;
         TryReuseArrayType(aobj, nobj);
         JSObject::setArrayLength(cx, nobj, length);
         args.rval().setObject(*nobj);
         if (argc == 0)
-            return JS_TRUE;
+            return true;
         argc--;
         p++;
     } else {
         nobj = NewDenseEmptyArray(cx);
         if (!nobj)
-            return JS_FALSE;
+            return false;
         args.rval().setObject(*nobj);
         length = 0;
     }
@@ -2571,7 +2571,7 @@ array_slice(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     if (!GetLengthProperty(cx, obj, &length))
-        return JS_FALSE;
+        return false;
     begin = 0;
     end = length;
 
@@ -2612,29 +2612,29 @@ array_slice(JSContext *cx, unsigned argc, Value *vp)
     {
         nobj = NewDenseCopiedArray(cx, end - begin, obj, begin);
         if (!nobj)
-            return JS_FALSE;
+            return false;
         TryReuseArrayType(obj, nobj);
         args.rval().setObject(*nobj);
-        return JS_TRUE;
+        return true;
     }
 
     nobj = NewDenseAllocatedArray(cx, end - begin);
     if (!nobj)
-        return JS_FALSE;
+        return false;
     TryReuseArrayType(obj, nobj);
 
     RootedValue value(cx);
     for (slot = begin; slot < end; slot++) {
         if (!JS_CHECK_OPERATION_LIMIT(cx) ||
             !GetElement(cx, obj, slot, &hole, &value)) {
-            return JS_FALSE;
+            return false;
         }
         if (!hole && !SetArrayElement(cx, nobj, slot - begin, value))
-            return JS_FALSE;
+            return false;
     }
 
     args.rval().setObject(*nobj);
-    return JS_TRUE;
+    return true;
 }
 
 /* ES5 15.4.4.20. */
@@ -2788,7 +2788,7 @@ js_Array(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     RootedTypeObject type(cx, GetTypeCallerInitObject(cx, JSProto_Array));
     if (!type)
-        return JS_FALSE;
+        return false;
 
     if (args.length() != 1 || !args[0].isNumber()) {
         if (!InitArrayTypes(cx, type, args.array(), args.length()))
@@ -3060,7 +3060,7 @@ js_ArrayInfo(JSContext *cx, unsigned argc, Value *vp)
 
         char *bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, arg, NullPtr());
         if (!bytes)
-            return JS_FALSE;
+            return false;
         if (arg.isPrimitive() ||
             !(array = arg.toObjectOrNull())->isArray()) {
             fprintf(stderr, "%s: not array\n", bytes);
