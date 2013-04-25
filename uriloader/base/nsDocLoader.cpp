@@ -935,6 +935,43 @@ nsDocLoader::GetDOMWindow(nsIDOMWindow **aResult)
 }
 
 NS_IMETHODIMP
+nsDocLoader::GetDOMWindowID(uint64_t *aResult)
+{
+  *aResult = 0;
+
+  nsCOMPtr<nsIDOMWindow> window;
+  nsresult rv = GetDOMWindow(getter_AddRefs(window));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsPIDOMWindow> piwindow = do_QueryInterface(window);
+  NS_ENSURE_STATE(piwindow);
+
+  MOZ_ASSERT(piwindow->IsOuterWindow());
+  *aResult = piwindow->WindowID();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocLoader::GetIsTopLevel(bool *aResult)
+{
+  *aResult = false;
+
+  nsCOMPtr<nsIDOMWindow> window;
+  nsresult rv = GetDOMWindow(getter_AddRefs(window));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsPIDOMWindow> piwindow = do_QueryInterface(window);
+  NS_ENSURE_STATE(piwindow);
+
+  nsCOMPtr<nsIDOMWindow> topWindow;
+  rv = piwindow->GetTop(getter_AddRefs(topWindow));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aResult = piwindow == topWindow;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDocLoader::GetIsLoadingDocument(bool *aIsLoadingDocument)
 {
   *aIsLoadingDocument = mIsLoadingDocument;
