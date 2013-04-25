@@ -908,11 +908,11 @@ IonBuilder::maybeAddOsrTypeBarriers()
     for (uint32_t i = info().startArgSlot(); i < osrBlock->stackDepth(); i++) {
         MInstruction *def = osrBlock->getSlot(i)->toOsrValue();
 
-        MPhi *headerPhi = header->getSlot(i)->toPhi();
+        MDefinition *headerValue = header->getSlot(i);
         MPhi *preheaderPhi = preheader->getSlot(i)->toPhi();
 
-        MIRType type = headerPhi->type();
-        types::StackTypeSet *typeSet = headerPhi->resultTypeSet();
+        MIRType type = headerValue->type();
+        types::StackTypeSet *typeSet = headerValue->resultTypeSet();
 
         if (!addOsrValueTypeBarrier(i, &def, type, typeSet))
             return false;
