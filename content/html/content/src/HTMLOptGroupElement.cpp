@@ -156,7 +156,7 @@ HTMLOptGroupElement::IntrinsicState() const
 }
 
 JSObject*
-HTMLOptGroupElement::WrapNode(JSContext* aCx, JSObject* aScope)
+HTMLOptGroupElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return HTMLOptGroupElementBinding::Wrap(aCx, aScope, this);
 }

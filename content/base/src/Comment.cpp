@@ -61,7 +61,7 @@ Comment::List(FILE* out, int32_t aIndent) const
 #endif
 
 JSObject*
-Comment::WrapNode(JSContext *aCx, JSObject *aScope)
+Comment::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
   return CommentBinding::Wrap(aCx, aScope, this);
 }

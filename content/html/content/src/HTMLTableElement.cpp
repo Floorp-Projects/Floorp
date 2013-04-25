@@ -309,7 +309,7 @@ HTMLTableElement::~HTMLTableElement()
 }
 
 JSObject*
-HTMLTableElement::WrapNode(JSContext *aCx, JSObject *aScope)
+HTMLTableElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
   return HTMLTableElementBinding::Wrap(aCx, aScope, this);
 }
