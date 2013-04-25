@@ -709,46 +709,20 @@ PerThreadData::PerThreadData(JSRuntime *runtime)
     ionTop(NULL),
     ionJSContext(NULL),
     ionStackLimit(0),
-#ifdef JS_THREADSAFE
-    ionStackLimitLock_(NULL),
-#endif
     ionActivation(NULL),
     asmJSActivationStack_(NULL),
-#ifdef JS_THREADSAFE
-    asmJSActivationStackLock_(NULL),
-#endif
     suppressGC(0)
 {}
-
-bool
-PerThreadData::init()
-{
-#ifdef JS_THREADSAFE
-    ionStackLimitLock_ = PR_NewLock();
-    if (!ionStackLimitLock_)
-        return false;
-
-    asmJSActivationStackLock_ = PR_NewLock();
-    if (!asmJSActivationStackLock_)
-        return false;
-#endif
-    return true;
-}
-
-PerThreadData::~PerThreadData()
-{
-#ifdef JS_THREADSAFE
-    if (ionStackLimitLock_)
-        PR_DestroyLock(ionStackLimitLock_);
-
-    if (asmJSActivationStackLock_)
-        PR_DestroyLock(asmJSActivationStackLock_);
-#endif
-}
 
 JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
   : mainThread(this),
     interrupt(0),
+#ifdef JS_THREADSAFE
+    operationCallbackLock(NULL),
+#ifdef DEBUG
+    operationCallbackOwner(NULL),
+#endif
+#endif
     atomsCompartment(NULL),
     systemZone(NULL),
     numCompartments(0),
@@ -941,10 +915,11 @@ JSRuntime::init(uint32_t maxbytes)
 {
 #ifdef JS_THREADSAFE
     ownerThread_ = PR_GetCurrentThread();
-#endif
 
-    if (!mainThread.init())
+    operationCallbackLock = PR_NewLock();
+    if (!operationCallbackLock)
         return false;
+#endif
 
     js::TlsPerThreadData.set(&mainThread);
 
@@ -1019,6 +994,10 @@ JSRuntime::~JSRuntime()
 {
 #ifdef JS_THREADSAFE
     clearOwnerThread();
+
+    JS_ASSERT(!operationCallbackOwner);
+    if (operationCallbackLock)
+        PR_DestroyLock(operationCallbackLock);
 #endif
 
     /*
@@ -3122,7 +3101,7 @@ JS_SetNativeStackQuota(JSRuntime *rt, size_t stackSize)
     // ionStackLimit, then update it so that it reflects the new nativeStacklimit.
 #ifdef JS_ION
     {
-        PerThreadData::IonStackLimitLock lock(rt->mainThread);
+        JSRuntime::AutoLockForOperationCallback lock(rt);
         if (rt->mainThread.ionStackLimit != uintptr_t(-1))
             rt->mainThread.ionStackLimit = rt->mainThread.nativeStackLimit;
     }
