@@ -69,7 +69,6 @@ public class AwesomeBar extends GeckoActivity
     private CustomEditText mText;
     private ImageButton mGoButton;
     private ContextMenuSubject mContextMenuSubject;
-    private boolean mIsUsingGestureKeyboard;
     private boolean mDelayRestartInput;
     // The previous autocomplete result returned to us
     private String mAutoCompleteResult = "";
@@ -276,26 +275,6 @@ public class AwesomeBar extends GeckoActivity
     }
 
     @Override
-    public void onWindowFocusChanged(boolean hasFocus) {
-        super.onWindowFocusChanged(hasFocus);
-
-        // The Awesome Bar will receive focus when the Awesome Screen first opens or after the user
-        // closes the "Select Input Method" window. If the input method changes to or from Swype,
-        // then toggle the URL mode flag. Swype's URL mode disables the automatic word spacing that
-        // Swype users expect when entering search queries, but does not add any special VKB keys
-        // like ".com" or "/" that would be useful for entering URLs.
-
-        if (!hasFocus)
-            return;
-
-        boolean wasUsingGestureKeyboard = mIsUsingGestureKeyboard;
-        mIsUsingGestureKeyboard = InputMethods.isGestureKeyboard(this);
-        if (mIsUsingGestureKeyboard != wasUsingGestureKeyboard) {
-            updateKeyboardInputType();
-        }
-    }
-
-    @Override
     public void onConfigurationChanged(Configuration newConfiguration) {
         super.onConfigurationChanged(newConfiguration);
     }
@@ -355,12 +334,13 @@ public class AwesomeBar extends GeckoActivity
     }
 
     private void updateKeyboardInputType() {
-        // If the user enters a space, then we know they are entering search terms, not a URL. If
-        // we're using a gesture keyboard, we can then switch to text mode so the IME auto-inserts
-        // spaces between words.
+        // If the user enters a space, then we know they are entering search terms, not a URL.
+        // We can then switch to text mode so,
+        // 1) the IME auto-inserts spaces between words
+        // 2) the IME doesn't reset input keyboard to Latin keyboard.
         String text = mText.getText().toString();
         int currentInputType = mText.getInputType();
-        int newInputType = mIsUsingGestureKeyboard && StringUtils.isSearchQuery(text, false)
+        int newInputType = StringUtils.isSearchQuery(text, false)
                            ? (currentInputType & ~InputType.TYPE_TEXT_VARIATION_URI) // Text mode
                            : (currentInputType | InputType.TYPE_TEXT_VARIATION_URI); // URL mode
         if (newInputType != currentInputType) {

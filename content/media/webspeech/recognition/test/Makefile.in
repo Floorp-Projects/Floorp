@@ -23,6 +23,7 @@ MOCHITEST_FILES := \
   test_abort.html \
   test_call_start_from_end_handler.html \
   test_preference_enable.html \
+  test_nested_eventloop.html \
   hello.ogg \
   silence.ogg \
   $(NULL)

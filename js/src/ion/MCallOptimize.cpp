@@ -1380,8 +1380,8 @@ IonBuilder::inlineDump(CallInfo &callInfo)
     }
 
     callInfo.unwrapArgs();
-
-    MParDump *dump = new MParDump(callInfo.getArg(1));
+    JS_ASSERT(1 == callInfo.argc());
+    MParDump *dump = new MParDump(callInfo.getArg(0));
     current->add(dump);
 
     MConstant *udef = MConstant::New(UndefinedValue());

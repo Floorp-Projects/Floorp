@@ -61,6 +61,7 @@ MOCHITEST_BROWSER_MAIN = \
   browser_inlinesettings_info.js \
   browser_tabsettings.js \
   browser_pluginprefs.js \
+  browser_CTP_plugins.js \
   $(NULL)
 
 MOCHITEST_BROWSER_SECONDARY = \
@@ -106,6 +107,7 @@ MOCHITEST_BROWSER_RESOURCES = \
   unsigned_hotfix.xpi \
   more_options.xul \
   options.xul \
+  plugin_test.html \
   redirect.sjs \
   releaseNotes.xhtml \
   $(NULL)

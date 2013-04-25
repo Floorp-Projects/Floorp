@@ -46,37 +46,6 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(CallbackObject)
 
-  /**
-   * Create a CallbackObject.  aCallback is the callback object we're wrapping.
-   * aOwner is the object that will be receiving this CallbackObject as a method
-   * argument, if any.  We need this so we can store our callback object in the
-   * same compartment as our owner.  If *aInited is set to false, an exception
-   * has been thrown.
-   */
-  CallbackObject(JSContext* cx, JSObject* aOwner, JSObject* aCallback,
-                 bool* aInited)
-    : mCallback(nullptr)
-  {
-    // If aOwner is not null, enter the compartment of aOwner's
-    // underlying object.
-    if (aOwner) {
-      aOwner = js::UncheckedUnwrap(aOwner);
-      JSAutoCompartment ac(cx, aOwner);
-      if (!JS_WrapObject(cx, &aCallback)) {
-        *aInited = false;
-        return;
-      }
-    }
-
-    Init(aCallback);
-    *aInited = true;
-  }
-
-  /*
-   * Create a CallbackObject without any sort of interesting games with
-   * compartments, for cases when you want to just use the existing object
-   * as-is.  This constructor can never fail.
-   */
   explicit CallbackObject(JSObject* aCallback)
   {
     Init(aCallback);
@@ -377,12 +346,7 @@ public:
     SafeAutoJSContext cx;
     JSAutoCompartment ac(cx, obj);
 
-    bool inited;
-    nsRefPtr<WebIDLCallbackT> newCallback =
-      new WebIDLCallbackT(cx, nullptr, obj, &inited);
-    if (!inited) {
-      return nullptr;
-    }
+    nsRefPtr<WebIDLCallbackT> newCallback = new WebIDLCallbackT(obj);
     return newCallback.forget();
   }
 

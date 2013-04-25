@@ -17,6 +17,14 @@
 
 #include "gfxContext.h"
 #include "gfx3DMatrix.h"
+#include "GLDefs.h"
+
+namespace mozilla {
+namespace gl {
+class GLContext;
+class TextureImage;
+}
+}
 
 namespace mozilla {
 namespace layers {

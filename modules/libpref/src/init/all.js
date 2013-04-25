@@ -3288,6 +3288,8 @@ pref("font.name-list.monospace.ja", "MotoyaLMaru, MotoyaLCedar, Droid Sans Mono"
 pref("font.name.serif.ko", "Charis SIL Compact");
 pref("font.name.sans-serif.ko", "Open Sans");
 pref("font.name.monospace.ko", "Droid Sans Mono");
+pref("font.name-list.serif.ko", "HYSerif");
+pref("font.name-list.sans-serif.ko", "SmartGothic, DroidSansFallback, Droid Sans Fallback");
 
 pref("font.name.serif.th", "Charis SIL Compact");
 pref("font.name.sans-serif.th", "Open Sans");

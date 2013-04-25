@@ -1291,10 +1291,9 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
 
     // Knowing that calleereg is a non-native function, load the JSScript.
     masm.loadPtr(Address(calleereg, offsetof(JSFunction, u.i.script_)), objreg);
-    masm.loadPtr(Address(objreg, OffsetOfIonInJSScript(executionMode)), objreg);
 
-    // Guard that the IonScript has been compiled.
-    masm.branchPtr(Assembler::BelowOrEqual, objreg, ImmWord(ION_COMPILING_SCRIPT), &uncompiled);
+    // Load script jitcode.
+    masm.loadBaselineOrIonRaw(objreg, objreg, executionMode, &uncompiled);
 
     // Nestle the StackPointer up to the argument vector.
     masm.freeStack(unusedStack);
@@ -1313,9 +1312,6 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
     masm.cmp32(nargsreg, Imm32(call->numStackArgs()));
     masm.j(Assembler::Above, &thunk);
 
-    // No argument fixup needed. Load the start of the target IonCode.
-    masm.loadPtr(Address(objreg, IonScript::offsetOfMethod()), objreg);
-    masm.loadPtr(Address(objreg, IonCode::offsetOfCode()), objreg);
     masm.jump(&makeCall);
 
     // Argument fixed needed. Load the ArgumentsRectifier.
@@ -1429,14 +1425,9 @@ CodeGenerator::visitCallKnown(LCallKnown *call)
 
     // Knowing that calleereg is a non-native function, load the JSScript.
     masm.loadPtr(Address(calleereg, offsetof(JSFunction, u.i.script_)), objreg);
-    masm.loadPtr(Address(objreg, OffsetOfIonInJSScript(executionMode)), objreg);
 
-    // Guard that the IonScript has been compiled.
-    masm.branchPtr(Assembler::BelowOrEqual, objreg, ImmWord(ION_COMPILING_SCRIPT), &uncompiled);
-
-    // Load the start of the target IonCode.
-    masm.loadPtr(Address(objreg, IonScript::offsetOfMethod()), objreg);
-    masm.loadPtr(Address(objreg, IonCode::offsetOfCode()), objreg);
+    // Load script jitcode.
+    masm.loadBaselineOrIonRaw(objreg, objreg, executionMode, &uncompiled);
 
     // Nestle the StackPointer up to the argument vector.
     masm.freeStack(unusedStack);
@@ -1640,10 +1631,9 @@ CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric *apply)
 
     // Knowing that calleereg is a non-native function, load the JSScript.
     masm.loadPtr(Address(calleereg, offsetof(JSFunction, u.i.script_)), objreg);
-    masm.loadPtr(Address(objreg, OffsetOfIonInJSScript(executionMode)), objreg);
 
-    // Guard that the IonScript has been compiled.
-    masm.branchPtr(Assembler::BelowOrEqual, objreg, ImmWord(ION_COMPILING_SCRIPT), &invoke);
+    // Load script jitcode.
+    masm.loadBaselineOrIonRaw(objreg, objreg, executionMode, &invoke);
 
     // Call with an Ion frame or a rectifier frame.
     {
@@ -1668,15 +1658,9 @@ CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric *apply)
             masm.j(Assembler::Below, &underflow);
         }
 
-        // No argument fixup needed. Load the start of the target IonCode.
-        {
-            masm.loadPtr(Address(objreg, IonScript::offsetOfMethod()), objreg);
-            masm.loadPtr(Address(objreg, IonCode::offsetOfCode()), objreg);
-
-            // Skip the construction of the rectifier frame because we have no
-            // underflow.
-            masm.jump(&rejoin);
-        }
+        // Skip the construction of the rectifier frame because we have no
+        // underflow.
+        masm.jump(&rejoin);
 
         // Argument fixup needed. Get ready to call the argumentsRectifier.
         {
@@ -1813,21 +1797,19 @@ CodeGenerator::generateArgumentsChecks()
 
     CompileInfo &info = gen->info();
 
-    // Indexes need to be shifted by one, to skip the scope chain slot.
-    JS_ASSERT(info.scopeChainSlot() == 0);
-    static const uint32_t START_SLOT = 1;
-
     Label miss;
-    for (uint32_t i = START_SLOT; i < CountArgSlots(info.fun()); i++) {
+    for (uint32_t i = info.startArgSlot(); i < info.endArgSlot(); i++) {
         // All initial parameters are guaranteed to be MParameters.
         MParameter *param = rp->getOperand(i)->toParameter();
         const types::TypeSet *types = param->resultTypeSet();
         if (!types || types->unknown())
             continue;
 
-        // Use ReturnReg as a scratch register here, since not all platforms
-        // have an actual ScratchReg.
-        int32_t offset = ArgToStackOffset((i - START_SLOT) * sizeof(Value));
+        // Calculate the offset on the stack of the argument.
+        // (i - info.startArgSlot())    - Compute index of arg within arg vector.
+        // ... * sizeof(Value)          - Scale by value size.
+        // ArgToStackOffset(...)        - Compute displacement within arg vector.
+        int32_t offset = ArgToStackOffset((i - info.startArgSlot()) * sizeof(Value));
         Label matched;
         masm.guardTypeSet(Address(StackPointer, offset), types, temp, &matched, &miss);
         masm.jump(&miss);
@@ -2860,6 +2842,66 @@ CodeGenerator::visitCreateThisWithTemplate(LCreateThisWithTemplate *lir)
     masm.bind(ool->rejoin());
     masm.initGCThing(objReg, templateObject);
 
+    return true;
+}
+
+typedef JSObject *(*NewIonArgumentsObjectFn)(JSContext *cx, IonJSFrameLayout *frame, HandleObject);
+static const VMFunction NewIonArgumentsObjectInfo =
+    FunctionInfo<NewIonArgumentsObjectFn>((NewIonArgumentsObjectFn) ArgumentsObject::createForIon);
+
+bool
+CodeGenerator::visitCreateArgumentsObject(LCreateArgumentsObject *lir)
+{
+    // This should be getting constructed in the first block only, and not any OSR entry blocks.
+    JS_ASSERT(lir->mir()->block()->id() == 0);
+
+    const LAllocation *callObj = lir->getCallObject();
+    Register temp = ToRegister(lir->getTemp(0));
+
+    masm.movePtr(StackPointer, temp);
+    masm.addPtr(Imm32(frameSize()), temp);
+
+    pushArg(ToRegister(callObj));
+    pushArg(temp);
+    return callVM(NewIonArgumentsObjectInfo, lir);
+}
+
+bool
+CodeGenerator::visitGetArgumentsObjectArg(LGetArgumentsObjectArg *lir)
+{
+    Register temp = ToRegister(lir->getTemp(0));
+    Register argsObj = ToRegister(lir->getArgsObject());
+    ValueOperand out = ToOutValue(lir);
+
+    masm.loadPrivate(Address(argsObj, ArgumentsObject::getDataSlotOffset()), temp);
+    Address argAddr(temp, ArgumentsData::offsetOfArgs() + lir->mir()->argno() * sizeof(Value));
+    masm.loadValue(argAddr, out);
+#ifdef DEBUG
+    Label success;
+    masm.branchTestMagic(Assembler::NotEqual, out, &success);
+    masm.breakpoint();
+    masm.bind(&success);
+#endif
+    return true;
+}
+
+bool
+CodeGenerator::visitSetArgumentsObjectArg(LSetArgumentsObjectArg *lir)
+{
+    Register temp = ToRegister(lir->getTemp(0));
+    Register argsObj = ToRegister(lir->getArgsObject());
+    ValueOperand value = ToValue(lir, LSetArgumentsObjectArg::ValueIndex);
+
+    masm.loadPrivate(Address(argsObj, ArgumentsObject::getDataSlotOffset()), temp);
+    Address argAddr(temp, ArgumentsData::offsetOfArgs() + lir->mir()->argno() * sizeof(Value));
+    emitPreBarrier(argAddr, MIRType_Value);
+#ifdef DEBUG
+    Label success;
+    masm.branchTestMagic(Assembler::NotEqual, argAddr, &success);
+    masm.breakpoint();
+    masm.bind(&success);
+#endif
+    masm.storeValue(value, argAddr);
     return true;
 }
 

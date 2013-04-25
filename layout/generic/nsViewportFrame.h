@@ -24,6 +24,8 @@ class nsPresContext;
   */
 class ViewportFrame : public nsContainerFrame {
 public:
+  NS_DECL_QUERYFRAME_TARGET(ViewportFrame)
+  NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS
 
   typedef nsContainerFrame Super;
@@ -68,6 +70,14 @@ public:
    */
   virtual nsIAtom* GetType() const MOZ_OVERRIDE;
 
+  /**
+   * Adjust aReflowState to account for scrollbars and pres shell
+   * GetScrollPositionClampingScrollPortSizeSet and
+   * GetContentDocumentFixedPositionMargins adjustments.
+   * @return the rect to use as containing block rect
+   */
+  nsRect AdjustReflowStateAsContainingBlock(nsHTMLReflowState* aReflowState) const;
+
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
 #endif
@@ -76,6 +86,13 @@ private:
   virtual mozilla::layout::FrameChildListID GetAbsoluteListID() const { return kFixedList; }
 
 protected:
+  /**
+   * Calculate how much room is available for fixed frames. That means
+   * determining if the viewport is scrollable and whether the vertical and/or
+   * horizontal scrollbars are visible.  Adjust the computed width/height and
+   * available width for aReflowState accordingly.
+   * @return the current scroll position, or 0,0 if not scrollable
+   */
   nsPoint AdjustReflowStateForScrollbars(nsHTMLReflowState* aReflowState) const;
 };
 
