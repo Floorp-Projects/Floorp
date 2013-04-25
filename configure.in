@@ -6395,7 +6395,7 @@ MOZ_ARG_ENABLE_BOOL(gtest,
     MOZ_ENABLE_GTEST= )
 
 if test -n "$MOZ_ENABLE_GTEST"; then
-    if test "${OS_TARGET}" = "WINNT" -o "${OS_TARGET}" = "Darwin" -o "${OS_TARGET}" = "Linux"; then
+    if test "${OS_TARGET}" = "WINNT" -o "${OS_TARGET}" = "Darwin" -o "${OS_TARGET}" = "Linux" -o "${OS_TARGET}" = "Android"; then
         MOZ_ENABLE_GTEST=1
         GTEST_HAS_RTTI=0
         AC_DEFINE(MOZ_ENABLE_GTEST)
@@ -6404,6 +6404,14 @@ if test -n "$MOZ_ENABLE_GTEST"; then
         AC_SUBST(GTEST_HAS_RTTI)
     else
         AC_MSG_ERROR([Cannot build with --enable-gtest on this platform.])
+    fi
+    if test "${OS_TARGET}" = "Android"; then
+        AC_DEFINE(GTEST_OS_LINUX_ANDROID)
+        AC_DEFINE(GTEST_USE_OWN_TR1_TUPLE)
+        AC_DEFINE_UNQUOTED(GTEST_HAS_CLONE, 0)
+        AC_SUBST(GTEST_OS_LINUX_ANDROID)
+        AC_SUBST(GTEST_USE_OWN_TR1_TUPLE)
+        AC_SUBST(GTEST_HAS_CLONE)
     fi
 fi
 
