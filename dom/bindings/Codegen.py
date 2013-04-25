@@ -2023,7 +2023,8 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
     """
     def __init__(self, descriptor, properties):
         assert descriptor.interface.hasInterfacePrototypeObject()
-        args = [Argument('JSContext*', 'aCx'), Argument('JSObject*', 'aScopeArg'),
+        args = [Argument('JSContext*', 'aCx'),
+                Argument('JS::Handle<JSObject*>', 'aScope'),
                 Argument(descriptor.nativeType + '*', 'aObject'),
                 Argument('nsWrapperCache*', 'aCache')]
         CGAbstractMethod.__init__(self, descriptor, 'Wrap', 'JSObject*', args)
@@ -2041,8 +2042,8 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
             assertISupportsInheritance = ""
         return """%s
 %s
-  JS::Rooted<JSObject*> aScope(aCx, aScopeArg); // Temporary!
-  JSObject* parent = WrapNativeParent(aCx, aScope, aObject->GetParentObject());
+  JS::Rooted<JSObject*> parent(aCx,
+                               WrapNativeParent(aCx, aScope, aObject->GetParentObject()));
   if (!parent) {
     return NULL;
   }
@@ -2077,7 +2078,8 @@ class CGWrapMethod(CGAbstractMethod):
     def __init__(self, descriptor):
         # XXX can we wrap if we don't have an interface prototype object?
         assert descriptor.interface.hasInterfacePrototypeObject()
-        args = [Argument('JSContext*', 'aCx'), Argument('JSObject*', 'aScope'),
+        args = [Argument('JSContext*', 'aCx'),
+                Argument('JS::Handle<JSObject*>', 'aScope'),
                 Argument('T*', 'aObject')]
         CGAbstractMethod.__init__(self, descriptor, 'Wrap', 'JSObject*', args, inline=True, templateArgs=["class T"])
 
@@ -2094,7 +2096,8 @@ class CGWrapNonWrapperCacheMethod(CGAbstractMethod):
     def __init__(self, descriptor, properties):
         # XXX can we wrap if we don't have an interface prototype object?
         assert descriptor.interface.hasInterfacePrototypeObject()
-        args = [Argument('JSContext*', 'aCx'), Argument('JSObject*', 'aScope'),
+        args = [Argument('JSContext*', 'aCx'),
+                Argument('JS::Handle<JSObject*>', 'aScope'),
                 Argument(descriptor.nativeType + '*', 'aObject')]
         if descriptor.nativeOwnership == 'owned':
             args.append(Argument('bool*', 'aTookOwnership'))
