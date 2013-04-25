@@ -341,7 +341,7 @@ Element::GetBindingURL(nsIDocument *aDocument, css::URLValue **aResult)
 }
 
 JSObject*
-Element::WrapObject(JSContext *aCx, JSObject *aScope)
+Element::WrapObject(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
   JSObject* obj = nsINode::WrapObject(aCx, aScope);
   if (!obj) {

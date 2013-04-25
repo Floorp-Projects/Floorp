@@ -102,7 +102,7 @@ SpeechRecognition::SetState(FSMState state)
 }
 
 JSObject*
-SpeechRecognition::WrapObject(JSContext* aCx, JSObject* aScope)
+SpeechRecognition::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return SpeechRecognitionBinding::Wrap(aCx, aScope, this);
 }

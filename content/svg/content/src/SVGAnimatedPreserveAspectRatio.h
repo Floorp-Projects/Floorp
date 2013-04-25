@@ -128,7 +128,8 @@ class DOMSVGAnimatedPreserveAspectRatio MOZ_FINAL : public nsISupports,
 
   // WebIDL
   nsSVGElement* GetParentObject() const { return mSVGElement; }
-  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
   // These aren't weak refs because new objects are returned each time
   already_AddRefed<DOMSVGPreserveAspectRatio> BaseVal();

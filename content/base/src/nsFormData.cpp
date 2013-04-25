@@ -102,7 +102,7 @@ nsFormData::Append(const nsAString& aName, nsIVariant* aValue)
 }
 
 /* virtual */ JSObject*
-nsFormData::WrapObject(JSContext* aCx, JSObject* aScope)
+nsFormData::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return FormDataBinding::Wrap(aCx, aScope, this);
 }

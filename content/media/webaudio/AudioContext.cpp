@@ -55,7 +55,7 @@ AudioContext::~AudioContext()
 }
 
 JSObject*
-AudioContext::WrapObject(JSContext* aCx, JSObject* aScope)
+AudioContext::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return AudioContextBinding::Wrap(aCx, aScope, this);
 }

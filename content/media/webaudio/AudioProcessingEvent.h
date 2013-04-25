@@ -26,7 +26,8 @@ public:
   NS_FORWARD_TO_NSDOMEVENT
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(AudioProcessingEvent, nsDOMEvent)
 
-  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope);
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
   void InitEvent(AudioBuffer* aInputBuffer,
                  uint32_t aNumberOfInputChannels,

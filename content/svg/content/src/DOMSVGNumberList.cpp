@@ -69,7 +69,7 @@ NS_INTERFACE_MAP_END
 
 
 JSObject*
-DOMSVGNumberList::WrapObject(JSContext *cx, JSObject *scope)
+DOMSVGNumberList::WrapObject(JSContext *cx, JS::Handle<JSObject*> scope)
 {
   return mozilla::dom::SVGNumberListBinding::Wrap(cx, scope, this);
 }

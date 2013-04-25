@@ -2377,7 +2377,7 @@ nsINode::QuerySelectorAll(const nsAString& aSelector, ErrorResult& aResult)
 }
 
 JSObject*
-nsINode::WrapObject(JSContext *aCx, JSObject *aScope)
+nsINode::WrapObject(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
   MOZ_ASSERT(IsDOMBinding());
 

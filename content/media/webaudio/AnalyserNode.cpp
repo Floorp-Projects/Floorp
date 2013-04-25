@@ -88,7 +88,7 @@ AnalyserNode::AnalyserNode(AudioContext* aContext)
 }
 
 JSObject*
-AnalyserNode::WrapObject(JSContext* aCx, JSObject* aScope)
+AnalyserNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return AnalyserNodeBinding::Wrap(aCx, aScope, this);
 }

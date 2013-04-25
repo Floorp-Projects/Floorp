@@ -409,7 +409,7 @@ nsScreen::SlowMozUnlockOrientation()
 
 /* virtual */
 JSObject*
-nsScreen::WrapObject(JSContext* aCx, JSObject* aScope)
+nsScreen::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return ScreenBinding::Wrap(aCx, aScope, this);
 }

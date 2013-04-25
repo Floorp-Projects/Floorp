@@ -25,7 +25,8 @@ public:
   NS_FORWARD_TO_NSDOMEVENT
   NS_DECL_NSIDOMTRANSITIONEVENT
 
-  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope)
+  virtual JSObject* WrapObject(JSContext* aCx,
+			       JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
   {
     return mozilla::dom::TransitionEventBinding::Wrap(aCx, aScope, this);
   }
