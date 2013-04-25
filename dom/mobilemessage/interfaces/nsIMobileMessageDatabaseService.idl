@@ -16,14 +16,15 @@ interface nsIDOMMozSmsFilter;
 interface nsIMobileMessageCallback;
 interface nsIMobileMessageCursorCallback;
 
-[scriptable, uuid(ec1ca45f-e621-4c67-9c50-74c16842e780)]
+[scriptable, uuid(ea6f49ae-3a4c-47eb-a489-15578e634100)]
 interface nsIMobileMessageDatabaseService : nsISupports
 {
   [binaryname(GetMessageMoz)]
   void getMessage(in long messageId,
                   in nsIMobileMessageCallback request);
 
-  void deleteMessage(in long messageId,
+  void deleteMessage([array, size_is(count)] in long messageIds,
+                     in uint32_t count,
                      in nsIMobileMessageCallback request);
 
   nsICursorContinueCallback createMessageCursor(in nsIDOMMozSmsFilter filter,
