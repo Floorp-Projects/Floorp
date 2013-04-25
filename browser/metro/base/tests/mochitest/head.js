@@ -55,6 +55,24 @@ function checkContextUIMenuItemVisibility(aVisibleList)
   is(errors, 0, "context menu item list visibility");
 }
 
+function checkMonoclePositionRange(aMonocle, aMinX, aMaxX, aMinY, aMaxY)
+{
+  let monocle = null;
+  if (aMonocle == "start")
+    monocle = SelectionHelperUI._startMark;
+  else if (aMonocle == "end")
+    monocle = SelectionHelperUI._endMark;
+  else if (aMonocle == "caret")
+    monocle = SelectionHelperUI._caretMark;
+  else
+    ok(false, "bad monocle id");
+
+  ok(monocle.xPos > aMinX && monocle.xPos < aMaxX,
+    "X position is " + monocle.xPos + ", expected between " + aMinX + " and " + aMaxX);
+  ok(monocle.yPos > aMinY && monocle.yPos < aMaxY,
+    "Y position is " + monocle.yPos + ", expected between " + aMinY + " and " + aMaxY);
+}
+
 /*
  * showNotification - displays a test notification with the current
  * browser and waits for the noticiation to be fully displayed.
@@ -184,7 +202,7 @@ function addTab(aUrl) {
   return Task.spawn(function() {
     info("Opening "+aUrl+" in a new tab");
     let tab = Browser.addTab(aUrl, true);
-    yield waitForEvent(tab.browser, "pageshow");
+    yield tab.pageShowPromise;
 
     is(tab.browser.currentURI.spec, aUrl, aUrl + " is loaded");
     registerCleanupFunction(function() Browser.closeTab(tab));
@@ -213,7 +231,6 @@ function addTab(aUrl) {
  * @returns a Promise that resolves to the received event, or to an Error
  */
 function waitForEvent(aSubject, aEventName, aTimeoutMs) {
-  info("waitForEvent: on " + aSubject + " event: " + aEventName);
   let eventDeferred = Promise.defer();
   let timeoutMs = aTimeoutMs || kDefaultWait;
   let timerID = setTimeout(function wfe_canceller() {
@@ -548,8 +565,11 @@ TouchDragAndHold.prototype = {
   _timeoutStep: 2,
   _numSteps: 50,
   _debug: false,
+  _win: null,
 
   callback: function callback() {
+    if (this._win == null)
+      return;
     if (++this._step.steps >= this._numSteps) {
       EventUtils.synthesizeTouchAtPoint(this._endPoint.xPos, this._endPoint.yPos,
                                         { type: "touchmove" }, this._win);

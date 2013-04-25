@@ -2886,3 +2886,15 @@ JSScript::formalLivesInArgumentsObject(unsigned argSlot)
     return argsObjAliasesFormals() && !formalIsAliased(argSlot);
 }
 
+void
+JSScript::updateBaselineOrIonRaw()
+{
+#ifdef JS_ION
+    if (hasIonScript())
+        baselineOrIonRaw = ion->method()->raw();
+    else if (hasBaselineScript())
+        baselineOrIonRaw = baseline->method()->raw();
+    else
+        baselineOrIonRaw = NULL;
+#endif
+}

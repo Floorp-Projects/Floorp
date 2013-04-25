@@ -712,6 +712,13 @@ bool DefineOSFileConstants(JSContext *cx, JSObject *global)
     }
   }
 
+#if defined(DEBUG)
+  JS::Value valDebug = JSVAL_TRUE;
+  if (!JS_SetProperty(cx, objSys, "DEBUG", &valDebug)) {
+    return false;
+  }
+#endif
+
   // Build OS.Constants.Path
 
   JSObject *objPath;
@@ -785,9 +792,8 @@ OSFileConstantsService::Init(JSContext *aCx)
     return rv;
   }
 
-  JSObject *targetObj = nullptr;
-
   mozJSComponentLoader* loader = mozJSComponentLoader::Get();
+  JS::Rooted<JSObject*> targetObj(aCx);
   rv = loader->FindTargetObject(aCx, &targetObj);
   NS_ENSURE_SUCCESS(rv, rv);
 

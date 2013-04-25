@@ -85,6 +85,15 @@ nsDOMKeyboardEvent::GetModifierState(const nsAString& aKey,
 }
 
 NS_IMETHODIMP
+nsDOMKeyboardEvent::GetKey(nsAString& aKeyName)
+{
+  if (!mEventIsInternal) {
+    static_cast<nsKeyEvent*>(mEvent)->GetDOMKeyName(aKeyName);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMKeyboardEvent::GetCharCode(uint32_t* aCharCode)
 {
   NS_ENSURE_ARG_POINTER(aCharCode);

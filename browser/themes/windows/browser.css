@@ -607,7 +607,7 @@ toolbarbutton.bookmark-item[open="true"] {
   -moz-padding-end: 2px;
 }
 
-.bookmark-item:not(#bookmarks-menu-button) > .toolbarbutton-icon {
+.bookmark-item > .toolbarbutton-icon {
   width: 16px;
   height: 16px;
 }
@@ -724,7 +724,8 @@ menuitem.bookmark-item {
 .toolbarbutton-1[disabled=true] > .toolbarbutton-icon,
 .toolbarbutton-1[disabled=true] > .toolbarbutton-menu-dropmarker,
 .toolbarbutton-1[disabled=true] > .toolbarbutton-menubutton-dropmarker,
-.toolbarbutton-1[disabled=true] > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
+.toolbarbutton-1[disabled=true] > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
+.toolbarbutton-1 > .toolbarbutton-menubutton-button[disabled] > .toolbarbutton-icon {
   opacity: .4;
 }
 
@@ -826,7 +827,7 @@ toolbar[mode=full] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 }
 
 @navbarLargeIcons@ .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
-  padding: 8px 3px 7px;
+  padding: 8px 5px 7px;
 }
 
 @navbarLargeIcons@ .toolbarbutton-1:not(:hover):not(:active):not([open]) > .toolbarbutton-menubutton-dropmarker::before,
@@ -1075,15 +1076,8 @@ toolbar[mode=full] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   -moz-image-region: rect(0, 126px, 18px, 108px);
 }
 
-#bookmarks-button,
-#bookmarks-menu-button {
+#bookmarks-button {
   -moz-image-region: rect(0, 144px, 18px, 126px);
-}
-#bookmarks-menu-button.bookmark-item {
-  list-style-image: url("chrome://browser/skin/Toolbar.png");
-}
-#bookmarks-menu-button.bookmark-item:-moz-lwtheme-brighttext {
-  list-style-image: url("chrome://browser/skin/Toolbar-inverted.png");
 }
 
 #print-button {
@@ -1544,8 +1538,8 @@ html|*.urlbar-input:-moz-lwtheme::-moz-placeholder,
 
 .ac-result-type-bookmark,
 .autocomplete-treebody::-moz-tree-image(bookmark, treecolAutoCompleteImage) {
-  list-style-image: url("chrome://browser/skin/places/editBookmark.png");
-  -moz-image-region: rect(0px 16px 16px 0px);
+  list-style-image: url("chrome://browser/skin/places/bookmark.png");
+  -moz-image-region: rect(0px 48px 16px 32px);
   width: 16px;
   height: 16px;
 }
@@ -1756,28 +1750,31 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   margin-top: 1em;
 }
 
-/* star button */
+/* bookmarks menu-button */
 
-#star-button {
+#bookmarks-menu-button {
+  -moz-image-region: rect(0px 378px 18px 360px);
+}
+
+#bookmarks-menu-button[starred] {
+  -moz-image-region: rect(18px 378px 36px 360px);
+}
+
+#bookmarks-menu-button.bookmark-item {
   list-style-image: url("chrome://browser/skin/places/bookmark.png");
   -moz-image-region: rect(0px 16px 16px 0px);
 }
 
-#star-button:hover {
-  background-image: radial-gradient(circle closest-side, hsla(45,100%,73%,.3), hsla(45,100%,73%,0));
-  -moz-image-region: rect(0px 32px 16px 16px);
-}
-
-#star-button:hover:active {
-  background-image: radial-gradient(circle closest-side, hsla(45,100%,73%,.1), hsla(45,100%,73%,0));
+#bookmarks-menu-button.bookmark-item[starred] {
   -moz-image-region: rect(0px 48px 16px 32px);
 }
 
-#star-button[starred="true"] {
-  list-style-image: url("chrome://browser/skin/places/editBookmark.png");
+#bookmarks-menu-button.bookmark-item > .toolbarbutton-menubutton-button> .toolbarbutton-icon {
+  -moz-margin-start: 5px;
 }
 
 /* bookmarking panel */
+
 #editBookmarkPanelStarIcon {
   list-style-image: url("chrome://browser/skin/places/starred48.png");
   width: 48px;

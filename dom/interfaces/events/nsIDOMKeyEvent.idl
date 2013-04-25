@@ -5,7 +5,7 @@
 
 #include "nsIDOMUIEvent.idl"
 
-[scriptable, builtinclass, uuid(ffbe684c-ca90-4b58-aa8c-9727f997f86d)]
+[scriptable, builtinclass, uuid(91a3d7f2-223b-4e09-a566-634e7ee0a31d)]
 interface nsIDOMKeyEvent : nsIDOMUIEvent
 {
   const unsigned long DOM_VK_CANCEL         = 0x03;
@@ -252,4 +252,6 @@ interface nsIDOMKeyEvent : nsIDOMUIEvent
   const unsigned long DOM_KEY_LOCATION_JOYSTICK = 0x05;
 
   readonly attribute unsigned long location;
+
+  readonly attribute DOMString key;
 };

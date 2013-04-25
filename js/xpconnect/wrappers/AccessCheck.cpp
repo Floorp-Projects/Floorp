@@ -209,7 +209,7 @@ IsWindow(const char *name)
 }
 
 bool
-AccessCheck::isCrossOriginAccessPermitted(JSContext *cx, JSObject *wrapper, jsid id,
+AccessCheck::isCrossOriginAccessPermitted(JSContext *cx, JSObject *wrapperArg, jsid idArg,
                                           Wrapper::Action act)
 {
     if (!XPCWrapper::GetSecurityManager())
@@ -218,7 +218,9 @@ AccessCheck::isCrossOriginAccessPermitted(JSContext *cx, JSObject *wrapper, jsid
     if (act == Wrapper::CALL)
         return true;
 
-    JSObject *obj = Wrapper::wrappedObject(wrapper);
+    RootedId id(cx, idArg);
+    RootedObject wrapper(cx, wrapperArg);
+    RootedObject obj(cx, Wrapper::wrappedObject(wrapper));
 
     const char *name;
     js::Class *clasp = js::GetObjectClass(obj);
@@ -233,7 +235,20 @@ AccessCheck::isCrossOriginAccessPermitted(JSContext *cx, JSObject *wrapper, jsid
             return true;
     }
 
-    return IsWindow(name) && IsFrameId(cx, obj, id);
+    // Check for frame IDs. If we're resolving named frames, make sure to only
+    // resolve ones that don't shadow native properties. See bug 860494.
+    if (IsWindow(name)) {
+        if (JSID_IS_STRING(id) && !XrayUtils::IsXrayResolving(cx, wrapper, id)) {
+            bool wouldShadow = false;
+            if (!XrayUtils::HasNativeProperty(cx, wrapper, id, &wouldShadow) ||
+                wouldShadow)
+            {
+                return false;
+            }
+        }
+        return IsFrameId(cx, obj, id);
+    }
+    return false;
 }
 
 bool

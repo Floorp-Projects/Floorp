@@ -2373,7 +2373,7 @@ CSPErrorQueue::Flush(nsIDocument* aDocument)
   for (uint32_t i = 0; i < mErrors.Length(); i++) {
     nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
         "CSP", aDocument,
-        nsContentUtils::eDOM_PROPERTIES,
+        nsContentUtils::eSECURITY_PROPERTIES,
         mErrors[i]);
   }
   mErrors.Clear();
@@ -2530,22 +2530,11 @@ nsDocument::InitCSP(nsIChannel* aChannel)
 
   // If the old header is present, warn that it will be deprecated.
   if (!cspOldHeaderValue.IsEmpty() || !cspOldROHeaderValue.IsEmpty()) {
-    nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                    "CSP", this,
-                                    nsContentUtils::eDOM_PROPERTIES,
-                                    "OldCSPHeaderDeprecated");
-
-    // Additionally log deprecated warning to Web Console.
     mCSPWebConsoleErrorQueue.Add("OldCSPHeaderDeprecated");
 
     // Also, if the new headers AND the old headers were present, warn
     // that the old headers will be ignored.
     if (cspSpecCompliant) {
-      nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                      "CSP", this,
-                                      nsContentUtils::eDOM_PROPERTIES,
-                                      "BothCSPHeadersPresent");
-      // Additionally log to Web Console.
       mCSPWebConsoleErrorQueue.Add("BothCSPHeadersPresent");
     }
   }
@@ -2582,11 +2571,6 @@ nsDocument::InitCSP(nsIChannel* aChannel)
     // CSP policies are present since CSP only allows one policy and it can't
     // be partially report-only.
     if (applyAppDefaultCSP || applyCSPFromHeader) {
-      nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                      "CSP", this,
-                                      nsContentUtils::eDOM_PROPERTIES,
-                                      "ReportOnlyCSPIgnored");
-      // Additionally log to Web Console.
       mCSPWebConsoleErrorQueue.Add("ReportOnlyCSPIgnored");
 #ifdef PR_LOGGING
       PR_LOG(gCspPRLog, PR_LOG_DEBUG,
@@ -5003,7 +4987,7 @@ nsDocument::Register(const nsAString& aName, const JS::Value& aOptions,
     JSAutoCompartment ac(aCx, GetWrapper());
     NS_ENSURE_TRUE(JS_WrapValue(aCx, const_cast<JS::Value*>(&aOptions)),
                    NS_ERROR_UNEXPECTED);
-    NS_ENSURE_TRUE(options.Init(aCx, JS::NullPtr(), aOptions),
+    NS_ENSURE_TRUE(options.Init(aCx, aOptions),
                    NS_ERROR_UNEXPECTED);
   }
 
@@ -11252,7 +11236,7 @@ nsAutoSyncOperation::nsAutoSyncOperation(nsIDocument* aDoc)
       win->GetTop(getter_AddRefs(topWindow));
       nsCOMPtr<nsPIDOMWindow> top = do_QueryInterface(topWindow);
       if (top) {
-        nsCOMPtr<nsIDocument> doc = do_QueryInterface(top->GetExtantDocument());
+        nsCOMPtr<nsIDocument> doc = top->GetExtantDoc();
         MarkDocumentTreeToBeInSyncOperation(doc, &mDocuments);
       }
     }

@@ -88,15 +88,15 @@ gfxSVGGlyphs::gfxSVGGlyphs(FallibleTArray<uint8_t>& aSVGTable,
 void
 gfxSVGGlyphs::UnmangleHeaders()
 {
-    mHeader->mIndexLength = NS_SWAP16(mHeader->mIndexLength);
+    mHeader->mIndexLength = mozilla::NativeEndian::swapFromBigEndian(mHeader->mIndexLength);
 
     mIndex = reinterpret_cast<IndexEntry*>(mSVGData.Elements() + sizeof(Header));
 
     for (uint16_t i = 0; i < mHeader->mIndexLength; i++) {
-        mIndex[i].mStartGlyph = NS_SWAP16(mIndex[i].mStartGlyph);
-        mIndex[i].mEndGlyph = NS_SWAP16(mIndex[i].mEndGlyph);
-        mIndex[i].mDocOffset = NS_SWAP32(mIndex[i].mDocOffset);
-        mIndex[i].mDocLength = NS_SWAP32(mIndex[i].mDocLength);
+        mIndex[i].mStartGlyph = mozilla::NativeEndian::swapFromBigEndian(mIndex[i].mStartGlyph);
+        mIndex[i].mEndGlyph = mozilla::NativeEndian::swapFromBigEndian(mIndex[i].mEndGlyph);
+        mIndex[i].mDocOffset = mozilla::NativeEndian::swapFromBigEndian(mIndex[i].mDocOffset);
+        mIndex[i].mDocLength = mozilla::NativeEndian::swapFromBigEndian(mIndex[i].mDocLength);
     }
 }
 
@@ -402,7 +402,7 @@ gfxSVGGlyphsDocument::InsertGlyphId(Element *aGlyphElement)
     }
 
     nsresult rv;
-    uint32_t glyphId = glyphIdStr.ToInteger(&rv, kRadix10);
+    uint32_t glyphId = glyphIdStr.ToInteger(&rv);
 
     if (NS_FAILED(rv)) {
         return;

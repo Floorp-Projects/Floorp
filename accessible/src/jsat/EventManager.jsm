@@ -38,6 +38,10 @@ this.EventManager = {
   },
 
   stop: function stop() {
+    if (!this._started) {
+      return;
+    }
+    Logger.info('EventManager.stop', Utils.MozBuildApp);
     Services.obs.removeObserver(this, 'accessible-event');
     this._started = false;
   },

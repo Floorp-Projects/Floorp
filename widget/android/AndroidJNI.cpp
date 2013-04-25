@@ -38,6 +38,7 @@
 #include "nsIMobileMessageDatabaseService.h"
 #include "nsPluginInstanceOwner.h"
 #include "nsSurfaceTexture.h"
+#include "GeckoProfiler.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -874,6 +875,12 @@ Java_org_mozilla_gecko_GeckoAppShell_onSurfaceTextureFrameAvailable(JNIEnv* jenv
   }
 
   st->NotifyFrameAvailable();
+}
+
+NS_EXPORT jdouble JNICALL
+Java_org_mozilla_gecko_GeckoJavaSampler_getProfilerTime(JNIEnv *jenv, jclass jc)
+{
+  return profiler_time();
 }
 
 }

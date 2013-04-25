@@ -6,7 +6,7 @@
 #ifndef GFX_ThebesLayerComposite_H
 #define GFX_ThebesLayerComposite_H
 
-#include "mozilla/layers/PLayers.h"
+#include "mozilla/layers/PLayerTransaction.h"
 #include "mozilla/layers/ShadowLayers.h"
 
 #include "Layers.h"

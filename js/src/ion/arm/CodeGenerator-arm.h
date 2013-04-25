@@ -134,7 +134,8 @@ class CodeGeneratorARM : public CodeGeneratorShared
 
     bool visitLoadElementT(LLoadElementT *load);
 
-    bool visitGuardShapeOrType(LGuardShapeOrType *guard);
+    bool visitGuardShape(LGuardShape *guard);
+    bool visitGuardObjectType(LGuardObjectType *guard);
     bool visitGuardClass(LGuardClass *guard);
     bool visitImplicitThis(LImplicitThis *lir);
 

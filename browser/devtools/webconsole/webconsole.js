@@ -4278,6 +4278,7 @@ var Utils = {
         return CATEGORY_CSS;
 
       case "Mixed Content Blocker":
+      case "CSP":
         return CATEGORY_SECURITY;
 
       default:

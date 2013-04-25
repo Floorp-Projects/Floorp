@@ -170,18 +170,6 @@ struct IonOptions
     // Default: false
     bool eagerCompilation;
 
-    // If a function has attempted to make this many calls to
-    // functions that are marked "uncompileable", then
-    // stop running this function in IonMonkey. (default 512)
-    uint32_t slowCallLimit;
-
-    // When caller runs in IM, but callee not, we take a slow path to the interpreter.
-    // This has a significant overhead. In order to decrease the number of times this happens,
-    // the useCount gets incremented faster to compile this function in IM and use the fastpath.
-    //
-    // Default: 5
-    uint32_t slowCallIncUseCount;
-
     // How many uses of a parallel kernel before we attempt compilation.
     //
     // Default: 1
@@ -221,8 +209,6 @@ struct IonOptions
         inlineMaxTotalBytecodeLength(1000),
         inlineUseCountRatio(128),
         eagerCompilation(false),
-        slowCallLimit(512),
-        slowCallIncUseCount(5),
         usesBeforeCompileParallel(1)
     {
     }
@@ -282,7 +268,7 @@ IonContext *GetIonContext();
 
 bool SetIonContext(IonContext *ctx);
 
-bool CanIonCompileScript(JSContext *cx, HandleScript script);
+bool CanIonCompileScript(JSContext *cx, HandleScript script, bool osr);
 
 MethodStatus CanEnterAtBranch(JSContext *cx, JSScript *script,
                               AbstractFramePtr fp, jsbytecode *pc, bool isConstructing);
