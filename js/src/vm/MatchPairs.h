@@ -98,19 +98,13 @@ class MatchPairs
 /* MatchPairs allocated into temporary storage, removed when out of scope. */
 class ScopedMatchPairs : public MatchPairs
 {
-    LifoAlloc *lifoAlloc_;
-    void      *mark_;        /* Saved original position in bump allocator. */
+    LifoAllocScope lifoScope_;
 
   public:
     /* Constructs an implicit LifoAllocScope. */
     ScopedMatchPairs(LifoAlloc *lifoAlloc)
-      : lifoAlloc_(lifoAlloc),
-        mark_(lifoAlloc->mark())
+      : lifoScope_(lifoAlloc)
     { }
-
-    ~ScopedMatchPairs() {
-        lifoAlloc_->release(mark_);
-    }
 
     const MatchPair &operator[](size_t i) const { return pair(i); }
 

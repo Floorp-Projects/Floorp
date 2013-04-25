@@ -475,22 +475,27 @@ JS_FunctionHasLocalNames(JSContext *cx, JSFunction *fun)
 }
 
 extern JS_PUBLIC_API(uintptr_t *)
-JS_GetFunctionLocalNameArray(JSContext *cx, JSFunction *fun, void **markp)
+JS_GetFunctionLocalNameArray(JSContext *cx, JSFunction *fun, void **memp)
 {
     RootedScript script(cx, fun->nonLazyScript());
     BindingVector bindings(cx);
     if (!FillBindingVector(script, &bindings))
         return NULL;
 
-    /* Munge data into the API this method implements.  Avert your eyes! */
-    *markp = cx->tempLifoAlloc().mark();
+    LifoAlloc &lifo = cx->tempLifoAlloc();
 
-    uintptr_t *names = cx->tempLifoAlloc().newArray<uintptr_t>(bindings.length());
-    if (!names) {
+    // Store the LifoAlloc::Mark right before the allocation.
+    LifoAlloc::Mark mark = lifo.mark();
+    void *mem = lifo.alloc(sizeof(LifoAlloc::Mark) + bindings.length() * sizeof(uintptr_t));
+    if (!mem) {
         js_ReportOutOfMemory(cx);
         return NULL;
     }
+    *memp = mem;
+    *reinterpret_cast<LifoAlloc::Mark*>(mem) = mark;
 
+    // Munge data into the API this method implements.  Avert your eyes!
+    uintptr_t *names = reinterpret_cast<uintptr_t*>((char*)mem + sizeof(LifoAlloc::Mark));
     for (size_t i = 0; i < bindings.length(); i++)
         names[i] = reinterpret_cast<uintptr_t>(bindings[i].name());
 
@@ -510,9 +515,9 @@ JS_AtomKey(JSAtom *atom)
 }
 
 extern JS_PUBLIC_API(void)
-JS_ReleaseFunctionLocalNameArray(JSContext *cx, void *mark)
+JS_ReleaseFunctionLocalNameArray(JSContext *cx, void *mem)
 {
-    cx->tempLifoAlloc().release(mark);
+    cx->tempLifoAlloc().release(*reinterpret_cast<LifoAlloc::Mark*>(mem));
 }
 
 JS_PUBLIC_API(JSScript *)
