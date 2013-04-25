@@ -324,14 +324,15 @@ interface TestJSImplInterface {
   object receiveObject();
   object? receiveNullableObject();
 
-/* The rest of these are untested.
   // Union types
   void passUnion((object or long) arg);
   void passUnionWithNullable((object? or long) arg);
-  void passNullableUnion((object or long)? arg);
+  // FIXME: Bug 863948 Nullable unions not supported yet
+  //   void passNullableUnion((object or long)? arg);
   void passOptionalUnion(optional (object or long) arg);
-  void passOptionalNullableUnion(optional (object or long)? arg);
-  void passOptionalNullableUnionWithDefaultValue(optional (object or long)? arg = null);
+  // FIXME: Bug 863948 Nullable unions not supported yet
+  //  void passOptionalNullableUnion(optional (object or long)? arg);
+  //  void passOptionalNullableUnionWithDefaultValue(optional (object or long)? arg = null);
   //void passUnionWithInterfaces((TestJSImplInterface or TestExternalInterface) arg);
   //void passUnionWithInterfacesAndNullable((TestJSImplInterface? or TestExternalInterface) arg);
   //void passUnionWithSequence((sequence<object> or long) arg);
@@ -351,7 +352,8 @@ interface TestJSImplInterface {
   attribute byte attributeRenamedFrom;
 
   void passDictionary(optional Dict x);
-  //UNSUPPORTED  Dict receiveDictionary();
+  // FIXME: Bug 863949 no dictionary return values
+  //   Dict receiveDictionary();
   void passOtherDictionary(optional GrandparentDict x);
   void passSequenceOfDictionaries(sequence<Dict> x);
   void passDictionaryOrLong(optional Dict x);
@@ -359,7 +361,8 @@ interface TestJSImplInterface {
 
   void passDictContainingDict(optional DictContainingDict arg);
   void passDictContainingSequence(optional DictContainingSequence arg);
-  //UNSUPPORTED DictContainingSequence receiveDictContainingSequence();
+  // FIXME: Bug 863949 no dictionary return values
+  //   DictContainingSequence receiveDictContainingSequence();
 
   // EnforceRange/Clamp tests
   void dontEnforceRangeOrClamp(byte arg);
@@ -368,15 +371,17 @@ interface TestJSImplInterface {
 
   // Typedefs
   const myLong myLongConstant = 5;
-  // ???? What 
   void exerciseTypedefInterfaces1(AnotherNameForTestJSImplInterface arg);
   AnotherNameForTestJSImplInterface exerciseTypedefInterfaces2(NullableTestJSImplInterface arg);
   void exerciseTypedefInterfaces3(YetAnotherNameForTestJSImplInterface arg);
 
   // Static methods and attributes
+  // FIXME: Bug 863952 Static things are not supported yet
+  /*
   static attribute boolean staticAttribute;
   static void staticMethod(boolean arg);
   static void staticMethodWithContext(any arg);
+  */
 
   // Overload resolution tests
   //void overload1(DOMString... strs);
@@ -397,9 +402,13 @@ interface TestJSImplInterface {
 
   // Miscellania
   [LenientThis] attribute long attrWithLenientThis;
-  [Unforgeable] readonly attribute long unforgeableAttr;
-  [Unforgeable, ChromeOnly] readonly attribute long unforgeableAttr2;
-  stringifier;
+  // FIXME: Bug 863954 Unforgeable things get all confused when
+  // non-JS-implemented interfaces inherit from JS-implemented ones or vice
+  // versa.
+  //   [Unforgeable] readonly attribute long unforgeableAttr;
+  //   [Unforgeable, ChromeOnly] readonly attribute long unforgeableAttr2;
+  // FIXME: Bug 863955 No stringifiers yet
+  //   stringifier;
   void passRenamedInterface(TestRenamedInterface arg);
   [PutForwards=writableByte] readonly attribute TestJSImplInterface putForwardsAttr;
   [PutForwards=writableByte, LenientThis] readonly attribute TestJSImplInterface putForwardsAttr2;
@@ -408,7 +417,7 @@ interface TestJSImplInterface {
   [Throws] attribute boolean throwingAttr;
   [GetterThrows] attribute boolean throwingGetterAttr;
   [SetterThrows] attribute boolean throwingSetterAttr;
-*/
+
   // If you add things here, add them to TestCodeGen as well
 };
 
