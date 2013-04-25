@@ -20,7 +20,7 @@ _BROWSER_FILES = \
                  browser_social_activation.js \
                  browser_social_perwindowPB.js \
                  browser_social_toolbar.js \
-                 browser_social_markButton.js \
+                 browser_social_shareButton.js \
                  browser_social_sidebar.js \
                  browser_social_flyout.js \
                  browser_social_mozSocial_API.js \
@@ -33,7 +33,7 @@ _BROWSER_FILES = \
                  social_activate.html \
                  social_activate_iframe.html \
                  social_panel.html \
-                 social_mark_image.png \
+                 social_share_image.png \
                  social_sidebar.html \
                  social_chat.html \
                  social_flyout.html \
