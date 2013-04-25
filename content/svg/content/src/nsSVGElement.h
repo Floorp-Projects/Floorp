@@ -308,7 +308,8 @@ public:
   already_AddRefed<nsIDOMSVGAnimatedString> ClassName();
   already_AddRefed<mozilla::dom::CSSValue> GetPresentationAttribute(const nsAString& aName, mozilla::ErrorResult& rv);
 protected:
-  virtual JSObject* WrapNode(JSContext *cx, JSObject *scope) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *cx,
+                             JS::Handle<JSObject*> scope) MOZ_OVERRIDE;
 
 #ifdef DEBUG
   // We define BeforeSetAttr here and mark it MOZ_FINAL to ensure it is NOT used

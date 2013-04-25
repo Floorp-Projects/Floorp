@@ -12,7 +12,7 @@ namespace mozilla {
 namespace dom {
 
 JSObject*
-SVGFECompositeElement::WrapNode(JSContext* aCx, JSObject* aScope)
+SVGFECompositeElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return SVGFECompositeElementBinding::Wrap(aCx, aScope, this);
 }

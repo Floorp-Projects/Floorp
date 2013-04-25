@@ -13,7 +13,7 @@ namespace mozilla {
 namespace dom {
 
 JSObject*
-SVGEllipseElement::WrapNode(JSContext *aCx, JSObject *aScope)
+SVGEllipseElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
   return SVGEllipseElementBinding::Wrap(aCx, aScope, this);
 }

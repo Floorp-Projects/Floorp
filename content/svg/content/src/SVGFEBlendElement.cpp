@@ -13,7 +13,7 @@ namespace mozilla {
 namespace dom {
 
 JSObject*
-SVGFEBlendElement::WrapNode(JSContext *aCx, JSObject *aScope)
+SVGFEBlendElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
   return SVGFEBlendElementBinding::Wrap(aCx, aScope, this);
 }

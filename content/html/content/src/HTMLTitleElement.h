@@ -70,7 +70,7 @@ public:
 
 protected:
 
-  virtual JSObject* WrapNode(JSContext* cx, JSObject* scope)
+  virtual JSObject* WrapNode(JSContext* cx, JS::Handle<JSObject*> scope)
     MOZ_OVERRIDE MOZ_FINAL;
 
 private:

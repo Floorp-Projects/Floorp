@@ -650,7 +650,8 @@ public:
   // XPCOM GetPhonetic() is OK
 
 protected:
-  virtual JSObject* WrapNode(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext* aCx,
+                             JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
   // Pull IsSingleLineTextControl into our scope, otherwise it'd be hidden
   // by the nsITextControlElement version.

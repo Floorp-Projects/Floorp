@@ -17,7 +17,7 @@ namespace dom {
 class SVGAnimatedLength;
 
 JSObject*
-SVGRectElement::WrapNode(JSContext *aCx, JSObject *aScope)
+SVGRectElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
   return SVGRectElementBinding::Wrap(aCx, aScope, this);
 }

@@ -77,7 +77,7 @@ HTMLSourceElement::BindToTree(nsIDocument *aDocument,
 }
 
 JSObject*
-HTMLSourceElement::WrapNode(JSContext* aCx, JSObject* aScope)
+HTMLSourceElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return HTMLSourceElementBinding::Wrap(aCx, aScope, this);
 }

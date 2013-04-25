@@ -42,7 +42,8 @@ protected:
   friend nsresult (::NS_NewSVGTextPathElement(nsIContent **aResult,
                                               already_AddRefed<nsINodeInfo> aNodeInfo));
   SVGTextPathElement(already_AddRefed<nsINodeInfo> aNodeInfo);
-  virtual JSObject* WrapNode(JSContext *cx, JSObject *scope) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *cx,
+                             JS::Handle<JSObject*> scope) MOZ_OVERRIDE;
 
 public:
   // nsIContent interface

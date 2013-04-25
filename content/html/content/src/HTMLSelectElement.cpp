@@ -1964,7 +1964,7 @@ HTMLSelectElement::SetSelectionChanged(bool aValue, bool aNotify)
 }
 
 JSObject*
-HTMLSelectElement::WrapNode(JSContext* aCx, JSObject* aScope)
+HTMLSelectElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return HTMLSelectElementBinding::Wrap(aCx, aScope, this);
 }

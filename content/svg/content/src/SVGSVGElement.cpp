@@ -46,7 +46,7 @@ namespace dom {
 class SVGAnimatedLength;
 
 JSObject*
-SVGSVGElement::WrapNode(JSContext *aCx, JSObject *aScope)
+SVGSVGElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
   return SVGSVGElementBinding::Wrap(aCx, aScope, this);
 }

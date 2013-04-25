@@ -21,7 +21,7 @@ namespace dom {
 // you will see the phrases "rowgroup" and "section" used interchangably
 
 JSObject*
-HTMLTableSectionElement::WrapNode(JSContext *aCx, JSObject *aScope)
+HTMLTableSectionElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
   return HTMLTableSectionElementBinding::Wrap(aCx, aScope, this);
 }

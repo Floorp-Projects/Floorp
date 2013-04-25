@@ -23,7 +23,8 @@ protected:
   friend nsresult (::NS_NewSVGAltGlyphElement(nsIContent **aResult,
                                               already_AddRefed<nsINodeInfo> aNodeInfo));
   SVGAltGlyphElement(already_AddRefed<nsINodeInfo> aNodeInfo);
-  virtual JSObject* WrapNode(JSContext *cx, JSObject *scope) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *cx,
+                             JS::Handle<JSObject*> scope) MOZ_OVERRIDE;
 
 public:
   // nsIContent interface
