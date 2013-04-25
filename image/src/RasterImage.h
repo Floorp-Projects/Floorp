@@ -585,7 +585,8 @@ private:
                                     gfxPattern::GraphicsFilter aFilter,
                                     const gfxMatrix &aUserSpaceToImageSpace,
                                     const gfxRect &aFill,
-                                    const nsIntRect &aSubimage);
+                                    const nsIntRect &aSubimage,
+                                    uint32_t aFlags);
 
   nsresult CopyFrame(uint32_t aWhichFrame,
                      uint32_t aFlags,
@@ -821,7 +822,7 @@ private: // data
   TimeStamp mDrawStartTime;
 
   inline bool CanQualityScale(const gfxSize& scale);
-  inline bool CanScale(gfxPattern::GraphicsFilter aFilter, gfxSize aScale);
+  inline bool CanScale(gfxPattern::GraphicsFilter aFilter, gfxSize aScale, uint32_t aFlags);
 
   struct ScaleResult
   {
