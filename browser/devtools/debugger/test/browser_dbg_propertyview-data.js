@@ -100,7 +100,7 @@ function testHierarchy() {
   gScope = gVariablesView._currHierarchy.get("");
   gVariable = gVariablesView._currHierarchy.get("[\"\"]");
 
-  is(gVariablesView._store.size, 1,
+  is(gVariablesView._store.length, 1,
     "There should be only one scope in the view");
   is(gScope._store.size, 1,
     "There should be only one variable in the scope");
