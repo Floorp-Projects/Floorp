@@ -25,7 +25,21 @@ class nsDOMEvent;
 class nsDOMEventTargetHelper : public mozilla::dom::EventTarget
 {
 public:
-  nsDOMEventTargetHelper() : mParentObject(nullptr), mOwnerWindow(nullptr), mHasOrHasHadOwnerWindow(false) {}
+  nsDOMEventTargetHelper()
+    : mParentObject(nullptr)
+    , mOwnerWindow(nullptr)
+    , mHasOrHasHadOwnerWindow(false)
+  {}
+  nsDOMEventTargetHelper(nsPIDOMWindow* aWindow)
+    : mParentObject(nullptr)
+    , mOwnerWindow(nullptr)
+    , mHasOrHasHadOwnerWindow(false)
+  {
+    BindToOwner(aWindow);
+    // All objects coming through here are WebIDL objects
+    SetIsDOMBinding();
+  }
+
   virtual ~nsDOMEventTargetHelper();
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS(nsDOMEventTargetHelper)
