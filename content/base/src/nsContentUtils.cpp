@@ -3147,7 +3147,9 @@ nsCxPusher::DoPush(JSContext* cx)
 {
   nsIThreadJSContextStack* stack = nsContentUtils::ThreadJSContextStack();
   if (!stack) {
-    return;
+    // If someone tries to push a cx when we don't have the relevant state,
+    // it's probably safest to just crash.
+    MOZ_CRASH();
   }
 
   if (cx && IsContextOnStack(stack, cx)) {
@@ -3178,7 +3180,8 @@ void
 nsCxPusher::Pop()
 {
   nsIThreadJSContextStack* stack = nsContentUtils::ThreadJSContextStack();
-  if (!mPushedSomething || !stack) {
+  MOZ_ASSERT(stack);
+  if (!mPushedSomething) {
     mScx = nullptr;
     mPushedSomething = false;
 

@@ -188,8 +188,10 @@ public:
                                  AudioChunk* aOutput,
                                  bool* aFinished) MOZ_OVERRIDE
   {
+    MutexAutoLock lock(NodeMutex());
+
     // If our node is dead, just output silence
-    if (!mNode) {
+    if (!Node()) {
       aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
       return;
     }
@@ -275,7 +277,15 @@ private:
           return NS_OK;
         }
 
-        nsRefPtr<ScriptProcessorNode> node = static_cast<ScriptProcessorNode*>(mStream->Engine()->Node());
+        nsRefPtr<ScriptProcessorNode> node;
+        {
+          // No need to keep holding the lock for the whole duration of this
+          // function, since we're holding a strong reference to it, so if
+          // we can obtain the reference, we will hold the node alive in
+          // this function.
+          MutexAutoLock lock(mStream->Engine()->NodeMutex());
+          node = static_cast<ScriptProcessorNode*>(mStream->Engine()->Node());
+        }
         if (!node) {
           return NS_OK;
         }
