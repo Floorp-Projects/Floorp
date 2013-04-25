@@ -9,3 +9,5 @@
 # architectures, though note that if you want to override options set in
 # another mozconfig file, you'll need to use mozconfig.common.override instead
 # of this file.
+
+mk_add_options AUTOCLOBBER=1
