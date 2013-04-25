@@ -61,6 +61,7 @@
 #ifdef MOZ_GAMEPAD
 #include "nsDOMGamepad.h"
 #endif
+#include "nsIDocument.h"
 
 #include "mozilla/dom/EventTarget.h"
 
@@ -1028,6 +1029,9 @@ protected:
                                   nsIDOMCSSStyleDeclaration** aReturn);
 
   void PreloadLocalStorage();
+
+  nsresult RequestAnimationFrame(const nsIDocument::FrameRequestCallbackHolder& aCallback,
+                                 int32_t* aHandle);
 
   // When adding new member variables, be careful not to create cycles
   // through JavaScript.  If there is any chance that a member variable
