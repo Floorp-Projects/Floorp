@@ -7424,6 +7424,70 @@ def dependencySortObjects(objects, dependencyGetter, nameGetter):
         sortedObjects.extend(sorted(toMove, key=nameGetter))
     return sortedObjects
 
+
+class ForwardDeclarationBuilder:
+    """
+    Create a canonical representation of a set of namespaced forward
+    declarations.
+    """
+    def __init__(self):
+        """
+        The set of declarations is represented as a tree of nested namespaces.
+        Each tree node has a set of declarations |decls| and a dict |children|.
+        Each declaration is a pair consisting of the class name and a boolean
+        that is true iff the class is really a struct. |children| maps the
+        names of inner namespaces to the declarations in that namespace.
+        """
+        self.decls = set([])
+        self.children = {}
+
+    def _listAdd(self, namespaces, name, isStruct=False):
+        """
+        Add a forward declaration, where |namespaces| is a list of namespaces.
+        |name| should not contain any other namespaces.
+        """
+        if namespaces:
+            child = self.children.setdefault(namespaces[0], ForwardDeclarationBuilder())
+            child._listAdd(namespaces[1:], name, isStruct)
+        else:
+            assert not '::' in name
+            self.decls.add((name, isStruct))
+
+    def addInMozillaDom(self, name, isStruct=False):
+        """
+        Add a forward declaration to the mozilla::dom:: namespace. |name| should not
+        contain any other namespaces.
+        """
+        self._listAdd(["mozilla", "dom"], name, isStruct)
+
+    def add(self, nativeType, isStruct=False):
+        """
+        Add a forward declaration, where |nativeType| is a string containing
+        the type and its namespaces, in the usual C++ way.
+        """
+        components = nativeType.split('::')
+        self._listAdd(components[:-1], components[-1], isStruct)
+
+    def _build(self, atTopLevel):
+        """
+        Return a codegenerator for the forward declarations.
+        """
+        decls = []
+        if self.decls:
+            decls.append(CGList([CGClassForwardDeclare(cname, isStruct)
+                                 for (cname, isStruct) in sorted(self.decls)]))
+        for namespace, child in sorted(self.children.iteritems()):
+            decls.append(CGNamespace(namespace, child._build(atTopLevel=False), declareOnly=True))
+
+        cg = CGList(decls, joiner='\n')
+        if not atTopLevel and len(decls) + len(self.decls) > 1:
+            cg = CGWrapper(cg, pre='\n', post='\n')
+        return cg
+
+    def build(self):
+        return self._build(atTopLevel=True)
+
+
 class CGBindingRoot(CGThing):
     """
     Root codegen class for binding generation. Instantiate the class, and call
@@ -7445,7 +7509,7 @@ class CGBindingRoot(CGThing):
                                                     isCallback=True)
         jsImplemented = config.getDescriptors(webIDLFile=webIDLFile,
                                               isJSImplemented=True)
-        forwardDeclares = [CGClassForwardDeclare('XPCWrappedNativeScope')]
+        forwardDeclares = ForwardDeclarationBuilder()
 
         descriptorsForForwardDeclaration = list(descriptors)
         ifaces = []
@@ -7490,50 +7554,36 @@ class CGBindingRoot(CGThing):
                 # just move along
                 pass
 
-        def declareNativeType(nativeType):
-            components = nativeType.split('::')
-            className = components[-1]
-            # JSObject is a struct, not a class
-            declare = CGClassForwardDeclare(className)
-            if len(components) > 1:
-                declare = CGNamespace.build(components[:-1],
-                                            CGWrapper(declare, declarePre='\n',
-                                                      declarePost='\n'),
-                                            declareOnly=True)
-            return CGWrapper(declare, declarePost='\n')
+        forwardDeclares.add('XPCWrappedNativeScope')
 
         for x in descriptorsForForwardDeclaration:
-            forwardDeclares.append(declareNativeType(x.nativeType))
+            forwardDeclares.add(x.nativeType)
 
         # Now add the forward declarations we need for our union types
         # and callback functions.
         for callback in mainCallbacks + workerCallbacks:
-            forwardDeclares.extend(
-                declareNativeType("mozilla::dom::" + str(t.unroll()))
-                for t in getTypesFromCallback(callback)
-                if t.unroll().isUnion() or t.unroll().isCallback())
+            for t in getTypesFromCallback(callback):
+                if t.unroll().isUnion() or t.unroll().isCallback():
+                    forwardDeclares.addInMozillaDom(str(t.unroll()))
 
         for callbackDescriptor in callbackDescriptors:
-            forwardDeclares.extend(
-                declareNativeType("mozilla::dom::" + str(t.unroll()))
-                for t in getTypesFromDescriptor(callbackDescriptor)
-                if t.unroll().isUnion() or t.unroll().isCallback())
+            for t in getTypesFromDescriptor(callbackDescriptor):
+                if t.unroll().isUnion() or t.unroll().isCallback():
+                    forwardDeclares.addInMozillaDom(str(t.unroll()))
 
         # Forward declarations for callback functions used in dictionaries.
         for dictionary in mainDictionaries + workerDictionaries:
-            forwardDeclares.extend(
-                declareNativeType("mozilla::dom::" + str(t.unroll()))
-                for t in getTypesFromDictionary(dictionary)
-                if t.unroll().isCallback())
+            for t in getTypesFromDictionary(dictionary):
+                if t.unroll().isCallback():
+                    forwardDeclares.addInMozillaDom(str(t.unroll()))
 
         # Forward declarations for callback functions used in interfaces
         for desc in descriptors:
-            forwardDeclares.extend(
-                declareNativeType("mozilla::dom::" + str(t.unroll()))
-                for t in getTypesFromDescriptor(desc)
-                if t.unroll().isCallback())
+            for t in getTypesFromDescriptor(desc):
+                if t.unroll().isCallback():
+                    forwardDeclares.addInMozillaDom(str(t.unroll()))
 
-        forwardDeclares = CGList(forwardDeclares)
+        forwardDeclares = forwardDeclares.build()
 
         descriptorsWithPrototype = filter(lambda d: d.interface.hasInterfacePrototypeObject(),
                                           descriptors)
