@@ -9,7 +9,10 @@ var ignoreIndirectCalls = {
     "__conv" : true,
     "__convf" : true,
     "prerrortable.c:callback_newtable" : true,
+    "mozalloc_oom.cpp:void (* gAbortHandler)(size_t)" : true,
+    "JSObject* js::GetWeakmapKeyDelegate(JSObject*)" : true, // FIXME: mark with AutoAssertNoGC instead
 };
+
 
 function indirectCallCannotGC(caller, name)
 {
@@ -26,10 +29,6 @@ function indirectCallCannotGC(caller, name)
     if (/CallDestroyScriptHook/.test(caller))
         return true;
 
-    // hooks called deep inside utility libraries.
-    if (name == "_malloc_message")
-        return true;
-
     return false;
 }
 
@@ -43,13 +42,15 @@ var ignoreClasses = {
     "PRIOMethods": true,
     "XPCOMFunctions" : true, // I'm a little unsure of this one
     "_MD_IOVector" : true,
-    "PRIOMethods" : true,
 };
 
 var ignoreCallees = {
     "js::Class.trace" : true,
     "js::Class.finalize" : true,
     "JSRuntime.destroyPrincipals" : true,
+    "nsISupports.AddRef" : true,
+    "nsISupports.Release" : true, // makes me a bit nervous; this is a bug but can happen
+    "nsAXPCNativeCallContext.GetJSContext" : true,
 };
 
 function fieldCallCannotGC(csu, fullfield)
@@ -92,18 +93,21 @@ function ignoreEdgeUse(edge, variable)
     return false;
 }
 
-var ignoreFunctions = [
-    "ptio.c:pt_MapError",
-    "PR_ExplodeTime",
-    "PR_ErrorInstallTable"
-];
+var ignoreFunctions = {
+    "ptio.c:pt_MapError" : true,
+    "PR_ExplodeTime" : true,
+    "PR_ErrorInstallTable" : true,
+    "PR_SetThreadPrivate" : true
+};
 
 function ignoreGCFunction(fun)
 {
-    for (var i = 0; i < ignoreFunctions.length; i++) {
-        if (fun == ignoreFunctions[i])
-            return true;
-    }
+    if (fun in ignoreFunctions)
+        return true;
+
+    // Templatized function
+    if (fun.indexOf("void nsCOMPtr<T>::Assert_NoQueryNeeded()") >= 0)
+        return true;
 
     // XXX modify refillFreeList<NoGC> to not need data flow analysis to understand it cannot GC.
     if (/refillFreeList/.test(fun) && /\(js::AllowGC\)0u/.test(fun))
