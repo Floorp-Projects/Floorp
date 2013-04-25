@@ -7,10 +7,10 @@
 
 #include "Accessible-inl.h"
 #include "ApplicationAccessible.h"
+#include "ARIAMap.h"
 #include "DocAccessible-inl.h"
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
-#include "nsARIAMap.h"
 #include "RootAccessibleWrap.h"
 #include "States.h"
 

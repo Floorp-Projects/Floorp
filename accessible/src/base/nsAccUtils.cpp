@@ -6,8 +6,8 @@
 #include "nsAccUtils.h"
 
 #include "Accessible-inl.h"
+#include "ARIAMap.h"
 #include "nsAccessibilityService.h"
-#include "nsARIAMap.h"
 #include "nsCoreUtils.h"
 #include "DocAccessible.h"
 #include "HyperTextAccessible.h"
@@ -367,16 +367,6 @@ nsAccUtils::GetScreenCoordsForParent(Accessible* aAccessible)
   nsRect rect = parentFrame->GetScreenRectInAppUnits();
   return nsPoint(rect.x, rect.y).
     ToNearestPixels(parentFrame->PresContext()->AppUnitsPerDevPixel());
-}
-
-uint8_t
-nsAccUtils::GetAttributeCharacteristics(nsIAtom* aAtom)
-{
-    for (uint32_t i = 0; i < nsARIAMap::gWAIUnivAttrMapLength; i++)
-      if (*nsARIAMap::gWAIUnivAttrMap[i].attributeName == aAtom)
-        return nsARIAMap::gWAIUnivAttrMap[i].characteristics;
-
-    return 0;
 }
 
 bool
