@@ -8179,7 +8179,7 @@ class CGBindingImplClass(CGClass):
                     { "infallible": True }))
 
         wrapArgs = [Argument('JSContext*', 'aCx'),
-                    Argument('JSObject*', 'aScope')]
+                    Argument('JS::Handle<JSObject*>', 'aScope')]
         self.methodDecls.insert(0,
                                 ClassMethod("WrapObject", "JSObject*",
                                             wrapArgs, virtual=descriptor.wrapperCache,
@@ -8253,7 +8253,7 @@ ${nativeType}::~${nativeType}()
 }
 
 JSObject*
-${nativeType}::WrapObject(JSContext* aCx, JSObject* aScope)
+${nativeType}::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return ${ifaceName}Binding::Wrap(aCx, aScope, this);
 }

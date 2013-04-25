@@ -200,7 +200,8 @@ public:
   already_AddRefed<nsClientRectList> GetClientRects();
 
   nsINode* GetParentObject() const { return mOwner; }
-  virtual JSObject* WrapObject(JSContext* cx, JSObject* scope) MOZ_OVERRIDE MOZ_FINAL;
+  virtual JSObject* WrapObject(JSContext* cx,
+                               JS::Handle<JSObject*> scope) MOZ_OVERRIDE MOZ_FINAL;
 
 private:
   // no copy's or assigns

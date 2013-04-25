@@ -617,7 +617,7 @@ IDBFactory::OpenInternal(const nsAString& aName,
 }
 
 JSObject*
-IDBFactory::WrapObject(JSContext* aCx, JSObject* aScope)
+IDBFactory::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return IDBFactoryBinding::Wrap(aCx, aScope, this);
 }

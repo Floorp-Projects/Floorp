@@ -18,8 +18,8 @@ class DOMFileRequest : public FileRequest
 public:
   DOMFileRequest(nsIDOMWindow* aWindow);
 
-  virtual JSObject*
-  WrapObject(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
   nsIDOMLockedFile* GetLockedFile() const;
   IMPL_EVENT_HANDLER(progress)

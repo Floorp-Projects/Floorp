@@ -151,7 +151,7 @@ nsDOMGamepad::Clone(nsISupports* aParent)
 }
 
 /* virtual */ JSObject*
-nsDOMGamepad::WrapObject(JSContext* aCx, JSObject* aScope)
+nsDOMGamepad::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return GamepadBinding::Wrap(aCx, aScope, this);
 }

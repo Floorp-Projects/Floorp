@@ -82,7 +82,7 @@ class TestNonWrapperCacheInterface : public nsISupports
 public:
   NS_DECL_ISUPPORTS
 
-  virtual JSObject* WrapObject(JSContext* cx, JSObject* scope);
+  virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> scope);
 };
 
 class OnlyForUseInConstructor : public nsISupports,

@@ -207,7 +207,7 @@ WebGLContext::~WebGLContext()
 }
 
 JSObject*
-WebGLContext::WrapObject(JSContext *cx, JSObject *scope)
+WebGLContext::WrapObject(JSContext *cx, JS::Handle<JSObject*> scope)
 {
     return dom::WebGLRenderingContextBinding::Wrap(cx, scope, this);
 }

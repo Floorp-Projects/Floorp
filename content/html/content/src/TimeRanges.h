@@ -36,7 +36,7 @@ public:
   // See http://www.whatwg.org/html/#normalized-timeranges-object
   void Normalize();
 
-  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope);
+  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope);
 
   uint32_t Length() const
   {

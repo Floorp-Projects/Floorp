@@ -19,7 +19,7 @@ namespace dom {
 class SVGIRect : public nsIDOMSVGRect
 {
 public:
-  JSObject* WrapObject(JSContext* aCx, JSObject* aScope)
+  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
   {
     return SVGRectBinding::Wrap(aCx, aScope, this);
   }

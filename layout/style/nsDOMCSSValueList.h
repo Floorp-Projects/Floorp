@@ -57,7 +57,8 @@ public:
     return nullptr;
   }
 
-  virtual JSObject *WrapObject(JSContext *cx, JSObject *scope) MOZ_OVERRIDE;
+  virtual JSObject *WrapObject(JSContext *cx,
+			       JS::Handle<JSObject*> scope) MOZ_OVERRIDE;
 
 private:
   bool                        mCommaDelimited;  // some value lists use a comma

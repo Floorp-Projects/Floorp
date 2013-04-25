@@ -74,7 +74,7 @@ NS_IMPL_ADDREF_INHERITED(DOMRequest, nsDOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(DOMRequest, nsDOMEventTargetHelper)
 
 /* virtual */ JSObject*
-DOMRequest::WrapObject(JSContext* aCx, JSObject* aScope)
+DOMRequest::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return DOMRequestBinding::Wrap(aCx, aScope, this);
 }
