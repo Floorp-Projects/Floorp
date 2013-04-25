@@ -169,7 +169,7 @@ ScopedMatchPairs::allocOrExpandArray(size_t pairCount)
     }
 
     JS_ASSERT(!pairs_);
-    pairs_ = (MatchPair *)lifoAlloc_->alloc(sizeof(MatchPair) * pairCount);
+    pairs_ = (MatchPair *)lifoScope_.alloc().alloc(sizeof(MatchPair) * pairCount);
     if (!pairs_)
         return false;
 
