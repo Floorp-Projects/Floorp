@@ -19,6 +19,7 @@
 #include "MediaBufferDecoder.h"
 #include "StreamBuffer.h"
 #include "MediaStreamGraph.h"
+#include "nsTHashtable.h"
 
 // X11 has a #define for CurrentTime. Unbelievable :-(.
 // See content/media/DOMMediaStream.h for more fun!
@@ -167,11 +168,14 @@ private:
   nsRefPtr<AudioListener> mListener;
   MediaBufferDecoder mDecoder;
   nsTArray<nsAutoPtr<WebAudioDecodeJob> > mDecodeJobs;
-  // Two arrays containing all the PannerNodes and AudioBufferSourceNodes,
-  // to compute the doppler shift. Those are weak pointers.
-  nsTArray<PannerNode*> mPannerNodes;
-  nsTArray<AudioBufferSourceNode*> mAudioBufferSourceNodes;
-  nsTArray<ScriptProcessorNode*> mScriptProcessorNodes;
+  // Two hashsets containing all the PannerNodes and AudioBufferSourceNodes,
+  // to compute the doppler shift, and also to stop AudioBufferSourceNodes.
+  // These are all weak pointers.
+  nsTHashtable<nsPtrHashKey<PannerNode> > mPannerNodes;
+  nsTHashtable<nsPtrHashKey<AudioBufferSourceNode> > mAudioBufferSourceNodes;
+  // Hashset containing all ScriptProcessorNodes in order to stop them.
+  // These are all weak pointers.
+  nsTHashtable<nsPtrHashKey<ScriptProcessorNode> > mScriptProcessorNodes;
 };
 
 }
