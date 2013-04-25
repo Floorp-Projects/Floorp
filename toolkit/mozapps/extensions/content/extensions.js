@@ -2042,12 +2042,6 @@ var gSearchView = {
     this._emptyNotice = document.getElementById("search-list-empty");
     this._allResultsLink = document.getElementById("search-allresults-link");
 
-    if (!AddonManager.isInstallEnabled("application/x-xpinstall")) {
-      var remote = document.getElementById("search-filter-remote");
-      remote.hidden = true;
-      this._filter.selectedIndex = 0; // Search in local addons
-    }
-
     var self = this;
     this._listBox.addEventListener("keydown", function listbox_onKeydown(aEvent) {
       if (aEvent.keyCode == aEvent.DOM_VK_ENTER ||
