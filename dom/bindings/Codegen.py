@@ -3208,15 +3208,8 @@ for (uint32_t i = 0; i < length; ++i) {
         typeName = CGDictionary.makeDictionaryName(type.inner,
                                                    descriptorProvider.workers)
         actualTypeName = typeName
-        selfRef = "${declName}"
 
         declType = CGGeneric(actualTypeName)
-
-        # If we're a member of something else, the const
-        # will come from the Optional or our container.
-        if not isMember:
-            declType = CGWrapper(declType, pre="const ")
-            selfRef = "const_cast<%s&>(%s)" % (typeName, selfRef)
 
         # We do manual default value handling here, because we
         # actually do want a jsval, and we only handle null anyway
@@ -3240,9 +3233,9 @@ for (uint32_t i = 0; i < length; ++i) {
         else:
             template = ""
 
-        template += ("if (!%s.Init(cx, %s)) {\n"
+        template += ("if (!${declName}.Init(cx, %s)) {\n"
                      "%s\n"
-                     "}" % (selfRef, val, exceptionCodeIndented.define()))
+                     "}" % (val, exceptionCodeIndented.define()))
 
         return (template, declType, None, False)
 
@@ -3993,7 +3986,15 @@ class CGCallGenerator(CGThing):
             # This is a workaround for a bug in Apple's clang.
             if a.type.isObject() and not a.type.nullable() and not a.optional:
                 name = "(JSObject&)" + name
-            args.append(CGGeneric(name))
+            arg = CGGeneric(name)
+            # Now constify the things that need it
+            def needsConst(a):
+                if a.type.isDictionary():
+                    return True
+                return False
+            if needsConst(a):
+                arg = CGWrapper(arg, pre="Constify(", post=")")
+            args.append(arg)
 
         # Return values that go in outparams go here
         if resultOutParam:
