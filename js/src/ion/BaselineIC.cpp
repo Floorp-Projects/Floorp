@@ -7601,7 +7601,8 @@ template <size_t ProtoChainDepth>
 ICUpdatedStub *
 ICSetElemDenseAddCompiler::getStubSpecific(ICStubSpace *space, const AutoShapeVector *shapes)
 {
-    return ICSetElem_DenseAddImpl<ProtoChainDepth>::New(space, getStubCode(), obj_->getType(cx),
+    Rooted<IonCode *> stubCode(cx, getStubCode());
+    return ICSetElem_DenseAddImpl<ProtoChainDepth>::New(space, stubCode, obj_->getType(cx),
                                                         shapes);
 }
 
