@@ -8433,11 +8433,14 @@ class CGJSImplClass(CGBindingImplClass):
         parentInterface = descriptor.interface.parent
         while parentInterface:
             if parentInterface.isJSImplemented():
-                baseConstructors = (
-                    [ "%s(aJSImplObject, aParent)" % parentClass ] +
-                    baseConstructors )
+                baseConstructors.insert(
+                    0, "%s(aJSImplObject, aParent)" % parentClass )
                 break
             parentInterface = parentInterface.parent
+        if not parentInterface and descriptor.interface.parent:
+            # We only have C++ ancestors, so only pass along the window
+            baseConstructors.insert(0,
+                                    "%s(aParent)" % parentClass)
 
         constructor = ClassConstructor(
             [Argument("JSObject*", "aJSImplObject"),
