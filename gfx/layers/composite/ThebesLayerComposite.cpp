@@ -26,7 +26,7 @@ namespace mozilla {
 namespace layers {
 
 ThebesLayerComposite::ThebesLayerComposite(LayerManagerComposite *aManager)
-  : ShadowThebesLayer(aManager, nullptr)
+  : ThebesLayer(aManager, nullptr)
   , LayerComposite(aManager)
   , mBuffer(nullptr)
 {
