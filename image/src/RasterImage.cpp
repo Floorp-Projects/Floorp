@@ -1594,6 +1594,15 @@ RasterImage::ResetAnimation()
   return NS_OK;
 }
 
+NS_IMETHODIMP_(float)
+RasterImage::GetFrameIndex(uint32_t aWhichFrame)
+{
+  MOZ_ASSERT(aWhichFrame <= FRAME_MAX_VALUE, "Invalid argument");
+  return (aWhichFrame == FRAME_FIRST || !mAnim)
+         ? 0.0f
+         : mAnim->currentAnimationFrameIndex;
+}
+
 void
 RasterImage::SetLoopCount(int32_t aLoopCount)
 {
