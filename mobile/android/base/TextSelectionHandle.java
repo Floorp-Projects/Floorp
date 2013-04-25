@@ -172,7 +172,7 @@ class TextSelectionHandle extends ImageView implements View.OnTouchListener {
         if (mHandleType.equals(HandleType.START))
             return mIsRTL ? mShadow : mWidth - mShadow;
         else if (mHandleType.equals(HandleType.MIDDLE))
-            return (mWidth - mShadow) / 2;
+            return mWidth / 2;
         else
             return mIsRTL ? mWidth - mShadow : mShadow;
     }
