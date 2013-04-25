@@ -101,6 +101,8 @@ https://mismatch.expired.example.com:443	privileged,cert=expired
 https://mismatch.untrusted.example.com:443	privileged,cert=untrusted
 https://untrusted-expired.example.com:443	privileged,cert=untrustedandexpired
 https://mismatch.untrusted-expired.example.com:443	privileged,cert=untrustedandexpired
+https://ev-valid.example.com:443	privileged,cert=evvalid
+https://ev-invalid.example.com:443      priviliged,cert=evinvalid
 
 # This is here so that we don't load the default live bookmark over
 # the network in every test suite.
