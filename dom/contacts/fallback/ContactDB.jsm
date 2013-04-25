@@ -19,11 +19,13 @@ Cu.import("resource://gre/modules/PhoneNumberUtils.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
 
 const DB_NAME = "contacts";
-const DB_VERSION = 10;
+const DB_VERSION = 11;
 const STORE_NAME = "contacts";
 const SAVED_GETALL_STORE_NAME = "getallcache";
 const CHUNK_SIZE = 20;
 const CHUNK_INTERVAL = 500;
+const REVISION_STORE = "revision";
+const REVISION_KEY = "revision";
 
 function ContactDispatcher(aContacts, aFullContacts, aCallback, aNewTxn, aClearDispatcher) {
   let nextIndex = 0;
@@ -362,6 +364,14 @@ ContactDB.prototype = {
             cursor.continue();
           }
         };
+      } else if (currVersion == 10) {
+        if (DEBUG) debug("Adding object store for database revision");
+        db.createObjectStore(REVISION_STORE).put(0, REVISION_KEY);
+      }
+
+      // Increment the DB revision on future schema changes as well
+      if (currVersion > 10) {
+        this.incrementRevision(aTransaction);
       }
     }
 
@@ -595,7 +605,14 @@ ContactDB.prototype = {
     });
   },
 
-  saveContact: function saveContact(aContact, successCb, errorCb) {
+  incrementRevision: function CDB_incrementRevision(txn) {
+    let revStore = txn.objectStore(REVISION_STORE);
+    revStore.get(REVISION_KEY).onsuccess = function(e) {
+      revStore.put(parseInt(e.target.result, 10) + 1, REVISION_KEY);
+    };
+  },
+
+  saveContact: function CDB_saveContact(aContact, successCb, errorCb) {
     let contact = this.makeImport(aContact);
     this.newTxn("readwrite", STORE_NAME, function (txn, store) {
       if (DEBUG) debug("Going to update" + JSON.stringify(contact));
@@ -623,6 +640,8 @@ ContactDB.prototype = {
         }
         this.invalidateCache();
       }.bind(this);
+
+      this.incrementRevision(txn);
     }.bind(this), successCb, errorCb);
   },
 
@@ -633,7 +652,8 @@ ContactDB.prototype = {
         store.delete(aId).onsuccess = function() {
           aSuccessCb();
         };
-      }, null, aErrorCb);
+        this.incrementRevision(txn);
+      }.bind(this), null, aErrorCb);
     }.bind(this));
   },
 
@@ -641,7 +661,8 @@ ContactDB.prototype = {
     this.newTxn("readwrite", STORE_NAME, function (txn, store) {
       if (DEBUG) debug("Going to clear all!");
       store.clear();
-    }, aSuccessCb, aErrorCb);
+      this.incrementRevision(txn);
+    }.bind(this), aSuccessCb, aErrorCb);
   },
 
   createCacheForQuery: function CDB_createCacheForQuery(aQuery, aSuccessCb, aFailureCb) {
@@ -719,6 +740,15 @@ ContactDB.prototype = {
         aSuccessCb(null);
       }
     }.bind(this));
+  },
+
+  getRevision: function CDB_getRevision(aSuccessCb) {
+    if (DEBUG) debug("getRevision");
+    this.newTxn("readonly", REVISION_STORE, function (txn, store) {
+      store.get(REVISION_KEY).onsuccess = function (e) {
+        aSuccessCb(e.target.result);
+      }
+    });
   },
 
   /*
@@ -881,6 +911,6 @@ ContactDB.prototype = {
   },
 
   init: function init(aGlobal) {
-      this.initDBHelper(DB_NAME, DB_VERSION, [STORE_NAME, SAVED_GETALL_STORE_NAME], aGlobal);
+      this.initDBHelper(DB_NAME, DB_VERSION, [STORE_NAME, SAVED_GETALL_STORE_NAME, REVISION_STORE], aGlobal);
   }
 };
