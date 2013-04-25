@@ -155,10 +155,7 @@ DOMCI_CLASS(MessageEvent)
 DOMCI_CLASS(DeviceStorage)
 
 // Geolocation
-DOMCI_CLASS(GeoGeolocation)
-DOMCI_CLASS(GeoPosition)
 DOMCI_CLASS(GeoPositionCoords)
-DOMCI_CLASS(GeoPositionError)
 
 DOMCI_CLASS(MozPowerManager)
 DOMCI_CLASS(MozWakeLock)
