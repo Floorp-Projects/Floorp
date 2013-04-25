@@ -67,7 +67,7 @@
            whether or not it is shown. That's not good for our case, since we
            want to allow each subview to be uniquely sized. -->
       <box id="PanelUI-subViews">
-        <vbox id="PanelUI-bookmarks" class="PanelUI-subView" flex="1">
+        <vbox id="PanelUI-bookmarks" flex="1">
           <label value="&appMenuBookmarks.label;"/>
           <vbox flex="1">
             <toolbarbutton label="&bookmarkThisPageCmd.label;"/>

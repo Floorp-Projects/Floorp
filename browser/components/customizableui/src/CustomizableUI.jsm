@@ -123,7 +123,7 @@ XPCOMUtils.defineLazyGetter(this, "gBuiltInWidgets", function() {
     },
     onViewShowing: function(aEvent) {
       // Populate our list of history
-      const kMaxResults = 10;
+      const kMaxResults = 15;
       let doc = aEvent.detail.ownerDocument;
 
       let options = PlacesUtils.history.getNewQueryOptions();
@@ -728,6 +728,10 @@ let CustomizableUIInternal = {
         ERROR("Could not find the view node with id: " + aWidget.viewId);
         throw new Error("Could not find the view node with id: " + aWidget.viewId);
       }
+
+      // PanelUI relies on the .PanelUI-subView class to be able to show only
+      // one sub-view at a time.
+      viewNode.classList.add("PanelUI-subView");
 
       for (let eventName of kSubviewEvents) {
         let handler = "on" + eventName;
