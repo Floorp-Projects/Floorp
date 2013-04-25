@@ -231,6 +231,7 @@
 #include "nsPISocketTransportService.h"
 #include "mozilla/dom/AudioContext.h"
 #include "mozilla/dom/FunctionBinding.h"
+#include "mozilla/dom/WindowBinding.h"
 
 #ifdef MOZ_WEBSPEECH
 #include "mozilla/dom/SpeechSynthesis.h"
@@ -4329,20 +4330,51 @@ nsGlobalWindow::MozRequestAnimationFrame(nsIFrameRequestCallback* aCallback,
   FORWARD_TO_INNER(MozRequestAnimationFrame, (aCallback, aHandle),
                    NS_ERROR_NOT_INITIALIZED);
 
-  if (!mDoc) {
-    return NS_OK;
+  if (!aCallback) {
+    if (mDoc) {
+      mDoc->WarnOnceAbout(nsIDocument::eMozBeforePaint);
+    }
+    return NS_ERROR_XPC_BAD_CONVERT_JS;
   }
 
-  if (!aCallback) {
-    mDoc->WarnOnceAbout(nsIDocument::eMozBeforePaint);
-    return NS_ERROR_XPC_BAD_CONVERT_JS;
+  nsIDocument::FrameRequestCallbackHolder holder(aCallback);
+  return RequestAnimationFrame(holder, aHandle);
+}
+
+nsresult
+nsGlobalWindow::RequestAnimationFrame(const nsIDocument::FrameRequestCallbackHolder& aCallback,
+                                      int32_t* aHandle)
+{
+  MOZ_ASSERT(IsInnerWindow());
+
+  if (!mDoc) {
+    *aHandle = 0;
+    return NS_OK;
   }
 
   if (mJSObject)
     js::NotifyAnimationActivity(mJSObject);
 
-  nsIDocument::FrameRequestCallbackHolder holder(aCallback);
-  return mDoc->ScheduleFrameRequestCallback(holder, aHandle);
+  return mDoc->ScheduleFrameRequestCallback(aCallback, aHandle);
+}
+
+NS_IMETHODIMP
+nsGlobalWindow::RequestAnimationFrame(const JS::Value& aCallback,
+                                      JSContext* cx,
+                                      int32_t* aHandle)
+{
+  FORWARD_TO_INNER(RequestAnimationFrame, (aCallback, cx, aHandle),
+                   NS_ERROR_NOT_INITIALIZED);
+
+  if (!aCallback.isObject() || !JS_ObjectIsCallable(cx, &aCallback.toObject())) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  nsRefPtr<FrameRequestCallback> callback =
+    new FrameRequestCallback(&aCallback.toObject());
+
+  nsIDocument::FrameRequestCallbackHolder holder(callback);
+  return RequestAnimationFrame(holder, aHandle);
 }
 
 NS_IMETHODIMP
