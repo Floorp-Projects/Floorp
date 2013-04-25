@@ -8459,7 +8459,20 @@ class CGJSImplClass(CGBindingImplClass):
                          extradefinitions=extradefinitions)
 
     def getWrapObjectBody(self):
-        return "return %sBinding::Wrap(aCx, aScope, this);" % self.descriptor.name
+        return ("JS::Rooted<JSObject*> obj(aCx, %sBinding::Wrap(aCx, aScope, this));\n"
+                "if (!obj) {\n"
+                "  return nullptr;\n"
+                "}\n"
+                "\n"
+                "// Now define it on our chrome object\n"
+                "JSAutoCompartment ac(aCx, mImpl->Callback());\n"
+                "if (!JS_WrapObject(aCx, obj.address())) {\n"
+                "  return nullptr;\n"
+                "}\n"
+                'if (!JS_DefineProperty(aCx, mImpl->Callback(), "__DOM_IMPL__", JS::ObjectValue(*obj), nullptr, nullptr, 0)) {\n'
+                "  return nullptr;\n"
+                "}\n"
+                "return obj;" % self.descriptor.name)
 
     def getGetParentObjectReturnType(self):
         return "nsISupports*"
