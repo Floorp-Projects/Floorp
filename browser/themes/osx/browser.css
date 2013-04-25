@@ -2183,6 +2183,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 .tab-label {
   margin: 0;
+  text-align: center;
 }
 
 .tab-throbber:not([pinned]),
