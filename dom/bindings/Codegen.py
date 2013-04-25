@@ -2717,11 +2717,6 @@ for (uint32_t i = 0; i < length; ++i) {
         argumentTypeName = typeName + "Argument"
         if nullable:
             typeName = "Nullable<" + typeName + " >"
-        if isOptional:
-            nonConstDecl = "const_cast<Optional<" + typeName + " >& >(${declName})"
-        else:
-            nonConstDecl = "const_cast<" + typeName + "& >(${declName})"
-            typeName = "const " + typeName
 
         def handleNull(templateBody, setToNullVar, extraConditionForNull=""):
             null = CGGeneric("if (%s${val}.isNullOrUndefined()) {\n"
@@ -2736,16 +2731,16 @@ for (uint32_t i = 0; i < length; ++i) {
         declType = CGGeneric(typeName)
         holderType = CGGeneric(argumentTypeName)
         if isOptional:
-            mutableDecl = nonConstDecl + ".Value()"
-            declType = CGTemplatedType("Optional", declType, isConst=True)
+            mutableDecl = "${declName}.Value()"
+            declType = CGTemplatedType("Optional", declType)
             holderType = CGTemplatedType("Maybe", holderType)
-            constructDecl = CGGeneric(nonConstDecl + ".Construct();")
+            constructDecl = CGGeneric("${declName}.Construct();")
             if nullable:
                 constructHolder = CGGeneric("${holderName}.construct(%s.SetValue());" % mutableDecl)
             else:
                 constructHolder = CGGeneric("${holderName}.construct(${declName}.Value());")
         else:
-            mutableDecl = nonConstDecl
+            mutableDecl = "${declName}"
             constructDecl = None
             if nullable:
                 holderType = CGTemplatedType("Maybe", holderType)
@@ -3979,6 +3974,8 @@ class CGCallGenerator(CGThing):
                 if a.optional and not a.defaultValue:
                     # If a.defaultValue, then it's not going to use an Optional,
                     # so doesn't need to be const just due to being optional.
+                    return True
+                if a.type.isUnion():
                     return True
                 return False
             if needsConst(a):
@@ -5603,6 +5600,7 @@ class CGUnionConversionStruct(CGThing):
         return string.Template("""
 class ${structName}Argument {
 public:
+  // Argument needs to be a const ref because that's all Maybe<> allows
   ${structName}Argument(const ${structName}& aUnion) : mUnion(const_cast<${structName}&>(aUnion))
   {
   }
