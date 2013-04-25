@@ -6,7 +6,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-#ident  "$Id: proto64.mk,v 1.4 2012/03/06 13:13:40 gerv%gerv.net Exp $"
+#ident  "$Id$"
 #
 
 ifeq ($(USE_64), 1)

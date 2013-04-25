@@ -46,7 +46,5 @@ _PR_MD_WAIT_SEM(_MDSemaphore *md)
 void 
 _PR_MD_POST_SEM(_MDSemaphore *md)
 {
-    int old_count;
-
-    ReleaseSemaphore(md->sem, 1, &old_count);
+    ReleaseSemaphore(md->sem, 1, NULL);
 }
