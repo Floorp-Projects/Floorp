@@ -342,7 +342,7 @@ abstract public class BrowserApp extends GeckoApp
 
         super.onCreate(savedInstanceState);
 
-        RelativeLayout actionBar = (RelativeLayout) getActionBarLayout();
+        LinearLayout actionBar = (LinearLayout) getActionBarLayout();
         mMainLayout.addView(actionBar, 2);
 
         ((GeckoApp.MainLayout) mMainLayout).setTouchEventInterceptor(new HideTabsTouchListener());
@@ -683,9 +683,16 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     public View getActionBarLayout() {
-        RelativeLayout actionBar = (RelativeLayout) LayoutInflater.from(this).inflate(R.layout.browser_toolbar, null);
-        actionBar.setLayoutParams(new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.FILL_PARENT,
-                                                                  (int) getResources().getDimension(R.dimen.browser_toolbar_height)));
+        int actionBarRes;
+
+        if (!HardwareUtils.hasMenuButton() || HardwareUtils.isTablet())
+           actionBarRes = R.layout.browser_toolbar_menu;
+        else
+           actionBarRes = R.layout.browser_toolbar;
+
+        LinearLayout actionBar = (LinearLayout) LayoutInflater.from(this).inflate(actionBarRes, null);
+        actionBar.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.FILL_PARENT,
+                                                                (int) getResources().getDimension(R.dimen.browser_toolbar_height)));
         return actionBar;
     }
 
