@@ -308,6 +308,7 @@ webidl_files = \
   URLUtils.webidl \
   USSDReceivedEvent.webidl \
   VideoStreamTrack.webidl \
+  Window.webidl \
   XMLDocument.webidl \
   XMLHttpRequest.webidl \
   XMLHttpRequestEventTarget.webidl \
