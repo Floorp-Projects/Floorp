@@ -278,8 +278,8 @@ PannerNodeEngine::EqualPowerPanningFunction(const AudioChunk& aInput,
   distanceGain = (this->*mDistanceModelFunction)(distance);
 
   // Actually compute the left and right gain.
-  gainL = cos(0.5 * M_PI * normalizedAzimuth);
-  gainR = sin(0.5 * M_PI * normalizedAzimuth);
+  gainL = cos(0.5 * M_PI * normalizedAzimuth) * aInput.mVolume;
+  gainR = sin(0.5 * M_PI * normalizedAzimuth) * aInput.mVolume;
 
   // Compute the output.
   if (inputChannels == 1) {

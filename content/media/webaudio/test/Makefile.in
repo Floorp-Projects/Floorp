@@ -25,16 +25,19 @@ MOCHITEST_FILES := \
   test_audioBufferSourceNode.html \
   test_audioBufferSourceNodeLoop.html \
   test_audioBufferSourceNodeLoopStartEnd.html \
+  test_audioBufferSourceNodeNullBuffer.html \
   test_badConnect.html \
   test_biquadFilterNode.html \
   test_currentTime.html \
   test_delayNode.html \
+  test_delayNodeWithGain.html \
   test_decodeAudioData.html \
   test_dynamicsCompressorNode.html \
   test_gainNode.html \
   test_pannerNode.html \
   test_scriptProcessorNode.html \
   test_singleSourceDest.html \
+  test_audioBufferSourceNodeLazyLoopParam.html \
   ting.ogg \
   ting-expected.wav \
   ting-dualchannel44.1.ogg \

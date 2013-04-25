@@ -8,9 +8,17 @@ srcdir     = @srcdir@
 VPATH      = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/config.mk
+
+# static win runtime linking
+USE_STATIC_LIBS = 1
+
+# don't use moz glue libs
+MOZ_GLUE_LDFLAGS =
+MOZ_GLUE_PROGRAM_LDFLAGS =
 
 NO_PROFILE_GUIDED_OPTIMIZE = 1
+
+include $(topsrcdir)/config/config.mk
 
 # We want this exe in dist/bin
 DIST_SUBDIR =

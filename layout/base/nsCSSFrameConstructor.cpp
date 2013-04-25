@@ -92,6 +92,7 @@
 #include "nsAnimationManager.h"
 #include "nsTransitionManager.h"
 #include "nsSVGIntegrationUtils.h"
+#include "nsViewportFrame.h"
 #include <algorithm>
 
 #ifdef MOZ_XUL
@@ -1597,7 +1598,7 @@ nsCSSFrameConstructor::CreateGeneratedContent(nsFrameConstructorState& aState,
         nsAutoString  nameSpaceVal;
         contentString.Left(nameSpaceVal, barIndex);
         nsresult error;
-        attrNameSpace = nameSpaceVal.ToInteger(&error, 10);
+        attrNameSpace = nameSpaceVal.ToInteger(&error);
         contentString.Cut(0, barIndex + 1);
         if (contentString.Length()) {
           if (mDocument->IsHTML() && aParentContent->IsHTML()) {
@@ -7733,7 +7734,8 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
         } else {
           needInvalidatingPaint = true;
           // Just invalidate our area:
-          nsSVGUtils::InvalidateBounds(aFrame);
+          nsSVGEffects::InvalidateRenderingObservers(aFrame);
+          aFrame->InvalidateFrameSubtree();
         }
       } else {
         needInvalidatingPaint = true;
@@ -12452,7 +12454,7 @@ nsCSSFrameConstructor::RecomputePosition(nsIFrame* aFrame)
 
     // Construct a bogus parent reflow state so that there's a usable
     // containing block reflow state.
-    nsIFrame *parentFrame = aFrame->GetParent();
+    nsIFrame* parentFrame = aFrame->GetParent();
     nsSize parentSize = parentFrame->GetSize();
 
     nsFrameState savedState = parentFrame->GetStateBits();
@@ -12476,7 +12478,10 @@ nsCSSFrameConstructor::RecomputePosition(nsIFrame* aFrame)
     nsSize availSize(parentSize.width, NS_INTRINSICSIZE);
 
     nsSize size = aFrame->GetSize();
-    nsSize cbSize = aFrame->GetContainingBlock()->GetSize();
+    ViewportFrame* viewport = do_QueryFrame(parentFrame);
+    nsSize cbSize = viewport ?
+      viewport->AdjustReflowStateAsContainingBlock(&parentReflowState).Size()
+      : aFrame->GetContainingBlock()->GetSize();
     const nsMargin& parentBorder =
       parentReflowState.mStyleBorder->GetComputedBorder();
     cbSize -= nsSize(parentBorder.LeftRight(), parentBorder.TopBottom());

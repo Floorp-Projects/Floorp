@@ -25,18 +25,10 @@ namespace dom {
 class CallbackFunction : public CallbackObject
 {
 public:
-  /**
-   * Create a CallbackFunction.  aCallable is the callable we're wrapping.
-   * aOwner is the object that will be receiving this CallbackFunction as a
-   * method argument, if any.  We need this so we can store our callable in the
-   * same compartment as our owner.  If *aInited is set to false, an exception
-   * has been thrown.
-   */
-  CallbackFunction(JSContext* cx, JSObject* aOwner, JSObject* aCallable,
-                   bool* aInited)
-    : CallbackObject(cx, aOwner, aCallable, aInited)
+  explicit CallbackFunction(JSObject* aCallable)
+    : CallbackObject(aCallable)
   {
-    MOZ_ASSERT(JS_ObjectIsCallable(cx, aCallable));
+    MOZ_ASSERT(JS_ObjectIsCallable(nullptr, aCallable));
   }
 
   JSObject* Callable() const

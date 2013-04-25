@@ -662,6 +662,23 @@ function shortenString(aString, aMaxLength)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// General Utils
+////////////////////////////////////////////////////////////////////////////////
+/**
+ * Return main chrome window (crosses chrome boundary)
+ */
+function getMainChromeWindow(aWindow)
+{
+  return aWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                .getInterface(Components.interfaces.nsIWebNavigation)
+                .QueryInterface(Components.interfaces.nsIDocShellTreeItem)
+                .rootTreeItem
+                .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                .getInterface(Components.interfaces.nsIDOMWindow);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 // Private
 ////////////////////////////////////////////////////////////////////////////////
 

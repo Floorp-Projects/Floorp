@@ -3361,8 +3361,8 @@ class PropertyDescriptorOperations
         MOZ_ASSERT(hasShortId());
         return desc()->shortid;
     }
-    JSPropertyOp getter() const { MOZ_ASSERT(!hasGetterObject()); return desc()->getter; }
-    JSStrictPropertyOp setter() const { MOZ_ASSERT(!hasSetterObject()); return desc()->setter; }
+    JSPropertyOp getter() const { return desc()->getter; }
+    JSStrictPropertyOp setter() const { return desc()->setter; }
     JS::HandleObject getterObject() const {
         MOZ_ASSERT(hasGetterObject());
         return JS::HandleObject::fromMarkedLocation(reinterpret_cast<JSObject *const *>(&desc()->getter));
@@ -3414,17 +3414,20 @@ template <>
 class HandleBase<JSPropertyDescriptor>
   : public JS::PropertyDescriptorOperations<JS::Handle<JSPropertyDescriptor> >
 {
-    friend class JS::PropertyDescriptorOperations<JS::Rooted<JSPropertyDescriptor> >;
+    friend class JS::PropertyDescriptorOperations<JS::Handle<JSPropertyDescriptor> >;
     const JSPropertyDescriptor *extract() const {
         return static_cast<const JS::Handle<JSPropertyDescriptor>*>(this)->address();
     }
+  public:
+    JS::HandleValue value() const { return JS::HandleValue::fromMarkedLocation(&extract()->value); }
+    JS::HandleObject obj() const { return JS::HandleObject::fromMarkedLocation(&extract()->obj); }
 };
 
 template <>
 class MutableHandleBase<JSPropertyDescriptor>
   : public JS::PropertyDescriptorOperations<JS::MutableHandle<JSPropertyDescriptor> >
 {
-    friend class JS::PropertyDescriptorOperations<JS::Rooted<JSPropertyDescriptor> >;
+    friend class JS::PropertyDescriptorOperations<JS::MutableHandle<JSPropertyDescriptor> >;
     const JSPropertyDescriptor *extract() const {
         return static_cast<const JS::MutableHandle<JSPropertyDescriptor>*>(this)->address();
     }

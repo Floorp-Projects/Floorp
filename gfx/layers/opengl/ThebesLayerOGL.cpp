@@ -4,10 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ipc/AutoOpenSurface.h"
-#include "mozilla/layers/PLayers.h"
+#include "mozilla/layers/PLayerTransaction.h"
 #include "TiledLayerBuffer.h"
 
-/* This must occur *after* layers/PLayers.h to avoid typedefs conflicts. */
+/* This must occur *after* layers/PLayerTransaction.h to avoid typedefs conflicts. */
 #include "mozilla/Util.h"
 
 #include "ThebesLayerBuffer.h"

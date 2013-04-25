@@ -27,13 +27,13 @@ function startTest(test, token) {
 
   element.src = test.name;
   element.name = test.name;
-  element.hasAudio = test.hasAudio;
+  element.hasAudio = elemType == "video" ? test.hasAudio : undefined;
   element.addEventListener("loadedmetadata", onloadedmetadata, false);
 
   element.load();
 }
 
-manager.runTests(gMozHasAudioTests, startTest);
+manager.runTests(gTrackTests, startTest);
 
 </script>
 </pre>

@@ -14,6 +14,16 @@ default-preferences pref(dom.experimental_forms_range,true)
 != input-range-different-fraction-of-range-unthemed-1.html input-range-different-fraction-of-range-unthemed-1-notref.html
 == input-range-same-fraction-of-range-unthemed-1.html input-range-same-fraction-of-range-unthemed-1-ref.html
 
+# dynamic value changes:
+== input-value-prop-unthemed.html input-75pct-unthemed-common-ref.html
+== input-value-prop.html input-75pct-common-ref.html
+== input-valueAsNumber-prop-unthemed.html input-75pct-unthemed-common-ref.html
+== input-valueAsNumber-prop.html input-75pct-common-ref.html
+== input-stepDown-unthemed.html input-75pct-unthemed-common-ref.html
+== input-stepDown.html input-75pct-common-ref.html
+== input-stepUp-unthemed.html input-75pct-unthemed-common-ref.html
+== input-stepUp.html input-75pct-common-ref.html
+
 # 'direction' property:
 == input-range-direction-unthemed-1.html input-range-direction-unthemed-1-ref.html
 

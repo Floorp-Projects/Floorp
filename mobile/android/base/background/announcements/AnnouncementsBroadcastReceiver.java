@@ -4,6 +4,8 @@
 
 package org.mozilla.gecko.background.announcements;
 
+import org.mozilla.gecko.background.BackgroundService;
+
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -28,9 +30,6 @@ public class AnnouncementsBroadcastReceiver extends BroadcastReceiver {
       return;
     }
 
-    Intent service = new Intent(context, AnnouncementsBroadcastService.class);
-    service.putExtras(intent);
-    service.setAction(intent.getAction());
-    context.startService(service);
+    BackgroundService.runIntentInService(context, intent, AnnouncementsBroadcastService.class);
   }
 }

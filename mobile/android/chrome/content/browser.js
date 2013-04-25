@@ -150,6 +150,24 @@ function sendMessageToJava(aMessage) {
   return getBridge().handleGeckoMessage(JSON.stringify(aMessage));
 }
 
+function doChangeMaxLineBoxWidth(aWidth) {
+  gReflowPending = null;
+  let webNav = BrowserApp.selectedTab.window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation);
+  let docShell = webNav.QueryInterface(Ci.nsIDocShell);
+  let docViewer = docShell.contentViewer.QueryInterface(Ci.nsIMarkupDocumentViewer);
+
+  let range = null;
+  if (BrowserApp.selectedTab._mReflozPoint) {
+    range = BrowserApp.selectedTab._mReflozPoint.range;
+  }
+
+  docViewer.changeMaxLineBoxWidth(aWidth);
+
+  if (range) {
+    BrowserEventHandler._zoomInAndSnapToRange(range);
+  }
+}
+
 function fuzzyEquals(a, b) {
   return (Math.abs(a - b) < 1e-6);
 }
@@ -172,10 +190,10 @@ XPCOMUtils.defineLazyGetter(this, "Rect", function() {
 });
 
 function resolveGeckoURI(aURI) {
-  if (aURI.indexOf("chrome://") == 0) {
+  if (aURI.startsWith("chrome://")) {
     let registry = Cc['@mozilla.org/chrome/chrome-registry;1'].getService(Ci["nsIChromeRegistry"]);
     return registry.convertChromeURL(Services.io.newURI(aURI, null, null)).spec;
-  } else if (aURI.indexOf("resource://") == 0) {
+  } else if (aURI.startsWith("resource://")) {
     let handler = Services.io.getProtocolHandler("resource").QueryInterface(Ci.nsIResProtocolHandler);
     return handler.resolveURI(Services.io.newURI(aURI, null, null));
   }
@@ -183,7 +201,7 @@ function resolveGeckoURI(aURI) {
 }
 
 function shouldShowProgress(url) {
-  return (url != "about:home" && !/^about:reader/.test(url));
+  return (url != "about:home" && !url.startsWith("about:reader"));
 }
 
 /**
@@ -2153,7 +2171,7 @@ var UserAgent = {
     if (aUri.schemeIs("http") || aUri.schemeIs("https")) {
       if (this.YOUTUBE_DOMAIN.test(aUri.host)) {
         // Send the phone UA to Youtube if this is a tablet.
-        if (defaultUA.indexOf("Android; Mobile;") === -1)
+        if (!defaultUA.contains("Android; Mobile;"))
           return defaultUA.replace("Android;", "Android; Mobile;");
       }
     }
@@ -2301,6 +2319,7 @@ nsBrowserAccess.prototype = {
 // get created with the right size rather than being 1x1
 let gScreenWidth = 1;
 let gScreenHeight = 1;
+let gReflowPending = null;
 
 // The margins that should be applied to the viewport for fixed position
 // children. This is used to avoid browser chrome permanently obscuring
@@ -2480,14 +2499,18 @@ Tab.prototype = {
   },
 
   performReflowOnZoom: function(aViewport) {
-      let webNav = this.window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation);
-      let docShell = webNav.QueryInterface(Ci.nsIDocShell);
-      let docViewer = docShell.contentViewer.QueryInterface(Ci.nsIMarkupDocumentViewer);
       let viewportWidth = gScreenWidth / aViewport.zoom;
+      let reflozTimeout = Services.prefs.getIntPref("browser.zoom.reflowZoom.reflowTimeout");
+
+      if (gReflowPending) {
+        clearTimeout(gReflowPending);
+      }
 
       // We add in a bit of fudge just so that the end characters don't accidentally
       // get clipped. 15px is an arbitrary choice.
-      docViewer.changeMaxLineBoxWidth(viewportWidth - 15);
+      gReflowPending = setTimeout(doChangeMaxLineBoxWidth,
+                                  reflozTimeout,
+                                  viewportWidth - 15);
   },
 
   /** 
@@ -3035,7 +3058,8 @@ Tab.prototype = {
         // pages and other similar page. This lets us fix bugs like 401575 which
         // require error page UI to do privileged things, without letting error
         // pages have any privilege themselves.
-        if (/^about:/.test(target.documentURI)) {
+        let docURI = target.documentURI;
+        if (docURI.startsWith("about:certerror") || docURI.startsWith("about:blocked")) {
           this.browser.addEventListener("click", ErrorPageEventHandler, true);
           let listener = function() {
             this.browser.removeEventListener("click", ErrorPageEventHandler, true);
@@ -3045,7 +3069,7 @@ Tab.prototype = {
           this.browser.addEventListener("pagehide", listener, true);
         }
 
-        if (/^about:reader/.test(target.documentURI))
+        if (docURI.startsWith("about:reader"))
           new AboutReader(this.browser.contentDocument, this.browser.contentWindow);
 
         break;
@@ -3223,7 +3247,7 @@ Tab.prototype = {
           if (article == null || (article.url != tabURL)) {
             // Don't clear the article for about:reader pages since we want to
             // use the article from the previous page
-            if (!/^about:reader/i.test(tabURL))
+            if (!tabURL.startsWith("about:reader"))
               this.savedArticle = null;
 
             return;
@@ -3438,6 +3462,8 @@ Tab.prototype = {
     if (aMetadata.maxZoom > 0)
       aMetadata.maxZoom *= scaleRatio;
 
+    aMetadata.isRTL = this.browser.contentDocument.documentElement.dir == "rtl";
+
     ViewportHandler.setMetadataForDocument(this.browser.contentDocument, aMetadata);
     this.updateViewportSize(gScreenWidth, aInitialLoad);
     this.sendViewportMetadata();
@@ -3566,6 +3592,7 @@ Tab.prototype = {
       defaultZoom: metadata.defaultZoom || metadata.scaleRatio,
       minZoom: metadata.minZoom || 0,
       maxZoom: metadata.maxZoom || 0,
+      isRTL: metadata.isRTL,
       tabID: this.id
     });
   },
@@ -3890,12 +3917,6 @@ var BrowserEventHandler = {
         this.onPinch(aData);
         break;
 
-      case "MozMagnifyGesture":
-        if (BrowserEventHandler.mReflozPref) {
-          this.onPinchFinish(aData, BrowserApp.selectedTab._mReflozPoint.x, BrowserApp.selectedTab._mReflozPoint.y);
-        }
-        break;
-
       default:
         dump('BrowserEventHandler.handleUserEvent: unexpected topic "' + aTopic + '"');
         break;
@@ -4039,6 +4060,7 @@ var BrowserEventHandler = {
     rect.h = viewport.cssHeight;
 
     sendMessageToJava(rect);
+    BrowserApp.selectedTab._mReflozPoint = null;
    },
 
    onPinch: function(aData) {
@@ -4052,15 +4074,6 @@ var BrowserEventHandler = {
        BrowserApp.selectedTab._mReflozPoint = { x: zoomPointX, y: zoomPointY,
          range: BrowserApp.selectedBrowser.contentDocument.caretPositionFromPoint(zoomPointX, zoomPointY) };
          BrowserApp.selectedTab.probablyNeedRefloz = true;
-     }
-   },
-
-   onPinchFinish: function(aData, aX, aY) {
-     // We only want to do this if reflow-on-zoom is enabled.
-     if (BrowserEventHandler.mReflozPref) {
-       let range = BrowserApp.selectedTab._mReflozPoint.range;
-       this._zoomInAndSnapToRange(range);
-       BrowserApp.selectedTab._mReflozPoint = null;
      }
    },
 
@@ -4454,7 +4467,7 @@ var ErrorPageEventHandler = {
 
         // If the event came from an ssl error page, it is probably either the "Add
         // Exception…" or "Get me out of here!" button
-        if (/^about:certerror\?e=nssBadCert/.test(errorDoc.documentURI)) {
+        if (errorDoc.documentURI.startsWith("about:certerror?e=nssBadCert")) {
           let perm = errorDoc.getElementById("permanentExceptionButton");
           let temp = errorDoc.getElementById("temporaryExceptionButton");
           if (target == temp || target == perm) {
@@ -4475,11 +4488,11 @@ var ErrorPageEventHandler = {
           } else if (target == errorDoc.getElementById("getMeOutOfHereButton")) {
             errorDoc.location = "about:home";
           }
-        } else if (/^about:blocked/.test(errorDoc.documentURI)) {
+        } else if (errorDoc.documentURI.startsWith("about:blocked")) {
           // The event came from a button on a malware/phishing block page
           // First check whether it's malware or phishing, so that we can
           // use the right strings/links
-          let isMalware = /e=malwareBlocked/.test(errorDoc.documentURI);
+          let isMalware = errorDoc.documentURI.contains("e=malwareBlocked");
           let bucketName = isMalware ? "WARNING_MALWARE_PAGE_" : "WARNING_PHISHING_PAGE_";
           let nsISecTel = Ci.nsISecurityUITelemetry;
           let isIframe = (aOwnerDoc.defaultView.parent === aOwnerDoc.defaultView);
@@ -4745,7 +4758,7 @@ var FormAssistant = {
       else if (item.text)
         label = item.text;
 
-      if (filter && label.toLowerCase().indexOf(lowerFieldValue) == -1)
+      if (filter && !(label.toLowerCase().contains(lowerFieldValue)) )
         continue;
       suggestions.push({ label: label, value: item.value });
     }
@@ -5101,6 +5114,8 @@ var ViewportHandler = {
                   (!widthStr && (heightStr == "device-height" || scale == 1.0)));
     }
 
+    let isRTL = aWindow.document.documentElement.dir == "rtl";
+
     return new ViewportMetadata({
       defaultZoom: scale,
       minZoom: minScale,
@@ -5109,7 +5124,8 @@ var ViewportHandler = {
       height: height,
       autoSize: autoSize,
       allowZoom: allowZoom,
-      isSpecified: hasMetaViewport
+      isSpecified: hasMetaViewport,
+      isRTL: isRTL
     });
   },
 
@@ -5181,6 +5197,7 @@ function ViewportMetadata(aMetadata = {}) {
   this.allowZoom = ("allowZoom" in aMetadata) ? aMetadata.allowZoom : true;
   this.isSpecified = ("isSpecified" in aMetadata) ? aMetadata.isSpecified : false;
   this.scaleRatio = ViewportHandler.getScaleRatio();
+  this.isRTL = ("isRTL" in aMetadata) ? aMetadata.isRTL : false;
   Object.seal(this);
 }
 
@@ -5194,6 +5211,7 @@ ViewportMetadata.prototype = {
   allowZoom: null,
   isSpecified: null,
   scaleRatio: null,
+  isRTL: null,
 };
 
 

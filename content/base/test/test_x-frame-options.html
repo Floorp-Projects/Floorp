@@ -118,6 +118,17 @@ var testFramesLoaded = function() {
   var test12 = frame.contentDocument.getElementById("test");
   is(test12, null, "test allow-from-deny");
 
+  // iframe from different origin, X-F-O: SAMEORIGIN, multipart - should not load
+  frame = harness.contentDocument.getElementById("sameorigin-multipart");
+  var test13 = frame.contentDocument.getElementById("test");
+  is(test13, null, "test sameorigin-multipart");
+
+  // iframe from same origin, X-F-O: SAMEORIGIN, multipart - should load
+  frame = harness.contentDocument.getElementById("sameorigin-multipart2");
+  var test14 = frame.contentDocument.getElementById("test").textContent;
+  is(test14, "sameorigin-multipart2", "test sameorigin-multipart2");
+
+
   // frames from bug 836132 tests
   {
     frame = harness.contentDocument.getElementById("allow-from-allow-1");

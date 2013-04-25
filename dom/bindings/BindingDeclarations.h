@@ -228,6 +228,11 @@ public:
   Optional()
   {}
 
+  explicit Optional(const T& aValue)
+  {
+    mImpl.construct(aValue);
+  }
+
   bool WasPassed() const
   {
     return !mImpl.empty();

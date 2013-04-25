@@ -16,7 +16,7 @@
 //#define COMPOSITOR_PERFORMANCE_WARNING
 
 #include "mozilla/layers/PCompositorParent.h"
-#include "mozilla/layers/PLayersParent.h"
+#include "mozilla/layers/PLayerTransactionParent.h"
 #include "base/thread.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/TimeStamp.h"
@@ -76,7 +76,7 @@ public:
 
   virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 
-  virtual void ShadowLayersUpdated(ShadowLayersParent* aLayerTree,
+  virtual void ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
                                    const TargetConfig& aTargetConfig,
                                    bool isFirstPaint) MOZ_OVERRIDE;
   /**
@@ -168,10 +168,11 @@ public:
                                         PlatformThreadId aThreadID);
 
 protected:
-  virtual PLayersParent* AllocPLayers(const LayersBackend& aBackendHint,
-                                      const uint64_t& aId,
-                                      TextureFactoryIdentifier* aTextureFactoryIdentifier);
-  virtual bool DeallocPLayers(PLayersParent* aLayers);
+  virtual PLayerTransactionParent*
+    AllocPLayerTransaction(const LayersBackend& aBackendHint,
+                           const uint64_t& aId,
+                           TextureFactoryIdentifier* aTextureFactoryIdentifier);
+  virtual bool DeallocPLayerTransaction(PLayerTransactionParent* aLayers);
   virtual void ScheduleTask(CancelableTask*, int);
   virtual void Composite();
   virtual void ComposeToTarget(gfxContext* aTarget);
@@ -179,7 +180,7 @@ protected:
   virtual void SetPageRect(const gfx::Rect& aCssPageRect);
   virtual void SyncViewportInfo(const nsIntRect& aDisplayPort, float aDisplayResolution, bool aLayersUpdated,
                                 nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY,
-                                gfx::Margin& aFixedLayerMargins);
+                                gfx::Margin& aFixedLayerMargins, float& aOffsetX, float& aOffsetY);
   void SetEGLSurfaceSize(int width, int height);
 
 private:
