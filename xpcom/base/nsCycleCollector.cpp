@@ -140,6 +140,7 @@
 
 #include "mozilla/CondVar.h"
 #include "mozilla/Likely.h"
+#include "mozilla/mozPoisonWrite.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/StandardInteger.h"
 #include "mozilla/Telemetry.h"
@@ -1302,6 +1303,7 @@ public:
     ~nsCycleCollectorLogger()
     {
         if (mStream) {
+            MozillaUnRegisterDebugFILE(mStream);
             fclose(mStream);
         }
     }
@@ -1382,7 +1384,9 @@ public:
         FILE* gcLogANSIFile = nullptr;
         gcLogFile->OpenANSIFileDesc("w", &gcLogANSIFile);
         NS_ENSURE_STATE(gcLogANSIFile);
+        MozillaRegisterDebugFILE(gcLogANSIFile);
         xpc::DumpJSHeap(gcLogANSIFile);
+        MozillaUnRegisterDebugFILE(gcLogANSIFile);
         fclose(gcLogANSIFile);
 
         // Strip off "incomplete-".
@@ -1415,6 +1419,7 @@ public:
         MOZ_ASSERT(!mStream);
         mOutFile->OpenANSIFileDesc("w", &mStream);
         NS_ENSURE_STATE(mStream);
+        MozillaRegisterDebugFILE(mStream);
 
         return NS_OK;
     }
@@ -1511,6 +1516,7 @@ public:
             MOZ_ASSERT(mStream);
             MOZ_ASSERT(mOutFile);
 
+            MozillaUnRegisterDebugFILE(mStream);
             fclose(mStream);
             mStream = nullptr;
 
