@@ -738,6 +738,11 @@ UPLOAD_FILES= \
   $(call QUOTED_WILDCARD,$(PKG_JSSHELL)) \
   $(if $(UPLOAD_EXTRA_FILES), $(foreach f, $(UPLOAD_EXTRA_FILES), $(wildcard $(DIST)/$(f))))
 
+ifdef MOZ_CRASHREPORTER_UPLOAD_FULL_SYMBOLS
+UPLOAD_FILES += \
+  $(call QUOTED_WILDCARD,$(DIST)/$(PKG_PATH)$(SYMBOL_FULL_ARCHIVE_BASENAME).zip)
+endif
+
 SIGN_CHECKSUM_CMD=
 ifdef MOZ_SIGN_CMD
 # If we're signing with gpg, we'll have a bunch of extra detached signatures to
