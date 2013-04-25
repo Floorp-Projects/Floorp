@@ -9,13 +9,15 @@
 
 #include "../TestJSImplGenBinding.h"
 
+class nsPIDOMWindow;
+
 namespace mozilla {
 namespace dom {
 
 class TestCImplementedInterface : public TestJSImplInterface
 {
 public:
-  TestCImplementedInterface(JSObject* aJSImpl, nsISupports* aParent)
+  TestCImplementedInterface(JSObject* aJSImpl, nsPIDOMWindow* aParent)
     : TestJSImplInterface(aJSImpl, aParent)
   {}
 };
