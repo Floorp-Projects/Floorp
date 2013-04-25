@@ -148,3 +148,15 @@ let WebNavigation =  {
 };
 
 WebNavigation.init();
+
+addEventListener("DOMTitleChanged", function (aEvent) {
+  let document = content.document;
+  switch (aEvent.type) {
+  case "DOMTitleChanged":
+    if (!aEvent.isTrusted || aEvent.target.defaultView != content)
+      return;
+
+    sendAsyncMessage("DOMTitleChanged", { title: document.title });
+    break;
+  }
+}, false);

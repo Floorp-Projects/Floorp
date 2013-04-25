@@ -39,7 +39,7 @@
       </xul:tabbox>
       <children/>
     </content>
-    <implementation implements="nsIDOMEventListener">
+    <implementation implements="nsIDOMEventListener, nsIMessageListener">
 
       <property name="tabContextMenu" readonly="true"
                 onget="return this.tabContainer.contextMenu;"/>
@@ -286,6 +286,19 @@
         <![CDATA[
           for (let i = 0; i < this.browsers.length; i++) {
             if (this.browsers[i].contentWindow == aWindow)
+              return this.tabs[i];
+          }
+          return null;
+        ]]>
+        </body>
+      </method>
+
+      <method name="_getTabForBrowser">
+        <parameter name="aBrowser"/>
+        <body>
+        <![CDATA[
+          for (let i = 0; i < this.tabs.length; i++) {
+            if (this.tabs[i].linkedBrowser == aBrowser)
               return this.tabs[i];
           }
           return null;
@@ -2685,6 +2698,24 @@
         ]]></body>
       </method>
 
+      <method name="receiveMessage">
+        <parameter name="aMessage"/>
+        <body><![CDATA[
+          let json = aMessage.json;
+          let browser = aMessage.target;
+
+          switch (aMessage.name) {
+            case "DOMTitleChanged":
+              let tab = this._getTabForBrowser(browser);
+              if (!tab)
+                return;
+              let titleChanged = this.setTabTitle(tab);
+              if (titleChanged && !tab.selected && !tab.hasAttribute("busy"))
+                tab.setAttribute("titlechanged", "true");
+          }
+        ]]></body>
+      </method>
+
       <constructor>
         <![CDATA[
           this.mCurrentBrowser = document.getAnonymousElementByAttribute(this, "anonid", "initialBrowser");
@@ -2721,6 +2752,9 @@
             Services.prefs.getBoolPref("browser.display.use_system_colors") ?
               "-moz-default-background-color" :
               Services.prefs.getCharPref("browser.display.background_color");
+
+          if (Services.prefs.getBoolPref("browser.tabs.remote"))
+            messageManager.addMessageListener("DOMTitleChanged", this);
         ]]>
       </constructor>
 
@@ -2754,6 +2788,9 @@
           }
           document.removeEventListener("keypress", this, false);
           window.removeEventListener("sizemodechange", this, false);
+
+          if (Services.prefs.getBoolPref("browser.tabs.remote"))
+            messageManager.removeMessageListener("DOMTitleChanged", this);
         ]]>
       </destructor>
 
