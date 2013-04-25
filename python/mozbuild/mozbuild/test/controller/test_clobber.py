@@ -204,7 +204,7 @@ class TestClobberer(unittest.TestCase):
 
         s = StringIO()
         status = clobber([topsrcdir, topobjdir], env, os.getcwd(), s)
-        self.assertEqual(status, 1)
+        self.assertEqual(status, 0)
         self.assertIn('Successfully completed auto clobber', s.getvalue())
         self.assertFalse(os.path.exists(dummy_file))
 
