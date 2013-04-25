@@ -53,6 +53,7 @@ public class SiteIdentityPopup extends PopupWindow {
         mResources = GeckoApp.mAppContext.getResources();
         mYOffset = mResources.getDimensionPixelSize(R.dimen.menu_popup_offset);
         mInflated = false;
+        setAnimationStyle(R.style.PopupAnimation);
     }
 
     public static synchronized SiteIdentityPopup getInstance() {

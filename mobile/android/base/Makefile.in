@@ -526,6 +526,8 @@ RES_XML = \
 
 RES_ANIM = \
   res/anim/awesomebar_fade_in.xml \
+  res/anim/popup_show.xml \
+  res/anim/popup_hide.xml \
   res/anim/awesomebar_fade_out.xml \
   res/anim/awesomebar_hold_still.xml \
   res/anim/grow_fade_in.xml \
