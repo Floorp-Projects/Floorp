@@ -263,7 +263,7 @@ struct Parser : private AutoGCRooter, public StrictModeGetter
 {
     JSContext           *const context; /* FIXME Bug 551291: use AutoGCRooter::context? */
     TokenStream         tokenStream;
-    void                *tempPoolMark;  /* initial JSContext.tempLifoAlloc mark */
+    LifoAlloc::Mark     tempPoolMark;
 
     /* list of parsed objects for GC tracing */
     ObjectBox *traceListHead;
