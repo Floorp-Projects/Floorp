@@ -61,6 +61,8 @@ _SERV_FILES = 	\
  	 	plain-loop.html \
 		android.json \
 		b2g.json \
+		root-ev-tester.crl \
+		intermediate-ev-tester.crl \
 		$(NULL)	
 
 ifeq ($(MOZ_BUILD_APP),mobile/android)
