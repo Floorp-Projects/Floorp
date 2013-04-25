@@ -106,6 +106,10 @@ this.TouchAdapter = {
       return;
     }
 
+    if (aEvent.mozInputSource == Ci.nsIDOMMouseEvent.MOZ_SOURCE_UNKNOWN) {
+      return;
+    }
+
     if (this._delayedEvent) {
       Utils.win.clearTimeout(this._delayedEvent);
       delete this._delayedEvent;
