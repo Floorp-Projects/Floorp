@@ -1080,7 +1080,7 @@ class CGClassConstructor(CGAbstractStaticMethod):
         name = self._ctor.identifier.name
         nativeName = MakeNativeName(self.descriptor.binaryNames.get(name, name))
         callGenerator = CGMethodCall(nativeName, True, self.descriptor,
-                                     self._ctor)
+                                     self._ctor, isConstructor=True)
         return preamble + callGenerator.define();
 
 class CGClassConstructHookHolder(CGGeneric):
@@ -4031,6 +4031,93 @@ class MethodNotCreatorError(Exception):
     def __init__(self, typename):
         self.typename = typename
 
+# A counter for making sure that when we're wrapping up things in
+# nested sequences we don't use the same variable name to iterate over
+# different sequences.
+sequenceWrapLevel = 0
+
+def wrapTypeIntoCurrentCompartment(type, value):
+    """
+    Take the thing named by "value" and if it contains "any",
+    "object", or spidermonkey-interface types inside return a CGThing
+    that will wrap them into the current compartment.
+    """
+    if type.isAny():
+        assert not type.nullable()
+        return CGGeneric("if (!JS_WrapValue(cx, &%s)) {\n"
+                         "  return false;\n"
+                         "}" % value)
+
+    if type.isObject():
+        if not type.nullable():
+            value = "%s.Slot()" % value
+        else:
+            value = "&%s" % value
+        return CGGeneric("if (!JS_WrapObject(cx, %s)) {\n"
+                         "  return false;\n"
+                         "}" % value)
+
+    if type.isSpiderMonkeyInterface():
+        raise TypeError("Can't handle wrapping of spidermonkey interfaces in "
+                        "constructor arguments yet")
+
+    if type.isSequence():
+        if type.nullable():
+            type = type.inner
+            value = "%s.AsMutable().Value()" % value
+        global sequenceWrapLevel
+        index = "indexName%d" % sequenceWrapLevel
+        sequenceWrapLevel += 1
+        wrapElement = wrapTypeIntoCurrentCompartment(type.inner,
+                                                     "%s[%s]" % (value, index))
+        sequenceWrapLevel -= 1
+        if not wrapElement:
+            return None
+        return CGWrapper(CGIndenter(wrapElement),
+                         pre=("for (uint32_t %s = 0; %s < %s.Length(); ++%s) {\n" %
+                              (index, index, value, index)),
+                         post="\n}")
+
+    if type.isDictionary():
+        assert not type.nullable()
+        value = "%s.AsMutable()" % value
+        myDict = type.inner
+        memberWraps = []
+        while myDict:
+            for member in myDict.members:
+                memberWrap = wrapArgIntoCurrentCompartment(
+                    member,
+                    "%s.%s" % (value, CGDictionary.makeMemberName(member.identifier.name)))
+                if memberWrap:
+                    memberWraps.append(memberWrap)
+            myDict = myDict.parent
+        return CGList(memberWraps, "\n") if len(memberWraps) != 0 else None
+
+    if type.isUnion():
+        raise TypeError("Can't handle wrapping of unions in constructor "
+                        "arguments yet")
+
+    if (type.isString() or type.isPrimitive() or type.isEnum() or
+        type.isGeckoInterface() or type.isCallback()):
+        # All of these don't need wrapping
+        return None
+
+    raise TypeError("Unknown type; we don't know how to wrap it in constructor "
+                    "arguments: %s" % type)
+
+def wrapArgIntoCurrentCompartment(arg, value):
+    """
+    As wrapTypeIntoCurrentCompartment but handles things being optional
+    """
+    origValue = value
+    isOptional = arg.optional and not arg.defaultValue
+    if isOptional:
+        value = value + ".AsMutable().Value()"
+    wrap = wrapTypeIntoCurrentCompartment(arg.type, value)
+    if wrap and isOptional:
+        wrap = CGIfWrapper(wrap, "%s.WasPassed()" % origValue)
+    return wrap
+
 class CGPerSignatureCall(CGThing):
     """
     This class handles the guts of generating code for a particular
@@ -4056,7 +4143,7 @@ class CGPerSignatureCall(CGThing):
 
     def __init__(self, returnType, arguments, nativeMethodName, static,
                  descriptor, idlNode, argConversionStartsAt=0, getter=False,
-                 setter=False):
+                 setter=False, isConstructor=False):
         assert idlNode.isMethod() == (not getter and not setter)
         assert idlNode.isAttr() == (getter or setter)
 
@@ -4116,6 +4203,30 @@ if (global.Failed()) {
                                              allowTreatNonCallableAsNull=setter,
                                              lenientFloatCode=lenientFloatCode) for
                          i in range(argConversionStartsAt, self.argCount)])
+
+        if isConstructor:
+            # If we're called via an xray, we need to enter the underlying
+            # object's compartment and then wrap up all of our arguments into
+            # that compartment as needed.  This is all happening after we've
+            # already done the conversions from JS values to WebIDL (C++)
+            # values, so we only need to worry about cases where there are 'any'
+            # or 'object' types, or other things that we represent as actual
+            # JSAPI types, present.  Effectively, we're emulating a
+            # CrossCompartmentWrapper, but working with the C++ types, not the
+            # original list of JS::Values.
+            cgThings.append(CGGeneric("Maybe<JSAutoCompartment> ac;"))
+            xraySteps = [
+                CGGeneric("obj = js::CheckedUnwrap(obj);\n"
+                          "if (!obj) {\n"
+                          "  return false;\n"
+                          "}\n"
+                          "ac.construct(cx, obj);") ]
+            xraySteps.extend(
+                wrapArgIntoCurrentCompartment(arg, argname)
+                for (arg, argname) in self.getArguments())
+            cgThings.append(
+                CGIfWrapper(CGList(xraySteps, "\n"),
+                            "xpc::WrapperFactory::IsXrayWrapper(obj)"))
 
         cgThings.append(CGCallGenerator(
                     self.getErrorReport() if self.isFallible() else None,
@@ -4221,7 +4332,8 @@ class CGMethodCall(CGThing):
     A class to generate selection of a method signature from a set of
     signatures and generation of a call to that signature.
     """
-    def __init__(self, nativeMethodName, static, descriptor, method):
+    def __init__(self, nativeMethodName, static, descriptor, method,
+                 isConstructor=False):
         CGThing.__init__(self)
 
         methodName = '"%s.%s"' % (descriptor.interface.identifier.name, method.identifier.name)
@@ -4238,7 +4350,9 @@ class CGMethodCall(CGThing):
         def getPerSignatureCall(signature, argConversionStartsAt=0):
             return CGPerSignatureCall(signature[0], signature[1],
                                       nativeMethodName, static, descriptor,
-                                      method, argConversionStartsAt)
+                                      method,
+                                      argConversionStartsAt=argConversionStartsAt,
+                                      isConstructor=isConstructor)
             
 
         signatures = method.signatures()
@@ -7086,6 +7200,10 @@ class CGDictionary(CGThing):
                  "    NS_ENSURE_TRUE(cx, false);\n"
                  "    return Init(cx, json.ref());\n"
                  "  }\n" if not self.workers else "") +
+                "  ${selfName}& AsMutable() const\n"
+                "  {\n"
+                "    return *const_cast<${selfName}*>(this);\n"
+                "  }\n"
                 "\n" +
                 "\n".join(memberDecls) + "\n"
                 "private:\n"

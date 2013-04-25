@@ -132,6 +132,18 @@ public:
   static
   already_AddRefed<TestInterface> Test(const GlobalObject&, const nsAString&,
                                        ErrorResult&);
+  static
+  already_AddRefed<TestInterface> Test2(const GlobalObject&,
+                                        JSContext*,
+                                        const DictForConstructor&,
+                                        JS::Value,
+                                        JSObject&,
+                                        JSObject*,
+                                        const Sequence<Dict>&,
+                                        const Optional<JS::Value>&,
+                                        const Optional<NonNull<JSObject> >&,
+                                        const Optional<JSObject*>&,
+                                        ErrorResult&);
 
   // Integer types
   int8_t ReadonlyByte();
