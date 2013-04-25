@@ -1,21 +1,7 @@
-. $topsrcdir/build/macosx/universal/mozconfig
+# This make file should be identical to the beta mozconfig, apart from the
+# safeguard below
+. "$topsrcdir/browser/config/mozconfigs/macosx-universal/beta"
 
-# Universal builds override the default of browser (bug 575283 comment 29)
-ac_add_options --enable-application=browser
-
-ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
-ac_add_options --enable-update-packaging
-ac_add_options --enable-official-branding
-
-# Needed to enable breakpad in application.ini
-export MOZILLA_OFFICIAL=1
-
-export MOZ_TELEMETRY_REPORTING=1
-
-# Treat warnings as errors in directories with FAIL_ON_WARNINGS.
-ac_add_options --enable-warnings-as-errors
-
-# Package js shell.
-export MOZ_PACKAGE_JSSHELL=1
-
-. "$topsrcdir/build/mozconfig.common.override"
+# safeguard against someone forgetting to re-set EARLY_BETA_OR_EARLIER in
+# defines.sh during the beta cycle
+export BUILDING_RELEASE=1
