@@ -6878,8 +6878,8 @@ class MTypeBarrier
 };
 
 // Like MTypeBarrier, guard that the value is in the given type set. This is
-// used after some VM calls (like GetElement) to avoid the slower calls to
-// TypeScript::Monitor inside these stubs.
+// used before property writes to ensure the value being written is represented
+// in the property types for the object.
 class MMonitorTypes : public MUnaryInstruction
 {
     const types::StackTypeSet *typeSet_;
@@ -6888,7 +6888,6 @@ class MMonitorTypes : public MUnaryInstruction
       : MUnaryInstruction(def),
         typeSet_(types)
     {
-        setResultType(MIRType_Value);
         setGuard();
         JS_ASSERT(!types->unknown());
     }
