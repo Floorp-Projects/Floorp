@@ -268,7 +268,7 @@ HTMLStyleElement::GetStyleSheetInfo(nsAString& aTitle,
 }
 
 JSObject*
-HTMLStyleElement::WrapNode(JSContext *aCx, JSObject *aScope)
+HTMLStyleElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
   return HTMLStyleElementBinding::Wrap(aCx, aScope, this);
 }

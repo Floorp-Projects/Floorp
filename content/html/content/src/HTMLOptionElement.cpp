@@ -439,7 +439,7 @@ HTMLOptionElement::CopyInnerTo(Element* aDest)
 }
 
 JSObject*
-HTMLOptionElement::WrapNode(JSContext* aCx, JSObject* aScope)
+HTMLOptionElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return HTMLOptionElementBinding::Wrap(aCx, aScope, this);
 }

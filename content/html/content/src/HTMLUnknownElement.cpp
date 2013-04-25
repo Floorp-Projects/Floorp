@@ -16,7 +16,7 @@ NS_IMPL_ADDREF_INHERITED(HTMLUnknownElement, Element)
 NS_IMPL_RELEASE_INHERITED(HTMLUnknownElement, Element)
 
 JSObject*
-HTMLUnknownElement::WrapNode(JSContext *aCx, JSObject *aScope)
+HTMLUnknownElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
   JSObject* obj =
     HTMLUnknownElementBinding::Wrap(aCx, aScope, this);

@@ -174,7 +174,7 @@ HTMLLegendElement::GetForm()
 }
 
 JSObject*
-HTMLLegendElement::WrapNode(JSContext* aCx, JSObject* aScope)
+HTMLLegendElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return HTMLLegendElementBinding::Wrap(aCx, aScope, this);
 }

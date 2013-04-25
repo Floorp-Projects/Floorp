@@ -21,7 +21,7 @@ static const unsigned short SVG_CHANNEL_B = 3;
 static const unsigned short SVG_CHANNEL_A = 4;
 
 JSObject*
-SVGFEDisplacementMapElement::WrapNode(JSContext* aCx, JSObject* aScope)
+SVGFEDisplacementMapElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return SVGFEDisplacementMapElementBinding::Wrap(aCx, aScope, this);
 }

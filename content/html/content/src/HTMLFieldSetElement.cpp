@@ -245,7 +245,7 @@ HTMLFieldSetElement::NotifyElementsForFirstLegendChange(bool aNotify)
 }
 
 JSObject*
-HTMLFieldSetElement::WrapNode(JSContext* aCx, JSObject* aScope)
+HTMLFieldSetElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return HTMLFieldSetElementBinding::Wrap(aCx, aScope, this);
 }

@@ -4762,7 +4762,7 @@ XULDocument::GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult)
 }
 
 JSObject*
-XULDocument::WrapNode(JSContext *aCx, JSObject *aScope)
+XULDocument::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
   JSObject* obj = XULDocumentBinding::Wrap(aCx, aScope, this);
   if (obj && !PostCreateWrapper(aCx, obj)) {
