@@ -191,7 +191,6 @@ FENNEC_JAVA_FILES = \
   gfx/IntSize.java \
   gfx/JavaPanZoomController.java \
   gfx/Layer.java \
-  gfx/LayerMarginsAnimator.java \
   gfx/LayerRenderer.java \
   gfx/LayerView.java \
   gfx/PluginLayer.java \

@@ -8,7 +8,6 @@ package org.mozilla.gecko;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.gfx.BitmapUtils;
-import org.mozilla.gecko.gfx.GeckoLayerClient;
 import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.PanZoomController;
@@ -67,7 +66,6 @@ abstract public class BrowserApp extends GeckoApp
                                  implements TabsPanel.TabsLayoutChangeListener,
                                             PropertyAnimator.PropertyAnimationListener,
                                             View.OnKeyListener,
-                                            GeckoLayerClient.OnMetricsChangedListener,
                                             AboutHome.UriLoadListener,
                                             AboutHome.LoadCompleteListener {
     private static final String LOGTAG = "GeckoBrowserApp";
@@ -115,8 +113,34 @@ abstract public class BrowserApp extends GeckoApp
     // We'll ask for feedback after the user launches the app this many times.
     private static final int FEEDBACK_LAUNCH_COUNT = 15;
 
+    // Variables used for scrolling the toolbar on/off the page;
+
+    // A drag has to move this amount multiplied by the height of the toolbar
+    // before the toolbar will appear or disappear.
+    private static final float TOOLBAR_MOVEMENT_THRESHOLD = 0.3f;
+
     // Whether the dynamic toolbar pref is enabled.
     private boolean mDynamicToolbarEnabled = false;
+
+    // The last recorded touch event from onInterceptTouchEvent. These are
+    // not updated until the movement threshold has been exceeded.
+    private float mLastTouchX = 0.0f;
+    private float mLastTouchY = 0.0f;
+
+    // Because we can only scroll by integer amounts, we store the fractional
+    // amounts to be applied here.
+    private float mToolbarSubpixelAccumulation = 0.0f;
+
+    // Used by onInterceptTouchEvent to lock the toolbar into an off or on
+    // position.
+    private boolean mToolbarLocked = false;
+
+    // Whether the toolbar movement threshold has been passed by the current
+    // drag.
+    private boolean mToolbarThresholdPassed = false;
+
+    // Toggled when the tabs tray is made visible to disable toolbar movement.
+    private boolean mToolbarPinned = false;
 
     // Stored value of the toolbar height, so we know when it's changed.
     private int mToolbarHeight = 0;
@@ -142,7 +166,7 @@ abstract public class BrowserApp extends GeckoApp
 
                         if (isDynamicToolbarEnabled()) {
                             // Show the toolbar.
-                            mLayerView.getLayerMarginsAnimator().showMargins(false);
+                            mBrowserToolbar.animateVisibility(true);
                         }
                     } else {
                         hideAboutHome();
@@ -171,7 +195,7 @@ abstract public class BrowserApp extends GeckoApp
 
                     if (isDynamicToolbarEnabled()) {
                         // Show the toolbar.
-                        mLayerView.getLayerMarginsAnimator().showMargins(false);
+                        mBrowserToolbar.animateVisibility(true);
                     }
                 }
                 break;
@@ -205,6 +229,134 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     @Override
+    public boolean onInterceptTouchEvent(View view, MotionEvent event) {
+        if (!isDynamicToolbarEnabled() || mToolbarPinned) {
+            return super.onInterceptTouchEvent(view, event);
+        }
+
+        // Don't let the toolbar scroll at all if the page is shorter than
+        // the screen height.
+        ImmutableViewportMetrics metrics =
+            mLayerView.getLayerClient().getViewportMetrics();
+        if (metrics.getPageHeight() < metrics.getHeight()) {
+            return super.onInterceptTouchEvent(view, event);
+        }
+
+        int action = event.getActionMasked();
+        int pointerCount = event.getPointerCount();
+
+        // Whenever there are no pointers left on the screen, tell the page
+        // to clamp the viewport on fixed layer margin changes. This lets the
+        // toolbar scrolling off the top of the page make the page scroll up
+        // if it'd cause the page to go into overscroll, but only when there
+        // are no pointers held down.
+        mLayerView.getLayerClient().setClampOnFixedLayerMarginsChange(
+            pointerCount == 0 || action == MotionEvent.ACTION_CANCEL ||
+            action == MotionEvent.ACTION_UP);
+
+        View toolbarView = mBrowserToolbar.getLayout();
+        if (action == MotionEvent.ACTION_DOWN ||
+            action == MotionEvent.ACTION_POINTER_DOWN) {
+            if (pointerCount == 1) {
+                mToolbarLocked = mToolbarThresholdPassed = false;
+                mToolbarSubpixelAccumulation = 0.0f;
+                mLastTouchX = event.getX();
+                mLastTouchY = event.getY();
+                return super.onInterceptTouchEvent(view, event);
+            }
+
+            // Animate the toolbar to the fully on/off position.
+            mBrowserToolbar.animateVisibility(
+                toolbarView.getScrollY() > toolbarView.getHeight() / 2 ?
+                    false : true);
+        }
+
+        // If more than one pointer has been tracked, or we've locked the
+        // toolbar movement, let the event pass through and be handled by the
+        // PanZoomController for zooming.
+        if (pointerCount > 1 || mToolbarLocked) {
+            return super.onInterceptTouchEvent(view, event);
+        }
+
+        // If a pointer has been lifted so that there's only one pointer left,
+        // unlock the toolbar and track that remaining pointer.
+        if (pointerCount == 1 && action == MotionEvent.ACTION_POINTER_UP) {
+            mLastTouchY = event.getY(1 - event.getActionIndex());
+            return super.onInterceptTouchEvent(view, event);
+        }
+
+        // Handle scrolling the toolbar
+        float eventX = event.getX();
+        float eventY = event.getY();
+        float deltaX = mLastTouchX - eventX;
+        float deltaY = mLastTouchY - eventY;
+        int toolbarY = toolbarView.getScrollY();
+        int toolbarHeight = toolbarView.getHeight();
+
+        // Check if we've passed the toolbar movement threshold
+        if (!mToolbarThresholdPassed) {
+            float threshold = toolbarHeight * TOOLBAR_MOVEMENT_THRESHOLD;
+            if (Math.abs(deltaY) > threshold) {
+                mToolbarThresholdPassed = true;
+                // If we're scrolling downwards and the toolbar was hidden
+                // when we started scrolling, lock it.
+                if (deltaY > 0 && toolbarY == toolbarHeight) {
+                    mToolbarLocked = true;
+                    return super.onInterceptTouchEvent(view, event);
+                }
+            } else if (Math.abs(deltaX) > threshold) {
+                // Any horizontal scrolling past the threshold should
+                // initiate toolbar lock.
+                mToolbarLocked = true;
+                mToolbarThresholdPassed = true;
+                return super.onInterceptTouchEvent(view, event);
+            } else {
+                // The threshold hasn't been passed. We don't want to update
+                // the stored last touch position, so return here.
+                return super.onInterceptTouchEvent(view, event);
+            }
+        } else if (action == MotionEvent.ACTION_MOVE) {
+            // Cancel any ongoing animation before we start moving the toolbar.
+            mBrowserToolbar.cancelVisibilityAnimation();
+
+            // Move the toolbar by the amount the touch event has moved,
+            // clamping to fully visible or fully hidden.
+
+            // Don't let the toolbar scroll off the top if it's just exposing
+            // overscroll area.
+            float toolbarMaxY = Math.min(toolbarHeight,
+                Math.max(0, toolbarHeight - (metrics.pageRectTop -
+                                             metrics.viewportRectTop)));
+
+            float newToolbarYf = Math.max(0, Math.min(toolbarMaxY,
+                toolbarY + deltaY + mToolbarSubpixelAccumulation));
+            int newToolbarY = Math.round(newToolbarYf);
+            mToolbarSubpixelAccumulation = (newToolbarYf - newToolbarY);
+
+            toolbarView.scrollTo(0, newToolbarY);
+
+            // Reset tracking when the toolbar is fully visible or hidden.
+            if (newToolbarY == 0 || newToolbarY == toolbarHeight) {
+                mLastTouchY = eventY;
+            }
+        } else if (action == MotionEvent.ACTION_UP ||
+                   action == MotionEvent.ACTION_CANCEL) {
+            // Animate the toolbar to fully on or off, depending on how much
+            // of it is hidden and the current swipe velocity.
+            PanZoomController pzc = mLayerView.getPanZoomController();
+            float yVelocity = (pzc == null ? 0.0f : pzc.getVelocityVector().y);
+            mBrowserToolbar.animateVisibilityWithVelocityBias(
+                toolbarY > toolbarHeight / 2 ? false : true, yVelocity);
+        }
+
+        // Update the last recorded position.
+        mLastTouchX = eventX;
+        mLastTouchY = eventY;
+
+        return super.onInterceptTouchEvent(view, event);
+    }
+
+    @Override
     public boolean onKey(View v, int keyCode, KeyEvent event) {
         // Global onKey handler. This is called if the focused UI doesn't
         // handle the key event, and before Gecko swallows the events.
@@ -220,19 +372,15 @@ abstract public class BrowserApp extends GeckoApp
                     // Toggle/focus the address bar on gamepad-y button.
                     if (mBrowserToolbar.isVisible()) {
                         if (isDynamicToolbarEnabled() && !mAboutHome.getUserVisibleHint()) {
-                            if (mLayerView != null) {
-                                mLayerView.getLayerMarginsAnimator().hideMargins(false);
-                                mLayerView.requestFocus();
-                            }
+                            mBrowserToolbar.animateVisibility(false);
+                            mLayerView.requestFocus();
                         } else {
                             // Just focus the address bar when about:home is visible
                             // or when the dynamic toolbar isn't enabled.
                             mBrowserToolbar.requestFocusFromTouch();
                         }
                     } else {
-                        if (mLayerView != null) {
-                            mLayerView.getLayerMarginsAnimator().showMargins(false);
-                        }
+                        mBrowserToolbar.animateVisibility(true);
                         mBrowserToolbar.requestFocusFromTouch();
                     }
                     return true;
@@ -351,9 +499,10 @@ abstract public class BrowserApp extends GeckoApp
             public boolean onInterceptMotionEvent(View view, MotionEvent event) {
                 // If we get a gamepad panning MotionEvent while the focus is not on the layerview,
                 // put the focus on the layerview and carry on
-                if (mLayerView != null && !mLayerView.hasFocus() && GamepadUtils.isPanningControl(event)) {
+                LayerView layerView = mLayerView;
+                if (layerView != null && !layerView.hasFocus() && GamepadUtils.isPanningControl(event)) {
                     if (mAboutHome.getUserVisibleHint()) {
-                        mLayerView.requestFocus();
+                        layerView.requestFocus();
                     } else {
                         mAboutHome.requestFocus();
                     }
@@ -446,23 +595,18 @@ abstract public class BrowserApp extends GeckoApp
 
     private void setDynamicToolbarEnabled(boolean enabled) {
         if (enabled) {
-            if (mLayerView != null) {
-                mLayerView.getLayerClient().setOnMetricsChangedListener(this);
-            }
             setToolbarMargin(0);
         } else {
             // Immediately show the toolbar when disabling the dynamic
             // toolbar.
-            if (mLayerView != null) {
-                mLayerView.getLayerClient().setOnMetricsChangedListener(null);
-            }
             mAboutHome.setPadding(0, 0, 0, 0);
-            if (mBrowserToolbar != null) {
-                mBrowserToolbar.getLayout().scrollTo(0, 0);
-            }
+            mBrowserToolbar.cancelVisibilityAnimation();
+            mBrowserToolbar.getLayout().scrollTo(0, 0);
         }
 
-        refreshToolbarHeight();
+        // Refresh the margins to reset the padding on the spacer and
+        // make sure that Gecko is in sync.
+        ((BrowserToolbarLayout)mBrowserToolbar.getLayout()).refreshMargins();
     }
 
     private boolean isDynamicToolbarEnabled() {
@@ -527,6 +671,12 @@ abstract public class BrowserApp extends GeckoApp
         mBrowserToolbar.updateBackButton(false);
         mBrowserToolbar.updateForwardButton(false);
 
+        // Reset mToolbarHeight before setting margins so we force the
+        // Viewport:FixedMarginsChanged message to be sent again now that
+        // Gecko has loaded.
+        mToolbarHeight = 0;
+        ((BrowserToolbarLayout)mBrowserToolbar.getLayout()).refreshMargins();
+
         mDoorHangerPopup.setAnchor(mBrowserToolbar.mFavicon);
 
         if (isExternalURL || mRestoreMode != RESTORE_NONE) {
@@ -545,13 +695,6 @@ abstract public class BrowserApp extends GeckoApp
             }
         }
 
-        // Listen to margin changes to position the toolbar correctly
-        if (isDynamicToolbarEnabled()) {
-            refreshToolbarHeight();
-            mLayerView.getLayerMarginsAnimator().showMargins(true);
-            mLayerView.getLayerClient().setOnMetricsChangedListener(this);
-        }
-
         // Intercept key events for gamepad shortcuts
         mLayerView.setOnKeyListener(this);
     }
@@ -566,41 +709,7 @@ abstract public class BrowserApp extends GeckoApp
         mGeckoLayout.requestLayout();
     }
 
-    @Override
-    public void onMetricsChanged(ImmutableViewportMetrics aMetrics) {
-        if (mAboutHome.getUserVisibleHint() || mBrowserToolbar == null) {
-            return;
-        }
-
-        final View toolbarLayout = mBrowserToolbar.getLayout();
-        final int marginTop = Math.round(aMetrics.marginTop);
-        ThreadUtils.postToUiThread(new Runnable() {
-            public void run() {
-                toolbarLayout.scrollTo(0, toolbarLayout.getHeight() - marginTop);
-            }
-        });
-    }
-
-    @Override
-    public void onPanZoomStopped() {
-        if (!isDynamicToolbarEnabled() || mAboutHome.getUserVisibleHint()) {
-            return;
-        }
-
-        ImmutableViewportMetrics metrics = mLayerView.getViewportMetrics();
-        if (metrics.marginTop >= mToolbarHeight / 2) {
-            mLayerView.getLayerMarginsAnimator().showMargins(false);
-        } else {
-            mLayerView.getLayerMarginsAnimator().hideMargins(false);
-        }
-    }
-
-    public void refreshToolbarHeight() {
-        int height = 0;
-        if (mBrowserToolbar != null) {
-            height = mBrowserToolbar.getLayout().getHeight();
-        }
-
+    public void setToolbarHeight(int aHeight, int aVisibleHeight) {
         if (!isDynamicToolbarEnabled() || mAboutHome.getUserVisibleHint()) {
             // Use aVisibleHeight here so that when the dynamic toolbar is
             // enabled, the padding will animate with the toolbar becoming
@@ -609,19 +718,40 @@ abstract public class BrowserApp extends GeckoApp
                 // When the dynamic toolbar is enabled, set the padding on the
                 // about:home widget directly - this is to avoid resizing the
                 // LayerView, which can cause visible artifacts.
-                mAboutHome.setPadding(0, height, 0, 0);
+                mAboutHome.setPadding(0, aVisibleHeight, 0, 0);
             } else {
-                setToolbarMargin(height);
-                height = 0;
+                setToolbarMargin(aVisibleHeight);
             }
+            aHeight = aVisibleHeight = 0;
         } else {
             setToolbarMargin(0);
         }
 
-        if (mLayerView != null && height != mToolbarHeight) {
-            mToolbarHeight = height;
-            mLayerView.getLayerMarginsAnimator().setMaxMargins(0, height, 0, 0);
-            mLayerView.getLayerMarginsAnimator().showMargins(true);
+        // Update the Gecko-side global for fixed viewport margins.
+        if (aHeight != mToolbarHeight) {
+            mToolbarHeight = aHeight;
+
+            // In the current UI, this is the only place we have need of
+            // viewport margins (to stop the toolbar from obscuring fixed-pos
+            // content).
+            GeckoAppShell.sendEventToGecko(
+                GeckoEvent.createBroadcastEvent("Viewport:FixedMarginsChanged",
+                    "{ \"top\" : " + aHeight + ", \"right\" : 0, \"bottom\" : 0, \"left\" : 0 }"));
+        }
+
+        if (mLayerView != null) {
+            mLayerView.getLayerClient().setFixedLayerMargins(0, aVisibleHeight, 0, 0);
+
+            // Force a redraw when the view isn't moving and the toolbar is
+            // fully visible or fully hidden. This is to make sure that the
+            // Gecko-side fixed viewport margins are in sync when the view and
+            // bar aren't animating.
+            PointF velocityVector = mLayerView.getPanZoomController().getVelocityVector();
+            if ((aVisibleHeight == 0 || aVisibleHeight == aHeight) &&
+                FloatUtils.fuzzyEquals(velocityVector.x, 0.0f) &&
+                FloatUtils.fuzzyEquals(velocityVector.y, 0.0f)) {
+                mLayerView.getLayerClient().forceRedraw();
+            }
         }
     }
 
@@ -973,13 +1103,11 @@ abstract public class BrowserApp extends GeckoApp
 
         // If the tabs layout is animating onto the screen, pin the dynamic
         // toolbar.
-        if (mLayerView != null && isDynamicToolbarEnabled()) {
-            if (width > 0 && height > 0) {
-                mLayerView.getLayerMarginsAnimator().showMargins(false);
-                mLayerView.getLayerMarginsAnimator().setMarginsPinned(true);
-            } else {
-                mLayerView.getLayerMarginsAnimator().setMarginsPinned(false);
-            }
+        if (width > 0 && height > 0) {
+            mToolbarPinned = true;
+            mBrowserToolbar.animateVisibility(true);
+        } else {
+            mToolbarPinned = false;
         }
 
         mMainLayoutAnimator.start();
@@ -1081,15 +1209,6 @@ abstract public class BrowserApp extends GeckoApp
             return;
         }
 
-        // Refresh toolbar height to possibly restore the toolbar padding
-        refreshToolbarHeight();
-
-        // Show the toolbar before hiding about:home so the
-        // onMetricsChanged callback still works.
-        if (isDynamicToolbarEnabled() && mLayerView != null) {
-            mLayerView.getLayerMarginsAnimator().showMargins(true);
-        }
-
         // We use commitAllowingStateLoss() instead of commit() here to avoid an
         // IllegalStateException. showAboutHome() and hideAboutHome() are
         // executed inside of tab's onChange() callback. Since that callback can
@@ -1103,6 +1222,9 @@ abstract public class BrowserApp extends GeckoApp
         mAboutHome.setUserVisibleHint(true);
 
         mBrowserToolbar.setNextFocusDownId(R.id.abouthome_content);
+
+        // Refresh margins to possibly restore the toolbar padding
+        ((BrowserToolbarLayout)mBrowserToolbar.getLayout()).refreshMargins();
     }
 
     private void hideAboutHome() {
@@ -1117,8 +1239,8 @@ abstract public class BrowserApp extends GeckoApp
         mBrowserToolbar.setShadowVisibility(true);
         mBrowserToolbar.setNextFocusDownId(R.id.layer_view);
 
-        // Refresh toolbar height to possibly restore the toolbar padding
-        refreshToolbarHeight();
+        // Refresh margins to possibly restore the toolbar padding
+        ((BrowserToolbarLayout)mBrowserToolbar.getLayout()).refreshMargins();
     }
 
     private class HideTabsTouchListener implements TouchEventInterceptor {
@@ -1341,8 +1463,8 @@ abstract public class BrowserApp extends GeckoApp
         if (!mBrowserToolbar.openOptionsMenu())
             super.openOptionsMenu();
 
-        if (isDynamicToolbarEnabled() && mLayerView != null)
-            mLayerView.getLayerMarginsAnimator().showMargins(false);
+        if (isDynamicToolbarEnabled())
+            mBrowserToolbar.animateVisibility(true);
     }
 
     @Override
