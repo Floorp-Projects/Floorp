@@ -527,7 +527,7 @@ AudioBufferSourceNode::Stop(double aWhen, ErrorResult& aRv)
   }
 
   AudioNodeStream* ns = static_cast<AudioNodeStream*>(mStream.get());
-  if (!ns) {
+  if (!ns || !Context()) {
     // We've already stopped and had our stream shut down
     return;
   }
