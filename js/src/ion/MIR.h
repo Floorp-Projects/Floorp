@@ -7725,7 +7725,8 @@ bool PropertyReadNeedsTypeBarrier(JSContext *cx, MDefinition *obj, PropertyName 
                                   types::StackTypeSet *observed);
 bool PropertyReadIsIdempotent(JSContext *cx, MDefinition *obj, PropertyName *name);
 bool PropertyWriteNeedsTypeBarrier(JSContext *cx, MBasicBlock *current, MDefinition **pobj,
-                                   PropertyName *name, MDefinition **pvalue);
+                                   PropertyName *name, MDefinition **pvalue,
+                                   bool canModify = true);
 
 } // namespace ion
 } // namespace js
