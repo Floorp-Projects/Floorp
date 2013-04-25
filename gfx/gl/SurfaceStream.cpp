@@ -311,26 +311,20 @@ SurfaceStream_TripleBuffer_Copy::SwapProducer(SurfaceFactory* factory,
 
     RecycleScraps(factory);
     if (mProducer) {
-        if (mStaging && mStaging->Type() != factory->Type())
+        if (mStaging) {
+            // We'll re-use this for a new mProducer later on if
+            // the size remains the same
             Recycle(factory, mStaging);
+        }
 
-        if (!mStaging)
-            New(factory, mProducer->Size(), mStaging);
-
-        if (!mStaging)
-            return nullptr;
-
-        SharedSurface::Copy(mProducer, mStaging, factory);
-        // Fence now, before we start (maybe) juggling Prod around.
+        Move(mProducer, mStaging);
         mStaging->Fence();
 
-        if (mProducer->Size() != size)
-            Recycle(factory, mProducer);
-    }
-
-    // The old Prod (if there every was one) was invalid,
-    // so we need a new one.
-    if (!mProducer) {
+        New(factory, size, mProducer);
+        
+        if (mProducer && mStaging->Size() == mProducer->Size())
+            SharedSurface::Copy(mStaging, mProducer, factory);
+    } else {
         New(factory, size, mProducer);
     }
 
