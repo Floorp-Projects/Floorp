@@ -1328,8 +1328,8 @@ nsDOMDeviceStorageCursor::RequestComplete()
 class PostAvailableResultEvent : public nsRunnable
 {
 public:
-  PostAvailableResultEvent(const nsAString& aPath, DOMRequest* aRequest)
-    : mPath(aPath)
+  PostAvailableResultEvent(DeviceStorageFile *aFile, DOMRequest* aRequest)
+    : mFile(aFile)
     , mRequest(aRequest)
   {
   }
@@ -1343,7 +1343,11 @@ public:
     nsString state;
     state.Assign(NS_LITERAL_STRING("available"));
 #ifdef MOZ_WIDGET_GONK
-    nsresult rv = GetSDCardStatus(mPath, state);
+    nsString path;
+    nsresult rv = mFile->mFile->GetPath(path);
+    if (NS_SUCCEEDED(rv)) {
+      rv = GetSDCardStatus(path, state);
+    }
     if (NS_FAILED(rv)) {
       state.Assign(NS_LITERAL_STRING("unavailable"));
     }
@@ -1356,7 +1360,7 @@ public:
   }
 
 private:
-  nsString mPath;
+  nsRefPtr<DeviceStorageFile> mFile;
   nsRefPtr<DOMRequest> mRequest;
 };
 
@@ -1843,7 +1847,7 @@ public:
           ContentChild::GetSingleton()->SendPDeviceStorageRequestConstructor(child, params);
           return NS_OK;
         }
-        r = new PostAvailableResultEvent(mFile->mPath, mRequest);
+        r = new PostAvailableResultEvent(mFile, mRequest);
         NS_DispatchToMainThread(r);
         return NS_OK;
       }
