@@ -16,197 +16,6 @@
 #include <wchar.h>
 #endif /* MOZ_UNICODE */
 
-#ifdef WINCE
-
-static HANDLE CreateFileA(LPCSTR lpFileName,
-                          DWORD dwDesiredAccess,
-                          DWORD dwShareMode,
-                          LPSECURITY_ATTRIBUTES lpSecurityAttributes,
-                          DWORD dwCreationDisposition,
-                          DWORD dwFlagsAndAttributes,
-                          HANDLE hTemplateFile)
-{
-    PRUnichar wFileName[MAX_PATH];
-    MultiByteToWideChar(CP_ACP, 0, lpFileName, -1, wFileName, MAX_PATH);
-    return CreateFileW(wFileName, dwDesiredAccess, dwShareMode,
-                       lpSecurityAttributes, dwCreationDisposition,
-                       dwFlagsAndAttributes, hTemplateFile);
-}
-
-/*
- * We seem to call FindFirstFileA and FindNextFileA just to get
- * the file names in a directory listing.  If so, we could define
- * a custom WIN32_FIND_DATAA structure with just the cFileName
- * member, and the CopyFindFileDataW2A function could just
- * copy/convert the cFileName member.
- */
-static void CopyFindFileDataW2A(LPWIN32_FIND_DATAW from,
-                                LPWIN32_FIND_DATAA to)
-{
-    /*
-     * WIN32_FIND_DATAA and WIN32_FIND_DATAW are slightly different.
-     * The dwReserved0, dwReserved1, and cAlternateFileName members
-     * exist only in WIN32_FIND_DATAA.  The dwOID member exists only
-     * in WIN32_FIND_DATAW.
-     */
-    to->dwFileAttributes = from->dwFileAttributes;
-    to->ftCreationTime = from->ftCreationTime;
-    to->ftLastAccessTime = from->ftLastAccessTime;
-    to->ftLastWriteTime = from->ftLastWriteTime;
-    to->nFileSizeHigh = from->nFileSizeHigh;
-    to->nFileSizeLow = from->nFileSizeLow;
-    to->dwReserved0 = 0;
-    to->dwReserved1 = 0;
-    WideCharToMultiByte(CP_ACP, 0, from->cFileName, -1,
-                        to->cFileName, MAX_PATH, NULL, NULL);
-    to->cAlternateFileName[0] = '\0';
-}
-
-static HANDLE FindFirstFileA(LPCSTR lpFileName,
-                             LPWIN32_FIND_DATAA lpFindFileData)
-{
-    PRUnichar wFileName[MAX_PATH];
-    HANDLE hFindFile;
-    WIN32_FIND_DATAW wFindFileData;
-    
-    MultiByteToWideChar(CP_ACP, 0, lpFileName, -1, wFileName, MAX_PATH);
-    hFindFile = FindFirstFileW(wFileName, &wFindFileData);
-    if (hFindFile != INVALID_HANDLE_VALUE) {
-        CopyFindFileDataW2A(&wFindFileData, lpFindFileData);
-    }
-    return hFindFile;
-}
-
-static BOOL FindNextFileA(HANDLE hFindFile,
-                          LPWIN32_FIND_DATAA lpFindFileData)
-{
-    WIN32_FIND_DATAW wFindFileData;
-    BOOL rv;
-
-    rv = FindNextFileW(hFindFile, &wFindFileData);
-    if (rv) {
-        CopyFindFileDataW2A(&wFindFileData, lpFindFileData);
-    }
-    return rv;
-}
-
-static BOOL GetFileAttributesExA(LPCSTR lpFileName,
-                                 GET_FILEEX_INFO_LEVELS fInfoLevelId,
-                                 LPVOID lpFileInformation)
-{
-    PRUnichar wFileName[MAX_PATH];
-    MultiByteToWideChar(CP_ACP, 0, lpFileName, -1, wFileName, MAX_PATH);
-    return GetFileAttributesExW(wFileName, fInfoLevelId, lpFileInformation);
-}
-
-static BOOL DeleteFileA(LPCSTR lpFileName)
-{
-    PRUnichar wFileName[MAX_PATH];
-    MultiByteToWideChar(CP_ACP, 0, lpFileName, -1, wFileName, MAX_PATH);
-    return DeleteFileW(wFileName);
-}
-
-static BOOL MoveFileA(LPCSTR from, LPCSTR to)
-{
-    PRUnichar wFrom[MAX_PATH];
-    PRUnichar wTo[MAX_PATH];
-    MultiByteToWideChar(CP_ACP, 0, from, -1, wFrom, MAX_PATH);
-    MultiByteToWideChar(CP_ACP, 0, to, -1, wTo, MAX_PATH);
-    return MoveFileW(wFrom, wTo);
-}
-
-static BOOL CreateDirectoryA(LPCSTR lpPathName,
-                             LPSECURITY_ATTRIBUTES lpSecurityAttributes)
-{
-    PRUnichar wPathName[MAX_PATH];
-    MultiByteToWideChar(CP_ACP, 0, lpPathName, -1, wPathName, MAX_PATH);
-    return CreateDirectoryW(wPathName, lpSecurityAttributes);
-}
-
-static BOOL RemoveDirectoryA(LPCSTR lpPathName)
-{
-    PRUnichar wPathName[MAX_PATH];
-    MultiByteToWideChar(CP_ACP, 0, lpPathName, -1, wPathName, MAX_PATH);
-    return RemoveDirectoryW(wPathName);
-}
-
-static long GetDriveType(const char *lpRootPathName)
-{
-    PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
-    return 0; // The drive type cannot be determined.
-}
-
-static DWORD GetFullPathName(const char *lpFileName,
-                             DWORD nBufferLength,
-                             const char *lpBuffer,
-                             const char **lpFilePart)
-{
-    // needs work dft
-    DWORD len = strlen(lpFileName);
-    if (len > nBufferLength)
-        return len;
-  
-    strncpy((char *)lpBuffer, lpFileName, len);
-    ((char *)lpBuffer)[len] = '\0';
-  
-    if (lpFilePart) {
-        char *sep = strrchr(lpBuffer, '\\');
-        if (sep) {
-            sep++; // pass the seperator
-            *lpFilePart = sep;
-        } else {
-            *lpFilePart = lpBuffer;
-        }
-    }
-    return len;
-}
-
-static BOOL LockFile(HANDLE hFile,
-                     DWORD dwFileOffsetLow,
-                     DWORD dwFileOffsetHigh,
-                     DWORD nNumberOfBytesToLockLow,
-                     DWORD nNumberOfBytesToLockHigh)
-{
-    OVERLAPPED overlapped = {0};
-    overlapped.Offset = dwFileOffsetLow;
-    overlapped.OffsetHigh = dwFileOffsetHigh;
-    return LockFileEx(hFile,
-                      LOCKFILE_EXCLUSIVE_LOCK | LOCKFILE_FAIL_IMMEDIATELY,
-                      0, // reserved
-                      nNumberOfBytesToLockLow,
-                      nNumberOfBytesToLockHigh, &overlapped);
-}
-
-static BOOL UnlockFile(HANDLE hFile,
-                       DWORD dwFileOffsetLow,
-                       DWORD dwFileOffsetHigh,
-                       DWORD nNumberOfBytesToUnlockLow,
-                       DWORD nNumberOfBytesToUnlockHigh)
-{
-    OVERLAPPED overlapped = {0};
-    overlapped.Offset = dwFileOffsetLow;
-    overlapped.OffsetHigh = dwFileOffsetHigh;
-    return UnlockFileEx(hFile,
-                        0, // reserved
-                        nNumberOfBytesToUnlockLow,
-                        nNumberOfBytesToUnlockHigh, &overlapped);
-}
-
-static unsigned char *_mbsdec(const unsigned char *string1,
-                              const unsigned char *string2)
-{
-    // needs work dft
-    return NULL;
-}
-
-static unsigned char *_mbsinc(const unsigned char *inCurrent)
-{
-    // needs work dft
-    return (unsigned char *)(inCurrent + 1);
-}
-
-#endif
-
 struct _MDLock               _pr_ioq_lock;
 
 /*
@@ -226,17 +35,6 @@ static DWORD dirAccessTable[] = {
     FILE_GENERIC_WRITE|FILE_DELETE_CHILD,
     FILE_GENERIC_EXECUTE
 };
-
-/* Windows CE has GetFileAttributesEx. */
-#ifndef WINCE
-typedef BOOL (WINAPI *GetFileAttributesExFn)(LPCTSTR,
-                                             GET_FILEEX_INFO_LEVELS,
-                                             LPVOID); 
-static GetFileAttributesExFn getFileAttributesEx;
-static void InitGetFileInfo(void);
-#endif
-
-static void InitUnicodeSupport(void);
 
 static PRBool IsPrevCharSlash(const char *str, const char *current);
 
@@ -276,12 +74,6 @@ _PR_MD_INIT_IO()
 #endif /* DEBUG */
 
     _PR_NT_InitSids();
-
-#ifndef WINCE
-    InitGetFileInfo();
-#endif
-
-    InitUnicodeSupport();
 
     _PR_MD_InitSockets();
 }
@@ -795,11 +587,6 @@ _PR_FileTimeToPRTime(const FILETIME *filetime, PRTime *prtm)
 PRInt32
 _PR_MD_STAT(const char *fn, struct stat *info)
 {
-#ifdef WINCE
-    // needs work. dft
-    PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
-    return -1;
-#else
     PRInt32 rv;
 
     rv = _stat(fn, (struct _stat *)info);
@@ -831,7 +618,6 @@ _PR_MD_STAT(const char *fn, struct stat *info)
         _PR_MD_MAP_STAT_ERROR(errno);
     }
     return rv;
-#endif
 }
 
 #define _PR_IS_SLASH(ch) ((ch) == '/' || (ch) == '\\')
@@ -935,117 +721,10 @@ IsRootDirectory(char *fn, size_t buflen)
     return rv;
 }
 
-#ifndef WINCE
-/*
- * InitGetFileInfo --
- *
- * Called during IO init. Checks for the existence of the system function
- * GetFileAttributeEx, which when available is used in GETFILEINFO calls. 
- * If the routine exists, then the address of the routine is stored in the
- * variable getFileAttributesEx, which will be used to call the routine.
- */
-static void InitGetFileInfo(void)
-{
-    HMODULE module;
-    module = GetModuleHandle("Kernel32.dll");
-    if (!module) {
-        PR_LOG(_pr_io_lm, PR_LOG_DEBUG,
-                ("InitGetFileInfo: GetModuleHandle() failed: %d",
-                GetLastError()));
-        return;
-    }
-
-    getFileAttributesEx = (GetFileAttributesExFn)
-            GetProcAddress(module, "GetFileAttributesExA");
-}
-
-/*
- * If GetFileAttributeEx doesn't exist, we call FindFirstFile as a
- * fallback.
- */
-static BOOL
-GetFileAttributesExFB(const char *fn, WIN32_FIND_DATA *findFileData)
-{
-    HANDLE hFindFile;
-
-    /*
-     * FindFirstFile() expands wildcard characters.  So
-     * we make sure the pathname contains no wildcard.
-     */
-    if (NULL != _mbspbrk(fn, "?*")) {
-        SetLastError(ERROR_INVALID_NAME);
-        return FALSE;
-    }
-
-    hFindFile = FindFirstFile(fn, findFileData);
-    if (INVALID_HANDLE_VALUE == hFindFile) {
-        DWORD len;
-        char *filePart;
-        char pathbuf[MAX_PATH + 1];
-
-        /*
-         * FindFirstFile() does not work correctly on root directories.
-         * It also doesn't work correctly on a pathname that ends in a
-         * slash.  So we first check to see if the pathname specifies a
-         * root directory.  If not, and if the pathname ends in a slash,
-         * we remove the final slash and try again.
-         */
-
-        /*
-         * If the pathname does not contain ., \, and /, it cannot be
-         * a root directory or a pathname that ends in a slash.
-         */
-        if (NULL == _mbspbrk(fn, ".\\/")) {
-            return FALSE;
-        } 
-        len = GetFullPathName(fn, sizeof(pathbuf), pathbuf,
-                &filePart);
-        if (0 == len) {
-            return FALSE;
-        }
-        if (len > sizeof(pathbuf)) {
-            SetLastError(ERROR_FILENAME_EXCED_RANGE);
-            return FALSE;
-        }
-        if (IsRootDirectory(pathbuf, sizeof(pathbuf))) {
-            findFileData->dwFileAttributes = FILE_ATTRIBUTE_DIRECTORY;
-            /* The file size doesn't have a meaning for directories. */
-            findFileData->nFileSizeHigh = 0;
-            findFileData->nFileSizeLow = 0;
-            /*
-             * For a directory, these timestamps all specify when the
-             * directory is created.  The creation time doesn't make
-             * sense for root directories, so we set it to (NSPR) time 0.
-             */
-            memcpy(&findFileData->ftCreationTime, &_pr_filetime_offset, 8);
-            findFileData->ftLastAccessTime = findFileData->ftCreationTime;
-            findFileData->ftLastWriteTime = findFileData->ftCreationTime;
-            return TRUE;
-        }
-        if (!IsPrevCharSlash(pathbuf, pathbuf + len)) {
-            return FALSE;
-        } else {
-            pathbuf[len - 1] = '\0';
-            hFindFile = FindFirstFile(pathbuf, findFileData);
-            if (INVALID_HANDLE_VALUE == hFindFile) {
-                return FALSE;
-            }
-        }
-    }
-
-    FindClose(hFindFile);
-    return TRUE;
-}
-#endif
-
 PRInt32
 _PR_MD_GETFILEINFO64(const char *fn, PRFileInfo64 *info)
 {
-#ifdef WINCE
     WIN32_FILE_ATTRIBUTE_DATA findFileData;
-#else
-    WIN32_FIND_DATA findFileData;
-#endif
     BOOL rv;
     
     if (NULL == fn || '\0' == *fn) {
@@ -1053,16 +732,7 @@ _PR_MD_GETFILEINFO64(const char *fn, PRFileInfo64 *info)
         return -1;
     }
 
-#ifdef WINCE
-    rv = GetFileAttributesExA(fn, GetFileExInfoStandard, &findFileData);
-#else
-    /* GetFileAttributesEx is supported on Win 2K and up. */
-    if (getFileAttributesEx) {
-        rv = getFileAttributesEx(fn, GetFileExInfoStandard, &findFileData);
-    } else {
-        rv = GetFileAttributesExFB(fn, &findFileData);
-    }
-#endif
+    rv = GetFileAttributesEx(fn, GetFileExInfoStandard, &findFileData);
     if (!rv) {
         _PR_MD_MAP_OPENDIR_ERROR(GetLastError());
         return -1;
@@ -1150,10 +820,6 @@ _PR_MD_GETOPENFILEINFO(const PRFileDesc *fd, PRFileInfo *info)
 PRStatus
 _PR_MD_SET_FD_INHERITABLE(PRFileDesc *fd, PRBool inheritable)
 {
-#ifdef WINCE
-    PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
-    return PR_FAILURE;
-#else
     BOOL rv;
 
     /*
@@ -1169,7 +835,6 @@ _PR_MD_SET_FD_INHERITABLE(PRFileDesc *fd, PRBool inheritable)
         return PR_FAILURE;
     }
     return PR_SUCCESS;
-#endif
 } 
 
 void
@@ -1185,9 +850,6 @@ _PR_MD_INIT_FD_INHERITABLE(PRFileDesc *fd, PRBool imported)
 void
 _PR_MD_QUERY_FD_INHERITABLE(PRFileDesc *fd)
 {
-#ifdef WINCE
-    fd->secret->inheritable = _PR_TRI_FALSE;
-#else
     DWORD flags;
 
     PR_ASSERT(_PR_TRI_UNKNOWN == fd->secret->inheritable);
@@ -1198,7 +860,6 @@ _PR_MD_QUERY_FD_INHERITABLE(PRFileDesc *fd)
             fd->secret->inheritable = _PR_TRI_FALSE;
         }
     }
-#endif
 }
 
 PRInt32
@@ -1216,10 +877,6 @@ _PR_MD_RENAME(const char *from, const char *to)
 PRInt32
 _PR_MD_ACCESS(const char *name, PRAccessHow how)
 {
-#ifdef WINCE
-    PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
-    return -1;
-#else
 PRInt32 rv;
     switch (how) {
       case PR_ACCESS_WRITE_OK:
@@ -1238,7 +895,6 @@ PRInt32 rv;
 	if (rv < 0)
 		_PR_MD_MAP_ACCESS_ERROR(errno);
     return rv;
-#endif
 }
 
 PRInt32
@@ -1363,40 +1019,6 @@ typedef UINT (WINAPI *GetDriveTypeWFn) (LPCWSTR);
 static GetDriveTypeWFn getDriveTypeW = GetDriveTypeW;
 
 #endif /* MOZ_UNICODE */
-
-PRBool _pr_useUnicode = PR_FALSE;
-
-static void InitUnicodeSupport(void)
-{
-#ifdef WINCE
-    /* The A functions don't even exist in Windows Mobile. */
-    _pr_useUnicode = PR_TRUE;
-#else
-    /*
-     * The W functions exist on Win9x as stubs that fail with the
-     * ERROR_CALL_NOT_IMPLEMENTED error.  We plan to emulate the
-     * MSLU W functions on Win9x in the future.
-     */
-
-    /* Find out if we are running on a Unicode enabled version of Windows */
-    OSVERSIONINFOA osvi = {0};
-
-    osvi.dwOSVersionInfoSize = sizeof(osvi);
-    if (GetVersionExA(&osvi)) {
-        _pr_useUnicode = (osvi.dwPlatformId >= VER_PLATFORM_WIN32_NT);
-    } else {
-        _pr_useUnicode = PR_FALSE;
-    }
-#ifdef DEBUG
-    /*
-     * In debug builds, allow explicit use of ANSI methods to simulate
-     * a Win9x environment for testing purposes.
-     */
-    if (getenv("WINAPI_USE_ANSI"))
-        _pr_useUnicode = PR_FALSE;
-#endif
-#endif
-}
 
 #ifdef MOZ_UNICODE
 

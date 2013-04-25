@@ -58,6 +58,68 @@ struct PLArenaPool {
 };
 
 /*
+ * WARNING: The PL_MAKE_MEM_ macros are for internal use by NSPR. Do NOT use
+ * them in your code.
+ *
+ * NOTE: Valgrind support to be added.
+ *
+ * The PL_MAKE_MEM_ macros are modeled after the MOZ_MAKE_MEM_ macros in
+ * Mozilla's mfbt/MemoryChecking.h. Only AddressSanitizer is supported now.
+ *
+ * Provides a common interface to the ASan (AddressSanitizer) and Valgrind
+ * functions used to mark memory in certain ways. In detail, the following
+ * three macros are provided:
+ *
+ *   PL_MAKE_MEM_NOACCESS  - Mark memory as unsafe to access (e.g. freed)
+ *   PL_MAKE_MEM_UNDEFINED - Mark memory as accessible, with content undefined
+ *   PL_MAKE_MEM_DEFINED - Mark memory as accessible, with content defined
+ *
+ * With Valgrind in use, these directly map to the three respective Valgrind
+ * macros. With ASan in use, the NOACCESS macro maps to poisoning the memory,
+ * while the UNDEFINED/DEFINED macros unpoison memory.
+ *
+ * With no memory checker available, all macros expand to the empty statement.
+ */
+
+/* WARNING: PL_SANITIZE_ADDRESS is for internal use by this header. Do NOT
+ * define or test this macro in your code.
+ */
+#if defined(__has_feature)
+#if __has_feature(address_sanitizer)
+#define PL_SANITIZE_ADDRESS 1
+#endif
+#elif defined(__SANITIZE_ADDRESS__)
+#define PL_SANITIZE_ADDRESS 1
+#endif
+
+#if defined(PL_SANITIZE_ADDRESS)
+
+/* These definitions are usually provided through the
+ * sanitizer/asan_interface.h header installed by ASan.
+ * See https://code.google.com/p/address-sanitizer/wiki/ManualPoisoning
+ */
+
+void __asan_poison_memory_region(void const volatile *addr, size_t size);
+void __asan_unpoison_memory_region(void const volatile *addr, size_t size);
+
+#define PL_MAKE_MEM_NOACCESS(addr, size) \
+    __asan_poison_memory_region((addr), (size))
+
+#define PL_MAKE_MEM_UNDEFINED(addr, size) \
+    __asan_unpoison_memory_region((addr), (size))
+
+#define PL_MAKE_MEM_DEFINED(addr, size) \
+    __asan_unpoison_memory_region((addr), (size))
+
+#else
+
+#define PL_MAKE_MEM_NOACCESS(addr, size)
+#define PL_MAKE_MEM_UNDEFINED(addr, size)
+#define PL_MAKE_MEM_DEFINED(addr, size)
+
+#endif
+
+/*
  * If the including .c file uses only one power-of-2 alignment, it may define
  * PL_ARENA_CONST_ALIGN_MASK to the alignment mask and save a few instructions
  * per ALLOCATE and GROW.
@@ -78,10 +140,12 @@ struct PLArenaPool {
         PRUint32 _nb = PL_ARENA_ALIGN(pool, nb); \
         PRUword _p = _a->avail; \
         PRUword _q = _p + _nb; \
-        if (_q > _a->limit) \
+        if (_q > _a->limit) { \
             _p = (PRUword)PL_ArenaAllocate(pool, _nb); \
-        else \
+        } else { \
+            PL_MAKE_MEM_UNDEFINED((void *)_p, nb); \
             _a->avail = _q; \
+        } \
         p = (void *)_p; \
         PL_ArenaCountAllocation(pool, nb); \
     PR_END_MACRO
@@ -94,6 +158,7 @@ struct PLArenaPool {
         PRUword _q = _p + _incr; \
         if (_p == (PRUword)(p) + PL_ARENA_ALIGN(pool, size) && \
             _q <= _a->limit) { \
+            PL_MAKE_MEM_UNDEFINED((void *)((PRUword)(p) + size), incr); \
             _a->avail = _q; \
             PL_ArenaCountInplaceGrowth(pool, size, incr); \
         } else { \
@@ -106,13 +171,19 @@ struct PLArenaPool {
 #define PR_UPTRDIFF(p,q) ((PRUword)(p) - (PRUword)(q))
 
 #define PL_CLEAR_UNUSED_PATTERN(a, pattern) \
-	   (PR_ASSERT((a)->avail <= (a)->limit), \
-	   memset((void*)(a)->avail, (pattern), (a)->limit - (a)->avail))
+    PR_BEGIN_MACRO \
+        PR_ASSERT((a)->avail <= (a)->limit); \
+        PL_MAKE_MEM_UNDEFINED((void*)(a)->avail, (a)->limit - (a)->avail); \
+        memset((void*)(a)->avail, (pattern), (a)->limit - (a)->avail); \
+    PR_END_MACRO
 #ifdef DEBUG
 #define PL_FREE_PATTERN 0xDA
 #define PL_CLEAR_UNUSED(a) PL_CLEAR_UNUSED_PATTERN((a), PL_FREE_PATTERN)
-#define PL_CLEAR_ARENA(a)  memset((void*)(a), PL_FREE_PATTERN, \
-                           (a)->limit - (PRUword)(a))
+#define PL_CLEAR_ARENA(a) \
+    PR_BEGIN_MACRO \
+        PL_MAKE_MEM_UNDEFINED((void*)(a), (a)->limit - (PRUword)(a)); \
+        memset((void*)(a), PL_FREE_PATTERN, (a)->limit - (PRUword)(a)); \
+    PR_END_MACRO
 #else
 #define PL_CLEAR_UNUSED(a)
 #define PL_CLEAR_ARENA(a)
@@ -125,6 +196,7 @@ struct PLArenaPool {
         if (PR_UPTRDIFF(_m, _a->base) <= PR_UPTRDIFF(_a->avail, _a->base)) { \
             _a->avail = (PRUword)PL_ARENA_ALIGN(pool, _m); \
             PL_CLEAR_UNUSED(_a); \
+            PL_MAKE_MEM_NOACCESS((void*)_a->avail, _a->limit - _a->avail); \
             PL_ArenaCountRetract(pool, _m); \
         } else { \
             PL_ArenaRelease(pool, _m); \
