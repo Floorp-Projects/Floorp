@@ -13,7 +13,8 @@
 #include "mozilla/layers/ContentHost.h"
 #include "ShadowLayerParent.h"
 #include "TiledLayerBuffer.h"
-#include "LayerManagerComposite.h"
+#include "mozilla/layers/LayerManagerComposite.h"
+#include "mozilla/layers/ThebesLayerComposite.h"
 #include "CompositorParent.h"
 
 namespace mozilla {
@@ -56,7 +57,7 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
         compositableParent->GetCompositableHost();
 
       Layer* layer = compositable ? compositable->GetLayer() : nullptr;
-      ShadowLayer* shadowLayer = layer ? layer->AsShadowLayer() : nullptr;
+      LayerComposite* shadowLayer = layer ? layer->AsLayerComposite() : nullptr;
       if (shadowLayer) {
         Compositor* compositor = static_cast<LayerManagerComposite*>(layer->Manager())->GetCompositor();
         compositable->SetCompositor(compositor);
@@ -109,8 +110,8 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
       CompositableParent* compositableParent = static_cast<CompositableParent*>(op.compositableParent());
       CompositableHost* compositable =
         compositableParent->GetCompositableHost();
-      ShadowThebesLayer* thebes =
-        static_cast<ShadowThebesLayer*>(compositable->GetLayer());
+      ThebesLayerComposite* thebes =
+        static_cast<ThebesLayerComposite*>(compositable->GetLayer());
 
       const ThebesBufferData& bufferData = op.bufferData();
 
