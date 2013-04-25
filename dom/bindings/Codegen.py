@@ -3468,15 +3468,14 @@ class CGArgumentConverter(CGThing):
         replacer["elemType"] = elementDeclType.define()
 
         # NOTE: Keep this in sync with sequence conversions as needed
-        variadicConversion = string.Template("""const ${seqType} ${declName};
+        variadicConversion = string.Template("""${seqType} ${declName};
 if (${argc} > ${index}) {
-  ${seqType}& arr = const_cast< ${seqType}& >(${declName});
-  if (!arr.SetCapacity(${argc} - ${index})) {
+  if (!${declName}.SetCapacity(${argc} - ${index})) {
     JS_ReportOutOfMemory(cx);
     return false;
   }
   for (uint32_t variadicArg = ${index}; variadicArg < ${argc}; ++variadicArg) {
-    ${elemType}& slot = *arr.AppendElement();
+    ${elemType}& slot = *${declName}.AppendElement();
 """).substitute(replacer)
 
         val = string.Template("${argv}[variadicArg]").substitute(replacer)
@@ -3974,6 +3973,7 @@ class CGCallGenerator(CGThing):
                 if a.optional and not a.defaultValue:
                     # If a.defaultValue, then it's not going to use an Optional,
                     # so doesn't need to be const just due to being optional.
+                    # This also covers variadic arguments.
                     return True
                 if a.type.isUnion():
                     return True
