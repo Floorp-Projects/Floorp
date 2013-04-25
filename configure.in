@@ -223,7 +223,6 @@ if test -n "$gonkdir" ; then
     AC_DEFINE(HAVE_PTHREADS)
     CROSS_COMPILE=1
     MOZ_CHROME_FILE_FORMAT=omni
-    NSS_NO_LIBPKIX=1
     direct_nspr_config=1
 else
     MOZ_ANDROID_NDK
@@ -4268,6 +4267,7 @@ MOZ_SYS_MSG=
 MOZ_TIME_MANAGER=
 MOZ_PAY=
 MOZ_AUDIO_CHANNEL_MANAGER=
+NSS_NO_LIBPKIX=
 
 case "$target_os" in
     mingw*)
@@ -6430,6 +6430,15 @@ fi
 AC_SUBST(MOZ_DISABLE_CRYPTOLEGACY)
 
 dnl ========================================================
+dnl = Disable libpkix
+dnl ========================================================
+if test -n "$NSS_NO_LIBPKIX"; then
+    AC_DEFINE(NSS_NO_LIBPKIX)
+fi
+AC_SUBST(NSS_NO_LIBPKIX)
+
+
+dnl ========================================================
 dnl =
 dnl = Module specific options
 dnl =
@@ -8525,8 +8534,6 @@ AC_SUBST(MOZ_PERMISSIONS)
 AC_SUBST(MOZ_PREF_EXTENSIONS)
 AC_SUBST(MOZ_JS_LIBS)
 AC_SUBST(MOZ_PSM)
-AC_DEFINE(NSS_NO_LIBPKIX)
-AC_SUBST(NSS_NO_LIBPKIX)
 AC_SUBST(MOZ_DEBUG)
 AC_SUBST(MOZ_DEBUG_SYMBOLS)
 AC_SUBST(MOZ_DEBUG_ENABLE_DEFS)
