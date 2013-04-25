@@ -706,6 +706,9 @@ private:
   void PassDictionaryOrLong(JSContext*, Dict&) MOZ_DELETE;
   void PassDictContainingDict(JSContext*, DictContainingDict&) MOZ_DELETE;
   void PassDictContainingSequence(DictContainingSequence&) MOZ_DELETE;
+
+  // Make sure various nullable things are always const
+  void PassNullableEnum(Nullable<TestEnum>&) MOZ_DELETE;
 };
 
 class TestIndexedGetterInterface : public nsISupports,

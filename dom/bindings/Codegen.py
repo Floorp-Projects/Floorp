@@ -3026,7 +3026,7 @@ for (uint32_t i = 0; i < length; ++i) {
         if type.nullable():
             declType = CGTemplatedType("Nullable", declType)
             declType = declType.define()
-            enumLoc = "const_cast<%s&>(${declName}).SetValue()" % declType
+            enumLoc = "${declName}.SetValue()"
         else:
             enumLoc = "${declName}"
             declType = declType.define()
@@ -3061,7 +3061,7 @@ for (uint32_t i = 0; i < length; ++i) {
                      "enumLoc" : enumLoc,
                     })
 
-        setNull = "const_cast<%s&>(${declName}).SetNull();" % declType
+        setNull = "${declName}.SetNull();"
 
         if type.nullable():
             template = CGIfElseWrapper("${val}.isNullOrUndefined()",
@@ -3078,9 +3078,6 @@ for (uint32_t i = 0; i < length; ++i) {
                                          ("%s = %sValues::%s" %
                                           (enumLoc, enumName,
                                            getEnumValueName(defaultValue.value))))
-        if type.nullable() and not isOptional:
-            # isOptional will handle the const bits itself
-            declType = "const " + declType
         return (template, CGGeneric(declType), None, isOptional)
 
     if type.isCallback():
@@ -3254,20 +3251,17 @@ for (uint32_t i = 0; i < length; ++i) {
 
     if type.nullable():
         declType = CGGeneric("Nullable<" + typeName + ">")
-        mutableType = declType.define() + "&"
-        if not isOptional and not isMember:
-            declType = CGWrapper(declType, pre="const ")
-        writeLoc = ("const_cast< %s >(${declName}).SetValue()" % mutableType)
+        writeLoc = "${declName}.SetValue()"
         readLoc = "${declName}.Value()"
         nullCondition = "${val}.isNullOrUndefined()"
         if defaultValue is not None and isinstance(defaultValue, IDLNullValue):
             nullCondition = "!(${haveValue}) || " + nullCondition
         template = (
             "if (%s) {\n"
-            "  const_cast< %s >(${declName}).SetNull();\n"
+            "  ${declName}.SetNull();\n"
             "} else if (!ValueToPrimitive<%s, %s>(cx, ${val}, &%s)) {\n"
             "%s\n"
-            "}" % (nullCondition, mutableType, typeName, conversionBehavior,
+            "}" % (nullCondition, typeName, conversionBehavior,
                    writeLoc, exceptionCodeIndented.define()))
     else:
         assert(defaultValue is None or
@@ -3986,6 +3980,8 @@ class CGCallGenerator(CGThing):
                 if a.type.isDictionary():
                     return True
                 if a.type.isSequence():
+                    return True
+                if a.type.nullable():
                     return True
                 return False
             if needsConst(a):
