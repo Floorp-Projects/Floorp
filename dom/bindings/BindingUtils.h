@@ -1757,6 +1757,15 @@ struct JSBindingFinalized<T, true>
   }
 };
 
+// Helpers for creating a const version of a type.
+template<typename T>
+const T& Constify(T& arg)
+{
+  return arg;
+}
+
+// Reparent the wrapper of aObj to whatever its native now thinks its
+// parent should be.
 nsresult
 ReparentWrapper(JSContext* aCx, JS::HandleObject aObj);
 

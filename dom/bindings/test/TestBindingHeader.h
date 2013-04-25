@@ -698,6 +698,14 @@ private:
   void PassOptionalNullableString(Optional<nsAString>&) MOZ_DELETE;
   void PassOptionalNullableStringWithDefaultValue(nsAString&) MOZ_DELETE;
   void PassVariadicString(Sequence<nsString>&) MOZ_DELETE;
+
+  // Make sure dictionary arguments are always const
+  void PassDictionary(JSContext*, Dict&) MOZ_DELETE;
+  void PassOtherDictionary(GrandparentDict&) MOZ_DELETE;
+  void PassSequenceOfDictionaries(JSContext*, Sequence<Dict>&) MOZ_DELETE;
+  void PassDictionaryOrLong(JSContext*, Dict&) MOZ_DELETE;
+  void PassDictContainingDict(JSContext*, DictContainingDict&) MOZ_DELETE;
+  void PassDictContainingSequence(DictContainingSequence&) MOZ_DELETE;
 };
 
 class TestIndexedGetterInterface : public nsISupports,
