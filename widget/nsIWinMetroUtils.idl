@@ -76,6 +76,7 @@ interface nsIWinMetroUtils : nsISupports
    * Pins a new tile to the Windows 8 start screen.
    * 
    * @param aTileID         An ID which can later be used to remove the tile
+   *                        ID must only contain valid filesystem characters
    * @param aShortName      A short name for the tile
    * @param aDiplayName     The name that will be displayed on the tile
    * @param aActivationArgs The arguments to pass to the browser upon 
@@ -94,6 +95,7 @@ interface nsIWinMetroUtils : nsISupports
    * Unpins a tile from the Windows 8 start screen.
    * 
    * @param aTileID An existing ID which was previously pinned
+   *                ID must only contain valid filesystem characters
    */
   void unpinTileAsync(in AString aTileID);
 
@@ -101,6 +103,7 @@ interface nsIWinMetroUtils : nsISupports
    * Determines if a tile is pinned to the Windows 8 start screen.
    * 
    * @param aTileID An ID which may have been pinned with pinTileAsync
+   *                ID must only contain valid filesystem characters
    * @return true if the tile is pinned
    */
   bool isTilePinned(in AString aTileID);
