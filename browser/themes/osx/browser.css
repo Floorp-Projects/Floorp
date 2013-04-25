@@ -2185,8 +2185,8 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   margin: 0;
 }
 
-.tab-throbber,
-.tab-icon-image {
+.tab-throbber:not([pinned]),
+.tab-icon-image:not([pinned]) {
   -moz-margin-end: 6px;
 }
 
