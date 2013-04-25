@@ -635,13 +635,24 @@
             entry != null && !entry.isNull();
             entry = UnixFile.readdir(this._dir)) {
          let contents = entry.contents;
-         if (contents.d_type == OS.Constants.libc.DT_DIR) {
-           let name = contents.d_name.readString();
-           if (name == "." || name == "..") {
-             continue;
-           }
+         let name = contents.d_name.readString();
+         if (name == "." || name == "..") {
+           continue;
          }
-         return new File.DirectoryIterator.Entry(contents, this._path);
+
+         let isDir, isSymLink;
+         if (!("d_type" in contents)) {
+           // |dirent| doesn't have d_type on some platforms (e.g. Solaris).
+           let path = OS.Unix.Path.join(this._path, name);
+           throw_on_negative("lstat", UnixFile.lstat(path, gStatDataPtr));
+           isDir = (gStatData.st_mode & OS.Constants.libc.S_IFMT) == OS.Constants.libc.S_IFDIR;
+           isSymLink = (gStatData.st_mode & OS.Constants.libc.S_IFMT) == OS.Constants.libc.S_IFLNK;
+         } else {
+           isDir = contents.d_type == OS.Constants.libc.DT_DIR;
+           isSymLink = contents.d_type == OS.Constants.libc.DT_LNK;
+         }
+
+         return new File.DirectoryIterator.Entry(isDir, isSymLink, name, this._path);
        }
        this.close();
        throw StopIteration;
@@ -678,12 +689,9 @@
      /**
       * An entry in a directory.
       */
-     File.DirectoryIterator.Entry = function Entry(unix_entry, parent) {
+     File.DirectoryIterator.Entry = function Entry(isDir, isSymLink, name, parent) {
        // Copy the relevant part of |unix_entry| to ensure that
        // our data is not overwritten prematurely.
-       let isDir = unix_entry.d_type == OS.Constants.libc.DT_DIR;
-       let isSymLink = unix_entry.d_type == OS.Constants.libc.DT_LNK;
-       let name = unix_entry.d_name.readString();
        this._parent = parent;
        let path = OS.Unix.Path.join(this._parent, name);
 
@@ -716,7 +724,7 @@
      let MODE_MASK = 4095 /*= 07777*/;
      File.Info = function Info(stat) {
        let isDir = (stat.st_mode & OS.Constants.libc.S_IFMT) == OS.Constants.libc.S_IFDIR;
-       let isSymLink = (stat.st_mode & OS.Constants.libc.S_IFMT) == OS.Constants.S_IFLNK;
+       let isSymLink = (stat.st_mode & OS.Constants.libc.S_IFMT) == OS.Constants.libc.S_IFLNK;
        let size = exports.OS.Shared.Type.size_t.importFromC(stat.st_size);
 
        let lastAccessDate = new Date(stat.st_atime * 1000);
