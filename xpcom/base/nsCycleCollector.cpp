@@ -574,7 +574,10 @@ public:
             return mNext++;
         }
     private:
-        Block *mFirstBlock, *mCurBlock;
+        // mFirstBlock is a reference to allow an Enumerator to be constructed
+        // for an empty graph.
+        Block *&mFirstBlock;
+        Block *mCurBlock;
         // mNext is the next value we want to return, unless mNext == mBlockEnd
         // NB: mLast is a reference to allow enumerating while building!
         PtrInfo *mNext, *mBlockEnd, *&mLast;
