@@ -43,6 +43,8 @@ function EventManager(sr) {
     "audioend": "audiostart"
   };
 
+  var isDone = false;
+
   // AUDIO_DATA events are asynchronous,
   // so we queue events requested while they are being
   // issued to make them seem synchronous
@@ -59,7 +61,10 @@ function EventManager(sr) {
         }
 
         ok(false, message);
-        if (self.done) self.done();
+        if (self.doneFunc && !isDone) {
+          isDone = true;
+          self.doneFunc();
+        }
       };
     })(allEvents[i]);
   }
@@ -78,8 +83,10 @@ function EventManager(sr) {
       }
 
       cb && cb(evt, sr);
-      if (self.done && nEventsExpected === self.eventsReceived.length) {
-        self.done();
+      if (self.doneFunc && !isDone &&
+          nEventsExpected === self.eventsReceived.length) {
+        isDone = true;
+        self.doneFunc();
       }
     }
   }
@@ -150,9 +157,11 @@ function performTest(options) {
       em.expect(eventName, cb);
     }
 
-    em.done = function() {
+    em.doneFunc = function() {
       em.requestTestEnd();
-      options.doneFunc();
+      if (options.doneFunc) {
+        options.doneFunc();
+      }
     }
 
     em.audioSampleFile = DEFAULT_AUDIO_SAMPLE_FILE;

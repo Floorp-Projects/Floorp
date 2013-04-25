@@ -263,14 +263,16 @@ nsSpeechTask::DispatchEndImpl(float aElapsedTime, uint32_t aCharIndex)
     mStream->Destroy();
   }
 
+  nsRefPtr<SpeechSynthesisUtterance> utterance = mUtterance;
+
   if (mSpeechSynthesis) {
     mSpeechSynthesis->OnEnd(this);
   }
 
-  mUtterance->mState = SpeechSynthesisUtterance::STATE_ENDED;
-  mUtterance->DispatchSpeechSynthesisEvent(NS_LITERAL_STRING("end"),
-                                           aCharIndex, aElapsedTime,
-                                           NS_LITERAL_STRING(""));
+  utterance->mState = SpeechSynthesisUtterance::STATE_ENDED;
+  utterance->DispatchSpeechSynthesisEvent(NS_LITERAL_STRING("end"),
+                                          aCharIndex, aElapsedTime,
+                                          NS_LITERAL_STRING(""));
   return NS_OK;
 }
 
