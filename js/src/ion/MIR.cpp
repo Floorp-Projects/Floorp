@@ -2473,9 +2473,8 @@ TryAddTypeBarrierForWrite(JSContext *cx, MBasicBlock *current, types::StackTypeS
     if (!types)
         return false;
 
-    MInstruction *ins = MTypeBarrier::New(*pvalue, types, Bailout_Normal);
+    MInstruction *ins = MMonitorTypes::New(*pvalue, types);
     current->add(ins);
-    *pvalue = ins;
     return true;
 }
 
