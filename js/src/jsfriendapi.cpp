@@ -1057,3 +1057,9 @@ js_DefineOwnProperty(JSContext *cx, JSObject *objArg, jsid idArg,
 
     return js_DefineOwnProperty(cx, HandleObject(obj), id, descriptor, bp);
 }
+
+JS_FRIEND_API(JSBool)
+js_ReportIsNotFunction(JSContext *cx, const JS::Value& v)
+{
+    return ReportIsNotFunction(cx, v);
+}
