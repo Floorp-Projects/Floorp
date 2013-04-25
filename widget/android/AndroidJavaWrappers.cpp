@@ -112,6 +112,8 @@ jfieldID AndroidViewTransform::jFixedLayerMarginLeft = 0;
 jfieldID AndroidViewTransform::jFixedLayerMarginTop = 0;
 jfieldID AndroidViewTransform::jFixedLayerMarginRight = 0;
 jfieldID AndroidViewTransform::jFixedLayerMarginBottom = 0;
+jfieldID AndroidViewTransform::jOffsetXField = 0;
+jfieldID AndroidViewTransform::jOffsetYField = 0;
 
 jclass AndroidProgressiveUpdateData::jProgressiveUpdateDataClass = 0;
 jfieldID AndroidProgressiveUpdateData::jXField = 0;
@@ -389,6 +391,8 @@ AndroidViewTransform::InitViewTransformClass(JNIEnv *jEnv)
     jFixedLayerMarginTop = getField("fixedLayerMarginTop", "F");
     jFixedLayerMarginRight = getField("fixedLayerMarginRight", "F");
     jFixedLayerMarginBottom = getField("fixedLayerMarginBottom", "F");
+    jOffsetXField = getField("offsetX", "F");
+    jOffsetYField = getField("offsetY", "F");
 }
 
 void
@@ -824,7 +828,7 @@ AndroidGeckoLayerClient::SetPageRect(const gfx::Rect& aCssPageRect)
 void
 AndroidGeckoLayerClient::SyncViewportInfo(const nsIntRect& aDisplayPort, float aDisplayResolution, bool aLayersUpdated,
                                           nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY,
-                                          gfx::Margin& aFixedLayerMargins)
+                                          gfx::Margin& aFixedLayerMargins, float& aOffsetX, float& aOffsetY)
 {
     NS_ASSERTION(!isNull(), "SyncViewportInfo called on null layer client!");
     JNIEnv *env = GetJNIForThread();    // this is called on the compositor thread
@@ -848,6 +852,9 @@ AndroidGeckoLayerClient::SyncViewportInfo(const nsIntRect& aDisplayPort, float a
     aScrollOffset = nsIntPoint(viewTransform.GetX(env), viewTransform.GetY(env));
     aScaleX = aScaleY = viewTransform.GetScale(env);
     viewTransform.GetFixedLayerMargins(env, aFixedLayerMargins);
+
+    aOffsetX = viewTransform.GetOffsetX(env);
+    aOffsetY = viewTransform.GetOffsetY(env);
 }
 
 bool
@@ -1092,6 +1099,22 @@ AndroidViewTransform::GetFixedLayerMargins(JNIEnv *env, gfx::Margin &aFixedLayer
     aFixedLayerMargins.right = env->GetFloatField(wrapped_obj, jFixedLayerMarginRight);
     aFixedLayerMargins.bottom = env->GetFloatField(wrapped_obj, jFixedLayerMarginBottom);
     aFixedLayerMargins.left = env->GetFloatField(wrapped_obj, jFixedLayerMarginLeft);
+}
+
+float
+AndroidViewTransform::GetOffsetX(JNIEnv *env)
+{
+    if (!env)
+        return 0.0f;
+    return env->GetFloatField(wrapped_obj, jOffsetXField);
+}
+
+float
+AndroidViewTransform::GetOffsetY(JNIEnv *env)
+{
+    if (!env)
+        return 0.0f;
+    return env->GetFloatField(wrapped_obj, jOffsetYField);
 }
 
 float

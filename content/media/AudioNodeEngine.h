@@ -8,6 +8,7 @@
 
 #include "AudioSegment.h"
 #include "mozilla/dom/AudioParam.h"
+#include "mozilla/Mutex.h"
 
 namespace mozilla {
 
@@ -151,6 +152,7 @@ class AudioNodeEngine {
 public:
   explicit AudioNodeEngine(dom::AudioNode* aNode)
     : mNode(aNode)
+    , mNodeMutex("AudioNodeEngine::mNodeMutex")
   {
     MOZ_ASSERT(mNode, "The engine is constructed with a null node");
     MOZ_COUNT_CTOR(AudioNodeEngine);
@@ -206,15 +208,25 @@ public:
     *aOutput = aInput;
   }
 
+  Mutex& NodeMutex() { return mNodeMutex;}
+
   dom::AudioNode* Node() const
   {
-    MOZ_ASSERT(NS_IsMainThread());
+    mNodeMutex.AssertCurrentThreadOwns();
     return mNode;
   }
 
-protected:
-  friend class dom::AudioNode;
+  void ClearNode()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(mNode != nullptr);
+    mNodeMutex.AssertCurrentThreadOwns();
+    mNode = nullptr;
+  }
+
+private:
   dom::AudioNode* mNode;
+  Mutex mNodeMutex;
 };
 
 }

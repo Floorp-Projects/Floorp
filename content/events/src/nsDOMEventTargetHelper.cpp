@@ -283,20 +283,11 @@ nsDOMEventTargetHelper::SetEventHandler(nsIAtom* aType,
                                         JSContext* aCx,
                                         const JS::Value& aValue)
 {
-  JSObject* obj = GetWrapper();
-  if (!obj) {
-    return NS_OK;
-  }
-
   nsRefPtr<EventHandlerNonNull> handler;
   JSObject* callable;
   if (aValue.isObject() &&
       JS_ObjectIsCallable(aCx, callable = &aValue.toObject())) {
-    bool ok;
-    handler = new EventHandlerNonNull(aCx, obj, callable, &ok);
-    if (!ok) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    handler = new EventHandlerNonNull(callable);
   }
   ErrorResult rv;
   SetEventHandler(aType, handler, rv);

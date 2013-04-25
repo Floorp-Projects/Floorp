@@ -62,12 +62,13 @@ var gPausedAfterEndedTests = gSmallTests.concat([
   { name:"small-shot.ogg", type:"video/ogg", duration:0.276 }
 ]);
 
-// Test the mozHasAudio property
-var gMozHasAudioTests = [
-  { name:"big.wav", type:"audio/x-wav", duration:9.278981, size:102444, hasAudio:undefined },
-  { name:"320x240.ogv", type:"video/ogg", width:320, height:240, duration:0.266, size:28942, hasAudio:false },
-  { name:"short-video.ogv", type:"video/ogg", duration:1.081, hasAudio:true },
-  { name:"seek.webm", type:"video/webm", duration:3.966, size:215529, hasAudio:false },
+// Test the mozHasAudio property, and APIs that detect different kinds of
+// tracks
+var gTrackTests = [
+  { name:"big.wav", type:"audio/x-wav", duration:9.278981, size:102444, hasAudio:true, hasVideo:false },
+  { name:"320x240.ogv", type:"video/ogg", width:320, height:240, duration:0.266, size:28942, hasAudio:false, hasVideo:true },
+  { name:"short-video.ogv", type:"video/ogg", duration:1.081, hasAudio:true, hasVideo:true },
+  { name:"seek.webm", type:"video/webm", duration:3.966, size:215529, hasAudio:false, hasVideo:true },
   { name:"bogus.duh", type:"bogus/duh" }
 ];
 

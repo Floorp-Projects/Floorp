@@ -874,37 +874,16 @@ nsEventListenerManager::CompileEventHandlerInternal(nsListenerStruct *aListenerS
     context->BindCompiledEventHandler(mTarget, listener->GetEventScope(),
                                       handler, &boundHandler);
     if (listener->EventName() == nsGkAtoms::onerror && win) {
-      bool ok;
-      JSAutoRequest ar(cx);
       nsRefPtr<OnErrorEventHandlerNonNull> handlerCallback =
-        new OnErrorEventHandlerNonNull(cx, listener->GetEventScope(),
-                                       boundHandler, &ok);
-      if (!ok) {
-        // JS_WrapObject failed, which means OOM allocating the JSObject.
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
+        new OnErrorEventHandlerNonNull(boundHandler);
       listener->SetHandler(handlerCallback);
     } else if (listener->EventName() == nsGkAtoms::onbeforeunload && win) {
-      bool ok;
-      JSAutoRequest ar(cx);
       nsRefPtr<BeforeUnloadEventHandlerNonNull> handlerCallback =
-        new BeforeUnloadEventHandlerNonNull(cx, listener->GetEventScope(),
-                                            boundHandler, &ok);
-      if (!ok) {
-        // JS_WrapObject failed, which means OOM allocating the JSObject.
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
+        new BeforeUnloadEventHandlerNonNull(boundHandler);
       listener->SetHandler(handlerCallback);
     } else {
-      bool ok;
-      JSAutoRequest ar(cx);
       nsRefPtr<EventHandlerNonNull> handlerCallback =
-        new EventHandlerNonNull(cx, listener->GetEventScope(),
-                                boundHandler, &ok);
-      if (!ok) {
-        // JS_WrapObject failed, which means OOM allocating the JSObject.
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
+        new EventHandlerNonNull(boundHandler);
       listener->SetHandler(handlerCallback);
     }
   }

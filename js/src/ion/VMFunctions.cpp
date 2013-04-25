@@ -69,26 +69,6 @@ InvokeFunction(JSContext *cx, HandleFunction fun0, uint32_t argc, Value *argv, V
             if (!fun)
                 return false;
         }
-
-        // In order to prevent massive bouncing between Ion and JM, see if we keep
-        // hitting functions that are uncompilable.
-        if (cx->methodJitEnabled && !fun->nonLazyScript()->canIonCompile()) {
-            RawScript script = GetTopIonJSScript(cx);
-            if (script->hasIonScript() &&
-                ++script->ionScript()->slowCallCount >= js_IonOptions.slowCallLimit)
-            {
-                AutoFlushCache afc("InvokeFunction");
-
-                // Poison the script so we don't try to run it again. This will
-                // trigger invalidation.
-                ForbidCompilation(cx, script);
-            }
-        }
-
-        // When caller runs in IM, but callee not, we take a slow path to the interpreter.
-        // This has a significant overhead. In order to decrease the number of times this happens,
-        // the useCount gets incremented faster to compile this function in IM and use the fastpath.
-        fun->nonLazyScript()->incUseCount(js_IonOptions.slowCallIncUseCount);
     }
 
     // TI will return false for monitorReturnTypes, meaning there is no

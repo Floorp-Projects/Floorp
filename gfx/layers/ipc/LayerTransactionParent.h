@@ -5,10 +5,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_layers_ShadowLayersParent_h
-#define mozilla_layers_ShadowLayersParent_h
+#ifndef MOZILLA_LAYERS_LAYERTRANSACTIONPARENT_H
+#define MOZILLA_LAYERS_LAYERTRANSACTIONPARENT_H
 
-#include "mozilla/layers/PLayersParent.h"
+#include "mozilla/layers/PLayerTransactionParent.h"
 #include "ShadowLayers.h"
 #include "ShadowLayersManager.h"
 #include "CompositableTransactionParent.h"
@@ -26,18 +26,18 @@ class ShadowLayerManager;
 class ShadowLayerParent;
 class CompositableParent;
 
-class ShadowLayersParent : public PLayersParent,
-                           public CompositableParentManager
+class LayerTransactionParent : public PLayerTransactionParent,
+                               public CompositableParentManager
 {
   typedef mozilla::layout::RenderFrameParent RenderFrameParent;
   typedef InfallibleTArray<Edit> EditArray;
   typedef InfallibleTArray<EditReply> EditReplyArray;
 
 public:
-  ShadowLayersParent(ShadowLayerManager* aManager,
-                     ShadowLayersManager* aLayersManager,
-                     uint64_t aId);
-  ~ShadowLayersParent();
+  LayerTransactionParent(ShadowLayerManager* aManager,
+                         ShadowLayersManager* aLayersManager,
+                         uint64_t aId);
+  ~LayerTransactionParent();
 
   void Destroy();
 
@@ -50,18 +50,18 @@ public:
   virtual bool AllocShmem(size_t aSize,
                           ipc::SharedMemory::SharedMemoryType aType,
                           ipc::Shmem* aShmem) {
-    return PLayersParent::AllocShmem(aSize, aType, aShmem);
+    return PLayerTransactionParent::AllocShmem(aSize, aType, aShmem);
   }
 
   virtual bool AllocUnsafeShmem(size_t aSize,
                                 ipc::SharedMemory::SharedMemoryType aType,
                                 ipc::Shmem* aShmem) {
-    return PLayersParent::AllocUnsafeShmem(aSize, aType, aShmem);
+    return PLayerTransactionParent::AllocUnsafeShmem(aSize, aType, aShmem);
   }
 
   virtual void DeallocShmem(ipc::Shmem& aShmem) MOZ_OVERRIDE
   {
-    PLayersParent::DeallocShmem(aShmem);
+    PLayerTransactionParent::DeallocShmem(aShmem);
   }
 
 
@@ -121,4 +121,4 @@ private:
 } // namespace layers
 } // namespace mozilla
 
-#endif // ifndef mozilla_layers_ShadowLayersParent_h
+#endif // MOZILLA_LAYERS_LAYERTRANSACTIONPARENT_H

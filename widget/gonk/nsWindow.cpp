@@ -539,7 +539,7 @@ nsWindow::GetDPI()
 }
 
 LayerManager *
-nsWindow::GetLayerManager(PLayersChild* aShadowManager,
+nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
                           LayersBackend aBackendHint,
                           LayerManagerPersistence aPersistence,
                           bool* aAllowRetaining)

@@ -634,7 +634,7 @@ gfxDWriteFont::GetFontTable(uint32_t aTag)
     UINT32      size;
     void       *context;
     BOOL        exists;
-    HRESULT hr = mFontFace->TryGetFontTable(NS_SWAP32(aTag),
+    HRESULT hr = mFontFace->TryGetFontTable(mozilla::NativeEndian::swapToBigEndian(aTag),
                                             &data, &size, &context, &exists);
     if (SUCCEEDED(hr) && exists) {
         FontTableRec *ftr = new FontTableRec(mFontFace, context);

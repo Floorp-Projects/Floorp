@@ -50,6 +50,9 @@
     _(CreateThis)                   \
     _(CreateThisWithProto)          \
     _(CreateThisWithTemplate)       \
+    _(CreateArgumentsObject)        \
+    _(GetArgumentsObjectArg)        \
+    _(SetArgumentsObjectArg)        \
     _(ReturnFromCtor)               \
     _(BitNotI)                      \
     _(BitNotV)                      \

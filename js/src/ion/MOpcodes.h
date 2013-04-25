@@ -33,6 +33,9 @@ namespace ion {
     _(CreateThis)                                                           \
     _(CreateThisWithProto)                                                  \
     _(CreateThisWithTemplate)                                               \
+    _(CreateArgumentsObject)                                                \
+    _(GetArgumentsObjectArg)                                                \
+    _(SetArgumentsObjectArg)                                                \
     _(PrepareCall)                                                          \
     _(PassArg)                                                              \
     _(Call)                                                                 \
