@@ -273,5 +273,11 @@ ImageWrapper::ResetAnimation()
   return mInnerImage->ResetAnimation();
 }
 
+NS_IMETHODIMP_(float)
+ImageWrapper::GetFrameIndex(uint32_t aWhichFrame)
+{
+  return mInnerImage->GetFrameIndex(aWhichFrame);
+}
+
 } // namespace image
 } // namespace mozilla
