@@ -8,7 +8,6 @@
 
 #include "nsIObserverService.h"
 
-#include "GeckoProfiler.h"
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
@@ -169,9 +168,7 @@ LazyIdleThread::EnsureThread()
 void
 LazyIdleThread::InitThread()
 {
-  profiler_register_thread(mName.get());
-
-  PR_SetCurrentThreadName(mName.get());
+  PR_SetCurrentThreadName(mName.BeginReading());
 
   // Happens on mThread but mThread may not be set yet...
 
@@ -193,14 +190,10 @@ LazyIdleThread::CleanupThread()
     NS_WARNING("Failed to set thread observer!");
   }
 
-  {
-    MutexAutoLock lock(mMutex);
+  MutexAutoLock lock(mMutex);
 
-    MOZ_ASSERT(!mThreadIsShuttingDown, "Shouldn't be true ever!");
-    mThreadIsShuttingDown = true;
-  }
-
-  profiler_unregister_thread();
+  MOZ_ASSERT(!mThreadIsShuttingDown, "Shouldn't be true ever!");
+  mThreadIsShuttingDown = true;
 }
 
 void
