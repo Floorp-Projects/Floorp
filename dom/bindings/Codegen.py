@@ -3012,9 +3012,9 @@ for (uint32_t i = 0; i < length; ++i) {
 
         return (
             "%s\n"
-            "const_cast<%s&>(${declName}) = &${holderName};" %
-            (getConversionCode("${holderName}"), declType),
-            CGGeneric("const " + declType), CGGeneric("FakeDependentString"),
+            "${declName} = &${holderName};" %
+            getConversionCode("${holderName}"),
+            CGGeneric(declType), CGGeneric("FakeDependentString"),
             # No need to deal with Optional here; we have handled it already
             False)
 
@@ -3982,6 +3982,8 @@ class CGCallGenerator(CGThing):
                 if a.type.isSequence():
                     return True
                 if a.type.nullable():
+                    return True
+                if a.type.isString():
                     return True
                 return False
             if needsConst(a):
