@@ -88,7 +88,7 @@
 .tab-background-end[selected=true]::after {
   /* position ::after on top of its parent */
   -moz-margin-start: -@tabCurveWidth@;
-  content: "";
+  margin-bottom: -1px;
   display: -moz-box;
 }
 
@@ -109,19 +109,14 @@
   clip-path: url(chrome://browser/content/browser.xul#tab-curve-clip-path-end);
 }
 
-.tab-background-start[selected=true]:not(:-moz-lwtheme)::after,
-.tab-background-end[selected=true]:not(:-moz-lwtheme)::after {
-  background-repeat: no-repeat;
-}
-
 .tab-background-start[selected=true]:-moz-locale-dir(ltr)::after,
 .tab-background-end[selected=true]:-moz-locale-dir(rtl)::after {
-  background-image: url(chrome://browser/skin/tabbrowser/tab-stroke-start.png);
+  content: url(chrome://browser/skin/tabbrowser/tab-stroke-start.png);
 }
 
 .tab-background-end[selected=true]:-moz-locale-dir(ltr)::after,
 .tab-background-start[selected=true]:-moz-locale-dir(rtl)::after {
-  background-image: url(chrome://browser/skin/tabbrowser/tab-stroke-end.png);
+  content: url(chrome://browser/skin/tabbrowser/tab-stroke-end.png);
 }
 
 .tab-background-start[selected=true]::before,
@@ -198,11 +193,7 @@
 #tabbrowser-tabs:not([overflow]) > .tabbrowser-tab[last-visible-tab]:not([selected]):not([beforehovered]):not(:hover)::after {
   -moz-margin-start: -1.5px;
   -moz-margin-end: -1.5px;
-  background-image: url("chrome://browser/skin/tabbrowser/tab-separator.png");
-  background-position: left bottom;
-  background-repeat: no-repeat;
-  background-size: 3px 100%;
-  content: '';
+  content: url(chrome://browser/skin/tabbrowser/tab-separator.png);
   display: -moz-box;
   width: 3px;
 }
