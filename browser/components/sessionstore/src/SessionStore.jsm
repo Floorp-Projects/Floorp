@@ -289,15 +289,11 @@ let SessionStoreInternal = {
   // whether the last window was closed and should be restored
   _restoreLastWindow: false,
 
-  // tabs to restore in order
-  _tabsToRestore: { priority: [], visible: [], hidden: [] },
+  // number of tabs currently restoring
   _tabsRestoringCount: 0,
 
-  // overrides MAX_CONCURRENT_TAB_RESTORES and _restoreHiddenTabs when true
+  // overrides MAX_CONCURRENT_TAB_RESTORES and restore_hidden_tabs when true
   _restoreOnDemand: false,
-
-  // whether to restore hidden tabs or not, pref controlled.
-  _restoreHiddenTabs: null,
 
   // whether to restore app tabs on demand or not, pref controlled.
   _restorePinnedTabsOnDemand: null,
@@ -380,10 +376,6 @@ let SessionStoreInternal = {
     this._restoreOnDemand =
       this._prefBranch.getBoolPref("sessionstore.restore_on_demand");
     this._prefBranch.addObserver("sessionstore.restore_on_demand", this, true);
-
-    this._restoreHiddenTabs =
-      this._prefBranch.getBoolPref("sessionstore.restore_hidden_tabs");
-    this._prefBranch.addObserver("sessionstore.restore_hidden_tabs", this, true);
 
     this._restorePinnedTabsOnDemand =
       this._prefBranch.getBoolPref("sessionstore.restore_pinned_tabs_on_demand");
@@ -568,10 +560,8 @@ let SessionStoreInternal = {
     if (this._sessionInitialized)
       this.saveState(true);
 
-    // clear out _tabsToRestore in case it's still holding refs
-    this._tabsToRestore.priority = null;
-    this._tabsToRestore.visible = null;
-    this._tabsToRestore.hidden = null;
+    // clear out priority queue in case it's still holding refs
+    TabRestoreQueue.reset();
 
     // Make sure to break our cycle with the save timer
     if (this._saveTimer) {
@@ -1207,10 +1197,6 @@ let SessionStoreInternal = {
         this._restoreOnDemand =
           this._prefBranch.getBoolPref("sessionstore.restore_on_demand");
         break;
-      case "sessionstore.restore_hidden_tabs":
-        this._restoreHiddenTabs =
-          this._prefBranch.getBoolPref("sessionstore.restore_hidden_tabs");
-        break;
       case "sessionstore.restore_pinned_tabs_on_demand":
         this._restorePinnedTabsOnDemand =
           this._prefBranch.getBoolPref("sessionstore.restore_pinned_tabs_on_demand");
@@ -1389,12 +1375,10 @@ let SessionStoreInternal = {
   },
 
   onTabShow: function ssi_onTabShow(aWindow, aTab) {
-    // If the tab hasn't been restored yet, move it into the right _tabsToRestore bucket
+    // If the tab hasn't been restored yet, move it into the right bucket
     if (aTab.linkedBrowser.__SS_restoreState &&
         aTab.linkedBrowser.__SS_restoreState == TAB_STATE_NEEDS_RESTORE) {
-      this._tabsToRestore.hidden.splice(this._tabsToRestore.hidden.indexOf(aTab), this._tabsToRestore.hidden.length);
-      // Just put it at the end of the list of visible tabs;
-      this._tabsToRestore.visible.push(aTab);
+      TabRestoreQueue.hiddenToVisible(aTab);
 
       // let's kick off tab restoration again to ensure this tab gets restored
       // with "restore_hidden_tabs" == false (now that it has become visible)
@@ -1407,12 +1391,10 @@ let SessionStoreInternal = {
   },
 
   onTabHide: function ssi_onTabHide(aWindow, aTab) {
-    // If the tab hasn't been restored yet, move it into the right _tabsToRestore bucket
+    // If the tab hasn't been restored yet, move it into the right bucket
     if (aTab.linkedBrowser.__SS_restoreState &&
         aTab.linkedBrowser.__SS_restoreState == TAB_STATE_NEEDS_RESTORE) {
-      this._tabsToRestore.visible.splice(this._tabsToRestore.visible.indexOf(aTab), this._tabsToRestore.visible.length);
-      // Just put it at the end of the list of hidden tabs;
-      this._tabsToRestore.hidden.push(aTab);
+      TabRestoreQueue.visibleToHidden(aTab);
     }
 
     // Default delay of 2 seconds gives enough time to catch multiple TabHide
@@ -1438,7 +1420,7 @@ let SessionStoreInternal = {
 
     this._browserSetState = true;
 
-    // Make sure _tabsToRestore is emptied out
+    // Make sure the priority queue is emptied out
     this._resetRestoringState();
 
     var window = this._getMostRecentBrowserWindow();
@@ -3151,13 +3133,7 @@ let SessionStoreInternal = {
       this.restoreTab(tab);
     }
     else {
-      // Put the tab into the right bucket
-      if (tabData.pinned)
-        this._tabsToRestore.priority.push(tab);
-      else if (tabData.hidden)
-        this._tabsToRestore.hidden.push(tab);
-      else
-        this._tabsToRestore.visible.push(tab);
+      TabRestoreQueue.add(tab);
       this.restoreNextTab();
     }
   },
@@ -3192,8 +3168,8 @@ let SessionStoreInternal = {
     // Make sure that the tabs progress listener is attached to this window
     this._ensureTabsProgressListener(window);
 
-    // Make sure that this tab is removed from _tabsToRestore
-    this._removeTabFromTabsToRestore(aTab);
+    // Make sure that this tab is removed from the priority queue.
+    TabRestoreQueue.remove(aTab);
 
     // Increase our internal count.
     this._tabsRestoringCount++;
@@ -3279,24 +3255,12 @@ let SessionStoreInternal = {
 
     // If it's not possible to restore anything, then just bail out.
     if ((this._restoreOnDemand &&
-        (this._restorePinnedTabsOnDemand || !this._tabsToRestore.priority.length)) ||
+        (this._restorePinnedTabsOnDemand || !TabRestoreQueue.hasPriorityTabs)) ||
         this._tabsRestoringCount >= MAX_CONCURRENT_TAB_RESTORES)
       return;
 
-    // Look in priority, then visible, then hidden
-    let nextTabArray;
-    if (this._tabsToRestore.priority.length) {
-      nextTabArray = this._tabsToRestore.priority
-    }
-    else if (this._tabsToRestore.visible.length) {
-      nextTabArray = this._tabsToRestore.visible;
-    }
-    else if (this._restoreHiddenTabs && this._tabsToRestore.hidden.length) {
-      nextTabArray = this._tabsToRestore.hidden;
-    }
-
-    if (nextTabArray) {
-      let tab = nextTabArray.shift();
+    let tab = TabRestoreQueue.shift();
+    if (tab) {
       let didStartLoad = this.restoreTab(tab);
       // If we don't start a load in the restored tab (eg, no entries) then we
       // want to attempt to restore the next tab.
@@ -4374,7 +4338,7 @@ let SessionStoreInternal = {
    * Reset state to prepare for a new session state to be restored.
    */
   _resetRestoringState: function ssi_initRestoringState() {
-    this._tabsToRestore = { priority: [], visible: [], hidden: [] };
+    TabRestoreQueue.reset();
     this._tabsRestoringCount = 0;
   },
 
@@ -4417,26 +4381,8 @@ let SessionStoreInternal = {
       // Make sure that the tab is removed from the list of tabs to restore.
       // Again, this is normally done in restoreTab, but that isn't being called
       // for this tab.
-      this._removeTabFromTabsToRestore(aTab);
+      TabRestoreQueue.remove(aTab);
     }
-  },
-
-  /**
-   * Remove the tab from this._tabsToRestore[priority/visible/hidden]
-   *
-   * @param aTab
-   */
-  _removeTabFromTabsToRestore: function ssi_removeTabFromTabsToRestore(aTab) {
-    // We'll always check priority first since we don't have an indicator if
-    // a tab will be there or not.
-    let arr = this._tabsToRestore.priority;
-    let index = arr.indexOf(aTab);
-    if (index == -1) {
-      arr = this._tabsToRestore[aTab.hidden ? "hidden" : "visible"];
-      index = arr.indexOf(aTab);
-    }
-    if (index > -1)
-      arr.splice(index, 1);
   },
 
   /**
@@ -4476,6 +4422,112 @@ let SessionStoreInternal = {
       browser.webNavigation.sessionHistory.
                             removeSHistoryListener(browser.__SS_shistoryListener);
       delete browser.__SS_shistoryListener;
+    }
+  }
+};
+
+/**
+ * Priority queue that keeps track of a list of tabs to restore and returns
+ * the tab we should restore next, based on priority rules. We decide between
+ * pinned, visible and hidden tabs in that and FIFO order. Hidden tabs are only
+ * restored with restore_hidden_tabs=true.
+ */
+let TabRestoreQueue = {
+  // The separate buckets used to store tabs.
+  tabs: {priority: [], visible: [], hidden: []},
+
+  // Returns whether we have any high priority tabs in the queue.
+  get hasPriorityTabs() !!this.tabs.priority.length,
+
+  // Lazy getter that returns whether we should restore hidden tabs.
+  get restoreHiddenTabs() {
+    let updateValue = () => {
+      let value = Services.prefs.getBoolPref(PREF);
+      let definition = {value: value, configurable: true};
+      Object.defineProperty(this, "restoreHiddenTabs", definition);
+    }
+
+    const PREF = "browser.sessionstore.restore_hidden_tabs";
+    Services.prefs.addObserver(PREF, updateValue, false);
+    updateValue();
+  },
+
+  // Resets the queue and removes all tabs.
+  reset: function () {
+    this.tabs = {priority: [], visible: [], hidden: []};
+  },
+
+  // Adds a tab to the queue and determines its priority bucket.
+  add: function (tab) {
+    let {priority, hidden, visible} = this.tabs;
+
+    if (tab.pinned) {
+      priority.push(tab);
+    } else if (tab.hidden) {
+      hidden.push(tab);
+    } else {
+      visible.push(tab);
+    }
+  },
+
+  // Removes a given tab from the queue, if it's in there.
+  remove: function (tab) {
+    let {priority, hidden, visible} = this.tabs;
+
+    // We'll always check priority first since we don't
+    // have an indicator if a tab will be there or not.
+    let set = priority;
+    let index = set.indexOf(tab);
+
+    if (index == -1) {
+      set = tab.hidden ? hidden : visible;
+      index = set.indexOf(tab);
+    }
+
+    if (index > -1) {
+      set.splice(index, 1);
+    }
+  },
+
+  // Returns and removes the tab with the highest priority.
+  shift: function () {
+    let set;
+    let {priority, hidden, visible} = this.tabs;
+
+    if (priority.length) {
+      set = priority;
+    } else if (visible.length) {
+      set = visible;
+    } else if (this.restoreHiddenTabs && hidden.length) {
+      set = hidden;
+    }
+
+    return set && set.shift();
+  },
+
+  // Moves a given tab from the 'hidden' to the 'visible' bucket.
+  hiddenToVisible: function (tab) {
+    let {hidden, visible} = this.tabs;
+    let index = hidden.indexOf(tab);
+
+    if (index > -1) {
+      hidden.splice(index, 1);
+      visible.push(tab);
+    } else {
+      throw new Error("restore queue: hidden tab not found");
+    }
+  },
+
+  // Moves a given tab from the 'visible' to the 'hidden' bucket.
+  visibleToHidden: function (tab) {
+    let {visible, hidden} = this.tabs;
+    let index = visible.indexOf(tab);
+
+    if (index > -1) {
+      visible.splice(index, 1);
+      hidden.push(tab);
+    } else {
+      throw new Error("restore queue: visible tab not found");
     }
   }
 };
