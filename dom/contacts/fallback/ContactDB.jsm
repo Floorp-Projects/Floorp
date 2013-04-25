@@ -19,7 +19,7 @@ Cu.import("resource://gre/modules/PhoneNumberUtils.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
 
 const DB_NAME = "contacts";
-const DB_VERSION = 8;
+const DB_VERSION = 9;
 const STORE_NAME = "contacts";
 const SAVED_GETALL_STORE_NAME = "getallcache";
 const CHUNK_SIZE = 20;
@@ -315,6 +315,28 @@ ContactDB.prototype = {
       } else if (currVersion == 7) {
         if (DEBUG) debug("Adding object store for cached searches");
         db.createObjectStore(SAVED_GETALL_STORE_NAME);
+      } else if (currVersion == 8) {
+        if (DEBUG) debug("Make exactTel only contain the value entered by the user");
+        if (!objectStore) {
+          objectStore = aTransaction.objectStore(STORE_NAME);
+        }
+
+        objectStore.openCursor().onsuccess = function(event) {
+          let cursor = event.target.result;
+          if (cursor) {
+            if (cursor.value.properties.tel) {
+              cursor.value.search.exactTel = [];
+              cursor.value.properties.tel.forEach(
+                function(tel) {
+                  let normalized = PhoneNumberUtils.normalize(tel.value.toString());
+                  cursor.value.search.exactTel.push(normalized);
+                }
+              );
+              cursor.update(cursor.value);
+            }
+            cursor.continue();
+          }
+        };
       }
     }
 
@@ -417,9 +439,10 @@ ContactDB.prototype = {
 
               // Chop off the first characters
               let number = aContact.properties[field][i].value;
-              contact.search.exactTel.push(number);
               let search = {};
               if (number) {
+                number = number.toString();
+                contact.search.exactTel.push(PhoneNumberUtils.normalize(number));
                 for (let i = 0; i < number.length; i++) {
                   search[number.substring(i, number.length)] = 1;
                 }
@@ -442,7 +465,6 @@ ContactDB.prototype = {
                   }
                   if (parsedNumber.internationalNumber &&
                       number.toString() !== parsedNumber.internationalNumber) {
-                    contact.search.exactTel.push(parsedNumber.internationalNumber);
                     let digits = parsedNumber.internationalNumber.match(/\d/g);
                     if (digits) {
                       digits = digits.join('');
@@ -775,7 +797,11 @@ ContactDB.prototype = {
         if (DEBUG) debug("Getting index: " + key);
         // case sensitive
         let index = store.index(key);
-        request = index.mozGetAll(options.filterValue, limit);
+        let filterValue = options.filterValue;
+        if (key == "tel") {
+          filterValue = PhoneNumberUtils.normalize(filterValue);
+        }
+        request = index.mozGetAll(filterValue, limit);
       } else {
         // not case sensitive
         let tmp = typeof options.filterValue == "string"
