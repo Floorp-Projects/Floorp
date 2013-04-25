@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<bindings id="firefoxBrowserBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="remote-browser" extends="chrome://global/content/bindings/browser.xml#browser">
+
+    <implementation type="application/javascript" implements="nsIAccessibleProvider, nsIObserver, nsIDOMEventListener, nsIMessageListener">
+
+      <property name="securityUI"
+                onget="return null;"/>
+
+      <property name="webNavigation"
+                onget="return this._remoteWebNavigation;"
+                readonly="true"/>
+
+      <field name="_remoteWebProgress">null</field>
+
+      <property name="webProgress" readonly="true">
+	<getter>
+	  <![CDATA[
+            if (!this._remoteWebProgress) {
+              let RemoteWebProgress = Components.utils.import("resource://gre/modules/RemoteWebProgress.jsm",
+ {}).RemoteWebProgress;
+              this._remoteWebProgress = new RemoteWebProgress(this);
+            }
+            return this._remoteWebProgress;
+	  ]]>
+	</getter>
+      </property>
+
+      <constructor>
+        <![CDATA[
+          this.messageManager.loadFrameScript("chrome://global/content/browser-child.js", true);
+          this.webProgress._init();
+        ]]>
+      </constructor>
+
+      <destructor>
+        <![CDATA[
+          this.webProgress._destroy();
+        ]]>
+      </destructor>
+
+    </implementation>
+
+  </binding>
+
+</bindings>
