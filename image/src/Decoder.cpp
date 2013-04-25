@@ -163,6 +163,9 @@ Decoder::Finish(RasterImage::eShutdownIntent aShutdownIntent)
     // If we're usable, do exactly what we should have when the decoder
     // completed.
     if (usable) {
+      if (mInFrame) {
+        PostFrameStop();
+      }
       PostDecodeDone();
     } else {
       if (mObserver) {
