@@ -14,7 +14,7 @@ callback DecodeSuccessCallback = void (AudioBuffer decodedData);
 callback DecodeErrorCallback = void ();
 
 [Constructor, PrefControlled]
-interface AudioContext {
+interface AudioContext : EventTarget {
 
     readonly attribute AudioDestinationNode destination;
     readonly attribute float sampleRate;
