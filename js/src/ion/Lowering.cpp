@@ -1730,7 +1730,7 @@ LIRGenerator::visitMonitorTypes(MMonitorTypes *ins)
     LMonitorTypes *lir = new LMonitorTypes(temp());
     if (!useBox(lir, LMonitorTypes::Input, ins->input()))
         return false;
-    return assignSnapshot(lir, Bailout_Monitor) && add(lir, ins);
+    return assignSnapshot(lir, Bailout_Normal) && add(lir, ins);
 }
 
 bool
