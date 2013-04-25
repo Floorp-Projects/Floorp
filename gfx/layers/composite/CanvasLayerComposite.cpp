@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ipc/AutoOpenSurface.h"
-#include "mozilla/layers/PLayers.h"
+#include "mozilla/layers/PLayerTransaction.h"
 #include "mozilla/layers/ShadowLayers.h"
 #include "mozilla/layers/CompositorTypes.h" // for TextureInfo
 #include "mozilla/layers/Effects.h"

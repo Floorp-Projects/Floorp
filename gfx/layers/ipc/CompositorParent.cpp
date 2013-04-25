@@ -24,7 +24,7 @@
 #include "nsGkAtoms.h"
 #include "nsIWidget.h"
 #include "RenderTrace.h"
-#include "ShadowLayersParent.h"
+#include "LayerTransactionParent.h"
 #include "BasicLayers.h"
 #include "nsIWidget.h"
 #include "nsGkAtoms.h"
@@ -207,8 +207,8 @@ CompositorParent::~CompositorParent()
 void
 CompositorParent::Destroy()
 {
-  NS_ABORT_IF_FALSE(ManagedPLayersParent().Length() == 0,
-                    "CompositorParent destroyed before managed PLayersParent");
+  NS_ABORT_IF_FALSE(ManagedPLayerTransactionParent().Length() == 0,
+                    "CompositorParent destroyed before managed PLayerTransactionParent");
 
   // Ensure that the layer manager is destructed on the compositor thread.
   mLayerManager = NULL;
@@ -688,7 +688,7 @@ CompositorParent::TransformFixedLayers(Layer* aLayer,
 static void
 SetShadowProperties(Layer* aLayer)
 {
-  // FIXME: Bug 717688 -- Do these updates in ShadowLayersParent::RecvUpdate.
+  // FIXME: Bug 717688 -- Do these updates in LayerTransactionParent::RecvUpdate.
   ShadowLayer* shadow = aLayer->AsShadowLayer();
   // Set the shadow's base transform to the layer's base transform.
   shadow->SetShadowTransform(aLayer->GetBaseTransform());
@@ -885,7 +885,7 @@ CompositorParent::TransformScrollableLayer(Layer* aLayer, const gfx3DMatrix& aRo
   const FrameMetrics& metrics = container->GetFrameMetrics();
   // We must apply the resolution scale before a pan/zoom transform, so we call
   // GetTransform here.
-  const gfx3DMatrix& currentTransform = aLayer->GetTransform();
+  gfx3DMatrix currentTransform = aLayer->GetTransform();
 
   gfx3DMatrix treeTransform;
 
@@ -934,9 +934,14 @@ CompositorParent::TransformScrollableLayer(Layer* aLayer, const gfx3DMatrix& aRo
   displayPortDevPixels.y += scrollOffsetDevPixels.y;
 
   gfx::Margin fixedLayerMargins(0, 0, 0, 0);
+  float offsetX = 0, offsetY = 0;
   SyncViewportInfo(displayPortDevPixels, 1/rootScaleX, mLayersUpdated,
-                   mScrollOffset, mXScale, mYScale, fixedLayerMargins);
+                   mScrollOffset, mXScale, mYScale, fixedLayerMargins,
+                   offsetX, offsetY);
   mLayersUpdated = false;
+
+  // Apply the render offset
+  mLayerManager->GetCompositor()->SetScreenRenderOffset(gfx::Point(offsetX, offsetY));
 
   // Handle transformations for asynchronous panning and zooming. We determine the
   // zoom used by Gecko from the transformation set on the root layer, and we
@@ -1037,7 +1042,7 @@ CompositorParent::TransformShadowTree(TimeStamp aCurrentFrame)
 }
 
 void
-CompositorParent::ShadowLayersUpdated(ShadowLayersParent* aLayerTree,
+CompositorParent::ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
                                       const TargetConfig& aTargetConfig,
                                       bool isFirstPaint)
 {
@@ -1091,18 +1096,20 @@ void
 CompositorParent::SyncViewportInfo(const nsIntRect& aDisplayPort,
                                    float aDisplayResolution, bool aLayersUpdated,
                                    nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY,
-                                   gfx::Margin& aFixedLayerMargins)
+                                   gfx::Margin& aFixedLayerMargins, float& aOffsetX,
+                                   float& aOffsetY)
 {
 #ifdef MOZ_WIDGET_ANDROID
   AndroidBridge::Bridge()->SyncViewportInfo(aDisplayPort, aDisplayResolution, aLayersUpdated,
-                                            aScrollOffset, aScaleX, aScaleY, aFixedLayerMargins);
+                                            aScrollOffset, aScaleX, aScaleY, aFixedLayerMargins,
+                                            aOffsetX, aOffsetY);
 #endif
 }
 
-PLayersParent*
-CompositorParent::AllocPLayers(const LayersBackend& aBackendHint,
-                               const uint64_t& aId,
-                               TextureFactoryIdentifier* aTextureFactoryIdentifier)
+PLayerTransactionParent*
+CompositorParent::AllocPLayerTransaction(const LayersBackend& aBackendHint,
+                                         const uint64_t& aId,
+                                         TextureFactoryIdentifier* aTextureFactoryIdentifier)
 {
   MOZ_ASSERT(aId == 0);
 
@@ -1126,7 +1133,7 @@ CompositorParent::AllocPLayers(const LayersBackend& aBackendHint,
     }
 
     *aTextureFactoryIdentifier = mLayerManager->GetTextureFactoryIdentifier();
-    return new ShadowLayersParent(mLayerManager, this, 0);
+    return new LayerTransactionParent(mLayerManager, this, 0);
   // Basic layers compositor not yet implemented
   /*} else if (aBackendHint == mozilla::layers::LAYERS_BASIC) {
     nsRefPtr<LayerManager> layerManager = new BasicShadowLayerManager(mWidget);
@@ -1137,7 +1144,7 @@ CompositorParent::AllocPLayers(const LayersBackend& aBackendHint,
       return NULL;
     }
     *aTextureFactoryIdentifier = layerManager->GetTextureFactoryIdentifier();
-    return new ShadowLayersParent(slm, this, 0); */
+    return new LayerTransactionParent(slm, this, 0); */
   } else {
     NS_ERROR("Unsupported backend selected for Async Compositor");
     return NULL;
@@ -1145,7 +1152,7 @@ CompositorParent::AllocPLayers(const LayersBackend& aBackendHint,
 }
 
 bool
-CompositorParent::DeallocPLayers(PLayersParent* actor)
+CompositorParent::DeallocPLayerTransaction(PLayerTransactionParent* actor)
 {
   delete actor;
   return true;
@@ -1280,12 +1287,14 @@ public:
                                 SurfaceDescriptor* aOutSnapshot)
   { return true; }
 
-  virtual PLayersParent* AllocPLayers(const LayersBackend& aBackendType,
-                                      const uint64_t& aId,
-                                      TextureFactoryIdentifier* aTextureFactoryIdentifier) MOZ_OVERRIDE;
-  virtual bool DeallocPLayers(PLayersParent* aLayers) MOZ_OVERRIDE;
+  virtual PLayerTransactionParent*
+    AllocPLayerTransaction(const LayersBackend& aBackendType,
+                           const uint64_t& aId,
+                           TextureFactoryIdentifier* aTextureFactoryIdentifier) MOZ_OVERRIDE;
 
-  virtual void ShadowLayersUpdated(ShadowLayersParent* aLayerTree,
+  virtual bool DeallocPLayerTransaction(PLayerTransactionParent* aLayers) MOZ_OVERRIDE;
+
+  virtual void ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
                                    const TargetConfig& aTargetConfig,
                                    bool isFirstPaint) MOZ_OVERRIDE;
 
@@ -1364,22 +1373,22 @@ CrossProcessCompositorParent::ActorDestroy(ActorDestroyReason aWhy)
     NewRunnableMethod(this, &CrossProcessCompositorParent::DeferredDestroy));
 }
 
-PLayersParent*
-CrossProcessCompositorParent::AllocPLayers(const LayersBackend& aBackendType,
-                                           const uint64_t& aId,
-                                           TextureFactoryIdentifier* aTextureFactoryIdentifier)
+PLayerTransactionParent*
+CrossProcessCompositorParent::AllocPLayerTransaction(const LayersBackend& aBackendType,
+                                                     const uint64_t& aId,
+                                                     TextureFactoryIdentifier* aTextureFactoryIdentifier)
 {
   MOZ_ASSERT(aId != 0);
 
   nsRefPtr<LayerManager> lm = sCurrentCompositor->GetLayerManager();
   *aTextureFactoryIdentifier = lm->GetTextureFactoryIdentifier();
-  return new ShadowLayersParent(lm->AsShadowManager(), this, aId);
+  return new LayerTransactionParent(lm->AsShadowManager(), this, aId);
 }
 
 bool
-CrossProcessCompositorParent::DeallocPLayers(PLayersParent* aLayers)
+CrossProcessCompositorParent::DeallocPLayerTransaction(PLayerTransactionParent* aLayers)
 {
-  ShadowLayersParent* slp = static_cast<ShadowLayersParent*>(aLayers);
+  LayerTransactionParent* slp = static_cast<LayerTransactionParent*>(aLayers);
   RemoveIndirectTree(slp->GetId());
   delete aLayers;
   return true;
@@ -1387,7 +1396,7 @@ CrossProcessCompositorParent::DeallocPLayers(PLayersParent* aLayers)
 
 void
 CrossProcessCompositorParent::ShadowLayersUpdated(
-  ShadowLayersParent* aLayerTree,
+  LayerTransactionParent* aLayerTree,
   const TargetConfig& aTargetConfig,
   bool isFirstPaint)
 {

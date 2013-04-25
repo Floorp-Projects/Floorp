@@ -43,7 +43,6 @@ function compareBuffers(buf1, buf2,
   var firstBadIndex = -1;
   for (var i = offset || 0; i < Math.min(buf1.length, (offset || 0) + length); ++i) {
     if (!fuzzyCompare(buf1[i + sourceOffset], buf2[i + destOffset])) {
-      console.log(buf1[i+sourceOffset] + " " + buf2[i+destOffset]);
       difference++;
       maxDifference = Math.max(maxDifference, Math.abs(buf1[i + sourceOffset] - buf2[i + destOffset]));
       if (firstBadIndex == -1) {

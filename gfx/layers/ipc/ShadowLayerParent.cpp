@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ShadowLayersParent.h"
+#include "LayerTransactionParent.h"
 #include "ShadowLayerParent.h"
 #include "ShadowLayers.h"
 
@@ -68,7 +68,7 @@ ShadowLayerParent::ActorDestroy(ActorDestroyReason why)
     break;
 
   case FailedConstructor:
-    NS_RUNTIMEABORT("FailedConstructor isn't possible in PLayers");
+    NS_RUNTIMEABORT("FailedConstructor isn't possible in PLayerTransaction");
     return;                     // unreached
   }
 

@@ -1396,7 +1396,7 @@ nsINode::doInsertChildAt(nsIContent* aKid, uint32_t aIndex,
 void
 nsINode::Remove()
 {
-  nsINode* parent = GetParentNode();
+  nsCOMPtr<nsINode> parent = GetParentNode();
   if (!parent) {
     return;
   }
@@ -2102,20 +2102,11 @@ nsINode::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
     return NS_OK;                                                            \
   }                                                                          \
   NS_IMETHODIMP nsINode::SetOn##name_(JSContext *cx, const JS::Value &v) {   \
-    JSObject *obj = GetWrapper();                                            \
-    if (!obj) {                                                              \
-      /* Just silently do nothing */                                         \
-      return NS_OK;                                                          \
-    }                                                                        \
     nsRefPtr<EventHandlerNonNull> handler;                                   \
     JSObject *callable;                                                      \
     if (v.isObject() &&                                                      \
         JS_ObjectIsCallable(cx, callable = &v.toObject())) {                 \
-      bool ok;                                                               \
-      handler = new EventHandlerNonNull(cx, obj, callable, &ok);             \
-      if (!ok) {                                                             \
-        return NS_ERROR_OUT_OF_MEMORY;                                       \
-      }                                                                      \
+      handler = new EventHandlerNonNull(callable);                           \
     }                                                                        \
     ErrorResult rv;                                                          \
     SetOn##name_(handler, rv);                                               \

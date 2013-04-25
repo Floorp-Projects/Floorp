@@ -561,8 +561,7 @@ IonScript::IonScript()
     callTargetEntries_(0),
     refcount_(0),
     recompileInfo_(),
-    osrPcMismatchCounter_(0),
-    slowCallCount(0)
+    osrPcMismatchCounter_(0)
 {
 }
 
@@ -1448,11 +1447,11 @@ CheckFrame(AbstractFramePtr fp)
 }
 
 static bool
-CheckScript(RawScript script)
+CheckScript(RawScript script, bool osr)
 {
-    if (script->needsArgsObj()) {
-        // Functions with arguments objects, are not supported yet.
-        IonSpew(IonSpew_Abort, "script has argsobj");
+    if (osr && script->needsArgsObj()) {
+        // OSR-ing into functions with arguments objects is not supported.
+        IonSpew(IonSpew_Abort, "OSR script has argsobj");
         return false;
     }
 
@@ -1508,9 +1507,9 @@ SequentialCompileContext::checkScriptSize(JSContext *cx, RawScript script)
 }
 
 bool
-CanIonCompileScript(JSContext *cx, HandleScript script)
+CanIonCompileScript(JSContext *cx, HandleScript script, bool osr)
 {
-    if (!script->canIonCompile() || !CheckScript(script))
+    if (!script->canIonCompile() || !CheckScript(script, osr))
         return false;
 
     SequentialCompileContext compileContext;
@@ -1519,9 +1518,8 @@ CanIonCompileScript(JSContext *cx, HandleScript script)
 
 template <typename CompileContext>
 static MethodStatus
-Compile(JSContext *cx, HandleScript script,
-        AbstractFramePtr fp, jsbytecode *osrPc, bool constructing,
-        CompileContext &compileContext)
+Compile(JSContext *cx, HandleScript script, AbstractFramePtr fp, jsbytecode *osrPc,
+        bool constructing, CompileContext &compileContext)
 {
     JS_ASSERT(ion::IsEnabled(cx));
     JS_ASSERT_IF(osrPc != NULL, (JSOp)*osrPc == JSOP_LOOPENTRY);
@@ -1541,7 +1539,7 @@ Compile(JSContext *cx, HandleScript script,
         return Method_CantCompile;
     }
 
-    if (!CheckScript(script)) {
+    if (!CheckScript(script, bool(osrPc))) {
         IonSpew(IonSpew_Abort, "Aborted compilation of %s:%d", script->filename(), script->lineno);
         return Method_CantCompile;
     }
@@ -1920,8 +1918,9 @@ EnterIon(JSContext *cx, StackFrame *fp, void *jitcode)
     if (fp->isFunctionFrame()) {
         fp->cleanupTornValues();
 
-        // CountArgSlot include |this| and the |scopeChain|.
-        maxArgc = CountArgSlots(fp->fun()) - 1; // -1 = discard |scopeChain|
+        // CountArgSlot include |this| and the |scopeChain| and maybe |argumentsObj|.
+        // Keep |this|, but discard the others.
+        maxArgc = CountArgSlots(fp->script(), fp->fun()) - StartArgSlot(fp->script(), fp->fun());
         maxArgv = fp->formals() - 1;            // -1 = include |this|
 
         // Formal arguments are the argument corresponding to the function

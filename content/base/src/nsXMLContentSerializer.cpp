@@ -1685,7 +1685,7 @@ nsXMLContentSerializer::AppendToStringWrapped(const nsASingleFragmentString& aSt
   mMayIgnoreLineBreakSequence = false;
 
   bool sequenceStartAfterAWhitespace = false;
-  if (pos < end) {
+  if (pos < end && !aOutputStr.IsEmpty()) {
     nsAString::const_char_iterator end2;
     aOutputStr.EndReading(end2);
     --end2;

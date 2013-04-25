@@ -21,10 +21,10 @@ addLoadEvent(function() {
   }
 
   var source = context.createBufferSource();
-  source.buffer = buffer;
 
   var sp = context.createScriptProcessor(2048);
   source.start(0);
+  source.buffer = buffer;
   source.connect(sp);
   sp.connect(context.destination);
   sp.onaudioprocess = function(e) {

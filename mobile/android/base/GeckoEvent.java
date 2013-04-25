@@ -590,10 +590,10 @@ public class GeckoEvent {
         sb.append("{ \"x\" : ").append(metrics.viewportRectLeft)
           .append(", \"y\" : ").append(metrics.viewportRectTop)
           .append(", \"zoom\" : ").append(metrics.zoomFactor)
-          .append(", \"fixedMarginLeft\" : ").append(metrics.fixedLayerMarginLeft)
-          .append(", \"fixedMarginTop\" : ").append(metrics.fixedLayerMarginTop)
-          .append(", \"fixedMarginRight\" : ").append(metrics.fixedLayerMarginRight)
-          .append(", \"fixedMarginBottom\" : ").append(metrics.fixedLayerMarginBottom)
+          .append(", \"fixedMarginLeft\" : ").append(metrics.marginLeft)
+          .append(", \"fixedMarginTop\" : ").append(metrics.marginTop)
+          .append(", \"fixedMarginRight\" : ").append(metrics.marginRight)
+          .append(", \"fixedMarginBottom\" : ").append(metrics.marginBottom)
           .append(", \"displayPort\" :").append(displayPort.toJSON())
           .append('}');
         event.mCharactersExtra = sb.toString();
