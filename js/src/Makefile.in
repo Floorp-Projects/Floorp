@@ -530,6 +530,18 @@ config/nsinstall$(HOST_BIN_SUFFIX): $(srcdir)/config/nsinstall.c $(srcdir)/confi
 	$(MAKE) -C config/ nsinstall$(HOST_BIN_SUFFIX)
 endif
 
+# Ensure symbol versions of shared library on Linux do not conflict
+# with those in libxul.
+ifeq (Linux,$(OS_TARGET))
+EXTRA_DSO_LDOPTS += -Wl,-version-script,symverscript
+
+symverscript: symverscript.in
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
+		-DVERSION="$(subst -,_,$(LIBRARY_NAME))" $< > $@
+
+EXTRA_DEPS += symverscript
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 ifdef JS_HAS_CTYPES
