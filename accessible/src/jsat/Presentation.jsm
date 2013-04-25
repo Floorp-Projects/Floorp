@@ -361,11 +361,11 @@ this.Presentation = {
     delete this.presenters;
     this.presenters = [new VisualPresenter()];
 
-    if (Utils.MozBuildApp == 'b2g') {
+    if (Utils.MozBuildApp == 'mobile/android') {
+      this.presenters.push(new AndroidPresenter());
+    } else {
       this.presenters.push(new SpeechPresenter());
       this.presenters.push(new HapticPresenter());
-    } else if (Utils.MozBuildApp == 'mobile/android') {
-      this.presenters.push(new AndroidPresenter());
     }
 
     return this.presenters;
