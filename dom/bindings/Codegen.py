@@ -5368,7 +5368,7 @@ ${callDestructors}
 
 ${methods}
 
-  bool ToJSVal(JSContext* cx, JSObject* scopeObj, JS::Value* vp) const;
+  bool ToJSVal(JSContext* cx, JS::Handle<JSObject*> scopeObj, JS::Value* vp) const;
 
 private:
   friend class ${structName}Argument;
@@ -5411,7 +5411,7 @@ ${destructors}
                 zip(templateVars, self.type.flatMemberTypes)))
 
         return string.Template("""bool
-${structName}::ToJSVal(JSContext* cx, JSObject* scopeObj, JS::Value* vp) const
+${structName}::ToJSVal(JSContext* cx, JS::Handle<JSObject*> scopeObj, JS::Value* vp) const
 {
   switch (mType) {
 ${doConversionsToJS}
@@ -8805,8 +8805,9 @@ class CallbackMember(CGNativeMember):
                 'jsvalRef' : "argv[%s]" % jsvalIndex,
                 'jsvalPtr' : "&argv[%s]" % jsvalIndex,
                 # XXXbz we don't have anything better to use for 'obj',
-                # really...
-                'obj' : 'mCallback',
+                # really...  It's OK to use CallbackPreserveColor because
+                # CallSetup already handled the unmark-gray bits for us.
+                'obj' : 'CallbackPreserveColor()',
                 'isCreator': False,
                 'exceptionCode' : self.exceptionCode
                 })
