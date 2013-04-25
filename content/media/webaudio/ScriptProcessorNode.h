@@ -34,7 +34,8 @@ public:
 
   IMPL_EVENT_HANDLER(audioprocess)
 
-  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope);
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
   virtual bool SupportsMediaStreams() const MOZ_OVERRIDE
   {

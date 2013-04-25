@@ -29,7 +29,8 @@ public:
   nsresult InitFromCtor(const nsAString& aType,
                         JSContext* aCx, jsval* aVal);
 
-  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope)
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
   {
     return mozilla::dom::ClipboardEventBinding::Wrap(aCx, aScope, this);
   }

@@ -16,7 +16,7 @@ NS_IMPL_ADDREF(WebGLShaderPrecisionFormat)
 NS_IMPL_RELEASE(WebGLShaderPrecisionFormat)
 
 JSObject*
-WebGLShaderPrecisionFormat::WrapObject(JSContext *cx, JSObject *scope)
+WebGLShaderPrecisionFormat::WrapObject(JSContext *cx, JS::Handle<JSObject*> scope)
 {
     return dom::WebGLShaderPrecisionFormatBinding::Wrap(cx, scope, this);
 }

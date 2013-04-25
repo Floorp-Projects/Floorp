@@ -40,7 +40,8 @@ SpeechSynthesisUtterance::SpeechSynthesisUtterance(const nsAString& text)
 SpeechSynthesisUtterance::~SpeechSynthesisUtterance() {}
 
 JSObject*
-SpeechSynthesisUtterance::WrapObject(JSContext* aCx, JSObject* aScope)
+SpeechSynthesisUtterance::WrapObject(JSContext* aCx,
+                                     JS::Handle<JSObject*> aScope)
 {
   return SpeechSynthesisUtteranceBinding::Wrap(aCx, aScope, this);
 }

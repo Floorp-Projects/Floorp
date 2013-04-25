@@ -453,7 +453,7 @@ Notification::PrefEnabled()
 }
 
 JSObject*
-Notification::WrapObject(JSContext* aCx, JSObject* aScope)
+Notification::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return mozilla::dom::NotificationBinding::Wrap(aCx, aScope, this);
 }

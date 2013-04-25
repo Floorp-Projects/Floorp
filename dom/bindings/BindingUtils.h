@@ -398,7 +398,8 @@ struct HasWrapObject
 private:
   typedef char yes[1];
   typedef char no[2];
-  typedef JSObject* (nsWrapperCache::*WrapObject)(JSContext*, JSObject*);
+  typedef JSObject* (nsWrapperCache::*WrapObject)(JSContext*,
+                                                  JS::Handle<JSObject*>);
   template<typename U, U> struct SFINAE;
   template <typename V> static no& Check(SFINAE<WrapObject, &V::WrapObject>*);
   template <typename V> static yes& Check(...);

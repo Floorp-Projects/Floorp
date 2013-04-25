@@ -214,7 +214,7 @@ nsXPathEvaluator::CreateExpression(const nsAString & aExpression,
 }
 
 JSObject*
-nsXPathEvaluator::WrapObject(JSContext* aCx, JSObject* aScope)
+nsXPathEvaluator::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
     return dom::XPathEvaluatorBinding::Wrap(aCx, aScope, this);
 }

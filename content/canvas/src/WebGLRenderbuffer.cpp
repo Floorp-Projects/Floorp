@@ -11,7 +11,7 @@
 using namespace mozilla;
 
 JSObject*
-WebGLRenderbuffer::WrapObject(JSContext *cx, JSObject *scope) {
+WebGLRenderbuffer::WrapObject(JSContext *cx, JS::Handle<JSObject*> scope) {
     return dom::WebGLRenderbufferBinding::Wrap(cx, scope, this);
 }
 

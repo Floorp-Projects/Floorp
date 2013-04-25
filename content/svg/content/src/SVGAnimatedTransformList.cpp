@@ -23,7 +23,7 @@ NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(SVGAnimatedTransformList, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(SVGAnimatedTransformList, Release)
 
 JSObject*
-SVGAnimatedTransformList::WrapObject(JSContext* aCx, JSObject* aScope)
+SVGAnimatedTransformList::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return SVGAnimatedTransformListBinding::Wrap(aCx, aScope, this);
 }

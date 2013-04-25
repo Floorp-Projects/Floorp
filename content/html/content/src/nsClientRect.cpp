@@ -39,7 +39,7 @@ FORWARD_GETTER(Width)
 FORWARD_GETTER(Height)
 
 JSObject*
-nsClientRect::WrapObject(JSContext* aCx, JSObject* aScope)
+nsClientRect::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   MOZ_ASSERT(mParent);
   return ClientRectBinding::Wrap(aCx, aScope, this);
@@ -74,7 +74,7 @@ nsClientRectList::Item(uint32_t aIndex, nsIDOMClientRect** aReturn)
 }
 
 JSObject*
-nsClientRectList::WrapObject(JSContext *cx, JSObject *scope)
+nsClientRectList::WrapObject(JSContext *cx, JS::Handle<JSObject*> scope)
 {
   return mozilla::dom::ClientRectListBinding::Wrap(cx, scope, this);
 }
