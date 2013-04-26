@@ -355,7 +355,7 @@ class JavaPanZoomController
             // transitions.
             synchronized (mTarget.getLock()) {
                 mTarget.setViewportMetrics(getValidViewportMetrics());
-                mTarget.forceRedraw();
+                mTarget.forceRedraw(null);
             }
             break;
         }
@@ -413,7 +413,7 @@ class JavaPanZoomController
             // We just interrupted a double-tap animation, so force a redraw in
             // case this touchstart is just a tap that doesn't end up triggering
             // a redraw
-            mTarget.forceRedraw();
+            mTarget.forceRedraw(null);
             // fall through
         case FLING:
         case AUTONAV:
@@ -967,7 +967,7 @@ class JavaPanZoomController
         stopAnimationTimer();
 
         // Force a viewport synchronisation
-        mTarget.forceRedraw();
+        mTarget.forceRedraw(null);
     }
 
     /* Returns the nearest viewport metrics with no overscroll visible. */
@@ -1187,7 +1187,7 @@ class JavaPanZoomController
         startTouch(detector.getFocusX(), detector.getFocusY(), detector.getEventTime());
 
         // Force a viewport synchronisation
-        mTarget.forceRedraw();
+        mTarget.forceRedraw(null);
 
         PointF point = new PointF(detector.getFocusX(), detector.getFocusY());
         GeckoEvent event = GeckoEvent.createNativeGestureEvent(GeckoEvent.ACTION_MAGNIFY_END, point, getMetrics().zoomFactor);
