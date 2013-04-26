@@ -744,6 +744,60 @@ AndroidGeckoEvent::MakeTouchEvent(nsIWidget* widget)
     return event;
 }
 
+MultiTouchInput
+AndroidGeckoEvent::MakeMultiTouchInput(nsIWidget* widget)
+{
+    MultiTouchInput::MultiTouchType type = (MultiTouchInput::MultiTouchType)-1;
+    int startIndex = 0;
+    int endIndex = Count();
+
+    switch (Action()) {
+        case AndroidMotionEvent::ACTION_DOWN:
+        case AndroidMotionEvent::ACTION_POINTER_DOWN: {
+            type = MultiTouchInput::MULTITOUCH_START;
+            break;
+        }
+        case AndroidMotionEvent::ACTION_MOVE: {
+            type = MultiTouchInput::MULTITOUCH_MOVE;
+            break;
+        }
+        case AndroidMotionEvent::ACTION_UP:
+        case AndroidMotionEvent::ACTION_POINTER_UP: {
+            // for pointer-up events we only want the data from
+            // the one pointer that went up
+            startIndex = PointerIndex();
+            endIndex = startIndex + 1;
+            type = MultiTouchInput::MULTITOUCH_END;
+            break;
+        }
+        case AndroidMotionEvent::ACTION_OUTSIDE:
+        case AndroidMotionEvent::ACTION_CANCEL: {
+            type = MultiTouchInput::MULTITOUCH_CANCEL;
+            break;
+        }
+    }
+
+    MultiTouchInput event(type, Time());
+
+    if (type < 0) {
+        // An event we don't know about
+        return event;
+    }
+
+    const nsIntPoint& offset = widget->WidgetToScreenOffset();
+    event.mTouches.SetCapacity(endIndex - startIndex);
+    for (int i = startIndex; i < endIndex; i++) {
+        SingleTouchData data(PointIndicies()[i],
+                             Points()[i] - offset,
+                             PointRadii()[i],
+                             Orientations()[i],
+                             Pressures()[i]);
+        event.mTouches.AppendElement(data);
+    }
+
+    return event;
+}
+
 void
 AndroidPoint::Init(JNIEnv *jenv, jobject jobj)
 {
