@@ -11,7 +11,7 @@
 using namespace mozilla;
 
 JSObject*
-WebGLShader::WrapObject(JSContext *cx, JSObject *scope) {
+WebGLShader::WrapObject(JSContext *cx, JS::Handle<JSObject*> scope) {
     return dom::WebGLShaderBinding::Wrap(cx, scope, this);
 }
 

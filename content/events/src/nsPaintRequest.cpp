@@ -25,7 +25,7 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(nsPaintRequest)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsPaintRequest)
 
 /* virtual */ JSObject*
-nsPaintRequest::WrapObject(JSContext* aCx, JSObject* aScope)
+nsPaintRequest::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return PaintRequestBinding::Wrap(aCx, aScope, this);
 }
@@ -65,7 +65,7 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(nsPaintRequestList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsPaintRequestList)
 
 JSObject*
-nsPaintRequestList::WrapObject(JSContext *cx, JSObject *scope)
+nsPaintRequestList::WrapObject(JSContext *cx, JS::Handle<JSObject*> scope)
 {
   return mozilla::dom::PaintRequestListBinding::Wrap(cx, scope, this);
 }

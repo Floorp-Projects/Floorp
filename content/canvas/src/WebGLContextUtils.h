@@ -20,10 +20,10 @@ WebGLContext::WebGLObjectAsJSValue(JSContext *cx, const WebGLObjectType *object,
         return JS::NullValue();
     }
     MOZ_ASSERT(this == object->Context());
-    JS::Value v;
-    JSObject* wrapper = GetWrapper();
+    JS::Rooted<JS::Value> v(cx);
+    JS::Rooted<JSObject*> wrapper(cx, GetWrapper());
     JSAutoCompartment ac(cx, wrapper);
-    if (!dom::WrapNewBindingObject(cx, wrapper, const_cast<WebGLObjectType*>(object), &v)) {
+    if (!dom::WrapNewBindingObject(cx, wrapper, const_cast<WebGLObjectType*>(object), v.address())) {
         rv.Throw(NS_ERROR_FAILURE);
         return JS::NullValue();
     }

@@ -30,7 +30,7 @@ rm_clear_all_elements (resource_manager_t *rm_p)
     uint16_t i;
 
     if (!rm_p) {
-        PLAT_ERROR(PLAT_COMMON_F_PREFIX"null resource manager received.\n", fname);
+        PLAT_ERROR(PLAT_COMMON_F_PREFIX"null resource manager received.", fname);
         return;
     }
 
@@ -58,12 +58,12 @@ rm_clear_element (resource_manager_t * rm_p, int16_t element)
     static const char fname[] = "rm_clear_elements";
 
     if (!rm_p) {
-        PLAT_ERROR(PLAT_COMMON_F_PREFIX"null resource manager received.\n", fname);
+        PLAT_ERROR(PLAT_COMMON_F_PREFIX"null resource manager received.", fname);
         return;
     }
 
     if (element < 0 || element >= rm_p->max_element) {
-        PLAT_ERROR(PLAT_COMMON_F_PREFIX"element value %d invalid. Max value is %d.\n",
+        PLAT_ERROR(PLAT_COMMON_F_PREFIX"element value %d invalid. Max value is %d.",
                fname, element, rm_p->max_element - 1);
         return;
     }
@@ -92,12 +92,12 @@ rm_set_element (resource_manager_t *rm_p, int16_t element)
     static const char fname[] = "rm_set_element";
 
     if (!rm_p) {
-        PLAT_ERROR(PLAT_COMMON_F_PREFIX"null resource manager received.\n", fname);
+        PLAT_ERROR(PLAT_COMMON_F_PREFIX"null resource manager received.", fname);
         return;
     }
 
     if (element < 0 || element >= rm_p->max_element) {
-        PLAT_ERROR(PLAT_COMMON_F_PREFIX"element value %d invalid. Max value %d.\n",
+        PLAT_ERROR(PLAT_COMMON_F_PREFIX"element value %d invalid. Max value %d.",
                fname, element, rm_p->max_element - 1);
         return;
     }
@@ -126,12 +126,12 @@ rm_is_element_set (resource_manager_t *rm_p, int16_t element)
     static const char fname[] = "rm_is_element_set";
 
     if (!rm_p) {
-        PLAT_ERROR(PLAT_COMMON_F_PREFIX"null resource manager received.\n", fname);
+        PLAT_ERROR(PLAT_COMMON_F_PREFIX"null resource manager received.", fname);
         return FALSE;
     }
 
     if (element < 0 || element >= rm_p->max_element) {
-        PLAT_ERROR(PLAT_COMMON_F_PREFIX"element value %d invalid. Max value %d.\n",
+        PLAT_ERROR(PLAT_COMMON_F_PREFIX"element value %d invalid. Max value %d.",
                fname, element, rm_p->max_element - 1);
         return FALSE;
     }
@@ -171,7 +171,7 @@ rm_get_free_element (resource_manager_t *rm_p)
     max_map = ~max_map;
 
     if (!rm_p) {
-        PLAT_ERROR(PLAT_COMMON_F_PREFIX"null resource manager received.\n", fname);
+        PLAT_ERROR(PLAT_COMMON_F_PREFIX"null resource manager received.", fname);
         return -1;
     }
 
@@ -214,7 +214,7 @@ rm_show (resource_manager_t *rm_p)
     uint16_t i, j;
 
     if (!rm_p) {
-        PLAT_ERROR(PLAT_COMMON_F_PREFIX"null resource manager received.\n", fname);
+        PLAT_ERROR(PLAT_COMMON_F_PREFIX"null resource manager received.", fname);
         return;
     }
 
@@ -222,7 +222,7 @@ rm_show (resource_manager_t *rm_p)
         for (j = 0; j < RM_NUM_ELEMENTS_PER_MAP; j++) {
             if (rm_p->table[i] & (1 << j)) {
                 element = (i * RM_NUM_ELEMENTS_PER_MAP) + j;
-                TNP_DEBUG(DEB_F_PREFIX"rm map: %d\n", DEB_F_PREFIX_ARGS(RM, fname), element);
+                TNP_DEBUG(DEB_F_PREFIX"rm map: %d", DEB_F_PREFIX_ARGS(RM, fname), element);
             }
         }
     }
@@ -249,14 +249,14 @@ rm_create (int16_t max_element)
     resource_manager_t *rm_p;
 
     if (max_element < 0) {
-        PLAT_ERROR(PLAT_COMMON_F_PREFIX"invalid max element %d received.\n", fname,
+        PLAT_ERROR(PLAT_COMMON_F_PREFIX"invalid max element %d received.", fname,
                max_element);
         return NULL;
     }
 
     rm_p = (resource_manager_t *) cpr_malloc(sizeof(resource_manager_t));
     if (!rm_p) {
-        PLAT_ERROR(PLAT_COMMON_F_PREFIX"unable to allocate resource manager.\n", fname);
+        PLAT_ERROR(PLAT_COMMON_F_PREFIX"unable to allocate resource manager.", fname);
         return NULL;
     }
 
@@ -291,7 +291,7 @@ rm_destroy (resource_manager_t *rm_p)
     static const char fname[] = "rm_destroy";
 
     if (!rm_p) {
-        PLAT_ERROR(PLAT_COMMON_F_PREFIX"null resource manager received.\n", fname);
+        PLAT_ERROR(PLAT_COMMON_F_PREFIX"null resource manager received.", fname);
         return;
     }
 

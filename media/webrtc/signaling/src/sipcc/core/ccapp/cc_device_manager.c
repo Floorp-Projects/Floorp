@@ -127,49 +127,49 @@ int action(int cmd)
     proCmd.cmd = cmd;
 
     if (cmd == CMD_INSERVICE ) {
-        CCAPP_DEBUG("CC_device_manager_action: CMD_INSERVICE \n");
+        CCAPP_DEBUG("CC_device_manager_action: CMD_INSERVICE");
         updateMediaConfigProperties();
         updateVideoConfigProperties();
         proCmd.cmdData.ccData.reason = STARTUP_NORMAL;
         if (ccappTaskPostMsg(CCAPP_SERVICE_CMD, (cprBuffer_t)&proCmd,
                        sizeof(sessionProvider_cmd_t), CCAPP_CCPROVIER) == CPR_FAILURE) {
-            CCAPP_DEBUG("ccInvokeFeature: ccappTaskSendMsg failed\n");
+            CCAPP_DEBUG("ccInvokeFeature: ccappTaskSendMsg failed");
         }
     } else if (cmd == CMD_INIT) {
 
-        CCAPP_DEBUG("CC_device_manager_action: CMD_INIT \n");
+        CCAPP_DEBUG("CC_device_manager_action: CMD_INIT");
         proCmd.cmdData.ccData.reason = STARTUP_NORMAL;
 
         if (ccappTaskPostMsg(CCAPP_SERVICE_CMD, (cprBuffer_t)&proCmd,
                        sizeof(sessionProvider_cmd_t), CCAPP_CCPROVIER) == CPR_FAILURE) {
-            CCAPP_DEBUG("ccInvokeFeature: ccappTaskSendMsg failed\n");
+            CCAPP_DEBUG("ccInvokeFeature: ccappTaskSendMsg failed");
         }
     } else if (cmd == CMD_RESTART) {
 
-        CCAPP_DEBUG("CC_device_manager_action: CMD_RESTART \n");
+        CCAPP_DEBUG("CC_device_manager_action: CMD_RESTART");
         updateMediaConfigProperties();
         proCmd.cmdData.ccData.reason = STARTUP_NORMAL;
 
         if (ccappTaskPostMsg(CCAPP_SERVICE_CMD, (cprBuffer_t)&proCmd,
                        sizeof(sessionProvider_cmd_t), CCAPP_CCPROVIER) == CPR_FAILURE) {
-            CCAPP_DEBUG("ccInvokeFeature: ccappTaskSendMsg failed\n");
+            CCAPP_DEBUG("ccInvokeFeature: ccappTaskSendMsg failed");
         }
 
     } else if (cmd == CMD_SHUTDOWN) {
 
-        CCAPP_DEBUG("CC_device_manager_action: CMD_SHUTDOWN \n");
+        CCAPP_DEBUG("CC_device_manager_action: CMD_SHUTDOWN");
         proCmd.cmdData.ccData.reason = CC_CAUSE_REG_ALL_FAILED;
         if (ccappTaskPostMsg(CCAPP_SERVICE_CMD, (cprBuffer_t)&proCmd,
                        sizeof(sessionProvider_cmd_t), CCAPP_CCPROVIER) == CPR_FAILURE) {
-            CCAPP_DEBUG("ccInvokeFeature: ccappTaskSendMsg failed\n");
+            CCAPP_DEBUG("ccInvokeFeature: ccappTaskSendMsg failed");
         }
     } else {
 
         proCmd.cmdData.ccData.reason = STARTUP_NORMAL;
-        CCAPP_DEBUG("CC_device_manager_action: Default \n");
+        CCAPP_DEBUG("CC_device_manager_action: Default");
         if (ccappTaskPostMsg(CCAPP_SERVICE_CMD, (cprBuffer_t)&proCmd,
                        sizeof(sessionProvider_cmd_t), CCAPP_CCPROVIER) == CPR_FAILURE) {
-            CCAPP_DEBUG("ccInvokeFeature: ccappTaskSendMsg failed\n");
+            CCAPP_DEBUG("ccInvokeFeature: ccappTaskSendMsg failed");
         }
 
     }
@@ -190,27 +190,27 @@ cc_boolean is_phone_registered() {
  * Wrapper function for settting state for handled events for device manager
  */
 void setState(int st) {
-        DEF_DEBUG("setState: new registration state=  %s\n", mgmt_state_to_str(st));
+        DEF_DEBUG("setState: new registration state=  %s", mgmt_state_to_str(st));
         mgmtState = st;
 }
 
 void processInsToOos (void )
 {
-        //CCAPP_DEBUG("CC_device_manager:  processInsToOoS \n");
-        DEF_DEBUG("CC_device_manager:  processInsToOoS \n");
+        //CCAPP_DEBUG("CC_device_manager:  processInsToOoS");
+        DEF_DEBUG("CC_device_manager:  processInsToOoS");
         sub_hndlr_stop();
 }
 
 void prepareForSoftReset()
 {
-        CCAPP_DEBUG("CC_device_manager:  prepareForSoftReset\n");
+        CCAPP_DEBUG("CC_device_manager:  prepareForSoftReset");
 
 }
 
 
 void processInserviceEvent( void)
 {
-    CCAPP_DEBUG("CC_device_manager:  process Inservice Event\n");
+    CCAPP_DEBUG("CC_device_manager:  process Inservice Event");
      if (g_deviceInfo.cucm_mode == CC_MODE_CCM ) {
         if (sub_hndlr_isAvailable() == FALSE) {
             sub_hndlr_start();
@@ -228,7 +228,7 @@ void registration_processEvent(int event) {
 
         boolean ignored=0;
 
-        DEF_DEBUG("registration_processEvent:  Event %s, current State %s \n",
+        DEF_DEBUG("registration_processEvent:  Event %s, current State %s",
                      mgmt_event_to_str(event) , mgmt_state_to_str(mgmtState));
 
         switch (event) {
@@ -583,7 +583,7 @@ void registration_processEvent(int event) {
         }
 
         if (ignored) {
-            DEF_DEBUG("registration_processEvent: IGNORED  Event  %s in State %s \n",
+            DEF_DEBUG("registration_processEvent: IGNORED  Event  %s in State %s",
                      mgmt_event_to_str(event) , mgmt_state_to_str(mgmtState));
         }
 

@@ -22,7 +22,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SVGAnimatedAngle)
 NS_INTERFACE_MAP_END
 
 JSObject*
-SVGAnimatedAngle::WrapObject(JSContext* aCx, JSObject* aScope)
+SVGAnimatedAngle::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return SVGAnimatedAngleBinding::Wrap(aCx, aScope, this);
 }

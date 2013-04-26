@@ -84,10 +84,19 @@ public:
 
   void FillScriptErrorEvent(nsScriptErrorEvent* aEvent) const;
 
-  bool IsPending() const
+  bool
+  IsPending() const
   {
     return !mHaveResultOrErrorCode;
   }
+
+#ifdef MOZ_ENABLE_PROFILER_SPS
+  uint64_t
+  GetSerialNumber() const
+  {
+    return mSerialNumber;
+  }
+#endif
 
 protected:
   IDBRequest();
@@ -97,16 +106,15 @@ protected:
   nsRefPtr<IDBTransaction> mTransaction;
 
   jsval mResultVal;
-
   nsCOMPtr<nsIDOMDOMError> mError;
-
   IndexedDBRequestParentBase* mActorParent;
-
-  nsresult mErrorCode;
-  bool mHaveResultOrErrorCode;
-
   nsString mFilename;
+#ifdef MOZ_ENABLE_PROFILER_SPS
+  uint64_t mSerialNumber;
+#endif
+  nsresult mErrorCode;
   uint32_t mLineNo;
+  bool mHaveResultOrErrorCode;
 };
 
 class IDBOpenDBRequest : public IDBRequest,

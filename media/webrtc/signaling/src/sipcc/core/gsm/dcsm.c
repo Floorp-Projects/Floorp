@@ -205,7 +205,7 @@ static void dcsm_do_ready_state_job (void)
     callid_t        call_id = CC_NO_CALL_ID;
 
     if (dcsm_cb.state != DCSM_S_READY) {
-        DEF_DEBUG(DEB_F_PREFIX": not in ready state.\n",
+        DEF_DEBUG(DEB_F_PREFIX": not in ready state.",
             DEB_F_PREFIX_ARGS("DCSM", fname));
         return;
     }
@@ -222,7 +222,7 @@ static void dcsm_do_ready_state_job (void)
             }
         }
 
-        DEF_DEBUG(DEB_F_PREFIX"%d: event (%s%s)\n",
+        DEF_DEBUG(DEB_F_PREFIX"%d: event (%s%s)",
             DEB_F_PREFIX_ARGS("DCSM", fname), call_id,
                      cc_msg_name((cc_msgs_t)(event_id)),
                      feat_msg ? cc_feature_name(feat_msg->feature_id):" ");
@@ -269,7 +269,7 @@ static void dcsm_add_call_id_to_list (callid_t call_id)
         /* Should never happen as there is a space to store call_id
          * for each calls
         */
-        DCSM_ERROR(DEB_F_PREFIX"DCSM No space to store call_id.\n",
+        DCSM_ERROR(DEB_F_PREFIX"DCSM No space to store call_id.",
                                     DEB_F_PREFIX_ARGS("DCSM", fname));
         return;
     }
@@ -332,7 +332,7 @@ dcsm_update_gsm_state (fsm_fcb_t *fcb, callid_t call_id, int state)
     fsmdef_dcb_t *dcb;
 
     if (fcb->fsm_type != FSM_TYPE_DEF) {
-        DEF_DEBUG(DEB_F_PREFIX"%d: Not handling for %s\n",
+        DEF_DEBUG(DEB_F_PREFIX"%d: Not handling for %s",
                   DEB_F_PREFIX_ARGS("DCSM", fname), call_id,
                   fsm_type_name(fcb->fsm_type));
         return;
@@ -380,7 +380,7 @@ dcsm_update_gsm_state (fsm_fcb_t *fcb, callid_t call_id, int state)
                  */
                 if (sll_count(dcsm_cb.s_msg_list) > 0 ) {
                     if (gsm_send_msg(DCSM_EV_READY, NULL, 0) == CPR_FAILURE) {
-                        DCSM_ERROR(DEB_F_PREFIX"send DCSM_EV_READY ERROR.\n",
+                        DCSM_ERROR(DEB_F_PREFIX"send DCSM_EV_READY ERROR.",
                                         DEB_F_PREFIX_ARGS(DCSM, fname));
                     }
                 }
@@ -391,7 +391,7 @@ dcsm_update_gsm_state (fsm_fcb_t *fcb, callid_t call_id, int state)
             break;
     }
 
-    DEF_DEBUG(DEB_F_PREFIX"%d : %s --> %s\n",
+    DEF_DEBUG(DEB_F_PREFIX"%d : %s --> %s",
             DEB_F_PREFIX_ARGS("DCSM", fname), call_id,
             dcsm_get_state_name(last_state),
             dcsm_get_state_name(dcsm_cb.state));
@@ -413,7 +413,7 @@ dcsm_wait_ev_offhook_handling (void *event, int event_id)
 {
     static const char fname[] = "dcsm_wait_ev_offhook_handling";
 
-    DEF_DEBUG(DEB_F_PREFIX": offhook\n",
+    DEF_DEBUG(DEB_F_PREFIX": offhook",
                      DEB_F_PREFIX_ARGS("DCSM", fname));
 
     dcsm_add_event_to_queue(event);
@@ -443,7 +443,7 @@ dcsm_wait_ev_feature_handling (void *event, int event_id)
         call_id = feat_msg->call_id;
     }
 
-    DEF_DEBUG(DEB_F_PREFIX"%d: id= %s%s\n",
+    DEF_DEBUG(DEB_F_PREFIX"%d: id= %s%s",
                      DEB_F_PREFIX_ARGS("DCSM", fname), call_id,
                     cc_msg_name((cc_msgs_t)(event_id)),
                      feat_msg ? cc_feature_name(feat_msg->feature_id):" ");
@@ -455,12 +455,12 @@ dcsm_wait_ev_feature_handling (void *event, int event_id)
         case CC_FEATURE_RESUME:
         case CC_FEATURE_JOIN:
             dcsm_add_event_to_queue(event);
-            DEF_DEBUG(DEB_F_PREFIX"%d: Event queued\n",
+            DEF_DEBUG(DEB_F_PREFIX"%d: Event queued",
                      DEB_F_PREFIX_ARGS("DCSM", fname), call_id);
             rc = SM_RC_END;
             break;
         default:
-            DEF_DEBUG(DEB_F_PREFIX"%d: Feature msg not handled\n",
+            DEF_DEBUG(DEB_F_PREFIX"%d: Feature msg not handled",
                      DEB_F_PREFIX_ARGS("DCSM", fname), call_id);
 
             rc = SM_RC_CONT;
@@ -487,7 +487,7 @@ dcsm_wait_ev_dialstring_handling (void *event, int event_id)
 {
     static const char fname[] = "dcsm_wait_ev_dialstring_handling";
 
-    DEF_DEBUG(DEB_F_PREFIX": dialstring\n",
+    DEF_DEBUG(DEB_F_PREFIX": dialstring",
                      DEB_F_PREFIX_ARGS("DCSM", fname));
 
     dcsm_add_event_to_queue(event);
@@ -525,7 +525,7 @@ dcsm_process_event (void *event, int event_id)
         }
     }
 
-    DEF_DEBUG(DEB_F_PREFIX"DCSM %-4d:(%s:%s%s)\n",
+    DEF_DEBUG(DEB_F_PREFIX"DCSM %-4d:(%s:%s%s)",
                      DEB_F_PREFIX_ARGS("DCSM", fname), call_id,
                      dcsm_get_state_name(dcsm_cb.state),
                      cc_msg_name((cc_msgs_t)(event_id)),
@@ -544,7 +544,7 @@ dcsm_process_event (void *event, int event_id)
 
         if ((hdlr = pdcsm_sm_table->table[pdcsm_sm_table->max_event * state_id +
                             event_id]) != NULL) {
-            DEF_DEBUG(DEB_F_PREFIX"%-4d: dcsm entry: (%s)\n",
+            DEF_DEBUG(DEB_F_PREFIX"%-4d: dcsm entry: (%s)",
                          DEB_F_PREFIX_ARGS("DCSM", fname), call_id,
                      cc_msg_name((cc_msgs_t)(event_id)));
 
@@ -679,7 +679,7 @@ dcsm_init (void)
                             dcsm_match_event);
 
     if (dcsm_cb.s_msg_list == NULL) {
-        DCSM_ERROR(DEB_F_PREFIX"DCSM CB creation failed.\n",
+        DCSM_ERROR(DEB_F_PREFIX"DCSM CB creation failed.",
                                     DEB_F_PREFIX_ARGS("DCSM", fname));
 
     }

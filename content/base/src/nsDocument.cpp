@@ -1303,6 +1303,35 @@ nsDOMStyleSheetSetList::GetSets(nsTArray<nsString>& aStyleSets)
 }
 
 // ==================================================================
+
+struct nsIDocument::FrameRequest
+{
+  FrameRequest(const FrameRequestCallbackHolder& aCallback,
+               int32_t aHandle) :
+    mCallback(aCallback),
+    mHandle(aHandle)
+  {}
+
+  // Conversion operator so that we can append these to a
+  // FrameRequestCallbackList
+  operator const FrameRequestCallbackHolder& () const {
+    return mCallback;
+  }
+
+  // Comparator operators to allow RemoveElementSorted with an
+  // integer argument on arrays of FrameRequest
+  bool operator==(int32_t aHandle) const {
+    return mHandle == aHandle;
+  }
+  bool operator<(int32_t aHandle) const {
+    return mHandle < aHandle;
+  }
+
+  FrameRequestCallbackHolder mCallback;
+  int32_t mHandle;
+};
+
+// ==================================================================
 // =
 // ==================================================================
 nsIDocument::nsIDocument()
@@ -1720,7 +1749,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
 
   for (uint32_t i = 0; i < tmp->mFrameRequestCallbacks.Length(); ++i) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mFrameRequestCallbacks[i]");
-    cb.NoteXPCOMChild(tmp->mFrameRequestCallbacks[i]);
+    cb.NoteXPCOMChild(tmp->mFrameRequestCallbacks[i].mCallback.GetISupports());
   }
 
   // Traverse animation components
@@ -8736,7 +8765,7 @@ nsIDocument::CreateStaticClone(nsISupports* aCloneContainer)
 }
 
 nsresult
-nsIDocument::ScheduleFrameRequestCallback(nsIFrameRequestCallback* aCallback,
+nsIDocument::ScheduleFrameRequestCallback(const FrameRequestCallbackHolder& aCallback,
                                           int32_t *aHandle)
 {
   if (mFrameRequestCallbackCounter == INT32_MAX) {

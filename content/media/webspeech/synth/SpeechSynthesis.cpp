@@ -82,7 +82,7 @@ SpeechSynthesis::~SpeechSynthesis()
 }
 
 JSObject*
-SpeechSynthesis::WrapObject(JSContext* aCx, JSObject* aScope)
+SpeechSynthesis::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return SpeechSynthesisBinding::Wrap(aCx, aScope, this);
 }

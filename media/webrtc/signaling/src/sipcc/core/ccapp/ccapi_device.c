@@ -278,7 +278,7 @@ void CCAPI_Device_IP_Update (cc_device_handle_t handle,
  */
 void CCAPI_Device_setVideoAutoTxPreference (cc_device_handle_t handle, cc_boolean txPref)
 {
-        CCAPP_DEBUG("CCAPI_Device_setVideoAutoTxPreference: updated to %d\n", txPref);
+        CCAPP_DEBUG("CCAPI_Device_setVideoAutoTxPreference: updated to %d", txPref);
 	cc_media_setVideoAutoTxPref(txPref);
 }
 

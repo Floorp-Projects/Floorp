@@ -13,27 +13,21 @@ const FILENAME = "styleeditor-import-test.css";
 const SOURCE = "body{background:red;}";
 
 
+let gUI;
+
 function test()
 {
   waitForExplicitFinish();
 
-  addTabAndLaunchStyleEditorChromeWhenLoaded(function (aChrome) {
-    aChrome.addChromeListener({
-      onEditorAdded: testEditorAdded
-    });
-    run(aChrome);
+  addTabAndOpenStyleEditor(function(panel) {
+    gUI = panel.UI;
+    gUI.on("editor-added", testEditorAdded);
   });
 
   content.location = TESTCASE_URI;
 }
 
-function run(aChrome)
-{
-  is(aChrome.editors.length, 2,
-     "there is 2 stylesheets initially");
-}
-
-function testImport(aChrome, aEditor)
+function testImport()
 {
   // create file to import first
   let file = FileUtils.getFile("ProfD", [FILENAME]);
@@ -46,42 +40,37 @@ function testImport(aChrome, aEditor)
     FileUtils.closeSafeFileOutputStream(ostream);
 
     // click the import button now that the file to import is ready
-    aChrome._mockImportFile = file;
+    gUI._mockImportFile = file;
 
     waitForFocus(function () {
-      let document = gChromeWindow.document
+      let document = gPanelWindow.document
       let importButton = document.querySelector(".style-editor-importButton");
-      EventUtils.synthesizeMouseAtCenter(importButton, {}, gChromeWindow);
-    }, gChromeWindow);
+      ok(importButton, "import button exists");
+
+      EventUtils.synthesizeMouseAtCenter(importButton, {}, gPanelWindow);
+    }, gPanelWindow);
   });
 }
 
 let gAddedCount = 0;
-function testEditorAdded(aChrome, aEditor)
+function testEditorAdded(aEvent, aEditor)
 {
   if (++gAddedCount == 2) {
     // test import after the 2 initial stylesheets have been loaded
-    if (!aChrome.editors[0].sourceEditor) {
-      aChrome.editors[0].addActionListener({
-        onAttach: function () {
-          testImport(aChrome);
-        }
-      });
-    } else {
-      testImport(aChrome);
-    }
+    gUI.editors[0].getSourceEditor().then(function() {
+      testImport();
+    });
   }
 
-  if (!aEditor.hasFlag("imported")) {
+  if (!aEditor.savedFile) {
     return;
   }
 
-  ok(!aEditor.hasFlag("inline"),
-     "imported stylesheet does not have INLINE flag");
-  ok(aEditor.savedFile,
+  is(aEditor.savedFile.leafName, FILENAME,
      "imported stylesheet will be saved directly into the same file");
-  is(aEditor.getFriendlyName(), FILENAME,
+  is(aEditor.friendlyName, FILENAME,
      "imported stylesheet has the same name as the filename");
 
+  gUI = null;
   finish();
 }

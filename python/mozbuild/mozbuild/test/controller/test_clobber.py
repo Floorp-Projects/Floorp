@@ -52,7 +52,7 @@ class TestClobberer(unittest.TestCase):
         self.assertFalse(c.clobber_needed())
 
         # Side-effect is topobjdir is created with CLOBBER file touched.
-        required, performed, reason = c.maybe_do_clobber(os.getcwd())
+        required, performed, reason = c.maybe_do_clobber(os.getcwd(), True)
         self.assertFalse(required)
         self.assertFalse(performed)
         self.assertIsNone(reason)
@@ -66,7 +66,7 @@ class TestClobberer(unittest.TestCase):
         c = Clobberer(self.get_topsrcdir(), self.get_tempdir())
         self.assertFalse(c.clobber_needed())
 
-        required, performed, reason = c.maybe_do_clobber(os.getcwd())
+        required, performed, reason = c.maybe_do_clobber(os.getcwd(), True)
         self.assertFalse(required)
         self.assertFalse(performed)
         self.assertIsNone(reason)
@@ -80,7 +80,7 @@ class TestClobberer(unittest.TestCase):
         with open(c.obj_clobber, 'a'):
             pass
 
-        required, performed, reason = c.maybe_do_clobber(os.getcwd())
+        required, performed, reason = c.maybe_do_clobber(os.getcwd(), True)
         self.assertFalse(required)
         self.assertFalse(performed)
         self.assertIsNone(reason)
@@ -103,13 +103,7 @@ class TestClobberer(unittest.TestCase):
 
         self.assertTrue(c.clobber_needed())
 
-        required, performed, reason = c.maybe_do_clobber(os.getcwd(), False)
-        self.assertTrue(required)
-        self.assertFalse(performed)
-        self.assertIn('Automatic clobbering has been disabled', reason)
-
-        # Now let's actually do it.
-        required, performed, reason = c.maybe_do_clobber(os.getcwd())
+        required, performed, reason = c.maybe_do_clobber(os.getcwd(), True)
         self.assertTrue(required)
         self.assertTrue(performed)
 
@@ -148,7 +142,7 @@ class TestClobberer(unittest.TestCase):
 
         self.assertTrue(c.clobber_needed())
 
-        required, performed, reason = c.maybe_do_clobber(c.topobjdir)
+        required, performed, reason = c.maybe_do_clobber(c.topobjdir, True)
         self.assertTrue(required)
         self.assertTrue(performed)
 
@@ -169,14 +163,14 @@ class TestClobberer(unittest.TestCase):
         d = os.path.join(c.topobjdir, 'dummy_dir')
         os.mkdir(d)
 
-        required, performed, reason = c.maybe_do_clobber(d)
+        required, performed, reason = c.maybe_do_clobber(d, True)
         self.assertTrue(required)
         self.assertFalse(performed)
         self.assertIn('Cannot clobber while the shell is inside', reason)
 
 
-    def test_mozconfig_overrides_auto_clobber(self):
-        """If NO_AUTOCLOBBER is in the environment, don't auto clobber."""
+    def test_mozconfig_opt_in(self):
+        """Auto clobber iff AUTOCLOBBER is in the environment."""
 
         topsrcdir = self.get_topsrcdir()
         topobjdir = self.get_tempdir()
@@ -194,14 +188,25 @@ class TestClobberer(unittest.TestCase):
         old_time = os.path.getmtime(os.path.join(topsrcdir, 'CLOBBER')) - 60
         os.utime(obj_clobber, (old_time, old_time))
 
+        # Check auto clobber is off by default
         env = dict(os.environ)
-        env['NO_AUTOCLOBBER'] = '1'
+        if env.get('AUTOCLOBBER', False):
+            del env['AUTOCLOBBER']
 
         s = StringIO()
         status = clobber([topsrcdir, topobjdir], env, os.getcwd(), s)
         self.assertEqual(status, 1)
-        self.assertIn('Automatic clobbering has been disabled', s.getvalue())
+        self.assertIn('Automatic clobbering is not enabled', s.getvalue())
         self.assertTrue(os.path.exists(dummy_file))
+
+        # Check auto clobber opt-in works
+        env['AUTOCLOBBER'] = '1'
+
+        s = StringIO()
+        status = clobber([topsrcdir, topobjdir], env, os.getcwd(), s)
+        self.assertEqual(status, 0)
+        self.assertIn('Successfully completed auto clobber', s.getvalue())
+        self.assertFalse(os.path.exists(dummy_file))
 
 
 if __name__ == '__main__':

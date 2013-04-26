@@ -590,35 +590,6 @@ private:
 };
 
 
-// NamedNodeMap helper
-
-class nsNamedNodeMapSH : public nsNamedArraySH
-{
-protected:
-  nsNamedNodeMapSH(nsDOMClassInfoData* aData) : nsNamedArraySH(aData)
-  {
-  }
-
-  virtual ~nsNamedNodeMapSH()
-  {
-  }
-
-  virtual nsISupports* GetItemAt(nsISupports *aNative, uint32_t aIndex,
-                                 nsWrapperCache **aCache, nsresult *aResult);
-
-  // Override nsNamedArraySH::GetNamedItem()
-  virtual nsISupports* GetNamedItem(nsISupports *aNative,
-                                    const nsAString& aName,
-                                    nsWrapperCache **cache,
-                                    nsresult *aResult);
-
-public:
-  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
-  {
-    return new nsNamedNodeMapSH(aData);
-  }
-};
-
 // Document helper, for document.location and document.on*
 
 class nsDocumentSH : public nsNodeSH

@@ -855,10 +855,13 @@ MobileMessageDatabaseService.prototype = {
 
   saveRecord: function saveRecord(aMessageRecord, aAddresses, aCallback) {
     let isOverriding = (aMessageRecord.id !== undefined);
+    let oldThreadId = 0;
     if (!isOverriding) {
       // Assign a new id.
       this.lastMessageId += 1;
       aMessageRecord.id = this.lastMessageId;
+    } else {
+      oldThreadId = aMessageRecord.threadId;
     }
     if (DEBUG) debug("Going to store " + JSON.stringify(aMessageRecord));
 
@@ -898,18 +901,6 @@ MobileMessageDatabaseService.prototype = {
           return;
         }
 
-        // If the overriding message is going to be saved into another
-        // thread which is different from the original one containing the
-        // overrided message, we need to update the original thread info.
-        if (isOverriding &&
-            (!threadRecord || threadRecord.id != aMessageRecord.threadId)) {
-          self.updateThreadByMessageChange(messageStore,
-                                           threadStore,
-                                           aMessageRecord.threadId,
-                                           aMessageRecord.id,
-                                           aMessageRecord.read);
-        }
-
         let insertMessageRecord = function (threadId) {
           // Setup threadId & threadIdIndex.
           aMessageRecord.threadId = threadId;
@@ -921,6 +912,17 @@ MobileMessageDatabaseService.prototype = {
           }
           // Really add to message store.
           messageStore.put(aMessageRecord);
+
+          // If the overriding message is going to be saved into another
+          // thread which is different from the original one containing the
+          // overrided message, we need to update the original thread info.
+          if (isOverriding && threadId != oldThreadId) {
+            self.updateThreadByMessageChange(messageStore,
+                                             threadStore,
+                                             oldThreadId,
+                                             aMessageRecord.id,
+                                             aMessageRecord.read);
+          }
         };
 
         let timestamp = aMessageRecord.timestamp;

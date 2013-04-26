@@ -17,7 +17,7 @@ DOMFileRequest::DOMFileRequest(nsIDOMWindow* aWindow)
 }
 
 /* virtual */ JSObject*
-DOMFileRequest::WrapObject(JSContext* aCx, JSObject* aScope)
+DOMFileRequest::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return FileRequestBinding::Wrap(aCx, aScope, this);
 }

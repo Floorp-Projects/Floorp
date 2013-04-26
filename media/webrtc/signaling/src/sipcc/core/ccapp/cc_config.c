@@ -73,7 +73,7 @@ void CC_Config_setArrayValue(int cfgid, char *byte_array, int length) {
 
     byte_ptr = cpr_malloc(length);
     if (byte_ptr == NULL) {
-        TNP_DEBUG(DEB_F_PREFIX"setPropertyCacheByteArray():malloc failed.\n", DEB_F_PREFIX_ARGS(JNI, "nSetPropertyCacheByteArray"));
+        TNP_DEBUG(DEB_F_PREFIX"setPropertyCacheByteArray():malloc failed.", DEB_F_PREFIX_ARGS(JNI, "nSetPropertyCacheByteArray"));
         return;
     }
 
@@ -101,7 +101,7 @@ char* CC_Config_setDialPlan(const char *dial_plan_string, int length) {
      * plan by setting the length to 0.
      */
     if (dial_plan_string == NULL || length == 0 || length >= DIALPLAN_MAX_SIZE) {
-        TNP_DEBUG(DEB_F_PREFIX"Setting NULL dialplan string (length [%d] is 0, or length is larger than maximum [%d])\n",
+        TNP_DEBUG(DEB_F_PREFIX"Setting NULL dialplan string (length [%d] is 0, or length is larger than maximum [%d])",
                 DEB_F_PREFIX_ARGS(JNI, fname), length, DIALPLAN_MAX_SIZE);
 
         dp_init_template (NULL, 0);
@@ -109,7 +109,7 @@ char* CC_Config_setDialPlan(const char *dial_plan_string, int length) {
      }
 
     ret = dp_init_template(dial_plan_string, length);
-    TNP_DEBUG(DEB_F_PREFIX"Parsed dial_plan_string.  Version=[%s], Length=[%d]\n", DEB_F_PREFIX_ARGS(JNI, fname), g_dp_version_stamp, length);
+    TNP_DEBUG(DEB_F_PREFIX"Parsed dial_plan_string.  Version=[%s], Length=[%d]", DEB_F_PREFIX_ARGS(JNI, fname), g_dp_version_stamp, length);
     if (ret != 0)
     {
         return (NULL);
@@ -133,10 +133,10 @@ char* CC_Config_setFcp(const char *fcp_plan_string, int len) {
      * If the string is null, return null (version)
      */
 
-    TNP_DEBUG(DEB_F_PREFIX"FCP Parsing FCP doc\n", DEB_F_PREFIX_ARGS(JNI, fname));
+    TNP_DEBUG(DEB_F_PREFIX"FCP Parsing FCP doc", DEB_F_PREFIX_ARGS(JNI, fname));
     if (fcp_plan_string == NULL)
     {
-        TNP_DEBUG(DEB_F_PREFIX"Null FCP xml document\n",
+        TNP_DEBUG(DEB_F_PREFIX"Null FCP xml document",
                 DEB_F_PREFIX_ARGS(JNI, fname));
 
         fcp_init_template (NULL);
@@ -144,7 +144,7 @@ char* CC_Config_setFcp(const char *fcp_plan_string, int len) {
     }
 
     ret = fcp_init_template (fcp_plan_string);
-    TNP_DEBUG(DEB_F_PREFIX"Parsed FCP xml.  Version=[%s]\n", DEB_F_PREFIX_ARGS(JNI, fname), g_fp_version_stamp);
+    TNP_DEBUG(DEB_F_PREFIX"Parsed FCP xml.  Version=[%s]", DEB_F_PREFIX_ARGS(JNI, fname), g_fp_version_stamp);
     if (ret != 0)
     {
         return (NULL);

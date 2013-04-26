@@ -80,8 +80,6 @@ extern cc_int32_t g_NotifyLineDebug;
 extern int32_t bug_printf(int32_t level, const char *_format, ...);
 extern int32_t nbuginf(const char *_format, ...);
 
-#define logMsg buginf
-
 /* SIP debug macros */
 #define CCSIP_DEBUG_MESSAGE(format,...) if (SipDebugMessage) \
         CSFLogDebug("ccsip_message", format, ## __VA_ARGS__)

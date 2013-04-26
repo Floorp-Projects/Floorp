@@ -117,12 +117,23 @@
        //    char[...]   d_name;
        //    };
        {
+         let d_name_extra_size = 0;
+         if (OS.Constants.libc.OSFILE_SIZEOF_DIRENT_D_NAME < 8) {
+           // d_name is defined like "char d_name[1];" on some platforms
+           // (e.g. Solaris), we need to give it more size for our structure.
+           d_name_extra_size = 256;
+         }
+
          let dirent = new OS.Shared.HollowStructure("dirent",
-           OS.Constants.libc.OSFILE_SIZEOF_DIRENT);
-         dirent.add_field_at(OS.Constants.libc.OSFILE_OFFSETOF_DIRENT_D_TYPE,
-           "d_type", ctypes.uint8_t);
+           OS.Constants.libc.OSFILE_SIZEOF_DIRENT + d_name_extra_size);
+         if (OS.Constants.libc.OSFILE_OFFSETOF_DIRENT_D_TYPE != undefined) {
+           // |dirent| doesn't have d_type on some platforms (e.g. Solaris).
+           dirent.add_field_at(OS.Constants.libc.OSFILE_OFFSETOF_DIRENT_D_TYPE,
+             "d_type", ctypes.uint8_t);
+         }
          dirent.add_field_at(OS.Constants.libc.OSFILE_OFFSETOF_DIRENT_D_NAME,
-           "d_name", ctypes.ArrayType(ctypes.char, OS.Constants.libc.OSFILE_SIZEOF_DIRENT_D_NAME));
+           "d_name", ctypes.ArrayType(ctypes.char,
+             OS.Constants.libc.OSFILE_SIZEOF_DIRENT_D_NAME + d_name_extra_size));
 
          // We now have built |dirent|.
          Types.dirent = dirent.getType();
@@ -504,21 +515,33 @@
                      );
        } else if (OS.Constants.libc._STAT_VER != undefined) {
          const ver = OS.Constants.libc._STAT_VER;
-         // Linux, all widths
+         let xstat_name, lxstat_name, fxstat_name
+         if (OS.Constants.Sys.Name == "SunOS") {
+           // Solaris
+           xstat_name = "_xstat";
+           lxstat_name = "_lxstat";
+           fxstat_name = "_fxstat";
+         } else {
+           // Linux, all widths
+           xstat_name = "__xstat";
+           lxstat_name = "__lxstat";
+           fxstat_name = "__fxstat";
+         }
+
          let xstat =
-           declareFFI("__xstat", ctypes.default_abi,
+           declareFFI(xstat_name, ctypes.default_abi,
                       /*return*/    Types.negativeone_or_nothing,
                       /*_stat_ver*/ Types.int,
                       /*path*/      Types.path,
                       /*buf*/       Types.stat.out_ptr);
          let lxstat =
-           declareFFI("__lxstat", ctypes.default_abi,
+           declareFFI(lxstat_name, ctypes.default_abi,
                       /*return*/    Types.negativeone_or_nothing,
                       /*_stat_ver*/ Types.int,
                       /*path*/      Types.path,
                       /*buf*/       Types.stat.out_ptr);
          let fxstat =
-           declareFFI("__fxstat", ctypes.default_abi,
+           declareFFI(fxstat_name, ctypes.default_abi,
                       /*return*/    Types.negativeone_or_nothing,
                       /*_stat_ver*/ Types.int,
                       /*fd*/        Types.fd,

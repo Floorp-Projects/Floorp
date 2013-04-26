@@ -29,7 +29,7 @@ static const char *cc_src_names[] = {
 };
 
 #define CC_DEBUG_ENTRY(__FUNCTION__, src_id, dst_id, call_id, line, msg) \
-    DEF_DEBUG(DEB_L_C_F_PREFIX"%s -> %s: %-20s\n",\
+    DEF_DEBUG(DEB_L_C_F_PREFIX"%s -> %s: %-20s",\
 			DEB_L_C_F_PREFIX_ARGS(CC_API, line, call_id, __FUNCTION__),\
             cc_src_name(src_id), cc_src_name(dst_id), msg)
 
@@ -60,21 +60,25 @@ cc_src_name (cc_srcs_t id)
 static void
 cc_print_msg (char *pData, int len)
 {
-    int ix;
+    int row = 0;
+    int col;
+#define BYTES_PER_LINE 24
+    char buffer[3 * BYTES_PER_LINE + 1];
     int msg_id = *((int *) pData);
 
-    buginf("\n" CCA_F_PREFIX "cc_msg= %s, 0x=", __FUNCTION__,
-                            cc_msg_name((cc_msgs_t) msg_id));
-    for (ix = 0; ix < len; ix++) {
-        if ((ix % 8 == 0) && ix) {
-            buginf("  ");
+    CSFLogDebug("gsm", CCA_F_PREFIX "cc_msg=%s, len=%d",
+                __FUNCTION__, cc_msg_name((cc_msgs_t) msg_id),len);
+
+    while (len) {
+        buffer[0] = '\0';
+        for (col = 0; (col < BYTES_PER_LINE) && len; col++) {
+            snprintf(buffer + (3 * col), 4, "%02X ", *pData);
+            pData++;
+            len--;
         }
-        if (ix % 24 == 0) {
-            buginf("\n");
-        }
-        buginf("%02x ", *pData++);
+        CSFLogObnoxious("gsm", "%04X %s",row * BYTES_PER_LINE, buffer);
+        row++;
     }
-    buginf("\n");
 }
 
 
@@ -219,7 +223,7 @@ void
 cc_mv_msg_body_parts (cc_msgbody_info_t *dst_msg, cc_msgbody_info_t *src_msg)
 {
     if (dst_msg == NULL) {
-        GSM_ERR_MSG(CCA_F_PREFIX "dst is NULL\n", __FUNCTION__);
+        GSM_ERR_MSG(CCA_F_PREFIX "dst is NULL", __FUNCTION__);
         return;
     }
 
@@ -780,11 +784,11 @@ cc_int_setup (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id,
 
     if (caller_id == NULL) {
         // nobody checks, CC_RC_ERROR, so generate error message
-        GSM_ERR_MSG("%s: caller id is NULL\n", __FUNCTION__);
+        GSM_ERR_MSG("%s: caller id is NULL", __FUNCTION__);
         return;
     }
 
-    CC_DEBUG(DEB_L_C_F_PREFIX "    CGPD= %s, CGPN= %s,\n    CDPD= %s, CDPN= %s\n",
+    CC_DEBUG(DEB_L_C_F_PREFIX "    CGPD= %s, CGPN= %s,\n    CDPD= %s, CDPN= %s",
 			 DEB_L_C_F_PREFIX_ARGS(CC_API, line, call_id, __FUNCTION__),
              caller_id->calling_name, caller_id->calling_number,
              caller_id->called_name, caller_id->called_number);
@@ -931,7 +935,7 @@ cc_int_alerting (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id,
     pmsg->inband = inband;
 
     CC_DEBUG_ENTRY(__FUNCTION__, src_id, dst_id, call_id, line, cc_msg_name(pmsg->msg_id));
-    CC_DEBUG(DEB_L_C_F_PREFIX "    inband= %d\n",
+    CC_DEBUG(DEB_L_C_F_PREFIX "    inband= %d",
 		DEB_L_C_F_PREFIX_ARGS(CC_API, line, call_id, __FUNCTION__), inband);
 
     if (cc_send_msg((cprBuffer_t) pmsg, sizeof(*pmsg), dst_id) != CC_RC_SUCCESS) {
@@ -1028,10 +1032,10 @@ cc_int_release (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id,
     cc_release_t *pmsg;
 
     if (dialstring == NULL) {
-        CC_DEBUG(DEB_L_C_F_PREFIX "    cause= %s\n",
+        CC_DEBUG(DEB_L_C_F_PREFIX "    cause= %s",
 			DEB_L_C_F_PREFIX_ARGS(CC_API, line, call_id, __FUNCTION__), cc_cause_name(cause));
     } else {
-        CC_DEBUG(DEB_L_C_F_PREFIX "    cause= %s, dialstring= %s\n",
+        CC_DEBUG(DEB_L_C_F_PREFIX "    cause= %s, dialstring= %s",
 			DEB_L_C_F_PREFIX_ARGS(CC_API, line, call_id, __FUNCTION__), cc_cause_name(cause), dialstring);
     }
 
@@ -1092,7 +1096,7 @@ cc_int_release_complete (cc_srcs_t src_id, cc_srcs_t dst_id,
     }
 
     CC_DEBUG_ENTRY(__FUNCTION__, src_id, dst_id, call_id, line, cc_msg_name(pmsg->msg_id));
-    CC_DEBUG(DEB_L_C_F_PREFIX "    cause= %s\n",
+    CC_DEBUG(DEB_L_C_F_PREFIX "    cause= %s",
 		DEB_L_C_F_PREFIX_ARGS(CC_API, line, call_id, __FUNCTION__), cc_cause_name(cause));
 
     if (cc_send_msg((cprBuffer_t) pmsg, sizeof(*pmsg), dst_id) != CC_RC_SUCCESS) {
@@ -1114,7 +1118,7 @@ cc_int_feature2 (cc_msgs_t msg_id, cc_srcs_t src_id, cc_srcs_t dst_id,
     pmsg = (cc_feature_t *) cc_get_msg_buf(sizeof(*pmsg));
     if (!pmsg) {
         // nobody checks, CC_RC_ERROR, so generate error message
-        GSM_ERR_MSG("%s: no buffer available for feat=%s\n", __FUNCTION__,
+        GSM_ERR_MSG("%s: no buffer available for feat=%s", __FUNCTION__,
                     cc_feature_name(feature_id));
         return;
     }
@@ -1155,11 +1159,11 @@ cc_int_feature2 (cc_msgs_t msg_id, cc_srcs_t src_id, cc_srcs_t dst_id,
         }
     }
     CC_DEBUG_ENTRY(__FUNCTION__, src_id, dst_id, call_id, line, cc_feature_name(feature_id));
-    CC_DEBUG(DEB_L_C_F_PREFIX "feature= %s, data= %p\n",
+    CC_DEBUG(DEB_L_C_F_PREFIX "feature= %s, data= %p",
 		DEB_L_C_F_PREFIX_ARGS(CC_API, line, call_id, __FUNCTION__), cc_feature_name(feature_id), data);
     if (cc_send_msg((cprBuffer_t) pmsg, sizeof(*pmsg), dst_id) != CC_RC_SUCCESS) {
         // nobody checks the return code, so generate error message
-        GSM_ERR_MSG("%s: unable to send msg for feat=%s\n", __FUNCTION__,
+        GSM_ERR_MSG("%s: unable to send msg for feat=%s", __FUNCTION__,
                     cc_feature_name(feature_id));
     }
     return;
@@ -1186,7 +1190,7 @@ static void send_message_helper(
 
     pmsg = (cc_feature_t *) cc_get_msg_buf(sizeof(*pmsg));
     if (!pmsg) {
-        GSM_ERR_MSG("%s: no buffer available for feat=%s\n", __FUNCTION__,
+        GSM_ERR_MSG("%s: no buffer available for feat=%s", __FUNCTION__,
                     cc_feature_name(feature_id));
         return;
     }
@@ -1225,11 +1229,11 @@ static void send_message_helper(
     }
 
     CC_DEBUG_ENTRY(__FUNCTION__, src_id, dst_id, call_id, line, cc_feature_name(feature_id));
-    CC_DEBUG(DEB_L_C_F_PREFIX "feature= %s, data= %p\n",
+    CC_DEBUG(DEB_L_C_F_PREFIX "feature= %s, data= %p",
         DEB_L_C_F_PREFIX_ARGS(CC_API, line, call_id, __FUNCTION__), cc_feature_name(feature_id), data);
     if (cc_send_msg((cprBuffer_t) pmsg, sizeof(*pmsg), dst_id) != CC_RC_SUCCESS) {
         // nobody checks the return code, so generate error message
-        GSM_ERR_MSG("%s: unable to send msg for feat=%s\n", __FUNCTION__,
+        GSM_ERR_MSG("%s: unable to send msg for feat=%s", __FUNCTION__,
                     cc_feature_name(feature_id));
     }
 
@@ -1321,7 +1325,7 @@ cc_int_feature_ack (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id,
     }
 
     CC_DEBUG_ENTRY(__FUNCTION__, src_id, dst_id, call_id, line, cc_msg_name(pmsg->msg_id));
-    CC_DEBUG(DEB_L_C_F_PREFIX "feature= %s, data= %p, cause= %s\n",
+    CC_DEBUG(DEB_L_C_F_PREFIX "feature= %s, data= %p, cause= %s",
 			DEB_L_C_F_PREFIX_ARGS(CC_API, line, call_id, __FUNCTION__), cc_feature_name(feature_id), data,
              cc_cause_name(cause));
 
@@ -1470,11 +1474,11 @@ cc_int_dialstring (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id,
 
     if (dialstring == NULL) {
         // nobody checks, CC_RC_ERROR, so generate error message
-        GSM_ERR_MSG("%s: no dialstring\n", __FUNCTION__);
+        GSM_ERR_MSG("%s: no dialstring", __FUNCTION__);
         return;
     }
 
-    CC_DEBUG(DEB_L_C_F_PREFIX "dialstring= %s\n",
+    CC_DEBUG(DEB_L_C_F_PREFIX "dialstring= %s",
 		DEB_L_C_F_PREFIX_ARGS(CC_API, line, call_id, __FUNCTION__),dialstring);
 
     pmsg = (cc_dialstring_t *) cc_get_msg_buf(sizeof(*pmsg));
@@ -1557,7 +1561,7 @@ cc_int_options_sdp_req (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id,
     pmsg->pMessage = pMessage;
 
     CC_DEBUG_ENTRY(__FUNCTION__, src_id, dst_id, call_id, line, cc_msg_name(pmsg->msg_id));
-    CC_DEBUG(DEB_L_C_F_PREFIX " message ptr=%p\n",
+    CC_DEBUG(DEB_L_C_F_PREFIX " message ptr=%p",
 		DEB_L_C_F_PREFIX_ARGS(CC_API, line, call_id, __FUNCTION__), pMessage);
 
     if (cc_send_msg((cprBuffer_t) pmsg, sizeof(*pmsg), dst_id) != CC_RC_SUCCESS) {
@@ -1590,7 +1594,7 @@ cc_int_options_sdp_ack (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id,
     cc_mv_msg_body_parts(&pmsg->msg_body, msg_body);
 
     CC_DEBUG_ENTRY(__FUNCTION__, src_id, dst_id, call_id, line, cc_msg_name(pmsg->msg_id));
-    CC_DEBUG(DEB_L_C_F_PREFIX " message ptr=%p\n",
+    CC_DEBUG(DEB_L_C_F_PREFIX " message ptr=%p",
 		DEB_L_C_F_PREFIX_ARGS(CC_API, line, call_id, __FUNCTION__), pMessage);
 
     if (cc_send_msg((cprBuffer_t) pmsg, sizeof(*pmsg), dst_id) != CC_RC_SUCCESS) {
@@ -1620,7 +1624,7 @@ cc_int_audit_sdp_req (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id,
     pmsg->apply_ringout = apply_ringout;
 
     CC_DEBUG_ENTRY(__FUNCTION__, src_id, dst_id, call_id, line, cc_msg_name(pmsg->msg_id));
-    CC_DEBUG(DEB_L_C_F_PREFIX "\n", DEB_L_C_F_PREFIX_ARGS(CC_API, line, call_id, __FUNCTION__));
+    CC_DEBUG(DEB_L_C_F_PREFIX "", DEB_L_C_F_PREFIX_ARGS(CC_API, line, call_id, __FUNCTION__));
 
     if (cc_send_msg((cprBuffer_t) pmsg, sizeof(*pmsg), dst_id) != CC_RC_SUCCESS) {
         // nobody checks the return code, so generate error message
@@ -1680,7 +1684,7 @@ cc_int_fail_fallback (cc_srcs_t src_id, cc_srcs_t dst_id, int rsp_type,
     pmsg->wait_flag = waited;
 
     CC_DEBUG_ENTRY(__FUNCTION__, src_id, dst_id, 0, 0, cc_msg_name(pmsg->msg_id));
-    CC_DEBUG(DEB_F_PREFIX "rsp_type= %s rsp_id= %s waited = %d\n",
+    CC_DEBUG(DEB_F_PREFIX "rsp_type= %s rsp_id= %s waited = %d",
              DEB_F_PREFIX_ARGS(CC_API, __FUNCTION__),
              rsp_type == RSP_START ? "RSP_START" : "RSP_COMPLETE",
              rsp_id == CC_REG_FAILOVER_RSP  ? "REG_FAILOVER_RSP" : "REG_FALLBACK_RSP",

@@ -327,7 +327,7 @@ HTMLSharedElement::GetAttributeMappingFunction() const
 }
 
 JSObject*
-HTMLSharedElement::WrapNode(JSContext *aCx, JSObject *aScope)
+HTMLSharedElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
   if (mNodeInfo->Equals(nsGkAtoms::param)) {
     return HTMLParamElementBinding::Wrap(aCx, aScope, this);

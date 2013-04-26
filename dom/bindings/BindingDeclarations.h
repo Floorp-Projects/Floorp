@@ -372,12 +372,9 @@ public:
     return true;
   }
 
-  operator JS::Value()
-  {
-    return mValue;
-  }
-
-  operator const JS::Value() const
+  // Note: This operator can be const because we return by value, not
+  // by reference.
+  operator JS::Value() const
   {
     return mValue;
   }

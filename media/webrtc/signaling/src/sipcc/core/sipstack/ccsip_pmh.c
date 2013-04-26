@@ -1381,7 +1381,7 @@ sippmh_parse_nameaddr_or_addrspec (char *input_loc_ptr,
             }
             cpr_free(sipLoc);
             CCSIP_ERR_DEBUG {
-                buginf("\n%s: Bad name-addr format", fname);
+                CSFLogDebug("sipstack", "%s: Bad name-addr format", fname);
             }
             return NULL;
         }
@@ -1453,7 +1453,7 @@ validate_tag (sipLocation_t *sipLoc, char *tag_ptr)
     if (*tag_ptr == 0) {
         ret_val = PARSE_ERR_UNEXPECTED_EOS;
         CCSIP_ERR_DEBUG {
-            buginf(parse_errors[ret_val], fname);
+            CSFLogDebug("sipstack", parse_errors[ret_val], fname);
         }
 
         return ret_val;
@@ -1473,7 +1473,7 @@ validate_tag (sipLocation_t *sipLoc, char *tag_ptr)
     if ((*tag_ptr != SEMI_COLON) && (*tag_ptr != 0)) {
         ret_val = PARSE_ERR_SYNTAX;
         CCSIP_ERR_DEBUG {
-            buginf(parse_errors[ret_val], fname, tag_ptr);
+            CSFLogDebug("sipstack", parse_errors[ret_val], fname, tag_ptr);
         }
     } else {
         /* terminate the tag */
@@ -2000,7 +2000,8 @@ sippmh_parse_diversion (const char *diversion, char *diversionhead)
                 if (sippmh_parse_diversion_params(diversion_t, sipdiversion) == FALSE) {
 
                     CCSIP_ERR_DEBUG {
-                        buginf("\nsippmh_parse_diversion: syntax error in Diversion header");
+                        CSFLogDebug("sipstack", "sippmh_parse_diversion: "
+                          "syntax error in Diversion header");
                     }
                     parse_errno = PARSE_ERR_SYNTAX;
                     sippmh_free_diversion(sipdiversion);
@@ -2012,8 +2013,8 @@ sippmh_parse_diversion (const char *diversion, char *diversionhead)
             break; /* break out of original do loop */
         } else {
             CCSIP_ERR_DEBUG {
-                buginf("\nsippmh_parse_diversion: syntax error missing "
-                       "semicolon in Diversion header");
+                CSFLogDebug("sipstack", "sippmh_parse_diversion: syntax error "
+                       "missing semicolon in Diversion header");
             }
             parse_errno = PARSE_ERR_SYNTAX;
             sippmh_free_diversion(sipdiversion);
@@ -2090,8 +2091,8 @@ sippmh_parse_contact (const char *input_contact)
                 SKIP_LWS(contact);
                 if (sipContact->num_locations == SIP_MAX_LOCATIONS) {
                     CCSIP_ERR_DEBUG {
-                        buginf("\nsippmh_parse_contact: Too many location headers"
-                               " in Contact header");
+                        CSFLogDebug("sipstack", "sippmh_parse_contact: Too many"
+                               " location headers in Contact header");
                     }
                     /* go with what we have */
                     break;
@@ -2160,8 +2161,8 @@ sippmh_parse_contact (const char *input_contact)
             SKIP_LWS(contact);
             if (sipContact->num_locations == SIP_MAX_LOCATIONS) {
                 CCSIP_ERR_DEBUG {
-                    buginf("\nsippmh_parse_contact: Too many location headers"
-                           " in Contact header");
+                    CSFLogDebug("sipstack", "sippmh_parse_contact: Too many "
+                            "location headers in Contact header");
                 }
                 /* go with what we have */
                 break;
@@ -2420,7 +2421,8 @@ sippmh_parse_via (const char *input_via)
                 /* Parameters follow */
                 if (parse_via_params(separator, sipVia) == FALSE) {
                     CCSIP_ERR_DEBUG
-                        buginf("%s: Duplicate params in Via\n", fname);
+                        CSFLogDebug("sipstack", "%s: Duplicate params in Via",
+                            fname);
                     sippmh_free_via(sipVia);
                     return NULL;
                 }
@@ -2434,7 +2436,8 @@ sippmh_parse_via (const char *input_via)
 
     /* Validate the host portion */
     if ((sipSPI_validate_ip_addr_name(sipVia->host) == FALSE)) {
-        CCSIP_ERR_DEBUG buginf("\n%s: Invalid host in Via", fname);
+        CCSIP_ERR_DEBUG CSFLogDebug("sipstack", "%s: Invalid host in Via",
+            fname);
         sippmh_free_via(sipVia);
         return NULL;
     }
@@ -2453,7 +2456,8 @@ sippmh_parse_via (const char *input_via)
     SKIP_LWS(endptr);
     if (*endptr || port_num == 0) {
         sippmh_free_via(sipVia);
-        CCSIP_ERR_DEBUG buginf("\n%s: Invalid port number in Via", fname);
+        CCSIP_ERR_DEBUG CSFLogDebug("sipstack",
+            "%s: Invalid port number in Via", fname);
         return NULL;
     }
     sipVia->remote_port = port_num;
@@ -2689,8 +2693,8 @@ sippmh_parse_record_route (const char *input_record_route)
                 sippmh_free_record_route(sipRecordRoute);
                 sipRecordRoute = NULL;
                 CCSIP_ERR_DEBUG {
-                    buginf("\nsippmh_parse_record_route: Too many location "
-                           "headers in Record-Route header");
+                    CSFLogDebug("sipstack", "sippmh_parse_record_route: Too "
+                          "many location headers in Record-Route header");
                 }
                 break;
             }
@@ -3098,7 +3102,7 @@ sippmh_parse_refer_to (char *input_refer_to)
 
     if (tokens == 0) {
         CCSIP_ERR_DEBUG {
-            buginf("\nEmpty Refer-To header\n");
+            CSFLogDebug("sipstack", "Empty Refer-To header");
         }
         sippmh_free_refer_to(sipReferTo);
         return NULL;
@@ -3120,7 +3124,8 @@ sippmh_parse_refer_to (char *input_refer_to)
 
     if (parse_errno != 0) {
         CCSIP_ERR_DEBUG {
-            buginf("\nError while parsing other Refer-To header\n");
+            CSFLogDebug("sipstack",
+                "Error while parsing other Refer-To header\n");
         }
         sippmh_free_refer_to(sipReferTo);
         return NULL;
@@ -4026,7 +4031,8 @@ sippmh_parse_authenticate (const char *input_char)
             } else {
                 sippmh_free_authen(sip_authen);
                 CCSIP_ERR_DEBUG {
-                    buginf("\n%s", get_debug_string(DEBUG_PMH_INCORRECT_SYNTAX));
+                    CSFLogDebug("sipstack", "%s",
+                      get_debug_string(DEBUG_PMH_INCORRECT_SYNTAX));
                 }
                 return NULL;
             }
@@ -4046,7 +4052,8 @@ sippmh_parse_authenticate (const char *input_char)
     } else {
         sippmh_free_authen(sip_authen);
         CCSIP_ERR_DEBUG {
-            buginf("\n%s", get_debug_string(DEBUG_PMH_INVALID_SCHEME));
+            CSFLogDebug("sipstack", "%s",
+                get_debug_string(DEBUG_PMH_INVALID_SCHEME));
         }
         return NULL;
     }
@@ -4093,7 +4100,8 @@ sippmh_parse_authenticate (const char *input_char)
             if (input == NULL) {
                 sippmh_free_authen(sip_authen);
                 CCSIP_ERR_DEBUG {
-                    buginf("\n%s", get_debug_string(DEBUG_PMH_INVALID_FIELD_VALUE));
+                    CSFLogDebug("sipstack", "%s",
+                        get_debug_string(DEBUG_PMH_INVALID_FIELD_VALUE));
                 }
                 return NULL;
             }
@@ -4102,7 +4110,8 @@ sippmh_parse_authenticate (const char *input_char)
         if (*input != EQUAL_SIGN) {
             sippmh_free_authen(sip_authen);
             CCSIP_ERR_DEBUG {
-                buginf("\n%s", get_debug_string(DEBUG_PMH_INCORRECT_SYNTAX));
+                CSFLogDebug("sipstack", "%s",
+                    get_debug_string(DEBUG_PMH_INCORRECT_SYNTAX));
             }
             return NULL;
         }
@@ -4117,7 +4126,8 @@ sippmh_parse_authenticate (const char *input_char)
             if (input == NULL) {
                 sippmh_free_authen(sip_authen);
                 CCSIP_ERR_DEBUG {
-                    buginf("\n%s", get_debug_string(DEBUG_PMH_INCORRECT_SYNTAX));
+                    CSFLogDebug("sipstack", "%s",
+                        get_debug_string(DEBUG_PMH_INCORRECT_SYNTAX));
                 }
                 return NULL;
             } else {
@@ -4156,7 +4166,8 @@ sippmh_parse_authenticate (const char *input_char)
             } else {
                 sippmh_free_authen(sip_authen);
                 CCSIP_ERR_DEBUG {
-                    buginf("\n%s", get_debug_string(DEBUG_PMH_NOT_ENOUGH_PARAMETERS));
+                    CSFLogDebug("sipstack", "%s",
+                        get_debug_string(DEBUG_PMH_NOT_ENOUGH_PARAMETERS));
                 }
                 return NULL;
             }
@@ -4766,7 +4777,7 @@ sippmh_parse_supported_require (const char *header, char **punsupported_tokens)
         }
 
         if (bad_token != NULL) {
-            CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Invalid tag in Require/Supported %s\n",
+            CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Invalid tag in Require/Supported %s",
                 DEB_F_PREFIX_ARGS(SIP_TAG, fname), bad_token);
 
             //allocate memory for unsupported options if necessary
@@ -4922,7 +4933,7 @@ ccsip_process_network_message (sipMessage_t **sipmsg_p,
     sip_msg = sippmh_message_create();
     if (sip_msg == NULL) {
         CCSIP_ERR_DEBUG {
-            buginf("%s: Error in creating SIP Msg\n", fname);
+            CSFLogDebug("sipstack", "%s: Error in creating SIP Msg", fname);
         }
         *sipmsg_p = NULL;
         return SIP_MSG_CREATE_ERR;
@@ -4935,7 +4946,8 @@ ccsip_process_network_message (sipMessage_t **sipmsg_p,
     if (sippmh_process_network_message(sip_msg, local_buf_ptr, &bytes_used)
         == STATUS_FAILURE) {
         CCSIP_ERR_DEBUG {
-            buginf("%s: process_network_message failed.\n", fname);
+            CSFLogDebug("sipstack", "%s: process_network_message failed.",
+                fname);
         }
         sippmh_message_free(sip_msg);
         *sipmsg_p = NULL;
@@ -4947,7 +4959,8 @@ ccsip_process_network_message (sipMessage_t **sipmsg_p,
             *display_msg = (char *) cpr_malloc(bytes_used + 1);
             if (*display_msg == NULL) {
                 CCSIP_ERR_DEBUG {
-                    buginf("%s: malloc of display msg failed.\n", fname);
+                    CSFLogDebug("sipstack",
+                        "%s: malloc of display msg failed.\n", fname);
                 }
                 sippmh_message_free(sip_msg);
                 *sipmsg_p = NULL;
@@ -4966,7 +4979,8 @@ ccsip_process_network_message (sipMessage_t **sipmsg_p,
         return SIP_SUCCESS;
     } else {
         CCSIP_ERR_DEBUG {
-            buginf("%s: process_network_msg: not complete\n", fname);
+            CSFLogDebug("sipstack", "%s: process_network_msg: not complete",
+              fname);
         }
         sippmh_message_free(sip_msg);
         *sipmsg_p = NULL;

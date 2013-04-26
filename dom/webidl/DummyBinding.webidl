@@ -19,6 +19,7 @@ interface DummyInterface {
   void funcHttpConnDict(optional HttpConnDict arg);
   void funcWebSocketDict(optional WebSocketDict arg);
   void funcDNSCacheDict(optional DNSCacheDict arg);
+  void frameRequestCallback(FrameRequestCallback arg);
 };
 
 interface DummyInterfaceWorkers {

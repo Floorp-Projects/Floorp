@@ -23,7 +23,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SVGAngle)
 NS_INTERFACE_MAP_END
 
 JSObject*
-SVGAngle::WrapObject(JSContext* aCx, JSObject* aScope)
+SVGAngle::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return SVGAngleBinding::Wrap(aCx, aScope, this);
 }

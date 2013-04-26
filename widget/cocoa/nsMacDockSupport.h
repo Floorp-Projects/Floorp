@@ -3,14 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#import <Carbon/Carbon.h>
-
 #include "nsIMacDockSupport.h"
 #include "nsIStandaloneNativeMenu.h"
 #include "nsITaskbarProgress.h"
 #include "nsITimer.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
+#include "nsNativeThemeCocoa.h"
 
 class nsMacDockSupport : public nsIMacDockSupport, public nsITaskbarProgress
 {
@@ -27,11 +26,12 @@ protected:
   nsString mBadgeText;
 
   NSImage *mAppIcon, *mProgressBackground;
-  HIThemeTrackDrawInfo mProgressDrawInfo;
 
+  HIRect mProgressBounds;
   nsTaskbarProgressState mProgressState;
   double mProgressFraction;
   nsCOMPtr<nsITimer> mProgressTimer;
+  nsRefPtr<nsNativeThemeCocoa> mTheme;
 
   static void RedrawIconCallback(nsITimer* aTimer, void* aClosure);
 

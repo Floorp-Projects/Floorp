@@ -1162,6 +1162,8 @@ IonBuilder::inlineParallelArrayTail(CallInfo &callInfo,
     if (returnTypes->unknownObject() || returnTypes->getObjectCount() != 1)
         return InliningStatus_NotInlined;
     types::TypeObject *typeObject = returnTypes->getTypeObject(0);
+    if (typeObject->clasp != &ParallelArrayObject::class_)
+        return InliningStatus_NotInlined;
 
     // Create the call and add in the non-this arguments.
     uint32_t targetArgs = argc;

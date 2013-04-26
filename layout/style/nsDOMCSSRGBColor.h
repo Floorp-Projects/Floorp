@@ -54,7 +54,7 @@ public:
     return nullptr;
   }
 
-  virtual JSObject *WrapObject(JSContext *cx, JSObject *aScope)
+  virtual JSObject *WrapObject(JSContext *cx, JS::Handle<JSObject*> aScope)
     MOZ_OVERRIDE MOZ_FINAL;
 
 private:

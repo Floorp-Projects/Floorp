@@ -10,7 +10,7 @@
 #include "mozilla/layers/ShadowLayers.h"
 
 #include "Layers.h"
-#include "LayerManagerComposite.h"
+#include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/layers/Effects.h"
 
 #include "gfxUtils.h"
@@ -19,7 +19,7 @@
 namespace mozilla {
 namespace layers {
 
-class ContainerLayerComposite : public ShadowContainerLayer,
+class ContainerLayerComposite : public ContainerLayer,
                                 public LayerComposite
 {
   template<class ContainerT>
@@ -29,6 +29,7 @@ class ContainerLayerComposite : public ShadowContainerLayer,
                               const nsIntRect& aClipRect);
 public:
   ContainerLayerComposite(LayerManagerComposite *aManager);
+
   ~ContainerLayerComposite();
 
   void InsertAfter(Layer* aChild, Layer* aAfter);
@@ -64,7 +65,7 @@ public:
 #endif
 };
 
-class RefLayerComposite : public ShadowRefLayer,
+class RefLayerComposite : public RefLayer,
                           public LayerComposite
 {
   template<class ContainerT>
@@ -92,6 +93,8 @@ public:
   }
 
   virtual void CleanupResources() MOZ_OVERRIDE;
+
+  virtual LayerComposite* AsLayerComposite() MOZ_OVERRIDE { return this; }
 
   // ref layers don't use a compositable
   CompositableHost* GetCompositableHost() MOZ_OVERRIDE { return nullptr; }

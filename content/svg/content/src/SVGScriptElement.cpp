@@ -16,7 +16,7 @@ namespace mozilla {
 namespace dom {
 
 JSObject*
-SVGScriptElement::WrapNode(JSContext *aCx, JSObject *aScope)
+SVGScriptElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
   return SVGScriptElementBinding::Wrap(aCx, aScope, this);
 }

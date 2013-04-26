@@ -428,7 +428,7 @@ var Browser = {
     }
     return null;
   },
-  
+
   createTabId: function createTabId() {
     return this._tabId++;
   },
@@ -564,7 +564,7 @@ var Browser = {
     let browser = tab.browser;
 
     this._selectedTab = tab;
-    
+
     if (lastTab)
       lastTab.active = false;
 
@@ -670,6 +670,25 @@ var Browser = {
   },
 
   pinSite: function browser_pinSite() {
+    // Get a path to our app tile
+    var file = Components.classes["@mozilla.org/file/directory_service;1"].
+           getService(Components.interfaces.nsIProperties).
+           get("CurProcD", Components.interfaces.nsIFile);
+    // Get rid of the current working directory's metro subidr
+    file = file.parent;
+    file.append("tileresources");
+    file.append("VisualElements_logo.png");
+    var ios = Components.classes["@mozilla.org/network/io-service;1"].
+              getService(Components.interfaces.nsIIOService);
+    var uriSpec = ios.newFileURI(file).spec;
+    MetroUtils.pinTileAsync(this._currentPageTileID,
+                            Browser.selectedBrowser.contentTitle, // short name
+                            Browser.selectedBrowser.contentTitle, // display name
+                            "metrobrowser -url " + Browser.selectedBrowser.currentURI.spec,
+                            uriSpec, uriSpec);
+  },
+
+  get _currentPageTileID() {
     // We use a unique ID per URL, so just use an MD5 hash of the URL as the ID.
     let hasher = Cc["@mozilla.org/security/hash;1"].
                  createInstance(Ci.nsICryptoHash);
@@ -679,58 +698,22 @@ var Browser = {
     stringStream.data = Browser.selectedBrowser.currentURI.spec;
     hasher.updateFromStream(stringStream, -1);
     let hashASCII = hasher.finish(true);
-
-    // Get a path to our app tile
-    var file = Components.classes["@mozilla.org/file/directory_service;1"]. 
-           getService(Components.interfaces.nsIProperties). 
-           get("CurProcD", Components.interfaces.nsIFile);
-    // Get rid of the current working directory's metro subidr
-    file = file.parent;
-    file.append("tileresources");
-    file.append("VisualElements_logo.png");
-    var ios = Components.classes["@mozilla.org/network/io-service;1"]. 
-              getService(Components.interfaces.nsIIOService); 
-    var uriSpec = ios.newFileURI(file).spec;
-    MetroUtils.pinTileAsync("FFTileID_" + hashASCII,
-                               Browser.selectedBrowser.contentTitle, // short name
-                               Browser.selectedBrowser.contentTitle, // display name
-                               "metrobrowser -url " + Browser.selectedBrowser.currentURI.spec,
-                               uriSpec,
-                               uriSpec);
+    // Replace '/' with a valid filesystem character
+    return ("FFTileID_" + hashASCII).replace('/', '_', 'g');
   },
 
   unpinSite: function browser_unpinSite() {
     if (!MetroUtils.immersive)
       return;
 
-    // We use a unique ID per URL, so just use an MD5 hash of the URL as the ID.
-    let hasher = Cc["@mozilla.org/security/hash;1"].
-                 createInstance(Ci.nsICryptoHash);
-    hasher.init(Ci.nsICryptoHash.MD5);
-    let stringStream = Cc["@mozilla.org/io/string-input-stream;1"].
-                       createInstance(Ci.nsIStringInputStream);
-    stringStream.data = Browser.selectedBrowser.currentURI.spec;
-    hasher.updateFromStream(stringStream, -1);
-    let hashASCII = hasher.finish(true);
-
-    MetroUtils.unpinTileAsync("FFTileID_" + hashASCII);
+    MetroUtils.unpinTileAsync(this._currentPageTileID);
   },
 
   isSitePinned: function browser_isSitePinned() {
     if (!MetroUtils.immersive)
       return false;
 
-    // We use a unique ID per URL, so just use an MD5 hash of the URL as the ID.
-    let hasher = Cc["@mozilla.org/security/hash;1"].
-                 createInstance(Ci.nsICryptoHash);
-    hasher.init(Ci.nsICryptoHash.MD5);
-    let stringStream = Cc["@mozilla.org/io/string-input-stream;1"].
-                       createInstance(Ci.nsIStringInputStream);
-    stringStream.data = Browser.selectedBrowser.currentURI.spec;
-    hasher.updateFromStream(stringStream, -1);
-    let hashASCII = hasher.finish(true);
-
-    return MetroUtils.isTilePinned("FFTileID_" + hashASCII);
+    return MetroUtils.isTilePinned(this._currentPageTileID);
   },
 
   starSite: function browser_starSite(callback) {
@@ -1052,7 +1035,7 @@ Browser.MainDragger.prototype = {
           x: (width + ALLOWED_MARGIN) < contentWidth ? (width - SCROLL_CORNER_SIZE) / contentWidth : 0,
           y: (height + ALLOWED_MARGIN) < contentHeight ? (height - SCROLL_CORNER_SIZE) / contentHeight : 0
         }
-        
+
         this._showScrollbars();
         break;
       }
@@ -1086,7 +1069,7 @@ Browser.MainDragger.prototype = {
   _updateScrollbars: function _updateScrollbars() {
     let scaleX = this._scrollScales.x, scaleY = this._scrollScales.y;
     let contentScroll = Browser.getScrollboxPosition(Browser.contentScrollboxScroller);
-    
+
     if (scaleX)
       this._horizontalScrollbar.style.MozTransform =
         "translateX(" + Math.round(contentScroll.x * scaleX) + "px)";

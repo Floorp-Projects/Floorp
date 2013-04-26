@@ -98,7 +98,7 @@ NS_IMPL_ISUPPORTS_INHERITED3(nsTextNode, nsGenericDOMDataNode, nsIDOMNode,
                              nsIDOMText, nsIDOMCharacterData)
 
 JSObject*
-nsTextNode::WrapNode(JSContext *aCx, JSObject *aScope)
+nsTextNode::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
   return TextBinding::Wrap(aCx, aScope, this);
 }

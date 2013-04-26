@@ -869,9 +869,12 @@ GLContext::UpdatePixelFormat()
     PixelBufferFormat format = QueryPixelFormat();
 #ifdef DEBUG
     const SurfaceCaps& caps = Caps();
+    MOZ_ASSERT(!caps.any, "Did you forget to DetermineCaps()?");
+
     MOZ_ASSERT(caps.color == !!format.red);
     MOZ_ASSERT(caps.color == !!format.green);
     MOZ_ASSERT(caps.color == !!format.blue);
+
     MOZ_ASSERT(caps.alpha == !!format.alpha);
     MOZ_ASSERT(caps.depth == !!format.depth);
     MOZ_ASSERT(caps.stencil == !!format.stencil);

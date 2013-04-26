@@ -51,7 +51,7 @@ public:
                                 nsIDOMXPathExpression **aResult);
 
     // WebIDL API
-    JSObject* WrapObject(JSContext* aCx, JSObject* aScope);
+    JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope);
     static already_AddRefed<nsXPathEvaluator>
         Constructor(const mozilla::dom::GlobalObject& aGlobal,
                     mozilla::ErrorResult& rv);

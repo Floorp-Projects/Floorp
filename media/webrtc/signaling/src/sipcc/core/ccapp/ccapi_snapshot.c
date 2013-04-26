@@ -30,7 +30,7 @@ cc_string_t lineLabels[MAX_CONFIG_LINES+1] = {0};
 
 void ccsnap_set_line_label(int btn, cc_string_t label) {
 
-   CCAPP_DEBUG(DEB_F_PREFIX"btn=%d label=%s\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "ccsnap_set_line_label"), btn, label);
+   CCAPP_DEBUG(DEB_F_PREFIX"btn=%d label=%s", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "ccsnap_set_line_label"), btn, label);
    if ( btn > 0 && btn <= MAX_CONFIG_LINES+1 ) {
        if ( label == NULL ) {
          label = strlib_empty();
@@ -94,7 +94,7 @@ cc_string_t CCAPI_ApplyTranslationMask (const char *ext, const char *mask)
     dnLen = strlen(ext);
 
     if ((dnLen == 0) || (maskLen == 0)) {
-        CCAPP_DEBUG(DEB_F_PREFIX"CCAPI_ApplyTranslationMask DN or mask has len=0\n",
+        CCAPP_DEBUG(DEB_F_PREFIX"CCAPI_ApplyTranslationMask DN or mask has len=0",
 DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI_ApplyTranslationMask"));
         return NULL;
     }
@@ -103,7 +103,7 @@ DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI_ApplyTranslationMask"));
      * hold the translated string.
      */
     if (dnLen + maskLen > 99) {
-        CCAPP_DEBUG(DEB_F_PREFIX"CCAPI_ApplyTranslationMask length overflow\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI_ApplyTranslationMask"));
+        CCAPP_DEBUG(DEB_F_PREFIX"CCAPI_ApplyTranslationMask length overflow", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI_ApplyTranslationMask"));
        return NULL;
     }
 
@@ -151,7 +151,7 @@ DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI_ApplyTranslationMask"));
 void ccsnap_line_pre_init () {
     int i;
 
-    CCAPP_DEBUG(DEB_F_PREFIX"Entering line_pre_init to clear it out to avoid mem leaks\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "ccsnap_line_pre_init"));
+    CCAPP_DEBUG(DEB_F_PREFIX"Entering line_pre_init to clear it out to avoid mem leaks", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "ccsnap_line_pre_init"));
 
     for (i=1;i<MAX_CONFIG_LINES;i++) {
         if ((lineInfo[i].name) && (strlen(lineInfo[i].name) > 0)) {
@@ -220,7 +220,7 @@ void ccsnap_line_init() {
           config_get_string(CFGID_CCM_EXTERNAL_NUMBER_MASK, maskStr, MAX_EXTERNAL_NUMBER_MASK_SIZE);
           if (strlen(maskStr) > 0) {
               lineInfo[i].externalNumber = CCAPI_ApplyTranslationMask(lineInfo[i].name, maskStr);
-              CCAPP_DEBUG("Setting lineInfo[i].externalNumber to %s\n", lineInfo[i].externalNumber);
+              CCAPP_DEBUG("Setting lineInfo[i].externalNumber to %s", lineInfo[i].externalNumber);
           } else {
               lineInfo[i].externalNumber = strlib_empty();
           }
@@ -325,7 +325,7 @@ cc_feature_info_t* ccsnap_getFeatureInfo(int featureIndex)
 void ccsnap_device_pre_init () {
     int i = 0;
 
-    CCAPP_DEBUG(DEB_F_PREFIX"Entering device_pre_init to clear it out to avoid mem leaks\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "ccsnap_device_pre_init"));
+    CCAPP_DEBUG(DEB_F_PREFIX"Entering device_pre_init to clear it out to avoid mem leaks", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "ccsnap_device_pre_init"));
     if ((g_deviceInfo.not_prompt) && (strlen(g_deviceInfo.not_prompt) > 0)) {
         strlib_free(g_deviceInfo.not_prompt);
     }
@@ -386,22 +386,22 @@ void ccsnap_gen_deviceEvent(ccapi_device_event_e event, cc_device_handle_t handl
 
     cc_device_info_t *device_info = CCAPI_Device_getDeviceInfo(handle);
     if ( device_info != NULL ) {
-        CCAPP_DEBUG(DEB_F_PREFIX"data->ref_count=%d \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), device_info->ref_count);
+        CCAPP_DEBUG(DEB_F_PREFIX"data->ref_count=%d", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), device_info->ref_count);
 
         switch (event) {
             case CCAPI_DEVICE_EV_NOTIFYPROMPT:
-              CCAPP_DEBUG(DEB_F_PREFIX"data->not_prompt=%s \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), device_info->not_prompt);
-              CCAPP_DEBUG(DEB_F_PREFIX"data->not_prompt_prio=%d \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), device_info->not_prompt_prio);
-              CCAPP_DEBUG(DEB_F_PREFIX"data->not_prompt_prog=%d \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), device_info->not_prompt_prog);
+              CCAPP_DEBUG(DEB_F_PREFIX"data->not_prompt=%s", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), device_info->not_prompt);
+              CCAPP_DEBUG(DEB_F_PREFIX"data->not_prompt_prio=%d", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), device_info->not_prompt_prio);
+              CCAPP_DEBUG(DEB_F_PREFIX"data->not_prompt_prog=%d", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), device_info->not_prompt_prog);
               break;
             case CCAPI_DEVICE_EV_STATE:
-              CCAPP_DEBUG(DEB_F_PREFIX"setting property %s to %s\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), "FullyRegistered", ((device_info->ins_state == CC_STATE_INS) ? "1" : "0"));
+              CCAPP_DEBUG(DEB_F_PREFIX"setting property %s to %s", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), "FullyRegistered", ((device_info->ins_state == CC_STATE_INS) ? "1" : "0"));
               //intentional follow through to let the debugs get printed.
             default:
-              CCAPP_DEBUG(DEB_F_PREFIX"data->mwi_lamp=%d \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), device_info->mwi_lamp);
-              CCAPP_DEBUG(DEB_F_PREFIX"data->ins_state=%02X \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), device_info->ins_state);
-              CCAPP_DEBUG(DEB_F_PREFIX"data->cucm_mode=%02X \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), device_info->cucm_mode);
-              CCAPP_DEBUG(DEB_F_PREFIX"data->ins_cause=%02X \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), device_info->ins_cause);
+              CCAPP_DEBUG(DEB_F_PREFIX"data->mwi_lamp=%d", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), device_info->mwi_lamp);
+              CCAPP_DEBUG(DEB_F_PREFIX"data->ins_state=%02X", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), device_info->ins_state);
+              CCAPP_DEBUG(DEB_F_PREFIX"data->cucm_mode=%02X", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), device_info->cucm_mode);
+              CCAPP_DEBUG(DEB_F_PREFIX"data->ins_cause=%02X", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), device_info->ins_cause);
               break;
 
         }
@@ -417,16 +417,16 @@ void ccsnap_gen_lineEvent(ccapi_line_event_e event, cc_lineid_t handle){
 
     if ( line_info != NULL ) {
         if (g_CCAppDebug) {
-            CCAPP_DEBUG(DEB_F_PREFIX"data->ref_count=%d \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), line_info->ref_count);
-            CCAPP_DEBUG(DEB_F_PREFIX"data->line_id=%d \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), line_info->line_id);
-            CCAPP_DEBUG(DEB_F_PREFIX"data->button=%d \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), line_info->button);
-            CCAPP_DEBUG(DEB_F_PREFIX"data->reg_state=%d \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), line_info->reg_state);
-            CCAPP_DEBUG(DEB_F_PREFIX"data->isCFWD=%d \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), line_info->isCFWD);
-            CCAPP_DEBUG(DEB_F_PREFIX"data->isLocalCFWD=%d \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), line_info->isLocalCFWD);
-            CCAPP_DEBUG(DEB_F_PREFIX"data->mwi=%d \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), line_info->mwi.status);
-            CCAPP_DEBUG(DEB_F_PREFIX"data->name=%s \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), line_info->name);
-            CCAPP_DEBUG(DEB_F_PREFIX"data->dn=%s \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), line_info->dn);
-            CCAPP_DEBUG(DEB_F_PREFIX"data->cfwd_dest=%s \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), line_info->cfwd_dest);
+            CCAPP_DEBUG(DEB_F_PREFIX"data->ref_count=%d", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), line_info->ref_count);
+            CCAPP_DEBUG(DEB_F_PREFIX"data->line_id=%d", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), line_info->line_id);
+            CCAPP_DEBUG(DEB_F_PREFIX"data->button=%d", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), line_info->button);
+            CCAPP_DEBUG(DEB_F_PREFIX"data->reg_state=%d", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), line_info->reg_state);
+            CCAPP_DEBUG(DEB_F_PREFIX"data->isCFWD=%d", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), line_info->isCFWD);
+            CCAPP_DEBUG(DEB_F_PREFIX"data->isLocalCFWD=%d", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), line_info->isLocalCFWD);
+            CCAPP_DEBUG(DEB_F_PREFIX"data->mwi=%d", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), line_info->mwi.status);
+            CCAPP_DEBUG(DEB_F_PREFIX"data->name=%s", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), line_info->name);
+            CCAPP_DEBUG(DEB_F_PREFIX"data->dn=%s", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), line_info->dn);
+            CCAPP_DEBUG(DEB_F_PREFIX"data->cfwd_dest=%s", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), line_info->cfwd_dest);
         }
         CCAPI_LineListener_onLineEvent(event, handle, line_info);
     }
@@ -454,7 +454,7 @@ void ccsnap_update_ccm_status(cc_string_t addr, cc_ccm_status_t status)
 {
     int i;
 
-    CCAPP_DEBUG(DEB_F_PREFIX"entry ccm %s status=%d\n",
+    CCAPP_DEBUG(DEB_F_PREFIX"entry ccm %s status=%d",
     		DEB_F_PREFIX_ARGS(SIP_CC_PROV, "ccsnap_update_ccm_status"), addr, status);
 
     for (i=0;i< CCAPI_MAX_SERVERS;i++) {
@@ -464,7 +464,7 @@ void ccsnap_update_ccm_status(cc_string_t addr, cc_ccm_status_t status)
         }
         if ( !strcmp(addr, g_deviceInfo.ucm[i].name) ) {
            g_deviceInfo.ucm[i].status = status;
-           CCAPP_DEBUG(DEB_F_PREFIX"server %s is now status=%d\n",
+           CCAPP_DEBUG(DEB_F_PREFIX"server %s is now status=%d",
             DEB_F_PREFIX_ARGS(SIP_CC_PROV, "ccsnap_update_ccm_status"),
             g_deviceInfo.ucm[i].name, status);
         }
@@ -550,12 +550,12 @@ cc_string_t ccsnap_EscapeStrToLocaleStr(cc_string_t destination, cc_string_t sou
 	cc_string_t ret_str = strlib_empty();
 
 	if(destination == NULL){
-		CCAPP_DEBUG(DEB_F_PREFIX"Error: destination is NULL\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
+		CCAPP_DEBUG(DEB_F_PREFIX"Error: destination is NULL", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
 		return NULL;
 	}
 
 	if(source == NULL){
-		CCAPP_DEBUG(DEB_F_PREFIX"Error: source is NULL\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
+		CCAPP_DEBUG(DEB_F_PREFIX"Error: source is NULL", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
 		strlib_free(destination);
 		return strlib_empty();
 	}
@@ -570,7 +570,7 @@ cc_string_t ccsnap_EscapeStrToLocaleStr(cc_string_t destination, cc_string_t sou
 	}
 
 	if (len <= 0){
-		CCAPP_DEBUG(DEB_F_PREFIX"Error: cannot write string of length <= 0\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
+		CCAPP_DEBUG(DEB_F_PREFIX"Error: cannot write string of length <= 0", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
 		strlib_free(destination);
 		return strlib_empty();
 	}
@@ -589,7 +589,7 @@ cc_string_t ccsnap_EscapeStrToLocaleStr(cc_string_t destination, cc_string_t sou
                 char* phrase_bucket_ptr = (char*)cpr_malloc(remaining_length * sizeof(char));
 
                 if (phrase_bucket_ptr == NULL) {
-                    CCAPP_ERROR(DEB_F_PREFIX"Error: phrase_bucket_ptr is NULL\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
+                    CCAPP_ERROR(DEB_F_PREFIX"Error: phrase_bucket_ptr is NULL", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
                     strlib_free(destination);
                     return NULL;
                 }
@@ -628,13 +628,13 @@ cc_string_t ccsnap_EscapeStrToLocaleStr(cc_string_t destination, cc_string_t sou
         strlib_free(destination);
     }
 
-    CCAPP_DEBUG(DEB_F_PREFIX"Localization String returning %s\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), ret_str);
+    CCAPP_DEBUG(DEB_F_PREFIX"Localization String returning %s", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), ret_str);
     return (ret_str);
 }
 
 static boolean missed, placed, received;
 void ccsnap_set_phone_services_provisioning(boolean misd, boolean plcd, boolean rcvd) {
-   CCAPP_ERROR(DEB_F_PREFIX"missed=%d placed=%d received=%d\n",
+   CCAPP_ERROR(DEB_F_PREFIX"missed=%d placed=%d received=%d",
     		DEB_F_PREFIX_ARGS(SIP_CC_PROV, "ccsnap_set_phone_services_provisioning"), misd, plcd, rcvd);
    missed = misd;
    placed = plcd;
@@ -661,50 +661,50 @@ boolean ccsnap_isPlacedCallLoggingEnabled()
  */
 
 static void printCallInfo(cc_callinfo_ref_t info, const char* fname) {
-    CCAPP_DEBUG(DEB_F_PREFIX"data->ref_count=%d \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->ref_count);
-    CCAPP_DEBUG(DEB_F_PREFIX"data->sess_id=%d \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->sess_id);
-    CCAPP_DEBUG(DEB_F_PREFIX"data->line=%02X \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->line);
-    CCAPP_DEBUG(DEB_F_PREFIX"data->id=%u \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->id);
-    CCAPP_DEBUG(DEB_F_PREFIX"data->inst=%d \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->inst);
-    CCAPP_DEBUG(DEB_F_PREFIX"data->state=%02X \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->state);
-    CCAPP_DEBUG(DEB_F_PREFIX"data->attr=%02X \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->attr);
-    CCAPP_DEBUG(DEB_F_PREFIX"data->type=%02X \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->type);
-    CCAPP_DEBUG(DEB_F_PREFIX"data->security=%02X \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->security);
-    CCAPP_DEBUG(DEB_F_PREFIX"data->policy=%02X \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->policy);
-    CCAPP_DEBUG(DEB_F_PREFIX"data->isSelected=%d \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->isSelected);
-    CCAPP_DEBUG(DEB_F_PREFIX"data->log_disp=%u \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->log_disp);
-    CCAPP_DEBUG(DEB_F_PREFIX"data->clg_name=%s \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->clg_name);
-    CCAPP_DEBUG(DEB_F_PREFIX"data->clg_number=%s \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->clg_number);
-    CCAPP_DEBUG(DEB_F_PREFIX"data->alt_number=%s \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->alt_number);
-    CCAPP_DEBUG(DEB_F_PREFIX"data->cld_name=%s \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->cld_name);
-    CCAPP_DEBUG(DEB_F_PREFIX"data->cld_number=%s \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->cld_number);
-    CCAPP_DEBUG(DEB_F_PREFIX"data->orig_called_name=%s \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->orig_called_name);
-    CCAPP_DEBUG(DEB_F_PREFIX"data->orig_called_number=%s \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->orig_called_number);
-    CCAPP_DEBUG(DEB_F_PREFIX"data->last_redir_name=%s \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->last_redir_name);
-    CCAPP_DEBUG(DEB_F_PREFIX"data->last_redir_number=%s \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->last_redir_number);
-    CCAPP_DEBUG(DEB_F_PREFIX"data->plcd_name=%s \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->plcd_name);
-    CCAPP_DEBUG(DEB_F_PREFIX"data->plcd_number=%s \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->plcd_number);
-    CCAPP_DEBUG(DEB_F_PREFIX"data->status=%s \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->status);
-    CCAPP_DEBUG(DEB_F_PREFIX"data->gci=%s \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->gci);
-    CCAPP_DEBUG(DEB_F_PREFIX"data->cause=%d \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->cause);
-    CCAPP_DEBUG(DEB_F_PREFIX"data->vid_dir=%d \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->vid_dir);
-    CCAPP_DEBUG(DEB_F_PREFIX"data->vid_offer=%d \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->vid_offer);
-    CCAPP_DEBUG(DEB_F_PREFIX"data->is_conf=%d \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->is_conf);
-    CCAPP_DEBUG(DEB_F_PREFIX"data->ringer_start=%d \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->ringer_start);
-    CCAPP_DEBUG(DEB_F_PREFIX"data->ringer_mode=%d \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->ringer_mode);
-    CCAPP_DEBUG(DEB_F_PREFIX"data->ringer_once=%d \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->ringer_once);
+    CCAPP_DEBUG(DEB_F_PREFIX"data->ref_count=%d", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->ref_count);
+    CCAPP_DEBUG(DEB_F_PREFIX"data->sess_id=%d", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->sess_id);
+    CCAPP_DEBUG(DEB_F_PREFIX"data->line=%02X", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->line);
+    CCAPP_DEBUG(DEB_F_PREFIX"data->id=%u", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->id);
+    CCAPP_DEBUG(DEB_F_PREFIX"data->inst=%d", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->inst);
+    CCAPP_DEBUG(DEB_F_PREFIX"data->state=%02X", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->state);
+    CCAPP_DEBUG(DEB_F_PREFIX"data->attr=%02X", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->attr);
+    CCAPP_DEBUG(DEB_F_PREFIX"data->type=%02X", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->type);
+    CCAPP_DEBUG(DEB_F_PREFIX"data->security=%02X", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->security);
+    CCAPP_DEBUG(DEB_F_PREFIX"data->policy=%02X", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->policy);
+    CCAPP_DEBUG(DEB_F_PREFIX"data->isSelected=%d", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->isSelected);
+    CCAPP_DEBUG(DEB_F_PREFIX"data->log_disp=%u", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->log_disp);
+    CCAPP_DEBUG(DEB_F_PREFIX"data->clg_name=%s", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->clg_name);
+    CCAPP_DEBUG(DEB_F_PREFIX"data->clg_number=%s", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->clg_number);
+    CCAPP_DEBUG(DEB_F_PREFIX"data->alt_number=%s", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->alt_number);
+    CCAPP_DEBUG(DEB_F_PREFIX"data->cld_name=%s", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->cld_name);
+    CCAPP_DEBUG(DEB_F_PREFIX"data->cld_number=%s", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->cld_number);
+    CCAPP_DEBUG(DEB_F_PREFIX"data->orig_called_name=%s", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->orig_called_name);
+    CCAPP_DEBUG(DEB_F_PREFIX"data->orig_called_number=%s", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->orig_called_number);
+    CCAPP_DEBUG(DEB_F_PREFIX"data->last_redir_name=%s", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->last_redir_name);
+    CCAPP_DEBUG(DEB_F_PREFIX"data->last_redir_number=%s", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->last_redir_number);
+    CCAPP_DEBUG(DEB_F_PREFIX"data->plcd_name=%s", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->plcd_name);
+    CCAPP_DEBUG(DEB_F_PREFIX"data->plcd_number=%s", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->plcd_number);
+    CCAPP_DEBUG(DEB_F_PREFIX"data->status=%s", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->status);
+    CCAPP_DEBUG(DEB_F_PREFIX"data->gci=%s", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->gci);
+    CCAPP_DEBUG(DEB_F_PREFIX"data->cause=%d", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->cause);
+    CCAPP_DEBUG(DEB_F_PREFIX"data->vid_dir=%d", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->vid_dir);
+    CCAPP_DEBUG(DEB_F_PREFIX"data->vid_offer=%d", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->vid_offer);
+    CCAPP_DEBUG(DEB_F_PREFIX"data->is_conf=%d", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->is_conf);
+    CCAPP_DEBUG(DEB_F_PREFIX"data->ringer_start=%d", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->ringer_start);
+    CCAPP_DEBUG(DEB_F_PREFIX"data->ringer_mode=%d", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->ringer_mode);
+    CCAPP_DEBUG(DEB_F_PREFIX"data->ringer_once=%d", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), info->ringer_once);
 }
 
 static void printFeatureInfo (ccapi_device_event_e type, cc_featureinfo_ref_t feature_info, const char* fname) {
-    CCAPP_DEBUG(DEB_F_PREFIX"data->button=%d \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), feature_info->button);
-    CCAPP_DEBUG(DEB_F_PREFIX"data->contact=%s \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), feature_info->contact);
-    CCAPP_DEBUG(DEB_F_PREFIX"data->featureOptionMask=%d \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), feature_info->featureOptionMask);
-    CCAPP_DEBUG(DEB_F_PREFIX"data->feature_id=%d \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), feature_info->feature_id);
-    CCAPP_DEBUG(DEB_F_PREFIX"data->name=%s \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), feature_info->name);
-    CCAPP_DEBUG(DEB_F_PREFIX"data->retrievalPrefix=%s \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), feature_info->retrievalPrefix);
-    CCAPP_DEBUG(DEB_F_PREFIX"data->speedDialNumber=%s \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), feature_info->speedDialNumber);
+    CCAPP_DEBUG(DEB_F_PREFIX"data->button=%d", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), feature_info->button);
+    CCAPP_DEBUG(DEB_F_PREFIX"data->contact=%s", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), feature_info->contact);
+    CCAPP_DEBUG(DEB_F_PREFIX"data->featureOptionMask=%d", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), feature_info->featureOptionMask);
+    CCAPP_DEBUG(DEB_F_PREFIX"data->feature_id=%d", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), feature_info->feature_id);
+    CCAPP_DEBUG(DEB_F_PREFIX"data->name=%s", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), feature_info->name);
+    CCAPP_DEBUG(DEB_F_PREFIX"data->retrievalPrefix=%s", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), feature_info->retrievalPrefix);
+    CCAPP_DEBUG(DEB_F_PREFIX"data->speedDialNumber=%s", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), feature_info->speedDialNumber);
     if (type == CCAPI_DEVICE_EV_BLF) {
-        CCAPP_DEBUG(DEB_F_PREFIX"data->blf_state=%d \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), feature_info->blf_state);
+        CCAPP_DEBUG(DEB_F_PREFIX"data->blf_state=%d", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), feature_info->blf_state);
     }
 
 }

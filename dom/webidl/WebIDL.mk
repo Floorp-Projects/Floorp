@@ -163,6 +163,7 @@ webidl_files = \
   MouseEvent.webidl \
   MouseScrollEvent.webidl \
   MozActivity.webidl \
+  MozNamedAttrMap.webidl \
   MutationEvent.webidl \
   MutationObserver.webidl \
   NetDashboard.webidl \
@@ -308,6 +309,7 @@ webidl_files = \
   URLUtils.webidl \
   USSDReceivedEvent.webidl \
   VideoStreamTrack.webidl \
+  Window.webidl \
   XMLDocument.webidl \
   XMLHttpRequest.webidl \
   XMLHttpRequestEventTarget.webidl \

@@ -187,7 +187,7 @@ sip_platform_timers_init (void)
 					   TIMER_EXPIRATION,
 					   sip_msgq);
 	if (!sipPassThroughTimer) {
-		CCSIP_DEBUG_ERROR("%s: failed to create sip PassThrough timer\n", fname);
+		CCSIP_DEBUG_ERROR("%s: failed to create sip PassThrough timer", fname);
 		return SIP_ERROR;
 	}
 
@@ -654,7 +654,7 @@ sip_platform_post_timer (uint32_t cmd, void *data)
     if (SIPTaskSendMsg(cmd, (cprBuffer_t) timer_msg, sizeof(uint32_t), NULL)
             == CPR_FAILURE) {
         cpr_free(timer_msg);
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX "Send msg failed.\n", fname);
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX "Send msg failed.", fname);
     }
     return;
 }
@@ -704,7 +704,7 @@ sip_platform_msg_timer_subnot_start (uint32_t msec,
     timer_p->port = port;
 
     if (cprStartTimer(timer_p->timer, msec, (void *)(long)id) == CPR_FAILURE) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX "%s failed\n",
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX "%s failed",
                           fname, "cprStartTimer");
         cpr_free(timer_p->message_buffer);
         timer_p->message_buffer = NULL;
@@ -726,7 +726,7 @@ sip_platform_msg_timer_subnot_stop (sipPlatformUITimer_t *timer_p)
         timer_p->message_buffer = NULL;
     }
     if (cprCancelTimer(timer_p->timer) == CPR_FAILURE) {
-        CCSIP_DEBUG_STATE(DEB_F_PREFIX "%s failed\n",
+        CCSIP_DEBUG_STATE(DEB_F_PREFIX "%s failed",
                           DEB_F_PREFIX_ARGS(SIP_TIMER, fname), "cprCancelTimer");
         return;
     }

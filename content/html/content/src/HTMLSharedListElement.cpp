@@ -149,7 +149,7 @@ HTMLSharedListElement::GetAttributeMappingFunction() const
 }
 
 JSObject*
-HTMLSharedListElement::WrapNode(JSContext *aCx, JSObject *aScope)
+HTMLSharedListElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
   if (mNodeInfo->Equals(nsGkAtoms::ol)) {
     return HTMLOListElementBinding::Wrap(aCx, aScope, this);

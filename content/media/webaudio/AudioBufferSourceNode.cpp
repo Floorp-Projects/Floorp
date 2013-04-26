@@ -423,7 +423,7 @@ AudioBufferSourceNode::~AudioBufferSourceNode()
 }
 
 JSObject*
-AudioBufferSourceNode::WrapObject(JSContext* aCx, JSObject* aScope)
+AudioBufferSourceNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return AudioBufferSourceNodeBinding::Wrap(aCx, aScope, this);
 }
@@ -527,7 +527,7 @@ AudioBufferSourceNode::Stop(double aWhen, ErrorResult& aRv)
   }
 
   AudioNodeStream* ns = static_cast<AudioNodeStream*>(mStream.get());
-  if (!ns) {
+  if (!ns || !Context()) {
     // We've already stopped and had our stream shut down
     return;
   }

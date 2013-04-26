@@ -59,7 +59,8 @@ public:
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
 protected:
-  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *aCx,
+                             JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
   // <option>'s list inside the datalist element.
   nsRefPtr<nsContentList> mOptions;

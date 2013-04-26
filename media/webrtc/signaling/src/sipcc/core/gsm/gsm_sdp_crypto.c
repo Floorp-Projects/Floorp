@@ -1037,8 +1037,8 @@ gsmsdp_negotiate_answer_crypto (fsmdef_dcb_t *dcb_p, cc_sdp_t *cc_sdp_p,
     *crypto_inst     = 0;
     remote_transport = sdp_get_media_transport(cc_sdp_p->dest_sdp, level);
     local_transport  = sdp_get_media_transport(cc_sdp_p->src_sdp, level);
-    GSM_DEBUG(GSM_F_PREFIX "remote transport %d\n", fname, remote_transport);
-    GSM_DEBUG(GSM_F_PREFIX "local transport %d\n", fname, local_transport);
+    GSM_DEBUG(GSM_F_PREFIX "remote transport %d", fname, remote_transport);
+    GSM_DEBUG(GSM_F_PREFIX "local transport %d", fname, local_transport);
 
     /* negotiate media transport */
     switch (remote_transport) {
@@ -1056,16 +1056,16 @@ gsmsdp_negotiate_answer_crypto (fsmdef_dcb_t *dcb_p, cc_sdp_t *cc_sdp_p,
         break;
 
     case SDP_TRANSPORT_RTPSAVP:
-        GSM_DEBUG(GSM_F_PREFIX "remote SAVP case\n", fname);
+        GSM_DEBUG(GSM_F_PREFIX "remote SAVP case", fname);
         /* Remote answer with SRTP */
         if (local_transport == SDP_TRANSPORT_RTPSAVP) {
-        GSM_DEBUG(GSM_F_PREFIX "local SAVP case\n", fname);
+        GSM_DEBUG(GSM_F_PREFIX "local SAVP case", fname);
             /* Remote and local media transport are using SRTP */
             if (gsmsdp_check_answer_crypto_param(dcb_p, cc_sdp_p, media,
                                                  crypto_inst)) {
                 /* Remote's answer crypto parameters are ok */
                 negotiated_transport = SDP_TRANSPORT_RTPSAVP;
-                GSM_DEBUG(GSM_F_PREFIX "crypto params verified\n", fname);
+                GSM_DEBUG(GSM_F_PREFIX "crypto params verified", fname);
             }
         } else {
             /* we offered RTP but remote comes back with SRTP, fail */
@@ -1084,7 +1084,7 @@ gsmsdp_negotiate_answer_crypto (fsmdef_dcb_t *dcb_p, cc_sdp_t *cc_sdp_p,
         /* Unknown */
         break;
     }
-    GSM_DEBUG(GSM_F_PREFIX "negotiated transport %d\n", fname, negotiated_transport);
+    GSM_DEBUG(GSM_F_PREFIX "negotiated transport %d", fname, negotiated_transport);
     return (negotiated_transport);
 }
 
@@ -1740,7 +1740,7 @@ gsmsdp_update_negotiated_transport (fsmdef_dcb_t *dcb_p,
         return;
     }
 
-    GSM_DEBUG(DEB_L_C_F_PREFIX "SDP media transport is SRTP\n",
+    GSM_DEBUG(DEB_L_C_F_PREFIX "SDP media transport is SRTP",
               DEB_L_C_F_PREFIX_ARGS(GSM, dcb_p->line, dcb_p->call_id, fname));
 
     /*
@@ -1756,7 +1756,7 @@ gsmsdp_update_negotiated_transport (fsmdef_dcb_t *dcb_p,
     if (algorithmID != media->negotiated_crypto.algorithmID) {
         media->negotiated_crypto.flags |= (FSMDEF_CRYPTO_TX_CHANGE |
                                            FSMDEF_CRYPTO_RX_CHANGE);
-        GSM_DEBUG(DEB_L_C_F_PREFIX "SDP algorithm ID change to %d\n",
+        GSM_DEBUG(DEB_L_C_F_PREFIX "SDP algorithm ID change to %d",
                   DEB_L_C_F_PREFIX_ARGS(GSM, dcb_p->line, dcb_p->call_id, fname), algorithmID);
     }
     media->negotiated_crypto.algorithmID = algorithmID;
@@ -1770,7 +1770,7 @@ gsmsdp_update_negotiated_transport (fsmdef_dcb_t *dcb_p,
     (void) gsmsdp_get_key_from_sdp(dcb_p, dest_sdp, level, crypto_inst, &key);
     if (gsmdsp_cmp_key(&key, &media->negotiated_crypto.rx_key)) {
         media->negotiated_crypto.flags |= FSMDEF_CRYPTO_RX_CHANGE;
-        GSM_DEBUG(DEB_L_C_F_PREFIX "SDP rx key changes\n",
+        GSM_DEBUG(DEB_L_C_F_PREFIX "SDP rx key changes",
                   DEB_L_C_F_PREFIX_ARGS(GSM, dcb_p->line, dcb_p->call_id, fname));
     }
     media->negotiated_crypto.rx_key = key;

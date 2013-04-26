@@ -24,7 +24,7 @@ static const unsigned short SVG_STITCHTYPE_STITCH = 1;
 static const unsigned short SVG_STITCHTYPE_NOSTITCH = 2;
 
 JSObject*
-SVGFETurbulenceElement::WrapNode(JSContext* aCx, JSObject* aScope)
+SVGFETurbulenceElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return SVGFETurbulenceElementBinding::Wrap(aCx, aScope, this);
 }

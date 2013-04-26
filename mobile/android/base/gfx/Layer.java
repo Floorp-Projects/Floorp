@@ -7,7 +7,6 @@ package org.mozilla.gecko.gfx;
 
 import org.mozilla.gecko.util.FloatUtils;
 
-import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
 
@@ -177,17 +176,15 @@ public abstract class Layer {
         public final RectF viewport;
         public final RectF pageRect;
         public final float zoomFactor;
-        public final PointF offset;
         public final int positionHandle;
         public final int textureHandle;
         public final FloatBuffer coordBuffer;
 
-        public RenderContext(RectF aViewport, RectF aPageRect, float aZoomFactor, PointF aOffset,
+        public RenderContext(RectF aViewport, RectF aPageRect, float aZoomFactor,
                              int aPositionHandle, int aTextureHandle, FloatBuffer aCoordBuffer) {
             viewport = aViewport;
             pageRect = aPageRect;
             zoomFactor = aZoomFactor;
-            offset = aOffset;
             positionHandle = aPositionHandle;
             textureHandle = aTextureHandle;
             coordBuffer = aCoordBuffer;
@@ -199,8 +196,7 @@ public abstract class Layer {
             }
             return RectUtils.fuzzyEquals(viewport, other.viewport)
                 && RectUtils.fuzzyEquals(pageRect, other.pageRect)
-                && FloatUtils.fuzzyEquals(zoomFactor, other.zoomFactor)
-                && FloatUtils.fuzzyEquals(offset, other.offset);
+                && FloatUtils.fuzzyEquals(zoomFactor, other.zoomFactor);
         }
     }
 }

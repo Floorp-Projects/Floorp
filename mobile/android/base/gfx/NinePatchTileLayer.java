@@ -75,8 +75,8 @@ public class NinePatchTileLayer extends TileLayer {
                            float tileX, float tileY, float tileWidth, float tileHeight) {
         RectF viewport = context.viewport;
         float viewportHeight = viewport.height();
-        float drawX = tileX - viewport.left - context.offset.x;
-        float drawY = viewportHeight - (tileY + tileHeight - viewport.top) - context.offset.y;
+        float drawX = tileX - viewport.left;
+        float drawY = viewportHeight - (tileY + tileHeight - viewport.top);
 
         float[] coords = {
             //x, y, z, texture_x, texture_y

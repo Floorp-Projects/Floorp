@@ -95,7 +95,7 @@ HTMLPropertiesCollection::SetDocument(nsIDocument* aDocument) {
 }
 
 JSObject*
-HTMLPropertiesCollection::WrapObject(JSContext* cx, JSObject* scope)
+HTMLPropertiesCollection::WrapObject(JSContext* cx, JS::Handle<JSObject*> scope)
 {
   return HTMLPropertiesCollectionBinding::Wrap(cx, scope, this);
 }
@@ -403,7 +403,7 @@ PropertyNodeList::GetParentObject()
 }
 
 JSObject*
-PropertyNodeList::WrapObject(JSContext *cx, JSObject *scope)
+PropertyNodeList::WrapObject(JSContext *cx, JS::Handle<JSObject*> scope)
 {
   return PropertyNodeListBinding::Wrap(cx, scope, this);
 }

@@ -14,7 +14,7 @@ namespace mozilla {
 namespace dom {
 
 JSObject*
-SVGFEComponentTransferElement::WrapNode(JSContext* aCx, JSObject* aScope)
+SVGFEComponentTransferElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return SVGFEComponentTransferElementBinding::Wrap(aCx, aScope, this);
 }

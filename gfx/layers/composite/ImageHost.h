@@ -7,7 +7,7 @@
 #define MOZILLA_GFX_IMAGEHOST_H
 
 #include "CompositableHost.h"
-#include "LayerManagerComposite.h"
+#include "mozilla/layers/LayerManagerComposite.h"
 
 namespace mozilla {
 namespace layers {
@@ -48,7 +48,7 @@ public:
 
   virtual CompositableType GetType() { return mTextureInfo.mCompositableType; }
 
-  virtual bool EnsureTextureHost(TextureIdentifier aTextureId,
+  virtual void EnsureTextureHost(TextureIdentifier aTextureId,
                                  const SurfaceDescriptor& aSurface,
                                  ISurfaceAllocator* aAllocator,
                                  const TextureInfo& aTextureInfo) MOZ_OVERRIDE;
@@ -88,6 +88,11 @@ public:
 #endif
 
 protected:
+  virtual void MakeTextureHost(TextureIdentifier aTextureId,
+                               const SurfaceDescriptor& aSurface,
+                               ISurfaceAllocator* aAllocator,
+                               const TextureInfo& aTextureInfo);
+
   RefPtr<TextureHost> mTextureHost;
   nsIntRect mPictureRect;
   bool mHasPictureRect;
@@ -106,11 +111,11 @@ public:
   virtual bool Update(const SurfaceDescriptor& aImage,
                       SurfaceDescriptor* aResult = nullptr) MOZ_OVERRIDE;
 
-  virtual bool EnsureTextureHost(TextureIdentifier aTextureId,
-                                 const SurfaceDescriptor& aSurface,
-                                 ISurfaceAllocator* aAllocator,
-                                 const TextureInfo& aTextureInfo) MOZ_OVERRIDE;
-
+protected:
+  virtual void MakeTextureHost(TextureIdentifier aTextureId,
+                               const SurfaceDescriptor& aSurface,
+                               ISurfaceAllocator* aAllocator,
+                               const TextureInfo& aTextureInfo) MOZ_OVERRIDE;
 };
 
 }

@@ -25,7 +25,7 @@ HTMLTableColElement::~HTMLTableColElement()
 }
 
 JSObject*
-HTMLTableColElement::WrapNode(JSContext *aCx, JSObject *aScope)
+HTMLTableColElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
   return HTMLTableColElementBinding::Wrap(aCx, aScope, this);
 }

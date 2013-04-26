@@ -20,7 +20,7 @@ static const unsigned short SVG_EDGEMODE_WRAP = 2;
 static const unsigned short SVG_EDGEMODE_NONE = 3;
 
 JSObject*
-SVGFEConvolveMatrixElement::WrapNode(JSContext* aCx, JSObject* aScope)
+SVGFEConvolveMatrixElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return SVGFEConvolveMatrixElementBinding::Wrap(aCx, aScope, this);
 }

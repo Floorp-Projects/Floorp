@@ -118,7 +118,7 @@ DOMMediaStream::~DOMMediaStream()
 }
 
 JSObject*
-DOMMediaStream::WrapObject(JSContext* aCx, JSObject* aScope)
+DOMMediaStream::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return dom::MediaStreamBinding::Wrap(aCx, aScope, this);
 }
@@ -250,7 +250,7 @@ DOMLocalMediaStream::~DOMLocalMediaStream()
 }
 
 JSObject*
-DOMLocalMediaStream::WrapObject(JSContext* aCx, JSObject* aScope)
+DOMLocalMediaStream::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return dom::LocalMediaStreamBinding::Wrap(aCx, aScope, this);
 }
