@@ -197,13 +197,6 @@ class IonCompartment
     // Allocated space for optimized baseline stubs.
     OptimizedICStubSpace optimizedStubSpace_;
 
-    // Stub to concatenate two strings inline. Note that it can't be
-    // stored in IonRuntime because masm.newGCString bakes in
-    // zone-specific pointers.
-    IonCode *stringConcatStub_;
-
-    IonCode *generateStringConcatStub(JSContext *cx);
-
   public:
     IonCode *getVMWrapper(const VMFunction &f);
 
@@ -289,10 +282,6 @@ class IonCompartment
 
     IonCode *debugTrapHandler(JSContext *cx) {
         return rt->debugTrapHandler(cx);
-    }
-
-    IonCode *stringConcatStub() {
-        return stringConcatStub_;
     }
 
     AutoFlushCache *flusher() {
