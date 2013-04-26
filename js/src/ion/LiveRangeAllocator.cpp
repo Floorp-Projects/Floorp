@@ -462,6 +462,19 @@ LiveRangeAllocator<VREG>::init()
     return true;
 }
 
+static void
+AddRegisterToSafepoint(LSafepoint *safepoint, AnyRegister reg, const LDefinition &def)
+{
+    safepoint->addLiveRegister(reg);
+
+    JS_ASSERT(def.type() == LDefinition::GENERAL ||
+              def.type() == LDefinition::DOUBLE ||
+              def.type() == LDefinition::OBJECT);
+
+    if (def.type() == LDefinition::OBJECT)
+        safepoint->addGcRegister(reg.gpr());
+}
+
 /*
  * This function builds up liveness intervals for all virtual registers
  * defined in the function. Additionally, it populates the liveIn array with
@@ -618,6 +631,11 @@ LiveRangeAllocator<VREG>::buildLivenessInfo()
                         AnyRegister reg = temp->output()->toRegister();
                         if (!addFixedRangeAtHead(reg, inputOf(*ins), outputOf(*ins)))
                             return false;
+
+                        // Fixed intervals are not added to safepoints, so do it
+                        // here.
+                        if (LSafepoint *safepoint = ins->safepoint())
+                            AddRegisterToSafepoint(safepoint, reg, *temp);
                     } else {
                         JS_ASSERT(!ins->isCall());
                         if (!vregs[temp].getInterval(0)->addRangeAtHead(inputOf(*ins), outputOf(*ins)))
@@ -680,6 +698,12 @@ LiveRangeAllocator<VREG>::buildLivenessInfo()
                             if (!addFixedRangeAtHead(reg, inputOf(*ins), outputOf(*ins)))
                                 return false;
                             to = inputOf(*ins);
+
+                            // Fixed intervals are not added to safepoints, so do it
+                            // here.
+                            LSafepoint *safepoint = ins->safepoint();
+                            if (!ins->isCall() && safepoint)
+                                AddRegisterToSafepoint(safepoint, reg, *vregs[use].def());
                         } else {
                             to = use->usedAtStart() ? inputOf(*ins) : outputOf(*ins);
                         }
