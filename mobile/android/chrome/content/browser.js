@@ -3387,6 +3387,22 @@ Tab.prototype = {
     this.pluginDoorhangerTimeout = null;
     this.shouldShowPluginDoorhanger = true;
     this.clickToPlayPluginsActivated = false;
+    // Borrowed from desktop Firefox: http://mxr.mozilla.org/mozilla-central/source/browser/base/content/urlbarBindings.xml#174
+    let matchedURL = documentURI.match(/^((?:[a-z]+:\/\/)?(?:[^\/]+@)?)(.+?)(?::\d+)?(?:\/|$)/);
+    let baseDomain = "";
+    if (matchedURL) {
+      var domain = "";
+      [, , domain] = matchedURL;
+
+      try {
+        baseDomain = Services.eTLD.getBaseDomainFromHost(domain);
+        if (!domain.endsWith(baseDomain)) {
+          // getBaseDomainFromHost converts its resultant to ACE.
+          let IDNService = Cc["@mozilla.org/network/idn-service;1"].getService(Ci.nsIIDNService);
+          baseDomain = IDNService.convertACEtoUTF8(baseDomain);
+        }
+      } catch (e) {}
+    }
 
     let message = {
       type: "Content:LocationChange",
@@ -3394,6 +3410,7 @@ Tab.prototype = {
       uri: fixedURI.spec,
       userSearch: this.userSearch || "",
       documentURI: documentURI,
+      baseDomain: baseDomain,
       contentType: (contentType ? contentType : ""),
       sameDocument: sameDocument
     };
