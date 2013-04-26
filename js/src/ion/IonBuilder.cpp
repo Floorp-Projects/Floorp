@@ -5856,9 +5856,6 @@ IonBuilder::jsop_getgname(HandlePropertyName name)
 bool
 ion::TypeSetIncludes(types::TypeSet *types, MIRType input, types::TypeSet *inputTypes)
 {
-    if (inputTypes)
-        return inputTypes->isSubset(types);
-
     switch (input) {
       case MIRType_Undefined:
       case MIRType_Null:
@@ -5870,10 +5867,10 @@ ion::TypeSetIncludes(types::TypeSet *types, MIRType input, types::TypeSet *input
         return types->hasType(types::Type::PrimitiveType(ValueTypeFromMIRType(input)));
 
       case MIRType_Object:
-        return types->unknownObject();
+        return types->unknownObject() || (inputTypes && inputTypes->isSubset(types));
 
       case MIRType_Value:
-        return types->unknown();
+        return types->unknown() || (inputTypes && inputTypes->isSubset(types));
 
       default:
         JS_NOT_REACHED("Bad input type");
