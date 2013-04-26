@@ -223,9 +223,6 @@ class GitFileInfo(VCSFileInfo):
 
 # Utility functions
 
-# A cache of repo info for each srcdir.
-srcdirRepoInfo = {}
-
 # A cache of files for which VCS info has already been determined. Used to
 # prevent extra filesystem activity or process launching.
 vcsFileInfoCache = {}
@@ -237,14 +234,14 @@ def IsInDir(file, dir):
     return os.path.abspath(file).lower().startswith(os.path.abspath(dir).lower())
 
 def GetVCSFilenameFromSrcdir(file, srcdir):
-    if srcdir not in srcdirRepoInfo:
+    if srcdir not in Dumper.srcdirRepoInfo:
         # Not in cache, so find it adnd cache it
         if os.path.isdir(os.path.join(srcdir, '.hg')):
-            srcdirRepoInfo[srcdir] = HGRepoInfo(srcdir)
+            Dumper.srcdirRepoInfo[srcdir] = HGRepoInfo(srcdir)
         else:
             # Unknown VCS or file is not in a repo.
             return None
-    return srcdirRepoInfo[srcdir].GetFileInfo(file)
+    return Dumper.srcdirRepoInfo[srcdir].GetFileInfo(file)
 
 def GetVCSFilename(file, srcdirs):
     """Given a full path to a file, and the top source directory,
@@ -306,11 +303,12 @@ def SourceIndex(fileStream, outputPath, vcs_root):
     pdbStreamFile.close()
     return result
 
-def WorkerInitializer(cls, lock):
+def WorkerInitializer(cls, lock, srcdirRepoInfo):
     """Windows worker processes won't have run GlobalInit, and due to a lack of fork(),
-    won't inherit the class variables from the parent. The only one they need is the lock,
-    so we run an initializer to set it. Redundant but harmless on other platforms."""
+    won't inherit the class variables from the parent. They only need a few variables,
+    so we run an initializer to set them. Redundant but harmless on other platforms."""
     cls.lock = lock
+    cls.srcdirRepoInfo = srcdirRepoInfo
 
 def StartProcessFilesWork(dumper, files, arch_num, arch, vcs_root, after, after_arg):
     """multiprocessing can't handle methods as Process targets, so we define
@@ -382,7 +380,9 @@ class Dumper:
         cls.manager = module.Manager()
         cls.jobs_condition = Dumper.manager.Condition()
         cls.lock = Dumper.manager.RLock()
-        cls.pool = module.Pool(num_cpus, WorkerInitializer, (cls, cls.lock))
+        cls.srcdirRepoInfo = Dumper.manager.dict()
+        cls.pool = module.Pool(num_cpus, WorkerInitializer,
+                               (cls, cls.lock, cls.srcdirRepoInfo))
 
     def JobStarted(self, file_key):
         """Increments the number of submitted jobs for the specified key file,
@@ -424,7 +424,11 @@ class Dumper:
         if doc.firstChild.tagName != "manifest":
             return
         # First, get remotes.
-        remotes = dict([(r.getAttribute("name"), r.getAttribute("fetch")) for r in doc.getElementsByTagName("remote")])
+        def ensure_slash(u):
+            if not u.endswith("/"):
+                return u + "/"
+            return u
+        remotes = dict([(r.getAttribute("name"), ensure_slash(r.getAttribute("fetch"))) for r in doc.getElementsByTagName("remote")])
         # And default remote.
         default_remote = None
         if doc.getElementsByTagName("default"):
@@ -459,7 +463,7 @@ class Dumper:
             # And cache its VCS file info. Currently all repos mentioned
             # in a repo manifest are assumed to be git.
             root = urlparse.urljoin(remote, name)
-            srcdirRepoInfo[srcdir] = GitRepoInfo(srcdir, rev, root)
+            Dumper.srcdirRepoInfo[srcdir] = GitRepoInfo(srcdir, rev, root)
 
     # subclasses override this
     def ShouldProcess(self, file):
