@@ -92,8 +92,8 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #endif
 
 #define NS_IWIDGET_IID \
-  { 0xdaac8d94, 0x14f3, 0x4bc4, \
-    { 0xa8, 0xc, 0xf0, 0xe6, 0x46, 0x1e, 0xad, 0x40 } }
+{ 0x16da2e50, 0x0fee, 0x4719, \
+  { 0x93, 0x37, 0xce, 0xd4, 0xdd, 0xd2, 0x22, 0x53 } }
 
 /*
  * Window shadow styles
@@ -848,7 +848,7 @@ class nsIWidget : public nsISupports {
      * Return size mode (minimized, maximized, normalized).
      * Returns a value from nsSizeMode (see nsGUIEvent.h)
      */
-    NS_IMETHOD GetSizeMode(int32_t* aMode) = 0;
+    virtual int32_t SizeMode() = 0;
 
     /**
      * Enable or disable this Widget

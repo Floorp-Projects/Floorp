@@ -11421,14 +11421,9 @@ nsGlobalChromeWindow::GetWindowState(uint16_t* aWindowState)
 
   nsCOMPtr<nsIWidget> widget = GetMainWidget();
 
-  int32_t aMode = 0;
+  int32_t mode = widget ? widget->SizeMode() : 0;
 
-  if (widget) {
-    nsresult rv = widget->GetSizeMode(&aMode);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  switch (aMode) {
+  switch (mode) {
     case nsSizeMode_Minimized:
       *aWindowState = nsIDOMChromeWindow::STATE_MINIMIZED;
       break;
