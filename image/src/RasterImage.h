@@ -716,6 +716,12 @@ private:
   };
   NS_IMETHOD RequestDecodeCore(RequestDecodeType aDecodeType);
 
+  // We would like to just check if we have a zero lock count, but we can't do
+  // that for animated images because in EnsureAnimExists we lock the image and
+  // never unlock so that animated images always have their lock count >= 1. In
+  // that case we use our animation consumers count as a proxy for lock count.
+  bool IsUnlocked() { return (mLockCount == 0 || (mAnim && mAnimationConsumers == 0)); }
+
 private: // data
   nsIntSize                  mSize;
 
