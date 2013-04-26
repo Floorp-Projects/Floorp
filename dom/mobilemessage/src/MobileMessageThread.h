@@ -28,7 +28,8 @@ public:
                       const nsTArray<nsString>& aParticipants,
                       const uint64_t aTimestamp,
                       const nsString& aBody,
-                      const uint64_t aUnreadCount);
+                      const uint64_t aUnreadCount,
+                      mobilemessage::MessageType aLastMessageType);
 
   MobileMessageThread(const ThreadData& aData);
 
@@ -37,6 +38,7 @@ public:
                          const JS::Value& aTimestamp,
                          const nsAString& aBody,
                          const uint64_t aUnreadCount,
+                         const nsAString& aLastMessageType,
                          JSContext* aCx,
                          nsIDOMMozMobileMessageThread** aThread);
 
