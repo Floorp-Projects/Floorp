@@ -38,7 +38,7 @@ interface nsIDOMTouch : nsISupports {
   %}
 };
 
-[scriptable, uuid(60706eb7-d50d-4379-b01c-e78e6af84213)]
+[scriptable, builtinclass, uuid(60706eb7-d50d-4379-b01c-e78e6af84213)]
 interface nsIDOMTouchList : nsISupports {
   readonly attribute unsigned long length;
   nsIDOMTouch item(in unsigned long index);
