@@ -201,4 +201,14 @@
  */
 //#define SK_SUPPORT_GPU 1
 
+/*  Don't dither 32bit gradients, to match what the canvas test suite expects.
+ */
+#define SK_DISABLE_DITHER_32BIT_GRADIENT
+
+/*  Don't include stdint.h on windows as it conflicts with our build system.
+ */
+#ifdef SK_BUILD_FOR_WIN32 
+    #define SK_IGNORE_STDINT_DOT_H 
+#endif 
+
 #endif
