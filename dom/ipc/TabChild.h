@@ -315,16 +315,6 @@ public:
     void MakeVisible();
     void MakeHidden();
 
-    virtual bool RecvSetAppType(const nsString& aAppType);
-
-    /**
-     * Get this object's app type.
-     *
-     * A TabChild's app type corresponds to the value of its frame element's
-     * "mozapptype" attribute.
-     */
-    void GetAppType(nsAString& aAppType) const { aAppType = mAppType; }
-
     // Returns true if the file descriptor was found in the cache, false
     // otherwise.
     bool GetCachedFileDescriptor(const nsAString& aPath,
@@ -459,7 +449,6 @@ private:
     bool mNotified;
     bool mContentDocumentIsDisplayed;
     bool mTriedBrowserInit;
-    nsString mAppType;
     ScreenOrientation mOrientation;
 
     DISALLOW_EVIL_CONSTRUCTORS(TabChild);

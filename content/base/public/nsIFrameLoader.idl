@@ -13,6 +13,7 @@ interface nsSubDocumentFrame;
 interface nsIMessageSender;
 interface nsIVariant;
 interface nsIDOMElement;
+interface nsITabParent;
 
 typedef unsigned long long nsContentViewId;
 
@@ -110,13 +111,19 @@ interface nsIContentViewManager : nsISupports
   readonly attribute nsIContentView rootContentView;
 };
 
-[scriptable, uuid(a4db652e-e3b0-4345-8107-cf6a30486759)]
+[scriptable, builtinclass, uuid(e4333e51-f2fa-4fdd-becd-75d000703355)]
 interface nsIFrameLoader : nsISupports
 {
   /**
    * Get the docshell from the frame loader.
    */
   readonly attribute nsIDocShell docShell;
+
+  /**
+   * Get this frame loader's TabParent, if it has a remote frame.  Otherwise,
+   * returns null.
+   */
+  readonly attribute nsITabParent tabParent;
 
   /**
    * Start loading the frame. This method figures out what to load
@@ -249,6 +256,15 @@ interface nsIFrameLoader : nsISupports
    * returns the iframe element.
    */
   readonly attribute nsIDOMElement ownerElement;
+
+  /**
+   * Get or set this frame loader's visibility.
+   *
+   * The notion of "visibility" here is separate from the notion of a
+   * window/docshell's visibility.  This field is mostly here so that we can
+   * have a notion of visibility in the parent process when frames are OOP.
+   */
+  [infallible] attribute boolean visible;
 };
 
 %{C++

@@ -110,7 +110,7 @@ using namespace mozilla::system;
 #include "nsEditorSpellCheck.h"
 #include "nsWindowMemoryReporter.h"
 #include "mozilla/dom/ContentParent.h"
-#include "mozilla/dom/ipc/ProcessPriorityManager.h"
+#include "mozilla/ProcessPriorityManager.h"
 #include "nsPermissionManager.h"
 #include "nsCookieService.h"
 #include "nsApplicationCacheService.h"
@@ -265,7 +265,7 @@ nsLayoutStatics::Initialize()
   SVGElementFactory::Init();
   nsSVGUtils::Init();
 
-  InitProcessPriorityManager();
+  ProcessPriorityManager::Init();
 
   nsPermissionManager::AppClearDataObserverInit();
   nsCookieService::AppClearDataObserverInit();
