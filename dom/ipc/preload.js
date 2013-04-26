@@ -79,6 +79,12 @@ const BrowserElementIsPreloaded = true;
 
   /* Applications Specific Helper */
   Cc["@mozilla.org/settingsManager;1"].getService(Ci["nsIDOMSettingsManager"]);
+  try {
+    if (Services.prefs.getBoolPref("dom.sysmsg.enabled")) {
+      Cc["@mozilla.org/system-message-manager;1"].getService(Ci["nsIDOMNavigatorSystemMessages"]);
+    }
+  } catch(e) {
+  }
 
   // This is a produc-specific file that's sometimes unavailable.
   try {
