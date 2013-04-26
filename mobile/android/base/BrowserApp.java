@@ -959,6 +959,8 @@ abstract public class BrowserApp extends GeckoApp
                                        PropertyAnimator.Property.SCROLL_X,
                                        -width);
         } else {
+            mTabsPanel.prepareTabsAnimation(mMainLayoutAnimator);
+
             mMainLayoutAnimator.attach(mMainLayout,
                                        PropertyAnimator.Property.SCROLL_Y,
                                        -height);
@@ -981,24 +983,10 @@ abstract public class BrowserApp extends GeckoApp
     @Override
     public void onPropertyAnimationStart() {
         mBrowserToolbar.updateTabs(true);
-
-        // Although the tabs panel is not animating per se, it will be re-drawn several
-        // times while the main/gecko layout slides to left/top. Adding a hardware layer
-        // here considerably improves the frame rate of the animation.
-        if (Build.VERSION.SDK_INT >= 11)
-            mTabsPanel.setLayerType(View.LAYER_TYPE_HARDWARE, null);
-        else
-            mTabsPanel.setDrawingCacheEnabled(true);
     }
 
     @Override
     public void onPropertyAnimationEnd() {
-        // Destroy the hardware layer used during the animation
-        if (Build.VERSION.SDK_INT >= 11)
-            mTabsPanel.setLayerType(View.LAYER_TYPE_NONE, null);
-        else
-            mTabsPanel.setDrawingCacheEnabled(false);
-
         if (mTabsPanel.isShown()) {
             if (hasTabsSideBar()) {
                 setSidebarMargin(mTabsPanel.getWidth());
@@ -1014,6 +1002,7 @@ abstract public class BrowserApp extends GeckoApp
         }
 
         mBrowserToolbar.refreshBackground();
+        mTabsPanel.finishTabsAnimation();
 
         if (hasTabsSideBar())
             mBrowserToolbar.adjustTabsAnimation(true);
