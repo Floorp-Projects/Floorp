@@ -53,6 +53,7 @@
   <command id="sp-cmd-errorConsole" oncommand="Scratchpad.openErrorConsole();" disabled="true"/>
   <command id="sp-cmd-webConsole" oncommand="Scratchpad.openWebConsole();"/>
   <command id="sp-cmd-documentationLink" oncommand="Scratchpad.openDocumentationPage();"/>
+  <command id="sp-cmd-hideSidebar" oncommand="Scratchpad.sidebar.hide();"/>
 </commandset>
 
 <keyset id="sourceEditorKeys"/>
@@ -102,6 +103,9 @@
        key="&errorConsoleCmd.commandkey;"
        command="sp-cmd-errorConsole"
        modifiers="accel,shift"/>
+  <key id="sp-key-hideSidebar"
+       keycode="VK_ESCAPE"
+       command="sp-cmd-hideSidebar"/>
   <key id="key_openHelp"
        keycode="VK_F1"
        command="sp-cmd-documentationLink"/>
