@@ -4,7 +4,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, builtinclass, uuid(ebc1db1a-07f9-4d79-b487-150298900ccc)]
+[scriptable, builtinclass, uuid(5efe7dc5-4f72-4b8e-9bcd-fb0676b554ca)]
 interface nsIDOMMozMobileMessageThread : nsISupports
 {
   // Unique identity of the thread.
@@ -23,4 +23,7 @@ interface nsIDOMMozMobileMessageThread : nsISupports
   // Timestamp of the last message in the thread.
   [implicit_jscontext]
   readonly attribute jsval              timestamp; // jsval is for Date.
+
+  // Message type of the last message in the thread.
+  readonly attribute DOMString          lastMessageType;
 };
