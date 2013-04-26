@@ -1,8 +1,8 @@
 accounts.google.com: max-age too low: 2592000
 aladdinschools.appspot.com: did not receive HSTS header
-alpha.irccloud.com: did not receive HSTS header
 api.mega.co.nz: could not connect to host
 api.recurly.com: did not receive HSTS header
+api.simple.com: did not receive HSTS header
 apis.google.com: did not receive HSTS header
 appengine.google.com: did not receive HSTS header
 betnet.fr: could not connect to host
@@ -12,6 +12,7 @@ braintreepayments.com: did not receive HSTS header
 browserid.org: did not receive HSTS header
 cert.se: max-age too low: 2628001
 checkout.google.com: did not receive HSTS header
+chrome-devtools-frontend.appspot.com: did not receive HSTS header
 chrome.google.com: did not receive HSTS header
 chromiumcodereview.appspot.com: did not receive HSTS header
 code.google.com: did not receive HSTS header
@@ -26,8 +27,8 @@ dropcam.com: did not receive HSTS header
 emailprivacytester.com: max-age too low: 8640000
 encrypted.google.com: did not receive HSTS header
 epoxate.com: max-age too low: 259200
-factor.cc: could not connect to host
 fatzebra.com.au: did not receive HSTS header
+fj.simple.com: did not receive HSTS header
 gmail.com: did not receive HSTS header
 googlemail.com: did not receive HSTS header
 googleplex.com: could not connect to host
@@ -46,8 +47,8 @@ ledgerscope.net: max-age too low: 86400
 linx.net: did not receive HSTS header
 lists.mayfirst.org: did not receive HSTS header
 mail.google.com: did not receive HSTS header
+makeyourlaws.org: could not connect to host
 market.android.com: did not receive HSTS header
-mega.co.nz: could not connect to host
 my.alfresco.com: did not receive HSTS header
 mydigipass.com: did not receive HSTS header
 neonisi.com: could not connect to host
@@ -90,4 +91,3 @@ www.neonisi.com: could not connect to host
 www.paycheckrecords.com: did not receive HSTS header
 www.paypal.com: max-age too low: 14400
 www.sandbox.mydigipass.com: could not connect to host
-www.twitter.com: did not receive HSTS header
