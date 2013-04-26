@@ -183,14 +183,14 @@ IonRuntime::initialize(JSContext *cx)
 {
     AutoEnterAtomsCompartment ac(cx);
 
-    if (!cx->compartment->ensureIonCompartmentExists(cx))
-        return false;
-
     IonContext ictx(cx, NULL);
     AutoFlushCache afc("IonRuntime::initialize");
 
     execAlloc_ = cx->runtime->getExecAlloc(cx);
     if (!execAlloc_)
+        return false;
+
+    if (!cx->compartment->ensureIonCompartmentExists(cx))
         return false;
 
     functionWrappers_ = cx->new_<VMWrapperMap>(cx);
@@ -284,7 +284,8 @@ IonRuntime::freeOsrTempData()
 IonCompartment::IonCompartment(IonRuntime *rt)
   : rt(rt),
     stubCodes_(NULL),
-    baselineCallReturnAddr_(NULL)
+    baselineCallReturnAddr_(NULL),
+    stringConcatStub_(NULL)
 {
 }
 
@@ -300,6 +301,11 @@ IonCompartment::initialize(JSContext *cx)
     stubCodes_ = cx->new_<ICStubCodeMap>(cx);
     if (!stubCodes_ || !stubCodes_->init())
         return false;
+
+    stringConcatStub_ = generateStringConcatStub(cx);
+    if (!stringConcatStub_)
+        return false;
+
     return true;
 }
 
@@ -354,6 +360,8 @@ IonCompartment::mark(JSTracer *trc, JSCompartment *compartment)
 
     // Free temporary OSR buffer.
     rt->freeOsrTempData();
+
+    MarkIonCodeRoot(trc, &stringConcatStub_, "stringConcatStub");
 }
 
 void
