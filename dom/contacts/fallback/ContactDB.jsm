@@ -347,10 +347,13 @@ ContactDB.prototype = {
               cursor.value.search.parsedTel = [];
               cursor.value.properties.tel.forEach(
                 function(tel) {
-                  cursor.value.search.parsedTel.push(parsed.nationalNumber);
-                  cursor.value.search.parsedTel.push(PhoneNumberUtils.normalize(parsed.nationalFormat));
-                  cursor.value.search.parsedTel.push(parsed.internationalNumber);
-                  cursor.value.search.parsedTel.push(PhoneNumberUtils.normalize(parsed.internationalFormat));
+                  let parsed = PhoneNumberUtils.parse(tel.value.toString());
+                  if (parsed) {
+                    cursor.value.search.parsedTel.push(parsed.nationalNumber);
+                    cursor.value.search.parsedTel.push(PhoneNumberUtils.normalize(parsed.nationalFormat));
+                    cursor.value.search.parsedTel.push(parsed.internationalNumber);
+                    cursor.value.search.parsedTel.push(PhoneNumberUtils.normalize(parsed.internationalFormat));
+                  }
                   cursor.value.search.parsedTel.push(PhoneNumberUtils.normalize(tel.value.toString()));
                 }
               );
@@ -457,29 +460,20 @@ ContactDB.prototype = {
         for (let i = 0; i <= aContact.properties[field].length; i++) {
           if (aContact.properties[field][i]) {
             if (field == "tel") {
-              // Special case telephone number.
-              // "+1-234-567" should also be found with 1234, 234-56, 23456
+              let number = aContact.properties.tel[i].value.toString();
+              let normalized = PhoneNumberUtils.normalize(number);
+              // We use an object here to avoid duplicates
+              let containsSearch = {};
+              let matchSearch = {};
 
-              // Chop off the first characters
-              let number = aContact.properties[field][i].value;
-              let search = {};
-              if (number) {
-                number = number.toString();
-                contact.search.exactTel.push(PhoneNumberUtils.normalize(number));
-                contact.search.parsedTel.push(PhoneNumberUtils.normalize(number));
-                for (let i = 0; i < number.length; i++) {
-                  search[number.substring(i, number.length)] = 1;
-                }
-                // Store +1-234-567 as ["1234567", "234567"...]
-                let digits = number.match(/\d/g);
-                if (digits && number.length != digits.length) {
-                  digits = digits.join('');
-                  for(let i = 0; i < digits.length; i++) {
-                    search[digits.substring(i, digits.length)] = 1;
-                  }
-                }
-                if (DEBUG) debug("lookup: " + JSON.stringify(contact.search[field]));
-                let parsedNumber = PhoneNumberUtils.parse(number.toString());
+              if (normalized) {
+                // exactTel holds normalized version of entered phone number.
+                // normalized: +1 (949) 123 - 4567 -> +19491234567
+                contact.search.exactTel.push(normalized);
+                // matchSearch holds normalized version of entered phone number,
+                // nationalNumber, nationalFormat, internationalNumber, internationalFormat
+                matchSearch[normalized] = 1;
+                let parsedNumber = PhoneNumberUtils.parse(number);
                 if (parsedNumber) {
                   if (DEBUG) {
                     debug("InternationalFormat: " + parsedNumber.internationalFormat);
@@ -487,28 +481,37 @@ ContactDB.prototype = {
                     debug("NationalNumber: " + parsedNumber.nationalNumber);
                     debug("NationalFormat: " + parsedNumber.nationalFormat);
                   }
+                  matchSearch[parsedNumber.nationalNumber] = 1;
+                  matchSearch[parsedNumber.internationalNumber] = 1;
+                  matchSearch[PhoneNumberUtils.normalize(parsedNumber.nationalFormat)] = 1;
+                  matchSearch[PhoneNumberUtils.normalize(parsedNumber.internationalFormat)] = 1
+                }
 
-                  contact.search.parsedTel.push(parsedNumber.nationalNumber);
-                  contact.search.parsedTel.push(PhoneNumberUtils.normalize(parsedNumber.nationalFormat));
-                  contact.search.parsedTel.push(parsedNumber.internationalNumber);
-                  contact.search.parsedTel.push(PhoneNumberUtils.normalize(parsedNumber.internationalFormat));
-
-                  if (parsedNumber.internationalNumber &&
-                      number !== parsedNumber.internationalNumber) {
-                    let digits = parsedNumber.internationalNumber.match(/\d/g);
-                    if (digits) {
-                      digits = digits.join('');
-                      for(let i = 0; i < digits.length; i++) {
-                        search[digits.substring(i, digits.length)] = 1;
-                      }
+                // containsSearch holds incremental search values for:
+                // normalized number, national format, international format
+                for (let i = 0; i < normalized.length; i++) {
+                  containsSearch[normalized.substring(i, normalized.length)] = 1;
+                }
+                if (parsedNumber) {
+                  if (parsedNumber.nationalFormat) {
+                    let number = PhoneNumberUtils.normalize(parsedNumber.nationalFormat);
+                    for (let i = 0; i < number.length; i++) {
+                      containsSearch[number.substring(i, number.length)] = 1;
                     }
                   }
-                } else {
-                  dump("Warning: No international number found for " + number + "\n");
+                  if (parsedNumber.internationalFormat) {
+                    let number = PhoneNumberUtils.normalize(parsedNumber.internationalFormat);
+                    for (let i = 0; i < number.length; i++) {
+                      containsSearch[number.substring(i, number.length)] = 1;
+                    }
+                  }
                 }
               }
-              for (let num in search) {
-                contact.search[field].push(num);
+              for (let num in containsSearch) {
+                contact.search.tel.push(num);
+              }
+              for (let num in matchSearch) {
+                contact.search.parsedTel.push(num);
               }
             } else if (field == "impp" || field == "email") {
               let value = aContact.properties[field][i].value;
@@ -846,10 +849,7 @@ ContactDB.prototype = {
         // not case sensitive
         let tmp = options.filterValue.toString().toLowerCase();
         if (key === 'tel') {
-          let digits = tmp.match(/\d/g);
-          if (digits) {
-            tmp = digits.join('');
-          }
+          tmp = PhoneNumberUtils.normalize(tmp);
         }
         let range = this._global.IDBKeyRange.bound(tmp, tmp + "\uFFFF");
         let index = store.index(key + "LowerCase");
