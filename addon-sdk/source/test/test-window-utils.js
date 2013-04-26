@@ -208,30 +208,20 @@ exports['test window watcher unregs 4 loading wins'] = function(assert, done) {
 }
 
 exports['test window watcher without untracker'] = function(assert, done) {
-  var myWindow;
-  var finished = false;
-
-  var delegate = {
+  let myWindow;
+  let wt = new windowUtils.WindowTracker({
     onTrack: function(window) {
       if (window == myWindow) {
         assert.pass("onTrack() called with our test window");
-        timer.setTimeout(function() {
-          myWindow.close();
 
-          if (!finished) {
-              finished = true;
-              myWindow = null;
-              wt.unload();
-              done();
-            } else {
-              assert.fail("onTrack() called multiple times.");
-            }
-        }, 1);
+        close(myWindow).then(function() {
+          wt.unload();
+          done();
+        }, assert.fail);
       }
     }
-  };
+  });
 
-  var wt = new windowUtils.WindowTracker(delegate);
   myWindow = makeEmptyWindow();
 };
 
