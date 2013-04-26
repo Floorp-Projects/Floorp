@@ -1002,26 +1002,6 @@ WrapObject(JSContext* cx, JSObject* scope, JSObject& p, JS::Value* vp)
   return true;
 }
 
-bool
-WrapCallbackInterface(JSContext *cx, JSObject *scope, nsISupports* callback,
-                      JS::Value* vp);
-
-static inline bool
-WrapCallbackInterface(JSContext *cx, JSObject *scope, nsISupports& callback,
-                      JS::Value* vp)
-{
-  return WrapCallbackInterface(cx, scope, &callback, vp);
-}
-
-// Helper for smart pointers (nsAutoPtr/nsRefPtr/nsCOMPtr).
-template <template <typename> class SmartPtr, class T>
-inline bool
-WrapCallbackInterface(JSContext* cx, JSObject* scope, const SmartPtr<T>& value,
-                      JS::Value* vp)
-{
-  return WrapCallbackInterface(cx, scope, value.get(), vp);
-}
-
 // Given an object "p" that inherits from nsISupports, wrap it and return the
 // result.  Null is returned on wrapping failure.  This is somewhat similar to
 // WrapObject() above, but does NOT allow Xrays around the result, since we
