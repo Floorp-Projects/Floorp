@@ -917,11 +917,11 @@ protected:
 
   void FlushPendingNotifications(mozFlushType aType);
   void EnsureReflowFlushAndPaint();
-  nsresult CheckSecurityWidthAndHeight(int32_t* width, int32_t* height);
-  nsresult CheckSecurityLeftAndTop(int32_t* left, int32_t* top);
+  void CheckSecurityWidthAndHeight(int32_t* width, int32_t* height);
+  void CheckSecurityLeftAndTop(int32_t* left, int32_t* top);
 
   // Arguments to this function should have values in app units
-  nsresult SetCSSViewportWidthAndHeight(nscoord width, nscoord height);
+  void SetCSSViewportWidthAndHeight(nscoord width, nscoord height);
   // Arguments to this function should have values in device pixels
   nsresult SetDocShellWidthAndHeight(int32_t width, int32_t height);
 
