@@ -3413,6 +3413,8 @@ BaseStubConstructor(nsIWeakReference* aWeakOwner,
                     const nsGlobalNameStruct *name_struct, JSContext *cx,
                     JSObject *obj, unsigned argc, jsval *argv, jsval *rval)
 {
+  MOZ_ASSERT(obj);
+
   nsresult rv;
   nsCOMPtr<nsISupports> native;
   if (name_struct->mType == nsGlobalNameStruct::eTypeClassConstructor) {
@@ -3928,11 +3930,7 @@ nsDOMConstructor::Construct(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
                             JSObject * obj, uint32_t argc, jsval * argv,
                             jsval * vp, bool *_retval)
 {
-  JSObject* class_obj = JSVAL_TO_OBJECT(argv[-2]);
-  if (!class_obj) {
-    NS_ERROR("nsDOMConstructor::Construct couldn't get constructor object.");
-    return NS_ERROR_UNEXPECTED;
-  }
+  MOZ_ASSERT(obj);
 
   const nsGlobalNameStruct *name_struct = GetNameStruct();
   NS_ENSURE_TRUE(name_struct, NS_ERROR_FAILURE);
@@ -7431,6 +7429,8 @@ nsDOMConstructorSH::Call(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          JSObject *obj, uint32_t argc, jsval *argv, jsval *vp,
                          bool *_retval)
 {
+  MOZ_ASSERT(obj);
+
   nsDOMConstructor *wrapped =
     static_cast<nsDOMConstructor *>(wrapper->Native());
 
@@ -7450,6 +7450,8 @@ nsDOMConstructorSH::Construct(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                               JSObject *obj, uint32_t argc, jsval *argv,
                               jsval *vp, bool *_retval)
 {
+  MOZ_ASSERT(obj);
+
   nsDOMConstructor *wrapped =
     static_cast<nsDOMConstructor *>(wrapper->Native());
 
