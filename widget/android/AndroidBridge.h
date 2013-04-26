@@ -29,6 +29,7 @@
 
 #include "mozilla/Likely.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/layers/GeckoContentController.h"
 
 // Some debug #defines
 // #define DEBUG_ANDROID_EVENTS
@@ -92,7 +93,7 @@ protected:
     virtual ~nsFilePickerCallback() {}
 };
 
-class AndroidBridge
+class AndroidBridge : public mozilla::layers::GeckoContentController
 {
 public:
     enum {
@@ -109,7 +110,7 @@ public:
     static void ConstructBridge(JNIEnv *jEnv, jclass jGeckoAppShellClass);
 
     static AndroidBridge *Bridge() {
-        return sBridge;
+        return sBridge.get();
     }
 
     static JavaVM *GetVM() {
@@ -384,7 +385,7 @@ public:
                             const int32_t      aPort,
                             nsACString & aResult);
 protected:
-    static AndroidBridge *sBridge;
+    static nsRefPtr<AndroidBridge> sBridge;
     nsTArray<nsCOMPtr<nsIMobileMessageCallback> > mSmsRequests;
 
     // the global JavaVM
@@ -543,6 +544,18 @@ protected:
     int (* Surface_unlockAndPost)(void* surface);
     void (* Region_constructor)(void* region);
     void (* Region_set)(void* region, void* rect);
+
+private:
+    jobject mNativePanZoomController;
+public:
+    jobject SetNativePanZoomController(jobject obj);
+    // GeckoContentController methods
+    void RequestContentRepaint(const mozilla::layers::FrameMetrics& aFrameMetrics) MOZ_OVERRIDE;
+    void HandleDoubleTap(const nsIntPoint& aPoint) MOZ_OVERRIDE;
+    void HandleSingleTap(const nsIntPoint& aPoint) MOZ_OVERRIDE;
+    void HandleLongTap(const nsIntPoint& aPoint) MOZ_OVERRIDE;
+    void SendAsyncScrollDOMEvent(const gfx::Rect& aContentRect, const gfx::Size& aScrollableSize) MOZ_OVERRIDE;
+    void PostDelayedTask(Task* task, int delay_ms) MOZ_OVERRIDE;
 };
 
 class AutoJObject {

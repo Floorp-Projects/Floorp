@@ -194,11 +194,12 @@ FENNEC_JAVA_FILES = \
   gfx/LayerMarginsAnimator.java \
   gfx/LayerRenderer.java \
   gfx/LayerView.java \
-  gfx/PluginLayer.java \
+  gfx/NativePanZoomController.java \
   gfx/NinePatchTileLayer.java \
   gfx/PanningPerfAPI.java \
   gfx/PanZoomController.java \
   gfx/PanZoomTarget.java \
+  gfx/PluginLayer.java \
   gfx/PointUtils.java \
   gfx/ProgressiveUpdateData.java \
   gfx/RectUtils.java \
@@ -1118,7 +1119,8 @@ jars:
 
 CLASSES_WITH_JNI= \
     org.mozilla.gecko.GeckoAppShell \
-		org.mozilla.gecko.GeckoJavaSampler \
+    org.mozilla.gecko.GeckoJavaSampler \
+    org.mozilla.gecko.gfx.NativePanZoomController \
     $(NULL)
 
 ifdef MOZ_WEBSMS_BACKEND
