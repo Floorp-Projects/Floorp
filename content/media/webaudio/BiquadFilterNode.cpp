@@ -5,17 +5,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "BiquadFilterNode.h"
-#include "mozilla/dom/BiquadFilterNodeBinding.h"
 #include "AudioNodeEngine.h"
 #include "AudioNodeStream.h"
 #include "AudioDestinationNode.h"
 #include "WebAudioUtils.h"
+#include "blink/Biquad.h"
 
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_3(BiquadFilterNode, AudioNode,
-                                     mFrequency, mQ, mGain)
+NS_IMPL_CYCLE_COLLECTION_INHERITED_4(BiquadFilterNode, AudioNode,
+                                     mFrequency, mDetune, mQ, mGain)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(BiquadFilterNode)
 NS_INTERFACE_MAP_END_INHERITING(AudioNode)
@@ -32,8 +32,9 @@ public:
     , mDestination(static_cast<AudioNodeStream*> (aDestination->Stream()))
     // Keep the default values in sync with the default values in
     // BiquadFilterNode::BiquadFilterNode
-    , mType(BiquadTypeEnum::LOWPASS)
+    , mType(BiquadFilterType::Lowpass)
     , mFrequency(350.f)
+    , mDetune(0.f)
     , mQ(1.f)
     , mGain(0.f)
   {
@@ -47,13 +48,14 @@ public:
   enum Parameteres {
     TYPE,
     FREQUENCY,
+    DETUNE,
     Q,
     GAIN
   };
   void SetInt32Parameter(uint32_t aIndex, int32_t aValue) MOZ_OVERRIDE
   {
     switch (aIndex) {
-    case TYPE: mType = static_cast<BiquadTypeEnum>(aValue); break;
+    case TYPE: mType = static_cast<BiquadFilterType>(aValue); break;
     default:
       NS_ERROR("Bad BiquadFilterNode Int32Parameter");
     }
@@ -65,6 +67,10 @@ public:
     case FREQUENCY:
       mFrequency = aValue;
       WebAudioUtils::ConvertAudioParamToTicks(mFrequency, mSource, mDestination);
+      break;
+    case DETUNE:
+      mDetune = aValue;
+      WebAudioUtils::ConvertAudioParamToTicks(mDetune, mSource, mDestination);
       break;
     case Q:
       mQ = aValue;
@@ -91,16 +97,18 @@ public:
 private:
   AudioNodeStream* mSource;
   AudioNodeStream* mDestination;
-  BiquadTypeEnum mType;
+  BiquadFilterType mType;
   AudioParamTimeline mFrequency;
+  AudioParamTimeline mDetune;
   AudioParamTimeline mQ;
   AudioParamTimeline mGain;
 };
 
 BiquadFilterNode::BiquadFilterNode(AudioContext* aContext)
   : AudioNode(aContext)
-  , mType(BiquadTypeEnum::LOWPASS)
+  , mType(BiquadFilterType::Lowpass)
   , mFrequency(new AudioParam(this, SendFrequencyToStream, 350.f))
+  , mDetune(new AudioParam(this, SendDetuneToStream, 0.f))
   , mQ(new AudioParam(this, SendQToStream, 1.f))
   , mGain(new AudioParam(this, SendGainToStream, 0.f))
 {
@@ -116,22 +124,17 @@ BiquadFilterNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 }
 
 void
-BiquadFilterNode::SetType(uint16_t aType, ErrorResult& aRv)
-{
-  BiquadTypeEnum type = static_cast<BiquadTypeEnum> (aType);
-  if (type > BiquadTypeEnum::Max) {
-    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
-  } else {
-    mType = type;
-    SendInt32ParameterToStream(BiquadFilterNodeEngine::TYPE, aType);
-  }
-}
-
-void
 BiquadFilterNode::SendFrequencyToStream(AudioNode* aNode)
 {
   BiquadFilterNode* This = static_cast<BiquadFilterNode*>(aNode);
   SendTimelineParameterToStream(This, BiquadFilterNodeEngine::FREQUENCY, *This->mFrequency);
+}
+
+void
+BiquadFilterNode::SendDetuneToStream(AudioNode* aNode)
+{
+  BiquadFilterNode* This = static_cast<BiquadFilterNode*>(aNode);
+  SendTimelineParameterToStream(This, BiquadFilterNodeEngine::DETUNE, *This->mDetune);
 }
 
 void
