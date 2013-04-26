@@ -4263,7 +4263,6 @@ MOZ_WEBSMS_BACKEND=
 MOZ_ANDROID_WALLPAPER=
 MOZ_ANDROID_BEAM=
 ACCESSIBILITY=1
-MOZ_SYS_MSG=
 MOZ_TIME_MANAGER=
 MOZ_PAY=
 MOZ_AUDIO_CHANNEL_MANAGER=
@@ -7641,14 +7640,6 @@ if test -n "$MOZ_B2G_BT"; then
     AC_DEFINE(MOZ_B2G_BT)
 fi
 AC_SUBST(MOZ_B2G_BT)
-
-dnl ========================================================
-dnl = Enable Support for System Messages API
-dnl ========================================================
-if test -n "$MOZ_SYS_MSG"; then
-    AC_DEFINE(MOZ_SYS_MSG)
-fi
-AC_SUBST(MOZ_SYS_MSG)
 
 dnl ========================================================
 dnl = Enable Support for Time Manager API
