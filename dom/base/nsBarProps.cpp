@@ -94,9 +94,7 @@ nsBarProp::GetBrowserChrome()
   if (!domwin)
     return nullptr;
 
-  nsIWebBrowserChrome *browserChrome = nullptr;
-  mDOMWindow->GetWebBrowserChrome(&browserChrome);
-  return browserChrome;
+  return mDOMWindow->GetWebBrowserChrome();
 }
 
 //

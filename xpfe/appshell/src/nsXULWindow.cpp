@@ -208,12 +208,10 @@ NS_IMETHODIMP nsXULWindow::SetZLevel(uint32_t aLevel)
 
   /* refuse to raise a maximized window above the normal browser level,
      for fear it could hide newly opened browser windows */
-  if (aLevel > nsIXULWindow::normalZ) {
-    int32_t sizeMode;
-    if (mWindow) {
-      mWindow->GetSizeMode(&sizeMode);
-      if (sizeMode == nsSizeMode_Maximized || sizeMode == nsSizeMode_Fullscreen)
-        return NS_ERROR_FAILURE;
+  if (aLevel > nsIXULWindow::normalZ && mWindow) {
+    int32_t sizeMode = mWindow->SizeMode();
+    if (sizeMode == nsSizeMode_Maximized || sizeMode == nsSizeMode_Fullscreen) {
+      return NS_ERROR_FAILURE;
     }
   }
 
@@ -1460,12 +1458,11 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
     return NS_OK;
   }
 
-  int32_t x, y, cx, cy;
-  int32_t sizeMode;
-
   // get our size, position and mode to persist
+  int32_t x, y, cx, cy;
   NS_ENSURE_SUCCESS(GetPositionAndSize(&x, &y, &cx, &cy), NS_ERROR_FAILURE);
-  mWindow->GetSizeMode(&sizeMode);
+
+  int32_t sizeMode = mWindow->SizeMode();
   double scale = mWindow->GetDefaultScale();
 
   // make our position relative to our parent, if any
