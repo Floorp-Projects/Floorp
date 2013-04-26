@@ -45,7 +45,7 @@ using namespace mozilla;
 
 NS_IMPL_THREADSAFE_ISUPPORTS0(nsFilePickerCallback)
 
-AndroidBridge *AndroidBridge::sBridge = 0;
+nsRefPtr<AndroidBridge> AndroidBridge::sBridge = nullptr;
 static unsigned sJavaEnvThreadIndex = 0;
 static void JavaThreadDetachFunc(void *arg);
 
@@ -2121,7 +2121,8 @@ AndroidBridge::SyncViewportInfo(const nsIntRect& aDisplayPort, float aDisplayRes
 }
 
 AndroidBridge::AndroidBridge()
-  : mLayerClient(NULL)
+  : mLayerClient(NULL),
+    mNativePanZoomController(NULL)
 {
 }
 
@@ -2693,3 +2694,46 @@ AndroidBridge::UnlockProfile()
     return ret;
 }
 
+jobject
+AndroidBridge::SetNativePanZoomController(jobject obj)
+{
+    jobject old = mNativePanZoomController;
+    mNativePanZoomController = obj;
+    return old;
+}
+
+void
+AndroidBridge::RequestContentRepaint(const mozilla::layers::FrameMetrics& aFrameMetrics)
+{
+    // FIXME implement this
+}
+
+void
+AndroidBridge::HandleDoubleTap(const nsIntPoint& aPoint)
+{
+    // FIXME implement this
+}
+
+void
+AndroidBridge::HandleSingleTap(const nsIntPoint& aPoint)
+{
+    // FIXME implement this
+}
+
+void
+AndroidBridge::HandleLongTap(const nsIntPoint& aPoint)
+{
+    // FIXME implement this
+}
+
+void
+AndroidBridge::SendAsyncScrollDOMEvent(const gfx::Rect& aContentRect, const gfx::Size& aScrollableSize)
+{
+    // FIXME implement this
+}
+
+void
+AndroidBridge::PostDelayedTask(Task* task, int delay_ms)
+{
+    // FIXME implement this
+}
