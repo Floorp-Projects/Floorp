@@ -503,6 +503,11 @@ body {
   background-image: url('chrome://browser/skin/images/reader-minus-icon-mdpi.png');
 }
 
+.step-control > .disabled {
+  opacity: 0.25;
+  -moz-user-select: -moz-none;
+}
+
 .toggle-button.on {
   background-image: url('chrome://browser/skin/images/reader-toggle-on-icon-mdpi.png');
 }
