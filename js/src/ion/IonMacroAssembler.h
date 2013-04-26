@@ -580,7 +580,6 @@ class MacroAssembler : public MacroAssemblerSpecific
     void newGCThing(const Register &result, gc::AllocKind allocKind, Label *fail);
     void newGCThing(const Register &result, JSObject *templateObject, Label *fail);
     void newGCString(const Register &result, Label *fail);
-    void newGCShortString(const Register &result, Label *fail);
 
     void parNewGCThing(const Register &result,
                        const Register &threadContextReg,
