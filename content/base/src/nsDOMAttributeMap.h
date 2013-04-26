@@ -10,12 +10,12 @@
 #ifndef nsDOMAttributeMap_h
 #define nsDOMAttributeMap_h
 
-#include "nsIDOMMozNamedAttrMap.h"
-#include "nsStringGlue.h"
-#include "nsRefPtrHashtable.h"
-#include "nsCycleCollectionParticipant.h"
-#include "nsIDOMAttr.h"
+#include "mozilla/dom/Attr.h"
 #include "mozilla/ErrorResult.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsIDOMMozNamedAttrMap.h"
+#include "nsRefPtrHashtable.h"
+#include "nsStringGlue.h"
 
 class nsIAtom;
 class nsINodeInfo;
@@ -23,7 +23,6 @@ class nsIDocument;
 
 namespace mozilla {
 namespace dom {
-class Attr;
 class Element;
 } // namespace dom
 } // namespace mozilla
@@ -140,8 +139,10 @@ public:
    */
   uint32_t Enumerate(AttrCache::EnumReadFunction aFunc, void *aUserArg) const;
 
-  Attr* GetItemAt(uint32_t aIndex);
-  Attr* GetNamedItem(const nsAString& aAttrName);
+  Attr* GetItemAt(uint32_t aIndex)
+  {
+    return Item(aIndex);
+  }
 
   static nsDOMAttributeMap* FromSupports(nsISupports* aSupports)
   {
@@ -162,14 +163,36 @@ public:
 
   NS_DECL_CYCLE_COLLECTION_CLASS(nsDOMAttributeMap)
 
+  // WebIDL
+  Attr* GetNamedItem(const nsAString& aAttrName);
+  Attr* NamedGetter(const nsAString& aAttrName, bool& aFound);
+  already_AddRefed<Attr>
+  SetNamedItem(Attr& aAttr, ErrorResult& aError)
+  {
+    return SetNamedItemInternal(aAttr, false, aError);
+  }
+  already_AddRefed<Attr>
+  RemoveNamedItem(const nsAString& aName, ErrorResult& aError);
+ 
+  Attr* Item(uint32_t aIndex);
+  Attr* IndexedGetter(uint32_t aIndex, bool& aFound);
+  uint32_t Length() const;
+
   Attr*
   GetNamedItemNS(const nsAString& aNamespaceURI,
                  const nsAString& aLocalName);
-
   already_AddRefed<Attr>
   SetNamedItemNS(Attr& aNode, ErrorResult& aError)
   {
     return SetNamedItemInternal(aNode, true, aError);
+  }
+  already_AddRefed<Attr>
+  RemoveNamedItemNS(const nsAString& aNamespaceURI, const nsAString& aLocalName,
+                    ErrorResult& aError);
+
+  void GetSupportedNames(nsTArray<nsString>& aNames)
+  {
+    // No supported names we want to show up in iteration.
   }
 
   size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
@@ -187,7 +210,7 @@ private:
    * true) implementation.
    */
   already_AddRefed<Attr>
-  SetNamedItemInternal(nsIDOMAttr* aNode, bool aWithNS, ErrorResult& aError);
+  SetNamedItemInternal(Attr& aNode, bool aWithNS, ErrorResult& aError);
 
   already_AddRefed<nsINodeInfo>
   GetAttrNodeInfo(const nsAString& aNamespaceURI,
