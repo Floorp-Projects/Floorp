@@ -8,6 +8,8 @@
               android:id="@+id/browser_toolbar"
               style="@style/BrowserToolbar"
               android:layout_centerVertical="true"
+              android:clipChildren="false"
+              android:clipToPadding="false"
               android:clickable="true"
               android:focusable="true">
 
@@ -80,15 +82,14 @@
          2 layers. Hence to center this, an additional 4dp is added to the left.
          The margins will be 40dp on left, 8dp on right, instead of ideal 30dp
          and 12dp. -->
-    <Gecko.TextSwitcher android:id="@+id/tabs_count"
-                        style="@style/AddressBar.ImageButton"
+    <org.mozilla.gecko.TabCounter android:id="@+id/tabs_counter"
+                        style="@style/AddressBar.ImageButton.TabCount"
                         android:layout_width="24dip"
                         android:layout_height="24dip"
                         android:layout_marginLeft="40dip"
                         android:layout_marginRight="8dip"
                         android:layout_marginTop="12dip"
-                        android:layout_alignRight="@id/tabs"
-                        android:gravity="center_horizontal"/>
+                        android:layout_alignRight="@id/tabs"/>
 
     <LinearLayout android:id="@+id/awesome_bar_content"
                   style="@style/AddressBar.Button"
