@@ -250,13 +250,20 @@ GonkGPSGeolocationProvider::AGPSRILSetIDCallback(uint32_t flags)
 void
 GonkGPSGeolocationProvider::AGPSRILRefLocCallback(uint32_t flags)
 {
-  nsRefPtr<GonkGPSGeolocationProvider> provider =
-    GonkGPSGeolocationProvider::GetSingleton();
+  class RequestRefLocEvent : public nsRunnable {
+  public:
+    RequestRefLocEvent()
+    {}
+    NS_IMETHOD Run() {
+      nsRefPtr<GonkGPSGeolocationProvider> provider =
+        GonkGPSGeolocationProvider::GetSingleton();
+      provider->SetReferenceLocation();
+      return NS_OK;
+    }
+  };
 
   if (flags & AGPS_RIL_REQUEST_REFLOC_CELLID) {
-    nsCOMPtr<nsIRunnable> event =
-      NS_NewRunnableMethod(provider, &GonkGPSGeolocationProvider::SetReferenceLocation);
-    NS_DispatchToMainThread(event);
+    NS_DispatchToMainThread(new RequestRefLocEvent());
   }
 }
 
