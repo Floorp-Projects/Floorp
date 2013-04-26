@@ -6,11 +6,9 @@
 #ifndef nsINode_h___
 #define nsINode_h___
 
-#include "mozilla/ErrorResult.h"
 #include "mozilla/Likely.h"
 #include "nsCOMPtr.h"               // for member, local
 #include "nsGkAtoms.h"              // for nsGkAtoms::baseURIProperty
-#include "nsIDOMEventTarget.h"      // for base class
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeSelector.h"     // base class
 #include "nsINodeInfo.h"            // member (in nsCOMPtr)
