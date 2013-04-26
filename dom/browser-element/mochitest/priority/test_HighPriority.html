@@ -1,0 +1,121 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that frames with mozapptype=critical which hold the "high-priority" or
+"cpu" wake locks get elevated process priority.
+-->
+<head>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="../browserElementTestHelpers.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="application/javascript;version=1.7">
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+browserElementTestHelpers.setEnabledPref(true);
+browserElementTestHelpers.addPermission();
+browserElementTestHelpers.enableProcessPriorityManager();
+
+function runTest() {
+  var iframe = document.createElement('iframe');
+  iframe.setAttribute('mozbrowser', true);
+  iframe.setAttribute('mozapptype', 'critical');
+  iframe.src = 'file_HighPriority.html';
+
+  // We expect the following to happen:
+  //
+  // - Process is created.
+  // - Its priority is set to FOREGROUND (when the process starts).
+  // - wait_alert('step0', FOREGROUND_HIGH)
+  // - wait_alert('step1', FOREGROUND)
+  // - wait_alert('step2', FOREGROUND_HIGH)
+  //
+  // Where wait_alert(M, P) means that we expect the subprocess to
+  //   * do alert(M) and
+  //   * be set to priority P
+  // in some order.  If the alert occurs before the priority change, we block
+  // the alert until we observe the priority change.  So the subprocess only
+  // has to do
+  //
+  //   // set priority to FOREGROUND_HIGH
+  //   alert('step0');
+  //   // set priority to FOREGROUND
+  //   alert('step1');
+  //
+  // etc.
+
+  var childID = null;
+  var alertTimes = [];
+
+  // Return a promise that's resolved once the child process calls alert() and
+  // we get a priority change, in some order.
+  //
+  // We check that the text of the alert is |"step" + index|.
+  //
+  // If gracePeriod is given, we check that the priority change occurred at
+  // least gracePeriod ms since the alert from the previous step (with a fudge
+  // factor to account for inaccurate timers).
+  function expectAlertAndPriorityChange(index, priority, /* optional */ gracePeriod) {
+    function checkAlertInfo(e) {
+      is(e.detail.message, 'step' + index, 'alert() number ' + index);
+      alertTimes.push(new Date());
+
+      // Block the alert; we'll unblock it by calling e.detail.unblock() later.
+      e.preventDefault();
+      return Promise.resolve(e.detail.unblock);
+    }
+
+    function checkGracePeriod() {
+      if (gracePeriod) {
+        var msSinceLastAlert = (new Date()) - alertTimes[index - 1];
+
+        // 50ms fudge factor.  This test is set up so that, if nsITimers are
+        // accurate, we don't need any fudge factor.  Unfortunately our timers
+        // are not accurate!  There's little we can do here except fudge.
+        // Thankfully all we're trying to test is that we get /some/ delay; the
+        // exact amount of delay isn't so important.
+        ok(msSinceLastAlert + 50 >= gracePeriod,
+           msSinceLastAlert + "ms since last alert >= (" + gracePeriod + " - 50ms)");
+      }
+    }
+
+    return Promise.all(
+      [expectMozbrowserEvent(iframe, 'showmodalprompt').then(checkAlertInfo),
+       expectPriorityChange(childID, priority).then(checkGracePeriod)]
+    ).then(function(results) {
+      // expectMozbrowserEvent returns the function to call to unblock the
+      // alert.  It comes to us as the first element of the results array.
+      results[0]();
+    });
+  }
+
+  expectProcessCreated().then(function(chid) {
+    childID = chid;
+    return expectPriorityChange(childID, 'FOREGROUND');
+  }).then(function() {
+    return expectAlertAndPriorityChange(0, 'FOREGROUND_HIGH');
+  }).then(function() {
+    return expectAlertAndPriorityChange(1, 'FOREGROUND', priorityChangeGracePeriod);
+  }).then(function() {
+    return expectAlertAndPriorityChange(2, 'FOREGROUND_HIGH');
+  }).then(function() {
+    return expectAlertAndPriorityChange(3, 'FOREGROUND', priorityChangeGracePeriod);
+  }).then(SimpleTest.finish);
+
+  document.body.appendChild(iframe);
+}
+
+const priorityChangeGracePeriod = 100;
+addEventListener('testready', function() {
+  SpecialPowers.pushPrefEnv(
+    {set: [['dom.ipc.processPriorityManager.backgroundGracePeriodMS',
+            priorityChangeGracePeriod]]},
+    runTest);
+});
+
+</script>
+</body>
+</html>
