@@ -4024,8 +4024,7 @@ nsGlobalWindow::SetInnerWidth(int32_t aInnerWidth)
     return NS_OK;
   }
 
-  NS_ENSURE_SUCCESS(CheckSecurityWidthAndHeight(&aInnerWidth, nullptr),
-                    NS_ERROR_FAILURE);
+  CheckSecurityWidthAndHeight(&aInnerWidth, nullptr);
 
 
   nsRefPtr<nsIPresShell> presShell = mDocShell->GetPresShell();
@@ -4041,7 +4040,8 @@ nsGlobalWindow::SetInnerWidth(int32_t aInnerWidth)
     nsRect shellArea = presContext->GetVisibleArea();
     height = shellArea.height;
     width  = nsPresContext::CSSPixelsToAppUnits(aInnerWidth);
-    return SetCSSViewportWidthAndHeight(width, height);
+    SetCSSViewportWidthAndHeight(width, height);
+    return NS_OK;
   }
   else
   {
@@ -4091,8 +4091,7 @@ nsGlobalWindow::SetInnerHeight(int32_t aInnerHeight)
     return NS_OK;
   }
 
-  NS_ENSURE_SUCCESS(CheckSecurityWidthAndHeight(nullptr, &aInnerHeight),
-                    NS_ERROR_FAILURE);
+  CheckSecurityWidthAndHeight(nullptr, &aInnerHeight);
 
   nsRefPtr<nsIPresShell> presShell = mDocShell->GetPresShell();
 
@@ -4107,7 +4106,8 @@ nsGlobalWindow::SetInnerHeight(int32_t aInnerHeight)
     nsRect shellArea = presContext->GetVisibleArea();
     width = shellArea.width;
     height  = nsPresContext::CSSPixelsToAppUnits(aInnerHeight);
-    return SetCSSViewportWidthAndHeight(width, height);
+    SetCSSViewportWidthAndHeight(width, height);
+    return NS_OK;
   }
   else
   {
@@ -4185,10 +4185,8 @@ nsGlobalWindow::SetOuterSize(int32_t aLengthCSSPixels, bool aIsWidth)
   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
   NS_ENSURE_TRUE(treeOwnerAsWin, NS_ERROR_FAILURE);
 
-  NS_ENSURE_SUCCESS(CheckSecurityWidthAndHeight(
-                        aIsWidth ? &aLengthCSSPixels : nullptr,
-                        aIsWidth ? nullptr : &aLengthCSSPixels),
-                    NS_ERROR_FAILURE);
+  CheckSecurityWidthAndHeight(aIsWidth ? &aLengthCSSPixels : nullptr,
+                              aIsWidth ? nullptr : &aLengthCSSPixels);
 
   int32_t width, height;
   NS_ENSURE_SUCCESS(treeOwnerAsWin->GetSize(&width, &height), NS_ERROR_FAILURE);
@@ -4468,8 +4466,7 @@ nsGlobalWindow::SetScreenX(int32_t aScreenX)
   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
   NS_ENSURE_TRUE(treeOwnerAsWin, NS_ERROR_FAILURE);
 
-  NS_ENSURE_SUCCESS(CheckSecurityLeftAndTop(&aScreenX, nullptr),
-                    NS_ERROR_FAILURE);
+  CheckSecurityLeftAndTop(&aScreenX, nullptr);
 
   int32_t x, y;
   NS_ENSURE_SUCCESS(treeOwnerAsWin->GetPosition(&x, &y),
@@ -4519,8 +4516,7 @@ nsGlobalWindow::SetScreenY(int32_t aScreenY)
   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
   NS_ENSURE_TRUE(treeOwnerAsWin, NS_ERROR_FAILURE);
 
-  NS_ENSURE_SUCCESS(CheckSecurityLeftAndTop(nullptr, &aScreenY),
-                    NS_ERROR_FAILURE);
+  CheckSecurityLeftAndTop(nullptr, &aScreenY);
 
   int32_t x, y;
   NS_ENSURE_SUCCESS(treeOwnerAsWin->GetPosition(&x, &y),
@@ -4536,7 +4532,7 @@ nsGlobalWindow::SetScreenY(int32_t aScreenY)
 
 // NOTE: Arguments to this function should have values scaled to
 // CSS pixels, not device pixels.
-nsresult
+void
 nsGlobalWindow::CheckSecurityWidthAndHeight(int32_t* aWidth, int32_t* aHeight)
 {
 #ifdef MOZ_XUL
@@ -4560,8 +4556,6 @@ nsGlobalWindow::CheckSecurityWidthAndHeight(int32_t* aWidth, int32_t* aHeight)
       }
     }
   }
-
-  return NS_OK;
 }
 
 // NOTE: Arguments to this function should have values in device pixels
@@ -4581,7 +4575,7 @@ nsGlobalWindow::SetDocShellWidthAndHeight(int32_t aInnerWidth, int32_t aInnerHei
 }
 
 // NOTE: Arguments to this function should have values in app units
-nsresult
+void
 nsGlobalWindow::SetCSSViewportWidthAndHeight(nscoord aInnerWidth, nscoord aInnerHeight)
 {
   nsRefPtr<nsPresContext> presContext;
@@ -4592,12 +4586,11 @@ nsGlobalWindow::SetCSSViewportWidthAndHeight(nscoord aInnerWidth, nscoord aInner
   shellArea.width = aInnerWidth;
 
   presContext->SetVisibleArea(shellArea);
-  return NS_OK;
 }
 
 // NOTE: Arguments to this function should have values scaled to
 // CSS pixels, not device pixels.
-nsresult
+void
 nsGlobalWindow::CheckSecurityLeftAndTop(int32_t* aLeft, int32_t* aTop)
 {
   // This one is harder. We have to get the screen size and window dimensions.
@@ -4673,8 +4666,6 @@ nsGlobalWindow::CheckSecurityLeftAndTop(int32_t* aLeft, int32_t* aTop)
         *aTop = 0;
     }
   }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -5783,8 +5774,7 @@ nsGlobalWindow::MoveTo(int32_t aXPos, int32_t aYPos)
   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
   NS_ENSURE_TRUE(treeOwnerAsWin, NS_ERROR_FAILURE);
 
-  NS_ENSURE_SUCCESS(CheckSecurityLeftAndTop(&aXPos, &aYPos),
-                    NS_ERROR_FAILURE);
+  CheckSecurityLeftAndTop(&aXPos, &aYPos);
 
   // mild abuse of a "size" object so we don't need more helper functions
   nsIntSize devPos(CSSToDevIntPixels(nsIntSize(aXPos, aYPos)));
@@ -5826,9 +5816,7 @@ nsGlobalWindow::MoveBy(int32_t aXDif, int32_t aYDif)
   cssPos.width += aXDif;
   cssPos.height += aYDif;
   
-  NS_ENSURE_SUCCESS(CheckSecurityLeftAndTop(&cssPos.width,
-                                            &cssPos.height),
-                    NS_ERROR_FAILURE);
+  CheckSecurityLeftAndTop(&cssPos.width, &cssPos.height);
 
   nsIntSize newDevPos(CSSToDevIntPixels(cssPos));
 
@@ -5857,8 +5845,7 @@ nsGlobalWindow::ResizeTo(int32_t aWidth, int32_t aHeight)
   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
   NS_ENSURE_TRUE(treeOwnerAsWin, NS_ERROR_FAILURE);
   
-  NS_ENSURE_SUCCESS(CheckSecurityWidthAndHeight(&aWidth, &aHeight),
-                    NS_ERROR_FAILURE);
+  CheckSecurityWidthAndHeight(&aWidth, &aHeight);
 
   nsIntSize devSz(CSSToDevIntPixels(nsIntSize(aWidth, aHeight)));
 
@@ -5898,9 +5885,7 @@ nsGlobalWindow::ResizeBy(int32_t aWidthDif, int32_t aHeightDif)
   cssSize.width += aWidthDif;
   cssSize.height += aHeightDif;
 
-  NS_ENSURE_SUCCESS(CheckSecurityWidthAndHeight(&cssSize.width,
-                                                &cssSize.height),
-                    NS_ERROR_FAILURE);
+  CheckSecurityWidthAndHeight(&cssSize.width, &cssSize.height);
 
   nsIntSize newDevSize(CSSToDevIntPixels(cssSize));
 
@@ -5948,9 +5933,7 @@ nsGlobalWindow::SizeToContent()
   NS_ENSURE_TRUE(treeOwner, NS_ERROR_FAILURE);
 
   nsIntSize cssSize(DevToCSSIntPixels(nsIntSize(width, height)));
-  NS_ENSURE_SUCCESS(CheckSecurityWidthAndHeight(&cssSize.width,
-                                                &cssSize.height),
-                    NS_ERROR_FAILURE);
+  CheckSecurityWidthAndHeight(&cssSize.width, &cssSize.height);
 
   nsIntSize newDevSize(CSSToDevIntPixels(cssSize));
 
