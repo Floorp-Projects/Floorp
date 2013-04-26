@@ -11,7 +11,7 @@ function test() {
 
     // This test reopens the network monitor a bunch of times, for different
     // hosts (bottom, side, window). This seems to be slow on debug builds.
-    requestLongerTimeout(2);
+    requestLongerTimeout(3);
 
     let prefsToCheck = {
       networkDetailsWidth: {
