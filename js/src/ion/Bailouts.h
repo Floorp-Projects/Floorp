@@ -228,6 +228,8 @@ uint32_t CachedShapeGuardFailure();
 
 uint32_t FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo);
 
+bool CheckFrequentBailouts(JSContext *cx, JSScript *script);
+
 } // namespace ion
 } // namespace js
 

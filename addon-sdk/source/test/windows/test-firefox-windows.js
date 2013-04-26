@@ -296,15 +296,6 @@ exports.testTrackWindows = function(test) {
     "activate 2", "global activate 2"
   ];
 
-  function shutdown(window) {
-    if (this.length === 1) {
-      test.assertEqual(actions.join(), expects.join(),
-        "correct activate and deactivate sequence")
-
-      test.done();
-    }
-  }
-
   function openWindow() {
     windows.push(browserWindows.open({
       url: "data:text/html;charset=utf-8,<i>testTrackWindows</i>",
@@ -312,18 +303,28 @@ exports.testTrackWindows = function(test) {
       onActivate: function(window) {
         let index = windows.indexOf(window);
 
+        test.assertEqual(actions.join(), expects.slice(0, index*4).join(), expects[index*4]);
         actions.push("activate " + index);
 
-        if (windows.length < 3)
+        if (windows.length < 3) {
           openWindow()
-        else
-          for each (let win in windows)
-            win.close(shutdown)
+        }
+        else {
+          let count = windows.length;
+          for each (let win in windows) {
+            win.close(function() {
+              if (--count == 0) {
+                test.done();
+              }
+            });
+          }
+        }
       },
 
       onDeactivate: function(window) {
         let index = windows.indexOf(window);
 
+        test.assertEqual(actions.join(), expects.slice(0, index*4 + 2).join(), expects[index*4 + 2]);
         actions.push("deactivate " + index)
       }
     }));
@@ -334,6 +335,8 @@ exports.testTrackWindows = function(test) {
     // only concerned with windows opened for this test
     if (index < 0)
       return;
+
+    test.assertEqual(actions.join(), expects.slice(0, index*4 + 1).join(), expects[index*4 + 1]);
     actions.push("global activate " + index)
   })
 
@@ -342,6 +345,8 @@ exports.testTrackWindows = function(test) {
     // only concerned with windows opened for this test
     if (index < 0)
       return;
+
+    test.assertEqual(actions.join(), expects.slice(0, index*4 + 3).join(), expects[index*4 + 3]);
     actions.push("global deactivate " + index)
   })
 
@@ -361,9 +366,7 @@ exports.testWindowOpenPrivateDefault = function(test) {
         test.assertEqual(tab.url, 'about:mozilla', 'opened correct tab');
         test.assertEqual(isPrivate(tab), false, 'tab is not private');
 
-        window.close(function() {
-          test.done();
-        });
+        window.close(test.done.bind(test));
       });
     }
   });

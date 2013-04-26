@@ -18,7 +18,6 @@
 
 #include "ion/BaselineJIT.h"
 #include "ion/Ion.h"
-#include "ion/IonCode.h"
 #include "vm/Shape.h"
 
 #include "jsobjinlines.h"

@@ -129,6 +129,13 @@ endif
 ifeq (Linux,$(OS_ARCH))
 ifneq (Android,$(OS_TARGET))
 OS_LIBS += -lrt
+EXTRA_DSO_LDOPTS += -Wl,-version-script,symverscript
+
+symverscript: symverscript.in
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
+		-DVERSION="$(LIBRARY_NAME)$(MOZILLA_VERSION)" $< > $@
+
+EXTRA_DEPS += symverscript
 endif
 endif
 

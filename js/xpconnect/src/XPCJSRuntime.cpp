@@ -2248,7 +2248,7 @@ class XPCJSRuntimeStats : public JS::RuntimeStats
             }
         }
 
-        extras->pathPrefix += nsPrintfCString("zone(%p)/", (void *)zone);
+        extras->pathPrefix += nsPrintfCString("zone(0x%p)/", (void *)zone);
 
         zStats->extra = extras;
     }
@@ -2691,6 +2691,12 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     // between optimized and debug builds. Also, ASan requires more stack space
     // due to redzones
     JS_SetNativeStackQuota(mJSRuntime, 2 * 128 * sizeof(size_t) * 1024);
+#elif defined(XP_WIN)
+    // 1MB is the default stack size on Windows
+    JS_SetNativeStackQuota(mJSRuntime, 900 * 1024);
+#elif defined(XP_MACOSX) || defined(DARWIN)
+    // 8MB is the default stack size on MacOS
+    JS_SetNativeStackQuota(mJSRuntime, 7 * 1024 * 1024);
 #else
     JS_SetNativeStackQuota(mJSRuntime, 128 * sizeof(size_t) * 1024);
 #endif

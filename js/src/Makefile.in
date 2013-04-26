@@ -11,9 +11,13 @@ srcdir		= @srcdir@
 run_for_side_effects := $(shell echo "MAKE: $(MAKE)")
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME	    = mozjs
-STATIC_LIBRARY_NAME = js_static
+ifdef JS_STANDALONE
+LIBRARY_NAME	= mozjs-@MOZJS_MAJOR_VERSION@.@MOZJS_MINOR_VERSION@@MOZJS_ALPHA@
+else
+LIBRARY_NAME	= mozjs
+endif
 
+STATIC_LIBRARY_NAME = js_static
 LIBS		= $(NSPR_LIBS)
 
 # JavaScript must be built shared, even for static builds, as it is used by
@@ -526,6 +530,18 @@ config/nsinstall$(HOST_BIN_SUFFIX): $(srcdir)/config/nsinstall.c $(srcdir)/confi
 	$(MAKE) -C config/ nsinstall$(HOST_BIN_SUFFIX)
 endif
 
+# Ensure symbol versions of shared library on Linux do not conflict
+# with those in libxul.
+ifeq (Linux,$(OS_TARGET))
+EXTRA_DSO_LDOPTS += -Wl,-version-script,symverscript
+
+symverscript: symverscript.in
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
+		-DVERSION="$(subst -,_,$(LIBRARY_NAME))" $< > $@
+
+EXTRA_DEPS += symverscript
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 ifdef JS_HAS_CTYPES
@@ -540,13 +556,53 @@ distclean clean::
 endif
 endif
 
+
+#############################################
+# BEGIN ECMAScript Internationalization API
+#
+
 # ICU headers need to be available whether we build with the complete
 # Internationalization API or not - ICU stubs rely on them.
 
 LOCAL_INCLUDES += \
-    -I$(topsrcdir)/../../intl/icu/source/common \
-    -I$(topsrcdir)/../../intl/icu/source/i18n \
-    $(NULL)
+  -I$(topsrcdir)/../../intl/icu/source/common \
+  -I$(topsrcdir)/../../intl/icu/source/i18n \
+  $(NULL)
+
+ifdef ENABLE_INTL_API
+
+ifeq ($(OS_ARCH),WINNT)
+  # Parallel gmake is buggy on Windows
+  ICU_GMAKE_OPTIONS="-j1"
+  # Library names: On Windows, ICU uses modified library names for static
+  # and debug libraries.
+  ifdef MOZ_DEBUG
+    ICU_LIB_SUFFIX=d
+  endif
+  ICU_LIB_RENAME = $(foreach libname,$(ICU_LIB_NAMES),\
+                     cp -p intl/icu/lib/s$(libname)$(ICU_LIB_SUFFIX).lib intl/icu/lib/$(libname).lib;)
+endif
+
+# - Build ICU as part of the "export" target, so things get built
+#   in the right order.
+# - ICU requires GNU make according to its readme.html. pymake can't be used
+#   because it doesn't support order only dependencies.
+# - Force ICU to use the standard suffix for object files because expandlibs
+#   will discard all files with a non-standard suffix (bug 857450).
+# - Options for genrb: -k strict parsing; -R omit collation tailoring rules.
+export::
+	$(GMAKE) $(ICU_GMAKE_OPTIONS) -C intl/icu STATIC_O=$(OBJ_SUFFIX) GENRBOPTS='-k -R'
+	$(ICU_LIB_RENAME)
+
+distclean clean::
+	$(call SUBMAKE,$@,intl/icu)
+
+endif
+
+#
+# END ECMAScript Internationalization API
+#############################################
+
 
 # The "find any vanilla new/new[] calls" script is tailored to Linux, so
 # only run it there.  That should be enough to catch any such calls that
@@ -577,7 +633,7 @@ endif
 check-jit-test::
 	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/jit-test/jit_test.py \
 	        --no-slow --no-progress --tinderbox --tbpl $(JITTEST_VALGRIND_FLAG) \
-	        $(DIST)/bin/js$(BIN_SUFFIX)
+	        $(DIST)/bin/$(JS_SHELL_NAME)$(BIN_SUFFIX)
 
 check:: check-jit-test
 
@@ -594,7 +650,7 @@ check-jstests:
 				--no-extensions \
 				--timeout 300 \
 				--args="`echo $$f | sed 's/\(.\)/ -\1/g'`" \
-				$(DIST)/bin/js$(BIN_SUFFIX); \
+				$(DIST)/bin/$(JS_SHELL_NAME)$(BIN_SUFFIX); \
 			RC=$$(( $$RC || $$?)); \
 		done; \
 	exit $$RC
@@ -621,7 +677,7 @@ endif
 
 DIST_GARBAGE = config.cache config.log config.status* \
    config/autoconf.mk \
-   unallmakefiles js-config js-config.h js-confdefs.h
+   unallmakefiles $(JS_CONFIG_NAME) js-config.h js-confdefs.h
 
 distclean::
 	cat unallmakefiles | $(XARGS) rm -f
@@ -638,10 +694,6 @@ endif
 ifdef JS_HAS_CTYPES
 DEFINES		+= -DJS_HAS_CTYPES
 DEFINES         += -DDLL_PREFIX=\"$(DLL_PREFIX)\" -DDLL_SUFFIX=\"$(DLL_SUFFIX)\"
-endif
-
-ifdef JS_VERSION
-DEFINES		+= -DJS_VERSION=$(JS_VERSION)
 endif
 
 ifneq ($(findstring -L,$(NSPR_LIBS)),)
@@ -674,6 +726,8 @@ EXTRA_LIBS += $(MOZ_ZLIB_LIBS)
 ifneq (,$(MOZ_ZLIB_LIBS)$(MOZ_GLUE_LDFLAGS))
 DEFINES += -DUSE_ZLIB
 endif
+
+SHARED_LIBRARY_LIBS += $(ICU_LIBS)
 
 # Prevent floating point errors caused by VC++ optimizations
 ifdef _MSC_VER
@@ -752,6 +806,11 @@ endif
 # - OS_LIBS includes libraries selected by the configure script.
 # - EXTRA_LIBS includes libraries selected by this Makefile.
 JS_CONFIG_LIBS=$(EXTRA_DSO_LDOPTS) $(OS_LIBS) $(EXTRA_LIBS)
+ifdef GNU_CC
+JS_CONFIG_MOZ_JS_LIBS=-L$(libdir) -l$(LIBRARY_NAME)
+else
+JS_CONFIG_MOZ_JS_LIBS=$(libdir)/$(LIBRARY_NAME).lib
+endif
 
 # The configure script invokes this rule explicitly at configure time!
 # It's important that js-config be ready by the time we're done
@@ -765,23 +824,39 @@ JS_CONFIG_LIBS=$(EXTRA_DSO_LDOPTS) $(OS_LIBS) $(EXTRA_LIBS)
 # avoid trying to re-compute all that in the configure script, we just
 # have the configure script generate this Makefile, and then invoke
 # this rule.
-at=@
-js-config: js-config.in Makefile $(DEPTH)/config/autoconf.mk $(topsrcdir)/config/config.mk $(topsrcdir)/config/rules.mk
-	$(RM) js-config.tmp
-	sed < $< > js-config.tmp \
-	-e 's|$(at)prefix$(at)|$(prefix)|' \
-	-e 's|$(at)exec_prefix$(at)|$(exec_prefix)|' \
-	-e 's|$(at)includedir$(at)|$(includedir)|' \
-	-e 's|$(at)libdir$(at)|$(libdir)|' \
-	-e 's|$(at)MOZILLA_VERSION$(at)|$(MOZILLA_VERSION)|' \
-	-e 's|$(at)LIBRARY_NAME$(at)|$(LIBRARY_NAME)|' \
-	-e 's|$(at)NSPR_CFLAGS$(at)|$(NSPR_CFLAGS)|' \
-	-e 's|$(at)JS_CONFIG_LIBS$(at)|$(JS_CONFIG_LIBS)|' \
-	-e 's|$(at)MOZ_JS_LIBS$(at)|$(MOZ_JS_LIBS)|' \
-	&& mv js-config.tmp $@ && chmod +x $@
 
-SCRIPTS = js-config
-SDK_BINARY = js-config
+# Set the various definitions that will be substituted for js-config
+# and for the pck-config .pc file.
+JS_CONFIG_SUBSTITUTIONS=\
+	-Dprefix="$(prefix)" \
+	-Dexec_prefix="$(exec_prefix)" \
+	-Dincludedir="$(includedir)" \
+	-Dlibdir="$(libdir)" \
+	-DMODULE="$(MODULE)" \
+	-DMOZILLA_VERSION="$(MOZILLA_VERSION)" \
+	-DLIBRARY_NAME="$(LIBRARY_NAME)" \
+	-DJS_CONFIG_LIBS="$(JS_CONFIG_LIBS)" \
+	-DJS_CONFIG_MOZ_JS_LIBS="$(JS_CONFIG_MOZ_JS_LIBS)" \
+	-DMOZJS_MAJOR_VERSION="$(MOZJS_MAJOR_VERSION)" \
+	-DMOZJS_MINOR_VERSION="$(MOZJS_MINOR_VERSION)" \
+	-DMOZJS_PATCH_VERSION="$(MOZJS_PATCH_VERSION)" \
+	-DMOZJS_ALPHA="$(MOZJS_ALPHA)" \
+	-DNSPR_CFLAGS="$(NSPR_CFLAGS)" \
+	-DNSPR_PKGCONF_CHECK="$(NSPR_PKGCONF_CHECK)"
+
+$(JS_CONFIG_NAME): js-config.in Makefile $(DEPTH)/config/autoconf.mk $(topsrcdir)/config/config.mk $(topsrcdir)/config/rules.mk
+	$(RM) $@.tmp
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py --marker % $(JS_CONFIG_SUBSTITUTIONS) $< > $@.tmp \
+	&& mv $@.tmp $@ && chmod +x $@
+
+SCRIPTS = $(JS_CONFIG_NAME)
+SDK_BINARY = $(JS_CONFIG_NAME)
+
+$(LIBRARY_NAME).pc: js.pc.in
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(JS_CONFIG_SUBSTITUTIONS) $< > $@
+
+install:: $(LIBRARY_NAME).pc
+	$(SYSINSTALL) $^ $(DESTDIR)$(libdir)/pkgconfig
 
 ######################################################
 # BEGIN SpiderMonkey header installation
@@ -806,27 +881,6 @@ SDK_BINARY = js-config
 #        mozilla/
 #          mfbt headers
 #
-# Currently $(MODULE) is just js, but we'll soon be changing it to include the
-# SpiderMonkey version, so that headers for multiple SpiderMonkey installs can
-# exist on a system at once.  (This permits embedders depending on system
-# SpiderMonkey to independently update their embeddings to newer SpiderMonkey
-# releases at different paces.)
-#
-# It is expected that embedders will then add -I$(includedir)/$(MODULE) to
-# their compiler invocations, which will then expose all of jsapi.h and friends
-# as they've always been exported.  (This will happen naturally for anyone using
-# pkgconfig systems to determine compiler/linker flags and the like.)  Headers
-# in subdirectories will show up as "mozilla/Assertions.h" and so on.  Also,
-# this system keeps #include "js/CharacterEncoding.h" in internal headers
-# working -- not that this is required, but it does simplify things.  (At some
-# point we may want to convert SpiderMonkey, and maybe Gecko, to this system, in
-# the interest of being a more conventional embedder, but it's probably a ways
-# off.)
-#
-# Eventually we'll probably trim this structure down to having the mfbt headers
-# in mozilla/, and every SpiderMonkey-specific header in js/*.  In the meantime
-# this is the structure implemented below.
-#
 
 install:: $(EXPORTS)
 	$(SYSINSTALL) $^ $(DESTDIR)$(includedir)/$(MODULE)
@@ -844,9 +898,10 @@ install:: $(EXPORTS_mozilla)
 install:: $(SCRIPTS)
 	$(SYSINSTALL) $^ $(DESTDIR)$(bindir)
 
-install:: $(LIBRARY) $(SHARED_LIBRARY) $(IMPORT_LIBRARY)
-ifneq (,$(LIBRARY))
-	$(SYSINSTALL) $(LIBRARY) $(DESTDIR)$(libdir)
+install:: $(REAL_LIBRARY) $(SHARED_LIBRARY) $(IMPORT_LIBRARY)
+ifneq (,$(REAL_LIBRARY))
+	$(SYSINSTALL) $(REAL_LIBRARY) $(DESTDIR)$(libdir)
+	mv -f $(DESTDIR)$(libdir)/$(REAL_LIBRARY) $(subst $(STATIC_LIBRARY_NAME),$(LIBRARY_NAME),$(DESTDIR)$(libdir)/$(REAL_LIBRARY))
 endif
 ifneq (,$(SHARED_LIBRARY))
 	$(SYSINSTALL) $(SHARED_LIBRARY) $(DESTDIR)$(libdir)
@@ -971,4 +1026,3 @@ endif
 #
 # END kludges for the Nitro assembler
 ###############################################
-

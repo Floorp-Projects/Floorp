@@ -54,13 +54,6 @@ using namespace mozilla;
 
 #endif // PR_LOGGING
 
-// font info loader constants
-
-// avoid doing this during startup even on slow machines but try to start
-// it soon enough so that system fallback doesn't happen first
-static const uint32_t kDelayBeforeLoadingFonts = 120 * 1000; // 2 minutes after init
-static const uint32_t kIntervalBetweenLoadingFonts = 2000;   // every 2 seconds until complete
-
 static __inline void
 BuildKeyNameFromFontName(nsAString &aName)
 {
@@ -711,7 +704,7 @@ gfxGDIFontList::InitFontList()
 
     GetFontSubstitutes();
 
-    StartLoader(kDelayBeforeLoadingFonts, kIntervalBetweenLoadingFonts);
+    GetPrefsAndStartLoader();
 
     return NS_OK;
 }

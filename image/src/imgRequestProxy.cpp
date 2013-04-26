@@ -55,7 +55,12 @@ class RequestBehaviour : public ProxyBehaviour
 
   virtual void SetOwner(imgRequest* aOwner) MOZ_OVERRIDE {
     mOwner = aOwner;
-    mOwnerHasImage = !!aOwner->GetStatusTracker().GetImage();
+
+    if (mOwner) {
+      mOwnerHasImage = !!aOwner->GetStatusTracker().GetImage();
+    } else {
+      mOwnerHasImage = false;
+    }
   }
 
  private:

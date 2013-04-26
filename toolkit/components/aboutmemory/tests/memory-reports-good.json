@@ -5,6 +5,12 @@
     {"process": "Main Process (pid NNN)", "path": "heap-allocated", "kind": 2, "units": 0, "amount": 262144000, "description": "Heap allocated."},
     {"process": "Main Process (pid NNN)", "path": "other/b", "kind": 2, "units": 0, "amount": 104857, "description": "Other b."},
     {"process": "Main Process (pid NNN)", "path": "other/a", "kind": 2, "units": 0, "amount": 209715, "description": "Other a."},
-    {"process": "Main Process (pid NNN)", "path": "explicit/a/b", "kind": 1, "units": 0, "amount": 52428800, "description": "A b."}
+    {"process": "Main Process (pid NNN)", "path": "explicit/a/b", "kind": 1, "units": 0, "amount": 52428800, "description": "A b."},
+
+    {"process": "Explicit-only process", "path": "explicit/a/b", "kind": 1, "units": 0, "amount": 100000, "description": "A b."},
+
+    {"process": "Other-only process", "path": "a/b", "kind": 1, "units": 0, "amount": 100000, "description": "A b."},
+    {"process": "Other-only process", "path": "a/c", "kind": 1, "units": 0, "amount": 100000, "description": "A c."},
+    {"process": "Other-only process", "path": "heap-allocated", "kind": 1, "units": 0, "amount": 500000, "description": "D."}
   ]
 }
