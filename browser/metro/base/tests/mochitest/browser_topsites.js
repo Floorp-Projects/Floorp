@@ -20,6 +20,13 @@ function mockLinks(aLinks) {
   return links;
 }
 
+function siteFromNode(aNode) {
+  return {
+    url: aNode.getAttribute("value"),
+    title: aNode.getAttribute("label")
+  };
+}
+
 function clearHistory() {
   PlacesUtils.history.removeAllPages();
 }
@@ -32,7 +39,6 @@ function fillHistory(aLinks) {
     let updateDeferred = Promise.defer();
 
     for (let link of aLinks.reverse()) {
-      info("fillHistory with link: " + JSON.stringify(link));
       let place = {
         uri: Util.makeURI(link.url),
         title: link.title,
@@ -254,10 +260,10 @@ gTests.push({
         title = tile.getAttribute("label");
 
     info(this.desc + ": pinning site at index 2");
-    TopSites.pinSite({
-      url: url,
-      title: title
-    }, 2);
+    TopSites.pinSites([{
+          url: url,
+          title: title
+        }], [2]);
 
     yield waitForCondition(function(){
       return !grid.controller.isUpdating;
@@ -320,7 +326,7 @@ gTests.push({
     ok( NewTabUtils.pinnedLinks.isPinned(site), "2nd item is pinned" );
     ok( items[1].hasAttribute("pinned"), "2nd item has pinned attribute" );
 
-    TopSites.unpinSite(site);
+    TopSites.unpinSites([site]);
 
     yield waitForCondition(function(){
       return !grid.controller.isUpdating;
@@ -337,7 +343,7 @@ gTests.push({
   setUp: function() {
     // setup - set topsites to known state
     yield setLinks(
-      "brian,dougal,dylan,ermintrude,florence,moose,sgtsam,train,zebedee,zeebad",
+      "brian,dougal,dylan,ermintrude,florence,moose,sgtsam,train,zebedee,zeebad,basic,coral",
       ",dougal"
     );
     yield updatePagesAndWait();
@@ -356,17 +362,12 @@ gTests.push({
           items = grid.children;
       is(items.length, 8, this.desc + ": should be 8 topsites");
 
-      let brianSite = {
-        url: items[0].getAttribute("value"),
-        title: items[0].getAttribute("label")
-      };
-      let dougalSite = {
-        url: items[1].getAttribute("value"),
-        title: items[1].getAttribute("label")
-      };
+      let brianSite = siteFromNode(items[0]);
+      let dougalSite = siteFromNode(items[1]);
+      let dylanSite = siteFromNode(items[2]);
 
       // we'll block brian (he's not pinned)
-      TopSites.hideSite(brianSite);
+      TopSites.hideSites([brianSite]);
 
       // pause until the update has fired and the view is finished updating
       yield waitForCondition(function(){
@@ -381,8 +382,8 @@ gTests.push({
       // make sure the empty slot was backfilled
       is(items.length, 8, this.desc + ": should be 8 topsites");
 
-      // block dougal, who is currently pinned at index 1
-      TopSites.hideSite(dougalSite);
+      // block dougal,dylan. dougal is currently pinned at index 1
+      TopSites.hideSites([dougalSite, dylanSite]);
 
       // pause until the update has fired and the view is finished updating
       yield waitForCondition(function(){
@@ -395,17 +396,22 @@ gTests.push({
       ok( !NewTabUtils.pinnedLinks.isPinned(dougalSite), "Blocked Site is no longer pinned" );
       is( grid.querySelectorAll("[value='"+dougalSite.url+"']").length, 0, "Blocked site was removed from grid");
 
-      // make sure the empty slot was backfilled
+      // verify dylan is blocked and removed from the grid
+      ok( (new Site(dylanSite)).blocked, "Site has truthy blocked property" );
+      ok( NewTabUtils.blockedLinks.isBlocked(dylanSite), "Site was blocked" );
+      ok( !NewTabUtils.pinnedLinks.isPinned(dylanSite), "Blocked Site is no longer pinned" );
+      is( grid.querySelectorAll("[value='"+dylanSite.url+"']").length, 0, "Blocked site was removed from grid");
+
+      // make sure the empty slots were backfilled
       is(items.length, 8, this.desc + ": should be 8 topsites");
 
-      TopSites.restoreSite(brianSite);
-      TopSites.restoreSite(dougalSite);
+      TopSites.restoreSites([brianSite, dougalSite, dylanSite]);
 
       yield waitForCondition(function(){
         return !grid.controller.isUpdating;
       });
 
-      // verify brian and dougal are unblocked and back in the grid
+      // verify brian, dougal and dyland are unblocked and back in the grid
       ok( !NewTabUtils.blockedLinks.isBlocked(brianSite), "site was unblocked" );
       is( grid.querySelectorAll("[value='"+brianSite.url+"']").length, 1, "Unblocked site is back in the grid");
 
@@ -415,7 +421,11 @@ gTests.push({
       ok( NewTabUtils.pinnedLinks.isPinned(dougalSite), "Restoring previously pinned site makes it pinned again" );
       is( grid.children[1].getAttribute("value"), dougalSite.url, "Blocked Site restored to pinned index" );
 
+      ok( !NewTabUtils.blockedLinks.isBlocked(dylanSite), "site was unblocked" );
+      is( grid.querySelectorAll("[value='"+dylanSite.url+"']").length, 1, "Unblocked site is back in the grid");
+
     } catch(ex) {
+
       ok(false, this.desc+": Caught exception in test: " + ex);
       info("trace: " + ex.stack);
     }
