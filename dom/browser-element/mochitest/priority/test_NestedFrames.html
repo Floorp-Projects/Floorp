@@ -1,0 +1,73 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test changing the visibility of an <iframe mozbrowser> changes the visibility
+(and thus the priority) of any <iframe mozbrowser>s it contains.
+-->
+<head>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="../browserElementTestHelpers.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="application/javascript;version=1.7">
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+browserElementTestHelpers.setEnabledPref(true);
+browserElementTestHelpers.addPermission();
+browserElementTestHelpers.enableProcessPriorityManager();
+
+// Give our origin permission to open browsers, and remove it when the test is complete.
+var principal = SpecialPowers.wrap(SpecialPowers.getNodePrincipal(document));
+SpecialPowers.addPermission("browser", true, { url: SpecialPowers.wrap(principal.URI).spec,
+                                               appId: principal.appId,
+                                               isInBrowserElement: true });
+
+addEventListener('unload', function() {
+  var principal = SpecialPowers.wrap(SpecialPowers.getNodePrincipal(document));
+  SpecialPowers.removePermission("browser", { url: SpecialPowers.wrap(principal.URI).spec,
+                                              appId: principal.appId,
+                                              isInBrowserElement: true });
+});
+
+function runTest() {
+  // Set up the following hierarchy of frames:
+  //
+  //   <iframe mozbrowser remote=false src='file_NestedFramesOuter.html'>
+  //     <iframe mozbrowser remote=true src='file_empty.html'>
+  //
+  // When we change the visibility of the outer iframe, it should change the
+  // priority of the inner one.
+
+  var iframe = document.createElement('iframe');
+  iframe.setAttribute('mozbrowser', true);
+  iframe.setAttribute('remote', false);
+  iframe.src = 'file_NestedFramesOuter.html#' + browserElementTestHelpers.emptyPage1;
+
+  // Note that this is the process corresponding to the /inner/ iframe.  The
+  // outer iframe runs in-process (because it has remote=false).
+  var childID = null;
+  expectOnlyOneProcessCreated().then(function(chid) {
+    childID = chid;
+    return Promise.all(
+      [expectPriorityChange(childID, 'FOREGROUND'),
+       expectMozbrowserEvent(iframe, 'loadend')]
+    );
+  }).then(function() {
+    // Send the outer iframe into the background.  This should change the
+    // priority of the inner frame's process to BACKGROUND.
+    var p = expectPriorityChange(childID, 'BACKGROUND');
+    iframe.setVisible(false);
+    return p;
+  }).then(SimpleTest.finish);
+
+  document.body.appendChild(iframe);
+}
+
+addEventListener('testready', runTest);
+
+</script>
+</body>
+</html>

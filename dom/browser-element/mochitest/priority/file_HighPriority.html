@@ -1,0 +1,20 @@
+<!DOCTYPE HTML>
+<html>
+<body>
+
+<script>
+var lock = navigator.requestWakeLock('high-priority');
+alert('step0');
+
+lock.unlock();
+alert('step1');
+
+lock = navigator.requestWakeLock('cpu');
+alert('step2');
+
+lock.unlock();
+alert('step3');
+</script>
+
+</body>
+</html>
