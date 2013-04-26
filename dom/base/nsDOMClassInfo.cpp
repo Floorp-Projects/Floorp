@@ -281,6 +281,8 @@ using mozilla::dom::workers::ResolveWorkerClasses;
 
 #include "nsIDOMMediaQueryList.h"
 
+#include "mozilla/dom/Activity.h"
+
 #include "nsDOMTouchEvent.h"
 
 #include "nsWrapperCacheInlines.h"
@@ -1662,9 +1664,8 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNavigatorBluetooth)
 #endif
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNavigatorCamera)
-#ifdef MOZ_SYS_MSG
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNavigatorSystemMessages)
-#endif
+    DOM_CLASSINFO_MAP_CONDITIONAL_ENTRY(nsIDOMNavigatorSystemMessages,
+                                        Activity::PrefEnabled())
 #ifdef MOZ_TIME_MANAGER
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozNavigatorTime)
 #endif
