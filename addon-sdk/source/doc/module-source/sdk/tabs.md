@@ -192,6 +192,11 @@ registration.
 Tabs emit all the events described in the Events section. Listeners are
 passed the `Tab` object that triggered the event.
 
+<api name="id">
+@property {string}
+The unique id for the tab. This property is read-only.
+</api>
+
 <api name="title">
 @property {string}
 The title of the tab (usually the title of the page currently loaded in the tab)
