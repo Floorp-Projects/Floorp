@@ -49,20 +49,8 @@ class HTMLElement(object):
     def click(self):
         return self.marionette._send_message('clickElement', 'ok', element=self.id)
 
-    def single_tap(self, x=None, y=None):
+    def tap(self, x=None, y=None):
         return self.marionette._send_message('singleTap', 'ok', element=self.id, x=x, y=y)
-
-    def double_tap(self, x=None, y=None):
-        return self.marionette._send_message('doubleTap', 'ok', element=self.id, x=x, y=y)
-
-    def press(self, x=None, y=None):
-        return self.marionette._send_message('press', 'value', element=self.id, x=x, y=y)
-
-    def release(self, touch_id, x=None, y=None):
-        return self.marionette._send_message('release', 'ok', element=self.id, touchId=touch_id, x=x, y=y)
-
-    def cancel_touch(self, touch_id):
-        return self.marionette._send_message('cancelTouch', 'ok', element=self.id, touchId=touch_id)
 
     @property
     def text(self):
@@ -136,6 +124,20 @@ class Actions(object):
 
     def cancel(self):
         self.action_chain.append(['cancel'])
+        return self
+
+    def tap(self, element, x=None, y=None):
+        element=element.id
+        self.action_chain.append(['press', element, x, y])
+        self.action_chain.append(['release'])
+        return self
+
+    def double_tap(self, element, x=None, y=None):
+        element=element.id
+        self.action_chain.append(['press', element, x, y])
+        self.action_chain.append(['release'])
+        self.action_chain.append(['press', element, x, y])
+        self.action_chain.append(['release'])
         return self
 
     def flick(self, element, x1, y1, x2, y2, duration=200):
