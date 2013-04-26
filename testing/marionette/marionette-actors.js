@@ -1379,106 +1379,6 @@ MarionetteDriverActor.prototype = {
   },
 
   /**
-   * Double Tap
-   *
-   * @param object aRequest
-   *        'element' represents the ID of the element to double tap on
-   */
-  doubleTap: function MDA_doubleTap(aRequest) {
-    this.command_id = this.getCommandId();
-    let serId = aRequest.element;
-    let x = aRequest.x;
-    let y = aRequest.y;
-    if (this.context == "chrome") {
-      this.sendError("Not in Chrome", 500, null, this.command_id);
-    }
-    else {
-      this.sendAsync("doubleTap",
-                     {
-                       value: serId,
-                       corx: x,
-                       cory: y
-                     },
-                     this.command_id);
-    }
-  },
-
-  /**
-   * Start touch
-   *
-   * @param object aRequest
-   *        'element' represents the ID of the element to touch
-   */
-  press: function MDA_press(aRequest) {
-    this.command_id = this.getCommandId();
-    let element = aRequest.element;
-    let x = aRequest.x;
-    let y = aRequest.y;
-    if (this.context == "chrome") {
-      this.sendError("Not in Chrome", 500, null, this.command_id);
-    }
-    else {
-      this.sendAsync("press",
-                     {
-                       value: element,
-                       corx: x,
-                       cory: y
-                     },
-                     this.command_id);
-    }
-  },
-
-  /**
-   * Cancel touch
-   *
-   * @param object aRequest
-   *        'element' represents the ID of the element to touch
-   */
-  cancelTouch: function MDA_cancelTouch(aRequest) {
-    this.command_id = this.getCommandId();
-    let element = aRequest.element;
-    let touchId = aRequest.touchId;
-    if (this.context == "chrome") {
-      this.sendError("Not in Chrome", 500, null, this.command_id);
-    }
-    else {
-      this.sendAsync("cancelTouch",
-                     {
-                       value: element,
-                       touchId: touchId
-                     },
-                     this.command_id);
-    }
-  },
-
-  /**
-   * End touch
-   *
-   * @param object aRequest
-   *        'element' represents the ID of the element to end the touch
-   */
-  release: function MDA_release(aRequest) {
-    this.command_id = this.getCommandId();
-    let element = aRequest.element;
-    let touchId = aRequest.touchId;
-    let x = aRequest.x;
-    let y = aRequest.y;
-    if (this.context == "chrome") {
-      this.sendError("Not in Chrome", 500, null, this.command_id);
-    }
-    else {
-      this.sendAsync("release",
-                     {
-                       value: element,
-                       touchId: touchId,
-                       corx: x,
-                       cory: y
-                     },
-                     this.command_id);
-    }
-  },
-
-  /**
    * actionChain
    *
    * @param object aRequest
@@ -2292,10 +2192,6 @@ MarionetteDriverActor.prototype.requestTypes = {
   "setScriptTimeout": MarionetteDriverActor.prototype.setScriptTimeout,
   "timeouts": MarionetteDriverActor.prototype.timeouts,
   "singleTap": MarionetteDriverActor.prototype.singleTap,
-  "doubleTap": MarionetteDriverActor.prototype.doubleTap,
-  "press": MarionetteDriverActor.prototype.press,
-  "release": MarionetteDriverActor.prototype.release,
-  "cancelTouch": MarionetteDriverActor.prototype.cancelTouch,
   "actionChain": MarionetteDriverActor.prototype.actionChain,
   "multiAction": MarionetteDriverActor.prototype.multiAction,
   "executeAsyncScript": MarionetteDriverActor.prototype.executeWithCallback,

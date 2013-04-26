@@ -156,3 +156,53 @@ class testSingleFinger(MarionetteTestCase):
         self.assertEqual("End", self.marionette.execute_script("return document.getElementById('mozLinkScroll').innerHTML;"))
         self.assertEqual("Start", self.marionette.execute_script("return document.getElementById('mozLinkScrollStart').innerHTML;"))
 
+    @skip("Skipping due to Bug 865334")
+    def test_touchcancel_chain(self):
+        testTouch = self.marionette.absolute_url("testAction.html")
+        self.marionette.navigate(testTouch)
+        button = self.marionette.find_element("id", "mozLinkCancel")
+        action = Actions(self.marionette)
+        action.press(button).wait(5).cancel()
+        action.perform()
+        time.sleep(15)
+        self.assertEqual("End", self.marionette.execute_script("return document.getElementById('mozLinkCancel').innerHTML;"))
+
+    def test_mouse_single_tap(self):
+        testTouch = self.marionette.absolute_url("testAction.html")
+        self.marionette.navigate(testTouch)
+        self.marionette.send_mouse_event(True)
+        button = self.marionette.find_element("id", "mozMouse")
+        action = Actions(self.marionette)
+        action.tap(button).perform()
+        time.sleep(15)
+        self.assertEqual("MouseClick", self.marionette.execute_script("return document.getElementById('mozMouse').innerHTML;"))
+
+    def test_mouse_double_tap(self):
+        testTouch = self.marionette.absolute_url("testAction.html")
+        self.marionette.navigate(testTouch)
+        self.marionette.send_mouse_event(True)
+        button = self.marionette.find_element("id", "mozMouse")
+        action = Actions(self.marionette)
+        action.double_tap(button).perform()
+        time.sleep(15)
+        self.assertEqual("MouseClick2", self.marionette.execute_script("return document.getElementById('mozMouse').innerHTML;"))
+
+    def test_touch(self):
+        testTouch = self.marionette.absolute_url("testAction.html")
+        self.marionette.navigate(testTouch)
+        self.marionette.send_mouse_event(False)
+        button = self.marionette.find_element("id", "mozMouse")
+        action = Actions(self.marionette)
+        action.tap(button).perform()
+        time.sleep(10)
+        self.assertEqual("TouchEnd", self.marionette.execute_script("return document.getElementById('mozMouse').innerHTML;"))
+
+    def test_dbtouch(self):
+        testTouch = self.marionette.absolute_url("testAction.html")
+        self.marionette.navigate(testTouch)
+        self.marionette.send_mouse_event(False)
+        button = self.marionette.find_element("id", "mozMouse")
+        action = Actions(self.marionette)
+        action.double_tap(button).perform()
+        time.sleep(10)
+        self.assertEqual("TouchEnd2", self.marionette.execute_script("return document.getElementById('mozMouse').innerHTML;"))
