@@ -263,6 +263,10 @@ class LNewArray : public LInstructionHelper<1, 0, 0>
   public:
     LIR_HEADER(NewArray)
 
+    const char *extraName() const {
+        return mir()->shouldUseVM() ? "VMCall" : NULL;
+    }
+
     MNewArray *mir() const {
         return mir_->toNewArray();
     }
@@ -272,6 +276,10 @@ class LNewObject : public LInstructionHelper<1, 0, 0>
 {
   public:
     LIR_HEADER(NewObject)
+
+    const char *extraName() const {
+        return mir()->shouldUseVM() ? "VMCall" : NULL;
+    }
 
     MNewObject *mir() const {
         return mir_->toNewObject();
@@ -1296,6 +1304,10 @@ class LTestVAndBranch : public LInstructionHelper<0, BOX_PIECES, 3>
         setTemp(2, temp2);
     }
 
+    const char *extraName() const {
+        return mir()->operandMightEmulateUndefined() ? "MightEmulateUndefined" : NULL;
+    }
+
     static const size_t Input = 0;
 
     const LAllocation *tempFloat() {
@@ -1317,7 +1329,7 @@ class LTestVAndBranch : public LInstructionHelper<0, BOX_PIECES, 3>
         return ifFalsy_->lir()->label();
     }
 
-    MTest *mir() {
+    MTest *mir() const {
         return mir_->toTest();
     }
 };
@@ -1871,7 +1883,13 @@ class LBitOpI : public LInstructionHelper<1, 2, 0>
       : op_(op)
     { }
 
-    JSOp bitop() {
+    const char *extraName() const {
+        if (bitop() == JSOP_URSH && mir_->toUrsh()->canOverflow())
+            return "UrshCanOverflow";
+        return NULL;
+    }
+
+    JSOp bitop() const {
         return op_;
     }
 };
@@ -2137,6 +2155,10 @@ class LAddI : public LBinaryMath<0>
       : recoversInput_(false)
     { }
 
+    const char *extraName() const {
+        return snapshot() ? "OverflowCheck" : NULL;
+    }
+
     virtual bool recoversInput() const {
         return recoversInput_;
     }
@@ -2156,6 +2178,10 @@ class LSubI : public LBinaryMath<0>
     LSubI()
       : recoversInput_(false)
     { }
+
+    const char *extraName() const {
+        return snapshot() ? "OverflowCheck" : NULL;
+    }
 
     virtual bool recoversInput() const {
         return recoversInput_;
@@ -2322,6 +2348,10 @@ class LValueToInt32 : public LInstructionHelper<1, BOX_PIECES, 1>
       : mode_(mode)
     {
         setTemp(0, temp);
+    }
+
+    const char *extraName() const {
+        return mode() == NORMAL ? "Normal" : "Truncate";
     }
 
     static const size_t Input = 0;
@@ -2775,6 +2805,11 @@ class LLoadElementV : public LInstructionHelper<BOX_PIECES, 2, 0>
         setOperand(0, elements);
         setOperand(1, index);
     }
+
+    const char *extraName() const {
+        return mir()->needsHoleCheck() ? "HoleCheck" : NULL;
+    }
+
     const MLoadElement *mir() const {
         return mir_->toLoadElement();
     }
@@ -2829,6 +2864,11 @@ class LLoadElementHole : public LInstructionHelper<BOX_PIECES, 3, 0>
         setOperand(1, index);
         setOperand(2, initLength);
     }
+
+    const char *extraName() const {
+        return mir()->needsHoleCheck() ? "HoleCheck" : NULL;
+    }
+
     const MLoadElementHole *mir() const {
         return mir_->toLoadElementHole();
     }
@@ -2856,6 +2896,11 @@ class LLoadElementT : public LInstructionHelper<1, 2, 0>
         setOperand(0, elements);
         setOperand(1, index);
     }
+
+    const char *extraName() const {
+        return mir()->needsHoleCheck() ? "HoleCheck" : (mir()->loadDoubles() ? "Doubles" : NULL);
+    }
+
     const MLoadElement *mir() const {
         return mir_->toLoadElement();
     }
@@ -2876,6 +2921,10 @@ class LStoreElementV : public LInstructionHelper<0, 2 + BOX_PIECES, 0>
     LStoreElementV(const LAllocation &elements, const LAllocation &index) {
         setOperand(0, elements);
         setOperand(1, index);
+    }
+
+    const char *extraName() const {
+        return mir()->needsHoleCheck() ? "HoleCheck" : NULL;
     }
 
     static const size_t Value = 2;
@@ -2904,6 +2953,10 @@ class LStoreElementT : public LInstructionHelper<0, 3, 0>
         setOperand(0, elements);
         setOperand(1, index);
         setOperand(2, value);
+    }
+
+    const char *extraName() const {
+        return mir()->needsHoleCheck() ? "HoleCheck" : NULL;
     }
 
     const MStoreElement *mir() const {
@@ -2991,6 +3044,10 @@ class LArrayPopShiftV : public LInstructionHelper<BOX_PIECES, 1, 2>
         setTemp(1, temp1);
     }
 
+    const char *extraName() const {
+        return mir()->mode() == MArrayPopShift::Pop ? "Pop" : "Shift";
+    }
+
     const MArrayPopShift *mir() const {
         return mir_->toArrayPopShift();
     }
@@ -3014,6 +3071,10 @@ class LArrayPopShiftT : public LInstructionHelper<1, 1, 2>
         setOperand(0, object);
         setTemp(0, temp0);
         setTemp(1, temp1);
+    }
+
+    const char *extraName() const {
+        return mir()->mode() == MArrayPopShift::Pop ? "Pop" : "Shift";
     }
 
     const MArrayPopShift *mir() const {
