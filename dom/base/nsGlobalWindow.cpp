@@ -5261,13 +5261,6 @@ nsGlobalWindow::Alert(const nsAString& aString)
   // the whole time a modal dialog is open.
   nsAutoPopupStatePusher popupStatePusher(openAbused, true);
 
-  // Special handling for alert(null) in JS for backwards
-  // compatibility.
-
-  NS_NAMED_LITERAL_STRING(null_str, "null");
-
-  const nsAString *str = DOMStringIsNull(aString) ? &null_str : &aString;
-
   // Before bringing up the window, unsuppress painting and flush
   // pending reflows.
   EnsureReflowFlushAndPaint();
@@ -5278,7 +5271,7 @@ nsGlobalWindow::Alert(const nsAString& aString)
   // Remove non-terminating null characters from the 
   // string. See bug #310037. 
   nsAutoString final;
-  nsContentUtils::StripNullChars(*str, final);
+  nsContentUtils::StripNullChars(aString, final);
 
   // Check if we're being called at a point where we can't use tab-modal
   // prompts, because something doesn't want reentrancy.
