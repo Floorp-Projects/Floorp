@@ -9,7 +9,11 @@ import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.util.HardwareUtils;
 
+import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.gecko.util.UiAsyncTask;
+
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Rect;
@@ -51,8 +55,11 @@ import java.util.List;
 public class BrowserToolbar implements ViewSwitcher.ViewFactory,
                                        Tabs.OnTabsChangedListener,
                                        GeckoMenu.ActionItemBarPresenter,
-                                       Animation.AnimationListener {
+                                       Animation.AnimationListener,
+                                       SharedPreferences.OnSharedPreferenceChangeListener {
     private static final String LOGTAG = "GeckoToolbar";
+    public static final String PREFS_NAME = "BrowserToolbar";
+    public static final String PREFS_SHOW_URL = "ShowUrl";
     private GeckoRelativeLayout mLayout;
     private LayoutParams mAwesomeBarParams;
     private View mAwesomeBarContent;
@@ -115,6 +122,8 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
 
     private static final int FORWARD_ANIMATION_DURATION = 450;
 
+    private boolean mShowUrl;
+
     public BrowserToolbar(BrowserApp activity) {
         // BrowserToolbar is attached to BrowserApp only.
         mActivity = activity;
@@ -125,6 +134,27 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         mAnimateSiteSecurity = true;
 
         mAnimatingEntry = false;
+        mShowUrl = false;
+
+        (new UiAsyncTask<Void, Void, Void>(ThreadUtils.getBackgroundHandler()) {
+            @Override
+            public synchronized Void doInBackground(Void... params) {
+                SharedPreferences settings = mActivity.getSharedPreferences(PREFS_NAME, 0);
+                settings.registerOnSharedPreferenceChangeListener(BrowserToolbar.this);
+                mShowUrl = settings.getBoolean(PREFS_SHOW_URL, false);
+                return null;
+            }
+
+            @Override
+            public void onPostExecute(Void v) {
+                if (mShowUrl) {
+                    Tab tab = Tabs.getInstance().getSelectedTab();
+                    if (tab != null) {
+                        setTitle(tab.getURL());
+                    }
+                }
+            }
+        }).execute();
     }
 
     public void from(RelativeLayout layout) {
@@ -431,7 +461,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         switch(msg) {
             case TITLE:
                 if (Tabs.getInstance().isSelectedTab(tab)) {
-                    setTitle(tab.getDisplayTitle());
+                    setTitle(mShowUrl ? tab.getURL() : tab.getDisplayTitle());
                 }
                 break;
             case START:
@@ -451,7 +481,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
                     updateForwardButton(tab.canDoForward());
                     setProgressVisibility(false);
                     // Reset the title in case we haven't navigated to a new page yet.
-                    setTitle(tab.getDisplayTitle());
+                    setTitle(mShowUrl ? tab.getURL() : tab.getDisplayTitle());
                 }
                 break;
             case RESTORED:
@@ -1189,7 +1219,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         Tab tab = Tabs.getInstance().getSelectedTab();
         if (tab != null) {
             String url = tab.getURL();
-            setTitle(tab.getDisplayTitle());
+            setTitle(mShowUrl ? tab.getURL() : tab.getDisplayTitle());
             setFavicon(tab.getFavicon());
             setProgressVisibility(tab.getState() == Tab.STATE_LOADING);
             setSecurityMode(tab.getSecurityMode());
@@ -1236,5 +1266,15 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
             mMenuPopup.dismiss();
 
         return true;
+    }
+
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        if (key.equals(PREFS_SHOW_URL)) {
+            mShowUrl = sharedPreferences.getBoolean(key, false);
+            Tab tab = Tabs.getInstance().getSelectedTab();
+            if (tab != null) {
+                setTitle(mShowUrl ? tab.getURL() : tab.getDisplayTitle());
+            }
+        }
     }
 }

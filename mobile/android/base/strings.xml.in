@@ -177,6 +177,10 @@
   <string name="contextmenu_subscribe">&contextmenu_subscribe;</string>
   <string name="contextmenu_site_settings">&contextmenu_site_settings;</string>
 
+  <string name="pref_titlebar_mode">&pref_titlebar_mode;</string>
+  <string name="pref_titlebar_mode_title">&pref_titlebar_mode_title;</string>
+  <string name="pref_titlebar_mode_url">&pref_titlebar_mode_url;</string>
+
   <string name="history_removed">&history_removed;</string>
 
   <string name="bookmark_edit_title">&bookmark_edit_title;</string>
