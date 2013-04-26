@@ -62,6 +62,20 @@ public:
     virtual ~TabParent();
     nsIDOMElement* GetOwnerElement() { return mFrameElement; }
     void SetOwnerElement(nsIDOMElement* aElement);
+
+    /**
+     * Get the mozapptype attribute from this TabParent's owner DOM element.
+     */
+    void GetAppType(nsAString& aOut);
+
+    /**
+     * Returns true iff this TabParent's nsIFrameLoader is visible.
+     *
+     * The frameloader's visibility can be independent of e.g. its docshell's
+     * visibility.
+     */
+    bool IsVisible();
+
     nsIBrowserDOMWindow *GetBrowserDOMWindow() { return mBrowserDOMWindow; }
     void SetBrowserDOMWindow(nsIBrowserDOMWindow* aBrowserDOMWindow) {
         mBrowserDOMWindow = aBrowserDOMWindow;

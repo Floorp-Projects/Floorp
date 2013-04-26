@@ -17,6 +17,7 @@
 #include "mozilla/dom/ContentParent.h"
 
 #include "nsThreadUtils.h"
+#include "nsHashPropertyBag.h"
 
 #ifdef MOZ_WIDGET_GONK
 #include "nsIAudioManager.h"
@@ -104,7 +105,7 @@ AudioChannelService::RegisterType(AudioChannelType aType, uint64_t aChildID)
   // In order to avoid race conditions, it's safer to notify any existing
   // agent any time a new one is registered.
   if (XRE_GetProcessType() == GeckoProcessType_Default) {
-    SendAudioChannelChangedNotification();
+    SendAudioChannelChangedNotification(aChildID);
     Notify();
   }
 }
@@ -142,7 +143,7 @@ AudioChannelService::UnregisterType(AudioChannelType aType,
         !mChannelCounters[AUDIO_CHANNEL_INT_CONTENT].Contains(aChildID)) {
       mActiveContentChildIDs.RemoveElement(aChildID);
     }
-    SendAudioChannelChangedNotification();
+    SendAudioChannelChangedNotification(aChildID);
     Notify();
   }
 }
@@ -180,7 +181,6 @@ AudioChannelService::GetMuted(AudioChannelAgent* aAgent, bool aElementHidden)
                                 aElementHidden, oldElementHidden);
   data->mMuted = muted;
 
-  SendAudioChannelChangedNotification();
   return muted;
 }
 
@@ -207,7 +207,6 @@ AudioChannelService::GetMutedInternal(AudioChannelType aType, uint64_t aChildID,
       mActiveContentChildIDs.AppendElement(aChildID);
     }
   }
-
   else if (newType == AUDIO_CHANNEL_INT_CONTENT_HIDDEN &&
            oldType == AUDIO_CHANNEL_INT_CONTENT &&
            !mActiveContentChildIDsFrozen) {
@@ -227,6 +226,8 @@ AudioChannelService::GetMutedInternal(AudioChannelType aType, uint64_t aChildID,
   if (newType != oldType && aType == AUDIO_CHANNEL_CONTENT) {
     Notify();
   }
+
+  SendAudioChannelChangedNotification(aChildID);
 
   // Let play any visible audio channel.
   if (!aElementHidden) {
@@ -258,12 +259,28 @@ AudioChannelService::ContentOrNormalChannelIsActive()
          !mChannelCounters[AUDIO_CHANNEL_INT_NORMAL].IsEmpty();
 }
 
+bool
+AudioChannelService::ProcessContentOrNormalChannelIsActive(uint64_t aChildID)
+{
+  return mChannelCounters[AUDIO_CHANNEL_INT_CONTENT].Contains(aChildID) ||
+         mChannelCounters[AUDIO_CHANNEL_INT_CONTENT_HIDDEN].Contains(aChildID) ||
+         mChannelCounters[AUDIO_CHANNEL_INT_NORMAL].Contains(aChildID);
+}
+
 void
-AudioChannelService::SendAudioChannelChangedNotification()
+AudioChannelService::SendAudioChannelChangedNotification(uint64_t aChildID)
 {
   if (XRE_GetProcessType() != GeckoProcessType_Default) {
     return;
   }
+
+  nsRefPtr<nsHashPropertyBag> props = new nsHashPropertyBag();
+  props->Init();
+  props->SetPropertyAsUint64(NS_LITERAL_STRING("childID"), aChildID);
+
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  obs->NotifyObservers(static_cast<nsIWritablePropertyBag*>(props),
+                       "audio-channel-process-changed", nullptr);
 
   // Calculating the most important active channel.
   AudioChannelType higher = AUDIO_CHANNEL_LAST;
@@ -341,7 +358,6 @@ AudioChannelService::SendAudioChannelChangedNotification()
       channelName.AssignLiteral("none");
     }
 
-    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     obs->NotifyObservers(nullptr, "audio-channel-changed", channelName.get());
   }
 
@@ -355,7 +371,6 @@ AudioChannelService::SendAudioChannelChangedNotification()
       channelName.AssignLiteral("none");
     }
 
-    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     obs->NotifyObservers(nullptr, "visible-audio-channel-changed", channelName.get());
   }
 }
@@ -461,7 +476,7 @@ AudioChannelService::Observe(nsISupports* aSubject, const char* aTopic, const PR
     // We don't have to remove the agents from the mAgents hashtable because if
     // that table contains only agents running on the same process.
 
-    SendAudioChannelChangedNotification();
+    SendAudioChannelChangedNotification(childID);
     Notify();
   } else {
     NS_WARNING("ipc:content-shutdown message without childID property");

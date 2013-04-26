@@ -19,7 +19,7 @@ Cu.import("resource://gre/modules/PhoneNumberUtils.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
 
 const DB_NAME = "contacts";
-const DB_VERSION = 8;
+const DB_VERSION = 10;
 const STORE_NAME = "contacts";
 const SAVED_GETALL_STORE_NAME = "getallcache";
 const CHUNK_SIZE = 20;
@@ -315,6 +315,50 @@ ContactDB.prototype = {
       } else if (currVersion == 7) {
         if (DEBUG) debug("Adding object store for cached searches");
         db.createObjectStore(SAVED_GETALL_STORE_NAME);
+      } else if (currVersion == 8) {
+        if (DEBUG) debug("Make exactTel only contain the value entered by the user");
+        if (!objectStore) {
+          objectStore = aTransaction.objectStore(STORE_NAME);
+        }
+
+        objectStore.openCursor().onsuccess = function(event) {
+          let cursor = event.target.result;
+          if (cursor) {
+            if (cursor.value.properties.tel) {
+              cursor.value.search.exactTel = [];
+              cursor.value.properties.tel.forEach(
+                function(tel) {
+                  let normalized = PhoneNumberUtils.normalize(tel.value.toString());
+                  cursor.value.search.exactTel.push(normalized);
+                }
+              );
+              cursor.update(cursor.value);
+            }
+            cursor.continue();
+          }
+        };
+      } else if (currVersion == 9) {
+        if (DEBUG) debug("Add a telMatch index with national and international numbers");
+        objectStore.createIndex("telMatch", "search.parsedTel", {multiEntry: true});
+        objectStore.openCursor().onsuccess = function(event) {
+          let cursor = event.target.result;
+          if (cursor) {
+            if (cursor.value.properties.tel) {
+              cursor.value.search.parsedTel = [];
+              cursor.value.properties.tel.forEach(
+                function(tel) {
+                  cursor.value.search.parsedTel.push(parsed.nationalNumber);
+                  cursor.value.search.parsedTel.push(PhoneNumberUtils.normalize(parsed.nationalFormat));
+                  cursor.value.search.parsedTel.push(parsed.internationalNumber);
+                  cursor.value.search.parsedTel.push(PhoneNumberUtils.normalize(parsed.internationalFormat));
+                  cursor.value.search.parsedTel.push(PhoneNumberUtils.normalize(tel.value.toString()));
+                }
+              );
+              cursor.update(cursor.value);
+            }
+            cursor.continue();
+          }
+        };
       }
     }
 
@@ -402,7 +446,8 @@ ContactDB.prototype = {
       email:           [],
       category:        [],
       tel:             [],
-      exactTel:        []
+      exactTel:        [],
+      parsedTel:       []
     };
 
     for (let field in aContact.properties) {
@@ -417,9 +462,11 @@ ContactDB.prototype = {
 
               // Chop off the first characters
               let number = aContact.properties[field][i].value;
-              contact.search.exactTel.push(number);
               let search = {};
               if (number) {
+                number = number.toString();
+                contact.search.exactTel.push(PhoneNumberUtils.normalize(number));
+                contact.search.parsedTel.push(PhoneNumberUtils.normalize(number));
                 for (let i = 0; i < number.length; i++) {
                   search[number.substring(i, number.length)] = 1;
                 }
@@ -440,9 +487,14 @@ ContactDB.prototype = {
                     debug("NationalNumber: " + parsedNumber.nationalNumber);
                     debug("NationalFormat: " + parsedNumber.nationalFormat);
                   }
+
+                  contact.search.parsedTel.push(parsedNumber.nationalNumber);
+                  contact.search.parsedTel.push(PhoneNumberUtils.normalize(parsedNumber.nationalFormat));
+                  contact.search.parsedTel.push(parsedNumber.internationalNumber);
+                  contact.search.parsedTel.push(PhoneNumberUtils.normalize(parsedNumber.internationalFormat));
+
                   if (parsedNumber.internationalNumber &&
-                      number.toString() !== parsedNumber.internationalNumber) {
-                    contact.search.exactTel.push(parsedNumber.internationalNumber);
+                      number !== parsedNumber.internationalNumber) {
                     let digits = parsedNumber.internationalNumber.match(/\d/g);
                     if (digits) {
                       digits = digits.join('');
@@ -731,7 +783,7 @@ ContactDB.prototype = {
     if (DEBUG) debug("ContactDB:find val:" + aOptions.filterValue + " by: " + aOptions.filterBy + " op: " + aOptions.filterOp);
     let self = this;
     this.newTxn("readonly", STORE_NAME, function (txn, store) {
-      if (aOptions && (aOptions.filterOp == "equals" || aOptions.filterOp == "contains")) {
+      if (aOptions && (["equals", "contains", "match"].indexOf(aOptions.filterOp) >= 0)) {
         self._findWithIndex(txn, store, aOptions);
       } else {
         self._findAll(txn, store, aOptions);
@@ -775,12 +827,24 @@ ContactDB.prototype = {
         if (DEBUG) debug("Getting index: " + key);
         // case sensitive
         let index = store.index(key);
-        request = index.mozGetAll(options.filterValue, limit);
+        let filterValue = options.filterValue;
+        if (key == "tel") {
+          filterValue = PhoneNumberUtils.normalize(filterValue);
+        }
+        request = index.mozGetAll(filterValue, limit);
+      } else if (options.filterOp == "match") {
+        if (DEBUG) debug("match");
+        if (key != "tel") {
+          dump("ContactDB: 'match' filterOp only works on tel\n");
+          return txn.abort();
+        }
+
+        let index = store.index("telMatch");
+        let normalized = PhoneNumberUtils.normalize(options.filterValue)
+        request = index.mozGetAll(normalized, limit);
       } else {
         // not case sensitive
-        let tmp = typeof options.filterValue == "string"
-                  ? options.filterValue.toLowerCase()
-                  : options.filterValue.toString().toLowerCase();
+        let tmp = options.filterValue.toString().toLowerCase();
         if (key === 'tel') {
           let digits = tmp.match(/\d/g);
           if (digits) {

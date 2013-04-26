@@ -712,3 +712,6 @@ pref("media.webaudio.enabled", true);
 // This needs more tests and stability fixes first, as well as UI.
 pref("media.navigator.enabled", false);
 pref("media.peerconnection.enabled", false);
+
+// Make <audio> and <video> talk to the AudioChannelService.
+pref("media.useAudioChannelService", true);
