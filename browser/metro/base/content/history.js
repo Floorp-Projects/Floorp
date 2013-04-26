@@ -77,7 +77,9 @@ HistoryView.prototype = {
 
   onVisit: function(aURI, aVisitID, aTime, aSessionID,
                     aReferringID, aTransitionType) {
-    this.refreshAndRepopulate();
+    if (!this._inBatch) {
+      this.refreshAndRepopulate();
+    }
   },
 
   onTitleChanged: function(aURI, aPageTitle) {
@@ -110,8 +112,7 @@ HistoryView.prototype = {
   },
 
   onDeleteVisits: function (aURI, aVisitTime, aGUID, aReason, aTransitionType) {
-    if (aReason ==  Ci.nsINavHistoryObserver.REASON_DELETED) {
-      Cu.reportError("got REASON_DELETED");
+    if ((aReason ==  Ci.nsINavHistoryObserver.REASON_DELETED) && !this._inBatch) {
       this.refreshAndRepopulate();
     }
   },
