@@ -751,6 +751,9 @@ pref("dom.experimental_forms", false);
 // Don't enable <input type=range> yet:
 pref("dom.experimental_forms_range", true);
 
+// Enables system messages and activities
+pref("dom.sysmsg.enabled", false);
+
 // Allocation Threshold for Workers
 pref("dom.workers.mem.gc_allocation_threshold_mb", 30);
 
