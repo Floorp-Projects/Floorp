@@ -903,7 +903,15 @@ Java_org_mozilla_gecko_gfx_NativePanZoomController_init(JNIEnv* env, jobject ins
 NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_gfx_NativePanZoomController_handleTouchEvent(JNIEnv* env, jobject instance, jobject event)
 {
-    // FIXME implement this
+    AsyncPanZoomController *controller = nsWindow::GetPanZoomController();
+    if (controller) {
+        AndroidGeckoEvent* wrapper = AndroidGeckoEvent::MakeFromJavaObject(env, event);
+        const MultiTouchInput& input = wrapper->MakeMultiTouchInput(nsWindow::TopWindow());
+        delete wrapper;
+        if (input.mType >= 0) {
+            controller->ReceiveInputEvent(input);
+        }
+    }
 }
 
 NS_EXPORT void JNICALL
@@ -931,7 +939,10 @@ Java_org_mozilla_gecko_gfx_NativePanZoomController_destroy(JNIEnv* env, jobject 
 NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_gfx_NativePanZoomController_notifyDefaultActionPrevented(JNIEnv* env, jobject instance, jboolean prevented)
 {
-    // FIXME implement this
+    AsyncPanZoomController *controller = nsWindow::GetPanZoomController();
+    if (controller) {
+        controller->ContentReceivedTouch(prevented);
+    }
 }
 
 NS_EXPORT jboolean JNICALL

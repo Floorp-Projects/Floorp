@@ -17,6 +17,7 @@
 #include "nsTArray.h"
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/dom/Touch.h"
+#include "InputData.h"
 
 //#define FORCE_ALOG 1
 
@@ -556,6 +557,7 @@ public:
     int Width() { return mWidth; }
     int Height() { return mHeight; }
     nsTouchEvent MakeTouchEvent(nsIWidget* widget);
+    MultiTouchInput MakeMultiTouchInput(nsIWidget* widget);
     void UnionRect(nsIntRect const& aRect);
 
 protected:
