@@ -30,6 +30,7 @@
 #include "mozilla/Likely.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/layers/GeckoContentController.h"
+#include "mozilla/TimeStamp.h"
 
 // Some debug #defines
 // #define DEBUG_ANDROID_EVENTS
@@ -92,6 +93,32 @@ public:
 protected:
     virtual ~nsFilePickerCallback() {}
 };
+
+class DelayedTask {
+public:
+    DelayedTask(Task* aTask, int aDelayMs) {
+        mTask = aTask;
+        mRunTime = TimeStamp::Now() + TimeDuration::FromMilliseconds(aDelayMs);
+    }
+
+    bool IsEarlierThan(DelayedTask *aOther) {
+        return mRunTime < aOther->mRunTime;
+    }
+
+    int64_t MillisecondsToRunTime() {
+        TimeDuration timeLeft = mRunTime - TimeStamp::Now();
+        return (int64_t)timeLeft.ToMilliseconds();
+    }
+
+    Task* GetTask() {
+        return mTask;
+    }
+
+private:
+    Task* mTask;
+    TimeStamp mRunTime;
+};
+
 
 class AndroidBridge : public mozilla::layers::GeckoContentController
 {
@@ -528,6 +555,7 @@ protected:
     jobject mGLControllerObj;
 
     jmethodID jRequestContentRepaint;
+    jmethodID jPostDelayedCallback;
 
     // some convinient types to have around
     jclass jStringClass;
@@ -552,6 +580,11 @@ protected:
 
 private:
     jobject mNativePanZoomController;
+    // This will always be accessed from one thread (the APZC "controller"
+    // thread, which is the Java UI thread), so we don't need to do locking
+    // to touch it
+    nsTArray<DelayedTask*> mDelayedTaskQueue;
+
 public:
     jobject SetNativePanZoomController(jobject obj);
     // GeckoContentController methods
@@ -560,7 +593,8 @@ public:
     void HandleSingleTap(const nsIntPoint& aPoint) MOZ_OVERRIDE;
     void HandleLongTap(const nsIntPoint& aPoint) MOZ_OVERRIDE;
     void SendAsyncScrollDOMEvent(const gfx::Rect& aContentRect, const gfx::Size& aScrollableSize) MOZ_OVERRIDE;
-    void PostDelayedTask(Task* task, int delay_ms) MOZ_OVERRIDE;
+    void PostDelayedTask(Task* aTask, int aDelayMs) MOZ_OVERRIDE;
+    int64_t RunDelayedTasks();
 };
 
 class AutoJObject {

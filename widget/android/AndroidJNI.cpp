@@ -920,6 +920,16 @@ Java_org_mozilla_gecko_gfx_NativePanZoomController_handleMotionEvent(JNIEnv* env
     // FIXME implement this
 }
 
+NS_EXPORT jlong JNICALL
+Java_org_mozilla_gecko_gfx_NativePanZoomController_runDelayedCallback(JNIEnv* env, jobject instance)
+{
+    if (!AndroidBridge::Bridge()) {
+        return -1;
+    }
+
+    return AndroidBridge::Bridge()->RunDelayedTasks();
+}
+
 NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_gfx_NativePanZoomController_destroy(JNIEnv* env, jobject instance)
 {

@@ -457,6 +457,25 @@ Java_org_mozilla_gecko_gfx_NativePanZoomController_handleMotionEvent(JNIEnv * ar
 
 #ifdef JNI_STUBS
 
+typedef jlong (*Java_org_mozilla_gecko_gfx_NativePanZoomController_runDelayedCallback_t)(JNIEnv *, jobject);
+static Java_org_mozilla_gecko_gfx_NativePanZoomController_runDelayedCallback_t f_Java_org_mozilla_gecko_gfx_NativePanZoomController_runDelayedCallback;
+extern "C" NS_EXPORT jlong JNICALL
+Java_org_mozilla_gecko_gfx_NativePanZoomController_runDelayedCallback(JNIEnv * arg0, jobject arg1) {
+    if (!f_Java_org_mozilla_gecko_gfx_NativePanZoomController_runDelayedCallback) {
+        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
+                       "JNI Function called before it was loaded");
+        return 0;
+    }
+    return f_Java_org_mozilla_gecko_gfx_NativePanZoomController_runDelayedCallback(arg0, arg1);
+}
+#endif
+
+#ifdef JNI_BINDINGS
+  xul_dlsym("Java_org_mozilla_gecko_gfx_NativePanZoomController_runDelayedCallback", &f_Java_org_mozilla_gecko_gfx_NativePanZoomController_runDelayedCallback);
+#endif
+
+#ifdef JNI_STUBS
+
 typedef void (*Java_org_mozilla_gecko_gfx_NativePanZoomController_destroy_t)(JNIEnv *, jobject);
 static Java_org_mozilla_gecko_gfx_NativePanZoomController_destroy_t f_Java_org_mozilla_gecko_gfx_NativePanZoomController_destroy;
 extern "C" NS_EXPORT void JNICALL
