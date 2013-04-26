@@ -2440,7 +2440,7 @@ abstract public class GeckoApp
             }
         }
 
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createMotionEvent(event));
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createMotionEvent(event, false));
         return true;
     }
 
