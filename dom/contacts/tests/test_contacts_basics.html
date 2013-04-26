@@ -87,7 +87,7 @@ var properties1 = {
   familyName: ["TestFamilyName","Wagner"],
   givenName: ["Test1","Test2"],
   nickname: "nicktest",
-  tel: [{type: ["work"], value: "123456", carrier: "testCarrier"} , {type: ["home", "fax"], value: "+9-876-5432"}],
+  tel: [{type: ["work"], value: "123456", carrier: "testCarrier"} , {type: ["home", "fax"], value: "+55 (31) 9876-3456"}, {type: ["home"], value: "+49 451 491934"}],
   adr: adr1,
   email: [{type: ["work"], value: "x@y.com"}]
 };
@@ -333,12 +333,12 @@ var steps = [
       checkContacts(createResult1, properties1);
       dump("findResult: " + JSON.stringify(findResult1) + "\n");
       // Some manual testing. Testint the testfunctions
-      // tel: [{type: ["work"], value: "123456", carrier: "testCarrier"} , {type: ["home", "fax"], value: "+9-876-5432"}],
+      // tel: [{type: ["work"], value: "123456", carrier: "testCarrier"} , {type: ["home", "fax"], value: "+55 (31) 9876-3456"}],
       is(findResult1.tel[0].carrier, "testCarrier", "Same Carrier");
       is(findResult1.tel[0].type, "work", "Same type");
       is(findResult1.tel[0].value, "123456", "Same Value");
       is(findResult1.tel[1].type[1], "fax", "Same type");
-      is(findResult1.tel[1].value, "+9-876-5432", "Same Value");
+      is(findResult1.tel[1].value, "+55 (31) 9876-3456", "Same Value");
 
       is(findResult1.adr[0].countryName, "country 1", "Same country");
 
@@ -504,6 +504,117 @@ var steps = [
     req.onerror = onFailure;
   },
   function () {
+    ok(true, "Retrieving by tel exact");
+    var options = {filterBy: ["tel"],
+                   filterOp: "equals",
+                   filterValue: "+55 319 8 7 6 3456"};
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      is(req.result.length, 1, "Found exactly 1 contact.");
+      findResult1 = req.result[0];
+      ok(findResult1.id == sample_id1, "Same ID");
+      checkContacts(createResult1, properties1);
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Retrieving by tel exact with substring");
+    var options = {filterBy: ["tel"],
+                   filterOp: "equals",
+                   filterValue: "3456"};
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      is(req.result.length, 0, "Found no contacts.");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Retrieving by tel exact with substring");
+    var options = {filterBy: ["tel"],
+                   filterOp: "equals",
+                   filterValue: "+55 (31)"};
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      is(req.result.length, 0, "Found no contacts.");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Retrieving by tel match national number");
+    var options = {filterBy: ["tel"],
+                   filterOp: "match",
+                   filterValue: "3198763456"};
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      is(req.result.length, 1, "Found exactly 1 contact.");
+      findResult1 = req.result[0];
+      ok(findResult1.id == sample_id1, "Same ID");
+      checkContacts(createResult1, properties1);
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Retrieving by tel match national format");
+    var options = {filterBy: ["tel"],
+                   filterOp: "match",
+                   filterValue: "0451 491934"};
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      is(req.result.length, 1, "Found exactly 1 contact.");
+      findResult1 = req.result[0];
+      ok(findResult1.id == sample_id1, "Same ID");
+      checkContacts(createResult1, properties1);
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Retrieving by tel match entered number");
+    var options = {filterBy: ["tel"],
+                   filterOp: "match",
+                   filterValue: "123456"};
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      is(req.result.length, 1, "Found exactly 1 contact.");
+      findResult1 = req.result[0];
+      ok(findResult1.id == sample_id1, "Same ID");
+      checkContacts(createResult1, properties1);
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Retrieving by tel match international number");
+    var options = {filterBy: ["tel"],
+                   filterOp: "match",
+                   filterValue: "+55 31 98763456"};
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      is(req.result.length, 1, "Found exactly 1 contact.");
+      findResult1 = req.result[0];
+      ok(findResult1.id == sample_id1, "Same ID");
+      checkContacts(createResult1, properties1);
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Retrieving by match with field other than tel");
+    var options = {filterBy: ["givenName"],
+                   filterOp: "match",
+                   filterValue: "my friends call me 555-4040"};
+    req = mozContacts.find(options);
+    req.onsuccess = onUnwantedSuccess;
+    req.onerror = function() {
+      ok(true, "Failed");
+      next();
+    }
+  },
+  function () {
     ok(true, "Retrieving by substring tel2");
     var options = {filterBy: ["tel"],
                    filterOp: "contains",
@@ -522,7 +633,7 @@ var steps = [
     ok(true, "Retrieving by substring tel3");
     var options = {filterBy: ["tel"],
                    filterOp: "contains",
-                   filterValue: "98765432"};
+                   filterValue: "98763456"};
     req = mozContacts.find(options);
     req.onsuccess = function () {
       is(req.result.length, 1, "Found exactly 1 contact.");

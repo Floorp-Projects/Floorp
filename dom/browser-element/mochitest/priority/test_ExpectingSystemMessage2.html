@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that a regular (not mozapptype=critical) frame that's expecting a system
+message gets priority BACKGROUND_PERCEIVABLE when it's in the background.
+-->
+<head>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="../browserElementTestHelpers.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="application/javascript;version=1.7">
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+browserElementTestHelpers.setEnabledPref(true);
+browserElementTestHelpers.addPermission();
+browserElementTestHelpers.enableProcessPriorityManager();
+SpecialPowers.addPermission("embed-apps", true, document);
+
+// Give our origin permission to open browsers, and remove it when the test is complete.
+var principal = SpecialPowers.wrap(SpecialPowers.getNodePrincipal(document));
+SpecialPowers.addPermission("browser", true, { url: SpecialPowers.wrap(principal.URI).spec,
+                                               appId: principal.appId,
+                                               isInBrowserElement: true });
+
+addEventListener('unload', function() {
+  var principal = SpecialPowers.wrap(SpecialPowers.getNodePrincipal(document));
+  SpecialPowers.removePermission("browser", { url: SpecialPowers.wrap(principal.URI).spec,
+                                              appId: principal.appId,
+                                              isInBrowserElement: true });
+});
+
+function runTest() {
+  var iframe = document.createElement('iframe');
+  iframe.setAttribute('mozbrowser', true);
+  iframe.setAttribute('expecting-system-message', true);
+  iframe.setAttribute('mozapp', 'http://example.org/manifest.webapp');
+
+  iframe.src = browserElementTestHelpers.emptyPage1;
+
+  var childID = null;
+  expectOnlyOneProcessCreated().then(function(chid) {
+    childID = chid;
+    return Promise.all(
+      [expectPriorityChange(childID, 'FOREGROUND'),
+       expectMozbrowserEvent(iframe, 'loadend')]);
+  }).then(function() {
+    var p = expectPriorityChange(childID, 'BACKGROUND_PERCEIVABLE');
+    iframe.setVisible(false);
+    return p;
+  }).then(SimpleTest.finish);
+
+  document.body.appendChild(iframe);
+}
+
+addEventListener('testready', function() {
+  // We don't want this wake lock to time out during the test; if it did, then
+  // we might see BACKGROUND priority instead of BACKGROUND_PERCEIVABLE.  So
+  // set the timeout to a large value.
+  SpecialPowers.pushPrefEnv(
+    {set: [["dom.ipc.systemMessageCPULockTimeoutSec", 99999]]},
+    runTest);
+});
+
+</script>
+</body>
+</html>

@@ -192,6 +192,10 @@ public:
                                       const int32_t& aState,
                                       const int32_t& aMountGeneration);
 
+    virtual bool RecvNotifyProcessPriorityChanged(const hal::ProcessPriority& aPriority);
+    virtual bool RecvMinimizeMemoryUsage();
+    virtual bool RecvCancelMinimizeMemoryUsage();
+
 #ifdef ANDROID
     gfxIntSize GetScreenSize() { return mScreenSize; }
 #endif
@@ -244,6 +248,7 @@ private:
     bool mIsForApp;
     bool mIsForBrowser;
     nsString mProcessName;
+    nsWeakPtr mMemoryMinimizerRunnable;
 
     static ContentChild* sSingleton;
 
