@@ -790,14 +790,7 @@ Element::SetAttributeNode(Attr& aNewAttr, ErrorResult& aError)
 {
   OwnerDoc()->WarnOnceAbout(nsIDocument::eSetAttributeNode);
 
-  nsCOMPtr<nsIDOMAttr> attr;
-  aError = Attributes()->SetNamedItem(&aNewAttr, getter_AddRefs(attr));
-  if (aError.Failed()) {
-    return nullptr;
-  }
-
-  nsRefPtr<Attr> returnAttr = static_cast<Attr*>(attr.get());
-  return returnAttr.forget();
+  return Attributes()->SetNamedItem(aNewAttr, aError);
 }
 
 already_AddRefed<Attr>
@@ -805,22 +798,7 @@ Element::RemoveAttributeNode(Attr& aAttribute,
                              ErrorResult& aError)
 {
   OwnerDoc()->WarnOnceAbout(nsIDocument::eRemoveAttributeNode);
-
-  nsAutoString name;
-
-  aError = aAttribute.GetName(name);
-  if (aError.Failed()) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIDOMAttr> attr;
-  aError = Attributes()->RemoveNamedItem(name, getter_AddRefs(attr));
-  if (aError.Failed()) {
-    return nullptr;
-  }
-
-  nsRefPtr<Attr> returnAttr = static_cast<Attr*>(attr.get());
-  return returnAttr.forget();
+  return Attributes()->RemoveNamedItem(aAttribute.NodeName(), aError);
 }
 
 void
@@ -904,7 +882,7 @@ Element::SetAttributeNodeNS(Attr& aNewAttr,
                             ErrorResult& aError)
 {
   OwnerDoc()->WarnOnceAbout(nsIDocument::eSetAttributeNodeNS);
-  return Attributes()->SetNamedItemNS(&aNewAttr, aError);
+  return Attributes()->SetNamedItemNS(aNewAttr, aError);
 }
 
 already_AddRefed<nsIHTMLCollection>
