@@ -558,7 +558,8 @@ FindBody(JSContext *cx, HandleFunction fun, StableCharPtr chars, size_t length,
     CompileOptions options(cx);
     options.setFileAndLine("internal-findBody", 0)
            .setVersion(fun->nonLazyScript()->getVersion());
-    TokenStream ts(cx, options, chars.get(), length, NULL);
+    AutoKeepAtoms keepAtoms(cx->runtime);
+    TokenStream ts(cx, options, chars.get(), length, NULL, keepAtoms);
     int nest = 0;
     bool onward = true;
     // Skip arguments list.
@@ -1374,7 +1375,8 @@ js::Function(JSContext *cx, unsigned argc, Value *vp)
          * here (duplicate argument names, etc.) will be detected when we
          * compile the function body.
          */
-        TokenStream ts(cx, options, collected_args.get(), args_length, /* strictModeGetter = */ NULL);
+        TokenStream ts(cx, options, collected_args.get(), args_length,
+                       /* strictModeGetter = */ NULL, keepAtoms);
 
         /* The argument string may be empty or contain no tokens. */
         TokenKind tt = ts.getToken();

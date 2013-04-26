@@ -1940,7 +1940,7 @@ class AutoUnlockGC
     ~AutoUnlockGC() { JS_LOCK_GC(rt); }
 };
 
-class AutoKeepAtoms
+class MOZ_STACK_CLASS AutoKeepAtoms
 {
     JSRuntime *rt;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
