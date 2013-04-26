@@ -747,7 +747,7 @@ function touch(target, duration, xt, yt, then) {
 
 /**
  * This function generates the coordinates of the element
- * @param 'x0', 'y0', 'x1', and 'y1' are the relative to the viewport.
+ * @param 'x0', 'y0', 'x1', and 'y1' are the relative to the target.
  *        If they are not specified, then the center of the target is used.
  */
 function coordinates(target, x0, y0, x1, y1) {
