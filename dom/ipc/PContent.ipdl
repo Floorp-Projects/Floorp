@@ -27,6 +27,7 @@ include URIParams;
 include "mozilla/chrome/RegistryMessageUtils.h";
 include "mozilla/dom/PermissionMessageUtils.h";
 include "mozilla/dom/TabMessageUtils.h";
+include "mozilla/HalTypes.h";
 include "mozilla/layout/RenderFrameUtils.h";
 include "mozilla/net/NeckoMessageUtils.h";
 include "nsGeoPositionIPCSerialiser.h";
@@ -44,6 +45,7 @@ using mozilla::null_t;
 using mozilla::void_t;
 using mozilla::dom::AudioChannelType;
 using mozilla::dom::NativeThreadId;
+using mozilla::hal::ProcessPriority;
 using mozilla::layout::ScrollingBehavior;
 using gfxIntSize;
 
@@ -348,6 +350,10 @@ child:
 
     FileSystemUpdate(nsString fsName, nsString mountPoint, int32_t fsState,
                      int32_t mountGeneration);
+
+    NotifyProcessPriorityChanged(ProcessPriority priority);
+    MinimizeMemoryUsage();
+    CancelMinimizeMemoryUsage();
 
 parent:
     /**

@@ -16,7 +16,6 @@ EXPORTS += [
 
 EXPORTS.mozilla.dom.ipc += [
     'Blob.h',
-    'ProcessPriorityManager.h',
     'nsIRemoteBlob.h',
 ]
 
@@ -36,5 +35,7 @@ EXPORTS.mozilla.dom += [
 
 EXPORTS.mozilla += [
     'AppProcessChecker.h',
+    'PreallocatedProcessManager.h',
+    'ProcessPriorityManager.h',
 ]
 

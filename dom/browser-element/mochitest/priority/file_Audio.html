@@ -1,0 +1,19 @@
+<html>
+<body>
+
+<script>
+addEventListener('load', function() {
+  setTimeout(function() {
+    var a = document.getElementById('audio');
+    a.onplay = function() {
+      alert('onplay');
+    };
+    a.play();
+  }, 0);
+});
+</script>
+
+<audio id='audio' loop src='silence.ogg'>
+
+</body>
+</html>
