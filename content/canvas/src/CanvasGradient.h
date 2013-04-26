@@ -10,6 +10,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/CanvasRenderingContext2DBinding.h"
 #include "mozilla/gfx/2D.h"
+#include "nsWrapperCache.h"
 
 #define NS_CANVASGRADIENTAZURE_PRIVATE_IID \
     {0x28425a6a, 0x90e0, 0x4d42, {0x9c, 0x75, 0xff, 0x60, 0x09, 0xb3, 0x10, 0xa8}}
@@ -17,10 +18,13 @@
 namespace mozilla {
 namespace dom {
 
-class CanvasGradient : public nsISupports
+class CanvasGradient : public nsISupports,
+                       public nsWrapperCache
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_CANVASGRADIENTAZURE_PRIVATE_IID)
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(CanvasGradient)
 
   enum Type
   {
@@ -46,8 +50,6 @@ public:
     return mStops;
   }
 
-  NS_DECL_ISUPPORTS
-
   // WebIDL
   void AddColorStop(float offset, const nsAString& colorstr, ErrorResult& rv);
 
@@ -56,10 +58,20 @@ public:
     return CanvasGradientBinding::Wrap(aCx, aScope, this);
   }
 
-protected:
-  CanvasGradient(Type aType) : mType(aType)
-  {}
+  CanvasRenderingContext2D* GetParentObject()
+  {
+    return mContext;
+  }
 
+protected:
+  CanvasGradient(CanvasRenderingContext2D* aContext, Type aType)
+    : mContext(aContext)
+    , mType(aType)
+  {
+    SetIsDOMBinding();
+  }
+
+  nsRefPtr<CanvasRenderingContext2D> mContext;
   nsTArray<mozilla::gfx::GradientStop> mRawStops;
   mozilla::RefPtr<mozilla::gfx::GradientStops> mStops;
   Type mType;
