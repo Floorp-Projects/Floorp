@@ -15,6 +15,10 @@
   <button id="mozLinkPos" style="position:absolute;left:0px;top:355px;" type="button" allowevents=true>Button2</button>
   <!-- "mozLinkCopy" listens for a touchdown and touchup -->
   <button id="mozLinkCopy" style="position:absolute;left:0px;top:455px;" type="button" allowevents=true>Button3</button>
+  <!-- "mozLinkScroll" listens for scroll -->
+  <button id="mozLinkScroll" style="position:absolute;left:0px;top:655px;" type="button" allowevents=true>Button8</button>
+  <!-- "mozLinkScrollStart" listens for scroll -->
+  <button id="mozLinkScrollStart" style="position:absolute;left:0px;top:405px;" type="button" allowevents=true>Button9</button>
   <!-- "mozLinkStart" and "mozLinkEnd" work together to perform touchdown on mozLinkStart, horizontal move and then touchup on mozLinkEnd -->  
   <button id="mozLinkStart" style="position:absolute;left:10px;top:200px;" type="button" allowevents=true>Press</button>
   <button id="mozLinkEnd" style="position:absolute;left:140px;top:200px;" type="button" allowevents=true>Release</button>
@@ -32,6 +36,7 @@
     var fourth = document.getElementById("mozLinkCopy2");
     var fifth = document.getElementById("mozLinkCancel");
     var sixth = document.getElementById("mozMouse");
+    var seventh = document.getElementById("mozLinkScrollStart");
     // touchmove and touchend must be performed on the same element as touchstart
     // here is press for vertical move
     press.addEventListener("touchstart", function(){changePressText("mozLink")}, false);
@@ -59,6 +64,9 @@
     sixth.addEventListener("mousedown", function(){changeMouseText("MouseDown")}, false);
     sixth.addEventListener("mouseup", function(){changeMouseText("MouseUp")}, false);
     sixth.addEventListener("click", function(){changeMouseText("MouseClick")}, false);
+    // here is seventh for a scroll
+    seventh.addEventListener("touchstart", function(){changePressText("mozLinkScrollStart")}, false);
+    seventh.addEventListener("touchend", function(){changeScrollText("mozLinkScroll")}, false);
     function changeMouseText(strId) {
       var mouse = document.getElementById("mozMouse");
       switch(strId) {
@@ -193,13 +201,23 @@
       }
     }
 
+    function changeScrollText(strId) {
+      var seventh = document.getElementById(strId);
+      if (elementInViewport(seventh)) {
+        seventh.innerHTML = "End";
+      }
+      else {
+        seventh.innerHTML = "Error";
+      }
+    }
+
     function changeTimePress() {
       var fourth = document.getElementById("mozLinkCopy2");
       var d = new Date();
       fourth.innerHTML = d.getTime();
       var newButton = document.createElement("button");
       newButton.id = "delayed";
-      newButton.setAttribute("style", "position:absolute;left:80px;top:105px;");
+      newButton.setAttribute("style", "position:absolute;left:220px;top:455px;");
       var content = document.createTextNode("Button6");
       newButton.appendChild(content);
       document.body.appendChild(newButton);
@@ -223,6 +241,22 @@
     function onContextMenuChange() {
       var context = document.getElementById("mozLinkCopy");
       context.innerHTML = "Context";
+    }
+
+    function elementInViewport(el) {
+      var top = el.offsetTop;
+      var left = el.offsetLeft;
+      var width = el.offsetWidth;
+      var height = el.offsetHeight;
+      while(el.offsetParent) {
+        el = el.offsetParent;
+        top += el.offsetTop;
+        left += el.offsetLeft;
+      }
+      return (top >= window.pageYOffset &&
+              left >= window.pageXOffset &&
+              (top + height) <= (window.pageYOffset + window.innerHeight) &&
+              (left + width) <= (window.pageXOffset + window.innerWidth));
     }
   </script>
 </body>
