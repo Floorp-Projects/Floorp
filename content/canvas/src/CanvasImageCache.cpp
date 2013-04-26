@@ -13,7 +13,6 @@
 #include "nsTHashtable.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "nsContentUtils.h"
-#include "mozilla/Preferences.h"
 
 namespace mozilla {
 
@@ -42,8 +41,6 @@ struct ImageCacheEntryData {
   {}
 
   nsExpirationState* GetExpirationState() { return &mState; }
-
-  size_t SizeInBytes() { return mSize.width * mSize.height * 4; }
 
   // Key
   nsRefPtr<Element> mImage;
@@ -82,41 +79,17 @@ public:
   nsAutoPtr<ImageCacheEntryData> mData;
 };
 
-static bool sPrefsInitialized = false;
-static int32_t sCanvasImageCacheLimit = 0;
-
-class ImageCache MOZ_FINAL : public nsExpirationTracker<ImageCacheEntryData,4>,
-                             public nsIObserver {
+class ImageCache MOZ_FINAL : public nsExpirationTracker<ImageCacheEntryData,4> {
 public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
-
   // We use 3 generations of 1 second each to get a 2-3 seconds timeout.
   enum { GENERATION_MS = 1000 };
   ImageCache()
     : nsExpirationTracker<ImageCacheEntryData,4>(GENERATION_MS)
-    , mSize(0)
   {
-    if (!sPrefsInitialized) {
-      sPrefsInitialized = true;
-      Preferences::AddIntVarCache(&sCanvasImageCacheLimit, "canvas.image.cache.limit", 0);
-    }
     mCache.Init();
   }
   ~ImageCache() {
     AgeAllGenerations();
-  }
-
-  void AddObject(ImageCacheEntryData* aObject)
-  {
-    nsExpirationTracker<ImageCacheEntryData,4>::AddObject(aObject);
-    mSize += aObject->SizeInBytes();
-  }
-
-  void RemoveObject(ImageCacheEntryData* aObject)
-  {
-    nsExpirationTracker<ImageCacheEntryData,4>::RemoveObject(aObject);
-    mSize -= aObject->SizeInBytes();
   }
 
   virtual void NotifyExpired(ImageCacheEntryData* aObject)
@@ -127,23 +100,9 @@ public:
   }
 
   nsTHashtable<ImageCacheEntry> mCache;
-  size_t mSize;
 };
 
 static ImageCache* gImageCache = nullptr;
-
-NS_IMPL_ISUPPORTS1(ImageCache, nsIObserver)
-
-NS_IMETHODIMP
-ImageCache::Observe(nsISupports *aSubject,
-                    const char *aTopic,
-                    const PRUnichar *aData)
-{
-  if (strcmp(aTopic, "memory-pressure") == 0) {
-    AgeAllGenerations();
-  }
-  return NS_OK;
-}
 
 class CanvasImageCacheShutdownObserver MOZ_FINAL : public nsIObserver
 {
@@ -161,9 +120,6 @@ CanvasImageCache::NotifyDrawImage(Element* aImage,
 {
   if (!gImageCache) {
     gImageCache = new ImageCache();
-    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-    if (os)
-      os->AddObserver(gImageCache, "memory-pressure", false);
     nsContentUtils::RegisterShutdownObserver(new CanvasImageCacheShutdownObserver());
   }
 
@@ -184,13 +140,6 @@ CanvasImageCache::NotifyDrawImage(Element* aImage,
     entry->mData->mSurface = aSurface;
     entry->mData->mSize = aSize;
   }
-
-  if (!sCanvasImageCacheLimit)
-    return;
-
-  // Expire the image cache early if its larger than we want it to be.
-  while (gImageCache->mSize > size_t(sCanvasImageCacheLimit))
-    gImageCache->AgeOneGeneration();
 }
 
 gfxASurface*
