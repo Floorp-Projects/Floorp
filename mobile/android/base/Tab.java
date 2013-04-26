@@ -36,6 +36,7 @@ public class Tab {
     private final int mId;
     private long mLastUsed;
     private String mUrl;
+    private String mBaseDomain;
     private String mUserSearch;
     private String mTitle;
     private Bitmap mFavicon;
@@ -77,6 +78,7 @@ public class Tab {
         mId = id;
         mLastUsed = 0;
         mUrl = url;
+        mBaseDomain = "";
         mUserSearch = "";
         mExternal = external;
         mParentId = parentId;
@@ -152,6 +154,10 @@ public class Tab {
         }
 
         return mUrl;
+    }
+
+    public String getBaseDomain() {
+        return mBaseDomain;
     }
 
     public Bitmap getFavicon() {
@@ -566,6 +572,7 @@ public class Tab {
         updateUserSearch(message.getString("userSearch"));
 
         setDocumentURI(message.getString("documentURI"));
+        mBaseDomain = message.optString("baseDomain");
         if (message.getBoolean("sameDocument")) {
             // We can get a location change event for the same document with an anchor tag
             // Notify listeners so that buttons like back or forward will update themselves
