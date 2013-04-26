@@ -7,7 +7,7 @@
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test" +
                  "/test-bug-782653-css-errors.html";
 
-let nodes, hud, SEC;
+let nodes, hud, StyleEditorUI;
 
 function test()
 {
@@ -23,7 +23,7 @@ function testViewSource(aHud)
   hud = aHud;
 
   registerCleanupFunction(function() {
-    nodes = hud = SEC = null;
+    nodes = hud = StyleEditorUI = null;
   });
 
   let selector = ".webconsole-msg-cssparser .webconsole-location";
@@ -41,7 +41,16 @@ function testViewSource(aHud)
 
       let target = TargetFactory.forTab(gBrowser.selectedTab);
       let toolbox = gDevTools.getToolbox(target);
-      toolbox.once("styleeditor-selected", onStyleEditorReady);
+      toolbox.once("styleeditor-selected", (event, panel) => {
+        StyleEditorUI = panel.UI;
+
+        let count = 0;
+        StyleEditorUI.on("editor-added", function() {
+          if (++count == 2) {
+            onStyleEditorReady(panel);
+          }
+        });
+      });
 
       EventUtils.sendMouseEvent({ type: "click" }, nodes[0]);
     },
@@ -49,43 +58,26 @@ function testViewSource(aHud)
   });
 }
 
-function onStyleEditorReady(aEvent, aPanel)
+function onStyleEditorReady(aPanel)
 {
-  info(aEvent + " event fired");
-
-  SEC = aPanel.styleEditorChrome;
   let win = aPanel.panelWindow;
   ok(win, "Style Editor Window is defined");
-  ok(SEC, "Style Editor Chrome is defined");
-
-  function sheetForNode(aNode)
-  {
-    let href = aNode.getAttribute("title");
-    let sheet, i = 0;
-    while((sheet = content.document.styleSheets[i++])) {
-      if (sheet.href == href) {
-        return sheet;
-      }
-    }
-    return null;
-  }
+  ok(StyleEditorUI, "Style Editor UI is defined");
 
   waitForFocus(function() {
     info("style editor window focused");
 
-    let sheet = sheetForNode(nodes[0]);
-    ok(sheet, "sheet found");
+    let href = nodes[0].getAttribute("title");
     let line = nodes[0].sourceLine;
     ok(line, "found source line");
 
-    checkStyleEditorForSheetAndLine(sheet, line - 1, function() {
+    checkStyleEditorForSheetAndLine(href, line - 1, function() {
       info("first check done");
 
       let target = TargetFactory.forTab(gBrowser.selectedTab);
       let toolbox = gDevTools.getToolbox(target);
 
-      let sheet = sheetForNode(nodes[1]);
-      ok(sheet, "sheet found");
+      let href = nodes[1].getAttribute("title");
       let line = nodes[1].sourceLine;
       ok(line, "found source line");
 
@@ -95,7 +87,7 @@ function onStyleEditorReady(aEvent, aPanel)
         toolbox.once("styleeditor-selected", function(aEvent) {
           info(aEvent + " event fired");
 
-          checkStyleEditorForSheetAndLine(sheet, line - 1, function() {
+          checkStyleEditorForSheetAndLine(href, line - 1, function() {
             info("second check done");
             finishTest();
           });
@@ -107,15 +99,15 @@ function onStyleEditorReady(aEvent, aPanel)
   }, win);
 }
 
-function checkStyleEditorForSheetAndLine(aStyleSheet, aLine, aCallback)
+function checkStyleEditorForSheetAndLine(aHref, aLine, aCallback)
 {
   let foundEditor = null;
   waitForSuccess({
     name: "style editor for stylesheet",
     validatorFn: function()
     {
-      for (let editor of SEC.editors) {
-        if (editor.styleSheet == aStyleSheet) {
+      for (let editor of StyleEditorUI.editors) {
+        if (editor.styleSheet.href == aHref) {
           foundEditor = editor;
           return true;
         }
@@ -136,7 +128,7 @@ function performLineCheck(aEditor, aLine, aCallback)
   {
     is(aEditor.sourceEditor.getCaretPosition().line, aLine,
        "correct line is selected");
-    is(SEC.selectedStyleSheetIndex, aEditor.styleSheetIndex,
+    is(StyleEditorUI.selectedStyleSheetIndex, aEditor.styleSheet.styleSheetIndex,
        "correct stylesheet is selected in the editor");
 
     aCallback && executeSoon(aCallback);
@@ -150,7 +142,8 @@ function performLineCheck(aEditor, aLine, aCallback)
     },
     successFn: checkForCorrectState,
     failureFn: function() {
-      info("selectedStyleSheetIndex " + SEC.selectedStyleSheetIndex + " expected " + aEditor.styleSheetIndex);
+      info("selectedStyleSheetIndex " + StyleEditorUI.selectedStyleSheetIndex
+           + " expected " + aEditor.styleSheet.styleSheetIndex);
       finishTest();
     },
   });
