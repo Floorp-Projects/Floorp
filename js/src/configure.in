@@ -234,13 +234,16 @@ MOZJS_MINOR_VERSION=`echo $MOZILLA_VERSION | sed "s|^[0-9]*\.\([0-9]*\).*|\1|"`
 MOZJS_PATCH_VERSION=`echo $MOZILLA_VERSION | sed "s|^[0-9]*\.[0-9]*[^0-9]*||"`
 IS_ALPHA=`echo $MOZILLA_VERSION | grep [ab]`
 
-if test -n "$JS_STANDALONE"; then
-JS_SHELL_NAME=js$MOZJS_MAJOR_VERSION
-JS_CONFIG_NAME=js$MOZJS_MAJOR_VERSION-config
-else
+dnl XXX in a temporary bid to avoid developer anger at renaming files
+dnl XXX before "js" symlinks exist, don't change names.
+dnl
+dnl if test -n "$JS_STANDALONE"; then
+dnl JS_SHELL_NAME=js$MOZJS_MAJOR_VERSION
+dnl JS_CONFIG_NAME=js$MOZJS_MAJOR_VERSION-config
+dnl else
 JS_SHELL_NAME=js
 JS_CONFIG_NAME=js-config
-fi
+dnl fi
 
 changequote([,])
 if test -n "$IS_ALPHA"; then
