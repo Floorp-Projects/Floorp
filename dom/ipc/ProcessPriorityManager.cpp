@@ -28,6 +28,7 @@
 #include "nsIDOMDocument.h"
 #include "nsPIDOMWindow.h"
 #include "StaticPtr.h"
+#include "nsIMozBrowserFrame.h"
 #include "nsIObserver.h"
 #include "nsITimer.h"
 #include "nsPrintfCString.h"
@@ -228,6 +229,7 @@ public:
   const nsAutoCString& NameWithComma();
 
   bool HasAppType(const char* aAppType);
+  bool IsExpectingSystemMessage();
 
   void OnAudioChannelProcessChanged(nsISupports* aSubject);
   void OnRemoteBrowserFrameShown(nsISupports* aSubject);
@@ -702,6 +704,27 @@ ParticularProcessPriorityManager::HasAppType(const char* aAppType)
   return false;
 }
 
+bool
+ParticularProcessPriorityManager::IsExpectingSystemMessage()
+{
+  const InfallibleTArray<PBrowserParent*>& browsers =
+    mContentParent->ManagedPBrowserParent();
+  for (uint32_t i = 0; i < browsers.Length(); i++) {
+    TabParent* tp = static_cast<TabParent*>(browsers[i]);
+    nsCOMPtr<nsIDOMElement> ownerElement = tp->GetOwnerElement();
+    nsCOMPtr<nsIMozBrowserFrame> bf = do_QueryInterface(ownerElement);
+    if (!bf) {
+      continue;
+    }
+
+    if (bf->GetIsExpectingSystemMessage()) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 ProcessPriority
 ParticularProcessPriorityManager::ComputePriority()
 {
@@ -722,6 +745,11 @@ ParticularProcessPriorityManager::ComputePriority()
 
   if (isVisible) {
     return PROCESS_PRIORITY_FOREGROUND;
+  }
+
+  if ((mHoldsCPUWakeLock || mHoldsHighPriorityWakeLock) &&
+      IsExpectingSystemMessage()) {
+    return PROCESS_PRIORITY_BACKGROUND_PERCEIVABLE;
   }
 
   AudioChannelService* service = AudioChannelService::GetAudioChannelService();
