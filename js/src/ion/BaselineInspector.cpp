@@ -128,16 +128,28 @@ CanUseDoubleCompare(ICStub::Kind kind)
     return kind == ICStub::Compare_Double || kind == ICStub::Compare_NumberWithUndefined;
 }
 
+// Whether a baseline stub kind is suitable for an int32 comparison that
+// converts its operands to int32.
+static bool
+CanUseInt32Compare(ICStub::Kind kind)
+{
+    return kind == ICStub::Compare_Int32 || kind == ICStub::Compare_Int32WithBoolean;
+}
+
 MCompare::CompareType
 BaselineInspector::expectedCompareType(jsbytecode *pc)
 {
     ICStub::Kind kind = monomorphicStubKind(pc);
 
+    if (CanUseInt32Compare(kind))
+        return MCompare::Compare_Int32;
     if (CanUseDoubleCompare(kind))
         return MCompare::Compare_Double;
 
     ICStub::Kind first, second;
     if (dimorphicStubKind(pc, &first, &second)) {
+        if (CanUseInt32Compare(first) && CanUseInt32Compare(second))
+            return MCompare::Compare_Int32;
         if (CanUseDoubleCompare(first) && CanUseDoubleCompare(second))
             return MCompare::Compare_Double;
     }
