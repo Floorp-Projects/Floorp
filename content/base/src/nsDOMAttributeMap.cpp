@@ -11,6 +11,7 @@
 
 #include "mozilla/dom/Attr.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/MozNamedAttrMapBinding.h"
 #include "nsAttrName.h"
 #include "nsContentUtils.h"
 #include "nsError.h"
@@ -31,6 +32,7 @@ nsDOMAttributeMap::nsDOMAttributeMap(Element* aContent)
   // We don't add a reference to our content. If it goes away,
   // we'll be told to drop our reference
   mAttributeCache.Init();
+  SetIsDOMBinding();
 }
 
 /**
@@ -59,6 +61,7 @@ nsDOMAttributeMap::DropReference()
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMAttributeMap)
   tmp->DropReference();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 
@@ -76,18 +79,17 @@ TraverseMapEntry(nsAttrHashKey::KeyType aKey, nsRefPtr<Attr>& aData,
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMAttributeMap)
   tmp->mAttributeCache.Enumerate(TraverseMapEntry, &cb);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-DOMCI_DATA(MozNamedAttrMap, nsDOMAttributeMap)
+NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(nsDOMAttributeMap)
 
 // QueryInterface implementation for nsDOMAttributeMap
 NS_INTERFACE_TABLE_HEAD(nsDOMAttributeMap)
-  NS_OFFSET_AND_INTERFACE_TABLE_BEGIN(nsDOMAttributeMap)
-    NS_INTERFACE_TABLE_ENTRY(nsDOMAttributeMap, nsIDOMMozNamedAttrMap)
-  NS_OFFSET_AND_INTERFACE_TABLE_END
-  NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
+  NS_INTERFACE_TABLE1(nsDOMAttributeMap, nsIDOMMozNamedAttrMap)
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsDOMAttributeMap)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MozNamedAttrMap)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMAttributeMap)
@@ -517,4 +519,10 @@ nsDOMAttributeMap::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
 
   // NB: mContent is non-owning and thus not counted.
   return n;
+}
+
+/* virtual */ JSObject*
+nsDOMAttributeMap::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+{
+  return MozNamedAttrMapBinding::Wrap(aCx, aScope, this);
 }
