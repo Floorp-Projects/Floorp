@@ -178,10 +178,34 @@ Object.defineProperty(OS.Shared, "DEBUG", {
     }
 });
 
+// Observer topics used for monitoring shutdown
+const WEB_WORKERS_SHUTDOWN_TOPIC = "web-workers-shutdown";
+const TEST_WEB_WORKERS_SHUTDOWN_TOPIC = "test.osfile.web-workers-shutdown";
+
+// Preference used to configure test shutdown observer.
+const PREF_OSFILE_TEST_SHUTDOWN_OBSERVER =
+  "toolkit.osfile.test.shutdown.observer";
+
+/**
+ * Safely attempt removing a test shutdown observer.
+ */
+let removeTestObserver = function removeTestObserver() {
+  try {
+    Services.obs.removeObserver(webWorkersShutdownObserver,
+      TEST_WEB_WORKERS_SHUTDOWN_TOPIC);
+  } catch (ex) {
+    // There was no observer to remove.
+  }
+};
+
 /**
  * An observer function to be used to monitor web-workers-shutdown events.
  */
-let webWorkersShutdownObserver = function webWorkersShutdownObserver() {
+let webWorkersShutdownObserver = function webWorkersShutdownObserver(aSubject, aTopic) {
+  if (aTopic == WEB_WORKERS_SHUTDOWN_TOPIC) {
+    Services.obs.removeObserver(webWorkersShutdownObserver, WEB_WORKERS_SHUTDOWN_TOPIC);
+    removeTestObserver();
+  }
   // Send a "System_shutdown" message to the worker.
   Scheduler.post("System_shutdown").then(function onSuccess(opened) {
     let msg = "";
@@ -200,14 +224,32 @@ let webWorkersShutdownObserver = function webWorkersShutdownObserver() {
   });
 };
 
-// Attaching an observer listening to the "web-workers-shutdown".
-Services.obs.addObserver(webWorkersShutdownObserver, "web-workers-shutdown",
-  false);
-// Attaching the same observer listening to the
-// "test.osfile.web-workers-shutdown".
-// Note: This is used for testing purposes.
 Services.obs.addObserver(webWorkersShutdownObserver,
-  "test.osfile.web-workers-shutdown", false);
+  WEB_WORKERS_SHUTDOWN_TOPIC, false);
+
+// Attaching an observer for PREF_OSFILE_TEST_SHUTDOWN_OBSERVER to enable or
+// disable the test shutdown event observer.
+// Note: By default the PREF_OSFILE_TEST_SHUTDOWN_OBSERVER is unset.
+// Note: This is meant to be used for testing purposes only.
+Services.prefs.addObserver(PREF_OSFILE_TEST_SHUTDOWN_OBSERVER,
+  function prefObserver() {
+    let addObserver;
+    try {
+      addObserver = Services.prefs.getBoolPref(
+        PREF_OSFILE_TEST_SHUTDOWN_OBSERVER);
+    } catch (x) {
+      // In case PREF_OSFILE_TEST_SHUTDOWN_OBSERVER was cleared.
+      addObserver = false;
+    }
+    if (addObserver) {
+      // Attaching an observer listening to the TEST_WEB_WORKERS_SHUTDOWN_TOPIC.
+      Services.obs.addObserver(webWorkersShutdownObserver,
+        TEST_WEB_WORKERS_SHUTDOWN_TOPIC, false);
+    } else {
+      // Removing the observer.
+      removeTestObserver();
+    }
+  }, false);
 
 /**
  * Representation of a file, with asynchronous methods.
