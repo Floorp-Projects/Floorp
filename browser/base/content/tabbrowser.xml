@@ -1262,6 +1262,7 @@
         <parameter name="aAllowThirdPartyFixup"/>
         <body>
           <![CDATA[
+            const NS_XUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
             var aFromExternal;
             var aRelatedToCurrent;
             var aSkipAnimation;
@@ -1285,9 +1286,7 @@
             if (this.mCurrentTab.owner)
               this.mCurrentTab.owner = null;
 
-            var t = document.createElementNS(
-              "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                                             "tab");
+            var t = document.createElementNS(NS_XUL, "tab");
 
             var uriIsAboutBlank = !aURI || aURI == "about:blank";
 
@@ -1336,33 +1335,27 @@
             b.setAttribute("autoscrollpopup", this._autoScrollPopup.id);
 
             // Create the browserStack container
-            var stack = document.createElementNS(
-                                    "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                                    "stack");
+            var stack = document.createElementNS(NS_XUL, "stack");
             stack.className = "browserStack";
             stack.appendChild(b);
             stack.setAttribute("flex", "1");
 
             // Create the browserContainer
-            var browserContainer = document.createElementNS(
-                                    "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                                    "vbox");
+            var browserContainer = document.createElementNS(NS_XUL, "vbox");
             browserContainer.className = "browserContainer";
             browserContainer.appendChild(stack);
             browserContainer.setAttribute("flex", "1");
 
             // Create the sidebar container
-            var browserSidebarContainer = document.createElementNS(
-                                      "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                                      "hbox");
+            var browserSidebarContainer = document.createElementNS(NS_XUL,
+                                                                   "hbox");
             browserSidebarContainer.className = "browserSidebarContainer";
             browserSidebarContainer.appendChild(browserContainer);
             browserSidebarContainer.setAttribute("flex", "1");
 
             // Add the Message and the Browser to the box
-            var notificationbox = document.createElementNS(
-                                    "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                                    "notificationbox");
+            var notificationbox = document.createElementNS(NS_XUL,
+                                                           "notificationbox");
             notificationbox.setAttribute("flex", "1");
             notificationbox.appendChild(browserSidebarContainer);
 
