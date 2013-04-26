@@ -6,6 +6,7 @@
 #include "mozilla/Util.h"
 #include "mozilla/layers/CompositorChild.h"
 #include "mozilla/layers/CompositorParent.h"
+#include "mozilla/layers/AsyncPanZoomController.h"
 
 #include <android/log.h>
 #include <dlfcn.h>
@@ -225,6 +226,9 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jclass glControllerClass = jEnv->FindClass("org/mozilla/gecko/gfx/GLController");
     jProvideEGLSurfaceMethod = jEnv->GetMethodID(glControllerClass, "provideEGLSurface",
                                                   "()Ljavax/microedition/khronos/egl/EGLSurface;");
+
+    jclass nativePanZoomControllerClass = jEnv->FindClass("org/mozilla/gecko/gfx/NativePanZoomController");
+    jRequestContentRepaint = jEnv->GetMethodID(nativePanZoomControllerClass, "requestContentRepaint", "(FFFFF)V");
 
     jclass eglClass = jEnv->FindClass("com/google/android/gles_jni/EGLSurfaceImpl");
     if (eglClass) {
@@ -2719,7 +2723,21 @@ AndroidBridge::SetNativePanZoomController(jobject obj)
 void
 AndroidBridge::RequestContentRepaint(const mozilla::layers::FrameMetrics& aFrameMetrics)
 {
-    // FIXME implement this
+    ALOG_BRIDGE("AndroidBridge::RequestContentRepaint");
+    JNIEnv* env = GetJNIForThread();    // called on the compositor thread
+    if (!env || !mNativePanZoomController) {
+        return;
+    }
+
+    float resolution = mozilla::layers::AsyncPanZoomController::CalculateResolution(aFrameMetrics).width;
+    float dpX = (aFrameMetrics.mDisplayPort.x + aFrameMetrics.mScrollOffset.x) * resolution;
+    float dpY = (aFrameMetrics.mDisplayPort.y + aFrameMetrics.mScrollOffset.y) * resolution;
+    float dpW = aFrameMetrics.mDisplayPort.width * resolution;
+    float dpH = aFrameMetrics.mDisplayPort.height * resolution;
+
+    AutoLocalJNIFrame jniFrame(env, 0);
+    env->CallVoidMethod(mNativePanZoomController, jRequestContentRepaint,
+        dpX, dpY, dpW, dpH, resolution);
 }
 
 void
