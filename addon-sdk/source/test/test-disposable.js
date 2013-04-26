@@ -188,4 +188,38 @@ exports["test disposables that throw"] = function(assert) {
   assert.equal(disposals, 0, "no disposal if constructor threw");
 }
 
+exports["test multiple destroy"] = function(assert) {
+  let loader = Loader(module);
+  let { Disposable } = loader.require("sdk/core/disposable");
+
+  let disposals = 0
+
+  let Foo = Class({
+    extends: Disposable,
+    dispose: function dispose() {
+      disposals = disposals + 1
+    }
+  })
+
+  let foo1 = Foo();
+  let foo2 = Foo();
+  let foo3 = Foo();
+
+  assert.equal(disposals, 0, "no disposals yet");
+
+  foo1.destroy();
+  assert.equal(disposals, 1, "disposed properly");
+  foo1.destroy();
+  assert.equal(disposals, 1, "didn't attempt to dispose twice");
+
+  foo2.destroy();
+  assert.equal(disposals, 2, "other instances still dispose fine");
+  foo2.destroy();
+  assert.equal(disposals, 2, "but not twice");
+
+  loader.unload();
+
+  assert.equal(disposals, 3, "unload only disposed the remaining instance");
+}
+
 require('test').run(exports);

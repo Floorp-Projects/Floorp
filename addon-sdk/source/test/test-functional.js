@@ -2,9 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+
 const { setTimeout } = require('sdk/timers');
 const utils = require('sdk/lang/functional');
-const { invoke, defer, curry, compose, memoize, once, delay, wrap } = utils;
+const { invoke, defer, partial, compose, memoize, once, delay, wrap } = utils;
+const { LoaderWithHookedConsole } = require('sdk/test/loader');
 
 exports['test forwardApply'] = function(assert) {
   function sum(b, c) this.a + b + c
@@ -29,17 +31,33 @@ exports['test deferred function'] = function(assert, done) {
   nextTurn = true;
 };
 
+exports['test partial function'] = function(assert) {
+  function sum(b, c) this.a + b + c;
+
+  let foo = { a : 5 };
+
+  foo.sum7 = partial(sum, 7);
+  foo.sum8and4 = partial(sum, 8, 4);
+
+  assert.equal(foo.sum7(2), 14, 'partial one arguments works');
+
+  assert.equal(foo.sum8and4(), 17, 'partial both arguments works');
+};
+
 exports['test curry function'] = function(assert) {
+  let { loader, messages } = LoaderWithHookedConsole(module);
+  let { curry } = loader.require('sdk/lang/functional');
+
   function sum(b, c) this.a + b + c;
 
   let foo = { a : 5 };
 
   foo.sum7 = curry(sum, 7);
-  foo.sum8and4 = curry(sum, 8, 4);
 
-  assert.equal(foo.sum7(2), 14, 'curry one arguments works');
+  assert.equal(messages.length, 1, "only one error is dispatched");
+  assert.ok(messages[0].msg.indexOf('curry is deprecated') > -1);
 
-  assert.equal(foo.sum8and4(), 17, 'curry both arguments works');
+  loader.unload();
 };
 
 exports['test compose'] = function(assert) {
