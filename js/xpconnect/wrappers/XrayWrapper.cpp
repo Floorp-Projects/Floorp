@@ -1038,10 +1038,8 @@ XPCWrappedNativeXrayTraits::resolveOwnProperty(JSContext *cx, Wrapper &jsWrapper
             return false;
         }
 
-#ifdef DEBUG
-        NS_ASSERTION(!pobj || (JS_HasPropertyById(cx, holder, id, &hasProp) &&
-                     hasProp), "id got defined somewhere else?");
-#endif
+        MOZ_ASSERT(!pobj || (JS_HasPropertyById(cx, holder, id, &hasProp) &&
+                             hasProp), "id got defined somewhere else?");
     }
 
     // resolveOwnProperty must return a non-empty |desc| if and only if an |own|

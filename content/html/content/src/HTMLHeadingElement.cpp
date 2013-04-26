@@ -37,7 +37,7 @@ NS_HTML_CONTENT_INTERFACE_MAP_END
 NS_IMPL_ELEMENT_CLONE(HTMLHeadingElement)
 
 JSObject*
-HTMLHeadingElement::WrapNode(JSContext *aCx, JSObject *aScope)
+HTMLHeadingElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
   return HTMLHeadingElementBinding::Wrap(aCx, aScope, this);
 }

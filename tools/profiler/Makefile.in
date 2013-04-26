@@ -42,6 +42,7 @@ CPPSRCS		= \
   nsProfilerFactory.cpp \
   nsProfiler.cpp \
   TableTicker.cpp \
+  SaveProfileTask.cpp \
   BreakpadSampler.cpp \
   UnwinderThread2.cpp \
   ProfileEntry.cpp \

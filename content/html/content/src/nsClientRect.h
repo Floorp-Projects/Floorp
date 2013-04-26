@@ -44,8 +44,8 @@ public:
     MOZ_ASSERT(mParent);
     return mParent;
   }
-  virtual JSObject*
-  WrapObject(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
 
   float Left() const
@@ -97,7 +97,8 @@ public:
 
   NS_DECL_NSIDOMCLIENTRECTLIST
   
-  virtual JSObject* WrapObject(JSContext *cx, JSObject *scope) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext *cx,
+                               JS::Handle<JSObject*> scope) MOZ_OVERRIDE;
 
   nsISupports* GetParentObject()
   {

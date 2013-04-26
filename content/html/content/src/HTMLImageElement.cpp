@@ -571,7 +571,7 @@ HTMLImageElement::GetCORSMode()
 }
 
 JSObject*
-HTMLImageElement::WrapNode(JSContext* aCx, JSObject* aScope)
+HTMLImageElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return HTMLImageElementBinding::Wrap(aCx, aScope, this);
 }

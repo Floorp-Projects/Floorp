@@ -200,7 +200,7 @@ DesktopNotification::Show(ErrorResult& aRv)
 }
 
 JSObject*
-DesktopNotification::WrapObject(JSContext* aCx, JSObject* aScope)
+DesktopNotification::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return DesktopNotificationBinding::Wrap(aCx, aScope, this);
 }
@@ -235,7 +235,7 @@ DesktopNotificationCenter::CreateNotification(const nsAString& aTitle,
 }
 
 JSObject*
-DesktopNotificationCenter::WrapObject(JSContext* aCx, JSObject* aScope)
+DesktopNotificationCenter::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return DesktopNotificationCenterBinding::Wrap(aCx, aScope, this);
 }

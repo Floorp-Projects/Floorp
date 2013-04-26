@@ -39,7 +39,7 @@
       </xul:tabbox>
       <children/>
     </content>
-    <implementation implements="nsIDOMEventListener">
+    <implementation implements="nsIDOMEventListener, nsIMessageListener">
 
       <property name="tabContextMenu" readonly="true"
                 onget="return this.tabContainer.contextMenu;"/>
@@ -293,6 +293,19 @@
         </body>
       </method>
 
+      <method name="_getTabForBrowser">
+        <parameter name="aBrowser"/>
+        <body>
+        <![CDATA[
+          for (let i = 0; i < this.tabs.length; i++) {
+            if (this.tabs[i].linkedBrowser == aBrowser)
+              return this.tabs[i];
+          }
+          return null;
+        ]]>
+        </body>
+      </method>
+
       <method name="getNotificationBox">
         <parameter name="aBrowser"/>
         <body>
@@ -526,7 +539,7 @@
                 // We need to add 2 because loadURIWithFlags may have
                 // cancelled a pending load which would have cleared
                 // its anchor scroll detection temporary increment.
-                if (aWebProgress.DOMWindow == this.mBrowser.contentWindow)
+                if (aWebProgress.isTopLevel)
                   this.mBrowser.userTypedClear += 2;
 
                 if (this._shouldShowProgress(aRequest)) {
@@ -553,7 +566,7 @@
                 }
                 this.mTab.removeAttribute("progress");
 
-                if (aWebProgress.DOMWindow == this.mBrowser.contentWindow) {
+                if (aWebProgress.isTopLevel) {
                   if (!Components.isSuccessCode(aStatus) &&
                       !isTabEmpty(this.mTab)) {
                     // Restore the current document's location in case the
@@ -622,7 +635,7 @@
                                         aFlags) {
               // OnLocationChange is called for both the top-level content
               // and the subframes.
-              let topLevel = aWebProgress.DOMWindow == this.mBrowser.contentWindow;
+              let topLevel = aWebProgress.isTopLevel;
 
               if (topLevel) {
                 // The document loaded correctly, clear the value if we should
@@ -928,20 +941,17 @@
             // Update the URL bar.
             var loc = this.mCurrentBrowser.currentURI;
 
-            // Bug 666801 - WebProgress support for e10s and
             // Bug 666809 - SecurityUI support for e10s
-            if (!gMultiProcessBrowser) {
-              var webProgress = this.mCurrentBrowser.webProgress;
-              var securityUI = this.mCurrentBrowser.securityUI;
+            var webProgress = this.mCurrentBrowser.webProgress;
+            var securityUI = this.mCurrentBrowser.securityUI;
 
-              this._callProgressListeners(null, "onLocationChange",
-                                          [webProgress, null, loc, 0], true,
-                                          false);
+            this._callProgressListeners(null, "onLocationChange",
+                                        [webProgress, null, loc, 0], true,
+                                        false);
 
-              if (securityUI) {
-                this._callProgressListeners(null, "onSecurityChange",
-                                            [webProgress, null, securityUI.state], true, false);
-              }
+            if (securityUI) {
+              this._callProgressListeners(null, "onSecurityChange",
+                                          [webProgress, null, securityUI.state], true, false);
             }
 
             var listener = this.mTabListeners[this.tabContainer.selectedIndex] || null;
@@ -1400,9 +1410,7 @@
             const filter = Components.classes["@mozilla.org/appshell/component/browser-status-filter;1"]
                                      .createInstance(Components.interfaces.nsIWebProgress);
             filter.addProgressListener(tabListener, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
-            // Bug 666801 - WebProgress support for e10s
-            if (!gMultiProcessBrowser)
-              b.webProgress.addProgressListener(filter, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
+            b.webProgress.addProgressListener(filter, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
             this.mTabListeners[position] = tabListener;
             this.mTabFilters[position] = filter;
 
@@ -1707,9 +1715,7 @@
             // Remove the tab's filter and progress listener.
             const filter = this.mTabFilters[aTab._tPos];
 
-            // Bug 666801 - WebProgress support for e10s
-            if (!gMultiProcessBrowser)
-              browser.webProgress.removeProgressListener(filter);
+            browser.webProgress.removeProgressListener(filter);
 
             filter.removeProgressListener(this.mTabListeners[aTab._tPos]);
             this.mTabListeners[aTab._tPos].destroy();
@@ -2692,6 +2698,24 @@
         ]]></body>
       </method>
 
+      <method name="receiveMessage">
+        <parameter name="aMessage"/>
+        <body><![CDATA[
+          let json = aMessage.json;
+          let browser = aMessage.target;
+
+          switch (aMessage.name) {
+            case "DOMTitleChanged":
+              let tab = this._getTabForBrowser(browser);
+              if (!tab)
+                return;
+              let titleChanged = this.setTabTitle(tab);
+              if (titleChanged && !tab.selected && !tab.hasAttribute("busy"))
+                tab.setAttribute("titlechanged", "true");
+          }
+        ]]></body>
+      </method>
+
       <constructor>
         <![CDATA[
           this.mCurrentBrowser = document.getAnonymousElementByAttribute(this, "anonid", "initialBrowser");
@@ -2728,6 +2752,9 @@
             Services.prefs.getBoolPref("browser.display.use_system_colors") ?
               "-moz-default-background-color" :
               Services.prefs.getCharPref("browser.display.background_color");
+
+          if (Services.prefs.getBoolPref("browser.tabs.remote"))
+            messageManager.addMessageListener("DOMTitleChanged", this);
         ]]>
       </constructor>
 
@@ -2761,6 +2788,9 @@
           }
           document.removeEventListener("keypress", this, false);
           window.removeEventListener("sizemodechange", this, false);
+
+          if (Services.prefs.getBoolPref("browser.tabs.remote"))
+            messageManager.removeMessageListener("DOMTitleChanged", this);
         ]]>
       </destructor>
 

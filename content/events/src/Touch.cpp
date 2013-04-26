@@ -145,7 +145,7 @@ Touch::Equals(nsIDOMTouch* aTouch)
 }
 
 /* virtual */ JSObject*
-Touch::WrapObject(JSContext* aCx, JSObject* aScope)
+Touch::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return TouchBinding::Wrap(aCx, aScope, this);
 }

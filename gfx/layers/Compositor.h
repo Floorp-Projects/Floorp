@@ -26,7 +26,7 @@
  *
  * # Main interfaces and abstractions
  *
- *  - Layer, ShadowableLayer and ShadowLayer
+ *  - Layer, ShadowableLayer and LayerComposite
  *    (see Layers.h and ipc/ShadowLayers.h)
  *  - CompositableClient and CompositableHost
  *    (client/CompositableClient.h composite/CompositableHost.h)
@@ -251,12 +251,6 @@ public:
    * be ignored, but compositor implementations are free to use it if they like.
    */
   virtual void SetDestinationSurfaceSize(const gfx::IntSize& aSize) = 0;
-
-  /**
-   * Declare an offset to use when rendering layers. This will be ignored when
-   * rendering to a target instead of the screen.
-   */
-  virtual void SetScreenRenderOffset(const gfx::Point& aOffset) = 0;
 
   /**
    * Tell the compositor to actually draw a quad. What to do draw and how it is

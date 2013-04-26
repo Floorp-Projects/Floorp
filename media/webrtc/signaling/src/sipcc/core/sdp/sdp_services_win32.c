@@ -47,7 +47,7 @@ void sdp_log_errmsg (sdp_errmsg_e errmsg, char *str)
  */
 void sdp_dump_buffer (char * _ptr, int _size_bytes)
 {
-    buginf_msg(_ptr);
+    CSFLogDebug("sdp", _ptr);
 }
 
 /******************************************************************/

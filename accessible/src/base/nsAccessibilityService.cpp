@@ -9,6 +9,7 @@
 #include "Accessible-inl.h"
 #include "ApplicationAccessibleWrap.h"
 #include "ARIAGridAccessibleWrap.h"
+#include "ARIAMap.h"
 #include "DocAccessible-inl.h"
 #include "FocusManager.h"
 #include "HTMLCanvasAccessible.h"
@@ -21,7 +22,6 @@
 #include "HyperTextAccessibleWrap.h"
 #include "nsAccessiblePivot.h"
 #include "nsAccUtils.h"
-#include "nsARIAMap.h"
 #include "nsEventShell.h"
 #include "nsIAccessibleProvider.h"
 #include "OuterDocAccessible.h"
@@ -107,7 +107,7 @@ MustBeAccessible(nsIContent* aContent, DocAccessible* aDocument)
         continue; // not ARIA
 
       // A global state or a property and in case of token defined.
-      uint8_t attrFlags = nsAccUtils::GetAttributeCharacteristics(attrAtom);
+      uint8_t attrFlags = aria::AttrCharacteristicsFor(attrAtom);
       if ((attrFlags & ATTR_GLOBAL) && (!(attrFlags & ATTR_VALTOKEN) ||
            nsAccUtils::HasDefinedARIAToken(aContent, attrAtom))) {
         return true;
@@ -943,11 +943,11 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
         if (frame->AccessibleType() == eHTMLTableRowType) {
           nsRoleMapEntry* contextRoleMap = aContext->ARIARoleMap();
           if (contextRoleMap && !(contextRoleMap->IsOfType(eTable)))
-            roleMapEntry = &nsARIAMap::gEmptyRoleMap;
+            roleMapEntry = &aria::gEmptyRoleMap;
 
         } else if (frame->AccessibleType() == eHTMLTableCellType &&
-                   aContext->ARIARoleMap() == &nsARIAMap::gEmptyRoleMap) {
-          roleMapEntry = &nsARIAMap::gEmptyRoleMap;
+                   aContext->ARIARoleMap() == &aria::gEmptyRoleMap) {
+          roleMapEntry = &aria::gEmptyRoleMap;
 
         } else if (content->Tag() == nsGkAtoms::dt ||
                    content->Tag() == nsGkAtoms::li ||
@@ -955,7 +955,7 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
                    frame->AccessibleType() == eHTMLLiType) {
           nsRoleMapEntry* contextRoleMap = aContext->ARIARoleMap();
           if (contextRoleMap && !(contextRoleMap->IsOfType(eList)))
-            roleMapEntry = &nsARIAMap::gEmptyRoleMap;
+            roleMapEntry = &aria::gEmptyRoleMap;
         }
       }
     }

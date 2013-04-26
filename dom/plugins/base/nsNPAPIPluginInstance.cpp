@@ -83,8 +83,8 @@ static bool EnsureGLContext()
 {
   if (!sPluginContext) {
     gfxIntSize dummySize(16, 16);
-    GLContext::SurfaceCaps dummyCaps;
-    sPluginContext = GLContextProvider::CreateOffscreen(dummySize, dummyCaps);
+    sPluginContext = GLContextProvider::CreateOffscreen(dummySize,
+                                                        GLContext::SurfaceCaps::Any());
   }
 
   return sPluginContext != nullptr;

@@ -43,7 +43,7 @@ public class ShapedButton extends GeckoImageButton
 
         // Path is clipped.
         mPath = new Path();
-        mCanvasDelegate = new CanvasDelegate(this, Mode.DST_OUT);
+        mCanvasDelegate = new CanvasDelegate(this, Mode.DST_IN);
 
         setWillNotDraw(false);
     }
@@ -66,15 +66,16 @@ public class ShapedButton extends GeckoImageButton
             mPath.cubicTo(curve * 0.75f, 0,
                           curve * 0.25f, height,
                           curve, height);
-            mPath.lineTo(0, height);
+            mPath.lineTo(width, height);
+            mPath.lineTo(width, 0);
             mPath.lineTo(0, 0);
         } else if (mSide == CurveTowards.LEFT) {
             mPath.moveTo(width, 0);
             mPath.cubicTo((width - (curve * 0.75f)), 0,
                           (width - (curve * 0.25f)), height,
                           (width - curve), height);
-            mPath.lineTo(width, height);
-            mPath.lineTo(width, 0);
+            mPath.lineTo(0, height);
+            mPath.lineTo(0, 0);
         }
     }
 

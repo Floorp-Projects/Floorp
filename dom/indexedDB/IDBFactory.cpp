@@ -7,12 +7,14 @@
 #include "base/basictypes.h"
 
 #include "IDBFactory.h"
+
 #include "nsIFile.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptContext.h"
 #include "nsIXPConnect.h"
 #include "nsIXPCScriptable.h"
 
+#include <algorithm>
 #include "jsdbgapi.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ContentChild.h"
@@ -42,9 +44,9 @@
 #include "IDBKeyRange.h"
 #include "IndexedDatabaseManager.h"
 #include "Key.h"
+#include "ProfilerHelpers.h"
 
 #include "ipc/IndexedDBChild.h"
-#include <algorithm>
 
 USING_INDEXEDDB_NAMESPACE
 USING_QUOTA_NAMESPACE
@@ -593,12 +595,29 @@ IDBFactory::OpenInternal(const nsAString& aName,
     dbActor->SetRequest(request);
   }
 
+#ifdef IDB_PROFILER_USE_MARKS
+  {
+    NS_ConvertUTF16toUTF8 profilerName(aName);
+    if (aDeleting) {
+      IDB_PROFILER_MARK("IndexedDB Request %llu: deleteDatabase(\"%s\")",
+                        "MT IDBFactory.deleteDatabase()",
+                        request->GetSerialNumber(), profilerName.get());
+    }
+    else {
+      IDB_PROFILER_MARK("IndexedDB Request %llu: open(\"%s\", %lld)",
+                        "MT IDBFactory.open()",
+                        request->GetSerialNumber(), profilerName.get(),
+                        aVersion);
+    }
+  }
+#endif
+
   request.forget(_retval);
   return NS_OK;
 }
 
 JSObject*
-IDBFactory::WrapObject(JSContext* aCx, JSObject* aScope)
+IDBFactory::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return IDBFactoryBinding::Wrap(aCx, aScope, this);
 }

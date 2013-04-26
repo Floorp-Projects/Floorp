@@ -51,25 +51,36 @@ src_body.xdb src_comp.xdb: run_complete
 
 callgraph.txt: src_body.xdb src_comp.xdb computeCallgraph.js
 	@echo Started computation of $@ at $$(date)
-	$(CALL_JS) $(ANALYSIS_SCRIPT_DIR)/computeCallgraph.js > $@
+	$(CALL_JS) $(ANALYSIS_SCRIPT_DIR)/computeCallgraph.js > $@.tmp
+	mv $@.tmp $@
 	@echo Finished computation of $@ at $$(date)
 
 gcFunctions.txt: callgraph.txt computeGCFunctions.js annotations.js
 	@echo Started computation of $@ at $$(date)
-	$(CALL_JS) $(ANALYSIS_SCRIPT_DIR)/computeGCFunctions.js ./callgraph.txt > $@
+	$(CALL_JS) $(ANALYSIS_SCRIPT_DIR)/computeGCFunctions.js ./callgraph.txt > $@.tmp
+	mv $@.tmp $@
 	@echo Finished computation of $@ at $$(date)
+
+gcFunctions.lst: gcFunctions.txt
+	perl -lne 'print $$1 if /^GC Function: (.*)/' gcFunctions.txt > $@
+
+suppressedFunctions.lst: gcFunctions.txt
+	perl -lne 'print $$1 if /^Suppressed Function: (.*)/' gcFunctions.txt > $@
 
 gcTypes.txt: src_comp.xdb computeGCTypes.js annotations.js
 	@echo Started computation of $@ at $$(date)
-	$(CALL_JS) $(ANALYSIS_SCRIPT_DIR)/computeGCTypes.js > $@
+	$(CALL_JS) $(ANALYSIS_SCRIPT_DIR)/computeGCTypes.js > $@.tmp
+	mv $@.tmp $@
 	@echo Finished computation of $@ at $$(date)
 
 allFunctions.txt: src_body.xdb
 	@echo Started computation of $@ at $$(date)
-	time $(SIXGILL)/bin/xdbkeys $^ > $@
+	time $(SIXGILL)/bin/xdbkeys $^ > $@.tmp
+	mv $@.tmp $@
 	@echo Finished computation of $@ at $$(date)
 
-rootingHazards.txt: gcFunctions.txt gcTypes.txt analyzeRoots.js annotations.js gen-hazards.sh
+rootingHazards.txt: gcFunctions.lst suppressedFunctions.lst gcTypes.txt analyzeRoots.js annotations.js gen-hazards.sh
 	@echo Started computation of $@ at $$(date)
-	time env JS=$(JS) ANALYZE="$(ANALYSIS_SCRIPT_DIR)/analyzeRoots.js" SIXGILL="$(SIXGILL)" "$(ANALYSIS_SCRIPT_DIR)/gen-hazards.sh" $(JOBS) > $@
+	time env JS=$(JS) ANALYZE="$(ANALYSIS_SCRIPT_DIR)/analyzeRoots.js" SIXGILL="$(SIXGILL)" "$(ANALYSIS_SCRIPT_DIR)/gen-hazards.sh" $(JOBS) > $@.tmp
+	mv $@.tmp $@
 	@echo Finished computation of $@ at $$(date)

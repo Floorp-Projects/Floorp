@@ -118,7 +118,7 @@ cc_return_t CC_Service_destroy() {
 cc_return_t CC_Service_start() {
     sessionProvider_cmd_t proCmd;
 
-    CCAPP_DEBUG("CC_Service_start \n");
+    CCAPP_DEBUG("CC_Service_start");
 
     memset ( &proCmd, 0, sizeof(sessionProvider_cmd_t));
     proCmd.sessionType = SESSIONTYPE_CALLCONTROL; //Not used
@@ -126,7 +126,7 @@ cc_return_t CC_Service_start() {
 
     if (ccappTaskPostMsg(CCAPP_SERVICE_CMD, (cprBuffer_t)&proCmd,
                          sizeof(sessionProvider_cmd_t), CCAPP_CCPROVIER) == CPR_FAILURE) {
-        CCAPP_DEBUG("CC_Service_start: ccappTaskSendMsg failed\n");
+        CCAPP_DEBUG("CC_Service_start: ccappTaskSendMsg failed");
         return CC_FAILURE;
     }
     return CC_SUCCESS;
@@ -141,7 +141,7 @@ cc_return_t CC_Service_start() {
 cc_return_t CC_Service_shutdown(cc_shutdown_reason_t mgmt_reason, string_t reason_string) {
     sessionProvider_cmd_t proCmd;
 
-    CCAPP_DEBUG("CC_Service_shutdown \n");
+    CCAPP_DEBUG("CC_Service_shutdown");
 
     memset ( &proCmd, 0, sizeof(sessionProvider_cmd_t));
     proCmd.sessionType = SESSIONTYPE_CALLCONTROL; //Not used
@@ -149,7 +149,7 @@ cc_return_t CC_Service_shutdown(cc_shutdown_reason_t mgmt_reason, string_t reaso
 
     if (ccappTaskPostMsg(CCAPP_SERVICE_CMD, (cprBuffer_t)&proCmd,
                          sizeof(sessionProvider_cmd_t), CCAPP_CCPROVIER) == CPR_FAILURE) {
-        CCAPP_DEBUG("CC_Service_shutdown: ccappTaskSendMsg failed\n");
+        CCAPP_DEBUG("CC_Service_shutdown: ccappTaskSendMsg failed");
         return CC_FAILURE;
     }
     return CC_SUCCESS;
@@ -164,7 +164,7 @@ cc_return_t CC_Service_shutdown(cc_shutdown_reason_t mgmt_reason, string_t reaso
 cc_return_t CC_Service_unregisterAllLines(cc_shutdown_reason_t mgmt_reason, string_t reason_string) {
     sessionProvider_cmd_t proCmd;
 
-    CCAPP_DEBUG("CC_Service_shutdown \n");
+    CCAPP_DEBUG("CC_Service_shutdown");
 
     memset ( &proCmd, 0, sizeof(sessionProvider_cmd_t));
     proCmd.sessionType = SESSIONTYPE_CALLCONTROL; //Not used
@@ -174,7 +174,7 @@ cc_return_t CC_Service_unregisterAllLines(cc_shutdown_reason_t mgmt_reason, stri
 
     if (ccappTaskPostMsg(CCAPP_SERVICE_CMD, (cprBuffer_t)&proCmd,
                          sizeof(sessionProvider_cmd_t), CCAPP_CCPROVIER) == CPR_FAILURE) {
-        CCAPP_DEBUG("CC_Service_shutdown: ccappTaskSendMsg failed\n");
+        CCAPP_DEBUG("CC_Service_shutdown: ccappTaskSendMsg failed");
         return CC_FAILURE;
     }
     return CC_SUCCESS;
@@ -189,7 +189,7 @@ cc_return_t CC_Service_unregisterAllLines(cc_shutdown_reason_t mgmt_reason, stri
 cc_return_t CC_Service_registerAllLines(cc_shutdown_reason_t mgmt_reason, string_t reason_string) {
     sessionProvider_cmd_t proCmd;
 
-    CCAPP_DEBUG("CC_Service_registerAllLines \n");
+    CCAPP_DEBUG("CC_Service_registerAllLines");
 
     memset ( &proCmd, 0, sizeof(sessionProvider_cmd_t));
     proCmd.sessionType = SESSIONTYPE_CALLCONTROL; //Not used
@@ -199,7 +199,7 @@ cc_return_t CC_Service_registerAllLines(cc_shutdown_reason_t mgmt_reason, string
 
     if (ccappTaskPostMsg(CCAPP_SERVICE_CMD, (cprBuffer_t)&proCmd,
                          sizeof(sessionProvider_cmd_t), CCAPP_CCPROVIER) == CPR_FAILURE) {
-        CCAPP_DEBUG("CC_Service_registerAllLines: ccappTaskSendMsg failed\n");
+        CCAPP_DEBUG("CC_Service_registerAllLines: ccappTaskSendMsg failed");
         return CC_FAILURE;
     }
     return CC_SUCCESS;
@@ -212,7 +212,7 @@ cc_return_t CC_Service_registerAllLines(cc_shutdown_reason_t mgmt_reason, string
 cc_return_t CC_Service_restart() {
     sessionProvider_cmd_t proCmd;
 
-    CCAPP_DEBUG("CC_Service_restart \n");
+    CCAPP_DEBUG("CC_Service_restart");
 
     memset ( &proCmd, 0, sizeof(sessionProvider_cmd_t));
     proCmd.sessionType = SESSIONTYPE_CALLCONTROL; //Not used
@@ -220,7 +220,7 @@ cc_return_t CC_Service_restart() {
 
     if (ccappTaskPostMsg(CCAPP_SERVICE_CMD, (cprBuffer_t)&proCmd,
                          sizeof(sessionProvider_cmd_t), CCAPP_CCPROVIER) == CPR_FAILURE) {
-        CCAPP_DEBUG("CC_Service_restart: ccappTaskSendMsg failed\n");
+        CCAPP_DEBUG("CC_Service_restart: ccappTaskSendMsg failed");
         return CC_FAILURE;
     }
     return CC_SUCCESS;

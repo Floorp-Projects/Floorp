@@ -26,7 +26,7 @@ interface nsIWebProgressListener;
  * notifications from any nsIWebProgress instances that are children of that
  * nsIWebProgress instance.
  */
-[scriptable, uuid(570F39D0-EFD0-11d3-B093-00A024FFC08C)]
+[scriptable, uuid(1c3437b0-9e2c-11e2-9e96-0800200c9a66)]
 interface nsIWebProgress : nsISupports
 {
   /**
@@ -132,6 +132,12 @@ interface nsIWebProgress : nsISupports
    *        Indicates that there is no associated DOM window.
    */
   readonly attribute nsIDOMWindow DOMWindow;
+  readonly attribute uint64_t DOMWindowID;
+
+  /**
+   * Indicates whether DOMWindow.top == DOMWindow.
+   */
+  readonly attribute boolean isTopLevel;
   
   /**
    * Indicates whether or not a document is currently being loaded

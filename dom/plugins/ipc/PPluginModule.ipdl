@@ -84,6 +84,9 @@ child:
   rpc PCrashReporter()
     returns (NativeThreadId tid, uint32_t processType);
 
+  rpc GeckoGetProfile()
+    returns (nsCString aProfile);
+
 parent:
   /**
    * This message is only used on X11 platforms.

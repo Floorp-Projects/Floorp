@@ -1414,28 +1414,28 @@ sdp_result_e sdp_parse_media (sdp_t *sdp_p, u16 level, const char *ptr)
                   sdp_get_media_name(mca_p->media));
         switch (mca_p->port_format) {
         case SDP_PORT_NUM_ONLY:
-            SDP_PRINT("Port num %ld, ", mca_p->port);
+            SDP_PRINT("Port num %d, ", mca_p->port);
             break;
 
         case SDP_PORT_NUM_COUNT:
-            SDP_PRINT("Port num %ld, count %ld, ",
+            SDP_PRINT("Port num %d, count %d, ",
                       mca_p->port, mca_p->num_ports);
             break;
         case SDP_PORT_VPI_VCI:
-            SDP_PRINT("VPI/VCI %ld/%lu, ", mca_p->vpi, mca_p->vci);
+            SDP_PRINT("VPI/VCI %d/%u, ", mca_p->vpi, mca_p->vci);
             break;
         case SDP_PORT_VCCI:
-            SDP_PRINT("VCCI %ld, ", mca_p->vcci);
+            SDP_PRINT("VCCI %d, ", mca_p->vcci);
             break;
         case SDP_PORT_NUM_VPI_VCI:
-            SDP_PRINT("Port %ld, VPI/VCI %ld/%lu, ", mca_p->port,
+            SDP_PRINT("Port %d, VPI/VCI %d/%u, ", mca_p->port,
                       mca_p->vpi, mca_p->vci);
             break;
         case SDP_PORT_VCCI_CID:
-            SDP_PRINT("VCCI %ld, CID %ld, ", mca_p->vcci, mca_p->cid);
+            SDP_PRINT("VCCI %d, CID %d, ", mca_p->vcci, mca_p->cid);
             break;
         case SDP_PORT_NUM_VPI_VCI_CID:
-            SDP_PRINT("Port %ld, VPI/VCI %ld/%lu, CID %ld, ", mca_p->port,
+            SDP_PRINT("Port %d, VPI/VCI %d/%u, CID %d, ", mca_p->port,
                       mca_p->vpi, mca_p->vci, mca_p->cid);
             break;
         default:

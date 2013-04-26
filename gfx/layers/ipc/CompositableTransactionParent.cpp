@@ -13,7 +13,8 @@
 #include "mozilla/layers/ContentHost.h"
 #include "ShadowLayerParent.h"
 #include "TiledLayerBuffer.h"
-#include "LayerManagerComposite.h"
+#include "mozilla/layers/LayerManagerComposite.h"
+#include "mozilla/layers/ThebesLayerComposite.h"
 #include "CompositorParent.h"
 
 namespace mozilla {
@@ -56,7 +57,7 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
         compositableParent->GetCompositableHost();
 
       Layer* layer = compositable ? compositable->GetLayer() : nullptr;
-      ShadowLayer* shadowLayer = layer ? layer->AsShadowLayer() : nullptr;
+      LayerComposite* shadowLayer = layer ? layer->AsLayerComposite() : nullptr;
       if (shadowLayer) {
         Compositor* compositor = static_cast<LayerManagerComposite*>(layer->Manager())->GetCompositor();
         compositable->SetCompositor(compositor);
@@ -72,24 +73,27 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
         RenderTraceInvalidateStart(layer, "FF00FF", layer->GetVisibleRegion().GetBounds());
       }
 
-      const SurfaceDescriptor& descriptor = op.image();
-      compositable->EnsureTextureHost(op.textureId(),
-                                      descriptor,
-                                      compositableParent->GetCompositableManager(),
-                                      TextureInfo());
-      MOZ_ASSERT(compositable->GetTextureHost());
+      if (compositable) {
+        const SurfaceDescriptor& descriptor = op.image();
+        compositable->EnsureTextureHost(op.textureId(),
+                                        descriptor,
+                                        compositableParent->GetCompositableManager(),
+                                        TextureInfo());
+        MOZ_ASSERT(compositable->GetTextureHost());
 
-      SurfaceDescriptor newBack;
-      bool shouldRecomposite = compositable->Update(descriptor, &newBack);
-      if (IsSurfaceDescriptorValid(newBack)) {
-        replyv.push_back(OpTextureSwap(compositableParent, nullptr, op.textureId(), newBack));
-      }
+        SurfaceDescriptor newBack;
+        bool shouldRecomposite = compositable->Update(descriptor, &newBack);
+        if (IsSurfaceDescriptorValid(newBack)) {
+          replyv.push_back(OpTextureSwap(compositableParent, nullptr,
+                                         op.textureId(), newBack));
+        }
 
-      if (shouldRecomposite && compositableParent->GetCompositorID()) {
-        CompositorParent* cp
-          = CompositorParent::GetCompositor(compositableParent->GetCompositorID());
-        if (cp) {
-          cp->ScheduleComposition();
+        if (shouldRecomposite && compositableParent->GetCompositorID()) {
+          CompositorParent* cp
+            = CompositorParent::GetCompositor(compositableParent->GetCompositorID());
+          if (cp) {
+            cp->ScheduleComposition();
+          }
         }
       }
 
@@ -106,8 +110,8 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
       CompositableParent* compositableParent = static_cast<CompositableParent*>(op.compositableParent());
       CompositableHost* compositable =
         compositableParent->GetCompositableHost();
-      ShadowThebesLayer* thebes =
-        static_cast<ShadowThebesLayer*>(compositable->GetLayer());
+      ThebesLayerComposite* thebes =
+        static_cast<ThebesLayerComposite*>(compositable->GetLayer());
 
       const ThebesBufferData& bufferData = op.bufferData();
 

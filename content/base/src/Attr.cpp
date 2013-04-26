@@ -377,9 +377,15 @@ Attr::Shutdown()
 }
 
 JSObject*
-Attr::WrapObject(JSContext* aCx, JSObject* aScope)
+Attr::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return AttrBinding::Wrap(aCx, aScope, this);
+}
+
+Element*
+Attr::GetContentInternal() const
+{
+  return mAttrMap ? mAttrMap->GetContent() : nullptr;
 }
 
 } // namespace dom

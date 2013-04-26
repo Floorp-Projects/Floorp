@@ -165,7 +165,7 @@ sipTransportGetServerHandle (line_t dn, line_t ndx)
      * dn-1
      */
     if (((int)dn < 1) || ((int)dn > MAX_REG_LINES)) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Args check: DN <%d> out of bounds.\n",
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Args check: DN <%d> out of bounds.",
                           fname, dn);
         return (INVALID_SOCKET);
     }
@@ -259,7 +259,7 @@ sipTransportGetServerAddress (cpr_ip_addr_t *pip_addr, line_t dn, line_t ndx)
      * dn-1
      */
     if (((int)dn < 1) || ((int)dn > MAX_REG_LINES)) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Args check: DN <%d> out of bounds.\n",
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Args check: DN <%d> out of bounds.",
                           fname, dn);
         return (0);
     }
@@ -330,7 +330,7 @@ sipTransportGetServerPort (line_t dn, line_t ndx)
      * dn-1
      */
     if (((int)dn < 1) || ((int)dn > MAX_REG_LINES)) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Args check: DN <%d> out of bounds.\n",
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Args check: DN <%d> out of bounds.",
                           fname, dn);
         return (0);
     }
@@ -397,13 +397,13 @@ sip_transport_setup_cc_conn (line_t dn, CCM_ID ccm_id)
      * dn-1
      */
     if (((int)dn < 1) || ((int)dn > MAX_REG_LINES)) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Args check: DN <%d> out of bounds.\n",
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Args check: DN <%d> out of bounds.",
                           fname, dn);
         return (status);
     }
 
     if (ccm_id >= MAX_CCM) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"ccm id <%d> out of bounds.\n",
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"ccm id <%d> out of bounds.",
                           fname, ccm_id);
         return (status);
     }
@@ -427,7 +427,7 @@ sip_transport_setup_cc_conn (line_t dn, CCM_ID ccm_id)
              * dont even attempt to create a connection if the
              * platform has deemed the ccm info invalid
              */
-            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Admin has not configured a valid cucm for cucm index=%s=%d.\n",
+            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Admin has not configured a valid cucm for cucm index=%s=%d.",
                               fname, CCM_ID_PRINT(ccm_id), ccm_id);
             return (status);
         }
@@ -546,7 +546,7 @@ sip_transport_setup_cc_conn (line_t dn, CCM_ID ccm_id)
             }
         }
     } else {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"DN <%d>: CC address/port not configured.\n",
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"DN <%d>: CC address/port not configured.",
                          fname, dn);
         status = CONN_INVALID;
     }
@@ -593,13 +593,13 @@ sip_transport_destroy_cc_conn (line_t dn, CCM_ID ccm_id)
      * dn-1
      */
     if (((int)dn < 1) || ((int)dn > MAX_REG_LINES)) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Args check: DN <%d> out of bounds.\n",
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Args check: DN <%d> out of bounds.",
                           fname, dn);
         return (disconnect_status);
     }
 
     if (ccm_id >= MAX_CCM) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"ccm id <%d> out of bounds.\n",
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"ccm id <%d> out of bounds.",
                           fname, ccm_id);
         return (disconnect_status);
     }
@@ -641,7 +641,7 @@ sip_transport_destroy_cc_conn (line_t dn, CCM_ID ccm_id)
                 sip_tcp_purge_entry(connid);
             }
         } else {
-            CCSIP_DEBUG_TASK(DEB_F_PREFIX"DN <%d>: CC socket already closed.\n",
+            CCSIP_DEBUG_TASK(DEB_F_PREFIX"DN <%d>: CC socket already closed.",
                              DEB_F_PREFIX_ARGS(SIP_TRANS, fname), dn);
             disconnect_status = 0;
         }
@@ -657,7 +657,7 @@ sip_transport_destroy_cc_conn (line_t dn, CCM_ID ccm_id)
                               "(handle=%d)\n", fname, dn, listen_socket);
             disconnect_status = -1;
         } else {
-            CCSIP_DEBUG_TASK(DEB_F_PREFIX"DN <%d>: CC socket closed: handle=<%d>\n",
+            CCSIP_DEBUG_TASK(DEB_F_PREFIX"DN <%d>: CC socket closed: handle=<%d>",
                              DEB_F_PREFIX_ARGS(SIP_TRANS, fname), dn, listen_socket);
             disconnect_status = 0;
         }
@@ -720,7 +720,7 @@ sipTransportCreateSendMessage (ccsipCCB_t *ccb,
      * Check args
      */
     if (!pSIPMessage) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Args: pSIPMessage is null\n", fname);
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Args: pSIPMessage is null", fname);
         return (-1);
     }
 
@@ -817,7 +817,7 @@ sipTransportSendMessage (ccsipCCB_t *ccb,
      * Check args
      */
     if ((!pOutMessageBuf) || (pOutMessageBuf[0] == '\0')) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Args: pOutMessageBuf is empty\n", fname);
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Args: pOutMessageBuf is empty", fname);
         return (-1);
     }
 
@@ -851,7 +851,7 @@ sipTransportSendMessage (ccsipCCB_t *ccb,
             ipaddr2dotted(cc_remote_ipaddr_str, cc_remote_ipaddr);
         }
 
-        CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"ccb <%d>: config <%s>:<%d> - remote <%s>:<%d>\n",
+        CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"ccb <%d>: config <%s>:<%d> - remote <%s>:<%d>",
                             DEB_F_PREFIX_ARGS(SIP_TRANS, fname), ccb->index,
                             cc_config_ipaddr_str, cc_config_port,
                             cc_remote_ipaddr_str, cc_remote_port);
@@ -862,17 +862,17 @@ sipTransportSendMessage (ccsipCCB_t *ccb,
                     (cc_config_port == cc_remote_port)) {
                     send_to_proxy_handle = sipTransportGetServerHandle(ccb->dn_line,
                                                                        ccb->index);
-                    CCSIP_DEBUG_TASK(DEB_F_PREFIX"Got handle %d\n", DEB_F_PREFIX_ARGS(SIP_TRANS, fname),
+                    CCSIP_DEBUG_TASK(DEB_F_PREFIX"Got handle %d", DEB_F_PREFIX_ARGS(SIP_TRANS, fname),
                                      send_to_proxy_handle);
                 }
             } else { /* TCP */
                 if (util_compare_ip(&cc_config_ipaddr, cc_remote_ipaddr)) {
                     send_to_proxy_handle = sipTransportGetServerHandle(ccb->dn_line,
                                                                        ccb->index);
-                    CCSIP_DEBUG_TASK(DEB_F_PREFIX"Got handle %d\n", DEB_F_PREFIX_ARGS(SIP_TRANS, fname),
+                    CCSIP_DEBUG_TASK(DEB_F_PREFIX"Got handle %d", DEB_F_PREFIX_ARGS(SIP_TRANS, fname),
                                      send_to_proxy_handle);
                     if (send_to_proxy_handle == INVALID_SOCKET) {
-                        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Invalid socket\n", fname);
+                        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Invalid socket", fname);
                         return (-1);
                     }
                 }
@@ -984,11 +984,11 @@ sipTransportSendMessage (ccsipCCB_t *ccb,
     if ((conn_type != NULL) && (cpr_strcasecmp(conn_type, "UDP")) &&
         (send_to_proxy_handle == INVALID_SOCKET)) {
         send_to_proxy_handle = sipTransportGetServerHandleWithAddr(cc_remote_ipaddr);
-        CCSIP_DEBUG_TASK(DEB_F_PREFIX"<%s> remote ip addr\n", DEB_F_PREFIX_ARGS(SIP_TRANS, fname), cc_remote_ipaddr_str);
+        CCSIP_DEBUG_TASK(DEB_F_PREFIX"<%s> remote ip addr", DEB_F_PREFIX_ARGS(SIP_TRANS, fname), cc_remote_ipaddr_str);
         if (send_to_proxy_handle == INVALID_SOCKET) {
             // for TCP and TLS return if we do not have a connection to the
             // remote side
-            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"No connection to ip addr <%s>\n", fname, cc_remote_ipaddr_str);
+            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"No connection to ip addr <%s>", fname, cc_remote_ipaddr_str);
             return (-1);
         }
     }
@@ -1153,7 +1153,7 @@ sipTransportSendMessage (ccsipCCB_t *ccb,
                 config_get_value(CFGID_TIMER_T1, &temp_timeout, sizeof(temp_timeout));
                 temp_timeout = (64 * temp_timeout);
                 if (cprStartTimer(tcbp->timer, temp_timeout, (void *)(long)(tcbp->trxn_id)) == CPR_FAILURE) {
-                    CCSIP_DEBUG_STATE(DEB_F_PREFIX"%s failed\n", DEB_F_PREFIX_ARGS(SIP_TRANS, fname), "cprStartTimer");
+                    CCSIP_DEBUG_STATE(DEB_F_PREFIX"%s failed", DEB_F_PREFIX_ARGS(SIP_TRANS, fname), "cprStartTimer");
                 }
             }
 
@@ -1201,7 +1201,7 @@ sipTransportGetListenPort (line_t line, ccsipCCB_t *ccb)
      * line-1
      */
     if (((int)line < 1) || ((int)line > MAX_REG_LINES)) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Args check: DN <%d> out of bounds.\n",
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Args check: DN <%d> out of bounds.",
                           fname, line);
         return 0;
     }
@@ -1218,7 +1218,7 @@ sipTransportGetListenPort (line_t line, ccsipCCB_t *ccb)
 
             ccm_id = ccm_table_ptr->ti_specific.ti_ccm.ccm_id;
             if (ccm_id >= MAX_CCM) {
-                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"ccm id <%d> out of bounds.\n",
+                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"ccm id <%d> out of bounds.",
                                   fname, ccm_id);
                 return 0;
             }
@@ -1271,7 +1271,7 @@ sipTransportGetTransportType (line_t line, boolean upper_case,
      * line-1
      */
     if (((int)line < 1) || ((int)line > MAX_REG_LINES)) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Args check: DN <%d> out of bounds.\n",
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Args check: DN <%d> out of bounds.",
                           fname, line);
         return udp;
     }
@@ -1367,7 +1367,7 @@ sipTransportGetPrimServerPort (line_t line)
      * line-1
      */
     if (((int)line < 1) || ((int)line > MAX_REG_LINES)) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Args check: DN <%d> out of bounds.\n",
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Args check: DN <%d> out of bounds.",
                           fname, line);
         return (0);
     }
@@ -1413,7 +1413,7 @@ sipTransportGetBkupServerPort (line_t line)
      * line-1
      */
     if (((int)line < 1) || ((int)line > MAX_REG_LINES)) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Args check: DN <%d> out of bounds.\n",
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Args check: DN <%d> out of bounds.",
                           fname, line);
         return (0);
     }
@@ -1457,7 +1457,7 @@ sipTransportGetEmerServerPort (line_t line)
      * line-1
      */
     if (((int)line < 1) || ((int)line > MAX_REG_LINES)) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Args check: DN <%d> out of bounds.\n",
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Args check: DN <%d> out of bounds.",
                           fname, line);
         return (0);
     }
@@ -1501,7 +1501,7 @@ sipTransportGetOutbProxyPort (line_t line)
      * line-1
      */
     if (((int)line < 1) || ((int)line > MAX_REG_LINES)) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Args check: DN <%d> out of bounds.\n",
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Args check: DN <%d> out of bounds.",
                           fname, line);
         return (0);
     }
@@ -1548,7 +1548,7 @@ sipTransportGetPrimServerAddress (line_t line, char *buffer)
      * line-1
      */
     if (((int)line < 1) || ((int)line > MAX_REG_LINES)) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Args check: DN <%d> out of bounds.\n",
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Args check: DN <%d> out of bounds.",
                           fname, line);
         return (ip_type);
     }
@@ -1606,7 +1606,7 @@ sipTransportGetBkupServerAddress (cpr_ip_addr_t *pip_addr,
      * line-1
      */
     if (((int)line < 1) || ((int)line > MAX_REG_LINES)) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Args check: DN <%d> out of bounds.\n",
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Args check: DN <%d> out of bounds.",
                           fname, line);
         return (0);
     }
@@ -1654,7 +1654,7 @@ sipTransportGetEmerServerAddress (line_t line, char *buffer)
      * line-1
      */
     if (((int)line < 1) || ((int)line > MAX_REG_LINES)) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Args check: DN <%d> out of bounds.\n",
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Args check: DN <%d> out of bounds.",
                           fname, line);
         return;
     }
@@ -1698,7 +1698,7 @@ sipTransportGetOutbProxyAddress (line_t line, char *buffer)
      * line-1
      */
     if (((int)line < 1) || ((int)line > MAX_REG_LINES)) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Args check: DN <%d> out of bounds.\n",
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Args check: DN <%d> out of bounds.",
                           fname, line);
         return;
     }
@@ -1794,7 +1794,7 @@ sip_regmgr_set_cc_info (line_t line, line_t dn_line,
      * dn_line-1
      */
     if (((int)dn_line < 1) || ((int)dn_line > MAX_REG_LINES)) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Args check: DN <%d> out of bounds.\n",
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Args check: DN <%d> out of bounds.",
                           fname, dn_line);
         return;
     }
@@ -1874,7 +1874,7 @@ SIPTransportUDPListenForSipMessages (void)
         return SIP_ERROR;
     }
 
-    CCSIP_DEBUG_TASK(DEB_F_PREFIX"Listening for SIP messages on UDP port <%d>, handle=<%d>\n",
+    CCSIP_DEBUG_TASK(DEB_F_PREFIX"Listening for SIP messages on UDP port <%d>, handle=<%d>",
                      DEB_F_PREFIX_ARGS(SIP_TRANS, fname), local_sip_control_port, listen_socket);
 
     return SIP_OK;
@@ -1891,7 +1891,7 @@ sipTransportCfgTableInit (boolean *cc_udp)
     static const char *fname = "sipTransportCfgTableInit";
 
 
-    CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Transport Interface init\n", DEB_F_PREFIX_ARGS(SIP_TRANS, fname));
+    CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Transport Interface init", DEB_F_PREFIX_ARGS(SIP_TRANS, fname));
 
     ti_common = &CSPS_Config_Table[0].ti_common;
     sip_config_get_proxy_addr(1, ti_common->addr_str, sizeof(ti_common->addr_str));
@@ -2010,7 +2010,7 @@ sipTransportCfgTableInit (boolean *cc_udp)
             ti_common->handle = INVALID_SOCKET;
 
             CC_Config_Table[line].cc_table_entry = (void *) NULL; // NULL for now.
-            CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"line %d Addr: %s Port: %d and listen Port: %d\n"
+            CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"line %d Addr: %s Port: %d and listen Port: %d"
                                 " transport: %d\n", DEB_F_PREFIX_ARGS(SIP_TRANS, fname),
                                 line, ti_common->addr_str, ti_common->port,
                                 ti_common->listen_port, ti_common->conn_type);
@@ -2018,15 +2018,15 @@ sipTransportCfgTableInit (boolean *cc_udp)
                 ti_csps_t *ti_csps_cfg_table;
 
                 ti_csps_cfg_table = CSPS_Config_Table[line].ti_specific.ti_csps;
-                CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"bkup Addr: %s and Port: %d\n",
+                CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"bkup Addr: %s and Port: %d",
                                     DEB_F_PREFIX_ARGS(SIP_TRANS, fname),
                                     ti_csps_cfg_table->bkup_pxy_addr_str,
                                     ti_csps_cfg_table->bkup_pxy_port);
-                CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"emer Addr: %s and Port: %d\n",
+                CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"emer Addr: %s and Port: %d",
                                     DEB_F_PREFIX_ARGS(SIP_TRANS, fname),
                                     ti_csps_cfg_table->emer_pxy_addr_str,
                                     ti_csps_cfg_table->emer_pxy_port);
-                CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"outb Addr: %s and Port: %d\n",
+                CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"outb Addr: %s and Port: %d",
                                     DEB_F_PREFIX_ARGS(SIP_TRANS, fname),
                                     ti_csps_cfg_table->outb_pxy_addr_str,
                                     ti_csps_cfg_table->outb_pxy_port);
@@ -2109,7 +2109,7 @@ sipTransportInit (void)
 void
 sipTransportShutdown ()
 {
-    CCSIP_DEBUG_STATE(DEB_F_PREFIX"Transport_interface: Shutting down!\n", DEB_F_PREFIX_ARGS(SIP_TRANS, "sipTransportShutdown"));
+    CCSIP_DEBUG_STATE(DEB_F_PREFIX"Transport_interface: Shutting down!", DEB_F_PREFIX_ARGS(SIP_TRANS, "sipTransportShutdown"));
     sip_regmgr_destroy_cc_conns();
 }
 

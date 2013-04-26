@@ -12,7 +12,7 @@
 using namespace mozilla;
 
 JSObject*
-WebGLTexture::WrapObject(JSContext *cx, JSObject *scope) {
+WebGLTexture::WrapObject(JSContext *cx, JS::Handle<JSObject*> scope) {
     return dom::WebGLTextureBinding::Wrap(cx, scope, this);
 }
 

@@ -56,7 +56,7 @@ WebGLBuffer::ElementArrayCacheBufferSubData(size_t pos, const void* ptr, size_t 
 }
 
 JSObject*
-WebGLBuffer::WrapObject(JSContext *cx, JSObject *scope) {
+WebGLBuffer::WrapObject(JSContext *cx, JS::Handle<JSObject*> scope) {
     return dom::WebGLBufferBinding::Wrap(cx, scope, this);
 }
 

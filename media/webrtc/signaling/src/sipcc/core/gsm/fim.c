@@ -58,13 +58,13 @@ fim_init_call_chns (void)
 
     fim_scbs = (fim_scb_t *) cpr_calloc(FIM_MAX_SCBS, sizeof(fim_scb_t));
     if (fim_scbs == NULL) {
-        GSM_DEBUG_ERROR(GSM_F_PREFIX"Failed to allocate FIM SCBs.\n", fname);
+        GSM_DEBUG_ERROR(GSM_F_PREFIX"Failed to allocate FIM SCBs.", fname);
         return;
     }
 
     fim_icbs = (fim_icb_t *) cpr_calloc(FIM_MAX_ICBS, sizeof(fim_icb_t));
     if (fim_icbs == NULL) {
-        GSM_DEBUG_ERROR(GSM_F_PREFIX"Failed to allocate FIM ICBs.\n", fname);
+        GSM_DEBUG_ERROR(GSM_F_PREFIX"Failed to allocate FIM ICBs.", fname);
         cpr_free(fim_scbs);
         fim_scbs = NULL;
         return;
@@ -260,7 +260,7 @@ fim_lock_ui (callid_t call_id)
     fim_icb_t *call_chn = fim_get_call_chn_by_call_id(call_id);
 
     if (call_chn == NULL) {
-        FIM_DEBUG(DEB_F_PREFIX"unknown call id\n", DEB_F_PREFIX_ARGS(FIM, "fim_lock_ui"));
+        FIM_DEBUG(DEB_F_PREFIX"unknown call id", DEB_F_PREFIX_ARGS(FIM, "fim_lock_ui"));
         return;
     }
     call_chn->ui_locked = TRUE;
@@ -272,7 +272,7 @@ fim_unlock_ui (callid_t call_id)
     fim_icb_t *call_chn = fim_get_call_chn_by_call_id(call_id);
 
     if (call_chn == NULL) {
-        FIM_DEBUG(DEB_F_PREFIX"unknown call id\n", DEB_F_PREFIX_ARGS(FIM, "fim_unlock_ui"));
+        FIM_DEBUG(DEB_F_PREFIX"unknown call id", DEB_F_PREFIX_ARGS(FIM, "fim_unlock_ui"));
         return;
     }
     call_chn->ui_locked = FALSE;
@@ -406,7 +406,7 @@ fim_process_event (void *data, boolean cac_passed)
     uint32_t       no_of_session = 1;
     callid_t       bw_call_id;
 
-    FIM_DEBUG(DEB_L_C_F_PREFIX"Msg name = %s\n", DEB_L_C_F_PREFIX_ARGS(FIM, line, call_id, fname),
+    FIM_DEBUG(DEB_L_C_F_PREFIX"Msg name = %s", DEB_L_C_F_PREFIX_ARGS(FIM, line, call_id, fname),
         cc_msg_name(msg_id));
 
     /*
@@ -564,7 +564,7 @@ fim_process_event (void *data, boolean cac_passed)
             FIM_DEBUG(get_debug_string(GSM_DBG1), "FIM", call_id, fname,
                       "not a call establishment event\n");
             if( feat_msg->feature_id == CC_FEATURE_UPD_SESSION_MEDIA_CAP) {
-                FIM_DEBUG(DEB_L_C_F_PREFIX"set_next_sess_video_pref = %d\n",
+                FIM_DEBUG(DEB_L_C_F_PREFIX"set_next_sess_video_pref = %d",
                         DEB_L_C_F_PREFIX_ARGS(FIM, line, call_id, fname),
                         feat_data->caps.support_direction);
                 set_next_sess_video_pref(feat_data->caps.support_direction);
@@ -589,7 +589,7 @@ fim_process_event (void *data, boolean cac_passed)
     if (call_chn->ui_locked && ((cc_feature_t *) msg)->src_id == CC_SRC_UI) {
         if (fsm_event_filtered_by_ui_lock(event_id,
                 ((cc_feature_t *)msg)->feature_id)) {
-            FIM_DEBUG(DEB_L_C_F_PREFIX" %s filtered by UI lock\n",
+            FIM_DEBUG(DEB_L_C_F_PREFIX" %s filtered by UI lock",
                       DEB_L_C_F_PREFIX_ARGS(FIM, line, call_id, fname),
                       cc_feature_name(((cc_feature_t *)msg)->feature_id));
             return(TRUE);
@@ -643,7 +643,7 @@ fim_process_event (void *data, boolean cac_passed)
             update_call_cnt = (fcb->dcb->call_not_counted_in_mnc_bt) ? FALSE: TRUE;
         }
 
-        FIM_DEBUG(DEB_L_C_F_PREFIX" %s(%s:%s)\n",
+        FIM_DEBUG(DEB_L_C_F_PREFIX" %s(%s:%s)",
                   DEB_L_C_F_PREFIX_ARGS(FIM, line, call_id, fname), fsm_type_name(icb->scb->type),
                   fsm_state_name(fcb->fsm_type, event.state),
                   cc_msg_name((cc_msgs_t) (event.event)));
@@ -662,7 +662,7 @@ fim_process_event (void *data, boolean cac_passed)
             break;
 
         case SM_RC_ERROR:
-            FIM_DEBUG(DEB_L_C_F_PREFIX" fsm sm error(%d:%d)\n",
+            FIM_DEBUG(DEB_L_C_F_PREFIX" fsm sm error(%d:%d)",
                       DEB_L_C_F_PREFIX_ARGS(FIM, line, call_id, fname), event.state, event.event);
             done = TRUE;
             cc_call_state(call_id, line, CC_STATE_UNKNOWN, NULL);

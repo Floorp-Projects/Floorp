@@ -42,7 +42,7 @@ NS_IMPL_URI_ATTR(HTMLModElement, Cite, cite)
 NS_IMPL_STRING_ATTR(HTMLModElement, DateTime, datetime)
 
 JSObject*
-HTMLModElement::WrapNode(JSContext* aCx, JSObject* aScope)
+HTMLModElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return HTMLModElementBinding::Wrap(aCx, aScope, this);
 }

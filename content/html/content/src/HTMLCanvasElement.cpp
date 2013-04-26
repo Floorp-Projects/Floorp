@@ -170,7 +170,7 @@ NS_HTML_CONTENT_INTERFACE_MAP_END
 NS_IMPL_ELEMENT_CLONE(HTMLCanvasElement)
 
 /* virtual */ JSObject*
-HTMLCanvasElement::WrapNode(JSContext* aCx, JSObject* aScope)
+HTMLCanvasElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return HTMLCanvasElementBinding::Wrap(aCx, aScope, this);
 }

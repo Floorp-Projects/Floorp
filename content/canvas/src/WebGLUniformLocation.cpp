@@ -9,7 +9,7 @@
 using namespace mozilla;
 
 JSObject*
-WebGLUniformLocation::WrapObject(JSContext *cx, JSObject *scope)
+WebGLUniformLocation::WrapObject(JSContext *cx, JS::Handle<JSObject*> scope)
 {
     return dom::WebGLUniformLocationBinding::Wrap(cx, scope, this);
 }

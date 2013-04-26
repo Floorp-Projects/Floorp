@@ -21,14 +21,10 @@ _BROWSER_TEST_FILES = \
                  browser_styleeditor_init.js \
                  browser_styleeditor_loading.js \
                  browser_styleeditor_new.js \
-                 browser_styleeditor_passedinsheet.js \
                  browser_styleeditor_pretty.js \
                  browser_styleeditor_private_perwindowpb.js \
-                 browser_styleeditor_readonly.js \
-                 browser_styleeditor_reopen.js \
                  browser_styleeditor_sv_keynav.js \
                  browser_styleeditor_sv_resize.js \
-                 browser_styleeditor_bug_826982_location_changed.js \
                  browser_styleeditor_bug_851132_middle_click.js \
                  head.js \
                  helpers.js \

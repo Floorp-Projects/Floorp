@@ -188,7 +188,6 @@ public class ScrollbarLayer extends TileLayer {
         float viewHeight = context.viewport.height();
 
         mBarRectF.set(mBarRect.left, viewHeight - mBarRect.top, mBarRect.right, viewHeight - mBarRect.bottom);
-        mBarRectF.offset(context.offset.x, -context.offset.y);
 
         // We take a 1-pixel slice from the center of the image and scale it to become the bar
         fillRectCoordBuffer(mCoords, mBarRectF, viewWidth, viewHeight, mBodyTexCoords, mTexWidth, mTexHeight);

@@ -38,11 +38,12 @@ public:
   // GetWidth() and GetHeight() return values in "display pixels".  A
   // "display pixel" is the smallest fully addressable part of a display.
   // But in HiDPI modes each "display pixel" corresponds to more than one
-  // device pixel.  Multiply display pixels by mContentsScaleFactor to
-  // get device pixels.
+  // device pixel.  Use GetDevicePixel**() to get device pixels.
   size_t GetWidth();
   size_t GetHeight();
   double GetContentsScaleFactor() { return mContentsScaleFactor; }
+  size_t GetDevicePixelWidth();
+  size_t GetDevicePixelHeight();
   size_t GetBytesPerRow();
   void Lock();
   void Unlock();

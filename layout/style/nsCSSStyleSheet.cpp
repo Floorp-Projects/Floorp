@@ -2260,7 +2260,7 @@ nsCSSStyleSheet::GetOriginalURI() const
 
 /* virtual */
 JSObject*
-nsCSSStyleSheet::WrapObject(JSContext* aCx, JSObject* aScope)
+nsCSSStyleSheet::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return CSSStyleSheetBinding::Wrap(aCx, aScope, this);
 }

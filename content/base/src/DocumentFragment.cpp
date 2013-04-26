@@ -22,7 +22,7 @@ namespace mozilla {
 namespace dom {
 
 JSObject*
-DocumentFragment::WrapNode(JSContext *aCx, JSObject *aScope)
+DocumentFragment::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
   return DocumentFragmentBinding::Wrap(aCx, aScope, this);
 }

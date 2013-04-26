@@ -13,15 +13,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "jstypes.h"
-#include "jsutil.h"
-
 #include "jsapi.h"
 #include "jsarray.h"
 #include "jsatom.h"
 #include "jsbool.h"
 #include "jscntxt.h"
-#include "jsversion.h"
+#include "jsfriendapi.h"
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsinterp.h"
@@ -29,20 +26,22 @@
 #include "jslock.h"
 #include "jsnum.h"
 #include "jsobj.h"
+#include "jstypes.h"
+#include "jsutil.h"
+#include "jsversion.h"
 #include "jswrapper.h"
+
+#include "ds/Sort.h"
+#include "gc/Marking.h"
 #include "methodjit/MethodJIT.h"
 #include "methodjit/StubCalls.h"
 #include "methodjit/StubCalls-inl.h"
-
-#include "gc/Marking.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/ForkJoin.h"
 #include "vm/NumericConversions.h"
 #include "vm/Shape.h"
 #include "vm/StringBuffer.h"
 #include "vm/ThreadPool.h"
-
-#include "ds/Sort.h"
 
 #include "jsatominlines.h"
 #include "jscntxtinlines.h"
@@ -84,11 +83,11 @@ js::GetLengthProperty(JSContext *cx, HandleObject obj, uint32_t *lengthp)
         return false;
 
     if (value.isInt32()) {
-        *lengthp = uint32_t(value.toInt32()); /* uint32_t cast does ToUint32_t */
+        *lengthp = uint32_t(value.toInt32()); // uint32_t cast does ToUint32
         return true;
     }
 
-    return ToUint32(cx, value, (uint32_t *)lengthp);
+    return ToUint32(cx, value, lengthp);
 }
 
 /*
@@ -301,6 +300,11 @@ SetArrayElement(JSContext *cx, HandleObject obj, double index, HandleValue v)
             if (index > uint32_t(-1))
                 break;
             uint32_t idx = uint32_t(index);
+            if (idx >= obj->getArrayLength() && !obj->arrayLengthIsWritable()) {
+                JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage, NULL,
+                                             JSMSG_CANT_REDEFINE_ARRAY_LENGTH);
+                return false;
+            }
             result = obj->ensureDenseElements(cx, idx, 1);
             if (result != JSObject::ED_OK)
                 break;
@@ -382,9 +386,7 @@ JSBool
 js::SetLengthProperty(JSContext *cx, HandleObject obj, double length)
 {
     RootedValue v(cx, NumberValue(length));
-
-    /* We don't support read-only array length yet. */
-    return JSObject::setProperty(cx, obj, obj, cx->names().length, &v, false);
+    return JSObject::setProperty(cx, obj, obj, cx->names().length, &v, true);
 }
 
 /*
@@ -417,113 +419,288 @@ array_length_setter(JSContext *cx, HandleObject obj, HandleId id, JSBool strict,
                                         NULL, NULL, JSPROP_ENUMERATE);
     }
 
-    uint32_t newlen;
-    if (!ToUint32(cx, vp, &newlen))
+    MOZ_ASSERT(obj->arrayLengthIsWritable(),
+               "setter shouldn't be called if property is non-writable");
+    return ArraySetLength(cx, obj, id, JSPROP_PERMANENT, vp, strict);
+}
+
+struct ReverseIndexComparator
+{
+    bool operator()(const uint32_t& a, const uint32_t& b, bool *lessOrEqualp) {
+        MOZ_ASSERT(a != b, "how'd we get duplicate indexes?");
+        *lessOrEqualp = b <= a;
+        return true;
+    }
+};
+
+/* ES6 20130308 draft 8.4.2.4 ArraySetLength */
+bool
+js::ArraySetLength(JSContext *cx, HandleObject obj, HandleId id, unsigned attrs,
+                   HandleValue value, bool setterIsStrict)
+{
+    MOZ_ASSERT(obj->isArray());
+    MOZ_ASSERT(id == NameToId(cx->names().length));
+    MOZ_ASSERT(attrs & JSPROP_PERMANENT);
+    MOZ_ASSERT(!(attrs & JSPROP_ENUMERATE));
+
+    /* Steps 1-2 are irrelevant in our implementation. */
+
+    /* Step 3. */
+    uint32_t newLen;
+    if (!ToUint32(cx, value, &newLen))
         return false;
 
+    /* Steps 4-5. */
     double d;
-    if (!ToNumber(cx, vp, &d))
+    if (!ToNumber(cx, value, &d))
         return false;
-
-    if (d != newlen) {
+    if (d != newLen) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_ARRAY_LENGTH);
         return false;
     }
 
-    uint32_t oldlen = obj->getArrayLength();
-    if (oldlen == newlen)
-        return true;
+    /* Steps 6-7. */
+    bool lengthIsWritable = obj->arrayLengthIsWritable();
+#ifdef DEBUG
+    {
+        RootedShape lengthShape(cx, obj->nativeLookup(cx, id));
+        MOZ_ASSERT(lengthShape);
+        MOZ_ASSERT(lengthShape->writable() == lengthIsWritable);
+    }
+#endif
 
-    vp.setNumber(newlen);
-    if (oldlen < newlen) {
-        JSObject::setArrayLength(cx, obj, newlen);
-        return true;
+    uint32_t oldLen = obj->getArrayLength();
+
+    /* Steps 8-9 for arrays with non-writable length. */
+    if (!lengthIsWritable) {
+        if (newLen == oldLen)
+            return true;
+
+        if (setterIsStrict) {
+            return JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage, NULL,
+                                                JSMSG_CANT_REDEFINE_ARRAY_LENGTH);
+        }
+
+        return JSObject::reportReadOnly(cx, id, JSREPORT_STRICT | JSREPORT_WARNING);
     }
 
-    /*
-     * Don't reallocate if we're not actually shrinking our slots. If we do
-     * shrink slots here, shrink the initialized length too.  This permits us
-     * us to disregard length when reading from arrays as long we are within
-     * the initialized capacity.
-     */
-    uint32_t oldcap = obj->getDenseCapacity();
-    uint32_t oldinit = obj->getDenseInitializedLength();
-    if (oldinit > newlen)
-        obj->setDenseInitializedLength(newlen);
-    if (oldcap > newlen)
-        obj->shrinkElements(cx, newlen);
 
-    if (!obj->isIndexed()) {
-        /* No sparse indexed properties to remove. */
-        JSObject::setArrayLength(cx, obj, newlen);
-        return true;
-    }
+    /* Step 8. */
+    bool succeeded = true;
+    do {
+        // The initialized length and capacity of an array only need updating
+        // when non-hole elements are added or removed, which doesn't happen
+        // when array length stays the same or increases.
+        if (newLen >= oldLen)
+            break;
 
-    if (oldlen - newlen < (1 << 24)) {
-        /*
-         * We are removing a relatively small number of indexes in an array,
-         * so delete any property found for one of the deleted indexes.
-         */
-        do {
-            --oldlen;
-            if (!JS_CHECK_OPERATION_LIMIT(cx)) {
-                JSObject::setArrayLength(cx, obj, oldlen + 1);
-                return false;
-            }
+        // Attempt to propagate dense-element optimization tricks, if possible,
+        // and avoid the generic (and accordingly slow) deletion code below.
+        // We can only do this if there are only densely-indexed elements.
+        // Once there's a sparse indexed element, there's no good way to know,
+        // save by enumerating all the properties to find it.  But we *have* to
+        // know in case that sparse indexed element is non-configurable, as
+        // that element must prevent any deletions below it.  Bug 586842 should
+        // fix this inefficiency by moving indexed storage to be entirely
+        // separate from non-indexed storage.
+        if (!obj->isIndexed()) {
+            uint32_t oldCapacity = obj->getDenseCapacity();
+            uint32_t oldInitializedLength = obj->getDenseInitializedLength();
+            MOZ_ASSERT(oldCapacity >= oldInitializedLength);
+            if (oldInitializedLength > newLen)
+                obj->setDenseInitializedLength(newLen);
+            if (oldCapacity > newLen)
+                obj->shrinkElements(cx, newLen);
 
-            JSBool succeeded;
-            if (!DeleteArrayElement(cx, obj, oldlen, &succeeded))
-                return false;
-            if (!succeeded) {
-                JSObject::setArrayLength(cx, obj, oldlen + 1);
-                if (!strict)
-                    return true;
+            // We've done the work of deleting any dense elements needing
+            // deletion, and there are no sparse elements.  Thus we can skip
+            // straight to defining the length.
+            break;
+        }
 
-                RootedId id(cx);
-                if (!IndexToId(cx, oldlen, &id))
+        // Step 15.
+        //
+        // Attempt to delete all elements above the new length, from greatest
+        // to least.  If any of these deletions fails, we're supposed to define
+        // the length to one greater than the index that couldn't be deleted,
+        // *with the property attributes specified*.  This might convert the
+        // length to be not the value specified, yet non-writable.  (You may be
+        // forgiven for thinking these are interesting semantics.)  Example:
+        //
+        //   var arr =
+        //     Object.defineProperty([0, 1, 2, 3], 1, { writable: false });
+        //   Object.defineProperty(arr, "length",
+        //                         { value: 0, writable: false });
+        //
+        // will convert |arr| to an array of non-writable length two, then
+        // throw a TypeError.
+        //
+        // We implement this behavior, in the relevant lops below, by setting
+        // |succeeded| to false.  Then we exit the loop, define the length
+        // appropriately, and only then throw a TypeError, if necessary.
+        uint32_t gap = oldLen - newLen;
+        const uint32_t RemoveElementsFastLimit = 1 << 24;
+        if (gap < RemoveElementsFastLimit) {
+            // If we're removing a relatively small number of elements, just do
+            // it exactly by the spec.
+            while (newLen < oldLen) {
+                /* Step 15a. */
+                oldLen--;
+
+                /* Steps 15b-d. */
+                JSBool deleteSucceeded;
+                if (!JSObject::deleteElement(cx, obj, oldLen, &deleteSucceeded))
                     return false;
-                obj->reportNotConfigurable(cx, id);
-                return false;
+                if (!deleteSucceeded) {
+                    newLen = oldLen + 1;
+                    succeeded = false;
+                    break;
+                }
             }
-        } while (oldlen != newlen);
-    } else {
-        /*
-         * We are going to remove a lot of indexes in a presumably sparse
-         * array. So instead of looping through indexes between newlen and
-         * oldlen, we iterate through all properties and remove those that
-         * correspond to indexes in the half-open range [newlen, oldlen).  See
-         * bug 322135.
-         */
-        RootedObject iter(cx, JS_NewPropertyIterator(cx, obj));
-        if (!iter)
-            return false;
+        } else {
+            // If we're removing a large number of elements from an array
+            // that's probably sparse, try a different tack.  Get all the own
+            // property names, sift out the indexes in the deletion range into
+            // a vector, sort the vector greatest to least, then delete the
+            // indexes greatest to least using that vector.  See bug 322135.
+            //
+            // This heuristic's kind of a huge guess -- "large number of
+            // elements" and "probably sparse" are completely unprincipled
+            // predictions.  In the long run, bug 586842 will support the right
+            // fix: store sparse elements in a sorted data structure that
+            // permits fast in-reverse-order traversal and concurrent removals.
 
-        uint32_t gap = oldlen - newlen;
-        for (;;) {
-            RootedId nid(cx);
-            if (!JS_CHECK_OPERATION_LIMIT(cx) || !JS_NextProperty(cx, iter, nid.address()))
-                return false;
-            if (JSID_IS_VOID(nid))
-                break;
-
-            // XXX Bug!  We should fail fast on the highest non-configurable
-            //     property we find, as we do in the simple-loop case above.
-            //     But since we're iterating in unknown order here, we don't
-            //     know if we're hitting the highest non-configurable property
-            //     when we hit a failure.  For now just drop unsuccessful
-            //     deletion on the floor, as the previous code here did.
-            uint32_t index;
-            JSBool succeeded;
-            if (js_IdIsIndex(nid, &index) && index - newlen < gap &&
-                !JSObject::deleteElement(cx, obj, index, &succeeded))
+            Vector<uint32_t> indexes(cx);
             {
-                return false;
+                AutoIdVector props(cx);
+                if (!GetPropertyNames(cx, obj, JSITER_OWNONLY | JSITER_HIDDEN, &props))
+                    return false;
+
+                for (size_t i = 0; i < props.length(); i++) {
+                    if (!JS_CHECK_OPERATION_LIMIT(cx))
+                        return false;
+
+                    uint32_t index;
+                    if (!js_IdIsIndex(props[i], &index))
+                        continue;
+
+                    if (index >= newLen && index < oldLen) {
+                        if (!indexes.append(index))
+                            return false;
+                    }
+                }
             }
+
+            uint32_t count = indexes.length();
+            {
+                // We should use radix sort to be O(n), but this is uncommon
+                // enough that we'll punt til someone complains.
+                Vector<uint32_t> scratch(cx);
+                if (!scratch.resize(count))
+                    return false;
+                MOZ_ALWAYS_TRUE(MergeSort(indexes.begin(), count, scratch.begin(),
+                                          ReverseIndexComparator()));
+            }
+
+            uint32_t index = UINT32_MAX;
+            for (uint32_t i = 0; i < count; i++) {
+                MOZ_ASSERT(indexes[i] < index, "indexes should never repeat");
+                index = indexes[i];
+
+                /* Steps 15b-d. */
+                JSBool deleteSucceeded;
+                if (!JSObject::deleteElement(cx, obj, index, &deleteSucceeded))
+                    return false;
+                if (!deleteSucceeded) {
+                    newLen = index + 1;
+                    succeeded = false;
+                    break;
+                }
+            }
+        }
+    } while (false);
+
+    /* Steps 12, 16. */
+
+    // Yes, we totally drop a non-stub getter/setter from a defineProperty
+    // API call on the floor here.  Given that getter/setter will go away in
+    // the long run, with accessors replacing them both internally and at the
+    // API level, just run with this.
+    RootedShape lengthShape(cx, obj->nativeLookup(cx, id));
+    if (!JSObject::changeProperty(cx, obj, lengthShape, attrs,
+                                  JSPROP_PERMANENT | JSPROP_READONLY | JSPROP_SHARED,
+                                  array_length_getter, array_length_setter))
+    {
+        return false;
+    }
+
+    RootedValue v(cx, NumberValue(newLen));
+    AddTypePropertyId(cx, obj, id, v);
+    JSObject::setArrayLength(cx, obj, newLen);
+
+    // All operations past here until the |!succeeded| code must be infallible,
+    // so that all element fields remain properly synchronized.
+
+    // Trim the initialized length, if needed, to preserve the <= length
+    // invariant.  (Capacity was already reduced during element deletion, if
+    // necessary.)
+    ObjectElements *header = obj->getElementsHeader();
+    header->initializedLength = Min(header->initializedLength, newLen);
+
+    if (attrs & JSPROP_READONLY) {
+        header->setNonwritableArrayLength();
+
+        // When an array's length becomes non-writable, writes to indexes
+        // greater than or equal to the length don't change the array.  We
+        // handle this with a check for non-writable length in most places.
+        // But in JIT code every check counts -- so we piggyback the check on
+        // the already-required range check for |index < capacity| by making
+        // capacity of arrays with non-writable length never exceed the length.
+        if (obj->getDenseCapacity() > newLen) {
+            obj->shrinkElements(cx, newLen);
+            obj->getElementsHeader()->capacity = newLen;
         }
     }
 
-    JSObject::setArrayLength(cx, obj, newlen);
+    if (setterIsStrict && !succeeded) {
+        RootedId elementId(cx);
+        if (!IndexToId(cx, newLen - 1, &elementId))
+            return false;
+        return obj->reportNotConfigurable(cx, elementId);
+    }
+
     return true;
+}
+
+bool
+js::WouldDefinePastNonwritableLength(JSContext *cx, HandleObject obj, uint32_t index, bool strict,
+                                     bool *definesPast)
+{
+    if (!obj->isArray()) {
+        *definesPast = false;
+        return true;
+    }
+
+    uint32_t length = obj->getArrayLength();
+    if (index < length) {
+        *definesPast = false;
+        return true;
+    }
+
+    if (obj->arrayLengthIsWritable()) {
+        *definesPast = false;
+        return true;
+    }
+
+    *definesPast = true;
+    if (!strict && !cx->hasStrictOption())
+        return true;
+
+    // Error in strict mode code or warn with strict option.
+    // XXX include the index and maybe array length in the error message
+    unsigned flags = strict ? JSREPORT_ERROR : (JSREPORT_STRICT | JSREPORT_WARNING);
+    return JS_ReportErrorFlagsAndNumber(cx, flags, js_GetErrorMessage, NULL,
+                                        JSMSG_CANT_DEFINE_PAST_ARRAY_LENGTH);
 }
 
 static JSBool
@@ -533,11 +710,14 @@ array_addProperty(JSContext *cx, HandleObject obj, HandleId id,
     uint32_t index, length;
 
     if (!js_IdIsIndex(id, &index))
-        return JS_TRUE;
+        return true;
     length = obj->getArrayLength();
-    if (index >= length)
+    if (index >= length) {
+        MOZ_ASSERT(obj->arrayLengthIsWritable(),
+                   "how'd this element get added if length is non-writable?");
         JSObject::setArrayLength(cx, obj, index + 1);
-    return JS_TRUE;
+    }
+    return true;
 }
 
 JSBool
@@ -614,7 +794,8 @@ AddLengthProperty(JSContext *cx, HandleObject obj)
     JS_ASSERT(!obj->nativeLookup(cx, lengthId));
 
     return JSObject::addProperty(cx, obj, lengthId, array_length_getter, array_length_setter,
-                                 SHAPE_INVALID_SLOT, JSPROP_PERMANENT | JSPROP_SHARED, 0, 0);
+                                 SHAPE_INVALID_SLOT, JSPROP_PERMANENT | JSPROP_SHARED, 0, 0,
+                                 /* allowDictionary = */ false);
 }
 
 #if JS_HAS_TOSOURCE
@@ -925,7 +1106,8 @@ InitArrayElements(JSContext *cx, HandleObject obj, uint32_t start, uint32_t coun
 
     /*
      * Optimize for dense arrays so long as adding the given set of elements
-     * wouldn't otherwise make the array slow.
+     * wouldn't otherwise make the array slow or exceed a non-writable array
+     * length.
      */
     do {
         if (!obj->isArray())
@@ -934,6 +1116,9 @@ InitArrayElements(JSContext *cx, HandleObject obj, uint32_t start, uint32_t coun
             break;
 
         if (obj->shouldConvertDoubleElements())
+            break;
+
+        if (!obj->arrayLengthIsWritable() && start + count > obj->getArrayLength())
             break;
 
         JSObject::EnsureDenseResult result = obj->ensureDenseElements(cx, start, count);
@@ -1695,49 +1880,11 @@ js::array_sort(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-/*
- * Perl-inspired push, pop, shift, unshift, and splice methods.
- */
-static bool
-array_push_slowly(JSContext *cx, HandleObject obj, CallArgs &args)
-{
-    uint32_t length;
-
-    if (!GetLengthProperty(cx, obj, &length))
-        return false;
-    if (!InitArrayElements(cx, obj, length, args.length(), args.array(), UpdateTypes))
-        return false;
-
-    /* Per ECMA-262, return the new array length. */
-    double newlength = length + double(args.length());
-    args.rval().setNumber(newlength);
-    return SetLengthProperty(cx, obj, newlength);
-}
-
-static bool
-array_push1_dense(JSContext* cx, HandleObject obj, CallArgs &args)
-{
-    JS_ASSERT(args.length() == 1);
-
-    uint32_t length = obj->getArrayLength();
-    JSObject::EnsureDenseResult result = obj->ensureDenseElements(cx, length, 1);
-    if (result != JSObject::ED_OK) {
-        if (result == JSObject::ED_FAILED)
-            return false;
-        JS_ASSERT(result == JSObject::ED_SPARSE);
-        return array_push_slowly(cx, obj, args);
-    }
-
-    obj->setArrayLengthInt32(length + 1);
-    JSObject::setDenseElementWithType(cx, obj, length, args[0]);
-    args.rval().setNumber(obj->getArrayLength());
-    return true;
-}
-
 JS_ALWAYS_INLINE JSBool
 NewbornArrayPushImpl(JSContext *cx, HandleObject obj, const Value &v)
 {
     JS_ASSERT(!v.isMagic());
+    JS_ASSERT(obj->arrayLengthIsWritable());
 
     uint32_t length = obj->getArrayLength();
     JS_ASSERT(length <= obj->getDenseCapacity());
@@ -1757,93 +1904,103 @@ js_NewbornArrayPush(JSContext *cx, HandleObject obj, const Value &vp)
     return NewbornArrayPushImpl(cx, obj, vp);
 }
 
+/* ES5 15.4.4.7 */
 JSBool
 js::array_push(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
+
+    /* Step 1. */
     RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
         return false;
 
-    /* Insist on one argument and obj of the expected class. */
-    if (args.length() != 1 || !obj->isArray())
-        return array_push_slowly(cx, obj, args);
+    /* Fast path for the fully-dense case. */
+    if (obj->isArray() &&
+        obj->arrayLengthIsWritable() &&
+        !ObjectMayHaveExtraIndexedProperties(obj))
+    {
+        uint32_t length = obj->getArrayLength();
+        uint32_t argCount = args.length();
+        JSObject::EnsureDenseResult result = obj->ensureDenseElements(cx, length, argCount);
+        if (result == JSObject::ED_FAILED)
+            return false;
 
-    return array_push1_dense(cx, obj, args);
-}
+        if (result == JSObject::ED_OK) {
+            obj->setArrayLengthInt32(length + argCount);
+            for (uint32_t i = 0, index = length; i < argCount; index++, i++)
+                JSObject::setDenseElementWithType(cx, obj, index, args[i]);
+            args.rval().setNumber(obj->getArrayLength());
+            return true;
+        }
 
-static JSBool
-array_pop_slowly(JSContext *cx, HandleObject obj, CallArgs &args)
-{
-    uint32_t index;
-    if (!GetLengthProperty(cx, obj, &index))
-        return false;
-
-    if (index == 0) {
-        args.rval().setUndefined();
-        return SetLengthProperty(cx, obj, index);
+        MOZ_ASSERT(result == JSObject::ED_SPARSE);
     }
 
-    index--;
-
-    JSBool hole;
-    RootedValue elt(cx);
-    if (!GetElement(cx, obj, index, &hole, &elt))
+    /* Steps 2-3. */
+    uint32_t length;
+    if (!GetLengthProperty(cx, obj, &length))
         return false;
 
-    if (!hole && !DeletePropertyOrThrow(cx, obj, index))
+    /* Steps 4-5. */
+    if (!InitArrayElements(cx, obj, length, args.length(), args.array(), UpdateTypes))
         return false;
 
-    args.rval().set(elt);
-    return SetLengthProperty(cx, obj, index);
+    /* Steps 6-7. */
+    double newlength = length + double(args.length());
+    args.rval().setNumber(newlength);
+    return SetLengthProperty(cx, obj, newlength);
 }
 
-static JSBool
-array_pop_dense(JSContext *cx, HandleObject obj, CallArgs &args)
-{
-    uint32_t index = obj->getArrayLength();
-    if (index == 0) {
-        args.rval().setUndefined();
-        return true;
-    }
-
-    index--;
-
-    JSBool hole;
-    RootedValue elt(cx);
-    if (!GetElement(cx, obj, index, &hole, &elt))
-        return false;
-
-    if (!hole && !DeletePropertyOrThrow(cx, obj, index))
-        return false;
-
-    args.rval().set(elt);
-
-    // obj may not be a dense array any more, e.g. if the element was a missing
-    // and a getter supplied by the prototype modified the object.
-    if (obj->getDenseInitializedLength() > index)
-        obj->setDenseInitializedLength(index);
-
-    JSObject::setArrayLength(cx, obj, index);
-    return true;
-}
-
+/* ES6 20130308 draft 15.4.4.6. */
 JSBool
 js::array_pop(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
+
+    /* Step 1. */
     RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
         return false;
-    if (obj->isArray())
-        return array_pop_dense(cx, obj, args);
-    return array_pop_slowly(cx, obj, args);
+
+    /* Steps 2-3. */
+    uint32_t index;
+    if (!GetLengthProperty(cx, obj, &index))
+        return false;
+
+    /* Steps 4-5. */
+    if (index == 0) {
+        /* Step 4b. */
+        args.rval().setUndefined();
+    } else {
+        /* Step 5a. */
+        index--;
+
+        /* Step 5b, 5e. */
+        JSBool hole;
+        if (!GetElement(cx, obj, index, &hole, args.rval()))
+            return false;
+
+        /* Step 5c. */
+        if (!hole && !DeletePropertyOrThrow(cx, obj, index))
+            return false;
+    }
+
+    // Keep dense initialized length optimal, if possible.  Note that this just
+    // reflects the possible deletion above: in particular, it's okay to do
+    // this even if the length is non-writable and SetLengthProperty throws.
+    if (obj->isNative() && obj->getDenseInitializedLength() > index)
+        obj->setDenseInitializedLength(index);
+
+    /* Steps 4a, 5d. */
+    return SetLengthProperty(cx, obj, index);
 }
 
 void
 js::ArrayShiftMoveElements(JSObject *obj)
 {
     JS_ASSERT(obj->isArray());
+    JS_ASSERT(obj->arrayLengthIsWritable());
 
     /*
      * At this point the length and initialized length have already been
@@ -1863,63 +2020,81 @@ mjit::stubs::ArrayShift(VMFrame &f)
 }
 #endif /* JS_METHODJIT */
 
+/* ES5 15.4.4.9 */
 JSBool
 js::array_shift(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
+
+    /* Step 1. */
     RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
-        return JS_FALSE;
+        return false;
 
-    uint32_t length;
-    if (!GetLengthProperty(cx, obj, &length))
-        return JS_FALSE;
+    /* Steps 2-3. */
+    uint32_t len;
+    if (!GetLengthProperty(cx, obj, &len))
+        return false;
 
-    if (length == 0) {
+    /* Step 4. */
+    if (len == 0) {
+        /* Step 4a. */
+        if (!SetLengthProperty(cx, obj, 0))
+            return false;
+
+        /* Step 4b. */
         args.rval().setUndefined();
-    } else {
-        length--;
-
-        if (obj->isArray() && !ObjectMayHaveExtraIndexedProperties(obj) &&
-            length < obj->getDenseCapacity() &&
-            0 < obj->getDenseInitializedLength())
-        {
-            args.rval().set(obj->getDenseElement(0));
-            if (args.rval().isMagic(JS_ELEMENTS_HOLE))
-                args.rval().setUndefined();
-            obj->moveDenseElements(0, 1, obj->getDenseInitializedLength() - 1);
-            obj->setDenseInitializedLength(obj->getDenseInitializedLength() - 1);
-            JSObject::setArrayLength(cx, obj, length);
-            if (!js_SuppressDeletedProperty(cx, obj, INT_TO_JSID(length)))
-                return JS_FALSE;
-            return JS_TRUE;
-        }
-
-        JSBool hole;
-        if (!GetElement(cx, obj, 0u, &hole, args.rval()))
-            return JS_FALSE;
-
-        /* Slide down the array above the first element. */
-        RootedValue value(cx);
-        for (uint32_t i = 0; i < length; i++) {
-            if (!JS_CHECK_OPERATION_LIMIT(cx))
-                return false;
-            if (!GetElement(cx, obj, i + 1, &hole, &value))
-                return false;
-            if (hole) {
-                if (!DeletePropertyOrThrow(cx, obj, i))
-                    return false;
-            } else {
-                if (!SetArrayElement(cx, obj, i, value))
-                    return false;
-            }
-        }
-
-        /* Delete the only or last element when it exists. */
-        if (!hole && !DeletePropertyOrThrow(cx, obj, length))
-            return JS_FALSE;
+        return true;
     }
-    return SetLengthProperty(cx, obj, length);
+
+    uint32_t newlen = len - 1;
+
+    /* Fast paths. */
+    if (obj->isArray() &&
+        obj->getDenseInitializedLength() > 0 &&
+        newlen < obj->getDenseCapacity() &&
+        !ObjectMayHaveExtraIndexedProperties(obj))
+    {
+        args.rval().set(obj->getDenseElement(0));
+        if (args.rval().isMagic(JS_ELEMENTS_HOLE))
+            args.rval().setUndefined();
+
+        obj->moveDenseElements(0, 1, obj->getDenseInitializedLength() - 1);
+        obj->setDenseInitializedLength(obj->getDenseInitializedLength() - 1);
+
+        if (!SetLengthProperty(cx, obj, newlen))
+            return false;
+
+        return js_SuppressDeletedProperty(cx, obj, INT_TO_JSID(newlen));
+    }
+
+    /* Steps 5, 10. */
+    JSBool hole;
+    if (!GetElement(cx, obj, uint32_t(0), &hole, args.rval()))
+        return false;
+
+    /* Steps 6-7. */
+    RootedValue value(cx);
+    for (uint32_t i = 0; i < newlen; i++) {
+        if (!JS_CHECK_OPERATION_LIMIT(cx))
+            return false;
+        if (!GetElement(cx, obj, i + 1, &hole, &value))
+            return false;
+        if (hole) {
+            if (!DeletePropertyOrThrow(cx, obj, i))
+                return false;
+        } else {
+            if (!SetArrayElement(cx, obj, i, value))
+                return false;
+        }
+    }
+
+    /* Step 8. */
+    if (!DeletePropertyOrThrow(cx, obj, newlen))
+        return false;
+
+    /* Step 9. */
+    return SetLengthProperty(cx, obj, newlen);
 }
 
 static JSBool
@@ -1943,6 +2118,8 @@ array_unshift(JSContext *cx, unsigned argc, Value *vp)
                 if (!obj->isArray())
                     break;
                 if (ObjectMayHaveExtraIndexedProperties(obj))
+                    break;
+                if (!obj->arrayLengthIsWritable())
                     break;
                 JSObject::EnsureDenseResult result = obj->ensureDenseElements(cx, length, args.length());
                 if (result != JSObject::ED_OK) {
@@ -2044,8 +2221,9 @@ CanOptimizeForDenseStorage(HandleObject arr, uint32_t startingIndex, uint32_t co
         return false;
 
     /*
-     * Now just watch out for getters and setters along the prototype chain or
-     * in other indexed properties on the object.
+     * Now watch out for getters and setters along the prototype chain or in
+     * other indexed properties on the object.  (Note that non-writable length
+     * is subsumed by the initializedLength comparison.)
      */
     return !ObjectMayHaveExtraIndexedProperties(arr) &&
            startingIndex + count <= arr->getDenseInitializedLength();
@@ -2184,9 +2362,29 @@ array_splice(JSContext *cx, unsigned argc, Value *vp)
 
         /*
          * Optimize only if the array is already dense and we can extend it to
-         * its new length.
+         * its new length.  It would be wrong to extend the elements here for a
+         * number of reasons.
+         *
+         * First, this could cause us to fall into the fast-path below.  This
+         * would cause elements to be moved into places past the non-writable
+         * length.  And when the dense initialized length is updated, that'll
+         * cause the |in| operator to think that those elements actually exist,
+         * even though, properly, setting them must fail.
+         *
+         * Second, extending the elements here will trigger assertions inside
+         * ensureDenseElements that the elements aren't being extended past the
+         * length of a non-writable array.  This is because extending elements
+         * will extend capacity -- which might extend them past a non-writable
+         * length, violating the |capacity <= length| invariant for such
+         * arrays.  And that would make the various JITted fast-path method
+         * implementations of [].push, [].unshift, and so on wrong.
+         *
+         * If the array length is non-writable, this method *will* throw.  For
+         * simplicity, have the slow-path code do it.  (Also note that the slow
+         * path may validly *not* throw -- if all the elements being moved are
+         * holes.)
          */
-        if (obj->isArray()) {
+        if (obj->isArray() && obj->arrayLengthIsWritable()) {
             JSObject::EnsureDenseResult res =
                 obj->ensureDenseElements(cx, obj->getArrayLength(),
                                          itemCount - actualDeleteCount);

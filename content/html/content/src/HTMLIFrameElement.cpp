@@ -249,7 +249,7 @@ HTMLIFrameElement::GetSandboxFlags()
 }
 
 JSObject*
-HTMLIFrameElement::WrapNode(JSContext* aCx, JSObject* aScope)
+HTMLIFrameElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return HTMLIFrameElementBinding::Wrap(aCx, aScope, this);
 }

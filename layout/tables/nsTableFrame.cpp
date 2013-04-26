@@ -1536,10 +1536,7 @@ nsTableFrame::AncestorsHaveStyleHeight(const nsHTMLReflowState& aParentReflowSta
     }
     else if (nsGkAtoms::tableFrame == frameType) {
       // we reached the containing table, so always return
-      if (rs->mStylePosition->mHeight.GetUnit() != eStyleUnit_Auto) {
-        return true;
-      }
-      else return false;
+      return rs->mStylePosition->mHeight.GetUnit() != eStyleUnit_Auto;
     }
   }
   return false;

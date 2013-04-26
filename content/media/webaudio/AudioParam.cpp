@@ -34,7 +34,7 @@ AudioParam::~AudioParam()
 }
 
 JSObject*
-AudioParam::WrapObject(JSContext* aCx, JSObject* aScope)
+AudioParam::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return AudioParamBinding::Wrap(aCx, aScope, this);
 }

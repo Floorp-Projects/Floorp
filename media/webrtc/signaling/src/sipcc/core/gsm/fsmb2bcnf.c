@@ -210,7 +210,7 @@ fsmb2bcnf_get_new_b2bcnf_context (callid_t b2bcnf_call_id, line_t line)
                      ccb->cnf_call_id, ccb->cns_call_id, fname, ccb);
     } else {
 
-        GSM_DEBUG_ERROR(GSM_F_PREFIX"Failed to get new b2bccb.\n", fname);
+        GSM_DEBUG_ERROR(GSM_F_PREFIX"Failed to get new b2bccb.", fname);
     }
 
     return (ccb);
@@ -786,7 +786,7 @@ fsmb2bcnf_ev_idle_feature (sm_event_t *event)
                                                         FSM_TYPE_B2BCNF);
 
             if (other_fcb == NULL) {
-                GSM_DEBUG_ERROR(GSM_F_PREFIX"FCP not found \n", fname);
+                GSM_DEBUG_ERROR(GSM_F_PREFIX"FCP not found", fname);
             } else {
                fsm_change_state(fcb, __LINE__, other_fcb->state);
             }
@@ -894,7 +894,7 @@ fsmb2bcnf_ev_active_feature (sm_event_t *event)
                 //Do nothing remote-cc will terminate the feature layer.
 
             } else {
-                DEF_DEBUG(DEB_F_PREFIX"Invoke hold call_id = %d t_call_id=%d\n",
+                DEF_DEBUG(DEB_F_PREFIX"Invoke hold call_id = %d t_call_id=%d",
                         DEB_F_PREFIX_ARGS(GSM, fname), ccb->cnf_call_id, ccb->cns_call_id);
                 //Actual hold to this call, so break the feature layer.
                 ui_terminate_feature(ccb->cnf_line, ccb->cnf_call_id, ccb->cns_call_id);
@@ -911,7 +911,7 @@ fsmb2bcnf_ev_active_feature (sm_event_t *event)
              * call_id in the data then terminate the existing consulatative
              * call and link that to another call.
             */
-            DEF_DEBUG(DEB_F_PREFIX"ACTIVE CNF call_id = %d, t_id = %d, cns_id=%d\n",
+            DEF_DEBUG(DEB_F_PREFIX"ACTIVE CNF call_id = %d, t_id = %d, cns_id=%d",
                 DEB_F_PREFIX_ARGS(GSM, fname), ccb->cnf_call_id,
                     feat_data->b2bconf.target_call_id, ccb->cns_call_id);
 
@@ -933,7 +933,7 @@ fsmb2bcnf_ev_active_feature (sm_event_t *event)
                             FSM_TYPE_B2BCNF);
 
                     if (cnf_fcb != NULL) {
-                        DEF_DEBUG(DEB_F_PREFIX"INVOKE ACTIVE CNF call_id = %d, t_id=%d\n",
+                        DEF_DEBUG(DEB_F_PREFIX"INVOKE ACTIVE CNF call_id = %d, t_id=%d",
                             DEB_F_PREFIX_ARGS(GSM, fname), ccb->cnf_call_id,
                         feat_data->b2bconf.target_call_id);
 
@@ -1036,7 +1036,7 @@ fsmb2bcnf_ev_active_feature (sm_event_t *event)
     case CC_SRC_SIP:
         switch (ftr_id) {
         case CC_FEATURE_CALL_PRESERVATION:
-             DEF_DEBUG(DEB_F_PREFIX"Invoke hold call_id = %d t_call_id=%d\n",
+             DEF_DEBUG(DEB_F_PREFIX"Invoke hold call_id = %d t_call_id=%d",
                             DEB_F_PREFIX_ARGS(GSM, fname), ccb->cnf_call_id, ccb->cns_call_id);
              //Actual hold to this call, so break the feature layer.
              ui_terminate_feature(ccb->cnf_line, ccb->cnf_call_id, ccb->cns_call_id);
@@ -1134,7 +1134,7 @@ fsmb2bcnf_get_sub_call_id_from_ccb(fsmcnf_ccb_t *ccb, callid_t *cnf_call_id,
 {
     static const char fname[] = "fsmb2bcnf_get_sub_call_id_from_ccb";
 
-    DEF_DEBUG(DEB_F_PREFIX"call_id = %d t_call_id=%d\n",
+    DEF_DEBUG(DEB_F_PREFIX"call_id = %d t_call_id=%d",
                         DEB_F_PREFIX_ARGS(GSM, fname), ccb->cnf_call_id, ccb->cns_call_id);
 
     *cnf_call_id = ccb->cnf_call_id;

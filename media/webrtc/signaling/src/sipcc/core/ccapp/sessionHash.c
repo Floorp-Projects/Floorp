@@ -233,7 +233,7 @@ void hashstats(int detail)
             while(cur_hash != NULL) {
                nodes++;
                if (detail > 3) {
-                  CCAPPDEBUG(DEB_F_PREFIX"%lx -> %lx: (%lx) (%lx) -> %lx\n",
+                  CCAPPDEBUG(DEB_F_PREFIX"%lx -> %lx: (%lx) (%lx) -> %lx",
                              DEB_F_PREFIX_ARGS(SIP_SES_HASH, fname),
                              cur_hash->prev, cur_hash, cur_hash->key, cur_hash->data, cur_hash->next);
                }
@@ -244,15 +244,15 @@ void hashstats(int detail)
                max = nodes;
             }
             if (detail > 1) {
-               CCAPPDEBUG(DEB_F_PREFIX"i: %d\n", DEB_F_PREFIX_ARGS(SIP_SES_HASH, fname), i);
+               CCAPPDEBUG(DEB_F_PREFIX"i: %d", DEB_F_PREFIX_ARGS(SIP_SES_HASH, fname), i);
             }
          }
       }
       avg = (double)(total) / (double)(used);
-      CCAPPDEBUG(DEB_F_PREFIX"total: %d\n", DEB_F_PREFIX_ARGS(SIP_SES_HASH, fname), total);
-      CCAPPDEBUG(DEB_F_PREFIX"max: %d\n", DEB_F_PREFIX_ARGS(SIP_SES_HASH, fname), max);
-      CCAPPDEBUG(DEB_F_PREFIX"used: %lf\n", DEB_F_PREFIX_ARGS(SIP_SES_HASH, fname), 100 * ((double)(used) / (double)(HASHBUCKETS)));
-      CCAPPDEBUG(DEB_F_PREFIX"average: %lf\n", DEB_F_PREFIX_ARGS(SIP_SES_HASH, fname), avg);
+      CCAPPDEBUG(DEB_F_PREFIX"total: %d", DEB_F_PREFIX_ARGS(SIP_SES_HASH, fname), total);
+      CCAPPDEBUG(DEB_F_PREFIX"max: %d", DEB_F_PREFIX_ARGS(SIP_SES_HASH, fname), max);
+      CCAPPDEBUG(DEB_F_PREFIX"used: %lf", DEB_F_PREFIX_ARGS(SIP_SES_HASH, fname), 100 * ((double)(used) / (double)(HASHBUCKETS)));
+      CCAPPDEBUG(DEB_F_PREFIX"average: %lf", DEB_F_PREFIX_ARGS(SIP_SES_HASH, fname), avg);
    }
 }
 
@@ -273,16 +273,16 @@ int main()
 
   hashItrInit(&itr);
   while ( data = hashItrNext(&itr) ) {
-    CCAPPDEBUG(DEB_F_PREFIX"Itr found %lx\n", DEB_F_PREFIX_ARGS(SIP_SES_HASH, fname), data);
+    CCAPPDEBUG(DEB_F_PREFIX"Itr found %lx", DEB_F_PREFIX_ARGS(SIP_SES_HASH, fname), data);
   }
 
-  CCAPPDEBUG(DEB_F_PREFIX"%lx\n", DEB_F_PREFIX_ARGS(SIP_SES_HASH, fname), findhash(0x01010001));
-  CCAPPDEBUG(DEB_F_PREFIX"%lx\n", DEB_F_PREFIX_ARGS(SIP_SES_HASH, fname), findhash(0x01060001));
-  CCAPPDEBUG(DEB_F_PREFIX"%lx\n", DEB_F_PREFIX_ARGS(SIP_SES_HASH, fname), findhash(0x01060002));
-  CCAPPDEBUG(DEB_F_PREFIX"%lx\n", DEB_F_PREFIX_ARGS(SIP_SES_HASH, fname), findhash(0x01070002));
-  CCAPPDEBUG(DEB_F_PREFIX"%lx\n", DEB_F_PREFIX_ARGS(SIP_SES_HASH, fname), findhash(0x01070004));
-  CCAPPDEBUG(DEB_F_PREFIX"%lx\n", DEB_F_PREFIX_ARGS(SIP_SES_HASH, fname), findhash(0x01080005));
-  CCAPPDEBUG(DEB_F_PREFIX"%lx\n", DEB_F_PREFIX_ARGS(SIP_SES_HASH, fname), findhash(0x01030001));
+  CCAPPDEBUG(DEB_F_PREFIX"%lx", DEB_F_PREFIX_ARGS(SIP_SES_HASH, fname), findhash(0x01010001));
+  CCAPPDEBUG(DEB_F_PREFIX"%lx", DEB_F_PREFIX_ARGS(SIP_SES_HASH, fname), findhash(0x01060001));
+  CCAPPDEBUG(DEB_F_PREFIX"%lx", DEB_F_PREFIX_ARGS(SIP_SES_HASH, fname), findhash(0x01060002));
+  CCAPPDEBUG(DEB_F_PREFIX"%lx", DEB_F_PREFIX_ARGS(SIP_SES_HASH, fname), findhash(0x01070002));
+  CCAPPDEBUG(DEB_F_PREFIX"%lx", DEB_F_PREFIX_ARGS(SIP_SES_HASH, fname), findhash(0x01070004));
+  CCAPPDEBUG(DEB_F_PREFIX"%lx", DEB_F_PREFIX_ARGS(SIP_SES_HASH, fname), findhash(0x01080005));
+  CCAPPDEBUG(DEB_F_PREFIX"%lx", DEB_F_PREFIX_ARGS(SIP_SES_HASH, fname), findhash(0x01030001));
 
   delhash(0x01030001);
   delhash(0x01060001);
@@ -290,16 +290,16 @@ int main()
 
   hashItrInit(&itr);
   while ( data = hashItrNext(&itr) ) {
-    CCAPPDEBUG(DEB_F_PREFIX"Itr found %lx\n", DEB_F_PREFIX_ARGS(SIP_SES_HAS, fname), data);
+    CCAPPDEBUG(DEB_F_PREFIX"Itr found %lx", DEB_F_PREFIX_ARGS(SIP_SES_HAS, fname), data);
   }
 
-  CCAPPDEBUG(DEB_F_PREFIX"%lx\n", DEB_F_PREFIX_ARGS(SIP_SES_HASH, fname), findhash(0x01010001));
-  CCAPPDEBUG(DEB_F_PREFIX"%lx\n", DEB_F_PREFIX_ARGS(SIP_SES_HASH, fname), findhash(0x01060001));
-  CCAPPDEBUG(DEB_F_PREFIX"%lx\n", DEB_F_PREFIX_ARGS(SIP_SES_HASH, fname), findhash(0x01060002));
-  CCAPPDEBUG(DEB_F_PREFIX"%lx\n", DEB_F_PREFIX_ARGS(SIP_SES_HASH, fname), findhash(0x01070002));
-  CCAPPDEBUG(DEB_F_PREFIX"%lx\n", DEB_F_PREFIX_ARGS(SIP_SES_HASH, fname), findhash(0x01070004));
-  CCAPPDEBUG(DEB_F_PREFIX"%lx\n", DEB_F_PREFIX_ARGS(SIP_SES_HASH, fname), findhash(0x01080005));
-  CCAPPDEBUG(DEB_F_PREFIX"%lx\n", DEB_F_PREFIX_ARGS(SIP_SES_HASH, fname), findhash(0x01030001));
+  CCAPPDEBUG(DEB_F_PREFIX"%lx", DEB_F_PREFIX_ARGS(SIP_SES_HASH, fname), findhash(0x01010001));
+  CCAPPDEBUG(DEB_F_PREFIX"%lx", DEB_F_PREFIX_ARGS(SIP_SES_HASH, fname), findhash(0x01060001));
+  CCAPPDEBUG(DEB_F_PREFIX"%lx", DEB_F_PREFIX_ARGS(SIP_SES_HASH, fname), findhash(0x01060002));
+  CCAPPDEBUG(DEB_F_PREFIX"%lx", DEB_F_PREFIX_ARGS(SIP_SES_HASH, fname), findhash(0x01070002));
+  CCAPPDEBUG(DEB_F_PREFIX"%lx", DEB_F_PREFIX_ARGS(SIP_SES_HASH, fname), findhash(0x01070004));
+  CCAPPDEBUG(DEB_F_PREFIX"%lx", DEB_F_PREFIX_ARGS(SIP_SES_HASH, fname), findhash(0x01080005));
+  CCAPPDEBUG(DEB_F_PREFIX"%lx", DEB_F_PREFIX_ARGS(SIP_SES_HASH, fname), findhash(0x01030001));
 }
 #endif
 

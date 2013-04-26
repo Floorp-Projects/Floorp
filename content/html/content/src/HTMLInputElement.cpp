@@ -6147,7 +6147,7 @@ HTMLInputElement::UpdateHasRange()
 }
 
 JSObject*
-HTMLInputElement::WrapNode(JSContext* aCx, JSObject* aScope)
+HTMLInputElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return HTMLInputElementBinding::Wrap(aCx, aScope, this);
 }
