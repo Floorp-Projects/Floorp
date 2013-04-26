@@ -36,6 +36,7 @@ MOCHITEST_FILES = \
 	file_MultipleFrames.html \
 	test_Preallocated.html \
 	test_ExpectingSystemMessage.html \
+	test_ExpectingSystemMessage2.html \
 	test_NestedFrames.html \
 	file_NestedFramesOuter.html \
 	$(NULL)
