@@ -55,6 +55,7 @@ using mozilla::unused;
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::widget;
+using namespace mozilla::layers;
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsWindow, nsBaseWidget)
 
@@ -2468,7 +2469,7 @@ nsWindow::NeedsPaint()
   return nsIWidget::NeedsPaint();
 }
 
-class AndroidCompositorParent : public mozilla::layers::CompositorParent {
+class AndroidCompositorParent : public CompositorParent {
 public:
     AndroidCompositorParent(nsIWidget* aWidget, bool aRenderToEGLSurface,
                             int aSurfaceWidth, int aSurfaceHeight)
@@ -2479,13 +2480,12 @@ public:
         }
     }
 
-    virtual void ShadowLayersUpdated(mozilla::layers::LayerTransactionParent* aLayerTree,
-                                     const mozilla::layers::TargetConfig& aTargetConfig,
+    virtual void ShadowLayersUpdated(LayerTransactionParent* aLayerTree, const TargetConfig& aTargetConfig,
                                      bool isFirstPaint) MOZ_OVERRIDE
     {
         CompositorParent::ShadowLayersUpdated(aLayerTree, aTargetConfig, isFirstPaint);
-        mozilla::layers::Layer* targetLayer = GetLayerManager()->GetPrimaryScrollableLayer();
-        mozilla::layers::AsyncPanZoomController* controller = nsWindow::GetPanZoomController();
+        Layer* targetLayer = GetLayerManager()->GetPrimaryScrollableLayer();
+        AsyncPanZoomController* controller = nsWindow::GetPanZoomController();
         if (targetLayer && targetLayer->AsContainerLayer() && controller) {
             targetLayer->SetAsyncPanZoomController(controller);
             controller->NotifyLayersUpdated(targetLayer->AsContainerLayer()->GetFrameMetrics(), isFirstPaint);
@@ -2493,14 +2493,14 @@ public:
     }
 };
 
-mozilla::layers::CompositorParent*
+CompositorParent*
 nsWindow::NewCompositorParent(int aSurfaceWidth, int aSurfaceHeight)
 {
     return new AndroidCompositorParent(this, true, aSurfaceWidth, aSurfaceHeight);
 }
 
 void
-nsWindow::SetPanZoomController(mozilla::layers::AsyncPanZoomController* apzc)
+nsWindow::SetPanZoomController(AsyncPanZoomController* apzc)
 {
     if (sApzc) {
         sApzc->SetCompositorParent(nullptr);
@@ -2512,7 +2512,7 @@ nsWindow::SetPanZoomController(mozilla::layers::AsyncPanZoomController* apzc)
     }
 }
 
-mozilla::layers::AsyncPanZoomController*
+AsyncPanZoomController*
 nsWindow::GetPanZoomController()
 {
     return sApzc;
