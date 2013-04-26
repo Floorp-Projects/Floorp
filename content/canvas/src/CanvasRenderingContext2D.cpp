@@ -150,9 +150,10 @@ NS_MEMORY_REPORTER_IMPLEMENT(CanvasAzureMemory,
 class CanvasRadialGradient : public CanvasGradient
 {
 public:
-  CanvasRadialGradient(const Point &aBeginOrigin, Float aBeginRadius,
+  CanvasRadialGradient(CanvasRenderingContext2D* aContext,
+                       const Point &aBeginOrigin, Float aBeginRadius,
                        const Point &aEndOrigin, Float aEndRadius)
-    : CanvasGradient(RADIAL)
+    : CanvasGradient(aContext, RADIAL)
     , mCenter1(aBeginOrigin)
     , mCenter2(aEndOrigin)
     , mRadius1(aBeginRadius)
@@ -169,8 +170,9 @@ public:
 class CanvasLinearGradient : public CanvasGradient
 {
 public:
-  CanvasLinearGradient(const Point &aBegin, const Point &aEnd)
-    : CanvasGradient(LINEAR)
+  CanvasLinearGradient(CanvasRenderingContext2D* aContext,
+                       const Point &aBegin, const Point &aEnd)
+    : CanvasGradient(aContext, LINEAR)
     , mBegin(aBegin)
     , mEnd(aEnd)
   {
@@ -394,10 +396,13 @@ CanvasGradient::AddColorStop(float offset, const nsAString& colorstr, ErrorResul
 
 NS_DEFINE_STATIC_IID_ACCESSOR(CanvasGradient, NS_CANVASGRADIENTAZURE_PRIVATE_IID)
 
-NS_IMPL_ADDREF(CanvasGradient)
-NS_IMPL_RELEASE(CanvasGradient)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(CanvasGradient)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(CanvasGradient)
 
-NS_INTERFACE_MAP_BEGIN(CanvasGradient)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(CanvasGradient, mContext)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CanvasGradient)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(mozilla::dom::CanvasGradient)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
@@ -471,6 +476,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(CanvasRenderingContext2D)
   for (uint32_t i = 0; i < tmp->mStyleStack.Length(); i++) {
     ImplCycleCollectionUnlink(tmp->mStyleStack[i].patternStyles[STYLE_STROKE]);
     ImplCycleCollectionUnlink(tmp->mStyleStack[i].patternStyles[STYLE_FILL]);
+    ImplCycleCollectionUnlink(tmp->mStyleStack[i].gradientStyles[STYLE_STROKE]);
+    ImplCycleCollectionUnlink(tmp->mStyleStack[i].gradientStyles[STYLE_FILL]);
   }
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -480,6 +487,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(CanvasRenderingContext2D)
   for (uint32_t i = 0; i < tmp->mStyleStack.Length(); i++) {
     ImplCycleCollectionTraverse(cb, tmp->mStyleStack[i].patternStyles[STYLE_STROKE], "Stroke CanvasPattern");
     ImplCycleCollectionTraverse(cb, tmp->mStyleStack[i].patternStyles[STYLE_FILL], "Fill CanvasPattern");
+    ImplCycleCollectionTraverse(cb, tmp->mStyleStack[i].gradientStyles[STYLE_STROKE], "Stroke CanvasGradient");
+    ImplCycleCollectionTraverse(cb, tmp->mStyleStack[i].gradientStyles[STYLE_FILL], "Fill CanvasGradient");
   }
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -1359,7 +1368,7 @@ already_AddRefed<CanvasGradient>
 CanvasRenderingContext2D::CreateLinearGradient(double x0, double y0, double x1, double y1)
 {
   nsRefPtr<CanvasGradient> grad =
-    new CanvasLinearGradient(Point(x0, y0), Point(x1, y1));
+    new CanvasLinearGradient(this, Point(x0, y0), Point(x1, y1));
 
   return grad.forget();
 }
@@ -1375,7 +1384,7 @@ CanvasRenderingContext2D::CreateRadialGradient(double x0, double y0, double r0,
   }
 
   nsRefPtr<CanvasGradient> grad =
-    new CanvasRadialGradient(Point(x0, y0), r0, Point(x1, y1), r1);
+    new CanvasRadialGradient(this, Point(x0, y0), r0, Point(x1, y1), r1);
 
   return grad.forget();
 }
