@@ -45,7 +45,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
 #include "mozilla/dom/BindingUtils.h"
-#include "mozilla/dom/ipc/ProcessPriorityManager.h"
+#include "mozilla/ProcessPriorityManager.h"
 
 #include "Layers.h"
 
