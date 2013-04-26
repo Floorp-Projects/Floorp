@@ -72,7 +72,7 @@ function ContactDispatcher(aContacts, aFullContacts, aCallback, aNewTxn, aClearD
                 aCallback(chunk);
                 chunk.length = 0;
                 nextIndex += CHUNK_SIZE;
-                interval = setTimeout(this.sendChunk, CHUNK_INTERVAL);
+                interval = setTimeout(sendChunk, CHUNK_INTERVAL);
               }
             }
           }
