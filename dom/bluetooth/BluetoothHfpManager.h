@@ -75,6 +75,7 @@ public:
   void HandleCallStateChanged(uint32_t aCallIndex, uint16_t aCallState,
                               const nsAString& aNumber, bool aSend);
   bool IsConnected();
+  void GetAddress(nsAString& aDeviceAddress);
 
 private:
   class GetVolumeTask;
