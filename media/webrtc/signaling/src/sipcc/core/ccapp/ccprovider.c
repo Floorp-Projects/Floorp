@@ -1799,6 +1799,8 @@ static void ccappUpdateSessionData (session_update_t *sessUpd)
         data->state = sessUpd->update.ccSessionUpd.data.state_data.state;
         data->media_stream_track_id = sessUpd->update.ccSessionUpd.data.state_data.media_stream_track_id;
         data->media_stream_id = sessUpd->update.ccSessionUpd.data.state_data.media_stream_id;
+        strlib_free(data->status);
+        data->status = sessUpd->update.ccSessionUpd.data.state_data.reason_text;
         capset_get_allowed_features(gCCApp.mode, data->state, data->allowed_features);
         ccsnap_gen_callEvent(CCAPI_CALL_EV_STATE, CREATE_CALL_HANDLE_FROM_SESSION_ID(data->sess_id));
         break;
