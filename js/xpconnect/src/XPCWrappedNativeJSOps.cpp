@@ -956,11 +956,12 @@ XPC_WN_Helper_CheckAccess(JSContext *cx, JSHandleObject obj, JSHandleId id,
 static JSBool
 XPC_WN_Helper_Call(JSContext *cx, unsigned argc, jsval *vp)
 {
+    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
     // N.B. we want obj to be the callee, not JS_THIS(cx, vp)
-    RootedObject obj(cx, JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)));
+    RootedObject obj(cx, &args.callee());
 
-    XPCCallContext ccx(JS_CALLER, cx, obj, NullPtr(), JSID_VOIDHANDLE,
-                       argc, JS_ARGV(cx, vp), vp);
+    XPCCallContext ccx(JS_CALLER, cx, obj, NullPtr(), JSID_VOIDHANDLE, args.length(),
+                       args.array(), args.rval().address());
     if (!ccx.IsValid())
         return false;
 
@@ -968,19 +969,20 @@ XPC_WN_Helper_Call(JSContext *cx, unsigned argc, jsval *vp)
 
     SLIM_LOG_WILL_MORPH(cx, obj);
     PRE_HELPER_STUB_NO_SLIM
-    Call(wrapper, cx, obj, argc, JS_ARGV(cx, vp), vp, &retval);
+    Call(wrapper, cx, obj, args.length(), args.array(), args.rval().address(), &retval);
     POST_HELPER_STUB
 }
 
 static JSBool
 XPC_WN_Helper_Construct(JSContext *cx, unsigned argc, jsval *vp)
 {
-    RootedObject obj(cx, JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)));
+    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+    RootedObject obj(cx, &args.callee());
     if (!obj)
         return false;
 
-    XPCCallContext ccx(JS_CALLER, cx, obj, NullPtr(), JSID_VOIDHANDLE,
-                       argc, JS_ARGV(cx, vp), vp);
+    XPCCallContext ccx(JS_CALLER, cx, obj, NullPtr(), JSID_VOIDHANDLE, args.length(),
+                       args.array(), args.rval().address());
     if (!ccx.IsValid())
         return false;
 
@@ -988,7 +990,7 @@ XPC_WN_Helper_Construct(JSContext *cx, unsigned argc, jsval *vp)
 
     SLIM_LOG_WILL_MORPH(cx, obj);
     PRE_HELPER_STUB_NO_SLIM
-    Construct(wrapper, cx, obj, argc, JS_ARGV(cx, vp), vp, &retval);
+    Construct(wrapper, cx, obj, args.length(), args.array(), args.rval().address(), &retval);
     POST_HELPER_STUB
 }
 
