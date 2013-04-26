@@ -90,8 +90,63 @@ public:
                                  AudioChunk* aOutput,
                                  bool* aFinished) MOZ_OVERRIDE
   {
-    // TODO: do the necessary computation here
-    *aOutput = aInput;
+    if (aInput.IsNull()) {
+      aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
+      return;
+    }
+
+    // Adjust the number of biquads based on the number of channels
+    const uint32_t numberOfChannels = aInput.mChannelData.Length();
+    mBiquads.SetLength(numberOfChannels);
+
+    AllocateAudioBlock(numberOfChannels, aOutput);
+
+    TrackTicks pos = aStream->GetCurrentPosition();
+
+    for (uint32_t i = 0; i < numberOfChannels; ++i) {
+      double freq = mFrequency.GetValueAtTime(pos);
+      double q = mQ.GetValueAtTime(pos);
+      double gain = mGain.GetValueAtTime(pos);
+      double detune = mDetune.GetValueAtTime(pos);
+
+      double nyquist = IdealAudioRate() * 0.5;
+      double normalizedFrequency = freq / nyquist;
+
+      if (detune) {
+        normalizedFrequency *= std::pow(2.0, detune / 1200);
+      }
+
+      switch (mType) {
+      case BiquadFilterType::Lowpass:
+        mBiquads[i].setLowpassParams(normalizedFrequency, q);
+        break;
+      case BiquadFilterType::Highpass:
+        mBiquads[i].setHighpassParams(normalizedFrequency, q);
+        break;
+      case BiquadFilterType::Bandpass:
+        mBiquads[i].setBandpassParams(normalizedFrequency, q);
+        break;
+      case BiquadFilterType::Lowshelf:
+        mBiquads[i].setLowShelfParams(normalizedFrequency, gain);
+        break;
+      case BiquadFilterType::Highshelf:
+        mBiquads[i].setHighShelfParams(normalizedFrequency, gain);
+        break;
+      case BiquadFilterType::Peaking:
+        mBiquads[i].setPeakingParams(normalizedFrequency, q, gain);
+        break;
+      case BiquadFilterType::Notch:
+        mBiquads[i].setNotchParams(normalizedFrequency, q);
+        break;
+      case BiquadFilterType::Allpass:
+        mBiquads[i].setAllpassParams(normalizedFrequency, q);
+        break;
+      }
+
+      mBiquads[i].process(static_cast<const float*>(aInput.mChannelData[i]),
+                          static_cast<float*>(const_cast<void*>(aOutput->mChannelData[i])),
+                          aInput.GetDuration());
+    }
   }
 
 private:
@@ -102,6 +157,7 @@ private:
   AudioParamTimeline mDetune;
   AudioParamTimeline mQ;
   AudioParamTimeline mGain;
+  nsTArray<WebCore::Biquad> mBiquads;
 };
 
 BiquadFilterNode::BiquadFilterNode(AudioContext* aContext)
