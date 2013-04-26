@@ -464,12 +464,6 @@ MacroAssembler::newGCString(const Register &result, Label *fail)
 }
 
 void
-MacroAssembler::newGCShortString(const Register &result, Label *fail)
-{
-    newGCThing(result, js::gc::FINALIZE_SHORT_STRING, fail);
-}
-
-void
 MacroAssembler::parNewGCThing(const Register &result,
                               const Register &threadContextReg,
                               const Register &tempReg1,
