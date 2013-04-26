@@ -194,9 +194,9 @@ MemoryReportRequestParent::~MemoryReportRequestParent()
     MOZ_COUNT_DTOR(MemoryReportRequestParent);
 }
 
-nsDataHashtable<nsStringHashKey, ContentParent*>* ContentParent::gAppContentParents;
-nsTArray<ContentParent*>* ContentParent::gNonAppContentParents;
-nsTArray<ContentParent*>* ContentParent::gPrivateContent;
+nsDataHashtable<nsStringHashKey, ContentParent*>* ContentParent::sAppContentParents;
+nsTArray<ContentParent*>* ContentParent::sNonAppContentParents;
+nsTArray<ContentParent*>* ContentParent::sPrivateContent;
 
 // This is true when subprocess launching is enabled.  This is the
 // case between StartUp() and ShutDown() or JoinAllSubprocesses().
@@ -376,17 +376,17 @@ ContentParent::JoinAllSubprocesses()
 /*static*/ already_AddRefed<ContentParent>
 ContentParent::GetNewOrUsed(bool aForBrowserElement)
 {
-    if (!gNonAppContentParents)
-        gNonAppContentParents = new nsTArray<ContentParent*>();
+    if (!sNonAppContentParents)
+        sNonAppContentParents = new nsTArray<ContentParent*>();
 
     int32_t maxContentProcesses = Preferences::GetInt("dom.ipc.processCount", 1);
     if (maxContentProcesses < 1)
         maxContentProcesses = 1;
 
-    if (gNonAppContentParents->Length() >= uint32_t(maxContentProcesses)) {
-        uint32_t idx = rand() % gNonAppContentParents->Length();
-        nsRefPtr<ContentParent> p = (*gNonAppContentParents)[idx];
-        NS_ASSERTION(p->IsAlive(), "Non-alive contentparent in gNonAppContentParents?");
+    if (sNonAppContentParents->Length() >= uint32_t(maxContentProcesses)) {
+        uint32_t idx = rand() % sNonAppContentParents->Length();
+        nsRefPtr<ContentParent> p = (*sNonAppContentParents)[idx];
+        NS_ASSERTION(p->IsAlive(), "Non-alive contentparent in sNonAppContentParents?");
         return p.forget();
     }
 
@@ -396,7 +396,7 @@ ContentParent::GetNewOrUsed(bool aForBrowserElement)
                           base::PRIVILEGES_DEFAULT,
                           PROCESS_PRIORITY_FOREGROUND);
     p->Init();
-    gNonAppContentParents->AppendElement(p);
+    sNonAppContentParents->AppendElement(p);
     return p.forget();
 }
 
@@ -482,10 +482,10 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
     // !HasOwnApp() branch above.
     nsCOMPtr<mozIApplication> ownApp = aContext.GetOwnApp();
 
-    if (!gAppContentParents) {
-        gAppContentParents =
+    if (!sAppContentParents) {
+        sAppContentParents =
             new nsDataHashtable<nsStringHashKey, ContentParent*>();
-        gAppContentParents->Init();
+        sAppContentParents->Init();
     }
 
     // Each app gets its own ContentParent instance.
@@ -497,7 +497,7 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
 
     ProcessPriority initialPriority = GetInitialProcessPriority(aFrameElement);
 
-    nsRefPtr<ContentParent> p = gAppContentParents->Get(manifestURL);
+    nsRefPtr<ContentParent> p = sAppContentParents->Get(manifestURL);
     if (p) {
         // Check that the process is still alive and set its priority.
         // Hopefully the process won't die after this point, if this call
@@ -517,7 +517,7 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
                                   privs, initialPriority);
             p->Init();
         }
-        gAppContentParents->Put(manifestURL, p);
+        sAppContentParents->Put(manifestURL, p);
     }
 
     nsRefPtr<TabParent> tp = new TabParent(aContext);
@@ -790,26 +790,26 @@ void
 ContentParent::MarkAsDead()
 {
     if (!mAppManifestURL.IsEmpty()) {
-        if (gAppContentParents) {
-            gAppContentParents->Remove(mAppManifestURL);
-            if (!gAppContentParents->Count()) {
-                delete gAppContentParents;
-                gAppContentParents = NULL;
+        if (sAppContentParents) {
+            sAppContentParents->Remove(mAppManifestURL);
+            if (!sAppContentParents->Count()) {
+                delete sAppContentParents;
+                sAppContentParents = NULL;
             }
         }
-    } else if (gNonAppContentParents) {
-        gNonAppContentParents->RemoveElement(this);
-        if (!gNonAppContentParents->Length()) {
-            delete gNonAppContentParents;
-            gNonAppContentParents = NULL;
+    } else if (sNonAppContentParents) {
+        sNonAppContentParents->RemoveElement(this);
+        if (!sNonAppContentParents->Length()) {
+            delete sNonAppContentParents;
+            sNonAppContentParents = NULL;
         }
     }
 
-    if (gPrivateContent) {
-        gPrivateContent->RemoveElement(this);
-        if (!gPrivateContent->Length()) {
-            delete gPrivateContent;
-            gPrivateContent = NULL;
+    if (sPrivateContent) {
+        sPrivateContent->RemoveElement(this);
+        if (!sPrivateContent->Length()) {
+            delete sPrivateContent;
+            sPrivateContent = NULL;
         }
     }
 
@@ -1149,17 +1149,17 @@ ContentParent::~ContentParent()
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
     // We should be removed from all these lists in ActorDestroy.
-    MOZ_ASSERT(!gPrivateContent || !gPrivateContent->Contains(this));
+    MOZ_ASSERT(!sPrivateContent || !sPrivateContent->Contains(this));
     if (mAppManifestURL.IsEmpty()) {
-        MOZ_ASSERT(!gNonAppContentParents ||
-                   !gNonAppContentParents->Contains(this));
+        MOZ_ASSERT(!sNonAppContentParents ||
+                   !sNonAppContentParents->Contains(this));
     } else {
-        // In general, we expect gAppContentParents->Get(mAppManifestURL) to be
+        // In general, we expect sAppContentParents->Get(mAppManifestURL) to be
         // NULL.  But it could be that we created another ContentParent for this
         // app after we did this->ActorDestroy(), so the right check is that
         // gAppContentParent->Get(mAppManifestURL) != this.
-        MOZ_ASSERT(!gAppContentParents ||
-                   gAppContentParents->Get(mAppManifestURL) != this);
+        MOZ_ASSERT(!sAppContentParents ||
+                   sAppContentParents->Get(mAppManifestURL) != this);
     }
 }
 
@@ -2523,17 +2523,17 @@ ContentParent::RecvScriptError(const nsString& aMessage,
 bool
 ContentParent::RecvPrivateDocShellsExist(const bool& aExist)
 {
-  if (!gPrivateContent)
-    gPrivateContent = new nsTArray<ContentParent*>();
+  if (!sPrivateContent)
+    sPrivateContent = new nsTArray<ContentParent*>();
   if (aExist) {
-    gPrivateContent->AppendElement(this);
+    sPrivateContent->AppendElement(this);
   } else {
-    gPrivateContent->RemoveElement(this);
-    if (!gPrivateContent->Length()) {
+    sPrivateContent->RemoveElement(this);
+    if (!sPrivateContent->Length()) {
       nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
       obs->NotifyObservers(nullptr, "last-pb-context-exited", nullptr);
-      delete gPrivateContent;
-      gPrivateContent = NULL;
+      delete sPrivateContent;
+      sPrivateContent = NULL;
     }
   }
   return true;
