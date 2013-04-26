@@ -124,6 +124,14 @@ BiquadFilterNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 }
 
 void
+BiquadFilterNode::SetType(BiquadFilterType aType)
+{
+  mType = aType;
+  SendInt32ParameterToStream(BiquadFilterNodeEngine::TYPE,
+                             static_cast<int32_t>(aType));
+}
+
+void
 BiquadFilterNode::SendFrequencyToStream(AudioNode* aNode)
 {
   BiquadFilterNode* This = static_cast<BiquadFilterNode*>(aNode);
