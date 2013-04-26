@@ -60,13 +60,20 @@ public:
    */
   virtual bool ContentOrNormalChannelIsActive();
 
+  /**
+   * Return true iff a normal or content channel is active for the given process
+   * ID.
+   */
+  virtual bool ProcessContentOrNormalChannelIsActive(uint64_t aChildID);
+
 protected:
   void Notify();
 
   /**
-   * Send the audio-channel-changed notification if needed.
+   * Send the audio-channel-changed notification for the given process ID if
+   * needed.
    */
-  void SendAudioChannelChangedNotification();
+  void SendAudioChannelChangedNotification(uint64_t aChildID);
 
   /* Register/Unregister IPC types: */
   void RegisterType(AudioChannelType aType, uint64_t aChildID);

@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that a high-priority frame that's expecting a system message initially
+gets priority FOREGROUND_HIGH.
+-->
+<head>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="../browserElementTestHelpers.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="application/javascript;version=1.7">
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+browserElementTestHelpers.setEnabledPref(true);
+browserElementTestHelpers.addPermission();
+browserElementTestHelpers.enableProcessPriorityManager();
+SpecialPowers.addPermission("embed-apps", true, document);
+
+function runTest() {
+  var iframe = document.createElement('iframe');
+  iframe.setAttribute('mozbrowser', true);
+  iframe.setAttribute('expecting-system-message', true);
+  iframe.setAttribute('mozapptype', 'critical');
+  iframe.setAttribute('mozapp', 'http://example.org/manifest.webapp');
+
+  iframe.src = browserElementTestHelpers.emptyPage1;
+
+  var childID = null;
+  expectOnlyOneProcessCreated().then(function(chid) {
+    childID = chid;
+    return expectPriorityChange(childID, 'FOREGROUND_HIGH');
+  }).then(function() {
+    // We go back to foreground when the wake lock taken on behalf of our new
+    // process times out.
+    return expectPriorityChange(childID, 'FOREGROUND');
+  }).then(SimpleTest.finish);
+
+  document.body.appendChild(iframe);
+}
+
+addEventListener('testready', function() {
+  // Cause the CPU wake lock taken on behalf of this new process to time out
+  // after 1s.
+  SpecialPowers.pushPrefEnv(
+    {set: [["dom.ipc.systemMessageCPULockTimeoutSec", 1]]},
+    runTest);
+});
+
+</script>
+</body>
+</html>

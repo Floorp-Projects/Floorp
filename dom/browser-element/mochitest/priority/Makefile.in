@@ -1,0 +1,46 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH		= @DEPTH@
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+relativesrcdir  = @relativesrcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+# Note: ../browserElementTestHelpers.js makes all tests in this directory OOP,
+# because testing the process-priority manager without OOP frames doesn't make
+# much sense.
+#
+# Good luck running these tests on anything but desktop Linux.
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+
+# This test disabled due to bug 865844.  In fact, it was never enabled!
+#
+#       test_WebGLContextLost.html \
+#       file_WebGLContextLost.html \
+
+MOCHITEST_FILES = \
+	test_Simple.html \
+	test_Visibility.html \
+	test_HighPriority.html \
+	file_HighPriority.html \
+	test_Background.html \
+	test_Audio.html \
+	file_Audio.html \
+	silence.ogg \
+	test_MultipleFrames.html \
+	file_MultipleFrames.html \
+	test_Preallocated.html \
+	test_ExpectingSystemMessage.html \
+	test_ExpectingSystemMessage2.html \
+	test_NestedFrames.html \
+	file_NestedFramesOuter.html \
+	$(NULL)
+
+endif # MOZ_WIDGET_TOOLKIT == gtk2
+
+include $(topsrcdir)/config/rules.mk
