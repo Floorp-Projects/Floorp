@@ -220,6 +220,31 @@ TabParent::SetOwnerElement(nsIDOMElement* aElement)
 }
 
 void
+TabParent::GetAppType(nsAString& aOut)
+{
+  aOut.Truncate();
+  nsCOMPtr<Element> elem = do_QueryInterface(mFrameElement);
+  if (!elem) {
+    return;
+  }
+
+  elem->GetAttr(kNameSpaceID_None, nsGkAtoms::mozapptype, aOut);
+}
+
+bool
+TabParent::IsVisible()
+{
+  nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
+  if (!frameLoader) {
+    return false;
+  }
+
+  bool visible = false;
+  frameLoader->GetVisible(&visible);
+  return visible;
+}
+
+void
 TabParent::Destroy()
 {
   if (mIsDestroyed) {
@@ -265,17 +290,19 @@ TabParent::ActorDestroy(ActorDestroyReason why)
     mIMETabParent = nullptr;
   }
   nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
+  nsCOMPtr<nsIObserverService> os = services::GetObserverService();
   if (frameLoader) {
     ReceiveMessage(CHILD_PROCESS_SHUTDOWN_MESSAGE, false, nullptr, nullptr);
     frameLoader->DestroyChild();
 
-    if (why == AbnormalShutdown) {
-      nsCOMPtr<nsIObserverService> os = services::GetObserverService();
-      if (os) {
-        os->NotifyObservers(NS_ISUPPORTS_CAST(nsIFrameLoader*, frameLoader),
-                            "oop-frameloader-crashed", nullptr);
-      }
+    if (why == AbnormalShutdown && os) {
+      os->NotifyObservers(NS_ISUPPORTS_CAST(nsIFrameLoader*, frameLoader),
+                          "oop-frameloader-crashed", nullptr);
     }
+  }
+
+  if (os) {
+    os->NotifyObservers(NS_ISUPPORTS_CAST(nsITabParent*, this), "ipc:browser-destroyed", nullptr);
   }
 }
 

@@ -51,7 +51,6 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
-using namespace mozilla::dom::ipc;
 using namespace mozilla::gfx;
 using namespace mozilla::gl;
 using namespace mozilla::layers;
@@ -66,7 +65,8 @@ WebGLMemoryPressureObserver::Observe(nsISupports* aSubject,
 
     bool wantToLoseContext = true;
 
-    if (!mContext->mCanLoseContextInForeground && CurrentProcessIsForeground())
+    if (!mContext->mCanLoseContextInForeground &&
+        ProcessPriorityManager::CurrentProcessIsForeground())
         wantToLoseContext = false;
     else if (!nsCRT::strcmp(aSomeData,
                             NS_LITERAL_STRING("heap-minimize").get()))
