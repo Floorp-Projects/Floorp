@@ -13,7 +13,6 @@
 #define FragmentOrElement_h___
 
 #include "nsAttrAndChildArray.h"          // member
-#include "nsCOMPtr.h"                     // member
 #include "nsCycleCollectionParticipant.h" // NS_DECL_CYCLE_*
 #include "nsIContent.h"                   // base class
 #include "nsIDOMTouchEvent.h"             // base class (nsITouchEventReceiver)
