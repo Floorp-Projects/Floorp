@@ -131,7 +131,17 @@ public:
   GetPairedDevicePropertiesInternal(const nsTArray<nsString>& aDeviceAddresses,
                                     BluetoothReplyRunnable* aRunnable) = 0;
 
-  /** 
+  /**
+   * Returns the properties of connected devices regarding to specific profile,
+   * implemented via a platform specific methood.
+   *
+   * @return NS_OK on success, NS_ERROR_FAILURE otherwise
+   */
+  virtual nsresult
+  GetConnectedDevicePropertiesInternal(uint16_t aProfileId,
+                                       BluetoothReplyRunnable* aRunnable) = 0;
+
+  /**
    * Stop device discovery (platform specific implementation)
    *
    * @return NS_OK if discovery stopped correctly, false otherwise

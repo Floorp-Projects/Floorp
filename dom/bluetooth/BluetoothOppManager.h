@@ -73,6 +73,7 @@ public:
   // Return true if there is an ongoing file-transfer session, please see
   // Bug 827267 for more information.
   bool IsTransferring();
+  void GetAddress(nsAString& aDeviceAddress);
 
   // Implement interface BluetoothSocketObserver
   void ReceiveSocketData(
