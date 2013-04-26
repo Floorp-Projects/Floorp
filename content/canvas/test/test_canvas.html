@@ -6215,13 +6215,13 @@ var _thrown = undefined; try {
 } catch (e) { _thrown = e }; ok(_thrown && _thrown.name == "IndexSizeError" && _thrown.code == DOMException.INDEX_SIZE_ERR, "should throw IndexSizeError");
 var _thrown = undefined; try {
   g.addColorStop(Infinity, '#000');
-} catch (e) { _thrown = e }; ok(_thrown && _thrown.name == "IndexSizeError" && _thrown.code == DOMException.INDEX_SIZE_ERR, "should throw IndexSizeError");
+} catch (e) { _thrown = e }; ok(_thrown && _thrown.name == "TypeError", "should throw TypeError");
 var _thrown = undefined; try {
   g.addColorStop(-Infinity, '#000');
-} catch (e) { _thrown = e }; ok(_thrown && _thrown.name == "IndexSizeError" && _thrown.code == DOMException.INDEX_SIZE_ERR, "should throw IndexSizeError");
+} catch (e) { _thrown = e }; ok(_thrown && _thrown.name == "TypeError", "should throw TypeError");
 var _thrown = undefined; try {
   g.addColorStop(NaN, '#000');
-} catch (e) { _thrown = e }; ok(_thrown && _thrown.name == "IndexSizeError" && _thrown.code == DOMException.INDEX_SIZE_ERR, "should throw IndexSizeError");
+} catch (e) { _thrown = e }; ok(_thrown && _thrown.name == "TypeError", "should throw TypeError");
 
 
 }

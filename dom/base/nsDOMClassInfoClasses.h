@@ -116,7 +116,6 @@ DOMCI_CLASS(SVGRect)
 DOMCI_CLASS(SVGZoomEvent)
 
 // Canvas
-DOMCI_CLASS(CanvasGradient)
 DOMCI_CLASS(MozCanvasPrintState)
 
 // WindowUtils
