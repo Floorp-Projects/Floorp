@@ -516,6 +516,14 @@ public:
         return event;
     }
 
+    static AndroidGeckoEvent* MakeBroadcastEvent(const nsCString& topic, const nsCString& data) {
+        AndroidGeckoEvent* event = new AndroidGeckoEvent();
+        event->Init(BROADCAST);
+        CopyUTF8toUTF16(topic, event->mCharacters);
+        CopyUTF8toUTF16(data, event->mCharactersExtra);
+        return event;
+    }
+
     int Action() { return mAction; }
     int Type() { return mType; }
     bool AckNeeded() { return mAckNeeded; }

@@ -34,6 +34,7 @@
 #include "nsIDOMClientRect.h"
 #include "StrongPointer.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "nsPrintfCString.h"
 
 #ifdef DEBUG
 #define ALOG_BRIDGE(args...) ALOG(args)
@@ -2724,19 +2725,25 @@ AndroidBridge::RequestContentRepaint(const mozilla::layers::FrameMetrics& aFrame
 void
 AndroidBridge::HandleDoubleTap(const nsIntPoint& aPoint)
 {
-    // FIXME implement this
+    nsCString data = nsPrintfCString("{ \"x\": %d, \"y\": %d }", aPoint.x, aPoint.y);
+    nsAppShell::gAppShell->PostEvent(AndroidGeckoEvent::MakeBroadcastEvent(
+            NS_LITERAL_CSTRING("Gesture:DoubleTap"), data));
 }
 
 void
 AndroidBridge::HandleSingleTap(const nsIntPoint& aPoint)
 {
-    // FIXME implement this
+    nsCString data = nsPrintfCString("{ \"x\": %d, \"y\": %d }", aPoint.x, aPoint.y);
+    nsAppShell::gAppShell->PostEvent(AndroidGeckoEvent::MakeBroadcastEvent(
+            NS_LITERAL_CSTRING("Gesture:SingleTap"), data));
 }
 
 void
 AndroidBridge::HandleLongTap(const nsIntPoint& aPoint)
 {
-    // FIXME implement this
+    nsCString data = nsPrintfCString("{ \"x\": %d, \"y\": %d }", aPoint.x, aPoint.y);
+    nsAppShell::gAppShell->PostEvent(AndroidGeckoEvent::MakeBroadcastEvent(
+            NS_LITERAL_CSTRING("Gesture:LongPress"), data));
 }
 
 void
