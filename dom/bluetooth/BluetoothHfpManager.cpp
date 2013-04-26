@@ -1455,3 +1455,9 @@ BluetoothHfpManager::IsConnected()
 
   return false;
 }
+
+void
+BluetoothHfpManager::GetAddress(nsAString& aDeviceAddress)
+{
+  return mSocket->GetAddress(aDeviceAddress);
+}

@@ -351,7 +351,7 @@ let FormAssistant = {
       case "Forms:Input:Value": {
         target.value = json.value;
 
-        let event = content.document.createEvent('HTMLEvents');
+        let event = target.ownerDocument.createEvent('HTMLEvents');
         event.initEvent('input', true, false);
         target.dispatchEvent(event);
         break;
@@ -377,7 +377,7 @@ let FormAssistant = {
 
         // only fire onchange event if any selected option is changed
         if (valueChanged) {
-          let event = content.document.createEvent('HTMLEvents');
+          let event = target.ownerDocument.createEvent('HTMLEvents');
           event.initEvent('change', true, true);
           target.dispatchEvent(event);
         }

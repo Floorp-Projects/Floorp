@@ -10,7 +10,7 @@ interface nsIDOMDOMRequest;
 interface nsIDOMBlob;
 interface nsIDOMBluetoothDevice;
 
-[scriptable, builtinclass, uuid(4321647b-0d45-4231-920b-8d238b6d1700)]
+[scriptable, builtinclass, uuid(88a5638f-f55a-4d67-8437-392d0a9a87c7)]
 interface nsIDOMBluetoothAdapter : nsIDOMEventTarget
 {
   readonly attribute DOMString address;
@@ -36,6 +36,7 @@ interface nsIDOMBluetoothAdapter : nsIDOMEventTarget
   nsIDOMDOMRequest pair(in nsIDOMBluetoothDevice aDevice);
   nsIDOMDOMRequest unpair(in nsIDOMBluetoothDevice aDevice);
   nsIDOMDOMRequest getPairedDevices();
+  nsIDOMDOMRequest getConnectedDevices(in unsigned short aProfile);
   nsIDOMDOMRequest setPinCode(in DOMString aDeviceAddress, in DOMString aPinCode);
   nsIDOMDOMRequest setPasskey(in DOMString aDeviceAddress, in unsigned long aPasskey);
   nsIDOMDOMRequest setPairingConfirmation(in DOMString aDeviceAddress, in bool aConfirmation);
