@@ -244,7 +244,7 @@ ConvertFrames(JSContext *cx, IonActivation *activation, IonBailoutIterator &it)
 
     // Set a flag to avoid bailing out on every iteration or function call. Ion can
     // compile and run the script again after an invalidation.
-    it.ionScript()->setBailoutExpected();
+    it.ionScript()->incNumBailouts();
     it.script()->updateBaselineOrIonRaw();
 
     // We use OffTheBooks instead of cx because at this time we cannot iterate
@@ -686,3 +686,22 @@ ion::ThunkToInterpreter(Value *vp)
     return status;
 }
 
+bool
+ion::CheckFrequentBailouts(JSContext *cx, JSScript *script)
+{
+    // Invalidate if this script keeps bailing out without invalidation. Next time
+    // we compile this script LICM will be disabled.
+
+    if (script->hasIonScript() &&
+        script->ionScript()->numBailouts() >= js_IonOptions.frequentBailoutThreshold)
+    {
+        script->hadFrequentBailouts = true;
+
+        IonSpew(IonSpew_Invalidate, "Invalidating due to too many bailouts");
+
+        if (!Invalidate(cx, script))
+            return false;
+    }
+
+    return true;
+}
