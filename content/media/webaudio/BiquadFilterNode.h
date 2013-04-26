@@ -36,10 +36,7 @@ public:
   {
     return mType;
   }
-  void SetType(BiquadFilterType aType)
-  {
-    mType = aType;
-  }
+  void SetType(BiquadFilterType aType);
 
   AudioParam* Frequency() const
   {
