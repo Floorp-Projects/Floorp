@@ -90,7 +90,9 @@ private:
 class nsDOMAttributeMap : public nsIDOMMozNamedAttrMap
 {
 public:
+  typedef mozilla::dom::Attr Attr;
   typedef mozilla::dom::Element Element;
+  typedef mozilla::ErrorResult ErrorResult;
 
   nsDOMAttributeMap(Element *aContent);
   virtual ~nsDOMAttributeMap();
@@ -128,7 +130,7 @@ public:
    */
   uint32_t Count() const;
 
-  typedef nsRefPtrHashtable<nsAttrHashKey, mozilla::dom::Attr> AttrCache;
+  typedef nsRefPtrHashtable<nsAttrHashKey, Attr> AttrCache;
 
   /**
    * Enumerates over the attribute nodess in the map and calls aFunc for each
@@ -138,8 +140,8 @@ public:
    */
   uint32_t Enumerate(AttrCache::EnumReadFunction aFunc, void *aUserArg) const;
 
-  mozilla::dom::Attr* GetItemAt(uint32_t aIndex);
-  mozilla::dom::Attr* GetNamedItem(const nsAString& aAttrName);
+  Attr* GetItemAt(uint32_t aIndex);
+  Attr* GetNamedItem(const nsAString& aAttrName);
 
   static nsDOMAttributeMap* FromSupports(nsISupports* aSupports)
   {
@@ -160,11 +162,12 @@ public:
 
   NS_DECL_CYCLE_COLLECTION_CLASS(nsDOMAttributeMap)
 
-  mozilla::dom::Attr* GetNamedItemNS(const nsAString& aNamespaceURI,
-                                 const nsAString& aLocalName);
+  Attr*
+  GetNamedItemNS(const nsAString& aNamespaceURI,
+                 const nsAString& aLocalName);
 
-  already_AddRefed<mozilla::dom::Attr> SetNamedItemNS(nsIDOMAttr *aNode,
-                                                  mozilla::ErrorResult& aError)
+  already_AddRefed<Attr>
+  SetNamedItemNS(Attr& aNode, ErrorResult& aError)
   {
     return SetNamedItemInternal(aNode, true, aError);
   }
@@ -183,21 +186,19 @@ private:
    * SetNamedItem() (aWithNS = false) and SetNamedItemNS() (aWithNS =
    * true) implementation.
    */
-  already_AddRefed<mozilla::dom::Attr>
-    SetNamedItemInternal(nsIDOMAttr *aNode,
-                         bool aWithNS,
-                         mozilla::ErrorResult& aError);
+  already_AddRefed<Attr>
+  SetNamedItemInternal(nsIDOMAttr* aNode, bool aWithNS, ErrorResult& aError);
 
   already_AddRefed<nsINodeInfo>
   GetAttrNodeInfo(const nsAString& aNamespaceURI,
                   const nsAString& aLocalName);
 
-  mozilla::dom::Attr* GetAttribute(nsINodeInfo* aNodeInfo, bool aNsAware);
+  Attr* GetAttribute(nsINodeInfo* aNodeInfo, bool aNsAware);
 
   /**
    * Remove an attribute, returns the removed node.
    */
-  already_AddRefed<mozilla::dom::Attr> RemoveAttribute(nsINodeInfo* aNodeInfo);
+  already_AddRefed<Attr> RemoveAttribute(nsINodeInfo* aNodeInfo);
 };
 
 
