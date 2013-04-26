@@ -347,10 +347,13 @@ ContactDB.prototype = {
               cursor.value.search.parsedTel = [];
               cursor.value.properties.tel.forEach(
                 function(tel) {
-                  cursor.value.search.parsedTel.push(parsed.nationalNumber);
-                  cursor.value.search.parsedTel.push(PhoneNumberUtils.normalize(parsed.nationalFormat));
-                  cursor.value.search.parsedTel.push(parsed.internationalNumber);
-                  cursor.value.search.parsedTel.push(PhoneNumberUtils.normalize(parsed.internationalFormat));
+                  let parsed = PhoneNumberUtils.parse(tel.value.toString());
+                  if (parsed) {
+                    cursor.value.search.parsedTel.push(parsed.nationalNumber);
+                    cursor.value.search.parsedTel.push(PhoneNumberUtils.normalize(parsed.nationalFormat));
+                    cursor.value.search.parsedTel.push(parsed.internationalNumber);
+                    cursor.value.search.parsedTel.push(PhoneNumberUtils.normalize(parsed.internationalFormat));
+                  }
                   cursor.value.search.parsedTel.push(PhoneNumberUtils.normalize(tel.value.toString()));
                 }
               );
