@@ -657,6 +657,21 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         return mCurrentViewTransform;
     }
 
+    /* Invoked by JNI from the compositor thread */
+    public ViewTransform syncFrameMetrics(float offsetX, float offsetY, float zoom,
+                float cssPageLeft, float cssPageTop, float cssPageRight, float cssPageBottom,
+                boolean layersUpdated, int x, int y, int width, int height, float resolution,
+                boolean isFirstPaint)
+    {
+        if (isFirstPaint) {
+            RectF pageRect = RectUtils.scale(new RectF(cssPageLeft, cssPageTop, cssPageRight, cssPageBottom), zoom);
+            setFirstPaintViewport(offsetX, offsetY, zoom, pageRect.left, pageRect.top, pageRect.right,
+                    pageRect.bottom, cssPageLeft, cssPageTop, cssPageRight, cssPageBottom);
+        }
+
+        return syncViewportInfo(x, y, width, height, resolution, layersUpdated);
+    }
+
     /** This function is invoked by Gecko via JNI; be careful when modifying signature. */
     public LayerRenderer.Frame createFrame() {
         // Create the shaders and textures if necessary.

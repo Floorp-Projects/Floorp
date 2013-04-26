@@ -344,6 +344,9 @@ public:
     void SyncViewportInfo(const nsIntRect& aDisplayPort, float aDisplayResolution, bool aLayersUpdated,
                           nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY,
                           gfx::Margin& aFixedLayerMargins, float& aOffsetX, float& aOffsetY);
+    void SyncFrameMetrics(const gfx::Point& aOffset, float aZoom, const gfx::Rect& aCssPageRect,
+                          bool aLayersUpdated, const gfx::Rect& aDisplayPort, float aDisplayResolution,
+                          bool aIsFirstPaint, gfx::Margin& aFixedLayerMargins, float& aOffsetX, float& aOffsetY);
 
     void AddPluginView(jobject view, const gfxRect& rect, bool isFullScreen);
     void RemovePluginView(jobject view, bool isFullScreen);

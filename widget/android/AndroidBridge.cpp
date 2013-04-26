@@ -2120,6 +2120,19 @@ AndroidBridge::SyncViewportInfo(const nsIntRect& aDisplayPort, float aDisplayRes
                              aOffsetX, aOffsetY);
 }
 
+void AndroidBridge::SyncFrameMetrics(const gfx::Point& aOffset, float aZoom, const gfx::Rect& aCssPageRect,
+                                     bool aLayersUpdated, const gfx::Rect& aDisplayPort, float aDisplayResolution,
+                                     bool aIsFirstPaint, gfx::Margin& aFixedLayerMargins, float& aOffsetX, float& aOffsetY)
+{
+    AndroidGeckoLayerClient *client = mLayerClient;
+    if (!client)
+        return;
+
+    client->SyncFrameMetrics(aOffset, aZoom, aCssPageRect,
+                             aLayersUpdated, aDisplayPort, aDisplayResolution,
+                             aIsFirstPaint, aFixedLayerMargins, aOffsetX, aOffsetY);
+}
+
 AndroidBridge::AndroidBridge()
   : mLayerClient(NULL),
     mNativePanZoomController(NULL)

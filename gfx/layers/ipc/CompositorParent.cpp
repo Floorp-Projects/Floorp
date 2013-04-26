@@ -846,10 +846,22 @@ CompositorParent::ApplyAsyncContentTransformToTree(TimeStamp aCurrentFrame,
     LayerComposite* layerComposite = aLayer->AsLayerComposite();
 
     ViewTransform treeTransform;
+    gfxPoint scrollOffset;
     *aWantNextFrame |=
       controller->SampleContentTransformForFrame(aCurrentFrame,
                                                  container,
-                                                 &treeTransform);
+                                                 &treeTransform,
+                                                 &scrollOffset);
+
+    gfx::Margin fixedLayerMargins(0, 0, 0, 0);
+    float offsetX = 0, offsetY = 0;
+    SyncFrameMetrics(aLayer, treeTransform, scrollOffset, fixedLayerMargins,
+                     offsetX, offsetY, mIsFirstPaint, mLayersUpdated);
+    mIsFirstPaint = false;
+    mLayersUpdated = false;
+
+    // Apply the render offset
+    mLayerManager->GetCompositor()->SetScreenRenderOffset(gfx::Point(offsetX, offsetY));
 
     gfx3DMatrix transform(gfx3DMatrix(treeTransform) * aLayer->GetTransform());
     // The transform already takes the resolution scale into account.  Since we
@@ -863,7 +875,6 @@ CompositorParent::ApplyAsyncContentTransformToTree(TimeStamp aCurrentFrame,
                         1);
     layerComposite->SetShadowTransform(transform);
 
-    gfx::Margin fixedLayerMargins(0, 0, 0, 0);
     TransformFixedLayers(
       aLayer,
       -treeTransform.mTranslation / treeTransform.mScale,
