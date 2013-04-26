@@ -110,9 +110,11 @@ SVGFEImageFrame::Init(nsIContent* aContent,
     do_QueryInterface(SVGFEImageFrameBase::mContent);
 
   if (imageLoader) {
-    imageLoader->FrameCreated(this);
     // We assume that feImage's are always visible.
+    // Increment the visible count before calling FrameCreated so that
+    // FrameCreated will actually track the image correctly.
     imageLoader->IncrementVisibleCount();
+    imageLoader->FrameCreated(this);
   }
 }
 
