@@ -35,6 +35,7 @@ EXPORTS.mozilla.dom += [
 
 EXPORTS.mozilla += [
     'AppProcessChecker.h',
+    'PreallocatedProcessManager.h',
     'ProcessPriorityManager.h',
 ]
 
