@@ -33,9 +33,9 @@
 
     <style name="AddressBar.ImageButton.Forward">
         <item name="android:contentDescription">@string/forward</item>
-        <item name="android:layout_width">64dip</item>
+        <item name="android:layout_width">45dip</item>
         <item name="android:layout_height">38dip</item>
-        <item name="android:paddingLeft">26dp</item>
+        <item name="android:paddingLeft">10dp</item>
         <item name="android:paddingTop">7dp</item>
         <item name="android:paddingBottom">7dp</item>
         <item name="android:layout_gravity">center_vertical</item>
@@ -50,9 +50,7 @@
    <style name="AddressBar.Button.Container">
         <item name="android:layout_marginTop">6dp</item>
         <item name="android:layout_marginBottom">6dp</item>
-        <item name="android:layout_marginRight">0dp</item>
         <!-- Start with forward hidden -->
-        <item name="android:layout_marginLeft">@dimen/addressbar_offset_left_noforward</item>
         <item name="android:orientation">horizontal</item>
     </style>
 

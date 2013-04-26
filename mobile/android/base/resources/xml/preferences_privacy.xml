@@ -54,6 +54,10 @@
                             android:defaultValue="true"
                             android:persistent="true" />
 
+        <ListPreference android:key="android.not_a_preference.privacy.titlebar"
+                        android:title="@string/pref_titlebar_mode"
+                        android:persistent="true" />
+
     </PreferenceCategory>
 
 </PreferenceScreen>

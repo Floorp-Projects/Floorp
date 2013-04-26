@@ -69,9 +69,9 @@ typedef uint16_t  jschar;
 #endif
 
 /*
- * Run-time version enumeration.  See jsversion.h for compile-time counterparts
- * to these values that may be selected by the JS_VERSION macro, and tested by
- * #if expressions.
+ * Run-time version enumeration.  For compile-time version checking, please use
+ * the JS_HAS_* macros in jsversion.h, or use MOZJS_MAJOR_VERSION,
+ * MOZJS_MINOR_VERSION, MOZJS_PATCH_VERSION, and MOZJS_ALPHA definitions.
  */
 typedef enum JSVersion {
     JSVERSION_ECMA_3  = 148,

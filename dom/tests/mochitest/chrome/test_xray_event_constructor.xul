@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=861493
+-->
+<window title="Mozilla Bug 861493"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <iframe id="t" type="content"></iframe>
+  
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=861493"
+     target="_blank">Mozilla Bug 861493</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  /** Test for Bug 861493 **/
+   SimpleTest.waitForExplicitFinish();
+
+   addLoadEvent(function() {
+     ok(Components.utils.isXrayWrapper($("t").contentWindow),
+        "Should have xray");
+     var e = new $("t").contentWindow.Event("test", { bubbles: true });
+     is(e.bubbles, true, "Dictionary should have worked");
+     SimpleTest.finish();
+   })
+
+  ]]>
+  </script>
+</window>

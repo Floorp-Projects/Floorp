@@ -15,8 +15,6 @@
     "b2g_manifest": "pandaboard.xml",
     "gecko_l10n_root": "http://hg.mozilla.org/l10n-central",
     "gaia": {
-        "vcs": "hgtool",
-        "repo": "http://hg.mozilla.org/integration/gaia-central",
         "l10n": {
             "vcs": "hgtool",
             "root": "http://hg.mozilla.org/gaia-l10n"

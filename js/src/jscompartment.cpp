@@ -4,11 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "jscompartment.h"
+
 #include "mozilla/DebugOnly.h"
 
 #include "jscntxt.h"
-#include "jsdate.h"
-#include "jscompartment.h"
 #include "jsgc.h"
 #include "jsiter.h"
 #include "jsmath.h"
@@ -16,29 +16,15 @@
 #include "jswatchpoint.h"
 #include "jswrapper.h"
 
-#if ENABLE_YARR_JIT
-#include "assembler/jit/ExecutableAllocator.h"
-#endif
-#include "assembler/wtf/Platform.h"
 #include "gc/Marking.h"
 #ifdef JS_ION
 #include "ion/IonCompartment.h"
-#include "ion/Ion.h"
 #endif
-#include "js/MemoryMetrics.h"
 #include "js/RootingAPI.h"
-#include "methodjit/MethodJIT.h"
-#include "methodjit/PolyIC.h"
-#include "methodjit/MonoIC.h"
-#include "methodjit/Retcon.h"
 #include "vm/Debugger.h"
-#include "vm/ForkJoin.h"
-#include "yarr/BumpPointerAllocator.h"
 
 #include "jsgcinlines.h"
 #include "jsobjinlines.h"
-
-#include "vm/Shape-inl.h"
 
 using namespace js;
 using namespace js::gc;

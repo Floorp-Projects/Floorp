@@ -535,7 +535,7 @@ IonScript::IonScript()
     osrEntryOffset_(0),
     invalidateEpilogueOffset_(0),
     invalidateEpilogueDataOffset_(0),
-    bailoutExpected_(0),
+    numBailouts_(0),
     hasInvalidatedCallTarget_(false),
     runtimeData_(0),
     runtimeSize_(0),
@@ -1009,14 +1009,20 @@ OptimizeMIR(MIRGenerator *mir)
         return false;
 
     if (js_IonOptions.licm) {
-        LICM licm(mir, graph);
-        if (!licm.analyze())
-            return false;
-        IonSpewPass("LICM");
-        AssertExtendedGraphCoherency(graph);
+        // LICM can hoist instructions from conditional branches and trigger
+        // repeated bailouts. Disable it if this script is known to bailout
+        // frequently.
+        JSScript *script = mir->info().script();
+        if (!script || !script->hadFrequentBailouts) {
+            LICM licm(mir, graph);
+            if (!licm.analyze())
+                return false;
+            IonSpewPass("LICM");
+            AssertExtendedGraphCoherency(graph);
 
-        if (mir->shouldCancel("LICM"))
-            return false;
+            if (mir->shouldCancel("LICM"))
+                return false;
+        }
     }
 
     if (js_IonOptions.rangeAnalysis) {

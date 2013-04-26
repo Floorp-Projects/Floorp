@@ -621,6 +621,9 @@ CompositorOGL::PrepareViewport(const gfx::IntSize& aSize,
   viewMatrix.Translate(-gfxPoint(1.0, -1.0));
   viewMatrix.Scale(2.0f / float(aSize.width), 2.0f / float(aSize.height));
   viewMatrix.Scale(1.0f, -1.0f);
+  if (!mTarget) {
+    viewMatrix.Translate(gfxPoint(mRenderOffset.x, mRenderOffset.y));
+  }
 
   viewMatrix = aWorldTransform * viewMatrix;
 

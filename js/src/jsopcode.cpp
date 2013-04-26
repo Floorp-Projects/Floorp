@@ -8,38 +8,29 @@
  * JS bytecode descriptors, disassemblers, and (expression) decompilers.
  */
 
-#include "mozilla/FloatingPoint.h"
+#include "jsopcode.h"
+
 #include "mozilla/Util.h"
 
-#ifdef HAVE_MEMORY_H
-#include <memory.h>
-#endif
 #include <stdarg.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include "jstypes.h"
 #include "jsutil.h"
 #include "jsprf.h"
 #include "jsapi.h"
-#include "jsarray.h"
 #include "jsatom.h"
 #include "jscntxt.h"
-#include "jsversion.h"
 #include "jsfun.h"
-#include "jsiter.h"
 #include "jsnum.h"
 #include "jsobj.h"
-#include "jsopcode.h"
 #include "jsscript.h"
 #include "jsstr.h"
 
-#include "ds/Sort.h"
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/TokenStream.h"
 #include "js/CharacterEncoding.h"
-#include "vm/Debugger.h"
 #include "vm/Shape.h"
 #include "vm/StringBuffer.h"
 
@@ -268,6 +259,7 @@ PCCounts::countName(JSOp op, size_t which)
 
 #ifdef DEBUG
 
+#ifdef JS_ION
 void
 js::DumpIonScriptCounts(Sprinter *sp, ion::IonScriptCounts *ionCounts)
 {
@@ -284,6 +276,7 @@ js::DumpIonScriptCounts(Sprinter *sp, ion::IonScriptCounts *ionCounts)
         Sprint(sp, "%s\n", block.code());
     }
 }
+#endif
 
 void
 js_DumpPCCounts(JSContext *cx, HandleScript script, js::Sprinter *sp)
@@ -319,12 +312,14 @@ js_DumpPCCounts(JSContext *cx, HandleScript script, js::Sprinter *sp)
         pc = next;
     }
 
+#ifdef JS_ION
     ion::IonScriptCounts *ionCounts = script->getIonCounts();
 
     while (ionCounts) {
         DumpIonScriptCounts(sp, ionCounts);
         ionCounts = ionCounts->previous();
     }
+#endif
 }
 
 /*

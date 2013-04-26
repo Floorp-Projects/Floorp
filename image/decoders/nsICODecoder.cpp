@@ -349,7 +349,7 @@ nsICODecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
       return;
     }
 
-    if (mContainedDecoder->HasSize()) {
+    if (!HasSize() && mContainedDecoder->HasSize()) {
       PostSize(mContainedDecoder->GetImageMetadata().GetWidth(),
                mContainedDecoder->GetImageMetadata().GetHeight());
     }

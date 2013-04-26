@@ -4,13 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "jsfriendapi.h"
+
 #include "mozilla/GuardObjects.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/StandardInteger.h"
 
 #include "jscntxt.h"
 #include "jscompartment.h"
-#include "jsfriendapi.h"
 #include "jsgc.h"
 #include "jswrapper.h"
 #include "jsweakmap.h"
@@ -1056,4 +1057,10 @@ js_DefineOwnProperty(JSContext *cx, JSObject *objArg, jsid idArg,
         assertSameCompartment(cx, CastAsObjectJsval(descriptor.setter));
 
     return js_DefineOwnProperty(cx, HandleObject(obj), id, descriptor, bp);
+}
+
+JS_FRIEND_API(JSBool)
+js_ReportIsNotFunction(JSContext *cx, const JS::Value& v)
+{
+    return ReportIsNotFunction(cx, v);
 }

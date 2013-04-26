@@ -934,9 +934,14 @@ CompositorParent::TransformScrollableLayer(Layer* aLayer, const gfx3DMatrix& aRo
   displayPortDevPixels.y += scrollOffsetDevPixels.y;
 
   gfx::Margin fixedLayerMargins(0, 0, 0, 0);
+  float offsetX = 0, offsetY = 0;
   SyncViewportInfo(displayPortDevPixels, 1/rootScaleX, mLayersUpdated,
-                   mScrollOffset, mXScale, mYScale, fixedLayerMargins);
+                   mScrollOffset, mXScale, mYScale, fixedLayerMargins,
+                   offsetX, offsetY);
   mLayersUpdated = false;
+
+  // Apply the render offset
+  mLayerManager->GetCompositor()->SetScreenRenderOffset(gfx::Point(offsetX, offsetY));
 
   // Handle transformations for asynchronous panning and zooming. We determine the
   // zoom used by Gecko from the transformation set on the root layer, and we
@@ -1091,11 +1096,13 @@ void
 CompositorParent::SyncViewportInfo(const nsIntRect& aDisplayPort,
                                    float aDisplayResolution, bool aLayersUpdated,
                                    nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY,
-                                   gfx::Margin& aFixedLayerMargins)
+                                   gfx::Margin& aFixedLayerMargins, float& aOffsetX,
+                                   float& aOffsetY)
 {
 #ifdef MOZ_WIDGET_ANDROID
   AndroidBridge::Bridge()->SyncViewportInfo(aDisplayPort, aDisplayResolution, aLayersUpdated,
-                                            aScrollOffset, aScaleX, aScaleY, aFixedLayerMargins);
+                                            aScrollOffset, aScaleX, aScaleY, aFixedLayerMargins,
+                                            aOffsetX, aOffsetY);
 #endif
 }
 

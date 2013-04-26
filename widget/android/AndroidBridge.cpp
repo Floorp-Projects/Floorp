@@ -2109,14 +2109,15 @@ AndroidBridge::SetPageRect(const gfx::Rect& aCssPageRect)
 void
 AndroidBridge::SyncViewportInfo(const nsIntRect& aDisplayPort, float aDisplayResolution, bool aLayersUpdated,
                                 nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY,
-                                gfx::Margin& aFixedLayerMargins)
+                                gfx::Margin& aFixedLayerMargins, float& aOffsetX, float& aOffsetY)
 {
     AndroidGeckoLayerClient *client = mLayerClient;
     if (!client)
         return;
 
     client->SyncViewportInfo(aDisplayPort, aDisplayResolution, aLayersUpdated,
-                             aScrollOffset, aScaleX, aScaleY, aFixedLayerMargins);
+                             aScrollOffset, aScaleX, aScaleY, aFixedLayerMargins,
+                             aOffsetX, aOffsetY);
 }
 
 AndroidBridge::AndroidBridge()

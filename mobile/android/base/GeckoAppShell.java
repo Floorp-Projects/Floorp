@@ -801,8 +801,10 @@ public class GeckoAppShell
     static String[] getHandlersForURL(String aURL, String aAction) {
         // aURL may contain the whole URL or just the protocol
         Uri uri = aURL.indexOf(':') >= 0 ? Uri.parse(aURL) : new Uri.Builder().scheme(aURL).build();
-        Intent intent = getIntentForActionString(aAction);
-        intent.setData(uri);
+
+        Intent intent = getOpenURIIntent(GeckoApp.mAppContext, uri.toString(), "",
+            TextUtils.isEmpty(aAction) ? Intent.ACTION_VIEW : aAction, "");
+
         return getHandlersForIntent(intent);
     }
 
