@@ -8,6 +8,7 @@
 #include "mozilla/dom/CanvasRenderingContext2DBinding.h"
 #include "mozilla/RefPtr.h"
 #include "nsISupports.h"
+#include "nsWrapperCache.h"
 
 #define NS_CANVASPATTERNAZURE_PRIVATE_IID \
     {0xc9bacc25, 0x28da, 0x421e, {0x9a, 0x4b, 0xbb, 0xd6, 0x93, 0x05, 0x12, 0xbc}}
@@ -20,11 +21,13 @@ class SourceSurface;
 
 namespace dom {
 
-class CanvasPattern MOZ_FINAL : public nsISupports
+class CanvasPattern MOZ_FINAL : public nsISupports,
+                                public nsWrapperCache
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_CANVASPATTERNAZURE_PRIVATE_IID)
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(CanvasPattern)
 
   enum RepeatMode
   {
@@ -34,17 +37,20 @@ public:
     NOREPEAT
   };
 
-  CanvasPattern(mozilla::gfx::SourceSurface* aSurface,
+  CanvasPattern(CanvasRenderingContext2D* aContext,
+                gfx::SourceSurface* aSurface,
                 RepeatMode aRepeat,
                 nsIPrincipal* principalForSecurityCheck,
                 bool forceWriteOnly,
                 bool CORSUsed)
-    : mSurface(aSurface)
+    : mContext(aContext)
+    , mSurface(aSurface)
     , mRepeat(aRepeat)
     , mPrincipal(principalForSecurityCheck)
     , mForceWriteOnly(forceWriteOnly)
     , mCORSUsed(CORSUsed)
   {
+    SetIsDOMBinding();
   }
 
   JSObject* WrapObject(JSContext* aCx, JSObject* aScope)
@@ -52,7 +58,13 @@ public:
     return CanvasPatternBinding::Wrap(aCx, aScope, this);
   }
 
-  mozilla::RefPtr<mozilla::gfx::SourceSurface> mSurface;
+  CanvasRenderingContext2D* GetParentObject()
+  {
+    return mContext;
+  }
+
+  nsRefPtr<CanvasRenderingContext2D> mContext;
+  RefPtr<gfx::SourceSurface> mSurface;
   const RepeatMode mRepeat;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   const bool mForceWriteOnly;
