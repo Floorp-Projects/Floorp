@@ -385,20 +385,6 @@ child:
                       nsIntSize renderSize);
 
     /**
-     * Send the child its app type.  The app type identifies the kind of app
-     * shown in this PBrowser.  Currently, the only recognized app type is
-     * "homescreen".
-     *
-     * The value here corresponds to the "mozapptype" attribute on iframes.  For
-     * example, <iframe mozbrowser mozapp="..." mozapptype="homescreen">.
-     *
-     * Only app frames (i.e., frames with an app-id) should have a non-empty app
-     * type.  If you try to SetAppType() with a non-empty app type on a non-app
-     * PBrowserChild, we may assert.
-     */
-    SetAppType(nsString appType);
-
-    /**
      * Sent by the chrome process when it no longer wants this remote
      * <browser>.  The child side cleans up in response, then
      * finalizing its death by sending back __delete__() to the

@@ -7,46 +7,75 @@
 #ifndef mozilla_ProcessPriorityManager_h_
 #define mozilla_ProcessPriorityManager_h_
 
+#include "mozilla/HalTypes.h"
+#include "mozilla/StaticPtr.h"
+#include "nsIObserver.h"
+#include "nsDataHashtable.h"
+
 namespace mozilla {
 namespace dom {
-namespace ipc {
+class ContentParent;
+}
 
 /**
- * Initialize the ProcessPriorityManager.
+ * This class sets the priority of subprocesses in response to explicit
+ * requests and events in the system.
  *
- * The ProcessPriorityManager informs the hal back-end whether this is the root
- * Gecko process, and, if we're not the root, informs hal when this process
- * transitions between having no visible top-level windows, and having at least
- * one visible top-level window.
+ * A process's priority changes e.g. when it goes into the background via
+ * mozbrowser's setVisible(false).  Process priority affects CPU scheduling and
+ * also which processes get killed when we run out of memory.
  *
- * Hal may adjust this process's operating system priority (e.g. niceness, on
- * *nix) according to these notificaitons.
- *
- * This function call does nothing if the pref for OOP tabs is not set.
+ * After you call Initialize(), the only thing you probably have to do is call
+ * SetProcessPriority on processes immediately after creating them in order to
+ * set their initial priority.  The ProcessPriorityManager takes care of the
+ * rest.
  */
-void InitProcessPriorityManager();
+class ProcessPriorityManager MOZ_FINAL
+{
+public:
+  /**
+   * Initialize the ProcessPriorityManager machinery, causing the
+   * ProcessPriorityManager to actively manage the priorities of all
+   * subprocesses.  You should call this before creating any subprocesses.
+   *
+   * You should also call this function even if you're in a child process,
+   * since it will initialize ProcessPriorityManagerChild.
+   */
+  static void Init();
 
-/**
- * True iff the current process has foreground or higher priority as
- * computed by DOM visibility.  The returned answer may not match the
- * actual OS process priority, for short intervals.
- */
-bool CurrentProcessIsForeground();
+  /**
+   * Set the process priority of a given ContentParent's process.
+   *
+   * Note that because this method takes a ContentParent*, you can only set the
+   * priority of your subprocesses.  In fact, because we don't support nested
+   * content processes (bug 761935), you can only call this method from the
+   * main process.
+   *
+   * It probably only makes sense to call this function immediately after a
+   * process is created.  At this point, the process priority manager doesn't
+   * have enough context about the processs to know what its priority should
+   * be.
+   *
+   * Eventually whatever priority you set here can and probably will be
+   * overwritten by the process priority manager.
+   */
+  static void SetProcessPriority(dom::ContentParent* aContentParent,
+                                 hal::ProcessPriority aPriority);
 
-/**
- * Calling this function prevents us from changing this process's priority
- * for a few seconds, if that change in priority would not have taken effect
- * immediately to begin with.
- *
- * In practice, this prevents foreground --> background transitions, but not
- * background --> foreground transitions.  It also does not prevent
- * transitions from an unknown priority (as happens immediately after we're
- * constructed) to a foreground priority.
- */
-void TemporarilyLockProcessPriority();
+  /**
+   * Returns true iff this process's priority is FOREGROUND*.
+   *
+   * Note that because process priorities are set in the main process, it's
+   * possible for this method to return a stale value.  So be careful about
+   * what you use this for.
+   */
+  static bool CurrentProcessIsForeground();
 
-} // namespace ipc
-} // namespace dom
+private:
+  ProcessPriorityManager();
+  DISALLOW_EVIL_CONSTRUCTORS(ProcessPriorityManager);
+};
+
 } // namespace mozilla
 
 #endif

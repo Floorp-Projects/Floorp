@@ -428,6 +428,11 @@ private:
   bool mRemoteBrowserInitialized : 1;
   bool mObservingOwnerContent : 1;
 
+  // Backs nsIFrameLoader::{Get,Set}Visible.  Visibility state here relates to
+  // whether this frameloader's <iframe mozbrowser> is setVisible(true)'ed, and
+  // doesn't necessarily correlate with docshell/document visibility.
+  bool mVisible : 1;
+
   // XXX leaking
   nsCOMPtr<nsIObserver> mChildHost;
   RenderFrameParent* mCurrentRemoteFrame;
