@@ -115,6 +115,9 @@ abstract public class BrowserApp extends GeckoApp
     // We'll ask for feedback after the user launches the app this many times.
     private static final int FEEDBACK_LAUNCH_COUNT = 15;
 
+    // Whether the dynamic toolbar pref is enabled.
+    private boolean mDynamicToolbarEnabled = false;
+
     // Stored value of the toolbar height, so we know when it's changed.
     private int mToolbarHeight = 0;
 
