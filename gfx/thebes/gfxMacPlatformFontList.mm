@@ -85,11 +85,6 @@ private:
     NSAutoreleasePool *mLocalPool;
 };
 
-// font info loader constants
-static const uint32_t kDelayBeforeLoadingCmaps = 8 * 1000; // 8secs
-static const uint32_t kIntervalBetweenLoadingCmaps = 150; // 150ms
-static const uint32_t kNumFontsPerSlice = 10; // read in info 10 fonts at a time
-
 // indexes into the NSArray objects that the Cocoa font manager returns
 // as the available members of a family
 #define INDEX_FONT_POSTSCRIPT_NAME 0
@@ -742,7 +737,7 @@ gfxMacPlatformFontList::InitFontList()
     PreloadNamesList();
 
     // start the delayed cmap loader
-    StartLoader(kDelayBeforeLoadingCmaps, kIntervalBetweenLoadingCmaps);
+    GetPrefsAndStartLoader();
 
     return NS_OK;
 }

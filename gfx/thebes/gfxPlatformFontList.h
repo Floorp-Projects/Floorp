@@ -245,6 +245,9 @@ protected:
     virtual bool RunLoader();
     virtual void FinishLoader();
 
+    // read the loader initialization prefs, and start it
+    void GetPrefsAndStartLoader();
+
     // used by memory reporter to accumulate sizes of family names in the hash
     static size_t
     SizeOfFamilyNameEntryExcludingThis(const nsAString&               aKey,
