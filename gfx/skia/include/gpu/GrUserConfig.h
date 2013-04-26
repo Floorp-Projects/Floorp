@@ -43,6 +43,10 @@
  */
 //#define GR_DEFAULT_TEXTURE_CACHE_MB_LIMIT 96
 
+/*
+ * This allows us to set a callback to be called before each GL call to ensure
+ * that our context is set correctly
+ */
 #define GR_GL_PER_GL_FUNC_CALLBACK  1
 
 #endif
