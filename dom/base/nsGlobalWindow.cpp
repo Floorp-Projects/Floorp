@@ -3892,9 +3892,8 @@ nsGlobalWindow::SetStatus(const nsAString& aStatus)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIWebBrowserChrome> browserChrome;
-  GetWebBrowserChrome(getter_AddRefs(browserChrome));
-  if(browserChrome) {
+  nsCOMPtr<nsIWebBrowserChrome> browserChrome = GetWebBrowserChrome();
+  if (browserChrome) {
     browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_SCRIPT,
                              PromiseFlatString(aStatus).get());
   }
@@ -9769,8 +9768,7 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
 
   *aReturn = nullptr;
 
-  nsCOMPtr<nsIWebBrowserChrome> chrome;
-  GetWebBrowserChrome(getter_AddRefs(chrome));
+  nsCOMPtr<nsIWebBrowserChrome> chrome = GetWebBrowserChrome();
   if (!chrome) {
     // No chrome means we don't want to go through with this open call
     // -- see nsIWindowWatcher.idl
@@ -10739,15 +10737,13 @@ nsGlobalWindow::GetTreeOwnerWindow()
   return baseWindow.forget();
 }
 
-nsresult
-nsGlobalWindow::GetWebBrowserChrome(nsIWebBrowserChrome **aBrowserChrome)
+already_AddRefed<nsIWebBrowserChrome>
+nsGlobalWindow::GetWebBrowserChrome()
 {
   nsCOMPtr<nsIDocShellTreeOwner> treeOwner = GetTreeOwner();
 
-  nsCOMPtr<nsIWebBrowserChrome> browserChrome(do_GetInterface(treeOwner));
-  NS_IF_ADDREF(*aBrowserChrome = browserChrome);
-
-  return NS_OK;
+  nsCOMPtr<nsIWebBrowserChrome> browserChrome = do_GetInterface(treeOwner);
+  return browserChrome.forget();
 }
 
 nsIScrollableFrame *

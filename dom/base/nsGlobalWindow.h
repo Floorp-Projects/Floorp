@@ -891,7 +891,7 @@ protected:
   // Helper Functions
   already_AddRefed<nsIDocShellTreeOwner> GetTreeOwner();
   already_AddRefed<nsIBaseWindow> GetTreeOwnerWindow();
-  nsresult GetWebBrowserChrome(nsIWebBrowserChrome** aBrowserChrome);
+  already_AddRefed<nsIWebBrowserChrome> GetWebBrowserChrome();
   nsresult SecurityCheckURL(const char *aURL);
   nsresult BuildURIfromBase(const char *aURL,
                             nsIURI **aBuiltURI,
