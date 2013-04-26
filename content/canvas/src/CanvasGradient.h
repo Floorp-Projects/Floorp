@@ -5,10 +5,10 @@
 #ifndef mozilla_dom_CanvasGradient_h
 #define mozilla_dom_CanvasGradient_h
 
-#include "nsIDOMCanvasRenderingContext2D.h"
 #include "nsTArray.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/CanvasRenderingContext2DBinding.h"
+#include "mozilla/dom/CanvasRenderingContext2D.h"
 #include "mozilla/gfx/2D.h"
 #include "nsWrapperCache.h"
 
@@ -53,7 +53,7 @@ public:
   // WebIDL
   void AddColorStop(float offset, const nsAString& colorstr, ErrorResult& rv);
 
-  JSObject* WrapObject(JSContext* aCx, JSObject* aScope)
+  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
   {
     return CanvasGradientBinding::Wrap(aCx, aScope, this);
   }
