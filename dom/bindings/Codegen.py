@@ -8682,13 +8682,13 @@ class CGCallback(CGClass):
         # Strip out the JSContext*/JSObject* args
         # that got added.
         assert args[0].name == "cx" and args[0].argType == "JSContext*"
-        assert args[1].name == "aThisObj" and args[1].argType == "JSObject*"
+        assert args[1].name == "aThisObj" and args[1].argType == "JS::Handle<JSObject*>"
         args = args[2:]
         # Record the names of all the arguments, so we can use them when we call
         # the private method.
         argnames = [arg.name for arg in args]
         argnamesWithThis = ["s.GetContext()", "thisObjJS"] + argnames
-        argnamesWithoutThis = ["s.GetContext()", "nullptr"] + argnames
+        argnamesWithoutThis = ["s.GetContext()", "JS::NullPtr()"] + argnames
         # Now that we've recorded the argnames for our call to our private
         # method, insert our optional argument for deciding whether the
         # CallSetup should re-throw exceptions on aRv.
@@ -8706,8 +8706,8 @@ class CGCallback(CGClass):
 
         bodyWithThis = string.Template(
             setupCall+
-            "JSObject* thisObjJS =\n"
-            "  WrapCallThisObject(s.GetContext(), CallbackPreserveColor(), thisObj);\n"
+            "JS::Rooted<JSObject*> thisObjJS(s.GetContext(),\n"
+            "  WrapCallThisObject(s.GetContext(), CallbackPreserveColor(), thisObj));\n"
             "if (!thisObjJS) {\n"
             "  aRv.Throw(NS_ERROR_FAILURE);\n"
             "  return${errorReturn};\n"
@@ -8856,7 +8856,7 @@ class CallbackMember(CGNativeMember):
     def getResultConversion(self):
         replacements = {
             "val": "rval",
-            "valPtr": "&rval",
+            "valPtr": "rval.address()",
             "holderName" : "rvalHolder",
             "declName" : "rvalDecl",
             # We actually want to pass in a null scope object here, because
@@ -8964,7 +8964,7 @@ class CallbackMember(CGNativeMember):
         # We want to allow the caller to pass in a "this" object, as
         # well as a JSContext.
         return [Argument("JSContext*", "cx"),
-                Argument("JSObject*", "aThisObj")] + args
+                Argument("JS::Handle<JSObject*>", "aThisObj")] + args
 
     def getCallSetup(self):
         if self.needThisHandling:
@@ -9003,7 +9003,7 @@ class CallbackMethod(CallbackMember):
         CallbackMember.__init__(self, sig, name, descriptorProvider,
                                 needThisHandling)
     def getRvalDecl(self):
-        return "JS::Value rval = JSVAL_VOID;\n"
+        return "JS::Rooted<JS::Value> rval(cx, JS::UndefinedValue());\n"
 
     def getCall(self):
         replacements = {
@@ -9019,7 +9019,7 @@ class CallbackMethod(CallbackMember):
             replacements["argc"] = "0"
         return string.Template("${getCallable}"
                 "if (!JS_CallFunctionValue(cx, ${thisObj}, callable,\n"
-                "                          ${argc}, ${argv}, &rval)) {\n"
+                "                          ${argc}, ${argv}, rval.address())) {\n"
                 "  aRv.Throw(NS_ERROR_UNEXPECTED);\n"
                 "  return${errorReturn};\n"
                 "}\n").substitute(replacements)
@@ -9033,7 +9033,7 @@ class CallCallback(CallbackMethod):
         return "aThisObj"
 
     def getCallableDecl(self):
-        return "JS::Value callable = JS::ObjectValue(*mCallback);\n"
+        return "JS::Rooted<JS::Value> callable(cx, JS::ObjectValue(*mCallback));\n"
 
 class CallbackOperation(CallbackMethod):
     def __init__(self, method, signature, descriptor):
@@ -9064,10 +9064,10 @@ class CallbackOperation(CallbackMethod):
                 '  return${errorReturn};\n'
                 '}\n').substitute(replacements)
         if not self.singleOperation:
-            return 'JS::Value callable;\n' + getCallableFromProp
+            return 'JS::Rooted<JS::Value> callable(cx);\n' + getCallableFromProp
         return (
             'bool isCallable = JS_ObjectIsCallable(cx, mCallback);\n'
-            'JS::Value callable;\n'
+            'JS::Rooted<JS::Value> callable(cx);\n'
             'if (isCallable) {\n'
             '  callable = JS::ObjectValue(*mCallback);\n'
             '} else {\n'
@@ -9085,7 +9085,7 @@ class CallbackGetter(CallbackMember):
                                 needThisHandling=False)
 
     def getRvalDecl(self):
-        return "JS::Value rval = JSVAL_VOID;\n"
+        return "JS::Rooted<JS::Value> rval(cx, JS::UndefinedValue());\n"
 
     def getCall(self):
         replacements = {
@@ -9093,7 +9093,7 @@ class CallbackGetter(CallbackMember):
             "attrName": self.attrName
             }
         return string.Template(
-            'if (!JS_GetProperty(cx, mCallback, "${attrName}", &rval)) {\n'
+            'if (!JS_GetProperty(cx, mCallback, "${attrName}", rval.address())) {\n'
             '  aRv.Throw(NS_ERROR_UNEXPECTED);\n'
             '  return${errorReturn};\n'
             '}\n').substitute(replacements);
