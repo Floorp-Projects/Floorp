@@ -4051,7 +4051,7 @@ def wrapTypeIntoCurrentCompartment(type, value):
     if type.isSequence():
         if type.nullable():
             type = type.inner
-            value = "%s.AsMutable().Value()" % value
+            value = "%s.Value()" % value
         global sequenceWrapLevel
         index = "indexName%d" % sequenceWrapLevel
         sequenceWrapLevel += 1
@@ -4067,7 +4067,6 @@ def wrapTypeIntoCurrentCompartment(type, value):
 
     if type.isDictionary():
         assert not type.nullable()
-        value = "%s.AsMutable()" % value
         myDict = type.inner
         memberWraps = []
         while myDict:
@@ -4099,7 +4098,7 @@ def wrapArgIntoCurrentCompartment(arg, value):
     origValue = value
     isOptional = arg.optional and not arg.defaultValue
     if isOptional:
-        value = value + ".AsMutable().Value()"
+        value = value + ".Value()"
     wrap = wrapTypeIntoCurrentCompartment(arg.type, value)
     if wrap and isOptional:
         wrap = CGIfWrapper(wrap, "%s.WasPassed()" % origValue)
@@ -7188,10 +7187,6 @@ class CGDictionary(CGThing):
                  "    NS_ENSURE_TRUE(cx, false);\n"
                  "    return Init(cx, json.ref());\n"
                  "  }\n" if not self.workers else "") +
-                "  ${selfName}& AsMutable() const\n"
-                "  {\n"
-                "    return *const_cast<${selfName}*>(this);\n"
-                "  }\n"
                 "\n" +
                 "\n".join(memberDecls) + "\n"
                 "private:\n"
