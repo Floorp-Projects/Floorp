@@ -104,15 +104,14 @@ public:
     SetStyleFromJSValue(cx, value, STYLE_FILL);
   }
 
-  already_AddRefed<nsIDOMCanvasGradient>
-    CreateLinearGradient(double x0, double y0, double x1, double y1,
-                         mozilla::ErrorResult& aError);
-  already_AddRefed<nsIDOMCanvasGradient>
+  already_AddRefed<CanvasGradient>
+    CreateLinearGradient(double x0, double y0, double x1, double y1);
+  already_AddRefed<CanvasGradient>
     CreateRadialGradient(double x0, double y0, double r0, double x1, double y1,
-                         double r1, mozilla::ErrorResult& aError);
+                         double r1, ErrorResult& aError);
   already_AddRefed<CanvasPattern>
     CreatePattern(const HTMLImageOrCanvasOrVideoElement& element,
-                  const nsAString& repeat, mozilla::ErrorResult& error);
+                  const nsAString& repeat, ErrorResult& error);
 
   double ShadowOffsetX()
   {

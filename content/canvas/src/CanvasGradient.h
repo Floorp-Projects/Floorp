@@ -8,6 +8,8 @@
 #include "nsIDOMCanvasRenderingContext2D.h"
 #include "nsTArray.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/dom/CanvasRenderingContext2DBinding.h"
+#include "mozilla/gfx/2D.h"
 
 #define NS_CANVASGRADIENTAZURE_PRIVATE_IID \
     {0x28425a6a, 0x90e0, 0x4d42, {0x9c, 0x75, 0xff, 0x60, 0x09, 0xb3, 0x10, 0xa8}}
@@ -15,7 +17,7 @@
 namespace mozilla {
 namespace dom {
 
-class CanvasGradient : public nsIDOMCanvasGradient
+class CanvasGradient : public nsISupports
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_CANVASGRADIENTAZURE_PRIVATE_IID)
@@ -46,8 +48,13 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  /* nsIDOMCanvasGradient */
-  NS_IMETHOD AddColorStop(float offset, const nsAString& colorstr);
+  // WebIDL
+  void AddColorStop(float offset, const nsAString& colorstr, ErrorResult& rv);
+
+  JSObject* WrapObject(JSContext* aCx, JSObject* aScope)
+  {
+    return CanvasGradientBinding::Wrap(aCx, aScope, this);
+  }
 
 protected:
   CanvasGradient(Type aType) : mType(aType)

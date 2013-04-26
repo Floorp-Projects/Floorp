@@ -361,22 +361,25 @@ private:
   mgfx::Rect mTempRect;
 };
 
-NS_IMETHODIMP
-CanvasGradient::AddColorStop(float offset, const nsAString& colorstr)
+void
+CanvasGradient::AddColorStop(float offset, const nsAString& colorstr, ErrorResult& rv)
 {
-  if (!FloatValidate(offset) || offset < 0.0 || offset > 1.0) {
-    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  if (offset < 0.0 || offset > 1.0) {
+    rv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return;
   }
 
   nsCSSValue value;
   nsCSSParser parser;
   if (!parser.ParseColorString(colorstr, nullptr, 0, value)) {
-    return NS_ERROR_DOM_SYNTAX_ERR;
+    rv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+    return;
   }
 
   nscolor color;
   if (!nsRuleNode::ComputeColor(value, nullptr, nullptr, color)) {
-    return NS_ERROR_DOM_SYNTAX_ERR;
+    rv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+    return;
   }
 
   mStops = nullptr;
@@ -387,8 +390,6 @@ CanvasGradient::AddColorStop(float offset, const nsAString& colorstr)
   newStop.color = Color::FromABGR(color);
 
   mRawStops.AppendElement(newStop);
-
-  return NS_OK;
 }
 
 NS_DEFINE_STATIC_IID_ACCESSOR(CanvasGradient, NS_CANVASGRADIENTAZURE_PRIVATE_IID)
@@ -398,8 +399,6 @@ NS_IMPL_RELEASE(CanvasGradient)
 
 NS_INTERFACE_MAP_BEGIN(CanvasGradient)
   NS_INTERFACE_MAP_ENTRY(mozilla::dom::CanvasGradient)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMCanvasGradient)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CanvasGradient)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
@@ -1356,17 +1355,16 @@ CanvasRenderingContext2D::GetFillRule(nsAString& aString)
 //
 // gradients and patterns
 //
-already_AddRefed<nsIDOMCanvasGradient>
-CanvasRenderingContext2D::CreateLinearGradient(double x0, double y0, double x1, double y1,
-                                               ErrorResult& aError)
+already_AddRefed<CanvasGradient>
+CanvasRenderingContext2D::CreateLinearGradient(double x0, double y0, double x1, double y1)
 {
-  nsRefPtr<nsIDOMCanvasGradient> grad =
+  nsRefPtr<CanvasGradient> grad =
     new CanvasLinearGradient(Point(x0, y0), Point(x1, y1));
 
   return grad.forget();
 }
 
-already_AddRefed<nsIDOMCanvasGradient>
+already_AddRefed<CanvasGradient>
 CanvasRenderingContext2D::CreateRadialGradient(double x0, double y0, double r0,
                                                double x1, double y1, double r1,
                                                ErrorResult& aError)
@@ -1376,7 +1374,7 @@ CanvasRenderingContext2D::CreateRadialGradient(double x0, double y0, double r0,
     return nullptr;
   }
 
-  nsRefPtr<nsIDOMCanvasGradient> grad =
+  nsRefPtr<CanvasGradient> grad =
     new CanvasRadialGradient(Point(x0, y0), r0, Point(x1, y1), r1);
 
   return grad.forget();
@@ -3808,6 +3806,5 @@ CanvasRenderingContext2D::ShouldForceInactiveLayer(LayerManager *aManager)
 }
 }
 
-DOMCI_DATA(CanvasGradient, mozilla::dom::CanvasGradient)
 DOMCI_DATA(CanvasRenderingContext2D, mozilla::dom::CanvasRenderingContext2D)
 
