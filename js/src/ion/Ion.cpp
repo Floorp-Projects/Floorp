@@ -183,14 +183,14 @@ IonRuntime::initialize(JSContext *cx)
 {
     AutoEnterAtomsCompartment ac(cx);
 
-    if (!cx->compartment->ensureIonCompartmentExists(cx))
-        return false;
-
     IonContext ictx(cx, NULL);
     AutoFlushCache afc("IonRuntime::initialize");
 
     execAlloc_ = cx->runtime->getExecAlloc(cx);
     if (!execAlloc_)
+        return false;
+
+    if (!cx->compartment->ensureIonCompartmentExists(cx))
         return false;
 
     functionWrappers_ = cx->new_<VMWrapperMap>(cx);
@@ -284,7 +284,8 @@ IonRuntime::freeOsrTempData()
 IonCompartment::IonCompartment(IonRuntime *rt)
   : rt(rt),
     stubCodes_(NULL),
-    baselineCallReturnAddr_(NULL)
+    baselineCallReturnAddr_(NULL),
+    stringConcatStub_(NULL)
 {
 }
 
@@ -300,6 +301,19 @@ IonCompartment::initialize(JSContext *cx)
     stubCodes_ = cx->new_<ICStubCodeMap>(cx);
     if (!stubCodes_ || !stubCodes_->init())
         return false;
+
+    return true;
+}
+
+bool
+IonCompartment::ensureIonStubsExist(JSContext *cx)
+{
+    if (!stringConcatStub_) {
+        stringConcatStub_ = generateStringConcatStub(cx);
+        if (!stringConcatStub_)
+            return false;
+    }
+
     return true;
 }
 
@@ -364,6 +378,9 @@ IonCompartment::sweep(FreeOp *fop)
     // If the sweep removed the ICCall_Fallback stub, NULL the baselineCallReturnAddr_ field.
     if (!stubCodes_->lookup(static_cast<uint32_t>(ICStub::Call_Fallback)))
         baselineCallReturnAddr_ = NULL;
+
+    if (stringConcatStub_ && !IsIonCodeMarked(stringConcatStub_.unsafeGet()))
+        stringConcatStub_ = NULL;
 }
 
 IonCode *
@@ -1321,6 +1338,9 @@ IonCompile(JSContext *cx, JSScript *script,
     types::AutoEnterAnalysis enter(cx);
 
     if (!cx->compartment->ensureIonCompartmentExists(cx))
+        return AbortReason_Alloc;
+
+    if (!cx->compartment->ionCompartment()->ensureIonStubsExist(cx))
         return AbortReason_Alloc;
 
     MIRGraph *graph = alloc->new_<MIRGraph>(temp);

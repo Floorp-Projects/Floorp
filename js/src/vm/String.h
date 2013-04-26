@@ -677,6 +677,10 @@ class JSInlineString : public JSFlatString
     static bool lengthFits(size_t length) {
         return length <= MAX_INLINE_LENGTH;
     }
+
+    static size_t offsetOfInlineStorage() {
+        return offsetof(JSInlineString, d.inlineStorage);
+    }
 };
 
 JS_STATIC_ASSERT(sizeof(JSInlineString) == sizeof(JSString));
