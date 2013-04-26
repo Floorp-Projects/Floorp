@@ -12,6 +12,10 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
 Cu.import("resource:///modules/devtools/EventEmitter.jsm");
+Cu.import("resource:///modules/devtools/StyleEditorDebuggee.jsm");
+Cu.import("resource:///modules/devtools/StyleEditorUI.jsm");
+Cu.import("resource:///modules/devtools/StyleEditorUtil.jsm");
+
 
 XPCOMUtils.defineLazyModuleGetter(this, "StyleEditorChrome",
                         "resource:///modules/devtools/StyleEditorChrome.jsm");
@@ -21,183 +25,99 @@ this.StyleEditorPanel = function StyleEditorPanel(panelWin, toolbox) {
 
   this._toolbox = toolbox;
   this._target = toolbox.target;
-
-  this.newPage = this.newPage.bind(this);
-  this.destroy = this.destroy.bind(this);
-  this.beforeNavigate = this.beforeNavigate.bind(this);
-
-  this._target.on("will-navigate", this.beforeNavigate);
-  this._target.on("navigate", this.newPage);
-  this._target.on("close", this.destroy);
-
   this._panelWin = panelWin;
   this._panelDoc = panelWin.document;
+
+  this.destroy = this.destroy.bind(this);
+  this._showError = this._showError.bind(this);
 }
 
 StyleEditorPanel.prototype = {
+  get target() this._toolbox.target,
+
+  get panelWindow() this._panelWin,
+
   /**
    * open is effectively an asynchronous constructor
    */
-  open: function StyleEditor_open() {
-    let contentWin = this._toolbox.target.window;
+  open: function() {
     let deferred = Promise.defer();
 
-    this.setPage(contentWin).then(function() {
+    let promise;
+    // We always interact with the target as if it were remote
+    if (!this.target.isRemote) {
+      promise = this.target.makeRemote();
+    } else {
+      promise = Promise.resolve(this.target);
+    }
+
+    promise.then(() => {
+      this.target.on("close", this.destroy);
+
+      this._debuggee = new StyleEditorDebuggee(this.target);
+
+      this.UI = new StyleEditorUI(this._debuggee, this._panelDoc);
+      this.UI.on("error", this._showError);
+
       this.isReady = true;
       deferred.resolve(this);
-    }.bind(this));
+    })
 
     return deferred.promise;
   },
 
   /**
-   * Target getter.
+   * Show an error message from the style editor in the toolbox
+   * notification box.
+   *
+   * @param  {string} event
+   *         Type of event
+   * @param  {string} errorCode
+   *         Error code of error to report
    */
-  get target() this._target,
-
-  /**
-   * Panel window getter.
-   */
-  get panelWindow() this._panelWin,
-
-  /**
-   * StyleEditorChrome instance getter.
-   */
-  get styleEditorChrome() this._panelWin.styleEditorChrome,
-
-  /**
-   * Set the page to target.
-   */
-  setPage: function StyleEditor_setPage(contentWindow) {
-    if (this._panelWin.styleEditorChrome) {
-      this._panelWin.styleEditorChrome.contentWindow = contentWindow;
-      this.selectStyleSheet(null, null, null);
-    } else {
-      let chromeRoot = this._panelDoc.getElementById("style-editor-chrome");
-      let chrome = new StyleEditorChrome(chromeRoot, contentWindow);
-      let promise = chrome.open();
-
-      this._panelWin.styleEditorChrome = chrome;
-      this.selectStyleSheet(null, null, null);
-      return promise;
+  _showError: function(event, errorCode) {
+    let message = _(errorCode);
+    let notificationBox = this._toolbox.getNotificationBox();
+    let notification = notificationBox.getNotificationWithValue("styleeditor-error");
+    if (!notification) {
+      notificationBox.appendNotification(message,
+        "styleeditor-error", "", notificationBox.PRIORITY_CRITICAL_LOW);
     }
-  },
-
-  /**
-   * Navigated to a new page.
-   */
-  newPage: function StyleEditor_newPage(event, payload) {
-    let window = payload._navPayload || payload;
-    this.reset();
-    this.setPage(window);
-  },
-
-  /**
-   * Before navigating to a new page or reloading the page.
-   */
-  beforeNavigate: function StyleEditor_beforeNavigate(event, payload) {
-    let request = payload._navPayload || payload;
-    if (this.styleEditorChrome.isDirty) {
-      this.preventNavigate(request);
-    }
-  },
-
-  /**
-   * Show a notificiation about losing unsaved changes.
-   */
-  preventNavigate: function StyleEditor_preventNavigate(request) {
-    request.suspend();
-
-    let notificationBox = null;
-    if (this.target.isLocalTab) {
-      let gBrowser = this.target.tab.ownerDocument.defaultView.gBrowser;
-      notificationBox = gBrowser.getNotificationBox();
-    }
-    else {
-      notificationBox = this._toolbox.getNotificationBox();
-    }
-
-    let notification = notificationBox.
-      getNotificationWithValue("styleeditor-page-navigation");
-
-    if (notification) {
-      notificationBox.removeNotification(notification, true);
-    }
-
-    let cancelRequest = function onCancelRequest() {
-      if (request) {
-        request.cancel(Cr.NS_BINDING_ABORTED);
-        request.resume(); // needed to allow the connection to be cancelled.
-        request = null;
-      }
-    };
-
-    let eventCallback = function onNotificationCallback(event) {
-      if (event == "removed") {
-        cancelRequest();
-      }
-    };
-
-    let buttons = [
-      {
-        id: "styleeditor.confirmNavigationAway.buttonLeave",
-        label: this.strings.GetStringFromName("confirmNavigationAway.buttonLeave"),
-        accessKey: this.strings.GetStringFromName("confirmNavigationAway.buttonLeaveAccesskey"),
-        callback: function onButtonLeave() {
-          if (request) {
-            request.resume();
-            request = null;
-          }
-        }.bind(this),
-      },
-      {
-        id: "styleeditor.confirmNavigationAway.buttonStay",
-        label: this.strings.GetStringFromName("confirmNavigationAway.buttonStay"),
-        accessKey: this.strings.GetStringFromName("confirmNavigationAway.buttonStayAccesskey"),
-        callback: cancelRequest
-      },
-    ];
-
-    let message = this.strings.GetStringFromName("confirmNavigationAway.message");
-
-    notification = notificationBox.appendNotification(message,
-      "styleeditor-page-navigation", "chrome://browser/skin/Info.png",
-      notificationBox.PRIORITY_WARNING_HIGH, buttons, eventCallback);
-
-    // Make sure this not a transient notification, to avoid the automatic
-    // transient notification removal.
-    notification.persistence = -1;
-  },
-
-
-  /**
-   * No window available anymore.
-   */
-  reset: function StyleEditor_reset() {
-    this._panelWin.styleEditorChrome.resetChrome();
   },
 
   /**
    * Select a stylesheet.
+   *
+   * @param {string} href
+   *        Url of stylesheet to find and select in editor
+   * @param {number} line
+   *        Line number to jump to after selecting
+   * @param {number} col
+   *        Column number to jump to after selecting
    */
-  selectStyleSheet: function StyleEditor_selectStyleSheet(stylesheet, line, col) {
-    this._panelWin.styleEditorChrome.selectStyleSheet(stylesheet, line, col);
+  selectStyleSheet: function(href, line, col) {
+    if (!this._debuggee || !this.UI) {
+      return;
+    }
+    let stylesheet = this._debuggee.styleSheetFromHref(href);
+    this.UI.selectStyleSheet(href, line, col);
   },
 
   /**
-   * Destroy StyleEditor
+   * Destroy the style editor.
    */
-  destroy: function StyleEditor_destroy() {
+  destroy: function() {
     if (!this._destroyed) {
       this._destroyed = true;
 
       this._target.off("will-navigate", this.beforeNavigate);
-      this._target.off("navigate", this.newPage);
       this._target.off("close", this.destroy);
       this._target = null;
       this._toolbox = null;
-      this._panelWin = null;
       this._panelDoc = null;
+
+      this._debuggee.destroy();
+      this.UI.destroy();
     }
 
     return Promise.resolve(null);

@@ -182,7 +182,8 @@ const UnsolicitedNotifications = {
   "tabDetached": "tabDetached",
   "tabNavigated": "tabNavigated",
   "pageError": "pageError",
-  "webappsEvent": "webappsEvent"
+  "webappsEvent": "webappsEvent",
+  "styleSheetsAdded": "styleSheetsAdded"
 };
 
 /**

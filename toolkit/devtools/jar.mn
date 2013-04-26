@@ -9,3 +9,4 @@ toolkit.jar:
   content/global/devtools/dbg-browser-actors.js   (debugger/server/dbg-browser-actors.js)
   content/global/devtools/dbg-webconsole-actors.js (webconsole/dbg-webconsole-actors.js)
   content/global/devtools/dbg-profiler-actors.js  (debugger/server/dbg-profiler-actors.js)
+  content/global/devtools/dbg-styleeditor-actors.js  (styleeditor/dbg-styleeditor-actors.js)
