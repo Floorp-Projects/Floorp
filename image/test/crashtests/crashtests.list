@@ -32,3 +32,10 @@ load 681190.html
 skip-if(Android&&smallScreen) load 694165-1.xhtml # nexus-s Android 2.3.6
 load 732319-1.html
 load 844403-1.html
+
+load truncated-second-frame.png # bug 863975
+
+# Bug 863958
+# This icon's size is such that it leads to multiple writes to the PNG decoder
+# after we've gotten our size.
+load multiple-png-hassize.ico

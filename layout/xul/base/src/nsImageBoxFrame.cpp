@@ -343,11 +343,14 @@ nsImageBoxFrame::PaintImage(nsRenderingContext& aRenderingContext,
 void nsDisplayXULImage::Paint(nsDisplayListBuilder* aBuilder,
                               nsRenderingContext* aCtx)
 {
+  uint32_t flags = imgIContainer::FLAG_NONE;
+  if (aBuilder->ShouldSyncDecodeImages())
+    flags |= imgIContainer::FLAG_SYNC_DECODE;
+  if (aBuilder->IsPaintingToWindow())
+    flags |= imgIContainer::FLAG_HIGH_QUALITY_SCALING;
+
   static_cast<nsImageBoxFrame*>(mFrame)->
-    PaintImage(*aCtx, mVisibleRect, ToReferenceFrame(),
-               aBuilder->ShouldSyncDecodeImages()
-                 ? (uint32_t) imgIContainer::FLAG_SYNC_DECODE
-                 : (uint32_t) imgIContainer::FLAG_NONE);
+    PaintImage(*aCtx, mVisibleRect, ToReferenceFrame(), flags);
 }
 
 void

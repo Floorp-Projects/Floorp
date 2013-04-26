@@ -8,10 +8,10 @@
  * JS execution context.
  */
 
-#include <limits.h>
+#include "jscntxt.h"
+
 #include <locale.h>
 #include <stdarg.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include "mozilla/DebugOnly.h"
@@ -25,12 +25,8 @@
 #include "mozilla/Util.h"
 
 #include "jstypes.h"
-#include "jsutil.h"
-#include "jsclist.h"
 #include "jsprf.h"
 #include "jsatom.h"
-#include "jscntxt.h"
-#include "jsversion.h"
 #include "jsdbgapi.h"
 #include "jsexn.h"
 #include "jsfun.h"
@@ -38,7 +34,6 @@
 #include "jsiter.h"
 #include "jslock.h"
 #include "jsmath.h"
-#include "jsnum.h"
 #include "jsobj.h"
 #include "jsopcode.h"
 #include "jspubtd.h"
@@ -47,22 +42,18 @@
 #include "jsworkers.h"
 #ifdef JS_ION
 #include "ion/Ion.h"
-#include "ion/IonFrames.h"
 #endif
 
 #ifdef JS_METHODJIT
-# include "assembler/assembler/MacroAssembler.h"
 # include "methodjit/MethodJIT.h"
 #endif
 #include "gc/Marking.h"
 #include "js/CharacterEncoding.h"
 #include "js/MemoryMetrics.h"
-#include "frontend/TokenStream.h"
 #include "frontend/ParseMaps.h"
 #include "vm/Shape.h"
 #include "yarr/BumpPointerAllocator.h"
 
-#include "jsatominlines.h"
 #include "jscntxtinlines.h"
 #include "jscompartment.h"
 #include "jsobjinlines.h"
@@ -145,6 +136,8 @@ JSRuntime::sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf, JS::RuntimeSizes 
 void
 JSRuntime::triggerOperationCallback()
 {
+    AutoLockForOperationCallback lock(this);
+
     /*
      * Invalidate ionTop to trigger its over-recursion check. Note this must be
      * set before interrupt, to avoid racing with js_InvokeOperationCallback,

@@ -299,6 +299,7 @@
  "security/manager/ssl/tests/mochitest/bugs/test_bug480509.html": "",
  "security/manager/ssl/tests/mochitest/bugs/test_bug483440.html": "",
  "security/manager/ssl/tests/mochitest/bugs/test_bug484111.html": "",
+ "security/manager/ssl/tests/mochitest/bugs/test_ev_validation.html": "TIMED_OUT",
  "security/manager/ssl/tests/mochitest/mixedcontent": "TIMED_OUT",
  "security/manager/ssl/tests/mochitest/stricttransportsecurity/test_stricttransportsecurity.html": "TIMED_OUT",
  "security/manager/ssl/tests/mochitest/stricttransportsecurity/test_sts_privatebrowsing.html": "TIMED_OUT",

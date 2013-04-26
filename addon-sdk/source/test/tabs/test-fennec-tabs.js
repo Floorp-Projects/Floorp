@@ -192,33 +192,6 @@ exports.testTabLocation = function(test) {
   });
 };
 
-// TEST: tab.reload()
-exports.testTabReload = function(test) {
-  test.waitUntilDone();
-
-  let url = "data:text/html;charset=utf-8,<!doctype%20html><title></title>";
-
-  tabs.open({
-    url: url,
-    onReady: function onReady(tab) {
-      tab.removeListener('ready', onReady);
-
-      tab.once(
-        'ready',
-        function onReload() {
-          test.pass("the tab was loaded again");
-          test.assertEqual(tab.url, url, "the tab has the same URL");
-
-          // end test
-          tab.close(function() test.done());
-        }
-      );
-
-      tab.reload();
-    }
-  });
-};
-
 // TEST: tab.move()
 exports.testTabMove = function(test) {
   test.waitUntilDone();

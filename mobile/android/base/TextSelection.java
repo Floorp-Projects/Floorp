@@ -122,21 +122,25 @@ class TextSelection extends Layer implements GeckoEventListener {
         // cache the relevant values from the context and bail out if they are the same. we do this
         // because this draw function gets called a lot (once per compositor frame) and we want to
         // avoid doing a lot of extra work in cases where it's not needed.
-        if (FloatUtils.fuzzyEquals(mViewLeft, context.viewport.left)
-                && FloatUtils.fuzzyEquals(mViewTop, context.viewport.top)
-                && FloatUtils.fuzzyEquals(mViewZoom, context.zoomFactor)) {
+        final float viewLeft = context.viewport.left - context.offset.x;
+        final float viewTop = context.viewport.top - context.offset.y;
+        final float viewZoom = context.zoomFactor;
+
+        if (FloatUtils.fuzzyEquals(mViewLeft, viewLeft)
+                && FloatUtils.fuzzyEquals(mViewTop, viewTop)
+                && FloatUtils.fuzzyEquals(mViewZoom, viewZoom)) {
             return;
         }
-        mViewLeft = context.viewport.left;
-        mViewTop = context.viewport.top;
-        mViewZoom = context.zoomFactor;
+        mViewLeft = viewLeft;
+        mViewTop = viewTop;
+        mViewZoom = viewZoom;
 
         mActivity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                mStartHandle.repositionWithViewport(context.viewport.left, context.viewport.top, context.zoomFactor);
-                mMiddleHandle.repositionWithViewport(context.viewport.left, context.viewport.top, context.zoomFactor);
-                mEndHandle.repositionWithViewport(context.viewport.left, context.viewport.top, context.zoomFactor);
+                mStartHandle.repositionWithViewport(viewLeft, viewTop, viewZoom);
+                mMiddleHandle.repositionWithViewport(viewLeft, viewTop, viewZoom);
+                mEndHandle.repositionWithViewport(viewLeft, viewTop, viewZoom);
             }
         });
     }

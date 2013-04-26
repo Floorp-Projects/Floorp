@@ -141,6 +141,13 @@ NSPR_API(PRThreadPriority) PR_GetThreadPriority(const PRThread *thread);
 
 /*
 ** Change the priority of the "thread" to "priority".
+**
+** PR_SetThreadPriority works in a best-effort manner. On some platforms a
+** special privilege, such as root access, is required to change thread
+** priorities, especially to raise thread priorities. If the caller doesn't
+** have enough privileges to change thread priorites, the function has no
+** effect except causing a future PR_GetThreadPriority call to return
+** |priority|.
 */
 NSPR_API(void) PR_SetThreadPriority(PRThread *thread, PRThreadPriority priority);
 

@@ -307,31 +307,30 @@ class LifoAlloc
         return static_cast<T *>(alloc(sizeof(T) * count));
     }
 
-    void *mark() {
-        markCount++;
+    class Mark {
+        BumpChunk *chunk;
+        void *markInChunk;
+        friend class LifoAlloc;
+        Mark(BumpChunk *chunk, void *markInChunk) : chunk(chunk), markInChunk(markInChunk) {}
+      public:
+        Mark() : chunk(NULL), markInChunk(NULL) {}
+    };
 
-        return latest ? latest->mark() : NULL;
+    Mark mark() {
+        markCount++;
+        return latest ? Mark(latest, latest->mark()) : Mark();
     }
 
-    void release(void *mark) {
+    void release(Mark mark) {
         markCount--;
-
-        if (!mark) {
+        if (!mark.chunk) {
             latest = first;
             if (latest)
                 latest->resetBump();
-            return;
+        } else {
+            latest = mark.chunk;
+            latest->release(mark.markInChunk);
         }
-
-        // Find the chunk that contains |mark|, and make sure we don't pass
-        // |latest| along the way -- we should be making the chain of active
-        // chunks shorter, not longer!
-        BumpChunk *container;
-        for (container = first; !container->contains(mark); container = container->next())
-            JS_ASSERT(container != latest);
-
-        latest = container;
-        latest->release(mark);
     }
 
     void releaseAll() {
@@ -381,18 +380,19 @@ class LifoAlloc
 
 class LifoAllocScope
 {
-    LifoAlloc   *lifoAlloc;
-    void        *mark;
-    bool        shouldRelease;
+    LifoAlloc       *lifoAlloc;
+    LifoAlloc::Mark mark;
+    bool            shouldRelease;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 
   public:
     explicit LifoAllocScope(LifoAlloc *lifoAlloc
                             MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : lifoAlloc(lifoAlloc), shouldRelease(true)
+      : lifoAlloc(lifoAlloc),
+        mark(lifoAlloc->mark()),
+        shouldRelease(true)
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-        mark = lifoAlloc->mark();
     }
 
     ~LifoAllocScope() {

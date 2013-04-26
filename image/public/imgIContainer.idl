@@ -57,7 +57,7 @@ native nsSize(nsSize);
  *
  * Internally, imgIContainer also manages animation of images.
  */
-[scriptable, builtinclass, uuid(0c1caf24-bce7-4db5-971d-8e1b6ed07540)]
+[scriptable, builtinclass, uuid(e385f907-9a59-419b-8e15-e2a96d8ce044)]
 interface imgIContainer : nsISupports
 {
   /**
@@ -130,6 +130,10 @@ interface imgIContainer : nsISupports
    *
    * FLAG_CLAMP: Extend the image to the fill area by clamping image sample
    * coordinates instead of by tiling. This only affects 'draw'.
+   *
+   * FLAG_HIGH_QUALITY_SCALING: A hint as to whether this image should be
+   * scaled using the high quality scaler. Do not set this if not drawing to
+   * a window or not listening to invalidations.
    */
 
   const long FLAG_NONE            = 0x0;
@@ -137,6 +141,7 @@ interface imgIContainer : nsISupports
   const long FLAG_DECODE_NO_PREMULTIPLY_ALPHA = 0x2;
   const long FLAG_DECODE_NO_COLORSPACE_CONVERSION = 0x4;
   const long FLAG_CLAMP           = 0x8;
+  const long FLAG_HIGH_QUALITY_SCALING = 0x10;
 
   /**
     * Constants for specifying various "special" frames.
@@ -274,4 +279,18 @@ interface imgIContainer : nsISupports
 
   /* Methods to control animation */
   void resetAnimation();
+
+  /*
+   * Returns an index for the requested animation frame (either FRAME_FIRST or
+   * FRAME_CURRENT).
+   *
+   * The units of the index aren't specified, and may vary between different
+   * types of images. What you can rely on is that on all occasions when
+   * getFrameIndex(FRAME_CURRENT) returns a certain value,
+   * draw(..FRAME_CURRENT..) will draw the same frame. The same holds for
+   * FRAME_FIRST as well.
+   *
+   * @param aWhichFrame Frame specifier of the FRAME_* variety.
+   */
+  [notxpcom] float getFrameIndex(in uint32_t aWhichFrame);
 };

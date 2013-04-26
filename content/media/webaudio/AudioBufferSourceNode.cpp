@@ -17,13 +17,13 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(AudioBufferSourceNode, AudioNode)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(AudioBufferSourceNode)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mBuffer)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPlaybackRate)
   if (tmp->Context()) {
     tmp->Context()->UnregisterAudioBufferSourceNode(tmp);
   }
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END_INHERITED(AudioNode)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(AudioBufferSourceNode, AudioNode)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBuffer)
@@ -562,8 +562,6 @@ AudioBufferSourceNode::SendDopplerShiftToStream(double aDopplerShift)
 void
 AudioBufferSourceNode::SendLoopParametersToStream()
 {
-  SendInt32ParameterToStream(LOOP, mLoop ? 1 : 0);
-
   // Don't compute and set the loop parameters unnecessarily
   if (mLoop && mBuffer) {
     float rate = mBuffer->SampleRate();
@@ -580,8 +578,13 @@ AudioBufferSourceNode::SendLoopParametersToStream()
     }
     int32_t loopStartTicks = NS_lround(actualLoopStart * rate);
     int32_t loopEndTicks = NS_lround(actualLoopEnd * rate);
-    SendInt32ParameterToStream(LOOPSTART, loopStartTicks);
-    SendInt32ParameterToStream(LOOPEND, loopEndTicks);
+    if (loopStartTicks < loopEndTicks) {
+      SendInt32ParameterToStream(LOOPSTART, loopStartTicks);
+      SendInt32ParameterToStream(LOOPEND, loopEndTicks);
+      SendInt32ParameterToStream(LOOP, 1);
+    }
+  } else if (!mLoop) {
+    SendInt32ParameterToStream(LOOP, 0);
   }
 }
 

@@ -47,6 +47,7 @@ public class LayerView extends FrameLayout {
 
     private GeckoLayerClient mLayerClient;
     private PanZoomController mPanZoomController;
+    private LayerMarginsAnimator mMarginsAnimator;
     private GLController mGLController;
     private InputConnectionHandler mInputConnectionHandler;
     private LayerRenderer mRenderer;
@@ -100,6 +101,7 @@ public class LayerView extends FrameLayout {
     public void initializeView(EventDispatcher eventDispatcher) {
         mLayerClient = new GeckoLayerClient(getContext(), this, eventDispatcher);
         mPanZoomController = mLayerClient.getPanZoomController();
+        mMarginsAnimator = mLayerClient.getLayerMarginsAnimator();
 
         mRenderer = new LayerRenderer(this);
         mInputConnectionHandler = null;
@@ -207,6 +209,7 @@ public class LayerView extends FrameLayout {
 
     public GeckoLayerClient getLayerClient() { return mLayerClient; }
     public PanZoomController getPanZoomController() { return mPanZoomController; }
+    public LayerMarginsAnimator getLayerMarginsAnimator() { return mMarginsAnimator; }
 
     public ImmutableViewportMetrics getViewportMetrics() {
         return mLayerClient.getViewportMetrics();
@@ -234,6 +237,10 @@ public class LayerView extends FrameLayout {
 
     public void setZoomConstraints(ZoomConstraints constraints) {
         mLayerClient.setZoomConstraints(constraints);
+    }
+
+    public void setIsRTL(boolean aIsRTL) {
+        mLayerClient.setIsRTL(aIsRTL);
     }
 
     public void setInputConnectionHandler(InputConnectionHandler inputConnectionHandler) {
