@@ -54,6 +54,7 @@ static const Register CallTempReg2 = ebx;
 static const Register CallTempReg3 = ecx;
 static const Register CallTempReg4 = esi;
 static const Register CallTempReg5 = edx;
+static const Register CallTempReg6 = ebp;
 
 // We have no arg regs, so our NonArgRegs are just our CallTempReg*
 static const Register CallTempNonArgRegs[] = { edi, eax, ebx, ecx, esi, edx };
