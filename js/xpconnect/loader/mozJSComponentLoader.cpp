@@ -680,7 +680,7 @@ mozJSComponentLoader::FindTargetObject(JSContext* aCx,
 }
 
 void
-mozJSComponentLoader::NoteSubScript(JSScript* aScript, JSObject* aThisObject)
+mozJSComponentLoader::NoteSubScript(HandleScript aScript, HandleObject aThisObject)
 {
   if (!mInitialized && NS_FAILED(ReallyInit())) {
       MOZ_NOT_REACHED();
@@ -847,8 +847,8 @@ mozJSComponentLoader::ObjectForLocation(nsIFile *aComponentFile,
 
     JSAutoCompartment ac(cx, obj);
 
-    JSScript *script = nullptr;
-    JSFunction *function = nullptr;
+    RootedScript script(cx);
+    RootedFunction function(cx);
 
     nsAutoCString nativePath;
     nsresult rv = aURI->GetSpec(nativePath);
@@ -868,10 +868,10 @@ mozJSComponentLoader::ObjectForLocation(nsIFile *aComponentFile,
     if (cache) {
         if (!mReuseLoaderGlobal) {
             rv = ReadCachedScript(cache, cachePath, cx, mSystemPrincipal,
-                                  &script);
+                                  script.address());
         } else {
             rv = ReadCachedFunction(cache, cachePath, cx, mSystemPrincipal,
-                                    &function);
+                                    function.address());
         }
 
         if (NS_SUCCEEDED(rv)) {

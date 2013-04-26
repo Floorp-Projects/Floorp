@@ -1378,16 +1378,16 @@ HasNativeProperty(JSContext *cx, HandleObject wrapper, HandleId id, bool *hasPro
     RootedObject holder(cx, traits->ensureHolder(cx, wrapper));
     NS_ENSURE_TRUE(holder, false);
     *hasProp = false;
-    JSPropertyDescriptor desc;
+    Rooted<PropertyDescriptor> desc(cx);
     Wrapper *handler = Wrapper::wrapperHandler(wrapper);
 
     // Try resolveOwnProperty.
     Maybe<ResolvingId> resolvingId;
     if (traits == &XPCWrappedNativeXrayTraits::singleton)
         resolvingId.construct(cx, wrapper, id);
-    if (!traits->resolveOwnProperty(cx, *handler, wrapper, holder, id, &desc, 0))
+    if (!traits->resolveOwnProperty(cx, *handler, wrapper, holder, id, desc.address(), 0))
         return false;
-    if (desc.obj) {
+    if (desc.object()) {
         *hasProp = true;
         return true;
     }
@@ -1402,9 +1402,9 @@ HasNativeProperty(JSContext *cx, HandleObject wrapper, HandleId id, bool *hasPro
     }
 
     // Try resolveNativeProperty.
-    if (!traits->resolveNativeProperty(cx, wrapper, holder, id, &desc, 0))
+    if (!traits->resolveNativeProperty(cx, wrapper, holder, id, desc.address(), 0))
         return false;
-    *hasProp = !!desc.obj;
+    *hasProp = !!desc.object();
     return true;
 }
 
