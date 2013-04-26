@@ -3864,6 +3864,8 @@ class MLambda
       : MUnaryInstruction(scopeChain), fun_(fun)
     {
         setResultType(MIRType_Object);
+        if (!fun->hasSingletonType() && !types::UseNewTypeForClone(fun))
+            setResultTypeSet(MakeSingletonTypeSet(fun));
     }
 
   public:
@@ -3893,7 +3895,10 @@ class MParLambda
                MDefinition *scopeChain, JSFunction *fun)
       : MBinaryInstruction(parSlice, scopeChain), fun_(fun)
     {
+        JS_ASSERT(!fun->hasSingletonType());
+        JS_ASSERT(!types::UseNewTypeForClone(fun));
         setResultType(MIRType_Object);
+        setResultTypeSet(MakeSingletonTypeSet(fun));
     }
 
   public:
