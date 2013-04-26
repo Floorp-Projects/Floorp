@@ -958,20 +958,20 @@ var BrowserApp = {
           Services.prefs.addObserver(prefName, this, false);
         }
 
-        // The plugin pref is actually two separate prefs, so
-        // we need to handle it differently
-        if (prefName == "plugin.enable") {
-          // Use a string type for java's ListPreference
-          pref.type = "string";
-          pref.value = PluginHelper.getPluginPreference();
-          prefs.push(pref);
-          continue;
-        } else if (prefName == "privacy.masterpassword.enabled") {
+        switch (prefName) {
+          // The plugin pref is actually two separate prefs, so
+          // we need to handle it differently
+          case "plugin.enable":
+            pref.type = "string";// Use a string type for java's ListPreference
+            pref.value = PluginHelper.getPluginPreference();
+            prefs.push(pref);
+            continue;
           // Master password is not a "real" pref
-          pref.type = "bool";
-          pref.value = MasterPassword.enabled;
-          prefs.push(pref);
-          continue;
+          case "privacy.masterpassword.enabled":
+            pref.type = "bool";
+            pref.value = MasterPassword.enabled;
+            prefs.push(pref);
+            continue;
         }
 
         try {
