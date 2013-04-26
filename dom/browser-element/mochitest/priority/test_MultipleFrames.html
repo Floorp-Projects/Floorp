@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that when we remove one of a process's frames from the DOM, the process's
+priority is recomputed.
+-->
+<head>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="../browserElementTestHelpers.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="application/javascript;version=1.7">
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+browserElementTestHelpers.setEnabledPref(true);
+browserElementTestHelpers.addPermission();
+browserElementTestHelpers.enableProcessPriorityManager();
+
+function runTest() {
+  var iframe = document.createElement('iframe');
+  iframe.setAttribute('mozbrowser', true);
+  iframe.src = 'file_MultipleFrames.html';
+
+  var childID = null;
+  var iframe2;
+  expectProcessCreated().then(function(chid) {
+    childID = chid;
+    return expectPriorityChange(childID, 'FOREGROUND');
+  }).then(function() {
+    return expectMozbrowserEvent(iframe, 'openwindow');
+  }).then(function(e) {
+    iframe2 = e.detail.frameElement;
+    document.body.appendChild(iframe2);
+    return expectMozbrowserEvent(iframe2, 'loadend');
+  }).then(function() {
+    // At this point, the child process has been set to FOREGROUND, and the popup
+    // opened by file_MultipleFrames has finished loading.
+    //
+    // Now setVisible(false) the popup frame and remove the popup frame from the
+    // DOM.  This should cause the process to take on BACKGROUND priority.
+    var p = expectPriorityChange(childID, 'BACKGROUND');
+    iframe.setVisible(false);
+    document.body.removeChild(iframe2);
+    return p;
+  }).then(SimpleTest.finish);
+
+  document.body.appendChild(iframe);
+}
+
+addEventListener('testready', runTest);
+</script>
+</body>
+</html>

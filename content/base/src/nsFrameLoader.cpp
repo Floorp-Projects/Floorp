@@ -285,6 +285,7 @@ nsFrameLoader::nsFrameLoader(Element* aOwner, bool aNetworkCreated)
   , mClampScrollPosition(true)
   , mRemoteBrowserInitialized(false)
   , mObservingOwnerContent(false)
+  , mVisible(true)
   , mCurrentRemoteFrame(nullptr)
   , mRemoteBrowser(nullptr)
   , mRenderMode(RENDER_MODE_DEFAULT)
@@ -2551,3 +2552,29 @@ nsFrameLoader::ResetPermissionManagerStatus()
   }
 }
 
+/* [infallible] */ NS_IMETHODIMP
+nsFrameLoader::SetVisible(bool aVisible)
+{
+  mVisible = aVisible;
+  nsCOMPtr<nsIObserverService> os = services::GetObserverService();
+  if (os) {
+    os->NotifyObservers(NS_ISUPPORTS_CAST(nsIFrameLoader*, this),
+                        "frameloader-visible-changed", nullptr);
+  }
+  return NS_OK;
+}
+
+/* [infallible] */ NS_IMETHODIMP
+nsFrameLoader::GetVisible(bool* aVisible)
+{
+  *aVisible = mVisible;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFrameLoader::GetTabParent(nsITabParent** aTabParent)
+{
+  nsCOMPtr<nsITabParent> tp = mRemoteBrowser;
+  tp.forget(aTabParent);
+  return NS_OK;
+}

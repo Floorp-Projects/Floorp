@@ -7,6 +7,9 @@
 #ifndef mozilla_StaticPtr_h
 #define mozilla_StaticPtr_h
 
+#include "mozilla/Assertions.h"
+#include "mozilla/NullPtr.h"
+
 namespace mozilla {
 
 /**
@@ -216,7 +219,7 @@ REFLEXIVE_EQUALITY_OPERATORS(const StaticAutoPtr<T>&, U*,
 
 // Let us compare StaticAutoPtr to 0.
 REFLEXIVE_EQUALITY_OPERATORS(const StaticAutoPtr<T>&, StaticPtr_internal::Zero*,
-                             lhs.get() == NULL, class T)
+                             lhs.get() == nullptr, class T)
 
 // StaticRefPtr (in)equality operators
 
@@ -242,7 +245,7 @@ REFLEXIVE_EQUALITY_OPERATORS(const StaticRefPtr<T>&, U*,
 
 // Let us compare StaticRefPtr to 0.
 REFLEXIVE_EQUALITY_OPERATORS(const StaticRefPtr<T>&, StaticPtr_internal::Zero*,
-                             lhs.get() == NULL, class T)
+                             lhs.get() == nullptr, class T)
 
 #undef REFLEXIVE_EQUALITY_OPERATORS
 
