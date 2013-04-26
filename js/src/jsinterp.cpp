@@ -85,6 +85,42 @@ CallThisObjectHook(JSContext *cx, HandleObject obj, Value *argv)
     return thisp;
 }
 
+/*
+ * Note: when Clang 3.2 (32-bit) inlines the two functions below in Interpret,
+ * the conservative stack scanner leaks a ton of memory and this negatively
+ * influences performance. The JS_NEVER_INLINE is a temporary workaround until
+ * we can remove the conservative scanner. See bug 849526 for more info.
+ */
+#if defined(__clang__) && defined(JS_CPU_X86)
+static JS_NEVER_INLINE bool
+#else
+static bool
+#endif
+ToBooleanOp(JSContext *cx)
+{
+    return ToBoolean(cx->regs().sp[-1]);
+}
+
+template <bool Eq>
+#if defined(__clang__) && defined(JS_CPU_X86)
+static JS_NEVER_INLINE bool
+#else
+static bool
+#endif
+LooseEqualityOp(JSContext *cx)
+{
+    FrameRegs &regs = cx->regs();
+    Value rval = regs.sp[-1];
+    Value lval = regs.sp[-2];
+    bool cond;
+    if (!LooselyEqual(cx, lval, rval, &cond))
+        return false;
+    cond = (cond == Eq);
+    regs.sp--;
+    regs.sp[-1].setBoolean(cond);
+    return true;
+}
+
 bool
 js::BoxNonStrictThis(JSContext *cx, MutableHandleValue thisv, bool *modified)
 {
@@ -1578,7 +1614,7 @@ END_CASE(JSOP_GOTO)
 
 BEGIN_CASE(JSOP_IFEQ)
 {
-    bool cond = ToBoolean(regs.sp[-1]);
+    bool cond = ToBooleanOp(cx);
     regs.sp--;
     if (cond == false) {
         len = GET_JUMP_OFFSET(regs.pc);
@@ -1589,7 +1625,7 @@ END_CASE(JSOP_IFEQ)
 
 BEGIN_CASE(JSOP_IFNE)
 {
-    bool cond = ToBoolean(regs.sp[-1]);
+    bool cond = ToBooleanOp(cx);
     regs.sp--;
     if (cond != false) {
         len = GET_JUMP_OFFSET(regs.pc);
@@ -1600,7 +1636,7 @@ END_CASE(JSOP_IFNE)
 
 BEGIN_CASE(JSOP_OR)
 {
-    bool cond = ToBoolean(regs.sp[-1]);
+    bool cond = ToBooleanOp(cx);
     if (cond == true) {
         len = GET_JUMP_OFFSET(regs.pc);
         DO_NEXT_OP(len);
@@ -1610,7 +1646,7 @@ END_CASE(JSOP_OR)
 
 BEGIN_CASE(JSOP_AND)
 {
-    bool cond = ToBoolean(regs.sp[-1]);
+    bool cond = ToBooleanOp(cx);
     if (cond == false) {
         len = GET_JUMP_OFFSET(regs.pc);
         DO_NEXT_OP(len);
@@ -1836,28 +1872,15 @@ END_CASE(JSOP_BITAND)
 
 #undef BITWISE_OP
 
-#define EQUALITY_OP(OP)                                                       \
-    JS_BEGIN_MACRO                                                            \
-        Value rval = regs.sp[-1];                                             \
-        Value lval = regs.sp[-2];                                             \
-        bool cond;                                                            \
-        if (!LooselyEqual(cx, lval, rval, &cond))                             \
-            goto error;                                                       \
-        cond = cond OP JS_TRUE;                                               \
-        TRY_BRANCH_AFTER_COND(cond, 2);                                       \
-        regs.sp--;                                                            \
-        regs.sp[-1].setBoolean(cond);                                         \
-    JS_END_MACRO
-
 BEGIN_CASE(JSOP_EQ)
-    EQUALITY_OP(==);
+    if (!LooseEqualityOp<true>(cx))
+        goto error;
 END_CASE(JSOP_EQ)
 
 BEGIN_CASE(JSOP_NE)
-    EQUALITY_OP(!=);
+    if (!LooseEqualityOp<false>(cx))
+        goto error;
 END_CASE(JSOP_NE)
-
-#undef EQUALITY_OP
 
 #define STRICT_EQUALITY_OP(OP, COND)                                          \
     JS_BEGIN_MACRO                                                            \
@@ -2040,7 +2063,7 @@ END_CASE(JSOP_MOD)
 
 BEGIN_CASE(JSOP_NOT)
 {
-    bool cond = ToBoolean(regs.sp[-1]);
+    bool cond = ToBooleanOp(cx);
     regs.sp--;
     PUSH_BOOLEAN(!cond);
 }
