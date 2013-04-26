@@ -161,6 +161,13 @@
         <item name="android:orientation">horizontal</item>
     </style>
 
+    <style name="AddressBar.ImageButton.TabCount">
+        <item name="android:background">@drawable/tabs_count</item>
+        <item name="android:gravity">center_horizontal</item>
+        <item name="android:clipChildren">false</item>
+        <item name="android:clipToPadding">false</item>
+    </style>
+
     <!-- Address bar -->
     <style name="AddressBar">
         <item name="android:layout_width">fill_parent</item>
