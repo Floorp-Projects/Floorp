@@ -889,8 +889,8 @@ protected:
   static void TimerCallback(nsITimer *aTimer, void *aClosure);
 
   // Helper Functions
-  nsresult GetTreeOwner(nsIDocShellTreeOwner** aTreeOwner);
-  nsresult GetTreeOwner(nsIBaseWindow** aTreeOwner);
+  already_AddRefed<nsIDocShellTreeOwner> GetTreeOwner();
+  already_AddRefed<nsIBaseWindow> GetTreeOwnerWindow();
   nsresult GetWebBrowserChrome(nsIWebBrowserChrome** aBrowserChrome);
   nsresult SecurityCheckURL(const char *aURL);
   nsresult BuildURIfromBase(const char *aURL,
