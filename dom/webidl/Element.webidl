@@ -13,8 +13,6 @@
  * liability, trademark and document use rules apply.
  */
 
-interface MozNamedAttrMap;
-
 interface Element : Node {
 /*
   We haven't moved these from Node to Element like the spec wants.
