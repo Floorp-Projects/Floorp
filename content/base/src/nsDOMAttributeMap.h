@@ -16,6 +16,7 @@
 #include "nsIDOMMozNamedAttrMap.h"
 #include "nsRefPtrHashtable.h"
 #include "nsStringGlue.h"
+#include "nsWrapperCache.h"
 
 class nsIAtom;
 class nsINodeInfo;
@@ -87,6 +88,7 @@ private:
 
 // Helper class that implements the nsIDOMMozNamedAttrMap interface.
 class nsDOMAttributeMap : public nsIDOMMozNamedAttrMap
+                        , public nsWrapperCache
 {
 public:
   typedef mozilla::dom::Attr Attr;
@@ -97,6 +99,7 @@ public:
   virtual ~nsDOMAttributeMap();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsDOMAttributeMap)
 
   // nsIDOMMozNamedAttrMap interface
   NS_DECL_NSIDOMMOZNAMEDATTRMAP
@@ -139,29 +142,12 @@ public:
    */
   uint32_t Enumerate(AttrCache::EnumReadFunction aFunc, void *aUserArg) const;
 
-  Attr* GetItemAt(uint32_t aIndex)
+  Element* GetParentObject() const
   {
-    return Item(aIndex);
+    return mContent;
   }
-
-  static nsDOMAttributeMap* FromSupports(nsISupports* aSupports)
-  {
-#ifdef DEBUG
-    {
-      nsCOMPtr<nsIDOMMozNamedAttrMap> map_qi = do_QueryInterface(aSupports);
-
-      // If this assertion fires the QI implementation for the object in
-      // question doesn't use the nsIDOMMozNamedAttrMap pointer as the nsISupports
-      // pointer. That must be fixed, or we'll crash...
-      NS_ASSERTION(map_qi == static_cast<nsIDOMMozNamedAttrMap*>(aSupports),
-                   "Uh, fix QI!");
-    }
-#endif
-
-    return static_cast<nsDOMAttributeMap*>(aSupports);
-  }
-
-  NS_DECL_CYCLE_COLLECTION_CLASS(nsDOMAttributeMap)
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
   // WebIDL
   Attr* GetNamedItem(const nsAString& aAttrName);

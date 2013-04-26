@@ -163,6 +163,7 @@ webidl_files = \
   MouseEvent.webidl \
   MouseScrollEvent.webidl \
   MozActivity.webidl \
+  MozNamedAttrMap.webidl \
   MutationEvent.webidl \
   MutationObserver.webidl \
   NetDashboard.webidl \
