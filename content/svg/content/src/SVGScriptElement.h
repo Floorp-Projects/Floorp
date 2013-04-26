@@ -33,7 +33,8 @@ protected:
   SVGScriptElement(already_AddRefed<nsINodeInfo> aNodeInfo,
                    FromParser aFromParser);
 
-  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *aCx,
+                             JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
 public:
   // interfaces:

@@ -158,12 +158,12 @@ nsSVGTextPathFrame::AttributeChanged(int32_t         aNameSpaceID,
 {
   if (aNameSpaceID == kNameSpaceID_None &&
       aAttribute == nsGkAtoms::startOffset) {
-    nsSVGUtils::InvalidateBounds(this, false);
+    nsSVGEffects::InvalidateRenderingObservers(this);
     nsSVGUtils::ScheduleReflowSVG(this);
     NotifyGlyphMetricsChange();
   } else if (aNameSpaceID == kNameSpaceID_XLink &&
              aAttribute == nsGkAtoms::href) {
-    nsSVGUtils::InvalidateBounds(this, false);
+    nsSVGEffects::InvalidateRenderingObservers(this);
     nsSVGUtils::ScheduleReflowSVG(this);
     // Blow away our reference, if any
     Properties().Delete(nsSVGEffects::HrefProperty());

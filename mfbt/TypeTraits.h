@@ -81,6 +81,35 @@ template<typename T>
 struct IsIntegral : detail::IsIntegralHelper<typename RemoveCV<T>::Type>
 {};
 
+template<typename T, typename U>
+struct IsSame;
+
+namespace detail {
+
+template<typename T>
+struct IsFloatingPointHelper
+  : IntegralConstant<bool,
+                     IsSame<T, float>::value ||
+                     IsSame<T, double>::value ||
+                     IsSame<T, long double>::value>
+{};
+
+} // namespace detail
+
+/**
+ * IsFloatingPoint determines whether a type is a floating point type (float,
+ * double, long double).
+ *
+ * mozilla::IsFloatingPoint<int>::value is false;
+ * mozilla::IsFloatingPoint<const float>::value is true;
+ * mozilla::IsFloatingPoint<long double>::value is true;
+ * mozilla::IsFloatingPoint<double*>::value is false.
+ */
+template<typename T>
+struct IsFloatingPoint
+  : detail::IsFloatingPointHelper<typename RemoveCV<T>::Type>
+{};
+
 /**
  * IsPointer determines whether a type is a pointer type (but not a pointer-to-
  * member type).
@@ -98,6 +127,19 @@ template<typename T>
 struct IsPointer<T*> : TrueType {};
 
 /* 20.9.4.2 Composite type traits [meta.unary.comp] */
+
+/**
+ * IsArithmetic determines whether a type is arithmetic.  A type is arithmetic
+ * iff it is an integral type or a floating point type.
+ *
+ * mozilla::IsArithmetic<int>::value is true;
+ * mozilla::IsArithmetic<double>::value is true;
+ * mozilla::IsArithmetic<long double*>::value is false.
+ */
+template<typename T>
+struct IsArithmetic
+  : IntegralConstant<bool, IsIntegral<T>::value || IsFloatingPoint<T>::value>
+{};
 
 /* 20.9.4.3 Type properties [meta.unary.prop] */
 
@@ -128,6 +170,38 @@ template<> struct IsPod<float>              : TrueType {};
 template<> struct IsPod<double>             : TrueType {};
 template<> struct IsPod<wchar_t>            : TrueType {};
 template<typename T> struct IsPod<T*>       : TrueType {};
+
+/**
+ * IsSigned determines whether a type is a signed arithmetic type.
+ *
+ * Don't use this if the type might be user-defined!  You might or might not get
+ * a compile error, depending.
+ *
+ * mozilla::IsSigned<int>::value is true;
+ * mozilla::IsSigned<const unsigned int>::value is false;
+ * mozilla::IsSigned<unsigned char>::value is false;
+ * mozilla::IsSigned<float>::value is true.
+ */
+template<typename T>
+struct IsSigned
+  : IntegralConstant<bool, IsArithmetic<T>::value && T(-1) < T(0)>
+{};
+
+/**
+ * IsUnsigned determines whether a type is an unsigned arithmetic type.
+ *
+ * Don't use this if the type might be user-defined!  You might or might not get
+ * a compile error, depending.
+ *
+ * mozilla::IsUnsigned<int>::value is false;
+ * mozilla::IsUnsigned<const unsigned int>::value is true;
+ * mozilla::IsUnsigned<unsigned char>::value is true;
+ * mozilla::IsUnsigned<float>::value is false.
+ */
+template<typename T>
+struct IsUnsigned
+  : IntegralConstant<bool, IsArithmetic<T>::value && T(0) < T(-1)>
+{};
 
 /* 20.9.5 Type property queries [meta.unary.prop.query] */
 

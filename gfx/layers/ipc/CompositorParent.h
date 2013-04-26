@@ -21,7 +21,7 @@
 #include "mozilla/Monitor.h"
 #include "mozilla/TimeStamp.h"
 #include "ShadowLayersManager.h"
-#include "LayerManagerComposite.h"
+#include "mozilla/layers/LayerManagerComposite.h"
 class nsIWidget;
 
 namespace base {
@@ -180,7 +180,7 @@ protected:
   virtual void SetPageRect(const gfx::Rect& aCssPageRect);
   virtual void SyncViewportInfo(const nsIntRect& aDisplayPort, float aDisplayResolution, bool aLayersUpdated,
                                 nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY,
-                                gfx::Margin& aFixedLayerMargins, float& aOffsetX, float& aOffsetY);
+                                gfx::Margin& aFixedLayerMargins);
   void SetEGLSurfaceSize(int width, int height);
 
 private:

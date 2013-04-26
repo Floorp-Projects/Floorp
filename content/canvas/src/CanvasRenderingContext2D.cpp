@@ -531,7 +531,7 @@ CanvasRenderingContext2D::~CanvasRenderingContext2D()
 }
 
 JSObject*
-CanvasRenderingContext2D::WrapObject(JSContext *cx, JSObject *scope)
+CanvasRenderingContext2D::WrapObject(JSContext *cx, JS::Handle<JSObject*> scope)
 {
   return CanvasRenderingContext2DBinding::Wrap(cx, scope, this);
 }

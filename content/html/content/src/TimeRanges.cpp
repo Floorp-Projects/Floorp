@@ -121,7 +121,7 @@ TimeRanges::Normalize()
 }
 
 JSObject*
-TimeRanges::WrapObject(JSContext* aCx, JSObject* aScope)
+TimeRanges::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return TimeRangesBinding::Wrap(aCx, aScope, this);
 }

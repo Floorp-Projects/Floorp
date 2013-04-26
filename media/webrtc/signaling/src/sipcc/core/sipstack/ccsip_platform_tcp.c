@@ -57,7 +57,7 @@ ccsipSocketSetNonblock (cpr_socket_t fd, int optval)
     const char  *fname = "ccsipSocketSetNonblock";
 
     if (cprSetSockNonBlock(fd)) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Unable to set non-blocking socket mode %d\n",
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Unable to set non-blocking socket mode %d",
                             fname, cpr_errno);
         return SIP_INTERNAL_ERR;
     }
@@ -75,7 +75,7 @@ ccsipSocketSetKeepAlive (cpr_socket_t fd, int optval)
 
     if (cprSetSockOpt(fd, SOL_SOCKET, SO_KEEPALIVE, (void *)&optval,
                       sizeof(optval))) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Unable to set KEEP ALIVE on a socket %d\n",
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Unable to set KEEP ALIVE on a socket %d",
                                 fname, cpr_errno);
         return SIP_INTERNAL_ERR;
     }
@@ -95,7 +95,7 @@ ccsipSocketSetTCPtos (cpr_socket_t fd, uint8_t optval)
 
     if (cprSetSockOpt(fd, SOL_TCP, TCP_TOS, (void *)&optval,
                       sizeof(optval))) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Unable to set TCP TOS on a socket %d\n",
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Unable to set TCP TOS on a socket %d",
                                 fname, cpr_errno);
         return SIP_INTERNAL_ERR;
     }
@@ -114,7 +114,7 @@ ccsipSocketSetPushBit (cpr_socket_t fd, int optval)
 
     if (cprSetSockOpt(fd, SOL_TCP, TCP_ALWAYSPUSH, (void *)&optval,
                       sizeof(optval))) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Unable to set PUSH BIT on a socket %d\n",
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Unable to set PUSH BIT on a socket %d",
                                 fname, cpr_errno);
         return SIP_INTERNAL_ERR;
     }
@@ -191,7 +191,7 @@ sip_tcp_detach_socket (cpr_socket_t s)
     const char *fname = "sip_tcp_detach_socket";
 
     if (s == INVALID_SOCKET) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Invalid socket\n", fname);
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Invalid socket", fname);
         return SIP_ERROR;
     }
     /*
@@ -212,7 +212,7 @@ sip_tcp_detach_socket (cpr_socket_t s)
      * Are there already too many connections?
      */
     if (i == MAX_SIP_CONNECTIONS) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Max TCP connections reached.\n", fname);
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Max TCP connections reached.", fname);
         return SIP_ERROR;
     }
     return SIP_OK;
@@ -306,7 +306,7 @@ sip_tcp_get_free_conn_entry (void)
         }
     }
 
-    CCSIP_DEBUG_ERROR(SIP_F_PREFIX"TCP Connection table full\n", fname);
+    CCSIP_DEBUG_ERROR(SIP_F_PREFIX"TCP Connection table full", fname);
 
     return -1;
 }
@@ -356,7 +356,7 @@ sip_tcp_purge_entry (sipSPIConnId_t connid)
     boolean secure;
 
     if (!VALID_CONNID(connid)) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Invalid TCP connection Id=%ld.\n",
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Invalid TCP connection Id=%ld.",
                             fname, connid);
         return;
     }
@@ -437,21 +437,21 @@ sip_tcp_create_connection (sipSPIMessage_t *spi_msg)
     new_fd = cprSocket(af_listen, SOCK_STREAM, 0 /* IPPROTO_TCP */);
     if (new_fd < 0) {
         /* Send create connection failed message to SIP_SPI */
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Socket creation failed %d.\n",
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Socket creation failed %d.",
                             fname, cpr_errno);
         return INVALID_SOCKET;
     }
     idx = sip_tcp_get_free_conn_entry();
     if (idx == -1) {
         /* Send create connection failed message to SIP_SPI */
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"No Free connection entry.\n",
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"No Free connection entry.",
                             fname);
         (void) sipSocketClose(new_fd, FALSE);
         return INVALID_SOCKET;
     }
 
     if (sip_tcp_set_sock_options(new_fd) != TRUE) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Socket set option failed.\n",
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Socket set option failed.",
                             fname);
     }
 
@@ -461,11 +461,11 @@ sip_tcp_create_connection (sipSPIMessage_t *spi_msg)
 
     (void) sip_set_sockaddr(&local_sock_addr, af_listen, local_ipaddr, 0, &addr_len);
 
-    CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"local_ipaddr.u.ip4=%x\n",
+    CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"local_ipaddr.u.ip4=%x",
             DEB_F_PREFIX_ARGS(SIP_TCP_MSG, fname), local_ipaddr.u.ip4);
 
     if (cprBind(new_fd, (cpr_sockaddr_t *)&local_sock_addr, addr_len)) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"TCP bind failed with error %d\n", fname,
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"TCP bind failed with error %d", fname,
                               cpr_errno);
         (void) sipSocketClose(new_fd, FALSE);
         sip_tcp_conn_tab[idx].fd = INVALID_SOCKET;
@@ -529,7 +529,7 @@ sip_tcp_create_connection (sipSPIMessage_t *spi_msg)
 
         (void) sip_tcp_attach_socket(new_fd);
     } else {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Error getting local port info.\n",
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Error getting local port info.",
                             fname);
         sip_tcp_purge_entry(idx);
         return INVALID_SOCKET;
@@ -593,7 +593,7 @@ sip_tcp_newmsg_to_spi (char *buf, unsigned long nbytes, int connID)
              * Print the received TCP packet info
              */
             if (disply_msg_buff != NULL) {
-                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"RCV: TCP message=\n", fname);
+                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"RCV: TCP message=", fname);
                 platform_print_sip_msg(disply_msg_buff);
             }
             from = sip_tcp_conn_tab[connID].addr;
@@ -611,7 +611,7 @@ sip_tcp_newmsg_to_spi (char *buf, unsigned long nbytes, int connID)
                 sip_tcp_conn_tab[connID].prev_bytes = nbytes;
             }
             sip_tcp_incomplete_msg++;
-            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"SIP Incomplete message.%d\n",fname,
+            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"SIP Incomplete message.%d",fname,
                 sip_tcp_incomplete_msg);
             error = TRUE;
             break;
@@ -621,18 +621,18 @@ sip_tcp_newmsg_to_spi (char *buf, unsigned long nbytes, int connID)
              * Print the received TCP packet info
              */
             if (disply_msg_buff != NULL) {
-                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"RCV: TCP message=\n", fname);
+                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"RCV: TCP message=", fname);
                 platform_print_sip_msg(disply_msg_buff);
             }
             sip_tcp_fail_network_msg++;
-            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"SIP Message Parse error %d.\n", fname,
+            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"SIP Message Parse error %d.", fname,
                 sip_tcp_fail_network_msg);
             error = TRUE;
             break;
 
         case SIP_MSG_CREATE_ERR:
         default:
-            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"SIP Message create error.\n", fname);
+            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"SIP Message create error.", fname);
             error = TRUE;
             break;
         }
@@ -773,7 +773,7 @@ sip_tcp_createconnfailed_to_spi (cpr_ip_addr_t *ipaddr,
 	                DEB_F_PREFIX_ARGS(SIP_TCP_MSG, fname), ip_addr_str);
 	            if (ccsip_register_send_msg(SIP_TMR_REG_RETRY, ccb->index)
 	                    != SIP_REG_OK) {
-	                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"REG send message failed.\n", fname);
+	                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"REG send message failed.", fname);
 	                ccsip_register_cleanup(ccb, TRUE);
 	            }
 
@@ -806,7 +806,7 @@ sip_tcp_read_socket (cpr_socket_t this_fd)
 
     connid = sip_tcp_fd_to_connid(this_fd);
     if (connid == -1) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Read failed for unknown socket %d.\n",
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Read failed for unknown socket %d.",
                         fname, this_fd);
         return;
     }
@@ -824,7 +824,7 @@ sip_tcp_read_socket (cpr_socket_t this_fd)
             sip_tcp_conn_tab[connid].state = SOCK_CONNECTED;
         } else if (errno == ENOTCONN) {
             sip_tcp_conn_tab[connid].dirtyFlag = TRUE;
-            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"socket error=%d=\n", fname, errno);
+            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"socket error=%d=", fname, errno);
             sip_tcp_createconnfailed_to_spi(&(sip_tcp_conn_tab[connid].ipaddr),
                                             sip_tcp_conn_tab[connid].port,
                                             sip_tcp_conn_tab[connid].context,
@@ -840,7 +840,7 @@ sip_tcp_read_socket (cpr_socket_t this_fd)
             sip_tcp_conn_tab[connid].prev_bytes = 0;
 
             if (sip_tcp_buf == NULL) {
-                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Unable to realloc tcp_msg buffer memory.\n",
+                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Unable to realloc tcp_msg buffer memory.",
                                     fname);
                 cpr_free(sip_tcp_conn_tab[connid].prev_msg);
                 sip_tcp_conn_tab[connid].prev_msg = NULL;
@@ -868,7 +868,7 @@ sip_tcp_read_socket (cpr_socket_t this_fd)
         } else {
             sip_tcp_buf = (char *) cpr_malloc(CPR_MAX_MSG_SIZE + 1);
             if (sip_tcp_buf == NULL) {
-                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Unable to malloc tcp_msg buffer memory.\n",
+                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Unable to malloc tcp_msg buffer memory.",
                                     fname);
                 return;
             }
@@ -885,11 +885,11 @@ sip_tcp_read_socket (cpr_socket_t this_fd)
              * Remote connection closure or broken pipe - post a message
              * to sip transport and wait for connection close command.
              */
-            CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"CUCM closed TCP connection.\n",
+            CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"CUCM closed TCP connection.",
                 DEB_F_PREFIX_ARGS(SIP_TCP_MSG, fname));
             sip_tcp_conn_tab[connid].error_cause = SOCKET_REMOTE_CLOSURE;
 
-            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"socket error=%d=\n", fname, errno);
+            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"socket error=%d=", fname, errno);
 
             sip_tcp_createconnfailed_to_spi(&(sip_tcp_conn_tab[connid].ipaddr),
                                         sip_tcp_conn_tab[connid].port,
@@ -951,14 +951,14 @@ sipTcpQueueSendData (int total_len, int connid,
     if (entry->sendQueue == NULL) {
         entry->sendQueue = sll_create(sip_tcp_find_msg);
         if (entry->sendQueue == NULL) {
-            CCSIP_DEBUG_ERROR("%s Failed to create sendQueue to buffer data!\n", fname);
+            CCSIP_DEBUG_ERROR("%s Failed to create sendQueue to buffer data!", fname);
             return;
         }
     }
 
     sendData = (ccsipTCPSendData_t *) cpr_malloc(sizeof(ccsipTCPSendData_t));
     if (sendData == NULL) {
-        CCSIP_DEBUG_ERROR("%s Failed to allocate memory for sendData!\n", fname);
+        CCSIP_DEBUG_ERROR("%s Failed to allocate memory for sendData!", fname);
         return;
     }
     memset(sendData, 0, sizeof(ccsipTCPSendData_t));
@@ -968,7 +968,7 @@ sipTcpQueueSendData (int total_len, int connid,
     if (sendData->data) {
         sstrncpy(sendData->data, buf, total_len);
     } else {
-        CCSIP_DEBUG_ERROR("%s Failed to allocate memory for sendData->data!\n", fname);
+        CCSIP_DEBUG_ERROR("%s Failed to allocate memory for sendData->data!", fname);
         cpr_free(sendData);
         return;
     }
@@ -980,7 +980,7 @@ sipTcpQueueSendData (int total_len, int connid,
     sendData->ip_sig_tos = ip_sig_tos;
     (void) sll_append(entry->sendQueue, sendData);
 
-    CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"Data queued length %d\n",
+    CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"Data queued length %d",
                           DEB_F_PREFIX_ARGS(SIP_TCP_MSG, fname), total_len);
 
     if (send_msg_q_size > max_tcp_send_msg_q_size) {
@@ -1022,7 +1022,7 @@ sip_tcp_resend (int connid)
     boolean secure;
 
     if (!VALID_CONNID(connid)) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Resend failed for unknown socket %d.\n",
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Resend failed for unknown socket %d.",
                         fname, connid);
         return;
     }
@@ -1042,12 +1042,12 @@ sip_tcp_resend (int connid)
                     qElem->bytesLeft -= bytes_sent;
                 } else {
                     if (errno == EWOULDBLOCK) {
-                        CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"Socket blocked requeue data\n",
+                        CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"Socket blocked requeue data",
                                               DEB_F_PREFIX_ARGS(SIP_TCP_MSG, fname));
                     } else {
                         entry->error_cause = SOCKET_SEND_ERROR;
                         sipTcpFlushRetrySendQueue(entry);
-                        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"socket error=%d=\n", fname, errno);
+                        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"socket error=%d=", fname, errno);
                         sip_tcp_createconnfailed_to_spi(
                             &(sip_tcp_conn_tab[connid].ipaddr),
                             sip_tcp_conn_tab[connid].port,
@@ -1063,7 +1063,7 @@ sip_tcp_resend (int connid)
             cpr_free(qElem->data);
             (void) sll_remove(entry->sendQueue, qElem);
             cpr_free(qElem);
-            CCSIP_DEBUG_REG_STATE("%s: sent out successfully, dequeue an entry.\n", fname);
+            CCSIP_DEBUG_REG_STATE("%s: sent out successfully, dequeue an entry.", fname);
 
             qElem = (ccsipTCPSendData_t *) sll_next(entry->sendQueue, NULL);
         } /* while qElem */
@@ -1094,7 +1094,7 @@ sip_tcp_channel_send (cpr_socket_t s, char *buf, uint32_t len)
     /* convert socket to connid */
     connid = sip_tcp_fd_to_connid(s);
     if (!VALID_CONNID(connid)) {
-        CCSIP_DEBUG_ERROR("%s: Couldn't map socket to a valid connid!\n", fname);
+        CCSIP_DEBUG_ERROR("%s: Couldn't map socket to a valid connid!", fname);
         return SIP_TCP_SEND_ERROR;
     }
     /* use connid we can get this socket's entry in sip_tcp_conn_tab[] */
@@ -1114,16 +1114,16 @@ sip_tcp_channel_send (cpr_socket_t s, char *buf, uint32_t len)
 
         } else if (conn_status == PLAT_SOCK_CONN_WAITING) {
 
-            CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"tls socket waiting %d\n", DEB_F_PREFIX_ARGS(SIP_TCP_MSG, fname), s);
+            CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"tls socket waiting %d", DEB_F_PREFIX_ARGS(SIP_TCP_MSG, fname), s);
             return SIP_TCP_SEND_OK;
 
         } else if (conn_status == PLAT_SOCK_CONN_FAILED) {
-            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"socket error=%d=\n", fname, errno);
+            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"socket error=%d=", fname, errno);
             sip_tcp_createconnfailed_to_spi(&(sip_tcp_conn_tab[connid].ipaddr),
                                             sip_tcp_conn_tab[connid].port,
                                             sip_tcp_conn_tab[connid].context,
                                             SOCKET_CONNECT_ERROR, connid);
-            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"TLS socket connect failed %d\n",
+            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"TLS socket connect failed %d",
                               fname, s);
             return SIP_TCP_SEND_ERROR;
         }
@@ -1164,7 +1164,7 @@ sip_tcp_channel_send (cpr_socket_t s, char *buf, uint32_t len)
                     break;
             }
             if (cpr_errno != CPR_ENOTCONN) {
-                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"socket error=%d=\n", fname, errno);
+                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"socket error=%d=", fname, errno);
                 sip_tcp_createconnfailed_to_spi(&(sip_tcp_conn_tab[connid].ipaddr),
                                                 sip_tcp_conn_tab[connid].port,
                                                 sip_tcp_conn_tab[connid].context,
@@ -1190,7 +1190,7 @@ sipTcpFreeSendQueue (int connid)
     static const char *fname = "sipTcpFreeSendQueue";
     sip_tcp_conn_t *entry;
 
-    CCSIP_DEBUG_TASK(DEB_F_PREFIX"Free TCP send queue for connid %d \n",
+    CCSIP_DEBUG_TASK(DEB_F_PREFIX"Free TCP send queue for connid %d",
                         DEB_F_PREFIX_ARGS(SIP_TCP_MSG, fname), connid);
     if (!VALID_CONNID(connid)) {
         return;

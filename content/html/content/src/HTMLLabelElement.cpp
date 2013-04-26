@@ -23,7 +23,7 @@ HTMLLabelElement::~HTMLLabelElement()
 }
 
 JSObject*
-HTMLLabelElement::WrapNode(JSContext *aCx, JSObject *aScope)
+HTMLLabelElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
   return HTMLLabelElementBinding::Wrap(aCx, aScope, this);
 }

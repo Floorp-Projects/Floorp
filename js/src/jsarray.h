@@ -4,15 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* JS Array interface. */
+
 #ifndef jsarray_h___
 #define jsarray_h___
-/*
- * JS Array interface.
- */
+
+#include "jsatom.h"
 #include "jscntxt.h"
 #include "jsprvtd.h"
 #include "jspubtd.h"
-#include "jsatom.h"
 #include "jsobj.h"
 
 namespace js {
@@ -70,6 +70,15 @@ NewDenseCopiedArray(JSContext *cx, uint32_t length, HandleObject src, uint32_t e
 extern JSObject *
 NewDenseCopiedArray(JSContext *cx, uint32_t length, const Value *values, RawObject proto = NULL,
                     NewObjectKind newKind = GenericObject);
+
+/*
+ * Determines whether a write to the given element on |obj| should fail because
+ * |obj| is an Array with a non-writable length, and writing that element would
+ * increase the length of the array.
+ */
+extern bool
+WouldDefinePastNonwritableLength(JSContext *cx, HandleObject obj, uint32_t index, bool strict,
+                                 bool *definesPast);
 
 /* Get the common shape used by all dense arrays with a prototype at globalObj. */
 extern RawShape

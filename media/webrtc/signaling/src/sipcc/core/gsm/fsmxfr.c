@@ -328,7 +328,7 @@ fsmxfr_feature_cancel (fsmxfr_xcb_t *xcb, line_t line, callid_t call_id,
     cc_feature_data_t data;
     fsm_fcb_t         *fcb_def;
 
-    DEF_DEBUG(DEB_F_PREFIX"Sending cancel call_id = %d, t_id=%d, cause = %d\n",
+    DEF_DEBUG(DEB_F_PREFIX"Sending cancel call_id = %d, t_id=%d, cause = %d",
             DEB_F_PREFIX_ARGS(GSM, fname), call_id, target_call_id, cause);
 
     fcb_def = fsm_get_fcb_by_call_id_and_type(call_id, FSM_TYPE_DEF);
@@ -371,7 +371,7 @@ fsmxfr_update_xfr_context (fsmxfr_xcb_t *xcb, callid_t old_call_id,
                            callid_t new_call_id)
 {
     static const char fname[] = "fsmxfr_update_xfr_context";
-    FSM_DEBUG_SM(DEB_F_PREFIX"Entered. \n", DEB_F_PREFIX_ARGS(FSM, "fsmxfr_update_xfr_context"));
+    FSM_DEBUG_SM(DEB_F_PREFIX"Entered.", DEB_F_PREFIX_ARGS(FSM, "fsmxfr_update_xfr_context"));
 
     if (xcb != NULL) {
         if (old_call_id == xcb->xfr_call_id) {
@@ -448,7 +448,7 @@ static void
 fsmxfr_remove_fcb (fsm_fcb_t *fcb, callid_t call_id)
 {
     fsmxfr_xcb_t *xcb = fcb->xcb;
-    FSM_DEBUG_SM(DEB_F_PREFIX"Entered. \n", DEB_F_PREFIX_ARGS(FSM, "fsmxfr_remove_fcb"));
+    FSM_DEBUG_SM(DEB_F_PREFIX"Entered.", DEB_F_PREFIX_ARGS(FSM, "fsmxfr_remove_fcb"));
 
     if (xcb != NULL) {
         fsmxfr_update_xfr_context(xcb, call_id, CC_NO_CALL_ID);
@@ -498,7 +498,7 @@ fsmxfr_cleanup (fsm_fcb_t *fcb, int fname, boolean both)
     line_t       other_line;
 
 
-    FSM_DEBUG_SM(DEB_F_PREFIX"Entered. \n", DEB_F_PREFIX_ARGS(FSM, "fsmxfr_cleanup"));
+    FSM_DEBUG_SM(DEB_F_PREFIX"Entered.", DEB_F_PREFIX_ARGS(FSM, "fsmxfr_cleanup"));
     other_call_id = fsmxfr_get_other_call_id(fcb->xcb, call_id);
     other_line    = fsmxfr_get_other_line(fcb->xcb, call_id);
 
@@ -527,7 +527,7 @@ fsmxfr_cleanup (fsm_fcb_t *fcb, int fname, boolean both)
      * fsmxfr_remove_fcb to free the xcb.
      */
     if (both) {
-        FSM_DEBUG_SM(DEB_F_PREFIX"clean both. \n", DEB_F_PREFIX_ARGS(FSM, "fsmxfr_cleanup"));
+        FSM_DEBUG_SM(DEB_F_PREFIX"clean both.", DEB_F_PREFIX_ARGS(FSM, "fsmxfr_cleanup"));
 
         if (other_call_id != CC_NO_CALL_ID) {
             if (other_fcb != NULL) {
@@ -874,7 +874,7 @@ fsmxfr_ev_idle_feature (sm_event_t *event)
             other_fcb = fsmxfr_get_active_xfer();
             if (other_fcb) {
                 if (other_fcb->xcb == NULL) {
-                    GSM_DEBUG_ERROR(GSM_F_PREFIX"Cannot find the active xfer\n", fname);
+                    GSM_DEBUG_ERROR(GSM_F_PREFIX"Cannot find the active xfer", fname);
                     return (SM_RC_END);
                 }
                 /* End existing consult call and then link another
@@ -911,7 +911,7 @@ fsmxfr_ev_idle_feature (sm_event_t *event)
 
             if (other_fcb->xcb == NULL || other_fcb->xcb->xfr_line != line) {
                 //Not on same line display a message
-                GSM_DEBUG_ERROR(GSM_F_PREFIX"Cannot find the active xfer\n", fname);
+                GSM_DEBUG_ERROR(GSM_F_PREFIX"Cannot find the active xfer", fname);
                 return(SM_RC_CONT);
             }
 
@@ -1116,7 +1116,7 @@ fsmxfr_ev_idle_feature (sm_event_t *event)
                     fsm_get_fcb_by_call_id_and_type(msg->data.xfer.target_call_id,
                                                     FSM_TYPE_XFR);
                 if (other_fcb == NULL) {
-                    GSM_DEBUG_ERROR(GSM_F_PREFIX"Cannot find the active xfer\n", fname);
+                    GSM_DEBUG_ERROR(GSM_F_PREFIX"Cannot find the active xfer", fname);
                     break;
                 }
 
@@ -1553,7 +1553,7 @@ fsmxfr_ev_active_release (sm_event_t *event)
     boolean           secondary = FALSE;
     cc_action_data_t  action_data;
     fsm_fcb_t        *other_fcb;
-    FSM_DEBUG_SM(DEB_F_PREFIX"Entered. \n", DEB_F_PREFIX_ARGS(FSM, "fsmxfr_ev_active_release"));
+    FSM_DEBUG_SM(DEB_F_PREFIX"Entered.", DEB_F_PREFIX_ARGS(FSM, "fsmxfr_ev_active_release"));
 
     /*
      * Complete a transfer if we have a pending transfer.
@@ -1564,7 +1564,7 @@ fsmxfr_ev_active_release (sm_event_t *event)
      * Check if this is a transfer of a transfer.
      */
     if (xcb == NULL) {
-        GSM_DEBUG_ERROR(GSM_F_PREFIX"Cannot find a transfer call to cancel.\n", fname);
+        GSM_DEBUG_ERROR(GSM_F_PREFIX"Cannot find a transfer call to cancel.", fname);
         return (SM_RC_CONT);
     }
 
@@ -1720,7 +1720,7 @@ static char *fsmxfr_get_dialed_num (fsmdef_dcb_t *dcb)
 
     tmp_called_number = lsm_get_gdialed_digits();
 
-    DEF_DEBUG(DEB_F_PREFIX"called_dialed_num = %s\n",
+    DEF_DEBUG(DEB_F_PREFIX"called_dialed_num = %s",
                 DEB_F_PREFIX_ARGS(GSM, fname), tmp_called_number);
 
     /* Get dialed number to put in the refer-to header. If there
@@ -1729,12 +1729,12 @@ static char *fsmxfr_get_dialed_num (fsmdef_dcb_t *dcb)
     if (tmp_called_number == NULL || (*tmp_called_number) == NUL) {
 
         if (dcb->caller_id.called_number[0] != NUL) {
-            DEF_DEBUG(DEB_F_PREFIX"called_dcb_num = %s\n",
+            DEF_DEBUG(DEB_F_PREFIX"called_dcb_num = %s",
                 DEB_F_PREFIX_ARGS(GSM, fname), (char *)dcb->caller_id.called_number);
             return((char *)dcb->caller_id.called_number);
 
         } else {
-            DEF_DEBUG(DEB_F_PREFIX"calling_dcb_num = %s\n",
+            DEF_DEBUG(DEB_F_PREFIX"calling_dcb_num = %s",
                 DEB_F_PREFIX_ARGS(GSM, fname), (char *)dcb->caller_id.calling_number);
             return((char *)dcb->caller_id.calling_number);
         }
@@ -1772,7 +1772,7 @@ fsmxfr_initiate_xfr (sm_event_t *event)
      * Place the consultation call on hold.
      */
     if (xcb == NULL) {
-        GSM_DEBUG_ERROR(GSM_F_PREFIX"Cannot find the active xfer\n", fname);
+        GSM_DEBUG_ERROR(GSM_F_PREFIX"Cannot find the active xfer", fname);
         return;
     }
 
@@ -1797,7 +1797,7 @@ fsmxfr_initiate_xfr (sm_event_t *event)
         if ((cns_fcb->state == FSMDEF_S_COLLECT_INFO) ||
             (cns_fcb->state == FSMDEF_S_OUTGOING_PROCEEDING) ||
             (cns_fcb->state == FSMDEF_S_KPML_COLLECT_INFO)) {
-            FSM_DEBUG_SM(DEB_L_C_F_PREFIX"Ignore the xfer xid %d cid %d %d\n",
+            FSM_DEBUG_SM(DEB_L_C_F_PREFIX"Ignore the xfer xid %d cid %d %d",
 				DEB_L_C_F_PREFIX_ARGS(FSM, xcb->xfr_line, xcb->xfr_call_id, "fsmxfr_initiate_xfr"),
                          xcb->xfr_id, xcb->xfr_call_id, xcb->cns_call_id);
             return;
@@ -1892,7 +1892,7 @@ fsmxfr_ev_active_feature (sm_event_t *event)
     fsm_sm_ftr(ftr_id, src_id);
 
     if (xcb == NULL) {
-        GSM_DEBUG_ERROR(GSM_F_PREFIX"Cannot find the active xfer\n", fname);
+        GSM_DEBUG_ERROR(GSM_F_PREFIX"Cannot find the active xfer", fname);
         return (SM_RC_CONT);
     }
 
@@ -1928,7 +1928,7 @@ fsmxfr_ev_active_feature (sm_event_t *event)
              * call_id in the data then terminate the existing consulatative
              * call and link that to another call.
             */
-            DEF_DEBUG(DEB_F_PREFIX"ACTIVE XFER call_id = %d, cns_id = %d, t_id=%d\n",
+            DEF_DEBUG(DEB_F_PREFIX"ACTIVE XFER call_id = %d, cns_id = %d, t_id=%d",
                 DEB_F_PREFIX_ARGS(GSM, fname), xcb->xfr_call_id,
                     feat_data->xfer.target_call_id, xcb->cns_call_id);
 
@@ -1939,7 +1939,7 @@ fsmxfr_ev_active_feature (sm_event_t *event)
                         FSM_TYPE_DEF);
 
                 if (cns_fcb != NULL) {
-                    DEF_DEBUG(DEB_F_PREFIX"INVOKE ACTIVE XFER call_id = %d, t_id=%d\n",
+                    DEF_DEBUG(DEB_F_PREFIX"INVOKE ACTIVE XFER call_id = %d, t_id=%d",
                         DEB_F_PREFIX_ARGS(GSM, fname), xcb->xfr_call_id,
                         feat_data->xfer.target_call_id);
                     cc_int_feature(CC_SRC_GSM, CC_SRC_GSM, xcb->xfr_call_id,
@@ -2002,7 +2002,7 @@ fsmxfr_ev_active_feature (sm_event_t *event)
             {
                 feat_data->hold.call_info.data.call_info_feat_data.protect = TRUE;
             } else {
-                DEF_DEBUG(DEB_F_PREFIX"Invoke hold call_id = %d t_call_id=%d\n",
+                DEF_DEBUG(DEB_F_PREFIX"Invoke hold call_id = %d t_call_id=%d",
                         DEB_F_PREFIX_ARGS(GSM, fname), xcb->xfr_call_id, xcb->cns_call_id);
                 //Actual hold to this call, so break the feature layer.
                 ui_terminate_feature(xcb->xfr_line, xcb->xfr_call_id, xcb->cns_call_id);
@@ -2060,7 +2060,7 @@ fsmxfr_ev_active_feature (sm_event_t *event)
             } else if ((xcb->type == FSMXFR_TYPE_XFR) &&
                        (msg->data.endcall.cause == CC_CAUSE_NO_USER_RESP)) {
 
-                DEF_DEBUG(DEB_F_PREFIX"Xfer type =%d\n",
+                DEF_DEBUG(DEB_F_PREFIX"Xfer type =%d",
                         DEB_F_PREFIX_ARGS(GSM, fname), xcb->type);
 
                 if ((platGetPhraseText(STR_INDEX_TRANSFERRING,
@@ -2109,7 +2109,7 @@ fsmxfr_ev_active_feature (sm_event_t *event)
     case CC_SRC_SIP:
         switch (ftr_id) {
         case CC_FEATURE_CALL_PRESERVATION:
-            DEF_DEBUG(DEB_F_PREFIX"Preservation call_id = %d t_call_id=%d\n",
+            DEF_DEBUG(DEB_F_PREFIX"Preservation call_id = %d t_call_id=%d",
                         DEB_F_PREFIX_ARGS(GSM, fname), xcb->xfr_call_id, xcb->cns_call_id);
             ui_terminate_feature(xcb->xfr_line, xcb->xfr_call_id, xcb->cns_call_id);
             fsmxfr_feature_cancel(xcb, xcb->xfr_line, xcb->xfr_call_id,
@@ -2358,7 +2358,7 @@ fsmxfr_ev_active_feature (sm_event_t *event)
                          * call will be released by the target.
                          */
                         if (xcb == NULL) {
-                            GSM_DEBUG_ERROR(GSM_F_PREFIX"Cannot find the active xfer\n", fname);
+                            GSM_DEBUG_ERROR(GSM_F_PREFIX"Cannot find the active xfer", fname);
                             break;
                         }
 
@@ -2478,7 +2478,7 @@ fsmxfr_ev_active_feature_ack (sm_event_t *event)
     }
 
     if (xcb == NULL) {
-        GSM_DEBUG_ERROR(GSM_F_PREFIX"Cannot find the active xfer\n", fname);
+        GSM_DEBUG_ERROR(GSM_F_PREFIX"Cannot find the active xfer", fname);
         return (sm_rc);
     }
 
@@ -2699,7 +2699,7 @@ fsmxfr_ev_active_onhook (sm_event_t *event)
     int               onhook_xfer = 0;
 
     if (xcb == NULL) {
-        GSM_DEBUG_ERROR(GSM_F_PREFIX"Cannot find the active xfer\n", fname);
+        GSM_DEBUG_ERROR(GSM_F_PREFIX"Cannot find the active xfer", fname);
         return (SM_RC_CONT);
     }
 
@@ -2831,12 +2831,12 @@ fsmxfr_ev_active_dialstring (sm_event_t *event)
      */
     dialstring = msg->dialstring;
     if ((dialstring == NULL) || (dialstring[0] == '\0')) {
-        FSM_DEBUG_SM(DEB_L_C_F_PREFIX"dialstring= %c\n",
+        FSM_DEBUG_SM(DEB_L_C_F_PREFIX"dialstring= %c",
 			DEB_L_C_F_PREFIX_ARGS(FSM, msg->line, call_id, fname), '\0');
         return (SM_RC_END);
     }
 
-    FSM_DEBUG_SM(DEB_L_C_F_PREFIX"dialstring= %s\n",
+    FSM_DEBUG_SM(DEB_L_C_F_PREFIX"dialstring= %s",
 		DEB_L_C_F_PREFIX_ARGS(FSM, msg->line, call_id, fname), dialstring);
 
     /*
@@ -2858,7 +2858,7 @@ fsmxfr_ev_active_dialstring (sm_event_t *event)
 
     if (xfr_dcb->active_feature == CC_FEATURE_BLIND_XFER) {
         if (!fsmxfr_copy_dialstring(&xcb->queued_dialstring, dialstring)) {
-            GSM_DEBUG_ERROR(GSM_L_C_F_PREFIX"unable to copy dialstring\n",
+            GSM_DEBUG_ERROR(GSM_L_C_F_PREFIX"unable to copy dialstring",
                             msg->line, call_id, fname);
         }
         return (SM_RC_END);
@@ -2985,16 +2985,16 @@ cc_is_xfr_call (callid_t call_id)
 
     switch (mode) {
     case FSMXFR_MODE_TRANSFEROR:
-        FSM_DEBUG_SM(DEB_F_PREFIX"xfer mode is transferor for call id = %d\n", DEB_F_PREFIX_ARGS(FSM, fname), call_id);
+        FSM_DEBUG_SM(DEB_F_PREFIX"xfer mode is transferor for call id = %d", DEB_F_PREFIX_ARGS(FSM, fname), call_id);
         return CC_XFR_MODE_TRANSFEROR;
     case FSMXFR_MODE_TRANSFEREE:
-        FSM_DEBUG_SM(DEB_F_PREFIX"xfer mode is transferee for call id = %d\n", DEB_F_PREFIX_ARGS(FSM, fname), call_id);
+        FSM_DEBUG_SM(DEB_F_PREFIX"xfer mode is transferee for call id = %d", DEB_F_PREFIX_ARGS(FSM, fname), call_id);
         return CC_XFR_MODE_TRANSFEREE;
     case FSMXFR_MODE_TARGET:
-        FSM_DEBUG_SM(DEB_F_PREFIX"xfer mode is target for call id = %d\n", DEB_F_PREFIX_ARGS(FSM, fname), call_id);
+        FSM_DEBUG_SM(DEB_F_PREFIX"xfer mode is target for call id = %d", DEB_F_PREFIX_ARGS(FSM, fname), call_id);
         return CC_XFR_MODE_TARGET;
     default:
-        FSM_DEBUG_SM(DEB_F_PREFIX"invalid xfer mode %d for call id = %d\n", DEB_F_PREFIX_ARGS(FSM, fname), mode, call_id);
+        FSM_DEBUG_SM(DEB_F_PREFIX"invalid xfer mode %d for call id = %d", DEB_F_PREFIX_ARGS(FSM, fname), mode, call_id);
         return CC_XFR_MODE_NONE;
     }
 }

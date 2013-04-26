@@ -23,7 +23,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SVGAnimatedLength)
 NS_INTERFACE_MAP_END
 
 JSObject*
-SVGAnimatedLength::WrapObject(JSContext* aCx, JSObject* aScope)
+SVGAnimatedLength::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return SVGAnimatedLengthBinding::Wrap(aCx, aScope, this);
 }

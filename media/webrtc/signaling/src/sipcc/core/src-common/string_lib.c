@@ -53,7 +53,8 @@ strlib_malloc (const char *str, int length, const char *fname, int line)
     temp = (string_block_t *) cpr_malloc(size);
 
     if (!temp) {
-        err_msg("Error: Strlib_Malloc() Failed. Requested Size = %d\n", size);
+        CSFLogError("src-common",
+            "Error: Strlib_Malloc() Failed. Requested Size = %d\n", size);
         return (string_t) 0;
     }
 
@@ -130,8 +131,8 @@ strlib_update (string_t destination, const char *source,
     /* Bogus destination */
     if (!destination) {
         /* Should never happen, so report it */
-        err_msg("%s: Destination String is invalid: %s:%d", fname,
-                calling_fname, line);
+        CSFLogError("src-common", "%s: Destination String is invalid: %s:%d",
+                fname, calling_fname, line);
         /* bad input, bad output */
         return NULL;
     }
@@ -139,7 +140,7 @@ strlib_update (string_t destination, const char *source,
     /* Bogus source */
     if (!source) {
         /* Should never happen, so report it and return something */
-        err_msg("%s: Source String is invalid: %s:%d", fname,
+        CSFLogError("src-common", "%s: Source String is invalid: %s:%d", fname,
                 calling_fname, line);
         strlib_free(destination);
         return strlib_empty();
@@ -319,7 +320,8 @@ strlib_is_string (string_t str)
     string_block_t *temp;
 
     if (str == NULL) {
-        err_msg("Strlib Error: strlib_is_tring passed invalid string\n");
+        CSFLogError("src-common",
+          "Strlib Error: strlib_is_tring passed invalid string\n");
         return (0);
     }
 
@@ -328,7 +330,8 @@ strlib_is_string (string_t str)
     if (temp->signature == STRING_SIGNATURE) {
         return (1);
     } else {
-        err_msg("Strlib Error: strlib_is_tring passed invalid string\n");
+        CSFLogError("src-common",
+          "Strlib Error: strlib_is_tring passed invalid string\n");
         return (0);
     }
 

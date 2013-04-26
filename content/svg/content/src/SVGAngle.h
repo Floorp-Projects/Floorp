@@ -48,7 +48,8 @@ public:
 
   // WebIDL
   nsSVGElement* GetParentObject() { return mSVGElement; }
-  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
   uint16_t UnitType() const;
   float Value() const;
   void GetValueAsString(nsAString& aValue);

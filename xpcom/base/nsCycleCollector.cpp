@@ -140,6 +140,7 @@
 
 #include "mozilla/CondVar.h"
 #include "mozilla/Likely.h"
+#include "mozilla/mozPoisonWrite.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/StandardInteger.h"
 #include "mozilla/Telemetry.h"
@@ -147,6 +148,9 @@
 using namespace mozilla;
 
 //#define COLLECT_TIME_DEBUG
+
+// Enable assertions that are useful for diagnosing errors in graph construction.
+//#define DEBUG_CC_GRAPH
 
 #define DEFAULT_SHUTDOWN_COLLECTIONS 5
 #define SHUTDOWN_COLLECTIONS(params) DEFAULT_SHUTDOWN_COLLECTIONS
@@ -335,6 +339,13 @@ public:
         bool operator!=(const Iterator& aOther) const
             { return mPointer != aOther.mPointer; }
 
+#ifdef DEBUG_CC_GRAPH
+        bool Initialized() const
+        {
+            return mPointer != nullptr;
+        }
+#endif
+
     private:
         PtrInfoOrBlock *mPointer;
     };
@@ -384,6 +395,12 @@ public:
     }
 };
 
+#ifdef DEBUG_CC_GRAPH
+#define CC_GRAPH_ASSERT(b) MOZ_ASSERT(b)
+#else
+#define CC_GRAPH_ASSERT(b)
+#endif
+
 enum NodeColor { black, white, grey };
 
 // This structure should be kept as small as possible; we may expect
@@ -420,23 +437,27 @@ public:
 
     EdgePool::Iterator FirstChild()
     {
+        CC_GRAPH_ASSERT(mFirstChild.Initialized());
         return mFirstChild;
     }
 
     // this PtrInfo must be part of a NodePool
     EdgePool::Iterator LastChild()
     {
+        CC_GRAPH_ASSERT((this + 1)->mFirstChild.Initialized());
         return (this + 1)->mFirstChild;
     }
 
     void SetFirstChild(EdgePool::Iterator aFirstChild)
     {
+        CC_GRAPH_ASSERT(aFirstChild.Initialized());
         mFirstChild = aFirstChild;
     }
 
     // this PtrInfo must be part of a NodePool
     void SetLastChild(EdgePool::Iterator aLastChild)
     {
+        CC_GRAPH_ASSERT(aLastChild.Initialized());
         (this + 1)->mFirstChild = aLastChild;
     }
 };
@@ -553,7 +574,10 @@ public:
             return mNext++;
         }
     private:
-        Block *mFirstBlock, *mCurBlock;
+        // mFirstBlock is a reference to allow an Enumerator to be constructed
+        // for an empty graph.
+        Block *&mFirstBlock;
+        Block *mCurBlock;
         // mNext is the next value we want to return, unless mNext == mBlockEnd
         // NB: mLast is a reference to allow enumerating while building!
         PtrInfo *mNext, *mBlockEnd, *&mLast;
@@ -1302,6 +1326,7 @@ public:
     ~nsCycleCollectorLogger()
     {
         if (mStream) {
+            MozillaUnRegisterDebugFILE(mStream);
             fclose(mStream);
         }
     }
@@ -1382,7 +1407,9 @@ public:
         FILE* gcLogANSIFile = nullptr;
         gcLogFile->OpenANSIFileDesc("w", &gcLogANSIFile);
         NS_ENSURE_STATE(gcLogANSIFile);
+        MozillaRegisterDebugFILE(gcLogANSIFile);
         xpc::DumpJSHeap(gcLogANSIFile);
+        MozillaUnRegisterDebugFILE(gcLogANSIFile);
         fclose(gcLogANSIFile);
 
         // Strip off "incomplete-".
@@ -1415,6 +1442,7 @@ public:
         MOZ_ASSERT(!mStream);
         mOutFile->OpenANSIFileDesc("w", &mStream);
         NS_ENSURE_STATE(mStream);
+        MozillaRegisterDebugFILE(mStream);
 
         return NS_OK;
     }
@@ -1511,6 +1539,7 @@ public:
             MOZ_ASSERT(mStream);
             MOZ_ASSERT(mOutFile);
 
+            MozillaUnRegisterDebugFILE(mStream);
             fclose(mStream);
             mStream = nullptr;
 

@@ -23,8 +23,8 @@ static const char* logTag = "ccapi_device_info";
 cc_deviceinfo_ref_t CCAPI_DeviceInfo_getDeviceHandle ()
 {
    static const char *fname="CCAPI_DeviceInfo_getDeviceHandle";
-   CCAPP_DEBUG(DEB_F_PREFIX"Entering\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
-   CCAPP_DEBUG(DEB_F_PREFIX"returned 0 (default)\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
+   CCAPP_DEBUG(DEB_F_PREFIX"Entering", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
+   CCAPP_DEBUG(DEB_F_PREFIX"returned 0 (default)", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
    return 0;
 }
 
@@ -79,10 +79,10 @@ cc_service_state_t CCAPI_DeviceInfo_getServiceState (cc_deviceinfo_ref_t handle)
 {
   static const char *fname="CCAPI_DeviceInfo_getServiceState";
   cc_device_info_t *device = handle;
-  CCAPP_DEBUG(DEB_F_PREFIX"Entering\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
+  CCAPP_DEBUG(DEB_F_PREFIX"Entering", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
 
   if ( device != NULL ) {
-     CCAPP_DEBUG(DEB_F_PREFIX"returned %02X\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), device->ins_state);
+     CCAPP_DEBUG(DEB_F_PREFIX"returned %02X", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), device->ins_state);
      return device->ins_state;
   }
 
@@ -98,10 +98,10 @@ cc_service_cause_t CCAPI_DeviceInfo_getServiceCause (cc_deviceinfo_ref_t handle)
 {
   static const char *fname="CCAPI_DeviceInfo_getServiceCause";
   cc_device_info_t *device = handle;
-  CCAPP_DEBUG(DEB_F_PREFIX"Entering\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
+  CCAPP_DEBUG(DEB_F_PREFIX"Entering", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
 
   if ( device != NULL ) {
-     CCAPP_DEBUG(DEB_F_PREFIX"returned %02X\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), device->ins_cause);
+     CCAPP_DEBUG(DEB_F_PREFIX"returned %02X", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), device->ins_cause);
      return device->ins_cause;
   }
 
@@ -117,10 +117,10 @@ cc_cucm_mode_t CCAPI_DeviceInfo_getCUCMMode (cc_deviceinfo_ref_t handle)
 {
   static const char *fname="CCAPI_DeviceInfo_getCUCMMode";
   cc_device_info_t *device = handle;
-  CCAPP_DEBUG(DEB_F_PREFIX"Entering\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
+  CCAPP_DEBUG(DEB_F_PREFIX"Entering", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
 
   if ( device != NULL ) {
-     CCAPP_DEBUG(DEB_F_PREFIX"returned %02X\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), device->cucm_mode);
+     CCAPP_DEBUG(DEB_F_PREFIX"returned %02X", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), device->cucm_mode);
      return device->cucm_mode;
   }
 
@@ -140,7 +140,7 @@ void CCAPI_DeviceInfo_getCalls (cc_deviceinfo_ref_t handle, cc_call_handle_t han
     hashItr_t itr;
     session_data_t *data;
     int i=0;
-    CCAPP_DEBUG(DEB_F_PREFIX"Entering\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
+    CCAPP_DEBUG(DEB_F_PREFIX"Entering", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
 
     hashItrInit(&itr);
     while ( (data = (session_data_t*)hashItrNext(&itr)) != NULL &&
@@ -148,7 +148,7 @@ void CCAPI_DeviceInfo_getCalls (cc_deviceinfo_ref_t handle, cc_call_handle_t han
         handles[i++] = CREATE_CALL_HANDLE_FROM_SESSION_ID(data->sess_id);
     }
     *count=i;
-    CCAPP_DEBUG(DEB_F_PREFIX"Finished (no return) \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
+    CCAPP_DEBUG(DEB_F_PREFIX"Finished (no return)", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
 }
 
 /**
@@ -166,7 +166,7 @@ void CCAPI_DeviceInfo_getCallsByState (cc_deviceinfo_ref_t handle, cc_call_state
     hashItr_t itr;
     session_data_t *data;
     int i=0;
-    CCAPP_DEBUG(DEB_F_PREFIX"Entering\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
+    CCAPP_DEBUG(DEB_F_PREFIX"Entering", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
 
     hashItrInit(&itr);
     while ( (data = (session_data_t*)hashItrNext(&itr)) != NULL &&
@@ -176,7 +176,7 @@ void CCAPI_DeviceInfo_getCallsByState (cc_deviceinfo_ref_t handle, cc_call_state
         }
     }
     *count=i;
-    CCAPP_DEBUG(DEB_F_PREFIX"Finished (no return) \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
+    CCAPP_DEBUG(DEB_F_PREFIX"Finished (no return)", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
 }
 
 /**
@@ -190,7 +190,7 @@ void CCAPI_DeviceInfo_getLines (cc_deviceinfo_ref_t handle, cc_lineid_t handles[
     static const char *fname="CCAPI_DeviceInfo_getLines";
     cc_line_info_t *line;
     int i=1, j=0;
-    CCAPP_DEBUG(DEB_F_PREFIX"Entering\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
+    CCAPP_DEBUG(DEB_F_PREFIX"Entering", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
 
     CCAPP_DEBUG(" LINES Start ");
 
@@ -201,7 +201,7 @@ void CCAPI_DeviceInfo_getLines (cc_deviceinfo_ref_t handle, cc_lineid_t handles[
         handles[j++] = line->button;
     }
     *count=j;
-    CCAPP_DEBUG(DEB_F_PREFIX"Finished (no return) \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
+    CCAPP_DEBUG(DEB_F_PREFIX"Finished (no return)", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
 }
 
 /**
@@ -215,7 +215,7 @@ void CCAPI_DeviceInfo_getFeatures (cc_deviceinfo_ref_t handle, cc_featureinfo_re
     static const char *fname="CCAPI_DeviceInfo_getFeatures";
     cc_featureinfo_ref_t feature;
     int i=0, j=0;
-    CCAPP_DEBUG(DEB_F_PREFIX"Entering\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
+    CCAPP_DEBUG(DEB_F_PREFIX"Entering", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
 
     for (i=1;i<=MAX_CONFIG_LINES && j<*count;i++) {
     	feature = (cc_featureinfo_ref_t) ccsnap_getFeatureInfo(i);
@@ -224,7 +224,7 @@ void CCAPI_DeviceInfo_getFeatures (cc_deviceinfo_ref_t handle, cc_featureinfo_re
     	}
     }
     *count=j;
-    CCAPP_DEBUG(DEB_F_PREFIX"Finished (no return) \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
+    CCAPP_DEBUG(DEB_F_PREFIX"Finished (no return)", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
 }
 
 /**
@@ -237,7 +237,7 @@ void CCAPI_DeviceInfo_getCallServers (cc_deviceinfo_ref_t handle, cc_callserver_
 {
     static const char *fname="CCAPI_DeviceInfo_getCallServers";
     int i, j=0;
-    CCAPP_DEBUG(DEB_F_PREFIX"Entering\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
+    CCAPP_DEBUG(DEB_F_PREFIX"Entering", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
 
     for (i=0;i<CCAPI_MAX_SERVERS && i< *count; i++) {
         if (g_deviceInfo.ucm[i].name != 0 && strlen(g_deviceInfo.ucm[i].name)) {
@@ -245,7 +245,7 @@ void CCAPI_DeviceInfo_getCallServers (cc_deviceinfo_ref_t handle, cc_callserver_
 	}
     }
     *count = j;
-    CCAPP_DEBUG(DEB_F_PREFIX"Finished (no return) \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
+    CCAPP_DEBUG(DEB_F_PREFIX"Finished (no return)", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
 }
 
 /**
@@ -258,10 +258,10 @@ cc_string_t CCAPI_DeviceInfo_getCallServerName (cc_callserver_ref_t handle)
 {
     static const char *fname="CCAPI_DeviceInfo_getCallServerName";
     cc_call_server_t *ref = (cc_call_server_t *) handle;
-    CCAPP_DEBUG(DEB_F_PREFIX"Entering\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
+    CCAPP_DEBUG(DEB_F_PREFIX"Entering", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
 
     if (ref != NULL && ref->name != 0) {
-        CCAPP_DEBUG(DEB_F_PREFIX"returned %s\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), ref->name);
+        CCAPP_DEBUG(DEB_F_PREFIX"returned %s", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), ref->name);
 	    return ref->name;
     }
     return strlib_empty();
@@ -276,10 +276,10 @@ cc_cucm_mode_t CCAPI_DeviceInfo_getCallServerMode (cc_callserver_ref_t handle)
 {
     static const char *fname="CCAPI_DeviceInfo_getCallServerMode";
     cc_call_server_t *ref = (cc_call_server_t *) handle;
-    CCAPP_DEBUG(DEB_F_PREFIX"Entering\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
+    CCAPP_DEBUG(DEB_F_PREFIX"Entering", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
 
     if (ref != NULL) {
-        CCAPP_DEBUG(DEB_F_PREFIX"returned %02X\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), ref->type);
+        CCAPP_DEBUG(DEB_F_PREFIX"returned %02X", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), ref->type);
         return ref->type;
     }
 
@@ -295,10 +295,10 @@ cc_ccm_status_t CCAPI_DeviceInfo_getCallServerStatus (cc_callserver_ref_t handle
 {
     static const char *fname="CCAPI_DeviceInfo_getCallServerStatus";
     cc_call_server_t *ref = (cc_call_server_t *) handle;
-    CCAPP_DEBUG(DEB_F_PREFIX"Entering\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
+    CCAPP_DEBUG(DEB_F_PREFIX"Entering", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
 
     if (ref != NULL) {
-        CCAPP_DEBUG(DEB_F_PREFIX"returned %02X\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), (ref->status));
+        CCAPP_DEBUG(DEB_F_PREFIX"returned %02X", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), (ref->status));
         return ref->status;
     }
 
@@ -314,7 +314,7 @@ cc_string_t CCAPI_DeviceInfo_getNotifyPrompt (cc_deviceinfo_ref_t handle)
 {
     static const char *fname="CCAPI_DeviceInfo_getNotifyPrompt";
     cc_device_info_t *ref = (cc_device_info_t *) handle;
-    CCAPP_DEBUG(DEB_F_PREFIX"Entering\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
+    CCAPP_DEBUG(DEB_F_PREFIX"Entering", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
 
     if (ref != NULL) {
         CCAPP_DEBUG(DEB_F_PREFIX"returned %p", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), (ref->not_prompt));
@@ -333,10 +333,10 @@ cc_uint32_t CCAPI_DeviceInfo_getNotifyPromptPriority (cc_deviceinfo_ref_t handle
 {
     static const char *fname="CCAPI_DeviceInfo_getNotifyPromptPriority";
     cc_device_info_t *ref = (cc_device_info_t *) handle;
-    CCAPP_DEBUG(DEB_F_PREFIX"Entering\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
+    CCAPP_DEBUG(DEB_F_PREFIX"Entering", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
 
     if (ref != NULL) {
-        CCAPP_DEBUG(DEB_F_PREFIX"returned %02X\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), (ref->not_prompt_prio));
+        CCAPP_DEBUG(DEB_F_PREFIX"returned %02X", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), (ref->not_prompt_prio));
         return ref->not_prompt_prio;
     }
 
@@ -352,10 +352,10 @@ cc_uint32_t CCAPI_DeviceInfo_getNotifyPromptProgress (cc_deviceinfo_ref_t handle
 {
     static const char *fname="CCAPI_DeviceInfo_getNotifyPromptProgress";
     cc_device_info_t *ref = (cc_device_info_t *) handle;
-    CCAPP_DEBUG(DEB_F_PREFIX"Entering\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
+    CCAPP_DEBUG(DEB_F_PREFIX"Entering", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
 
     if (ref != NULL) {
-        CCAPP_DEBUG(DEB_F_PREFIX"returned %02X\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), (ref->not_prompt_prog));
+        CCAPP_DEBUG(DEB_F_PREFIX"returned %02X", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), (ref->not_prompt_prog));
         return ref->not_prompt_prog;
     }
 
@@ -371,7 +371,7 @@ cc_boolean CCAPI_DeviceInfo_isMissedCallLoggingEnabled (cc_deviceinfo_ref_t hand
 {
     static const char *fname="CCAPI_DeviceInfo_isMissedCallLoggingEnabled";
 
-    CCAPP_DEBUG(DEB_F_PREFIX" return val %d\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), ccsnap_isMissedCallLoggingEnabled());
+    CCAPP_DEBUG(DEB_F_PREFIX" return val %d", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), ccsnap_isMissedCallLoggingEnabled());
     return ccsnap_isMissedCallLoggingEnabled();
 }
 
@@ -384,7 +384,7 @@ cc_boolean CCAPI_DeviceInfo_isPlacedCallLoggingEnabled (cc_deviceinfo_ref_t hand
 {
     static const char *fname="CCAPI_DeviceInfo_isPlacedCallLoggingEnabled";
 
-    CCAPP_DEBUG(DEB_F_PREFIX" return val %d\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), ccsnap_isPlacedCallLoggingEnabled());
+    CCAPP_DEBUG(DEB_F_PREFIX" return val %d", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), ccsnap_isPlacedCallLoggingEnabled());
     return ccsnap_isPlacedCallLoggingEnabled();
 }
 
@@ -398,7 +398,7 @@ cc_boolean CCAPI_DeviceInfo_isReceivedCallLoggingEnabled (cc_deviceinfo_ref_t ha
 {
     static const char *fname="CCAPI_DeviceInfo_isReceivedCallLoggingEnabled";
 
-    CCAPP_DEBUG(DEB_F_PREFIX" return val %d\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), ccsnap_isReceivedCallLoggingEnabled());
+    CCAPP_DEBUG(DEB_F_PREFIX" return val %d", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), ccsnap_isReceivedCallLoggingEnabled());
     return ccsnap_isReceivedCallLoggingEnabled();
 }
 
@@ -424,7 +424,7 @@ cc_string_t CCAPI_DeviceInfo_getSignalingIPAddress(cc_deviceinfo_ref_t handle)
 
     sip_config_get_net_device_ipaddr(&ip_addr);
     ipaddr2dotted(g_deviceInfo.registration_ip_addr, &ip_addr);
-    CCAPP_DEBUG(DEB_F_PREFIX"returned %s\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), g_deviceInfo.registration_ip_addr);
+    CCAPP_DEBUG(DEB_F_PREFIX"returned %s", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), g_deviceInfo.registration_ip_addr);
     return g_deviceInfo.registration_ip_addr;
 }
 
@@ -457,10 +457,10 @@ cc_boolean CCAPI_DeviceInfo_getMWILampState(cc_deviceinfo_ref_t handle)
 {
     static const char *fname="CCAPI_DeviceInfo_getMWILampState";
     cc_device_info_t *device = handle;
-    CCAPP_DEBUG(DEB_F_PREFIX"Entering\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
+    CCAPP_DEBUG(DEB_F_PREFIX"Entering", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
 
     if ( device != NULL ) {
-       CCAPP_DEBUG(DEB_F_PREFIX"returned %d\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), device->mwi_lamp);
+       CCAPP_DEBUG(DEB_F_PREFIX"returned %d", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), device->mwi_lamp);
        return device->mwi_lamp;
     }
 

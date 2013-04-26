@@ -123,7 +123,8 @@ public:
   nsresult GetSortedControls(nsTArray<nsGenericHTMLFormElement*>& aControls) const;
 
   // nsWrapperCache
-  virtual JSObject* WrapObject(JSContext *cx, JSObject *scope)
+  virtual JSObject* WrapObject(JSContext *cx,
+                               JS::Handle<JSObject*> scope) MOZ_OVERRIDE
   {
     return HTMLCollectionBinding::Wrap(cx, scope, this);
   }

@@ -44,8 +44,8 @@
 #ifdef DEBUG_verbose
 #   define DEBUG_COUNT(name, count)                                             \
         { if ((count % 10) == 0) printf (name ": %i\n", count); }
-#   define DEBUG_CREATE(name, count) {count++; DEBUG_COUNT ("+++++ "name,count)}
-#   define DEBUG_DESTROY(name, count) {count--; DEBUG_COUNT ("----- "name,count)}
+#   define DEBUG_CREATE(name, count) {count++; DEBUG_COUNT ("+++++ " name,count)}
+#   define DEBUG_DESTROY(name, count) {count--; DEBUG_COUNT ("----- " name,count)}
 #else
 #   define DEBUG_CREATE(name, count) 
 #   define DEBUG_DESTROY(name, count)

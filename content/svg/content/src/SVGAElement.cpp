@@ -18,7 +18,7 @@ namespace mozilla {
 namespace dom {
 
 JSObject*
-SVGAElement::WrapNode(JSContext *aCx, JSObject *aScope)
+SVGAElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
   return SVGAElementBinding::Wrap(aCx, aScope, this);
 }

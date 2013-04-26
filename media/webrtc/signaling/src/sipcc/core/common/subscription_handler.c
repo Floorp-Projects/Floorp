@@ -40,13 +40,13 @@ boolean sub_hndlr_isAlertingBLFState(int inst)
     static const char fname[] = "sub_hndlr_isAlertingBLFState";
 
     if ((displayBLFState == TRUE) && (blfStates[inst - 1] == CC_SIP_BLF_ALERTING)) {
-        CCAPP_DEBUG(DEB_F_PREFIX"inst=%d, isAlerting=TRUE\n",
+        CCAPP_DEBUG(DEB_F_PREFIX"inst=%d, isAlerting=TRUE",
                     DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname),
                     inst);
 
         return TRUE;
     }
-    CCAPP_DEBUG(DEB_F_PREFIX"inst=%d, isAlerting=FALSE\n",
+    CCAPP_DEBUG(DEB_F_PREFIX"inst=%d, isAlerting=FALSE",
                 DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname),
                 inst);
     return FALSE;
@@ -67,12 +67,12 @@ boolean sub_hndlr_isInUseBLFState(int inst)
     static const char fname[] = "sub_hndlr_isInUseBLFState";
 
     if ((displayBLFState == TRUE) && (blfStates[inst - 1] == CC_SIP_BLF_INUSE)) {
-    CCAPP_DEBUG(DEB_F_PREFIX"inst=%d, isInUse=TRUE\n",
+    CCAPP_DEBUG(DEB_F_PREFIX"inst=%d, isInUse=TRUE",
                 DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname),
                 inst);
         return TRUE;
     }
-    CCAPP_DEBUG(DEB_F_PREFIX"inst=%d, isInUse=FALSE\n",
+    CCAPP_DEBUG(DEB_F_PREFIX"inst=%d, isInUse=FALSE",
                 DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname),
                 inst);
     return FALSE;
@@ -91,7 +91,7 @@ boolean sub_hndlr_isAvailable()
 {
     static const char fname[] = "sub_hndlr_isAvailable";
 
-    CCAPP_DEBUG(DEB_F_PREFIX"isAvailable=%d\n",
+    CCAPP_DEBUG(DEB_F_PREFIX"isAvailable=%d",
                 DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname),
                 isAvailable);
     return isAvailable;
@@ -127,7 +127,7 @@ void sub_hndlr_start()
     char primaryLine[MAX_LINE_NAME_SIZE] = {0};
     int transId;
 
-    CCAPP_DEBUG(DEB_F_PREFIX"entering\n",
+    CCAPP_DEBUG(DEB_F_PREFIX"entering",
                 DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
     /* let the system know that subscription handler is available. */
     isAvailable = TRUE;
@@ -143,7 +143,7 @@ void sub_hndlr_start()
         config_get_line_value(CFGID_LINE_FEATURE, &lineFeature, sizeof(lineFeature), i);
 
 
-        CCAPP_DEBUG(DEB_F_PREFIX"inst=%d, lineFeature=%d\n",
+        CCAPP_DEBUG(DEB_F_PREFIX"inst=%d, lineFeature=%d",
                     DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname),
                     i, lineFeature);
         switch (lineFeature) {
@@ -194,7 +194,7 @@ void sub_hndlr_stop()
     static const char fname[] = "sub_hndlr_stop";
     int i;
 
-    CCAPP_DEBUG(DEB_F_PREFIX"entering\n",
+    CCAPP_DEBUG(DEB_F_PREFIX"entering",
                 DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
     isAvailable = FALSE;
     isBLFHandlerRunning = FALSE;
@@ -225,7 +225,7 @@ static void hideBLFButtonsDisplay()
     int i;
     cc_uint32_t lineFeature = 0;
 
-    CCAPP_DEBUG(DEB_F_PREFIX"entering\n",
+    CCAPP_DEBUG(DEB_F_PREFIX"entering",
                 DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
     displayBLFState = FALSE;
     for (i = SPEEDDIAL_START_BUTTON_NUMBER; i <= MAX_REG_LINES; i++) {
@@ -258,7 +258,7 @@ static void unhideBLFButtonsDisplay()
     cc_uint32_t lineFeature = 0;
     char speedDialNumber[MAX_LINE_NAME_SIZE] = {0};
 
-    CCAPP_DEBUG(DEB_F_PREFIX"entering\n",
+    CCAPP_DEBUG(DEB_F_PREFIX"entering",
                 DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
 
     displayBLFState = TRUE;
@@ -292,11 +292,11 @@ void sub_hndlr_controlBLFButtons(boolean state)
     static const char fname[] = "sub_hndlr_controlBLFButtons";
 
     if (state == TRUE) {
-        CCAPP_DEBUG(DEB_F_PREFIX"going to hide\n",
+        CCAPP_DEBUG(DEB_F_PREFIX"going to hide",
                     DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
         hideBLFButtonsDisplay();
     } else {
-        CCAPP_DEBUG(DEB_F_PREFIX"going to unhide\n",
+        CCAPP_DEBUG(DEB_F_PREFIX"going to unhide",
                     DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
         unhideBLFButtonsDisplay();
     }
@@ -321,7 +321,7 @@ void sub_hndlr_NotifyBLFStatus(int requestId, cc_blf_state_t status, int appId)
     char speedDialNumber[MAX_LINE_NAME_SIZE] = {0};
 
 
-    CCAPP_DEBUG(DEB_F_PREFIX"requestId=%d, status=%d, appId=%d\n",
+    CCAPP_DEBUG(DEB_F_PREFIX"requestId=%d, status=%d, appId=%d",
                 DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname),
                 requestId, status, appId);
     if (appId == 0) {

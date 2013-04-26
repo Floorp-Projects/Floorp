@@ -36,7 +36,8 @@ public:
   NS_IMETHOD_(void) Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType);
   NS_IMETHOD_(bool) Deserialize(const IPC::Message* aMsg, void** aIter);
 
-  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope)
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
   {
     return mozilla::dom::ScrollAreaEventBinding::Wrap(aCx, aScope, this);
   }

@@ -252,12 +252,12 @@ void sip_platform_task_msgqwait (void *arg)
     char          template[sizeof(sip_serv_sock_addr.sun_path)];
 
     if (msgq == NULL) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"task msgq is null, exiting\n", fname);
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"task msgq is null, exiting", fname);
         return;
     }
 
     if (platThreadInit("SIP IPCQ task") != 0) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"failed to attach thread to JVM\n", fname);
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"failed to attach thread to JVM", fname);
         return;
     }
 
@@ -335,7 +335,7 @@ void sip_platform_task_msgqwait (void *arg)
         }
 
         if (num_messages) {
-            CCSIP_DEBUG_TASK(DEB_F_PREFIX"%d msg available on msgq\n", DEB_F_PREFIX_ARGS(SIP_MSG_QUE, fname), num_messages);
+            CCSIP_DEBUG_TASK(DEB_F_PREFIX"%d msg available on msgq", DEB_F_PREFIX_ARGS(SIP_MSG_QUE, fname), num_messages);
             /*
              * There are some number of messages sent to the main thread,
              * trigger the main SIP thread via IPC to process the message.
@@ -344,7 +344,7 @@ void sip_platform_task_msgqwait (void *arg)
                           sizeof(num_messages), 0,
                           (cpr_sockaddr_t *)&sip_serv_sock_addr,
                           cpr_sun_len(sip_serv_sock_addr)) < 0) {
-                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"send IPC failed errno=%d\n", fname, cpr_errno);
+                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"send IPC failed errno=%d", fname, cpr_errno);
             }
 
             if (FALSE == quit_thread) {
@@ -393,12 +393,12 @@ static void sip_process_int_msg (void)
     }
 
     if (num_messages == 0) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"message queue is empty!\n", fname);
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"message queue is empty!", fname);
         return;
     }
 
     if (num_messages > MAX_SIP_MESSAGES) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"number of  messages on queue exceeds maximum %d\n", fname,
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"number of  messages on queue exceeds maximum %d", fname,
                           num_messages);
         num_messages = MAX_SIP_MESSAGES;
     }
@@ -423,7 +423,7 @@ static void sip_process_int_msg (void)
                 sip_get_sock_dir_tmpl(template, sizeof(template), NULL);
                 PR_snprintf(stmpdir, sizeof(stmpdir), template, getpid());
                 if (rmdir(stmpdir) != 0) {
-                    CCSIP_DEBUG_ERROR(SIP_F_PREFIX"failed to remove temp dir\n",
+                    CCSIP_DEBUG_ERROR(SIP_F_PREFIX"failed to remove temp dir",
                                       fname);
                 }
             }
@@ -473,7 +473,7 @@ sip_platform_task_loop (void *arg)
 
     sip_msgq = (cprMsgQueue_t) arg;
     if (!sip_msgq) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"sip_msgq is null, exiting\n", fname);
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"sip_msgq is null, exiting", fname);
         return;
     }
     sip.msgQueue = sip_msgq;
@@ -485,7 +485,7 @@ sip_platform_task_loop (void *arg)
     SIPTaskInit();
 
     if (platThreadInit("SIPStack Task") != 0) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"failed to attach thread to JVM\n", fname);
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"failed to attach thread to JVM", fname);
         return;
     }
 
@@ -505,7 +505,7 @@ sip_platform_task_loop (void *arg)
       PR_snprintf(stmpdir, sizeof(stmpdir), template, getpid());
 
       if (mkdir(stmpdir, 0700) != 0) {
-          CCSIP_DEBUG_ERROR(SIP_F_PREFIX"failed to create temp dir\n", fname);
+          CCSIP_DEBUG_ERROR(SIP_F_PREFIX"failed to create temp dir", fname);
           return;
       }
 

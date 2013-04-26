@@ -100,7 +100,7 @@
                 (arg) == CCAPP_SESSION_MGMT ?  "CCAPP_SESSION_MGMT" : \
                 "Unknown Cmd")
 
-#define APP_ERR_MSG err_msg
+#define APP_ERR_MSG(format, ...) CSFLogError("app" , format , ## __VA_ARGS__ )
 
 #define MAX_REASON_LENGTH      MAX_SIP_REASON_LENGTH
 #define MAX_SESSION_PARAM_LEN  128
@@ -636,7 +636,7 @@ processSessionEvent (line_t line_id, callid_t call_id, unsigned int event, sdp_d
     switch(event) {
          case CC_FEATURE_ONHOOK:
              getLineIdAndCallId(&line_id, &call_id);
-             CCAPP_DEBUG(DEB_F_PREFIX"CC_FEATURE_ONHOOK = %s\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), data);
+             CCAPP_DEBUG(DEB_F_PREFIX"CC_FEATURE_ONHOOK = %s", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), data);
              cc_onhook_ext(CC_SRC_UI, call_id, line_id, FALSE,
                          (data && (strncasecmp(data, "ACTIVECALLS", sizeof("ACTIVECALLS")) == 0))?
                              CC_REASON_ACTIVECALL_LIST: CC_REASON_NULL );
@@ -827,7 +827,7 @@ processSessionEvent (line_t line_id, callid_t call_id, unsigned int event, sdp_d
          case CC_FEATURE_OFFHOOK:
              if (lsm_is_line_available(line_id, FALSE) == FALSE) {
                  //close the session
-                 CCAPP_DEBUG(DEB_F_PREFIX"CC_FEATURE_OFFHOOK: no available line.\n",
+                 CCAPP_DEBUG(DEB_F_PREFIX"CC_FEATURE_OFFHOOK: no available line.",
                                              DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
 		 ccsnap_gen_callEvent(CCAPI_CALL_EV_STATE, CREATE_CALL_HANDLE(line_id, call_id));
                  lsm_ui_display_notify_str_index(STR_INDEX_ERROR_PASS_LIMIT);
@@ -838,10 +838,10 @@ processSessionEvent (line_t line_id, callid_t call_id, unsigned int event, sdp_d
                call_id = cc_get_new_call_id();
              } else {
                if (event == CC_FEATURE_NEW_CALL) {
-                   CCAPP_DEBUG(DEB_F_PREFIX"CC_FEATURE_NEW_CALL called with callid=%d\n",
+                   CCAPP_DEBUG(DEB_F_PREFIX"CC_FEATURE_NEW_CALL called with callid=%d",
                            DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), call_id);
                } else {
-                   CCAPP_DEBUG(DEB_F_PREFIX"CC_FEATURE_OFFHOOK called with callid=%d\n",
+                   CCAPP_DEBUG(DEB_F_PREFIX"CC_FEATURE_OFFHOOK called with callid=%d",
                            DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), call_id);
                }
              }
@@ -870,7 +870,7 @@ processSessionEvent (line_t line_id, callid_t call_id, unsigned int event, sdp_d
              break;
 
          case CC_FEATURE_END_CALL:
-		     CCAPP_DEBUG(DEB_F_PREFIX"CC_FEATURE_ONHOOK = %s\n",
+		     CCAPP_DEBUG(DEB_F_PREFIX"CC_FEATURE_ONHOOK = %s",
 				 DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), data);
 		     if (data && (strcmp(data, "ACTIVECALLS") == 0)) {
 		         getLineIdAndCallId(&line_id, &call_id);
@@ -893,7 +893,7 @@ processSessionEvent (line_t line_id, callid_t call_id, unsigned int event, sdp_d
 		     getDigits(data,digits);
 		     if ( strlen(digits)) {
 			cc_feature_data_t ftr_data;
-			CCAPP_DEBUG(DEB_F_PREFIX"conf: sid=%s.\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname),data);
+			CCAPP_DEBUG(DEB_F_PREFIX"conf: sid=%s.", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname),data);
 			// if data is received we need to extract the call id
 			// and send target_call_id in feature_data
 			// Post the event on the original call ( received call id as string in data).
@@ -910,13 +910,13 @@ processSessionEvent (line_t line_id, callid_t call_id, unsigned int event, sdp_d
 			strtol_result = strtol(digits, &strtol_end, 10);
 
 			if (errno || digits == strtol_end || strtol_result < INT_MIN || strtol_result > INT_MAX) {
-				CCAPP_ERROR(DEB_F_PREFIX"digits parse error %s.\n",DEB_F_PREFIX_ARGS(SIP_CC_PROV, __FUNCTION__), digits);
+				CCAPP_ERROR(DEB_F_PREFIX"digits parse error %s.",DEB_F_PREFIX_ARGS(SIP_CC_PROV, __FUNCTION__), digits);
 			} else {
 				cc_feature(CC_SRC_UI, GET_CALLID((int) strtol_result), line_id, event, &ftr_data);
 			}
 			break;
 		     } else {
-			CCAPP_DEBUG(DEB_F_PREFIX"conf: no sid.\n",DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
+			CCAPP_DEBUG(DEB_F_PREFIX"conf: no sid.",DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
              	     }// DON'T ADD BREAK HERE. EVENT IS PASSED BELOW
 
          case CC_FEATURE_B2B_JOIN:
@@ -980,7 +980,7 @@ static char * ccapp_cmd_to_str(unsigned int cmd) {
 void CCApp_processCmds(unsigned int cmd, unsigned int reason, string_t reasonStr)
 {
     static const char fname[] = "CCApp_processCmds";
-    CCAPP_DEBUG(DEB_F_PREFIX" Received Cmd %s\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV,
+    CCAPP_DEBUG(DEB_F_PREFIX" Received Cmd %s", DEB_F_PREFIX_ARGS(SIP_CC_PROV,
            fname), ccapp_cmd_to_str(cmd));
        switch (cmd) {
          case CMD_INSERVICE:
@@ -1001,7 +1001,7 @@ void CCApp_processCmds(unsigned int cmd, unsigned int reason, string_t reasonStr
             pres_sub_handler_initialized();
             break;
          default:
-            APP_ERR_MSG("CCApp_processCmds: Error: Unknown message %d\n", cmd);
+            APP_ERR_MSG("CCApp_processCmds: Error: Unknown message %d", cmd);
             break;
        }
 }
@@ -1126,12 +1126,12 @@ boolean ccappPreserveCall()
     session_data_t *data;
     boolean retVal = FALSE;
 
-    CCAPP_DEBUG(DEB_F_PREFIX"called\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
+    CCAPP_DEBUG(DEB_F_PREFIX"called", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
     hashItrInit(&itr);
     while ( (data = (session_data_t*)hashItrNext(&itr)) != NULL ) {
       if ( data->state == CONNECTED || data->state == PRESERVATION ) {
 	// need to wait for this call to end.
-        CCAPP_DEBUG(DEB_F_PREFIX"inPreservation = true\n",
+        CCAPP_DEBUG(DEB_F_PREFIX"inPreservation = true",
             DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
         gCCApp.inPreservation = TRUE;
         gCCApp.preservID = data->sess_id;
@@ -1140,7 +1140,7 @@ boolean ccappPreserveCall()
         retVal = TRUE;
       } else {
         // End this call now
-        CCAPP_DEBUG(DEB_F_PREFIX"ending call %x\n",
+        CCAPP_DEBUG(DEB_F_PREFIX"ending call %x",
             DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname),  data->sess_id);
         /*
          * Note that for calls in state such as RIU, HOLD etc.
@@ -1170,7 +1170,7 @@ void proceedWithFOFB()
 {
   static const char fname[] = "proceedWithFOFB";
 
-  CCAPP_DEBUG(DEB_F_PREFIX"called. preservation=%d in cucm mode=%s \n",
+  CCAPP_DEBUG(DEB_F_PREFIX"called. preservation=%d in cucm mode=%s",
         DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname),
         gCCApp.inPreservation,
         gCCApp.cucm_mode == FAILOVER ? "FAILOVER":
@@ -1223,7 +1223,7 @@ void ccappHandleRegStateUpdates(feature_update_t *featUpd)
 {
   static const char fname[] = "ccappHandleRegStateUpdates";
 
-  CCAPP_DEBUG(DEB_F_PREFIX"called. feature=%d=%s, state=%d\n",
+  CCAPP_DEBUG(DEB_F_PREFIX"called. feature=%d=%s, state=%d",
        DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), featUpd->featureID, CCAPP_TASK_CMD_PRINT(featUpd->featureID), gCCApp.state);
   gCCApp.cause = CC_CAUSE_NONE;
 
@@ -1232,7 +1232,7 @@ void ccappHandleRegStateUpdates(feature_update_t *featUpd)
   {
      case CCAPP_MODE_NOTIFY:
         gCCApp.mode = featUpd->update.ccFeatUpd.data.line_info.info;
-        CCAPP_DEBUG(DEB_F_PREFIX"called. gCCApp.mode= %d gCCApp.state=%d. Returning\n",
+        CCAPP_DEBUG(DEB_F_PREFIX"called. gCCApp.mode= %d gCCApp.state=%d. Returning",
                     DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), gCCApp.mode, gCCApp.state);
         return;
 
@@ -1294,7 +1294,7 @@ void ccappHandleRegStateUpdates(feature_update_t *featUpd)
         break;
     }
     // Notify INS/OOS state to Session Manager if required
-    CCAPP_DEBUG(DEB_F_PREFIX"called. service_state=%d, mode=%d, cause=%d\n",
+    CCAPP_DEBUG(DEB_F_PREFIX"called. service_state=%d, mode=%d, cause=%d",
             DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname),
             mapProviderState(gCCApp.state),
             gCCApp.mode,
@@ -1380,7 +1380,7 @@ static void ccappUpdateSessionData (session_update_t *sessUpd)
              sessUpd->eventID == ICE_CANDIDATE_ADD ||
              sessUpd->eventID == REMOTE_STREAM_ADD ) {
 
-            CCAPP_DEBUG(DEB_F_PREFIX"CALL_SESSION_CREATED for session id 0x%x event is 0x%x \n",
+            CCAPP_DEBUG(DEB_F_PREFIX"CALL_SESSION_CREATED for session id 0x%x event is 0x%x",
                     DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), sessUpd->sessionID,
                     sessUpd->eventID);
 
@@ -1389,7 +1389,7 @@ static void ccappUpdateSessionData (session_update_t *sessUpd)
 
             } else {
                 if ( sessUpd->update.ccSessionUpd.data.state_data.state == ONHOOK ) {
-                    CCAPP_DEBUG(DEB_F_PREFIX"NOT CREATING Session Ignoring event %d sessid %x as state is ONHOOK\n",
+                    CCAPP_DEBUG(DEB_F_PREFIX"NOT CREATING Session Ignoring event %d sessid %x as state is ONHOOK",
                             DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), sessUpd->eventID, sessUpd->sessionID );
                     //Even session data is not created, we need to send ONHOOK to application to terminate call.
                     createdSessionData = FALSE;
@@ -1400,12 +1400,12 @@ static void ccappUpdateSessionData (session_update_t *sessUpd)
             if (createdSessionData == TRUE) {
                 cc_call_handle_t callHandle = CREATE_CALL_HANDLE_FROM_SESSION_ID(sessUpd->sessionID);
                 //<Added for automation test purpose, <CallBegin>
-                NOTIFY_CALL_DEBUG(DEB_NOTIFY_PREFIX"[line=%d][call.ref=%d]\n",
+                NOTIFY_CALL_DEBUG(DEB_NOTIFY_PREFIX"[line=%d][call.ref=%d]",
                                 "CallBegin", GET_LINE_ID(callHandle), GET_CALL_ID(callHandle));
                 //>
         data = cpr_malloc(sizeof(session_data_t));
         if ( data == NULL ) {
-            APP_ERR_MSG("ccappUpdateSessionData Error: cpr_malloc failed for session data\n");
+            APP_ERR_MSG("ccappUpdateSessionData Error: cpr_malloc failed for session data");
             return;
         }
         //Populate the session hash data the first time.
@@ -1508,11 +1508,11 @@ static void ccappUpdateSessionData (session_update_t *sessUpd)
                 break;
             }
         } else if (sessUpd->eventID == CALL_DELETE_LAST_DIGIT) {
-            CCAPP_DEBUG(DEB_F_PREFIX"CALL_DELETE_LAST_DIGIT: event %d sessid %x.\n",
+            CCAPP_DEBUG(DEB_F_PREFIX"CALL_DELETE_LAST_DIGIT: event %d sessid %x.",
                     DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), sessUpd->eventID, sessUpd->sessionID );
             return;
         } else {
-            CCAPP_DEBUG(DEB_F_PREFIX"NOT CREATING Session Ignoring event %d sessid %x \n",
+            CCAPP_DEBUG(DEB_F_PREFIX"NOT CREATING Session Ignoring event %d sessid %x",
                     DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), sessUpd->eventID, sessUpd->sessionID );
             return;
         }
@@ -1526,7 +1526,7 @@ static void ccappUpdateSessionData (session_update_t *sessUpd)
 
     }
 
-    CCAPP_DEBUG(DEB_F_PREFIX"Found data for sessid %x event %d\n",
+    CCAPP_DEBUG(DEB_F_PREFIX"Found data for sessid %x event %d",
             DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), sessUpd->sessionID, sessUpd->eventID);
 	switch(sessUpd->eventID) {
 	case CALL_SESSION_CLOSED:
@@ -1535,7 +1535,7 @@ static void ccappUpdateSessionData (session_update_t *sessUpd)
         if ( sess_data_p != NULL ){
             cleanSessionData(sess_data_p);
             if ( 0 >  delhash(sessUpd->sessionID) ) {
-                APP_ERR_MSG (DEB_F_PREFIX"failed to delete hash sessid=0x%08x\n",
+                APP_ERR_MSG (DEB_F_PREFIX"failed to delete hash sessid=0x%08x",
                         DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname),sessUpd->sessionID);
             }
             cpr_free(sess_data_p);
@@ -1554,7 +1554,7 @@ static void ccappUpdateSessionData (session_update_t *sessUpd)
 		break;
 
 	case CALL_STATE:
-	    DEF_DEBUG(DEB_F_PREFIX"Call_STATE:. state=%d, attr=%d, cause=%d, instance=%d\n",
+	    DEF_DEBUG(DEB_F_PREFIX"Call_STATE:. state=%d, attr=%d, cause=%d, instance=%d",
 	                        DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname),
 	                        sessUpd->update.ccSessionUpd.data.state_data.state,
 	                        data->attr,
@@ -1581,7 +1581,7 @@ static void ccappUpdateSessionData (session_update_t *sessUpd)
 
             //<Added for automation test purpose, <CallEnd>
             if (data->state == ONHOOK) {
-                NOTIFY_CALL_DEBUG(DEB_NOTIFY_PREFIX"[line=%d][call.ref=%d]\n",
+                NOTIFY_CALL_DEBUG(DEB_NOTIFY_PREFIX"[line=%d][call.ref=%d]",
                                 "CallEND", data->line, data->id);
             }
             //>
@@ -1592,7 +1592,7 @@ static void ccappUpdateSessionData (session_update_t *sessUpd)
                 if ( sess_data_p != NULL ){
                     cleanSessionData(sess_data_p);
                     if ( 0 >  delhash(sessUpd->sessionID) ) {
-                          APP_ERR_MSG (DEB_F_PREFIX"failed to delete hash sessid=0x%08x\n",
+                          APP_ERR_MSG (DEB_F_PREFIX"failed to delete hash sessid=0x%08x",
                                     DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname),sessUpd->sessionID);
                   	}
                         cpr_free(sess_data_p);
@@ -1655,7 +1655,7 @@ static void ccappUpdateSessionData (session_update_t *sessUpd)
 		data->security = sessUpd->update.ccSessionUpd.data.call_info.security;
 		data->policy = sessUpd->update.ccSessionUpd.data.call_info.policy;
         if ((data->cld_number[0]) && ccappCldNumIsCfwdallString(data->cld_number)) {
-            DEF_DEBUG(DEB_F_PREFIX"Not updating the UI. Called Number = %s\n",
+            DEF_DEBUG(DEB_F_PREFIX"Not updating the UI. Called Number = %s",
                     DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), data->cld_number);
             return;
         }
@@ -1716,7 +1716,7 @@ static void ccappUpdateSessionData (session_update_t *sessUpd)
             }
         }
         //<Added for automation test purpose, <CallStatusChanged>
-        NOTIFY_CALL_DEBUG(DEB_NOTIFY_PREFIX"[line=%d][call.ref=%d][status=%s]\n",
+        NOTIFY_CALL_DEBUG(DEB_NOTIFY_PREFIX"[line=%d][call.ref=%d][status=%s]",
                  "callStatusChange", data->line, data->id,
                   NOTIFY_CALL_STATUS);
         //>
@@ -1803,7 +1803,7 @@ static void ccappUpdateSessionData (session_update_t *sessUpd)
         ccsnap_gen_callEvent(CCAPI_CALL_EV_STATE, CREATE_CALL_HANDLE_FROM_SESSION_ID(data->sess_id));
         break;
     default:
-        DEF_DEBUG(DEB_F_PREFIX"Unknown event, id = %d\n",
+        DEF_DEBUG(DEB_F_PREFIX"Unknown event, id = %d",
                             DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), sessUpd->eventID);
         break;
 	}
@@ -1880,7 +1880,7 @@ int i,j;
       CCAPP_DEBUG(DEB_F_PREFIX"%08X ", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "dump_msg"), msg[i+j]);
       if ( (i+j+1)*4 >= len ) return;
     }
-    CCAPP_DEBUG(DEB_F_PREFIX"\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "dump_msg"));
+    CCAPP_DEBUG(DEB_F_PREFIX, DEB_F_PREFIX_ARGS(SIP_CC_PROV, "dump_msg"));
   }
 }
 
@@ -1902,7 +1902,7 @@ void ccp_handler(void* msg, int type) {
     int length;
     cc_reg_state_t state;
 
-    CCAPP_DEBUG(DEB_F_PREFIX"Received Cmd %s\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname),
+    CCAPP_DEBUG(DEB_F_PREFIX"Received Cmd %s", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname),
         CCAPP_TASK_CMD_PRINT(type) );
 
 
@@ -1926,7 +1926,7 @@ void ccp_handler(void* msg, int type) {
         break;
     case CCAPP_INVOKE_FEATURE:
         featMsg = (session_feature_t *) msg;
-        CCAPP_DEBUG(DEB_F_PREFIX"CCAPP_INVOKE_FEATURE:sid=%d, fid=%d, line=%d, cid=%d, info=%s info1=%s\n",
+        CCAPP_DEBUG(DEB_F_PREFIX"CCAPP_INVOKE_FEATURE:sid=%d, fid=%d, line=%d, cid=%d, info=%s info1=%s",
                 DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname),
                 featMsg->session_id,
                 featMsg->featureID,
@@ -1954,14 +1954,14 @@ void ccp_handler(void* msg, int type) {
     case CCAPP_SESSION_UPDATE:
         sessUpd = (session_update_t *) msg;
         // Udpate the local cache
-        CCAPP_DEBUG(DEB_F_PREFIX"CCAPP_SESSION_UPDATE:type:%d.\n",
+        CCAPP_DEBUG(DEB_F_PREFIX"CCAPP_SESSION_UPDATE:type:%d.",
               DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), GET_SESS_TYPE(sessUpd->sessionID));
         // XXX Why do this when sessType is in session_update_t already?
         if (GET_SESS_TYPE(sessUpd->sessionID) == SESSIONTYPE_CALLCONTROL) {
             ccappUpdateSessionData(sessUpd);
         }
         else {
-            CCAPP_DEBUG(DEB_F_PREFIX"Unknown type:%d\n",
+            CCAPP_DEBUG(DEB_F_PREFIX"Unknown type:%d",
                     DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), sessUpd->sessType);
         }
         freeSessionData(sessUpd);
@@ -1972,13 +1972,13 @@ void ccp_handler(void* msg, int type) {
         featUpd = (feature_update_t *) msg;
         // Update Registration state
         if (featUpd->featureID == DEVICE_REG_STATE)
-        	CCAPP_DEBUG(DEB_F_PREFIX"DEVICE_REG_STATE\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
+        	CCAPP_DEBUG(DEB_F_PREFIX"DEVICE_REG_STATE", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
 
         if(featUpd->update.ccFeatUpd.data.line_info.info == CC_REGISTERED)
-        	CCAPP_DEBUG(DEB_F_PREFIX"CC_REGISTERED\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
+        	CCAPP_DEBUG(DEB_F_PREFIX"CC_REGISTERED", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
 
         if(state == (int) CC_INSERVICE)
-        	CCAPP_DEBUG(DEB_F_PREFIX"CC_INSERVICE\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
+        	CCAPP_DEBUG(DEB_F_PREFIX"CC_INSERVICE", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
 
         if ( featUpd->featureID == DEVICE_REG_STATE &&
             featUpd->update.ccFeatUpd.data.line_info.info == CC_REGISTERED &&
@@ -1987,13 +1987,13 @@ void ccp_handler(void* msg, int type) {
             cc_uint32_t major_ver=0, minor_ver=0,addtnl_ver=0;
             char name[CC_MAX_LEN_REQ_SUPP_PARAM_CISCO_SISTAG]={0};
             platGetSISProtocolVer( &major_ver, &minor_ver, &addtnl_ver, name);
-            CCAPP_DEBUG(DEB_F_PREFIX"The SIS verion is: %s, sis ver: %d.%d.%d \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), name, major_ver, minor_ver, addtnl_ver);
+            CCAPP_DEBUG(DEB_F_PREFIX"The SIS verion is: %s, sis ver: %d.%d.%d", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), name, major_ver, minor_ver, addtnl_ver);
             if(!strncmp(name, REQ_SUPP_PARAM_CISCO_CME_SISTAG, strlen(REQ_SUPP_PARAM_CISCO_CME_SISTAG))){
-                CCAPP_DEBUG(DEB_F_PREFIX"This is CUCME mode.\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
+                CCAPP_DEBUG(DEB_F_PREFIX"This is CUCME mode.", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
             } else if(!strncmp(name, REQ_SUPP_PARAM_CISCO_SISTAG, strlen(REQ_SUPP_PARAM_CISCO_SISTAG))){
-                CCAPP_DEBUG(DEB_F_PREFIX"This is CUCM mode.\n",DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
+                CCAPP_DEBUG(DEB_F_PREFIX"This is CUCM mode.",DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
              } else {
-                CCAPP_DEBUG(DEB_F_PREFIX"This is unknown mode.\n",DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
+                CCAPP_DEBUG(DEB_F_PREFIX"This is unknown mode.",DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
              }
             ccapp_set_state(CC_INSERVICE);
             gCCApp.cause = CC_CAUSE_NONE;
@@ -2087,7 +2087,8 @@ void ccp_handler(void* msg, int type) {
         destroy_ccapp_thread();
         break;
     default:
-        APP_ERR_MSG("CCApp_Task: Error: Unknown message %d msg =0x%x\n", type, msg);
+        APP_ERR_MSG("CCApp_Task: Error: Unknown message %d msg =%p",
+          type, msg);
         break;
     }
 }
@@ -2101,7 +2102,7 @@ void ccp_handler(void* msg, int type) {
 void destroy_ccapp_thread()
 {
     static const char fname[] = "destroy_ccapp_thread";
-    TNP_DEBUG(DEB_F_PREFIX"Unloading ccapp and destroying ccapp thread\n",
+    TNP_DEBUG(DEB_F_PREFIX"Unloading ccapp and destroying ccapp thread",
         DEB_F_PREFIX_ARGS(SIP_CC_INIT, fname));
     platform_initialized = FALSE;
     CCAppShutdown();
@@ -2189,7 +2190,7 @@ void ccappFeatureUpdated (feature_update_t *featUpd) {
 	ccsnap_gen_deviceEvent(CCAPI_DEVICE_EV_SERVER_STATUS, CC_DEVICE_ID);
         break;
     default:
-        DEF_DEBUG(DEB_F_PREFIX"Unknown event: id= %d\n",
+        DEF_DEBUG(DEB_F_PREFIX"Unknown event: id= %d",
                             DEB_F_PREFIX_ARGS(SIP_CC_PROV, "ccappFeatureUpdated"), featUpd->featureID);
         break;
 
@@ -2232,7 +2233,7 @@ void ccappFeatureUpdated (feature_update_t *featUpd) {
 void ccappSyncSessionMgmt(session_mgmt_t *sessMgmt)
 {
     cc_line_info_t *line_info;
-    CCAPP_DEBUG(DEB_F_PREFIX"ccappSyncSessionMgmt: func_id=%d \n",
+    CCAPP_DEBUG(DEB_F_PREFIX"ccappSyncSessionMgmt: func_id=%d",
             DEB_F_PREFIX_ARGS(SIP_CC_PROV, "ccappSyncSessionMgmt"),
             sessMgmt->func_id);
 
@@ -2240,7 +2241,7 @@ void ccappSyncSessionMgmt(session_mgmt_t *sessMgmt)
     switch (sessMgmt->func_id) {
     case SESSION_MGMT_SET_TIME:
         g_deviceInfo.reg_time = sessMgmt->data.time.gmt_time;
-        CCAPP_DEBUG(DEB_F_PREFIX"Setting reg_time to == %lld\n",
+        CCAPP_DEBUG(DEB_F_PREFIX"Setting reg_time to == %lld",
                            DEB_F_PREFIX_ARGS(SIP_CC_PROV,
                                 "ccappSyncSessionMgmt"), g_deviceInfo.reg_time);
         platSetCucmRegTime();

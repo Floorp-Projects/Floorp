@@ -117,7 +117,7 @@ HTMLLIElement::GetAttributeMappingFunction() const
 }
 
 JSObject*
-HTMLLIElement::WrapNode(JSContext *aCx, JSObject *aScope)
+HTMLLIElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
   return HTMLLIElementBinding::Wrap(aCx, aScope, this);
 }

@@ -19,13 +19,13 @@ CPPSRCS = \
   AccGroupInfo.cpp \
   AccIterator.cpp \
   Filters.cpp \
+  ARIAMap.cpp \
   ARIAStateMap.cpp \
   DocManager.cpp \
   EventQueue.cpp \
   FocusManager.cpp \
   NotificationController.cpp \
   nsAccessNode.cpp \
-  nsARIAMap.cpp \
   nsCoreUtils.cpp \
   nsAccUtils.cpp \
   nsAccessibilityService.cpp \

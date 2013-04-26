@@ -203,7 +203,8 @@ public:
   nsresult GetPropertyValue(nsCSSFontDesc aFontDescID,
                             nsAString & aResult) const;
 
-  virtual JSObject* WrapObject(JSContext *cx, JSObject *scope) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext *cx,
+                               JS::Handle<JSObject*> scope) MOZ_OVERRIDE;
 
 protected:
   friend class nsCSSFontFaceRule;

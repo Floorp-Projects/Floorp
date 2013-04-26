@@ -342,7 +342,7 @@ public:
     void SetPageRect(const gfx::Rect& aCssPageRect);
     void SyncViewportInfo(const nsIntRect& aDisplayPort, float aDisplayResolution, bool aLayersUpdated,
                           nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY,
-                          gfx::Margin& aFixedLayerMargins, float& aOffsetX, float& aOffsetY);
+                          gfx::Margin& aFixedLayerMargins);
 
     void AddPluginView(jobject view, const gfxRect& rect, bool isFullScreen);
     void RemovePluginView(jobject view, bool isFullScreen);

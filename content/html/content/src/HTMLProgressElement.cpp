@@ -148,7 +148,7 @@ HTMLProgressElement::IsIndeterminate() const
 }
 
 JSObject*
-HTMLProgressElement::WrapNode(JSContext* aCx, JSObject* aScope)
+HTMLProgressElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return HTMLProgressElementBinding::Wrap(aCx, aScope, this);
 }

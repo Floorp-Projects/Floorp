@@ -859,6 +859,18 @@ ElementsHeader::asArrayBufferElements()
 class ArrayBufferObject;
 
 /*
+ * ES6 20130308 draft 8.4.2.4 ArraySetLength.
+ *
+ * |id| must be "length", |attrs| are the attributes to be used for the newly-
+ * changed length property, |value| is the value for the new length, and
+ * |setterIsStrict| indicates whether invalid changes will cause a TypeError
+ * to be thrown.
+ */
+extern bool
+ArraySetLength(JSContext *cx, HandleObject obj, HandleId id, unsigned attrs, HandleValue value,
+               bool setterIsStrict);
+
+/*
  * Elements header used for all native objects. The elements component of such
  * objects offers an efficient representation for all or some of the indexed
  * properties of the object, using a flat array of Values rather than a shape
@@ -891,12 +903,20 @@ class ArrayBufferObject;
  * These indicate indexes which are not dense properties of the array. The
  * property may, however, be held by the object's properties.
  *
- * NB: the capacity and length of an object are entirely unrelated!  The
- * length may be greater than, less than, or equal to the capacity. The first
- * case may occur when the user writes "new Array(100)", in which case the
- * length is 100 while the capacity remains 0 (indices below length and above
- * capacity must be treated as holes). See array_length_setter for another
- * explanation of how the first case may occur.
+ * The capacity and length of an object's elements are almost entirely
+ * unrelated!  In general the length may be greater than, less than, or equal
+ * to the capacity.  The first case occurs with |new Array(100)|.  The length
+ * is 100, but the capacity remains 0 (indices below length and above capacity
+ * must be treated as holes) until elements between capacity and length are
+ * set.  The other two cases are common, depending upon the number of elements
+ * in an array and the underlying allocator used for element storage.
+ *
+ * The only case in which the capacity and length of an object's elements are
+ * related is when the object is an array with non-writable length.  In this
+ * case the capacity is always less than or equal to the length.  This permits
+ * JIT code to optimize away the check for non-writable length when assigning
+ * to possibly out-of-range elements: such code already has to check for
+ * |index < capacity|, and fallback code checks for non-writable length.
  *
  * The initialized length of an object specifies the number of elements that
  * have been initialized. All elements above the initialized length are
@@ -924,7 +944,11 @@ class ObjectElements
   public:
     enum Flags {
         CONVERT_DOUBLE_ELEMENTS = 0x1,
-        ASMJS_ARRAY_BUFFER = 0x2
+        ASMJS_ARRAY_BUFFER = 0x2,
+
+        // Present only if these elements correspond to an array with
+        // non-writable length; never present for non-arrays.
+        NONWRITABLE_ARRAY_LENGTH = 0x4
     };
 
   private:
@@ -932,6 +956,10 @@ class ObjectElements
     friend class ObjectImpl;
     friend class ArrayBufferObject;
     friend class Nursery;
+
+    friend bool
+    ArraySetLength(JSContext *cx, HandleObject obj, HandleId id, unsigned attrs, HandleValue value,
+                   bool setterIsStrict);
 
     /* See Flags enum above. */
     uint32_t flags;
@@ -974,28 +1002,36 @@ class ObjectElements
     void setIsAsmJSArrayBuffer() {
         flags |= ASMJS_ARRAY_BUFFER;
     }
+    bool hasNonwritableArrayLength() const {
+        return flags & NONWRITABLE_ARRAY_LENGTH;
+    }
+    void setNonwritableArrayLength() {
+        flags |= NONWRITABLE_ARRAY_LENGTH;
+    }
 
   public:
     ObjectElements(uint32_t capacity, uint32_t length)
       : flags(0), initializedLength(0), capacity(capacity), length(length)
     {}
 
-    HeapSlot *elements() { return (HeapSlot *)(uintptr_t(this) + sizeof(ObjectElements)); }
+    HeapSlot *elements() {
+        return reinterpret_cast<HeapSlot*>(uintptr_t(this) + sizeof(ObjectElements));
+    }
     static ObjectElements * fromElements(HeapSlot *elems) {
-        return (ObjectElements *)(uintptr_t(elems) - sizeof(ObjectElements));
+        return reinterpret_cast<ObjectElements*>(uintptr_t(elems) - sizeof(ObjectElements));
     }
 
     static int offsetOfFlags() {
-        return (int)offsetof(ObjectElements, flags) - (int)sizeof(ObjectElements);
+        return int(offsetof(ObjectElements, flags)) - int(sizeof(ObjectElements));
     }
     static int offsetOfInitializedLength() {
-        return (int)offsetof(ObjectElements, initializedLength) - (int)sizeof(ObjectElements);
+        return int(offsetof(ObjectElements, initializedLength)) - int(sizeof(ObjectElements));
     }
     static int offsetOfCapacity() {
-        return (int)offsetof(ObjectElements, capacity) - (int)sizeof(ObjectElements);
+        return int(offsetof(ObjectElements, capacity)) - int(sizeof(ObjectElements));
     }
     static int offsetOfLength() {
-        return (int)offsetof(ObjectElements, length) - (int)sizeof(ObjectElements);
+        return int(offsetof(ObjectElements, length)) - int(sizeof(ObjectElements));
     }
 
     static bool ConvertElementsToDoubles(JSContext *cx, uintptr_t elements);
@@ -1082,6 +1118,10 @@ class ObjectImpl : public gc::Cell
 
     HeapSlot *slots;     /* Slots for object properties. */
     HeapSlot *elements;  /* Slots for object elements. */
+
+    friend bool
+    ArraySetLength(JSContext *cx, HandleObject obj, HandleId id, unsigned attrs, HandleValue value,
+                   bool setterIsStrict);
 
   private:
     static void staticAsserts() {
@@ -1412,7 +1452,7 @@ class ObjectImpl : public gc::Cell
          * immediately afterwards. Such cases cannot occur for dense arrays
          * (which have at least two fixed slots) and can only result in a leak.
          */
-        return elements != emptyObjectElements && elements != fixedElements();
+        return !hasEmptyElements() && elements != fixedElements();
     }
 
     inline bool hasFixedElements() const {

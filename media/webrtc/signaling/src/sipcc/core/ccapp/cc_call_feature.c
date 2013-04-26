@@ -58,7 +58,7 @@ cc_return_t cc_invokeFeature(cc_call_handle_t call_handle, group_cc_feature_t fe
     callFeature.featureID = featureId;
     callFeature.featData.ccData.state = video_pref;
 
-    CCAPP_DEBUG(DEB_F_PREFIX"cc_invokeFeature:sid=%d, line=%d, cid=%d, fid=%d, video_pref=%s data=%s\n",
+    CCAPP_DEBUG(DEB_F_PREFIX"cc_invokeFeature:sid=%d, line=%d, cid=%d, fid=%d, video_pref=%s data=%s",
                         DEB_F_PREFIX_ARGS("cc_call_feature", "cc_invokeFeature"),
                         callFeature.session_id,
                         GET_LINE_ID(call_handle),
@@ -87,7 +87,7 @@ cc_return_t cc_invokeFeature(cc_call_handle_t call_handle, group_cc_feature_t fe
     }
 
     if (ccappTaskPostMsg(CCAPP_INVOKE_FEATURE, &callFeature, sizeof(session_feature_t), CCAPP_CCPROVIER) == CPR_FAILURE) {
-            CCAPP_DEBUG(DEB_F_PREFIX"ccappTaskSendMsg failed\n",
+            CCAPP_DEBUG(DEB_F_PREFIX"ccappTaskSendMsg failed",
             		DEB_F_PREFIX_ARGS("cc_call_feature", "cc_invokeFeature"));
             return CC_FAILURE;
 	}
@@ -118,7 +118,7 @@ cc_return_t cc_invokeFeatureSDPMode(cc_call_handle_t call_handle,
     callFeature.featData.ccData.level = level;
     callFeature.featData.ccData.constraints = constraints;
 
-    CCAPP_DEBUG(DEB_F_PREFIX"cc_invokeFeatureSDPMode:sid=%d, line=%d, cid=%d, fid=%d, data=%s\n",
+    CCAPP_DEBUG(DEB_F_PREFIX"cc_invokeFeatureSDPMode:sid=%d, line=%d, cid=%d, fid=%d, data=%s",
                         DEB_F_PREFIX_ARGS("cc_call_feature", "cc_invokeFeatureSDPMode"),
                         callFeature.session_id,
                         GET_LINE_ID(call_handle),
@@ -154,7 +154,7 @@ cc_return_t cc_invokeFeatureSDPMode(cc_call_handle_t call_handle,
     }
 
     if (ccappTaskPostMsg(CCAPP_INVOKE_FEATURE, &callFeature, sizeof(session_feature_t), CCAPP_CCPROVIER) == CPR_FAILURE) {
-            CCAPP_DEBUG(DEB_F_PREFIX"ccappTaskSendMsg failed\n",
+            CCAPP_DEBUG(DEB_F_PREFIX"ccappTaskSendMsg failed",
             		DEB_F_PREFIX_ARGS("cc_call_feature", "cc_invokeFeatureSDPMode"));
             return CC_FAILURE;
 	}
@@ -205,7 +205,7 @@ cc_return_t CC_CallFeature_originateCall(cc_call_handle_t call_handle, cc_sdp_di
 	static const char fname[] = "CC_CallFeature_originateCall:";
 	//CCAPP_DEBUG(DEB_L_C_F_PREFIX, DEB_L_C_F_PREFIX_ARGS(SIP_CC_PROV, GET_CALL_ID(call_handle),
 	//		GET_LINE_ID(call_handle), fname));
-	CCAPP_DEBUG(DEB_F_PREFIX"CC_CallFeature_originateCall:cHandle=%d\n",
+	CCAPP_DEBUG(DEB_F_PREFIX"CC_CallFeature_originateCall:cHandle=%d",
 	                        DEB_F_PREFIX_ARGS("cc_call_feature", fname),
 	                        call_handle);
     return cc_invokeFeature(call_handle, CC_FEATURE_OFFHOOK, video_pref, NULL);
@@ -610,7 +610,7 @@ cc_return_t CC_CallFeature_directTransfer(cc_call_handle_t call_handle,
     CCAPP_DEBUG(DEB_L_C_F_PREFIX, DEB_L_C_F_PREFIX_ARGS(SIP_CC_PROV, GET_CALL_ID(call_handle),
                 GET_LINE_ID(call_handle), fname));
     if (target_call_handle == CC_EMPTY_CALL_HANDLE) {
-        CCAPP_DEBUG(DEB_L_C_F_PREFIX"target call handle is empty.\n", DEB_L_C_F_PREFIX_ARGS(SIP_CC_PROV, GET_CALL_ID(call_handle),
+        CCAPP_DEBUG(DEB_L_C_F_PREFIX"target call handle is empty.", DEB_L_C_F_PREFIX_ARGS(SIP_CC_PROV, GET_CALL_ID(call_handle),
                     GET_LINE_ID(call_handle), fname));
         return CC_FAILURE;
     }
@@ -627,7 +627,7 @@ cc_return_t CC_CallFeature_joinAcrossLine(cc_call_handle_t call_handle, cc_call_
     CCAPP_DEBUG(DEB_L_C_F_PREFIX, DEB_L_C_F_PREFIX_ARGS(SIP_CC_PROV, GET_CALL_ID(call_handle),
                 GET_LINE_ID(call_handle), fname));
     if (target_call_handle == CC_EMPTY_CALL_HANDLE) {
-        CCAPP_DEBUG(DEB_L_C_F_PREFIX"target call handle is empty.\n", DEB_L_C_F_PREFIX_ARGS(SIP_CC_PROV, GET_CALL_ID(call_handle),
+        CCAPP_DEBUG(DEB_L_C_F_PREFIX"target call handle is empty.", DEB_L_C_F_PREFIX_ARGS(SIP_CC_PROV, GET_CALL_ID(call_handle),
                     GET_LINE_ID(call_handle), fname));
         return CC_FAILURE;
     }

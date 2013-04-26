@@ -150,17 +150,17 @@ boolean ccsip_common_util_generate_auth (sipMessage_t *pSipMessage, ccsip_common
      */
     authenticate = sippmh_get_header_val(pSipMessage, AUTH_HDR(response_code), NULL);
     if (authenticate == NULL) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"%s header missing in the %d response\n",
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"%s header missing in the %d response",
                           fname, AUTH_HDR_STR(response_code), response_code);
         return FALSE;
     }
-    CCSIP_DEBUG_TASK(DEB_F_PREFIX"Authenticate header %s = %s\n", DEB_F_PREFIX_ARGS(SIP_AUTH, fname), AUTH_HDR_STR(response_code), authenticate);
+    CCSIP_DEBUG_TASK(DEB_F_PREFIX"Authenticate header %s = %s", DEB_F_PREFIX_ARGS(SIP_AUTH, fname), AUTH_HDR_STR(response_code), authenticate);
     /*
      * Parse Authenticate header.
      */
     sip_authen = sippmh_parse_authenticate(authenticate);
     if (sip_authen == NULL) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"%s:%s header formatted incorrectly in the %d response\n",
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"%s:%s header formatted incorrectly in the %d response",
                           fname, AUTH_HDR_STR(response_code), authenticate, response_code);
         return FALSE;
     }
@@ -204,7 +204,7 @@ boolean ccsip_common_util_generate_auth (sipMessage_t *pSipMessage, ccsip_common
 
         cpr_free(author_str);
     } else {
-         CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Authorization header build unsuccessful\n", fname);
+         CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Authorization header build unsuccessful", fname);
          sippmh_free_authen(sip_authen);
          return FALSE;
     }

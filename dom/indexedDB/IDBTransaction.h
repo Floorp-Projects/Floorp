@@ -212,6 +212,14 @@ public:
     return mAbortCode;
   }
 
+#ifdef MOZ_ENABLE_PROFILER_SPS
+  uint64_t
+  GetSerialNumber() const
+  {
+    return mSerialNumber;
+  }
+#endif
+
 private:
   nsresult
   AbortInternal(nsresult aAbortCode, already_AddRefed<nsIDOMDOMError> aError);
@@ -258,6 +266,9 @@ private:
   IndexedDBTransactionParent* mActorParent;
 
   nsresult mAbortCode;
+#ifdef MOZ_ENABLE_PROFILER_SPS
+  uint64_t mSerialNumber;
+#endif
   bool mCreating;
 
 #ifdef DEBUG

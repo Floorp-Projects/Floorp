@@ -48,8 +48,8 @@ public:
   {
     return mWindow;
   }
-  virtual JSObject*
-  WrapObject(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
   already_AddRefed<ArchiveRequest> GetFilenames();
   already_AddRefed<ArchiveRequest> GetFile(const nsAString& filename);

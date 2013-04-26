@@ -15,6 +15,7 @@ import org.mozilla.gecko.db.BrowserContract.Thumbnails;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserDB.TopSitesCursorWrapper;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
+import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.util.ActivityResultHandler;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UiAsyncTask;
@@ -25,7 +26,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.drawable.Drawable;
@@ -313,7 +313,7 @@ public class TopSitesView extends GridView {
                 if (b == null)
                     continue;
 
-                Bitmap thumbnail = BitmapFactory.decodeByteArray(b, 0, b.length);
+                Bitmap thumbnail = BitmapUtils.decodeByteArray(b);
                 if (thumbnail == null)
                     continue;
 
@@ -658,7 +658,7 @@ public class TopSitesView extends GridView {
                         final byte[] b = c.getBlob(c.getColumnIndexOrThrow(Thumbnails.DATA));
                         Bitmap bitmap = null;
                         if (b != null) {
-                            bitmap = BitmapFactory.decodeByteArray(b, 0, b.length);
+                            bitmap = BitmapUtils.decodeByteArray(b);
                         }
                         c.close();
 

@@ -1933,7 +1933,7 @@ nsXULElement::IsEventAttributeName(nsIAtom *aName)
 }
 
 JSObject*
-nsXULElement::WrapNode(JSContext *aCx, JSObject *aScope)
+nsXULElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
     return dom::XULElementBinding::Wrap(aCx, aScope, this);
 }

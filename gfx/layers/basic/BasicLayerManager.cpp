@@ -1251,7 +1251,7 @@ BasicShadowLayerManager::ForwardTransaction()
   RenderTraceScope rendertrace("Foward Transaction", "000090");
   mPhase = PHASE_FORWARD;
 
-  // forward this transaction's changeset to our ShadowLayerManager
+  // forward this transaction's changeset to our LayerManagerComposite
   AutoInfallibleTArray<EditReply, 10> replies;
   if (HasShadowManager() && ShadowLayerForwarder::EndTransaction(&replies)) {
     for (nsTArray<EditReply>::size_type i = 0; i < replies.Length(); ++i) {

@@ -214,7 +214,7 @@ get_state (int request_id,
     static const char fname[] = "get_state";
     pres_subscription_req_t *sub_req_p;
 
-    DEF_DEBUG(DEB_F_PREFIX"REQ %d: TM %d: WTR %s: PRT %s: FMSK %d: APP %d\n",
+    DEF_DEBUG(DEB_F_PREFIX"REQ %d: TM %d: WTR %s: PRT %s: FMSK %d: APP %d",
          DEB_F_PREFIX_ARGS(BLF_INFO, fname),
          request_id, duration, watcher, presentity, feature_mask, app_id);
     /*
@@ -225,7 +225,7 @@ get_state (int request_id,
         if (s_pres_req_list == NULL) {
             /* let platform know that we can not continue */
             ui_BLF_notification(request_id, CC_SIP_BLF_REJECTED, app_id);
-            BLF_ERROR(MISC_F_PREFIX"Exiting : request list creation failed\n", fname);
+            BLF_ERROR(MISC_F_PREFIX"Exiting : request list creation failed", fname);
             return;
         }
     }
@@ -240,7 +240,7 @@ get_state (int request_id,
         sub_req_p = (pres_subscription_req_t *)
             cpr_malloc(sizeof(pres_subscription_req_t));
         if (sub_req_p == NULL) {
-            BLF_ERROR(MISC_F_PREFIX"Exiting : malloc failed\n", fname);
+            BLF_ERROR(MISC_F_PREFIX"Exiting : malloc failed", fname);
             return;
         }
 
@@ -269,11 +269,11 @@ get_state (int request_id,
         free_sub_request(sub_req_p);
         /* let platform know that we can not continue */
         ui_BLF_notification(request_id, CC_SIP_BLF_REJECTED, app_id);
-        BLF_ERROR(MISC_F_PREFIX"Exiting : Unable to send SUBSCRIBE\n", fname);
+        BLF_ERROR(MISC_F_PREFIX"Exiting : Unable to send SUBSCRIBE", fname);
         return;
     }
 
-    BLF_DEBUG(DEB_F_PREFIX"Exiting : request made successfully\n", DEB_F_PREFIX_ARGS(BLF, fname));
+    BLF_DEBUG(DEB_F_PREFIX"Exiting : request made successfully", DEB_F_PREFIX_ARGS(BLF, fname));
     return;
 }
 
@@ -311,7 +311,7 @@ terminate_req (int request_id)
     static const char fname[] = "terminate_req";
     pres_subscription_req_t *sub_req_p;
 
-    BLF_DEBUG(DEB_F_PREFIX"Entering (request_id=%d)\n",
+    BLF_DEBUG(DEB_F_PREFIX"Entering (request_id=%d)",
               DEB_F_PREFIX_ARGS(BLF, fname), request_id);
 
     /*
@@ -319,7 +319,7 @@ terminate_req (int request_id)
      */
     if ((sub_req_p = (pres_subscription_req_t *)
                 sll_find(s_pres_req_list, &request_id)) == NULL) {
-        BLF_ERROR(MISC_F_PREFIX"request does not exist in the list\n", fname);
+        BLF_ERROR(MISC_F_PREFIX"request does not exist in the list", fname);
         return;
     }
 
@@ -347,7 +347,7 @@ terminate_req (int request_id)
      */
     free_sub_request(sub_req_p);
 
-    BLF_DEBUG(DEB_F_PREFIX"Exiting : request terminated\n", DEB_F_PREFIX_ARGS(BLF, fname));
+    BLF_DEBUG(DEB_F_PREFIX"Exiting : request terminated", DEB_F_PREFIX_ARGS(BLF, fname));
     return;
 }
 
@@ -402,9 +402,9 @@ terminate_req_all (void)
     static const char fname[] = "terminate_req_all";
     pres_subscription_req_t *sub_req_p;
 
-    BLF_DEBUG(DEB_F_PREFIX"Entering\n", DEB_F_PREFIX_ARGS(BLF, fname));
+    BLF_DEBUG(DEB_F_PREFIX"Entering", DEB_F_PREFIX_ARGS(BLF, fname));
     if (s_pres_req_list == NULL) {
-        BLF_DEBUG(DEB_F_PREFIX"Exiting : no outstanding requests\n", DEB_F_PREFIX_ARGS(BLF, fname));
+        BLF_DEBUG(DEB_F_PREFIX"Exiting : no outstanding requests", DEB_F_PREFIX_ARGS(BLF, fname));
         return;
     }
 
@@ -427,7 +427,7 @@ terminate_req_all (void)
      * out of service, set s_subs_hndlr_initialized to FALSE.
      */
     s_subs_hndlr_initialized = FALSE;
-    BLF_DEBUG(DEB_F_PREFIX"Exiting\n", DEB_F_PREFIX_ARGS(BLF, fname));
+    BLF_DEBUG(DEB_F_PREFIX"Exiting", DEB_F_PREFIX_ARGS(BLF, fname));
 }
 
 /*
@@ -453,7 +453,7 @@ subscribe_response_ind (ccsip_sub_not_data_t *msg_data)
     sub_id_t sub_id = msg_data->sub_id;
     pres_subscription_req_t *sub_req_p;
 
-    BLF_DEBUG(DEB_F_PREFIX"Entering (status_code=%d)\n",
+    BLF_DEBUG(DEB_F_PREFIX"Entering (status_code=%d)",
               DEB_F_PREFIX_ARGS(BLF, fname), status_code);
 
     if ((s_pres_req_list == NULL) ||
@@ -465,7 +465,7 @@ subscribe_response_ind (ccsip_sub_not_data_t *msg_data)
          */
         (void) sub_int_subscribe_term(sub_id, TRUE, request_id,
                                       CC_SUBSCRIPTIONS_PRESENCE);
-        BLF_DEBUG(DEB_F_PREFIX"Exiting : subscription does not exist\n", DEB_F_PREFIX_ARGS(BLF, fname));
+        BLF_DEBUG(DEB_F_PREFIX"Exiting : subscription does not exist", DEB_F_PREFIX_ARGS(BLF, fname));
         return;
     }
 
@@ -479,7 +479,7 @@ subscribe_response_ind (ccsip_sub_not_data_t *msg_data)
      */
     if ((status_code >= 100) && (status_code < 300)) {
         /* do nothing */
-        BLF_DEBUG(DEB_F_PREFIX"Exiting :100-299 response\n", DEB_F_PREFIX_ARGS(BLF, fname));
+        BLF_DEBUG(DEB_F_PREFIX"Exiting :100-299 response", DEB_F_PREFIX_ARGS(BLF, fname));
         return;
     }
 
@@ -495,10 +495,10 @@ subscribe_response_ind (ccsip_sub_not_data_t *msg_data)
              * remove the node from the list of subscriptions.
              */
             free_sub_request(sub_req_p);
-            BLF_ERROR(MISC_F_PREFIX"Exiting : Unable to send SUBSCRIBE\n", fname);
+            BLF_ERROR(MISC_F_PREFIX"Exiting : Unable to send SUBSCRIBE", fname);
             return;
         }
-        BLF_DEBUG(DEB_F_PREFIX"Exiting : subscribed again with double duration\n", DEB_F_PREFIX_ARGS(BLF, fname));
+        BLF_DEBUG(DEB_F_PREFIX"Exiting : subscribed again with double duration", DEB_F_PREFIX_ARGS(BLF, fname));
         return;
     }
 
@@ -527,10 +527,10 @@ subscribe_response_ind (ccsip_sub_not_data_t *msg_data)
              * remove the node from the list of subscriptions.
              */
             free_sub_request(sub_req_p);
-            BLF_ERROR(MISC_F_PREFIX"Exiting : Unable to send SUBSCRIBE\n", fname);
+            BLF_ERROR(MISC_F_PREFIX"Exiting : Unable to send SUBSCRIBE", fname);
             return;
         }
-        BLF_DEBUG(DEB_F_PREFIX"Exiting : subscribed again after receiving 481\n", DEB_F_PREFIX_ARGS(BLF, fname));
+        BLF_DEBUG(DEB_F_PREFIX"Exiting : subscribed again after receiving 481", DEB_F_PREFIX_ARGS(BLF, fname));
         return;
     }
 
@@ -553,7 +553,7 @@ subscribe_response_ind (ccsip_sub_not_data_t *msg_data)
      */
     free_sub_request(sub_req_p);
 
-    BLF_DEBUG(DEB_F_PREFIX"Exiting : request terminated\n", DEB_F_PREFIX_ARGS(BLF, fname));
+    BLF_DEBUG(DEB_F_PREFIX"Exiting : request terminated", DEB_F_PREFIX_ARGS(BLF, fname));
     return;
 }
 
@@ -582,7 +582,7 @@ notify_ind_cb (ccsip_sub_not_data_t * msg_data)
     uint32_t cseq = msg_data->u.notify_ind_data.cseq;
     int blf_state;
 
-    BLF_DEBUG(DEB_F_PREFIX"Entering (subscription_state=%d)\n",
+    BLF_DEBUG(DEB_F_PREFIX"Entering (subscription_state=%d)",
               DEB_F_PREFIX_ARGS(BLF, fname), sub_state);
 
     /*
@@ -591,7 +591,7 @@ notify_ind_cb (ccsip_sub_not_data_t * msg_data)
      */
     if ((msg_data->u.notify_ind_data.eventData != NULL) &&
         (msg_data->u.notify_ind_data.eventData->type != EVENT_DATA_PRESENCE)) {
-        BLF_ERROR(MISC_F_PREFIX"NOTIFY does not contain presence body\n", fname);
+        BLF_ERROR(MISC_F_PREFIX"NOTIFY does not contain presence body", fname);
         free_event_data(msg_data->u.notify_ind_data.eventData);
         msg_data->u.notify_ind_data.eventData = NULL;
     }
@@ -613,7 +613,7 @@ notify_ind_cb (ccsip_sub_not_data_t * msg_data)
         (void) sub_int_subscribe_term(sub_id, TRUE, request_id,
                                       CC_SUBSCRIPTIONS_PRESENCE);
         free_event_data(msg_data->u.notify_ind_data.eventData);
-        BLF_DEBUG(DEB_F_PREFIX"Exiting : subscription does not exist\n", DEB_F_PREFIX_ARGS(BLF, fname));
+        BLF_DEBUG(DEB_F_PREFIX"Exiting : subscription does not exist", DEB_F_PREFIX_ARGS(BLF, fname));
         return;
     }
 
@@ -627,7 +627,7 @@ notify_ind_cb (ccsip_sub_not_data_t * msg_data)
      */
     if (cseq < sub_req_p->highest_cseq) {
         free_event_data(msg_data->u.notify_ind_data.eventData);
-        BLF_ERROR(MISC_F_PREFIX"Exiting : out of sequence NOTIFY received\n", fname);
+        BLF_ERROR(MISC_F_PREFIX"Exiting : out of sequence NOTIFY received", fname);
         return;
     } else {
         sub_req_p->highest_cseq = cseq;
@@ -690,7 +690,7 @@ notify_ind_cb (ccsip_sub_not_data_t * msg_data)
                          * Timer successfully started. free up event data and return.
                          */
                         free_event_data(msg_data->u.notify_ind_data.eventData);
-                        BLF_DEBUG(DEB_F_PREFIX"Exiting : retry_after Timer started\n",
+                        BLF_DEBUG(DEB_F_PREFIX"Exiting : retry_after Timer started",
                                   DEB_F_PREFIX_ARGS(BLF, fname));
                         return;
                     }
@@ -701,9 +701,9 @@ notify_ind_cb (ccsip_sub_not_data_t * msg_data)
                      * remove the node from the list of subscriptions.
                      */
                     free_sub_request(sub_req_p);
-                    BLF_ERROR(MISC_F_PREFIX"Unable to send SUBSCRIBE\n", fname);
+                    BLF_ERROR(MISC_F_PREFIX"Unable to send SUBSCRIBE", fname);
                 }
-                BLF_DEBUG(DEB_F_PREFIX"subscribed again after expiration\n", DEB_F_PREFIX_ARGS(BLF, fname));
+                BLF_DEBUG(DEB_F_PREFIX"subscribed again after expiration", DEB_F_PREFIX_ARGS(BLF, fname));
             } else {
                 /*
                  * and remove the node from the list of subscriptions.
@@ -732,12 +732,12 @@ notify_ind_cb (ccsip_sub_not_data_t * msg_data)
              */
             cc_feature(CC_SRC_MISC_APP, CC_NO_CALL_ID, 0, CC_FEATURE_BLF_ALERT_TONE, NULL);
         }
-        DEF_DEBUG(DEB_F_PREFIX"SUB %d: BLF %d\n",
+        DEF_DEBUG(DEB_F_PREFIX"SUB %d: BLF %d",
             DEB_F_PREFIX_ARGS(BLF_INFO, fname), sub_state, blf_state);
     }
 
     free_event_data(msg_data->u.notify_ind_data.eventData);
-    BLF_DEBUG(DEB_F_PREFIX"Exiting : acted based on subscription state\n", DEB_F_PREFIX_ARGS(BLF, fname));
+    BLF_DEBUG(DEB_F_PREFIX"Exiting : acted based on subscription state", DEB_F_PREFIX_ARGS(BLF, fname));
     return;
 }
 
@@ -759,14 +759,14 @@ unsolicited_notify_ind_cb (ccsip_sub_not_data_t *msg_data)
     char  presentity_user[CC_MAX_DIALSTRING_LEN];
     static const char fname[] = "unsolicited_notify_ind_cb";
 
-    BLF_DEBUG(DEB_F_PREFIX"Entering\n", DEB_F_PREFIX_ARGS(BLF, fname));
+    BLF_DEBUG(DEB_F_PREFIX"Entering", DEB_F_PREFIX_ARGS(BLF, fname));
     /*
      * memory for event bodies is allocated by sip stack and it is the
      * responsibility of the user (this module) to free it when it is done with it.
      */
     if ((msg_data->u.notify_ind_data.eventData != NULL) &&
         (msg_data->u.notify_ind_data.eventData->type != EVENT_DATA_PRESENCE)) {
-        BLF_ERROR(MISC_F_PREFIX"NOTIFY does not contain presence body\n", fname);
+        BLF_ERROR(MISC_F_PREFIX"NOTIFY does not contain presence body", fname);
         free_event_data(msg_data->u.notify_ind_data.eventData);
         msg_data->u.notify_ind_data.eventData = NULL;
     }
@@ -793,7 +793,7 @@ unsolicited_notify_ind_cb (ccsip_sub_not_data_t *msg_data)
 
     if (s_pres_req_list == NULL) {
         free_event_data(msg_data->u.notify_ind_data.eventData);
-        BLF_DEBUG(DEB_F_PREFIX"Exiting : no pres requests\n", DEB_F_PREFIX_ARGS(BLF, fname));
+        BLF_DEBUG(DEB_F_PREFIX"Exiting : no pres requests", DEB_F_PREFIX_ARGS(BLF, fname));
         return;
     }
     /* strip of the "sip:" */
@@ -886,7 +886,7 @@ static void append_notification_to_pending_queue (ccsip_event_data_t *event_data
     if (s_pending_notify_list == NULL) {
         s_pending_notify_list = sll_create(NULL);
         if (s_pending_notify_list == NULL) {
-            err_msg("MSC: 0/0: %s: out of memory", fname);
+            CSFLogError("src-common", "MSC: 0/0: %s: out of memory", fname);
             free_event_data(event_data_p);
             return;
         }
@@ -910,14 +910,15 @@ static void append_notification_to_pending_queue (ccsip_event_data_t *event_data
      * MAX_REG_LINES entries in the list.
      */
     if (sll_count(s_pending_notify_list) == MAX_REG_LINES) {
-        err_msg("MSC: 0/0: %s: ignoring the NOTIFY to protect from DoS attack", fname);
+        CSFLogError("src-common", "MSC: 0/0: %s: ignoring the NOTIFY "
+            "to protect from DoS attack", fname);
         free_event_data(event_data_p);
         return;
     }
     pending_notify_p = (pres_pending_notify_t *)
                        cpr_malloc(sizeof(pres_pending_notify_t));
     if (pending_notify_p == NULL) {
-        err_msg("MSC: 0/0: %s: out of memory", fname);
+        CSFLogError("src-common", "MSC: 0/0: %s: out of memory", fname);
         free_event_data(event_data_p);
         return;
     }
@@ -943,11 +944,11 @@ static void sub_handler_initialized (void)
     char  presentity_user[CC_MAX_DIALSTRING_LEN];
     Presence_ext_t *event_body_p = NULL;
 
-    BLF_DEBUG("MSC: 0/0: %s: invoked\n", fname);
+    BLF_DEBUG("MSC: 0/0: %s: invoked", fname);
     s_subs_hndlr_initialized = TRUE;
 
     if (s_pending_notify_list == NULL) {
-        BLF_DEBUG("MSC: 0/0: %s: no pending notfications\n", fname);
+        BLF_DEBUG("MSC: 0/0: %s: no pending notfications", fname);
         return;
     }
 
@@ -979,7 +980,7 @@ static void sub_handler_initialized (void)
                 BLF_DEBUG("MSC: 0/0: %s: no matching BLF feature keys found", fname);
             }
         }
-        BLF_DEBUG("MSC: 0/0: %s: processed a pending notfication for %s\n",
+        BLF_DEBUG("MSC: 0/0: %s: processed a pending notfication for %s",
                   fname, presentity_url);
         free_event_data(pending_notify_p->event_data_p);
         (void) sll_remove(s_pending_notify_list, (void *)pending_notify_p);
@@ -1016,7 +1017,7 @@ terminate_cb (ccsip_sub_not_data_t *msg_data)
     pres_subscription_req_t *sub_req_p = NULL;
     int orig_duration = 0;
 
-    BLF_DEBUG(DEB_F_PREFIX"Entering (reason_code=%d, status_code=%d)\n",
+    BLF_DEBUG(DEB_F_PREFIX"Entering (reason_code=%d, status_code=%d)",
               DEB_F_PREFIX_ARGS(BLF, fname), reason_code, status_code);
 
     if (s_pres_req_list != NULL) {
@@ -1030,7 +1031,7 @@ terminate_cb (ccsip_sub_not_data_t *msg_data)
          */
         (void) sub_int_subscribe_term(sub_id, TRUE, request_id,
                                       CC_SUBSCRIPTIONS_PRESENCE);
-        BLF_DEBUG(DEB_F_PREFIX"Exiting : subscription does not exist\n", DEB_F_PREFIX_ARGS(BLF, fname));
+        BLF_DEBUG(DEB_F_PREFIX"Exiting : subscription does not exist", DEB_F_PREFIX_ARGS(BLF, fname));
         return;
     }
 
@@ -1077,7 +1078,7 @@ terminate_cb (ccsip_sub_not_data_t *msg_data)
         free_sub_request(sub_req_p);
     }
 
-    BLF_DEBUG(DEB_F_PREFIX"Exiting : terminated subscription\n", DEB_F_PREFIX_ARGS(BLF, fname));
+    BLF_DEBUG(DEB_F_PREFIX"Exiting : terminated subscription", DEB_F_PREFIX_ARGS(BLF, fname));
     return;
 }
 
@@ -1100,7 +1101,7 @@ extract_blf_state (Presence_ext_t *event_body_p, int feature_mask)
     boolean alerting;
     int return_code = CC_SIP_BLF_UNKNOWN;
 
-    BLF_DEBUG(DEB_F_PREFIX"Entering\n", DEB_F_PREFIX_ARGS(BLF, fname));
+    BLF_DEBUG(DEB_F_PREFIX"Entering", DEB_F_PREFIX_ARGS(BLF, fname));
 
     if (event_body_p == NULL) {
         BLF_DEBUG(DEB_F_PREFIX
@@ -1114,19 +1115,19 @@ extract_blf_state (Presence_ext_t *event_body_p, int feature_mask)
     }
     on_the_phone = event_body_p->onThePhone;
     alerting = event_body_p->alerting;
-    BLF_DEBUG(DEB_F_PREFIX"basic: %s, onThePhone:%d, alerting:%d\n",
+    BLF_DEBUG(DEB_F_PREFIX"basic: %s, onThePhone:%d, alerting:%d",
               DEB_F_PREFIX_ARGS(BLF, fname), basic_p, on_the_phone, alerting);
 
     if ((on_the_phone == FALSE) &&
         (cpr_strcasecmp(basic_p, "closed") == 0)) {
-        BLF_DEBUG(DEB_F_PREFIX"Exiting with return value %d\n",
+        BLF_DEBUG(DEB_F_PREFIX"Exiting with return value %d",
                   DEB_F_PREFIX_ARGS(BLF, fname), CC_SIP_BLF_UNKNOWN);
         return(CC_SIP_BLF_UNKNOWN);
     }
 
     if (feature_mask & BLF_PICKUP_FEATURE) {
         if (alerting == TRUE) {
-            BLF_DEBUG(DEB_F_PREFIX"Exiting with return value %d\n",
+            BLF_DEBUG(DEB_F_PREFIX"Exiting with return value %d",
                       DEB_F_PREFIX_ARGS(BLF, fname), CC_SIP_BLF_ALERTING);
             return CC_SIP_BLF_ALERTING;
 
@@ -1140,7 +1141,7 @@ extract_blf_state (Presence_ext_t *event_body_p, int feature_mask)
         return_code = CC_SIP_BLF_INUSE;
     }
 
-    BLF_DEBUG(DEB_F_PREFIX"Exiting with return value %d\n",
+    BLF_DEBUG(DEB_F_PREFIX"Exiting with return value %d",
               DEB_F_PREFIX_ARGS(BLF, fname), return_code);
     return return_code;
 }
@@ -1198,10 +1199,10 @@ pres_process_msg_from_msgq (uint32_t cmd, void *msg_p)
         break;
 
     default:
-        BLF_ERROR(MISC_F_PREFIX"bad Cmd received: %d\n", fname, cmd);
+        BLF_ERROR(MISC_F_PREFIX"bad Cmd received: %d", fname, cmd);
         break;
     }
-    BLF_DEBUG(DEB_F_PREFIX"Exiting\n", DEB_F_PREFIX_ARGS(BLF, fname));
+    BLF_DEBUG(DEB_F_PREFIX"Exiting", DEB_F_PREFIX_ARGS(BLF, fname));
 }
 
 /*
@@ -1311,7 +1312,7 @@ process_timer_expiration (void *msg_p)
     cprCallBackTimerMsg_t *timerMsg;
     pres_subscription_req_t *sub_req_p;
 
-    BLF_DEBUG(DEB_F_PREFIX"Entering\n", DEB_F_PREFIX_ARGS(BLF, fname));
+    BLF_DEBUG(DEB_F_PREFIX"Entering", DEB_F_PREFIX_ARGS(BLF, fname));
 
     timerMsg = (cprCallBackTimerMsg_t *) msg_p;
     switch (timerMsg->expiredTimerId) {
@@ -1324,14 +1325,14 @@ process_timer_expiration (void *msg_p)
             free_sub_request(sub_req_p);
             BLF_DEBUG(DEB_F_PREFIX"Unable to send SUBSCRIBE", DEB_F_PREFIX_ARGS(BLF, fname));
         }
-        BLF_DEBUG(DEB_F_PREFIX"resubscribed after retry-after seconds\n", DEB_F_PREFIX_ARGS(BLF, fname));
+        BLF_DEBUG(DEB_F_PREFIX"resubscribed after retry-after seconds", DEB_F_PREFIX_ARGS(BLF, fname));
         break;
     default:
-        BLF_ERROR(MISC_F_PREFIX"unknown timer:%d expired\n", fname,
+        BLF_ERROR(MISC_F_PREFIX"unknown timer:%d expired", fname,
                   timerMsg->expiredTimerId);
         break;
     }
-    BLF_DEBUG(DEB_F_PREFIX"Exiting\n", DEB_F_PREFIX_ARGS(BLF, fname));
+    BLF_DEBUG(DEB_F_PREFIX"Exiting", DEB_F_PREFIX_ARGS(BLF, fname));
 }
 
 /**
@@ -1353,7 +1354,7 @@ void pres_unsolicited_notify_ind (ccsip_sub_not_data_t *msg_data)
     pmsg = (ccsip_sub_not_data_t *) cc_get_msg_buf(sizeof(*pmsg));
 
     if (!pmsg) {
-        BLF_ERROR(MISC_F_PREFIX"malloc failed\n", fname);
+        BLF_ERROR(MISC_F_PREFIX"malloc failed", fname);
         return;
     }
     memcpy(pmsg, msg_data, sizeof(*pmsg));

@@ -5,8 +5,8 @@
 
 #include "HTMLImageMapAccessible.h"
 
+#include "ARIAMap.h"
 #include "nsAccUtils.h"
-#include "nsARIAMap.h"
 #include "DocAccessible-inl.h"
 #include "Role.h"
 

@@ -12,9 +12,18 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/TypedArray.h"
 #include "nsCOMPtr.h"
+#include "mozilla/dom/UnionTypes.h"
+
+// Forward declare this before we include TestCodeGenBinding.h, because that header relies on including
+// this one for it, for ParentDict. Hopefully it won't begin to rely on it in more fundamental ways.
+namespace mozilla {
+namespace dom {
+class TestExternalInterface;
+} // namespace dom
+} // namespace mozilla
+
 // We don't export TestCodeGenBinding.h, but it's right in our parent dir.
 #include "../TestCodeGenBinding.h"
-#include "mozilla/dom/UnionTypes.h"
 
 extern bool TestFuncControlledMember(JSContext*, JSObject*);
 
@@ -73,7 +82,7 @@ class TestNonWrapperCacheInterface : public nsISupports
 public:
   NS_DECL_ISUPPORTS
 
-  virtual JSObject* WrapObject(JSContext* cx, JSObject* scope);
+  virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> scope);
 };
 
 class OnlyForUseInConstructor : public nsISupports,

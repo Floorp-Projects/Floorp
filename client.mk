@@ -108,8 +108,8 @@ endef
 # before evaluation.
 $(eval $(subst ||,$(CR),$(shell _PYMAKE=$(.PYMAKE) $(TOPSRCDIR)/$(MOZCONFIG_LOADER) $(TOPSRCDIR) 2> $(TOPSRCDIR)/.mozconfig.out | sed 's/$$/||/')))
 
-ifdef NO_AUTOCLOBBER
-export NO_AUTOCLOBBER=1
+ifdef AUTOCLOBBER
+export AUTOCLOBBER=1
 endif
 
 # Automatically add -jN to make flags if not defined. N defaults to number of cores.

@@ -86,7 +86,7 @@ cpr_sockaddr_t *sip_set_sockaddr (cpr_sockaddr_storage *psock_storage, uint16_t 
 
     case AF_INET:
         if (ip_addr.type == CPR_IP_ADDR_IPV6) {
-            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Setting ipv6 address in AF_INET\n",fname);
+            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Setting ipv6 address in AF_INET",fname);
             break;
         }
         pin_addr = (cpr_sockaddr_in_t *)psock_storage;
@@ -99,7 +99,7 @@ cpr_sockaddr_t *sip_set_sockaddr (cpr_sockaddr_storage *psock_storage, uint16_t 
         return(psock_addr=(cpr_sockaddr_t *)pin_addr);
 
     default:
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Unable to set sockaddr.\n",fname);
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Unable to set sockaddr.",fname);
         break;
     }
 
@@ -227,11 +227,11 @@ sip_platform_udp_channel_create (cpr_ip_mode_e ip_mode, cpr_socket_t *s,
     memset(&local_sock_addr, 0, sizeof(local_sock_addr));
 
     (void) sip_set_sockaddr(&local_sock_addr, af_family_connect, local_signaladdr, 0, &addr_len);
-    CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"local_signaladdr.u.ip4=%x\n",
+    CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"local_signaladdr.u.ip4=%x",
         DEB_F_PREFIX_ARGS(SIP_SDP, fname), local_signaladdr.u.ip4);
 
     if(cprBind(*s, (cpr_sockaddr_t *)&local_sock_addr, addr_len)){
-       CCSIP_DEBUG_ERROR(SIP_F_PREFIX"UDP bind failed with errno %d\n", fname, cpr_errno);
+       CCSIP_DEBUG_ERROR(SIP_F_PREFIX"UDP bind failed with errno %d", fname, cpr_errno);
        (void) sipSocketClose(*s, FALSE);
        *s = INVALID_SOCKET;
        return SIP_ERROR;
@@ -303,7 +303,7 @@ sip_platform_udp_channel_read (cpr_socket_t s,
         cpr_free(buf);
         *len = 0;
         if (cpr_errno != CPR_EWOULDBLOCK) {
-            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"fd[%d]\n", fname, s);
+            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"fd[%d]", fname, s);
             CCSIP_DEBUG_ERROR(get_debug_string(DEBUG_GENERAL_SYSTEMCALL_FAILED),
                               fname, "cprRecvFrom", cpr_errno);
             return SIP_ERROR;
@@ -318,13 +318,13 @@ sip_platform_udp_channel_read (cpr_socket_t s,
          * has closed by the peer, as with TCP sockets.  With UDP
          * sockets, there is no such thing as closing a connection.
          */
-        CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"No data on fd %d\n", DEB_F_PREFIX_ARGS(SIP_SDP, fname), s);
+        CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"No data on fd %d", DEB_F_PREFIX_ARGS(SIP_SDP, fname), s);
         cpr_free(buf);
         *len = 0;
         break;
     default:
         /* PKT has been read */
-        CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Recvd on fd %d\n", DEB_F_PREFIX_ARGS(SIP_SDP, fname), s);
+        CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Recvd on fd %d", DEB_F_PREFIX_ARGS(SIP_SDP, fname), s);
         *len = (uint16_t) bytes_read;
         break;
     }
@@ -396,7 +396,7 @@ sip_platform_udp_read_socket (cpr_socket_t s)
             (void) SIPTaskProcessUDPMessage(buf, len, from);
         }
     } else {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"No buffers available to read UDP socket.\n",
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"No buffers available to read UDP socket.",
                             fname);
     }
 }
@@ -437,7 +437,7 @@ sip_platform_udp_channel_sendto (cpr_socket_t s, char *buf, uint32_t len,
              * Will get socket error ECONNREFUSED after an ICMP message
              * resend the message
              */
-            CCSIP_DEBUG_TASK(DEB_F_PREFIX"UDP send to error %d\n", DEB_F_PREFIX_ARGS(SIP_SOCK, fname), cpr_errno);
+            CCSIP_DEBUG_TASK(DEB_F_PREFIX"UDP send to error %d", DEB_F_PREFIX_ARGS(SIP_SOCK, fname), cpr_errno);
             bytesSent = cprSendTo(s, (void *)buf, (size_t)len, 0,
                                   (cpr_sockaddr_t *)&sock_addr, addr_len);
         }

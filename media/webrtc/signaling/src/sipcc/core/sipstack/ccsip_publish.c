@@ -304,7 +304,7 @@ int publish_handle_ev_app_publish (cprBuffer_t buf)
          */
         if (pcb_p->outstanding_trxn == TRUE) {
             if (append_pending_reqs(pcb_p, msg_p) == TRUE) {
-                CCSIP_DEBUG_TASK(DEB_F_PREFIX"deffering as there is an outstanding transaction\n",
+                CCSIP_DEBUG_TASK(DEB_F_PREFIX"deffering as there is an outstanding transaction",
                                  DEB_F_PREFIX_ARGS(SIP_PUB, fname));
                 return SIP_DEFER;
             }
@@ -313,7 +313,7 @@ int publish_handle_ev_app_publish (cprBuffer_t buf)
             send_resp_to_app(PUBLISH_FAILED_NORESOURCE, msg_p->pub_handle, msg_p->app_handle,
                              msg_p->callback_task, msg_p->resp_msg_id);
             free_event_data(msg_p->event_data_p);
-            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Queueing outgoing PUBLISH request failed\n", fname);
+            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Queueing outgoing PUBLISH request failed", fname);
             return SIP_ERROR;
         }
         /*
@@ -331,7 +331,7 @@ int publish_handle_ev_app_publish (cprBuffer_t buf)
             send_resp_to_app(PUBLISH_FAILED_NORESOURCE, msg_p->pub_handle, msg_p->app_handle,
                              msg_p->callback_task, msg_p->resp_msg_id);
             free_event_data(msg_p->event_data_p);
-            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"PCB allocation failed\n", fname);
+            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"PCB allocation failed", fname);
             return SIP_ERROR;
         }
         pcb_p->app_handle = msg_p->app_handle;
@@ -349,7 +349,7 @@ int publish_handle_ev_app_publish (cprBuffer_t buf)
     if (sipSPISendPublish(pcb_p, FALSE) == TRUE) {
         pcb_p->outstanding_trxn = TRUE;
         outgoingPublishes++;
-        CCSIP_DEBUG_TASK(DEB_F_PREFIX"PUBLISH request sent successfully\n", DEB_F_PREFIX_ARGS(SIP_PUB, fname));
+        CCSIP_DEBUG_TASK(DEB_F_PREFIX"PUBLISH request sent successfully", DEB_F_PREFIX_ARGS(SIP_PUB, fname));
         return SIP_OK;
     }
 
@@ -357,7 +357,7 @@ int publish_handle_ev_app_publish (cprBuffer_t buf)
     free_pcb (pcb_p);
     send_resp_to_app(PUBLISH_FAILED_SEND, msg_p->pub_handle, msg_p->app_handle,
                      msg_p->callback_task, msg_p->resp_msg_id);
-    CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Failed to send PUBLISH request\n", fname);
+    CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Failed to send PUBLISH request", fname);
     return SIP_ERROR;
 
 }
@@ -423,7 +423,7 @@ static boolean sipSPISendPublish (ccsip_publish_cb_t *pcb_p, boolean authen)
     if (HSTATUS_SUCCESS != sippmh_add_request_line(request,
                                                    sipGetMethodString(sipMethodPublish),
                                                    pcb_p->full_ruri, SIP_VERSION)) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Error in adding Request line\n", fname);
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Error in adding Request line", fname);
         free_sip_message(request);
         return (FALSE);
     }
@@ -434,7 +434,7 @@ static boolean sipSPISendPublish (ccsip_publish_cb_t *pcb_p, boolean authen)
              src_addr_str, pcb_p->hb.local_port, VIA_BRANCH,
              VIA_BRANCH_START, (unsigned int) cpr_rand());
     if (HSTATUS_SUCCESS != sippmh_add_text_header(request, SIP_HEADER_VIA, via)) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Error in adding VIA header\n", fname);
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Error in adding VIA header", fname);
         free_sip_message(request);
         return (FALSE);
     }
@@ -442,7 +442,7 @@ static boolean sipSPISendPublish (ccsip_publish_cb_t *pcb_p, boolean authen)
     // Add To Header
     snprintf(sip_temp_str, MAX_SIP_URL_LENGTH, "<%s>", pcb_p->full_ruri);
     if (HSTATUS_SUCCESS != sippmh_add_text_header(request, SIP_HEADER_TO, sip_temp_str)) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Error in adding TO header\n", fname);
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Error in adding TO header", fname);
         free_sip_message(request);
         return (FALSE);
     }
@@ -452,7 +452,7 @@ static boolean sipSPISendPublish (ccsip_publish_cb_t *pcb_p, boolean authen)
     sip_util_make_tag(sip_temp_tag);
     sstrncat(sip_temp_str, sip_temp_tag, MAX_SIP_URL_LENGTH - strlen(sip_temp_str));
     if (HSTATUS_SUCCESS != sippmh_add_text_header(request, SIP_HEADER_FROM, sip_temp_str)) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Error in adding FROM header\n", fname);
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Error in adding FROM header", fname);
         free_sip_message(request);
         return (FALSE);
     }
@@ -468,7 +468,7 @@ static boolean sipSPISendPublish (ccsip_publish_cb_t *pcb_p, boolean authen)
                  (unsigned int) cpr_rand(),
                  src_addr_str);
     if (HSTATUS_SUCCESS != sippmh_add_text_header(request, SIP_HEADER_CALLID, pcb_p->hb.sipCallID)) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Error in adding CALLID header\n", fname);
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Error in adding CALLID header", fname);
         free_sip_message(request);
         return (FALSE);
     }
@@ -480,7 +480,7 @@ static boolean sipSPISendPublish (ccsip_publish_cb_t *pcb_p, boolean authen)
              mac_address[4] * 256 + mac_address[5],
              src_addr_str, pcb_p->hb.local_port);
     if (HSTATUS_SUCCESS != sippmh_add_text_header(request, SIP_HEADER_CONTACT, sip_temp_str)) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Error in adding Contact header\n", fname);
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Error in adding Contact header", fname);
         free_sip_message(request);
         return (FALSE);
     }
@@ -491,7 +491,7 @@ static boolean sipSPISendPublish (ccsip_publish_cb_t *pcb_p, boolean authen)
         cseq = 1;
     }
     if (HSTATUS_SUCCESS != sippmh_add_cseq(request, sipGetMethodString(sipMethodPublish), cseq)) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Error in adding CSEQ header\n", fname);
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Error in adding CSEQ header", fname);
         free_sip_message(request);
         return (FALSE);
     }
@@ -505,7 +505,7 @@ static boolean sipSPISendPublish (ccsip_publish_cb_t *pcb_p, boolean authen)
     if (pcb_p->entity_tag != NULL) {
         if (HSTATUS_SUCCESS != sippmh_add_text_header(request, SIP_HEADER_SIPIFMATCH,
                                                       pcb_p->entity_tag)) {
-            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Error in adding Event header\n", fname);
+            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Error in adding Event header", fname);
             free_sip_message(request);
             return (FALSE);
         }
@@ -514,7 +514,7 @@ static boolean sipSPISendPublish (ccsip_publish_cb_t *pcb_p, boolean authen)
     // Add Expires Header
     if (HSTATUS_SUCCESS != sippmh_add_int_header(request, SIP_HEADER_EXPIRES,
                 pcb_p->hb.orig_expiration)) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Error in adding Expires header\n", fname);
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Error in adding Expires header", fname);
         free_sip_message(request);
         return (FALSE);
     }
@@ -525,7 +525,7 @@ static boolean sipSPISendPublish (ccsip_publish_cb_t *pcb_p, boolean authen)
     if (HSTATUS_SUCCESS !=
         sippmh_add_int_header(request, SIP_HEADER_MAX_FORWARDS,
             max_forwards_value)) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Error in adding Max-Forwards header\n", fname);
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Error in adding Max-Forwards header", fname);
         free_sip_message(request);
         return (FALSE);
     }
@@ -534,7 +534,7 @@ static boolean sipSPISendPublish (ccsip_publish_cb_t *pcb_p, boolean authen)
     if (authen) {
         if (HSTATUS_SUCCESS != sippmh_add_text_header(request, AUTHOR_HDR(pcb_p->hb.authen.status_code),
                                                       pcb_p->hb.authen.authorization)) {
-            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Error in adding Authorization header\n", fname);
+            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Error in adding Authorization header", fname);
             free_sip_message(request);
             return (FALSE);
         }
@@ -543,13 +543,13 @@ static boolean sipSPISendPublish (ccsip_publish_cb_t *pcb_p, boolean authen)
     // Add content, if any
     if (pcb_p->hb.event_data_p) {
         if (add_content(pcb_p->hb.event_data_p, request, fname) == FALSE) {
-            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Error in adding Content\n", fname);
+            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Error in adding Content", fname);
             free_sip_message(request);
             return (FALSE);
         }
     } else {
         if (HSTATUS_SUCCESS != sippmh_add_int_header(request, SIP_HEADER_CONTENT_LENGTH, 0)) {
-            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Error in adding Content-Len\n", fname);
+            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Error in adding Content-Len", fname);
             free_sip_message(request);
             return (FALSE);
         }
@@ -561,7 +561,7 @@ static boolean sipSPISendPublish (ccsip_publish_cb_t *pcb_p, boolean authen)
                                       (int16_t) pcb_p->hb.dest_sip_port,
                                       FALSE, TRUE, timeout, pcb_p,
                                       RELDEV_NO_STORED_MSG) < 0) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"failed to send PUBLISH message\n", fname);
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"failed to send PUBLISH message", fname);
         return (FALSE);
     }
 
@@ -613,7 +613,7 @@ int publish_handle_retry_timer_expire (uint32_t handle)
         if (timeout > time_t2) {
             timeout = time_t2;
         }
-        CCSIP_DEBUG_TASK(DEB_F_PREFIX"Resending message #%d\n",
+        CCSIP_DEBUG_TASK(DEB_F_PREFIX"Resending message #%d",
                          DEB_F_PREFIX_ARGS(SIP_PUB, fname), pcb_p->hb.retx_counter);
             if (sipTransportSendMessage(NULL,
                                         pcb_p->retry_timer.message_buffer,
@@ -702,7 +702,7 @@ int publish_handle_ev_sip_response (sipMessage_t *pSipMessage)
 
     callID_p = sippmh_get_cached_header_val(pSipMessage, CALLID);
     if (!callID_p) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Cannot obtain SIP Call ID.\n", fname);
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Cannot obtain SIP Call ID.", fname);
         return SIP_ERROR;
     }
 
@@ -711,7 +711,7 @@ int publish_handle_ev_sip_response (sipMessage_t *pSipMessage)
      */
     pcb_p = find_pcb_by_sip_callid(callID_p);
     if (pcb_p == NULL) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"No matching PCB found\n", fname);
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"No matching PCB found", fname);
         return SIP_ERROR;
     }
 
@@ -731,12 +731,12 @@ int publish_handle_ev_sip_response (sipMessage_t *pSipMessage)
 
     if ((response_code == SIP_CLI_ERR_UNAUTH) ||
         (response_code == SIP_CLI_ERR_PROXY_REQD)) {
-        CCSIP_DEBUG_TASK(DEB_F_PREFIX"Authentication Required\n", DEB_F_PREFIX_ARGS(SIP_PUB, fname));
+        CCSIP_DEBUG_TASK(DEB_F_PREFIX"Authentication Required", DEB_F_PREFIX_ARGS(SIP_PUB, fname));
         if (ccsip_common_util_generate_auth(pSipMessage, &pcb_p->hb, SIP_METHOD_PUBLISH,
                                             response_code, pcb_p->full_ruri) == TRUE) {
             if (sipSPISendPublish(pcb_p, TRUE) == TRUE) {
                 pcb_p->outstanding_trxn = TRUE;
-                CCSIP_DEBUG_TASK(DEB_F_PREFIX"sent request with Auth header\n", DEB_F_PREFIX_ARGS(SIP_PUB, fname));
+                CCSIP_DEBUG_TASK(DEB_F_PREFIX"sent request with Auth header", DEB_F_PREFIX_ARGS(SIP_PUB, fname));
                 return SIP_OK;
              }
         }
@@ -746,7 +746,7 @@ int publish_handle_ev_sip_response (sipMessage_t *pSipMessage)
         send_resp_to_app(PUBLISH_FAILED_SEND, pcb_p->pub_handle, pcb_p->app_handle,
                          pcb_p->callback_task, pcb_p->resp_msg_id);
         free_pcb (pcb_p);
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"failed to respond to auth challenge\n", fname);
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"failed to respond to auth challenge", fname);
         return SIP_ERROR;
     }
 
@@ -766,7 +766,7 @@ int publish_handle_ev_sip_response (sipMessage_t *pSipMessage)
             }
             if (sipSPISendPublish(pcb_p, FALSE) == TRUE) {
                 pcb_p->outstanding_trxn = TRUE;
-                CCSIP_DEBUG_TASK(DEB_F_PREFIX"sent request with increased expires\n", DEB_F_PREFIX_ARGS(SIP_PUB, fname));
+                CCSIP_DEBUG_TASK(DEB_F_PREFIX"sent request with increased expires", DEB_F_PREFIX_ARGS(SIP_PUB, fname));
                 return SIP_OK;
              }
         }
@@ -776,7 +776,7 @@ int publish_handle_ev_sip_response (sipMessage_t *pSipMessage)
         send_resp_to_app(PUBLISH_FAILED_SEND, pcb_p->pub_handle, pcb_p->app_handle,
                          pcb_p->callback_task, pcb_p->resp_msg_id);
         free_pcb (pcb_p);
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"failed to respond to 423\n", fname);
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"failed to respond to 423", fname);
         return SIP_ERROR;
     }
 
@@ -787,7 +787,7 @@ int publish_handle_ev_sip_response (sipMessage_t *pSipMessage)
         send_resp_to_app(response_code, pcb_p->pub_handle, pcb_p->app_handle,
                          pcb_p->callback_task, pcb_p->resp_msg_id);
         free_pcb (pcb_p);
-        CCSIP_DEBUG_TASK(DEB_F_PREFIX"received %d response\n", DEB_F_PREFIX_ARGS(SIP_PUB, fname), response_code);
+        CCSIP_DEBUG_TASK(DEB_F_PREFIX"received %d response", DEB_F_PREFIX_ARGS(SIP_PUB, fname), response_code);
         return SIP_OK;
     }
 
@@ -795,7 +795,7 @@ int publish_handle_ev_sip_response (sipMessage_t *pSipMessage)
      * if the response is < 200, do nothing.
      */
     if (response_code < 200) {
-        CCSIP_DEBUG_TASK(DEB_F_PREFIX"received %d response\n", DEB_F_PREFIX_ARGS(SIP_PUB, fname), response_code);
+        CCSIP_DEBUG_TASK(DEB_F_PREFIX"received %d response", DEB_F_PREFIX_ARGS(SIP_PUB, fname), response_code);
         return SIP_OK;
     }
 
@@ -806,7 +806,7 @@ int publish_handle_ev_sip_response (sipMessage_t *pSipMessage)
         send_resp_to_app(response_code, pcb_p->pub_handle, pcb_p->app_handle,
                          pcb_p->callback_task, pcb_p->resp_msg_id);
         free_pcb (pcb_p);
-        CCSIP_DEBUG_TASK(DEB_F_PREFIX"removed PCB as this was a terminating PUBLISH\n", DEB_F_PREFIX_ARGS(SIP_PUB, fname));
+        CCSIP_DEBUG_TASK(DEB_F_PREFIX"removed PCB as this was a terminating PUBLISH", DEB_F_PREFIX_ARGS(SIP_PUB, fname));
         return SIP_OK;
     }
 
@@ -829,7 +829,7 @@ int publish_handle_ev_sip_response (sipMessage_t *pSipMessage)
             free_pcb (pcb_p);
             send_resp_to_app(PUBLISH_FAILED_NORESOURCE, pcb_p->pub_handle, pcb_p->app_handle,
                              pcb_p->callback_task, pcb_p->resp_msg_id);
-            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"memory allocation failed\n", fname);
+            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"memory allocation failed", fname);
             return SIP_ERROR;
 
         }
@@ -847,7 +847,7 @@ int publish_handle_ev_sip_response (sipMessage_t *pSipMessage)
     }
     send_resp_to_app(response_code, pcb_p->pub_handle, pcb_p->app_handle,
                      pcb_p->callback_task, pcb_p->resp_msg_id);
-    CCSIP_DEBUG_TASK(DEB_F_PREFIX"sent response %d to app\n", DEB_F_PREFIX_ARGS(SIP_PUB, fname), response_code);
+    CCSIP_DEBUG_TASK(DEB_F_PREFIX"sent response %d to app", DEB_F_PREFIX_ARGS(SIP_PUB, fname), response_code);
     return SIP_OK;
 }
 

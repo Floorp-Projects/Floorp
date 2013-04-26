@@ -210,7 +210,7 @@ fsmcnf_get_new_cnf_context (callid_t cnf_call_id)
         FSM_DEBUG_SM(get_debug_string(FSMCNF_DBG_PTR), ccb->cnf_id,
                      ccb->cnf_call_id, ccb->cns_call_id, fname, ccb);
     } else {
-        GSM_DEBUG_ERROR(GSM_F_PREFIX"Failed to get new ccb.\n", fname);
+        GSM_DEBUG_ERROR(GSM_F_PREFIX"Failed to get new ccb.", fname);
     }
 
     return (ccb);
@@ -708,7 +708,7 @@ fsmcnf_ev_idle_feature (sm_event_t *event)
                 cause = gsmsdp_encode_sdp_and_update_version(other_dcb,
                                                              &data.resume.msg_body);
                 if (cause != CC_CAUSE_OK) {
-                    FSM_DEBUG_SM(get_debug_string(FSM_DBG_SDP_BUILD_ERR));
+                    FSM_DEBUG_SM("%s", get_debug_string(FSM_DBG_SDP_BUILD_ERR));
                     sm_rc = SM_RC_END;
                     break;
                 }
@@ -779,7 +779,7 @@ fsmcnf_ev_idle_feature (sm_event_t *event)
                                                         FSM_TYPE_CNF);
 
             if(other_fcb == NULL) {
-                GSM_DEBUG_ERROR(GSM_F_PREFIX"Failed to get FCB.\n", fname);
+                GSM_DEBUG_ERROR(GSM_F_PREFIX"Failed to get FCB.", fname);
             } else {
                 fsm_change_state(fcb, __LINE__, other_fcb->state);
             }
@@ -901,7 +901,7 @@ fsmcnf_ev_idle_feature (sm_event_t *event)
                         cause = gsmsdp_encode_sdp_and_update_version(other_dcb,
                                                                      &data.resume.msg_body);
                         if (cause != CC_CAUSE_OK) {
-                            GSM_DEBUG_ERROR(get_debug_string(FSM_DBG_SDP_BUILD_ERR));
+                            GSM_DEBUG_ERROR("%s", get_debug_string(FSM_DBG_SDP_BUILD_ERR));
                             fsmcnf_cleanup(fcb, __LINE__, TRUE);
                             sm_rc = SM_RC_END;
                             break;
@@ -1118,7 +1118,7 @@ fsmcnf_ev_cnfing_feature (sm_event_t *event)
             cause = gsmsdp_encode_sdp_and_update_version(other_dcb,
                                                          &data.resume.msg_body);
             if (cause != CC_CAUSE_OK) {
-                GSM_DEBUG_ERROR(get_debug_string(FSM_DBG_SDP_BUILD_ERR));
+                GSM_DEBUG_ERROR("%s", get_debug_string(FSM_DBG_SDP_BUILD_ERR));
                 sm_rc = SM_RC_END;
                 break;
             }
@@ -1170,7 +1170,7 @@ fsmcnf_ev_cnfing_feature (sm_event_t *event)
                 feat_data->hold.call_info.data.hold_resume_reason != CC_REASON_CONF &&
                 feat_data->hold.call_info.data.hold_resume_reason != CC_REASON_INTERNAL)) {
                 sm_rc = SM_RC_END;
-                DEF_DEBUG(DEB_F_PREFIX"Invoke hold call_id = %d t_call_id=%d\n",
+                DEF_DEBUG(DEB_F_PREFIX"Invoke hold call_id = %d t_call_id=%d",
                             DEB_F_PREFIX_ARGS(GSM, fname), ccb->cnf_call_id, ccb->cns_call_id);
                 //Actual hold to this call, so break the feature layer.
                 ui_terminate_feature(dcb->line, ccb->cnf_call_id, ccb->cns_call_id);
@@ -1288,7 +1288,7 @@ fsmcnf_ev_cnfed_release (sm_event_t *event)
         cause = gsmsdp_encode_sdp_and_update_version(other_dcb,
                                                      &data.resume.msg_body);
         if (cause != CC_CAUSE_OK) {
-            GSM_DEBUG_ERROR(get_debug_string(FSM_DBG_SDP_BUILD_ERR));
+            GSM_DEBUG_ERROR("%s", get_debug_string(FSM_DBG_SDP_BUILD_ERR));
             return (SM_RC_END);
         }
         data.resume.cause = CC_CAUSE_CONF;
@@ -1567,7 +1567,7 @@ fsmcnf_ev_cnfed_feature_ack (sm_event_t *event)
                     cause = gsmsdp_encode_sdp_and_update_version(dcb,
                                                                  &ftr_data.resume.msg_body);
                     if (cause != CC_CAUSE_OK) {
-                        GSM_DEBUG_ERROR(get_debug_string(FSM_DBG_SDP_BUILD_ERR));
+                        GSM_DEBUG_ERROR("%s", get_debug_string(FSM_DBG_SDP_BUILD_ERR));
                         return (SM_RC_END);
                     }
                     ftr_data.resume.cause = CC_CAUSE_OK;

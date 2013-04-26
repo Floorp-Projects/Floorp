@@ -21,6 +21,11 @@
 #include "TiledLayerBuffer.h"
 #include "gfxPlatform.h"
 #include "CompositableHost.h"
+#include "mozilla/layers/ThebesLayerComposite.h"
+#include "mozilla/layers/ImageLayerComposite.h"
+#include "mozilla/layers/ColorLayerComposite.h"
+#include "mozilla/layers/ContainerLayerComposite.h"
+#include "mozilla/layers/CanvasLayerComposite.h"
 
 typedef std::vector<mozilla::layers::EditReply> EditReplyVector;
 
@@ -47,13 +52,13 @@ cast(const PCompositableParent* in)
 
 template<class OpCreateT>
 static ShadowLayerParent*
-AsShadowLayer(const OpCreateT& op)
+AsLayerComposite(const OpCreateT& op)
 {
   return cast(op.layerParent());
 }
 
 static ShadowLayerParent*
-AsShadowLayer(const OpSetRoot& op)
+AsLayerComposite(const OpSetRoot& op)
 {
   return cast(op.rootParent());
 }
@@ -125,7 +130,7 @@ ShadowChild(const OpRaiseToTopChild& op)
 
 //--------------------------------------------------
 // LayerTransactionParent
-LayerTransactionParent::LayerTransactionParent(ShadowLayerManager* aManager,
+LayerTransactionParent::LayerTransactionParent(LayerManagerComposite* aManager,
                                                ShadowLayersManager* aLayersManager,
                                                uint64_t aId)
   : mLayerManager(aManager)
@@ -189,47 +194,47 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
     case Edit::TOpCreateThebesLayer: {
       MOZ_LAYERS_LOG(("[ParentSide] CreateThebesLayer"));
 
-      nsRefPtr<ShadowThebesLayer> layer =
-        layer_manager()->CreateShadowThebesLayer();
-      AsShadowLayer(edit.get_OpCreateThebesLayer())->Bind(layer);
+      nsRefPtr<ThebesLayerComposite> layer =
+        layer_manager()->CreateThebesLayerComposite();
+      AsLayerComposite(edit.get_OpCreateThebesLayer())->Bind(layer);
       break;
     }
     case Edit::TOpCreateContainerLayer: {
       MOZ_LAYERS_LOG(("[ParentSide] CreateContainerLayer"));
 
-      nsRefPtr<ContainerLayer> layer = layer_manager()->CreateShadowContainerLayer();
-      AsShadowLayer(edit.get_OpCreateContainerLayer())->Bind(layer);
+      nsRefPtr<ContainerLayer> layer = layer_manager()->CreateContainerLayerComposite();
+      AsLayerComposite(edit.get_OpCreateContainerLayer())->Bind(layer);
       break;
     }
     case Edit::TOpCreateImageLayer: {
       MOZ_LAYERS_LOG(("[ParentSide] CreateImageLayer"));
 
-      nsRefPtr<ShadowImageLayer> layer =
-        layer_manager()->CreateShadowImageLayer();
-      AsShadowLayer(edit.get_OpCreateImageLayer())->Bind(layer);
+      nsRefPtr<ImageLayerComposite> layer =
+        layer_manager()->CreateImageLayerComposite();
+      AsLayerComposite(edit.get_OpCreateImageLayer())->Bind(layer);
       break;
     }
     case Edit::TOpCreateColorLayer: {
       MOZ_LAYERS_LOG(("[ParentSide] CreateColorLayer"));
 
-      nsRefPtr<ShadowColorLayer> layer = layer_manager()->CreateShadowColorLayer();
-      AsShadowLayer(edit.get_OpCreateColorLayer())->Bind(layer);
+      nsRefPtr<ColorLayerComposite> layer = layer_manager()->CreateColorLayerComposite();
+      AsLayerComposite(edit.get_OpCreateColorLayer())->Bind(layer);
       break;
     }
     case Edit::TOpCreateCanvasLayer: {
       MOZ_LAYERS_LOG(("[ParentSide] CreateCanvasLayer"));
 
-      nsRefPtr<ShadowCanvasLayer> layer =
-        layer_manager()->CreateShadowCanvasLayer();
-      AsShadowLayer(edit.get_OpCreateCanvasLayer())->Bind(layer);
+      nsRefPtr<CanvasLayerComposite> layer =
+        layer_manager()->CreateCanvasLayerComposite();
+      AsLayerComposite(edit.get_OpCreateCanvasLayer())->Bind(layer);
       break;
     }
     case Edit::TOpCreateRefLayer: {
       MOZ_LAYERS_LOG(("[ParentSide] CreateRefLayer"));
 
-      nsRefPtr<ShadowRefLayer> layer =
-        layer_manager()->CreateShadowRefLayer();
-      AsShadowLayer(edit.get_OpCreateRefLayer())->Bind(layer);
+      nsRefPtr<RefLayerComposite> layer =
+        layer_manager()->CreateRefLayerComposite();
+      AsLayerComposite(edit.get_OpCreateRefLayer())->Bind(layer);
       break;
     }
 
@@ -238,7 +243,7 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       MOZ_LAYERS_LOG(("[ParentSide] SetLayerAttributes"));
 
       const OpSetLayerAttributes& osla = edit.get_OpSetLayerAttributes();
-      Layer* layer = AsShadowLayer(osla)->AsLayer();
+      Layer* layer = AsLayerComposite(osla)->AsLayer();
       const LayerAttributes& attrs = osla.attrs();
 
       const CommonLayerAttributes& common = attrs.common();
@@ -267,8 +272,8 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       case Specific::TThebesLayerAttributes: {
         MOZ_LAYERS_LOG(("[ParentSide]   thebes layer"));
 
-        ShadowThebesLayer* thebesLayer =
-          static_cast<ShadowThebesLayer*>(layer);
+        ThebesLayerComposite* thebesLayer =
+          static_cast<ThebesLayerComposite*>(layer);
         const ThebesLayerAttributes& attrs =
           specific.get_ThebesLayerAttributes();
 
@@ -300,7 +305,7 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
 
         static_cast<CanvasLayer*>(layer)->SetFilter(
           specific.get_CanvasLayerAttributes().filter());
-        static_cast<ShadowCanvasLayer*>(layer)->SetBounds(
+        static_cast<CanvasLayerComposite*>(layer)->SetBounds(
           specific.get_CanvasLayerAttributes().bounds());
         break;
 
@@ -328,7 +333,7 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
     case Edit::TOpSetRoot: {
       MOZ_LAYERS_LOG(("[ParentSide] SetRoot"));
 
-      mRoot = AsShadowLayer(edit.get_OpSetRoot())->AsContainer();
+      mRoot = AsLayerComposite(edit.get_OpSetRoot())->AsContainer();
       break;
     }
     case Edit::TOpInsertAfter: {
@@ -406,7 +411,7 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
   // Ensure that any pending operations involving back and front
   // buffers have completed, so that neither process stomps on the
   // other's buffer contents.
-  ShadowLayerManager::PlatformSyncBeforeReplyUpdate();
+  LayerManagerComposite::PlatformSyncBeforeReplyUpdate();
 
   mShadowLayersManager->ShadowLayersUpdated(this, targetConfig, isFirstPaint);
 
@@ -423,7 +428,7 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
 void
 LayerTransactionParent::Attach(ShadowLayerParent* aLayerParent, CompositableParent* aCompositable)
 {
-  ShadowLayer* layer = aLayerParent->AsLayer()->AsShadowLayer();
+  LayerComposite* layer = aLayerParent->AsLayer()->AsLayerComposite();
   MOZ_ASSERT(layer);
   LayerComposite* layerComposite = aLayerParent->AsLayer()->AsLayerComposite();
 

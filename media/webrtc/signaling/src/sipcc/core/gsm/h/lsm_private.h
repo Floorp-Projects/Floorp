@@ -8,7 +8,7 @@
 #include "phone_types.h"
 #include "ccapi.h"
 
-#define LSM_ERR_MSG err_msg
+#define LSM_ERR_MSG(format, ...) CSFLogError("lsm" , format , ## __VA_ARGS__ )
 
 #define LSM_DEFAULT_LINE     (1)
 #define LSM_DEFAULT_INSTANCE (1)

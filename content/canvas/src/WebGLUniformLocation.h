@@ -31,7 +31,7 @@ public:
     uint32_t ProgramGeneration() const { return mProgramGeneration; }
     int ElementSize() const { return mElementSize; }
 
-    virtual JSObject* WrapObject(JSContext *cx, JSObject *scope);
+    JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> scope);
 
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_CYCLE_COLLECTION_CLASS(WebGLUniformLocation)

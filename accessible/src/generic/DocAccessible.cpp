@@ -1061,7 +1061,7 @@ DocAccessible::ARIAAttributeChanged(Accessible* aAccessible, nsIAtom* aAttribute
 
   // For aria attributes like drag and drop changes we fire a generic attribute
   // change event; at least until native API comes up with a more meaningful event.
-  uint8_t attrFlags = nsAccUtils::GetAttributeCharacteristics(aAttribute);
+  uint8_t attrFlags = aria::AttrCharacteristicsFor(aAttribute);
   if (!(attrFlags & ATTR_BYPASSOBJ))
     FireDelayedEvent(nsIAccessibleEvent::EVENT_OBJECT_ATTRIBUTE_CHANGED,
                      aAccessible);

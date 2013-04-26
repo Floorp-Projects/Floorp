@@ -557,7 +557,7 @@ nsDOMFileReader::ConvertStream(const char *aFileData,
 }
 
 /* virtual */ JSObject*
-nsDOMFileReader::WrapObject(JSContext* aCx, JSObject* aScope)
+nsDOMFileReader::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return FileReaderBinding::Wrap(aCx, aScope, this);
 }

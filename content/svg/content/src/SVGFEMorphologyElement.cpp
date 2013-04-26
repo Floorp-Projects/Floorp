@@ -13,7 +13,7 @@ namespace mozilla {
 namespace dom {
 
 JSObject*
-SVGFEMorphologyElement::WrapNode(JSContext* aCx, JSObject* aScope)
+SVGFEMorphologyElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return SVGFEMorphologyElementBinding::Wrap(aCx, aScope, this);
 }

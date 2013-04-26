@@ -7,8 +7,8 @@
 #include "uiaRawElmProvider.h"
 
 #include "AccessibleWrap.h"
+#include "ARIAMap.h"
 #include "nsIPersistentProperties2.h"
-#include "nsARIAMap.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;

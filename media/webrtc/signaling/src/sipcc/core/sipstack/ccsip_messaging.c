@@ -99,19 +99,19 @@ get_last_request_trx_index (ccsipCCB_t *ccb, boolean sent)
         return -1;
     }
 
-    CCSIP_DEBUG_TRX(DEB_F_PREFIX"Getting last TRX index, sent = %d\n", DEB_F_PREFIX_ARGS(SIP_TRX, fname), sent);
+    CCSIP_DEBUG_TRX(DEB_F_PREFIX"Getting last TRX index, sent = %d", DEB_F_PREFIX_ARGS(SIP_TRX, fname), sent);
 
     if (sent) {
         for (i = MAX_REQ_OUTSTANDING - 1; i >= 0; i--) {
             if (ccb->sent_request[i].cseq_number != CCSIP_START_CSEQ) {
-                CCSIP_DEBUG_TRX(DEB_F_PREFIX"Got TRX(%d) for sent req\n", DEB_F_PREFIX_ARGS(SIP_TRX, fname), i);
+                CCSIP_DEBUG_TRX(DEB_F_PREFIX"Got TRX(%d) for sent req", DEB_F_PREFIX_ARGS(SIP_TRX, fname), i);
                 return i;
             }
         }
     } else {
         for (i = MAX_REQ_OUTSTANDING - 1; i >= 0; i--) {
             if (ccb->recv_request[i].cseq_number != CCSIP_START_CSEQ) {
-                CCSIP_DEBUG_TRX(DEB_F_PREFIX"Got TRX(%d) for recv req\n", DEB_F_PREFIX_ARGS(SIP_TRX, fname), i);
+                CCSIP_DEBUG_TRX(DEB_F_PREFIX"Got TRX(%d) for recv req", DEB_F_PREFIX_ARGS(SIP_TRX, fname), i);
                 return i;
             }
         }
@@ -134,23 +134,23 @@ get_next_request_trx_index (ccsipCCB_t *ccb, boolean sent)
         return -1;
     }
 
-    CCSIP_DEBUG_TRX(DEB_F_PREFIX"Getting next TRX index, sent = %d\n", DEB_F_PREFIX_ARGS(SIP_TRX, fname), sent);
+    CCSIP_DEBUG_TRX(DEB_F_PREFIX"Getting next TRX index, sent = %d", DEB_F_PREFIX_ARGS(SIP_TRX, fname), sent);
     if (sent) {
         for (i = 0; i < MAX_REQ_OUTSTANDING; i++) {
             if (ccb->sent_request[i].cseq_number == CCSIP_START_CSEQ) {
-                CCSIP_DEBUG_TRX(DEB_F_PREFIX"Got TRX(%d) for sent req\n", DEB_F_PREFIX_ARGS(SIP_TRX, fname), i);
+                CCSIP_DEBUG_TRX(DEB_F_PREFIX"Got TRX(%d) for sent req", DEB_F_PREFIX_ARGS(SIP_TRX, fname), i);
                 return i;
             }
         }
     } else {
         for (i = 0; i < MAX_REQ_OUTSTANDING; i++) {
             if (ccb->recv_request[i].cseq_number == CCSIP_START_CSEQ) {
-                CCSIP_DEBUG_TRX(DEB_F_PREFIX"Got TRX(%d) for recv req\n", DEB_F_PREFIX_ARGS(SIP_TRX, fname), i);
+                CCSIP_DEBUG_TRX(DEB_F_PREFIX"Got TRX(%d) for recv req", DEB_F_PREFIX_ARGS(SIP_TRX, fname), i);
                 return i;
             }
         }
     }
-    CCSIP_DEBUG_TRX(DEB_F_PREFIX"Unable to get any open TRX!!\n", DEB_F_PREFIX_ARGS(SIP_TRX, fname));
+    CCSIP_DEBUG_TRX(DEB_F_PREFIX"Unable to get any open TRX!!", DEB_F_PREFIX_ARGS(SIP_TRX, fname));
     return -1;
 }
 
@@ -167,13 +167,13 @@ get_method_request_trx_index (ccsipCCB_t *ccb, sipMethod_t method, boolean sent)
         return -1;
     }
 
-    CCSIP_DEBUG_TRX(DEB_F_PREFIX"Getting TRX for method(%s), sent = %d\n",
+    CCSIP_DEBUG_TRX(DEB_F_PREFIX"Getting TRX for method(%s), sent = %d",
                     DEB_F_PREFIX_ARGS(SIP_TRX, fname), sipGetMethodString(method), sent);
 
     if (sent) {
         for (i = 0; i < MAX_REQ_OUTSTANDING; i++) {
             if (ccb->sent_request[i].cseq_method == method) {
-                CCSIP_DEBUG_TRX(DEB_F_PREFIX"Got TRX(%d) for sent method(%s)\n",
+                CCSIP_DEBUG_TRX(DEB_F_PREFIX"Got TRX(%d) for sent method(%s)",
                                 DEB_F_PREFIX_ARGS(SIP_TRX, fname), i, sipGetMethodString(method));
                 return i;
             }
@@ -181,13 +181,13 @@ get_method_request_trx_index (ccsipCCB_t *ccb, sipMethod_t method, boolean sent)
     } else {
         for (i = 0; i < MAX_REQ_OUTSTANDING; i++) {
             if (ccb->recv_request[i].cseq_method == method) {
-                CCSIP_DEBUG_TRX(DEB_F_PREFIX"Got TRX(%d) for recv method(%s)\n",
+                CCSIP_DEBUG_TRX(DEB_F_PREFIX"Got TRX(%d) for recv method(%s)",
                                 DEB_F_PREFIX_ARGS(SIP_TRX, fname), i, sipGetMethodString(method));
                 return i;
             }
         }
     }
-    CCSIP_DEBUG_TRX(DEB_F_PREFIX"Unable to find any TRX for method!!\n", DEB_F_PREFIX_ARGS(SIP_TRX, fname));
+    CCSIP_DEBUG_TRX(DEB_F_PREFIX"Unable to find any TRX for method!!", DEB_F_PREFIX_ARGS(SIP_TRX, fname));
     return -1;
 }
 
@@ -207,7 +207,7 @@ clean_method_request_trx (ccsipCCB_t *ccb, sipMethod_t method, boolean sent)
         return;
     }
 
-    CCSIP_DEBUG_TRX(DEB_F_PREFIX"Removing TRX for method(%s), sent = %d\n",
+    CCSIP_DEBUG_TRX(DEB_F_PREFIX"Removing TRX for method(%s), sent = %d",
                     DEB_F_PREFIX_ARGS(SIP_TRX, fname), sipGetMethodString(method), sent);
 
     if (sent) {
@@ -222,7 +222,7 @@ clean_method_request_trx (ccsipCCB_t *ccb, sipMethod_t method, boolean sent)
             transactionp[i].cseq_number = CCSIP_START_CSEQ;
             strlib_free(transactionp[i].u.sip_via_header);
             strlib_free(transactionp[i].sip_via_sentby);
-            CCSIP_DEBUG_TRX(DEB_F_PREFIX"Removed TRX(%d) for method(%s)\n",
+            CCSIP_DEBUG_TRX(DEB_F_PREFIX"Removed TRX(%d) for method(%s)",
                             DEB_F_PREFIX_ARGS(SIP_TRX, fname), i, sipGetMethodString(method));
             found = TRUE;
         }
@@ -336,7 +336,7 @@ sipSPISendRegister (ccsipCCB_t *ccb,
     CPR_IP_ADDR_INIT(ipaddr);
 
     if (!(request = sipSPIBuildRegisterHeaders(ccb, user, expires_int))) {
-        CCSIP_DEBUG_ERROR("%s: Error: Building Register Headers.\n",
+        CCSIP_DEBUG_ERROR("%s: Error: Building Register Headers.",
                           fname);
         return (send_result);
     }
@@ -385,7 +385,8 @@ sipSPISendRegister (ccsipCCB_t *ccb,
         send_result = SendRequest(ccb, request, sipMethodRegister,
                                   FALSE, TRUE, FALSE);
     } else {
-        err_msg("%s: Unable to retrieve address of proxy.\n", fname);
+        CSFLogError("sipstack", "%s: Unable to retrieve address of proxy.",
+          fname);
         free_sip_message(request);
     }
 
@@ -512,7 +513,7 @@ sipSPISetRPID (ccsipCCB_t *ccb, boolean request)
     }
 
     if (!ccb) {
-        CCSIP_DEBUG_ERROR("%s: Error: NULL ccb.\n", fname);
+        CCSIP_DEBUG_ERROR("%s: Error: NULL ccb.", fname);
         return rpid_flag;
     }
 
@@ -582,7 +583,7 @@ sipSPISetFrom (ccsipCCB_t *ccb)
     cpr_ip_type ip_type = CPR_IP_ADDR_INVALID;
 
     if (!ccb) {
-        CCSIP_DEBUG_ERROR("%s: Error: NULL ccb.\n", fname);
+        CCSIP_DEBUG_ERROR("%s: Error: NULL ccb.", fname);
         return;
     }
 
@@ -599,7 +600,7 @@ sipSPISetFrom (ccsipCCB_t *ccb)
     sip_from_temp = strlib_open(ccb->sip_from, MAX_SIP_URL_LENGTH);
 
     if (sip_from_temp == NULL) {
-        CCSIP_DEBUG_ERROR("%s: Error: sip_from_temp is NULL.\n", fname);
+        CCSIP_DEBUG_ERROR("%s: Error: sip_from_temp is NULL.", fname);
         return;
     }
 
@@ -739,7 +740,7 @@ sipSPISendInvite (ccsipCCB_t *ccb, sipInviteType_t inviteType,
 
         if (inviterefer == FALSE) {
             //Not enough information for starting attended transfer
-            CCSIP_DEBUG_ERROR("%s: Error:Replaces INVITE build unsuccessful.\n",
+            CCSIP_DEBUG_ERROR("%s: Error:Replaces INVITE build unsuccessful.",
                               fname);
             return (FALSE);
         }
@@ -817,7 +818,7 @@ sipSPISendInvite (ccsipCCB_t *ccb, sipInviteType_t inviteType,
     messageflag.flags |= SIP_HEADER_CONTENT_TYPE_BIT;
     request = GET_SIP_MESSAGE();
     if (request == NULL) {
-        CCSIP_DEBUG_ERROR("%s: Error: Unable to allocate INVITE request\n",
+        CCSIP_DEBUG_ERROR("%s: Error: Unable to allocate INVITE request",
                           fname);
         return (FALSE);
     }
@@ -855,7 +856,7 @@ sipSPISendInvite (ccsipCCB_t *ccb, sipInviteType_t inviteType,
 
     if (flag != STATUS_SUCCESS) {
         free_sip_message(request);
-        CCSIP_DEBUG_ERROR("%s: Error: INVITE message build unsuccessful.\n",
+        CCSIP_DEBUG_ERROR("%s: Error: INVITE message build unsuccessful.",
                           fname);
         clean_method_request_trx(ccb, sipMethodInvite, TRUE);
         return (FALSE);
@@ -978,7 +979,7 @@ sipSPISendInviteMidCall (ccsipCCB_t *ccb, boolean expires)
     /* Write SDP */
     if (flag != STATUS_SUCCESS) {
         free_sip_message(request);
-        CCSIP_DEBUG_ERROR("%s: Error: INVITE message build unsuccessful.\n",
+        CCSIP_DEBUG_ERROR("%s: Error: INVITE message build unsuccessful.",
                           fname);
         clean_method_request_trx(ccb, sipMethodInvite, TRUE);
         return (FALSE);
@@ -1065,7 +1066,7 @@ sipSPISendAck (ccsipCCB_t *ccb, sipMessage_t *response)
         }
         response_cseq_number = response_cseq_structure->number;
         cpr_free(response_cseq_structure);
-        CCSIP_DEBUG_STATE(DEB_F_PREFIX"Cseq from response = %d \n",
+        CCSIP_DEBUG_STATE(DEB_F_PREFIX"Cseq from response = %d",
             DEB_F_PREFIX_ARGS(SIP_ACK, "sipSPISendAck"), response_cseq_number);
     } else {
         trx_index = get_method_request_trx_index(ccb, sipMethodInvite, TRUE);
@@ -1073,7 +1074,7 @@ sipSPISendAck (ccsipCCB_t *ccb, sipMessage_t *response)
             return (FALSE);
         }
         response_cseq_number = ccb->sent_request[trx_index].cseq_number;
-        CCSIP_DEBUG_STATE(DEB_F_PREFIX"Cseq from ccb = %d \n",
+        CCSIP_DEBUG_STATE(DEB_F_PREFIX"Cseq from ccb = %d",
             DEB_F_PREFIX_ARGS(SIP_ACK, "sipSPISendAck"), response_cseq_number);
     }
 
@@ -1381,14 +1382,14 @@ sip_platform_icmp_unreachable_callback (void *ccb, uint32_t ipaddr)
 
     icmp_msg = (uint32_t *) SIPTaskGetBuffer(sizeof(uint32_t));
     if (!icmp_msg) {
-        CCSIP_DEBUG_ERROR("%s: Error: get buffer failed.\n", fname);
+        CCSIP_DEBUG_ERROR("%s: Error: get buffer failed.", fname);
         return;
     }
     *icmp_msg = ((ccsipCCB_t *)ccb)->index;
 
     if (SIPTaskSendMsg(SIP_ICMP_UNREACHABLE, (cprBuffer_t)icmp_msg,
                        sizeof(uint32_t), (void *)(long)ipaddr) == CPR_FAILURE) {
-        CCSIP_DEBUG_ERROR("%s: Error: send msg failed.\n", fname);
+        CCSIP_DEBUG_ERROR("%s: Error: send msg failed.", fname);
         cpr_free((cprBuffer_t)icmp_msg);
     }
     return;
@@ -2167,7 +2168,7 @@ sipSPIsendNonActiveOptionResponse (sipMessage_t *msg,
         request_uri_error = TRUE;
     }
     if (request_uri_error) {
-        CCSIP_DEBUG_ERROR("%s: Error: Invalid Request URI failed.\n", fname);
+        CCSIP_DEBUG_ERROR("%s: Error: Invalid Request URI failed.", fname);
         free_sip_message(response);
         /* Send 400 error */
         if (sipSPISendErrorResponse(msg, SIP_CLI_ERR_BAD_REQ,
@@ -2289,7 +2290,7 @@ sipSPIsendNonActiveOptionResponse (sipMessage_t *msg,
             return FALSE;
         }
         if (request_cseq_structure->method != sipMethodOptions) {
-            CCSIP_DEBUG_ERROR("%s: Error: Invalid method in Cseq failed.\n",
+            CCSIP_DEBUG_ERROR("%s: Error: Invalid method in Cseq failed.",
                               fname);
             free_sip_message(response);
             /* Send 400 error */
@@ -2995,7 +2996,7 @@ sipSPISendFailureResponseAck (ccsipCCB_t *ccb, sipMessage_t *response,
                 cpr_free(authen.authorization);
                 UPDATE_FLAGS(flag, tflag);
             } else {
-                CCSIP_DEBUG_ERROR("%s: Error: Bad authentication header.\n",
+                CCSIP_DEBUG_ERROR("%s: Error: Bad authentication header.",
                                   fname);
                 if (request) {
                     free_sip_message(request);
@@ -3042,7 +3043,7 @@ sipSPISendFailureResponseAck (ccsipCCB_t *ccb, sipMessage_t *response,
      * to any duplicate 200 OK or error responses
      */
     if ((previous_call_line == 0xFF) && (prevcall == FALSE)) {
-        CCSIP_DEBUG_ERROR("%s: INFO: Skipping store for this Ack\n", fname);
+        CCSIP_DEBUG_ERROR("%s: INFO: Skipping store for this Ack", fname);
     } else {
         reldel_stored_msg = sipRelDevCoupledMessageStore(request,
                                                          response_callid,
@@ -3131,7 +3132,7 @@ sipGetRequestMethod (sipMessage_t *pRequest, sipMethod_t *pMethod)
     if (pReqLine->method) {
         *pMethod = sippmh_get_method_code(pReqLine->method);
     } else {
-        CCSIP_DEBUG_ERROR("%s: Error: No recognizable method in Req-URI!\n",
+        CCSIP_DEBUG_ERROR("%s: Error: No recognizable method in Req-URI!",
                           fname);
     }
 
@@ -3477,7 +3478,7 @@ sipSPIAddRouteHeaders (sipMessage_t *msg, ccsipCCB_t *ccb,
     if (route[0] != '\0') {
         if (sippmh_add_text_header(msg, SIP_HEADER_ROUTE, route)
                 == STATUS_SUCCESS) {
-            CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Adding route = %s\n",
+            CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Adding route = %s",
                 DEB_F_PREFIX_ARGS(SIP_ROUTE, fname), route);
             if (result_route) {
                 sstrncpy(result_route, route, result_route_length);
@@ -3492,7 +3493,7 @@ sipSPIAddRouteHeaders (sipMessage_t *msg, ccsipCCB_t *ccb,
          * This would happen when the Record-Route header has
          * a single entry and Contact was NULL
          */
-        CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Not adding route \n", DEB_F_PREFIX_ARGS(SIP_ROUTE, fname));
+        CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Not adding route", DEB_F_PREFIX_ARGS(SIP_ROUTE, fname));
     }
 
     return (TRUE);
@@ -3548,7 +3549,7 @@ sipSPIAddCiscoGuid (sipMessage_t *msg, ccsipCCB_t *ccb)
                                                       SIP_HEADER_CISCO_GUID,
                                                       guid_char));
     } else {
-        CCSIP_DEBUG_ERROR("%s: Error: Fatal error in parsing ccb.\n",
+        CCSIP_DEBUG_ERROR("%s: Error: Fatal error in parsing ccb.",
                           fname);
     }
 */
@@ -3672,7 +3673,7 @@ sipSPICheckContentHeaders (sipMessage_t *msg)
         if (msg->mesg_body[i].msgBody) {
             if (msg->mesg_body[i].msgContentTypeValue
                     == SIP_CONTENT_TYPE_UNKNOWN_VALUE) {
-                CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Pass-through \"%s\"\n",
+                CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Pass-through \"%s\"",
                                     DEB_F_PREFIX_ARGS(SIP_CONTENT_TYPE, fname),
                                     msg->mesg_body[i].msgContentType);
                 // return (SIP_MESSAGING_ERROR_UNSUPPORTED_MEDIA);
@@ -3768,14 +3769,14 @@ sipCheckRequestURI (ccsipCCB_t *ccb, sipMessage_t *request)
                                 ipaddr2dotted(src_addr_str, &src_addr);
                                 if (strcmp(sipUriUrl->host, src_addr_str)) {
                                     if (!validateHostName(sipUriUrl->host, pUser)) {
-                                        CCSIP_DEBUG_ERROR("Unknown address in Request URI\n");
+                                        CCSIP_DEBUG_ERROR("Unknown address in Request URI");
                                         request_uri_error = TRUE;
                                         errorCode = SIP_MESSAGING_ENDPOINT_NOT_FOUND;
                                     }
                                 }
                             } else {
                                 if (!validateHostName(sipUriUrl->host, pUser)) {
-                                    CCSIP_DEBUG_ERROR("Unknown address in Request URI\n");
+                                    CCSIP_DEBUG_ERROR("Unknown address in Request URI");
                                     request_uri_error = TRUE;
                                     errorCode = SIP_MESSAGING_ENDPOINT_NOT_FOUND;
                                 }
@@ -3784,7 +3785,7 @@ sipCheckRequestURI (ccsipCCB_t *ccb, sipMessage_t *request)
                                 if (ccb &&
                                     cpr_strcasecmp(sipTransportGetTransportType(ccb->dn_line, FALSE, ccb), "udp") == 0) {
                                     if (sipUriUrl->port != ccb->local_port) {
-                                        CCSIP_DEBUG_ERROR("Port Mismatch(UDP), URL Port: %d, Port Used: %d\n",
+                                        CCSIP_DEBUG_ERROR("Port Mismatch(UDP), URL Port: %d, Port Used: %d",
                                              sipUriUrl->port, ccb->local_port);
                                         request_uri_error = TRUE;
                                         errorCode = SIP_MESSAGING_ENDPOINT_NOT_FOUND;
@@ -3870,7 +3871,7 @@ sipSPICheckRequest (ccsipCCB_t *ccb, sipMessage_t *request)
 
 
     if ((retval = sipCheckRequestURI(ccb, request)) != SIP_MESSAGING_OK) {
-        CCSIP_DEBUG_ERROR("%s: Request URI Not Found\n", fname);
+        CCSIP_DEBUG_ERROR("%s: Request URI Not Found", fname);
         return (retval);
     }
 
@@ -3920,7 +3921,7 @@ sipSPICheckRequest (ccsipCCB_t *ccb, sipMessage_t *request)
     }
 
     if ((retval = sipSPICheckContentHeaders(request)) != SIP_MESSAGING_OK) {
-        CCSIP_DEBUG_ERROR("%s: Content header value not supported\n", fname);
+        CCSIP_DEBUG_ERROR("%s: Content header value not supported", fname);
         return (retval);
     }
 
@@ -3929,10 +3930,10 @@ sipSPICheckRequest (ccsipCCB_t *ccb, sipMessage_t *request)
      */
     if (ccb && ccb->sipCallID[0]) {
         if (strcmp(ccb->sipCallID, callID) != 0) {
-            CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Call ID match: new call id.\n", DEB_F_PREFIX_ARGS(SIP_CALL_ID, fname));
+            CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Call ID match: new call id.", DEB_F_PREFIX_ARGS(SIP_CALL_ID, fname));
             retval = SIP_MESSAGING_NEW_CALLID;
         } else {
-            CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Call ID match: same call id.\n", DEB_F_PREFIX_ARGS(SIP_CALL_ID, fname));
+            CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Call ID match: same call id.", DEB_F_PREFIX_ARGS(SIP_CALL_ID, fname));
         }
     }
 
@@ -3985,7 +3986,7 @@ sipSPICheckRequest (ccsipCCB_t *ccb, sipMessage_t *request)
 
     if (request->mesg_line) {
         if (strlen(request->mesg_line) >= MAX_SIP_URL_LENGTH) {
-            CCSIP_DEBUG_ERROR("%s: Request URI length exceeds acceptable value\n",
+            CCSIP_DEBUG_ERROR("%s: Request URI length exceeds acceptable value",
                               fname);
             return (SIP_MESSAGING_ERROR);
         }
@@ -4139,7 +4140,7 @@ sipSPICheckRequest (ccsipCCB_t *ccb, sipMessage_t *request)
                     }
                 }
                 if (!to_tag_match) {
-                    CCSIP_DEBUG_ERROR("%s: To-Tag mismatch detected!\n", fname);
+                    CCSIP_DEBUG_ERROR("%s: To-Tag mismatch detected!", fname);
                     return (SIP_CLI_ERR_CALLEG);
                 }
                 // Now check from-tag
@@ -4160,7 +4161,7 @@ sipSPICheckRequest (ccsipCCB_t *ccb, sipMessage_t *request)
                         }
                     }
                     if (!from_tag_match) {
-                        CCSIP_DEBUG_ERROR("%s: From-Tag mismatch detected!\n",
+                        CCSIP_DEBUG_ERROR("%s: From-Tag mismatch detected!",
                                           fname);
                         return (SIP_CLI_ERR_CALLEG);
                     }
@@ -4188,7 +4189,7 @@ sipSPICheckRequest (ccsipCCB_t *ccb, sipMessage_t *request)
         }
         /* Check if duplicate */
         if (sipRelDevMessageIsDuplicate(&requestRecord, &handle)) {
-            CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Duplicate request detected...\n", DEB_F_PREFIX_ARGS(SIP_RESP, fname));
+            CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Duplicate request detected...", DEB_F_PREFIX_ARGS(SIP_RESP, fname));
             // If the request is an ACK we do not have any thing to send
             // This was retransmitted ACK so drop it.
             if (requestRecord.cseq_method != sipMethodAck) {
@@ -4279,14 +4280,14 @@ sipSPICheckResponse (ccsipCCB_t *ccb, sipMessage_t *response)
     via = sippmh_get_cached_header_val(response, VIA);
     if (via) {
         if (strchr(via, COMMA)) {
-            CCSIP_DEBUG_ERROR("%s: Multiple Via headers found in response\n",
+            CCSIP_DEBUG_ERROR("%s: Multiple Via headers found in response",
                               fname);
             return (SIP_MESSAGING_ERROR);
         }
     }
 
     if (sipSPICheckContentHeaders(response) != SIP_MESSAGING_OK) {
-        CCSIP_DEBUG_ERROR("%s: Content header value not supported\n", fname);
+        CCSIP_DEBUG_ERROR("%s: Content header value not supported", fname);
         return (SIP_MESSAGING_ERROR);
     }
 
@@ -4430,7 +4431,7 @@ sipSPICheckResponse (ccsipCCB_t *ccb, sipMessage_t *response)
 
         /* Check if duplicate */
         if (sipRelDevMessageIsDuplicate(&responseRecord, &handle)) {
-            CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Duplicate response detected...\n", DEB_F_PREFIX_ARGS(SIP_RESP, fname));
+            CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Duplicate response detected...", DEB_F_PREFIX_ARGS(SIP_RESP, fname));
             if (sipRelDevCoupledMessageSend(handle) < 0) {
                 CCSIP_DEBUG_ERROR(get_debug_string(DEBUG_GENERAL_FUNCTIONCALL_FAILED),
                                   fname, "sipRelDevCoupledMessageSend()");
@@ -4438,7 +4439,7 @@ sipSPICheckResponse (ccsipCCB_t *ccb, sipMessage_t *response)
             if ((response_method == sipMethodInvite) &&
                 (code_class == codeClass1xx)) {
                 /* Allow multiple provisional responses */
-                CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Allowed duplicate provisional response\n",
+                CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Allowed duplicate provisional response",
                                     DEB_F_PREFIX_ARGS(SIP_RESP, fname));
             } else {
                 return (SIP_MESSAGING_DUPLICATE);
@@ -4454,7 +4455,7 @@ sipSPICheckResponse (ccsipCCB_t *ccb, sipMessage_t *response)
      */
     trx_index = get_method_request_trx_index(ccb, response_method, TRUE);
     if (trx_index < 0) {
-        CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"No Matching Request Found!:\n"
+        CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"No Matching Request Found!:"
                             "(Response: cseq=%u, trx_method=%s)\n",
                             DEB_F_PREFIX_ARGS(SIP_CALL_STATUS, fname), response_cseq_number,
                             sipGetMethodString(response_method));
@@ -4529,7 +4530,7 @@ sipSPICheckResponse (ccsipCCB_t *ccb, sipMessage_t *response)
                      * No CANCEL was sent, so this is a plain mismatch
                      * of the CSeq #
                      */
-                    CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Ignoring response message\n",
+                    CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Ignoring response message",
                                         DEB_F_PREFIX_ARGS(SIP_RESP, fname));
                     return (SIP_MESSAGING_ERROR);
                 }
@@ -4619,8 +4620,8 @@ sipSPIGenerateAuthorizationResponse (sip_authen_t *sip_authen,
     if ((sip_authen->scheme != SIP_DIGEST) ||
         (!md5_sess_used &&
          (cpr_strcasecmp(sip_authen->algorithm, "md5") != 0))) {
-        CCSIP_DEBUG_ERROR("%s: Error: invalid XXX-Authenticate.\n", fname);
-        CCSIP_DEBUG_ERROR("  scheme: %d, algorithm: %s.\n", sip_authen->scheme,
+        CCSIP_DEBUG_ERROR("%s: Error: invalid XXX-Authenticate.", fname);
+        CCSIP_DEBUG_ERROR("  scheme: %d, algorithm: %s.", sip_authen->scheme,
                           sip_authen->algorithm);
         return (FALSE);
     }
@@ -4683,7 +4684,7 @@ sipSPIGenerateAuthorizationResponse (sip_authen_t *sip_authen,
         for (i = 0; i < ccb->local_msg_body.num_parts; i++) {
             if (ccb->local_msg_body.parts[i].body != NULL) {
                 DigestString(ccb->local_msg_body.parts[i].body, HA2);
-                AUTH_DEBUG(DEB_F_PREFIX"entity body= \n", DEB_F_PREFIX_ARGS(SIP_MSG, fname));
+                AUTH_DEBUG(DEB_F_PREFIX"entity body=", DEB_F_PREFIX_ARGS(SIP_MSG, fname));
             }
         }
     } else {
@@ -5254,7 +5255,7 @@ sipSPISendByeAuth (sipMessage_t *pResponse,
      */
     memset(ReqURI, 0, sizeof(ReqURI));
     if (response_record_route_info) {
-        CCSIP_DEBUG_STATE(DEB_F_PREFIX"Forming Req-URI: using 401/407's Record-Route\n",
+        CCSIP_DEBUG_STATE(DEB_F_PREFIX"Forming Req-URI: using 401/407's Record-Route",
                           DEB_F_PREFIX_ARGS(SIP_REQ_URI, fname));
         i = response_record_route_info->num_locations - 1;
         if (response_record_route_info->locations[i]->genUrl->schema
@@ -5313,7 +5314,7 @@ sipSPISendByeAuth (sipMessage_t *pResponse,
         request_uri_addr = *dest_ipaddr;
         request_uri_port = dest_port;
     } else if (response_contact_info) {
-        CCSIP_DEBUG_STATE(DEB_F_PREFIX"Forming Req-URI: using Contact\n", DEB_F_PREFIX_ARGS(SIP_REQ_URI, fname));
+        CCSIP_DEBUG_STATE(DEB_F_PREFIX"Forming Req-URI: using Contact", DEB_F_PREFIX_ARGS(SIP_REQ_URI, fname));
         if (response_contact_info->locations[0]->genUrl->schema == URL_TYPE_SIP) {
             sipUrl = response_contact_info->locations[0]->genUrl->u.sipUrl;
         } else {
@@ -6000,7 +6001,7 @@ sipSPIGenRequestURI (ccsipCCB_t *ccb, sipMethod_t sipmethod, boolean initInvite)
                 (lr || (ccb->state >= SIP_STATE_SENT_INVITE_CONNECTED))) {
                 // Use Contact info ONLY if loose routing or
                 // if we're fully connected - otherwise use proxy
-                CCSIP_DEBUG_STATE(DEB_F_PREFIX"Forming Req-URI: using Contact\n",
+                CCSIP_DEBUG_STATE(DEB_F_PREFIX"Forming Req-URI: using Contact",
                                   DEB_F_PREFIX_ARGS(SIP_REQ_URI, fname));
 
                 if ((sipMethodInvite == sipmethod) &&
@@ -6367,7 +6368,7 @@ sipSPIAddReasonHeader (ccsipCCB_t *ccb, sipMessage_t *request)
                 MAX_SIP_HEADER_LENGTH - strlen(pReasonStr) - 1);
         return (sippmh_add_text_header(request, SIP_HEADER_REASON, pReasonStr));
     } else {
-        CCSIP_DEBUG_ERROR("%s called with send_reason_header set to false\n", fname);
+        CCSIP_DEBUG_ERROR("%s called with send_reason_header set to false", fname);
         return (STATUS_SUCCESS);
     }
 }
@@ -6446,7 +6447,7 @@ get_reason_string (int unreg_reason, char *unreg_reason_str, int len)
             break;
         default:
             unreg_reason_str[0] = '\0';
-            CCSIP_DEBUG_ERROR("Unkown unreg reason code passed\n");
+            CCSIP_DEBUG_ERROR("Unkown unreg reason code passed");
             break;
     }
 }
@@ -6729,7 +6730,7 @@ SendRequest (ccsipCCB_t *ccb, sipMessage_t *request, sipMethod_t method,
      */
     trx_index = get_last_request_trx_index(ccb, TRUE);
     if (trx_index < 0) {
-        CCSIP_DEBUG_ERROR("%s: No Valid Trx found!\n", "SendRequest");
+        CCSIP_DEBUG_ERROR("%s: No Valid Trx found!", "SendRequest");
         return (FALSE);
     }
     if (sipMethodAck == method) {
@@ -7113,7 +7114,7 @@ AddGeneralHeaders (ccsipCCB_t *ccb,
             tflag = CopyLocalSDPintoResponse(request, &ccb->local_msg_body);
             if (tflag != HSTATUS_SUCCESS) {
                 /* there is some thing wrong with message body */
-                CCSIP_DEBUG_ERROR("%s: Error adding message body.\n", fname);
+                CCSIP_DEBUG_ERROR("%s: Error adding message body.", fname);
                 break;
             }
 
@@ -7131,7 +7132,7 @@ AddGeneralHeaders (ccsipCCB_t *ccb,
             tflag = CopyLocalSDPintoResponse(request, &ccb->local_msg_body);
             if (tflag != HSTATUS_SUCCESS) {
                 /* there is some thing wrong with message body */
-                CCSIP_DEBUG_ERROR("%s: Error adding options message body.\n",
+                CCSIP_DEBUG_ERROR("%s: Error adding options message body.",
                                   fname);
             }
 
@@ -7312,7 +7313,7 @@ sipSPISendUpdate (ccsipCCB_t *ccb)
 
     if (flag != STATUS_SUCCESS) {
         free_sip_message(request);
-        CCSIP_DEBUG_ERROR("%s: Error: UPDATE message build unsuccessful.\n",
+        CCSIP_DEBUG_ERROR("%s: Error: UPDATE message build unsuccessful.",
                           fname);
         clean_method_request_trx(ccb, sipMethodUpdate, TRUE);
         return (FALSE);
@@ -7628,7 +7629,7 @@ sipSPIBuildRegisterHeaders(ccsipCCB_t *ccb,
 
     if (flag != STATUS_SUCCESS) {
         free_sip_message(request);
-        CCSIP_DEBUG_ERROR("%s: Error: REGISTER message build unsuccessful.\n",
+        CCSIP_DEBUG_ERROR("%s: Error: REGISTER message build unsuccessful.",
                           fname);
         clean_method_request_trx(ccb, sipMethodRegister, TRUE);
         return (NULL);

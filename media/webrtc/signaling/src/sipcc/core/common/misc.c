@@ -80,7 +80,7 @@ set_month_from_str (char *month_str)
             ret_val = TRUE;
         }
     } else {
-        TNP_DEBUG(DEB_F_PREFIX "Input month_str is NULL!!!! \n", DEB_F_PREFIX_ARGS(PLAT_API, fname));
+        TNP_DEBUG(DEB_F_PREFIX "Input month_str is NULL!!!!", DEB_F_PREFIX_ARGS(PLAT_API, fname));
     }
     return (ret_val);
 }
@@ -351,7 +351,7 @@ void
 cprReleaseSysHeader (void *syshdr)
 {
     if (syshdr == NULL) {
-        CPR_ERROR("cprReleaseSysHeader: Sys header pointer is NULL\n");
+        CPR_ERROR("cprReleaseSysHeader: Sys header pointer is NULL");
         return;
     }
 

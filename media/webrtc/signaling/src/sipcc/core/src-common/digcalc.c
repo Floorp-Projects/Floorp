@@ -121,10 +121,10 @@ DigestCalcResponse (IN HASHHEX HA1,       /* H(A1) */
 
     CvtHex(RespHash, Response);
 
-    AUTH_DEBUG(DEB_F_PREFIX"HA1=     %s\n", DEB_F_PREFIX_ARGS(SIP_REQ_DIGEST, fname), HA1);
-    AUTH_DEBUG(DEB_F_PREFIX"HEntity= %s\n", DEB_F_PREFIX_ARGS(SIP_REQ_DIGEST, fname), HEntity);
-    AUTH_DEBUG(DEB_F_PREFIX"HA2=     %s\n", DEB_F_PREFIX_ARGS(SIP_REQ_DIGEST, fname), HA2Hex);
-    AUTH_DEBUG(DEB_F_PREFIX"Digest=  %s\n", DEB_F_PREFIX_ARGS(SIP_REQ_DIGEST, fname), Response);
+    AUTH_DEBUG(DEB_F_PREFIX"HA1=     %s", DEB_F_PREFIX_ARGS(SIP_REQ_DIGEST, fname), HA1);
+    AUTH_DEBUG(DEB_F_PREFIX"HEntity= %s", DEB_F_PREFIX_ARGS(SIP_REQ_DIGEST, fname), HEntity);
+    AUTH_DEBUG(DEB_F_PREFIX"HA2=     %s", DEB_F_PREFIX_ARGS(SIP_REQ_DIGEST, fname), HA2Hex);
+    AUTH_DEBUG(DEB_F_PREFIX"Digest=  %s", DEB_F_PREFIX_ARGS(SIP_REQ_DIGEST, fname), Response);
 }
 
 

@@ -13,7 +13,7 @@ namespace mozilla {
 namespace dom {
 
 JSObject*
-SVGFEMergeElement::WrapNode(JSContext *aCx, JSObject *aScope)
+SVGFEMergeElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
   return SVGFEMergeElementBinding::Wrap(aCx, aScope, this);
 }

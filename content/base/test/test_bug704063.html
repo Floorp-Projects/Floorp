@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug </title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug  **/
+  SimpleTest.waitForExplicitFinish();
+  var unprefixedRan = false;
+  var prefixedRan = false;
+  function unprefixed(time) {
+    is(prefixedRan, true, "We were called second");
+    unprefixedRan = true;
+    ok(Math.abs(time - performance.now()) < 3600000,
+       "An hour really shouldn't have passed here");
+    ok(Math.abs(time - Date.now()) > 3600000,
+       "More than an hour should have passed since 1970");
+  }
+  function prefixed(time) {
+    is(unprefixedRan, false, "Prefixed was called first");
+    prefixedRan = true;
+    ok(Math.abs(time - Date.now()) < 3600000,
+       "Our time should be comparable to Date.now()");
+    ok(Math.abs(time - performance.now()) > 3600000,
+       "Our time should not be comparable to performance.now()");
+  }
+  function prefixed2() {
+    ok(prefixedRan, "We should be after the other prefixed call");
+    ok(unprefixedRan, "We should be after the unprefixed call");
+    SimpleTest.finish();
+  }
+
+  window.onload = function() {
+    window.mozRequestAnimationFrame(prefixed);
+    window.requestAnimationFrame(unprefixed);
+    window.mozRequestAnimationFrame(prefixed2);
+  }
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">Mozilla Bug </a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

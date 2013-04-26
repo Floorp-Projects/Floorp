@@ -192,15 +192,6 @@ public:
   static nsIntPoint GetScreenCoordsForParent(Accessible* aAccessible);
 
   /**
-   * Get the ARIA attribute characteristics for a given ARIA attribute.
-   * 
-   * @param aAtom  ARIA attribute
-   * @return       A bitflag representing the attribute characteristics
-   *               (see nsARIAMap.h for possible bit masks, prefixed "ARIA_")
-   */
-  static uint8_t GetAttributeCharacteristics(nsIAtom* aAtom);
-
-  /**
    * Get the 'live' or 'container-live' object attribute value from the given
    * ELiveAttrRule constant.
    *
