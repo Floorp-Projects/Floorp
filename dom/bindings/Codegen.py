@@ -3622,10 +3622,7 @@ if (!returnArray) {
         else:
             wrappingCode = ""
 
-        if descriptor.interface.isCallback():
-            wrap = "WrapCallbackInterface(cx, ${obj}, %s, ${jsvalPtr})" % result
-            failed = None
-        elif not descriptor.interface.isExternal() and not descriptor.skipGen:
+        if not descriptor.interface.isExternal() and not descriptor.skipGen:
             if descriptor.wrapperCache:
                 assert descriptor.nativeOwnership != 'owned'
                 wrapMethod = "WrapNewBindingObject"
