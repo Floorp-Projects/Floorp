@@ -510,6 +510,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         testq(lhs, imm);
         j(cond, label);
     }
+    void branchTestPtr(Condition cond, const Address &lhs, Imm32 imm, Label *label) {
+        testq(Operand(lhs), imm);
+        j(cond, label);
+    }
     void decBranchPtr(Condition cond, const Register &lhs, Imm32 imm, Label *label) {
         subPtr(imm, lhs);
         j(cond, label);
