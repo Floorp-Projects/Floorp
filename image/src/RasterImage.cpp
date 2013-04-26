@@ -2748,16 +2748,19 @@ RasterImage::RequestDecodeCore(RequestDecodeType aDecodeType)
   if (mError)
     return NS_ERROR_FAILURE;
 
-  // If we've already got a full decoder running, and have already
-  // decoded some bytes, we have nothing to do
-  if (mDecoder && !mDecoder->IsSizeDecode() && mBytesDecoded) {
+  // If we're already decoded, there's nothing to do.
+  if (mDecoded)
     return NS_OK;
-  }
 
   // mFinishing protects against the case when we enter RequestDecode from
   // ShutdownDecoder -- in that case, we're done with the decode, we're just
   // not quite ready to admit it.  See bug 744309.
   if (mFinishing)
+    return NS_OK;
+
+  // If we're currently waiting for a new frame, we can't do anything until
+  // that frame is allocated.
+  if (mDecoder && mDecoder->NeedsNewFrame())
     return NS_OK;
 
   // If our callstack goes through a size decoder, we have a problem.
@@ -2784,13 +2787,28 @@ RasterImage::RequestDecodeCore(RequestDecodeType aDecodeType)
     }
   }
 
-  // If we're fully decoded, we have nothing to do. This has to be after
-  // DecodeUntilSizeAvailable because it can result in a synchronous decode if
-  // we're already waiting on a full decode.
-  if (mDecoded)
-    return NS_OK;
-
   MutexAutoLock lock(mDecodingMutex);
+
+  // If the image is waiting for decode work to be notified, go ahead and do that.
+  if (mDecodeRequest &&
+      mDecodeRequest->mRequestStatus == DecodeRequest::REQUEST_WORK_DONE) {
+    nsresult rv = FinishedSomeDecoding();
+    CONTAINER_ENSURE_SUCCESS(rv);
+  }
+
+  // If we're fully decoded, we have nothing to do. We need this check after
+  // DecodeUntilSizeAvailable and FinishedSomeDecoding because they can result
+  // in us finishing an in-progress decode (or kicking off and finishing a
+  // synchronous decode if we're already waiting on a full decode).
+  if (mDecoded) {
+    return NS_OK;
+  }
+
+  // If we've already got a full decoder running, and have already
+  // decoded some bytes, we have nothing to do
+  if (mDecoder && !mDecoder->IsSizeDecode() && mBytesDecoded) {
+    return NS_OK;
+  }
 
   // If we have a size decode open, interrupt it and shut it down; or if
   // the decoder has different flags than what we need
@@ -2808,13 +2826,6 @@ RasterImage::RequestDecodeCore(RequestDecodeType aDecodeType)
     CONTAINER_ENSURE_SUCCESS(rv);
 
     MOZ_ASSERT(mDecoder);
-  }
-
-  // If we're waiting for decode work to be notified, go ahead and do that.
-  if (mDecodeRequest &&
-      mDecodeRequest->mRequestStatus == DecodeRequest::REQUEST_WORK_DONE) {
-    nsresult rv = FinishedSomeDecoding();
-    CONTAINER_ENSURE_SUCCESS(rv);
   }
 
   // If we've read all the data we have, we're done
