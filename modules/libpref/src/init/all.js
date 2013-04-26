@@ -3921,10 +3921,6 @@ pref("image.multithreaded_decoding.enabled", true);
 // automatically determined based on the system's number of cores.
 pref("image.multithreaded_decoding.limit", -1);
 
-// Limit for the canvas image cache. 0 means we don't limit the size of the
-// cache.
-pref("canvas.image.cache.limit", 0);
-
 // WebGL prefs
 pref("gl.msaa-level", 2);
 pref("webgl.force-enabled", false);
