@@ -18,9 +18,11 @@ import android.view.MotionEvent;
 import android.view.View;
 
 class NativePanZoomController implements PanZoomController, GeckoEventListener {
+    private final PanZoomTarget mTarget;
     private final EventDispatcher mDispatcher;
 
     NativePanZoomController(PanZoomTarget target, View view, EventDispatcher dispatcher) {
+        mTarget = target;
         mDispatcher = dispatcher;
         if (GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoRunning)) {
             init();
@@ -78,4 +80,9 @@ class NativePanZoomController implements PanZoomController, GeckoEventListener {
     public native boolean getRedrawHint();
     public native void setOverScrollMode(int overscrollMode);
     public native int getOverScrollMode();
+
+    /* Invoked from JNI */
+    private void requestContentRepaint(float x, float y, float width, float height, float resolution) {
+        mTarget.forceRedraw(new DisplayPortMetrics(x, y, x + width, y + height, resolution));
+    }
 }

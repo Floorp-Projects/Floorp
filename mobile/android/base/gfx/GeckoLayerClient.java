@@ -694,11 +694,11 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         mLayerRenderer.deactivateDefaultProgram();
     }
 
-    private void geometryChanged() {
+    private void geometryChanged(DisplayPortMetrics displayPort) {
         /* Let Gecko know if the screensize has changed */
         sendResizeEventIfNecessary(false);
         if (getRedrawHint()) {
-            adjustViewport(null);
+            adjustViewport(displayPort);
         }
     }
 
@@ -794,7 +794,7 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
 
         mView.requestRender();
         if (notifyGecko && mGeckoIsReady) {
-            geometryChanged();
+            geometryChanged(null);
         }
         setShadowVisibility();
     }
@@ -856,10 +856,10 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
 
     /** Implementation of PanZoomTarget */
     @Override
-    public void forceRedraw() {
+    public void forceRedraw(DisplayPortMetrics displayPort) {
         mForceRedraw = true;
         if (mGeckoIsReady) {
-            geometryChanged();
+            geometryChanged(displayPort);
         }
     }
 

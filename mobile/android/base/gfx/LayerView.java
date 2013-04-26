@@ -245,7 +245,7 @@ public class LayerView extends FrameLayout {
 
     public void setInputConnectionHandler(InputConnectionHandler inputConnectionHandler) {
         mInputConnectionHandler = inputConnectionHandler;
-        mLayerClient.forceRedraw();
+        mLayerClient.forceRedraw(null);
     }
 
     @Override
