@@ -288,29 +288,43 @@ AudioNodeStream::ObtainInputBlock(AudioChunk* aTmpChunk)
   }
 
   AllocateAudioBlock(outputChannelCount, aTmpChunk);
+  float silenceChannel[WEBAUDIO_BLOCK_SIZE] = {0.f};
 
   for (uint32_t i = 0; i < inputChunkCount; ++i) {
     AudioChunk* chunk = inputChunks[i];
     nsAutoTArray<const void*,GUESS_AUDIO_CHANNELS> channels;
     channels.AppendElements(chunk->mChannelData);
     if (channels.Length() < outputChannelCount) {
-      AudioChannelsUpMix(&channels, outputChannelCount, nullptr);
-      NS_ASSERTION(outputChannelCount == channels.Length(),
-                   "We called GetAudioChannelsSuperset to avoid this");
-    } else if (channels.Length() > outputChannelCount) {
-      nsAutoTArray<float*,GUESS_AUDIO_CHANNELS> outputChannels;
-      outputChannels.SetLength(outputChannelCount);
-      for (uint32_t i = 0; i < outputChannelCount; ++i) {
-        outputChannels[i] =
-          const_cast<float*>(static_cast<const float*>(aTmpChunk->mChannelData[i]));
+      if (mMixingMode.mChannelInterpretation == ChannelInterpretation::Speakers) {
+        AudioChannelsUpMix(&channels, outputChannelCount, nullptr);
+        NS_ASSERTION(outputChannelCount == channels.Length(),
+                     "We called GetAudioChannelsSuperset to avoid this");
+      } else {
+        // Fill up the remaining channels by zeros
+        for (uint32_t i = channels.Length(); i < outputChannelCount; ++i) {
+          channels.AppendElement(silenceChannel);
+        }
       }
+    } else if (channels.Length() > outputChannelCount) {
+      if (mMixingMode.mChannelInterpretation == ChannelInterpretation::Speakers) {
+        nsAutoTArray<float*,GUESS_AUDIO_CHANNELS> outputChannels;
+        outputChannels.SetLength(outputChannelCount);
+        for (uint32_t i = 0; i < outputChannelCount; ++i) {
+          outputChannels[i] =
+            const_cast<float*>(static_cast<const float*>(aTmpChunk->mChannelData[i]));
+        }
 
-      AudioChannelsDownMix(channels, outputChannels.Elements(),
-                           outputChannelCount, WEBAUDIO_BLOCK_SIZE);
+        AudioChannelsDownMix(channels, outputChannels.Elements(),
+                             outputChannelCount, WEBAUDIO_BLOCK_SIZE);
 
-      channels.SetLength(outputChannelCount);
-      for (uint32_t i = 0; i < channels.Length(); ++i) {
-        channels[i] = outputChannels[i];
+        channels.SetLength(outputChannelCount);
+        for (uint32_t i = 0; i < channels.Length(); ++i) {
+          channels[i] = outputChannels[i];
+        }
+      } else {
+        // Drop the remaining channels
+        channels.RemoveElementsAt(outputChannelCount,
+                                  channels.Length() - outputChannelCount);
       }
     }
 
