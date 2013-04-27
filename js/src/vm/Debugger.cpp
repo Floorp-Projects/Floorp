@@ -917,9 +917,9 @@ CallMethodIfPresent(JSContext *cx, HandleObject obj, const char *name, int argc,
     if (!atom)
         return false;
 
-    Rooted<jsid> id(cx, AtomToId(atom));
+    RootedId id(cx, AtomToId(atom));
     RootedValue fval(cx);
-    return GetMethod(cx, obj, id, 0, &fval) &&
+    return JSObject::getGeneric(cx, obj, obj, id, &fval) &&
            (!js_IsCallable(fval) || Invoke(cx, ObjectValue(*obj), fval, argc, argv, rval));
 }
 
