@@ -2010,13 +2010,16 @@ MediaStreamGraph::CreateTrackUnionStream(DOMMediaStream* aWrapper)
 
 AudioNodeStream*
 MediaStreamGraph::CreateAudioNodeStream(AudioNodeEngine* aEngine,
-                                        AudioNodeStreamKind aKind,
-                                        uint32_t aNumberOfInputChannels)
+                                        AudioNodeStreamKind aKind)
 {
-  AudioNodeStream* stream = new AudioNodeStream(aEngine, aKind, aNumberOfInputChannels);
+  MOZ_ASSERT(NS_IsMainThread());
+  AudioNodeStream* stream = new AudioNodeStream(aEngine, aKind);
   NS_ADDREF(stream);
   MediaStreamGraphImpl* graph = static_cast<MediaStreamGraphImpl*>(this);
   stream->SetGraphImpl(graph);
+  stream->SetChannelMixingParametersImpl(aEngine->NodeMainThread()->ChannelCount(),
+                                         aEngine->NodeMainThread()->ChannelCountModeValue(),
+                                         aEngine->NodeMainThread()->ChannelInterpretationValue());
   graph->AppendMessage(new CreateMessage(stream));
   return stream;
 }

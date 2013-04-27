@@ -184,6 +184,15 @@ AudioNode::SendThreeDPointParameterToStream(uint32_t aIndex, const ThreeDPoint& 
 }
 
 void
+AudioNode::SendChannelMixingParametersToStream()
+{
+  AudioNodeStream* ns = static_cast<AudioNodeStream*>(mStream.get());
+  MOZ_ASSERT(ns, "How come we don't have a stream here?");
+  ns->SetChannelMixingParameters(mChannelCount, mChannelCountMode,
+                                 mChannelInterpretation);
+}
+
+void
 AudioNode::SendTimelineParameterToStream(AudioNode* aNode, uint32_t aIndex,
                                          const AudioParamTimeline& aValue)
 {

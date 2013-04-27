@@ -160,6 +160,54 @@ AudioNodeStream::SetBuffer(already_AddRefed<ThreadSharedFloatArrayBufferList> aB
   GraphImpl()->AppendMessage(new Message(this, aBuffer));
 }
 
+void
+AudioNodeStream::SetChannelMixingParameters(uint32_t aNumberOfChannels,
+                                            ChannelCountMode aChannelCountMode,
+                                            ChannelInterpretation aChannelInterpretation)
+{
+  class Message : public ControlMessage {
+  public:
+    Message(AudioNodeStream* aStream,
+            uint32_t aNumberOfChannels,
+            ChannelCountMode aChannelCountMode,
+            ChannelInterpretation aChannelInterpretation)
+      : ControlMessage(aStream),
+        mNumberOfChannels(aNumberOfChannels),
+        mChannelCountMode(aChannelCountMode),
+        mChannelInterpretation(aChannelInterpretation)
+    {}
+    virtual void Run()
+    {
+      static_cast<AudioNodeStream*>(mStream)->
+        SetChannelMixingParametersImpl(mNumberOfChannels, mChannelCountMode,
+                                       mChannelInterpretation);
+    }
+    uint32_t mNumberOfChannels;
+    ChannelCountMode mChannelCountMode;
+    ChannelInterpretation mChannelInterpretation;
+  };
+
+  MOZ_ASSERT(this);
+  GraphImpl()->AppendMessage(new Message(this, aNumberOfChannels,
+                                         aChannelCountMode,
+                                         aChannelInterpretation));
+}
+
+void
+AudioNodeStream::SetChannelMixingParametersImpl(uint32_t aNumberOfChannels,
+                                                ChannelCountMode aChannelCountMode,
+                                                ChannelInterpretation aChannelInterpretation)
+{
+  // Make sure that we're not clobbering any significant bits by fitting these
+  // values in 16 bits.
+  MOZ_ASSERT(int(aChannelCountMode) < INT16_MAX);
+  MOZ_ASSERT(int(aChannelInterpretation) < INT16_MAX);
+
+  mNumberOfInputChannels = aNumberOfChannels;
+  mMixingMode.mChannelCountMode = aChannelCountMode;
+  mMixingMode.mChannelInterpretation = aChannelInterpretation;
+}
+
 StreamBuffer::Track*
 AudioNodeStream::EnsureTrack()
 {
