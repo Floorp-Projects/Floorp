@@ -43,6 +43,9 @@ addLoadEvent(function() {
   near(panner.coneInnerAngle, 360, "Correct default value for cone inner angle");
   near(panner.coneOuterAngle, 360, "Correct default value for cone outer angle");
   near(panner.coneOuterGain, 0, "Correct default value for cone outer gain");
+  is(panner.channelCount, 2, "panner node has 2 input channels by default");
+  is(panner.channelCountMode, "clamped-max", "Correct channelCountMode for the panner node");
+  is(panner.channelInterpretation, "speakers", "Correct channelCountInterpretation for the panner node");
 
   panner.setPosition(1, 1, 1);
   panner.setOrientation(1, 1, 1);
