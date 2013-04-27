@@ -41,8 +41,14 @@ AudioNode::Release()
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(AudioNode)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 
-AudioNode::AudioNode(AudioContext* aContext)
+AudioNode::AudioNode(AudioContext* aContext,
+                     uint32_t aChannelCount,
+                     ChannelCountMode aChannelCountMode,
+                     ChannelInterpretation aChannelInterpretation)
   : mContext(aContext)
+  , mChannelCount(aChannelCount)
+  , mChannelCountMode(aChannelCountMode)
+  , mChannelInterpretation(aChannelInterpretation)
 {
   MOZ_ASSERT(aContext);
   nsDOMEventTargetHelper::BindToOwner(aContext->GetParentObject());

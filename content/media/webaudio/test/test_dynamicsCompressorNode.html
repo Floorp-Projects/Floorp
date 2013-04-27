@@ -34,6 +34,10 @@ addLoadEvent(function() {
   source.connect(compressor);
   compressor.connect(destination);
 
+  is(compressor.channelCount, 2, "compressor node has 2 input channels by default");
+  is(compressor.channelCountMode, "explicit", "Correct channelCountMode for the compressor node");
+  is(compressor.channelInterpretation, "speakers", "Correct channelCountInterpretation for the compressor node");
+
   // Verify default values
   with (compressor) {
     near(threshold.defaultValue, -24, "Correct default value for threshold");

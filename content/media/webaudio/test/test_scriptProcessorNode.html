@@ -44,6 +44,10 @@ addLoadEvent(function() {
     context.createScriptProcessor(255);
   }, DOMException.INDEX_SIZE_ERR);
 
+  is(sourceSP.channelCount, 2, "script processor node has 2 input channels by default");
+  is(sourceSP.channelCountMode, "explicit", "Correct channelCountMode for the script processor node");
+  is(sourceSP.channelInterpretation, "speakers", "Correct channelCountInterpretation for the script processor node");
+
   function findFirstNonZeroSample(buffer) {
     for (var i = 0; i < buffer.length; ++i) {
       if (buffer.getChannelData(0)[i] != 0) {

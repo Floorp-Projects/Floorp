@@ -41,6 +41,9 @@ addLoadEvent(function() {
   near(filter.detune.defaultValue, 0, "Correct default value for filter detune");
   near(filter.Q.defaultValue, 1, "Correct default value for filter Q");
   near(filter.gain.defaultValue, 0, "Correct default value for filter gain");
+  is(filter.channelCount, 2, "Biquad filter node has 2 input channels by default");
+  is(filter.channelCountMode, "max", "Correct channelCountMode for the biquad filter node");
+  is(filter.channelInterpretation, "speakers", "Correct channelCountInterpretation for the biquad filter node");
 
   // Make sure that we can set all of the valid type values
   var types = [

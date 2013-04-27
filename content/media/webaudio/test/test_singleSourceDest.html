@@ -25,6 +25,9 @@ addLoadEvent(function() {
   is(destination.context, context, "Destination node has proper context");
   is(destination.numberOfInputs, 1, "Destination node has 1 inputs");
   is(destination.numberOfOutputs, 0, "Destination node has 0 outputs");
+  is(destination.channelCount, 2, "Destination node has 2 input channels by default");
+  is(destination.channelCountMode, "explicit", "Correct channelCountMode for the destination node");
+  is(destination.channelInterpretation, "speakers", "Correct channelCountInterpretation for the destination node");
   ok(destination instanceof EventTarget, "AudioNodes must be EventTargets");
 
   testWith(context, buffer, destination, function(source) {
@@ -84,6 +87,9 @@ function createNode(context, buffer, destination) {
   is(source.loopStart, 0, "Correct default value for loopStart");
   is(source.loopEnd, 0, "Correct default value for loopEnd");
   ok(!source.buffer, "Source node should not have a buffer when it's created");
+  is(source.channelCount, 2, "source node has 2 input channels by default");
+  is(source.channelCountMode, "max", "Correct channelCountMode for the source node");
+  is(source.channelInterpretation, "speakers", "Correct channelCountInterpretation for the source node");
 
   source.buffer = buffer;
   ok(source.buffer, "Source node should have a buffer now");

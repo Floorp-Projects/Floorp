@@ -171,7 +171,10 @@ private:
 };
 
 BiquadFilterNode::BiquadFilterNode(AudioContext* aContext)
-  : AudioNode(aContext)
+  : AudioNode(aContext,
+              2,
+              ChannelCountMode::Max,
+              ChannelInterpretation::Speakers)
   , mType(BiquadFilterType::Lowpass)
   , mFrequency(new AudioParam(this, SendFrequencyToStream, 350.f))
   , mDetune(new AudioParam(this, SendDetuneToStream, 0.f))

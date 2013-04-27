@@ -46,6 +46,9 @@ addLoadEvent(function() {
   gain.gain.value = 0.5;
   is(gain.gain.value, 0.5, "Correct initial value");
   is(gain.gain.defaultValue, 1.0, "Correct default value");
+  is(gain.channelCount, 2, "gain node has 2 input channels by default");
+  is(gain.channelCountMode, "max", "Correct channelCountMode for the gain node");
+  is(gain.channelInterpretation, "speakers", "Correct channelCountInterpretation for the gain node");
 
   source.start(0);
   sp.onaudioprocess = function(e) {
