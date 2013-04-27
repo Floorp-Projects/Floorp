@@ -384,7 +384,9 @@ pkix_done:
           // note: rv is reused to catch errors on cert creation!
           ScopedCERTCertificate tempCert(CERT_DupCertificate(trustAnchor));
           rv = CERT_AddCertToListTail(*validationChain, tempCert);
-          if (rv != SECSuccess) {
+          if (rv == SECSuccess) {
+            tempCert.forget(); // ownership traferred to validationChain
+          } else {
             CERT_DestroyCertList(*validationChain);
             *validationChain = nullptr;
           }
