@@ -1124,14 +1124,12 @@
                 // At this point, we now have a URI.
                 // Let's try to unescape it using a character set
                 // in case the URI is not ASCII.
-                if (!gMultiProcessBrowser) {
-                  try {
-                    var characterSet = browser.contentDocument.characterSet;
-                    const textToSubURI = Components.classes["@mozilla.org/intl/texttosuburi;1"]
-                                                   .getService(Components.interfaces.nsITextToSubURI);
-                    title = textToSubURI.unEscapeNonAsciiURI(characterSet, title);
-                  } catch(ex) { /* Do nothing. */ }
-                }
+                try {
+                  var characterSet = browser.characterSet;
+                  const textToSubURI = Components.classes["@mozilla.org/intl/texttosuburi;1"]
+                                                 .getService(Components.interfaces.nsITextToSubURI);
+                  title = textToSubURI.unEscapeNonAsciiURI(characterSet, title);
+                } catch(ex) { /* Do nothing. */ }
 
                 crop = "center";
 
