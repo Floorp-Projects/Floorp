@@ -2110,6 +2110,17 @@ LIRGenerator::visitLoadTypedArrayElementHole(MLoadTypedArrayElementHole *ins)
 }
 
 bool
+LIRGenerator::visitLoadTypedArrayElementStatic(MLoadTypedArrayElementStatic *ins)
+{
+    LLoadTypedArrayElementStatic *lir =
+        new LLoadTypedArrayElementStatic(useRegisterAtStart(ins->ptr()));
+
+    if (ins->fallible() && !assignSnapshot(lir))
+        return false;
+    return define(lir, ins);
+}
+
+bool
 LIRGenerator::visitLoadFixedSlot(MLoadFixedSlot *ins)
 {
     JS_ASSERT(ins->object()->type() == MIRType_Object);

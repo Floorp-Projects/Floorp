@@ -15,7 +15,7 @@
 #include "jsnum.h"
 #include "jsstr.h"
 #include "jsatominlines.h"
-#include "jstypedarrayinlines.h" // For ClampIntForUint8Array
+#include "jstypedarrayinlines.h"
 
 using namespace js;
 using namespace js::ion;
@@ -2193,6 +2193,30 @@ bool
 MInArray::needsNegativeIntCheck() const
 {
     return !index()->range() || index()->range()->lower() < 0;
+}
+
+void *
+MLoadTypedArrayElementStatic::base() const
+{
+    return TypedArray::viewData(typedArray_);
+}
+
+size_t
+MLoadTypedArrayElementStatic::length() const
+{
+    return TypedArray::byteLength(typedArray_);
+}
+
+void *
+MStoreTypedArrayElementStatic::base() const
+{
+    return TypedArray::viewData(typedArray_);
+}
+
+size_t
+MStoreTypedArrayElementStatic::length() const
+{
+    return TypedArray::byteLength(typedArray_);
 }
 
 MDefinition *
