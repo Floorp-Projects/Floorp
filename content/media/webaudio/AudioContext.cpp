@@ -350,6 +350,9 @@ AudioContext::GetJSContext() const
 
   nsCOMPtr<nsIScriptGlobalObject> scriptGlobal =
     do_QueryInterface(GetParentObject());
+  if (!scriptGlobal) {
+    return nullptr;
+  }
   nsIScriptContext* scriptContext = scriptGlobal->GetContext();
   if (!scriptContext) {
     return nullptr;
