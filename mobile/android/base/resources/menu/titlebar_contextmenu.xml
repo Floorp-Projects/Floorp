@@ -21,7 +21,7 @@
           android:title="@string/contextmenu_copyurl"/>
 
     <item android:id="@+id/site_settings"
-          android:title="@string/site_settings_title" />
+          android:title="@string/contextmenu_site_settings" />
 
     <item android:id="@+id/add_to_launcher"
           android:title="@string/contextmenu_add_to_launcher"/>

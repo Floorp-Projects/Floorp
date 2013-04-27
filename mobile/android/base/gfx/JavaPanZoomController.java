@@ -197,6 +197,11 @@ class JavaPanZoomController
         if (state != mState) {
             GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("PanZoom:StateChange", state.toString()));
             mState = state;
+
+            // Let the target know we've finished with it (for now)
+            if (state == PanZoomState.NOTHING) {
+                mTarget.panZoomStopped();
+            }
         }
     }
 
@@ -350,7 +355,7 @@ class JavaPanZoomController
             // transitions.
             synchronized (mTarget.getLock()) {
                 mTarget.setViewportMetrics(getValidViewportMetrics());
-                mTarget.forceRedraw();
+                mTarget.forceRedraw(null);
             }
             break;
         }
@@ -408,7 +413,7 @@ class JavaPanZoomController
             // We just interrupted a double-tap animation, so force a redraw in
             // case this touchstart is just a tap that doesn't end up triggering
             // a redraw
-            mTarget.forceRedraw();
+            mTarget.forceRedraw(null);
             // fall through
         case FLING:
         case AUTONAV:
@@ -706,8 +711,7 @@ class JavaPanZoomController
     }
 
     private void scrollBy(float dx, float dy) {
-        ImmutableViewportMetrics scrolled = getMetrics().offsetViewportBy(dx, dy);
-        mTarget.setViewportMetrics(scrolled);
+        mTarget.scrollBy(dx, dy);
     }
 
     private void fling() {
@@ -963,7 +967,7 @@ class JavaPanZoomController
         stopAnimationTimer();
 
         // Force a viewport synchronisation
-        mTarget.forceRedraw();
+        mTarget.forceRedraw(null);
     }
 
     /* Returns the nearest viewport metrics with no overscroll visible. */
@@ -998,8 +1002,8 @@ class JavaPanZoomController
         // Ensure minZoomFactor keeps the page at least as big as the viewport.
         if (pageRect.width() > 0) {
             float pageWidth = pageRect.width() +
-              viewportMetrics.fixedLayerMarginLeft +
-              viewportMetrics.fixedLayerMarginRight;
+              viewportMetrics.marginLeft +
+              viewportMetrics.marginRight;
             float scaleFactor = viewport.width() / pageWidth;
             minZoomFactor = Math.max(minZoomFactor, zoomFactor * scaleFactor);
             if (viewport.width() > pageWidth)
@@ -1007,8 +1011,8 @@ class JavaPanZoomController
         }
         if (pageRect.height() > 0) {
             float pageHeight = pageRect.height() +
-              viewportMetrics.fixedLayerMarginTop +
-              viewportMetrics.fixedLayerMarginBottom;
+              viewportMetrics.marginTop +
+              viewportMetrics.marginBottom;
             float scaleFactor = viewport.height() / pageHeight;
             minZoomFactor = Math.max(minZoomFactor, zoomFactor * scaleFactor);
             if (viewport.height() > pageHeight)
@@ -1043,15 +1047,9 @@ class JavaPanZoomController
         @Override
         protected float getViewportLength() { return getMetrics().getWidth(); }
         @Override
-        protected float getPageStart() {
-            ImmutableViewportMetrics metrics = getMetrics();
-            return metrics.pageRectLeft - metrics.fixedLayerMarginLeft;
-        }
+        protected float getPageStart() { return getMetrics().pageRectLeft; }
         @Override
-        protected float getPageLength() {
-            ImmutableViewportMetrics metrics = getMetrics();
-            return metrics.getPageWidth() + metrics.fixedLayerMarginLeft + metrics.fixedLayerMarginRight;
-        }
+        protected float getPageLength() { return getMetrics().getPageWidthWithMargins(); }
     }
 
     private class AxisY extends Axis {
@@ -1061,15 +1059,9 @@ class JavaPanZoomController
         @Override
         protected float getViewportLength() { return getMetrics().getHeight(); }
         @Override
-        protected float getPageStart() {
-            ImmutableViewportMetrics metrics = getMetrics();
-            return metrics.pageRectTop - metrics.fixedLayerMarginTop;
-        }
+        protected float getPageStart() { return getMetrics().pageRectTop; }
         @Override
-        protected float getPageLength() {
-            ImmutableViewportMetrics metrics = getMetrics();
-            return metrics.getPageHeight() + metrics.fixedLayerMarginTop + metrics.fixedLayerMarginBottom;
-        }
+        protected float getPageLength() { return getMetrics().getPageHeightWithMargins(); }
     }
 
     /*
@@ -1195,7 +1187,7 @@ class JavaPanZoomController
         startTouch(detector.getFocusX(), detector.getFocusY(), detector.getEventTime());
 
         // Force a viewport synchronisation
-        mTarget.forceRedraw();
+        mTarget.forceRedraw(null);
 
         PointF point = new PointF(detector.getFocusX(), detector.getFocusY());
         GeckoEvent event = GeckoEvent.createNativeGestureEvent(GeckoEvent.ACTION_MAGNIFY_END, point, getMetrics().zoomFactor);

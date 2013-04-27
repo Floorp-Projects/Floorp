@@ -1270,10 +1270,11 @@ nsOSHelperAppService::GetFromExtension(const nsCString& aFileExt) {
     
 #ifdef MOZ_WIDGET_GTK2
     LOG(("Looking in GNOME registry\n"));
-    nsMIMEInfoBase *gnomeInfo = nsGNOMERegistry::GetFromExtension(aFileExt).get();
+    nsRefPtr<nsMIMEInfoBase> gnomeInfo =
+      nsGNOMERegistry::GetFromExtension(aFileExt);
     if (gnomeInfo) {
       LOG(("Got MIMEInfo from GNOME registry\n"));
-      return gnomeInfo;
+      return gnomeInfo.forget();
     }
 #endif
 
@@ -1301,10 +1302,7 @@ nsOSHelperAppService::GetFromExtension(const nsCString& aFileExt) {
   }
 
   nsAutoCString mimeType(asciiMajorType + NS_LITERAL_CSTRING("/") + asciiMinorType);
-  nsMIMEInfoUnix* mimeInfo = new nsMIMEInfoUnix(mimeType);
-  if (!mimeInfo)
-    return nullptr;
-  NS_ADDREF(mimeInfo);
+  nsRefPtr<nsMIMEInfoUnix> mimeInfo = new nsMIMEInfoUnix(mimeType);
   
   mimeInfo->AppendExtension(aFileExt);
   nsHashtable typeOptions; // empty hash table
@@ -1342,7 +1340,7 @@ nsOSHelperAppService::GetFromExtension(const nsCString& aFileExt) {
     mimeInfo->SetPreferredAction(nsIMIMEInfo::saveToDisk);
   }
 
-  return mimeInfo;
+  return mimeInfo.forget();
 }
 
 already_AddRefed<nsMIMEInfoBase>
@@ -1389,17 +1387,17 @@ nsOSHelperAppService::GetFromType(const nsCString& aMIMEType) {
           NS_LossyConvertUTF16toASCII(mailcap_description).get()));
 
 #ifdef MOZ_WIDGET_GTK2
-  nsMIMEInfoBase *gnomeInfo = nullptr;
+  nsRefPtr<nsMIMEInfoBase> gnomeInfo;
   if (handler.IsEmpty()) {
     // No useful data yet.  Check the GNOME registry.  Unfortunately, newer
     // GNOME versions no longer have type-to-extension mappings, so we might
     // get back a MIMEInfo without any extensions set.  In that case we'll have
     // to look in our mime.types files for the extensions.    
     LOG(("Looking in GNOME registry\n"));
-    gnomeInfo = nsGNOMERegistry::GetFromType(aMIMEType).get();
+    gnomeInfo = nsGNOMERegistry::GetFromType(aMIMEType);
     if (gnomeInfo && gnomeInfo->HasExtensions()) {
       LOG(("Got MIMEInfo from GNOME registry, and it has extensions set\n"));
-      return gnomeInfo;
+      return gnomeInfo.forget();
     }
   }
 #endif
@@ -1418,7 +1416,7 @@ nsOSHelperAppService::GetFromType(const nsCString& aMIMEType) {
 
     NS_ASSERTION(!gnomeInfo->HasExtensions(), "How'd that happen?");
     gnomeInfo->SetFileExtensions(NS_ConvertUTF16toUTF8(extensions));
-    return gnomeInfo;
+    return gnomeInfo.forget();
   }
 #endif
 
@@ -1466,10 +1464,7 @@ nsOSHelperAppService::GetFromType(const nsCString& aMIMEType) {
     return nullptr;
   }
   
-  nsMIMEInfoUnix* mimeInfo = new nsMIMEInfoUnix(aMIMEType);
-  if (!mimeInfo)
-    return nullptr;
-  NS_ADDREF(mimeInfo);
+  nsRefPtr<nsMIMEInfoUnix> mimeInfo = new nsMIMEInfoUnix(aMIMEType);
 
   mimeInfo->SetFileExtensions(NS_ConvertUTF16toUTF8(extensions));
   if (! mime_types_description.IsEmpty()) {
@@ -1492,7 +1487,7 @@ nsOSHelperAppService::GetFromType(const nsCString& aMIMEType) {
     mimeInfo->SetPreferredAction(nsIMIMEInfo::saveToDisk);
   }
 
-  return mimeInfo;
+  return mimeInfo.forget();
 }
 
 
@@ -1501,7 +1496,7 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aType,
                                         const nsACString& aFileExt,
                                         bool       *aFound) {
   *aFound = true;
-  nsMIMEInfoBase* retval = GetFromType(PromiseFlatCString(aType)).get();
+  nsRefPtr<nsMIMEInfoBase> retval = GetFromType(PromiseFlatCString(aType));
   bool hasDefault = false;
   if (retval)
     retval->GetHasDefaultHandler(&hasDefault);
@@ -1509,7 +1504,7 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aType,
     nsRefPtr<nsMIMEInfoBase> miByExt = GetFromExtension(PromiseFlatCString(aFileExt));
     // If we had no extension match, but a type match, use that
     if (!miByExt && retval)
-      return retval;
+      return retval.forget();
     // If we had an extension match but no type match, set the mimetype and use
     // it
     if (!retval && miByExt) {
@@ -1517,19 +1512,18 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aType,
         miByExt->SetMIMEType(aType);
       miByExt.swap(retval);
 
-      return retval;
+      return retval.forget();
     }
     // If we got nothing, make a new mimeinfo
     if (!retval) {
       *aFound = false;
       retval = new nsMIMEInfoUnix(aType);
       if (retval) {
-        NS_ADDREF(retval);
         if (!aFileExt.IsEmpty())
           retval->AppendExtension(aFileExt);
       }
       
-      return retval;
+      return retval.forget();
     }
 
     // Copy the attributes of retval (mimeinfo from type) onto miByExt, to
@@ -1542,7 +1536,7 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aType,
 
     miByExt.swap(retval);
   }
-  return retval;
+  return retval.forget();
 }
 
 NS_IMETHODIMP

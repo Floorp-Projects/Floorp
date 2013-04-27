@@ -32,9 +32,6 @@ const { filter, pipe } = require("./event/utils");
 const { getNodeView, getActiveView } = require("./view/core");
 const { isNil, isObject } = require("./lang/type");
 
-if (isPrivateBrowsingSupported && isWindowPBSupported)
-  throw Error('The panel module cannot be used with per-window private browsing at the moment, see Bug 816257');
-
 let isArray = Array.isArray;
 let assetsURI = require("./self").data.url();
 
@@ -251,24 +248,24 @@ const Panel = Class({
 exports.Panel = Panel;
 
 // Filter panel events to only panels that are create by this module.
-let panelEvents = filter(function({target}) panelFor(target), events);
+let panelEvents = filter(events, function({target}) panelFor(target));
 
 // Panel events emitted after panel has being shown.
-let shows = filter(function({type}) type === "sdk-panel-shown", panelEvents);
+let shows = filter(panelEvents, function({type}) type === "sdk-panel-shown");
 
 // Panel events emitted after panel became hidden.
-let hides = filter(function({type}) type === "sdk-panel-hidden", panelEvents);
+let hides = filter(panelEvents, function({type}) type === "sdk-panel-hidden");
 
 // Panel events emitted after content inside panel is ready. For different
 // panels ready may mean different state based on `contentScriptWhen` attribute.
 // Weather given event represents readyness is detected by `getAttachEventType`
 // helper function.
-let ready = filter(function({type, target})
-  getAttachEventType(modelFor(panelFor(target))) === type, panelEvents);
+let ready = filter(panelEvents, function({type, target})
+  getAttachEventType(modelFor(panelFor(target))) === type);
 
 // Panel events emitted after content document in the panel has changed.
-let change = filter(function({type}) type === "sdk-panel-content-changed",
-                    panelEvents);
+let change = filter(panelEvents, function({type})
+  type === "sdk-panel-content-changed");
 
 // Forward panel show / hide events to panel's own event listeners.
 on(shows, "data", function({target}) emit(panelFor(target), "show"));

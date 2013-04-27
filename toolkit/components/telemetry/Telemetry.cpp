@@ -1863,8 +1863,8 @@ TelemetryImpl::CreateTelemetryInstance()
   // AddRef for the local reference
   NS_ADDREF(sTelemetry);
   // AddRef for the caller
-  NS_ADDREF(sTelemetry);
-  return sTelemetry;
+  nsCOMPtr<nsITelemetry> ret = sTelemetry;
+  return ret.forget();
 }
 
 void

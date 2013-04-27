@@ -153,6 +153,7 @@ _BROWSER_FILES = \
                  browser_bug735471.js \
                  browser_bug743421.js \
                  browser_bug749738.js \
+                 browser_bug752516.js \
                  browser_bug763468_perwindowpb.js \
                  browser_bug767836_perwindowpb.js \
                  browser_bug771331.js \
@@ -274,6 +275,7 @@ _BROWSER_FILES = \
                  plugin_clickToPlayDeny.html \
                  plugin_bug744745.html \
                  plugin_bug749455.html \
+                 plugin_bug752516.html \
                  plugin_bug787619.html \
                  plugin_bug797677.html \
                  plugin_bug818009.html \

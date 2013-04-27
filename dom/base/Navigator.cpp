@@ -1113,7 +1113,7 @@ Navigator::MozGetUserMediaDevices(nsIGetUserMediaDevicesSuccessCallback* aOnSucc
   }
 
   // Check if the caller is chrome privileged, bail if not
-  if (!nsContentUtils::IsChromeDoc(win->GetExtantDoc())) {
+  if (!nsContentUtils::IsCallerChrome()) {
     return NS_ERROR_FAILURE;
   }
 

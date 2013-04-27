@@ -1388,9 +1388,9 @@ already_AddRefed<nsISupports>
 nsHTMLFormElement::DoResolveName(const nsAString& aName,
                                  bool aFlushContent)
 {
-  nsISupports *result;
-  NS_IF_ADDREF(result = mControls->NamedItemInternal(aName, aFlushContent));
-  return result;
+  nsCOMPtr<nsISupports> result =
+    mControls->NamedItemInternal(aName, aFlushContent);
+  return result.forget();
 }
 
 void

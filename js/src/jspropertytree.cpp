@@ -4,17 +4,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "jspropertytree.h"
+
 #include "jstypes.h"
-#include "jsprf.h"
 #include "jsapi.h"
 #include "jscntxt.h"
 #include "jsgc.h"
-#include "jspropertytree.h"
 
 #include "vm/Shape.h"
 
 #include "jsgcinlines.h"
-#include "jsobjinlines.h"
 
 #include "vm/Shape-inl.h"
 

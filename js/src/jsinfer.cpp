@@ -4,25 +4,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "jsinfer.h"
+
 #include "mozilla/DebugOnly.h"
 #include "mozilla/PodOperations.h"
 
 #include "jsapi.h"
 #include "jsautooplen.h"
-#include "jsbool.h"
-#include "jscntxt.h"
-#include "jsdate.h"
-#include "jsexn.h"
 #include "jsfriendapi.h"
 #include "jsgc.h"
-#include "jsinfer.h"
-#include "jsmath.h"
-#include "jsnum.h"
 #include "jsobj.h"
 #include "jsscript.h"
 #include "jscntxt.h"
 #include "jsstr.h"
-#include "jsiter.h"
 #include "jsworkers.h"
 
 #ifdef JS_ION
@@ -30,15 +24,11 @@
 #include "ion/Ion.h"
 #include "ion/IonCompartment.h"
 #endif
-#include "frontend/TokenStream.h"
 #include "gc/Marking.h"
 #include "js/MemoryMetrics.h"
 #include "methodjit/MethodJIT.h"
 #include "methodjit/Retcon.h"
 #include "vm/Shape.h"
-#ifdef JS_METHODJIT
-# include "assembler/assembler/MacroAssembler.h"
-#endif
 
 #include "jsatominlines.h"
 #include "jsgcinlines.h"

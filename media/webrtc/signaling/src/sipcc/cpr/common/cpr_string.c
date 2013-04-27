@@ -200,7 +200,8 @@ void flex_string_vsprintf(flex_string *fs, const char *format, va_list original_
     va_copy(ap, original_ap);
     vsnprintf_result = vsnprintf(fs->buffer + fs->string_length, fs->buffer_length - fs->string_length, format, ap);
     va_end(ap);
-    MOZ_ASSERT(vsnprintf_result > 0 && vsnprintf_result < (fs->buffer_length - fs->string_length));
+    MOZ_ASSERT(vsnprintf_result > 0 &&
+               (size_t)vsnprintf_result < (fs->buffer_length - fs->string_length));
   }
 
   if (vsnprintf_result > 0) {

@@ -1,0 +1,4 @@
+locale basepack en-US jar:en-US.jar!/locale/en-US/global/
+locale basepack fr jar:en-US.jar!/locale/en-US/global/
+locale overpack en-US jar:en-US.jar!/locale/en-US/global/
+locale overpack de jar:en-US.jar!/locale/en-US/global/

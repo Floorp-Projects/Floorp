@@ -105,6 +105,7 @@ MOCHITEST_FILES = \
 	test_bug613794.html \
 	test_bug753758.html \
 	test_bug764125.html \
+	test_bug856472.html \
 	test_drawImage_edge_cases.html \
 	test_drawImage_document_domain.html \
   test_mozDashOffset.html \

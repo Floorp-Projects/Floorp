@@ -16,7 +16,7 @@ Text::SplitText(uint32_t aOffset, ErrorResult& rv)
   if (rv.Failed()) {
     return nullptr;
   }
-  return static_cast<Text*>(newChild.forget().get());
+  return newChild.forget().downcast<Text>();
 }
 
 } // namespace dom

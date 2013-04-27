@@ -225,8 +225,8 @@ CreateFactory(const mozilla::Module& module, const mozilla::Module::CIDEntry& en
         gFactory = new Factory();
         NS_ADDREF(gFactory);
     }
-    NS_ADDREF(gFactory);
-    return gFactory;
+    nsCOMPtr<nsIFactory> ret = gFactory;
+    return ret.forget();
 }
 
 static const mozilla::Module::CIDEntry kLocalCIDs[] = {

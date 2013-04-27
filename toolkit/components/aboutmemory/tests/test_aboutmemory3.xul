@@ -72,9 +72,7 @@
   ]]>
   </script>
 
-  <iframe id="amGoodFrame"  height="200" src="about:memory"></iframe>
-  <iframe id="amGoodFrame2" height="200" src="about:memory"></iframe>
-  <iframe id="amBadFrame"   height="200" src="about:memory"></iframe>
+  <iframe id="amFrame"  height="400" src="about:memory"></iframe>
 
   <script type="application/javascript">
   <![CDATA[
@@ -99,35 +97,70 @@
 
   // Load the given file into the frame, then copy+paste the entire frame and
   // check that the cut text matches what we expect.
-  function test(aFrameId, aFilename, aExpected, aDumpFirst, aNext) {
-    let frame = document.getElementById(aFrameId);
+  function test(aFilename, aFilename2, aExpected, aDumpFirst, aNext) {
+    let frame = document.getElementById("amFrame");
     frame.focus();
 
-    let file = Cc["@mozilla.org/file/directory_service;1"]
-               .getService(Components.interfaces.nsIProperties)
-               .get("CurWorkD", Components.interfaces.nsIFile);
-    file.append("chrome");
-    file.append("toolkit");
-    file.append("components");
-    file.append("aboutmemory");
-    file.append("tests");
-    file.append(aFilename);
+    let aIsVerbose = true;
+    let doc = frame.contentWindow.document;
+    let verbosity = doc.getElementById("verbose");
+    verbosity.checked = aIsVerbose;
 
-    if (aDumpFirst) {
-        let dumper = Cc["@mozilla.org/memory-info-dumper;1"].
-                        getService(Ci.nsIMemoryInfoDumper);
-
-        dumper.dumpMemoryReportsToNamedFile(file.path,
-                                            /* minimizeMemoryUsage = */ false,
-                                            /* dumpChildProcesses = */ false);
+    function getFilePath(aFilename) {
+      let file = Cc["@mozilla.org/file/directory_service;1"]
+                 .getService(Components.interfaces.nsIProperties)
+                 .get("CurWorkD", Components.interfaces.nsIFile);
+      file.append("chrome");
+      file.append("toolkit");
+      file.append("components");
+      file.append("aboutmemory");
+      file.append("tests");
+      file.append(aFilename);
+      return file.path;
     }
 
-    let input = frame.contentWindow.document.getElementById("filePickerInput");
-    input.value = file.path;    // this works because it's a chrome test
+    let filePath = getFilePath(aFilename);
 
-    var e = document.createEvent('Event');
+    let e = document.createEvent('Event');
     e.initEvent('change', true, true);
-    input.dispatchEvent(e);
+
+    if (!aFilename2) {
+      if (aDumpFirst) {
+          let dumper = Cc["@mozilla.org/memory-info-dumper;1"].
+                          getService(Ci.nsIMemoryInfoDumper);
+
+          dumper.dumpMemoryReportsToNamedFile(filePath,
+                                              /* minimizeMemoryUsage = */ false,
+                                              /* dumpChildProcesses = */ false);
+      }
+
+      let fileInput1 =
+        frame.contentWindow.document.getElementById("fileInput1");
+      fileInput1.value = filePath;    // this works because it's a chrome test
+
+      fileInput1.dispatchEvent(e);
+
+    } else {
+      let fileInput2 =
+        frame.contentWindow.document.getElementById("fileInput2");
+      fileInput2.value = filePath;    // this works because it's a chrome test
+
+      // Hack alert:  fileInput2's onchange handler calls fileInput2.click().
+      // But we don't want that to happen, because we want to bypass the file
+      // picker for the test.  So we set |e.skipClick|, which causes
+      // fileInput2.click() to be skipped, and dispatch the second change event
+      // directly ourselves.
+
+      e.skipClick = true;
+      fileInput2.dispatchEvent(e);
+
+      let filePath2 = getFilePath(aFilename2);
+      fileInput2.value = filePath2;    // this works because it's a chrome test
+
+      let e2 = document.createEvent('Event');
+      e2.initEvent('change', true, true);
+      fileInput2.dispatchEvent(e);
+    }
 
     // Initialize the clipboard contents.
     SpecialPowers.clipboardCopyString("initial clipboard value");
@@ -166,33 +199,73 @@
   }
 
   // Returns a function that chains together multiple test() calls.
-  function chain(aFrameIds) {
-    let x = aFrameIds.shift();
+  function chain(aPieces) {
+    let x = aPieces.shift();
     if (x) {
-      return function() { test(x.frameId, x.filename, x.expected, x.dumpFirst, chain(aFrameIds)); }
+      return function() { test(x.filename, x.filename2, x.expected, x.dumpFirst, chain(aPieces)); }
     } else {
       return function() { finish(); };
     }
   }
 
-  // This is pretty simple output, but that's ok;  this file is about testing
-  // the loading of data from file.  If we got this far, we're doing fine.
   let expectedGood =
+"\
+Explicit-only process\n\
+\n\
+WARNING: the 'heap-allocated' memory reporter does not work for this platform and/or configuration. This means that 'heap-unclassified' is not shown and the 'explicit' tree shows less memory than it should.\n\
+Explicit Allocations\n\
+\n\
+100,000 B (100.0%) -- explicit\n\
+└──100,000 B (100.0%) ── a/b\n\
+\n\
+Other Measurements\n\
+\n\
+Main Process (pid NNN)\n\
+Explicit Allocations\n\
+\n\
+262,144,000 B (100.0%) -- explicit\n\
+├──209,715,200 B (80.00%) ── heap-unclassified\n\
+└───52,428,800 B (20.00%) ── a/b\n\
+\n\
+Other Measurements\n\
+\n\
+314,572 B (100.0%) -- other\n\
+├──209,715 B (66.67%) ── a\n\
+└──104,857 B (33.33%) ── b\n\
+\n\
+262,144,000 B ── heap-allocated\n\
+\n\
+Other-only process\n\
+\n\
+WARNING: the 'heap-allocated' memory reporter does not work for this platform and/or configuration. This means that 'heap-unclassified' is not shown and the 'explicit' tree shows less memory than it should.\n\
+Explicit Allocations\n\
+\n\
+Other Measurements\n\
+\n\
+200,000 B (100.0%) -- a\n\
+├──100,000 B (50.00%) ── b\n\
+└──100,000 B (50.00%) ── c\n\
+\n\
+500,000 B ── heap-allocated\n\
+\n\
+";
+
+  let expectedGood2 =
 "\
 Main Process (pid NNN)\n\
 Explicit Allocations\n\
 \n\
-250.00 MB (100.0%) -- explicit\n\
-├──200.00 MB (80.00%) ── heap-unclassified\n\
-└───50.00 MB (20.00%) ── a/b\n\
+262,144,000 B (100.0%) -- explicit\n\
+├──209,715,200 B (80.00%) ── heap-unclassified\n\
+└───52,428,800 B (20.00%) ── a/b\n\
 \n\
 Other Measurements\n\
 \n\
-0.30 MB (100.0%) -- other\n\
-├──0.20 MB (66.67%) ── a\n\
-└──0.10 MB (33.33%) ── b\n\
+314,572 B (100.0%) -- other\n\
+├──209,715 B (66.67%) ── a\n\
+└──104,857 B (33.33%) ── b\n\
 \n\
-250.00 MB ── heap-allocated\n\
+262,144,000 B ── heap-allocated\n\
 \n\
 ";
 
@@ -201,15 +274,64 @@ Other Measurements\n\
 "\
 Invalid memory report(s): missing 'hasMozMallocUsableSize' property";
 
+  // This is the output for a diff.
+  let expectedDiff =
+"\
+P\n\
+\n\
+WARNING: the 'heap-allocated' memory reporter does not work for this platform and/or configuration. This means that 'heap-unclassified' is not shown and the 'explicit' tree shows less memory than it should.\n\
+Explicit Allocations\n\
+\n\
+-10,005 B (100.0%) -- explicit\n\
+├──-10,000 B (99.95%) ── storage/prefixset/goog-phish-shavar\n\
+├───────-6 B (00.06%) ── spell-check [2]\n\
+└────────1 B (-0.01%) ── xpcom/category-manager\n\
+\n\
+Other Measurements\n\
+\n\
+3,000 B ── canvas-2d-pixel-bytes [2] [+]\n\
+ -100 B ── foobar [-]\n\
+\n\
+P2 (pid NNN)\n\
+\n\
+WARNING: the 'heap-allocated' memory reporter does not work for this platform and/or configuration. This means that 'heap-unclassified' is not shown and the 'explicit' tree shows less memory than it should.\n\
+Explicit Allocations\n\
+\n\
+Other Measurements\n\
+\n\
+11 B ── z 0xNNN\n\
+\n\
+P3\n\
+\n\
+WARNING: the 'heap-allocated' memory reporter does not work for this platform and/or configuration. This means that 'heap-unclassified' is not shown and the 'explicit' tree shows less memory than it should.\n\
+Explicit Allocations\n\
+\n\
+Other Measurements\n\
+\n\
+-55 B ── p3 [-]\n\
+\n\
+P4\n\
+\n\
+WARNING: the 'heap-allocated' memory reporter does not work for this platform and/or configuration. This means that 'heap-unclassified' is not shown and the 'explicit' tree shows less memory than it should.\n\
+Explicit Allocations\n\
+\n\
+Other Measurements\n\
+\n\
+66 B ── p4 [+]\n\
+\n\
+";
+
   let frames = [
     // This loads a pre-existing file that is valid.
-    { frameId: "amGoodFrame", filename: "memory-reports-good.json", expected: expectedGood, dumpFirst: false },
+    { filename: "memory-reports-good.json", expected: expectedGood, dumpFirst: false },
 
     // This dumps to a file and then reads it back in.  The output is the same as the first test.
-    { frameId: "amGoodFrame2", filename: "memory-reports-dumped.json.gz", expected: expectedGood, dumpFirst: true },
+    { filename: "memory-reports-dumped.json.gz", expected: expectedGood2, dumpFirst: true },
 
     // This loads a pre-existing file that is invalid.
-    { frameId: "amBadFrame",  filename: "memory-reports-bad.json",  expected: expectedBad, dumpFirst: false }
+    { filename: "memory-reports-bad.json",  expected: expectedBad, dumpFirst: false },
+
+    { filename: "memory-reports-diff1.json", filename2: "memory-reports-diff2.json",  expected: expectedDiff, dumpFirst: false }
   ];
 
   SimpleTest.waitForFocus(chain(frames));
