@@ -158,9 +158,6 @@ endif # SKIP_COPY_XULRUNNER
 ifeq ($(OS_ARCH),WINNT)
 	cp $(srcdir)/$(APP_ICON).ico $(DIST)/bin/chrome/icons/default/$(APP_ICON).ico
 	$(REDIT_PATH)/redit$(HOST_BIN_SUFFIX) $(DIST)/bin/$(APP_BINARY) $(srcdir)/$(APP_ICON).ico
-	cp $(srcdir)/$(APP_ICON).ico $(DIST)/bin/chrome/icons/default/default.ico
-else
-	cp $(srcdir)/default.png $(DIST)/bin/chrome/icons/default/default.png
 endif
 
 endif
