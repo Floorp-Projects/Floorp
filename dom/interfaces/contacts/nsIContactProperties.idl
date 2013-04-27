@@ -4,10 +4,11 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(c5d6eb73-a079-4a9f-8cd5-618194f73b30)]
+[scriptable, uuid(9cbfa81c-bcab-4ca9-b0d2-f4318f295e33)]
 interface nsIContactAddress : nsISupports
 {
   attribute DOMString type;
+  attribute boolean   pref; // false = no pref, true = preferred (vCard3 TYPE:PREF; vCard4 PREF:1)
   attribute DOMString streetAddress;
   attribute DOMString locality;
   attribute DOMString region;
@@ -15,11 +16,12 @@ interface nsIContactAddress : nsISupports
   attribute DOMString countryName;
 };
 
-[scriptable, uuid(474b8c6d-f984-431f-9636-e523ca3ec34d)]
+[scriptable, uuid(ad19a543-69e4-44f0-adfa-37c011556bc1)]
 interface nsIContactField : nsISupports
 {
-  attribute jsval type; // DOMString[] for primary/favorite (use:"PREF"), "home", "work", etc.
+  attribute jsval     type; // DOMString[], "home", "work", etc.
   attribute DOMString value;
+  attribute boolean   pref; // false = no pref, true = preferred (vCard3 TYPE:PREF; vCard4 PREF:1)
 };
 
 [scriptable, uuid(4d42c5a9-ea5d-4102-80c3-40cc986367ca)]
