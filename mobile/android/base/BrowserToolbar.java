@@ -33,14 +33,15 @@ import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.ContextMenu;
+import android.view.LayoutInflater;
 import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewGroup.MarginLayoutParams;
 import android.view.Window;
 import android.view.accessibility.AccessibilityNodeInfo;
-import android.view.animation.Animation;
 import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
@@ -56,7 +57,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class BrowserToolbar implements Tabs.OnTabsChangedListener,
+public class BrowserToolbar implements ViewSwitcher.ViewFactory,
+                                       Tabs.OnTabsChangedListener,
                                        GeckoMenu.ActionItemBarPresenter,
                                        Animation.AnimationListener,
                                        SharedPreferences.OnSharedPreferenceChangeListener {
@@ -82,7 +84,7 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
     public ImageButton mSiteSecurity;
     public ImageButton mReader;
     private AnimationDrawable mProgressSpinner;
-    private TabCounter mTabsCounter;
+    private GeckoTextSwitcher mTabsCount;
     private ImageView mShadow;
     private GeckoImageButton mMenu;
     private LinearLayout mActionItemBar;
@@ -90,6 +92,7 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
     private List<View> mFocusOrder;
 
     final private BrowserApp mActivity;
+    private LayoutInflater mInflater;
     private Handler mHandler;
     private boolean mHasSoftMenuButton;
 
@@ -100,6 +103,12 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
 
     private boolean mAnimatingEntry;
 
+    private int mDuration;
+    private TranslateAnimation mSlideUpIn;
+    private TranslateAnimation mSlideUpOut;
+    private TranslateAnimation mSlideDownIn;
+    private TranslateAnimation mSlideDownOut;
+
     private AlphaAnimation mLockFadeIn;
     private TranslateAnimation mTitleSlideLeft;
     private TranslateAnimation mTitleSlideRight;
@@ -108,6 +117,7 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
     private int mDefaultForwardMargin;
     private PropertyAnimator mForwardAnim = null;
 
+    private int mCount;
     private int mFaviconSize;
 
     private PropertyAnimator mVisibilityAnimator;
@@ -125,6 +135,7 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
     public BrowserToolbar(BrowserApp activity) {
         // BrowserToolbar is attached to BrowserApp only.
         mActivity = activity;
+        mInflater = LayoutInflater.from(activity);
 
         sActionItems = new ArrayList<View>();
         Tabs.registerOnTabsChangedListener(this);
@@ -240,7 +251,23 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
         });
         mTabs.setImageLevel(0);
 
-        mTabsCounter = (TabCounter) mLayout.findViewById(R.id.tabs_counter);
+        mTabsCount = (GeckoTextSwitcher) mLayout.findViewById(R.id.tabs_count);
+        mTabsCount.removeAllViews();
+        mTabsCount.setFactory(this);
+        mTabsCount.setText("");
+        mCount = 0;
+        if (Build.VERSION.SDK_INT >= 16) {
+            // This adds the TextSwitcher to the a11y node tree, where we in turn
+            // could make it return an empty info node. If we don't do this the
+            // TextSwitcher's child TextViews get picked up, and we don't want
+            // that since the tabs ImageButton is already properly labeled for
+            // accessibility.
+            mTabsCount.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_YES);
+            mTabsCount.setAccessibilityDelegate(new View.AccessibilityDelegate() {
+                    @Override
+                    public void onInitializeAccessibilityNodeInfo(View host, AccessibilityNodeInfo info) {}
+                });
+        }
 
         mBack = (ImageButton) mLayout.findViewById(R.id.back);
         mBack.setOnClickListener(new Button.OnClickListener() {
@@ -339,6 +366,16 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
         });
 
         mHandler = new Handler();
+        mSlideUpIn = new TranslateAnimation(0, 0, 40, 0);
+        mSlideUpOut = new TranslateAnimation(0, 0, 0, -40);
+        mSlideDownIn = new TranslateAnimation(0, 0, -40, 0);
+        mSlideDownOut = new TranslateAnimation(0, 0, 0, 40);
+
+        mDuration = 750;
+        mSlideUpIn.setDuration(mDuration);
+        mSlideUpOut.setDuration(mDuration);
+        mSlideDownIn.setDuration(mDuration);
+        mSlideDownOut.setDuration(mDuration);
 
         float slideWidth = mActivity.getResources().getDimension(R.dimen.browser_toolbar_lock_width);
 
@@ -542,6 +579,12 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
         }
     }
 
+    @Override
+    public View makeView() {
+        // This returns a TextView for the TextSwitcher.
+        return mInflater.inflate(R.layout.tabs_counter, null);
+    }
+
     private int getAwesomeBarAnimTranslation() {
         return mLayout.getWidth() - mAwesomeBarEntry.getRight();
     }
@@ -574,7 +617,7 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
             proxy.setTranslationX(translation);
             proxy = AnimatorProxy.create(mTabs);
             proxy.setTranslationX(translation);
-            proxy = AnimatorProxy.create(mTabsCounter);
+            proxy = AnimatorProxy.create(mTabsCount);
             proxy.setTranslationX(translation);
             proxy = AnimatorProxy.create(mActionItemBar);
             proxy.setTranslationX(translation);
@@ -609,7 +652,7 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
         contentAnimator.attach(mTabs,
                                PropertyAnimator.Property.TRANSLATION_X,
                                0);
-        contentAnimator.attach(mTabsCounter,
+        contentAnimator.attach(mTabsCount,
                                PropertyAnimator.Property.TRANSLATION_X,
                                0);
         contentAnimator.attach(mActionItemBar,
@@ -710,7 +753,7 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
         contentAnimator.attach(mTabs,
                                PropertyAnimator.Property.TRANSLATION_X,
                                translation);
-        contentAnimator.attach(mTabsCounter,
+        contentAnimator.attach(mTabsCount,
                                PropertyAnimator.Property.TRANSLATION_X,
                                translation);
         contentAnimator.attach(mActionItemBar,
@@ -772,18 +815,29 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
             return;
         }
 
-        mTabsCounter.setCount(count);
+        if (mCount > count) {
+            mTabsCount.setInAnimation(mSlideDownIn);
+            mTabsCount.setOutAnimation(mSlideDownOut);
+        } else if (mCount < count) {
+            mTabsCount.setInAnimation(mSlideUpIn);
+            mTabsCount.setOutAnimation(mSlideUpOut);
+        } else {
+            return;
+        }
 
+        mTabsCount.setText(String.valueOf(count));
         mTabs.setContentDescription((count > 1) ?
                                     mActivity.getString(R.string.num_tabs, count) :
                                     mActivity.getString(R.string.one_tab));
+        mCount = count;
     }
 
     public void updateTabCount(int count) {
-        mTabsCounter.setCurrentText(String.valueOf(count));
+        mTabsCount.setCurrentText(String.valueOf(count));
         mTabs.setContentDescription((count > 1) ?
                                     mActivity.getString(R.string.num_tabs, count) :
                                     mActivity.getString(R.string.one_tab));
+        mCount = count;
         updateTabs(mActivity.areTabsShown());
     }
 
@@ -797,7 +851,7 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
         animator.attach(mTabs,
                         PropertyAnimator.Property.TRANSLATION_X,
                         width);
-        animator.attach(mTabsCounter,
+        animator.attach(mTabsCount,
                         PropertyAnimator.Property.TRANSLATION_X,
                         width);
         animator.attach(mBack,
@@ -833,7 +887,7 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
         mAwesomeBarEntry.setTranslationX(width);
         mAddressBarBg.setTranslationX(width);
         mTabs.setTranslationX(width);
-        mTabsCounter.setTranslationX(width);
+        mTabsCount.setTranslationX(width);
         mBack.setTranslationX(width);
         mForward.setTranslationX(width);
         mTitle.setTranslationX(width);
