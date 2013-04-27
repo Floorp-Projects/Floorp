@@ -185,6 +185,8 @@ GrallocBufferActor::GrallocBufferActor()
     NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(GrallocBufferActor));
     registered = true;
   }
+
+  mTextureHost = nullptr;
 }
 
 GrallocBufferActor::~GrallocBufferActor()
@@ -219,6 +221,20 @@ GrallocBufferActor::Create(const gfxIntSize& aSize,
   actor->mGraphicBuffer = buffer;
   *aOutHandle = MagicGrallocBufferHandle(buffer);
   return actor;
+}
+
+// used only for hacky fix in gecko 23 for bug 862324
+void GrallocBufferActor::ActorDestroy(ActorDestroyReason)
+{
+  if (mTextureHost) {
+    mTextureHost->ForgetBuffer();
+  }
+}
+
+// used only for hacky fix in gecko 23 for bug 862324
+void GrallocBufferActor::SetTextureHost(TextureHost* aTextureHost)
+{
+  mTextureHost = aTextureHost;
 }
 
 /*static*/ already_AddRefed<TextureImage>
