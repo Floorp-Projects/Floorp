@@ -216,6 +216,12 @@ public:
     return mNode;
   }
 
+  dom::AudioNode* NodeMainThread() const
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    return mNode;
+  }
+
   void ClearNode()
   {
     MOZ_ASSERT(NS_IsMainThread());
