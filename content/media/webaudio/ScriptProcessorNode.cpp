@@ -359,7 +359,10 @@ ScriptProcessorNode::ScriptProcessorNode(AudioContext* aContext,
                                          uint32_t aBufferSize,
                                          uint32_t aNumberOfInputChannels,
                                          uint32_t aNumberOfOutputChannels)
-  : AudioNode(aContext)
+  : AudioNode(aContext,
+              2,
+              ChannelCountMode::Explicit,
+              ChannelInterpretation::Speakers)
   , mSharedBuffers(new SharedBuffers())
   , mBufferSize(aBufferSize ?
                   aBufferSize : // respect what the web developer requested

@@ -46,6 +46,9 @@ addLoadEvent(function() {
   delay.delayTime.value = 0.5;
   is(delay.delayTime.value, 0.5, "Correct initial value");
   is(delay.delayTime.defaultValue, 0, "Correct default value");
+  is(delay.channelCount, 2, "delay node has 2 input channels by default");
+  is(delay.channelCountMode, "max", "Correct channelCountMode for the delay node");
+  is(delay.channelInterpretation, "speakers", "Correct channelCountInterpretation for the delay node");
 
   var delay2 = context.createDelay(2);
   is(delay2.delayTime.value, 0, "Correct initial value");
