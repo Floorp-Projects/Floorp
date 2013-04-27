@@ -58,6 +58,10 @@ public:
     return mGain;
   }
 
+  void GetFrequencyResponse(const Float32Array& aFrequencyHz,
+                            Float32Array& aMagResponse,
+                            Float32Array& aPhaseResponse);
+
 private:
   static void SendFrequencyToStream(AudioNode* aNode);
   static void SendDetuneToStream(AudioNode* aNode);
