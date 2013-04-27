@@ -107,9 +107,7 @@ let CommandUtils = {
           button.setAttribute("tooltiptext", command.description);
         }
 
-        let buttonWasClickedAtLeastOnce = false;
         button.addEventListener("click", function() {
-          buttonWasClickedAtLeastOnce = true;
           requisition.update(buttonSpec.typed);
           //if (requisition.getStatus() == Status.VALID) {
             requisition.exec();
@@ -136,27 +134,9 @@ let CommandUtils = {
           };
           command.state.onChange(target, onChange);
           onChange(null, target.tab);
-          let cleanUp = function () {
-            document.defaultView.removeEventListener("unload", cleanUp, false);
-            target.off("close", cleanUp);
-
+          document.defaultView.addEventListener("unload", function() {
             command.state.offChange(target, onChange);
-
-            // If the command toggles state and if that state has been
-            // modified by the button, then make sure the state is
-            // cleared when the button's document unloads. This is so
-            // that the effects of buttons on the developer toolbar do
-            // not persist after the toolbar is closed.
-            if (buttonWasClickedAtLeastOnce &&
-                command.state.isChecked(target)) {
-              // toggle state to the off position
-              requisition.update(buttonSpec.typed);
-              requisition.exec();
-              buttonWasClickedAtLeastOnce = false;
-            }
-          };
-          document.defaultView.addEventListener("unload", cleanUp, false);
-          target.on("close", cleanUp);
+          }, false);
         }
       }
     });
