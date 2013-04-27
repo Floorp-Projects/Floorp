@@ -494,22 +494,22 @@ nsXPCWrappedJSClass::IsWrappedJS(nsISupports* aPtr)
            result == WrappedJSIdentity::GetSingleton();
 }
 
-// NB: This returns null unless there's nothing on the JSContext stack.
+// NB: This will return the top JSContext on the JSContext stack if there is one,
+// before attempting to get the context from the wrapped JS object.
 static JSContext *
-GetContextFromObject(JSObject *objArg)
+GetContextFromObjectOrDefault(nsXPCWrappedJS* wrapper)
 {
     // Don't stomp over a running context.
     XPCJSContextStack* stack = XPCJSRuntime::Get()->GetJSContextStack();
-
     if (stack && stack->Peek())
-        return nullptr;
+        return stack->Peek();
 
     // In order to get a context, we need a context.
     XPCCallContext ccx(NATIVE_CALLER);
     if (!ccx.IsValid())
         return nullptr;
 
-    RootedObject obj(ccx, objArg);
+    RootedObject obj(ccx, wrapper->GetJSObject());
     JSAutoCompartment ac(ccx, obj);
     XPCWrappedNativeScope* scope = GetObjectScope(obj);
     XPCContext *xpcc = scope->GetContext();
@@ -520,7 +520,7 @@ GetContextFromObject(JSObject *objArg)
         return cx;
     }
 
-    return nullptr;
+    return XPCCallContext::GetDefaultJSContext();
 }
 
 class SameOriginCheckedComponent MOZ_FINAL : public nsISecurityCheckedComponent
@@ -620,9 +620,7 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
         return NS_NOINTERFACE;
     }
 
-    JSContext *context = GetContextFromObject(self->GetJSObject());
-    if (!context)
-        context = XPCCallContext::GetDefaultJSContext();
+    JSContext *context = GetContextFromObjectOrDefault(self);
     XPCCallContext ccx(NATIVE_CALLER, context);
     if (!ccx.IsValid()) {
         *aInstancePtr = nullptr;
@@ -1136,9 +1134,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
     // the whole nsIXPCFunctionThisTranslator bit.  That code uses ccx to
     // convert natives to JSObjects, but we do NOT plan to pass those JSObjects
     // to our real callee.
-    JSContext *context = GetContextFromObject(wrapper->GetJSObject());
-    if (!context)
-        context = XPCCallContext::GetDefaultJSContext();
+    JSContext *context = GetContextFromObjectOrDefault(wrapper);
     XPCCallContext ccx(NATIVE_CALLER, context);
     if (!ccx.IsValid())
         return retval;

@@ -136,7 +136,7 @@ public class RedirOutputThread extends Thread
                 }
             }
 
-        // wait for process to end, if it has not already, then destroy it
+        // wait for process to end; if it has not already ended, then destroy it
         try
             {
             pProc.waitFor();
@@ -144,8 +144,8 @@ public class RedirOutputThread extends Thread
         catch (InterruptedException e) 
             {
             e.printStackTrace();
+            pProc.destroy();
             }
-        pProc.destroy();
         buffer = null;
         System.gc();
         }

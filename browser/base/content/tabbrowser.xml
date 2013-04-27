@@ -28,10 +28,7 @@
           <xul:notificationbox flex="1">
             <xul:hbox flex="1" class="browserSidebarContainer">
               <xul:vbox flex="1" class="browserContainer">
-                <xul:stack flex="1" class="browserStack">
-                  <xul:browser anonid="initialBrowser" type="content-primary" message="true" disablehistory="true"
-                               xbl:inherits="tooltip=contenttooltip,contextmenu=contentcontextmenu,autocompletepopup"/>
-                </xul:stack>
+                <xul:stack flex="1" class="browserStack" anonid="browserStack"/>
               </xul:vbox>
             </xul:hbox>
           </xul:notificationbox>
@@ -1265,6 +1262,7 @@
         <parameter name="aAllowThirdPartyFixup"/>
         <body>
           <![CDATA[
+            const NS_XUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
             var aFromExternal;
             var aRelatedToCurrent;
             var aSkipAnimation;
@@ -1288,9 +1286,7 @@
             if (this.mCurrentTab.owner)
               this.mCurrentTab.owner = null;
 
-            var t = document.createElementNS(
-              "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                                             "tab");
+            var t = document.createElementNS(NS_XUL, "tab");
 
             var uriIsAboutBlank = !aURI || aURI == "about:blank";
 
@@ -1328,56 +1324,38 @@
             if (aOwner)
               t.owner = aOwner;
 
-            var b = document.createElementNS(
-              "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                                             "browser");
+            var b = this._createBrowserElement();
             b.setAttribute("type", "content-targetable");
-            b.setAttribute("message", "true");
-            b.setAttribute("contextmenu", this.getAttribute("contentcontextmenu"));
-            b.setAttribute("tooltip", this.getAttribute("contenttooltip"));
-
-            if (Services.prefs.getPrefType("browser.tabs.remote") == Services.prefs.PREF_BOOL &&
-                Services.prefs.getBoolPref("browser.tabs.remote")) {
-              b.setAttribute("remote", "true");
-            }
 
             if (window.gShowPageResizers && document.getElementById("addon-bar").collapsed &&
                 window.windowState == window.STATE_NORMAL) {
               b.setAttribute("showresizer", "true");
             }
 
-            if (this.hasAttribute("autocompletepopup"))
-              b.setAttribute("autocompletepopup", this.getAttribute("autocompletepopup"));
             b.setAttribute("autoscrollpopup", this._autoScrollPopup.id);
 
             // Create the browserStack container
-            var stack = document.createElementNS(
-                                    "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                                    "stack");
+            var stack = document.createElementNS(NS_XUL, "stack");
             stack.className = "browserStack";
             stack.appendChild(b);
             stack.setAttribute("flex", "1");
 
             // Create the browserContainer
-            var browserContainer = document.createElementNS(
-                                    "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                                    "vbox");
+            var browserContainer = document.createElementNS(NS_XUL, "vbox");
             browserContainer.className = "browserContainer";
             browserContainer.appendChild(stack);
             browserContainer.setAttribute("flex", "1");
 
             // Create the sidebar container
-            var browserSidebarContainer = document.createElementNS(
-                                      "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                                      "hbox");
+            var browserSidebarContainer = document.createElementNS(NS_XUL,
+                                                                   "hbox");
             browserSidebarContainer.className = "browserSidebarContainer";
             browserSidebarContainer.appendChild(browserContainer);
             browserSidebarContainer.setAttribute("flex", "1");
 
             // Add the Message and the Browser to the box
-            var notificationbox = document.createElementNS(
-                                    "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                                    "notificationbox");
+            var notificationbox = document.createElementNS(NS_XUL,
+                                                           "notificationbox");
             notificationbox.setAttribute("flex", "1");
             notificationbox.appendChild(browserSidebarContainer);
 
@@ -1415,7 +1393,6 @@
             this.mTabFilters[position] = filter;
 
             b._fastFind = this.fastFind;
-            b.droppedLinkHandler = handleDroppedLink;
 
             // Dispatch a new tab notification.  We do this once we're
             // entirely done, so that things are in a consistent state
@@ -2716,9 +2693,37 @@
         ]]></body>
       </method>
 
+      <method name="_createBrowserElement">
+        <body><![CDATA[
+          var b = document.createElementNS(
+            "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                           "browser");
+          b.setAttribute("message", "true");
+          b.setAttribute("contextmenu", this.getAttribute("contentcontextmenu"));
+          b.setAttribute("tooltip", this.getAttribute("contenttooltip"));
+
+          if (this.hasAttribute("autocompletepopup"))
+            b.setAttribute("autocompletepopup", this.getAttribute("autocompletepopup"));
+
+          if (Services.prefs.getBoolPref("browser.tabs.remote"))
+            b.setAttribute("remote", "true");
+
+          b.droppedLinkHandler = handleDroppedLink;
+
+          return b;
+        ]]></body>
+      </method>
+
       <constructor>
         <![CDATA[
-          this.mCurrentBrowser = document.getAnonymousElementByAttribute(this, "anonid", "initialBrowser");
+          let browser = this._createBrowserElement();
+          this.mCurrentBrowser = browser;
+          browser.setAttribute("type", "content-primary");
+          browser.setAttribute("disablehistory", "true");
+
+          let stack = document.getAnonymousElementByAttribute(this, "anonid", "browserStack");
+          stack.appendChild(browser);
+
           this.mCurrentTab = this.tabContainer.firstChild;
           document.addEventListener("keypress", this, false);
           window.addEventListener("sizemodechange", this, false);
@@ -2735,7 +2740,6 @@
           this._autoScrollPopup.id = "autoscroller";
           this.appendChild(this._autoScrollPopup);
           this.mCurrentBrowser.setAttribute("autoscrollpopup", this._autoScrollPopup.id);
-          this.mCurrentBrowser.droppedLinkHandler = handleDroppedLink;
           this.updateWindowResizers();
 
           // Hook up the event listeners to the first browser
@@ -4229,16 +4233,17 @@
          */
         var clickedOnce = false;
         function enableDblClick(event) {
-          if (event.detail == 1 && !clickedOnce) {
+          var target = event.originalTarget;
+          if (target.className == 'tab-close-button')
+            target._ignoredClick = true;
+          if (!clickedOnce) {
             clickedOnce = true;
             return;
           }
-          setTimeout(function() {
-            tabContainer._blockDblClick = false;
-          }, 0);
-          tabContainer.removeEventListener("click", enableDblClick, false);
+          tabContainer._blockDblClick = false;
+          tabContainer.removeEventListener("click", enableDblClick, true);
         }
-        tabContainer.addEventListener("click", enableDblClick, false);
+        tabContainer.addEventListener("click", enableDblClick, true);
       ]]></handler>
 
       <handler event="dblclick" button="0" phase="capturing">

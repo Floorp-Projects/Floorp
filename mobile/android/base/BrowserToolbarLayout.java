@@ -8,9 +8,9 @@ package org.mozilla.gecko;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
-import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 
-public class BrowserToolbarLayout extends LinearLayout {
+public class BrowserToolbarLayout extends GeckoRelativeLayout {
     private static final String LOGTAG = "GeckoToolbarLayout";
 
     public BrowserToolbarLayout(Context context, AttributeSet attrs) {
@@ -29,34 +29,20 @@ public class BrowserToolbarLayout extends LinearLayout {
     }
 
     @Override
-    protected void onScrollChanged(int l, int t, int oldl, int oldt) {
-        super.onScrollChanged(l, t, oldl, oldt);
-
-        if (t != oldt) {
-            refreshMargins();
-        }
-    }
-
-    @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
 
         if (h != oldh) {
             // Post this to happen outside of onSizeChanged, as this may cause
             // a layout change and relayouts within a layout change don't work.
+            final int height = h;
             post(new Runnable() {
                 @Override
                 public void run() {
-                    refreshMargins();
+                    ((BrowserApp)GeckoApp.mAppContext).refreshToolbarHeight();
                 }
             });
         }
-    }
-
-    public void refreshMargins() {
-        int height = getHeight();
-        int visibleHeight = height - getScrollY();
-        ((BrowserApp)GeckoApp.mAppContext).setToolbarHeight(height, visibleHeight);
     }
 }
 

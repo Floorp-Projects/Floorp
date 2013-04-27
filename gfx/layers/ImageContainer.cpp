@@ -530,7 +530,7 @@ PlanarYCbCrImage::GetAsSurface()
 
   mSurface = imageSurface;
 
-  return imageSurface.forget().get();
+  return imageSurface.forget();
 }
 
 already_AddRefed<gfxASurface>

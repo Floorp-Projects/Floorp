@@ -19,6 +19,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Point;
+import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.opengl.GLES20;
@@ -277,21 +278,23 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
         return pixelBuffer;
     }
 
-    private RenderContext createScreenContext(ImmutableViewportMetrics metrics) {
+    private RenderContext createScreenContext(ImmutableViewportMetrics metrics, PointF offset) {
         RectF viewport = new RectF(0.0f, 0.0f, metrics.getWidth(), metrics.getHeight());
-        RectF pageRect = new RectF(metrics.getPageRect());
-        return createContext(viewport, pageRect, 1.0f);
+        RectF pageRect = metrics.getPageRect();
+
+        return createContext(viewport, pageRect, 1.0f, offset);
     }
 
-    private RenderContext createPageContext(ImmutableViewportMetrics metrics) {
-        Rect viewport = RectUtils.round(metrics.getViewport());
+    private RenderContext createPageContext(ImmutableViewportMetrics metrics, PointF offset) {
+        RectF viewport = metrics.getViewport();
         RectF pageRect = metrics.getPageRect();
         float zoomFactor = metrics.zoomFactor;
-        return createContext(new RectF(viewport), pageRect, zoomFactor);
+
+        return createContext(new RectF(RectUtils.round(viewport)), pageRect, zoomFactor, offset);
     }
 
-    private RenderContext createContext(RectF viewport, RectF pageRect, float zoomFactor) {
-        return new RenderContext(viewport, pageRect, zoomFactor, mPositionHandle, mTextureHandle,
+    private RenderContext createContext(RectF viewport, RectF pageRect, float zoomFactor, PointF offset) {
+        return new RenderContext(viewport, pageRect, zoomFactor, offset, mPositionHandle, mTextureHandle,
                                  mCoordBuffer);
     }
 
@@ -410,17 +413,27 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
         private boolean mUpdated;
         private final Rect mPageRect;
         private final Rect mAbsolutePageRect;
+        private final PointF mRenderOffset;
 
         public Frame(ImmutableViewportMetrics metrics) {
             mFrameMetrics = metrics;
-            mPageContext = createPageContext(metrics);
-            mScreenContext = createScreenContext(metrics);
 
-            Point origin = PointUtils.round(mFrameMetrics.getOrigin());
-            Rect pageRect = RectUtils.round(mFrameMetrics.getPageRect());
-            mAbsolutePageRect = new Rect(pageRect);
+            // Work out the offset due to margins
+            Layer rootLayer = mView.getLayerClient().getRoot();
+            mRenderOffset = mFrameMetrics.getMarginOffset();
+            float scaleDiff = mFrameMetrics.zoomFactor / rootLayer.getResolution();
+            mRenderOffset.set(mRenderOffset.x * scaleDiff,
+                              mRenderOffset.y * scaleDiff);
+
+            mPageContext = createPageContext(metrics, mRenderOffset);
+            mScreenContext = createScreenContext(metrics, mRenderOffset);
+
+            RectF pageRect = mFrameMetrics.getPageRect();
+            mAbsolutePageRect = RectUtils.round(pageRect);
+
+            PointF origin = mFrameMetrics.getOrigin();
             pageRect.offset(-origin.x, -origin.y);
-            mPageRect = pageRect;
+            mPageRect = RectUtils.round(pageRect);
         }
 
         private void setScissorRect() {
@@ -438,8 +451,11 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
             int right = Math.min(screenSize.width, rect.right);
             int bottom = Math.min(screenSize.height, rect.bottom);
 
-            return new Rect(left, screenSize.height - bottom, right,
-                            (screenSize.height - bottom) + (bottom - top));
+            Rect scissorRect = new Rect(left, screenSize.height - bottom, right,
+                                        (screenSize.height - bottom) + (bottom - top));
+            scissorRect.offset(Math.round(-mRenderOffset.x), Math.round(-mRenderOffset.y));
+
+            return scissorRect;
         }
 
         /** This function is invoked via JNI; be careful when modifying signature. */
@@ -544,7 +560,9 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
             GLES20.glDisable(GLES20.GL_SCISSOR_TEST);
 
             // Draw the drop shadow, if we need to.
-            if (!new RectF(mAbsolutePageRect).contains(mFrameMetrics.getViewport()))
+            RectF offsetAbsPageRect = new RectF(mAbsolutePageRect);
+            offsetAbsPageRect.offset(mRenderOffset.x, mRenderOffset.y);
+            if (!offsetAbsPageRect.contains(mFrameMetrics.getViewport()))
                 mShadowLayer.draw(mPageContext);
         }
 

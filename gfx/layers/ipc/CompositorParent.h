@@ -180,7 +180,13 @@ protected:
   virtual void SetPageRect(const gfx::Rect& aCssPageRect);
   virtual void SyncViewportInfo(const nsIntRect& aDisplayPort, float aDisplayResolution, bool aLayersUpdated,
                                 nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY,
-                                gfx::Margin& aFixedLayerMargins);
+                                gfx::Margin& aFixedLayerMargins, float& aOffsetX, float& aOffsetY);
+  virtual void SyncFrameMetrics(Layer* aLayer, const ViewTransform& aTreeTransform,
+                                const gfxPoint& aScrollOffset, gfx::Margin& aFixedLayerMargins,
+                                float& aOffsetX, float& aOffsetY,
+                                bool aIsFirstPaint, bool aLayersUpdated) {
+  }
+
   void SetEGLSurfaceSize(int width, int height);
 
 private:

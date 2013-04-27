@@ -3504,6 +3504,13 @@ nsGlobalWindow::GetContent(nsIDOMWindow** aContent)
   FORWARD_TO_OUTER(GetContent, (aContent), NS_ERROR_NOT_INITIALIZED);
   *aContent = nullptr;
 
+  // First check for a named frame named "content"
+  nsCOMPtr<nsIDOMWindow> domWindow = GetChildWindow(nsDOMClassInfo::sContent_id);
+  if (domWindow) {
+    domWindow.forget(aContent);
+    return NS_OK;
+  }
+
   // If we're contained in <iframe mozbrowser> or <iframe mozapp>, then
   // GetContent is the same as window.top.
   if (mDocShell && mDocShell->GetIsInBrowserOrApp()) {
@@ -3535,7 +3542,7 @@ nsGlobalWindow::GetContent(nsIDOMWindow** aContent)
     treeOwner->GetPrimaryContentShell(getter_AddRefs(primaryContent));
   }
 
-  nsCOMPtr<nsIDOMWindow> domWindow(do_GetInterface(primaryContent));
+  domWindow = do_GetInterface(primaryContent);
   domWindow.forget(aContent);
 
   return NS_OK;
@@ -4821,18 +4828,16 @@ static already_AddRefed<nsIDocShellTreeItem>
 GetCallerDocShellTreeItem()
 {
   JSContext *cx = nsContentUtils::GetCurrentJSContext();
-  nsIDocShellTreeItem *callerItem = nullptr;
+  nsCOMPtr<nsIDocShellTreeItem> callerItem;
 
   if (cx) {
     nsCOMPtr<nsIWebNavigation> callerWebNav =
       do_GetInterface(nsJSUtils::GetDynamicScriptGlobal(cx));
 
-    if (callerWebNav) {
-      CallQueryInterface(callerWebNav, &callerItem);
-    }
+    callerItem = do_QueryInterface(callerWebNav);
   }
 
-  return callerItem;
+  return callerItem.forget();
 }
 
 bool
@@ -4862,13 +4867,13 @@ nsGlobalWindow::GetMainWidget()
 {
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin = GetTreeOwnerWindow();
 
-  nsIWidget *widget = nullptr;
+  nsCOMPtr<nsIWidget> widget;
 
   if (treeOwnerAsWin) {
-    treeOwnerAsWin->GetMainWidget(&widget);
+    treeOwnerAsWin->GetMainWidget(getter_AddRefs(widget));
   }
 
-  return widget;
+  return widget.forget();
 }
 
 nsIWidget*

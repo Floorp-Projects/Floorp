@@ -2473,9 +2473,8 @@ TryAddTypeBarrierForWrite(JSContext *cx, MBasicBlock *current, types::StackTypeS
     if (!types)
         return false;
 
-    MInstruction *ins = MTypeBarrier::New(*pvalue, types, Bailout_Normal);
+    MInstruction *ins = MMonitorTypes::New(*pvalue, types);
     current->add(ins);
-    *pvalue = ins;
     return true;
 }
 
@@ -2494,7 +2493,7 @@ AddTypeGuard(MBasicBlock *current, MDefinition *obj, types::TypeObject *typeObje
 
 bool
 ion::PropertyWriteNeedsTypeBarrier(JSContext *cx, MBasicBlock *current, MDefinition **pobj,
-                                   PropertyName *name, MDefinition **pvalue)
+                                   PropertyName *name, MDefinition **pvalue, bool canModify)
 {
     // If any value being written is not reflected in the type information for
     // objects which obj could represent, a type barrier is needed when writing
@@ -2536,6 +2535,12 @@ ion::PropertyWriteNeedsTypeBarrier(JSContext *cx, MBasicBlock *current, MDefinit
             break;
         }
         if (!TypeSetIncludes(property, (*pvalue)->type(), (*pvalue)->resultTypeSet())) {
+            // Either pobj or pvalue needs to be modified to filter out the
+            // types which the value could have but are not in the property,
+            // or a VM call is required. A VM call is always required if pobj
+            // and pvalue cannot be modified.
+            if (!canModify)
+                return true;
             success = TryAddTypeBarrierForWrite(cx, current, types, id, pvalue);
             break;
         }

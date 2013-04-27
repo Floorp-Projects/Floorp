@@ -523,9 +523,8 @@ nsSVGLinearGradientFrame::CreateGradient()
   x2 = GetLengthValue(dom::SVGLinearGradientElement::ATTR_X2);
   y2 = GetLengthValue(dom::SVGLinearGradientElement::ATTR_Y2);
 
-  gfxPattern *pattern = new gfxPattern(x1, y1, x2, y2);
-  NS_IF_ADDREF(pattern);
-  return pattern;
+  nsRefPtr<gfxPattern> pattern = new gfxPattern(x1, y1, x2, y2);
+  return pattern.forget();
 }
 
 // -------------------------------------------------------------------------
@@ -672,9 +671,8 @@ nsSVGRadialGradientFrame::CreateGradient()
     }
   }
 
-  gfxPattern *pattern = new gfxPattern(fx, fy, 0, cx, cy, r);
-  NS_IF_ADDREF(pattern);
-  return pattern;
+  nsRefPtr<gfxPattern> pattern = new gfxPattern(fx, fy, 0, cx, cy, r);
+  return pattern.forget();
 }
 
 // -------------------------------------------------------------------------

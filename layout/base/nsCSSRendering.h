@@ -33,7 +33,8 @@ public:
   typedef mozilla::layers::ImageContainer ImageContainer;
 
   enum {
-    FLAG_SYNC_DECODE_IMAGES = 0x01
+    FLAG_SYNC_DECODE_IMAGES = 0x01,
+    FLAG_PAINTING_TO_WINDOW = 0x02
   };
   nsImageRenderer(nsIFrame* aForFrame, const nsStyleImage* aImage, uint32_t aFlags);
   ~nsImageRenderer();

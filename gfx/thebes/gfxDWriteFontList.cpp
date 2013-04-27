@@ -40,13 +40,6 @@ using namespace mozilla;
                                    gfxPlatform::GetLog(eGfxLog_cmapdata), \
                                    PR_LOG_DEBUG)
 
-// font info loader constants
-
-// avoid doing this during startup even on slow machines but try to start
-// it soon enough so that system fallback doesn't happen first
-static const uint32_t kDelayBeforeLoadingFonts = 120 * 1000; // 2 minutes after init
-static const uint32_t kIntervalBetweenLoadingFonts = 2000;   // every 2 seconds until complete
-
 static __inline void
 BuildKeyNameFromFontName(nsAString &aName)
 {
@@ -997,7 +990,7 @@ gfxDWriteFontList::DelayedInitFontList()
         Preferences::GetInt("gfx.font_rendering.cleartype_params.force_gdi_classic_max_size",
                             mForceGDIClassicMaxFontSize);
 
-    StartLoader(kDelayBeforeLoadingFonts, kIntervalBetweenLoadingFonts);
+    GetPrefsAndStartLoader();
 
     LOGREGISTRY(L"DelayedInitFontList end");
 

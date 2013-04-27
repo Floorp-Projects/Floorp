@@ -175,7 +175,7 @@ struct JS_PUBLIC_API(NullPtr)
  * specialization, define a HandleBase<T> specialization containing them.
  */
 template <typename T>
-class Handle : public js::HandleBase<T>
+class MOZ_STACK_CLASS Handle : public js::HandleBase<T>
 {
     friend class MutableHandle<T>;
 
@@ -269,7 +269,7 @@ typedef Handle<Value>        HandleValue;
  * them.
  */
 template <typename T>
-class MutableHandle : public js::MutableHandleBase<T>
+class MOZ_STACK_CLASS MutableHandle : public js::MutableHandleBase<T>
 {
   public:
     inline MutableHandle(Rooted<T> *root);
@@ -431,7 +431,7 @@ namespace JS {
  * specialization, define a RootedBase<T> specialization containing them.
  */
 template <typename T>
-class Rooted : public js::RootedBase<T>
+class MOZ_STACK_CLASS Rooted : public js::RootedBase<T>
 {
     void init(JSContext *cxArg) {
 #if defined(JSGC_ROOT_ANALYSIS) || defined(JSGC_USE_EXACT_ROOTING)

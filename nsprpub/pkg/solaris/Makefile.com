@@ -6,7 +6,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-#ident	"$Id: Makefile.com,v 1.9 2012/03/06 13:13:40 gerv%gerv.net Exp $"
+#ident	"$Id$"
 #
 
 MACH = $(shell mach)

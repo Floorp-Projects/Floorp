@@ -120,6 +120,12 @@ struct IonOptions
     // Default: 6,000
     uint32_t osrPcMismatchesBeforeRecompile;
 
+    // Number of bailouts without invalidation before we set
+    // JSScript::hadFrequentBailouts and invalidate.
+    //
+    // Default: 10
+    uint32_t frequentBailoutThreshold;
+
     // How many actual arguments are accepted on the C stack.
     //
     // Default: 4,096
@@ -201,6 +207,7 @@ struct IonOptions
         usesBeforeCompileNoJaeger(40),
         usesBeforeInliningFactor(.125),
         osrPcMismatchesBeforeRecompile(6000),
+        frequentBailoutThreshold(10),
         maxStackArgs(4096),
         maxInlineDepth(3),
         smallFunctionMaxInlineDepth(10),

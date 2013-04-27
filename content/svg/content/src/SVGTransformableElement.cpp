@@ -24,7 +24,7 @@ SVGTransformableElement::Transform()
   // We're creating a DOM wrapper, so we must tell GetAnimatedTransformList
   // to allocate the SVGAnimatedTransformList if it hasn't already done so:
   return SVGAnimatedTransformList::GetDOMWrapper(
-           GetAnimatedTransformList(DO_ALLOCATE), this).get();
+           GetAnimatedTransformList(DO_ALLOCATE), this);
 
 }
 

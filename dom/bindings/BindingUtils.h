@@ -1002,26 +1002,6 @@ WrapObject(JSContext* cx, JSObject* scope, JSObject& p, JS::Value* vp)
   return true;
 }
 
-bool
-WrapCallbackInterface(JSContext *cx, JSObject *scope, nsISupports* callback,
-                      JS::Value* vp);
-
-static inline bool
-WrapCallbackInterface(JSContext *cx, JSObject *scope, nsISupports& callback,
-                      JS::Value* vp)
-{
-  return WrapCallbackInterface(cx, scope, &callback, vp);
-}
-
-// Helper for smart pointers (nsAutoPtr/nsRefPtr/nsCOMPtr).
-template <template <typename> class SmartPtr, class T>
-inline bool
-WrapCallbackInterface(JSContext* cx, JSObject* scope, const SmartPtr<T>& value,
-                      JS::Value* vp)
-{
-  return WrapCallbackInterface(cx, scope, value.get(), vp);
-}
-
 // Given an object "p" that inherits from nsISupports, wrap it and return the
 // result.  Null is returned on wrapping failure.  This is somewhat similar to
 // WrapObject() above, but does NOT allow Xrays around the result, since we
@@ -1431,6 +1411,11 @@ public:
     MOZ_ASSERT(!empty() && ref(), "Can not alias null.");
     return *ref();
   }
+
+  JSObject** Slot() { // To make us look like a NonNull
+    // Assert if we're empty, on purpose
+    return ref().address();
+  }
 };
 
 class LazyRootedObject : public Maybe<JS::RootedObject>
@@ -1438,6 +1423,12 @@ class LazyRootedObject : public Maybe<JS::RootedObject>
 public:
   operator JSObject*() const {
     return empty() ? (JSObject*) nullptr : ref();
+  }
+
+  JSObject** operator&()
+  {
+    // Assert if we're empty, on purpose
+    return ref().address();
   }
 };
 
@@ -1746,6 +1737,15 @@ struct JSBindingFinalized<T, true>
   }
 };
 
+// Helpers for creating a const version of a type.
+template<typename T>
+const T& Constify(T& arg)
+{
+  return arg;
+}
+
+// Reparent the wrapper of aObj to whatever its native now thinks its
+// parent should be.
 nsresult
 ReparentWrapper(JSContext* aCx, JS::HandleObject aObj);
 

@@ -18,6 +18,7 @@ Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://gre/modules/Task.jsm");
+Cu.import("resource://gre/modules/PlacesBackups.jsm");
 
 const ALLBOOKMARKS_ANNO    = "AllBookmarks";
 const DESCRIPTION_ANNO     = "bookmarkProperties/description";
@@ -348,7 +349,7 @@ BookmarksEngine.prototype = {
     Task.spawn(function() {
       // For first-syncs, make a backup for the user to restore
       if (this.lastSync == 0) {
-        yield PlacesUtils.archiveBookmarksFile(null, true);
+        yield PlacesBackups.create(null, true);
       }
 
       this.__defineGetter__("_guidMap", function() {
@@ -1280,7 +1281,7 @@ BookmarksStore.prototype = {
     let cb = Async.makeSpinningCallback();
     Task.spawn(function() {
       // Save a backup before clearing out all bookmarks.
-      yield PlacesUtils.archiveBookmarksFile(null, true);
+      yield PlacesBackups.create(null, true);
       for each (let guid in kSpecialIds.guids)
         if (guid != "places") {
           let id = kSpecialIds.specialIdForGUID(guid);

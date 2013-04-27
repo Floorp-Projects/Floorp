@@ -64,6 +64,7 @@ public class GeckoPreferences
     private static String PREFS_TELEMETRY_ENABLED = "toolkit.telemetry.enabled";
     private static String PREFS_TELEMETRY_ENABLED_PRERELEASE = "toolkit.telemetry.enabledPreRelease";
     private static String PREFS_UPDATER_AUTODOWNLOAD = "app.update.autodownload";
+    private static String PREFS_TITLEBAR_MODE = "android.not_a_preference.privacy.titlebar";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -173,6 +174,8 @@ public class GeckoPreferences
                         i--;
                         continue;
                     }
+                } else if (PREFS_TITLEBAR_MODE.equals(key)) {
+                    setupTitlebarPref((ListPreference)pref);
                 }
 
                 // Some Preference UI elements are not actually preferences,
@@ -535,5 +538,30 @@ public class GeckoPreferences
     @Override
     public boolean isGeckoActivityOpened() {
         return false;
+    }
+
+    private void setupTitlebarPref(final ListPreference pref) {
+        final SharedPreferences settings = getSharedPreferences(BrowserToolbar.PREFS_NAME, 0);
+        boolean value = settings.getBoolean(BrowserToolbar.PREFS_SHOW_URL, false);
+
+        final String[] entries = new String[] {
+            getResources().getString(R.string.pref_titlebar_mode_url),
+            getResources().getString(R.string.pref_titlebar_mode_title)
+        };
+        pref.setEntries(entries);
+        pref.setEntryValues(entries);
+        pref.setValueIndex(value ? 0 : 1);
+        pref.setSummary(value ? entries[0] : entries[1]);
+
+        pref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+            @Override
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
+                settings.edit()
+                        .putBoolean(BrowserToolbar.PREFS_SHOW_URL, newValue.toString().equals(entries[0]))
+                        .commit();
+                pref.setSummary(newValue.toString());
+                return true;
+            }
+        });
     }
 }

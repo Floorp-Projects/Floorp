@@ -76,9 +76,7 @@ nsSVGFilterInstance::CreateImage()
 
   surface->SetDeviceOffset(gfxPoint(-mSurfaceRect.x, -mSurfaceRect.y));
 
-  gfxImageSurface *retval = nullptr;
-  surface.swap(retval);
-  return retval;
+  return surface.forget();
 }
 
 gfxRect

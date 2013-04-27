@@ -138,6 +138,12 @@ const kDefaultCSSViewportHeight = 480;
 
 const kViewportRemeasureThrottle = 500;
 
+const kDoNotTrackPrefState = Object.freeze({
+  NO_PREF: "0",
+  DISALLOW_TRACKING: "1",
+  ALLOW_TRACKING: "2",
+});
+
 function dump(a) {
   Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService).logStringMessage(a);
 }
@@ -958,20 +964,42 @@ var BrowserApp = {
           Services.prefs.addObserver(prefName, this, false);
         }
 
-        // The plugin pref is actually two separate prefs, so
-        // we need to handle it differently
-        if (prefName == "plugin.enable") {
-          // Use a string type for java's ListPreference
-          pref.type = "string";
-          pref.value = PluginHelper.getPluginPreference();
-          prefs.push(pref);
-          continue;
-        } else if (prefName == "privacy.masterpassword.enabled") {
+        switch (prefName) {
+          // The plugin pref is actually two separate prefs, so
+          // we need to handle it differently
+          case "plugin.enable":
+            pref.type = "string";// Use a string type for java's ListPreference
+            pref.value = PluginHelper.getPluginPreference();
+            prefs.push(pref);
+            continue;
           // Master password is not a "real" pref
-          pref.type = "bool";
-          pref.value = MasterPassword.enabled;
-          prefs.push(pref);
-          continue;
+          case "privacy.masterpassword.enabled":
+            pref.type = "bool";
+            pref.value = MasterPassword.enabled;
+            prefs.push(pref);
+            continue;
+          /*
+           * Handle Do-not-track preference
+           *
+           * "privacy.donottrackheader" is not "real" pref name.
+           * This pref name is used in the setting menu, and
+           * this is passed when initializing the setting menu.
+           */
+          case "privacy.donottrackheader": {
+            pref.type = "string";
+
+            let enableDNT = Services.prefs.getBoolPref("privacy.donottrackheader.enabled");
+            if (!enableDNT) {
+              pref.value = kDoNotTrackPrefState.NO_PREF;
+            } else {
+              let dntState = Services.prefs.getIntPref("privacy.donottrackheader.value");
+              pref.value = (dntState === 0) ? kDoNotTrackPrefState.ALLOW_TRACKING :
+                                              kDoNotTrackPrefState.DISALLOW_TRACKING;
+            }
+
+            prefs.push(pref);
+            continue;
+          }
         }
 
         try {
@@ -1065,6 +1093,26 @@ var BrowserApp = {
         MasterPassword.removePassword(json.value);
       else
         MasterPassword.setPassword(json.value);
+      return;
+    } else if (json.name === "privacy.donottrackheader") {
+      // "privacy.donottrackheader" is not "real" pref name, it's used in the setting menu.
+      switch (json.value) {
+        case kDoNotTrackPrefState.NO_PREF:
+          // Don't tell anything about tracking me
+          Services.prefs.setBoolPref("privacy.donottrackheader.enabled", false);
+          Services.prefs.clearUserPref("privacy.donottrackheader.value");
+          break;
+        case kDoNotTrackPrefState.ALLOW_TRACKING:
+          // Accept tracking me
+          Services.prefs.setBoolPref("privacy.donottrackheader.enabled", true);
+          Services.prefs.setIntPref("privacy.donottrackheader.value", 0);
+          break;
+        case kDoNotTrackPrefState.DISALLOW_TRACKING:
+          // Not accept tracking me
+          Services.prefs.setBoolPref("privacy.donottrackheader.enabled", true);
+          Services.prefs.setIntPref("privacy.donottrackheader.value", 1);
+          break;
+      }
       return;
     } else if (json.name == SearchEngines.PREF_SUGGEST_ENABLED) {
       // Enabling or disabling suggestions will prevent future prompts
@@ -3462,6 +3510,8 @@ Tab.prototype = {
     if (aMetadata.maxZoom > 0)
       aMetadata.maxZoom *= scaleRatio;
 
+    aMetadata.isRTL = this.browser.contentDocument.documentElement.dir == "rtl";
+
     ViewportHandler.setMetadataForDocument(this.browser.contentDocument, aMetadata);
     this.updateViewportSize(gScreenWidth, aInitialLoad);
     this.sendViewportMetadata();
@@ -3590,6 +3640,7 @@ Tab.prototype = {
       defaultZoom: metadata.defaultZoom || metadata.scaleRatio,
       minZoom: metadata.minZoom || 0,
       maxZoom: metadata.maxZoom || 0,
+      isRTL: metadata.isRTL,
       tabID: this.id
     });
   },
@@ -5111,6 +5162,8 @@ var ViewportHandler = {
                   (!widthStr && (heightStr == "device-height" || scale == 1.0)));
     }
 
+    let isRTL = aWindow.document.documentElement.dir == "rtl";
+
     return new ViewportMetadata({
       defaultZoom: scale,
       minZoom: minScale,
@@ -5119,7 +5172,8 @@ var ViewportHandler = {
       height: height,
       autoSize: autoSize,
       allowZoom: allowZoom,
-      isSpecified: hasMetaViewport
+      isSpecified: hasMetaViewport,
+      isRTL: isRTL
     });
   },
 
@@ -5191,6 +5245,7 @@ function ViewportMetadata(aMetadata = {}) {
   this.allowZoom = ("allowZoom" in aMetadata) ? aMetadata.allowZoom : true;
   this.isSpecified = ("isSpecified" in aMetadata) ? aMetadata.isSpecified : false;
   this.scaleRatio = ViewportHandler.getScaleRatio();
+  this.isRTL = ("isRTL" in aMetadata) ? aMetadata.isRTL : false;
   Object.seal(this);
 }
 
@@ -5204,6 +5259,7 @@ ViewportMetadata.prototype = {
   allowZoom: null,
   isSpecified: null,
   scaleRatio: null,
+  isRTL: null,
 };
 
 
