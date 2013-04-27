@@ -100,16 +100,16 @@ var properties2 = {
   honorificSuffix: "dummyHonorificSuffix",
   additionalName: "dummyadditionalName",
   nickname: "dummyNickname",
-  tel: [{type: ["test"], value: "7932012345", carrier: "myCarrier"},{type: ["home", "custom"], value: "7932012346"}],
-  email: [{type: ["test"], value: "a@b.c"}, {value: "b@c.d"}],
+  tel: [{type: ["test"], value: "7932012345", carrier: "myCarrier", pref: 1},{type: ["home", "custom"], value: "7932012346", pref: 0}],
+  email: [{type: ["test"], value: "a@b.c"}, {value: "b@c.d", pref: 1}],
   adr: [adr1, adr2],
-  impp: [{type: ["aim"], value:"im1"}, {value: "im2"}],
+  impp: [{type: ["aim"], value:"im1", pref: 1}, {value: "im2"}],
   org: ["org1", "org2"],
   jobTitle: ["boss", "superboss"],
   bday: new Date("1980, 12, 01"),
   note: "test note",
   category: ["cat1", "cat2"],
-  url: [{type: ["work", "work2"], value: "www.1.com"}, {value:"www2.com"}],
+  url: [{type: ["work", "work2"], value: "www.1.com", pref: 1}, {value:"www2.com"}],
   anniversary: new Date("2000, 12, 01"),
   sex: "male",
   genderIdentity: "test"
@@ -161,17 +161,20 @@ function checkAddress(adr1, adr2) {
   checkStr(adr1.region, adr2.region, "Same region");
   checkStr(adr1.postalCode, adr2.postalCode, "Same postalCode");
   checkStr(adr1.countryName, adr2.countryName, "Same countryName");
+  is(adr1.pref, adr2.pref, "Same pref");
 }
 
 function checkTel(tel1, tel2) {
   checkStr(tel1.type, tel2.type, "Same type");
   checkStr(tel1.value, tel2.value, "Same value");
   checkStr(tel1.carrier, tel2.carrier, "Same carrier");
+  is(tel1.pref, tel2.pref, "Same pref");
 }
 
 function checkField(field1, field2) {
   checkStr(field1.type, field2.type, "Same type");
   checkStr(field1.value, field2.value, "Same value");
+  is(field1.pref, field2.pref, "Same pref");
 }
 
 function checkContacts(contact1, contact2) {
