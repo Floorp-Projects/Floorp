@@ -114,6 +114,21 @@ static struct nsMyTrustedEVInfo myTrustedEVInfos[] = {
    * as an existing entry, then please use the same oid_name.
    */
   {
+    // This is the testing EV signature.
+    // C=US, ST=CA, L=Mountain View, O=Mozilla - EV debug test CA, OU=Security Engineering, CN=EV Testing (untrustworthy) CA/name=ev-test-ca/emailAddress=charlatan@testing.example.com
+    "1.3.6.1.4.1.13769.666.666.666.1.500.9.1",
+    "DEBUGtesting EV OID",
+    SEC_OID_UNKNOWN,
+    "AD:FE:0E:44:16:45:B0:17:46:8B:76:01:74:B7:FF:64:5A:EC:35:91",
+    "MIHhMQswCQYDVQQGEwJVUzELMAkGA1UECBMCQ0ExFjAUBgNVBAcTDU1vdW50YWlu"
+    "IFZpZXcxIzAhBgNVBAoTGk1vemlsbGEgLSBFViBkZWJ1ZyB0ZXN0IENBMR0wGwYD"
+    "VQQLExRTZWN1cml0eSBFbmdpbmVlcmluZzEmMCQGA1UEAxMdRVYgVGVzdGluZyAo"
+    "dW50cnVzdHdvcnRoeSkgQ0ExEzARBgNVBCkTCmV2LXRlc3QtY2ExLDAqBgkqhkiG"
+    "9w0BCQEWHWNoYXJsYXRhbkB0ZXN0aW5nLmV4YW1wbGUuY29t",
+    "AK/FPSJmJkky",
+    nullptr
+  },
+  {
     // CN=WellsSecure Public Root Certificate Authority,OU=Wells Fargo Bank NA,O=Wells Fargo WellsSecure,C=US
     "2.16.840.1.114171.500.9",
     "WellsSecure EV OID",
@@ -1065,7 +1080,11 @@ nsNSSComponent::IdentityInfoInit()
     ias.serialNumber.type = siUnsignedInteger;
 
     entry.cert = CERT_FindCertByIssuerAndSN(nullptr, &ias);
-    NS_ASSERTION(entry.cert, "Could not find EV root in NSS storage");
+
+    // The debug CA info is at position 0, and is NOT on the NSS root db
+    if (iEV != 0) {
+       NS_ASSERTION(entry.cert, "Could not find EV root in NSS storage");
+    }
 
     SECITEM_FreeItem(&ias.derIssuer, false);
     SECITEM_FreeItem(&ias.serialNumber, false);

@@ -2847,9 +2847,7 @@ Accessible::SelectedItems()
   while ((selected = iter.Next()))
     selectedItems->AppendElement(selected, false);
 
-  nsIMutableArray* items = nullptr;
-  selectedItems.forget(&items);
-  return items;
+  return selectedItems.forget();
 }
 
 uint32_t

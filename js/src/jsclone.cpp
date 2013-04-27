@@ -28,18 +28,17 @@
  * array object.
  */
 
+#include "jsclone.h"
+
 #include "mozilla/FloatingPoint.h"
 
-#include "jsclone.h"
 #include "jsdate.h"
 #include "jstypedarray.h"
 
 #include "jstypedarrayinlines.h"
 
 #include "vm/BooleanObject-inl.h"
-#include "vm/NumberObject-inl.h"
 #include "vm/RegExpObject-inl.h"
-#include "vm/StringObject-inl.h"
 
 using namespace js;
 using mozilla::LittleEndian;

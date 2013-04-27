@@ -131,14 +131,19 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
    * Additionally, the mobile root is annotated. In Firefox Sync, PlacesUtils is
    * used to find the IDs of these special folders.
    *
-   * Sync skips over `places` and `tags` when finding IDs.
-   *
-   * We need to consume records with these various guids, producing a local
+   * We need to consume records with these various GUIDs, producing a local
    * representation which we are able to stably map upstream.
+   *
+   * Android Sync skips over the contents of some special GUIDs -- `places`, `tags`,
+   * etc. -- when finding IDs.
+   * Some of these special GUIDs are part of desktop structure (places, tags). Some
+   * are part of Fennec's custom data (readinglist, pinned).
+   *
+   * We don't want to upload or apply these records.
    *
    * That is:
    *
-   * * We should not upload a `places` record or a `tags` record.
+   * * We should not upload a `places`,`tags`, `readinglist`, or `pinned` record.
    * * We can stably _store_ menu/toolbar/unfiled/mobile as special GUIDs, and set
      * their parent ID as appropriate on upload.
    *

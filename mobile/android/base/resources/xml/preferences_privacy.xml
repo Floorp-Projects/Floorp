@@ -25,10 +25,11 @@
                             gecko:entryKeys="@array/pref_private_data_keys"
                             gecko:initialValues="@array/pref_private_data_values" />
 
-        <CheckBoxPreference android:key="privacy.donottrackheader.enabled"
-                            android:title="@string/pref_do_not_track"
-                            android:defaultValue="false"
-                            android:persistent="false" />
+        <ListPreference android:key="privacy.donottrackheader"
+                        android:title="@string/pref_donottrack_menu"
+                        android:entries="@array/pref_donottrack_entries"
+                        android:entryValues="@array/pref_donottrack_values"
+                        android:persistent="false" />
 
         <CheckBoxPreference android:key="signon.rememberSignons"
                             android:title="@string/pref_remember_signons"
@@ -53,6 +54,10 @@
                             android:title="@string/pref_show_product_announcements"
                             android:defaultValue="true"
                             android:persistent="true" />
+
+        <ListPreference android:key="android.not_a_preference.privacy.titlebar"
+                        android:title="@string/pref_titlebar_mode"
+                        android:persistent="true" />
 
     </PreferenceCategory>
 

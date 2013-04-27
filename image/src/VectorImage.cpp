@@ -755,6 +755,15 @@ VectorImage::ResetAnimation()
   return NS_OK;
 }
 
+NS_IMETHODIMP_(float)
+VectorImage::GetFrameIndex(uint32_t aWhichFrame)
+{
+  MOZ_ASSERT(aWhichFrame <= FRAME_MAX_VALUE, "Invalid argument");
+  return aWhichFrame == FRAME_FIRST
+         ? 0.0f
+         : mSVGDocumentWrapper->GetCurrentTime();
+}
+
 //------------------------------------------------------------------------------
 // nsIRequestObserver methods
 

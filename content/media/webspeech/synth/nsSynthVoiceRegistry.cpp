@@ -516,11 +516,11 @@ nsSynthVoiceRegistry::SpeakUtterance(SpeechSynthesisUtterance& aUtterance,
     aUtterance.mVoice->GetVoiceURI(uri);
   }
 
-  nsSpeechTask* task;
+  nsRefPtr<nsSpeechTask> task;
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
     task = new SpeechTaskChild(&aUtterance);
     SpeechSynthesisRequestChild* actor =
-      new SpeechSynthesisRequestChild(static_cast<SpeechTaskChild*>(task));
+      new SpeechSynthesisRequestChild(static_cast<SpeechTaskChild*>(task.get()));
     mSpeechSynthChild->SendPSpeechSynthesisRequestConstructor(actor,
                                                               aUtterance.mText,
                                                               lang,
@@ -534,8 +534,7 @@ nsSynthVoiceRegistry::SpeakUtterance(SpeechSynthesisUtterance& aUtterance,
           aUtterance.Rate(), aUtterance.Pitch(), task);
   }
 
-  NS_IF_ADDREF(task);
-  return task;
+  return task.forget();
 }
 
 void

@@ -5,17 +5,6 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(bbb20a59-524e-4662-981e-5e142814b20c)]
-interface nsIDOMCanvasGradient : nsISupports
-{
-  void addColorStop(in float offset, in DOMString color);
-};
-
-[scriptable, uuid(21dea65c-5c08-4eb1-ac82-81fe95be77b8)]
-interface nsIDOMCanvasPattern : nsISupports
-{
-};
-
 /**
  * This interface remains only for the constants, for a context, use the
  * WebIDL/Paris bindings instead (CanvasRenderingContext2D.webidl).

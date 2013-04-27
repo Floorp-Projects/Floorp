@@ -13,7 +13,7 @@ const self = require("../self");
 const traceback = require("./traceback")
 const prefs = require("../preferences/service");
 const { merge } = require("../util/object");
-const { curry } = require("../lang/functional");
+const { partial } = require("../lang/functional");
 
 const LEVELS = {
   "all": Number.MIN_VALUE,
@@ -102,13 +102,13 @@ function PlainTextConsole(print) {
   }
 
   merge(this, {
-    log: curry(message, print, "info"),
-    info: curry(message, print, "info"),
-    warn: curry(message, print, "warn"),
-    error: curry(message, print, "error"),
-    debug: curry(message, print, "debug"),
-    exception: curry(errorMessage, print),
-    trace: curry(traceMessage, print),
+    log: partial(message, print, "info"),
+    info: partial(message, print, "info"),
+    warn: partial(message, print, "warn"),
+    error: partial(message, print, "error"),
+    debug: partial(message, print, "debug"),
+    exception: partial(errorMessage, print),
+    trace: partial(traceMessage, print),
 
     dir: function dir() {},
     group: function group() {},

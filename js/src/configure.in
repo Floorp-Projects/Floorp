@@ -51,6 +51,7 @@ _SUBDIR_CONFIG_ARGS="$ac_configure_args"
 dnl Set the version number of the libs included with mozilla
 dnl ========================================================
 NSPR_VERSION=4
+NSPR_MINVER=4.9.2
 
 dnl Set the minimum version of toolkit libs used by mozilla
 dnl ========================================================
@@ -215,6 +216,49 @@ if test -n "$gonkdir" ; then
 else
     MOZ_ANDROID_NDK
 fi
+
+dnl ==============================================================
+dnl Get mozilla version from central milestone file
+dnl ==============================================================
+MOZILLA_VERSION=`$PERL $srcdir/config/milestone.pl -topsrcdir $srcdir`
+MOZILLA_UAVERSION=`$PERL $srcdir/config/milestone.pl -topsrcdir $srcdir -uaversion`
+
+AC_DEFINE_UNQUOTED(MOZILLA_VERSION,"$MOZILLA_VERSION")
+AC_DEFINE_UNQUOTED(MOZILLA_VERSION_U,$MOZILLA_VERSION)
+AC_DEFINE_UNQUOTED(MOZILLA_UAVERSION,"$MOZILLA_UAVERSION")
+
+# Separate version into components for use in shared object naming etc
+changequote(,)
+MOZJS_MAJOR_VERSION=`echo $MOZILLA_VERSION | sed "s|\(^[0-9]*\)\.[0-9]*.*|\1|"`
+MOZJS_MINOR_VERSION=`echo $MOZILLA_VERSION | sed "s|^[0-9]*\.\([0-9]*\).*|\1|"`
+MOZJS_PATCH_VERSION=`echo $MOZILLA_VERSION | sed "s|^[0-9]*\.[0-9]*[^0-9]*||"`
+IS_ALPHA=`echo $MOZILLA_VERSION | grep [ab]`
+
+dnl XXX in a temporary bid to avoid developer anger at renaming files
+dnl XXX before "js" symlinks exist, don't change names.
+dnl
+dnl if test -n "$JS_STANDALONE"; then
+dnl JS_SHELL_NAME=js$MOZJS_MAJOR_VERSION
+dnl JS_CONFIG_NAME=js$MOZJS_MAJOR_VERSION-config
+dnl else
+JS_SHELL_NAME=js
+JS_CONFIG_NAME=js-config
+dnl fi
+
+changequote([,])
+if test -n "$IS_ALPHA"; then
+  changequote(,)
+  MOZJS_ALPHA=`echo $MOZILLA_VERSION | sed "s|^[0-9]*\.[0-9\.]*\([^0-9]\).*|\1|"`
+  changequote([,])
+fi
+AC_DEFINE_UNQUOTED(MOZJS_MAJOR_VERSION,"$MOZJS_MAJOR_VERSION")
+AC_DEFINE_UNQUOTED(MOZJS_MINOR_VERSION,"$MOZJS_MINOR_VERSION")
+AC_SUBST(JS_SHELL_NAME)
+AC_SUBST(JS_CONFIG_NAME)
+AC_SUBST(MOZJS_MAJOR_VERSION)
+AC_SUBST(MOZJS_MINOR_VERSION)
+AC_SUBST(MOZJS_PATCH_VERSION)
+AC_SUBST(MOZJS_ALPHA)
 
 dnl ========================================================
 dnl Checks for compilers.
@@ -813,7 +857,6 @@ TARGET_MD_ARCH=unix
 DIRENT_INO=d_ino
 MOZ_USER_DIR=".mozilla"
 
-MOZ_JS_LIBS='-L$(libdir) -lmozjs'
 MOZ_FIX_LINK_PATHS='-Wl,-rpath-link,$(LIBXUL_DIST)/bin -Wl,-rpath-link,$(prefix)/lib'
 
 MOZ_COMPONENT_NSPR_LIBS='-L$(LIBXUL_DIST)/bin $(NSPR_LIBS)'
@@ -1481,6 +1524,9 @@ case "$target" in
     MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
     MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
     MOZ_OPTIMIZE_FLAGS="-O3 -fno-stack-protector"
+    if test -n "$CLANG_CXX"; then
+      MOZ_OPTIMIZE_FLAGS="$MOZ_OPTIMIZE_FLAGS -fno-vectorize"
+    fi
     CFLAGS="$CFLAGS -fno-common"
     CXXFLAGS="$CXXFLAGS -fno-common"
     DLL_SUFFIX=".dylib"
@@ -1574,6 +1620,9 @@ ia64*-hpux*)
 
     MOZ_GFX_OPTIMIZE_MOBILE=1
     MOZ_OPTIMIZE_FLAGS="-O3 -freorder-blocks -fno-reorder-functions"
+    if test -n "$CLANG_CXX"; then
+      MOZ_OPTIMIZE_FLAGS="$MOZ_OPTIMIZE_FLAGS -fno-vectorize"
+    fi
     # The Maemo builders don't know about this flag
     MOZ_ARM_VFP_FLAGS="-mfpu=vfp"
     ;;
@@ -1595,6 +1644,9 @@ ia64*-hpux*)
         MOZ_PGO_OPTIMIZE_FLAGS="-O3"
         MOZ_OPTIMIZE_FLAGS="-O3 -freorder-blocks $MOZ_OPTIMIZE_SIZE_TWEAK"
         MOZ_DEBUG_FLAGS="-g"
+    fi
+    if test -n "$CLANG_CXX"; then
+      MOZ_OPTIMIZE_FLAGS="$MOZ_OPTIMIZE_FLAGS -fno-vectorize"
     fi
 
     TARGET_NSPR_MDCPUCFG='\"md/_linux.cfg\"'
@@ -1636,7 +1688,6 @@ ia64*-hpux*)
         RCFLAGS='-O coff --use-temp-file'
         # mingw doesn't require kernel32, user32, and advapi32 explicitly
         LIBS="$LIBS -lgdi32 -lwinmm -lwsock32 -lpsapi"
-        MOZ_JS_LIBS='-L$(libdir) -lmozjs'
         MOZ_FIX_LINK_PATHS=
         DYNAMIC_XPCOM_LIBS='-L$(LIBXUL_DIST)/lib -lxpcom -lxpcom_core -lmozalloc'
         XPCOM_FROZEN_LDOPTS='-L$(LIBXUL_DIST)/lib -lxpcom -lmozalloc'
@@ -1694,7 +1745,6 @@ ia64*-hpux*)
         MOZ_DEBUG_LDFLAGS='-DEBUG -DEBUGTYPE:CV'
         WARNINGS_AS_ERRORS='-WX'
         MOZ_OPTIMIZE_FLAGS="-O2"
-        MOZ_JS_LIBS='$(libdir)/mozjs.lib'
         MOZ_FIX_LINK_PATHS=
         DYNAMIC_XPCOM_LIBS='$(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xpcom_core.lib $(LIBXUL_DIST)/lib/mozalloc.lib'
         XPCOM_FROZEN_LDOPTS='$(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/mozalloc.lib'
@@ -3139,13 +3189,16 @@ if test "$_USE_SYSTEM_NSPR" && (test "$NSPR_CFLAGS" -o "$NSPR_LIBS"); then
 See 'configure --help'.])
 fi
 
-dnl Top-level Mozilla switched to requiring NSPR 4.8.6 (bug 560582), but we don't need it in JS.
 if test -n "$_USE_SYSTEM_NSPR"; then
     MOZ_NATIVE_NSPR=
-    AM_PATH_NSPR(4.9.2, [MOZ_NATIVE_NSPR=1], [AC_MSG_ERROR([your don't have NSPR installed or your version is too old])])
+    AM_PATH_NSPR($NSPR_MINVER, [MOZ_NATIVE_NSPR=1], [AC_MSG_ERROR([your don't have NSPR installed or your version is too old])])
 fi
 
+NSPR_PKGCONF_CHECK="nspr"
 if test -n "$MOZ_NATIVE_NSPR"; then
+    # piggy back on $MOZ_NATIVE_NSPR to set a variable for the nspr check for js.pc
+    NSPR_PKGCONF_CHECK="nspr >= $NSPR_MINVER"
+
     _SAVE_CFLAGS=$CFLAGS
     CFLAGS="$CFLAGS $NSPR_CFLAGS"
     AC_TRY_COMPILE([#include "prlog.h"],
@@ -3156,6 +3209,7 @@ if test -n "$MOZ_NATIVE_NSPR"; then
                 AC_MSG_ERROR([system NSPR does not support PR_STATIC_ASSERT]))
     CFLAGS=$_SAVE_CFLAGS
 fi
+AC_SUBST(NSPR_PKGCONF_CHECK)
 
 dnl ========================================================
 dnl system zlib Support
@@ -4149,7 +4203,6 @@ AC_SUBST(WINDRES)
 AC_SUBST(IMPLIB)
 AC_SUBST(FILTER)
 AC_SUBST(BIN_FLAGS)
-AC_SUBST(MOZ_JS_LIBS)
 AC_SUBST(MOZ_DEBUG)
 AC_SUBST(MOZ_DEBUG_SYMBOLS)
 AC_SUBST(MOZ_DEBUG_ENABLE_DEFS)
@@ -4362,12 +4415,100 @@ if test "$ACCESSIBILITY" -a "$MOZ_ENABLE_GTK2" ; then
     AC_DEFINE_UNQUOTED(ATK_REV_VERSION, $ATK_REV_VERSION)
 fi
 
+
+dnl ========================================================
 dnl ECMAScript Internationalization API Support (uses ICU)
 dnl ========================================================
+
+MOZ_ARG_ENABLE_BOOL(intl-api,
+[  --enable-intl-api       Enable ECMAScript Internationalization API],
+    ENABLE_INTL_API=1 )
+
+dnl Settings for the implementation of the ECMAScript Internationalization API
+if test -n "$ENABLE_INTL_API"; then
+    AC_DEFINE(ENABLE_INTL_API)
+    # We build ICU as a static library.
+    AC_DEFINE(U_STATIC_IMPLEMENTATION)
+
+    case "$OS_TARGET" in
+        WINNT)
+            ICU_LIB_NAMES="icuin icuuc icudt"
+            ;;
+        Darwin|Linux)
+            ICU_LIB_NAMES="icui18n icuuc icudata"
+            ;;
+        *)
+            AC_MSG_ERROR([ECMAScript Internationalization API is not yet supported on this platform])
+    esac
+
+    ICU_LIBS='$(call EXPAND_LIBNAME_PATH,$(ICU_LIB_NAMES),$(DEPTH)/intl/icu/lib)'
+else
+    ICU_LIB_NAMES=
+    ICU_LIBS=
+fi
+
+AC_SUBST(ENABLE_INTL_API)
+AC_SUBST(ICU_LIB_NAMES)
+AC_SUBST(ICU_LIBS)
 
 dnl Source files that use ICU should have control over which parts of the ICU
 dnl namespace they want to use.
 AC_DEFINE(U_USING_ICU_NAMESPACE,0)
+
+
+dnl Settings for ICU
+if test -n "$ENABLE_INTL_API" ; then
+    # Set ICU compile options
+    ICU_CPPFLAGS=""
+    # don't use icu namespace automatically in client code
+    ICU_CPPFLAGS="$ICU_CPPFLAGS -DU_USING_ICU_NAMESPACE=0"
+    # don't include obsolete header files
+    ICU_CPPFLAGS="$ICU_CPPFLAGS -DU_NO_DEFAULT_INCLUDE_UTF_HEADERS=1"
+    # remove chunks of the library that we don't need (yet)
+    ICU_CPPFLAGS="$ICU_CPPFLAGS -DUCONFIG_NO_LEGACY_CONVERSION"
+    ICU_CPPFLAGS="$ICU_CPPFLAGS -DUCONFIG_NO_TRANSLITERATION"
+    ICU_CPPFLAGS="$ICU_CPPFLAGS -DUCONFIG_NO_REGULAR_EXPRESSIONS"
+    ICU_CPPFLAGS="$ICU_CPPFLAGS -DUCONFIG_NO_BREAK_ITERATION"
+
+    # Set OS dependent options for ICU
+    case "$OS_TARGET" in
+        Darwin)
+            ICU_TARGET=MacOSX
+            ;;
+        Linux)
+            ICU_TARGET=Linux
+            ;;
+        WINNT)
+            ICU_TARGET=MSYS/MSVC
+            ;;
+    esac
+
+    # To reduce library size, use static linking
+    ICU_LINK_OPTS="--enable-static --disable-shared"
+    # Force the ICU static libraries to be position independent code
+    ICU_CFLAGS="$DSO_PIC_CFLAGS"
+    ICU_CXXFLAGS="$DSO_PIC_CFLAGS"
+
+    ICU_BUILD_OPTS=""
+    if test -n "$MOZ_DEBUG"; then
+        ICU_BUILD_OPTS="$ICU_BUILD_OPTS --enable-debug"
+    fi
+    if test -z "$MOZ_OPTIMIZE"; then
+        ICU_BUILD_OPTS="$ICU_BUILD_OPTS --disable-release"
+    fi
+
+    abs_srcdir=`(cd $srcdir; pwd)`
+    mkdir -p $_objdir/intl/icu
+    (cd $_objdir/intl/icu; \
+     CFLAGS="$ICU_CFLAGS" CPPFLAGS="$ICU_CPPFLAGS" CXXFLAGS="$ICU_CXXFLAGS" \
+            $(SHELL) $abs_srcdir/../../intl/icu/source/runConfigureICU \
+            $ICU_BUILD_OPTS \
+            $ICU_TARGET \
+            $ICU_LINK_OPTS \
+            --enable-extras=no --enable-icuio=no  --enable-layout=no \
+            --enable-tests=no --enable-samples=no || exit 1
+    ) || exit 1
+fi
 
 
 dnl ========================================================
@@ -4387,9 +4528,9 @@ dnl ========================================================
 AC_OUTPUT([js-confdefs.h Makefile config/autoconf.mk config/emptyvars.mk])
 
 # Produce the js-config script at configure time; see the comments for
-# 'js-config' in Makefile.in.
-AC_MSG_RESULT(invoking $MAKE to create js-config script)
-$MAKE js-config
+# 'js*-config' in Makefile.in.
+AC_MSG_RESULT(invoking $MAKE to create $JS_CONFIG_NAME script)
+$MAKE $JS_CONFIG_NAME
 
 # Build jsctypes if it's enabled.
 if test "$JS_HAS_CTYPES" -a -z "$MOZ_NATIVE_FFI"; then
@@ -4461,4 +4602,3 @@ if test "$JS_HAS_CTYPES" -a -z "$MOZ_NATIVE_FFI"; then
   ac_configure_args="$_SUBDIR_CONFIG_ARGS"
   CONFIG_FILES=$old_config_files
 fi
-

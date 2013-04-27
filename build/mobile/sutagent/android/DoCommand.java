@@ -107,7 +107,7 @@ public class DoCommand {
     String ffxProvider = "org.mozilla.ffxcp";
     String fenProvider = "org.mozilla.fencp";
 
-    private final String prgVersion = "SUTAgentAndroid Version 1.16";
+    private final String prgVersion = "SUTAgentAndroid Version 1.17";
 
     public enum Command
         {
@@ -178,6 +178,7 @@ public class DoCommand {
         TZSET ("tzset"),
         ADB ("adb"),
         CHMOD ("chmod"),
+        TOPACTIVITY ("activity"),
         UNKNOWN ("unknown");
 
         private final String theCmd;
@@ -822,6 +823,10 @@ public class DoCommand {
                     strReturn = ChmodDir(Argv[1]);
                 else
                     strReturn = sErrorPrefix + "Wrong number of arguments for chmod command!";
+                break;
+
+            case TOPACTIVITY:
+                strReturn = TopActivity();
                 break;
 
             case HELP:
@@ -3844,6 +3849,29 @@ private void CancelNotification()
         return(sRet);
         }
 
+    public String TopActivity()
+        {
+        String sRet = "";
+        ActivityManager aMgr = (ActivityManager) contextWrapper.getSystemService(Activity.ACTIVITY_SERVICE);
+        List< ActivityManager.RunningTaskInfo > taskInfo = null;
+        ComponentName componentInfo = null;
+        if (aMgr != null)
+            {
+            taskInfo = aMgr.getRunningTasks(1);
+            }
+        if (taskInfo != null)
+            {
+            // topActivity: "The activity component at the top of the history stack of the task.
+            // This is what the user is currently doing."
+            componentInfo = taskInfo.get(0).topActivity;
+            }
+        if (componentInfo != null)
+            {
+            sRet = componentInfo.getPackageName();
+            }
+        return(sRet);
+        }
+
     private String PrintUsage()
         {
         String sRet =
@@ -3905,6 +3933,7 @@ private void CancelNotification()
             "tzget                           - returns the current timezone set on the device\n" +
             "rebt                            - reboot device\n" +
             "adb ip|usb                      - set adb to use tcp/ip on port 5555 or usb\n" +
+            "activity                        - print package name of top (foreground) activity\n" +
             "quit                            - disconnect SUTAgent\n" +
             "exit                            - close SUTAgent\n" +
             "ver                             - SUTAgent version\n" +

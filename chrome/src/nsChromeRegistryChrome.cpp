@@ -36,6 +36,7 @@
 #include "nsIObserverService.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
+#include "mozilla/Preferences.h"
 #include "nsIResProtocolHandler.h"
 #include "nsIScriptError.h"
 #include "nsIVersionComparator.h"
@@ -48,6 +49,7 @@
 #define MATCH_OS_LOCALE_PREF "intl.locale.matchOS"
 #define SELECTED_LOCALE_PREF "general.useragent.locale"
 #define SELECTED_SKIN_PREF   "general.skins.selectedSkin"
+#define PACKAGE_OVERRIDE_BRANCH "chrome.override_package."
 
 using namespace mozilla;
 
@@ -196,20 +198,25 @@ NS_IMETHODIMP
 nsChromeRegistryChrome::GetLocalesForPackage(const nsACString& aPackage,
                                        nsIUTF8StringEnumerator* *aResult)
 {
+  nsCString realpackage;
+  nsresult rv = OverrideLocalePackage(aPackage, realpackage);
+  if (NS_FAILED(rv))
+    return rv;
+
   nsTArray<nsCString> *a = new nsTArray<nsCString>;
   if (!a)
     return NS_ERROR_OUT_OF_MEMORY;
 
   PackageEntry* entry =
       static_cast<PackageEntry*>(PL_DHashTableOperate(&mPackagesHash,
-                                                      & aPackage,
+                                                      & realpackage,
                                                       PL_DHASH_LOOKUP));
 
   if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
     entry->locales.EnumerateToArray(a);
   }
 
-  nsresult rv = NS_NewAdoptingUTF8StringEnumerator(aResult, a);
+  rv = NS_NewAdoptingUTF8StringEnumerator(aResult, a);
   if (NS_FAILED(rv))
     delete a;
 
@@ -267,9 +274,13 @@ nsresult
 nsChromeRegistryChrome::GetSelectedLocale(const nsACString& aPackage,
                                           nsACString& aLocale)
 {
+  nsCString realpackage;
+  nsresult rv = OverrideLocalePackage(aPackage, realpackage);
+  if (NS_FAILED(rv))
+    return rv;
   PackageEntry* entry =
       static_cast<PackageEntry*>(PL_DHashTableOperate(&mPackagesHash,
-                                                      & aPackage,
+                                                      & realpackage,
                                                       PL_DHASH_LOOKUP));
 
   if (PL_DHASH_ENTRY_IS_FREE(entry))
@@ -279,6 +290,21 @@ nsChromeRegistryChrome::GetSelectedLocale(const nsACString& aPackage,
   if (aLocale.IsEmpty())
     return NS_ERROR_FAILURE;
 
+  return NS_OK;
+}
+
+nsresult
+nsChromeRegistryChrome::OverrideLocalePackage(const nsACString& aPackage,
+                                              nsACString& aOverride)
+{
+  const nsACString& pref = NS_LITERAL_CSTRING(PACKAGE_OVERRIDE_BRANCH) + aPackage;
+  nsAdoptingCString override = mozilla::Preferences::GetCString(PromiseFlatCString(pref).get());
+  if (override) {
+    aOverride = override;
+  }
+  else {
+    aOverride = aPackage;
+  }
   return NS_OK;
 }
 

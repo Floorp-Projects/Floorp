@@ -34,6 +34,7 @@
 #include "mozilla/Preferences.h"
 
 using namespace mozilla::scache;
+using namespace JS;
 
 /* load() error msgs, XXX localize? */
 #define LOAD_ERROR_NOSERVICE "Error creating IO Service."
@@ -75,12 +76,14 @@ ReportError(JSContext *cx, const char *msg)
 }
 
 nsresult
-mozJSSubScriptLoader::ReadScript(nsIURI *uri, JSContext *cx, JSObject *target_obj,
+mozJSSubScriptLoader::ReadScript(nsIURI *uri, JSContext *cx, JSObject *targetObjArg,
                                  const nsAString& charset, const char *uriStr,
                                  nsIIOService *serv, nsIPrincipal *principal,
                                  bool reuseGlobal, JSScript **scriptp,
                                  JSFunction **functionp)
 {
+    RootedObject target_obj(cx, targetObjArg);
+
     nsCOMPtr<nsIChannel>     chan;
     nsCOMPtr<nsIInputStream> instream;
     JSErrorReporter  er;
@@ -125,7 +128,6 @@ mozJSSubScriptLoader::ReadScript(nsIURI *uri, JSContext *cx, JSObject *target_ob
     JS::CompileOptions options(cx);
     options.setPrincipals(nsJSPrincipals::get(principal))
            .setFileAndLine(uriStr, 1);
-    JS::RootedObject target_obj_root(cx, target_obj);
     if (!charset.IsVoid()) {
         nsString script;
         rv = nsScriptLoader::ConvertToUTF16(nullptr, reinterpret_cast<const uint8_t*>(buf.get()), len,
@@ -136,11 +138,11 @@ mozJSSubScriptLoader::ReadScript(nsIURI *uri, JSContext *cx, JSObject *target_ob
         }
 
         if (!reuseGlobal) {
-            *scriptp = JS::Compile(cx, target_obj_root, options,
+            *scriptp = JS::Compile(cx, target_obj, options,
                                    reinterpret_cast<const jschar*>(script.get()),
                                    script.Length());
         } else {
-            *functionp = JS::CompileFunction(cx, target_obj_root, options,
+            *functionp = JS::CompileFunction(cx, target_obj, options,
                                              nullptr, 0, nullptr,
                                              reinterpret_cast<const jschar*>(script.get()),
                                              script.Length());
@@ -150,9 +152,9 @@ mozJSSubScriptLoader::ReadScript(nsIURI *uri, JSContext *cx, JSObject *target_ob
         // the lazy source loader doesn't know the encoding.
         if (!reuseGlobal) {
             options.setSourcePolicy(JS::CompileOptions::LAZY_SOURCE);
-            *scriptp = JS::Compile(cx, target_obj_root, options, buf.get(), len);
+            *scriptp = JS::Compile(cx, target_obj, options, buf.get(), len);
         } else {
-            *functionp = JS::CompileFunction(cx, target_obj_root, options,
+            *functionp = JS::CompileFunction(cx, target_obj, options,
                                              nullptr, 0, nullptr, buf.get(),
                                              len);
         }
@@ -198,7 +200,7 @@ mozJSSubScriptLoader::LoadSubScript(const nsAString& url,
 
     JSAutoRequest ar(cx);
 
-    JS::RootedObject targetObj(cx);
+    RootedObject targetObj(cx);
     mozJSComponentLoader* loader = mozJSComponentLoader::Get();
     rv = loader->FindTargetObject(cx, &targetObj);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -207,8 +209,8 @@ mozJSSubScriptLoader::LoadSubScript(const nsAString& url,
 
     // We base reusingGlobal off of what the loader told us, but we may not
     // actually be using that object.
-    JSObject* passedObj;
-    if (!JS_ValueToObject(cx, target, &passedObj))
+    RootedObject passedObj(cx);
+    if (!JS_ValueToObject(cx, target, passedObj.address()))
         return NS_ERROR_ILLEGAL_VALUE;
 
     if (passedObj)
@@ -217,7 +219,7 @@ mozJSSubScriptLoader::LoadSubScript(const nsAString& url,
     // Remember an object out of the calling compartment so that we
     // can properly wrap the result later.
     nsCOMPtr<nsIPrincipal> principal = mSystemPrincipal;
-    JSObject *result_obj = targetObj;
+    RootedObject result_obj(cx, targetObj);
     targetObj = JS_FindCompilationScope(cx, targetObj);
     if (!targetObj)
         return NS_ERROR_FAILURE;
@@ -240,10 +242,10 @@ mozJSSubScriptLoader::LoadSubScript(const nsAString& url,
     nsAutoCString uriStr;
     nsAutoCString scheme;
 
-    JSScript* script = nullptr;
+    RootedScript script(cx);
 
     // Figure out who's calling us
-    if (!JS_DescribeScriptedCaller(cx, &script, nullptr)) {
+    if (!JS_DescribeScriptedCaller(cx, script.address(), nullptr)) {
         // No scripted frame means we don't know who's calling, bail.
         return NS_ERROR_FAILURE;
     }
@@ -297,14 +299,14 @@ mozJSSubScriptLoader::LoadSubScript(const nsAString& url,
     cachePath.AppendPrintf("jssubloader/%d", version);
     PathifyURI(uri, cachePath);
 
-    JSFunction* function = nullptr;
+    RootedFunction function(cx);
     script = nullptr;
     if (cache)
-        rv = ReadCachedScript(cache, cachePath, cx, mSystemPrincipal, &script);
+        rv = ReadCachedScript(cache, cachePath, cx, mSystemPrincipal, script.address());
     if (!script) {
         rv = ReadScript(uri, cx, targetObj, charset,
                         static_cast<const char*>(uriStr.get()), serv,
-                        principal, reusingGlobal, &script, &function);
+                        principal, reusingGlobal, script.address(), function.address());
         writeScript = !!script;
     }
 

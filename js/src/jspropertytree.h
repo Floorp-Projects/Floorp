@@ -7,7 +7,10 @@
 #ifndef jspropertytree_h___
 #define jspropertytree_h___
 
+#include "jsalloc.h"
+
 #include "js/HashTable.h"
+#include "js/RootingAPI.h"
 
 namespace js {
 

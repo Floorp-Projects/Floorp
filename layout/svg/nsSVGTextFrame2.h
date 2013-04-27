@@ -628,7 +628,14 @@ private:
   uint32_t mGetCanvasTMForFlag;
 
   /**
-   * Whether something has changed to invalidate the values in mPositions.
+   * The NS_FRAME_IS_DIRTY and NS_FRAME_HAS_DIRTY_CHILDREN bits indicate
+   * that our anonymous block child needs to be reflowed, and that mPositions
+   * will likely need to be updated as a consequence. These are set, for
+   * example, when the font-family changes. Sometimes we only need to
+   * update mPositions though. For example if the x/y attributes change.
+   * mPositioningDirty is used to indicate this latter "things are dirty" case
+   * to allow us to avoid reflowing the anonymous block when it is not
+   * necessary.
    */
   bool mPositioningDirty;
 };

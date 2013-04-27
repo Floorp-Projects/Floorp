@@ -69,7 +69,6 @@
 <!ENTITY pref_category_privacy "Privacy &amp; Security">
 <!ENTITY pref_category_content "Content">
 <!ENTITY pref_about_firefox "About &brandShortName;">
-<!ENTITY pref_do_not_track "Tell sites not to track me">
 <!ENTITY pref_telemetry "Send performance data">
 <!ENTITY pref_remember_signons "Remember passwords">
 
@@ -82,6 +81,11 @@
 <!ENTITY pref_cookies_accept_all "Enabled">
 <!ENTITY pref_cookies_not_accept_foreign "Enabled, excluding 3rd party">
 <!ENTITY pref_cookies_disabled "Disabled">
+
+<!ENTITY pref_donottrack_menu "Tracking">
+<!ENTITY pref_donottrack_disallow_tracking "Tell sites that I do not want to be tracked">
+<!ENTITY pref_donottrack_allow_tracking "Tell sites that I want to be tracked">
+<!ENTITY pref_donottrack_no_pref "Do not tell sites anything about my tracking preferences">
 
 <!ENTITY pref_char_encoding "Character encoding">
 <!ENTITY pref_char_encoding_on "Show menu">
@@ -172,6 +176,11 @@ size. -->
 <!ENTITY contextmenu_copyurl "Copy Address">
 <!ENTITY contextmenu_edit_bookmark "Edit">
 <!ENTITY contextmenu_subscribe "Subscribe to Page">
+<!ENTITY contextmenu_site_settings "Edit Site Settings">
+
+<!ENTITY pref_titlebar_mode "Title bar">
+<!ENTITY pref_titlebar_mode_title "Show page title">
+<!ENTITY pref_titlebar_mode_url "Show page address">
 
 <!ENTITY history_removed "Page removed">
 
@@ -180,7 +189,9 @@ size. -->
 <!ENTITY bookmark_edit_location "Location">
 <!ENTITY bookmark_edit_keyword "Keyword">
 
-<!ENTITY site_settings_title2       "Site Settings…">
+<!-- Localization note (site_settings_*) : These strings are used in the "Site Settings"
+     dialog that appears after selecting the "Edit Site Settings" context menu item. -->
+<!ENTITY site_settings_title3       "Site Settings">
 <!ENTITY site_settings_cancel       "Cancel">
 <!ENTITY site_settings_clear        "Clear">
 <!ENTITY site_settings_no_settings  "There are no settings to clear.">

@@ -39,13 +39,13 @@ function tabEventsFor(window) {
 }
 
 // Filter DOMContentLoaded events from all the browser events.
-let readyEvents = filter(function(e) e.type === "DOMContentLoaded", events);
+let readyEvents = filter(events, function(e) e.type === "DOMContentLoaded");
 // Map DOMContentLoaded events to it's target browser windows.
-let futureWindows = map(function(e) e.target, readyEvents);
+let futureWindows = map(readyEvents, function(e) e.target);
 // Expand all browsers that will become interactive to supported tab events
 // on these windows. Result will be a tab events from all tabs of all windows
 // that will become interactive.
-let eventsFromFuture = expand(tabEventsFor, futureWindows);
+let eventsFromFuture = expand(futureWindows, tabEventsFor);
 
 // Above covers only windows that will become interactive in a future, but some
 // windows may already be interactive so we pick those and expand to supported

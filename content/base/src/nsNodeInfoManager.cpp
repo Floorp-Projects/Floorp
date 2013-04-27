@@ -242,11 +242,9 @@ nsNodeInfoManager::GetNodeInfo(nsIAtom *aName, nsIAtom *aPrefix,
   void *node = PL_HashTableLookup(mNodeInfoHash, &tmpKey);
 
   if (node) {
-    nsINodeInfo* nodeInfo = static_cast<nsINodeInfo *>(node);
+    nsCOMPtr<nsINodeInfo> nodeInfo = static_cast<nsINodeInfo*>(node);
 
-    NS_ADDREF(nodeInfo);
-
-    return nodeInfo;
+    return nodeInfo.forget();
   }
 
   nsRefPtr<nsNodeInfo> newNodeInfo =
@@ -263,10 +261,7 @@ nsNodeInfoManager::GetNodeInfo(nsIAtom *aName, nsIAtom *aPrefix,
     NS_IF_ADDREF(mDocument);
   }
 
-  nsNodeInfo *nodeInfo = nullptr;
-  newNodeInfo.swap(nodeInfo);
-
-  return nodeInfo;
+  return newNodeInfo.forget();
 }
 
 

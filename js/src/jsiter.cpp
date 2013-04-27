@@ -6,6 +6,8 @@
 
 /* JavaScript iterators. */
 
+#include "jsiter.h"
+
 #include "mozilla/PodOperations.h"
 #include "mozilla/Util.h"
 
@@ -14,23 +16,15 @@
 #include "jsapi.h"
 #include "jsarray.h"
 #include "jsatom.h"
-#include "jsbool.h"
 #include "jscntxt.h"
 #include "jsversion.h"
-#include "jsexn.h"
-#include "jsfun.h"
 #include "jsgc.h"
 #include "jsinterp.h"
-#include "jsiter.h"
-#include "jslock.h"
-#include "jsnum.h"
 #include "jsobj.h"
 #include "jsopcode.h"
 #include "jsproxy.h"
 #include "jsscript.h"
 
-#include "ds/Sort.h"
-#include "frontend/TokenStream.h"
 #include "gc/Marking.h"
 #include "vm/GlobalObject.h"
 #include "vm/Shape.h"

@@ -14,8 +14,8 @@ dnl ========================================================
 dnl = Defaults
 dnl ========================================================
 MOD_MAJOR_VERSION=4
-MOD_MINOR_VERSION=9
-MOD_PATCH_VERSION=6
+MOD_MINOR_VERSION=10
+MOD_PATCH_VERSION=0
 NSPR_MODNAME=nspr20
 _HAVE_PTHREADS=
 USE_PTHREADS=
@@ -271,7 +271,6 @@ case "$target" in
     fi
 
     AC_DEFINE(ANDROID)
-    AC_DEFINE_UNQUOTED(ANDROID_VERSION, $android_version)
     ;;
 esac
 fi
@@ -593,9 +592,9 @@ if test "$target" != "$host" -o -n "$CROSS_COMPILE"; then
     LDFLAGS="$HOST_LDFLAGS"
 
     AC_MSG_CHECKING([whether the $host compiler ($HOST_CC $HOST_CFLAGS $HOST_LDFLAGS) works])
-    AC_TRY_COMPILE([], [return(0);], 
-        [ac_cv_prog_host_cc_works=1 AC_MSG_RESULT([yes])],
-        AC_MSG_ERROR([installation or configuration problem: $host compiler $HOST_CC cannot create executables.]) )
+    AC_TRY_COMPILE([], [return 0;],
+        [AC_MSG_RESULT([yes])],
+        [AC_MSG_ERROR([installation or configuration problem: $host compiler $HOST_CC cannot create executables.])] )
 
     CC=$_SAVE_CC
     CFLAGS=$_SAVE_CFLAGS
@@ -2553,8 +2552,8 @@ case $target in
     ;;
 *)
     AC_CHECK_LIB(dl, dlopen,
-        AC_CHECK_HEADER(dlfcn.h,
-            OS_LIBS="-ldl $OS_LIBS"))
+        [AC_CHECK_HEADER(dlfcn.h,
+            OS_LIBS="-ldl $OS_LIBS")])
     ;;
 esac
 
