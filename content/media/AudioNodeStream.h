@@ -9,6 +9,7 @@
 #include "MediaStreamGraph.h"
 #include "AudioChannelFormat.h"
 #include "AudioNodeEngine.h"
+#include "mozilla/dom/AudioNodeBinding.h"
 #include "mozilla/dom/AudioParam.h"
 
 #ifdef PR_LOGGING
@@ -43,13 +44,14 @@ public:
    * Transfers ownership of aEngine to the new AudioNodeStream.
    */
   AudioNodeStream(AudioNodeEngine* aEngine,
-                  MediaStreamGraph::AudioNodeStreamKind aKind,
-                  uint32_t aNumberOfInputChannels = 0)
+                  MediaStreamGraph::AudioNodeStreamKind aKind)
     : ProcessedMediaStream(nullptr),
       mEngine(aEngine),
       mKind(aKind),
-      mNumberOfInputChannels(aNumberOfInputChannels)
+      mNumberOfInputChannels(2)
   {
+    mMixingMode.mChannelCountMode = dom::ChannelCountMode::Max;
+    mMixingMode.mChannelInterpretation = dom::ChannelInterpretation::Speakers;
     // AudioNodes are always producing data
     mHasCurrentData = true;
     MOZ_COUNT_CTOR(AudioNodeStream);
@@ -68,12 +70,18 @@ public:
   void SetTimelineParameter(uint32_t aIndex, const dom::AudioParamTimeline& aValue);
   void SetThreeDPointParameter(uint32_t aIndex, const dom::ThreeDPoint& aValue);
   void SetBuffer(already_AddRefed<ThreadSharedFloatArrayBufferList> aBuffer);
+  void SetChannelMixingParameters(uint32_t aNumberOfChannels,
+                                  dom::ChannelCountMode aChannelCountMoe,
+                                  dom::ChannelInterpretation aChannelInterpretation);
 
   virtual AudioNodeStream* AsAudioNodeStream() { return this; }
 
   // Graph thread only
   void SetStreamTimeParameterImpl(uint32_t aIndex, MediaStream* aRelativeToStream,
                                   double aStreamTime);
+  void SetChannelMixingParametersImpl(uint32_t aNumberOfChannels,
+                                      dom::ChannelCountMode aChannelCountMoe,
+                                      dom::ChannelInterpretation aChannelInterpretation);
   virtual void ProduceOutput(GraphTime aFrom, GraphTime aTo);
   TrackTicks GetCurrentPosition();
   bool AllInputsFinished() const;
@@ -95,6 +103,11 @@ protected:
   MediaStreamGraph::AudioNodeStreamKind mKind;
   // The number of input channels that this stream requires. 0 means don't care.
   uint32_t mNumberOfInputChannels;
+  // The mixing modes
+  struct {
+    dom::ChannelCountMode mChannelCountMode : 16;
+    dom::ChannelInterpretation mChannelInterpretation : 16;
+  } mMixingMode;
 };
 
 }

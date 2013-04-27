@@ -127,6 +127,7 @@ public:
   void SetChannelCount(uint32_t aChannelCount)
   {
     mChannelCount = aChannelCount;
+    SendChannelMixingParametersToStream();
   }
   ChannelCountMode ChannelCountModeValue() const
   {
@@ -135,6 +136,7 @@ public:
   void SetChannelCountModeValue(ChannelCountMode aMode)
   {
     mChannelCountMode = aMode;
+    SendChannelMixingParametersToStream();
   }
   ChannelInterpretation ChannelInterpretationValue() const
   {
@@ -143,6 +145,7 @@ public:
   void SetChannelInterpretationValue(ChannelInterpretation aMode)
   {
     mChannelInterpretation = aMode;
+    SendChannelMixingParametersToStream();
   }
 
   struct InputNode {
@@ -180,6 +183,7 @@ protected:
   void SendDoubleParameterToStream(uint32_t aIndex, double aValue);
   void SendInt32ParameterToStream(uint32_t aIndex, int32_t aValue);
   void SendThreeDPointParameterToStream(uint32_t aIndex, const ThreeDPoint& aValue);
+  void SendChannelMixingParametersToStream();
   static void SendTimelineParameterToStream(AudioNode* aNode, uint32_t aIndex,
                                             const AudioParamTimeline& aValue);
 
