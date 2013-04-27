@@ -21,7 +21,7 @@ public class TabCounter extends GeckoTextSwitcher
 
     private static final float CENTER_X = 0.5f;
     private static final float CENTER_Y = 1.25f;
-    private static final int DURATION = 300;
+    private static final int DURATION = 500;
     private static final float Z_DISTANCE = 200;
 
     private final AnimationSet mFlipInForward;
