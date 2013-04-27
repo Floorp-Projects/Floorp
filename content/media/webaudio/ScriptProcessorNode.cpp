@@ -286,7 +286,7 @@ private:
           MutexAutoLock lock(mStream->Engine()->NodeMutex());
           node = static_cast<ScriptProcessorNode*>(mStream->Engine()->Node());
         }
-        if (!node) {
+        if (!node || !node->Context()) {
           return NS_OK;
         }
 
