@@ -158,7 +158,6 @@ using namespace mozilla;
 //#define DEBUG_CC_GRAPH
 
 #define DEFAULT_SHUTDOWN_COLLECTIONS 5
-#define SHUTDOWN_COLLECTIONS(params) DEFAULT_SHUTDOWN_COLLECTIONS
 
 #if defined(XP_WIN)
 // Defined in nsThreadManager.cpp.
@@ -1079,10 +1078,7 @@ public:
     void CheckThreadSafety();
 
 private:
-    void MainThreadCollect(ccType aCCType,
-                           nsCycleCollectorResults *aResults,
-                           uint32_t aTryCollections,
-                           nsICycleCollectorListener *aListener);
+    void ShutdownCollect(nsICycleCollectorListener *aListener);
 
 public:
     void Collect(ccType aCCType,
@@ -2749,27 +2745,21 @@ nsCycleCollector::CleanupAfterCollection()
 }
 
 void
-nsCycleCollector::MainThreadCollect(ccType aCCType,
-                                    nsCycleCollectorResults *aResults,
-                                    uint32_t aTryCollections,
-                                    nsICycleCollectorListener *aListener)
+nsCycleCollector::ShutdownCollect(nsICycleCollectorListener *aListener)
 {
     nsAutoTArray<PtrInfo*, 4000> whiteNodes;
 
-    if (!PrepareForCollection(aResults, &whiteNodes))
+    if (!PrepareForCollection(nullptr, &whiteNodes))
         return;
 
-    uint32_t totalCollections = 0;
-    while (aTryCollections > totalCollections) {
+    for (uint32_t i = 0; i < DEFAULT_SHUTDOWN_COLLECTIONS; ++i) {
         // Synchronous cycle collection. Always force a JS GC beforehand.
         FixGrayBits(true);
         if (aListener && NS_FAILED(aListener->Begin()))
             aListener = nullptr;
-        if (!(BeginCollection(aCCType, aListener) &&
+        if (!(BeginCollection(ShutdownCC, aListener) &&
               FinishCollection(aListener)))
             break;
-
-        ++totalCollections;
     }
 
     CleanupAfterCollection();
@@ -2918,8 +2908,7 @@ nsCycleCollector::Shutdown()
                 listener->SetAllTraces();
             }
         }
-        MainThreadCollect(ShutdownCC, nullptr, SHUTDOWN_COLLECTIONS(mParams),
-                          listener);
+        ShutdownCollect(listener);
     }
 
     mParams.mDoNothing = true;
