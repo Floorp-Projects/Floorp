@@ -397,25 +397,84 @@ CodeGeneratorX86::visitUInt32ToDouble(LUInt32ToDouble *lir)
     return true;
 }
 
-class ion::OutOfLineAsmJSLoadHeapOutOfBounds : public OutOfLineCodeBase<CodeGeneratorX86>
+// Load a NaN or zero into a register for an out of bounds AsmJS or static
+// typed array load.
+class ion::OutOfLineLoadTypedArrayOutOfBounds : public OutOfLineCodeBase<CodeGeneratorX86>
 {
     AnyRegister dest_;
   public:
-    OutOfLineAsmJSLoadHeapOutOfBounds(AnyRegister dest) : dest_(dest) {}
+    OutOfLineLoadTypedArrayOutOfBounds(AnyRegister dest) : dest_(dest) {}
     const AnyRegister &dest() const { return dest_; }
-    bool accept(CodeGeneratorX86 *codegen) { return codegen->visitOutOfLineAsmJSLoadHeapOutOfBounds(this); }
+    bool accept(CodeGeneratorX86 *codegen) { return codegen->visitOutOfLineLoadTypedArrayOutOfBounds(this); }
 };
+
+void
+CodeGeneratorX86::loadViewTypeElement(ArrayBufferView::ViewType vt, const Address &srcAddr,
+                                      const LDefinition *out)
+{
+    switch (vt) {
+      case ArrayBufferView::TYPE_INT8:    masm.movxblWithPatch(srcAddr, ToRegister(out)); break;
+      case ArrayBufferView::TYPE_UINT8_CLAMPED:
+      case ArrayBufferView::TYPE_UINT8:   masm.movzblWithPatch(srcAddr, ToRegister(out)); break;
+      case ArrayBufferView::TYPE_INT16:   masm.movxwlWithPatch(srcAddr, ToRegister(out)); break;
+      case ArrayBufferView::TYPE_UINT16:  masm.movzwlWithPatch(srcAddr, ToRegister(out)); break;
+      case ArrayBufferView::TYPE_INT32:   masm.movlWithPatch(srcAddr, ToRegister(out)); break;
+      case ArrayBufferView::TYPE_UINT32:  masm.movlWithPatch(srcAddr, ToRegister(out)); break;
+      case ArrayBufferView::TYPE_FLOAT64: masm.movsdWithPatch(srcAddr, ToFloatRegister(out)); break;
+      default: JS_NOT_REACHED("unexpected array type");
+    }
+}
+
+bool
+CodeGeneratorX86::visitLoadTypedArrayElementStatic(LLoadTypedArrayElementStatic *ins)
+{
+    const MLoadTypedArrayElementStatic *mir = ins->mir();
+    ArrayBufferView::ViewType vt = mir->viewType();
+
+    Register ptr = ToRegister(ins->ptr());
+    const LDefinition *out = ins->output();
+
+    OutOfLineLoadTypedArrayOutOfBounds *ool = NULL;
+    if (!mir->fallible()) {
+        ool = new OutOfLineLoadTypedArrayOutOfBounds(ToAnyRegister(out));
+        if (!addOutOfLineCode(ool))
+            return false;
+    }
+
+    masm.cmpl(ptr, Imm32(mir->length()));
+    if (ool)
+        masm.j(Assembler::AboveOrEqual, ool->entry());
+    else if (!bailoutIf(Assembler::AboveOrEqual, ins->snapshot()))
+        return false;
+
+    Address srcAddr(ptr, (int32_t) mir->base());
+    if (vt == ArrayBufferView::TYPE_FLOAT32) {
+        FloatRegister dest = ToFloatRegister(out);
+        masm.movssWithPatch(srcAddr, dest);
+        masm.cvtss2sd(dest, dest);
+        if (ool)
+            masm.bind(ool->rejoin());
+        return true;
+    }
+    loadViewTypeElement(vt, srcAddr, out);
+    if (ool)
+        masm.bind(ool->rejoin());
+    return true;
+}
 
 bool
 CodeGeneratorX86::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
 {
+    // This is identical to LoadTypedArrayElementStatic, except that the
+    // array's base and length are not known ahead of time and can be patched
+    // later on, and the instruction is always infallible.
     const MAsmJSLoadHeap *mir = ins->mir();
     ArrayBufferView::ViewType vt = mir->viewType();
 
     Register ptr = ToRegister(ins->ptr());
     const LDefinition *out = ins->output();
 
-    OutOfLineAsmJSLoadHeapOutOfBounds *ool = new OutOfLineAsmJSLoadHeapOutOfBounds(ToAnyRegister(out));
+    OutOfLineLoadTypedArrayOutOfBounds *ool = new OutOfLineLoadTypedArrayOutOfBounds(ToAnyRegister(out));
     if (!addOutOfLineCode(ool))
         return false;
 
@@ -433,23 +492,14 @@ CodeGeneratorX86::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
         return gen->noteHeapAccess(AsmJSHeapAccess(cmp.offset(), before, after, vt, AnyRegister(dest)));
     }
     uint32_t before = masm.size();
-    switch (vt) {
-      case ArrayBufferView::TYPE_INT8:    masm.movxblWithPatch(srcAddr, ToRegister(out)); break;
-      case ArrayBufferView::TYPE_UINT8:   masm.movzblWithPatch(srcAddr, ToRegister(out)); break;
-      case ArrayBufferView::TYPE_INT16:   masm.movxwlWithPatch(srcAddr, ToRegister(out)); break;
-      case ArrayBufferView::TYPE_UINT16:  masm.movzwlWithPatch(srcAddr, ToRegister(out)); break;
-      case ArrayBufferView::TYPE_INT32:   masm.movlWithPatch(srcAddr, ToRegister(out)); break;
-      case ArrayBufferView::TYPE_UINT32:  masm.movlWithPatch(srcAddr, ToRegister(out)); break;
-      case ArrayBufferView::TYPE_FLOAT64: masm.movsdWithPatch(srcAddr, ToFloatRegister(out)); break;
-      default: JS_NOT_REACHED("unexpected array type");
-    }
+    loadViewTypeElement(vt, srcAddr, out);
     uint32_t after = masm.size();
     masm.bind(ool->rejoin());
     return gen->noteHeapAccess(AsmJSHeapAccess(cmp.offset(), before, after, vt, ToAnyRegister(out)));
 }
 
 bool
-CodeGeneratorX86::visitOutOfLineAsmJSLoadHeapOutOfBounds(OutOfLineAsmJSLoadHeapOutOfBounds *ool)
+CodeGeneratorX86::visitOutOfLineLoadTypedArrayOutOfBounds(OutOfLineLoadTypedArrayOutOfBounds *ool)
 {
     if (ool->dest().isFloat())
         masm.movsd(&js_NaN, ool->dest().fpu());
@@ -459,9 +509,54 @@ CodeGeneratorX86::visitOutOfLineAsmJSLoadHeapOutOfBounds(OutOfLineAsmJSLoadHeapO
     return true;
 }
 
+void
+CodeGeneratorX86::storeViewTypeElement(ArrayBufferView::ViewType vt, const LAllocation *value,
+                                       const Address &dstAddr)
+{
+    switch (vt) {
+      case ArrayBufferView::TYPE_INT8:    masm.movbWithPatch(ToRegister(value), dstAddr); break;
+      case ArrayBufferView::TYPE_UINT8_CLAMPED:
+      case ArrayBufferView::TYPE_UINT8:   masm.movbWithPatch(ToRegister(value), dstAddr); break;
+      case ArrayBufferView::TYPE_INT16:   masm.movwWithPatch(ToRegister(value), dstAddr); break;
+      case ArrayBufferView::TYPE_UINT16:  masm.movwWithPatch(ToRegister(value), dstAddr); break;
+      case ArrayBufferView::TYPE_INT32:   masm.movlWithPatch(ToRegister(value), dstAddr); break;
+      case ArrayBufferView::TYPE_UINT32:  masm.movlWithPatch(ToRegister(value), dstAddr); break;
+      case ArrayBufferView::TYPE_FLOAT64: masm.movsdWithPatch(ToFloatRegister(value), dstAddr); break;
+      default: JS_NOT_REACHED("unexpected array type");
+    }
+}
+
+bool
+CodeGeneratorX86::visitStoreTypedArrayElementStatic(LStoreTypedArrayElementStatic *ins)
+{
+    MStoreTypedArrayElementStatic *mir = ins->mir();
+    ArrayBufferView::ViewType vt = mir->viewType();
+
+    Register ptr = ToRegister(ins->ptr());
+    const LAllocation *value = ins->value();
+
+    masm.cmpl(ptr, Imm32(mir->length()));
+    Label rejoin;
+    masm.j(Assembler::AboveOrEqual, &rejoin);
+
+    Address dstAddr(ptr, (int32_t) mir->base());
+    if (vt == ArrayBufferView::TYPE_FLOAT32) {
+        masm.convertDoubleToFloat(ToFloatRegister(value), ScratchFloatReg);
+        masm.movssWithPatch(ScratchFloatReg, dstAddr);
+        masm.bind(&rejoin);
+        return true;
+    }
+    storeViewTypeElement(vt, value, dstAddr);
+    masm.bind(&rejoin);
+    return true;
+}
+
 bool
 CodeGeneratorX86::visitAsmJSStoreHeap(LAsmJSStoreHeap *ins)
 {
+    // This is identical to StoreTypedArrayElementStatic, except that the
+    // array's base and length are not known ahead of time and can be patched
+    // later on.
     MAsmJSStoreHeap *mir = ins->mir();
     ArrayBufferView::ViewType vt = mir->viewType();
 
@@ -482,16 +577,7 @@ CodeGeneratorX86::visitAsmJSStoreHeap(LAsmJSStoreHeap *ins)
         return gen->noteHeapAccess(AsmJSHeapAccess(cmp.offset(), before, after));
     }
     uint32_t before = masm.size();
-    switch (vt) {
-      case ArrayBufferView::TYPE_INT8:    masm.movbWithPatch(ToRegister(value), dstAddr); break;
-      case ArrayBufferView::TYPE_UINT8:   masm.movbWithPatch(ToRegister(value), dstAddr); break;
-      case ArrayBufferView::TYPE_INT16:   masm.movwWithPatch(ToRegister(value), dstAddr); break;
-      case ArrayBufferView::TYPE_UINT16:  masm.movwWithPatch(ToRegister(value), dstAddr); break;
-      case ArrayBufferView::TYPE_INT32:   masm.movlWithPatch(ToRegister(value), dstAddr); break;
-      case ArrayBufferView::TYPE_UINT32:  masm.movlWithPatch(ToRegister(value), dstAddr); break;
-      case ArrayBufferView::TYPE_FLOAT64: masm.movsdWithPatch(ToFloatRegister(value), dstAddr); break;
-      default: JS_NOT_REACHED("unexpected array type");
-    }
+    storeViewTypeElement(vt, value, dstAddr);
     uint32_t after = masm.size();
     masm.bind(&rejoin);
     return gen->noteHeapAccess(AsmJSHeapAccess(cmp.offset(), before, after));

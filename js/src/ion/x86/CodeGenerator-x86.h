@@ -13,7 +13,7 @@
 namespace js {
 namespace ion {
 
-class OutOfLineAsmJSLoadHeapOutOfBounds;
+class OutOfLineLoadTypedArrayOutOfBounds;
 class OutOfLineTruncate;
 
 class CodeGeneratorX86 : public CodeGeneratorX86Shared
@@ -28,6 +28,10 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     ValueOperand ToOutValue(LInstruction *ins);
     ValueOperand ToTempValue(LInstruction *ins, size_t pos);
 
+    void loadViewTypeElement(ArrayBufferView::ViewType vt, const Address &srcAddr,
+                             const LDefinition *out);
+    void storeViewTypeElement(ArrayBufferView::ViewType vt, const LAllocation *value,
+                              const Address &dstAddr);
     void storeElementTyped(const LAllocation *value, MIRType valueType, MIRType elementType,
                            const Register &elements, const LAllocation *index);
 
@@ -52,6 +56,8 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     bool visitCompareVAndBranch(LCompareVAndBranch *lir);
     bool visitUInt32ToDouble(LUInt32ToDouble *lir);
     bool visitTruncateDToInt32(LTruncateDToInt32 *ins);
+    bool visitLoadTypedArrayElementStatic(LLoadTypedArrayElementStatic *ins);
+    bool visitStoreTypedArrayElementStatic(LStoreTypedArrayElementStatic *ins);
     bool visitAsmJSLoadHeap(LAsmJSLoadHeap *ins);
     bool visitAsmJSStoreHeap(LAsmJSStoreHeap *ins);
     bool visitAsmJSLoadGlobalVar(LAsmJSLoadGlobalVar *ins);
@@ -59,7 +65,7 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     bool visitAsmJSLoadFuncPtr(LAsmJSLoadFuncPtr *ins);
     bool visitAsmJSLoadFFIFunc(LAsmJSLoadFFIFunc *ins);
 
-    bool visitOutOfLineAsmJSLoadHeapOutOfBounds(OutOfLineAsmJSLoadHeapOutOfBounds *ool);
+    bool visitOutOfLineLoadTypedArrayOutOfBounds(OutOfLineLoadTypedArrayOutOfBounds *ool);
     bool visitOutOfLineTruncate(OutOfLineTruncate *ool);
 
     void postAsmJSCall(LAsmJSCall *lir);
