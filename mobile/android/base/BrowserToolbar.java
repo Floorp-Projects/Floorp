@@ -7,7 +7,6 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
 import org.mozilla.gecko.gfx.LayerView;
-import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.HardwareUtils;
 
 import org.mozilla.gecko.util.ThreadUtils;
@@ -17,7 +16,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.ColorDrawable;
@@ -26,21 +24,19 @@ import android.graphics.drawable.StateListDrawable;
 import android.os.Build;
 import android.os.Handler;
 import android.os.SystemClock;
-import android.text.style.ForegroundColorSpan;
-import android.text.Spannable;
-import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.ContextMenu;
+import android.view.LayoutInflater;
 import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewGroup.MarginLayoutParams;
 import android.view.Window;
 import android.view.accessibility.AccessibilityNodeInfo;
-import android.view.animation.Animation;
 import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
@@ -56,7 +52,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class BrowserToolbar implements Tabs.OnTabsChangedListener,
+public class BrowserToolbar implements ViewSwitcher.ViewFactory,
+                                       Tabs.OnTabsChangedListener,
                                        GeckoMenu.ActionItemBarPresenter,
                                        Animation.AnimationListener,
                                        SharedPreferences.OnSharedPreferenceChangeListener {
@@ -82,7 +79,7 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
     public ImageButton mSiteSecurity;
     public ImageButton mReader;
     private AnimationDrawable mProgressSpinner;
-    private TabCounter mTabsCounter;
+    private GeckoTextSwitcher mTabsCount;
     private ImageView mShadow;
     private GeckoImageButton mMenu;
     private LinearLayout mActionItemBar;
@@ -90,6 +87,7 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
     private List<View> mFocusOrder;
 
     final private BrowserApp mActivity;
+    private LayoutInflater mInflater;
     private Handler mHandler;
     private boolean mHasSoftMenuButton;
 
@@ -100,6 +98,12 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
 
     private boolean mAnimatingEntry;
 
+    private int mDuration;
+    private TranslateAnimation mSlideUpIn;
+    private TranslateAnimation mSlideUpOut;
+    private TranslateAnimation mSlideDownIn;
+    private TranslateAnimation mSlideDownOut;
+
     private AlphaAnimation mLockFadeIn;
     private TranslateAnimation mTitleSlideLeft;
     private TranslateAnimation mTitleSlideRight;
@@ -108,6 +112,7 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
     private int mDefaultForwardMargin;
     private PropertyAnimator mForwardAnim = null;
 
+    private int mCount;
     private int mFaviconSize;
 
     private PropertyAnimator mVisibilityAnimator;
@@ -116,15 +121,13 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
     private static final int TABS_EXPANDED = 2;
 
     private static final int FORWARD_ANIMATION_DURATION = 450;
-    private final ForegroundColorSpan mUrlColor;
-    private final ForegroundColorSpan mDomainColor;
-    private final ForegroundColorSpan mPrivateDomainColor;
 
     private boolean mShowUrl;
 
     public BrowserToolbar(BrowserApp activity) {
         // BrowserToolbar is attached to BrowserApp only.
         mActivity = activity;
+        mInflater = LayoutInflater.from(activity);
 
         sActionItems = new ArrayList<View>();
         Tabs.registerOnTabsChangedListener(this);
@@ -144,18 +147,14 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
 
             @Override
             public void onPostExecute(Void v) {
-                Tab tab = Tabs.getInstance().getSelectedTab();
-                if (tab != null) {
-                    setTitle(tab.getDisplayTitle());
+                if (mShowUrl) {
+                    Tab tab = Tabs.getInstance().getSelectedTab();
+                    if (tab != null) {
+                        setTitle(tab.getURL());
+                    }
                 }
             }
         }).execute();
-
-        Resources res = mActivity.getResources();
-        mUrlColor = new ForegroundColorSpan(res.getColor(R.color.url_bar_urltext));
-        mDomainColor = new ForegroundColorSpan(res.getColor(R.color.url_bar_domaintext_private));
-        mPrivateDomainColor = new ForegroundColorSpan(res.getColor(R.color.url_bar_domaintext));
-
     }
 
     public void from(RelativeLayout layout) {
@@ -240,7 +239,23 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
         });
         mTabs.setImageLevel(0);
 
-        mTabsCounter = (TabCounter) mLayout.findViewById(R.id.tabs_count);
+        mTabsCount = (GeckoTextSwitcher) mLayout.findViewById(R.id.tabs_count);
+        mTabsCount.removeAllViews();
+        mTabsCount.setFactory(this);
+        mTabsCount.setText("");
+        mCount = 0;
+        if (Build.VERSION.SDK_INT >= 16) {
+            // This adds the TextSwitcher to the a11y node tree, where we in turn
+            // could make it return an empty info node. If we don't do this the
+            // TextSwitcher's child TextViews get picked up, and we don't want
+            // that since the tabs ImageButton is already properly labeled for
+            // accessibility.
+            mTabsCount.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_YES);
+            mTabsCount.setAccessibilityDelegate(new View.AccessibilityDelegate() {
+                    @Override
+                    public void onInitializeAccessibilityNodeInfo(View host, AccessibilityNodeInfo info) {}
+                });
+        }
 
         mBack = (ImageButton) mLayout.findViewById(R.id.back);
         mBack.setOnClickListener(new Button.OnClickListener() {
@@ -339,6 +354,16 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
         });
 
         mHandler = new Handler();
+        mSlideUpIn = new TranslateAnimation(0, 0, 40, 0);
+        mSlideUpOut = new TranslateAnimation(0, 0, 0, -40);
+        mSlideDownIn = new TranslateAnimation(0, 0, -40, 0);
+        mSlideDownOut = new TranslateAnimation(0, 0, 0, 40);
+
+        mDuration = 750;
+        mSlideUpIn.setDuration(mDuration);
+        mSlideUpOut.setDuration(mDuration);
+        mSlideDownIn.setDuration(mDuration);
+        mSlideDownOut.setDuration(mDuration);
 
         float slideWidth = mActivity.getResources().getDimension(R.dimen.browser_toolbar_lock_width);
 
@@ -436,7 +461,7 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
         switch(msg) {
             case TITLE:
                 if (Tabs.getInstance().isSelectedTab(tab)) {
-                    setTitle(tab.getDisplayTitle());
+                    setTitle(mShowUrl ? tab.getURL() : tab.getDisplayTitle());
                 }
                 break;
             case START:
@@ -456,7 +481,7 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
                     updateForwardButton(tab.canDoForward());
                     setProgressVisibility(false);
                     // Reset the title in case we haven't navigated to a new page yet.
-                    setTitle(tab.getDisplayTitle());
+                    setTitle(mShowUrl ? tab.getURL() : tab.getDisplayTitle());
                 }
                 break;
             case RESTORED:
@@ -542,6 +567,12 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
         }
     }
 
+    @Override
+    public View makeView() {
+        // This returns a TextView for the TextSwitcher.
+        return mInflater.inflate(R.layout.tabs_counter, null);
+    }
+
     private int getAwesomeBarAnimTranslation() {
         return mLayout.getWidth() - mAwesomeBarEntry.getRight();
     }
@@ -574,7 +605,7 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
             proxy.setTranslationX(translation);
             proxy = AnimatorProxy.create(mTabs);
             proxy.setTranslationX(translation);
-            proxy = AnimatorProxy.create(mTabsCounter);
+            proxy = AnimatorProxy.create(mTabsCount);
             proxy.setTranslationX(translation);
             proxy = AnimatorProxy.create(mActionItemBar);
             proxy.setTranslationX(translation);
@@ -609,7 +640,7 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
         contentAnimator.attach(mTabs,
                                PropertyAnimator.Property.TRANSLATION_X,
                                0);
-        contentAnimator.attach(mTabsCounter,
+        contentAnimator.attach(mTabsCount,
                                PropertyAnimator.Property.TRANSLATION_X,
                                0);
         contentAnimator.attach(mActionItemBar,
@@ -710,7 +741,7 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
         contentAnimator.attach(mTabs,
                                PropertyAnimator.Property.TRANSLATION_X,
                                translation);
-        contentAnimator.attach(mTabsCounter,
+        contentAnimator.attach(mTabsCount,
                                PropertyAnimator.Property.TRANSLATION_X,
                                translation);
         contentAnimator.attach(mActionItemBar,
@@ -772,18 +803,29 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
             return;
         }
 
-        mTabsCounter.setCount(count, true);
+        if (mCount > count) {
+            mTabsCount.setInAnimation(mSlideDownIn);
+            mTabsCount.setOutAnimation(mSlideDownOut);
+        } else if (mCount < count) {
+            mTabsCount.setInAnimation(mSlideUpIn);
+            mTabsCount.setOutAnimation(mSlideUpOut);
+        } else {
+            return;
+        }
 
+        mTabsCount.setText(String.valueOf(count));
         mTabs.setContentDescription((count > 1) ?
                                     mActivity.getString(R.string.num_tabs, count) :
                                     mActivity.getString(R.string.one_tab));
+        mCount = count;
     }
 
     public void updateTabCount(int count) {
-        mTabsCounter.setCount(count, false);
+        mTabsCount.setCurrentText(String.valueOf(count));
         mTabs.setContentDescription((count > 1) ?
                                     mActivity.getString(R.string.num_tabs, count) :
                                     mActivity.getString(R.string.one_tab));
+        mCount = count;
         updateTabs(mActivity.areTabsShown());
     }
 
@@ -797,7 +839,7 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
         animator.attach(mTabs,
                         PropertyAnimator.Property.TRANSLATION_X,
                         width);
-        animator.attach(mTabsCounter,
+        animator.attach(mTabsCount,
                         PropertyAnimator.Property.TRANSLATION_X,
                         width);
         animator.attach(mBack,
@@ -833,7 +875,7 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
         mAwesomeBarEntry.setTranslationX(width);
         mAddressBarBg.setTranslationX(width);
         mTabs.setTranslationX(width);
-        mTabsCounter.setTranslationX(width);
+        mTabsCount.setTranslationX(width);
         mBack.setTranslationX(width);
         mForward.setTranslationX(width);
         mTitle.setTranslationX(width);
@@ -977,9 +1019,8 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
         }
     }
 
-    private void setTitle(String title) {
+    private void setTitle(CharSequence title) {
         Tab tab = Tabs.getInstance().getSelectedTab();
-        CharSequence displayTitle = title;
 
         // Keep the title unchanged if the tab is entering reader mode
         if (tab != null && tab.isEnteringReaderMode())
@@ -989,30 +1030,10 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
         // placeholder text. Because "about:home" and "about:privatebrowsing" don't
         // have titles, their display titles will always match their URLs.
         if (tab != null && ("about:home".equals(title) ||
-                            "about:privatebrowsing".equals(title))) {
-            displayTitle = null;
-        }
+                            "about:privatebrowsing".equals(title)))
+            title = null;
 
-        if (mShowUrl && displayTitle != null) {
-            title = StringUtils.stripScheme(tab.getURL());
-            title = StringUtils.stripCommonSubdomains(title);
-            displayTitle = title;
-
-            // highlight the domain name if we find one
-            String baseDomain = tab.getBaseDomain();
-            if (!TextUtils.isEmpty(baseDomain)) {
-                SpannableStringBuilder builder = new SpannableStringBuilder(title);
-                int index = title.indexOf(baseDomain);
-                if (index > -1) {
-                    builder.setSpan(mUrlColor, 0, title.length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
-                    builder.setSpan(tab.isPrivate() ? mPrivateDomainColor : mDomainColor, index, index+baseDomain.length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
-
-                    displayTitle = builder;
-                }
-            }
-        }
-
-        mTitle.setText(displayTitle);
+        mTitle.setText(title);
         mLayout.setContentDescription(title != null ? title : mTitle.getHint());
     }
 
@@ -1197,7 +1218,7 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
         Tab tab = Tabs.getInstance().getSelectedTab();
         if (tab != null) {
             String url = tab.getURL();
-            setTitle(tab.getDisplayTitle());
+            setTitle(mShowUrl ? tab.getURL() : tab.getDisplayTitle());
             setFavicon(tab.getFavicon());
             setProgressVisibility(tab.getState() == Tab.STATE_LOADING);
             setSecurityMode(tab.getSecurityMode());
@@ -1207,18 +1228,17 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
             updateBackButton(tab.canDoBack());
             updateForwardButton(tab.canDoForward());
 
-            final boolean isPrivate = tab.isPrivate();
-            mAddressBarBg.setPrivateMode(isPrivate);
-            mLayout.setPrivateMode(isPrivate);
-            mTabs.setPrivateMode(isPrivate);
-            mTitle.setPrivateMode(isPrivate);
-            mMenu.setPrivateMode(isPrivate);
+            mAddressBarBg.setPrivateMode(tab.isPrivate());
+            mLayout.setPrivateMode(tab.isPrivate());
+            mTabs.setPrivateMode(tab.isPrivate());
+            mTitle.setPrivateMode(tab.isPrivate());
+            mMenu.setPrivateMode(tab.isPrivate());
 
             if (mBack instanceof BackButton)
-                ((BackButton) mBack).setPrivateMode(isPrivate);
+                ((BackButton) mBack).setPrivateMode(tab.isPrivate());
 
             if (mForward instanceof ForwardButton)
-                ((ForwardButton) mForward).setPrivateMode(isPrivate);
+                ((ForwardButton) mForward).setPrivateMode(tab.isPrivate());
         }
     }
 
@@ -1252,7 +1272,7 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
             mShowUrl = sharedPreferences.getBoolean(key, false);
             Tab tab = Tabs.getInstance().getSelectedTab();
             if (tab != null) {
-                setTitle(tab.getDisplayTitle());
+                setTitle(mShowUrl ? tab.getURL() : tab.getDisplayTitle());
             }
         }
     }
