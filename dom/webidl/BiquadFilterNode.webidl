@@ -30,9 +30,9 @@ interface BiquadFilterNode : AudioNode {
     readonly attribute AudioParam Q; // Quality factor
     readonly attribute AudioParam gain; // in Decibels
 
-    // void getFrequencyResponse(Float32Array frequencyHz,
-    //                           Float32Array magResponse,
-    //                           Float32Array phaseResponse);
+    void getFrequencyResponse(Float32Array frequencyHz,
+                              Float32Array magResponse,
+                              Float32Array phaseResponse);
 
 };
 

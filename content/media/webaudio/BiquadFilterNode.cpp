@@ -23,6 +23,48 @@ NS_INTERFACE_MAP_END_INHERITING(AudioNode)
 NS_IMPL_ADDREF_INHERITED(BiquadFilterNode, AudioNode)
 NS_IMPL_RELEASE_INHERITED(BiquadFilterNode, AudioNode)
 
+void SetParamsOnBiquad(WebCore::Biquad& aBiquad,
+                       BiquadFilterType aType,
+                       double aFrequency,
+                       double aQ,
+                       double aGain,
+                       double aDetune)
+{
+  const double nyquist = IdealAudioRate() * 0.5;
+  double normalizedFrequency = aFrequency / nyquist;
+
+  if (aDetune) {
+    normalizedFrequency *= std::pow(2.0, aDetune / 1200);
+  }
+
+  switch (aType) {
+  case BiquadFilterType::Lowpass:
+    aBiquad.setLowpassParams(normalizedFrequency, aQ);
+    break;
+  case BiquadFilterType::Highpass:
+    aBiquad.setHighpassParams(normalizedFrequency, aQ);
+    break;
+  case BiquadFilterType::Bandpass:
+    aBiquad.setBandpassParams(normalizedFrequency, aQ);
+    break;
+  case BiquadFilterType::Lowshelf:
+    aBiquad.setLowShelfParams(normalizedFrequency, aGain);
+    break;
+  case BiquadFilterType::Highshelf:
+    aBiquad.setHighShelfParams(normalizedFrequency, aGain);
+    break;
+  case BiquadFilterType::Peaking:
+    aBiquad.setPeakingParams(normalizedFrequency, aQ, aGain);
+    break;
+  case BiquadFilterType::Notch:
+    aBiquad.setNotchParams(normalizedFrequency, aQ);
+    break;
+  case BiquadFilterType::Allpass:
+    aBiquad.setAllpassParams(normalizedFrequency, aQ);
+    break;
+  }
+}
+
 class BiquadFilterNodeEngine : public AudioNodeEngine
 {
 public:
@@ -103,45 +145,13 @@ public:
 
     TrackTicks pos = aStream->GetCurrentPosition();
 
+    double freq = mFrequency.GetValueAtTime(pos);
+    double q = mQ.GetValueAtTime(pos);
+    double gain = mGain.GetValueAtTime(pos);
+    double detune = mDetune.GetValueAtTime(pos);
+
     for (uint32_t i = 0; i < numberOfChannels; ++i) {
-      double freq = mFrequency.GetValueAtTime(pos);
-      double q = mQ.GetValueAtTime(pos);
-      double gain = mGain.GetValueAtTime(pos);
-      double detune = mDetune.GetValueAtTime(pos);
-
-      double nyquist = IdealAudioRate() * 0.5;
-      double normalizedFrequency = freq / nyquist;
-
-      if (detune) {
-        normalizedFrequency *= std::pow(2.0, detune / 1200);
-      }
-
-      switch (mType) {
-      case BiquadFilterType::Lowpass:
-        mBiquads[i].setLowpassParams(normalizedFrequency, q);
-        break;
-      case BiquadFilterType::Highpass:
-        mBiquads[i].setHighpassParams(normalizedFrequency, q);
-        break;
-      case BiquadFilterType::Bandpass:
-        mBiquads[i].setBandpassParams(normalizedFrequency, q);
-        break;
-      case BiquadFilterType::Lowshelf:
-        mBiquads[i].setLowShelfParams(normalizedFrequency, gain);
-        break;
-      case BiquadFilterType::Highshelf:
-        mBiquads[i].setHighShelfParams(normalizedFrequency, gain);
-        break;
-      case BiquadFilterType::Peaking:
-        mBiquads[i].setPeakingParams(normalizedFrequency, q, gain);
-        break;
-      case BiquadFilterType::Notch:
-        mBiquads[i].setNotchParams(normalizedFrequency, q);
-        break;
-      case BiquadFilterType::Allpass:
-        mBiquads[i].setAllpassParams(normalizedFrequency, q);
-        break;
-      }
+      SetParamsOnBiquad(mBiquads[i], mType, freq, q, gain, detune);
 
       mBiquads[i].process(static_cast<const float*>(aInput.mChannelData[i]),
                           static_cast<float*>(const_cast<void*>(aOutput->mChannelData[i])),
@@ -185,6 +195,38 @@ BiquadFilterNode::SetType(BiquadFilterType aType)
   mType = aType;
   SendInt32ParameterToStream(BiquadFilterNodeEngine::TYPE,
                              static_cast<int32_t>(aType));
+}
+
+void
+BiquadFilterNode::GetFrequencyResponse(const Float32Array& aFrequencyHz,
+                                       Float32Array& aMagResponse,
+                                       Float32Array& aPhaseResponse)
+{
+  uint32_t length = std::min(std::min(aFrequencyHz.Length(), aMagResponse.Length()),
+                             aPhaseResponse.Length());
+  if (!length) {
+    return;
+  }
+
+  nsAutoArrayPtr<float> frequencies(new float[length]);
+  float* frequencyHz = aFrequencyHz.Data();
+  const double nyquist = IdealAudioRate() * 0.5;
+
+  // Normalize the frequencies
+  for (uint32_t i = 0; i < length; ++i) {
+    frequencies[i] = static_cast<float>(frequencyHz[i] / nyquist);
+  }
+
+  const double currentTime = Context()->CurrentTime();
+
+  double freq = mFrequency->GetValueAtTime(currentTime);
+  double q = mQ->GetValueAtTime(currentTime);
+  double gain = mGain->GetValueAtTime(currentTime);
+  double detune = mDetune->GetValueAtTime(currentTime);
+
+  WebCore::Biquad biquad;
+  SetParamsOnBiquad(biquad, mType, freq, q, gain, detune);
+  biquad.getFrequencyResponse(int(length), frequencies, aMagResponse.Data(), aPhaseResponse.Data());
 }
 
 void
