@@ -341,13 +341,13 @@ nsMathMLmoFrame::ProcessOperatorData()
     // Use the default value suggested by the MathML REC.
     // http://www.w3.org/TR/MathML/chapter3.html#presm.mo.attrs
     // thickmathspace = 5/18em
-    float lspace = 5.0/18.0;
-    float rspace = 5.0/18.0;
+    float lspace = 5.0f/18.0f;
+    float rspace = 5.0f/18.0f;
     if (NS_MATHML_OPERATOR_IS_INVISIBLE(mFlags)) {
       // mMathMLChar has been reset in ProcessTextData so we can not find it
       // in the operator dictionary. The operator dictionary always uses
       // lspace = rspace = 0 for invisible operators.
-      lspace = rspace = 0.0;
+      lspace = rspace = 0;
     } else {
       // lookup the operator dictionary
       nsAutoString data;
@@ -508,7 +508,7 @@ nsMathMLmoFrame::ProcessOperatorData()
   // give a multiple of the defaut value but a multiple of the operator at
   // normal size.
   //
-  mMinSize = 0.0;
+  mMinSize = 0;
   GetAttribute(mContent, mPresentationData.mstyle, nsGkAtoms::minsize_,
                value);
   if (!value.IsEmpty()) {

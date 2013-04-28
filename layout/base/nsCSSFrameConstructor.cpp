@@ -1429,13 +1429,12 @@ nsCSSFrameConstructor::nsCSSFrameConstructor(nsIDocument *aDocument,
   , mRebuildAllExtraHint(nsChangeHint(0))
   , mAnimationGeneration(0)
   , mPendingRestyles(ELEMENT_HAS_PENDING_RESTYLE |
-                     ELEMENT_IS_POTENTIAL_RESTYLE_ROOT, this)
+                     ELEMENT_IS_POTENTIAL_RESTYLE_ROOT)
   , mPendingAnimationRestyles(ELEMENT_HAS_PENDING_ANIMATION_RESTYLE |
-                              ELEMENT_IS_POTENTIAL_ANIMATION_RESTYLE_ROOT, this)
+                              ELEMENT_IS_POTENTIAL_ANIMATION_RESTYLE_ROOT)
 {
-  // XXXbz this should be in Init() or something!
-  mPendingRestyles.Init();
-  mPendingAnimationRestyles.Init();
+  mPendingRestyles.Init(this);
+  mPendingAnimationRestyles.Init(this);
 
 #ifdef DEBUG
   static bool gFirstTime = true;
