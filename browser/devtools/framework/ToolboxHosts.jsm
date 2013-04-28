@@ -4,12 +4,13 @@
 
 "use strict";
 
-const {Cu} = require("chrome");
-
-let Promise = require("sdk/core/promise");
-let EventEmitter = require("devtools/shared/event-emitter");
+const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
+Cu.import("resource:///modules/devtools/EventEmitter.jsm");
+
+this.EXPORTED_SYMBOLS = [ "Hosts" ];
 
 /**
  * A toolbox host represents an object that contains a toolbox (e.g. the
@@ -20,7 +21,7 @@ Cu.import("resource://gre/modules/Services.jsm");
  * destroy() - destroy the host's UI
  */
 
-exports.Hosts = {
+this.Hosts = {
   "bottom": BottomHost,
   "side": SidebarHost,
   "window": WindowHost

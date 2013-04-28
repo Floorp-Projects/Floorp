@@ -4,8 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var Promise = require("sdk/core/promise");
-var EventEmitter = require("devtools/shared/event-emitter");
+const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
+
+this.EXPORTED_SYMBOLS = ["ToolSidebar"];
+
+Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
+Cu.import("resource:///modules/devtools/EventEmitter.jsm");
 
 const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
@@ -20,7 +24,7 @@ const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
  * @param {Boolean} showTabstripe
  *  Show the tabs.
  */
-function ToolSidebar(tabbox, panel, showTabstripe=true)
+this.ToolSidebar = function ToolSidebar(tabbox, panel, showTabstripe=true)
 {
   EventEmitter.decorate(this);
 
@@ -36,8 +40,6 @@ function ToolSidebar(tabbox, panel, showTabstripe=true)
     this._tabbox.setAttribute("hidetabs", "true");
   }
 }
-
-exports.ToolSidebar = ToolSidebar;
 
 ToolSidebar.prototype = {
   /**

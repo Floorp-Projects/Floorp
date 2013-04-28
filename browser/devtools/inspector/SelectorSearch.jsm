@@ -4,11 +4,13 @@
 
 "use strict";
 
-const {Cu} = require("chrome");
+const Cu = Components.utils;
 
-loader.lazyGetter(this, "AutocompletePopup", () => {
-  return Cu.import("resource:///modules/devtools/AutocompletePopup.jsm", {}).AutocompletePopup;
-});
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "AutocompletePopup",
+                                  "resource:///modules/devtools/AutocompletePopup.jsm");
+this.EXPORTED_SYMBOLS = ["SelectorSearch"];
 
 // Maximum number of selector suggestions shown in the panel.
 const MAX_SUGGESTIONS = 15;
@@ -26,7 +28,7 @@ const MAX_SUGGESTIONS = 15;
  *        The method to callback when a search is available.
  *        This method is called with the matched node as the first argument.
  */
-function SelectorSearch(aContentDocument, aInputNode, aCallback) {
+this.SelectorSearch = function(aContentDocument, aInputNode, aCallback) {
   this.doc = aContentDocument;
   this.callback = aCallback;
   this.searchBox = aInputNode;
@@ -64,9 +66,7 @@ function SelectorSearch(aContentDocument, aInputNode, aCallback) {
   this.searchBox.addEventListener("keypress", this._onSearchKeypress, true);
 }
 
-exports.SelectorSearch = SelectorSearch;
-
-SelectorSearch.prototype = {
+this.SelectorSearch.prototype = {
 
   // The possible states of the query.
   States: {
