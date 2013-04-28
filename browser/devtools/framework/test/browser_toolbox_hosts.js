@@ -6,7 +6,11 @@ let temp = {}
 Cu.import("resource:///modules/devtools/gDevTools.jsm", temp);
 let DevTools = temp.DevTools;
 
-let Toolbox = devtools.Toolbox;
+Cu.import("resource:///modules/devtools/Toolbox.jsm", temp);
+let Toolbox = temp.Toolbox;
+
+Cu.import("resource:///modules/devtools/Target.jsm", temp);
+let TargetFactory = temp.TargetFactory;
 
 let toolbox, target;
 

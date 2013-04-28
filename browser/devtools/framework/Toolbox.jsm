@@ -4,17 +4,16 @@
 
 "use strict";
 
-const {Cc, Ci, Cu} = require("chrome");
-
-let Promise = require("sdk/core/promise");
-let EventEmitter = require("devtools/shared/event-emitter");
+const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
+Cu.import("resource:///modules/devtools/EventEmitter.jsm");
 Cu.import("resource:///modules/devtools/gDevTools.jsm");
 
-loader.lazyGetter(this, "Hosts", () => require("devtools/framework/toolbox-hosts").Hosts);
-
+XPCOMUtils.defineLazyModuleGetter(this, "Hosts",
+                                  "resource:///modules/devtools/ToolboxHosts.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "CommandUtils",
                                   "resource:///modules/devtools/DeveloperToolbar.jsm");
 
@@ -35,13 +34,77 @@ XPCOMUtils.defineLazyGetter(this, "toolboxStrings", function() {
 });
 
 XPCOMUtils.defineLazyGetter(this, "Requisition", function() {
-  let scope = {};
-  Cu.import("resource://gre/modules/devtools/Require.jsm", scope);
-  Cu.import("resource:///modules/devtools/gcli.jsm", scope);
+  Cu.import("resource://gre/modules/devtools/Require.jsm");
+  Cu.import("resource:///modules/devtools/gcli.jsm");
 
-  let req = scope.require;
-  return req('gcli/cli').Requisition;
+  return require('gcli/cli').Requisition;
 });
+
+this.EXPORTED_SYMBOLS = [ "Toolbox" ];
+
+// This isn't the best place for this, but I don't know what is right now
+
+/**
+ * Implementation of 'promised', while we wait for bug 790195 to be fixed.
+ * @see Consuming promises in https://addons.mozilla.org/en-US/developers/docs/sdk/latest/packages/api-utils/promise.html
+ * @see https://bugzilla.mozilla.org/show_bug.cgi?id=790195
+ * @see https://github.com/mozilla/addon-sdk/blob/master/packages/api-utils/lib/promise.js#L179
+ */
+Promise.promised = (function() {
+  // Note: Define shortcuts and utility functions here in order to avoid
+  // slower property accesses and unnecessary closure creations on each
+  // call of this popular function.
+
+  var call = Function.call;
+  var concat = Array.prototype.concat;
+
+  // Utility function that does following:
+  // execute([ f, self, args...]) => f.apply(self, args)
+  function execute(args) { return call.apply(call, args); }
+
+  // Utility function that takes promise of `a` array and maybe promise `b`
+  // as arguments and returns promise for `a.concat(b)`.
+  function promisedConcat(promises, unknown) {
+    return promises.then(function(values) {
+      return Promise.resolve(unknown).then(function(value) {
+        return values.concat([ value ]);
+      });
+    });
+  }
+
+  return function promised(f, prototype) {
+    /**
+    Returns a wrapped `f`, which when called returns a promise that resolves to
+    `f(...)` passing all the given arguments to it, which by the way may be
+    promises. Optionally second `prototype` argument may be provided to be used
+    a prototype for a returned promise.
+
+    ## Example
+
+    var promise = promised(Array)(1, promise(2), promise(3))
+    promise.then(console.log) // => [ 1, 2, 3 ]
+    **/
+
+    return function promised() {
+      // create array of [ f, this, args... ]
+      return concat.apply([ f, this ], arguments).
+          // reduce it via `promisedConcat` to get promised array of fulfillments
+          reduce(promisedConcat, Promise.resolve([], prototype)).
+          // finally map that to promise of `f.apply(this, args...)`
+          then(execute);
+    };
+  };
+})();
+
+/**
+ * Convert an array of promises to a single promise, which is resolved (with an
+ * array containing resolved values) only when all the component promises are
+ * resolved.
+ */
+Promise.all = Promise.promised(Array);
+
+
+
 
 /**
  * A "Toolbox" is the component that holds all the tools for one specific
@@ -55,7 +118,7 @@ XPCOMUtils.defineLazyGetter(this, "Requisition", function() {
  * @param {Toolbox.HostType} hostType
  *        Type of host that will host the toolbox (e.g. sidebar, window)
  */
-function Toolbox(target, selectedTool, hostType) {
+this.Toolbox = function Toolbox(target, selectedTool, hostType) {
   this._target = target;
   this._toolPanels = new Map();
 
@@ -89,7 +152,6 @@ function Toolbox(target, selectedTool, hostType) {
   gDevTools.on("tool-registered", this._toolRegistered);
   gDevTools.on("tool-unregistered", this._toolUnregistered);
 }
-exports.Toolbox = Toolbox;
 
 /**
  * The toolbox can be 'hosted' either embedded in a browser window
