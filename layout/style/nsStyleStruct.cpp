@@ -1992,11 +1992,11 @@ void nsTimingFunction::AssignFromKeyword(int32_t aTimingFunctionType)
                     "transition timing function constants not as expected");
 
   static const float timingFunctionValues[5][4] = {
-    { 0.25, 0.10, 0.25, 1.00 }, // ease
-    { 0.00, 0.00, 1.00, 1.00 }, // linear
-    { 0.42, 0.00, 1.00, 1.00 }, // ease-in
-    { 0.00, 0.00, 0.58, 1.00 }, // ease-out
-    { 0.42, 0.00, 0.58, 1.00 }  // ease-in-out
+    { 0.25f, 0.10f, 0.25f, 1.00f }, // ease
+    { 0.00f, 0.00f, 1.00f, 1.00f }, // linear
+    { 0.42f, 0.00f, 1.00f, 1.00f }, // ease-in
+    { 0.00f, 0.00f, 0.58f, 1.00f }, // ease-out
+    { 0.42f, 0.00f, 0.58f, 1.00f }  // ease-in-out
   };
 
   NS_ABORT_IF_FALSE(0 <= aTimingFunctionType && aTimingFunctionType < 5,
