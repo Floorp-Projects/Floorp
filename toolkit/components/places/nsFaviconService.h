@@ -61,7 +61,7 @@ public:
   /**
    * Obtains the service's object.
    */
-  static nsFaviconService* GetSingleton();
+  static already_AddRefed<nsFaviconService> GetSingleton();
 
   /**
    * Initializes the service's object.  This should only be called once.

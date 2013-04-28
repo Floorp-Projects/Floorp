@@ -321,8 +321,8 @@ nsGenericHTMLElement::Dataset()
     slots->mDataset = new nsDOMStringMap(this);
   }
 
-  NS_ADDREF(slots->mDataset);
-  return slots->mDataset;
+  nsRefPtr<nsDOMStringMap> ret = slots->mDataset;
+  return ret.forget();
 }
 
 nsresult
