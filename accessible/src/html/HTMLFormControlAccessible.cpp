@@ -543,6 +543,91 @@ HTMLFileInputAccessible::HandleAccEvent(AccEvent* aEvent)
   return NS_OK;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+// HTMLRangeAccessible
+////////////////////////////////////////////////////////////////////////////////
+
+NS_IMPL_ISUPPORTS_INHERITED1(HTMLRangeAccessible, LeafAccessible,
+                             nsIAccessibleValue)
+
+role
+HTMLRangeAccessible::NativeRole()
+{
+  return roles::SLIDER;
+}
+
+bool
+HTMLRangeAccessible::IsWidget() const
+{
+  return true;
+}
+
+void
+HTMLRangeAccessible::Value(nsString& aValue)
+{
+  LeafAccessible::Value(aValue);
+  if (!aValue.IsEmpty())
+    return;
+
+  HTMLInputElement::FromContent(mContent)->GetValue(aValue);
+}
+
+NS_IMETHODIMP
+HTMLRangeAccessible::GetMaximumValue(double* aMaximumValue)
+{
+  nsresult rv = LeafAccessible::GetMaximumValue(aMaximumValue);
+  if (rv != NS_OK_NO_ARIA_VALUE)
+    return rv;
+
+  *aMaximumValue = HTMLInputElement::FromContent(mContent)->GetMaximum();
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+HTMLRangeAccessible::GetMinimumValue(double* aMinimumValue)
+{
+  nsresult rv = LeafAccessible::GetMinimumValue(aMinimumValue);
+  if (rv != NS_OK_NO_ARIA_VALUE)
+    return rv;
+
+  *aMinimumValue = HTMLInputElement::FromContent(mContent)->GetMinimum();
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+HTMLRangeAccessible::GetMinimumIncrement(double* aMinimumIncrement)
+{
+  nsresult rv = LeafAccessible::GetMinimumIncrement(aMinimumIncrement);
+  if (rv != NS_OK_NO_ARIA_VALUE)
+    return rv;
+
+  *aMinimumIncrement = HTMLInputElement::FromContent(mContent)->GetStep();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLRangeAccessible::GetCurrentValue(double* aCurrentValue)
+{
+  nsresult rv = LeafAccessible::GetCurrentValue(aCurrentValue);
+  if (rv != NS_OK_NO_ARIA_VALUE)
+    return rv;
+
+  *aCurrentValue = HTMLInputElement::FromContent(mContent)->GetValueAsDouble();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLRangeAccessible::SetCurrentValue(double aValue)
+{
+  ErrorResult er;
+  HTMLInputElement::FromContent(mContent)->SetValueAsNumber(aValue, er);
+  return er.ErrorCode();
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 // HTMLGroupboxAccessible
 ////////////////////////////////////////////////////////////////////////////////
