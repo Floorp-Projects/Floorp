@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/layers/AsyncCompositionManager.h" // for ViewTransform
 #include "CompositorParent.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -19,6 +20,7 @@
 #include "Layers.h"
 #include "AnimationCommon.h"
 #include <algorithm>
+#include "mozilla/layers/LayerManagerComposite.h"
 
 using namespace mozilla::css;
 
