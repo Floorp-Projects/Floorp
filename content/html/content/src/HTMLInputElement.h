@@ -602,6 +602,14 @@ public:
     aRv = ApplyStep(-aN);
   }
 
+  /**
+   * Returns the current step value.
+   * Returns kStepAny if the current step is "any" string.
+   *
+   * @return the current step value.
+   */
+  double GetStep() const;
+
   void GetValidationMessage(nsAString& aValidationMessage, ErrorResult& aRv);
 
   // XPCOM GetCustomVisibility() is OK
@@ -1026,14 +1034,6 @@ protected:
     * http://www.whatwg.org/specs/web-apps/current-work/multipage/common-input-element-attributes.html#concept-input-step-scale
     */
   double GetStepScaleFactor() const;
-
-  /**
-   * Returns the current step value.
-   * Returns kStepAny if the current step is "any" string.
-   *
-   * @return the current step value.
-   */
-  double GetStep() const;
 
   /**
    * Return the base used to compute if a value matches step.
