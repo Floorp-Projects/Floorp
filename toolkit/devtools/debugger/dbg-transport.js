@@ -182,7 +182,7 @@ DebuggerTransport.prototype = {
         Cu.reportError(msg);
       }
       dump(msg + "\n");
-      dumpn("Packet was: " + JSON.stringify(packet));
+      dumpn("Packet was: " + packet);
     }
 
     return true;
@@ -229,7 +229,7 @@ LocalDebuggerTransport.prototype = {
         Cu.reportError(msg);
       }
       dump(msg + "\n");
-      dump("Packet was: " + JSON.stringify(aPacket) + "\n");
+      dumpn("Packet was: " + aPacket + "\n");
     }
   },
 
