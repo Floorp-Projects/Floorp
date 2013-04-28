@@ -8,6 +8,8 @@
 
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
 
   <script type="application/javascript"
           src="../common.js"></script>
@@ -79,21 +81,46 @@
       }
     }
 
-    function changeProcessValue(aID, aValue) {
-        this.DOMNode = getNode(aID);
+    function changeProgressValue(aID, aValue)
+    {
+      this.DOMNode = getNode(aID);
 
-        this.invoke = function changeProcessValue_invoke() {
-            this.DOMNode.value = aValue;
-        }
+      this.invoke = function changeProgressValue_invoke()
+      {
+         this.DOMNode.value = aValue;
+      }
 
-        this.check = function changeProcessValue_check() {
-            var acc = getAccessible(this.DOMNode);
-            is(acc.value, aValue+"%", "Wrong value for " + prettyName(aID));
-        }
+      this.check = function changeProgressValue_check()
+      {
+        var acc = getAccessible(this.DOMNode);
+        is(acc.value, aValue+"%", "Wrong value for " + prettyName(aID));
+      }
 
-        this.getID = function changeProcessValue_getID() {
-            return prettyName(aID) + " value changed";
-        }
+      this.getID = function changeProgressValue_getID()
+      {
+        return prettyName(aID) + " value changed";
+      }
+    }
+
+    function changeRangeValue(aID)
+    {
+      this.DOMNode = getNode(aID);
+
+      this.invoke = function changeRangeValue_invoke()
+      {
+        synthesizeMouse(getNode(aID), 5, 5, { });
+      }
+
+      this.finalCheck = function changeRangeValue_finalCheck()
+      {
+        var acc = getAccessible(this.DOMNode);
+        is(acc.value, "0", "Wrong value for " + prettyName(aID));
+      }
+
+      this.getID = function changeRangeValue_getID()
+      {
+        return prettyName(aID) + " range value changed";
+      }
     }
 
     function doTests()
@@ -104,6 +131,7 @@
       testValue("slider_vt", "hi", 0, 0, 3, 0);
       testValue("scrollbar", "5", 5, 0, 1000, 0);
       testValue("progress", "22%", 22, 0, 100, 0);
+      testValue("range", "6", 6, 0, 10, 1);
 
       // Test value change events
       gQueue = new eventQueue(nsIAccessibleEvent.EVENT_VALUE_CHANGE);
@@ -115,7 +143,8 @@
 
       gQueue.push(new changeValue("combobox", "hello"));
 
-      gQueue.push(new changeProcessValue("progress", "50"));
+      gQueue.push(new changeProgressValue("progress", "50"));
+      gQueue.push(new changeRangeValue("range"));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
@@ -136,6 +165,11 @@
     href="https://bugzilla.mozilla.org/show_bug.cgi?id=529289"
     title="We dont expose new aria role 'scrollbar' and property aria-orientation">
    Mozilla Bug 529289
+  </a>
+  <a target="_blank"
+    href="https://bugzilla.mozilla.org/show_bug.cgi?id=559764"
+    title="Make HTML5 input@type=range element accessible">
+   Mozilla Bug 559764
   </a>
   <a target="_blank"
     href="https://bugzilla.mozilla.org/show_bug.cgi?id=703202"
@@ -174,6 +208,9 @@
 
   <!-- progress bar -->
   <progress id="progress" value="22" max="100"></progress>
+
+  <!-- input@type="range" -->
+  <input type="range" id="range" min="0" max="10" value="6">
 
 </body>
 </html>

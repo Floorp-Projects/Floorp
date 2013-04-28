@@ -52,6 +52,10 @@ public:
 
   virtual bool IsLeaf() const MOZ_OVERRIDE { return true; }
 
+#ifdef ACCESSIBILITY
+  virtual mozilla::a11y::AccType AccessibleType() MOZ_OVERRIDE;
+#endif
+
   // nsIAnonymousContentCreator
   virtual nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements) MOZ_OVERRIDE;
   virtual void AppendAnonymousContentTo(nsBaseContentList& aElements,
