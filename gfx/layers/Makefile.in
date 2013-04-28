@@ -97,6 +97,7 @@ endif
 endif
 
 CPPSRCS += \
+        AsyncCompositionManager.cpp \
         AsyncPanZoomController.cpp \
         Axis.cpp \
         CanvasClient.cpp \

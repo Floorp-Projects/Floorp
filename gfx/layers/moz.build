@@ -58,6 +58,7 @@ EXPORTS.gfxipc += [
 ]
 
 EXPORTS.mozilla.layers += [
+    'AsyncCompositionManager.h',
     'AsyncPanZoomController.h',
     'Axis.h',
     'CanvasClient.h',
