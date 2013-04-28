@@ -601,9 +601,7 @@ gfxFT2Font::GetOrMakeFont(FT2FontEntry *aFontEntry, const gfxFontStyle *aStyle,
             return nullptr;
         gfxFontCache::GetCache()->AddNew(font);
     }
-    gfxFont *f = nullptr;
-    font.swap(f);
-    return static_cast<gfxFT2Font *>(f);
+    return font.forget().downcast<gfxFT2Font>();
 }
 
 void
