@@ -2791,12 +2791,12 @@ TryGetTabChildGlobalAsEventTarget(nsISupports *aFrom)
 {
   nsCOMPtr<nsIFrameLoaderOwner> frameLoaderOwner = do_QueryInterface(aFrom);
   if (!frameLoaderOwner) {
-    return NULL;
+    return nullptr;
   }
 
   nsRefPtr<nsFrameLoader> frameLoader = frameLoaderOwner->GetFrameLoader();
   if (!frameLoader) {
-    return NULL;
+    return nullptr;
   }
 
   nsCOMPtr<EventTarget> target = frameLoader->GetTabChildGlobalAsEventTarget();

@@ -287,11 +287,10 @@ nsAccessibilityService::CreatePluginAccessible(nsObjectFrame* aFrame,
     HWND pluginPort = nullptr;
     aFrame->GetPluginPort(&pluginPort);
 
-    Accessible* accessible =
+    nsRefPtr<Accessible> accessible =
       new HTMLWin32ObjectOwnerAccessible(aContent, aContext->Document(),
                                          pluginPort);
-    NS_ADDREF(accessible);
-    return accessible;
+    return accessible.forget();
 
 #elif MOZ_ACCESSIBILITY_ATK
     if (!AtkSocketAccessible::gCanEmbed)

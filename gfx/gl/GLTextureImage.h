@@ -214,10 +214,10 @@ public:
 
     /**
      * If this TextureImage has a permanent gfxASurface backing,
-     * return it.  Otherwise return NULL.
+     * return it.  Otherwise return nullptr.
      */
     virtual already_AddRefed<gfxASurface> GetBackingSurface()
-    { return NULL; }
+    { return nullptr; }
 
     const nsIntSize& GetSize() const { return mSize; }
     ContentType GetContentType() const { return mContentType; }
