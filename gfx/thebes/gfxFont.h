@@ -1383,7 +1383,6 @@ public:
     struct THEBES_API RunMetrics {
         RunMetrics() {
             mAdvanceWidth = mAscent = mDescent = 0.0;
-            mBoundingBox = gfxRect(0,0,0,0);
         }
 
         void CombineWith(const RunMetrics& aOther, bool aOtherIsOnLeft);
