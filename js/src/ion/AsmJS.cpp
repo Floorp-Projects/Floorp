@@ -3514,14 +3514,14 @@ CheckCoerceToInt(FunctionCompiler &f, ParseNode *expr, MDefinition **def, Type *
     if (!CheckExpr(f, operand, Use::ToInt32, &operandDef, &operandType))
         return false;
 
-    if (operandType.isDoublish()) {
+    if (operandType.isDouble()) {
         *def = f.unary<MTruncateToInt32>(operandDef);
         *type = Type::Signed;
         return true;
     }
 
     if (!operandType.isIntish())
-        return f.fail("Operand to ~ must be intish or doublish", operand);
+        return f.fail("Operand to ~ must be intish or double", operand);
 
     *def = operandDef;
     *type = Type::Signed;
@@ -3708,19 +3708,14 @@ CheckAddOrSub(FunctionCompiler &f, ParseNode *expr, Use use, MDefinition **def, 
         return true;
     }
 
-    if (expr->isKind(PNK_ADD) && lhsType.isDouble() && rhsType.isDouble()) {
-        *def = f.binary<MAdd>(lhsDef, rhsDef, MIRType_Double);
-        *type = Type::Double;
-        return true;
-    }
+    if (!lhsType.isDouble() || !rhsType.isDouble())
+        return f.fail("Arguments to + or - must both be ints or doubles", expr);
 
-    if (expr->isKind(PNK_SUB) && lhsType.isDoublish() && rhsType.isDoublish()) {
-        *def = f.binary<MSub>(lhsDef, rhsDef, MIRType_Double);
-        *type = Type::Double;
-        return true;
-    }
-
-    return f.fail("Arguments to + or - must both be ints or doubles", expr);
+    *def = expr->isKind(PNK_ADD)
+           ? f.binary<MAdd>(lhsDef, rhsDef, MIRType_Double)
+           : f.binary<MSub>(lhsDef, rhsDef, MIRType_Double);
+    *type = Type::Double;
+    return true;
 }
 
 static bool
