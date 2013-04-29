@@ -93,7 +93,7 @@ this.TouchAdapter = {
           this.eventsOfInterest, ['mouseenter', 'mousemove', 'mouseleave']);
       }
     } else {
-      this.eventsOfInterest = ['mousedown', 'mousemove', 'mouseup'];
+      this.eventsOfInterest = ['mousedown', 'mousemove', 'mouseup', 'click'];
     }
 
     return this.eventsOfInterest;
