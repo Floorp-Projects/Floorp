@@ -3126,13 +3126,14 @@ JS::Value
 nsGenericHTMLElement::GetItemValue(JSContext* aCx, JSObject* aScope,
                                    ErrorResult& aError)
 {
+  JS::Rooted<JSObject*> scope(aCx, aScope);
   if (!HasAttr(kNameSpaceID_None, nsGkAtoms::itemprop)) {
     return JS::NullValue();
   }
 
   if (ItemScope()) {
     JS::Value v;
-    if (!mozilla::dom::WrapObject(aCx, aScope, this, &v)) {
+    if (!mozilla::dom::WrapObject(aCx, scope, this, &v)) {
       aError.Throw(NS_ERROR_FAILURE);
       return JS::UndefinedValue();
     }

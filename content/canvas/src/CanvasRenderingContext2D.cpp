@@ -1291,7 +1291,7 @@ CanvasRenderingContext2D::SetStyleFromJSValue(JSContext* cx,
 }
 
 static JS::Value
-WrapStyle(JSContext* cx, JSObject* obj,
+WrapStyle(JSContext* cx, JSObject* objArg,
           CanvasRenderingContext2D::CanvasMultiGetterType type,
           nsAString& str, nsISupports* supports, ErrorResult& error)
 {
@@ -1306,6 +1306,7 @@ WrapStyle(JSContext* cx, JSObject* obj,
     case CanvasRenderingContext2D::CMG_STYLE_PATTERN:
     case CanvasRenderingContext2D::CMG_STYLE_GRADIENT:
     {
+      JS::Rooted<JSObject*> obj(cx, objArg);
       ok = dom::WrapObject(cx, obj, supports, &v);
       break;
     }
