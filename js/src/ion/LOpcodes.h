@@ -76,7 +76,6 @@
     _(CompareDAndBranch)            \
     _(CompareS)                     \
     _(CompareStrictS)               \
-    _(ParCompareS)                  \
     _(CompareB)                     \
     _(CompareBAndBranch)            \
     _(CompareV)                     \
@@ -159,8 +158,10 @@
     _(StoreElementHoleT)            \
     _(LoadTypedArrayElement)        \
     _(LoadTypedArrayElementHole)    \
+    _(LoadTypedArrayElementStatic)  \
     _(StoreTypedArrayElement)       \
     _(StoreTypedArrayElementHole)   \
+    _(StoreTypedArrayElementStatic) \
     _(EffectiveAddress)             \
     _(ClampIToUint8)                \
     _(ClampDToUint8)                \

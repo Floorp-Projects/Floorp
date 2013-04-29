@@ -150,8 +150,8 @@ public class testBookmarksTab extends BaseTest {
         mAsserter.is(checkBookmarkEdit(1,"Bookmark Link",list), true, "Bookmark Link was changed");
 
         // Test edit bookmark keyword
-        editBookmark(1,2," Bookmark Keyword ",list);
-        mAsserter.is(checkBookmarkEdit(1,"Bookmark Keyword",list), true, "Bookmark Keyword was changed");
+        editBookmark(1,2," BookmarkKeyword ",list);
+        mAsserter.is(checkBookmarkEdit(1,"BookmarkKeyword",list), true, "Bookmark Keyword was changed");
 
         // Remove Bookmark from Context Menu
         waitForText("Bookmarks");

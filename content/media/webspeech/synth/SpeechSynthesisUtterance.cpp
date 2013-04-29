@@ -71,10 +71,10 @@ SpeechSynthesisUtterance::Constructor(GlobalObject& aGlobal,
   }
 
   MOZ_ASSERT(win->IsInnerWindow());
-  SpeechSynthesisUtterance* object = new SpeechSynthesisUtterance(aText);
-  NS_ADDREF(object);
+  nsRefPtr<SpeechSynthesisUtterance> object =
+    new SpeechSynthesisUtterance(aText);
   object->BindToOwner(win);
-  return object;
+  return object.forget();
 }
 
 void

@@ -346,7 +346,7 @@ ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapperArg, jsid idArg, Wr
         return false;
     }
 
-    JSObject *hallpass = &exposedProps.toObject();
+    RootedObject hallpass(cx, &exposedProps.toObject());
 
     if (!AccessCheck::subsumes(js::UncheckedUnwrap(hallpass), wrappedObject)) {
         EnterAndThrow(cx, wrapper, "Invalid __exposedProps__");
@@ -355,19 +355,19 @@ ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapperArg, jsid idArg, Wr
 
     Access access = NO_ACCESS;
 
-    JSPropertyDescriptor desc;
-    if (!JS_GetPropertyDescriptorById(cx, hallpass, id, 0, &desc)) {
+    Rooted<JSPropertyDescriptor> desc(cx);
+    if (!JS_GetPropertyDescriptorById(cx, hallpass, id, 0, desc.address())) {
         return false; // Error
     }
-    if (!desc.obj || !(desc.attrs & JSPROP_ENUMERATE))
+    if (!desc.object() || !desc.isEnumerable())
         return false;
 
-    if (!JSVAL_IS_STRING(desc.value)) {
+    if (!desc.value().isString()) {
         EnterAndThrow(cx, wrapper, "property must be a string");
         return false;
     }
 
-    JSString *str = JSVAL_TO_STRING(desc.value);
+    JSString *str = desc.value().toString();
     size_t length;
     const jschar *chars = JS_GetStringCharsAndLength(cx, str, &length);
     if (!chars)

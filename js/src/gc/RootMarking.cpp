@@ -519,10 +519,8 @@ AutoGCRooter::trace(JSTracer *trc)
       }
 
       case HASHABLEVALUE: {
-          /*
         HashableValue::AutoRooter *rooter = static_cast<HashableValue::AutoRooter *>(this);
         rooter->trace(trc);
-          */
         return;
       }
 

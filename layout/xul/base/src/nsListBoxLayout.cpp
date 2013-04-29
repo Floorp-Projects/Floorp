@@ -207,7 +207,6 @@ nsListBoxLayout::LayoutInternal(nsIFrame* aBox, nsBoxLayoutState& aState)
 
 already_AddRefed<nsBoxLayout> NS_NewListBoxLayout()
 {
-  nsBoxLayout* layout = new nsListBoxLayout();
-  NS_IF_ADDREF(layout);
-  return layout;
+  nsRefPtr<nsBoxLayout> layout = new nsListBoxLayout();
+  return layout.forget();
 } 

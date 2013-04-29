@@ -6,22 +6,17 @@
 
 /* JS reflection package. */
 
+#include "jsreflect.h"
+
 #include <stdlib.h>
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Util.h"
 
 #include "jspubtd.h"
+#include "jsarray.h"
 #include "jsatom.h"
 #include "jsobj.h"
-#include "jsreflect.h"
-#include "jsprf.h"
-#include "jsiter.h"
-#include "jsbool.h"
-#include "jsinferinlines.h"
-#include "jsobjinlines.h"
-#include "jsarray.h"
-#include "jsnum.h"
 
 #include "frontend/Parser.h"
 #include "frontend/ParseNode-inl.h"
@@ -29,7 +24,7 @@
 #include "js/CharacterEncoding.h"
 #include "vm/RegExpObject.h"
 
-#include "jsscriptinlines.h"
+#include "jsobjinlines.h"
 
 using namespace js;
 using namespace js::frontend;

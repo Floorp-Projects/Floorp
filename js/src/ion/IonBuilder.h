@@ -324,6 +324,8 @@ class IonBuilder : public MIRGenerator
     MInstruction *addShapeGuard(MDefinition *obj, const RawShape shape, BailoutKind bailoutKind);
 
     JSObject *getNewArrayTemplateObject(uint32_t count);
+    MDefinition *convertShiftToMaskForStaticTypedArray(MDefinition *id,
+                                                       ArrayBufferView::ViewType viewType);
 
     bool invalidatedIdempotentCache();
 
@@ -377,10 +379,12 @@ class IonBuilder : public MIRGenerator
     bool jsop_getelem();
     bool jsop_getelem_dense();
     bool jsop_getelem_typed(int arrayType);
+    bool jsop_getelem_typed_static(bool *psucceeded);
     bool jsop_getelem_string();
     bool jsop_setelem();
     bool jsop_setelem_dense(types::StackTypeSet::DoubleConversion conversion);
     bool jsop_setelem_typed(int arrayType);
+    bool jsop_setelem_typed_static(bool *psucceeded);
     bool jsop_length();
     bool jsop_length_fastPath();
     bool jsop_arguments();

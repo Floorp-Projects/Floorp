@@ -379,6 +379,16 @@ public:
     return mValue;
   }
 
+  JS::Value* operator&()
+  {
+    return &mValue;
+  }
+
+  const JS::Value* operator&() const
+  {
+    return &mValue;
+  }
+
 private:
   // Don't allow copy-construction of these objects, because it'll do the wrong
   // thing with our flag mCx.

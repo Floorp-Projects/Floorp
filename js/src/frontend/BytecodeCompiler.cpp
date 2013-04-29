@@ -365,7 +365,7 @@ frontend::CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, CompileO
     // If the context is strict, immediately parse the body in strict
     // mode. Otherwise, we parse it normally. If we see a "use strict"
     // directive, we backup and reparse it as strict.
-    TokenStream::Position start;
+    TokenStream::Position start(parser.keepAtoms);
     parser.tokenStream.tell(&start);
     bool initiallyStrict = StrictModeFromContext(cx);
     bool becameStrict;

@@ -15,6 +15,10 @@
 #include "mozilla/layers/PGrallocBufferChild.h"
 #include "mozilla/layers/PGrallocBufferParent.h"
 
+// used only for hacky fix in gecko 23 for bug 862324
+// see bug 865908 about fixing this.
+#include "TextureHost.h"
+
 #define MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
 #define MOZ_HAVE_PLATFORM_SPECIFIC_LAYER_BUFFERS
 
@@ -81,6 +85,14 @@ public:
   static android::sp<GraphicBuffer>
   GetFrom(const SurfaceDescriptorGralloc& aDescriptor);
 
+  // used only for hacky fix in gecko 23 for bug 862324
+  // see bug 865908 about fixing this.
+  void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
+
+  // used only for hacky fix in gecko 23 for bug 862324
+  // see bug 865908 about fixing this.
+  void SetTextureHost(TextureHost* aTextureHost);
+
 private:
   GrallocBufferActor();
 
@@ -91,6 +103,10 @@ private:
   // This value stores the number of bytes allocated in this
   // BufferActor. This will be used for the memory reporter.
   size_t mAllocBytes;
+
+  // used only for hacky fix in gecko 23 for bug 862324
+  // see bug 865908 about fixing this.
+  TextureHost* mTextureHost;
 
   friend class ISurfaceAllocator;
 };

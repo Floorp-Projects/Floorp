@@ -53,6 +53,7 @@ public:
   NS_IMETHOD GetAnimationMode(uint16_t* aAnimationMode) MOZ_OVERRIDE;
   NS_IMETHOD SetAnimationMode(uint16_t aAnimationMode) MOZ_OVERRIDE;
   NS_IMETHOD ResetAnimation() MOZ_OVERRIDE;
+  NS_IMETHOD_(float) GetFrameIndex(uint32_t aWhichFrame) MOZ_OVERRIDE;
 
 protected:
   FrozenImage(Image* aImage) : ImageWrapper(aImage) { }

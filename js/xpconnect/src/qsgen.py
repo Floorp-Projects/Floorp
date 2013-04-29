@@ -226,7 +226,6 @@ class Configuration:
         # optional settings
         self.irregularFilenames = config.get('irregularFilenames', {})
         self.customIncludes = config.get('customIncludes', [])
-        self.customReturnInterfaces = config.get('customReturnInterfaces', [])
         self.customMethodCalls = config.get('customMethodCalls', {})
         self.newBindingProperties = config.get('newBindingProperties', {})
 
@@ -313,10 +312,6 @@ def readConfigFile(filename, includePath, cachedir):
     for iface in stubbedInterfaces:
         for member in iface.stubMembers:
             checkStubMember(member)
-
-    for iface in conf.customReturnInterfaces:
-        # just ensure that it exists so that we can grab it later
-        iface = getInterface(iface, errorLoc='looking for %s' % (iface,))
 
     return conf, interfaces
 
@@ -1271,7 +1266,6 @@ def writeStubFile(filename, headerFilename, conf, interfaces):
         resulttypes = []
         for iface in interfaces:
             resulttypes.extend(writeIncludesForInterface(iface))
-        resulttypes.extend(conf.customReturnInterfaces)
         for customInclude in conf.customIncludes:
             f.write('#include "%s"\n' % customInclude)
         f.write("\n\n")

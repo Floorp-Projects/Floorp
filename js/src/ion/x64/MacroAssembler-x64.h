@@ -318,51 +318,21 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         splitTag(src, ScratchReg);
         return testGCThing(cond, ScratchReg);
     }
+    Condition testGCThing(Condition cond, const BaseIndex &src) {
+        splitTag(src, ScratchReg);
+        return testGCThing(cond, ScratchReg);
+    }
     Condition testMagic(Condition cond, const Address &src) {
+        splitTag(src, ScratchReg);
+        return testMagic(cond, ScratchReg);
+    }
+    Condition testMagic(Condition cond, const BaseIndex &src) {
         splitTag(src, ScratchReg);
         return testMagic(cond, ScratchReg);
     }
     Condition testPrimitive(Condition cond, const ValueOperand &src) {
         splitTag(src, ScratchReg);
         return testPrimitive(cond, ScratchReg);
-    }
-
-
-    Condition testUndefined(Condition cond, const BaseIndex &src) {
-        splitTag(src, ScratchReg);
-        return testUndefined(cond, ScratchReg);
-    }
-    Condition testNull(Condition cond, const BaseIndex &src) {
-        splitTag(src, ScratchReg);
-        return testNull(cond, ScratchReg);
-    }
-    Condition testBoolean(Condition cond, const BaseIndex &src) {
-        splitTag(src, ScratchReg);
-        return testBoolean(cond, ScratchReg);
-    }
-    Condition testString(Condition cond, const BaseIndex &src) {
-        splitTag(src, ScratchReg);
-        return testString(cond, ScratchReg);
-    }
-    Condition testInt32(Condition cond, const BaseIndex &src) {
-        splitTag(src, ScratchReg);
-        return testInt32(cond, ScratchReg);
-    }
-    Condition testObject(Condition cond, const BaseIndex &src) {
-        splitTag(src, ScratchReg);
-        return testObject(cond, ScratchReg);
-    }
-    Condition testDouble(Condition cond, const BaseIndex &src) {
-        splitTag(src, ScratchReg);
-        return testDouble(cond, ScratchReg);
-    }
-    Condition testMagic(Condition cond, const BaseIndex &src) {
-        splitTag(src, ScratchReg);
-        return testMagic(cond, ScratchReg);
-    }
-    Condition testGCThing(Condition cond, const BaseIndex &src) {
-        splitTag(src, ScratchReg);
-        return testGCThing(cond, ScratchReg);
     }
 
     Condition isMagic(Condition cond, const ValueOperand &src, JSWhyMagic why) {
@@ -508,6 +478,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
     void branchTestPtr(Condition cond, Register lhs, Imm32 imm, Label *label) {
         testq(lhs, imm);
+        j(cond, label);
+    }
+    void branchTestPtr(Condition cond, const Address &lhs, Imm32 imm, Label *label) {
+        testq(Operand(lhs), imm);
         j(cond, label);
     }
     void decBranchPtr(Condition cond, const Register &lhs, Imm32 imm, Label *label) {

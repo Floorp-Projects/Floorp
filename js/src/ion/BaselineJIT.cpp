@@ -265,7 +265,7 @@ ion::CanEnterBaselineJIT(JSContext *cx, JSScript *scriptArg, StackFrame *fp, boo
     if (IsJSDEnabled(cx)) {
         if (JSOp(*cx->regs().pc) == JSOP_LOOPENTRY) // No OSR.
             return Method_Skipped;
-    } else if (scriptArg->incUseCount() <= js_IonOptions.baselineUsesBeforeCompile) {
+    } else if (script->incUseCount() <= js_IonOptions.baselineUsesBeforeCompile) {
         return Method_Skipped;
     }
 

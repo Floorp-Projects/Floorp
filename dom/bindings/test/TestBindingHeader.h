@@ -132,6 +132,18 @@ public:
   static
   already_AddRefed<TestInterface> Test(const GlobalObject&, const nsAString&,
                                        ErrorResult&);
+  static
+  already_AddRefed<TestInterface> Test2(const GlobalObject&,
+                                        JSContext*,
+                                        const DictForConstructor&,
+                                        JS::Value,
+                                        JSObject&,
+                                        JSObject*,
+                                        const Sequence<Dict>&,
+                                        const Optional<JS::Value>&,
+                                        const Optional<NonNull<JSObject> >&,
+                                        const Optional<JSObject*>&,
+                                        ErrorResult&);
 
   // Integer types
   int8_t ReadonlyByte();
@@ -686,6 +698,25 @@ private:
   void PassOptionalNullableString(Optional<nsAString>&) MOZ_DELETE;
   void PassOptionalNullableStringWithDefaultValue(nsAString&) MOZ_DELETE;
   void PassVariadicString(Sequence<nsString>&) MOZ_DELETE;
+
+  // Make sure dictionary arguments are always const
+  void PassDictionary(JSContext*, Dict&) MOZ_DELETE;
+  void PassOtherDictionary(GrandparentDict&) MOZ_DELETE;
+  void PassSequenceOfDictionaries(JSContext*, Sequence<Dict>&) MOZ_DELETE;
+  void PassDictionaryOrLong(JSContext*, Dict&) MOZ_DELETE;
+  void PassDictContainingDict(JSContext*, DictContainingDict&) MOZ_DELETE;
+  void PassDictContainingSequence(DictContainingSequence&) MOZ_DELETE;
+
+  // Make sure various nullable things are always const
+  void PassNullableEnum(Nullable<TestEnum>&) MOZ_DELETE;
+
+  // Make sure unions are always const
+  void PassUnion(JSContext*, ObjectOrLong& arg) MOZ_DELETE;
+  void PassUnionWithNullable(JSContext*, ObjectOrNullOrLong& arg) MOZ_DELETE;
+  void PassNullableUnion(JSContext*, Nullable<ObjectOrLong>&) MOZ_DELETE;
+  void PassOptionalUnion(JSContext*, Optional<ObjectOrLong>&) MOZ_DELETE;
+  void PassOptionalNullableUnion(JSContext*, Optional<Nullable<ObjectOrLong> >&) MOZ_DELETE;
+  void PassOptionalNullableUnionWithDefaultValue(JSContext*, Nullable<ObjectOrLong>&) MOZ_DELETE;
 };
 
 class TestIndexedGetterInterface : public nsISupports,

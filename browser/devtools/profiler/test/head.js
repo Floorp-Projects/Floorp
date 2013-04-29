@@ -5,11 +5,9 @@ let temp = {};
 const PROFILER_ENABLED = "devtools.profiler.enabled";
 const REMOTE_ENABLED = "devtools.debugger.remote-enabled";
 
-Cu.import("resource:///modules/devtools/Target.jsm", temp);
-let TargetFactory = temp.TargetFactory;
-
 Cu.import("resource:///modules/devtools/gDevTools.jsm", temp);
 let gDevTools = temp.gDevTools;
+let TargetFactory = temp.devtools.TargetFactory;
 
 Cu.import("resource://gre/modules/devtools/dbg-server.jsm", temp);
 let DebuggerServer = temp.DebuggerServer;

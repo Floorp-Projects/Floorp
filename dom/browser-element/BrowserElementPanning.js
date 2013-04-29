@@ -371,13 +371,20 @@ const ContentPanning = {
     let isScrolling = false;
     let oldX, oldY, newX, newY;
     let win, doc, htmlNode, bodyNode;
+    let xScrollable = content.scrollWidth > content.clientWidth;
+    let yScrollable = content.scrollHeight > content.clientHeight;
 
     function doScroll(node, delta) {
       if (node instanceof Ci.nsIDOMHTMLElement) {
-        oldX = node.scrollLeft, oldY = node.scrollTop;
-        node.scrollLeft += delta.x;
-        node.scrollTop += delta.y;
-        newX = node.scrollLeft, newY = node.scrollTop;
+        newX = oldX = node.scrollLeft, newY = oldY = node.scrollTop;
+        if (xScrollable) {
+           node.scrollLeft += delta.x;
+           newX = node.scrollLeft;
+        }
+        if (yScrollable) {
+           node.scrollTop += delta.y;
+           newY = node.scrollTop;
+        }
         return (newX != oldX || newY != oldY);
       } else if (node instanceof Ci.nsIDOMWindow) {
         win = node;

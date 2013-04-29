@@ -9,8 +9,10 @@
 
 #include <stdio.h>
 
-#include "js/Vector.h"
 #include "jsalloc.h"
+#include "jsutil.h"
+
+#include "js/Vector.h"
 
 namespace js {
 namespace cli {

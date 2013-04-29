@@ -802,7 +802,7 @@ protected:
   nsresult UpdateChannelMuteState(bool aCanPlay);
 
   // Update the audio channel playing state
-  void UpdateAudioChannelPlayingState();
+  virtual void UpdateAudioChannelPlayingState();
 
   // The current decoder. Load() has been called on this decoder.
   // At most one of mDecoder and mSrcStream can be non-null.

@@ -398,3 +398,174 @@ Java_org_mozilla_gecko_GeckoJavaSampler_getProfilerTime(JNIEnv * arg0, jclass ar
   xul_dlsym("Java_org_mozilla_gecko_GeckoJavaSampler_getProfilerTime", &f_Java_org_mozilla_gecko_GeckoJavaSampler_getProfilerTime);
 #endif
 
+#ifdef JNI_STUBS
+
+typedef void (*Java_org_mozilla_gecko_gfx_NativePanZoomController_init_t)(JNIEnv *, jobject);
+static Java_org_mozilla_gecko_gfx_NativePanZoomController_init_t f_Java_org_mozilla_gecko_gfx_NativePanZoomController_init;
+extern "C" NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_gfx_NativePanZoomController_init(JNIEnv * arg0, jobject arg1) {
+    if (!f_Java_org_mozilla_gecko_gfx_NativePanZoomController_init) {
+        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
+                       "JNI Function called before it was loaded");
+        return ;
+    }
+     f_Java_org_mozilla_gecko_gfx_NativePanZoomController_init(arg0, arg1);
+}
+#endif
+
+#ifdef JNI_BINDINGS
+  xul_dlsym("Java_org_mozilla_gecko_gfx_NativePanZoomController_init", &f_Java_org_mozilla_gecko_gfx_NativePanZoomController_init);
+#endif
+
+#ifdef JNI_STUBS
+
+typedef void (*Java_org_mozilla_gecko_gfx_NativePanZoomController_handleTouchEvent_t)(JNIEnv *, jobject, jobject);
+static Java_org_mozilla_gecko_gfx_NativePanZoomController_handleTouchEvent_t f_Java_org_mozilla_gecko_gfx_NativePanZoomController_handleTouchEvent;
+extern "C" NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_gfx_NativePanZoomController_handleTouchEvent(JNIEnv * arg0, jobject arg1, jobject arg2) {
+    if (!f_Java_org_mozilla_gecko_gfx_NativePanZoomController_handleTouchEvent) {
+        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
+                       "JNI Function called before it was loaded");
+        return ;
+    }
+     f_Java_org_mozilla_gecko_gfx_NativePanZoomController_handleTouchEvent(arg0, arg1, arg2);
+}
+#endif
+
+#ifdef JNI_BINDINGS
+  xul_dlsym("Java_org_mozilla_gecko_gfx_NativePanZoomController_handleTouchEvent", &f_Java_org_mozilla_gecko_gfx_NativePanZoomController_handleTouchEvent);
+#endif
+
+#ifdef JNI_STUBS
+
+typedef void (*Java_org_mozilla_gecko_gfx_NativePanZoomController_handleMotionEvent_t)(JNIEnv *, jobject, jobject);
+static Java_org_mozilla_gecko_gfx_NativePanZoomController_handleMotionEvent_t f_Java_org_mozilla_gecko_gfx_NativePanZoomController_handleMotionEvent;
+extern "C" NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_gfx_NativePanZoomController_handleMotionEvent(JNIEnv * arg0, jobject arg1, jobject arg2) {
+    if (!f_Java_org_mozilla_gecko_gfx_NativePanZoomController_handleMotionEvent) {
+        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
+                       "JNI Function called before it was loaded");
+        return ;
+    }
+     f_Java_org_mozilla_gecko_gfx_NativePanZoomController_handleMotionEvent(arg0, arg1, arg2);
+}
+#endif
+
+#ifdef JNI_BINDINGS
+  xul_dlsym("Java_org_mozilla_gecko_gfx_NativePanZoomController_handleMotionEvent", &f_Java_org_mozilla_gecko_gfx_NativePanZoomController_handleMotionEvent);
+#endif
+
+#ifdef JNI_STUBS
+
+typedef jlong (*Java_org_mozilla_gecko_gfx_NativePanZoomController_runDelayedCallback_t)(JNIEnv *, jobject);
+static Java_org_mozilla_gecko_gfx_NativePanZoomController_runDelayedCallback_t f_Java_org_mozilla_gecko_gfx_NativePanZoomController_runDelayedCallback;
+extern "C" NS_EXPORT jlong JNICALL
+Java_org_mozilla_gecko_gfx_NativePanZoomController_runDelayedCallback(JNIEnv * arg0, jobject arg1) {
+    if (!f_Java_org_mozilla_gecko_gfx_NativePanZoomController_runDelayedCallback) {
+        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
+                       "JNI Function called before it was loaded");
+        return 0;
+    }
+    return f_Java_org_mozilla_gecko_gfx_NativePanZoomController_runDelayedCallback(arg0, arg1);
+}
+#endif
+
+#ifdef JNI_BINDINGS
+  xul_dlsym("Java_org_mozilla_gecko_gfx_NativePanZoomController_runDelayedCallback", &f_Java_org_mozilla_gecko_gfx_NativePanZoomController_runDelayedCallback);
+#endif
+
+#ifdef JNI_STUBS
+
+typedef void (*Java_org_mozilla_gecko_gfx_NativePanZoomController_destroy_t)(JNIEnv *, jobject);
+static Java_org_mozilla_gecko_gfx_NativePanZoomController_destroy_t f_Java_org_mozilla_gecko_gfx_NativePanZoomController_destroy;
+extern "C" NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_gfx_NativePanZoomController_destroy(JNIEnv * arg0, jobject arg1) {
+    if (!f_Java_org_mozilla_gecko_gfx_NativePanZoomController_destroy) {
+        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
+                       "JNI Function called before it was loaded");
+        return ;
+    }
+     f_Java_org_mozilla_gecko_gfx_NativePanZoomController_destroy(arg0, arg1);
+}
+#endif
+
+#ifdef JNI_BINDINGS
+  xul_dlsym("Java_org_mozilla_gecko_gfx_NativePanZoomController_destroy", &f_Java_org_mozilla_gecko_gfx_NativePanZoomController_destroy);
+#endif
+
+#ifdef JNI_STUBS
+
+typedef void (*Java_org_mozilla_gecko_gfx_NativePanZoomController_notifyDefaultActionPrevented_t)(JNIEnv *, jobject, jboolean);
+static Java_org_mozilla_gecko_gfx_NativePanZoomController_notifyDefaultActionPrevented_t f_Java_org_mozilla_gecko_gfx_NativePanZoomController_notifyDefaultActionPrevented;
+extern "C" NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_gfx_NativePanZoomController_notifyDefaultActionPrevented(JNIEnv * arg0, jobject arg1, jboolean arg2) {
+    if (!f_Java_org_mozilla_gecko_gfx_NativePanZoomController_notifyDefaultActionPrevented) {
+        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
+                       "JNI Function called before it was loaded");
+        return ;
+    }
+     f_Java_org_mozilla_gecko_gfx_NativePanZoomController_notifyDefaultActionPrevented(arg0, arg1, arg2);
+}
+#endif
+
+#ifdef JNI_BINDINGS
+  xul_dlsym("Java_org_mozilla_gecko_gfx_NativePanZoomController_notifyDefaultActionPrevented", &f_Java_org_mozilla_gecko_gfx_NativePanZoomController_notifyDefaultActionPrevented);
+#endif
+
+#ifdef JNI_STUBS
+
+typedef jboolean (*Java_org_mozilla_gecko_gfx_NativePanZoomController_getRedrawHint_t)(JNIEnv *, jobject);
+static Java_org_mozilla_gecko_gfx_NativePanZoomController_getRedrawHint_t f_Java_org_mozilla_gecko_gfx_NativePanZoomController_getRedrawHint;
+extern "C" NS_EXPORT jboolean JNICALL
+Java_org_mozilla_gecko_gfx_NativePanZoomController_getRedrawHint(JNIEnv * arg0, jobject arg1) {
+    if (!f_Java_org_mozilla_gecko_gfx_NativePanZoomController_getRedrawHint) {
+        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
+                       "JNI Function called before it was loaded");
+        return false;
+    }
+    return f_Java_org_mozilla_gecko_gfx_NativePanZoomController_getRedrawHint(arg0, arg1);
+}
+#endif
+
+#ifdef JNI_BINDINGS
+  xul_dlsym("Java_org_mozilla_gecko_gfx_NativePanZoomController_getRedrawHint", &f_Java_org_mozilla_gecko_gfx_NativePanZoomController_getRedrawHint);
+#endif
+
+#ifdef JNI_STUBS
+
+typedef void (*Java_org_mozilla_gecko_gfx_NativePanZoomController_setOverScrollMode_t)(JNIEnv *, jobject, jint);
+static Java_org_mozilla_gecko_gfx_NativePanZoomController_setOverScrollMode_t f_Java_org_mozilla_gecko_gfx_NativePanZoomController_setOverScrollMode;
+extern "C" NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_gfx_NativePanZoomController_setOverScrollMode(JNIEnv * arg0, jobject arg1, jint arg2) {
+    if (!f_Java_org_mozilla_gecko_gfx_NativePanZoomController_setOverScrollMode) {
+        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
+                       "JNI Function called before it was loaded");
+        return ;
+    }
+     f_Java_org_mozilla_gecko_gfx_NativePanZoomController_setOverScrollMode(arg0, arg1, arg2);
+}
+#endif
+
+#ifdef JNI_BINDINGS
+  xul_dlsym("Java_org_mozilla_gecko_gfx_NativePanZoomController_setOverScrollMode", &f_Java_org_mozilla_gecko_gfx_NativePanZoomController_setOverScrollMode);
+#endif
+
+#ifdef JNI_STUBS
+
+typedef jint (*Java_org_mozilla_gecko_gfx_NativePanZoomController_getOverScrollMode_t)(JNIEnv *, jobject);
+static Java_org_mozilla_gecko_gfx_NativePanZoomController_getOverScrollMode_t f_Java_org_mozilla_gecko_gfx_NativePanZoomController_getOverScrollMode;
+extern "C" NS_EXPORT jint JNICALL
+Java_org_mozilla_gecko_gfx_NativePanZoomController_getOverScrollMode(JNIEnv * arg0, jobject arg1) {
+    if (!f_Java_org_mozilla_gecko_gfx_NativePanZoomController_getOverScrollMode) {
+        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
+                       "JNI Function called before it was loaded");
+        return 0;
+    }
+    return f_Java_org_mozilla_gecko_gfx_NativePanZoomController_getOverScrollMode(arg0, arg1);
+}
+#endif
+
+#ifdef JNI_BINDINGS
+  xul_dlsym("Java_org_mozilla_gecko_gfx_NativePanZoomController_getOverScrollMode", &f_Java_org_mozilla_gecko_gfx_NativePanZoomController_getOverScrollMode);
+#endif
+

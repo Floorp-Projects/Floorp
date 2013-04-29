@@ -5,9 +5,6 @@
 // Tests that we correctly display appropriate media query titles in the
 // rule view.
 
-let tempScope = {};
-Cu.import("resource:///modules/devtools/CssRuleView.jsm", tempScope);
-let _ElementStyle = tempScope._ElementStyle;
 let doc;
 
 const TEST_URI = "http://example.com/browser/browser/devtools/styleinspector/" +

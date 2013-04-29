@@ -855,13 +855,10 @@ MobileMessageDatabaseService.prototype = {
 
   saveRecord: function saveRecord(aMessageRecord, aAddresses, aCallback) {
     let isOverriding = (aMessageRecord.id !== undefined);
-    let oldThreadId = 0;
     if (!isOverriding) {
       // Assign a new id.
       this.lastMessageId += 1;
       aMessageRecord.id = this.lastMessageId;
-    } else {
-      oldThreadId = aMessageRecord.threadId;
     }
     if (DEBUG) debug("Going to store " + JSON.stringify(aMessageRecord));
 
@@ -910,19 +907,28 @@ MobileMessageDatabaseService.prototype = {
           for each (let id in participantIds) {
             aMessageRecord.participantIdsIndex.push([id, timestamp]);
           }
-          // Really add to message store.
-          messageStore.put(aMessageRecord);
 
-          // If the overriding message is going to be saved into another
-          // thread which is different from the original one containing the
-          // overrided message, we need to update the original thread info.
-          if (isOverriding && threadId != oldThreadId) {
-            self.updateThreadByMessageChange(messageStore,
-                                             threadStore,
-                                             oldThreadId,
-                                             aMessageRecord.id,
-                                             aMessageRecord.read);
+          if (!isOverriding) {
+            // Really add to message store.
+            messageStore.put(aMessageRecord);
+            return;
           }
+
+          // If we're going to override an old message, we need to update the
+          // info of the original thread containing the overridden message.
+          // To get the original thread ID and read status of the overridden
+          // message record, we need to retrieve it before overriding it.
+          messageStore.get(aMessageRecord.id).onsuccess = function(event) {
+            let oldMessageRecord = event.target.result;
+            messageStore.put(aMessageRecord);
+            if (oldMessageRecord) {
+              self.updateThreadByMessageChange(messageStore,
+                                               threadStore,
+                                               oldMessageRecord.threadId,
+                                               aMessageRecord.id,
+                                               oldMessageRecord.read);
+            }
+          };
         };
 
         let timestamp = aMessageRecord.timestamp;

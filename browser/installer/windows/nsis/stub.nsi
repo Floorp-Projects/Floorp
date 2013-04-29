@@ -221,7 +221,7 @@ Var ControlRightPX
 !undef URLStubDownload
 !define URLStubDownload "http://download.mozilla.org/?product=firefox-beta-latest&os=win&lang=${AB_CD}"
 !undef URLManualDownload
-!define URLManualDownload "https://www.mozilla.org/firefox/installer-help/?channel=beta"
+!define URLManualDownload "https://www.mozilla.org/${AB_CD}/firefox/installer-help/?channel=beta&installer_lang=${AB_CD}"
 !undef Channel
 !define Channel "beta"
 !endif

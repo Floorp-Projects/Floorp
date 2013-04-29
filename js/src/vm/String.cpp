@@ -319,6 +319,24 @@ js::ConcatStrings(JSContext *cx,
     if (!JSString::validateLength(cxIfCanGC, wholeLength))
         return NULL;
 
+    if (JSShortString::lengthFits(wholeLength)) {
+        JSShortString *str = js_NewGCShortString<allowGC>(cx);
+        if (!str)
+            return NULL;
+        const jschar *leftChars = left->getChars(cx);
+        if (!leftChars)
+            return NULL;
+        const jschar *rightChars = right->getChars(cx);
+        if (!rightChars)
+            return NULL;
+
+        jschar *buf = str->init(wholeLength);
+        PodCopy(buf, leftChars, leftLen);
+        PodCopy(buf + leftLen, rightChars, rightLen);
+        buf[wholeLength] = 0;
+        return str;
+    }
+
     return JSRope::new_<allowGC>(cx, left, right, wholeLength);
 }
 
