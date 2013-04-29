@@ -2046,7 +2046,8 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
         return """%s
 %s
   JS::Rooted<JSObject*> parent(aCx,
-                               WrapNativeParent(aCx, aScope, aObject->GetParentObject()));
+    GetRealParentObject(aObject,
+                        WrapNativeParent(aCx, aScope, aObject->GetParentObject())));
   if (!parent) {
     return NULL;
   }
