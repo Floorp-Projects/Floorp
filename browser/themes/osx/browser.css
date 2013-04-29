@@ -3250,7 +3250,8 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 .popup-notification-icon[popupid="indexedDB-permissions-prompt"],
-.popup-notification-icon[popupid="indexedDB-quota-prompt"] {
+.popup-notification-icon[popupid="indexedDB-quota-prompt"],
+.popup-notification-icon[popupid*="offline-app-requested"] {
   list-style-image: url(chrome://global/skin/icons/question-64.png);
 }
 
@@ -3974,5 +3975,3 @@ panel[type="arrow"][popupid="click-to-play-plugins"] > .panel-arrowcontainer > .
     -moz-padding-end: 50px;
   }
 }
-
-
