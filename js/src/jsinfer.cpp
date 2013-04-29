@@ -2467,10 +2467,12 @@ TypeZone::init(JSContext *cx)
         !cx->hasOption(JSOPTION_TYPE_INFERENCE) ||
         !cx->runtime->jitSupportsFloatingPoint)
     {
+        jaegerCompilationAllowed = true;
         return;
     }
 
     inferenceEnabled = true;
+    jaegerCompilationAllowed = cx->hasOption(JSOPTION_METHODJIT);
 }
 
 TypeObject *
@@ -2692,13 +2694,28 @@ types::UseNewTypeForInitializer(JSContext *cx, JSScript *script, jsbytecode *pc,
     if (key != JSProto_Object && !(key >= JSProto_Int8Array && key <= JSProto_Uint8ClampedArray))
         return GenericObject;
 
-    AutoEnterAnalysis enter(cx);
+    /*
+     * All loops in the script will have a JSTRY_ITER or JSTRY_LOOP try note
+     * indicating their boundary.
+     */
 
-    if (!script->ensureRanAnalysis(cx))
-        return GenericObject;
+    if (!script->hasTrynotes())
+        return SingletonObject;
 
-    if (script->analysis()->getCode(pc).inLoop)
-        return GenericObject;
+    unsigned offset = pc - script->code;
+
+    JSTryNote *tn = script->trynotes()->vector;
+    JSTryNote *tnlimit = tn + script->trynotes()->length;
+    for (; tn < tnlimit; tn++) {
+        if (tn->kind != JSTRY_ITER && tn->kind != JSTRY_LOOP)
+            continue;
+
+        unsigned startOffset = script->mainOffset + tn->start;
+        unsigned endOffset = startOffset + tn->length;
+
+        if (offset >= startOffset && offset < endOffset)
+            return GenericObject;
+    }
 
     return SingletonObject;
 }
@@ -5652,7 +5669,15 @@ types::MarkIteratorUnknownSlow(JSContext *cx)
     if (JSOp(*pc) != JSOP_ITER)
         return;
 
+    if (IgnoreTypeChanges(cx, script))
+        return;
+
     AutoEnterAnalysis enter(cx);
+
+    if (!script->ensureRanAnalysis(cx)) {
+        cx->compartment->types.setPendingNukeTypes(cx);
+        return;
+    }
 
     /*
      * This script is iterating over an actual Iterator or Generator object, or
@@ -5737,6 +5762,10 @@ void
 types::TypeDynamicResult(JSContext *cx, JSScript *script, jsbytecode *pc, Type type)
 {
     JS_ASSERT(cx->typeInferenceEnabled());
+
+    if (IgnoreTypeChanges(cx, script))
+        return;
+
     AutoEnterAnalysis enter(cx);
 
     /* Directly update associated type sets for applicable bytecodes. */
@@ -5840,6 +5869,9 @@ types::TypeMonitorResult(JSContext *cx, JSScript *script, jsbytecode *pc, const 
 {
     /* Allow the non-TYPESET scenario to simplify stubs used in compound opcodes. */
     if (!(js_CodeSpec[*pc].format & JOF_TYPESET))
+        return;
+
+    if (IgnoreTypeChanges(cx, script))
         return;
 
     AutoEnterAnalysis enter(cx);
