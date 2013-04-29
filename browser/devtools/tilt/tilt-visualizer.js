@@ -5,8 +5,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const Cu = Components.utils;
-const Ci = Components.interfaces;
+const {Cu, Ci, ChromeWorker} = require("chrome");
+
+let TiltGL = require("devtools/tilt/tilt-gl");
+let TiltUtils = require("devtools/tilt/tilt-utils");
+let TiltVisualizerStyle = require("devtools/tilt/tilt-visualizer-style");
+let {EPSILON, TiltMath, vec3, mat4, quat4} = require("devtools/tilt/tilt-math");
+let {TargetFactory} = require("devtools/framework/target");
+
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource:///modules/devtools/gDevTools.jsm");
 
 const ELEMENT_MIN_SIZE = 4;
 const INVISIBLE_ELEMENTS = {
@@ -46,18 +54,9 @@ const ARCBALL_ZOOM_MAX = 500;
 const ARCBALL_RESET_SPHERICAL_FACTOR = 0.1;
 const ARCBALL_RESET_LINEAR_FACTOR = 0.01;
 
-const TILT_CRAFTER = "resource:///modules/devtools/TiltWorkerCrafter.js";
-const TILT_PICKER = "resource:///modules/devtools/TiltWorkerPicker.js";
+const TILT_CRAFTER = "resource:///modules/devtools/tilt/TiltWorkerCrafter.js";
+const TILT_PICKER = "resource:///modules/devtools/tilt/TiltWorkerPicker.js";
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource:///modules/devtools/gDevTools.jsm");
-Cu.import("resource:///modules/devtools/Target.jsm");
-Cu.import("resource:///modules/devtools/TiltGL.jsm");
-Cu.import("resource:///modules/devtools/TiltMath.jsm");
-Cu.import("resource:///modules/devtools/TiltUtils.jsm");
-Cu.import("resource:///modules/devtools/TiltVisualizerStyle.jsm");
-
-this.EXPORTED_SYMBOLS = ["TiltVisualizer"];
 
 /**
  * Initializes the visualization presenter and controller.
@@ -71,7 +70,7 @@ this.EXPORTED_SYMBOLS = ["TiltVisualizer"];
  *      {Function} onError: optional, function called if initialization failed
  *      {Function} onLoad: optional, function called if initialization worked
  */
-this.TiltVisualizer = function TiltVisualizer(aProperties)
+function TiltVisualizer(aProperties)
 {
   // make sure the properties parameter is a valid object
   aProperties = aProperties || {};
@@ -105,6 +104,8 @@ this.TiltVisualizer = function TiltVisualizer(aProperties)
    */
   this.controller = new TiltVisualizer.Controller(this.canvas, this.presenter);
 }
+
+exports.TiltVisualizer = TiltVisualizer;
 
 TiltVisualizer.prototype = {
 
@@ -1424,10 +1425,9 @@ TiltVisualizer.Controller.prototype = {
   _onKeyPress: function TVC__onKeyPress(e)
   {
     if (e.keyCode === e.DOM_VK_ESCAPE) {
-      let mod = {};
-      Cu.import("resource:///modules/devtools/Tilt.jsm", mod);
+      let {TiltManager} = require("devtools/tilt/tilt");
       let tilt =
-        mod.TiltManager.getTiltForBrowser(this.presenter.chromeWindow);
+        TiltManager.getTiltForBrowser(this.presenter.chromeWindow);
       e.preventDefault();
       e.stopPropagation();
       tilt.destroy(tilt.currentWindowId, true);
