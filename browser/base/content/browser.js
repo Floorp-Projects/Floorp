@@ -4061,7 +4061,8 @@ var CombinedStopReload = {
     var stop = document.getElementById("stop-button");
 
     if (urlbar) {
-      if (!reload || urlbar.nextSibling != reload ||
+      if (urlbar.parentNode.getAttribute("mode") != "icons" ||
+          !reload || urlbar.nextSibling != reload ||
           !stop || reload.nextSibling != stop)
         urlbar.removeAttribute("combined");
       else {
