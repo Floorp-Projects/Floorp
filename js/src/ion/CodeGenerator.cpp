@@ -208,31 +208,49 @@ static const double DoubleZero = 0.0;
 bool
 CodeGenerator::visitValueToDouble(LValueToDouble *lir)
 {
+    MToDouble *mir = lir->mir();
     ValueOperand operand = ToValue(lir, LValueToDouble::Input);
     FloatRegister output = ToFloatRegister(lir->output());
 
     Register tag = masm.splitTagForTest(operand);
 
-    Label isDouble, isInt32, isBool, isNull, done;
-    // Type-check switch.
+    Label isDouble, isInt32, isBool, isNull, isUndefined, done;
+    bool hasBoolean = false, hasNull = false, hasUndefined = false;
+
     masm.branchTestDouble(Assembler::Equal, tag, &isDouble);
     masm.branchTestInt32(Assembler::Equal, tag, &isInt32);
-    masm.branchTestBoolean(Assembler::Equal, tag, &isBool);
-    masm.branchTestNull(Assembler::Equal, tag, &isNull);
 
-    Assembler::Condition cond = masm.testUndefined(Assembler::NotEqual, tag);
-    if (!bailoutIf(cond, lir->snapshot()))
+    if (mir->conversion() != MToDouble::NumbersOnly) {
+        masm.branchTestBoolean(Assembler::Equal, tag, &isBool);
+        masm.branchTestUndefined(Assembler::Equal, tag, &isUndefined);
+        hasBoolean = true;
+        hasUndefined = true;
+        if (mir->conversion() != MToDouble::NonNullNonStringPrimitives) {
+            masm.branchTestNull(Assembler::Equal, tag, &isNull);
+            hasNull = true;
+        }
+    }
+
+    if (!bailout(lir->snapshot()))
         return false;
-    masm.loadStaticDouble(&js_NaN, output);
-    masm.jump(&done);
 
-    masm.bind(&isNull);
-    masm.loadStaticDouble(&DoubleZero, output);
-    masm.jump(&done);
+    if (hasNull) {
+        masm.bind(&isNull);
+        masm.loadStaticDouble(&DoubleZero, output);
+        masm.jump(&done);
+    }
 
-    masm.bind(&isBool);
-    masm.boolValueToDouble(operand, output);
-    masm.jump(&done);
+    if (hasUndefined) {
+        masm.bind(&isUndefined);
+        masm.loadStaticDouble(&js_NaN, output);
+        masm.jump(&done);
+    }
+
+    if (hasBoolean) {
+        masm.bind(&isBool);
+        masm.boolValueToDouble(operand, output);
+        masm.jump(&done);
+    }
 
     masm.bind(&isInt32);
     masm.int32ValueToDouble(operand, output);

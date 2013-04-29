@@ -1393,6 +1393,8 @@ MCompare::inputType()
       case Compare_Int32:
         return MIRType_Int32;
       case Compare_Double:
+      case Compare_DoubleMaybeCoerceLHS:
+      case Compare_DoubleMaybeCoerceRHS:
         return MIRType_Double;
       case Compare_String:
       case Compare_StrictString:
@@ -1447,11 +1449,12 @@ MCompare::infer(JSContext *cx, BaselineInspector *inspector, jsbytecode *pc)
     }
 
     // Any comparison is allowed except strict eq.
-    if (!strictEq &&
-        ((lhs == MIRType_Double && SafelyCoercesToDouble(getOperand(1))) ||
-         (rhs == MIRType_Double && SafelyCoercesToDouble(getOperand(0)))))
-    {
-        compareType_ = Compare_Double;
+    if (!strictEq && lhs == MIRType_Double && SafelyCoercesToDouble(getOperand(1))) {
+        compareType_ = Compare_DoubleMaybeCoerceRHS;
+        return;
+    }
+    if (!strictEq && rhs == MIRType_Double && SafelyCoercesToDouble(getOperand(0))) {
+        compareType_ = Compare_DoubleMaybeCoerceLHS;
         return;
     }
 

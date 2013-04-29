@@ -58,11 +58,11 @@ BaselineInspector::maybeMonomorphicShapeForPropertyOp(jsbytecode *pc)
     return NULL;
 }
 
-ICStub::Kind
-BaselineInspector::monomorphicStubKind(jsbytecode *pc)
+ICStub *
+BaselineInspector::monomorphicStub(jsbytecode *pc)
 {
     if (!hasBaselineScript())
-        return ICStub::INVALID;
+        return NULL;
 
     const ICEntry &entry = icEntryFromPC(pc);
 
@@ -70,13 +70,13 @@ BaselineInspector::monomorphicStubKind(jsbytecode *pc)
     ICStub *next = stub->next();
 
     if (!next || !next->isFallback())
-        return ICStub::INVALID;
+        return NULL;
 
-    return stub->kind();
+    return stub;
 }
 
 bool
-BaselineInspector::dimorphicStubKind(jsbytecode *pc, ICStub::Kind *pfirst, ICStub::Kind *psecond)
+BaselineInspector::dimorphicStub(jsbytecode *pc, ICStub **pfirst, ICStub **psecond)
 {
     if (!hasBaselineScript())
         return false;
@@ -90,8 +90,8 @@ BaselineInspector::dimorphicStubKind(jsbytecode *pc, ICStub::Kind *pfirst, ICStu
     if (!after || !after->isFallback())
         return false;
 
-    *pfirst = stub->kind();
-    *psecond = next->kind();
+    *pfirst = stub;
+    *psecond = next;
     return true;
 }
 
@@ -101,9 +101,11 @@ BaselineInspector::expectedResultType(jsbytecode *pc)
     // Look at the IC entries for this op to guess what type it will produce,
     // returning MIRType_None otherwise.
 
-    ICStub::Kind kind = monomorphicStubKind(pc);
+    ICStub *stub = monomorphicStub(pc);
+    if (!stub)
+        return MIRType_None;
 
-    switch (kind) {
+    switch (stub->kind()) {
       case ICStub::BinaryArith_Int32:
       case ICStub::BinaryArith_BooleanWithInt32:
       case ICStub::UnaryArith_Int32:
@@ -139,35 +141,42 @@ CanUseInt32Compare(ICStub::Kind kind)
 MCompare::CompareType
 BaselineInspector::expectedCompareType(jsbytecode *pc)
 {
-    ICStub::Kind kind = monomorphicStubKind(pc);
+    ICStub *first = monomorphicStub(pc), *second = NULL;
+    if (!first && !dimorphicStub(pc, &first, &second))
+        return MCompare::Compare_Unknown;
 
-    if (CanUseInt32Compare(kind))
+    if (CanUseInt32Compare(first->kind()) && (!second || CanUseInt32Compare(second->kind())))
         return MCompare::Compare_Int32;
-    if (CanUseDoubleCompare(kind))
-        return MCompare::Compare_Double;
 
-    ICStub::Kind first, second;
-    if (dimorphicStubKind(pc, &first, &second)) {
-        if (CanUseInt32Compare(first) && CanUseInt32Compare(second))
-            return MCompare::Compare_Int32;
-        if (CanUseDoubleCompare(first) && CanUseDoubleCompare(second))
-            return MCompare::Compare_Double;
+    if (CanUseDoubleCompare(first->kind()) && (!second || CanUseDoubleCompare(second->kind()))) {
+        ICCompare_NumberWithUndefined *coerce =
+            first->isCompare_NumberWithUndefined()
+            ? first->toCompare_NumberWithUndefined()
+            : (second && second->isCompare_NumberWithUndefined())
+              ? second->toCompare_NumberWithUndefined()
+              : NULL;
+        if (coerce) {
+            return coerce->lhsIsUndefined()
+                   ? MCompare::Compare_DoubleMaybeCoerceLHS
+                   : MCompare::Compare_DoubleMaybeCoerceRHS;
+        }
+        return MCompare::Compare_Double;
     }
 
     return MCompare::Compare_Unknown;
 }
 
 static bool
-TryToSpecializeBinaryArithOp(ICStub::Kind *kinds,
-                             uint32_t nkinds,
+TryToSpecializeBinaryArithOp(ICStub **stubs,
+                             uint32_t nstubs,
                              MIRType *result)
 {
     bool sawInt32 = false;
     bool sawDouble = false;
     bool sawOther = false;
 
-    for (uint32_t i = 0; i < nkinds; i++) {
-        switch (kinds[i]) {
+    for (uint32_t i = 0; i < nstubs; i++) {
+        switch (stubs[i]->kind()) {
           case ICStub::BinaryArith_Int32:
             sawInt32 = true;
             break;
@@ -203,14 +212,16 @@ MIRType
 BaselineInspector::expectedBinaryArithSpecialization(jsbytecode *pc)
 {
     MIRType result;
-    ICStub::Kind kinds[2];
+    ICStub *stubs[2];
 
-    kinds[0] = monomorphicStubKind(pc);
-    if (TryToSpecializeBinaryArithOp(kinds, 1, &result))
-        return result;
+    stubs[0] = monomorphicStub(pc);
+    if (stubs[0]) {
+        if (TryToSpecializeBinaryArithOp(stubs, 1, &result))
+            return result;
+    }
 
-    if (dimorphicStubKind(pc, &kinds[0], &kinds[1])) {
-        if (TryToSpecializeBinaryArithOp(kinds, 2, &result))
+    if (dimorphicStub(pc, &stubs[0], &stubs[1])) {
+        if (TryToSpecializeBinaryArithOp(stubs, 2, &result))
             return result;
     }
 
