@@ -103,16 +103,14 @@ XPCJSContextStack::Push(JSContext *cx)
     return true;
 }
 
-#ifdef DEBUG
 bool
-XPCJSContextStack::DEBUG_StackHasJSContext(JSContext *cx)
+XPCJSContextStack::HasJSContext(JSContext *cx)
 {
     for (uint32_t i = 0; i < mStack.Length(); i++)
         if (cx == mStack[i].cx)
             return true;
     return false;
 }
-#endif
 
 static JSBool
 SafeGlobalResolve(JSContext *cx, JSHandleObject obj, JSHandleId id)
@@ -213,45 +211,3 @@ XPCJSContextStack::GetSafeJSContext()
 
     return mSafeJSContext;
 }
-
-/***************************************************************************/
-
-NS_IMPL_ISUPPORTS1(nsXPCJSContextStackIterator, nsIJSContextStackIterator)
-
-NS_IMETHODIMP
-nsXPCJSContextStackIterator::Reset(nsIJSContextStack *aStack)
-{
-    NS_ASSERTION(aStack == nsXPConnect::GetXPConnect(),
-                 "aStack must be implemented by XPConnect singleton");
-    mStack = XPCJSRuntime::Get()->GetJSContextStack()->GetStack();
-    if (mStack->IsEmpty())
-        mStack = nullptr;
-    else
-        mPosition = mStack->Length() - 1;
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPCJSContextStackIterator::Done(bool *aDone)
-{
-    *aDone = !mStack;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPCJSContextStackIterator::Prev(JSContext **aContext)
-{
-    if (!mStack)
-        return NS_ERROR_NOT_INITIALIZED;
-
-    *aContext = mStack->ElementAt(mPosition).cx;
-
-    if (mPosition == 0)
-        mStack = nullptr;
-    else
-        --mPosition;
-
-    return NS_OK;
-}
-

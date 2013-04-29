@@ -472,6 +472,8 @@ namespace danger {
 NS_EXPORT_(bool) PushJSContext(JSContext *aCx);
 NS_EXPORT_(void) PopJSContext();
 
+bool IsJSContextOnStack(JSContext *aCx);
+
 } /* namespace danger */
 } /* namespace xpc */
 

@@ -344,8 +344,7 @@ XPCCallContext::~XPCCallContext()
             printf("!xpc - doing deferred destruction of JSContext @ %p\n",
                    mJSContext);
 #endif
-            NS_ASSERTION(!XPCJSRuntime::Get()->GetJSContextStack()->
-                         DEBUG_StackHasJSContext(mJSContext),
+            NS_ASSERTION(!XPCJSRuntime::Get()->GetJSContextStack()->HasJSContext(mJSContext),
                          "JSContext still in threadjscontextstack!");
 
             JS_DestroyContext(mJSContext);
