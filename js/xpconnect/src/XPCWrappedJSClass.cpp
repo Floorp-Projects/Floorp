@@ -1254,13 +1254,16 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
                     }
                 }
             }
-        } else if (!JS_GetMethod(cx, obj, name, thisObj.address(), fval.address())) {
+        } else {
+            if (!JS_GetProperty(cx, obj, name, fval.address()))
+                goto pre_call_clean_up;
             // XXX We really want to factor out the error reporting better and
             // specifically report the failure to find a function with this name.
             // This is what we do below if the property is found but is not a
             // function. We just need to factor better so we can get to that
             // reporting path from here.
-            goto pre_call_clean_up;
+
+            thisObj = obj;
         }
     }
 

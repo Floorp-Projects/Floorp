@@ -1290,9 +1290,19 @@ TabChild::GetCachedFileDescriptor(const nsAString& aPath,
 
     MOZ_ASSERT(info);
     MOZ_ASSERT(info->mPath == aPath);
-    MOZ_ASSERT(!info->mCallback);
-    MOZ_ASSERT(!info->mCanceled);
 
+    // If we got a previous request for this file descriptor that was then
+    // canceled, insert the new request ahead of the old in the queue so that
+    // it will be serviced first.
+    if (info->mCanceled) {
+        // This insertion will change the array and invalidate |info|, so
+        // be careful not to touch |info| after this.
+        mCachedFileDescriptorInfos.InsertElementAt(index,
+            new CachedFileDescriptorInfo(aPath, aCallback));
+        return false;
+    }
+
+    MOZ_ASSERT(!info->mCallback);
     info->mCallback = aCallback;
 
     nsRefPtr<CachedFileDescriptorCallbackRunnable> runnable =

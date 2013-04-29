@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1366143901000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1366828228000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -202,6 +202,10 @@
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
                   </emItem>
+      <emItem  blockID="i338" id="{1FD91A9C-410C-4090-BBCC-55D3450EF433}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                  </emItem>
       <emItem  blockID="i59" id="ghostviewer@youtube2.com">
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
@@ -287,6 +291,10 @@
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
                   </emItem>
+      <emItem  blockID="i109" id="{392e123b-b691-4a5e-b52f-c4c1027e749c}">
+                        <versionRange  minVersion="0" maxVersion="*">
+                    </versionRange>
+                  </emItem>
       <emItem  blockID="i286" id="{58bd07eb-0ee0-4df0-8121-dc9b693373df}">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
@@ -313,8 +321,8 @@
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
                   </emItem>
-      <emItem  blockID="i109" id="{392e123b-b691-4a5e-b52f-c4c1027e749c}">
-                        <versionRange  minVersion="0" maxVersion="*">
+      <emItem  blockID="i218" id="ffxtlbr@claro.com">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i76" id="crossriderapp3924@crossrider.com">
@@ -364,6 +372,10 @@
                   </emItem>
       <emItem  blockID="i47" id="youtube@youtube2.com">
                         </emItem>
+      <emItem  blockID="i336" id="CortonExt@ext.com">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                  </emItem>
       <emItem  blockID="i103" id="kdrgun@gmail.com">
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
@@ -442,10 +454,6 @@
                     </versionRange>
                   </emItem>
       <emItem  blockID="i226" id="{462be121-2b54-4218-bf00-b9bf8135b23f}">
-                        <versionRange  minVersion="0" maxVersion="*" severity="1">
-                    </versionRange>
-                  </emItem>
-      <emItem  blockID="i218" id="ffxtlbr@claro.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                   </emItem>

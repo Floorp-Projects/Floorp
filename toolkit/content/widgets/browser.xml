@@ -409,6 +409,10 @@
                 onget="return this.contentDocument.title;"
                 readonly="true"/>
 
+      <property name="characterSet"
+                onget="return this.contentDocument.characterSet;"
+                readonly="true"/>
+
       <property name="contentPrincipal"
                 onget="return this.contentDocument.nodePrincipal;"
                 readonly="true"/>

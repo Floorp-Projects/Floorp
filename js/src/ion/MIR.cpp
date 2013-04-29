@@ -15,7 +15,7 @@
 #include "jsnum.h"
 #include "jsstr.h"
 #include "jsatominlines.h"
-#include "jstypedarrayinlines.h" // For ClampIntForUint8Array
+#include "jstypedarrayinlines.h"
 
 using namespace js;
 using namespace js::ion;
@@ -1236,7 +1236,9 @@ KnownNonStringPrimitive(MDefinition *op)
 }
 
 void
-MBinaryArithInstruction::infer(bool overflowed)
+MBinaryArithInstruction::infer(BaselineInspector *inspector,
+                               jsbytecode *pc,
+                               bool overflowed)
 {
     JS_ASSERT(this->type() == MIRType_Value);
 
@@ -1246,9 +1248,10 @@ MBinaryArithInstruction::infer(bool overflowed)
     MIRType lhs = getOperand(0)->type();
     MIRType rhs = getOperand(1)->type();
 
-    // Anything complex - strings and objects - are not specialized.
+    // Anything complex - strings and objects - are not specialized
+    // unless baseline type hints suggest it might be profitable
     if (!KnownNonStringPrimitive(getOperand(0)) || !KnownNonStringPrimitive(getOperand(1)))
-        return;
+        return inferFallback(inspector, pc);
 
     // Guess a result type based on the inputs.
     // Don't specialize for neither-integer-nor-double results.
@@ -1257,7 +1260,7 @@ MBinaryArithInstruction::infer(bool overflowed)
     else if (lhs == MIRType_Double || rhs == MIRType_Double)
         setResultType(MIRType_Double);
     else
-        return;
+        return inferFallback(inspector, pc);
 
     // If the operation has ever overflowed, use a double specialization.
     if (overflowed)
@@ -1288,6 +1291,29 @@ MBinaryArithInstruction::infer(bool overflowed)
     if (isAdd() || isMul())
         setCommutative();
     setResultType(rval);
+}
+
+void
+MBinaryArithInstruction::inferFallback(BaselineInspector *inspector,
+                                       jsbytecode *pc)
+{
+    // Try to specialize based on what baseline observed in practice.
+    specialization_ = inspector->expectedBinaryArithSpecialization(pc);
+    if (specialization_ != MIRType_None) {
+        setResultType(specialization_);
+        return;
+    }
+
+    // In parallel execution, for now anyhow, we *only* support adding
+    // and manipulating numbers (not strings or objects).  So no
+    // matter what we can specialize to double...if the result ought
+    // to have been something else, we'll fail in the various type
+    // guards that get inserted later.
+    if (block()->info().executionMode() == ParallelExecution) {
+        specialization_ = MIRType_Double;
+        setResultType(MIRType_Double);
+        return;
+    }
 }
 
 static bool
@@ -2167,6 +2193,30 @@ bool
 MInArray::needsNegativeIntCheck() const
 {
     return !index()->range() || index()->range()->lower() < 0;
+}
+
+void *
+MLoadTypedArrayElementStatic::base() const
+{
+    return TypedArray::viewData(typedArray_);
+}
+
+size_t
+MLoadTypedArrayElementStatic::length() const
+{
+    return TypedArray::byteLength(typedArray_);
+}
+
+void *
+MStoreTypedArrayElementStatic::base() const
+{
+    return TypedArray::viewData(typedArray_);
+}
+
+size_t
+MStoreTypedArrayElementStatic::length() const
+{
+    return TypedArray::byteLength(typedArray_);
 }
 
 MDefinition *

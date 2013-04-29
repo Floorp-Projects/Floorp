@@ -247,7 +247,6 @@ platform_print_sip_msg (const char *msg)
         return;
     }
 
-    CSFLogDebug("sipstack", "");
     /* replace digits for security reasons */
     if (strstr(msg, "kpml-response")) {
         /* This is kpml response. so supress printing digits. */

@@ -1318,7 +1318,7 @@ LookupNameWithGlobalDefault(JSContext *cx, HandlePropertyName name, HandleObject
 extern JSObject *
 js_FindVariableScope(JSContext *cx, JSFunction **funp);
 
-/* JSGET_CACHE_RESULT is the analogue of DNP_CACHE_RESULT for GetMethod. */
+/* JSGET_CACHE_RESULT is the analogue of DNP_CACHE_RESULT. */
 const unsigned JSGET_CACHE_RESULT = 1; // from a caching interpreter opcode
 
 /*
@@ -1367,16 +1367,6 @@ GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id, MutableHa
 
 bool
 NewPropertyDescriptorObject(JSContext *cx, const PropertyDescriptor *desc, MutableHandleValue vp);
-
-extern JSBool
-GetMethod(JSContext *cx, HandleObject obj, HandleId id, unsigned getHow, MutableHandleValue vp);
-
-inline bool
-GetMethod(JSContext *cx, HandleObject obj, PropertyName *name, unsigned getHow, MutableHandleValue vp)
-{
-    Rooted<jsid> id(cx, NameToId(name));
-    return GetMethod(cx, obj, id, getHow, vp);
-}
 
 /*
  * If obj has an already-resolved data property for id, return true and
