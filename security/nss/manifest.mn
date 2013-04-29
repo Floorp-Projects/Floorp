@@ -10,6 +10,4 @@ IMPORTS =	nspr20/v4.8 \
 
 RELEASE = nss
 
-DIRS = lib cmd
-
-
+DIRS = coreconf lib cmd

@@ -272,6 +272,7 @@ CONST_OID x520BusinessCategory[]                = { X520_ATTRIBUTE_TYPE, 15 };
 CONST_OID x520PostalAddress[]                   = { X520_ATTRIBUTE_TYPE, 16 };
 CONST_OID x520PostalCode[]                      = { X520_ATTRIBUTE_TYPE, 17 };
 CONST_OID x520PostOfficeBox[]                   = { X520_ATTRIBUTE_TYPE, 18 };
+CONST_OID x520Name[]                            = { X520_ATTRIBUTE_TYPE, 41 };
 CONST_OID x520GivenName[]                       = { X520_ATTRIBUTE_TYPE, 42 };
 CONST_OID x520Initials[]                        = { X520_ATTRIBUTE_TYPE, 43 };
 CONST_OID x520GenerationQualifier[]             = { X520_ATTRIBUTE_TYPE, 44 };
@@ -1645,7 +1646,9 @@ const static SECOidData oids[SEC_OID_TOTAL] = {
     OD( msExtendedKeyUsageTrustListSigning, 
         SEC_OID_MS_EXT_KEY_USAGE_CTL_SIGNING,
         "Microsoft Trust List Signing",
-	CKM_INVALID_MECHANISM, INVALID_CERT_EXTENSION )
+	CKM_INVALID_MECHANISM, INVALID_CERT_EXTENSION ),
+    OD( x520Name, SEC_OID_AVA_NAME,
+    	"X520 Name",    CKM_INVALID_MECHANISM, INVALID_CERT_EXTENSION )
 };
 
 /* PRIVATE EXTENDED SECOID Table

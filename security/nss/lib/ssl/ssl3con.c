@@ -10469,7 +10469,7 @@ ssl3_InitState(sslSocket *ss)
 
     ss->ssl3.hs.ws = (ss->sec.isServer) ? wait_client_hello : wait_server_hello;
 #ifdef NSS_ENABLE_ECC
-    ss->ssl3.hs.negotiatedECCurves = SSL3_SUPPORTED_CURVES_MASK;
+    ss->ssl3.hs.negotiatedECCurves = ssl3_GetSupportedECCCurveMask(ss);
 #endif
     ssl_ReleaseSpecWriteLock(ss);
 
