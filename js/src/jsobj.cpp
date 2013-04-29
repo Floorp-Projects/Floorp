@@ -921,6 +921,23 @@ DefinePropertyOnArray(JSContext *cx, HandleObject obj, HandleId id, const PropDe
 
     /* Step 2. */
     if (id == NameToId(cx->names().length)) {
+        // Canonicalize value, if necessary, before proceeding any further.  It
+        // would be better if this were always/only done by ArraySetLength.
+        // But canonicalization may throw a RangeError (or other exception, if
+        // the value is an object with user-defined conversion semantics)
+        // before other attributes are checked.  So as long as our internal
+        // defineProperty hook doesn't match the ECMA one, this duplicate
+        // checking can't be helped.
+        RootedValue v(cx);
+        if (desc.hasValue()) {
+            uint32_t newLen;
+            if (!CanonicalizeArrayLengthValue(cx, desc.value(), &newLen))
+                return false;
+            v.setNumber(newLen);
+        } else {
+            v.setNumber(obj->getArrayLength());
+        }
+
         if (desc.hasConfigurable() && desc.configurable())
             return Reject(cx, id, JSMSG_CANT_REDEFINE_PROP, throwError, rval);
         if (desc.hasEnumerable() && desc.enumerable())
@@ -930,16 +947,9 @@ DefinePropertyOnArray(JSContext *cx, HandleObject obj, HandleId id, const PropDe
             return Reject(cx, id, JSMSG_CANT_REDEFINE_PROP, throwError, rval);
 
         unsigned attrs = obj->nativeLookup(cx, id)->attributes();
-
-        RootedValue v(cx, desc.hasValue() ? desc.value() : NumberValue(obj->getArrayLength()));
         if (!obj->arrayLengthIsWritable()) {
             if (desc.hasWritable() && desc.writable())
                 return Reject(cx, id, JSMSG_CANT_REDEFINE_PROP, throwError, rval);
-
-            if (desc.hasValue()) {
-                if (obj->getArrayLength() != desc.value().toNumber())
-                    return Reject(cx, id, JSMSG_CANT_REDEFINE_PROP, throwError, rval);
-            }
         } else {
             if (desc.hasWritable() && !desc.writable())
                 attrs = attrs | JSPROP_READONLY;

@@ -80,6 +80,13 @@ extern bool
 WouldDefinePastNonwritableLength(JSContext *cx, HandleObject obj, uint32_t index, bool strict,
                                  bool *definesPast);
 
+/*
+ * Canonicalize |vp| to a uint32_t value potentially suitable for use as an
+ * array length.
+ */
+extern bool
+CanonicalizeArrayLengthValue(JSContext *cx, HandleValue v, uint32_t *canonicalized);
+
 /* Get the common shape used by all dense arrays with a prototype at globalObj. */
 extern RawShape
 GetDenseArrayShape(JSContext *cx, HandleObject globalObj);
