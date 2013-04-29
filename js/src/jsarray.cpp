@@ -420,6 +420,22 @@ struct ReverseIndexComparator
     }
 };
 
+bool
+js::CanonicalizeArrayLengthValue(JSContext *cx, HandleValue v, uint32_t *newLen)
+{
+    if (!ToUint32(cx, v, newLen))
+        return false;
+
+    double d;
+    if (!ToNumber(cx, v, &d))
+        return false;
+    if (d == *newLen)
+        return true;
+
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_ARRAY_LENGTH);
+    return false;
+}
+
 /* ES6 20130308 draft 8.4.2.4 ArraySetLength */
 bool
 js::ArraySetLength(JSContext *cx, HandleObject obj, HandleId id, unsigned attrs,
@@ -432,19 +448,10 @@ js::ArraySetLength(JSContext *cx, HandleObject obj, HandleId id, unsigned attrs,
 
     /* Steps 1-2 are irrelevant in our implementation. */
 
-    /* Step 3. */
+    /* Steps 3-5. */
     uint32_t newLen;
-    if (!ToUint32(cx, value, &newLen))
+    if (!CanonicalizeArrayLengthValue(cx, value, &newLen))
         return false;
-
-    /* Steps 4-5. */
-    double d;
-    if (!ToNumber(cx, value, &d))
-        return false;
-    if (d != newLen) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_ARRAY_LENGTH);
-        return false;
-    }
 
     /* Steps 6-7. */
     bool lengthIsWritable = obj->arrayLengthIsWritable();
