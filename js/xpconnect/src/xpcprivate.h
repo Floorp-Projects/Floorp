@@ -464,7 +464,6 @@ class nsXPConnect : public nsIXPConnect,
                     public nsSupportsWeakReference,
                     public nsCycleCollectionJSRuntime,
                     public nsIJSRuntimeService,
-                    public nsIThreadJSContextStack,
                     public nsIJSEngineTelemetryStats
 {
 public:
