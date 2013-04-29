@@ -301,8 +301,10 @@ private:
     static int TimeoutChanged(const char* aPref, void* aModule);
     void NotifyPluginCrashed();
 
+#ifdef MOZ_ENABLE_PROFILER_SPS
     void InitPluginProfiling();
     void ShutdownPluginProfiling();
+#endif
 
     PluginProcessParent* mSubprocess;
     // the plugin thread in mSubprocess

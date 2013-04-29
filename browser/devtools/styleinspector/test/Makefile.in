@@ -37,6 +37,7 @@ MOCHITEST_BROWSER_FILES = \
   browser_bug722691_rule_view_increment.js \
   browser_computedview_734259_style_editor_link.js \
   browser_computedview_copy.js\
+  browser_styleinspector_bug_677930_urls_clickable.js \
   head.js \
   $(NULL)
 
@@ -50,6 +51,10 @@ MOCHITEST_BROWSER_FILES += \
   browser_bug705707_is_content_stylesheet.xul \
   browser_bug705707_is_content_stylesheet_xul.css \
   browser_bug722196_identify_media_queries.html \
+  browser_styleinspector_bug_677930_urls_clickable.html \
+  browser_styleinspector_bug_677930_urls_clickable \
+  browser_styleinspector_bug_677930_urls_clickable/browser_styleinspector_bug_677930_urls_clickable.css \
+  test-image.png \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

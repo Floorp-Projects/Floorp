@@ -1,16 +1,3 @@
-<html xmlns="http://www.w3.org/1999/xhtml">
-<!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=619959
--->
-<head>
-  <title>Test 'pointer-events' handling</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
-</head>
-<body onload="run_tests()">
-<script class="testbody" type="text/javascript">
-<![CDATA[
-
 SimpleTest.waitForExplicitFinish();
 
 var pointer_events_values = [
@@ -285,11 +272,27 @@ function test_element(id, x, y, over /* bit flags indicating which area(s) of th
   element.setAttribute('stroke', 'none');
 }
 
-function run_tests()
+function run_tests(subtest)
 {
   var div = document.getElementById("div");
   dx = div.offsetLeft;
   dy = div.offsetTop;
+
+  // Run the test with only a subset of pointer-events values, to avoid
+  // running over the mochitest time limit.  The subtest argument indicates
+  // whether to use the first half of the pointer-events values (0)
+  // or the second half (1).
+  var partition = Math.floor(pointer_events_values.length / 2);
+  switch (subtest) {
+    case 0:
+      pointer_events_values.splice(partition);
+      break;
+    case 1:
+      pointer_events_values.splice(0, partition);
+      break;
+    case 2:
+      throw "unexpected subtest number";
+  }
 
   test_element('rect', 30, 30, POINT_OVER_FILL);
   test_element('rect', 5, 5, POINT_OVER_STROKE);
@@ -323,22 +326,3 @@ function run_tests()
 
   SimpleTest.finish();
 }
-
-]]>
-</script>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=619959">Mozilla Bug 619959</a>
-<p id="display"></p>
-<div id="content">
-
-  <div width="100%" height="1" id="div"></div>
-
-  <svg xmlns="http://www.w3.org/2000/svg" id="svg">
-    <rect id="rect" x="10" y="10" width="40" height="40" stroke-width="20"/>
-    <text id="text" x="190" y="50" font-size="40px" stroke-width="20">X</text>
-  </svg>
-
-</div>
-<pre id="test">
-</pre>
-</body>
-</html>

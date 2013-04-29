@@ -5,10 +5,10 @@
 'use strict';
 
 
-// TODO <jwilde>: Observe changes in history with nsINavHistoryObserver
 function HistoryView(aSet) {
   this._set = aSet;
   this._set.controller = this;
+  this._inBatch = false;
 
   let history = Cc["@mozilla.org/browser/nav-history-service;1"].
                 getService(Ci.nsINavHistoryService);
@@ -42,8 +42,7 @@ HistoryView.prototype = {
       let uri = node.uri;
       let title = node.title || uri;
 
-      let item = this._set.appendItem(title, uri);
-      item.setAttribute("iconURI", node.icon);
+      this.addItemToSet(uri, title, node.icon);
     }
 
     rootNode.containerOpen = false;
@@ -52,22 +51,48 @@ HistoryView.prototype = {
   destruct: function destruct() {
   },
 
-  // nsINavHistoryObserver
+  // nsINavHistoryObserver & helpers
+
+  addItemToSet: function addItemToSet(uri, title, icon) {
+    let item = this._set.appendItem(title, uri, this._inBatch);
+    item.setAttribute("iconURI", icon);
+  },
+
+  // TODO rebase/merge Alert: bug 831916 's patch merges in,
+  // this can be replaced with the updated calls to populateGrid()
+  refreshAndRepopulate: function() {
+    this._set.clearAll();
+    this.populateGrid();
+  },
 
   onBeginUpdateBatch: function() {
+    // Avoid heavy grid redraws while a batch is in process
+    this._inBatch = true;
   },
 
   onEndUpdateBatch: function() {
+    this._inBatch = false;
+    this.refreshAndRepopulate();
   },
 
   onVisit: function(aURI, aVisitID, aTime, aSessionID,
                     aReferringID, aTransitionType) {
+    if (!this._inBatch) {
+      this.refreshAndRepopulate();
+    }
   },
 
   onTitleChanged: function(aURI, aPageTitle) {
+    let changedItems = this._set.getItemsByUrl(aURI.spec);
+    for (let item of changedItems) {
+      item.setAttribute("label", aPageTitle);
+    }
   },
 
   onDeleteURI: function(aURI) {
+    for (let item of this._set.getItemsByUrl(aURI.spec)) {
+      this._set.removeItem(item, this._inBatch);
+    }
   },
 
   onClearHistory: function() {
@@ -75,9 +100,21 @@ HistoryView.prototype = {
   },
 
   onPageChanged: function(aURI, aWhat, aValue) {
+    if (aWhat ==  Ci.nsINavHistoryObserver.ATTRIBUTE_FAVICON) {
+      let changedItems = this._set.getItemsByUrl(aURI.spec);
+      for (let item of changedItems) {
+        let currIcon = item.getAttribute("iconURI");
+        if (currIcon != aValue) {
+          item.setAttribute("iconURI", aValue);
+        }
+      }
+    }
   },
 
-  onPageExpired: function(aURI, aVisitTime, aWholeEntry) {
+  onDeleteVisits: function (aURI, aVisitTime, aGUID, aReason, aTransitionType) {
+    if ((aReason ==  Ci.nsINavHistoryObserver.REASON_DELETED) && !this._inBatch) {
+      this.refreshAndRepopulate();
+    }
   },
 
   QueryInterface: function(iid) {
@@ -125,4 +162,3 @@ let HistoryPanelView = {
     this._view.destruct();
   }
 };
-

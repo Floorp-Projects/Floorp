@@ -461,4 +461,11 @@ LIRGeneratorARM::lowerTruncateDToInt32(MTruncateToInt32 *ins)
     return define(new LTruncateDToInt32(useRegister(opd), LDefinition::BogusTemp()), ins);
 }
 
+bool
+LIRGeneratorARM::visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic *ins)
+{
+    JS_NOT_REACHED("NYI");
+    return true;
+}
+
 //__aeabi_uidiv

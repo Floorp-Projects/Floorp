@@ -41,12 +41,19 @@ JSObject* ParPush(ParPushArgs *args);
 // generation.
 JSObject *ParExtendArray(ForkJoinSlice *slice, JSObject *array, uint32_t length);
 
-enum ParCompareResult {
-    ParCompareNe = false,
-    ParCompareEq = true,
-    ParCompareUnknown = 2
-};
-ParCompareResult ParCompareStrings(JSString *str1, JSString *str2);
+// These parallel operations fail if they would be required to convert
+// to a string etc etc.
+ParallelResult ParStrictlyEqual(ForkJoinSlice *slice, MutableHandleValue v1, MutableHandleValue v2, JSBool *);
+ParallelResult ParStrictlyUnequal(ForkJoinSlice *slice, MutableHandleValue v1, MutableHandleValue v2, JSBool *);
+ParallelResult ParLooselyEqual(ForkJoinSlice *slice, MutableHandleValue v1, MutableHandleValue v2, JSBool *);
+ParallelResult ParLooselyUnequal(ForkJoinSlice *slice, MutableHandleValue v1, MutableHandleValue v2, JSBool *);
+ParallelResult ParLessThan(ForkJoinSlice *slice, MutableHandleValue v1, MutableHandleValue v2, JSBool *);
+ParallelResult ParLessThanOrEqual(ForkJoinSlice *slice, MutableHandleValue v1, MutableHandleValue v2, JSBool *);
+ParallelResult ParGreaterThan(ForkJoinSlice *slice, MutableHandleValue v1, MutableHandleValue v2, JSBool *);
+ParallelResult ParGreaterThanOrEqual(ForkJoinSlice *slice, MutableHandleValue v1, MutableHandleValue v2, JSBool *);
+
+ParallelResult ParStringsEqual(ForkJoinSlice *slice, HandleString v1, HandleString v2, JSBool *);
+ParallelResult ParStringsUnequal(ForkJoinSlice *slice, HandleString v1, HandleString v2, JSBool *);
 
 void ParallelAbort(JSScript *script);
 

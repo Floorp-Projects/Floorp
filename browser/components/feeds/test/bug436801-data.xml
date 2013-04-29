@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:base="http://www.example.com/">
+
+  <title type="xhtml" xml:base="/foo/bar/">
+    <div xmlns="http://www.w3.org/1999/xhtml">Example of a <em>special</em> feed (<img height="20px" src="baz.png" alt="base test sprite"/>)</div>
+  </title>
+
+  <subtitle type="html" xml:base="/foo/bar/">
+    <![CDATA[
+      With a <em>special</em> subtitle (<img height="20px" src="baz.png" alt="base test sprite"/>)
+    ]]>
+  </subtitle>
+
+  <link href="http://example.org/"/>
+
+  <updated>2010-09-02T18:30:02Z</updated>
+
+  <author>
+    <name>John Doe</name>
+  </author>
+
+  <id>urn:uuid:22906062-ecbd-46e2-b6a7-3039506a398f</id>
+
+  <entry>
+    <title type="xhtml" xml:base="/foo/bar/">
+      <div xmlns="http://www.w3.org/1999/xhtml">Some <abbr title="Extensible Hyper-text Mark-up Language">XHTML</abbr> examples (<img height="20px" src="baz.png" alt="base test sprite"/>)</div>
+    </title>
+    <id>urn:uuid:b48083a7-71a7-4c9c-8515-b7c0d22955e7</id>
+    <updated>2010-09-02T18:30:02Z</updated>
+    <summary>Some text.</summary>
+  </entry>
+
+  <entry>
+    <title type="html" xml:base="/foo/bar/">
+      <![CDATA[
+        Some <abbr title="Hyper-text Mark-up Language">HTML</abbr> examples (<img height="20px" src="baz.png" alt="base test sprite"/>)
+      ]]>
+    </title>
+    <id>urn:uuid:1424967a-280a-414d-b0ab-8b11c4ac1bb7</id>
+    <updated>2010-09-02T18:30:02Z</updated>
+    <summary>Some text.</summary>
+  </entry>
+
+</feed>

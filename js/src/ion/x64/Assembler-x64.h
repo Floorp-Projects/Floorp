@@ -82,6 +82,7 @@ static const Register CallTempReg2 = rbx;
 static const Register CallTempReg3 = rcx;
 static const Register CallTempReg4 = rsi;
 static const Register CallTempReg5 = rdx;
+static const Register CallTempReg6 = rbp;
 
 // Different argument registers for WIN64
 #if defined(_WIN64)
@@ -625,6 +626,19 @@ class Assembler : public AssemblerX86Shared
     }
     void testq(const Register &lhs, const Register &rhs) {
         masm.testq_rr(rhs.code(), lhs.code());
+    }
+    void testq(const Operand &lhs, Imm32 rhs) {
+        switch (lhs.kind()) {
+          case Operand::REG:
+            masm.testq_i32r(rhs.value, lhs.reg());
+            break;
+          case Operand::REG_DISP:
+            masm.testq_i32m(rhs.value, lhs.disp(), lhs.base());
+            break;
+          default:
+            JS_NOT_REACHED("unexpected operand kind");
+            break;
+        }
     }
 
     void jmp(void *target, Relocation::Kind reloc = Relocation::HARDCODED) {

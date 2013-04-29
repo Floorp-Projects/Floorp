@@ -1866,12 +1866,19 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
   tmp->mInUnlinkOrDeletion = false;
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
+static bool sPrefsInitialized = false;
+static int32_t sOnloadDecodeLimit = 0;
 
 nsresult
 nsDocument::Init()
 {
   if (mCSSLoader || mStyleImageLoader || mNodeInfoManager || mScriptLoader) {
     return NS_ERROR_ALREADY_INITIALIZED;
+  }
+
+  if (!sPrefsInitialized) {
+    sPrefsInitialized = true;
+    Preferences::AddIntVarCache(&sOnloadDecodeLimit, "image.onload.decode.limit", 0);
   }
 
   mIdentifierMap.Init();
@@ -8919,9 +8926,11 @@ nsDocument::AddImage(imgIRequest* aImage)
 
   // If this is the first insertion and we're locking images, lock this image
   // too.
-  if (oldCount == 0 && mLockingImages) {
-    rv = aImage->LockImage();
-    if (NS_SUCCEEDED(rv))
+  if (oldCount == 0) {
+    if (mLockingImages)
+      rv = aImage->LockImage();
+    if (NS_SUCCEEDED(rv) && (!sOnloadDecodeLimit ||
+                             mImageTracker.Count() < sOnloadDecodeLimit))
       rv = aImage->StartDecoding();
   }
 

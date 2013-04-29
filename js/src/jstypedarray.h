@@ -321,6 +321,7 @@ TypedArrayShift(ArrayBufferView::ViewType viewType)
     switch (viewType) {
       case ArrayBufferView::TYPE_INT8:
       case ArrayBufferView::TYPE_UINT8:
+      case ArrayBufferView::TYPE_UINT8_CLAMPED:
         return 0;
       case ArrayBufferView::TYPE_INT16:
       case ArrayBufferView::TYPE_UINT16:

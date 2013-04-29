@@ -55,7 +55,7 @@ static const Register CallTempReg2 = r7;
 static const Register CallTempReg3 = r8;
 static const Register CallTempReg4 = r0;
 static const Register CallTempReg5 = r1;
-
+static const Register CallTempReg6 = r2;
 
 static const Register IntArgReg0 = r0;
 static const Register IntArgReg1 = r1;

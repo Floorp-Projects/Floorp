@@ -220,10 +220,10 @@ js::OnUnknownMethod(JSContext *cx, HandleObject obj, Value idval_, MutableHandle
 {
     RootedValue idval(cx, idval_);
 
-    RootedId id(cx, NameToId(cx->names().noSuchMethod));
     RootedValue value(cx);
-    if (!GetMethod(cx, obj, id, 0, &value))
+    if (!JSObject::getProperty(cx, obj, obj, cx->names().noSuchMethod, &value))
         return false;
+
     TypeScript::MonitorUnknown(cx);
 
     if (value.get().isPrimitive()) {
