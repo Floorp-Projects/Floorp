@@ -375,15 +375,19 @@ CustomizeMode.prototype = {
   //           also want to (try) persisting with currentset as well to make it
   //           less painful to switch to older builds.
   persistCurrentSets: function()  {
-    let document = this.document;
-    let toolbars = document.querySelectorAll("toolbar");
+    //XXXjaws The toolbar bindings that are included in this changeset (/browser/base/content/toolbar.xml)
+    //        don't implement currentSet. They probably need to inherit the toolkit bindings.
+    return;
 
-    for (let toolbar of toolbars) {
-      // Calculate currentset and store it in the attribute.
-      toolbar.setAttribute("currentset", toolbar.currentSet);
-      // Persist the currentset attribute directly on hardcoded toolbars.
-      document.persist(toolbar.id, "currentset");
-    }
+    let document = this.document;
+    let toolbar = document.getElementById("nav-bar");
+
+    // Calculate currentset and store it in the attribute.
+    let currentSet = toolbar.currentSet;
+    toolbar.setAttribute("currentset", currentSet);
+
+    // Persist the currentset attribute directly on hardcoded toolbars.
+    document.persist(toolbar.id, "currentset");
   },
 
   reset: function() {

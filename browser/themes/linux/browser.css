@@ -15,8 +15,8 @@
 %define fgTabTexture linear-gradient(transparent 0px, transparent 1px, hsla(0,0%,100%,0.35) 1px, hsla(0,0%,100%,0.35) 2px, hsla(0,0%,100%,0.65) 2px, hsla(0,0%,100%,0.65) 3px, @toolbarHighlight@)
 %define fgTabBackgroundMiddle @fgTabTexture@, linear-gradient(transparent 0px, transparent 2px, -moz-dialog 2px, -moz-dialog)
 %define forwardTransitionLength 150ms
-%define conditionalForwardWithUrlbar       window:not([chromehidden~=toolbar]) :-moz-any(#nav-bar[currentset*="unified-back-forward-button,urlbar-container"],                #nav-bar:not([currentset]))                 > #nav-bar-customizationtarget > #unified-back-forward-button
-%define conditionalForwardWithUrlbar_small window:not([chromehidden~=toolbar]) :-moz-any(#nav-bar[currentset*="unified-back-forward-button,urlbar-container"][iconsize=small],#nav-bar:not([currentset])[iconsize=small]) > #nav-bar-customizationtarget > #unified-back-forward-button
+%define conditionalForwardWithUrlbar       window:not([chromehidden~=toolbar]) :-moz-any(#nav-bar[currentset*="unified-back-forward-button,urlbar-container"],                #nav-bar:not([currentset]))                 > #unified-back-forward-button
+%define conditionalForwardWithUrlbar_small window:not([chromehidden~=toolbar]) :-moz-any(#nav-bar[currentset*="unified-back-forward-button,urlbar-container"][iconsize=small],#nav-bar:not([currentset])[iconsize=small]) > #unified-back-forward-button
 %define conditionalForwardWithUrlbarWidth 32
 %define conditionalForwardWithUrlbarWidth_small 24
 

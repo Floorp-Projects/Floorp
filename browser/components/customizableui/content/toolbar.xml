@@ -98,17 +98,6 @@
           return this._toolbox;
         ]]></getter>
       </property>
-
-      <property name="currentSet" readonly="true">
-        <getter><![CDATA[
-          if (!this._customizationTarget)
-            return "";
-
-          return [node.id for (node of this._customizationTarget.children)].join(',');
-        ]]></getter>
-      </property>
-
-
     </implementation>
   </binding>
 
