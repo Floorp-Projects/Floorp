@@ -217,20 +217,25 @@ public class LayerMarginsAnimator implements TouchEventInterceptor {
         // Only alter margins if the toolbar isn't pinned
         if (!mMarginsPinned) {
             RectF overscroll = aMetrics.getOverscroll();
-            aDx = scrollMargin(newMarginsX, aDx,
-                               overscroll.left, overscroll.right,
-                               mTouchStartPosition.x,
-                               aMetrics.viewportRectLeft, aMetrics.viewportRectRight,
-                               aMetrics.pageRectLeft, aMetrics.pageRectRight,
-                               mMaxMargins.left, mMaxMargins.right,
-                               aMetrics.isRTL);
-            aDy = scrollMargin(newMarginsY, aDy,
-                               overscroll.top, overscroll.bottom,
-                               mTouchStartPosition.y,
-                               aMetrics.viewportRectTop, aMetrics.viewportRectBottom,
-                               aMetrics.pageRectTop, aMetrics.pageRectBottom,
-                               mMaxMargins.top, mMaxMargins.bottom,
-                               false);
+            // Only allow margins to scroll if the page can fill the viewport.
+            if (aMetrics.getPageWidth() >= aMetrics.getWidth()) {
+                aDx = scrollMargin(newMarginsX, aDx,
+                                   overscroll.left, overscroll.right,
+                                   mTouchStartPosition.x,
+                                   aMetrics.viewportRectLeft, aMetrics.viewportRectRight,
+                                   aMetrics.pageRectLeft, aMetrics.pageRectRight,
+                                   mMaxMargins.left, mMaxMargins.right,
+                                   aMetrics.isRTL);
+            }
+            if (aMetrics.getPageHeight() >= aMetrics.getHeight()) {
+                aDy = scrollMargin(newMarginsY, aDy,
+                                   overscroll.top, overscroll.bottom,
+                                   mTouchStartPosition.y,
+                                   aMetrics.viewportRectTop, aMetrics.viewportRectBottom,
+                                   aMetrics.pageRectTop, aMetrics.pageRectBottom,
+                                   mMaxMargins.top, mMaxMargins.bottom,
+                                   false);
+            }
         }
 
         return aMetrics.setMargins(newMarginsX[0], newMarginsY[0], newMarginsX[1], newMarginsY[1]).offsetViewportBy(aDx, aDy);
