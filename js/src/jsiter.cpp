@@ -25,6 +25,7 @@
 #include "jsproxy.h"
 #include "jsscript.h"
 
+#include "ds/Sort.h"
 #include "gc/Marking.h"
 #include "vm/GlobalObject.h"
 #include "vm/Shape.h"
