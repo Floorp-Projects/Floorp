@@ -2,9 +2,14 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+/* This test mirrors ../../test/unit/test_0160_appInUse_complete.js but does the
+ * update using the service.  This test only runs on Windows but the blocks like
+ * IS_MACOSX are preserved to make it easy to spot differences between the 2
+ * mirrored tests. */
+
 /* Application in use complete MAR file patch apply success test */
 
-const TEST_ID = "0160";
+const TEST_ID = "0160_svc";
 // All we care about is that the last modified time has changed so that Mac OS
 // X Launch Services invalidates its cache so the test allows up to one minute
 // difference in the last modified time.
@@ -234,6 +239,10 @@ ADDITIONAL_TEST_DIRS = [
 }];
 
 function run_test() {
+  if (!shouldRunServiceTest()) {
+    return;
+  }
+
   do_test_pending();
   do_register_cleanup(cleanupUpdaterTest);
 
@@ -264,14 +273,12 @@ function doUpdate() {
   }
 
   // apply the complete mar
-  let exitValue = runUpdate();
-  logTestInfo("testing updater binary process exitValue for success when " +
-              "applying a complete mar");
-  do_check_eq(exitValue, 0);
-
-  setupHelperFinish();
+  runUpdateUsingService(STATE_PENDING_SVC, STATE_SUCCEEDED, checkUpdateApplied);
 }
 
+function checkUpdateApplied() {
+  setupHelperFinish();
+}
 
 function checkUpdate() {
   logTestInfo("testing update.status should be " + STATE_SUCCEEDED);
@@ -290,6 +297,14 @@ function checkUpdate() {
   }
 
   checkFilesAfterUpdateSuccess();
+  checkUpdateLogContents(LOG_COMPLETE_SUCCESS);
 
-  checkCallbackAppLog();
+  if (IS_WIN) {
+    logTestInfo("testing tobedeleted directory doesn't exist");
+    let toBeDeletedDir = getApplyDirFile("tobedeleted", true);
+    do_check_false(toBeDeletedDir.exists());
+  }
+
+  checkCallbackServiceLog();
 }
+

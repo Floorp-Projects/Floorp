@@ -605,6 +605,26 @@ public:
     return this;
   }
 
+  // only overridden for hacky fix in gecko 23 for bug 862324
+  // see bug 865908 about fixing this.
+  virtual void SetBuffer(SurfaceDescriptor* aBuffer, ISurfaceAllocator* aAllocator) MOZ_OVERRIDE;
+
+  // used only for hacky fix in gecko 23 for bug 862324
+  virtual void ForgetBuffer()
+  {
+    if (mBuffer) {
+      // Intentionally don't destroy the actor held by mBuffer here.
+      // The point is that this is only called from GrallocBufferActor::ActorDestroy
+      // where we know that the actor is already being deleted.
+      // See bug 862324 comment 39.
+      delete mBuffer;
+      mBuffer = nullptr;
+    }
+
+    mGraphicBuffer = nullptr;
+    DeleteTextures();
+  }
+
 private:
   void DeleteTextures();
 

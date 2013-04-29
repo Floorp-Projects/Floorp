@@ -3259,7 +3259,7 @@ IonBuilder::jsop_binary(JSOp op, MDefinition *left, MDefinition *right)
     bool overflowed = types::HasOperationOverflowed(script(), pc);
 
     current->add(ins);
-    ins->infer(overflowed);
+    ins->infer(inspector, pc, overflowed);
     current->push(ins);
 
     if (ins->isEffectful())
@@ -5856,9 +5856,6 @@ IonBuilder::jsop_getgname(HandlePropertyName name)
 bool
 ion::TypeSetIncludes(types::TypeSet *types, MIRType input, types::TypeSet *inputTypes)
 {
-    if (inputTypes)
-        return inputTypes->isSubset(types);
-
     switch (input) {
       case MIRType_Undefined:
       case MIRType_Null:
@@ -5870,10 +5867,10 @@ ion::TypeSetIncludes(types::TypeSet *types, MIRType input, types::TypeSet *input
         return types->hasType(types::Type::PrimitiveType(ValueTypeFromMIRType(input)));
 
       case MIRType_Object:
-        return types->unknownObject();
+        return types->unknownObject() || (inputTypes && inputTypes->isSubset(types));
 
       case MIRType_Value:
-        return types->unknown();
+        return types->unknown() || (inputTypes && inputTypes->isSubset(types));
 
       default:
         JS_NOT_REACHED("Bad input type");
@@ -6234,9 +6231,93 @@ IonBuilder::getTypedArrayElements(MDefinition *obj)
     return MTypedArrayElements::New(obj);
 }
 
+MDefinition *
+IonBuilder::convertShiftToMaskForStaticTypedArray(MDefinition *id,
+                                                  ArrayBufferView::ViewType viewType)
+{
+    if (!id->isRsh() || id->isEffectful())
+        return NULL;
+    if (!id->getOperand(1)->isConstant())
+        return NULL;
+    const Value &value = id->getOperand(1)->toConstant()->value();
+    if (!value.isInt32() || uint32_t(value.toInt32()) != TypedArrayShift(viewType))
+        return NULL;
+
+    // Instead of shifting, mask off the low bits of the index so that
+    // a non-scaled access on the typed array can be performed.
+    MConstant *mask = MConstant::New(Int32Value(~((1 << value.toInt32()) - 1)));
+    MBitAnd *ptr = MBitAnd::New(id->getOperand(0), mask);
+
+    ptr->infer();
+    JS_ASSERT(!ptr->isEffectful());
+
+    current->add(mask);
+    current->add(ptr);
+
+    return ptr;
+}
+
+bool
+IonBuilder::jsop_getelem_typed_static(bool *psucceeded)
+{
+    if (!LIRGenerator::allowStaticTypedArrayAccesses())
+        return true;
+
+    MDefinition *id = current->peek(-1);
+    MDefinition *obj = current->peek(-2);
+
+    if (ElementAccessHasExtraIndexedProperty(cx, obj))
+        return true;
+
+    if (!obj->resultTypeSet())
+        return true;
+    JSObject *typedArray = obj->resultTypeSet()->getSingleton();
+    if (!typedArray)
+        return true;
+    JS_ASSERT(typedArray->isTypedArray());
+
+    ArrayBufferView::ViewType viewType = JS_GetArrayBufferViewType(typedArray);
+
+    MDefinition *ptr = convertShiftToMaskForStaticTypedArray(id, viewType);
+    if (!ptr)
+        return true;
+
+    obj->setFolded();
+
+    MLoadTypedArrayElementStatic *load = MLoadTypedArrayElementStatic::New(typedArray, ptr);
+    current->add(load);
+
+    // The load is infallible if an undefined result will be coerced to the
+    // appropriate numeric type if the read is out of bounds. The truncation
+    // analysis picks up some of these cases, but is incomplete with respect
+    // to others. For now, sniff the bytecode for simple patterns following
+    // the load which guarantee a truncation or numeric conversion.
+    if (viewType == ArrayBufferView::TYPE_FLOAT32 || viewType == ArrayBufferView::TYPE_FLOAT64) {
+        jsbytecode *next = pc + JSOP_GETELEM_LENGTH;
+        if (*next == JSOP_POS)
+            load->setInfallible();
+    } else {
+        jsbytecode *next = pc + JSOP_GETELEM_LENGTH;
+        if (*next == JSOP_ZERO && *(next + JSOP_ZERO_LENGTH) == JSOP_BITOR)
+            load->setInfallible();
+    }
+
+    current->popn(2);
+    current->push(load);
+
+    *psucceeded = true;
+    return true;
+}
+
 bool
 IonBuilder::jsop_getelem_typed(int arrayType)
 {
+    bool staticAccess = false;
+    if (!jsop_getelem_typed_static(&staticAccess))
+        return false;
+    if (staticAccess)
+        return true;
+
     types::StackTypeSet *types = script()->analysis()->bytecodeTypes(pc);
 
     MDefinition *id = current->pop();
@@ -6451,8 +6532,58 @@ IonBuilder::jsop_setelem_dense(types::StackTypeSet::DoubleConversion conversion)
 }
 
 bool
+IonBuilder::jsop_setelem_typed_static(bool *psucceeded)
+{
+    if (!LIRGenerator::allowStaticTypedArrayAccesses())
+        return true;
+
+    MDefinition *value = current->peek(-1);
+    MDefinition *id = current->peek(-2);
+    MDefinition *obj = current->peek(-3);
+
+    if (ElementAccessHasExtraIndexedProperty(cx, obj))
+        return true;
+
+    if (!obj->resultTypeSet())
+        return true;
+    JSObject *typedArray = obj->resultTypeSet()->getSingleton();
+    if (!typedArray)
+        return true;
+    JS_ASSERT(typedArray->isTypedArray());
+
+    ArrayBufferView::ViewType viewType = JS_GetArrayBufferViewType(typedArray);
+
+    MDefinition *ptr = convertShiftToMaskForStaticTypedArray(id, viewType);
+    if (!ptr)
+        return true;
+
+    obj->setFolded();
+
+    // Clamp value to [0, 255] for Uint8ClampedArray.
+    MDefinition *toWrite = value;
+    if (viewType == ArrayBufferView::TYPE_UINT8_CLAMPED) {
+        toWrite = MClampToUint8::New(value);
+        current->add(toWrite->toInstruction());
+    }
+
+    MInstruction *store = MStoreTypedArrayElementStatic::New(typedArray, ptr, toWrite);
+    current->add(store);
+    current->popn(3);
+    current->push(value);
+
+    *psucceeded = true;
+    return resumeAfter(store);
+}
+
+bool
 IonBuilder::jsop_setelem_typed(int arrayType)
 {
+    bool staticAccess = false;
+    if (!jsop_setelem_typed_static(&staticAccess))
+        return false;
+    if (staticAccess)
+        return true;
+
     MDefinition *value = current->pop();
     MDefinition *id = current->pop();
     MDefinition *obj = current->pop();

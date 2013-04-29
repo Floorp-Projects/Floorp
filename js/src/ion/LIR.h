@@ -609,6 +609,12 @@ class LInstruction
         }
     }
 
+    // Hook for opcodes to add extra high level detail about what code will be
+    // emitted for the op.
+    virtual const char *extraName() const {
+        return NULL;
+    }
+
   public:
     virtual Opcode op() const = 0;
 

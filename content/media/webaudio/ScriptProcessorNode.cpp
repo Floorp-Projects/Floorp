@@ -234,7 +234,114 @@ private:
     }
   }
 
-  void SendBuffersToMainThread(AudioNodeStream* aStream);
+  void SendBuffersToMainThread(AudioNodeStream* aStream)
+  {
+    MOZ_ASSERT(!NS_IsMainThread());
+
+    // we now have a full input buffer ready to be sent to the main thread.
+    TrackTicks playbackTick = mSource->GetCurrentPosition();
+    // Add the duration of the current sample
+    playbackTick += WEBAUDIO_BLOCK_SIZE;
+    // Add the delay caused by the main thread
+    playbackTick += mSharedBuffers->DelaySoFar();
+    // Compute the playback time in the coordinate system of the destination
+    double playbackTime =
+      WebAudioUtils::StreamPositionToDestinationTime(playbackTick,
+                                                     mSource,
+                                                     mDestination);
+
+    class Command : public nsRunnable
+    {
+    public:
+      Command(AudioNodeStream* aStream,
+              InputChannels& aInputChannels,
+              double aPlaybackTime,
+              bool aNullInput)
+        : mStream(aStream)
+        , mPlaybackTime(aPlaybackTime)
+        , mNullInput(aNullInput)
+      {
+        mInputChannels.SetLength(aInputChannels.Length());
+        if (!aNullInput) {
+          for (uint32_t i = 0; i < mInputChannels.Length(); ++i) {
+            mInputChannels[i] = aInputChannels[i].forget();
+          }
+        }
+      }
+
+      NS_IMETHODIMP Run()
+      {
+        // If it's not safe to run scripts right now, schedule this to run later
+        if (!nsContentUtils::IsSafeToRunScript()) {
+          nsContentUtils::AddScriptRunner(this);
+          return NS_OK;
+        }
+
+        nsRefPtr<ScriptProcessorNode> node;
+        {
+          // No need to keep holding the lock for the whole duration of this
+          // function, since we're holding a strong reference to it, so if
+          // we can obtain the reference, we will hold the node alive in
+          // this function.
+          MutexAutoLock lock(mStream->Engine()->NodeMutex());
+          node = static_cast<ScriptProcessorNode*>(mStream->Engine()->Node());
+        }
+        if (!node) {
+          return NS_OK;
+        }
+
+        AutoPushJSContext cx(node->Context()->GetJSContext());
+        if (cx) {
+          JSAutoRequest ar(cx);
+
+          // Create the input buffer
+          nsRefPtr<AudioBuffer> inputBuffer;
+          if (!mNullInput) {
+            inputBuffer = new AudioBuffer(node->Context(),
+                                          node->BufferSize(),
+                                          node->Context()->SampleRate());
+            if (!inputBuffer->InitializeBuffers(mInputChannels.Length(), cx)) {
+              return NS_OK;
+            }
+            // Put the channel data inside it
+            for (uint32_t i = 0; i < mInputChannels.Length(); ++i) {
+              inputBuffer->SetRawChannelContents(cx, i, mInputChannels[i]);
+            }
+          }
+
+          // Ask content to produce data in the output buffer
+          // Note that we always avoid creating the output buffer here, and we try to
+          // avoid creating the input buffer as well.  The AudioProcessingEvent class
+          // knows how to lazily create them if needed once the script tries to access
+          // them.  Otherwise, we may be able to get away without creating them!
+          nsRefPtr<AudioProcessingEvent> event = new AudioProcessingEvent(node, nullptr, nullptr);
+          event->InitEvent(inputBuffer,
+                           mInputChannels.Length(),
+                           mPlaybackTime);
+          node->DispatchTrustedEvent(event);
+
+          // Steal the output buffers
+          nsRefPtr<ThreadSharedFloatArrayBufferList> output;
+          if (event->HasOutputBuffer()) {
+            output = event->OutputBuffer()->GetThreadSharedChannelsForRate(cx);
+          }
+
+          // Append it to our output buffer queue
+          node->GetSharedBuffers()->FinishProducingOutputBuffer(output, node->BufferSize());
+        }
+        return NS_OK;
+      }
+    private:
+      nsRefPtr<AudioNodeStream> mStream;
+      InputChannels mInputChannels;
+      double mPlaybackTime;
+      bool mNullInput;
+    };
+
+    NS_DispatchToMainThread(new Command(aStream, mInputChannels,
+                                        playbackTime,
+                                        !mSeenNonSilenceInput));
+  }
 
   friend class ScriptProcessorNode;
 
@@ -281,116 +388,6 @@ JSObject*
 ScriptProcessorNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return ScriptProcessorNodeBinding::Wrap(aCx, aScope, this);
-}
-
-class DispatchAudioProcessEventCommand : public nsRunnable
-{
-public:
-  DispatchAudioProcessEventCommand(AudioNodeStream* aStream,
-                                   ScriptProcessorNodeEngine::InputChannels& aInputChannels,
-                                   double aPlaybackTime,
-                                   bool aNullInput)
-    : mStream(aStream)
-    , mPlaybackTime(aPlaybackTime)
-    , mNullInput(aNullInput)
-  {
-    mInputChannels.SetLength(aInputChannels.Length());
-    if (!aNullInput) {
-      for (uint32_t i = 0; i < mInputChannels.Length(); ++i) {
-        mInputChannels[i] = aInputChannels[i].forget();
-      }
-    }
-  }
-
-  NS_IMETHODIMP Run()
-  {
-    // If it's not safe to run scripts right now, schedule this to run later
-    if (!nsContentUtils::IsSafeToRunScript()) {
-      nsContentUtils::AddScriptRunner(this);
-      return NS_OK;
-    }
-
-    nsRefPtr<ScriptProcessorNode> node;
-    {
-      // No need to keep holding the lock for the whole duration of this
-      // function, since we're holding a strong reference to it, so if
-      // we can obtain the reference, we will hold the node alive in
-      // this function.
-      MutexAutoLock lock(mStream->Engine()->NodeMutex());
-      node = static_cast<ScriptProcessorNode*>(mStream->Engine()->Node());
-    }
-    if (!node) {
-      return NS_OK;
-    }
-
-    AutoPushJSContext cx(node->Context()->GetJSContext());
-    if (cx) {
-      JSAutoRequest ar(cx);
-
-      // Create the input buffer
-      nsRefPtr<AudioBuffer> inputBuffer;
-      if (!mNullInput) {
-        inputBuffer = new AudioBuffer(node->Context(),
-                                      node->BufferSize(),
-                                      node->Context()->SampleRate());
-        if (!inputBuffer->InitializeBuffers(mInputChannels.Length(), cx)) {
-          return NS_OK;
-        }
-        // Put the channel data inside it
-        for (uint32_t i = 0; i < mInputChannels.Length(); ++i) {
-          inputBuffer->SetRawChannelContents(cx, i, mInputChannels[i]);
-        }
-      }
-
-      // Ask content to produce data in the output buffer
-      // Note that we always avoid creating the output buffer here, and we try to
-      // avoid creating the input buffer as well.  The AudioProcessingEvent class
-      // knows how to lazily create them if needed once the script tries to access
-      // them.  Otherwise, we may be able to get away without creating them!
-      nsRefPtr<AudioProcessingEvent> event = new AudioProcessingEvent(node, nullptr, nullptr);
-      event->InitEvent(inputBuffer,
-                       mInputChannels.Length(),
-                       mPlaybackTime);
-      node->DispatchTrustedEvent(event);
-
-      // Steal the output buffers
-      nsRefPtr<ThreadSharedFloatArrayBufferList> output;
-      if (event->HasOutputBuffer()) {
-        output = event->OutputBuffer()->GetThreadSharedChannelsForRate(cx);
-      }
-
-      // Append it to our output buffer queue
-      node->GetSharedBuffers()->FinishProducingOutputBuffer(output, node->BufferSize());
-    }
-    return NS_OK;
-  }
-private:
-  nsRefPtr<AudioNodeStream> mStream;
-  ScriptProcessorNodeEngine::InputChannels mInputChannels;
-  double mPlaybackTime;
-  bool mNullInput;
-};
-
-void
-ScriptProcessorNodeEngine::SendBuffersToMainThread(AudioNodeStream* aStream)
-{
-  MOZ_ASSERT(!NS_IsMainThread());
-
-  // we now have a full input buffer ready to be sent to the main thread.
-  TrackTicks playbackTick = mSource->GetCurrentPosition();
-  // Add the duration of the current sample
-  playbackTick += WEBAUDIO_BLOCK_SIZE;
-  // Add the delay caused by the main thread
-  playbackTick += mSharedBuffers->DelaySoFar();
-  // Compute the playback time in the coordinate system of the destination
-  double playbackTime =
-    WebAudioUtils::StreamPositionToDestinationTime(playbackTick,
-                                                   mSource,
-                                                   mDestination);
-
-  NS_DispatchToMainThread(new DispatchAudioProcessEventCommand(aStream, mInputChannels,
-                                                               playbackTime,
-                                                               !mSeenNonSilenceInput));
 }
 
 }

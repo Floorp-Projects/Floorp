@@ -40,6 +40,12 @@
                 onget="return this._contentTitle"
                 readonly="true"/>
 
+      <field name="_characterSet">null</field>
+
+      <property name="characterSet"
+                onget="return this._characterSet"
+                readonly="true"/>
+
       <constructor>
         <![CDATA[
           this.messageManager.addMessageListener("DOMTitleChanged", this);

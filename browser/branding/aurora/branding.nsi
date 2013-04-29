@@ -14,7 +14,7 @@
 !define URLUpdateInfo         "http://www.mozilla.org/projects/firefox"
 
 !define URLStubDownload "http://download.mozilla.org/?product=firefox-aurora-latest&os=win&lang=${AB_CD}"
-!define URLManualDownload "https://www.mozilla.org/firefox/installer-help/?channel=aurora"
+!define URLManualDownload "https://www.mozilla.org/${AB_CD}/firefox/installer-help/?channel=aurora&installer_lang=${AB_CD}"
 !define Channel "aurora"
 
 # The installer's certificate name and issuer expected by the stub installer

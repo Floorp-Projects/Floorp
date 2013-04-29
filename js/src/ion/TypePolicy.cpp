@@ -549,6 +549,15 @@ StoreTypedArrayHolePolicy::adjustInputs(MInstruction *ins)
 }
 
 bool
+StoreTypedArrayElementStaticPolicy::adjustInputs(MInstruction *ins)
+{
+    MStoreTypedArrayElementStatic *store = ins->toStoreTypedArrayElementStatic();
+    JS_ASSERT(store->ptr()->type() == MIRType_Int32);
+
+    return adjustValueInput(ins, store->viewType(), store->value(), 1);
+}
+
+bool
 ClampPolicy::adjustInputs(MInstruction *ins)
 {
     MDefinition *in = ins->toClampToUint8()->input();

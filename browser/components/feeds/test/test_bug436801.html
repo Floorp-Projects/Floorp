@@ -1,0 +1,119 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=436801
+-->
+<head>
+  <title>Test feed preview subscribe UI</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=436801">Mozilla Bug 436801</a>
+<p id="display"><iframe id="testFrame" src="bug436801-data.xml"></iframe></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(function () {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var doc = $("testFrame").contentDocument;
+
+  checkNode(doc.getElementById("feedTitleText"), [
+    "ELEMENT", "h1", { "xml:base": "http://www.example.com/foo/bar/" }, [
+      ["TEXT", "Example of a "],
+      ["ELEMENT", "em", [
+        ["TEXT", "special"],
+      ]],
+      ["TEXT", " feed ("],
+      ["ELEMENT", "img", { "src": "baz.png" }],
+      ["TEXT", ")"],
+    ]
+  ]);
+
+  checkNode(doc.getElementById("feedSubtitleText"), [
+    "ELEMENT", "h2", { "xml:base": "http://www.example.com/foo/bar/" }, [
+      ["TEXT", "With a "],
+      ["ELEMENT", "em", [
+        ["TEXT", "special"],
+      ]],
+      ["TEXT", " subtitle ("],
+      ["ELEMENT", "img", { "src": "baz.png" }],
+      ["TEXT", ")"],
+    ]
+  ]);
+
+  checkNode(doc.querySelector(".entry").firstChild.firstChild.firstChild, [
+    "ELEMENT", "span", { "xml:base": "http://www.example.com/foo/bar/" }, [
+      ["TEXT", "Some "],
+      ["ELEMENT", "abbr", { title: "Extensible Hyper-text Mark-up Language" }, [
+        ["TEXT", "XHTML"],
+      ]],
+      ["TEXT", " examples ("],
+      ["ELEMENT", "img", { "src": "baz.png" }],
+      ["TEXT", ")"],
+    ]
+  ]);
+
+  checkNode(doc.querySelectorAll(".entry")[1].firstChild.firstChild.firstChild, [
+    "ELEMENT", "span", { "xml:base": "http://www.example.com/foo/bar/" }, [
+      ["TEXT", "Some "],
+      ["ELEMENT", "abbr", { title: "Hyper-text Mark-up Language" }, [
+        ["TEXT", "HTML"],
+      ]],
+      ["TEXT", " examples ("],
+      ["ELEMENT", "img", { "src": "baz.png" }],
+      ["TEXT", ")"],
+    ]
+  ]);
+});
+
+addLoadEvent(SimpleTest.finish);
+
+function checkNode(node, schema) {
+  var typeName = schema.shift() + "_NODE";
+  var type = Node[typeName];
+  is(node.nodeType, type, "Node should be expected type " + typeName);
+  if (type == Node.TEXT_NODE) {
+    var text = schema.shift();
+    is(node.data, text, "Text should match");
+    return;
+  }
+  // type == Node.ELEMENT_NODE
+  var tag = schema.shift();
+  is(node.localName, tag, "Element should have expected tag");
+  while (schema.length) {
+    var val = schema.shift();
+    if (Array.isArray(val))
+      var childSchema = val;
+    else
+      var attrSchema = val;
+  }
+  if (attrSchema) {
+    var nsTable = {
+      xml: "http://www.w3.org/XML/1998/namespace",
+    };
+    for (var name in attrSchema) {
+      var [ns, nsName] = name.split(":");
+      var val = nsName ? node.getAttributeNS(nsTable[ns], nsName) :
+                node.getAttribute(name);
+      is(val, attrSchema[name], "Attribute " + name + " should match");
+    }
+  }
+  if (childSchema) {
+    var numChildren = node.childNodes.length;
+    is(childSchema.length, numChildren,
+       "Element should have expected number of children");
+    for (var i = 0; i < numChildren; i++)
+      checkNode(node.childNodes[i], childSchema[i]);
+  }
+}
+
+</script>
+</pre>
+</body>
+</html>
