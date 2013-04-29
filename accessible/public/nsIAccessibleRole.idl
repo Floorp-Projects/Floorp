@@ -773,5 +773,9 @@ interface nsIAccessibleRole : nsISupports
    * An HTML definition <dd>
    */
   const unsigned long ROLE_DEFINITION = 128;
-};
 
+  /**
+   * A keyboard or keypad key.
+   */
+  const unsigned long ROLE_KEY = 129;
+};
