@@ -170,6 +170,20 @@ class TestRecursiveMakeBackend(BackendTester):
             'EXPORTS_nspr/private += pprio.h',
         ])
 
+    def test_xpcshell_manifests(self):
+        """Ensure XPCSHELL_TESTS_MANIFESTS is written out correctly."""
+        env = self._consume('xpcshell_manifests', RecursiveMakeBackend)
+
+        backend_path = os.path.join(env.topobjdir, 'backend.mk')
+        lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:-1]]
+
+        # Avoid positional parameter and async related breakage
+        var = 'XPCSHELL_TESTS'
+        xpclines = sorted([val for val in lines if val.startswith(var)])
+
+        # Assignment[aa], append[cc], conditional[valid]
+        expected = ('aa', 'bb', 'cc', 'dd', 'valid_val')
+        self.assertEqual(xpclines, ["XPCSHELL_TESTS += %s" % val for val in expected])
 
 if __name__ == '__main__':
     main()

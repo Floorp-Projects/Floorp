@@ -15,6 +15,7 @@ from mozbuild.frontend.data import (
     ReaderSummary,
     VariablePassthru,
     Exports,
+    XpcshellManifests,
 )
 from mozbuild.frontend.emitter import TreeMetadataEmitter
 from mozbuild.frontend.reader import BuildReader
@@ -168,6 +169,24 @@ class TestEmitterBasic(unittest.TestCase):
         self.assertIn('overwrite', exports._children)
         overwrite = exports._children['overwrite']
         self.assertEqual(overwrite.get_strings(), ['new.h'])
+
+    def test_xpcshell_manifests(self):
+        reader = self.reader('xpcshell_manifests')
+        objs = self.read_topsrcdir(reader)
+
+        inis = []
+        for o in objs:
+            if isinstance(o, XpcshellManifests):
+                inis.append(o.xpcshell_manifests)
+
+        iniByDir = [
+            'bar/xpcshell.ini',
+            'enabled_var/xpcshell.ini',
+            'foo/xpcshell.ini',
+            'tans/xpcshell.ini',
+            ]
+
+        self.assertEqual(sorted(inis), iniByDir)
 
 if __name__ == '__main__':
     main()
