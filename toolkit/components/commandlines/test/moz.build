@@ -6,3 +6,10 @@
 
 MODULE = 'test_harness_commandlines'
 
+XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
+
+if CONFIG['OS_ARCH'] == 'WINNT':
+    XPCSHELL_TESTS_MANIFESTS += ['unit_win/xpcshell.ini']
+
+if CONFIG['OS_ARCH'] != 'WINNT' and CONFIG['OS_ARCH'] not in ('Darwin', 'OS2'):
+    XPCSHELL_TESTS_MANIFESTS += ['unit_unix/xpcshell.ini']

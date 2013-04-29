@@ -14,7 +14,7 @@ TESTXPI = $(TESTROOT)/xpcshell/addons
 
 include $(DEPTH)/config/autoconf.mk
 
-XPCSHELL_TESTS = \
+DISABLED_XPCSHELL_TESTS = \
   xpcshell \
   xpcshell-unpack \
   $(NULL)

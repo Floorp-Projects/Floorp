@@ -6,3 +6,4 @@
 
 MODULE = 'crashreporter_test'
 
+XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini', 'unit_ipc/xpcshell.ini']

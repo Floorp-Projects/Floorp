@@ -10,7 +10,7 @@ relativesrcdir  = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-XPCSHELL_TESTS	= unit
+DISABLED_XPCSHELL_TESTS	= unit
 
 
 MOCHITEST_BROWSER_FILES = browser_420786.js \

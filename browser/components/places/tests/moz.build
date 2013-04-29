@@ -8,3 +8,4 @@ DIRS += ['browser', 'chrome']
 
 MODULE = 'test_browser_places'
 
+XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']

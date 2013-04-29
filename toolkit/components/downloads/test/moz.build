@@ -8,3 +8,4 @@ TEST_DIRS += ['browser']
 
 MODULE = 'test_dm'
 
+XPCSHELL_TESTS_MANIFESTS += ['schema_migration/xpcshell.ini', 'unit/xpcshell.ini']

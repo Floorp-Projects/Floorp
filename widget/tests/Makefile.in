@@ -12,7 +12,7 @@ FAIL_ON_WARNINGS = 1
 
 include $(DEPTH)/config/autoconf.mk
 
-XPCSHELL_TESTS  = unit
+DISABLED_XPCSHELL_TESTS  = unit
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 

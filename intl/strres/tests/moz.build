@@ -6,3 +6,4 @@
 
 MODULE = 'test_intl_strres'
 
+XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']

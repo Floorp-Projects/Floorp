@@ -19,7 +19,7 @@ EXTRA_JS_MODULES = \
   $(NULL)
 
 ifdef ENABLE_TESTS
-XPCSHELL_TESTS = test/unit
+DISABLED_XPCSHELL_TESTS = test/unit
 endif
 
 include $(topsrcdir)/config/rules.mk

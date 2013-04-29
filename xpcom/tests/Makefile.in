@@ -113,7 +113,7 @@ ifeq ($(OS_ARCH)$(OS_RELEASE),FreeBSD2)
 LIBS		+= -lpcap
 endif
 
-XPCSHELL_TESTS = unit
+DISABLED_XPCSHELL_TESTS = unit
 
 # Make sure we have symbols in case we need to debug these.
 MOZ_DEBUG_SYMBOLS = 1
