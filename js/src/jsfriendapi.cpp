@@ -1004,12 +1004,15 @@ js::GetDOMCallbacks(JSRuntime *rt)
 
 static void *gListBaseHandlerFamily = NULL;
 static uint32_t gListBaseExpandoSlot = 0;
+static ListBaseShadowsCheck gListBaseShadowsCheck;
 
 JS_FRIEND_API(void)
-js::SetListBaseInformation(void *listBaseHandlerFamily, uint32_t listBaseExpandoSlot)
+js::SetListBaseInformation(void *listBaseHandlerFamily, uint32_t listBaseExpandoSlot,
+                           ListBaseShadowsCheck listBaseShadowsCheck)
 {
     gListBaseHandlerFamily = listBaseHandlerFamily;
     gListBaseExpandoSlot = listBaseExpandoSlot;
+    gListBaseShadowsCheck = listBaseShadowsCheck;
 }
 
 void *
@@ -1022,6 +1025,12 @@ uint32_t
 js::GetListBaseExpandoSlot()
 {
     return gListBaseExpandoSlot;
+}
+
+ListBaseShadowsCheck
+js::GetListBaseShadowsCheck()
+{
+    return gListBaseShadowsCheck;
 }
 
 JS_FRIEND_API(void)
