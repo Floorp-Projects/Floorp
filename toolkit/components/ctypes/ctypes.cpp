@@ -66,8 +66,8 @@ Module::~Module()
 static JSBool
 SealObjectAndPrototype(JSContext* cx, JSObject* parent, const char* name)
 {
-  JS::Value prop;
-  if (!JS_GetProperty(cx, parent, name, &prop))
+  JS::Rooted<JS::Value> prop(cx);
+  if (!JS_GetProperty(cx, parent, name, prop.address()))
     return false;
 
   if (prop.isUndefined()) {
@@ -75,24 +75,24 @@ SealObjectAndPrototype(JSContext* cx, JSObject* parent, const char* name)
     return true;
   }
 
-  JSObject* obj = JSVAL_TO_OBJECT(prop);
-  if (!JS_GetProperty(cx, obj, "prototype", &prop))
+  JS::Rooted<JSObject*> obj(cx, prop.toObjectOrNull());
+  if (!JS_GetProperty(cx, obj, "prototype", prop.address()))
     return false;
 
-  JSObject* prototype = JSVAL_TO_OBJECT(prop);
+  JS::Rooted<JSObject*> prototype(cx, prop.toObjectOrNull());
   return JS_FreezeObject(cx, obj) && JS_FreezeObject(cx, prototype);
 }
 
 static JSBool
-InitAndSealCTypesClass(JSContext* cx, JSObject* global)
+InitAndSealCTypesClass(JSContext* cx, JS::Handle<JSObject*> global)
 {
   // Init the ctypes object.
   if (!JS_InitCTypesClass(cx, global))
     return false;
 
   // Set callbacks for charset conversion and such.
-  JS::Value ctypes;
-  if (!JS_GetProperty(cx, global, "ctypes", &ctypes))
+  JS::Rooted<JS::Value> ctypes(cx);
+  if (!JS_GetProperty(cx, global, "ctypes", ctypes.address()))
     return false;
 
   JS_SetCTypesCallbacks(JSVAL_TO_OBJECT(ctypes), &sCallbacks);
