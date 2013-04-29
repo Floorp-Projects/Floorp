@@ -29,7 +29,8 @@ const unsigned MAX_SCRIPT_PROCESSOR_CHANNELS = 10000;
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_2(AudioContext, mDestination, mListener)
+NS_IMPL_CYCLE_COLLECTION_INHERITED_2(AudioContext, nsDOMEventTargetHelper,
+                                     mDestination, mListener)
 
 NS_IMPL_ADDREF_INHERITED(AudioContext, nsDOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(AudioContext, nsDOMEventTargetHelper)
