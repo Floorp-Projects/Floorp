@@ -527,7 +527,7 @@ HTMLBodyElement::IsEventAttributeName(nsIAtom *aName)
   HTMLBodyElement::GetOn##name_()                                              \
   {                                                                            \
     nsPIDOMWindow* win = OwnerDoc()->GetInnerWindow();                         \
-    if (win && win->IsInnerWindow()) {                                         \
+    if (win) {                                                                 \
       nsCOMPtr<nsISupports> supports = do_QueryInterface(win);                 \
       nsGlobalWindow* globalWin = nsGlobalWindow::FromSupports(supports);      \
       return globalWin->GetOn##name_();                                        \
@@ -538,7 +538,7 @@ HTMLBodyElement::IsEventAttributeName(nsIAtom *aName)
   HTMLBodyElement::SetOn##name_(type_* handler, ErrorResult& error)            \
   {                                                                            \
     nsPIDOMWindow* win = OwnerDoc()->GetInnerWindow();                         \
-    if (!win || !win->IsInnerWindow()) {                                       \
+    if (!win) {                                                                \
       return;                                                                  \
     }                                                                          \
                                                                                \

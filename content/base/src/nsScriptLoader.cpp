@@ -805,7 +805,7 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
   }
 
   nsPIDOMWindow *pwin = mDocument->GetInnerWindow();
-  if (!pwin || !pwin->IsInnerWindow()) {
+  if (!pwin) {
     return NS_ERROR_FAILURE;
   }
   nsCOMPtr<nsIScriptGlobalObject> globalObject = do_QueryInterface(pwin);
