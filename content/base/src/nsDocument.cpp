@@ -124,7 +124,6 @@
 #include "nsDOMCID.h"
 
 #include "jsapi.h"
-#include "nsIJSContextStack.h"
 #include "nsIXPConnect.h"
 #include "nsCycleCollector.h"
 #include "nsCCUncollectableMarker.h"

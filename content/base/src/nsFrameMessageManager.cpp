@@ -19,7 +19,6 @@
 #include "nsNetUtil.h"
 #include "nsScriptLoader.h"
 #include "nsFrameLoader.h"
-#include "nsIJSContextStack.h"
 #include "nsIXULRuntime.h"
 #include "nsIScriptError.h"
 #include "nsIConsoleService.h"
@@ -630,10 +629,10 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
                                       InfallibleTArray<nsString>* aJSONRetVal,
                                       JSContext* aContext)
 {
-  JSContext* ctx = mContext ? mContext : aContext;
-  if (!ctx) {
-    ctx = nsContentUtils::ThreadJSContextStack()->GetSafeJSContext();
-  }
+  JSContext *cxToUse = mContext ? mContext
+                                : (aContext ? aContext
+                                            : nsContentUtils::GetSafeJSContext());
+  AutoPushJSContext ctx(cxToUse);
   if (mListeners.Length()) {
     nsCOMPtr<nsIAtom> name = do_GetAtom(aMessage);
     MMListenerRemover lr(this);
@@ -976,17 +975,10 @@ void
 nsFrameScriptExecutor::Shutdown()
 {
   if (sCachedScripts) {
-    JSContext* cx = nsContentUtils::ThreadJSContextStack()->GetSafeJSContext();
-    if (cx) {
-#ifdef DEBUG_smaug
-      printf("Will clear cached frame manager scripts!\n");
-#endif
-      JSAutoRequest ar(cx);
-      NS_ASSERTION(sCachedScripts != nullptr, "Need cached scripts");
-      sCachedScripts->Enumerate(CachedScriptUnrooter, cx);
-    } else {
-      NS_WARNING("No context available. Leaking cached scripts!\n");
-    }
+    SafeAutoJSContext cx;
+    JSAutoRequest ar(cx);
+    NS_ASSERTION(sCachedScripts != nullptr, "Need cached scripts");
+    sCachedScripts->Enumerate(CachedScriptUnrooter, cx);
 
     delete sCachedScripts;
     sCachedScripts = nullptr;
