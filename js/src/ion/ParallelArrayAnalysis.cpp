@@ -495,8 +495,6 @@ bool
 ParallelArrayVisitor::visitCompare(MCompare *compare)
 {
     MCompare::CompareType type = compare->compareType();
-    MBox *lhsBox, *rhsBox;
-    MBasicBlock *block;
 
     switch (type) {
       case MCompare::Compare_Int32:
