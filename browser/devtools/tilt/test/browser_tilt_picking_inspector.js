@@ -17,8 +17,8 @@ function test() {
   waitForExplicitFinish();
 
   createTab(function() {
-    let { TargetFactory } = Cu.import("resource:///modules/devtools/Target.jsm", {});
-    let target = TargetFactory.forTab(gBrowser.selectedTab);
+    let { devtools } = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
+    let target = devtools.TargetFactory.forTab(gBrowser.selectedTab);
 
     gDevTools.showToolbox(target, "inspector").then(function(toolbox) {
       let contentDocument = toolbox.target.tab.linkedBrowser.contentDocument;
