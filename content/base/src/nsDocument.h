@@ -140,7 +140,7 @@ public:
     return mNameContentList;
   }
   bool HasNameElement() const {
-    return mNameContentList && !mNameContentList->Length() != 0;
+    return mNameContentList && mNameContentList->Length() != 0;
   }
 
   /**
