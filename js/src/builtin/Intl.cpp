@@ -193,11 +193,16 @@ enum UNumberFormatStyle {
     UNUM_CURRENCY_PLURAL,
 };
 
+enum UNumberFormatRoundingMode {
+    UNUM_ROUND_HALFUP,
+};
+
 enum UNumberFormatAttribute {
   UNUM_GROUPING_USED,
   UNUM_MIN_INTEGER_DIGITS,
   UNUM_MAX_FRACTION_DIGITS,
   UNUM_MIN_FRACTION_DIGITS,
+  UNUM_ROUNDING_MODE,
   UNUM_SIGNIFICANT_DIGITS_USED,
   UNUM_MIN_SIGNIFICANT_DIGITS,
   UNUM_MAX_SIGNIFICANT_DIGITS,
@@ -1415,6 +1420,7 @@ NewUNumberFormat(JSContext *cx, HandleObject numberFormat)
         unum_setAttribute(nf, UNUM_MAX_FRACTION_DIGITS, uMaximumFractionDigits);
     }
     unum_setAttribute(nf, UNUM_GROUPING_USED, uUseGrouping);
+    unum_setAttribute(nf, UNUM_ROUNDING_MODE, UNUM_ROUND_HALFUP);
 
     return toClose.forget();
 }
