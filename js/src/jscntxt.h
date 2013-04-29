@@ -1751,7 +1751,6 @@ struct JSContext : js::ContextFriendFields,
 #endif
 
     inline bool typeInferenceEnabled() const;
-    inline bool jaegerCompilationAllowed() const;
 
     void updateJITEnabled();
 
