@@ -105,6 +105,7 @@ let pageLoaded = false;
 let pageError = false;
 let output = null;
 let jsterm = null;
+let hud = null;
 let testEnded = false;
 
 let TestObserver = {
@@ -118,29 +119,30 @@ let TestObserver = {
 
     var expectedCategory = TESTS[pos].category;
 
-    info("test #" + pos + " console observer got " + aSubject.category + ", is expecting " + expectedCategory);
+    info("test #" + pos + " console observer got " + aSubject.category +
+         ", is expecting " + expectedCategory);
 
     if (aSubject.category == expectedCategory) {
       foundCategory = true;
+      startNextTest();
     }
     else {
-      info("unexpected message was: " + aSubject.sourceName + ':' + aSubject.lineNumber + '; ' +
-                aSubject.errorMessage);
+      info("unexpected message was: " + aSubject.sourceName + ":" +
+           aSubject.lineNumber + "; " + aSubject.errorMessage);
     }
   }
 };
 
-function consoleOpened(hud) {
+function consoleOpened(aHud) {
+  hud = aHud;
   output = hud.outputNode;
-
-  nodeInsertedListener.observe(output, {childList: true});
   jsterm = hud.jsterm;
 
   Services.console.registerListener(TestObserver);
 
   registerCleanupFunction(testEnd);
 
-  executeSoon(testNext);
+  testNext();
 }
 
 function testNext() {
@@ -153,28 +155,25 @@ function testNext() {
   pos++;
   info("testNext: #" + pos);
   if (pos < TESTS.length) {
-    waitForSuccess({
-      timeout: 10000,
-      name: "test #" + pos + " successful finish",
-      validatorFn: function()
-      {
-        return foundCategory && foundText && pageLoaded && pageError;
-      },
-      successFn: testNext,
-      failureFn: function() {
-        info("foundCategory " + foundCategory + " foundText " + foundText +
-             " pageLoaded " + pageLoaded + " pageError " + pageError);
-        finishTest();
-      },
+    let test = TESTS[pos];
+
+    waitForMessages({
+      webconsole: hud,
+      messages: [{
+        name: "message for test #" + pos + ": '" + test.matchString +"'",
+        text: test.matchString,
+      }],
+    }).then(() => {
+      foundText = true;
+      startNextTest();
     });
 
-    let test = TESTS[pos];
     let testLocation = TESTS_PATH + test.file;
-    browser.addEventListener("load", function onLoad(aEvent) {
+    gBrowser.selectedBrowser.addEventListener("load", function onLoad(aEvent) {
       if (content.location.href != testLocation) {
         return;
       }
-      browser.removeEventListener(aEvent.type, onLoad, true);
+      gBrowser.selectedBrowser.removeEventListener(aEvent.type, onLoad, true);
 
       pageLoaded = true;
       test.onload && test.onload(aEvent);
@@ -183,44 +182,40 @@ function testNext() {
         content.addEventListener("error", function _onError() {
           content.removeEventListener("error", _onError);
           pageError = true;
+          startNextTest();
         });
         expectUncaughtException();
       }
       else {
         pageError = true;
       }
+
+      startNextTest();
     }, true);
 
     content.location = testLocation;
   }
   else {
     testEnded = true;
-    executeSoon(finishTest);
+    finishTest();
   }
 }
 
 function testEnd() {
+  if (!testEnded) {
+    info("foundCategory " + foundCategory + " foundText " + foundText +
+         " pageLoaded " + pageLoaded + " pageError " + pageError);
+  }
+
   Services.console.unregisterListener(TestObserver);
-  nodeInsertedListener.disconnect();
-  TestObserver = output = jsterm = null;
+  hud = TestObserver = output = jsterm = null;
 }
 
-var nodeInsertedListener = new MutationObserver(function(mutations) {
-  if (testEnded) {
-    return;
+function startNextTest() {
+  if (!testEnded && foundCategory && foundText && pageLoaded && pageError) {
+    testNext();
   }
-
-  for (var mutation of mutations) {
-    if (mutation.addedNodes) {
-      let textContent = output.textContent;
-      foundText = textContent.indexOf(TESTS[pos].matchString) > -1;
-      if (foundText) {
-        ok(foundText, "test #" + pos + ": message found '" + TESTS[pos].matchString + "'");
-      }
-      return;
-    }
-  }
-});
+}
 
 function test() {
   requestLongerTimeout(2);
