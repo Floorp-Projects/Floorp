@@ -56,7 +56,7 @@ AudioNodeStream::SetStreamTimeParameterImpl(uint32_t aIndex, MediaStream* aRelat
   StreamTime streamTime = std::max<MediaTime>(0, SecondsToMediaTime(aStreamTime));
   GraphTime graphTime = aRelativeToStream->StreamTimeToGraphTime(streamTime);
   StreamTime thisStreamTime = GraphTimeToStreamTimeOptimistic(graphTime);
-  TrackTicks ticks = TimeToTicksRoundDown(IdealAudioRate(), thisStreamTime);
+  TrackTicks ticks = TimeToTicksRoundUp(IdealAudioRate(), thisStreamTime);
   mEngine->SetStreamTimeParameter(aIndex, ticks);
 }
 
