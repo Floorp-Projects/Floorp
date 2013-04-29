@@ -21,7 +21,7 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsITelemetry.h"
-#include "nsIJSContextStack.h"
+#include "nsIXPConnect.h"
 #include "jsapi.h"
 #include "prio.h"
 
@@ -505,10 +505,9 @@ int main(int argc, char** argv)
   // using the cx here without triggering a cx stack assert, so just do that
   // for now. Eventually, the whole notion of pushing and popping will just go
   // away.
-  nsCOMPtr<nsIThreadJSContextStack> stack =
-    do_GetService("@mozilla.org/js/xpc/ContextStack;1");
-  if (stack)
-    cx = stack->GetSafeJSContext();
+  nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID());
+  if (xpc)
+    cx = xpc->GetSafeJSContext();
 
   bool use_js = !!cx;
   JSAutoRequest req(cx);
