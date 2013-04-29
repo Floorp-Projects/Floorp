@@ -289,7 +289,7 @@ HTMLOptionsCollection::NamedItem(JSContext* cx, const nsAString& name,
   if (!item) {
     return nullptr;
   }
-  JSObject* wrapper = nsWrapperCache::GetWrapper();
+  JS::Rooted<JSObject*> wrapper(cx, nsWrapperCache::GetWrapper());
   JSAutoCompartment ac(cx, wrapper);
   JS::Value v;
   if (!mozilla::dom::WrapObject(cx, wrapper, item, item, nullptr, &v)) {

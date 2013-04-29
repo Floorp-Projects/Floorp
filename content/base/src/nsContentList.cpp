@@ -673,7 +673,7 @@ nsContentList::NamedItem(JSContext* cx, const nsAString& name,
   if (!item) {
     return nullptr;
   }
-  JSObject* wrapper = GetWrapper();
+  JS::Rooted<JSObject*> wrapper(cx, GetWrapper());
   JSAutoCompartment ac(cx, wrapper);
   JS::Value v;
   if (!mozilla::dom::WrapObject(cx, wrapper, item, item, nullptr, &v)) {
