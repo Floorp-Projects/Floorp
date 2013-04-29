@@ -6,14 +6,13 @@
 #include "mpi.h"
 #include "mplogic.h"
 #include "mpi-priv.h"
-#include <stdlib.h>
 
 #define ECP521_DIGITS ECL_CURVE_DIGITS(521)
 
 /* Fast modular reduction for p521 = 2^521 - 1.  a can be r. Uses
  * algorithm 2.31 from Hankerson, Menezes, Vanstone. Guide to 
  * Elliptic Curve Cryptography. */
-mp_err
+static mp_err
 ec_GFp_nistp521_mod(const mp_int *a, mp_int *r, const GFMethod *meth)
 {
 	mp_err res = MP_OKAY;
@@ -72,7 +71,7 @@ ec_GFp_nistp521_mod(const mp_int *a, mp_int *r, const GFMethod *meth)
 /* Compute the square of polynomial a, reduce modulo p521. Store the
  * result in r.  r could be a.  Uses optimized modular reduction for p521. 
  */
-mp_err
+static mp_err
 ec_GFp_nistp521_sqr(const mp_int *a, mp_int *r, const GFMethod *meth)
 {
 	mp_err res = MP_OKAY;
@@ -86,7 +85,7 @@ ec_GFp_nistp521_sqr(const mp_int *a, mp_int *r, const GFMethod *meth)
 /* Compute the product of two polynomials a and b, reduce modulo p521.
  * Store the result in r.  r could be a or b; a could be b.  Uses
  * optimized modular reduction for p521. */
-mp_err
+static mp_err
 ec_GFp_nistp521_mul(const mp_int *a, const mp_int *b, mp_int *r,
 					const GFMethod *meth)
 {
@@ -100,7 +99,7 @@ ec_GFp_nistp521_mul(const mp_int *a, const mp_int *b, mp_int *r,
 
 /* Divides two field elements. If a is NULL, then returns the inverse of
  * b. */
-mp_err
+static mp_err
 ec_GFp_nistp521_div(const mp_int *a, const mp_int *b, mp_int *r,
 		   const GFMethod *meth)
 {

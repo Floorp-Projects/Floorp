@@ -44,15 +44,9 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 # (7) Execute "local" rules. (OPTIONAL).                              #
 #######################################################################
 
-nss_build_all: build_coreconf build_nspr all
+nss_build_all: build_nspr all
 
-nss_clean_all: clobber_coreconf clobber_nspr clobber
-
-build_coreconf:
-	$(MAKE) -C $(CORE_DEPTH)/coreconf
-
-clobber_coreconf:
-	$(MAKE) -C $(CORE_DEPTH)/coreconf clobber
+nss_clean_all: clobber_nspr clobber
 
 NSPR_CONFIG_STATUS = $(CORE_DEPTH)/../nspr/$(OBJDIR_NAME)/config.status
 NSPR_CONFIGURE = $(CORE_DEPTH)/../nspr/configure
@@ -102,7 +96,7 @@ NSPR_PREFIX = $$(topsrcdir)/../dist/$(OBJDIR_NAME)
 endif
 
 $(NSPR_CONFIG_STATUS): $(NSPR_CONFIGURE)
-	$(NSINSTALL) -D $(CORE_DEPTH)/../nspr/$(OBJDIR_NAME)
+	mkdir -p $(CORE_DEPTH)/../nspr/$(OBJDIR_NAME)
 	cd $(CORE_DEPTH)/../nspr/$(OBJDIR_NAME) ; \
 	$(NSPR_COMPILERS) sh ../configure \
 	$(NSPR_CONFIGURE_OPTS) \
@@ -121,30 +115,7 @@ build_docs:
 clean_docs:
 	$(MAKE) -C $(CORE_DEPTH)/doc clean
 
-moz_import::
-ifeq (,$(filter-out WIN%,$(OS_TARGET)))
-	$(NSINSTALL) -D $(DIST)/include/nspr
-	cp $(DIST)/../include/nspr/*.h $(DIST)/include/nspr
-	cp $(DIST)/../include/* $(DIST)/include
-ifdef BUILD_OPT
-	cp $(DIST)/../WIN32_O.OBJ/lib/* $(DIST)/lib
-else
-	cp $(DIST)/../WIN32_D.OBJ/lib/* $(DIST)/lib
-endif
-	mv $(DIST)/lib/dbm32.lib $(DIST)/lib/dbm.lib
-else
-ifeq ($(OS_TARGET),OS2)
-	cp -rf $(DIST)/../include $(DIST)
-	cp -rf $(DIST)/../lib $(DIST)
-	cp -f $(DIST)/lib/libmozdbm_s.$(LIB_SUFFIX) $(DIST)/lib/libdbm.$(LIB_SUFFIX)
-else
-	$(NSINSTALL) -L ../../dist include $(DIST)
-	$(NSINSTALL) -L ../../dist lib $(DIST)
-	cp $(DIST)/lib/libmozdbm_s.$(LIB_SUFFIX) $(DIST)/lib/libdbm.$(LIB_SUFFIX)
-endif
-endif
-
-nss_RelEng_bld: build_coreconf import all
+nss_RelEng_bld: import all
 
 package:
 	$(MAKE) -C pkg publish

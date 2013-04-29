@@ -743,7 +743,7 @@ Using the SQLite databases must be manually specified by using the <command>sql:
 <!-- fill in your name first; keep the other names for reference -->
   <refsection id="authors">
     <title>Authors</title>
-    <para>The NSS tools were written and maintained by developers with Netscape, Red Hat, and Sun.</para>
+    <para>The NSS tools were written and maintained by developers with Netscape, Red Hat,  Sun, Oracle, Mozilla, and Google.</para>
     <para>
 	Authors: Elio Maldonado &lt;emaldona@redhat.com>, Deon Lackey &lt;dlackey@redhat.com>.
     </para>
@@ -752,9 +752,7 @@ Using the SQLite databases must be manually specified by using the <command>sql:
 <!-- don't change -->
   <refsection id="license">
     <title>LICENSE</title>
-    <para>Licensed under the Mozilla Public License, version 1.1,
-        and/or the GNU General Public License, version 2 or later,
-        and/or the GNU Lesser General Public License, version 2.1 or later.
+    <para>Licensed under the Mozilla Public License, v. 2.0.  If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
     </para>
   </refsection>
 

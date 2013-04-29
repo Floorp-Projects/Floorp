@@ -23,13 +23,14 @@ typedef int (*SECU_PPFunc)(FILE *out, SECItem *item, char *msg, int level);
 #endif
 
 /* print out an error message */
-extern void SECU_PrintError(char *progName, char *msg, ...);
+extern void SECU_PrintError(const char *progName, const char *msg, ...);
 
 /* print out a system error message */
-extern void SECU_PrintSystemError(char *progName, char *msg, ...);
+extern void SECU_PrintSystemError(const char *progName, const char *msg, ...);
 
 /* print a formatted error message */
-extern void SECU_PrintErrMsg(FILE *out, int level, char *progName, char *msg, ...);
+extern void SECU_PrintErrMsg(FILE *out, int level, const char *progName,
+                             const char *msg, ...);
 
 /* Read the contents of a file into a SECItem */
 extern SECStatus SECU_FileToItem(SECItem *dst, PRFileDesc *src);
@@ -68,7 +69,7 @@ extern void SECU_PrintString(FILE *out, const SECItem *si, const char *m,
                              int level);
 extern void SECU_PrintAny(FILE *out, const SECItem *i, const char *m, int level);
 
-extern void SECU_PrintPRandOSError(char *progName);
+extern void SECU_PrintPRandOSError(const char *progName);
 
 /* Caller ensures that dst is at least item->len*2+1 bytes long */
 void
