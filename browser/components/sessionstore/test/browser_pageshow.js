@@ -15,6 +15,9 @@ function test() {
  * session store service the first history entry must be selected.
  */
 
+const URL = "data:text/html,<h1>first</h1>";
+const URL2 = "data:text/html,<h1>second</h1>";
+
 function runTests() {
   // Create a dummy window that is regarded as active. We need to do this
   // because we always collect data for tabs of active windows no matter if
@@ -24,8 +27,8 @@ function runTests() {
 
   // Create a tab with two history entries.
   let tab = gBrowser.selectedTab = gBrowser.addTab("about:blank");
-  yield loadURI("about:robots");
-  yield loadURI("about:mozilla");
+  yield loadURI(URL);
+  yield loadURI(URL2);
 
   // All windows currently marked as dirty will be written to disk
   // and thus marked clean afterwards.
@@ -35,7 +38,7 @@ function runTests() {
   // will not fire a 'load' event but a 'pageshow' event with persisted=true.
   waitForPageShow();
   yield gBrowser.selectedBrowser.goBack();
-  is(tab.linkedBrowser.currentURI.spec, "about:robots", "url is about:robots");
+  is(tab.linkedBrowser.currentURI.spec, URL, "correct url after going back");
 
   // If by receiving the 'pageshow' event the first window has correctly
   // been marked as dirty, getBrowserState() should return the tab we created
