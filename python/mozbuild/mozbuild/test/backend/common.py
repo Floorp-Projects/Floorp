@@ -63,6 +63,13 @@ CONFIGS = {
         'non_global_defines': [],
         'substs': [],
     },
+    'xpcshell_manifests': {
+        'defines': [],
+        'non_global_defines': [],
+        'substs': [
+            ('XPCSHELL_TESTS_MANIFESTS', 'XPCSHELL_TESTS'),
+            ],
+    },
 }
 
 

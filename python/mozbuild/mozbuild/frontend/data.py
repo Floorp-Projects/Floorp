@@ -148,3 +148,14 @@ class Exports(SandboxDerived):
     def __init__(self, sandbox, exports):
         SandboxDerived.__init__(self, sandbox)
         self.exports = exports
+
+class XpcshellManifests(SandboxDerived):
+    """Build object container for XPCSHELL_TESTS_MANIFESTS (was: XPCSHELL_TESTS).
+
+    This object contains a list of xpcshell.ini manifest files.
+    """
+    __slots__ = ('xpcshell_manifests')
+
+    def __init__(self, sandbox, manifests):
+        SandboxDerived.__init__(self, sandbox)
+        self.xpcshell_manifests = manifests

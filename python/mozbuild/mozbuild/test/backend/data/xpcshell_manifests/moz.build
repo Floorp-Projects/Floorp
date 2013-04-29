@@ -1,0 +1,11 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# Any copyright is dedicated to the Public Domain.
+# http://creativecommons.org/publicdomain/zero/1.0/
+
+XPCSHELL_TESTS_MANIFESTS  = ['aa/xpcshell.ini', 'bb/xpcshell.ini']
+XPCSHELL_TESTS_MANIFESTS += ['cc/xpcshell.ini', 'dd/xpcshell.ini']
+
+if CONFIG['_INVALID_CONFIG_VALUE']:
+    XPCSHELL_TESTS_MANIFESTS += ['invalid_val/xpcshell.ini']
+else:
+    XPCSHELL_TESTS_MANIFESTS += ['valid_val/xpcshell.ini']
