@@ -11,14 +11,13 @@
 interface nsIDOMMozBrowserFrame : nsISupports
 {
   /**
-   * <iframe> and <frame> elements may have the mozbrowser attribute.
+   * <iframe> element may have the mozbrowser attribute.
    *
-   * The mozbrowser attribute has no effect unless the <iframe> or <frame>
-   * element is contained in a document privileged to create browser frames.
+   * The mozbrowser attribute has no effect unless the <iframe> element is
+   * contained in a document privileged to create browser frames.
    *
-   * An <iframe> or <frame> element in a privileged document with the mozbrowser
-   * attribute emits a variety of events when various things happen inside the
-   * frame.
+   * An <iframe> element in a privileged document with the mozbrowser attribute
+   * emits a variety of events when various things happen inside the frame.
    *
    * This will be documented eventually, but for more information at the moment,
    * see dom/browser-element/BrowserElement{Child,Parent}.js.
