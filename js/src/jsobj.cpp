@@ -1511,12 +1511,8 @@ js::CreateThisForFunctionWithProto(JSContext *cx, HandleObject callee, JSObject 
     }
 
     if (res && cx->typeInferenceEnabled()) {
-        JSScript *script = callee->toFunction()->nonLazyScript();
-        if (!types::IgnoreTypeChanges(cx, script)) {
-            if (!script->ensureRanAnalysis(cx))
-                return NULL;
-            TypeScript::SetThis(cx, script, types::Type::ObjectType(res));
-        }
+        RootedScript script(cx, callee->toFunction()->nonLazyScript());
+        TypeScript::SetThis(cx, script, types::Type::ObjectType(res));
     }
 
     return res;
