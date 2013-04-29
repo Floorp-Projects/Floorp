@@ -32,7 +32,6 @@
 #include "nsIDOMCloseEvent.h"
 #include "nsICryptoHash.h"
 #include "jsdbgapi.h"
-#include "nsIJSContextStack.h"
 #include "nsJSUtils.h"
 #include "nsIScriptError.h"
 #include "nsNetUtil.h"

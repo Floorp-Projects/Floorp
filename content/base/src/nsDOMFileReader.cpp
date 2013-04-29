@@ -28,7 +28,6 @@
 #include "nsStreamUtils.h"
 #include "nsXPCOM.h"
 #include "nsIDOMEventListener.h"
-#include "nsIJSContextStack.h"
 #include "nsJSEnvironment.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsCExternalHandlerService.h"
