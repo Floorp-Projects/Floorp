@@ -135,8 +135,10 @@ function migrateSettings() {
     // ensure any *builtin* provider in activeproviders is in user level prefs
     for (let origin in ActiveProviders._providers) {
       let prefname;
+      let manifest;
       try {
         prefname = getPrefnameFromOrigin(origin);
+        manifest = JSON.parse(Services.prefs.getComplexValue(prefname, Ci.nsISupportsString).data);
       } catch(e) {
         // Our preference is missing or bad, remove from ActiveProviders and
         // continue. This is primarily an error-case and should only be
@@ -146,21 +148,14 @@ function migrateSettings() {
         ActiveProviders.flush();
         continue;
       }
-      if (!Services.prefs.prefHasUserValue(prefname)) {
-        // if we've got an active *builtin* provider, ensure that the pref
-        // is set at a user-level as that will signify *installed* status.
-        let manifest;
-        try {
-          manifest = JSON.parse(Services.prefs.getComplexValue(prefname, Ci.nsISupportsString).data);
-        } catch(e) {
-          // see comment in the delete/flush code above.
-          ActiveProviders.delete(origin);
-          ActiveProviders.flush();
-          continue;
-        }
-        // our default manifests have been updated with the builtin flags as of
-        // fx22, delete it so we can set the user-pref
+      if (!manifest.updateDate) {
+        // the provider was installed with an older build, so we will update the
+        // timestamp and ensure the manifest is in user prefs
         delete manifest.builtin;
+        if (!manifest.updateDate) {
+          manifest.updateDate = Date.now();
+          manifest.installDate = 0; // we don't know when it was installed
+        }
 
         let string = Cc["@mozilla.org/supports-string;1"].
                      createInstance(Ci.nsISupportsString);
@@ -196,6 +191,10 @@ function migrateSettings() {
         // our default manifests have been updated with the builtin flags as of
         // fx22, delete it so we can set the user-pref
         delete manifest.builtin;
+        if (!manifest.updateDate) {
+          manifest.updateDate = Date.now();
+          manifest.installDate = 0; // we don't know when it was installed
+        }
 
         let string = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
         string.data = JSON.stringify(manifest);
@@ -836,6 +835,14 @@ function getPrefnameFromOrigin(origin) {
 }
 
 function AddonInstaller(sourceURI, aManifest, installCallback) {
+  aManifest.updateDate = Date.now();
+  // get the existing manifest for installDate
+  let manifest = SocialServiceInternal.getManifestByOrigin(aManifest.origin);
+  if (manifest && manifest.installDate)
+    aManifest.installDate = manifest.installDate;
+  else
+    aManifest.installDate = aManifest.updateDate;
+
   this.sourceURI = sourceURI;
   this.install = function() {
     let addon = this.addon;
