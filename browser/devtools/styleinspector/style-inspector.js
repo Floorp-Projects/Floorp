@@ -4,29 +4,29 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const Cc = Components.classes;
-const Cu = Components.utils;
-const Ci = Components.interfaces;
+const {Cc, Cu, Ci} = require("chrome");
+
+let ToolDefinitions = require("main").Tools;
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource:///modules/devtools/CssRuleView.jsm");
-Cu.import("resource:///modules/devtools/ToolDefinitions.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "gDevTools",
-                                  "resource:///modules/devtools/gDevTools.jsm");
+loader.lazyGetter(this, "gDevTools", () => Cu.import("resource:///modules/devtools/gDevTools.jsm", {}).gDevTools);
+loader.lazyGetter(this, "RuleView", () => require("devtools/styleinspector/rule-view"));
+loader.lazyGetter(this, "ComputedView", () => require("devtools/styleinspector/computed-view"));
+loader.lazyGetter(this, "_strings", () => Services.strings
+  .createBundle("chrome://browser/locale/devtools/styleinspector.properties"));
+loader.lazyGetter(this, "CssLogic", () => require("devtools/styleinspector/css-logic").CssLogic);
 
 // This module doesn't currently export any symbols directly, it only
 // registers inspector tools.
-this.EXPORTED_SYMBOLS = ["RuleViewTool", "ComputedViewTool"];
 
-this.RuleViewTool = function RVT_RuleViewTool(aInspector, aWindow, aIFrame)
+function RuleViewTool(aInspector, aWindow, aIFrame)
 {
   this.inspector = aInspector;
   this.doc = aWindow.document;
   this.outerIFrame = aIFrame;
 
-  this.view = new CssRuleView(this.doc, null);
+  this.view = new RuleView.CssRuleView(this.doc, null);
   this.doc.documentElement.appendChild(this.view.element);
 
   this._changeHandler = function() {
@@ -61,7 +61,7 @@ this.RuleViewTool = function RVT_RuleViewTool(aInspector, aWindow, aIFrame)
     if (contentSheet)  {
       let target = this.inspector.target;
 
-      if (styleEditorDefinition.isTargetSupported(target)) {
+      if (ToolDefinitions.styleEditor.isTargetSupported(target)) {
         gDevTools.showToolbox(target, "styleeditor").then(function(toolbox) {
           toolbox.getCurrentPanel().selectStyleSheet(styleSheet, line);
         });
@@ -92,6 +92,8 @@ this.RuleViewTool = function RVT_RuleViewTool(aInspector, aWindow, aIFrame)
 
   this.onSelect();
 }
+
+exports.RuleViewTool = RuleViewTool;
 
 RuleViewTool.prototype = {
   onSelect: function RVT_onSelect(aEvent) {
@@ -150,14 +152,14 @@ RuleViewTool.prototype = {
   }
 }
 
-this.ComputedViewTool = function CVT_ComputedViewTool(aInspector, aWindow, aIFrame)
+function ComputedViewTool(aInspector, aWindow, aIFrame)
 {
   this.inspector = aInspector;
   this.window = aWindow;
   this.document = aWindow.document;
   this.outerIFrame = aIFrame;
   this.cssLogic = new CssLogic();
-  this.view = new CssHtmlTree(this);
+  this.view = new ComputedView.CssHtmlTree(this);
 
   this._onSelect = this.onSelect.bind(this);
   this.inspector.selection.on("detached", this._onSelect);
@@ -175,6 +177,8 @@ this.ComputedViewTool = function CVT_ComputedViewTool(aInspector, aWindow, aIFra
 
   this.onSelect();
 }
+
+exports.ComputedViewTool = ComputedViewTool;
 
 ComputedViewTool.prototype = {
   onSelect: function CVT_onSelect(aEvent)
@@ -232,18 +236,3 @@ ComputedViewTool.prototype = {
     delete this.inspector;
   }
 }
-
-XPCOMUtils.defineLazyGetter(this, "_strings", function() Services.strings
-  .createBundle("chrome://browser/locale/devtools/styleinspector.properties"));
-
-XPCOMUtils.defineLazyGetter(this, "CssLogic", function() {
-  let tmp = {};
-  Cu.import("resource:///modules/devtools/CssLogic.jsm", tmp);
-  return tmp.CssLogic;
-});
-
-XPCOMUtils.defineLazyGetter(this, "CssHtmlTree", function() {
-  let tmp = {};
-  Cu.import("resource:///modules/devtools/CssHtmlTree.jsm", tmp);
-  return tmp.CssHtmlTree;
-});
