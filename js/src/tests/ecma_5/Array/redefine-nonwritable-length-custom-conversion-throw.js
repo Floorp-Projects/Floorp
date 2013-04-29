@@ -47,7 +47,7 @@ catch (e)
   assertEq(e instanceof SyntaxError, true, "expected SyntaxError, got " + e);
 }
 
-assertEq(count, 2);
+assertEq(count, 1);
 assertEq(arr.length, 0);
 
 /******************************************************************************/
