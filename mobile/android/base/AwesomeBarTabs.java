@@ -132,8 +132,10 @@ public class AwesomeBarTabs extends TabHost
         mListTouchListener = new View.OnTouchListener() {
             @Override
             public boolean onTouch(View view, MotionEvent event) {
-                if (event.getActionMasked() == MotionEvent.ACTION_DOWN)
-                    hideSoftInput(view);
+                if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
+                    // take focus away from awesome bar to hide the keyboard
+                    requestFocus();
+                }
                 return false;
             }
         };
@@ -161,7 +163,8 @@ public class AwesomeBarTabs extends TabHost
             public void onPageSelected(int position) {
                 tabWidget.setCurrentTab(position);
                 styleSelectedTab();
-                hideSoftInput(mViewPager);
+                // take focus away from awesome bar to hide the keyboard
+                requestFocus();
              }
          });
 
@@ -274,13 +277,6 @@ public class AwesomeBarTabs extends TabHost
         });
 
         return indicatorView;
-    }
-
-    private boolean hideSoftInput(View view) {
-        InputMethodManager imm =
-                (InputMethodManager) mContext.getSystemService(Context.INPUT_METHOD_SERVICE);
-
-        return imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
     }
 
     public void setOnUrlOpenListener(OnUrlOpenListener listener) {
