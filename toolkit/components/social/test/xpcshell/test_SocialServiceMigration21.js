@@ -48,4 +48,9 @@ function testMigration(manifest, next) {
   do_check_true(activeProviders[manifest.origin]);
   do_check_true(MANIFEST_PREFS.prefHasUserValue(manifest.origin));
   do_check_true(JSON.parse(DEFAULT_PREFS.getCharPref(manifest.origin)).builtin);
+
+  let userPref = JSON.parse(MANIFEST_PREFS.getCharPref(manifest.origin));
+  do_check_true(parseInt(userPref.updateDate) > 0);
+  // migrated providers wont have an installDate
+  do_check_true(userPref.installDate === 0);
 }
