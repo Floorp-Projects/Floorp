@@ -1361,6 +1361,7 @@ var currencyDigits = {
     PYG: 0,
     RWF: 0,
     TND: 3,
+    UGX: 0,
     UYI: 0,
     VND: 0,
     VUV: 0,
