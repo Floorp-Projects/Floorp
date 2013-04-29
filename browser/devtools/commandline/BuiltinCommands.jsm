@@ -14,13 +14,13 @@ this.EXPORTED_SYMBOLS = [ "CmdAddonFlags", "CmdCommands" ];
 Cu.import("resource:///modules/devtools/gcli.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/osfile.jsm")
-Cu.import("resource:///modules/devtools/EventEmitter.jsm");
+Cu.import("resource://gre/modules/osfile.jsm");
+Cu.import("resource:///modules/devtools/shared/event-emitter.js");
 
 XPCOMUtils.defineLazyModuleGetter(this, "gDevTools",
                                   "resource:///modules/devtools/gDevTools.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "TargetFactory",
-                                  "resource:///modules/devtools/Target.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "devtools",
+                                  "resource:///modules/devtools/gDevTools.jsm");
 
 /* CmdAddon ---------------------------------------------------------------- */
 
@@ -405,9 +405,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "TargetFactory",
     return global.Debugger;
   });
 
-  XPCOMUtils.defineLazyModuleGetter(this, "TargetFactory",
-                                    "resource:///modules/devtools/Target.jsm");
-
   let debuggers = [];
 
   /**
@@ -437,7 +434,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "TargetFactory",
       debuggers.push(dbg);
 
       let gBrowser = context.environment.chromeDocument.defaultView.gBrowser;
-      let target = TargetFactory.forTab(gBrowser.selectedTab);
+      let target = devtools.TargetFactory.forTab(gBrowser.selectedTab);
       gDevTools.showToolbox(target, "webconsole");
 
       return gcli.lookup("calllogStartReply");
@@ -589,7 +586,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "TargetFactory",
       }.bind(this);
 
       let gBrowser = context.environment.chromeDocument.defaultView.gBrowser;
-      let target = TargetFactory.forTab(gBrowser.selectedTab);
+      let target = devtools.TargetFactory.forTab(gBrowser.selectedTab);
       gDevTools.showToolbox(target, "webconsole");
 
       return gcli.lookup("calllogChromeStartReply");
@@ -835,7 +832,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "TargetFactory",
     description: gcli.lookup("consolecloseDesc"),
     exec: function Command_consoleClose(args, context) {
       let gBrowser = context.environment.chromeDocument.defaultView.gBrowser;
-      let target = TargetFactory.forTab(gBrowser.selectedTab);
+      let target = devtools.TargetFactory.forTab(gBrowser.selectedTab);
       return gDevTools.closeToolbox(target);
     }
   });
@@ -848,7 +845,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "TargetFactory",
     description: gcli.lookup("consoleopenDesc"),
     exec: function Command_consoleOpen(args, context) {
       let gBrowser = context.environment.chromeDocument.defaultView.gBrowser;
-      let target = TargetFactory.forTab(gBrowser.selectedTab);
+      let target = devtools.TargetFactory.forTab(gBrowser.selectedTab);
       return gDevTools.showToolbox(target, "webconsole");
     }
   });
@@ -1599,6 +1596,75 @@ XPCOMUtils.defineLazyModuleGetter(this, "TargetFactory",
   }
 }(this));
 
+/* CmdTools -------------------------------------------------------------- */
+
+(function(module) {
+  gcli.addCommand({
+    name: "tools",
+    description: gcli.lookup("toolsDesc"),
+    manual: gcli.lookup("toolsManual"),
+    get hidden() gcli.hiddenByChromePref(),
+  });
+
+  gcli.addCommand({
+    name: "tools srcdir",
+    description: gcli.lookup("toolsSrcdirDesc"),
+    manual: gcli.lookup("toolsSrcdirManual"),
+    get hidden() gcli.hiddenByChromePref(),
+    params: [
+      {
+        name: "srcdir",
+        type: "string",
+        description: gcli.lookup("toolsSrcdirDir")
+      }
+    ],
+    returnType: "string",
+    exec: function(args, context) {
+      let promise = context.createPromise();
+      let existsPromise = OS.File.exists(args.srcdir + "/CLOBBER");
+      existsPromise.then(function(exists) {
+        if (exists) {
+          var str = Cc["@mozilla.org/supports-string;1"]
+            .createInstance(Ci.nsISupportsString);
+          str.data = args.srcdir;
+          Services.prefs.setComplexValue("devtools.loader.srcdir",
+              Components.interfaces.nsISupportsString, str);
+          devtools.reload();
+          promise.resolve(gcli.lookupFormat("toolsSrcdirReloaded", [args.srcdir]));
+          return;
+        }
+        promise.reject(gcli.lookupFormat("toolsSrcdirNotFound", [args.srcdir]));
+      });
+      return promise;
+    }
+  });
+
+  gcli.addCommand({
+    name: "tools builtin",
+    description: gcli.lookup("toolsBuiltinDesc"),
+    manual: gcli.lookup("toolsBuiltinManual"),
+    get hidden() gcli.hiddenByChromePref(),
+    returnType: "string",
+    exec: function(args, context) {
+      Services.prefs.clearUserPref("devtools.loader.srcdir");
+      devtools.reload();
+      return gcli.lookup("toolsBuiltinReloaded");
+    }
+  });
+
+  gcli.addCommand({
+    name: "tools reload",
+    description: gcli.lookup("toolsReloadDesc"),
+    get hidden() gcli.hiddenByChromePref() || !Services.prefs.prefHasUserValue("devtools.loader.srcdir"),
+
+    returnType: "string",
+    exec: function(args, context) {
+      devtools.reload();
+      return gcli.lookup("toolsReloaded");
+    }
+  });
+}(this));
+
 /* CmdRestart -------------------------------------------------------------- */
 
 (function(module) {
@@ -1993,7 +2059,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "TargetFactory",
     function fireChange() {
       eventEmitter.emit("changed", tab);
     }
-    var target = TargetFactory.forTab(tab);
+    var target = devtools.TargetFactory.forTab(tab);
     target.off("navigate", fireChange);
     target.once("navigate", fireChange);
   }

@@ -6,10 +6,6 @@
 let doc;
 let salutation;
 
-let tempScope = {};
-Cu.import("resource:///modules/devtools/Target.jsm", tempScope);
-let TargetFactory = tempScope.TargetFactory;
-
 function createDocument()
 {
   doc.body.innerHTML = '<div id="first" style="{ margin: 10em; ' +

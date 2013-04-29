@@ -6,7 +6,7 @@
 
 this.EXPORTED_SYMBOLS = ['ContactDB'];
 
-let DEBUG = false;
+const DEBUG = false;
 function debug(s) { dump("-*- ContactDB component: " + s + "\n"); }
 
 const Cu = Components.utils;
@@ -72,7 +72,7 @@ function ContactDispatcher(aContacts, aFullContacts, aCallback, aNewTxn, aClearD
                 aCallback(chunk);
                 chunk.length = 0;
                 nextIndex += CHUNK_SIZE;
-                interval = setTimeout(this.sendChunk, CHUNK_INTERVAL);
+                interval = setTimeout(sendChunk, CHUNK_INTERVAL);
               }
             }
           }
@@ -638,7 +638,6 @@ ContactDB.prototype = {
   },
 
   clear: function clear(aSuccessCb, aErrorCb) {
-    DEBUG = true;
     this.newTxn("readwrite", STORE_NAME, function (txn, store) {
       if (DEBUG) debug("Going to clear all!");
       store.clear();
@@ -782,7 +781,6 @@ ContactDB.prototype = {
    *        - count
    */
   find: function find(aSuccessCb, aFailureCb, aOptions) {
-    DEBUG = false;
     if (DEBUG) debug("ContactDB:find val:" + aOptions.filterValue + " by: " + aOptions.filterBy + " op: " + aOptions.filterOp);
     let self = this;
     this.newTxn("readonly", STORE_NAME, function (txn, store) {
