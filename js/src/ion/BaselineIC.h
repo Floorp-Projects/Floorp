@@ -1918,15 +1918,21 @@ class ICCompare_NumberWithUndefined : public ICStub
 {
     friend class ICStubSpace;
 
-    ICCompare_NumberWithUndefined(IonCode *stubCode)
+    ICCompare_NumberWithUndefined(IonCode *stubCode, bool lhsIsUndefined)
       : ICStub(ICStub::Compare_NumberWithUndefined, stubCode)
-    {}
+    {
+        extra_ = lhsIsUndefined;
+    }
 
   public:
-    static inline ICCompare_NumberWithUndefined *New(ICStubSpace *space, IonCode *code) {
+    static inline ICCompare_NumberWithUndefined *New(ICStubSpace *space, IonCode *code, bool lhsIsUndefined) {
         if (!code)
             return NULL;
-        return space->allocate<ICCompare_NumberWithUndefined>(code);
+        return space->allocate<ICCompare_NumberWithUndefined>(code, lhsIsUndefined);
+    }
+
+    bool lhsIsUndefined() {
+        return extra_;
     }
 
     class Compiler : public ICMultiStubCompiler {
@@ -1948,7 +1954,7 @@ class ICCompare_NumberWithUndefined : public ICStub
         }
 
         ICStub *getStub(ICStubSpace *space) {
-            return ICCompare_NumberWithUndefined::New(space, getStubCode());
+            return ICCompare_NumberWithUndefined::New(space, getStubCode(), lhsIsUndefined);
         }
     };
 };
@@ -2080,7 +2086,7 @@ class ICCompare_ObjectWithUndefined : public ICStub
         }
 
         ICStub *getStub(ICStubSpace *space) {
-            return ICCompare_NumberWithUndefined::New(space, getStubCode());
+            return ICCompare_ObjectWithUndefined::New(space, getStubCode());
         }
     };
 };

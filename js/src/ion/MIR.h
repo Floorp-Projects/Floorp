@@ -1782,6 +1782,9 @@ class MCompare
         // Double compared to Double
         Compare_Double,
 
+        Compare_DoubleMaybeCoerceLHS,
+        Compare_DoubleMaybeCoerceRHS,
+
         // String compared to String
         Compare_String,
 
@@ -2337,8 +2340,19 @@ class MToDouble
   : public MUnaryInstruction,
     public ToDoublePolicy
 {
-    MToDouble(MDefinition *def)
-      : MUnaryInstruction(def)
+  public:
+    // Types of values which can be converted.
+    enum ConversionKind {
+        NonStringPrimitives,
+        NonNullNonStringPrimitives,
+        NumbersOnly
+    };
+
+  private:
+    ConversionKind conversion_;
+
+    MToDouble(MDefinition *def, ConversionKind conversion = NonStringPrimitives)
+      : MUnaryInstruction(def), conversion_(conversion)
     {
         setResultType(MIRType_Double);
         setMovable();
@@ -2346,11 +2360,15 @@ class MToDouble
 
   public:
     INSTRUCTION_HEADER(ToDouble)
-    static MToDouble *New(MDefinition *def) {
-        return new MToDouble(def);
+    static MToDouble *New(MDefinition *def, ConversionKind conversion = NonStringPrimitives) {
+        return new MToDouble(def, conversion);
     }
     static MToDouble *NewAsmJS(MDefinition *def) {
         return new MToDouble(def);
+    }
+
+    ConversionKind conversion() const {
+        return conversion_;
     }
 
     TypePolicy *typePolicy() {
@@ -2362,6 +2380,8 @@ class MToDouble
         return getOperand(0);
     }
     bool congruentTo(MDefinition *const &ins) const {
+        if (!ins->isToDouble() || ins->toToDouble()->conversion() != conversion())
+            return false;
         return congruentIfOperandsEqual(ins);
     }
     AliasSet getAliasSet() const {

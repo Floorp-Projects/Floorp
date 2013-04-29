@@ -2334,6 +2334,10 @@ class LValueToDouble : public LInstructionHelper<1, BOX_PIECES, 0>
   public:
     LIR_HEADER(ValueToDouble)
     static const size_t Input = 0;
+
+    MToDouble *mir() {
+        return mir_->toToDouble();
+    }
 };
 
 // Convert a value to an int32.
