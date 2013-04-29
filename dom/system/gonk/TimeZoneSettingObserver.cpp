@@ -11,7 +11,6 @@
 #include "mozilla/StaticPtr.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
-#include "nsIJSContextStack.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsISettingsService.h"

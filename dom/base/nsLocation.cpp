@@ -25,7 +25,6 @@
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
-#include "nsIJSContextStack.h"
 #include "nsXPIDLString.h"
 #include "nsError.h"
 #include "nsDOMClassInfoID.h"
@@ -45,9 +44,6 @@ GetDocumentCharacterSetForURI(const nsAString& aHref, nsACString& aCharset)
   aCharset.Truncate();
 
   nsresult rv;
-
-  nsCOMPtr<nsIJSContextStack> stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
 
   JSContext *cx = nsContentUtils::GetCurrentJSContext();
   if (cx) {

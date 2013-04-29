@@ -27,8 +27,6 @@
 #include "nsPluginsDir.h"
 #include "nsPluginLogging.h"
 
-#include "nsIJSContextStack.h"
-
 #include "nsIDOMElement.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDocument.h"

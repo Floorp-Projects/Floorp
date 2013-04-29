@@ -8,10 +8,7 @@
 #include "PCOMContentPermissionRequestChild.h"
 
 #include "nsIPrincipal.h"
-#include "nsIJSContextStack.h"
-
 #include "nsIAlertsService.h"
-
 #include "nsIContentPermissionPrompt.h"
 
 #include "nsIObserver.h"
