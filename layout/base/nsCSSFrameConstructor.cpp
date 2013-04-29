@@ -8786,11 +8786,15 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
     // Create a continuing area frame
     // XXXbz we really shouldn't have to do this by hand!
     nsIFrame* blockFrame = GetFieldSetBlockFrame(aFrame);
-    nsIFrame* continuingBlockFrame =
-      CreateContinuingFrame(aPresContext, blockFrame, newFrame);
-
-    // Set the fieldset's initial child list
-    SetInitialSingleChild(newFrame, continuingBlockFrame);
+    if (blockFrame) {
+      nsIFrame* continuingBlockFrame =
+        CreateContinuingFrame(aPresContext, blockFrame, newFrame);
+      // Set the fieldset's initial child list
+      SetInitialSingleChild(newFrame, continuingBlockFrame);
+    } else {
+      MOZ_ASSERT(aFrame->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER,
+                 "FieldSet block may only be null for overflow containers");
+    }
   } else if (nsGkAtoms::legendFrame == frameType) {
     newFrame = NS_NewLegendFrame(shell, styleContext);
     newFrame->Init(content, aParentFrame, aFrame);
