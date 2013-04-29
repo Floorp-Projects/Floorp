@@ -9,7 +9,7 @@
 %define fgTabTexture linear-gradient(hsla(0,0%,100%,0.6), hsla(0,0%,100%,0.6) 0px, hsl(0,0%,99%) 1px, hsl(0,0%,92%))
 %define fgTabBackgroundMiddle linear-gradient(transparent, transparent)
 %define forwardTransitionLength 150ms
-%define conditionalForwardWithUrlbar window:not([chromehidden~=toolbar]) #navigator-toolbox[iconsize=large] > :-moz-any(#nav-bar[currentset*="unified-back-forward-button,urlbar-container"],#nav-bar:not([currentset])) > #nav-bar-customizationtarget > #unified-back-forward-button
+%define conditionalForwardWithUrlbar window:not([chromehidden~=toolbar]) #navigator-toolbox[iconsize=large] > :-moz-any(#nav-bar[currentset*="unified-back-forward-button,urlbar-container"],#nav-bar:not([currentset])) > #unified-back-forward-button
 %define conditionalForwardWithUrlbarWidth 27
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");

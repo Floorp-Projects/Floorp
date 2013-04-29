@@ -224,16 +224,11 @@ let gFuturePlacements = new Map();
  */
 let gDefaultPlacements = new Map([
   ["nav-bar", [
-    "unified-back-forward-button",
-    "urlbar-container",
-    "reload-button",
-    "stop-button",
     "search-container",
-    "webrtc-status-button",
     "bookmarks-menu-button-container",
     "downloads-button",
-    "home-button",
     "social-toolbar-button",
+    "PanelUI-button",
     "share-page"
   ]],
   ["PanelUI-contents", [
@@ -376,7 +371,6 @@ let CustomizableUIInternal = {
 
     let placements = gPlacements.get(area);
     this.buildArea(area, placements, aToolbar);
-    aToolbar.setAttribute("currentset", placements.join(","));
 
     // We register this window to have its customization data cleaned up when
     // unloading.
