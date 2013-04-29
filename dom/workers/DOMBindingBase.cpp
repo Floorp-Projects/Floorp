@@ -5,8 +5,6 @@
 
 #include "DOMBindingBase.h"
 
-#include "nsIJSContextStack.h"
-
 #include "jsfriendapi.h"
 #include "mozilla/dom/DOMJSClass.h"
 #include "nsContentUtils.h"

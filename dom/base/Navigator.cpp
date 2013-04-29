@@ -19,7 +19,6 @@
 #include "nsIWebContentHandlerRegistrar.h"
 #include "nsICookiePermission.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsIJSContextStack.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsContentUtils.h"
 #include "nsUnicharUtils.h"
@@ -75,8 +74,6 @@ DOMCI_DATA(Navigator, mozilla::dom::Navigator)
 
 namespace mozilla {
 namespace dom {
-
-static const char sJSStackContractID[] = "@mozilla.org/js/xpc/ContextStack;1";
 
 static bool sDoNotTrackEnabled = false;
 static bool sVibratorEnabled   = false;
@@ -892,11 +889,7 @@ Navigator::MozIsLocallyAvailable(const nsAString &aURI,
   }
 
   // Same origin check.
-  nsCOMPtr<nsIJSContextStack> stack = do_GetService(sJSStackContractID);
-  NS_ENSURE_TRUE(stack, NS_ERROR_FAILURE);
-
-  JSContext* cx = nullptr;
-  rv = stack->Peek(&cx);
+  JSContext *cx = nsContentUtils::GetCurrentJSContext();
   NS_ENSURE_TRUE(cx, NS_ERROR_FAILURE);
 
   rv = nsContentUtils::GetSecurityManager()->CheckSameOrigin(cx, uri);
