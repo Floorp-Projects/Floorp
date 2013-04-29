@@ -649,12 +649,36 @@ class GeckoInputConnection
         return this;
     }
 
+    private boolean replaceComposingSpanWithSelection() {
+        final Editable content = getEditable();
+        if (content == null) {
+            return false;
+        }
+        int a = getComposingSpanStart(content),
+            b = getComposingSpanEnd(content);
+        if (a != -1 && b != -1) {
+            if (DEBUG) {
+                Log.d(LOGTAG, "removing composition at " + a + "-" + b);
+            }
+            removeComposingSpans(content);
+            Selection.setSelection(content, a, b);
+        }
+        return true;
+    }
+
     @Override
     public boolean commitText(CharSequence text, int newCursorPosition) {
         if (InputMethods.shouldCommitCharAsKey(mCurrentInputMethod) &&
             text.length() == 1 && newCursorPosition > 0) {
+            if (DEBUG) {
+                Log.d(LOGTAG, "committing \"" + text + "\" as key");
+            }
             // mKeyInputConnection is a BaseInputConnection that commits text as keys;
-            return mKeyInputConnection.commitText(text, newCursorPosition);
+            // but we first need to replace any composing span with a selection,
+            // so that the new key events will generate characters to replace
+            // text from the old composing span
+            return replaceComposingSpanWithSelection() &&
+                mKeyInputConnection.commitText(text, newCursorPosition);
         }
         return super.commitText(text, newCursorPosition);
     }
