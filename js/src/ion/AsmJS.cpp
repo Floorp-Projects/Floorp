@@ -590,7 +590,7 @@ class Use
         JS_ASSERT(which_ == AddOrSub);
         return *pcount_;
     }
-    Type toFFIReturnType() const {
+    Type toReturnType() const {
         switch (which_) {
           case NoCoercion: return Type::Void;
           case ToInt32: return Type::Intish;
@@ -613,6 +613,27 @@ class Use
     bool operator==(Use rhs) const { return which_ == rhs.which_; }
     bool operator!=(Use rhs) const { return which_ != rhs.which_; }
 };
+
+// Implements <: (subtype) operator when the type of the rhs is
+// 'rhs.toReturnType'.
+static inline bool
+operator<=(RetType lhs, Use rhs)
+{
+    switch (rhs.which()) {
+      case Use::NoCoercion:
+      case Use::AddOrSub:
+        JS_ASSERT(rhs.toReturnType() == Type::Void);
+        return true;
+      case Use::ToInt32:
+        JS_ASSERT(rhs.toReturnType() == Type::Intish);
+        return lhs == RetType::Signed;
+      case Use::ToNumber:
+        JS_ASSERT(rhs.toReturnType() == Type::Doublish);
+        return lhs == RetType::Double;
+    }
+    JS_NOT_REACHED("Unexpected use kind");
+    return false;
+}
 
 /*****************************************************************************/
 // Numeric literal utilities
@@ -3246,7 +3267,7 @@ CheckCallArgs(FunctionCompiler &f, ParseNode *callNode, Use use, FunctionCompile
 
 static bool
 CheckInternalCall(FunctionCompiler &f, ParseNode *callNode, const ModuleCompiler::Func &callee,
-                  MDefinition **def, Type *type)
+                  Use use, MDefinition **def, Type *type)
 {
     FunctionCompiler::Args args(f);
 
@@ -3264,7 +3285,27 @@ CheckInternalCall(FunctionCompiler &f, ParseNode *callNode, const ModuleCompiler
     if (!f.internalCall(callee, args, def))
         return false;
 
-    *type = callee.returnType().toType();
+    // Note: the eventual goal for this code is to perform single-pass type
+    // checking. A single pass means that we may not have seen the callee's definition
+    // when we encounter a callsite. To address this, asm.js requires call
+    // sites to coerce return values before use (unused values require no such
+    // coercion). More specifically, the spec widens the return type of a
+    // function from int to intish and double to doublish (similar to how
+    // asm.js requires coercions on loads). A single-pass implementation of
+    // this typing rule can achieve the same effect by:
+    //  - optimistically giving a call expression use.toReturnType (thus, one
+    //    of 'void', 'intish', 'doublish').
+    //  - later checking that use.toReturnType was conservative, i.e., that the
+    //    declared return type was a subtype of use.toReturnType.
+    // For now, we check both conditions here. With a single-pass type checking
+    // algorithm, we'd accumulate all the uses for a given callee name
+    // (detecting inconsistencies between uses) and check this meet-over-uses
+    // against the declared return type when the definition was encountered.
+
+    if (!(callee.returnType() <= use))
+        return f.fail("return type of callee not compatible with use", callNode);
+
+    *type = use.toReturnType();
     return true;
 }
 
@@ -3344,7 +3385,7 @@ CheckFFICall(FunctionCompiler &f, ParseNode *callNode, unsigned ffiIndex, Use us
     if (!f.ffiCall(exitIndex, args, use.toMIRType(), def))
         return false;
 
-    *type = use.toFFIReturnType();
+    *type = use.toReturnType();
     return true;
 }
 
@@ -3418,7 +3459,7 @@ CheckCall(FunctionCompiler &f, ParseNode *call, Use use, MDefinition **def, Type
     if (const ModuleCompiler::Global *global = f.lookupGlobal(callee->name())) {
         switch (global->which()) {
           case ModuleCompiler::Global::Function:
-            return CheckInternalCall(f, call, f.m().function(global->funcIndex()), def, type);
+            return CheckInternalCall(f, call, f.m().function(global->funcIndex()), use, def, type);
           case ModuleCompiler::Global::FFI:
             return CheckFFICall(f, call, global->ffiIndex(), use, def, type);
           case ModuleCompiler::Global::MathBuiltin:
