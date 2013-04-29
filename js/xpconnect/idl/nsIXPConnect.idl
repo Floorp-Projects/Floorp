@@ -17,7 +17,6 @@
 #include "nsIVariant.idl"
 #include "nsIObjectOutputStream.idl"
 #include "nsIObjectInputStream.idl"
-#include "nsIJSContextStack.idl"
 
 %{ C++
 #include "jspubtd.h"
@@ -291,8 +290,8 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[uuid(b3012603-aa25-4192-b331-c16272499957)]
-interface nsIXPConnect : nsIThreadJSContextStack
+[uuid(4d292c29-9d18-403b-b98e-2056e550a3b4)]
+interface nsIXPConnect : nsISupports
 {
 %{ C++
   NS_DEFINE_STATIC_CID_ACCESSOR(NS_XPCONNECT_CID)
@@ -465,10 +464,9 @@ interface nsIXPConnect : nsIThreadJSContextStack
                              in int32_t        aLineNumber,
                              in nsIStackFrame  aCaller);
 
-    /**
-    * @deprecated do-nothing function.
-    */
-    [deprecated] void syncJSContexts();
+
+    [noscript,notxpcom,nostdcall] JSContextPtr getCurrentJSContext();
+    [noscript,notxpcom,nostdcall] JSContextPtr getSafeJSContext();
 
     readonly attribute nsIStackFrame                CurrentJSStack;
     readonly attribute nsAXPCNativeCallContextPtr   CurrentNativeCallContext;
