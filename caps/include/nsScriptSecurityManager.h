@@ -16,7 +16,6 @@
 #include "nsHashtable.h"
 #include "nsCOMPtr.h"
 #include "nsIChannelEventSink.h"
-#include "nsIJSContextStack.h"
 #include "nsIObserver.h"
 #include "pldhash.h"
 #include "plstr.h"
@@ -523,7 +522,6 @@ private:
 
     static nsIIOService    *sIOService;
     static nsIXPConnect    *sXPConnect;
-    static nsIThreadJSContextStack* sJSContextStack;
     static nsIStringBundle *sStrBundle;
     static JSRuntime       *sRuntime;
 };
