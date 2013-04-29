@@ -31,7 +31,7 @@ NS_GetComplexLineBreaks(const PRUnichar* aText, uint32_t aLength,
                   aLength, 
                   position, 
                   &offset);
-    if (status != noErr)
+    if (status != noErr || offset >= aLength)
       break;        
     aBreakBefore[offset] = true;
     position = offset;
