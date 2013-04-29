@@ -146,7 +146,6 @@
 #include "mozilla/Mutex.h"
 
 #include "nsThreadUtils.h"
-#include "nsIJSContextStack.h"
 #include "nsIJSEngineTelemetryStats.h"
 
 #include "nsIConsoleService.h"
@@ -472,8 +471,6 @@ public:
     NS_DECL_NSIXPCONNECT
     NS_DECL_NSITHREADOBSERVER
     NS_DECL_NSIJSRUNTIMESERVICE
-    NS_DECL_NSIJSCONTEXTSTACK
-    NS_DECL_NSITHREADJSCONTEXTSTACK
     NS_DECL_NSIJSENGINETELEMETRYSTATS
 
     // non-interface implementation

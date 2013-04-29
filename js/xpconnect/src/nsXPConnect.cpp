@@ -48,13 +48,11 @@ using namespace mozilla::dom;
 using namespace xpc;
 using namespace JS;
 
-NS_IMPL_THREADSAFE_ISUPPORTS7(nsXPConnect,
+NS_IMPL_THREADSAFE_ISUPPORTS5(nsXPConnect,
                               nsIXPConnect,
                               nsISupportsWeakReference,
                               nsIThreadObserver,
                               nsIJSRuntimeService,
-                              nsIJSContextStack,
-                              nsIThreadJSContextStack,
                               nsIJSEngineTelemetryStats)
 
 nsXPConnect* nsXPConnect::gSelf = nullptr;
@@ -1520,9 +1518,8 @@ nsXPConnect::GetCurrentJSStack(nsIStackFrame * *aCurrentJSStack)
     NS_ASSERTION(aCurrentJSStack, "bad param");
     *aCurrentJSStack = nullptr;
 
-    JSContext* cx;
     // is there a current context available?
-    if (NS_SUCCEEDED(Peek(&cx)) && cx) {
+    if (JSContext *cx = GetCurrentJSContext()) {
         nsCOMPtr<nsIStackFrame> stack;
         XPCJSStack::CreateStack(cx, getter_AddRefs(stack));
         if (stack) {
@@ -1549,13 +1546,6 @@ nsXPConnect::GetCurrentNativeCallContext(nsAXPCNativeCallContext * *aCurrentNati
     NS_ASSERTION(aCurrentNativeCallContext, "bad param");
 
     *aCurrentNativeCallContext = XPCJSRuntime::Get()->GetCallContext();
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPConnect::SyncJSContexts(void)
-{
-    // Do-nothing compatibility function
     return NS_OK;
 }
 
@@ -1774,10 +1764,8 @@ nsXPConnect::DebugDumpJSStack(bool showArgs,
                               bool showLocals,
                               bool showThisProps)
 {
-    JSContext* cx;
-    if (NS_FAILED(Peek(&cx)))
-        printf("failed to peek into nsIThreadJSContextStack service!\n");
-    else if (!cx)
+    JSContext* cx = GetCurrentJSContext();
+    if (!cx)
         printf("there is no JSContext on the nsIThreadJSContextStack!\n");
     else
         xpc_DumpJSStack(cx, showArgs, showLocals, showThisProps);
@@ -1790,10 +1778,8 @@ nsXPConnect::DebugPrintJSStack(bool showArgs,
                                bool showLocals,
                                bool showThisProps)
 {
-    JSContext* cx;
-    if (NS_FAILED(Peek(&cx)))
-        printf("failed to peek into nsIThreadJSContextStack service!\n");
-    else if (!cx)
+    JSContext* cx = GetCurrentJSContext();
+    if (!cx)
         printf("there is no JSContext on the nsIThreadJSContextStack!\n");
     else
         return xpc_PrintJSStack(cx, showArgs, showLocals, showThisProps);
@@ -1805,10 +1791,8 @@ nsXPConnect::DebugPrintJSStack(bool showArgs,
 NS_IMETHODIMP
 nsXPConnect::DebugDumpEvalInJSStackFrame(uint32_t aFrameNumber, const char *aSourceText)
 {
-    JSContext* cx;
-    if (NS_FAILED(Peek(&cx)))
-        printf("failed to peek into nsIThreadJSContextStack service!\n");
-    else if (!cx)
+    JSContext* cx = GetCurrentJSContext();
+    if (!cx)
         printf("there is no JSContext on the nsIThreadJSContextStack!\n");
     else
         xpc_DumpEvalInJSStackFrame(cx, aFrameNumber, aSourceText);
@@ -1963,28 +1947,6 @@ nsXPConnect::UnregisterGCCallback(JSGCCallback func)
     mRuntime->RemoveGCCallback(func);
 }
 
-//  nsIJSContextStack and nsIThreadJSContextStack implementations
-
-/* readonly attribute int32_t Count; */
-NS_IMETHODIMP
-nsXPConnect::GetCount(int32_t *aCount)
-{
-    MOZ_ASSERT(aCount);
-
-    *aCount = XPCJSRuntime::Get()->GetJSContextStack()->Count();
-    return NS_OK;
-}
-
-/* JSContext Peek (); */
-NS_IMETHODIMP
-nsXPConnect::Peek(JSContext * *_retval)
-{
-    MOZ_ASSERT(_retval);
-
-    *_retval = xpc_UnmarkGrayContext(XPCJSRuntime::Get()->GetJSContextStack()->Peek());
-    return NS_OK;
-}
-
 #ifdef MOZ_JSDEBUGGER
 void
 nsXPConnect::CheckForDebugMode(JSRuntime *rt)
@@ -2061,6 +2023,14 @@ xpc_ActivateDebugMode()
     XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
     nsXPConnect::GetXPConnect()->SetDebugModeWhenPossible(true, true);
     nsXPConnect::CheckForDebugMode(rt->GetJSRuntime());
+}
+
+/* virtual */
+JSContext*
+nsXPConnect::GetCurrentJSContext()
+{
+    JSContext *cx = XPCJSRuntime::Get()->GetJSContextStack()->Peek();
+    return xpc_UnmarkGrayContext(cx);
 }
 
 /* virtual */

@@ -5447,11 +5447,7 @@ nsContentUtils::GetContextForEventHandlers(nsINode* aNode,
 JSContext *
 nsContentUtils::GetCurrentJSContext()
 {
-  JSContext *cx = nullptr;
-
-  sXPConnect->Peek(&cx);
-
-  return cx;
+  return sXPConnect->GetCurrentJSContext();
 }
 
 /* static */
