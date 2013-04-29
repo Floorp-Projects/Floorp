@@ -3013,36 +3013,6 @@ nsCxPusher::~nsCxPusher()
   Pop();
 }
 
-static bool
-IsContextOnStack(JSContext *aContext)
-{
-  if (aContext == nsContentUtils::GetCurrentJSContext())
-    return true;
-
-  nsCOMPtr<nsIJSContextStackIterator>
-    iterator(do_CreateInstance("@mozilla.org/js/xpc/ContextStackIterator;1"));
-  NS_ENSURE_TRUE(iterator, false);
-
-  nsresult rv = iterator->Reset(nsContentUtils::XPConnect());
-  NS_ENSURE_SUCCESS(rv, false);
-
-  bool done;
-  JSContext *ctx = nullptr;
-  while (NS_SUCCEEDED(iterator->Done(&done)) && !done) {
-    rv = iterator->Prev(&ctx);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Broken iterator implementation");
-
-    if (!ctx) {
-      continue;
-    }
-
-    if (nsJSUtils::GetDynamicScriptContext(ctx) && ctx == aContext)
-      return true;
-  }
-
-  return false;
-}
-
 bool
 nsCxPusher::Push(EventTarget *aCurrentTarget)
 {
@@ -3138,7 +3108,10 @@ nsCxPusher::DoPush(JSContext* cx)
     MOZ_CRASH();
   }
 
-  if (cx && IsContextOnStack(cx)) {
+  // NB: The GetDynamicScriptContext is historical and might not be sane.
+  if (cx && nsJSUtils::GetDynamicScriptContext(cx) &&
+      xpc::danger::IsJSContextOnStack(cx))
+  {
     // If the context is on the stack, that means that a script
     // is running at the moment in the context.
     mScriptIsRunning = true;
