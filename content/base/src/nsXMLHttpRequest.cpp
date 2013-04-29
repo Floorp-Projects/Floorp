@@ -26,7 +26,6 @@
 #include "nsGUIEvent.h"
 #include "prprf.h"
 #include "nsIDOMEventListener.h"
-#include "nsIJSContextStack.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsWeakPtr.h"
 #include "nsIScriptGlobalObject.h"

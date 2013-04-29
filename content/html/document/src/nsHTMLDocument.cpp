@@ -69,7 +69,6 @@
 #include "nsIDocumentInlines.h"
 #include "nsIDocumentEncoder.h" //for outputting selection
 #include "nsICachingChannel.h"
-#include "nsIJSContextStack.h"
 #include "nsIContentViewer.h"
 #include "nsIWyciwygChannel.h"
 #include "nsIScriptElement.h"
@@ -3323,39 +3322,32 @@ nsHTMLDocument::DoClipboardSecurityCheck(bool aPaste)
 {
   nsresult rv = NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIJSContextStack> stack =
-    do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+  JSContext *cx = nsContentUtils::GetCurrentJSContext();
+  if (!cx) {
+    return NS_OK;
+  }
+  JSAutoRequest ar(cx);
 
-  if (stack) {
-    JSContext *cx = nullptr;
-    stack->Peek(&cx);
-    if (!cx) {
-      return NS_OK;
+  NS_NAMED_LITERAL_CSTRING(classNameStr, "Clipboard");
+
+  nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
+
+  if (aPaste) {
+    if (nsHTMLDocument::sPasteInternal_id == JSID_VOID) {
+      nsHTMLDocument::sPasteInternal_id =
+        INTERNED_STRING_TO_JSID(cx, ::JS_InternString(cx, "paste"));
     }
-
-    JSAutoRequest ar(cx);
-
-    NS_NAMED_LITERAL_CSTRING(classNameStr, "Clipboard");
-
-    nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
-
-    if (aPaste) {
-      if (nsHTMLDocument::sPasteInternal_id == JSID_VOID) {
-        nsHTMLDocument::sPasteInternal_id =
-          INTERNED_STRING_TO_JSID(cx, ::JS_InternString(cx, "paste"));
-      }
-      rv = secMan->CheckPropertyAccess(cx, nullptr, classNameStr.get(),
-                                       nsHTMLDocument::sPasteInternal_id,
-                                       nsIXPCSecurityManager::ACCESS_GET_PROPERTY);
-    } else {
-      if (nsHTMLDocument::sCutCopyInternal_id == JSID_VOID) {
-        nsHTMLDocument::sCutCopyInternal_id =
-          INTERNED_STRING_TO_JSID(cx, ::JS_InternString(cx, "cutcopy"));
-      }
-      rv = secMan->CheckPropertyAccess(cx, nullptr, classNameStr.get(),
-                                       nsHTMLDocument::sCutCopyInternal_id,
-                                       nsIXPCSecurityManager::ACCESS_GET_PROPERTY);
+    rv = secMan->CheckPropertyAccess(cx, nullptr, classNameStr.get(),
+                                     nsHTMLDocument::sPasteInternal_id,
+                                     nsIXPCSecurityManager::ACCESS_GET_PROPERTY);
+  } else {
+    if (nsHTMLDocument::sCutCopyInternal_id == JSID_VOID) {
+      nsHTMLDocument::sCutCopyInternal_id =
+        INTERNED_STRING_TO_JSID(cx, ::JS_InternString(cx, "cutcopy"));
     }
+    rv = secMan->CheckPropertyAccess(cx, nullptr, classNameStr.get(),
+                                     nsHTMLDocument::sCutCopyInternal_id,
+                                     nsIXPCSecurityManager::ACCESS_GET_PROPERTY);
   }
   return rv;
 }
