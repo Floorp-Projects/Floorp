@@ -429,7 +429,6 @@ nsGlobalWindow::DOMMinTimeoutValue() const {
 // CIDs
 static NS_DEFINE_CID(kXULControllersCID, NS_XULCONTROLLERS_CID);
 
-static const char sJSStackContractID[] = "@mozilla.org/js/xpc/ContextStack;1";
 static const char sPopStatePrefStr[] = "browser.history.allowPopState";
 
 #define NETWORK_UPLOAD_EVENT_NAME     NS_LITERAL_STRING("moznetworkupload")

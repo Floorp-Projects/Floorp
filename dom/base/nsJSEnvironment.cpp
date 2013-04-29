@@ -14,7 +14,6 @@
 #include "nsDOMCID.h"
 #include "nsIServiceManager.h"
 #include "nsIXPConnect.h"
-#include "nsIJSContextStack.h"
 #include "nsIJSRuntimeService.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsPrimitives.h"

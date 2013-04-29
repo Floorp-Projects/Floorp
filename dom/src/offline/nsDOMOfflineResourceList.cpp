@@ -18,7 +18,6 @@
 #include "nsIDOMLoadStatus.h"
 #include "nsAutoPtr.h"
 #include "nsContentUtils.h"
-#include "nsIJSContextStack.h"
 #include "nsEventDispatcher.h"
 #include "nsIObserverService.h"
 #include "nsIScriptGlobalObject.h"

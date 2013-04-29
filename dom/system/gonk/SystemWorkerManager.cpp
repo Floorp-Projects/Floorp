@@ -17,7 +17,6 @@
 
 #include "SystemWorkerManager.h"
 
-#include "nsIJSContextStack.h"
 #include "nsINetworkManager.h"
 #include "nsIWifi.h"
 #include "nsIWorkerHolder.h"
