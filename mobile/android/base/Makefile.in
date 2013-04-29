@@ -996,6 +996,7 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/address_bar_nav_button.xml             \
   mobile/android/base/resources/drawable/address_bar_right_edge.xml             \
   mobile/android/base/resources/drawable/address_bar_url.xml                    \
+  mobile/android/base/resources/drawable/awesomebar_listview_divider.xml        \
   mobile/android/base/resources/drawable/awesomebar_header_row.xml              \
   mobile/android/base/resources/drawable/awesomebar_row_favicon_bg.xml          \
   mobile/android/base/resources/drawable/awesomebar_tab_indicator.xml           \

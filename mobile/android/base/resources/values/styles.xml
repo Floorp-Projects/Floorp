@@ -3,7 +3,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<resources>
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!--
         Base application styles. This could be overridden in other res/values-XXX/themes.xml.
@@ -53,7 +53,10 @@
 
     <style name="Widget.ExpandableListView" parent="Widget.ListView">
         <item name="android:groupIndicator">@android:color/transparent</item>
-        <item name="android:childDivider">#D1D5DA</item>
+
+        <!-- Using a color for the childDivider is broken for Froyo and GB
+             phones (see bug 862761), so we use a drawable instead. -->
+        <item name="android:childDivider">@drawable/awesomebar_listview_divider</item>
     </style>
 
     <style name="Widget.ListItem">
