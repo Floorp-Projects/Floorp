@@ -573,21 +573,6 @@ MarkIteratorUnknown(JSContext *cx)
         MarkIteratorUnknownSlow(cx);
 }
 
-/*
- * Return whether new type information in the specified script should be
- * ignored. Tracking new types in a script requires the script to be analyzed,
- * which can consume a large amount of memory when dealing with scripts that
- * don't run long enough to be compiled (as is the case for the majority of
- * executed scripts in web code).
- */
-inline bool
-IgnoreTypeChanges(JSContext *cx, JSScript *script)
-{
-    return !script->hasAnalysis() &&
-           !cx->jaegerCompilationAllowed() &&
-           script->analyzedArgsUsage();
-}
-
 void TypeMonitorCallSlow(JSContext *cx, JSObject *callee, const CallArgs &args,
                          bool constructing);
 
@@ -601,8 +586,6 @@ TypeMonitorCall(JSContext *cx, const js::CallArgs &args, bool constructing)
     if (args.callee().isFunction()) {
         JSFunction *fun = args.callee().toFunction();
         if (fun->isInterpreted()) {
-            if (IgnoreTypeChanges(cx, fun->nonLazyScript()))
-                return true;
             if (!fun->nonLazyScript()->ensureRanAnalysis(cx))
                 return false;
             if (cx->typeInferenceEnabled())

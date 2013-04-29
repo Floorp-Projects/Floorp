@@ -435,9 +435,6 @@ HandleException(JSContext *cx, const IonFrameIterator &frame, ResumeFromExceptio
             break;
           }
 
-          case JSTRY_LOOP:
-            break;
-
           default:
             JS_NOT_REACHED("Invalid try note");
         }
