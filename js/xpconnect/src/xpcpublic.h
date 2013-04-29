@@ -462,6 +462,19 @@ GetJunkScope();
 nsCycleCollectionParticipant *
 xpc_JSZoneParticipant();
 
+// This API is for internal use only and should _not_ be used without approval
+// by the XPConnect Module Owner. Consumers who want to push/pop contexts
+// should go through one of the RAII classes (nsCxPusher, or one of the
+// convenience wrappers defined in nsContentUtils.h).
+namespace xpc {
+namespace danger {
+
+NS_EXPORT_(bool) PushJSContext(JSContext *aCx);
+NS_EXPORT_(void) PopJSContext();
+
+} /* namespace danger */
+} /* namespace xpc */
+
 namespace mozilla {
 namespace dom {
 

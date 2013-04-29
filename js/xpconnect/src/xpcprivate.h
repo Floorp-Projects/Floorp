@@ -574,8 +574,6 @@ private:
     uint16_t                   mEventDepth;
 
     static uint32_t gReportAllJSExceptions;
-    static JSBool gDebugMode;
-    static JSBool gDesiredDebugMode;
 
 public:
     static nsIScriptSecurityManager *gScriptSecurityManager;
@@ -4278,6 +4276,9 @@ GetObjectScope(JSObject *obj)
 {
     return EnsureCompartmentPrivate(obj)->scope;
 }
+
+extern JSBool gDebugMode;
+extern JSBool gDesiredDebugMode;
 }
 
 /***************************************************************************/

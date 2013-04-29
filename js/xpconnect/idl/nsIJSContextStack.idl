@@ -8,13 +8,11 @@
 
 [ptr] native JSContext(JSContext);
 
-[uuid(c67d8270-3189-11d3-9885-006008962422)]
+[uuid(ff1e7ec6-249b-4bda-9068-7b06ebb58a2a)]
 interface nsIJSContextStack : nsISupports
 {
     readonly attribute int32_t  count;
     JSContext                   peek();
-    JSContext                   pop();
-    void                        push(in JSContext cx);
 };
 
 [uuid(c7e6b7aa-fc12-4ca7-b140-98c38b698961)]
