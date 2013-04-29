@@ -12,7 +12,6 @@
 #include "nsIObserverService.h"
 #include "nsIObserver.h"
 #include "nsIXPConnect.h"
-#include "nsIJSContextStack.h"
 
 #include "nsIWindowMediator.h"
 #include "nsIWindowWatcher.h"
