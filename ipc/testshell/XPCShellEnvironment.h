@@ -19,8 +19,6 @@ struct JSContext;
 class JSObject;
 struct JSPrincipals;
 
-class nsIJSContextStack;
-
 namespace mozilla {
 namespace ipc {
 
