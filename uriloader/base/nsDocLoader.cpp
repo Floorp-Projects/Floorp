@@ -952,17 +952,18 @@ nsDocLoader::GetIsTopLevel(bool *aResult)
   *aResult = false;
 
   nsCOMPtr<nsIDOMWindow> window;
-  nsresult rv = GetDOMWindow(getter_AddRefs(window));
-  NS_ENSURE_SUCCESS(rv, rv);
+  GetDOMWindow(getter_AddRefs(window));
+  if (window) {
+    nsCOMPtr<nsPIDOMWindow> piwindow = do_QueryInterface(window);
+    NS_ENSURE_STATE(piwindow);
 
-  nsCOMPtr<nsPIDOMWindow> piwindow = do_QueryInterface(window);
-  NS_ENSURE_STATE(piwindow);
+    nsCOMPtr<nsIDOMWindow> topWindow;
+    nsresult rv = piwindow->GetTop(getter_AddRefs(topWindow));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIDOMWindow> topWindow;
-  rv = piwindow->GetTop(getter_AddRefs(topWindow));
-  NS_ENSURE_SUCCESS(rv, rv);
+    *aResult = piwindow == topWindow;
+  }
 
-  *aResult = piwindow == topWindow;
   return NS_OK;
 }
 
