@@ -79,7 +79,7 @@
  * MozTapGesture - Generated when the user executes a two finger
  * tap gesture on the input device. Client coordinates contain the
  * center point of the tap.
- * (XXX Not implemented on Mac)
+ * (XXX On OS X, only Lion (10.7) and up)
  *
  * MozPressTapGesture - Generated when the user executes a press
  * and tap two finger gesture (first finger down, second finger down,
