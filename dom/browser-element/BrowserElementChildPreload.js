@@ -326,7 +326,9 @@ BrowserElementChild.prototype = {
     let returnValue = win.modalReturnValue;
     delete win.modalReturnValue;
 
-    utils.leaveModalStateWithWindow(modalStateWin);
+    if (!this._shuttingDown) {
+      utils.leaveModalStateWithWindow(modalStateWin);
+    }
 
     debug("Leaving modal state (outerID=" + outerWindowID + ", " +
                                "innerID=" + innerWindowID + ")");
