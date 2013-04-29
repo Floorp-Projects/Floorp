@@ -338,8 +338,12 @@ typedef NSInteger NSEventGestureAxis;
 - (void)swipeWithEvent:(NSEvent *)anEvent;
 - (void)beginGestureWithEvent:(NSEvent *)anEvent;
 - (void)magnifyWithEvent:(NSEvent *)anEvent;
+- (void)smartMagnifyWithEvent:(NSEvent *)anEvent;
 - (void)rotateWithEvent:(NSEvent *)anEvent;
 - (void)endGestureWithEvent:(NSEvent *)anEvent;
+
+// Helper function for Lion smart magnify events
++ (BOOL)isLionSmartMagnifyEvent:(NSEvent*)anEvent;
 
 // Support for fluid swipe tracking.
 #ifdef __LP64__
