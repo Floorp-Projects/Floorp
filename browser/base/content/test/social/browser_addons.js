@@ -57,6 +57,8 @@ function installListener(next, aManifest) {
     },
     onInstalled: function(addon) {
       is(addon.manifest.origin, aManifest.origin, "provider installed");
+      ok(addon.installDate.getTime() > 0, "addon has installDate");
+      ok(addon.updateDate.getTime() > 0, "addon has updateDate");
       ok(Services.prefs.prefHasUserValue(prefname), "manifest is in user-prefs");
       expectEvent = "onUninstalling";
     },
