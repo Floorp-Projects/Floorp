@@ -89,8 +89,8 @@ class BaselineInspector
         return ICInspectorType(this, pc, ent);
     }
 
-    ICStub::Kind monomorphicStubKind(jsbytecode *pc);
-    bool dimorphicStubKind(jsbytecode *pc, ICStub::Kind *pfirst, ICStub::Kind *psecond);
+    ICStub *monomorphicStub(jsbytecode *pc);
+    bool dimorphicStub(jsbytecode *pc, ICStub **pfirst, ICStub **psecond);
 
   public:
     RawShape maybeMonomorphicShapeForPropertyOp(jsbytecode *pc);

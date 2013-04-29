@@ -835,8 +835,12 @@ LIRGenerator::visitCompare(MCompare *comp)
     }
 
     // Compare doubles.
-    if (comp->compareType() == MCompare::Compare_Double)
+    if (comp->compareType() == MCompare::Compare_Double ||
+        comp->compareType() == MCompare::Compare_DoubleMaybeCoerceLHS ||
+        comp->compareType() == MCompare::Compare_DoubleMaybeCoerceRHS)
+    {
         return define(new LCompareD(useRegister(left), useRegister(right)), comp);
+    }
 
     // Compare values.
     if (comp->compareType() == MCompare::Compare_Value) {
@@ -1376,6 +1380,7 @@ bool
 LIRGenerator::visitToDouble(MToDouble *convert)
 {
     MDefinition *opd = convert->input();
+    MToDouble::ConversionKind conversion = convert->conversion();
 
     switch (opd->type()) {
       case MIRType_Value:
@@ -1387,13 +1392,18 @@ LIRGenerator::visitToDouble(MToDouble *convert)
       }
 
       case MIRType_Null:
+        JS_ASSERT(conversion != MToDouble::NumbersOnly && conversion != MToDouble::NonNullNonStringPrimitives);
         return lowerConstantDouble(0, convert);
 
       case MIRType_Undefined:
+        JS_ASSERT(conversion != MToDouble::NumbersOnly);
         return lowerConstantDouble(js_NaN, convert);
 
-      case MIRType_Int32:
       case MIRType_Boolean:
+        JS_ASSERT(conversion != MToDouble::NumbersOnly);
+        /* FALLTHROUGH */
+
+      case MIRType_Int32:
       {
         LInt32ToDouble *lir = new LInt32ToDouble(useRegister(opd));
         return define(lir, convert);
