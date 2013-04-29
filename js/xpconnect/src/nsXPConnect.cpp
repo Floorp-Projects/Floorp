@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sts=4 et sw=4 tw=80:
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -59,8 +60,9 @@ NS_IMPL_THREADSAFE_ISUPPORTS7(nsXPConnect,
 nsXPConnect* nsXPConnect::gSelf = nullptr;
 JSBool       nsXPConnect::gOnceAliveNowDead = false;
 uint32_t     nsXPConnect::gReportAllJSExceptions = 0;
-JSBool       nsXPConnect::gDebugMode = false;
-JSBool       nsXPConnect::gDesiredDebugMode = false;
+
+JSBool       xpc::gDebugMode = false;
+JSBool       xpc::gDesiredDebugMode = false;
 
 // Global cache of the default script security manager (QI'd to
 // nsIScriptSecurityManager)
@@ -1873,7 +1875,9 @@ nsXPConnect::OnProcessNextEvent(nsIThreadInternal *aThread, bool aMayWait,
     // Push a null JSContext so that we don't see any script during
     // event processing.
     MOZ_ASSERT(NS_IsMainThread());
-    return Push(nullptr);
+    bool ok = xpc::danger::PushJSContext(nullptr);
+    NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1890,7 +1894,8 @@ nsXPConnect::AfterProcessNextEvent(nsIThreadInternal *aThread,
     nsJSContext::MaybePokeCC();
     nsDOMMutationObserver::HandleMutations();
 
-    return Pop(nullptr);
+    xpc::danger::PopJSContext();
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2059,49 +2064,52 @@ xpc_ActivateDebugMode()
     nsXPConnect::CheckForDebugMode(rt->GetJSRuntime());
 }
 
-/* JSContext Pop (); */
-NS_IMETHODIMP
-nsXPConnect::Pop(JSContext * *_retval)
-{
-    JSContext *cx = XPCJSRuntime::Get()->GetJSContextStack()->Pop();
-    if (_retval)
-        *_retval = xpc_UnmarkGrayContext(cx);
-    return NS_OK;
-}
-
-/* void Push (in JSContext cx); */
-NS_IMETHODIMP
-nsXPConnect::Push(JSContext * cx)
-{
-     if (gDebugMode != gDesiredDebugMode && NS_IsMainThread()) {
-         const InfallibleTArray<XPCJSContextInfo>* stack =
-             XPCJSRuntime::Get()->GetJSContextStack()->GetStack();
-         if (!gDesiredDebugMode) {
-             /* Turn off debug mode immediately, even if JS code is currently running */
-             CheckForDebugMode(mRuntime->GetJSRuntime());
-         } else {
-             bool runningJS = false;
-             for (uint32_t i = 0; i < stack->Length(); ++i) {
-                 JSContext *cx = (*stack)[i].cx;
-                 if (cx && js::IsContextRunningJS(cx)) {
-                     runningJS = true;
-                     break;
-                 }
-             }
-             if (!runningJS)
-                 CheckForDebugMode(mRuntime->GetJSRuntime());
-         }
-     }
-
-     return XPCJSRuntime::Get()->GetJSContextStack()->Push(cx) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-}
-
 /* virtual */
 JSContext*
 nsXPConnect::GetSafeJSContext()
 {
     return XPCJSRuntime::Get()->GetJSContextStack()->GetSafeJSContext();
 }
+
+namespace xpc {
+namespace danger {
+
+NS_EXPORT_(bool)
+PushJSContext(JSContext *aCx)
+{
+    // JSD mumbo jumbo.
+    nsXPConnect *xpc = nsXPConnect::GetXPConnect();
+    JSRuntime *rt = XPCJSRuntime::Get()->GetJSRuntime();
+    if (xpc::gDebugMode != xpc::gDesiredDebugMode) {
+        if (!xpc::gDesiredDebugMode) {
+            /* Turn off debug mode immediately, even if JS code is currently
+               running. */
+            xpc->CheckForDebugMode(rt);
+        } else {
+            bool runningJS = false;
+            XPCJSContextStack *stack = XPCJSRuntime::Get()->GetJSContextStack();
+            for (uint32_t i = 0; i < stack->Count(); ++i) {
+                JSContext *cx = (*stack->GetStack())[i].cx;
+                if (cx && js::IsContextRunningJS(cx)) {
+                    runningJS = true;
+                    break;
+                }
+            }
+            if (!runningJS)
+                xpc->CheckForDebugMode(rt);
+        }
+    }
+    return XPCJSRuntime::Get()->GetJSContextStack()->Push(aCx);
+}
+
+NS_EXPORT_(void)
+PopJSContext()
+{
+    XPCJSRuntime::Get()->GetJSContextStack()->Pop();
+}
+
+} /* namespace danger */
+} /* namespace xpc */
 
 nsIPrincipal*
 nsXPConnect::GetPrincipal(JSObject* obj, bool allowShortCircuit) const

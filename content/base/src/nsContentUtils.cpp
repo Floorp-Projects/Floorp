@@ -3144,7 +3144,7 @@ nsCxPusher::DoPush(JSContext* cx)
     mScriptIsRunning = true;
   }
 
-  if (NS_FAILED(xpc->Push(cx))) {
+  if (!xpc::danger::PushJSContext(cx)) {
     MOZ_CRASH();
   }
 
@@ -3185,7 +3185,7 @@ nsCxPusher::Pop()
                                 js::GetEnterCompartmentDepth(mPushedContext));
   DebugOnly<JSContext*> stackTop;
   MOZ_ASSERT(mPushedContext == nsContentUtils::GetCurrentJSContext());
-  nsContentUtils::XPConnect()->Pop(nullptr);
+  xpc::danger::PopJSContext();
 
   if (!mScriptIsRunning && mScx) {
     // No JS is running in the context, but executing the event handler might have
