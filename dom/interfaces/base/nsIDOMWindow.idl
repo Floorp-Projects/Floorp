@@ -185,8 +185,8 @@ interface nsIDOMWindow : nsISupports
 
 
   // user prompts
-  void                      alert([Null(Stringify)] in DOMString text);
-  boolean                   confirm(in DOMString text);
+  void                      alert([optional, Null(Stringify)] in DOMString text);
+  boolean                   confirm([optional] in DOMString text);
 
   // prompt() should return a null string if cancel is pressed
   DOMString                 prompt([optional] in DOMString aMessage,

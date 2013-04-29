@@ -18,6 +18,7 @@ MOCHITEST_FILES = \
     test_bug619644.html \
     test_bug620145.html \
     test_bug625187.html \
+    test_bug861605.html \
     prompt_common.js \
     bug619644_inner.html \
     bug625187_iframe.html \
