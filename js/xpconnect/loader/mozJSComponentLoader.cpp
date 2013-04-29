@@ -32,7 +32,6 @@
 #include "mozJSComponentLoader.h"
 #include "mozJSLoaderUtils.h"
 #include "nsIJSRuntimeService.h"
-#include "nsIJSContextStack.h"
 #include "nsIXPConnect.h"
 #include "nsCRT.h"
 #include "nsMemory.h"
@@ -337,10 +336,10 @@ static const JSFunctionSpec gGlobalFun[] = {
     JS_FS_END
 };
 
-class JSCLContextHelper
+class MOZ_STACK_CLASS JSCLContextHelper
 {
 public:
-    JSCLContextHelper(mozJSComponentLoader* loader);
+    JSCLContextHelper(JSContext* aCx);
     ~JSCLContextHelper();
 
     void reportErrorAfterPop(char *buf);
@@ -348,8 +347,9 @@ public:
     operator JSContext*() const {return mContext;}
 
 private:
+
     JSContext* mContext;
-    nsIThreadJSContextStack* mContextStack;
+    nsCxPusher mPusher;
     char*      mBuf;
 
     // prevent copying and assignment
@@ -464,10 +464,6 @@ mozJSComponentLoader::ReallyInit()
         NS_FAILED(rv = mRuntimeService->GetRuntime(&mRuntime)))
         return rv;
 
-    mContextStack = do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
-    if (NS_FAILED(rv))
-        return rv;
-
     // Create our compilation context.
     mContext = JS_NewContext(mRuntime, 256);
     if (!mContext)
@@ -547,7 +543,7 @@ mozJSComponentLoader::LoadModule(FileLocation &aFile)
     if (NS_FAILED(rv))
         return NULL;
 
-    JSCLContextHelper cx(this);
+    JSCLContextHelper cx(mContext);
     JSAutoCompartment ac(cx, entry->obj);
 
     JSObject* cm_jsobj;
@@ -834,7 +830,7 @@ mozJSComponentLoader::ObjectForLocation(nsIFile *aComponentFile,
                                         bool aPropagateExceptions,
                                         JS::MutableHandleValue aException)
 {
-    JSCLContextHelper cx(this);
+    JSCLContextHelper cx(mContext);
 
     JS_AbortIfWrongThread(JS_GetRuntime(cx));
 
@@ -1166,7 +1162,6 @@ mozJSComponentLoader::UnloadModules()
     mContext = nullptr;
 
     mRuntimeService = nullptr;
-    mContextStack = nullptr;
 #ifdef DEBUG_shaver_off
     fprintf(stderr, "mJCL: UnloadAll(%d)\n", aWhen);
 #endif
@@ -1350,7 +1345,7 @@ mozJSComponentLoader::ImportInto(const nsACString &aLocation,
     vp.set(mod->obj);
 
     if (targetObj) {
-        JSCLContextHelper cxhelper(this);
+        JSCLContextHelper cxhelper(mContext);
         JSAutoCompartment ac(mContext, mod->obj);
 
         RootedValue symbols(mContext);
@@ -1503,30 +1498,21 @@ mozJSComponentLoader::ModuleEntry::GetFactory(const mozilla::Module& module,
 
 //----------------------------------------------------------------------
 
-JSCLContextHelper::JSCLContextHelper(mozJSComponentLoader *loader)
-    : mContext(loader->mContext),
-      mContextStack(loader->mContextStack),
-      mBuf(nullptr)
+JSCLContextHelper::JSCLContextHelper(JSContext* aCx)
+    : mContext(aCx)
+    , mBuf(nullptr)
 {
-    mContextStack->Push(mContext);
+    mPusher.Push(mContext);
     JS_BeginRequest(mContext);
 }
 
 JSCLContextHelper::~JSCLContextHelper()
 {
-    if (mContextStack) {
-        JS_EndRequest(mContext);
-
-        mContextStack->Pop(nullptr);
-
-        JSContext* cx = nullptr;
-        mContextStack->Peek(&cx);
-
-        mContextStack = nullptr;
-
-        if (cx && mBuf) {
-            JS_ReportError(cx, mBuf);
-        }
+    JS_EndRequest(mContext);
+    mPusher.Pop();
+    JSContext *restoredCx = nsContentUtils::GetCurrentJSContext();
+    if (restoredCx && mBuf) {
+        JS_ReportError(restoredCx, mBuf);
     }
 
     if (mBuf) {
