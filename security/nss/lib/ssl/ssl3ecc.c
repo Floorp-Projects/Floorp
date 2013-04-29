@@ -960,7 +960,16 @@ PRBool
 ssl3_IsECCEnabled(sslSocket * ss)
 {
     const ssl3CipherSuite * suite;
+    PK11SlotInfo *slot;
 
+    /* make sure we can do ECC */
+    slot = PK11_GetBestSlot(CKM_ECDH1_DERIVE,  ss->pkcs11PinArg);
+    if (!slot) {
+	return PR_FALSE;
+    }
+    PK11_FreeSlot(slot);
+
+    /* make sure an ECC cipher is enabled */
     for (suite = ecSuites; *suite; ++suite) {
 	PRBool    enabled = PR_FALSE;
 	SECStatus rv      = ssl3_CipherPrefGet(ss, *suite, &enabled);
@@ -974,21 +983,20 @@ ssl3_IsECCEnabled(sslSocket * ss)
 
 #define BE(n) 0, n
 
-#ifndef NSS_ECC_MORE_THAN_SUITE_B
 /* Prefabricated TLS client hello extension, Elliptic Curves List,
  * offers only 3 curves, the Suite B curves, 23-25 
  */
-static const PRUint8 EClist[12] = {
+static const PRUint8 suiteBECList[12] = {
     BE(10),         /* Extension type */
     BE( 8),         /* octets that follow ( 3 pairs + 1 length pair) */
     BE( 6),         /* octets that follow ( 3 pairs) */
     BE(23), BE(24), BE(25)
 };
-#else
+
 /* Prefabricated TLS client hello extension, Elliptic Curves List,
  * offers curves 1-25.
  */
-static const PRUint8 EClist[56] = {
+static const PRUint8 tlsECList[56] = {
     BE(10),         /* Extension type */
     BE(52),         /* octets that follow (25 pairs + 1 length pair) */
     BE(50),         /* octets that follow (25 pairs) */
@@ -997,7 +1005,6 @@ static const PRUint8 EClist[56] = {
     BE(16), BE(17), BE(18), BE(19), BE(20), BE(21), BE(22), BE(23), 
     BE(24), BE(25)
 };
-#endif
 
 static const PRUint8 ECPtFmt[6] = {
     BE(11),         /* Extension type */
@@ -1005,6 +1012,29 @@ static const PRUint8 ECPtFmt[6] = {
              1,     /* octets that follow */
                  0  /* uncompressed type only */
 };
+
+/* This function already presumes we can do ECC, ssl_IsECCEnabled must be
+ * called before this function. It looks to see if we have a token which
+ * is capable of doing smaller than SuiteB curves. If the token can, we
+ * presume the token can do the whole SSL suite of curves. If it can't we
+ * presume the token that allowed ECC to be enabled can only do suite B
+ * curves. */
+static PRBool
+ssl3_SuiteBOnly(sslSocket *ss)
+{
+    /* look to see if we can handle certs less than 163 bits */
+    PK11SlotInfo *slot =
+	PK11_GetBestSlotWithAttributes(CKM_ECDH1_DERIVE, 0, 163,
+					ss ? ss->pkcs11PinArg : NULL);
+
+    if (!slot) {
+	/* nope, presume we can only do suite B */
+	return PR_TRUE;
+    }
+    /* we can, presume we can do all curves */
+    PK11_FreeSlot(slot);
+    return PR_FALSE;
+}
 
 /* Send our "canned" (precompiled) Supported Elliptic Curves extension,
  * which says that we support all TLS-defined named curves.
@@ -1015,10 +1045,22 @@ ssl3_SendSupportedCurvesXtn(
 			PRBool      append,
 			PRUint32    maxBytes)
 {
+    int ECListSize = 0;
+    const PRUint8 *ECList = NULL;
+
     if (!ss || !ssl3_IsECCEnabled(ss))
     	return 0;
-    if (append && maxBytes >= (sizeof EClist)) {
-	SECStatus rv = ssl3_AppendHandshake(ss, EClist, (sizeof EClist));
+
+    if (ssl3_SuiteBOnly(ss)) {
+	ECListSize = sizeof (suiteBECList);
+	ECList = suiteBECList;
+    } else {
+	ECListSize = sizeof (tlsECList);
+	ECList = tlsECList;
+    }
+ 
+    if (append && maxBytes >= ECListSize) {
+	SECStatus rv = ssl3_AppendHandshake(ss, ECList, ECListSize);
 	if (rv != SECSuccess)
 	    return -1;
 	if (!ss->sec.isServer) {
@@ -1027,7 +1069,16 @@ ssl3_SendSupportedCurvesXtn(
 		ssl_elliptic_curves_xtn;
 	}
     }
-    return (sizeof EClist);
+    return ECListSize;
+}
+
+PRInt32
+ssl3_GetSupportedECCCurveMask(sslSocket *ss)
+{
+    if (ssl3_SuiteBOnly(ss)) {
+	return SSL3_SUITE_B_SUPPORTED_CURVES_MASK;
+    }
+    return SSL3_ALL_SUPPORTED_CURVES_MASK;
 }
 
 /* Send our "canned" (precompiled) Supported Point Formats extension,

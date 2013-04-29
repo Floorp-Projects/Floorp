@@ -83,6 +83,9 @@ static const NameToKind name2kinds[] = {
                                                     SEC_ASN1_PRINTABLE_STRING},
     { "businessCategory",       64, SEC_OID_BUSINESS_CATEGORY, SEC_ASN1_DS},
 
+/* values defined in X.520 */
+    { "name",           64, SEC_OID_AVA_NAME,           SEC_ASN1_DS},
+
     { 0,               256, SEC_OID_UNKNOWN,            0},
 };
 

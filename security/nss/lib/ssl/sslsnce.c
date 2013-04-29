@@ -2027,7 +2027,7 @@ ssl_GetSessionTicketKeys(unsigned char *keyName, unsigned char *encKey,
     PRBool rv = PR_FALSE;
     PRUint32 now = 0;
     cacheDesc *cache = &globalCache;
-    uint8 ticketMacKey[AES_256_KEY_LENGTH], ticketEncKey[SHA256_LENGTH];
+    uint8 ticketMacKey[SHA256_LENGTH], ticketEncKey[AES_256_KEY_LENGTH];
     uint8 ticketKeyNameSuffixLocal[SESS_TICKET_KEY_VAR_NAME_LEN];
     uint8 *ticketMacKeyPtr, *ticketEncKeyPtr, *ticketKeyNameSuffix;
     PRBool cacheIsEnabled = PR_TRUE;

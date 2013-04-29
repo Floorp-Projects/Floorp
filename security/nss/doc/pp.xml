@@ -84,7 +84,7 @@
 
   <refsection id="resources">
     <title>Additional Resources</title>
-    <para>NSS is maintained in conjunction with PKI and security-related projects through Mozilla dn Fedora. The most closely-related project is Dogtag PKI, with a project wiki at <ulink url="http://pki.fedoraproject.org/wiki/">PKI Wiki</ulink>. </para>
+    <para>NSS is maintained in conjunction with PKI and security-related projects through Mozilla and Fedora. The most closely-related project is Dogtag PKI, with a project wiki at <ulink url="http://pki.fedoraproject.org/wiki/">PKI Wiki</ulink>. </para>
 	<para>For information specifically about NSS, the NSS project wiki is located at <ulink url="http://www.mozilla.org/projects/security/pki/nss/">Mozilla NSS site</ulink>. The NSS site relates directly to NSS code changes and releases.</para>
 	<para>Mailing lists: pki-devel@redhat.com and pki-users@redhat.com</para>
 	<para>IRC: Freenode at #dogtag-pki</para>
@@ -93,7 +93,7 @@
 <!-- fill in your name first; keep the other names for reference -->
   <refsection id="authors">
     <title>Authors</title>
-    <para>The NSS tools were written and maintained by developers with Netscape, Red Hat, and Sun.</para>
+    <para>The NSS tools were written and maintained by developers with Netscape, Red Hat,  Sun, Oracle, Mozilla, and Google.</para>
     <para>
 	Authors: Elio Maldonado &lt;emaldona@redhat.com>, Deon Lackey &lt;dlackey@redhat.com>.
     </para>
@@ -102,9 +102,7 @@
 <!-- don't change -->
   <refsection id="license">
     <title>LICENSE</title>
-    <para>Licensed under the Mozilla Public License, version 1.1,
-        and/or the GNU General Public License, version 2 or later,
-        and/or the GNU Lesser General Public License, version 2.1 or later.
+    <para>Licensed under the Mozilla Public License, v. 2.0.  If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
     </para>
   </refsection>
 

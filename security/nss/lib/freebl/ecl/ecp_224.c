@@ -6,14 +6,13 @@
 #include "mpi.h"
 #include "mplogic.h"
 #include "mpi-priv.h"
-#include <stdlib.h>
 
 #define ECP224_DIGITS ECL_CURVE_DIGITS(224)
 
 /* Fast modular reduction for p224 = 2^224 - 2^96 + 1.  a can be r. Uses
  * algorithm 7 from Brown, Hankerson, Lopez, Menezes. Software
  * Implementation of the NIST Elliptic Curves over Prime Fields. */
-mp_err
+static mp_err
 ec_GFp_nistp224_mod(const mp_int *a, mp_int *r, const GFMethod *meth)
 {
 	mp_err res = MP_OKAY;
@@ -275,7 +274,7 @@ ec_GFp_nistp224_mod(const mp_int *a, mp_int *r, const GFMethod *meth)
 /* Compute the square of polynomial a, reduce modulo p224. Store the
  * result in r.  r could be a.  Uses optimized modular reduction for p224. 
  */
-mp_err
+static mp_err
 ec_GFp_nistp224_sqr(const mp_int *a, mp_int *r, const GFMethod *meth)
 {
 	mp_err res = MP_OKAY;
@@ -289,7 +288,7 @@ ec_GFp_nistp224_sqr(const mp_int *a, mp_int *r, const GFMethod *meth)
 /* Compute the product of two polynomials a and b, reduce modulo p224.
  * Store the result in r.  r could be a or b; a could be b.  Uses
  * optimized modular reduction for p224. */
-mp_err
+static mp_err
 ec_GFp_nistp224_mul(const mp_int *a, const mp_int *b, mp_int *r,
 					const GFMethod *meth)
 {
@@ -303,7 +302,7 @@ ec_GFp_nistp224_mul(const mp_int *a, const mp_int *b, mp_int *r,
 
 /* Divides two field elements. If a is NULL, then returns the inverse of
  * b. */
-mp_err
+static mp_err
 ec_GFp_nistp224_div(const mp_int *a, const mp_int *b, mp_int *r,
 		   const GFMethod *meth)
 {

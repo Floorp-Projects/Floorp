@@ -81,6 +81,14 @@ typedef int __BLAPI_DEPRECATED __attribute__((deprecated));
  */
 #define MAX_ECKEY_LEN 	        72	/* Bytes */
 
+#ifdef NSS_ECC_MORE_THAN_SUITE_B
+#define EC_MAX_KEY		571     /* in bits */
+#define EC_MIN_KEY		112     /* in bits */
+#else
+#define EC_MAX_KEY		521     /* in bits */
+#define EC_MIN_KEY		256     /* in bits */
+#endif
+
 /* EC point compression format */
 #define EC_POINT_FORM_COMPRESSED_Y0    0x02
 #define EC_POINT_FORM_COMPRESSED_Y1    0x03
