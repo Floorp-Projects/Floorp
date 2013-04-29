@@ -38,6 +38,9 @@ public:
     return true;
   }
 
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(PannerNode, AudioNode)
+
   PanningModelType PanningModel() const
   {
     return mPanningModel;
