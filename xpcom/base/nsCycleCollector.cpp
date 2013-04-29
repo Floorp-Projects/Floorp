@@ -917,6 +917,12 @@ nsPurpleBuffer::SelectPointers(GCGraphBuilder &aBuilder)
     }
 }
 
+enum ccType {
+    ScheduledCC, /* Automatically triggered, based on time or the purple buffer. */
+    ManualCC,    /* Explicitly triggered. */
+    ShutdownCC   /* Shutdown CC, used for finding leaks. */
+};
+
 class nsCycleCollector;
 
 class nsCycleCollectorRunner : public nsRunnable
@@ -931,7 +937,7 @@ class nsCycleCollectorRunner : public nsRunnable
     bool mRunning;
     bool mShutdown;
     bool mCollected;
-    bool mMergeZones;
+    ccType mCCType;
 
 public:
     nsCycleCollectorRunner(nsCycleCollector *collector,
@@ -945,7 +951,7 @@ public:
           mRunning(false),
           mShutdown(false),
           mCollected(false),
-          mMergeZones(false)
+          mCCType(ScheduledCC)
     {
         MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
     }
@@ -960,7 +966,7 @@ public:
         return NS_NewThread(getter_AddRefs(mThread), this);
     }
 
-    void Collect(bool aMergeZones,
+    void Collect(ccType aCCType,
                  nsCycleCollectorResults *aResults,
                  nsICycleCollectorListener *aListener);
 
@@ -1029,6 +1035,9 @@ private:
 
     nsPurpleBuffer mPurpleBuf;
 
+    uint32_t mUnmergedNeeded;
+    uint32_t mMergedInARow;
+
 public:
     void RegisterJSRuntime(nsCycleCollectionJSRuntime *aJSRuntime);
     void ForgetJSRuntime();
@@ -1070,13 +1079,13 @@ public:
     void CheckThreadSafety();
 
 private:
-    void MainThreadCollect(bool aMergeZones,
+    void MainThreadCollect(ccType aCCType,
                            nsCycleCollectorResults *aResults,
                            uint32_t aTryCollections,
                            nsICycleCollectorListener *aListener);
 
 public:
-    void Collect(bool aMergeZones,
+    void Collect(ccType aCCType,
                  nsCycleCollectorResults *aResults,
                  nsICycleCollectorListener *aListener);
 
@@ -1084,10 +1093,11 @@ public:
     bool PrepareForCollection(nsCycleCollectorResults *aResults,
                               nsTArray<PtrInfo*> *aWhiteNodes);
     void FixGrayBits(bool aForceGC);
+    bool ShouldMergeZones(ccType aCCType);
     void CleanupAfterCollection();
 
     // Start and finish an individual collection.
-    bool BeginCollection(bool aMergeZones, nsICycleCollectorListener *aListener);
+    bool BeginCollection(ccType aCCType, nsICycleCollectorListener *aListener);
     bool FinishCollection(nsICycleCollectorListener *aListener);
 
     uint32_t SuspectedCount();
@@ -1144,7 +1154,7 @@ nsCycleCollectorRunner::Run()
         }
 
         mCollector->JSRuntime()->NotifyEnterCycleCollectionThread();
-        mCollected = mCollector->BeginCollection(mMergeZones, mListener);
+        mCollected = mCollector->BeginCollection(mCCType, mListener);
         mCollector->JSRuntime()->NotifyLeaveCycleCollectionThread();
 
         mReply.Notify();
@@ -1154,7 +1164,7 @@ nsCycleCollectorRunner::Run()
 }
 
 void
-nsCycleCollectorRunner::Collect(bool aMergeZones,
+nsCycleCollectorRunner::Collect(ccType aCCType,
                                 nsCycleCollectorResults *aResults,
                                 nsICycleCollectorListener *aListener)
 {
@@ -1181,7 +1191,7 @@ nsCycleCollectorRunner::Collect(bool aMergeZones,
     if (aListener && NS_FAILED(aListener->Begin()))
         aListener = nullptr;
     mListener = aListener;
-    mMergeZones = aMergeZones;
+    mCCType = aCCType;
 
     if (mModel == CCWithTraverseThread &&
         mCollector->JSRuntime()->NotifyLeaveMainThread()) {
@@ -1189,7 +1199,7 @@ nsCycleCollectorRunner::Collect(bool aMergeZones,
         mReply.Wait();
         mCollector->JSRuntime()->NotifyEnterMainThread();
     } else {
-        mCollected = mCollector->BeginCollection(aMergeZones, mListener);
+        mCollected = mCollector->BeginCollection(aCCType, mListener);
     }
 
     mListener = nullptr;
@@ -2521,7 +2531,9 @@ nsCycleCollector::nsCycleCollector(CCThreadingModel aModel) :
     mBeforeUnlinkCB(nullptr),
     mForgetSkippableCB(nullptr),
     mReporter(nullptr),
-    mPurpleBuf(mParams)
+    mPurpleBuf(mParams),
+    mUnmergedNeeded(0),
+    mMergedInARow(0)
 {
     nsRefPtr<nsCycleCollectorRunner> runner =
         new nsCycleCollectorRunner(this, aModel);
@@ -2737,7 +2749,7 @@ nsCycleCollector::CleanupAfterCollection()
 }
 
 void
-nsCycleCollector::MainThreadCollect(bool aMergeZones,
+nsCycleCollector::MainThreadCollect(ccType aCCType,
                                     nsCycleCollectorResults *aResults,
                                     uint32_t aTryCollections,
                                     nsICycleCollectorListener *aListener)
@@ -2753,7 +2765,7 @@ nsCycleCollector::MainThreadCollect(bool aMergeZones,
         FixGrayBits(true);
         if (aListener && NS_FAILED(aListener->Begin()))
             aListener = nullptr;
-        if (!(BeginCollection(aMergeZones, aListener) &&
+        if (!(BeginCollection(aCCType, aListener) &&
               FinishCollection(aListener)))
             break;
 
@@ -2764,15 +2776,50 @@ nsCycleCollector::MainThreadCollect(bool aMergeZones,
 }
 
 void
-nsCycleCollector::Collect(bool aMergeZones,
+nsCycleCollector::Collect(ccType aCCType,
                           nsCycleCollectorResults *aResults,
                           nsICycleCollectorListener *aListener)
 {
-    mRunner->Collect(aMergeZones, aResults, aListener);
+    mRunner->Collect(aCCType, aResults, aListener);
+}
+
+// Don't merge too many times in a row, and do at least a minimum
+// number of unmerged CCs in a row.
+static const uint32_t kMinConsecutiveUnmerged = 3;
+static const uint32_t kMaxConsecutiveMerged = 3;
+
+bool
+nsCycleCollector::ShouldMergeZones(ccType aCCType)
+{
+    if (!mJSRuntime) {
+        return false;
+    }
+
+    MOZ_ASSERT(mUnmergedNeeded <= kMinConsecutiveUnmerged);
+    MOZ_ASSERT(mMergedInARow <= kMaxConsecutiveMerged);
+
+    if (mMergedInARow == kMaxConsecutiveMerged) {
+        MOZ_ASSERT(mUnmergedNeeded == 0);
+        mUnmergedNeeded = kMinConsecutiveUnmerged;
+    }
+
+    if (mUnmergedNeeded > 0) {
+        mUnmergedNeeded--;
+        mMergedInARow = 0;
+        return false;
+    }
+
+    if (aCCType == ScheduledCC && mJSRuntime->UsefulToMergeZones()) {
+        mMergedInARow++;
+        return true;
+    } else {
+        mMergedInARow = 0;
+        return false;
+    }
 }
 
 bool
-nsCycleCollector::BeginCollection(bool aMergeZones,
+nsCycleCollector::BeginCollection(ccType aCCType,
                                   nsICycleCollectorListener *aListener)
 {
     // aListener should be Begin()'d before this
@@ -2781,8 +2828,13 @@ nsCycleCollector::BeginCollection(bool aMergeZones,
     if (mParams.mDoNothing)
         return false;
 
+    bool mergeZones = ShouldMergeZones(aCCType);
+    if (mResults) {
+        mResults->mMergedZones = mergeZones;
+    }
+
     GCGraphBuilder builder(this, mGraph, mJSRuntime, aListener,
-                           aMergeZones);
+                           mergeZones);
     if (!builder.Initialized())
         return false;
 
@@ -2866,7 +2918,7 @@ nsCycleCollector::Shutdown()
                 listener->SetAllTraces();
             }
         }
-        MainThreadCollect(false, nullptr,  SHUTDOWN_COLLECTIONS(mParams),
+        MainThreadCollect(ShutdownCC, nullptr, SHUTDOWN_COLLECTIONS(mParams),
                           listener);
     }
 
@@ -3029,7 +3081,7 @@ nsCycleCollector_forgetSkippable(bool aRemoveChildlessNodes)
 }
 
 void
-nsCycleCollector_collect(bool aMergeZones,
+nsCycleCollector_collect(bool aManuallyTriggered,
                          nsCycleCollectorResults *aResults,
                          nsICycleCollectorListener *aListener)
 {
@@ -3045,7 +3097,7 @@ nsCycleCollector_collect(bool aMergeZones,
         listener = new nsCycleCollectorLogger();
     }
 
-    collector->Collect(aMergeZones, aResults, listener);
+    collector->Collect(aManuallyTriggered ? ManualCC : ScheduledCC, aResults, listener);
 }
 
 void
