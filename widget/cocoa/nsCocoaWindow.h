@@ -95,6 +95,8 @@ typedef struct _nsCocoaWindowList {
 - (void)updateTrackingArea;
 - (NSView*)trackingAreaView;
 
+- (ChildView*)mainChildView;
+
 @end
 
 @interface NSWindow (Undocumented)
@@ -190,7 +192,6 @@ typedef struct _nsCocoaWindowList {
 - (void)setTitlebarNeedsDisplayInRect:(NSRect)aRect sync:(BOOL)aSync;
 - (void)setTitlebarNeedsDisplayInRect:(NSRect)aRect;
 - (void)setDrawsContentsIntoWindowFrame:(BOOL)aState;
-- (ChildView*)mainChildView;
 @end
 
 class nsCocoaWindow : public nsBaseWidget, public nsPIWidgetCocoa
