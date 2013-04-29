@@ -5,7 +5,7 @@ function ffi(a,b,c,d) {
     return a+b+c+d;
 }
 
-var f = asmLink(asmCompile('global','imp', USE_ASM + 'var ffi=imp.ffi; function g() { return 1 } function f() { var i=0; i=g(); return ((ffi(4,5,6,7)|0)+i)|0 } return f'), null, {ffi:ffi});
+var f = asmLink(asmCompile('global','imp', USE_ASM + 'var ffi=imp.ffi; function g() { return 1 } function f() { var i=0; i=g()|0; return ((ffi(4,5,6,7)|0)+i)|0 } return f'), null, {ffi:ffi});
 assertEq(f(1), 23);
 
 var counter = 0;
