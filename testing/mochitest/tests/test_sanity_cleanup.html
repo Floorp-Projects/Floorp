@@ -1,0 +1,30 @@
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>SimpleTest.registerCleanupFunction test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+// Not a great example, since we have the pushPrefEnv API to cover
+// this use case, but I want to be able to test that the cleanup
+// function gets run, so setting and clearing a pref seems straightforward.
+function do_cleanup1() {
+  SpecialPowers.clearUserPref("simpletest.cleanup.1");
+  info("do_cleanup1 run!");
+}
+function do_cleanup2() {
+  SpecialPowers.clearUserPref("simpletest.cleanup.2");
+  info("do_cleanup2 run!");
+}
+SpecialPowers.setBoolPref("simpletest.cleanup.1", true);
+SpecialPowers.setBoolPref("simpletest.cleanup.2", true);
+SimpleTest.registerCleanupFunction(do_cleanup1);
+SimpleTest.registerCleanupFunction(do_cleanup2);
+ok(true, "dummy check");
+</script>
+</body>
+</html>

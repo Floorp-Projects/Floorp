@@ -1,0 +1,24 @@
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>SimpleTest.registerCleanupFunction test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+for (pref of [1, 2]) {
+  try {
+    SpecialPowers.getBoolPref("simpletest.cleanup." + pref);
+    ok(false, "Cleanup function should have unset pref");
+  }
+  catch(ex) {
+    ok(true, "Pref was not set");
+  }
+}
+
+</script>
+</body>
+</html>

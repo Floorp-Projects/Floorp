@@ -225,6 +225,7 @@ SimpleTest.testPluginIsOOP = function () {
 
 SimpleTest._tests = [];
 SimpleTest._stopOnLoad = true;
+SimpleTest._cleanupFunctions = [];
 
 /**
  * Something like assert.
@@ -693,7 +694,11 @@ SimpleTest.executeSoon = function(aFunc) {
         return SpecialPowers.executeSoon(aFunc, window);
     }
     setTimeout(aFunc, 0);
-}
+};
+
+SimpleTest.registerCleanupFunction = function(aFunc) {
+    SimpleTest._cleanupFunctions.push(aFunc);
+};
 
 /**
  * Finishes the tests. This is automatically called, except when
@@ -705,6 +710,17 @@ SimpleTest.finish = function () {
     }
 
     SimpleTest._alreadyFinished = true;
+
+    // Execute all of our cleanup functions.
+    var func;
+    while ((func = SimpleTest._cleanupFunctions.pop())) {
+      try {
+        func();
+      }
+      catch (ex) {
+        SimpleTest.ok(false, "Cleanup function threw exception: " + ex);
+      }
+    }
 
     if (SpecialPowers.DOMWindowUtils.isTestControllingRefreshes) {
         SimpleTest.ok(false, "test left refresh driver under test control");
