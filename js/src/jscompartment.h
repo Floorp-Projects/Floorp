@@ -411,6 +411,12 @@ JSContext::typeInferenceEnabled() const
     return compartment->zone()->types.inferenceEnabled;
 }
 
+inline bool
+JSContext::jaegerCompilationAllowed() const
+{
+    return compartment->zone()->types.jaegerCompilationAllowed;
+}
+
 inline js::Handle<js::GlobalObject*>
 JSContext::global() const
 {
