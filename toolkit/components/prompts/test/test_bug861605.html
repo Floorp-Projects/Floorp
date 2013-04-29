@@ -30,10 +30,13 @@ function hasTabModalPrompts() {
 function runtest()
 {
   isTabModal = hasTabModalPrompts();
-  if (!isTabModal)
+  if (!isTabModal) {
     todo(false, "Test is run with tab modal prompts disabled.");
-  else
-    ok(true, "Test is run with tab modal prompts enabled.");
+    SimpleTest.finish();
+    return;
+  }
+
+  ok(true, "Test is run with tab modal prompts enabled.");
 
   startCallbackTimer();
 
