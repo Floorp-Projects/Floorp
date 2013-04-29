@@ -28,7 +28,10 @@
           <xul:notificationbox flex="1">
             <xul:hbox flex="1" class="browserSidebarContainer">
               <xul:vbox flex="1" class="browserContainer">
-                <xul:stack flex="1" class="browserStack" anonid="browserStack"/>
+                <xul:stack flex="1" class="browserStack">
+                  <xul:browser anonid="initialBrowser" type="content-primary" message="true" disablehistory="true"
+                               xbl:inherits="tooltip=contenttooltip,contextmenu=contentcontextmenu,autocompletepopup"/>
+                </xul:stack>
               </xul:vbox>
             </xul:hbox>
           </xul:notificationbox>
@@ -1322,14 +1325,26 @@
             if (aOwner)
               t.owner = aOwner;
 
-            var b = this._createBrowserElement();
+            var b = document.createElementNS(
+              "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                             "browser");
             b.setAttribute("type", "content-targetable");
+            b.setAttribute("message", "true");
+            b.setAttribute("contextmenu", this.getAttribute("contentcontextmenu"));
+            b.setAttribute("tooltip", this.getAttribute("contenttooltip"));
+
+            if (Services.prefs.getPrefType("browser.tabs.remote") == Services.prefs.PREF_BOOL &&
+                Services.prefs.getBoolPref("browser.tabs.remote")) {
+              b.setAttribute("remote", "true");
+            }
 
             if (window.gShowPageResizers && document.getElementById("addon-bar").collapsed &&
                 window.windowState == window.STATE_NORMAL) {
               b.setAttribute("showresizer", "true");
             }
 
+            if (this.hasAttribute("autocompletepopup"))
+              b.setAttribute("autocompletepopup", this.getAttribute("autocompletepopup"));
             b.setAttribute("autoscrollpopup", this._autoScrollPopup.id);
 
             // Create the browserStack container
@@ -1391,6 +1406,7 @@
             this.mTabFilters[position] = filter;
 
             b._fastFind = this.fastFind;
+            b.droppedLinkHandler = handleDroppedLink;
 
             // Dispatch a new tab notification.  We do this once we're
             // entirely done, so that things are in a consistent state
@@ -2691,37 +2707,9 @@
         ]]></body>
       </method>
 
-      <method name="_createBrowserElement">
-        <body><![CDATA[
-          var b = document.createElementNS(
-            "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                                           "browser");
-          b.setAttribute("message", "true");
-          b.setAttribute("contextmenu", this.getAttribute("contentcontextmenu"));
-          b.setAttribute("tooltip", this.getAttribute("contenttooltip"));
-
-          if (this.hasAttribute("autocompletepopup"))
-            b.setAttribute("autocompletepopup", this.getAttribute("autocompletepopup"));
-
-          if (Services.prefs.getBoolPref("browser.tabs.remote"))
-            b.setAttribute("remote", "true");
-
-          b.droppedLinkHandler = handleDroppedLink;
-
-          return b;
-        ]]></body>
-      </method>
-
       <constructor>
         <![CDATA[
-          let browser = this._createBrowserElement();
-          this.mCurrentBrowser = browser;
-          browser.setAttribute("type", "content-primary");
-          browser.setAttribute("disablehistory", "true");
-
-          let stack = document.getAnonymousElementByAttribute(this, "anonid", "browserStack");
-          stack.appendChild(browser);
-
+          this.mCurrentBrowser = document.getAnonymousElementByAttribute(this, "anonid", "initialBrowser");
           this.mCurrentTab = this.tabContainer.firstChild;
           document.addEventListener("keypress", this, false);
           window.addEventListener("sizemodechange", this, false);
@@ -2738,6 +2726,7 @@
           this._autoScrollPopup.id = "autoscroller";
           this.appendChild(this._autoScrollPopup);
           this.mCurrentBrowser.setAttribute("autoscrollpopup", this._autoScrollPopup.id);
+          this.mCurrentBrowser.droppedLinkHandler = handleDroppedLink;
           this.updateWindowResizers();
 
           // Hook up the event listeners to the first browser
