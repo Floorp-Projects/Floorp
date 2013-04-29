@@ -2544,72 +2544,6 @@ nsJSContext::ShrinkGCBuffersNow()
   JS::ShrinkGCBuffers(nsJSRuntime::sRuntime);
 }
 
-// Return true if there exists a JSContext with a default global whose current
-// inner is gray. The intent is to look for JS Object windows. We don't merge
-// system compartments, so we don't use them to trigger merging CCs.
-static bool
-AnyGrayCurrentContentInnerWindows()
-{
-  if (!nsJSRuntime::sRuntime) {
-    return false;
-  }
-  JSContext *iter = nullptr;
-  JSContext *cx;
-  while ((cx = JS_ContextIterator(nsJSRuntime::sRuntime, &iter))) {
-    // Skip anything without an nsIScriptContext, as well as any scx whose
-    // NativeGlobal() is not an outer window (this happens with XUL Prototype
-    // compilation scopes, for example, which we're not interested in).
-    nsIScriptContext *scx = GetScriptContextFromJSContext(cx);
-    JS::RootedObject global(cx, scx ? scx->GetNativeGlobal() : nullptr);
-    if (!global || !js::GetObjectParent(global)) {
-      continue;
-    }
-    // Grab the inner from the outer.
-    global = JS_ObjectToInnerObject(cx, global);
-    MOZ_ASSERT(!js::GetObjectParent(global));
-    if (JS::GCThingIsMarkedGray(global) &&
-        !js::IsSystemCompartment(js::GetObjectCompartment(global))) {
-      return true;
-    }
-  }
-  return false;
-}
-
-static bool
-DoMergingCC(bool aForced)
-{
-  // Don't merge too many times in a row, and do at least a minimum
-  // number of unmerged CCs in a row.
-  static const int32_t kMinConsecutiveUnmerged = 3;
-  static const int32_t kMaxConsecutiveMerged = 3;
-
-  static int32_t sUnmergedNeeded = 0;
-  static int32_t sMergedInARow = 0;
-
-  MOZ_ASSERT(0 <= sUnmergedNeeded && sUnmergedNeeded <= kMinConsecutiveUnmerged);
-  MOZ_ASSERT(0 <= sMergedInARow && sMergedInARow <= kMaxConsecutiveMerged);
-
-  if (sMergedInARow == kMaxConsecutiveMerged) {
-    MOZ_ASSERT(sUnmergedNeeded == 0);
-    sUnmergedNeeded = kMinConsecutiveUnmerged;
-  }
-
-  if (sUnmergedNeeded > 0) {
-    sUnmergedNeeded--;
-    sMergedInARow = 0;
-    return false;
-  }
-
-  if (!aForced && AnyGrayCurrentContentInnerWindows()) {
-    sMergedInARow++;
-    return true;
-  } else {
-    sMergedInARow = 0;
-    return false;
-  }
-
-}
-
 static void
 FinishAnyIncrementalGC()
 {
@@ -2652,7 +2586,7 @@ TimeBetween(PRTime start, PRTime end)
 void
 nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
                              int32_t aExtraForgetSkippableCalls,
-                             bool aForced)
+                             bool aManuallyTriggered)
 {
   if (!NS_IsMainThread()) {
     return;
@@ -2691,9 +2625,8 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
   uint32_t skippableDuration = TimeBetween(endGCTime, endSkippableTime);
 
   // Prepare to actually run the CC.
-  bool mergingCC = DoMergingCC(aForced);
   nsCycleCollectorResults ccResults;
-  nsCycleCollector_collect(mergingCC, &ccResults, aListener);
+  nsCycleCollector_collect(aManuallyTriggered, &ccResults, aListener);
   sCCollectedWaitingForGC += ccResults.mFreedRefCounted + ccResults.mFreedGCed;
 
   // If we collected a substantial amount of cycles, poke the GC since more objects
@@ -2728,7 +2661,7 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
 
   if (sPostGCEventsToConsole) {
     nsCString mergeMsg;
-    if (mergingCC) {
+    if (ccResults.mMergedZones) {
       mergeMsg.AssignLiteral(" merged");
     }
 
