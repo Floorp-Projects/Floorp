@@ -10,7 +10,7 @@ srcdir      = @srcdir@
 VPATH       = $(srcdir)
 relativesrcdir = @relativesrcdir@
 
-XPCSHELL_TESTS = tests
+DISABLED_XPCSHELL_TESTS = tests
 
 include $(DEPTH)/config/autoconf.mk
 

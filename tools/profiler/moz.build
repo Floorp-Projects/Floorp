@@ -21,3 +21,4 @@ EXPORTS += [
     'GeckoProfiler.h',
 ]
 
+XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell.ini']

@@ -8,3 +8,4 @@ DIRS += ['rdfcat', 'rdfpoll', 'triplescat']
 
 MODULE = 'test_rdf'
 
+XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']

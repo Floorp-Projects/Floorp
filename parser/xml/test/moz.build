@@ -6,3 +6,5 @@
 
 MODULE = 'test_xmlreader'
 
+# Note: set the test module's name to test_<yourmodule>
+XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']

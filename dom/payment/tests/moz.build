@@ -6,3 +6,4 @@
 
 MODULE = 'test_dom_payment'
 
+XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']

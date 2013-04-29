@@ -9,3 +9,4 @@ if CONFIG['MOZ_BUILD_APP'] != 'mobile':
 
 MODULE = 'test_extensionmanager'
 
+XPCSHELL_TESTS_MANIFESTS += ['xpcshell-unpack/xpcshell.ini', 'xpcshell/xpcshell.ini']

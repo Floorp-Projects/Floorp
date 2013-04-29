@@ -13,3 +13,4 @@ EXPORTS += [
     'jsdebug.h',
 ]
 
+XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell.ini']

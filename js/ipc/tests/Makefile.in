@@ -11,7 +11,7 @@ include $(DEPTH)/config/autoconf.mk
 
 # FIXME/bug 575918: out-of-process xpcshell is broken on OS X
 ifneq ($(OS_ARCH),Darwin)
-XPCSHELL_TESTS = unit
+DISABLED_XPCSHELL_TESTS = unit
 endif
 
 include $(topsrcdir)/config/config.mk

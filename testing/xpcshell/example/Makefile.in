@@ -22,7 +22,7 @@ include $(DEPTH)/config/autoconf.mk
 
 # This is a list of directories containing tests to run, separated by spaces.
 # Most likely, tho, you won't use more than one directory here.
-XPCSHELL_TESTS = \
+DISABLED_XPCSHELL_TESTS = \
                  unit \
                  $(NULL)
 

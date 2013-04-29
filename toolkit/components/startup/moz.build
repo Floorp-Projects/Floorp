@@ -14,3 +14,4 @@ EXPORTS.mozilla += [
     'StartupTimeline.h',
 ]
 
+XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']

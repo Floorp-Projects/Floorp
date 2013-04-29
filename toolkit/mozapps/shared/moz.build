@@ -8,3 +8,5 @@ TEST_DIRS += ['test/chrome']
 
 MODULE = 'toolkitShared'
 
+if CONFIG['ENABLE_TESTS']:
+    XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
