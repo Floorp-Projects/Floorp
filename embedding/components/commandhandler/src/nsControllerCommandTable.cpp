@@ -163,8 +163,7 @@ nsControllerCommandTable::DoCommandParams(const char *aCommandName, nsICommandPa
 {
   // find the command  
   nsCOMPtr<nsIControllerCommand> commandHandler;
-  nsresult rv;
-  rv = FindCommandHandler(aCommandName, getter_AddRefs(commandHandler));
+  FindCommandHandler(aCommandName, getter_AddRefs(commandHandler));
   if (!commandHandler)
   {
 #if DEBUG
@@ -181,8 +180,7 @@ nsControllerCommandTable::GetCommandState(const char *aCommandName, nsICommandPa
 {
   // find the command  
   nsCOMPtr<nsIControllerCommand> commandHandler;
-  nsresult rv;
-  rv = FindCommandHandler(aCommandName, getter_AddRefs(commandHandler));
+  FindCommandHandler(aCommandName, getter_AddRefs(commandHandler));
   if (!commandHandler)
   {
 #if DEBUG
