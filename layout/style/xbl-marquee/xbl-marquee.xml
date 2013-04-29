@@ -259,7 +259,7 @@
             case "string":
               if (!aIgnoreNextCall) {
                 try {
-                  this["_on" + aName] = new Function("event", aValue);
+                  this["_on" + aName] = new XPCNativeWrapper.unwrap(window).Function("event", aValue);
                 }
                 catch(e) {
                   return false;
