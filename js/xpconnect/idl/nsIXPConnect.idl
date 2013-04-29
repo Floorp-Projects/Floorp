@@ -17,6 +17,7 @@
 #include "nsIVariant.idl"
 #include "nsIObjectOutputStream.idl"
 #include "nsIObjectInputStream.idl"
+#include "nsIJSContextStack.idl"
 
 %{ C++
 #include "jspubtd.h"
@@ -290,8 +291,8 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[uuid(7e7a9a90-4607-4e3a-8ef1-b0f4b8de1c27)]
-interface nsIXPConnect : nsISupports
+[uuid(b3012603-aa25-4192-b331-c16272499957)]
+interface nsIXPConnect : nsIThreadJSContextStack
 {
 %{ C++
   NS_DEFINE_STATIC_CID_ACCESSOR(NS_XPCONNECT_CID)
