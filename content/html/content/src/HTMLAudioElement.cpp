@@ -35,8 +35,9 @@ NS_IMPL_ADDREF_INHERITED(HTMLAudioElement, HTMLMediaElement)
 NS_IMPL_RELEASE_INHERITED(HTMLAudioElement, HTMLMediaElement)
 
 NS_INTERFACE_TABLE_HEAD(HTMLAudioElement)
-NS_HTML_CONTENT_INTERFACE_TABLE2(HTMLAudioElement, nsIDOMHTMLMediaElement,
-                                 nsIDOMHTMLAudioElement)
+NS_HTML_CONTENT_INTERFACE_TABLE4(HTMLAudioElement, nsIDOMHTMLMediaElement,
+                                 nsIDOMHTMLAudioElement, nsITimerCallback,
+                                 nsIAudioChannelAgentCallback)
 NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLAudioElement,
                                              HTMLMediaElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
@@ -45,7 +46,8 @@ NS_IMPL_ELEMENT_CLONE(HTMLAudioElement)
 
 
 HTMLAudioElement::HTMLAudioElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-  : HTMLMediaElement(aNodeInfo)
+  : HTMLMediaElement(aNodeInfo),
+    mTimerActivated(false)
 {
   SetIsDOMBinding();
 }
@@ -113,6 +115,14 @@ HTMLAudioElement::MozSetup(uint32_t aChannels, uint32_t aRate, ErrorResult& aRv)
     mAudioStream->Shutdown();
   }
 
+#ifdef MOZ_B2G
+  if (mTimerActivated) {
+    mDeferStopPlayTimer->Cancel();
+    mTimerActivated = false;
+    UpdateAudioChannelPlayingState();
+  }
+#endif
+
   mAudioStream = AudioStream::AllocateStream();
   aRv = mAudioStream->Init(aChannels, aRate, mAudioChannelType);
   if (aRv.Failed()) {
@@ -145,6 +155,21 @@ HTMLAudioElement::MozWriteAudio(const float* aData, uint32_t aLength,
     aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return 0;
   }
+
+#ifdef MOZ_B2G
+  if (!mDeferStopPlayTimer) {
+    mDeferStopPlayTimer = do_CreateInstance("@mozilla.org/timer;1");
+  }
+
+  if (mTimerActivated) {
+    mDeferStopPlayTimer->Cancel();
+  }
+  // The maximum buffer size of audio backend is 1 second, so waiting for 1
+  // second is sufficient enough.
+  mDeferStopPlayTimer->InitWithCallback(this, 1000, nsITimer::TYPE_ONE_SHOT);
+  mTimerActivated = true;
+  UpdateAudioChannelPlayingState();
+#endif
 
   // Don't write more than can be written without blocking.
   uint32_t writeLen = std::min(mAudioStream->Available(), aLength / mChannels);
@@ -215,5 +240,74 @@ HTMLAudioElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
   return HTMLAudioElementBinding::Wrap(aCx, aScope, this);
 }
 
+/* void canPlayChanged (in boolean canPlay); */
+NS_IMETHODIMP
+HTMLAudioElement::CanPlayChanged(bool canPlay)
+{
+  NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
+  // Only Audio_Data API will initialize the mAudioStream, so we call the parent
+  // one when this audio tag is not used by Audio_Data API.
+  if (!mAudioStream) {
+    return HTMLMediaElement::CanPlayChanged(canPlay);
+  }
+#ifdef MOZ_B2G
+  if (mChannelSuspended == !canPlay) {
+    return NS_OK;
+  }
+  mChannelSuspended = !canPlay;
+  SetMutedInternal(mChannelSuspended);
+#endif
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLAudioElement::Notify(nsITimer* aTimer)
+{
+#ifdef MOZ_B2G
+  mTimerActivated = false;
+  UpdateAudioChannelPlayingState();
+#endif
+  return NS_OK;
+}
+
+void
+HTMLAudioElement::UpdateAudioChannelPlayingState()
+{
+  if (!mAudioStream) {
+    HTMLMediaElement::UpdateAudioChannelPlayingState();
+    return;
+  }
+  // The HTMLAudioElement is registered to the AudioChannelService only on B2G.
+#ifdef MOZ_B2G
+  if (mTimerActivated != mPlayingThroughTheAudioChannel) {
+    mPlayingThroughTheAudioChannel = mTimerActivated;
+
+    if (!mAudioChannelAgent) {
+      nsresult rv;
+      mAudioChannelAgent = do_CreateInstance("@mozilla.org/audiochannelagent;1", &rv);
+      if (!mAudioChannelAgent) {
+        return;
+      }
+      // Use a weak ref so the audio channel agent can't leak |this|.
+      mAudioChannelAgent->InitWithWeakCallback(mAudioChannelType, this);
+
+      nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(OwnerDoc());
+      if (domDoc) {
+        bool hidden = false;
+        domDoc->GetHidden(&hidden);
+        mAudioChannelAgent->SetVisibilityState(!hidden);
+      }
+    }
+
+    if (mPlayingThroughTheAudioChannel) {
+      bool canPlay;
+      mAudioChannelAgent->StartPlaying(&canPlay);
+    } else {
+      mAudioChannelAgent->StopPlaying();
+      mAudioChannelAgent = nullptr;
+    }
+  }
+#endif
+}
 } // namespace dom
 } // namespace mozilla
