@@ -48,7 +48,8 @@ public:
     : ProcessedMediaStream(nullptr),
       mEngine(aEngine),
       mKind(aKind),
-      mNumberOfInputChannels(2)
+      mNumberOfInputChannels(2),
+      mMarkAsFinishedAfterThisBlock(false)
   {
     mMixingMode.mChannelCountMode = dom::ChannelCountMode::Max;
     mMixingMode.mChannelInterpretation = dom::ChannelInterpretation::Speakers;
@@ -108,6 +109,9 @@ protected:
     dom::ChannelCountMode mChannelCountMode : 16;
     dom::ChannelInterpretation mChannelInterpretation : 16;
   } mMixingMode;
+  // Whether the stream should be marked as finished as soon
+  // as the current time range has been computed block by block.
+  bool mMarkAsFinishedAfterThisBlock;
 };
 
 }
