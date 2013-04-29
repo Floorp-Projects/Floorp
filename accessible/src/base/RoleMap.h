@@ -1047,3 +1047,11 @@ ROLE(DEFINITION,
      USE_ROLE_STRING,
      IA2_ROLE_PARAGRAPH,
      eNameFromSubtreeRule)
+
+ROLE(KEY,
+     "key",
+     ATK_ROLE_PUSH_BUTTON,
+     NSAccessibilityButtonRole,
+     ROLE_SYSTEM_PUSHBUTTON,
+     ROLE_SYSTEM_PUSHBUTTON,
+     eNameFromSubtreeRule)
