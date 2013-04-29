@@ -21,6 +21,6 @@ relativesrcdir = @relativesrcdir@
 include $(DEPTH)/config/autoconf.mk
 
 # Note: set the test module's name to test_<yourmodule>
-XPCSHELL_TESTS  = unit
+DISABLED_XPCSHELL_TESTS  = unit
 
 include $(topsrcdir)/config/rules.mk

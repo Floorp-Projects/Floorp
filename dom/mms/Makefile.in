@@ -13,7 +13,7 @@ include $(DEPTH)/config/autoconf.mk
 
 ifdef MOZ_B2G_RIL
 ifdef ENABLE_TESTS
-XPCSHELL_TESTS = tests
+DISABLED_XPCSHELL_TESTS = tests
 endif
 endif
 

@@ -71,7 +71,7 @@ $(DIST)/bin/crashreporter.crt: $(topsrcdir)/security/nss/lib/ckfw/builtins/certd
 
 # The xpcshell test case here verifies that the CA certificate list
 # works with OpenSSL.
-XPCSHELL_TESTS = maemo-unit
+DISABLED_XPCSHELL_TESTS = maemo-unit
 
 else
 CPPSRCS += crashreporter_linux.cpp

@@ -14,7 +14,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MOZILLA_INTERNAL_API = 1
 
-XPCSHELL_TESTS=unit
+DISABLED_XPCSHELL_TESTS=unit
 
 # XXX Get this to work in libxul builds.
 ## simple c++ tests (no xpcom)

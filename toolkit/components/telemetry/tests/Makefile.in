@@ -13,7 +13,7 @@ include $(DEPTH)/config/autoconf.mk
 
 #MODULE		= test_harness_telemetry
 
-XPCSHELL_TESTS = \
+DISABLED_XPCSHELL_TESTS = \
                  unit \
                  $(NULL)
 

@@ -18,12 +18,12 @@ CPP_UNIT_TESTS = \
                  $(NULL)
 
 
-XPCSHELL_TESTS = \
+DISABLED_XPCSHELL_TESTS = \
                unit \
                $(NULL)
 # FIXME/bug 575918: out-of-process xpcshell is broken on OS X
 ifneq ($(OS_ARCH),Darwin)
-XPCSHELL_TESTS += unit_ipc
+DISABLED_XPCSHELL_TESTS += unit_ipc
 endif
 
 

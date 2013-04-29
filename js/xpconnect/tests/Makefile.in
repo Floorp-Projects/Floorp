@@ -11,7 +11,7 @@ relativesrcdir = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-XPCSHELL_TESTS = unit
+DISABLED_XPCSHELL_TESTS = unit
 
 LIBS = \
   $(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \

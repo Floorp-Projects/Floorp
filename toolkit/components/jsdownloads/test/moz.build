@@ -6,3 +6,4 @@
 
 TEST_DIRS += ['data']
 
+XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
