@@ -1706,9 +1706,8 @@ GetReferenceRenderingContext(nsTextFrame* aTextFrame, nsRenderingContext* aRC)
       return nullptr;
   }
 
-  gfxContext* ctx = tmp->ThebesContext();
-  NS_ADDREF(ctx);
-  return ctx;
+  nsRefPtr<gfxContext> ctx = tmp->ThebesContext();
+  return ctx.forget();
 }
 
 /**

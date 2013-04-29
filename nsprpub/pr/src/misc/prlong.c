@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "primpl.h"
+#include "prlong.h"
 
 static PRInt64 ll_zero = LL_INIT( 0x00000000,0x00000000 );
 static PRInt64 ll_maxint = LL_INIT( 0x7fffffff, 0xffffffff );

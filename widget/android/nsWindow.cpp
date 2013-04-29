@@ -55,6 +55,7 @@ using mozilla::unused;
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::widget;
+using namespace mozilla::layers;
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsWindow, nsBaseWidget)
 
@@ -2468,7 +2469,7 @@ nsWindow::NeedsPaint()
   return nsIWidget::NeedsPaint();
 }
 
-class AndroidCompositorParent : public mozilla::layers::CompositorParent {
+class AndroidCompositorParent : public CompositorParent {
 public:
     AndroidCompositorParent(nsIWidget* aWidget, bool aRenderToEGLSurface,
                             int aSurfaceWidth, int aSurfaceHeight)
@@ -2479,28 +2480,45 @@ public:
         }
     }
 
-    virtual void ShadowLayersUpdated(mozilla::layers::LayerTransactionParent* aLayerTree,
-                                     const mozilla::layers::TargetConfig& aTargetConfig,
+    virtual void ShadowLayersUpdated(LayerTransactionParent* aLayerTree, const TargetConfig& aTargetConfig,
                                      bool isFirstPaint) MOZ_OVERRIDE
     {
         CompositorParent::ShadowLayersUpdated(aLayerTree, aTargetConfig, isFirstPaint);
-        mozilla::layers::Layer* targetLayer = GetLayerManager()->GetPrimaryScrollableLayer();
-        mozilla::layers::AsyncPanZoomController* controller = nsWindow::GetPanZoomController();
+        Layer* targetLayer = GetLayerManager()->GetPrimaryScrollableLayer();
+        AsyncPanZoomController* controller = nsWindow::GetPanZoomController();
         if (targetLayer && targetLayer->AsContainerLayer() && controller) {
             targetLayer->SetAsyncPanZoomController(controller);
             controller->NotifyLayersUpdated(targetLayer->AsContainerLayer()->GetFrameMetrics(), isFirstPaint);
         }
     }
+
+    virtual void SyncFrameMetrics(Layer* aLayer, const ViewTransform& aTreeTransform,
+                                  const gfxPoint& aScrollOffset, mozilla::gfx::Margin& aFixedLayerMargins,
+                                  float& aOffsetX, float& aOffsetY,
+                                  bool aIsFirstPaint, bool aLayersUpdated) MOZ_OVERRIDE
+    {
+        const gfx3DMatrix& rootTransform = GetLayerManager()->GetRoot()->GetTransform();
+        ContainerLayer* container = aLayer->AsContainerLayer();
+        const FrameMetrics& metrics = container->GetFrameMetrics();
+
+        mozilla::gfx::Rect displayPortLayersPixels(metrics.mCriticalDisplayPort.IsEmpty() ?
+                                          metrics.mDisplayPort : metrics.mCriticalDisplayPort);
+        mozilla::gfx::Point scrollOffset(aScrollOffset.x, aScrollOffset.y);
+
+        AndroidBridge::Bridge()->SyncFrameMetrics(scrollOffset, aTreeTransform.mScale.width, metrics.mScrollableRect,
+                                                  aLayersUpdated, displayPortLayersPixels, 1 / rootTransform.GetXScale(),
+                                                  aIsFirstPaint, aFixedLayerMargins, aOffsetX, aOffsetY);
+    }
 };
 
-mozilla::layers::CompositorParent*
+CompositorParent*
 nsWindow::NewCompositorParent(int aSurfaceWidth, int aSurfaceHeight)
 {
     return new AndroidCompositorParent(this, true, aSurfaceWidth, aSurfaceHeight);
 }
 
 void
-nsWindow::SetPanZoomController(mozilla::layers::AsyncPanZoomController* apzc)
+nsWindow::SetPanZoomController(AsyncPanZoomController* apzc)
 {
     if (sApzc) {
         sApzc->SetCompositorParent(nullptr);
@@ -2512,7 +2530,7 @@ nsWindow::SetPanZoomController(mozilla::layers::AsyncPanZoomController* apzc)
     }
 }
 
-mozilla::layers::AsyncPanZoomController*
+AsyncPanZoomController*
 nsWindow::GetPanZoomController()
 {
     return sApzc;

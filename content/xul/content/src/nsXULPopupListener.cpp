@@ -300,8 +300,8 @@ GetImmediateChild(nsIContent* aContent, nsIAtom *aTag)
        child;
        child = child->GetNextSibling()) {
     if (child->Tag() == aTag) {
-      NS_ADDREF(child);
-      return child;
+      nsCOMPtr<nsIContent> ret = child;
+      return ret.forget();
     }
   }
 

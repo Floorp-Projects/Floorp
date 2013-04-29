@@ -17,6 +17,7 @@ using namespace js;
 using namespace ion;
 
 using parallel::Spew;
+using parallel::SpewOps;
 using parallel::SpewBailouts;
 using parallel::SpewBailoutIR;
 
@@ -183,20 +184,183 @@ ion::ParExtendArray(ForkJoinSlice *slice, JSObject *array, uint32_t length)
     return array;
 }
 
-ParCompareResult
-ion::ParCompareStrings(JSString *str1, JSString *str2)
-{
-    // NYI---the rope case
-    if (!str1->isLinear())
-        return ParCompareUnknown;
-    if (!str2->isLinear())
-        return ParCompareUnknown;
+#define PAR_RELATIONAL_OP(OP, EXPECTED)                                         \
+do {                                                                            \
+    /* Optimize for two int-tagged operands (typical loop control). */          \
+    if (lhs.isInt32() && rhs.isInt32()) {                                       \
+        *res = (lhs.toInt32() OP rhs.toInt32()) == EXPECTED;                    \
+    } else if (lhs.isNumber() && rhs.isNumber()) {                              \
+        double l = lhs.toNumber(), r = rhs.toNumber();                          \
+        *res = (l OP r) == EXPECTED;                                            \
+    } else if (lhs.isBoolean() && rhs.isBoolean()) {                            \
+        bool l = lhs.toBoolean();                                               \
+        bool r = rhs.toBoolean();                                               \
+        *res = (l OP r) == EXPECTED;                                            \
+    } else if (lhs.isBoolean() && rhs.isNumber()) {                             \
+        bool l = lhs.toBoolean();                                               \
+        double r = rhs.toNumber();                                              \
+        *res = (l OP r) == EXPECTED;                                            \
+    } else if (lhs.isNumber() && rhs.isBoolean()) {                             \
+        double l = lhs.toNumber();                                              \
+        bool r = rhs.toBoolean();                                               \
+        *res = (l OP r) == EXPECTED;                                            \
+    } else {                                                                    \
+        int32_t vsZero;                                                         \
+        ParallelResult ret = ParCompareMaybeStrings(slice, lhs, rhs, &vsZero);  \
+        if (ret != TP_SUCCESS)                                                  \
+            return ret;                                                         \
+        *res = (vsZero OP 0) == EXPECTED;                                       \
+    }                                                                           \
+    return TP_SUCCESS;                                                          \
+} while(0)
 
+static ParallelResult
+ParCompareStrings(ForkJoinSlice *slice, HandleString str1,
+                  HandleString str2, int32_t *res)
+{
+    if (!str1->isLinear())
+        return TP_RETRY_SEQUENTIALLY;
+    if (!str2->isLinear())
+        return TP_RETRY_SEQUENTIALLY;
     JSLinearString &linearStr1 = str1->asLinear();
     JSLinearString &linearStr2 = str2->asLinear();
-    if (EqualStrings(&linearStr1, &linearStr2))
-        return ParCompareEq;
-    return ParCompareNe;
+    if (!CompareChars(linearStr1.chars(), linearStr1.length(),
+                      linearStr2.chars(), linearStr2.length(),
+                      res))
+        return TP_FATAL;
+
+    return TP_SUCCESS;
+}
+
+static ParallelResult
+ParCompareMaybeStrings(ForkJoinSlice *slice,
+                       HandleValue v1,
+                       HandleValue v2,
+                       int32_t *res)
+{
+    if (!v1.isString())
+        return TP_RETRY_SEQUENTIALLY;
+    if (!v2.isString())
+        return TP_RETRY_SEQUENTIALLY;
+    RootedString str1(slice->perThreadData, v1.toString());
+    RootedString str2(slice->perThreadData, v2.toString());
+    return ParCompareStrings(slice, str1, str2, res);
+}
+
+template<bool Equal>
+ParallelResult
+ParLooselyEqualImpl(ForkJoinSlice *slice, MutableHandleValue lhs, MutableHandleValue rhs, JSBool *res)
+{
+    PAR_RELATIONAL_OP(==, Equal);
+}
+
+ParallelResult
+js::ion::ParLooselyEqual(ForkJoinSlice *slice, MutableHandleValue lhs, MutableHandleValue rhs, JSBool *res)
+{
+    return ParLooselyEqualImpl<true>(slice, lhs, rhs, res);
+}
+
+ParallelResult
+js::ion::ParLooselyUnequal(ForkJoinSlice *slice, MutableHandleValue lhs, MutableHandleValue rhs, JSBool *res)
+{
+    return ParLooselyEqualImpl<false>(slice, lhs, rhs, res);
+}
+
+template<bool Equal>
+ParallelResult
+ParStrictlyEqualImpl(ForkJoinSlice *slice, MutableHandleValue lhs, MutableHandleValue rhs, JSBool *res)
+{
+    if (lhs.isNumber()) {
+        if (rhs.isNumber()) {
+            *res = (lhs.toNumber() == rhs.toNumber()) == Equal;
+            return TP_SUCCESS;
+        }
+    } else if (lhs.isBoolean()) {
+        if (rhs.isBoolean()) {
+            *res = (lhs.toBoolean() == rhs.toBoolean()) == Equal;
+            return TP_SUCCESS;
+        }
+    } else if (lhs.isNull()) {
+        if (rhs.isNull()) {
+            *res = Equal;
+            return TP_SUCCESS;
+        }
+    } else if (lhs.isUndefined()) {
+        if (rhs.isUndefined()) {
+            *res = Equal;
+            return TP_SUCCESS;
+        }
+    } else if (lhs.isObject()) {
+        if (rhs.isObject()) {
+            *res = (lhs.toObjectOrNull() == rhs.toObjectOrNull()) == Equal;
+            return TP_SUCCESS;
+        }
+    } else if (lhs.isString()) {
+        if (rhs.isString())
+            return ParLooselyEqualImpl<Equal>(slice, lhs, rhs, res);
+    }
+
+    return TP_RETRY_SEQUENTIALLY;
+}
+
+ParallelResult
+js::ion::ParStrictlyEqual(ForkJoinSlice *slice, MutableHandleValue lhs, MutableHandleValue rhs, JSBool *res)
+{
+    return ParStrictlyEqualImpl<true>(slice, lhs, rhs, res);
+}
+
+ParallelResult
+js::ion::ParStrictlyUnequal(ForkJoinSlice *slice, MutableHandleValue lhs, MutableHandleValue rhs, JSBool *res)
+{
+    return ParStrictlyEqualImpl<false>(slice, lhs, rhs, res);
+}
+
+ParallelResult
+js::ion::ParLessThan(ForkJoinSlice *slice, MutableHandleValue lhs, MutableHandleValue rhs, JSBool *res)
+{
+    PAR_RELATIONAL_OP(<, true);
+}
+
+ParallelResult
+js::ion::ParLessThanOrEqual(ForkJoinSlice *slice, MutableHandleValue lhs, MutableHandleValue rhs, JSBool *res)
+{
+    PAR_RELATIONAL_OP(<=, true);
+}
+
+ParallelResult
+js::ion::ParGreaterThan(ForkJoinSlice *slice, MutableHandleValue lhs, MutableHandleValue rhs, JSBool *res)
+{
+    PAR_RELATIONAL_OP(>, true);
+}
+
+ParallelResult
+js::ion::ParGreaterThanOrEqual(ForkJoinSlice *slice, MutableHandleValue lhs, MutableHandleValue rhs, JSBool *res)
+{
+    PAR_RELATIONAL_OP(>=, true);
+}
+
+template<bool Equal>
+ParallelResult
+ParStringsEqualImpl(ForkJoinSlice *slice, HandleString lhs, HandleString rhs, JSBool *res)
+{
+    int32_t vsZero;
+    ParallelResult ret = ParCompareStrings(slice, lhs, rhs, &vsZero);
+    if (ret != TP_SUCCESS)
+        return ret;
+    *res = (vsZero == 0) == Equal;
+    return TP_SUCCESS;
+}
+
+ParallelResult
+js::ion::ParStringsEqual(ForkJoinSlice *slice, HandleString v1, HandleString v2, JSBool *res)
+{
+    return ParStringsEqualImpl<true>(slice, v1, v2, res);
+}
+
+ParallelResult
+js::ion::ParStringsUnequal(ForkJoinSlice *slice, HandleString v1, HandleString v2, JSBool *res)
+{
+    return ParStringsEqualImpl<false>(slice, v1, v2, res);
 }
 
 void

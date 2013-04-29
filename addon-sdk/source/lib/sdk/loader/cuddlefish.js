@@ -63,9 +63,15 @@ function incompatibility(module) {
 
   let applications = Object.keys(engines);
 
-  applications.forEach(xulappModule.is);
-
-  let versionRange = engines[xulappModule.name];
+  let versionRange;
+  applications.forEach(function(name) {
+    if (xulappModule.is(name)) {
+      versionRange = engines[name];
+      // Continue iteration. We want to ensure the module doesn't
+      // contain a typo in the applications' name or some unknown
+      // application - `is` function throws an exception in that case.
+    }
+  });
 
   if (typeof(versionRange) === "string") {
     if (xulappModule.satisfiesVersion(versionRange))

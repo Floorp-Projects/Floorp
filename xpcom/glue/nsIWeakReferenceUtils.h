@@ -76,7 +76,7 @@ inline
 already_AddRefed<nsIWeakReference>
 do_GetWeakReference( nsISupports* aRawPtr, nsresult* error = 0 )
   {
-    return NS_GetWeakReference(aRawPtr, error);
+    return dont_AddRef(NS_GetWeakReference(aRawPtr, error));
   }
 
 inline

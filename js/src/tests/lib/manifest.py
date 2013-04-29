@@ -61,7 +61,7 @@ class XULInfo:
 
         # Read the values.
         val_re = re.compile(r'(TARGET_XPCOM_ABI|OS_TARGET|MOZ_DEBUG)\s*=\s*(.*)')
-        kw = {}
+        kw = { 'isdebug': False }
         for line in open(path):
             m = val_re.match(line)
             if m:

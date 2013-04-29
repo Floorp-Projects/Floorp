@@ -175,15 +175,6 @@
         <item name="android:background">@android:color/transparent</item>
     </style>
 
-    <style name="AddressBar.Button.Container">
-        <item name="android:layout_marginLeft">4dp</item>
-        <item name="android:layout_marginRight">4dp</item>
-        <item name="android:layout_toLeftOf">@id/menu_items</item>
-        <item name="android:layout_alignParentLeft">true</item>
-        <item name="android:layout_alignParentBottom">true</item>
-        <item name="android:layout_centerVertical">true</item>
-    </style>
-
     <!-- Address bar - Image Button -->
     <style name="AddressBar.ImageButton" parent="AddressBar.Button">
         <item name="android:scaleType">center</item>
@@ -196,6 +187,10 @@
         <item name="android:layout_width">0dip</item>
         <item name="android:layout_height">0dip</item>
         <item name="android:visibility">gone</item>
+    </style>
+
+    <style name="AddressBar.ImageButton.Back" parent="AddressBar.ImageButton.Unused">
+        <item name="android:contentDescription">@string/back</item>
     </style>
 
     <style name="AddressBar.ImageButton.Forward" parent="AddressBar.ImageButton.Unused">
@@ -427,5 +422,10 @@
         <item name="android:padding">10dp</item>
         <item name="android:textAppearance">@style/TextAppearance</item>
     </style>
+
+    <style name="PopupAnimation">
+        <item name="@android:windowEnterAnimation">@anim/popup_show</item>
+        <item name="@android:windowExitAnimation">@anim/popup_hide</item>
+    </style>   
 
 </resources>

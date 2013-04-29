@@ -97,10 +97,9 @@ GLTexture::Release()
       mContext->MakeCurrent();
       mContext->fDeleteTextures(1, &mTexture);
     } else {
-      nsCOMPtr<nsIRunnable> runnable =
-        new TextureDeleter(mContext.get(), mTexture);
-      mContext->DispatchToOwningThread(runnable);
-      mContext.forget();
+      already_AddRefed<GLContext> context = mContext.forget();
+      nsCOMPtr<nsIRunnable> runnable = new TextureDeleter(context, mTexture);
+      context.get()->DispatchToOwningThread(runnable);
     }
 
     mTexture = 0;

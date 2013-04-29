@@ -51,9 +51,14 @@ class LIRGeneratorX86 : public LIRGeneratorX86Shared
     bool visitAsmJSUnsignedToDouble(MAsmJSUnsignedToDouble *ins);
     bool visitAsmJSStoreHeap(MAsmJSStoreHeap *ins);
     bool visitAsmJSLoadFuncPtr(MAsmJSLoadFuncPtr *ins);
+    bool visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic *ins);
     bool lowerPhi(MPhi *phi);
 
     static bool allowTypedElementHoleCheck() {
+        return true;
+    }
+
+    static bool allowStaticTypedArrayAccesses() {
         return true;
     }
 };

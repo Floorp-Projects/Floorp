@@ -455,8 +455,8 @@ nsHTMLStyleSheet::UniqueMappedAttributes(nsMappedAttributes* aMapped)
     // We added a new entry to the hashtable, so we have a new unique set.
     entry->mAttributes = aMapped;
   }
-  NS_ADDREF(entry->mAttributes); // for caller
-  return entry->mAttributes;
+  nsRefPtr<nsMappedAttributes> ret = entry->mAttributes;
+  return ret.forget();
 }
 
 void

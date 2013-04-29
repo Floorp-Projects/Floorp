@@ -126,10 +126,9 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsRenderingContext *aContext,
     nsSVGUtils::ComputeAlphaMask(data, stride, rect, aOpacity);
   }
 
-  gfxPattern *retval = new gfxPattern(image);
+  nsRefPtr<gfxPattern> retval = new gfxPattern(image);
   retval->SetMatrix(matrix);
-  NS_IF_ADDREF(retval);
-  return retval;
+  return retval.forget();
 }
 
 /* virtual */ void

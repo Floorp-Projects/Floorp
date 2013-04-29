@@ -126,8 +126,10 @@ namespace ion {
     _(ArrayConcat)                                                          \
     _(LoadTypedArrayElement)                                                \
     _(LoadTypedArrayElementHole)                                            \
+    _(LoadTypedArrayElementStatic)                                          \
     _(StoreTypedArrayElement)                                               \
     _(StoreTypedArrayElementHole)                                           \
+    _(StoreTypedArrayElementStatic)                                         \
     _(EffectiveAddress)                                                     \
     _(ClampToUint8)                                                         \
     _(LoadFixedSlot)                                                        \

@@ -72,9 +72,8 @@ already_AddRefed<nsIParser>
 nsHtml5Module::NewHtml5Parser()
 {
   NS_ABORT_IF_FALSE(sNsHtml5ModuleInitialized, "nsHtml5Module not initialized.");
-  nsIParser* rv = static_cast<nsIParser*> (new nsHtml5Parser());
-  NS_ADDREF(rv);
-  return rv;
+  nsCOMPtr<nsIParser> rv = new nsHtml5Parser();
+  return rv.forget();
 }
 
 // static

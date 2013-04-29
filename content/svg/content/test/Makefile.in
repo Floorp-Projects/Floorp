@@ -48,7 +48,9 @@ MOCHITEST_FILES = \
 		test_pathAnimInterpolation.xhtml \
 		test_pathSeg.xhtml \
 		test_pointAtLength.xhtml \
-		test_pointer-events.xhtml \
+		test_pointer-events-1a.xhtml \
+		test_pointer-events-1b.xhtml \
+		pointer-events.js \
 		test_pointer-events-2.xhtml \
 		test_pointer-events-3.xhtml \
 		test_pointer-events-4.xhtml \

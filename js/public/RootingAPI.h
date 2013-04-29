@@ -23,7 +23,7 @@
  * location. The GC must therefore know about all live pointers to a thing,
  * not just one of them, in order to behave correctly.
  *
- * The |Root| and |Handle| classes below are used to root stack locations
+ * The |Rooted| and |Handle| classes below are used to root stack locations
  * whose value may be held live across a call that can trigger GC. For a
  * code fragment such as:
  *
@@ -73,18 +73,15 @@
  *   updating the value of the referenced Rooted<T>. A MutableHandle<T> can be
  *   created from a Rooted<T> by using |Rooted<T>::operator&()|.
  *
- * In some cases the small performance overhead of exact rooting is too much.
- * In these cases, try the following:
+ * In some cases the small performance overhead of exact rooting (measured to
+ * be a few nanoseconds on desktop) is too much. In these cases, try the
+ * following:
  *
  * - Move all Rooted<T> above inner loops: this allows you to re-use the root
  *   on each iteration of the loop.
  *
  * - Pass Handle<T> through your hot call stack to avoid re-rooting costs at
  *   every invocation.
- *
- * There also exists a set of RawT typedefs for modules without rooting
- * concerns, such as the GC. Do not use these as they provide no rooting
- * protection whatsoever.
  *
  * The following diagram explains the list of supported, implicit type
  * conversions between classes of this family:
@@ -96,9 +93,7 @@
  *     +---> MutableHandle<T>
  *     (via &)
  *
- * Currently, all of these types have an implicit conversion to RawT. These are
- * present only for the purpose of bootstrapping exact rooting and will be
- * removed in the future (Bug 817164).
+ * All of these types have an implicit conversion to raw pointers.
  */
 
 namespace js {
@@ -175,7 +170,7 @@ struct JS_PUBLIC_API(NullPtr)
  * specialization, define a HandleBase<T> specialization containing them.
  */
 template <typename T>
-class Handle : public js::HandleBase<T>
+class MOZ_STACK_CLASS Handle : public js::HandleBase<T>
 {
     friend class MutableHandle<T>;
 
@@ -269,7 +264,7 @@ typedef Handle<Value>        HandleValue;
  * them.
  */
 template <typename T>
-class MutableHandle : public js::MutableHandleBase<T>
+class MOZ_STACK_CLASS MutableHandle : public js::MutableHandleBase<T>
 {
   public:
     inline MutableHandle(Rooted<T> *root);
@@ -431,7 +426,7 @@ namespace JS {
  * specialization, define a RootedBase<T> specialization containing them.
  */
 template <typename T>
-class Rooted : public js::RootedBase<T>
+class MOZ_STACK_CLASS Rooted : public js::RootedBase<T>
 {
     void init(JSContext *cxArg) {
 #if defined(JSGC_ROOT_ANALYSIS) || defined(JSGC_USE_EXACT_ROOTING)

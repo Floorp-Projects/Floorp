@@ -1,0 +1,27 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=619959
+-->
+<head>
+  <title>Test 'pointer-events' handling</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="run_tests(0)">
+<script class="testbody" src="pointer-events.js"></script>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=619959">Mozilla Bug 619959</a>
+<p id="display"></p>
+<div id="content">
+
+  <div width="100%" height="1" id="div"></div>
+
+  <svg xmlns="http://www.w3.org/2000/svg" id="svg">
+    <rect id="rect" x="10" y="10" width="40" height="40" stroke-width="20"/>
+    <text id="text" x="190" y="50" font-size="40px" stroke-width="20">X</text>
+  </svg>
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

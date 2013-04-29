@@ -239,6 +239,17 @@ pref("gfx.downloadable_fonts.fallback_delay", 3000);
 
 pref("gfx.filter.nearest.force-enabled", false);
 
+// prefs controlling the font (name/cmap) loader that runs shortly after startup
+#ifdef XP_WIN
+pref("gfx.font_loader.families_per_slice", 3); // read in info 3 families at a time
+pref("gfx.font_loader.delay", 120000);         // 2 minutes after startup
+pref("gfx.font_loader.interval", 1000);        // every 1 second until complete
+#else
+pref("gfx.font_loader.families_per_slice", 3); // read in info 3 families at a time
+pref("gfx.font_loader.delay", 8000);           // 8 secs after startup
+pref("gfx.font_loader.interval", 50);          // run every 50 ms
+#endif
+
 // whether to always search all font cmaps during system font fallback
 pref("gfx.font_rendering.fallback.always_use_cmaps", false);
 
@@ -1787,22 +1798,6 @@ pref("viewmanager.do_doublebuffering", true);
 
 // enable single finger gesture input (win7+ tablets)
 pref("gestures.enable_single_finger_input", true);
-
-/*
- * What are the entities that you want Mozilla to save using mnemonic
- * names rather than numeric codes? E.g. If set, we'll output &nbsp;
- * otherwise, we may output 0xa0 depending on the charset.
- *
- * "none"   : don't use any entity names; only use numeric codes.
- * "basic"  : use entity names just for &nbsp; &amp; &lt; &gt; &quot; for 
- *            interoperability/exchange with products that don't support more
- *            than that.
- * "latin1" : use entity names for 8bit accented letters and other special
- *            symbols between 128 and 255.
- * "html"   : use entity names for 8bit accented letters, greek letters, and
- *            other special markup symbols as defined in HTML4.
- */
-//pref("editor.encode_entity",                 "html");
 
 pref("editor.resizing.preserve_ratio",       true);
 pref("editor.positioning.offset",            0);
@@ -3924,6 +3919,9 @@ pref("image.multithreaded_decoding.limit", -1);
 // Limit for the canvas image cache. 0 means we don't limit the size of the
 // cache.
 pref("canvas.image.cache.limit", 0);
+
+// How many images to eagerly decode on a given page. 0 means "no limit".
+pref("image.onload.decode.limit", 0);
 
 // WebGL prefs
 pref("gl.msaa-level", 2);
