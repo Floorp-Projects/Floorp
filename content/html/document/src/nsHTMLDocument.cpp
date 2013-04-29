@@ -2369,7 +2369,7 @@ nsHTMLDocument::NamedGetter(JSContext* cx, const nsAString& aName, bool& aFound,
 
   JS::Value val;
   { // Scope for auto-compartment
-    JSObject* wrapper = GetWrapper();
+    JS::Rooted<JSObject*> wrapper(cx, GetWrapper());
     JSAutoCompartment ac(cx, wrapper);
     // XXXbz Should we call the (slightly misnamed, really) WrapNativeParent
     // here?
