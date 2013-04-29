@@ -23,6 +23,7 @@ namespace widget {
 #ifdef NS_ENABLE_TSF
 bool IMEHandler::sIsInTSFMode = false;
 bool IMEHandler::sPluginHasFocus = false;
+IMEHandler::SetInputScopesFunc IMEHandler::sSetInputScopes = nullptr;
 #endif // #ifdef NS_ENABLE_TSF
 
 // static
@@ -32,6 +33,17 @@ IMEHandler::Initialize()
 #ifdef NS_ENABLE_TSF
   nsTextStore::Initialize();
   sIsInTSFMode = nsTextStore::IsInTSFMode();
+  if (!sIsInTSFMode) {
+    // When full nsTextStore is not available, try to use SetInputScopes API
+    // to enable at least InputScope. Use GET_MODULE_HANDLE_EX_FLAG_PIN to
+    // ensure that msctf.dll will not be unloaded.
+    HMODULE module = nullptr;
+    if (GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_PIN, L"msctf.dll",
+                           &module)) {
+      sSetInputScopes = reinterpret_cast<SetInputScopesFunc>(
+        GetProcAddress(module, "SetInputScopes"));
+    }
+  }
 #endif // #ifdef NS_ENABLE_TSF
 
   nsIMM32Handler::Initialize();
@@ -245,8 +257,15 @@ IMEHandler::GetOpenState(nsWindow* aWindow)
 void
 IMEHandler::OnDestroyWindow(nsWindow* aWindow)
 {
+#ifdef NS_ENABLE_TSF
   // We need to do nothing here for TSF. Just restore the default context
   // if it's been disassociated.
+  if (!sIsInTSFMode) {
+    // MSDN says we need to set IS_DEFAULT to avoid memory leak when we use
+    // SetInputScopes API. Use an empty string to do this.
+    SetInputScopeForIMM32(aWindow, EmptyString());
+  }
+#endif // #ifdef NS_ENABLE_TSF
   nsIMEContext IMEContext(aWindow->GetWindowHandle());
   IMEContext.AssociateDefaultContext();
 }
@@ -282,6 +301,9 @@ IMEHandler::SetInputContext(nsWindow* aWindow,
       }
       return;
     }
+  } else {
+    // Set at least InputScope even when TextStore is not available.
+    SetInputScopeForIMM32(aWindow, aInputContext.mHTMLInputType);
   }
 #endif // #ifdef NS_ENABLE_TSF
 
@@ -383,6 +405,69 @@ IMEHandler::IsDoingKakuteiUndo(HWND aWnd)
          charMsg.wParam == VK_BACK && charMsg.lParam == 0x1 &&
          startCompositionMsg.time <= compositionMsg.time &&
          compositionMsg.time <= charMsg.time;
+}
+
+// static
+void
+IMEHandler::SetInputScopeForIMM32(nsWindow* aWindow,
+                                  const nsAString& aHTMLInputType)
+{
+  if (sIsInTSFMode || !sSetInputScopes || aWindow->Destroyed()) {
+    return;
+  }
+  UINT arraySize = 0;
+  const InputScope* scopes = nullptr;
+  // http://www.whatwg.org/specs/web-apps/current-work/multipage/the-input-element.html
+  if (aHTMLInputType.IsEmpty() || aHTMLInputType.EqualsLiteral("text")) {
+    static const InputScope inputScopes[] = { IS_DEFAULT };
+    scopes = &inputScopes[0];
+    arraySize = ArrayLength(inputScopes);
+  } else if (aHTMLInputType.EqualsLiteral("url")) {
+    static const InputScope inputScopes[] = { IS_URL };
+    scopes = &inputScopes[0];
+    arraySize = ArrayLength(inputScopes);
+  } else if (aHTMLInputType.EqualsLiteral("search")) {
+    static const InputScope inputScopes[] = { IS_SEARCH };
+    scopes = &inputScopes[0];
+    arraySize = ArrayLength(inputScopes);
+  } else if (aHTMLInputType.EqualsLiteral("email")) {
+    static const InputScope inputScopes[] = { IS_EMAIL_SMTPEMAILADDRESS };
+    scopes = &inputScopes[0];
+    arraySize = ArrayLength(inputScopes);
+  } else if (aHTMLInputType.EqualsLiteral("password")) {
+    static const InputScope inputScopes[] = { IS_PASSWORD };
+    scopes = &inputScopes[0];
+    arraySize = ArrayLength(inputScopes);
+  } else if (aHTMLInputType.EqualsLiteral("datetime") ||
+             aHTMLInputType.EqualsLiteral("datetime-local")) {
+    static const InputScope inputScopes[] = {
+      IS_DATE_FULLDATE, IS_TIME_FULLTIME };
+    scopes = &inputScopes[0];
+    arraySize = ArrayLength(inputScopes);
+  } else if (aHTMLInputType.EqualsLiteral("date") ||
+             aHTMLInputType.EqualsLiteral("month") ||
+             aHTMLInputType.EqualsLiteral("week")) {
+    static const InputScope inputScopes[] = { IS_DATE_FULLDATE };
+    scopes = &inputScopes[0];
+    arraySize = ArrayLength(inputScopes);
+  } else if (aHTMLInputType.EqualsLiteral("time")) {
+    static const InputScope inputScopes[] = { IS_TIME_FULLTIME };
+    scopes = &inputScopes[0];
+    arraySize = ArrayLength(inputScopes);
+  } else if (aHTMLInputType.EqualsLiteral("tel")) {
+    static const InputScope inputScopes[] = {
+      IS_TELEPHONE_FULLTELEPHONENUMBER, IS_TELEPHONE_LOCALNUMBER };
+    scopes = &inputScopes[0];
+    arraySize = ArrayLength(inputScopes);
+  } else if (aHTMLInputType.EqualsLiteral("number")) {
+    static const InputScope inputScopes[] = { IS_NUMBER };
+    scopes = &inputScopes[0];
+    arraySize = ArrayLength(inputScopes);
+  }
+  if (scopes && arraySize > 0) {
+    sSetInputScopes(aWindow->GetWindowHandle(), scopes, arraySize, nullptr, 0,
+                    nullptr, nullptr);
+  }
 }
 
 } // namespace widget
