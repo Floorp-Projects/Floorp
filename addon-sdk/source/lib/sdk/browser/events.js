@@ -17,4 +17,4 @@ const { isBrowser } = require("../window/utils");
 // implementation for `isBrowser`. Either way it's not really needed yet
 // neither window tracker provides this event.
 
-exports.events = filter(function({target}) isBrowser(target), events);
+exports.events = filter(events, function({target}) isBrowser(target));

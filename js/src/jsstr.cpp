@@ -15,6 +15,8 @@
  * allocations in the same native method.
  */
 
+#include "jsstr.h"
+
 #include "mozilla/Attributes.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/FloatingPoint.h"
@@ -32,16 +34,12 @@
 #include "jscntxt.h"
 #include "jsgc.h"
 #include "jsinterp.h"
-#include "jslock.h"
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsopcode.h"
-#include "jsprobes.h"
-#include "jsstr.h"
 #include "jsversion.h"
 
 #include "builtin/RegExp.h"
-#include "js/HashTable.h"
 #include "vm/GlobalObject.h"
 #include "vm/NumericConversions.h"
 #include "vm/RegExpObject.h"
@@ -3739,9 +3737,8 @@ js::ValueToSource(JSContext *cx, const Value &v)
 
     RootedValue rval(cx, NullValue());
     RootedValue fval(cx);
-    RootedId id(cx, NameToId(cx->names().toSource));
-    Rooted<JSObject*> obj(cx, &v.toObject());
-    if (!GetMethod(cx, obj, id, 0, &fval))
+    RootedObject obj(cx, &v.toObject());
+    if (!JSObject::getProperty(cx, obj, obj, cx->names().toSource, &fval))
         return NULL;
     if (js_IsCallable(fval)) {
         if (!Invoke(cx, ObjectValue(*obj), fval, 0, NULL, rval.address()))

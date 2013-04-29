@@ -304,7 +304,7 @@ getAtomAttr(txStylesheetAttr* aAttributes,
         return rv;
     }
 
-    *aAtom = NS_NewAtom(attr->mValue);
+    *aAtom = NS_NewAtom(attr->mValue).get();
     NS_ENSURE_TRUE(*aAtom, NS_ERROR_OUT_OF_MEMORY);
 
     return NS_OK;

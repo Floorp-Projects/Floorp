@@ -18,6 +18,8 @@ MOCHITEST_FILES =	bug408328-data.xml \
 		bug494328-data.xml \
 		test_bug589543.html \
 		bug589543-data.xml \
+		test_bug436801.html \
+		bug436801-data.xml \
 		test_registerHandler.html \
 		valid-feed.xml \
 		valid-unsniffable-feed.xml \

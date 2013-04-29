@@ -225,14 +225,28 @@
         <parameter name="aSkipArrange"/>
         <body>
           <![CDATA[
-            let removal = this.getItemAtIndex(anIndex);
-            this.removeChild(removal);
-            if (!aSkipArrange)
-              this.arrangeItems();
+            let item = this.getItemAtIndex(anIndex);
+            return item ? this.removeItem(item, aSkipArrange) : null;
+          ]]>
+        </body>
+      </method>
+
+      <method name="removeItem">
+        <parameter name="aItem"/>
+        <parameter name="aSkipArrange"/>
+        <body>
+          <![CDATA[
+            let removal = aItem.parentNode == this && this.removeChild(aItem);
+            if (removal && !aSkipArrange)
+                this.arrangeItems();
+
+            // note that after removal the node is unbound
+            // so none of the richgriditem binding methods & properties are available
             return removal;
           ]]>
         </body>
       </method>
+
 
       <method name="getIndexOfItem">
         <parameter name="anItem"/>
@@ -241,7 +255,7 @@
             if (!anItem)
               return -1;
 
-            return Array.prototype.indexOf.call(this.children, anItem);
+            return Array.indexOf(this.children, anItem);
           ]]>
         </body>
       </method>
@@ -253,6 +267,15 @@
             if (!this._isIndexInBounds(anIndex))
               return null;
             return this.children.item(anIndex);
+          ]]>
+        </body>
+      </method>
+
+      <method name="getItemsByUrl">
+        <parameter name="aUrl"/>
+        <body>
+          <![CDATA[
+            return this.querySelectorAll('richgriditem[value="'+aUrl+'"]');
           ]]>
         </body>
       </method>

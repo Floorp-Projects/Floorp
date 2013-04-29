@@ -233,6 +233,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741267
         ok(false, "Should be able to return NodeFilter from a sandbox " + e);
       }
 
+      try {
+        var eventCtor = Components.utils.evalInSandbox("Event", sandbox);
+        var e = new eventCtor("test", { bubbles: true });
+        is(e.bubbles, true, "Dictionary argument should work");
+      } catch (e) {
+        ok(false, "Should be able to construct my event " + e);
+      }
+
       SimpleTest.finish();
     }
 

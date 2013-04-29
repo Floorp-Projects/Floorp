@@ -4,9 +4,14 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <Gecko.TextView xmlns:android="http://schemas.android.com/apk/res/android"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="@dimen/tabs_counter_size"
-                android:textColor="#FFB5B7B9"
+                android:layout_width="24dip"
+                android:layout_height="24dip"
+                android:layout_margin="12dip"
+                android:paddingTop="2dip"
+                android:paddingLeft="4dip"
+                android:background="@drawable/tabs_count"
+                android:textAppearance="@style/TextAppearance.Micro"
+                android:textColor="#FF43484E"
+                android:textStyle="bold"
                 android:duplicateParentState="true"
                 android:gravity="center"/>

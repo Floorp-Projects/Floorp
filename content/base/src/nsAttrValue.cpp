@@ -739,9 +739,8 @@ nsAttrValue::GetAsAtom() const
 
     case eAtom:
       {
-        nsIAtom* atom = GetAtomValue();
-        NS_ADDREF(atom);
-        return atom;
+        nsCOMPtr<nsIAtom> atom = GetAtomValue();
+        return atom.forget();
       }
 
     default:
@@ -1229,9 +1228,9 @@ nsAttrValue::ParseAtom(const nsAString& aValue)
 {
   ResetIfSet();
 
-  nsIAtom* atom = NS_NewAtom(aValue);
+  nsCOMPtr<nsIAtom> atom = NS_NewAtom(aValue);
   if (atom) {
-    SetPtrValueAndType(atom, eAtomBase);
+    SetPtrValueAndType(atom.forget().get(), eAtomBase);
   }
 }
 
@@ -1712,9 +1711,10 @@ nsAttrValue::SetMiscAtomOrString(const nsAString* aValue)
                  "Empty string?");
     MiscContainer* cont = GetMiscContainer();
     if (len <= NS_ATTRVALUE_MAX_STRINGLENGTH_ATOM) {
-      nsIAtom* atom = NS_NewAtom(*aValue);
+      nsCOMPtr<nsIAtom> atom = NS_NewAtom(*aValue);
       if (atom) {
-        cont->mStringBits = reinterpret_cast<uintptr_t>(atom) | eAtomBase;
+        cont->mStringBits =
+          reinterpret_cast<uintptr_t>(atom.forget().get()) | eAtomBase;
       }
     } else {
       nsStringBuffer* buf = GetStringBuffer(*aValue);

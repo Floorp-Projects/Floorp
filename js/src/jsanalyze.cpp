@@ -4,16 +4,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "jsanalyze.h"
+
 #include "mozilla/DebugOnly.h"
 #include "mozilla/PodOperations.h"
 
-#include "jsanalyze.h"
 #include "jsautooplen.h"
 #include "jscompartment.h"
 #include "jscntxt.h"
 
 #include "jsinferinlines.h"
-#include "jsobjinlines.h"
 
 using namespace js;
 using namespace js::analyze;

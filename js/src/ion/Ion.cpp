@@ -183,14 +183,14 @@ IonRuntime::initialize(JSContext *cx)
 {
     AutoEnterAtomsCompartment ac(cx);
 
-    if (!cx->compartment->ensureIonCompartmentExists(cx))
-        return false;
-
     IonContext ictx(cx, NULL);
     AutoFlushCache afc("IonRuntime::initialize");
 
     execAlloc_ = cx->runtime->getExecAlloc(cx);
     if (!execAlloc_)
+        return false;
+
+    if (!cx->compartment->ensureIonCompartmentExists(cx))
         return false;
 
     functionWrappers_ = cx->new_<VMWrapperMap>(cx);
@@ -284,7 +284,8 @@ IonRuntime::freeOsrTempData()
 IonCompartment::IonCompartment(IonRuntime *rt)
   : rt(rt),
     stubCodes_(NULL),
-    baselineCallReturnAddr_(NULL)
+    baselineCallReturnAddr_(NULL),
+    stringConcatStub_(NULL)
 {
 }
 
@@ -300,6 +301,19 @@ IonCompartment::initialize(JSContext *cx)
     stubCodes_ = cx->new_<ICStubCodeMap>(cx);
     if (!stubCodes_ || !stubCodes_->init())
         return false;
+
+    return true;
+}
+
+bool
+IonCompartment::ensureIonStubsExist(JSContext *cx)
+{
+    if (!stringConcatStub_) {
+        stringConcatStub_ = generateStringConcatStub(cx);
+        if (!stringConcatStub_)
+            return false;
+    }
+
     return true;
 }
 
@@ -364,6 +378,9 @@ IonCompartment::sweep(FreeOp *fop)
     // If the sweep removed the ICCall_Fallback stub, NULL the baselineCallReturnAddr_ field.
     if (!stubCodes_->lookup(static_cast<uint32_t>(ICStub::Call_Fallback)))
         baselineCallReturnAddr_ = NULL;
+
+    if (stringConcatStub_ && !IsIonCodeMarked(stringConcatStub_.unsafeGet()))
+        stringConcatStub_ = NULL;
 }
 
 IonCode *
@@ -535,7 +552,7 @@ IonScript::IonScript()
     osrEntryOffset_(0),
     invalidateEpilogueOffset_(0),
     invalidateEpilogueDataOffset_(0),
-    bailoutExpected_(0),
+    numBailouts_(0),
     hasInvalidatedCallTarget_(false),
     runtimeData_(0),
     runtimeSize_(0),
@@ -1009,14 +1026,20 @@ OptimizeMIR(MIRGenerator *mir)
         return false;
 
     if (js_IonOptions.licm) {
-        LICM licm(mir, graph);
-        if (!licm.analyze())
-            return false;
-        IonSpewPass("LICM");
-        AssertExtendedGraphCoherency(graph);
+        // LICM can hoist instructions from conditional branches and trigger
+        // repeated bailouts. Disable it if this script is known to bailout
+        // frequently.
+        JSScript *script = mir->info().script();
+        if (!script || !script->hadFrequentBailouts) {
+            LICM licm(mir, graph);
+            if (!licm.analyze())
+                return false;
+            IonSpewPass("LICM");
+            AssertExtendedGraphCoherency(graph);
 
-        if (mir->shouldCancel("LICM"))
-            return false;
+            if (mir->shouldCancel("LICM"))
+                return false;
+        }
     }
 
     if (js_IonOptions.rangeAnalysis) {
@@ -1315,6 +1338,9 @@ IonCompile(JSContext *cx, JSScript *script,
     types::AutoEnterAnalysis enter(cx);
 
     if (!cx->compartment->ensureIonCompartmentExists(cx))
+        return AbortReason_Alloc;
+
+    if (!cx->compartment->ionCompartment()->ensureIonStubsExist(cx))
         return AbortReason_Alloc;
 
     MIRGraph *graph = alloc->new_<MIRGraph>(temp);

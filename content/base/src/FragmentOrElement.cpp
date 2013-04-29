@@ -691,9 +691,7 @@ FragmentOrElement::GetChildren(uint32_t aFilter)
     }
   }
 
-  nsINodeList* returnList = nullptr;
-  list.forget(&returnList);
-  return returnList;
+  return list.forget();
 }
 
 static nsIContent*

@@ -320,7 +320,7 @@ public:
       CallbackObjectHolderBase::ToXPCOMCallback(GetWebIDLCallback(),
                                                 NS_GET_TEMPLATE_IID(XPCOMCallbackT));
     // ToXPCOMCallback already did the right QI for us.
-    return static_cast<XPCOMCallbackT*>(supp.forget().get());
+    return supp.forget().downcast<XPCOMCallbackT>();
   }
 
   // Try to return a WebIDLCallbackT version of this object.

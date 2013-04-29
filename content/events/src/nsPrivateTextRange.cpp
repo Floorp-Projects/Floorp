@@ -60,11 +60,6 @@ NS_METHOD_(uint16_t) nsPrivateTextRangeList::GetLength()
 NS_METHOD_(already_AddRefed<nsIPrivateTextRange>) nsPrivateTextRangeList::Item(uint16_t aIndex)
 {
   nsRefPtr<nsPrivateTextRange> ret = mList.ElementAt(aIndex);
-  if (ret) {
-    nsPrivateTextRange *retPtr = nullptr;
-    ret.swap(retPtr);
-    return retPtr;
-  }
-  return nullptr;
+  return ret.forget();
 }
 

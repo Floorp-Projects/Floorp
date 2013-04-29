@@ -15,28 +15,27 @@ NS_IMPL_ISUPPORTS1(nsDeviceContextSpecAndroid, nsIDeviceContextSpec)
 NS_IMETHODIMP
 nsDeviceContextSpecAndroid::GetSurfaceForPrinter(gfxASurface** aSurface)
 {
-  nsAutoCString tmpDir(getenv("TMPDIR"));
-  nsresult rv = 
+  nsresult rv =
     NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(mTempFile));
   NS_ENSURE_SUCCESS(rv, rv);
-  
-  nsAutoCString filename("tmp-printing.pdf");  
+
+  nsAutoCString filename("tmp-printing.pdf");
   mTempFile->AppendNative(filename);
   rv = mTempFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0660);
-  NS_ENSURE_SUCCESS(rv, rv);  
-  
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsCOMPtr<nsIFileOutputStream> stream = do_CreateInstance("@mozilla.org/network/file-output-stream;1");
   rv = stream->Init(mTempFile, -1, -1, 0);
-  NS_ENSURE_SUCCESS(rv, rv);  
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsRefPtr<gfxASurface> surface;
 
-  // XXX: what should we do hear for size? screen size?
+  // XXX: what should we do here for size? screen size?
   gfxSize surfaceSize(480, 800);
 
   surface = new gfxPDFSurface(stream, surfaceSize);
-  
-  
+
+
   NS_ABORT_IF_FALSE(surface, "valid address expected");
   surface.swap(*aSurface);
   return NS_OK;

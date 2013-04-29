@@ -1664,8 +1664,8 @@ nsStyleSet::ReparentStyleContext(nsStyleContext* aStyleContext,
   // This short-circuit is OK because we don't call TryStartingTransition
   // during style reresolution if the style context pointer hasn't changed.
   if (aStyleContext->GetParent() == aNewParentContext) {
-    aStyleContext->AddRef();
-    return aStyleContext;
+    nsRefPtr<nsStyleContext> ret = aStyleContext;
+    return ret.forget();
   }
 
   nsIAtom* pseudoTag = aStyleContext->GetPseudo();

@@ -445,7 +445,7 @@ PropertyNodeList::GetValues(JSContext* aCx, nsTArray<JS::Value >& aResult,
 {
   EnsureFresh();
 
-  JSObject* wrapper = GetWrapper();
+  JS::RootedObject wrapper(aCx, GetWrapper());
   JSAutoCompartment ac(aCx, wrapper);
   uint32_t length = mElements.Length();
   for (uint32_t i = 0; i < length; ++i) {

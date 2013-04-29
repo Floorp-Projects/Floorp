@@ -637,6 +637,16 @@ GrallocTextureHostOGL::DeleteTextures()
   }
 }
 
+// only used for hacky fix in gecko 23 for bug 862324
+static void
+RegisterTextureHostAtGrallocBufferActor(TextureHost* aTextureHost, const SurfaceDescriptor& aSurfaceDescriptor)
+{
+  if (IsSurfaceDescriptorValid(aSurfaceDescriptor)) {
+    GrallocBufferActor* actor = static_cast<GrallocBufferActor*>(aSurfaceDescriptor.get_SurfaceDescriptorGralloc().bufferParent());
+    actor->SetTextureHost(aTextureHost);
+  }
+}
+
 void
 GrallocTextureHostOGL::UpdateImpl(const SurfaceDescriptor& aImage,
                                  nsIntRegion* aRegion)
@@ -648,7 +658,6 @@ void
 GrallocTextureHostOGL::SwapTexturesImpl(const SurfaceDescriptor& aImage,
                                         nsIntRegion*)
 {
-  android::sp<android::GraphicBuffer> buffer = GrallocBufferActor::GetFrom(aImage);
   MOZ_ASSERT(aImage.type() == SurfaceDescriptor::TSurfaceDescriptorGralloc);
 
   const SurfaceDescriptorGralloc& desc = aImage.get_SurfaceDescriptorGralloc();
@@ -657,6 +666,11 @@ GrallocTextureHostOGL::SwapTexturesImpl(const SurfaceDescriptor& aImage,
   mTextureTarget = TextureTargetForAndroidPixelFormat(mGraphicBuffer->getPixelFormat());
 
   DeleteTextures();
+
+  // only done for hacky fix in gecko 23 for bug 862324.
+  // Doing this in SetBuffer is not enough, as ImageHostBuffered::SwapTextures can
+  // change the value of *mBuffer without calling SetBuffer again.
+  RegisterTextureHostAtGrallocBufferActor(this, aImage);
 }
 
 void GrallocTextureHostOGL::BindTexture(GLenum aTextureUnit)
@@ -678,6 +692,13 @@ GrallocTextureHostOGL::IsValid() const
 GrallocTextureHostOGL::~GrallocTextureHostOGL()
 {
   DeleteTextures();
+
+  // only done for hacky fix in gecko 23 for bug 862324.
+  if (mBuffer) {
+    // make sure that if the GrallocBufferActor survives us, it doesn't keep a dangling
+    // pointer to us.
+    RegisterTextureHostAtGrallocBufferActor(nullptr, *mBuffer);
+  }
 }
 
 bool
@@ -734,6 +755,17 @@ GrallocTextureHostOGL::GetFormat() const
   return mFormat;
 }
 
+void
+GrallocTextureHostOGL::SetBuffer(SurfaceDescriptor* aBuffer, ISurfaceAllocator* aAllocator) MOZ_OVERRIDE
+{
+  MOZ_ASSERT(!mBuffer, "Will leak the old mBuffer");
+  mBuffer = aBuffer;
+  mDeAllocator = aAllocator;
+
+  // only done for hacky fix in gecko 23 for bug 862324.
+  // Doing this in SwapTextures is not enough, as the crash could occur right after SetBuffer.
+  RegisterTextureHostAtGrallocBufferActor(this, *mBuffer);
+}
 
 #endif
 

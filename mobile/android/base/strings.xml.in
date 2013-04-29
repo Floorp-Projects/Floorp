@@ -84,7 +84,6 @@
   <string name="pref_header_privacy">&pref_header_privacy;</string>
   <string name="pref_header_content">&pref_header_content;</string>
   <string name="pref_about_firefox">&pref_about_firefox;</string>
-  <string name="pref_do_not_track">&pref_do_not_track;</string>
   <string name="pref_telemetry">&pref_telemetry;</string>
   <string name="pref_remember_signons">&pref_remember_signons;</string>
 
@@ -92,6 +91,11 @@
   <string name="pref_cookies_accept_all">&pref_cookies_accept_all;</string>
   <string name="pref_cookies_not_accept_foreign">&pref_cookies_not_accept_foreign;</string>
   <string name="pref_cookies_disabled">&pref_cookies_disabled;</string>
+
+  <string name="pref_donottrack_menu">&pref_donottrack_menu;</string>
+  <string name="pref_donottrack_disallow_tracking">&pref_donottrack_disallow_tracking;</string>
+  <string name="pref_donottrack_allow_tracking">&pref_donottrack_allow_tracking;</string>
+  <string name="pref_donottrack_no_pref">&pref_donottrack_no_pref;</string>
 
   <string name="pref_char_encoding">&pref_char_encoding;</string>
   <string name="pref_char_encoding_on">&pref_char_encoding_on;</string>
@@ -151,7 +155,7 @@
   <string name="tabs_private">&tabs_private;</string>
   <string name="tabs_synced">&tabs_synced;</string>
 
-  <string name="site_settings_title">&site_settings_title2;</string>
+  <string name="site_settings_title">&site_settings_title3;</string>
   <string name="site_settings_cancel">&site_settings_cancel;</string>
   <string name="site_settings_clear">&site_settings_clear;</string>
   <string name="site_settings_no_settings">&site_settings_no_settings;</string>
@@ -175,6 +179,11 @@
   <string name="contextmenu_copyurl">&contextmenu_copyurl;</string>
   <string name="contextmenu_edit_bookmark">&contextmenu_edit_bookmark;</string>
   <string name="contextmenu_subscribe">&contextmenu_subscribe;</string>
+  <string name="contextmenu_site_settings">&contextmenu_site_settings;</string>
+
+  <string name="pref_titlebar_mode">&pref_titlebar_mode;</string>
+  <string name="pref_titlebar_mode_title">&pref_titlebar_mode_title;</string>
+  <string name="pref_titlebar_mode_url">&pref_titlebar_mode_url;</string>
 
   <string name="history_removed">&history_removed;</string>
 

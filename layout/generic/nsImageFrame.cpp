@@ -1218,11 +1218,15 @@ static void PaintDebugImageMap(nsIFrame* aFrame, nsRenderingContext* aCtx,
 void
 nsDisplayImage::Paint(nsDisplayListBuilder* aBuilder,
                       nsRenderingContext* aCtx) {
+  uint32_t flags = imgIContainer::FLAG_NONE;
+  if (aBuilder->ShouldSyncDecodeImages()) {
+    flags |= imgIContainer::FLAG_SYNC_DECODE;
+  }
+  if (aBuilder->IsPaintingToWindow()) {
+    flags |= imgIContainer::FLAG_HIGH_QUALITY_SCALING;
+  }
   static_cast<nsImageFrame*>(mFrame)->
-    PaintImage(*aCtx, ToReferenceFrame(), mVisibleRect, mImage,
-               aBuilder->ShouldSyncDecodeImages()
-                 ? (uint32_t) imgIContainer::FLAG_SYNC_DECODE
-                 : (uint32_t) imgIContainer::FLAG_NONE);
+    PaintImage(*aCtx, ToReferenceFrame(), mVisibleRect, mImage, flags);
 }
 
 already_AddRefed<ImageContainer>
@@ -1349,9 +1353,12 @@ nsImageFrame::PaintImage(nsRenderingContext& aRenderingContext, nsPoint aPt,
   nsImageMap* map = GetImageMap();
   if (nullptr != map) {
     aRenderingContext.PushState();
+    aRenderingContext.Translate(inner.TopLeft());
+    aRenderingContext.SetColor(NS_RGB(255, 255, 255));
+    aRenderingContext.SetLineStyle(nsLineStyle_kSolid);
+    map->Draw(this, aRenderingContext);
     aRenderingContext.SetColor(NS_RGB(0, 0, 0));
     aRenderingContext.SetLineStyle(nsLineStyle_kDotted);
-    aRenderingContext.Translate(inner.TopLeft());
     map->Draw(this, aRenderingContext);
     aRenderingContext.PopState();
   }

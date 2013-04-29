@@ -50,12 +50,6 @@ members = [
     #'nsIDOMLocation.hostname',
     #'nsIDOMLocation.href',
 
-    # dom/interfaces/canvas
-    #
-    # canvas friends
-    'nsIDOMCanvasGradient.*',
-    'nsIDOMCanvasPattern.*',
-
     # dom/interfaces/core
     'nsIDOMDOMStringList.*',
 
@@ -143,9 +137,6 @@ members = [
 #
 irregularFilenames = {
     # stowaways
-    'nsIDOMCanvasGradient': 'nsIDOMCanvasRenderingContext2D',
-    'nsIDOMCanvasPattern': 'nsIDOMCanvasRenderingContext2D',
-
     'nsIDOMBlob': 'nsIDOMFile',
 
     'nsIIndexedDatabaseUsageCallback': 'nsIIndexedDatabaseManager',
@@ -170,11 +161,6 @@ customIncludes = [
     'mozilla/dom/EventBinding.h',
     'mozilla/dom/MouseEventBinding.h',
     'mozilla/dom/UIEventBinding.h',
-    ]
-
-customReturnInterfaces = [
-    'nsIDOMCanvasPattern',
-    'nsIDOMCanvasGradient',
     ]
 
 nsIDOMStorage_Clear_customMethodCallCode = """

@@ -62,6 +62,11 @@ ShadowLayerParent::ActorDestroy(ActorDestroyReason why)
     break;
 
   case AbnormalShutdown:
+    if (mLayer) {
+      mLayer->Disconnect();
+    }
+    break;
+
   case NormalShutdown:
     // let IPDL-generated code automatically clean up Shmems and so
     // forth; our channel is disconnected anyway

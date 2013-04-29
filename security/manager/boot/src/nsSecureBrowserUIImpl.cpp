@@ -245,18 +245,18 @@ nsSecureBrowserUIImpl::GetState(uint32_t* aState)
 already_AddRefed<nsISupports> 
 nsSecureBrowserUIImpl::ExtractSecurityInfo(nsIRequest* aRequest)
 {
-  nsISupports *retval = nullptr; 
+  nsCOMPtr<nsISupports> retval;
   nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
   if (channel)
-    channel->GetSecurityInfo(&retval);
+    channel->GetSecurityInfo(getter_AddRefs(retval));
   
   if (!retval) {
     nsCOMPtr<nsISecurityInfoProvider> provider(do_QueryInterface(aRequest));
     if (provider)
-      provider->GetSecurityInfo(&retval);
+      provider->GetSecurityInfo(getter_AddRefs(retval));
   }
 
-  return retval;
+  return retval.forget();
 }
 
 nsresult

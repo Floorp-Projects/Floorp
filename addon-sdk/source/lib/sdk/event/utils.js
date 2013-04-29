@@ -25,7 +25,7 @@ let refs = (function() {
   }
 })();
 
-function transform(f, input) {
+function transform(input, f) {
   let output = {};
 
   // Since event listeners don't prevent `input` to be GC-ed we wanna presrve
@@ -46,16 +46,16 @@ function transform(f, input) {
 // High order event transformation function that takes `input` event channel
 // and returns transformation containing only events on which `p` predicate
 // returns `true`.
-function filter(predicate, input) {
-  return transform(function(data, next) {
+function filter(input, predicate) {
+  return transform(input, function(data, next) {
     if (predicate(data)) next(data)
-  }, input);
+  });
 }
 exports.filter = filter;
 
 // High order function that takes `input` and returns input of it's values
 // mapped via given `f` function.
-function map(f, input) transform(function(data, next) next(f(data)), input)
+function map(input, f) transform(input, function(data, next) next(f(data)))
 exports.map = map;
 
 // High order function that takes `input` stream of streams and merges them
@@ -97,7 +97,7 @@ function merge(inputs) {
 }
 exports.merge = merge;
 
-function expand(f, inputs) merge(map(f, inputs))
+function expand(inputs, f) merge(map(inputs, f))
 exports.expand = expand;
 
 function pipe(from, to) on(from, "*", emit.bind(emit, to))

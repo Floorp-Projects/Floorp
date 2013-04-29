@@ -101,8 +101,8 @@ richlistitem[type="download"]:first-child {
 .downloadTypeIcon {
   -moz-margin-end: 8px;
   /* Prevent flickering when changing states. */
-  min-height: 32px;
-  min-width: 32px;
+  height: 32px;
+  width: 32px;
 }
 
 .blockedIcon {

@@ -321,6 +321,7 @@ typedef union jsval_layout
             int32_t        i32;
             uint32_t       u32;
             JSWhyMagic     why;
+            uintptr_t      word;
         } payload;
     } s;
     double asDouble;

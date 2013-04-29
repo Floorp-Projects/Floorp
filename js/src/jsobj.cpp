@@ -7,6 +7,8 @@
 /*
  * JS object implementation.
  */
+#include "jsobj.h"
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -18,19 +20,12 @@
 #include "jsapi.h"
 #include "jsarray.h"
 #include "jsatom.h"
-#include "jsbool.h"
 #include "jscntxt.h"
-#include "jsdate.h"
-#include "jsversion.h"
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsinterp.h"
 #include "jsiter.h"
-#include "jslock.h"
-#include "jsmath.h"
 #include "jsnum.h"
-#include "jsobj.h"
-#include "jsonparser.h"
 #include "jsopcode.h"
 #include "jsprobes.h"
 #include "jsprototypes.h"
@@ -38,35 +33,26 @@
 #include "jsscript.h"
 #include "jsstr.h"
 #include "jsdbgapi.h"
-#include "json.h"
 #include "jswatchpoint.h"
 #include "jswrapper.h"
 
-#include "builtin/MapObject.h"
-#include "builtin/Module.h"
-#include "builtin/ParallelArray.h"
-#include "frontend/BytecodeCompiler.h"
-#include "frontend/Parser.h"
+#include "frontend/TokenStream.h"
 #include "gc/Marking.h"
 #include "js/MemoryMetrics.h"
 #include "vm/Shape.h"
-#include "vm/StringBuffer.h"
-#include "vm/Xdr.h"
 
 #include "jsatominlines.h"
 #include "jsboolinlines.h"
 #include "jscntxtinlines.h"
-#include "jsinterpinlines.h"
+#include "jscompartmentinlines.h"
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
-#include "jscompartmentinlines.h"
+#include "jstypedarrayinlines.h"
 
 #include "vm/BooleanObject-inl.h"
 #include "vm/NumberObject-inl.h"
 #include "vm/Shape-inl.h"
 #include "vm/StringObject-inl.h"
-
-#include "jsautooplen.h"
 
 using namespace js;
 using namespace js::gc;
@@ -3890,10 +3876,7 @@ GetPropertyHelperInline(JSContext *cx,
             if (!script || script->warnedAboutUndefinedProp)
                 return true;
 
-            /*
-             * XXX do not warn about missing __iterator__ as the function
-             * may be called from JS_GetMethodById. See bug 355145.
-             */
+            /* We may just be checking if that object has an iterator. */
             if (JSID_IS_ATOM(id, cx->names().iteratorIntrinsic))
                 return JS_TRUE;
 
@@ -4098,18 +4081,6 @@ baseops::GetPropertyDefault(JSContext *cx, HandleObject obj, HandleId id, Handle
     return baseops::GetProperty(cx, obj2, id, vp);
 }
 
-JSBool
-js::GetMethod(JSContext *cx, HandleObject obj, HandleId id, unsigned getHow, MutableHandleValue vp)
-{
-    JSAutoResolveFlags rf(cx, 0);
-
-    GenericIdOp op = obj->getOps()->getGeneric;
-    if (!op)
-        return GetPropertyHelper(cx, obj, id, getHow, vp);
-
-    return op(cx, obj, obj, id, vp);
-}
-
 static bool
 MaybeReportUndeclaredVarAssignment(JSContext *cx, JSString *propname)
 {
@@ -4213,9 +4184,10 @@ bool
 JSObject::callMethod(JSContext *cx, HandleId id, unsigned argc, Value *argv, MutableHandleValue vp)
 {
     RootedValue fval(cx);
-    Rooted<JSObject*> obj(cx, this);
-    return GetMethod(cx, obj, id, 0, &fval) &&
-           Invoke(cx, ObjectValue(*obj), fval, argc, argv, vp.address());
+    RootedObject obj(cx, this);
+    if (!JSObject::getGeneric(cx, obj, obj, id, &fval))
+        return false;
+    return Invoke(cx, ObjectValue(*obj), fval, argc, argv, vp.address());
 }
 
 JSBool
@@ -4577,9 +4549,9 @@ js::HasDataProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
  * or steps 3-4.
  */
 static bool
-MaybeCallMethod(JSContext *cx, HandleObject obj, Handle<jsid> id, MutableHandleValue vp)
+MaybeCallMethod(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp)
 {
-    if (!GetMethod(cx, obj, id, 0, vp))
+    if (!JSObject::getGeneric(cx, obj, obj, id, vp))
         return false;
     if (!js_IsCallable(vp)) {
         vp.setObject(*obj);

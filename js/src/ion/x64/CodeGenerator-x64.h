@@ -52,6 +52,8 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared
     bool visitCompareVAndBranch(LCompareVAndBranch *lir);
     bool visitUInt32ToDouble(LUInt32ToDouble *lir);
     bool visitTruncateDToInt32(LTruncateDToInt32 *ins);
+    bool visitLoadTypedArrayElementStatic(LLoadTypedArrayElementStatic *ins);
+    bool visitStoreTypedArrayElementStatic(LStoreTypedArrayElementStatic *ins);
     bool visitAsmJSLoadHeap(LAsmJSLoadHeap *ins);
     bool visitAsmJSStoreHeap(LAsmJSStoreHeap *ins);
     bool visitAsmJSLoadGlobalVar(LAsmJSLoadGlobalVar *ins);

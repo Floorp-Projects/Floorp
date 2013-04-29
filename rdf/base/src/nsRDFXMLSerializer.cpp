@@ -200,9 +200,7 @@ nsRDFXMLSerializer::EnsureNewPrefix()
             ++iter;
         } 
     } while (!isNewPrefix);
-    nsIAtom* outPrefix = nullptr;
-    prefix.swap(outPrefix);
-    return outPrefix;
+    return prefix.forget();
 }
 
 // This converts a property resource (like

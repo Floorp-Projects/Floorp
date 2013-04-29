@@ -19,8 +19,7 @@ function initialize(instance) {
   // Create an event handler that will dispose instance on unload.
   function handler(event) {
     if (event.subject.wrappedJSObject === unloadSubject) {
-      dispose(instance);
-      instance.dispose();
+      instance.destroy();
     }
   }
 
@@ -66,8 +65,10 @@ let Disposable = Class({
   destroy: function destroy() {
     // Destroying disposable removes unload handler so that attempt to dispose
     // won't be made at unload & delegates to dispose.
-    dispose(this);
-    this.dispose();
+    if (disposables.has(this)) {
+      dispose(this);
+      this.dispose();
+    }
   }
 });
 exports.Disposable = Disposable;

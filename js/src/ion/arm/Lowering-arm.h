@@ -72,6 +72,7 @@ class LIRGeneratorARM : public LIRGeneratorShared
     bool visitAsmJSStoreHeap(MAsmJSStoreHeap *ins);
     bool visitAsmJSLoadFuncPtr(MAsmJSLoadFuncPtr *ins);
     bool visitInterruptCheck(MInterruptCheck *ins);
+    bool visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic *ins);
 };
 
 typedef LIRGeneratorARM LIRGeneratorSpecific;

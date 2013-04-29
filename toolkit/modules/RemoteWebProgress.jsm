@@ -98,6 +98,8 @@ RemoteWebProgress.prototype = {
       this._browser.webNavigation._currentURI = loc;
       this._browser.webNavigation.canGoBack = aMessage.json.canGoBack;
       this._browser.webNavigation.canGoForward = aMessage.json.canGoForward;
+      this._browser._characterSet = aMessage.json.charset;
+
       for each (let p in this._progressListeners) {
         p.onLocationChange(this, req, loc);
       }

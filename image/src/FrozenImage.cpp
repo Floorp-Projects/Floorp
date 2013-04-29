@@ -111,5 +111,12 @@ FrozenImage::ResetAnimation()
   return NS_OK;
 }
 
+NS_IMETHODIMP_(float)
+FrozenImage::GetFrameIndex(uint32_t aWhichFrame)
+{
+  MOZ_ASSERT(aWhichFrame <= FRAME_MAX_VALUE, "Invalid argument");
+  return 0;
+}
+
 } // namespace image
 } // namespace mozilla

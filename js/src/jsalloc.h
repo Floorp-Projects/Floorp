@@ -7,7 +7,10 @@
 #ifndef jsalloc_h_
 #define jsalloc_h_
 
-#include "jsutil.h"
+#include "js/Utility.h"
+#include "jstypes.h"
+
+struct JSContext;
 
 namespace js {
 
