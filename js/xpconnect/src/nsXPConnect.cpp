@@ -1690,8 +1690,7 @@ nsXPConnect::ReleaseJSContext(JSContext * aJSContext, bool noGC)
     }
     // else continue on and synchronously destroy the JSContext ...
 
-    NS_ASSERTION(!XPCJSRuntime::Get()->GetJSContextStack()->
-                 DEBUG_StackHasJSContext(aJSContext),
+    NS_ASSERTION(!XPCJSRuntime::Get()->GetJSContextStack()->HasJSContext(aJSContext),
                  "JSContext still in threadjscontextstack!");
 
     if (noGC)
@@ -2106,6 +2105,12 @@ NS_EXPORT_(void)
 PopJSContext()
 {
     XPCJSRuntime::Get()->GetJSContextStack()->Pop();
+}
+
+bool
+IsJSContextOnStack(JSContext *aCx)
+{
+  return XPCJSRuntime::Get()->GetJSContextStack()->HasJSContext(aCx);
 }
 
 } /* namespace danger */
