@@ -78,7 +78,6 @@ SaveProfileTask::Run() {
       LOG("Fail to open profile log file.");
     }
   }
-  JS_EndRequest(cx);
   JS_DestroyContext(cx);
 
   return NS_OK;
