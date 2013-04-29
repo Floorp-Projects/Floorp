@@ -63,7 +63,7 @@ AudioChannelService::Shutdown()
   }
 }
 
-NS_IMPL_ISUPPORTS0(AudioChannelService)
+NS_IMPL_ISUPPORTS2(AudioChannelService, nsIObserver, nsITimerCallback)
 
 AudioChannelService::AudioChannelService()
 : mCurrentHigherChannel(AUDIO_CHANNEL_LAST)
@@ -102,9 +102,17 @@ AudioChannelService::RegisterType(AudioChannelType aType, uint64_t aChildID)
   AudioChannelInternalType type = GetInternalType(aType, true);
   mChannelCounters[type].AppendElement(aChildID);
 
-  // In order to avoid race conditions, it's safer to notify any existing
-  // agent any time a new one is registered.
   if (XRE_GetProcessType() == GeckoProcessType_Default) {
+    // Since there is another telephony registered, we can unregister old one
+    // immediately.
+    if (mDeferTelChannelTimer && aType == AUDIO_CHANNEL_TELEPHONY) {
+      mDeferTelChannelTimer->Cancel();
+      mDeferTelChannelTimer = nullptr;
+      UnregisterTypeInternal(aType, mTimerElementHidden, mTimerChildID);
+    }
+
+    // In order to avoid race conditions, it's safer to notify any existing
+    // agent any time a new one is registered.
     SendAudioChannelChangedNotification(aChildID);
     Notify();
   }
@@ -125,6 +133,28 @@ void
 AudioChannelService::UnregisterType(AudioChannelType aType,
                                     bool aElementHidden,
                                     uint64_t aChildID)
+{
+  // There are two reasons to defer the decrease of telephony channel.
+  // 1. User can have time to remove device from his ear before music resuming.
+  // 2. Give BT SCO to be disconnected before starting to connect A2DP.
+  if (XRE_GetProcessType() == GeckoProcessType_Default &&
+      aType == AUDIO_CHANNEL_TELEPHONY &&
+      (mChannelCounters[AUDIO_CHANNEL_INT_TELEPHONY_HIDDEN].Length() +
+       mChannelCounters[AUDIO_CHANNEL_INT_TELEPHONY].Length()) == 1) {
+    mTimerElementHidden = aElementHidden;
+    mTimerChildID = aChildID;
+    mDeferTelChannelTimer = do_CreateInstance("@mozilla.org/timer;1");
+    mDeferTelChannelTimer->InitWithCallback(this, 1500, nsITimer::TYPE_ONE_SHOT);
+    return;
+  }
+
+  UnregisterTypeInternal(aType, aElementHidden, aChildID);
+}
+
+void
+AudioChannelService::UnregisterTypeInternal(AudioChannelType aType,
+                                            bool aElementHidden,
+                                            uint64_t aChildID)
 {
   // The array may contain multiple occurrence of this appId but
   // this should remove only the first one.
@@ -398,6 +428,14 @@ AudioChannelService::Notify()
   for (uint32_t i = 0; i < children.Length(); i++) {
     unused << children[i]->SendAudioChannelNotify();
   }
+}
+
+NS_IMETHODIMP
+AudioChannelService::Notify(nsITimer* aTimer)
+{
+  UnregisterTypeInternal(AUDIO_CHANNEL_TELEPHONY, mTimerElementHidden, mTimerChildID);
+  mDeferTelChannelTimer = nullptr;
+  return NS_OK;
 }
 
 bool
