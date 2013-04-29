@@ -16,7 +16,6 @@
 #include "nsIComponentManager.h"
 #include "nsString.h"
 #include "nsIPrefService.h"
-#include "nsIJSContextStack.h"
 #include "nspr.h"
 #include "mozilla/Attributes.h"
 #include "nsContentUtils.h"
