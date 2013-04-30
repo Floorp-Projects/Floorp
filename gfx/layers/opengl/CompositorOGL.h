@@ -29,7 +29,7 @@ class CompositorOGL : public Compositor
 
 public:
   CompositorOGL(nsIWidget *aWidget, int aSurfaceWidth = -1, int aSurfaceHeight = -1,
-                bool aIsRenderingToEGLSurface = false);
+                bool aUseExternalSurfaceSize = false);
 
   virtual ~CompositorOGL();
 
@@ -185,11 +185,11 @@ private:
   bool mHasBGRA;
 
   /**
-   * When rendering to an EGL surface (e.g. on Android), we rely on being told
+   * When rendering to some EGL surfaces (e.g. on Android), we rely on being told
    * about size changes (via SetSurfaceSize) rather than pulling this information
    * from the widget.
    */
-  bool mIsRenderingToEGLSurface;
+  bool mUseExternalSurfaceSize;
 
   /**
    * Have we had DrawQuad calls since the last frame was rendered?
