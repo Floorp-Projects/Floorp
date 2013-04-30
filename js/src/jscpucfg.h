@@ -14,7 +14,6 @@
 # if defined(_M_X64) || defined(_M_AMD64) || defined(_AMD64_)
 #  define IS_LITTLE_ENDIAN 1
 #  undef  IS_BIG_ENDIAN
-#  define JS_BYTES_PER_DOUBLE 8
 #  define JS_BYTES_PER_WORD   8
 #  define JS_BITS_PER_WORD_LOG2   6
 # else  /* !(defined(_M_X64) || defined(_M_AMD64) || defined(_AMD64_)) */
@@ -29,7 +28,6 @@
 
 # define IS_LITTLE_ENDIAN 1
 # undef  IS_BIG_ENDIAN
-# define JS_BYTES_PER_DOUBLE 8
 # define JS_BYTES_PER_WORD   4
 # define JS_BITS_PER_WORD_LOG2   5
 
