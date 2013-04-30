@@ -849,11 +849,23 @@ MBinaryBitwiseInstruction::foldsTo(bool useValueNumbers)
     if (specialization_ != MIRType_Int32)
         return this;
 
-    MDefinition *lhs = getOperand(0);
-    MDefinition *rhs = getOperand(1);
-
     if (MDefinition *folded = EvaluateConstantOperands(this))
         return folded;
+
+    return this;
+}
+
+MDefinition *
+MBinaryBitwiseInstruction::foldUnnecessaryBitop()
+{
+    if (specialization_ != MIRType_Int32)
+        return this;
+
+    // Eliminate bitwise operations that are no-ops when used on integer
+    // inputs, such as (x | 0).
+
+    MDefinition *lhs = getOperand(0);
+    MDefinition *rhs = getOperand(1);
 
     if (IsConstant(lhs, 0))
         return foldIfZero(0);
@@ -867,7 +879,7 @@ MBinaryBitwiseInstruction::foldsTo(bool useValueNumbers)
     if (IsConstant(rhs, -1))
         return foldIfNegOne(1);
 
-    if (EqualValues(useValueNumbers, lhs, rhs))
+    if (EqualValues(false, lhs, rhs))
         return foldIfEqual();
 
     return this;

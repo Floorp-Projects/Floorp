@@ -2655,6 +2655,7 @@ class MBinaryBitwiseInstruction
     }
 
     MDefinition *foldsTo(bool useValueNumbers);
+    MDefinition *foldUnnecessaryBitop();
     virtual MDefinition *foldIfZero(size_t operand) = 0;
     virtual MDefinition *foldIfNegOne(size_t operand) = 0;
     virtual MDefinition *foldIfEqual()  = 0;
