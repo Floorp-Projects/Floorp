@@ -386,7 +386,7 @@ gc::MarkKind(JSTracer *trc, void **thingp, JSGCTraceKind kind)
         MarkInternal(trc, reinterpret_cast<RawObject *>(thingp));
         break;
       case JSTRACE_STRING:
-        MarkInternal(trc, reinterpret_cast<RawString *>(thingp));
+        MarkInternal(trc, reinterpret_cast<JSString **>(thingp));
         break;
       case JSTRACE_SCRIPT:
         MarkInternal(trc, reinterpret_cast<JSScript **>(thingp));
@@ -1495,7 +1495,7 @@ js::TraceChildren(JSTracer *trc, void *thing, JSGCTraceKind kind)
         break;
 
       case JSTRACE_STRING:
-        MarkChildren(trc, static_cast<RawString>(thing));
+        MarkChildren(trc, static_cast<JSString *>(thing));
         break;
 
       case JSTRACE_SCRIPT:

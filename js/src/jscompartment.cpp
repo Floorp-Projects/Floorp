@@ -206,7 +206,7 @@ JSCompartment::wrap(JSContext *cx, MutableHandleValue vp, HandleObject existingA
         return true;
 
     if (vp.isString()) {
-        RawString str = vp.toString();
+        JSString *str = vp.toString();
 
         /* If the string is already in this compartment, we are done. */
         if (str->zone() == zone())
@@ -281,7 +281,7 @@ JSCompartment::wrap(JSContext *cx, MutableHandleValue vp, HandleObject existingA
         if (!str)
             return false;
 
-        RawString wrapped = js_NewStringCopyN<CanGC>(cx, str->chars(), str->length());
+        JSString *wrapped = js_NewStringCopyN<CanGC>(cx, str->chars(), str->length());
         if (!wrapped)
             return false;
 

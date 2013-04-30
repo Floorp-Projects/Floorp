@@ -445,7 +445,7 @@ exn_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
 
         atom = cx->names().stack;
         if (str == atom) {
-            RawString stack = StackTraceToString(cx, priv);
+            JSString *stack = StackTraceToString(cx, priv);
             if (!stack)
                 return false;
 
@@ -669,7 +669,7 @@ exn_toString(JSContext *cx, unsigned argc, Value *vp)
     if (!sb.append(name) || !sb.append(": ") || !sb.append(message))
         return false;
 
-    RawString str = sb.finishString();
+    JSString *str = sb.finishString();
     if (!str)
         return false;
     args.rval().setString(str);
@@ -738,7 +738,7 @@ exn_toSource(JSContext *cx, unsigned argc, Value *vp)
         if (filename->empty() && !sb.append(", \"\""))
                 return false;
 
-        RawString linenumber = ToString<CanGC>(cx, linenoVal);
+        JSString *linenumber = ToString<CanGC>(cx, linenoVal);
         if (!linenumber)
             return false;
         if (!sb.append(", ") || !sb.append(linenumber))
@@ -748,7 +748,7 @@ exn_toSource(JSContext *cx, unsigned argc, Value *vp)
     if (!sb.append("))"))
         return false;
 
-    RawString str = sb.finishString();
+    JSString *str = sb.finishString();
     if (!str)
         return false;
     args.rval().setString(str);
@@ -1077,7 +1077,7 @@ js_ReportUncaughtException(JSContext *cx)
         }
 
         if (JS_GetProperty(cx, exnObject, filename_str, &roots[4])) {
-            RawString tmp = ToString<CanGC>(cx, roots[4]);
+            JSString *tmp = ToString<CanGC>(cx, roots[4]);
             if (tmp)
                 filename.encodeLatin1(cx, tmp);
         }

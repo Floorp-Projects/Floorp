@@ -21,13 +21,12 @@
 #include "js/CharacterEncoding.h"
 #include "js/RootingAPI.h"
 
-ForwardDeclareJS(String);
 class JSDependentString;
-class JSUndependedString;
 class JSExtensibleString;
 class JSExternalString;
-class JSStableString;
 class JSInlineString;
+class JSStableString;
+class JSString;
 class JSRope;
 
 namespace js {
