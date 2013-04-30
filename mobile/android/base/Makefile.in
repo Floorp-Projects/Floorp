@@ -8,7 +8,6 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/ipc/app/defs.mk
 
 DIST_FILES = package-name.txt
 
