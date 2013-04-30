@@ -15,7 +15,7 @@
 %define navbarTextboxCustomBorder border-color: rgba(0,0,0,.32);
 %define navbarLargeIcons #navigator-toolbox[iconsize=large] > #nav-bar
 %define forwardTransitionLength 150ms
-%define conditionalForwardWithUrlbar window:not([chromehidden~=toolbar]) #navigator-toolbox[iconsize=large] > :-moz-any(#nav-bar[currentset*="unified-back-forward-button,urlbar-container"],#nav-bar:not([currentset])) > #unified-back-forward-button
+%define conditionalForwardWithUrlbar window:not([chromehidden~=toolbar]) #navigator-toolbox[iconsize=large] > :-moz-any(#nav-bar[currentset*="unified-back-forward-button,urlbar-container"],#nav-bar:not([currentset])) > #nav-bar-customizationtarget > #unified-back-forward-button
 %define conditionalForwardWithUrlbarWidth 27
 
 %ifdef MOZ_OFFICIAL_BRANDING
