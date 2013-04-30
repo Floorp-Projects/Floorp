@@ -3117,11 +3117,11 @@ LookupResult(JSContext *cx, HandleObject obj, HandleObject obj2, HandleId id,
 
     if (!obj2->isNative()) {
         if (obj2->is<ProxyObject>()) {
-            AutoPropertyDescriptorRooter desc(cx);
+            Rooted<PropertyDescriptor> desc(cx);
             if (!Proxy::getPropertyDescriptor(cx, obj2, id, &desc, 0))
                 return false;
-            if (!(desc.attrs & JSPROP_SHARED)) {
-                vp.set(desc.value);
+            if (!desc.isShared()) {
+                vp.set(desc.value());
                 return true;
             }
         }
@@ -3595,7 +3595,7 @@ JS_DefineProperties(JSContext *cx, JSObject *objArg, const JSPropertySpec *ps)
 
 static bool
 GetPropertyDescriptorById(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
-                          bool own, PropertyDescriptor *desc)
+                          bool own, MutableHandle<PropertyDescriptor> desc)
 {
     RootedObject obj2(cx);
     RootedShape shape(cx);
@@ -3603,30 +3603,22 @@ GetPropertyDescriptorById(JSContext *cx, HandleObject obj, HandleId id, unsigned
     if (!LookupPropertyById(cx, obj, id, flags, &obj2, &shape))
         return false;
 
-    if (!shape || (own && obj != obj2)) {
-        desc->obj = NULL;
-        desc->attrs = 0;
-        desc->getter = NULL;
-        desc->setter = NULL;
-        desc->value.setUndefined();
+    JS_ASSERT(desc.isClear());
+    if (!shape || (own && obj != obj2))
         return true;
-    }
 
-    desc->obj = obj2;
+    desc.object().set(obj2);
     if (obj2->isNative()) {
         if (IsImplicitDenseElement(shape)) {
-            desc->attrs = JSPROP_ENUMERATE;
-            desc->getter = NULL;
-            desc->setter = NULL;
-            desc->value = obj2->getDenseElement(JSID_TO_INT(id));
+            desc.setEnumerable();
+            desc.value().set(obj2->getDenseElement(JSID_TO_INT(id)));
         } else {
-            desc->attrs = shape->attributes();
-            desc->getter = shape->getter();
-            desc->setter = shape->setter();
+            desc.setAttributes(shape->attributes());
+            desc.setGetter(shape->getter());
+            desc.setSetter(shape->setter());
+            JS_ASSERT(desc.value().isUndefined());
             if (shape->hasSlot())
-                desc->value = obj2->nativeGetSlot(shape->slot());
-            else
-                desc->value.setUndefined();
+                desc.value().set(obj2->nativeGetSlot(shape->slot()));
         }
     } else {
         if (obj2->is<ProxyObject>()) {
@@ -3635,11 +3627,11 @@ GetPropertyDescriptorById(JSContext *cx, HandleObject obj, HandleId id, unsigned
                    ? Proxy::getOwnPropertyDescriptor(cx, obj2, id, desc, 0)
                    : Proxy::getPropertyDescriptor(cx, obj2, id, desc, 0);
         }
-        if (!JSObject::getGenericAttributes(cx, obj2, id, &desc->attrs))
+        if (!JSObject::getGenericAttributes(cx, obj2, id, &desc.attributesRef()))
             return false;
-        desc->getter = NULL;
-        desc->setter = NULL;
-        desc->value.setUndefined();
+        JS_ASSERT(desc.getter() == NULL);
+        JS_ASSERT(desc.setter() == NULL);
+        JS_ASSERT(desc.value().isUndefined());
     }
     return true;
 }
@@ -3650,7 +3642,7 @@ JS_GetPropertyDescriptorById(JSContext *cx, JSObject *objArg, jsid idArg, unsign
 {
     RootedObject obj(cx, objArg);
     RootedId id(cx, idArg);
-    AutoPropertyDescriptorRooter desc(cx);
+    Rooted<PropertyDescriptor> desc(cx);
     if (!GetPropertyDescriptorById(cx, obj, id, flags, false, &desc))
         return false;
     *desc_ = desc;
@@ -3664,16 +3656,16 @@ JS_GetPropertyAttrsGetterAndSetterById(JSContext *cx, JSObject *objArg, jsid idA
 {
     RootedObject obj(cx, objArg);
     RootedId id(cx, idArg);
-    AutoPropertyDescriptorRooter desc(cx);
+    Rooted<PropertyDescriptor> desc(cx);
     if (!GetPropertyDescriptorById(cx, obj, id, 0, false, &desc))
         return false;
 
-    *attrsp = desc.attrs;
-    *foundp = (desc.obj != NULL);
+    *attrsp = desc.attributes();
+    *foundp = !!desc.object();
     if (getterp)
-        *getterp = desc.getter;
+        *getterp = desc.getter();
     if (setterp)
-        *setterp = desc.setter;
+        *setterp = desc.setter();
     return true;
 }
 

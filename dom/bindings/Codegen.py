@@ -6930,7 +6930,8 @@ class CGResolveOwnProperty(CGAbstractStaticMethod):
                 Argument('JS::Handle<JSObject*>', 'wrapper'),
                 Argument('JS::Handle<JSObject*>', 'obj'),
                 Argument('JS::Handle<jsid>', 'id'),
-                Argument('JSPropertyDescriptor*', 'desc'), Argument('unsigned', 'flags'),
+                Argument('JS::MutableHandle<JSPropertyDescriptor>', 'desc'),
+                Argument('unsigned', 'flags'),
                 ]
         CGAbstractStaticMethod.__init__(self, descriptor, "ResolveOwnProperty",
                                         "bool", args)
@@ -6948,7 +6949,8 @@ class CGResolveOwnPropertyViaNewresolve(CGAbstractBindingMethod):
                 Argument('JS::Handle<JSObject*>', 'wrapper'),
                 Argument('JS::Handle<JSObject*>', 'obj'),
                 Argument('JS::Handle<jsid>', 'id'),
-                Argument('JSPropertyDescriptor*', 'desc'), Argument('unsigned', 'flags'),
+                Argument('JS::MutableHandle<JSPropertyDescriptor>', 'desc'),
+                Argument('unsigned', 'flags'),
                 ]
         CGAbstractBindingMethod.__init__(self, descriptor,
                                          "ResolveOwnPropertyViaNewresolve",
@@ -7076,8 +7078,8 @@ class CGProxySpecialOperation(CGPerSignatureCall):
             templateValues = {
                 "declName": argument.identifier.name,
                 "holderName": argument.identifier.name + "_holder",
-                "val" : "JS::Handle<JS::Value>::fromMarkedLocation(&desc->value)",
-                "mutableVal" : "JS::MutableHandle<JS::Value>::fromMarkedLocation(&desc->value)",
+                "val": "desc.value()",
+                "mutableVal" : "desc.value()",
                 "obj": "obj"
             }
             self.cgRoot.prepend(instantiateJSToNativeConversion(info, templateValues))
@@ -7282,7 +7284,8 @@ class CGDOMJSProxyHandler_getOwnPropertyDescriptor(ClassMethod):
     def __init__(self, descriptor):
         args = [Argument('JSContext*', 'cx'), Argument('JS::Handle<JSObject*>', 'proxy'),
                 Argument('JS::Handle<jsid>', 'id'),
-                Argument('JSPropertyDescriptor*', 'desc'), Argument('unsigned', 'flags')]
+                Argument('JS::MutableHandle<JSPropertyDescriptor>', 'desc'),
+                Argument('unsigned', 'flags')]
         ClassMethod.__init__(self, "getOwnPropertyDescriptor", "bool", args)
         self.descriptor = descriptor
     def getBody(self):
@@ -7294,23 +7297,22 @@ class CGDOMJSProxyHandler_getOwnPropertyDescriptor(ClassMethod):
             setOrIndexedGet += "int32_t index = GetArrayIndexFromId(cx, id);\n"
             readonly = toStringBool(indexedSetter is None)
             fillDescriptor = "FillPropertyDescriptor(desc, proxy, %s);\nreturn true;" % readonly
-            templateValues = {'jsvalRef': 'JS::MutableHandle<JS::Value>::fromMarkedLocation(&desc->value)',
-                              'jsvalHandle': 'JS::MutableHandle<JS::Value>::fromMarkedLocation(&desc->value)',
+            templateValues = {'jsvalRef': 'desc.value()', 'jsvalHandle': 'desc.value()',
                               'obj': 'proxy', 'successCode': fillDescriptor}
             get = ("if (IsArrayIndex(index)) {\n" +
                    CGIndenter(CGProxyIndexedGetter(self.descriptor, templateValues)).define() + "\n" +
                    "}\n") % (self.descriptor.nativeType)
 
         if UseHolderForUnforgeable(self.descriptor):
-            getUnforgeable = """if (!JS_GetPropertyDescriptorById(cx, ${holder}, id, flags, desc)) {
+            getUnforgeable = """if (!JS_GetPropertyDescriptorById(cx, ${holder}, id, flags, desc.address())) {
   return false;
 }
-MOZ_ASSERT_IF(desc->obj, desc->obj == ${holder});"""
+MOZ_ASSERT_IF(desc.object(), desc.object() == ${holder});"""
             getUnforgeable = CallOnUnforgeableHolder(self.descriptor,
                                                      getUnforgeable, "isXray")
-            getUnforgeable += """if (desc->obj) {
-  desc->obj = proxy;
-  return !isXray || JS_WrapPropertyDescriptor(cx, desc);
+            getUnforgeable += """if (desc.object()) {
+  desc.object().set(proxy);
+  return !isXray || JS_WrapPropertyDescriptor(cx, desc.address());
 }
 
 """
@@ -7362,8 +7364,7 @@ MOZ_ASSERT_IF(desc->obj, desc->obj == ${holder});"""
         if self.descriptor.supportsNamedProperties():
             readonly = toStringBool(self.descriptor.operations['NamedSetter'] is None)
             fillDescriptor = "FillPropertyDescriptor(desc, proxy, %s);\nreturn true;" % readonly
-            templateValues = {'jsvalRef': 'JS::MutableHandle<JS::Value>::fromMarkedLocation(&desc->value)',
-                              'jsvalHandle': 'JS::MutableHandle<JS::Value>::fromMarkedLocation(&desc->value)',
+            templateValues = {'jsvalRef': 'desc.value()', 'jsvalHandle': 'desc.value()',
                               'obj': 'proxy', 'successCode': fillDescriptor}
             condition = "!HasPropertyOnPrototype(cx, proxy, this, id)"
             if self.descriptor.interface.getExtendedAttribute('OverrideBuiltins'):
@@ -7380,24 +7381,25 @@ MOZ_ASSERT_IF(desc->obj, desc->obj == ${holder});"""
 
         return setOrIndexedGet + """JS::Rooted<JSObject*> expando(cx);
 if (!isXray && (expando = GetExpandoObject(proxy))) {
-  if (!JS_GetPropertyDescriptorById(cx, expando, id, flags, desc)) {
+  if (!JS_GetPropertyDescriptorById(cx, expando, id, flags, desc.address())) {
     return false;
   }
-  if (desc->obj) {
+  if (desc.object()) {
     // Pretend the property lives on the wrapper.
-    desc->obj = proxy;
+    desc.object().set(proxy);
     return true;
   }
 }
 """ + namedGet + """
-desc->obj = nullptr;
+desc.object().set(nullptr);
 return true;"""
 
 class CGDOMJSProxyHandler_defineProperty(ClassMethod):
     def __init__(self, descriptor):
         args = [Argument('JSContext*', 'cx'), Argument('JS::Handle<JSObject*>', 'proxy'),
                 Argument('JS::Handle<jsid>', 'id'),
-                Argument('JSPropertyDescriptor*', 'desc'), Argument('bool*', 'defined')]
+                Argument('JS::MutableHandle<JSPropertyDescriptor>', 'desc'),
+                Argument('bool*', 'defined')]
         ClassMethod.__init__(self, "defineProperty", "bool", args, virtual=True, override=True)
         self.descriptor = descriptor
     def getBody(self):
@@ -7429,7 +7431,7 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
                                    "if (hasUnforgeable) {\n"
                                    "  *defined = true;" +
                                    "  bool unused;\n"
-                                   "  return js_DefineOwnProperty(cx, ${holder}, id, *desc, &unused);\n"
+                                   "  return js_DefineOwnProperty(cx, ${holder}, id, desc, &unused);\n"
                                    "}\n")
             set += CallOnUnforgeableHolder(self.descriptor,
                                            defineOnUnforgeable,

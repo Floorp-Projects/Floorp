@@ -38,15 +38,15 @@ public:
 
   bool preventExtensions(JSContext *cx, JS::Handle<JSObject*> proxy) MOZ_OVERRIDE;
   bool getPropertyDescriptor(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
-                            JSPropertyDescriptor* desc, unsigned flags) MOZ_OVERRIDE;
+                             JS::MutableHandle<JSPropertyDescriptor> desc, unsigned flags) MOZ_OVERRIDE;
   bool defineProperty(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
-                      JSPropertyDescriptor* desc) MOZ_OVERRIDE
+                      JS::MutableHandle<JSPropertyDescriptor> desc) MOZ_OVERRIDE
   {
     bool unused;
     return defineProperty(cx, proxy, id, desc, &unused);
   }
   virtual bool defineProperty(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
-                              JSPropertyDescriptor* desc, bool* defined);
+                              JS::MutableHandle<JSPropertyDescriptor> desc, bool* defined);
   bool delete_(JSContext* cx, JS::Handle<JSObject*> proxy,
                JS::Handle<jsid> id, bool* bp) MOZ_OVERRIDE;
   bool enumerate(JSContext* cx, JS::Handle<JSObject*> proxy, JS::AutoIdVector& props) MOZ_OVERRIDE;
@@ -123,19 +123,20 @@ IsArrayIndex(int32_t index)
 }
 
 inline void
-FillPropertyDescriptor(JSPropertyDescriptor* desc, JSObject* obj, bool readonly)
+FillPropertyDescriptor(JS::MutableHandle<JSPropertyDescriptor> desc, JSObject* obj, bool readonly)
 {
-  desc->obj = obj;
-  desc->attrs = (readonly ? JSPROP_READONLY : 0) | JSPROP_ENUMERATE;
-  desc->getter = NULL;
-  desc->setter = NULL;
-  desc->shortid = 0;
+  desc.object().set(obj);
+  desc.setAttributes((readonly ? JSPROP_READONLY : 0) | JSPROP_ENUMERATE);
+  desc.setGetter(nullptr);
+  desc.setSetter(nullptr);
+  desc.setShortId(0);
 }
 
 inline void
-FillPropertyDescriptor(JSPropertyDescriptor* desc, JSObject* obj, JS::Value v, bool readonly)
+FillPropertyDescriptor(JS::MutableHandle<JSPropertyDescriptor> desc, JSObject* obj, JS::Value v,
+                       bool readonly)
 {
-  desc->value = v;
+  desc.value().set(v);
   FillPropertyDescriptor(desc, obj, readonly);
 }
 

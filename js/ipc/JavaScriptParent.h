@@ -34,11 +34,11 @@ class JavaScriptParent
     // (The traps should be in the same order like js/src/jsproxy.h)
     bool preventExtensions(JSContext *cx, JS::HandleObject proxy);
     bool getPropertyDescriptor(JSContext *cx, JS::HandleObject proxy, JS::HandleId id,
-                               JSPropertyDescriptor *desc, unsigned flags);
+                               JS::MutableHandle<JSPropertyDescriptor> desc, unsigned flags);
     bool getOwnPropertyDescriptor(JSContext *cx, JS::HandleObject proxy, JS::HandleId id,
-                                  JSPropertyDescriptor *desc, unsigned flags);
+                                  JS::MutableHandle<JSPropertyDescriptor> desc, unsigned flags);
     bool defineProperty(JSContext *cx, JS::HandleObject proxy, JS::HandleId id,
-                        JSPropertyDescriptor *desc);
+                        JS::MutableHandle<JSPropertyDescriptor> desc);
     bool getOwnPropertyNames(JSContext *cx, JS::HandleObject proxy, js::AutoIdVector &props);
     bool delete_(JSContext *cx, JS::HandleObject proxy, JS::HandleId id, bool *bp);
     bool enumerate(JSContext *cx, JS::HandleObject proxy, js::AutoIdVector &props);

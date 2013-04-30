@@ -161,12 +161,12 @@ DOMProxyHandler::preventExtensions(JSContext *cx, JS::Handle<JSObject*> proxy)
 
 bool
 DOMProxyHandler::getPropertyDescriptor(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
-                                       JSPropertyDescriptor* desc, unsigned flags)
+                                       MutableHandle<JSPropertyDescriptor> desc, unsigned flags)
 {
   if (!getOwnPropertyDescriptor(cx, proxy, id, desc, flags)) {
     return false;
   }
-  if (desc->obj) {
+  if (desc.object()) {
     return true;
   }
 
@@ -175,18 +175,18 @@ DOMProxyHandler::getPropertyDescriptor(JSContext* cx, JS::Handle<JSObject*> prox
     return false;
   }
   if (!proto) {
-    desc->obj = NULL;
+    desc.object().set(nullptr);
     return true;
   }
 
-  return JS_GetPropertyDescriptorById(cx, proto, id, 0, desc);
+  return JS_GetPropertyDescriptorById(cx, proto, id, 0, desc.address());
 }
 
 bool
 DOMProxyHandler::defineProperty(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
-                                JSPropertyDescriptor* desc, bool* defined)
+                                MutableHandle<JSPropertyDescriptor> desc, bool* defined)
 {
-  if ((desc->attrs & JSPROP_GETTER) && desc->setter == JS_StrictPropertyStub) {
+  if (desc.hasGetterObject() && desc.setter() == JS_StrictPropertyStub) {
     return JS_ReportErrorFlagsAndNumber(cx,
                                         JSREPORT_WARNING | JSREPORT_STRICT |
                                         JSREPORT_STRICT_MODE_ERROR,
@@ -204,7 +204,7 @@ DOMProxyHandler::defineProperty(JSContext* cx, JS::Handle<JSObject*> proxy, JS::
   }
 
   bool dummy;
-  return js_DefineOwnProperty(cx, expando, id, *desc, &dummy);
+  return js_DefineOwnProperty(cx, expando, id, desc, &dummy);
 }
 
 bool

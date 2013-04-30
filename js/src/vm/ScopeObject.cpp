@@ -1374,14 +1374,16 @@ class DebugScopeProxy : public BaseProxyHandler
         return false;
     }
 
-    bool getPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id, PropertyDescriptor *desc,
+    bool getPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
+                               MutableHandle<PropertyDescriptor> desc,
                                unsigned flags) MOZ_OVERRIDE
     {
         return getOwnPropertyDescriptor(cx, proxy, id, desc, flags);
     }
 
     bool getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
-                                  PropertyDescriptor *desc, unsigned flags) MOZ_OVERRIDE
+                                  MutableHandle<PropertyDescriptor> desc,
+                                  unsigned flags) MOZ_OVERRIDE
     {
         Rooted<DebugScopeObject*> debugScope(cx, &proxy->as<DebugScopeObject>());
         Rooted<ScopeObject*> scope(cx, &debugScope->scope());
@@ -1391,23 +1393,27 @@ class DebugScopeProxy : public BaseProxyHandler
             return false;
 
         if (maybeArgsObj) {
-            PodZero(desc);
-            desc->obj = debugScope;
-            desc->attrs = JSPROP_READONLY | JSPROP_ENUMERATE | JSPROP_PERMANENT;
-            desc->value = ObjectValue(*maybeArgsObj);
+            desc.object().set(debugScope);
+            desc.setAttributes(JSPROP_READONLY | JSPROP_ENUMERATE | JSPROP_PERMANENT);
+            desc.value().setObject(*maybeArgsObj);
+            desc.setShortId(0);
+            desc.setGetter(NULL);
+            desc.setSetter(NULL);
             return true;
         }
 
         RootedValue v(cx);
         if (handleUnaliasedAccess(cx, debugScope, scope, id, GET, &v)) {
-            PodZero(desc);
-            desc->obj = debugScope;
-            desc->attrs = JSPROP_READONLY | JSPROP_ENUMERATE | JSPROP_PERMANENT;
-            desc->value = v;
+            desc.object().set(debugScope);
+            desc.setAttributes(JSPROP_READONLY | JSPROP_ENUMERATE | JSPROP_PERMANENT);
+            desc.value().set(v);
+            desc.setShortId(0);
+            desc.setGetter(NULL);
+            desc.setSetter(NULL);
             return true;
         }
 
-        return JS_GetPropertyDescriptorById(cx, scope, id, 0, desc);
+        return JS_GetPropertyDescriptorById(cx, scope, id, 0, desc.address());
     }
 
     bool get(JSContext *cx, HandleObject proxy, HandleObject receiver,  HandleId id,
@@ -1442,7 +1448,7 @@ class DebugScopeProxy : public BaseProxyHandler
     }
 
     bool defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
-                        PropertyDescriptor *desc) MOZ_OVERRIDE
+                        MutableHandle<PropertyDescriptor> desc) MOZ_OVERRIDE
     {
         Rooted<ScopeObject*> scope(cx, &proxy->as<DebugScopeObject>().scope());
 
@@ -1452,8 +1458,8 @@ class DebugScopeProxy : public BaseProxyHandler
         if (found)
             return Throw(cx, id, JSMSG_CANT_REDEFINE_PROP);
 
-        return JS_DefinePropertyById(cx, scope, id, desc->value, desc->getter, desc->setter,
-                                     desc->attrs);
+        return JS_DefinePropertyById(cx, scope, id, desc.value(), desc.getter(), desc.setter(),
+                                     desc.attributes());
     }
 
     bool getScopePropertyNames(JSContext *cx, HandleObject proxy, AutoIdVector &props,

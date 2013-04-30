@@ -243,9 +243,12 @@ JS_SetCompartmentPrincipals(JSCompartment *compartment, JSPrincipals *principals
 }
 
 JS_FRIEND_API(bool)
-JS_WrapPropertyDescriptor(JSContext *cx, js::PropertyDescriptor *desc)
+JS_WrapPropertyDescriptor(JSContext *cx, js::PropertyDescriptor *descArg)
 {
-    return cx->compartment()->wrap(cx, desc);
+    Rooted<PropertyDescriptor> desc(cx, *descArg);
+    bool status = cx->compartment()->wrap(cx, &desc);
+    *descArg = desc;
+    return status;
 }
 
 JS_FRIEND_API(bool)
@@ -1104,17 +1107,18 @@ js::GetObjectMetadata(JSObject *obj)
 
 JS_FRIEND_API(bool)
 js_DefineOwnProperty(JSContext *cx, JSObject *objArg, jsid idArg,
-                     const js::PropertyDescriptor& descriptor, bool *bp)
+                     const js::PropertyDescriptor& descriptorArg, bool *bp)
 {
     RootedObject obj(cx, objArg);
     RootedId id(cx, idArg);
+    Rooted<PropertyDescriptor> descriptor(cx, descriptorArg);
     JS_ASSERT(cx->runtime()->heapState == js::Idle);
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj, id, descriptor.value);
-    if (descriptor.attrs & JSPROP_GETTER)
-        assertSameCompartment(cx, CastAsObjectJsval(descriptor.getter));
-    if (descriptor.attrs & JSPROP_SETTER)
-        assertSameCompartment(cx, CastAsObjectJsval(descriptor.setter));
+    assertSameCompartment(cx, obj, id, descriptor.value());
+    if (descriptor.hasGetterObject())
+        assertSameCompartment(cx, descriptor.getterObject());
+    if (descriptor.hasSetterObject())
+        assertSameCompartment(cx, descriptor.setterObject());
 
     return DefineOwnProperty(cx, HandleObject(obj), id, descriptor, bp);
 }
