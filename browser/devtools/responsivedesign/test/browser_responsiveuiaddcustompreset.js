@@ -79,6 +79,9 @@ function test() {
     info("waiting for responsive mode to turn off");
     mgr.once("off", restart);
 
+    // Force document reflow to avoid intermittent failures.
+    info("document height " + document.height);
+
     // We're still in the loop of initializing the responsive mode.
     // Let's wait next loop to stop it.
     executeSoon(function() {

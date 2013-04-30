@@ -18,6 +18,8 @@ var Appbar = {
     window.addEventListener('MozContextActionsChange', this, false);
     Elements.browsers.addEventListener('URLChanged', this, true);
     Elements.tabList.addEventListener('TabSelect', this, true);
+    Elements.panelUI.addEventListener('ToolPanelShown', this, false);
+    Elements.panelUI.addEventListener('ToolPanelHidden', this, false);
 
     this._updateDebugButtons();
     this._updateZoomButtons();
@@ -30,6 +32,8 @@ var Appbar = {
     switch (aEvent.type) {
       case 'URLChanged':
       case 'TabSelect':
+      case 'ToolPanelShown':
+      case 'ToolPanelHidden':
         this.appbar.dismiss();
         break;
       case 'MozAppbarShowing':

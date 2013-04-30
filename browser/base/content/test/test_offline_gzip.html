@@ -96,21 +96,17 @@ function handleMessageEvents(event) {
 }
 
 function loaded() {
-  // Click the notification bar's "Allow" button.  This should kick
+  // Click the notification panel's "Allow" button.  This should kick
   // off updates, which will eventually lead to getting messages from
   // the iframe.
   var wm = SpecialPowers.Cc["@mozilla.org/appshell/window-mediator;1"].
            getService(SpecialPowers.Ci.nsIWindowMediator);
   var win = wm.getMostRecentWindow("navigator:browser");
-  var notificationBox = win.gBrowser.getNotificationBox();
-
-  var notification = notificationBox
-    .getNotificationWithValue("offline-app-requested-mochi.test");
-  notification.childNodes[0].click();
+  var panel = win.PopupNotifications.panel;
+  panel.firstElementChild.button.click();
 }
 
 </script>
 </pre>
 </body>
 </html>
-

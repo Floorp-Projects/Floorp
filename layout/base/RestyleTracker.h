@@ -173,9 +173,8 @@ class RestyleTracker {
 public:
   typedef mozilla::dom::Element Element;
 
-  RestyleTracker(uint32_t aRestyleBits,
-                 nsCSSFrameConstructor* aFrameConstructor) :
-    mRestyleBits(aRestyleBits), mFrameConstructor(aFrameConstructor),
+  RestyleTracker(uint32_t aRestyleBits) :
+    mRestyleBits(aRestyleBits),
     mHaveLaterSiblingRestyles(false)
   {
     NS_PRECONDITION((mRestyleBits & ~ELEMENT_ALL_RESTYLE_FLAGS) == 0,
@@ -192,7 +191,8 @@ public:
                     "Shouldn't have both root flags");
   }
 
-  void Init() {
+  void Init(nsCSSFrameConstructor* aFrameConstructor) {
+    mFrameConstructor = aFrameConstructor;
     mPendingRestyles.Init();
   }
 

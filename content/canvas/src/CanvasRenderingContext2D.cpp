@@ -790,9 +790,12 @@ CanvasRenderingContext2D::EnsureTarget()
      if (layerManager) {
 #ifdef USE_SKIA_GPU
        if (gfxPlatform::GetPlatform()->UseAcceleratedSkiaCanvas()) {
+         SurfaceCaps caps = SurfaceCaps::ForRGBA();
+         caps.preserve = true;
+
          mGLContext = mozilla::gl::GLContextProvider::CreateOffscreen(gfxIntSize(size.width,
                                                                                  size.height),
-                                                                      SurfaceCaps::ForRGBA(),
+                                                                      caps,
                                                                       mozilla::gl::GLContext::ContextFlagsNone);
          mTarget = gfxPlatform::GetPlatform()->CreateDrawTargetForFBO(0, mGLContext, size, format);
        } else

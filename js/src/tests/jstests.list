@@ -4,7 +4,6 @@
 skip-if(!this.hasOwnProperty("Intl")) include test402/jstests.list # Intl is not enabled in all builds
 skip include test402/lib/jstests.list # include files
 
-skip script test402/ch09/9.2/9.2.8_4.js # bug 853702
 skip script test402/ch10/10.1/10.1.1_a.js # bug 854320
 skip script test402/ch10/10.1/10.1.1_13.js # bug 853704
 skip script test402/ch10/10.1/10.1.1_19_c.js # bug 853704

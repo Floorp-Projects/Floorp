@@ -9,7 +9,7 @@
                 android:layout_margin="12dip"
                 android:paddingTop="2dip"
                 android:paddingLeft="4dip"
-                android:background="@drawable/tabs_count"
+                android:background="@drawable/tabs_count_foreground"
                 android:textAppearance="@style/TextAppearance.Micro"
                 android:textColor="#FF43484E"
                 android:textStyle="bold"

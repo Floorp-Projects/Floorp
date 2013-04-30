@@ -1,2 +1,3 @@
 // Don't crash.
-ParallelArray(7, function ([y]) {})
+if (getBuildConfiguration().parallelJS)
+  ParallelArray(7, function ([y]) {})

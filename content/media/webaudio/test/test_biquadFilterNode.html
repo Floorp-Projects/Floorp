@@ -36,19 +36,26 @@ addLoadEvent(function() {
   filter.connect(destination);
 
   // Verify default values
-  is(filter.type, 0, "Correct default value for type");
+  is(filter.type, "lowpass", "Correct default value for type");
   near(filter.frequency.defaultValue, 350, "Correct default value for filter frequency");
+  near(filter.detune.defaultValue, 0, "Correct default value for filter detune");
   near(filter.Q.defaultValue, 1, "Correct default value for filter Q");
   near(filter.gain.defaultValue, 0, "Correct default value for filter gain");
 
   // Make sure that we can set all of the valid type values
-  for (var i = 0; i <= 7; ++i) {
-    filter.type = i;
+  var types = [
+    "lowpass",
+    "highpass",
+    "bandpass",
+    "lowshelf",
+    "highshelf",
+    "peaking",
+    "notch",
+    "allpass",
+  ];
+  for (var i = 0; i < types.length; ++i) {
+    filter.type = types[i];
   }
-
-  expectException(function() {
-    filter.type = 8;
-  }, DOMException.INDEX_SIZE_ERR);
 
   source.start(0);
   SimpleTest.executeSoon(function() {

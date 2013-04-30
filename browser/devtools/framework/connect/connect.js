@@ -9,10 +9,10 @@
 const Cu = Components.utils;
 Cu.import("resource:///modules/devtools/Target.jsm");
 Cu.import("resource:///modules/devtools/Toolbox.jsm");
-Cu.import("resource:///modules/devtools/gDevTools.jsm");
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
+let {devtools, gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
 
 let gClient;
 let gConnectionTimeout;
@@ -169,8 +169,8 @@ function openToolbox(form, chrome=false) {
     client: gClient,
     chrome: chrome
   };
-  TargetFactory.forRemoteTab(options).then((target) => {
-    gDevTools.showToolbox(target, "webconsole", Toolbox.HostType.WINDOW);
+  devtools.TargetFactory.forRemoteTab(options).then((target) => {
+    gDevTools.showToolbox(target, "webconsole", devtools.Toolbox.HostType.WINDOW);
     window.close();
   });
 }
