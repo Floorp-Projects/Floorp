@@ -825,7 +825,6 @@ class CompilerRootNode
 }  /* namespace js */
 
 ForwardDeclareJS(Script);
-ForwardDeclareJS(Function);
 ForwardDeclareJS(Object);
 
 #endif  /* jsgc_root_h___ */

@@ -82,7 +82,7 @@ SPSProfiler::enable(bool enabled)
 
 /* Lookup the string for the function/script, creating one if necessary */
 const char*
-SPSProfiler::profileString(JSContext *cx, RawScript script, RawFunction maybeFun)
+SPSProfiler::profileString(JSContext *cx, RawScript script, JSFunction *maybeFun)
 {
     JS_ASSERT(strings.initialized());
     ProfileStringMap::AddPtr s = strings.lookupForAdd(script);
@@ -118,7 +118,7 @@ SPSProfiler::onScriptFinalized(RawScript script)
 }
 
 bool
-SPSProfiler::enter(JSContext *cx, RawScript script, RawFunction maybeFun)
+SPSProfiler::enter(JSContext *cx, RawScript script, JSFunction *maybeFun)
 {
     const char *str = profileString(cx, script, maybeFun);
     if (str == NULL)
@@ -131,7 +131,7 @@ SPSProfiler::enter(JSContext *cx, RawScript script, RawFunction maybeFun)
 }
 
 void
-SPSProfiler::exit(JSContext *cx, RawScript script, RawFunction maybeFun)
+SPSProfiler::exit(JSContext *cx, RawScript script, JSFunction *maybeFun)
 {
     pop();
 
@@ -214,7 +214,7 @@ SPSProfiler::pop()
  * AddPtr held while invoking allocProfileString.
  */
 const char*
-SPSProfiler::allocProfileString(JSContext *cx, RawScript script, RawFunction maybeFun)
+SPSProfiler::allocProfileString(JSContext *cx, RawScript script, JSFunction *maybeFun)
 {
     DebugOnly<uint64_t> gcBefore = cx->runtime->gcNumber;
     StringBuffer buf(cx);

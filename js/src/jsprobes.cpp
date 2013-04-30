@@ -89,7 +89,7 @@ ScriptFilename(const RawScript script)
 }
 
 static const char *
-FunctionName(JSContext *cx, RawFunction fun, JSAutoByteString* bytes)
+FunctionName(JSContext *cx, JSFunction *fun, JSAutoByteString* bytes)
 {
     if (!fun)
         return Probes::nullName;
@@ -106,7 +106,7 @@ FunctionName(JSContext *cx, RawFunction fun, JSAutoByteString* bytes)
  * a number of usually unused lines of code would cause.
  */
 void
-Probes::DTraceEnterJSFun(JSContext *cx, RawFunction fun, RawScript script)
+Probes::DTraceEnterJSFun(JSContext *cx, JSFunction *fun, RawScript script)
 {
     JSAutoByteString funNameBytes;
     JAVASCRIPT_FUNCTION_ENTRY(ScriptFilename(script), Probes::nullName,
@@ -114,7 +114,7 @@ Probes::DTraceEnterJSFun(JSContext *cx, RawFunction fun, RawScript script)
 }
 
 void
-Probes::DTraceExitJSFun(JSContext *cx, RawFunction fun, RawScript script)
+Probes::DTraceExitJSFun(JSContext *cx, JSFunction *fun, RawScript script)
 {
     JSAutoByteString funNameBytes;
     JAVASCRIPT_FUNCTION_RETURN(ScriptFilename(script), Probes::nullName,

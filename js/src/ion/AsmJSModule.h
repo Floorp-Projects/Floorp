@@ -434,7 +434,7 @@ class AsmJSModule
         return functionCounts_.append(counts);
     }
 
-    bool addExportedFunction(RawFunction fun, PropertyName *maybeFieldName,
+    bool addExportedFunction(JSFunction *fun, PropertyName *maybeFieldName,
                              MoveRef<ArgCoercionVector> argCoercions, ReturnType returnType)
     {
         ExportedFunction func(fun, maybeFieldName, argCoercions, returnType);

@@ -5073,7 +5073,7 @@ JS_DefineFunctions(JSContext *cx, JSObject *objArg, const JSFunctionSpec *fs)
                     return JS_FALSE;
                 }
             } else {
-                RawFunction fun = DefineFunction(cx, obj, id, /* native = */ NULL, fs->nargs, 0,
+                JSFunction *fun = DefineFunction(cx, obj, id, /* native = */ NULL, fs->nargs, 0,
                                                  JSFunction::ExtendedFinalizeKind, SingletonObject);
                 if (!fun)
                     return JS_FALSE;

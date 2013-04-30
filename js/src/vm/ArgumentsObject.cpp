@@ -68,7 +68,7 @@ ArgumentsObject::MaybeForwardToCallObject(AbstractFramePtr frame, JSObject *obj,
 ArgumentsObject::MaybeForwardToCallObject(ion::IonJSFrameLayout *frame, HandleObject callObj,
                                           JSObject *obj, ArgumentsData *data)
 {
-    RawFunction callee = ion::CalleeTokenToFunction(frame->calleeToken());
+    JSFunction *callee = ion::CalleeTokenToFunction(frame->calleeToken());
     RawScript script = callee->nonLazyScript();
     if (callee->isHeavyweight() && script->argsObjAliasesFormals()) {
         JS_ASSERT(callObj && callObj->isCall());
