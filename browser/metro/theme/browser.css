@@ -114,6 +114,9 @@
   -moz-image-region: rect(73px 196px 121px 152px) !important;
 }
 
+#tabs-container[viewstate="snapped"] {
+  visibility: hidden;
+}
 
 @-moz-keyframes open-documenttab {
   0% {
