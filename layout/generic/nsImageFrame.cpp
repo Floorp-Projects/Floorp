@@ -1734,23 +1734,10 @@ nsImageFrame::GetFrameName(nsAString& aResult) const
   return MakeFrameName(NS_LITERAL_STRING("ImageFrame"), aResult);
 }
 
-NS_IMETHODIMP
+void
 nsImageFrame::List(FILE* out, int32_t aIndent, uint32_t aFlags) const
 {
-  IndentBy(out, aIndent);
-  ListTag(out);
-#ifdef DEBUG_waterson
-  fprintf(out, " [parent=%p]", mParent);
-#endif
-  if (HasView()) {
-    fprintf(out, " [view=%p]", (void*)GetView());
-  }
-  fprintf(out, " {%d,%d,%d,%d}", mRect.x, mRect.y, mRect.width, mRect.height);
-  if (0 != mState) {
-    fprintf(out, " [state=%016llx]", (unsigned long long)mState);
-  }
-  fprintf(out, " [content=%p]", (void*)mContent);
-  fprintf(out, " [sc=%p]", static_cast<void*>(mStyleContext));
+  ListGeneric(out, aIndent, aFlags);
 
   // output the img src url
   nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mContent);
@@ -1767,7 +1754,6 @@ nsImageFrame::List(FILE* out, int32_t aIndent, uint32_t aFlags) const
     }
   }
   fputs("\n", out);
-  return NS_OK;
 }
 #endif
 

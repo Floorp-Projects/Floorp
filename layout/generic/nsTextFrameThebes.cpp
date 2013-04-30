@@ -8324,61 +8324,22 @@ nsTextFrame::GetDebugStateBits() const
     ~(TEXT_WHITESPACE_FLAGS | TEXT_REFLOW_FLAGS);
 }
 
-NS_IMETHODIMP
+void
 nsTextFrame::List(FILE* out, int32_t aIndent, uint32_t aFlags) const
 {
-  // Output the tag
-  IndentBy(out, aIndent);
-  ListTag(out);
-  if (HasView()) {
-    fprintf(out, " [view=%p]", static_cast<void*>(GetView()));
-  }
+  ListGeneric(out, aIndent, aFlags);
+
   fprintf(out, " [run=%p]", static_cast<void*>(mTextRun));
 
   // Output the first/last content offset and prev/next in flow info
   bool isComplete = uint32_t(GetContentEnd()) == GetContent()->TextLength();
-  fprintf(out, "[%d,%d,%c] ", 
-          GetContentOffset(), GetContentLength(),
+  fprintf(out, "[%d,%d,%c] ", GetContentOffset(), GetContentLength(),
           isComplete ? 'T':'F');
   
-  if (GetNextSibling()) {
-    fprintf(out, " next=%p", static_cast<void*>(GetNextSibling()));
-  }
-  nsIFrame* prevContinuation = GetPrevContinuation();
-  if (nullptr != prevContinuation) {
-    fprintf(out, " prev-continuation=%p", static_cast<void*>(prevContinuation));
-  }
-  if (nullptr != mNextContinuation) {
-    fprintf(out, " next-continuation=%p", static_cast<void*>(mNextContinuation));
-  }
-
-  // Output the rect and state
-  fprintf(out, " {%d,%d,%d,%d}", mRect.x, mRect.y, mRect.width, mRect.height);
-  fprintf(out, " [state=%016llx]", (unsigned long long)mState);
   if (IsSelected()) {
     fprintf(out, " SELECTED");
   }
-  fprintf(out, " [content=%p]", static_cast<void*>(mContent));
-  if (HasOverflowAreas()) {
-    nsRect overflowArea = GetVisualOverflowRect();
-    fprintf(out, " [vis-overflow=%d,%d,%d,%d]",
-            overflowArea.x, overflowArea.y,
-            overflowArea.width, overflowArea.height);
-    overflowArea = GetScrollableOverflowRect();
-    fprintf(out, " [scr-overflow=%d,%d,%d,%d]",
-            overflowArea.x, overflowArea.y,
-            overflowArea.width, overflowArea.height);
-  }
-  fprintf(out, " sc=%p", static_cast<void*>(mStyleContext));
-  nsIAtom* pseudoTag = mStyleContext->GetPseudo();
-  if (pseudoTag) {
-    nsAutoString atomString;
-    pseudoTag->ToString(atomString);
-    fprintf(out, " pst=%s",
-            NS_LossyConvertUTF16toASCII(atomString).get());
-  }
   fputs("\n", out);
-  return NS_OK;
 }
 #endif
 

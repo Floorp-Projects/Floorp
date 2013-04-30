@@ -203,37 +203,15 @@ nsPlaceholderFrame::GetFrameName(nsAString& aResult) const
   return MakeFrameName(NS_LITERAL_STRING("Placeholder"), aResult);
 }
 
-NS_IMETHODIMP
+void
 nsPlaceholderFrame::List(FILE* out, int32_t aIndent, uint32_t aFlags) const
 {
-  IndentBy(out, aIndent);
-  ListTag(out);
-  if (HasView()) {
-    fprintf(out, " [view=%p]", (void*)GetView());
-  }
-  fprintf(out, " {%d,%d,%d,%d}", mRect.x, mRect.y, mRect.width, mRect.height);
-  if (0 != mState) {
-    fprintf(out, " [state=%016llx]", (unsigned long long)mState);
-  }
-  nsIFrame* prevInFlow = GetPrevInFlow();
-  nsIFrame* nextInFlow = GetNextInFlow();
-  if (prevInFlow) {
-    fprintf(out, " prev-in-flow=%p", static_cast<void*>(prevInFlow));
-  }
-  if (nextInFlow) {
-    fprintf(out, " next-in-flow=%p", static_cast<void*>(nextInFlow));
-  }
-  if (mContent) {
-    fprintf(out, " [content=%p]", static_cast<void*>(mContent));
-  }
-  if (mStyleContext) {
-    fprintf(out, " [sc=%p]", static_cast<void*>(mStyleContext));
-  }
+  ListGeneric(out, aIndent, aFlags);
+
   if (mOutOfFlowFrame) {
     fprintf(out, " outOfFlowFrame=");
     nsFrame::ListTag(out, mOutOfFlowFrame);
   }
   fputs("\n", out);
-  return NS_OK;
 }
 #endif // DEBUG
