@@ -123,7 +123,7 @@ XPCOMUtils.defineLazyGetter(this, "gBuiltInWidgets", function() {
     },
     onViewShowing: function(aEvent) {
       // Populate our list of history
-      const kMaxResults = 10;
+      const kMaxResults = 15;
       let doc = aEvent.detail.ownerDocument;
 
       let options = PlacesUtils.history.getNewQueryOptions();
@@ -224,11 +224,16 @@ let gFuturePlacements = new Map();
  */
 let gDefaultPlacements = new Map([
   ["nav-bar", [
+    "unified-back-forward-button",
+    "urlbar-container",
+    "reload-button",
+    "stop-button",
     "search-container",
+    "webrtc-status-button",
     "bookmarks-menu-button-container",
     "downloads-button",
+    "home-button",
     "social-toolbar-button",
-    "PanelUI-button",
     "share-page"
   ]],
   ["PanelUI-contents", [
@@ -371,6 +376,7 @@ let CustomizableUIInternal = {
 
     let placements = gPlacements.get(area);
     this.buildArea(area, placements, aToolbar);
+    aToolbar.setAttribute("currentset", placements.join(","));
 
     // We register this window to have its customization data cleaned up when
     // unloading.
@@ -413,14 +419,18 @@ let CustomizableUIInternal = {
       let limit = currentNode.previousSibling;
       let node = container.lastChild;
       while (node != limit) {
-        // XXXunf Deprecating the old "removable" attribute, is this right?
-        // XXXmconley I think we need to hear from UX about this.
-        if (palette) {
-          palette.appendChild(node);
-        } else {
-          container.removeChild(node);
+        // Nodes opt-in to removability. If they're removable, and we haven't
+        // seen them in the placements array, then we toss them into the palette
+        // if one exists. If no palette exists, we just remove the node. If the
+        // node is not removable, we leave it where it is.
+        if (node.getAttribute("removable") == "true") {
+          if (palette) {
+            palette.appendChild(node);
+          } else {
+            container.removeChild(node);
+          }
         }
-        node = container.lastChild;
+        node = node.previousSibling;
       }
     }
   },
@@ -728,6 +738,10 @@ let CustomizableUIInternal = {
         ERROR("Could not find the view node with id: " + aWidget.viewId);
         throw new Error("Could not find the view node with id: " + aWidget.viewId);
       }
+
+      // PanelUI relies on the .PanelUI-subView class to be able to show only
+      // one sub-view at a time.
+      viewNode.classList.add("PanelUI-subView");
 
       for (let eventName of kSubviewEvents) {
         let handler = "on" + eventName;
