@@ -7100,7 +7100,7 @@ IonBuilder::invalidatedIdempotentCache()
 }
 
 bool
-IonBuilder::loadSlot(MDefinition *obj, HandleShape shape, MIRType rvalType,
+IonBuilder::loadSlot(MDefinition *obj, RawShape shape, MIRType rvalType,
                      bool barrier, types::StackTypeSet *types)
 {
     JS_ASSERT(shape->hasDefaultGetter());
@@ -7180,12 +7180,12 @@ IonBuilder::jsop_getprop(HandlePropertyName name)
     if (!getPropTryCommonGetter(&emitted, id, barrier, types) || emitted)
         return emitted;
 
-    // Try to emit a monomorphic cache based on data in JM caches.
-    if (!getPropTryMonomorphic(&emitted, id, barrier, types) || emitted)
+    // Try to emit a monomorphic/polymorphic access based on baseline caches.
+    if (!getPropTryInlineAccess(&emitted, name, id, barrier, types) || emitted)
         return emitted;
 
     // Try to emit a polymorphic cache.
-    if (!getPropTryPolymorphic(&emitted, name, id, barrier, types) || emitted)
+    if (!getPropTryCache(&emitted, name, id, barrier, types) || emitted)
         return emitted;
 
     // Emit a call.
@@ -7344,51 +7344,90 @@ IonBuilder::getPropTryCommonGetter(bool *emitted, HandleId id,
     return true;
 }
 
+static bool
+CanInlinePropertyOpShapes(const Vector<Shape *> &shapes)
+{
+    for (size_t i = 0; i < shapes.length(); i++) {
+        // We inline the property access as long as the shape is not in
+        // dictionary made. We cannot be sure that the shape is still a
+        // lastProperty, and calling Shape::search() on dictionary mode
+        // shapes that aren't lastProperty is invalid.
+        if (shapes[i]->inDictionary())
+            return false;
+    }
+
+    return true;
+}
+
 bool
-IonBuilder::getPropTryMonomorphic(bool *emitted, HandleId id,
-                                  bool barrier, types::StackTypeSet *types)
+IonBuilder::getPropTryInlineAccess(bool *emitted, HandlePropertyName name, HandleId id,
+                                   bool barrier, types::StackTypeSet *types)
 {
     JS_ASSERT(*emitted == false);
-    bool accessGetter = script()->analysis()->getCode(pc).accessGetter;
-
     if (current->peek(-1)->type() != MIRType_Object)
         return true;
 
-    RootedShape objShape(cx, mjit::GetPICSingleShape(cx, script(), pc, info().constructing()));
-    if (!objShape)
-        objShape = inspector->maybeMonomorphicShapeForPropertyOp(pc);
-
-    if (!objShape || objShape->inDictionary()) {
-        spew("GETPROP not monomorphic");
-        return true;
+    Vector<Shape *> shapes(cx);
+    if (RawShape objShape = mjit::GetPICSingleShape(cx, script(), pc, info().constructing())) {
+        if (!shapes.append(objShape))
+            return false;
+    } else {
+        if (!inspector->maybeShapesForPropertyOp(pc, shapes))
+            return false;
     }
 
-    MDefinition *obj = current->pop();
-
-    // The JM IC was monomorphic, so we inline the property access as long as
-    // the shape is not in dictionary made. We cannot be sure that the shape is
-    // still a lastProperty, and calling Shape::search() on dictionary mode
-    // shapes that aren't lastProperty is invalid.
-    obj = addShapeGuard(obj, objShape, Bailout_CachedShapeGuard);
-
-    spew("Inlining monomorphic GETPROP");
-    RootedShape shape(cx, objShape->search(cx, id));
-    JS_ASSERT(shape);
+    if (shapes.empty() || !CanInlinePropertyOpShapes(shapes))
+        return true;
 
     MIRType rvalType = MIRTypeFromValueType(types->getKnownTypeTag());
-    if (barrier || IsNullOrUndefined(rvalType) || accessGetter)
+    if (barrier || IsNullOrUndefined(rvalType))
         rvalType = MIRType_Value;
 
-    if (!loadSlot(obj, shape, rvalType, barrier, types))
-        return false;
+    MDefinition *obj = current->pop();
+    if (shapes.length() == 1) {
+        // In the monomorphic case, use separate ShapeGuard and LoadSlot
+        // instructions.
+        spew("Inlining monomorphic GETPROP");
+
+        RawShape objShape = shapes[0];
+        obj = addShapeGuard(obj, objShape, Bailout_CachedShapeGuard);
+
+        RawShape shape = objShape->search(cx, id);
+        JS_ASSERT(shape);
+
+        if (!loadSlot(obj, shape, rvalType, barrier, types))
+            return false;
+    } else {
+        JS_ASSERT(shapes.length() > 1);
+        spew("Inlining polymorphic GETPROP");
+
+        MGetPropertyPolymorphic *load = MGetPropertyPolymorphic::New(obj, name);
+        current->add(load);
+        current->push(load);
+
+        for (size_t i = 0; i < shapes.length(); i++) {
+            RawShape objShape = shapes[i];
+            RawShape shape =  objShape->search(cx, id);
+            JS_ASSERT(shape);
+            if (!load->addShape(objShape, shape))
+                return false;
+        }
+
+        if (failedShapeGuard_)
+            load->setNotMovable();
+
+        load->setResultType(rvalType);
+        if (!pushTypeBarrier(load, types, barrier))
+            return false;
+    }
 
     *emitted = true;
     return true;
 }
 
 bool
-IonBuilder::getPropTryPolymorphic(bool *emitted, HandlePropertyName name, HandleId id,
-                                  bool barrier, types::StackTypeSet *types)
+IonBuilder::getPropTryCache(bool *emitted, HandlePropertyName name, HandleId id,
+                            bool barrier, types::StackTypeSet *types)
 {
     JS_ASSERT(*emitted == false);
     bool accessGetter = script()->analysis()->getCode(pc).accessGetter;
@@ -7528,27 +7567,55 @@ IonBuilder::jsop_setprop(HandlePropertyName name)
         return resumeAfter(fixed);
     }
 
-    RawShape objShape = mjit::GetPICSingleShape(cx, script(), pc, info().constructing());
-    if (!objShape)
-        objShape = inspector->maybeMonomorphicShapeForPropertyOp(pc);
-
-    if (objShape && !objShape->inDictionary()) {
-        // The JM IC was monomorphic, so we inline the property access as
-        // long as the shape is not in dictionary mode. We cannot be sure
-        // that the shape is still a lastProperty, and calling Shape::search
-        // on dictionary mode shapes that aren't lastProperty is invalid.
-        obj = addShapeGuard(obj, objShape, Bailout_CachedShapeGuard);
-
-        RootedShape shape(cx, objShape->search(cx, NameToId(name)));
-        JS_ASSERT(shape);
-
-        spew("Inlining monomorphic SETPROP");
-
-        bool needsBarrier = objTypes->propertyNeedsBarrier(cx, id);
-        return storeSlot(obj, shape, value, needsBarrier);
+    Vector<Shape *> shapes(cx);
+    if (RawShape objShape = mjit::GetPICSingleShape(cx, script(), pc, info().constructing())) {
+        if (!shapes.append(objShape))
+            return false;
+    } else {
+        if (!inspector->maybeShapesForPropertyOp(pc, shapes))
+            return false;
     }
 
-    spew("SETPROP not monomorphic");
+    if (!shapes.empty() && CanInlinePropertyOpShapes(shapes)) {
+        if (shapes.length() == 1) {
+            spew("Inlining monomorphic SETPROP");
+
+            // The JM IC was monomorphic, so we inline the property access as
+            // long as the shape is not in dictionary mode. We cannot be sure
+            // that the shape is still a lastProperty, and calling Shape::search
+            // on dictionary mode shapes that aren't lastProperty is invalid.
+            RawShape objShape = shapes[0];
+            obj = addShapeGuard(obj, objShape, Bailout_CachedShapeGuard);
+
+            RawShape shape = objShape->search(cx, NameToId(name));
+            JS_ASSERT(shape);
+
+            bool needsBarrier = objTypes->propertyNeedsBarrier(cx, id);
+            return storeSlot(obj, shape, value, needsBarrier);
+        } else {
+            JS_ASSERT(shapes.length() > 1);
+            spew("Inlining polymorphic SETPROP");
+
+            MSetPropertyPolymorphic *ins = MSetPropertyPolymorphic::New(obj, value);
+            current->add(ins);
+            current->push(value);
+
+            for (size_t i = 0; i < shapes.length(); i++) {
+                RawShape objShape = shapes[i];
+                RawShape shape =  objShape->search(cx, id);
+                JS_ASSERT(shape);
+                if (!ins->addShape(objShape, shape))
+                    return false;
+            }
+
+            if (objTypes->propertyNeedsBarrier(cx, id))
+                ins->setNeedsBarrier();
+
+            return resumeAfter(ins);
+        }
+    }
+
+    spew("SETPROP IC");
 
     MSetPropertyCache *ins = MSetPropertyCache::New(obj, value, name, script()->strict);
 

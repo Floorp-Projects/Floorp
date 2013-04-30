@@ -329,7 +329,7 @@ class IonBuilder : public MIRGenerator
 
     bool invalidatedIdempotentCache();
 
-    bool loadSlot(MDefinition *obj, HandleShape shape, MIRType rvalType,
+    bool loadSlot(MDefinition *obj, RawShape shape, MIRType rvalType,
                   bool barrier, types::StackTypeSet *types);
     bool storeSlot(MDefinition *obj, RawShape shape, MDefinition *value, bool needsBarrier);
 
@@ -340,10 +340,10 @@ class IonBuilder : public MIRGenerator
                                 bool barrier, types::StackTypeSet *types);
     bool getPropTryCommonGetter(bool *emitted, HandleId id,
                                 bool barrier, types::StackTypeSet *types);
-    bool getPropTryMonomorphic(bool *emitted, HandleId id,
-                               bool barrier, types::StackTypeSet *types);
-    bool getPropTryPolymorphic(bool *emitted, HandlePropertyName name, HandleId id,
-                               bool barrier, types::StackTypeSet *types);
+    bool getPropTryInlineAccess(bool *emitted, HandlePropertyName name, HandleId id,
+                                bool barrier, types::StackTypeSet *types);
+    bool getPropTryCache(bool *emitted, HandlePropertyName name, HandleId id,
+                         bool barrier, types::StackTypeSet *types);
 
     // Typed array helpers.
     MInstruction *getTypedArrayLength(MDefinition *obj);

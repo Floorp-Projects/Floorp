@@ -3531,6 +3531,107 @@ class LGetPropertyCacheT : public LInstructionHelper<1, 1, 1>
     }
 };
 
+// Emit code to load a boxed value from an object's slots if its shape matches
+// one of the shapes observed by the baseline IC, else bails out.
+class LGetPropertyPolymorphicV : public LInstructionHelper<BOX_PIECES, 1, 0>
+{
+  public:
+    LIR_HEADER(GetPropertyPolymorphicV)
+    BOX_OUTPUT_ACCESSORS()
+
+    LGetPropertyPolymorphicV(const LAllocation &obj) {
+        setOperand(0, obj);
+    }
+    const LAllocation *obj() {
+        return getOperand(0);
+    }
+    const MGetPropertyPolymorphic *mir() const {
+        return mir_->toGetPropertyPolymorphic();
+    }
+};
+
+// Emit code to load a typed value from an object's slots if its shape matches
+// one of the shapes observed by the baseline IC, else bails out.
+class LGetPropertyPolymorphicT : public LInstructionHelper<1, 1, 1>
+{
+  public:
+    LIR_HEADER(GetPropertyPolymorphicT)
+
+    LGetPropertyPolymorphicT(const LAllocation &obj, const LDefinition &temp) {
+        setOperand(0, obj);
+        setTemp(0, temp);
+    }
+    const LAllocation *obj() {
+        return getOperand(0);
+    }
+    const LDefinition *temp() {
+        return getTemp(0);
+    }
+    const MGetPropertyPolymorphic *mir() const {
+        return mir_->toGetPropertyPolymorphic();
+    }
+};
+
+// Emit code to store a boxed value to an object's slots if its shape matches
+// one of the shapes observed by the baseline IC, else bails out.
+class LSetPropertyPolymorphicV : public LInstructionHelper<0, 1 + BOX_PIECES, 1>
+{
+  public:
+    LIR_HEADER(SetPropertyPolymorphicV)
+
+    LSetPropertyPolymorphicV(const LAllocation &obj, const LDefinition &temp) {
+        setOperand(0, obj);
+        setTemp(0, temp);
+    }
+
+    static const size_t Value = 1;
+
+    const LAllocation *obj() {
+        return getOperand(0);
+    }
+    const LDefinition *temp() {
+        return getTemp(0);
+    }
+    const MSetPropertyPolymorphic *mir() const {
+        return mir_->toSetPropertyPolymorphic();
+    }
+};
+
+// Emit code to store a typed value to an object's slots if its shape matches
+// one of the shapes observed by the baseline IC, else bails out.
+class LSetPropertyPolymorphicT : public LInstructionHelper<0, 2, 1>
+{
+    MIRType valueType_;
+
+  public:
+    LIR_HEADER(SetPropertyPolymorphicT)
+
+    LSetPropertyPolymorphicT(const LAllocation &obj, const LAllocation &value, MIRType valueType,
+                             const LDefinition &temp)
+      : valueType_(valueType)
+    {
+        setOperand(0, obj);
+        setOperand(1, value);
+        setTemp(0, temp);
+    }
+
+    const LAllocation *obj() {
+        return getOperand(0);
+    }
+    const LAllocation *value() {
+        return getOperand(1);
+    }
+    const LDefinition *temp() {
+        return getTemp(0);
+    }
+    MIRType valueType() const {
+        return valueType_;
+    }
+    const MSetPropertyPolymorphic *mir() const {
+        return mir_->toSetPropertyPolymorphic();
+    }
+};
+
 class LGetElementCacheV : public LInstructionHelper<BOX_PIECES, 1 + BOX_PIECES, 0>
 {
   public:

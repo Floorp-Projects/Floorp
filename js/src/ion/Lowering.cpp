@@ -2212,6 +2212,39 @@ LIRGenerator::visitGetPropertyCache(MGetPropertyCache *ins)
 }
 
 bool
+LIRGenerator::visitGetPropertyPolymorphic(MGetPropertyPolymorphic *ins)
+{
+    JS_ASSERT(ins->obj()->type() == MIRType_Object);
+
+    if (ins->type() == MIRType_Value) {
+        LGetPropertyPolymorphicV *lir = new LGetPropertyPolymorphicV(useRegister(ins->obj()));
+        return assignSnapshot(lir) && defineBox(lir, ins);
+    }
+
+    LDefinition maybeTemp = (ins->type() == MIRType_Double) ? temp() : LDefinition::BogusTemp();
+    LGetPropertyPolymorphicT *lir = new LGetPropertyPolymorphicT(useRegister(ins->obj()), maybeTemp);
+    return assignSnapshot(lir, Bailout_CachedShapeGuard) && define(lir, ins);
+}
+
+bool
+LIRGenerator::visitSetPropertyPolymorphic(MSetPropertyPolymorphic *ins)
+{
+    JS_ASSERT(ins->obj()->type() == MIRType_Object);
+
+    if (ins->value()->type() == MIRType_Value) {
+        LSetPropertyPolymorphicV *lir = new LSetPropertyPolymorphicV(useRegister(ins->obj()), temp());
+        if (!useBox(lir, LSetPropertyPolymorphicV::Value, ins->value()))
+            return false;
+        return assignSnapshot(lir, Bailout_CachedShapeGuard) && add(lir, ins);
+    }
+
+    LAllocation value = useRegisterOrConstant(ins->value());
+    LSetPropertyPolymorphicT *lir =
+        new LSetPropertyPolymorphicT(useRegister(ins->obj()), value, ins->value()->type(), temp());
+    return assignSnapshot(lir) && add(lir, ins);
+}
+
+bool
 LIRGenerator::visitGetElementCache(MGetElementCache *ins)
 {
     JS_ASSERT(ins->object()->type() == MIRType_Object);
