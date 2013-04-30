@@ -320,12 +320,10 @@ BaseProxyHandler::construct(JSContext *cx, HandleObject proxy, const CallArgs &a
     return false;
 }
 
-JSString *
-BaseProxyHandler::obj_toString(JSContext *cx, HandleObject proxy)
+const char *
+BaseProxyHandler::className(JSContext *cx, HandleObject proxy)
 {
-    return JS_NewStringCopyZ(cx, IsFunctionProxy(proxy)
-                                 ? "[object Function]"
-                                 : "[object Object]");
+    return IsFunctionProxy(proxy) ? "Function" : "Object";
 }
 
 JSString *
@@ -524,12 +522,12 @@ DirectProxyHandler::objectClassIs(HandleObject proxy, ESClassValue classValue,
     return ObjectClassIs(obj, classValue, cx);
 }
 
-JSString *
-DirectProxyHandler::obj_toString(JSContext *cx, HandleObject proxy)
+const char *
+DirectProxyHandler::className(JSContext *cx, HandleObject proxy)
 {
     assertEnteredPolicy(cx, proxy, JSID_VOID);
     RootedObject target(cx, GetProxyTargetObject(proxy));
-    return obj_toStringHelper(cx, target);
+    return JSObject::className(cx, target);
 }
 
 JSString *
@@ -2662,8 +2660,8 @@ Proxy::objectClassIs(HandleObject proxy, ESClassValue classValue, JSContext *cx)
     return GetProxyHandler(proxy)->objectClassIs(proxy, classValue, cx);
 }
 
-JSString *
-Proxy::obj_toString(JSContext *cx, HandleObject proxy)
+const char *
+Proxy::className(JSContext *cx, HandleObject proxy)
 {
     JS_CHECK_RECURSION(cx, return NULL);
     BaseProxyHandler *handler = GetProxyHandler(proxy);
@@ -2671,9 +2669,9 @@ Proxy::obj_toString(JSContext *cx, HandleObject proxy)
                            BaseProxyHandler::GET, /* mayThrow = */ false);
     // Do the safe thing if the policy rejects.
     if (!policy.allowed()) {
-        return handler->BaseProxyHandler::obj_toString(cx, proxy);
+        return handler->BaseProxyHandler::className(cx, proxy);
     }
-    return handler->obj_toString(cx, proxy);
+    return handler->className(cx, proxy);
 }
 
 JSString *

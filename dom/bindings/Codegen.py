@@ -6868,13 +6868,14 @@ if (expando) {
 vp.setUndefined();
 return true;""" % (getIndexedOrExpando, getNamed)
 
-class CGDOMJSProxyHandler_obj_toString(ClassMethod):
+class CGDOMJSProxyHandler_className(ClassMethod):
     def __init__(self, descriptor):
         args = [Argument('JSContext*', 'cx'), Argument('JS::Handle<JSObject*>', 'proxy')]
-        ClassMethod.__init__(self, "obj_toString", "JSString*", args)
+        ClassMethod.__init__(self, "className", "const char*", args,
+                             virtual=True, override=True)
         self.descriptor = descriptor
     def getBody(self):
-        return "return mozilla::dom::DOMProxyHandler::obj_toString(cx, \"%s\");" % self.descriptor.name
+        return 'return "%s";' % self.descriptor.name
 
 class CGDOMJSProxyHandler_finalizeInBackground(ClassMethod):
     def __init__(self, descriptor):
@@ -6974,7 +6975,7 @@ class CGDOMJSProxyHandler(CGClass):
         methods.extend([CGDOMJSProxyHandler_getOwnPropertyNames(descriptor),
                         CGDOMJSProxyHandler_hasOwn(descriptor),
                         CGDOMJSProxyHandler_get(descriptor),
-                        CGDOMJSProxyHandler_obj_toString(descriptor),
+                        CGDOMJSProxyHandler_className(descriptor),
                         CGDOMJSProxyHandler_finalizeInBackground(descriptor),
                         CGDOMJSProxyHandler_finalize(descriptor),
                         CGDOMJSProxyHandler_getElementIfPresent(descriptor),
