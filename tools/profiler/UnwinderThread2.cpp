@@ -1541,6 +1541,42 @@ void do_breakpad_unwind_Buffer_free_singletons()
   g_buffers = NULL;
 }
 
+static void stats_notify_frame(google_breakpad::StackFrame::FrameTrust tr)
+{
+  // Gather stats in intervals.
+  static int nf_NONE     = 0;
+  static int nf_SCAN     = 0;
+  static int nf_CFI_SCAN = 0;
+  static int nf_FP       = 0;
+  static int nf_CFI      = 0;
+  static int nf_CONTEXT  = 0;
+  static int nf_total    = 0; // total frames since last printout
+
+  nf_total++;
+  switch (tr) {
+    case google_breakpad::StackFrame::FRAME_TRUST_NONE: nf_NONE++; break;
+    case google_breakpad::StackFrame::FRAME_TRUST_SCAN: nf_SCAN++; break;
+    case google_breakpad::StackFrame::FRAME_TRUST_CFI_SCAN:
+      nf_CFI_SCAN++; break;
+    case google_breakpad::StackFrame::FRAME_TRUST_FP: nf_FP++; break;
+    case google_breakpad::StackFrame::FRAME_TRUST_CFI: nf_CFI++; break;
+    case google_breakpad::StackFrame::FRAME_TRUST_CONTEXT: nf_CONTEXT++; break;
+    default: break;
+  }
+  if (nf_total >= 5000) {
+    LOGF("BPUnw frame stats: TOTAL %5u"
+         "    CTX %4u    CFI %4u    FP %4u    SCAN %4u    NONE %4u",
+         nf_total, nf_CONTEXT, nf_CFI, nf_FP, nf_CFI_SCAN+nf_SCAN, nf_NONE);
+    nf_NONE     = 0;
+    nf_SCAN     = 0;
+    nf_CFI_SCAN = 0;
+    nf_FP       = 0;
+    nf_CFI      = 0;
+    nf_CONTEXT  = 0;
+    nf_total    = 0;
+  }
+}
+
 static
 void do_breakpad_unwind_Buffer(/*OUT*/PCandSP** pairs,
                                /*OUT*/unsigned int* nPairs,
@@ -1691,6 +1727,9 @@ void do_breakpad_unwind_Buffer(/*OUT*/PCandSP** pairs,
          (0,0) values, which correspond to the skipped frames. */
       if (n_frames_dubious > (unsigned int)sUnwindStackScan)
         break;
+
+      if (LOGLEVEL >= 2)
+        stats_notify_frame(frame->trust);
 
 #     if defined(SPS_ARCH_amd64)
       google_breakpad::StackFrameAMD64* frame_amd64
