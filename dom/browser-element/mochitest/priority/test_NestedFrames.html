@@ -61,6 +61,10 @@ function runTest() {
     var p = expectPriorityChange(childID, 'BACKGROUND');
     iframe.setVisible(false);
     return p;
+  }).then(function() {
+    var p = expectPriorityChange(childID, 'FOREGROUND');
+    iframe.setVisible(true);
+    return p;
   }).then(SimpleTest.finish);
 
   document.body.appendChild(iframe);
