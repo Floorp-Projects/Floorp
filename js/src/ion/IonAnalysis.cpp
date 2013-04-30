@@ -204,10 +204,11 @@ IsPhiObservable(MPhi *phi, Observability observe)
     // object in the function. The phi might be observable after a bailout.
     // For inlined frames this is not needed, as they are captured in the inlineResumePoint.
     if (info.fun() && info.hasArguments()) {
-        uint32_t first = info.firstActualArgSlot();
+        uint32_t first = info.firstArgSlot();
         if (first <= slot && slot - first < info.nargs()) {
-            // If arguments obj aliases formals, then no arguments slots should ever be phis.
-            JS_ASSERT(!info.argsObjAliasesFormals());
+            // If arguments obj aliases formals, then the arg slots will never be used.
+            if (info.argsObjAliasesFormals())
+                return false;
             return true;
         }
     }
