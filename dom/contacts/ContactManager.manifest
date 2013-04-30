@@ -2,7 +2,7 @@ component {6cb78b21-4218-414b-8a84-3b7bf0088b34} ContactManager.js
 contract @mozilla.org/contactProperties;1 {6cb78b21-4218-414b-8a84-3b7bf0088b34}
 
 component {9cbfa81c-bcab-4ca9-b0d2-f4318f295e33} ContactManager.js
-contract @mozilla.org/contactAddress;1 {c5d6eb73-a079-4a9f-8cd5-618194f73b30}
+contract @mozilla.org/contactAddress;1 {9cbfa81c-bcab-4ca9-b0d2-f4318f295e33}
 
 component {ad19a543-69e4-44f0-adfa-37c011556bc1} ContactManager.js
 contract @mozilla.org/contactField;1 {ad19a543-69e4-44f0-adfa-37c011556bc1}
@@ -20,6 +20,6 @@ component {72a5ee28-81d8-4af8-90b3-ae935396cc66} ContactManager.js
 contract @mozilla.org/contact;1 {72a5ee28-81d8-4af8-90b3-ae935396cc66}
 category JavaScript-global-constructor-maybe dom.mozContacts.enabled mozContact,@mozilla.org/contact;1
 
-component {4efae3f8-dd69-4622-97c8-f16e4d38d95c} ContactManager.js
-contract @mozilla.org/contactManager;1 {4efae3f8-dd69-4622-97c8-f16e4d38d95c}
+component {7bfb6481-f946-4254-afc5-d7fe9f5c45a3} ContactManager.js
+contract @mozilla.org/contactManager;1 {7bfb6481-f946-4254-afc5-d7fe9f5c45a3}
 category JavaScript-navigator-property-maybe dom.mozContacts.enabled mozContacts,@mozilla.org/contactManager;1
