@@ -309,7 +309,7 @@ public:
              mSampleRate == IdealAudioRate());
   }
 
-  void UpdateSampleRateIfNeeded(AudioNodeStream* aStream)
+  void UpdateSampleRateIfNeeded(AudioNodeStream* aStream, uint32_t aChannels)
   {
     if (mPlaybackRateTimeline.HasSimpleValue()) {
       mPlaybackRate = mPlaybackRateTimeline.GetValue();
@@ -324,7 +324,7 @@ public:
 
     uint32_t currentOutSampleRate, currentInSampleRate;
     if (ShouldResample()) {
-      SpeexResamplerState* resampler = Resampler(mChannels);
+      SpeexResamplerState* resampler = Resampler(aChannels);
       speex_resampler_get_rate(resampler, &currentInSampleRate, &currentOutSampleRate);
       uint32_t finalSampleRate = ComputeFinalOutSampleRate();
       if (currentOutSampleRate != finalSampleRate) {
@@ -350,7 +350,7 @@ public:
     // WebKit treats the playbackRate as a k-rate parameter in their code,
     // despite the spec saying that it should be an a-rate parameter. We treat
     // it as k-rate. Spec bug: https://www.w3.org/Bugs/Public/show_bug.cgi?id=21592
-    UpdateSampleRateIfNeeded(aStream);
+    UpdateSampleRateIfNeeded(aStream, channels);
 
     uint32_t written = 0;
     TrackTicks currentPosition = GetPosition(aStream);
