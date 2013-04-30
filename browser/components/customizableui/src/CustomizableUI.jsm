@@ -115,7 +115,7 @@ XPCOMUtils.defineLazyGetter(this, "gBuiltInWidgets", function() {
     name: "History...",
     description: "History repeats itself!",
     defaultArea: CustomizableUI.AREA_PANEL,
-    allowedAreas: [CustomizableUI.AREA_PANEL],
+    allowedAreas: [CustomizableUI.AREA_PANEL, CustomizableUI.AREA_NAVBAR],
     icons: {
       "16": "chrome://branding/content/icon16.png",
       "32": "chrome://branding/content/icon48.png",
@@ -788,7 +788,8 @@ let CustomizableUIInternal = {
       }
     } else if (aWidget.type == "view") {
       let ownerWindow = aNode.ownerDocument.defaultView;
-      ownerWindow.PanelUI.showSubView(aWidget.viewId, aNode);
+      ownerWindow.PanelUI.showSubView(aWidget.viewId, aNode,
+                                      this.getPlacementOfWidget(aNode.id).area);
     }
   },
 

@@ -176,8 +176,10 @@ const PanelUI = {
    * Shows a subview in the panel with a given ID.
    *
    * @param aViewId the ID of the subview to show.
+   * @param aAnchor the element that spawned the subview.
+   * @param aPlacementArea the CustomizableUI area that aAnchor is in.
    */
-  showSubView: function(aViewId, aAnchor) {
+  showSubView: function(aViewId, aAnchor, aPlacementArea) {
     let viewNode = document.getElementById(aViewId);
     if (!viewNode) {
       Cu.reportError("Could not show panel subview with id: " + aViewId);
@@ -189,39 +191,66 @@ const PanelUI = {
       return;
     }
 
-    let oldHeight = this.mainView.clientHeight;
-    viewNode.setAttribute("current", true);
-    this._currentSubView = viewNode;
+    if (aPlacementArea == CustomizableUI.AREA_PANEL) {
+      // The subview can get moved if the widget is not in the
+      // panel. For robustness, check that the subview is in the
+      // right place and move it if necessary.
+      if (viewNode.parentElement != this.subViews) {
+        this.subViews.appendChild(viewNode);
+      }
 
-    // Emit the ViewShowing event so that the widget definition has a chance
-    // to lazily populate the subview with things.
-    let evt = document.createEvent("CustomEvent");
-    evt.initCustomEvent("ViewShowing", true, true, viewNode);
-    viewNode.dispatchEvent(evt);
+      let oldHeight = this.mainView.clientHeight;
+      viewNode.setAttribute("current", true);
+      this._currentSubView = viewNode;
 
-    this.viewStack.setAttribute("view", "subview");
-    this.mainViewSpring.style.height = this.subViews.scrollHeight - oldHeight + "px";
-    this.container.style.height = this.subViews.scrollHeight + "px";
+      // Emit the ViewShowing event so that the widget definition has a chance
+      // to lazily populate the subview with things.
+      let evt = document.createEvent("CustomEvent");
+      evt.initCustomEvent("ViewShowing", true, true, viewNode);
+      viewNode.dispatchEvent(evt);
 
-    // Now we have to transition to transition the panel. There are a few parts
-    // to this:
-    //
-    // 1) The main view content gets shifted so that the center of the anchor
-    //    node is at the left-most edge of the panel.
-    // 2) The subview deck slides in so that it takes up almost all of the
-    //    panel.
-    // 3) If the subview is taller then the main panel contents, then the panel
-    //    must grow to meet that new height. Otherwise, it must shrink.
-    //
-    // All three of these actions make use of CSS transformations, so they
-    // should all occur simultaneously.
-    this._shiftMainView(aAnchor);
-    this._subViewObserver.observe(viewNode, {
-      attributes: true,
-      characterData: true,
-      childList: true,
-      subtree: true
-    });
+      this.viewStack.setAttribute("view", "subview");
+      this.mainViewSpring.style.height = this.subViews.scrollHeight - oldHeight + "px";
+      this.container.style.height = this.subViews.scrollHeight + "px";
+
+      // Now we have to transition to transition the panel. There are a few parts
+      // to this:
+      //
+      // 1) The main view content gets shifted so that the center of the anchor
+      //    node is at the left-most edge of the panel.
+      // 2) The subview deck slides in so that it takes up almost all of the
+      //    panel.
+      // 3) If the subview is taller then the main panel contents, then the panel
+      //    must grow to meet that new height. Otherwise, it must shrink.
+      //
+      // All three of these actions make use of CSS transformations, so they
+      // should all occur simultaneously.
+      this._shiftMainView(aAnchor);
+      this._subViewObserver.observe(viewNode, {
+        attributes: true,
+        characterData: true,
+        childList: true,
+        subtree: true
+      });
+    } else {
+      // Emit the ViewShowing event so that the widget definition has a chance
+      // to lazily populate the subview with things.
+      let evt = document.createEvent("CustomEvent");
+      evt.initCustomEvent("ViewShowing", true, true, viewNode);
+      viewNode.dispatchEvent(evt);
+
+      let panel = document.createElement("panel");
+      panel.appendChild(viewNode);
+      panel.setAttribute("type", "arrow");
+      panel.setAttribute("id", "customizationui-widget-panel");
+      document.getElementById(CustomizableUI.AREA_NAVBAR).appendChild(panel);
+      panel.addEventListener("popuphidden", function() {
+        this.subViews.appendChild(viewNode);
+        panel.parentElement.removeChild(panel);
+      });
+
+      panel.openPopup(aAnchor, "bottomcenter topright");
+    }
   },
 
   /**
