@@ -32,47 +32,29 @@
 #include "hb-object-private.hh"
 
 
-struct hb_set_digest_common_bits_t
-{
-  ASSERT_POD ();
+/*
+ * The set digests here implement various "filters" that support
+ * "approximate member query".  Conceptually these are like Bloom
+ * Filter and Quotient Filter, however, much smaller, faster, and
+ * designed to fit the requirements of our uses for glyph coverage
+ * queries.  As a result, our filters have much higher.
+ */
 
-  typedef unsigned int mask_t;
-
-  inline void init (void) {
-    mask = ~0;
-    value = (mask_t) -1;
-  }
-
-  inline void add (hb_codepoint_t g) {
-    if (unlikely (value == (mask_t) -1)) {
-      value = g;
-      return;
-    }
-
-    mask ^= (g & mask) ^ value;
-    value &= mask;
-  }
-
-  inline void add_range (hb_codepoint_t a, hb_codepoint_t b) {
-    /* The negation here stands for ~(x-1). */
-    mask &= -(1 << _hb_bit_storage (a ^ b));
-    value &= mask;
-  }
-
-  inline bool may_have (hb_codepoint_t g) const {
-    return (g & mask) == value;
-  }
-
-  private:
-  mask_t mask;
-  mask_t value;
-};
-
+template <typename mask_t, unsigned int shift>
 struct hb_set_digest_lowest_bits_t
 {
   ASSERT_POD ();
 
-  typedef unsigned long mask_t;
+  static const unsigned int num_bits = 0
+				     + (sizeof (mask_t) >= 1 ? 3 : 0)
+				     + (sizeof (mask_t) >= 2 ? 1 : 0)
+				     + (sizeof (mask_t) >= 4 ? 1 : 0)
+				     + (sizeof (mask_t) >= 8 ? 1 : 0)
+				     + (sizeof (mask_t) >= 16? 1 : 0)
+				     + 0;
+
+  ASSERT_STATIC (shift < sizeof (hb_codepoint_t) * 8);
+  ASSERT_STATIC (shift + num_bits <= sizeof (hb_codepoint_t) * 8);
 
   inline void init (void) {
     mask = 0;
@@ -83,7 +65,7 @@ struct hb_set_digest_lowest_bits_t
   }
 
   inline void add_range (hb_codepoint_t a, hb_codepoint_t b) {
-    if (b - a >= sizeof (mask_t) * 8 - 1)
+    if ((b >> shift) - (a >> shift) >= sizeof (mask_t) * 8 - 1)
       mask = (mask_t) -1;
     else {
       mask_t ma = mask_for (a);
@@ -98,37 +80,64 @@ struct hb_set_digest_lowest_bits_t
 
   private:
 
-  static inline mask_t mask_for (hb_codepoint_t g) { return ((mask_t) 1) << (g & (sizeof (mask_t) * 8 - 1)); }
+  static inline mask_t mask_for (hb_codepoint_t g) {
+    return ((mask_t) 1) << ((g >> shift) & (sizeof (mask_t) * 8 - 1));
+  }
   mask_t mask;
 };
 
-struct hb_set_digest_t
+template <typename head_t, typename tail_t>
+struct hb_set_digest_combiner_t
 {
   ASSERT_POD ();
 
   inline void init (void) {
-    digest1.init ();
-    digest2.init ();
+    head.init ();
+    tail.init ();
   }
 
   inline void add (hb_codepoint_t g) {
-    digest1.add (g);
-    digest2.add (g);
+    head.add (g);
+    tail.add (g);
   }
 
   inline void add_range (hb_codepoint_t a, hb_codepoint_t b) {
-    digest1.add_range (a, b);
-    digest2.add_range (a, b);
+    head.add_range (a, b);
+    tail.add_range (a, b);
   }
 
   inline bool may_have (hb_codepoint_t g) const {
-    return digest1.may_have (g) && digest2.may_have (g);
+    return head.may_have (g) && tail.may_have (g);
   }
 
   private:
-  hb_set_digest_common_bits_t digest1;
-  hb_set_digest_lowest_bits_t digest2;
+  head_t head;
+  tail_t tail;
 };
+
+
+/*
+ * hb_set_digest_t
+ *
+ * This is a combination of digests that performs "best".
+ * There is not much science to this: it's a result of intuition
+ * and testing.
+ */
+typedef hb_set_digest_combiner_t
+<
+  hb_set_digest_lowest_bits_t<unsigned long, 4>,
+  hb_set_digest_combiner_t
+  <
+    hb_set_digest_lowest_bits_t<unsigned long, 0>,
+    hb_set_digest_lowest_bits_t<unsigned long, 9>
+  >
+> hb_set_digest_t;
+
+
+
+/*
+ * hb_set_t
+ */
 
 
 /* TODO Make this faster and memmory efficient. */

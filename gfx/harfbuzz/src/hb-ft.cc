@@ -53,14 +53,7 @@
  *
  *   - We don't handle / allow for emboldening / obliqueing.
  *
- *   - Rounding, etc?
- *
- *   - In the future, we should add constructors to create fonts in font space.
- *
- *   - I believe transforms are not correctly implemented.  FreeType does not
- *     provide any API to get to the transform/delta set on the face. :(
- *
- *   - Always use FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH?
+ *   - In the future, we should add constructors to create fonts in font space?
  *
  *   - FT_Load_Glyph() is exteremely costly.  Do something about it?
  */
@@ -242,8 +235,8 @@ hb_ft_get_glyph_name (hb_font_t *font HB_UNUSED,
   FT_Face ft_face = (FT_Face) font_data;
 
   hb_bool_t ret = !FT_Get_Glyph_Name (ft_face, glyph, name, size);
-  if (!ret || (size && !*name))
-    snprintf (name, size, "gid%u", glyph);
+  if (ret && (size && !*name))
+    ret = false;
 
   return ret;
 }
