@@ -10,6 +10,7 @@
 #include "mozilla/RefPtr.h"
 #include "nsCRT.h"
 #include "nsNetUtil.h"
+#include "nsNSSCertHelper.h"
 #include "nsIObserverService.h"
 #include "nsNetUtil.h"
 #include "nsISupportsPrimitives.h"
@@ -96,27 +97,6 @@ void
 nsClientAuthRememberService::RemoveAllFromMemory()
 {
   mSettingsTable.Clear();
-}
-
-static nsresult
-GetCertFingerprintByOidTag(CERTCertificate* nsscert,
-                           SECOidTag aOidTag, 
-                           nsCString &fp)
-{
-  unsigned int hash_len = HASH_ResultLenByOidTag(aOidTag);
-  RefPtr<nsStringBuffer> fingerprint(nsStringBuffer::Alloc(hash_len));
-  if (!fingerprint)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  PK11_HashBuf(aOidTag, (unsigned char*)fingerprint->Data(), 
-               nsscert->derCert.data, nsscert->derCert.len);
-
-  SECItem fpItem;
-  fpItem.data = (unsigned char*)fingerprint->Data();
-  fpItem.len = hash_len;
-
-  fp.Adopt(CERT_Hexify(&fpItem, 1));
-  return NS_OK;
 }
 
 nsresult
