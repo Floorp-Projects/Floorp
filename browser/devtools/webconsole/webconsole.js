@@ -1062,7 +1062,8 @@ WebConsoleFrame.prototype = {
         if (!timer) {
           return;
         }
-        body = l10n.getFormatStr("timeEnd", [timer.name, timer.duration]);
+        let duration = Math.round(timer.duration * 100) / 100;
+        body = l10n.getFormatStr("timeEnd", [timer.name, duration]);
         clipboardText = body;
         break;
       }
