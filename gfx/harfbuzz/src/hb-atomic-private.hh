@@ -47,22 +47,18 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
-/* mingw32 does not have MemoryBarrier.
- * MemoryBarrier may be defined as a macro or a function.
- * Just make a failsafe version for ourselves. */
-#ifdef MemoryBarrier
-#define HBMemoryBarrier MemoryBarrier
-#else
-static inline void HBMemoryBarrier (void) {
+#if defined(__MINGW32__) && !defined(MemoryBarrier)
+static inline void _HBMemoryBarrier (void) {
   long dummy = 0;
   InterlockedExchange (&dummy, 1);
 }
+# define MemoryBarrier _HBMemoryBarrier
 #endif
 
 typedef LONG hb_atomic_int_t;
 #define hb_atomic_int_add(AI, V)	InterlockedExchangeAdd (&(AI), (V))
 
-#define hb_atomic_ptr_get(P)		(HBMemoryBarrier (), (void *) *(P))
+#define hb_atomic_ptr_get(P)		(MemoryBarrier (), (void *) *(P))
 #define hb_atomic_ptr_cmpexch(P,O,N)	(InterlockedCompareExchangePointer ((void **) (P), (void *) (N), (void *) (O)) == (void *) (O))
 
 

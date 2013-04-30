@@ -226,7 +226,7 @@ _hb_graphite2_shape (hb_shape_plan_t    *shape_plan,
   gr_font *grfont = HB_SHAPER_DATA_GET (font);
 
   const char *lang = hb_language_to_string (hb_buffer_get_language (buffer));
-  const char *lang_end = strchr (lang, '-');
+  const char *lang_end = lang ? strchr (lang, '-') : NULL;
   int lang_len = lang_end ? lang_end - lang : -1;
   gr_feature_val *feats = gr_face_featureval_for_lang (grface, lang ? hb_tag_from_string (lang, lang_len) : 0);
 

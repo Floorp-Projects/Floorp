@@ -68,18 +68,12 @@ collect_features_default (hb_ot_shape_planner_t *plan)
   }
 
   for (; script_features && *script_features; script_features++)
-    plan->map.add_bool_feature (*script_features);
+    plan->map.add_global_bool_feature (*script_features);
 }
 
 static hb_ot_shape_normalization_mode_t
 normalization_preference_default (const hb_segment_properties_t *props)
 {
-  switch ((hb_tag_t) props->script)
-  {
-    /* Unicode-1.1 additions */
-    case HB_SCRIPT_HANGUL:
-      return HB_OT_SHAPE_NORMALIZATION_MODE_COMPOSED_FULL;
-  }
   return HB_OT_SHAPE_NORMALIZATION_MODE_COMPOSED_DIACRITICS;
 }
 
