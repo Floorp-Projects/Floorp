@@ -237,14 +237,14 @@ TestRunner._makeIframe = function (url, retry) {
         // but we'll try focus() just in case that's needed
 
         contentAsyncEvent("Focus");
-        SpecialPowers.focus(window);
+        window.focus();
         iframe.focus();
         if (retry < 3) {
             window.setTimeout('TestRunner._makeIframe("'+url+'", '+(retry+1)+')', 1000);
             return;
         }
 
-        TestRunner.error("Error: Unable to restore focus, expect failures and timeouts.");
+        TestRunner.log("Error: Unable to restore focus, expect failures and timeouts.");
     }
     window.scrollTo(0, $('indicator').offsetTop);
     iframe.src = url;
@@ -282,6 +282,8 @@ TestRunner.runTests = function (/*url...*/) {
     TestRunner._urls = flattenArguments(arguments);
     $('testframe').src="";
     TestRunner._checkForHangs();
+    window.focus();
+    $('testframe').focus();
     TestRunner.runNextTest();
 };
 
@@ -299,6 +301,8 @@ TestRunner.resetTests = function(listURLs) {
   TestRunner._urls = listURLs;
   $('testframe').src="";
   TestRunner._checkForHangs();
+  window.focus();
+  $('testframe').focus();
   TestRunner.runNextTest();
 }
 
