@@ -331,13 +331,18 @@ function addCertOverride(host, port, bits) {
 function run_test() {
   // Set to allow the cert presented by our SPDY server
   do_get_profile();
+  var prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
+  var oldPref = prefs.getIntPref("network.http.speculative-parallel-limit");
+  prefs.setIntPref("network.http.speculative-parallel-limit", 0);
+
   addCertOverride("localhost", 4443,
                   Ci.nsICertOverrideService.ERROR_UNTRUSTED |
                   Ci.nsICertOverrideService.ERROR_MISMATCH |
                   Ci.nsICertOverrideService.ERROR_TIME);
 
+  prefs.setIntPref("network.http.speculative-parallel-limit", oldPref);
+
   // Make sure spdy is enabled
-  var prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
   prefs.setBoolPref("network.http.spdy.enabled", true);
 
   // And make go!
