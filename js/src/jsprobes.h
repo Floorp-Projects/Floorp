@@ -75,10 +75,10 @@ bool callTrackingActive(JSContext *);
 bool wantNativeAddressInfo(JSContext *);
 
 /* Entering a JS function */
-bool enterScript(JSContext *, RawScript, RawFunction , StackFrame *);
+bool enterScript(JSContext *, RawScript, JSFunction *, StackFrame *);
 
 /* About to leave a JS function */
-bool exitScript(JSContext *, RawScript, RawFunction , StackFrame *);
+bool exitScript(JSContext *, RawScript, JSFunction *, StackFrame *);
 
 /* Executing a script */
 bool startExecution(RawScript script);
@@ -149,8 +149,8 @@ discardExecutableRegion(void *start, size_t size);
  * marshalling required for these probe points is expensive enough that it
  * shouldn't really matter.
  */
-void DTraceEnterJSFun(JSContext *cx, RawFunction fun, RawScript script);
-void DTraceExitJSFun(JSContext *cx, RawFunction fun, RawScript script);
+void DTraceEnterJSFun(JSContext *cx, JSFunction *fun, RawScript script);
+void DTraceExitJSFun(JSContext *cx, JSFunction *fun, RawScript script);
 
 } /* namespace Probes */
 
@@ -181,7 +181,7 @@ Probes::wantNativeAddressInfo(JSContext *cx)
 }
 
 inline bool
-Probes::enterScript(JSContext *cx, RawScript script, RawFunction maybeFun,
+Probes::enterScript(JSContext *cx, RawScript script, JSFunction *maybeFun,
                     StackFrame *fp)
 {
     bool ok = true;
@@ -204,7 +204,7 @@ Probes::enterScript(JSContext *cx, RawScript script, RawFunction maybeFun,
 }
 
 inline bool
-Probes::exitScript(JSContext *cx, RawScript script, RawFunction maybeFun,
+Probes::exitScript(JSContext *cx, RawScript script, JSFunction *maybeFun,
                    StackFrame *fp)
 {
     bool ok = true;
