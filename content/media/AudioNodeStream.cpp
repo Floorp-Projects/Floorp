@@ -289,6 +289,8 @@ AudioNodeStream::ObtainInputBlock(AudioChunk* aTmpChunk)
 
   AllocateAudioBlock(outputChannelCount, aTmpChunk);
   float silenceChannel[WEBAUDIO_BLOCK_SIZE] = {0.f};
+  // The static storage here should be 1KB, so it's fine
+  nsAutoTArray<float, GUESS_AUDIO_CHANNELS*WEBAUDIO_BLOCK_SIZE> downmixBuffer;
 
   for (uint32_t i = 0; i < inputChunkCount; ++i) {
     AudioChunk* chunk = inputChunks[i];
@@ -309,9 +311,9 @@ AudioNodeStream::ObtainInputBlock(AudioChunk* aTmpChunk)
       if (mMixingMode.mChannelInterpretation == ChannelInterpretation::Speakers) {
         nsAutoTArray<float*,GUESS_AUDIO_CHANNELS> outputChannels;
         outputChannels.SetLength(outputChannelCount);
+        downmixBuffer.SetLength(outputChannelCount * WEBAUDIO_BLOCK_SIZE);
         for (uint32_t i = 0; i < outputChannelCount; ++i) {
-          outputChannels[i] =
-            const_cast<float*>(static_cast<const float*>(aTmpChunk->mChannelData[i]));
+          outputChannels[i] = &downmixBuffer[i * WEBAUDIO_BLOCK_SIZE];
         }
 
         AudioChannelsDownMix(channels, outputChannels.Elements(),
