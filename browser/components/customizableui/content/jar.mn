@@ -10,7 +10,6 @@ browser.jar:
   content/browser/customizableui/panelUIOverlay.js
   content/browser/customizableui/toolbar.xml
 
-
 # These overlays should be kept in sync with what pages are in
 # XULBrowserWindow.inContentWhitelist in browser.js
 % overlay about:addons               chrome://browser/content/customizableui/panelUIOverlay.xul

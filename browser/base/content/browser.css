@@ -9,8 +9,12 @@ searchbar {
   -moz-binding: url("chrome://browser/content/search/search.xml#searchbar");
 }
 
-#nav-bar {
+toolbar[customizable="true"] {
   -moz-binding: url("chrome://browser/content/customizableui/toolbar.xml#toolbar");
+}
+
+#toolbar-menubar[autohide="true"] {
+  -moz-binding: url("chrome://browser/content/customizableui/toolbar.xml#toolbar-menubar-autohide");
 }
 
 tabbrowser {

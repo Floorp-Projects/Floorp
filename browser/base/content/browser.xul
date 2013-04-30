@@ -1186,7 +1186,6 @@
              mode="icons" iconsize="small" defaulticonsize="small"
              lockiconsize="true"
              defaultset="addonbar-closebutton,spring,status-bar"
-             customizable="true"
              key="key_toggleAddonBar">
       <toolbarbutton id="addonbar-closebutton"
                      tooltiptext="&addonBarCloseButton.tooltip;"
