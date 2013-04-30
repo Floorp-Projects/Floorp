@@ -714,6 +714,14 @@ RILContentHelper.prototype = {
       iccContact.number = contact.tel[0].value;
     }
 
+    if (contact.email) {
+      iccContact.email = contact.email[0].value;
+    }
+
+    if (contact.tel.length > 1) {
+      iccContact.anr = contact.tel.slice(1);
+    }
+
     cpmm.sendAsyncMessage("RIL:UpdateIccContact", {requestId: requestId,
                                                    contactType: contactType,
                                                    contact: iccContact,
