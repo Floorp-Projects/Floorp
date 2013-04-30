@@ -228,9 +228,15 @@ ClippedImage::GetFrameInternal(const nsIntSize& aViewportSize,
                                                   aFlags)) {
     // Create a surface to draw into.
     gfxImageSurface::gfxImageFormat format = gfxASurface::ImageFormatARGB32;
-    nsRefPtr<gfxASurface> surface = gfxPlatform::GetPlatform()
-      ->CreateOffscreenSurface(gfxIntSize(mClip.width, mClip.height),
-                               gfxImageSurface::ContentFromFormat(format));
+
+#   if defined(XP_WIN)
+      nsRefPtr<gfxASurface> surface =
+        new gfxImageSurface(gfxIntSize(mClip.width, mClip.height), format);
+#   else
+      nsRefPtr<gfxASurface> surface = gfxPlatform::GetPlatform()
+        ->CreateOffscreenSurface(gfxIntSize(mClip.width, mClip.height),
+                                 gfxImageSurface::ContentFromFormat(format));
+#   endif
 
     // Create our callback.
     nsRefPtr<gfxDrawingCallback> drawTileCallback =
