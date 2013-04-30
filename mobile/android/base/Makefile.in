@@ -172,7 +172,7 @@ FENNEC_JAVA_FILES = \
   db/BrowserContract.java \
   db/BrowserProvider.java \
   db/FormHistoryProvider.java \
-  db/GeckoProvider.java \
+  db/PerProfileContentProvider.java \
   db/PasswordsProvider.java \
   db/TabsProvider.java \
   gfx/Axis.java \
