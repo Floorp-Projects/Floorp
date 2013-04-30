@@ -13,9 +13,9 @@
 %define toolbarShadowColor hsla(209,67%,12%,0.35)
 %define fgTabBackgroundMiddle linear-gradient(transparent, transparent 2px, -moz-dialog 2px, -moz-dialog)
 %define navbarTextboxCustomBorder border-color: rgba(0,0,0,.32);
-%define navbarLargeIcons #navigator-toolbox[iconsize=large][mode=icons] > #nav-bar
+%define navbarLargeIcons #navigator-toolbox[iconsize=large] > #nav-bar
 %define forwardTransitionLength 150ms
-%define conditionalForwardWithUrlbar window:not([chromehidden~=toolbar]) #navigator-toolbox[iconsize=large][mode=icons] > :-moz-any(#nav-bar[currentset*="unified-back-forward-button,urlbar-container"],#nav-bar:not([currentset])) > #unified-back-forward-button
+%define conditionalForwardWithUrlbar window:not([chromehidden~=toolbar]) #navigator-toolbox[iconsize=large] > :-moz-any(#nav-bar[currentset*="unified-back-forward-button,urlbar-container"],#nav-bar:not([currentset])) > #nav-bar-customizationtarget > #unified-back-forward-button
 %define conditionalForwardWithUrlbarWidth 27
 
 %ifdef MOZ_OFFICIAL_BRANDING
@@ -652,7 +652,7 @@ toolbarbutton.bookmark-item[open="true"] {
   height: 16px;
 }
 
-/* Prevent [mode="icons"] from hiding the label */
+/* Force the display of the label for bookmarks */
 .bookmark-item > .toolbarbutton-text {
   display: -moz-box !important;
 }
@@ -782,15 +782,6 @@ menuitem.bookmark-item {
 .toolbarbutton-1 > .toolbarbutton-icon,
 .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
   -moz-margin-end: 0;
-}
-
-toolbar[mode=full] .toolbarbutton-1:not([type=menu-button]) {
-  -moz-box-orient: vertical;
-}
-
-toolbar[mode=full] .toolbarbutton-1,
-toolbar[mode=full] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
-  min-width: 57px;
 }
 
 #nav-bar {
@@ -2174,10 +2165,6 @@ toolbarbutton.chevron > .toolbarbutton-icon {
   margin: 0;
 }
 
-toolbar[mode="text"] toolbarbutton.chevron > .toolbarbutton-icon {
-  display: -moz-box; /* display chevron icon in text mode */
-}
-
 #sidebar-throbber[loading="true"] {
   list-style-image: url("chrome://global/skin/icons/loading_16.png");
   -moz-margin-end: 4px;
@@ -2934,7 +2921,7 @@ chatbox {
 
 /* Customization mode */
 
-%include ../shared/customization.inc.css
+%include ../shared/customizableui/customizeMode.inc.css
 
 /* End customization mode */
 
