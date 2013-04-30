@@ -20,7 +20,10 @@ HBLIBS =
 HBSOURCES =  \
 	hb-atomic-private.hh \
 	hb-blob.cc \
+	hb-buffer-deserialize-json.hh \
+	hb-buffer-deserialize-text.hh \
 	hb-buffer-private.hh \
+	hb-buffer-serialize.cc \
 	hb-buffer.cc \
 	hb-cache-private.hh \
 	hb-common.cc \
@@ -257,11 +260,15 @@ arabic-table: gen-arabic-table.py ArabicShaping.txt UnicodeData.txt
 .PHONY: unicode-tables arabic-table indic-table
 
 BUILT_SOURCES += \
+	hb-buffer-deserialize-json.hh \
+	hb-buffer-deserialize-text.hh \
 	hb-ot-shape-complex-indic-machine.hh \
 	hb-ot-shape-complex-myanmar-machine.hh \
 	hb-ot-shape-complex-sea-machine.hh \
 	$(NULL)
 EXTRA_DIST += \
+	hb-buffer-deserialize-json.rl \
+	hb-buffer-deserialize-text.rl \
 	hb-ot-shape-complex-indic-machine.rl \
 	hb-ot-shape-complex-myanmar-machine.rl \
 	hb-ot-shape-complex-sea-machine.rl \
@@ -270,7 +277,13 @@ EXTRA_DIST += \
 	$(AM_V_GEN)$(top_srcdir)/missing --run ragel -e -F1 -o "$@.tmp" "$<" && \
 	mv "$@.tmp" "$@" || ( $(RM) "$@.tmp" && false )
 
-noinst_PROGRAMS = main test test-would-substitute test-size-params
+noinst_PROGRAMS = \
+	main \
+	test \
+	test-buffer-serialize \
+	test-size-params \
+	test-would-substitute \
+	$(NULL)
 bin_PROGRAMS =
 
 main_SOURCES = main.cc
@@ -288,6 +301,10 @@ test_would_substitute_LDADD = libharfbuzz.la $(HBLIBS) $(FREETYPE_LIBS)
 test_size_params_SOURCES = test-size-params.cc
 test_size_params_CPPFLAGS = $(HBCFLAGS)
 test_size_params_LDADD = libharfbuzz.la $(HBLIBS)
+
+test_buffer_serialize_SOURCES = test-buffer-serialize.cc
+test_buffer_serialize_CPPFLAGS = $(HBCFLAGS)
+test_buffer_serialize_LDADD = libharfbuzz.la $(HBLIBS)
 
 dist_check_SCRIPTS = \
 	check-c-linkage-decls.sh \

@@ -129,6 +129,11 @@ HB_UNICODE_FUNCS_IMPLEMENT_CALLBACKS_SIMPLE
    * be.  That has been reported to the Unicode Technical Committee for
    * consideration.  As such, we include it here, since Uniscribe removes it.
    *
+   * Note: While U+115F and U+1160 are Default_Ignorable, we do NOT want to
+   * hide them, as the way Uniscribe has implemented them is with regular
+   * spacing glyphs, and that's the way fonts are made to work.  As such,
+   * we make exceptions for those two.
+   *
    * Gathered from:
    * http://unicode.org/cldr/utility/list-unicodeset.jsp?a=[:DI:]&abb=on&ucd=on&esc=on
    *
@@ -141,8 +146,8 @@ HB_UNICODE_FUNCS_IMPLEMENT_CALLBACKS_SIMPLE
    *
    * 00AD ;SOFT HYPHEN
    * 034F ;COMBINING GRAPHEME JOINER
-   * 115F ;HANGUL CHOSEONG FILLER
-   * 1160 ;HANGUL JUNGSEONG FILLER
+   * #115F ;HANGUL CHOSEONG FILLER
+   * #1160 ;HANGUL JUNGSEONG FILLER
    * 17B4 ;KHMER VOWEL INHERENT AQ
    * 17B5 ;KHMER VOWEL INHERENT AA
    * 180B..180D ;MONGOLIAN FREE VARIATION SELECTOR THREE
@@ -168,7 +173,6 @@ HB_UNICODE_FUNCS_IMPLEMENT_CALLBACKS_SIMPLE
       switch (page) {
 	case 0x00: return unlikely (ch == 0x00AD);
 	case 0x03: return unlikely (ch == 0x034F);
-	case 0x11: return hb_in_range<hb_codepoint_t> (ch, 0x115F, 0x1160);
 	case 0x17: return hb_in_range<hb_codepoint_t> (ch, 0x17B4, 0x17B5);
 	case 0x18: return hb_in_range<hb_codepoint_t> (ch, 0x180B, 0x180E);
 	case 0x20: return hb_in_ranges<hb_codepoint_t> (ch, 0x200B, 0x200F,

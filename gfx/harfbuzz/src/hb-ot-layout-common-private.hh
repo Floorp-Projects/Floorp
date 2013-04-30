@@ -129,8 +129,7 @@ struct RecordListOf : RecordArrayOf<Type>
 struct RangeRecord
 {
   inline int cmp (hb_codepoint_t g) const {
-    hb_codepoint_t a = start, b = end;
-    return g < a ? -1 : g <= b ? 0 : +1 ;
+    return g < start ? -1 : g <= end ? 0 : +1 ;
   }
 
   inline bool sanitize (hb_sanitize_context_t *c) {

@@ -123,7 +123,7 @@ hb_blob_create_sub_blob (hb_blob_t    *parent,
 
   blob = hb_blob_create (parent->data + offset,
 			 MIN (length, parent->length - offset),
-			 parent->mode,
+			 HB_MEMORY_MODE_READONLY,
 			 hb_blob_reference (parent),
 			 (hb_destroy_func_t) hb_blob_destroy);
 

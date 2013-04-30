@@ -110,6 +110,7 @@ struct hb_buffer_t {
 
   HB_INTERNAL void add (hb_codepoint_t  codepoint,
 			unsigned int    cluster);
+  HB_INTERNAL void add_info (const hb_glyph_info_t &glyph_info);
 
   HB_INTERNAL void reverse_range (unsigned int start, unsigned int end);
   HB_INTERNAL void reverse (void);
@@ -128,7 +129,7 @@ struct hb_buffer_t {
   HB_INTERNAL void replace_glyph (hb_codepoint_t glyph_index);
   /* Makes a copy of the glyph at idx to output and replace glyph_index */
   HB_INTERNAL void output_glyph (hb_codepoint_t glyph_index);
-  HB_INTERNAL void output_info (hb_glyph_info_t &glyph_info);
+  HB_INTERNAL void output_info (const hb_glyph_info_t &glyph_info);
   /* Copies glyph at idx to output but doesn't advance idx */
   HB_INTERNAL void copy_glyph (void);
   /* Copies glyph at idx to output and advance idx.
