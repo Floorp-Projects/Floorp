@@ -115,6 +115,8 @@ class Configuration:
                 getter = lambda x: x.interface.isExternal()
             elif key == 'isJSImplemented':
                 getter = lambda x: x.interface.isJSImplemented()
+            elif key == 'isNavigatorProperty':
+                getter = lambda x: x.interface.getNavigatorProperty() != None
             else:
                 getter = lambda x: getattr(x, key)
             curr = filter(lambda x: getter(x) == val, curr)
