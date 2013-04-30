@@ -170,7 +170,7 @@ decompose (const hb_ot_shape_normalize_context_t *c, bool shortest, hb_codepoint
 }
 
 /* Returns 0 if didn't decompose, number of resulting characters otherwise. */
-static inline unsigned int
+static inline bool
 decompose_compatibility (const hb_ot_shape_normalize_context_t *c, hb_codepoint_t u)
 {
   unsigned int len, i;
@@ -191,6 +191,7 @@ decompose_compatibility (const hb_ot_shape_normalize_context_t *c, hb_codepoint_
   return len;
 }
 
+/* Returns true if recomposition may be benefitial. */
 static inline void
 decompose_current_character (const hb_ot_shape_normalize_context_t *c, bool shortest)
 {
@@ -230,6 +231,7 @@ handle_variation_selector_cluster (const hb_ot_shape_normalize_context_t *c, uns
   }
 }
 
+/* Returns true if recomposition may be benefitial. */
 static inline void
 decompose_multi_char_cluster (const hb_ot_shape_normalize_context_t *c, unsigned int end)
 {
@@ -351,11 +353,12 @@ _hb_ot_shape_normalize (const hb_ot_shape_plan_t *plan,
   while (buffer->idx < count)
   {
     hb_codepoint_t composed, glyph;
-    if (/* We don't try to compose a non-mark character with it's preceding starter.
-	 * This is both an optimization to avoid trying to compose every two neighboring
-	 * glyphs in most scripts AND a desired feature for Hangul.  Apparently Hangul
-	 * fonts are not designed to mix-and-match pre-composed syllables and Jamo. */
-	HB_UNICODE_GENERAL_CATEGORY_IS_MARK (_hb_glyph_info_get_general_category (&buffer->cur())) &&
+    if (/* If mode is NOT COMPOSED_FULL (ie. it's COMPOSED_DIACRITICS), we don't try to
+	 * compose a non-mark character with it's preceding starter.  This is just an
+	 * optimization to avoid trying to compose every two neighboring glyphs in most
+	 * scripts. */
+	(mode == HB_OT_SHAPE_NORMALIZATION_MODE_COMPOSED_FULL ||
+	 HB_UNICODE_GENERAL_CATEGORY_IS_MARK (_hb_glyph_info_get_general_category (&buffer->cur()))) &&
 	/* If there's anything between the starter and this char, they should have CCC
 	 * smaller than this character's. */
 	(starter == buffer->out_len - 1 ||
