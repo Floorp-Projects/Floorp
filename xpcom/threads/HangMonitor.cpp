@@ -184,13 +184,13 @@ ThreadMain(void*)
         timestamp == lastTimestamp &&
         gTimeout > 0) {
       ++waitCount;
-      if (waitCount == 2) {
+      if (waitCount >= 2) {
 #ifdef REPORT_CHROME_HANGS
         GetChromeHangReport(stack);
 #else
         int32_t delay =
           int32_t(PR_IntervalToSeconds(now - timestamp));
-        if (delay > gTimeout) {
+        if (delay >= gTimeout) {
           MonitorAutoUnlock unlock(*gMonitor);
           Crash();
         }
