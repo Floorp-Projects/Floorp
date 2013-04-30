@@ -523,10 +523,8 @@ public:
         PtrInfo *Add(void *aPointer, nsCycleCollectionParticipant *aParticipant)
         {
             if (mNext == mBlockEnd) {
-                Block *block;
-                if (!(*mNextBlock = block =
-                        static_cast<Block*>(NS_Alloc(sizeof(Block)))))
-                    return nullptr;
+                Block *block = static_cast<Block*>(NS_Alloc(sizeof(Block)));
+                *mNextBlock = block;
                 mNext = block->mEntries;
                 mBlockEnd = block->mEntries + BlockSize;
                 block->mNext = nullptr;
@@ -1878,10 +1876,6 @@ GCGraphBuilder::AddNode(void *s, nsCycleCollectionParticipant *aParticipant)
     if (!e->mNode) {
         // New entry.
         result = mNodeBuilder.Add(s, aParticipant);
-        if (!result) {
-            PL_DHashTableRawRemove(&mPtrToNodeMap, e);
-            return nullptr;
-        }
         e->mNode = result;
     } else {
         result = e->mNode;
