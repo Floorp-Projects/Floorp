@@ -14,7 +14,6 @@
 
 #include "js/Vector.h"
 
-ForwardDeclareJS(Atom);
 ForwardDeclareJS(FlatString);
 
 namespace js {
@@ -92,7 +91,7 @@ class StringBuffer
     js::RawFlatString finishString();
 
     /* Identical to finishString() except that an atom is created. */
-    js::RawAtom finishAtom();
+    JSAtom *finishAtom();
 
     /*
      * Creates a raw string from the characters in this buffer.  The string is
