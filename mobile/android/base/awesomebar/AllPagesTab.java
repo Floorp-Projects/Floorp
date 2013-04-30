@@ -151,6 +151,8 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
 
     @Override
     public void destroy() {
+        super.destroy();
+
         unregisterEventListener("SearchEngines:Data");
 
         mHandler.removeMessages(MESSAGE_UPDATE_FAVICONS);
@@ -321,13 +323,9 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
 
         @Override
         public void onClick() {
-            AwesomeBarTabs.OnUrlOpenListener listener = getUrlListener();
-            if (listener == null)
-                return;
-
             String url = mCursor.getString(mCursor.getColumnIndexOrThrow(URLColumns.URL));
             String title = mCursor.getString(mCursor.getColumnIndexOrThrow(URLColumns.TITLE));
-            listener.onUrlOpen(url, title);
+            sendToListener(url, title);
         }
 
         @Override
