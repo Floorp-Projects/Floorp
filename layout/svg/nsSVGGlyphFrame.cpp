@@ -306,7 +306,8 @@ nsSVGGlyphFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 {
   nsSVGGlyphFrameBase::DidSetStyleContext(aOldStyleContext);
 
-  if (!(GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
+  if (!(GetStateBits() & NS_FRAME_FIRST_REFLOW) ||
+      (GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)) {
     ClearTextRun();
     NotifyGlyphMetricsChange();
   }

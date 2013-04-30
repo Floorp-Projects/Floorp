@@ -2,10 +2,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-var tempScope = {};
-Cu.import("resource:///modules/devtools/Target.jsm", tempScope);
-var TargetFactory = tempScope.TargetFactory;
-
 var target;
 
 function test()

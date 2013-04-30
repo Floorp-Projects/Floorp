@@ -92,7 +92,7 @@ nsBlockReflowContext::ComputeCollapsedTopMargin(const nsHTMLReflowState& aRS,
   // B->nextinflow, we'll traverse B->nextinflow twice. But this is
   // OK because our traversal is idempotent.
   for ( ;block; block = static_cast<nsBlockFrame*>(block->GetNextInFlow())) {
-    for (int overflowLines = false; overflowLines <= true; ++overflowLines) {
+    for (int overflowLines = 0; overflowLines <= 1; ++overflowLines) {
       nsBlockFrame::line_iterator line;
       nsBlockFrame::line_iterator line_end;
       bool anyLines = true;

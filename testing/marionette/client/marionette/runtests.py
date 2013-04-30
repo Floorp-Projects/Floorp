@@ -31,7 +31,6 @@ class MarionetteTestResult(unittest._TextTestResult):
         del kwargs['marionette']
         super(MarionetteTestResult, self).__init__(*args, **kwargs)
         self.passed = 0
-        self.perfdata = None
         self.tests_passed = []
 
     def addSuccess(self, test):
@@ -70,14 +69,6 @@ class MarionetteTestResult(unittest._TextTestResult):
                     self.stream.writeln(' '.join(line).encode('ascii', 'replace'))
                 self.stream.writeln('END LOG:')
 
-    def getPerfData(self, test):
-        for testcase in test._tests:
-            if testcase.perfdata:
-                if not self.perfdata:
-                    self.perfdata = datazilla.DatazillaResult(testcase.perfdata)
-                else:
-                    self.perfdata.join_results(testcase.perfdata)
-
     def printErrorList(self, flavour, errors):
         for test, err in errors:
             self.stream.writeln(self.separator1)
@@ -104,8 +95,6 @@ class MarionetteTextTestRunner(unittest.TextTestRunner):
     resultclass = MarionetteTestResult
 
     def __init__(self, **kwargs):
-        self.perf = kwargs['perf']
-        del kwargs['perf']
         self.marionette = kwargs['marionette']
         del kwargs['marionette']
         unittest.TextTestRunner.__init__(self, **kwargs)
@@ -137,8 +126,6 @@ class MarionetteTextTestRunner(unittest.TextTestRunner):
         timeTaken = stopTime - startTime
         result.printErrors()
         result.printLogs(test)
-        if self.perf:
-            result.getPerfData(test)
         if hasattr(result, 'separator2'):
             self.stream.writeln(result.separator2)
         run = result.testsRun
@@ -186,9 +173,9 @@ class MarionetteTestRunner(object):
                  app=None, bin=None, profile=None, autolog=False, revision=None,
                  es_server=None, rest_server=None, logger=None,
                  testgroup="marionette", noWindow=False, logcat_dir=None,
-                 xml_output=None, repeat=0, perf=False, perfserv=None,
-                 gecko_path=None, testvars=None, tree=None, type=None,
-                 device=None, symbols_path=None, **kwargs):
+                 xml_output=None, repeat=0, gecko_path=None, testvars=None,
+                 tree=None, type=None, device=None, symbols_path=None,
+                 **kwargs):
         self.address = address
         self.emulator = emulator
         self.emulatorBinary = emulatorBinary
@@ -209,11 +196,8 @@ class MarionetteTestRunner(object):
         self.baseurl = None
         self.marionette = None
         self.logcat_dir = logcat_dir
-        self.perfrequest = None
         self.xml_output = xml_output
         self.repeat = repeat
-        self.perf = perf
-        self.perfserv = perfserv
         self.gecko_path = gecko_path
         self.testvars = {}
         self.test_kwargs = kwargs
@@ -254,7 +238,6 @@ class MarionetteTestRunner(object):
         self.failed = 0
         self.todo = 0
         self.failures = []
-        self.perfrequest = None
 
     def start_httpd(self):
         host = moznetwork.get_ip()
@@ -374,12 +357,6 @@ class MarionetteTestRunner(object):
         self.elapsedtime = datetime.utcnow() - starttime
         if self.autolog:
             self.post_to_autolog(self.elapsedtime)
-        if self.perfrequest and options.perf:
-            try:
-                self.perfrequest.submit()
-            except Exception, e:
-                print "Could not submit to datazilla"
-                print e
 
         if self.xml_output:
             xml_dir = os.path.dirname(os.path.abspath(self.xml_output))
@@ -434,30 +411,6 @@ class MarionetteTestRunner(object):
             manifest = TestManifest()
             manifest.read(filepath)
 
-            if self.perf:
-                if self.perfserv is None:
-                    self.perfserv = manifest.get("perfserv")[0]
-                machine_name = socket.gethostname()
-                try:
-                    manifest.has_key("machine_name")
-                    machine_name = manifest.get("machine_name")[0]
-                except:
-                    self.logger.info("Using machine_name: %s" % machine_name)
-                os_name = platform.system()
-                os_version = platform.release()
-                self.perfrequest = datazilla.DatazillaRequest(
-                             server=self.perfserv,
-                             machine_name=machine_name,
-                             os=os_name,
-                             os_version=os_version,
-                             platform=manifest.get("platform")[0],
-                             build_name=manifest.get("build_name")[0],
-                             version=manifest.get("version")[0],
-                             revision=self.revision,
-                             branch=manifest.get("branch")[0],
-                             id=os.getenv('BUILD_ID'),
-                             test_date=int(time.time()))
-
             manifest_tests = manifest.active_tests(disabled=False)
 
             for i in manifest.get(tests=manifest_tests, **testargs):
@@ -481,14 +434,11 @@ class MarionetteTestRunner(object):
 
         if suite.countTestCases():
             runner = MarionetteTextTestRunner(verbosity=3,
-                                              perf=self.perf,
                                               marionette=self.marionette)
             results = runner.run(suite)
             self.results.append(results)
 
             self.failed += len(results.failures) + len(results.errors)
-            if results.perfdata and options.perf:
-                self.perfrequest.add_datazilla_result(results.perfdata)
             if hasattr(results, 'skipped'):
                 self.todo += len(results.skipped) + len(results.expectedFailures)
             self.passed += results.passed
@@ -589,7 +539,7 @@ class MarionetteTestOptions(OptionParser):
         self.add_option('--revision',
                         action='store',
                         dest='revision',
-                        help='git revision for autolog/perfdata submissions')
+                        help='git revision for autolog submissions')
         self.add_option('--testgroup',
                         action='store',
                         dest='testgroup',
@@ -615,7 +565,7 @@ class MarionetteTestOptions(OptionParser):
                         dest='emulator_res',
                         type='str',
                         help='set a custom resolution for the emulator'
-                          'Example: "480x800"')
+                             'Example: "480x800"')
         self.add_option('--no-window',
                         action='store_true',
                         dest='noWindow',
@@ -659,16 +609,6 @@ class MarionetteTestOptions(OptionParser):
                         action='store',
                         help='profile to use when launching the gecko process. if not passed, then a profile will be '
                              'constructed and used')
-        self.add_option('--perf',
-                        dest='perf',
-                        action='store_true',
-                        default=False,
-                        help='send performance data to perf data server')
-        self.add_option('--perf-server',
-                        dest='perfserv',
-                        action='store',
-                        help='dataserver for perf data submission. entering this value will overwrite the perfserv '
-                             'value in any passed manifest files')
         self.add_option('--repeat',
                         dest='repeat',
                         action='store',
@@ -711,9 +651,6 @@ class MarionetteTestOptions(OptionParser):
         # default to storing logcat output for emulator runs
         if options.emulator and not options.logcat_dir:
             options.logcat_dir = 'logcat'
-
-        if options.perf:
-            import datazilla
 
         # check for valid resolution string, strip whitespaces
         try:

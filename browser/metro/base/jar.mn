@@ -42,6 +42,7 @@ chrome.jar:
   content/helperui/SelectionHelperUI.js        (content/helperui/SelectionHelperUI.js)
   content/helperui/FormHelperUI.js             (content/helperui/FormHelperUI.js)
   content/helperui/FindHelperUI.js             (content/helperui/FindHelperUI.js)
+  content/helperui/ItemPinHelper.js            (content/helperui/ItemPinHelper.js)
 
   content/contenthandlers/ContextMenuHandler.js (content/contenthandlers/ContextMenuHandler.js)
   content/contenthandlers/PluginCTPHandler.js  (content/contenthandlers/PluginCTPHandler.js)

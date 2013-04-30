@@ -268,7 +268,8 @@
               <richgrid id="start-bookmarks-grid" seltype="multiple" flex="1"/>
             </vbox>
             <vbox id="start-history" class="meta-section">
-              <label class="meta-section-title" value="&startHistoryHeader.label;"/>
+              <label class="meta-section-title" value="&startHistoryHeader.label;"
+                onclick="PanelUI.show('history-container');"/>
               <richgrid id="start-history-grid" seltype="multiple" flex="1"/>
             </vbox>
             <vbox id="start-remotetabs" class="meta-section">
@@ -311,30 +312,6 @@
       <textbox id="find-helper-textbox" class="search-bar content-navigator-item" oncommand="FindHelperUI.search(this.value)" oninput="FindHelperUI.updateCommands(this.value);" type="search"/>
     </vbox>
 
-    <!-- Windows 8 Appbar -->
-    <appbar id="appbar" mousethrough="never" observes="bcast_windowState">
-      <!-- contextual actions temporarily hidden, pending #800996 -->
-      <hbox id="contextualactions-tray" flex="1">
-        <toolbarbutton id="delete-selected-button" hidden="true" fade="true" oncommand="Appbar.dispatchContextualAction('delete')"/>
-        <toolbarbutton id="restore-selected-button" hidden="true" fade="true" oncommand="Appbar.dispatchContextualAction('restore')"/>
-        <toolbarbutton id="pin-selected-button" hidden="true" fade="true" oncommand="Appbar.dispatchContextualAction('pin')"/>
-        <toolbarbutton id="unpin-selected-button" hidden="true" fade="true" oncommand="Appbar.dispatchContextualAction('unpin')"/>
-        <toolbarbutton id="clear-selected-button" hidden="true" fade="true" oncommand="Appbar.dispatchContextualAction('clear')"/>
-      </hbox>
-      <hbox flex="1">
-        <toolbarbutton id="download-button" oncommand="Appbar.onDownloadButton()"/>
-        <toolbarbutton id="console-button" oncommand="Appbar.onConsoleButton()"/>
-        <toolbarbutton id="jsshell-button" oncommand="Appbar.onJSShellButton()"/>
-      </hbox>
-      <hbox>
-        <toolbarbutton id="more-button" onclick="Appbar.onMoreButton(event)" />
-        <toolbarbutton id="zoomout-button" oncommand="Appbar.onZoomOutButton()"/>
-        <toolbarbutton id="zoomin-button" oncommand="Appbar.onZoomInButton()"/>
-        <toolbarbutton id="star-button" type="checkbox" oncommand="Appbar.onStarButton()"/>
-        <toolbarbutton id="pin-button" type="checkbox" oncommand="Appbar.onPinButton()"/>
-      </hbox>
-    </appbar>
-
     <vbox id="panel-container" hidden="true" class="window-width window-height meta" observes="bcast_windowState">
       <hbox id="panel-header">
         <toolbarbutton id="panel-close-button" command="cmd_panel"/>
@@ -352,10 +329,10 @@
 
       <deck id="panel-items" selectedIndex="0" flex="1" >
         <scrollbox id="bookmarks-container" flex="1">
-          <richgrid id="bookmarks-list" class="canSnapTiles" seltype="single" flex="1"/>
+          <richgrid id="bookmarks-list" class="canSnapTiles" seltype="multiple" flex="1"/>
         </scrollbox>
         <scrollbox id="history-container" flex="1">
-          <richgrid id="history-list" class="canSnapTiles" seltype="single" flex="1"/>
+          <richgrid id="history-list" class="canSnapTiles" seltype="multiple" flex="1"/>
         </scrollbox>
         <scrollbox id="downloads-container" flex="1">
           <richgrid id="downloads-list" class="canSnapTiles" seltype="single" flex="1"/>
@@ -386,6 +363,29 @@
         </vbox>
       </deck>
     </vbox>
+
+    <!-- Windows 8 Appbar -->
+    <appbar id="appbar" mousethrough="never" observes="bcast_windowState">
+      <hbox id="contextualactions-tray" flex="1">
+        <toolbarbutton id="delete-selected-button" hidden="true" fade="true" oncommand="Appbar.dispatchContextualAction('delete')"/>
+        <toolbarbutton id="restore-selected-button" hidden="true" fade="true" oncommand="Appbar.dispatchContextualAction('restore')"/>
+        <toolbarbutton id="pin-selected-button" hidden="true" fade="true" oncommand="Appbar.dispatchContextualAction('pin')"/>
+        <toolbarbutton id="unpin-selected-button" hidden="true" fade="true" oncommand="Appbar.dispatchContextualAction('unpin')"/>
+        <toolbarbutton id="clear-selected-button" hidden="true" fade="true" oncommand="Appbar.dispatchContextualAction('clear')"/>
+      </hbox>
+      <hbox flex="1">
+        <toolbarbutton id="download-button" oncommand="Appbar.onDownloadButton()"/>
+        <toolbarbutton id="console-button" oncommand="Appbar.onConsoleButton()"/>
+        <toolbarbutton id="jsshell-button" oncommand="Appbar.onJSShellButton()"/>
+      </hbox>
+      <hbox>
+        <toolbarbutton id="more-button" onclick="Appbar.onMoreButton(event)" />
+        <toolbarbutton id="zoomout-button" oncommand="Appbar.onZoomOutButton()"/>
+        <toolbarbutton id="zoomin-button" oncommand="Appbar.onZoomInButton()"/>
+        <toolbarbutton id="star-button" type="checkbox" oncommand="Appbar.onStarButton()"/>
+        <toolbarbutton id="pin-button" type="checkbox" oncommand="Appbar.onPinButton()"/>
+      </hbox>
+    </appbar>
 
   <!-- Selection overlay - this should be below any content that can have selectable text -->
   <!-- onclick addresses dom bug 835175, str in bug 832957 -->

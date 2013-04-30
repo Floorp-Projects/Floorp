@@ -392,7 +392,7 @@ HTMLFrameSetElement::IsEventAttributeName(nsIAtom *aName)
   HTMLFrameSetElement::GetOn##name_()                                          \
   {                                                                            \
     nsPIDOMWindow* win = OwnerDoc()->GetInnerWindow();                         \
-    if (win && win->IsInnerWindow()) {                                         \
+    if (win) {                                                                 \
       nsCOMPtr<nsISupports> supports = do_QueryInterface(win);                 \
       nsGlobalWindow* globalWin = nsGlobalWindow::FromSupports(supports);      \
       return globalWin->GetOn##name_();                                        \
@@ -403,7 +403,7 @@ HTMLFrameSetElement::IsEventAttributeName(nsIAtom *aName)
   HTMLFrameSetElement::SetOn##name_(type_* handler, ErrorResult& error)        \
   {                                                                            \
     nsPIDOMWindow* win = OwnerDoc()->GetInnerWindow();                         \
-    if (!win || !win->IsInnerWindow()) {                                       \
+    if (!win) {                                                                \
       return;                                                                  \
     }                                                                          \
                                                                                \

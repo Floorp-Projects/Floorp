@@ -8,6 +8,9 @@ this.EXPORTED_SYMBOLS = [
   "DummyMeasurement",
   "DummyProvider",
   "DummyConstantProvider",
+  "DummyPullOnlyThrowsOnInitProvider",
+  "DummyThrowOnInitProvider",
+  "DummyThrowOnShutdownProvider",
 ];
 
 const {utils: Cu} = Components;
@@ -98,7 +101,7 @@ DummyProvider.prototype = {
 
 
 this.DummyConstantProvider = function () {
-  DummyProvider.call(this, "DummyConstantProvider");
+  DummyProvider.call(this, this.name);
 }
 
 DummyConstantProvider.prototype = {
@@ -107,5 +110,45 @@ DummyConstantProvider.prototype = {
   name: "DummyConstantProvider",
 
   pullOnly: true,
+};
+
+this.DummyThrowOnInitProvider = function () {
+  DummyProvider.call(this, "DummyThrowOnInitProvider");
+
+  throw new Error("Dummy Error");
+};
+
+this.DummyThrowOnInitProvider.prototype = {
+  __proto__: DummyProvider.prototype,
+
+  name: "DummyThrowOnInitProvider",
+};
+
+this.DummyPullOnlyThrowsOnInitProvider = function () {
+  DummyConstantProvider.call(this);
+
+  throw new Error("Dummy Error");
+};
+
+this.DummyPullOnlyThrowsOnInitProvider.prototype = {
+  __proto__: DummyConstantProvider.prototype,
+
+  name: "DummyPullOnlyThrowsOnInitProvider",
+};
+
+this.DummyThrowOnShutdownProvider = function () {
+  DummyProvider.call(this, "DummyThrowOnShutdownProvider");
+};
+
+this.DummyThrowOnShutdownProvider.prototype = {
+  __proto__: DummyProvider.prototype,
+
+  name: "DummyThrowOnShutdownProvider",
+
+  pullOnly: true,
+
+  onShutdown: function () {
+    throw new Error("Dummy shutdown error");
+  },
 };
 

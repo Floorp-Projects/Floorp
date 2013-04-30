@@ -1,3 +1,7 @@
 // |jit-test| error: TypeError
-toString = undefined;
-if (!(this in ParallelArray)) {}
+if (getBuildConfiguration().parallelJS) {
+  toString = undefined;
+  if (!(this in ParallelArray)) {}
+} else {
+  throw new TypeError();
+}

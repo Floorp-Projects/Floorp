@@ -154,9 +154,9 @@ nsWifiMonitor::Onready(uint32_t count, nsIWifiScanResult **results)
   ReplaceArray(mLastAccessPoints, accessPoints);
 
   nsTArray<nsIWifiAccessPoint*> ac;
-  uint32_t resultCount = accessPoints.Count();
+  uint32_t resultCount = mLastAccessPoints.Count();
   for (uint32_t i = 0; i < resultCount; i++) {
-    ac.AppendElement(accessPoints[i]);
+    ac.AppendElement(mLastAccessPoints[i]);
   }
 
   for (uint32_t i = 0; i < mListeners.Length(); i++) {
