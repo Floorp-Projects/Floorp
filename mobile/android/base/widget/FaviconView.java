@@ -5,11 +5,16 @@
 
 package org.mozilla.gecko.widget;
 
+import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.Favicons;
 import org.mozilla.gecko.R;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Color;
+import android.graphics.PorterDuff.Mode;
+import android.graphics.drawable.Drawable;
+import android.os.AsyncTask;
 import android.util.AttributeSet;
 import android.widget.ImageView;
 
@@ -25,7 +30,7 @@ public class FaviconView extends ImageView {
     }
 
     @Override
-    public void setImageBitmap(Bitmap bitmap) {
+    public void setImageBitmap(final Bitmap bitmap) {
         if (bitmap == null) {
             // Call setImageDrawable directly to avoid creating a useless BitmapDrawable.
             setImageDrawable(null);
@@ -37,8 +42,21 @@ public class FaviconView extends ImageView {
             setBackgroundResource(0);
         } else {
             super.setImageBitmap(bitmap);
-            // XXX Otherwise show a dominant color background.
-            setBackgroundResource(R.drawable.favicon_bg);
+            // Otherwise show a dominant color background.
+            new AsyncTask<Void, Void, Integer>(){
+                @Override
+                public Integer doInBackground(Void... params) {
+                    return BitmapUtils.getDominantColor(bitmap);
+                }
+                @Override
+                public void onPostExecute(Integer color) {
+                    // Set an alpha value on the dominant color.
+                    color = Color.argb(70, Color.red(color), Color.green(color), Color.blue(color));
+                    Drawable drawable = getResources().getDrawable(R.drawable.favicon_bg);
+                    drawable.setColorFilter(color, Mode.SRC_ATOP);
+                    setBackgroundDrawable(drawable);
+                }
+            }.execute();
         }
     }
 }
