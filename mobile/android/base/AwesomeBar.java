@@ -56,6 +56,7 @@ public class AwesomeBar extends GeckoActivity
     private static final String LOGTAG = "GeckoAwesomeBar";
 
     public static final String URL_KEY = "url";
+    public static final String TAB_KEY = "tab";
     public static final String CURRENT_URL_KEY = "currenturl";
     public static final String TARGET_KEY = "target";
     public static final String SEARCH_KEY = "search";
@@ -119,6 +120,13 @@ public class AwesomeBar extends GeckoActivity
                         imm.showSoftInput(mText, InputMethodManager.SHOW_IMPLICIT);
                     }
                 });
+            }
+
+            @Override
+            public void onSwitchToTab(final int tabId) {
+                Intent resultIntent = new Intent();
+                resultIntent.putExtra(TAB_KEY, Integer.toString(tabId));
+                finishWithResult(resultIntent);
             }
         });
 
