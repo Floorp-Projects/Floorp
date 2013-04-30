@@ -566,9 +566,9 @@ class StackTypeSet : public TypeSet
 
     void addSubset(JSContext *cx, TypeSet *target);
     void addGetProperty(JSContext *cx, JSScript *script, jsbytecode *pc,
-                        StackTypeSet *target, RawId id);
+                        StackTypeSet *target, jsid id);
     void addSetProperty(JSContext *cx, JSScript *script, jsbytecode *pc,
-                        StackTypeSet *target, RawId id);
+                        StackTypeSet *target, jsid id);
     void addSetElement(JSContext *cx, JSScript *script, jsbytecode *pc,
                        StackTypeSet *objectTypes, StackTypeSet *valueTypes);
     void addCall(JSContext *cx, TypeCallsite *site);
@@ -631,7 +631,7 @@ class StackTypeSet : public TypeSet
     RawObject getSingleton();
 
     /* Whether any objects in the type set needs a barrier on id. */
-    bool propertyNeedsBarrier(JSContext *cx, RawId id);
+    bool propertyNeedsBarrier(JSContext *cx, jsid id);
 
     /*
      * Whether this set contains all types in other, except (possibly) the
@@ -680,7 +680,7 @@ class HeapTypeSet : public TypeSet
 
     void addSubset(JSContext *cx, TypeSet *target);
     void addGetProperty(JSContext *cx, JSScript *script, jsbytecode *pc,
-                        StackTypeSet *target, RawId id);
+                        StackTypeSet *target, jsid id);
     void addCallProperty(JSContext *cx, JSScript *script, jsbytecode *pc, jsid id);
     void addFilterPrimitives(JSContext *cx, TypeSet *target);
     void addSubsetBarrier(JSContext *cx, JSScript *script, jsbytecode *pc, TypeSet *target);
@@ -859,7 +859,7 @@ struct Property
     inline Property(jsid id);
     inline Property(const Property &o);
 
-    static uint32_t keyBits(RawId id) { return uint32_t(JSID_BITS(id)); }
+    static uint32_t keyBits(jsid id) { return uint32_t(JSID_BITS(id)); }
     static jsid getKey(Property *p) { return p->id; }
 };
 
@@ -1047,10 +1047,10 @@ struct TypeObject : gc::Cell
      * assignment, and the own types of the property will be used instead of
      * aggregate types.
      */
-    inline HeapTypeSet *getProperty(JSContext *cx, RawId id, bool own);
+    inline HeapTypeSet *getProperty(JSContext *cx, jsid id, bool own);
 
     /* Get a property only if it already exists. */
-    inline HeapTypeSet *maybeGetProperty(RawId id, JSContext *cx);
+    inline HeapTypeSet *maybeGetProperty(jsid id, JSContext *cx);
 
     inline unsigned getPropertyCount();
     inline Property *getProperty(unsigned i);
@@ -1063,7 +1063,7 @@ struct TypeObject : gc::Cell
 
     /* Helpers */
 
-    bool addProperty(JSContext *cx, RawId id, Property **pprop);
+    bool addProperty(JSContext *cx, jsid id, Property **pprop);
     bool addDefiniteProperties(JSContext *cx, JSObject *obj);
     bool matchDefiniteProperties(HandleObject obj);
     void addPrototype(JSContext *cx, TypeObject *proto);

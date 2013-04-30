@@ -4471,7 +4471,7 @@ baseops::SetElementAttributes(JSContext *cx, HandleObject obj, uint32_t index, u
     if (nobj->isNative() && IsImplicitDenseElement(shape)) {
         if (!JSObject::sparsifyDenseElement(cx, obj, index))
             return false;
-        RawId id = INT_TO_JSID(index);
+        jsid id = INT_TO_JSID(index);
         shape = obj->nativeLookup(cx, HandleId::fromMarkedLocation(&id)); // not a gcthing
     }
     return nobj->isNative()

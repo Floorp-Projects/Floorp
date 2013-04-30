@@ -277,8 +277,8 @@ TypeFlagPrimitive(TypeFlags flags)
  * maintains the constraint that if two different jsids map to the same property
  * in JS (e.g. 3 and "3"), they have the same type representation.
  */
-inline RawId
-IdToTypeId(RawId id)
+inline jsid
+IdToTypeId(jsid id)
 {
     JS_ASSERT(!JSID_IS_EMPTY(id));
 
@@ -313,7 +313,7 @@ const char * TypeIdStringImpl(jsid id);
 
 /* Convert an id for printing during debug. */
 static inline const char *
-TypeIdString(RawId id)
+TypeIdString(jsid id)
 {
 #ifdef DEBUG
     return TypeIdStringImpl(id);
@@ -597,7 +597,7 @@ TypeMonitorCall(JSContext *cx, const js::CallArgs &args, bool constructing)
 }
 
 inline bool
-TrackPropertyTypes(JSContext *cx, RawObject obj, RawId id)
+TrackPropertyTypes(JSContext *cx, RawObject obj, jsid id)
 {
     if (!cx->typeInferenceEnabled() || obj->hasLazyType() || obj->type()->unknownProperties())
         return false;
@@ -609,7 +609,7 @@ TrackPropertyTypes(JSContext *cx, RawObject obj, RawId id)
 }
 
 inline void
-EnsureTrackPropertyTypes(JSContext *cx, RawObject obj, RawId id)
+EnsureTrackPropertyTypes(JSContext *cx, RawObject obj, jsid id)
 {
     JS_ASSERT(!obj->hasLazyType());
 
@@ -690,7 +690,7 @@ MarkTypeObjectUnknownProperties(JSContext *cx, TypeObject *obj,
  * have a getter/setter.
  */
 inline void
-MarkTypePropertyConfigured(JSContext *cx, HandleObject obj, RawId id)
+MarkTypePropertyConfigured(JSContext *cx, HandleObject obj, jsid id)
 {
     if (cx->typeInferenceEnabled())
         id = IdToTypeId(id);
@@ -1599,7 +1599,7 @@ TypeObject::setBasePropertyCount(uint32_t count)
 }
 
 inline HeapTypeSet *
-TypeObject::getProperty(JSContext *cx, RawId id, bool own)
+TypeObject::getProperty(JSContext *cx, jsid id, bool own)
 {
     JS_ASSERT(cx->compartment->activeAnalysis);
 
@@ -1648,13 +1648,13 @@ TypeObject::getProperty(JSContext *cx, RawId id, bool own)
 }
 
 inline HeapTypeSet *
-TypeObject::maybeGetProperty(RawId id, JSContext *cx)
+TypeObject::maybeGetProperty(jsid id, JSContext *cx)
 {
     JS_ASSERT(JSID_IS_VOID(id) || JSID_IS_EMPTY(id) || JSID_IS_STRING(id));
     JS_ASSERT_IF(!JSID_IS_EMPTY(id), id == IdToTypeId(id));
     JS_ASSERT(!unknownProperties());
 
-    Property *prop = HashSetLookup<RawId,Property,Property>
+    Property *prop = HashSetLookup<jsid,Property,Property>
         (propertySet, basePropertyCount(), id);
 
     return prop ? &prop->types : NULL;
