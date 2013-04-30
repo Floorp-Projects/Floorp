@@ -196,8 +196,6 @@ public:
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaResource)
 
-  virtual ~MediaResource() {}
-
   // The following can be called on the main thread only:
   // Get the URI
   virtual nsIURI* URI() const { return nullptr; }
@@ -224,7 +222,7 @@ public:
   // Create a new stream of the same type that refers to the same URI
   // with a new channel. Any cached data associated with the original
   // stream should be accessible in the new stream too.
-  virtual MediaResource* CloneData(MediaDecoder* aDecoder) = 0;
+  virtual already_AddRefed<MediaResource> CloneData(MediaDecoder* aDecoder) = 0;
   // Set statistics to be recorded to the object passed in.
   virtual void RecordStatisticsTo(MediaChannelStatistics *aStatistics) { }
 
@@ -313,9 +311,7 @@ public:
   // changes.
   // For resources using the media cache, this returns true only when all
   // streams for the same resource are all suspended.
-  // If aActiveResource is non-null, fills it with a pointer to a stream
-  // for this resource that is not suspended or ended.
-  virtual bool IsSuspendedByCache(MediaResource** aActiveResource) = 0;
+  virtual bool IsSuspendedByCache() = 0;
   // Returns true if this stream has been suspended.
   virtual bool IsSuspended() = 0;
   // Reads only data which is cached in the media cache. If you try to read
@@ -335,7 +331,7 @@ public:
    * Create a resource, reading data from the channel. Call on main thread only.
    * The caller must follow up by calling resource->Open().
    */
-  static MediaResource* Create(MediaDecoder* aDecoder, nsIChannel* aChannel);
+  static already_AddRefed<MediaResource> Create(MediaDecoder* aDecoder, nsIChannel* aChannel);
 
   /**
    * Open the stream. This creates a stream listener and returns it in
@@ -374,6 +370,8 @@ public:
   // nsIChannel when the MediaResource is created. Safe to call from
   // any thread.
   virtual const nsCString& GetContentType() const = 0;
+protected:
+  virtual ~MediaResource() {};
 };
 
 class BaseMediaResource : public MediaResource {
@@ -496,7 +494,7 @@ public:
   // Return true if the stream has been closed.
   bool IsClosed() const { return mCacheStream.IsClosed(); }
   virtual bool     CanClone();
-  virtual MediaResource* CloneData(MediaDecoder* aDecoder);
+  virtual already_AddRefed<MediaResource> CloneData(MediaDecoder* aDecoder);
   // Set statistics to be recorded to the object passed in. If not called,
   // |ChannelMediaResource| will create it's own statistics objects in |Open|.
   void RecordStatisticsTo(MediaChannelStatistics *aStatistics) MOZ_OVERRIDE {
@@ -526,7 +524,7 @@ public:
   virtual int64_t GetNextCachedData(int64_t aOffset);
   virtual int64_t GetCachedDataEnd(int64_t aOffset);
   virtual bool    IsDataCachedToEndOfResource(int64_t aOffset);
-  virtual bool    IsSuspendedByCache(MediaResource** aActiveResource);
+  virtual bool    IsSuspendedByCache();
   virtual bool    IsSuspended();
   virtual bool    IsTransportSeekable() MOZ_OVERRIDE;
 
@@ -547,7 +545,7 @@ public:
     void Revoke() { mResource = nullptr; }
 
   private:
-    ChannelMediaResource* mResource;
+    nsRefPtr<ChannelMediaResource> mResource;
   };
   friend class Listener;
 
