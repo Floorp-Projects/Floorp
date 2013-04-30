@@ -6916,7 +6916,7 @@ class MInstanceOf
     CompilerRootObject protoObj_;
 
   public:
-    MInstanceOf(MDefinition *obj, RawObject proto)
+    MInstanceOf(MDefinition *obj, JSObject *proto)
       : MUnaryInstruction(obj),
         protoObj_(proto)
     {
@@ -6929,7 +6929,7 @@ class MInstanceOf
         return this;
     }
 
-    RawObject prototypeObject() {
+    JSObject *prototypeObject() {
         return protoObj_;
     }
 };

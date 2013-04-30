@@ -951,7 +951,7 @@ HeapTypeSet::addFilterPrimitives(JSContext *cx, TypeSet *target)
 
 /* If id is a normal slotful 'own' property of an object, get its shape. */
 static inline Shape *
-GetSingletonShape(JSContext *cx, RawObject obj, jsid idArg)
+GetSingletonShape(JSContext *cx, JSObject *obj, jsid idArg)
 {
     if (!obj->isNative())
         return NULL;
@@ -1164,7 +1164,7 @@ MarkPropertyAccessUnknown(JSContext *cx, JSScript *script, jsbytecode *pc, TypeS
  * property.
  */
 static inline Type
-GetSingletonPropertyType(JSContext *cx, RawObject rawObjArg, HandleId id)
+GetSingletonPropertyType(JSContext *cx, JSObject *rawObjArg, HandleId id)
 {
     RootedObject obj(cx, rawObjArg);    // Root this locally because it's assigned to.
 
@@ -2185,7 +2185,7 @@ StackTypeSet::getKnownClass()
 
     for (unsigned i = 0; i < count; i++) {
         Class *nclasp;
-        if (RawObject object = getSingleObject(i))
+        if (JSObject *object = getSingleObject(i))
             nclasp = object->getClass();
         else if (TypeObject *object = getTypeObject(i))
             nclasp = object->clasp;
@@ -2219,7 +2219,7 @@ StackTypeSet::isDOMClass()
     unsigned count = getObjectCount();
     for (unsigned i = 0; i < count; i++) {
         Class *clasp;
-        if (RawObject object = getSingleObject(i))
+        if (JSObject *object = getSingleObject(i))
             clasp = object->getClass();
         else if (TypeObject *object = getTypeObject(i))
             clasp = object->clasp;
@@ -2244,7 +2244,7 @@ StackTypeSet::getCommonPrototype()
 
     for (unsigned i = 0; i < count; i++) {
         TaggedProto nproto;
-        if (RawObject object = getSingleObject(i))
+        if (JSObject *object = getSingleObject(i))
             nproto = object->getProto();
         else if (TypeObject *object = getTypeObject(i))
             nproto = object->proto.get();
@@ -3637,7 +3637,7 @@ TypeObject::getFromPrototypes(JSContext *cx, jsid id, TypeSet *types, bool force
 }
 
 static inline void
-UpdatePropertyType(JSContext *cx, TypeSet *types, RawObject obj, Shape *shape,
+UpdatePropertyType(JSContext *cx, TypeSet *types, JSObject *obj, Shape *shape,
                    bool force)
 {
     types->setOwnProperty(cx, false);
@@ -5350,8 +5350,8 @@ AnalyzePoppedThis(JSContext *cx, Vector<SSAUseChain *> *pendingPoppedThis,
             /* Need to definitely be calling Function.call/apply on a specific script. */
             RootedFunction function(cx);
             {
-                RawObject funcallObj = funcallTypes->getSingleton();
-                RawObject scriptObj = scriptTypes->getSingleton();
+                JSObject *funcallObj = funcallTypes->getSingleton();
+                JSObject *scriptObj = scriptTypes->getSingleton();
                 if (!funcallObj || !funcallObj->isFunction() ||
                     funcallObj->toFunction()->isInterpreted() ||
                     !scriptObj || !scriptObj->isFunction() ||

@@ -27,14 +27,14 @@ using namespace js::gc;
 using mozilla::ArrayLength;
 
 static inline HeapSlot &
-GetCall(RawObject proxy)
+GetCall(JSObject *proxy)
 {
     JS_ASSERT(IsFunctionProxy(proxy));
     return proxy->getSlotRef(JSSLOT_PROXY_CALL);
 }
 
 static inline Value
-GetConstruct(RawObject proxy)
+GetConstruct(JSObject *proxy)
 {
     if (proxy->slotSpan() <= JSSLOT_PROXY_CONSTRUCT)
         return UndefinedValue();
@@ -42,7 +42,7 @@ GetConstruct(RawObject proxy)
 }
 
 static inline HeapSlot &
-GetFunctionProxyConstruct(RawObject proxy)
+GetFunctionProxyConstruct(JSObject *proxy)
 {
     JS_ASSERT(IsFunctionProxy(proxy));
     JS_ASSERT(proxy->slotSpan() > JSSLOT_PROXY_CONSTRUCT);
@@ -2978,7 +2978,7 @@ proxy_DeleteSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid, JSBool
 }
 
 static void
-proxy_TraceObject(JSTracer *trc, RawObject obj)
+proxy_TraceObject(JSTracer *trc, JSObject *obj)
 {
 #ifdef DEBUG
     if (!trc->runtime->gcDisableStrictProxyCheckingCount && obj->isWrapper()) {
@@ -3009,7 +3009,7 @@ proxy_TraceObject(JSTracer *trc, RawObject obj)
 }
 
 static void
-proxy_TraceFunction(JSTracer *trc, RawObject obj)
+proxy_TraceFunction(JSTracer *trc, JSObject *obj)
 {
     // NB: If you add new slots here, make sure to change
     // js::NukeChromeCrossCompartmentWrappers to cope.
@@ -3019,7 +3019,7 @@ proxy_TraceFunction(JSTracer *trc, RawObject obj)
 }
 
 static JSObject *
-proxy_WeakmapKeyDelegate(RawObject obj)
+proxy_WeakmapKeyDelegate(JSObject *obj)
 {
     JS_ASSERT(obj->isProxy());
     return GetProxyHandler(obj)->weakmapKeyDelegate(obj);
@@ -3033,7 +3033,7 @@ proxy_Convert(JSContext *cx, HandleObject proxy, JSType hint, MutableHandleValue
 }
 
 static void
-proxy_Finalize(FreeOp *fop, RawObject obj)
+proxy_Finalize(FreeOp *fop, JSObject *obj)
 {
     JS_ASSERT(obj->isProxy());
     GetProxyHandler(obj)->finalize(fop, obj);

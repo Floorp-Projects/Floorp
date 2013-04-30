@@ -491,7 +491,7 @@ bool GreaterThanOrEqual(JSContext *cx, MutableHandleValue lhs, MutableHandleValu
 template<bool Equal>
 bool StringsEqual(JSContext *cx, HandleString left, HandleString right, JSBool *res);
 
-JSBool ObjectEmulatesUndefined(RawObject obj);
+JSBool ObjectEmulatesUndefined(JSObject *obj);
 
 bool IteratorMore(JSContext *cx, HandleObject obj, JSBool *res);
 

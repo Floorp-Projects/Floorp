@@ -44,10 +44,10 @@ static JSBool
 Exception(JSContext *cx, unsigned argc, Value *vp);
 
 static void
-exn_trace(JSTracer *trc, RawObject obj);
+exn_trace(JSTracer *trc, JSObject *obj);
 
 static void
-exn_finalize(FreeOp *fop, RawObject obj);
+exn_finalize(FreeOp *fop, JSObject *obj);
 
 static JSBool
 exn_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
@@ -242,7 +242,7 @@ struct SuppressErrorsGuard
 };
 
 static void
-SetExnPrivate(RawObject exnObject, JSExnPrivate *priv);
+SetExnPrivate(JSObject *exnObject, JSExnPrivate *priv);
 
 static bool
 InitExnPrivate(JSContext *cx, HandleObject exnObject, HandleString message,
@@ -336,14 +336,14 @@ InitExnPrivate(JSContext *cx, HandleObject exnObject, HandleString message,
 }
 
 static inline JSExnPrivate *
-GetExnPrivate(RawObject obj)
+GetExnPrivate(JSObject *obj)
 {
     JS_ASSERT(obj->isError());
     return (JSExnPrivate *) obj->getPrivate();
 }
 
 static void
-exn_trace(JSTracer *trc, RawObject obj)
+exn_trace(JSTracer *trc, JSObject *obj)
 {
     if (JSExnPrivate *priv = GetExnPrivate(obj)) {
         if (priv->message)
@@ -361,7 +361,7 @@ exn_trace(JSTracer *trc, RawObject obj)
 
 /* NB: An error object's private must be set through this function. */
 static void
-SetExnPrivate(RawObject exnObject, JSExnPrivate *priv)
+SetExnPrivate(JSObject *exnObject, JSExnPrivate *priv)
 {
     JS_ASSERT(!exnObject->getPrivate());
     JS_ASSERT(exnObject->isError());
@@ -373,7 +373,7 @@ SetExnPrivate(RawObject exnObject, JSExnPrivate *priv)
 }
 
 static void
-exn_finalize(FreeOp *fop, RawObject obj)
+exn_finalize(FreeOp *fop, JSObject *obj)
 {
     if (JSExnPrivate *priv = GetExnPrivate(obj)) {
         if (JSErrorReport *report = priv->errorReport) {
@@ -470,7 +470,7 @@ js_ErrorFromException(jsval exn)
     if (JSVAL_IS_PRIMITIVE(exn))
         return NULL;
 
-    RawObject obj = JSVAL_TO_OBJECT(exn);
+    JSObject *obj = JSVAL_TO_OBJECT(exn);
     if (!obj->isError())
         return NULL;
 

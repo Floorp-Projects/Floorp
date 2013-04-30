@@ -383,7 +383,7 @@ gc::MarkKind(JSTracer *trc, void **thingp, JSGCTraceKind kind)
     JS_ASSERT_IF(cell->isTenured(), kind == MapAllocToTraceKind(cell->tenuredGetAllocKind()));
     switch (kind) {
       case JSTRACE_OBJECT:
-        MarkInternal(trc, reinterpret_cast<RawObject *>(thingp));
+        MarkInternal(trc, reinterpret_cast<JSObject **>(thingp));
         break;
       case JSTRACE_STRING:
         MarkInternal(trc, reinterpret_cast<JSString **>(thingp));
@@ -652,7 +652,7 @@ gc::MarkObjectSlots(JSTracer *trc, JSObject *obj, uint32_t start, uint32_t nslot
 }
 
 static bool
-ShouldMarkCrossCompartment(JSTracer *trc, RawObject src, Cell *cell)
+ShouldMarkCrossCompartment(JSTracer *trc, JSObject *src, Cell *cell)
 {
     if (!IS_GC_MARKING_TRACER(trc))
         return true;
@@ -690,14 +690,14 @@ ShouldMarkCrossCompartment(JSTracer *trc, RawObject src, Cell *cell)
 }
 
 void
-gc::MarkCrossCompartmentObjectUnbarriered(JSTracer *trc, RawObject src, JSObject **dst, const char *name)
+gc::MarkCrossCompartmentObjectUnbarriered(JSTracer *trc, JSObject *src, JSObject **dst, const char *name)
 {
     if (ShouldMarkCrossCompartment(trc, src, *dst))
         MarkObjectUnbarriered(trc, dst, name);
 }
 
 void
-gc::MarkCrossCompartmentScriptUnbarriered(JSTracer *trc, RawObject src, JSScript **dst,
+gc::MarkCrossCompartmentScriptUnbarriered(JSTracer *trc, JSObject *src, JSScript **dst,
                                       const char *name)
 {
     if (ShouldMarkCrossCompartment(trc, src, *dst))
@@ -705,7 +705,7 @@ gc::MarkCrossCompartmentScriptUnbarriered(JSTracer *trc, RawObject src, JSScript
 }
 
 void
-gc::MarkCrossCompartmentSlot(JSTracer *trc, RawObject src, HeapSlot *dst, const char *name)
+gc::MarkCrossCompartmentSlot(JSTracer *trc, JSObject *src, HeapSlot *dst, const char *name)
 {
     if (dst->isMarkable() && ShouldMarkCrossCompartment(trc, src, (Cell *)dst->toGCThing()))
         MarkSlot(trc, dst, name);
@@ -1491,7 +1491,7 @@ js::TraceChildren(JSTracer *trc, void *thing, JSGCTraceKind kind)
 {
     switch (kind) {
       case JSTRACE_OBJECT:
-        MarkChildren(trc, static_cast<RawObject>(thing));
+        MarkChildren(trc, static_cast<JSObject *>(thing));
         break;
 
       case JSTRACE_STRING:
