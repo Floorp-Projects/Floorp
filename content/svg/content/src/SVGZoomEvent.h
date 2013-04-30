@@ -8,31 +8,50 @@
 
 #include "nsAutoPtr.h"
 #include "nsDOMUIEvent.h"
-#include "nsIDOMSVGZoomEvent.h"
+#include "DOMSVGPoint.h"
+#include "mozilla/dom/SVGZoomEventBinding.h"
 
 class nsGUIEvent;
+class nsISVGPoint;
 class nsPresContext;
 
 namespace mozilla {
-class DOMSVGPoint;
-
 namespace dom {
 
-class SVGZoomEvent : public nsDOMUIEvent,
-                     public nsIDOMSVGZoomEvent
+class SVGZoomEvent MOZ_FINAL : public nsDOMUIEvent
 {
 public:
   SVGZoomEvent(EventTarget* aOwner, nsPresContext* aPresContext,
                nsGUIEvent* aEvent);
-                     
-  // nsISupports interface:
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIDOMSVGZoomEvent interface:
-  NS_DECL_NSIDOMSVGZOOMEVENT
 
   // Forward to base class
   NS_FORWARD_TO_NSDOMUIEVENT
+
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
+  {
+    return SVGZoomEventBinding::Wrap(aCx, aScope, this);
+  }
+
+  float PreviousScale() const
+  {
+    return mPreviousScale;
+  }
+
+  nsISVGPoint* GetPreviousTranslate() const
+  {
+    return mPreviousTranslate;
+  }
+
+  float NewScale() const
+  {
+    return mNewScale;
+  }
+
+  nsISVGPoint* GetNewTranslate() const
+  {
+    return mNewTranslate;
+  }
 
 private:
   float mPreviousScale;
