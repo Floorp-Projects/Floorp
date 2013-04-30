@@ -34,7 +34,7 @@ sdnAccessible::QueryInterface(REFIID aREFIID, void** aInstancePtr)
   *aInstancePtr = nullptr;
 
   if (aREFIID == IID_ISimpleDOMNode) {
-    *aInstancePtr = this;
+    *aInstancePtr = static_cast<ISimpleDOMNode*>(this);
     AddRef();
     return S_OK;
   }
@@ -46,7 +46,7 @@ sdnAccessible::QueryInterface(REFIID aREFIID, void** aInstancePtr)
   // IUnknown* is the canonical one if and only if this accessible doesn't have
   // an accessible.
   if (aREFIID == IID_IUnknown) {
-    *aInstancePtr = this;
+    *aInstancePtr = static_cast<ISimpleDOMNode*>(this);
     AddRef();
     return S_OK;
   }
@@ -328,7 +328,7 @@ sdnAccessible::get_parentNode(ISimpleDOMNode __RPC_FAR *__RPC_FAR* aNode)
 
   nsINode* resultNode = mNode->GetParentNode();
   if (resultNode) {
-    *aNode = new sdnAccessible(resultNode);
+    *aNode = static_cast<ISimpleDOMNode*>(new sdnAccessible(resultNode));
     (*aNode)->AddRef();
   }
 
@@ -351,7 +351,7 @@ sdnAccessible::get_firstChild(ISimpleDOMNode __RPC_FAR *__RPC_FAR* aNode)
 
   nsINode* resultNode = mNode->GetFirstChild();
   if (resultNode) {
-    *aNode = new sdnAccessible(resultNode);
+    *aNode = static_cast<ISimpleDOMNode*>(new sdnAccessible(resultNode));
     (*aNode)->AddRef();
   }
 
@@ -374,7 +374,7 @@ sdnAccessible::get_lastChild(ISimpleDOMNode __RPC_FAR *__RPC_FAR* aNode)
 
   nsINode* resultNode = mNode->GetLastChild();
   if (resultNode) {
-    *aNode = new sdnAccessible(resultNode);
+    *aNode = static_cast<ISimpleDOMNode*>(new sdnAccessible(resultNode));
     (*aNode)->AddRef();
   }
 
@@ -397,7 +397,7 @@ sdnAccessible::get_previousSibling(ISimpleDOMNode __RPC_FAR *__RPC_FAR* aNode)
 
   nsINode* resultNode = mNode->GetPreviousSibling();
   if (resultNode) {
-    *aNode = new sdnAccessible(resultNode);
+    *aNode = static_cast<ISimpleDOMNode*>(new sdnAccessible(resultNode));
     (*aNode)->AddRef();
   }
 
@@ -420,7 +420,7 @@ sdnAccessible::get_nextSibling(ISimpleDOMNode __RPC_FAR *__RPC_FAR* aNode)
 
   nsINode* resultNode = mNode->GetNextSibling();
   if (resultNode) {
-    *aNode = new sdnAccessible(resultNode);
+    *aNode = static_cast<ISimpleDOMNode*>(new sdnAccessible(resultNode));
     (*aNode)->AddRef();
   }
 
@@ -444,7 +444,7 @@ sdnAccessible::get_childAt(unsigned aChildIndex,
 
   nsINode* resultNode = mNode->GetChildAt(aChildIndex);
   if (resultNode) {
-    *aNode = new sdnAccessible(resultNode);
+    *aNode = static_cast<ISimpleDOMNode*>(new sdnAccessible(resultNode));
     (*aNode)->AddRef();
   }
 
