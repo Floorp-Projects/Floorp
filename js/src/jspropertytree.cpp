@@ -31,17 +31,17 @@ ShapeHasher::match(const Key k, const Lookup &l)
     return k->matches(l);
 }
 
-RawShape
+Shape *
 PropertyTree::newShape(JSContext *cx)
 {
-    RawShape shape = js_NewGCShape(cx);
+    Shape *shape = js_NewGCShape(cx);
     if (!shape)
         JS_ReportOutOfMemory(cx);
     return shape;
 }
 
 static KidsHash *
-HashChildren(RawShape kid1, RawShape kid2)
+HashChildren(Shape *kid1, Shape *kid2)
 {
     KidsHash *hash = js_new<KidsHash>();
     if (!hash || !hash->init(2)) {
@@ -55,7 +55,7 @@ HashChildren(RawShape kid1, RawShape kid2)
 }
 
 bool
-PropertyTree::insertChild(JSContext *cx, RawShape parent, RawShape child)
+PropertyTree::insertChild(JSContext *cx, Shape *parent, Shape *child)
 {
     JS_ASSERT(!parent->inDictionary());
     JS_ASSERT(!child->parent);
@@ -72,7 +72,7 @@ PropertyTree::insertChild(JSContext *cx, RawShape parent, RawShape child)
     }
 
     if (kidp->isShape()) {
-        RawShape shape = kidp->toShape();
+        Shape *shape = kidp->toShape();
         JS_ASSERT(shape != child);
         JS_ASSERT(!shape->matches(child));
 
@@ -96,7 +96,7 @@ PropertyTree::insertChild(JSContext *cx, RawShape parent, RawShape child)
 }
 
 void
-Shape::removeChild(RawShape child)
+Shape::removeChild(Shape *child)
 {
     JS_ASSERT(!child->inDictionary());
     JS_ASSERT(child->parent == this);
@@ -126,11 +126,11 @@ Shape::removeChild(RawShape child)
     }
 }
 
-RawShape
+Shape *
 PropertyTree::getChild(JSContext *cx, Shape *parent_, uint32_t nfixed, const StackShape &child)
 {
     {
-        RawShape shape = NULL;
+        Shape *shape = NULL;
 
         JS_ASSERT(parent_);
 
@@ -144,7 +144,7 @@ PropertyTree::getChild(JSContext *cx, Shape *parent_, uint32_t nfixed, const Sta
          */
         KidsPointer *kidp = &parent_->kids;
         if (kidp->isShape()) {
-            RawShape kid = kidp->toShape();
+            Shape *kid = kidp->toShape();
             if (kid->matches(child))
                 shape = kid;
         } else if (kidp->isHash()) {
@@ -186,7 +186,7 @@ PropertyTree::getChild(JSContext *cx, Shape *parent_, uint32_t nfixed, const Sta
     StackShape::AutoRooter childRoot(cx, &child);
     RootedShape parent(cx, parent_);
 
-    RawShape shape = newShape(cx);
+    Shape *shape = newShape(cx);
     if (!shape)
         return NULL;
 
@@ -240,7 +240,7 @@ Shape::finalize(FreeOp *fop)
 #ifdef DEBUG
 
 void
-KidsPointer::checkConsistency(RawShape aKid) const
+KidsPointer::checkConsistency(Shape *aKid) const
 {
     if (isShape()) {
         JS_ASSERT(toShape() == aKid);
@@ -325,13 +325,13 @@ Shape::dumpSubtree(JSContext *cx, int level, FILE *fp) const
     if (!kids.isNull()) {
         ++level;
         if (kids.isShape()) {
-            RawShape kid = kids.toShape();
+            Shape *kid = kids.toShape();
             JS_ASSERT(kid->parent == this);
             kid->dumpSubtree(cx, level, fp);
         } else {
             const KidsHash &hash = *kids.toHash();
             for (KidsHash::Range range = hash.all(); !range.empty(); range.popFront()) {
-                RawShape kid = range.front();
+                Shape *kid = range.front();
 
                 JS_ASSERT(kid->parent == this);
                 kid->dumpSubtree(cx, level, fp);
@@ -365,7 +365,7 @@ js::PropertyTree::dumpShapes(JSRuntime *rt)
         typedef JSCompartment::EmptyShapeSet HS;
         HS &h = c->emptyShapes;
         for (HS::Range r = h.all(); !r.empty(); r.popFront()) {
-            RawShape empty = r.front();
+            Shape *empty = r.front();
             empty->dumpSubtree(rt, 0, dumpfp);
             putc('\n', dumpfp);
         }

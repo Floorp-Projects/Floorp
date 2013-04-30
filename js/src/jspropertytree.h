@@ -14,18 +14,18 @@
 
 namespace js {
 
-ForwardDeclare(Shape);
+class Shape;
 struct StackShape;
 
 struct ShapeHasher {
-    typedef RawShape Key;
+    typedef Shape *Key;
     typedef StackShape Lookup;
 
     static inline HashNumber hash(const Lookup &l);
     static inline bool match(Key k, const Lookup &l);
 };
 
-typedef HashSet<RawShape, ShapeHasher, SystemAllocPolicy> KidsHash;
+typedef HashSet<Shape *, ShapeHasher, SystemAllocPolicy> KidsHash;
 
 class KidsPointer {
   private:
@@ -42,14 +42,14 @@ class KidsPointer {
     void setNull() { w = 0; }
 
     bool isShape() const { return (w & TAG) == SHAPE && !isNull(); }
-    RawShape toShape() const {
+    Shape *toShape() const {
         JS_ASSERT(isShape());
-        return reinterpret_cast<RawShape>(w & ~uintptr_t(TAG));
+        return reinterpret_cast<Shape *>(w & ~uintptr_t(TAG));
     }
-    void setShape(RawShape shape) {
+    void setShape(Shape *shape) {
         JS_ASSERT(shape);
-        JS_ASSERT((reinterpret_cast<uintptr_t>(static_cast<RawShape>(shape)) & TAG) == 0);
-        w = reinterpret_cast<uintptr_t>(static_cast<RawShape>(shape)) | SHAPE;
+        JS_ASSERT((reinterpret_cast<uintptr_t>(static_cast<Shape *>(shape)) & TAG) == 0);
+        w = reinterpret_cast<uintptr_t>(static_cast<Shape *>(shape)) | SHAPE;
     }
 
     bool isHash() const { return (w & TAG) == HASH; }
@@ -64,7 +64,7 @@ class KidsPointer {
     }
 
 #ifdef DEBUG
-    void checkConsistency(RawShape aKid) const;
+    void checkConsistency(Shape *aKid) const;
 #endif
 };
 
@@ -74,7 +74,7 @@ class PropertyTree
 
     JSCompartment *compartment;
 
-    bool insertChild(JSContext *cx, RawShape parent, RawShape child);
+    bool insertChild(JSContext *cx, Shape *parent, Shape *child);
 
     PropertyTree();
 
@@ -86,8 +86,8 @@ class PropertyTree
     {
     }
 
-    RawShape newShape(JSContext *cx);
-    RawShape getChild(JSContext *cx, Shape *parent, uint32_t nfixed, const StackShape &child);
+    Shape *newShape(JSContext *cx);
+    Shape *getChild(JSContext *cx, Shape *parent, uint32_t nfixed, const StackShape &child);
 
 #ifdef DEBUG
     static void dumpShapes(JSRuntime *rt);

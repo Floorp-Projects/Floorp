@@ -253,7 +253,7 @@ JS_WrapAutoIdVector(JSContext *cx, js::AutoIdVector &props)
 JS_FRIEND_API(void)
 JS_TraceShapeCycleCollectorChildren(JSTracer *trc, void *shape)
 {
-    MarkCycleCollectorChildren(trc, static_cast<RawShape>(shape));
+    MarkCycleCollectorChildren(trc, static_cast<Shape *>(shape));
 }
 
 static bool
