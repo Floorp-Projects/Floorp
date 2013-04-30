@@ -108,7 +108,7 @@
 #include "nsXPCOM.h"
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsCycleCollector.h"
+#include "nsCycleCollectionJSRuntime.h"
 #include "nsDebug.h"
 #include "nsISupports.h"
 #include "nsIServiceManager.h"

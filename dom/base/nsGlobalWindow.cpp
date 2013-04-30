@@ -64,7 +64,6 @@
 #include "mozilla/dom/DesktopNotification.h"
 #include "nsContentCID.h"
 #include "nsLayoutStatics.h"
-#include "nsCycleCollector.h"
 #include "nsCCUncollectableMarker.h"
 #include "nsAutoJSValHolder.h"
 #include "nsDOMMediaQueryList.h"

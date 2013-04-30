@@ -38,6 +38,8 @@
 #include "mozilla/dom/TextEncoderBinding.h"
 
 #include "nsWrapperCacheInlines.h"
+#include "nsCycleCollector.h"
+#include "nsCycleCollectorUtils.h"
 #include "nsDOMMutationObserver.h"
 #include "nsICycleCollectorListener.h"
 #include "nsThread.h"
