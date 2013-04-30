@@ -319,7 +319,6 @@ namespace js {
  */
 typedef JSObject *                  RawObject;
 typedef jsid                        RawId;
-typedef JS::Value                   RawValue;
 
 /*
  * InternalHandle is a handle to an internal pointer into a gcthing. Use
