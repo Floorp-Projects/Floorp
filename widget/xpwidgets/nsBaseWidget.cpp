@@ -864,8 +864,6 @@ nsBaseWidget::ComputeShouldAccelerate(bool aDefault)
 CompositorParent* nsBaseWidget::NewCompositorParent(int aSurfaceWidth,
                                                     int aSurfaceHeight)
 {
-  // Even if we are using EGL, unless we are on Android, we don't want
-  // CompositorParent to think we are, so we pass aRenderToEGLSurface = false.
   return new CompositorParent(this, false, aSurfaceWidth, aSurfaceHeight);
 }
 
