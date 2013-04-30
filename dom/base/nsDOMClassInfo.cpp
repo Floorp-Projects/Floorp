@@ -5043,24 +5043,26 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     // compatibility, this should spit out an message on the JS
     // console.
 
-    JSObject *windowObj = win->GetGlobalJSObject();
+    JSObject* windowObj = js::CheckedUnwrap(obj, /* stopAtOuter = */ false);
+    NS_ENSURE_TRUE(windowObj, NS_ERROR_DOM_SECURITY_ERR);
 
-    JSAutoCompartment ac(cx, windowObj);
-    JSAutoRequest ar(cx);
-
-    JSFunction *fun = ::JS_NewFunction(cx, ContentWindowGetter, 0, 0,
-                                       windowObj, "_content");
-    if (!fun) {
-      return NS_ERROR_OUT_OF_MEMORY;
+    JSObject *funObj;
+    {
+      JSAutoCompartment ac(cx, windowObj);
+      JSFunction *fun = ::JS_NewFunction(cx, ContentWindowGetter, 0, 0,
+                                         windowObj, "_content");
+      if (!fun) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      funObj = ::JS_GetFunctionObject(fun);
     }
 
-    JSObject *funObj = ::JS_GetFunctionObject(fun);
-
-    if (!::JS_DefinePropertyById(cx, windowObj, id, JSVAL_VOID,
-                                 JS_DATA_TO_FUNC_PTR(JSPropertyOp, funObj),
-                                 JS_StrictPropertyStub,
-                                 JSPROP_ENUMERATE | JSPROP_GETTER |
-                                 JSPROP_SHARED)) {
+    if (!JS_WrapObject(cx, &funObj) ||
+        !JS_DefinePropertyById(cx, obj, id, JSVAL_VOID,
+                               JS_DATA_TO_FUNC_PTR(JSPropertyOp, funObj),
+                               JS_StrictPropertyStub,
+                               JSPROP_ENUMERATE | JSPROP_GETTER |
+                               JSPROP_SHARED)) {
       return NS_ERROR_FAILURE;
     }
 
