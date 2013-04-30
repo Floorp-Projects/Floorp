@@ -8,6 +8,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/FileUtils.jsm");
 
 const NETWORKMANAGER_CONTRACTID = "@mozilla.org/network/manager;1";
 const NETWORKMANAGER_CID =
@@ -31,10 +32,13 @@ const TOPIC_PREF_CHANGED             = "nsPref:changed";
 const TOPIC_XPCOM_SHUTDOWN           = "xpcom-shutdown";
 const PREF_MANAGE_OFFLINE_STATUS     = "network.gonk.manage-offline-status";
 
-// TODO, get USB RNDIS interface name automatically.(see Bug 776212)
+const POSSIBLE_USB_INTERFACE_NAME = "rndis0,usb0";
 const DEFAULT_USB_INTERFACE_NAME  = "rndis0";
 const DEFAULT_3G_INTERFACE_NAME   = "rmnet0";
 const DEFAULT_WIFI_INTERFACE_NAME = "wlan0";
+
+// The kernel's proc entry for network lists.
+const KERNEL_NETWORK_ENTRY = "/sys/class/net";
 
 const TETHERING_TYPE_WIFI = "WiFi";
 const TETHERING_TYPE_USB  = "USB";
@@ -148,6 +152,9 @@ function NetworkManager() {
     // Ignore.
   }
   Services.prefs.addObserver(PREF_MANAGE_OFFLINE_STATUS, this, false);
+
+  // Possible usb tethering interfaces for different gonk platform.
+  this.possibleInterface = POSSIBLE_USB_INTERFACE_NAME.split(",");
 
   // Default values for internal and external interfaces.
   this._tetheringInterface = Object.create(null);
@@ -838,10 +845,28 @@ NetworkManager.prototype = {
     this.controlMessage(params, this.usbTetheringResultReport);
   },
 
+  getUsbInterface: function getUsbInterface() {
+    // Find the rndis interface.
+    for (let i = 0; i < this.possibleInterface.length; i++) {
+      try {
+        let file = new FileUtils.File(KERNEL_NETWORK_ENTRY + "/" +
+                                      this.possibleInterface[i]);
+        if (file.IsDirectory()) {
+          return this.possibleInterface[i];
+        }
+      } catch (e) {
+        debug("Not " + this.possibleInterface[i] + " interface.");
+      }
+    }
+    debug("Can't find rndis interface in possible lists.");
+    return DEFAULT_USB_INTERFACE_NAME;
+  },
+
   enableUsbRndisResult: function enableUsbRndisResult(data) {
     let result = data.result;
     let enable = data.enable;
     if (result) {
+      this._tetheringInterface[TETHERING_TYPE_USB].internalInterface = this.getUsbInterface();
       this.setUSBTethering(enable, this._tetheringInterface[TETHERING_TYPE_USB]);
     } else {
       let params = {
