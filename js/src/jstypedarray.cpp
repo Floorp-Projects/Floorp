@@ -2838,7 +2838,7 @@ struct DataViewIO
 
     static void fromBuffer(DataType *dest, const uint8_t *unalignedBuffer, bool wantSwap)
     {
-        JS_ASSERT((reinterpret_cast<uintptr_t>(dest) & (Min<size_t>(JS_ALIGN_OF_POINTER, sizeof(DataType)) - 1)) == 0);
+        JS_ASSERT((reinterpret_cast<uintptr_t>(dest) & (Min<size_t>(MOZ_ALIGNOF(void*), sizeof(DataType)) - 1)) == 0);
         memcpy((void *) dest, unalignedBuffer, sizeof(ReadWriteType));
         if (wantSwap) {
             ReadWriteType *rwDest = reinterpret_cast<ReadWriteType *>(dest);
@@ -2848,7 +2848,7 @@ struct DataViewIO
 
     static void toBuffer(uint8_t *unalignedBuffer, const DataType *src, bool wantSwap)
     {
-        JS_ASSERT((reinterpret_cast<uintptr_t>(src) & (Min<size_t>(JS_ALIGN_OF_POINTER, sizeof(DataType)) - 1)) == 0);
+        JS_ASSERT((reinterpret_cast<uintptr_t>(src) & (Min<size_t>(MOZ_ALIGNOF(void*), sizeof(DataType)) - 1)) == 0);
         ReadWriteType temp = *reinterpret_cast<const ReadWriteType *>(src);
         if (wantSwap)
             temp = swapBytes(temp);
