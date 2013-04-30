@@ -19,6 +19,7 @@ import android.text.TextUtils;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageView;
@@ -87,7 +88,7 @@ abstract public class AwesomeBarTab {
         return mContentResolver;
     }
 
-    private HashMap<String, Integer> getOpenTabs() {
+    protected HashMap<String, Integer> getOpenTabs() {
         if (sOpenTabs == null || sOpenTabs.isEmpty()) {
             Iterable<Tab> tabs = Tabs.getInstance().getTabsInOrder();
             sOpenTabs = new HashMap<String, Integer>();
@@ -103,6 +104,26 @@ abstract public class AwesomeBarTab {
             mResources = mContext.getResources();
         }
         return mResources;
+    }
+
+    protected void setupMenu(ContextMenu menu, AwesomeBar.ContextMenuSubject subject) {
+        MenuInflater inflater = new MenuInflater(mContext);
+        inflater.inflate(R.menu.awesomebar_contextmenu, menu);
+
+        // Show Open Private Tab if we're in private mode, Open New Tab otherwise
+        boolean isPrivate = false;
+        Tab tab = Tabs.getInstance().getSelectedTab();
+        if (tab != null) {
+            isPrivate = tab.isPrivate();
+        }
+        menu.findItem(R.id.open_new_tab).setVisible(!isPrivate);
+        menu.findItem(R.id.open_private_tab).setVisible(isPrivate);
+
+        // Hide "Remove" item if there isn't a valid history ID
+        if (subject.id < 0) {
+            menu.findItem(R.id.remove_history).setVisible(false);
+        }
+        menu.setHeaderTitle(subject.title);
     }
 
     protected void updateFavicon(FaviconView faviconView, Bitmap bitmap, String key) {

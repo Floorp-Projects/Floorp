@@ -461,12 +461,10 @@ public class BookmarksTab extends AwesomeBarTab {
         if (subject == null)
             return subject;
 
-        MenuInflater inflater = new MenuInflater(mContext);
-        inflater.inflate(R.menu.awesomebar_contextmenu, menu);
+        setupMenu(menu, subject);
         
         menu.findItem(R.id.remove_history).setVisible(false);
         menu.findItem(R.id.open_in_reader).setVisible(false);
-        menu.setHeaderTitle(subject.title);
 
         return subject;
     }
