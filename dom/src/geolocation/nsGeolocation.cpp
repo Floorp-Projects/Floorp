@@ -949,6 +949,8 @@ nsGeolocationService::StopDevice()
     return;
   }
 
+  mHigherAccuracy = false;
+
   mProvider->Shutdown();
   obs->NotifyObservers(mProvider,
                        "geolocation-device-events",
