@@ -100,7 +100,6 @@ main (int argc, char **argv)
   hb_buffer_t *buffer = hb_buffer_create ();
 
   hb_buffer_add_utf8 (buffer, "\xe0\xa4\x95\xe0\xa5\x8d\xe0\xa4\xb0\xe0\xa5\x8d\xe0\xa4\x95", -1, 0, -1);
-  hb_buffer_guess_segment_properties (buffer);
 
   hb_shape (font, buffer, NULL, 0);
 
