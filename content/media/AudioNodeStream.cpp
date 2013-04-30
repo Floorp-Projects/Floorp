@@ -303,7 +303,7 @@ AudioNodeStream::ObtainInputBlock(AudioChunk* aTmpChunk)
                      "We called GetAudioChannelsSuperset to avoid this");
       } else {
         // Fill up the remaining channels by zeros
-        for (uint32_t i = channels.Length(); i < outputChannelCount; ++i) {
+        for (uint32_t j = channels.Length(); j < outputChannelCount; ++j) {
           channels.AppendElement(silenceChannel);
         }
       }
@@ -312,16 +312,16 @@ AudioNodeStream::ObtainInputBlock(AudioChunk* aTmpChunk)
         nsAutoTArray<float*,GUESS_AUDIO_CHANNELS> outputChannels;
         outputChannels.SetLength(outputChannelCount);
         downmixBuffer.SetLength(outputChannelCount * WEBAUDIO_BLOCK_SIZE);
-        for (uint32_t i = 0; i < outputChannelCount; ++i) {
-          outputChannels[i] = &downmixBuffer[i * WEBAUDIO_BLOCK_SIZE];
+        for (uint32_t j = 0; j < outputChannelCount; ++j) {
+          outputChannels[j] = &downmixBuffer[j * WEBAUDIO_BLOCK_SIZE];
         }
 
         AudioChannelsDownMix(channels, outputChannels.Elements(),
                              outputChannelCount, WEBAUDIO_BLOCK_SIZE);
 
         channels.SetLength(outputChannelCount);
-        for (uint32_t i = 0; i < channels.Length(); ++i) {
-          channels[i] = outputChannels[i];
+        for (uint32_t j = 0; j < channels.Length(); ++j) {
+          channels[j] = outputChannels[j];
         }
       } else {
         // Drop the remaining channels
