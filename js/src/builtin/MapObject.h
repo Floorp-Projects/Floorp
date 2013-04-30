@@ -43,25 +43,32 @@ class HashableValue {
     bool operator==(const HashableValue &other) const;
     HashableValue mark(JSTracer *trc) const;
     Value get() const { return value.get(); }
+};
 
-    class AutoRooter : private AutoGCRooter
-    {
-      public:
-        explicit AutoRooter(JSContext *cx, HashableValue *v_
-                            MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-          : AutoGCRooter(cx, HASHABLEVALUE), v(v_), skip(cx, v_)
+class AutoHashableValueRooter : private AutoGCRooter
+{
+  public:
+    explicit AutoHashableValueRooter(JSContext *cx
+                                     MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+        : AutoGCRooter(cx, HASHABLEVALUE)
         {
             MOZ_GUARD_OBJECT_NOTIFIER_INIT;
         }
 
-        friend void AutoGCRooter::trace(JSTracer *trc);
-        void trace(JSTracer *trc);
+    bool setValue(JSContext *cx, const Value &v) {
+        return value.setValue(cx, v);
+    }
 
-      private:
-        HashableValue *v;
-        SkipRoot skip;
-        MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-    };
+    operator const HashableValue & () {
+        return value;
+    }
+
+    friend void AutoGCRooter::trace(JSTracer *trc);
+    void trace(JSTracer *trc);
+
+  private:
+    HashableValue value;
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 template <class Key, class Value, class OrderedHashPolicy, class AllocPolicy>
