@@ -5,12 +5,10 @@
 #include "prerror.h"
 #include "prprf.h"
 
-#include "mozilla/Scoped.h"
+#include "ScopedNSSTypes.h"
 #include "nsNSSCertHelper.h"
 #include "nsCOMPtr.h"
 #include "nsNSSCertificate.h"
-#include "cert.h"
-#include "keyhi.h"
 #include "secder.h"
 #include "nsNSSCertValidity.h"
 #include "nsNSSASN1Object.h"
@@ -2213,4 +2211,22 @@ getNSSCertNicknamesFromCertList(CERTCertList *certList)
                                           const_cast<char*>(aUtf8ExpiredString.get()),
                                           const_cast<char*>(aUtf8NotYetValidString.get()));
   
+}
+
+nsresult
+GetCertFingerprintByOidTag(CERTCertificate* nsscert,
+                           SECOidTag aOidTag, 
+                           nsCString &fp)
+{
+  Digest digest;
+  nsresult rv = digest.DigestBuf(aOidTag, nsscert->derCert.data,
+                                 nsscert->derCert.len);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  char *tmpstr = CERT_Hexify(const_cast<SECItem*>(&digest.get()), 1);
+  NS_ENSURE_TRUE(tmpstr, NS_ERROR_OUT_OF_MEMORY);
+
+  fp.Assign(tmpstr);
+  PORT_Free(tmpstr);
+  return NS_OK;
 }
