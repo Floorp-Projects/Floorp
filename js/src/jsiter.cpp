@@ -396,7 +396,7 @@ NativeIterator::allocateIterator(JSContext *cx, uint32_t slength, const AutoIdVe
     size_t plength = props.length();
     NativeIterator *ni = (NativeIterator *)
         cx->malloc_(sizeof(NativeIterator)
-                    + plength * sizeof(RawString)
+                    + plength * sizeof(JSString *)
                     + slength * sizeof(Shape *));
     if (!ni)
         return NULL;

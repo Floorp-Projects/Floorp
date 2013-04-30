@@ -222,7 +222,7 @@ RegExpStatics::createDependent(JSContext *cx, size_t start, size_t end, MutableH
 
     JS_ASSERT(start <= end);
     JS_ASSERT(end <= matchesInput->length());
-    RawString str = js_NewDependentString(cx, matchesInput, start, end - start);
+    JSString *str = js_NewDependentString(cx, matchesInput, start, end - start);
     if (!str)
         return false;
     out.setString(str);

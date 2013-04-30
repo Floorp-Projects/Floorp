@@ -2568,9 +2568,9 @@ DoConcatStrings(JSContext *cx, HandleValue lhs, HandleValue rhs, MutableHandleVa
 {
     JS_ASSERT(lhs.isString());
     JS_ASSERT(rhs.isString());
-    RawString lstr = lhs.toString();
-    RawString rstr = rhs.toString();
-    RawString result = ConcatStrings<NoGC>(cx, lstr, rstr);
+    JSString *lstr = lhs.toString();
+    JSString *rstr = rhs.toString();
+    JSString *result = ConcatStrings<NoGC>(cx, lstr, rstr);
     if (result) {
         res.set(StringValue(result));
         return true;
@@ -2609,7 +2609,7 @@ ICBinaryArith_StringConcat::Compiler::generateStubCode(MacroAssembler &masm)
     return true;
 }
 
-static RawString
+static JSString *
 ConvertObjectToStringForConcat(JSContext *cx, HandleValue obj)
 {
     JS_ASSERT(obj.isObject());
@@ -2623,8 +2623,8 @@ static bool
 DoConcatStringObject(JSContext *cx, bool lhsIsString, HandleValue lhs, HandleValue rhs,
                      MutableHandleValue res)
 {
-    RawString lstr = NULL;
-    RawString rstr = NULL;
+    JSString *lstr = NULL;
+    JSString *rstr = NULL;
     if (lhsIsString) {
         // Convert rhs first.
         JS_ASSERT(lhs.isString() && rhs.isObject());
