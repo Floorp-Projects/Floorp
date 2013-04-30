@@ -96,7 +96,7 @@ AccessibleWrap::QueryInterface(REFIID iid, void** ppv)
     if (IsDefunct() || (!HasOwnContent() && !IsDoc()))
       return E_NOINTERFACE;
 
-    *ppv = new sdnAccessible(GetNode());
+    *ppv = static_cast<ISimpleDOMNode*>(new sdnAccessible(GetNode()));
   }
 
   if (nullptr == *ppv) {
@@ -564,9 +564,7 @@ public:
   ~AccessibleEnumerator() { }
 
   // IUnknown
-  STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject);
-  STDMETHODIMP_(ULONG) AddRef(void);
-  STDMETHODIMP_(ULONG) Release(void);
+  DECL_IUNKNOWN
 
   // IEnumVARIANT
   STDMETHODIMP Next(unsigned long celt, VARIANT FAR* rgvar, unsigned long FAR* pceltFetched);
@@ -581,10 +579,9 @@ public:
 private:
   nsCOMPtr<nsIArray> mArray;
   uint32_t mCurIndex;
-  nsAutoRefCnt mRefCnt;
 };
 
-HRESULT
+STDMETHODIMP
 AccessibleEnumerator::QueryInterface(REFIID iid, void ** ppvObject)
 {
   A11Y_TRYBLOCK_BEGIN
@@ -604,21 +601,6 @@ AccessibleEnumerator::QueryInterface(REFIID iid, void ** ppvObject)
   return E_NOINTERFACE;
 
   A11Y_TRYBLOCK_END
-}
-
-STDMETHODIMP_(ULONG)
-AccessibleEnumerator::AddRef(void)
-{
-  return ++mRefCnt;
-}
-
-STDMETHODIMP_(ULONG)
-AccessibleEnumerator::Release(void)
-{
-  ULONG r = --mRefCnt;
-  if (r == 0)
-    delete this;
-  return r;
 }
 
 STDMETHODIMP
