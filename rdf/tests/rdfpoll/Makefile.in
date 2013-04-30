@@ -10,7 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-PROGRAM		= rdfpoll$(BIN_SUFFIX)
 CPPSRCS		= rdfpoll.cpp
 
 
