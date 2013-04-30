@@ -2291,7 +2291,7 @@ ImplicitConvert(JSContext* cx,
       break;
     }
 
-    JSObject* baseType = PointerType::GetBaseType(targetType);
+    JS::Rooted<JSObject*> baseType(cx, PointerType::GetBaseType(targetType));
     if (sourceData) {
       // First, determine if the targetType is ctypes.void_t.ptr.
       TypeCode sourceCode = CType::GetTypeCode(sourceType);
@@ -3747,7 +3747,7 @@ CType::HasInstance(JSContext* cx, JSHandleObject obj, JSMutableHandleValue v, JS
   JS_ASSERT(CType::IsCType(obj));
 
   jsval slot = JS_GetReservedSlot(obj, SLOT_PROTO);
-  RootedObject prototype(cx, &slot.toObject());
+  JS::Rooted<JSObject*> prototype(cx, &slot.toObject());
   JS_ASSERT(prototype);
   JS_ASSERT(CData::IsCDataProto(prototype));
 
@@ -7118,7 +7118,7 @@ CDataFinalizer::Methods::Forget(JSContext* cx, unsigned argc, jsval *vp)
     return JS_FALSE;
   }
 
-  RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
+  JS::Rooted<JSObject*> obj(cx, args.thisv().toObjectOrNull());
   if (!obj)
     return JS_FALSE;
   if (!CDataFinalizer::IsCDataFinalizer(obj)) {
