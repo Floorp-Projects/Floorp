@@ -38,6 +38,7 @@ MOCHITEST_FILES := \
   test_decodeAudioData.html \
   test_dynamicsCompressorNode.html \
   test_gainNode.html \
+  test_mixingRules.html \
   test_pannerNode.html \
   test_scriptProcessorNode.html \
   test_singleSourceDest.html \
