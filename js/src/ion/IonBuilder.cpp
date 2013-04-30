@@ -151,7 +151,7 @@ IonBuilder::getSingleCallTarget(types::StackTypeSet *calleeTypes)
     if (!calleeTypes)
         return NULL;
 
-    RawObject obj = calleeTypes->getSingleton();
+    JSObject *obj = calleeTypes->getSingleton();
     if (!obj || !obj->isFunction())
         return NULL;
 
@@ -7965,7 +7965,7 @@ IonBuilder::jsop_instanceof()
     // exact function and prototype object being tested for, use a typed path.
     do {
         types::StackTypeSet *rhsTypes = rhs->resultTypeSet();
-        RawObject rhsObject = rhsTypes ? rhsTypes->getSingleton() : NULL;
+        JSObject *rhsObject = rhsTypes ? rhsTypes->getSingleton() : NULL;
         if (!rhsObject || !rhsObject->isFunction() || rhsObject->isBoundFunction())
             break;
 
@@ -7975,7 +7975,7 @@ IonBuilder::jsop_instanceof()
 
         types::HeapTypeSet *protoTypes =
             rhsType->getProperty(cx, NameToId(cx->names().classPrototype), false);
-        RawObject protoObject = protoTypes ? protoTypes->getSingleton(cx) : NULL;
+        JSObject *protoObject = protoTypes ? protoTypes->getSingleton(cx) : NULL;
         if (!protoObject)
             break;
 

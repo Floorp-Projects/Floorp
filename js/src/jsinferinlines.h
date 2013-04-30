@@ -192,7 +192,7 @@ RecompileInfo::compilerOutput(JSContext *cx) const
 /////////////////////////////////////////////////////////////////////
 
 /* static */ inline Type
-Type::ObjectType(RawObject obj)
+Type::ObjectType(JSObject *obj)
 {
     if (obj->hasSingletonType())
         return Type(uintptr_t(obj) | 1);
@@ -597,7 +597,7 @@ TypeMonitorCall(JSContext *cx, const js::CallArgs &args, bool constructing)
 }
 
 inline bool
-TrackPropertyTypes(JSContext *cx, RawObject obj, jsid id)
+TrackPropertyTypes(JSContext *cx, JSObject *obj, jsid id)
 {
     if (!cx->typeInferenceEnabled() || obj->hasLazyType() || obj->type()->unknownProperties())
         return false;
@@ -609,7 +609,7 @@ TrackPropertyTypes(JSContext *cx, RawObject obj, jsid id)
 }
 
 inline void
-EnsureTrackPropertyTypes(JSContext *cx, RawObject obj, jsid id)
+EnsureTrackPropertyTypes(JSContext *cx, JSObject *obj, jsid id)
 {
     JS_ASSERT(!obj->hasLazyType());
 
@@ -661,7 +661,7 @@ AddTypeProperty(JSContext *cx, TypeObject *obj, const char *name, const Value &v
 
 /* Set one or more dynamic flags on a type object. */
 inline void
-MarkTypeObjectFlags(JSContext *cx, RawObject obj, TypeObjectFlags flags)
+MarkTypeObjectFlags(JSContext *cx, JSObject *obj, TypeObjectFlags flags)
 {
     if (cx->typeInferenceEnabled() && !obj->hasLazyType() && !obj->type()->hasAllFlags(flags))
         obj->type()->setFlags(cx, flags);
@@ -700,7 +700,7 @@ MarkTypePropertyConfigured(JSContext *cx, HandleObject obj, jsid id)
 
 /* Mark a state change on a particular object. */
 inline void
-MarkObjectStateChange(JSContext *cx, RawObject obj)
+MarkObjectStateChange(JSContext *cx, JSObject *obj)
 {
     if (cx->typeInferenceEnabled() && !obj->hasLazyType() && !obj->type()->unknownProperties())
         obj->type()->markStateChange(cx);
@@ -1360,7 +1360,7 @@ Type::objectKey() const
     return (TypeObjectKey *) data;
 }
 
-inline RawObject
+inline JSObject *
 Type::singleObject() const
 {
     JS_ASSERT(isSingleObject());
@@ -1534,7 +1534,7 @@ TypeSet::getObject(unsigned i) const
     return objectSet[i];
 }
 
-inline RawObject
+inline JSObject *
 TypeSet::getSingleObject(unsigned i) const
 {
     TypeObjectKey *key = getObject(i);

@@ -3235,7 +3235,7 @@ JS_LinkConstructorAndPrototype(JSContext *cx, JSObject *ctorArg, JSObject *proto
 }
 
 JS_PUBLIC_API(JSClass *)
-JS_GetClass(RawObject obj)
+JS_GetClass(JSObject *obj)
 {
     return obj->getJSClass();
 }
@@ -3271,14 +3271,14 @@ JS_HasInstance(JSContext *cx, JSObject *objArg, jsval valueArg, JSBool *bp)
 }
 
 JS_PUBLIC_API(void *)
-JS_GetPrivate(RawObject obj)
+JS_GetPrivate(JSObject *obj)
 {
     /* This function can be called by a finalizer. */
     return obj->getPrivate();
 }
 
 JS_PUBLIC_API(void)
-JS_SetPrivate(RawObject obj, void *data)
+JS_SetPrivate(JSObject *obj, void *data)
 {
     /* This function can be called by a finalizer. */
     obj->setPrivate(data);
@@ -3316,7 +3316,7 @@ JS_SetPrototype(JSContext *cx, JSObject *objArg, JSObject *protoArg)
 }
 
 JS_PUBLIC_API(JSObject *)
-JS_GetParent(RawObject obj)
+JS_GetParent(JSObject *obj)
 {
     JS_ASSERT(!obj->isScope());
     return obj->getParent();
@@ -4577,7 +4577,7 @@ JS_Enumerate(JSContext *cx, JSObject *objArg)
 const uint32_t JSSLOT_ITER_INDEX = 0;
 
 static void
-prop_iter_finalize(FreeOp *fop, RawObject obj)
+prop_iter_finalize(FreeOp *fop, JSObject *obj)
 {
     void *pdata = obj->getPrivate();
     if (!pdata)
@@ -4591,7 +4591,7 @@ prop_iter_finalize(FreeOp *fop, RawObject obj)
 }
 
 static void
-prop_iter_trace(JSTracer *trc, RawObject obj)
+prop_iter_trace(JSTracer *trc, JSObject *obj)
 {
     void *pdata = obj->getPrivate();
     if (!pdata)
@@ -4719,13 +4719,13 @@ JS_ArrayIterator(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 JS_PUBLIC_API(jsval)
-JS_GetReservedSlot(RawObject obj, uint32_t index)
+JS_GetReservedSlot(JSObject *obj, uint32_t index)
 {
     return obj->getReservedSlot(index);
 }
 
 JS_PUBLIC_API(void)
-JS_SetReservedSlot(RawObject obj, uint32_t index, Value value)
+JS_SetReservedSlot(JSObject *obj, uint32_t index, Value value)
 {
     obj->setReservedSlot(index, value);
 }
@@ -4935,13 +4935,13 @@ JS_GetFunctionArity(JSFunction *fun)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_ObjectIsFunction(JSContext *cx, RawObject obj)
+JS_ObjectIsFunction(JSContext *cx, JSObject *obj)
 {
     return obj->isFunction();
 }
 
 JS_PUBLIC_API(JSBool)
-JS_ObjectIsCallable(JSContext *cx, RawObject obj)
+JS_ObjectIsCallable(JSContext *cx, JSObject *obj)
 {
     return obj->isCallable();
 }

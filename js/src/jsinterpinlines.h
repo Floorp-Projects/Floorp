@@ -73,7 +73,7 @@ ComputeImplicitThis(JSContext *cx, HandleObject obj, MutableHandleValue vp)
     if (IsCacheableNonGlobalScope(obj))
         return true;
 
-    RawObject nobj = JSObject::thisObject(cx, obj);
+    JSObject *nobj = JSObject::thisObject(cx, obj);
     if (!nobj)
         return false;
 

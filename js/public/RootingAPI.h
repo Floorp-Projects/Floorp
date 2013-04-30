@@ -314,12 +314,6 @@ typedef MutableHandle<Value>       MutableHandleValue;
 namespace js {
 
 /*
- * Raw pointer used as documentation that a parameter does not need to be
- * rooted.
- */
-typedef JSObject *                  RawObject;
-
-/*
  * InternalHandle is a handle to an internal pointer into a gcthing. Use
  * InternalHandle when you have a pointer to a direct field of a gcthing, or
  * when you need a parameter type for something that *may* be a pointer to a
@@ -820,7 +814,5 @@ class CompilerRootNode
 };
 
 }  /* namespace js */
-
-ForwardDeclareJS(Object);
 
 #endif  /* jsgc_root_h___ */

@@ -1097,7 +1097,7 @@ IonBuilder::inlineNewParallelArray(CallInfo &callInfo)
         return InliningStatus_NotInlined;
 
     types::StackTypeSet *ctorTypes = callInfo.getArg(0)->resultTypeSet();
-    RawObject targetObj = ctorTypes ? ctorTypes->getSingleton() : NULL;
+    JSObject *targetObj = ctorTypes ? ctorTypes->getSingleton() : NULL;
     RootedFunction target(cx);
     if (targetObj && targetObj->isFunction())
         target = targetObj->toFunction();

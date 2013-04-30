@@ -6084,7 +6084,7 @@ typedef bool (*IsDelegateObjectFn)(JSContext *, HandleObject, HandleObject, JSBo
 static const VMFunction IsDelegateObjectInfo = FunctionInfo<IsDelegateObjectFn>(IsDelegateObject);
 
 bool
-CodeGenerator::emitInstanceOf(LInstruction *ins, RawObject prototypeObject)
+CodeGenerator::emitInstanceOf(LInstruction *ins, JSObject *prototypeObject)
 {
     // This path implements fun_hasInstance when the function's prototype is
     // known to be prototypeObject.

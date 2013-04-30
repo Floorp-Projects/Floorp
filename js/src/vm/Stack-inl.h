@@ -627,7 +627,7 @@ AbstractFramePtr::setReturnValue(const Value &rval) const
 #endif
 }
 
-inline RawObject
+inline JSObject *
 AbstractFramePtr::scopeChain() const
 {
     if (isStackFrame())

@@ -850,7 +850,7 @@ class js::MapIteratorObject : public JSObject
     static const JSFunctionSpec methods[];
     static MapIteratorObject *create(JSContext *cx, HandleObject mapobj, ValueMap *data,
                                      MapObject::IteratorKind kind);
-    static void finalize(FreeOp *fop, RawObject obj);
+    static void finalize(FreeOp *fop, JSObject *obj);
 
   private:
     static inline bool is(const Value &v);
@@ -942,7 +942,7 @@ MapIteratorObject::create(JSContext *cx, HandleObject mapobj, ValueMap *data,
 }
 
 void
-MapIteratorObject::finalize(FreeOp *fop, RawObject obj)
+MapIteratorObject::finalize(FreeOp *fop, JSObject *obj)
 {
     fop->delete_(obj->asMapIterator().range());
 }
@@ -1099,7 +1099,7 @@ MarkKey(Range &r, const HashableValue &key, JSTracer *trc)
 }
 
 void
-MapObject::mark(JSTracer *trc, RawObject obj)
+MapObject::mark(JSTracer *trc, JSObject *obj)
 {
     if (ValueMap *map = obj->asMap().getData()) {
         for (ValueMap::Range r = map->all(); !r.empty(); r.popFront()) {
@@ -1147,7 +1147,7 @@ WriteBarrierPost(JSRuntime *rt, TableType *table, const HashableValue &key)
 }
 
 void
-MapObject::finalize(FreeOp *fop, RawObject obj)
+MapObject::finalize(FreeOp *fop, JSObject *obj)
 {
     if (ValueMap *map = obj->asMap().getData())
         fop->delete_(map);
@@ -1422,7 +1422,7 @@ class js::SetIteratorObject : public JSObject
     enum { TargetSlot, RangeSlot, SlotCount };
     static const JSFunctionSpec methods[];
     static SetIteratorObject *create(JSContext *cx, HandleObject setobj, ValueSet *data);
-    static void finalize(FreeOp *fop, RawObject obj);
+    static void finalize(FreeOp *fop, JSObject *obj);
 
   private:
     static inline bool is(const Value &v);
@@ -1502,7 +1502,7 @@ SetIteratorObject::create(JSContext *cx, HandleObject setobj, ValueSet *data)
 }
 
 void
-SetIteratorObject::finalize(FreeOp *fop, RawObject obj)
+SetIteratorObject::finalize(FreeOp *fop, JSObject *obj)
 {
     fop->delete_(obj->asSetIterator().range());
 }
@@ -1589,7 +1589,7 @@ SetObject::initClass(JSContext *cx, JSObject *obj)
 }
 
 void
-SetObject::mark(JSTracer *trc, RawObject obj)
+SetObject::mark(JSTracer *trc, JSObject *obj)
 {
     SetObject *setobj = static_cast<SetObject *>(obj);
     if (ValueSet *set = setobj->getData()) {
@@ -1599,7 +1599,7 @@ SetObject::mark(JSTracer *trc, RawObject obj)
 }
 
 void
-SetObject::finalize(FreeOp *fop, RawObject obj)
+SetObject::finalize(FreeOp *fop, JSObject *obj)
 {
     SetObject *setobj = static_cast<SetObject *>(obj);
     if (ValueSet *set = setobj->getData())

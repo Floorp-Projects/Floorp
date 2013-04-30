@@ -243,7 +243,7 @@ template bool StringsEqual<true>(JSContext *cx, HandleString lhs, HandleString r
 template bool StringsEqual<false>(JSContext *cx, HandleString lhs, HandleString rhs, JSBool *res);
 
 JSBool
-ObjectEmulatesUndefined(RawObject obj)
+ObjectEmulatesUndefined(JSObject *obj)
 {
     return EmulatesUndefined(obj);
 }
