@@ -28,7 +28,7 @@ NewShortString(JSContext *cx, JS::Latin1Chars chars)
 {
     size_t len = chars.length();
     JS_ASSERT(JSShortString::lengthFits(len));
-    RawInlineString str = JSInlineString::lengthFits(len)
+    JSInlineString *str = JSInlineString::lengthFits(len)
                           ? JSInlineString::new_<allowGC>(cx)
                           : JSShortString::new_<allowGC>(cx);
     if (!str)
