@@ -17,4 +17,4 @@
 #
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
-Bug 856358: Needs a clobber because it renames an IDL file. See also bug 860894.
+Bug 839855 - Android resource file changes (only affects Android builds)

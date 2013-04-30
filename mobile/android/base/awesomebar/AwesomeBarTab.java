@@ -100,16 +100,7 @@ abstract public class AwesomeBarTab {
     }
 
     protected void updateFavicon(ImageView faviconView, Bitmap bitmap) {
-        if (bitmap == null) {
-            faviconView.setImageDrawable(null);
-        } else if (Favicons.getInstance().isLargeFavicon(bitmap)) {
-            // If the icon is large, hide the background
-            faviconView.setImageBitmap(bitmap);
-            faviconView.setBackgroundResource(0);
-        } else {
-            faviconView.setImageBitmap(bitmap);
-            faviconView.setBackgroundResource(R.drawable.awesomebar_row_favicon_bg);
-        }
+        faviconView.setImageBitmap(bitmap);
     }
 
     protected void updateTitle(TextView titleView, Cursor cursor) {

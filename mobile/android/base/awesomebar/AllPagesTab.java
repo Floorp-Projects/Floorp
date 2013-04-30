@@ -15,6 +15,7 @@ import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UiAsyncTask;
+import org.mozilla.gecko.widget.FaviconView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -86,7 +87,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
 
     private class SearchEntryViewHolder {
         public FlowLayout suggestionView;
-        public ImageView iconView;
+        public FaviconView iconView;
         public LinearLayout userEnteredView;
         public TextView userEnteredTextView;
     }
@@ -491,7 +492,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
 
                     viewHolder = new SearchEntryViewHolder();
                     viewHolder.suggestionView = (FlowLayout) convertView.findViewById(R.id.suggestion_layout);
-                    viewHolder.iconView = (ImageView) convertView.findViewById(R.id.suggestion_icon);
+                    viewHolder.iconView = (FaviconView) convertView.findViewById(R.id.suggestion_icon);
                     viewHolder.userEnteredView = (LinearLayout) convertView.findViewById(R.id.suggestion_user_entered);
                     viewHolder.userEnteredTextView = (TextView) convertView.findViewById(R.id.suggestion_text);
 
@@ -510,7 +511,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
                     viewHolder = new AwesomeEntryViewHolder();
                     viewHolder.titleView = (TextView) convertView.findViewById(R.id.title);
                     viewHolder.urlView = (TextView) convertView.findViewById(R.id.url);
-                    viewHolder.faviconView = (ImageView) convertView.findViewById(R.id.favicon);
+                    viewHolder.faviconView = (FaviconView) convertView.findViewById(R.id.favicon);
                     viewHolder.bookmarkIconView = (ImageView) convertView.findViewById(R.id.bookmark_icon);
 
                     convertView.setTag(viewHolder);
