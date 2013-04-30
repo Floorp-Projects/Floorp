@@ -397,7 +397,17 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
             cModel.Equals("GT-S7500T", nsCaseInsensitiveCStringComparator()) ||
             cModel.Equals("GT-S7500L", nsCaseInsensitiveCStringComparator()) ||
             cModel.Equals("GT-S6500T", nsCaseInsensitiveCStringComparator()) ||
-            cModel.Equals("SGH-T989", nsCaseInsensitiveCStringComparator()))
+            cModel.Equals("SGH-T989", nsCaseInsensitiveCStringComparator()) ||
+            cHardware.Equals("smdkc110", nsCaseInsensitiveCStringComparator()) ||
+            cHardware.Equals("smdkc210", nsCaseInsensitiveCStringComparator()) ||
+            cHardware.Equals("herring", nsCaseInsensitiveCStringComparator()) ||
+            cHardware.Equals("shw-m110s", nsCaseInsensitiveCStringComparator()) ||
+            cHardware.Equals("shw-m180s", nsCaseInsensitiveCStringComparator()) ||
+            cHardware.Equals("n1", nsCaseInsensitiveCStringComparator()) ||
+            cHardware.Equals("latona", nsCaseInsensitiveCStringComparator()) ||
+            cHardware.Equals("aalto", nsCaseInsensitiveCStringComparator()) ||
+            cHardware.Equals("atlas", nsCaseInsensitiveCStringComparator()) ||
+            cHardware.Equals("qcom", nsCaseInsensitiveCStringComparator()))
         {
           isWhitelisted = false;
         }
