@@ -9,12 +9,14 @@
                 android:gravity="left|center_vertical"
                 style="@style/AboutHome.RowItem">
 
-    <ImageView android:id="@+id/last_tab_favicon"
-               android:layout_width="32dip"
-               android:layout_height="32dip"
-               android:layout_centerVertical="true"
-               android:layout_marginLeft="@dimen/abouthome_rowitem_left_padding"
-               android:src="@drawable/favicon"/>
+    <Gecko.FaviconView android:id="@+id/last_tab_favicon"
+                       android:layout_width="@dimen/favicon_bg"
+                       android:layout_height="@dimen/favicon_bg"
+                       android:layout_marginLeft="@dimen/abouthome_rowitem_left_padding"
+                       android:layout_centerVertical="true"
+                       android:minWidth="@dimen/favicon_bg"
+                       android:minHeight="@dimen/favicon_bg"
+                       android:background="@drawable/favicon_bg"/>
 
     <Gecko.TextView android:id="@+id/last_tab_title"
                     android:layout_width="wrap_content"
