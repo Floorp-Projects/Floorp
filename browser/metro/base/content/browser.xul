@@ -182,7 +182,7 @@
     <vbox id="page">
       <vbox id="tray" class="tray-toolbar" visible="true" observes="bcast_windowState" >
         <!-- Tabs -->
-        <hbox id="tabs-container">
+        <hbox id="tabs-container" observes="bcast_windowState">
           <box id="tabs" flex="1"
                 observes="bcast_preciseInput"
                 onselect="BrowserUI.selectTabAndDismiss(this);"
