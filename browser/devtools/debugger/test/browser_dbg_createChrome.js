@@ -12,7 +12,7 @@ var gDebuggee = null;
 
 function test() {
   // Windows XP test slaves are terribly slow at this test.
-  requestLongerTimeout(2);
+  requestLongerTimeout(4);
 
   debug_chrome(STACK_URL, aOnClosing, function(aTab, aDebuggee, aProcess) {
     gTab = aTab;
