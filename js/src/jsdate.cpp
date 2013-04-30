@@ -763,7 +763,7 @@ DaysInMonth(int year, int month)
  */
 
 static JSBool
-date_parseISOString(RawLinearString str, double *result, DateTimeInfo *dtInfo)
+date_parseISOString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
 {
     double msec;
 
@@ -902,7 +902,7 @@ date_parseISOString(RawLinearString str, double *result, DateTimeInfo *dtInfo)
 }
 
 static JSBool
-date_parseString(RawLinearString str, double *result, DateTimeInfo *dtInfo)
+date_parseString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
 {
     double msec;
 
@@ -1186,7 +1186,7 @@ date_parse(JSContext *cx, unsigned argc, Value *vp)
     if (!str)
         return false;
 
-    RawLinearString linearStr = str->ensureLinear(cx);
+    JSLinearString *linearStr = str->ensureLinear(cx);
     if (!linearStr)
         return false;
 
@@ -3075,7 +3075,7 @@ js_Date(JSContext *cx, unsigned argc, Value *vp)
             if (!str)
                 return false;
 
-            RawLinearString linearStr = str->ensureLinear(cx);
+            JSLinearString *linearStr = str->ensureLinear(cx);
             if (!linearStr)
                 return false;
 
