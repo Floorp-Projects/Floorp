@@ -926,6 +926,129 @@ CodeGenerator::visitStoreSlotV(LStoreSlotV *store)
 }
 
 bool
+CodeGenerator::emitGetPropertyPolymorphic(LInstruction *ins, Register obj, Register scratch,
+                                          const TypedOrValueRegister &output)
+{
+    MGetPropertyPolymorphic *mir = ins->mirRaw()->toGetPropertyPolymorphic();
+    JS_ASSERT(mir->numShapes() > 1);
+
+    masm.loadObjShape(obj, scratch);
+
+    Label done;
+    for (size_t i = 0; i < mir->numShapes(); i++) {
+        Label next;
+        masm.branchPtr(Assembler::NotEqual, scratch, ImmGCPtr(mir->objShape(i)), &next);
+
+        RawShape shape = mir->shape(i);
+        if (shape->slot() < shape->numFixedSlots()) {
+            // Fixed slot.
+            masm.loadTypedOrValue(Address(obj, JSObject::getFixedSlotOffset(shape->slot())),
+                                  output);
+        } else {
+            // Dynamic slot.
+            uint32_t offset = (shape->slot() - shape->numFixedSlots()) * sizeof(js::Value);
+            masm.loadPtr(Address(obj, JSObject::offsetOfSlots()), scratch);
+            masm.loadTypedOrValue(Address(scratch, offset), output);
+        }
+
+        masm.jump(&done);
+        masm.bind(&next);
+    }
+
+    // Bailout if no shape matches.
+    if (!bailout(ins->snapshot()))
+        return false;
+
+    masm.bind(&done);
+    return true;
+}
+
+bool
+CodeGenerator::visitGetPropertyPolymorphicV(LGetPropertyPolymorphicV *ins)
+{
+    Register obj = ToRegister(ins->obj());
+    ValueOperand output = GetValueOutput(ins);
+    return emitGetPropertyPolymorphic(ins, obj, output.scratchReg(), output);
+}
+
+bool
+CodeGenerator::visitGetPropertyPolymorphicT(LGetPropertyPolymorphicT *ins)
+{
+    Register obj = ToRegister(ins->obj());
+    TypedOrValueRegister output(ins->mir()->type(), ToAnyRegister(ins->output()));
+    Register temp = (output.type() == MIRType_Double)
+                    ? ToRegister(ins->temp())
+                    : output.typedReg().gpr();
+    return emitGetPropertyPolymorphic(ins, obj, temp, output);
+}
+
+bool
+CodeGenerator::emitSetPropertyPolymorphic(LInstruction *ins, Register obj, Register scratch,
+                                          const ConstantOrRegister &value)
+{
+    MSetPropertyPolymorphic *mir = ins->mirRaw()->toSetPropertyPolymorphic();
+    JS_ASSERT(mir->numShapes() > 1);
+
+    masm.loadObjShape(obj, scratch);
+
+    Label done;
+    for (size_t i = 0; i < mir->numShapes(); i++) {
+        Label next;
+        masm.branchPtr(Assembler::NotEqual, scratch, ImmGCPtr(mir->objShape(i)), &next);
+
+        RawShape shape = mir->shape(i);
+        if (shape->slot() < shape->numFixedSlots()) {
+            // Fixed slot.
+            Address addr(obj, JSObject::getFixedSlotOffset(shape->slot()));
+            if (mir->needsBarrier())
+                emitPreBarrier(addr, MIRType_Value);
+            masm.storeConstantOrRegister(value, addr);
+        } else {
+            // Dynamic slot.
+            masm.loadPtr(Address(obj, JSObject::offsetOfSlots()), scratch);
+            Address addr(scratch, (shape->slot() - shape->numFixedSlots()) * sizeof(js::Value));
+            if (mir->needsBarrier())
+                emitPreBarrier(addr, MIRType_Value);
+            masm.storeConstantOrRegister(value, addr);
+        }
+
+        masm.jump(&done);
+        masm.bind(&next);
+    }
+
+    // Bailout if no shape matches.
+    if (!bailout(ins->snapshot()))
+        return false;
+
+    masm.bind(&done);
+    return true;
+}
+
+bool
+CodeGenerator::visitSetPropertyPolymorphicV(LSetPropertyPolymorphicV *ins)
+{
+    Register obj = ToRegister(ins->obj());
+    Register temp = ToRegister(ins->temp());
+    ValueOperand value = ToValue(ins, LSetPropertyPolymorphicV::Value);
+    return emitSetPropertyPolymorphic(ins, obj, temp, TypedOrValueRegister(value));
+}
+
+bool
+CodeGenerator::visitSetPropertyPolymorphicT(LSetPropertyPolymorphicT *ins)
+{
+    Register obj = ToRegister(ins->obj());
+    Register temp = ToRegister(ins->temp());
+
+    ConstantOrRegister value;
+    if (ins->mir()->value()->isConstant())
+        value = ConstantOrRegister(ins->mir()->value()->toConstant()->value());
+    else
+        value = TypedOrValueRegister(ins->mir()->value()->type(), ToAnyRegister(ins->value()));
+
+    return emitSetPropertyPolymorphic(ins, obj, temp, value);
+}
+
+bool
 CodeGenerator::visitElements(LElements *lir)
 {
     Address elements(ToRegister(lir->object()), JSObject::offsetOfElements());
