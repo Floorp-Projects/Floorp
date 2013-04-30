@@ -55,7 +55,6 @@ Var WasOptionsButtonClicked
 Var CanWriteToInstallDir
 Var HasRequiredSpaceAvailable
 Var IsDownloadFinished
-Var Initialized
 Var DownloadSizeBytes
 Var HalfOfDownload
 Var DownloadReset
@@ -383,6 +382,7 @@ Function .onInit
     StrCpy $INSTDIR "$R9"
   ${EndIf}
 
+  ; Used to determine if the default installation directory was used.
   StrCpy $InitialInstallDir "$INSTDIR"
 
   ClearErrors
@@ -409,6 +409,16 @@ Function .onInit
   StrCpy $InitialInstallRequirementsCode ""
   StrCpy $IsDownloadFinished ""
   StrCpy $FirefoxLaunchCode "0"
+  StrCpy $CheckboxShortcutOnBar "1"
+  StrCpy $CheckboxShortcutInStartMenu "1"
+  StrCpy $CheckboxShortcutOnDesktop "1"
+  StrCpy $CheckboxSendPing "1"
+!ifdef MOZ_MAINTENANCE_SERVICE
+  StrCpy $CheckboxInstallMaintSvc "1"
+!else
+  StrCpy $CheckboxInstallMaintSvc "0"
+!endif
+  StrCpy $WasOptionsButtonClicked "0"
 
   CreateFont $FontBlurb "$(^Font)" "12" "500"
   CreateFont $FontNormal "$(^Font)" "11" "500"
@@ -642,19 +652,6 @@ Function createDummy
 FunctionEnd
 
 Function createIntro
-  ; If Back is clicked on the options page reset variables
-  StrCpy $INSTDIR "$InitialInstallDir"
-  StrCpy $CheckboxShortcutOnBar "1"
-  StrCpy $CheckboxShortcutInStartMenu "1"
-  StrCpy $CheckboxShortcutOnDesktop "1"
-  StrCpy $CheckboxSendPing "1"
-!ifdef MOZ_MAINTENANCE_SERVICE
-  StrCpy $CheckboxInstallMaintSvc "1"
-!else
-  StrCpy $CheckboxInstallMaintSvc "0"
-!endif
-  StrCpy $WasOptionsButtonClicked "0"
-
   nsDialogs::Create /NOUNLOAD 1018
   Pop $Dialog
 
@@ -673,33 +670,23 @@ Function createIntro
   SendMessage $0 ${WM_SETFONT} $FontBlurb 0
   SetCtlColors $0 ${INTRO_BLURB_TEXT_COLOR} transparent
 
-  ${If} "$Initialized" == "true"
-    ; When the user clicked back from the options page.
-    System::Call "kernel32::GetTickCount()l .s"
-    Pop $0
-    ${GetSecondsElapsed} "$StartOptionsPhaseTickCount" "$0" $1
-    ; This is added to the previous value of $OptionsPhaseSeconds because the
-    ; options page can be displayed multiple times.
-    IntOp $OptionsPhaseSeconds $OptionsPhaseSeconds + $1
+  SetCtlColors $HWNDPARENT ${FOOTER_CONTROL_TEXT_COLOR_NORMAL} ${FOOTER_BKGRD_COLOR}
+  GetDlgItem $0 $HWNDPARENT 10 ; Default browser checkbox
+  ; Set as default is not supported in the installer for Win8 and above so
+  ; only display it on Windows 7 and below
+  ${If} "$CanSetAsDefault" == "true"
+    ; The uxtheme must be disabled on checkboxes in order to override the
+    ; system font color.
+    System::Call 'uxtheme::SetWindowTheme(i $0 , w " ", w " ")'
+    SendMessage $0 ${WM_SETFONT} $FontNormal 0
+    SendMessage $0 ${WM_SETTEXT} 0 "STR:$(MAKE_DEFAULT)"
+    SendMessage $0 ${BM_SETCHECK} 1 0
+    SetCtlColors $0 ${FOOTER_CONTROL_TEXT_COLOR_NORMAL} ${FOOTER_BKGRD_COLOR}
   ${Else}
-    SetCtlColors $HWNDPARENT ${FOOTER_CONTROL_TEXT_COLOR_NORMAL} ${FOOTER_BKGRD_COLOR}
-    GetDlgItem $0 $HWNDPARENT 10 ; Default browser checkbox
-    ; Set as default is not supported in the installer for Win8 and above so
-    ; only display it on Windows 7 and below
-    ${If} "$CanSetAsDefault" == "true"
-      ; The uxtheme must be disabled on checkboxes in order to override the
-      ; system font color.
-      System::Call 'uxtheme::SetWindowTheme(i $0 , w " ", w " ")'
-      SendMessage $0 ${WM_SETFONT} $FontNormal 0
-      SendMessage $0 ${WM_SETTEXT} 0 "STR:$(MAKE_DEFAULT)"
-      SendMessage $0 ${BM_SETCHECK} 1 0
-      SetCtlColors $0 ${FOOTER_CONTROL_TEXT_COLOR_NORMAL} ${FOOTER_BKGRD_COLOR}
-    ${Else}
-      ShowWindow $0 ${SW_HIDE}
-    ${EndIf}
-    GetDlgItem $0 $HWNDPARENT 11
     ShowWindow $0 ${SW_HIDE}
   ${EndIf}
+  GetDlgItem $0 $HWNDPARENT 11
+  ShowWindow $0 ${SW_HIDE}
 
   ${NSD_CreateBitmap} ${APPNAME_BMP_EDGE_DU} ${APPNAME_BMP_TOP_DU} \
                       ${APPNAME_BMP_WIDTH_DU} ${APPNAME_BMP_HEIGHT_DU} ""
@@ -717,7 +704,7 @@ Function createIntro
   GetDlgItem $0 $HWNDPARENT 2 ; Cancel button
   SendMessage $0 ${WM_SETTEXT} 0 "STR:$(CANCEL_BUTTON)"
 
-  GetDlgItem $0 $HWNDPARENT 3 ; Back and Options button
+  GetDlgItem $0 $HWNDPARENT 3 ; Back button used for Options
   SendMessage $0 ${WM_SETTEXT} 0 "STR:$(OPTIONS_BUTTON)"
 
   IntOp $IntroPageShownCount $IntroPageShownCount + 1
@@ -730,8 +717,6 @@ Function createIntro
 
   ${NSD_FreeImage} $0
   ${NSD_FreeImage} $1
-
-  StrCpy $Initialized "true"
 FunctionEnd
 
 Function leaveIntro
@@ -773,8 +758,8 @@ Function leaveIntro
 FunctionEnd
 
 Function createOptions
-  ; Check whether the requirements to install are satisfied the first time the
-  ; options page is displayed for metrics.
+  ; Check whether the install requirements are satisfied using the default
+  ; values for metrics.
   ${If} "$InitialInstallRequirementsCode" == ""
     ${If} "$CanWriteToInstallDir" != "true"
     ${AndIf} "$HasRequiredSpaceAvailable" != "true"
@@ -970,8 +955,9 @@ Function createOptions
   GetDlgItem $0 $HWNDPARENT 2 ; Cancel button
   SendMessage $0 ${WM_SETTEXT} 0 "STR:$(CANCEL_BUTTON)"
 
-  GetDlgItem $0 $HWNDPARENT 3 ; Back and Options button
-  SendMessage $0 ${WM_SETTEXT} 0 "STR:$(BACK_BUTTON)"
+  GetDlgItem $0 $HWNDPARENT 3 ; Back button used for Options
+  EnableWindow $0 0
+  ShowWindow $0 ${SW_HIDE}
 
   ; If the option button was not clicked display the reason for what needs to be
   ; resolved to continue the installation.
@@ -1152,7 +1138,7 @@ Function createInstall
   EnableWindow $0 0
   ShowWindow $0 ${SW_HIDE}
 
-  GetDlgItem $0 $HWNDPARENT 3 ; Back and Options button
+  GetDlgItem $0 $HWNDPARENT 3 ; Back button used for Options
   EnableWindow $0 0
   ShowWindow $0 ${SW_HIDE}
 
