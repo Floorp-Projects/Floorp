@@ -305,7 +305,7 @@ Shape::replaceLastProperty(JSContext *cx, const StackBaseShape &base,
     StackShape child(shape);
     StackShape::AutoRooter childRoot(cx, &child);
     {
-        RawUnownedBaseShape nbase = BaseShape::getUnowned(cx, base);
+        UnownedBaseShape *nbase = BaseShape::getUnowned(cx, base);
         if (!nbase)
             return NULL;
 
@@ -703,7 +703,7 @@ JSObject::putProperty(JSContext *cx, HandleObject obj, HandleId id,
         StackBaseShape base(obj->lastProperty()->base());
         base.updateGetterSetter(attrs, getter, setter);
 
-        RawUnownedBaseShape nbase = BaseShape::getUnowned(cx, base);
+        UnownedBaseShape *nbase = BaseShape::getUnowned(cx, base);
         if (!nbase)
             return NULL;
 
@@ -1008,7 +1008,7 @@ JSObject::setParent(JSContext *cx, HandleObject obj, HandleObject parent)
     if (obj->inDictionaryMode()) {
         StackBaseShape base(obj->lastProperty());
         base.parent = parent;
-        RawUnownedBaseShape nbase = BaseShape::getUnowned(cx, base);
+        UnownedBaseShape *nbase = BaseShape::getUnowned(cx, base);
         if (!nbase)
             return false;
 
@@ -1087,7 +1087,7 @@ js::ObjectImpl::setFlag(JSContext *cx, /*BaseShape::Flag*/ uint32_t flag_,
             return false;
         StackBaseShape base(self->lastProperty());
         base.flags |= flag;
-        RawUnownedBaseShape nbase = BaseShape::getUnowned(cx, base);
+        UnownedBaseShape *nbase = BaseShape::getUnowned(cx, base);
         if (!nbase)
             return false;
 
@@ -1114,7 +1114,7 @@ js::ObjectImpl::clearFlag(JSContext *cx, /*BaseShape::Flag*/ uint32_t flag)
 
     StackBaseShape base(self->lastProperty());
     base.flags &= ~flag;
-    RawUnownedBaseShape nbase = BaseShape::getUnowned(cx, base);
+    UnownedBaseShape *nbase = BaseShape::getUnowned(cx, base);
     if (!nbase)
         return false;
 
@@ -1147,7 +1147,7 @@ StackBaseShape::hash(const StackBaseShape *base)
 }
 
 /* static */ inline bool
-StackBaseShape::match(RawUnownedBaseShape key, const StackBaseShape *lookup)
+StackBaseShape::match(UnownedBaseShape *key, const StackBaseShape *lookup)
 {
     return key->flags == lookup->flags
         && key->clasp == lookup->clasp
@@ -1177,7 +1177,7 @@ BaseShape::getUnowned(JSContext *cx, const StackBaseShape &base)
 
     new (nbase_) BaseShape(base);
 
-    RawUnownedBaseShape nbase = static_cast<RawUnownedBaseShape>(nbase_);
+    UnownedBaseShape *nbase = static_cast<UnownedBaseShape *>(nbase_);
 
     if (!table.relookupOrAdd(p, &base, nbase))
         return NULL;
@@ -1192,7 +1192,7 @@ JSCompartment::sweepBaseShapeTable()
 
     if (baseShapes.initialized()) {
         for (BaseShapeSet::Enum e(baseShapes); !e.empty(); e.popFront()) {
-            RawUnownedBaseShape base = e.front();
+            UnownedBaseShape *base = e.front();
             if (IsBaseShapeAboutToBeFinalized(&base))
                 e.removeFront();
         }
