@@ -262,7 +262,7 @@ AtomizeAndTakeOwnership(JSContext *cx, const jschar *tbchars, size_t length,
 
     AutoEnterAtomsCompartment ac(cx);
 
-    RawFlatString flat = js_NewString<CanGC>(cx, const_cast<jschar*>(tbchars), length);
+    JSFlatString *flat = js_NewString<CanGC>(cx, const_cast<jschar*>(tbchars), length);
     if (!flat) {
         js_free((void*)tbchars);
         return NULL;
@@ -306,7 +306,7 @@ AtomizeAndCopyChars(JSContext *cx, const jschar *tbchars, size_t length, InternB
 
     AutoEnterAtomsCompartment ac(cx);
 
-    RawFlatString flat = js_NewStringCopyN<allowGC>(cx, tbchars, length);
+    JSFlatString *flat = js_NewStringCopyN<allowGC>(cx, tbchars, length);
     if (!flat)
         return NULL;
 
