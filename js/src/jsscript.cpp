@@ -123,7 +123,7 @@ Bindings::initWithTemporaryStorage(JSContext *cx, InternalBindingsHandle self,
         StackBaseShape base(cx->compartment, &CallClass, cx->global(),
                             BaseShape::VAROBJ | BaseShape::DELEGATE);
 
-        RawUnownedBaseShape nbase = BaseShape::getUnowned(cx, base);
+        UnownedBaseShape *nbase = BaseShape::getUnowned(cx, base);
         if (!nbase)
             return false;
 
