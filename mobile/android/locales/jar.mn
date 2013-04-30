@@ -60,4 +60,3 @@ relativesrcdir dom/locales:
 
 % override chrome://global/locale/charsetTitles.properties chrome://browser/locale/overrides/charsetTitles.properties
 % override chrome://global/locale/global.dtd chrome://browser/locale/overrides/global.dtd
-  locale/@AB_CD@/browser/handling.properties      (%chrome/handling.properties)
