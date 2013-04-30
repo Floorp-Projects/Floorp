@@ -4631,7 +4631,7 @@ DebuggerObject_getOwnPropertyDescriptor(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     /* Bug: This can cause the debuggee to run! */
-    AutoPropertyDescriptorRooter desc(cx);
+    Rooted<PropertyDescriptor> desc(cx);
     {
         Maybe<AutoCompartment> ac;
         ac.construct(cx, obj);
@@ -4643,28 +4643,26 @@ DebuggerObject_getOwnPropertyDescriptor(JSContext *cx, unsigned argc, Value *vp)
             return false;
     }
 
-    if (desc.obj) {
+    if (desc.object()) {
         /* Rewrap the debuggee values in desc for the debugger. */
-        RootedValue value(cx, desc.value);
-        if (!dbg->wrapDebuggeeValue(cx, &value))
+        if (!dbg->wrapDebuggeeValue(cx, desc.value()))
             return false;
-        desc.value = value;
 
-        if (desc.attrs & JSPROP_GETTER) {
-            RootedValue get(cx, ObjectOrNullValue(CastAsObject(desc.getter)));
+        if (desc.hasGetterObject()) {
+            RootedValue get(cx, ObjectOrNullValue(desc.getterObject()));
             if (!dbg->wrapDebuggeeValue(cx, &get))
                 return false;
-            desc.getter = CastAsPropertyOp(get.toObjectOrNull());
+            desc.setGetterObject(get.toObjectOrNull());
         }
-        if (desc.attrs & JSPROP_SETTER) {
-            RootedValue set(cx, ObjectOrNullValue(CastAsObject(desc.setter)));
+        if (desc.hasSetterObject()) {
+            RootedValue set(cx, ObjectOrNullValue(desc.setterObject()));
             if (!dbg->wrapDebuggeeValue(cx, &set))
                 return false;
-            desc.setter = CastAsStrictPropertyOp(set.toObjectOrNull());
+            desc.setSetterObject(set.toObjectOrNull());
         }
     }
 
-    return NewPropertyDescriptorObject(cx, &desc, args.rval());
+    return NewPropertyDescriptorObject(cx, desc, args.rval());
 }
 
 static bool

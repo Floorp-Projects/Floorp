@@ -3430,7 +3430,6 @@ template <typename Outer>
 class PropertyDescriptorOperations
 {
     const JSPropertyDescriptor * desc() const { return static_cast<const Outer*>(this)->extract(); }
-    JSPropertyDescriptor * desc() { return static_cast<Outer*>(this)->extract(); }
 
   public:
     bool isEnumerable() const { return desc()->attrs & JSPROP_ENUMERATE; }
@@ -3439,19 +3438,17 @@ class PropertyDescriptorOperations
     bool hasNativeAccessors() const { return desc()->attrs & JSPROP_NATIVE_ACCESSORS; }
     bool hasGetterObject() const { return desc()->attrs & JSPROP_GETTER; }
     bool hasSetterObject() const { return desc()->attrs & JSPROP_SETTER; }
+    bool hasGetterOrSetterObject() const { return desc()->attrs & (JSPROP_GETTER | JSPROP_SETTER); }
     bool isShared() const { return desc()->attrs & JSPROP_SHARED; }
     bool isIndex() const { return desc()->attrs & JSPROP_INDEX; }
     bool hasShortId() const { return desc()->attrs & JSPROP_SHORTID; }
     bool hasAttributes(unsigned attrs) const { return desc()->attrs & attrs; }
 
-    JS::MutableHandle<JSObject*> object() {
-        return JS::MutableHandle<JSObject*>::fromMarkedLocation(&desc()->obj);
+    JS::Handle<JSObject*> object() const {
+        return JS::Handle<JSObject*>::fromMarkedLocation(&desc()->obj);
     }
     unsigned attributes() const { return desc()->attrs; }
-    unsigned shortid() const {
-        MOZ_ASSERT(hasShortId());
-        return desc()->shortid;
-    }
+    unsigned shortid() const { return desc()->shortid; }
     JSPropertyOp getter() const { return desc()->getter; }
     JSStrictPropertyOp setter() const { return desc()->setter; }
     JS::Handle<JSObject*> getterObject() const {
@@ -3464,11 +3461,35 @@ class PropertyDescriptorOperations
         return JS::Handle<JSObject*>::fromMarkedLocation(
                 reinterpret_cast<JSObject *const *>(&desc()->setter));
     }
+    JS::Handle<Value> value() const {
+        return JS::Handle<Value>::fromMarkedLocation(&desc()->value);
+    }
+
+    bool isClear() const {
+        return desc()->obj == NULL && desc()->attrs == 0 && desc()->getter == NULL &&
+               desc()->setter == NULL && desc()->value.isUndefined();
+    }
+};
+
+template <typename Outer>
+class MutablePropertyDescriptorOperations : public PropertyDescriptorOperations<Outer>
+{
+    JSPropertyDescriptor * desc() { return static_cast<Outer*>(this)->extractMutable(); }
+
+  public:
+    JS::MutableHandle<JSObject*> object() {
+        return JS::MutableHandle<JSObject*>::fromMarkedLocation(&desc()->obj);
+    }
+    unsigned &attributesRef() { return desc()->attrs; }
+    JSPropertyOp &getter() { return desc()->getter; }
+    JSStrictPropertyOp &setter() { return desc()->setter; }
     JS::MutableHandle<Value> value() {
         return JS::MutableHandle<Value>::fromMarkedLocation(&desc()->value);
     }
 
+    void setEnumerable() { desc()->attrs |= JSPROP_ENUMERATE; }
     void setAttributes(unsigned attrs) { desc()->attrs = attrs; }
+
     void setShortId(unsigned id) { desc()->shortid = id; }
     void setGetter(JSPropertyOp op) { desc()->getter = op; }
     void setSetter(JSStrictPropertyOp op) { desc()->setter = op; }
@@ -3494,13 +3515,14 @@ struct GCMethods<JSPropertyDescriptor> {
 
 template <>
 class RootedBase<JSPropertyDescriptor>
-  : public JS::PropertyDescriptorOperations<JS::Rooted<JSPropertyDescriptor> >
+  : public JS::MutablePropertyDescriptorOperations<JS::Rooted<JSPropertyDescriptor> >
 {
     friend class JS::PropertyDescriptorOperations<JS::Rooted<JSPropertyDescriptor> >;
+    friend class JS::MutablePropertyDescriptorOperations<JS::Rooted<JSPropertyDescriptor> >;
     const JSPropertyDescriptor *extract() const {
         return static_cast<const JS::Rooted<JSPropertyDescriptor>*>(this)->address();
     }
-    JSPropertyDescriptor *extract() {
+    JSPropertyDescriptor *extractMutable() {
         return static_cast<JS::Rooted<JSPropertyDescriptor>*>(this)->address();
     }
 };
@@ -3513,24 +3535,18 @@ class HandleBase<JSPropertyDescriptor>
     const JSPropertyDescriptor *extract() const {
         return static_cast<const JS::Handle<JSPropertyDescriptor>*>(this)->address();
     }
-  public:
-    JS::Handle<JS::Value> value() const {
-        return JS::Handle<JS::Value>::fromMarkedLocation(&extract()->value);
-    }
-    JS::Handle<JSObject*> obj() const {
-        return JS::Handle<JSObject*>::fromMarkedLocation(&extract()->obj);
-    }
 };
 
 template <>
 class MutableHandleBase<JSPropertyDescriptor>
-  : public JS::PropertyDescriptorOperations<JS::MutableHandle<JSPropertyDescriptor> >
+  : public JS::MutablePropertyDescriptorOperations<JS::MutableHandle<JSPropertyDescriptor> >
 {
     friend class JS::PropertyDescriptorOperations<JS::MutableHandle<JSPropertyDescriptor> >;
+    friend class JS::MutablePropertyDescriptorOperations<JS::MutableHandle<JSPropertyDescriptor> >;
     const JSPropertyDescriptor *extract() const {
         return static_cast<const JS::MutableHandle<JSPropertyDescriptor>*>(this)->address();
     }
-    JSPropertyDescriptor *extract() {
+    JSPropertyDescriptor *extractMutable() {
         return static_cast<JS::MutableHandle<JSPropertyDescriptor>*>(this)->address();
     }
 };

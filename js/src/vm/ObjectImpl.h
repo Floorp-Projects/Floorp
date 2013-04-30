@@ -238,7 +238,7 @@ struct PropDesc {
      * makeObject populates pd based on the other fields of *this, creating a
      * new property descriptor JSObject and defining properties on it.
      */
-    void initFromPropertyDescriptor(const PropertyDescriptor &desc);
+    void initFromPropertyDescriptor(Handle<PropertyDescriptor> desc);
     bool makeObject(JSContext *cx);
 
     void setUndefined() { isUndefined_ = true; }
@@ -355,7 +355,7 @@ class AutoPropDescRooter : private JS::CustomAutoRooter
 
     PropDesc& getPropDesc() { return propDesc; }
 
-    void initFromPropertyDescriptor(const PropertyDescriptor &desc) {
+    void initFromPropertyDescriptor(Handle<PropertyDescriptor> desc) {
         propDesc.initFromPropertyDescriptor(desc);
     }
 

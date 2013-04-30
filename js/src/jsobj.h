@@ -1168,7 +1168,7 @@ DefineOwnProperty(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
 
 extern bool
 DefineOwnProperty(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
-                  const js::PropertyDescriptor &descriptor, bool *bp);
+                  JS::Handle<js::PropertyDescriptor> descriptor, bool *bp);
 
 /*
  * The NewObjectKind allows an allocation site to specify the type properties
@@ -1343,13 +1343,14 @@ GetPropertyPure(ThreadSafeContext *cx, JSObject *obj, PropertyName *name, Value 
 }
 
 bool
-GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id, PropertyDescriptor *desc);
+GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id,
+                         MutableHandle<PropertyDescriptor> desc);
 
 bool
 GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp);
 
 bool
-NewPropertyDescriptorObject(JSContext *cx, const PropertyDescriptor *desc, MutableHandleValue vp);
+NewPropertyDescriptorObject(JSContext *cx, Handle<PropertyDescriptor> desc, MutableHandleValue vp);
 
 /*
  * If obj has an already-resolved data property for id, return true and

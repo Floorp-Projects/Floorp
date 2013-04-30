@@ -185,10 +185,10 @@ js::HasOwnProperty<NoGC>(JSContext *cx, LookupGenericOp lookup,
                          FakeMutableHandle<JSObject*> objp, FakeMutableHandle<Shape*> propp);
 
 bool
-js::NewPropertyDescriptorObject(JSContext *cx, const PropertyDescriptor *desc,
+js::NewPropertyDescriptorObject(JSContext *cx, Handle<PropertyDescriptor> desc,
                                 MutableHandleValue vp)
 {
-    if (!desc->obj) {
+    if (!desc.object()) {
         vp.setUndefined();
         return true;
     }
@@ -196,7 +196,7 @@ js::NewPropertyDescriptorObject(JSContext *cx, const PropertyDescriptor *desc,
     /* We have our own property, so start creating the descriptor. */
     AutoPropDescRooter d(cx);
 
-    d.initFromPropertyDescriptor(*desc);
+    d.initFromPropertyDescriptor(desc);
     if (!d.makeObject(cx))
         return false;
     vp.set(d.pd());
@@ -204,20 +204,20 @@ js::NewPropertyDescriptorObject(JSContext *cx, const PropertyDescriptor *desc,
 }
 
 void
-PropDesc::initFromPropertyDescriptor(const PropertyDescriptor &desc)
+PropDesc::initFromPropertyDescriptor(Handle<PropertyDescriptor> desc)
 {
     isUndefined_ = false;
     pd_.setUndefined();
-    attrs = uint8_t(desc.attrs);
+    attrs = uint8_t(desc.attributes());
     JS_ASSERT_IF(attrs & JSPROP_READONLY, !(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
-    if (desc.attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
+    if (desc.hasGetterOrSetterObject()) {
         hasGet_ = true;
-        get_ = ((desc.attrs & JSPROP_GETTER) && desc.getter)
-               ? CastAsObjectJsval(desc.getter)
+        get_ = desc.hasGetterObject() && desc.getterObject()
+               ? ObjectValue(*desc.getterObject())
                : UndefinedValue();
         hasSet_ = true;
-        set_ = ((desc.attrs & JSPROP_SETTER) && desc.setter)
-               ? CastAsObjectJsval(desc.setter)
+        set_ = desc.hasSetterObject() && desc.setterObject()
+               ? ObjectValue(*desc.setterObject())
                : UndefinedValue();
         hasValue_ = false;
         value_.setUndefined();
@@ -228,7 +228,7 @@ PropDesc::initFromPropertyDescriptor(const PropertyDescriptor &desc)
         hasSet_ = false;
         set_.setUndefined();
         hasValue_ = true;
-        value_ = desc.value;
+        value_ = desc.value();
         hasWritable_ = true;
     }
     hasEnumerable_ = true;
@@ -270,7 +270,7 @@ PropDesc::makeObject(JSContext *cx)
 
 bool
 js::GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id,
-                             PropertyDescriptor *desc)
+                             MutableHandle<PropertyDescriptor> desc)
 {
     // FIXME: Call TrapGetOwnProperty directly once ScriptedIndirectProxies is removed
     if (obj->is<ProxyObject>())
@@ -281,22 +281,22 @@ js::GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id,
     if (!HasOwnProperty<CanGC>(cx, obj->getOps()->lookupGeneric, obj, id, &pobj, &shape))
         return false;
     if (!shape) {
-        desc->obj = NULL;
+        desc.object().set(NULL);
         return true;
     }
 
     bool doGet = true;
     if (pobj->isNative()) {
-        desc->attrs = GetShapeAttributes(shape);
-        if (desc->attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
+        desc.setAttributes(GetShapeAttributes(shape));
+        if (desc.hasGetterOrSetterObject()) {
             doGet = false;
-            if (desc->attrs & JSPROP_GETTER)
-                desc->getter = CastAsPropertyOp(shape->getterObject());
-            if (desc->attrs & JSPROP_SETTER)
-                desc->setter = CastAsStrictPropertyOp(shape->setterObject());
+            if (desc.hasGetterObject())
+                desc.setGetterObject(shape->getterObject());
+            if (desc.hasSetterObject())
+                desc.setSetterObject(shape->setterObject());
         }
     } else {
-        if (!JSObject::getGenericAttributes(cx, pobj, id, &desc->attrs))
+        if (!JSObject::getGenericAttributes(cx, pobj, id, &desc.attributesRef()))
             return false;
     }
 
@@ -304,17 +304,17 @@ js::GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id,
     if (doGet && !JSObject::getGeneric(cx, obj, obj, id, &value))
         return false;
 
-    desc->value = value;
-    desc->obj = obj;
+    desc.value().set(value);
+    desc.object().set(obj);
     return true;
 }
 
 bool
 js::GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp)
 {
-    AutoPropertyDescriptorRooter desc(cx);
+    Rooted<PropertyDescriptor> desc(cx);
     return GetOwnPropertyDescriptor(cx, obj, id, &desc) &&
-           NewPropertyDescriptorObject(cx, &desc, vp);
+           NewPropertyDescriptorObject(cx, desc, vp);
 }
 
 bool
@@ -568,29 +568,29 @@ js::CheckDefineProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValu
 
     // ES5 8.12.9 Step 1. Even though we know obj is native, we use generic
     // APIs for shorter, more readable code.
-    AutoPropertyDescriptorRooter desc(cx);
+    Rooted<PropertyDescriptor> desc(cx);
     if (!GetOwnPropertyDescriptor(cx, obj, id, &desc))
         return false;
 
     // This does not have to check obj's extensibility when !desc.obj (steps
     // 2-3) because the low-level methods JSObject::{add,put}Property check
     // for that.
-    if (desc.obj && (desc.attrs & JSPROP_PERMANENT)) {
+    if (desc.object() && desc.isPermanent()) {
         // Steps 6-11, skipping step 10.a.ii. Prohibit redefining a permanent
         // property with different metadata, except to make a writable property
         // non-writable.
-        if (getter != desc.getter ||
-            setter != desc.setter ||
-            (attrs != desc.attrs && attrs != (desc.attrs | JSPROP_READONLY)))
+        if (getter != desc.getter() ||
+            setter != desc.setter() ||
+            (attrs != desc.attributes() && attrs != (desc.attributes() | JSPROP_READONLY)))
         {
             return Throw(cx, id, JSMSG_CANT_REDEFINE_PROP);
         }
 
         // Step 10.a.ii. Prohibit changing the value of a non-configurable,
         // non-writable data property.
-        if ((desc.attrs & (JSPROP_GETTER | JSPROP_SETTER | JSPROP_READONLY)) == JSPROP_READONLY) {
+        if ((desc.attributes() & (JSPROP_GETTER | JSPROP_SETTER | JSPROP_READONLY)) == JSPROP_READONLY) {
             bool same;
-            if (!SameValue(cx, value, desc.value, &same))
+            if (!SameValue(cx, value, desc.value(), &same))
                 return false;
             if (!same)
                 return JSObject::reportReadOnly(cx, id);
@@ -1024,7 +1024,7 @@ js::DefineOwnProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValue 
 
 bool
 js::DefineOwnProperty(JSContext *cx, HandleObject obj, HandleId id,
-                      const PropertyDescriptor &descriptor, bool *bp)
+                      Handle<PropertyDescriptor> descriptor, bool *bp)
 {
     AutoPropDescArrayRooter descs(cx);
     PropDesc *desc = descs.append();
@@ -4548,17 +4548,17 @@ baseops::SetPropertyHelper(JSContext *cx, HandleObject obj, HandleObject receive
     if (shape) {
         if (!pobj->isNative()) {
             if (pobj->is<ProxyObject>()) {
-                AutoPropertyDescriptorRooter pd(cx);
+                Rooted<PropertyDescriptor> pd(cx);
                 if (!Proxy::getPropertyDescriptor(cx, pobj, id, &pd, JSRESOLVE_ASSIGNING))
                     return false;
 
-                if ((pd.attrs & (JSPROP_SHARED | JSPROP_SHADOWABLE)) == JSPROP_SHARED) {
-                    return !pd.setter ||
-                           CallSetter(cx, receiver, id, pd.setter, pd.attrs, pd.shortid, strict,
-                                      vp);
+                if ((pd.attributes() & (JSPROP_SHARED | JSPROP_SHADOWABLE)) == JSPROP_SHARED) {
+                    return !pd.setter() ||
+                           CallSetter(cx, receiver, id, pd.setter(), pd.attributes(),
+                                      pd.shortid(), strict, vp);
                 }
 
-                if (pd.attrs & JSPROP_READONLY) {
+                if (pd.isReadonly()) {
                     if (strict)
                         return JSObject::reportReadOnly(cx, id, JSREPORT_ERROR);
                     if (cx->hasExtraWarningsOption())
