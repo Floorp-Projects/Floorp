@@ -17,7 +17,6 @@ XPIDL_SOURCES += [
     'nsIDOMSVGLength.idl',
     'nsIDOMSVGNumber.idl',
     'nsIDOMSVGRect.idl',
-    'nsIDOMSVGZoomEvent.idl',
 ]
 
 XPIDL_MODULE = 'dom_svg'
