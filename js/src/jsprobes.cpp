@@ -55,7 +55,7 @@ Probes::discardMJITCode(FreeOp *fop, mjit::JITScript *jscr, mjit::JITChunk *chun
 
 bool
 Probes::registerICCode(JSContext *cx,
-                       mjit::JITChunk *chunk, RawScript script, jsbytecode* pc,
+                       mjit::JITChunk *chunk, JSScript *script, jsbytecode* pc,
                        void *start, size_t size)
 {
     if (cx->runtime->spsProfiler.enabled() &&
@@ -79,7 +79,7 @@ Probes::discardExecutableRegion(void *start, size_t size)
 
 #ifdef INCLUDE_MOZILLA_DTRACE
 static const char *
-ScriptFilename(const RawScript script)
+ScriptFilename(const JSScript *script)
 {
     if (!script)
         return Probes::nullName;
@@ -106,7 +106,7 @@ FunctionName(JSContext *cx, JSFunction *fun, JSAutoByteString* bytes)
  * a number of usually unused lines of code would cause.
  */
 void
-Probes::DTraceEnterJSFun(JSContext *cx, JSFunction *fun, RawScript script)
+Probes::DTraceEnterJSFun(JSContext *cx, JSFunction *fun, JSScript *script)
 {
     JSAutoByteString funNameBytes;
     JAVASCRIPT_FUNCTION_ENTRY(ScriptFilename(script), Probes::nullName,
@@ -114,7 +114,7 @@ Probes::DTraceEnterJSFun(JSContext *cx, JSFunction *fun, RawScript script)
 }
 
 void
-Probes::DTraceExitJSFun(JSContext *cx, JSFunction *fun, RawScript script)
+Probes::DTraceExitJSFun(JSContext *cx, JSFunction *fun, JSScript *script)
 {
     JSAutoByteString funNameBytes;
     JAVASCRIPT_FUNCTION_RETURN(ScriptFilename(script), Probes::nullName,

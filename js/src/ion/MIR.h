@@ -5849,7 +5849,7 @@ class MBindNameCache
     CompilerRootScript script_;
     jsbytecode *pc_;
 
-    MBindNameCache(MDefinition *scopeChain, PropertyName *name, RawScript script, jsbytecode *pc)
+    MBindNameCache(MDefinition *scopeChain, PropertyName *name, JSScript *script, jsbytecode *pc)
       : MUnaryInstruction(scopeChain), name_(name), script_(script), pc_(pc)
     {
         setResultType(MIRType_Object);
@@ -5858,7 +5858,7 @@ class MBindNameCache
   public:
     INSTRUCTION_HEADER(BindNameCache)
 
-    static MBindNameCache *New(MDefinition *scopeChain, PropertyName *name, RawScript script,
+    static MBindNameCache *New(MDefinition *scopeChain, PropertyName *name, JSScript *script,
                                jsbytecode *pc) {
         return new MBindNameCache(scopeChain, name, script, pc);
     }
@@ -5872,7 +5872,7 @@ class MBindNameCache
     PropertyName *name() const {
         return name_;
     }
-    RawScript script() const {
+    JSScript *script() const {
         return script_;
     }
     jsbytecode *pc() const {
@@ -7334,7 +7334,7 @@ class MFunctionBoundary : public MNullaryInstruction
     Type type_;
     unsigned inlineLevel_;
 
-    MFunctionBoundary(RawScript script, Type type, unsigned inlineLevel)
+    MFunctionBoundary(JSScript *script, Type type, unsigned inlineLevel)
       : script_(script), type_(type), inlineLevel_(inlineLevel)
     {
         JS_ASSERT_IF(type != Inline_Exit, script != NULL);
@@ -7345,12 +7345,12 @@ class MFunctionBoundary : public MNullaryInstruction
   public:
     INSTRUCTION_HEADER(FunctionBoundary)
 
-    static MFunctionBoundary *New(RawScript script, Type type,
+    static MFunctionBoundary *New(JSScript *script, Type type,
                                   unsigned inlineLevel = 0) {
         return new MFunctionBoundary(script, type, inlineLevel);
     }
 
-    RawScript script() {
+    JSScript *script() {
         return script_;
     }
 

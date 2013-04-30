@@ -126,7 +126,7 @@ fun_getProperty(JSContext *cx, HandleObject obj_, HandleId id, MutableHandleValu
         // IonMonkey does not guarantee |f.arguments| can be
         // fully recovered, so we try to mitigate observing this behavior by
         // detecting its use early.
-        RawScript script = iter.script();
+        JSScript *script = iter.script();
         ion::ForbidCompilation(cx, script);
 #endif
 
@@ -1164,7 +1164,7 @@ fun_isGenerator(JSContext *cx, unsigned argc, Value *vp)
 
     bool result = false;
     if (fun->hasScript()) {
-        RawScript script = fun->nonLazyScript();
+        JSScript *script = fun->nonLazyScript();
         JS_ASSERT(script->length != 0);
         result = script->isGenerator;
     }

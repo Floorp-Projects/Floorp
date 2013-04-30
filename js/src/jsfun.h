@@ -208,7 +208,7 @@ class JSFunction : public JSObject
 
     bool initializeLazyScript(JSContext *cx);
 
-    js::RawScript getOrCreateScript(JSContext *cx) {
+    JSScript *getOrCreateScript(JSContext *cx) {
         JS_ASSERT(isInterpreted());
         JS_ASSERT(cx);
         if (isInterpretedLazy()) {
@@ -233,12 +233,12 @@ class JSFunction : public JSObject
         return fun->hasScript();
     }
 
-    js::RawScript nonLazyScript() const {
+    JSScript *nonLazyScript() const {
         JS_ASSERT(hasScript());
         return JS::HandleScript::fromMarkedLocation(&u.i.script_);
     }
 
-    js::RawScript maybeNonLazyScript() const {
+    JSScript *maybeNonLazyScript() const {
         return isInterpreted() ? nonLazyScript() : NULL;
     }
 

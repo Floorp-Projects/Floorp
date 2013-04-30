@@ -72,7 +72,7 @@ class StaticScopeIter
     Type type() const;
 
     StaticBlockObject &block() const;
-    RawScript funScript() const;
+    JSScript *funScript() const;
 };
 
 /*****************************************************************************/

@@ -101,7 +101,7 @@ IonFrameIterator::frameSize() const
 }
 
 // Returns the JSScript associated with the topmost Ion frame.
-inline RawScript
+inline JSScript *
 GetTopIonJSScript(PerThreadData *pt, const SafepointIndex **safepointIndexOut, void **returnAddrOut)
 {
     IonFrameIterator iter(pt->ionTop);
@@ -126,7 +126,7 @@ GetTopIonJSScript(PerThreadData *pt, const SafepointIndex **safepointIndexOut, v
 }
 
 
-inline RawScript
+inline JSScript *
 GetTopIonJSScript(JSContext *cx, const SafepointIndex **safepointIndexOut, void **returnAddrOut)
 {
     return GetTopIonJSScript(&cx->mainThread(), safepointIndexOut, returnAddrOut);

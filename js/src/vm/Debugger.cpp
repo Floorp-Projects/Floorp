@@ -1231,7 +1231,7 @@ Debugger::onSingleStep(JSContext *cx, MutableHandleValue vp)
      */
     {
         uint32_t stepperCount = 0;
-        RawScript trappingScript = iter.script();
+        JSScript *trappingScript = iter.script();
         GlobalObject *global = cx->global();
         if (GlobalObject::DebuggerVector *debuggers = global->getDebuggers()) {
             for (Debugger **p = debuggers->begin(); p != debuggers->end(); p++) {
@@ -3796,7 +3796,7 @@ static JSBool
 DebuggerFrame_getOffset(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_FRAME(cx, argc, vp, "get offset", args, thisobj, iter);
-    RawScript script = iter.script();
+    JSScript *script = iter.script();
     iter.updatePcQuadratic();
     jsbytecode *pc = iter.pc();
     JS_ASSERT(script->code <= pc);

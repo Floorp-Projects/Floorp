@@ -47,7 +47,7 @@ class ParallelCompileContext
     }
 
     // Defined in Ion.cpp, so that they can make use of static fns defined there
-    MethodStatus checkScriptSize(JSContext *cx, RawScript script);
+    MethodStatus checkScriptSize(JSContext *cx, JSScript *script);
     MethodStatus compileTransitively();
     AbortReason compile(IonBuilder *builder, MIRGraph *graph,
                         ScopedJSDeletePtr<LifoAlloc> &autoDelete);

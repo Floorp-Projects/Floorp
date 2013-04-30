@@ -781,7 +781,7 @@ PrepareOsrTempData(JSContext *cx, ICUseCount_Fallback *stub, BaselineFrame *fram
         *((JSFunction **) (stackFrame + StackFrame::offsetOfExec())) = frame->fun();
         *((uint32_t *) (stackFrame + StackFrame::offsetOfFlags())) = StackFrame::FUNCTION;
     } else {
-        *((RawScript *) (stackFrame + StackFrame::offsetOfExec())) = frame->script();
+        *((JSScript **) (stackFrame + StackFrame::offsetOfExec())) = frame->script();
         *((uint32_t *) (stackFrame + StackFrame::offsetOfFlags())) = 0;
     }
 
@@ -1659,7 +1659,7 @@ DoCompareFallback(JSContext *cx, BaselineFrame *frame, ICCompare_Fallback *stub,
         return true;
     }
 
-    RawScript script = frame->script();
+    JSScript *script = frame->script();
 
     // Try to generate new stubs.
     if (lhs.isInt32() && rhs.isInt32()) {
@@ -2070,7 +2070,7 @@ DoToBoolFallback(JSContext *cx, BaselineFrame *frame, ICToBool_Fallback *stub, H
 
     JS_ASSERT(!arg.isBoolean());
 
-    RawScript script = frame->script();
+    JSScript *script = frame->script();
 
     // Try to generate new stubs.
     if (arg.isInt32()) {
