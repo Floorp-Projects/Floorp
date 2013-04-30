@@ -43,7 +43,7 @@ function testFrameParameters()
       is(localNodes.length + localNonEnums.length, 12,
         "The localScope and localNonEnums should contain all the created variable elements.");
 
-      is(localNodes[0].querySelector(".value").getAttribute("value"), "[object Proxy]",
+      is(localNodes[0].querySelector(".value").getAttribute("value"), "[object Window]",
         "Should have the right property value for 'this'.");
       is(localNodes[8].querySelector(".value").getAttribute("value"), "[object Arguments]",
         "Should have the right property value for 'arguments'.");
@@ -117,7 +117,7 @@ function testFrameParameters()
         window.clearInterval(intervalID);
 
         is(thisNode.target.querySelector(".value")
-           .getAttribute("value"), "[object Proxy]",
+           .getAttribute("value"), "[object Window]",
           "Should have the right property value for 'this'.");
 
         is(thisNode.get("window").target.querySelector(".name")

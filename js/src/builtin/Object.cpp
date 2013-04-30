@@ -287,13 +287,11 @@ obj_toSource(JSContext *cx, unsigned argc, Value *vp)
 #endif /* JS_HAS_TOSOURCE */
 
 JSString *
-js::obj_toStringHelper(JSContext *cx, HandleObject obj)
+JS_BasicObjectToString(JSContext *cx, HandleObject obj)
 {
-    if (obj->isProxy())
-        return Proxy::obj_toString(cx, obj);
+    const char *className = JSObject::className(cx, obj);
 
     StringBuffer sb(cx);
-    const char *className = obj->getClass()->name;
     if (!sb.append("[object ") || !sb.appendInflated(className, strlen(className)) ||
         !sb.append("]"))
     {
@@ -326,7 +324,7 @@ obj_toString(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     /* Steps 4-5. */
-    RawString str = js::obj_toStringHelper(cx, obj);
+    RawString str = JS_BasicObjectToString(cx, obj);
     if (!str)
         return false;
     args.rval().setString(str);

@@ -1373,7 +1373,7 @@ NativeToString(JSContext* cx, JSObject* wrapper, JSObject* object, const char* p
       }
     } else {
       if (IsDOMProxy(obj)) {
-        str = js::GetProxyHandler(obj)->obj_toString(cx, obj);
+        str = JS_BasicObjectToString(cx, obj);
       } else {
         js::Class* clasp = js::GetObjectClass(obj);
         if (IsDOMClass(clasp)) {

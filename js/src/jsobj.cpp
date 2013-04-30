@@ -1210,6 +1210,16 @@ JSObject::isSealedOrFrozen(JSContext *cx, HandleObject obj, ImmutabilityType it,
     return true;
 }
 
+/* static */
+const char *
+JSObject::className(JSContext *cx, HandleObject obj)
+{
+    if (obj->isProxy())
+        return Proxy::className(cx, obj);
+
+    return obj->getClass()->name;
+}
+
 /*
  * Get the GC kind to use for scripted 'new' on the given class.
  * FIXME bug 547327: estimate the size from the allocation site.
