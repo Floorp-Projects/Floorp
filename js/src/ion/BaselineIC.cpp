@@ -1268,7 +1268,7 @@ ICTypeMonitor_TypeObject::Compiler::generateStubCode(MacroAssembler &masm)
 
 bool
 ICUpdatedStub::addUpdateStubForValue(JSContext *cx, HandleScript script, HandleObject obj,
-                                     RawId id, HandleValue val)
+                                     jsid id, HandleValue val)
 {
     if (numOptimizedStubs_ >= MAX_OPTIMIZED_STUBS) {
         // TODO: if the TypeSet becomes unknown or has the AnyObject type,
