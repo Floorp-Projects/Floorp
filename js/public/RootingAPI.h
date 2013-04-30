@@ -372,20 +372,6 @@ class InternalHandle<T*>
 };
 
 /*
- * This macro simplifies forward declaration of a class and its matching raw-pointer.
- */
-# define ForwardDeclare(type)              \
-    class type;                            \
-    typedef type * Raw##type
-
-# define ForwardDeclareJS(type)            \
-    class JS##type;                        \
-    namespace js {                         \
-        typedef JS##type * Raw##type;      \
-    }                                      \
-    class JS##type
-
-/*
  * By default, pointers should use the inheritance hierarchy to find their
  * ThingRootKind. Some pointer types are explicitly set in jspubtd.h so that
  * Rooted<T> may be used without the class definition being available.
