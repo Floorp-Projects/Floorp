@@ -186,10 +186,9 @@ public:
    */
   void OnNavigation();
 
-#ifdef MOZ_SYS_MSG
   // Helper to initialize mMessagesManager.
   nsresult EnsureMessagesManager();
-#endif
+
   NS_DECL_NSIDOMNAVIGATORCAMERA
 
 private:
