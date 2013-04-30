@@ -95,6 +95,7 @@ public class BookmarksTab extends AwesomeBarTab {
 
     @Override
     public void destroy() {
+        super.destroy();
         // Can't use getters for adapter. It will create one if null.
         if (mCursorAdapter != null && mView != null) {
             ListView list = (ListView)mView;
@@ -203,18 +204,13 @@ public class BookmarksTab extends AwesomeBarTab {
         }
 
         // Otherwise, just open the URL
-        AwesomeBarTabs.OnUrlOpenListener listener = getUrlListener();
-        if (listener == null) {
-            return;
-        }
-
         String url = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.URL));
         String title = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.TITLE));
         long parentId = cursor.getLong(cursor.getColumnIndexOrThrow(Bookmarks.PARENT));
         if (parentId == Bookmarks.FIXED_READING_LIST_ID) {
             url = ReaderModeUtils.getAboutReaderForUrl(url, true);
         }
-        listener.onUrlOpen(url, title);
+        sendToListener(url, title);
     }
 
     private class BookmarksListAdapter extends SimpleCursorAdapter {

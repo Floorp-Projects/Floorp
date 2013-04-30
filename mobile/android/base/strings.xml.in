@@ -26,6 +26,7 @@
   <string name="awesomebar_all_pages_title">&awesomebar_all_pages_title;</string>
   <string name="awesomebar_bookmarks_title">&awesomebar_bookmarks_title;</string>
   <string name="awesomebar_history_title">&awesomebar_history_title;</string>
+  <string name="awesomebar_switch_to_tab">&awesomebar_switch_to_tab;</string>
 
   <string name="crash_reporter_title">&crash_reporter_title;</string>
   <string name="crash_message2">&crash_message2;</string>
