@@ -495,6 +495,11 @@ nsTimeout::~nsTimeout()
   }
 #endif
 
+  if (mTimer) {
+    mTimer->Cancel();
+    mTimer = nullptr;
+  }
+
   MOZ_COUNT_DTOR(nsTimeout);
 }
 
@@ -506,6 +511,14 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsTimeout)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsTimeout, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsTimeout, Release)
+
+// Return true if this timeout has a refcount of 1. This is used to check
+// that dummy_timeout doesn't leak from nsGlobalWindow::RunTimeout.
+bool
+nsTimeout::HasRefCntOne()
+{
+  return mRefCnt.get() == 1;
+}
 
 nsPIDOMWindow::nsPIDOMWindow(nsPIDOMWindow *aOuterWindow)
 : mFrameElement(nullptr), mDocShell(nullptr), mModalStateDepth(0),
@@ -10302,9 +10315,8 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
   NS_ASSERTION(IsInnerWindow(), "Timeout running on outer window!");
   NS_ASSERTION(!IsFrozen(), "Timeout running on a window in the bfcache!");
 
-  nsTimeout *nextTimeout, *timeout;
+  nsTimeout *nextTimeout;
   nsTimeout *last_expired_timeout, *last_insertion_point;
-  nsTimeout dummy_timeout;
   uint32_t firingDepth = mTimeoutFiringDepth + 1;
 
   // Make sure that the window and the script context don't go away as
@@ -10333,7 +10345,7 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
   // timeout events fire "early", so we need to test the timer as well
   // as the deadline.
   last_expired_timeout = nullptr;
-  for (timeout = mTimeouts.getFirst(); timeout; timeout = timeout->getNext()) {
+  for (nsTimeout *timeout = mTimeouts.getFirst(); timeout; timeout = timeout->getNext()) {
     if (((timeout == aTimeout) || (timeout->mWhen <= deadline)) &&
         (timeout->mFiringDepth == 0)) {
       // Mark any timeouts that are on the list to be fired with the
@@ -10365,24 +10377,21 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
   // timeouts that will be processed in a future call to
   // win_run_timeout(). This dummy timeout serves as the head of the
   // list for any timeouts inserted as a result of running a timeout.
-  dummy_timeout.mFiringDepth = firingDepth;
-  dummy_timeout.mWhen = now;
-  last_expired_timeout->setNext(&dummy_timeout);
-
-  // Don't let ClearWindowTimeouts throw away our stack-allocated
-  // dummy timeout.
-  dummy_timeout.AddRef();
-  dummy_timeout.AddRef();
+  nsRefPtr<nsTimeout> dummy_timeout = new nsTimeout();
+  dummy_timeout->mFiringDepth = firingDepth;
+  dummy_timeout->mWhen = now;
+  last_expired_timeout->setNext(dummy_timeout);
+  dummy_timeout->AddRef();
 
   last_insertion_point = mTimeoutInsertionPoint;
   // If we ever start setting mTimeoutInsertionPoint to a non-dummy timeout,
   // the logic in ResetTimersForNonBackgroundWindow will need to change.
-  mTimeoutInsertionPoint = &dummy_timeout;
+  mTimeoutInsertionPoint = dummy_timeout;
 
   Telemetry::AutoCounter<Telemetry::DOM_TIMERS_FIRED_PER_NATIVE_TIMEOUT> timeoutsRan;
 
-  for (timeout = mTimeouts.getFirst();
-       timeout != &dummy_timeout && !IsFrozen();
+  for (nsTimeout *timeout = mTimeouts.getFirst();
+       timeout != dummy_timeout && !IsFrozen();
        timeout = nextTimeout) {
     nextTimeout = timeout->getNext();
 
@@ -10436,6 +10445,7 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
       // ClearAllTimeouts() was called from a *nested* call, possibly
       // through a timeout that fired while a modal (to this window)
       // dialog was open or through other non-obvious paths.
+      MOZ_ASSERT(dummy_timeout->HasRefCntOne(), "dummy_timeout may leak");
 
       mTimeoutInsertionPoint = last_insertion_point;
 
@@ -10463,35 +10473,12 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
   }
 
   // Take the dummy timeout off the head of the list
-  dummy_timeout.remove();
+  dummy_timeout->remove();
+  dummy_timeout->Release();
+  MOZ_ASSERT(dummy_timeout->HasRefCntOne(), "dummy_timeout may leak");
 
   mTimeoutInsertionPoint = last_insertion_point;
 }
-
-nsrefcnt
-nsTimeout::Release()
-{
-  if (--mRefCnt > 0)
-    return mRefCnt;
-
-  // language specific cleanup done as mScriptHandler destructs...
-
-  // Kill the timer if it is still alive.
-  if (mTimer) {
-    mTimer->Cancel();
-    mTimer = nullptr;
-  }
-
-  delete this;
-  return 0;
-}
-
-nsrefcnt
-nsTimeout::AddRef()
-{
-  return ++mRefCnt;
-}
-
 
 nsresult
 nsGlobalWindow::ClearTimeoutOrInterval(int32_t aTimerID)
