@@ -15,6 +15,8 @@ CPPSRCS = \
   PluginHangUIChild.cpp \
   $(NULL)
 
+PROGRAM = plugin-hang-ui$(BIN_SUFFIX)
+
 OS_LIBS = $(call EXPAND_LIBNAME,comctl32)
 
 RCINCLUDE = HangUIDlg.rc

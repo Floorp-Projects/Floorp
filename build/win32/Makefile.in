@@ -13,6 +13,7 @@ NO_PROFILE_GUIDED_OPTIMIZE = 1
 
 ifdef ENABLE_TESTS
 
+PROGRAM = crashinject$(BIN_SUFFIX)
 USE_STATIC_LIBS = 1
 CPPSRCS = crashinject.cpp
 
