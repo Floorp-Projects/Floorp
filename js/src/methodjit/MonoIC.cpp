@@ -1308,7 +1308,7 @@ class CallCompiler : public BaseCompiler
         }
 
         JS_ASSERT(fun);
-        RawScript script = fun->nonLazyScript();
+        JSScript *script = fun->nonLazyScript();
         JS_ASSERT(script);
 
         uint32_t flags = callingNew ? StackFrame::CONSTRUCTING : 0;
@@ -1488,7 +1488,7 @@ ic::GenerateArgumentCheckStub(VMFrame &f)
     JITScript *jit = f.jit();
     StackFrame *fp = f.fp();
     JSFunction *fun = fp->fun();
-    RawScript script = fun->nonLazyScript();
+    JSScript *script = fun->nonLazyScript();
 
     if (jit->argsCheckPool)
         jit->resetArgsCheck();

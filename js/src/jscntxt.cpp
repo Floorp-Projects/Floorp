@@ -565,7 +565,7 @@ checkReportFlags(JSContext *cx, unsigned *flags)
          * We assume that if the top frame is a native, then it is strict if
          * the nearest scripted frame is strict, see bug 536306.
          */
-        RawScript script = cx->stack.currentScript();
+        JSScript *script = cx->stack.currentScript();
         if (script && script->strict)
             *flags &= ~JSREPORT_WARNING;
         else if (cx->hasStrictOption())

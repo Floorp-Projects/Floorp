@@ -34,7 +34,7 @@ AssertInnerizedScopeChain(JSContext *cx, JSObject &scopeobj)
 }
 
 static bool
-IsEvalCacheCandidate(RawScript script)
+IsEvalCacheCandidate(JSScript *script)
 {
     // Make sure there are no inner objects which might use the wrong parent
     // and/or call scope by reusing the previous eval's script. Skip the
@@ -123,7 +123,7 @@ class EvalScriptGuard
         }
     }
 
-    void setNewScript(RawScript script) {
+    void setNewScript(JSScript *script) {
         // JSScript::initFromEmitter has already called js_CallNewScriptHook.
         JS_ASSERT(!script_ && script);
         script_ = script;
@@ -289,7 +289,7 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, AbstractFrame
                .setNoScriptRval(false)
                .setPrincipals(principals)
                .setOriginPrincipals(originPrincipals);
-        RawScript compiled = frontend::CompileScript(cx, scopeobj, callerScript, options,
+        JSScript *compiled = frontend::CompileScript(cx, scopeobj, callerScript, options,
                                                      chars.get(), length, stableStr, staticLevel);
         if (!compiled)
             return false;
@@ -350,7 +350,7 @@ js::DirectEvalFromIon(JSContext *cx,
                .setNoScriptRval(false)
                .setPrincipals(principals)
                .setOriginPrincipals(originPrincipals);
-        RawScript compiled = frontend::CompileScript(cx, scopeobj, callerScript, options,
+        JSScript *compiled = frontend::CompileScript(cx, scopeobj, callerScript, options,
                                                      chars.get(), length, stableStr, staticLevel);
         if (!compiled)
             return false;

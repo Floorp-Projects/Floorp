@@ -59,7 +59,7 @@ bool
 IonFrameIterator::checkInvalidation(IonScript **ionScriptOut) const
 {
     uint8_t *returnAddr = returnAddressToFp();
-    RawScript script = this->script();
+    JSScript *script = this->script();
     // N.B. the current IonScript is not the same as the frame's
     // IonScript if the frame has since been invalidated.
     bool invalidated;
@@ -174,13 +174,13 @@ IonFrameIterator::isEntryJSFrame() const
     return true;
 }
 
-RawScript
+JSScript *
 IonFrameIterator::script() const
 {
     JS_ASSERT(isScripted());
     if (isBaselineJS())
         return baselineFrame()->script();
-    RawScript script = ScriptFromCalleeToken(calleeToken());
+    JSScript *script = ScriptFromCalleeToken(calleeToken());
     JS_ASSERT(script);
     return script;
 }
@@ -189,7 +189,7 @@ void
 IonFrameIterator::baselineScriptAndPc(JSScript **scriptRes, jsbytecode **pcRes) const
 {
     JS_ASSERT(isBaselineJS());
-    RawScript script = this->script();
+    JSScript *script = this->script();
     if (scriptRes)
         *scriptRes = script;
     uint8_t *retAddr = returnAddressToFp();
@@ -474,7 +474,7 @@ HandleException(ResumeFromException *rfe)
                 // When profiling, each frame popped needs a notification that
                 // the function has exited, so invoke the probe that a function
                 // is exiting.
-                RawScript script = frames.script();
+                JSScript *script = frames.script();
                 Probes::exitScript(cx, script, script->function(), NULL);
                 if (!frames.more())
                     break;
@@ -494,7 +494,7 @@ HandleException(ResumeFromException *rfe)
                 return;
 
             // Unwind profiler pseudo-stack
-            RawScript script = iter.script();
+            JSScript *script = iter.script();
             Probes::exitScript(cx, script, script->function(), NULL);
 
             if (cx->compartment->debugMode() && !calledDebugEpilogue) {
@@ -633,7 +633,7 @@ MarkCalleeToken(JSTracer *trc, CalleeToken token)
       }
       case CalleeToken_Script:
       {
-        RawScript script = CalleeTokenToScript(token);
+        JSScript *script = CalleeTokenToScript(token);
         MarkScriptRoot(trc, &script, "ion-entry");
         JS_ASSERT(script == CalleeTokenToScript(token));
         break;

@@ -312,7 +312,7 @@ js::RunScript(JSContext *cx, StackFrame *fp)
         if (!iter.done()) {
             ++iter;
             if (iter.isScript()) {
-                RawScript script = iter.script();
+                JSScript *script = iter.script();
                 jsbytecode *pc = iter.pc();
                 if (UseNewType(cx, script, pc))
                     fp->setUseNewType();

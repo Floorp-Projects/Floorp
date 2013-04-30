@@ -1552,7 +1552,7 @@ MatchNumericComparator(const Value &v)
     if (!fun->hasScript())
         return Match_None;
 
-    RawScript script = fun->nonLazyScript();
+    JSScript *script = fun->nonLazyScript();
     jsbytecode *pc = script->code;
 
     uint16_t arg0, arg1;

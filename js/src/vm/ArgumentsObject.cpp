@@ -55,7 +55,7 @@ CopyStackFrameArguments(const AbstractFramePtr frame, HeapValue *dst, unsigned t
 ArgumentsObject::MaybeForwardToCallObject(AbstractFramePtr frame, JSObject *obj,
                                           ArgumentsData *data)
 {
-    RawScript script = frame.script();
+    JSScript *script = frame.script();
     if (frame.fun()->isHeavyweight() && script->argsObjAliasesFormals()) {
         obj->initFixedSlot(MAYBE_CALL_SLOT, ObjectValue(frame.callObj()));
         for (AliasedFormalIter fi(script); fi; fi++)
@@ -69,7 +69,7 @@ ArgumentsObject::MaybeForwardToCallObject(ion::IonJSFrameLayout *frame, HandleOb
                                           JSObject *obj, ArgumentsData *data)
 {
     JSFunction *callee = ion::CalleeTokenToFunction(frame->calleeToken());
-    RawScript script = callee->nonLazyScript();
+    JSScript *script = callee->nonLazyScript();
     if (callee->isHeavyweight() && script->argsObjAliasesFormals()) {
         JS_ASSERT(callObj && callObj->isCall());
         obj->initFixedSlot(MAYBE_CALL_SLOT, ObjectValue(*callObj.get()));

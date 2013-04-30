@@ -66,7 +66,7 @@ static inline void
 PushMarkStack(GCMarker *gcmarker, JSFunction *thing);
 
 static inline void
-PushMarkStack(GCMarker *gcmarker, RawScript thing);
+PushMarkStack(GCMarker *gcmarker, JSScript *thing);
 
 static inline void
 PushMarkStack(GCMarker *gcmarker, Shape *thing);
@@ -81,7 +81,7 @@ namespace js {
 namespace gc {
 
 static void MarkChildren(JSTracer *trc, JSString *str);
-static void MarkChildren(JSTracer *trc, RawScript script);
+static void MarkChildren(JSTracer *trc, JSScript *script);
 static void MarkChildren(JSTracer *trc, Shape *shape);
 static void MarkChildren(JSTracer *trc, BaseShape *base);
 static void MarkChildren(JSTracer *trc, types::TypeObject *type);
@@ -389,7 +389,7 @@ gc::MarkKind(JSTracer *trc, void **thingp, JSGCTraceKind kind)
         MarkInternal(trc, reinterpret_cast<RawString *>(thingp));
         break;
       case JSTRACE_SCRIPT:
-        MarkInternal(trc, reinterpret_cast<RawScript *>(thingp));
+        MarkInternal(trc, reinterpret_cast<JSScript **>(thingp));
         break;
       case JSTRACE_SHAPE:
         MarkInternal(trc, reinterpret_cast<Shape **>(thingp));
@@ -714,7 +714,7 @@ gc::MarkCrossCompartmentSlot(JSTracer *trc, RawObject src, HeapSlot *dst, const 
 /*** Special Marking ***/
 
 void
-gc::MarkObject(JSTracer *trc, HeapPtr<GlobalObject, RawScript> *thingp, const char *name)
+gc::MarkObject(JSTracer *trc, HeapPtr<GlobalObject, JSScript *> *thingp, const char *name)
 {
     JS_SET_TRACING_NAME(trc, name);
     MarkInternal(trc, thingp->unsafeGet());
@@ -779,7 +779,7 @@ PushMarkStack(GCMarker *gcmarker, types::TypeObject *thing)
 }
 
 static void
-PushMarkStack(GCMarker *gcmarker, RawScript thing)
+PushMarkStack(GCMarker *gcmarker, JSScript *thing)
 {
     JS_COMPARTMENT_ASSERT(gcmarker->runtime, thing);
     JS_ASSERT(!IsInsideNursery(thing->runtime(), thing));
@@ -993,7 +993,7 @@ gc::MarkChildren(JSTracer *trc, JSString *str)
 }
 
 static void
-gc::MarkChildren(JSTracer *trc, RawScript script)
+gc::MarkChildren(JSTracer *trc, JSScript *script)
 {
     script->markChildren(trc);
 }
@@ -1499,7 +1499,7 @@ js::TraceChildren(JSTracer *trc, void *thing, JSGCTraceKind kind)
         break;
 
       case JSTRACE_SCRIPT:
-        MarkChildren(trc, static_cast<RawScript>(thing));
+        MarkChildren(trc, static_cast<JSScript *>(thing));
         break;
 
       case JSTRACE_SHAPE:

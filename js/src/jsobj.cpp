@@ -1563,7 +1563,7 @@ js::CreateThisForFunction(JSContext *cx, HandleObject callee, bool newType)
  * checking whether document.all is defined.
  */
 static bool
-Detecting(JSContext *cx, RawScript script, jsbytecode *pc)
+Detecting(JSContext *cx, JSScript *script, jsbytecode *pc)
 {
     /* General case: a branch or equality op follows the access. */
     JSOp op = JSOp(*pc);
@@ -1614,7 +1614,7 @@ js_InferFlags(JSContext *cx, unsigned defaultFlags)
      * handle the case of cross-compartment property access.
      */
     jsbytecode *pc;
-    RawScript script = cx->stack.currentScript(&pc, ContextStack::ALLOW_CROSS_COMPARTMENT);
+    JSScript *script = cx->stack.currentScript(&pc, ContextStack::ALLOW_CROSS_COMPARTMENT);
     if (!script)
         return defaultFlags;
 
@@ -3759,7 +3759,7 @@ NativeGetInline(JSContext *cx,
 
     {
         jsbytecode *pc;
-        RawScript script = cx->stack.currentScript(&pc);
+        JSScript *script = cx->stack.currentScript(&pc);
         if (script && script->hasAnalysis()) {
             analyze::Bytecode *code = script->analysis()->maybeCode(pc);
             if (code)
@@ -4110,7 +4110,7 @@ static bool
 MaybeReportUndeclaredVarAssignment(JSContext *cx, JSString *propname)
 {
     {
-        RawScript script = cx->stack.currentScript(NULL, ContextStack::ALLOW_CROSS_COMPARTMENT);
+        JSScript *script = cx->stack.currentScript(NULL, ContextStack::ALLOW_CROSS_COMPARTMENT);
         if (!script)
             return true;
 
@@ -4133,7 +4133,7 @@ js::ReportIfUndeclaredVarAssignment(JSContext *cx, HandleString propname)
 {
     {
         jsbytecode *pc;
-        RawScript script = cx->stack.currentScript(&pc, ContextStack::ALLOW_CROSS_COMPARTMENT);
+        JSScript *script = cx->stack.currentScript(&pc, ContextStack::ALLOW_CROSS_COMPARTMENT);
         if (!script)
             return true;
 
@@ -4991,7 +4991,7 @@ dumpValue(const Value &v)
             fputs("<unnamed function", stderr);
         }
         if (fun->hasScript()) {
-            RawScript script = fun->nonLazyScript();
+            JSScript *script = fun->nonLazyScript();
             fprintf(stderr, " (%s:%u)",
                     script->filename() ? script->filename() : "", script->lineno);
         }
@@ -5259,7 +5259,7 @@ js_DumpBacktrace(JSContext *cx)
         if (i.isScript()) {
             const char *filename = JS_GetScriptFilename(cx, i.script());
             unsigned line = JS_PCToLineNumber(cx, i.script(), i.pc());
-            RawScript script = i.script();
+            JSScript *script = i.script();
             sprinter.printf("#%d %14p   %s:%d (%p @ %d)\n",
                             depth, (i.isIon() ? 0 : i.interpFrame()), filename, line,
                             script, i.pc() - script->code);

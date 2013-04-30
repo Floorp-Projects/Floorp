@@ -1545,7 +1545,7 @@ CodeGenerator::visitCallKnown(LCallKnown *call)
     // If the function is known to be uncompilable, just emit the call to
     // Invoke in sequential mode, else mark as cannot compile.
     JS_ASSERT(call->mir()->hasRootedScript());
-    RawScript targetScript = target->nonLazyScript();
+    JSScript *targetScript = target->nonLazyScript();
     if (GetIonScript(targetScript, executionMode) == ION_DISABLED_SCRIPT) {
         if (executionMode == ParallelExecution)
             return false;
@@ -2220,7 +2220,7 @@ CodeGenerator::maybeCreateScriptCounts()
     IonScriptCounts *counts = NULL;
 
     CompileInfo *outerInfo = &gen->info();
-    RawScript script = outerInfo->script();
+    JSScript *script = outerInfo->script();
 
     if (cx->runtime->profilingScripts) {
         if (script && !script->hasScriptCounts && !script->initScriptCounts(cx))
@@ -4929,7 +4929,7 @@ CodeGenerator::link()
     // We encode safepoints after the OSI-point offsets have been determined.
     encodeSafepoints();
 
-    RawScript script = gen->info().script();
+    JSScript *script = gen->info().script();
     ExecutionMode executionMode = gen->info().executionMode();
     JS_ASSERT(!HasIonScript(script, executionMode));
 

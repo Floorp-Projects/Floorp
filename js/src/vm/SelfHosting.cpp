@@ -707,7 +707,7 @@ JSRuntime::cloneSelfHostedFunctionScript(JSContext *cx, Handle<PropertyName*> na
     RootedFunction sourceFun(cx, funVal.toObject().toFunction());
     RootedScript sourceScript(cx, sourceFun->nonLazyScript());
     JS_ASSERT(!sourceScript->enclosingStaticScope());
-    RawScript cscript = CloneScript(cx, NullPtr(), targetFun, sourceScript);
+    JSScript *cscript = CloneScript(cx, NullPtr(), targetFun, sourceScript);
     if (!cscript)
         return false;
     targetFun->setScript(cscript);

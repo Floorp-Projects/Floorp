@@ -20,7 +20,7 @@
 #include "js/HashTable.h"
 #include "js/Vector.h"
 
-ForwardDeclareJS(Script);
+class JSScript;
 
 namespace js {
 
@@ -1165,7 +1165,7 @@ struct TypeCallsite
     /* Type set receiving the return value of this call. */
     StackTypeSet *returnTypes;
 
-    inline TypeCallsite(JSContext *cx, RawScript script, jsbytecode *pc,
+    inline TypeCallsite(JSContext *cx, JSScript *script, jsbytecode *pc,
                         bool isNew, unsigned argumentCount);
 };
 
@@ -1191,15 +1191,15 @@ class TypeScript
     /* Array of type type sets for variables and JOF_TYPESET ops. */
     TypeSet *typeArray() { return (TypeSet *) (uintptr_t(this) + sizeof(TypeScript)); }
 
-    static inline unsigned NumTypeSets(RawScript script);
+    static inline unsigned NumTypeSets(JSScript *script);
 
-    static inline HeapTypeSet  *ReturnTypes(RawScript script);
-    static inline StackTypeSet *ThisTypes(RawScript script);
-    static inline StackTypeSet *ArgTypes(RawScript script, unsigned i);
-    static inline StackTypeSet *LocalTypes(RawScript script, unsigned i);
+    static inline HeapTypeSet  *ReturnTypes(JSScript *script);
+    static inline StackTypeSet *ThisTypes(JSScript *script);
+    static inline StackTypeSet *ArgTypes(JSScript *script, unsigned i);
+    static inline StackTypeSet *LocalTypes(JSScript *script, unsigned i);
 
     /* Follows slot layout in jsanalyze.h, can get this/arg/local type sets. */
-    static inline StackTypeSet *SlotTypes(RawScript script, unsigned slot);
+    static inline StackTypeSet *SlotTypes(JSScript *script, unsigned slot);
 
     /* Get the default 'new' object for a given standard class, per the script's global. */
     static inline TypeObject *StandardType(JSContext *cx, JSProtoKey kind);
@@ -1248,7 +1248,7 @@ class TypeScript
     static void AddFreezeConstraints(JSContext *cx, JSScript *script);
     static void Purge(JSContext *cx, HandleScript script);
 
-    static void Sweep(FreeOp *fop, RawScript script);
+    static void Sweep(FreeOp *fop, JSScript *script);
     void destroy();
 };
 
@@ -1431,7 +1431,7 @@ struct TypeCompartment
 
     /* Mark a script as needing recompilation once inference has finished. */
     void addPendingRecompile(JSContext *cx, const RecompileInfo &info);
-    void addPendingRecompile(JSContext *cx, RawScript script, jsbytecode *pc);
+    void addPendingRecompile(JSContext *cx, JSScript *script, jsbytecode *pc);
 
     /* Monitor future effects on a bytecode. */
     void monitorBytecode(JSContext *cx, JSScript *script, uint32_t offset,
