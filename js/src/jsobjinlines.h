@@ -922,7 +922,7 @@ JSObject::asString()
 inline bool
 JSObject::isDebugScope() const
 {
-    extern bool js_IsDebugScopeSlow(js::RawObject obj);
+    extern bool js_IsDebugScopeSlow(JSObject *obj);
     return getClass() == &js::ObjectProxyClass && js_IsDebugScopeSlow(const_cast<JSObject*>(this));
 }
 

@@ -1862,7 +1862,7 @@ DisassembleScript(JSContext *cx, HandleScript script, HandleFunction fun, bool l
     if (recursive && script->hasObjects()) {
         ObjectArray *objects = script->objects();
         for (unsigned i = 0; i != objects->length; ++i) {
-            RawObject obj = objects->vector[i];
+            JSObject *obj = objects->vector[i];
             if (obj->isFunction()) {
                 Sprint(sp, "\n");
                 RootedFunction f(cx, obj->toFunction());

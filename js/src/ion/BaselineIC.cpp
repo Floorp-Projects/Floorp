@@ -1531,7 +1531,7 @@ DoNewArray(JSContext *cx, ICNewArray_Fallback *stub, uint32_t length,
 {
     FallbackICSpew(cx, stub, "NewArray");
 
-    RawObject obj = NewInitArray(cx, length, type);
+    JSObject *obj = NewInitArray(cx, length, type);
     if (!obj)
         return false;
 
@@ -1565,7 +1565,7 @@ DoNewObject(JSContext *cx, ICNewObject_Fallback *stub, HandleObject templateObje
 {
     FallbackICSpew(cx, stub, "NewObject");
 
-    RawObject obj = NewInitObject(cx, templateObject);
+    JSObject *obj = NewInitObject(cx, templateObject);
     if (!obj)
         return false;
 

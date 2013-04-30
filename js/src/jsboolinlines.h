@@ -32,9 +32,9 @@ BooleanGetPrimitiveValue(JSContext *cx, HandleObject obj, Value *vp)
 }
 
 inline bool
-EmulatesUndefined(RawObject obj)
+EmulatesUndefined(JSObject *obj)
 {
-    RawObject actual = MOZ_LIKELY(!obj->isWrapper()) ? obj : UncheckedUnwrap(obj);
+    JSObject *actual = MOZ_LIKELY(!obj->isWrapper()) ? obj : UncheckedUnwrap(obj);
     bool emulatesUndefined = actual->getClass()->emulatesUndefined();
     MOZ_ASSERT_IF(emulatesUndefined, obj->type()->flags & types::OBJECT_FLAG_EMULATES_UNDEFINED);
     return emulatesUndefined;

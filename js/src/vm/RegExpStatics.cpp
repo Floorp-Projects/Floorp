@@ -21,14 +21,14 @@ using namespace js;
  */
 
 static void
-resc_finalize(FreeOp *fop, RawObject obj)
+resc_finalize(FreeOp *fop, JSObject *obj)
 {
     RegExpStatics *res = static_cast<RegExpStatics *>(obj->getPrivate());
     fop->delete_(res);
 }
 
 static void
-resc_trace(JSTracer *trc, RawObject obj)
+resc_trace(JSTracer *trc, JSObject *obj)
 {
     void *pdata = obj->getPrivate();
     JS_ASSERT(pdata);

@@ -618,16 +618,16 @@ SetGCZeal(JSRuntime *rt, uint8_t zeal, uint32_t frequency);
 /* Functions for managing cross compartment gray pointers. */
 
 extern void
-DelayCrossCompartmentGrayMarking(RawObject src);
+DelayCrossCompartmentGrayMarking(JSObject *src);
 
 extern void
-NotifyGCNukeWrapper(RawObject o);
+NotifyGCNukeWrapper(JSObject *o);
 
 extern unsigned
-NotifyGCPreSwap(RawObject a, RawObject b);
+NotifyGCPreSwap(JSObject *a, JSObject *b);
 
 extern void
-NotifyGCPostSwap(RawObject a, RawObject b, unsigned preResult);
+NotifyGCPostSwap(JSObject *a, JSObject *b, unsigned preResult);
 
 void
 InitTracer(JSTracer *trc, JSRuntime *rt, JSTraceCallback callback);

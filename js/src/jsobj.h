@@ -26,8 +26,6 @@
 #include "vm/ObjectImpl.h"
 #include "vm/String.h"
 
-ForwardDeclareJS(Object);
-
 namespace JS {
 struct ObjectsExtraSizes;
 }
@@ -1134,7 +1132,7 @@ js_PopulateObject(JSContext *cx, js::HandleObject newborn, js::HandleObject prop
  * Fast access to immutable standard objects (constructors and prototypes).
  */
 extern bool
-js_GetClassObject(JSContext *cx, js::RawObject obj, JSProtoKey key,
+js_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key,
                   js::MutableHandleObject objp);
 
 /*

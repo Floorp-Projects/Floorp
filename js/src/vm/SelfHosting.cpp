@@ -618,7 +618,7 @@ CloneProperties(JSContext *cx, HandleObject obj, HandleObject clone, CloneMemory
     return true;
 }
 
-static RawObject
+static JSObject *
 CloneObject(JSContext *cx, HandleObject srcObj, CloneMemory &clonedObjects)
 {
     CloneMemory::AddPtr p = clonedObjects.lookupForAdd(srcObj.get());

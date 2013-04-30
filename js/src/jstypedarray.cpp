@@ -391,7 +391,7 @@ ArrayBufferObject::prepareForAsmJS(JSContext *cx, Handle<ArrayBufferObject*> buf
 }
 
 void
-ArrayBufferObject::releaseAsmJSArrayBuffer(FreeOp *fop, RawObject obj)
+ArrayBufferObject::releaseAsmJSArrayBuffer(FreeOp *fop, JSObject *obj)
 {
     ArrayBufferObject &buffer = obj->asArrayBuffer();
     JS_ASSERT(buffer.isAsmJSArrayBuffer());
@@ -432,7 +432,7 @@ ArrayBufferObject::prepareForAsmJS(JSContext *cx, Handle<ArrayBufferObject*> buf
 }
 
 void
-ArrayBufferObject::releaseAsmJSArrayBuffer(FreeOp *fop, RawObject obj)
+ArrayBufferObject::releaseAsmJSArrayBuffer(FreeOp *fop, JSObject *obj)
 {
     fop->free_(obj->asArrayBuffer().getElementsHeader());
 }
@@ -494,7 +494,7 @@ SetBufferLink(JSObject *view, JSObject *buffer)
 }
 
 void
-ArrayBufferObject::addView(RawObject view)
+ArrayBufferObject::addView(JSObject *view)
 {
     // This view should never have been associated with a buffer before
     JS_ASSERT(BufferLink(view) == UNSET_BUFFER_LINK);
@@ -642,7 +642,7 @@ ArrayBufferObject::stealContents(JSContext *cx, JSObject *obj, void **contents,
 }
 
 void
-ArrayBufferObject::obj_trace(JSTracer *trc, RawObject obj)
+ArrayBufferObject::obj_trace(JSTracer *trc, JSObject *obj)
 {
     /*
      * If this object changes, it will get marked via the private data barrier,
@@ -1154,7 +1154,7 @@ js::IsDataView(JSObject* obj)
 }
 
 void
-TypedArray::neuter(RawObject tarray)
+TypedArray::neuter(JSObject *tarray)
 {
     JS_ASSERT(tarray->isTypedArray());
     tarray->setSlot(LENGTH_SLOT, Int32Value(0));
@@ -1376,7 +1376,7 @@ class TypedArrayTemplate
     }
 
     static void
-    obj_trace(JSTracer *trc, RawObject obj)
+    obj_trace(JSTracer *trc, JSObject *obj)
     {
         MarkSlot(trc, &obj->getFixedSlotRef(BUFFER_SLOT), "typedarray.buffer");
     }
@@ -1902,7 +1902,7 @@ class TypedArrayTemplate
         unsigned flags = JSPROP_SHARED | JSPROP_GETTER | JSPROP_PERMANENT;
 
         Rooted<GlobalObject*> global(cx, cx->compartment->maybeGlobal());
-        RawObject getter = NewFunction(cx, NullPtr(), Getter<ValueGetter>, 0,
+        JSObject *getter = NewFunction(cx, NullPtr(), Getter<ValueGetter>, 0,
                                        JSFunction::NATIVE_FUN, global, NullPtr());
         if (!getter)
             return false;
@@ -3632,7 +3632,7 @@ InitArrayBufferClass(JSContext *cx)
 
     RootedId byteLengthId(cx, NameToId(cx->names().byteLength));
     unsigned flags = JSPROP_SHARED | JSPROP_GETTER | JSPROP_PERMANENT;
-    RawObject getter = NewFunction(cx, NullPtr(), ArrayBufferObject::byteLengthGetter, 0,
+    JSObject *getter = NewFunction(cx, NullPtr(), ArrayBufferObject::byteLengthGetter, 0,
                                    JSFunction::NATIVE_FUN, global, NullPtr());
     if (!getter)
         return NULL;

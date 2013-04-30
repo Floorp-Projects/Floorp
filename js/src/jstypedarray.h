@@ -56,7 +56,7 @@ class ArrayBufferObject : public JSObject
     template<typename T>
     static JSBool createTypedArrayFromBuffer(JSContext *cx, unsigned argc, Value *vp);
 
-    static void obj_trace(JSTracer *trc, RawObject obj);
+    static void obj_trace(JSTracer *trc, JSObject *obj);
 
     static JSBool obj_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id,
                                     MutableHandleObject objp, MutableHandleShape propp);
@@ -140,7 +140,7 @@ class ArrayBufferObject : public JSObject
 
     static inline void setElementsHeader(js::ObjectElements *header, uint32_t bytes);
 
-    void addView(RawObject view);
+    void addView(JSObject *view);
 
     bool allocateSlots(JSContext *cx, uint32_t size, uint8_t *contents = NULL);
     void changeContents(JSContext *cx, ObjectElements *newHeader);
@@ -164,7 +164,7 @@ class ArrayBufferObject : public JSObject
     inline bool isAsmJSArrayBuffer() const;
     static bool prepareForAsmJS(JSContext *cx, Handle<ArrayBufferObject*> buffer);
     static void neuterAsmJSArrayBuffer(ArrayBufferObject &buffer);
-    static void releaseAsmJSArrayBuffer(FreeOp *fop, RawObject obj);
+    static void releaseAsmJSArrayBuffer(FreeOp *fop, JSObject *obj);
 };
 
 /*
@@ -280,7 +280,7 @@ struct TypedArray : public BufferView {
   public:
     static bool isArrayIndex(JSObject *obj, jsid id, uint32_t *ip = NULL);
 
-    static void neuter(RawObject tarray);
+    static void neuter(JSObject *tarray);
 
     static inline uint32_t slotWidth(int atype);
     static inline int slotWidth(JSObject *obj);
