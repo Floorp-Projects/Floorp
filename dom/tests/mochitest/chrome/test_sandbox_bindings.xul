@@ -28,6 +28,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741267
     function doTest() {
       var win = $("t").contentWindow;
       var sandbox = Components.utils.Sandbox(win, { sandboxPrototype: win });
+
+      is(sandbox._content, sandbox.content, "_content and content returned the same thing");
+
       try {
         var css = Components.utils.evalInSandbox("CSSStyleDeclaration", sandbox);
         is(css.prototype, "[object CSSStyleDeclarationPrototype]", "'CSSStyleDeclaration.prototype' in a sandbox should return the CSSStyleDeclaration interface prototype object");
