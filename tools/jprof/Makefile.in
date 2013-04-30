@@ -11,8 +11,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-PROGRAM = jprof
-
 CPPSRCS = \
 	bfd.cpp    \
 	coff.cpp   \

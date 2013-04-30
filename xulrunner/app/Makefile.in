@@ -15,8 +15,6 @@ GARBAGE += $(addprefix $(DIST)/bin/defaults/pref/,xulrunner.js)
 
 DEFINES += -DAB_CD=$(AB_CD)
 
-PROGRAM = xulrunner$(BIN_SUFFIX)
-
 DEFINES += -DXULRUNNER_PROGNAME=\"xulrunner\"
 
 ifdef TARGET_XPCOM_ABI
