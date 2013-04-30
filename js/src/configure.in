@@ -4505,7 +4505,7 @@ if test -n "$ENABLE_INTL_API" ; then
     mkdir -p $_objdir/intl/icu
     (cd $_objdir/intl/icu; \
      CFLAGS="$ICU_CFLAGS" CPPFLAGS="$ICU_CPPFLAGS" CXXFLAGS="$ICU_CXXFLAGS" \
-            $(SHELL) $abs_srcdir/../../intl/icu/source/runConfigureICU \
+            $SHELL $abs_srcdir/../../intl/icu/source/runConfigureICU \
             $ICU_BUILD_OPTS \
             $ICU_TARGET \
             $ICU_LINK_OPTS \
