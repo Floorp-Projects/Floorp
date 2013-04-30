@@ -88,7 +88,7 @@ StaticScopeIter::block() const
     return obj->asStaticBlock();
 }
 
-RawScript
+JSScript *
 StaticScopeIter::funScript() const
 {
     JS_ASSERT(type() == FUNCTION);
@@ -1232,7 +1232,7 @@ class DebugScopeProxy : public BaseProxyHandler
                 return false;
 
             if (maybeframe) {
-                RawScript script = maybeframe.script();
+                JSScript *script = maybeframe.script();
                 unsigned local = block->slotToLocalIndex(script->bindings, shape->slot());
                 if (action == GET)
                     vp.set(maybeframe.unaliasedLocal(local));

@@ -418,7 +418,7 @@ struct AutoEnterCompilation
         JS_ASSERT(info.outputIndex == RecompileInfo::NoCompilerRunning);
     }
 
-    bool init(RawScript script, bool constructing, unsigned chunkIndex)
+    bool init(JSScript *script, bool constructing, unsigned chunkIndex)
     {
         CompilerOutput co;
         co.script = script;
@@ -725,7 +725,7 @@ FixObjectType(JSContext *cx, HandleObject obj)
         cx->compartment->types.fixObjectType(cx, obj);
 }
 
-/* Interface helpers for RawScript */
+/* Interface helpers for JSScript*. */
 extern void TypeMonitorResult(JSContext *cx, JSScript *script, jsbytecode *pc,
                               const js::Value &rval);
 extern void TypeDynamicResult(JSContext *cx, JSScript *script, jsbytecode *pc,
@@ -780,7 +780,7 @@ UseNewTypeForClone(JSFunction *fun)
      * instance a singleton type and clone the underlying script.
      */
 
-    RawScript script = fun->nonLazyScript();
+    JSScript *script = fun->nonLazyScript();
 
     if (script->length >= 50)
         return false;
@@ -809,20 +809,20 @@ UseNewTypeForClone(JSFunction *fun)
 /////////////////////////////////////////////////////////////////////
 
 /* static */ inline unsigned
-TypeScript::NumTypeSets(RawScript script)
+TypeScript::NumTypeSets(JSScript *script)
 {
     return script->nTypeSets + analyze::TotalSlots(script);
 }
 
 /* static */ inline HeapTypeSet *
-TypeScript::ReturnTypes(RawScript script)
+TypeScript::ReturnTypes(JSScript *script)
 {
     TypeSet *types = script->types->typeArray() + script->nTypeSets + js::analyze::CalleeSlot();
     return types->toHeapTypeSet();
 }
 
 /* static */ inline StackTypeSet *
-TypeScript::ThisTypes(RawScript script)
+TypeScript::ThisTypes(JSScript *script)
 {
     TypeSet *types = script->types->typeArray() + script->nTypeSets + js::analyze::ThisSlot();
     return types->toStackTypeSet();
@@ -835,7 +835,7 @@ TypeScript::ThisTypes(RawScript script)
  */
 
 /* static */ inline StackTypeSet *
-TypeScript::ArgTypes(RawScript script, unsigned i)
+TypeScript::ArgTypes(JSScript *script, unsigned i)
 {
     JS_ASSERT(i < script->function()->nargs);
     TypeSet *types = script->types->typeArray() + script->nTypeSets + js::analyze::ArgSlot(i);
@@ -843,7 +843,7 @@ TypeScript::ArgTypes(RawScript script, unsigned i)
 }
 
 /* static */ inline StackTypeSet *
-TypeScript::LocalTypes(RawScript script, unsigned i)
+TypeScript::LocalTypes(JSScript *script, unsigned i)
 {
     JS_ASSERT(i < script->nfixed);
     TypeSet *types = script->types->typeArray() + script->nTypeSets + js::analyze::LocalSlot(script, i);
@@ -851,7 +851,7 @@ TypeScript::LocalTypes(RawScript script, unsigned i)
 }
 
 /* static */ inline StackTypeSet *
-TypeScript::SlotTypes(RawScript script, unsigned slot)
+TypeScript::SlotTypes(JSScript *script, unsigned slot)
 {
     JS_ASSERT(slot < js::analyze::TotalSlots(script));
     TypeSet *types = script->types->typeArray() + script->nTypeSets + slot;
@@ -1553,7 +1553,7 @@ TypeSet::getTypeObject(unsigned i) const
 /////////////////////////////////////////////////////////////////////
 
 inline
-TypeCallsite::TypeCallsite(JSContext *cx, RawScript script, jsbytecode *pc,
+TypeCallsite::TypeCallsite(JSContext *cx, JSScript *script, jsbytecode *pc,
                            bool isNew, unsigned argumentCount)
     : script(script), pc(pc), isNew(isNew), argumentCount(argumentCount),
       thisTypes(NULL), returnTypes(NULL)

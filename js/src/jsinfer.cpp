@@ -671,7 +671,7 @@ enum PropertyAccessKind {
 template <PropertyAccessKind access>
 class TypeConstraintProp : public TypeConstraint
 {
-    RawScript script_;
+    JSScript *script_;
 
   public:
     jsbytecode *pc;
@@ -685,7 +685,7 @@ class TypeConstraintProp : public TypeConstraint
     /* Property being accessed. This is unrooted. */
     RawId id;
 
-    TypeConstraintProp(RawScript script, jsbytecode *pc, StackTypeSet *target, RawId id)
+    TypeConstraintProp(JSScript *script, jsbytecode *pc, StackTypeSet *target, RawId id)
         : script_(script), pc(pc), target(target), id(id)
     {
         JS_ASSERT(script && pc && target);
@@ -738,7 +738,7 @@ HeapTypeSet::addGetProperty(JSContext *cx, JSScript *script, jsbytecode *pc,
 template <PropertyAccessKind access>
 class TypeConstraintCallProp : public TypeConstraint
 {
-    RawScript script_;
+    JSScript *script_;
 
   public:
     jsbytecode *callpc;
@@ -746,7 +746,7 @@ class TypeConstraintCallProp : public TypeConstraint
     /* Property being accessed. */
     jsid id;
 
-    TypeConstraintCallProp(RawScript script, jsbytecode *callpc, jsid id)
+    TypeConstraintCallProp(JSScript *script, jsbytecode *callpc, jsid id)
         : script_(script), callpc(callpc), id(id)
     {
         JS_ASSERT(script && callpc);
@@ -783,7 +783,7 @@ HeapTypeSet::addCallProperty(JSContext *cx, JSScript *script, jsbytecode *pc, js
  */
 class TypeConstraintSetElement : public TypeConstraint
 {
-    RawScript script_;
+    JSScript *script_;
 
   public:
     jsbytecode *pc;
@@ -791,7 +791,7 @@ class TypeConstraintSetElement : public TypeConstraint
     StackTypeSet *objectTypes;
     StackTypeSet *valueTypes;
 
-    TypeConstraintSetElement(RawScript script, jsbytecode *pc,
+    TypeConstraintSetElement(JSScript *script, jsbytecode *pc,
                              StackTypeSet *objectTypes, StackTypeSet *valueTypes)
         : script_(script), pc(pc),
           objectTypes(objectTypes), valueTypes(valueTypes)
@@ -841,7 +841,7 @@ StackTypeSet::addCall(JSContext *cx, TypeCallsite *site)
 /* Constraints for arithmetic operations. */
 class TypeConstraintArith : public TypeConstraint
 {
-    RawScript script_;
+    JSScript *script_;
 
   public:
     jsbytecode *pc;
@@ -852,7 +852,7 @@ class TypeConstraintArith : public TypeConstraint
     /* For addition operations, the other operand. */
     TypeSet *other;
 
-    TypeConstraintArith(RawScript script, jsbytecode *pc, TypeSet *target, TypeSet *other)
+    TypeConstraintArith(JSScript *script, jsbytecode *pc, TypeSet *target, TypeSet *other)
         : script_(script), pc(pc), target(target), other(other)
     {
         JS_ASSERT(target);
@@ -873,12 +873,12 @@ StackTypeSet::addArith(JSContext *cx, JSScript *script, jsbytecode *pc, TypeSet 
 /* Subset constraint which transforms primitive values into appropriate objects. */
 class TypeConstraintTransformThis : public TypeConstraint
 {
-    RawScript script_;
+    JSScript *script_;
 
   public:
     TypeSet *target;
 
-    TypeConstraintTransformThis(RawScript script, TypeSet *target)
+    TypeConstraintTransformThis(JSScript *script, TypeSet *target)
         : script_(script), target(target)
     {}
 
@@ -899,14 +899,14 @@ StackTypeSet::addTransformThis(JSContext *cx, JSScript *script, TypeSet *target)
  */
 class TypeConstraintPropagateThis : public TypeConstraint
 {
-    RawScript script_;
+    JSScript *script_;
 
   public:
     jsbytecode *callpc;
     Type type;
     StackTypeSet *types;
 
-    TypeConstraintPropagateThis(RawScript script, jsbytecode *callpc, Type type, StackTypeSet *types)
+    TypeConstraintPropagateThis(JSScript *script, jsbytecode *callpc, Type type, StackTypeSet *types)
         : script_(script), callpc(callpc), type(type), types(types)
     {}
 
@@ -1060,11 +1060,11 @@ void ScriptAnalysis::breakTypeBarriersSSA(JSContext *cx, const SSAValue &v)
 class TypeConstraintSubsetBarrier : public TypeConstraint
 {
   public:
-    RawScript script;
+    JSScript *script;
     jsbytecode *pc;
     TypeSet *target;
 
-    TypeConstraintSubsetBarrier(RawScript script, jsbytecode *pc, TypeSet *target)
+    TypeConstraintSubsetBarrier(JSScript *script, jsbytecode *pc, TypeSet *target)
         : script(script), pc(pc), target(target)
     {}
 
@@ -2338,7 +2338,7 @@ enum RecompileKind {
  * compilation.
  */
 static inline bool
-JITCodeHasCheck(RawScript script, jsbytecode *pc, RecompileKind kind)
+JITCodeHasCheck(JSScript *script, jsbytecode *pc, RecompileKind kind)
 {
     if (kind == RECOMPILE_NONE)
         return false;
@@ -2380,7 +2380,7 @@ JITCodeHasCheck(RawScript script, jsbytecode *pc, RecompileKind kind)
  * which this script was inlined into.
  */
 static inline void
-AddPendingRecompile(JSContext *cx, RawScript script, jsbytecode *pc,
+AddPendingRecompile(JSContext *cx, JSScript *script, jsbytecode *pc,
                     RecompileKind kind = RECOMPILE_NONE)
 {
     /*
@@ -2430,10 +2430,10 @@ AddPendingRecompile(JSContext *cx, RawScript script, jsbytecode *pc,
  */
 class TypeConstraintFreezeStack : public TypeConstraint
 {
-    RawScript script_;
+    JSScript *script_;
 
   public:
-    TypeConstraintFreezeStack(RawScript script)
+    TypeConstraintFreezeStack(JSScript *script)
         : script_(script)
     {}
 
@@ -2637,7 +2637,7 @@ TypeCompartment::addAllocationSiteTypeObject(JSContext *cx, AllocationSiteKey ke
 }
 
 static inline RawId
-GetAtomId(JSContext *cx, RawScript script, const jsbytecode *pc, unsigned offset)
+GetAtomId(JSContext *cx, JSScript *script, const jsbytecode *pc, unsigned offset)
 {
     PropertyName *name = script->getName(GET_UINT32_INDEX(pc + offset));
     return IdToTypeId(NameToId(name));
@@ -2891,7 +2891,7 @@ TypeZone::nukeTypes(FreeOp *fop)
     /* Throw away all JIT code in the compartment, but leave everything else alone. */
 
     for (gc::CellIter i(zone(), gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
-        RawScript script = i.get<JSScript>();
+        JSScript *script = i.get<JSScript>();
         mjit::ReleaseScriptCode(fop, script);
 # ifdef JS_ION
         ion::FinishInvalidation(fop, script);
@@ -2958,7 +2958,7 @@ TypeCompartment::addPendingRecompile(JSContext *cx, const RecompileInfo &info)
 }
 
 void
-TypeCompartment::addPendingRecompile(JSContext *cx, RawScript script, jsbytecode *pc)
+TypeCompartment::addPendingRecompile(JSContext *cx, JSScript *script, jsbytecode *pc)
 {
     JS_ASSERT(script);
     if (!constrainedOutputs)
@@ -5980,7 +5980,7 @@ JSScript::makeTypes(JSContext *cx)
         JS_ASSERT(originalFunction());
         JS_ASSERT(function()->nargs == originalFunction()->nargs);
 
-        RawScript original = originalFunction()->nonLazyScript();
+        JSScript *original = originalFunction()->nonLazyScript();
         if (!original->ensureHasTypes(cx))
             return false;
 
@@ -6741,7 +6741,7 @@ TypeCompartment::~TypeCompartment()
 }
 
 /* static */ void
-TypeScript::Sweep(FreeOp *fop, RawScript script)
+TypeScript::Sweep(FreeOp *fop, JSScript *script)
 {
     JSCompartment *compartment = script->compartment();
     JS_ASSERT(compartment->zone()->isGCSweeping());
@@ -6921,7 +6921,7 @@ TypeCompartment::maybePurgeAnalysis(JSContext *cx, bool force)
 }
 
 static void
-SizeOfScriptTypeInferenceData(RawScript script, JS::TypeInferenceSizes *sizes,
+SizeOfScriptTypeInferenceData(JSScript *script, JS::TypeInferenceSizes *sizes,
                               JSMallocSizeOfFun mallocSizeOf)
 {
     TypeScript *typeScript = script->types;
@@ -7039,7 +7039,7 @@ TypeZone::sweep(FreeOp *fop, bool releaseTypes)
         gcstats::AutoPhase ap2(rt->gcStats, gcstats::PHASE_DISCARD_TI);
 
         for (CellIterUnderGC i(zone(), FINALIZE_SCRIPT); !i.done(); i.next()) {
-            RawScript script = i.get<JSScript>();
+            JSScript *script = i.get<JSScript>();
             if (script->types) {
                 types::TypeScript::Sweep(fop, script);
 

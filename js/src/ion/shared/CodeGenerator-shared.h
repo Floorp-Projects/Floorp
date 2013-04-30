@@ -374,14 +374,14 @@ class OutOfLineCode : public TempObject
     uint32_t framePushed() const {
         return framePushed_;
     }
-    void setSource(RawScript script, jsbytecode *pc) {
+    void setSource(JSScript *script, jsbytecode *pc) {
         script_ = script;
         pc_ = pc;
     }
     jsbytecode *pc() {
         return pc_;
     }
-    RawScript script() {
+    JSScript *script() {
         return script_;
     }
 };

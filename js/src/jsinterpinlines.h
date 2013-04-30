@@ -887,7 +887,7 @@ GetElementOperation(JSContext *cx, JSOp op, MutableHandleValue lref, HandleValue
 
 static JS_ALWAYS_INLINE bool
 SetObjectElementOperation(JSContext *cx, Handle<JSObject*> obj, HandleId id, const Value &value,
-                          bool strict, RawScript maybeScript = NULL, jsbytecode *pc = NULL)
+                          bool strict, JSScript *maybeScript = NULL, jsbytecode *pc = NULL)
 {
     RootedScript script(cx, maybeScript);
     types::TypeScript::MonitorAssign(cx, obj, id);

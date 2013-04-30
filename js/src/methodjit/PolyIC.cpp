@@ -2170,7 +2170,7 @@ frameCountersOffset(VMFrame &f)
     }
 
     jsbytecode *pc;
-    RawScript script = cx->stack.currentScript(&pc);
+    JSScript *script = cx->stack.currentScript(&pc);
     offset += pc - script->code;
 
     return offset;
