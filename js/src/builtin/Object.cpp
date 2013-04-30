@@ -424,11 +424,11 @@ obj_lookupGetter(JSContext *cx, unsigned argc, Value *vp)
         // The vanilla getter lookup code below requires that the object is
         // native. Handle proxies separately.
         args.rval().setUndefined();
-        AutoPropertyDescriptorRooter desc(cx);
+        Rooted<PropertyDescriptor> desc(cx);
         if (!Proxy::getPropertyDescriptor(cx, obj, id, &desc, 0))
             return false;
-        if (desc.obj && (desc.attrs & JSPROP_GETTER) && desc.getter)
-            args.rval().set(CastAsObjectJsval(desc.getter));
+        if (desc.object() && desc.hasGetterObject() && desc.getterObject())
+            args.rval().setObject(*desc.getterObject());
         return true;
     }
     RootedObject pobj(cx);
@@ -460,11 +460,11 @@ obj_lookupSetter(JSContext *cx, unsigned argc, Value *vp)
         // The vanilla setter lookup code below requires that the object is
         // native. Handle proxies separately.
         args.rval().setUndefined();
-        AutoPropertyDescriptorRooter desc(cx);
+        Rooted<PropertyDescriptor> desc(cx);
         if (!Proxy::getPropertyDescriptor(cx, obj, id, &desc, 0))
             return false;
-        if (desc.obj && (desc.attrs & JSPROP_SETTER) && desc.setter)
-            args.rval().set(CastAsObjectJsval(desc.setter));
+        if (desc.object() && desc.hasSetterObject() && desc.setterObject())
+            args.rval().setObject(*desc.setterObject());
         return true;
     }
     RootedObject pobj(cx);

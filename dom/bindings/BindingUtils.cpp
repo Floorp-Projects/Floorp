@@ -815,15 +815,14 @@ GetNativePropertyHooks(JSContext *cx, JS::Handle<JSObject*> obj,
 bool
 XrayResolveOwnProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                        JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
-                       JSPropertyDescriptor* desc, unsigned flags)
+                       JS::MutableHandle<JSPropertyDescriptor> desc, unsigned flags)
 {
   DOMObjectType type;
   const NativePropertyHooks *nativePropertyHooks =
     GetNativePropertyHooks(cx, obj, type);
 
   return type != eInstance || !nativePropertyHooks->mResolveOwnProperty ||
-         nativePropertyHooks->mResolveOwnProperty(cx, wrapper, obj, id, desc,
-                                                  flags);
+         nativePropertyHooks->mResolveOwnProperty(cx, wrapper, obj, id, desc, flags);
 }
 
 static bool
@@ -1088,7 +1087,7 @@ XrayResolveNativeProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
 bool
 XrayDefineProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                    JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
-                   JSPropertyDescriptor* desc, bool* defined)
+                   JS::MutableHandle<JSPropertyDescriptor> desc, bool* defined)
 {
   if (!js::IsProxy(obj))
       return true;

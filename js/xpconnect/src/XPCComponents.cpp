@@ -3134,17 +3134,17 @@ bool
 xpc::SandboxProxyHandler::getPropertyDescriptor(JSContext *cx,
                                                 JS::Handle<JSObject*> proxy,
                                                 JS::Handle<jsid> id,
-                                                PropertyDescriptor *desc,
+                                                JS::MutableHandle<PropertyDescriptor> desc,
                                                 unsigned flags)
 {
     JS::RootedObject obj(cx, wrappedObject(proxy));
 
     MOZ_ASSERT(js::GetObjectCompartment(obj) == js::GetObjectCompartment(proxy));
     if (!JS_GetPropertyDescriptorById(cx, obj, id,
-                                      flags, desc))
+                                      flags, desc.address()))
         return false;
 
-    if (!desc->obj)
+    if (!desc.object())
         return true; // No property, nothing to do
 
     // Now fix up the getter/setter/value as needed to be bound to desc->obj
@@ -3157,21 +3157,21 @@ xpc::SandboxProxyHandler::getPropertyDescriptor(JSContext *cx,
     // Similarly, don't mess with XPC_WN_Helper_GetProperty and
     // XPC_WN_Helper_SetProperty, for the same reasons: that could confuse our
     // access to expandos when we're not doing Xrays.
-    if (desc->getter != xpc::holder_get &&
-        desc->getter != XPC_WN_Helper_GetProperty &&
-        !BindPropertyOp(cx, desc->getter, desc, id, JSPROP_GETTER, proxy))
+    if (desc.getter() != xpc::holder_get &&
+        desc.getter() != XPC_WN_Helper_GetProperty &&
+        !BindPropertyOp(cx, desc.getter(), desc.address(), id, JSPROP_GETTER, proxy))
         return false;
-    if (desc->setter != xpc::holder_set &&
-        desc->setter != XPC_WN_Helper_SetProperty &&
-        !BindPropertyOp(cx, desc->setter, desc, id, JSPROP_SETTER, proxy))
+    if (desc.setter() != xpc::holder_set &&
+        desc.setter() != XPC_WN_Helper_SetProperty &&
+        !BindPropertyOp(cx, desc.setter(), desc.address(), id, JSPROP_SETTER, proxy))
         return false;
-    if (desc->value.isObject()) {
-        JSObject* val = &desc->value.toObject();
+    if (desc.value().isObject()) {
+        JSObject* val = &desc.value().toObject();
         if (JS_ObjectIsCallable(cx, val)) {
             val = WrapCallable(cx, val, proxy);
             if (!val)
                 return false;
-            desc->value = ObjectValue(*val);
+            desc.value().setObject(*val);
         }
     }
 
@@ -3182,14 +3182,14 @@ bool
 xpc::SandboxProxyHandler::getOwnPropertyDescriptor(JSContext *cx,
                                                    JS::Handle<JSObject*> proxy,
                                                    JS::Handle<jsid> id,
-                                                   PropertyDescriptor *desc,
+                                                   JS::MutableHandle<PropertyDescriptor> desc,
                                                    unsigned flags)
 {
     if (!getPropertyDescriptor(cx, proxy, id, desc, flags))
         return false;
 
-    if (desc->obj != wrappedObject(proxy))
-        desc->obj = nullptr;
+    if (desc.object() != wrappedObject(proxy))
+        desc.object().set(nullptr);
 
     return true;
 }

@@ -2679,7 +2679,7 @@ CopyProperty(JSContext *cx, HandleObject obj, HandleObject referent, HandleId id
              unsigned lookupFlags, MutableHandleObject objp)
 {
     RootedShape shape(cx);
-    AutoPropertyDescriptorRooter desc(cx);
+    Rooted<PropertyDescriptor> desc(cx);
     unsigned propFlags = 0;
     RootedObject obj2(cx);
 
@@ -2691,24 +2691,24 @@ CopyProperty(JSContext *cx, HandleObject obj, HandleObject referent, HandleId id
             return true;
 
         if (shape->hasSlot()) {
-            desc.value = referent->nativeGetSlot(shape->slot());
+            desc.value().set(referent->nativeGetSlot(shape->slot()));
         } else {
-            desc.value.setUndefined();
+            desc.value().setUndefined();
         }
 
-        desc.attrs = shape->attributes();
-        desc.getter = shape->getter();
-        if (!desc.getter && !(desc.attrs & JSPROP_GETTER))
-            desc.getter = JS_PropertyStub;
-        desc.setter = shape->setter();
-        if (!desc.setter && !(desc.attrs & JSPROP_SETTER))
-            desc.setter = JS_StrictPropertyStub;
-        desc.shortid = shape->shortid();
+        desc.setAttributes(shape->attributes());
+        desc.setGetter(shape->getter());
+        if (!desc.getter() && !desc.hasGetterObject())
+            desc.setGetter(JS_PropertyStub);
+        desc.setSetter(shape->setter());
+        if (!desc.setter() && !desc.hasSetterObject())
+            desc.setSetter(JS_StrictPropertyStub);
+        desc.setShortId(shape->shortid());
         propFlags = shape->getFlags();
     } else if (referent->is<ProxyObject>()) {
         if (!Proxy::getOwnPropertyDescriptor(cx, referent, id, &desc, 0))
             return false;
-        if (!desc.obj)
+        if (!desc.object())
             return true;
     } else {
         if (!JSObject::lookupGeneric(cx, referent, id, objp, &shape))
@@ -2717,21 +2717,20 @@ CopyProperty(JSContext *cx, HandleObject obj, HandleObject referent, HandleId id
             return true;
         RootedValue value(cx);
         if (!JSObject::getGeneric(cx, referent, referent, id, &value) ||
-            !JSObject::getGenericAttributes(cx, referent, id, &desc.attrs))
+            !JSObject::getGenericAttributes(cx, referent, id, &desc.attributesRef()))
         {
             return false;
         }
-        desc.value = value;
-        desc.attrs &= JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT;
-        desc.getter = JS_PropertyStub;
-        desc.setter = JS_StrictPropertyStub;
-        desc.shortid = 0;
+        desc.value().set(value);
+        desc.attributesRef() &= JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT;
+        desc.setGetter(JS_PropertyStub);
+        desc.setSetter(JS_StrictPropertyStub);
+        desc.setShortId(0);
     }
 
-    RootedValue value(cx, desc.value);
     objp.set(obj);
-    return DefineNativeProperty(cx, obj, id, value, desc.getter, desc.setter,
-                                desc.attrs, propFlags, desc.shortid);
+    return DefineNativeProperty(cx, obj, id, desc.value(), desc.getter(), desc.setter(),
+                                desc.attributes(), propFlags, desc.shortid());
 }
 
 static bool
