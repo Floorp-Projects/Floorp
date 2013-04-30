@@ -79,7 +79,7 @@ id_caller(JSContext *cx) {
 
 #ifdef DEBUG
 const char *
-types::TypeIdStringImpl(RawId id)
+types::TypeIdStringImpl(jsid id)
 {
     if (JSID_IS_VOID(id))
         return "(index)";
@@ -683,9 +683,9 @@ class TypeConstraintProp : public TypeConstraint
     StackTypeSet *target;
 
     /* Property being accessed. This is unrooted. */
-    RawId id;
+    jsid id;
 
-    TypeConstraintProp(JSScript *script, jsbytecode *pc, StackTypeSet *target, RawId id)
+    TypeConstraintProp(JSScript *script, jsbytecode *pc, StackTypeSet *target, jsid id)
         : script_(script), pc(pc), target(target), id(id)
     {
         JS_ASSERT(script && pc && target);
@@ -702,7 +702,7 @@ typedef TypeConstraintProp<PROPERTY_READ_EXISTING> TypeConstraintGetPropertyExis
 
 void
 StackTypeSet::addGetProperty(JSContext *cx, JSScript *script, jsbytecode *pc,
-                             StackTypeSet *target, RawId id)
+                             StackTypeSet *target, jsid id)
 {
     /*
      * GetProperty constraints are normally used with property read input type
@@ -715,14 +715,14 @@ StackTypeSet::addGetProperty(JSContext *cx, JSScript *script, jsbytecode *pc,
 
 void
 StackTypeSet::addSetProperty(JSContext *cx, JSScript *script, jsbytecode *pc,
-                             StackTypeSet *target, RawId id)
+                             StackTypeSet *target, jsid id)
 {
     add(cx, cx->analysisLifoAlloc().new_<TypeConstraintSetProperty>(script, pc, target, id));
 }
 
 void
 HeapTypeSet::addGetProperty(JSContext *cx, JSScript *script, jsbytecode *pc,
-                            StackTypeSet *target, RawId id)
+                            StackTypeSet *target, jsid id)
 {
     JS_ASSERT(!target->purged());
     add(cx, cx->typeLifoAlloc().new_<TypeConstraintGetProperty>(script, pc, target, id));
@@ -951,7 +951,7 @@ HeapTypeSet::addFilterPrimitives(JSContext *cx, TypeSet *target)
 
 /* If id is a normal slotful 'own' property of an object, get its shape. */
 static inline Shape *
-GetSingletonShape(JSContext *cx, RawObject obj, RawId idArg)
+GetSingletonShape(JSContext *cx, RawObject obj, jsid idArg)
 {
     if (!obj->isNative())
         return NULL;
@@ -1203,7 +1203,7 @@ GetSingletonPropertyType(JSContext *cx, RawObject rawObjArg, HandleId id)
 template <PropertyAccessKind access>
 static inline void
 PropertyAccess(JSContext *cx, JSScript *script, jsbytecode *pc, TypeObject *object,
-               StackTypeSet *target, RawId idArg)
+               StackTypeSet *target, jsid idArg)
 {
     RootedId id(cx, idArg);
 
@@ -2299,7 +2299,7 @@ HeapTypeSet::needsBarrier(JSContext *cx)
 }
 
 bool
-StackTypeSet::propertyNeedsBarrier(JSContext *cx, RawId id)
+StackTypeSet::propertyNeedsBarrier(JSContext *cx, jsid id)
 {
     RootedId typeId(cx, IdToTypeId(id));
 
@@ -2636,7 +2636,7 @@ TypeCompartment::addAllocationSiteTypeObject(JSContext *cx, AllocationSiteKey ke
     return res;
 }
 
-static inline RawId
+static inline jsid
 GetAtomId(JSContext *cx, JSScript *script, const jsbytecode *pc, unsigned offset)
 {
     PropertyName *name = script->getName(GET_UINT32_INDEX(pc + offset));
@@ -3662,7 +3662,7 @@ UpdatePropertyType(JSContext *cx, TypeSet *types, RawObject obj, Shape *shape,
 }
 
 bool
-TypeObject::addProperty(JSContext *cx, RawId id, Property **pprop)
+TypeObject::addProperty(JSContext *cx, jsid id, Property **pprop)
 {
     JS_ASSERT(!*pprop);
     Property *base = cx->typeLifoAlloc().new_<Property>(id);
@@ -3734,7 +3734,7 @@ TypeObject::addDefiniteProperties(JSContext *cx, JSObject *obj)
 
     RootedShape shape(cx, obj->lastProperty());
     while (!shape->isEmptyShape()) {
-        RawId id = IdToTypeId(shape->propid());
+        jsid id = IdToTypeId(shape->propid());
         if (!JSID_IS_VOID(id) && obj->isFixedSlot(shape->slot()) &&
             shape->slot() <= (TYPE_FLAG_DEFINITE_MASK >> TYPE_FLAG_DEFINITE_SHIFT)) {
             TypeSet *types = getProperty(cx, id, true);
@@ -3807,7 +3807,7 @@ TypeObject::addPropertyType(JSContext *cx, jsid id, const Value &value)
 void
 TypeObject::addPropertyType(JSContext *cx, const char *name, Type type)
 {
-    RawId id = JSID_VOID;
+    jsid id = JSID_VOID;
     if (name) {
         JSAtom *atom = Atomize(cx, name, strlen(name));
         if (!atom) {
@@ -4295,7 +4295,7 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset, TypeInferen
 
       case JSOP_GETGNAME:
       case JSOP_CALLGNAME: {
-        RawId id = GetAtomId(cx, script, pc, 0);
+        jsid id = GetAtomId(cx, script, pc, 0);
 
         StackTypeSet *seen = bytecodeTypes(pc);
         seen->addSubset(cx, &pushed[0]);
