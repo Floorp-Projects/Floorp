@@ -338,9 +338,13 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
 
     LayerOGL* layerGL = static_cast<LayerOGL*>(aLayer->ImplData());
     LayerRenderState state = layerGL->GetRenderState();
+    nsIntSize surfaceSize;
 
-    if (!state.mSurface ||
-        state.mSurface->type() != SurfaceDescriptor::TSurfaceDescriptorGralloc) {
+    if (state.mSurface &&
+        state.mSurface->type() == SurfaceDescriptor::TSurfaceDescriptorGralloc) {
+        surfaceSize = state.mSurface->get_SurfaceDescriptorGralloc().size();
+    }
+    else {
         if (aLayer->AsColorLayer() && mColorFill) {
             fillColor = true;
         } else {
@@ -374,10 +378,10 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
     } else {
         if(state.mHasOwnOffset) {
             bufferRect = nsIntRect(state.mOffset.x, state.mOffset.y,
-                int(buffer->getWidth()), int(buffer->getHeight()));
+                surfaceSize.width, surfaceSize.height);
         } else {
             bufferRect = nsIntRect(visibleRect.x, visibleRect.y,
-                int(buffer->getWidth()), int(buffer->getHeight()));
+                surfaceSize.width, surfaceSize.height);
         }
     }
 
