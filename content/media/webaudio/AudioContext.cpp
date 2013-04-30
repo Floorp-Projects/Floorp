@@ -297,19 +297,20 @@ AudioContext::CurrentTime() const
   return MediaTimeToSeconds(Destination()->Stream()->GetCurrentTime());
 }
 
+template <class T>
 static PLDHashOperator
-StopAudioBufferSourceNode(nsPtrHashKey<AudioBufferSourceNode>* aEntry, void* aData)
+GetHashtableEntry(nsPtrHashKey<T>* aEntry, void* aData)
 {
-  ErrorResult rv;
-  aEntry->GetKey()->Stop(0.0, rv);
+  nsTArray<T*>* array = static_cast<nsTArray<T*>*>(aData);
+  array->AppendElement(aEntry->GetKey());
   return PL_DHASH_NEXT;
 }
 
-static PLDHashOperator
-StopScriptProcessorNode(nsPtrHashKey<ScriptProcessorNode>* aEntry, void* aData)
+template <class T>
+static void
+GetHashtableElements(nsTHashtable<nsPtrHashKey<T> >& aHashtable, nsTArray<T*>& aArray)
 {
-  aEntry->GetKey()->Stop();
-  return PL_DHASH_NEXT;
+  aHashtable.EnumerateEntries(&GetHashtableEntry<T>, &aArray);
 }
 
 void
@@ -320,10 +321,23 @@ AudioContext::Shutdown()
 
   // Stop all audio buffer source nodes, to make sure that they release
   // their self-references.
-  mAudioBufferSourceNodes.EnumerateEntries(StopAudioBufferSourceNode, nullptr);
+  // We first gather an array of the nodes and then call Stop on each one,
+  // since Stop may delete the object and therefore trigger a re-entrant
+  // hashtable call to remove the pointer from the hashtable, which is
+  // not safe.
+  nsTArray<AudioBufferSourceNode*> sourceNodes;
+  GetHashtableElements(mAudioBufferSourceNodes, sourceNodes);
+  for (uint32_t i = 0; i < sourceNodes.Length(); ++i) {
+    ErrorResult rv;
+    sourceNodes[i]->Stop(0.0, rv);
+  }
   // Stop all script processor nodes, to make sure that they release
   // their self-references.
-  mScriptProcessorNodes.EnumerateEntries(StopScriptProcessorNode, nullptr);
+  nsTArray<ScriptProcessorNode*> spNodes;
+  GetHashtableElements(mScriptProcessorNodes, spNodes);
+  for (uint32_t i = 0; i < spNodes.Length(); ++i) {
+    spNodes[i]->Stop();
+  }
 }
 
 void
