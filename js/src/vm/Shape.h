@@ -224,7 +224,6 @@ struct ShapeTable {
  */
 
 ForwardDeclare(UnownedBaseShape);
-ForwardDeclare(BaseShape);
 ForwardDeclare(Shape);
 struct StackBaseShape;
 
@@ -354,9 +353,9 @@ class BaseShape : public js::gc::Cell
     static inline size_t offsetOfParent() { return offsetof(BaseShape, parent); }
     static inline size_t offsetOfFlags() { return offsetof(BaseShape, flags); }
 
-    static inline void writeBarrierPre(RawBaseShape shape);
-    static inline void writeBarrierPost(RawBaseShape shape, void *addr);
-    static inline void readBarrier(RawBaseShape shape);
+    static inline void writeBarrierPre(BaseShape *shape);
+    static inline void writeBarrierPost(BaseShape *shape, void *addr);
+    static inline void readBarrier(BaseShape *shape);
 
     static inline ThingRootKind rootKind() { return THING_ROOT_BASE_SHAPE; }
 
@@ -400,7 +399,7 @@ struct StackBaseShape
     StrictPropertyOp rawSetter;
     JSCompartment *compartment;
 
-    explicit StackBaseShape(RawBaseShape base)
+    explicit StackBaseShape(BaseShape *base)
       : flags(base->flags & BaseShape::OBJECT_FLAG_MASK),
         clasp(base->clasp),
         parent(base->parent),
@@ -689,14 +688,14 @@ class Shape : public js::gc::Cell
 
     inline bool matches(const RawShape other) const;
     inline bool matches(const StackShape &other) const;
-    inline bool matchesParamsAfterId(RawBaseShape base,
+    inline bool matchesParamsAfterId(BaseShape *base,
                                      uint32_t aslot, unsigned aattrs, unsigned aflags,
                                      int ashortid) const;
 
     bool get(JSContext* cx, HandleObject receiver, JSObject *obj, JSObject *pobj, MutableHandleValue vp);
     bool set(JSContext* cx, HandleObject obj, HandleObject receiver, bool strict, MutableHandleValue vp);
 
-    RawBaseShape base() const { return base_.get(); }
+    BaseShape *base() const { return base_.get(); }
 
     bool hasSlot() const { return (attrs & JSPROP_SHARED) == 0; }
     uint32_t slot() const { JS_ASSERT(hasSlot() && !hasMissingSlot()); return maybeSlot(); }
