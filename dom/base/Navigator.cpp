@@ -222,11 +222,9 @@ Navigator::Invalidate()
 
   mCameraManager = nullptr;
 
-#ifdef MOZ_SYS_MSG
   if (mMessagesManager) {
     mMessagesManager = nullptr;
   }
-#endif
 
 #ifdef MOZ_AUDIO_CHANNEL_MANAGER
   if (mAudioChannelManager) {
@@ -1404,7 +1402,6 @@ Navigator::GetMozBluetooth(nsIDOMBluetoothManager** aBluetooth)
 //*****************************************************************************
 //    nsNavigator::nsIDOMNavigatorSystemMessages
 //*****************************************************************************
-#ifdef MOZ_SYS_MSG
 nsresult
 Navigator::EnsureMessagesManager()
 {
@@ -1432,34 +1429,33 @@ Navigator::EnsureMessagesManager()
 
   return NS_OK;
 }
-#endif
 
 NS_IMETHODIMP
 Navigator::MozHasPendingMessage(const nsAString& aType, bool *aResult)
 {
-#ifdef MOZ_SYS_MSG
+  if (!Preferences::GetBool("dom.sysmsg.enabled", false)) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
   *aResult = false;
   nsresult rv = EnsureMessagesManager();
   NS_ENSURE_SUCCESS(rv, rv);
 
   return mMessagesManager->MozHasPendingMessage(aType, aResult);
-#else
-  return NS_ERROR_NOT_IMPLEMENTED;
-#endif
 }
 
 NS_IMETHODIMP
 Navigator::MozSetMessageHandler(const nsAString& aType,
                                 nsIDOMSystemMessageCallback *aCallback)
 {
-#ifdef MOZ_SYS_MSG
+  if (!Preferences::GetBool("dom.sysmsg.enabled", false)) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
   nsresult rv = EnsureMessagesManager();
   NS_ENSURE_SUCCESS(rv, rv);
 
   return mMessagesManager->MozSetMessageHandler(aType, aCallback);
-#else
-  return NS_ERROR_NOT_IMPLEMENTED;
-#endif
 }
 
 //*****************************************************************************

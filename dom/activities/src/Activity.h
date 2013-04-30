@@ -8,6 +8,7 @@
 #include "DOMRequest.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "nsIActivityProxy.h"
+#include "mozilla/Preferences.h"
 
 #define NS_DOMACTIVITY_CID                          \
  {0x1c5b0930, 0xc90c, 0x4e9c, {0xaf, 0x4e, 0xb0, 0xb7, 0xa6, 0x59, 0xb4, 0xed}}
@@ -28,11 +29,7 @@ public:
 
   static bool PrefEnabled()
   {
-#ifdef MOZ_SYS_MSG
-    return true;
-#else
-    return false;
-#endif
+    return Preferences::GetBool("dom.sysmsg.enabled", false);
   }
 
   static already_AddRefed<Activity>
