@@ -175,6 +175,21 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer,
       return false;
     }
     mTextureClient->SetDescriptor(desc);
+  } else if (image->GetFormat() == GRALLOC_PLANAR_YCBCR) {
+    EnsureTextureClient(TEXTURE_SHARED_GL_EXTERNAL);
+
+    nsIntRect rect(0, 0,
+                   image->GetSize().width,
+                   image->GetSize().height);
+    UpdatePictureRect(rect);
+
+    AutoLockTextureClient lock(mTextureClient);
+
+    SurfaceDescriptor desc = static_cast<GrallocPlanarYCbCrImage*>(image)->GetSurfaceDescriptor();
+    if (!IsSurfaceDescriptorValid(desc)) {
+      return false;
+    }
+    mTextureClient->SetDescriptor(desc);
 #endif
   } else {
     nsRefPtr<gfxASurface> surface = image->GetAsSurface();
