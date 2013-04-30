@@ -350,25 +350,16 @@ DebuggerClient.prototype = {
 
     let self = this;
 
-    let consolesClosed = 0;
-    let consolesToClose = 0;
-
-    for each (let client in this._consoleClients) {
-      consolesToClose++;
-      client.close(onConsoleClose);
-    }
-
-    if (!consolesToClose) {
+    let continuation = function () {
+      self._consoleClients = {};
       detachThread();
     }
 
-    function onConsoleClose() {
-      consolesClosed++;
-      if (consolesClosed >= consolesToClose) {
-        self._consoleClients = {};
-        detachThread();
-      }
+    for each (let client in this._consoleClients) {
+      continuation = client.close.bind(client, continuation);
     }
+
+    continuation();
 
     function detachThread() {
       if (self.activeThread) {
