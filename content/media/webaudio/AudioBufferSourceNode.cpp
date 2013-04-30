@@ -312,9 +312,11 @@ public:
       mPlaybackRate = mPlaybackRateTimeline.GetValueAtTime<TrackTicks>(aStream->GetCurrentPosition());
     }
 
-    // Make sure the playback rate if something our resampler can work with.
-    if (mPlaybackRate <= 0.0 || mPlaybackRate >= 1024) {
+    // Make sure the playback rate and the doppler shift are something
+    // our resampler can work with.
+    if (ComputeFinalOutSampleRate() == 0) {
       mPlaybackRate = 1.0;
+      mDopplerShift = 1.0;
     }
 
     uint32_t currentOutSampleRate, currentInSampleRate;
