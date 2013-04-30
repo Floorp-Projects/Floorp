@@ -4725,7 +4725,7 @@ JS_GetReservedSlot(RawObject obj, uint32_t index)
 }
 
 JS_PUBLIC_API(void)
-JS_SetReservedSlot(RawObject obj, uint32_t index, RawValue value)
+JS_SetReservedSlot(RawObject obj, uint32_t index, Value value)
 {
     obj->setReservedSlot(index, value);
 }
