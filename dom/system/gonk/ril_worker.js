@@ -10878,7 +10878,7 @@ let ICCRecordHelper = {
   readPLMNEntries: function readPLMNEntries(length) {
     let plmnList = [];
     // Each PLMN entry has 3 bytes.
-    debug("readPLMNEntries: PLMN entries length = " + length);
+    if (DEBUG) debug("readPLMNEntries: PLMN entries length = " + length);
     let index = 0;
     while (index < length) {
       // Unused entries will be 0xFFFFFF, according to EF_SPDI
@@ -10962,40 +10962,43 @@ let ICCUtilsHelper = {
       return null;
     }
 
-    // According to 3GPP TS 31.102 Sec. 4.2.59 and 3GPP TS 51.011 Sec. 10.3.42,
-    // the ME shall use this EF_OPL in association with the EF_PNN in place
-    // of any network name stored within the ME's internal list and any network
-    // name received when registered to the PLMN.
-    let length = iccInfoPriv.OPL ? iccInfoPriv.OPL.length : 0;
-    for (let i = 0; i < length; i++) {
-      let opl = iccInfoPriv.OPL[i];
-      // Try to match the MCC/MNC.
-      if (mcc != opl.mcc || mnc != opl.mnc) {
-        continue;
+    if (!iccInfoPriv.OPL) {
+      // When OPL is not present:
+      // According to 3GPP TS 31.102 Sec. 4.2.58 and 3GPP TS 51.011 Sec. 10.3.41,
+      // If EF_OPL is not present, the first record in this EF is used for the
+      // default network name when registered to the HPLMN.
+      // If we haven't get pnnEntry assigned, we should try to assign default
+      // value to it.
+      if (mcc == iccInfo.mcc && mnc == iccInfo.mnc) {
+        pnnEntry = iccInfoPriv.PNN[0];
       }
-      // Try to match the location area code. If current local area code is
-      // covered by lac range that specified in the OPL entry, use the PNN
-      // that specified in the OPL entry.
-      if ((opl.lacTacStart == 0x0 && opl.lacTacEnd == 0xFFFE) ||
-          (opl.lacTacStart <= lac && opl.lacTacEnd >= lac)) {
-        if (opl.pnnRecordId == 0) {
-          // See 3GPP TS 31.102 Sec. 4.2.59 and 3GPP TS 51.011 Sec. 10.3.42,
-          // A value of '00' indicates that the name is to be taken from other
-          // sources.
-          return null;
+    } else {
+      // According to 3GPP TS 31.102 Sec. 4.2.59 and 3GPP TS 51.011 Sec. 10.3.42,
+      // the ME shall use this EF_OPL in association with the EF_PNN in place
+      // of any network name stored within the ME's internal list and any network
+      // name received when registered to the PLMN.
+      let length = iccInfoPriv.OPL ? iccInfoPriv.OPL.length : 0;
+      for (let i = 0; i < length; i++) {
+        let opl = iccInfoPriv.OPL[i];
+        // Try to match the MCC/MNC.
+        if (mcc != opl.mcc || mnc != opl.mnc) {
+          continue;
         }
-        pnnEntry = iccInfoPriv.PNN[opl.pnnRecordId - 1]
-        break;
+        // Try to match the location area code. If current local area code is
+        // covered by lac range that specified in the OPL entry, use the PNN
+        // that specified in the OPL entry.
+        if ((opl.lacTacStart == 0x0 && opl.lacTacEnd == 0xFFFE) ||
+            (opl.lacTacStart <= lac && opl.lacTacEnd >= lac)) {
+          if (opl.pnnRecordId == 0) {
+            // See 3GPP TS 31.102 Sec. 4.2.59 and 3GPP TS 51.011 Sec. 10.3.42,
+            // A value of '00' indicates that the name is to be taken from other
+            // sources.
+            return null;
+          }
+          pnnEntry = iccInfoPriv.PNN[opl.pnnRecordId - 1];
+          break;
+        }
       }
-    }
-
-    // According to 3GPP TS 31.102 Sec. 4.2.58 and 3GPP TS 51.011 Sec. 10.3.41,
-    // the first record in this EF is used for the default network name when
-    // registered to the HPLMN.
-    // If we haven't get pnnEntry assigned, we should try to assign default
-    // value to it.
-    if (!pnnEntry && mcc == iccInfo.mcc && mnc == iccInfo.mnc) {
-      pnnEntry = iccInfoPriv.PNN[0]
     }
 
     if (!pnnEntry) {
@@ -11003,8 +11006,8 @@ let ICCUtilsHelper = {
     }
 
     // Return a new object to avoid global variable, PNN, be modified by accident.
-    return {fullName: pnnEntry.fullName || "",
-            shortName: pnnEntry.shortName || ""};
+    return { fullName: pnnEntry.fullName || "",
+             shortName: pnnEntry.shortName || "" };
   },
 
   /**
