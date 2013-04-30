@@ -12,6 +12,9 @@ const kPrefCustomizationDebug = "browser.uiCustomization.debug";
 const kPaletteId = "customization-palette";
 const kAboutURI = "about:customizing";
 
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource:///modules/CustomizableUI.jsm");
+
 let gDebug = false;
 try {
   gDebug = Services.prefs.getBoolPref(kPrefCustomizationDebug);
@@ -19,14 +22,11 @@ try {
 
 function LOG(str) {
   if (gDebug) {
-    Services.console.logStringMessage(str);
+    Services.console.logStringMessage("[CustomizeMode] " + str);
   }
 }
 
 function ERROR(aMsg) Cu.reportError("[CustomizeMode] " + aMsg);
-
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource:///modules/CustomizableUI.jsm");
 
 function CustomizeMode(aWindow) {
   this.window = aWindow;
@@ -68,6 +68,10 @@ CustomizeMode.prototype = {
   },
 
   enter: function() {
+    if (this._customizing) {
+      return;
+    }
+
     let window = this.window;
     let document = this.document;
 
@@ -124,7 +128,9 @@ CustomizeMode.prototype = {
         target.addEventListener("dragexit", self);
         target.addEventListener("drop", self);
         for (let child of target.children) {
-          self.wrapToolbarItem(child, getPlaceForItem(child));
+          if (self.isCustomizableItem(child)) {
+            self.wrapToolbarItem(child, getPlaceForItem(child));
+          }
         }
         self.areas.push(target);
       }
@@ -142,6 +148,10 @@ CustomizeMode.prototype = {
   },
 
   exit: function() {
+    if (!this._customizing) {
+      return;
+    }
+
     CustomizableUI.removeListener(this);
 
     let deck = this.document.getElementById("tab-view-deck");
@@ -172,7 +182,9 @@ CustomizeMode.prototype = {
 
     for (let target of this.areas) {
       for (let toolbarItem of target.children) {
-        this.unwrapToolbarItem(toolbarItem);
+        if (this.isWrappedToolbarItem(toolbarItem)) {
+          this.unwrapToolbarItem(toolbarItem);
+        }
       }
       target.removeEventListener("dragstart", this);
       target.removeEventListener("dragover", this);
@@ -280,6 +292,18 @@ CustomizeMode.prototype = {
     this.window.gNavToolbox.palette = this._stowedPalette;
   },
 
+  isCustomizableItem: function(aNode) {
+    return aNode.localName == "toolbarbutton" ||
+           aNode.localName == "toolbaritem" ||
+           aNode.localName == "toolbarseparator" ||
+           aNode.localName == "toolbarspring" ||
+           aNode.localName == "toolbarspacer";
+  },
+
+  isWrappedToolbarItem: function(aNode) {
+    return aNode.localName == "toolbarpaletteitem";
+  },
+
   wrapToolbarItem: function(aNode, aPlace) {
     let wrapper = this.createWrapper(aNode, aPlace);
     // It's possible that this toolbar node is "mid-flight" and doesn't have
@@ -370,17 +394,13 @@ CustomizeMode.prototype = {
     return toolbarItem;
   },
 
-  //XXXjaws This doesn't handle custom toolbars.
-  //XXXmconley While CustomizableUI.jsm uses prefs to preserve state, we might
-  //           also want to (try) persisting with currentset as well to make it
-  //           less painful to switch to older builds.
   persistCurrentSets: function()  {
     let document = this.document;
-    let toolbars = document.querySelectorAll("toolbar");
-
+    let toolbars = document.querySelectorAll("toolbar[customizable='true']");
     for (let toolbar of toolbars) {
-      // Calculate currentset and store it in the attribute.
-      toolbar.setAttribute("currentset", toolbar.currentSet);
+      let set = toolbar.currentSet;
+      toolbar.setAttribute("currentset", set);
+      LOG("Setting currentset of " + toolbar.id + " as " + set);
       // Persist the currentset attribute directly on hardcoded toolbars.
       document.persist(toolbar.id, "currentset");
     }

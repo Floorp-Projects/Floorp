@@ -66,7 +66,7 @@
           let id = this.getAttribute("customizationtarget");
           if (id)
             this._customizationTarget = document.getElementById(id);
-          
+
           if (!this._customizationTarget)
             this._customizationTarget = this;
 
@@ -112,4 +112,122 @@
     </implementation>
   </binding>
 
+  <!-- The toolbar-menubar-autohide and toolbar-drag bindings are almost
+       verbatim copies of their toolkit counterparts - they just inherit from
+       the customizableui's toolbar binding instead of toolkit's. We're currently
+       OK with the maintainance burden of having two copies of a binding, since
+       the long term goal is to move the customization framework into toolkit. -->
+
+  <binding id="toolbar-menubar-autohide"
+           extends="chrome://browser/content/customizableui/toolbar.xml#toolbar">
+    <implementation>
+      <constructor>
+        this._setInactive();
+      </constructor>
+
+      <field name="_inactiveTimeout">null</field>
+
+      <field name="_contextMenuListener"><![CDATA[({
+        toolbar: this,
+        contextMenu: null,
+
+        get active () !!this.contextMenu,
+
+        init: function (event) {
+          let node = event.target;
+          while (node != this.toolbar) {
+            if (node.localName == "menupopup")
+              return;
+            node = node.parentNode;
+          }
+
+          let contextMenuId = this.toolbar.getAttribute("context");
+          if (!contextMenuId)
+            return;
+
+          this.contextMenu = document.getElementById(contextMenuId);
+          if (!this.contextMenu)
+            return;
+
+          this.contextMenu.addEventListener("popupshown", this, false);
+          this.contextMenu.addEventListener("popuphiding", this, false);
+          this.toolbar.addEventListener("mousemove", this, false);
+        },
+        handleEvent: function (event) {
+          switch (event.type) {
+            case "popupshown":
+              this.toolbar.removeEventListener("mousemove", this, false);
+              break;
+            case "popuphiding":
+            case "mousemove":
+              this.toolbar._setInactiveAsync();
+              this.toolbar.removeEventListener("mousemove", this, false);
+              this.contextMenu.removeEventListener("popuphiding", this, false);
+              this.contextMenu.removeEventListener("popupshown", this, false);
+              this.contextMenu = null;
+              break;
+          }
+        }
+      })]]></field>
+
+      <method name="_setInactive">
+        <body><![CDATA[
+          this.setAttribute("inactive", "true");
+        ]]></body>
+      </method>
+
+      <method name="_setInactiveAsync">
+        <body><![CDATA[
+          this._inactiveTimeout = setTimeout(function (self) {
+            if (self.getAttribute("autohide") == "true") {
+              self._inactiveTimeout = null;
+              self._setInactive();
+            }
+          }, 0, this);
+        ]]></body>
+      </method>
+
+      <method name="_setActive">
+        <body><![CDATA[
+          if (this._inactiveTimeout) {
+            clearTimeout(this._inactiveTimeout);
+            this._inactiveTimeout = null;
+          }
+          this.removeAttribute("inactive");
+        ]]></body>
+      </method>
+    </implementation>
+
+    <handlers>
+      <handler event="DOMMenuBarActive"     action="this._setActive();"/>
+      <handler event="popupshowing"         action="this._setActive();"/>
+      <handler event="mousedown" button="2" action="this._contextMenuListener.init(event);"/>
+      <handler event="DOMMenuBarInactive"><![CDATA[
+        if (!this._contextMenuListener.active)
+          this._setInactiveAsync();
+      ]]></handler>
+    </handlers>
+  </binding>
+
+  <binding id="toolbar-drag"
+           extends="chrome://browser/content/customizableui/toolbar.xml#toolbar">
+    <implementation>
+      <field name="_dragBindingAlive">true</field>
+      <constructor><![CDATA[
+        if (!this._draggableStarted) {
+          this._draggableStarted = true;
+          try {
+            let tmp = {};
+            Components.utils.import("resource://gre/modules/WindowDraggingUtils.jsm", tmp);
+            let draggableThis = new tmp.WindowDraggingElement(this);
+            draggableThis.mouseDownCheck = function(e) {
+              // Don't move while customizing.
+              return this._dragBindingAlive &&
+                     this.getAttribute("customizing") != "true";
+            };
+          } catch (e) {}
+        }
+      ]]></constructor>
+    </implementation>
+  </binding>
 </bindings>
