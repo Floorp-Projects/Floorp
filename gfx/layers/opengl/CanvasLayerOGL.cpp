@@ -33,7 +33,7 @@
 #include <OpenGL/OpenGL.h>
 #endif
 
-#ifdef MOZ_X11
+#ifdef GL_PROVIDER_GLX
 #include "gfxXlibSurface.h"
 #endif
 
@@ -126,7 +126,7 @@ CanvasLayerOGL::Initialize(const Data& aData)
   } else if (aData.mSurface) {
     mCanvasSurface = aData.mSurface;
     mNeedsYFlip = false;
-#if defined(MOZ_X11) && !defined(MOZ_PLATFORM_MAEMO)
+#if defined(GL_PROVIDER_GLX)
     if (aData.mSurface->GetType() == gfxASurface::SurfaceTypeXlib) {
         gfxXlibSurface *xsurf = static_cast<gfxXlibSurface*>(aData.mSurface);
         mPixmap = xsurf->GetGLXPixmap();
@@ -197,7 +197,7 @@ CanvasLayerOGL::UpdateSurface()
     return;
   }
 
-#if defined(MOZ_X11) && !defined(MOZ_PLATFORM_MAEMO)
+#if defined(GL_PROVIDER_GLX)
   if (mPixmap) {
     return;
   }
@@ -309,7 +309,7 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
     program = mOGLManager->GetProgram(mLayerProgram, GetMaskLayer());
   }
 
-#if defined(MOZ_X11) && !defined(MOZ_PLATFORM_MAEMO)
+#if defined(GL_PROVIDER_GLX)
   if (mPixmap && !mDelayedUpdates) {
     sDefGLXLib.BindTexImage(mPixmap);
   }
@@ -335,7 +335,7 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
     mOGLManager->BindAndDrawQuadWithTextureRect(program, drawRect, drawRect.Size());
   }
 
-#if defined(MOZ_X11) && !defined(MOZ_PLATFORM_MAEMO)
+#if defined(GL_PROVIDER_GLX)
   if (mPixmap && !mDelayedUpdates) {
     sDefGLXLib.ReleaseTexImage(mPixmap);
   }
