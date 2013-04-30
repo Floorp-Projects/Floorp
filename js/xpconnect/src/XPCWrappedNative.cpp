@@ -3007,8 +3007,12 @@ NS_IMETHODIMP XPCWrappedNative::GetXPConnect(nsIXPConnect * *aXPConnect)
 }
 
 /* XPCNativeInterface FindInterfaceWithMember (in jsval name); */
-NS_IMETHODIMP XPCWrappedNative::FindInterfaceWithMember(jsid name, nsIInterfaceInfo * *_retval)
+NS_IMETHODIMP XPCWrappedNative::FindInterfaceWithMember(jsid nameArg,
+                                                        nsIInterfaceInfo * *_retval)
 {
+    AutoJSContext cx;
+    RootedId name(cx, nameArg);
+
     XPCNativeInterface* iface;
     XPCNativeMember*  member;
 
@@ -3022,8 +3026,12 @@ NS_IMETHODIMP XPCWrappedNative::FindInterfaceWithMember(jsid name, nsIInterfaceI
 }
 
 /* XPCNativeInterface FindInterfaceWithName (in jsval name); */
-NS_IMETHODIMP XPCWrappedNative::FindInterfaceWithName(jsid name, nsIInterfaceInfo * *_retval)
+NS_IMETHODIMP XPCWrappedNative::FindInterfaceWithName(jsid nameArg,
+                                                      nsIInterfaceInfo * *_retval)
 {
+    AutoJSContext cx;
+    RootedId name(cx, nameArg);
+
     XPCNativeInterface* iface = GetSet()->FindNamedInterface(name);
     if (iface) {
         nsIInterfaceInfo* temp = iface->GetInterfaceInfo();
@@ -3036,8 +3044,11 @@ NS_IMETHODIMP XPCWrappedNative::FindInterfaceWithName(jsid name, nsIInterfaceInf
 
 /* [notxpcom] bool HasNativeMember (in jsval name); */
 NS_IMETHODIMP_(bool)
-XPCWrappedNative::HasNativeMember(jsid name)
+XPCWrappedNative::HasNativeMember(jsid nameArg)
 {
+    AutoJSContext cx;
+    RootedId name(cx, nameArg);
+
     XPCNativeMember *member = nullptr;
     uint16_t ignored;
     return GetSet()->FindMember(name, &member, &ignored) && !!member;
