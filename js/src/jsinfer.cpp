@@ -1397,14 +1397,14 @@ TypeConstraintSetElement::newType(JSContext *cx, TypeSet *source, Type type)
     }
 }
 
-static inline RawFunction
+static inline JSFunction *
 CloneCallee(JSContext *cx, HandleFunction fun, HandleScript script, jsbytecode *pc)
 {
     /*
      * Clone called functions at appropriate callsites to match interpreter
      * behavior.
      */
-    RawFunction callee = CloneFunctionAtCallsite(cx, fun, script, pc);
+    JSFunction *callee = CloneFunctionAtCallsite(cx, fun, script, pc);
     if (!callee)
         return NULL;
 

@@ -64,7 +64,7 @@ CanIonCompile(RawScript script, ExecutionMode cmode)
 }
 
 static inline bool
-CanIonCompile(RawFunction fun, ExecutionMode cmode)
+CanIonCompile(JSFunction *fun, ExecutionMode cmode)
 {
     return fun->isInterpreted() && CanIonCompile(fun->nonLazyScript(), cmode);
 }

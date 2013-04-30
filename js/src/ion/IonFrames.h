@@ -64,7 +64,7 @@ CalleeTokenToFunction(CalleeToken token)
     JS_ASSERT(CalleeTokenIsFunction(token));
     return (JSFunction *)token;
 }
-static inline RawFunction
+static inline JSFunction *
 CalleeTokenToParallelFunction(CalleeToken token)
 {
     JS_ASSERT(GetCalleeTokenTag(token) == CalleeToken_ParallelFunction);

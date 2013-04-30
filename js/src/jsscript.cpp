@@ -1936,7 +1936,7 @@ JSScript::enclosingScriptsCompiledSuccessfully() const
     RawObject enclosing = enclosingStaticScope();
     while (enclosing) {
         if (enclosing->isFunction()) {
-            RawFunction fun = enclosing->toFunction();
+            JSFunction *fun = enclosing->toFunction();
             if (!fun->hasScript())
                 return false;
             enclosing = fun->nonLazyScript()->enclosingStaticScope();

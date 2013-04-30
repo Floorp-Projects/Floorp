@@ -136,7 +136,7 @@ class SPSProfiler
     uint32_t             enabled_;
 
     const char *allocProfileString(JSContext *cx, RawScript script,
-                                   RawFunction function);
+                                   JSFunction *function);
     void push(const char *string, void *sp, RawScript script, jsbytecode *pc);
     void pop();
 
@@ -164,8 +164,8 @@ class SPSProfiler
      *   - exit: this function has ceased execution, and no further
      *           entries/exits will be made
      */
-    bool enter(JSContext *cx, RawScript script, RawFunction maybeFun);
-    void exit(JSContext *cx, RawScript script, RawFunction maybeFun);
+    bool enter(JSContext *cx, RawScript script, JSFunction *maybeFun);
+    void exit(JSContext *cx, RawScript script, JSFunction *maybeFun);
     void updatePC(RawScript script, jsbytecode *pc) {
         if (enabled() && *size_ - 1 < max_) {
             JS_ASSERT(*size_ > 0);
@@ -251,7 +251,7 @@ class SPSProfiler
 #endif
 
     void setProfilingStack(ProfileEntry *stack, uint32_t *size, uint32_t max);
-    const char *profileString(JSContext *cx, RawScript script, RawFunction maybeFun);
+    const char *profileString(JSContext *cx, RawScript script, JSFunction *maybeFun);
     void onScriptFinalized(RawScript script);
 
     /* meant to be used for testing, not recommended to call in normal code */
