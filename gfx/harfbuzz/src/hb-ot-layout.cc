@@ -70,9 +70,15 @@ _hb_ot_layout_create (hb_face_t *face)
   }
 
   for (unsigned int i = 0; i < layout->gsub_lookup_count; i++)
+  {
+    layout->gsub_digests[i].init ();
     layout->gsub->get_lookup (i).add_coverage (&layout->gsub_digests[i]);
+  }
   for (unsigned int i = 0; i < layout->gpos_lookup_count; i++)
+  {
+    layout->gpos_digests[i].init ();
     layout->gpos->get_lookup (i).add_coverage (&layout->gpos_digests[i]);
+  }
 
   return layout;
 }
@@ -666,11 +672,12 @@ hb_bool_t
 hb_ot_layout_substitute_lookup (hb_font_t    *font,
 				hb_buffer_t  *buffer,
 				unsigned int  lookup_index,
-				hb_mask_t     mask)
+				hb_mask_t     mask,
+				hb_bool_t     auto_zwj)
 {
   if (unlikely (lookup_index >= hb_ot_layout_from_face (font->face)->gsub_lookup_count)) return false;
 
-  OT::hb_apply_context_t c (font, buffer, mask);
+  OT::hb_apply_context_t c (0, font, buffer, mask, auto_zwj);
 
   const OT::SubstLookup& l = hb_ot_layout_from_face (font->face)->gsub->get_lookup (lookup_index);
 
@@ -715,11 +722,12 @@ hb_bool_t
 hb_ot_layout_position_lookup (hb_font_t    *font,
 			      hb_buffer_t  *buffer,
 			      unsigned int  lookup_index,
-			      hb_mask_t     mask)
+			      hb_mask_t     mask,
+			      hb_bool_t     auto_zwj)
 {
   if (unlikely (lookup_index >= hb_ot_layout_from_face (font->face)->gpos_lookup_count)) return false;
 
-  OT::hb_apply_context_t c (font, buffer, mask);
+  OT::hb_apply_context_t c (1, font, buffer, mask, auto_zwj);
 
   const OT::PosLookup& l = hb_ot_layout_from_face (font->face)->gpos->get_lookup (lookup_index);
 

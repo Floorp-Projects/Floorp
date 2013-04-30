@@ -38,7 +38,7 @@ namespace OT {
 
 
 
-#define TRACE_PROCESS(this) \
+#define TRACE_DISPATCH(this) \
 	hb_auto_trace_t<context_t::max_debug_depth, typename context_t::return_t> trace \
 	(&c->debug_depth, c->get_name (), this, HB_FUNC, \
 	 "");
@@ -60,7 +60,7 @@ struct hb_closure_context_t
   typedef hb_void_t return_t;
   typedef return_t (*recurse_func_t) (hb_closure_context_t *c, unsigned int lookup_index);
   template <typename T>
-  inline return_t process (const T &obj) { obj.closure (this); return HB_VOID; }
+  inline return_t dispatch (const T &obj) { obj.closure (this); return HB_VOID; }
   static return_t default_return_value (void) { return HB_VOID; }
   bool stop_sublookup_iteration (return_t r HB_UNUSED) const { return false; }
   return_t recurse (unsigned int lookup_index)
@@ -109,7 +109,7 @@ struct hb_would_apply_context_t
   static const unsigned int max_debug_depth = HB_DEBUG_WOULD_APPLY;
   typedef bool return_t;
   template <typename T>
-  inline return_t process (const T &obj) { return obj.would_apply (this); }
+  inline return_t dispatch (const T &obj) { return obj.would_apply (this); }
   static return_t default_return_value (void) { return false; }
   bool stop_sublookup_iteration (return_t r) const { return r; }
 
@@ -148,7 +148,7 @@ struct hb_collect_glyphs_context_t
   typedef hb_void_t return_t;
   typedef return_t (*recurse_func_t) (hb_collect_glyphs_context_t *c, unsigned int lookup_index);
   template <typename T>
-  inline return_t process (const T &obj) { obj.collect_glyphs (this); return HB_VOID; }
+  inline return_t dispatch (const T &obj) { obj.collect_glyphs (this); return HB_VOID; }
   static return_t default_return_value (void) { return HB_VOID; }
   bool stop_sublookup_iteration (return_t r HB_UNUSED) const { return false; }
   return_t recurse (unsigned int lookup_index)
@@ -214,7 +214,7 @@ struct hb_get_coverage_context_t
   static const unsigned int max_debug_depth = 0;
   typedef const Coverage &return_t;
   template <typename T>
-  inline return_t process (const T &obj) { return obj.get_coverage (); }
+  inline return_t dispatch (const T &obj) { return obj.get_coverage (); }
   static return_t default_return_value (void) { return Null(Coverage); }
 
   hb_get_coverage_context_t (void) :
@@ -241,7 +241,7 @@ struct hb_apply_context_t
   typedef bool return_t;
   typedef return_t (*recurse_func_t) (hb_apply_context_t *c, unsigned int lookup_index);
   template <typename T>
-  inline return_t process (const T &obj) { return obj.apply (this); }
+  inline return_t dispatch (const T &obj) { return obj.apply (this); }
   static return_t default_return_value (void) { return false; }
   bool stop_sublookup_iteration (return_t r) const { return r; }
   return_t recurse (unsigned int lookup_index)
@@ -255,83 +255,189 @@ struct hb_apply_context_t
     return ret;
   }
 
+  unsigned int table_index; /* GSUB/GPOS */
   hb_font_t *font;
   hb_face_t *face;
   hb_buffer_t *buffer;
   hb_direction_t direction;
   hb_mask_t lookup_mask;
+  bool auto_zwj;
   recurse_func_t recurse_func;
   unsigned int nesting_level_left;
   unsigned int lookup_props;
-  unsigned int property; /* propety of first glyph */
   const GDEF &gdef;
   bool has_glyph_classes;
   unsigned int debug_depth;
 
 
-  hb_apply_context_t (hb_font_t *font_,
+  hb_apply_context_t (unsigned int table_index_,
+		      hb_font_t *font_,
 		      hb_buffer_t *buffer_,
-		      hb_mask_t lookup_mask_) :
+		      hb_mask_t lookup_mask_,
+		      bool auto_zwj_) :
+			table_index (table_index_),
 			font (font_), face (font->face), buffer (buffer_),
 			direction (buffer_->props.direction),
 			lookup_mask (lookup_mask_),
+			auto_zwj (auto_zwj_),
 			recurse_func (NULL),
 			nesting_level_left (MAX_NESTING_LEVEL),
-			lookup_props (0), property (0),
+			lookup_props (0),
 			gdef (*hb_ot_layout_from_face (face)->gdef),
 			has_glyph_classes (gdef.has_glyph_classes ()),
 			debug_depth (0) {}
 
-  void set_recurse_func (recurse_func_t func) { recurse_func = func; }
-  void set_lookup_props (unsigned int lookup_props_) { lookup_props = lookup_props_; }
-  void set_lookup (const Lookup &l) { lookup_props = l.get_props (); }
+  inline void set_recurse_func (recurse_func_t func) { recurse_func = func; }
+  inline void set_lookup_props (unsigned int lookup_props_) { lookup_props = lookup_props_; }
+  inline void set_lookup (const Lookup &l) { lookup_props = l.get_props (); }
+
+  struct matcher_t
+  {
+    inline matcher_t (void) :
+	     lookup_props (0),
+	     ignore_zwnj (false),
+	     ignore_zwj (false),
+	     mask (-1),
+#define arg1(arg) (arg) /* Remove the macro to see why it's needed! */
+	     syllable arg1(0),
+#undef arg1
+	     match_func (NULL),
+	     match_data (NULL) {};
+
+    typedef bool (*match_func_t) (hb_codepoint_t glyph_id, const USHORT &value, const void *data);
+
+    inline void set_ignore_zwnj (bool ignore_zwnj_) { ignore_zwnj = ignore_zwnj_; }
+    inline void set_ignore_zwj (bool ignore_zwj_) { ignore_zwj = ignore_zwj_; }
+    inline void set_lookup_props (unsigned int lookup_props_) { lookup_props = lookup_props_; }
+    inline void set_mask (hb_mask_t mask_) { mask = mask_; }
+    inline void set_syllable (uint8_t syllable_)  { syllable = syllable_; }
+    inline void set_match_func (match_func_t match_func_,
+				const void *match_data_)
+    { match_func = match_func_; match_data = match_data_; }
+
+    enum may_match_t {
+      MATCH_NO,
+      MATCH_YES,
+      MATCH_MAYBE
+    };
+
+    inline may_match_t may_match (const hb_glyph_info_t &info,
+				  const USHORT          *glyph_data) const
+    {
+      if (!(info.mask & mask) ||
+	  (syllable && syllable != info.syllable ()))
+	return MATCH_NO;
+
+      if (match_func)
+        return match_func (info.codepoint, *glyph_data, match_data) ? MATCH_YES : MATCH_NO;
+
+      return MATCH_MAYBE;
+    }
+
+    enum may_skip_t {
+      SKIP_NO,
+      SKIP_YES,
+      SKIP_MAYBE
+    };
+
+    inline may_skip_t
+    may_skip (const hb_apply_context_t *c,
+	      const hb_glyph_info_t    &info) const
+    {
+      unsigned int property;
+
+      property = info.glyph_props();
+
+      if (!c->match_properties (info.codepoint, property, lookup_props))
+	return SKIP_YES;
+
+      if (unlikely (_hb_glyph_info_is_default_ignorable (&info) &&
+		    (ignore_zwnj || !_hb_glyph_info_is_zwnj (&info)) &&
+		    (ignore_zwj || !_hb_glyph_info_is_zwj (&info)) &&
+		    !is_a_ligature (info)))
+	return SKIP_MAYBE;
+
+      return SKIP_NO;
+    }
+
+    protected:
+    unsigned int lookup_props;
+    bool ignore_zwnj;
+    bool ignore_zwj;
+    hb_mask_t mask;
+    uint8_t syllable;
+    match_func_t match_func;
+    const void *match_data;
+  };
 
   struct skipping_forward_iterator_t
   {
     inline skipping_forward_iterator_t (hb_apply_context_t *c_,
 					unsigned int start_index_,
 					unsigned int num_items_,
-					bool context_match = false)
+					bool context_match = false) :
+					 idx (start_index_),
+					 c (c_),
+					 match_glyph_data (NULL),
+					 num_items (num_items_),
+					 end (c->buffer->len)
     {
-      c = c_;
-      idx = start_index_;
-      num_items = num_items_;
-      mask = context_match ? -1 : c->lookup_mask;
-      syllable = context_match ? 0 : c->buffer->cur().syllable ();
-      end = c->buffer->len;
+      matcher.set_lookup_props (c->lookup_props);
+      /* Ignore ZWNJ if we are matching GSUB context, or matching GPOS. */
+      matcher.set_ignore_zwnj (context_match || c->table_index == 1);
+      /* Ignore ZWJ if we are matching GSUB context, or matching GPOS, or if asked to. */
+      matcher.set_ignore_zwj (context_match || c->table_index == 1 || c->auto_zwj);
+      if (!context_match)
+	matcher.set_mask (c->lookup_mask);
+      matcher.set_syllable (start_index_ == c->buffer->idx ? c->buffer->cur().syllable () : 0);
     }
-    inline bool has_no_chance (void) const
+    inline void set_lookup_props (unsigned int lookup_props) { matcher.set_lookup_props (lookup_props); }
+    inline void set_syllable (unsigned int syllable) { matcher.set_syllable (syllable); }
+    inline void set_match_func (matcher_t::match_func_t match_func,
+				const void *match_data,
+				const USHORT glyph_data[])
     {
-      return unlikely (num_items && idx + num_items >= end);
+      matcher.set_match_func (match_func, match_data);
+      match_glyph_data = glyph_data;
     }
-    inline void reject (void)
-    {
-      num_items++;
-    }
-    inline bool next (unsigned int *property_out,
-		      unsigned int  lookup_props)
+
+    inline bool has_no_chance (void) const { return unlikely (num_items && idx + num_items >= end); }
+    inline void reject (void) { num_items++; match_glyph_data--; }
+    inline bool next (void)
     {
       assert (num_items > 0);
-      do
+      while (!has_no_chance ())
       {
-	if (has_no_chance ())
-	  return false;
 	idx++;
-      } while (c->should_skip (&c->buffer->info[idx], lookup_props, property_out));
-      num_items--;
-      return (c->buffer->info[idx].mask & mask) && (!syllable || syllable == c->buffer->info[idx].syllable ());
-    }
-    inline bool next (unsigned int *property_out = NULL)
-    {
-      return next (property_out, c->lookup_props);
+	const hb_glyph_info_t &info = c->buffer->info[idx];
+
+	matcher_t::may_skip_t skip = matcher.may_skip (c, info);
+	if (unlikely (skip == matcher_t::SKIP_YES))
+	  continue;
+
+	matcher_t::may_match_t match = matcher.may_match (info, match_glyph_data);
+	if (match == matcher_t::MATCH_YES ||
+	    (match == matcher_t::MATCH_MAYBE &&
+	     skip == matcher_t::SKIP_NO))
+	{
+	  num_items--;
+	  match_glyph_data++;
+	  return true;
+	}
+
+	if (skip == matcher_t::SKIP_NO)
+	  return false;
+      }
+      return false;
     }
 
     unsigned int idx;
     protected:
     hb_apply_context_t *c;
+    matcher_t matcher;
+    const USHORT *match_glyph_data;
+
     unsigned int num_items;
-    hb_mask_t mask;
-    uint8_t syllable;
     unsigned int end;
   };
 
@@ -340,47 +446,69 @@ struct hb_apply_context_t
     inline skipping_backward_iterator_t (hb_apply_context_t *c_,
 					 unsigned int start_index_,
 					 unsigned int num_items_,
-					 hb_mask_t mask_ = 0,
-					 bool match_syllable_ = true)
+					 bool context_match = false) :
+					  idx (start_index_),
+					  c (c_),
+					  match_glyph_data (NULL),
+					  num_items (num_items_)
     {
-      c = c_;
-      idx = start_index_;
-      num_items = num_items_;
-      mask = mask_ ? mask_ : c->lookup_mask;
-      syllable = match_syllable_ ? c->buffer->cur().syllable () : 0;
+      matcher.set_lookup_props (c->lookup_props);
+      /* Ignore ZWNJ if we are matching GSUB context, or matching GPOS. */
+      matcher.set_ignore_zwnj (context_match || c->table_index == 1);
+      /* Ignore ZWJ if we are matching GSUB context, or matching GPOS, or if asked to. */
+      matcher.set_ignore_zwj (context_match || c->table_index == 1 || c->auto_zwj);
+      if (!context_match)
+	matcher.set_mask (c->lookup_mask);
+      matcher.set_syllable (start_index_ == c->buffer->idx ? c->buffer->cur().syllable () : 0);
     }
-    inline bool has_no_chance (void) const
+    inline void set_lookup_props (unsigned int lookup_props) { matcher.set_lookup_props (lookup_props); }
+    inline void set_syllable (unsigned int syllable) { matcher.set_syllable (syllable); }
+    inline void set_match_func (matcher_t::match_func_t match_func,
+				const void *match_data,
+				const USHORT glyph_data[])
     {
-      return unlikely (idx < num_items);
+      matcher.set_match_func (match_func, match_data);
+      match_glyph_data = glyph_data;
     }
-    inline void reject (void)
-    {
-      num_items++;
-    }
-    inline bool prev (unsigned int *property_out,
-		      unsigned int  lookup_props)
+
+    inline bool has_no_chance (void) const { return unlikely (idx < num_items); }
+    inline void reject (void) { num_items++; }
+    inline bool prev (void)
     {
       assert (num_items > 0);
-      do
+      while (!has_no_chance ())
       {
-	if (has_no_chance ())
-	  return false;
 	idx--;
-      } while (c->should_skip (&c->buffer->out_info[idx], lookup_props, property_out));
-      num_items--;
-      return (c->buffer->out_info[idx].mask & mask) && (!syllable || syllable == c->buffer->out_info[idx].syllable ());
-    }
-    inline bool prev (unsigned int *property_out = NULL)
-    {
-      return prev (property_out, c->lookup_props);
+	const hb_glyph_info_t &info = c->buffer->out_info[idx];
+
+	matcher_t::may_skip_t skip = matcher.may_skip (c, info);
+
+	if (unlikely (skip == matcher_t::SKIP_YES))
+	  continue;
+
+	matcher_t::may_match_t match = matcher.may_match (info, match_glyph_data);
+	if (match == matcher_t::MATCH_YES ||
+	    (match == matcher_t::MATCH_MAYBE &&
+	     skip == matcher_t::SKIP_NO))
+	{
+	  num_items--;
+	  match_glyph_data++;
+	  return true;
+	}
+
+	if (skip == matcher_t::SKIP_NO)
+	  return false;
+      }
+      return false;
     }
 
     unsigned int idx;
     protected:
     hb_apply_context_t *c;
+    matcher_t matcher;
+    const USHORT *match_glyph_data;
+
     unsigned int num_items;
-    hb_mask_t mask;
-    uint8_t syllable;
   };
 
   inline bool
@@ -423,35 +551,13 @@ struct hb_apply_context_t
 
   inline bool
   check_glyph_property (hb_glyph_info_t *info,
-			unsigned int  lookup_props,
-			unsigned int *property_out) const
+			unsigned int  lookup_props) const
   {
     unsigned int property;
 
     property = info->glyph_props();
-    *property_out = property;
 
     return match_properties (info->codepoint, property, lookup_props);
-  }
-
-  inline bool
-  should_skip (hb_glyph_info_t *info,
-	       unsigned int  lookup_props,
-	       unsigned int *property_out) const
-  {
-    unsigned int property;
-
-    property = info->glyph_props();
-    if (property_out)
-      *property_out = property;
-
-    return !match_properties (info->codepoint, property, lookup_props);
-  }
-
-
-  inline bool should_skip_current_glyph (void) const
-  {
-    return should_skip (&buffer->cur(), lookup_props, NULL);
   }
 
   inline void set_class (hb_codepoint_t glyph_index, unsigned int class_guess) const
@@ -598,6 +704,7 @@ static inline bool match_input (hb_apply_context_t *c,
   TRACE_APPLY (NULL);
 
   hb_apply_context_t::skipping_forward_iterator_t skippy_iter (c, c->buffer->idx, count - 1);
+  skippy_iter.set_match_func (match_func, match_data, input);
   if (skippy_iter.has_no_chance ()) return TRACE_RETURN (false);
 
   /*
@@ -618,7 +725,7 @@ static inline bool match_input (hb_apply_context_t *c,
    *   ligate with a conjunct...)
    */
 
-  bool is_mark_ligature = !!(c->property & HB_OT_LAYOUT_GLYPH_PROPS_MARK);
+  bool is_mark_ligature = !!(c->buffer->cur().glyph_props() & HB_OT_LAYOUT_GLYPH_PROPS_MARK);
 
   unsigned int total_component_count = 0;
   total_component_count += get_lig_num_comps (c->buffer->cur());
@@ -628,11 +735,7 @@ static inline bool match_input (hb_apply_context_t *c,
 
   for (unsigned int i = 1; i < count; i++)
   {
-    unsigned int property;
-
-    if (!skippy_iter.next (&property)) return TRACE_RETURN (false);
-
-    if (likely (!match_func (c->buffer->info[skippy_iter.idx].codepoint, input[i - 1], match_data))) return TRACE_RETURN (false);
+    if (!skippy_iter.next ()) return TRACE_RETURN (false);
 
     unsigned int this_lig_id = get_lig_id (c->buffer->info[skippy_iter.idx]);
     unsigned int this_lig_comp = get_lig_comp (c->buffer->info[skippy_iter.idx]);
@@ -651,7 +754,7 @@ static inline bool match_input (hb_apply_context_t *c,
 	return TRACE_RETURN (false);
     }
 
-    is_mark_ligature = is_mark_ligature && (property & HB_OT_LAYOUT_GLYPH_PROPS_MARK);
+    is_mark_ligature = is_mark_ligature && (c->buffer->info[skippy_iter.idx].glyph_props() & HB_OT_LAYOUT_GLYPH_PROPS_MARK);
     total_component_count += get_lig_num_comps (c->buffer->info[skippy_iter.idx]);
   }
 
@@ -668,13 +771,17 @@ static inline bool match_input (hb_apply_context_t *c,
 }
 static inline void ligate_input (hb_apply_context_t *c,
 				 unsigned int count, /* Including the first glyph (not matched) */
-				 const USHORT input[] HB_UNUSED, /* Array of input values--start with second glyph */
+				 const USHORT input[], /* Array of input values--start with second glyph */
+				 match_func_t match_func,
+				 const void *match_data,
 				 hb_codepoint_t lig_glyph,
-				 match_func_t match_func HB_UNUSED,
-				 const void *match_data HB_UNUSED,
 				 bool is_mark_ligature,
 				 unsigned int total_component_count)
 {
+  hb_apply_context_t::skipping_forward_iterator_t skippy_iter (c, c->buffer->idx, count - 1);
+  skippy_iter.set_match_func (match_func, match_data, input);
+  if (skippy_iter.has_no_chance ()) return;
+
   /*
    * - If it *is* a mark ligature, we don't allocate a new ligature id, and leave
    *   the ligature to keep its old ligature id.  This will allow it to attach to
@@ -715,7 +822,9 @@ static inline void ligate_input (hb_apply_context_t *c,
 
   for (unsigned int i = 1; i < count; i++)
   {
-    while (c->should_skip_current_glyph ())
+    if (!skippy_iter.next ()) return;
+
+    while (c->buffer->idx < skippy_iter.idx)
     {
       if (!is_mark_ligature) {
 	unsigned int new_lig_comp = components_so_far - last_num_components +
@@ -755,17 +864,12 @@ static inline bool match_backtrack (hb_apply_context_t *c,
   TRACE_APPLY (NULL);
 
   hb_apply_context_t::skipping_backward_iterator_t skippy_iter (c, c->buffer->backtrack_len (), count, true);
-  if (skippy_iter.has_no_chance ())
-    return TRACE_RETURN (false);
+  skippy_iter.set_match_func (match_func, match_data, backtrack);
+  if (skippy_iter.has_no_chance ()) return TRACE_RETURN (false);
 
   for (unsigned int i = 0; i < count; i++)
-  {
     if (!skippy_iter.prev ())
       return TRACE_RETURN (false);
-
-    if (likely (!match_func (c->buffer->out_info[skippy_iter.idx].codepoint, backtrack[i], match_data)))
-      return TRACE_RETURN (false);
-  }
 
   return TRACE_RETURN (true);
 }
@@ -780,17 +884,12 @@ static inline bool match_lookahead (hb_apply_context_t *c,
   TRACE_APPLY (NULL);
 
   hb_apply_context_t::skipping_forward_iterator_t skippy_iter (c, c->buffer->idx + offset - 1, count, true);
-  if (skippy_iter.has_no_chance ())
-    return TRACE_RETURN (false);
+  skippy_iter.set_match_func (match_func, match_data, lookahead);
+  if (skippy_iter.has_no_chance ()) return TRACE_RETURN (false);
 
   for (unsigned int i = 0; i < count; i++)
-  {
     if (!skippy_iter.next ())
       return TRACE_RETURN (false);
-
-    if (likely (!match_func (c->buffer->info[skippy_iter.idx].codepoint, lookahead[i], match_data)))
-      return TRACE_RETURN (false);
-  }
 
   return TRACE_RETURN (true);
 }
@@ -824,6 +923,9 @@ static inline void recurse_lookups (context_t *c,
 
 static inline bool apply_lookup (hb_apply_context_t *c,
 				 unsigned int count, /* Including the first glyph */
+				 const USHORT input[], /* Array of input values--start with second glyph */
+				 match_func_t match_func,
+				 const void *match_data,
 				 unsigned int lookupCount,
 				 const LookupRecord lookupRecord[] /* Array of LookupRecords--in design order */)
 {
@@ -840,17 +942,46 @@ static inline bool apply_lookup (hb_apply_context_t *c,
    * and we jump out of it.  Not entirely disastrous.  So we don't check
    * for reverse lookup here.
    */
-  for (unsigned int i = 0; i < count; /* NOP */)
+
+  hb_apply_context_t::skipping_forward_iterator_t skippy_iter (c, c->buffer->idx, count - 1);
+  skippy_iter.set_match_func (match_func, match_data, input);
+  uint8_t syllable = c->buffer->cur().syllable();
+
+  unsigned int i = 0;
+  if (lookupCount && 0 == lookupRecord->sequenceIndex)
   {
-    if (unlikely (c->buffer->idx == end))
-      return TRACE_RETURN (true);
-    while (c->should_skip_current_glyph ())
+    unsigned int old_pos = c->buffer->idx;
+
+    /* Apply a lookup */
+    bool done = c->recurse (lookupRecord->lookupListIndex);
+
+    lookupRecord++;
+    lookupCount--;
+    /* Err, this is wrong if the lookup jumped over some glyphs */
+    i += c->buffer->idx - old_pos;
+
+    if (!done)
+      goto not_applied;
+    else
     {
-      /* No lookup applied for this index */
-      c->buffer->next_glyph ();
-      if (unlikely (c->buffer->idx == end))
-	return TRACE_RETURN (true);
+      /* Reinitialize iterator. */
+      hb_apply_context_t::skipping_forward_iterator_t tmp (c, c->buffer->idx - 1, count - i);
+      tmp.set_syllable (syllable);
+      skippy_iter = tmp;
     }
+  }
+  else
+  {
+  not_applied:
+    /* No lookup applied for this index */
+    c->buffer->next_glyph ();
+    i++;
+  }
+  while (i < count)
+  {
+    if (!skippy_iter.next ()) return TRACE_RETURN (true);
+    while (c->buffer->idx < skippy_iter.idx)
+      c->buffer->next_glyph ();
 
     if (lookupCount && i == lookupRecord->sequenceIndex)
     {
@@ -863,15 +994,20 @@ static inline bool apply_lookup (hb_apply_context_t *c,
       lookupCount--;
       /* Err, this is wrong if the lookup jumped over some glyphs */
       i += c->buffer->idx - old_pos;
-      if (unlikely (c->buffer->idx == end))
-	return TRACE_RETURN (true);
 
       if (!done)
-	goto not_applied;
+	goto not_applied2;
+      else
+      {
+        /* Reinitialize iterator. */
+	hb_apply_context_t::skipping_forward_iterator_t tmp (c, c->buffer->idx - 1, count - i);
+	tmp.set_syllable (syllable);
+	skippy_iter = tmp;
+      }
     }
     else
     {
-    not_applied:
+    not_applied2:
       /* No lookup applied for this index */
       c->buffer->next_glyph ();
       i++;
@@ -953,7 +1089,8 @@ static inline bool context_apply_lookup (hb_apply_context_t *c,
 		      inputCount, input,
 		      lookup_context.funcs.match, lookup_context.match_data)
       && apply_lookup (c,
-		       inputCount,
+		       inputCount, input,
+		       lookup_context.funcs.match, lookup_context.match_data,
 		       lookupCount, lookupRecord);
 }
 
@@ -1348,13 +1485,13 @@ struct ContextFormat3
 struct Context
 {
   template <typename context_t>
-  inline typename context_t::return_t process (context_t *c) const
+  inline typename context_t::return_t dispatch (context_t *c) const
   {
-    TRACE_PROCESS (this);
+    TRACE_DISPATCH (this);
     switch (u.format) {
-    case 1: return TRACE_RETURN (c->process (u.format1));
-    case 2: return TRACE_RETURN (c->process (u.format2));
-    case 3: return TRACE_RETURN (c->process (u.format3));
+    case 1: return TRACE_RETURN (c->dispatch (u.format1));
+    case 2: return TRACE_RETURN (c->dispatch (u.format2));
+    case 3: return TRACE_RETURN (c->dispatch (u.format3));
     default:return TRACE_RETURN (c->default_return_value ());
     }
   }
@@ -1489,7 +1626,8 @@ static inline bool chain_context_apply_lookup (hb_apply_context_t *c,
 			  lookup_context.funcs.match, lookup_context.match_data[2],
 			  lookahead_offset)
       && apply_lookup (c,
-		       inputCount,
+		       inputCount, input,
+		       lookup_context.funcs.match, lookup_context.match_data[1],
 		       lookupCount, lookupRecord);
 }
 
@@ -1963,13 +2101,13 @@ struct ChainContextFormat3
 struct ChainContext
 {
   template <typename context_t>
-  inline typename context_t::return_t process (context_t *c) const
+  inline typename context_t::return_t dispatch (context_t *c) const
   {
-    TRACE_PROCESS (this);
+    TRACE_DISPATCH (this);
     switch (u.format) {
-    case 1: return TRACE_RETURN (c->process (u.format1));
-    case 2: return TRACE_RETURN (c->process (u.format2));
-    case 3: return TRACE_RETURN (c->process (u.format3));
+    case 1: return TRACE_RETURN (c->dispatch (u.format1));
+    case 2: return TRACE_RETURN (c->dispatch (u.format2));
+    case 3: return TRACE_RETURN (c->dispatch (u.format3));
     default:return TRACE_RETURN (c->default_return_value ());
     }
   }
@@ -2043,9 +2181,9 @@ struct Extension
   }
 
   template <typename context_t>
-  inline typename context_t::return_t process (context_t *c) const
+  inline typename context_t::return_t dispatch (context_t *c) const
   {
-    return get_subtable<typename T::LookupSubTable> ().process (c, get_type ());
+    return get_subtable<typename T::LookupSubTable> ().dispatch (c, get_type ());
   }
 
   inline bool sanitize_self (hb_sanitize_context_t *c) {

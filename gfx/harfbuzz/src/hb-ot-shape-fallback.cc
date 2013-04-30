@@ -25,6 +25,7 @@
  */
 
 #include "hb-ot-shape-fallback-private.hh"
+#include "hb-ot-layout-gsubgpos-private.hh"
 
 static unsigned int
 recategorize_combining_class (hb_codepoint_t u,
@@ -406,4 +407,49 @@ _hb_ot_shape_fallback_position (const hb_ot_shape_plan_t *plan,
       last_cluster = buffer->info[i].cluster;
     }
   position_cluster (plan, font, buffer, start, count);
+}
+
+
+/* Performs old-style TrueType kerning. */
+void
+_hb_ot_shape_fallback_kern (const hb_ot_shape_plan_t *plan,
+			    hb_font_t *font,
+			    hb_buffer_t  *buffer)
+{
+  unsigned int count = buffer->len;
+  hb_mask_t kern_mask = plan->map.get_1_mask (HB_DIRECTION_IS_HORIZONTAL (buffer->props.direction) ?
+					      HB_TAG ('k','e','r','n') : HB_TAG ('v','k','r','n'));
+
+  OT::hb_apply_context_t c (1, font, buffer, kern_mask, true/*auto_zwj*/);
+  c.set_lookup_props (OT::LookupFlag::IgnoreMarks);
+
+  for (buffer->idx = 0; buffer->idx < count;)
+  {
+    OT::hb_apply_context_t::skipping_forward_iterator_t skippy_iter (&c, buffer->idx, 1);
+    if (!skippy_iter.next ())
+    {
+      buffer->idx++;
+      continue;
+    }
+
+    hb_position_t x_kern, y_kern, kern1, kern2;
+    font->get_glyph_kerning_for_direction (buffer->info[buffer->idx].codepoint,
+					   buffer->info[skippy_iter.idx].codepoint,
+					   buffer->props.direction,
+					   &x_kern, &y_kern);
+
+    kern1 = x_kern >> 1;
+    kern2 = x_kern - kern1;
+    buffer->pos[buffer->idx].x_advance += kern1;
+    buffer->pos[skippy_iter.idx].x_advance += kern2;
+    buffer->pos[skippy_iter.idx].x_offset += kern2;
+
+    kern1 = y_kern >> 1;
+    kern2 = y_kern - kern1;
+    buffer->pos[buffer->idx].y_advance += kern1;
+    buffer->pos[skippy_iter.idx].y_advance += kern2;
+    buffer->pos[skippy_iter.idx].y_offset += kern2;
+
+    buffer->idx = skippy_iter.idx;
+  }
 }

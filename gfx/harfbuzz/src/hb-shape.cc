@@ -38,10 +38,8 @@ static void
 parse_space (const char **pp, const char *end)
 {
   char c;
-#define ISSPACE(c) ((c)==' '||(c)=='\f'||(c)=='\n'||(c)=='\r'||(c)=='\t'||(c)=='\v')
   while (*pp < end && (c = **pp, ISSPACE (c)))
     (*pp)++;
-#undef ISSPACE
 }
 
 static hb_bool_t
@@ -60,16 +58,19 @@ static hb_bool_t
 parse_uint (const char **pp, const char *end, unsigned int *pv)
 {
   char buf[32];
-  strncpy (buf, *pp, end - *pp);
-  buf[ARRAY_LENGTH (buf) - 1] = '\0';
+  unsigned int len = MIN (ARRAY_LENGTH (buf) - 1, (unsigned int) (end - *pp));
+  strncpy (buf, *pp, len);
+  buf[len] = '\0';
 
   char *p = buf;
   char *pend = p;
   unsigned int v;
 
+  /* Intentionally use strtol instead of strtoul, such that
+   * -1 turns into "big number"... */
+  errno = 0;
   v = strtol (p, &pend, 0);
-
-  if (p == pend)
+  if (errno || p == pend)
     return false;
 
   *pv = v;
@@ -254,8 +255,6 @@ hb_shape_full (hb_font_t          *font,
     return true;
 
   assert (buffer->content_type == HB_BUFFER_CONTENT_TYPE_UNICODE);
-
-  buffer->guess_segment_properties ();
 
   hb_shape_plan_t *shape_plan = hb_shape_plan_create_cached (font->face, &buffer->props, features, num_features, shaper_list);
   hb_bool_t res = hb_shape_plan_execute (shape_plan, font, buffer, features, num_features);

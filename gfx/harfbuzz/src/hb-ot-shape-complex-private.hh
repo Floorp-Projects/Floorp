@@ -185,6 +185,20 @@ hb_ot_shape_complex_categorize (const hb_ot_shape_planner_t *planner)
       return &_hb_ot_complex_shaper_thai;
 
 
+#if 0
+    /* Note:
+     * Currently we don't have a separate Hangul shaper.  The default shaper handles
+     * Hangul by enabling jamo features.  We may want to implement a separate shaper
+     * in the future.  See this thread for details of what such a shaper would do:
+     *
+     *   http://lists.freedesktop.org/archives/harfbuzz/2013-April/003070.html
+     */
+    /* Unicode-1.1 additions */
+    case HB_SCRIPT_HANGUL:
+
+      return &_hb_ot_complex_shaper_hangul;
+#endif
+
 
     /* ^--- Add new shapers here */
 
