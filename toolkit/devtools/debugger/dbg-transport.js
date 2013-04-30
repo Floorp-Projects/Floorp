@@ -7,6 +7,62 @@
 "use strict";
 Components.utils.import("resource://gre/modules/NetUtil.jsm");
 
+/* Turn the error e into a string, without fail. */
+function safeErrorString(aError) {
+  try {
+    var s = aError.toString();
+    if (typeof s === "string")
+      return s;
+  } catch (ee) { }
+
+  return "<failed trying to find error description>";
+}
+
+/**
+ * Given a handler function that may throw, return an infallible handler
+ * function that calls the fallible handler, and logs any exceptions it
+ * throws.
+ *
+ * @param aHandler function
+ *      A handler function, which may throw.
+ * @param aName string
+ *      A name for aHandler, for use in error messages. If omitted, we use
+ *      aHandler.name.
+ *
+ * (SpiderMonkey does generate good names for anonymous functions, but we
+ * don't have a way to get at them from JavaScript at the moment.)
+ */
+function makeInfallible(aHandler, aName) {
+  if (!aName)
+    aName = aHandler.name;
+
+  return function (/* arguments */) {
+    try {
+      return aHandler.apply(this, arguments);
+    } catch (ex) {
+      let msg = "Handler function ";
+      if (aName) {
+        msg += aName + " ";
+      }
+      msg += "threw an exception: " + safeErrorString(ex);
+      if (ex.stack) {
+        msg += "\nCall stack:\n" + ex.stack;
+      }
+
+      dump(msg + "\n");
+
+      if (Cu.reportError) {
+        /*
+         * Note that the xpcshell test harness registers an observer for
+         * console messages, so when we're running tests, this will cause
+         * the test to quit.
+         */
+        Cu.reportError(msg);
+      }
+    }
+  }
+}
+
 /**
  * An adapter that handles data transfers between the debugger client and
  * server. It can work with both nsIPipe and nsIServerSocket transports so
@@ -90,11 +146,12 @@ DebuggerTransport.prototype = {
     }
   },
 
-  onOutputStreamReady: function DT_onOutputStreamReady(aStream) {
+  onOutputStreamReady:
+  makeInfallible(function DT_onOutputStreamReady(aStream) {
     let written = aStream.write(this._outgoing, this._outgoing.length);
     this._outgoing = this._outgoing.slice(written);
     this._flushOutgoing();
-  },
+  }, "DebuggerTransport.prototype.onOutputStreamReady"),
 
   /**
    * Initialize the input stream for reading. Once this method has been
@@ -109,29 +166,23 @@ DebuggerTransport.prototype = {
   },
 
   // nsIStreamListener
-  onStartRequest: function DT_onStartRequest(aRequest, aContext) {},
+  onStartRequest:
+  makeInfallible(function DT_onStartRequest(aRequest, aContext) {},
+                 "DebuggerTransport.prototype.onStartRequest"),
 
-  onStopRequest: function DT_onStopRequest(aRequest, aContext, aStatus) {
+  onStopRequest:
+  makeInfallible(function DT_onStopRequest(aRequest, aContext, aStatus) {
     this.close();
     this.hooks.onClosed(aStatus);
-  },
+  }, "DebuggerTransport.prototype.onStopRequest"),
 
-  onDataAvailable: function DT_onDataAvailable(aRequest, aContext,
-                                                aStream, aOffset, aCount) {
-    try {
-      this._incoming += NetUtil.readInputStreamToString(aStream,
-                                                        aStream.available());
-      while (this._processIncoming()) {};
-    } catch(e) {
-      let msg = "Unexpected error reading from debugging connection: " + e + " - " + e.stack;
-      if (Cu.reportError) {
-        Cu.reportError(msg);
-      }
-      dump(msg + "\n");
-      this.close();
-      return;
-    }
-  },
+  onDataAvailable:
+  makeInfallible(function DT_onDataAvailable(aRequest, aContext,
+                                             aStream, aOffset, aCount) {
+    this._incoming += NetUtil.readInputStreamToString(aStream,
+                                                      aStream.available());
+    while (this._processIncoming()) {};
+  }, "DebuggerTransport.prototype.onDataAvailable"),
 
   /**
    * Process incoming packets. Returns true if a packet has been received, either
@@ -170,20 +221,11 @@ DebuggerTransport.prototype = {
       return true;
     }
 
-    try {
-      dumpn("Got: " + packet);
-      let self = this;
-      Services.tm.currentThread.dispatch({run: function() {
-        self.hooks.onPacket(parsed);
-      }}, 0);
-    } catch(e) {
-      let msg = "Error handling incoming packet: " + e + " - " + e.stack;
-      if (Cu.reportError) {
-        Cu.reportError(msg);
-      }
-      dump(msg + "\n");
-      dumpn("Packet was: " + JSON.stringify(packet));
-    }
+    dumpn("Got: " + packet);
+    let self = this;
+    Services.tm.currentThread.dispatch(makeInfallible(function() {
+      self.hooks.onPacket(parsed);
+    }, "DebuggerTransport instance's this.hooks.onPacket"), 0);
 
     return true;
   }
@@ -220,32 +262,23 @@ LocalDebuggerTransport.prototype = {
    * endpoint.
    */
   send: function LDT_send(aPacket) {
-    try {
-      let serial = this._serial.count++;
-      if (wantLogging) {
-        if (aPacket.to) {
-          dumpn("Packet " + serial + " sent to " + uneval(aPacket.to));
-        } else if (aPacket.from) {
-          dumpn("Packet " + serial + " sent from " + uneval(aPacket.from));
-        }
+    let serial = this._serial.count++;
+    if (wantLogging) {
+      if (aPacket.to) {
+        dumpn("Packet " + serial + " sent to " + uneval(aPacket.to));
+      } else if (aPacket.from) {
+        dumpn("Packet " + serial + " sent from " + uneval(aPacket.from));
       }
-      this._deepFreeze(aPacket);
-      let other = this.other;
-      Services.tm.currentThread.dispatch(function() {
-        // Avoid the cost of JSON.stringify() when logging is disabled.
-        if (wantLogging) {
-          dumpn("Received packet " + serial + ": " + JSON.stringify(aPacket, null, 2));
-        }
-        other.hooks.onPacket(aPacket);
-      }, 0);
-    } catch(e) {
-      let msg = "Error handling incoming packet: " + e + " - " + e.stack;
-      if (Cu.reportError) {
-        Cu.reportError(msg);
-      }
-      dump(msg + "\n");
-      dump("Packet was: " + JSON.stringify(aPacket) + "\n");
     }
+    this._deepFreeze(aPacket);
+    let other = this.other;
+    Services.tm.currentThread.dispatch(makeInfallible(function() {
+      // Avoid the cost of JSON.stringify() when logging is disabled.
+      if (wantLogging) {
+        dumpn("Received packet " + serial + ": " + JSON.stringify(aPacket, null, 2));
+      }
+      other.hooks.onPacket(aPacket);
+    }, "LocalDebuggerTransport instance's this.other.hooks.onPacket"), 0);
   },
 
   /**
@@ -283,6 +316,4 @@ LocalDebuggerTransport.prototype = {
       }
     }
   }
-
-}
-
+};

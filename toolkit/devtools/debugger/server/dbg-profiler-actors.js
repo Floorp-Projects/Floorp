@@ -98,7 +98,7 @@ ProfilerActor.prototype = {
     }
     return { unregistered: unregistered }
   },
-  observe: function(aSubject, aTopic, aData) {
+  observe: makeInfallible(function(aSubject, aTopic, aData) {
     function unWrapper(obj) {
       if (obj && typeof obj == "object" && ("wrappedJSObject" in obj)) {
         obj = obj.wrappedJSObject;
@@ -128,7 +128,7 @@ ProfilerActor.prototype = {
                      data: data.unwrapped });
     data.fixup();
     subject.fixup();
-  },
+  }, "ProfilerActor.prototype.observe"),
 };
 
 /**
