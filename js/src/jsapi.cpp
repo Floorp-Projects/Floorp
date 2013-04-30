@@ -4490,7 +4490,7 @@ JS_DeleteProperty(JSContext *cx, JSObject *objArg, const char *name)
     return JS_DeleteProperty2(cx, objArg, name, &junk);
 }
 
-static RawShape
+static Shape *
 LastConfigurableShape(JSObject *obj)
 {
     for (Shape::Range<NoGC> r(obj->lastProperty()); !r.empty(); r.popFront()) {
@@ -4603,7 +4603,7 @@ prop_iter_trace(JSTracer *trc, RawObject obj)
          * barrier here because the pointer is updated via setPrivate, which
          * always takes a barrier.
          */
-        RawShape tmp = static_cast<RawShape>(pdata);
+        Shape *tmp = static_cast<Shape *>(pdata);
         MarkShapeUnbarriered(trc, &tmp, "prop iter shape");
         obj->setPrivateUnbarriered(tmp);
     } else {
@@ -4675,7 +4675,7 @@ JS_NextProperty(JSContext *cx, JSObject *iterobjArg, jsid *idp)
     if (i < 0) {
         /* Native case: private data is a property tree node pointer. */
         JS_ASSERT(iterobj->getParent()->isNative());
-        RawShape shape = static_cast<RawShape>(iterobj->getPrivate());
+        Shape *shape = static_cast<Shape *>(iterobj->getPrivate());
 
         while (shape->previous() && !shape->enumerable())
             shape = shape->previous();
@@ -4684,7 +4684,7 @@ JS_NextProperty(JSContext *cx, JSObject *iterobjArg, jsid *idp)
             JS_ASSERT(shape->isEmptyShape());
             *idp = JSID_VOID;
         } else {
-            iterobj->setPrivateGCThing(const_cast<RawShape>(shape->previous().get()));
+            iterobj->setPrivateGCThing(const_cast<Shape *>(shape->previous().get()));
             *idp = shape->propid();
         }
     } else {

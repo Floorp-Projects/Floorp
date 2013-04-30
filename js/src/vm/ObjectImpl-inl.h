@@ -52,13 +52,13 @@ js::ObjectImpl::getTaggedProto() const
     return TaggedProto(getProto());
 }
 
-inline js::RawShape
+inline js::Shape *
 js::ObjectImpl::nativeLookup(JSContext *cx, PropertyId pid)
 {
     return nativeLookup(cx, pid.asId());
 }
 
-inline js::RawShape
+inline js::Shape *
 js::ObjectImpl::nativeLookup(JSContext *cx, PropertyName *name)
 {
     return nativeLookup(cx, NameToId(name));

@@ -63,7 +63,7 @@ StaticScopeIter::hasDynamicScopeObject() const
            : obj->toFunction()->isHeavyweight();
 }
 
-RawShape
+Shape *
 StaticScopeIter::scopeShape() const
 {
     JS_ASSERT(hasDynamicScopeObject());
@@ -97,7 +97,7 @@ StaticScopeIter::funScript() const
 
 /*****************************************************************************/
 
-RawShape
+Shape *
 js::ScopeCoordinateToStaticScopeShape(JSContext *cx, JSScript *script, jsbytecode *pc)
 {
     JS_ASSERT(pc >= script->code && pc < script->code + script->length);
@@ -682,7 +682,7 @@ StaticBlockObject::create(JSContext *cx)
     return &obj->asStaticBlock();
 }
 
-/* static */ RawShape
+/* static */ Shape *
 StaticBlockObject::addVar(JSContext *cx, Handle<StaticBlockObject*> block, HandleId id,
                           int index, bool *redeclared)
 {
@@ -1223,7 +1223,7 @@ class DebugScopeProxy : public BaseProxyHandler
         /* Handle unaliased let and catch bindings at block scope. */
         if (scope->isClonedBlock()) {
             Rooted<ClonedBlockObject *> block(cx, &scope->asClonedBlock());
-            RawShape shape = block->lastProperty()->search(cx, id);
+            Shape *shape = block->lastProperty()->search(cx, id);
             if (!shape)
                 return false;
 

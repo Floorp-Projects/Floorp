@@ -5373,10 +5373,10 @@ class MGetPropertyPolymorphic
 {
     struct Entry {
         // The shape to guard against.
-        RawShape objShape;
+        Shape *objShape;
 
         // The property to laod.
-        RawShape shape;
+        Shape *shape;
     };
 
     Vector<Entry, 4, IonAllocPolicy> shapes_;
@@ -5412,7 +5412,7 @@ class MGetPropertyPolymorphic
     TypePolicy *typePolicy() {
         return this;
     }
-    bool addShape(RawShape objShape, RawShape shape) {
+    bool addShape(Shape *objShape, Shape *shape) {
         Entry entry;
         entry.objShape = objShape;
         entry.shape = shape;
@@ -5421,10 +5421,10 @@ class MGetPropertyPolymorphic
     size_t numShapes() const {
         return shapes_.length();
     }
-    RawShape objShape(size_t i) const {
+    Shape *objShape(size_t i) const {
         return shapes_[i].objShape;
     }
-    RawShape shape(size_t i) const {
+    Shape *shape(size_t i) const {
         return shapes_[i].shape;
     }
     MDefinition *obj() const {
@@ -5445,10 +5445,10 @@ class MSetPropertyPolymorphic
 {
     struct Entry {
         // The shape to guard against.
-        RawShape objShape;
+        Shape *objShape;
 
         // The property to laod.
-        RawShape shape;
+        Shape *shape;
     };
 
     Vector<Entry, 4, IonAllocPolicy> shapes_;
@@ -5470,7 +5470,7 @@ class MSetPropertyPolymorphic
     TypePolicy *typePolicy() {
         return this;
     }
-    bool addShape(RawShape objShape, RawShape shape) {
+    bool addShape(Shape *objShape, Shape *shape) {
         Entry entry;
         entry.objShape = objShape;
         entry.shape = shape;
@@ -5479,10 +5479,10 @@ class MSetPropertyPolymorphic
     size_t numShapes() const {
         return shapes_.length();
     }
-    RawShape objShape(size_t i) const {
+    Shape *objShape(size_t i) const {
         return shapes_[i].objShape;
     }
-    RawShape shape(size_t i) const {
+    Shape *shape(size_t i) const {
         return shapes_[i].shape;
     }
     MDefinition *obj() const {
@@ -5911,7 +5911,7 @@ class MGuardShape
     MDefinition *obj() const {
         return getOperand(0);
     }
-    const RawShape shape() const {
+    const Shape *shape() const {
         return shape_;
     }
     BailoutKind bailoutKind() const {

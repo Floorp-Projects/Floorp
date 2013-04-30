@@ -7100,7 +7100,7 @@ IonBuilder::invalidatedIdempotentCache()
 }
 
 bool
-IonBuilder::loadSlot(MDefinition *obj, RawShape shape, MIRType rvalType,
+IonBuilder::loadSlot(MDefinition *obj, Shape *shape, MIRType rvalType,
                      bool barrier, types::StackTypeSet *types)
 {
     JS_ASSERT(shape->hasDefaultGetter());
@@ -7127,7 +7127,7 @@ IonBuilder::loadSlot(MDefinition *obj, RawShape shape, MIRType rvalType,
 }
 
 bool
-IonBuilder::storeSlot(MDefinition *obj, RawShape shape, MDefinition *value, bool needsBarrier)
+IonBuilder::storeSlot(MDefinition *obj, Shape *shape, MDefinition *value, bool needsBarrier)
 {
     JS_ASSERT(shape->hasDefaultSetter());
     JS_ASSERT(shape->writable());
@@ -7368,7 +7368,7 @@ IonBuilder::getPropTryInlineAccess(bool *emitted, HandlePropertyName name, Handl
         return true;
 
     Vector<Shape *> shapes(cx);
-    if (RawShape objShape = mjit::GetPICSingleShape(cx, script(), pc, info().constructing())) {
+    if (Shape *objShape = mjit::GetPICSingleShape(cx, script(), pc, info().constructing())) {
         if (!shapes.append(objShape))
             return false;
     } else {
@@ -7389,10 +7389,10 @@ IonBuilder::getPropTryInlineAccess(bool *emitted, HandlePropertyName name, Handl
         // instructions.
         spew("Inlining monomorphic GETPROP");
 
-        RawShape objShape = shapes[0];
+        Shape *objShape = shapes[0];
         obj = addShapeGuard(obj, objShape, Bailout_CachedShapeGuard);
 
-        RawShape shape = objShape->search(cx, id);
+        Shape *shape = objShape->search(cx, id);
         JS_ASSERT(shape);
 
         if (!loadSlot(obj, shape, rvalType, barrier, types))
@@ -7406,8 +7406,8 @@ IonBuilder::getPropTryInlineAccess(bool *emitted, HandlePropertyName name, Handl
         current->push(load);
 
         for (size_t i = 0; i < shapes.length(); i++) {
-            RawShape objShape = shapes[i];
-            RawShape shape =  objShape->search(cx, id);
+            Shape *objShape = shapes[i];
+            Shape *shape =  objShape->search(cx, id);
             JS_ASSERT(shape);
             if (!load->addShape(objShape, shape))
                 return false;
@@ -7568,7 +7568,7 @@ IonBuilder::jsop_setprop(HandlePropertyName name)
     }
 
     Vector<Shape *> shapes(cx);
-    if (RawShape objShape = mjit::GetPICSingleShape(cx, script(), pc, info().constructing())) {
+    if (Shape *objShape = mjit::GetPICSingleShape(cx, script(), pc, info().constructing())) {
         if (!shapes.append(objShape))
             return false;
     } else {
@@ -7584,10 +7584,10 @@ IonBuilder::jsop_setprop(HandlePropertyName name)
             // long as the shape is not in dictionary mode. We cannot be sure
             // that the shape is still a lastProperty, and calling Shape::search
             // on dictionary mode shapes that aren't lastProperty is invalid.
-            RawShape objShape = shapes[0];
+            Shape *objShape = shapes[0];
             obj = addShapeGuard(obj, objShape, Bailout_CachedShapeGuard);
 
-            RawShape shape = objShape->search(cx, NameToId(name));
+            Shape *shape = objShape->search(cx, NameToId(name));
             JS_ASSERT(shape);
 
             bool needsBarrier = objTypes->propertyNeedsBarrier(cx, id);
@@ -7601,8 +7601,8 @@ IonBuilder::jsop_setprop(HandlePropertyName name)
             current->push(value);
 
             for (size_t i = 0; i < shapes.length(); i++) {
-                RawShape objShape = shapes[i];
-                RawShape shape =  objShape->search(cx, id);
+                Shape *objShape = shapes[i];
+                Shape *shape =  objShape->search(cx, id);
                 JS_ASSERT(shape);
                 if (!ins->addShape(objShape, shape))
                     return false;
@@ -8017,7 +8017,7 @@ IonBuilder::addBoundsCheck(MDefinition *index, MDefinition *length)
 }
 
 MInstruction *
-IonBuilder::addShapeGuard(MDefinition *obj, const RawShape shape, BailoutKind bailoutKind)
+IonBuilder::addShapeGuard(MDefinition *obj, Shape *const shape, BailoutKind bailoutKind)
 {
     MGuardShape *guard = MGuardShape::New(obj, shape, bailoutKind);
     current->add(guard);

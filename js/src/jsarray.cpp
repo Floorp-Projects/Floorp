@@ -133,7 +133,7 @@ js::StringIsArrayIndex(JSLinearString *str, uint32_t *indexp)
     return false;
 }
 
-RawShape
+Shape *
 js::GetDenseArrayShape(JSContext *cx, HandleObject globalObj)
 {
     JS_ASSERT(globalObj);

@@ -131,7 +131,7 @@ BaseShape::matchesGetterSetter(PropertyOp rawGetter, StrictPropertyOp rawSetter)
 }
 
 inline
-StackBaseShape::StackBaseShape(RawShape shape)
+StackBaseShape::StackBaseShape(Shape *shape)
   : flags(shape->getObjectFlags()),
     clasp(shape->getObjectClass()),
     parent(shape->getObjectParent()),
@@ -244,7 +244,7 @@ StackShape::hash() const
 }
 
 inline bool
-Shape::matches(const RawShape other) const
+Shape::matches(const Shape *other) const
 {
     return propid_.get() == other->propid_.get() &&
            matchesParamsAfterId(other->base(), other->maybeSlot(), other->attrs,
@@ -339,7 +339,7 @@ Shape::set(JSContext* cx, HandleObject obj, HandleObject receiver, bool strict, 
 }
 
 inline void
-Shape::setParent(RawShape p)
+Shape::setParent(Shape *p)
 {
     JS_ASSERT_IF(p && !p->hasMissingSlot() && !inDictionary(),
                  p->maybeSlot() <= maybeSlot());
@@ -405,7 +405,7 @@ EmptyShape::EmptyShape(UnownedBaseShape *base, uint32_t nfixed)
 }
 
 inline void
-Shape::writeBarrierPre(RawShape shape)
+Shape::writeBarrierPre(Shape *shape)
 {
 #ifdef JSGC_INCREMENTAL
     if (!shape || !shape->runtime()->needsBarrier())
@@ -413,7 +413,7 @@ Shape::writeBarrierPre(RawShape shape)
 
     JS::Zone *zone = shape->zone();
     if (zone->needsBarrier()) {
-        RawShape tmp = shape;
+        Shape *tmp = shape;
         MarkShapeUnbarriered(zone->barrierTracer(), &tmp, "write barrier");
         JS_ASSERT(tmp == shape);
     }
@@ -421,17 +421,17 @@ Shape::writeBarrierPre(RawShape shape)
 }
 
 inline void
-Shape::writeBarrierPost(RawShape shape, void *addr)
+Shape::writeBarrierPost(Shape *shape, void *addr)
 {
 }
 
 inline void
-Shape::readBarrier(RawShape shape)
+Shape::readBarrier(Shape *shape)
 {
 #ifdef JSGC_INCREMENTAL
     JS::Zone *zone = shape->zone();
     if (zone->needsBarrier()) {
-        RawShape tmp = shape;
+        Shape *tmp = shape;
         MarkShapeUnbarriered(zone->barrierTracer(), &tmp, "read barrier");
         JS_ASSERT(tmp == shape);
     }

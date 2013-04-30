@@ -939,7 +939,7 @@ CodeGenerator::emitGetPropertyPolymorphic(LInstruction *ins, Register obj, Regis
         Label next;
         masm.branchPtr(Assembler::NotEqual, scratch, ImmGCPtr(mir->objShape(i)), &next);
 
-        RawShape shape = mir->shape(i);
+        Shape *shape = mir->shape(i);
         if (shape->slot() < shape->numFixedSlots()) {
             // Fixed slot.
             masm.loadTypedOrValue(Address(obj, JSObject::getFixedSlotOffset(shape->slot())),
@@ -996,7 +996,7 @@ CodeGenerator::emitSetPropertyPolymorphic(LInstruction *ins, Register obj, Regis
         Label next;
         masm.branchPtr(Assembler::NotEqual, scratch, ImmGCPtr(mir->objShape(i)), &next);
 
-        RawShape shape = mir->shape(i);
+        Shape *shape = mir->shape(i);
         if (shape->slot() < shape->numFixedSlots()) {
             // Fixed slot.
             Address addr(obj, JSObject::getFixedSlotOffset(shape->slot()));

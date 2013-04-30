@@ -265,7 +265,7 @@ RegExpObject::createShared(JSContext *cx, RegExpGuard *g)
     return true;
 }
 
-RawShape
+Shape *
 RegExpObject::assignInitialShape(JSContext *cx)
 {
     JS_ASSERT(isRegExp());
