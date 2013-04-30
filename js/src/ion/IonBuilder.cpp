@@ -5409,7 +5409,7 @@ IonBuilder::newPendingLoopHeader(MBasicBlock *predecessor, jsbytecode *pc, bool 
             bool haveValue = false;
             Value existingValue;
             {
-                uint32_t arg = i - info().firstActualArgSlot();
+                uint32_t arg = i - info().firstArgSlot();
                 uint32_t var = i - info().firstLocalSlot();
                 if (arg < info().nargs()) {
                     if (!script()->formalIsAliased(arg)) {
