@@ -12,6 +12,7 @@
     <Gecko.FaviconView android:id="@+id/last_tab_favicon"
                        android:layout_width="@dimen/favicon_bg"
                        android:layout_height="@dimen/favicon_bg"
+                       android:layout_marginBottom="6dip"
                        android:layout_marginLeft="@dimen/abouthome_rowitem_left_padding"
                        android:layout_centerVertical="true"
                        android:minWidth="@dimen/favicon_bg"
