@@ -26,7 +26,6 @@ class JSDependentString;
 class JSUndependedString;
 class JSExtensibleString;
 class JSExternalString;
-ForwardDeclareJS(LinearString);
 class JSStableString;
 ForwardDeclareJS(InlineString);
 class JSRope;
