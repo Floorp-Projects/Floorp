@@ -312,7 +312,8 @@ imgStatusTracker::imgStatusTracker(const imgStatusTracker& aOther)
     mState(aOther.mState),
     mImageStatus(aOther.mImageStatus),
     mIsMultipart(aOther.mIsMultipart),
-    mHadLastPart(aOther.mHadLastPart)
+    mHadLastPart(aOther.mHadLastPart),
+    mHasBeenDecoded(aOther.mHasBeenDecoded)
     // Note: we explicitly don't copy several fields:
     //  - mRequestRunnable, because it won't be nulled out when the
     //    mRequestRunnable's Run function eventually gets called.
