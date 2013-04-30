@@ -840,6 +840,9 @@ let test_system_shutdown = maketest("system_shutdown", function system_shutdown(
         };
         waitObservation.promise.then(cleanUp, cleanUp);
 
+        // Measure how long it takes to receive a log message.
+        let logStart;
+
         let listener = {
           observe: function (aMessage) {
             test.info("Waiting for a console message mentioning resource " + resource);
@@ -861,6 +864,8 @@ let test_system_shutdown = maketest("system_shutdown", function system_shutdown(
                   "be activated 2 times.");
               }
               test.ok(true, "Leaked resource is correctly listed in the log.");
+              test.info(
+                "It took " + (Date.now() - logStart) + "MS to receive a log message.");
               setTimeout(function() { waitObservation.resolve(); });
             } else {
               test.info("This log didn't list the expected resource: " + resource + "\ngot " + aMessage.message);
@@ -868,13 +873,14 @@ let test_system_shutdown = maketest("system_shutdown", function system_shutdown(
           }
         };
         Services.console.registerListener(listener);
+        logStart = Date.now();
         f();
         // If listener does not resolve webObservation in timely manner (100MS),
         // reject it.
         setTimeout(function() {
           test.info("waitObservation timeout exceeded.");
           waitObservation.reject();
-        }, 100);
+        }, 500);
         yield waitObservation.promise;
       });
     }
@@ -890,9 +896,9 @@ let test_system_shutdown = maketest("system_shutdown", function system_shutdown(
         Services.obs.notifyObservers(null, "test.osfile.web-workers-shutdown",
           null);
       });
-      test.ok(true, "Log messages observervation promise resolved as expected.");
+      test.ok(true, "Log messages observation promise resolved as expected.");
     } catch (ex) {
-      test.fail("Log messages observervation promise was rejected.");
+      test.fail("Log messages observation promise was rejected.");
     }
     yield iterator.close();
 
@@ -905,10 +911,10 @@ let test_system_shutdown = maketest("system_shutdown", function system_shutdown(
               null);
           });
           test.ok(shouldResolve,
-            "Log message observervation promise resolved as expected.");
+            "Log message observation promise resolved as expected.");
         } catch (ex) {
           test.ok(!shouldResolve,
-            "Log message observervation promise was rejected as expected.");
+            "Log message observation promise was rejected as expected.");
         }
         yield openedFile.close();
       });
