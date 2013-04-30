@@ -2551,7 +2551,7 @@ nsHttpConnectionMgr::OnMsgSpeculativeConnect(int32_t, void *param)
     if (preferredEntry)
         ent = preferredEntry;
 
-    if (mNumHalfOpenConns <= gHttpHandler->ParallelSpeculativeConnectLimit() &&
+    if (mNumHalfOpenConns < gHttpHandler->ParallelSpeculativeConnectLimit() &&
         !ent->mIdleConns.Length() && !RestrictConnections(ent) &&
         !AtActiveConnectionLimit(ent, trans->Caps())) {
         CreateTransport(ent, trans, trans->Caps(), true);
