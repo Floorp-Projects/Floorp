@@ -692,6 +692,11 @@ GrallocTextureHostOGL::SwapTexturesImpl(const SurfaceDescriptor& aImage,
 {
   MOZ_ASSERT(aImage.type() == SurfaceDescriptor::TSurfaceDescriptorGralloc);
 
+  if (mBuffer) {
+    // only done for hacky fix in gecko 23 for bug 862324.
+    RegisterTextureHostAtGrallocBufferActor(nullptr, *mBuffer);
+  }
+
   const SurfaceDescriptorGralloc& desc = aImage.get_SurfaceDescriptorGralloc();
   mGraphicBuffer = GrallocBufferActor::GetFrom(desc);
   mFormat = SurfaceFormatForAndroidPixelFormat(mGraphicBuffer->getPixelFormat());
