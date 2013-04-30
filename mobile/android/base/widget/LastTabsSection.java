@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.widget;
 
+import org.mozilla.gecko.Favicons;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.SessionParser;
@@ -13,6 +14,7 @@ import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.util.GamepadUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UiAsyncTask;
+import org.mozilla.gecko.widget.FaviconView;
 
 import android.content.ContentResolver;
 import android.content.Context;
@@ -21,7 +23,6 @@ import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -122,7 +123,9 @@ public class LastTabsSection extends AboutHomeSection {
         ((TextView) tabView.findViewById(R.id.last_tab_title)).setText(tab.title);
         ((TextView) tabView.findViewById(R.id.last_tab_url)).setText(url);
         if (favicon != null) {
-            ((ImageView) tabView.findViewById(R.id.last_tab_favicon)).setImageBitmap(favicon);
+            FaviconView faviconView = (FaviconView) tabView.findViewById(R.id.last_tab_favicon);
+            Bitmap bitmap = Favicons.getInstance().scaleImage(favicon);
+            faviconView.setImageBitmap(favicon);
         }
 
         tabView.setOnClickListener(new View.OnClickListener() {

@@ -221,6 +221,7 @@ FENNEC_JAVA_FILES = \
   widget/AboutHomeSection.java \
   widget/AddonsSection.java \
   widget/DateTimePicker.java \
+  widget/FaviconView.java \
   widget/IconTabWidget.java \
   widget/LastTabsSection.java \
   widget/LinkTextView.java \
@@ -998,10 +999,10 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/address_bar_url.xml                    \
   mobile/android/base/resources/drawable/awesomebar_listview_divider.xml        \
   mobile/android/base/resources/drawable/awesomebar_header_row.xml              \
-  mobile/android/base/resources/drawable/awesomebar_row_favicon_bg.xml          \
   mobile/android/base/resources/drawable/awesomebar_tab_indicator.xml           \
   mobile/android/base/resources/drawable/awesomebar_tab_selected.xml            \
   mobile/android/base/resources/drawable/awesomebar_tab_unselected.xml          \
+  mobile/android/base/resources/drawable/favicon_bg.xml                         \
   mobile/android/base/resources/drawable/handle_end_level.xml                   \
   mobile/android/base/resources/drawable/handle_start_level.xml                 \
   mobile/android/base/resources/drawable/ic_menu_back.xml                       \
