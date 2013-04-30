@@ -5355,6 +5355,40 @@ nsNavigatorSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   if (!name_struct) {
     return NS_OK;
   }
+
+  if (name_struct->mType == nsGlobalNameStruct::eTypeNewDOMBinding) {
+    mozilla::dom::ConstructNavigatorProperty construct = name_struct->mConstructNavigatorProperty;
+    MOZ_ASSERT(construct);
+
+    if (name_struct->mPrefEnabled && !(*name_struct->mPrefEnabled)()) {
+      return NS_OK;
+    }
+
+    JS::Rooted<JSObject*> naviObj(cx, js::CheckedUnwrap(obj, /* stopAtOuter = */ false));
+    NS_ENSURE_TRUE(naviObj, NS_ERROR_DOM_SECURITY_ERR);
+
+    JS::Rooted<JSObject*> domObject(cx);
+    {
+      JSAutoCompartment ac(cx, naviObj);
+      domObject = construct(cx, naviObj);
+      if (!domObject) {
+        return NS_ERROR_FAILURE;
+      }
+    }
+
+    if (!JS_WrapObject(cx, domObject.address()) ||
+        !JS_DefinePropertyById(cx, obj, id,
+                               JS::ObjectValue(*domObject),
+                               nullptr, nullptr, JSPROP_ENUMERATE)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    *_retval = true;
+    *objp = obj;
+
+    return NS_OK;
+  }
+
   NS_ASSERTION(name_struct->mType == nsGlobalNameStruct::eTypeNavigatorProperty,
                "unexpected type");
 
