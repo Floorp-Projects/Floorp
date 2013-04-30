@@ -123,6 +123,8 @@ public:
 
     virtual gfxImageFormat GetOffscreenFormat();
 
+    virtual int GetScreenDepth() const;
+
 protected:
     static gfxFontconfigUtils *sFontconfigUtils;
 
