@@ -188,9 +188,7 @@
   display: none;
 }
 
-#PanelUI-subViews toolbarbutton,
-#PanelUI-mainView toolbarbutton,
-#customizationui-widget-panel toolbarbutton {
+:-moz-any(#PanelUI-mainView, #PanelUI-subViews, #customizationui-widget-panel) toolbarbutton {
   -moz-appearance: none;
   padding: 2px 6px;
   background: hsla(210,32%,93%,0) padding-box;
@@ -204,9 +202,7 @@
   transition-duration: 150ms;
 }
 
-#PanelUI-subViews toolbarbutton:not([disabled]):not([checked]):not([open]):not(:active):hover,
-#PanelUI-mainView toolbarbutton:not([disabled]):not([checked]):not([open]):not(:active):hover,
-#customizationui-widget-panel toolbarbutton:not([disabled]):not([checked]):not([open]):not(:active):hover,
+:-moz-any(#PanelUI-mainView, #PanelUI-subViews, #customizationui-widget-panel) toolbarbutton:not([disabled]):not([checked]):not([open]):not(:active):hover,
 #PanelUI-mainView .PanelUI-pageControls toolbarbutton,
 #PanelUI-mainView #PanelUI-customize-btn {
   background-image: -moz-linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,100%,.1));
@@ -216,9 +212,8 @@
               0 0 2px hsla(210,54%,20%,.1);
 }
 
-#PanelUI-subViews toolbarbutton:not([disabled]):-moz-any([open],[checked],:hover:active),
-#PanelUI-mainView toolbarbutton:not([disabled]):-moz-any([open],[checked],:hover:active),
-#customizationui-widget-panel toolbarbutton:not([disabled]):-moz-any([open],[checked],:hover:active) {
+:-moz-any(#PanelUI-mainView, #PanelUI-subViews, #customizationui-widget-panel) toolbarbutton:not([disabled]):-moz-any([open],[checked],:hover:active),
+  #PanelUI-mainView .PanelUI-pageControls toolbarbutton:hover:active {
   background-image: -moz-linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,100%,.1));
   background-color: hsla(210,54%,20%,.15);
   border-color: hsla(210,54%,20%,.3) hsla(210,54%,20%,.35) hsla(210,54%,20%,.4);
@@ -234,7 +229,7 @@
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
 }
 
-#PanelUI-contents > toolbarbutton.panelui-mainview-anchor {
+#PanelUI-contents > .panelui-mainview-anchor {
   background-color: Highlight;
   background-image: linear-gradient(rgba(255,255,255,0.3), rgba(255,255,255,0));
   background-repeat: repeat-x;
