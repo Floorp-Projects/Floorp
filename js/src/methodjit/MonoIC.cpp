@@ -115,14 +115,14 @@ PatchSetFallback(VMFrame &f, ic::SetGlobalNameIC *ic)
 }
 
 void
-SetGlobalNameIC::patchInlineShapeGuard(Repatcher &repatcher, RawShape shape)
+SetGlobalNameIC::patchInlineShapeGuard(Repatcher &repatcher, Shape *shape)
 {
     JSC::CodeLocationDataLabelPtr label = fastPathStart.dataLabelPtrAtOffset(shapeOffset);
     repatcher.repatch(label, shape);
 }
 
 static LookupStatus
-UpdateSetGlobalName(VMFrame &f, ic::SetGlobalNameIC *ic, JSObject *obj, RawShape shape)
+UpdateSetGlobalName(VMFrame &f, ic::SetGlobalNameIC *ic, JSObject *obj, Shape *shape)
 {
     /* Give globals a chance to appear. */
     if (!shape)
@@ -160,7 +160,7 @@ ic::SetGlobalName(VMFrame &f, ic::SetGlobalNameIC *ic)
 
     {
         RootedId id(f.cx, NameToId(name));
-        RawShape shape = obj->nativeLookup(f.cx, id);
+        Shape *shape = obj->nativeLookup(f.cx, id);
 
         if (!monitor.recompiled()) {
             LookupStatus status = UpdateSetGlobalName(f, ic, obj, shape);

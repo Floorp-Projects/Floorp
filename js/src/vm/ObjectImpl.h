@@ -25,7 +25,7 @@ namespace js {
 class Debugger;
 class ObjectImpl;
 class Nursery;
-ForwardDeclare(Shape);
+class Shape;
 
 class AutoPropDescArrayRooter;
 
@@ -364,7 +364,7 @@ class ElementsHeader
         } dense;
         class {
             friend class SparseElementsHeader;
-            RawShape shape;
+            Shape *shape;
         } sparse;
         class {
             friend class ArrayBufferElementsHeader;
@@ -455,7 +455,7 @@ class DenseElementsHeader : public ElementsHeader
 class SparseElementsHeader : public ElementsHeader
 {
   public:
-    RawShape shape() {
+    Shape *shape() {
         MOZ_ASSERT(ElementsHeader::isSparseElements());
         return sparse.shape;
     }
@@ -1317,9 +1317,9 @@ class ObjectImpl : public gc::Cell
     /* Compute dynamicSlotsCount() for this object. */
     inline uint32_t numDynamicSlots() const;
 
-    RawShape nativeLookup(JSContext *cx, jsid id);
-    inline RawShape nativeLookup(JSContext *cx, PropertyId pid);
-    inline RawShape nativeLookup(JSContext *cx, PropertyName *name);
+    Shape *nativeLookup(JSContext *cx, jsid id);
+    inline Shape *nativeLookup(JSContext *cx, PropertyId pid);
+    inline Shape *nativeLookup(JSContext *cx, PropertyName *name);
 
     inline bool nativeContains(JSContext *cx, jsid id);
     inline bool nativeContains(JSContext *cx, PropertyName* name);

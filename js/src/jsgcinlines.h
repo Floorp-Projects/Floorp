@@ -591,7 +591,7 @@ js_NewGCScript(JSContext *cx)
                                                    sizeof(JSScript), js::gc::TenuredHeap);
 }
 
-inline js::RawShape
+inline js::Shape *
 js_NewGCShape(JSContext *cx)
 {
     return js::gc::NewGCThing<js::Shape, js::CanGC>(cx, js::gc::FINALIZE_SHAPE,

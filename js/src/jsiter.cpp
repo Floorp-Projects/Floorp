@@ -397,7 +397,7 @@ NativeIterator::allocateIterator(JSContext *cx, uint32_t slength, const AutoIdVe
     NativeIterator *ni = (NativeIterator *)
         cx->malloc_(sizeof(NativeIterator)
                     + plength * sizeof(RawString)
-                    + slength * sizeof(RawShape));
+                    + slength * sizeof(Shape *));
     if (!ni)
         return NULL;
     AutoValueVector strings(cx);
@@ -583,7 +583,7 @@ js::GetIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandleVa
         return true;
     }
 
-    Vector<RawShape, 8> shapes(cx);
+    Vector<Shape *, 8> shapes(cx);
     uint32_t key = 0;
 
     bool keysOnly = (flags == JSITER_ENUMERATE);
@@ -644,7 +644,7 @@ js::GetIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandleVa
                         shapes.clear();
                         goto miss;
                     }
-                    RawShape shape = pobj->lastProperty();
+                    Shape *shape = pobj->lastProperty();
                     key = (key + (key << 16)) ^ (uintptr_t(shape) >> 3);
                     if (!shapes.append(shape))
                         return false;

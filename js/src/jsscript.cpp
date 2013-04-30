@@ -133,7 +133,7 @@ Bindings::initWithTemporaryStorage(JSContext *cx, InternalBindingsHandle self,
         unsigned frameIndex = bi.frameIndex();
         StackShape child(nbase, id, slot++, 0, attrs, Shape::HAS_SHORTID, frameIndex);
 
-        RawShape shape = self->callObjShape_->getChildBinding(cx, child);
+        Shape *shape = self->callObjShape_->getChildBinding(cx, child);
         if (!shape)
             return false;
 
