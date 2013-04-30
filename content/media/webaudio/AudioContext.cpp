@@ -244,6 +244,7 @@ void
 AudioContext::UnregisterAudioBufferSourceNode(AudioBufferSourceNode* aNode)
 {
   mAudioBufferSourceNodes.RemoveEntry(aNode);
+  UpdatePannerSource();
 }
 
 void

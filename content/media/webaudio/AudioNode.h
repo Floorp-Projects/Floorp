@@ -166,6 +166,7 @@ public:
   }
 
 private:
+  friend class AudioBufferSourceNode;
   // This could possibly delete 'this'.
   void DisconnectFromGraph();
 
