@@ -572,6 +572,7 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/ic_menu_addons_filler.png \
   res/drawable-mdpi/ic_menu_bookmark_add.png \
   res/drawable-mdpi/ic_menu_bookmark_remove.png \
+  res/drawable-mdpi/ic_menu_character_encoding.png \
   res/drawable-mdpi/ic_menu_close_all_tabs.png \
   res/drawable-mdpi/ic_menu_forward.png \
   res/drawable-mdpi/ic_menu_new_private_tab.png \
@@ -683,6 +684,7 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/ic_menu_addons_filler.png \
   res/drawable-hdpi/ic_menu_bookmark_add.png \
   res/drawable-hdpi/ic_menu_bookmark_remove.png \
+  res/drawable-hdpi/ic_menu_character_encoding.png \
   res/drawable-hdpi/ic_menu_close_all_tabs.png \
   res/drawable-hdpi/ic_menu_forward.png \
   res/drawable-hdpi/ic_menu_new_private_tab.png \
@@ -775,6 +777,7 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/ic_menu_bookmark_add.png \
   res/drawable-xhdpi/ic_menu_bookmark_remove.png \
   res/drawable-xhdpi/ic_menu_close_all_tabs.png \
+  res/drawable-xhdpi/ic_menu_character_encoding.png \
   res/drawable-xhdpi/ic_menu_forward.png \
   res/drawable-xhdpi/ic_menu_new_private_tab.png \
   res/drawable-xhdpi/ic_menu_new_tab.png \
