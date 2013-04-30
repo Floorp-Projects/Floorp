@@ -12,6 +12,7 @@
 #include "nsRect.h"
 #include "mozilla/dom/ScreenOrientation.h"
 #include "mozilla/gfx/Rect.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/layers/LayerTransaction.h" // for TargetConfig
@@ -51,7 +52,7 @@ struct ViewTransform {
  * short circuit that stuff to directly affect layers as they are composited,
  * for example, off-main thread animation, async video, async pan/zoom.
  */
-class AsyncCompositionManager : public RefCounted<AsyncCompositionManager>
+class AsyncCompositionManager MOZ_FINAL : public RefCounted<AsyncCompositionManager>
 {
   friend class AutoResolveRefLayers;
 public:
