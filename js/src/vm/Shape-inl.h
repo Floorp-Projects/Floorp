@@ -160,7 +160,7 @@ StackBaseShape::updateGetterSetter(uint8_t attrs,
 }
 
 inline void
-BaseShape::adoptUnowned(RawUnownedBaseShape other)
+BaseShape::adoptUnowned(UnownedBaseShape *other)
 {
     /*
      * This is a base shape owned by a dictionary object, update it to reflect the
@@ -180,7 +180,7 @@ BaseShape::adoptUnowned(RawUnownedBaseShape other)
 }
 
 inline void
-BaseShape::setOwned(RawUnownedBaseShape unowned)
+BaseShape::setOwned(UnownedBaseShape *unowned)
 {
     flags |= OWNED_SHAPE;
     this->unowned_ = unowned;
@@ -191,7 +191,7 @@ BaseShape::assertConsistency()
 {
 #ifdef DEBUG
     if (isOwned()) {
-        RawUnownedBaseShape unowned = baseUnowned();
+        UnownedBaseShape *unowned = baseUnowned();
         JS_ASSERT(hasGetterObject() == unowned->hasGetterObject());
         JS_ASSERT(hasSetterObject() == unowned->hasSetterObject());
         JS_ASSERT_IF(hasGetterObject(), getterObject() == unowned->getterObject());
@@ -216,7 +216,7 @@ Shape::Shape(const StackShape &other, uint32_t nfixed)
 }
 
 inline
-Shape::Shape(RawUnownedBaseShape base, uint32_t nfixed)
+Shape::Shape(UnownedBaseShape *base, uint32_t nfixed)
   : base_(base),
     propid_(JSID_EMPTY),
     slotInfo(SHAPE_INVALID_SLOT | (nfixed << FIXED_SLOTS_SHIFT)),
@@ -396,7 +396,7 @@ Shape::initDictionaryShape(const StackShape &child, uint32_t nfixed, HeapPtrShap
 }
 
 inline
-EmptyShape::EmptyShape(RawUnownedBaseShape base, uint32_t nfixed)
+EmptyShape::EmptyShape(UnownedBaseShape *base, uint32_t nfixed)
   : js::Shape(base, nfixed)
 {
     /* Only empty shapes can be NON_NATIVE. */

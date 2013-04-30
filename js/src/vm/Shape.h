@@ -223,7 +223,7 @@ struct ShapeTable {
  * an earlier property, however.
  */
 
-ForwardDeclare(UnownedBaseShape);
+class UnownedBaseShape;
 ForwardDeclare(Shape);
 struct StackBaseShape;
 
@@ -312,8 +312,8 @@ class BaseShape : public js::gc::Cell
     inline bool matchesGetterSetter(PropertyOp rawGetter,
                                     StrictPropertyOp rawSetter) const;
 
-    inline void adoptUnowned(RawUnownedBaseShape other);
-    inline void setOwned(RawUnownedBaseShape unowned);
+    inline void adoptUnowned(UnownedBaseShape *other);
+    inline void setOwned(UnownedBaseShape *unowned);
 
     JSObject *getObjectParent() const { return parent; }
     uint32_t getObjectFlags() const { return flags & OBJECT_FLAG_MASK; }
@@ -369,16 +369,16 @@ class BaseShape : public js::gc::Cell
 
 class UnownedBaseShape : public BaseShape {};
 
-UnownedBaseShape*
+UnownedBaseShape *
 BaseShape::unowned()
 {
     return isOwned() ? baseUnowned() : toUnowned();
 }
 
-UnownedBaseShape*
+UnownedBaseShape *
 BaseShape::toUnowned()
 {
-    JS_ASSERT(!isOwned() && !unowned_); return static_cast<RawUnownedBaseShape>(this);
+    JS_ASSERT(!isOwned() && !unowned_); return static_cast<UnownedBaseShape *>(this);
 }
 
 UnownedBaseShape*
@@ -424,7 +424,7 @@ struct StackBaseShape
                                    StrictPropertyOp rawSetter);
 
     static inline HashNumber hash(const StackBaseShape *lookup);
-    static inline bool match(RawUnownedBaseShape key, const StackBaseShape *lookup);
+    static inline bool match(UnownedBaseShape *key, const StackBaseShape *lookup);
 
     class AutoRooter : private JS::CustomAutoRooter
     {
@@ -626,7 +626,7 @@ class Shape : public js::gc::Cell
     Shape(const StackShape &other, uint32_t nfixed);
 
     /* Used by EmptyShape (see jsscopeinlines.h). */
-    Shape(RawUnownedBaseShape base, uint32_t nfixed);
+    Shape(UnownedBaseShape *base, uint32_t nfixed);
 
     /* Copy constructor disabled, to avoid misuse of the above form. */
     Shape(const Shape &other) MOZ_DELETE;
@@ -903,7 +903,7 @@ class AutoRooterGetterSetter
 
 struct EmptyShape : public js::Shape
 {
-    EmptyShape(RawUnownedBaseShape base, uint32_t nfixed);
+    EmptyShape(UnownedBaseShape *base, uint32_t nfixed);
 
     /*
      * Lookup an initial shape matching the given parameters, creating an empty
@@ -969,14 +969,14 @@ typedef HashSet<InitialShapeEntry, InitialShapeEntry, SystemAllocPolicy> Initial
 struct StackShape
 {
     /* For performance, StackShape only roots when absolutely necessary. */
-    RawUnownedBaseShape base;
-    RawId               propid;
-    uint32_t            slot_;
-    uint8_t             attrs;
-    uint8_t             flags;
-    int16_t             shortid;
+    UnownedBaseShape *base;
+    RawId            propid;
+    uint32_t         slot_;
+    uint8_t          attrs;
+    uint8_t          flags;
+    int16_t          shortid;
 
-    explicit StackShape(RawUnownedBaseShape base, jsid propid, uint32_t slot,
+    explicit StackShape(UnownedBaseShape *base, jsid propid, uint32_t slot,
                         uint32_t nfixed, unsigned attrs, unsigned flags, int shortid)
       : base(base),
         propid(propid),

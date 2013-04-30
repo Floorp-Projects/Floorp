@@ -873,7 +873,7 @@ ScanBaseShape(GCMarker *gcmarker, BaseShape *base)
      * unowned base shape.
      */
     if (base->isOwned()) {
-        RawUnownedBaseShape unowned = base->baseUnowned();
+        UnownedBaseShape *unowned = base->baseUnowned();
         JS_ASSERT(base->compartment() == unowned->compartment());
         unowned->markIfUnmarked(gcmarker->getMarkColor());
     }
