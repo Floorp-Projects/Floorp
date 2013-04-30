@@ -14,6 +14,7 @@
 #include "jslibmath.h"
 #include "jsinfer.h"
 #include "jsinferinlines.h"
+#include "jstypedarrayinlines.h"
 #include "TypePolicy.h"
 #include "IonAllocPolicy.h"
 #include "InlineList.h"
