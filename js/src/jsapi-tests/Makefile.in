@@ -11,8 +11,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-PROGRAM         = jsapi-tests$(BIN_SUFFIX)
-
 CPPSRCS = \
   tests.cpp \
   selfTest.cpp \
