@@ -51,9 +51,9 @@ skip-if(B2G) HTTP(..) == font-features-turkish-override-5.html font-features-tur
 HTTP(..) == font-features-order-1.html font-features-ref.html
 HTTP(..) == font-features-order-2.html font-features-noliga.html
 
-# sanity check for kerning - with no spaces, kerning should occur (XP version of Arial doesn't contain kerning data)
+# sanity check for kerning - with no spaces, kerning should occur
 HTTP(..) == kerning-sanity-check-kern.html kerning-sanity-check-default.html
-fails-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) HTTP(..) != kerning-sanity-check-nokern.html kerning-sanity-check-default.html
+HTTP(..) != kerning-sanity-check-nokern.html kerning-sanity-check-default.html
 
 # OpenType features should work across inter-word spaces
 HTTP(..) == font-features-across-space-1.html font-features-across-space-1-ref.html

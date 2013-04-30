@@ -98,7 +98,6 @@ _hb_fallback_shape (hb_shape_plan_t    *shape_plan HB_UNUSED,
   hb_codepoint_t space;
   font->get_glyph (' ', 0, &space);
 
-  buffer->guess_segment_properties ();
   buffer->clear_positions ();
 
   unsigned int count = buffer->len;

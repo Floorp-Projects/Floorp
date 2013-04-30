@@ -329,7 +329,7 @@ static const indic_config_t indic_configs[] =
 
 struct feature_list_t {
   hb_tag_t tag;
-  hb_bool_t is_global;
+  hb_ot_map_feature_flags_t flags;
 };
 
 static const feature_list_t
@@ -339,32 +339,32 @@ indic_features[] =
    * Basic features.
    * These features are applied in order, one at a time, after initial_reordering.
    */
-  {HB_TAG('n','u','k','t'), true},
-  {HB_TAG('a','k','h','n'), true},
-  {HB_TAG('r','p','h','f'), false},
-  {HB_TAG('r','k','r','f'), true},
-  {HB_TAG('p','r','e','f'), false},
-  {HB_TAG('b','l','w','f'), false},
-  {HB_TAG('h','a','l','f'), false},
-  {HB_TAG('a','b','v','f'), false},
-  {HB_TAG('p','s','t','f'), false},
-  {HB_TAG('c','f','a','r'), false},
-  {HB_TAG('v','a','t','u'), true},
-  {HB_TAG('c','j','c','t'), true},
+  {HB_TAG('n','u','k','t'), F_GLOBAL},
+  {HB_TAG('a','k','h','n'), F_GLOBAL},
+  {HB_TAG('r','p','h','f'), F_NONE},
+  {HB_TAG('r','k','r','f'), F_GLOBAL},
+  {HB_TAG('p','r','e','f'), F_NONE},
+  {HB_TAG('b','l','w','f'), F_NONE},
+  {HB_TAG('h','a','l','f'), F_NONE},
+  {HB_TAG('a','b','v','f'), F_NONE},
+  {HB_TAG('p','s','t','f'), F_NONE},
+  {HB_TAG('c','f','a','r'), F_NONE},
+  {HB_TAG('v','a','t','u'), F_GLOBAL},
+  {HB_TAG('c','j','c','t'), F_GLOBAL},
   /*
    * Other features.
    * These features are applied all at once, after final_reordering.
    */
-  {HB_TAG('i','n','i','t'), false},
-  {HB_TAG('p','r','e','s'), true},
-  {HB_TAG('a','b','v','s'), true},
-  {HB_TAG('b','l','w','s'), true},
-  {HB_TAG('p','s','t','s'), true},
-  {HB_TAG('h','a','l','n'), true},
+  {HB_TAG('i','n','i','t'), F_NONE},
+  {HB_TAG('p','r','e','s'), F_GLOBAL},
+  {HB_TAG('a','b','v','s'), F_GLOBAL},
+  {HB_TAG('b','l','w','s'), F_GLOBAL},
+  {HB_TAG('p','s','t','s'), F_GLOBAL},
+  {HB_TAG('h','a','l','n'), F_GLOBAL},
   /* Positioning features, though we don't care about the types. */
-  {HB_TAG('d','i','s','t'), true},
-  {HB_TAG('a','b','v','m'), true},
-  {HB_TAG('b','l','w','m'), true},
+  {HB_TAG('d','i','s','t'), F_GLOBAL},
+  {HB_TAG('a','b','v','m'), F_GLOBAL},
+  {HB_TAG('b','l','w','m'), F_GLOBAL},
 };
 
 /*
@@ -419,21 +419,21 @@ collect_features_indic (hb_ot_shape_planner_t *plan)
   /* Do this before any lookups have been applied. */
   map->add_gsub_pause (setup_syllables);
 
-  map->add_bool_feature (HB_TAG('l','o','c','l'));
+  map->add_global_bool_feature (HB_TAG('l','o','c','l'));
   /* The Indic specs do not require ccmp, but we apply it here since if
    * there is a use of it, it's typically at the beginning. */
-  map->add_bool_feature (HB_TAG('c','c','m','p'));
+  map->add_global_bool_feature (HB_TAG('c','c','m','p'));
 
 
   unsigned int i = 0;
   map->add_gsub_pause (initial_reordering);
   for (; i < INDIC_BASIC_FEATURES; i++) {
-    map->add_bool_feature (indic_features[i].tag, indic_features[i].is_global);
+    map->add_feature (indic_features[i].tag, 1, indic_features[i].flags | F_MANUAL_ZWJ);
     map->add_gsub_pause (NULL);
   }
   map->add_gsub_pause (final_reordering);
   for (; i < INDIC_NUM_FEATURES; i++) {
-    map->add_bool_feature (indic_features[i].tag, indic_features[i].is_global);
+    map->add_feature (indic_features[i].tag, 1, indic_features[i].flags | F_MANUAL_ZWJ);
   }
 }
 
@@ -442,9 +442,9 @@ override_features_indic (hb_ot_shape_planner_t *plan)
 {
   /* Uniscribe does not apply 'kern'. */
   if (hb_options ().uniscribe_bug_compatible)
-    plan->map.add_feature (HB_TAG('k','e','r','n'), 0, true);
+    plan->map.add_feature (HB_TAG('k','e','r','n'), 0, F_GLOBAL);
 
-  plan->map.add_feature (HB_TAG('l','i','g','a'), 0, true);
+  plan->map.add_feature (HB_TAG('l','i','g','a'), 0, F_GLOBAL);
 }
 
 
@@ -457,10 +457,10 @@ struct would_substitute_feature_t
 			    &lookups, &count);
   }
 
-  inline bool would_substitute (hb_codepoint_t    *glyphs,
-				unsigned int       glyphs_count,
-				bool               zero_context,
-				hb_face_t         *face) const
+  inline bool would_substitute (const hb_codepoint_t *glyphs,
+				unsigned int          glyphs_count,
+				bool                  zero_context,
+				hb_face_t            *face) const
   {
     for (unsigned int i = 0; i < count; i++)
       if (hb_ot_layout_lookup_would_substitute_fast (face, lookups[i].index, glyphs, glyphs_count, zero_context))
@@ -532,7 +532,8 @@ data_create_indic (const hb_ot_shape_plan_t *plan)
   indic_plan->pstf.init (&plan->map, HB_TAG('p','s','t','f'));
 
   for (unsigned int i = 0; i < ARRAY_LENGTH (indic_plan->mask_array); i++)
-    indic_plan->mask_array[i] = indic_features[i].is_global ? 0 : plan->map.get_1_mask (indic_features[i].tag);
+    indic_plan->mask_array[i] = (indic_features[i].flags & F_GLOBAL) ?
+				 0 : plan->map.get_1_mask (indic_features[i].tag);
 
   return indic_plan;
 }
@@ -545,13 +546,30 @@ data_destroy_indic (void *data)
 
 static indic_position_t
 consonant_position_from_face (const indic_shape_plan_t *indic_plan,
-			      hb_codepoint_t *glyphs, unsigned int glyphs_len,
-			      hb_face_t      *face)
+			      const hb_codepoint_t glyphs[2],
+			      hb_face_t *face)
 {
+  /* For old-spec, the order of glyphs is Consonant,Virama,
+   * whereas for new-spec, it's Virama,Consonant.  However,
+   * some broken fonts (like Free Sans) simply copied lookups
+   * from old-spec to new-spec without modification.
+   * And oddly enough, Uniscribe seems to respect those lookups.
+   * Eg. in the sequence U+0924,U+094D,U+0930, Uniscribe finds
+   * base at 0.  The font however, only has lookups matching
+   * 930,94D in 'blwf', not the expected 94D,930 (with new-spec
+   * table).  As such, we simply match both sequences.  Seems
+   * to work. */
   bool zero_context = indic_plan->is_old_spec ? false : true;
-  if (indic_plan->pref.would_substitute (glyphs, glyphs_len, zero_context, face)) return POS_BELOW_C;
-  if (indic_plan->blwf.would_substitute (glyphs, glyphs_len, zero_context, face)) return POS_BELOW_C;
-  if (indic_plan->pstf.would_substitute (glyphs, glyphs_len, zero_context, face)) return POS_POST_C;
+  hb_codepoint_t glyphs_r[2] = {glyphs[1], glyphs[0]};
+  if (indic_plan->pref.would_substitute (glyphs  , 2, zero_context, face) ||
+      indic_plan->pref.would_substitute (glyphs_r, 2, zero_context, face))
+    return POS_POST_C;
+  if (indic_plan->blwf.would_substitute (glyphs  , 2, zero_context, face) ||
+      indic_plan->blwf.would_substitute (glyphs_r, 2, zero_context, face))
+    return POS_BELOW_C;
+  if (indic_plan->pstf.would_substitute (glyphs  , 2, zero_context, face) ||
+      indic_plan->pstf.would_substitute (glyphs_r, 2, zero_context, face))
+    return POS_POST_C;
   return POS_BASE_C;
 }
 
@@ -609,16 +627,15 @@ update_consonant_positions (const hb_ot_shape_plan_t *plan,
 {
   const indic_shape_plan_t *indic_plan = (const indic_shape_plan_t *) plan->data;
 
-  unsigned int consonant_pos = indic_plan->is_old_spec ? 0 : 1;
   hb_codepoint_t glyphs[2];
-  if (indic_plan->get_virama_glyph (font, &glyphs[1 - consonant_pos]))
+  if (indic_plan->get_virama_glyph (font, &glyphs[0]))
   {
     hb_face_t *face = font->face;
     unsigned int count = buffer->len;
     for (unsigned int i = 0; i < count; i++)
       if (buffer->info[i].indic_position() == POS_BASE_C) {
-	glyphs[consonant_pos] = buffer->info[i].codepoint;
-	buffer->info[i].indic_position() = consonant_position_from_face (indic_plan, glyphs, 2, face);
+	glyphs[1] = buffer->info[i].codepoint;
+	buffer->info[i].indic_position() = consonant_position_from_face (indic_plan, glyphs, face);
       }
   }
 }
@@ -716,7 +733,7 @@ initial_reordering_consonant_syllable (const hb_ot_shape_plan_t *plan,
 	     *
 	     * IMPLEMENTATION NOTES:
 	     *
-	     * Our pre-base reordering Ra's are marked POS_BELOW, so will be skipped
+	     * Our pre-base reordering Ra's are marked POS_POST_C, so will be skipped
 	     * by the logic above already.
 	     */
 
@@ -1002,8 +1019,9 @@ initial_reordering_consonant_syllable (const hb_ot_shape_plan_t *plan,
       do {
 	j--;
 
-	/* A ZWJ disables CJCT, however, it's mere presence is enough
-	 * to disable ligation.  No explicit action needed. */
+	/* ZWJ/ZWNJ should disable CJCT.  They do that by simply
+	 * being there, since we don't skip them for the CJCT
+	 * feature (ie. F_MANUAL_ZWJ) */
 
 	/* A ZWNJ disables HALF. */
 	if (non_joiner)
@@ -1304,7 +1322,8 @@ final_reordering_syllable (const hb_ot_shape_plan_t *plan,
       while (new_reph_pos < base && !is_halant_or_coeng (info[new_reph_pos]))
 	new_reph_pos++;
 
-      if (new_reph_pos < base && is_halant_or_coeng (info[new_reph_pos])) {
+      if (new_reph_pos < base && is_halant_or_coeng (info[new_reph_pos]))
+      {
 	/* ->If ZWJ or ZWNJ are following this halant, position is moved after it. */
 	if (new_reph_pos + 1 < base && is_joiner (info[new_reph_pos + 1]))
 	  new_reph_pos++;
@@ -1356,7 +1375,8 @@ final_reordering_syllable (const hb_ot_shape_plan_t *plan,
       while (new_reph_pos < base && !is_halant_or_coeng (info[new_reph_pos]))
 	new_reph_pos++;
 
-      if (new_reph_pos < base && is_halant_or_coeng (info[new_reph_pos])) {
+      if (new_reph_pos < base && is_halant_or_coeng (info[new_reph_pos]))
+      {
 	/* ->If ZWJ or ZWNJ are following this halant, position is moved after it. */
 	if (new_reph_pos + 1 < base && is_joiner (info[new_reph_pos + 1]))
 	  new_reph_pos++;
@@ -1455,9 +1475,11 @@ final_reordering_syllable (const hb_ot_shape_plan_t *plan,
 	  }
 
 	  if (new_pos > start && is_halant_or_coeng (info[new_pos - 1]))
+	  {
 	    /* -> If ZWJ or ZWNJ follow this halant, position is moved after it. */
 	    if (new_pos < end && is_joiner (info[new_pos]))
 	      new_pos++;
+	  }
 
 	  {
 	    unsigned int old_pos = i;

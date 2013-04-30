@@ -49,14 +49,16 @@ struct hb_ot_map_t
     unsigned int shift;
     hb_mask_t mask;
     hb_mask_t _1_mask; /* mask for value=1, for quick access */
-    hb_bool_t needs_fallback;
+    unsigned int needs_fallback : 1;
+    unsigned int auto_zwj : 1;
 
     static int cmp (const feature_map_t *a, const feature_map_t *b)
     { return a->tag < b->tag ? -1 : a->tag > b->tag ? 1 : 0; }
   };
 
   struct lookup_map_t {
-    unsigned int index;
+    unsigned short index;
+    unsigned short auto_zwj : 1;
     hb_mask_t mask;
 
     static int cmp (const lookup_map_t *a, const lookup_map_t *b)
@@ -136,7 +138,8 @@ struct hb_ot_map_t
   HB_INTERNAL void add_lookups (hb_face_t    *face,
 				unsigned int  table_index,
 				unsigned int  feature_index,
-				hb_mask_t     mask);
+				hb_mask_t     mask,
+				bool          auto_zwj);
 
   hb_mask_t global_mask;
 
@@ -144,6 +147,30 @@ struct hb_ot_map_t
   hb_prealloced_array_t<lookup_map_t, 32> lookups[2]; /* GSUB/GPOS */
   hb_prealloced_array_t<pause_map_t, 1> pauses[2]; /* GSUB/GPOS */
 };
+
+enum hb_ot_map_feature_flags_t {
+  F_NONE		= 0x0000,
+  F_GLOBAL		= 0x0001,
+  F_HAS_FALLBACK	= 0x0002,
+  F_MANUAL_ZWJ		= 0x0004
+};
+/* Macro version for where const is desired. */
+#define F_COMBINE(l,r) (hb_ot_map_feature_flags_t ((unsigned int) (l) | (unsigned int) (r)))
+inline hb_ot_map_feature_flags_t
+operator | (hb_ot_map_feature_flags_t l, hb_ot_map_feature_flags_t r)
+{ return hb_ot_map_feature_flags_t ((unsigned int) l | (unsigned int) r); }
+inline hb_ot_map_feature_flags_t
+operator & (hb_ot_map_feature_flags_t l, hb_ot_map_feature_flags_t r)
+{ return hb_ot_map_feature_flags_t ((unsigned int) l & (unsigned int) r); }
+inline hb_ot_map_feature_flags_t
+operator ~ (hb_ot_map_feature_flags_t r)
+{ return hb_ot_map_feature_flags_t (~(unsigned int) r); }
+inline hb_ot_map_feature_flags_t&
+operator |= (hb_ot_map_feature_flags_t &l, hb_ot_map_feature_flags_t r)
+{ l = l | r; return l; }
+inline hb_ot_map_feature_flags_t&
+operator &= (hb_ot_map_feature_flags_t& l, hb_ot_map_feature_flags_t r)
+{ l = l & r; return l; }
 
 
 struct hb_ot_map_builder_t
@@ -153,10 +180,11 @@ struct hb_ot_map_builder_t
   HB_INTERNAL hb_ot_map_builder_t (hb_face_t *face_,
 				   const hb_segment_properties_t *props_);
 
-  HB_INTERNAL void add_feature (hb_tag_t tag, unsigned int value, bool global, bool has_fallback = false);
+  HB_INTERNAL void add_feature (hb_tag_t tag, unsigned int value,
+				hb_ot_map_feature_flags_t flags);
 
-  inline void add_bool_feature (hb_tag_t tag, bool global = true, bool has_fallback = false)
-  { add_feature (tag, 1, global, has_fallback); }
+  inline void add_global_bool_feature (hb_tag_t tag)
+  { add_feature (tag, 1, F_GLOBAL); }
 
   inline void add_gsub_pause (hb_ot_map_t::pause_func_t pause_func)
   { add_pause (0, pause_func); }
@@ -177,8 +205,7 @@ struct hb_ot_map_builder_t
     hb_tag_t tag;
     unsigned int seq; /* sequence#, used for stable sorting only */
     unsigned int max_value;
-    bool global; /* whether the feature applies value to every glyph in the buffer */
-    bool has_fallback; /* whether to allocate bits even if feature not found */
+    hb_ot_map_feature_flags_t flags;
     unsigned int default_value; /* for non-global features, what should the unset glyphs take */
     unsigned int stage[2]; /* GSUB/GPOS */
 

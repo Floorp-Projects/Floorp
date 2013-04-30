@@ -103,7 +103,7 @@ main := |*
 static void
 find_syllables (hb_buffer_t *buffer)
 {
-  unsigned int p, pe, eof, ts HB_UNUSED, te, act;
+  unsigned int p, pe, eof, ts HB_UNUSED, te HB_UNUSED, act HB_UNUSED;
   int cs;
   hb_glyph_info_t *info = buffer->info;
   %%{
