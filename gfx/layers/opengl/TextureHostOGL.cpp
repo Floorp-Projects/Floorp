@@ -593,11 +593,24 @@ SurfaceFormatForAndroidPixelFormat(android::PixelFormat aFormat)
     return FORMAT_R5G6B5;
   case android::PIXEL_FORMAT_A_8:
     return FORMAT_A8;
-  case 17: // NV21 YUV format, see http://developer.android.com/reference/android/graphics/ImageFormat.html#NV21
+  case HAL_PIXEL_FORMAT_YCbCr_422_SP:
+  case HAL_PIXEL_FORMAT_YCrCb_420_SP:
+  case HAL_PIXEL_FORMAT_YCbCr_422_I:
+  case HAL_PIXEL_FORMAT_YV12:
     return FORMAT_B8G8R8A8; // yup, use FORMAT_B8G8R8A8 even though it's a YUV texture. This is an external texture.
   default:
-    MOZ_NOT_REACHED("Unknown Android pixel format");
-    return FORMAT_UNKNOWN;
+    if (aFormat >= 0x100 && aFormat <= 0x1FF) {
+      // Reserved range for HAL specific formats.
+      return FORMAT_B8G8R8A8;
+    } else {
+      // This is not super-unreachable, there's a bunch of hypothetical pixel
+      // formats we don't deal with.
+      // We only want to abort in debug builds here, since if we crash here
+      // we'll take down the compositor process and thus the phone. This seems
+      // like undesirable behaviour. We'd rather have a subtle artifact.
+      MOZ_ASSERT(false, "Unknown Android pixel format.");
+      return FORMAT_UNKNOWN;
+    }
   }
 }
 
@@ -605,10 +618,29 @@ static GLenum
 TextureTargetForAndroidPixelFormat(android::PixelFormat aFormat)
 {
   switch (aFormat) {
-  case 17: // NV21 YUV format, see http://developer.android.com/reference/android/graphics/ImageFormat.html#NV21
+  case HAL_PIXEL_FORMAT_YCbCr_422_SP:
+  case HAL_PIXEL_FORMAT_YCrCb_420_SP:
+  case HAL_PIXEL_FORMAT_YCbCr_422_I:
+  case HAL_PIXEL_FORMAT_YV12:
     return LOCAL_GL_TEXTURE_EXTERNAL;
-  default:
+  case android::PIXEL_FORMAT_RGBA_8888:
+  case android::PIXEL_FORMAT_RGBX_8888:
+  case android::PIXEL_FORMAT_RGB_565:
+  case android::PIXEL_FORMAT_A_8:
     return LOCAL_GL_TEXTURE_2D;
+  default:
+    if (aFormat >= 0x100 && aFormat <= 0x1FF) {
+      // Reserved range for HAL specific formats.
+      return LOCAL_GL_TEXTURE_EXTERNAL;
+    } else {
+      // This is not super-unreachable, there's a bunch of hypothetical pixel
+      // formats we don't deal with.
+      // We only want to abort in debug builds here, since if we crash here
+      // we'll take down the compositor process and thus the phone. This seems
+      // like undesirable behaviour. We'd rather have a subtle artifact.
+      MOZ_ASSERT(false, "Unknown Android pixel format.");
+      return LOCAL_GL_TEXTURE_EXTERNAL;
+    }
   }
 }
 
