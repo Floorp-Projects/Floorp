@@ -40,7 +40,8 @@ WMFReader::WMFReader(AbstractMediaDecoder* aDecoder)
     mVideoStride(0),
     mHasAudio(false),
     mHasVideo(false),
-    mCanSeek(false)
+    mCanSeek(false),
+    mIsMP3Enabled(WMFDecoder::IsMP3Supported())
 {
   NS_ASSERTION(NS_IsMainThread(), "Must be on main thread.");
   MOZ_COUNT_CTOR(WMFReader);
@@ -388,13 +389,13 @@ WMFReader::ConfigureVideoDecoder()
   return S_OK;
 }
 
-static void
-GetSupportedAudioCodecs(const GUID** aCodecs, uint32_t* aNumCodecs)
+void
+WMFReader::GetSupportedAudioCodecs(const GUID** aCodecs, uint32_t* aNumCodecs)
 {
   MOZ_ASSERT(aCodecs);
   MOZ_ASSERT(aNumCodecs);
 
-  if (WMFDecoder::IsMP3Supported()) {
+  if (mIsMP3Enabled) {
     static const GUID codecs[] = {
       MFAudioFormat_AAC,
       MFAudioFormat_MP3

@@ -55,6 +55,7 @@ private:
   HRESULT ConfigureAudioDecoder();
   HRESULT ConfigureVideoDecoder();
   HRESULT ConfigureVideoFrameGeometry(IMFMediaType* aMediaType);
+  void GetSupportedAudioCodecs(const GUID** aCodecs, uint32_t* aNumCodecs);
 
   RefPtr<IMFSourceReader> mSourceReader;
   RefPtr<WMFByteStream> mByteStream;
@@ -74,6 +75,11 @@ private:
   bool mHasAudio;
   bool mHasVideo;
   bool mCanSeek;
+
+  // We can't call WMFDecoder::IsMP3Supported() on non-main threads, since it
+  // checks a pref, so we cache its value in mIsMP3Enabled and use that on
+  // the decode thread.
+  const bool mIsMP3Enabled;
 };
 
 } // namespace mozilla
