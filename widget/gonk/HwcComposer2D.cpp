@@ -297,11 +297,7 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
     }
 
     float opacity = aLayer->GetEffectiveOpacity();
-    if (opacity <= 0) {
-        LOGD("Layer is fully transparent so skip rendering");
-        return true;
-    }
-    else if (opacity < 1) {
+    if (opacity < 1) {
         LOGD("Layer has planar semitransparency which is unsupported");
         return false;
     }
@@ -444,7 +440,11 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
         hwcLayer.visibleRegionScreen = region;
     } else {
         hwcLayer.flags |= HWC_COLOR_FILL;
-        ColorLayer* colorLayer = static_cast<ColorLayer*>(layerGL->GetLayer());
+        ColorLayer* colorLayer = aLayer->AsColorLayer();
+        if (colorLayer->GetColor().a < 1.0) {
+            LOGD("Color layer has semitransparency which is unsupported");
+            return false;
+        }
         hwcLayer.transform = colorLayer->GetColor().Packed();
     }
 
