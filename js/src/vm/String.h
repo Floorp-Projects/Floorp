@@ -30,7 +30,6 @@ ForwardDeclareJS(LinearString);
 class JSStableString;
 ForwardDeclareJS(InlineString);
 class JSRope;
-ForwardDeclareJS(FlatString);
 
 namespace js {
 

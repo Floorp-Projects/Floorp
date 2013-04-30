@@ -38,7 +38,7 @@ StringBuffer::extractWellSized()
     return buf;
 }
 
-RawFlatString
+JSFlatString *
 StringBuffer::finishString()
 {
     JSContext *cx = context();
