@@ -1256,9 +1256,8 @@ SpecialPowersAPI.prototype = {
     return this.focusManager.focusedWindow;
   },
 
-  focus: function(aWindow) {
-    sendAsyncMessage("SpecialPowers.Focus", {});
-    aWindow.focus();
+  focus: function(window) {
+    window.focus();
   },
 
   getClipboardData: function(flavor) {
