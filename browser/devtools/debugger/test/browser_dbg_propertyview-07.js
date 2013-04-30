@@ -42,7 +42,7 @@ function testFrameParameters()
       is(localNodes.length, 12,
         "The localScope should contain all the created variable elements.");
 
-      is(localNodes[0].querySelector(".value").getAttribute("value"), "[object Proxy]",
+      is(localNodes[0].querySelector(".value").getAttribute("value"), "[object Window]",
         "Should have the right property value for 'this'.");
 
       is(localNodes[1].querySelector(".value").getAttribute("value"), "[object Object]",

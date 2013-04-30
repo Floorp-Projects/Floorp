@@ -561,6 +561,9 @@ class JSObject : public js::ObjectImpl
         return isSealedOrFrozen(cx, obj, FREEZE, resultp);
     }
 
+    /* toString support. */
+    static const char *className(JSContext *cx, js::HandleObject obj);
+
     /* Accessors for elements. */
 
     struct MaybeContext {
