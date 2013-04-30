@@ -444,21 +444,6 @@ public:
   // object. Returns -1 on error or if the frame doesn't have a content object
   static int32_t ContentIndexInContainer(const nsIFrame* aFrame);
 
-  static void IndentBy(FILE* out, int32_t aIndent) {
-    while (--aIndent >= 0) fputs("  ", out);
-  }
-  
-  void ListTag(FILE* out) const {
-    ListTag(out, this);
-  }
-
-  static void ListTag(FILE* out, const nsIFrame* aFrame) {
-    nsAutoString tmp;
-    aFrame->GetFrameName(tmp);
-    fputs(NS_LossyConvertUTF16toASCII(tmp).get(), out);
-    fprintf(out, "@%p", static_cast<const void*>(aFrame));
-  }
-
   static void XMLQuote(nsString& aString);
 
   /**
@@ -676,18 +661,6 @@ private:
 
 #ifdef DEBUG
 public:
-  // Formerly the nsIFrameDebug interface
-
-  NS_IMETHOD  List(FILE* out, int32_t aIndent, uint32_t aFlags = 0) const;
-  /**
-   * lists the frames beginning from the root frame
-   * - calls root frame's List(...)
-   */
-  static void RootFrameList(nsPresContext* aPresContext,
-                            FILE* out, int32_t aIndent);
-
-  static void DumpFrameTree(nsIFrame* aFrame);
-
   /**
    * Get a printable from of the name of the frame type.
    * XXX This should be eliminated and we use GetType() instead...
