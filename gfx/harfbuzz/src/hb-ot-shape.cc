@@ -83,12 +83,12 @@ hb_ot_shape_collect_features (hb_ot_shape_planner_t          *planner,
 
   switch (props->direction) {
     case HB_DIRECTION_LTR:
-      map->add_global_bool_feature (HB_TAG ('l','t','r','a'));
-      map->add_global_bool_feature (HB_TAG ('l','t','r','m'));
+      map->add_bool_feature (HB_TAG ('l','t','r','a'));
+      map->add_bool_feature (HB_TAG ('l','t','r','m'));
       break;
     case HB_DIRECTION_RTL:
-      map->add_global_bool_feature (HB_TAG ('r','t','l','a'));
-      map->add_feature (HB_TAG ('r','t','l','m'), 1, F_NONE);
+      map->add_bool_feature (HB_TAG ('r','t','l','a'));
+      map->add_bool_feature (HB_TAG ('r','t','l','m'), false);
       break;
     case HB_DIRECTION_TTB:
     case HB_DIRECTION_BTT:
@@ -97,31 +97,30 @@ hb_ot_shape_collect_features (hb_ot_shape_planner_t          *planner,
       break;
   }
 
+#define ADD_FEATURES(array) \
+  HB_STMT_START { \
+    for (unsigned int i = 0; i < ARRAY_LENGTH (array); i++) \
+      map->add_bool_feature (array[i]); \
+  } HB_STMT_END
+
   if (planner->shaper->collect_features)
     planner->shaper->collect_features (planner);
 
-  for (unsigned int i = 0; i < ARRAY_LENGTH (common_features); i++)
-    map->add_global_bool_feature (common_features[i]);
+  ADD_FEATURES (common_features);
 
   if (HB_DIRECTION_IS_HORIZONTAL (props->direction))
-    for (unsigned int i = 0; i < ARRAY_LENGTH (horizontal_features); i++)
-      map->add_feature (horizontal_features[i], 1, F_GLOBAL |
-			(horizontal_features[i] == HB_TAG('k','e','r','n') ?
-			 F_HAS_FALLBACK : F_NONE));
+    ADD_FEATURES (horizontal_features);
   else
-    for (unsigned int i = 0; i < ARRAY_LENGTH (vertical_features); i++)
-      map->add_feature (vertical_features[i], 1, F_GLOBAL |
-			(vertical_features[i] == HB_TAG('v','k','r','n') ?
-			 F_HAS_FALLBACK : F_NONE));
+    ADD_FEATURES (vertical_features);
 
   if (planner->shaper->override_features)
     planner->shaper->override_features (planner);
 
+#undef ADD_FEATURES
+
   for (unsigned int i = 0; i < num_user_features; i++) {
     const hb_feature_t *feature = &user_features[i];
-    map->add_feature (feature->tag, feature->value,
-		      (feature->start == 0 && feature->end == (unsigned int) -1) ?
-		       F_GLOBAL : F_NONE);
+    map->add_feature (feature->tag, feature->value, (feature->start == 0 && feature->end == (unsigned int) -1));
   }
 }
 
@@ -493,6 +492,31 @@ hb_ot_position_complex (hb_ot_shape_context_t *c)
 }
 
 static inline void
+hb_ot_truetype_kern (hb_ot_shape_context_t *c)
+{
+  /* TODO Check for kern=0 */
+  unsigned int count = c->buffer->len;
+  for (unsigned int i = 1; i < count; i++) {
+    hb_position_t x_kern, y_kern, kern1, kern2;
+    c->font->get_glyph_kerning_for_direction (c->buffer->info[i - 1].codepoint, c->buffer->info[i].codepoint,
+					      c->buffer->props.direction,
+					      &x_kern, &y_kern);
+
+    kern1 = x_kern >> 1;
+    kern2 = x_kern - kern1;
+    c->buffer->pos[i - 1].x_advance += kern1;
+    c->buffer->pos[i].x_advance += kern2;
+    c->buffer->pos[i].x_offset += kern2;
+
+    kern1 = y_kern >> 1;
+    kern2 = y_kern - kern1;
+    c->buffer->pos[i - 1].y_advance += kern1;
+    c->buffer->pos[i].y_advance += kern2;
+    c->buffer->pos[i].y_offset += kern2;
+  }
+}
+
+static inline void
 hb_ot_position (hb_ot_shape_context_t *c)
 {
   hb_ot_position_default (c);
@@ -508,7 +532,7 @@ hb_ot_position (hb_ot_shape_context_t *c)
   /* Visual fallback goes here. */
 
   if (fallback)
-    _hb_ot_shape_fallback_kern (c->plan, c->font, c->buffer);
+    hb_ot_truetype_kern (c);
 }
 
 
@@ -626,6 +650,8 @@ hb_ot_shape_glyphs_closure (hb_font_t          *font,
 			    hb_set_t           *glyphs)
 {
   hb_ot_shape_plan_t plan;
+
+  buffer->guess_segment_properties ();
 
   const char *shapers[] = {"ot", NULL};
   hb_shape_plan_t *shape_plan = hb_shape_plan_create_cached (font->face, &buffer->props,
