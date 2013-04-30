@@ -3,22 +3,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsDOMSVGZoomEvent.h"
+#include "mozilla/dom/SVGZoomEvent.h"
 #include "DOMSVGPoint.h"
 #include "mozilla/dom/SVGSVGElement.h"
 #include "nsIPresShell.h"
 #include "nsIDocument.h"
 #include "mozilla/dom/Element.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
+DOMCI_DATA(SVGZoomEvent, mozilla::dom::SVGZoomEvent)
+
+namespace mozilla {
+namespace dom {
 
 //----------------------------------------------------------------------
 // Implementation
 
-nsDOMSVGZoomEvent::nsDOMSVGZoomEvent(mozilla::dom::EventTarget* aOwner,
-                                     nsPresContext* aPresContext,
-                                     nsGUIEvent* aEvent)
+SVGZoomEvent::SVGZoomEvent(EventTarget* aOwner,
+                           nsPresContext* aPresContext,
+                           nsGUIEvent* aEvent)
   : nsDOMUIEvent(aOwner, aPresContext,
                  aEvent ? aEvent : new nsGUIEvent(false, NS_SVG_ZOOM, 0))
   , mPreviousScale(0)
@@ -75,12 +77,10 @@ nsDOMSVGZoomEvent::nsDOMSVGZoomEvent(mozilla::dom::EventTarget* aOwner,
 //----------------------------------------------------------------------
 // nsISupports methods:
 
-NS_IMPL_ADDREF_INHERITED(nsDOMSVGZoomEvent, nsDOMUIEvent)
-NS_IMPL_RELEASE_INHERITED(nsDOMSVGZoomEvent, nsDOMUIEvent)
+NS_IMPL_ADDREF_INHERITED(SVGZoomEvent, nsDOMUIEvent)
+NS_IMPL_RELEASE_INHERITED(SVGZoomEvent, nsDOMUIEvent)
 
-DOMCI_DATA(SVGZoomEvent, nsDOMSVGZoomEvent)
-
-NS_INTERFACE_MAP_BEGIN(nsDOMSVGZoomEvent)
+NS_INTERFACE_MAP_BEGIN(SVGZoomEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGZoomEvent)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGZoomEvent)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMUIEvent)
@@ -91,7 +91,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMUIEvent)
 
 /* readonly attribute float previousScale; */
 NS_IMETHODIMP
-nsDOMSVGZoomEvent::GetPreviousScale(float *aPreviousScale)
+SVGZoomEvent::GetPreviousScale(float *aPreviousScale)
 {
   *aPreviousScale = mPreviousScale;
   return NS_OK;
@@ -99,7 +99,7 @@ nsDOMSVGZoomEvent::GetPreviousScale(float *aPreviousScale)
 
 /* readonly attribute SVGPoint previousTranslate; */
 NS_IMETHODIMP
-nsDOMSVGZoomEvent::GetPreviousTranslate(nsISupports **aPreviousTranslate)
+SVGZoomEvent::GetPreviousTranslate(nsISupports **aPreviousTranslate)
 {
   *aPreviousTranslate = mPreviousTranslate;
   NS_IF_ADDREF(*aPreviousTranslate);
@@ -107,7 +107,7 @@ nsDOMSVGZoomEvent::GetPreviousTranslate(nsISupports **aPreviousTranslate)
 }
 
 /* readonly attribute float newScale; */
-NS_IMETHODIMP nsDOMSVGZoomEvent::GetNewScale(float *aNewScale)
+NS_IMETHODIMP SVGZoomEvent::GetNewScale(float *aNewScale)
 {
   *aNewScale = mNewScale;
   return NS_OK;
@@ -115,12 +115,15 @@ NS_IMETHODIMP nsDOMSVGZoomEvent::GetNewScale(float *aNewScale)
 
 /* readonly attribute SVGPoint newTranslate; */
 NS_IMETHODIMP
-nsDOMSVGZoomEvent::GetNewTranslate(nsISupports **aNewTranslate)
+SVGZoomEvent::GetNewTranslate(nsISupports **aNewTranslate)
 {
   *aNewTranslate = mNewTranslate;
   NS_IF_ADDREF(*aNewTranslate);
   return NS_OK;
 }
+
+} // namespace dom
+} // namespace mozilla
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -132,6 +135,7 @@ NS_NewDOMSVGZoomEvent(nsIDOMEvent** aInstancePtrResult,
                       nsPresContext* aPresContext,
                       nsGUIEvent *aEvent)
 {
-  nsDOMSVGZoomEvent* it = new nsDOMSVGZoomEvent(aOwner, aPresContext, aEvent);
+  mozilla::dom::SVGZoomEvent* it =
+    new mozilla::dom::SVGZoomEvent(aOwner, aPresContext, aEvent);
   return CallQueryInterface(it, aInstancePtrResult);
 }
