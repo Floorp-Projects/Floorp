@@ -340,88 +340,11 @@ nsBlockFrame::GetSplittableType() const
 }
 
 #ifdef DEBUG
-NS_METHOD
+void
 nsBlockFrame::List(FILE* out, int32_t aIndent, uint32_t aFlags) const
 {
-  IndentBy(out, aIndent);
-  ListTag(out);
-#ifdef DEBUG_waterson
-  fprintf(out, " [parent=%p]", mParent);
-#endif
-  if (HasView()) {
-    fprintf(out, " [view=%p]", static_cast<void*>(GetView()));
-  }
-  if (GetNextSibling()) {
-    fprintf(out, " next=%p", static_cast<void*>(GetNextSibling()));
-  }
+  ListGeneric(out, aIndent, aFlags);
 
-  // Output the flow linkage
-  if (nullptr != GetPrevInFlow()) {
-    fprintf(out, " prev-in-flow=%p", static_cast<void*>(GetPrevInFlow()));
-  }
-  if (nullptr != GetNextInFlow()) {
-    fprintf(out, " next-in-flow=%p", static_cast<void*>(GetNextInFlow()));
-  }
-
-  void* IBsibling = Properties().Get(IBSplitSpecialSibling());
-  if (IBsibling) {
-    fprintf(out, " IBSplitSpecialSibling=%p", IBsibling);
-  }
-  void* IBprevsibling = Properties().Get(IBSplitSpecialPrevSibling());
-  if (IBprevsibling) {
-    fprintf(out, " IBSplitSpecialPrevSibling=%p", IBprevsibling);
-  }
-
-  if (nullptr != mContent) {
-    fprintf(out, " [content=%p]", static_cast<void*>(mContent));
-  }
-
-  // Output the rect and state
-  fprintf(out, " {%d,%d,%d,%d}", mRect.x, mRect.y, mRect.width, mRect.height);
-  if (0 != mState) {
-    fprintf(out, " [state=%016llx]", (unsigned long long)mState);
-  }
-  nsBlockFrame* f = const_cast<nsBlockFrame*>(this);
-  if (f->HasOverflowAreas()) {
-    nsRect overflowArea = f->GetVisualOverflowRect();
-    fprintf(out, " [vis-overflow=%d,%d,%d,%d]", overflowArea.x, overflowArea.y,
-            overflowArea.width, overflowArea.height);
-    overflowArea = f->GetScrollableOverflowRect();
-    fprintf(out, " [scr-overflow=%d,%d,%d,%d]", overflowArea.x, overflowArea.y,
-            overflowArea.width, overflowArea.height);
-  }
-  int32_t numInlineLines = 0;
-  int32_t numBlockLines = 0;
-  if (!mLines.empty()) {
-    const_line_iterator line = begin_lines(), line_end = end_lines();
-    for ( ; line != line_end; ++line) {
-      if (line->IsBlock())
-        numBlockLines++;
-      else
-        numInlineLines++;
-    }
-  }
-  fprintf(out, " sc=%p(i=%d,b=%d)",
-          static_cast<void*>(mStyleContext), numInlineLines, numBlockLines);
-  nsIAtom* pseudoTag = mStyleContext->GetPseudo();
-  if (pseudoTag) {
-    nsAutoString atomString;
-    pseudoTag->ToString(atomString);
-    fprintf(out, " pst=%s",
-            NS_LossyConvertUTF16toASCII(atomString).get());
-  }
-  if (IsTransformed()) {
-    fprintf(out, " transformed");
-  }
-  if (ChildrenHavePerspective()) {
-    fprintf(out, " perspective");
-  }
-  if (Preserves3DChildren()) {
-    fprintf(out, " preserves-3d-children");
-  }
-  if (Preserves3D()) {
-    fprintf(out, " preserves-3d");
-  }
   fputs("<\n", out);
 
   aIndent++;
@@ -438,7 +361,7 @@ nsBlockFrame::List(FILE* out, int32_t aIndent, uint32_t aFlags) const
   const FrameLines* overflowLines = GetOverflowLines();
   if (overflowLines && !overflowLines->mLines.empty()) {
     IndentBy(out, aIndent);
-    fputs("Overflow-lines<\n", out);
+    fprintf(out, "Overflow-lines %p/%p <\n", overflowLines, &overflowLines->mFrames);
     const_line_iterator line = overflowLines->mLines.begin(),
                         line_end = overflowLines->mLines.end();
     for ( ; line != line_end; ++line) {
@@ -457,7 +380,8 @@ nsBlockFrame::List(FILE* out, int32_t aIndent, uint32_t aFlags) const
       continue;
     }
     IndentBy(out, aIndent);
-    fprintf(out, "%s<\n", mozilla::layout::ChildListName(lists.CurrentID()));
+    fprintf(out, "%s %p <\n", mozilla::layout::ChildListName(lists.CurrentID()),
+            &GetChildList(lists.CurrentID()));
     nsFrameList::Enumerator childFrames(lists.CurrentList());
     for (; !childFrames.AtEnd(); childFrames.Next()) {
       nsIFrame* kid = childFrames.get();
@@ -470,8 +394,6 @@ nsBlockFrame::List(FILE* out, int32_t aIndent, uint32_t aFlags) const
   aIndent--;
   IndentBy(out, aIndent);
   fputs(">\n", out);
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP_(nsFrameState)

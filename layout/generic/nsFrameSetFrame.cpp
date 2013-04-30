@@ -147,9 +147,10 @@ public:
   NS_DECL_FRAMEARENA_HELPERS
 
 #ifdef DEBUG
-  NS_IMETHOD List(FILE* out,
-                  int32_t aIndent,
-                  uint32_t aFlags = 0) const MOZ_OVERRIDE;
+  NS_IMETHOD GetFrameName(nsAString& aResult) const
+  {
+    return MakeFrameName(NS_LITERAL_STRING("FramesetBlank"), aResult);
+  }
 #endif
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
@@ -1710,18 +1711,6 @@ void nsDisplayFramesetBlank::Paint(nsDisplayListBuilder* aBuilder,
   aCtx->SetColor(white);
   aCtx->FillRect(mVisibleRect);
 }
-
-#ifdef DEBUG
-NS_IMETHODIMP
-nsHTMLFramesetBlankFrame::List(FILE*    out,
-                               int32_t  aIndent,
-                               uint32_t aFlags) const
-{
-  IndentBy(out, aIndent);
-  fprintf(out, "%p BLANK \n", (void*)this);
-  return nsLeafFrame::List(out, aIndent, aFlags);
-}
-#endif
 
 void
 nsHTMLFramesetBlankFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,

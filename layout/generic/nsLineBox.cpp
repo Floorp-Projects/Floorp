@@ -239,8 +239,10 @@ nsLineBox::List(FILE* out, int32_t aIndent, uint32_t aFlags) const
   }
   fprintf(out, "{%d,%d,%d,%d} ",
           mBounds.x, mBounds.y, mBounds.width, mBounds.height);
-  if (mData) {
-    fprintf(out, "vis-overflow={%d,%d,%d,%d} scr-overflow={%d,%d,%d,%d} ",
+  if (mData &&
+      (!mData->mOverflowAreas.VisualOverflow().IsEqualEdges(mBounds) ||
+       !mData->mOverflowAreas.ScrollableOverflow().IsEqualEdges(mBounds))) {
+    fprintf(out, "vis-overflow=%d,%d,%d,%d scr-overflow=%d,%d,%d,%d ",
             mData->mOverflowAreas.VisualOverflow().x,
             mData->mOverflowAreas.VisualOverflow().y,
             mData->mOverflowAreas.VisualOverflow().width,
