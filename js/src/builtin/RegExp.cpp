@@ -366,7 +366,7 @@ regexp_toString_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsRegExp(args.thisv()));
 
-    RawString str = args.thisv().toObject().asRegExp().toString(cx);
+    JSString *str = args.thisv().toObject().asRegExp().toString(cx);
     if (!str)
         return false;
 

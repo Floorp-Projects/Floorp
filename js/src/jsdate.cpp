@@ -1182,7 +1182,7 @@ date_parse(JSContext *cx, unsigned argc, Value *vp)
         return true;
     }
 
-    RawString str = ToString<CanGC>(cx, args[0]);
+    JSString *str = ToString<CanGC>(cx, args[0]);
     if (!str)
         return false;
 
@@ -2487,7 +2487,7 @@ date_toGMTString_impl(JSContext *cx, CallArgs args)
     else
         print_gmt_string(buf, sizeof buf, utctime);
 
-    RawString str = JS_NewStringCopyZ(cx, buf);
+    JSString *str = JS_NewStringCopyZ(cx, buf);
     if (!str)
         return false;
     args.rval().setString(str);
@@ -2516,7 +2516,7 @@ date_toISOString_impl(JSContext *cx, CallArgs args)
     char buf[100];
     print_iso_string(buf, sizeof buf, utctime);
 
-    RawString str = JS_NewStringCopyZ(cx, buf);
+    JSString *str = JS_NewStringCopyZ(cx, buf);
     if (!str)
         return false;
     args.rval().setString(str);
@@ -2713,7 +2713,7 @@ date_format(JSContext *cx, double date, formatspec format, MutableHandleValue rv
         }
     }
 
-    RawString str = JS_NewStringCopyZ(cx, buf);
+    JSString *str = JS_NewStringCopyZ(cx, buf);
     if (!str)
         return false;
     rval.setString(str);
@@ -2759,7 +2759,7 @@ ToLocaleFormatHelper(JSContext *cx, HandleObject obj, const char *format, Mutabl
     if (cx->runtime->localeCallbacks && cx->runtime->localeCallbacks->localeToUnicode)
         return cx->runtime->localeCallbacks->localeToUnicode(cx, buf, rval);
 
-    RawString str = JS_NewStringCopyZ(cx, buf);
+    JSString *str = JS_NewStringCopyZ(cx, buf);
     if (!str)
         return false;
     rval.setString(str);
@@ -2934,7 +2934,7 @@ date_toSource_impl(JSContext *cx, CallArgs args)
         return false;
     }
 
-    RawString str = sb.finishString();
+    JSString *str = sb.finishString();
     if (!str)
         return false;
     args.rval().setString(str);
@@ -3071,7 +3071,7 @@ js_Date(JSContext *cx, unsigned argc, Value *vp)
 
         if (args[0].isString()) {
             /* Step 2. */
-            RawString str = args[0].toString();
+            JSString *str = args[0].toString();
             if (!str)
                 return false;
 
