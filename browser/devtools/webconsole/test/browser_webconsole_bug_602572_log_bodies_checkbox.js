@@ -19,8 +19,8 @@ function test()
   browser.addEventListener("load", function onLoad1(aEvent) {
     browser.removeEventListener(aEvent.type, onLoad1, true);
 
-    openConsole(null, function(aHud) {
-      info("iframe1 root height " + aHud.ui.rootElement.clientHeight);
+    openConsole(null, (hud) => hud.iframeWindow.mozRequestAnimationFrame(() => {
+      info("iframe1 root height " + hud.ui.rootElement.clientHeight);
 
       // open tab 2
       addTab("data:text/html;charset=utf-8,Web Console test for bug 602572: log bodies checkbox. tab 2");
@@ -29,12 +29,9 @@ function test()
       browser.addEventListener("load", function onLoad2(aEvent) {
         browser.removeEventListener(aEvent.type, onLoad2, true);
 
-        openConsole(null, function(aHud) {
-          info("iframe2 root height " + aHud.ui.rootElement.clientHeight);
-          waitForFocus(startTest, aHud.iframeWindow);
-        });
+        openConsole(null, (hud) => hud.iframeWindow.mozRequestAnimationFrame(startTest));
       }, true);
-    });
+    }));
   }, true);
 }
 
@@ -44,6 +41,7 @@ function startTest()
   let win2 = tabs[runCount*2 + 1].linkedBrowser.contentWindow;
   let hudId2 = HUDService.getHudIdByWindow(win2);
   huds[1] = HUDService.hudReferences[hudId2];
+  info("startTest: iframe2 root height " + huds[1].ui.rootElement.clientHeight);
 
   if (runCount == 0) {
     menuitems[1] = huds[1].ui.rootElement.querySelector("#saveBodies");
