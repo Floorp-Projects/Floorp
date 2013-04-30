@@ -1035,9 +1035,10 @@ XPCWrappedNativeXrayTraits::resolveOwnProperty(JSContext *cx, Wrapper &jsWrapper
         }
 
         bool retval = true;
-        JSObject *pobj = NULL;
-        nsresult rv = wn->GetScriptableInfo()->GetCallback()->NewResolve(wn, cx, wrapper, id,
-                                                                         flags, &pobj, &retval);
+        RootedObject pobj(cx);
+        nsIXPCScriptable *callback = wn->GetScriptableInfo()->GetCallback();
+        nsresult rv = callback->NewResolve(wn, cx, wrapper, id, flags,
+                                           pobj.address(), &retval);
         if (NS_FAILED(rv)) {
             if (retval)
                 XPCThrower::Throw(rv, cx);
