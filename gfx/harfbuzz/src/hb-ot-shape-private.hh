@@ -33,10 +33,6 @@
 
 
 
-/* buffer var allocations, used during the entire shaping process */
-#define unicode_props0()	var2.u8[0]
-#define unicode_props1()	var2.u8[1]
-
 
 
 struct hb_ot_shape_plan_t
@@ -88,38 +84,5 @@ struct hb_ot_shape_planner_t
   NO_COPY (hb_ot_shape_planner_t);
 };
 
-
-
-inline void
-_hb_glyph_info_set_unicode_props (hb_glyph_info_t *info, hb_unicode_funcs_t *unicode)
-{
-  info->unicode_props0() = ((unsigned int) unicode->general_category (info->codepoint)) |
-			   (unicode->is_default_ignorable (info->codepoint) ? 0x80 : 0);
-  info->unicode_props1() = unicode->modified_combining_class (info->codepoint);
-}
-
-inline hb_unicode_general_category_t
-_hb_glyph_info_get_general_category (const hb_glyph_info_t *info)
-{
-  return (hb_unicode_general_category_t) (info->unicode_props0() & 0x7F);
-}
-
-inline void
-_hb_glyph_info_set_modified_combining_class (hb_glyph_info_t *info, unsigned int modified_class)
-{
-  info->unicode_props1() = modified_class;
-}
-
-inline unsigned int
-_hb_glyph_info_get_modified_combining_class (const hb_glyph_info_t *info)
-{
-  return info->unicode_props1();
-}
-
-inline hb_bool_t
-_hb_glyph_info_is_default_ignorable (const hb_glyph_info_t *info)
-{
-  return !!(info->unicode_props0() & 0x80);
-}
 
 #endif /* HB_OT_SHAPE_PRIVATE_HH */

@@ -27,6 +27,7 @@
 #include "hb-shape-plan-private.hh"
 #include "hb-shaper-private.hh"
 #include "hb-font-private.hh"
+#include "hb-buffer-private.hh"
 
 #define HB_SHAPER_IMPLEMENT(shaper) \
 	HB_SHAPER_DATA_ENSURE_DECLARE(shaper, face) \
@@ -178,8 +179,13 @@ hb_shape_plan_execute (hb_shape_plan_t    *shape_plan,
 		       const hb_feature_t *features,
 		       unsigned int        num_features)
 {
-  if (unlikely (shape_plan->face != font->face))
+  if (unlikely (hb_object_is_inert (shape_plan) ||
+		hb_object_is_inert (font) ||
+		hb_object_is_inert (buffer)))
     return false;
+
+  assert (shape_plan->face == font->face);
+  assert (hb_segment_properties_equal (&shape_plan->props, &buffer->props));
 
 #define HB_SHAPER_EXECUTE(shaper) \
 	HB_STMT_START { \

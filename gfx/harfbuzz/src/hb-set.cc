@@ -27,7 +27,6 @@
 #include "hb-set-private.hh"
 
 
-
 /* Public API */
 
 
