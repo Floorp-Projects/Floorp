@@ -1273,7 +1273,7 @@ let RIL = {
 
     // Write pin2.
     if (options.command == ICC_COMMAND_UPDATE_RECORD &&
-        options.p2) {
+        options.pin2) {
       Buf.writeString(options.pin2);
     } else {
       Buf.writeString(null);
@@ -6293,8 +6293,8 @@ let GsmPDUHelper = {
                                                                   alphaId,
                                                                   number) {
     // Write String length
-    let length = recordSize * 2;
-    Buf.writeUint32(length);
+    let strLen = recordSize * 2;
+    Buf.writeUint32(strLen);
 
     let alphaLen = recordSize - ADN_FOOTER_SIZE_BYTES;
     this.writeAlphaIdentifier(alphaLen, alphaId);
@@ -6303,7 +6303,7 @@ let GsmPDUHelper = {
     // Write unused octets 0xff, CCP and EXT1.
     this.writeHexOctet(0xff);
     this.writeHexOctet(0xff);
-    Buf.writeStringDelimiter(length);
+    Buf.writeStringDelimiter(strLen);
   },
 
   /**
@@ -9853,6 +9853,7 @@ let ICCIOHelper = {
     }
 
     options.type = EF_TYPE_LINEAR_FIXED;
+    options.pathId = ICCFileHelper.getEFPath(options.fileId);
     let cb = options.callback;
     options.callback = function callback(options) {
       options.callback = cb;
@@ -10431,6 +10432,37 @@ let ICCRecordHelper = {
   },
 
   /**
+   * Update USIM Phonebook EF_IAP.
+   *
+   * @see TS 131.102, clause 4.4.2.13
+   *
+   * @param fileId       EF id of the IAP.
+   * @param recordNumber The identifier of the record shall be updated.
+   * @param iap          The IAP value to be written.
+   * @param onsuccess    Callback to be called when success.
+   * @param onerror      Callback to be called when error.
+   */
+  updateIAP: function updateIAP(fileId, recordNumber, iap, onsuccess, onerror) {
+    let dataWriter = function dataWriter(recordSize) {
+      // Write String length
+      let strLen = recordSize * 2;
+      Buf.writeUint32(strLen);
+
+      for (let i = 0; i < iap.length; i++) {
+        GsmPDUHelper.writeHexOctet(iap[i]);
+      }
+
+      Buf.writeStringDelimiter(strLen);
+    }.bind(this);
+
+    ICCIOHelper.updateLinearFixedEF({fileId: fileId,
+                                     recordNumber: recordNumber,
+                                     dataWriter: dataWriter,
+                                     callback: onsuccess,
+                                     onerror: onerror});
+  },
+
+  /**
    * Cache EF_Email record size.
    */
   _emailRecordSize: null,
@@ -10485,6 +10517,44 @@ let ICCRecordHelper = {
   },
 
   /**
+   * Update USIM Phonebook EF_EMAIL.
+   *
+   * @see TS 131.102, clause 4.4.2.13
+   *
+   * @param pbr          Phonebook Reference File.
+   * @param recordNumber The identifier of the record shall be updated.
+   * @param email        The value to be written.
+   * @param adnRecordId  The record Id of ADN, only needed if the fileType of Email is TYPE2.
+   * @param onsuccess    Callback to be called when success.
+   * @param onerror      Callback to be called when error.
+   */
+  updateEmail: function updateEmail(pbr, recordNumber, email, adnRecordId, onsuccess, onerror) {
+    let fileId = pbr[USIM_PBR_EMAIL].fileId;
+    let fileType = pbr[USIM_PBR_EMAIL].fileType;
+    let dataWriter = function dataWriter(recordSize) {
+      // Write String length
+      let strLen = recordSize * 2;
+      Buf.writeUint32(strLen);
+
+      if (fileType == ICC_USIM_TYPE1_TAG) {
+        GsmPDUHelper.writeStringTo8BitUnpacked(recordSize, email);
+      } else {
+        GsmPDUHelper.writeStringTo8BitUnpacked(recordSize - 2, email);
+        GsmPDUHelper.writeHexOctet(pbr.adn.sfi || 0xff);
+        GsmPDUHelper.writeHexOctet(adnRecordId);
+      }
+
+      Buf.writeStringDelimiter(strLen);
+    }.bind(this);
+
+    ICCIOHelper.updateLinearFixedEF({fileId: fileId,
+                                     recordNumber: recordNumber,
+                                     dataWriter: dataWriter,
+                                     callback: onsuccess,
+                                     onerror: onerror});
+ },
+
+  /**
    * Cache EF_ANR record size.
    */
   _anrRecordSize: null,
@@ -10533,6 +10603,50 @@ let ICCRecordHelper = {
                                    recordSize: this._anrRecordSize,
                                    callback: callback.bind(this),
                                    onerror: onerror});
+  },
+  /**
+   * Update USIM Phonebook EF_ANR.
+   *
+   * @see TS 131.102, clause 4.4.2.9
+   *
+   * @param pbr          Phonebook Reference File.
+   * @param recordNumber The identifier of the record shall be updated.
+   * @param number       The value to be written.
+   * @param adnRecordId  The record Id of ADN, only needed if the fileType of Email is TYPE2.
+   * @param onsuccess    Callback to be called when success.
+   * @param onerror      Callback to be called when error.
+   */
+  updateANR: function updateANR(pbr, recordNumber, number, adnRecordId, onsuccess, onerror) {
+    let fileId = pbr[USIM_PBR_ANR0].fileId;
+    let fileType = pbr[USIM_PBR_ANR0].fileType;
+    let dataWriter = function dataWriter(recordSize) {
+      // Write String length
+      let strLen = recordSize * 2;
+      Buf.writeUint32(strLen);
+
+      // EF_AAS record Id. Unused for now.
+      GsmPDUHelper.writeHexOctet(0xff);
+
+      GsmPDUHelper.writeNumberWithLength(number);
+
+      // Write unused octets 0xff, CCP and EXT1.
+      GsmPDUHelper.writeHexOctet(0xff);
+      GsmPDUHelper.writeHexOctet(0xff);
+
+      // For Type 2 there are two extra octets.
+      if (fileType == ICC_USIM_TYPE2_TAG) {
+        GsmPDUHelper.writeHexOctet(pbr.adn.sfi || 0xff);
+        GsmPDUHelper.writeHexOctet(adnRecordId);
+      }
+
+      Buf.writeStringDelimiter(strLen);
+    }.bind(this);
+
+    ICCIOHelper.updateLinearFixedEF({fileId: fileId,
+                                     recordNumber: recordNumber,
+                                     dataWriter: dataWriter,
+                                     callback: onsuccess,
+                                     onerror: onerror});
   },
 
   /**
@@ -11146,7 +11260,7 @@ let ICCUtilsHelper = {
       };
       simTlv.value = GsmPDUHelper.readHexOctetArray(simTlv.length)
       tlvs.push(simTlv);
-      index += simTlv.length + 2 /* The length of 'tag' and 'length' field */;
+      index += simTlv.length + 2; // The length of 'tag' and 'length' field.
     }
     return tlvs;
   },
@@ -11171,6 +11285,7 @@ let ICCUtilsHelper = {
         pbr[tagName] = tlv;
         pbr[tagName].fileType = pbrTlv.tag;
         pbr[tagName].fileId = (tlv.value[0] << 8) | tlv.value[1];
+        pbr[tagName].sfi = tlv.value[2];
 
         // For Type 2, the order of files is in the same order in IAP.
         if (pbrTlv.tag == ICC_USIM_TYPE2_TAG) {
@@ -11501,13 +11616,10 @@ let ICCContactHelper = {
    * @param onerror     Callback to be called when error.
    */
   readSupportedPBRFields: function readSupportedPBRFields(pbr, contacts, onsuccess, onerror) {
-    // Current supported fields. Adding more fields to read will increasing I/O
-    // time dramatically, do check the performance is acceptable when you add
-    // more fields.
-    const fields = ["email", "anr0"];
-
-    (function readField(field) {
-      let field = fields.pop();
+    let fieldIndex = 0;
+    (function readField() {
+      let field = USIM_PBR_FIELDS[fieldIndex];
+      fieldIndex += 1;
       if (!field) {
         if (onsuccess) {
           onsuccess(contacts);
@@ -11574,11 +11686,11 @@ let ICCContactHelper = {
       let gotFieldCb = function gotFieldCb(value) {
         if (value) {
           // Move anr0 anr1,.. into anr[].
-          if (field.startsWith("anr")) {
-            if (!contact["anr"]) {
-              contact["anr"] = [];
+          if (field.startsWith(USIM_PBR_ANR)) {
+            if (!contact[USIM_PBR_ANR]) {
+              contact[USIM_PBR_ANR] = [];
             }
-            contact["anr"].push(value);
+            contact[USIM_PBR_ANR].push(value);
           } else {
             contact[field] = value;
           }
@@ -11590,12 +11702,12 @@ let ICCContactHelper = {
       }.bind(this);
 
       // Detect EF to be read, for anr, it could have anr0, anr1,...
-      let ef = field.startsWith("anr") ? "anr" : field;
+      let ef = field.startsWith(USIM_PBR_ANR) ? USIM_PBR_ANR : field;
       switch (ef) {
-        case "email":
+        case USIM_PBR_EMAIL:
           ICCRecordHelper.readEmail(fileId, fileType, recordId, gotFieldCb, onerror);
           break;
-        case "anr":
+        case USIM_PBR_ANR:
           ICCRecordHelper.readANR(fileId, fileType, recordId, gotFieldCb, onerror);
           break;
         default:
@@ -11610,7 +11722,7 @@ let ICCContactHelper = {
   /**
    * Get the recordId.
    *
-   * If the fileType of Email is ICC_USIM_TYPE1_TAG, use corresponding ADN recordId.
+   * If the fileType of field is ICC_USIM_TYPE1_TAG, use corresponding ADN recordId.
    * otherwise get the recordId from IAP.
    *
    * @see TS 131.102, clause 4.4.2.2
@@ -11626,7 +11738,7 @@ let ICCContactHelper = {
       if (onsuccess) {
         onsuccess(contact.recordId);
       }
-    } else {
+    } else if (pbr[field].fileType == ICC_USIM_TYPE2_TAG) {
       // If the file type is ICC_USIM_TYPE2_TAG, the recordId shall be got from IAP.
       let gotIapCb = function gotIapCb(iap) {
         let indexInIAP = pbr[field].indexInIAP;
@@ -11638,6 +11750,9 @@ let ICCContactHelper = {
       }.bind(this);
 
       ICCRecordHelper.readIAP(pbr.iap.fileId, contact.recordId, gotIapCb, onerror);
+    } else {
+      let error = onerror | debug;
+      error("USIM PBR files in Type 3 format are not supported.");
     }
   },
 
@@ -11658,10 +11773,178 @@ let ICCContactHelper = {
     ICCRecordHelper.readPBR(gotPbrCb, onerror);
   },
 
+  /**
+   * Update fields in Phonebook Reference File.
+   *
+   * @param pbr           Phonebook Reference File to be read.
+   * @param onsuccess     Callback to be called when success.
+   * @param onerror       Callback to be called when error.
+   */
   updatePhonebookSet: function updatePhonebookSet(pbr, contact, onsuccess, onerror) {
-    // TODO: Bug 859659, update EF_Email and EF_ANR.
-    ICCRecordHelper.updateADNLike(pbr.adn.fileId, contact, null, onsuccess, onerror);
-  }
+    let updateAdnCb = function () {
+      this.updateSupportedPBRFields(pbr, contact, onsuccess, onerror);
+    }.bind(this);
+
+    ICCRecordHelper.updateADNLike(pbr.adn.fileId, contact, null, updateAdnCb, onerror);
+  },
+
+  /**
+   * Update supported Phonebook fields.
+   *
+   * @param pbr         Phone Book Reference file.
+   * @param contact     Contact to be updated.
+   * @param onsuccess   Callback to be called when success.
+   * @param onerror     Callback to be called when error.
+   */
+  updateSupportedPBRFields: function updateSupportedPBRFields(pbr, contact, onsuccess, onerror) {
+    let fieldIndex = 0;
+    (function updateField() {
+      let field = USIM_PBR_FIELDS[fieldIndex];
+      fieldIndex += 1;
+      if (!field) {
+        if (onsuccess) {
+          onsuccess();
+        }
+        return;
+      }
+
+      // Check if PBR has this field.
+      if (!pbr[field]) {
+        updateField();
+        return;
+      }
+
+      // Check if contact has additional properties (email, anr, ...etc) need
+      // to be updated as well.
+      if ((field === USIM_PBR_EMAIL && !contact.email) ||
+          (field === USIM_PBR_ANR0 && !contact.anr[0])) {
+        updateField();
+        return;
+      }
+
+      ICCContactHelper.updateContactField(pbr, contact, field, updateField, onerror);
+    })();
+  },
+
+  /**
+   * Update contact's field from USIM.
+   *
+   * @param pbr           The phonebook reference file.
+   * @param contact       The contact needs to be updated.
+   * @param field         Phonebook field to be updated.
+   * @param onsuccess     Callback to be called when success.
+   * @param onerror       Callback to be called when error.
+   */
+  updateContactField: function updateContactField(pbr, contact, field, onsuccess, onerror) {
+    if (pbr[field].fileType === ICC_USIM_TYPE1_TAG) {
+      this.updateContactFieldType1(pbr, contact, field, onsuccess, onerror);
+    } else if (pbr[field].fileType === ICC_USIM_TYPE2_TAG) {
+      this.updateContactFieldType2(pbr, contact, field, onsuccess, onerror);
+    }
+  },
+
+  /**
+   * Update Type 1 USIM contact fields.
+   *
+   * @param pbr           The phonebook reference file.
+   * @param contact       The contact needs to be updated.
+   * @param field         Phonebook field to be updated.
+   * @param onsuccess     Callback to be called when success.
+   * @param onerror       Callback to be called when error.
+   */
+  updateContactFieldType1: function updateContactFieldType1(pbr, contact, field, onsuccess, onerror) {
+    if (field === USIM_PBR_EMAIL) {
+      ICCRecordHelper.updateEmail(pbr, contact.recordId, contact.email, null, onsuccess, onerror);
+    } else if (field === USIM_PBR_ANR0) {
+      ICCRecordHelper.updateANR(pbr, contact.recordId, contact.anr[0], null, onsuccess, onerror);
+    }
+  },
+
+  /**
+   * Update Type 2 USIM contact fields.
+   *
+   * @param pbr           The phonebook reference file.
+   * @param contact       The contact needs to be updated.
+   * @param field         Phonebook field to be updated.
+   * @param onsuccess     Callback to be called when success.
+   * @param onerror       Callback to be called when error.
+   */
+  updateContactFieldType2: function updateContactFieldType2(pbr, contact, field, onsuccess, onerror) {
+    // Case 1 : EF_IAP[adnRecordId] doesn't have a value(0xff)
+    //   Find a free recordId for EF_field
+    //   Update field with that free recordId.
+    //   Update IAP.
+    //
+    // Case 2: EF_IAP[adnRecordId] has a value
+    //   update EF_field[iap[field.indexInIAP]]
+
+    let gotIapCb = function gotIapCb(iap) {
+      let recordId = iap[pbr[field].indexInIAP];
+      if (recordId === 0xff) {
+        // Case 1.
+        this.addContactFieldType2(pbr, contact, field, onsuccess, onerror);
+        return;
+      }
+
+      // Case 2.
+      if (field === USIM_PBR_EMAIL) {
+        ICCRecordHelper.updateEmail(pbr, recordId, contact.email, contact.recordId, onsuccess, onerror);
+      } else if (field === USIM_PBR_ANR0) {
+        ICCRecordHelper.updateANR(pbr, recordId, contact.anr[0], contact.recordId, onsuccess, onerror);
+      }
+    }.bind(this);
+
+    ICCRecordHelper.readIAP(pbr.iap.fileId, contact.recordId, gotIapCb, onerror);
+  },
+
+  /**
+   * Add Type 2 USIM contact fields.
+   *
+   * @param pbr           The phonebook reference file.
+   * @param contact       The contact needs to be updated.
+   * @param field         Phonebook field to be updated.
+   * @param onsuccess     Callback to be called when success.
+   * @param onerror       Callback to be called when error.
+   */
+  addContactFieldType2: function addContactFieldType2(pbr, contact, field, onsuccess, onerror) {
+    let successCb = function successCb(recordId) {
+      let updateCb = function updateCb() {
+        this.updateContactFieldIndexInIAP(pbr, contact.recordId, field, recordId, onsuccess, onerror);
+      }.bind(this);
+
+      if (field === USIM_PBR_EMAIL) {
+        ICCRecordHelper.updateEmail(pbr, recordId, contact.email, contact.recordId, updateCb, onerror);
+      } else if (field === USIM_PBR_ANR0) {
+        ICCRecordHelper.updateANR(pbr, recordId, contact.anr[0], contact.recordId, updateCb, onerror);
+      }
+    }.bind(this);
+
+    let errorCb = function errorCb(errorMsg) {
+      let error = onerror || debug;
+      error(errorMsg + " USIM field " + field);
+    }.bind(this);
+
+    ICCRecordHelper.findFreeRecordId(pbr[field].fileId, successCb, errorCb);
+  },
+
+  /**
+   * Update IAP value.
+   *
+   * @param pbr           The phonebook reference file.
+   * @param recordNumber  The record identifier of EF_IAP.
+   * @param field         Phonebook field.
+   * @param value         The value of 'field' in IAP.
+   * @param onsuccess     Callback to be called when success.
+   * @param onerror       Callback to be called when error.
+   *
+   */
+  updateContactFieldIndexInIAP: function updateContactFieldIndexInIAP(pbr, recordNumber, field, value, onsuccess, onerror) {
+    let gotIAPCb = function gotIAPCb(iap) {
+      iap[pbr[field].indexInIAP] = value;
+      ICCRecordHelper.updateIAP(pbr.iap.fileId, recordNumber, iap, onsuccess, onerror);
+    }.bind(this);
+    ICCRecordHelper.readIAP(pbr.iap.fileId, recordNumber, gotIAPCb, onerror);
+  },
 };
 
 let RuimRecordHelper = {
