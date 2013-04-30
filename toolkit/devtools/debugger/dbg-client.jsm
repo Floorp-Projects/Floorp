@@ -348,37 +348,10 @@ DebuggerClient.prototype = {
       });
     }
 
-    let closeTransport = function _closeTransport() {
-      this._transport.close();
-      this._transport = null;
-    }.bind(this);
-
-    let detachTab = function _detachTab() {
-      if (this.activeTab) {
-        this.activeTab.detach(closeTransport);
-      } else {
-        closeTransport();
-      }
-    }.bind(this);
-
-    let detachThread = function _detachThread() {
-      if (this.activeThread) {
-        this.activeThread.detach(detachTab);
-      } else {
-        detachTab();
-      }
-    }.bind(this);
+    let self = this;
 
     let consolesClosed = 0;
     let consolesToClose = 0;
-
-    let onConsoleClose = function _onConsoleClose() {
-      consolesClosed++;
-      if (consolesClosed >= consolesToClose) {
-        this._consoleClients = {};
-        detachThread();
-      }
-    }.bind(this);
 
     for each (let client in this._consoleClients) {
       consolesToClose++;
@@ -387,6 +360,35 @@ DebuggerClient.prototype = {
 
     if (!consolesToClose) {
       detachThread();
+    }
+
+    function onConsoleClose() {
+      consolesClosed++;
+      if (consolesClosed >= consolesToClose) {
+        self._consoleClients = {};
+        detachThread();
+      }
+    }
+
+    function detachThread() {
+      if (self.activeThread) {
+        self.activeThread.detach(detachTab);
+      } else {
+        detachTab();
+      }
+    }
+
+    function detachTab() {
+      if (self.activeTab) {
+        self.activeTab.detach(closeTransport);
+      } else {
+        closeTransport();
+      }
+    }
+
+    function closeTransport() {
+      self._transport.close();
+      self._transport = null;
     }
   },
 
