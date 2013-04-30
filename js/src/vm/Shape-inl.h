@@ -259,7 +259,7 @@ Shape::matches(const StackShape &other) const
 }
 
 inline bool
-Shape::matchesParamsAfterId(RawBaseShape base, uint32_t aslot,
+Shape::matchesParamsAfterId(BaseShape *base, uint32_t aslot,
                             unsigned aattrs, unsigned aflags, int ashortid) const
 {
     return base->unowned() == this->base()->unowned() &&
@@ -448,7 +448,7 @@ Shape::markChildren(JSTracer *trc)
 }
 
 inline void
-BaseShape::writeBarrierPre(RawBaseShape base)
+BaseShape::writeBarrierPre(BaseShape *base)
 {
 #ifdef JSGC_INCREMENTAL
     if (!base || !base->runtime()->needsBarrier())
@@ -456,7 +456,7 @@ BaseShape::writeBarrierPre(RawBaseShape base)
 
     JS::Zone *zone = base->zone();
     if (zone->needsBarrier()) {
-        RawBaseShape tmp = base;
+        BaseShape *tmp = base;
         MarkBaseShapeUnbarriered(zone->barrierTracer(), &tmp, "write barrier");
         JS_ASSERT(tmp == base);
     }
@@ -464,17 +464,17 @@ BaseShape::writeBarrierPre(RawBaseShape base)
 }
 
 inline void
-BaseShape::writeBarrierPost(RawBaseShape shape, void *addr)
+BaseShape::writeBarrierPost(BaseShape *shape, void *addr)
 {
 }
 
 inline void
-BaseShape::readBarrier(RawBaseShape base)
+BaseShape::readBarrier(BaseShape *base)
 {
 #ifdef JSGC_INCREMENTAL
     JS::Zone *zone = base->zone();
     if (zone->needsBarrier()) {
-        RawBaseShape tmp = base;
+        BaseShape *tmp = base;
         MarkBaseShapeUnbarriered(zone->barrierTracer(), &tmp, "read barrier");
         JS_ASSERT(tmp == base);
     }

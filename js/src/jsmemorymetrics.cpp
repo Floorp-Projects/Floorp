@@ -242,7 +242,7 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
       }
 
       case JSTRACE_BASE_SHAPE: {
-        RawBaseShape base = static_cast<RawBaseShape>(thing);
+        BaseShape *base = static_cast<BaseShape *>(thing);
         CompartmentStats *cStats = GetCompartmentStats(base->compartment());
         cStats->gcHeapShapesBase += thingSize;
         break;

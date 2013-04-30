@@ -599,7 +599,7 @@ js_NewGCShape(JSContext *cx)
 }
 
 template <js::AllowGC allowGC>
-inline js::RawBaseShape
+inline js::BaseShape *
 js_NewGCBaseShape(JSContext *cx)
 {
     return js::gc::NewGCThing<js::BaseShape, allowGC>(cx, js::gc::FINALIZE_BASE_SHAPE,
