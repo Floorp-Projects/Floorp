@@ -13,7 +13,7 @@
 
 #include <stdarg.h>
 
-#include "jsapi.h"
+#include "js/Value.h"
 #include "nscore.h"
 #include "mozilla/Assertions.h"
 
