@@ -31,7 +31,6 @@ class JSStableString;
 ForwardDeclareJS(InlineString);
 class JSRope;
 ForwardDeclareJS(FlatString);
-ForwardDeclareJS(Atom);
 
 namespace js {
 

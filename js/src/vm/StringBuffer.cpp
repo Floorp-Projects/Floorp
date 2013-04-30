@@ -66,7 +66,7 @@ StringBuffer::finishString()
     return str;
 }
 
-RawAtom
+JSAtom *
 StringBuffer::finishAtom()
 {
     JSContext *cx = context();
@@ -75,7 +75,7 @@ StringBuffer::finishAtom()
     if (length == 0)
         return cx->names().empty;
 
-    RawAtom atom = AtomizeChars<CanGC>(cx, cb.begin(), length);
+    JSAtom *atom = AtomizeChars<CanGC>(cx, cb.begin(), length);
     cb.clear();
     return atom;
 }
