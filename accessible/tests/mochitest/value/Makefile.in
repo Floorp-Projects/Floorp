@@ -15,6 +15,7 @@ MOCHITEST_A11Y_FILES =\
 		test_general.html \
 		test_progress.html \
 		test_progress.xul \
+		test_range.html \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

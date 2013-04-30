@@ -13,6 +13,7 @@ LIBRARY_NAME   := gkconwebaudio_blink_s
 LIBXUL_LIBRARY := 1
 
 CPPSRCS := \
+  Biquad.cpp \
   DynamicsCompressor.cpp \
   DynamicsCompressorKernel.cpp \
   ZeroPole.cpp \

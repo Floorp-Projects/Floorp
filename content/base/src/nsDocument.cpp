@@ -4239,17 +4239,6 @@ nsDocument::GetWindowInternal() const
   return win->GetOuterWindow();
 }
 
-nsPIDOMWindow *
-nsDocument::GetInnerWindowInternal()
-{
-  MOZ_ASSERT(mRemovedFromDocShell,
-             "This document should have been removed from docshell!");
-
-  nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(GetScriptGlobalObject()));
-
-  return win;
-}
-
 nsScriptLoader*
 nsDocument::ScriptLoader()
 {

@@ -5,6 +5,7 @@
 
 /* rendering object to wrap rendering objects that should be scrollable */
 
+#include "base/compiler_specific.h"
 #include "nsCOMPtr.h"
 #include "nsHTMLParts.h"
 #include "nsPresContext.h"
@@ -74,7 +75,7 @@ NS_IMPL_FRAMEARENA_HELPERS(nsHTMLScrollFrame)
 
 nsHTMLScrollFrame::nsHTMLScrollFrame(nsIPresShell* aShell, nsStyleContext* aContext, bool aIsRoot)
   : nsContainerFrame(aContext),
-    mInner(this, aIsRoot)
+    mInner(ALLOW_THIS_IN_INITIALIZER_LIST(this), aIsRoot)
 {
 }
 
@@ -883,7 +884,7 @@ NS_IMPL_FRAMEARENA_HELPERS(nsXULScrollFrame)
 
 nsXULScrollFrame::nsXULScrollFrame(nsIPresShell* aShell, nsStyleContext* aContext, bool aIsRoot)
   : nsBoxFrame(aShell, aContext, aIsRoot),
-    mInner(this, aIsRoot)
+    mInner(ALLOW_THIS_IN_INITIALIZER_LIST(this), aIsRoot)
 {
   SetLayoutManager(nullptr);
 }
@@ -2341,7 +2342,7 @@ nsGfxScrollFrameInner::ScrollBy(nsIntPoint aDelta,
     if (isGenericOrigin){
       aOrigin = nsGkAtoms::pixels;
     }
-    negativeTolerance = positiveTolerance = 0.5;
+    negativeTolerance = positiveTolerance = 0.5f;
     break;
   }
   case nsIScrollableFrame::LINES: {
@@ -2349,7 +2350,7 @@ nsGfxScrollFrameInner::ScrollBy(nsIntPoint aDelta,
     if (isGenericOrigin){
       aOrigin = nsGkAtoms::lines;
     }
-    negativeTolerance = positiveTolerance = 0.1;
+    negativeTolerance = positiveTolerance = 0.1f;
     break;
   }
   case nsIScrollableFrame::PAGES: {
@@ -2357,7 +2358,7 @@ nsGfxScrollFrameInner::ScrollBy(nsIntPoint aDelta,
     if (isGenericOrigin){
       aOrigin = nsGkAtoms::pages;
     }
-    negativeTolerance = 0.05;
+    negativeTolerance = 0.05f;
     positiveTolerance = 0;
     break;
   }

@@ -1,0 +1,69 @@
+<html>
+<head>
+  <title>Test for Bug 861605</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="prompt_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="runtest()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=861605">Mozilla Bug 861605</a>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+var selectionTest = false;
+var testNum = 0;
+
+function hasTabModalPrompts() {
+  var prefName = "prompts.tab_modal.enabled";
+  var Services = SpecialPowers.Cu
+                              .import("resource://gre/modules/Services.jsm")
+                              .Services;
+  return Services.prefs.getPrefType(prefName) == Services.prefs.PREF_BOOL &&
+         Services.prefs.getBoolPref(prefName);
+}
+
+function runtest()
+{
+  isTabModal = hasTabModalPrompts();
+  if (!isTabModal) {
+    todo(false, "Test is run with tab modal prompts disabled.");
+    SimpleTest.finish();
+    return;
+  }
+
+  ok(true, "Test is run with tab modal prompts enabled.");
+
+  startCallbackTimer();
+
+  try {
+    alert();
+    ok(true, "alert() without arguments should not throw!");
+  } catch(e) {
+    ok(false, "alert() without arguments should not throw!");
+  }
+
+  startCallbackTimer();
+
+  try {
+    confirm();
+    ok(true, "confirm() without arguments should not throw!");
+  } catch(e) {
+    ok(false, "confirm() without arguments should not throw!");
+  }
+
+  SimpleTest.finish();
+}
+
+function handleDialog(ui, testNum)
+{
+  synthesizeMouse(ui.button0, 5, 5, { }, ui.button0.ownerDocument.defaultView);
+}
+</script>
+
+</body>
+</html>

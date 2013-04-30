@@ -10,28 +10,29 @@
  * liability, trademark and document use rules apply.
  */
 
+enum BiquadFilterType {
+  "lowpass",
+  "highpass",
+  "bandpass",
+  "lowshelf",
+  "highshelf",
+  "peaking",
+  "notch",
+  "allpass"
+};
+
 [PrefControlled]
 interface BiquadFilterNode : AudioNode {
 
-    // Filter type.
-    const unsigned short LOWPASS = 0;
-    const unsigned short HIGHPASS = 1;
-    const unsigned short BANDPASS = 2;
-    const unsigned short LOWSHELF = 3;
-    const unsigned short HIGHSHELF = 4;
-    const unsigned short PEAKING = 5;
-    const unsigned short NOTCH = 6;
-    const unsigned short ALLPASS = 7;
-
-    [SetterThrows]
-    attribute unsigned short type;
+    attribute BiquadFilterType type;
     readonly attribute AudioParam frequency; // in Hertz
+    readonly attribute AudioParam detune; // in Cents
     readonly attribute AudioParam Q; // Quality factor
     readonly attribute AudioParam gain; // in Decibels
 
-    // void getFrequencyResponse(Float32Array frequencyHz,
-    //                           Float32Array magResponse,
-    //                           Float32Array phaseResponse);
+    void getFrequencyResponse(Float32Array frequencyHz,
+                              Float32Array magResponse,
+                              Float32Array phaseResponse);
 
 };
 

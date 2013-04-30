@@ -105,23 +105,22 @@ function testEventHandling() {
 function loaded() {
   testEventHandling();
 
-  // Click the notification bar's "Allow" button.  This should kick
+  // Click the notification panel's "Allow" button.  This should kick
   // off updates, which will eventually lead to getting messages from
   // the children.
   var wm = SpecialPowers.Cc["@mozilla.org/appshell/window-mediator;1"].
            getService(SpecialPowers.Ci.nsIWindowMediator);
   var win = wm.getMostRecentWindow("navigator:browser");
-  var notificationBox = win.gBrowser.getNotificationBox();
+  var panel = win.PopupNotifications.panel;
+  is(panel.childElementCount, 2, "2 notifications being displayed");
+  panel.firstElementChild.button.click();
 
-  var notification = notificationBox.getNotificationWithValue("offline-app-requested-mochi.test");
-  notification.childNodes[0].click();
-
-  notification = SpecialPowers.wrap(notificationBox).getNotificationWithValue("offline-app-requested-example.com");
-  notification.childNodes[0].click();
+  // should have dismissed one of the notifications.
+  is(panel.childElementCount, 1, "1 notification now being displayed");
+  panel.firstElementChild.button.click();
 }
 
 </script>
 </pre>
 </body>
 </html>
-

@@ -1312,8 +1312,8 @@ ContainerState::CreateOrRecycleThebesLayer(const nsIFrame* aActiveScrolledRoot,
     // transform. See nsGfxScrollFrame::InvalidateInternal, where
     // we ensure that mInvalidThebesContent is updated according to the
     // scroll position as of the most recent paint.
-    if (!FuzzyEqual(data->mXScale, mParameters.mXScale, 0.00001) ||
-        !FuzzyEqual(data->mYScale, mParameters.mYScale, 0.00001) ||
+    if (!FuzzyEqual(data->mXScale, mParameters.mXScale, 0.00001f) ||
+        !FuzzyEqual(data->mYScale, mParameters.mYScale, 0.00001f) ||
         data->mAppUnitsPerDevPixel != mAppUnitsPerDevPixel) {
       InvalidateEntireThebesLayer(layer, aActiveScrolledRoot);
 #ifndef MOZ_ANDROID_OMTC

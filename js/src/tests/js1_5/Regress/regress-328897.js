@@ -31,8 +31,8 @@ else
 
   gDelayTestDriverEnd = true;
 
-  // Trying to set call window.alert() without any arguments will throw.
-  window.alert();
+  // Trying to set call window.showModalDialog() without any arguments will throw.
+  window.showModalDialog();
   actual = 'No Error';
 }
 

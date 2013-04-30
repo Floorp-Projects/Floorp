@@ -1,5 +1,6 @@
 // |jit-test| error: TypeError
 // Don't crash.
+if (getBuildConfiguration().parallelJS) {
 gczeal(2);
 evaluate("\
 function assertAlmostEq(v1, v2) {\
@@ -62,3 +63,6 @@ function testFilter(jsarray, func, cmpFunction) {}\
 			} )      
 			!= "x"; 
 	});
+} else {
+  throw new TypeError();
+}

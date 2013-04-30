@@ -26,6 +26,10 @@
 
 #include <algorithm>
 
+#ifdef ACCESSIBILITY
+#include "nsAccessibilityService.h"
+#endif
+
 #define LONG_SIDE_TO_SHORT_SIDE_RATIO 10
 
 using namespace mozilla;
@@ -349,6 +353,14 @@ nsRangeFrame::ReflowAnonymousContent(nsPresContext*           aPresContext,
   return NS_OK;
 }
 
+#ifdef ACCESSIBILITY
+a11y::AccType
+nsRangeFrame::AccessibleType()
+{
+  return a11y::eHTMLRangeType;
+}
+#endif
+
 double
 nsRangeFrame::GetValueAsFractionOfRange()
 {
@@ -489,6 +501,14 @@ nsRangeFrame::UpdateForValueChange()
     // theming is applied, so we just repaint the entire range.
     InvalidateFrame();
   }
+
+#ifdef ACCESSIBILITY
+  nsAccessibilityService* accService = nsIPresShell::AccService();
+  if (accService) {
+    accService->RangeValueChanged(PresContext()->PresShell(), mContent);
+  }
+#endif
+
   SchedulePaint();
 }
 

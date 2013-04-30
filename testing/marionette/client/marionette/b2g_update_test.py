@@ -203,7 +203,6 @@ class B2GUpdateTestCase(MarionetteTestCase):
         self.duration = time.time() - self.start_time
         if self.marionette.session is not None:
             self.loglines.extend(self.marionette.get_logs())
-            self.perfdata = self.marionette.get_perf_data()
             self.marionette.delete_session()
         self.marionette = None
 

@@ -16,7 +16,6 @@ let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
                .getService(Ci.mozIJSSubScriptLoader);
 loader.loadSubScript("chrome://marionette/content/marionette-simpletest.js");
 loader.loadSubScript("chrome://marionette/content/marionette-log-obj.js");
-loader.loadSubScript("chrome://marionette/content/marionette-perf.js");
 Cu.import("chrome://marionette/content/marionette-elements.js");
 let utils = {};
 loader.loadSubScript("chrome://marionette/content/EventUtils.js", utils);
@@ -192,7 +191,6 @@ function MarionetteDriverActor(aConnection)
   this.pageTimeout = null;
   this.timer = null;
   this.marionetteLog = new MarionetteLogObj();
-  this.marionettePerf = new MarionettePerfData();
   this.command_id = null;
   this.mainFrame = null; //topmost chrome frame
   this.curFrame = null; //subframe that currently has focus
@@ -652,23 +650,6 @@ MarionetteDriverActor.prototype = {
     this.command_id = this.getCommandId();
     this.sendResponse(this.marionetteLog.getLogs(), this.command_id);
   },
-  
-  /**
-   * Log some performance data
-   */
-  addPerfData: function MDA_addPerfData(aRequest) {
-    this.command_id = this.getCommandId();
-    this.marionettePerf.addPerfData(aRequest.suite, aRequest.name, aRequest.value);
-    this.sendOk(this.command_id);
-  },
-
-  /**
-   * Retrieve the performance data
-   */
-  getPerfData: function MDA_getPerfData() {
-    this.command_id = this.getCommandId();
-    this.sendResponse(this.marionettePerf.getPerfData(), this.command_id);
-  },
 
   /**
    * Sets the context of the subsequent commands to be either 'chrome' or 'content'
@@ -820,7 +801,7 @@ MarionetteDriverActor.prototype = {
 
     let curWindow = this.getCurrentWindow();
     let marionette = new Marionette(this, curWindow, "chrome",
-                                    this.marionetteLog, this.marionettePerf,
+                                    this.marionetteLog,
                                     timeout, this.testName);
     let _chromeSandbox = this.createExecuteSandbox(curWindow,
                                                    marionette,
@@ -954,7 +935,7 @@ MarionetteDriverActor.prototype = {
     let that = this;
     that.timeout = timeout;
     let marionette = new Marionette(this, curWindow, "chrome",
-                                    this.marionetteLog, this.marionettePerf,
+                                    this.marionetteLog,
                                     timeout, this.testName);
     marionette.command_id = this.command_id;
 
@@ -2204,9 +2185,6 @@ MarionetteDriverActor.prototype = {
         if (message.json.log) {
           this.marionetteLog.addLogs(message.json.log);
         }
-        if (message.json.perf) {
-          this.marionettePerf.appendPerfData(message.json.perf);
-        }
         break;
       case "Marionette:runEmulatorCmd":
         this.sendToClient(message.json, -1);
@@ -2309,8 +2287,6 @@ MarionetteDriverActor.prototype.requestTypes = {
   "getStatus": MarionetteDriverActor.prototype.getStatus,
   "log": MarionetteDriverActor.prototype.log,
   "getLogs": MarionetteDriverActor.prototype.getLogs,
-  "addPerfData": MarionetteDriverActor.prototype.addPerfData,
-  "getPerfData": MarionetteDriverActor.prototype.getPerfData,
   "setContext": MarionetteDriverActor.prototype.setContext,
   "executeScript": MarionetteDriverActor.prototype.execute,
   "setScriptTimeout": MarionetteDriverActor.prototype.setScriptTimeout,

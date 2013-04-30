@@ -35,7 +35,7 @@ LICM::analyze()
             continue;
 
         // Attempt to optimize loop.
-        Loop loop(mir, header->backedge(), header);
+        Loop loop(mir, header);
 
         Loop::LoopReturn lr = loop.init();
         if (lr == Loop::LoopReturn_Error)
@@ -54,9 +54,8 @@ LICM::analyze()
     return true;
 }
 
-Loop::Loop(MIRGenerator *mir, MBasicBlock *footer, MBasicBlock *header)
+Loop::Loop(MIRGenerator *mir, MBasicBlock *header)
   : mir(mir),
-    footer_(footer),
     header_(header)
 {
     preLoop_ = header_->getPredecessor(0);
@@ -66,54 +65,65 @@ Loop::LoopReturn
 Loop::init()
 {
     IonSpew(IonSpew_LICM, "Loop identified, headed by block %d", header_->id());
-    IonSpew(IonSpew_LICM, "footer is block %d", footer_->id());
+    IonSpew(IonSpew_LICM, "footer is block %d", header_->backedge()->id());
 
     // The first predecessor of the loop header must dominate the header.
     JS_ASSERT(header_->id() > header_->getPredecessor(0)->id());
 
-    LoopReturn lr = iterateLoopBlocks(footer_);
-    if (lr == LoopReturn_Error)
+    // Loops from backedge to header and marks all visited blocks
+    // as part of the loop. At the same time add all hoistable instructions
+    // (in RPO order) to the instruction worklist.
+    Vector<MBasicBlock *, 1, IonAllocPolicy> inlooplist;
+    if (!inlooplist.append(header_->backedge()))
         return LoopReturn_Error;
+    header_->backedge()->mark();
 
-    return lr;
-}
+    while (!inlooplist.empty()) {
+        MBasicBlock *block = inlooplist.back();
 
-Loop::LoopReturn
-Loop::iterateLoopBlocks(MBasicBlock *current)
-{
-    // Visited.
-    current->mark();
-
-    // Hoisting requires more finesse if the loop contains a block that
-    // self-dominates: there exists control flow that may enter the loop
-    // without passing through the loop preheader.
-    //
-    // Rather than perform a complicated analysis of the dominance graph,
-    // just return a soft error to ignore this loop.
-    if (current->immediateDominator() == current)
-        return LoopReturn_Skip;
-
-    // If we haven't reached the loop header yet, recursively explore predecessors
-    // if we haven't seen them already.
-    if (current != header_) {
-        for (size_t i = 0; i < current->numPredecessors(); i++) {
-            if (current->getPredecessor(i)->isMarked())
-                continue;
-            LoopReturn lr = iterateLoopBlocks(current->getPredecessor(i));
-            if (lr != LoopReturn_Success)
-                return lr;
+        // Hoisting requires more finesse if the loop contains a block that
+        // self-dominates: there exists control flow that may enter the loop
+        // without passing through the loop preheader.
+        //
+        // Rather than perform a complicated analysis of the dominance graph,
+        // just return a soft error to ignore this loop.
+        if (block->immediateDominator() == block) {
+            while (!worklist_.empty())
+                popFromWorklist();
+            return LoopReturn_Skip;
         }
+
+        // Add not yet visited predecessors to the inlooplist.
+        if (block != header_) {
+            for (size_t i = 0; i < block->numPredecessors(); i++) {
+                MBasicBlock *pred = block->getPredecessor(i);
+                if (pred->isMarked())
+                    continue;
+
+                if (!inlooplist.append(pred))
+                    return LoopReturn_Error;
+                pred->mark();
+            }
+        }
+
+        // If any block was added, process them first.
+        if (block != inlooplist.back())
+            continue;
+
+        // Add all instructions in this block (but the control instruction) to the worklist
+        for (MInstructionIterator i = block->begin(); i != block->end(); i++) {
+            MInstruction *ins = *i;
+
+            if (isHoistable(ins)) {
+                if (!insertInWorklist(ins))
+                    return LoopReturn_Error;
+            }
+        }
+
+        // All successors of this block are visited.
+        inlooplist.popBack();
     }
 
-    // Add all instructions in this block (but the control instruction) to the worklist
-    for (MInstructionIterator i = current->begin(); i != current->end(); i++) {
-        MInstruction *ins = *i;
-
-        if (ins->isMovable() && !ins->isEffectful()) {
-            if (!insertInWorklist(ins))
-                return LoopReturn_Error;
-        }
-    }
     return LoopReturn_Success;
 }
 
