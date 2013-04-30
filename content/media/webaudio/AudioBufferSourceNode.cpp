@@ -21,6 +21,11 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(AudioBufferSourceNode)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mBuffer)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPlaybackRate)
   if (tmp->Context()) {
+    // AudioNode's Unlink implementation disconnects us from the graph
+    // too, but we need to do this right here to make sure that
+    // UnregisterAudioBufferSourceNode can properly untangle us from
+    // the possibly connected PannerNodes.
+    tmp->DisconnectFromGraph();
     tmp->Context()->UnregisterAudioBufferSourceNode(tmp);
   }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END_INHERITED(AudioNode)
