@@ -34,6 +34,3 @@ gcd(1), invmod(1), isprime(1)
 
  Michael J. Fromberger <sting@linguist.dartmouth.edu>
  Thayer School of Engineering, Hanover, New Hampshire, USA
- 
- $Date$
-

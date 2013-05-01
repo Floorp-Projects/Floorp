@@ -4,8 +4,6 @@
 
 /*
  * CMS array functions.
- *
- * $Id$
  */
 
 #include "cmslocal.h"

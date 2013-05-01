@@ -4,8 +4,6 @@
 
 /*
  * Header for pkcs7 types.
- *
- * $Id$
  */
 
 #ifndef _PKCS7T_H_
