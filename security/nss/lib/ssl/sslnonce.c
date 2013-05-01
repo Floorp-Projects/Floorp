@@ -4,6 +4,7 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* $Id$ */
 
 #include "cert.h"
 #include "pk11pub.h"
@@ -183,8 +184,10 @@ ssl_DestroySID(sslSessionID *sid)
     if ( sid->peerCert ) {
 	CERT_DestroyCertificate(sid->peerCert);
     }
-    if (sid->peerCertStatus.items) {
+    if (sid->peerCertStatus.len) {
         SECITEM_FreeArray(&sid->peerCertStatus, PR_FALSE);
+        sid->peerCertStatus.items = NULL;
+        sid->peerCertStatus.len = 0;
     }
 
     if ( sid->localCert ) {

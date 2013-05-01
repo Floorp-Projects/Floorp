@@ -4,6 +4,8 @@
 
 /*
  * cmsutil -- A command to work with CMS data
+ *
+ * $Id$
  */
 
 #include "nspr.h"

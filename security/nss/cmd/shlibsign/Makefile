@@ -45,10 +45,7 @@ endif
 
 
 # sign any and all shared libraries that contain the word freebl
-ifeq ($(NSS_BUILD_WITHOUT_SOFTOKEN),1))
-CHECKLIBS=
-CHECKLOC=
-else
+
 CHECKLIBS = $(DIST)/lib/$(DLL_PREFIX)softokn3.$(DLL_SUFFIX)
 CHECKLIBS += $(wildcard $(DIST)/lib/$(DLL_PREFIX)freebl*3.$(DLL_SUFFIX))
 ifndef NSS_DISABLE_DBM
@@ -58,7 +55,7 @@ CHECKLOC = $(CHECKLIBS:.$(DLL_SUFFIX)=.chk)
 
 MD_LIB_RELEASE_FILES = $(CHECKLOC)
 ALL_TRASH += $(CHECKLOC)
-endif
+
 
 #######################################################################
 # (5) Execute "global" rules. (OPTIONAL)                              #

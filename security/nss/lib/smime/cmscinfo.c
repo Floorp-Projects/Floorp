@@ -4,6 +4,8 @@
 
 /*
  * CMS contentInfo methods.
+ *
+ * $Id$
  */
 
 #include "cmslocal.h"

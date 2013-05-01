@@ -4,6 +4,8 @@
 
 /*
  * Test program for SDR (Secret Decoder Ring) functions.
+ *
+ * $Id$
  */
 
 #include "nspr.h"

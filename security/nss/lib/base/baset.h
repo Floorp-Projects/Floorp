@@ -5,6 +5,10 @@
 #ifndef BASET_H
 #define BASET_H
 
+#ifdef DEBUG
+static const char BASET_CVS_ID[] = "@(#) $RCSfile$ $Revision$ $Date$";
+#endif /* DEBUG */
+
 /*
  * baset.h
  *

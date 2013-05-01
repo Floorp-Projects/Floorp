@@ -5,6 +5,10 @@
 #ifndef CKCAPI_H
 #define CKCAPI_H 1
 
+#ifdef DEBUG
+static const char CKCAPI_CVS_ID[] = "@(#) $RCSfile$ $Revision$ $Date$";
+#endif /* DEBUG */
+
 #include "nssckmdt.h"
 #include "nssckfw.h"
 

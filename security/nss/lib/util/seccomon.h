@@ -8,6 +8,8 @@
  * This file should have lowest-common-denominator datastructures
  * for security libraries.  It should not be dependent on any other
  * headers, and should not require linking with any libraries.
+ *
+ * $Id$
  */
 
 #ifndef _SECCOMMON_H_

@@ -5,6 +5,8 @@
 /*
  * base64.h - prototypes for base64 encoding/decoding
  * Note: These functions are deprecated; see nssb64.h for new routines.
+ *
+ * $Id$
  */
 #ifndef _BASE64_H_
 #define _BASE64_H_

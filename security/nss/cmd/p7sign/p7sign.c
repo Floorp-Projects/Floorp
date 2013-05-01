@@ -5,6 +5,8 @@
 /*
  * p7sign -- A command to create a *detached* pkcs7 signature (over a given
  * input file).
+ *
+ * $Id$
  */
 
 #include "nspr.h"

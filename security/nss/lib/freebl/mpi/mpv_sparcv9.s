@@ -3,6 +3,9 @@
 ! License, v. 2.0. If a copy of the MPL was not distributed with this
 ! file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+!  $Id$
+!
+
 	.section	".text",#alloc,#execinstr
 /* 000000	   0 ( 0  0) */		.register	%g2,#scratch
 /* 000000	     ( 0  0) */		.register	%g3,#scratch

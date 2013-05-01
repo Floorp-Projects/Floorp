@@ -4,6 +4,8 @@
 
 /*
  * Utility routines to complement the ASN.1 encoding and decoding functions.
+ *
+ * $Id$
  */
 
 #include "secasn1.h"

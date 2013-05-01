@@ -4,6 +4,8 @@
 
 /*
  * Header for CMS types.
+ *
+ * $Id$
  */
 
 #ifndef _CMST_H_

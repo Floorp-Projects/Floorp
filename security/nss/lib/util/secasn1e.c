@@ -5,6 +5,8 @@
 /*
  * Support for ENcoding ASN.1 data based on BER/DER (Basic/Distinguished
  * Encoding Rules).
+ *
+ * $Id$
  */
 
 #include "secasn1.h"

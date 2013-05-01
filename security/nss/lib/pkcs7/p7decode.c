@@ -4,6 +4,8 @@
 
 /*
  * PKCS7 decoding, verification.
+ *
+ * $Id$
  */
 
 #include "p7local.h"
