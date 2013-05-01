@@ -13,8 +13,7 @@
     cursor: -moz-zoom-out;
   }
 
-  .shrinkToFit,
-  .scaleToDevicePixels {
+  .shrinkToFit {
     cursor: -moz-zoom-in;
   }
 }
