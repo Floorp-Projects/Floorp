@@ -885,7 +885,7 @@ AndroidGeckoLayerClient::SetPageRect(const gfx::Rect& aCssPageRect)
 void
 AndroidGeckoLayerClient::SyncViewportInfo(const nsIntRect& aDisplayPort, float aDisplayResolution, bool aLayersUpdated,
                                           nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY,
-                                          gfx::Margin& aFixedLayerMargins, float& aOffsetX, float& aOffsetY)
+                                          gfx::Margin& aFixedLayerMargins, gfx::Point& aOffset)
 {
     NS_ASSERTION(!isNull(), "SyncViewportInfo called on null layer client!");
     JNIEnv *env = GetJNIForThread();    // this is called on the compositor thread
@@ -910,14 +910,14 @@ AndroidGeckoLayerClient::SyncViewportInfo(const nsIntRect& aDisplayPort, float a
     aScaleX = aScaleY = viewTransform.GetScale(env);
     viewTransform.GetFixedLayerMargins(env, aFixedLayerMargins);
 
-    aOffsetX = viewTransform.GetOffsetX(env);
-    aOffsetY = viewTransform.GetOffsetY(env);
+    aOffset.x = viewTransform.GetOffsetX(env);
+    aOffset.y = viewTransform.GetOffsetY(env);
 }
 
 void
-AndroidGeckoLayerClient::SyncFrameMetrics(const gfx::Point& aOffset, float aZoom, const gfx::Rect& aCssPageRect,
+AndroidGeckoLayerClient::SyncFrameMetrics(const gfx::Point& aScrollOffset, float aZoom, const gfx::Rect& aCssPageRect,
                                           bool aLayersUpdated, const gfx::Rect& aDisplayPort, float aDisplayResolution,
-                                          bool aIsFirstPaint, gfx::Margin& aFixedLayerMargins, float& aOffsetX, float& aOffsetY)
+                                          bool aIsFirstPaint, gfx::Margin& aFixedLayerMargins, gfx::Point& aOffset)
 {
     NS_ASSERTION(!isNull(), "SyncFrameMetrics called on null layer client!");
     JNIEnv *env = GetJNIForThread();    // this is called on the compositor thread
@@ -927,13 +927,13 @@ AndroidGeckoLayerClient::SyncFrameMetrics(const gfx::Point& aOffset, float aZoom
     AutoLocalJNIFrame jniFrame(env);
 
     // convert the displayport rect from scroll-relative CSS pixels to document-relative device pixels
-    int dpX = NS_lround((aDisplayPort.x * aDisplayResolution) + aOffset.x);
-    int dpY = NS_lround((aDisplayPort.y * aDisplayResolution) + aOffset.y);
+    int dpX = NS_lround((aDisplayPort.x * aDisplayResolution) + aScrollOffset.x);
+    int dpY = NS_lround((aDisplayPort.y * aDisplayResolution) + aScrollOffset.y);
     int dpW = NS_lround(aDisplayPort.width * aDisplayResolution);
     int dpH = NS_lround(aDisplayPort.height * aDisplayResolution);
 
     jobject viewTransformJObj = env->CallObjectMethod(wrapped_obj, jSyncFrameMetricsMethod,
-            aOffset.x, aOffset.y, aZoom,
+            aScrollOffset.x, aScrollOffset.y, aZoom,
             aCssPageRect.x, aCssPageRect.y, aCssPageRect.XMost(), aCssPageRect.YMost(),
             aLayersUpdated, dpX, dpY, dpW, dpH, aDisplayResolution,
             aIsFirstPaint);
@@ -946,8 +946,8 @@ AndroidGeckoLayerClient::SyncFrameMetrics(const gfx::Point& aOffset, float aZoom
     AndroidViewTransform viewTransform;
     viewTransform.Init(viewTransformJObj);
     viewTransform.GetFixedLayerMargins(env, aFixedLayerMargins);
-    aOffsetX = viewTransform.GetOffsetX(env);
-    aOffsetY = viewTransform.GetOffsetY(env);
+    aOffset.x = viewTransform.GetOffsetX(env);
+    aOffset.y = viewTransform.GetOffsetY(env);
 }
 
 bool
