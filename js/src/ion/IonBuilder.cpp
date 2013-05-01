@@ -5589,6 +5589,9 @@ TestSingletonPropertyTypes(JSContext *cx, MDefinition *obj, JSObject *singleton,
     if (types && types->unknownObject())
         return true;
 
+    if (id != types::IdToTypeId(id))
+        return true;
+
     RootedObject objectSingleton(cx, types ? types->getSingleton() : NULL);
     if (objectSingleton)
         return TestSingletonProperty(cx, objectSingleton, singleton, id, isKnownConstant);
