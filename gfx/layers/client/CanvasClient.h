@@ -13,7 +13,7 @@ namespace mozilla {
 
 namespace layers {
 
-class BasicCanvasLayer;
+class ClientCanvasLayer;
 
 /**
  * Compositable client for 2d and webgl canvas.
@@ -38,7 +38,7 @@ public:
 
   virtual ~CanvasClient() {}
 
-  virtual void Update(gfx::IntSize aSize, BasicCanvasLayer* aLayer) = 0;
+  virtual void Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer) = 0;
 
   virtual void Updated();
 
@@ -64,7 +64,7 @@ public:
     return mTextureInfo;
   }
 
-  virtual void Update(gfx::IntSize aSize, BasicCanvasLayer* aLayer);
+  virtual void Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer);
 };
 
 // Used for GL canvases where we don't need to do any readback, i.e., with a
@@ -80,7 +80,7 @@ public:
     return mTextureInfo;
   }
 
-  virtual void Update(gfx::IntSize aSize, BasicCanvasLayer* aLayer);
+  virtual void Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer);
 };
 
 }

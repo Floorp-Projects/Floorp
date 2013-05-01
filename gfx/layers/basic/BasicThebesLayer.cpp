@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "BasicThebesLayer.h"
-#include "BasicTiledThebesLayer.h"
 #include "gfxUtils.h"
 #include "nsIWidget.h"
 #include "RenderTrace.h"
@@ -74,9 +73,6 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
   nsRefPtr<gfxASurface> targetSurface = aContext->CurrentSurface();
 
   if (!mContentClient) {
-    MOZ_ASSERT(!AsShadowableLayer() ||
-                 !static_cast<BasicShadowableThebesLayer*>(AsShadowableLayer())->HasShadow(),
-               "OMTC layers must have a content client by now");
     // we pass a null pointer for the Forwarder argument, which means
     // this will not have a ContentHost on the other side.
     mContentClient = new ContentClientBasic(nullptr, BasicManager());
@@ -231,129 +227,6 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
   }
 }
 
-BasicShadowableThebesLayer::~BasicShadowableThebesLayer()
-{
-  MOZ_COUNT_DTOR(BasicShadowableThebesLayer);
-}
-
-void
-BasicShadowableThebesLayer::PaintThebes(gfxContext* aContext,
-                                        Layer* aMaskLayer,
-                                        LayerManager::DrawThebesLayerCallback aCallback,
-                                        void* aCallbackData,
-                                        ReadbackProcessor* aReadback)
-{
-  if (!HasShadow()) {
-    BasicThebesLayer::PaintThebes(aContext, aMaskLayer, aCallback, aCallbackData, aReadback);
-    return;
-  }
-
-  if (aMaskLayer) {
-    static_cast<BasicImplData*>(aMaskLayer->ImplData())
-      ->Paint(aContext, nullptr);
-  }
-  
-  if (!mContentClient) {
-    mContentClient = ContentClient::CreateContentClient(BasicManager());
-    if (!mContentClient) {
-      return;
-    }
-    mContentClient->Connect();
-    BasicManager()->Attach(mContentClient, this);
-    MOZ_ASSERT(mContentClient->GetForwarder());
-  }
-
-  mContentClient->BeginPaint();
-  BasicThebesLayer::PaintThebes(aContext, nullptr, aCallback, aCallbackData, aReadback);
-  mContentClient->EndPaint();
-}
-
-void
-BasicShadowableThebesLayer::PaintBuffer(gfxContext* aContext,
-                                        const nsIntRegion& aRegionToDraw,
-                                        const nsIntRegion& aExtendedRegionToDraw,
-                                        const nsIntRegion& aRegionToInvalidate,
-                                        bool aDidSelfCopy,
-                                        LayerManager::DrawThebesLayerCallback aCallback,
-                                        void* aCallbackData)
-{
-  ContentClientRemote* contentClientRemote = static_cast<ContentClientRemote*>(mContentClient.get());
-  MOZ_ASSERT(contentClientRemote->GetIPDLActor() || !HasShadow());
-
-  // NB: this just throws away the entire valid region if there are
-  // too many rects.
-  mValidRegion.SimplifyInward(8);
-
-  Base::PaintBuffer(aContext,
-                    aRegionToDraw, aExtendedRegionToDraw, aRegionToInvalidate,
-                    aDidSelfCopy,
-                    aCallback, aCallbackData);
-  if (!HasShadow() || BasicManager()->IsTransactionIncomplete()) {
-    return;
-  }
-
-  // Hold(this) ensures this layer is kept alive through the current transaction
-  // The ContentClient assumes this layer is kept alive (e.g., in CreateBuffer,
-  // DestroyThebesBuffer), so deleting this Hold for whatever reason will break things.
-  BasicManager()->Hold(this);
-  contentClientRemote->Updated(aRegionToDraw,
-                               mVisibleRegion,
-                               aDidSelfCopy);
-}
-
-void
-BasicShadowableThebesLayer::Disconnect()
-{
-  mContentClient = nullptr;
-  BasicShadowableLayer::Disconnect();
-}
-
-class ShadowThebesLayerBuffer : public ThebesLayerBuffer
-{
-  typedef ThebesLayerBuffer Base;
-
-public:
-  ShadowThebesLayerBuffer()
-    : Base(ContainsVisibleBounds)
-  {
-    MOZ_COUNT_CTOR(ShadowThebesLayerBuffer);
-  }
-
-  ~ShadowThebesLayerBuffer()
-  {
-    MOZ_COUNT_DTOR(ShadowThebesLayerBuffer);
-  }
-
-  /**
-   * Swap in the old "virtual buffer" (see above) attributes in aNew*
-   * and return the old ones in aOld*.
-   *
-   * Swap() must only be called when the buffer is in its "unmapped"
-   * state, that is the underlying gfxASurface is not available.  It
-   * is expected that the owner of this buffer holds an unmapped
-   * SurfaceDescriptor as the backing storage for this buffer.  That's
-   * why no gfxASurface or SurfaceDescriptor parameters appear here.
-   */
-  void Swap(const nsIntRect& aNewRect, const nsIntPoint& aNewRotation,
-            nsIntRect* aOldRect, nsIntPoint* aOldRotation)
-  {
-    *aOldRect = BufferRect();
-    *aOldRotation = BufferRotation();
-
-    nsRefPtr<gfxASurface> oldBuffer;
-    oldBuffer = SetBuffer(nullptr, aNewRect, aNewRotation);
-    MOZ_ASSERT(!oldBuffer);
-  }
-
-protected:
-  virtual already_AddRefed<gfxASurface>
-  CreateBuffer(ContentType, const nsIntRect&, uint32_t, gfxASurface**)
-  {
-    NS_RUNTIMEABORT("ThebesLayerComposite can't paint content");
-    return nullptr;
-  }
-};
-
 already_AddRefed<ThebesLayer>
 BasicLayerManager::CreateThebesLayer()
 {
@@ -361,30 +234,6 @@ BasicLayerManager::CreateThebesLayer()
   nsRefPtr<ThebesLayer> layer = new BasicThebesLayer(this);
   return layer.forget();
 }
-
-already_AddRefed<ThebesLayer>
-BasicShadowLayerManager::CreateThebesLayer()
-{
-  NS_ASSERTION(InConstruction(), "Only allowed in construction phase");
-#ifdef FORCE_BASICTILEDTHEBESLAYER
-  if (HasShadowManager() && GetCompositorBackendType() == LAYERS_OPENGL) {
-    // BasicTiledThebesLayer doesn't support main
-    // thread compositing so only return this layer
-    // type if we have a shadow manager.
-    nsRefPtr<BasicTiledThebesLayer> layer =
-      new BasicTiledThebesLayer(this);
-    MAYBE_CREATE_SHADOW(Thebes);
-    return layer.forget();
-  } else
-#endif
-  {
-    nsRefPtr<BasicShadowableThebesLayer> layer =
-      new BasicShadowableThebesLayer(this);
-    MAYBE_CREATE_SHADOW(Thebes);
-    return layer.forget();
-  }
-}
-
 
 }
 }

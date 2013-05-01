@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/layers/PLayerTransactionChild.h"
-#include "BasicTiledThebesLayer.h"
+#include "ClientTiledThebesLayer.h"
 #include "gfxImageSurface.h"
 #include "GeckoProfiler.h"
 #include "gfxPlatform.h"
@@ -13,30 +13,30 @@ namespace mozilla {
 namespace layers {
 
 
-BasicTiledThebesLayer::BasicTiledThebesLayer(BasicShadowLayerManager* const aManager)
-  : ThebesLayer(aManager, static_cast<BasicImplData*>(this))
+ClientTiledThebesLayer::ClientTiledThebesLayer(ClientLayerManager* const aManager)
+  : ThebesLayer(aManager, static_cast<ClientLayer*>(this))
   , mContentClient()
 {
-  MOZ_COUNT_CTOR(BasicTiledThebesLayer);
+  MOZ_COUNT_CTOR(ClientTiledThebesLayer);
   mPaintData.mLastScrollOffset = gfx::Point(0, 0);
   mPaintData.mFirstPaint = true;
 }
 
-BasicTiledThebesLayer::~BasicTiledThebesLayer()
+ClientTiledThebesLayer::~ClientTiledThebesLayer()
 {
-  MOZ_COUNT_DTOR(BasicTiledThebesLayer);
+  MOZ_COUNT_DTOR(ClientTiledThebesLayer);
 }
 
 void
-BasicTiledThebesLayer::FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
+ClientTiledThebesLayer::FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
 {
   aAttrs = ThebesLayerAttributes(GetValidRegion());
 }
 
 void
-BasicTiledThebesLayer::BeginPaint()
+ClientTiledThebesLayer::BeginPaint()
 {
-  if (BasicManager()->IsRepeatTransaction()) {
+  if (ClientManager()->IsRepeatTransaction()) {
     return;
   }
 
@@ -82,7 +82,7 @@ BasicTiledThebesLayer::BeginPaint()
   // composition bounds.
   mPaintData.mCompositionBounds.SetEmpty();
   mPaintData.mScrollOffset.MoveTo(0, 0);
-  Layer* primaryScrollable = BasicManager()->GetPrimaryScrollableLayer();
+  Layer* primaryScrollable = ClientManager()->GetPrimaryScrollableLayer();
   if (primaryScrollable) {
     const FrameMetrics& metrics = primaryScrollable->AsContainerLayer()->GetFrameMetrics();
     mPaintData.mScrollOffset = metrics.mScrollOffset;
@@ -97,7 +97,7 @@ BasicTiledThebesLayer::BeginPaint()
 }
 
 void
-BasicTiledThebesLayer::EndPaint(bool aFinish)
+ClientTiledThebesLayer::EndPaint(bool aFinish)
 {
   if (!aFinish && !mPaintData.mPaintFinished) {
     return;
@@ -108,27 +108,21 @@ BasicTiledThebesLayer::EndPaint(bool aFinish)
 }
 
 void
-BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
-                                   Layer* aMaskLayer,
-                                   LayerManager::DrawThebesLayerCallback aCallback,
-                                   void* aCallbackData,
-                                   ReadbackProcessor* aReadback)
+ClientTiledThebesLayer::RenderLayer()
 {
-  if (!HasShadow()) {
-    NS_ASSERTION(false, "Shadow requested for painting\n");
-    return;
-  }
-
-  if (!aCallback) {
-    BasicManager()->SetTransactionIncomplete();
+  LayerManager::DrawThebesLayerCallback callback =
+    ClientManager()->GetThebesLayerCallback();
+  void *data = ClientManager()->GetThebesLayerCallbackData();
+  if (!callback) {
+    ClientManager()->SetTransactionIncomplete();
     return;
   }
 
   if (!mContentClient) {
-    mContentClient = new TiledContentClient(this, BasicManager());
+    mContentClient = new TiledContentClient(this, ClientManager());
 
     mContentClient->Connect();
-    BasicManager()->Attach(mContentClient, this);
+    ClientManager()->Attach(mContentClient, this);
     MOZ_ASSERT(mContentClient->GetForwarder());
   }
 
@@ -144,8 +138,8 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
   }
 
   // Only paint the mask layer on the first transaction.
-  if (aMaskLayer && !BasicManager()->IsRepeatTransaction()) {
-    static_cast<BasicImplData*>(aMaskLayer->ImplData())->Paint(aContext, nullptr);
+  if (GetMaskLayer() && !ClientManager()->IsRepeatTransaction()) {
+    ToClientLayer(GetMaskLayer())->RenderLayer();
   }
 
   // Fast path for no progressive updates, no low-precision updates and no
@@ -155,12 +149,12 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
       GetParent()->GetFrameMetrics().mCriticalDisplayPort.IsEmpty()) {
     mValidRegion = mVisibleRegion;
 
-    NS_ASSERTION(!BasicManager()->IsRepeatTransaction(), "Didn't paint our mask layer");
+    NS_ASSERTION(!ClientManager()->IsRepeatTransaction(), "Didn't paint our mask layer");
 
     mContentClient->mTiledBuffer.PaintThebes(mValidRegion, invalidRegion,
-                                             aCallback, aCallbackData);
+                                             callback, data);
 
-    BasicManager()->Hold(this);
+    ClientManager()->Hold(this);
     mContentClient->LockCopyAndWrite(TiledContentClient::TILED_BUFFER);
 
     return;
@@ -174,7 +168,7 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
 
   // Make sure that tiles that fall outside of the visible region are
   // discarded on the first update.
-  if (!BasicManager()->IsRepeatTransaction()) {
+  if (!ClientManager()->IsRepeatTransaction()) {
     mValidRegion.And(mValidRegion, mVisibleRegion);
     if (!mPaintData.mLayerCriticalDisplayPort.IsEmpty()) {
       // Make sure that tiles that fall outside of the critical displayport are
@@ -206,7 +200,7 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
     bool updatedBuffer = false;
     // Only draw progressively when the resolution is unchanged.
     if (gfxPlatform::UseProgressiveTilePainting() &&
-        !BasicManager()->HasShadowTarget() &&
+        !ClientManager()->HasShadowTarget() &&
         mContentClient->mTiledBuffer.GetFrameResolution() == mPaintData.mResolution) {
       // Store the old valid region, then clear it before painting.
       // We clip the old valid region to the visible region, as it only gets
@@ -220,7 +214,7 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
       updatedBuffer =
         mContentClient->mTiledBuffer.ProgressiveUpdate(mValidRegion, invalidRegion,
                                                        oldValidRegion, &mPaintData,
-                                                       aCallback, aCallbackData);
+                                                       callback, data);
     } else {
       updatedBuffer = true;
       mValidRegion = mVisibleRegion;
@@ -229,18 +223,18 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
       }
       mContentClient->mTiledBuffer.SetFrameResolution(mPaintData.mResolution);
       mContentClient->mTiledBuffer.PaintThebes(mValidRegion, invalidRegion,
-                                               aCallback, aCallbackData);
+                                               callback, data);
     }
 
     if (updatedBuffer) {
       mPaintData.mFirstPaint = false;
-      BasicManager()->Hold(this);
+      ClientManager()->Hold(this);
       mContentClient->LockCopyAndWrite(TiledContentClient::TILED_BUFFER);
 
       // If there are low precision updates, mark the paint as unfinished and
       // request a repeat transaction.
       if (!lowPrecisionInvalidRegion.IsEmpty() && mPaintData.mPaintFinished) {
-        BasicManager()->SetRepeatTransaction();
+        ClientManager()->SetRepeatTransaction();
         mPaintData.mLowPrecisionPaintCount = 1;
         mPaintData.mPaintFinished = false;
       }
@@ -288,7 +282,7 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
                               .ProgressiveUpdate(mLowPrecisionValidRegion,
                                                  lowPrecisionInvalidRegion,
                                                  oldValidRegion, &mPaintData,
-                                                 aCallback, aCallbackData);
+                                                 callback, data);
     }
   } else if (!mLowPrecisionValidRegion.IsEmpty()) {
     // Clear the low precision tiled buffer
@@ -296,14 +290,14 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
     mLowPrecisionValidRegion.SetEmpty();
     mContentClient->mLowPrecisionTiledBuffer.PaintThebes(mLowPrecisionValidRegion,
                                                          mLowPrecisionValidRegion,
-                                                         aCallback, aCallbackData);
+                                                         callback, data);
   }
 
   // We send a Painted callback if we clear the valid region of the low
   // precision buffer, so that the shadow buffer's valid region can be updated
   // and the associated resources can be freed.
   if (updatedLowPrecision) {
-    BasicManager()->Hold(this);
+    ClientManager()->Hold(this);
     mContentClient->LockCopyAndWrite(TiledContentClient::LOW_PRECISION_TILED_BUFFER);
   }
 

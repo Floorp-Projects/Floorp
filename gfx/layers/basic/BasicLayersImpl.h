@@ -129,47 +129,6 @@ FillWithMask(gfxContext* aContext, float aOpacity, Layer* aMaskLayer);
 BasicImplData*
 ToData(Layer* aLayer);
 
-ShadowableLayer*
-ToShadowable(Layer* aLayer);
-
-// Some layers, like ReadbackLayers, can't be shadowed and shadowing
-// them doesn't make sense anyway
-bool
-ShouldShadow(Layer* aLayer);
-
-
-template<class OpT> BasicShadowableLayer*
-GetBasicShadowable(const OpT& op)
-{
-  return static_cast<BasicShadowableLayer*>(
-    static_cast<const ShadowLayerChild*>(op.textureChild()->Manager())->layer());
-}
-
-// Create a shadow layer (PLayerChild) for aLayer, if we're forwarding
-// our layer tree to a parent process.  Record the new layer creation
-// in the current open transaction as a side effect.
-template<typename CreatedMethod> void
-MaybeCreateShadowFor(BasicShadowableLayer* aLayer,
-                     BasicShadowLayerManager* aMgr,
-                     CreatedMethod aMethod)
-{
-  if (!aMgr->HasShadowManager()) {
-    return;
-  }
-
-  PLayerChild* shadow = aMgr->ConstructShadowFor(aLayer);
-  // XXX error handling
-  NS_ABORT_IF_FALSE(shadow, "failed to create shadow");
-
-  aLayer->SetShadow(shadow);
-  (aMgr->*aMethod)(aLayer);
-  aMgr->Hold(aLayer->AsLayer());
-}
-
-#define MAYBE_CREATE_SHADOW(_type)                                      \
-  MaybeCreateShadowFor(layer, this,                                     \
-                       &ShadowLayerForwarder::Created ## _type ## Layer)
-
 }
 }
 
