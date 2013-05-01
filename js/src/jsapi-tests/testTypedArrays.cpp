@@ -59,6 +59,11 @@ template<JSObject *Create(JSContext *, uint32_t),
 bool
 TestPlainTypedArray(JSContext *cx)
 {
+    {
+        RootedObject notArray(cx, Create(cx, UINT32_MAX));
+        CHECK(!notArray);
+    }
+
     RootedObject array(cx, Create(cx, 7));
     CHECK(JS_IsTypedArrayObject(array));
     RootedObject proto(cx);
