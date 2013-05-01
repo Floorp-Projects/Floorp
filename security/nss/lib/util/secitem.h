@@ -10,6 +10,8 @@
 /*
  * secitem.h - public data structures and prototypes for handling
  *	       SECItems
+ *
+ * $Id$
  */
 
 #include "plarena.h"

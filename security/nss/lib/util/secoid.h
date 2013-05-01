@@ -9,6 +9,8 @@
 
 /*
  * secoid.h - public data structures and prototypes for ASN.1 OID functions
+ *
+ * $Id$
  */
 
 #include "plarena.h"

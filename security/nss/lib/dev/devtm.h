@@ -5,6 +5,10 @@
 #ifndef DEVTM_H
 #define DEVTM_H
 
+#ifdef DEBUG
+static const char DEVTM_CVS_ID[] = "@(#) $RCSfile$ $Revision$ $Date$";
+#endif /* DEBUG */
+
 /*
  * devtm.h
  *

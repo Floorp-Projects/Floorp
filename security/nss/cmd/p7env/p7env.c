@@ -4,6 +4,8 @@
 
 /*
  * p7env -- A command to create a pkcs7 enveloped data.
+ *
+ * $Id$
  */
 
 #include "nspr.h"

@@ -5,6 +5,8 @@
 /*
  * Stuff specific to S/MIME policy and interoperability.
  * Depends on PKCS7, but there should be no dependency the other way around.
+ *
+ * $Id$
  */
 
 #include "secmime.h"

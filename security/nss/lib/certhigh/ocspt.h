@@ -4,6 +4,8 @@
 
 /*
  * Public header for exported OCSP types.
+ *
+ * $Id$
  */
 
 #ifndef _OCSPT_H_

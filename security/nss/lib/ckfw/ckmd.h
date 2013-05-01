@@ -5,6 +5,10 @@
 #ifndef CKMD_H
 #define CKMD_H
 
+#ifdef DEBUG
+static const char CKMD_CVS_ID[] = "@(#) $RCSfile$ $Revision$ $Date$";
+#endif /* DEBUG */
+
 /*
  * ckmd.h
  *

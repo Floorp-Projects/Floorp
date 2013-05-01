@@ -5,6 +5,10 @@
 #ifndef NSSCKFWT_H
 #define NSSCKFWT_H
 
+#ifdef DEBUG
+static const char NSSCKFWT_CVS_ID[] = "@(#) $RCSfile$ $Revision$ $Date$";
+#endif /* DEBUG */
+
 /*
  * nssckfwt.h
  *

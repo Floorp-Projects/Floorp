@@ -5,6 +5,10 @@
 #ifndef PKINSS3HACK_H
 #define PKINSS3HACK_H
 
+#ifdef DEBUG
+static const char PKINSS3HACK_CVS_ID[] = "@(#) $RCSfile$ $Revision$ $Date$";
+#endif /* DEBUG */
+
 #ifndef NSSDEVT_H
 #include "nssdevt.h"
 #endif /* NSSDEVT_H */

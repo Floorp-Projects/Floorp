@@ -5,6 +5,10 @@
 #ifndef _PKCS11N_H_
 #define _PKCS11N_H_
 
+#ifdef DEBUG
+static const char CKT_CVS_ID[] = "@(#) $RCSfile$ $Revision$ $Date$";
+#endif /* DEBUG */
+
 /*
  * pkcs11n.h
  *

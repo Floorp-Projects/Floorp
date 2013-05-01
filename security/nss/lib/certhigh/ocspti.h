@@ -4,6 +4,8 @@
 
 /*
  * Private header defining OCSP types.
+ *
+ * $Id$
  */
 
 #ifndef _OCSPTI_H_

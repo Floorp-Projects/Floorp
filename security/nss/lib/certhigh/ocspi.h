@@ -3,6 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 /*
  * ocspi.h - NSS internal interfaces to OCSP code
+ *
+ * $Id$
  */
 
 #ifndef _OCSPI_H_

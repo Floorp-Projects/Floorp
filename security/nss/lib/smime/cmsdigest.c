@@ -4,6 +4,8 @@
 
 /*
  * CMS digesting.
+ *
+ * $Id$
  */
 
 #include "cmslocal.h"

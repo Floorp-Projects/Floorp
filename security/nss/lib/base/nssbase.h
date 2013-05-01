@@ -5,6 +5,10 @@
 #ifndef NSSBASE_H
 #define NSSBASE_H
 
+#ifdef DEBUG
+static const char NSSBASE_CVS_ID[] = "@(#) $RCSfile$ $Revision$ $Date$";
+#endif /* DEBUG */
+
 /*
  * nssbase.h
  *

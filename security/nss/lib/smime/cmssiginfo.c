@@ -4,6 +4,8 @@
 
 /*
  * CMS signerInfo methods.
+ *
+ * $Id$
  */
 
 #include "cmslocal.h"
