@@ -542,8 +542,12 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
         }
     }
 
-    private int getAwesomeBarAnimTranslation() {
+    private int getAwesomeBarEntryTranslation() {
         return mLayout.getWidth() - mAwesomeBarEntry.getRight();
+    }
+
+    private int getAwesomeBarCurveTranslation() {
+        return mLayout.getWidth() - mTabs.getLeft();
     }
 
     public void fromAwesomeBarSearch(String url) {
@@ -568,20 +572,21 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
             // Keep the entry highlighted during the animation
             mLayout.setSelected(true);
 
-            final int translation = getAwesomeBarAnimTranslation();
+            final int entryTranslation = getAwesomeBarEntryTranslation();
+            final int curveTranslation = getAwesomeBarCurveTranslation();
 
             proxy = AnimatorProxy.create(mAwesomeBarRightEdge);
-            proxy.setTranslationX(translation);
+            proxy.setTranslationX(entryTranslation);
             proxy = AnimatorProxy.create(mTabs);
-            proxy.setTranslationX(translation);
+            proxy.setTranslationX(curveTranslation);
             proxy = AnimatorProxy.create(mTabsCounter);
-            proxy.setTranslationX(translation);
+            proxy.setTranslationX(curveTranslation);
             proxy = AnimatorProxy.create(mActionItemBar);
-            proxy.setTranslationX(translation);
+            proxy.setTranslationX(curveTranslation);
 
             if (mHasSoftMenuButton) {
                 proxy = AnimatorProxy.create(mMenu);
-                proxy.setTranslationX(translation);
+                proxy.setTranslationX(curveTranslation);
             }
         }
 
@@ -624,7 +629,6 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
         contentAnimator.setPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
             @Override
             public void onPropertyAnimationStart() {
-                mTabs.setVisibility(View.VISIBLE);
             }
 
             @Override
@@ -672,7 +676,8 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
         final PropertyAnimator contentAnimator = new PropertyAnimator(250);
         contentAnimator.setUseHardwareLayer(false);
 
-        final int translation = getAwesomeBarAnimTranslation();
+        final int entryTranslation = getAwesomeBarEntryTranslation();
+        final int curveTranslation = getAwesomeBarCurveTranslation();
 
         // Keep the entry highlighted during the animation
         mLayout.setSelected(true);
@@ -706,21 +711,21 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
         // Slide the right side elements of the toolbar
         contentAnimator.attach(mAwesomeBarRightEdge,
                                PropertyAnimator.Property.TRANSLATION_X,
-                               translation);
+                               entryTranslation);
         contentAnimator.attach(mTabs,
                                PropertyAnimator.Property.TRANSLATION_X,
-                               translation);
+                               curveTranslation);
         contentAnimator.attach(mTabsCounter,
                                PropertyAnimator.Property.TRANSLATION_X,
-                               translation);
+                               curveTranslation);
         contentAnimator.attach(mActionItemBar,
                                PropertyAnimator.Property.TRANSLATION_X,
-                               translation);
+                               curveTranslation);
 
         if (mHasSoftMenuButton)
             contentAnimator.attach(mMenu,
                                    PropertyAnimator.Property.TRANSLATION_X,
-                                   translation);
+                                   curveTranslation);
 
         contentAnimator.setPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
             @Override
@@ -729,8 +734,6 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
 
             @Override
             public void onPropertyAnimationEnd() {
-                mTabs.setVisibility(View.INVISIBLE);
-
                 // Once the entry is fully expanded, start awesome screen
                 mActivity.onSearchRequested();
                 mAnimatingEntry = false;
