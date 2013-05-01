@@ -79,6 +79,9 @@ public:
                                                   void* buffer,
                                                   GLContext::SharedTextureBufferType bufferType);
 
+    static already_AddRefed<gfxASurface> GetSharedHandleAsSurface(GLContext::SharedTextureShareType shareType,
+                                                                  SharedTextureHandle sharedHandle);
+
     /**
      * Free any resources held by this Context Provider.
      */
