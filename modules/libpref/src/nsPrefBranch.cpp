@@ -29,6 +29,9 @@
 #include "nsICrashReporter.h"
 #endif
 
+// 1 MB should be enough for everyone.
+static const uint32_t MAX_PREF_LENGTH = 1 * 1024 * 1024;
+
 // Definitions
 struct EnumerateData {
   const char  *parent;
@@ -401,10 +404,13 @@ NS_IMETHODIMP nsPrefBranch::SetComplexValue(const char *aPrefName, const nsIID &
     nsCOMPtr<nsISupportsString> theString = do_QueryInterface(aValue);
 
     if (theString) {
-      nsAutoString wideString;
+      nsString wideString;
 
       rv = theString->GetData(wideString);
       if (NS_SUCCEEDED(rv)) {
+        if (wideString.Length() > MAX_PREF_LENGTH) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
         rv = SetCharPref(aPrefName, NS_ConvertUTF16toUTF8(wideString).get());
       }
     }
@@ -419,6 +425,9 @@ NS_IMETHODIMP nsPrefBranch::SetComplexValue(const char *aPrefName, const nsIID &
 
       rv = theString->GetData(getter_Copies(wideString));
       if (NS_SUCCEEDED(rv)) {
+        if (wideString.Length() > MAX_PREF_LENGTH) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
         rv = SetCharPref(aPrefName, NS_ConvertUTF16toUTF8(wideString).get());
       }
     }
