@@ -7,6 +7,17 @@ import ctypes
 
 import nss_ctypes
 
+# Change the limits in JarSignatureVerification.cpp when you change the limits
+# here.
+max_entry_uncompressed_len = 100 * 1024 * 1024
+max_total_uncompressed_len = 500 * 1024 * 1024
+max_entry_count = 100 * 1000
+max_entry_filename_len = 1024
+max_mf_len = max_entry_count * 50
+max_sf_len = 1024
+
+
+
 def nss_load_cert(nss_db_dir, nss_password, cert_nickname):
   nss_ctypes.NSS_Init(nss_db_dir)
   try:
@@ -32,18 +43,10 @@ def nss_create_detached_signature(cert, dataToSign, wincx):
   finally:
     nss_ctypes.SEC_PKCS7DestroyContentInfo(p7)
 
-def sign_zip(in_zipfile_name, out_zipfile_name, cert, wincx):
+# We receive a ids_json string for the toBeSigned app
+def sign_zip(in_zipfile_name, out_zipfile_name, cert, wincx, ids_json):
   mf_entries = []
   seen_entries = set()
-
-  # Change the limits in JarSignatureVerification.cpp when you change the limits
-  # here.
-  max_entry_uncompressed_len = 100 * 1024 * 1024
-  max_total_uncompressed_len = 500 * 1024 * 1024
-  max_entry_count = 100 * 1000
-  max_entry_filename_len = 1024
-  max_mf_len = max_entry_count * 50
-  max_sf_len = 1024
 
   total_uncompressed_len = 0
   entry_count = 0
@@ -95,6 +98,9 @@ def sign_zip(in_zipfile_name, out_zipfile_name, cert, wincx):
           # Add the entry to the manifest we're building
           mf_entries.append('Name: %s\nSHA1-Digest: %s\n'
                                 % (name, b64encode(sha1(contents).digest())))
+    if (ids_json):
+      mf_entries.append('Name: %s\nSHA1-Digest: %s\n'
+                        % ("META-INF/ids.json", b64encode(sha1(ids_json).digest())))
 
     mf_contents = 'Manifest-Version: 1.0\n\n' + '\n'.join(mf_entries)
     if len(mf_contents) > max_mf_len:
@@ -112,6 +118,8 @@ def sign_zip(in_zipfile_name, out_zipfile_name, cert, wincx):
     out_zip.writestr("META-INF/A.RSA", p7, zipfile.ZIP_DEFLATED)
     out_zip.writestr("META-INF/A.SF",  sf_contents, zipfile.ZIP_DEFLATED)
     out_zip.writestr("META-INF/MANIFEST.MF", mf_contents, zipfile.ZIP_DEFLATED)
+    if (ids_json):
+        out_zip.writestr("META-INF/ids.json", ids_json, zipfile.ZIP_DEFLATED)
 
 def main():
   parser = argparse.ArgumentParser(description='Sign a B2G app.')
@@ -126,7 +134,29 @@ def main():
                             required=True, help="input JAR file (unsigned)")
   parser.add_argument('-o', action='store', type=argparse.FileType('wb'),
                             required=True, help="output JAR file (signed)")
+  parser.add_argument('-I', '--ids-file', action='store', type=argparse.FileType('rb'),
+                     help="Path to the ids.json file", dest='I')
+  parser.add_argument('-S', '--storeId', action='store',
+                      help="Store Id for the package", dest='S')
+  parser.add_argument('-V', '--storeVersion', action='store', type=int,
+                      help="Package Version", dest='V')
   args = parser.parse_args()
+
+  # Sadly nested groups and neccesarily inclusive groups (http://bugs.python.org/issue11588)
+  # are not implemented. Note that this means the automatic help is slighty incorrect
+  if not((not args.I and args.V and args.S) or (args.I and not args.V and not args.S)):
+      raise ValueError("Either -I or -S and -V must be specified")
+
+  if (args.I):
+    ids_contents = args.I.read(max_entry_uncompressed_len+1)
+  else:
+    ids_contents = '''{
+  "id": "%(id)s",
+  "version": %(version)d
+}
+''' % {"id": args.S, "version": args.V}
+  if len(ids_contents) > max_entry_uncompressed_len:
+    raise ValueError("Entry is too large: %s" % (name))
 
   db_dir = args.d
   password = args.f.readline().strip()
@@ -134,7 +164,7 @@ def main():
 
   (wincx, cert) = nss_load_cert(db_dir, password, cert_nickname)
   try:
-    sign_zip(args.i, args.o, cert, wincx)
+    sign_zip(args.i, args.o, cert, wincx, ids_contents)
     return 0
   finally:
     nss_ctypes.CERT_DestroyCertificate(cert)
