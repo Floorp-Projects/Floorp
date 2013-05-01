@@ -606,7 +606,7 @@ AsyncCompositionManager::SyncFrameMetrics(const gfx::Point& aScrollOffset,
                                           gfx::Margin& aFixedLayerMargins,
                                           gfx::Point& aOffset)
 {
-#ifdef MOZ_ANDROID_WIDGET
+#ifdef MOZ_WIDGET_ANDROID
   AndroidBridge::Bridge()->SyncFrameMetrics(aScrollOffset, aZoom, aCssPageRect,
                                             aLayersUpdated, aDisplayPort,
                                             aDisplayResolution, aIsFirstPaint,
