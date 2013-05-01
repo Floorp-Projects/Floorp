@@ -64,12 +64,18 @@ private:
 /* static */ GLManager*
 GLManager::CreateGLManager(LayerManager* aManager)
 {
-  if (aManager->GetBackendType() == LAYERS_OPENGL) {
+  if (!aManager) {
+    return nullptr;
+  } else if (aManager->GetBackendType() == LAYERS_OPENGL) {
     return new GLManagerLayerManager(static_cast<LayerManagerOGL*>(aManager));
   }
   if (aManager->GetBackendType() == LAYERS_NONE) {
-    return new GLManagerCompositor(static_cast<CompositorOGL*>(
-      static_cast<LayerManagerComposite*>(aManager)->GetCompositor()));
+    if (Compositor::GetBackend() == LAYERS_OPENGL) {
+      return new GLManagerCompositor(static_cast<CompositorOGL*>(
+        static_cast<LayerManagerComposite*>(aManager)->GetCompositor()));
+    } else {
+      return nullptr;
+    }
   }
 
   MOZ_NOT_REACHED("Cannot create GLManager for non-GL layer manager");

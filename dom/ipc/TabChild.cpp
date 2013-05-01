@@ -2087,10 +2087,9 @@ TabChild::InitRenderingState()
     static_cast<PuppetWidget*>(mWidget.get())->InitIMEState();
 
     uint64_t id;
-    TextureFactoryIdentifier textureFactoryIdentifier;
     RenderFrameChild* remoteFrame =
         static_cast<RenderFrameChild*>(SendPRenderFrameConstructor(
-                                         &mScrolling, &textureFactoryIdentifier, &id));
+                                         &mScrolling, &mTextureFactoryIdentifier, &id));
     if (!remoteFrame) {
       NS_WARNING("failed to construct RenderFrame");
       return false;
@@ -2106,8 +2105,8 @@ TabChild::InitRenderingState()
           return false;
         }
         shadowManager =
-            compositorChild->SendPLayerTransactionConstructor(textureFactoryIdentifier.mParentBackend,
-                                                              id, &textureFactoryIdentifier);
+            compositorChild->SendPLayerTransactionConstructor(mTextureFactoryIdentifier.mParentBackend,
+                                                              id, &mTextureFactoryIdentifier);
     } else {
         // Pushing transactions to the parent content.
         shadowManager = remoteFrame->SendPLayerTransactionConstructor();
@@ -2121,11 +2120,11 @@ TabChild::InitRenderingState()
     }
 
     ShadowLayerForwarder* lf =
-        mWidget->GetLayerManager(shadowManager, textureFactoryIdentifier.mParentBackend)
+        mWidget->GetLayerManager(shadowManager, mTextureFactoryIdentifier.mParentBackend)
                ->AsShadowForwarder();
     NS_ABORT_IF_FALSE(lf && lf->HasShadowManager(),
                       "PuppetWidget should have shadow manager");
-    lf->IdentifyTextureHost(textureFactoryIdentifier);
+    lf->IdentifyTextureHost(mTextureFactoryIdentifier);
 
     mRemoteFrame = remoteFrame;
 
@@ -2173,7 +2172,11 @@ TabChild::GetDPI(float* aDPI)
 void
 TabChild::NotifyPainted()
 {
-    if (UseDirectCompositor() && !mNotified) {
+    // Normally we only need to notify the content process once, but with BasicCompositor
+    // we need to notify content every change so that it can compute an invalidation
+    // region and send that to the widget.
+    if (UseDirectCompositor() &&
+        (!mNotified || mTextureFactoryIdentifier.mParentBackend == LAYERS_BASIC)) {
         mRemoteFrame->SendNotifyCompositorTransaction();
         mNotified = true;
     }
