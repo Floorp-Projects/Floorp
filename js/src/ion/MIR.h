@@ -7124,7 +7124,7 @@ class MTypeBarrier
 // Like MTypeBarrier, guard that the value is in the given type set. This is
 // used before property writes to ensure the value being written is represented
 // in the property types for the object.
-class MMonitorTypes : public MUnaryInstruction
+class MMonitorTypes : public MUnaryInstruction, public BoxInputsPolicy
 {
     const types::StackTypeSet *typeSet_;
 
@@ -7142,6 +7142,11 @@ class MMonitorTypes : public MUnaryInstruction
     static MMonitorTypes *New(MDefinition *def, const types::StackTypeSet *types) {
         return new MMonitorTypes(def, types);
     }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+
     MDefinition *input() const {
         return getOperand(0);
     }
