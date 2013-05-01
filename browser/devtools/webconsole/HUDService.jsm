@@ -17,7 +17,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "gDevTools",
     "resource:///modules/devtools/gDevTools.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "devtools",
-    "resource:///modules/devtools/gDevTools.jsm");
+    "resource://gre/modules/devtools/Loader.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
     "resource://gre/modules/Services.jsm");
