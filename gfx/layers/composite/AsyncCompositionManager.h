@@ -130,11 +130,15 @@ private:
                         float& aScaleX, float& aScaleY,
                         gfx::Margin& aFixedLayerMargins,
                         float& aOffsetX, float& aOffsetY);
-  virtual void SyncFrameMetrics(Layer* aLayer, const ViewTransform& aTreeTransform,
-                                const gfxPoint& aScrollOffset, gfx::Margin& aFixedLayerMargins,
-                                float& aOffsetX, float& aOffsetY,
-                                bool aIsFirstPaint, bool aLayersUpdated)
-  {}
+  void SyncFrameMetrics(const gfx::Point& aOffset,
+                        float aZoom,
+                        const gfx::Rect& aCssPageRect,
+                        bool aLayersUpdated,
+                        const gfx::Rect& aDisplayPort,
+                        float aDisplayResolution,
+                        bool aIsFirstPaint,
+                        gfx::Margin& aFixedLayerMargins,
+                        float& aOffsetX, float& aOffsetY);
 
   /**
    * Recursively applies the given translation to all top-level fixed position
