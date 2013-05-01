@@ -727,13 +727,13 @@ js::StrictlyEqual(JSContext *cx, const Value &lref, const Value &rref, bool *equ
 static inline bool
 IsNegativeZero(const Value &v)
 {
-    return v.isDouble() && MOZ_DOUBLE_IS_NEGATIVE_ZERO(v.toDouble());
+    return v.isDouble() && mozilla::IsNegativeZero(v.toDouble());
 }
 
 static inline bool
 IsNaN(const Value &v)
 {
-    return v.isDouble() && MOZ_DOUBLE_IS_NaN(v.toDouble());
+    return v.isDouble() && mozilla::IsNaN(v.toDouble());
 }
 
 bool
@@ -2633,7 +2633,7 @@ BEGIN_CASE(JSOP_TABLESWITCH)
         i = rref.toInt32();
     } else {
         double d;
-        /* Don't use MOZ_DOUBLE_IS_INT32; treat -0 (double) as 0. */
+        /* Don't use mozilla::DoubleIsInt32; treat -0 (double) as 0. */
         if (!rref.isDouble() || (d = rref.toDouble()) != (i = int32_t(rref.toDouble())))
             DO_NEXT_OP(len);
     }

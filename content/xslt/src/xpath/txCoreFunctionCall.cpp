@@ -364,8 +364,8 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             NS_ENSURE_SUCCESS(rv, rv);
 
             // check for NaN or +/-Inf
-            if (MOZ_DOUBLE_IS_NaN(start) ||
-                MOZ_DOUBLE_IS_INFINITE(start) ||
+            if (mozilla::IsNaN(start) ||
+                mozilla::IsInfinite(start) ||
                 start >= src.Length() + 0.5) {
                 aContext->recycler()->getEmptyStringResult(aResult);
 
@@ -380,7 +380,7 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
                 NS_ENSURE_SUCCESS(rv, rv);
 
                 end += start;
-                if (MOZ_DOUBLE_IS_NaN(end) || end < 0) {
+                if (mozilla::IsNaN(end) || end < 0) {
                     aContext->recycler()->getEmptyStringResult(aResult);
 
                     return NS_OK;
@@ -524,8 +524,8 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             rv = evaluateToNumber(mParams[0], aContext, &dbl);
             NS_ENSURE_SUCCESS(rv, rv);
 
-            if (!MOZ_DOUBLE_IS_NaN(dbl) && !MOZ_DOUBLE_IS_INFINITE(dbl)) {
-                if (MOZ_DOUBLE_IS_NEGATIVE(dbl) && dbl >= -0.5) {
+            if (mozilla::IsFinite(dbl)) {
+                if (mozilla::IsNegative(dbl) && dbl >= -0.5) {
                     dbl *= 0;
                 }
                 else {
@@ -541,11 +541,8 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             rv = evaluateToNumber(mParams[0], aContext, &dbl);
             NS_ENSURE_SUCCESS(rv, rv);
 
-            if (!MOZ_DOUBLE_IS_NaN(dbl) &&
-                !MOZ_DOUBLE_IS_INFINITE(dbl) &&
-                !(dbl == 0 && MOZ_DOUBLE_IS_NEGATIVE(dbl))) {
+            if (mozilla::IsFinite(dbl) && !mozilla::IsNegativeZero(dbl))
                 dbl = floor(dbl);
-            }
 
             return aContext->recycler()->getNumberResult(dbl, aResult);
         }
@@ -555,13 +552,11 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             rv = evaluateToNumber(mParams[0], aContext, &dbl);
             NS_ENSURE_SUCCESS(rv, rv);
 
-            if (!MOZ_DOUBLE_IS_NaN(dbl) && !MOZ_DOUBLE_IS_INFINITE(dbl)) {
-                if (MOZ_DOUBLE_IS_NEGATIVE(dbl) && dbl > -1) {
+            if (mozilla::IsFinite(dbl)) {
+                if (mozilla::IsNegative(dbl) && dbl > -1)
                     dbl *= 0;
-                }
-                else {
+                else
                     dbl = ceil(dbl);
-                }
             }
 
             return aContext->recycler()->getNumberResult(dbl, aResult);

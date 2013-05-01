@@ -1734,14 +1734,14 @@ ReportLenientThisUnwrappingFailure(JSContext* cx, JS::Handle<JSObject*> obj)
 
 // Date implementation methods
 Date::Date() :
-  mMsecSinceEpoch(MOZ_DOUBLE_NaN())
+  mMsecSinceEpoch(UnspecifiedNaN())
 {
 }
 
 bool
 Date::IsUndefined() const
 {
-  return MOZ_DOUBLE_IS_NaN(mMsecSinceEpoch);
+  return IsNaN(mMsecSinceEpoch);
 }
 
 bool

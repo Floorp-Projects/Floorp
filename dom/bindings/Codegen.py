@@ -2256,11 +2256,11 @@ def numericValue(t, v):
     if (t == IDLType.Tags.unrestricted_double or
         t == IDLType.Tags.unrestricted_float):
         if v == float("inf"):
-            return "MOZ_DOUBLE_POSITIVE_INFINITY()"
+            return "mozilla::PositiveInfinity()"
         if v == float("-inf"):
-            return "MOZ_DOUBLE_NEGATIVE_INFINITY()"
+            return "mozilla::NegativeInfinity()"
         if math.isnan(v):
-            return "MOZ_DOUBLE_NaN()"
+            return "mozilla::UnspecifiedNaN()"
     return "%s%s" % (v, numericSuffixes[t])
 
 class CastableObjectUnwrapper():
@@ -3393,8 +3393,8 @@ for (uint32_t i = 0; i < length; ++i) {
         else:
             nonFiniteCode = ("  ThrowErrorMessage(cx, MSG_NOT_FINITE);\n"
                              "%s" % exceptionCodeIndented.define())
-        template += (" else if (!MOZ_DOUBLE_IS_FINITE(%s)) {\n"
-                     "  // Note: MOZ_DOUBLE_IS_FINITE will do the right thing\n"
+        template += (" else if (!mozilla::IsFinite(%s)) {\n"
+                     "  // Note: mozilla::IsFinite will do the right thing\n"
                      "  //       when passed a non-finite float too.\n"
                      "%s\n"
                      "}" % (readLoc, nonFiniteCode))

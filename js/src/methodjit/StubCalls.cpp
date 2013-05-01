@@ -58,6 +58,9 @@ using namespace js::types;
 using namespace JSC;
 
 using mozilla::DebugOnly;
+using mozilla::DoubleIsInt32;
+using mozilla::IsNaN;
+using mozilla::IsNegative;
 
 void JS_FASTCALL
 stubs::BindName(VMFrame &f, PropertyName *name_)
@@ -673,13 +676,13 @@ stubs::Div(VMFrame &f)
         const Value *vp;
 #ifdef XP_WIN
         /* XXX MSVC miscompiles such that (NaN == 0) */
-        if (MOZ_DOUBLE_IS_NaN(d2))
+        if (IsNaN(d2))
             vp = &rt->NaNValue;
         else
 #endif
-        if (d1 == 0 || MOZ_DOUBLE_IS_NaN(d1))
+        if (d1 == 0 || IsNaN(d1))
             vp = &rt->NaNValue;
-        else if (MOZ_DOUBLE_IS_NEGATIVE(d1) != MOZ_DOUBLE_IS_NEGATIVE(d2))
+        else if (IsNegative(d1) != IsNegative(d2))
             vp = &rt->negativeInfinityValue;
         else
             vp = &rt->positiveInfinityValue;
@@ -1301,7 +1304,7 @@ stubs::TableSwitch(VMFrame &f, jsbytecode *origPc)
         if (d == 0) {
             /* Treat -0 (double) as 0. */
             tableIdx = 0;
-        } else if (!MOZ_DOUBLE_IS_INT32(d, &tableIdx)) {
+        } else if (!DoubleIsInt32(d, &tableIdx)) {
             goto finally;
         }
     } else {
