@@ -58,66 +58,11 @@ BasicColorLayer::PaintColorTo(gfxRGBA aColor, float aOpacity,
   PaintWithMask(aContext, aOpacity, aMaskLayer);
 }
 
-class BasicShadowableColorLayer : public BasicColorLayer,
-                                  public BasicShadowableLayer
-{
-public:
-  BasicShadowableColorLayer(BasicShadowLayerManager* aManager) :
-    BasicColorLayer(aManager)
-  {
-    MOZ_COUNT_CTOR(BasicShadowableColorLayer);
-  }
-  virtual ~BasicShadowableColorLayer()
-  {
-    MOZ_COUNT_DTOR(BasicShadowableColorLayer);
-  }
-
-  virtual void FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
-  {
-    aAttrs = ColorLayerAttributes(GetColor());
-  }
-
-  virtual Layer* AsLayer() { return this; }
-  virtual ShadowableLayer* AsShadowableLayer() { return this; }
-
-  virtual void Disconnect()
-  {
-    BasicShadowableLayer::Disconnect();
-  }
-
-  virtual void Paint(gfxContext* aContext, Layer* aMaskLayer);
-};
-
-void
-BasicShadowableColorLayer::Paint(gfxContext* aContext, Layer* aMaskLayer)
-{
-  BasicColorLayer::Paint(aContext, aMaskLayer);
-
-  if (!HasShadow()) {
-    return;
-  }
-
-  if (aMaskLayer) {
-    static_cast<BasicImplData*>(aMaskLayer->ImplData())
-      ->Paint(aContext, nullptr);
-  }
-}
-
-
 already_AddRefed<ColorLayer>
 BasicLayerManager::CreateColorLayer()
 {
   NS_ASSERTION(InConstruction(), "Only allowed in construction phase");
   nsRefPtr<ColorLayer> layer = new BasicColorLayer(this);
-  return layer.forget();
-}
-already_AddRefed<ColorLayer>
-BasicShadowLayerManager::CreateColorLayer()
-{
-  NS_ASSERTION(InConstruction(), "Only allowed in construction phase");
-  nsRefPtr<BasicShadowableColorLayer> layer =
-    new BasicShadowableColorLayer(this);
-  MAYBE_CREATE_SHADOW(Color);
   return layer.forget();
 }
 

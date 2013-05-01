@@ -2123,15 +2123,6 @@ nsWindow::OnExposeEvent(cairo_t *cr)
     }
     // If this widget uses OMTC...
     if (GetLayerManager()->AsShadowForwarder() && GetLayerManager()->AsShadowForwarder()->HasShadowManager()) {
-#if defined(MOZ_WIDGET_GTK2)
-        nsRefPtr<gfxContext> ctx = new gfxContext(GetThebesSurface());
-#else
-        nsRefPtr<gfxContext> ctx = new gfxContext(GetThebesSurface(cr));
-#endif
-        nsBaseWidget::AutoLayerManagerSetup
-          setupLayerManager(this, ctx, mozilla::layers::BUFFER_NONE);
-
-        listener->PaintWindow(this, region, 0);
         listener->DidPaintWindow();
 
         g_free(rects);
