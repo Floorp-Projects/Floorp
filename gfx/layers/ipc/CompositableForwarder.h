@@ -85,6 +85,13 @@ public:
                              SurfaceDescriptor* aDescriptor) = 0;
 
   /**
+   * Same as UpdateTexture, but performs an asynchronous layer transaction (if possible)
+   */
+  virtual void UpdateTextureNoSwap(CompositableClient* aCompositable,
+                                   TextureIdentifier aTextureId,
+                                   SurfaceDescriptor* aDescriptor) = 0;
+
+  /**
    * Communicate to the compositor that aRegion in the texture identified by
    * aCompositable and aIdentifier has been updated to aThebesBuffer.
    */

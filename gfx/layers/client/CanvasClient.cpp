@@ -67,6 +67,13 @@ CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
   mTextureClient->Unlock();
 }
 
+void
+CanvasClient2D::Updated()
+{
+  mForwarder->UpdateTextureNoSwap(this, 1, mTextureClient->GetDescriptor());
+}
+
+
 CanvasClientWebGL::CanvasClientWebGL(CompositableForwarder* aFwd,
                                      TextureFlags aFlags)
 : CanvasClient(aFwd, aFlags)

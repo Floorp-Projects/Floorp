@@ -65,6 +65,8 @@ public:
   }
 
   virtual void Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer);
+
+  virtual void Updated() MOZ_OVERRIDE;
 };
 
 // Used for GL canvases where we don't need to do any readback, i.e., with a
