@@ -1841,7 +1841,7 @@ class TypedArrayTemplate
             return fromArray(cx, dataObj);
 
         /* (ArrayBuffer, [byteOffset, [length]]) */
-        int32_t byteOffset = -1;
+        int32_t byteOffset = 0;
         int32_t length = -1;
 
         if (argc > 1) {
@@ -2099,7 +2099,7 @@ class TypedArrayTemplate
 
   public:
     static JSObject *
-    fromBuffer(JSContext *cx, HandleObject bufobj, int32_t byteOffsetInt, int32_t lengthInt,
+    fromBuffer(JSContext *cx, HandleObject bufobj, uint32_t byteOffset, int32_t lengthInt,
                HandleObject proto)
     {
         if (!ObjectClassIs(bufobj, ESClass_ArrayBuffer, cx)) {
@@ -2150,7 +2150,7 @@ class TypedArrayTemplate
 
                 ag.setCallee(cx->compartment->maybeGlobal()->createArrayFromBuffer<NativeType>());
                 ag.setThis(ObjectValue(*bufobj));
-                ag[0] = Int32Value(byteOffsetInt);
+                ag[0] = NumberValue(byteOffset);
                 ag[1] = Int32Value(lengthInt);
                 ag[2] = ObjectValue(*proto);
 
@@ -2165,19 +2165,17 @@ class TypedArrayTemplate
             return NULL; // must be arrayBuffer
         }
 
-        uint32_t boffset = (byteOffsetInt == -1) ? 0 : uint32_t(byteOffsetInt);
-
         ArrayBufferObject &buffer = bufobj->asArrayBuffer();
 
-        if (boffset > buffer.byteLength() || boffset % sizeof(NativeType) != 0) {
+        if (byteOffset > buffer.byteLength() || byteOffset % sizeof(NativeType) != 0) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_TYPED_ARRAY_BAD_ARGS);
             return NULL; // invalid byteOffset
         }
 
         uint32_t len;
         if (lengthInt == -1) {
-            len = (buffer.byteLength() - boffset) / sizeof(NativeType);
-            if (len * sizeof(NativeType) != buffer.byteLength() - boffset) {
+            len = (buffer.byteLength() - byteOffset) / sizeof(NativeType);
+            if (len * sizeof(NativeType) != buffer.byteLength() - byteOffset) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_TYPED_ARRAY_BAD_ARGS);
                 return NULL; // given byte array doesn't map exactly to sizeof(NativeType) * N
             }
@@ -2187,17 +2185,17 @@ class TypedArrayTemplate
 
         // Go slowly and check for overflow.
         uint32_t arrayByteLength = len * sizeof(NativeType);
-        if (len >= INT32_MAX / sizeof(NativeType) || boffset >= INT32_MAX - arrayByteLength) {
+        if (len >= INT32_MAX / sizeof(NativeType) || byteOffset >= INT32_MAX - arrayByteLength) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_TYPED_ARRAY_BAD_ARGS);
-            return NULL; // overflow when calculating boffset + len * sizeof(NativeType)
+            return NULL; // overflow when calculating byteOffset + len * sizeof(NativeType)
         }
 
-        if (arrayByteLength + boffset > buffer.byteLength()) {
+        if (arrayByteLength + byteOffset > buffer.byteLength()) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_TYPED_ARRAY_BAD_ARGS);
-            return NULL; // boffset + len is too big for the arraybuffer
+            return NULL; // byteOffset + len is too big for the arraybuffer
         }
 
-        return makeInstance(cx, bufobj, boffset, len, proto);
+        return makeInstance(cx, bufobj, byteOffset, len, proto);
     }
 
     static JSObject *
@@ -2593,7 +2591,11 @@ ArrayBufferObject::createTypedArrayFromBufferImpl(JSContext *cx, CallArgs args)
     Rooted<JSObject*> proto(cx, &args[2].toObject());
 
     Rooted<JSObject*> obj(cx);
-    obj = ArrayType::fromBuffer(cx, buffer, args[0].toInt32(), args[1].toInt32(), proto);
+    double byteOffset = args[0].toNumber();
+    MOZ_ASSERT(0 <= byteOffset);
+    MOZ_ASSERT(byteOffset <= UINT32_MAX);
+    MOZ_ASSERT(byteOffset == uint32_t(byteOffset));
+    obj = ArrayType::fromBuffer(cx, buffer, uint32_t(byteOffset), args[1].toInt32(), proto);
     if (!obj)
         return false;
     args.rval().setObject(*obj);
@@ -3379,12 +3381,11 @@ const JSFunctionSpec _typedArray::jsfuncs[] = {                                \
       return TypedArrayTemplate<NativeType>::fromArray(cx, other);                           \
   }                                                                                          \
   JS_FRIEND_API(JSObject *) JS_New ## Name ## ArrayWithBuffer(JSContext *cx,                 \
-                               JSObject *arrayBuffer_, uint32_t byteoffset, int32_t length)  \
+                               JSObject *arrayBuffer_, uint32_t byteOffset, int32_t length)  \
   {                                                                                          \
-      MOZ_ASSERT(byteoffset <= INT32_MAX);                                                   \
       Rooted<JSObject*> arrayBuffer(cx, arrayBuffer_);                                       \
       Rooted<JSObject*> proto(cx, NULL);                                                     \
-      return TypedArrayTemplate<NativeType>::fromBuffer(cx, arrayBuffer, byteoffset, length, \
+      return TypedArrayTemplate<NativeType>::fromBuffer(cx, arrayBuffer, byteOffset, length, \
                                                         proto);                              \
   }                                                                                          \
   JS_FRIEND_API(JSBool) JS_Is ## Name ## Array(JSObject *obj)                                \
