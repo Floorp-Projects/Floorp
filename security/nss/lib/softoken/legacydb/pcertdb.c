@@ -4,8 +4,6 @@
 
 /*
  * Permanent Certificate database handling code 
- *
- * $Id$
  */
 #include "lowkeyti.h"
 #include "pcert.h"

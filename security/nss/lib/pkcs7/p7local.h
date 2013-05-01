@@ -12,8 +12,6 @@
  * of pkcs7 code, first try to add a PKCS7 interface which will do it for
  * you.  If that has a problem, then just move out what you need, changing
  * its name as appropriate!
- *
- * $Id$
  */
 
 #ifndef _P7LOCAL_H_

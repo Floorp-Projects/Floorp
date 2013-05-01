@@ -4,8 +4,6 @@
 
 /*
  * CMS attributes.
- *
- * $Id$
  */
 
 #include "cmslocal.h"

@@ -4,8 +4,6 @@
 
 /*
  * Tool for converting builtin CA certs.
- *
- * $Id$
  */
 
 #include "nssrenam.h"

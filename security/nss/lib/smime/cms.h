@@ -4,8 +4,6 @@
 
 /*
  * Interfaces of the CMS implementation.
- *
- * $Id$
  */
 
 #ifndef _CMS_H_
