@@ -344,17 +344,23 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(TimeStamp aCurrentFram
     LayerComposite* layerComposite = aLayer->AsLayerComposite();
 
     ViewTransform treeTransform;
-    gfxPoint scrollOffset;
+    gfx::Point scrollOffset;
     *aWantNextFrame |=
       controller->SampleContentTransformForFrame(aCurrentFrame,
                                                  container,
                                                  &treeTransform,
-                                                 &scrollOffset);
+                                                 scrollOffset);
 
+    const gfx3DMatrix& rootTransform = mLayerManager->GetRoot()->GetTransform();
+    const FrameMetrics& metrics = container->GetFrameMetrics();
+    gfx::Rect displayPortLayersPixels(metrics.mCriticalDisplayPort.IsEmpty() ?
+                                      metrics.mDisplayPort : metrics.mCriticalDisplayPort);
     gfx::Margin fixedLayerMargins(0, 0, 0, 0);
     float offsetX = 0, offsetY = 0;
-    SyncFrameMetrics(aLayer, treeTransform, scrollOffset, fixedLayerMargins,
-                     offsetX, offsetY, mIsFirstPaint, mLayersUpdated);
+    SyncFrameMetrics(scrollOffset, treeTransform.mScale.width, metrics.mScrollableRect,
+                     mLayersUpdated, displayPortLayersPixels, 1 / rootTransform.GetXScale(),
+                     mIsFirstPaint, fixedLayerMargins, offsetX, offsetY);
+
     mIsFirstPaint = false;
     mLayersUpdated = false;
 
@@ -584,6 +590,26 @@ AsyncCompositionManager::SyncViewportInfo(const nsIntRect& aDisplayPort,
                                             aLayersUpdated,
                                             aScrollOffset,
                                             aScaleX, aScaleY,
+                                            aFixedLayerMargins,
+                                            aOffsetX, aOffsetY);
+#endif
+}
+
+void
+AsyncCompositionManager::SyncFrameMetrics(const gfx::Point& aOffset,
+                                          float aZoom,
+                                          const gfx::Rect& aCssPageRect,
+                                          bool aLayersUpdated,
+                                          const gfx::Rect& aDisplayPort,
+                                          float aDisplayResolution,
+                                          bool aIsFirstPaint,
+                                          gfx::Margin& aFixedLayerMargins,
+                                          float& aOffsetX, float& aOffsetY)
+{
+#ifdef MOZ_ANDROID_WIDGET
+  AndroidBridge::Bridge()->SyncFrameMetrics(aOffset, aZoom, aCssPageRect,
+                                            aLayersUpdated, aDisplayPort,
+                                            aDisplayResolution, aIsFirstPaint,
                                             aFixedLayerMargins,
                                             aOffsetX, aOffsetY);
 #endif
