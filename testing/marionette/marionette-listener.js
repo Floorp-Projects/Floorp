@@ -112,7 +112,6 @@ function startListeners() {
   addMessageListenerId("Marionette:actionChain", actionChain);
   addMessageListenerId("Marionette:multiAction", multiAction);
   addMessageListenerId("Marionette:sendMouseEvent", sendMouseEvent);
-  addMessageListenerId("Marionette:setSearchTimeout", setSearchTimeout);
   addMessageListenerId("Marionette:goUrl", goUrl);
   addMessageListenerId("Marionette:getUrl", getUrl);
   addMessageListenerId("Marionette:getTitle", getTitle);
@@ -141,7 +140,6 @@ function startListeners() {
   addMessageListenerId("Marionette:importScript", importScript);
   addMessageListenerId("Marionette:getAppCacheStatus", getAppCacheStatus);
   addMessageListenerId("Marionette:setTestName", setTestName);
-  addMessageListenerId("Marionette:setState", setState);
   addMessageListenerId("Marionette:screenShot", screenShot);
   addMessageListenerId("Marionette:addCookie", addCookie);
   addMessageListenerId("Marionette:getAllCookies", getAllCookies);
@@ -169,21 +167,6 @@ function sleepSession(msg) {
 }
 
 /**
- * Sets script-wide state variables; used after frame switching.
- */
-function setState(msg) {
-  marionetteTimeout = msg.json.scriptTimeout;
-  try {
-    elementManager.setSearchTimeout(msg.json.searchTimeout);
-  }
-  catch (e) {
-    sendError(e.message, e.code, e.stack, msg.json.command_id);
-    return;
-  }
-  sendOk(msg.json.command_id);
-}
-
-/**
  * Restarts all our listeners after this listener was put to sleep
  */
 function restart(msg) {
@@ -203,7 +186,6 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:actionChain", actionChain);
   removeMessageListenerId("Marionette:multiAction", multiAction);
   removeMessageListenerId("Marionette:sendMouseEvent", sendMouseEvent);
-  removeMessageListenerId("Marionette:setSearchTimeout", setSearchTimeout);
   removeMessageListenerId("Marionette:goUrl", goUrl);
   removeMessageListenerId("Marionette:getTitle", getTitle);
   removeMessageListenerId("Marionette:getPageSource", getPageSource);
@@ -231,7 +213,6 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:importScript", importScript);
   removeMessageListenerId("Marionette:getAppCacheStatus", getAppCacheStatus);
   removeMessageListenerId("Marionette:setTestName", setTestName);
-  removeMessageListenerId("Marionette:setState", setState);
   removeMessageListenerId("Marionette:screenShot", screenShot);
   removeMessageListenerId("Marionette:addCookie", addCookie);
   removeMessageListenerId("Marionette:getAllCookies", getAllCookies);
@@ -1236,20 +1217,6 @@ function multiAction(msg) {
 }
 
 /**
- * Function to set the timeout period for element searching 
- */
-function setSearchTimeout(msg) {
-  try {
-    elementManager.setSearchTimeout(msg.json.value);
-  }
-  catch (e) {
-    sendError(e.message, e.code, e.stack, msg.json.command_id);
-    return;
-  }
-  sendOk(msg.json.command_id);
-}
-
-/**
  * Navigate to URI. Handles the case where we navigate within an iframe.
  * All other navigation is handled by the server (in chrome space).
  */
@@ -1344,7 +1311,8 @@ function findElementContent(msg) {
   try {
     let on_success = function(id, cmd_id) { sendResponse({value:id}, cmd_id); };
     let on_error = sendError;
-    elementManager.find(curWindow, msg.json, on_success, on_error, false, command_id);
+    elementManager.find(curWindow, msg.json, msg.json.searchTimeout,
+                        on_success, on_error, false, command_id);
   }
   catch (e) {
     sendError(e.message, e.code, e.stack, command_id);
@@ -1359,7 +1327,8 @@ function findElementsContent(msg) {
   try {
     let on_success = function(id, cmd_id) { sendResponse({value:id}, cmd_id); };
     let on_error = sendError;
-    elementManager.find(curWindow, msg.json, on_success, on_error, true, command_id);
+    elementManager.find(curWindow, msg.json, msg.json.searchTimeout,
+                        on_success, on_error, true, command_id);
   }
   catch (e) {
     sendError(e.message, e.code, e.stack, command_id);
