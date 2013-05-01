@@ -598,7 +598,7 @@ add_task(function test_data_submission_success() {
     do_check_true(reporter.haveRemoteData());
 
     // Ensure data from providers made it to payload.
-    let o = yield reporter.getLastPayload();
+    let o = yield reporter.getJSONPayload(true);
     do_check_true("DummyProvider.DummyMeasurement" in o.data.last);
     do_check_true("DummyConstantProvider.DummyMeasurement" in o.data.last);
 
@@ -698,22 +698,6 @@ add_task(function test_policy_accept_reject() {
     policy.recordUserRejection();
     do_check_false(policy.dataSubmissionPolicyAccepted);
     do_check_false(reporter.willUploadData);
-  } finally {
-    reporter._shutdown();
-    yield shutdownServer(server);
-  }
-});
-
-add_task(function test_upload_save_payload() {
-  let [reporter, server] = yield getReporterAndServer("upload_save_payload");
-
-  try {
-    let deferred = Promise.defer();
-    let request = new DataSubmissionRequest(deferred, new Date(), false);
-
-    yield reporter._uploadData(request);
-    let json = yield reporter.getLastPayload();
-    do_check_true("thisPingDate" in json);
   } finally {
     reporter._shutdown();
     yield shutdownServer(server);
