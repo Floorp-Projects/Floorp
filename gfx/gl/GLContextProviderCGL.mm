@@ -464,6 +464,31 @@ GLContextProviderCGL::CreateSharedHandle(GLContext::SharedTextureShareType share
     return (SharedTextureHandle)surf;
 }
 
+already_AddRefed<gfxASurface>
+GLContextProviderCGL::GetSharedHandleAsSurface(GLContext::SharedTextureShareType shareType,
+                                               SharedTextureHandle sharedHandle)
+{
+  MacIOSurface* surf = reinterpret_cast<MacIOSurface*>(sharedHandle);
+  surf->Lock();
+  size_t bytesPerRow = surf->GetBytesPerRow();
+  size_t ioWidth = surf->GetWidth();
+  size_t ioHeight = surf->GetHeight();
+
+  unsigned char* ioData = (unsigned char*)surf->GetBaseAddress();
+
+  nsRefPtr<gfxImageSurface> imgSurface =
+    new gfxImageSurface(gfxIntSize(ioWidth, ioHeight), gfxASurface::ImageFormatARGB32);
+
+  for (size_t i = 0; i < ioHeight; i++) {
+    memcpy(imgSurface->Data() + i * imgSurface->Stride(),
+           ioData + i * bytesPerRow, ioWidth * 4);
+  }
+
+  surf->Unlock();
+
+  return imgSurface.forget();
+}
+
 void
 GLContextProviderCGL::Shutdown()
 {

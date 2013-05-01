@@ -695,6 +695,13 @@ GLContextProviderWGL::CreateSharedHandle(GLContext::SharedTextureShareType share
   return 0;
 }
 
+already_AddRefed<gfxASurface>
+GLContextProviderWGL::GetSharedHandleAsSurface(GLContext::SharedTextureShareType shareType,
+                                               SharedTextureHandle sharedHandle)
+{
+  return nullptr;
+}
+
 static nsRefPtr<GLContextWGL> gGlobalContext[WGLLibrary::LIBS_MAX];
 
 GLContext *
