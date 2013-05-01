@@ -951,18 +951,6 @@ JS_DumpCompartmentPCCounts(JSContext *cx)
 #endif
 }
 
-JS_PUBLIC_API(JSObject *)
-JS_UnwrapObject(JSObject *obj)
-{
-    return UncheckedUnwrap(obj);
-}
-
-JS_PUBLIC_API(JSObject *)
-JS_UnwrapObjectAndInnerize(JSObject *obj)
-{
-    return UncheckedUnwrap(obj, /* stopAtOuter = */ false);
-}
-
 JS_FRIEND_API(JSBool)
 js_CallContextDebugHandler(JSContext *cx)
 {
