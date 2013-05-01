@@ -29,7 +29,7 @@ private:
     /* additional members */
     nsresult FileURIFixup(const nsACString &aStringURI, nsIURI** aURI);
     nsresult ConvertFileToStringURI(const nsACString& aIn, nsCString& aOut);
-    nsresult KeywordURIFixup(const nsACString &aStringURI, nsIURI** aURI);
+    void KeywordURIFixup(const nsACString &aStringURI, nsIInputStream** aPostData, nsIURI** aURI);
     bool PossiblyByteExpandedFileName(const nsAString& aIn);
     bool PossiblyHostPortUrl(const nsACString& aUrl);
     bool MakeAlternateURI(nsIURI *aURI);
