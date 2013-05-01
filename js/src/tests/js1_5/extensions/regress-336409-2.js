@@ -1,4 +1,4 @@
-// |reftest| skip-if(!xulRuntime.shell&&((Android||(isDebugBuild&&xulRuntime.OS=="Linux")||xulRuntime.XPCOMABI.match(/x86_64/)))) silentfail slow -- can fail silently due to out of memory, bug 615011 - timeouts on slow debug Linux
+// |reftest| skip-if(!xulRuntime.shell&&((Android||(isDebugBuild&&xulRuntime.OS=="Linux")||xulRuntime.XPCOMABI.match(/x86_64/)))) slow -- can fail silently due to out of memory, bug 615011 - timeouts on slow debug Linux
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,7 +8,7 @@
 var BUGNUMBER = 336409;
 var summary = 'Integer overflow in js_obj_toSource';
 var actual = 'No Crash';
-var expect = /(No Crash|InternalError: allocation size overflow)/;
+var expect = /(No Crash|InternalError: allocation size overflow|out of memory)/;
 
 printBugNumber(BUGNUMBER);
 printStatus (summary);
