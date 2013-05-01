@@ -698,7 +698,7 @@ gc::MarkCrossCompartmentObjectUnbarriered(JSTracer *trc, JSObject *src, JSObject
 
 void
 gc::MarkCrossCompartmentScriptUnbarriered(JSTracer *trc, JSObject *src, JSScript **dst,
-                                      const char *name)
+                                          const char *name)
 {
     if (ShouldMarkCrossCompartment(trc, src, *dst))
         MarkScriptUnbarriered(trc, dst, name);
