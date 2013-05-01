@@ -421,6 +421,7 @@ private:
     class CachedFileDescriptorInfo;
     class CachedFileDescriptorCallbackRunnable;
 
+    TextureFactoryIdentifier mTextureFactoryIdentifier;
     nsCOMPtr<nsIWebNavigation> mWebNav;
     nsCOMPtr<nsIWidget> mWidget;
     nsCOMPtr<nsIURI> mLastURI;

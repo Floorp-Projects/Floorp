@@ -61,6 +61,7 @@ EXPORTS.mozilla.layers += [
     'AsyncCompositionManager.h',
     'AsyncPanZoomController.h',
     'Axis.h',
+    'BasicCompositor.h',
     'CanvasClient.h',
     'CanvasLayerComposite.h',
     'ColorLayerComposite.h',

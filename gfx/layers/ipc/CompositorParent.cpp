@@ -12,6 +12,7 @@
 #include "AutoOpenSurface.h"
 #include "CompositorParent.h"
 #include "mozilla/layers/CompositorOGL.h"
+#include "mozilla/layers/BasicCompositor.h"
 #include "LayerTransactionParent.h"
 #include "nsIWidget.h"
 #include "nsGkAtoms.h"
@@ -564,22 +565,26 @@ CompositorParent::AllocPLayerTransaction(const LayersBackend& aBackendHint,
                                                   mEGLSurfaceSize.width,
                                                   mEGLSurfaceSize.height,
                                                   mUseExternalSurfaceSize));
-    mWidget = nullptr;
-    mLayerManager->SetCompositorID(mCompositorID);
-
-    if (!mLayerManager->Initialize()) {
-      NS_ERROR("Failed to init Compositor");
-      return nullptr;
-    }
-
-    mCompositionManager = new AsyncCompositionManager(mLayerManager);
-
-    *aTextureFactoryIdentifier = mLayerManager->GetTextureFactoryIdentifier();
-    return new LayerTransactionParent(mLayerManager, this, 0);
+  } else if (aBackendHint == mozilla::layers::LAYERS_BASIC) {
+    mLayerManager =
+      new LayerManagerComposite(new BasicCompositor(mWidget));
   } else {
     NS_ERROR("Unsupported backend selected for Async Compositor");
     return nullptr;
   }
+
+  mWidget = nullptr;
+  mLayerManager->SetCompositorID(mCompositorID);
+
+  if (!mLayerManager->Initialize()) {
+    NS_ERROR("Failed to init Compositor");
+    return nullptr;
+  }
+
+  mCompositionManager = new AsyncCompositionManager(mLayerManager);
+
+  *aTextureFactoryIdentifier = mLayerManager->GetTextureFactoryIdentifier();
+  return new LayerTransactionParent(mLayerManager, this, 0);
 }
 
 bool

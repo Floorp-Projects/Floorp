@@ -1162,7 +1162,7 @@ BasicShadowLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
 
     // If we have a non-default target, we need to let our shadow manager draw
     // to it. This will happen at the end of the transaction.
-    if (aTarget && (aTarget != mDefaultTarget) &&
+    if (aTarget && ((aTarget != mDefaultTarget) || Compositor::GetBackend() == LAYERS_BASIC) &&
         XRE_GetProcessType() == GeckoProcessType_Default) {
       mShadowTarget = aTarget;
 
@@ -1204,31 +1204,8 @@ BasicShadowLayerManager::EndTransaction(DrawThebesLayerCallback aCallback,
     BasicLayerManager::BeginTransaction();
     BasicShadowLayerManager::EndTransaction(aCallback, aCallbackData, aFlags);
     mIsRepeatTransaction = false;
-  } else if (mShadowTarget) {
-    if (mWidget) {
-      if (CompositorChild* remoteRenderer = mWidget->GetRemoteRenderer()) {
-        nsIntRect bounds;
-        mWidget->GetBounds(bounds);
-        SurfaceDescriptor inSnapshot, snapshot;
-        if (AllocSurfaceDescriptor(bounds.Size(),
-                                   gfxASurface::CONTENT_COLOR_ALPHA,
-                                   &inSnapshot) &&
-            // The compositor will usually reuse |snapshot| and return
-            // it through |outSnapshot|, but if it doesn't, it's
-            // responsible for freeing |snapshot|.
-            remoteRenderer->SendMakeSnapshot(inSnapshot, &snapshot)) {
-          AutoOpenSurface opener(OPEN_READ_ONLY, snapshot);
-          gfxASurface* source = opener.Get();
-
-          mShadowTarget->DrawSurface(source, source->GetSize());
-        }
-        if (IsSurfaceDescriptorValid(snapshot)) {
-          ShadowLayerForwarder::DestroySharedSurface(&snapshot);
-        }
-      }
-    }
-    mShadowTarget = nullptr;
-    mDummyTarget = nullptr;
+  } else {
+    MakeSnapshotIfRequired();
   }
 }
 
@@ -1242,7 +1219,40 @@ BasicShadowLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags)
     return false;
   }
   ForwardTransaction();
+  MakeSnapshotIfRequired();
   return true;
+}
+
+void 
+BasicShadowLayerManager::MakeSnapshotIfRequired()
+{
+  if (!mShadowTarget) {
+    return;
+  }
+  if (mWidget) {
+    if (CompositorChild* remoteRenderer = mWidget->GetRemoteRenderer()) {
+      nsIntRect bounds;
+      mWidget->GetBounds(bounds);
+      SurfaceDescriptor inSnapshot, snapshot;
+      if (AllocSurfaceDescriptor(bounds.Size(),
+                                 gfxASurface::CONTENT_COLOR_ALPHA,
+                                 &inSnapshot) &&
+          // The compositor will usually reuse |snapshot| and return
+          // it through |outSnapshot|, but if it doesn't, it's
+          // responsible for freeing |snapshot|.
+          remoteRenderer->SendMakeSnapshot(inSnapshot, &snapshot)) {
+        AutoOpenSurface opener(OPEN_READ_ONLY, snapshot);
+        gfxASurface* source = opener.Get();
+
+        mShadowTarget->DrawSurface(source, source->GetSize());
+      }
+      if (IsSurfaceDescriptorValid(snapshot)) {
+        ShadowLayerForwarder::DestroySharedSurface(&snapshot);
+      }
+    }
+  }
+  mShadowTarget = nullptr;
+  mDummyTarget = nullptr;
 }
 
 void

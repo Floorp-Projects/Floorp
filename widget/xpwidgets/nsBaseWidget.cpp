@@ -886,7 +886,12 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
 
   TextureFactoryIdentifier textureFactoryIdentifier;
   PLayerTransactionChild* shadowManager;
-  mozilla::layers::LayersBackend backendHint = mozilla::layers::LAYERS_OPENGL;
+  mozilla::layers::LayersBackend backendHint;
+  if (mUseLayersAcceleration) {
+    backendHint = mozilla::layers::LAYERS_OPENGL;
+  } else {
+    backendHint = mozilla::layers::LAYERS_BASIC;
+  }
   shadowManager = mCompositorChild->SendPLayerTransactionConstructor(
     backendHint, 0, &textureFactoryIdentifier);
 

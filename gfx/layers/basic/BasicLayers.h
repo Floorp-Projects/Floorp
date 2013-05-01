@@ -279,6 +279,12 @@ private:
    */
   void ForwardTransaction();
 
+  /**
+   * Take a snapshot of the parent context, and copy
+   * it into mShadowTarget.
+   */
+  void MakeSnapshotIfRequired();
+
   // The bounds of |mTarget| in device pixels.
   nsIntRect mTargetBounds;
 

@@ -33,6 +33,7 @@ CPPSRCS = \
         BasicLayerManager.cpp \
         BasicCanvasLayer.cpp \
         BasicColorLayer.cpp \
+        BasicCompositor.cpp \
         BasicContainerLayer.cpp \
         BasicImageLayer.cpp \
         BasicLayersImpl.cpp \
