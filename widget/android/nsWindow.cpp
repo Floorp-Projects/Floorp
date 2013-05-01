@@ -2492,24 +2492,6 @@ public:
             controller->NotifyLayersUpdated(targetLayer->AsContainerLayer()->GetFrameMetrics(), isFirstPaint);
         }
     }
-
-    virtual void SyncFrameMetrics(Layer* aLayer, const ViewTransform& aTreeTransform,
-                                  const gfxPoint& aScrollOffset, mozilla::gfx::Margin& aFixedLayerMargins,
-                                  float& aOffsetX, float& aOffsetY,
-                                  bool aIsFirstPaint, bool aLayersUpdated) MOZ_OVERRIDE
-    {
-        const gfx3DMatrix& rootTransform = GetLayerManager()->GetRoot()->GetTransform();
-        ContainerLayer* container = aLayer->AsContainerLayer();
-        const FrameMetrics& metrics = container->GetFrameMetrics();
-
-        mozilla::gfx::Rect displayPortLayersPixels(metrics.mCriticalDisplayPort.IsEmpty() ?
-                                          metrics.mDisplayPort : metrics.mCriticalDisplayPort);
-        mozilla::gfx::Point scrollOffset(aScrollOffset.x, aScrollOffset.y);
-
-        AndroidBridge::Bridge()->SyncFrameMetrics(scrollOffset, aTreeTransform.mScale.width, metrics.mScrollableRect,
-                                                  aLayersUpdated, displayPortLayersPixels, 1 / rootTransform.GetXScale(),
-                                                  aIsFirstPaint, aFixedLayerMargins, aOffsetX, aOffsetY);
-    }
 };
 
 CompositorParent*
