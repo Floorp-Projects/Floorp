@@ -622,7 +622,7 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
                 // Turn off selected state on the entry
                 mLayout.setSelected(false);
 
-                PropertyAnimator buttonsAnimator = new PropertyAnimator(150);
+                PropertyAnimator buttonsAnimator = new PropertyAnimator(300);
 
                 // Fade toolbar buttons (reader, stop) after the entry
                 // is schrunk back to its original size.
