@@ -41,10 +41,18 @@
   font-size: 10px;
 }
 
+.PanelUI-pageControls {
+  padding: 1em 0 0;
+}
+
+.PanelUI-footer,
+.PanelUI-editControls,
+.PanelUI-zoomControls,
 #PanelUI-contents,
+.PanelUI-footer,
 #customizationui-widget-panel {
   max-width: @menuPanelWidth@;
-  padding: 0 1em;
+  padding: .5em 1em;
 }
 
 #PanelUI-container {
@@ -105,51 +113,50 @@
 #customizationui-widget-panel toolbarbutton > .toolbarbutton-text {
   text-align: start;
   -moz-padding-start: 8px;
-  font-size: 12px;
   display: -moz-box;
 }
 
 #PanelUI-contents[type="list"] toolbarbutton .toolbarbutton-acceltext {
-  font-size: 10px;
+  font-size: calc(5em / 6);
   color: GrayText;
   margin-left: 0;
   margin-right: 0;
 }
 
 #PanelUI-contents[type="list"] toolbarbutton .toolbarbutton-icon {
-  min-width: 24px;
-  max-width: 24px;
-  min-height: 24px;
-  max-height: 24px;
+  min-width: 2em;
+  max-width: 2em;
+  min-height: 2em;
+  max-height: 2em;
 }
 
 #PanelUI-contents[type="grid"] {
   display: block;
 }
 
+.PanelUI-pageControls toolbarbutton {
+  min-width: 7em;
+  max-width: 7em;
+}
+
+.PanelUI-pageControls toolbarbutton > .toolbarbutton-icon {
+  -moz-margin-end: 0;
+}
+
 #PanelUI-contents[type="grid"] toolbarbutton {
   -moz-box-orient: vertical;
-  min-width: 72px;
-  max-width: 72px;
-  min-height: 72px;
-  max-height: 72px;
+  min-width: 7em;
+  max-width: 7em;
+  min-height: 6em;
+  max-height: 6em;
 }
 
 #PanelUI-contents[type="grid"] toolbarbutton .toolbarbutton-icon {
-  min-width: 32px;
-  max-width: 32px;
-  min-height: 32px;
-  max-height: 32px;
-  margin: 5px;
-}
-
-.PanelUI-pageControls {
-  padding: 12px 20px;
-}
-
-.PanelUI-editControls,
-.PanelUI-zoomControls {
-  padding: 6px 0;
+  min-width: calc(8em / 3);
+  max-width: calc(8em / 3);
+  min-height: calc(8em / 3);
+  max-height: calc(8em / 3);
+  margin: calc(5em / 12);
 }
 
 .PanelUI-editControls #PanelUI-copy-btn,
@@ -166,7 +173,6 @@
 }
 
 .PanelUI-footer {
-  padding: 9px 12px;
   background-color: rgba(0, 0, 0, 0.05);
   border-top: 1px solid rgba(0,0,0,.1);
 }
