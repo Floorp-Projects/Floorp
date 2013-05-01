@@ -110,7 +110,6 @@
     macro(objectUndefined, objectUndefined, "[object Undefined]") \
     macro(of, of, "of") \
     macro(offset, offset, "offset") \
-    macro(outOfMemory, outOfMemory, "out of memory") \
     macro(parseFloat, parseFloat, "parseFloat") \
     macro(parseInt, parseInt, "parseInt") \
     macro(pattern, pattern, "pattern") \
