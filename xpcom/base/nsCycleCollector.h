@@ -6,10 +6,9 @@
 #ifndef nsCycleCollector_h__
 #define nsCycleCollector_h__
 
-class nsISupports;
+class nsCycleCollectionJSRuntime;
 class nsICycleCollectorListener;
-class nsCycleCollectionParticipant;
-class nsCycleCollectionTraversalCallback;
+class nsISupports;
 
 // Contains various stats about the cycle collection.
 class nsCycleCollectorResults
@@ -49,50 +48,8 @@ uint32_t nsCycleCollector_suspectedCount();
 void nsCycleCollector_shutdownThreads();
 void nsCycleCollector_shutdown();
 
-// Various methods the cycle collector needs to deal with Javascript.
-struct nsCycleCollectionJSRuntime
-{
-    virtual nsresult BeginCycleCollection(nsCycleCollectionTraversalCallback &cb) = 0;
-
-    /**
-     * Called before/after transitioning to/from the main thread.
-     *
-     * NotifyLeaveMainThread may return 'false' to prevent the cycle collector
-     * from leaving the main thread.
-     */
-    virtual bool NotifyLeaveMainThread() = 0;
-    virtual void NotifyEnterCycleCollectionThread() = 0;
-    virtual void NotifyLeaveCycleCollectionThread() = 0;
-    virtual void NotifyEnterMainThread() = 0;
-
-    /**
-     * Unmark gray any weak map values, as needed.
-     */
-    virtual void FixWeakMappingGrayBits() = 0;
-
-    /**
-     * Should we force a JavaScript GC before a CC?
-     */
-    virtual bool NeedCollect() = 0;
-
-    /**
-     * Runs the JavaScript GC. |reason| is a gcreason::Reason from jsfriendapi.h.
-     */
-    virtual void Collect(uint32_t reason) = 0;
-
-    /**
-     * Get the JS cycle collection participant.
-     */
-    virtual nsCycleCollectionParticipant *GetParticipant() = 0;
-
-#ifdef DEBUG
-    virtual void SetObjectToUnlink(void* aObject) = 0;
-    virtual void AssertNoObjectsToTrace(void* aPossibleJSHolder) = 0;
-#endif
-};
-
 // Helpers for interacting with JS
-void nsCycleCollector_registerJSRuntime(nsCycleCollectionJSRuntime *rt);
+void nsCycleCollector_registerJSRuntime(nsCycleCollectionJSRuntime *aRt);
 void nsCycleCollector_forgetJSRuntime();
 
 #define NS_CYCLE_COLLECTOR_LOGGER_CID \

@@ -1795,56 +1795,10 @@ nsOverflowContinuationTracker::Finish(nsIFrame* aChild)
 // Debugging
 
 #ifdef DEBUG
-NS_IMETHODIMP
+void
 nsContainerFrame::List(FILE* out, int32_t aIndent, uint32_t aFlags) const
 {
-  IndentBy(out, aIndent);
-  ListTag(out);
-#ifdef DEBUG_waterson
-  fprintf(out, " [parent=%p]", static_cast<void*>(mParent));
-#endif
-  if (HasView()) {
-    fprintf(out, " [view=%p]", static_cast<void*>(GetView()));
-  }
-  if (GetNextSibling()) {
-    fprintf(out, " next=%p", static_cast<void*>(GetNextSibling()));
-  }
-  if (nullptr != GetPrevContinuation()) {
-    fprintf(out, " prev-continuation=%p", static_cast<void*>(GetPrevContinuation()));
-  }
-  if (nullptr != GetNextContinuation()) {
-    fprintf(out, " next-continuation=%p", static_cast<void*>(GetNextContinuation()));
-  }
-  void* IBsibling = Properties().Get(IBSplitSpecialSibling());
-  if (IBsibling) {
-    fprintf(out, " IBSplitSpecialSibling=%p", IBsibling);
-  }
-  void* IBprevsibling = Properties().Get(IBSplitSpecialPrevSibling());
-  if (IBprevsibling) {
-    fprintf(out, " IBSplitSpecialPrevSibling=%p", IBprevsibling);
-  }
-  fprintf(out, " {%d,%d,%d,%d}", mRect.x, mRect.y, mRect.width, mRect.height);
-  if (0 != mState) {
-    fprintf(out, " [state=%016llx]", (unsigned long long)mState);
-  }
-  fprintf(out, " [content=%p]", static_cast<void*>(mContent));
-  nsContainerFrame* f = const_cast<nsContainerFrame*>(this);
-  if (f->HasOverflowAreas()) {
-    nsRect overflowArea = f->GetVisualOverflowRect();
-    fprintf(out, " [vis-overflow=%d,%d,%d,%d]", overflowArea.x, overflowArea.y,
-            overflowArea.width, overflowArea.height);
-    overflowArea = f->GetScrollableOverflowRect();
-    fprintf(out, " [scr-overflow=%d,%d,%d,%d]", overflowArea.x, overflowArea.y,
-            overflowArea.width, overflowArea.height);
-  }
-  fprintf(out, " [sc=%p]", static_cast<void*>(mStyleContext));
-  nsIAtom* pseudoTag = mStyleContext->GetPseudo();
-  if (pseudoTag) {
-    nsAutoString atomString;
-    pseudoTag->ToString(atomString);
-    fprintf(out, " pst=%s",
-            NS_LossyConvertUTF16toASCII(atomString).get());
-  }
+  ListGeneric(out, aIndent, aFlags);
 
   // Output the children
   bool outputOneList = false;
@@ -1853,8 +1807,14 @@ nsContainerFrame::List(FILE* out, int32_t aIndent, uint32_t aFlags) const
     if (outputOneList) {
       IndentBy(out, aIndent);
     }
-    outputOneList = true;
-    fputs(mozilla::layout::ChildListName(lists.CurrentID()), out);
+    if (lists.CurrentID() != kPrincipalList) {
+      if (!outputOneList) {
+        fputs("\n", out);
+        IndentBy(out, aIndent);
+      }
+      fputs(mozilla::layout::ChildListName(lists.CurrentID()), out);
+      fprintf(out, " %p ", &GetChildList(lists.CurrentID()));
+    }
     fputs("<\n", out);
     nsFrameList::Enumerator childFrames(lists.CurrentList());
     for (; !childFrames.AtEnd(); childFrames.Next()) {
@@ -1867,12 +1827,11 @@ nsContainerFrame::List(FILE* out, int32_t aIndent, uint32_t aFlags) const
     }
     IndentBy(out, aIndent);
     fputs(">\n", out);
+    outputOneList = true;
   }
 
   if (!outputOneList) {
     fputs("<>\n", out);
   }
-
-  return NS_OK;
 }
 #endif

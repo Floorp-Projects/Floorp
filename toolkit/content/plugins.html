@@ -61,14 +61,14 @@
   AddonManager.getAddonsByTypes(["plugin"], function (aPlugins) {
     var fragment = document.createDocumentFragment();
 
-    // "Enabled plugins"
+    // "Installed plugins"
     var id, label;
     if (aPlugins.length > 0) {
       id = "plugs";
-      label = "enabledplugins_label";
+      label = "installedplugins_label";
     } else {
       id = "noplugs";
-      label = "nopluginsareenabled_label";
+      label = "nopluginsareinstalled_label";
     }
     var enabledplugins = document.createElement("h1");
     enabledplugins.setAttribute("id", id);

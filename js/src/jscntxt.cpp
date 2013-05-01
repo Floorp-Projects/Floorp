@@ -1108,6 +1108,11 @@ js_InvokeOperationCallback(JSContext *cx)
     if (rt->gcIsNeeded)
         GCSlice(rt, GC_NORMAL, rt->gcTriggerReason);
 
+#ifdef JSGC_GENERATIONAL
+    if (rt->gcStoreBuffer.isAboutToOverflow())
+        MinorGC(rt, JS::gcreason::FULL_STORE_BUFFER);
+#endif
+
 #ifdef JS_ION
     /*
      * A worker thread may have set the callback after finishing an Ion

@@ -15,6 +15,7 @@
 #include "nsStaticComponents.h"
 #include "prlink.h"
 
+#include "nsCycleCollector.h"
 #include "nsObserverList.h"
 #include "nsObserverService.h"
 #include "nsProperties.h"
