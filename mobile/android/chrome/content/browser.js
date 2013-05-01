@@ -1033,9 +1033,6 @@ var BrowserApp = {
       // preferences to be actual booleans.
       switch (prefName) {
         case "network.cookie.cookieBehavior":
-          pref.type = "string";
-          pref.value = pref.value.toString();
-          break;
         case "font.size.inflation.minTwips":
           pref.type = "string";
           pref.value = pref.value.toString();
@@ -1120,9 +1117,6 @@ var BrowserApp = {
       // integers and strings to represent booleans. Here, we convert them back
       // to their actual types so we can store them.
       case "network.cookie.cookieBehavior":
-        json.type = "int";
-        json.value = parseInt(json.value);
-        break;
       case "font.size.inflation.minTwips":
         json.type = "int";
         json.value = parseInt(json.value);
