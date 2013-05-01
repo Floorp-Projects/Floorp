@@ -4323,6 +4323,9 @@ IonBuilder::createThisScriptedSingleton(HandleFunction target, MDefinition *call
     if (!proto)
         return NULL;
 
+    if (!target->nonLazyScript()->types)
+        return NULL;
+
     // Generate an inline path to create a new |this| object with
     // the given singleton prototype.
     types::TypeObject *type = proto->getNewType(cx, &ObjectClass, target);
