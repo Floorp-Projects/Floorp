@@ -174,7 +174,6 @@ TelemetryPing.prototype = {
   _pendingPings: [],
   _doLoadSaveNotifications: false,
   _startupIO : {},
-  _hashID: Ci.nsICryptoHash.SHA256,
   // The number of outstanding saved pings that we have issued loading
   // requests for.
   _pingsLoaded: 0,
@@ -611,17 +610,6 @@ TelemetryPing.prototype = {
     return { __iterator__: payloadIterWithThis };
   },
 
-  hashString: function hashString(s) {
-    let digest = Cc["@mozilla.org/security/hash;1"]
-                 .createInstance(Ci.nsICryptoHash);
-    digest.init(this._hashID);
-    let stream = Cc["@mozilla.org/io/string-input-stream;1"]
-                 .createInstance(Ci.nsIStringInputStream);
-    stream.data = s;
-    digest.updateFromStream(stream, stream.available());
-    return digest.finish(/*base64encode=*/true);
-  },
-
   /**
    * Send data to the server. Record success/send-time in histograms
    */
@@ -828,18 +816,6 @@ TelemetryPing.prototype = {
                                  Ci.nsITimer.TYPE_ONE_SHOT);
   },
 
-  ensurePingChecksum: function ensurePingChecksum(ping) {
-    /* A ping from the current session won't have a checksum.  */
-    if (!ping.checksum) {
-      return;
-    }
-
-    let checksumNow = this.hashString(ping.payload);
-    if (ping.checksum != checksumNow) {
-      throw new Error("Invalid ping checksum")
-    }
-  },
-
   addToPendingPings: function addToPendingPings(file, stream) {
     let success = false;
 
@@ -848,8 +824,6 @@ TelemetryPing.prototype = {
       stream.close();
       let ping = JSON.parse(string);
       this._pingLoadsCompleted++;
-      // This will throw if checksum is invalid.
-      this.ensurePingChecksum(ping);
       this._pendingPings.push(ping);
       if (this._doLoadSaveNotifications &&
           this._pingLoadsCompleted == this._pingsLoaded) {
@@ -857,7 +831,7 @@ TelemetryPing.prototype = {
       }
       success = true;
     } catch (e) {
-      // An error reading the file, or an error parsing/checksumming the contents.
+      // An error reading the file, or an error parsing the contents.
       stream.close();           // close is idempotent.
       file.remove(true);
     }
@@ -986,9 +960,6 @@ TelemetryPing.prototype = {
   },
 
   saveFileForPing: function saveFileForPing(ping) {
-    if (!('checksum' in ping)) {
-      ping.checksum = this.hashString(ping.payload);
-    }
     let file = this.ensurePingDirectory();
     file.append(ping.slug);
     return file;
