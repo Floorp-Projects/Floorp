@@ -11,7 +11,6 @@ include $(DEPTH)/config/autoconf.mk
 
 ifeq ($(OS_ARCH),WINNT)
 CPPSRCS    = redit.cpp
-PROGRAM    = redit$(BIN_SUFFIX)
 
 SDK_BINARY =  \
 	$(PROGRAM) \

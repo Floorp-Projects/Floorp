@@ -6,3 +6,5 @@
 
 MODULE = 'xremoteclient'
 
+PROGRAM = 'mozilla-xremote-client'
+
