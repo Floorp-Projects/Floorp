@@ -953,7 +953,9 @@ var BrowserApp = {
 
       for each (let prefName in aPrefsRequest.preferences) {
         let pref = {
-          name: prefName
+          name: prefName,
+          type: "",
+          value: null
         };
 
         if (aListen) {
