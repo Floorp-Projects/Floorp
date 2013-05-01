@@ -675,13 +675,14 @@ StyleSheetActor.prototype = {
   onUpdate: function(request) {
     DOMUtils.parseStyleSheet(this.styleSheet, request.text);
 
+    this._notifyPropertyChanged("ruleCount");
+
     if (request.transition) {
       this._insertTransistionRule();
     }
     else {
       this._notifyStyleApplied();
     }
-    this._notifyPropertyChanged("ruleCount");
 
     return {};
   },
