@@ -264,13 +264,13 @@ ChangeUI all "nsisui.exe"
 !if "${AB_CD}" == "en-US"
   ; Custom strings for en-US. This is done here so they aren't translated.
   !define INDENT "     "
-  !define INTRO_BLURB "Thanks for choosing $BrandFullName. We’re not just designed to be different, we’re different by design. Click to install."
+  !define INTRO_BLURB "Thanks for choosing $BrandFullName. We’re not just designed to be different, we’re different by design."
   !define INSTALL_BLURB1 "You're about to enjoy the very latest in speed, flexibility and security so you're always in control."
   !define INSTALL_BLURB2 "And you're joining a global community of users, contributors and developers working to make the best browser in the world."
   !define INSTALL_BLURB3 "You even get a haiku:$\n${INDENT}Proudly non-profit$\n${INDENT}Free to innovate for you$\n${INDENT}And a better Web"
   !undef INDENT
 !else
-  !define INTRO_BLURB "$(INTRO_BLURB)"
+  !define INTRO_BLURB "$(INTRO_BLURB1)"
   !define INSTALL_BLURB1 "$(INSTALL_BLURB1)"
   !define INSTALL_BLURB2 "$(INSTALL_BLURB2)"
   !define INSTALL_BLURB3 "$(INSTALL_BLURB3)"
