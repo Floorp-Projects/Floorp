@@ -2417,19 +2417,27 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcess
                        ForStyle(mCtx, CanvasRenderingContext2D::STYLE_FILL, mCtx->mTarget),
                      DrawOptions(mState->globalAlpha, mCtx->UsedOperation()));
       } else if (mOp == CanvasRenderingContext2D::TEXT_DRAW_OPERATION_STROKE) {
-        RefPtr<Path> path = scaledFont->GetPathForGlyphs(buffer, mCtx->mTarget);
-
+        // stroke glyphs one at a time to avoid poor CoreGraphics performance
+        // when stroking a path with a very large number of points
+        buffer.mGlyphs = &glyphBuf.front();
+        buffer.mNumGlyphs = 1;
         const ContextState& state = *mState;
-        AdjustedTarget(mCtx, &bounds)->
-          Stroke(path, CanvasGeneralPattern().
-                   ForStyle(mCtx, CanvasRenderingContext2D::STYLE_STROKE, mCtx->mTarget),
-                 StrokeOptions(state.lineWidth, state.lineJoin,
-                               state.lineCap, state.miterLimit,
-                               state.dash.Length(),
-                               state.dash.Elements(),
-                               state.dashOffset),
-                 DrawOptions(state.globalAlpha, mCtx->UsedOperation()));
+        AdjustedTarget target(mCtx, &bounds);
+        const StrokeOptions strokeOpts(state.lineWidth, state.lineJoin,
+                                       state.lineCap, state.miterLimit,
+                                       state.dash.Length(),
+                                       state.dash.Elements(),
+                                       state.dashOffset);
+        CanvasGeneralPattern cgp;
+        const Pattern& patForStyle
+          (cgp.ForStyle(mCtx, CanvasRenderingContext2D::STYLE_STROKE, mCtx->mTarget));
+        const DrawOptions drawOpts(state.globalAlpha, mCtx->UsedOperation());
 
+        for (unsigned i = glyphBuf.size(); i > 0; --i) {
+          RefPtr<Path> path = scaledFont->GetPathForGlyphs(buffer, mCtx->mTarget);
+          target->Stroke(path, patForStyle, strokeOpts, drawOpts);
+          buffer.mGlyphs++;
+        }
       }
     }
   }

@@ -5,12 +5,18 @@
 
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <item android:state_pressed="true"
-          android:drawable="@color/highlight_dark"/>
+    <item android:state_pressed="true">
+        <shape>
+            <solid android:color="@color/highlight_dark" />
+        </shape>
+    </item>
 
     <item android:state_focused="true"
-          android:state_pressed="false"
-          android:drawable="@color/highlight_dark_focused"/>
+          android:state_pressed="false">
+        <shape>
+            <solid android:color="@color/highlight_dark_focused" />
+        </shape>
+    </item>
 
     <item android:drawable="@android:color/transparent"/>
 

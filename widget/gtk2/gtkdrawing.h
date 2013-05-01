@@ -115,8 +115,6 @@ typedef enum {
   MOZ_GTK_GRIPPER,
   /* Paints a GtkEntry. */
   MOZ_GTK_ENTRY,
-  /* Paints the native caret (or in GTK-speak: insertion cursor) */
-  MOZ_GTK_ENTRY_CARET,
   /* Paints a GtkOptionMenu. */
   MOZ_GTK_DROPDOWN,
   /* Paints a dropdown arrow (a GtkButton containing a down GtkArrow). */

@@ -58,6 +58,10 @@ StoreBuffer::SlotEdge::isNullEdge() const
 
 /*** MonoTypeBuffer ***/
 
+
+/* How full we allow a store buffer to become before we request a MinorGC. */
+const static double HighwaterRatio = 7.0 / 8.0;
+
 template <typename T>
 bool
 StoreBuffer::MonoTypeBuffer<T>::enable(uint8_t *region, size_t len)
@@ -65,6 +69,9 @@ StoreBuffer::MonoTypeBuffer<T>::enable(uint8_t *region, size_t len)
     JS_ASSERT(len % sizeof(T) == 0);
     base = pos = reinterpret_cast<T *>(region);
     top = reinterpret_cast<T *>(region + len);
+    highwater = reinterpret_cast<T *>(region + size_t(double(len) * HighwaterRatio));
+    JS_ASSERT(highwater > base);
+    JS_ASSERT(highwater < top);
     return true;
 }
 
@@ -72,7 +79,7 @@ template <typename T>
 void
 StoreBuffer::MonoTypeBuffer<T>::disable()
 {
-    base = pos = top = NULL;
+    base = pos = top = highwater = NULL;
 }
 
 template <typename T>
@@ -97,6 +104,24 @@ StoreBuffer::MonoTypeBuffer<T>::compactNotInSet(NurseryType *nursery)
 
 template <typename T>
 void
+StoreBuffer::MonoTypeBuffer<T>::compactRemoveDuplicates()
+{
+    JS_ASSERT(duplicates.empty());
+
+    T *insert = base;
+    for (T *v = base; v != pos; ++v) {
+        if (!duplicates.has(v->location())) {
+            *insert++ = *v;
+            /* Failure to insert will leave the set with duplicates. Oh well. */
+            duplicates.put(v->location());
+        }
+    }
+    pos = insert;
+    duplicates.clear();
+}
+
+template <typename T>
+void
 StoreBuffer::MonoTypeBuffer<T>::compact()
 {
 #ifdef JS_GC_ZEAL
@@ -105,29 +130,7 @@ StoreBuffer::MonoTypeBuffer<T>::compact()
     else
 #endif
         compactNotInSet(&owner->runtime->gcNursery);
-}
-
-template <typename T>
-void
-StoreBuffer::MonoTypeBuffer<T>::put(const T &v)
-{
-    /* Check if we have been enabled. */
-    if (!pos)
-        return;
-
-    /*
-     * Note: it is sometimes valid for a put to happen in the middle of a GC,
-     * e.g. a rekey of a Relocatable may end up here. In general, we do not
-     * care about these new entries or any overflows they cause.
-     */
-    *pos++ = v;
-    if (isFull()) {
-        compact();
-        if (isFull()) {
-            owner->setOverflowed();
-            pos = base;
-        }
-    }
+    compactRemoveDuplicates();
 }
 
 template <typename T>
@@ -199,13 +202,6 @@ StoreBuffer::RelocatableMonoTypeBuffer<T>::compact()
 {
     compactMoved();
     StoreBuffer::MonoTypeBuffer<T>::compact();
-}
-
-template <typename T>
-void
-StoreBuffer::RelocatableMonoTypeBuffer<T>::unput(const T &v)
-{
-    MonoTypeBuffer<T>::put(v.tagged());
 }
 
 /*** GenericBuffer ***/
@@ -336,6 +332,8 @@ StoreBuffer::disable()
     if (!enabled)
         return;
 
+    aboutToOverflow = false;
+
     bufferVal.disable();
     bufferCell.disable();
     bufferSlot.disable();
@@ -353,6 +351,8 @@ StoreBuffer::clear()
 {
     if (!enabled)
         return true;
+
+    aboutToOverflow = false;
 
     bufferVal.clear();
     bufferCell.clear();
@@ -376,6 +376,13 @@ StoreBuffer::mark(JSTracer *trc)
     bufferRelocVal.mark(trc);
     bufferRelocCell.mark(trc);
     bufferGeneric.mark(trc);
+}
+
+void
+StoreBuffer::setAboutToOverflow()
+{
+    aboutToOverflow = true;
+    runtime->triggerOperationCallback();
 }
 
 void

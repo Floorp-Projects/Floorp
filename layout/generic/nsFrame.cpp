@@ -205,13 +205,13 @@ nsFrame::GetLogModuleInfo()
 }
 
 void
-nsFrame::DumpFrameTree(nsIFrame* aFrame)
+nsIFrame::DumpFrameTree(nsIFrame* aFrame)
 {
     RootFrameList(aFrame->PresContext(), stdout, 0);
 }
 
 void
-nsFrame::RootFrameList(nsPresContext* aPresContext, FILE* out, int32_t aIndent)
+nsIFrame::RootFrameList(nsPresContext* aPresContext, FILE* out, int32_t aIndent)
 {
   if (!aPresContext || !out)
     return;
@@ -5277,42 +5277,82 @@ DebugListFrameTree(nsIFrame* aFrame)
 
 
 // Debugging
-NS_IMETHODIMP
-nsFrame::List(FILE* out, int32_t aIndent, uint32_t aFlags) const
+void
+nsIFrame::ListGeneric(FILE* out, int32_t aIndent, uint32_t aFlags) const
 {
   IndentBy(out, aIndent);
   ListTag(out);
-#ifdef DEBUG_waterson
-  fprintf(out, " [parent=%p]", static_cast<void*>(mParent));
-#endif
   if (HasView()) {
     fprintf(out, " [view=%p]", static_cast<void*>(GetView()));
   }
+  if (GetNextSibling()) {
+    fprintf(out, " next=%p", static_cast<void*>(GetNextSibling()));
+  }
+  if (GetPrevContinuation()) {
+    bool fluid = GetPrevInFlow() == GetPrevContinuation();
+    fprintf(out, " prev-%s=%p", fluid?"in-flow":"continuation",
+            static_cast<void*>(GetPrevContinuation()));
+  }
+  if (GetNextContinuation()) {
+    bool fluid = GetNextInFlow() == GetNextContinuation();
+    fprintf(out, " next-%s=%p", fluid?"in-flow":"continuation",
+            static_cast<void*>(GetNextContinuation()));
+  }
+  void* IBsibling = Properties().Get(IBSplitSpecialSibling());
+  if (IBsibling) {
+    fprintf(out, " IBSplitSpecialSibling=%p", IBsibling);
+  }
+  void* IBprevsibling = Properties().Get(IBSplitSpecialPrevSibling());
+  if (IBprevsibling) {
+    fprintf(out, " IBSplitSpecialPrevSibling=%p", IBprevsibling);
+  }
   fprintf(out, " {%d,%d,%d,%d}", mRect.x, mRect.y, mRect.width, mRect.height);
+  nsIFrame* f = const_cast<nsIFrame*>(this);
+  if (f->HasOverflowAreas()) {
+    nsRect vo = f->GetVisualOverflowRect();
+    if (!vo.IsEqualEdges(mRect)) {
+      fprintf(out, " vis-overflow=%d,%d,%d,%d", vo.x, vo.y, vo.width, vo.height);
+    }
+    nsRect so = f->GetScrollableOverflowRect();
+    if (!so.IsEqualEdges(mRect)) {
+      fprintf(out, " scr-overflow=%d,%d,%d,%d", so.x, so.y, so.width, so.height);
+    }
+  }
   if (0 != mState) {
     fprintf(out, " [state=%016llx]", (unsigned long long)mState);
   }
-  nsIFrame* prevInFlow = GetPrevInFlow();
-  nsIFrame* nextInFlow = GetNextInFlow();
-  if (nullptr != prevInFlow) {
-    fprintf(out, " prev-in-flow=%p", static_cast<void*>(prevInFlow));
+  if (IsTransformed()) {
+    fprintf(out, " transformed");
   }
-  if (nullptr != nextInFlow) {
-    fprintf(out, " next-in-flow=%p", static_cast<void*>(nextInFlow));
+  if (ChildrenHavePerspective()) {
+    fprintf(out, " perspective");
   }
-  fprintf(out, " [content=%p]", static_cast<void*>(mContent));
-  nsFrame* f = const_cast<nsFrame*>(this);
-  if (f->HasOverflowAreas()) {
-    nsRect overflowArea = f->GetVisualOverflowRect();
-    fprintf(out, " [vis-overflow=%d,%d,%d,%d]", overflowArea.x, overflowArea.y,
-            overflowArea.width, overflowArea.height);
-    overflowArea = f->GetScrollableOverflowRect();
-    fprintf(out, " [scr-overflow=%d,%d,%d,%d]", overflowArea.x, overflowArea.y,
-            overflowArea.width, overflowArea.height);
+  if (Preserves3DChildren()) {
+    fprintf(out, " preserves-3d-children");
   }
-  fprintf(out, " [sc=%p]", static_cast<void*>(mStyleContext));
+  if (Preserves3D()) {
+    fprintf(out, " preserves-3d");
+  }
+  if (mContent) {
+    fprintf(out, " [content=%p]", static_cast<void*>(mContent));
+  }
+  fprintf(out, " [sc=%p", static_cast<void*>(mStyleContext));
+  if (mStyleContext) {
+    nsIAtom* pseudoTag = mStyleContext->GetPseudo();
+    if (pseudoTag) {
+      nsAutoString atomString;
+      pseudoTag->ToString(atomString);
+      fprintf(out, "%s", NS_LossyConvertUTF16toASCII(atomString).get());
+    }
+  }
+  fputs("]", out);
+}
+
+void
+nsIFrame::List(FILE* out, int32_t aIndent, uint32_t aFlags) const
+{
+  ListGeneric(out, aIndent, aFlags);
   fputs("\n", out);
-  return NS_OK;
 }
 
 NS_IMETHODIMP

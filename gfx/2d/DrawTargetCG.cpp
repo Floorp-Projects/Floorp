@@ -670,10 +670,7 @@ DrawTargetCG::Stroke(const Path *aPath, const Pattern &aPattern, const StrokeOpt
     CGContextClip(cg);
     DrawGradient(cg, aPattern);
   } else {
-    CGContextBeginPath(cg);
     // XXX: we could put fill mode into the path fill rule if we wanted
-    const PathCG *cgPath = static_cast<const PathCG*>(aPath);
-    CGContextAddPath(cg, cgPath->GetPath());
 
     SetStrokeFromPattern(cg, mColorSpace, aPattern);
     CGContextStrokePath(cg);

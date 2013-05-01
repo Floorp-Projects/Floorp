@@ -2282,7 +2282,7 @@ class FunctionCompiler
 // subsequently owned by an AsmJSModuleClass JSObject.
 
 static void AsmJSModuleObject_finalize(FreeOp *fop, RawObject obj);
-static void AsmJSModuleObject_trace(JSTracer *trc, JSRawObject obj);
+static void AsmJSModuleObject_trace(JSTracer *trc, JSObject *obj);
 
 static const unsigned ASM_CODE_RESERVED_SLOT = 0;
 static const unsigned ASM_CODE_NUM_RESERVED_SLOTS = 1;
@@ -2340,7 +2340,7 @@ AsmJSModuleObject_finalize(FreeOp *fop, RawObject obj)
 }
 
 static void
-AsmJSModuleObject_trace(JSTracer *trc, JSRawObject obj)
+AsmJSModuleObject_trace(JSTracer *trc, JSObject *obj)
 {
     AsmJSModuleObjectToModule(obj).trace(trc);
 }
