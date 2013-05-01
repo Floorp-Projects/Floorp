@@ -429,6 +429,10 @@ AbstractHealthReporter.prototype = Object.freeze({
    * will likely not return anything.
    */
   getProvider: function (name) {
+    if (!this._providerManager) {
+      return null;
+    }
+
     return this._providerManager.getProvider(name);
   },
 
@@ -1153,31 +1157,44 @@ HealthReporter.prototype = Object.freeze({
     return result;
   },
 
-  _onBagheeraResult: function (request, isDelete, result) {
+  _onBagheeraResult: function (request, isDelete, date, result) {
     this._log.debug("Received Bagheera result.");
 
     let promise = CommonUtils.laterTickResolvingPromise(null);
+    let hrProvider = this.getProvider("org.mozilla.healthreport");
 
     if (!result.transportSuccess) {
+      // The built-in provider may not be initialized if this instance failed
+      // to initialize fully.
+      if (hrProvider && !isDelete) {
+        hrProvider.recordEvent("uploadTransportFailure", date);
+      }
+
       request.onSubmissionFailureSoft("Network transport error.");
       return promise;
     }
 
     if (!result.serverSuccess) {
+      if (hrProvider && !isDelete) {
+        hrProvider.recordEvent("uploadServerFailure", date);
+      }
+
       request.onSubmissionFailureHard("Server failure.");
       return promise;
     }
 
-    let now = this._now();
+    if (hrProvider && !isDelete) {
+      hrProvider.recordEvent("uploadSuccess", date);
+    }
 
     if (isDelete) {
       this.lastSubmitID = null;
     } else {
       this.lastSubmitID = result.id;
-      this.lastPingDate = now;
+      this.lastPingDate = date;
     }
 
-    request.onSubmissionSuccess(now);
+    request.onSubmissionSuccess(this._now());
 
 #ifdef PRERELEASE_BUILD
     // Intended to be temporary until we a) assess the impact b) bug 846133
@@ -1208,6 +1225,7 @@ HealthReporter.prototype = Object.freeze({
     this._log.info("Uploading data to server: " + this.serverURI + " " +
                    this.serverNamespace + ":" + id);
     let client = new BagheeraClient(this.serverURI);
+    let now = this._now();
 
     return Task.spawn(function doUpload() {
       let payload = yield this.getJSONPayload();
@@ -1224,6 +1242,13 @@ HealthReporter.prototype = Object.freeze({
         throw ex;
       }
 
+      let hrProvider = this.getProvider("org.mozilla.healthreport");
+      if (hrProvider) {
+        let event = this.lastSubmitID ? "continuationUploadAttempt"
+                                      : "firstDocumentUploadAttempt";
+        hrProvider.recordEvent(event, now);
+      }
+
       TelemetryStopwatch.start(TELEMETRY_UPLOAD, this);
       let result;
       try {
@@ -1236,10 +1261,13 @@ HealthReporter.prototype = Object.freeze({
         TelemetryStopwatch.finish(TELEMETRY_UPLOAD, this);
       } catch (ex) {
         TelemetryStopwatch.cancel(TELEMETRY_UPLOAD, this);
+        if (hrProvider) {
+          hrProvider.recordEvent("uploadClientFailure", now);
+        }
         throw ex;
       }
 
-      yield this._onBagheeraResult(request, false, result);
+      yield this._onBagheeraResult(request, false, now, result);
     }.bind(this));
   },
 
@@ -1260,7 +1288,7 @@ HealthReporter.prototype = Object.freeze({
     let client = new BagheeraClient(this.serverURI);
 
     return client.deleteDocument(this.serverNamespace, this.lastSubmitID)
-                 .then(this._onBagheeraResult.bind(this, request, true),
+                 .then(this._onBagheeraResult.bind(this, request, true, this._now()),
                        this._onSubmitDataRequestFailure.bind(this));
   },
 });
