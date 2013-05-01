@@ -417,7 +417,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLMediaElement, nsGenericHTMLElement)
   if (tmp->mSrcStream) {
-    // Need to EndMediaStreamPlayback to clear mStream and make sure everything
+    // Need to EndMediaStreamPlayback to clear mSrcStream and make sure everything
     // gets unhooked correctly.
     tmp->EndSrcMediaStreamPlayback();
   }
@@ -1281,7 +1281,10 @@ double
 HTMLMediaElement::CurrentTime() const
 {
   if (mSrcStream) {
-    return MediaTimeToSeconds(GetSrcMediaStream()->GetCurrentTime());
+    MediaStream* stream = GetSrcMediaStream();
+    if (stream) {
+      return MediaTimeToSeconds(stream->GetCurrentTime());
+    }
   }
 
   if (mDecoder) {
@@ -1467,7 +1470,10 @@ HTMLMediaElement::Pause(ErrorResult& aRv)
 
   if (!oldPaused) {
     if (mSrcStream) {
-      GetSrcMediaStream()->ChangeExplicitBlockerCount(1);
+      MediaStream* stream = GetSrcMediaStream();
+      if (stream) {
+        stream->ChangeExplicitBlockerCount(1);
+      }
     }
     FireTimeUpdate(false);
     DispatchAsyncEvent(NS_LITERAL_STRING("pause"));
@@ -2635,21 +2641,28 @@ void HTMLMediaElement::SetupSrcMediaStreamPlayback(DOMMediaStream* aStream)
 
 void HTMLMediaElement::EndSrcMediaStreamPlayback()
 {
-  GetSrcMediaStream()->RemoveListener(mSrcStreamListener);
+  MediaStream* stream = GetSrcMediaStream();
+  if (stream) {
+    stream->RemoveListener(mSrcStreamListener);
+  }
   // Kill its reference to this element
   mSrcStreamListener->Forget();
   mSrcStreamListener = nullptr;
-  GetSrcMediaStream()->RemoveAudioOutput(this);
+  if (stream) {
+    stream->RemoveAudioOutput(this);
+  }
   VideoFrameContainer* container = GetVideoFrameContainer();
   if (container) {
-    GetSrcMediaStream()->RemoveVideoOutput(container);
+    if (stream) {
+      stream->RemoveVideoOutput(container);
+    }
     container->ClearCurrentFrame();
   }
-  if (mPaused) {
-    GetSrcMediaStream()->ChangeExplicitBlockerCount(-1);
+  if (mPaused && stream) {
+    stream->ChangeExplicitBlockerCount(-1);
   }
-  if (mPausedForInactiveDocumentOrChannel) {
-    GetSrcMediaStream()->ChangeExplicitBlockerCount(-1);
+  if (mPausedForInactiveDocumentOrChannel && stream) {
+    stream->ChangeExplicitBlockerCount(-1);
   }
   mSrcStream = nullptr;
 }

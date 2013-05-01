@@ -109,6 +109,7 @@ public:
   MediaStreamTrack* GetDOMTrackFor(TrackID aTrackID);
 
 protected:
+  void Destroy();
   void InitSourceStream(nsIDOMWindow* aWindow, uint32_t aHintContents);
   void InitTrackUnionStream(nsIDOMWindow* aWindow, uint32_t aHintContents);
   void InitStreamCommon(MediaStream* aStream);
