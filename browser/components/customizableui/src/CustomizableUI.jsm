@@ -179,6 +179,25 @@ XPCOMUtils.defineLazyGetter(this, "gBuiltInWidgets", function() {
     onViewHiding: function(aEvent) {
       LOG("History view is being hidden!");
     }
+  }, {
+    id: "privatebrowsing-button",
+    name: "Private Browsing\u2026",
+    description: "Open a new Private Browsing window",
+    defaultArea: CustomizableUI.AREA_PANEL,
+    allowedAreas: [CustomizableUI.AREA_PANEL],
+    icons: {
+      "16": "chrome://branding/content/icon16.png",
+      "32": "chrome://branding/content/icon48.png",
+      "48": "chrome://branding/content/icon48.png"
+    },
+    onCommand: function(e) {
+      if (e.target && e.target.ownerDocument && e.target.ownerDocument.defaultView) {
+        let win = e.target.ownerDocument.defaultView;
+        if (typeof win.OpenBrowserWindow == "function") {
+          win.OpenBrowserWindow({private: true});
+        }
+      }
+    }
   }];
 });
 
@@ -250,6 +269,7 @@ let gDefaultPlacements = new Map([
   ]],
   ["PanelUI-contents", [
     "new-window-button",
+    "privatebrowsing-button",
     "print-button",
     "history-button",
     "fullscreen-button",
