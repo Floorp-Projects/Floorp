@@ -9,7 +9,7 @@ this.EXPORTED_SYMBOLS = [ ];
 
 Components.utils.import('resource://gre/modules/XPCOMUtils.jsm');
 Components.utils.import("resource://gre/modules/devtools/gcli.jsm");
-Components.utils.import("resource:///modules/devtools/gDevTools.jsm");
+Components.utils.import("resource://gre/modules/devtools/Loader.jsm");
 
 // Fetch TiltManager using the current loader, but don't save a
 // reference to it, because it might change with a tool reload.

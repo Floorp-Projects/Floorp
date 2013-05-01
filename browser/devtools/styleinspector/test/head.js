@@ -7,7 +7,10 @@ let tempScope = {};
 Cu.import("resource:///modules/devtools/gDevTools.jsm", tempScope);
 let ConsoleUtils = tempScope.ConsoleUtils;
 let gDevTools = tempScope.gDevTools;
+
+Cu.import("resource://gre/modules/devtools/Loader.jsm", tempScope);
 let devtools = tempScope.devtools;
+
 let TargetFactory = devtools.TargetFactory;
 let {CssHtmlTree} = devtools.require("devtools/styleinspector/computed-view");
 let {CssRuleView, _ElementStyle} = devtools.require("devtools/styleinspector/rule-view");
