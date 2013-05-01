@@ -476,7 +476,7 @@ nsContextMenu.prototype = {
   },
 
   inspectNode: function CM_inspectNode() {
-    let {devtools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
+    let {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
     let gBrowser = this.browser.ownerDocument.defaultView.gBrowser;
     let tt = devtools.TargetFactory.forTab(gBrowser.selectedTab);
     return gDevTools.showToolbox(tt, "inspector").then(function(toolbox) {
