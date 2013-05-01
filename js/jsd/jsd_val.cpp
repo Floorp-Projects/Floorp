@@ -11,6 +11,7 @@
 #include "jsd.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
+#include "jswrapper.h"
 
 #ifdef DEBUG
 void JSD_ASSERT_VALID_VALUE(JSDValue* jsdval)
@@ -605,7 +606,7 @@ jsd_GetValueFunction(JSDContext* jsdc, JSDValue* jsdval)
     if (JSVAL_IS_PRIMITIVE(jsdval->val))
         return NULL;
 
-    obj = JS_UnwrapObject(JSVAL_TO_OBJECT(jsdval->val));
+    obj = js::UncheckedUnwrap(JSVAL_TO_OBJECT(jsdval->val));
     oldCompartment = JS_EnterCompartment(jsdc->dumbContext, obj);
     fun = JS_ValueToFunction(jsdc->dumbContext, OBJECT_TO_JSVAL(obj));
     JS_LeaveCompartment(jsdc->dumbContext, oldCompartment);
