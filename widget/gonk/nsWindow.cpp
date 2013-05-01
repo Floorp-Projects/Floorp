@@ -43,6 +43,7 @@
 #include "nsWindow.h"
 #include "nsIWidgetListener.h"
 #include "cutils/properties.h"
+#include "ClientLayerManager.h"
 #include "BasicLayers.h"
 
 #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Gonk" , ## args)
@@ -225,6 +226,8 @@ nsWindow::DoDraw(void)
         if (listener) {
             listener->PaintWindow(gWindowToRedraw, region, 0);
         }
+    } else if (mozilla::layers::LAYERS_CLIENT == lm->GetBackendType()) {
+      // No need to do anything, the compositor will handle drawing
     } else if (mozilla::layers::LAYERS_BASIC == lm->GetBackendType()) {
         MOZ_ASSERT(sFramebufferOpen || sUsingOMTC);
         nsRefPtr<gfxASurface> targetSurface;
@@ -552,7 +555,12 @@ nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
         if (mLayerManager->GetBackendType() == LAYERS_BASIC) {
             BasicLayerManager* manager =
                 static_cast<BasicLayerManager*>(mLayerManager.get());
-            manager->SetDefaultTargetConfiguration(mozilla::layers::BUFFER_NONE, 
+            manager->SetDefaultTargetConfiguration(mozilla::layers::BUFFER_NONE,
+                                                   ScreenRotation(EffectiveScreenRotation()));
+        } else if (mLayerManager->GetBackendType() == LAYERS_CLIENT) {
+            ClientLayerManager* manager =
+                static_cast<ClientLayerManager*>(mLayerManager.get());
+            manager->SetDefaultTargetConfiguration(mozilla::layers::BUFFER_NONE,
                                                    ScreenRotation(EffectiveScreenRotation()));
         }
         return mLayerManager;
@@ -606,7 +614,7 @@ nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
         NS_RUNTIMEABORT("Can't open GL context and can't fall back on /dev/graphics/fb0 ...");
     }
 
-    mLayerManager = new BasicShadowLayerManager(this);
+    mLayerManager = new ClientLayerManager(this);
     mUseLayersAcceleration = false;
 
     return mLayerManager;

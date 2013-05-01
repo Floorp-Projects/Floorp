@@ -26,6 +26,7 @@ var Cc = SpecialPowers.Cc;
 var Ci = SpecialPowers.Ci;
 
 var sysInfo = Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2);
+var xr = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
 
 var windows = SpecialPowers.Services.ww.getWindowEnumerator();
 var windowutils;
@@ -93,7 +94,11 @@ switch(osName)
     break;
 
   default: // Linux and others.
-    is(acceleratedWindows, 0, "Acceleration not supported on '" + osName + "'");
+    if (xr.OS == "Android" && xr.widgetToolkit != "gonk") {
+      isnot(acceleratedWindows, 0, "Acceleration enabled on Android");
+    } else {
+      is(acceleratedWindows, 0, "Acceleration not supported on '" + osName + "'");
+    }
 }
 
 </script>

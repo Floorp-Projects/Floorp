@@ -2,12 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef GFX_BASICTILEDTHEBESLAYER_H
-#define GFX_BASICTILEDTHEBESLAYER_H
+#ifndef GFX_CLIENTTILEDTHEBESLAYER_H
+#define GFX_CLIENTTILEDTHEBESLAYER_H
 
 #include "mozilla/layers/ShadowLayers.h"
-#include "BasicLayers.h"
-#include "BasicImplData.h"
+#include "ClientLayerManager.h"
 #include "mozilla/layers/TiledContentClient.h" // tiles and tile buffer
 
 namespace mozilla {
@@ -30,15 +29,14 @@ class BasicTiledLayerBuffer;
  *
  * There is no ContentClient for tiled layers. There is a ContentHost, however.
  */
-class BasicTiledThebesLayer : public ThebesLayer,
-                              public BasicImplData,
-                              public BasicShadowableLayer
+class ClientTiledThebesLayer : public ThebesLayer,
+                               public ClientLayer
 {
   typedef ThebesLayer Base;
 
 public:
-  BasicTiledThebesLayer(BasicShadowLayerManager* const aManager);
-  ~BasicTiledThebesLayer();
+  ClientTiledThebesLayer(ClientLayerManager* const aManager);
+  ~ClientTiledThebesLayer();
 
   // Thebes Layer
   virtual Layer* AsLayer() { return this; }
@@ -54,19 +52,15 @@ public:
 
   virtual void Disconnect()
   {
-    BasicShadowableLayer::Disconnect();
+    ClientLayer::Disconnect();
   }
 
-  virtual void PaintThebes(gfxContext* aContext,
-                           Layer* aMaskLayer,
-                           LayerManager::DrawThebesLayerCallback aCallback,
-                           void* aCallbackData,
-                           ReadbackProcessor* aReadback);
+  virtual void RenderLayer();
 
 private:
-  BasicShadowLayerManager* BasicManager()
+  ClientLayerManager* ClientManager()
   {
-    return static_cast<BasicShadowLayerManager*>(mManager);
+    return static_cast<ClientLayerManager*>(mManager);
   }
 
   // BasicImplData

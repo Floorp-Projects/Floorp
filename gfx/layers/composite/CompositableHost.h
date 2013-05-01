@@ -10,7 +10,7 @@
 #include "mozilla/layers/PCompositableParent.h"
 #include "mozilla/layers/ISurfaceAllocator.h"
 #include "ThebesLayerBuffer.h"
-#include "BasicTiledThebesLayer.h" // for BasicTiledLayerBuffer
+#include "ClientTiledThebesLayer.h" // for BasicTiledLayerBuffer
 #include "mozilla/RefPtr.h"
 
 namespace mozilla {
