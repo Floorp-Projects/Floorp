@@ -1075,48 +1075,50 @@ var BrowserApp = {
   setPreferences: function setPreferences(aPref) {
     let json = JSON.parse(aPref);
 
-    if (json.name == "plugin.enable") {
+    switch (json.name) {
       // The plugin pref is actually two separate prefs, so
       // we need to handle it differently
-      PluginHelper.setPluginPreference(json.value);
-      return;
-    } else if (json.name == "privacy.masterpassword.enabled") {
-      // MasterPassword pref is not real, we just need take action and leave
-      // MasterPassword pref is not real, we just need take action and leave
-      if (MasterPassword.enabled)
-        MasterPassword.removePassword(json.value);
-      else
-        MasterPassword.setPassword(json.value);
-      return;
-    } else if (json.name === "privacy.donottrackheader") {
-      // "privacy.donottrackheader" is not "real" pref name, it's used in the setting menu.
-      switch (json.value) {
-        case kDoNotTrackPrefState.NO_PREF:
-          // Don't tell anything about tracking me
-          Services.prefs.setBoolPref("privacy.donottrackheader.enabled", false);
-          Services.prefs.clearUserPref("privacy.donottrackheader.value");
-          break;
-        case kDoNotTrackPrefState.ALLOW_TRACKING:
-          // Accept tracking me
-          Services.prefs.setBoolPref("privacy.donottrackheader.enabled", true);
-          Services.prefs.setIntPref("privacy.donottrackheader.value", 0);
-          break;
-        case kDoNotTrackPrefState.DISALLOW_TRACKING:
-          // Not accept tracking me
-          Services.prefs.setBoolPref("privacy.donottrackheader.enabled", true);
-          Services.prefs.setIntPref("privacy.donottrackheader.value", 1);
-          break;
-      }
-      return;
-    } else if (json.name == SearchEngines.PREF_SUGGEST_ENABLED) {
-      // Enabling or disabling suggestions will prevent future prompts
-      Services.prefs.setBoolPref(SearchEngines.PREF_SUGGEST_PROMPTED, true);
-    }
+      case "plugin.enable":
+        PluginHelper.setPluginPreference(json.value);
+        return;
 
-    // when sending to java, we normalized special preferences that use
-    // integers and strings to represent booleans.  here, we convert them back
-    // to their actual types so we can store them.
-    switch (json.name) {
+      // MasterPassword pref is not real, we just need take action and leave
+      case "privacy.masterpassword.enabled":
+        if (MasterPassword.enabled)
+          MasterPassword.removePassword(json.value);
+        else
+          MasterPassword.setPassword(json.value);
+        return;
+
+      // "privacy.donottrackheader" is not "real" pref name, it's used in the setting menu.
+      case "privacy.donottrackheader":
+        switch (json.value) {
+          // Don't tell anything about tracking me
+          case kDoNotTrackPrefState.NO_PREF:
+            Services.prefs.setBoolPref("privacy.donottrackheader.enabled", false);
+            Services.prefs.clearUserPref("privacy.donottrackheader.value");
+            break;
+          // Accept tracking me
+          case kDoNotTrackPrefState.ALLOW_TRACKING:
+            Services.prefs.setBoolPref("privacy.donottrackheader.enabled", true);
+            Services.prefs.setIntPref("privacy.donottrackheader.value", 0);
+            break;
+          // Not accept tracking me
+          case kDoNotTrackPrefState.DISALLOW_TRACKING:
+            Services.prefs.setBoolPref("privacy.donottrackheader.enabled", true);
+            Services.prefs.setIntPref("privacy.donottrackheader.value", 1);
+            break;
+        }
+        return;
+
+      // Enabling or disabling suggestions will prevent future prompts
+      case SearchEngines.PREF_SUGGEST_ENABLED:
+        Services.prefs.setBoolPref(SearchEngines.PREF_SUGGEST_PROMPTED, true);
+        break;
+
+      // When sending to Java, we normalized special preferences that use
+      // integers and strings to represent booleans. Here, we convert them back
+      // to their actual types so we can store them.
       case "network.cookie.cookieBehavior":
         json.type = "int";
         json.value = parseInt(json.value);
@@ -1127,14 +1129,19 @@ var BrowserApp = {
         break;
     }
 
-    if (json.type == "bool") {
-      Services.prefs.setBoolPref(json.name, json.value);
-    } else if (json.type == "int") {
-      Services.prefs.setIntPref(json.name, json.value);
-    } else {
-      let pref = Cc["@mozilla.org/pref-localizedstring;1"].createInstance(Ci.nsIPrefLocalizedString);
-      pref.data = json.value;
-      Services.prefs.setComplexValue(json.name, Ci.nsISupportsString, pref);
+    switch (json.type) {
+      case "bool":
+        Services.prefs.setBoolPref(json.name, json.value);
+        break;
+      case "int":
+        Services.prefs.setIntPref(json.name, json.value);
+        break;
+      default: {
+        let pref = Cc["@mozilla.org/pref-localizedstring;1"].createInstance(Ci.nsIPrefLocalizedString);
+        pref.data = json.value;
+        Services.prefs.setComplexValue(json.name, Ci.nsISupportsString, pref);
+        break;
+      }
     }
   },
 
