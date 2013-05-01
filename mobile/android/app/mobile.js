@@ -649,6 +649,9 @@ pref("network.manage-offline-status", true);
 // increase the timeout clamp for background tabs to 15 minutes
 pref("dom.min_background_timeout_value", 900000);
 
+// Allow reader mode even on low-memory platforms
+pref("reader.force_allow", false);
+
 // The default of font size in reader (1-7)
 pref("reader.font_size", 4);
 
