@@ -4772,8 +4772,8 @@ gfxFontStyle::gfxFontStyle(uint8_t aStyle, uint16_t aWeight, int16_t aStretch,
     systemFont(aSystemFont), printerFont(aPrinterFont),
     style(aStyle)
 {
-    MOZ_ASSERT(!MOZ_DOUBLE_IS_NaN(size));
-    MOZ_ASSERT(!MOZ_DOUBLE_IS_NaN(sizeAdjust));
+    MOZ_ASSERT(!mozilla::IsNaN(size));
+    MOZ_ASSERT(!mozilla::IsNaN(sizeAdjust));
 
     if (weight > 900)
         weight = 900;

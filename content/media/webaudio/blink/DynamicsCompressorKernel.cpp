@@ -37,6 +37,8 @@
 using namespace std;
 
 using mozilla::dom::WebAudioUtils;
+using mozilla::IsInfinite;
+using mozilla::IsNaN;
 
 namespace WebCore {
 
@@ -285,9 +287,9 @@ void DynamicsCompressorKernel::process(float* sourceChannels[],
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
         // Fix gremlins.
-        if (MOZ_DOUBLE_IS_NaN(m_detectorAverage))
+        if (IsNaN(m_detectorAverage))
             m_detectorAverage = 1;
-        if (MOZ_DOUBLE_IS_INFINITE(m_detectorAverage))
+        if (IsInfinite(m_detectorAverage))
             m_detectorAverage = 1;
 
         float desiredGain = m_detectorAverage;
@@ -313,9 +315,9 @@ void DynamicsCompressorKernel::process(float* sourceChannels[],
             m_maxAttackCompressionDiffDb = -1;
 
             // Fix gremlins.
-            if (MOZ_DOUBLE_IS_NaN(compressionDiffDb))
+            if (IsNaN(compressionDiffDb))
                 compressionDiffDb = -1;
-            if (MOZ_DOUBLE_IS_INFINITE(compressionDiffDb))
+            if (IsInfinite(compressionDiffDb))
                 compressionDiffDb = -1;
 
             // Adaptive release - higher compression (lower compressionDiffDb)  releases faster.
@@ -341,9 +343,9 @@ void DynamicsCompressorKernel::process(float* sourceChannels[],
             // Attack mode - compressionDiffDb should be positive dB
 
             // Fix gremlins.
-            if (MOZ_DOUBLE_IS_NaN(compressionDiffDb))
+            if (IsNaN(compressionDiffDb))
                 compressionDiffDb = 1;
-            if (MOZ_DOUBLE_IS_INFINITE(compressionDiffDb))
+            if (IsInfinite(compressionDiffDb))
                 compressionDiffDb = 1;
 
             // As long as we're still in attack mode, use a rate based off
@@ -409,9 +411,9 @@ void DynamicsCompressorKernel::process(float* sourceChannels[],
                 detectorAverage = min(1.0f, detectorAverage);
 
                 // Fix gremlins.
-                if (MOZ_DOUBLE_IS_NaN(detectorAverage))
+                if (IsNaN(detectorAverage))
                     detectorAverage = 1;
-                if (MOZ_DOUBLE_IS_INFINITE(detectorAverage))
+                if (IsInfinite(detectorAverage))
                     detectorAverage = 1;
 
                 // Exponential approach to desired gain.

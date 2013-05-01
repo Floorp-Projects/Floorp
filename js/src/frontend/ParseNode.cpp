@@ -17,6 +17,8 @@
 using namespace js;
 using namespace js::frontend;
 
+using mozilla::IsFinite;
+
 /*
  * Asserts to verify assumptions behind pn_ macros.
  */
@@ -635,7 +637,7 @@ NullaryNode::dump()
       case PNK_NUMBER: {
         ToCStringBuf cbuf;
         const char *cstr = NumberToCString(NULL, &cbuf, pn_dval);
-        if (!MOZ_DOUBLE_IS_FINITE(pn_dval))
+        if (!IsFinite(pn_dval))
             fputc('#', stderr);
         if (cstr)
             fprintf(stderr, "%s", cstr);

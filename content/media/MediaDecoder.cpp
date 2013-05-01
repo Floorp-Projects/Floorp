@@ -1219,9 +1219,9 @@ void MediaDecoder::DurationChanged()
 void MediaDecoder::SetDuration(double aDuration)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (MOZ_DOUBLE_IS_INFINITE(aDuration)) {
+  if (mozilla::IsInfinite(aDuration)) {
     SetInfinite(true);
-  } else if (MOZ_DOUBLE_IS_NaN(aDuration)) {
+  } else if (IsNaN(aDuration)) {
     mDuration = -1;
     SetInfinite(true);
   } else {

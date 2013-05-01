@@ -46,7 +46,7 @@ inline double
 TimeClip(double time)
 {
     /* Steps 1-2. */
-    if (!MOZ_DOUBLE_IS_FINITE(time) || mozilla::Abs(time) > MaxTimeMagnitude)
+    if (!mozilla::IsFinite(time) || mozilla::Abs(time) > MaxTimeMagnitude)
         return js_NaN;
 
     /* Step 3. */

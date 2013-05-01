@@ -9,6 +9,7 @@
 #define nsCSSValue_h___
 
 #include "mozilla/Attributes.h"
+#include "mozilla/FloatingPoint.h"
 
 #include "nsCOMPtr.h"
 #include "nsCRTGlue.h"
@@ -21,7 +22,6 @@
 #include "nsStringBuffer.h"
 #include "nsTArray.h"
 #include "nsStyleConsts.h"
-#include "mozilla/FloatingPoint.h"
 
 class imgRequestProxy;
 class nsIDocument;
@@ -355,7 +355,7 @@ public:
   float GetFloatValue() const
   {
     NS_ABORT_IF_FALSE(eCSSUnit_Number <= mUnit, "not a float value");
-    MOZ_ASSERT(!MOZ_DOUBLE_IS_NaN(mValue.mFloat));
+    MOZ_ASSERT(!mozilla::IsNaN(mValue.mFloat));
     return mValue.mFloat;
   }
 

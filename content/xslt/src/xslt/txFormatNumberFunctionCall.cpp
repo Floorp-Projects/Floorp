@@ -81,16 +81,16 @@ txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext,
     }
 
     // Special cases
-    if (MOZ_DOUBLE_IS_NaN(value)) {
+    if (mozilla::IsNaN(value)) {
         return aContext->recycler()->getStringResult(format->mNaN, aResult);
     }
 
-    if (value == MOZ_DOUBLE_POSITIVE_INFINITY()) {
+    if (value == mozilla::PositiveInfinity()) {
         return aContext->recycler()->getStringResult(format->mInfinity,
                                                      aResult);
     }
 
-    if (value == MOZ_DOUBLE_NEGATIVE_INFINITY()) {
+    if (value == mozilla::NegativeInfinity()) {
         nsAutoString res;
         res.Append(format->mMinusSign);
         res.Append(format->mInfinity);
@@ -112,7 +112,7 @@ txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext,
 
     // Get right subexpression
     inQuote = false;
-    if (MOZ_DOUBLE_IS_NEGATIVE(value)) {
+    if (mozilla::IsNegative(value)) {
         while (pos < formatLen &&
                (inQuote ||
                 formatStr.CharAt(pos) != format->mPatternSeparator)) {
