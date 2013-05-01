@@ -356,16 +356,16 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(TimeStamp aCurrentFram
     gfx::Rect displayPortLayersPixels(metrics.mCriticalDisplayPort.IsEmpty() ?
                                       metrics.mDisplayPort : metrics.mCriticalDisplayPort);
     gfx::Margin fixedLayerMargins(0, 0, 0, 0);
-    float offsetX = 0, offsetY = 0;
+    gfx::Point offset(0, 0);
     SyncFrameMetrics(scrollOffset, treeTransform.mScale.width, metrics.mScrollableRect,
                      mLayersUpdated, displayPortLayersPixels, 1 / rootTransform.GetXScale(),
-                     mIsFirstPaint, fixedLayerMargins, offsetX, offsetY);
+                     mIsFirstPaint, fixedLayerMargins, offset);
 
     mIsFirstPaint = false;
     mLayersUpdated = false;
 
     // Apply the render offset
-    mLayerManager->GetCompositor()->SetScreenRenderOffset(gfx::Point(offsetX, offsetY));
+    mLayerManager->GetCompositor()->SetScreenRenderOffset(offset);
 
     gfx3DMatrix transform(gfx3DMatrix(treeTransform) * aLayer->GetTransform());
     // The transform already takes the resolution scale into account.  Since we
@@ -403,11 +403,6 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer, const gfx3DMatr
   const gfx3DMatrix& currentTransform = aLayer->GetTransform();
 
   gfx3DMatrix treeTransform;
-
-  // Translate fixed position layers so that they stay in the correct position
-  // when mScrollOffset and metricsScrollOffset differ.
-  gfxPoint offset;
-  gfxSize scaleDiff;
 
   float rootScaleX = aRootTransform.GetXScale(),
         rootScaleY = aRootTransform.GetYScale();
@@ -449,14 +444,14 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer, const gfx3DMatr
   displayPortDevPixels.y += scrollOffsetDevPixels.y;
 
   gfx::Margin fixedLayerMargins(0, 0, 0, 0);
-  float offsetX = 0, offsetY = 0;
+  gfx::Point offset(0, 0);
   SyncViewportInfo(displayPortDevPixels, 1/rootScaleX, mLayersUpdated,
                    mScrollOffset, mXScale, mYScale, fixedLayerMargins,
-                   offsetX, offsetY);
+                   offset);
   mLayersUpdated = false;
 
   // Apply the render offset
-  mLayerManager->GetCompositor()->SetScreenRenderOffset(gfx::Point(offsetX, offsetY));
+  mLayerManager->GetCompositor()->SetScreenRenderOffset(offset);
 
   // Handle transformations for asynchronous panning and zooming. We determine the
   // zoom used by Gecko from the transformation set on the root layer, and we
@@ -478,24 +473,29 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer, const gfx3DMatr
   treeTransform = gfx3DMatrix(ViewTransform(-scrollCompensation,
                                             gfxSize(mXScale, mYScale)));
 
+  // Translate fixed position layers so that they stay in the correct position
+  // when mScrollOffset and metricsScrollOffset differ.
+  gfxPoint fixedOffset;
+  gfxSize scaleDiff;
+
   // If the contents can fit entirely within the widget area on a particular
   // dimenson, we need to translate and scale so that the fixed layers remain
   // within the page boundaries.
   if (mContentRect.width * tempScaleDiffX < metrics.mCompositionBounds.width) {
-    offset.x = -metricsScrollOffset.x;
+    fixedOffset.x = -metricsScrollOffset.x;
     scaleDiff.width = std::min(1.0f, metrics.mCompositionBounds.width / (float)mContentRect.width);
   } else {
-    offset.x = clamped(mScrollOffset.x / tempScaleDiffX, (float)mContentRect.x,
+    fixedOffset.x = clamped(mScrollOffset.x / tempScaleDiffX, (float)mContentRect.x,
                        mContentRect.XMost() - metrics.mCompositionBounds.width / tempScaleDiffX) -
                metricsScrollOffset.x;
     scaleDiff.width = tempScaleDiffX;
   }
 
   if (mContentRect.height * tempScaleDiffY < metrics.mCompositionBounds.height) {
-    offset.y = -metricsScrollOffset.y;
+    fixedOffset.y = -metricsScrollOffset.y;
     scaleDiff.height = std::min(1.0f, metrics.mCompositionBounds.height / (float)mContentRect.height);
   } else {
-    offset.y = clamped(mScrollOffset.y / tempScaleDiffY, (float)mContentRect.y,
+    fixedOffset.y = clamped(mScrollOffset.y / tempScaleDiffY, (float)mContentRect.y,
                        mContentRect.YMost() - metrics.mCompositionBounds.height / tempScaleDiffY) -
                metricsScrollOffset.y;
     scaleDiff.height = tempScaleDiffY;
@@ -512,7 +512,7 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer, const gfx3DMatr
                               1.0f/container->GetPostYScale(),
                               1);
   layerComposite->SetShadowTransform(computedTransform);
-  TransformFixedLayers(aLayer, offset, scaleDiff, fixedLayerMargins);
+  TransformFixedLayers(aLayer, fixedOffset, scaleDiff, fixedLayerMargins);
 }
 
 bool
@@ -582,7 +582,7 @@ AsyncCompositionManager::SyncViewportInfo(const nsIntRect& aDisplayPort,
                                           nsIntPoint& aScrollOffset,
                                           float& aScaleX, float& aScaleY,
                                           gfx::Margin& aFixedLayerMargins,
-                                          float& aOffsetX, float& aOffsetY)
+                                          gfx::Point& aOffset)
 {
 #ifdef MOZ_WIDGET_ANDROID
   AndroidBridge::Bridge()->SyncViewportInfo(aDisplayPort,
@@ -591,12 +591,12 @@ AsyncCompositionManager::SyncViewportInfo(const nsIntRect& aDisplayPort,
                                             aScrollOffset,
                                             aScaleX, aScaleY,
                                             aFixedLayerMargins,
-                                            aOffsetX, aOffsetY);
+                                            aOffset);
 #endif
 }
 
 void
-AsyncCompositionManager::SyncFrameMetrics(const gfx::Point& aOffset,
+AsyncCompositionManager::SyncFrameMetrics(const gfx::Point& aScrollOffset,
                                           float aZoom,
                                           const gfx::Rect& aCssPageRect,
                                           bool aLayersUpdated,
@@ -604,14 +604,13 @@ AsyncCompositionManager::SyncFrameMetrics(const gfx::Point& aOffset,
                                           float aDisplayResolution,
                                           bool aIsFirstPaint,
                                           gfx::Margin& aFixedLayerMargins,
-                                          float& aOffsetX, float& aOffsetY)
+                                          gfx::Point& aOffset)
 {
 #ifdef MOZ_ANDROID_WIDGET
-  AndroidBridge::Bridge()->SyncFrameMetrics(aOffset, aZoom, aCssPageRect,
+  AndroidBridge::Bridge()->SyncFrameMetrics(aScrollOffset, aZoom, aCssPageRect,
                                             aLayersUpdated, aDisplayPort,
                                             aDisplayResolution, aIsFirstPaint,
-                                            aFixedLayerMargins,
-                                            aOffsetX, aOffsetY);
+                                            aFixedLayerMargins, aOffset);
 #endif
 }
 
