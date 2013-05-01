@@ -50,29 +50,25 @@ var expectedViolationsLeft = 14;
 // This is used to watch the blocked data bounce off CSP and allowed data 
 // get sent out to the wire.
 function examiner() {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-  this.obsvc = Components.classes['@mozilla.org/observer-service;1']
-                        .getService(Components.interfaces.nsIObserverService);
-  this.obsvc.addObserver(this, "csp-on-violate-policy", false);
+  SpecialPowers.addObserver(this, "csp-on-violate-policy", false);
 }
 examiner.prototype  = {
   observe: function(subject, topic, data) {
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
     // subject should be an nsURI, and should be either allowed or blocked.
-    if(!subject.QueryInterface) return;
+    if (!SpecialPowers.can_QI(subject))
+      return;
       
     if (topic === "csp-on-violate-policy") {
       //these were blocked... record that they were blocked
-      var uri = subject.QueryInterface(Components.interfaces.nsIURI);
-      window.frameBlocked(uri.asciiSpec, data);
+      var asciiSpec = SpecialPowers.getPrivilegedProps(SpecialPowers.do_QueryInterface(subject, "nsIURI"), "asciiSpec");
+      window.frameBlocked(asciiSpec, data);
     }
   },
 
   // must eventually call this to remove the listener, 
   // or mochitests might get borked.
   remove: function() {
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-    this.obsvc.removeObserver(this, "csp-on-violate-policy");
+    SpecialPowers.removeObserver(this, "csp-on-violate-policy");
   }
 }
 
