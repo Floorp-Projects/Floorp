@@ -517,8 +517,10 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
     }
 
     void setIsRTL(boolean aIsRTL) {
-        ImmutableViewportMetrics newMetrics = getViewportMetrics().setIsRTL(aIsRTL);
-        setViewportMetrics(newMetrics, false);
+        synchronized (getLock()) {
+            ImmutableViewportMetrics newMetrics = getViewportMetrics().setIsRTL(aIsRTL);
+            setViewportMetrics(newMetrics, false);
+        }
     }
 
     /** This function is invoked by Gecko via JNI; be careful when modifying signature.
