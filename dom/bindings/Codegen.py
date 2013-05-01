@@ -7728,6 +7728,8 @@ class CGBindingRoot(CGThing):
         descriptors = config.getDescriptors(webIDLFile=webIDLFile,
                                             hasInterfaceOrInterfacePrototypeObject=True,
                                             skipGen=False)
+        hasWorkerStuff = len(config.getDescriptors(webIDLFile=webIDLFile,
+                                                   workers=True)) != 0
         mainDictionaries = config.getDictionaries(webIDLFile=webIDLFile,
                                                   workers=False)
         workerDictionaries = config.getDictionaries(webIDLFile=webIDLFile,
@@ -7839,13 +7841,12 @@ class CGBindingRoot(CGThing):
                           'XPCWrapper.h',
                           'nsDOMQS.h',
                           'AccessCheck.h',
-                          'WorkerPrivate.h',
                           'nsContentUtils.h',
                           'mozilla/Preferences.h',
                           # Have to include nsDOMQS.h to get fast arg unwrapping
                           # for old-binding things with castability.
                           'nsDOMQS.h'
-                          ],
+                          ] + (['WorkerPrivate.h'] if hasWorkerStuff else []),
                          curr,
                          config,
                          jsImplemented)
