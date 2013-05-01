@@ -698,7 +698,11 @@ Function createIntro
   ${NSD_SetStretchedImage} $2 $PLUGINSDIR\bgintro.bmp $1
 
   GetDlgItem $0 $HWNDPARENT 1 ; Install button
-  SendMessage $0 ${WM_SETTEXT} 0 "STR:$(INSTALL_BUTTON)"
+  ${If} ${FileExists} "$INSTDIR\${FileMainEXE}"
+    SendMessage $0 ${WM_SETTEXT} 0 "STR:$(UPGRADE_BUTTON)"
+  ${Else}
+    SendMessage $0 ${WM_SETTEXT} 0 "STR:$(INSTALL_BUTTON)"
+  ${EndIf}
   ${NSD_SetFocus} $0
 
   GetDlgItem $0 $HWNDPARENT 2 ; Cancel button
@@ -949,7 +953,11 @@ Function createOptions
 !endif
 
   GetDlgItem $0 $HWNDPARENT 1 ; Install button
-  SendMessage $0 ${WM_SETTEXT} 0 "STR:$(INSTALL_BUTTON)"
+  ${If} ${FileExists} "$INSTDIR\${FileMainEXE}"
+    SendMessage $0 ${WM_SETTEXT} 0 "STR:$(UPGRADE_BUTTON)"
+  ${Else}
+    SendMessage $0 ${WM_SETTEXT} 0 "STR:$(INSTALL_BUTTON)"
+  ${EndIf}
   ${NSD_SetFocus} $0
 
   GetDlgItem $0 $HWNDPARENT 2 ; Cancel button
@@ -969,7 +977,7 @@ Function createOptions
     ${EndIf}
   ${EndIf}
 
-  IntOp $OptionsPageShownCount $OptionsPageShownCount + 1
+  StrCpy $OptionsPageShownCount "1"
 
   System::Call "kernel32::GetTickCount()l .s"
   Pop $StartOptionsPhaseTickCount
@@ -1681,6 +1689,13 @@ Function OnChange_DirRequest
   System::Call 'user32::GetWindowTextW(i $DirRequest, w .r0, i ${NSIS_MAX_STRLEN})'
   StrCpy $INSTDIR "$0"
   Call UpdateFreeSpaceLabel
+
+  GetDlgItem $0 $HWNDPARENT 1 ; Install button
+  ${If} ${FileExists} "$INSTDIR\${FileMainEXE}"
+    SendMessage $0 ${WM_SETTEXT} 0 "STR:$(UPGRADE_BUTTON)"
+  ${Else}
+    SendMessage $0 ${WM_SETTEXT} 0 "STR:$(INSTALL_BUTTON)"
+  ${EndIf}
 FunctionEnd
 
 Function OnClick_ButtonBrowse
