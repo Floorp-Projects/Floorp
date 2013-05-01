@@ -15,7 +15,6 @@ include $(topsrcdir)/config/config.mk
 
 ifneq (,$(filter beta,$(MOZ_UPDATE_CHANNEL)))
 EXTENSIONS = \
-  testpilot@labs.mozilla.com \
   $(NULL)
 
 all_xpis = $(foreach dir,$(EXTENSIONS),$(DISTROEXT)/$(dir).xpi)

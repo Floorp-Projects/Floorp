@@ -514,9 +514,6 @@ user_pref("extensions.getAddons.cache.enabled", false);
 // Disable intalling any distribution add-ons
 user_pref("extensions.installDistroAddons", false);
 
-user_pref("extensions.testpilot.runStudies", false);
-user_pref("extensions.testpilot.alreadyCustomizedToolbar", true);
-
 user_pref("geo.wifi.uri", "http://%(server)s/tests/dom/tests/mochitest/geolocation/network_geolocation.sjs");
 user_pref("geo.wifi.testing", true);
 user_pref("geo.ignore.location_filter", true);
