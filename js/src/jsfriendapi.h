@@ -36,10 +36,10 @@ extern JS_FRIEND_API(JSString *)
 JS_GetAnonymousString(JSRuntime *rt);
 
 extern JS_FRIEND_API(JSObject *)
-JS_FindCompilationScope(JSContext *cx, JSRawObject obj);
+JS_FindCompilationScope(JSContext *cx, JSObject *obj);
 
 extern JS_FRIEND_API(JSFunction *)
-JS_GetObjectFunction(JSRawObject obj);
+JS_GetObjectFunction(JSObject *obj);
 
 extern JS_FRIEND_API(JSBool)
 JS_SplicePrototype(JSContext *cx, JSObject *obj, JSObject *proto);
@@ -870,7 +870,7 @@ extern JS_FRIEND_API(JSBool)
 js_DateIsValid(JSObject* obj);
 
 extern JS_FRIEND_API(double)
-js_DateGetMsecSinceEpoch(JSRawObject obj);
+js_DateGetMsecSinceEpoch(JSObject *obj);
 
 /* Implemented in jscntxt.cpp. */
 

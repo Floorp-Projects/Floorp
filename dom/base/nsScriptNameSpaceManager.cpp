@@ -822,6 +822,22 @@ nsScriptNameSpaceManager::RegisterDefineDOMInterface(const nsAFlatString& aName,
   }
 }
 
+void
+nsScriptNameSpaceManager::RegisterNavigatorDOMConstructor(
+    const nsAFlatString& aName,
+    mozilla::dom::ConstructNavigatorProperty aNavConstructor,
+    mozilla::dom::PrefEnabled aPrefEnabled)
+{
+  nsGlobalNameStruct *s = AddToHash(&mNavigatorNames, &aName);
+  if (s) {
+    if (s->mType == nsGlobalNameStruct::eTypeNotInitialized) {
+      s->mType = nsGlobalNameStruct::eTypeNewDOMBinding;
+    }
+    s->mConstructNavigatorProperty = aNavConstructor;
+    s->mPrefEnabled = aPrefEnabled;
+  }
+}
+
 struct GlobalNameClosure
 {
   nsScriptNameSpaceManager::GlobalNameEnumerator enumerator;

@@ -90,5 +90,6 @@ EXPORTS.mozilla.dom += [
     'SVGTSpanElement.h',
     'SVGUseElement.h',
     'SVGViewElement.h',
+    'SVGZoomEvent.h',
 ]
 

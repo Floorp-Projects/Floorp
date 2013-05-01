@@ -175,6 +175,7 @@ NS_MEMORY_REPORTER_IMPLEMENT(GrallocBufferActor,
 
 GrallocBufferActor::GrallocBufferActor()
 : mAllocBytes(0)
+, mTextureHost(nullptr)
 {
   static bool registered;
   if (!registered) {
@@ -185,8 +186,6 @@ GrallocBufferActor::GrallocBufferActor()
     NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(GrallocBufferActor));
     registered = true;
   }
-
-  mTextureHost = nullptr;
 }
 
 GrallocBufferActor::~GrallocBufferActor()

@@ -108,7 +108,7 @@
 #include "nsXPCOM.h"
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsCycleCollector.h"
+#include "nsCycleCollectionJSRuntime.h"
 #include "nsDebug.h"
 #include "nsISupports.h"
 #include "nsIServiceManager.h"
@@ -1462,7 +1462,7 @@ XPC_WN_GetterSetter(JSContext *cx, unsigned argc, jsval *vp);
 
 extern JSBool
 XPC_WN_JSOp_Enumerate(JSContext *cx, JSHandleObject obj, JSIterateOp enum_op,
-                      JSMutableHandleValue statep, JSMutableHandleId idp);
+                      JSMutableHandleValue statep, JS::MutableHandleId idp);
 
 extern JSObject*
 XPC_WN_JSOp_ThisObject(JSContext *cx, JSHandleObject obj);

@@ -2911,7 +2911,7 @@ NewArray(JSContext *cx, uint32_t length, RawObject protoArg, NewObjectKind newKi
     NewObjectCache &cache = cx->runtime->newObjectCache;
 
     NewObjectCache::EntryIndex entry = -1;
-    if (newKind != SingletonObject &&
+    if (newKind == GenericObject &&
         cache.lookupGlobal(&ArrayClass, cx->global(), allocKind, &entry))
     {
         RootedObject obj(cx, cache.newObjectFromHit(cx, entry, GetInitialHeap(newKind, &ArrayClass)));
@@ -2945,7 +2945,8 @@ NewArray(JSContext *cx, uint32_t length, RawObject protoArg, NewObjectKind newKi
     if (!shape)
         return NULL;
 
-    RootedObject obj(cx, JSObject::createArray(cx, allocKind, gc::DefaultHeap, shape, type, length));
+    RootedObject obj(cx, JSObject::createArray(cx, allocKind, GetInitialHeap(newKind, &ArrayClass),
+                                               shape, type, length));
     if (!obj)
         return NULL;
 

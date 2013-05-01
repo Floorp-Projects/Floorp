@@ -937,7 +937,7 @@ env_enumerate(JSContext *cx, JSHandleObject obj)
 
 static JSBool
 env_resolve(JSContext *cx, JSHandleObject obj, JSHandleId id, unsigned flags,
-            JSMutableHandleObject objp)
+            JS::MutableHandleObject objp)
 {
     JSString *idstr, *valstr;
 

@@ -3125,7 +3125,7 @@ nsObjectLoadingContent::TeardownProtoChain()
 bool
 nsObjectLoadingContent::DoNewResolve(JSContext* aCx, JSHandleObject aObject,
                                      JSHandleId aId, unsigned aFlags,
-                                     JSMutableHandleObject aObjp)
+                                     JS::MutableHandle<JSObject*> aObjp)
 {
   // We don't resolve anything; we just try to make sure we're instantiated
 

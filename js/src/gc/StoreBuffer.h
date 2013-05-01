@@ -137,9 +137,24 @@ class StoreBuffer
         T *pos;       /* Pointer to the current insertion position. */
         T *top;       /* Pointer to one element after the end. */
 
+        /*
+         * If the buffer's insertion position goes over the high-water-mark,
+         * we trigger a minor GC at the next operation callback.
+         */
+        T *highwater;
+
+        /*
+         * This set stores duplicates found when compacting. We create the set
+         * here, rather than local to the algorithm to avoid malloc overhead in
+         * the common case.
+         */
+        EdgeSet duplicates;
+
         MonoTypeBuffer(StoreBuffer *owner)
           : owner(owner), base(NULL), pos(NULL), top(NULL)
-        {}
+        {
+            duplicates.init();
+        }
 
         MonoTypeBuffer &operator=(const MonoTypeBuffer& other) MOZ_DELETE;
 
@@ -149,10 +164,12 @@ class StoreBuffer
 
         bool isEmpty() const { return pos == base; }
         bool isFull() const { JS_ASSERT(pos <= top); return pos == top; }
+        bool isAboutToOverflow() const { return pos >= highwater; }
 
         /* Compaction algorithms. */
         template <typename NurseryType>
         void compactNotInSet(NurseryType *nursery);
+        void compactRemoveDuplicates();
 
         /*
          * Attempts to reduce the usage of the buffer by removing unnecessary
@@ -161,7 +178,28 @@ class StoreBuffer
         virtual void compact();
 
         /* Add one item to the buffer. */
-        void put(const T &v);
+        void put(const T &v) {
+            /* Check if we have been enabled. */
+            if (!pos)
+                return;
+
+            /*
+             * Note: it is sometimes valid for a put to happen in the middle of a GC,
+             * e.g. a rekey of a Relocatable may end up here. In general, we do not
+             * care about these new entries or any overflows they cause.
+             */
+            *pos++ = v;
+            if (isAboutToOverflow()) {
+                owner->setAboutToOverflow();
+                if (isFull()) {
+                    compact();
+                    if (isFull()) {
+                        owner->setOverflowed();
+                        clear();
+                    }
+                }
+            }
+        }
 
         /* Mark the source of all edges in the store buffer. */
         void mark(JSTracer *trc);
@@ -188,7 +226,9 @@ class StoreBuffer
         virtual void compact();
 
         /* Record a removal from the buffer. */
-        void unput(const T &v);
+        void unput(const T &v) {
+            MonoTypeBuffer<T>::put(v.tagged());
+        }
     };
 
     class GenericBuffer
@@ -345,6 +385,7 @@ class StoreBuffer
 
     void *buffer;
 
+    bool aboutToOverflow;
     bool overflowed;
     bool enabled;
 
@@ -373,13 +414,15 @@ class StoreBuffer
                                     GenericBufferSize;
 
     /* For use by our owned buffers. */
+    void setAboutToOverflow();
     void setOverflowed();
 
   public:
     explicit StoreBuffer(JSRuntime *rt)
       : bufferVal(this), bufferCell(this), bufferSlot(this),
         bufferRelocVal(this), bufferRelocCell(this), bufferGeneric(this),
-        runtime(rt), buffer(NULL), overflowed(false), enabled(false)
+        runtime(rt), buffer(NULL), aboutToOverflow(false), overflowed(false),
+        enabled(false)
     {}
 
     bool enable();
@@ -389,6 +432,7 @@ class StoreBuffer
     bool clear();
 
     /* Get the overflowed status. */
+    bool isAboutToOverflow() const { return aboutToOverflow; }
     bool hasOverflowed() const { return overflowed; }
 
     /* Insert a single edge into the buffer/remembered set. */
