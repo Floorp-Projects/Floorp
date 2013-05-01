@@ -55,31 +55,16 @@ static const LONGLONG kNsPerMillisec = 1000000;
 // Global constants
 // ----------------------------------------------------------------------------
 
-// If QPC is found faulty for two stamps in this interval, we disable it
-// completely.
+// Tolerance to failures settings.
 //
-// Values is in [ms].
-static const uint32_t kQPCHardFailureDetectionInterval = 2000;
-
-// On every use of QPC values we check the overflow of skew difference of the
-// two stamps doesn't go over this number of milliseconds.  Both timer
-// functions jitter so we have to have some limit.  The value is based on tests.
-//
-// Changing kQPCHardFailureDetectionInterval influences this limit: prolonging
-// just kQPCHardFailureDetectionInterval means to be more sensitive to threshold
-// overflows.
-//
-// How this constant is used (see CheckQPC function):
-// First, adjust the limit linearly to the check interval:
-//   LIMIT = (GTC_now - GTC_epoch) / kQPCHardFailureDetectionInterval
-// Then, check the skew difference overflow is in this adjusted limit:
-//   ABS( (QPC_now - GTC_now) - (QPC_epoch - GTC_epoch) ) - THRESHOLD < LIMIT
-//
-// Thresholds are calculated dynamically, see sUnderrunThreshold and
-// sOverrunThreshold below.
-//
-// Limit is in number of [ms].
-static const ULONGLONG kOverflowLimit = 50;
+// What is the interval we want to have failure free.
+// in [ms]
+static const uint32_t kFailureFreeInterval = 5000;
+// How many failures we are willing to tolerate in the interval.
+static const uint32_t kMaxFailuresPerInterval = 4;
+// What is the threshold to treat fluctuations as actual failures.
+// in [ms]
+static const uint32_t kFailureThreshold = 50;
 
 // If we are not able to get the value of GTC time increment, use this value
 // which is the most usual increment.
@@ -108,23 +93,41 @@ static const DWORD kDefaultTimeIncrement = 156001;
 // Result of QueryPerformanceFrequency
 static LONGLONG sFrequencyPerSec = 0;
 
-// Lower and upper bound that QueryPerformanceCounter - GetTickCount must not
-// go under or over when compared to any older QPC - GTC difference (skew).
-// Values are based on the GetTickCount update interval.
-//
-// Schematically, QPC works correctly if ((QPC_now - GTC_now) -
-// (QPC_epoch - GTC_epoch)) is in  [sUnderrunThreshold, sOverrunThreshold]
-// interval every time we compare two time stamps.
-//
-// Kept in [mt]
-static LONGLONG sUnderrunThreshold;
-static LONGLONG sOverrunThreshold;
+// How much we are tolerant to GTC occasional loose of resoltion.
+// This number says how many multiples of the minimal GTC resolution
+// detected on the system are acceptable.  This number is empirical.
+static const LONGLONG kGTCTickLeapTolerance = 4;
 
-// Interval to return duration using QPC.  When two time stamps
-// are within this interval, perform QPC check first.
+// Base tolerance (more: "inability of detection" range) threshold is calculated
+// dynamically, and kept in sGTCResulutionThreshold.
+//
+// Schematically, QPC worked "100%" correctly if ((GTC_now - GTC_epoch) -
+// (QPC_now - QPC_epoch)) was in  [-sGTCResulutionThreshold, sGTCResulutionThreshold]
+// interval every time we'd compared two time stamps.
+// If not, then we check the overflow behind this basic threshold
+// is in kFailureThreshold.  If not, we condider it as a QPC failure.  If too many
+// failures in short time are detected, QPC is considered faulty and disabled.
 //
 // Kept in [mt]
-static LONGLONG sQPCHardFailureDetectionInterval;
+static LONGLONG sGTCResulutionThreshold;
+
+// If QPC is found faulty for two stamps in this interval, we engage
+// the fault detection algorithm.  For duration larger then this limit
+// we bypass using durations calculated from QPC when jitter is detected,
+// but don't touch the sUseQPC flag.
+//
+// Value is in [ms].
+static const uint32_t kHardFailureLimit = 2000;
+// Conversion to [mt]
+static LONGLONG sHardFailureLimit;
+
+// Conversion of kFailureFreeInterval and kFailureThreshold to [mt]
+static LONGLONG sFailureFreeInterval;
+static LONGLONG sFailureThreshold;
+
+// ----------------------------------------------------------------------------
+// Systemm status flags
+// ----------------------------------------------------------------------------
 
 // Flag for stable TSC that indicates platform where QPC is stable.
 static bool sHasStableTSC = false;
@@ -149,6 +152,21 @@ static const DWORD kLockSpinCount = 4096;
 // then using CMPXCHG8B.)
 // It is protecting the globals bellow.
 static CRITICAL_SECTION sTimeStampLock;
+
+// ----------------------------------------------------------------------------
+// Global lock protected variables
+// ----------------------------------------------------------------------------
+
+// Timestamp in future until QPC must behave correctly.
+// Set to now + kFailureFreeInterval on first QPC failure detection.
+// Set to now + E * kFailureFreeInterval on following errors,
+//   where E is number of errors detected during last kFailureFreeInterval
+//   milliseconds, calculated simply as:
+//   E = (sFaultIntoleranceCheckpoint - now) / kFailureFreeInterval + 1.
+// When E > kMaxFailuresPerInterval -> disable QPC.
+//
+// Kept in [mt]
+static ULONGLONG sFaultIntoleranceCheckpoint = 0;
 
 // Used only when GetTickCount64 is not available on the platform.
 // Last result of GetTickCount call.
@@ -239,27 +257,17 @@ InitThresholds()
   // Convert back to 100ns, values will be: 160000, 210000
   timeIncrementCeil *= 10000;
 
-  // How many milli-ticks has the interval
-  LONGLONG ticksPerGetTickCountResolution =
-    (int64_t(timeIncrement) * sFrequencyPerSec) / 10000LL;
-
   // How many milli-ticks has the interval rounded up
   LONGLONG ticksPerGetTickCountResolutionCeiling =
     (int64_t(timeIncrementCeil) * sFrequencyPerSec) / 10000LL;
 
-  // I observed differences about 2 times of the GTC resolution.  GTC may
-  // jump by 32 ms in two steps, therefor use the ceiling value.
-  // Having 64 (15.6 or 16 * 4 exactly) is used to avoid false negatives
-  // for very short times where QPC and GTC may jitter even more.
-  sUnderrunThreshold =
-    LONGLONG((-4) * ticksPerGetTickCountResolutionCeiling);
+  // GTC may jump by 32 (2*16) ms in two steps, therefor use the ceiling value.
+  sGTCResulutionThreshold =
+    LONGLONG(kGTCTickLeapTolerance * ticksPerGetTickCountResolutionCeiling);
 
-  // QPC should go no further than 2 * GTC resolution.
-  sOverrunThreshold =
-    LONGLONG((+4) * ticksPerGetTickCountResolution);
-
-  sQPCHardFailureDetectionInterval =
-    LONGLONG(kQPCHardFailureDetectionInterval) * sFrequencyPerSec;
+  sHardFailureLimit = ms2mt(kHardFailureLimit);
+  sFailureFreeInterval = ms2mt(kFailureFreeInterval);
+  sFailureThreshold = ms2mt(kFailureThreshold);
 }
 
 static void
@@ -341,66 +349,75 @@ TimeStampValue::operator-=(const int64_t aOther)
   return *this;
 }
 
-// If the duration is less then one second, perform check of QPC stability
-// by comparing both 'epoch' and 'now' skew (=GTC - QPC) values.
-bool
-TimeStampValue::CheckQPC(int64_t aDuration, const TimeStampValue &aOther) const
+// If the duration is less then two seconds, perform check of QPC stability
+// by comparing both GTC and QPC calculated durations of this and aOther.
+uint64_t
+TimeStampValue::CheckQPC(const TimeStampValue &aOther) const
 {
-  if (!mHasQPC || !aOther.mHasQPC) // Not both holding QPC
-    return false;
+  uint64_t deltaGTC = mGTC - aOther.mGTC;
+
+  if (!mHasQPC || !aOther.mHasQPC) // Both not holding QPC
+    return deltaGTC;
+
+  uint64_t deltaQPC = mQPC - aOther.mQPC;
 
   if (sHasStableTSC) // For stable TSC there is no need to check
-    return true;
+    return deltaQPC;
 
   if (!sUseQPC) // QPC globally disabled
-    return false;
-
-  // Treat absolutely for calibration purposes
-  aDuration = DeprecatedAbs(aDuration);
+    return deltaGTC;
 
   // Check QPC is sane before using it.
+  int64_t diff = DeprecatedAbs(int64_t(deltaQPC) - int64_t(deltaGTC));
+  if (diff <= sGTCResulutionThreshold)
+    return deltaQPC;
 
-  LONGLONG skew1 = mGTC - mQPC;
-  LONGLONG skew2 = aOther.mGTC - aOther.mQPC;
+  // Treat absolutely for calibration purposes
+  int64_t duration = DeprecatedAbs(int64_t(deltaGTC));
+  int64_t overflow = diff - sGTCResulutionThreshold;
 
-  LONGLONG diff = skew1 - skew2;
-  LONGLONG overflow;
+  LOG(("TimeStamp: QPC check after %llums with overflow %1.4fms",
+       mt2ms(duration), mt2ms_f(overflow)));
 
-  if (diff < sUnderrunThreshold)
-    overflow = sUnderrunThreshold - diff;
-  else if (diff > sOverrunThreshold)
-    overflow = diff - sOverrunThreshold;
-  else
-    return true;
+  if (overflow <= sFailureThreshold) // We are in the limit, let go.
+    return deltaQPC; // XXX Should we return GTC here?
 
-  ULONGLONG trend;
-  if (aDuration)
-    trend = LONGLONG(overflow * (double(sQPCHardFailureDetectionInterval) / aDuration));
-  else
-    trend = overflow;
+  // QPC deviates, don't use it, since now this method may only return deltaGTC.
+  LOG(("TimeStamp: QPC jittered over failure threshold"));
 
-  LOG(("TimeStamp: QPC check after %llums with overflow %1.4fms"
-       ", adjusted trend per interval is %1.4fms",
-       mt2ms(aDuration),
-       mt2ms_f(overflow),
-       mt2ms_f(trend)));
-
-  if (trend <= ms2mt(kOverflowLimit)) {
-    // We are in the limit, let go.
-    return true;
-  }
-
-  // QPC deviates, don't use it.
-  LOG(("TimeStamp: QPC found highly jittering"));
-
-  if (aDuration < sQPCHardFailureDetectionInterval) {
+  if (duration < sHardFailureLimit) {
     // Interval between the two time stamps is very short, consider
-    // QPC as unstable and disable it completely.
-    sUseQPC = false;
-    LOG(("TimeStamp: QPC disabled"));
+    // QPC as unstable and record a failure.
+    uint64_t now = ms2mt(sGetTickCount64());
+
+    AutoCriticalSection lock(&sTimeStampLock);
+
+    if (sFaultIntoleranceCheckpoint && sFaultIntoleranceCheckpoint > now) {
+      // There's already been an error in the last fault intollerant interval.
+      // Time since now to the checkpoint actually holds information on how many
+      // failures there were in the failure free interval we have defined.
+      uint64_t failureCount = (sFaultIntoleranceCheckpoint - now + sFailureFreeInterval - 1) /
+                               sFailureFreeInterval;
+      if (failureCount > kMaxFailuresPerInterval) {
+        sUseQPC = false;
+        LOG(("TimeStamp: QPC disabled"));
+      }
+      else {
+        // Move the fault intolerance checkpoint more to the future, prolong it
+        // to reflect the number of detected failures.
+        ++failureCount;
+        sFaultIntoleranceCheckpoint = now + failureCount * sFailureFreeInterval;
+        LOG(("TimeStamp: recording %dth QPC failure", failureCount));
+      }
+    }
+    else {
+      // Setup fault intolerance checkpoint in the future for first detected error.
+      sFaultIntoleranceCheckpoint = now + sFailureFreeInterval;
+      LOG(("TimeStamp: recording 1st QPC failure"));
+    }
   }
 
-  return false;
+  return deltaGTC;
 }
 
 uint64_t
@@ -409,10 +426,7 @@ TimeStampValue::operator-(const TimeStampValue &aOther) const
   if (mIsNull && aOther.mIsNull)
     return uint64_t(0);
 
-  if (CheckQPC(int64_t(mGTC - aOther.mGTC), aOther))
-    return mQPC - aOther.mQPC;
-
-  return mGTC - aOther.mGTC;
+  return CheckQPC(aOther);
 }
 
 // ----------------------------------------------------------------------------
