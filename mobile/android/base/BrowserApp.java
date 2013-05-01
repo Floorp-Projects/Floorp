@@ -664,8 +664,6 @@ abstract public class BrowserApp extends GeckoApp
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
         String url = null;
 
         // Don't update the url in the toolbar if the activity was cancelled.
@@ -680,6 +678,11 @@ abstract public class BrowserApp extends GeckoApp
 
         // We always need to call fromAwesomeBarSearch to perform the toolbar animation.
         mBrowserToolbar.fromAwesomeBarSearch(url);
+
+        // Trigger any tab-related events after we start restoring
+        // the toolbar state above to make ensure animations happen
+        // on the correct order.
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
     public View getActionBarLayout() {
