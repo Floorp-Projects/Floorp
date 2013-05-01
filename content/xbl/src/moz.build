@@ -18,7 +18,7 @@ CPP_SOURCES += [
     'nsXBLContentSink.cpp',
     'nsXBLDocumentInfo.cpp',
     'nsXBLEventHandler.cpp',
-    'nsXBLInsertionPoint.cpp',
+    'nsXBLChildrenElement.cpp',
     'nsXBLProtoImpl.cpp',
     'nsXBLProtoImplField.cpp',
     'nsXBLProtoImplMethod.cpp',

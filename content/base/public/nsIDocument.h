@@ -1315,18 +1315,6 @@ public:
   }
 
   /**
-   * See GetXBLChildNodesFor on nsBindingManager
-   */
-  virtual nsresult GetXBLChildNodesFor(nsIContent* aContent,
-                                       nsIDOMNodeList** aResult) = 0;
-
-  /**
-   * See GetContentListFor on nsBindingManager
-   */
-  virtual nsresult GetContentListFor(nsIContent* aContent,
-                                     nsIDOMNodeList** aResult) = 0;
-
-  /**
    * See GetAnonymousElementByAttribute on nsIDOMDocumentXBL.
    */
   virtual Element*

@@ -27,34 +27,6 @@ class nsXBLProtoImplField;
 class nsXBLBinding;
 class nsCSSStyleSheet;
 
-// This structure represents an insertion point, and is used when writing out
-// insertion points. It contains comparison operators so that it can be stored
-// in an array sorted by index.
-struct InsertionItem {
-  uint32_t insertionIndex;
-  nsIAtom* tag;
-  nsIContent* defaultContent;
-
-  InsertionItem(uint32_t aInsertionIndex, nsIAtom* aTag, nsIContent* aDefaultContent)
-    : insertionIndex(aInsertionIndex), tag(aTag), defaultContent(aDefaultContent) { }
-
-  bool operator<(const InsertionItem& item) const
-  {
-    NS_ASSERTION(insertionIndex != item.insertionIndex || defaultContent == item.defaultContent,
-                 "default content is different for same index");
-    return insertionIndex < item.insertionIndex;
-  }
-
-  bool operator==(const InsertionItem& item) const
-  {
-    NS_ASSERTION(insertionIndex != item.insertionIndex || defaultContent == item.defaultContent,
-                 "default content is different for same index");
-    return insertionIndex == item.insertionIndex;
-  }
-};
-
-typedef nsClassHashtable<nsISupportsHashKey, nsAutoTArray<InsertionItem, 1> > ArrayOfInsertionPointsByContent;
-
 // *********************************************************************/
 // The XBLPrototypeBinding class
 
@@ -145,27 +117,12 @@ public:
 
   nsIStyleRuleProcessor* GetRuleProcessor();
   nsXBLPrototypeResources::sheet_array_type* GetStyleSheets();
-
-  bool HasInsertionPoints() { return mInsertionPointTable != nullptr; }
   
   bool HasStyleSheets() {
     return mResources && mResources->mStyleSheetList.Length() > 0;
   }
 
   nsresult FlushSkinSheets();
-
-  void InstantiateInsertionPoints(nsXBLBinding* aBinding);
-
-  // XXXbz this aIndex has nothing to do with an index into the child
-  // list of the insertion parent or anything.
-  nsIContent* GetInsertionPoint(nsIContent* aBoundElement,
-                                nsIContent* aCopyRoot,
-                                const nsIContent *aChild,
-                                uint32_t* aIndex);
-
-  nsIContent* GetSingleInsertionPoint(nsIContent* aBoundElement,
-                                      nsIContent* aCopyRoot,
-                                      uint32_t* aIndex, bool* aMultiple);
 
   nsIAtom* GetBaseTag(int32_t* aNamespaceID);
   void SetBaseTag(int32_t aNamespaceID, nsIAtom* aTag);
@@ -219,8 +176,6 @@ public:
 
   /**
    * Write the content node aNode to aStream.
-   * aInsertionPointsByContent is a hash of the insertion points in the binding,
-   * keyed by where there are in the content hierarchy.
    *
    * This method is called recursively for each child descendant. For the topmost
    * call, aNode must be an element.
@@ -245,19 +200,11 @@ public:
    *     destination namespace
    *     destination attribute
    *   the constant XBLBinding_Serialize_NoMoreAttributes
-   *   insertion points within this node:
-   *     child index to insert within node
-   *     default content serialized in the same manner or XBLBinding_Serialize_NoContent
-   *     count of insertion points at that index
-   *       that number of string tags (those in the <children>'s includes attribute)
-   *   the constant XBLBinding_Serialize_NoMoreInsertionPoints
    *   32-bit count of the number of child nodes
    *     each child node is serialized in the same manner in sequence
    *   the constant XBLBinding_Serialize_NoContent
    */
-  nsresult WriteContentNode(nsIObjectOutputStream* aStream,
-                            nsIContent* aNode,
-                            ArrayOfInsertionPointsByContent& aInsertionPointsByContent);
+  nsresult WriteContentNode(nsIObjectOutputStream* aStream, nsIContent* aNode);
 
   /**
    * Read or write a namespace id from or to aStream. If the namespace matches
@@ -286,9 +233,6 @@ public:
   void Trace(const TraceCallbacks& aCallbacks, void *aClosure) const;
 
 // Internal member functions.
-// XXXbz GetImmediateChild needs to be public to be called by SetAttrs,
-// InstantiateInsertionPoints, etc; those should probably be a class static
-// method instead of a global (non-static!) ones.
 public:
   /**
    * GetImmediateChild locates the immediate child of our binding element which
@@ -309,10 +253,6 @@ protected:
                            int32_t aDestNamespaceID, nsIAtom* aDestTag,
                            nsIContent* aContent);
   void ConstructAttributeTable(nsIContent* aElement);
-  void ConstructInsertionTable(nsIContent* aElement);
-  void GetNestedChildren(nsIAtom* aTag, int32_t aNamespace,
-                         nsIContent* aContent,
-                         nsCOMArray<nsIContent> & aList);
   void CreateKeyHandlers();
 
 // MEMBER VARIABLES
@@ -341,9 +281,6 @@ protected:
   nsObjectHashtable* mAttributeTable; // A table for attribute containers. Namespace IDs are used as
                                       // keys in the table. Containers are nsObjectHashtables.
                                       // This table is used to efficiently handle attribute changes.
-
-  nsObjectHashtable* mInsertionPointTable; // A table of insertion points for placing explicit content
-                                           // underneath anonymous content.
 
   nsSupportsHashtable* mInterfaceTable; // A table of cached interfaces that we support.
 

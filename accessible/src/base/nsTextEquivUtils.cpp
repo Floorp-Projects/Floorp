@@ -136,7 +136,7 @@ nsTextEquivUtils::AppendTextEquivFromTextContent(nsIContent *aContent,
   if (aContent->IsNodeOfType(nsINode::eTEXT)) {
     bool isHTMLBlock = false;
 
-    nsIContent *parentContent = aContent->GetParent();
+    nsIContent *parentContent = aContent->GetFlattenedTreeParent();
     if (parentContent) {
       nsIFrame *frame = parentContent->GetPrimaryFrame();
       if (frame) {
