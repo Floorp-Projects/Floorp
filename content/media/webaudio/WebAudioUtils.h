@@ -90,7 +90,7 @@ struct WebAudioUtils {
 
   static void FixNaN(double& aDouble)
   {
-    if (MOZ_DOUBLE_IS_NaN(aDouble) || MOZ_DOUBLE_IS_INFINITE(aDouble)) {
+    if (IsNaN(aDouble) || IsInfinite(aDouble)) {
       aDouble = 0.0;
     }
   }

@@ -102,10 +102,10 @@ class Range : public TempObject {
     // Maximal exponenent under which we have no precission loss on double
     // operations. Double has 52 bits of mantissa, so 2^52+1 cannot be
     // represented without loss.
-    static const uint16_t MaxTruncatableExponent = MOZ_DOUBLE_EXPONENT_SHIFT;
+    static const uint16_t MaxTruncatableExponent = mozilla::DoubleExponentShift;
 
     // 11 bits of signed exponent, so the max is encoded on 10 bits.
-    static const uint16_t MaxDoubleExponent = MOZ_DOUBLE_EXPONENT_BIAS;
+    static const uint16_t MaxDoubleExponent = mozilla::DoubleExponentBias;
 
   private:
     // Absolute ranges.

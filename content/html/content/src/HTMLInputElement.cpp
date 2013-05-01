@@ -1187,7 +1187,7 @@ HTMLInputElement::ConvertStringToNumber(nsAString& aValue,
         }
 
         double date = JS::MakeDate(year, month - 1, day);
-        if (MOZ_DOUBLE_IS_NaN(date)) {
+        if (IsNaN(date)) {
           return false;
         }
 
@@ -1361,9 +1361,7 @@ HTMLInputElement::ConvertNumberToString(Decimal aValue,
         double month = JS::MonthFromTime(aValue.toDouble());
         double day = JS::DayFromTime(aValue.toDouble());
 
-        if (MOZ_DOUBLE_IS_NaN(year) ||
-            MOZ_DOUBLE_IS_NaN(month) ||
-            MOZ_DOUBLE_IS_NaN(day)) {
+        if (IsNaN(year) || IsNaN(month) || IsNaN(day)) {
           return false;
         }
 
@@ -1474,7 +1472,7 @@ HTMLInputElement::SetValueAsNumber(double aValueAsNumber, ErrorResult& aRv)
 {
   // TODO: return TypeError when HTMLInputElement is converted to WebIDL, see
   // bug 825197.
-  if (MOZ_DOUBLE_IS_INFINITE(aValueAsNumber)) {
+  if (IsInfinite(aValueAsNumber)) {
     aRv.Throw(NS_ERROR_INVALID_ARG);
     return;
   }
@@ -3443,7 +3441,7 @@ HTMLInputElement::SanitizeValue(nsAString& aValue)
       {
         nsresult ec;
         double val = PromiseFlatString(aValue).ToDouble(&ec);
-        if (NS_FAILED(ec) || !MOZ_DOUBLE_IS_FINITE(val)) {
+        if (NS_FAILED(ec) || !IsFinite(val)) {
           aValue.Truncate();
         }
       }
