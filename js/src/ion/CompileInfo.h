@@ -134,7 +134,7 @@ class CompileInfo
         JS_ASSERT(fun());
         return hasArguments() ? 2 : 1;
     }
-    uint32_t firstActualArgSlot() const {
+    uint32_t firstArgSlot() const {
         return nimplicit_;
     }
     uint32_t argSlotUnchecked(uint32_t i) const {

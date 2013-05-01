@@ -675,9 +675,8 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
           }
         }
 
-        JS::AutoValueRooter objectsv(ctx);
-        objectsv.set(OBJECT_TO_JSVAL(aObjectsArray));
-        if (!JS_WrapValue(ctx, objectsv.jsval_addr()))
+        JS::Rooted<JS::Value> objectsv(ctx, JS::ObjectValue(*aObjectsArray));
+        if (!JS_WrapValue(ctx, objectsv.address()))
             return NS_ERROR_UNEXPECTED;
 
         JS::Value json = JSVAL_NULL;
@@ -698,7 +697,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
                           BOOLEAN_TO_JSVAL(aSync), nullptr, nullptr, JSPROP_ENUMERATE);
         JS_DefineProperty(ctx, param, "json", json, nullptr, nullptr, JSPROP_ENUMERATE); // deprecated
         JS_DefineProperty(ctx, param, "data", json, nullptr, nullptr, JSPROP_ENUMERATE);
-        JS_DefineProperty(ctx, param, "objects", objectsv.jsval_value(), nullptr, nullptr, JSPROP_ENUMERATE);
+        JS_DefineProperty(ctx, param, "objects", objectsv, nullptr, nullptr, JSPROP_ENUMERATE);
 
         JS::Value thisValue = JSVAL_VOID;
 
@@ -729,23 +728,21 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
           thisValue.setObject(*object);
         }
 
-        JS::Value rval = JSVAL_VOID;
-
-        JS::AutoValueRooter argv(ctx);
-        argv.set(OBJECT_TO_JSVAL(param));
+        JS::Rooted<JS::Value> rval(ctx, JSVAL_VOID);
+        JS::Rooted<JS::Value> argv(ctx, JS::ObjectValue(*param));
 
         {
           JSObject* thisObject = JSVAL_TO_OBJECT(thisValue);
 
           JSAutoCompartment tac(ctx, thisObject);
-          if (!JS_WrapValue(ctx, argv.jsval_addr()))
+          if (!JS_WrapValue(ctx, argv.address()))
             return NS_ERROR_UNEXPECTED;
 
           JS_CallFunctionValue(ctx, thisObject,
-                               funval, 1, argv.jsval_addr(), &rval);
+                               funval, 1, argv.address(), rval.address());
           if (aJSONRetVal) {
             nsString json;
-            if (JS_Stringify(ctx, &rval, nullptr, JSVAL_NULL,
+            if (JS_Stringify(ctx, rval.address(), nullptr, JSVAL_NULL,
                              JSONCreator, &json)) {
               aJSONRetVal->AppendElement(json);
             }

@@ -2457,12 +2457,12 @@ ImplicitConvert(JSContext* cx,
       }
 
       for (uint32_t i = 0; i < sourceLength; ++i) {
-        js::AutoValueRooter item(cx);
-        if (!JS_GetElement(cx, valObj, i, item.jsval_addr()))
+        RootedValue item(cx);
+        if (!JS_GetElement(cx, valObj, i, item.address()))
           return false;
 
         char* data = intermediate.get() + elementSize * i;
-        if (!ImplicitConvert(cx, item.jsval_value(), baseType, data, false, NULL))
+        if (!ImplicitConvert(cx, item, baseType, data, false, NULL))
           return false;
       }
 
@@ -2539,13 +2539,13 @@ ImplicitConvert(JSContext* cx,
         if (!field)
           return false;
 
-        js::AutoValueRooter prop(cx);
-        if (!JS_GetPropertyById(cx, valObj, id, prop.jsval_addr()))
+        RootedValue prop(cx);
+        if (!JS_GetPropertyById(cx, valObj, id, prop.address()))
           return false;
 
         // Convert the field via ImplicitConvert().
         char* fieldData = intermediate.get() + field->mOffset;
-        if (!ImplicitConvert(cx, prop.jsval_value(), field->mType, fieldData, false, NULL))
+        if (!ImplicitConvert(cx, prop, field->mType, fieldData, false, NULL))
           return false;
 
         ++i;
@@ -2585,8 +2585,8 @@ ExplicitConvert(JSContext* cx, HandleValue val, HandleObject targetType, void* b
   // If ImplicitConvert failed, and there is no pending exception, then assume
   // hard failure (out of memory, or some other similarly serious condition).
   // We store any pending exception in case we need to re-throw it.
-  js::AutoValueRooter ex(cx);
-  if (!JS_GetPendingException(cx, ex.jsval_addr()))
+  RootedValue ex(cx);
+  if (!JS_GetPendingException(cx, ex.address()))
     return false;
 
   // Otherwise, assume soft failure. Clear the pending exception so that we
@@ -2634,7 +2634,7 @@ ExplicitConvert(JSContext* cx, HandleValue val, HandleObject targetType, void* b
   case TYPE_array:
   case TYPE_struct:
     // ImplicitConvert is sufficient. Re-throw the exception it generated.
-    JS_SetPendingException(cx, ex.jsval_value());
+    JS_SetPendingException(cx, ex);
     return false;
   case TYPE_void_t:
   case TYPE_function:
@@ -4288,9 +4288,9 @@ ArrayType::ConstructData(JSContext* cx,
       // We were given an object with a .length property.
       // This could be a JS array, or a CData array.
       RootedObject arg(cx, &args[0].toObject());
-      js::AutoValueRooter lengthVal(cx);
-      if (!JS_GetProperty(cx, arg, "length", lengthVal.jsval_addr()) ||
-          !jsvalToSize(cx, lengthVal.jsval_value(), false, &length)) {
+      RootedValue lengthVal(cx);
+      if (!JS_GetProperty(cx, arg, "length", lengthVal.address()) ||
+          !jsvalToSize(cx, lengthVal, false, &length)) {
         JS_ReportError(cx, "argument must be an array object or length");
         return JS_FALSE;
       }
@@ -4644,12 +4644,12 @@ ExtractStructField(JSContext* cx, jsval val, JSObject** typeObj)
     return NULL;
   }
 
-  js::AutoValueRooter propVal(cx);
-  if (!JS_GetPropertyById(cx, obj, nameid, propVal.jsval_addr()))
+  RootedValue propVal(cx);
+  if (!JS_GetPropertyById(cx, obj, nameid, propVal.address()))
     return NULL;
 
-  if (propVal.value().isPrimitive() ||
-      !CType::IsCType(JSVAL_TO_OBJECT(propVal.jsval_value()))) {
+  if (propVal.isPrimitive() ||
+      !CType::IsCType(propVal.toObjectOrNull())) {
     JS_ReportError(cx, "struct field descriptors require a valid name and type");
     return NULL;
   }
@@ -4657,7 +4657,7 @@ ExtractStructField(JSContext* cx, jsval val, JSObject** typeObj)
   // Undefined size or zero size struct members are illegal.
   // (Zero-size arrays are legal as struct members in C++, but libffi will
   // choke on a zero-size struct, so we disallow them.)
-  *typeObj = JSVAL_TO_OBJECT(propVal.jsval_value());
+  *typeObj = propVal.toObjectOrNull();
   size_t size;
   if (!CType::GetSafeSize(*typeObj, &size) || size == 0) {
     JS_ReportError(cx, "struct field types must have defined and nonzero size");
@@ -4782,12 +4782,12 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj_, JSObject* fieldsOb
     structAlign = 0;
 
     for (uint32_t i = 0; i < len; ++i) {
-      js::AutoValueRooter item(cx);
-      if (!JS_GetElement(cx, fieldsObj, i, item.jsval_addr()))
+      RootedValue item(cx);
+      if (!JS_GetElement(cx, fieldsObj, i, item.address()))
         return JS_FALSE;
 
       RootedObject fieldType(cx, NULL);
-      JSFlatString* flat = ExtractStructField(cx, item.jsval_value(), fieldType.address());
+      JSFlatString* flat = ExtractStructField(cx, item, fieldType.address());
       if (!flat)
         return JS_FALSE;
       Rooted<JSStableString*> name(cx, flat->ensureStable(cx));

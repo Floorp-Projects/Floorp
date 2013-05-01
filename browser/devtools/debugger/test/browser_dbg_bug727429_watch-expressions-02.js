@@ -117,7 +117,7 @@ function test()
     waitForWatchExpressions(function() {
       info("Performing test2");
       checkWatchExpressions(undefined,
-                            { type: "object", class: "Proxy" },
+                            { type: "object", class: "Window" },
                             undefined,
                             "sensational",
                             26);
@@ -132,7 +132,7 @@ function test()
     waitForWatchExpressions(function() {
       info("Performing test3");
       checkWatchExpressions({ type: "object", class: "Object" },
-                            { type: "object", class: "Proxy" },
+                            { type: "object", class: "Window" },
                             undefined,
                             "sensational",
                             26);
@@ -147,7 +147,7 @@ function test()
     waitForWatchExpressions(function() {
       info("Performing test4");
       checkWatchExpressions(5,
-                            { type: "object", class: "Proxy" },
+                            { type: "object", class: "Window" },
                             undefined,
                             "sensational",
                             27);
@@ -163,7 +163,7 @@ function test()
     waitForWatchExpressions(function() {
       info("Performing test5");
       checkWatchExpressions(5,
-                            { type: "object", class: "Proxy" },
+                            { type: "object", class: "Window" },
                             undefined,
                             "sensational",
                             27);
@@ -179,7 +179,7 @@ function test()
     waitForWatchExpressions(function() {
       info("Performing test6");
       checkWatchExpressions(5,
-                            { type: "object", class: "Proxy" },
+                            { type: "object", class: "Window" },
                             undefined,
                             "sensational",
                             27);
@@ -195,7 +195,7 @@ function test()
     waitForWatchExpressions(function() {
       info("Performing test7");
       checkWatchExpressions(5,
-                            { type: "object", class: "Proxy" },
+                            { type: "object", class: "Window" },
                             undefined,
                             "sensational",
                             27);
@@ -211,7 +211,7 @@ function test()
     waitForWatchExpressions(function() {
       info("Performing test8");
       checkWatchExpressions(5,
-                            { type: "object", class: "Proxy" },
+                            { type: "object", class: "Window" },
                             undefined,
                             "sensational",
                             27);

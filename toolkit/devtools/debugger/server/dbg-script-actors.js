@@ -179,6 +179,7 @@ ThreadActor.prototype = {
   },
 
   disconnect: function TA_disconnect() {
+    dumpn("in ThreadActor.prototype.disconnect");
     if (this._state == "paused") {
       this.onResume();
     }
@@ -248,6 +249,7 @@ ThreadActor.prototype = {
 
   onDetach: function TA_onDetach(aRequest) {
     this.disconnect();
+    dumpn("ThreadActor.prototype.onDetach: returning 'detached' packet");
     return {
       type: "detached"
     };

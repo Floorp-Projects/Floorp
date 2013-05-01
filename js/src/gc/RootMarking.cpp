@@ -387,10 +387,6 @@ inline void
 AutoGCRooter::trace(JSTracer *trc)
 {
     switch (tag_) {
-      case JSVAL:
-        MarkValueRoot(trc, &static_cast<AutoValueRooter *>(this)->val, "JS::AutoValueRooter.val");
-        return;
-
       case PARSER:
         static_cast<frontend::Parser<frontend::FullParseHandler> *>(this)->trace(trc);
         return;
