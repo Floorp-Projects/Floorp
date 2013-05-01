@@ -502,6 +502,14 @@ nsOfflineCacheUpdateService::Schedule(nsIURI *aManifestURI,
 
     nsresult rv;
 
+    if (aWindow) {
+      // Ensure there is window.applicationCache object that is
+      // responsible for association of the new applicationCache
+      // with the corresponding document.  Just ignore the result.
+      nsCOMPtr<nsIDOMOfflineResourceList> appCacheWindowObject;
+      aWindow->GetApplicationCache(getter_AddRefs(appCacheWindowObject));
+    }
+
     rv = update->Init(aManifestURI, aDocumentURI, aDocument,
                       aCustomProfileDir, aAppID, aInBrowser);
     NS_ENSURE_SUCCESS(rv, rv);
