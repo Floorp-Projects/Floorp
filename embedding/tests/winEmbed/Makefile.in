@@ -36,7 +36,6 @@ include $(DEPTH)/config/autoconf.mk
 
 XPI_NAME	= winembed
 
-PROGRAM		= winEmbed$(BIN_SUFFIX)
 RESFILE		= winEmbed.res
 
 CPPSRCS		= \

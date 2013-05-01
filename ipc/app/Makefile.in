@@ -9,8 +9,6 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-PROGRAM = $(MOZ_CHILD_PROCESS_NAME)
-
 ifneq ($(dir $(PROGRAM)),./)
   GENERATED_DIRS = $(dir $(PROGRAM))
 endif
