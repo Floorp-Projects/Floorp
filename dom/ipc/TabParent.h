@@ -149,6 +149,7 @@ public:
     virtual bool RecvSetCursor(const uint32_t& aValue);
     virtual bool RecvSetBackgroundColor(const nscolor& aValue);
     virtual bool RecvGetDPI(float* aValue);
+    virtual bool RecvGetDefaultScale(double* aValue);
     virtual bool RecvGetWidgetNativeData(WindowsHandle* aValue);
     virtual bool RecvZoomToRect(const gfxRect& aRect);
     virtual bool RecvUpdateZoomConstraints(const bool& aAllowZoom,
@@ -293,6 +294,7 @@ protected:
     nsIntSize mDimensions;
     ScreenOrientation mOrientation;
     float mDPI;
+    double mDefaultScale;
     bool mShown;
     bool mUpdatedDimensions;
 
@@ -300,7 +302,7 @@ private:
     already_AddRefed<nsFrameLoader> GetFrameLoader() const;
     already_AddRefed<nsIWidget> GetWidget() const;
     layout::RenderFrameParent* GetRenderFrame();
-    void TryCacheDPI();
+    void TryCacheDPIAndScale();
 
     // When true, we create a pan/zoom controller for our frame and
     // notify it of input events targeting us.
