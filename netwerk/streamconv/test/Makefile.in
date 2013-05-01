@@ -11,6 +11,8 @@ FAIL_ON_WARNINGS := 1
 
 include $(DEPTH)/config/autoconf.mk
 
+PROGRAM		= TestStreamConv$(BIN_SUFFIX)
+
 CPPSRCS		= \
 		Converters.cpp \
 		TestStreamConv.cpp \
