@@ -5,8 +5,6 @@
 /*
  * ciferfam.h - cipher familie IDs used for configuring ciphers for export
  *              control
- *
- * $Id$
  */
 
 #ifndef _CIFERFAM_H_

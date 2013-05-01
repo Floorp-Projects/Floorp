@@ -8,8 +8,6 @@
  * This file abstracts out libc functionality that libsec depends on
  * 
  * NOTE - These are not public interfaces
- *
- * $Id$
  */
 
 #include "seccomon.h"
@@ -396,18 +394,35 @@ PORT_ArenaMark(PLArenaPool *arena)
     return result;
 }
 
+/*
+ * This function accesses the internals of PLArena, which is why it needs
+ * to use the NSPR internal macro PL_MAKE_MEM_UNDEFINED before the memset
+ * calls.
+ *
+ * We should move this function to NSPR as PL_ClearArenaAfterMark or add
+ * a PL_ARENA_CLEAR_AND_RELEASE macro.
+ *
+ * TODO: remove the #ifdef PL_MAKE_MEM_UNDEFINED tests when NSPR 4.10+ is
+ * widely available.
+ */
 static void
 port_ArenaZeroAfterMark(PLArenaPool *arena, void *mark)
 {
     PLArena *a = arena->current;
     if (a->base <= (PRUword)mark && (PRUword)mark <= a->avail) {
 	/* fast path: mark falls in the current arena */
+#ifdef PL_MAKE_MEM_UNDEFINED
+	PL_MAKE_MEM_UNDEFINED(mark, a->avail - (PRUword)mark);
+#endif
 	memset(mark, 0, a->avail - (PRUword)mark);
     } else {
 	/* slow path: need to find the arena that mark falls in */
 	for (a = arena->first.next; a; a = a->next) {
 	    PR_ASSERT(a->base <= a->avail && a->avail <= a->limit);
 	    if (a->base <= (PRUword)mark && (PRUword)mark <= a->avail) {
+#ifdef PL_MAKE_MEM_UNDEFINED
+		PL_MAKE_MEM_UNDEFINED(mark, a->avail - (PRUword)mark);
+#endif
 		memset(mark, 0, a->avail - (PRUword)mark);
 		a = a->next;
 		break;
@@ -415,6 +430,9 @@ port_ArenaZeroAfterMark(PLArenaPool *arena, void *mark)
 	}
 	for (; a; a = a->next) {
 	    PR_ASSERT(a->base <= a->avail && a->avail <= a->limit);
+#ifdef PL_MAKE_MEM_UNDEFINED
+	    PL_MAKE_MEM_UNDEFINED((void *)a->base, a->avail - a->base);
+#endif
 	    memset((void *)a->base, 0, a->avail - a->base);
 	}
     }

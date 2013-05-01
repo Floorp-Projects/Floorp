@@ -4,8 +4,6 @@
 
 /*
  * PKCS7 encoding.
- *
- * $Id$
  */
 
 #include "p7local.h"

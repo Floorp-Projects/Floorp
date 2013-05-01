@@ -5,7 +5,6 @@
 /*
  * DTLS Protocol
  */
-/* $Id$ */
 
 #include "ssl.h"
 #include "sslimpl.h"

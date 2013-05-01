@@ -7,7 +7,4 @@
  *
  * NOTE - The interfaces formerly in this header were private and are now all
  *        obsolete.
- *
- * $Id$
  */
-

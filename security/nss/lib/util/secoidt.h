@@ -9,8 +9,6 @@
 
 /*
  * secoidt.h - public data structures for ASN.1 OID functions
- *
- * $Id$
  */
 
 #include "secitem.h"

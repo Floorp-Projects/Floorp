@@ -9,8 +9,6 @@
  * of smime code, first try to add a CMS interface which will do it for
  * you.  If that has a problem, then just move out what you need, changing
  * its name as appropriate!
- *
- * $Id$
  */
 
 #ifndef _CMSLOCAL_H_

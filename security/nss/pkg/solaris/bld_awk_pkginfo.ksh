@@ -7,8 +7,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-#ident	"$Id$"
-#
 # Simple script which builds the awk_pkginfo awk script.  This awk script
 # is used to convert the pkginfo.tmpl files into pkginfo files
 # for the build.
