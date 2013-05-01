@@ -443,6 +443,10 @@ function run_test_7() {
   Services.prefs.setCharPref("lightweightThemes.usedThemes", JSON.stringify(themes));
 
   testserver.registerPathHandler("/data/lwtheme.js", function(request, response) {
+    // Server will specify an expiry in one year.
+    let expiry = new Date();
+    expiry.setFullYear(expiry.getFullYear() + 1);
+    response.setHeader("Expires", expiry.toUTCString(), false);
     response.write(JSON.stringify({
       id: "1",
       version: "2",
@@ -501,6 +505,78 @@ function check_test_7() {
     do_check_true((Date.now() - p1.updateDate.getTime()) < 5000);
 
     gInstallDate = p1.installDate.getTime();
+
+    run_test_7_cache();
+  });
+}
+
+// Test that background update checks for lightweight themes do not use the cache
+// The update body from test 7 shouldn't be used since the cache should be bypassed.
+function run_test_7_cache() {
+  // XXX The lightweight theme manager strips non-https updateURLs so hack it
+  // back in.
+  let themes = JSON.parse(Services.prefs.getCharPref("lightweightThemes.usedThemes"));
+  do_check_eq(themes.length, 1);
+  themes[0].updateURL = "http://localhost:4444/data/lwtheme.js";
+  Services.prefs.setCharPref("lightweightThemes.usedThemes", JSON.stringify(themes));
+
+  testserver.registerPathHandler("/data/lwtheme.js", function(request, response) {
+    response.write(JSON.stringify({
+      id: "1",
+      version: "3",
+      name: "Updated Theme v.3",
+      description: "A test theme v.3",
+      author: "John Smith",
+      homepageURL: "http://localhost:4444/data/index3.html?v=3",
+      headerURL: "http://localhost:4444/data/header.png?v=3",
+      footerURL: "http://localhost:4444/data/footer.png?v=3",
+      previewURL: "http://localhost:4444/data/preview.png?v=3",
+      iconURL: "http://localhost:4444/data/icon2.png?v=3",
+      updateURL: "https://localhost:4444/data/lwtheme.js?v=3"
+    }));
+  });
+
+  AddonManager.getAddonByID("1@personas.mozilla.org", function(p1) {
+    do_check_neq(p1, null);
+    do_check_eq(p1.version, "2");
+    do_check_eq(p1.name, "Updated Theme");
+    do_check_true(p1.isActive);
+    do_check_eq(p1.installDate.getTime(), gInstallDate);
+    do_check_true(p1.installDate.getTime() < p1.updateDate.getTime());
+
+    prepare_test({
+      "1@personas.mozilla.org": [
+        ["onInstalling", false],
+        "onInstalled"
+      ]
+    }, [
+      "onExternalInstall"
+    ], check_test_7_cache);
+
+    // Fake a timer event to cause a background update and wait for the magic to
+    // happen
+    gInternalManager.notify(null);
+  });
+}
+
+function check_test_7_cache() {
+  AddonManager.getAddonByID("1@personas.mozilla.org", function(p1) {
+    let currentTheme = LightweightThemeManager.currentTheme;
+    do_check_neq(p1, null);
+    do_check_eq(p1.version, "3");
+    do_check_eq(p1.name, "Updated Theme v.3");
+    do_check_eq(p1.description, "A test theme v.3");
+    do_print(JSON.stringify(p1));
+    do_check_eq(p1.creator.name, "John Smith");
+    do_check_eq(p1.homepageURL, "http://localhost:4444/data/index3.html?v=3");
+    do_check_eq(p1.screenshots[0].url, "http://localhost:4444/data/preview.png?v=3");
+    do_check_eq(p1.iconURL, "http://localhost:4444/data/icon2.png?v=3");
+    do_check_eq(currentTheme.headerURL, "http://localhost:4444/data/header.png?v=3");
+    do_check_eq(currentTheme.footerURL, "http://localhost:4444/data/footer.png?v=3");
+    do_check_eq(currentTheme.updateURL, "https://localhost:4444/data/lwtheme.js?v=3");
+
+    do_check_eq(p1.installDate.getTime(), gInstallDate);
+    do_check_true(p1.installDate.getTime() < p1.updateDate.getTime());
 
     run_test_8();
   });
