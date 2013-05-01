@@ -24,11 +24,6 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
-  virtual bool SupportsMediaStreams() const MOZ_OVERRIDE
-  {
-    return true;
-  }
-
   void GetFloatFrequencyData(Float32Array& aArray);
   void GetByteFrequencyData(Uint8Array& aArray);
   void GetByteTimeDomainData(Uint8Array& aArray);
