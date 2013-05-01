@@ -6,5 +6,3 @@
 
 MODULE = 'ucgendat'
 
-PROGRAM = 'ucgendat'
-
