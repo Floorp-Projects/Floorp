@@ -16,7 +16,6 @@ DIST_FILES = recommended-addons.json
 
 ifndef LIBXUL_SDK
 ifneq (Android,$(OS_TARGET))
-PROGRAM=$(MOZ_APP_NAME)$(BIN_SUFFIX)
 
 LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/xre
 LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/base
