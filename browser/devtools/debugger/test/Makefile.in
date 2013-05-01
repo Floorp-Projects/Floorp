@@ -61,6 +61,7 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_location-changes.js \
 	browser_dbg_location-changes-new.js \
 	browser_dbg_location-changes-blank.js \
+	browser_dbg_location-changes-bp.js \
 	browser_dbg_sources-cache.js \
 	browser_dbg_scripts-switching.js \
 	browser_dbg_scripts-sorting.js \
@@ -133,6 +134,8 @@ MOCHITEST_BROWSER_PAGES = \
 	binary_search.coffee \
 	binary_search.js \
 	binary_search.map \
+	test-location-changes-bp.js \
+	test-location-changes-bp.html \
 	$(NULL)
 
 MOCHITEST_BROWSER_FILES_PARTS = MOCHITEST_BROWSER_TESTS MOCHITEST_BROWSER_PAGES
