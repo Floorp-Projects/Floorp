@@ -590,20 +590,6 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
             }
         }
 
-        // Restore opacity of content elements in the toolbar immediatelly
-        // so that the response is immediate from user interaction in the
-        // awesome screen.
-        proxy = AnimatorProxy.create(mFavicon);
-        proxy.setAlpha(1);
-        proxy = AnimatorProxy.create(mSiteSecurity);
-        proxy.setAlpha(1);
-        proxy = AnimatorProxy.create(mTitle);
-        proxy.setAlpha(1);
-        proxy = AnimatorProxy.create(mForward);
-        proxy.setAlpha(mForward.isEnabled() ? 1 : 0);
-        proxy = AnimatorProxy.create(mBack);
-        proxy.setAlpha(1);
-
         final PropertyAnimator contentAnimator = new PropertyAnimator(250);
         contentAnimator.setUseHardwareLayer(false);
 
@@ -686,25 +672,7 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
         // Keep the entry highlighted during the animation
         mLayout.setSelected(true);
 
-        if (mActionItemBar.getVisibility() == View.VISIBLE) {
-            contentAnimator.attach(mFavicon,
-                                   PropertyAnimator.Property.ALPHA,
-                                   0);
-            contentAnimator.attach(mSiteSecurity,
-                                   PropertyAnimator.Property.ALPHA,
-                                   0);
-            contentAnimator.attach(mTitle,
-                                   PropertyAnimator.Property.ALPHA,
-                                   0);
-        }
-
         // Fade out all controls inside the toolbar
-        contentAnimator.attach(mForward,
-                               PropertyAnimator.Property.ALPHA,
-                               0);
-        contentAnimator.attach(mBack,
-                               PropertyAnimator.Property.ALPHA,
-                               0);
         contentAnimator.attach(mReader,
                                PropertyAnimator.Property.ALPHA,
                                0);
