@@ -11,7 +11,6 @@ VPATH		= @srcdir@ @srcdir@/tests
 
 include $(DEPTH)/config/autoconf.mk
 
-PROGRAM = gdb-tests$(BIN_SUFFIX)
 CPPSRCS =					\
   gdb-tests.cpp					\
   test-jsid.cpp					\

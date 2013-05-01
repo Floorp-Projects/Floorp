@@ -167,6 +167,14 @@ VARIABLES = {
         EXPORTS.mozilla.dom += ['bar.h']
         """),
 
+    'PROGRAM' : (unicode, "",
+        """Compiled executable name.
+
+        If the configuration token 'BIN_SUFFIX' is set, its value will be
+        automatically appended to PROGRAM. If PROGRAM already ends with
+        BIN_SUFFIX, PROGRAM will remain unchanged.
+        """),
+
     # IDL Generation.
     'XPIDL_SOURCES': (list, [],
         """XPCOM Interface Definition Files (xpidl).

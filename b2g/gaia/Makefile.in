@@ -11,8 +11,6 @@ include $(DEPTH)/config/autoconf.mk
 
 GAIA_PATH := gaia/profile
 
-PROGRAM = $(MOZ_APP_NAME)$(BIN_SUFFIX)
-
 ifeq ($(OS_ARCH),WINNT)
 CPPSRCS = run-b2g.cpp
 DEFINES += \
