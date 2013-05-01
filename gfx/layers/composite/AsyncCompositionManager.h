@@ -129,8 +129,8 @@ private:
                         nsIntPoint& aScrollOffset,
                         float& aScaleX, float& aScaleY,
                         gfx::Margin& aFixedLayerMargins,
-                        float& aOffsetX, float& aOffsetY);
-  void SyncFrameMetrics(const gfx::Point& aOffset,
+                        gfx::Point& aOffset);
+  void SyncFrameMetrics(const gfx::Point& aScrollOffset,
                         float aZoom,
                         const gfx::Rect& aCssPageRect,
                         bool aLayersUpdated,
@@ -138,7 +138,7 @@ private:
                         float aDisplayResolution,
                         bool aIsFirstPaint,
                         gfx::Margin& aFixedLayerMargins,
-                        float& aOffsetX, float& aOffsetY);
+                        gfx::Point& aOffset);
 
   /**
    * Recursively applies the given translation to all top-level fixed position
