@@ -18,7 +18,9 @@
 #include "vm/Stack-inl.h"
 #include "vm/ArgumentsObject-inl.h"
 
+#if  defined(JS_ION)
 #include "ion/IonFrames.h"
+#endif
 
 using namespace js;
 using namespace js::gc;
