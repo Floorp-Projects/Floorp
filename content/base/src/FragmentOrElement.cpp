@@ -94,7 +94,7 @@
 #include "nsView.h"
 #include "nsViewManager.h"
 #include "nsIScrollableFrame.h"
-#include "nsXBLInsertionPoint.h"
+#include "ChildIterator.h"
 #include "mozilla/css/StyleRule.h" /* For nsCSSSelectorList */
 #include "nsRuleProcessorData.h"
 #include "nsAsyncDOMEvent.h"
@@ -149,16 +149,15 @@ nsIContent::FindFirstNonChromeOnlyAccessContent() const
 nsIContent*
 nsIContent::GetFlattenedTreeParent() const
 {
-  nsIContent *parent = GetParent();
-  if (parent && parent->HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
-    nsIDocument *doc = parent->OwnerDoc();
-    nsIContent* insertionElement =
-      doc->BindingManager()->GetNestedInsertionPoint(parent, this);
-    if (insertionElement) {
-      parent = insertionElement;
+  if (HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
+    nsIContent* parent = OwnerDoc()->BindingManager()->
+      GetInsertionParent(const_cast<nsIContent*>(this));
+    if (parent) {
+      return parent;
     }
   }
-  return parent;
+
+  return GetParent();
 }
 
 nsIContent::IMEState
@@ -653,24 +652,14 @@ FragmentOrElement::GetChildren(uint32_t aFilter)
   // explict content altered by insertion point if we were requested for XBL
   // anonymous content, otherwise append explicit content with respect to
   // insertion point if any.
-  nsINodeList *childList = nullptr;
-
-  nsIDocument* document = OwnerDoc();
   if (!(aFilter & eAllButXBL)) {
-    childList = document->BindingManager()->GetXBLChildNodesFor(this);
-    if (!childList) {
-      childList = ChildNodes();
+    FlattenedChildIterator iter(this);
+    for (nsIContent* child = iter.GetNextChild(); child; child = iter.GetNextChild()) {
+      list->AppendElement(child);
     }
-
   } else {
-    childList = document->BindingManager()->GetContentListFor(this);
-  }
-
-  if (childList) {
-    uint32_t length = 0;
-    childList->GetLength(&length);
-    for (uint32_t idx = 0; idx < length; idx++) {
-      nsIContent* child = childList->Item(idx);
+    ExplicitChildIterator iter(this);
+    for (nsIContent* child = iter.GetNextChild(); child; child = iter.GetNextChild()) {
       list->AppendElement(child);
     }
   }

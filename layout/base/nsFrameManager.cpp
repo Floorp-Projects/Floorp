@@ -60,6 +60,7 @@
 #include "nsTransitionManager.h"
 #include "RestyleTracker.h"
 #include "nsAbsoluteContainingBlock.h"
+#include "ChildIterator.h"
 
 #include "nsFrameManager.h"
 #include "nsRuleProcessorData.h"
@@ -398,19 +399,12 @@ nsFrameManager::ClearAllUndisplayedContentIn(nsIContent* aParentContent)
 
   // Need to look at aParentContent's content list due to XBL insertions.
   // Nodes in aParentContent's content list do not have aParentContent as a
-  // parent, but are treated as children of aParentContent. We get access to
-  // the content list via GetXBLChildNodesFor and just ignore any nodes we
-  // don't care about.
-  nsINodeList* list =
-    aParentContent->OwnerDoc()->BindingManager()->GetXBLChildNodesFor(aParentContent);
-  if (list) {
-    uint32_t length;
-    list->GetLength(&length);
-    for (uint32_t i = 0; i < length; ++i) {
-      nsIContent* child = list->Item(i);
-      if (child->GetParent() != aParentContent) {
-        ClearUndisplayedContentIn(child, child->GetParent());
-      }
+  // parent, but are treated as children of aParentContent. We iterate over
+  // the flattened content list and just ignore any nodes we don't care about.
+  FlattenedChildIterator iter(aParentContent);
+  for (nsIContent* child = iter.GetNextChild(); child; child = iter.GetNextChild()) {
+    if (child->GetParent() != aParentContent) {
+      ClearUndisplayedContentIn(child, child->GetParent());
     }
   }
 }

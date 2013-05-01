@@ -16,6 +16,7 @@ FAIL_ON_WARNINGS = 1
 LOCAL_INCLUDES	= \
 		-I$(srcdir) \
 		-I$(topsrcdir)/content/events/src \
+		-I$(topsrcdir)/content/base/src \
 		-I$(srcdir)/../base/src \
 		-I$(srcdir)/../../base \
 		-I$(srcdir)/../../generic \
