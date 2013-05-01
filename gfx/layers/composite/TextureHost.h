@@ -25,6 +25,7 @@ class Compositor;
 class SurfaceDescriptor;
 class ISurfaceAllocator;
 class TextureSourceOGL;
+class TextureSourceBasic;
 class TextureParent;
 
 /**
@@ -76,6 +77,9 @@ public:
    * Cast to an TextureSource for the OpenGL backend.
    */
   virtual TextureSourceOGL* AsSourceOGL() { return nullptr; }
+
+  virtual TextureSourceBasic* AsSourceBasic() { return nullptr; }
+
   /**
    * In some rare cases we currently need to consider a group of textures as one
    * TextureSource, that can be split in sub-TextureSources.

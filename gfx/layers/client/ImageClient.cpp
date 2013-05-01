@@ -28,17 +28,17 @@ ImageClient::CreateImageClient(CompositableType aCompositableHostType,
   RefPtr<ImageClient> result = nullptr;
   switch (aCompositableHostType) {
   case BUFFER_IMAGE_SINGLE:
-    if (aForwarder->GetCompositorBackendType() == LAYERS_OPENGL) {
+    if (ImageClientSingle::SupportsBackend(aForwarder->GetCompositorBackendType())) {
       result = new ImageClientSingle(aForwarder, aFlags, BUFFER_IMAGE_SINGLE);
     }
     break;
   case BUFFER_IMAGE_BUFFERED:
-    if (aForwarder->GetCompositorBackendType() == LAYERS_OPENGL) {
+    if (ImageClientSingle::SupportsBackend(aForwarder->GetCompositorBackendType())) {
       result = new ImageClientSingle(aForwarder, aFlags, BUFFER_IMAGE_BUFFERED);
     }
     break;
   case BUFFER_BRIDGE:
-    if (aForwarder->GetCompositorBackendType() == LAYERS_OPENGL) {
+    if (ImageClientBridge::SupportsBackend(aForwarder->GetCompositorBackendType())) {
       result = new ImageClientBridge(aForwarder, aFlags);
     }
     break;
@@ -82,15 +82,16 @@ ImageClientSingle::ImageClientSingle(CompositableForwarder* aFwd,
   mTextureInfo.mTextureFlags = aFlags;
 }
 
-void
+bool
 ImageClientSingle::EnsureTextureClient(TextureClientType aType)
 {
   // We should not call this method if using ImageBridge or tiled texture
   // clients since SupportsType always fails
   if (mTextureClient && mTextureClient->SupportsType(aType)) {
-    return;
+    return true;
   }
   mTextureClient = CreateTextureClient(aType);
+  return !!mTextureClient;
 }
 
 bool
@@ -108,8 +109,8 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer,
     return true;
   }
 
-  if (image->GetFormat() == PLANAR_YCBCR) {
-    EnsureTextureClient(TEXTURE_YCBCR);
+  if (image->GetFormat() == PLANAR_YCBCR &&
+      EnsureTextureClient(TEXTURE_YCBCR)) {
     PlanarYCbCrImage* ycbcr = static_cast<PlanarYCbCrImage*>(image);
 
     if (ycbcr->AsSharedPlanarYCbCrImage()) {
@@ -133,9 +134,8 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer,
         return false;
       }
     }
-  } else if (image->GetFormat() == SHARED_TEXTURE) {
-    EnsureTextureClient(TEXTURE_SHARED_GL_EXTERNAL);
-  
+  } else if (image->GetFormat() == SHARED_TEXTURE &&
+             EnsureTextureClient(TEXTURE_SHARED_GL_EXTERNAL)) {
     SharedTextureImage* sharedImage = static_cast<SharedTextureImage*>(image);
     const SharedTextureImage::Data *data = sharedImage->GetData();
 
@@ -144,9 +144,8 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer,
                                     data->mSize,
                                     data->mInverted);
     mTextureClient->SetDescriptor(SurfaceDescriptor(texture));
-  } else if (image->GetFormat() == SHARED_RGB) {
-    EnsureTextureClient(TEXTURE_SHMEM);
-
+  } else if (image->GetFormat() == SHARED_RGB &&
+             EnsureTextureClient(TEXTURE_SHMEM)) {
     nsIntRect rect(0, 0,
                    image->GetSize().width,
                    image->GetSize().height);
@@ -160,9 +159,8 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer,
     }
     mTextureClient->SetDescriptor(desc);
 #ifdef MOZ_WIDGET_GONK
-  } else if (image->GetFormat() == GONK_IO_SURFACE) {
-    EnsureTextureClient(TEXTURE_SHARED_GL_EXTERNAL);
-
+  } else if (image->GetFormat() == GONK_IO_SURFACE &&
+             EnsureTextureClient(TEXTURE_SHARED_GL_EXTERNAL)) {
     nsIntRect rect(0, 0,
                    image->GetSize().width,
                    image->GetSize().height);
@@ -196,6 +194,7 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer,
     MOZ_ASSERT(surface);
 
     EnsureTextureClient(TEXTURE_SHMEM);
+    MOZ_ASSERT(mTextureClient, "Failed to create texture client");
 
     nsRefPtr<gfxPattern> pattern = new gfxPattern(surface);
     pattern->SetFilter(mFilter);
@@ -223,6 +222,26 @@ void
 ImageClientSingle::Updated()
 {
   mForwarder->UpdateTexture(this, 1, mTextureClient->GetDescriptor());
+}
+
+bool
+ImageClientSingle::SupportsBackend(LayersBackend aBackend)
+{
+  if (aBackend == LAYERS_OPENGL ||
+      aBackend == LAYERS_BASIC) {
+    return true;
+  }
+  return false;
+}
+
+bool
+ImageClientBridge::SupportsBackend(LayersBackend aBackend)
+{
+  if (aBackend == LAYERS_OPENGL ||
+      aBackend == LAYERS_BASIC) {
+    return true;
+  }
+  return false;
 }
 
 ImageClientBridge::ImageClientBridge(CompositableForwarder* aFwd,
