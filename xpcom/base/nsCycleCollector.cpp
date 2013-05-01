@@ -2943,12 +2943,6 @@ NS_CycleCollectorSuspect2(void *n, nsCycleCollectionParticipant *cp)
     return collector->Suspect(n, cp);
 }
 
-bool
-NS_CycleCollectorForget2(nsPurpleBufferEntry *e)
-{
-    return true;
-}
-
 uint32_t
 nsCycleCollector_suspectedCount()
 {
