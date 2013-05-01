@@ -50,6 +50,8 @@
 
 #include "updatelogging.h"
 
+#include "mozilla/Compiler.h"
+
 // Amount of the progress bar to use in each of the 3 update stages,
 // should total 100.0.
 #define PROGRESS_PREPARE_SIZE 20.0f
@@ -119,12 +121,20 @@ static bool sUseHardLinks = true;
 
 // This variable lives in libbz2.  It's declared in bzlib_private.h, so we just
 // declare it here to avoid including that entire header file.
-#if (__GNUC__ >= 4) || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3)
+#define BZ2_CRC32TABLE_UNDECLARED
+
+#if MOZ_IS_GCC
+#if MOZ_GCC_VERSION_AT_LEAST(3, 3, 0)
 extern "C"  __attribute__((visibility("default"))) unsigned int BZ2_crc32Table[256];
+#undef BZ2_CRC32TABLE_UNDECLARED
+#endif
 #elif defined(__SUNPRO_C) || defined(__SUNPRO_CC)
 extern "C" __global unsigned int BZ2_crc32Table[256];
-#else
+#undef BZ2_CRC32TABLE_UNDECLARED
+#endif
+#if defined(BZ2_CRC32TABLE_UNDECLARED)
 extern "C" unsigned int BZ2_crc32Table[256];
+#undef BZ2_CRC32TABLE_UNDECLARED
 #endif
 
 static unsigned int
