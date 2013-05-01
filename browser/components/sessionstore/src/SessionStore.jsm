@@ -459,13 +459,10 @@ let SessionStoreInternal = {
       catch (ex) { debug("The session file is invalid: " + ex); }
     }
 
-    if (this._resume_from_crash) {
-      // Launch background copy of the session file. Note that we do
-      // not have race conditions here as _SessionFile guarantees
-      // that any I/O operation is completed before proceeding to
-      // the next I/O operation.
-      _SessionFile.createBackupCopy();
-    }
+    // A Lazy getter for the sessionstore.js backup promise.
+    XPCOMUtils.defineLazyGetter(this, "_backupSessionFileOnce", function () {
+      return _SessionFile.createBackupCopy();
+    });
 
     // at this point, we've as good as resumed the session, so we can
     // clear the resume_session_once flag, if it's set
@@ -3758,13 +3755,33 @@ let SessionStoreInternal = {
       return;
     }
 
-    let self = this;
-    _SessionFile.write(data).then(
-      function onSuccess() {
-        self._lastSaveTime = Date.now();
-        Services.obs.notifyObservers(null, "sessionstore-state-write-complete", "");
-      }
-    );
+    let promise;
+    // If "sessionstore.resume_from_crash" is true, attempt to backup the
+    // session file first, before writing to it.
+    if (this._resume_from_crash) {
+      // Note that we do not have race conditions here as _SessionFile
+      // guarantees that any I/O operation is completed before proceeding to
+      // the next I/O operation.
+      // Note backup happens only once, on initial save.
+      promise = this._backupSessionFileOnce;
+    } else {
+      promise = Promise.resolve();
+    }
+
+    // Attempt to write to the session file (potentially, depending on
+    // "sessionstore.resume_from_crash" preference, after successful backup).
+    promise = promise.then(function onSuccess() {
+      // Write (atomically) to a session file, using a tmp file.
+      return _SessionFile.write(data);
+    });
+
+    // Once the session file is successfully updated, save the time stamp of the
+    // last save and notify the observers.
+    promise = promise.then(() => {
+      this._lastSaveTime = Date.now();
+      Services.obs.notifyObservers(null, "sessionstore-state-write-complete",
+        "");
+    });
   },
 
   /* ........ Auxiliary Functions .............. */

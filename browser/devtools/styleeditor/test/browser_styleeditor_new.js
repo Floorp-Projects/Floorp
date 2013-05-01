@@ -25,6 +25,8 @@ let gAddedCount = 0;  // to add new stylesheet after the 2 initial stylesheets
 let gNewEditor;       // to make sure only one new stylesheet got created
 let gOriginalHref;
 
+let checksCompleted = 0;
+
 function testEditorAdded(aEvent, aEditor)
 {
   gAddedCount++;
@@ -46,18 +48,29 @@ function testEditorAdded(aEvent, aEditor)
   is(gUI.editors.length, 3,
      "creating a new stylesheet added a new StyleEditor instance");
 
-  aEditor.getSourceEditor().then(testEditor);
-
   aEditor.styleSheet.once("style-applied", function() {
     // when changes have been completely applied to live stylesheet after transisiton
-    let summary = aEditor.summary;
-    let ruleCount = summary.querySelector(".stylesheet-rule-count").textContent;
-    is(parseInt(ruleCount), 1,
-       "new editor shows 1 rule after modification");
-
     ok(!content.document.documentElement.classList.contains(TRANSITION_CLASS),
        "StyleEditor's transition class has been removed from content");
+
+    if (++checksCompleted == 3) {
+      cleanup();
+    }
   });
+
+  aEditor.styleSheet.on("property-change", function(event, property) {
+    if (property == "ruleCount") {
+      let ruleCount = aEditor.summary.querySelector(".stylesheet-rule-count").textContent;
+      is(parseInt(ruleCount), 1,
+         "new editor shows 1 rule after modification");
+
+      if (++checksCompleted == 3) {
+        cleanup();
+      }
+    }
+  });
+
+  aEditor.getSourceEditor().then(testEditor);
 }
 
 function testEditor(aEditor) {
@@ -116,9 +129,15 @@ function onTransitionEnd() {
   if (gNewEditor) {
     is(gNewEditor.styleSheet.href, gOriginalHref,
        "style sheet href did not change");
-
-    gNewEditor = null;
-    gUI = null;
-    finish();
   }
+
+  if (++checksCompleted == 3) {
+    cleanup();
+  }
+}
+
+function cleanup() {
+  gNewEditor = null;
+  gUI = null;
+  finish();
 }
