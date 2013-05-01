@@ -948,116 +948,108 @@ var BrowserApp = {
   },
 
   getPreferences: function getPreferences(aPrefsRequest, aListen) {
-    try {
-      let prefs = [];
+    let prefs = [];
 
-      for each (let prefName in aPrefsRequest.preferences) {
-        let pref = {
-          name: prefName,
-          type: "",
-          value: null
-        };
+    for each (let prefName in aPrefsRequest.preferences) {
+      let pref = {
+        name: prefName,
+        type: "",
+        value: null
+      };
 
-        if (aListen) {
-          if (this._prefObservers[prefName])
-            this._prefObservers[prefName].push(aPrefsRequest.requestId);
-          else
-            this._prefObservers[prefName] = [ aPrefsRequest.requestId ];
-          Services.prefs.addObserver(prefName, this, false);
-        }
-
-        switch (prefName) {
-          // The plugin pref is actually two separate prefs, so
-          // we need to handle it differently
-          case "plugin.enable":
-            pref.type = "string";// Use a string type for java's ListPreference
-            pref.value = PluginHelper.getPluginPreference();
-            prefs.push(pref);
-            continue;
-          // Master password is not a "real" pref
-          case "privacy.masterpassword.enabled":
-            pref.type = "bool";
-            pref.value = MasterPassword.enabled;
-            prefs.push(pref);
-            continue;
-          /*
-           * Handle Do-not-track preference
-           *
-           * "privacy.donottrackheader" is not "real" pref name.
-           * This pref name is used in the setting menu, and
-           * this is passed when initializing the setting menu.
-           */
-          case "privacy.donottrackheader": {
-            pref.type = "string";
-
-            let enableDNT = Services.prefs.getBoolPref("privacy.donottrackheader.enabled");
-            if (!enableDNT) {
-              pref.value = kDoNotTrackPrefState.NO_PREF;
-            } else {
-              let dntState = Services.prefs.getIntPref("privacy.donottrackheader.value");
-              pref.value = (dntState === 0) ? kDoNotTrackPrefState.ALLOW_TRACKING :
-                                              kDoNotTrackPrefState.DISALLOW_TRACKING;
-            }
-
-            prefs.push(pref);
-            continue;
-          }
-        }
-
-        try {
-          switch (Services.prefs.getPrefType(prefName)) {
-            case Ci.nsIPrefBranch.PREF_BOOL:
-              pref.type = "bool";
-              pref.value = Services.prefs.getBoolPref(prefName);
-              break;
-            case Ci.nsIPrefBranch.PREF_INT:
-              pref.type = "int";
-              pref.value = Services.prefs.getIntPref(prefName);
-              break;
-            case Ci.nsIPrefBranch.PREF_STRING:
-            default:
-              pref.type = "string";
-              try {
-                // Try in case it's a localized string (will throw an exception if not)
-                pref.value = Services.prefs.getComplexValue(prefName, Ci.nsIPrefLocalizedString).data;
-              } catch (e) {
-                pref.value = Services.prefs.getCharPref(prefName);
-              }
-              break;
-          }
-        } catch (e) {
-          dump("Error reading pref [" + prefName + "]: " + e);
-          // preference does not exist; do not send it
-          continue;
-        }
-
-        // some preferences use integers or strings instead of booleans for
-        // indicating enabled/disabled. since the java ui uses the type to
-        // determine which ui elements to show, we need to normalize these
-        // preferences to be actual booleans.
-        switch (prefName) {
-          case "network.cookie.cookieBehavior":
-            pref.type = "string";
-            pref.value = pref.value.toString();
-            break;
-          case "font.size.inflation.minTwips":
-            pref.type = "string";
-            pref.value = pref.value.toString();
-            break;
-        }
-
-        prefs.push(pref);
+      if (aListen) {
+        if (this._prefObservers[prefName])
+          this._prefObservers[prefName].push(aPrefsRequest.requestId);
+        else
+          this._prefObservers[prefName] = [ aPrefsRequest.requestId ];
+        Services.prefs.addObserver(prefName, this, false);
       }
 
-      sendMessageToJava({
-        type: "Preferences:Data",
-        requestId: aPrefsRequest.requestId,    // opaque request identifier, can be any string/int/whatever
-        preferences: prefs
-      });
+      // These pref names are not "real" pref names.
+      // They are used in the setting menu,
+      // and these are passed when initializing the setting menu.
+      switch (prefName) {
+        // The plugin pref is actually two separate prefs, so
+        // we need to handle it differently
+        case "plugin.enable":
+          pref.type = "string";// Use a string type for java's ListPreference
+          pref.value = PluginHelper.getPluginPreference();
+          prefs.push(pref);
+          continue;
+        // Handle master password
+        case "privacy.masterpassword.enabled":
+          pref.type = "bool";
+          pref.value = MasterPassword.enabled;
+          prefs.push(pref);
+          continue;
+        // Handle do-not-track preference
+        case "privacy.donottrackheader": {
+          pref.type = "string";
 
-    } catch (e) {
-      dump("Unhandled exception getting prefs: " + e);
+          let enableDNT = Services.prefs.getBoolPref("privacy.donottrackheader.enabled");
+          if (!enableDNT) {
+            pref.value = kDoNotTrackPrefState.NO_PREF;
+          } else {
+            let dntState = Services.prefs.getIntPref("privacy.donottrackheader.value");
+            pref.value = (dntState === 0) ? kDoNotTrackPrefState.ALLOW_TRACKING :
+                                            kDoNotTrackPrefState.DISALLOW_TRACKING;
+          }
+
+          prefs.push(pref);
+          continue;
+        }
+      }
+
+      try {
+        switch (Services.prefs.getPrefType(prefName)) {
+          case Ci.nsIPrefBranch.PREF_BOOL:
+            pref.type = "bool";
+            pref.value = Services.prefs.getBoolPref(prefName);
+            break;
+          case Ci.nsIPrefBranch.PREF_INT:
+            pref.type = "int";
+            pref.value = Services.prefs.getIntPref(prefName);
+            break;
+          case Ci.nsIPrefBranch.PREF_STRING:
+          default:
+            pref.type = "string";
+            try {
+              // Try in case it's a localized string (will throw an exception if not)
+              pref.value = Services.prefs.getComplexValue(prefName, Ci.nsIPrefLocalizedString).data;
+            } catch (e) {
+              pref.value = Services.prefs.getCharPref(prefName);
+            }
+            break;
+        }
+      } catch (e) {
+        dump("Error reading pref [" + prefName + "]: " + e);
+        // preference does not exist; do not send it
+        continue;
+      }
+
+      // Some preferences use integers or strings instead of booleans for
+      // indicating enabled/disabled. Since the Java UI uses the type to
+      // determine which ui elements to show, we need to normalize these
+      // preferences to be actual booleans.
+      switch (prefName) {
+        case "network.cookie.cookieBehavior":
+          pref.type = "string";
+          pref.value = pref.value.toString();
+          break;
+        case "font.size.inflation.minTwips":
+          pref.type = "string";
+          pref.value = pref.value.toString();
+          break;
+      }
+
+      prefs.push(pref);
     }
+
+    sendMessageToJava({
+      type: "Preferences:Data",
+      requestId: aPrefsRequest.requestId,    // opaque request identifier, can be any string/int/whatever
+      preferences: prefs
+    });
   },
 
   removePreferenceObservers: function removePreferenceObservers(aRequestId) {
