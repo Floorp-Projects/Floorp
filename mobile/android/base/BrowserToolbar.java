@@ -1063,7 +1063,8 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
         if (mForward.getVisibility() != View.VISIBLE)
             return;
 
-        mForwardAnim = new PropertyAnimator(FORWARD_ANIMATION_DURATION);
+        // We want the forward button to show immediately when switching tabs
+        mForwardAnim = new PropertyAnimator(mSwitchingTabs ? 10 : FORWARD_ANIMATION_DURATION);
         final int width = mForward.getWidth() / 2;
 
         mForwardAnim.setPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
