@@ -15,6 +15,7 @@ from mozbuild.frontend.data import (
     ReaderSummary,
     VariablePassthru,
     Exports,
+    Program,
     XpcshellManifests,
 )
 from mozbuild.frontend.emitter import TreeMetadataEmitter
@@ -31,6 +32,7 @@ class TestEmitterBasic(unittest.TestCase):
     def reader(self, name):
         config = MockConfig(os.path.join(data_path, name))
         config.substs['ENABLE_TESTS'] = '1'
+        config.substs['BIN_SUFFIX'] = '.prog'
 
         return BuildReader(config)
 
@@ -169,6 +171,17 @@ class TestEmitterBasic(unittest.TestCase):
         self.assertIn('overwrite', exports._children)
         overwrite = exports._children['overwrite']
         self.assertEqual(overwrite.get_strings(), ['new.h'])
+
+    def test_program(self):
+        reader = self.reader('program')
+        objs = self.read_topsrcdir(reader)
+
+        self.assertEqual(len(objs), 2)
+        self.assertIsInstance(objs[0], DirectoryTraversal)
+        self.assertIsInstance(objs[1], Program)
+
+        program = objs[1].program
+        self.assertEqual(program, 'test_program.prog')
 
     def test_xpcshell_manifests(self):
         reader = self.reader('xpcshell_manifests')

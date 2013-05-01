@@ -10,8 +10,6 @@ VPATH     = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 # Build a binary bootstrapping with XRE_main
-PROGRAM   = webapprt-stub$(BIN_SUFFIX)
-
 CPPSRCS   = webapprt.cpp
 
 # Statically link against the CRT

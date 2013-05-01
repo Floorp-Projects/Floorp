@@ -149,6 +149,24 @@ class Exports(SandboxDerived):
         SandboxDerived.__init__(self, sandbox)
         self.exports = exports
 
+class Program(SandboxDerived):
+    """Sandbox container object for PROGRAM, which is a unicode string.
+
+    This class handles automatically appending BIN_SUFFIX to the PROGRAM value.
+    If BIN_SUFFIX is not defined, PROGRAM is unchanged.
+    Otherwise, if PROGRAM ends in BIN_SUFFIX, it is unchanged
+    Otherwise, BIN_SUFFIX is appended to PROGRAM
+    """
+    __slots__ = ('program')
+
+    def __init__(self, sandbox, program, bin_suffix):
+        SandboxDerived.__init__(self, sandbox)
+
+        bin_suffix = bin_suffix or ''
+        if not program.endswith(bin_suffix):
+            program += bin_suffix
+        self.program = program
+
 class XpcshellManifests(SandboxDerived):
     """Build object container for XPCSHELL_TESTS_MANIFESTS (was: XPCSHELL_TESTS).
 
