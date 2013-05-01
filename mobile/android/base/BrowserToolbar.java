@@ -72,7 +72,7 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
     private GeckoTextView mTitle;
     private int mTitlePadding;
     private boolean mSiteSecurityVisible;
-    private boolean mAnimateSiteSecurity;
+    private boolean mSwitchingTabs;
     private ShapedButton mTabs;
     private int mTabsPaneWidth;
     private ImageButton mBack;
@@ -128,7 +128,7 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
 
         sActionItems = new ArrayList<View>();
         Tabs.registerOnTabsChangedListener(this);
-        mAnimateSiteSecurity = true;
+        mSwitchingTabs = true;
 
         mAnimatingEntry = false;
         mShowUrl = false;
@@ -463,14 +463,14 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
                 updateTabCount(Tabs.getInstance().getDisplayCount());
                 break;
             case SELECTED:
-                mAnimateSiteSecurity = false;
+                mSwitchingTabs = true;
                 // fall through
             case LOCATION_CHANGE:
             case LOAD_ERROR:
                 if (Tabs.getInstance().isSelectedTab(tab)) {
                     refresh();
                 }
-                mAnimateSiteSecurity = true;
+                mSwitchingTabs = false;
                 break;
             case CLOSED:
             case ADDED:
@@ -910,7 +910,7 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
 
         mSiteSecurityVisible = visible;
 
-        if (!mAnimateSiteSecurity) {
+        if (mSwitchingTabs) {
             mSiteSecurity.setVisibility(visible ? View.VISIBLE : View.GONE);
             return;
         }
