@@ -296,6 +296,7 @@ public:
 
     /** Return the DPI of the widget this TabChild draws to. */
     void GetDPI(float* aDPI);
+    void GetDefaultScale(double *aScale);
 
     gfxSize GetZoom() { return mLastMetrics.mZoom; }
 
