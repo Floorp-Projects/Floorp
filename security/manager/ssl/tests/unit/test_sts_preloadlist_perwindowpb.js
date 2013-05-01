@@ -20,7 +20,7 @@ var gObserver = new Observer();
 // (we have to remove any state added to the sts service so as to not muck
 // with other tests).
 var hosts = ["http://keyerror.com", "http://subdomain.intercom.io",
-             "http://subdomain.pixi.me", "http://crypto.cat",
+             "http://subdomain.pixi.me", "http://bugzilla.mozilla.org",
              "http://logentries.com"];
 
 function cleanup() {
@@ -134,25 +134,25 @@ function test_part1() {
 const IS_PRIVATE = Ci.nsISocketProvider.NO_PERMANENT_STORAGE;
 
 function test_private_browsing1() {
-  // sanity - crypto.cat is preloaded, includeSubdomains set
-  do_check_true(gSTSService.isStsHost("crypto.cat", IS_PRIVATE));
-  do_check_true(gSTSService.isStsHost("a.b.c.subdomain.crypto.cat", IS_PRIVATE));
+  // sanity - bugzilla.mozilla.org is preloaded, includeSubdomains set
+  do_check_true(gSTSService.isStsHost("bugzilla.mozilla.org", IS_PRIVATE));
+  do_check_true(gSTSService.isStsHost("a.b.c.subdomain.bugzilla.mozilla.org", IS_PRIVATE));
 
-  var uri = Services.io.newURI("http://crypto.cat", null, null);
+  var uri = Services.io.newURI("http://bugzilla.mozilla.org", null, null);
   gSTSService.processStsHeader(uri, "max-age=0", IS_PRIVATE);
-  do_check_false(gSTSService.isStsHost("crypto.cat", IS_PRIVATE));
-  do_check_false(gSTSService.isStsHost("a.b.subdomain.crypto.cat", IS_PRIVATE));
+  do_check_false(gSTSService.isStsHost("bugzilla.mozilla.org", IS_PRIVATE));
+  do_check_false(gSTSService.isStsHost("a.b.subdomain.bugzilla.mozilla.org", IS_PRIVATE));
 
   // check adding it back in
   gSTSService.processStsHeader(uri, "max-age=1000", IS_PRIVATE);
-  do_check_true(gSTSService.isStsHost("crypto.cat", IS_PRIVATE));
+  do_check_true(gSTSService.isStsHost("bugzilla.mozilla.org", IS_PRIVATE));
   // but no includeSubdomains this time
-  do_check_false(gSTSService.isStsHost("b.subdomain.crypto.cat", IS_PRIVATE));
+  do_check_false(gSTSService.isStsHost("b.subdomain.bugzilla.mozilla.org", IS_PRIVATE));
 
   // do the hokey-pokey...
   gSTSService.processStsHeader(uri, "max-age=0", IS_PRIVATE);
-  do_check_false(gSTSService.isStsHost("crypto.cat", IS_PRIVATE));
-  do_check_false(gSTSService.isStsHost("subdomain.crypto.cat", IS_PRIVATE));
+  do_check_false(gSTSService.isStsHost("bugzilla.mozilla.org", IS_PRIVATE));
+  do_check_false(gSTSService.isStsHost("subdomain.bugzilla.mozilla.org", IS_PRIVATE));
 
   // TODO unfortunately we don't have a good way to know when an entry
   // has expired in the permission manager, so we can't yet extend this test
@@ -176,9 +176,9 @@ function test_private_browsing1() {
 
 function test_private_browsing2() {
   // if this test gets this far, it means there's a private browsing service
-  do_check_true(gSTSService.isStsHost("crypto.cat", 0));
-  // the crypto.cat entry has includeSubdomains set
-  do_check_true(gSTSService.isStsHost("subdomain.crypto.cat", 0));
+  do_check_true(gSTSService.isStsHost("bugzilla.mozilla.org", 0));
+  // the bugzilla.mozilla.org entry has includeSubdomains set
+  do_check_true(gSTSService.isStsHost("subdomain.bugzilla.mozilla.org", 0));
 
   // Now that we're out of private browsing mode, we need to make sure
   // we've "forgotten" that we "forgot" this site's sts status.
