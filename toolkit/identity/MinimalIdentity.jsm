@@ -134,6 +134,8 @@ IDService.prototype = {
     // store the caller structure and notify the UI observers
     this._rpFlows[aRpCaller.id] = aRpCaller;
 
+    log("flows:", Object.keys(this._rpFlows).join(', '));
+
     let options = makeMessageObject(aRpCaller);
     log("sending identity-controller-watch:", options);
     Services.obs.notifyObservers({wrappedJSObject: options},"identity-controller-watch", null);
@@ -152,6 +154,9 @@ IDService.prototype = {
     });
     log("sending identity-controller-unwatch for id", options.id, options.origin);
     Services.obs.notifyObservers({wrappedJSObject: options}, "identity-controller-unwatch", null);
+
+    // Stop sending messages to this window
+    delete this._rpFlows[aRpId];
   },
 
   /**
@@ -223,7 +228,14 @@ IDService.prototype = {
       return;
     }
 
-    rp.doLogout();
+    // Logout from every site with the same origin
+    let origin = rp.origin;
+    Object.keys(this._rpFlows).forEach(function(key) {
+      let rp = this._rpFlows[key];
+      if (rp.origin === origin) {
+        rp.doLogout();
+      }
+    }.bind(this));
   },
 
   doReady: function doReady(aRpCallerId) {
