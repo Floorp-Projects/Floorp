@@ -234,7 +234,15 @@ void nsView::DoResetWidgetBounds(bool aMoveOnly,
   if (mViewManager->GetRootView() == this) {
     return;
   }
-  
+
+  NS_PRECONDITION(mWindow, "Why was this called??");
+
+  bool curVisibility = mWindow->IsVisible();
+  bool newVisibility = IsEffectivelyVisible();
+  if (curVisibility && !newVisibility) {
+    mWindow->Show(false);
+  }
+
   nsIntRect curBounds;
   mWindow->GetClientBounds(curBounds);
 
@@ -251,8 +259,6 @@ void nsView::DoResetWidgetBounds(bool aMoveOnly,
     // positions aren't reliable anyway because of correction to be on or off-screen.
     return;
   }
-
-  NS_PRECONDITION(mWindow, "Why was this called??");
 
   nsIntRect newBounds = CalcWidgetBounds(type);
 
@@ -304,6 +310,10 @@ void nsView::DoResetWidgetBounds(bool aMoveOnly,
                             aInvalidateChangedSize);
     } // else do nothing!
   }
+
+  if (!curVisibility && newVisibility) {
+    mWindow->Show(true);
+  }
 }
 
 void nsView::SetDimensions(const nsRect& aRect, bool aPaint, bool aResizeWidget)
@@ -337,13 +347,7 @@ void nsView::NotifyEffectiveVisibilityChanged(bool aEffectivelyVisible)
 
   if (nullptr != mWindow)
   {
-    if (aEffectivelyVisible)
-    {
-      DoResetWidgetBounds(false, true);
-      mWindow->Show(true);
-    }
-    else
-      mWindow->Show(false);
+    ResetWidgetBounds(false, false);
   }
 
   for (nsView* child = mFirstChild; child; child = child->mNextSibling) {
