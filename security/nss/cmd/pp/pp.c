@@ -5,6 +5,8 @@
 /*
  * Pretty-print some well-known BER or DER encoded data (e.g. certificates,
  * keys, pkcs7)
+ *
+ * $Id$
  */
 
 #include "secutil.h"

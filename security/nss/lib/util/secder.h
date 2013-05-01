@@ -10,6 +10,8 @@
 /*
  * secder.h - public data structures and prototypes for the DER encoding and
  *	      decoding utilities library
+ *
+ * $Id$
  */
 
 #include <time.h>

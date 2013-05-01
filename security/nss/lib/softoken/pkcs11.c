@@ -304,13 +304,13 @@ static const struct mechanismList mechanisms[] = {
 				 CKF_DERIVE}, 	PR_TRUE}, 
 #ifdef NSS_ENABLE_ECC
      /* -------------------- Elliptic Curve Operations --------------------- */
-     {CKM_EC_KEY_PAIR_GEN,      {EC_MIN_KEY_BITS, EC_MAX_KEY_BITS,
+     {CKM_EC_KEY_PAIR_GEN,      {EC_MIN_KEY, EC_MAX_KEY, 
 				 CKF_GENERATE_KEY_PAIR|CKF_EC_BPNU}, PR_TRUE}, 
-     {CKM_ECDH1_DERIVE,         {EC_MIN_KEY_BITS, EC_MAX_KEY_BITS,
+     {CKM_ECDH1_DERIVE,         {EC_MIN_KEY, EC_MAX_KEY,
 				 CKF_DERIVE|CKF_EC_BPNU}, PR_TRUE}, 
-     {CKM_ECDSA,                {EC_MIN_KEY_BITS, EC_MAX_KEY_BITS,
+     {CKM_ECDSA,                {EC_MIN_KEY, EC_MAX_KEY,
 				 CKF_SN_VR|CKF_EC_BPNU}, PR_TRUE}, 
-     {CKM_ECDSA_SHA1,           {EC_MIN_KEY_BITS, EC_MAX_KEY_BITS,
+     {CKM_ECDSA_SHA1,           {EC_MIN_KEY, EC_MAX_KEY,
 				 CKF_SN_VR|CKF_EC_BPNU}, PR_TRUE}, 
 #endif /* NSS_ENABLE_ECC */
      /* ------------------------- RC2 Operations --------------------------- */

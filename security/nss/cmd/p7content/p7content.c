@@ -4,6 +4,8 @@
 
 /*
  * p7content -- A command to display pkcs7 content.
+ *
+ * $Id$
  */
 
 #include "nspr.h"

@@ -4,6 +4,8 @@
 
 /*
  * CMS message methods.
+ *
+ * $Id$
  */
 
 #include "cmslocal.h"

@@ -4,6 +4,8 @@
 
 /*
  * certhtml.c --- convert a cert to html
+ *
+ * $Id$
  */
 
 #include "seccomon.h"

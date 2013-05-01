@@ -4,6 +4,7 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* $Id$ */
 
 #ifndef _BLAPIT_H_
 #define _BLAPIT_H_
@@ -81,11 +82,11 @@ typedef int __BLAPI_DEPRECATED __attribute__((deprecated));
 #define MAX_ECKEY_LEN 	        72	/* Bytes */
 
 #ifdef NSS_ECC_MORE_THAN_SUITE_B
-#define EC_MAX_KEY_BITS		571     /* in bits */
-#define EC_MIN_KEY_BITS		112     /* in bits */
+#define EC_MAX_KEY		571     /* in bits */
+#define EC_MIN_KEY		112     /* in bits */
 #else
-#define EC_MAX_KEY_BITS		521     /* in bits */
-#define EC_MIN_KEY_BITS		256     /* in bits */
+#define EC_MAX_KEY		521     /* in bits */
+#define EC_MIN_KEY		256     /* in bits */
 #endif
 
 /* EC point compression format */

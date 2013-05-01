@@ -5,6 +5,8 @@
 /*
  * Diffie-Hellman parameter generation, key generation, and secret derivation.
  * KEA secret generation and verification.
+ *
+ * $Id$
  */
 #ifdef FREEBL_NO_DEPEND
 #include "stubs.h"

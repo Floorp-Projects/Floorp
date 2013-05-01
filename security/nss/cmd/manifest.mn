@@ -11,7 +11,7 @@ REQUIRES = nss nspr libdbm
 DIRS = lib  \
  addbuiltin \
  atob  \
- $(BLTEST_SRCDIR) \
+ bltest \
  btoa  \
  certcgi \
  certutil  \
@@ -23,7 +23,7 @@ DIRS = lib  \
  derdump  \
  digest  \
  httpserv  \
- $(FIPSTEST_SRCDIR)  \
+ fipstest  \
  $(LOWHASHTEST_SRCDIR)  \
  listsuites \
  makepqg  \

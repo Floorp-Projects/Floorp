@@ -5,6 +5,8 @@
 /*
  * Implementation of OCSP services, for both client and server.
  * (XXX, really, mostly just for client right now, but intended to do both.)
+ *
+ * $Id$
  */
 
 #include "prerror.h"
