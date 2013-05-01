@@ -2201,7 +2201,7 @@ class TypedArrayTemplate
     }
 
     static JSObject *
-    fromLength(JSContext *cx, int32_t nelements)
+    fromLength(JSContext *cx, uint32_t nelements)
     {
         RootedObject buffer(cx, createBufferWithSizeAndCount(cx, nelements));
         if (!buffer)
@@ -3371,7 +3371,6 @@ const JSFunctionSpec _typedArray::jsfuncs[] = {                                \
 #define IMPL_TYPED_ARRAY_JSAPI_CONSTRUCTORS(Name,NativeType)                                 \
   JS_FRIEND_API(JSObject *) JS_New ## Name ## Array(JSContext *cx, uint32_t nelements)       \
   {                                                                                          \
-      MOZ_ASSERT(nelements <= INT32_MAX);                                                    \
       return TypedArrayTemplate<NativeType>::fromLength(cx, nelements);                      \
   }                                                                                          \
   JS_FRIEND_API(JSObject *) JS_New ## Name ## ArrayFromArray(JSContext *cx, JSObject *other_)\
