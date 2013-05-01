@@ -10,9 +10,11 @@ Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
 Cu.import("resource://gre/modules/Metrics.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/services/healthreport/healthreporter.jsm");
+Cu.import("resource://gre/modules/services/healthreport/providers.jsm");
 Cu.import("resource://gre/modules/services/datareporting/policy.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
+Cu.import("resource://testing-common/httpd.js");
 Cu.import("resource://testing-common/services-common/bagheeraserver.js");
 Cu.import("resource://testing-common/services/metrics/mocks.jsm");
 Cu.import("resource://testing-common/services/healthreport/utils.jsm");
@@ -63,8 +65,15 @@ function getJustReporter(name, uri=SERVER_URI, inspected=false) {
 }
 
 function getReporter(name, uri, inspected) {
-  let reporter = getJustReporter(name, uri, inspected);
-  return reporter.onInit();
+  return Task.spawn(function init() {
+    let reporter = getJustReporter(name, uri, inspected);
+    yield reporter.onInit();
+
+    yield reporter._providerManager.registerProviderFromType(
+      HealthReportProvider);
+
+    throw new Task.Result(reporter);
+  });
 }
 
 function getReporterAndServer(name, namespace="test") {
@@ -86,6 +95,26 @@ function shutdownServer(server) {
   server.stop(deferred.resolve.bind(deferred));
 
   return deferred.promise;
+}
+
+function getHealthReportProviderValues(reporter, day=null) {
+  return Task.spawn(function getValues() {
+    let p = reporter.getProvider("org.mozilla.healthreport");
+    do_check_neq(p, null);
+    let m = p.getMeasurement("submissions", 1);
+    do_check_neq(m, null);
+
+    let data = yield reporter._storage.getMeasurementValues(m.id);
+    if (!day) {
+      throw new Task.Result(data);
+    }
+
+    do_check_true(data.days.hasDay(day));
+    let serializer = m.serializer(m.SERIALIZE_JSON)
+    let json = serializer.daily(data.days.getDay(day));
+
+    throw new Task.Result(json);
+  });
 }
 
 function run_test() {
@@ -189,9 +218,9 @@ add_task(function test_pull_only_providers() {
 
   let reporter = yield getReporter("constant_only_providers");
   try {
-    do_check_eq(reporter._providerManager._providers.size, 0);
+    let initCount = reporter._providerManager.providers.length;
     yield reporter._providerManager.registerProvidersFromCategoryManager(category);
-    do_check_eq(reporter._providerManager._providers.size, 1);
+    do_check_eq(reporter._providerManager._providers.size, initCount + 1);
     do_check_true(reporter._storage.hasProvider("DummyProvider"));
     do_check_false(reporter._storage.hasProvider("DummyConstantProvider"));
     do_check_neq(reporter.getProvider("DummyProvider"), null);
@@ -199,7 +228,7 @@ add_task(function test_pull_only_providers() {
 
     yield reporter.collectMeasurements();
 
-    do_check_eq(reporter._providerManager._providers.size, 1);
+    do_check_eq(reporter._providerManager._providers.size, initCount + 1);
     do_check_true(reporter._storage.hasProvider("DummyConstantProvider"));
 
     let mID = reporter._storage.measurementID("DummyConstantProvider", "DummyMeasurement", 1);
@@ -324,6 +353,7 @@ add_task(function test_constant_only_providers_in_json_payload() {
 
   let reporter = yield getReporter("constant_only_providers_in_json_payload");
   try {
+    let initCount = reporter._providerManager.providers.length;
     yield reporter._providerManager.registerProvidersFromCategoryManager(category);
 
     let payload = yield reporter.collectAndObtainJSONPayload();
@@ -332,7 +362,7 @@ add_task(function test_constant_only_providers_in_json_payload() {
     do_check_true("DummyConstantProvider.DummyMeasurement" in o.data.last);
 
     let providers = reporter._providerManager.providers;
-    do_check_eq(providers.length, 1);
+    do_check_eq(providers.length, initCount + 1);
 
     // Do it again for good measure.
     payload = yield reporter.collectAndObtainJSONPayload();
@@ -341,7 +371,7 @@ add_task(function test_constant_only_providers_in_json_payload() {
     do_check_true("DummyConstantProvider.DummyMeasurement" in o.data.last);
 
     providers = reporter._providerManager.providers;
-    do_check_eq(providers.length, 1);
+    do_check_eq(providers.length, initCount + 1);
 
     // Ensure throwing getJSONPayload is handled properly.
     Object.defineProperty(reporter, "_getJSONPayload", {
@@ -354,7 +384,7 @@ add_task(function test_constant_only_providers_in_json_payload() {
 
     reporter.collectAndObtainJSONPayload().then(do_throw, function onError() {
       providers = reporter._providerManager.providers;
-      do_check_eq(providers.length, 1);
+      do_check_eq(providers.length, initCount + 1);
       deferred.resolve();
     });
 
@@ -509,7 +539,41 @@ add_task(function test_data_submission_transport_failure() {
 
     yield deferred.promise;
     do_check_eq(request.state, request.SUBMISSION_FAILURE_SOFT);
+
+    let data = yield getHealthReportProviderValues(reporter, new Date());
+    do_check_eq(data._v, 1);
+    do_check_eq(data.firstDocumentUploadAttempt, 1);
+    do_check_eq(data.uploadTransportFailure, 1);
+    do_check_eq(Object.keys(data).length, 3);
   } finally {
+    reporter._shutdown();
+  }
+});
+
+add_task(function test_data_submission_server_failure() {
+  let [reporter, server] = yield getReporterAndServer("data_submission_server_failure");
+  try {
+    Object.defineProperty(server, "_handleNamespaceSubmitPost", {
+      value: function (ns, id, request, response) {
+        throw HTTP_500;
+      },
+      writable: true,
+    });
+
+    let deferred = Promise.defer();
+    let now = new Date();
+    let request = new DataSubmissionRequest(deferred, now);
+    reporter.requestDataUpload(request);
+    yield deferred.promise;
+    do_check_eq(request.state, request.SUBMISSION_FAILURE_HARD);
+
+    let data = yield getHealthReportProviderValues(reporter, now);
+    do_check_eq(data._v, 1);
+    do_check_eq(data.firstDocumentUploadAttempt, 1);
+    do_check_eq(data.uploadServerFailure, 1);
+    do_check_eq(Object.keys(data).length, 3);
+  } finally {
+    yield shutdownServer(server);
     reporter._shutdown();
   }
 });
@@ -525,7 +589,8 @@ add_task(function test_data_submission_success() {
 
     let deferred = Promise.defer();
 
-    let request = new DataSubmissionRequest(deferred, new Date());
+    let now = new Date();
+    let request = new DataSubmissionRequest(deferred, now);
     reporter.requestDataUpload(request);
     yield deferred.promise;
     do_check_eq(request.state, request.SUBMISSION_SUCCESS);
@@ -536,6 +601,12 @@ add_task(function test_data_submission_success() {
     let o = yield reporter.getLastPayload();
     do_check_true("DummyProvider.DummyMeasurement" in o.data.last);
     do_check_true("DummyConstantProvider.DummyMeasurement" in o.data.last);
+
+    let data = yield getHealthReportProviderValues(reporter, now);
+    do_check_eq(data._v, 1);
+    do_check_eq(data.firstDocumentUploadAttempt, 1);
+    do_check_eq(data.uploadSuccess, 1);
+    do_check_eq(Object.keys(data).length, 3);
 
     reporter._shutdown();
   } finally {
@@ -569,6 +640,15 @@ add_task(function test_recurring_daily_pings() {
     do_check_neq(reporter.lastSubmitID, lastID);
     do_check_true(server.hasDocument(reporter.serverNamespace, reporter.lastSubmitID));
     do_check_false(server.hasDocument(reporter.serverNamespace, lastID));
+
+    // now() on the health reporter instance wasn't munged. So, we should see
+    // both requests attributed to the same day.
+    let data = yield getHealthReportProviderValues(reporter, new Date());
+    do_check_eq(data._v, 1);
+    do_check_eq(data.firstDocumentUploadAttempt, 1);
+    do_check_eq(data.continuationUploadAttempt, 1);
+    do_check_eq(data.uploadSuccess, 2);
+    do_check_eq(Object.keys(data).length, 4);
   } finally {
     reporter._shutdown();
     yield shutdownServer(server);
@@ -751,12 +831,12 @@ add_task(function test_upload_on_init_failure() {
 
   let oldOnResult = reporter._onBagheeraResult;
   Object.defineProperty(reporter, "_onBagheeraResult", {
-    value: function (request, isDelete, result) {
+    value: function (request, isDelete, date, result) {
       do_check_false(isDelete);
       do_check_true(result.transportSuccess);
       do_check_true(result.serverSuccess);
 
-      oldOnResult.call(reporter, request, isDelete, result);
+      oldOnResult.call(reporter, request, isDelete, new Date(), result);
       deferred.resolve();
     },
   });
