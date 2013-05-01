@@ -10,8 +10,7 @@ const Cu = Components.utils;
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
-let {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
-let {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+let {devtools, gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
 
 let gClient;
 let gConnectionTimeout;
