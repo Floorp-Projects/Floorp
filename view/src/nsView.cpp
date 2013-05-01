@@ -242,8 +242,6 @@ void nsView::DoResetWidgetBounds(bool aMoveOnly,
 
   // Stash a copy of these and use them so we can handle this being deleted (say
   // from sync painting/flushing from Show/Move/Resize on the widget).
-  nsRect dimBounds = mDimBounds;
-  nsViewVisibility vis = mVis;
   nsIntRect newBounds;
   nsRefPtr<nsDeviceContext> dx;
   mViewManager->GetDeviceContext(*getter_AddRefs(dx));
@@ -253,10 +251,11 @@ void nsView::DoResetWidgetBounds(bool aMoveOnly,
 
   nsIntRect curBounds;
   widget->GetClientBounds(curBounds);
+  bool invisiblePopup = type == eWindowType_popup &&
+                        ((curBounds.IsEmpty() && mDimBounds.IsEmpty()) ||
+                         mVis == nsViewVisibility_kHide);
 
-  if (type == eWindowType_popup &&
-      ((curBounds.IsEmpty() && dimBounds.IsEmpty()) ||
-       vis == nsViewVisibility_kHide)) {
+  if (invisiblePopup) {
     // We're going to hit the early exit below, avoid calling CalcWidgetBounds.
   } else {
     newBounds = CalcWidgetBounds(type);
@@ -268,9 +267,7 @@ void nsView::DoResetWidgetBounds(bool aMoveOnly,
     widget->Show(false);
   }
 
-  if (type == eWindowType_popup &&
-      ((curBounds.IsEmpty() && dimBounds.IsEmpty()) ||
-       vis == nsViewVisibility_kHide)) {
+  if (invisiblePopup) {
     // Don't manipulate empty or hidden popup widgets. For example there's no
     // point moving hidden comboboxes around, or doing X server roundtrips
     // to compute their true screen position. This could mean that WidgetToScreen
