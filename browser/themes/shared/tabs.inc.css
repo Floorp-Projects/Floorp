@@ -170,6 +170,7 @@
   background-color: transparent;
   background-image: url(chrome://browser/skin/tabbrowser/tab-active-middle.png),
                     @fgTabBackgroundMiddle@;
+  background-size: 100% 100%;
   background-repeat: repeat-x;
 }
 
