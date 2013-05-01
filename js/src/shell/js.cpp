@@ -984,7 +984,7 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
         if (!JSVAL_IS_VOID(v)) {
             global = JSVAL_IS_PRIMITIVE(v) ? NULL : JSVAL_TO_OBJECT(v);
             if (global) {
-                global = JS_UnwrapObject(global);
+                global = js::UncheckedUnwrap(global);
                 if (!global)
                     return false;
             }
