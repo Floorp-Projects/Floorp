@@ -1015,7 +1015,7 @@ array_toString(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     if (!js_IsCallable(join)) {
-        JSString *str = obj_toStringHelper(cx, obj);
+        JSString *str = JS_BasicObjectToString(cx, obj);
         if (!str)
             return false;
         args.rval().setString(str);

@@ -112,7 +112,7 @@ class JS_FRIEND_API(CrossCompartmentWrapper) : public Wrapper
                             CallArgs args) MOZ_OVERRIDE;
     virtual bool hasInstance(JSContext *cx, HandleObject wrapper, MutableHandleValue v,
                              bool *bp) MOZ_OVERRIDE;
-    virtual JSString *obj_toString(JSContext *cx, HandleObject wrapper) MOZ_OVERRIDE;
+    virtual const char *className(JSContext *cx, HandleObject proxy) MOZ_OVERRIDE;
     virtual JSString *fun_toString(JSContext *cx, HandleObject wrapper,
                                    unsigned indent) MOZ_OVERRIDE;
     virtual bool regexp_toShared(JSContext *cx, HandleObject proxy, RegExpGuard *g) MOZ_OVERRIDE;
@@ -190,15 +190,20 @@ class JS_FRIEND_API(DeadObjectProxy) : public BaseProxyHandler
     virtual bool construct(JSContext *cx, HandleObject proxy, const CallArgs &args) MOZ_OVERRIDE;
     virtual bool nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl,
                             CallArgs args) MOZ_OVERRIDE;
-    virtual bool hasInstance(JSContext *cx, HandleObject proxy, MutableHandleValue v, bool *bp);
-    virtual bool objectClassIs(HandleObject obj, ESClassValue classValue, JSContext *cx);
-    virtual JSString *obj_toString(JSContext *cx, HandleObject proxy);
-    virtual JSString *fun_toString(JSContext *cx, HandleObject proxy, unsigned indent);
-    virtual bool regexp_toShared(JSContext *cx, HandleObject proxy, RegExpGuard *g);
-    virtual bool defaultValue(JSContext *cx, HandleObject obj, JSType hint, MutableHandleValue vp);
+    virtual bool hasInstance(JSContext *cx, HandleObject proxy, MutableHandleValue v,
+                             bool *bp) MOZ_OVERRIDE;
+    virtual bool objectClassIs(HandleObject obj, ESClassValue classValue,
+                               JSContext *cx) MOZ_OVERRIDE;
+    virtual const char *className(JSContext *cx, HandleObject proxy) MOZ_OVERRIDE;
+    virtual JSString *fun_toString(JSContext *cx, HandleObject proxy, unsigned indent) MOZ_OVERRIDE;
+    virtual bool regexp_toShared(JSContext *cx, HandleObject proxy, RegExpGuard *g) MOZ_OVERRIDE;
+    virtual bool defaultValue(JSContext *cx, HandleObject obj, JSType hint,
+                              MutableHandleValue vp) MOZ_OVERRIDE;
     virtual bool getElementIfPresent(JSContext *cx, HandleObject obj, HandleObject receiver,
-                                     uint32_t index, MutableHandleValue vp, bool *present);
-    virtual bool getPrototypeOf(JSContext *cx, HandleObject proxy, MutableHandleObject protop);
+                                     uint32_t index, MutableHandleValue vp,
+                                     bool *present) MOZ_OVERRIDE;
+    virtual bool getPrototypeOf(JSContext *cx, HandleObject proxy,
+                                MutableHandleObject protop) MOZ_OVERRIDE;
 
     static DeadObjectProxy singleton;
 };
