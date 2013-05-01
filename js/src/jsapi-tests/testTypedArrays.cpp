@@ -100,6 +100,11 @@ TestArrayFromBuffer(JSContext *cx)
     CHECK(bufdata = JS_GetArrayBufferData(buffer));
     memset(bufdata, 1, nbytes);
 
+    {
+        RootedObject notArray(cx, CreateWithBuffer(cx, buffer, UINT32_MAX, -1));
+        CHECK(!notArray);
+    }
+
     RootedObject array(cx, CreateWithBuffer(cx, buffer, 0, -1));
     CHECK_EQUAL(JS_GetTypedArrayLength(array), elts);
     CHECK_EQUAL(JS_GetTypedArrayByteOffset(array), 0);

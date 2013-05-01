@@ -986,10 +986,9 @@ extern JS_FRIEND_API(JSObject *)
 JS_NewFloat64ArrayFromArray(JSContext *cx, JSObject *array);
 
 /*
- * Create a new typed array using the given ArrayBuffer for storage. byteOffset
- * must not exceed (signed) INT32_MAX. The length value is optional; if -1 is
- * passed, enough elements to use up the remainder of the byte array is used as
- * the default value.
+ * Create a new typed array using the given ArrayBuffer for storage.  The
+ * length value is optional; if -1 is passed, enough elements to use up the
+ * remainder of the byte array is used as the default value.
  */
 
 extern JS_FRIEND_API(JSObject *)
