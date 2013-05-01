@@ -39,8 +39,8 @@ VideoGraphicBuffer::VideoGraphicBuffer(const android::wp<android::OmxDecoder> aO
                                        android::MediaBuffer *aBuffer,
                                        SurfaceDescriptor *aDescriptor)
   : GraphicBufferLocked(*aDescriptor),
-    mMediaBuffer(aBuffer),
-    mOmxDecoder(aOmxDecoder)
+    mOmxDecoder(aOmxDecoder),
+    mMediaBuffer(aBuffer)
 {
   mMediaBuffer->add_ref();
 }
@@ -74,7 +74,7 @@ namespace android {
 
 MediaStreamSource::MediaStreamSource(MediaResource *aResource,
                                      AbstractMediaDecoder *aDecoder) :
-  mResource(aResource), mDecoder(aDecoder)
+  mDecoder(aDecoder), mResource(aResource)
 {
 }
 
@@ -127,8 +127,8 @@ using namespace android;
 
 OmxDecoder::OmxDecoder(MediaResource *aResource,
                        AbstractMediaDecoder *aDecoder) :
-  mDecoder(aDecoder),
   mResource(aResource),
+  mDecoder(aDecoder),
   mVideoWidth(0),
   mVideoHeight(0),
   mVideoColorFormat(0),
@@ -141,8 +141,8 @@ OmxDecoder::OmxDecoder(MediaResource *aResource,
   mVideoBuffer(nullptr),
   mAudioBuffer(nullptr),
   mIsVideoSeeking(false),
-  mAudioMetadataRead(false),
-  mPaused(false)
+  mPaused(false),
+  mAudioMetadataRead(false)
 {
 }
 
@@ -234,7 +234,7 @@ bool OmxDecoder::Init() {
   // OMXClient::connect() always returns OK and abort's fatally if
   // it can't connect.
   OMXClient client;
-  DebugOnly<status_t> err = client.connect();
+  status_t err = client.connect();
   NS_ASSERTION(err == OK, "Failed to connect to OMX in mediaserver.");
   sp<IOMX> omx = client.interface();
 
@@ -512,6 +512,7 @@ bool OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aTimeUs,
 
   if (err == OK && mVideoBuffer->range_length() > 0) {
     int64_t timeUs;
+    int64_t durationUs;
     int32_t unreadable;
     int32_t keyFrame;
 
@@ -544,6 +545,7 @@ bool OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aTimeUs,
       aFrame->mGraphicBuffer = new mozilla::layers::VideoGraphicBuffer(this, mVideoBuffer, &newDescriptor);
       aFrame->mRotation = mVideoRotation;
       aFrame->mTimeUs = timeUs;
+      aFrame->mEndTimeUs = timeUs + durationUs;
       aFrame->mKeyFrame = keyFrame;
       aFrame->Y.mWidth = mVideoWidth;
       aFrame->Y.mHeight = mVideoHeight;
@@ -558,6 +560,8 @@ bool OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aTimeUs,
       if (!ToVideoFrame(aFrame, timeUs, data, length, keyFrame)) {
         return false;
       }
+
+      aFrame->mEndTimeUs = timeUs + durationUs;
     }
 
     if (aKeyframeSkip && timeUs < aTimeUs) {
@@ -692,4 +696,3 @@ void OmxDecoder::Pause() {
   }
   mPaused = true;
 }
-

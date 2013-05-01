@@ -273,16 +273,15 @@ bool MediaPluginHost::FindDecoder(const nsACString& aMimeType, const char* const
 
 MPAPI::Decoder *MediaPluginHost::CreateDecoder(MediaResource *aResource, const nsACString& aMimeType)
 {
-  NS_ENSURE_TRUE(aResource, nullptr);
+  const char *chars;
+  size_t len = NS_CStringGetData(aMimeType, &chars, nullptr);
 
-  nsAutoPtr<Decoder> decoder(new Decoder());
+  Decoder *decoder = new Decoder();
   if (!decoder) {
     return nullptr;
   }
   decoder->mResource = aResource;
 
-  const char *chars;
-  size_t len = NS_CStringGetData(aMimeType, &chars, nullptr);
   for (size_t n = 0; n < mPlugins.Length(); ++n) {
     Manifest *plugin = mPlugins[n];
     const char* const *codecs;
@@ -290,8 +289,7 @@ MPAPI::Decoder *MediaPluginHost::CreateDecoder(MediaResource *aResource, const n
       continue;
     }
     if (plugin->CreateDecoder(&sPluginHost, decoder, chars, len)) {
-      aResource->AddRef();
-      return decoder.forget();
+      return decoder;
     }
   }
 
@@ -301,12 +299,6 @@ MPAPI::Decoder *MediaPluginHost::CreateDecoder(MediaResource *aResource, const n
 void MediaPluginHost::DestroyDecoder(Decoder *aDecoder)
 {
   aDecoder->DestroyDecoder(aDecoder);
-  MediaResource* resource = GetResource(aDecoder);
-  if (resource) {
-    // resource *shouldn't* be null, but check anyway just in case the plugin
-    // decoder does something stupid.
-    resource->Release();
-  }
   delete aDecoder;
 }
 
