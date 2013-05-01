@@ -242,6 +242,14 @@ MOCHITEST_FILES += \
 		small-shot.mp3 \
 		sound.ogg \
 		spacestorm-1000Hz-100ms.ogg \
+		test-1-mono.opus \
+		test-2-stereo.opus \
+		test-3-LCR.opus \
+		test-4-quad.opus \
+		test-5-5.0.opus \
+		test-6-5.1.opus \
+		test-7-6.1.opus \
+		test-8-7.1.opus \
 		video-overhang.ogg \
 		file_a4_tone.ogg \
 		detodos.opus \
