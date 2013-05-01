@@ -552,8 +552,8 @@ public:
     return false;
   }
 
-  virtual JSString *obj_toString(JSContext *cx,
-                                 JS::Handle<JSObject*> wrapper) MOZ_OVERRIDE;
+  virtual const char *className(JSContext *cx,
+                                JS::Handle<JSObject*> wrapper) MOZ_OVERRIDE;
   virtual void finalize(JSFreeOp *fop, JSObject *proxy) MOZ_OVERRIDE;
 
   // Fundamental traps
@@ -646,12 +646,12 @@ nsOuterWindowProxy::preventExtensions(JSContext *cx,
   return false;
 }
 
-JSString *
-nsOuterWindowProxy::obj_toString(JSContext *cx, JS::Handle<JSObject*> proxy)
+const char *
+nsOuterWindowProxy::className(JSContext *cx, JS::Handle<JSObject*> proxy)
 {
     MOZ_ASSERT(js::IsProxy(proxy));
 
-    return JS_NewStringCopyZ(cx, "[object Window]");
+    return "Window";
 }
 
 void
@@ -931,18 +931,18 @@ class nsChromeOuterWindowProxy : public nsOuterWindowProxy
 public:
   nsChromeOuterWindowProxy() : nsOuterWindowProxy() {}
 
-  virtual JSString *obj_toString(JSContext *cx, JS::Handle<JSObject*> wrapper);
+  virtual const char *className(JSContext *cx, JS::Handle<JSObject*> wrapper) MOZ_OVERRIDE;
 
   static nsChromeOuterWindowProxy singleton;
 };
 
-JSString *
-nsChromeOuterWindowProxy::obj_toString(JSContext *cx,
-                                       JS::Handle<JSObject*> proxy)
+const char *
+nsChromeOuterWindowProxy::className(JSContext *cx,
+                                    JS::Handle<JSObject*> proxy)
 {
     MOZ_ASSERT(js::IsProxy(proxy));
 
-    return JS_NewStringCopyZ(cx, "[object ChromeWindow]");
+    return "ChromeWindow";
 }
 
 nsChromeOuterWindowProxy

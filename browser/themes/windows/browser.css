@@ -830,9 +830,18 @@ toolbar[mode=full] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   padding: 8px 5px 7px;
 }
 
+@navbarLargeIcons@ #social-toolbar-item {
+  margin-left: 2px;
+  margin-right: 2px;
+}
+
+@navbarLargeIcons@ #social-toolbar-item > .toolbarbutton-1 {
+  padding-left: 0;
+  padding-right: 0;
+}
+
 @navbarLargeIcons@ .toolbarbutton-1:not(:hover):not(:active):not([open]) > .toolbarbutton-menubutton-dropmarker::before,
-@navbarLargeIcons@ > #social-toolbar-item > .toolbarbutton-1:not(:hover) + .social-notification-container:not(:hover) > .toolbarbutton-1::before,
-@navbarLargeIcons@ > #social-toolbar-item > .social-notification-container:not(:hover) + .social-notification-container:not(:hover) > .toolbarbutton-1::before {
+@navbarLargeIcons@ #social-toolbar-item > .toolbarbutton-1:not(:hover):not(:active):not([open]) + .toolbarbutton-1:not(:hover):not(:active):not([open])::before {
   content: "";
   display: -moz-box;
   width: 1px;
@@ -2809,6 +2818,11 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   top: 2px;
   right: 2px;
 }
+
+.toolbarbutton-badge-container > .toolbarbutton-icon[label]:not([label=""]) {
+  -moz-margin-end: 0;
+}
+
 .toolbarbutton-badge[badge=""] {
   display: none;
 }
@@ -2829,7 +2843,7 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 
 @navbarLargeIcons@ *|* > .toolbarbutton-badge[badge]:not([badge=""])::after {
   top: 1px;
-  right: 5px;
+  right: 1px;
 }
 
 .toolbarbutton-badge[badge]:not([badge=""]):-moz-locale-dir(rtl)::after {
@@ -2838,7 +2852,7 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 }
 
 @navbarLargeIcons@ *|* > .toolbarbutton-badge[badge]:not([badge=""]):-moz-locale-dir(rtl)::after {
-  left: 5px;
+  left: 1px;
   right: auto;
 }
 

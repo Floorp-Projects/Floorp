@@ -76,7 +76,7 @@ function testFrameEval() {
         "Should have the right name for 'this'.");
       is(scope.get("this").value.type, "object",
         "Should have the right value type for 'this'.");
-      is(scope.get("this").value.class, "Proxy",
+      is(scope.get("this").value.class, "Window",
         "Should have the right value type for 'this'.");
 
       is(scope.get("ermahgerd")._isContentVisible, true,

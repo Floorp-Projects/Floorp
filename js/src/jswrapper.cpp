@@ -526,19 +526,11 @@ CrossCompartmentWrapper::hasInstance(JSContext *cx, HandleObject wrapper, Mutabl
     return Wrapper::hasInstance(cx, wrapper, v, bp);
 }
 
-JSString *
-CrossCompartmentWrapper::obj_toString(JSContext *cx, HandleObject wrapper)
+const char *
+CrossCompartmentWrapper::className(JSContext *cx, HandleObject wrapper)
 {
-    RootedString str(cx);
-    {
-        AutoCompartment call(cx, wrappedObject(wrapper));
-        str = Wrapper::obj_toString(cx, wrapper);
-        if (!str)
-            return NULL;
-    }
-    if (!cx->compartment->wrap(cx, str.address()))
-        return NULL;
-    return str;
+    AutoCompartment call(cx, wrappedObject(wrapper));
+    return Wrapper::className(cx, wrapper);
 }
 
 JSString *
@@ -789,10 +781,10 @@ DeadObjectProxy::objectClassIs(HandleObject obj, ESClassValue classValue, JSCont
     return false;
 }
 
-JSString *
-DeadObjectProxy::obj_toString(JSContext *cx, HandleObject wrapper)
+const char *
+DeadObjectProxy::className(JSContext *cx, HandleObject wrapper)
 {
-    return JS_NewStringCopyZ(cx, "[object DeadObject]");
+    return "DeadObject";
 }
 
 JSString *
