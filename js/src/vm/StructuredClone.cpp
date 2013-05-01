@@ -644,21 +644,22 @@ JSStructuredCloneWriter::parseTransferable()
         return false;
     }
 
-    RootedObject array(context(), &transferable.toObject());
-    if (!JS_IsArrayObject(context(), array)) {
+    JSContext *cx = context();
+    RootedObject array(cx, &transferable.toObject());
+    if (!JS_IsArrayObject(cx, array)) {
         reportErrorTransferable();
         return false;
     }
 
     uint32_t length;
-    if (!JS_GetArrayLength(context(), array, &length)) {
+    if (!JS_GetArrayLength(cx, array, &length)) {
         return false;
     }
 
     RootedValue v(context());
 
     for (uint32_t i = 0; i < length; ++i) {
-        if (!JS_GetElement(context(), array, i, &v)) {
+        if (!JS_GetElement(cx, array, i, &v)) {
             return false;
         }
 
@@ -898,25 +899,26 @@ JSStructuredCloneWriter::startWrite(const Value &v)
 bool
 JSStructuredCloneWriter::writeTransferMap()
 {
-    if (!transferableObjects.empty()) {
-        if (!out.writePair(SCTAG_TRANSFER_MAP_HEADER, (uint32_t)SCTAG_TM_NOT_MARKED))
+    if (transferableObjects.empty())
+        return true;
+
+    if (!out.writePair(SCTAG_TRANSFER_MAP_HEADER, (uint32_t)SCTAG_TM_NOT_MARKED))
+        return false;
+
+    for (HashSet<JSObject*>::Range r = transferableObjects.all();
+         !r.empty(); r.popFront()) {
+        JSObject *obj = r.front();
+
+        if (!memory.put(obj, memory.count()))
             return false;
 
-        for (HashSet<JSObject*>::Range r = transferableObjects.all();
-             !r.empty(); r.popFront()) {
-            JSObject *obj = r.front();
+        void *content;
+        uint8_t *data;
+        if (!JS_StealArrayBufferContents(context(), obj, &content, &data))
+            return false;
 
-            if (!memory.put(obj, memory.count()))
-                return false;
-
-            void *content;
-            uint8_t *data;
-            if (!JS_StealArrayBufferContents(context(), obj, &content, &data))
-               return false;
-
-            if (!out.writePair(SCTAG_TRANSFER_MAP, 0) || !out.writePtr(content))
-                return false;
-        }
+        if (!out.writePair(SCTAG_TRANSFER_MAP, 0) || !out.writePtr(content))
+            return false;
     }
 
     return true;
