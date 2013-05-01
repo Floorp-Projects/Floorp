@@ -333,7 +333,6 @@ public class TabsPanel extends LinearLayout
         if (mVisible) {
             mVisible = false;
             dispatchLayoutChange(0, 0);
-            mPanel = null;
         }
     }
 
