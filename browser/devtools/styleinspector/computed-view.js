@@ -14,8 +14,6 @@ Cu.import("resource://gre/modules/PluralForm.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource:///modules/devtools/Templater.jsm");
 
-Cu.import("resource:///modules/devtools/gDevTools.jsm");
-
 const FILTER_CHANGED_TIMEOUT = 300;
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
@@ -43,7 +41,7 @@ const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 function UpdateProcess(aWin, aGenerator, aOptions)
 {
   this.win = aWin;
-  this.iter = devtools._Iterator(aGenerator);
+  this.iter = _Iterator(aGenerator);
   this.onItem = aOptions.onItem || function() {};
   this.onBatch = aOptions.onBatch || function () {};
   this.onDone = aOptions.onDone || function() {};
