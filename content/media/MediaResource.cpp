@@ -713,16 +713,15 @@ bool ChannelMediaResource::CanClone()
   return mCacheStream.IsAvailableForSharing();
 }
 
-already_AddRefed<MediaResource> ChannelMediaResource::CloneData(MediaDecoder* aDecoder)
+MediaResource* ChannelMediaResource::CloneData(MediaDecoder* aDecoder)
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
   NS_ASSERTION(mCacheStream.IsAvailableForSharing(), "Stream can't be cloned");
 
-  nsRefPtr<ChannelMediaResource> resource =
-    new ChannelMediaResource(aDecoder,
-                             nullptr,
-                             mURI,
-                             GetContentType());
+  ChannelMediaResource* resource = new ChannelMediaResource(aDecoder,
+                                                            nullptr,
+                                                            mURI,
+                                                            GetContentType());
   if (resource) {
     // Initially the clone is treated as suspended by the cache, because
     // we don't have a channel. If the cache needs to read data from the clone
@@ -735,7 +734,7 @@ already_AddRefed<MediaResource> ChannelMediaResource::CloneData(MediaDecoder* aD
     resource->mChannelStatistics = new MediaChannelStatistics(mChannelStatistics);
     resource->mChannelStatistics->Stop();
   }
-  return resource.forget();
+  return resource;
 }
 
 void ChannelMediaResource::CloseChannel()
@@ -1188,9 +1187,9 @@ ChannelMediaResource::EnsureCacheUpToDate()
 }
 
 bool
-ChannelMediaResource::IsSuspendedByCache()
+ChannelMediaResource::IsSuspendedByCache(MediaResource** aActiveResource)
 {
-  return mCacheStream.AreAllStreamsForResourceSuspended();
+  return mCacheStream.AreAllStreamsForResourceSuspended(aActiveResource);
 }
 
 bool
@@ -1284,7 +1283,7 @@ public:
   virtual void     Resume() {}
   virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal();
   virtual bool     CanClone();
-  virtual already_AddRefed<MediaResource> CloneData(MediaDecoder* aDecoder);
+  virtual MediaResource* CloneData(MediaDecoder* aDecoder);
   virtual nsresult ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCount);
 
   // These methods are called off the main thread.
@@ -1327,7 +1326,13 @@ public:
     return std::max(aOffset, mSize);
   }
   virtual bool    IsDataCachedToEndOfResource(int64_t aOffset) { return true; }
-  virtual bool    IsSuspendedByCache() { return false; }
+  virtual bool    IsSuspendedByCache(MediaResource** aActiveResource)
+  {
+    if (aActiveResource) {
+      *aActiveResource = nullptr;
+    }
+    return false;
+  }
   virtual bool    IsSuspended() { return false; }
   virtual bool    IsTransportSeekable() MOZ_OVERRIDE { return true; }
 
@@ -1499,7 +1504,7 @@ bool FileMediaResource::CanClone()
   return true;
 }
 
-already_AddRefed<MediaResource> FileMediaResource::CloneData(MediaDecoder* aDecoder)
+MediaResource* FileMediaResource::CloneData(MediaDecoder* aDecoder)
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
@@ -1522,8 +1527,7 @@ already_AddRefed<MediaResource> FileMediaResource::CloneData(MediaDecoder* aDeco
   if (NS_FAILED(rv))
     return nullptr;
 
-  nsRefPtr<MediaResource> resource(new FileMediaResource(aDecoder, channel, mURI, GetContentType()));
-  return resource.forget();
+  return new FileMediaResource(aDecoder, channel, mURI, GetContentType());
 }
 
 nsresult FileMediaResource::ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCount)
@@ -1588,7 +1592,7 @@ int64_t FileMediaResource::Tell()
   return offset;
 }
 
-already_AddRefed<MediaResource>
+MediaResource*
 MediaResource::Create(MediaDecoder* aDecoder, nsIChannel* aChannel)
 {
   NS_ASSERTION(NS_IsMainThread(),
@@ -1605,12 +1609,10 @@ MediaResource::Create(MediaDecoder* aDecoder, nsIChannel* aChannel)
   aChannel->GetContentType(contentType);
 
   nsCOMPtr<nsIFileChannel> fc = do_QueryInterface(aChannel);
-  nsRefPtr<MediaResource> resource;
   if (fc || IsBlobURI(uri)) {
-    resource = new FileMediaResource(aDecoder, aChannel, uri, contentType);
+    return new FileMediaResource(aDecoder, aChannel, uri, contentType);
   }
-  resource = new ChannelMediaResource(aDecoder, aChannel, uri, contentType);
-  return resource.forget();
+  return new ChannelMediaResource(aDecoder, aChannel, uri, contentType);
 }
 
 void BaseMediaResource::MoveLoadsToBackground() {

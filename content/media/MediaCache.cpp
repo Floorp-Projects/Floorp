@@ -1830,7 +1830,7 @@ MediaCacheStream::IsTransportSeekable()
 }
 
 bool
-MediaCacheStream::AreAllStreamsForResourceSuspended()
+MediaCacheStream::AreAllStreamsForResourceSuspended(MediaResource** aActiveStream)
 {
   ReentrantMonitorAutoEnter mon(gMediaCache->GetReentrantMonitor());
   MediaCache::ResourceStreamIterator iter(mResourceID);
@@ -1847,9 +1847,15 @@ MediaCacheStream::AreAllStreamsForResourceSuspended()
     if (stream->mChannelOffset > dataOffset) {
       continue;
     }
+    if (aActiveStream) {
+      *aActiveStream = stream->mClient;
+    }
     return false;
   }
 
+  if (aActiveStream) {
+    *aActiveStream = nullptr;
+  }
   return true;
 }
 
