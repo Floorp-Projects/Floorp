@@ -1,7 +1,7 @@
 import os
 from setuptools import setup, find_packages
 
-version = '0.5.26'
+version = '0.5.27'
 
 # get documentation from the README
 try:
