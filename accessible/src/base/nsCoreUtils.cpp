@@ -197,7 +197,7 @@ nsCoreUtils::GetDOMElementFor(nsIContent *aContent)
     return aContent;
 
   if (aContent->IsNodeOfType(nsINode::eTEXT))
-    return aContent->GetParent();
+    return aContent->GetFlattenedTreeParent();
 
   return nullptr;
 }
@@ -540,7 +540,7 @@ nsCoreUtils::GetTreeBoxObject(nsIContent *aContent)
           return treeBox.forget();
       }
     }
-    currentContent = currentContent->GetParent();
+    currentContent = currentContent->GetFlattenedTreeParent();
   }
 
   return nullptr;

@@ -6169,18 +6169,6 @@ nsDocument::ClearBoxObjectFor(nsIContent* aContent)
   }
 }
 
-nsresult
-nsDocument::GetXBLChildNodesFor(nsIContent* aContent, nsIDOMNodeList** aResult)
-{
-  return BindingManager()->GetXBLChildNodesFor(aContent, aResult);
-}
-
-nsresult
-nsDocument::GetContentListFor(nsIContent* aContent, nsIDOMNodeList** aResult)
-{
-  return BindingManager()->GetContentListFor(aContent, aResult);
-}
-
 void
 nsDocument::FlushSkinBindings()
 {
