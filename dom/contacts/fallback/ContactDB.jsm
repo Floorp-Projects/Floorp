@@ -498,22 +498,14 @@ ContactDB.prototype = {
                 }
 
                 // containsSearch holds incremental search values for:
-                // normalized number, national format, international format
+                // normalized number and national format
                 for (let i = 0; i < normalized.length; i++) {
                   containsSearch[normalized.substring(i, normalized.length)] = 1;
                 }
-                if (parsedNumber) {
-                  if (parsedNumber.nationalFormat) {
-                    let number = PhoneNumberUtils.normalize(parsedNumber.nationalFormat);
-                    for (let i = 0; i < number.length; i++) {
-                      containsSearch[number.substring(i, number.length)] = 1;
-                    }
-                  }
-                  if (parsedNumber.internationalFormat) {
-                    let number = PhoneNumberUtils.normalize(parsedNumber.internationalFormat);
-                    for (let i = 0; i < number.length; i++) {
-                      containsSearch[number.substring(i, number.length)] = 1;
-                    }
+                if (parsedNumber && parsedNumber.nationalFormat) {
+                  let number = PhoneNumberUtils.normalize(parsedNumber.nationalFormat);
+                  for (let i = 0; i < number.length; i++) {
+                    containsSearch[number.substring(i, number.length)] = 1;
                   }
                 }
               }
