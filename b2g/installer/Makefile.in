@@ -33,7 +33,6 @@ DEFINES += \
 
 DEFINES += -DJAREXT=
 
-include $(topsrcdir)/ipc/app/defs.mk
 DEFINES += -DMOZ_CHILD_PROCESS_NAME=$(MOZ_CHILD_PROCESS_NAME)
 
 # Set MSVC dlls version to package, if any.
