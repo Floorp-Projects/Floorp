@@ -588,6 +588,11 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
                 proxy = AnimatorProxy.create(mMenu);
                 proxy.setTranslationX(curveTranslation);
             }
+
+            proxy = AnimatorProxy.create(mReader);
+            proxy.setAlpha(0);
+            proxy = AnimatorProxy.create(mStop);
+            proxy.setAlpha(0);
         }
 
         final PropertyAnimator contentAnimator = new PropertyAnimator(250);
@@ -672,13 +677,11 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
         // Keep the entry highlighted during the animation
         mLayout.setSelected(true);
 
-        // Fade out all controls inside the toolbar
-        contentAnimator.attach(mReader,
-                               PropertyAnimator.Property.ALPHA,
-                               0);
-        contentAnimator.attach(mStop,
-                               PropertyAnimator.Property.ALPHA,
-                               0);
+        // Hide stop/reader buttons immediately
+        AnimatorProxy proxy = AnimatorProxy.create(mReader);
+        proxy.setAlpha(0);
+        proxy = AnimatorProxy.create(mStop);
+        proxy.setAlpha(0);
 
         // Slide the right side elements of the toolbar
         contentAnimator.attach(mAwesomeBarRightEdge,
