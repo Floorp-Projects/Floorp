@@ -15,8 +15,6 @@ include $(topsrcdir)/config/config.mk
 
 DIST_SUBDIR = metro/install
 
-PROGRAM = linktool$(BIN_SUFFIX)
-
 CPPSRCS    = linktool.cpp
 
 OS_LIBS = \
