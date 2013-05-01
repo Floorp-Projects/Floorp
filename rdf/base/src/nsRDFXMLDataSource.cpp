@@ -742,7 +742,7 @@ RDFXMLDataSourceImpl::rdfXMLFlush(nsIURI *aURI)
         // write the file will be unaquirable.
         nsCOMPtr<nsIRDFService> dummy = do_GetService(kRDFServiceCID, &rv);
         if (NS_FAILED(rv)) {
-            NS_WARNING("unable to Flush() diry datasource during XPCOM shutdown");
+            NS_WARNING("unable to Flush() dirty datasource during XPCOM shutdown");
             return rv;
         }
     }
