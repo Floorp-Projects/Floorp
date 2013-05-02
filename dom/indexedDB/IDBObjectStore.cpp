@@ -726,11 +726,11 @@ public:
                                     fileInfo);
       }
 
-      jsval wrappedBlob;
+      JS::Rooted<JS::Value> wrappedBlob(aCx);
       JS::Rooted<JSObject*> global(aCx, JS_GetGlobalForScopeChain(aCx));
-       rv =
-        nsContentUtils::WrapNative(aCx, global, domBlob,
-                                   &NS_GET_IID(nsIDOMBlob), &wrappedBlob);
+      rv = nsContentUtils::WrapNative(aCx, global, domBlob,
+                                      &NS_GET_IID(nsIDOMBlob),
+                                      wrappedBlob.address());
       if (NS_FAILED(rv)) {
         NS_WARNING("Failed to wrap native!");
         return nullptr;
@@ -753,11 +753,11 @@ public:
                                   nativeFile, fileInfo);
     }
 
-    jsval wrappedFile;
+    JS::Rooted<JS::Value> wrappedFile(aCx);
     JS::Rooted<JSObject*> global(aCx, JS_GetGlobalForScopeChain(aCx));
-    rv =
-      nsContentUtils::WrapNative(aCx, global, domFile,
-                                 &NS_GET_IID(nsIDOMFile), &wrappedFile);
+    rv = nsContentUtils::WrapNative(aCx, global, domFile,
+                                    &NS_GET_IID(nsIDOMFile),
+                                    wrappedFile.address());
     if (NS_FAILED(rv)) {
       NS_WARNING("Failed to wrap native!");
       return nullptr;
@@ -795,7 +795,8 @@ public:
     //   File.name
     //   File.lastModifiedDate
 
-    JSObject* obj = JS_NewObject(aCx, nullptr, nullptr, nullptr);
+    JS::Rooted<JSObject*> obj(aCx,
+      JS_NewObject(aCx, nullptr, nullptr, nullptr));
     if (!obj) {
       NS_WARNING("Failed to create object!");
       return nullptr;
@@ -804,8 +805,8 @@ public:
     // Technically these props go on the proto, but this detail won't change
     // the results of index creation.
 
-    JSString* type =
-      JS_NewUCStringCopyN(aCx, aData.type.get(), aData.type.Length());
+    JS::Rooted<JSString*> type(aCx,
+      JS_NewUCStringCopyN(aCx, aData.type.get(), aData.type.Length()));
     if (!type ||
         !JS_DefineProperty(aCx, obj, "size",
                            JS_NumberValue((double)aData.size),
@@ -930,15 +931,15 @@ IDBObjectStore::AppendIndexUpdateInfo(
 
   if (!JSVAL_IS_PRIMITIVE(val) &&
       JS_IsArrayObject(aCx, JSVAL_TO_OBJECT(val))) {
-    JSObject* array = JSVAL_TO_OBJECT(val);
+    JS::Rooted<JSObject*> array(aCx, JSVAL_TO_OBJECT(val));
     uint32_t arrayLength;
     if (!JS_GetArrayLength(aCx, array, &arrayLength)) {
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
 
     for (uint32_t arrayIndex = 0; arrayIndex < arrayLength; arrayIndex++) {
-      jsval arrayItem;
-      if (!JS_GetElement(aCx, array, arrayIndex, &arrayItem)) {
+      JS::Rooted<JS::Value> arrayItem(aCx);
+      if (!JS_GetElement(aCx, array, arrayIndex, arrayItem.address())) {
         return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
       }
 
@@ -1818,7 +1819,8 @@ IDBObjectStore::AddOrPut(const jsval& aValue,
     return NS_ERROR_DOM_INDEXEDDB_READ_ONLY_ERR;
   }
 
-  jsval keyval = (aOptionalArgCount >= 1) ? aKey : JSVAL_VOID;
+  JS::Rooted<JS::Value> keyval(aCx,
+    (aOptionalArgCount >= 1) ? aKey : JSVAL_VOID);
 
   StructuredCloneWriteInfo cloneWriteInfo;
   Key key;
@@ -4028,8 +4030,8 @@ CreateIndexHelper::InsertDataFromObjectStore(mozIStorageConnection* aConnection)
       nullptr
     };
 
-    jsval clone;
-    if (!buffer.read(cx, &clone, &callbacks, &cloneReadInfo)) {
+    JS::Rooted<JS::Value> clone(cx);
+    if (!buffer.read(cx, clone.address(), &callbacks, &cloneReadInfo)) {
       NS_WARNING("Failed to deserialize structured clone data!");
       return NS_ERROR_DOM_DATA_CLONE_ERR;
     }

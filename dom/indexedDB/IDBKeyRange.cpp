@@ -52,8 +52,8 @@ ReturnKeyRange(JSContext* aCx,
     return false;
   }
 
-  JSObject* result;
-  if (NS_FAILED(holder->GetJSObject(&result))) {
+  JS::Rooted<JSObject*> result(aCx);
+  if (NS_FAILED(holder->GetJSObject(result.address()))) {
     JS_ReportError(aCx, "Couldn't get JSObject from wrapper.");
     return false;
   }
@@ -113,8 +113,8 @@ MakeOnlyKeyRange(JSContext* aCx,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  jsval val;
-  if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "v", &val)) {
+  JS::Rooted<JS::Value> val(aCx);
+  if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "v", val.address())) {
     return false;
   }
 
@@ -134,9 +134,10 @@ MakeLowerBoundKeyRange(JSContext* aCx,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  jsval val;
+  JS::Rooted<JS::Value> val(aCx);
   JSBool open = false;
-  if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "v/b", &val, &open)) {
+  if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "v/b", val.address(),
+                           &open)) {
     return false;
   }
 
@@ -156,9 +157,10 @@ MakeUpperBoundKeyRange(JSContext* aCx,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  jsval val;
+  JS::Rooted<JS::Value> val(aCx);
   JSBool open = false;
-  if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "v/b", &val, &open)) {
+  if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "v/b", val.address(),
+                           &open)) {
     return false;
   }
 
@@ -178,10 +180,11 @@ MakeBoundKeyRange(JSContext* aCx,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  jsval lowerVal, upperVal;
+  JS::Rooted<JS::Value> lowerVal(aCx), upperVal(aCx);
   JSBool lowerOpen = false, upperOpen = false;
-  if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "vv/bb", &lowerVal,
-                           &upperVal, &lowerOpen, &upperOpen)) {
+  if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "vv/bb",
+                           lowerVal.address(), upperVal.address(),
+                           &lowerOpen, &upperOpen)) {
     return false;
   }
 

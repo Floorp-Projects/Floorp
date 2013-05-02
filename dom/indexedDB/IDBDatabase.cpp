@@ -658,7 +658,7 @@ IDBDatabase::Transaction(const jsval& aStoreNames,
   nsTArray<nsString> storesToOpen;
 
   if (!JSVAL_IS_PRIMITIVE(aStoreNames)) {
-    JSObject* obj = JSVAL_TO_OBJECT(aStoreNames);
+    JS::Rooted<JSObject*> obj(aCx, JSVAL_TO_OBJECT(aStoreNames));
 
     // See if this is a JS array.
     if (JS_IsArrayObject(aCx, obj)) {
@@ -674,10 +674,10 @@ IDBDatabase::Transaction(const jsval& aStoreNames,
       storesToOpen.SetCapacity(length);
 
       for (uint32_t index = 0; index < length; index++) {
-        jsval val;
+        JS::Rooted<JS::Value> val(aCx);
         JSString* jsstr;
         nsDependentJSString str;
-        if (!JS_GetElement(aCx, obj, index, &val) ||
+        if (!JS_GetElement(aCx, obj, index, val.address()) ||
             !(jsstr = JS_ValueToString(aCx, val)) ||
             !str.init(aCx, jsstr)) {
           return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
