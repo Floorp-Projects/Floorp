@@ -57,6 +57,11 @@ NativeIterator::mark(JSTracer *trc)
         MarkString(trc, str, "prop");
     if (obj)
         MarkObject(trc, &obj, "obj");
+
+    // The SuppressDeletedPropertyHelper loop can GC, so make sure that if the
+    // GC removes any elements from the list, it won't remove this one.
+    if (iterObj_)
+        MarkObjectUnbarriered(trc, &iterObj_, "iterObj");
 }
 
 struct IdHashPolicy {
@@ -1069,19 +1074,13 @@ SuppressDeletedPropertyHelper(JSContext *cx, HandleObject obj, StringPredicate p
 
     while (ni != enumeratorList) {
       again:
-        /* This only works for identified surpressed keys, not values. */
+        /* This only works for identified suppressed keys, not values. */
         if (ni->isKeyIter() && ni->obj == obj && ni->props_cursor < ni->props_end) {
             /* Check whether id is still to come. */
             HeapPtr<JSFlatString> *props_cursor = ni->current();
             HeapPtr<JSFlatString> *props_end = ni->end();
             for (HeapPtr<JSFlatString> *idp = props_cursor; idp < props_end; ++idp) {
                 if (predicate(*idp)) {
-                     /*
-                     * Root the iterobj. This loop can GC, so we want to make sure that if
-                     * the GC removes any elements from the list, it won't remove this one.
-                     */
-                    AutoObjectRooter iterRoot(cx, ni->iterObj());
-
                     /*
                      * Check whether another property along the prototype chain
                      * became visible as a result of this deletion.

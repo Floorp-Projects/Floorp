@@ -117,7 +117,6 @@ class JS_PUBLIC_API(AutoGCRooter) {
         SHAPEVECTOR =  -4, /* js::AutoShapeVector */
         IDARRAY =      -6, /* js::AutoIdArray */
         DESCRIPTORS =  -7, /* js::AutoPropDescArrayRooter */
-        OBJECT =       -8, /* js::AutoObjectRooter */
         ID =           -9, /* js::AutoIdRooter */
         VALVECTOR =   -10, /* js::AutoValueVector */
         DESCRIPTOR =  -11, /* js::AutoPropertyDescriptorRooter */
@@ -145,35 +144,6 @@ class JS_PUBLIC_API(AutoGCRooter) {
     /* No copy or assignment semantics. */
     AutoGCRooter(AutoGCRooter &ida) MOZ_DELETE;
     void operator=(AutoGCRooter &ida) MOZ_DELETE;
-};
-
-class AutoObjectRooter : private AutoGCRooter
-{
-  public:
-    AutoObjectRooter(JSContext *cx, JSObject *obj = NULL
-                     MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : AutoGCRooter(cx, OBJECT), obj_(obj)
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-
-    void setObject(JSObject *obj) {
-        obj_ = obj;
-    }
-
-    JSObject * object() const {
-        return obj_;
-    }
-
-    JSObject ** addr() {
-        return &obj_;
-    }
-
-    friend void AutoGCRooter::trace(JSTracer *trc);
-
-  private:
-    JSObject *obj_;
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 class AutoStringRooter : private AutoGCRooter {
@@ -5055,7 +5025,6 @@ using JS::AutoScriptVector;
 using JS::AutoIdArray;
 
 using JS::AutoGCRooter;
-using JS::AutoObjectRooter;
 using JS::AutoArrayRooter;
 using JS::AutoVectorRooter;
 using JS::AutoHashMapRooter;
