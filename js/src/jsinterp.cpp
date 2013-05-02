@@ -312,7 +312,7 @@ js::RunScript(JSContext *cx, StackFrame *fp)
         if (!iter.done()) {
             ++iter;
             if (iter.isScript()) {
-                RawScript script = iter.script();
+                JSScript *script = iter.script();
                 jsbytecode *pc = iter.pc();
                 if (UseNewType(cx, script, pc))
                     fp->setUseNewType();
@@ -590,7 +590,7 @@ js::Execute(JSContext *cx, HandleScript script, JSObject &scopeChainArg, Value *
 
     /* Ensure the scope chain is all same-compartment and terminates in a global. */
 #ifdef DEBUG
-    RawObject s = scopeChain;
+    JSObject *s = scopeChain;
     do {
         assertSameCompartment(cx, s);
         JS_ASSERT_IF(!s->enclosingScope(), s->isGlobal());

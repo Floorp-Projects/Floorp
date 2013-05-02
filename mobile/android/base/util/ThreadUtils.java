@@ -6,13 +6,49 @@
 package org.mozilla.gecko.util;
 
 import android.os.Handler;
+import android.util.Log;
+
+import java.util.Map;
 
 public final class ThreadUtils {
+    private static final String LOGTAG = "ThreadUtils";
+
     private static Thread sUiThread;
     private static Thread sGeckoThread;
     private static Thread sBackgroundThread;
 
     private static Handler sUiHandler;
+
+    @SuppressWarnings("serial")
+    public static class UiThreadBlockedException extends RuntimeException {
+        public UiThreadBlockedException() {
+            super();
+        }
+
+        public UiThreadBlockedException(String msg) {
+            super(msg);
+        }
+
+        public UiThreadBlockedException(String msg, Throwable e) {
+            super(msg, e);
+        }
+
+        public UiThreadBlockedException(Throwable e) {
+            super(e);
+        }
+    }
+
+    public static void dumpAllStackTraces() {
+        Log.w(LOGTAG, "Dumping ALL the threads!");
+        Map<Thread, StackTraceElement[]> allStacks = Thread.getAllStackTraces();
+        for (Thread t : allStacks.keySet()) {
+            Log.w(LOGTAG, t.toString());
+            for (StackTraceElement ste : allStacks.get(t)) {
+                Log.w(LOGTAG, ste.toString());
+            }
+            Log.w(LOGTAG, "----");
+        }
+    }
 
     public static void setUiThread(Thread thread, Handler handler) {
         sUiThread = thread;

@@ -321,7 +321,7 @@ class IonBuilder : public MIRGenerator
 
     MInstruction *addConvertElementsToDoubles(MDefinition *elements);
     MInstruction *addBoundsCheck(MDefinition *index, MDefinition *length);
-    MInstruction *addShapeGuard(MDefinition *obj, const RawShape shape, BailoutKind bailoutKind);
+    MInstruction *addShapeGuard(MDefinition *obj, Shape *const shape, BailoutKind bailoutKind);
 
     JSObject *getNewArrayTemplateObject(uint32_t count);
     MDefinition *convertShiftToMaskForStaticTypedArray(MDefinition *id,
@@ -329,9 +329,9 @@ class IonBuilder : public MIRGenerator
 
     bool invalidatedIdempotentCache();
 
-    bool loadSlot(MDefinition *obj, RawShape shape, MIRType rvalType,
+    bool loadSlot(MDefinition *obj, Shape *shape, MIRType rvalType,
                   bool barrier, types::StackTypeSet *types);
-    bool storeSlot(MDefinition *obj, RawShape shape, MDefinition *value, bool needsBarrier);
+    bool storeSlot(MDefinition *obj, Shape *shape, MDefinition *value, bool needsBarrier);
 
     // jsop_getprop() helpers.
     bool getPropTryArgumentsLength(bool *emitted);

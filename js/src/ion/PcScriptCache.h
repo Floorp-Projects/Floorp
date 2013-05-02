@@ -19,7 +19,7 @@ struct PcScriptCacheEntry
 {
     uint8_t *returnAddress; // Key into the hash table.
     jsbytecode *pc;         // Cached PC.
-    RawScript script;       // Cached script.
+    JSScript *script;       // Cached script.
 };
 
 struct PcScriptCache
@@ -45,7 +45,7 @@ struct PcScriptCache
     bool get(JSRuntime *rt, uint32_t hash, uint8_t *addr,
              JSScript **scriptRes, jsbytecode **pcRes);
 
-    void add(uint32_t hash, uint8_t *addr, jsbytecode *pc, RawScript script) {
+    void add(uint32_t hash, uint8_t *addr, jsbytecode *pc, JSScript *script) {
         entries[hash].returnAddress = addr;
         entries[hash].pc = pc;
         entries[hash].script = script;
