@@ -8,6 +8,7 @@
 #include <stdarg.h>
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/FloatingPoint.h"
 
 #include "BindingUtils.h"
 
@@ -18,6 +19,7 @@
 #include "xpcprivate.h"
 #include "XPCQuickStubs.h"
 #include "XrayWrapper.h"
+#include "jsfriendapi.h"
 
 #include "mozilla/dom/HTMLObjectElement.h"
 #include "mozilla/dom/HTMLObjectElementBinding.h"
@@ -1710,6 +1712,44 @@ ReportLenientThisUnwrappingFailure(JSContext* cx, JS::Handle<JSObject*> obj)
   if (window && window->GetDoc()) {
     window->GetDoc()->WarnOnceAbout(nsIDocument::eLenientThis);
   }
+}
+
+// Date implementation methods
+Date::Date() :
+  mMsecSinceEpoch(MOZ_DOUBLE_NaN())
+{
+}
+
+bool
+Date::IsUndefined() const
+{
+  return MOZ_DOUBLE_IS_NaN(mMsecSinceEpoch);
+}
+
+bool
+Date::SetTimeStamp(JSContext* cx, JSObject* objArg)
+{
+  JS::Rooted<JSObject*> obj(cx, objArg);
+  MOZ_ASSERT(JS_ObjectIsDate(cx, obj));
+
+  obj = js::CheckedUnwrap(obj);
+  // This really sucks: even if JS_ObjectIsDate, CheckedUnwrap can _still_ fail
+  if (!obj) {
+    return false;
+  }
+  mMsecSinceEpoch = js_DateGetMsecSinceEpoch(obj);
+  return true;
+}
+
+bool
+Date::ToDateObject(JSContext* cx, JS::Value* vp) const
+{
+  JSObject* obj = JS_NewDateObjectMsec(cx, mMsecSinceEpoch);
+  if (!obj) {
+    return false;
+  }
+  *vp = JS::ObjectValue(*obj);
+  return true;
 }
 
 } // namespace dom
