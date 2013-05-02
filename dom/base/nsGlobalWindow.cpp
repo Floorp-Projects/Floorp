@@ -6588,7 +6588,7 @@ PostMessageReadStructuredClone(JSContext* cx,
 
     nsISupports* supports;
     if (JS_ReadBytes(reader, &supports, sizeof(supports))) {
-      JS::Rooted<JSObject*> global(cx, JS_GetGlobalForScopeChain(cx));
+      JSObject* global = JS_GetGlobalForScopeChain(cx);
       if (global) {
         JS::Value val;
         nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;

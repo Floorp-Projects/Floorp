@@ -121,8 +121,7 @@ MobileMessageManager::Send(JSContext* aCx, JSObject* aGlobal, JSString* aNumber,
   nsresult rv = smsService->Send(number, aMessage, msgCallback);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  JS::Rooted<JSObject*> global(aCx, aGlobal);
-  rv = nsContentUtils::WrapNative(aCx, global,
+  rv = nsContentUtils::WrapNative(aCx, aGlobal,
                                   static_cast<nsIDOMDOMRequest*>(request.get()),
                                   aRequest);
   if (NS_FAILED(rv)) {

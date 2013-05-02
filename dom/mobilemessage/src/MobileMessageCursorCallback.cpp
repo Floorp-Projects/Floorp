@@ -67,7 +67,7 @@ MobileMessageCursorCallback::NotifyCursorResult(nsISupports* aResult)
   AutoPushJSContext cx(scriptContext->GetNativeContext());
   NS_ENSURE_TRUE(cx, NS_ERROR_FAILURE);
 
-  JS::Rooted<JSObject*> global(cx, scriptContext->GetNativeGlobal());
+  JSObject* global = scriptContext->GetNativeGlobal();
   NS_ENSURE_TRUE(global, NS_ERROR_FAILURE);
 
   JSAutoRequest ar(cx);

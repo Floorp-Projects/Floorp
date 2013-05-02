@@ -119,7 +119,7 @@ HelperBase::WrapNative(JSContext* aCx,
   NS_ASSERTION(aResult, "Null pointer!");
   NS_ASSERTION(mRequest, "Null request!");
 
-  JS::Rooted<JSObject*> global(aCx, mRequest->GetParentObject());
+  JSObject* global = mRequest->GetParentObject();
   NS_ASSERTION(global, "This should never be null!");
 
   nsresult rv =
