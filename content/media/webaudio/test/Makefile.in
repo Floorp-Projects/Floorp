@@ -26,6 +26,8 @@ MOCHITEST_FILES := \
   test_AudioContext.html \
   test_AudioListener.html \
   test_AudioParam.html \
+  test_audioParamExponentialRamp.html \
+  test_audioParamLinearRamp.html \
   test_audioBufferSourceNode.html \
   test_audioBufferSourceNodeLazyLoopParam.html \
   test_audioBufferSourceNodeLoop.html \
