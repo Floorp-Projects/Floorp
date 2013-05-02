@@ -2512,7 +2512,7 @@ def getJSToNativeConversionTemplate(type, descriptorProvider, failureCode=None,
         if isNullOrUndefined:
             assert type.nullable()
             # Just ignore templateBody and set ourselves to null.
-            # Note that wedon't have to worry about default values
+            # Note that we don't have to worry about default values
             # here either, since we already examined this value.
             return "%s;" % codeToSetNull
 
@@ -3304,6 +3304,33 @@ for (uint32_t i = 0; i < length; ++i) {
         # ignore the jsval.
         return ("", None, None, False)
 
+    if type.isDate():
+        assert not isEnforceRange and not isClamp
+
+        declType = CGGeneric("Date")
+        if type.nullable():
+            declType = CGTemplatedType("Nullable", declType)
+            dateVal = "${declName}.SetValue()"
+        else:
+            dateVal = "${declName}"
+
+        if failureCode is None:
+            notDate = ("ThrowErrorMessage(cx, MSG_NOT_DATE);\n"
+                       "%s" % exceptionCode)
+        else:
+            notDate = failureCode
+
+        conversion = (
+            "if (!JS_ObjectIsDate(cx, &${val}.toObject()) ||\n"
+            "    !%s.SetTimeStamp(cx, &${val}.toObject())) {\n"
+            "%s\n"
+            "}" %
+            (dateVal, CGIndenter(CGGeneric(notDate)).define()))
+
+        conversion = wrapObjectTemplate(conversion, type,
+                                        "${declName}.SetNull()")
+        return (conversion, declType, None, isOptional)
+
     if not type.isPrimitive():
         raise TypeError("Need conversion for argument type '%s'" % str(type))
 
@@ -3809,7 +3836,7 @@ if (!returnArray) {
         return (wrapAndSetPtr((prefix % result) +
                               "ToJSVal(cx, ${obj}, ${jsvalPtr})"), False)
 
-    if not (type.isPrimitive() or type.isDictionary()):
+    if not (type.isPrimitive() or type.isDictionary() or type.isDate()):
         raise TypeError("Need to learn to wrap %s" % type)
 
     if type.nullable():
@@ -3824,6 +3851,9 @@ if (!returnArray) {
         return (wrapAndSetPtr("%s.ToObject(cx, ${obj}, ${jsvalPtr})" % result),
                 False)
 
+    if type.isDate():
+        return (wrapAndSetPtr("%s.ToDateObject(cx, ${jsvalPtr})" % result),
+                False)
 
     tag = type.tag()
 
@@ -3990,6 +4020,11 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
         return result, True
     if returnType.isUnion():
         raise TypeError("Need to sort out ownership model for union retvals");
+    if returnType.isDate():
+        result = CGGeneric("Date")
+        if returnType.nullable():
+            result = CGTemplatedType("Nullable", result)
+        return result, False
     raise TypeError("Don't know how to declare return value for %s" %
                     returnType)
 
@@ -5232,6 +5267,8 @@ class CGMemberJITInfo(CGThing):
             return reduce(CGMemberJITInfo.getSingleReturnType,
                           u.flatMemberTypes, "")
         if t.isDictionary():
+            return "JSVAL_TYPE_OBJECT"
+        if t.isDate():
             return "JSVAL_TYPE_OBJECT"
         if not t.isPrimitive():
             raise TypeError("No idea what type " + str(t) + " is.")
@@ -8041,6 +8078,12 @@ class CGNativeMember(ClassMethod):
             else:
                 returnCode = "retval.SwapElements(${declName});"
             return "void", "", returnCode
+        if type.isDate():
+            result = CGGeneric("Date")
+            if type.nullable():
+                result = CGTemplatedType("Nullable", result)
+            return (result.define(), "%s()" % result.define(),
+                    "return ${declName};")
         raise TypeError("Don't know how to declare return value for %s" %
                         type)
 
@@ -8185,6 +8228,9 @@ class CGNativeMember(ClassMethod):
             typeName = CGDictionary.makeDictionaryName(type.inner,
                                                        self.descriptor.workers)
             return typeName, True, True
+
+        if type.isDate():
+            return "Date", False, True
 
         assert type.isPrimitive()
 
