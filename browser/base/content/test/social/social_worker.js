@@ -100,6 +100,23 @@ onconnect = function(e) {
           };
         }
         port.postMessage({topic: "social.user-profile", data: profile});
+        port.postMessage({
+          topic: "social.page-mark-config",
+          data: {
+            images: {
+              // this one is relative to test we handle relative ones.
+              marked: "/browser/browser/base/content/test/social/social_mark_image.png",
+              // absolute to check we handle them too.
+              unmarked: "https://example.com/browser/browser/base/content/test/social/social_mark_image.png"
+            },
+            messages: {
+              unmarkedTooltip: "Mark this page",
+              markedTooltip: "Unmark this page",
+              unmarkedLabel: "Mark",
+              markedLabel: "Unmark",
+            }
+          }
+        });
         break;
       case "test-ambient-notification":
         let icon = {
@@ -115,31 +132,6 @@ onconnect = function(e) {
         break;
       case "test-isVisible-response":
         testPort.postMessage({topic: "got-isVisible-response", result: event.data.result});
-        break;
-      case "social.user-recommend-prompt":
-        port.postMessage({
-          topic: "social.user-recommend-prompt-response",
-          data: {
-            images: {
-              // this one is relative to test we handle relative ones.
-              share: "browser/browser/base/content/test/social/social_share_image.png",
-              // absolute to check we handle them too.
-              unshare: "https://example.com/browser/browser/base/content/test/social/social_share_image.png"
-            },
-            messages: {
-              shareTooltip: "Share this page",
-              unshareTooltip: "Unshare this page",
-              sharedLabel: "This page has been shared",
-              unsharedLabel: "This page is no longer shared",
-              unshareLabel: "You have already shared this page",
-              portraitLabel: "Your pretty face",
-              unshareConfirmLabel: "Unshare it!",
-              unshareConfirmAccessKey: "U",
-              unshareCancelLabel: "Got it!",
-              unshareCancelAccessKey: "G"
-            }
-          }
-        });
         break;
     }
   }
