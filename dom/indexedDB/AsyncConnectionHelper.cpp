@@ -56,7 +56,7 @@ ConvertCloneReadInfosToArrayInternal(
                                 nsTArray<StructuredCloneReadInfo>& aReadInfos,
                                 jsval* aResult)
 {
-  JSObject* array = JS_NewArrayObject(aCx, 0, nullptr);
+  JS::Rooted<JSObject*> array(aCx, JS_NewArrayObject(aCx, 0, nullptr));
   if (!array) {
     NS_WARNING("Failed to make array!");
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
@@ -72,13 +72,13 @@ ConvertCloneReadInfosToArrayInternal(
          index++) {
       StructuredCloneReadInfo& readInfo = aReadInfos[index];
 
-      jsval val;
-      if (!IDBObjectStore::DeserializeValue(aCx, readInfo, &val)) {
+      JS::Rooted<JS::Value> val(aCx);
+      if (!IDBObjectStore::DeserializeValue(aCx, readInfo, val.address())) {
         NS_WARNING("Failed to decode!");
         return NS_ERROR_DOM_DATA_CLONE_ERR;
       }
 
-      if (!JS_SetElement(aCx, array, index, &val)) {
+      if (!JS_SetElement(aCx, array, index, val.address())) {
         NS_WARNING("Failed to set array element!");
         return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
       }
