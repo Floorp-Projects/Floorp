@@ -66,19 +66,21 @@ AudioNode::~AudioNode()
   MOZ_ASSERT(mOutputParams.IsEmpty());
 }
 
+template <class InputNode>
 static uint32_t
-FindIndexOfNode(const nsTArray<AudioNode::InputNode>& aInputNodes, const AudioNode* aNode)
+FindIndexOfNode(const nsTArray<InputNode>& aInputNodes, const AudioNode* aNode)
 {
   for (uint32_t i = 0; i < aInputNodes.Length(); ++i) {
     if (aInputNodes[i].mInputNode == aNode) {
       return i;
     }
   }
-  return nsTArray<AudioNode::InputNode>::NoIndex;
+  return nsTArray<InputNode>::NoIndex;
 }
 
+template <class InputNode>
 static uint32_t
-FindIndexOfNodeWithPorts(const nsTArray<AudioNode::InputNode>& aInputNodes, const AudioNode* aNode,
+FindIndexOfNodeWithPorts(const nsTArray<InputNode>& aInputNodes, const AudioNode* aNode,
                          uint32_t aInputPort, uint32_t aOutputPort)
 {
   for (uint32_t i = 0; i < aInputNodes.Length(); ++i) {
@@ -88,7 +90,7 @@ FindIndexOfNodeWithPorts(const nsTArray<AudioNode::InputNode>& aInputNodes, cons
       return i;
     }
   }
-  return nsTArray<AudioNode::InputNode>::NoIndex;
+  return nsTArray<InputNode>::NoIndex;
 }
 
 void
@@ -199,6 +201,13 @@ AudioNode::Connect(AudioParam& aDestination, uint32_t aOutput,
   input->mInputNode = this;
   input->mInputPort = INVALID_PORT;
   input->mOutputPort = aOutput;
+
+  MediaStream* stream = aDestination.Stream();
+  MOZ_ASSERT(stream->AsProcessedStream());
+  ProcessedMediaStream* ps = static_cast<ProcessedMediaStream*>(stream);
+
+  // Setup our stream as an input to the AudioParam's stream
+  input->mStreamPort = ps->AllocateInputPort(mStream, MediaInputPort::FLAG_BLOCK_INPUT);
 }
 
 void

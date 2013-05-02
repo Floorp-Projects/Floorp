@@ -9,12 +9,14 @@
 #include "nsIDOMWindow.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/AudioParamBinding.h"
+#include "AudioNodeEngine.h"
+#include "AudioNodeStream.h"
 
 namespace mozilla {
 namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(AudioParam)
-  tmp->DisconnectFromGraph();
+  tmp->DisconnectFromGraphAndDestroyStream();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mNode)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -33,7 +35,7 @@ AudioParam::Release()
   if (mRefCnt.get() == 1) {
     // We are about to be deleted, disconnect the object from the graph before
     // the derived type is destroyed.
-    DisconnectFromGraph();
+    DisconnectFromGraphAndDestroyStream();
   }
   NS_IMPL_CC_NATIVE_RELEASE_BODY(AudioParam)
 }
@@ -64,7 +66,7 @@ AudioParam::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 }
 
 void
-AudioParam::DisconnectFromGraph()
+AudioParam::DisconnectFromGraphAndDestroyStream()
 {
   // Addref this temporarily so the refcount bumping below doesn't destroy us
   // prematurely
@@ -76,6 +78,46 @@ AudioParam::DisconnectFromGraph()
     mInputNodes.RemoveElementAt(i);
     input->RemoveOutputParam(this);
   }
+
+  if (mNodeStreamPort) {
+    mNodeStreamPort->Destroy();
+    mNodeStreamPort = nullptr;
+  }
+
+  if (mStream) {
+    mStream->Destroy();
+    mStream = nullptr;
+  }
+}
+
+MediaStream*
+AudioParam::Stream()
+{
+  if (mStream) {
+    return mStream;
+  }
+
+  AudioNodeEngine* engine = new AudioNodeEngine(nullptr);
+  nsRefPtr<AudioNodeStream> stream = mNode->Context()->Graph()->CreateAudioNodeStream(engine, MediaStreamGraph::INTERNAL_STREAM);
+
+  // Force the input to have only one channel, and make it down-mix using
+  // the speaker rules if needed.
+  stream->SetChannelMixingParametersImpl(1, ChannelCountMode::Explicit, ChannelInterpretation::Speakers);
+  // Mark as an AudioParam helper stream
+  stream->SetAudioParamHelperStream();
+
+  mStream = stream.forget();
+
+  // Setup the AudioParam's stream as an input to the owner AudioNode's stream
+  MediaStream* nodeStream = mNode->Stream();
+  MOZ_ASSERT(nodeStream->AsProcessedStream());
+  ProcessedMediaStream* ps = static_cast<ProcessedMediaStream*>(nodeStream);
+  mNodeStreamPort = ps->AllocateInputPort(mStream, MediaInputPort::FLAG_BLOCK_INPUT);
+
+  // Let the MSG's copy of AudioParamTimeline know about the change in the stream
+  mCallback(mNode);
+
+  return mStream;
 }
 
 }

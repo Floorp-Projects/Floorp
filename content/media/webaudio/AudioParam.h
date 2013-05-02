@@ -105,6 +105,11 @@ public:
     return mDefaultValue;
   }
 
+  AudioNode* Node() const
+  {
+    return mNode;
+  }
+
   const nsTArray<AudioNode::InputNode>& InputNodes() const
   {
     return mInputNodes;
@@ -120,7 +125,10 @@ public:
     return mInputNodes.AppendElement();
   }
 
-  void DisconnectFromGraph();
+  void DisconnectFromGraphAndDestroyStream();
+
+  // May create the stream if it doesn't exist
+  MediaStream* Stream();
 
 protected:
   nsCycleCollectingAutoRefCnt mRefCnt;
@@ -133,6 +141,8 @@ private:
   nsTArray<AudioNode::InputNode> mInputNodes;
   CallbackType mCallback;
   const float mDefaultValue;
+  // The input port used to connect the AudioParam's stream to its node's stream
+  nsRefPtr<MediaInputPort> mNodeStreamPort;
 };
 
 }

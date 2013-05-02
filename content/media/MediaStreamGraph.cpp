@@ -2017,9 +2017,11 @@ MediaStreamGraph::CreateAudioNodeStream(AudioNodeEngine* aEngine,
   NS_ADDREF(stream);
   MediaStreamGraphImpl* graph = static_cast<MediaStreamGraphImpl*>(this);
   stream->SetGraphImpl(graph);
-  stream->SetChannelMixingParametersImpl(aEngine->NodeMainThread()->ChannelCount(),
-                                         aEngine->NodeMainThread()->ChannelCountModeValue(),
-                                         aEngine->NodeMainThread()->ChannelInterpretationValue());
+  if (aEngine->HasNode()) {
+    stream->SetChannelMixingParametersImpl(aEngine->NodeMainThread()->ChannelCount(),
+                                           aEngine->NodeMainThread()->ChannelCountModeValue(),
+                                           aEngine->NodeMainThread()->ChannelInterpretationValue());
+  }
   graph->AppendMessage(new CreateMessage(stream));
   return stream;
 }
