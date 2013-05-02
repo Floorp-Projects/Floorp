@@ -218,8 +218,8 @@ IDBFactory::Create(ContentParent* aContentParent,
   nsresult rv = xpc->CreateSandbox(cx, principal, getter_AddRefs(globalHolder));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  JS::Rooted<JSObject*> global(cx);
-  rv = globalHolder->GetJSObject(global.address());
+  JSObject* global;
+  rv = globalHolder->GetJSObject(&global);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // The CreateSandbox call returns a proxy to the actual sandbox object. We
