@@ -163,7 +163,8 @@ typedef JSObject* (*ParentGetter)(JSContext* aCx, JS::Handle<JSObject*> aObj);
  * prototype object is guaranteed to exist as long as the global does, since the
  * global traces its array of WebIDL prototypes and constructors.
  */
-typedef JS::Handle<JSObject*> (*ProtoGetter)(JSContext* aCx, JSObject* aGlobal);
+typedef JS::Handle<JSObject*> (*ProtoGetter)(JSContext* aCx,
+                                             JS::Handle<JSObject*> aGlobal);
 
 struct DOMClass
 {

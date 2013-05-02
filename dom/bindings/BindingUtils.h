@@ -331,7 +331,7 @@ struct NamedConstructor
  * |name|, which must also be non-null.
  */
 void
-CreateInterfaceObjects(JSContext* cx, JSObject* global,
+CreateInterfaceObjects(JSContext* cx, JS::Handle<JSObject*> global,
                        JS::Handle<JSObject*> protoProto,
                        JSClass* protoClass, JSObject** protoCache,
                        JSClass* constructorClass, const JSNativeHolder* constructor,
