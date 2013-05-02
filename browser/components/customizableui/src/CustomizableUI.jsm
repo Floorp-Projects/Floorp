@@ -115,7 +115,7 @@ XPCOMUtils.defineLazyGetter(this, "gBuiltInWidgets", function() {
     name: "History...",
     description: "History repeats itself!",
     defaultArea: CustomizableUI.AREA_PANEL,
-    allowedAreas: [CustomizableUI.AREA_PANEL],
+    allowedAreas: [CustomizableUI.AREA_PANEL, CustomizableUI.AREA_NAVBAR],
     icons: {
       "16": "chrome://branding/content/icon16.png",
       "32": "chrome://branding/content/icon48.png",
@@ -123,7 +123,7 @@ XPCOMUtils.defineLazyGetter(this, "gBuiltInWidgets", function() {
     },
     onViewShowing: function(aEvent) {
       // Populate our list of history
-      const kMaxResults = 10;
+      const kMaxResults = 15;
       let doc = aEvent.detail.ownerDocument;
 
       let options = PlacesUtils.history.getNewQueryOptions();
@@ -223,13 +223,30 @@ let gFuturePlacements = new Map();
  * placements to use.
  */
 let gDefaultPlacements = new Map([
+  ["toolbar-menubar", [
+    "menubar-items",
+  ]],
+  ["TabsToolbar", [
+    "tabbrowser-tabs",
+    "new-tab-button",
+    "alltabs-button",
+    "tabs-closebutton"
+  ]],
   ["nav-bar", [
+    "unified-back-forward-button",
+    "urlbar-container",
+    "reload-button",
+    "stop-button",
     "search-container",
+    "webrtc-status-button",
     "bookmarks-menu-button-container",
     "downloads-button",
+    "home-button",
     "social-toolbar-button",
-    "PanelUI-button",
     "share-page"
+  ]],
+  ["PersonalToolbar", [
+    "personal-bookmarks",
   ]],
   ["PanelUI-contents", [
     "new-window-button",
@@ -289,6 +306,9 @@ let CustomizableUIInternal = {
 
     this.registerArea(CustomizableUI.AREA_PANEL);
     this.registerArea(CustomizableUI.AREA_NAVBAR, ["legacy"]);
+    this.registerArea(CustomizableUI.AREA_MENUBAR, ["legacy"]);
+    this.registerArea(CustomizableUI.AREA_TABSTRIP, ["legacy"]);
+    this.registerArea(CustomizableUI.AREA_BOOKMARKS, ["legacy"]);
   },
 
   _defineBuiltInWidgets: function() {
@@ -342,7 +362,7 @@ let CustomizableUIInternal = {
     let area = aToolbar.id;
 
     if (!gAreas.has(area)) {
-      throw new Error("Unknown customization area");
+      throw new Error("Unknown customization area: " + area);
     }
 
     if (this.isBuildAreaRegistered(area, aToolbar)) {
@@ -356,12 +376,6 @@ let CustomizableUIInternal = {
       if (legacyState) {
         legacyState = legacyState.split(",");
       }
-      //XXXunf should the legacy attribute be purged?
-      //       kinda messes up switching to older builds
-      //XXXmconley No, I don't think so - I think we want to make it easy to
-      //           switch back and forth between builds until this thing hits
-      //           release.
-      //aToolbar.removeAttribute("currentset");
 
       // Manually restore the state here, so the legacy state can be converted. 
       this.restoreStateForArea(area, legacyState);
@@ -371,9 +385,10 @@ let CustomizableUIInternal = {
 
     let placements = gPlacements.get(area);
     this.buildArea(area, placements, aToolbar);
+    aToolbar.setAttribute("currentset", placements.join(","));
 
-    // We register this window to have its customization data cleaned up when
-    // unloading.
+    // We ensure that the window is registered to have its customization data
+    // cleaned up when unloading.
     this.registerBuildWindow(document.defaultView);
   },
 
@@ -389,6 +404,7 @@ let CustomizableUIInternal = {
     let currentNode = container.firstChild;
     for (let id of aPlacements) {
       if (currentNode && currentNode.id == id) {
+        this._addParentFlex(currentNode);
         currentNode = currentNode.nextSibling;
         continue;
       }
@@ -413,14 +429,18 @@ let CustomizableUIInternal = {
       let limit = currentNode.previousSibling;
       let node = container.lastChild;
       while (node != limit) {
-        // XXXunf Deprecating the old "removable" attribute, is this right?
-        // XXXmconley I think we need to hear from UX about this.
-        if (palette) {
-          palette.appendChild(node);
-        } else {
-          container.removeChild(node);
+        // Nodes opt-in to removability. If they're removable, and we haven't
+        // seen them in the placements array, then we toss them into the palette
+        // if one exists. If no palette exists, we just remove the node. If the
+        // node is not removable, we leave it where it is.
+        if (node.getAttribute("removable") == "true") {
+          if (palette) {
+            palette.appendChild(node);
+          } else {
+            container.removeChild(node);
+          }
         }
-        node = container.lastChild;
+        node = node.previousSibling;
       }
     }
   },
@@ -473,6 +493,7 @@ let CustomizableUIInternal = {
                this.buildWidget(aDocument, null, widget) ];
     }
 
+    LOG("Searching for " + aWidgetId + " in toolbox.");
     let node = this.findWidgetInToolbox(aWidgetId, aToolbox, aDocument);
     if (node) {
       return [ CustomizableUI.PROVIDER_XUL, node ];
@@ -729,6 +750,10 @@ let CustomizableUIInternal = {
         throw new Error("Could not find the view node with id: " + aWidget.viewId);
       }
 
+      // PanelUI relies on the .PanelUI-subView class to be able to show only
+      // one sub-view at a time.
+      viewNode.classList.add("PanelUI-subView");
+
       for (let eventName of kSubviewEvents) {
         let handler = "on" + eventName;
         if (typeof aWidget[handler] == "function") {
@@ -763,7 +788,8 @@ let CustomizableUIInternal = {
       }
     } else if (aWidget.type == "view") {
       let ownerWindow = aNode.ownerDocument.defaultView;
-      ownerWindow.PanelUI.showSubView(aWidget.viewId, aNode);
+      ownerWindow.PanelUI.showSubView(aWidget.viewId, aNode,
+                                      this.getPlacementOfWidget(aNode.id).area);
     }
   },
 
@@ -801,7 +827,7 @@ let CustomizableUIInternal = {
     LOG("Iterating the actual nodes of the window palette");
     for (let node of aWindowPalette.children) {
       LOG("In palette children: " + node.id);
-      if (!this.getPlacementOfWidget(node.id)) {
+      if (node.id && !this.getPlacementOfWidget(node.id)) {
         widgets.add(node.id);
       }
     }
@@ -824,7 +850,7 @@ let CustomizableUIInternal = {
 
   addWidgetToArea: function(aWidgetId, aArea, aPosition) {
     if (!gAreas.has(aArea)) {
-      throw new Error("Unknown customization area");
+      throw new Error("Unknown customization area: " + aArea);
     }
 
     // If this is a lazy area that hasn't been restored yet, we can't yet modify
@@ -1451,6 +1477,9 @@ Object.freeze(CustomizableUIInternal);
 this.CustomizableUI = {
   get AREA_PANEL() "PanelUI-contents",
   get AREA_NAVBAR() "nav-bar",
+  get AREA_MENUBAR() "toolbar-menubar",
+  get AREA_TABSTRIP() "TabsToolbar",
+  get AREA_BOOKMARKS() "PersonalToolbar",
 
   get PROVIDER_XUL() "xul",
   get PROVIDER_API() "api",
@@ -1511,7 +1540,7 @@ this.CustomizableUI = {
   },
   getWidgetsInArea: function(aArea) {
     if (!gAreas.has(aArea)) {
-      throw new Error("Unknown customization area");
+      throw new Error("Unknown customization area: " + aArea);
     }
     if (!gPlacements.has(aArea)) {
       throw new Error("Area not yet restored");

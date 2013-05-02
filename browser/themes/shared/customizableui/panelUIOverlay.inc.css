@@ -41,9 +41,18 @@
   font-size: 10px;
 }
 
-#PanelUI-contents {
+.PanelUI-pageControls {
+  padding: 1em 0 0;
+}
+
+.PanelUI-footer,
+.PanelUI-editControls,
+.PanelUI-zoomControls,
+#PanelUI-contents,
+.PanelUI-footer,
+#customizationui-widget-panel {
   max-width: @menuPanelWidth@;
-  padding: 0 1em;
+  padding: .5em 1em;
 }
 
 #PanelUI-container {
@@ -84,6 +93,7 @@
   margin-left: 38px;
   transform: translateX(@menuPanelWidth@);
   transition: transform 150ms;
+  overflow-y: hidden;
 }
 
 #PanelUI-subViews > .PanelUI-subView:not([current]) {
@@ -98,54 +108,55 @@
   -moz-box-orient: horizontal;
 }
 
-#PanelUI-contents[type="list"] toolbarbutton .toolbarbutton-text,
-#PanelUI-subViews toolbarbutton .toolbarbutton-text {
+#PanelUI-contents[type="list"] toolbarbutton > .toolbarbutton-text,
+#PanelUI-subViews toolbarbutton > .toolbarbutton-text,
+#customizationui-widget-panel toolbarbutton > .toolbarbutton-text {
   text-align: start;
   -moz-padding-start: 8px;
-  font-size: 12px;
+  display: -moz-box;
 }
 
 #PanelUI-contents[type="list"] toolbarbutton .toolbarbutton-acceltext {
-  font-size: 10px;
+  font-size: calc(5em / 6);
   color: GrayText;
   margin-left: 0;
   margin-right: 0;
 }
 
 #PanelUI-contents[type="list"] toolbarbutton .toolbarbutton-icon {
-  min-width: 24px;
-  max-width: 24px;
-  min-height: 24px;
-  max-height: 24px;
+  min-width: 2em;
+  max-width: 2em;
+  min-height: 2em;
+  max-height: 2em;
 }
 
 #PanelUI-contents[type="grid"] {
   display: block;
 }
 
+.PanelUI-pageControls toolbarbutton {
+  min-width: 7em;
+  max-width: 7em;
+}
+
+.PanelUI-pageControls toolbarbutton > .toolbarbutton-icon {
+  -moz-margin-end: 0;
+}
+
 #PanelUI-contents[type="grid"] toolbarbutton {
   -moz-box-orient: vertical;
-  min-width: 72px;
-  max-width: 72px;
-  min-height: 72px;
-  max-height: 72px;
+  min-width: 7em;
+  max-width: 7em;
+  min-height: 6em;
+  max-height: 6em;
 }
 
 #PanelUI-contents[type="grid"] toolbarbutton .toolbarbutton-icon {
-  min-width: 32px;
-  max-width: 32px;
-  min-height: 32px;
-  max-height: 32px;
-  margin: 5px;
-}
-
-.PanelUI-pageControls {
-  padding: 12px 20px;
-}
-
-.PanelUI-editControls,
-.PanelUI-zoomControls {
-  padding: 6px 0;
+  min-width: calc(8em / 3);
+  max-width: calc(8em / 3);
+  min-height: calc(8em / 3);
+  max-height: calc(8em / 3);
+  margin: calc(5em / 12);
 }
 
 .PanelUI-editControls #PanelUI-copy-btn,
@@ -162,7 +173,6 @@
 }
 
 .PanelUI-footer {
-  padding: 9px 12px;
   background-color: rgba(0, 0, 0, 0.05);
   border-top: 1px solid rgba(0,0,0,.1);
 }
@@ -184,8 +194,7 @@
   display: none;
 }
 
-#PanelUI-subViews toolbarbutton,
-#PanelUI-mainView toolbarbutton {
+:-moz-any(#PanelUI-mainView, #PanelUI-subViews, #customizationui-widget-panel) toolbarbutton {
   -moz-appearance: none;
   padding: 2px 6px;
   background: hsla(210,32%,93%,0) padding-box;
@@ -199,8 +208,7 @@
   transition-duration: 150ms;
 }
 
-#PanelUI-subViews toolbarbutton:not([disabled]):not([checked]):not([open]):not(:active):hover,
-#PanelUI-mainView toolbarbutton:not([disabled]):not([checked]):not([open]):not(:active):hover,
+:-moz-any(#PanelUI-mainView, #PanelUI-subViews, #customizationui-widget-panel) toolbarbutton:not([disabled]):not([checked]):not([open]):not(:active):hover,
 #PanelUI-mainView .PanelUI-pageControls toolbarbutton,
 #PanelUI-mainView #PanelUI-customize-btn {
   background-image: -moz-linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,100%,.1));
@@ -210,8 +218,8 @@
               0 0 2px hsla(210,54%,20%,.1);
 }
 
-#PanelUI-subViews toolbarbutton:not([disabled]):-moz-any([open],[checked],:hover:active),
-#PanelUI-mainView toolbarbutton:not([disabled]):-moz-any([open],[checked],:hover:active) {
+:-moz-any(#PanelUI-mainView, #PanelUI-subViews, #customizationui-widget-panel) toolbarbutton:not([disabled]):-moz-any([open],[checked],:hover:active),
+  #PanelUI-mainView .PanelUI-pageControls toolbarbutton:hover:active {
   background-image: -moz-linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,100%,.1));
   background-color: hsla(210,54%,20%,.15);
   border-color: hsla(210,54%,20%,.3) hsla(210,54%,20%,.35) hsla(210,54%,20%,.4);
@@ -225,4 +233,11 @@
 
 #PanelUI-historyItems > toolbarbutton {
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
+}
+
+#PanelUI-contents > .panelui-mainview-anchor {
+  background-color: Highlight;
+  background-image: linear-gradient(rgba(255,255,255,0.3), rgba(255,255,255,0));
+  background-repeat: repeat-x;
+  color: HighlightText;
 }
