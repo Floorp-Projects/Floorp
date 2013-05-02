@@ -21,6 +21,7 @@ this.EXPORTED_SYMBOLS = [
   "AppInfoProvider",
   "CrashDirectoryService",
   "CrashesProvider",
+  "HealthReportProvider",
   "PlacesProvider",
   "SearchesProvider",
   "SessionsProvider",
@@ -1394,3 +1395,41 @@ this.SearchesProvider.prototype = Object.freeze({
   },
 });
 
+function HealthReportSubmissionMeasurement1() {
+  Metrics.Measurement.call(this);
+}
+
+HealthReportSubmissionMeasurement1.prototype = Object.freeze({
+  __proto__: Metrics.Measurement.prototype,
+
+  name: "submissions",
+  version: 1,
+
+  fields: {
+    firstDocumentUploadAttempt: DAILY_COUNTER_FIELD,
+    continuationUploadAttempt: DAILY_COUNTER_FIELD,
+    uploadSuccess: DAILY_COUNTER_FIELD,
+    uploadTransportFailure: DAILY_COUNTER_FIELD,
+    uploadServerFailure: DAILY_COUNTER_FIELD,
+    uploadClientFailure: DAILY_COUNTER_FIELD,
+  },
+});
+
+this.HealthReportProvider = function () {
+  Metrics.Provider.call(this);
+}
+
+HealthReportProvider.prototype = Object.freeze({
+  __proto__: Metrics.Provider.prototype,
+
+  name: "org.mozilla.healthreport",
+
+  measurementTypes: [HealthReportSubmissionMeasurement1],
+
+  recordEvent: function (event, date=new Date()) {
+    let m = this.getMeasurement("submissions", 1);
+    return this.enqueueStorageOperation(function recordCounter() {
+      return m.incrementDailyCounter(event, date);
+    });
+  },
+});

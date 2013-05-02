@@ -377,11 +377,6 @@ MmsMessage::GetSender(nsAString& aSender)
 NS_IMETHODIMP
 MmsMessage::GetReceivers(JSContext* aCx, JS::Value* aReceivers)
 {
-  uint32_t length = mReceivers.Length();
-  if (length == 0) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
   JSObject* reveiversObj = nullptr;
   nsresult rv = nsTArrayToJSArray(aCx, mReceivers, &reveiversObj);
   NS_ENSURE_SUCCESS(rv, rv);
