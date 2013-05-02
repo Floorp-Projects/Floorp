@@ -60,8 +60,9 @@ MobileMessageCallback::NotifySuccess(nsISupports *aMessage)
   JSAutoRequest ar(cx);
   JSAutoCompartment ac(cx, global);
 
-  JS::Value wrappedMessage;
-  rv = nsContentUtils::WrapNative(cx, global, aMessage, &wrappedMessage);
+  JS::Rooted<JS::Value> wrappedMessage(cx);
+  rv = nsContentUtils::WrapNative(cx, global, aMessage,
+                                  wrappedMessage.address());
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NotifySuccess(wrappedMessage);

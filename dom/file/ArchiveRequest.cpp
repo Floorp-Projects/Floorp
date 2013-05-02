@@ -245,11 +245,12 @@ ArchiveRequest::GetFilesResult(JSContext* aCx,
   for (uint32_t i = 0; i < aFileList.Length(); ++i) {
     nsCOMPtr<nsIDOMFile> file = aFileList[i];
 
-    JS::Value value;
+    JS::Rooted<JS::Value> value(aCx);
     JS::Rooted<JSObject*> global(aCx, JS_GetGlobalForScopeChain(aCx));
     nsresult rv = nsContentUtils::WrapNative(aCx, global, file,
-                                             &NS_GET_IID(nsIDOMFile), &value);
-    if (NS_FAILED(rv) || !JS_SetElement(aCx, array, i, &value)) {
+                                             &NS_GET_IID(nsIDOMFile),
+                                             value.address());
+    if (NS_FAILED(rv) || !JS_SetElement(aCx, array, i, value.address())) {
       return NS_ERROR_FAILURE;
     }
   }
