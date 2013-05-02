@@ -91,9 +91,9 @@ JSValToDashArray(JSContext* cx, const JS::Value& val,
                  FallibleTArray<T>& dashArray);
 
 template<typename T>
-JS::Value
+nsresult
 DashArrayToJSVal(FallibleTArray<T>& dashArray,
-                 JSContext* cx, mozilla::ErrorResult& rv);
+                 JSContext* cx, JS::Value* val);
 
 template<typename T>
 nsresult
@@ -105,7 +105,7 @@ JSValToDashArray(JSContext* cx, const JS::Value& patternArray,
     static const uint32_t MAX_NUM_DASHES = 1 << 14;
 
     if (!JSVAL_IS_PRIMITIVE(patternArray)) {
-        JS::Rooted<JSObject*> obj(cx, JSVAL_TO_OBJECT(patternArray));
+        JSObject* obj = JSVAL_TO_OBJECT(patternArray);
         uint32_t length;
         if (!JS_GetArrayLength(cx, obj, &length)) {
             // Not an array-like thing
@@ -149,27 +149,27 @@ JSValToDashArray(JSContext* cx, const JS::Value& patternArray,
 }
 
 template<typename T>
-JS::Value
+nsresult
 DashArrayToJSVal(FallibleTArray<T>& dashes,
-                 JSContext* cx, mozilla::ErrorResult& rv)
+                 JSContext* cx, JS::Value* val)
 {
     if (dashes.IsEmpty()) {
-        return JSVAL_NULL;
-    }
-    JS::Rooted<JSObject*> obj(cx, JS_NewArrayObject(cx, dashes.Length(), nullptr));
-    if (!obj) {
-        rv.Throw(NS_ERROR_OUT_OF_MEMORY);
-        return JSVAL_NULL;
-    }
-    for (uint32_t i = 0; i < dashes.Length(); ++i) {
-        double d = dashes[i];
-        JS::Value elt = DOUBLE_TO_JSVAL(d);
-        if (!JS_SetElement(cx, obj, i, &elt)) {
-            rv.Throw(NS_ERROR_FAILURE);
-            return JSVAL_NULL;
+        *val = JSVAL_NULL;
+    } else {
+        JSObject* obj = JS_NewArrayObject(cx, dashes.Length(), nullptr);
+        if (!obj) {
+            return NS_ERROR_OUT_OF_MEMORY;
         }
+        for (uint32_t i = 0; i < dashes.Length(); ++i) {
+            double d = dashes[i];
+            JS::Value elt = DOUBLE_TO_JSVAL(d);
+            if (!JS_SetElement(cx, obj, i, &elt)) {
+                return NS_ERROR_FAILURE;
+            }
+        }
+        *val = OBJECT_TO_JSVAL(obj);
     }
-    return OBJECT_TO_JSVAL(obj);
+    return NS_OK;
 }
 
 }

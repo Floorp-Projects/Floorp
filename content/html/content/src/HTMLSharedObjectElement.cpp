@@ -362,9 +362,8 @@ HTMLSharedObjectElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
   if (!obj) {
     return nullptr;
   }
-  JS::Rooted<JSObject*> rootedObj(aCx, obj);
-  SetupProtoChain(aCx, rootedObj);
-  return rootedObj;
+  SetupProtoChain(aCx, obj);
+  return obj;
 }
 
 } // namespace dom
