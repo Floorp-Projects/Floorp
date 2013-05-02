@@ -254,6 +254,7 @@ public:
     void CloseNotification(const nsAString& aAlertName);
 
     int GetDPI();
+    int GetScreenDepth();
 
     void ShowFilePickerForExtensions(nsAString& aFilePath, const nsAString& aExtensions);
     void ShowFilePickerForMimeType(nsAString& aFilePath, const nsAString& aMimeType);
@@ -479,6 +480,7 @@ protected:
     jmethodID jAlertsProgressListener_OnProgress;
     jmethodID jCloseNotification;
     jmethodID jGetDpi;
+    jmethodID jGetScreenDepth;
     jmethodID jSetFullScreen;
     jmethodID jShowInputMethodPicker;
     jmethodID jNotifyDefaultPrevented;
