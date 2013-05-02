@@ -56,6 +56,7 @@ struct MmsMessageData
   nsString            subject;
   nsString            smil;
   MmsAttachmentData[] attachments;
+  uint64_t            expiryDate;
 };
 
 union MobileMessageData

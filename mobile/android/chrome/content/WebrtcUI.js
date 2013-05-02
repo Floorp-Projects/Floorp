@@ -84,8 +84,9 @@ var WebrtcUI = {
       return;
 
     let host = aBrowser.contentDocument.documentURIObject.asciiHost;
+    let requestor = chromeWin.BrowserApp.manifest ? "'" + chromeWin.BrowserApp.manifest.name  + "'" : host;
     let stringBundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
-    let message = stringBundle.formatStringFromName("getUserMedia.share" + requestType + ".message", [ host ], 1);
+    let message = stringBundle.formatStringFromName("getUserMedia.share" + requestType + ".message", [ requestor ], 1);
 
     if (audioDevices.length) {
       let buttons = this.getDeviceButtons(audioDevices, aCallID, stringBundle);
