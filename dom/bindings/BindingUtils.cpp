@@ -294,7 +294,7 @@ CreateConstructor(JSContext* cx, JSObject* global, const char* name,
 
 static bool
 DefineConstructor(JSContext* cx, JSObject* global, const char* name,
-                  JSObject* constructor)
+                  JS::Handle<JSObject*> constructor)
 {
   JSBool alreadyDefined;
   if (!JS_AlreadyHasOwnProperty(cx, global, name, &alreadyDefined)) {
@@ -312,12 +312,12 @@ CreateInterfaceObject(JSContext* cx, JSObject* global,
                       JSClass* constructorClass,
                       const JSNativeHolder* constructorNative,
                       unsigned ctorNargs, const NamedConstructor* namedConstructors,
-                      JSObject* proto,
+                      JS::Handle<JSObject*> proto,
                       const NativeProperties* properties,
                       const NativeProperties* chromeOnlyProperties,
                       const char* name)
 {
-  JSObject* constructor;
+  JS::Rooted<JSObject*> constructor(cx);
   bool isCallbackInterface = constructorClass == js::Jsvalify(&js::ObjectClass);
   if (constructorClass) {
     JSObject* constructorProto;
@@ -342,22 +342,23 @@ CreateInterfaceObject(JSContext* cx, JSObject* global,
   if (constructorClass && !isCallbackInterface) {
     // Have to shadow Function.prototype.toString, since that throws
     // on things that are not js::FunctionClass.
-    JSFunction* toString = js::DefineFunctionWithReserved(cx, constructor,
-                                                          "toString",
-                                                          InterfaceObjectToString,
-                                                          0, 0);
+    JS::Rooted<JSFunction*> toString(cx,
+      js::DefineFunctionWithReserved(cx, constructor,
+                                     "toString",
+                                     InterfaceObjectToString,
+                                     0, 0));
     if (!toString) {
       return NULL;
     }
-
-    JSObject* toStringObj = JS_GetFunctionObject(toString);
-    js::SetFunctionNativeReserved(toStringObj, TOSTRING_CLASS_RESERVED_SLOT,
-                                  PRIVATE_TO_JSVAL(constructorClass));
 
     JSString *str = ::JS_InternString(cx, name);
     if (!str) {
       return NULL;
     }
+    JSObject* toStringObj = JS_GetFunctionObject(toString);
+    js::SetFunctionNativeReserved(toStringObj, TOSTRING_CLASS_RESERVED_SLOT,
+                                  PRIVATE_TO_JSVAL(constructorClass));
+
     js::SetFunctionNativeReserved(toStringObj, TOSTRING_NAME_RESERVED_SLOT,
                                   STRING_TO_JSVAL(str));
 
@@ -413,10 +414,10 @@ CreateInterfaceObject(JSContext* cx, JSObject* global,
   if (namedConstructors) {
     int namedConstructorSlot = DOM_INTERFACE_SLOTS_BASE;
     while (namedConstructors->mName) {
-      JSObject* namedConstructor = CreateConstructor(cx, global,
-                                                     namedConstructors->mName,
-                                                     &namedConstructors->mHolder,
-                                                     namedConstructors->mNargs);
+      JS::Rooted<JSObject*> namedConstructor(cx,
+        CreateConstructor(cx, global, namedConstructors->mName,
+                          &namedConstructors->mHolder,
+                          namedConstructors->mNargs));
       if (!namedConstructor ||
           !JS_DefineProperty(cx, namedConstructor, "prototype",
                              JS::ObjectValue(*proto), JS_PropertyStub,
@@ -453,12 +454,13 @@ DefineWebIDLBindingPropertiesOnXPCProto(JSContext* cx, JSObject* proto, const Na
 
 static JSObject*
 CreateInterfacePrototypeObject(JSContext* cx, JSObject* global,
-                               JSObject* parentProto, JSClass* protoClass,
+                               JS::Handle<JSObject*> parentProto,
+                               JSClass* protoClass,
                                const NativeProperties* properties,
                                const NativeProperties* chromeOnlyProperties)
 {
-  JSObject* ourProto = JS_NewObjectWithUniqueType(cx, protoClass, parentProto,
-                                                  global);
+  JS::Rooted<JSObject*> ourProto(cx,
+    JS_NewObjectWithUniqueType(cx, protoClass, parentProto, global));
   if (!ourProto) {
     return NULL;
   }
@@ -501,7 +503,8 @@ CreateInterfacePrototypeObject(JSContext* cx, JSObject* global,
 }
 
 void
-CreateInterfaceObjects(JSContext* cx, JSObject* global, JSObject* protoProto,
+CreateInterfaceObjects(JSContext* cx, JSObject* global,
+                       JS::Handle<JSObject*> protoProto,
                        JSClass* protoClass, JSObject** protoCache,
                        JSClass* constructorClass, const JSNativeHolder* constructor,
                        unsigned ctorNargs, const NamedConstructor* namedConstructors,
@@ -535,10 +538,11 @@ CreateInterfaceObjects(JSContext* cx, JSObject* global, JSObject* protoProto,
              "If, and only if, there is an interface object we need to cache "
              "it");
 
-  JSObject* proto;
+  JS::Rooted<JSObject*> proto(cx);
   if (protoClass) {
-    proto = CreateInterfacePrototypeObject(cx, global, protoProto, protoClass,
-                                           properties, chromeOnlyProperties);
+    proto =
+      CreateInterfacePrototypeObject(cx, global, protoProto, protoClass,
+                                     properties, chromeOnlyProperties);
     if (!proto) {
       return;
     }
@@ -549,7 +553,7 @@ CreateInterfaceObjects(JSContext* cx, JSObject* global, JSObject* protoProto,
     *protoCache = proto;
   }
   else {
-    proto = NULL;
+    MOZ_ASSERT(!proto);
   }
 
   JSObject* interface;
@@ -1470,7 +1474,7 @@ ReparentWrapper(JSContext* aCx, JS::HandleObject aObjArg)
   // return early we must avoid ending up with two reflectors pointing to the
   // same native. Other than that, the objects we create will just go away.
 
-  JSObject *proto =
+  JS::Handle<JSObject*> proto =
     (domClass->mGetProto)(aCx,
                           js::GetGlobalForObjectCrossCompartment(newParent));
   if (!proto) {
