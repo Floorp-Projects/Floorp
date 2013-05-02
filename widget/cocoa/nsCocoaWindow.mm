@@ -2522,14 +2522,13 @@ static void MozFrameView_initTitleCell(id self, SEL sel, id cell)
   target.super_class = [self superclass];
   NSFrameView_initTitleCell super = (NSFrameView_initTitleCell) objc_msgSendSuper;
   super(&target, sel, cell);
-  Class oldCellClass = [cell class];
   if (cell) {
+    Class cellClass = [cell class];
     if (!gMozTitleCellClass) {
-      Class superclass = [cell class];
-      Class newClass = objc_allocateClassPair(superclass,
+      Class newClass = objc_allocateClassPair(cellClass,
                                               "MozTitleCell", 0);
       if (newClass) {
-        if ([superclass instancesRespondToSelector:@selector(drawWithFrame:inView:)]) {
+        if ([cellClass instancesRespondToSelector:@selector(drawWithFrame:inView:)]) {
           class_addMethod(newClass, @selector(drawWithFrame:inView:),
                           (IMP)MozTitleCell_drawWithFrame,
                           "v@:{_NSRect={_NSPoint=ff}{_NSSize=ff}}@");
@@ -2538,7 +2537,8 @@ static void MozFrameView_initTitleCell(id self, SEL sel, id cell)
         gMozTitleCellClass = newClass;
       }
     }
-    if (gMozTitleCellClass) {
+    if (gMozTitleCellClass &&
+        cellClass == class_getSuperclass(gMozTitleCellClass)) {
       object_setClass(cell, gMozTitleCellClass);
     }
   }
@@ -2547,19 +2547,28 @@ static void MozFrameView_initTitleCell(id self, SEL sel, id cell)
 static int32_t MozFrameView_buttonBoxDisplayPixelsWidth(id self, SEL sel)
 {
   NSRect buttonBox = NSZeroRect;
-  NSButton *closeButton = [self closeButton];
+  NSButton *closeButton = nil;
+  if ([self respondsToSelector:@selector(closeButton)]) {
+    closeButton = [self closeButton];
+  }
   if (closeButton) {
     NSRect closeButtonBox = [self convertRect:[closeButton bounds]
                                      fromView:closeButton];
     buttonBox = NSUnionRect(buttonBox, closeButtonBox);
   }
-  NSButton *minimizeButton = [self minimizeButton];
+  NSButton *minimizeButton = nil;
+  if ([self respondsToSelector:@selector(minimizeButton)]) {
+    minimizeButton = [self minimizeButton];
+  }
   if (minimizeButton) {
     NSRect minimizeButtonBox = [self convertRect:[minimizeButton bounds]
                                         fromView:minimizeButton];
     buttonBox = NSUnionRect(buttonBox, minimizeButtonBox);
   }
-  NSButton *zoomButton = [self zoomButton];
+  NSButton *zoomButton = nil;
+  if ([self respondsToSelector:@selector(zoomButton)]) {
+    zoomButton = [self zoomButton];
+  }
   if (zoomButton) {
     NSRect zoomButtonBox = [self convertRect:[zoomButton bounds]
                                     fromView:zoomButton];
@@ -2571,7 +2580,10 @@ static int32_t MozFrameView_buttonBoxDisplayPixelsWidth(id self, SEL sel)
 static int32_t MozFrameView_fullScreenButtonDisplayPixelsWidth(id self, SEL sel)
 {
   CGFloat floatWidth = 0;
-  NSButton *fullScreenButton = [self fullScreenButton];
+  NSButton *fullScreenButton = nil;
+  if ([self respondsToSelector:@selector(fullScreenButton)]) {
+    fullScreenButton = [self fullScreenButton];
+  }
   if (fullScreenButton) {
     floatWidth += [self convertSize:[fullScreenButton bounds].size
                            fromView:fullScreenButton].width;
