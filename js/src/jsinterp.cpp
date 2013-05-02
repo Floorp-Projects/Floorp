@@ -565,11 +565,9 @@ js::ExecuteKernel(JSContext *cx, HandleScript script, JSObject &scopeChainArg, c
     if (!cx->stack.pushExecuteFrame(cx, script, thisv, scopeChain, type, evalInFrame, &efg))
         return false;
 
-    if (!types::IgnoreTypeChanges(cx, script)) {
-        if (!script->ensureRanAnalysis(cx))
-            return false;
-        TypeScript::SetThis(cx, script, efg.fp()->thisValue());
-    }
+    if (!script->ensureRanAnalysis(cx))
+        return false;
+    TypeScript::SetThis(cx, script, efg.fp()->thisValue());
 
     Probes::startExecution(script);
     bool ok = RunScript(cx, efg.fp());
@@ -3368,11 +3366,7 @@ END_CASE(JSOP_ARRAYPUSH)
                 regs.sp -= 1;
                 if (!ok)
                     goto error;
-                break;
               }
-
-              case JSTRY_LOOP:
-                break;
            }
         }
 

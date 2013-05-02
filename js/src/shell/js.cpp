@@ -4927,6 +4927,11 @@ ProcessArgs(JSContext *cx, JSObject *obj_, OptionParser *op)
     if (op->getBoolOption('s'))
         JS_ToggleOptions(cx, JSOPTION_STRICT);
 
+    if (op->getBoolOption("no-jm")) {
+        enableMethodJit = false;
+        JS_ToggleOptions(cx, JSOPTION_METHODJIT);
+    }
+
     if (op->getBoolOption('d')) {
         JS_SetRuntimeDebugMode(JS_GetRuntime(cx), true);
         JS_SetDebugMode(cx, true);
@@ -5116,16 +5121,12 @@ Shell(JSContext *cx, OptionParser *op, char **envp)
     JSAutoRequest ar(cx);
 
     /*
-     * First check to see if type inference and JM are enabled. These flags
-     * must be set on the compartment when it is constructed.
+     * First check to see if type inference is enabled. This flag must be set
+     * on the compartment when it is constructed.
      */
     if (op->getBoolOption("no-ti")) {
         enableTypeInference = false;
         JS_ToggleOptions(cx, JSOPTION_TYPE_INFERENCE);
-    }
-    if (op->getBoolOption("no-jm")) {
-        enableMethodJit = false;
-        JS_ToggleOptions(cx, JSOPTION_METHODJIT);
     }
 
     RootedObject glob(cx);

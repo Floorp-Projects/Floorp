@@ -115,11 +115,7 @@ FindExceptionHandler(JSContext *cx)
                   cx->regs().sp -= 1;
                   if (!ok)
                       goto error;
-                  break;
                 }
-
-                case JSTRY_LOOP:
-                  break;
             }
         }
     } else {
