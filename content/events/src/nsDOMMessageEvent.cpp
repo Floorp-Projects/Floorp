@@ -8,6 +8,9 @@
 #include "jsapi.h"
 #include "nsDOMClassInfoID.h"
 
+using namespace mozilla;
+using namespace mozilla::dom;
+
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsDOMMessageEvent, nsDOMEvent)
   tmp->mData = JSVAL_VOID;
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSource)
@@ -49,10 +52,19 @@ nsDOMMessageEvent::~nsDOMMessageEvent()
 NS_IMETHODIMP
 nsDOMMessageEvent::GetData(JSContext* aCx, JS::Value* aData)
 {
-  *aData = mData;
-  if (!JS_WrapValue(aCx, aData))
-    return NS_ERROR_FAILURE;
-  return NS_OK;
+  ErrorResult rv;
+  *aData = GetData(aCx, rv);
+  return rv.ErrorCode();
+}
+
+JS::Value
+nsDOMMessageEvent::GetData(JSContext* aCx, ErrorResult& aRv)
+{
+  JS::Value data = mData;
+  if (!JS_WrapValue(aCx, &data)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+  }
+  return data;
 }
 
 NS_IMETHODIMP
