@@ -532,7 +532,7 @@ nsIContent *
 nsContentList::NamedItem(const nsAString& aName, bool aDoFlush)
 {
   BringSelfUpToDate(aDoFlush);
-    
+
   uint32_t i, count = mElements.Length();
 
   // Typically IDs and names are atomized

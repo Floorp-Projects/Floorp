@@ -1393,7 +1393,7 @@ nsXULTemplateBuilder::InitHTMLTemplateRoot()
                                     getter_AddRefs(wrapper));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    JSObject* jselement = JSVAL_TO_OBJECT(v);
+    JS::Rooted<JSObject*> jselement(jscontext, JSVAL_TO_OBJECT(v));
 
     if (mDB) {
         // database
