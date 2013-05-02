@@ -142,11 +142,11 @@ bool VoiceEngine::Delete(VoiceEngine*& voiceEngine)
     return true;
 }
 
-int VoiceEngine::SetAndroidObjects(void* javaVM, void* env, void* context)
+int VoiceEngine::SetAndroidObjects(void* javaVM, void* context)
 {
 #if defined(ANDROID) && !defined(MOZ_WIDGET_GONK)
-  return AudioDeviceAndroidJni::SetAndroidAudioDeviceObjects(
-      javaVM, env, context);
+    return AudioDeviceAndroidJni::SetAndroidAudioDeviceObjects(
+         javaVM, context);
 #else
   return -1;
 #endif

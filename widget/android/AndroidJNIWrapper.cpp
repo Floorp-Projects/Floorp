@@ -119,4 +119,14 @@ extern "C" {
     mozilla::AutoLocalJNIFrame jniFrame(env);
     return env->CallStaticIntMethodA(cls, method, values);
   }
+
+  __attribute__ ((visibility("default")))
+  jobject jsjni_GetGlobalContextRef() {
+    return mozilla::AndroidBridge::Bridge()->GetGlobalContextRef();
+  }
+
+  __attribute__ ((visibility("default")))
+  JavaVM* jsjni_GetVM() {
+    return mozilla::AndroidBridge::GetVM();
+  }
 }
