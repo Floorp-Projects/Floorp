@@ -3505,7 +3505,8 @@ var XULBrowserWindow = {
   statusText: "",
   isBusy: false,
   // The pages in this array should be kept in sync with what pages that
-  // panelUIOverlay.xul is set to overlay in /browser/base/jar.mn
+  // panelUIOverlay.xul is set to overlay in
+  // browser/components/customizableui/content/jar.mn
   inContentWhitelist: ["about:addons", "about:downloads", "about:permissions",
                        "about:sync-progress", "about:preferences"],
 
@@ -4057,8 +4058,7 @@ var CombinedStopReload = {
     var stop = document.getElementById("stop-button");
 
     if (urlbar) {
-      if (urlbar.parentNode.getAttribute("mode") != "icons" ||
-          !reload || urlbar.nextSibling != reload ||
+      if (!reload || urlbar.nextSibling != reload ||
           !stop || reload.nextSibling != stop)
         urlbar.removeAttribute("combined");
       else {
