@@ -905,14 +905,18 @@ IonBuilder::maybeAddOsrTypeBarriers()
     static const size_t OSR_PHI_POSITION = 1;
     JS_ASSERT(preheader->getPredecessor(OSR_PHI_POSITION) == osrBlock);
 
-    for (uint32_t i = info().startArgSlot(); i < osrBlock->stackDepth(); i++) {
+    MPhiIterator headerPhi = header->phisBegin();
+    while (headerPhi != header->phisEnd() && headerPhi->slot() < info().startArgSlot())
+        headerPhi++;
+
+    for (uint32_t i = info().startArgSlot(); i < osrBlock->stackDepth(); i++, headerPhi++) {
         MInstruction *def = osrBlock->getSlot(i)->toOsrValue();
 
-        MDefinition *headerValue = header->getSlot(i);
+        JS_ASSERT(headerPhi->slot() == i);
         MPhi *preheaderPhi = preheader->getSlot(i)->toPhi();
 
-        MIRType type = headerValue->type();
-        types::StackTypeSet *typeSet = headerValue->resultTypeSet();
+        MIRType type = headerPhi->type();
+        types::StackTypeSet *typeSet = headerPhi->resultTypeSet();
 
         if (!addOsrValueTypeBarrier(i, &def, type, typeSet))
             return false;
