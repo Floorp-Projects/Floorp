@@ -47,6 +47,8 @@
 
 #include "jsobjinlines.h"
 
+#include "js/Date.h"
+
 using namespace js;
 using namespace js::types;
 
@@ -342,6 +344,30 @@ MakeDate(double day, double time)
 
     /* Step 2. */
     return day * msPerDay + time;
+}
+
+JS_PUBLIC_API(double)
+JS::MakeDate(double year, unsigned month, unsigned day)
+{
+    return TimeClip(::MakeDate(MakeDay(year, month, day), 0));
+}
+
+JS_PUBLIC_API(double)
+JS::YearFromTime(double time)
+{
+    return ::YearFromTime(time);
+}
+
+JS_PUBLIC_API(double)
+JS::MonthFromTime(double time)
+{
+    return ::MonthFromTime(time);
+}
+
+JS_PUBLIC_API(double)
+JS::DayFromTime(double time)
+{
+    return DateFromTime(time);
 }
 
 /*

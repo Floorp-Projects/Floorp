@@ -69,6 +69,7 @@ EXPORTS.js += [
     'Anchor.h',
     'CallArgs.h',
     'CharacterEncoding.h',
+    'Date.h',
     'GCAPI.h',
     'HashTable.h',
     'HeapAPI.h',
