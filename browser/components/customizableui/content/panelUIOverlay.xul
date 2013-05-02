@@ -10,11 +10,11 @@
   %browserDTD;
 ]>
 
-<?xml-stylesheet href="chrome://browser/skin/panelUIOverlay.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/customizableui/panelUIOverlay.css" type="text/css"?>
 
 <overlay id="panelUIOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script type="application/javascript" src="chrome://browser/content/panelUIOverlay.js"/>
+  <script type="application/javascript" src="chrome://browser/content/customizableui/panelUIOverlay.js"/>
 
   <hbox id="app-extension-point-end">
     <toolbarbutton id="PanelUI-menu-button"
