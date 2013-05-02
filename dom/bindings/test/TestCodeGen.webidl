@@ -428,6 +428,17 @@ interface TestInterface {
   void passUnionWithObject((object or long) arg);
   //void passUnionWithDict((Dict or long) arg);
 
+  // Date types
+  void passDate(Date arg);
+  void passNullableDate(Date? arg);
+  void passOptionalDate(optional Date arg);
+  void passOptionalNullableDate(optional Date? arg);
+  void passOptionalNullableDateWithDefaultValue(optional Date? arg = null);
+  void passDateSequence(sequence<Date> arg);
+  void passNullableDateSequence(sequence<Date?> arg);
+  Date receiveDate();
+  Date? receiveNullableDate();
+
   // binaryNames tests
   void methodRenamedFrom();
   void methodRenamedFrom(byte argument);
@@ -468,6 +479,7 @@ interface TestInterface {
   void overload2(TestInterface arg);
   void overload2(optional Dict arg);
   void overload2(DOMString arg);
+  void overload2(Date arg);
   void overload3(TestInterface arg);
   void overload3(TestCallback arg);
   void overload3(DOMString arg);
