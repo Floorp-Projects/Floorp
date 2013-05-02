@@ -202,9 +202,6 @@ BreakTypeToString(uint8_t aBreakType)
   case NS_STYLE_CLEAR_RIGHT: return "rightbr";
   case NS_STYLE_CLEAR_LEFT_AND_RIGHT: return "leftbr+rightbr";
   case NS_STYLE_CLEAR_LINE: return "linebr";
-  case NS_STYLE_CLEAR_BLOCK: return "blockbr";
-  case NS_STYLE_CLEAR_COLUMN: return "columnbr";
-  case NS_STYLE_CLEAR_PAGE: return "pagebr";
   default:
     break;
   }
