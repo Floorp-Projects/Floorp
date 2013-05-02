@@ -20,6 +20,7 @@ browser.jar:
   skin/classic/browser/actionicon-tab.png
   skin/classic/browser/appmenu.png
 * skin/classic/browser/browser.css
+* skin/classic/browser/browser-lightweightTheme.css
   skin/classic/browser/click-to-play-warning-stripes.png
   skin/classic/browser/customization/customization-mode-background.jpg (customization/customization-mode-background.jpg)
 * skin/classic/browser/engineManager.css
