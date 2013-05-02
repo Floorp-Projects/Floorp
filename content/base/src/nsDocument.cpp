@@ -4968,7 +4968,8 @@ CustomElementConstructor(JSContext *aCx, unsigned aArgc, JS::Value* aVp)
 {
   JS::Value calleeVal = JS_CALLEE(aCx, aVp);
 
-  JSObject* global = JS_GetGlobalForObject(aCx, &calleeVal.toObject());
+  JS::Rooted<JSObject*> global(aCx,
+    JS_GetGlobalForObject(aCx, &calleeVal.toObject()));
   nsCOMPtr<nsPIDOMWindow> window = do_QueryWrapper(aCx, global);
   MOZ_ASSERT(window, "Should have a non-null window");
 
@@ -6574,7 +6575,7 @@ nsIDocument::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv)
   bool sameDocument = oldDocument == this;
 
   AutoJSContext cx;
-  JSObject *newScope = nullptr;
+  JS::Rooted<JSObject*> newScope(cx, nullptr);
   if (!sameDocument) {
     newScope = GetWrapper();
     if (!newScope && GetScopeObject() && GetScopeObject()->GetGlobalJSObject()) {
@@ -6582,7 +6583,7 @@ nsIDocument::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv)
       // irrelevant, given that we're passing aAllowWrapping = false, and
       // documents should always insist on being wrapped in an canonical
       // scope. But we try to pass something sane anyway.
-      JSObject *global = GetScopeObject()->GetGlobalJSObject();
+      JS::Rooted<JSObject*> global(cx, GetScopeObject()->GetGlobalJSObject());
 
       JS::Value v;
       rv = nsContentUtils::WrapNative(cx, global, this, this, &v, nullptr,
@@ -11200,7 +11201,7 @@ nsIDocument::Evaluate(const nsAString& aExpression, nsINode* aContextNode,
 // This is just a hack around the fact that window.document is not
 // [Unforgeable] yet.
 bool
-nsIDocument::PostCreateWrapper(JSContext* aCx, JSObject *aNewObject)
+nsIDocument::PostCreateWrapper(JSContext* aCx, JS::Handle<JSObject*> aNewObject)
 {
   MOZ_ASSERT(IsDOMBinding());
 

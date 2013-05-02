@@ -923,8 +923,9 @@ InterfaceToJsval(nsPIDOMWindow* aWindow, nsISupports* aObject, const nsIID* aIID
   }
 
   JS::Value someJsVal;
+  JS::Rooted<JSObject*> global(cx, JS_GetGlobalObject(cx));
   nsresult rv = nsContentUtils::WrapNative(cx,
-                                           JS_GetGlobalObject(cx),
+                                           global,
                                            aObject,
                                            aIID,
                                            &someJsVal);
