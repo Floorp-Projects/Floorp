@@ -23,6 +23,8 @@ this.EXPORTED_SYMBOLS = [
   "XPATH"
 ];
 
+const DOCUMENT_POSITION_DISCONNECTED = 1;
+
 let uuidGen = Components.classes["@mozilla.org/uuid-generator;1"]
              .getService(Components.interfaces.nsIUUIDGenerator);
 
@@ -113,7 +115,11 @@ ElementManager.prototype = {
       delete this.seenItems[id];
     }
     // use XPCNativeWrapper to compare elements; see bug 834266
-    if (!el || !(XPCNativeWrapper(el).ownerDocument == XPCNativeWrapper(win).document)) {
+    let wrappedWin = XPCNativeWrapper(win);
+    if (!el ||
+        !(XPCNativeWrapper(el).ownerDocument == wrappedWin.document) ||
+        (XPCNativeWrapper(el).compareDocumentPosition(wrappedWin.document.documentElement) &
+         DOCUMENT_POSITION_DISCONNECTED)) {
       throw new ElementException("Stale element reference", 10, null);
     }
     return el;
