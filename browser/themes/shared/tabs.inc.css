@@ -47,8 +47,48 @@
 }
 
 .tab-content {
-  -moz-padding-end: 10px;
-  -moz-padding-start: 10px;
+  -moz-padding-end: 9px;
+  -moz-padding-start: 9px;
+}
+
+.tab-throbber,
+.tab-icon-image,
+.tab-close-button {
+  margin-top: 1px;
+}
+
+.tab-throbber,
+.tab-icon-image {
+  height: 16px;
+  width: 16px;
+}
+
+.tab-icon-image {
+  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
+}
+
+.tab-throbber {
+  list-style-image: url("chrome://browser/skin/tabbrowser/connecting.png");
+}
+
+.tab-throbber[progress] {
+  list-style-image: url("chrome://browser/skin/tabbrowser/loading.png");
+}
+
+.tab-throbber:not([pinned]),
+.tab-icon-image:not([pinned]) {
+  -moz-margin-end: 6px;
+}
+
+.tab-label {
+  -moz-margin-end: 0;
+  -moz-margin-start: 0;
+}
+
+.tab-close-button {
+  -moz-margin-start: 4px;
+  -moz-margin-end: -2px;
+  padding: 0;
 }
 
 .tab-background,
@@ -203,17 +243,4 @@
 .tabs-newtab-button {
   clip-path: url(chrome://browser/content/browser.xul#tab-clip-path-outer);
   width: 66px;
-}
-
-
-/* Tab icons */
-
-.tab-throbber,
-.tab-icon-image {
-  width: 16px;
-  height: 16px;
-}
-
-.tab-icon-image {
-  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
 }
