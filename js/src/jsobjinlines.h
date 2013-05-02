@@ -1053,7 +1053,7 @@ JSObject::hasProperty(JSContext *cx, js::HandleObject obj,
 inline bool
 JSObject::isCallable()
 {
-    return isFunction() || getClass()->call;
+    return getClass()->isCallable();
 }
 
 inline void
