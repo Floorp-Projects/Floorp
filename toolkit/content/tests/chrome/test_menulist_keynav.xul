@@ -88,7 +88,8 @@ function differentPressed()
   list.open = true;
   is(list.getBoundingClientRect().width, list.firstChild.getBoundingClientRect().width,
      "menu and popup width match");
-  ok(list.getBoundingClientRect().width > list.getItemAtIndex(0).getBoundingClientRect().width + 2,
+  var minScrollbarWidth = window.matchMedia("(-moz-overlay-scrollbars)").matches ? 0 : 3;
+  ok(list.getBoundingClientRect().width >= list.getItemAtIndex(0).getBoundingClientRect().width + minScrollbarWidth,
      "menuitem width accounts for scrollbar");
   list.open = false;
 
