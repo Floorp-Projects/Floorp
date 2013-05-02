@@ -80,6 +80,9 @@ class LinearScanAllocator : public LiveRangeAllocator<LinearScanVirtualRegister>
     typedef Vector<LiveInterval *, 0, SystemAllocPolicy> SlotList;
     SlotList finishedSlots_;
     SlotList finishedDoubleSlots_;
+#ifdef JS_NUNBOX32
+    SlotList finishedNunboxSlots_;
+#endif
 
     // Run-time state
     UnhandledQueue unhandled;
