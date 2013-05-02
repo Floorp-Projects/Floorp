@@ -588,12 +588,7 @@
  * themes with Aero Glass.
  */
 #titlebar-buttonbox {
-  -moz-appearance: -moz-window-button-box;
   z-index: 1;
-}
-
-#main-window[sizemode="maximized"] #titlebar-buttonbox {
-  -moz-appearance: -moz-window-button-box-maximized;
 }
 
 .titlebar-placeholder[type="appmenu-button"] {
