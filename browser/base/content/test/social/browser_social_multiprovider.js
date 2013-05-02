@@ -59,10 +59,6 @@ var tests = {
 
 function checkUIStateMatchesProvider(provider) {
   let profileData = getExpectedProfileData(provider);
-  // Bug 789863 - share button uses 'displayName', toolbar uses 'userName'
-  // Check the "share button"
-  let displayNameEl = document.getElementById("socialUserDisplayName");
-  is(displayNameEl.getAttribute("label"), profileData.displayName, "display name matches provider profile");
   // The toolbar
   let loginStatus = document.getElementsByClassName("social-statusarea-loggedInStatus");
   for (let label of loginStatus) {
