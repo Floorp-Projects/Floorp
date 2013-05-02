@@ -233,6 +233,12 @@ fips_140()
 
   echo "mangling ${SOFTOKEN}"
   echo "mangle -i ${SOFTOKEN} -o -8 -b 5"
+  # If nss was built without softoken use the system installed one.
+  # It's location must be specified by the package maintainer.
+  if [ ! -e  ${MANGLEDIR}/${DLL_PREFIX}softokn3.${DLL_SUFFIX} ]; then
+    echo "cp ${SOFTOKEN_LIB_DIR}/${DLL_PREFIX}softokn3.${DLL_SUFFIX} ${MANGLEDIR}"
+    cp ${SOFTOKEN_LIB_DIR}/${DLL_PREFIX}softokn3.${DLL_SUFFIX} ${MANGLEDIR}
+  fi
   ${BINDIR}/mangle -i ${SOFTOKEN} -o -8 -b 5 2>&1
   if [ $? -eq 0 ]; then
     if [ "${OS_ARCH}" = "WINNT" ]; then

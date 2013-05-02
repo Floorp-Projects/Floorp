@@ -4,8 +4,6 @@
 
 /*
  * Interface to the PKCS7 implementation.
- *
- * $Id$
  */
 
 #ifndef _SECPKCS7_H_

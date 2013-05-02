@@ -11,10 +11,6 @@
  * Low-level methods for interaction with cryptoki devices
  */
 
-#ifdef DEBUG
-static const char DEV_CVS_ID[] = "@(#) $RCSfile$ $Revision$ $Date$";
-#endif /* DEBUG */
-
 #ifndef NSSDEV_H
 #include "nssdev.h"
 #endif /* NSSDEV_H */

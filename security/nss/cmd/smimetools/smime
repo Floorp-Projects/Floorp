@@ -7,8 +7,6 @@
 #
 # smime.pl - frontend for S/MIME message generation and parsing
 #
-# $Id$
-#
 
 use Getopt::Std;
 

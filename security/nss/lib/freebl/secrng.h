@@ -7,8 +7,6 @@
 /*
  * secrng.h - public data structures and prototypes for the secure random
  *	      number generator
- *
- * $Id$
  */
 
 /******************************************/

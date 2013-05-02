@@ -5,8 +5,6 @@
 /*
  * PKCS7 implementation -- the exported parts that are used whether
  * creating or decoding.
- *
- * $Id$
  */
 
 #include "p7local.h"

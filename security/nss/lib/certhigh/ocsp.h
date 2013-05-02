@@ -4,8 +4,6 @@
 
 /*
  * Interface to the OCSP implementation.
- *
- * $Id$
  */
 
 #ifndef _OCSP_H_
