@@ -255,13 +255,13 @@ js::CloneFunctionAtCallsite(JSContext *cx, HandleFunction fun, HandleScript scri
     if (!table.initialized() && !table.init())
         return NULL;
 
-    Key key;
-    SkipRoot skipKey(cx, &key); /* Stop the analysis complaining about unrooted key. */
-    key.script = script;
-    key.offset = pc - script->code;
-    key.original = fun;
+    uint32_t offset = pc - script->code;
+    void* originalScript = script;
+    void* originalFun = fun;
+    SkipRoot skipScript(cx, &originalScript);
+    SkipRoot skipFun(cx, &originalFun);
 
-    Table::AddPtr p = table.lookupForAdd(key);
+    Table::AddPtr p = table.lookupForAdd(Key(fun, script, offset));
     SkipRoot skipHash(cx, &p); /* Prevent the hash from being poisoned. */
     if (p)
         return p->value;
@@ -279,11 +279,11 @@ js::CloneFunctionAtCallsite(JSContext *cx, HandleFunction fun, HandleScript scri
     clone->nonLazyScript()->isCallsiteClone = true;
     clone->nonLazyScript()->setOriginalFunctionObject(fun);
 
+    Key key(fun, script, offset);
+
     /* Recalculate the hash if script or fun have been moved. */
-    if (key.script != script && key.original != fun) {
-        key.script = script;
-        key.original = fun;
-        Table::AddPtr p = table.lookupForAdd(key);
+    if (script != originalScript || fun != originalFun) {
+        p = table.lookupForAdd(key);
         JS_ASSERT(!p);
     }
 
