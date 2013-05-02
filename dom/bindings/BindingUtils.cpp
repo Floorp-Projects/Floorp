@@ -275,7 +275,7 @@ Constructor(JSContext* cx, unsigned argc, JS::Value* vp)
 }
 
 static JSObject*
-CreateConstructor(JSContext* cx, JSObject* global, const char* name,
+CreateConstructor(JSContext* cx, JS::Handle<JSObject*> global, const char* name,
                   const JSNativeHolder* nativeHolder, unsigned ctorNargs)
 {
   JSFunction* fun = js::NewFunctionWithReserved(cx, Constructor, ctorNargs,
@@ -293,7 +293,7 @@ CreateConstructor(JSContext* cx, JSObject* global, const char* name,
 }
 
 static bool
-DefineConstructor(JSContext* cx, JSObject* global, const char* name,
+DefineConstructor(JSContext* cx, JS::Handle<JSObject*> global, const char* name,
                   JS::Handle<JSObject*> constructor)
 {
   JSBool alreadyDefined;
@@ -308,7 +308,7 @@ DefineConstructor(JSContext* cx, JSObject* global, const char* name,
 }
 
 static JSObject*
-CreateInterfaceObject(JSContext* cx, JSObject* global,
+CreateInterfaceObject(JSContext* cx, JS::Handle<JSObject*> global,
                       JSClass* constructorClass,
                       const JSNativeHolder* constructorNative,
                       unsigned ctorNargs, const NamedConstructor* namedConstructors,
@@ -453,7 +453,7 @@ DefineWebIDLBindingPropertiesOnXPCProto(JSContext* cx, JSObject* proto, const Na
 }
 
 static JSObject*
-CreateInterfacePrototypeObject(JSContext* cx, JSObject* global,
+CreateInterfacePrototypeObject(JSContext* cx, JS::Handle<JSObject*> global,
                                JS::Handle<JSObject*> parentProto,
                                JSClass* protoClass,
                                const NativeProperties* properties,
@@ -503,7 +503,7 @@ CreateInterfacePrototypeObject(JSContext* cx, JSObject* global,
 }
 
 void
-CreateInterfaceObjects(JSContext* cx, JSObject* global,
+CreateInterfaceObjects(JSContext* cx, JS::Handle<JSObject*> global,
                        JS::Handle<JSObject*> protoProto,
                        JSClass* protoClass, JSObject** protoCache,
                        JSClass* constructorClass, const JSNativeHolder* constructor,
@@ -1474,9 +1474,9 @@ ReparentWrapper(JSContext* aCx, JS::HandleObject aObjArg)
   // return early we must avoid ending up with two reflectors pointing to the
   // same native. Other than that, the objects we create will just go away.
 
-  JS::Handle<JSObject*> proto =
-    (domClass->mGetProto)(aCx,
-                          js::GetGlobalForObjectCrossCompartment(newParent));
+  JS::Rooted<JSObject*> global(aCx,
+                               js::GetGlobalForObjectCrossCompartment(newParent));
+  JS::Handle<JSObject*> proto = (domClass->mGetProto)(aCx, global);
   if (!proto) {
     return NS_ERROR_FAILURE;
   }

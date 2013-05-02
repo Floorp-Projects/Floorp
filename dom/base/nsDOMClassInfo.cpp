@@ -4450,7 +4450,7 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
       }
 
       Maybe<JSAutoCompartment> ac;
-      JSObject* global;
+      JS::Rooted<JSObject*> global(cx);
       bool defineOnXray = xpc::WrapperFactory::IsXrayWrapper(obj);
       if (defineOnXray) {
         global = js::CheckedUnwrap(obj, /* stopAtOuter = */ false);

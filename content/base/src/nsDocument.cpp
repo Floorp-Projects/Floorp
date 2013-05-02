@@ -5046,7 +5046,7 @@ nsDocument::Register(JSContext* aCx, const nsAString& aName,
     rv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }
-  JSObject* global = sgo->GetGlobalJSObject();
+  JS::Rooted<JSObject*> global(aCx, sgo->GetGlobalJSObject());
 
   JSAutoCompartment ac(aCx, global);
 
