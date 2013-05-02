@@ -6380,11 +6380,11 @@ nsContentUtils::IsPatternMatching(nsAString& aValue, nsAString& aPattern,
     return true;
   }
 
-  JS::Rooted<JS::Value> rval(cx, JS::NullValue());
+  JS::Value rval = JS::NullValue();
   size_t idx = 0;
   if (!JS_ExecuteRegExpNoStatics(cx, re,
                                  static_cast<jschar*>(aValue.BeginWriting()),
-                                 aValue.Length(), &idx, true, rval.address())) {
+                                 aValue.Length(), &idx, true, &rval)) {
     JS_ClearPendingException(cx);
     return true;
   }

@@ -762,13 +762,13 @@ HTMLCanvasElement::GetContext(const nsAString& aContextId,
       MOZ_ASSERT(aCx);
       contextProps = do_CreateInstance("@mozilla.org/hash-property-bag;1");
 
-      JS::Rooted<JSObject*> opts(aCx, &aContextOptions.toObject());
-      JS::AutoIdArray props(aCx, JS_Enumerate(aCx, opts));
+      JSObject& opts = aContextOptions.toObject();
+      JS::AutoIdArray props(aCx, JS_Enumerate(aCx, &opts));
       for (size_t i = 0; !!props && i < props.length(); ++i) {
         jsid propid = props[i];
-        JS::Rooted<JS::Value> propname(aCx), propval(aCx);
-        if (!JS_IdToValue(aCx, propid, propname.address()) ||
-            !JS_GetPropertyById(aCx, opts, propid, propval.address())) {
+        JS::Value propname, propval;
+        if (!JS_IdToValue(aCx, propid, &propname) ||
+            !JS_GetPropertyById(aCx, &opts, propid, &propval)) {
           return NS_ERROR_FAILURE;
         }
 
