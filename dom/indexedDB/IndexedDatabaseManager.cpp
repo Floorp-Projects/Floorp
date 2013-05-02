@@ -402,7 +402,7 @@ IndexedDatabaseManager::InitWindowless(const jsval& aObj, JSContext* aCx)
   NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
   NS_ENSURE_ARG(!JSVAL_IS_PRIMITIVE(aObj));
 
-  JSObject* obj = JSVAL_TO_OBJECT(aObj);
+  JS::Rooted<JSObject*> obj(aCx, JSVAL_TO_OBJECT(aObj));
 
   JSBool hasIndexedDB;
   if (!JS_HasProperty(aCx, obj, "indexedDB", &hasIndexedDB)) {
