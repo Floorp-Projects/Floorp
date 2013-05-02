@@ -20,10 +20,6 @@ struct ID3D10Device;
 struct ID3D10ShaderResourceView;
 #endif
 
-#ifdef MOZ_WIDGET_GONK
-# include <ui/GraphicBuffer.h>
-#endif
-
 typedef void* HANDLE;
 
 namespace mozilla {
