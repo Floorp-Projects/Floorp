@@ -15,6 +15,8 @@
                                                                 inside the private browsing mode -->
 <!ENTITY mainWindow.titlePrivateBrowsingSuffix "(Private Browsing)">
 
+<!ENTITY appmenu.title                       "Customize and Control &brandFullName;">
+
 <!-- Tab context menu -->
 <!ENTITY  reloadTab.label                    "Reload Tab">
 <!ENTITY  reloadTab.accesskey                "R">
@@ -319,6 +321,10 @@ These should match what Safari and other Apple applications use on OS X Lion. --
 <!ENTITY appMenuGettingStarted.label "Getting Started">
 <!ENTITY appMenuSafeMode.label "Restart with Add-ons Disabled…">
 <!ENTITY appMenuSafeMode.accesskey "R">
+<!ENTITY appMenuBack.label "Back">
+<!ENTITY appMenuBookmarks.label "Bookmarks">
+<!ENTITY appMenuHistory.label "History">
+<!ENTITY appMenuHistoryMore.label "More…">
 
 <!ENTITY openCmd.commandkey           "l">
 <!ENTITY urlbar.placeholder2          "Search or enter address">
@@ -530,6 +536,9 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY zoomOutButton.tooltip          "Zoom out">
 <!ENTITY zoomInButton.tooltip           "Zoom in">
 <!ENTITY zoomControls.label             "Zoom Controls">
+<!ENTITY zoomReset.tooltip              "Reset Zoom">
+<!-- LOCALIZATION NOTE(zoomReset.label): the &#37; is the percent symbol. -->
+<!ENTITY zoomReset.label                "100&#37;">
 
 <!ENTITY quitApplicationCmdWin.label       "Exit"> 
 <!ENTITY quitApplicationCmdWin.accesskey   "x">
@@ -639,6 +648,16 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!ENTITY social.learnMore.label "Learn more…">
 <!ENTITY social.learnMore.accesskey "l">
 <!ENTITY social.closeNotificationItem.label "Not Now">
+
+
+
+<!ENTITY customizeMode.tabTitle "Customize &brandShortName;">
+<!ENTITY customizeMode.menuAndToolbars.label "Menu and toolbars">
+<!ENTITY customizeMode.menuAndToolbars.header "More tools to add to the menu and toolbar">
+<!ENTITY customizeMode.appearance.label "Appearance">
+<!ENTITY customizeMode.appearance.header "Bling!">
+<!ENTITY customizeMode.restoreDefaults "Restore Defaults">
+<!ENTITY customizeMode.done "Done">
 
 <!ENTITY social.chatBar.commandkey "c">
 <!ENTITY social.chatBar.label "Focus chats">
