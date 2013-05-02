@@ -734,17 +734,8 @@ HTMLInputElement::Clone(nsINodeInfo* aNodeInfo, nsINode** aResult) const
   nsresult rv = const_cast<HTMLInputElement*>(this)->CopyInnerTo(it);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  switch (mType) {
-    case NS_FORM_INPUT_EMAIL:
-    case NS_FORM_INPUT_SEARCH:
-    case NS_FORM_INPUT_TEXT:
-    case NS_FORM_INPUT_PASSWORD:
-    case NS_FORM_INPUT_TEL:
-    case NS_FORM_INPUT_URL:
-    case NS_FORM_INPUT_NUMBER:
-    case NS_FORM_INPUT_DATE:
-    case NS_FORM_INPUT_TIME:
-    case NS_FORM_INPUT_RANGE:
+  switch (GetValueMode()) {
+    case VALUE_MODE_VALUE:
       if (mValueChanged) {
         // We don't have our default value anymore.  Set our value on
         // the clone.
@@ -754,7 +745,7 @@ HTMLInputElement::Clone(nsINodeInfo* aNodeInfo, nsINode** aResult) const
         it->SetValueInternal(value, false, true);
       }
       break;
-    case NS_FORM_INPUT_FILE:
+    case VALUE_MODE_FILENAME:
       if (it->OwnerDoc()->IsStaticDocument()) {
         // We're going to be used in print preview.  Since the doc is static
         // we can just grab the pretty string and use it as wallpaper
@@ -764,16 +755,15 @@ HTMLInputElement::Clone(nsINodeInfo* aNodeInfo, nsINode** aResult) const
         it->mFiles.AppendObjects(mFiles);
       }
       break;
-    case NS_FORM_INPUT_RADIO:
-    case NS_FORM_INPUT_CHECKBOX:
+    case VALUE_MODE_DEFAULT_ON:
       if (mCheckedChanged) {
         // We no longer have our original checked state.  Set our
         // checked state on the clone.
         it->DoSetChecked(mChecked, false, true);
       }
       break;
-    case NS_FORM_INPUT_IMAGE:
-      if (it->OwnerDoc()->IsStaticDocument()) {
+    case VALUE_MODE_DEFAULT:
+      if (mType == NS_FORM_INPUT_IMAGE && it->OwnerDoc()->IsStaticDocument()) {
         CreateStaticImageClone(it);
       }
       break;
@@ -4470,53 +4460,36 @@ NS_IMETHODIMP
 HTMLInputElement::SaveState()
 {
   nsRefPtr<HTMLInputElementState> inputState;
-  switch (mType) {
-    case NS_FORM_INPUT_CHECKBOX:
-    case NS_FORM_INPUT_RADIO:
-      {
-        if (mCheckedChanged) {
-          inputState = new HTMLInputElementState();
-          inputState->SetChecked(mChecked);
-        }
-        break;
+  switch (GetValueMode()) {
+    case VALUE_MODE_DEFAULT_ON:
+      if (mCheckedChanged) {
+        inputState = new HTMLInputElementState();
+        inputState->SetChecked(mChecked);
       }
-
-    // Never save passwords in session history
-    case NS_FORM_INPUT_PASSWORD:
       break;
-    case NS_FORM_INPUT_EMAIL:
-    case NS_FORM_INPUT_SEARCH:
-    case NS_FORM_INPUT_TEXT:
-    case NS_FORM_INPUT_TEL:
-    case NS_FORM_INPUT_URL:
-    case NS_FORM_INPUT_HIDDEN:
-    case NS_FORM_INPUT_NUMBER:
-    case NS_FORM_INPUT_DATE:
-    case NS_FORM_INPUT_TIME:
-    case NS_FORM_INPUT_RANGE:
-      {
-        if (mValueChanged) {
-          inputState = new HTMLInputElementState();
-          nsAutoString value;
-          GetValue(value);
-          DebugOnly<nsresult> rv =
-            nsLinebreakConverter::ConvertStringLineBreaks(
-                 value,
-                 nsLinebreakConverter::eLinebreakPlatform,
-                 nsLinebreakConverter::eLinebreakContent);
-          NS_ASSERTION(NS_SUCCEEDED(rv), "Converting linebreaks failed!");
-          inputState->SetValue(value);
-       }
-      break;
-    }
-    case NS_FORM_INPUT_FILE:
-      {
-        if (mFiles.Count()) {
-          inputState = new HTMLInputElementState();
-          inputState->SetFiles(mFiles);
-        }
-        break;
+    case VALUE_MODE_FILENAME:
+      if (mFiles.Count()) {
+        inputState = new HTMLInputElementState();
+        inputState->SetFiles(mFiles);
       }
+      break;
+    case VALUE_MODE_VALUE:
+      // Never save passwords in session history such as unmodified inputs.
+      if (mType != NS_FORM_INPUT_PASSWORD && mValueChanged) {
+        inputState = new HTMLInputElementState();
+        nsAutoString value;
+        GetValue(value);
+        DebugOnly<nsresult> rv =
+          nsLinebreakConverter::ConvertStringLineBreaks(
+               value,
+               nsLinebreakConverter::eLinebreakPlatform,
+               nsLinebreakConverter::eLinebreakContent);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Converting linebreaks failed!");
+        inputState->SetValue(value);
+      }
+      break;
+    case VALUE_MODE_DEFAULT:
+      break;
   }
 
   nsresult rv = NS_OK;
@@ -4660,37 +4633,24 @@ HTMLInputElement::RestoreState(nsPresState* aState)
     (do_QueryInterface(aState->GetStateProperty()));
 
   if (inputState) {
-    switch (mType) {
-      case NS_FORM_INPUT_CHECKBOX:
-      case NS_FORM_INPUT_RADIO:
-        {
-          if (inputState->IsCheckedSet()) {
-            restoredCheckedState = true;
-            DoSetChecked(inputState->GetChecked(), true, true);
-          }
-          break;
+    switch (GetValueMode()) {
+      case VALUE_MODE_DEFAULT_ON:
+        if (inputState->IsCheckedSet()) {
+          restoredCheckedState = true;
+          DoSetChecked(inputState->GetChecked(), true, true);
         }
-
-      case NS_FORM_INPUT_EMAIL:
-      case NS_FORM_INPUT_SEARCH:
-      case NS_FORM_INPUT_TEXT:
-      case NS_FORM_INPUT_TEL:
-      case NS_FORM_INPUT_URL:
-      case NS_FORM_INPUT_HIDDEN:
-      case NS_FORM_INPUT_NUMBER:
-      case NS_FORM_INPUT_DATE:
-      case NS_FORM_INPUT_TIME:
-      case NS_FORM_INPUT_RANGE:
-        {
-          SetValueInternal(inputState->GetValue(), false, true);
-          break;
-        }
-      case NS_FORM_INPUT_FILE:
+        break;
+      case VALUE_MODE_FILENAME:
         {
           const nsCOMArray<nsIDOMFile>& files = inputState->GetFiles();
           SetFiles(files, true);
-          break;
         }
+        break;
+      case VALUE_MODE_VALUE:
+        SetValueInternal(inputState->GetValue(), false, true);
+        break;
+      case VALUE_MODE_DEFAULT:
+        break;
     }
   }
 
