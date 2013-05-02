@@ -13,14 +13,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=821850
   /** Test for XBL scope behavior. **/
   SimpleTest.waitForExplicitFinish();
 
-  // The XBL scope pref is read when a global is constructed, so we need to set
-  // it before loading the test.
-  function setup() {
-    SpecialPowers.pushPrefEnv({set: [['dom.xbl_scopes', true]] }, continueSetup);
-  }
-
   // Embed the real test. It will take care of everything else.
-  function continueSetup() {
+  //
+  // NB: This two-layer setup used to exist because XBL scopes were behind a
+  // pref, and we wanted to make sure that we properly set the pref before
+  // loading the real test. This stuff is no longer behind a pref, but we just
+  // leave the structure as-is for expediency.
+  function setup() {
     $('ifr').setAttribute('src', 'file_bug821850.xhtml');
   }
 
