@@ -183,11 +183,10 @@ interface nsIDOMTCPSocket : nsISupports
  * Needed to account for multiple possible types that can be provided to
  * the socket callbacks as arguments.
  */
-[scriptable, uuid(fff9ed4a-5e94-4fc0-84e4-7f4d35d0a26c)]
+[scriptable, uuid(322193a3-da17-4ca5-ad26-3539c519ea4b)]
 interface nsITCPSocketInternal : nsISupports {
-  // Trigger the callback for |type| and provide an Error() object with the given data
-  void callListenerError(in DOMString type, in DOMString message, in DOMString filename,
-                         in uint32_t lineNumber, in uint32_t columnNumber);
+  // Trigger the callback for |type| and provide a DOMError() object with the given data
+  void callListenerError(in DOMString type, in DOMString name);
 
   // Trigger the callback for |type| and provide a string argument
   void callListenerData(in DOMString type, in DOMString data);
