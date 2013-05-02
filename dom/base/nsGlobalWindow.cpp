@@ -952,8 +952,8 @@ static JSObject*
 NewOuterWindowProxy(JSContext *cx, JSObject *parent, bool isChrome)
 {
   JSAutoCompartment ac(cx, parent);
-  JSObject *proto;
-  if (!js::GetObjectProto(cx, parent, &proto))
+  JS::Rooted<JSObject*> proto(cx);
+  if (!js::GetObjectProto(cx, parent, proto.address()))
     return nullptr;
 
   JSObject *obj = js::Wrapper::New(cx, parent, proto, parent,
@@ -2036,8 +2036,8 @@ nsGlobalWindow::SetOuterObject(JSContext* aCx, JSObject* aOuterObject)
 
   // Set up the prototype for the outer object.
   JSObject* inner = JS_GetParent(aOuterObject);
-  JSObject* proto;
-  if (!JS_GetPrototype(aCx, inner, &proto)) {
+  JS::Rooted<JSObject*> proto(aCx);
+  if (!JS_GetPrototype(aCx, inner, proto.address())) {
     return NS_ERROR_FAILURE;
   }
   JS_SetPrototype(aCx, aOuterObject, proto);
@@ -6462,8 +6462,8 @@ JSObject* nsGlobalWindow::CallerGlobal()
   // retrieve the global corresponding to the innermost scripted frame. Then,
   // we verify that its principal is subsumed by the subject principal. If it
   // isn't, something is screwy, and we want to clamp to the cx global.
-  JSObject *scriptedGlobal = JS_GetScriptedGlobal(cx);
-  JSObject *cxGlobal = JS_GetGlobalForScopeChain(cx);
+  JS::Rooted<JSObject*> scriptedGlobal(cx, JS_GetScriptedGlobal(cx));
+  JS::Rooted<JSObject*> cxGlobal(cx, JS_GetGlobalForScopeChain(cx));
   if (!xpc::AccessCheck::subsumes(cxGlobal, scriptedGlobal)) {
     NS_WARNING("Something nasty is happening! Applying countermeasures...");
     return cxGlobal;
@@ -6477,7 +6477,7 @@ nsGlobalWindow::CallerInnerWindow()
 {
   JSContext *cx = nsContentUtils::GetCurrentJSContext();
   NS_ENSURE_TRUE(cx, nullptr);
-  JSObject *scope = CallerGlobal();
+  JS::Rooted<JSObject*> scope(cx, CallerGlobal());
 
   // When Jetpack runs content scripts inside a sandbox, it uses
   // sandboxPrototype to make them appear as though they're running in the
@@ -6487,8 +6487,8 @@ nsGlobalWindow::CallerInnerWindow()
   // now we need to do some special handling to support it.
   {
     JSAutoCompartment ac(cx, scope);
-    JSObject *scopeProto;
-    bool ok = JS_GetPrototype(cx, scope, &scopeProto);
+    JS::Rooted<JSObject*> scopeProto(cx);
+    bool ok = JS_GetPrototype(cx, scope, scopeProto.address());
     NS_ENSURE_TRUE(ok, nullptr);
     if (scopeProto && xpc::IsSandboxPrototypeProxy(scopeProto) &&
         (scopeProto = js::CheckedUnwrap(scopeProto, /* stopAtOuter = */ false)))
@@ -6590,10 +6590,10 @@ PostMessageReadStructuredClone(JSContext* cx,
     if (JS_ReadBytes(reader, &supports, sizeof(supports))) {
       JS::Rooted<JSObject*> global(cx, JS_GetGlobalForScopeChain(cx));
       if (global) {
-        JS::Value val;
+        JS::Rooted<JS::Value> val(cx);
         nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
         if (NS_SUCCEEDED(nsContentUtils::WrapNative(cx, global, supports,
-                                                    &val,
+                                                    val.address(),
                                                     getter_AddRefs(wrapper)))) {
           return JSVAL_TO_OBJECT(val);
         }
@@ -6728,14 +6728,16 @@ PostMessageEvent::Run()
   }
 
   // Deserialize the structured clone data
-  JS::Value messageData;
+  JS::Rooted<JS::Value> messageData(cx);
   {
     JSAutoRequest ar(cx);
     StructuredCloneInfo scInfo;
     scInfo.event = this;
 
-    if (!buffer.read(cx, &messageData, &kPostMessageCallbacks, &scInfo))
+    if (!buffer.read(cx, messageData.address(), &kPostMessageCallbacks,
+                     &scInfo)) {
       return NS_ERROR_DOM_DATA_CLONE_ERR;
+    }
   }
 
   // Create the event
@@ -7366,7 +7368,7 @@ public:
         JSContext* cx = nsContentUtils::GetSafeJSContext();
 
         JSAutoRequest ar(cx);
-        js::NukeCrossCompartmentWrappers(cx, 
+        js::NukeCrossCompartmentWrappers(cx,
                                          js::ChromeCompartmentsOnly(),
                                          js::SingleCompartment(js::GetObjectCompartment(obj)),
                                          window->IsInnerWindow() ? js::DontNukeWindowReferences :
