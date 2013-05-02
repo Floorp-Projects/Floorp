@@ -105,7 +105,7 @@ RegExpShared::isJITRuntimeEnabled(JSContext *cx)
 {
 #if ENABLE_YARR_JIT
 # if defined(ANDROID) && defined(JS_METHODJIT)
-    return cx->methodJitEnabled;
+    return !cx->jitIsBroken;
 # else
     return true;
 # endif

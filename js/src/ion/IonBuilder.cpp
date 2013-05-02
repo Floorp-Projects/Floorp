@@ -905,14 +905,18 @@ IonBuilder::maybeAddOsrTypeBarriers()
     static const size_t OSR_PHI_POSITION = 1;
     JS_ASSERT(preheader->getPredecessor(OSR_PHI_POSITION) == osrBlock);
 
-    for (uint32_t i = info().startArgSlot(); i < osrBlock->stackDepth(); i++) {
+    MPhiIterator headerPhi = header->phisBegin();
+    while (headerPhi != header->phisEnd() && headerPhi->slot() < info().startArgSlot())
+        headerPhi++;
+
+    for (uint32_t i = info().startArgSlot(); i < osrBlock->stackDepth(); i++, headerPhi++) {
         MInstruction *def = osrBlock->getSlot(i)->toOsrValue();
 
-        MDefinition *headerValue = header->getSlot(i);
+        JS_ASSERT(headerPhi->slot() == i);
         MPhi *preheaderPhi = preheader->getSlot(i)->toPhi();
 
-        MIRType type = headerValue->type();
-        types::StackTypeSet *typeSet = headerValue->resultTypeSet();
+        MIRType type = headerPhi->type();
+        types::StackTypeSet *typeSet = headerPhi->resultTypeSet();
 
         if (!addOsrValueTypeBarrier(i, &def, type, typeSet))
             return false;
@@ -5589,6 +5593,9 @@ TestSingletonPropertyTypes(JSContext *cx, MDefinition *obj, JSObject *singleton,
     if (types && types->unknownObject())
         return true;
 
+    if (id != types::IdToTypeId(id))
+        return true;
+
     RootedObject objectSingleton(cx, types ? types->getSingleton() : NULL);
     if (objectSingleton)
         return TestSingletonProperty(cx, objectSingleton, singleton, id, isKnownConstant);
@@ -6428,30 +6435,28 @@ IonBuilder::jsop_getelem_string()
 bool
 IonBuilder::jsop_setelem()
 {
-    MDefinition *value = current->peek(-1);
-    MDefinition *index = current->peek(-2);
-    MDefinition *object = current->peek(-3);
+    MDefinition *value = current->pop();
+    MDefinition *index = current->pop();
+    MDefinition *object = current->pop();
 
     int arrayType = TypedArray::TYPE_MAX;
     if (ElementAccessIsTypedArray(object, index, &arrayType))
-        return jsop_setelem_typed(arrayType);
+        return jsop_setelem_typed(arrayType, object, index, value);
 
     if (!PropertyWriteNeedsTypeBarrier(cx, current, &object, NULL, &value)) {
         if (ElementAccessIsDenseNative(object, index)) {
             types::StackTypeSet::DoubleConversion conversion =
                 object->resultTypeSet()->convertDoubleElements(cx);
             if (conversion != types::StackTypeSet::AmbiguousDoubleConversion)
-                return jsop_setelem_dense(conversion);
+                return jsop_setelem_dense(conversion, object, index, value);
         }
     }
 
     if (object->type() == MIRType_Magic)
-        return jsop_arguments_setelem();
+        return jsop_arguments_setelem(object, index, value);
 
     if (script()->argumentsHasVarBinding() && object->mightBeType(MIRType_Magic))
         return abort("Type is not definitely lazy arguments.");
-
-    current->popn(3);
 
     MInstruction *ins = MCallSetElement::New(object, index, value);
     current->add(ins);
@@ -6461,12 +6466,9 @@ IonBuilder::jsop_setelem()
 }
 
 bool
-IonBuilder::jsop_setelem_dense(types::StackTypeSet::DoubleConversion conversion)
+IonBuilder::jsop_setelem_dense(types::StackTypeSet::DoubleConversion conversion,
+                               MDefinition *obj, MDefinition *id, MDefinition *value)
 {
-    MDefinition *value = current->pop();
-    MDefinition *id = current->pop();
-    MDefinition *obj = current->pop();
-
     MIRType elementType = DenseNativeElementType(cx, obj);
     bool packed = ElementAccessIsPacked(cx, obj);
 
@@ -6535,14 +6537,11 @@ IonBuilder::jsop_setelem_dense(types::StackTypeSet::DoubleConversion conversion)
 }
 
 bool
-IonBuilder::jsop_setelem_typed_static(bool *psucceeded)
+IonBuilder::jsop_setelem_typed_static(MDefinition *obj, MDefinition *id, MDefinition *value,
+                                      bool *psucceeded)
 {
     if (!LIRGenerator::allowStaticTypedArrayAccesses())
         return true;
-
-    MDefinition *value = current->peek(-1);
-    MDefinition *id = current->peek(-2);
-    MDefinition *obj = current->peek(-3);
 
     if (ElementAccessHasExtraIndexedProperty(cx, obj))
         return true;
@@ -6571,7 +6570,6 @@ IonBuilder::jsop_setelem_typed_static(bool *psucceeded)
 
     MInstruction *store = MStoreTypedArrayElementStatic::New(typedArray, ptr, toWrite);
     current->add(store);
-    current->popn(3);
     current->push(value);
 
     *psucceeded = true;
@@ -6579,17 +6577,14 @@ IonBuilder::jsop_setelem_typed_static(bool *psucceeded)
 }
 
 bool
-IonBuilder::jsop_setelem_typed(int arrayType)
+IonBuilder::jsop_setelem_typed(int arrayType,
+                               MDefinition *obj, MDefinition *id, MDefinition *value)
 {
     bool staticAccess = false;
-    if (!jsop_setelem_typed_static(&staticAccess))
+    if (!jsop_setelem_typed_static(obj, id, value, &staticAccess))
         return false;
     if (staticAccess)
         return true;
-
-    MDefinition *value = current->pop();
-    MDefinition *id = current->pop();
-    MDefinition *obj = current->pop();
 
     SetElemICInspector icInspect(inspector->setElemICInspector(pc));
     bool expectOOB = icInspect.sawOOBTypedArrayWrite();
@@ -6754,7 +6749,7 @@ IonBuilder::jsop_arguments_getelem()
 }
 
 bool
-IonBuilder::jsop_arguments_setelem()
+IonBuilder::jsop_arguments_setelem(MDefinition *object, MDefinition *index, MDefinition *value)
 {
     return abort("NYI arguments[]=");
 }

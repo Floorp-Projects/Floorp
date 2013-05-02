@@ -26,53 +26,46 @@ function log(s) {
 
 // used to watch if requests are blocked by CSP or allowed through
 function examiner() {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-  var obsvc = Components.classes['@mozilla.org/observer-service;1']
-                        .getService(Components.interfaces.nsIObserverService);
-  obsvc.addObserver(this, "csp-on-violate-policy", false);
-  obsvc.addObserver(this, "http-on-modify-request", false);
+  SpecialPowers.addObserver(this, "csp-on-violate-policy", false);
+  SpecialPowers.addObserver(this, "http-on-modify-request", false);
 }
 examiner.prototype  = {
   observe: function(subject, topic, data) {
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
     // subject should be an nsURI, and should be either allowed or blocked.
-    if(!subject.QueryInterface)
+    if (!SpecialPowers.can_QI(subject))
       return;
 
     var testpat = new RegExp("testid=([a-z0-9-]+)");
-    var uri;
+    var asciiSpec;
     var testid;
 
     if (topic === "http-on-modify-request") {
       // request was sent
-      uri = subject.QueryInterface(Components.interfaces.nsIHttpChannel).URI;
-      if (!testpat.test(uri.asciiSpec)) return;
-      testid = testpat.exec(uri.asciiSpec)[1];
+      asciiSpec = SpecialPowers.getPrivilegedProps(SpecialPowers.do_QueryInterface(subject, "nsIHttpChannel"), "URI.asciiSpec");
+      if (!testpat.test(asciiSpec)) return;
+      testid = testpat.exec(asciiSpec)[1];
       if (testExpectedResults[testid] == "completed") return;
-      log("allowed: "+uri.asciiSpec);
-      window.testResult(testid, uri.asciiSpec, true);
+      log("allowed: "+asciiSpec);
+      window.testResult(testid, asciiSpec, true);
     }
 
     else if (topic === "csp-on-violate-policy") {
       // request was blocked
-      uri = subject.QueryInterface(Components.interfaces.nsIURI);
-      if (!testpat.test(uri.asciiSpec)) return;
-      testid = testpat.exec(uri.asciiSpec)[1];
+      asciiSpec = SpecialPowers.getPrivilegedProps(SpecialPowers.do_QueryInterface(subject, "nsIURI"), "asciiSpec");
+      if (!testpat.test(asciiSpec)) return;
+      testid = testpat.exec(asciiSpec)[1];
       // had to add this check because http-on-modify-request can fire after
       // csp-on-violate-policy, apparently, even though the request does
       // not hit the wire.
       if (testExpectedResults[testid] == "completed") return;
-      log("BLOCKED: "+uri.asciiSpec);
-      window.testResult(testid, uri.asciiSpec, false);
+      log("BLOCKED: "+asciiSpec);
+      window.testResult(testid, asciiSpec, false);
     }
   },
 
   remove: function() {
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-    var obsvc = Components.classes['@mozilla.org/observer-service;1']
-                          .getService(Components.interfaces.nsIObserverService);
-    obsvc.removeObserver(this, "csp-on-violate-policy");
-    obsvc.removeObserver(this, "http-on-modify-request");
+    SpecialPowers.removeObserver(this, "csp-on-violate-policy");
+    SpecialPowers.removeObserver(this, "http-on-modify-request");
   }
 }
 window.examiner = new examiner();
@@ -119,7 +112,6 @@ var testExpectedResults = { "font-src": true,
 // takes the name of the test, the URL that was tested, and whether the
 // load occurred
 var testResult = function(testName, url, result) {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   log("  testName: "+testName+", result: "+result+", expected: "+testExpectedResults[testName]+"\n");
   is(result, testExpectedResults[testName], testName+" test: "+url);
 

@@ -782,11 +782,11 @@ CalculateProcessCreationTimestamp()
   return 0;
 }
 #endif
- 
+
 NS_IMETHODIMP
 nsAppStartup::GetStartupInfo(JSContext* aCx, JS::Value* aRetval)
 {
-  JSObject *obj = JS_NewObject(aCx, NULL, NULL, NULL);
+  JS::Rooted<JSObject*> obj(aCx, JS_NewObject(aCx, NULL, NULL, NULL));
   *aRetval = OBJECT_TO_JSVAL(obj);
 
   PRTime ProcessCreationTimestamp = StartupTimeline::Get(StartupTimeline::PROCESS_CREATION);

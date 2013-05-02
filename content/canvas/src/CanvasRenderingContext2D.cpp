@@ -1455,6 +1455,7 @@ CanvasRenderingContext2D::CreatePattern(const HTMLImageOrCanvasOrVideoElement& e
 
   // Ignore nullptr cairo surfaces! See bug 666312.
   if (!res.mSurface->CairoSurface() || res.mSurface->CairoStatus()) {
+    error.Throw(NS_ERROR_NOT_AVAILABLE);
     return nullptr;
   }
 

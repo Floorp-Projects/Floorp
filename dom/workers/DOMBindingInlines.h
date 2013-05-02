@@ -40,7 +40,7 @@ struct WrapPrototypeTraits
     }                                                                          \
                                                                                \
     static inline JSObject*                                                    \
-    GetProtoObject(JSContext* aCx, JSObject* aGlobal)                          \
+    GetProtoObject(JSContext* aCx, JS::Handle<JSObject*> aGlobal)              \
     {                                                                          \
       using namespace mozilla::dom;                                            \
       return _class##Binding_workers::GetProtoObject(aCx, aGlobal);            \
@@ -70,13 +70,14 @@ Wrap(JSContext* aCx, JSObject* aGlobal, nsRefPtr<T>& aConcreteObject)
     }
   }
 
-  JSObject* proto = WrapPrototypeTraits<T>::GetProtoObject(aCx, aGlobal);
+  JS::Rooted<JSObject*> global(aCx, aGlobal);
+  JSObject* proto = WrapPrototypeTraits<T>::GetProtoObject(aCx, global);
   if (!proto) {
     return NULL;
   }
 
   JSObject* wrapper =
-    JS_NewObject(aCx, WrapPrototypeTraits<T>::GetJSClass(), proto, aGlobal);
+    JS_NewObject(aCx, WrapPrototypeTraits<T>::GetJSClass(), proto, global);
   if (!wrapper) {
     return NULL;
   }

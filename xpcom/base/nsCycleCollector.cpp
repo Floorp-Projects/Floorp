@@ -45,27 +45,31 @@
 // An XPCOM object is either scan-safe or scan-unsafe, purple-safe or
 // purple-unsafe.
 //
-// An object is scan-safe if:
+// An nsISupports object is scan-safe if:
 //
-//  - It can be QI'ed to |nsXPCOMCycleCollectionParticipant|, though this
-//    operation loses ISupports identity (like nsIClassInfo).
-//  - The operation |traverse| on the resulting
+//  - It can be QI'ed to |nsXPCOMCycleCollectionParticipant|, though
+//    this operation loses ISupports identity (like nsIClassInfo).
+//  - Additionally, the operation |traverse| on the resulting
 //    nsXPCOMCycleCollectionParticipant does not cause *any* refcount
 //    adjustment to occur (no AddRef / Release calls).
+//
+// A non-nsISupports ("native") object is scan-safe by explicitly
+// providing its nsCycleCollectionParticipant.
 //
 // An object is purple-safe if it satisfies the following properties:
 //
 //  - The object is scan-safe.  
 //  - If the object calls |nsCycleCollector::suspect(this)|, 
-//    it will eventually call |nsCycleCollector::forget(this)|, 
-//    exactly once per call to |suspect|, before being destroyed.
+//    it will null out the pointer from the purple buffer entry to
+//    the object before being destroyed.
 //
 // When we receive a pointer |ptr| via
 // |nsCycleCollector::suspect(ptr)|, we assume it is purple-safe. We
 // can check the scan-safety, but have no way to ensure the
 // purple-safety; objects must obey, or else the entire system falls
 // apart. Don't involve an object in this scheme if you can't
-// guarantee its purple-safety.
+// guarantee its purple-safety. The easiest way to ensure that an
+// object is purple-safe is to use nsCycleCollectingAutoRefCnt.
 //
 // When we have a scannable set of purple nodes ready, we begin
 // our walks. During the walks, the nodes we |traverse| should only
@@ -73,12 +77,12 @@
 // of those nodes. 
 //
 // We do not |AddRef| or |Release| any objects during scanning. We
-// rely on purple-safety of the roots that call |suspect| and
-// |forget| to hold, such that we will forget about a purple pointer
-// before it is destroyed.  The pointers that are merely scan-safe,
-// we hold only for the duration of scanning, and there should be no
-// objects released from the scan-safe set during the scan (there
-// should be no threads involved).
+// rely on the purple-safety of the roots that call |suspect| to
+// hold, such that we will clear the pointer from the purple buffer
+// entry to the object before it is destroyed. The pointers that are
+// merely scan-safe we hold only for the duration of scanning, and
+// there should be no objects released from the scan-safe set during
+// the scan.
 //
 // We *do* call |AddRef| and |Release| on every white object, on
 // either side of the calls to |Unlink|. This keeps the set of white
@@ -1061,8 +1065,7 @@ public:
     nsresult Init();
     void ShutdownThreads();
 
-    nsPurpleBufferEntry* Suspect2(void *n, nsCycleCollectionParticipant *cp);
-    bool Forget2(nsPurpleBufferEntry *e);
+    nsPurpleBufferEntry* Suspect(void *n, nsCycleCollectionParticipant *cp);
 
     void CheckThreadSafety();
 
@@ -2593,7 +2596,7 @@ nsCycleCollector_isScanSafe(void *s, nsCycleCollectionParticipant *cp)
 #endif
 
 nsPurpleBufferEntry*
-nsCycleCollector::Suspect2(void *n, nsCycleCollectionParticipant *cp)
+nsCycleCollector::Suspect(void *n, nsCycleCollectionParticipant *cp)
 {
     CheckThreadSafety();
 
@@ -2612,23 +2615,6 @@ nsCycleCollector::Suspect2(void *n, nsCycleCollectionParticipant *cp)
 
     // Caller is responsible for filling in result's mRefCnt.
     return mPurpleBuf.Put(n, cp);
-}
-
-
-bool
-nsCycleCollector::Forget2(nsPurpleBufferEntry *e)
-{
-    CheckThreadSafety();
-
-    // Re-entering ::Forget during collection used to be a fault, but
-    // we are canonicalizing nsISupports pointers using QI, so we will
-    // see some spurious refcount traffic here. 
-
-    if (mScanInProgress)
-        return false;
-
-    mPurpleBuf.Remove(e);
-    return true;
 }
 
 void
@@ -2954,24 +2940,7 @@ NS_CycleCollectorSuspect2(void *n, nsCycleCollectionParticipant *cp)
         return nullptr;
     }
 
-    return collector->Suspect2(n, cp);
-}
-
-bool
-NS_CycleCollectorForget2(nsPurpleBufferEntry *e)
-{
-    nsCycleCollector *collector = sCollector.get();
-
-    if (!collector)
-        MOZ_CRASH();
-
-    if (collector == (nsCycleCollector*)1) {
-        // This is our special sentinel value that tells us that we've shut
-        // down this thread's CC.
-        return true;
-    }
-
-    return collector->Forget2(e);
+    return collector->Suspect(n, cp);
 }
 
 uint32_t

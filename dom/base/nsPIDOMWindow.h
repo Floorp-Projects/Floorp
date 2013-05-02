@@ -643,7 +643,6 @@ public:
   void AddAudioContext(mozilla::dom::AudioContext* aAudioContext);
 
   // WebIDL-ish APIs
-  static bool HasPerformanceSupport();
   nsPerformance* GetPerformance();
 
 protected:

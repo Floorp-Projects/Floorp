@@ -643,9 +643,8 @@ js::GetProperty(JSContext *cx, Handle<ObjectImpl*> obj, Handle<ObjectImpl*> rece
             return false;
         }
 
-        PropDesc desc;
-        PropDesc::AutoRooter rootDesc(cx, &desc);
-        if (!GetOwnProperty(cx, current, pid, resolveFlags, &desc))
+        AutoPropDescRooter desc(cx);
+        if (!GetOwnProperty(cx, current, pid, resolveFlags, &desc.getPropDesc()))
             return false;
 
         /* No property?  Recur or bottom out. */
