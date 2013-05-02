@@ -57,8 +57,8 @@ nsDOMMessageEvent::GetData(JSContext* aCx, JS::Value* aData)
 JS::Value
 nsDOMMessageEvent::GetData(JSContext* aCx, mozilla::ErrorResult& aRv)
 {
-  JS::Rooted<JS::Value> data(aCx, mData);
-  if (!JS_WrapValue(aCx, data.address())) {
+  JS::Value data = mData;
+  if (!JS_WrapValue(aCx, &data)) {
     aRv.Throw(NS_ERROR_FAILURE);
   }
   return data;
