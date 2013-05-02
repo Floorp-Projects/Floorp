@@ -15,6 +15,16 @@
 // This must be included last:
 #include "nsObjCExceptions.h"
 
+enum {
+  mozNSScrollerStyleLegacy       = 0,
+  mozNSScrollerStyleOverlay      = 1
+};
+typedef NSInteger mozNSScrollerStyle;
+
+@interface NSScroller(AvailableSinceLion)
++ (mozNSScrollerStyle)preferredScrollerStyle;
+@end
+
 nsLookAndFeel::nsLookAndFeel() : nsXPLookAndFeel()
 {
 }
@@ -341,6 +351,9 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
     case eIntID_ScrollSliderStyle:
       aResult = eScrollThumbStyle_Proportional;
       break;
+    case eIntID_UseOverlayScrollbars:
+      aResult = UseOverlayScrollbars();
+      break;
     case eIntID_TreeOpenDelay:
       aResult = 1000;
       break;
@@ -451,6 +464,12 @@ nsLookAndFeel::GetFloatImpl(FloatID aID, float &aResult)
   }
 
   return res;
+}
+
+bool nsLookAndFeel::UseOverlayScrollbars()
+{
+  return [NSScroller respondsToSelector:@selector(preferredScrollerStyle)] &&
+         [NSScroller preferredScrollerStyle] == mozNSScrollerStyleOverlay;
 }
 
 // copied from gfxQuartzFontCache.mm, maybe should go in a Cocoa utils
