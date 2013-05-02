@@ -165,7 +165,7 @@ DashArrayToJSVal(FallibleTArray<T>& dashes,
     for (uint32_t i = 0; i < dashes.Length(); ++i) {
         double d = dashes[i];
         JS::Value elt = DOUBLE_TO_JSVAL(d);
-        if (!JS_SetElement(cx, obj, i, &elt)) {
+        if (!JS_DefineElement(cx, obj, i, elt, nullptr, nullptr, 0)) {
             rv.Throw(NS_ERROR_FAILURE);
             return JSVAL_NULL;
         }

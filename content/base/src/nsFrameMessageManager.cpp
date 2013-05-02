@@ -660,10 +660,10 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
           JS_NewObject(ctx, nullptr, nullptr, nullptr));
         NS_ENSURE_TRUE(param, NS_ERROR_OUT_OF_MEMORY);
 
-        JS::Value targetv;
+        JS::Rooted<JS::Value> targetv(ctx);
         JS::Rooted<JSObject*> global(ctx, JS_GetGlobalForObject(ctx, object));
-        nsContentUtils::WrapNative(ctx, global, aTarget, &targetv, nullptr,
-                                   true);
+        nsContentUtils::WrapNative(ctx, global, aTarget, targetv.address(),
+                                   nullptr, true);
 
         // To keep compatibility with e10s message manager,
         // define empty objects array.
@@ -700,9 +700,9 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
         JS_DefineProperty(ctx, param, "data", json, nullptr, nullptr, JSPROP_ENUMERATE);
         JS_DefineProperty(ctx, param, "objects", objectsv, nullptr, nullptr, JSPROP_ENUMERATE);
 
-        JS::Rooted<JS::Value> thisValue(ctx, JSVAL_VOID);
+        JS::Rooted<JS::Value> thisValue(ctx, JS::UndefinedValue());
 
-        JS::Value funval;
+        JS::Rooted<JS::Value> funval(ctx);
         if (JS_ObjectIsCallable(ctx, object)) {
           // If the listener is a JS function:
           funval.setObject(*object);
@@ -720,7 +720,8 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
                                      thisValue.address(), nullptr, true);
         } else {
           // If the listener is a JS object which has receiveMessage function:
-          if (!JS_GetProperty(ctx, object, "receiveMessage", &funval) ||
+          if (!JS_GetProperty(ctx, object, "receiveMessage",
+                              funval.address()) ||
               !funval.isObject())
             return NS_ERROR_UNEXPECTED;
 
