@@ -4654,6 +4654,9 @@ nsLayoutUtils::SurfaceFromElement(HTMLCanvasElement* aElement,
       surf = gfxPlatform::GetPlatform()->CreateOffscreenSurface(size, gfxASurface::CONTENT_COLOR_ALPHA);
     }
 
+    if (!surf)
+      return result;
+
     nsRefPtr<gfxContext> ctx = new gfxContext(surf);
     // XXX shouldn't use the external interface, but maybe we can layerify this
     uint32_t flags = premultAlpha ? HTMLCanvasElement::RenderFlagPremultAlpha : 0;
