@@ -2257,7 +2257,7 @@ nsFormControlList::NamedItem(const nsAString& aName,
   *aReturn = nullptr;
 
   nsCOMPtr<nsISupports> supports;
-  
+
   if (!mNameLookupTable.Get(aName, getter_AddRefs(supports))) {
     // key not found
     return NS_OK;
@@ -2553,8 +2553,8 @@ nsFormControlList::NamedItem(JSContext* cx, const nsAString& name,
   }
   JS::Rooted<JSObject*> wrapper(cx, nsWrapperCache::GetWrapper());
   JSAutoCompartment ac(cx, wrapper);
-  JS::Value v;
-  if (!mozilla::dom::WrapObject(cx, wrapper, item, &v)) {
+  JS::Rooted<JS::Value> v(cx);
+  if (!mozilla::dom::WrapObject(cx, wrapper, item, v.address())) {
     error.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
