@@ -98,6 +98,7 @@
 
 // input type=date
 #include "jsapi.h"
+#include "js/Date.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Input)
 
@@ -1177,41 +1178,17 @@ HTMLInputElement::ConvertStringToNumber(nsAString& aValue,
       }
     case NS_FORM_INPUT_DATE:
       {
-        SafeAutoJSContext ctx;
-        JSAutoRequest ar(ctx);
-
         uint32_t year, month, day;
         if (!GetValueAsDate(aValue, &year, &month, &day)) {
           return false;
         }
 
-        JSObject* date = JS_NewDateObjectMsec(ctx, 0);
-        if (!date) {
-          JS_ClearPendingException(ctx);
+        double date = JS::MakeDate(year, month - 1, day);
+        if (MOZ_DOUBLE_IS_NaN(date)) {
           return false;
         }
 
-        JS::Value rval;
-        JS::Value fullYear[3];
-        fullYear[0].setInt32(year);
-        fullYear[1].setInt32(month - 1);
-        fullYear[2].setInt32(day);
-        if (!JS::Call(ctx, date, "setUTCFullYear", 3, fullYear, &rval)) {
-          JS_ClearPendingException(ctx);
-          return false;
-        }
-
-        JS::Value timestamp;
-        if (!JS::Call(ctx, date, "getTime", 0, nullptr, &timestamp)) {
-          JS_ClearPendingException(ctx);
-          return false;
-        }
-
-        if (!timestamp.isNumber() || MOZ_DOUBLE_IS_NaN(timestamp.toNumber())) {
-          return false;
-        }
-
-        aResultValue = timestamp.toNumber();
+        aResultValue = date;
         return true;
       }
     case NS_FORM_INPUT_TIME:
@@ -1369,35 +1346,21 @@ HTMLInputElement::ConvertNumberToString(double aValue,
       return true;
     case NS_FORM_INPUT_DATE:
       {
-        SafeAutoJSContext ctx;
-        JSAutoRequest ar(ctx);
-
-        // The specs require |aValue| to be truncated.
+        // The specs (and our JS APIs) require |aValue| to be truncated.
         aValue = floor(aValue);
 
-        JSObject* date = JS_NewDateObjectMsec(ctx, aValue);
-        if (!date) {
-          JS_ClearPendingException(ctx);
+        double year = JS::YearFromTime(aValue);
+        double month = JS::MonthFromTime(aValue);
+        double day = JS::DayFromTime(aValue);
+
+        if (MOZ_DOUBLE_IS_NaN(year) ||
+            MOZ_DOUBLE_IS_NaN(month) ||
+            MOZ_DOUBLE_IS_NaN(day)) {
           return false;
         }
 
-        JS::Value year, month, day;
-        if (!JS::Call(ctx, date, "getUTCFullYear", 0, nullptr, &year) ||
-            !JS::Call(ctx, date, "getUTCMonth", 0, nullptr, &month) ||
-            !JS::Call(ctx, date, "getUTCDate", 0, nullptr, &day)) {
-          JS_ClearPendingException(ctx);
-          return false;
-        }
-
-        if (!year.isNumber() || !month.isNumber() || !day.isNumber() ||
-            MOZ_DOUBLE_IS_NaN(year.toNumber()) ||
-            MOZ_DOUBLE_IS_NaN(month.toNumber()) ||
-            MOZ_DOUBLE_IS_NaN(day.toNumber())) {
-          return false;
-        }
-
-        aResultString.AppendPrintf("%04.0f-%02.0f-%02.0f", year.toNumber(),
-                                   month.toNumber() + 1, day.toNumber());
+        aResultString.AppendPrintf("%04.0f-%02.0f-%02.0f", year,
+                                   month + 1, day);
 
         return true;
       }
