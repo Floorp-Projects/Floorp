@@ -518,25 +518,14 @@ protected:
 
   class WakeLockBoolWrapper {
   public:
-    WakeLockBoolWrapper(bool val = false)
-      : mValue(val), mCanPlay(true), mOuter(nullptr) {}
-
-    void SetOuter(nsHTMLMediaElement* outer) { mOuter = outer; }
-    void SetCanPlay(bool aCanPlay);
-
-    operator bool() { return mValue; }
-
+    WakeLockBoolWrapper(bool val = false) : mValue(val), mOuter(nullptr), mWakeLock(nullptr) {}
+    void SetOuter(HTMLMediaElement* outer) { mOuter = outer; }
+    operator bool() const { return mValue; }
     WakeLockBoolWrapper& operator=(bool val);
-
     bool operator !() const { return !mValue; }
-
   private:
-    void UpdateWakeLock();
-
     bool mValue;
-    bool mCanPlay;
-    nsHTMLMediaElement* mOuter;
-
+    HTMLMediaElement* mOuter;
     nsCOMPtr<nsIDOMMozWakeLock> mWakeLock;
   };
 
