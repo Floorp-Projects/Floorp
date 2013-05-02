@@ -1471,7 +1471,9 @@ AtomIsEventHandlerName(nsIAtom *aName)
 // Helper function to find the JSObject associated with a (presumably DOM)
 // interface.
 nsresult
-nsJSContext::JSObjectFromInterface(nsISupports* aTarget, JSObject* aScope, JSObject** aRet)
+nsJSContext::JSObjectFromInterface(nsISupports* aTarget,
+                                   JS::Handle<JSObject*> aScope,
+                                   JSObject** aRet)
 {
   // It is legal to specify a null target.
   if (!aTarget) {
@@ -1516,7 +1518,8 @@ nsJSContext::BindCompiledEventHandler(nsISupports* aTarget, JSObject* aScope,
 
   // Get the jsobject associated with this target
   JSObject *target = nullptr;
-  nsresult rv = JSObjectFromInterface(aTarget, aScope, &target);
+  JS::Rooted<JSObject*> scope(mContext, aScope);
+  nsresult rv = JSObjectFromInterface(aTarget, scope, &target);
   NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef DEBUG
@@ -1672,8 +1675,9 @@ nsJSContext::SetProperty(JSObject* aTarget, const char* aPropName, nsISupports* 
 
   Maybe<nsRootedJSValueArray> tempStorage;
 
+  JS::Rooted<JSObject*> global(mContext, GetNativeGlobal());
   nsresult rv =
-    ConvertSupportsTojsvals(aArgs, GetNativeGlobal(), &argc, &argv, tempStorage);
+    ConvertSupportsTojsvals(aArgs, global, &argc, &argv, tempStorage);
   NS_ENSURE_SUCCESS(rv, rv);
 
   JS::Value vargs;
@@ -1704,7 +1708,7 @@ nsJSContext::SetProperty(JSObject* aTarget, const char* aPropName, nsISupports* 
 
 nsresult
 nsJSContext::ConvertSupportsTojsvals(nsISupports *aArgs,
-                                     JSObject *aScope,
+                                     JS::Handle<JSObject*> aScope,
                                      uint32_t *aArgc,
                                      JS::Value **aArgv,
                                      Maybe<nsRootedJSValueArray> &aTempStorage)
@@ -1976,7 +1980,8 @@ nsJSContext::AddSupportsPrimitiveTojsvals(nsISupports *aArg, JS::Value *aArgv)
       AutoFree iidGuard(iid); // Free iid upon destruction.
 
       nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
-      JSObject *global = xpc_UnmarkGrayObject(::JS_GetGlobalObject(cx));
+      JS::Rooted<JSObject*> global(cx,
+        xpc_UnmarkGrayObject(::JS_GetGlobalObject(cx)));
       JS::Value v;
       nsresult rv = nsContentUtils::WrapNative(cx, global,
                                                data, iid, &v,

@@ -54,7 +54,7 @@ MobileMessageCallback::NotifySuccess(nsISupports *aMessage)
   AutoPushJSContext cx(scriptContext->GetNativeContext());
   NS_ENSURE_TRUE(cx, NS_ERROR_FAILURE);
 
-  JSObject* global = scriptContext->GetNativeGlobal();
+  JS::Rooted<JSObject*> global(cx, scriptContext->GetNativeGlobal());
   NS_ENSURE_TRUE(global, NS_ERROR_FAILURE);
 
   JSAutoRequest ar(cx);
