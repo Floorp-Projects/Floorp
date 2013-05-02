@@ -1,0 +1,69 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test connecting an AudioNode to an AudioParam</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="webaudio.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  SpecialPowers.setBoolPref("media.webaudio.enabled", true);
+
+  var context = new AudioContext();
+  var buffer = context.createBuffer(2, 2048, context.sampleRate);
+  for (var i = 0; i < 2048; ++i) {
+    for (var j = 0; j < 2; ++j) {
+      buffer.getChannelData(j)[i] = Math.sin(440 * 2 * (j + 1) * Math.PI * i / context.sampleRate);
+    }
+  }
+  var sourceBuffer = context.createBuffer(2, 2048, context.sampleRate);
+  for (var i = 0; i < 2048; ++i) {
+    sourceBuffer.getChannelData(0)[i] = 1;
+    sourceBuffer.getChannelData(1)[i] = -1;
+  }
+  var expectedBuffer = context.createBuffer(2, 2048, context.sampleRate);
+  for (var i = 0; i < 2048; ++i) {
+    expectedBuffer.getChannelData(0)[i] = 1 + (buffer.getChannelData(0)[i] + buffer.getChannelData(1)[i]) / 2;
+    expectedBuffer.getChannelData(1)[i] = -(1 + (buffer.getChannelData(0)[i] + buffer.getChannelData(1)[i]) / 2);
+  }
+
+  var destination = context.destination;
+
+  var paramSource = context.createBufferSource();
+  paramSource.buffer = buffer;
+
+  var source = context.createBufferSource();
+  source.buffer = sourceBuffer;
+
+  var gain = context.createGain();
+
+  paramSource.connect(gain.gain);
+  source.connect(gain);
+
+  var sp = context.createScriptProcessor(2048);
+  gain.connect(sp);
+  sp.connect(destination);
+
+  paramSource.start(0);
+  source.start(0);
+  sp.onaudioprocess = function(e) {
+    is(e.inputBuffer.numberOfChannels, 2, "Correct input channel count");
+    compareBuffers(e.inputBuffer.getChannelData(0), expectedBuffer.getChannelData(0));
+    compareBuffers(e.inputBuffer.getChannelData(1), expectedBuffer.getChannelData(1));
+
+    sp.onaudioprocess = null;
+
+    SpecialPowers.clearUserPref("media.webaudio.enabled");
+    SimpleTest.finish();
+  };
+});
+
+</script>
+</pre>
+</body>
+</html>
