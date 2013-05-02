@@ -44,8 +44,8 @@ JSDebugger::AddClass(const JS::Value &global, JSContext* cx)
   if (!global.isObject()) {
     return NS_ERROR_INVALID_ARG;
   }
-  
-  JSObject* obj = &global.toObject();
+
+  JS::RootedObject obj(cx, &global.toObject());
   obj = js::UncheckedUnwrap(obj, /* stopAtOuter = */ false);
   if (!obj) {
     return NS_ERROR_FAILURE;
