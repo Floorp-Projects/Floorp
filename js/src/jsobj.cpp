@@ -1520,8 +1520,12 @@ js::CreateThisForFunctionWithProto(JSContext *cx, HandleObject callee, JSObject 
     }
 
     if (res && cx->typeInferenceEnabled()) {
-        RootedScript script(cx, callee->toFunction()->nonLazyScript());
-        TypeScript::SetThis(cx, script, types::Type::ObjectType(res));
+        JSScript *script = callee->toFunction()->nonLazyScript();
+        if (!types::IgnoreTypeChanges(cx, script)) {
+            if (!script->ensureRanAnalysis(cx))
+                return NULL;
+            TypeScript::SetThis(cx, script, types::Type::ObjectType(res));
+        }
     }
 
     return res;
@@ -1547,8 +1551,12 @@ js::CreateThisForFunction(JSContext *cx, HandleObject callee, bool newType)
         /* Reshape the singleton before passing it as the 'this' value. */
         JSObject::clear(cx, nobj);
 
-        RootedScript calleeScript(cx, callee->toFunction()->nonLazyScript());
-        TypeScript::SetThis(cx, calleeScript, types::Type::ObjectType(nobj));
+        JSScript *calleeScript = callee->toFunction()->nonLazyScript();
+        if (!IgnoreTypeChanges(cx, calleeScript)) {
+            if (!calleeScript->ensureRanAnalysis(cx))
+                return NULL;
+            TypeScript::SetThis(cx, calleeScript, types::Type::ObjectType(nobj));
+        }
 
         return nobj;
     }
