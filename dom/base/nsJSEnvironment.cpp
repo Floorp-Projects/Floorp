@@ -1518,9 +1518,9 @@ nsJSContext::BindCompiledEventHandler(nsISupports* aTarget, JSObject* aScope,
   XPCAutoRequest ar(mContext);
 
   // Get the jsobject associated with this target
-  JSObject *target = nullptr;
+  JS::Rooted<JSObject*> target(mContext);
   JS::Rooted<JSObject*> scope(mContext, aScope);
-  nsresult rv = JSObjectFromInterface(aTarget, scope, &target);
+  nsresult rv = JSObjectFromInterface(aTarget, scope, target.address());
   NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef DEBUG
