@@ -2641,8 +2641,8 @@ LIRGenerator::visitSetDOMProperty(MSetDOMProperty *ins)
     // Keep using GetTempRegForIntArg, since we want to make sure we
     // don't clobber registers we're already using.
     Register tempReg1, tempReg2;
-    GetTempRegForIntArg(2, 0, &tempReg1);
-    mozilla::DebugOnly<bool> ok = GetTempRegForIntArg(3, 0, &tempReg2);
+    GetTempRegForIntArg(4, 0, &tempReg1);
+    mozilla::DebugOnly<bool> ok = GetTempRegForIntArg(5, 0, &tempReg2);
     MOZ_ASSERT(ok, "How can we not have six temp registers?");
     if (!useBoxFixed(lir, LSetDOMProperty::Value, val, tempReg1, tempReg2))
         return false;
