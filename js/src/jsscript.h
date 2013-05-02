@@ -49,15 +49,12 @@ namespace analyze {
 
 /*
  * Type of try note associated with each catch or finally block, and also with
- * for-in and other kinds of loops. Non-for-in loops do not need these notes
- * for exception unwinding, but storing their boundaries here is helpful for
- * heuristics that need to know whether a given op is inside a loop.
+ * for-in loops.
  */
 typedef enum JSTryNoteKind {
     JSTRY_CATCH,
     JSTRY_FINALLY,
-    JSTRY_ITER,
-    JSTRY_LOOP
+    JSTRY_ITER
 } JSTryNoteKind;
 
 /*
@@ -67,9 +64,9 @@ struct JSTryNote {
     uint8_t         kind;       /* one of JSTryNoteKind */
     uint8_t         padding;    /* explicit padding on uint16_t boundary */
     uint16_t        stackDepth; /* stack depth upon exception handler entry */
-    uint32_t        start;      /* start of the try statement or loop
+    uint32_t        start;      /* start of the try statement or for-in loop
                                    relative to script->main */
-    uint32_t        length;     /* length of the try statement or loop */
+    uint32_t        length;     /* length of the try statement or for-in loop */
 };
 
 namespace js {
