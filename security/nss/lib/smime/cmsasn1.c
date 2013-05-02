@@ -4,8 +4,6 @@
 
 /*
  * CMS ASN.1 templates
- *
- * $Id$
  */
 
 #include "cmslocal.h"

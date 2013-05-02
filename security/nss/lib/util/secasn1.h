@@ -6,8 +6,6 @@
  * Support for encoding/decoding of ASN.1 using BER/DER (Basic/Distinguished
  * Encoding Rules).  The routines are found in and used extensively by the
  * security library, but exported for other use.
- *
- * $Id$
  */
 
 #ifndef _SECASN1_H_

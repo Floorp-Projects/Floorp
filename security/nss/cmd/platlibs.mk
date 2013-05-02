@@ -36,7 +36,18 @@ ifdef USE_STATIC_LIBS
 
 DEFINES += -DNSS_USE_STATIC_LIBS
 # $(PROGRAM) has explicit dependencies on $(EXTRA_LIBS)
-CRYPTOLIB=$(SOFTOKEN_LIB_DIR)/$(LIB_PREFIX)freebl.$(LIB_SUFFIX)
+ifndef USE_SYSTEM_FREEBL
+CRYPTOLIB=$(DIST)/lib/$(LIB_PREFIX)freebl.$(LIB_SUFFIX)
+SOFTOKENLIB=$(DIST)/lib/$(LIB_PREFIX)softokn.$(LIB_SUFFIX)
+else
+# Use the system freebl and softoken libraries
+CRYPTOLIB=$(FREEBL_LIB_DIR)/$(LIB_PREFIX)freebl.$(LIB_SUFFIX)
+SOFTOKENLIB=
+EXTRA_SHARED_LIBS += \
+	-L$(SOFTOKEN_LIB_DIR) \
+	-lsoftokn3 \
+	$(NULL)
+endif
 
 PKIXLIB = \
 	$(DIST)/lib/$(LIB_PREFIX)pkixtop.$(LIB_SUFFIX) \
@@ -67,7 +78,7 @@ EXTRA_LIBS += \
 	$(DIST)/lib/$(LIB_PREFIX)cryptohi.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)pk11wrap.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)certdb.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)softokn.$(LIB_SUFFIX) \
+	$(SOFTOKENLIB) \
 	$(CRYPTOLIB) \
 	$(DIST)/lib/$(LIB_PREFIX)nsspki.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)nssdev.$(LIB_SUFFIX) \
@@ -102,7 +113,7 @@ EXTRA_LIBS += \
 	$(DIST)/lib/$(LIB_PREFIX)certhi.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)nsspki.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)pk11wrap.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)softokn.$(LIB_SUFFIX) \
+	$(SOFTOKENLIB) \
 	$(DIST)/lib/$(LIB_PREFIX)certdb.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)nsspki.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)nssdev.$(LIB_SUFFIX) \
@@ -185,7 +196,21 @@ EXTRA_SHARED_LIBS += \
 	$(NULL)
 endif
 
+ifdef SOFTOKEN_LIB_DIR
+ifdef NSS_USE_SYSTEM_FREEBL
+EXTRA_SHARED_LIBS += -L$(SOFTOKEN_LIB_DIR) -lsoftokn3
+endif
+endif
+
 endif # USE_STATIC_LIBS
+
+# If a platform has a system freebl, set USE_SYSTEM_FREEBL to 1 and
+# FREEBL_LIBS to the linker command-line arguments for the system nss-util
+# (for example, -lfreebl3 on fedora) in the platform's config file in coreconf.
+ifdef NSS_USE_SYSTEM_FREEBL
+FREEBL_LIBS = $(FREEBL_LIB_DIR)/$(LIB_PREFIX)freebl.$(LIB_SUFFIX)
+EXTRA_LIBS += $(FREEBL_LIBS)
+endif
 
 # If a platform has a system zlib, set USE_SYSTEM_ZLIB to 1 and
 # ZLIB_LIBS to the linker command-line arguments for the system zlib

@@ -4,8 +4,6 @@
 
 /*
  * CMS miscellaneous utility functions.
- *
- * $Id$
  */
 
 #include "cmslocal.h"

@@ -66,13 +66,16 @@ cipher_main()
           failedStr=""
           inOff=0
           res=0
+          # If nss was built without softoken use the system installed bltest tool. 
+          # The FREEBL_BINDIR location is platform dependent. See the comments
+          # regarding this location in tests/common/init.sh. 
           while [ $inOff -lt 8 ]
           do
              outOff=0
              while [ $outOff -lt 8 ]
              do
                  echo "bltest -T -m $PARAM -d $CIPHERTESTDIR -1 $inOff -2 $outOff"
-                 ${PROFTOOL} ${BINDIR}/bltest -T -m $PARAM -d $CIPHERTESTDIR -1 $inOff -2 $outOff
+                 ${PROFTOOL} ${FREEBL_BINDIR}/bltest${PROG_SUFFIX} -T -m $PARAM -d $CIPHERTESTDIR -1 $inOff -2 $outOff
                  if [ $? -ne 0 ]; then
                      failedStr="$failedStr[$inOff:$outOff]"
                  fi
@@ -120,6 +123,14 @@ cipher_cleanup()
 
 ################## main #################################################
 
+# When building without softoken, bltest isn't built. It was already
+# built and the cipher suite run as part of an nss-softoken build. 
+if [ ! -x ${DIST}/${OBJDIR}/bin/bltest${PROG_SUFFIX} ]; then
+    echo "bltest not built, skipping this test." >> ${LOGFILE}
+    res = 0
+    html_msg $res $EXP_RET "$TESTNAME"
+    return 0
+fi
 cipher_init
 cipher_main
 cipher_gcm

@@ -104,8 +104,6 @@ TwoToMinus32:
 !   29		      ! * the GPL.  If you do not delete the provisions above, a recipient
 !   30		      ! * may use your version of this file under either the MPL or the
 !   31		      ! * GPL.
-!   32		      ! *
-!   33		      ! *  $Id$
 !   34		      ! */
 !   36		      !#define RF_INLINE_MACROS
 !   38		      !static const double TwoTo16=65536.0;

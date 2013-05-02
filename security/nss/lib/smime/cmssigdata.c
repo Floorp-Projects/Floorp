@@ -4,8 +4,6 @@
 
 /*
  * CMS signedData methods.
- *
- * $Id$
  */
 
 #include "cmslocal.h"

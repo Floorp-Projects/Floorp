@@ -4,8 +4,6 @@
 
 /*
  * Certificate handling code
- *
- * $Id$
  */
 
 #include "nssilock.h"

@@ -4,8 +4,6 @@
 
 /*
  * Stuff specific to S/MIME policy and interoperability.
- *
- * $Id$
  */
 
 #include "secmime.h"
