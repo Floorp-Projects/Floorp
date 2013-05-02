@@ -131,7 +131,6 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jAlertsProgressListener_OnProgress = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "alertsProgressListener_OnProgress", "(Ljava/lang/String;JJLjava/lang/String;)V");
     jCloseNotification = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "closeNotification", "(Ljava/lang/String;)V");
     jGetDpi = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getDpi", "()I");
-    jGetScreenDepth = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getScreenDepth", "()I");
     jSetFullScreen = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "setFullScreen", "(Z)V");
     jShowInputMethodPicker = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "showInputMethodPicker", "()V");
     jNotifyDefaultPrevented = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "notifyDefaultPrevented", "(Z)V");
@@ -771,29 +770,6 @@ AndroidBridge::GetDPI()
     }
 
     return sDPI;
-}
-
-int
-AndroidBridge::GetScreenDepth()
-{
-    static int sDepth = 0;
-    if (sDepth)
-        return sDepth;
-
-    ALOG_BRIDGE("AndroidBridge::GetScreenDepth");
-    const int DEFAULT_DEPTH = 16;
-    JNIEnv *env = GetJNIEnv();
-    if (!env)
-        return DEFAULT_DEPTH;
-    AutoLocalJNIFrame jniFrame(env);
-
-    sDepth = (int)env->CallStaticIntMethod(mGeckoAppShellClass, jGetScreenDepth);
-    if (jniFrame.CheckForException()) {
-        sDepth = 0;
-        return DEFAULT_DEPTH;
-    }
-
-    return sDepth;
 }
 
 void
@@ -2665,17 +2641,13 @@ nsresult AndroidBridge::CaptureThumbnail(nsIDOMWindow *window, int32_t bufW, int
              nsPresContext::CSSPixelsToAppUnits(srcW / scale),
              nsPresContext::CSSPixelsToAppUnits(srcH / scale));
 
-    bool is24bit = (GetScreenDepth() == 24);
-    uint32_t stride = bufW * (is24bit ? 4 : 2);
+    uint32_t stride = bufW * 2 /* 16 bpp */;
 
     void* data = env->GetDirectBufferAddress(buffer);
     if (!data)
         return NS_ERROR_FAILURE;
 
-    nsRefPtr<gfxImageSurface> surf =
-        new gfxImageSurface(static_cast<unsigned char*>(data), nsIntSize(bufW, bufH), stride,
-                            is24bit ? gfxASurface::ImageFormatRGB24 :
-                                      gfxASurface::ImageFormatRGB16_565);
+    nsRefPtr<gfxImageSurface> surf = new gfxImageSurface(static_cast<unsigned char*>(data), nsIntSize(bufW, bufH), stride, gfxASurface::ImageFormatRGB16_565);
     if (surf->CairoStatus() != 0) {
         ALOG_BRIDGE("Error creating gfxImageSurface");
         return NS_ERROR_FAILURE;

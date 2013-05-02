@@ -33,7 +33,6 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.ImageFormat;
 import android.graphics.Paint;
-import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
@@ -126,7 +125,6 @@ public class GeckoAppShell
     static private final boolean LOGGING = false;
 
     static private int sDensityDpi = 0;
-    static private int sScreenDepth = 0;
 
     private static final EventDispatcher sEventDispatcher = new EventDispatcher();
 
@@ -1285,36 +1283,6 @@ public class GeckoAppShell
         }
 
         return sDensityDpi;
-    }
-
-    /**
-     * Returns the colour depth of the default screen. This will either be
-     * 24 or 16.
-     */
-    public static synchronized int getScreenDepth() {
-        if (sScreenDepth == 0) {
-            switch (GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getPixelFormat()) {
-            case PixelFormat.RGBA_8888 :
-            case PixelFormat.RGBX_8888 :
-            case PixelFormat.RGB_888 :
-                sScreenDepth = 24;
-                break;
-            default:
-                sScreenDepth = 16;
-                break;
-            }
-        }
-
-        return sScreenDepth;
-    }
-
-    public static synchronized void setScreenDepthOverride(int aScreenDepth) {
-        if (sScreenDepth != 0) {
-            Log.e(LOGTAG, "Tried to override screen depth after it's already been set");
-            return;
-        }
-
-        sScreenDepth = aScreenDepth;
     }
 
     public static void setFullScreen(boolean fullscreen) {

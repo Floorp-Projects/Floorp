@@ -49,19 +49,10 @@ public class GLController {
 
     private static final int LOCAL_EGL_OPENGL_ES2_BIT = 4;
 
-    private static final int[] CONFIG_SPEC_16BPP = {
+    private static final int[] CONFIG_SPEC = {
         EGL10.EGL_RED_SIZE, 5,
         EGL10.EGL_GREEN_SIZE, 6,
         EGL10.EGL_BLUE_SIZE, 5,
-        EGL10.EGL_SURFACE_TYPE, EGL10.EGL_WINDOW_BIT,
-        EGL10.EGL_RENDERABLE_TYPE, LOCAL_EGL_OPENGL_ES2_BIT,
-        EGL10.EGL_NONE
-    };
-
-    private static final int[] CONFIG_SPEC_24BPP = {
-        EGL10.EGL_RED_SIZE, 8,
-        EGL10.EGL_GREEN_SIZE, 8,
-        EGL10.EGL_BLUE_SIZE, 8,
         EGL10.EGL_SURFACE_TYPE, EGL10.EGL_WINDOW_BIT,
         EGL10.EGL_RENDERABLE_TYPE, LOCAL_EGL_OPENGL_ES2_BIT,
         EGL10.EGL_NONE
@@ -211,41 +202,26 @@ public class GLController {
     }
 
     private EGLConfig chooseConfig() {
-        int[] desiredConfig;
-        int rSize, gSize, bSize;
         int[] numConfigs = new int[1];
-
-        switch (GeckoAppShell.getScreenDepth()) {
-        case 24:
-            desiredConfig = CONFIG_SPEC_24BPP;
-            rSize = gSize = bSize = 8;
-            break;
-        case 16:
-        default:
-            desiredConfig = CONFIG_SPEC_16BPP;
-            rSize = 5; gSize = 6; bSize = 5;
-            break;
-        }
-
-        if (!mEGL.eglChooseConfig(mEGLDisplay, desiredConfig, null, 0, numConfigs) ||
+        if (!mEGL.eglChooseConfig(mEGLDisplay, CONFIG_SPEC, null, 0, numConfigs) ||
                 numConfigs[0] <= 0) {
             throw new GLControllerException("No available EGL configurations " +
                                             getEGLError());
         }
 
         EGLConfig[] configs = new EGLConfig[numConfigs[0]];
-        if (!mEGL.eglChooseConfig(mEGLDisplay, desiredConfig, configs, numConfigs[0], numConfigs)) {
+        if (!mEGL.eglChooseConfig(mEGLDisplay, CONFIG_SPEC, configs, numConfigs[0], numConfigs)) {
             throw new GLControllerException("No EGL configuration for that specification " +
                                             getEGLError());
         }
 
-        // Select the first configuration that matches the screen depth.
+        // Select the first 565 RGB configuration.
         int[] red = new int[1], green = new int[1], blue = new int[1];
         for (EGLConfig config : configs) {
             mEGL.eglGetConfigAttrib(mEGLDisplay, config, EGL10.EGL_RED_SIZE, red);
             mEGL.eglGetConfigAttrib(mEGLDisplay, config, EGL10.EGL_GREEN_SIZE, green);
             mEGL.eglGetConfigAttrib(mEGLDisplay, config, EGL10.EGL_BLUE_SIZE, blue);
-            if (red[0] == rSize && green[0] == gSize && blue[0] == bSize) {
+            if (red[0] == 5 && green[0] == 6 && blue[0] == 5) {
                 return config;
             }
         }
