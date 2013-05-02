@@ -5,10 +5,6 @@
 #ifndef CKFW_H
 #define CKFW_H
 
-#ifdef DEBUG
-static const char CKFW_CVS_ID[] = "@(#) $RCSfile$ $Revision$ $Date$";
-#endif /* DEBUG */
-
 /*
  * ckfw.h
  *

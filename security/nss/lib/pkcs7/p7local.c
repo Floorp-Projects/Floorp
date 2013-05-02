@@ -7,8 +7,6 @@
  * This file should only contain things that are needed by both the
  * encoding/creation side *and* the decoding/decryption side.  Anything
  * else should be static routines in the appropriate file.
- *
- * $Id$
  */
 
 #include "p7local.h"

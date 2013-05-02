@@ -4,8 +4,6 @@
 
 /*
  * SMIME message methods
- *
- * $Id$
  */
 
 #include "cmslocal.h"

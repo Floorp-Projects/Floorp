@@ -4,8 +4,6 @@
 
 /*
  * secport.h - portability interfaces for security libraries
- *
- * $Id$
  */
 
 #ifndef _SECPORT_H_

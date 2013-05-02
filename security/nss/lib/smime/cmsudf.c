@@ -4,8 +4,6 @@
 
 /*
  * CMS User Define Types
- *
- * $Id$
  */
 
 #include "cmslocal.h"
