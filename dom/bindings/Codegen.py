@@ -3782,7 +3782,7 @@ if (!returnArray) {
         wrapCode = wrapCode % { "result": result }
         return wrapCode, False
 
-    if type.tag() == IDLType.Tags.any:
+    if type.isAny():
         # See comments in WrapNewBindingObject explaining why we need
         # to wrap here.
         # NB: setValue(..., True) calls JS_WrapValue(), so is fallible
