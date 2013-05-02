@@ -1061,17 +1061,11 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
         return;
     }
 
-    int bytesPerPixel = 2;
-    gfxASurface::gfxImageFormat format = gfxASurface::ImageFormatRGB16_565;
-    if (AndroidBridge::Bridge()->GetScreenDepth() == 24) {
-        bytesPerPixel = 4;
-        format = gfxASurface::ImageFormatRGB24;
-    }
-
     layers::renderTraceEventStart("Get surface", "424545");
-    static unsigned char bits2[32 * 32 * 4];
+    static unsigned char bits2[32 * 32 * 2];
     nsRefPtr<gfxImageSurface> targetSurface =
-        new gfxImageSurface(bits2, gfxIntSize(32, 32), 32 * bytesPerPixel, format);
+        new gfxImageSurface(bits2, gfxIntSize(32, 32), 32 * 2,
+                            gfxASurface::ImageFormatRGB16_565);
     layers::renderTraceEventEnd("Get surface", "424545");
 
     layers::renderTraceEventStart("Widget draw to", "434646");
