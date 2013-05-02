@@ -28,9 +28,8 @@ FireInteralError(mozilla::net::PTCPSocketParent* aActor, uint32_t aLineNo)
 {
   mozilla::unused <<
       aActor->SendCallback(NS_LITERAL_STRING("onerror"),
-                          JSError(NS_LITERAL_STRING("Internal error"),
-                                  NS_LITERAL_STRING(__FILE__), aLineNo, 0),
-                          NS_LITERAL_STRING("connecting"), 0);
+                           TCPError(NS_LITERAL_STRING("InvalidStateError")),
+                           NS_LITERAL_STRING("connecting"), 0);
 }
 
 NS_IMPL_CYCLE_COLLECTION_2(TCPSocketParent, mSocket, mIntermediary)
@@ -142,7 +141,7 @@ TCPSocketParent::SendCallback(const nsAString& aType, const JS::Value& aDataVal,
       FireInteralError(this, __LINE__);
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    data = str;
+    data = SendableData(str);
 
   } else if (aDataVal.isUndefined() || aDataVal.isNull()) {
     data = mozilla::void_t();
@@ -166,40 +165,18 @@ TCPSocketParent::SendCallback(const nsAString& aType, const JS::Value& aDataVal,
       data = SendableData(arr);
 
     } else {
-      nsDependentJSString message, filename;
-      uint32_t lineNumber = 0;
-      uint32_t columnNumber = 0;
+      nsDependentJSString name;
 
       JS::Value val;
-      if (!JS_GetProperty(aCx, obj, "message", &val)) {
-        NS_ERROR("No message property on supposed error object");
+      if (!JS_GetProperty(aCx, obj, "name", &val)) {
+        NS_ERROR("No name property on supposed error object");
       } else if (JSVAL_IS_STRING(val)) {
-        if (!message.init(aCx, JSVAL_TO_STRING(val))) {
+        if (!name.init(aCx, JSVAL_TO_STRING(val))) {
           NS_WARNING("couldn't initialize string");
         }
       }
 
-      if (!JS_GetProperty(aCx, obj, "fileName", &val)) {
-        NS_ERROR("No fileName property on supposed error object");
-      } else if (JSVAL_IS_STRING(val)) {
-        if (!filename.init(aCx, JSVAL_TO_STRING(val))) {
-          NS_WARNING("couldn't initialize string");
-        }
-      }
-
-      if (!JS_GetProperty(aCx, obj, "lineNumber", &val)) {
-        NS_ERROR("No lineNumber property on supposed error object");
-      } else if (JSVAL_IS_INT(val)) {
-        lineNumber = JSVAL_TO_INT(val);
-      }
-
-      if (!JS_GetProperty(aCx, obj, "columnNumber", &val)) {
-        NS_ERROR("No columnNumber property on supposed error object");
-      } else if (JSVAL_IS_INT(val)) {
-        columnNumber = JSVAL_TO_INT(val);
-      }
-
-      data = JSError(message, filename, lineNumber, columnNumber);
+      data = TCPError(name);
     }
   } else {
     NS_ERROR("Unexpected JS value encountered");
