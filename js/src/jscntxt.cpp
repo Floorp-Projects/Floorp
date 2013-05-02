@@ -1167,6 +1167,7 @@ JSContext::JSContext(JSRuntime *rt)
     iterValue(MagicValue(JS_NO_ITER_VALUE)),
 #ifdef JS_METHODJIT
     methodJitEnabled(false),
+    jitIsBroken(false),
 #endif
 #ifdef MOZ_TRACE_JSCALLS
     functionCallback(NULL),
@@ -1468,7 +1469,8 @@ void
 JSContext::updateJITEnabled()
 {
 #ifdef JS_METHODJIT
-    methodJitEnabled = (options_ & JSOPTION_METHODJIT) && !IsJITBrokenHere();
+    jitIsBroken = IsJITBrokenHere();
+    methodJitEnabled = (options_ & JSOPTION_METHODJIT) && !jitIsBroken;
 #endif
 }
 
