@@ -127,10 +127,9 @@ TCPSocketChild::RecvCallback(const nsString& aType,
   if (aData.type() == CallbackData::Tvoid_t) {
     rv = mSocket->CallListenerVoid(aType);
 
-  } else if (aData.type() == CallbackData::TJSError) {
-    const JSError& err(aData.get_JSError());
-    rv = mSocket->CallListenerError(aType, err.message(), err.filename(),
-                                   err.lineNumber(), err.columnNumber());
+  } else if (aData.type() == CallbackData::TTCPError) {
+    const TCPError& err(aData.get_TCPError());
+    rv = mSocket->CallListenerError(aType, err.name());
 
   } else if (aData.type() == CallbackData::TSendableData) {
     const SendableData& data = aData.get_SendableData();

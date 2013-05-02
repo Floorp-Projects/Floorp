@@ -16,6 +16,7 @@ test_dirs := \
   mozbuild/mozbuild/test/compilation \
   mozbuild/mozbuild/test/frontend \
   mozbuild/mozpack/test \
+  mozbuild/dumbmake/test \
   $(NULL)
 
 PYTHON_UNIT_TESTS := $(foreach dir,$(test_dirs),$(wildcard $(srcdir)/$(dir)/*.py))

@@ -898,15 +898,16 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
       int64_t eventTime = aNowEpoch / PR_USEC_PER_MSEC;
       for (uint32_t i = 0; i < frameRequestCallbacks.Length(); ++i) {
         const DocumentFrameCallbacks& docCallbacks = frameRequestCallbacks[i];
-        DOMHighResTimeStamp timeStamp;
         // XXXbz Bug 863140: GetInnerWindow can return the outer
         // window in some cases.
         nsPIDOMWindow* innerWindow = docCallbacks.mDocument->GetInnerWindow();
+        DOMHighResTimeStamp timeStamp = 0;
         if (innerWindow && innerWindow->IsInnerWindow()) {
-          timeStamp = innerWindow->GetPerformance()->GetDOMTiming()->
-            TimeStampToDOMHighRes(aNowTime);
-        } else {
-          timeStamp = 0;
+          nsPerformance* perf = innerWindow->GetPerformance();
+          if (perf) {
+            timeStamp = perf->GetDOMTiming()->TimeStampToDOMHighRes(aNowTime);
+          }
+          // else window is partially torn down already
         }
         for (uint32_t j = 0; j < docCallbacks.mCallbacks.Length(); ++j) {
           const nsIDocument::FrameRequestCallbackHolder& holder =

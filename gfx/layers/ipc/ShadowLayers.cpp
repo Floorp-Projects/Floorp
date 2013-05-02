@@ -317,6 +317,23 @@ ShadowLayerForwarder::UpdateTexture(CompositableClient* aCompositable,
 }
 
 void
+ShadowLayerForwarder::UpdateTextureNoSwap(CompositableClient* aCompositable,
+                                          TextureIdentifier aTextureId,
+                                          SurfaceDescriptor* aDescriptor)
+{
+  if (aDescriptor->type() != SurfaceDescriptor::T__None &&
+      aDescriptor->type() != SurfaceDescriptor::Tnull_t) {
+    MOZ_ASSERT(aCompositable);
+    MOZ_ASSERT(aCompositable->GetIPDLActor());
+    mTxn->AddNoSwapPaint(OpPaintTexture(nullptr, aCompositable->GetIPDLActor(), 1,
+                                        SurfaceDescriptor(*aDescriptor)));
+    *aDescriptor = SurfaceDescriptor();
+  } else {
+    NS_WARNING("Trying to send a null SurfaceDescriptor.");
+  }
+}
+
+void
 ShadowLayerForwarder::UpdateTextureRegion(CompositableClient* aCompositable,
                                           const ThebesBufferData& aThebesBufferData,
                                           const nsIntRegion& aUpdatedRegion)

@@ -3045,14 +3045,6 @@
 
           let lastVisible = visibleTabs.length - 1;
 
-          // selectedItem will not be in visibleTabs briefly when
-          // browser.tabs.closeWindowWithLastTab is disabled and the user closes
-          // the last tab
-          if (!this.selectedItem.closing && selectedIndex != 0) {
-            let beforeSelectedTab = visibleTabs[selectedIndex - 1];
-            beforeSelectedTab.removeAttribute("beforehovered");
-          }
-
           if (this._afterSelectedTab)
             this._afterSelectedTab.removeAttribute("afterselected-visible");
           if (this.selectedItem.closing || selectedIndex == lastVisible) {
@@ -3061,7 +3053,6 @@
             this._afterSelectedTab = visibleTabs[selectedIndex + 1];
             this._afterSelectedTab.setAttribute("afterselected-visible",
                                                 "true");
-            this._afterSelectedTab.removeAttribute("afterhovered");
           }
 
           if (this._firstTab)
@@ -4314,7 +4305,7 @@
           this.mOverCloseButton = true;
 
         let tab = event.target;
-        if (tab.selected || tab.closing)
+        if (tab.closing)
           return;
 
         let tabContainer = this.parentNode;

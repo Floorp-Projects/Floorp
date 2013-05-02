@@ -157,7 +157,14 @@ enum DOMObjectType {
 };
 
 typedef JSObject* (*ParentGetter)(JSContext* aCx, JS::Handle<JSObject*> aObj);
-typedef JSObject* (*ProtoGetter)(JSContext* aCx, JSObject* aGlobal);
+/**
+ * Returns a handle to the relevent WebIDL prototype object for the given global
+ * (which may be a handle to null on out of memory).  Once allocated, the
+ * prototype object is guaranteed to exist as long as the global does, since the
+ * global traces its array of WebIDL prototypes and constructors.
+ */
+typedef JS::Handle<JSObject*> (*ProtoGetter)(JSContext* aCx,
+                                             JS::Handle<JSObject*> aGlobal);
 
 struct DOMClass
 {

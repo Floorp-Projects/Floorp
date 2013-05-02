@@ -20,11 +20,14 @@
 #include "nsIInterfaceInfo.h"
 #include "xptinfo.h"
 #include "nsXPIDLString.h"
+#include "nsPrintfCString.h"
 #include "nsReadableUtils.h"
 #include "nsHashKeys.h"
 #include "nsDOMClassInfo.h"
 #include "nsCRT.h"
 #include "nsIObserverService.h"
+
+#include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 
 #define NS_INTERFACE_PREFIX "nsI"
@@ -715,6 +718,18 @@ nsScriptNameSpaceManager::AddCategoryEntryToHash(nsICategoryManager* aCategoryMa
   rv = aCategoryManager->GetCategoryEntry(aCategory, categoryEntry.get(),
                                           getter_Copies(contractId));
   NS_ENSURE_SUCCESS(rv, rv);
+
+  if (type == nsGlobalNameStruct::eTypeNavigatorProperty ||
+      type == nsGlobalNameStruct::eTypeExternalConstructor) {
+    bool isNavProperty = type == nsGlobalNameStruct::eTypeNavigatorProperty;
+    nsPrintfCString prefName("dom.%s.disable.%s",
+                             isNavProperty ? "navigator-property" : "global-constructor",
+                             categoryEntry.get());
+    if (Preferences::GetType(prefName.get()) == nsIPrefBranch::PREF_BOOL &&
+        Preferences::GetBool(prefName.get(), false)) {
+        return NS_OK;
+    }
+  }
 
   nsCOMPtr<nsIComponentRegistrar> registrar;
   rv = NS_GetComponentRegistrar(getter_AddRefs(registrar));
