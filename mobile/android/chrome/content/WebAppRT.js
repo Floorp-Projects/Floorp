@@ -68,13 +68,15 @@ let WebAppRT = {
         // If so, get the launchUrl from the manifest and we'll launch with that
         //let app = DOMApplicationRegistry.getAppByManifestURL(aUrl);
         if (app.manifestURL == aUrl) {
+          BrowserApp.manifest = app.manifest;
           BrowserApp.manifestUrl = aUrl;
           aCallback(manifest.fullLaunchPath());
           return;
         }
-    
+
         // Otherwise, see if the apps launch path is this url
         if (manifest.fullLaunchPath() == aUrl) {
+          BrowserApp.manifest = app.manifest;
           BrowserApp.manifestUrl = app.manifestURL;
           aCallback(aUrl);
           return;
