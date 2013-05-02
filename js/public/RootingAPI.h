@@ -314,15 +314,6 @@ typedef MutableHandle<Value>       MutableHandleValue;
 namespace js {
 
 /*
- * Raw pointer used as documentation that a parameter does not need to be
- * rooted.
- */
-typedef JSObject *                  RawObject;
-typedef JSString *                  RawString;
-typedef jsid                        RawId;
-typedef JS::Value                   RawValue;
-
-/*
  * InternalHandle is a handle to an internal pointer into a gcthing. Use
  * InternalHandle when you have a pointer to a direct field of a gcthing, or
  * when you need a parameter type for something that *may* be a pointer to a
@@ -379,20 +370,6 @@ class InternalHandle<T*>
         offset(uintptr_t(field))
     {}
 };
-
-/*
- * This macro simplifies forward declaration of a class and its matching raw-pointer.
- */
-# define ForwardDeclare(type)              \
-    class type;                            \
-    typedef type * Raw##type
-
-# define ForwardDeclareJS(type)            \
-    class JS##type;                        \
-    namespace js {                         \
-        typedef JS##type * Raw##type;      \
-    }                                      \
-    class JS##type
 
 /*
  * By default, pointers should use the inheritance hierarchy to find their
@@ -823,9 +800,5 @@ class CompilerRootNode
 };
 
 }  /* namespace js */
-
-ForwardDeclareJS(Script);
-ForwardDeclareJS(Function);
-ForwardDeclareJS(Object);
 
 #endif  /* jsgc_root_h___ */

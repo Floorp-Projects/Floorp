@@ -251,7 +251,7 @@ class IonCache
         idempotent_ = true;
     }
 
-    void setScriptedLocation(RawScript script, jsbytecode *pc) {
+    void setScriptedLocation(JSScript *script, jsbytecode *pc) {
         JS_ASSERT(!idempotent_);
         this->script = script;
         this->pc = pc;

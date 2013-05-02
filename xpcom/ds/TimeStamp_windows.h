@@ -24,7 +24,7 @@ class TimeStampValue
 
   TimeStampValue(uint64_t GTC, uint64_t QPC, bool hasQPC);
 
-  bool CheckQPC(int64_t aDuration, const TimeStampValue &aOther) const;
+  uint64_t CheckQPC(const TimeStampValue &aOther) const;
 
 public:
   struct _SomethingVeryRandomHere;

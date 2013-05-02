@@ -87,13 +87,6 @@ public:
   // This should be idempotent (safe to call multiple times).
   virtual void DestroyMediaStream();
 
-  // This method should be overridden to return true in nodes
-  // which support being hooked up to the Media Stream graph.
-  virtual bool SupportsMediaStreams() const
-  {
-    return false;
-  }
-
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(AudioNode,
                                            nsDOMEventTargetHelper)

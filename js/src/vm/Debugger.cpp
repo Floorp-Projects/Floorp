@@ -513,7 +513,7 @@ Debugger::slowPathOnEnterFrame(JSContext *cx, AbstractFramePtr frame, MutableHan
 }
 
 static void
-DebuggerFrame_freeStackIterData(FreeOp *fop, RawObject obj);
+DebuggerFrame_freeStackIterData(FreeOp *fop, JSObject *obj);
 
 /*
  * Handle leaving a frame with debuggers watching. |frameOk| indicates whether
@@ -1231,7 +1231,7 @@ Debugger::onSingleStep(JSContext *cx, MutableHandleValue vp)
      */
     {
         uint32_t stepperCount = 0;
-        RawScript trappingScript = iter.script();
+        JSScript *trappingScript = iter.script();
         GlobalObject *global = cx->global();
         if (GlobalObject::DebuggerVector *debuggers = global->getDebuggers()) {
             for (Debugger **p = debuggers->begin(); p != debuggers->end(); p++) {
@@ -1369,7 +1369,7 @@ Debugger::slowPathOnNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global
 /*** Debugger JSObjects **************************************************************************/
 
 /* static */ bool
-Debugger::isDebugWrapper(RawObject o)
+Debugger::isDebugWrapper(JSObject *o)
 {
     Class *c = o->getClass();
     return c == &DebuggerObject_class ||
@@ -1546,7 +1546,7 @@ Debugger::markAll(JSTracer *trc)
 }
 
 void
-Debugger::traceObject(JSTracer *trc, RawObject obj)
+Debugger::traceObject(JSTracer *trc, JSObject *obj)
 {
     if (Debugger *dbg = Debugger::fromJSObject(obj))
         dbg->trace(trc);
@@ -1645,7 +1645,7 @@ Debugger::findCompartmentEdges(Zone *zone, js::gc::ComponentFinder<Zone> &finder
 }
 
 void
-Debugger::finalize(FreeOp *fop, RawObject obj)
+Debugger::finalize(FreeOp *fop, JSObject *obj)
 {
     Debugger *dbg = fromJSObject(obj);
     if (!dbg)
@@ -2682,7 +2682,7 @@ SetScriptReferent(JSObject *obj, JSScript *script)
 }
 
 static void
-DebuggerScript_trace(JSTracer *trc, RawObject obj)
+DebuggerScript_trace(JSTracer *trc, JSObject *obj)
 {
     /* This comes from a private pointer, so no barrier needed. */
     if (JSScript *script = GetScriptReferent(obj)) {
@@ -3482,14 +3482,14 @@ static const JSFunctionSpec DebuggerScript_methods[] = {
 /*** Debugger.Frame ******************************************************************************/
 
 static void
-DebuggerFrame_freeStackIterData(FreeOp *fop, RawObject obj)
+DebuggerFrame_freeStackIterData(FreeOp *fop, JSObject *obj)
 {
     fop->delete_((StackIter::Data *)obj->getPrivate());
     obj->setPrivate(NULL);
 }
 
 static void
-DebuggerFrame_finalize(FreeOp *fop, RawObject obj)
+DebuggerFrame_finalize(FreeOp *fop, JSObject *obj)
 {
     DebuggerFrame_freeStackIterData(fop, obj);
 }
@@ -3796,7 +3796,7 @@ static JSBool
 DebuggerFrame_getOffset(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_FRAME(cx, argc, vp, "get offset", args, thisobj, iter);
-    RawScript script = iter.script();
+    JSScript *script = iter.script();
     iter.updatePcQuadratic();
     jsbytecode *pc = iter.pc();
     JS_ASSERT(script->code <= pc);
@@ -4076,7 +4076,7 @@ static const JSFunctionSpec DebuggerFrame_methods[] = {
 /*** Debugger.Object *****************************************************************************/
 
 static void
-DebuggerObject_trace(JSTracer *trc, RawObject obj)
+DebuggerObject_trace(JSTracer *trc, JSObject *obj)
 {
     /*
      * There is a barrier on private pointers, so the Unbarriered marking
@@ -4868,7 +4868,7 @@ static const JSFunctionSpec DebuggerObject_methods[] = {
 /*** Debugger.Environment ************************************************************************/
 
 static void
-DebuggerEnv_trace(JSTracer *trc, RawObject obj)
+DebuggerEnv_trace(JSTracer *trc, JSObject *obj)
 {
     /*
      * There is a barrier on private pointers, so the Unbarriered marking

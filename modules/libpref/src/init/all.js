@@ -4205,3 +4205,9 @@ pref("captivedetect.maxWaitingTime", 5000);
 pref("captivedetect.pollingTime", 3000);
 pref("captivedetect.maxRetryCount", 5);
 #endif
+
+#ifdef RELEASE_BUILD
+pref("dom.forms.inputmode", false);
+#else
+pref("dom.forms.inputmode", true);
+#endif

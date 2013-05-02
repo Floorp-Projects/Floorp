@@ -221,7 +221,7 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
       }
 
       case JSTRACE_SHAPE: {
-        RawShape shape = static_cast<RawShape>(thing);
+        Shape *shape = static_cast<Shape *>(thing);
         CompartmentStats *cStats = GetCompartmentStats(shape->compartment());
         size_t propTableSize, kidsSize;
         shape->sizeOfExcludingThis(rtStats->mallocSizeOf_, &propTableSize, &kidsSize);
@@ -242,7 +242,7 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
       }
 
       case JSTRACE_BASE_SHAPE: {
-        RawBaseShape base = static_cast<RawBaseShape>(thing);
+        BaseShape *base = static_cast<BaseShape *>(thing);
         CompartmentStats *cStats = GetCompartmentStats(base->compartment());
         cStats->gcHeapShapesBase += thingSize;
         break;

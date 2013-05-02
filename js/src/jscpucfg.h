@@ -14,10 +14,8 @@
 # if defined(_M_X64) || defined(_M_AMD64) || defined(_AMD64_)
 #  define IS_LITTLE_ENDIAN 1
 #  undef  IS_BIG_ENDIAN
-#  define JS_BYTES_PER_DOUBLE 8
 #  define JS_BYTES_PER_WORD   8
 #  define JS_BITS_PER_WORD_LOG2   6
-#  define JS_ALIGN_OF_POINTER 8
 # else  /* !(defined(_M_X64) || defined(_M_AMD64) || defined(_AMD64_)) */
 #  error "CPU type is unknown"
 # endif /* !(defined(_M_X64) || defined(_M_AMD64) || defined(_AMD64_)) */
@@ -30,10 +28,8 @@
 
 # define IS_LITTLE_ENDIAN 1
 # undef  IS_BIG_ENDIAN
-# define JS_BYTES_PER_DOUBLE 8
 # define JS_BYTES_PER_WORD   4
 # define JS_BITS_PER_WORD_LOG2   5
-# define JS_ALIGN_OF_POINTER 4
 
 #elif defined(__APPLE__)
 # if __LITTLE_ENDIAN__

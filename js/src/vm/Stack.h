@@ -277,7 +277,7 @@ class AbstractFramePtr
 
     inline JSGenerator *maybeSuspendedGenerator(JSRuntime *rt) const;
 
-    inline RawObject scopeChain() const;
+    inline JSObject *scopeChain() const;
     inline CallObject &callObj() const;
     inline bool initFunctionScopeObjects(JSContext *cx);
     inline JSCompartment *compartment() const;
@@ -292,7 +292,7 @@ class AbstractFramePtr
     inline bool isFramePushedByExecute() const;
     inline bool isDebuggerFrame() const;
 
-    inline RawScript script() const;
+    inline JSScript *script() const;
     inline JSFunction *fun() const;
     inline JSFunction *maybeFun() const;
     inline JSFunction *callee() const;
@@ -418,12 +418,12 @@ class StackFrame
   private:
     mutable uint32_t    flags_;         /* bits described by Flags */
     union {                             /* describes what code is executing in a */
-        RawScript       script;         /*   global frame */
+        JSScript        *script;        /*   global frame */
         JSFunction      *fun;           /*   function frame, pre GetScopeChain */
     } exec;
     union {                             /* describes the arguments of a function */
         unsigned        nactual;        /*   for non-eval frames */
-        RawScript       evalScript;     /*   the script of an eval-in-function */
+        JSScript        *evalScript;    /*   the script of an eval-in-function */
     } u;
     mutable JSObject    *scopeChain_;   /* if HAS_SCOPECHAIN, current scope chain */
     StackFrame          *prev_;         /* if HAS_PREVPC, previous cx->regs->fp */
@@ -485,13 +485,13 @@ class StackFrame
 
     /* Used for Invoke, Interpret, trace-jit LeaveTree, and method-jit stubs. */
     void initCallFrame(JSContext *cx, JSFunction &callee,
-                       RawScript script, uint32_t nactual, StackFrame::Flags flags);
+                       JSScript *script, uint32_t nactual, StackFrame::Flags flags);
 
     /* Used for getFixupFrame (for FixupArity). */
     void initFixupFrame(StackFrame *prev, StackFrame::Flags flags, void *ncode, unsigned nactual);
 
     /* Used for eval. */
-    void initExecuteFrame(RawScript script, StackFrame *prevLink, AbstractFramePtr prev,
+    void initExecuteFrame(JSScript *script, StackFrame *prevLink, AbstractFramePtr prev,
                           FrameRegs *regs, const Value &thisv, JSObject &scopeChain,
                           ExecuteType type);
 
@@ -760,7 +760,7 @@ class StackFrame
      *   the same VMFrame. Other calls force expansion of the inlined frames.
      */
 
-    RawScript script() const {
+    JSScript *script() const {
         return isFunctionFrame()
                ? isEvalFrame()
                  ? u.evalScript
@@ -1342,7 +1342,7 @@ class FrameRegs
     }
 
     /* For stubs::CompileFunction, ContextStack: */
-    void prepareToRun(StackFrame &fp, RawScript script) {
+    void prepareToRun(StackFrame &fp, JSScript *script) {
         pc = script->code;
         sp = fp.slots() + script->nfixed;
         fp_ = &fp;
@@ -1350,7 +1350,7 @@ class FrameRegs
     }
 
     void setToEndOfScript() {
-        RawScript script = fp()->script();
+        JSScript *script = fp()->script();
         sp = fp()->base();
         pc = script->code + script->length - JSOP_STOP_LENGTH;
         JS_ASSERT(*pc == JSOP_STOP);
@@ -1770,7 +1770,7 @@ class ContextStack
         DONT_ALLOW_CROSS_COMPARTMENT = false,
         ALLOW_CROSS_COMPARTMENT = true
     };
-    inline RawScript currentScript(jsbytecode **pc = NULL,
+    inline JSScript *currentScript(jsbytecode **pc = NULL,
                                    MaybeAllowCrossCompartment = DONT_ALLOW_CROSS_COMPARTMENT) const;
 
     /* Get the scope chain for the topmost scripted call on the stack. */
@@ -1965,7 +1965,7 @@ class StackIter
 #endif
         return data_.state_ == SCRIPTED;
     }
-    RawScript script() const {
+    JSScript *script() const {
         JS_ASSERT(isScript());
         if (data_.state_ == SCRIPTED)
             return interpFrame()->script();

@@ -7,13 +7,17 @@
 
 #include "xptcprivate.h"
 
+#include "mozilla/Compiler.h"
+
 #if !defined(__arm__) && !(defined(LINUX) || defined(ANDROID))
 #error "This code is for Linux ARM only. Check that it works on your system, too.\nBeware that this code is highly compiler dependent."
 #endif
 
-#if defined(__GNUC__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 5)) \
+#if MOZ_IS_GCC
+#if MOZ_GCC_VERSION_AT_LEAST(4, 5, 0) \
     && defined(__ARM_EABI__) && !defined(__ARM_PCS_VFP) && !defined(__ARM_PCS)
 #error "Can't identify floating point calling conventions.\nPlease ensure that your toolchain defines __ARM_PCS or __ARM_PCS_VFP."
+#endif
 #endif
 
 #ifndef __ARM_PCS_VFP
