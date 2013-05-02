@@ -2793,6 +2793,11 @@ SetExtResourceFullZoom(nsIDocument* aDocument, void* aClosure)
 NS_IMETHODIMP
 nsDocumentViewer::SetTextZoom(float aTextZoom)
 {
+  // If we don't have a document, then we need to bail.
+  if (!mDocument) {
+    return NS_ERROR_FAILURE;
+  }
+
   if (GetIsPrintPreview()) {
     return NS_OK;
   }
@@ -2830,6 +2835,11 @@ nsDocumentViewer::GetTextZoom(float* aTextZoom)
 NS_IMETHODIMP
 nsDocumentViewer::SetMinFontSize(int32_t aMinFontSize)
 {
+  // If we don't have a document, then we need to bail.
+  if (!mDocument) {
+    return NS_ERROR_FAILURE;
+  }
+
   if (GetIsPrintPreview()) {
     return NS_OK;
   }
@@ -2894,6 +2904,11 @@ nsDocumentViewer::SetFullZoom(float aFullZoom)
     return NS_OK;
   }
 #endif
+
+  // If we don't have a document, then we need to bail.
+  if (!mDocument) {
+    return NS_ERROR_FAILURE;
+  }
 
   mPageZoom = aFullZoom;
 

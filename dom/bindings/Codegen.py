@@ -1672,18 +1672,21 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
     properties should be a PropertyArrays instance.
     """
     def __init__(self, descriptor, properties):
-        args = [Argument('JSContext*', 'aCx'), Argument('JSObject*', 'aGlobal'),
+        args = [Argument('JSContext*', 'aCx'),
+                Argument('JS::Handle<JSObject*>', 'aGlobal'),
                 Argument('JSObject**', 'protoAndIfaceArray')]
         CGAbstractMethod.__init__(self, descriptor, 'CreateInterfaceObjects', 'void', args)
         self.properties = properties
     def definition_body(self):
         protoChain = self.descriptor.prototypeChain
         if len(protoChain) == 1:
-            getParentProto = "JS_GetObjectPrototype(aCx, aGlobal)"
+            getParentProto = "aCx, JS_GetObjectPrototype(aCx, aGlobal)"
+            parentProtoType = "Rooted"
         else:
             parentProtoName = self.descriptor.prototypeChain[-2]
             getParentProto = ("%s::GetProtoObject(aCx, aGlobal)" %
                               toBindingNamespace(parentProtoName))
+            parentProtoType = "Handle"
 
         needInterfaceObject = self.descriptor.interface.hasInterfaceObject()
         needInterfacePrototypeObject = self.descriptor.interface.hasInterfacePrototypeObject()
@@ -1751,10 +1754,10 @@ if (!unforgeableHolder) {
         else:
             createUnforgeableHolder = None
 
-        getParentProto = ("JSObject* parentProto = %s;\n" +
+        getParentProto = ("JS::%s<JSObject*> parentProto(%s);\n" +
                           "if (!parentProto) {\n" +
                           "  return;\n" +
-                          "}\n") % getParentProto
+                          "}\n") % (parentProtoType, getParentProto)
 
         if (needInterfaceObject and
             self.descriptor.needsConstructHookHolder()):
@@ -1840,27 +1843,27 @@ class CGGetPerInterfaceObject(CGAbstractMethod):
     constructor object).
     """
     def __init__(self, descriptor, name, idPrefix=""):
-        args = [Argument('JSContext*', 'aCx'), Argument('JSObject*', 'aGlobal')]
+        args = [Argument('JSContext*', 'aCx'),
+                Argument('JS::Handle<JSObject*>', 'aGlobal')]
         CGAbstractMethod.__init__(self, descriptor, name,
-                                  'JSObject*', args, inline=True)
+                                  'JS::Handle<JSObject*>', args, inline=True)
         self.id = idPrefix + "id::" + self.descriptor.name
     def definition_body(self):
-        return """
+        return ("""
 
   /* Make sure our global is sane.  Hopefully we can remove this sometime */
   if (!(js::GetObjectClass(aGlobal)->flags & JSCLASS_DOM_GLOBAL)) {
-    return NULL;
+    return JS::NullPtr();
   }
   /* Check to see whether the interface objects are already installed */
   JSObject** protoAndIfaceArray = GetProtoAndIfaceArray(aGlobal);
-  JSObject* cachedObject = protoAndIfaceArray[%s];
-  if (!cachedObject) {
+  if (!protoAndIfaceArray[%s]) {
     CreateInterfaceObjects(aCx, aGlobal, protoAndIfaceArray);
-    cachedObject = protoAndIfaceArray[%s];
   }
 
-  /* cachedObject might _still_ be null, but that's OK */
-  return cachedObject;""" % (self.id, self.id)
+  /* The object might _still_ be null, but that's OK */
+  return JS::Handle<JSObject*>::fromMarkedLocation(&protoAndIfaceArray[%s]);""" %
+                (self.id, self.id))
 
 class CGGetProtoObjectMethod(CGGetPerInterfaceObject):
     """
@@ -1892,7 +1895,8 @@ class CGDefineDOMInterfaceMethod(CGAbstractMethod):
     a given interface.
     """
     def __init__(self, descriptor):
-        args = [Argument('JSContext*', 'aCx'), Argument('JSObject*', 'aGlobal'),
+        args = [Argument('JSContext*', 'aCx'),
+                Argument('JS::Handle<JSObject*>', 'aGlobal'),
                 Argument('jsid', 'id'), Argument('bool*', 'aEnabled')]
         CGAbstractMethod.__init__(self, descriptor, 'DefineDOMInterface', 'JSObject*', args)
 
@@ -2112,8 +2116,8 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
   }
 
   JSAutoCompartment ac(aCx, parent);
-  JSObject* global = JS_GetGlobalForObject(aCx, parent);
-  JSObject* proto = GetProtoObject(aCx, global);
+  JS::Rooted<JSObject*> global(aCx, JS_GetGlobalForObject(aCx, parent));
+  JS::Handle<JSObject*> proto = GetProtoObject(aCx, global);
   if (!proto) {
     return NULL;
   }
@@ -2159,8 +2163,8 @@ class CGWrapNonWrapperCacheMethod(CGAbstractMethod):
 
     def definition_body(self):
         return """%s
-  JSObject* global = JS_GetGlobalForObject(aCx, aScope);
-  JSObject* proto = GetProtoObject(aCx, global);
+  JS::Rooted<JSObject*> global(aCx, JS_GetGlobalForObject(aCx, aScope));
+  JS::Handle<JSObject*> proto = GetProtoObject(aCx, global);
   if (!proto) {
     return NULL;
   }
@@ -7979,11 +7983,11 @@ class CGNativeMember(ClassMethod):
             elif type.nullable():
                 # Decl is a raw pointer
                 returnCode = ("NS_IF_ADDREF(${declName});\n"
-                              "return ${declName};")
+                              "return dont_AddRef(${declName});")
             else:
                 # Decl is a non-null raw pointer.
                 returnCode = ("NS_ADDREF(${declName});\n"
-                              "return ${declName};")
+                              "return dont_AddRef(${declName});")
             return result.define(), "nullptr", returnCode
         if type.isCallback():
             return ("already_AddRefed<%s>" % type.unroll().identifier.name,

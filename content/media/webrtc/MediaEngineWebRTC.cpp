@@ -221,6 +221,20 @@ MediaEngineWebRTC::EnumerateAudioDevices(nsTArray<nsRefPtr<MediaEngineAudioSourc
   // We spawn threads to handle gUM runnables, so we must protect the member vars
   MutexAutoLock lock(mMutex);
 
+#ifdef MOZ_WIDGET_ANDROID
+  jobject context = mozilla::AndroidBridge::Bridge()->GetGlobalContextRef();
+
+  // get the JVM
+  JavaVM *jvm = mozilla::AndroidBridge::Bridge()->GetVM();
+
+  JNIEnv *env;
+  jvm->AttachCurrentThread(&env, NULL);
+
+  webrtc::VoiceEngine::SetAndroidObjects(jvm, (void*)context);
+
+  env->DeleteGlobalRef(context);
+#endif
+
   if (!mVoiceEngine) {
     mVoiceEngine = webrtc::VoiceEngine::Create();
     if (!mVoiceEngine) {

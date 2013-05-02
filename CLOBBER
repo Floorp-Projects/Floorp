@@ -17,4 +17,4 @@
 #
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
-Bug 839855 - Android resource file changes (only affects Android builds)
+Bug 866093 - Change in .gyp file for Android builds.

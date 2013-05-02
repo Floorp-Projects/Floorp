@@ -81,6 +81,7 @@ class RegExpStatics
     explicit RegExpStatics(InitBuffer) : bufferLink(NULL), copied(false) {}
 
     friend class PreserveRegExpStatics;
+    friend class AutoRegExpStaticsBuffer;
 
   public:
     /* Mutators. */
@@ -146,59 +147,57 @@ class RegExpStatics
     void getLastParen(JSSubString *out) const;
     void getLeftContext(JSSubString *out) const;
     void getRightContext(JSSubString *out) const;
+};
 
-    /* PreserveRegExpStatics helpers. */
-
-    class AutoRooter : private JS::CustomAutoRooter
+class AutoRegExpStaticsBuffer : private JS::CustomAutoRooter
+{
+  public:
+    explicit AutoRegExpStaticsBuffer(JSContext *cx
+                                     MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : CustomAutoRooter(cx), statics(RegExpStatics::InitBuffer()), skip(cx, &statics)
     {
-      public:
-        explicit AutoRooter(JSContext *cx, RegExpStatics *statics_
-                            MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-          : CustomAutoRooter(cx), statics(statics_), skip(cx, statics_)
-        {
-            MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-        }
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    }
 
-      private:
-        virtual void trace(JSTracer *trc) {
-            if (statics->matchesInput) {
-                traceString(trc, reinterpret_cast<JSString**>(&statics->matchesInput),
-                               "RegExpStatics::AutoRooter matchesInput");
-            }
-            if (statics->lazySource) {
-                traceString(trc, reinterpret_cast<JSString**>(&statics->lazySource),
-                               "RegExpStatics::AutoRooter lazySource");
-            }
-            if (statics->pendingInput) {
-                traceString(trc, reinterpret_cast<JSString**>(&statics->pendingInput),
-                               "RegExpStatics::AutoRooter pendingInput");
-            }
-        }
+    RegExpStatics& getStatics() { return statics; }
 
-        RegExpStatics *statics;
-        SkipRoot skip;
-        MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-    };
+  private:
+    virtual void trace(JSTracer *trc) {
+        if (statics.matchesInput) {
+            traceString(trc, reinterpret_cast<JSString**>(&statics.matchesInput),
+                        "AutoRegExpStaticsBuffer matchesInput");
+        }
+        if (statics.lazySource) {
+            traceString(trc, reinterpret_cast<JSString**>(&statics.lazySource),
+                        "AutoRegExpStaticsBuffer lazySource");
+        }
+        if (statics.pendingInput) {
+            traceString(trc, reinterpret_cast<JSString**>(&statics.pendingInput),
+                        "AutoRegExpStaticsBuffer pendingInput");
+        }
+    }
+
+    RegExpStatics statics;
+    SkipRoot skip;
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 class PreserveRegExpStatics
 {
     RegExpStatics * const original;
-    RegExpStatics buffer;
-    RegExpStatics::AutoRooter bufferRoot;
+    AutoRegExpStaticsBuffer buffer;
 
   public:
     explicit PreserveRegExpStatics(JSContext *cx, RegExpStatics *original)
      : original(original),
-       buffer(RegExpStatics::InitBuffer()),
-       bufferRoot(cx, &buffer)
+       buffer(cx)
     {}
 
     bool init(JSContext *cx) {
-        return original->save(cx, &buffer);
+        return original->save(cx, &buffer.getStatics());
     }
 
-    inline ~PreserveRegExpStatics();
+    ~PreserveRegExpStatics() { original->restore(); }
 };
 
 inline js::RegExpStatics *
@@ -499,11 +498,6 @@ RegExpStatics::setPendingInput(JSString *newInput)
 {
     aboutToWrite();
     pendingInput = newInput;
-}
-
-PreserveRegExpStatics::~PreserveRegExpStatics()
-{
-    original->restore();
 }
 
 inline void

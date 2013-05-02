@@ -75,6 +75,7 @@ public:
     void process(const AudioChunk* sourceChunk, AudioChunk* destinationChunk, unsigned framesToProcess);
     void reset();
     void setNumberOfChannels(unsigned);
+    unsigned numberOfChannels() const { return m_numberOfChannels; }
 
     void setParameterValue(unsigned parameterID, float value);
     float parameterValue(unsigned parameterID);

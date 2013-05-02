@@ -382,15 +382,18 @@ class IonBuilder : public MIRGenerator
     bool jsop_getelem_typed_static(bool *psucceeded);
     bool jsop_getelem_string();
     bool jsop_setelem();
-    bool jsop_setelem_dense(types::StackTypeSet::DoubleConversion conversion);
-    bool jsop_setelem_typed(int arrayType);
-    bool jsop_setelem_typed_static(bool *psucceeded);
+    bool jsop_setelem_dense(types::StackTypeSet::DoubleConversion conversion,
+                            MDefinition *object, MDefinition *index, MDefinition *value);
+    bool jsop_setelem_typed(int arrayType,
+                            MDefinition *object, MDefinition *index, MDefinition *value);
+    bool jsop_setelem_typed_static(MDefinition *object, MDefinition *index, MDefinition *value,
+                                   bool *psucceeded);
     bool jsop_length();
     bool jsop_length_fastPath();
     bool jsop_arguments();
     bool jsop_arguments_length();
     bool jsop_arguments_getelem();
-    bool jsop_arguments_setelem();
+    bool jsop_arguments_setelem(MDefinition *object, MDefinition *index, MDefinition *value);
     bool jsop_not();
     bool jsop_getprop(HandlePropertyName name);
     bool jsop_setprop(HandlePropertyName name);
