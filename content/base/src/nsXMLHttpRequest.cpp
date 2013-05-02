@@ -3630,14 +3630,14 @@ nsXMLHttpRequest::GetInterface(JSContext* aCx, nsIJSID* aIID, ErrorResult& aRv)
 {
   const nsID* iid = aIID->GetID();
   nsCOMPtr<nsISupports> result;
-  JS::Value v = JSVAL_NULL;
+  JS::Rooted<JS::Value> v(aCx, JSVAL_NULL);
   aRv = GetInterface(*iid, getter_AddRefs(result));
   NS_ENSURE_FALSE(aRv.Failed(), JSVAL_NULL);
 
   JS::Rooted<JSObject*> wrapper(aCx, GetWrapper());
   JSAutoCompartment ac(aCx, wrapper);
   JS::Rooted<JSObject*> global(aCx, JS_GetGlobalForObject(aCx, wrapper));
-  aRv = nsContentUtils::WrapNative(aCx, global, result, iid, &v);
+  aRv = nsContentUtils::WrapNative(aCx, global, result, iid, v.address());
   return aRv.Failed() ? JSVAL_NULL : v;
 }
 

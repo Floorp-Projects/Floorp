@@ -73,8 +73,8 @@ MobileMessageCursorCallback::NotifyCursorResult(nsISupports* aResult)
   JSAutoRequest ar(cx);
   JSAutoCompartment ac(cx, global);
 
-  JS::Value wrappedResult;
-  rv = nsContentUtils::WrapNative(cx, global, aResult, &wrappedResult);
+  JS::Rooted<JS::Value> wrappedResult(cx);
+  rv = nsContentUtils::WrapNative(cx, global, aResult, wrappedResult.address());
   NS_ENSURE_SUCCESS(rv, rv);
 
   mDOMCursor->FireSuccess(wrappedResult);
