@@ -27,7 +27,7 @@
              style="margin: 0; padding: 0; border: 0;"/>
     </vbox>
     <vbox id="scrollbox-test">
-       <scrollbar orient="vertical" style="border: 0; padding: 0;"/>
+       <scrollbar orient="vertical" style="margin: 0; border: 0; padding: 0;"/>
     </vbox>
   </hbox>
 </vbox>
