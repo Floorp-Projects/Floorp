@@ -243,7 +243,7 @@ def CallOnUnforgeableHolder(descriptor, code, isXrayCheck=None):
   JSObject* global = js::GetGlobalForObjectCrossCompartment(proxy);"""
 
     return (pre + """
-  JSObject* unforgeableHolder = GetUnforgeableHolder(global, prototypes::id::%s);
+  JS::Rooted<JSObject*> unforgeableHolder(cx, GetUnforgeableHolder(global, prototypes::id::%s));
 """ + CGIndenter(CGGeneric(code)).define() + """
 }
 """) % descriptor.name
@@ -1204,7 +1204,7 @@ class CGClassHasInstanceHook(CGAbstractStaticMethod):
     return true;
   }
 
-  JSObject* instance = &vp.toObject();
+  JS::Rooted<JSObject*> instance(cx, &vp.toObject());
   """
         if self.descriptor.interface.hasInterfacePrototypeObject():
             return header + """
@@ -2597,7 +2597,7 @@ def getJSToNativeConversionTemplate(type, descriptorProvider, failureCode=None,
             arrayRef = "${declName}"
 
         # NOTE: Keep this in sync with variadic conversions as needed
-        templateBody = ("""JSObject* seq = &${val}.toObject();\n
+        templateBody = ("""JS::Rooted<JSObject*> seq(cx, &${val}.toObject());\n
 if (!IsArrayLike(cx, seq)) {
 %s
 }
@@ -2936,9 +2936,9 @@ for (uint32_t i = 0; i < length; ++i) {
             else:
                 holderType = "nsRefPtr<" + typeName + ">"
             templateBody += (
-                "jsval tmpVal = ${val};\n" +
+                "JS::Rooted<JS::Value> tmpVal(cx, ${val});\n" +
                 typePtr + " tmp;\n"
-                "if (NS_FAILED(xpc_qsUnwrapArg<" + typeName + ">(cx, ${val}, &tmp, static_cast<" + typeName + "**>(getter_AddRefs(${holderName})), &tmpVal))) {\n")
+                "if (NS_FAILED(xpc_qsUnwrapArg<" + typeName + ">(cx, ${val}, &tmp, static_cast<" + typeName + "**>(getter_AddRefs(${holderName})), tmpVal.address()))) {\n")
             templateBody += CGIndenter(onFailureBadType(failureCode,
                                                         descriptor.interface.identifier.name)).define()
             templateBody += ("}\n"
@@ -6839,7 +6839,7 @@ class CGDOMJSProxyHandler_hasOwn(ClassMethod):
           "Should not have a XrayWrapper here");
 
 """ + indexed + unforgeable + """
-JSObject* expando = GetExpandoObject(proxy);
+JS::Rooted<JSObject*> expando(cx, GetExpandoObject(proxy));
 if (expando) {
   JSBool b = true;
   JSBool ok = JS_HasPropertyById(cx, expando, id, &b);
@@ -6875,7 +6875,7 @@ class CGDOMJSProxyHandler_get(ClassMethod):
                                                               hasUnforgeable)
         else:
             getUnforgeableOrExpando = ""
-        getUnforgeableOrExpando += """JSObject* expando = DOMProxyHandler::GetExpandoObject(proxy);
+        getUnforgeableOrExpando += """JS::Rooted<JSObject*> expando(cx, DOMProxyHandler::GetExpandoObject(proxy));
 if (expando) {
   JSBool hasProp;
   if (!JS_HasPropertyById(cx, expando, id, &hasProp)) {
