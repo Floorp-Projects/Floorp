@@ -2475,12 +2475,160 @@ GetDPI(NSWindow* aWindow)
   return dpi * backingScale;
 }
 
+// Methods of our MozTitleCell and MozFrameView classes, created below as
+// subclasses of the appropriate undocumented superclasses.  Since we don't
+// know beforehand exactly what the superclasses will be, each of these
+// classes is created dynamically, using low-level Objective-C runtime
+// methods.  So their methods' declarations can't use Objective-C syntax.
+
+static Class gMozTitleCellClass = nil;
+
+typedef void (*NSCell_drawWithFrame)(struct objc_super *, SEL, NSRect, NSView *);
+
+static void MozTitleCell_drawWithFrame(id self, SEL sel, NSRect cellFrame,
+                                       NSView *controlView)
+{
+  BaseWindow *window = nil;
+  // The documentation for -[NSCell drawWithFrame:(NSRect)cellFrame
+  // inView:(NSView*)controlView] says "this method draws the cell in the
+  // currently focused view", which is what's returned by [NSView focusView].
+  // So in the very unlikely event that 'controlView' is nil, we fall back
+  // to using [NSView focusView].
+  if (controlView) {
+    window = (BaseWindow *) [controlView window];
+  } else {
+    window = (BaseWindow *) [[NSView focusView] window];
+  }
+  if ([window isKindOfClass:[BaseWindow class]]) {
+    if ([window drawsContentsIntoWindowFrame]) {
+      return;
+    }
+  }
+  struct objc_super target;
+  target.receiver = self;
+  target.super_class = [self superclass];
+  NSCell_drawWithFrame super = (NSCell_drawWithFrame) objc_msgSendSuper;
+  super(&target, sel, cellFrame, controlView);
+}
+
+static NSMutableDictionary *gFrameViewClassesByStyleMask = nil;
+
+typedef void (*NSFrameView_initTitleCell)(struct objc_super *, SEL, id);
+
+static void MozFrameView_initTitleCell(id self, SEL sel, id cell)
+{
+  struct objc_super target;
+  target.receiver = self;
+  target.super_class = [self superclass];
+  NSFrameView_initTitleCell super = (NSFrameView_initTitleCell) objc_msgSendSuper;
+  super(&target, sel, cell);
+  Class oldCellClass = [cell class];
+  if (cell) {
+    if (!gMozTitleCellClass) {
+      Class superclass = [cell class];
+      Class newClass = objc_allocateClassPair(superclass,
+                                              "MozTitleCell", 0);
+      if (newClass) {
+        if ([superclass instancesRespondToSelector:@selector(drawWithFrame:inView:)]) {
+          class_addMethod(newClass, @selector(drawWithFrame:inView:),
+                          (IMP)MozTitleCell_drawWithFrame,
+                          "v@:{_NSRect={_NSPoint=ff}{_NSSize=ff}}@");
+        }
+        objc_registerClassPair(newClass);
+        gMozTitleCellClass = newClass;
+      }
+    }
+    if (gMozTitleCellClass) {
+      object_setClass(cell, gMozTitleCellClass);
+    }
+  }
+}
+
+static int32_t MozFrameView_buttonBoxDisplayPixelsWidth(id self, SEL sel)
+{
+  NSRect buttonBox = NSZeroRect;
+  NSButton *closeButton = [self closeButton];
+  if (closeButton) {
+    NSRect closeButtonBox = [self convertRect:[closeButton bounds]
+                                     fromView:closeButton];
+    buttonBox = NSUnionRect(buttonBox, closeButtonBox);
+  }
+  NSButton *minimizeButton = [self minimizeButton];
+  if (minimizeButton) {
+    NSRect minimizeButtonBox = [self convertRect:[minimizeButton bounds]
+                                        fromView:minimizeButton];
+    buttonBox = NSUnionRect(buttonBox, minimizeButtonBox);
+  }
+  NSButton *zoomButton = [self zoomButton];
+  if (zoomButton) {
+    NSRect zoomButtonBox = [self convertRect:[zoomButton bounds]
+                                    fromView:zoomButton];
+    buttonBox = NSUnionRect(buttonBox, zoomButtonBox);
+  }
+  return rint(buttonBox.size.width);
+}
+
+static int32_t MozFrameView_fullScreenButtonDisplayPixelsWidth(id self, SEL sel)
+{
+  CGFloat floatWidth = 0;
+  NSButton *fullScreenButton = [self fullScreenButton];
+  if (fullScreenButton) {
+    floatWidth += [self convertSize:[fullScreenButton bounds].size
+                           fromView:fullScreenButton].width;
+  }
+  return rint(floatWidth);
+}
+
 @interface BaseWindow(Private)
 - (void)removeTrackingArea;
 - (void)cursorUpdated:(NSEvent*)aEvent;
 @end
 
 @implementation BaseWindow
+
++ (Class)frameViewClassForStyleMask:(NSUInteger)styleMask
+{
+  Class retval = [super frameViewClassForStyleMask:styleMask];
+
+  if (!gFrameViewClassesByStyleMask) {
+    gFrameViewClassesByStyleMask =
+      [[NSMutableDictionary dictionaryWithCapacity:3] retain];
+  }
+  if (!gFrameViewClassesByStyleMask) {
+    return retval;
+  }
+
+  NSString *styleMaskString =
+    [NSString stringWithFormat:@"%p", (void *) styleMask];
+  Class existingClass = (Class)
+    [gFrameViewClassesByStyleMask valueForKey:styleMaskString];
+  if (existingClass) {
+    retval = existingClass;
+  } else if (retval) {
+    char newClassName[32];
+    snprintf(newClassName, sizeof(newClassName) - 1, "MozFrameView%s",
+             [styleMaskString UTF8String]);
+    Class newClass = objc_allocateClassPair(retval, newClassName, 0);
+    if (newClass) {
+      if ([retval instancesRespondToSelector:@selector(initTitleCell:)]) {
+        class_addMethod(newClass, @selector(initTitleCell:),
+                        (IMP)MozFrameView_initTitleCell,
+                        "v@:@");
+      }
+      class_addMethod(newClass, @selector(buttonBoxDisplayPixelsWidth),
+                      (IMP)MozFrameView_buttonBoxDisplayPixelsWidth,
+                      "l@:");
+      class_addMethod(newClass, @selector(fullScreenButtonDisplayPixelsWidth),
+                      (IMP)MozFrameView_fullScreenButtonDisplayPixelsWidth,
+                      "l@:");
+      objc_registerClassPair(newClass);
+      [gFrameViewClassesByStyleMask setValue:newClass forKey:styleMaskString];
+      retval = newClass;
+    }
+  }
+
+  return retval;
+}
 
 - (id)initWithContentRect:(NSRect)aContentRect styleMask:(NSUInteger)aStyle backing:(NSBackingStoreType)aBufferingType defer:(BOOL)aFlag
 {

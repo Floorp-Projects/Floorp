@@ -4598,7 +4598,10 @@ var TabsInTitlebar = {
 #endif
       let captionButtonsBox = $("titlebar-buttonbox");
       this._sizePlaceholder("caption-buttons", rect(captionButtonsBox).width);
-
+#ifdef XP_MACOSX
+      let fullscreenButton  = $("titlebar-fullscreen-button");
+      this._sizePlaceholder("fullscreen-button", rect(fullscreenButton).width);
+#endif
       let titlebarContentHeight = rect(titlebarContent).height;
       let menuHeight = this._outerHeight(menubar);
 

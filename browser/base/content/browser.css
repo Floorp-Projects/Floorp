@@ -125,6 +125,23 @@ toolbar[printpreview="true"] {
 #main-window[tabsintitlebar] #titlebar-buttonbox {
   position: relative;
 }
+
+#titlebar-buttonbox {
+  -moz-appearance: -moz-window-button-box;
+}
+
+%ifdef XP_MACOSX
+#titlebar-fullscreen-button {
+  -moz-appearance: -moz-mac-fullscreen-button;
+}
+%endif
+
+%ifdef XP_WIN
+#main-window[sizemode="maximized"] #titlebar-buttonbox {
+  -moz-appearance: -moz-window-button-box-maximized;
+}
+%endif
+
 %endif
 
 .bookmarks-toolbar-customize,

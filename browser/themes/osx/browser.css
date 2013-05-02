@@ -40,12 +40,12 @@
   background-color: #eeeeee;
 }
 
-#titlebar-buttonbox-container {
+#titlebar-buttonbox > .titlebar-button {
   display: none;
 }
 
 #titlebar {
-  height: 22px;
+  padding-top: 9px;
 }
 
 #main-window:not(:-moz-lwtheme):not([privatebrowsingmode=temporary]) > #titlebar {
