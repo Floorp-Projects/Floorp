@@ -10,10 +10,9 @@
 @namespace html url("http://www.w3.org/1999/xhtml");
 
 %include ../shared/browser.inc
+%include linuxShared.inc
 %filter substitution
-%define toolbarHighlight rgba(255,255,255,.3)
-%define fgTabTexture linear-gradient(transparent 0px, transparent 1px, hsla(0,0%,100%,0.35) 1px, hsla(0,0%,100%,0.35) 2px, hsla(0,0%,100%,0.65) 2px, hsla(0,0%,100%,0.65) 3px, @toolbarHighlight@)
-%define fgTabBackgroundMiddle @fgTabTexture@, linear-gradient(transparent 0px, transparent 2px, -moz-dialog 2px, -moz-dialog)
+
 %define forwardTransitionLength 150ms
 %define conditionalForwardWithUrlbar       window:not([chromehidden~=toolbar]) :-moz-any(#nav-bar[currentset*="unified-back-forward-button,urlbar-container"][mode=icons],                #nav-bar:not([currentset])[mode=icons])                 > #unified-back-forward-button
 %define conditionalForwardWithUrlbar_small window:not([chromehidden~=toolbar]) :-moz-any(#nav-bar[currentset*="unified-back-forward-button,urlbar-container"][mode=icons][iconsize=small],#nav-bar:not([currentset])[mode=icons][iconsize=small]) > #unified-back-forward-button
@@ -1592,6 +1591,9 @@ toolbar[iconsize="small"] #bookmarks-menu-button[starred],
 #TabsToolbar[tabsontop=true]:not(:-moz-lwtheme) {
   -moz-appearance: menubar;
   color: -moz-menubartext;
+}
+
+#TabsToolbar[tabsontop=true] {
   box-shadow: 0 -1px 0 rgba(0,0,0,.1) inset;
 }
 
@@ -1605,6 +1607,15 @@ toolbar[iconsize="small"] #bookmarks-menu-button[starred],
 
 #TabsToolbar[tabsontop=false] {
   background-image: linear-gradient(to top, rgba(0,0,0,.3) 1px, rgba(0,0,0,.05) 1px, transparent 50%);
+}
+
+.tab-background-middle[selected=true]:-moz-lwtheme {
+  background-image: url(chrome://browser/skin/tabbrowser/tab-active-middle.png),
+                    @fgTabTexture@;
+}
+
+.tabbrowser-tab {
+  color: inherit;
 }
 
 .tabbrowser-tab:focus > .tab-stack > .tab-content > .tab-label {
