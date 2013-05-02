@@ -43,6 +43,9 @@ class Emulator(object):
 
     deviceRe = re.compile(r"^emulator-(\d+)(\s*)(.*)$")
     _default_res = '320x480'
+    prefs = {'app.update.enabled': False,
+             'app.update.staging.enabled': False,
+             'app.update.service.enabled': False}
 
     def __init__(self, homedir=None, noWindow=False, logcat_dir=None,
                  arch="x86", emulatorBinary=None, res=None, sdcard=None,
@@ -348,6 +351,27 @@ waitFor(
             self.install_gecko(gecko_path, marionette)
 
         self.wait_for_system_message(marionette)
+        self.set_prefs(marionette)
+
+    def set_prefs(self, marionette):
+        marionette.start_session()
+        marionette.set_context(marionette.CONTEXT_CHROME)
+        for pref in self.prefs:
+            marionette.execute_script("""
+            Components.utils.import("resource://gre/modules/Services.jsm");
+            let argtype = typeof(arguments[1]);
+            switch(argtype) {
+                case 'boolean':
+                    Services.prefs.setBoolPref(arguments[0], arguments[1]);
+                    break;
+                case 'number':
+                    Services.prefs.setIntPref(arguments[0], arguments[1]);
+                    break;
+                default:
+                    Services.prefs.setCharPref(arguments[0], arguments[1]);
+            }
+            """, [pref, self.prefs[pref]])
+        marionette.delete_session()
 
     def restart_b2g(self):
         print 'restarting B2G'
