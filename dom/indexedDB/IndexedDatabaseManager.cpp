@@ -419,7 +419,7 @@ IndexedDatabaseManager::InitWindowless(const jsval& aObj, JSContext* aCx)
   // exceptions.
   nsCOMPtr<nsIDOMScriptObjectFactory> sof(do_GetService(kDOMSOF_CID));
 
-  JS::Rooted<JSObject*> global(aCx, JS_GetGlobalForObject(aCx, obj));
+  JSObject* global = JS_GetGlobalForObject(aCx, obj);
   NS_ASSERTION(global, "What?! No global!");
 
   nsRefPtr<IDBFactory> factory;
@@ -429,8 +429,8 @@ IndexedDatabaseManager::InitWindowless(const jsval& aObj, JSContext* aCx)
 
   NS_ASSERTION(factory, "This should never fail for chrome!");
 
-  JS::Rooted<JS::Value> indexedDBVal(aCx);
-  rv = nsContentUtils::WrapNative(aCx, obj, factory, indexedDBVal.address());
+  jsval indexedDBVal;
+  rv = nsContentUtils::WrapNative(aCx, obj, factory, &indexedDBVal);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!JS_DefineProperty(aCx, obj, "indexedDB", indexedDBVal, nullptr,
@@ -438,7 +438,7 @@ IndexedDatabaseManager::InitWindowless(const jsval& aObj, JSContext* aCx)
     return NS_ERROR_FAILURE;
   }
 
-  JS::Rooted<JSObject*> keyrangeObj(aCx, JS_NewObject(aCx, nullptr, nullptr, nullptr));
+  JSObject* keyrangeObj = JS_NewObject(aCx, nullptr, nullptr, nullptr);
   NS_ENSURE_TRUE(keyrangeObj, NS_ERROR_OUT_OF_MEMORY);
 
   if (!IDBKeyRange::DefineConstructors(aCx, keyrangeObj)) {
