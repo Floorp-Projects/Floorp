@@ -1374,6 +1374,8 @@ nsXULTemplateBuilder::InitHTMLTemplateRoot()
     if (! global)
         return NS_ERROR_UNEXPECTED;
 
+    JSObject *scope = global->GetGlobalJSObject();
+
     nsIScriptContext *context = global->GetContext();
     if (! context)
         return NS_ERROR_UNEXPECTED;
@@ -1382,8 +1384,6 @@ nsXULTemplateBuilder::InitHTMLTemplateRoot()
     NS_ASSERTION(context != nullptr, "no jscontext");
     if (! jscontext)
         return NS_ERROR_UNEXPECTED;
-
-    JS::Rooted<JSObject*> scope(jscontext, global->GetGlobalJSObject());
 
     JSAutoRequest ar(jscontext);
 
