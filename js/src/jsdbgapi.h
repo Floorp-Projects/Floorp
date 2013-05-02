@@ -140,9 +140,9 @@ JS_ClearAllWatchPoints(JSContext *cx);
 
 /************************************************************************/
 
-// RawScript because this needs to be callable from a signal handler
+// Raw JSScript* because this needs to be callable from a signal handler.
 extern JS_PUBLIC_API(unsigned)
-JS_PCToLineNumber(JSContext *cx, js::RawScript script, jsbytecode *pc);
+JS_PCToLineNumber(JSContext *cx, JSScript *script, jsbytecode *pc);
 
 extern JS_PUBLIC_API(jsbytecode *)
 JS_LineNumberToPC(JSContext *cx, JSScript *script, unsigned lineno);
@@ -460,12 +460,6 @@ JS_DumpPCCounts(JSContext *cx, JSScript *script);
 
 extern JS_PUBLIC_API(void)
 JS_DumpCompartmentPCCounts(JSContext *cx);
-
-extern JS_PUBLIC_API(JSObject *)
-JS_UnwrapObject(JSObject *obj);
-
-extern JS_PUBLIC_API(JSObject *)
-JS_UnwrapObjectAndInnerize(JSObject *obj);
 
 /* Call the context debug handler on the topmost scripted frame. */
 extern JS_FRIEND_API(JSBool)

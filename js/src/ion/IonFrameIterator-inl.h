@@ -19,7 +19,7 @@ template <class Op>
 inline void
 SnapshotIterator::readFrameArgs(Op &op, const Value *argv, Value *scopeChain, Value *thisv,
                                 unsigned start, unsigned formalEnd, unsigned iterEnd,
-                                RawScript script)
+                                JSScript *script)
 {
     if (scopeChain)
         *scopeChain = read();

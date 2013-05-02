@@ -75,16 +75,16 @@ bool callTrackingActive(JSContext *);
 bool wantNativeAddressInfo(JSContext *);
 
 /* Entering a JS function */
-bool enterScript(JSContext *, RawScript, RawFunction , StackFrame *);
+bool enterScript(JSContext *, JSScript *, JSFunction *, StackFrame *);
 
 /* About to leave a JS function */
-bool exitScript(JSContext *, RawScript, RawFunction , StackFrame *);
+bool exitScript(JSContext *, JSScript *, JSFunction *, StackFrame *);
 
 /* Executing a script */
-bool startExecution(RawScript script);
+bool startExecution(JSScript *script);
 
 /* Script has completed execution */
-bool stopExecution(RawScript script);
+bool stopExecution(JSScript *script);
 
 /*
  * Object has been created. |obj| must exist (its class and size are read)
@@ -132,7 +132,7 @@ discardMJITCode(FreeOp *fop, mjit::JITScript *jscr, mjit::JITChunk *chunk, void*
  */
 bool
 registerICCode(JSContext *cx,
-               mjit::JITChunk *chunk, RawScript script, jsbytecode* pc,
+               mjit::JITChunk *chunk, JSScript *script, jsbytecode* pc,
                void *start, size_t size);
 #endif /* JS_METHODJIT */
 
@@ -149,8 +149,8 @@ discardExecutableRegion(void *start, size_t size);
  * marshalling required for these probe points is expensive enough that it
  * shouldn't really matter.
  */
-void DTraceEnterJSFun(JSContext *cx, RawFunction fun, RawScript script);
-void DTraceExitJSFun(JSContext *cx, RawFunction fun, RawScript script);
+void DTraceEnterJSFun(JSContext *cx, JSFunction *fun, JSScript *script);
+void DTraceExitJSFun(JSContext *cx, JSFunction *fun, JSScript *script);
 
 } /* namespace Probes */
 
@@ -181,7 +181,7 @@ Probes::wantNativeAddressInfo(JSContext *cx)
 }
 
 inline bool
-Probes::enterScript(JSContext *cx, RawScript script, RawFunction maybeFun,
+Probes::enterScript(JSContext *cx, JSScript *script, JSFunction *maybeFun,
                     StackFrame *fp)
 {
     bool ok = true;
@@ -204,7 +204,7 @@ Probes::enterScript(JSContext *cx, RawScript script, RawFunction maybeFun,
 }
 
 inline bool
-Probes::exitScript(JSContext *cx, RawScript script, RawFunction maybeFun,
+Probes::exitScript(JSContext *cx, JSScript *script, JSFunction *maybeFun,
                    StackFrame *fp)
 {
     bool ok = true;
@@ -275,7 +275,7 @@ Probes::finalizeObject(JSObject *obj)
     return ok;
 }
 inline bool
-Probes::startExecution(RawScript script)
+Probes::startExecution(JSScript *script)
 {
     bool ok = true;
 
@@ -289,7 +289,7 @@ Probes::startExecution(RawScript script)
 }
 
 inline bool
-Probes::stopExecution(RawScript script)
+Probes::stopExecution(JSScript *script)
 {
     bool ok = true;
 

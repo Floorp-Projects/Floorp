@@ -481,7 +481,7 @@ IsCacheableProtoChain(JSObject *obj, JSObject *holder)
 }
 
 static bool
-IsCacheableGetPropReadSlot(JSObject *obj, JSObject *holder, RawShape shape)
+IsCacheableGetPropReadSlot(JSObject *obj, JSObject *holder, Shape *shape)
 {
     if (!shape || !IsCacheableProtoChain(obj, holder))
         return false;
@@ -493,7 +493,7 @@ IsCacheableGetPropReadSlot(JSObject *obj, JSObject *holder, RawShape shape)
 }
 
 static bool
-IsCacheableNoProperty(JSObject *obj, JSObject *holder, RawShape shape, jsbytecode *pc,
+IsCacheableNoProperty(JSObject *obj, JSObject *holder, Shape *shape, jsbytecode *pc,
                       const TypedOrValueRegister &output)
 {
     if (shape)
@@ -544,7 +544,7 @@ IsCacheableNoProperty(JSObject *obj, JSObject *holder, RawShape shape, jsbytecod
 }
 
 static bool
-IsCacheableGetPropCallNative(JSObject *obj, JSObject *holder, RawShape shape)
+IsCacheableGetPropCallNative(JSObject *obj, JSObject *holder, Shape *shape)
 {
     if (!shape || !IsCacheableProtoChain(obj, holder))
         return false;
@@ -557,7 +557,7 @@ IsCacheableGetPropCallNative(JSObject *obj, JSObject *holder, RawShape shape)
 }
 
 static bool
-IsCacheableGetPropCallPropertyOp(JSObject *obj, JSObject *holder, RawShape shape)
+IsCacheableGetPropCallPropertyOp(JSObject *obj, JSObject *holder, Shape *shape)
 {
     if (!shape || !IsCacheableProtoChain(obj, holder))
         return false;
@@ -1688,7 +1688,7 @@ SetPropertyIC::attachNativeAdding(JSContext *cx, IonScript *ion, JSObject *obj,
     JSObject *proto = obj->getProto();
     Register protoReg = object();
     while (proto) {
-        RawShape protoShape = proto->lastProperty();
+        Shape *protoShape = proto->lastProperty();
 
         // load next prototype
         masm.loadPtr(Address(protoReg, JSObject::offsetOfType()), protoReg);
@@ -1749,7 +1749,7 @@ IsPropertyInlineable(JSObject *obj)
 static bool
 IsPropertySetInlineable(JSContext *cx, HandleObject obj, HandleId id, MutableHandleShape pshape)
 {
-    RawShape shape = obj->nativeLookup(cx, id);
+    Shape *shape = obj->nativeLookup(cx, id);
 
     if (!shape)
         return false;
@@ -1823,7 +1823,7 @@ IsPropertyAddInlineable(JSContext *cx, HandleObject obj, HandleId id, uint32_t o
             return false;
 
         // if prototype defines this property in a non-plain way, don't optimize
-        RawShape protoShape = proto->nativeLookup(cx, id);
+        Shape *protoShape = proto->nativeLookup(cx, id);
         if (protoShape && !protoShape->hasDefaultSetter())
             return false;
 
@@ -2216,7 +2216,7 @@ BindNameIC::attachGlobal(JSContext *cx, IonScript *ion, JSObject *scopeChain)
 
 static inline void
 GenerateScopeChainGuard(MacroAssembler &masm, JSObject *scopeObj,
-                        Register scopeObjReg, RawShape shape, Label *failures)
+                        Register scopeObjReg, Shape *shape, Label *failures)
 {
     if (scopeObj->isCall()) {
         // We can skip a guard on the call object if the script's bindings are
@@ -2224,8 +2224,8 @@ GenerateScopeChainGuard(MacroAssembler &masm, JSObject *scopeObj,
         // variables).
         CallObject *callObj = &scopeObj->asCall();
         if (!callObj->isForEval()) {
-            RawFunction fun = &callObj->callee();
-            RawScript script = fun->nonLazyScript();
+            JSFunction *fun = &callObj->callee();
+            JSScript *script = fun->nonLazyScript();
             if (!script->funHasExtensibleScope)
                 return;
         }
@@ -2452,7 +2452,7 @@ NameIC::attachCallGetter(JSContext *cx, IonScript *ion, JSObject *obj, JSObject 
 }
 
 static bool
-IsCacheableNameCallGetter(JSObject *scopeChain, JSObject *obj, JSObject *holder, RawShape shape)
+IsCacheableNameCallGetter(JSObject *scopeChain, JSObject *obj, JSObject *holder, Shape *shape)
 {
     if (obj != scopeChain)
         return false;

@@ -126,7 +126,7 @@ fun_getProperty(JSContext *cx, HandleObject obj_, HandleId id, MutableHandleValu
         // IonMonkey does not guarantee |f.arguments| can be
         // fully recovered, so we try to mitigate observing this behavior by
         // detecting its use early.
-        RawScript script = iter.script();
+        JSScript *script = iter.script();
         ion::ForbidCompilation(cx, script);
 #endif
 
@@ -149,7 +149,7 @@ fun_getProperty(JSContext *cx, HandleObject obj_, HandleId id, MutableHandleValu
         jsbytecode *prevpc = fp->prevpc(&inlined);
         if (inlined) {
             mjit::JITChunk *chunk = fp->prev()->jit()->chunk(prevpc);
-            RawFunction fun = chunk->inlineFrames()[inlined->inlineIndex].fun;
+            JSFunction *fun = chunk->inlineFrames()[inlined->inlineIndex].fun;
             fun->nonLazyScript()->uninlineable = true;
             MarkTypeObjectFlags(cx, fun, OBJECT_FLAG_UNINLINEABLE);
         }
@@ -257,7 +257,7 @@ ResolveInterpretedFunctionPrototype(JSContext *cx, HandleObject obj)
      * Make the prototype object an instance of Object with the same parent
      * as the function object itself.
      */
-    RawObject objProto = obj->global().getOrCreateObjectPrototype(cx);
+    JSObject *objProto = obj->global().getOrCreateObjectPrototype(cx);
     if (!objProto)
         return NULL;
     RootedObject proto(cx, NewObjectWithGivenProto(cx, &ObjectClass, objProto, NULL, SingletonObject));
@@ -524,7 +524,7 @@ JSFunction::trace(JSTracer *trc)
 }
 
 static void
-fun_trace(JSTracer *trc, RawObject obj)
+fun_trace(JSTracer *trc, JSObject *obj)
 {
     obj->toFunction()->trace(trc);
 }
@@ -1156,7 +1156,7 @@ js::CallOrConstructBoundFunction(JSContext *cx, unsigned argc, Value *vp)
 static JSBool
 fun_isGenerator(JSContext *cx, unsigned argc, Value *vp)
 {
-    RawFunction fun;
+    JSFunction *fun;
     if (!IsFunctionObject(vp[1], &fun)) {
         JS_SET_RVAL(cx, vp, BooleanValue(false));
         return true;
@@ -1164,7 +1164,7 @@ fun_isGenerator(JSContext *cx, unsigned argc, Value *vp)
 
     bool result = false;
     if (fun->hasScript()) {
-        RawScript script = fun->nonLazyScript();
+        JSScript *script = fun->nonLazyScript();
         JS_ASSERT(script->length != 0);
         result = script->isGenerator;
     }
@@ -1200,7 +1200,7 @@ fun_bind(JSContext *cx, unsigned argc, Value *vp)
     /* Steps 7-9. */
     RootedValue thisArg(cx, args.length() >= 1 ? args[0] : UndefinedValue());
     RootedObject target(cx, &thisv.toObject());
-    RawObject boundFunction = js_fun_bind(cx, target, thisArg, boundArgs, argslen);
+    JSObject *boundFunction = js_fun_bind(cx, target, thisArg, boundArgs, argslen);
     if (!boundFunction)
         return false;
 
@@ -1424,7 +1424,7 @@ js::Function(JSContext *cx, unsigned argc, Value *vp)
 
 #ifdef DEBUG
     for (unsigned i = 0; i < formals.length(); ++i) {
-        RawString str = formals[i];
+        JSString *str = formals[i];
         JS_ASSERT(str->asAtom().asPropertyName() == formals[i]);
     }
 #endif
@@ -1675,7 +1675,7 @@ JSObject::hasIdempotentProtoChain() const
 {
     // Return false if obj (or an object on its proto chain) is non-native or
     // has a resolve or lookup hook.
-    RawObject obj = const_cast<RawObject>(this);
+    JSObject *obj = const_cast<JSObject *>(this);
     while (true) {
         if (!obj->isNative())
             return false;

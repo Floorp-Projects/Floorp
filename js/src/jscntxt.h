@@ -89,7 +89,7 @@ typedef HashMap<CallsiteCloneKey,
                 CallsiteCloneKey,
                 SystemAllocPolicy> CallsiteCloneTable;
 
-RawFunction CloneFunctionAtCallsite(JSContext *cx, HandleFunction fun,
+JSFunction *CloneFunctionAtCallsite(JSContext *cx, HandleFunction fun,
                                     HandleScript script, jsbytecode *pc);
 
 typedef HashSet<JSObject *> ObjectSet;
@@ -2230,12 +2230,12 @@ SetValueRangeToNull(Value *vec, size_t len)
     SetValueRangeToNull(vec, vec + len);
 }
 
-class AutoObjectVector : public AutoVectorRooter<RawObject>
+class AutoObjectVector : public AutoVectorRooter<JSObject *>
 {
   public:
     explicit AutoObjectVector(JSContext *cx
                               MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-        : AutoVectorRooter<RawObject>(cx, OBJVECTOR)
+        : AutoVectorRooter<JSObject *>(cx, OBJVECTOR)
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
@@ -2243,12 +2243,12 @@ class AutoObjectVector : public AutoVectorRooter<RawObject>
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-class AutoStringVector : public AutoVectorRooter<RawString>
+class AutoStringVector : public AutoVectorRooter<JSString *>
 {
   public:
     explicit AutoStringVector(JSContext *cx
                               MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-        : AutoVectorRooter<RawString>(cx, STRINGVECTOR)
+        : AutoVectorRooter<JSString *>(cx, STRINGVECTOR)
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
@@ -2256,12 +2256,12 @@ class AutoStringVector : public AutoVectorRooter<RawString>
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-class AutoShapeVector : public AutoVectorRooter<RawShape>
+class AutoShapeVector : public AutoVectorRooter<Shape *>
 {
   public:
     explicit AutoShapeVector(JSContext *cx
                              MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-        : AutoVectorRooter<RawShape>(cx, SHAPEVECTOR)
+        : AutoVectorRooter<Shape *>(cx, SHAPEVECTOR)
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
@@ -2271,19 +2271,19 @@ class AutoShapeVector : public AutoVectorRooter<RawShape>
 
 class AutoValueArray : public AutoGCRooter
 {
-    RawValue *start_;
+    Value *start_;
     unsigned length_;
     SkipRoot skip;
 
   public:
-    AutoValueArray(JSContext *cx, RawValue *start, unsigned length
+    AutoValueArray(JSContext *cx, Value *start, unsigned length
                    MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : AutoGCRooter(cx, VALARRAY), start_(start), length_(length), skip(cx, start, length)
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
 
-    RawValue *start() { return start_; }
+    Value *start() { return start_; }
     unsigned length() const { return length_; }
 
     MutableHandleValue handleAt(unsigned i)
@@ -2300,12 +2300,12 @@ class AutoValueArray : public AutoGCRooter
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-class AutoObjectObjectHashMap : public AutoHashMapRooter<RawObject, RawObject>
+class AutoObjectObjectHashMap : public AutoHashMapRooter<JSObject *, JSObject *>
 {
   public:
     explicit AutoObjectObjectHashMap(JSContext *cx
                                      MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : AutoHashMapRooter<RawObject, RawObject>(cx, OBJOBJHASHMAP)
+      : AutoHashMapRooter<JSObject *, JSObject *>(cx, OBJOBJHASHMAP)
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
@@ -2313,12 +2313,12 @@ class AutoObjectObjectHashMap : public AutoHashMapRooter<RawObject, RawObject>
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-class AutoObjectUnsigned32HashMap : public AutoHashMapRooter<RawObject, uint32_t>
+class AutoObjectUnsigned32HashMap : public AutoHashMapRooter<JSObject *, uint32_t>
 {
   public:
     explicit AutoObjectUnsigned32HashMap(JSContext *cx
                                          MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : AutoHashMapRooter<RawObject, uint32_t>(cx, OBJU32HASHMAP)
+      : AutoHashMapRooter<JSObject *, uint32_t>(cx, OBJU32HASHMAP)
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
@@ -2326,12 +2326,12 @@ class AutoObjectUnsigned32HashMap : public AutoHashMapRooter<RawObject, uint32_t
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-class AutoObjectHashSet : public AutoHashSetRooter<RawObject>
+class AutoObjectHashSet : public AutoHashSetRooter<JSObject *>
 {
   public:
     explicit AutoObjectHashSet(JSContext *cx
                                MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : AutoHashSetRooter<RawObject>(cx, OBJHASHSET)
+      : AutoHashSetRooter<JSObject *>(cx, OBJHASHSET)
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }

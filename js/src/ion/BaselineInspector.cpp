@@ -42,7 +42,7 @@ BaselineInspector::maybeShapesForPropertyOp(jsbytecode *pc, Vector<Shape *> &sha
 
     ICStub *stub = entry.firstStub();
     while (stub->next()) {
-        RawShape shape;
+        Shape *shape;
         if (stub->isGetProp_Native()) {
             shape = stub->toGetProp_Native()->shape();
         } else if (stub->isSetProp_Native()) {
