@@ -626,25 +626,24 @@ SocialProvider.prototype = {
   // values aren't to be used as the user is logged out'.
   profile: undefined,
 
-  // Contains the information necessary to support our "recommend" feature.
+  // Contains the information necessary to support our page mark feature.
   // null means no info yet provided (which includes the case of the provider
   // not supporting the feature) or the provided data is invalid.  Updated via
-  // the 'recommendInfo' setter and returned via the getter.
-  _recommendInfo: null,
-  get recommendInfo() {
-    return this._recommendInfo;
+  // the 'pageMarkInfo' setter and returned via the getter.
+  _pageMarkInfo: null,
+  get pageMarkInfo() {
+    return this._pageMarkInfo;
   },
-  set recommendInfo(data) {
-    // Accept *and validate* the user-recommend-prompt-response message from
-    // the provider.
+  set pageMarkInfo(data) {
+    // Accept *and validate* the page-mark-config message from the provider.
     let promptImages = {};
     let promptMessages = {};
     function reportError(reason) {
-      Cu.reportError("Invalid recommend data from provider: " + reason + ": sharing is disabled for this provider");
-      // and we explicitly reset the recommend data to null to avoid stale
+      Cu.reportError("Invalid page-mark data from provider: " + reason + ": marking is disabled for this provider");
+      // and we explicitly reset the page-mark data to null to avoid stale
       // data being used and notify our observers.
-      this._recommendInfo = null;
-      Services.obs.notifyObservers(null, "social:recommend-info-changed", this.origin);
+      this._pageMarkInfo = null;
+      Services.obs.notifyObservers(null, "social:page-mark-config", this.origin);
     }
     if (!data ||
         !data.images || typeof data.images != "object" ||
@@ -652,10 +651,10 @@ SocialProvider.prototype = {
       reportError("data is missing valid 'images' or 'messages' elements");
       return;
     }
-    for (let sub of ["share", "unshare"]) {
+    for (let sub of ["marked", "unmarked"]) {
       let url = data.images[sub];
       if (!url || typeof url != "string" || url.length == 0) {
-        reportError('images["' + sub + '"] is missing or not a non-empty string');
+        reportError('images["' + sub + '"] is not a valid string');
         return;
       }
       // resolve potentially relative URLs but there is no same-origin check
@@ -669,19 +668,15 @@ SocialProvider.prototype = {
       }
       promptImages[sub] = imgUri.spec;
     }
-    for (let sub of ["shareTooltip", "unshareTooltip",
-                     "sharedLabel", "unsharedLabel", "unshareLabel",
-                     "portraitLabel",
-                     "unshareConfirmLabel", "unshareConfirmAccessKey",
-                     "unshareCancelLabel", "unshareCancelAccessKey"]) {
+    for (let sub of ["markedTooltip", "unmarkedTooltip", "markedLabel", "unmarkedLabel"]) {
       if (typeof data.messages[sub] != "string" || data.messages[sub].length == 0) {
         reportError('messages["' + sub + '"] is not a valid string');
         return;
       }
       promptMessages[sub] = data.messages[sub];
     }
-    this._recommendInfo = {images: promptImages, messages: promptMessages};
-    Services.obs.notifyObservers(null, "social:recommend-info-changed", this.origin);
+    this._pageMarkInfo = {images: promptImages, messages: promptMessages};
+    Services.obs.notifyObservers(null, "social:page-mark-config", this.origin);
   },
 
   // Map of objects describing the provider's notification icons, whose
