@@ -1672,7 +1672,8 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
     properties should be a PropertyArrays instance.
     """
     def __init__(self, descriptor, properties):
-        args = [Argument('JSContext*', 'aCx'), Argument('JSObject*', 'aGlobal'),
+        args = [Argument('JSContext*', 'aCx'),
+                Argument('JS::Handle<JSObject*>', 'aGlobal'),
                 Argument('JSObject**', 'protoAndIfaceArray')]
         CGAbstractMethod.__init__(self, descriptor, 'CreateInterfaceObjects', 'void', args)
         self.properties = properties
@@ -1842,7 +1843,8 @@ class CGGetPerInterfaceObject(CGAbstractMethod):
     constructor object).
     """
     def __init__(self, descriptor, name, idPrefix=""):
-        args = [Argument('JSContext*', 'aCx'), Argument('JSObject*', 'aGlobal')]
+        args = [Argument('JSContext*', 'aCx'),
+                Argument('JS::Handle<JSObject*>', 'aGlobal')]
         CGAbstractMethod.__init__(self, descriptor, name,
                                   'JS::Handle<JSObject*>', args, inline=True)
         self.id = idPrefix + "id::" + self.descriptor.name
@@ -1893,7 +1895,8 @@ class CGDefineDOMInterfaceMethod(CGAbstractMethod):
     a given interface.
     """
     def __init__(self, descriptor):
-        args = [Argument('JSContext*', 'aCx'), Argument('JSObject*', 'aGlobal'),
+        args = [Argument('JSContext*', 'aCx'),
+                Argument('JS::Handle<JSObject*>', 'aGlobal'),
                 Argument('jsid', 'id'), Argument('bool*', 'aEnabled')]
         CGAbstractMethod.__init__(self, descriptor, 'DefineDOMInterface', 'JSObject*', args)
 
@@ -2113,7 +2116,7 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
   }
 
   JSAutoCompartment ac(aCx, parent);
-  JSObject* global = JS_GetGlobalForObject(aCx, parent);
+  JS::Rooted<JSObject*> global(aCx, JS_GetGlobalForObject(aCx, parent));
   JS::Handle<JSObject*> proto = GetProtoObject(aCx, global);
   if (!proto) {
     return NULL;
@@ -2160,7 +2163,7 @@ class CGWrapNonWrapperCacheMethod(CGAbstractMethod):
 
     def definition_body(self):
         return """%s
-  JSObject* global = JS_GetGlobalForObject(aCx, aScope);
+  JS::Rooted<JSObject*> global(aCx, JS_GetGlobalForObject(aCx, aScope));
   JS::Handle<JSObject*> proto = GetProtoObject(aCx, global);
   if (!proto) {
     return NULL;
