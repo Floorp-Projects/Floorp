@@ -47,11 +47,13 @@ class Build(MachCommandBase):
     """Interface to build the tree."""
 
     @Command('build', help='Build the tree.')
+    @CommandArgument('--jobs', '-j', default='0', metavar='jobs', type=int,
+        help='Number of concurrent jobs to run. Default is the number of CPUs.')
     @CommandArgument('what', default=None, nargs='*', help=BUILD_WHAT_HELP)
     @CommandArgument('-X', '--disable-extra-make-dependencies',
                      default=False, action='store_true',
                      help='Do not add extra make dependencies.')
-    def build(self, what=None, disable_extra_make_dependencies=None):
+    def build(self, what=None, disable_extra_make_dependencies=None, jobs=0):
         # This code is only meant to be temporary until the more robust tree
         # building code in bug 780329 lands.
         from mozbuild.compilation.warnings import WarningsCollector
@@ -125,14 +127,14 @@ class Build(MachCommandBase):
             for make_dir, make_target in target_pairs:
                 status = self._run_make(directory=make_dir, target=make_target,
                     line_handler=on_line, log=False, print_directory=False,
-                    ensure_exit_code=False)
+                    ensure_exit_code=False, num_jobs=jobs)
 
                 if status != 0:
                     break
         else:
             status = self._run_make(srcdir=True, filename='client.mk',
                 line_handler=on_line, log=False, print_directory=False,
-                allow_parallel=False, ensure_exit_code=False)
+                allow_parallel=False, ensure_exit_code=False, num_jobs=jobs)
 
             self.log(logging.WARNING, 'warning_summary',
                 {'count': len(warnings_collector.database)},
