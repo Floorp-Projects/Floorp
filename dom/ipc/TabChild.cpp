@@ -2170,6 +2170,17 @@ TabChild::GetDPI(float* aDPI)
 }
 
 void
+TabChild::GetDefaultScale(double* aScale)
+{
+    *aScale = -1.0;
+    if (!mRemoteFrame) {
+        return;
+    }
+
+    SendGetDefaultScale(aScale);
+}
+
+void
 TabChild::NotifyPainted()
 {
     // Normally we only need to notify the content process once, but with BasicCompositor
