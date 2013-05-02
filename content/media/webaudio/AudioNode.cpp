@@ -146,7 +146,7 @@ AudioNode::Connect(AudioNode& aDestination, uint32_t aOutput,
   input->mInputNode = this;
   input->mInputPort = aInput;
   input->mOutputPort = aOutput;
-  if (SupportsMediaStreams() && aDestination.mStream) {
+  if (aDestination.mStream) {
     // Connect streams in the MediaStreamGraph
     MOZ_ASSERT(aDestination.mStream->AsProcessedStream());
     ProcessedMediaStream* ps =

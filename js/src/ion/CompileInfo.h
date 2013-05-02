@@ -13,7 +13,7 @@ namespace js {
 namespace ion {
 
 inline unsigned
-StartArgSlot(RawScript script, JSFunction *fun)
+StartArgSlot(JSScript *script, JSFunction *fun)
 {
     // First slot is for scope chain.
     // Second one may be for arguments object.
@@ -21,7 +21,7 @@ StartArgSlot(RawScript script, JSFunction *fun)
 }
 
 inline unsigned
-CountArgSlots(RawScript script, JSFunction *fun)
+CountArgSlots(JSScript *script, JSFunction *fun)
 {
     return StartArgSlot(script, fun) + (fun ? fun->nargs + 1 : 0);
 }
@@ -39,7 +39,7 @@ enum ExecutionMode {
 class CompileInfo
 {
   public:
-    CompileInfo(RawScript script, JSFunction *fun, jsbytecode *osrPc, bool constructing,
+    CompileInfo(JSScript *script, JSFunction *fun, jsbytecode *osrPc, bool constructing,
                 ExecutionMode executionMode)
       : script_(script), fun_(fun), osrPc_(osrPc), constructing_(constructing),
         executionMode_(executionMode)
@@ -63,7 +63,7 @@ class CompileInfo
         nslots_ = nlocals_ + nstack_;
     }
 
-    RawScript script() const {
+    JSScript *script() const {
         return script_;
     }
     JSFunction *fun() const {

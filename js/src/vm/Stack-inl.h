@@ -133,7 +133,7 @@ StackFrame::resetInlinePrev(StackFrame *prevfp, jsbytecode *prevpc)
 
 inline void
 StackFrame::initCallFrame(JSContext *cx, JSFunction &callee,
-                          RawScript script, uint32_t nactual, StackFrame::Flags flagsArg)
+                          JSScript *script, uint32_t nactual, StackFrame::Flags flagsArg)
 {
     JS_ASSERT((flagsArg & ~(CONSTRUCTING |
                             LOWERED_CALL_APPLY |
@@ -507,7 +507,7 @@ ContextStack::popFrameAfterOverflow()
     regs.popFrame(fp->actuals() + fp->numActualArgs());
 }
 
-inline RawScript
+inline JSScript *
 ContextStack::currentScript(jsbytecode **ppc,
                             MaybeAllowCrossCompartment allowCrossCompartment) const
 {
@@ -536,7 +536,7 @@ ContextStack::currentScript(jsbytecode **ppc,
         mjit::JITChunk *chunk = fp->jit()->chunk(regs.pc);
         JS_ASSERT(inlined->inlineIndex < chunk->nInlineFrames);
         mjit::InlineFrame *frame = &chunk->inlineFrames()[inlined->inlineIndex];
-        RawScript script = frame->fun->nonLazyScript();
+        JSScript *script = frame->fun->nonLazyScript();
         if (!allowCrossCompartment && script->compartment() != cx_->compartment)
             return NULL;
         if (ppc)
@@ -545,7 +545,7 @@ ContextStack::currentScript(jsbytecode **ppc,
     }
 #endif
 
-    RawScript script = fp->script();
+    JSScript *script = fp->script();
     if (!allowCrossCompartment && script->compartment() != cx_->compartment)
         return NULL;
 
@@ -627,7 +627,7 @@ AbstractFramePtr::setReturnValue(const Value &rval) const
 #endif
 }
 
-inline RawObject
+inline JSObject *
 AbstractFramePtr::scopeChain() const
 {
     if (isStackFrame())
@@ -841,7 +841,7 @@ AbstractFramePtr::isDebuggerFrame() const
 #endif
     return false;
 }
-inline RawScript
+inline JSScript *
 AbstractFramePtr::script() const
 {
     if (isStackFrame())

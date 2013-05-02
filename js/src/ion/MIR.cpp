@@ -395,7 +395,7 @@ MConstant::printOpcode(FILE *fp)
                 fputs("unnamed function", fp);
             }
             if (fun->hasScript()) {
-                RawScript script = fun->nonLazyScript();
+                JSScript *script = fun->nonLazyScript();
                 fprintf(fp, " (%s:%u)",
                         script->filename() ? script->filename() : "", script->lineno);
             }
@@ -2244,7 +2244,7 @@ MGetPropertyPolymorphic::mightAlias(MDefinition *store)
         return true;
 
     for (size_t i = 0; i < numShapes(); i++) {
-        RawShape shape = this->shape(i);
+        Shape *shape = this->shape(i);
         if (shape->slot() < shape->numFixedSlots()) {
             // Fixed slot.
             uint32_t slot = shape->slot();

@@ -133,7 +133,7 @@ js::StringIsArrayIndex(JSLinearString *str, uint32_t *indexp)
     return false;
 }
 
-RawShape
+Shape *
 js::GetDenseArrayShape(JSContext *cx, HandleObject globalObj)
 {
     JS_ASSERT(globalObj);
@@ -1552,7 +1552,7 @@ MatchNumericComparator(const Value &v)
     if (!fun->hasScript())
         return Match_None;
 
-    RawScript script = fun->nonLazyScript();
+    JSScript *script = fun->nonLazyScript();
     jsbytecode *pc = script->code;
 
     uint16_t arg0, arg1;
@@ -2902,7 +2902,7 @@ EnsureNewArrayElements(JSContext *cx, JSObject *obj, uint32_t length)
 
 template<bool allocateCapacity>
 static JS_ALWAYS_INLINE JSObject *
-NewArray(JSContext *cx, uint32_t length, RawObject protoArg, NewObjectKind newKind = GenericObject)
+NewArray(JSContext *cx, uint32_t length, JSObject *protoArg, NewObjectKind newKind = GenericObject)
 {
     gc::AllocKind allocKind = GuessArrayGCKind(length);
     JS_ASSERT(CanBeFinalizedInBackground(allocKind, &ArrayClass));
@@ -2971,21 +2971,21 @@ NewArray(JSContext *cx, uint32_t length, RawObject protoArg, NewObjectKind newKi
 }
 
 JSObject * JS_FASTCALL
-js::NewDenseEmptyArray(JSContext *cx, RawObject proto /* = NULL */,
+js::NewDenseEmptyArray(JSContext *cx, JSObject *proto /* = NULL */,
                        NewObjectKind newKind /* = GenericObject */)
 {
     return NewArray<false>(cx, 0, proto, newKind);
 }
 
 JSObject * JS_FASTCALL
-js::NewDenseAllocatedArray(JSContext *cx, uint32_t length, RawObject proto /* = NULL */,
+js::NewDenseAllocatedArray(JSContext *cx, uint32_t length, JSObject *proto /* = NULL */,
                            NewObjectKind newKind /* = GenericObject */)
 {
     return NewArray<true>(cx, length, proto, newKind);
 }
 
 JSObject * JS_FASTCALL
-js::NewDenseUnallocatedArray(JSContext *cx, uint32_t length, RawObject proto /* = NULL */,
+js::NewDenseUnallocatedArray(JSContext *cx, uint32_t length, JSObject *proto /* = NULL */,
                              NewObjectKind newKind /* = GenericObject */)
 {
     return NewArray<false>(cx, length, proto, newKind);
@@ -2995,7 +2995,7 @@ js::NewDenseUnallocatedArray(JSContext *cx, uint32_t length, RawObject proto /* 
 JSObject * JS_FASTCALL
 mjit::stubs::NewDenseUnallocatedArray(VMFrame &f, uint32_t length)
 {
-    JSObject *obj = NewArray<false>(f.cx, length, (RawObject)f.scratch);
+    JSObject *obj = NewArray<false>(f.cx, length, (JSObject *)f.scratch);
     if (!obj)
         THROWV(NULL);
 
@@ -3005,7 +3005,7 @@ mjit::stubs::NewDenseUnallocatedArray(VMFrame &f, uint32_t length)
 
 JSObject *
 js::NewDenseCopiedArray(JSContext *cx, uint32_t length, HandleObject src, uint32_t elementOffset,
-                        RawObject proto /* = NULL */)
+                        JSObject *proto /* = NULL */)
 {
     JS_ASSERT(!src->isIndexed());
 
@@ -3027,7 +3027,7 @@ js::NewDenseCopiedArray(JSContext *cx, uint32_t length, HandleObject src, uint32
 // values must point at already-rooted Value objects
 JSObject *
 js::NewDenseCopiedArray(JSContext *cx, uint32_t length, const Value *values,
-                        RawObject proto /* = NULL */, NewObjectKind newKind /* = GenericObject */)
+                        JSObject *proto /* = NULL */, NewObjectKind newKind /* = GenericObject */)
 {
     JSObject* obj = NewArray<true>(cx, length, proto);
     if (!obj)

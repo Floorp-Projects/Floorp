@@ -47,7 +47,7 @@ interface HTMLInputElement : HTMLElement {
            attribute unsigned long height;
   [Pure]
            attribute boolean indeterminate;
-  [Pure, SetterThrows]
+  [Pure, SetterThrows, Pref="dom.forms.inputmode"]
            attribute DOMString inputMode;
   [Pure]
   readonly attribute HTMLElement? list;

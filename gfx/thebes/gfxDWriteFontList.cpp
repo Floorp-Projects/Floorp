@@ -245,7 +245,7 @@ gfxDWriteFontEntry::IsSymbolFont()
 }
 
 static bool
-UsingArabicScriptSystemLocale()
+UsingArabicOrHebrewScriptSystemLocale()
 {
     LANGID langid = PRIMARYLANGID(::GetSystemDefaultLangID());
     switch (langid) {
@@ -256,6 +256,7 @@ UsingArabicScriptSystemLocale()
     case LANG_SINDHI:
     case LANG_UIGHUR:
     case LANG_URDU:
+    case LANG_HEBREW:
         return true;
     default:
         return false;
@@ -268,11 +269,12 @@ gfxDWriteFontEntry::GetFontTable(uint32_t aTableTag,
 {
     gfxDWriteFontList *pFontList = gfxDWriteFontList::PlatformFontList();
 
-    // don't use GDI table loading for symbol fonts or for
+    // Don't use GDI table loading for symbol fonts or for
     // italic fonts in Arabic-script system locales because of
-    // potential cmap discrepancies, see bug 629386
+    // potential cmap discrepancies, see bug 629386.
+    // Ditto for Hebrew, bug 837498.
     if (mFont && pFontList->UseGDIFontTableAccess() &&
-        !(mItalic && UsingArabicScriptSystemLocale()) &&
+        !(mItalic && UsingArabicOrHebrewScriptSystemLocale()) &&
         !mFont->IsSymbolFont())
     {
         LOGFONTW logfont = { 0 };
