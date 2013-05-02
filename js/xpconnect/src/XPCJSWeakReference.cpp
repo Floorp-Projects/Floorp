@@ -72,7 +72,8 @@ xpcJSWeakReference::Get(JSContext* aCx, JS::Value* aRetval)
     if (!wrappedObj) {
         // We have a generic XPCOM object that supports weak references here.
         // Wrap it and pass it out.
-        return nsContentUtils::WrapNative(aCx, JS_GetGlobalForScopeChain(aCx),
+        JS::Rooted<JSObject*> global(aCx, JS_GetGlobalForScopeChain(aCx));
+        return nsContentUtils::WrapNative(aCx, global,
                                           supports, &NS_GET_IID(nsISupports),
                                           aRetval);
     }

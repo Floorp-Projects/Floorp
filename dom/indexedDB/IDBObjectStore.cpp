@@ -666,8 +666,9 @@ public:
       aData.name, aData.type, fileInfo.forget());
 
     jsval wrappedFileHandle;
+    JS::Rooted<JSObject*> global(aCx, JS_GetGlobalForScopeChain(aCx));
     nsresult rv =
-      nsContentUtils::WrapNative(aCx, JS_GetGlobalForScopeChain(aCx),
+      nsContentUtils::WrapNative(aCx, global,
                                  static_cast<nsIDOMFileHandle*>(fileHandle),
                                  &NS_GET_IID(nsIDOMFileHandle),
                                  &wrappedFileHandle);
@@ -726,8 +727,9 @@ public:
       }
 
       jsval wrappedBlob;
+      JS::Rooted<JSObject*> global(aCx, JS_GetGlobalForScopeChain(aCx));
        rv =
-        nsContentUtils::WrapNative(aCx, JS_GetGlobalForScopeChain(aCx), domBlob,
+        nsContentUtils::WrapNative(aCx, global, domBlob,
                                    &NS_GET_IID(nsIDOMBlob), &wrappedBlob);
       if (NS_FAILED(rv)) {
         NS_WARNING("Failed to wrap native!");
@@ -752,8 +754,9 @@ public:
     }
 
     jsval wrappedFile;
+    JS::Rooted<JSObject*> global(aCx, JS_GetGlobalForScopeChain(aCx));
     rv =
-      nsContentUtils::WrapNative(aCx, JS_GetGlobalForScopeChain(aCx), domFile,
+      nsContentUtils::WrapNative(aCx, global, domFile,
                                  &NS_GET_IID(nsIDOMFile), &wrappedFile);
     if (NS_FAILED(rv)) {
       NS_WARNING("Failed to wrap native!");
