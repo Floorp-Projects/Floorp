@@ -1258,15 +1258,15 @@ EmptyShape::getInitialShape(JSContext *cx, Class *clasp, TaggedProto proto, JSOb
     if (!table.initialized() && !table.init())
         return NULL;
 
-    InitialShapeEntry::Lookup lookup(clasp, proto, parent, nfixed, objectFlags);
-
-    InitialShapeSet::AddPtr p = table.lookupForAdd(lookup);
+    typedef InitialShapeEntry::Lookup Lookup;
+    InitialShapeSet::AddPtr p =
+        table.lookupForAdd(Lookup(clasp, proto, parent, nfixed, objectFlags));
 
     if (p)
         return p->shape;
 
-    Rooted<TaggedProto> protoRoot(cx, lookup.proto);
-    RootedObject parentRoot(cx, lookup.parent);
+    Rooted<TaggedProto> protoRoot(cx, proto);
+    RootedObject parentRoot(cx, parent);
 
     StackBaseShape base(cx->compartment, clasp, parent, objectFlags);
     Rooted<UnownedBaseShape*> nbase(cx, BaseShape::getUnowned(cx, base));
@@ -1278,11 +1278,11 @@ EmptyShape::getInitialShape(JSContext *cx, Class *clasp, TaggedProto proto, JSOb
         return NULL;
     new (shape) EmptyShape(nbase, nfixed);
 
-    lookup.proto = protoRoot;
-    lookup.parent = parentRoot;
-
-    if (!table.relookupOrAdd(p, lookup, InitialShapeEntry(shape, lookup.proto)))
+    if (!table.relookupOrAdd(p, Lookup(clasp, protoRoot, parentRoot, nfixed, objectFlags),
+                             InitialShapeEntry(shape, protoRoot)))
+    {
         return NULL;
+    }
 
     return shape;
 }
