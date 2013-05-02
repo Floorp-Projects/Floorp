@@ -1446,7 +1446,7 @@ js::NewReshapedObject(JSContext *cx, HandleTypeObject type, JSObject *parent,
             if (!ids.append(JSID_VOID))
                 return NULL;
         }
-        RawShape nshape = shape;
+        Shape *nshape = shape;
         while (!nshape->isEmptyShape()) {
             ids[nshape->slot()] = nshape->propid();
             nshape = nshape->previous();
@@ -1563,7 +1563,7 @@ js::CreateThisForFunction(JSContext *cx, HandleObject callee, bool newType)
  * checking whether document.all is defined.
  */
 static bool
-Detecting(JSContext *cx, RawScript script, jsbytecode *pc)
+Detecting(JSContext *cx, JSScript *script, jsbytecode *pc)
 {
     /* General case: a branch or equality op follows the access. */
     JSOp op = JSOp(*pc);
@@ -1614,7 +1614,7 @@ js_InferFlags(JSContext *cx, unsigned defaultFlags)
      * handle the case of cross-compartment property access.
      */
     jsbytecode *pc;
-    RawScript script = cx->stack.currentScript(&pc, ContextStack::ALLOW_CROSS_COMPARTMENT);
+    JSScript *script = cx->stack.currentScript(&pc, ContextStack::ALLOW_CROSS_COMPARTMENT);
     if (!script)
         return defaultFlags;
 
@@ -2963,7 +2963,7 @@ js::SetClassAndProto(JSContext *cx, HandleObject obj,
 }
 
 bool
-js_GetClassObject(JSContext *cx, RawObject obj, JSProtoKey key, MutableHandleObject objp)
+js_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key, MutableHandleObject objp)
 {
     RootedObject global(cx, &obj->global());
     if (!global->isGlobal()) {
@@ -3128,7 +3128,7 @@ JSObject::freeSlot(uint32_t slot)
 }
 
 static bool
-PurgeProtoChain(JSContext *cx, RawObject objArg, HandleId id)
+PurgeProtoChain(JSContext *cx, JSObject *objArg, HandleId id)
 {
     /* Root locally so we can re-assign. */
     RootedObject obj(cx, objArg);
@@ -3184,7 +3184,7 @@ js_PurgeScopeChainHelper(JSContext *cx, HandleObject objArg, HandleId id)
     return true;
 }
 
-RawShape
+Shape *
 js_AddNativeProperty(JSContext *cx, HandleObject obj, HandleId id,
                      PropertyOp getter, StrictPropertyOp setter, uint32_t slot,
                      unsigned attrs, unsigned flags, int shortid)
@@ -3197,7 +3197,7 @@ js_AddNativeProperty(JSContext *cx, HandleObject obj, HandleId id,
     if (!js_PurgeScopeChain(cx, obj, id))
         return NULL;
 
-    RawShape shape =
+    Shape *shape =
         JSObject::putProperty(cx, obj, id, getter, setter, slot, attrs, flags, shortid);
     if (!shape)
         return shape;
@@ -3542,7 +3542,7 @@ CallResolveOp(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
         return true;
     }
 
-    RawShape shape;
+    Shape *shape;
     if (!objp->nativeEmpty() && (shape = objp->nativeLookup(cx, id)))
         propp.set(shape);
     else
@@ -3572,7 +3572,7 @@ LookupPropertyWithFlagsInline(JSContext *cx,
                 return true;
             }
 
-            RawShape shape = current->nativeLookup(cx, id);
+            Shape *shape = current->nativeLookup(cx, id);
             if (shape) {
                 objp.set(current);
                 propp.set(shape);
@@ -3759,7 +3759,7 @@ NativeGetInline(JSContext *cx,
 
     {
         jsbytecode *pc;
-        RawScript script = cx->stack.currentScript(&pc);
+        JSScript *script = cx->stack.currentScript(&pc);
         if (script && script->hasAnalysis()) {
             analyze::Bytecode *code = script->analysis()->maybeCode(pc);
             if (code)
@@ -4110,7 +4110,7 @@ static bool
 MaybeReportUndeclaredVarAssignment(JSContext *cx, JSString *propname)
 {
     {
-        RawScript script = cx->stack.currentScript(NULL, ContextStack::ALLOW_CROSS_COMPARTMENT);
+        JSScript *script = cx->stack.currentScript(NULL, ContextStack::ALLOW_CROSS_COMPARTMENT);
         if (!script)
             return true;
 
@@ -4133,7 +4133,7 @@ js::ReportIfUndeclaredVarAssignment(JSContext *cx, HandleString propname)
 {
     {
         jsbytecode *pc;
-        RawScript script = cx->stack.currentScript(&pc, ContextStack::ALLOW_CROSS_COMPARTMENT);
+        JSScript *script = cx->stack.currentScript(&pc, ContextStack::ALLOW_CROSS_COMPARTMENT);
         if (!script)
             return true;
 
@@ -4471,7 +4471,7 @@ baseops::SetElementAttributes(JSContext *cx, HandleObject obj, uint32_t index, u
     if (nobj->isNative() && IsImplicitDenseElement(shape)) {
         if (!JSObject::sparsifyDenseElement(cx, obj, index))
             return false;
-        RawId id = INT_TO_JSID(index);
+        jsid id = INT_TO_JSID(index);
         shape = obj->nativeLookup(cx, HandleId::fromMarkedLocation(&id)); // not a gcthing
     }
     return nobj->isNative()
@@ -4555,7 +4555,7 @@ js::HasDataProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
         return true;
     }
 
-    if (RawShape shape = obj->nativeLookup(cx, id)) {
+    if (Shape *shape = obj->nativeLookup(cx, id)) {
         if (shape->hasDefaultGetter() && shape->hasSlot()) {
             *vp = obj->nativeGetSlot(shape->slot());
             return true;
@@ -4910,7 +4910,7 @@ js_GetObjectSlotName(JSTracer *trc, char *buf, size_t bufsize)
     JSObject *obj = (JSObject *)trc->debugPrintArg;
     uint32_t slot = uint32_t(trc->debugPrintIndex);
 
-    RawShape shape;
+    Shape *shape;
     if (obj->isNative()) {
         shape = obj->lastProperty();
         while (shape && (!shape->hasSlot() || shape->slot() != slot))
@@ -4991,7 +4991,7 @@ dumpValue(const Value &v)
             fputs("<unnamed function", stderr);
         }
         if (fun->hasScript()) {
-            RawScript script = fun->nonLazyScript();
+            JSScript *script = fun->nonLazyScript();
             fprintf(stderr, " (%s:%u)",
                     script->filename() ? script->filename() : "", script->lineno);
         }
@@ -5148,7 +5148,7 @@ JSObject::dump()
 
     if (obj->isNative()) {
         fprintf(stderr, "properties:\n");
-        Vector<RawShape, 8, SystemAllocPolicy> props;
+        Vector<Shape *, 8, SystemAllocPolicy> props;
         for (Shape::Range<NoGC> r(obj->lastProperty()); !r.empty(); r.popFront())
             props.append(&r.front());
         for (size_t i = props.length(); i-- != 0;)
@@ -5259,7 +5259,7 @@ js_DumpBacktrace(JSContext *cx)
         if (i.isScript()) {
             const char *filename = JS_GetScriptFilename(cx, i.script());
             unsigned line = JS_PCToLineNumber(cx, i.script(), i.pc());
-            RawScript script = i.script();
+            JSScript *script = i.script();
             sprinter.printf("#%d %14p   %s:%d (%p @ %d)\n",
                             depth, (i.isIon() ? 0 : i.interpFrame()), filename, line,
                             script, i.pc() - script->code);

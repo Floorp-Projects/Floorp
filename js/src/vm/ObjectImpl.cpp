@@ -196,8 +196,8 @@ js::ObjectImpl::checkShapeConsistency()
 
     MOZ_ASSERT(isNative());
 
-    RawShape shape = lastProperty();
-    RawShape prev = NULL;
+    Shape *shape = lastProperty();
+    Shape *prev = NULL;
 
     if (inDictionaryMode()) {
         MOZ_ASSERT(shape->hasTable());
@@ -294,7 +294,7 @@ js::ObjectImpl::slotInRange(uint32_t slot, SentinelAllowed sentinel) const
  */
 MOZ_NEVER_INLINE
 #endif
-RawShape
+Shape *
 js::ObjectImpl::nativeLookup(JSContext *cx, jsid id)
 {
     MOZ_ASSERT(isNative());

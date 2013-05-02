@@ -275,7 +275,7 @@ JSObject::dynamicSlotIndex(size_t slot)
 }
 
 inline void
-JSObject::setLastPropertyInfallible(js::RawShape shape)
+JSObject::setLastPropertyInfallible(js::Shape *shape)
 {
     JS_ASSERT(!shape->inDictionary());
     JS_ASSERT(shape->compartment() == compartment());
@@ -306,7 +306,7 @@ JSObject::canRemoveLastProperty()
      * converted to dictionary mode instead. See BaseShape comment in jsscope.h
      */
     JS_ASSERT(!inDictionaryMode());
-    js::RawShape previous = lastProperty()->previous().get();
+    js::Shape *previous = lastProperty()->previous().get();
     return previous->getObjectParent() == lastProperty()->getObjectParent()
         && previous->getObjectFlags() == lastProperty()->getObjectFlags();
 }
@@ -922,7 +922,7 @@ JSObject::asString()
 inline bool
 JSObject::isDebugScope() const
 {
-    extern bool js_IsDebugScopeSlow(js::RawObject obj);
+    extern bool js_IsDebugScopeSlow(JSObject *obj);
     return getClass() == &js::ObjectProxyClass && js_IsDebugScopeSlow(const_cast<JSObject*>(this));
 }
 

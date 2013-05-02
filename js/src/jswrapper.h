@@ -52,9 +52,9 @@ class JS_FRIEND_API(Wrapper) : public DirectProxyHandler
 
     static JSObject *Renew(JSContext *cx, JSObject *existing, JSObject *obj, Wrapper *handler);
 
-    static Wrapper *wrapperHandler(RawObject wrapper);
+    static Wrapper *wrapperHandler(JSObject *wrapper);
 
-    static JSObject *wrappedObject(RawObject wrapper);
+    static JSObject *wrappedObject(JSObject *wrapper);
 
     unsigned flags() const {
         return mFlags;
@@ -218,7 +218,7 @@ TransparentObjectWrapper(JSContext *cx, HandleObject existing, HandleObject obj,
 extern JS_FRIEND_DATA(int) sWrapperFamily;
 
 inline bool
-IsWrapper(RawObject obj)
+IsWrapper(JSObject *obj)
 {
     return IsProxy(obj) && GetProxyHandler(obj)->family() == &sWrapperFamily;
 }
@@ -235,18 +235,18 @@ UncheckedUnwrap(JSObject *obj, bool stopAtOuter = true, unsigned *flagsp = NULL)
 // code should never be unwrapping outer window wrappers, we always stop at
 // outer windows.
 JS_FRIEND_API(JSObject *)
-CheckedUnwrap(RawObject obj, bool stopAtOuter = true);
+CheckedUnwrap(JSObject *obj, bool stopAtOuter = true);
 
 // Unwrap only the outermost security wrapper, with the same semantics as
 // above. This is the checked version of Wrapper::wrappedObject.
 JS_FRIEND_API(JSObject *)
-UnwrapOneChecked(RawObject obj, bool stopAtOuter = true);
+UnwrapOneChecked(JSObject *obj, bool stopAtOuter = true);
 
 JS_FRIEND_API(bool)
-IsCrossCompartmentWrapper(RawObject obj);
+IsCrossCompartmentWrapper(JSObject *obj);
 
 bool
-IsDeadProxyObject(RawObject obj);
+IsDeadProxyObject(JSObject *obj);
 
 JSObject *
 NewDeadProxyObject(JSContext *cx, JSObject *parent);

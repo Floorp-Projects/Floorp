@@ -44,10 +44,10 @@ static JSBool
 Exception(JSContext *cx, unsigned argc, Value *vp);
 
 static void
-exn_trace(JSTracer *trc, RawObject obj);
+exn_trace(JSTracer *trc, JSObject *obj);
 
 static void
-exn_finalize(FreeOp *fop, RawObject obj);
+exn_finalize(FreeOp *fop, JSObject *obj);
 
 static JSBool
 exn_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
@@ -242,7 +242,7 @@ struct SuppressErrorsGuard
 };
 
 static void
-SetExnPrivate(RawObject exnObject, JSExnPrivate *priv);
+SetExnPrivate(JSObject *exnObject, JSExnPrivate *priv);
 
 static bool
 InitExnPrivate(JSContext *cx, HandleObject exnObject, HandleString message,
@@ -272,7 +272,7 @@ InitExnPrivate(JSContext *cx, HandleObject exnObject, HandleString message,
                 return false;
             JSStackTraceStackElem &frame = frames.back();
             if (i.isNonEvalFunctionFrame()) {
-                RawAtom atom = i.callee()->displayAtom();
+                JSAtom *atom = i.callee()->displayAtom();
                 if (atom == NULL)
                     atom = cx->runtime->emptyString;
                 frame.funName = atom;
@@ -336,14 +336,14 @@ InitExnPrivate(JSContext *cx, HandleObject exnObject, HandleString message,
 }
 
 static inline JSExnPrivate *
-GetExnPrivate(RawObject obj)
+GetExnPrivate(JSObject *obj)
 {
     JS_ASSERT(obj->isError());
     return (JSExnPrivate *) obj->getPrivate();
 }
 
 static void
-exn_trace(JSTracer *trc, RawObject obj)
+exn_trace(JSTracer *trc, JSObject *obj)
 {
     if (JSExnPrivate *priv = GetExnPrivate(obj)) {
         if (priv->message)
@@ -361,7 +361,7 @@ exn_trace(JSTracer *trc, RawObject obj)
 
 /* NB: An error object's private must be set through this function. */
 static void
-SetExnPrivate(RawObject exnObject, JSExnPrivate *priv)
+SetExnPrivate(JSObject *exnObject, JSExnPrivate *priv)
 {
     JS_ASSERT(!exnObject->getPrivate());
     JS_ASSERT(exnObject->isError());
@@ -373,7 +373,7 @@ SetExnPrivate(RawObject exnObject, JSExnPrivate *priv)
 }
 
 static void
-exn_finalize(FreeOp *fop, RawObject obj)
+exn_finalize(FreeOp *fop, JSObject *obj)
 {
     if (JSExnPrivate *priv = GetExnPrivate(obj)) {
         if (JSErrorReport *report = priv->errorReport) {
@@ -445,7 +445,7 @@ exn_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
 
         atom = cx->names().stack;
         if (str == atom) {
-            RawString stack = StackTraceToString(cx, priv);
+            JSString *stack = StackTraceToString(cx, priv);
             if (!stack)
                 return false;
 
@@ -470,7 +470,7 @@ js_ErrorFromException(jsval exn)
     if (JSVAL_IS_PRIMITIVE(exn))
         return NULL;
 
-    RawObject obj = JSVAL_TO_OBJECT(exn);
+    JSObject *obj = JSVAL_TO_OBJECT(exn);
     if (!obj->isError())
         return NULL;
 
@@ -669,7 +669,7 @@ exn_toString(JSContext *cx, unsigned argc, Value *vp)
     if (!sb.append(name) || !sb.append(": ") || !sb.append(message))
         return false;
 
-    RawString str = sb.finishString();
+    JSString *str = sb.finishString();
     if (!str)
         return false;
     args.rval().setString(str);
@@ -738,7 +738,7 @@ exn_toSource(JSContext *cx, unsigned argc, Value *vp)
         if (filename->empty() && !sb.append(", \"\""))
                 return false;
 
-        RawString linenumber = ToString<CanGC>(cx, linenoVal);
+        JSString *linenumber = ToString<CanGC>(cx, linenoVal);
         if (!linenumber)
             return false;
         if (!sb.append(", ") || !sb.append(linenumber))
@@ -748,7 +748,7 @@ exn_toSource(JSContext *cx, unsigned argc, Value *vp)
     if (!sb.append("))"))
         return false;
 
-    RawString str = sb.finishString();
+    JSString *str = sb.finishString();
     if (!str)
         return false;
     args.rval().setString(str);
@@ -1077,7 +1077,7 @@ js_ReportUncaughtException(JSContext *cx)
         }
 
         if (JS_GetProperty(cx, exnObject, filename_str, &roots[4])) {
-            RawString tmp = ToString<CanGC>(cx, roots[4]);
+            JSString *tmp = ToString<CanGC>(cx, roots[4]);
             if (tmp)
                 filename.encodeLatin1(cx, tmp);
         }
