@@ -2088,47 +2088,21 @@ NS_IMETHODIMP HTMLMediaElement::Play()
   return rv.ErrorCode();
 }
 
-nsHTMLMediaElement::WakeLockBoolWrapper&
-nsHTMLMediaElement::WakeLockBoolWrapper::operator=(bool val) {
-  if (mValue == val) {
+HTMLMediaElement::WakeLockBoolWrapper& HTMLMediaElement::WakeLockBoolWrapper::operator=(bool val) {
+  if (mValue == val)
     return *this;
-  }
-
-  mValue = val;
-  UpdateWakeLock();
-  return *this;
-}
-
-void
-nsHTMLMediaElement::WakeLockBoolWrapper::SetCanPlay(bool aCanPlay)
-{
-  mCanPlay = aCanPlay;
-  UpdateWakeLock();
-}
-
-void
-nsHTMLMediaElement::WakeLockBoolWrapper::UpdateWakeLock()
-{
-  if (!mOuter) {
-    return;
-
-  }
-  bool playing = (!mValue && mCanPlay);
-
-  if (playing) {
+  if (!mWakeLock && !val && mOuter) {
     nsCOMPtr<nsIPowerManagerService> pmService =
       do_GetService(POWERMANAGERSERVICE_CONTRACTID);
-    NS_ENSURE_TRUE_VOID(pmService);
+    NS_ENSURE_TRUE(pmService, *this);
 
-    if (!mWakeLock) {
-      pmService->NewWakeLock(NS_LITERAL_STRING("cpu"),
-                             mOuter->OwnerDoc()->GetWindow(),
-                             getter_AddRefs(mWakeLock));
-    }
-  } else if (mWakeLock) {
-    // Wakelock 'unlocks' itself in its destructor.
+    pmService->NewWakeLock(NS_LITERAL_STRING("Playing_media"), mOuter->OwnerDoc()->GetWindow(), getter_AddRefs(mWakeLock));
+  } else if (mWakeLock && val) {
+    mWakeLock->Unlock();
     mWakeLock = nullptr;
   }
+  mValue = val;
+  return *this;
 }
 
 bool HTMLMediaElement::ParseAttribute(int32_t aNamespaceID,
@@ -3741,7 +3715,6 @@ void HTMLMediaElement::UpdateAudioChannelPlayingState()
     if (mPlayingThroughTheAudioChannel) {
       bool canPlay;
       mAudioChannelAgent->StartPlaying(&canPlay);
-      mPaused.SetCanPlay(canPlay);
     } else {
       mAudioChannelAgent->StopPlaying();
       mAudioChannelAgent = nullptr;
@@ -3755,7 +3728,6 @@ NS_IMETHODIMP HTMLMediaElement::CanPlayChanged(bool canPlay)
   NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
 
   UpdateChannelMuteState(canPlay);
-  mPaused.SetCanPlay(canPlay);
   return NS_OK;
 }
 
