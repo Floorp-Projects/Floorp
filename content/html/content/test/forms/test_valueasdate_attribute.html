@@ -350,7 +350,7 @@ function checkWithBustedPrototype()
 
     element.valueAsDate = new Date();
 
-    todo_isnot(element.valueAsDate, null, ".valueAsDate should not return null");
+    isnot(element.valueAsDate, null, ".valueAsDate should not return null");
     // TODO: check the Date object value (UTCFullYear, UTCMonth and UTCDate)
     // when .valueAsDate will stop returning null.
 
@@ -364,7 +364,7 @@ function checkWithBustedPrototype()
 
     element.valueAsDate = new Date();
 
-    todo_isnot(element.valueAsDate, null, ".valueAsDate should not return null");
+    isnot(element.valueAsDate, null, ".valueAsDate should not return null");
     // TODO: check the Date object value (UTCFullYear, UTCMonth and UTCDate)
     // when .valueAsDate will stop returning null.
 
