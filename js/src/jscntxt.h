@@ -1745,7 +1745,8 @@ struct JSContext : js::ContextFriendFields,
     js::Value           iterValue;
 
 #ifdef JS_METHODJIT
-    bool                 methodJitEnabled;
+    bool methodJitEnabled;
+    bool jitIsBroken;
 
     js::mjit::JaegerRuntime &jaegerRuntime() { return runtime->jaegerRuntime(); }
 #endif
