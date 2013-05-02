@@ -484,8 +484,8 @@ AutoGCRooter::trace(JSTracer *trc)
       case OBJOBJHASHMAP: {
         AutoObjectObjectHashMap::HashMapImpl &map = static_cast<AutoObjectObjectHashMap *>(this)->map;
         for (AutoObjectObjectHashMap::Enum e(map); !e.empty(); e.popFront()) {
-            mozilla::DebugOnly<RawObject> key = e.front().key;
-            MarkObjectRoot(trc, (RawObject *) &e.front().key, "AutoObjectObjectHashMap key");
+            mozilla::DebugOnly<JSObject *> key = e.front().key;
+            MarkObjectRoot(trc, const_cast<JSObject **>(&e.front().key), "AutoObjectObjectHashMap key");
             JS_ASSERT(key == e.front().key);  // Needs rewriting for moving GC, see bug 726687.
             MarkObjectRoot(trc, &e.front().value, "AutoObjectObjectHashMap value");
         }
@@ -496,8 +496,8 @@ AutoGCRooter::trace(JSTracer *trc)
         AutoObjectUnsigned32HashMap *self = static_cast<AutoObjectUnsigned32HashMap *>(this);
         AutoObjectUnsigned32HashMap::HashMapImpl &map = self->map;
         for (AutoObjectUnsigned32HashMap::Enum e(map); !e.empty(); e.popFront()) {
-            mozilla::DebugOnly<RawObject> key = e.front().key;
-            MarkObjectRoot(trc, (RawObject *) &e.front().key, "AutoObjectUnsignedHashMap key");
+            mozilla::DebugOnly<JSObject *> key = e.front().key;
+            MarkObjectRoot(trc, const_cast<JSObject **>(&e.front().key), "AutoObjectUnsignedHashMap key");
             JS_ASSERT(key == e.front().key);  // Needs rewriting for moving GC, see bug 726687.
         }
         return;
@@ -507,8 +507,8 @@ AutoGCRooter::trace(JSTracer *trc)
         AutoObjectHashSet *self = static_cast<AutoObjectHashSet *>(this);
         AutoObjectHashSet::HashSetImpl &set = self->set;
         for (AutoObjectHashSet::Enum e(set); !e.empty(); e.popFront()) {
-            mozilla::DebugOnly<RawObject> obj = e.front();
-            MarkObjectRoot(trc, (RawObject *) &e.front(), "AutoObjectHashSet value");
+            mozilla::DebugOnly<JSObject *> obj = e.front();
+            MarkObjectRoot(trc, const_cast<JSObject **>(&e.front()), "AutoObjectHashSet value");
             JS_ASSERT(obj == e.front());  // Needs rewriting for moving GC, see bug 726687.
         }
         return;
@@ -649,6 +649,30 @@ JSPropertyDescriptor::trace(JSTracer *trc)
     }
 }
 
+static inline void
+MarkGlobalForMinorGC(JSTracer *trc, JSCompartment *compartment)
+{
+#ifdef JS_ION
+    /*
+     * Named properties of globals which have had Ion activity are treated as
+     * roots during minor GCs. This allows writes to globals to occur without
+     * needing a write barrier.
+     */
+    JS_ASSERT(trc->runtime->isHeapMinorCollecting());
+
+    if (!compartment->ionCompartment())
+        return;
+
+    GlobalObject *global = compartment->maybeGlobal();
+    if (!global)
+        return;
+
+    /* Global reserved slots never hold nursery things. */
+    for (size_t i = JSCLASS_RESERVED_SLOTS(global->getClass()); i < global->slotSpan(); ++i)
+        MarkValueRoot(trc, global->nativeGetSlotRef(i).unsafeGet(), "MinorGlobalRoot");
+#endif /* JS_ION */
+}
+
 void
 js::gc::MarkRuntime(JSTracer *trc, bool useSavedRoots)
 {
@@ -736,6 +760,9 @@ js::gc::MarkRuntime(JSTracer *trc, bool useSavedRoots)
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
         if (IS_GC_MARKING_TRACER(trc) && !c->zone()->isCollecting())
             continue;
+
+        if (trc->runtime->isHeapMinorCollecting())
+            MarkGlobalForMinorGC(trc, c);
 
         /* During a GC, these are treated as weak pointers. */
         if (!IS_GC_MARKING_TRACER(trc)) {

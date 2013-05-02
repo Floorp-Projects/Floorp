@@ -240,7 +240,7 @@ JSCompartment::sweepCallsiteClones()
     }
 }
 
-RawFunction
+JSFunction *
 js::CloneFunctionAtCallsite(JSContext *cx, HandleFunction fun, HandleScript script, jsbytecode *pc)
 {
     JS_ASSERT(cx->typeInferenceEnabled());
@@ -565,7 +565,7 @@ checkReportFlags(JSContext *cx, unsigned *flags)
          * We assume that if the top frame is a native, then it is strict if
          * the nearest scripted frame is strict, see bug 536306.
          */
-        RawScript script = cx->stack.currentScript();
+        JSScript *script = cx->stack.currentScript();
         if (script && script->strict)
             *flags &= ~JSREPORT_WARNING;
         else if (cx->hasStrictOption())
@@ -623,7 +623,7 @@ js::ReportUsageError(JSContext *cx, HandleObject callee, const char *msg)
     const char *usageStr = "usage";
     PropertyName *usageAtom = Atomize(cx, usageStr, strlen(usageStr))->asPropertyName();
     RootedId id(cx, NameToId(usageAtom));
-    DebugOnly<RawShape> shape = static_cast<RawShape>(callee->nativeLookup(cx, id));
+    DebugOnly<Shape *> shape = static_cast<Shape *>(callee->nativeLookup(cx, id));
     JS_ASSERT(!shape->configurable());
     JS_ASSERT(!shape->writable());
     JS_ASSERT(shape->hasDefaultGetter());

@@ -3279,7 +3279,7 @@ Tab.prototype = {
 
         // For low-memory devices, don't allow reader mode since it takes up a lot of memory.
         // See https://bugzilla.mozilla.org/show_bug.cgi?id=792603 for details.
-        if (BrowserApp.isOnLowMemoryPlatform)
+        if (BrowserApp.isOnLowMemoryPlatform && !Services.prefs.getBoolPref("reader.force_allow"))
           return;
 
         // Once document is fully loaded, parse it

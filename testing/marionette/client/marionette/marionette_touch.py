@@ -5,7 +5,7 @@
 import os
 from errors import ElementNotVisibleException
 from marionette import Actions
-from gestures import pinch
+import gestures
 """
 Adds touch support in Marionette
 """
@@ -36,9 +36,9 @@ class MarionetteTouchMixin(object):
 
     def flick(self, element, x1, y1, x2, y2, duration=200):
         self.check_element(element)
-        action = Actions(self.marionette)
+        action = Actions(self)
         action.flick(element, x1, y1, x2, y2, duration).perform()
 
     def pinch(self, element, x1, y1, x2, y2, x3, y3, x4, y4, duration = 200):
         self.check_element(element)
-        pinch(element, x1, y1, x2, y2, x3, y3, x4, y4, duration)
+        gestures.pinch(self, element, x1, y1, x2, y2, x3, y3, x4, y4, duration)

@@ -215,7 +215,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitCallDeleteProperty(LCallDeleteProperty *lir);
     bool visitBitNotV(LBitNotV *lir);
     bool visitBitOpV(LBitOpV *lir);
-    bool emitInstanceOf(LInstruction *ins, RawObject prototypeObject);
+    bool emitInstanceOf(LInstruction *ins, JSObject *prototypeObject);
     bool visitIn(LIn *ins);
     bool visitInArray(LInArray *ins);
     bool visitInstanceOfO(LInstanceOfO *ins);

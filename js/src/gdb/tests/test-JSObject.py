@@ -18,5 +18,3 @@ assert_pretty('funcPtr', '(JSFunction *)  [object Function "formFollows"]')
 
 assert_pretty('plainRef', '(JSObject &) @ [object Object]')
 assert_pretty('funcRef', '(JSFunction &) @ [object Function "formFollows"]')
-assert_pretty('plainRaw', '(js::RawObject)  [object Object]')
-assert_pretty('funcRaw', '(js::RawObject)  [object Function "dys"]')

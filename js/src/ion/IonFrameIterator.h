@@ -153,7 +153,7 @@ class IonFrameIterator
     JSFunction *callee() const;
     JSFunction *maybeCallee() const;
     unsigned numActualArgs() const;
-    RawScript script() const;
+    JSScript *script() const;
     void baselineScriptAndPc(JSScript **scriptRes, jsbytecode **pcRes) const;
     Value *nativeVp() const;
     Value *actualArgs() const;
@@ -270,7 +270,7 @@ class SnapshotIterator : public SnapshotReader
     template <class Op>
     inline void readFrameArgs(Op &op, const Value *argv, Value *scopeChain, Value *thisv,
                               unsigned start, unsigned formalEnd, unsigned iterEnd,
-                              RawScript script);
+                              JSScript *script);
 
     Value maybeReadSlotByIndex(size_t index) {
         while (index--) {
@@ -324,7 +324,7 @@ class InlineFrameIteratorMaybeGC
     template <class Op>
     inline void forEachCanonicalActualArg(JSContext *cx, Op op, unsigned start, unsigned count) const;
 
-    RawScript script() const {
+    JSScript *script() const {
         return script_;
     }
     jsbytecode *pc() const {

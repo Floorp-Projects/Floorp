@@ -55,7 +55,7 @@ CopyStackFrameArguments(const AbstractFramePtr frame, HeapValue *dst, unsigned t
 ArgumentsObject::MaybeForwardToCallObject(AbstractFramePtr frame, JSObject *obj,
                                           ArgumentsData *data)
 {
-    RawScript script = frame.script();
+    JSScript *script = frame.script();
     if (frame.fun()->isHeavyweight() && script->argsObjAliasesFormals()) {
         obj->initFixedSlot(MAYBE_CALL_SLOT, ObjectValue(frame.callObj()));
         for (AliasedFormalIter fi(script); fi; fi++)
@@ -68,8 +68,8 @@ ArgumentsObject::MaybeForwardToCallObject(AbstractFramePtr frame, JSObject *obj,
 ArgumentsObject::MaybeForwardToCallObject(ion::IonJSFrameLayout *frame, HandleObject callObj,
                                           JSObject *obj, ArgumentsData *data)
 {
-    RawFunction callee = ion::CalleeTokenToFunction(frame->calleeToken());
-    RawScript script = callee->nonLazyScript();
+    JSFunction *callee = ion::CalleeTokenToFunction(frame->calleeToken());
+    JSScript *script = callee->nonLazyScript();
     if (callee->isHeavyweight() && script->argsObjAliasesFormals()) {
         JS_ASSERT(callObj && callObj->isCall());
         obj->initFixedSlot(MAYBE_CALL_SLOT, ObjectValue(*callObj.get()));
@@ -226,7 +226,7 @@ ArgumentsObject::create(JSContext *cx, HandleScript script, HandleFunction calle
     data->deletedBits = reinterpret_cast<size_t *>(dstEnd);
     ClearAllBitArrayElements(data->deletedBits, numDeletedWords);
 
-    RawObject obj = JSObject::create(cx, FINALIZE_KIND, GetInitialHeap(GenericObject, clasp),
+    JSObject *obj = JSObject::create(cx, FINALIZE_KIND, GetInitialHeap(GenericObject, clasp),
                                      shape, type);
     if (!obj) {
         js_free(data);
@@ -572,13 +572,13 @@ strictargs_enumerate(JSContext *cx, HandleObject obj)
 }
 
 void
-ArgumentsObject::finalize(FreeOp *fop, RawObject obj)
+ArgumentsObject::finalize(FreeOp *fop, JSObject *obj)
 {
     fop->free_(reinterpret_cast<void *>(obj->asArguments().data()));
 }
 
 void
-ArgumentsObject::trace(JSTracer *trc, RawObject obj)
+ArgumentsObject::trace(JSTracer *trc, JSObject *obj)
 {
     ArgumentsObject &argsobj = obj->asArguments();
     ArgumentsData *data = argsobj.data();

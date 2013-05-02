@@ -151,7 +151,7 @@ IonBuilder::getSingleCallTarget(types::StackTypeSet *calleeTypes)
     if (!calleeTypes)
         return NULL;
 
-    RawObject obj = calleeTypes->getSingleton();
+    JSObject *obj = calleeTypes->getSingleton();
     if (!obj || !obj->isFunction())
         return NULL;
 
@@ -4323,6 +4323,9 @@ IonBuilder::createThisScriptedSingleton(HandleFunction target, MDefinition *call
     if (!proto)
         return NULL;
 
+    if (!target->nonLazyScript()->types)
+        return NULL;
+
     // Generate an inline path to create a new |this| object with
     // the given singleton prototype.
     types::TypeObject *type = proto->getNewType(cx, &ObjectClass, target);
@@ -6766,7 +6769,7 @@ GetDefiniteSlot(JSContext *cx, types::StackTypeSet *types, JSAtom *atom)
     if (!type || type->unknownProperties())
         return NULL;
 
-    RawId id = AtomToId(atom);
+    jsid id = AtomToId(atom);
     if (id != types::IdToTypeId(id))
         return NULL;
 
@@ -6959,7 +6962,7 @@ IonBuilder::TestCommonPropFunc(JSContext *cx, types::StackTypeSet *types, Handle
         if (obj != foundProto) {
             // Walk the prototype chain. Everyone has to have the property, since we
             // just checked, so propSet cannot be NULL.
-            RawId typeId = types::IdToTypeId(id);
+            jsid typeId = types::IdToTypeId(id);
             while (true) {
                 types::HeapTypeSet *propSet = curType->getProperty(cx, typeId, false);
                 // This assert is now assured, since we have faulted them in
@@ -7100,7 +7103,7 @@ IonBuilder::invalidatedIdempotentCache()
 }
 
 bool
-IonBuilder::loadSlot(MDefinition *obj, RawShape shape, MIRType rvalType,
+IonBuilder::loadSlot(MDefinition *obj, Shape *shape, MIRType rvalType,
                      bool barrier, types::StackTypeSet *types)
 {
     JS_ASSERT(shape->hasDefaultGetter());
@@ -7127,7 +7130,7 @@ IonBuilder::loadSlot(MDefinition *obj, RawShape shape, MIRType rvalType,
 }
 
 bool
-IonBuilder::storeSlot(MDefinition *obj, RawShape shape, MDefinition *value, bool needsBarrier)
+IonBuilder::storeSlot(MDefinition *obj, Shape *shape, MDefinition *value, bool needsBarrier)
 {
     JS_ASSERT(shape->hasDefaultSetter());
     JS_ASSERT(shape->writable());
@@ -7368,7 +7371,7 @@ IonBuilder::getPropTryInlineAccess(bool *emitted, HandlePropertyName name, Handl
         return true;
 
     Vector<Shape *> shapes(cx);
-    if (RawShape objShape = mjit::GetPICSingleShape(cx, script(), pc, info().constructing())) {
+    if (Shape *objShape = mjit::GetPICSingleShape(cx, script(), pc, info().constructing())) {
         if (!shapes.append(objShape))
             return false;
     } else {
@@ -7389,10 +7392,10 @@ IonBuilder::getPropTryInlineAccess(bool *emitted, HandlePropertyName name, Handl
         // instructions.
         spew("Inlining monomorphic GETPROP");
 
-        RawShape objShape = shapes[0];
+        Shape *objShape = shapes[0];
         obj = addShapeGuard(obj, objShape, Bailout_CachedShapeGuard);
 
-        RawShape shape = objShape->search(cx, id);
+        Shape *shape = objShape->search(cx, id);
         JS_ASSERT(shape);
 
         if (!loadSlot(obj, shape, rvalType, barrier, types))
@@ -7406,8 +7409,8 @@ IonBuilder::getPropTryInlineAccess(bool *emitted, HandlePropertyName name, Handl
         current->push(load);
 
         for (size_t i = 0; i < shapes.length(); i++) {
-            RawShape objShape = shapes[i];
-            RawShape shape =  objShape->search(cx, id);
+            Shape *objShape = shapes[i];
+            Shape *shape =  objShape->search(cx, id);
             JS_ASSERT(shape);
             if (!load->addShape(objShape, shape))
                 return false;
@@ -7568,7 +7571,7 @@ IonBuilder::jsop_setprop(HandlePropertyName name)
     }
 
     Vector<Shape *> shapes(cx);
-    if (RawShape objShape = mjit::GetPICSingleShape(cx, script(), pc, info().constructing())) {
+    if (Shape *objShape = mjit::GetPICSingleShape(cx, script(), pc, info().constructing())) {
         if (!shapes.append(objShape))
             return false;
     } else {
@@ -7584,10 +7587,10 @@ IonBuilder::jsop_setprop(HandlePropertyName name)
             // long as the shape is not in dictionary mode. We cannot be sure
             // that the shape is still a lastProperty, and calling Shape::search
             // on dictionary mode shapes that aren't lastProperty is invalid.
-            RawShape objShape = shapes[0];
+            Shape *objShape = shapes[0];
             obj = addShapeGuard(obj, objShape, Bailout_CachedShapeGuard);
 
-            RawShape shape = objShape->search(cx, NameToId(name));
+            Shape *shape = objShape->search(cx, NameToId(name));
             JS_ASSERT(shape);
 
             bool needsBarrier = objTypes->propertyNeedsBarrier(cx, id);
@@ -7601,8 +7604,8 @@ IonBuilder::jsop_setprop(HandlePropertyName name)
             current->push(value);
 
             for (size_t i = 0; i < shapes.length(); i++) {
-                RawShape objShape = shapes[i];
-                RawShape shape =  objShape->search(cx, id);
+                Shape *objShape = shapes[i];
+                Shape *shape =  objShape->search(cx, id);
                 JS_ASSERT(shape);
                 if (!ins->addShape(objShape, shape))
                     return false;
@@ -7965,7 +7968,7 @@ IonBuilder::jsop_instanceof()
     // exact function and prototype object being tested for, use a typed path.
     do {
         types::StackTypeSet *rhsTypes = rhs->resultTypeSet();
-        RawObject rhsObject = rhsTypes ? rhsTypes->getSingleton() : NULL;
+        JSObject *rhsObject = rhsTypes ? rhsTypes->getSingleton() : NULL;
         if (!rhsObject || !rhsObject->isFunction() || rhsObject->isBoundFunction())
             break;
 
@@ -7975,7 +7978,7 @@ IonBuilder::jsop_instanceof()
 
         types::HeapTypeSet *protoTypes =
             rhsType->getProperty(cx, NameToId(cx->names().classPrototype), false);
-        RawObject protoObject = protoTypes ? protoTypes->getSingleton(cx) : NULL;
+        JSObject *protoObject = protoTypes ? protoTypes->getSingleton(cx) : NULL;
         if (!protoObject)
             break;
 
@@ -8017,7 +8020,7 @@ IonBuilder::addBoundsCheck(MDefinition *index, MDefinition *length)
 }
 
 MInstruction *
-IonBuilder::addShapeGuard(MDefinition *obj, const RawShape shape, BailoutKind bailoutKind)
+IonBuilder::addShapeGuard(MDefinition *obj, Shape *const shape, BailoutKind bailoutKind)
 {
     MGuardShape *guard = MGuardShape::New(obj, shape, bailoutKind);
     current->add(guard);

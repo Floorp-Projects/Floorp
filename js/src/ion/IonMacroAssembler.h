@@ -763,7 +763,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         bind(&stackFull);
     }
 
-    void spsPushFrame(SPSProfiler *p, const char *str, RawScript s, Register temp) {
+    void spsPushFrame(SPSProfiler *p, const char *str, JSScript *s, Register temp) {
         Label stackFull;
         spsProfileEntryAddress(p, 0, temp, &stackFull);
 

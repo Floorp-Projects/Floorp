@@ -659,7 +659,7 @@ BaselineScript::pcForReturnAddress(JSScript *script, uint8_t *nativeAddress)
 }
 
 void
-BaselineScript::toggleDebugTraps(RawScript script, jsbytecode *pc)
+BaselineScript::toggleDebugTraps(JSScript *script, jsbytecode *pc)
 {
     JS_ASSERT(script->baselineScript() == this);
 
@@ -779,7 +779,7 @@ BaselineScript::purgeOptimizedStubs(Zone *zone)
 }
 
 void
-ion::FinishDiscardBaselineScript(FreeOp *fop, RawScript script)
+ion::FinishDiscardBaselineScript(FreeOp *fop, JSScript *script)
 {
     if (!script->hasBaselineScript())
         return;

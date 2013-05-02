@@ -21,17 +21,13 @@
 #include "js/CharacterEncoding.h"
 #include "js/RootingAPI.h"
 
-ForwardDeclareJS(String);
 class JSDependentString;
-class JSUndependedString;
 class JSExtensibleString;
 class JSExternalString;
-ForwardDeclareJS(LinearString);
+class JSInlineString;
 class JSStableString;
-ForwardDeclareJS(InlineString);
+class JSString;
 class JSRope;
-ForwardDeclareJS(FlatString);
-ForwardDeclareJS(Atom);
 
 namespace js {
 
@@ -857,7 +853,7 @@ class PropertyName : public JSAtom
 
 JS_STATIC_ASSERT(sizeof(PropertyName) == sizeof(JSString));
 
-static JS_ALWAYS_INLINE RawId
+static JS_ALWAYS_INLINE jsid
 NameToId(PropertyName *name)
 {
     return NON_INTEGER_ATOM_TO_JSID(name);

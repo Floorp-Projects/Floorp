@@ -63,7 +63,7 @@ StaticScopeIter::hasDynamicScopeObject() const
            : obj->toFunction()->isHeavyweight();
 }
 
-RawShape
+Shape *
 StaticScopeIter::scopeShape() const
 {
     JS_ASSERT(hasDynamicScopeObject());
@@ -88,7 +88,7 @@ StaticScopeIter::block() const
     return obj->asStaticBlock();
 }
 
-RawScript
+JSScript *
 StaticScopeIter::funScript() const
 {
     JS_ASSERT(type() == FUNCTION);
@@ -97,7 +97,7 @@ StaticScopeIter::funScript() const
 
 /*****************************************************************************/
 
-RawShape
+Shape *
 js::ScopeCoordinateToStaticScopeShape(JSContext *cx, JSScript *script, jsbytecode *pc)
 {
     JS_ASSERT(pc >= script->code && pc < script->code + script->length);
@@ -348,7 +348,7 @@ WithObject::create(JSContext *cx, HandleObject proto, HandleObject enclosing, ui
     obj->asScope().setEnclosingScope(enclosing);
     obj->setReservedSlot(DEPTH_SLOT, PrivateUint32Value(depth));
 
-    RawObject thisp = JSObject::thisObject(cx, proto);
+    JSObject *thisp = JSObject::thisObject(cx, proto);
     if (!thisp)
         return NULL;
 
@@ -682,7 +682,7 @@ StaticBlockObject::create(JSContext *cx)
     return &obj->asStaticBlock();
 }
 
-/* static */ RawShape
+/* static */ Shape *
 StaticBlockObject::addVar(JSContext *cx, Handle<StaticBlockObject*> block, HandleId id,
                           int index, bool *redeclared)
 {
@@ -1223,7 +1223,7 @@ class DebugScopeProxy : public BaseProxyHandler
         /* Handle unaliased let and catch bindings at block scope. */
         if (scope->isClonedBlock()) {
             Rooted<ClonedBlockObject *> block(cx, &scope->asClonedBlock());
-            RawShape shape = block->lastProperty()->search(cx, id);
+            Shape *shape = block->lastProperty()->search(cx, id);
             if (!shape)
                 return false;
 
@@ -1232,7 +1232,7 @@ class DebugScopeProxy : public BaseProxyHandler
                 return false;
 
             if (maybeframe) {
-                RawScript script = maybeframe.script();
+                JSScript *script = maybeframe.script();
                 unsigned local = block->slotToLocalIndex(script->bindings, shape->slot());
                 if (action == GET)
                     vp.set(maybeframe.unaliasedLocal(local));
@@ -1538,7 +1538,7 @@ DebugScopeObject::isForDeclarative() const
 }
 
 bool
-js_IsDebugScopeSlow(RawObject obj)
+js_IsDebugScopeSlow(JSObject *obj)
 {
     return obj->getClass() == &ObjectProxyClass &&
            GetProxyHandler(obj) == &DebugScopeProxy::singleton;
