@@ -97,7 +97,6 @@
 #include <limits>
 
 // input type=date
-#include "jsapi.h"
 #include "js/Date.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Input)
@@ -1400,11 +1399,12 @@ HTMLInputElement::ConvertNumberToString(double aValue,
   }
 }
 
-JS::Value
-HTMLInputElement::GetValueAsDate(JSContext* aCx, ErrorResult& aRv)
+
+Nullable<Date>
+HTMLInputElement::GetValueAsDate(ErrorResult& aRv)
 {
   if (mType != NS_FORM_INPUT_DATE && mType != NS_FORM_INPUT_TIME) {
-    return JS::NullValue();
+    return Nullable<Date>();
   }
 
   switch (mType) {
@@ -1414,26 +1414,10 @@ HTMLInputElement::GetValueAsDate(JSContext* aCx, ErrorResult& aRv)
       nsAutoString value;
       GetValueInternal(value);
       if (!GetValueAsDate(value, &year, &month, &day)) {
-        return JS::NullValue();
+        return Nullable<Date>();
       }
 
-      JSObject* date = JS_NewDateObjectMsec(aCx, 0);
-      if (!date) {
-        JS_ClearPendingException(aCx);
-        return JS::NullValue();
-      }
-
-      JS::Value rval;
-      JS::Value fullYear[3];
-      fullYear[0].setInt32(year);
-      fullYear[1].setInt32(month - 1);
-      fullYear[2].setInt32(day);
-      if (!JS::Call(aCx, date, "setUTCFullYear", 3, fullYear, &rval)) {
-        JS_ClearPendingException(aCx);
-        return JS::NullValue();
-      }
-
-      return JS::ObjectOrNullValue(date);
+      return Nullable<Date>(Date(JS::MakeDate(year, month - 1, day)));
     }
     case NS_FORM_INPUT_TIME:
     {
@@ -1441,71 +1425,32 @@ HTMLInputElement::GetValueAsDate(JSContext* aCx, ErrorResult& aRv)
       nsAutoString value;
       GetValueInternal(value);
       if (!ParseTime(value, &millisecond)) {
-        return JS::NullValue();
+        return Nullable<Date>();
       }
 
-      JSObject* date = JS_NewDateObjectMsec(aCx, millisecond);
-      if (!date) {
-        JS_ClearPendingException(aCx);
-        return JS::NullValue();
-      }
-
-      return JS::ObjectValue(*date);
+      return Nullable<Date>(Date(millisecond));
     }
   }
 
   MOZ_ASSERT(false, "Unrecognized input type");
   aRv.Throw(NS_ERROR_UNEXPECTED);
-  return JS::NullValue();
-}
-
-NS_IMETHODIMP
-HTMLInputElement::GetValueAsDate(JSContext* aCx, JS::Value* aDate)
-{
-  ErrorResult rv;
-  *aDate = GetValueAsDate(aCx, rv);
-  return rv.ErrorCode();
+  return Nullable<Date>();
 }
 
 void
-HTMLInputElement::SetValueAsDate(JSContext* aCx, JS::Value aDate, ErrorResult& aRv)
+HTMLInputElement::SetValueAsDate(Nullable<Date> aDate, ErrorResult& aRv)
 {
   if (mType != NS_FORM_INPUT_DATE && mType != NS_FORM_INPUT_TIME) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
 
-  if (aDate.isNullOrUndefined()) {
+  if (aDate.IsNull() || aDate.Value().IsUndefined()) {
     aRv = SetValue(EmptyString());
     return;
   }
 
-  // TODO: return TypeError when HTMLInputElement is converted to WebIDL, see
-  // bug 826302.
-  if (!aDate.isObject() || !JS_ObjectIsDate(aCx, &aDate.toObject())) {
-    SetValue(EmptyString());
-    aRv.Throw(NS_ERROR_INVALID_ARG);
-    return;
-  }
-
-  JSObject& date = aDate.toObject();
-  JS::Value timestamp;
-  if (!JS::Call(aCx, &date, "getTime", 0, nullptr, &timestamp) ||
-      !timestamp.isNumber() || MOZ_DOUBLE_IS_NaN(timestamp.toNumber())) {
-    JS_ClearPendingException(aCx);
-    SetValue(EmptyString());
-    return;
-  }
-
-  SetValue(timestamp.toNumber());
-}
-
-NS_IMETHODIMP
-HTMLInputElement::SetValueAsDate(JSContext* aCx, const JS::Value& aDate)
-{
-  ErrorResult rv;
-  SetValueAsDate(aCx, aDate, rv);
-  return rv.ErrorCode();
+  SetValue(aDate.Value().TimeStamp());
 }
 
 NS_IMETHODIMP
