@@ -309,6 +309,7 @@ DefineConstructor(JSContext* cx, JS::Handle<JSObject*> global, const char* name,
 
 static JSObject*
 CreateInterfaceObject(JSContext* cx, JS::Handle<JSObject*> global,
+                      JS::Handle<JSObject*> constructorProto,
                       JSClass* constructorClass,
                       const JSNativeHolder* constructorNative,
                       unsigned ctorNargs, const NamedConstructor* namedConstructors,
@@ -318,20 +319,12 @@ CreateInterfaceObject(JSContext* cx, JS::Handle<JSObject*> global,
                       const char* name)
 {
   JS::Rooted<JSObject*> constructor(cx);
-  bool isCallbackInterface = constructorClass == js::Jsvalify(&js::ObjectClass);
   if (constructorClass) {
-    JSObject* constructorProto;
-    if (isCallbackInterface) {
-      constructorProto = JS_GetObjectPrototype(cx, global);
-    } else {
-      constructorProto = JS_GetFunctionPrototype(cx, global);
-    }
-    if (!constructorProto) {
-      return NULL;
-    }
+    MOZ_ASSERT(constructorProto);
     constructor = JS_NewObject(cx, constructorClass, constructorProto, global);
   } else {
     MOZ_ASSERT(constructorNative);
+    MOZ_ASSERT(constructorProto == JS_GetFunctionPrototype(cx, global));
     constructor = CreateConstructor(cx, global, name, constructorNative,
                                     ctorNargs);
   }
@@ -339,7 +332,7 @@ CreateInterfaceObject(JSContext* cx, JS::Handle<JSObject*> global,
     return NULL;
   }
 
-  if (constructorClass && !isCallbackInterface) {
+  if (constructorClass) {
     // Have to shadow Function.prototype.toString, since that throws
     // on things that are not js::FunctionClass.
     JS::Rooted<JSFunction*> toString(cx,
@@ -506,6 +499,7 @@ void
 CreateInterfaceObjects(JSContext* cx, JS::Handle<JSObject*> global,
                        JS::Handle<JSObject*> protoProto,
                        JSClass* protoClass, JSObject** protoCache,
+                       JS::Handle<JSObject*> constructorProto,
                        JSClass* constructorClass, const JSNativeHolder* constructor,
                        unsigned ctorNargs, const NamedConstructor* namedConstructors,
                        JSObject** constructorCache, const DOMClass* domClass,
@@ -558,7 +552,8 @@ CreateInterfaceObjects(JSContext* cx, JS::Handle<JSObject*> global,
 
   JSObject* interface;
   if (constructorClass || constructor) {
-    interface = CreateInterfaceObject(cx, global, constructorClass, constructor,
+    interface = CreateInterfaceObject(cx, global, constructorProto,
+                                      constructorClass, constructor,
                                       ctorNargs, namedConstructors, proto,
                                       properties, chromeOnlyProperties, name);
     if (!interface) {
