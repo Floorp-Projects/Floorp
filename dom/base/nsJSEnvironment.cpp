@@ -756,9 +756,9 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
   NS_ENSURE_TRUE(prompt, JS_FALSE);
 
   // Check if we should offer the option to debug
-  JSScript *script;
+  JS::RootedScript script(cx);
   unsigned lineno;
-  JSBool hasFrame = ::JS_DescribeScriptedCaller(cx, &script, &lineno);
+  JSBool hasFrame = ::JS_DescribeScriptedCaller(cx, script.address(), &lineno);
 
   bool debugPossible = hasFrame && js::CanCallContextDebugHandler(cx);
 #ifdef MOZ_JSDEBUGGER
@@ -1354,7 +1354,7 @@ nsJSContext::CompileScript(const PRUnichar* aText,
 
   NS_ENSURE_ARG_POINTER(aPrincipal);
 
-  JSObject* scopeObject = ::JS_GetGlobalObject(mContext);
+  JS::Rooted<JSObject*> scopeObject(mContext, ::JS_GetGlobalObject(mContext));
   xpc_UnmarkGrayObject(scopeObject);
 
   bool ok = false;
@@ -1482,8 +1482,8 @@ nsJSContext::JSObjectFromInterface(nsISupports* aTarget, JS::HandleObject aScope
   // Get the jsobject associated with this target
   // We don't wrap here because we trust the JS engine to wrap the target
   // later.
-  JS::Value v;
-  nsresult rv = nsContentUtils::WrapNative(mContext, aScope, aTarget, &v);
+  JS::Rooted<JS::Value> v(mContext);
+  nsresult rv = nsContentUtils::WrapNative(mContext, aScope, aTarget, v.address());
   NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef DEBUG
@@ -1562,8 +1562,9 @@ nsresult
 nsJSContext::Deserialize(nsIObjectInputStream* aStream,
                          JS::MutableHandle<JSScript*> aResult)
 {
-  JSScript *script;
-  nsresult rv = nsContentUtils::XPConnect()->ReadScript(aStream, mContext, &script);
+  JS::RootedScript script(mContext);
+  nsresult rv =
+    nsContentUtils::XPConnect()->ReadScript(aStream, mContext, script.address());
   if (NS_FAILED(rv)) return rv;
 
   aResult.set(script);
@@ -1573,7 +1574,7 @@ nsJSContext::Deserialize(nsIObjectInputStream* aStream,
 nsIScriptGlobalObject *
 nsJSContext::GetGlobalObject()
 {
-  JSObject *global = ::JS_GetGlobalObject(mContext);
+  JS::Rooted<JSObject*> global(mContext, ::JS_GetGlobalObject(mContext));
 
   if (!global) {
     return nullptr;
@@ -1778,8 +1779,8 @@ nsJSContext::ConvertSupportsTojsvals(nsISupports *aArgs,
                        "Don't pass nsISupportsPrimitives - use nsIVariant!");
 #endif
           nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
-          JS::Value v;
-          rv = nsContentUtils::WrapNative(mContext, aScope, arg, &v,
+          JS::Rooted<JS::Value> v(mContext);
+          rv = nsContentUtils::WrapNative(mContext, aScope, arg, v.address(),
                                           getter_AddRefs(wrapper));
           if (NS_SUCCEEDED(rv)) {
             *thisval = v;
@@ -1979,9 +1980,9 @@ nsJSContext::AddSupportsPrimitiveTojsvals(nsISupports *aArg, JS::Value *aArgv)
 
       nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
       JS::Rooted<JSObject*> global(cx, xpc_UnmarkGrayObject(::JS_GetGlobalObject(cx)));
-      JS::Value v;
+      JS::Rooted<JS::Value> v(cx);
       nsresult rv = nsContentUtils::WrapNative(cx, global,
-                                               data, iid, &v,
+                                               data, iid, v.address(),
                                                getter_AddRefs(wrapper));
       NS_ENSURE_SUCCESS(rv, rv);
 
@@ -3393,9 +3394,9 @@ NS_DOMReadStructuredClone(JSContext* cx,
   if (tag == SCTAG_DOM_IMAGEDATA) {
     // Read the information out of the stream.
     uint32_t width, height;
-    JS::Value dataArray;
+    JS::Rooted<JS::Value> dataArray(cx);
     if (!JS_ReadUint32Pair(reader, &width, &height) ||
-        !JS_ReadTypedArray(reader, &dataArray)) {
+        !JS_ReadTypedArray(reader, dataArray.address())) {
       return nullptr;
     }
     MOZ_ASSERT(dataArray.isObject());
