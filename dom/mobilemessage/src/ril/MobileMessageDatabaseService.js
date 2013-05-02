@@ -1009,13 +1009,21 @@ MobileMessageDatabaseService.prototype = {
       aMessage.receiver = self;
     } else if (aMessage.type == "mms") {
       let receivers = aMessage.receivers;
-      if (!receivers.length) {
-        // TODO Bug 853384 - we cannot expose empty receivers for
-        // an MMS message. Returns 'myself' when .msisdn isn't valid.
-        receivers.push(self ? self : "myself");
-      } else {
-        // TODO Bug 853384 - we cannot correcly exclude the phone number
-        // from the receivers, thus wrongly building the index.
+      // We need to add the receivers (excluding our own) into the participants
+      // of a thread. Some cases we might encounter here:
+      // 1. receivers.length == 0
+      //    This usually happens when receiving an MMS notification indication
+      //    which doesn't carry any receivers.
+      // 2. receivers.length == 1
+      //    If the receivers contain single phone number, we don't need to
+      //    add it into participants because we know that number is our own.
+      // 3. receivers.length >= 2
+      //    If the receivers contain multiple phone numbers, we need to add all
+      //    of them but not our own into participants.
+      if (receivers.length >= 2) {
+        // TODO Bug 853384 - for some SIM cards, the phone number might not be
+        // available, so we cannot correcly exclude our own from the receivers,
+        // thus wrongly building the thread index.
         let slicedReceivers = receivers.slice();
         if (self) {
           let found = slicedReceivers.indexOf(self);

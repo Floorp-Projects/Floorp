@@ -533,7 +533,7 @@ BluetoothOppManager::CreateDeviceStorageFile(nsIFile* aFile)
   if (StringBeginsWith(mimeType, NS_LITERAL_CSTRING("image/"))) {
     return new DeviceStorageFile(NS_LITERAL_STRING("pictures"), storagePath);
   } else if (StringBeginsWith(mimeType, NS_LITERAL_CSTRING("video/"))) {
-    return new DeviceStorageFile(NS_LITERAL_STRING("movies"), storagePath);
+    return new DeviceStorageFile(NS_LITERAL_STRING("videos"), storagePath);
   } else if (StringBeginsWith(mimeType, NS_LITERAL_CSTRING("audio/"))) {
     return new DeviceStorageFile(NS_LITERAL_STRING("music"), storagePath);
   } else {
