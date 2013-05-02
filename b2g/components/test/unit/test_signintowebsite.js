@@ -106,6 +106,7 @@ function test_watch() {
     let mockedDoc = mockDoc({loggedInUser: null}, function(action, params) {
       do_check_eq(action, 'ready');
       controller.uninit();
+      MinimalIDService.RP.unwatch(mockedDoc.id);
       do_test_finished();
       run_next_test();
     });
@@ -130,6 +131,7 @@ function test_request_login() {
         do_check_eq(action, 'login');
         do_check_eq(params, TEST_CERT);
         controller.uninit();
+        MinimalIDService.RP.unwatch(mockedDoc.id);
         do_test_finished();
         run_next_test();
       }
@@ -156,6 +158,7 @@ function test_request_logout() {
         do_check_eq(action, 'logout');
         do_check_eq(params, undefined);
         controller.uninit();
+        MinimalIDService.RP.unwatch(mockedDoc.id);
         do_test_finished();
         run_next_test();
       }
@@ -186,6 +189,7 @@ function test_request_login_logout() {
         do_check_eq(action, 'logout');
         do_check_eq(params, undefined);
         controller.uninit();
+        MinimalIDService.RP.unwatch(mockedDoc.id);
         do_test_finished();
         run_next_test();
       }
@@ -195,6 +199,60 @@ function test_request_login_logout() {
     MinimalIDService.RP.watch(mockedDoc, {});
     MinimalIDService.RP.request(mockedDoc.id, {});
     MinimalIDService.RP.logout(mockedDoc.id, {});
+  });
+}
+
+function test_logout_everywhere() {
+  do_test_pending();
+  let logouts = 0;
+
+  setup_test_identity("fugu@food.gov", TEST_CERT, function() {
+    let controller = SignInToWebsiteController;
+
+    let mockedDoc1 = mockDoc({loggedInUser: null}, call_sequentially(
+      function(action, params) {
+        do_check_eq(action, 'ready');
+      },
+      function(action, params) {
+        do_check_eq(action, 'login');
+      },
+      function(action, params) {
+        // Result of logout from doc2.
+        // We don't know what order the logouts will occur in.
+        do_check_eq(action, 'logout');
+        if (++logouts === 2) {
+          do_test_finished();
+          run_next_test();
+        }
+      }
+    ));
+
+    let mockedDoc2 = mockDoc({loggedInUser: null}, call_sequentially(
+      function(action, params) {
+        do_check_eq(action, 'ready');
+      },
+      function(action, params) {
+        do_check_eq(action, 'login');
+      },
+      function(action, params) {
+        do_check_eq(action, 'logout');
+        if (++logouts === 2) {
+          do_test_finished();
+          run_next_test();
+        }
+      }
+    ));
+
+    controller.init({pipe: mockReceivingPipe()});
+    MinimalIDService.RP.watch(mockedDoc1, {});
+    MinimalIDService.RP.request(mockedDoc1.id, {});
+
+    MinimalIDService.RP.watch(mockedDoc2, {});
+    MinimalIDService.RP.request(mockedDoc2.id, {});
+
+    // Logs out of both docs because they share the
+    // same origin.
+    MinimalIDService.RP.logout(mockedDoc2.id, {});
   });
 }
 
@@ -230,6 +288,8 @@ function test_options_pass_through() {
         break;
       case "identity-delegate-logout":
         do_test_finished();
+        controller.uninit();
+        MinimalIDService.RP.unwatch(mockedDoc.id);
         run_next_test();
         break;
     }
@@ -250,6 +310,7 @@ let TESTS = [
   test_request_login,
   test_request_logout,
   test_request_login_logout,
+  test_logout_everywhere,
 
   test_options_pass_through
 ];
