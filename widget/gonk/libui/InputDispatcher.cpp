@@ -53,7 +53,7 @@
 
 #include "InputDispatcher.h"
 
-#include <ui/PowerManager.h>
+#include "PowerManager.h"
 
 #include <stddef.h>
 #include <unistd.h>
