@@ -309,8 +309,9 @@ struct MainThreadWorkerStructuredCloneCallbacks
         // nsIDOMFiles should be threadsafe, thus we will use the same instance
         // on the main thread.
         JS::Value wrappedFile;
+        JS::Rooted<JSObject*> global(aCx, JS_GetGlobalForScopeChain(aCx));
         nsresult rv =
-          nsContentUtils::WrapNative(aCx, JS_GetGlobalForScopeChain(aCx), file,
+          nsContentUtils::WrapNative(aCx, global, file,
                                      &NS_GET_IID(nsIDOMFile), &wrappedFile);
         if (NS_FAILED(rv)) {
           Error(aCx, DATA_CLONE_ERR);
@@ -342,8 +343,9 @@ struct MainThreadWorkerStructuredCloneCallbacks
         // nsIDOMBlobs should be threadsafe, thus we will use the same instance
         // on the main thread.
         JS::Value wrappedBlob;
+        JS::Rooted<JSObject*> global(aCx, JS_GetGlobalForScopeChain(aCx));
         nsresult rv =
-          nsContentUtils::WrapNative(aCx, JS_GetGlobalForScopeChain(aCx), blob,
+          nsContentUtils::WrapNative(aCx, global, blob,
                                      &NS_GET_IID(nsIDOMBlob), &wrappedBlob);
         if (NS_FAILED(rv)) {
           Error(aCx, DATA_CLONE_ERR);
