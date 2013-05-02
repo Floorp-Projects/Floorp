@@ -38,10 +38,10 @@ class MediaStreamSource : public DataSource {
   typedef mozilla::MediaResource MediaResource;
   typedef mozilla::AbstractMediaDecoder AbstractMediaDecoder;
 
-  MediaResource *mResource;
+  nsRefPtr<MediaResource> mResource;
   AbstractMediaDecoder *mDecoder;
 public:
-  MediaStreamSource(MediaResource *aResource,
+  MediaStreamSource(MediaResource* aResource,
                     AbstractMediaDecoder *aDecoder);
 
   virtual status_t initCheck() const;
@@ -80,7 +80,7 @@ class OmxDecoder : public RefBase {
   };
 
   AbstractMediaDecoder *mDecoder;
-  MediaResource *mResource;
+  nsRefPtr<MediaResource> mResource;
   sp<GonkNativeWindow> mNativeWindow;
   sp<GonkNativeWindowClient> mNativeWindowClient;
   sp<MediaSource> mVideoTrack;
