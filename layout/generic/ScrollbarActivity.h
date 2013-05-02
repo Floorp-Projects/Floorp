@@ -7,138 +7,82 @@
 #define ScrollbarActivity_h___
 
 #include "nsCOMPtr.h"
-#include "nsIDOMEventListener.h"
 #include "mozilla/TimeStamp.h"
-#include "nsRefreshDriver.h"
 
 class nsIContent;
-class nsIScrollbarOwner;
 class nsITimer;
 class nsIAtom;
+class nsIScrollableFrame;
 
 namespace mozilla {
-namespace layout {
 
 /**
  * ScrollbarActivity
  *
- * This class manages scrollbar behavior that imitates the native Mac OS X
- * Lion overlay scrollbar behavior: Scrollbars are only shown while "scrollbar
- * activity" occurs, and they're hidden with a fade animation after a short
- * delay.
+ * This class manages scrollbar active state. When some activity occured
+ * the 'active' attribute of the both the horizontal scrollbar and vertical
+ * scrollbar is set.
+ * After a small amount of time of inactivity this attribute is unset from
+ * both scrollbars.
+ * Some css specific rules can affect the scrollbar, like showing/hiding it
+ * with a fade transition.
  *
- * Scrollbar activity has these states:
- *  - inactive:
- *      Scrollbars are hidden.
- *  - ongoing activity:
- *      Scrollbars are visible and being operated on in some way, for example
- *      because they're hovered or pressed.
- *  - active, but waiting for fade out
- *      Scrollbars are still completely visible but are about to fade away.
- *  - fading out
- *      Scrollbars are subject to a fade-out animation.
- *
- * Initial scrollbar activity needs to be reported by the scrollbar holder that
+ * Initial scrollbar activity needs to be reported by the scrollbar frame that
  * owns the ScrollbarActivity instance. This needs to happen via a call to
  * ActivityOccurred(), for example when the current scroll position or the size
  * of the scroll area changes.
  *
- * As soon as scrollbars are visible, the ScrollbarActivity class manages the
- * rest of the activity behavior: It ensures that mouse motions inside the
- * scroll area keep the scrollbars visible, and that scrollbars don't fade away
- * while they're being hovered / dragged. It also sets a sticky hover attribute
- * on the most recently hovered scrollbar.
- *
- * ScrollbarActivity falls into hibernation after the scrollbars have faded
- * out. It only starts acting after the next call to ActivityOccurred() /
- * ActivityStarted().
+ * ScrollbarActivity then wait until a timeout has expired or a new call to
+ * ActivityOccured() has been made. When the timeout expires ActivityFinished()
+ * is call and reset the active state.
  */
 
-class ScrollbarActivity : public nsIDOMEventListener,
-                          public nsARefreshObserver {
+class ScrollbarActivity {
 public:
-  ScrollbarActivity(nsIScrollbarOwner* aScrollableFrame)
-   : mScrollableFrame(aScrollableFrame)
-   , mNestedActivityCounter(0)
-   , mIsActive(false)
-   , mIsFading(false)
-   , mListeningForEvents(false)
-   , mHScrollbarHovered(false)
-   , mVScrollbarHovered(false)
+  ScrollbarActivity(nsIScrollableFrame* aScrollableFrame)
+   : mIsActive(false)
+   , mScrollableFrame(aScrollableFrame)
   {}
 
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMEVENTLISTENER
-
-  virtual ~ScrollbarActivity() {}
-
-  void Destroy();
-
   void ActivityOccurred();
-  void ActivityStarted();
-  void ActivityStopped();
-
-  virtual void WillRefresh(TimeStamp aTime);
-
-  static void FadeBeginTimerFired(nsITimer* aTimer, void* aSelf) {
-    reinterpret_cast<ScrollbarActivity*>(aSelf)->BeginFade();
-  }
-
-  static const uint32_t kScrollbarFadeBeginDelay = 450; // milliseconds
-  static const uint32_t kScrollbarFadeDuration = 200; // milliseconds
+  void ActivityFinished();
+  ~ScrollbarActivity();
 
 protected:
+  /*
+   * mIsActive is true once any type of activity occurent on the scrollable
+   * frame and until kScrollbarActivityFinishedDelay has expired.
+   * This does not reflect the value of the 'active' attributes on scrollbars.
+   */
+  bool mIsActive;
 
-  bool IsActivityOngoing()
-  { return mNestedActivityCounter > 0; }
-  bool IsStillFading(TimeStamp aTime);
+  /*
+   * Hold a reference to the scrollable frame in order to retrieve the
+   * horizontal and vertical scrollbar boxes where to set the 'active'
+   * attribute.
+   */
+  nsIScrollableFrame* mScrollableFrame;
 
-  void HandleEventForScrollbar(const nsAString& aType,
-                               nsIContent* aTarget,
-                               nsIContent* aScrollbar,
-                               bool* aStoredHoverState);
+  nsCOMPtr<nsITimer> mActivityFinishedTimer;
 
   void SetIsActive(bool aNewActive);
-  void SetIsFading(bool aNewFading);
 
-  void BeginFade();
-  void EndFade();
-
-  void StartFadeBeginTimer();
-  void CancelFadeBeginTimer();
-  void StartListeningForEvents();
-  void StartListeningForEventsOnScrollbar(nsIDOMEventTarget* aScrollbar);
-  void StopListeningForEvents();
-  void StopListeningForEventsOnScrollbar(nsIDOMEventTarget* aScrollbar);
-  void RegisterWithRefreshDriver();
-  void UnregisterFromRefreshDriver();
-
-  void UpdateOpacity(TimeStamp aTime);
-  void HoveredScrollbar(nsIContent* aScrollbar);
-
-  nsRefreshDriver* GetRefreshDriver();
-  nsIContent* GetScrollbarContent(bool aVertical);
-  nsIContent* GetHorizontalScrollbar() { return GetScrollbarContent(false); }
-  nsIContent* GetVerticalScrollbar() { return GetScrollbarContent(true); }
-
-  static const TimeDuration FadeDuration() {
-    return TimeDuration::FromMilliseconds(kScrollbarFadeDuration);
+  enum { kScrollbarActivityFinishedDelay = 450 }; // milliseconds
+  static void ActivityFinishedTimerFired(nsITimer* aTimer, void* aSelf) {
+    reinterpret_cast<ScrollbarActivity*>(aSelf)->ActivityFinished();
   }
+  void StartActivityFinishedTimer();
+  void CancelActivityFinishedTimer();
 
-  nsIScrollbarOwner* mScrollableFrame;
-  TimeStamp mFadeBeginTime;
-  nsCOMPtr<nsITimer> mFadeBeginTimer;
-  nsCOMPtr<nsIDOMEventTarget> mHorizontalScrollbar; // null while inactive
-  nsCOMPtr<nsIDOMEventTarget> mVerticalScrollbar;   // null while inactive
-  int mNestedActivityCounter;
-  bool mIsActive;
-  bool mIsFading;
-  bool mListeningForEvents;
-  bool mHScrollbarHovered;
-  bool mVScrollbarHovered;
+  nsIContent* GetScrollbarContent(bool aVertical);
+  nsIContent* GetHorizontalScrollbar() {
+    return GetScrollbarContent(false);
+  }
+  nsIContent* GetVerticalScrollbar() {
+    return GetScrollbarContent(true);
+  }
 };
 
-} // namespace layout
 } // namespace mozilla
 
 #endif /* ScrollbarActivity_h___ */

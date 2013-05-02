@@ -58,7 +58,7 @@ function runTest() {
       var elem = document.getElementById(orient + size);
       var thumbRect = document.getAnonymousElementByAttribute(elem, 'sbattr', 'scrollbar-thumb').getBoundingClientRect();
       var sizeToCheck = orient == "horizontal" ? "width" : "height";
-      var expectedSize = size == "Small" ? 19 : 26;
+      var expectedSize = size == "Small" ? 19 : 22;
       is(thumbRect[sizeToCheck], expectedSize, size + " scrollbar has wrong minimum " + sizeToCheck);
     });
   });
