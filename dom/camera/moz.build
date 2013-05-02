@@ -22,8 +22,10 @@ MODULE = 'dom'
 
 EXPORTS += [
     'CameraCommon.h',
+    'CameraPreviewMediaStream.h',
     'DOMCameraManager.h',
     'GonkNativeWindow.h',
     'GonkNativeWindowClient.h',
+    'GonkCameraControl.h',
 ]
 

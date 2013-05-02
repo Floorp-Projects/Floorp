@@ -22,6 +22,46 @@
 #include "CameraCommon.h"
 
 // From nsDOMCameraManager, but gonk-specific!
+nsresult
+nsDOMCameraManager::GetNumberOfCameras(int32_t& aDeviceCount)
+{
+  aDeviceCount = android::Camera::getNumberOfCameras();
+  return NS_OK;
+}
+
+nsresult
+nsDOMCameraManager::GetCameraName(uint32_t aDeviceNum, nsCString& aDeviceName)
+{
+  int32_t count = android::Camera::getNumberOfCameras();
+  DOM_CAMERA_LOGI("getListOfCameras : getNumberOfCameras() returned %d\n", count);
+  if (aDeviceNum > count) {
+    DOM_CAMERA_LOGE("GetCameraName : invalid device number");
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  android::CameraInfo info;
+  int rv = android::Camera::getCameraInfo(aDeviceNum, &info);
+  if (rv != 0) {
+    DOM_CAMERA_LOGE("GetCameraName : get_camera_info(%d) failed: %d\n", aDeviceNum, rv);
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  switch (info.facing) {
+    case CAMERA_FACING_BACK:
+      aDeviceName.Assign("back");
+      break;
+
+    case CAMERA_FACING_FRONT:
+      aDeviceName.Assign("front");
+      break;
+
+    default:
+      aDeviceName.Assign("extra-camera-");
+      aDeviceName.AppendInt(aDeviceNum);
+      break;
+  }
+  return NS_OK;
+}
 
 /* [implicit_jscontext] jsval getListOfCameras (); */
 NS_IMETHODIMP
@@ -40,40 +80,25 @@ nsDOMCameraManager::GetListOfCameras(JSContext* cx, JS::Value* _retval)
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  DOM_CAMERA_LOGI("getListOfCameras : get_number_of_cameras() returned %d\n", count);
+  DOM_CAMERA_LOGI("getListOfCameras : getNumberOfCameras() returned %d\n", count);
   while (count--) {
-    android::CameraInfo info;
-    int rv = android::Camera::getCameraInfo(count, &info);
-    if (rv != 0) {
-      DOM_CAMERA_LOGE("getListOfCameras : get_camera_info(%d) failed: %d\n", count, rv);
+    nsCString cameraName;
+    nsresult result = GetCameraName(count, cameraName);
+    if (result != NS_OK) {
       continue;
     }
 
-    JSString* v;
+    JSString* v = JS_NewStringCopyZ(cx, cameraName.get());
     JS::Value jv;
-
-    switch (info.facing) {
-      case CAMERA_FACING_BACK:
-        v = JS_NewStringCopyZ(cx, "back");
-        index = 0;
-        break;
-
-      case CAMERA_FACING_FRONT:
-        v = JS_NewStringCopyZ(cx, "front");
-        index = 1;
-        break;
-
-      default:
-        // TODO: see bug 779143.
-        {
-          static uint32_t extraIndex = 2;
-          nsCString s;
-          s.AppendPrintf("extra-camera-%d", count);
-          v = JS_NewStringCopyZ(cx, s.get());
-          index = extraIndex++;
-        }
-        break;
+    if (!cameraName.Compare("back")) {
+      index = 0;
+    } else if (!cameraName.Compare("front")) {
+      index = 1;
+    } else {
+      static uint32_t extraIndex = 2;
+      index = extraIndex++;
     }
+
     if (!v) {
       DOM_CAMERA_LOGE("getListOfCameras : out of memory populating camera list");
       return NS_ERROR_NOT_AVAILABLE;
