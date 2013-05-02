@@ -309,7 +309,7 @@ public:
     if (mPlaybackRateTimeline.HasSimpleValue()) {
       mPlaybackRate = mPlaybackRateTimeline.GetValue();
     } else {
-      mPlaybackRate = mPlaybackRateTimeline.GetValueAtTime<TrackTicks>(aStream->GetCurrentPosition());
+      mPlaybackRate = mPlaybackRateTimeline.GetValueAtTime(aStream->GetCurrentPosition());
     }
 
     // Make sure the playback rate if something our resampler can work with.

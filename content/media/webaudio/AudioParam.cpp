@@ -120,6 +120,26 @@ AudioParam::Stream()
   return mStream;
 }
 
+float
+AudioParamTimeline::AudioNodeInputValue(size_t aCounter) const
+{
+  MOZ_ASSERT(mStream);
+
+  // If we have a chunk produced by the AudioNode inputs to the AudioParam,
+  // get its value now.  We use aCounter to tell us which frame of the last
+  // AudioChunk to look at.
+  float audioNodeInputValue = 0.0f;
+  const AudioChunk& lastAudioNodeChunk =
+    static_cast<AudioNodeStream*>(mStream.get())->LastChunk();
+  if (!lastAudioNodeChunk.IsNull()) {
+    MOZ_ASSERT(lastAudioNodeChunk.GetDuration() == WEBAUDIO_BLOCK_SIZE);
+    audioNodeInputValue =
+      static_cast<const float*>(lastAudioNodeChunk.mChannelData[0])[aCounter];
+  }
+
+  return audioNodeInputValue;
+}
+
 }
 }
 

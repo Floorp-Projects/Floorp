@@ -11,6 +11,7 @@
 #include "mozilla/ErrorResult.h"
 #include "nsAutoPtr.h"
 #include "MediaStreamGraph.h"
+#include "AudioSegment.h"
 
 namespace mozilla {
 
@@ -25,9 +26,11 @@ namespace dom {
 // consuming this class.
 class AudioParamTimeline : public AudioEventTimeline<ErrorResult>
 {
+  typedef AudioEventTimeline<ErrorResult> BaseClass;
+
 public:
   explicit AudioParamTimeline(float aDefaultValue)
-    : AudioEventTimeline<ErrorResult>(aDefaultValue)
+    : BaseClass(aDefaultValue)
   {
   }
 
@@ -35,6 +38,30 @@ public:
   {
     return mStream;
   }
+
+  bool HasSimpleValue() const
+  {
+    return BaseClass::HasSimpleValue() && !mStream;
+  }
+
+  // Get the value of the AudioParam at time aTime + aCounter.
+  // aCounter here is an offset to aTime if we try to get the value in ticks,
+  // otherwise it should always be zero.  aCounter is meant to be used when
+  // getting the value of an a-rate AudioParam for each tick inside an
+  // AudioNodeEngine implementation.
+  template<class TimeType>
+  float GetValueAtTime(TimeType aTime, size_t aCounter = 0) const
+  {
+    MOZ_ASSERT(aCounter < WEBAUDIO_BLOCK_SIZE);
+    MOZ_ASSERT(!aCounter || !HasSimpleValue());
+
+    // Mix the value of the AudioParam itself with that of the AudioNode inputs.
+    return BaseClass::GetValueAtTime(static_cast<TimeType>(aTime + aCounter)) +
+           (mStream ? AudioNodeInputValue(aCounter) : 0.0f);
+  }
+
+private:
+  float AudioNodeInputValue(size_t aCounter) const;
 
 protected:
   // This is created lazily when needed.
