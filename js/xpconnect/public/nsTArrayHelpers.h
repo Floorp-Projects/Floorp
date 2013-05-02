@@ -19,7 +19,7 @@ nsTArrayToJSArray(JSContext* aCx, const nsTArray<T>& aSourceArray,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  JSObject* global = JS_GetGlobalForScopeChain(aCx);
+  JS::Rooted<JSObject*> global(aCx, JS_GetGlobalForScopeChain(aCx));
   MOZ_ASSERT(global);
 
   for (uint32_t index = 0; index < aSourceArray.Length(); index++) {

@@ -464,8 +464,9 @@ MmsMessage::GetAttachments(JSContext* aCx, JS::Value* aAttachments)
     }
 
     // Get |attachment.mContent|.
+    JS::Rooted<JSObject*> global(aCx, JS_GetGlobalForScopeChain(aCx));
     nsresult rv = nsContentUtils::WrapNative(aCx,
-                                             JS_GetGlobalForScopeChain(aCx),
+                                             global,
                                              attachment.content,
                                              &NS_GET_IID(nsIDOMBlob),
                                              &tmpJsVal);
