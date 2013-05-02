@@ -139,7 +139,7 @@ var shell = {
       if (Services.prefs.getBoolPref('app.reportCrashes')) {
         this.submitCrash(crashID);
       } else {
-        debugCrashReport('app.reportCrashes is disabled');
+        this.deleteCrash(crashID);
       }
     } catch (e) {
       debugCrashReport('Can\'t fetch app.reportCrashes. Exception: ' + e);
@@ -154,6 +154,13 @@ var shell = {
         crashID: crashID,
         chrome: isChrome
       });
+    }
+  },
+
+  deleteCrash: function shell_deleteCrash(aCrashID) {
+    if (aCrashID) {
+      debugCrashReport('Deleting pending crash: ' + aCrashID);
+      shell.CrashSubmit.delete(aCrashID);
     }
   },
 
