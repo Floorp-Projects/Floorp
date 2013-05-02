@@ -280,7 +280,8 @@ WebRtc_Word32 AudioDeviceModuleImpl::CreatePlatformSpecificObjects()
         // Create the Android implementation of the Device Utility.
         ptrAudioDeviceUtility = new AudioDeviceUtilityAndroid(Id());
     }
-#elif defined(WEBRTC_ANDROID_OPENSLES) or defined(WEBRTC_ANDROID)
+#endif
+#if defined(WEBRTC_ANDROID_OPENSLES) or defined(WEBRTC_ANDROID)
     // Fall back to this case if on Android 2.2/OpenSLES not available.
     if (ptrAudioDevice == NULL) {
         // Create the *Android Java* implementation of the Audio Device
