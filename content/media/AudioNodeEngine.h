@@ -154,7 +154,6 @@ public:
     : mNode(aNode)
     , mNodeMutex("AudioNodeEngine::mNodeMutex")
   {
-    MOZ_ASSERT(mNode, "The engine is constructed with a null node");
     MOZ_COUNT_CTOR(AudioNodeEngine);
   }
   virtual ~AudioNodeEngine()
@@ -209,6 +208,11 @@ public:
   }
 
   Mutex& NodeMutex() { return mNodeMutex;}
+
+  bool HasNode() const
+  {
+    return !!mNode;
+  }
 
   dom::AudioNode* Node() const
   {
