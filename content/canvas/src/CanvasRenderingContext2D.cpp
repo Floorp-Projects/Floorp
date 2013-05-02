@@ -2811,7 +2811,9 @@ CanvasRenderingContext2D::SetMozDash(JSContext* cx,
 JS::Value
 CanvasRenderingContext2D::GetMozDash(JSContext* cx, ErrorResult& error)
 {
-  return DashArrayToJSVal(CurrentState().dash, cx, error);
+  JS::Value mozDash;
+  error = DashArrayToJSVal(CurrentState().dash, cx, &mozDash);
+  return mozDash;
 }
 
 void
@@ -3422,7 +3424,7 @@ CanvasRenderingContext2D::GetImageDataArray(JSContext* aCx,
     }
   }
 
-  JS::Rooted<JSObject*> darray(aCx, JS_NewUint8ClampedArray(aCx, len.value()));
+  JSObject* darray = JS_NewUint8ClampedArray(aCx, len.value());
   if (!darray) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

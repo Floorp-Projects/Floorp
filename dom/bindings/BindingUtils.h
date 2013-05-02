@@ -1176,7 +1176,7 @@ WrapCallThisObject(JSContext* cx, JS::Handle<JSObject*> scope, const T& p)
   // Callbacks are nsISupports, so WrapNativeParent will just happily wrap them
   // up as an nsISupports XPCWrappedNative... which is not at all what we want.
   // So we need to special-case them.
-  JS::Rooted<JSObject*> obj(cx, GetJSObjectFromCallback(p));
+  JSObject* obj = GetJSObjectFromCallback(p);
   if (!obj) {
     // WrapNativeParent is a bit of a Swiss army knife that will
     // wrap anything for us.
@@ -1187,7 +1187,7 @@ WrapCallThisObject(JSContext* cx, JS::Handle<JSObject*> scope, const T& p)
   }
 
   // But all that won't necessarily put things in the compartment of cx.
-  if (!JS_WrapObject(cx, obj.address())) {
+  if (!JS_WrapObject(cx, &obj)) {
     return nullptr;
   }
 
