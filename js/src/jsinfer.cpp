@@ -5057,7 +5057,7 @@ struct NewScriptPropertiesState
 };
 
 static bool
-AnalyzePoppedThis(JSContext *cx, Vector<SSAUseChain *> *pendingPoppedThis,
+AnalyzePoppedThis(JSContext *cx, SSAUseChain *use,
                   TypeObject *type, JSFunction *fun, NewScriptPropertiesState &state);
 
 static bool
@@ -5103,13 +5103,6 @@ AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, HandleFunction fun,
      */
     Vector<SSAUseChain *> pendingPoppedThis(cx);
 
-    /*
-     * lastThisPopped is the largest use offset of a 'this' value we've
-     * processed so far.
-     */
-    uint32_t lastThisPopped = 0;
-
-    bool entirelyAnalyzed = true;
     unsigned nextOffset = 0;
     while (nextOffset < script->length) {
         unsigned offset = nextOffset;
@@ -5124,27 +5117,27 @@ AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, HandleFunction fun,
             continue;
 
         /*
+         * If offset >= the offset at the top of the pending stack, we either
+         * encountered the end of a compound inline assignment or a 'this' was
+         * immediately popped and used. In either case, handle the uses
+         * consumed before the current offset.
+         */
+        while (!pendingPoppedThis.empty() && offset >= pendingPoppedThis.back()->offset) {
+            SSAUseChain *use = pendingPoppedThis.popCopy();
+            if (!AnalyzePoppedThis(cx, use, type, fun, state))
+                return false;
+        }
+
+        /*
          * End analysis after the first return statement from the script,
          * returning success if the return is unconditional.
          */
-        if (op == JSOP_RETURN || op == JSOP_STOP || op == JSOP_RETRVAL) {
-            if (offset < lastThisPopped) {
-                state.baseobj = NULL;
-                entirelyAnalyzed = false;
-                break;
-            }
-
-            entirelyAnalyzed = code->unconditional;
-            break;
-        }
+        if (op == JSOP_RETURN || op == JSOP_STOP || op == JSOP_RETRVAL)
+            return code->unconditional;
 
         /* 'this' can escape through a call to eval. */
-        if (op == JSOP_EVAL) {
-            if (offset < lastThisPopped)
-                state.baseobj = NULL;
-            entirelyAnalyzed = false;
-            break;
-        }
+        if (op == JSOP_EVAL)
+            return false;
 
         /*
          * We are only interested in places where 'this' is popped. The new
@@ -5156,251 +5149,217 @@ AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, HandleFunction fun,
         SSAValue thisv = SSAValue::PushedValue(offset, 0);
         SSAUseChain *uses = analysis->useChain(thisv);
 
-        /*
-         * If offset >= the offset at the top of the pending stack, we either
-         * encountered the end of a compound inline assignment or a 'this' was
-         * immediately popped and used. In either case, handle the use.
-         */
-        if (!pendingPoppedThis.empty() &&
-            offset >= pendingPoppedThis.back()->offset) {
-            lastThisPopped = pendingPoppedThis[0]->offset;
-            if (!AnalyzePoppedThis(cx, &pendingPoppedThis, type, fun, state))
-                return false;
-        }
-
         JS_ASSERT(uses);
         if (uses->next || !uses->popped) {
             /* 'this' value popped in more than one place. */
-            entirelyAnalyzed = false;
-            break;
+            return false;
         }
 
         /* Only handle 'this' values popped in unconditional code. */
         Bytecode *poppedCode = analysis->maybeCode(uses->offset);
-        if (!poppedCode || !poppedCode->unconditional) {
-            entirelyAnalyzed = false;
-            break;
-        }
+        if (!poppedCode || !poppedCode->unconditional)
+            return false;
 
-        if (!pendingPoppedThis.append(uses)) {
-            entirelyAnalyzed = false;
-            break;
-        }
-    }
-
-    /*
-     * There is an invariant that all definite properties come before
-     * non-definite properties in the shape tree. So, we can't process
-     * remaining 'this' uses on the stack unless we have completely analyzed
-     * the function, due to corner cases like the following:
-     *
-     *   this.x = this[this.y = "foo"]++;
-     *
-     * The 'this.y = "foo"' assignment breaks the above loop since the 'this'
-     * in the assignment is popped multiple times, with 'this.x' being left on
-     * the pending stack. But we can't mark 'x' as a definite property, as
-     * that would make it come before 'y' in the shape tree, breaking the
-     * invariant.
-     */
-    if (entirelyAnalyzed &&
-        !pendingPoppedThis.empty() &&
-        !AnalyzePoppedThis(cx, &pendingPoppedThis, type, fun, state))
-    {
-        return false;
+        if (!pendingPoppedThis.append(uses))
+            return false;
     }
 
     /* Will have hit a STOP or similar, unless the script always throws. */
-    return entirelyAnalyzed;
+    return true;
 }
 
 static bool
-AnalyzePoppedThis(JSContext *cx, Vector<SSAUseChain *> *pendingPoppedThis,
+AnalyzePoppedThis(JSContext *cx, SSAUseChain *use,
                   TypeObject *type, JSFunction *fun, NewScriptPropertiesState &state)
 {
     RootedScript script(cx, fun->nonLazyScript());
     ScriptAnalysis *analysis = script->analysis();
 
-    while (!pendingPoppedThis->empty()) {
-        SSAUseChain *uses = pendingPoppedThis->back();
-        pendingPoppedThis->popBack();
+    jsbytecode *pc = script->code + use->offset;
+    JSOp op = JSOp(*pc);
 
-        jsbytecode *pc = script->code + uses->offset;
-        JSOp op = JSOp(*pc);
+    if (op == JSOP_SETPROP && use->u.which == 1) {
+        /*
+         * Don't use GetAtomId here, we need to watch for SETPROP on
+         * integer properties and bail out. We can't mark the aggregate
+         * JSID_VOID type property as being in a definite slot.
+         */
+        RootedId id(cx, NameToId(script->getName(GET_UINT32_INDEX(pc))));
+        if (IdToTypeId(id) != id)
+            return false;
+        if (id_prototype(cx) == id || id___proto__(cx) == id || id_constructor(cx) == id)
+            return false;
 
-        if (op == JSOP_SETPROP && uses->u.which == 1) {
-            /*
-             * Don't use GetAtomId here, we need to watch for SETPROP on
-             * integer properties and bail out. We can't mark the aggregate
-             * JSID_VOID type property as being in a definite slot.
-             */
-            RootedId id(cx, NameToId(script->getName(GET_UINT32_INDEX(pc))));
-            if (IdToTypeId(id) != id)
+        /*
+         * Don't add definite properties for properties that were already
+         * read in the constructor.
+         */
+        for (size_t i = 0; i < state.accessedProperties.length(); i++) {
+            if (state.accessedProperties[i] == id)
                 return false;
-            if (id_prototype(cx) == id || id___proto__(cx) == id || id_constructor(cx) == id)
-                return false;
+        }
 
-            /*
-             * Don't add definite properties for properties that were already
-             * read in the constructor.
-             */
-            for (size_t i = 0; i < state.accessedProperties.length(); i++) {
-                if (state.accessedProperties[i] == id)
-                    return false;
-            }
+        if (!AddClearDefiniteGetterSetterForPrototypeChain(cx, type, id))
+            return false;
 
-            if (!AddClearDefiniteGetterSetterForPrototypeChain(cx, type, id))
-                return false;
-
-            unsigned slotSpan = state.baseobj->slotSpan();
-            RootedValue value(cx, UndefinedValue());
-            if (!DefineNativeProperty(cx, state.baseobj, id, value, NULL, NULL,
-                                      JSPROP_ENUMERATE, 0, 0, DNP_SKIP_TYPE)) {
-                cx->compartment->types.setPendingNukeTypes(cx);
-                state.baseobj = NULL;
-                return false;
-            }
-
-            if (state.baseobj->inDictionaryMode()) {
-                state.baseobj = NULL;
-                return false;
-            }
-
-            if (state.baseobj->slotSpan() == slotSpan) {
-                /* Set a duplicate property. */
-                return false;
-            }
-
-            TypeNewScript::Initializer setprop(TypeNewScript::Initializer::SETPROP, uses->offset);
-            if (!state.initializerList.append(setprop)) {
-                cx->compartment->types.setPendingNukeTypes(cx);
-                state.baseobj = NULL;
-                return false;
-            }
-
-            if (state.baseobj->slotSpan() >= (TYPE_FLAG_DEFINITE_MASK >> TYPE_FLAG_DEFINITE_SHIFT)) {
-                /* Maximum number of definite properties added. */
-                return false;
-            }
-        } else if (op == JSOP_GETPROP && uses->u.which == 0) {
-            /*
-             * Properties can be read from the 'this' object if the following hold:
-             *
-             * - The read is not on a getter along the prototype chain, which
-             *   could cause 'this' to escape.
-             *
-             * - The accessed property is either already a definite property or
-             *   is not later added as one. Since the definite properties are
-             *   added to the object at the point of its creation, reading a
-             *   definite property before it is assigned could incorrectly hit.
-             */
-            RootedId id(cx, NameToId(script->getName(GET_UINT32_INDEX(pc))));
-            if (IdToTypeId(id) != id)
-                return false;
-            if (!state.baseobj->nativeLookup(cx, id) && !state.accessedProperties.append(id.get())) {
-                cx->compartment->types.setPendingNukeTypes(cx);
-                state.baseobj = NULL;
-                return false;
-            }
-
-            if (!AddClearDefiniteGetterSetterForPrototypeChain(cx, type, id))
-                return false;
-
-            /*
-             * Populate the read with any value from the type's proto, if
-             * this is being used in a function call and we need to analyze the
-             * callee's behavior.
-             */
-            Shape *shape = type->proto ? type->proto->nativeLookup(cx, id) : NULL;
-            if (shape && shape->hasSlot()) {
-                Value protov = type->proto->getSlot(shape->slot());
-                TypeSet *types = script->analysis()->bytecodeTypes(pc);
-                types->addType(cx, GetValueType(cx, protov));
-            }
-        } else if ((op == JSOP_FUNCALL || op == JSOP_FUNAPPLY) && uses->u.which == GET_ARGC(pc) - 1) {
-            /*
-             * Passed as the first parameter to Function.call. Follow control
-             * into the callee, and add any definite properties it assigns to
-             * the object as well. :TODO: This is narrow pattern matching on
-             * the inheritance patterns seen in the v8-deltablue benchmark, and
-             * needs robustness against other ways initialization can cross
-             * script boundaries.
-             *
-             * Add constraints ensuring we are calling Function.call on a
-             * particular script, removing definite properties from the result
-             */
-
-            /* Callee/this must have been pushed by a CALLPROP. */
-            SSAValue calleev = analysis->poppedValue(pc, GET_ARGC(pc) + 1);
-            if (calleev.kind() != SSAValue::PUSHED)
-                return false;
-            jsbytecode *calleepc = script->code + calleev.pushedOffset();
-            if (JSOp(*calleepc) != JSOP_CALLPROP)
-                return false;
-
-            /*
-             * This code may not have run yet, break any type barriers involved
-             * in performing the call (for the greater good!).
-             */
-            analysis->breakTypeBarriersSSA(cx, analysis->poppedValue(calleepc, 0));
-            analysis->breakTypeBarriers(cx, calleepc - script->code, true);
-
-            StackTypeSet *funcallTypes = analysis->poppedTypes(pc, GET_ARGC(pc) + 1);
-            StackTypeSet *scriptTypes = analysis->poppedTypes(pc, GET_ARGC(pc));
-
-            /* Need to definitely be calling Function.call/apply on a specific script. */
-            RootedFunction function(cx);
-            {
-                JSObject *funcallObj = funcallTypes->getSingleton();
-                JSObject *scriptObj = scriptTypes->getSingleton();
-                if (!funcallObj || !funcallObj->isFunction() ||
-                    funcallObj->toFunction()->isInterpreted() ||
-                    !scriptObj || !scriptObj->isFunction() ||
-                    !scriptObj->toFunction()->isInterpreted()) {
-                    return false;
-                }
-                Native native = funcallObj->toFunction()->native();
-                if (native != js_fun_call && native != js_fun_apply)
-                    return false;
-                function = scriptObj->toFunction();
-            }
-
-            /*
-             * Generate constraints to clear definite properties from the type
-             * should the Function.call or callee itself change in the future.
-             */
-            funcallTypes->add(cx,
-                cx->analysisLifoAlloc().new_<TypeConstraintClearDefiniteSingle>(type));
-            scriptTypes->add(cx,
-                cx->analysisLifoAlloc().new_<TypeConstraintClearDefiniteSingle>(type));
-
-            TypeNewScript::Initializer pushframe(TypeNewScript::Initializer::FRAME_PUSH, uses->offset);
-            if (!state.initializerList.append(pushframe)) {
-                cx->compartment->types.setPendingNukeTypes(cx);
-                state.baseobj = NULL;
-                return false;
-            }
-
-            if (!AnalyzeNewScriptProperties(cx, type, function, state))
-                return false;
-
-            TypeNewScript::Initializer popframe(TypeNewScript::Initializer::FRAME_POP, 0);
-            if (!state.initializerList.append(popframe)) {
-                cx->compartment->types.setPendingNukeTypes(cx);
-                state.baseobj = NULL;
-                return false;
-            }
-
-            /*
-             * The callee never lets the 'this' value escape, continue looking
-             * for definite properties in the remainder of this script.
-             */
-        } else {
-            /* Unhandled use of 'this'. */
+        unsigned slotSpan = state.baseobj->slotSpan();
+        RootedValue value(cx, UndefinedValue());
+        if (!DefineNativeProperty(cx, state.baseobj, id, value, NULL, NULL,
+                                  JSPROP_ENUMERATE, 0, 0, DNP_SKIP_TYPE))
+        {
+            cx->compartment->types.setPendingNukeTypes(cx);
+            state.baseobj = NULL;
             return false;
         }
+
+        if (state.baseobj->inDictionaryMode()) {
+            state.baseobj = NULL;
+            return false;
+        }
+
+        if (state.baseobj->slotSpan() == slotSpan) {
+            /* Set a duplicate property. */
+            return false;
+        }
+
+        TypeNewScript::Initializer setprop(TypeNewScript::Initializer::SETPROP, use->offset);
+        if (!state.initializerList.append(setprop)) {
+            cx->compartment->types.setPendingNukeTypes(cx);
+            state.baseobj = NULL;
+            return false;
+        }
+
+        if (state.baseobj->slotSpan() >= (TYPE_FLAG_DEFINITE_MASK >> TYPE_FLAG_DEFINITE_SHIFT)) {
+            /* Maximum number of definite properties added. */
+            return false;
+        }
+
+        return true;
     }
 
-    return true;
+    if (op == JSOP_GETPROP && use->u.which == 0) {
+        /*
+         * Properties can be read from the 'this' object if the following hold:
+         *
+         * - The read is not on a getter along the prototype chain, which
+         *   could cause 'this' to escape.
+         *
+         * - The accessed property is either already a definite property or
+         *   is not later added as one. Since the definite properties are
+         *   added to the object at the point of its creation, reading a
+         *   definite property before it is assigned could incorrectly hit.
+         */
+        RootedId id(cx, NameToId(script->getName(GET_UINT32_INDEX(pc))));
+        if (IdToTypeId(id) != id)
+            return false;
+        if (!state.baseobj->nativeLookup(cx, id) && !state.accessedProperties.append(id.get())) {
+            cx->compartment->types.setPendingNukeTypes(cx);
+            state.baseobj = NULL;
+            return false;
+        }
+
+        if (!AddClearDefiniteGetterSetterForPrototypeChain(cx, type, id))
+            return false;
+
+        /*
+         * Populate the read with any value from the type's proto, if
+         * this is being used in a function call and we need to analyze the
+         * callee's behavior.
+         */
+        Shape *shape = type->proto ? type->proto->nativeLookup(cx, id) : NULL;
+        if (shape && shape->hasSlot()) {
+            Value protov = type->proto->getSlot(shape->slot());
+            TypeSet *types = script->analysis()->bytecodeTypes(pc);
+            types->addType(cx, GetValueType(cx, protov));
+        }
+
+        return true;
+    }
+
+    if ((op == JSOP_FUNCALL || op == JSOP_FUNAPPLY) && use->u.which == GET_ARGC(pc) - 1) {
+        /*
+         * Passed as the first parameter to Function.call. Follow control
+         * into the callee, and add any definite properties it assigns to
+         * the object as well. :TODO: This is narrow pattern matching on
+         * the inheritance patterns seen in the v8-deltablue benchmark, and
+         * needs robustness against other ways initialization can cross
+         * script boundaries.
+         *
+         * Add constraints ensuring we are calling Function.call on a
+         * particular script, removing definite properties from the result
+         */
+
+        /* Callee/this must have been pushed by a CALLPROP. */
+        SSAValue calleev = analysis->poppedValue(pc, GET_ARGC(pc) + 1);
+        if (calleev.kind() != SSAValue::PUSHED)
+            return false;
+        jsbytecode *calleepc = script->code + calleev.pushedOffset();
+        if (JSOp(*calleepc) != JSOP_CALLPROP)
+            return false;
+
+        /*
+         * This code may not have run yet, break any type barriers involved
+         * in performing the call (for the greater good!).
+         */
+        analysis->breakTypeBarriersSSA(cx, analysis->poppedValue(calleepc, 0));
+        analysis->breakTypeBarriers(cx, calleepc - script->code, true);
+
+        StackTypeSet *funcallTypes = analysis->poppedTypes(pc, GET_ARGC(pc) + 1);
+        StackTypeSet *scriptTypes = analysis->poppedTypes(pc, GET_ARGC(pc));
+
+        /* Need to definitely be calling Function.call/apply on a specific script. */
+        RootedFunction function(cx);
+        {
+            JSObject *funcallObj = funcallTypes->getSingleton();
+            JSObject *scriptObj = scriptTypes->getSingleton();
+            if (!funcallObj || !funcallObj->isFunction() ||
+                funcallObj->toFunction()->isInterpreted() ||
+                !scriptObj || !scriptObj->isFunction() ||
+                !scriptObj->toFunction()->isInterpreted())
+            {
+                return false;
+            }
+            Native native = funcallObj->toFunction()->native();
+            if (native != js_fun_call && native != js_fun_apply)
+                return false;
+            function = scriptObj->toFunction();
+        }
+
+        /*
+         * Generate constraints to clear definite properties from the type
+         * should the Function.call or callee itself change in the future.
+         */
+        funcallTypes->add(cx,
+            cx->analysisLifoAlloc().new_<TypeConstraintClearDefiniteSingle>(type));
+        scriptTypes->add(cx,
+            cx->analysisLifoAlloc().new_<TypeConstraintClearDefiniteSingle>(type));
+
+        TypeNewScript::Initializer pushframe(TypeNewScript::Initializer::FRAME_PUSH, use->offset);
+        if (!state.initializerList.append(pushframe)) {
+            cx->compartment->types.setPendingNukeTypes(cx);
+            state.baseobj = NULL;
+            return false;
+        }
+
+        if (!AnalyzeNewScriptProperties(cx, type, function, state))
+            return false;
+
+        TypeNewScript::Initializer popframe(TypeNewScript::Initializer::FRAME_POP, 0);
+        if (!state.initializerList.append(popframe)) {
+            cx->compartment->types.setPendingNukeTypes(cx);
+            state.baseobj = NULL;
+            return false;
+        }
+
+        /*
+         * The callee never lets the 'this' value escape, continue looking
+         * for definite properties in the remainder of this script.
+         */
+        return true;
+    }
+
+    /* Unhandled use of 'this'. */
+    return false;
 }
 
 /*
