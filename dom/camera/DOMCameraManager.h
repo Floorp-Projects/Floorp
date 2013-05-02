@@ -46,6 +46,9 @@ public:
   void Register(mozilla::nsDOMCameraControl* aDOMCameraControl);
   void OnNavigation(uint64_t aWindowId);
 
+  nsresult GetNumberOfCameras(int32_t& aDeviceCount);
+  nsresult GetCameraName(uint32_t aDeviceNum, nsCString& aDeviceName);
+
 protected:
   void XpComShutdown();
   void Shutdown(uint64_t aWindowId);
