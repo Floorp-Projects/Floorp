@@ -404,8 +404,8 @@ class ParallelIonInvoke
         calleeToken_ = CalleeToParallelToken(callee);
     }
 
-    bool invoke(JSContext *cx) {
-        RootedValue result(cx);
+    bool invoke() {
+        RootedValue result(TlsPerThreadData.get());
         enter_(jitcode_, argc_ + 1, argv_ + 1, NULL, calleeToken_, NULL, 0, result.address());
         return !result.isMagic();
     }
@@ -487,7 +487,7 @@ class ParallelDo : public ForkJoinOp
         if (!fun_->isFunction())
             return Method_Skipped;
 
-        RootedFunction callee(cx_, fun_->toFunction());
+        RootedFunction callee(TlsPerThreadData.get(), fun_->toFunction());
 
         if (!callee->isInterpreted() || !callee->isSelfHostedBuiltin())
             return Method_Skipped;
@@ -497,7 +497,7 @@ class ParallelDo : public ForkJoinOp
 
         // If this function has not been run enough to enable parallel
         // execution, perform a warmup.
-        RootedScript script(cx_, callee->nonLazyScript());
+        RootedScript script(TlsPerThreadData.get(), callee->nonLazyScript());
         if (script->getUseCount() < js_IonOptions.usesBeforeCompileParallel) {
             if (!warmupForParallelExecution())
                 return Method_Error;
@@ -537,7 +537,7 @@ class ParallelDo : public ForkJoinOp
     }
 
     bool invalidateBailedOutScripts() {
-        RootedScript script(cx_, fun_->toFunction()->nonLazyScript());
+        RootedScript script(TlsPerThreadData.get(), fun_->toFunction()->nonLazyScript());
 
         // Sometimes the script is collected or invalidated already,
         // for example when a full GC runs at an inconvenient time.
@@ -568,7 +568,7 @@ class ParallelDo : public ForkJoinOp
 
     bool executeSequentially() {
         uint32_t numSlices = ForkJoinSlices(cx_);
-        RootedValue funVal(cx_, ObjectValue(*fun_));
+        RootedValue funVal(TlsPerThreadData.get(), ObjectValue(*fun_));
         FastInvokeGuard fig(cx_, funVal);
         for (uint32_t i = 0; i < numSlices; i++) {
             InvokeArgsGuard &args = fig.args();
@@ -599,7 +599,7 @@ class ParallelDo : public ForkJoinOp
         JS_ASSERT(pendingInvalidations[slice.sliceId] == NULL);
 
         JS_ASSERT(fun_->isFunction());
-        RootedFunction callee(cx_, fun_->toFunction());
+        RootedFunction callee(TlsPerThreadData.get(), fun_->toFunction());
         if (!callee->nonLazyScript()->hasParallelIonScript()) {
             // Sometimes, particularly with GCZeal, the parallel ion
             // script can be collected between starting the parallel
@@ -615,7 +615,7 @@ class ParallelDo : public ForkJoinOp
         fii.args[1] = Int32Value(slice.numSlices);
         fii.args[2] = BooleanValue(false);
 
-        bool ok = fii.invoke(cx_);
+        bool ok = fii.invoke();
         JS_ASSERT(ok == !slice.abortedScript);
         if (!ok) {
             JSScript *script = slice.abortedScript;
@@ -654,14 +654,14 @@ js::parallel::Do(JSContext *cx, CallArgs &args)
     JS_ASSERT(args[0].isObject());
     JS_ASSERT(args[0].toObject().isFunction());
 
-    RootedObject fun(cx, &args[0].toObject());
+    RootedObject fun(TlsPerThreadData.get(), &args[0].toObject());
     ParallelDo op(cx, fun);
     ExecutionStatus status = op.apply();
     if (status == ExecutionFatal)
         return false;
 
     if (args[1].isObject()) {
-        RootedObject feedback(cx, &args[1].toObject());
+        RootedObject feedback(TlsPerThreadData.get(), &args[1].toObject());
         if (feedback && feedback->isFunction()) {
             InvokeArgsGuard feedbackArgs;
             if (!cx->stack.pushInvokeArgs(cx, 1, &feedbackArgs))
