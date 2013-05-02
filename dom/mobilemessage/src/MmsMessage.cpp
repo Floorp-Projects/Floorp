@@ -42,7 +42,8 @@ MmsMessage::MmsMessage(int32_t                         aId,
                        bool                            aRead,
                        const nsAString&                aSubject,
                        const nsAString&                aSmil,
-                       const nsTArray<MmsAttachment>&  aAttachments)
+                       const nsTArray<MmsAttachment>&  aAttachments,
+                       uint64_t                        aExpiryDate)
   : mId(aId),
     mThreadId(aThreadId),
     mDelivery(aDelivery),
@@ -53,7 +54,8 @@ MmsMessage::MmsMessage(int32_t                         aId,
     mRead(aRead),
     mSubject(aSubject),
     mSmil(aSmil),
-    mAttachments(aAttachments)
+    mAttachments(aAttachments),
+    mExpiryDate(aExpiryDate)
 {
 }
 
@@ -67,6 +69,7 @@ MmsMessage::MmsMessage(const mobilemessage::MmsMessageData& aData)
   , mRead(aData.read())
   , mSubject(aData.subject())
   , mSmil(aData.smil())
+  , mExpiryDate(aData.expiryDate())
 {
   uint32_t len = aData.attachments().Length();
   mAttachments.SetCapacity(len);
@@ -98,6 +101,7 @@ MmsMessage::Create(int32_t               aId,
                    const nsAString&      aSubject,
                    const nsAString&      aSmil,
                    const JS::Value&      aAttachments,
+                   const JS::Value&      aExpiryDate,
                    JSContext*            aCx,
                    nsIDOMMozMmsMessage** aMessage)
 {
@@ -226,6 +230,25 @@ MmsMessage::Create(int32_t               aId,
     attachments.AppendElement(attachment);
   }
 
+  // Set |expiryDate|.
+  uint64_t expiryDate;
+  if (aExpiryDate.isObject()) {
+    JSObject* expiryDateObj = &aExpiryDate.toObject();
+    if (!JS_ObjectIsDate(aCx, expiryDateObj)) {
+      return NS_ERROR_INVALID_ARG;
+    }
+    expiryDate = js_DateGetMsecSinceEpoch(expiryDateObj);
+  } else {
+    if (!aExpiryDate.isNumber()) {
+      return NS_ERROR_INVALID_ARG;
+    }
+    double number = aExpiryDate.toNumber();
+    if (static_cast<uint64_t>(number) != number) {
+      return NS_ERROR_INVALID_ARG;
+    }
+    expiryDate = static_cast<uint64_t>(number);
+  }
+
   nsCOMPtr<nsIDOMMozMmsMessage> message = new MmsMessage(aId,
                                                          aThreadId,
                                                          delivery,
@@ -236,7 +259,8 @@ MmsMessage::Create(int32_t               aId,
                                                          aRead,
                                                          aSubject,
                                                          aSmil,
-                                                         attachments);
+                                                         attachments,
+                                                         expiryDate);
   message.forget(aMessage);
   return NS_OK;
 }
@@ -256,6 +280,7 @@ MmsMessage::GetData(ContentParent* aParent,
   aData.read() = mRead;
   aData.subject() = mSubject;
   aData.smil() = mSmil;
+  aData.expiryDate() = mExpiryDate;
 
   aData.attachments().SetCapacity(mAttachments.Length());
   for (uint32_t i = 0; i < mAttachments.Length(); i++) {
@@ -484,6 +509,16 @@ MmsMessage::GetAttachments(JSContext* aCx, JS::Value* aAttachments)
   }
 
   aAttachments->setObject(*attachments);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+MmsMessage::GetExpiryDate(JSContext* cx, JS::Value* aDate)
+{
+  JSObject *obj = JS_NewDateObjectMsec(cx, mExpiryDate);
+  NS_ENSURE_TRUE(obj, NS_ERROR_FAILURE);
+
+  *aDate = OBJECT_TO_JSVAL(obj);
   return NS_OK;
 }
 

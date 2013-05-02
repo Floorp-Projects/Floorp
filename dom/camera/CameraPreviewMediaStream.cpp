@@ -106,6 +106,10 @@ CameraPreviewMediaStream::SetCurrentFrame(const gfxIntSize& aIntrinsicSize, Imag
       NS_NewRunnableMethod(output, &VideoFrameContainer::Invalidate);
     NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
   }
+
+  if (mFrameCallback) {
+    mFrameCallback->OnNewFrame(aIntrinsicSize, aImage);
+  }
 }
 
 }
