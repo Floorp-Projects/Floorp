@@ -20,6 +20,11 @@ class AudioStream;
  */
 const int GUESS_AUDIO_CHANNELS = 2;
 
+// We ensure that the graph advances in steps that are multiples of the Web
+// Audio block size
+const uint32_t WEBAUDIO_BLOCK_SIZE_BITS = 7;
+const uint32_t WEBAUDIO_BLOCK_SIZE = 1 << WEBAUDIO_BLOCK_SIZE_BITS;
+
 /**
  * An AudioChunk represents a multi-channel buffer of audio samples.
  * It references an underlying ThreadSharedObject which manages the lifetime

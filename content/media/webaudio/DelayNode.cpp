@@ -185,7 +185,7 @@ public:
       TrackTicks tick = aStream->GetCurrentPosition();
       for (size_t counter = 0; counter < WEBAUDIO_BLOCK_SIZE; ++counter) {
         computedDelay[counter] = std::max(0.0, std::min(mMaxDelay,
-                                   double(mDelay.GetValueAtTime<TrackTicks>(tick + counter))));
+                                   double(mDelay.GetValueAtTime(tick, counter))));
       }
     }
 
