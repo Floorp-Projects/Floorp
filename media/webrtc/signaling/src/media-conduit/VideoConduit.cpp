@@ -9,6 +9,10 @@
 #include "AudioConduit.h"
 #include "video_engine/include/vie_errors.h"
 
+#ifdef MOZ_WIDGET_ANDROID
+#include "AndroidJNIWrapper.h"
+#endif
+
 namespace mozilla {
 
 static const char* logTag ="WebrtcVideoSessionConduit";
@@ -97,6 +101,24 @@ MediaConduitErrorCode WebrtcVideoConduit::Init()
 {
 
   CSFLogDebug(logTag,  "%s ", __FUNCTION__);
+
+#ifdef MOZ_WIDGET_ANDROID
+  jobject context = jsjni_GetGlobalContextRef();
+
+  // get the JVM
+  JavaVM *jvm = jsjni_GetVM();
+
+  JNIEnv* env;
+  if (jvm->GetEnv((void**)&env, JNI_VERSION_1_4) != JNI_OK) {
+      CSFLogError(logTag,  "%s: could not get Java environment", __FUNCTION__);
+      return kMediaConduitSessionNotInited;
+  }
+  jvm->AttachCurrentThread(&env, NULL);
+
+  webrtc::VideoEngine::SetAndroidObjects(jvm, (void*)context);
+
+  env->DeleteGlobalRef(context);
+#endif
 
   if( !(mVideoEngine = webrtc::VideoEngine::Create()) )
   {

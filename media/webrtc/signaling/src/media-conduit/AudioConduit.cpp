@@ -15,6 +15,9 @@
 
 #include "voice_engine/include/voe_errors.h"
 
+#ifdef MOZ_WIDGET_ANDROID
+#include "AndroidJNIWrapper.h"
+#endif
 
 namespace mozilla {
 
@@ -136,6 +139,24 @@ MediaConduitErrorCode WebrtcAudioConduit::Init(WebrtcAudioConduit *other)
     MOZ_ASSERT(other->mVoiceEngine);
     mVoiceEngine = other->mVoiceEngine;
   } else {
+#ifdef MOZ_WIDGET_ANDROID
+      jobject context = jsjni_GetGlobalContextRef();
+
+      // get the JVM
+      JavaVM *jvm = jsjni_GetVM();
+
+      JNIEnv* env;
+      if (jvm->GetEnv((void**)&env, JNI_VERSION_1_4) != JNI_OK) {
+          CSFLogError(logTag,  "%s: could not get Java environment", __FUNCTION__);
+          return kMediaConduitSessionNotInited;
+      }
+      jvm->AttachCurrentThread(&env, NULL);
+
+      webrtc::VoiceEngine::SetAndroidObjects(jvm, (void*)context);
+
+      env->DeleteGlobalRef(context);
+#endif
+
     //Per WebRTC APIs below function calls return NULL on failure
     if(!(mVoiceEngine = webrtc::VoiceEngine::Create()))
     {
