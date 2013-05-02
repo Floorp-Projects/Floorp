@@ -1688,6 +1688,21 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
                               toBindingNamespace(parentProtoName))
             parentProtoType = "Handle"
 
+        parentWithInterfaceObject = self.descriptor.interface.parent
+        while (parentWithInterfaceObject and
+               not parentWithInterfaceObject.hasInterfaceObject()):
+            parentWithInterfaceObject = parentWithInterfaceObject.parent
+        if parentWithInterfaceObject:
+            parentIfaceName = parentWithInterfaceObject.identifier.name
+            if self.descriptor.workers:
+                parentIfaceName += "_workers"
+            getConstructorProto = ("%s::GetConstructorObject(aCx, aGlobal)" %
+                                   toBindingNamespace(parentIfaceName))
+            constructorProtoType = "Handle"
+        else:
+            getConstructorProto = "aCx, JS_GetFunctionPrototype(aCx, aGlobal)"
+            constructorProtoType = "Rooted"
+
         needInterfaceObject = self.descriptor.interface.hasInterfaceObject()
         needInterfacePrototypeObject = self.descriptor.interface.hasInterfacePrototypeObject()
 
@@ -1757,7 +1772,12 @@ if (!unforgeableHolder) {
         getParentProto = ("JS::%s<JSObject*> parentProto(%s);\n" +
                           "if (!parentProto) {\n" +
                           "  return;\n" +
-                          "}\n") % (parentProtoType, getParentProto)
+                          "}") % (parentProtoType, getParentProto)
+
+        getConstructorProto = ("JS::%s<JSObject*> constructorProto(%s);\n"
+                               "if (!constructorProto) {\n"
+                               "  return;\n"
+                               "}" % (constructorProtoType, getConstructorProto))
 
         if (needInterfaceObject and
             self.descriptor.needsConstructHookHolder()):
@@ -1807,7 +1827,7 @@ if (!unforgeableHolder) {
             chromeProperties = "nullptr"
         call = ("dom::CreateInterfaceObjects(aCx, aGlobal, parentProto,\n"
                 "                            %s, %s,\n"
-                "                            %s, %s, %d, %s,\n"
+                "                            constructorProto, %s, %s, %d, %s,\n"
                 "                            %s,\n"
                 "                            %s,\n"
                 "                            %s,\n"
@@ -1832,8 +1852,8 @@ if (!unforgeableHolder) {
         else:
             setUnforgeableHolder = None
         functionBody = CGList(
-            [CGGeneric(getParentProto), initIds, prefCache,
-             createUnforgeableHolder, CGGeneric(call), setUnforgeableHolder],
+            [CGGeneric(getParentProto), CGGeneric(getConstructorProto), initIds,
+             prefCache, createUnforgeableHolder, CGGeneric(call), setUnforgeableHolder],
             "\n\n")
         return CGIndenter(functionBody).define()
 
