@@ -49,10 +49,19 @@ nsDOMMessageEvent::~nsDOMMessageEvent()
 NS_IMETHODIMP
 nsDOMMessageEvent::GetData(JSContext* aCx, JS::Value* aData)
 {
-  *aData = mData;
-  if (!JS_WrapValue(aCx, aData))
-    return NS_ERROR_FAILURE;
-  return NS_OK;
+  mozilla::ErrorResult rv;
+  *aData = GetData(aCx, rv);
+  return rv.ErrorCode();
+}
+
+JS::Value
+nsDOMMessageEvent::GetData(JSContext* aCx, mozilla::ErrorResult& aRv)
+{
+  JS::Value data = mData;
+  if (!JS_WrapValue(aCx, &data)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+  }
+  return data;
 }
 
 NS_IMETHODIMP
