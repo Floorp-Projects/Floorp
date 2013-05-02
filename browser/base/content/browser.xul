@@ -1228,7 +1228,7 @@
 
   <svg:svg height="0">
     <svg:clipPath id="tab-curve-clip-path-start" clipPathUnits="objectBoundingBox">
-      <svg:path d="M 1,0.0645 C 0.5683,0.0679,0.51693,0.3764,0.4837,0.5484 c -0.0522,0.2702,-0.1425,0.4194,0.4333,0.4194 L 0,1 H 1.0333 V 0.0645 z"/>
+      <svg:path d="M 1,0.0645 C 0.5683,0.0679,0.51693,0.3764,0.4837,0.5484 c -0.0522,0.2702,-0.1425,0.4194,-0.4333,0.4194 L 0,1 H 1.0333 V 0.0645 z"/>
     </svg:clipPath>
     <svg:clipPath id="tab-curve-clip-path-end" clipPathUnits="objectBoundingBox">
       <svg:path d="M -0.0333,0.0645 C 0.4317,0.0679,0.4831,0.3764,0.5163,0.5484 c 0.0522,0.2702,+0.1425,0.4194,0.4333,0.4194 L 1,1 H -0.033 V 0.0645 z"/>
