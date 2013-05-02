@@ -488,13 +488,16 @@ ChromeDebuggerProcess.prototype = {
   close: function RDP_close() {
     dumpn("Closing chrome debugging process");
     if (!this.globalUI) {
+      dumpn("globalUI is missing");
       return;
     }
     delete this.globalUI._chromeDebugger;
 
     if (this._dbgProcess.isRunning) {
+      dumpn("Killing chrome debugging process...");
       this._dbgProcess.kill();
     }
+    dumpn("...done.");
     if (typeof this._closeCallback == "function") {
       this._closeCallback.call({}, this);
     }
