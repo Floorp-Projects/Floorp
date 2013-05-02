@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#if defined(WEBRTC_ANDROID) && !defined(WEBRTC_ANDROID_OPENSLES)
+#ifdef ANDROID
 #include "modules/audio_device/android/audio_device_jni_android.h"
 #endif
 
@@ -144,13 +144,9 @@ bool VoiceEngine::Delete(VoiceEngine*& voiceEngine)
 
 int VoiceEngine::SetAndroidObjects(void* javaVM, void* env, void* context)
 {
-#ifdef WEBRTC_ANDROID
-#ifdef WEBRTC_ANDROID_OPENSLES
-  return 0;
-#else
+#if defined(ANDROID) && !defined(MOZ_WIDGET_GONK)
   return AudioDeviceAndroidJni::SetAndroidAudioDeviceObjects(
       javaVM, env, context);
-#endif
 #else
   return -1;
 #endif
