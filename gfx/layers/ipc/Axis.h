@@ -125,13 +125,13 @@ public:
    * That is to say, if the given displacement is applied, this will tell you
    * whether or not it will overscroll, and in what direction.
    */
-  Overscroll DisplacementWillOverscroll(int32_t aDisplacement);
+  Overscroll DisplacementWillOverscroll(float aDisplacement);
 
   /**
    * If a displacement will overscroll the axis, this returns the amount and in
    * what direction. Similar to getExcess() but takes a displacement to apply.
    */
-  float DisplacementWillOverscrollAmount(int32_t aDisplacement);
+  float DisplacementWillOverscrollAmount(float aDisplacement);
 
   /**
    * Gets the overscroll state of the axis given a scaling of the page. That is
