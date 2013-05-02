@@ -735,8 +735,12 @@ LinearScanAllocator::allocateSlotFor(const LiveInterval *interval)
     LinearScanVirtualRegister *reg = &vregs[interval->vreg()];
 
     SlotList *freed;
-    if (reg->type() == LDefinition::DOUBLE || IsNunbox(reg))
+    if (reg->type() == LDefinition::DOUBLE)
         freed = &finishedDoubleSlots_;
+#ifdef JS_NUNBOX32
+    else if (IsNunbox(reg))
+        freed = &finishedNunboxSlots_;
+#endif
     else
         freed = &finishedSlots_;
 
@@ -841,7 +845,7 @@ LinearScanAllocator::freeAllocation(LiveInterval *interval, LAllocation *alloc)
         if (!candidate->canonicalSpill()->isStackSlot())
             return;
 
-        finishedDoubleSlots_.append(candidate->lastInterval());
+        finishedNunboxSlots_.append(candidate->lastInterval());
     }
 #endif
 }
