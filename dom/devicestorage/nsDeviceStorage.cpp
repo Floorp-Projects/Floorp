@@ -922,13 +922,13 @@ InterfaceToJsval(nsPIDOMWindow* aWindow, nsISupports* aObject, const nsIID* aIID
     return JSVAL_NULL;
   }
 
-  JS::Value someJsVal;
+  JS::Rooted<JS::Value> someJsVal(cx);
   JS::Rooted<JSObject*> global(cx, JS_GetGlobalObject(cx));
   nsresult rv = nsContentUtils::WrapNative(cx,
                                            global,
                                            aObject,
                                            aIID,
-                                           &someJsVal);
+                                           someJsVal.address());
   if (NS_FAILED(rv)) {
     return JSVAL_NULL;
   }
