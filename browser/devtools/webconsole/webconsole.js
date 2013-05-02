@@ -1098,6 +1098,9 @@ WebConsoleFrame.prototype = {
 
     if (objectActors.size > 0) {
       node._objectActors = objectActors;
+
+      let repeatNode = node.querySelector(".webconsole-msg-repeat");
+      repeatNode._uid += [...objectActors].join("-");
     }
 
     // Make the node bring up the variables view, to allow the user to inspect
