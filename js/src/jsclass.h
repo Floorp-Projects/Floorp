@@ -312,6 +312,9 @@ struct Class
         return flags & JSCLASS_EMULATES_UNDEFINED;
     }
 
+    /* Defined in jsfuninlines.h */
+    inline bool isCallable() const;
+
     static size_t offsetOfFlags() { return offsetof(Class, flags); }
 };
 

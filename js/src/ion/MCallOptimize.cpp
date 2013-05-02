@@ -1343,6 +1343,29 @@ IonBuilder::inlineIsCallable(CallInfo &callInfo)
     if (callInfo.getArg(0)->type() != MIRType_Object)
         return InliningStatus_NotInlined;
 
+    // Try inlining with constant true/false: only objects may be callable at
+    // all, and if we know the class check if it is callable.
+    bool isCallableKnown = false;
+    bool isCallableConstant;
+    if (callInfo.getArg(0)->type() != MIRType_Object) {
+        isCallableKnown = true;
+        isCallableConstant = false;
+    } else {
+        types::StackTypeSet *types = callInfo.getArg(0)->resultTypeSet();
+        Class *clasp = types ? types->getKnownClass() : NULL;
+        if (clasp) {
+            isCallableKnown = true;
+            isCallableConstant = clasp->isCallable();
+        }
+    }
+
+    if (isCallableKnown) {
+        MConstant *constant = MConstant::New(BooleanValue(isCallableConstant));
+        current->add(constant);
+        current->push(constant);
+        return InliningStatus_Inlined;
+    }
+
     callInfo.unwrapArgs();
 
     MIsCallable *isCallable = MIsCallable::New(callInfo.getArg(0));
