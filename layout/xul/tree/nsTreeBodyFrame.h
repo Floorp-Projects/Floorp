@@ -24,9 +24,16 @@
 #include "nsScrollbarFrame.h"
 #include "nsThreadUtils.h"
 #include "mozilla/LookAndFeel.h"
+#include "nsIScrollbarOwner.h"
 
 class nsOverflowChecker;
 class nsTreeImageListener;
+
+namespace mozilla {
+namespace layout {
+class ScrollbarActivity;
+}
+}
 
 // An entry in the tree's image cache
 struct nsTreeImageCacheEntry
@@ -45,8 +52,11 @@ class nsTreeBodyFrame MOZ_FINAL
   , public nsICSSPseudoComparator
   , public nsIScrollbarMediator
   , public nsIReflowCallback
+  , public nsIScrollbarOwner
 {
 public:
+  typedef mozilla::layout::ScrollbarActivity ScrollbarActivity;
+
   nsTreeBodyFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
   ~nsTreeBodyFrame();
 
@@ -125,6 +135,12 @@ public:
   NS_IMETHOD PositionChanged(nsScrollbarFrame* aScrollbar, int32_t aOldIndex, int32_t& aNewIndex);
   NS_IMETHOD ScrollbarButtonPressed(nsScrollbarFrame* aScrollbar, int32_t aOldIndex, int32_t aNewIndex) MOZ_OVERRIDE;
   NS_IMETHOD VisibilityChanged(bool aVisible) MOZ_OVERRIDE { Invalidate(); return NS_OK; }
+
+  // nsIScrollbarOwner
+  virtual nsIFrame* GetScrollbarBox(bool aVertical) MOZ_OVERRIDE {
+    ScrollParts parts = GetScrollParts();
+    return aVertical ? parts.mVScrollbar : parts.mHScrollbar;
+  }
 
   // Overridden from nsIFrame to cache our pres context.
   virtual void Init(nsIContent*     aContent,
@@ -524,6 +540,8 @@ protected: // Data Members
   Slots* mSlots;
 
   nsRevocableEventPtr<ScrollEvent> mScrollEvent;
+
+  nsCOMPtr<ScrollbarActivity> mScrollbarActivity;
 
   // The cached box object parent.
   nsCOMPtr<nsITreeBoxObject> mTreeBoxObject;

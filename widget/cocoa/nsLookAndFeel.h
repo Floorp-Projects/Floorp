@@ -24,6 +24,8 @@ public:
     return 0x2022;
   }
 
+  static bool UseOverlayScrollbars();
+
 protected:
 
   // Apple hasn't defined a constant for scollbars with two arrows on each end, so we'll use this one.

@@ -14,6 +14,7 @@
 #include "nsCoord.h"
 #include "nsPresContext.h"
 #include "mozilla/gfx/Point.h"
+#include "nsIScrollbarOwner.h"
 
 #define NS_DEFAULT_VERTICAL_SCROLL_DISTANCE   3
 #define NS_DEFAULT_HORIZONTAL_SCROLL_DISTANCE 5
@@ -27,7 +28,7 @@ class nsIFrame;
  * APIs for examining scroll state, observing changes to scroll state,
  * and triggering scrolling.
  */
-class nsIScrollableFrame : public nsQueryFrame {
+class nsIScrollableFrame : public nsIScrollbarOwner {
 public:
   typedef mozilla::gfx::Point Point;
 
@@ -201,14 +202,6 @@ public:
    * Remove a scroll position listener.
    */
   virtual void RemoveScrollPositionListener(nsIScrollPositionListener* aListener) = 0;
-
-  /**
-   * Obtain the XUL box for the horizontal or vertical scrollbar, or null
-   * if there is no such box. Avoid using this, but may be useful for
-   * setting up a scrollbar mediator if you want to redirect scrollbar
-   * input.
-   */
-  virtual nsIFrame* GetScrollbarBox(bool aVertical) = 0;
 
   /**
    * Internal method used by scrollbars to notify their scrolling
