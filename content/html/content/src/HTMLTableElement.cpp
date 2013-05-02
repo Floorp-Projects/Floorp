@@ -234,8 +234,8 @@ TableRowsCollection::NamedItem(JSContext* cx, const nsAString& name,
       if (item) {
         JS::Rooted<JSObject*> wrapper(cx, nsWrapperCache::GetWrapper());
         JSAutoCompartment ac(cx, wrapper);
-        JS::Rooted<JS::Value> v(cx);
-        if (!mozilla::dom::WrapObject(cx, wrapper, item, v.address())) {
+        JS::Value v;
+        if (!mozilla::dom::WrapObject(cx, wrapper, item, &v)) {
           error.Throw(NS_ERROR_FAILURE);
           return nullptr;
         }
