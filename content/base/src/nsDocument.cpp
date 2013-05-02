@@ -3364,8 +3364,7 @@ nsDocument::doCreateShell(nsPresContext* aContext,
   FillStyleSet(aStyleSet);
 
   nsRefPtr<PresShell> shell = new PresShell;
-  nsresult rv = shell->Init(this, aContext, aViewManager, aStyleSet, aCompatMode);
-  NS_ENSURE_SUCCESS(rv, rv);
+  shell->Init(this, aContext, aViewManager, aStyleSet, aCompatMode);
 
   // Note: we don't hold a ref to the shell (it holds a ref to us)
   mPresShell = shell;
