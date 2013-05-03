@@ -515,6 +515,34 @@ public:
   }
 };
 
+class LazyRootedValue : public Maybe<JS::Rooted<JS::Value> >
+{
+public:
+  operator JS::Value() const
+  {
+    // Assert if we're empty, on purpose
+    return ref();
+  }
+
+  operator JS::Rooted<JS::Value>& ()
+  {
+    // Assert if we're empty, on purpose
+    return ref();
+  }
+
+  operator JS::Handle<JS::Value>()
+  {
+    // Assert if we're empty, on purpose
+    return ref();
+  }
+
+  JS::Value* operator&()
+  {
+    // Assert if we're empty, on purpose
+    return ref().address();
+  }
+};
+
 } // namespace dom
 } // namespace mozilla
 
