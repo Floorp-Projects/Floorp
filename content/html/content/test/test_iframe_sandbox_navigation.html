@@ -198,16 +198,18 @@ function doIf10TestPart1() {
   if (firstPrincipal != "")
     return;
 
-  // use SpecialPowers to get the principal of if_10
+  // use SpecialPowers to get the principal of if_10.
+  // NB: We stringify here and below because special-powers wrapping doesn't
+  // preserve identity.
   var if_10 = document.getElementById('if_10');
-  firstPrincipal = SpecialPowers.getNodePrincipal(if_10.contentDocument);
+  firstPrincipal = SpecialPowers.wrap(if_10).contentDocument.nodePrincipal.origin;
   if_10.src = 'file_iframe_sandbox_d_if10.html';
 
 }
 function doIf10TestPart2() {
   var if_10 = document.getElementById('if_10');
   // use SpecialPowers to get the principal of if_10
-  secondPrincipal = SpecialPowers.getNodePrincipal(if_10.contentDocument);
+  secondPrincipal = SpecialPowers.wrap(if_10).contentDocument.nodePrincipal.origin;
   ok_wrapper(firstPrincipal != secondPrincipal, "documents should NOT have the same principal if they are sandboxed without" +
     " allow-same-origin and the first document is navigated to the second");
 }
