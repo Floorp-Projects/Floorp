@@ -39,18 +39,6 @@ analyze::PrintBytecode(JSContext *cx, HandleScript script, jsbytecode *pc)
 }
 #endif
 
-static inline bool
-IsJumpOpcode(JSOp op)
-{
-    uint32_t type = JOF_TYPE(js_CodeSpec[op].format);
-
-    /*
-     * LABEL opcodes have type JOF_JUMP but are no-ops, don't treat them as
-     * jumps to avoid degrading precision.
-     */
-    return type == JOF_JUMP && op != JSOP_LABEL;
-}
-
 /////////////////////////////////////////////////////////////////////
 // Bytecode Analysis
 /////////////////////////////////////////////////////////////////////
@@ -590,7 +578,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
         }
 
         /* Handle any fallthrough from this opcode. */
-        if (!BytecodeNoFallThrough(op)) {
+        if (BytecodeFallsThrough(op)) {
             JS_ASSERT(successorOffset < script_->length);
 
             Bytecode *&nextcode = codeArray[successorOffset];

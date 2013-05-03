@@ -28,6 +28,7 @@ class BaselineCompilerShared
     bool ionOSRCompileable_;
     bool debugMode_;
 
+    BytecodeAnalysis analysis_;
     FrameInfo frame;
 
     FallbackICStubSpace stubSpace_;
@@ -129,6 +130,11 @@ class BaselineCompilerShared
     }
 
     bool callVM(const VMFunction &fun);
+
+  public:
+    BytecodeAnalysis &analysis() {
+        return analysis_;
+    }
 };
 
 } // namespace ion
