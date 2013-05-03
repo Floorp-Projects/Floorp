@@ -38,7 +38,6 @@ MOCHITEST_FILES := \
   test_decodeAudioData.html \
   test_dynamicsCompressorNode.html \
   test_pannerNode.html \
-  test_scriptProcessorNodeChannelCount.html \
   test_singleSourceDest.html \
   ting.ogg \
   ting-expected.wav \
@@ -64,6 +63,7 @@ MOCHITEST_FILES += \
   test_gainNode.html \
   test_mixingRules.html \
   test_scriptProcessorNode.html \
+  test_scriptProcessorNodeChannelCount.html \
   $(NULL)
 endif
 
