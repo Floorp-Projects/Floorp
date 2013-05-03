@@ -10,8 +10,7 @@
 #include "nsCoord.h"
 
 /**
- * Provides a way for a client of an nsIScrollableView to learn about scroll position
- * changes.
+ * Provides a way to learn about scroll position changes of nsIScrollableFrame's.
  */
 class nsIScrollPositionListener {
 public:
