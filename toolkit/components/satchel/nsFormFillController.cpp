@@ -38,12 +38,11 @@
 
 using namespace mozilla::dom;
 
-NS_IMPL_ISUPPORTS6(nsFormFillController,
+NS_IMPL_ISUPPORTS5(nsFormFillController,
                    nsIFormFillController,
                    nsIAutoCompleteInput,
                    nsIAutoCompleteSearch,
                    nsIDOMEventListener,
-                   nsIFormAutoCompleteObserver,
                    nsIMutationObserver)
 
 nsFormFillController::nsFormFillController() :
@@ -603,15 +602,11 @@ nsFormFillController::StartSearch(const nsAString &aSearchString, const nsAStrin
     // XXX aPreviousResult shouldn't ever be a historyResult type, since we're not letting
     // satchel manage the field?
     rv = mLoginManager->AutoCompleteSearch(aSearchString,
-                                           aPreviousResult,
-                                           mFocusedInput,
-                                           getter_AddRefs(result));
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (aListener) {
-      aListener->OnSearchResult(this, result);
-    }
+                                         aPreviousResult,
+                                         mFocusedInput,
+                                         getter_AddRefs(result));
   } else {
-    mLastListener = aListener;
+    nsCOMPtr<nsIAutoCompleteResult> formHistoryResult;
 
     // It appears that mFocusedInput is always null when we are focusing a XUL
     // element. Scary :)
@@ -620,65 +615,48 @@ nsFormFillController::StartSearch(const nsAString &aSearchString, const nsAStrin
         do_GetService("@mozilla.org/satchel/form-autocomplete;1", &rv);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      formAutoComplete->AutoCompleteSearchAsync(aSearchParam,
+      rv = formAutoComplete->AutoCompleteSearch(aSearchParam,
                                                 aSearchString,
                                                 mFocusedInput,
                                                 aPreviousResult,
-                                                this);
-      mLastFormAutoComplete = formAutoComplete;
-    } else {
-      mLastSearchString = aSearchString;
+                                                getter_AddRefs(formHistoryResult));
 
-      // Even if autocomplete is disabled, handle the inputlist anyway as that was
-      // specifically requested by the page. This is so a field can have the default
-      // autocomplete disabled and replaced with a custom inputlist autocomplete.
-      return PerformInputListAutoComplete(aPreviousResult);
+      NS_ENSURE_SUCCESS(rv, rv);
     }
-  }
 
-  return NS_OK;
-}
+    mLastSearchResult = formHistoryResult;
+    mLastListener = aListener;
+    mLastSearchString = aSearchString;
 
-nsresult
-nsFormFillController::PerformInputListAutoComplete(nsIAutoCompleteResult* aPreviousResult)
-{
-  // If an <input> is focused, check if it has a list="<datalist>" which can
-  // provide the list of suggestions.
+    nsCOMPtr <nsIInputListAutoComplete> inputListAutoComplete =
+      do_GetService("@mozilla.org/satchel/inputlist-autocomplete;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-  nsresult rv;
-  nsCOMPtr<nsIAutoCompleteResult> result;
+    rv = inputListAutoComplete->AutoCompleteSearch(formHistoryResult,
+                                                   aSearchString,
+                                                   mFocusedInput,
+                                                   getter_AddRefs(result));
 
-  nsCOMPtr <nsIInputListAutoComplete> inputListAutoComplete =
-    do_GetService("@mozilla.org/satchel/inputlist-autocomplete;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = inputListAutoComplete->AutoCompleteSearch(aPreviousResult,
-                                                 mLastSearchString,
-                                                 mFocusedInput,
-                                                 getter_AddRefs(result));
-  NS_ENSURE_SUCCESS(rv, rv);
+    if (mFocusedInput) {
+      nsCOMPtr<nsIDOMHTMLElement> list;
+      mFocusedInput->GetList(getter_AddRefs(list));
 
-  if (mFocusedInput) {
-    nsCOMPtr<nsIDOMHTMLElement> list;
-    mFocusedInput->GetList(getter_AddRefs(list));
-
-    // Add a mutation observer to check for changes to the items in the <datalist>
-    // and update the suggestions accordingly.
-    nsCOMPtr<nsINode> node = do_QueryInterface(list);
-    if (mListNode != node) {
-      if (mListNode) {
-        mListNode->RemoveMutationObserver(this);
-        mListNode = nullptr;
-      }
-      if (node) {
-        node->AddMutationObserverUnlessExists(this);
-        mListNode = node;
+      nsCOMPtr<nsINode> node = do_QueryInterface(list);
+      if (mListNode != node) {
+        if (mListNode) {
+          mListNode->RemoveMutationObserver(this);
+          mListNode = nullptr;
+        }
+        if (node) {
+          node->AddMutationObserverUnlessExists(this);
+          mListNode = node;
+        }
       }
     }
   }
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  if (mLastListener) {
-    mLastListener->OnSearchResult(this, result);
-  }
+  aListener->OnSearchResult(this, result);
 
   return NS_OK;
 }
@@ -731,29 +709,7 @@ void nsFormFillController::RevalidateDataList()
 NS_IMETHODIMP
 nsFormFillController::StopSearch()
 {
-  // Make sure to stop and clear this, otherwise the controller will prevent
-  // mLastFormAutoComplete from being deleted.
-  if (mLastFormAutoComplete) {
-    mLastFormAutoComplete->StopAutoCompleteSearch();
-    mLastFormAutoComplete = nullptr;
-  }
   return NS_OK;
-}
-
-////////////////////////////////////////////////////////////////////////
-//// nsIFormAutoCompleteObserver
-
-NS_IMETHODIMP
-nsFormFillController::OnSearchCompletion(nsIAutoCompleteResult *aResult)
-{
-  nsCOMPtr<nsIAutoCompleteResult> resultParam = do_QueryInterface(aResult);
-
-  nsAutoString searchString;
-  resultParam->GetSearchString(searchString);
-  mLastSearchResult = aResult;
-  mLastSearchString = searchString;
-
-  return PerformInputListAutoComplete(resultParam);
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -1211,3 +1167,4 @@ static const mozilla::Module kSatchelModule = {
 };
 
 NSMODULE_DEFN(satchel) = &kSatchelModule;
+
