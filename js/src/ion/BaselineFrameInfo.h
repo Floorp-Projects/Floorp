@@ -13,6 +13,7 @@
 #include "BaselineJIT.h"
 #include "BaselineFrame.h"
 #include "BaselineRegisters.h"
+#include "BytecodeAnalysis.h"
 #include "IonMacroAssembler.h"
 #include "FixedList.h"
 
@@ -158,8 +159,11 @@ class StackValue
 
 enum StackAdjustment { AdjustStack, DontAdjustStack };
 
+class BaselineCompilerShared;
+
 class FrameInfo
 {
+    BaselineCompilerShared &compiler;
     RootedScript script;
     MacroAssembler &masm;
 
@@ -167,8 +171,10 @@ class FrameInfo
     size_t spIndex;
 
   public:
-    FrameInfo(JSContext *cx, HandleScript script, MacroAssembler &masm)
-      : script(cx, script),
+    FrameInfo(JSContext *cx, BaselineCompilerShared &compiler, HandleScript script,
+              MacroAssembler &masm)
+      : compiler(compiler),
+        script(cx, script),
         masm(masm),
         stack(),
         spIndex(0)

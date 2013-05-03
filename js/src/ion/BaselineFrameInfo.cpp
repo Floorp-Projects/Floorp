@@ -6,6 +6,7 @@
 
 #include "BaselineFrameInfo.h"
 #include "IonSpewer.h"
+#include "shared/BaselineCompiler-shared.h"
 
 #include "jsanalyze.h"
 #include "jsinferinlines.h"
@@ -147,8 +148,8 @@ void
 FrameInfo::assertValidState(jsbytecode *pc)
 {
     // Check stack depth.
-    analyze::Bytecode *code = script->analysis()->maybeCode(pc);
-    JS_ASSERT_IF(code, stackDepth() == code->stackDepth);
+    BytecodeInfo *info = compiler.analysis().maybeInfo(pc);
+    JS_ASSERT_IF(info, stackDepth() == info->stackDepth);
 
     // Start at the bottom, find the first value that's not synced.
     uint32_t i = 0;
