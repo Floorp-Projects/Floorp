@@ -1756,7 +1756,8 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
             prefCache = None
             
         if UseHolderForUnforgeable(self.descriptor):
-            createUnforgeableHolder = CGGeneric("""JSObject* unforgeableHolder = JS_NewObjectWithGivenProto(aCx, nullptr, nullptr, nullptr);
+            createUnforgeableHolder = CGGeneric("""JS::Rooted<JSObject*> unforgeableHolder(aCx,
+  JS_NewObjectWithGivenProto(aCx, nullptr, nullptr, nullptr));
 if (!unforgeableHolder) {
   return;
 }""")
@@ -1988,23 +1989,34 @@ class CGIsMethod(CGAbstractMethod):
         #   js::GetObjectJSClass(obj) == &Class.mBase
         return """  return IsProxy(obj);"""
 
-def CreateBindingJSObject(descriptor, parent):
+def CreateBindingJSObject(descriptor, properties, parent):
+    # When we have unforgeable properties, we're going to define them
+    # on our object, so we have to root it when we create it, so it
+    # won't suddenly die while defining the unforgeables.
+    needRoot = (properties.unforgeableAttrs.hasNonChromeOnly() or
+                properties.unforgeableAttrs.hasChromeOnly())
+    if needRoot:
+        objDecl = "  JS::Rooted<JSObject*> obj(aCx);\n"
+    else:
+        objDecl = "  JSObject *obj;\n"
     if descriptor.proxy:
-        create = """  JSObject *obj = NewProxyObject(aCx, DOMProxyHandler::getInstance(),
-                                 JS::PrivateValue(aObject), proto, %s);
+        create = """  obj = NewProxyObject(aCx, DOMProxyHandler::getInstance(),
+                       JS::PrivateValue(aObject), proto, %s);
   if (!obj) {
     return NULL;
   }
 
 """
     else:
-        create = """  JSObject* obj = JS_NewObject(aCx, &Class.mBase, proto, %s);
+        create = """  obj = JS_NewObject(aCx, &Class.mBase, proto, %s);
   if (!obj) {
     return NULL;
   }
 
   js::SetReservedSlot(obj, DOM_OBJECT_SLOT, PRIVATE_TO_JSVAL(aObject));
 """
+    create = objDecl + create
+
     if descriptor.nativeOwnership in ['refcounted', 'nsisupports']:
         create += """  NS_ADDREF(aObject);
 """
@@ -2149,7 +2161,8 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
 
   return obj;""" % (AssertInheritanceChain(self.descriptor),
                     assertISupportsInheritance,
-                    CreateBindingJSObject(self.descriptor, "parent"),
+                    CreateBindingJSObject(self.descriptor, self.properties,
+                                          "parent"),
                     InitUnforgeableProperties(self.descriptor, self.properties))
 
 class CGWrapMethod(CGAbstractMethod):
@@ -2193,7 +2206,8 @@ class CGWrapNonWrapperCacheMethod(CGAbstractMethod):
 %s
 %s
   return obj;""" % (AssertInheritanceChain(self.descriptor),
-                    CreateBindingJSObject(self.descriptor, "global"),
+                    CreateBindingJSObject(self.descriptor, self.properties,
+                                          "global"),
                     InitUnforgeableProperties(self.descriptor, self.properties))
 
 builtinNames = {
@@ -6212,29 +6226,29 @@ class CGClass(CGThing):
 
 class CGResolveOwnProperty(CGAbstractMethod):
     def __init__(self, descriptor):
-        args = [Argument('JSContext*', 'cx'), Argument('JSObject*', 'wrapper_'),
-                Argument('JSObject*', 'obj'), Argument('jsid', 'id_'),
+        args = [Argument('JSContext*', 'cx'),
+                Argument('JS::Handle<JSObject*>', 'wrapper'),
+                Argument('JS::Handle<JSObject*>', 'obj'),
+                Argument('JS::Handle<jsid>', 'id'),
                 Argument('JSPropertyDescriptor*', 'desc'), Argument('unsigned', 'flags'),
                 ]
         CGAbstractMethod.__init__(self, descriptor, "ResolveOwnProperty", "bool", args)
     def definition_body(self):
         return """  // We rely on getOwnPropertyDescriptor not shadowing prototype properties by named
   // properties. If that changes we'll need to filter here.
-  js::RootedObject wrapper(cx, wrapper_);
-  js::RootedId id(cx, id_);
   return js::GetProxyHandler(obj)->getOwnPropertyDescriptor(cx, wrapper, id, desc, flags);
 """
 
 class CGEnumerateOwnProperties(CGAbstractMethod):
     def __init__(self, descriptor):
-        args = [Argument('JSContext*', 'cx'), Argument('JSObject*', 'wrapper_'),
-                Argument('JSObject*', 'obj'),
+        args = [Argument('JSContext*', 'cx'),
+                Argument('JS::Handle<JSObject*>', 'wrapper'),
+                Argument('JS::Handle<JSObject*>', 'obj'),
                 Argument('JS::AutoIdVector&', 'props')]
         CGAbstractMethod.__init__(self, descriptor, "EnumerateOwnProperties", "bool", args)
     def definition_body(self):
         return """  // We rely on getOwnPropertyNames not shadowing prototype properties by named
   // properties. If that changes we'll need to filter here.
-  JS::Rooted<JSObject*> wrapper(cx, wrapper_);
   return js::GetProxyHandler(obj)->getOwnPropertyNames(cx, wrapper, props);
 """
 

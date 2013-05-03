@@ -61,7 +61,7 @@ public:
 protected:
   // Append the property names in "names" that don't live on our proto
   // chain to "props"
-  bool AppendNamedPropertyIds(JSContext* cx, JSObject* proxy,
+  bool AppendNamedPropertyIds(JSContext* cx, JS::Handle<JSObject*> proxy,
                               nsTArray<nsString>& names,
                               JS::AutoIdVector& props);
 };
