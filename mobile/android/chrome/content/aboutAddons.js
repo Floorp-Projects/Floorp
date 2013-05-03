@@ -52,7 +52,8 @@ var ContextMenus = {
       document.getElementById("contextmenu-uninstall").removeAttribute("hidden");
     }
 
-    if (this.target.getAttribute("isDisabled") != "true") {
+    let enabled = this.target.getAttribute("isDisabled") != "true";
+    if (enabled) {
       document.getElementById("contextmenu-enable").setAttribute("hidden", "true");
       document.getElementById("contextmenu-disable").removeAttribute("hidden");
     } else {
@@ -60,7 +61,8 @@ var ContextMenus = {
       document.getElementById("contextmenu-disable").setAttribute("hidden", "true");
     }
 
-    if (addon.type == "search") {
+    // Only show the "Set as Default" menuitem for enabled non-default search engines.
+    if (addon.type == "search" && enabled && addon.id != Services.search.defaultEngine.name) {
       document.getElementById("contextmenu-default").removeAttribute("hidden");
     } else {
       document.getElementById("contextmenu-default").setAttribute("hidden", "true");

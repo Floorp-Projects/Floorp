@@ -18,7 +18,8 @@
                  curpos="0"
                  maxpos="600"
                  pageincrement="400"
-                 width="500"/>
+                 width="500"
+                 style="margin:0"/>
   </hbox>
   
   <!-- test code goes here -->

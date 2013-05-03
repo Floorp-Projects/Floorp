@@ -20,7 +20,7 @@ interface nsIDOMValidityState;
   * http://www.whatwg.org/specs/web-apps/current-work/
   */
 
-[scriptable, uuid(79474f55-a561-44d6-a80f-8e57dba634dd)]
+[scriptable, uuid(d57537ed-39d0-46ea-8516-0ce0a5bfb805)]
 interface nsIDOMHTMLInputElement : nsIDOMHTMLElement
 {
            attribute DOMString             accept;
@@ -69,7 +69,9 @@ interface nsIDOMHTMLInputElement : nsIDOMHTMLElement
            attribute DOMString             defaultValue;
            attribute DOMString             value;
            attribute double                valueAsNumber;
-  [implicit_jscontext] attribute jsval     valueAsDate;
+          // valustAsDate is only supported via WebIDL, because it's intimately
+          // tied to JS Date objects and xpidl support for that sort of thing is
+          // terrible.
 
   [optional_argc] void stepDown([optional] in long n);
   [optional_argc] void stepUp([optional] in long n);

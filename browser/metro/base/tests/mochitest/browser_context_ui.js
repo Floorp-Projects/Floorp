@@ -82,7 +82,7 @@ gTests.push({
     is(edit.selectionStart, 0, "Location field is selected");
     is(edit.selectionEnd, edit.value.length, "Location field is selected");
 
-    Browser.closeTab(tab);
+    Browser.closeTab(tab, { forceClose: true });
   }
 });
 

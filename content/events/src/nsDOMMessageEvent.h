@@ -26,7 +26,7 @@ public:
   nsDOMMessageEvent(mozilla::dom::EventTarget* aOwner,
                     nsPresContext* aPresContext, nsEvent* aEvent);
   ~nsDOMMessageEvent();
-                     
+
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(nsDOMMessageEvent,
                                                          nsDOMEvent)
@@ -42,12 +42,7 @@ public:
     return mozilla::dom::MessageEventBinding::Wrap(aCx, aScope, this);
   }
 
-  JS::Value GetData(JSContext* aCx, mozilla::ErrorResult& aRv)
-  {
-    JS::Value data;
-    aRv = GetData(aCx, &data);
-    return data;
-  }
+  JS::Value GetData(JSContext* aCx, mozilla::ErrorResult& aRv);
 
   already_AddRefed<nsIDOMWindow> GetSource()
   {

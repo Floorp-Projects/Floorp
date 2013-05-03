@@ -168,18 +168,18 @@ skip-if(B2G) == 192767-26.xul 192767-36.xul
 skip-if(B2G) == 192767-27.xul 192767-37.xul
 != 192767-01.xul 192767-21.xul
 != 192767-02.xul 192767-22.xul
-fails-if(Android) != 192767-03.xul 192767-23.xul
+skip-if(B2G) fails-if(Android) != 192767-03.xul 192767-23.xul
 != 192767-04.xul 192767-24.xul
 != 192767-05.xul 192767-25.xul
-fails-if(Android) != 192767-06.xul 192767-26.xul
-fails-if(Android) != 192767-07.xul 192767-27.xul
+skip-if(B2G) fails-if(Android) != 192767-06.xul 192767-26.xul
+skip-if(B2G) fails-if(Android) != 192767-07.xul 192767-27.xul
 != 192767-11.xul 192767-31.xul
 != 192767-12.xul 192767-32.xul
-fails-if(Android) != 192767-13.xul 192767-33.xul
+skip-if(B2G) fails-if(Android) != 192767-13.xul 192767-33.xul
 != 192767-14.xul 192767-34.xul
 != 192767-15.xul 192767-35.xul
-fails-if(Android) != 192767-16.xul 192767-36.xul
-fails-if(Android) != 192767-17.xul 192767-37.xul
+skip-if(B2G) fails-if(Android) != 192767-16.xul 192767-36.xul
+skip-if(B2G) fails-if(Android) != 192767-17.xul 192767-37.xul
 != 200774-1.html about:blank
 == 201215-1.html 201215-1-ref.html
 == 201293-1a.html 201293-1-ref.html

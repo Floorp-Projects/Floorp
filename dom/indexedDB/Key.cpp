@@ -133,7 +133,7 @@ Key::EncodeJSValInternal(JSContext* aCx, const jsval aVal,
   }
 
   if (!JSVAL_IS_PRIMITIVE(aVal)) {
-    JSObject* obj = JSVAL_TO_OBJECT(aVal);
+    JS::Rooted<JSObject*> obj(aCx, JSVAL_TO_OBJECT(aVal));
     if (JS_IsArrayObject(aCx, obj)) {
       aTypeOffset += eMaxType;
 
@@ -151,8 +151,8 @@ Key::EncodeJSValInternal(JSContext* aCx, const jsval aVal,
       }
 
       for (uint32_t index = 0; index < length; index++) {
-        jsval val;
-        if (!JS_GetElement(aCx, obj, index, &val)) {
+        JS::Rooted<JS::Value> val(aCx);
+        if (!JS_GetElement(aCx, obj, index, val.address())) {
           return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
         }
 
@@ -191,7 +191,7 @@ Key::DecodeJSValInternal(const unsigned char*& aPos, const unsigned char* aEnd,
   NS_ENSURE_TRUE(aRecursionDepth < MaxRecursionDepth, NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
 
   if (*aPos - aTypeOffset >= eArray) {
-    JSObject* array = JS_NewArrayObject(aCx, 0, nullptr);
+    JS::Rooted<JSObject*> array(aCx, JS_NewArrayObject(aCx, 0, nullptr));
     if (!array) {
       NS_WARNING("Failed to make array!");
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
@@ -206,14 +206,14 @@ Key::DecodeJSValInternal(const unsigned char*& aPos, const unsigned char* aEnd,
 
     uint32_t index = 0;
     while (aPos < aEnd && *aPos - aTypeOffset != eTerminator) {
-      jsval val;
+      JS::Rooted<JS::Value> val(aCx);
       nsresult rv = DecodeJSValInternal(aPos, aEnd, aCx, aTypeOffset,
-                                        &val, aRecursionDepth + 1);
+                                        val.address(), aRecursionDepth + 1);
       NS_ENSURE_SUCCESS(rv, rv);
 
       aTypeOffset = 0;
 
-      if (!JS_SetElement(aCx, array, index++, &val)) {
+      if (!JS_SetElement(aCx, array, index++, val.address())) {
         NS_WARNING("Failed to set array element!");
         return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
       }
