@@ -4704,10 +4704,8 @@ nsLayoutUtils::SurfaceFromElement(HTMLVideoElement* aElement,
     return result;
 
   ImageContainer *container = aElement->GetImageContainer();
-  if (!container) {
-    result.mIsStillLoading = true;
+  if (!container)
     return result;
-  }
 
   gfxIntSize size;
   nsRefPtr<gfxASurface> surf = container->GetCurrentAsSurface(&size);
