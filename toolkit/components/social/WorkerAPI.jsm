@@ -58,12 +58,14 @@ WorkerAPI.prototype = {
     },
     "social.user-profile": function (data) {
       this._provider.updateUserProfile(data);
+      // get the info we need for 'recommend' support.
+      this._port.postMessage({topic: "social.user-recommend-prompt"});
     },
     "social.ambient-notification": function (data) {
       this._provider.setAmbientNotification(data);
     },
-    "social.page-mark-config": function(data) {
-      this._provider.pageMarkInfo = data;
+    "social.user-recommend-prompt-response": function(data) {
+      this._provider.recommendInfo = data;
     },
     "social.cookies-get": function(data) {
       let document = this._port._window.document;

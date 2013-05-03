@@ -292,32 +292,6 @@ nsContextMenu.prototype = {
                   this.onTextInput && top.gBidiUI);
     this.showItem("context-bidi-page-direction-toggle",
                   !this.onTextInput && top.gBidiUI);
-    
-    // SocialMarks
-    let marksEnabled = SocialUI.enabled && Social.provider.pageMarkInfo;
-    let enablePageMark = marksEnabled && !(this.isContentSelected ||
-                            this.onTextInput || this.onLink || this.onImage ||
-                            this.onVideo || this.onAudio || this.onSocial);
-    let enableLinkMark = marksEnabled && ((this.onLink && !this.onMailtoLink &&
-                                           !this.onSocial) || this.onPlainTextLink);
-    if (enablePageMark) {
-      Social.isURIMarked(gBrowser.currentURI, function(marked) {
-        let label = marked ? "social.unmarkpage.label" : "social.markpage.label";
-        let provider = Social.provider || Social.defaultProvider;
-        let menuLabel = gNavigatorBundle.getFormattedString(label, [provider.name]);
-        this.setItemAttr("context-markpage", "label", menuLabel);
-      }.bind(this));
-    }
-    this.showItem("context-markpage", enablePageMark);
-    if (enableLinkMark) {
-      Social.isURIMarked(this.linkURI, function(marked) {
-        let label = marked ? "social.unmarklink.label" : "social.marklink.label";
-        let provider = Social.provider || Social.defaultProvider;
-        let menuLabel = gNavigatorBundle.getFormattedString(label, [provider.name]);
-        this.setItemAttr("context-marklink", "label", menuLabel);
-      }.bind(this));
-    }
-    this.showItem("context-marklink", enableLinkMark);
   },
 
   initSpellingItems: function() {
@@ -1491,11 +1465,6 @@ nsContextMenu.prototype = {
                                        , itemId: itemId
                                        }, window.top);
     }
-  },
-
-  markLink: function CM_markLink() {
-    // send link to social
-    SocialMark.toggleURIMark(this.linkURI);
   },
 
   savePageAs: function CM_savePageAs() {
