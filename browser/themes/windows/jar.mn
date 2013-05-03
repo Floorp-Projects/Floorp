@@ -20,10 +20,13 @@ browser.jar:
         skin/classic/browser/aboutSyncTabs.css
 #endif
         skin/classic/browser/actionicon-tab.png
+        skin/classic/browser/appmenu.png
         skin/classic/browser/appmenu-icons.png
         skin/classic/browser/appmenu-dropmarker.png
 *       skin/classic/browser/browser.css
+*       skin/classic/browser/browser-lightweightTheme.css
         skin/classic/browser/click-to-play-warning-stripes.png
+        skin/classic/browser/customizableui/customization-mode-background.jpg (customizableui/customization-mode-background.jpg)
 *       skin/classic/browser/engineManager.css
         skin/classic/browser/Geolocation-16.png
         skin/classic/browser/Geolocation-64.png
@@ -72,6 +75,7 @@ browser.jar:
         skin/classic/browser/webRTC-shareDevice-16.png
         skin/classic/browser/webRTC-shareDevice-64.png
         skin/classic/browser/webRTC-sharingDevice-16.png
+*       skin/classic/browser/customizableui/panelUIOverlay.css       (customizableui/panelUIOverlay.css)
         skin/classic/browser/downloads/buttons.png                   (downloads/buttons.png)
         skin/classic/browser/downloads/download-glow.png             (downloads/download-glow.png)
         skin/classic/browser/downloads/download-notification-finish.png (downloads/download-notification-finish.png)
@@ -129,10 +133,19 @@ browser.jar:
         skin/classic/browser/tabbrowser/connecting.png               (tabbrowser/connecting.png)
         skin/classic/browser/tabbrowser/loading.png                  (tabbrowser/loading.png)
         skin/classic/browser/tabbrowser/tab.png                      (tabbrowser/tab.png)
+        skin/classic/browser/tabbrowser/tab-active-middle.png        (tabbrowser/tab-active-middle.png)
+        skin/classic/browser/tabbrowser/tab-active-middle-lwtheme.png (tabbrowser/tab-active-middle-lwtheme.png)
         skin/classic/browser/tabbrowser/tab-arrow-left.png           (tabbrowser/tab-arrow-left.png)
         skin/classic/browser/tabbrowser/tab-arrow-left-inverted.png  (tabbrowser/tab-arrow-left-inverted.png)
+        skin/classic/browser/tabbrowser/tab-background-start.png     (tabbrowser/tab-background-start.png)
+        skin/classic/browser/tabbrowser/tab-background-middle.png    (tabbrowser/tab-background-middle.png)
+        skin/classic/browser/tabbrowser/tab-background-end.png       (tabbrowser/tab-background-end.png)
         skin/classic/browser/tabbrowser/tab-overflow-border.png      (tabbrowser/tab-overflow-border.png)
+        skin/classic/browser/tabbrowser/tab-stroke-end.png           (tabbrowser/tab-stroke-end.png)
+        skin/classic/browser/tabbrowser/tab-stroke-start.png         (tabbrowser/tab-stroke-start.png)
         skin/classic/browser/tabbrowser/tabDragIndicator.png         (tabbrowser/tabDragIndicator.png)
+        skin/classic/browser/tabbrowser/tab-separator-luna-blue.png  (tabbrowser/tab-separator-luna-blue.png)
+        skin/classic/browser/tabbrowser/tab-separator.png            (tabbrowser/tab-separator.png)
         skin/classic/browser/tabview/close.png                      (tabview/close.png)
         skin/classic/browser/tabview/edit-light.png                 (tabview/edit-light.png)
         skin/classic/browser/tabview/grain.png                      (tabview/grain.png)
@@ -265,10 +278,13 @@ browser.jar:
         skin/classic/aero/browser/aboutSyncTabs.css
 #endif
         skin/classic/aero/browser/actionicon-tab.png
+        skin/classic/aero/browser/appmenu.png
         skin/classic/aero/browser/appmenu-dropmarker.png
         skin/classic/aero/browser/appmenu-icons.png
 *       skin/classic/aero/browser/browser.css                        (browser-aero.css)
+*       skin/classic/aero/browser/browser-lightweightTheme.css
         skin/classic/aero/browser/click-to-play-warning-stripes.png
+        skin/classic/aero/browser/customizableui/customization-mode-background.jpg (customizableui/customization-mode-background.jpg)
 *       skin/classic/aero/browser/engineManager.css
         skin/classic/aero/browser/Geolocation-16.png
         skin/classic/aero/browser/Geolocation-64.png
@@ -317,6 +333,7 @@ browser.jar:
         skin/classic/aero/browser/webRTC-shareDevice-16.png
         skin/classic/aero/browser/webRTC-shareDevice-64.png
         skin/classic/aero/browser/webRTC-sharingDevice-16.png
+*       skin/classic/aero/browser/customizableui/panelUIOverlay.css  (customizableui/panelUIOverlay.css)
         skin/classic/aero/browser/downloads/buttons.png              (downloads/buttons-aero.png)
         skin/classic/aero/browser/downloads/download-glow.png        (downloads/download-glow.png)
         skin/classic/aero/browser/downloads/download-notification-finish.png (downloads/download-notification-finish.png)
@@ -374,10 +391,18 @@ browser.jar:
         skin/classic/aero/browser/tabbrowser/connecting.png          (tabbrowser/connecting.png)
         skin/classic/aero/browser/tabbrowser/loading.png             (tabbrowser/loading.png)
         skin/classic/aero/browser/tabbrowser/tab.png                 (tabbrowser/tab.png)
+        skin/classic/aero/browser/tabbrowser/tab-active-middle.png   (tabbrowser/tab-active-middle.png)
+        skin/classic/aero/browser/tabbrowser/tab-active-middle-lwtheme.png (tabbrowser/tab-active-middle-lwtheme.png)
         skin/classic/aero/browser/tabbrowser/tab-arrow-left.png      (tabbrowser/tab-arrow-left.png)
         skin/classic/aero/browser/tabbrowser/tab-arrow-left-inverted.png (tabbrowser/tab-arrow-left-inverted.png)
+        skin/classic/aero/browser/tabbrowser/tab-background-start.png    (tabbrowser/tab-background-start.png)
+        skin/classic/aero/browser/tabbrowser/tab-background-middle.png   (tabbrowser/tab-background-middle.png)
+        skin/classic/aero/browser/tabbrowser/tab-background-end.png      (tabbrowser/tab-background-end.png)
         skin/classic/aero/browser/tabbrowser/tab-overflow-border.png (tabbrowser/tab-overflow-border.png)
+        skin/classic/aero/browser/tabbrowser/tab-stroke-end.png      (tabbrowser/tab-stroke-end.png)
+        skin/classic/aero/browser/tabbrowser/tab-stroke-start.png    (tabbrowser/tab-stroke-start.png)
         skin/classic/aero/browser/tabbrowser/tabDragIndicator.png    (tabbrowser/tabDragIndicator.png)
+        skin/classic/aero/browser/tabbrowser/tab-separator.png       (tabbrowser/tab-separator-aero.png)
         skin/classic/aero/browser/tabview/close.png                  (tabview/close.png)
         skin/classic/aero/browser/tabview/edit-light.png             (tabview/edit-light.png)
         skin/classic/aero/browser/tabview/grain.png                  (tabview/grain.png)

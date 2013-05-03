@@ -13,6 +13,14 @@ browser[remote="true"] {
   -moz-binding: url("chrome://global/content/bindings/remote-browser.xml#remote-browser");
 }
 
+toolbar[customizable="true"] {
+  -moz-binding: url("chrome://browser/content/customizableui/toolbar.xml#toolbar");
+}
+
+#toolbar-menubar[autohide="true"] {
+  -moz-binding: url("chrome://browser/content/customizableui/toolbar.xml#toolbar-menubar-autohide");
+}
+
 tabbrowser {
   -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser");
 }
@@ -39,11 +47,11 @@ tabbrowser {
 
 .tabbrowser-tab:not([pinned]) {
   -moz-box-flex: 100;
-  max-width: 250px;
+  max-width: 180px;
   min-width: 100px;
   width: 0;
   transition: min-width 200ms ease-out,
-              max-width 250ms ease-out,
+              max-width 230ms ease-out,
               opacity 50ms ease-out 20ms /* hide the tab for the first 20ms of the max-width transition */;
 }
 
@@ -52,8 +60,8 @@ tabbrowser {
   min-width: 0.1px;
   opacity: 0 !important;
   transition: min-width 200ms ease-out,
-              max-width 250ms ease-out,
-              opacity 50ms ease-out 180ms /* hide the tab for the last 20ms of the max-width transition */;
+              max-width 230ms ease-out,
+              opacity 50ms ease-out 160ms /* hide the tab for the last 20ms of the max-width transition */;
 }
 
 .tab-throbber:not([fadein]):not([pinned]),
@@ -121,6 +129,23 @@ toolbar[printpreview="true"] {
 #main-window[tabsintitlebar] #titlebar-buttonbox {
   position: relative;
 }
+
+#titlebar-buttonbox {
+  -moz-appearance: -moz-window-button-box;
+}
+
+%ifdef XP_MACOSX
+#titlebar-fullscreen-button {
+  -moz-appearance: -moz-mac-fullscreen-button;
+}
+%endif
+
+%ifdef XP_WIN
+#main-window[sizemode="maximized"] #titlebar-buttonbox {
+  -moz-appearance: -moz-window-button-box-maximized;
+}
+%endif
+
 %endif
 
 .bookmarks-toolbar-customize,
@@ -140,11 +165,10 @@ toolbar[printpreview="true"] {
 #urlbar-container:not([combined]) > #urlbar > toolbarbutton,
 #urlbar-container[combined] + #reload-button + #stop-button,
 #urlbar-container[combined] + #reload-button,
-toolbar:not([mode="icons"]) > #urlbar-container > #urlbar > toolbarbutton,
-toolbar[mode="icons"] > #urlbar-container > #urlbar > #urlbar-reload-button:not([displaystop]) + #urlbar-stop-button,
-toolbar[mode="icons"] > #urlbar-container > #urlbar > #urlbar-reload-button[displaystop],
-toolbar[mode="icons"] > #reload-button:not([displaystop]) + #stop-button,
-toolbar[mode="icons"] > #reload-button[displaystop] {
+#urlbar-reload-button:not([displaystop]) + #urlbar-stop-button,
+#urlbar-reload-button[displaystop],
+#reload-button:not([displaystop]) + #stop-button,
+#reload-button[displaystop] {
   visibility: collapse;
 }
 
@@ -437,14 +461,6 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
   word-wrap: break-word;
   /* We must specify a min-width, otherwise word-wrap:break-word doesn't work. Bug 630864. */
   min-width: 1px;
-}
-
-#nav-bar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-icon {
-  display: -moz-box;
-}
-
-#nav-bar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
-  display: none;
 }
 
 /* ::::: Ctrl-Tab Panel ::::: */
