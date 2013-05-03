@@ -218,6 +218,26 @@ XPCOMUtils.defineLazyGetter(this, "gBuiltInWidgets", function() {
         win.saveDocument(win.content.document);
       }
     }
+  }, {
+    id: "find-button",
+    name: "Find",
+    shortcut: "Ctrl+F",
+    description: "Find in this page",
+    defaultArea: CustomizableUI.AREA_PANEL,
+    allowedAreas: [CustomizableUI.AREA_PANEL],
+    icons: {
+      "16": "chrome://branding/content/icon16.png",
+      "32": "chrome://branding/content/icon48.png",
+      "48": "chrome://branding/content/icon48.png"
+    },
+    onCommand: function(aEvent) {
+      let win = aEvent.target &&
+                aEvent.target.ownerDocument &&
+                aEvent.target.ownerDocument.defaultView;
+      if (win && win.gFindBar) {
+        win.gFindBar.onFindCommand();
+      }
+    }
   }];
 });
 
@@ -294,6 +314,7 @@ let gDefaultPlacements = new Map([
     "print-button",
     "history-button",
     "fullscreen-button",
+    "find-button",
     "history-panelmenu",
     "bookmarks-panelmenu",
   ]]
