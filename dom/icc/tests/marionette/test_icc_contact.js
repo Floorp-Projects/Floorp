@@ -5,17 +5,36 @@ MARIONETTE_TIMEOUT = 30000;
 
 SpecialPowers.addPermission("mobileconnection", true, document);
 
-// TODO: bug 847741 move getSimContacts to IccManager
-SpecialPowers.addPermission("contacts-read", true, document);
-SpecialPowers.addPermission("contacts-write", true, document);
-SpecialPowers.addPermission("contacts-create", true, document);
-
 let icc = navigator.mozMobileConnection.icc;
 ok(icc instanceof MozIccManager, "icc is instanceof " + icc.constructor);
 
-// TODO: bug 847741 move getSimContacts to IccManager
-let mozContacts = window.navigator.mozContacts;
-ok(mozContacts);
+function testImportSimContacts() {
+  let request = icc.readContacts("adn");
+  request.onsuccess = function onsuccess() {
+    let simContacts = request.result;
+
+    is(Array.isArray(simContacts), true);
+
+    is(simContacts[0].name, "Mozilla");
+    is(simContacts[0].tel[0].value, "15555218201");
+
+    is(simContacts[1].name, "Saßê黃");
+    is(simContacts[1].tel[0].value, "15555218202");
+
+    is(simContacts[2].name, "Fire 火");
+    is(simContacts[2].tel[0].value, "15555218203");
+
+    is(simContacts[3].name, "Huang 黃");
+    is(simContacts[3].tel[0].value, "15555218204");
+
+    runNextTest();
+  };
+
+  request.onerror = function onerror() {
+    ok(false, "Cannot get Sim Contacts");
+    runNextTest();
+  };
+};
 
 function testAddIccContact() {
   let contact = new mozContact();
@@ -25,15 +44,12 @@ function testAddIccContact() {
     tel: [{value: "0912345678"}]
   });
 
-  // TODO: 'ADN' should change to use lower case
-  let updateRequest = icc.updateContact("ADN", contact);
+  let updateRequest = icc.updateContact("adn", contact);
 
   updateRequest.onsuccess = function onsuccess() {
     // Get ICC contact for checking new contact
 
-    // TODO: 1. bug 847741 move getSimContacts to IccManager
-    //       2. 'ADN' should change to use lower case
-    let getRequest = mozContacts.getSimContacts("ADN");
+    let getRequest = icc.readContacts("adn");
 
     getRequest.onsuccess = function onsuccess() {
       let simContacts = getRequest.result;
@@ -60,6 +76,7 @@ function testAddIccContact() {
 };
 
 let tests = [
+  testImportSimContacts,
   testAddIccContact,
 ];
 
@@ -75,12 +92,6 @@ function runNextTest() {
 
 function cleanUp() {
   SpecialPowers.removePermission("mobileconnection", document);
-
-  // TODO: bug 847741 move getSimContacts to IccManager
-  SpecialPowers.removePermission("contacts-read", document);
-  SpecialPowers.removePermission("contacts-write", document);
-  SpecialPowers.removePermission("contacts-create", document);
-
   finish();
 }
 
