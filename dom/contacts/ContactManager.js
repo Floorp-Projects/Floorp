@@ -471,6 +471,9 @@ ContactManager.prototype = {
           let contact = result.shift();
           this._pushArray(data.cachedContacts, result);
           this.nextTick(this._fireSuccessOrDone.bind(this, data.cursor, contact));
+          if (!contact) {
+            this.removeRequest(msg.cursorId);
+          }
         } else {
           if (DEBUG) debug("cursor not waiting, saving");
           this._pushArray(data.cachedContacts, result);
@@ -680,7 +683,9 @@ ContactManager.prototype = {
       if (DEBUG) debug("contact in cache");
       let contact = data.cachedContacts.shift();
       this.nextTick(this._fireSuccessOrDone.bind(this, data.cursor, contact));
-      if (data.cachedContacts.length < CONTACTS_SENDMORE_MINIMUM) {
+      if (!contact) {
+        this.removeRequest(aCursorId);
+      } else if (data.cachedContacts.length === CONTACTS_SENDMORE_MINIMUM) {
         cpmm.sendAsyncMessage("Contacts:GetAll:SendNow", { cursorId: aCursorId });
       }
     } else {
