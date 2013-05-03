@@ -233,11 +233,10 @@ TestRunner._makeIframe = function (url, retry) {
     if (url != "about:blank" &&
         (("hasFocus" in document && !document.hasFocus()) ||
          ("activeElement" in document && document.activeElement != iframe))) {
-        // typically calling ourselves from setTimeout is sufficient
-        // but we'll try focus() just in case that's needed
 
         contentAsyncEvent("Focus");
         window.focus();
+        SpecialPowers.focus();
         iframe.focus();
         if (retry < 3) {
             window.setTimeout('TestRunner._makeIframe("'+url+'", '+(retry+1)+')', 1000);
@@ -282,8 +281,6 @@ TestRunner.runTests = function (/*url...*/) {
     TestRunner._urls = flattenArguments(arguments);
     $('testframe').src="";
     TestRunner._checkForHangs();
-    window.focus();
-    $('testframe').focus();
     TestRunner.runNextTest();
 };
 
@@ -301,8 +298,6 @@ TestRunner.resetTests = function(listURLs) {
   TestRunner._urls = listURLs;
   $('testframe').src="";
   TestRunner._checkForHangs();
-  window.focus();
-  $('testframe').focus();
   TestRunner.runNextTest();
 }
 
