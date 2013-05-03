@@ -35,14 +35,10 @@ MOCHITEST_FILES := \
   test_audioBufferSourceNodeNullBuffer.html \
   test_badConnect.html \
   test_biquadFilterNode.html \
-  test_delayNode.html \
-  test_delayNodeWithGain.html \
   test_decodeAudioData.html \
   test_dynamicsCompressorNode.html \
-  test_gainNode.html \
   test_mixingRules.html \
   test_pannerNode.html \
-  test_scriptProcessorNode.html \
   test_scriptProcessorNodeChannelCount.html \
   test_singleSourceDest.html \
   ting.ogg \
@@ -64,6 +60,10 @@ ifneq ($(OS_TARGET),Android)
 MOCHITEST_FILES += \
   test_bug867174.html \
   test_currentTime.html \
+  test_delayNode.html \
+  test_delayNodeWithGain.html \
+  test_gainNode.html \
+  test_scriptProcessorNode.html \
   $(NULL)
 endif
 
