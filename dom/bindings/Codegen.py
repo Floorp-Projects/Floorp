@@ -3222,20 +3222,19 @@ for (uint32_t i = 0; i < length; ++i) {
     if type.isAny():
         assert not isEnforceRange and not isClamp
 
-        if isMember == "Dictionary":
-            declType = "RootedJSValue"
-            templateBody = ("if (!${declName}.SetValue(cx, ${val})) {\n"
-                            "  return false;\n"
-                            "}")
-            nullHandling = "${declName}.SetValue(nullptr, JS::NullValue())"
-        elif isMember and isMember != "Variadic":
-            # Variadic arguments are rooted by being in argv
+        if isMember == "Dictionary" or not isMember:
+            declType = "LazyRootedValue"
+            templateBody = "${declName}.construct(cx, ${val});"
+            nullHandling = "${declName}.construct(cx, JS::NullValue());"
+        elif isMember != "Variadic":
             raise TypeError("Can't handle sequence member 'any'; need to sort "
                             "out rooting issues")
         else:
+            # Variadic arguments are rooted by being in argv
             declType = "JS::Value"
             templateBody = "${declName} = ${val};"
             nullHandling = "${declName} = JS::NullValue()"
+
         templateBody = handleDefaultNull(templateBody, nullHandling)
         return (templateBody, CGGeneric(declType), None, isOptional)
 
@@ -8115,7 +8114,7 @@ class CGNativeMember(ClassMethod):
             args.insert(0, Argument("const %s&" % globalObjectType, "global"))
         return args
 
-    def doGetArgType(self, type, optional, isMember):
+    def doGetArgType(self, type, optional, variadic, isMember):
         """
         The main work of getArgType.  Returns a string type decl, whether this
         is a const ref, as well as whether the type should be wrapped in
@@ -8204,7 +8203,12 @@ class CGNativeMember(ClassMethod):
             return declType % name, False, False
 
         if type.isAny():
-            return "JS::Value", False, False
+            # Don't do the rooting stuff for variadics for now
+            if optional and not variadic:
+                declType = "LazyRootedValue"
+            else:
+                declType = "JS::Value"
+            return declType, False, False
 
         if type.isObject():
             if optional:
@@ -8235,7 +8239,7 @@ class CGNativeMember(ClassMethod):
         Get the type of an argument declaration.  Returns the type CGThing, and
         whether this should be a const ref.
         """
-        (decl, ref, handleNullable) = self.doGetArgType(type, optional,
+        (decl, ref, handleNullable) = self.doGetArgType(type, optional, variadic,
                                                         isMember or variadic)
         decl = CGGeneric(decl)
         if handleNullable and type.nullable():
