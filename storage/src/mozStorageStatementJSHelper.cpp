@@ -108,8 +108,8 @@ StatementJSHelper::getRow(Statement *aStatement,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  JSObject *obj = nullptr;
-  rv = aStatement->mStatementRowHolder->GetJSObject(&obj);
+  JS::Rooted<JSObject*> obj(aCtx);
+  rv = aStatement->mStatementRowHolder->GetJSObject(obj.address());
   NS_ENSURE_SUCCESS(rv, rv);
 
   *_row = OBJECT_TO_JSVAL(obj);
@@ -147,8 +147,8 @@ StatementJSHelper::getParams(Statement *aStatement,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  JSObject *obj = nullptr;
-  rv = aStatement->mStatementParamsHolder->GetJSObject(&obj);
+  JS::Rooted<JSObject*> obj(aCtx);
+  rv = aStatement->mStatementParamsHolder->GetJSObject(obj.address());
   NS_ENSURE_SUCCESS(rv, rv);
 
   *_params = OBJECT_TO_JSVAL(obj);
