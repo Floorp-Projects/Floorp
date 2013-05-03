@@ -482,6 +482,9 @@ PannerNode::FindConnectedSources()
   mSources.Clear();
   std::set<AudioNode*> cycleSet;
   FindConnectedSources(this, mSources, cycleSet);
+  for (unsigned i = 0; i < mSources.Length(); i++) {
+    mSources[i]->RegisterPannerNode(this);
+  }
 }
 
 void
