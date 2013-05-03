@@ -2336,6 +2336,10 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   list-style-image: url(chrome://mozapps/skin/plugins/pluginBlocked-64.png);
 }
 
+.popup-notification-icon[popupid="plugins-not-found"] {
+  list-style-image: url(chrome://browser/skin/pluginInstall-64.png);
+}
+
 .popup-notification-icon[popupid="web-notifications"] {
   list-style-image: url(chrome://browser/skin/notification-64.png);
 }
@@ -2466,6 +2470,10 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 
 #blocked-plugins-notification-icon {
   list-style-image: url(chrome://mozapps/skin/plugins/notifyPluginBlocked.png);
+}
+
+#plugin-install-notification-icon {
+  list-style-image: url(chrome://browser/skin/pluginInstall-16.png);
 }
 
 #notification-popup-box[hidden] {
