@@ -122,20 +122,6 @@ typedef struct _nsCocoaWindowList {
 
 @end
 
-// Present since at least OS X 10.5 in NSFrameView or one of its subclasses.
-@interface NSObject (NSFrameViewMethods)
-- (NSButton*)closeButton;
-- (NSButton*)zoomButton;
-- (NSButton*)minimizeButton;
-- (NSButton*)fullScreenButton;
-- (void)initTitleCell:(id)cell;
-@end
-
-@interface NSView (MozFrameViewMethods)
-- (int32_t)buttonBoxDisplayPixelsWidth;
-- (int32_t)fullScreenButtonDisplayPixelsWidth;
-@end
-
 @interface PopupWindow : BaseWindow
 {
 @private
