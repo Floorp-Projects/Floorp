@@ -564,6 +564,19 @@ class AutoIdVector : public AutoVectorRooter<jsid>
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
+class AutoObjectVector : public AutoVectorRooter<JSObject *>
+{
+  public:
+    explicit AutoObjectVector(JSContext *cx
+                              MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+        : AutoVectorRooter<JSObject *>(cx, OBJVECTOR)
+    {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
 class AutoScriptVector : public AutoVectorRooter<JSScript *>
 {
   public:
@@ -5021,6 +5034,7 @@ using JS::Latin1CharsZ;
 
 using JS::AutoIdVector;
 using JS::AutoValueVector;
+using JS::AutoObjectVector;
 using JS::AutoScriptVector;
 using JS::AutoIdArray;
 
