@@ -2650,6 +2650,11 @@ public:
     // the head of the jump list) is bound.
     bool nextJump(const JmpSrc& from, JmpSrc* next)
     {
+        // Sanity check - if the assembler has OOM'd, it will start overwriting
+        // its internal buffer and thus our links could be garbage.
+        if (oom())
+            return false;
+
         char* code = reinterpret_cast<char*>(m_formatter.data());
         int32_t offset = getInt32(code + from.m_offset);
         if (offset == -1)
