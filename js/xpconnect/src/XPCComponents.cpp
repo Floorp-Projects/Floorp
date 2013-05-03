@@ -218,7 +218,6 @@ nsXPCComponents_Interfaces::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
 
 nsXPCComponents_Interfaces::nsXPCComponents_Interfaces()
 {
-    XPTInterfaceInfoManager::GetSingleton()->GetScriptableInterfaces(mInterfaces);
 }
 
 nsXPCComponents_Interfaces::~nsXPCComponents_Interfaces()
@@ -259,6 +258,13 @@ nsXPCComponents_Interfaces::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
         case JSENUMERATE_INIT:
         case JSENUMERATE_INIT_ALL:
         {
+            // Lazily init the list of interfaces when someone tries to
+            // enumerate them.
+            if (mInterfaces.IsEmpty()) {
+                XPTInterfaceInfoManager::GetSingleton()->
+                    GetScriptableInterfaces(mInterfaces);
+            }
+
             *statep = JSVAL_ZERO;
             if (idp)
                 *idp = INT_TO_JSID(mInterfaces.Length());
@@ -500,7 +506,6 @@ nsXPCComponents_InterfacesByID::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
 
 nsXPCComponents_InterfacesByID::nsXPCComponents_InterfacesByID()
 {
-    XPTInterfaceInfoManager::GetSingleton()->GetScriptableInterfaces(mInterfaces);
 }
 
 nsXPCComponents_InterfacesByID::~nsXPCComponents_InterfacesByID()
@@ -539,6 +544,13 @@ nsXPCComponents_InterfacesByID::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
         case JSENUMERATE_INIT:
         case JSENUMERATE_INIT_ALL:
         {
+            // Lazily init the list of interfaces when someone tries to
+            // enumerate them.
+            if (mInterfaces.IsEmpty()) {
+                XPTInterfaceInfoManager::GetSingleton()->
+                    GetScriptableInterfaces(mInterfaces);
+            }
+
             *statep = JSVAL_ZERO;
             if (idp)
                 *idp = INT_TO_JSID(mInterfaces.Length());
