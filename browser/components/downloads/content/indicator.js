@@ -359,6 +359,11 @@ const DownloadsIndicatorView = {
       return;
     }
 
+    // No need to show visual notification if the panel is visible.
+    if (DownloadsPanel.isPanelShowing) {
+      return;
+    }
+
     function DIV_SEN_callback() {
       if (this._notificationTimeout) {
         clearTimeout(this._notificationTimeout);
