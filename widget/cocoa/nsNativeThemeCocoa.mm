@@ -358,36 +358,27 @@ static NSWindow* NativeWindowForFrame(nsIFrame* aFrame,
   return (NSWindow*)topLevelWidget->GetNativeData(NS_NATIVE_WINDOW);
 }
 
-static NSView* FrameViewForFrame(nsIFrame* aFrame)
+static int32_t WindowButtonsReservedWidth(nsIFrame* aFrame)
 {
   NSWindow* window = NativeWindowForFrame(aFrame);
-  return [[window contentView] superview];
-}
-
-static int32_t ButtonBoxDisplayPixelsWidth(nsIFrame* aFrame)
-{
-  int32_t retval = 60;  // Default value;
-  NSView *frameView = FrameViewForFrame(aFrame);
-  if ([frameView respondsToSelector:@selector(buttonBoxDisplayPixelsWidth)]) {
-    int32_t measuredWidth = [frameView buttonBoxDisplayPixelsWidth];
-    if (measuredWidth) {
-      retval = measuredWidth;
-    }
+  if (!window) {
+    return 61; // fallback value
   }
-  return retval;
-}
 
-static int32_t FullScreenButtonDisplayPixelsWidth(nsIFrame* aFrame)
-{
-  int32_t retval = 20;  // Default value;
-  NSView *frameView = FrameViewForFrame(aFrame);
-  if ([frameView respondsToSelector:@selector(fullScreenButtonDisplayPixelsWidth)]) {
-    int32_t measuredWidth = [frameView fullScreenButtonDisplayPixelsWidth];
-    if (measuredWidth) {
-      retval = measuredWidth;
-    }
+  NSRect buttonBox = NSZeroRect;
+  NSButton* closeButton = [window standardWindowButton:NSWindowCloseButton];
+  if (closeButton) {
+    buttonBox = NSUnionRect(buttonBox, [closeButton frame]);
   }
-  return retval;
+  NSButton* minimizeButton = [window standardWindowButton:NSWindowMiniaturizeButton];
+  if (minimizeButton) {
+    buttonBox = NSUnionRect(buttonBox, [minimizeButton frame]);
+  }
+  NSButton* zoomButton = [window standardWindowButton:NSWindowZoomButton];
+  if (zoomButton) {
+    buttonBox = NSUnionRect(buttonBox, [zoomButton frame]);
+  }
+  return int32_t(NSMaxX(buttonBox));
 }
 
 static BOOL FrameIsInActiveWindow(nsIFrame* aFrame)
@@ -2768,12 +2759,14 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsRenderingContext* aContext,
     }
 
     case NS_THEME_WINDOW_BUTTON_BOX: {
-      aResult->SizeTo(ButtonBoxDisplayPixelsWidth(aFrame), 0);
+      aResult->SizeTo(WindowButtonsReservedWidth(aFrame), 0);
       break;
     }
 
     case NS_THEME_MOZ_MAC_FULLSCREEN_BUTTON: {
-      aResult->SizeTo(FullScreenButtonDisplayPixelsWidth(aFrame), 0);
+      // This value is hardcoded because it's needed before we can measure the
+      // position and size of the fullscreen button.
+      aResult->SizeTo(20, 0);
       break;
     }
 
