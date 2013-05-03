@@ -2537,6 +2537,33 @@ def getJSToNativeConversionTemplate(type, descriptorProvider, failureCode=None,
 
         return templateBody
 
+    # A helper function for converting things that look like JSObject*
+    # when nullable and JSObject& when not nullable.
+    def handleJSObjectType(type, isMember, failureCode):
+        if type.nullable():
+            declType = CGGeneric("LazyRootedObject")
+        else:
+            declType = CGGeneric("NonNullLazyRootedObject")
+
+        # If cx is null then LazyRootedObject will not be
+        # constructed and behave as nullptr.
+        templateBody = "${declName}.construct(cx, &${val}.toObject());"
+
+        # Cast of nullptr to (JSObject*) is required for template deduction.
+        setToNullCode = "${declName}.construct(cx, static_cast<JSObject*>(nullptr));"
+
+        if isMember == "Dictionary":
+            # If cx is null then LazyRootedObject will not be
+            # constructed and behave as nullptr.
+            templateBody = CGIfWrapper(CGGeneric(templateBody), "cx").define()
+            setToNullCode = CGIfWrapper(CGGeneric(setToNullCode), "cx").define()
+
+        template = wrapObjectTemplate(templateBody, type, setToNullCode,
+                                      failureCode)
+
+        return (template, declType, None, isOptional)
+
+
     assert not (isEnforceRange and isClamp) # These are mutually exclusive
 
     if type.isArray():
@@ -2717,7 +2744,7 @@ for (uint32_t i = 0; i < length; ++i) {
 
         objectMemberTypes = filter(lambda t: t.isObject(), memberTypes)
         if len(objectMemberTypes) > 0:
-            object = CGGeneric("%s.SetToObject(&argObj);\n"
+            object = CGGeneric("%s.SetToObject(cx, &argObj);\n"
                                "done = true;" % unionArgumentObj)
         else:
             object = None
@@ -2845,19 +2872,15 @@ for (uint32_t i = 0; i < length; ++i) {
         if (descriptor.interface.isCallback() and
             descriptor.interface.identifier.name != "EventListener"):
             if descriptor.workers:
-                if type.nullable() or isCallbackReturnValue:
-                    declType = CGGeneric("JSObject*")
-                else:
-                    declType = CGGeneric("NonNull<JSObject>")
-                conversion = "  ${declName} = &${val}.toObject();\n"
+                return handleJSObjectType(type, isMember, failureCode)
+
+            name = descriptor.interface.identifier.name
+            if type.nullable() or isCallbackReturnValue:
+                declType = CGGeneric("nsRefPtr<%s>" % name);
             else:
-                name = descriptor.interface.identifier.name
-                if type.nullable() or isCallbackReturnValue:
-                    declType = CGGeneric("nsRefPtr<%s>" % name);
-                else:
-                    declType = CGGeneric("OwningNonNull<%s>" % name)
-                conversion = (
-                    "  ${declName} = new %s(&${val}.toObject());\n" % name)
+                declType = CGGeneric("OwningNonNull<%s>" % name)
+            conversion = (
+                "  ${declName} = new %s(&${val}.toObject());\n" % name)
 
             template = wrapObjectTemplate(conversion, type,
                                           "${declName} = nullptr",
@@ -2922,7 +2945,7 @@ for (uint32_t i = 0; i < length; ++i) {
                         "${declName}",
                         exceptionCode))
         elif descriptor.workers:
-            templateBody += "${declName} = &${val}.toObject();"
+            return handleJSObjectType(type, isMember, failureCode)
         else:
             # Either external, or new-binding non-castable.  We always have a
             # holder for these, because we don't actually know whether we have
@@ -3218,40 +3241,7 @@ for (uint32_t i = 0; i < length; ++i) {
 
     if type.isObject():
         assert not isEnforceRange and not isClamp
-
-        if isMember and isMember != "Dictionary":
-            raise TypeError("Can't handle member 'object' not in a dictionary;"
-                            "need to sort out rooting issues")
-
-        if isMember == "Dictionary":
-            if type.nullable():
-                declType = CGGeneric("LazyRootedObject")
-            else:
-                declType = CGGeneric("NonNullLazyRootedObject")
-
-            # If cx is null then LazyRootedObject will not be
-            # constructed and behave as nullptr.
-            templateBody = ("if (cx) {\n"
-                            "  ${declName}.construct(cx, &${val}.toObject());\n"
-                            "}")
-
-            # Cast of nullptr to (JSObject*) is required for template deduction.
-            setToNullCode = ("if (cx) {\n"
-                             "  ${declName}.construct(cx, (JSObject*) nullptr);\n"
-                             "}")
-        else:
-            if type.nullable():
-                declType = CGGeneric("JSObject*")
-            else:
-                declType = CGGeneric("NonNull<JSObject>")
-
-            templateBody = "${declName} = &${val}.toObject();"
-            setToNullCode = "${declName} = NULL"
-
-        template = wrapObjectTemplate(templateBody, type, setToNullCode,
-                                      failureCode)
-
-        return (template, declType, None, isOptional)
+        return handleJSObjectType(type, isMember, failureCode)
 
     if type.isDictionary():
         if failureCode is not None and not isDefinitelyObject:
@@ -5478,9 +5468,9 @@ return true;"""
     externalType = getUnionAccessorSignatureType(type, descriptorProvider).define()
 
     if type.isObject():
-        setter = CGGeneric("void SetToObject(JSObject* obj)\n"
+        setter = CGGeneric("void SetToObject(JSContext* cx, JSObject* obj)\n"
                            "{\n"
-                           "  mUnion.mValue.mObject.SetValue() = obj;\n"
+                           "  mUnion.mValue.mObject.SetValue().construct(cx, obj);\n"
                            "  mUnion.mType = mUnion.eObject;\n"
                            "}")
     else:
@@ -5648,9 +5638,10 @@ ${doConversionsToJS}
         assert not type.nullable() # flatMemberTypes never has nullable types
         val = "mValue.m%(name)s.Value()" % templateVars
         if type.isObject():
-            # We'll have a NonNull<JSObject> while the wrapping code
-            # wants a JSObject*
-            val = "%s.get()" % val
+            # We'll have a NonNullLazyRootedObject while the wrapping code wants
+            # a JSObject*.  But our .ref() is a JS::Rooted<JSObject*>, which can
+            # convert to a JSObject*.
+            val = "%s.ref()" % val
         elif type.isSpiderMonkeyInterface():
             # We have a NonNull<TypedArray> object while the wrapping code
             # wants a JSObject*.  Cheat with .get() so we don't have to
@@ -8055,7 +8046,7 @@ class CGNativeMember(ClassMethod):
             if type.nullable():
                 returnCode = "return ${declName};"
             else:
-                returnCode = "return ${declName}.Ptr();"
+                returnCode = "return ${declName}.ref();"
             return "JSObject*", "nullptr", returnCode
         if type.isSpiderMonkeyInterface():
             if type.nullable():
@@ -8216,13 +8207,16 @@ class CGNativeMember(ClassMethod):
             return "JS::Value", False, False
 
         if type.isObject():
-            if type.nullable() or self.jsObjectsArePtr:
-                declType = "%s*"
-            elif optional:
-                declType = "NonNull<%s>"
+            if optional:
+                if type.nullable():
+                    declType = "LazyRootedObject"
+                else:
+                    declType = "NonNullLazyRootedObject"
+            elif type.nullable() or self.jsObjectsArePtr:
+                declType = "JSObject*"
             else:
-                declType = "%s&"
-            return (declType % "JSObject"), False, False
+                declType = "JSObject&"
+            return declType, False, False
 
         if type.isDictionary():
             typeName = CGDictionary.makeDictionaryName(type.inner,
