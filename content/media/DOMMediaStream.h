@@ -113,6 +113,11 @@ public:
   static already_AddRefed<DOMMediaStream>
   CreateTrackUnionStream(nsIDOMWindow* aWindow, TrackTypeHints aHintContents = 0);
 
+  void SetLogicalStreamStartTime(StreamTime aTime)
+  {
+    mLogicalStreamStartTime = aTime;
+  }
+
   // Notifications from StreamListener.
   // CreateDOMTrack should only be called when it's safe to run script.
   MediaStreamTrack* CreateDOMTrack(TrackID aTrackID, MediaSegment::Type aType);
@@ -129,7 +134,6 @@ public:
   private:
     TrackTypeHints mExpectedTracks;
   };
-
   // When one track of the appropriate type has been added for each bit set
   // in aCallback->GetExpectedTracks(), run aCallback->NotifyTracksAvailable.
   // It is allowed to do anything, including run script.
@@ -149,6 +153,9 @@ protected:
 
   class StreamListener;
   friend class StreamListener;
+
+  // StreamTime at which the currentTime attribute would return 0.
+  StreamTime mLogicalStreamStartTime;
 
   // We need this to track our parent object.
   nsCOMPtr<nsIDOMWindow> mWindow;
