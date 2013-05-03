@@ -14,6 +14,12 @@
 #include "nsDOMEventTargetHelper.h"
 #include "mozilla/StaticPtr.h"
 
+#define DEVICESTORAGE_PICTURES   "pictures"
+#define DEVICESTORAGE_VIDEOS     "videos"
+#define DEVICESTORAGE_MUSIC      "music"
+#define DEVICESTORAGE_APPS       "apps"
+#define DEVICESTORAGE_SDCARD     "sdcard"
+
 class DeviceStorageFile MOZ_FINAL
   : public nsISupports {
 public:
@@ -48,7 +54,12 @@ public:
   void CollectFiles(nsTArray<nsRefPtr<DeviceStorageFile> > &aFiles, PRTime aSince = 0);
   void collectFilesInternal(nsTArray<nsRefPtr<DeviceStorageFile> > &aFiles, PRTime aSince, nsAString& aRootPath);
 
-  static void DirectoryDiskUsage(nsIFile* aFile, uint64_t* aSoFar, const nsAString& aStorageType);
+  static void DirectoryDiskUsage(nsIFile* aFile,
+                                 uint64_t* aPicturesSoFar,
+                                 uint64_t* aVideosSoFar,
+                                 uint64_t* aMusicSoFar,
+                                 uint64_t* aTotalSoFar);
+
   static void GetRootDirectoryForType(const nsAString& aType,
                                       const nsAString& aVolName,
                                       nsIFile** aFile);
