@@ -1955,21 +1955,21 @@ add_test(function test_update_adn_like() {
 });
 
 /**
- * Verify ICCRecordHelper.getFreeRecordId.
+ * Verify ICCRecordHelper.findFreeRecordId.
  */
-add_test(function test_get_free_record_id() {
+add_test(function test_find_free_record_id() {
   let worker = newUint8Worker();
-  let helper = worker.GsmPDUHelper;
-  let record = worker.ICCRecordHelper;
-  let buf    = worker.Buf;
-  let io     = worker.ICCIOHelper;
+  let pduHelper = worker.GsmPDUHelper;
+  let recordHelper = worker.ICCRecordHelper;
+  let buf = worker.Buf;
+  let io  = worker.ICCIOHelper;
 
   function writeRecord (record) {
     // Write data size
     buf.writeUint32(record.length * 2);
 
     for (let i = 0; i < record.length; i++) {
-      helper.writeHexOctet(record[i]);
+      pduHelper.writeHexOctet(record[i]);
     }
 
     // Write string delimiter
@@ -1998,7 +1998,7 @@ add_test(function test_get_free_record_id() {
   };
 
   let fileId = 0x0000; // Dummy.
-  record.getFreeRecordId(
+  recordHelper.findFreeRecordId(
     fileId,
     function (recordId) {
       do_check_eq(recordId, 2);
@@ -2025,7 +2025,7 @@ add_test(function test_read_icc_contacts() {
   };
 
   record.readPBR = function readPBR(onsuccess, onerror) {
-    onsuccess({adn:{}, email: {}, anr0: {}});
+    onsuccess([{adn:{}, email: {}, anr0: {}}]);
   };
 
   record.readADNLike = function readADNLike(fileId, onsuccess, onerror) {
@@ -2055,11 +2055,11 @@ add_test(function test_read_icc_contacts() {
     run_next_test();
   };
 
-  contactHelper.readICCContacts(CARD_APPTYPE_USIM, "ADN", successCb, errorCb);
+  contactHelper.readICCContacts(CARD_APPTYPE_USIM, "adn", successCb, errorCb);
 });
 
 /**
- * Verify ICCContactHelper.updateICCContact
+ * Verify ICCContactHelper.updateICCContact with appType is CARD_APPTYPE_SIM.
  */
 add_test(function test_update_icc_contact() {
   let worker = newUint8Worker();
@@ -2078,10 +2078,65 @@ add_test(function test_update_icc_contact() {
   };
 
   let contact = {recordId: 1, alphaId: "test", number: "123456"};
-  do_test(contact, "ADN", ICC_EF_ADN);
-  do_test(contact, "FDN", ICC_EF_FDN, "1111");
+  do_test(contact, "adn", ICC_EF_ADN);
+  do_test(contact, "fdn", ICC_EF_FDN, "1111");
 
   run_next_test();
+});
+
+/**
+ * Verify ICCContactHelper.updateICCContact with appType is CARD_APPTYPE_USIM.
+ */
+add_test(function test_update_icc_contact() {
+  let worker = newUint8Worker();
+  let recordHelper = worker.ICCRecordHelper;
+  let contactHelper = worker.ICCContactHelper;
+  const FILE_ID = 0x4f3a;
+
+  recordHelper.readPBR = function (onsuccess, onerror) {
+    onsuccess([{adn:{fileId: FILE_ID}}]);
+  };
+
+  let oldContact = {recordId: 1, alphaId: "test", number: "123456"};
+  recordHelper.updateADNLike = function (fileId, contact, pin2, onsuccess, onerror) {
+    do_check_eq(fileId, FILE_ID);
+    do_check_eq(contact.alphaId, oldContact.alphaId);
+    do_check_eq(contact.number, oldContact.number);
+
+    run_next_test();
+  };
+
+  contactHelper.updateICCContact(CARD_APPTYPE_USIM, "adn", oldContact);
+});
+
+/**
+ * Verify ICCContactHelper.findFreeICCContact
+ */
+add_test(function test_find_free_icc_contact() {
+  let worker = newUint8Worker();
+  let recordHelper = worker.ICCRecordHelper;
+  let contactHelper = worker.ICCContactHelper;
+  const RECORD_ID = 1;
+
+  recordHelper.readPBR = function (onsuccess, onerror) {
+    onsuccess([{adn:{}, email: {}, anr0: {}}]);
+  };
+
+  recordHelper.findFreeRecordId = function (fileId, onsuccess, onerror) {
+    onsuccess(RECORD_ID);
+  };
+
+  let successCb = function (recordId) {
+    do_check_eq(recordId, RECORD_ID);
+    run_next_test();
+  };
+
+  let errorCb = function (errorMsg) {
+    do_check_true(false);
+    run_next_test();
+  };
+
+  contactHelper.findFreeICCContact(CARD_APPTYPE_USIM, "adn", successCb, errorCb);
 });
 
 /**

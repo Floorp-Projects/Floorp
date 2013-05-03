@@ -18,7 +18,7 @@ interface nsIIccListener : nsISupports
 /**
  * XPCOM component (in the content process) that provides the ICC information.
  */
-[scriptable, uuid(c74b434a-fb2a-4e22-a6cd-1ac353e3f4ce)]
+[scriptable, uuid(041aee4f-fad0-4ed8-a11c-774b1aedd09e)]
 interface nsIIccProvider : nsISupports
 {
   /**
@@ -29,6 +29,9 @@ interface nsIIccProvider : nsISupports
   void registerIccMsg(in nsIIccListener listener);
   void unregisterIccMsg(in nsIIccListener listener);
 
+  /**
+   * STK interfaces.
+   */
   void sendStkResponse(in nsIDOMWindow window,
                        in jsval        command,
                        in jsval        response);
@@ -39,6 +42,12 @@ interface nsIIccProvider : nsISupports
                               in jsval        timer);
   void sendStkEventDownload(in nsIDOMWindow window,
                             in jsval        event);
+
+  /**
+   * Phonebook interfaces.
+   */
+  nsIDOMDOMRequest readContacts(in nsIDOMWindow window,
+                                in DOMString contactType);
 
   nsIDOMDOMRequest updateContact(in nsIDOMWindow window,
                                  in DOMString contactType,
