@@ -1078,28 +1078,15 @@ HyperTextAccessible::GetTextAtOffset(int32_t aOffset,
       return GetCharAt(aOffset, eGetAt, aText, aStartOffset, aEndOffset) ?
         NS_OK : NS_ERROR_INVALID_ARG;
 
-    case BOUNDARY_WORD_START: {
-      uint32_t textLen =  CharacterCount();
-      if (offset == textLen) {
-        *aStartOffset = *aEndOffset = textLen;
-        return NS_OK;
-      }
-
+    case BOUNDARY_WORD_START:
       *aEndOffset = FindWordBoundary(offset, eDirNext, eStartWord);
       *aStartOffset = FindWordBoundary(*aEndOffset, eDirPrevious, eStartWord);
       return GetText(*aStartOffset, *aEndOffset, aText);
-    }
 
-    case BOUNDARY_WORD_END: {
-      if (offset == 0) {
-        *aStartOffset = *aEndOffset = 0;
-        return NS_OK;
-      }
-
+    case BOUNDARY_WORD_END:
       *aStartOffset = FindWordBoundary(offset, eDirPrevious, eEndWord);
       *aEndOffset = FindWordBoundary(*aStartOffset, eDirNext, eEndWord);
       return GetText(*aStartOffset, *aEndOffset, aText);
-    }
 
     case BOUNDARY_LINE_START:
     case BOUNDARY_LINE_END:
