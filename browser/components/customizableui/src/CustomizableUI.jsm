@@ -258,6 +258,26 @@ XPCOMUtils.defineLazyGetter(this, "gBuiltInWidgets", function() {
         win.BrowserOpenFileWindow();
       }
     }
+  }, {
+    id: "developer-button",
+    name: "Developer",
+    shortcut: "Shift+F11",
+    description: "Toggle Developer Tools",
+    defaultArea: CustomizableUI.AREA_PANEL,
+    allowedAreas: [CustomizableUI.AREA_PANEL],
+    icons: {
+      "16": "chrome://branding/content/icon16.png",
+      "32": "chrome://branding/content/icon48.png",
+      "48": "chrome://branding/content/icon48.png"
+    },
+    onCommand: function(aEvent) {
+      let win = aEvent.target &&
+                aEvent.target.ownerDocument &&
+                aEvent.target.ownerDocument.defaultView;
+      if (win && win.gDevToolsBrowser) {
+        win.gDevToolsBrowser.toggleToolboxCommand(win.gBrowser);
+      }
+    }
   }];
 });
 
