@@ -270,13 +270,11 @@ xpti_ArrayAppender(const char* name, xptiInterfaceEntry* entry, void* arg)
 {
     nsCOMArray<nsIInterfaceInfo>* array = static_cast<nsCOMArray<nsIInterfaceInfo>*>(arg);
 
-    nsCOMPtr<nsIInterfaceInfo> ii;
-    if (NS_SUCCEEDED(EntryToInfo(entry, getter_AddRefs(ii)))) {
-      bool scriptable = false;
-      ii->IsScriptable(&scriptable);
-      if (scriptable) {
-        array->AppendElement(ii);
-      }
+    if (entry->GetScriptableFlag()) {
+        nsCOMPtr<nsIInterfaceInfo> ii;
+        if (NS_SUCCEEDED(EntryToInfo(entry, getter_AddRefs(ii)))) {
+            array->AppendElement(ii);
+        }
     }
     return PL_DHASH_NEXT;
 }
