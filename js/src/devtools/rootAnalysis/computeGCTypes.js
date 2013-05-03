@@ -19,7 +19,7 @@ function processCSU(csu, body)
         if (type.Kind == "CSU") {
             // Ignore nesting in classes which are AutoGCRooters. We only consider
             // types with fields that may not be properly rooted.
-            if (type.Name == "JS::AutoGCRooter")
+            if (type.Name == "JS::AutoGCRooter" || type.Name == "JS::CustomAutoRooter")
                 return;
             addNestedStructure(csu, type.Name);
         }
