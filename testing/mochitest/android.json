@@ -39,6 +39,7 @@
  "content/base/test/websocket_hybi/test_receive-blob.html": "",
  "content/base/test/websocket_hybi/test_send-arraybuffer.html": "",
  "content/base/test/websocket_hybi/test_send-blob.html": "",
+ "content/canvas/test/webgl": "bug 865443- seperate suite",
  "content/events/test/test_bug409604.html": "TIMED_OUT",
  "content/events/test/test_bug426082.html": "",
  "content/events/test/test_bug457672.html": "CRASH_DUMP, RANDOM",
