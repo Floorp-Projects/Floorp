@@ -3,6 +3,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+const kPrefNotifyMissingFlash = "plugins.notifyMissingFlash";
+
 var gPluginHandler = {
   PLUGIN_SCRIPTED_STATE_NONE: 0,
   PLUGIN_SCRIPTED_STATE_FIRED: 1,
@@ -148,6 +150,69 @@ var gPluginHandler = {
     }
   },
 
+  supportedPlugins: {
+    "mimetypes": {
+      "application/x-shockwave-flash": "flash",
+      "application/futuresplash": "flash",
+      "application/x-java-.*": "java",
+      "application/x-director": "shockwave",
+      "application/(sdp|x-(mpeg|rtsp|sdp))": "quicktime",
+      "audio/(3gpp(2)?|AMR|aiff|basic|mid(i)?|mp4|mpeg|vnd\.qcelp|wav|x-(aiff|m4(a|b|p)|midi|mpeg|wav))": "quicktime",
+      "image/(pict|png|tiff|x-(macpaint|pict|png|quicktime|sgi|targa|tiff))": "quicktime",
+      "video/(3gpp(2)?|flc|mp4|mpeg|quicktime|sd-video|x-mpeg)": "quicktime",
+      "application/x-unknown": "test",
+    },
+
+    "plugins": {
+      "flash": {
+        "displayName": "Flash",
+        "installWINNT": true,
+        "installDarwin": true,
+        "installLinux": true,
+      },
+      "java": {
+        "displayName": "Java",
+        "installWINNT": true,
+        "installDarwin": true,
+        "installLinux": true,
+      },
+      "shockwave": {
+        "displayName": "Shockwave",
+        "installWINNT": true,
+        "installDarwin": true,
+      },
+      "quicktime": {
+        "displayName": "QuickTime",
+        "installWINNT": true,
+      },
+      "test": {
+        "displayName": "Test plugin",
+        "installWINNT": true,
+        "installLinux": true,
+        "installDarwin": true,
+      }
+    }
+  },
+
+  nameForSupportedPlugin: function (aMimeType) {
+    for (let type in this.supportedPlugins.mimetypes) {
+      let re = new RegExp(type);
+      if (re.test(aMimeType)) {
+        return this.supportedPlugins.mimetypes[type];
+      }
+    }
+    return null;
+  },
+
+  canInstallThisMimeType: function (aMimeType) {
+    let os = Services.appinfo.OS;
+    let pluginName = this.nameForSupportedPlugin(aMimeType);
+    if (pluginName && "install" + os in this.supportedPlugins.plugins[pluginName]) {
+      return true;
+    }
+    return false;
+  },
+
   handleEvent : function(event) {
     let plugin = event.target;
     let doc = plugin.ownerDocument;
@@ -181,20 +246,20 @@ var gPluginHandler = {
         break;
 
       case "PluginNotFound":
+        let installable = this.showInstallNotification(plugin, eventType);
         // For non-object plugin tags, register a click handler to install the
         // plugin. Object tags can, and often do, deal with that themselves,
         // so don't stomp on the page developers toes.
-        if (!(plugin instanceof HTMLObjectElement)) {
-          // We don't yet check to see if there's actually an installer available.
+        if (installable && !(plugin instanceof HTMLObjectElement)) {
           let installStatus = doc.getAnonymousElementByAttribute(plugin, "class", "installStatus");
-          installStatus.setAttribute("status", "ready");
+          installStatus.setAttribute("installable", "true");
           let iconStatus = doc.getAnonymousElementByAttribute(plugin, "class", "icon");
-          iconStatus.setAttribute("status", "ready");
+          iconStatus.setAttribute("installable", "true");
 
           let installLink = doc.getAnonymousElementByAttribute(plugin, "class", "installPluginLink");
           this.addLinkClickCallback(installLink, "installSinglePlugin", plugin);
         }
-        /* FALLTHRU */
+        break;
 
       case "PluginBlocklisted":
       case "PluginOutdated":
@@ -436,6 +501,61 @@ var gPluginHandler = {
     openHelpLink("plugin-crashed", false);
   },
 
+  showInstallNotification: function (aPlugin) {
+    let browser = gBrowser.getBrowserForDocument(aPlugin.ownerDocument
+                                                        .defaultView.top.document);
+    if (!browser.missingPlugins)
+      browser.missingPlugins = new Map();
+
+    let pluginInfo = this._getPluginInfo(aPlugin);
+    browser.missingPlugins.set(pluginInfo.mimetype, pluginInfo);
+
+    // only show notification for small subset of plugins
+    let mimetype = pluginInfo.mimetype.split(";")[0];
+    if (!this.canInstallThisMimeType(mimetype))
+      return;
+
+    let pluginIdentifier = this.nameForSupportedPlugin(mimetype);
+    if (!pluginIdentifier)
+      return;
+
+    let displayName = this.supportedPlugins.plugins[pluginIdentifier].displayName;
+
+    // don't show several notifications
+    let notification = PopupNotifications.getNotification("plugins-not-found", browser);
+    if (notification)
+      return true;
+
+    let messageString = gNavigatorBundle.getString("installPlugin.message");
+    let mainAction = {
+      label: gNavigatorBundle.getFormattedString("installPlugin.button.label",
+                                                 [displayName]),
+      accessKey: gNavigatorBundle.getString("installPlugin.button.accesskey"),
+      callback: function () {
+        openDialog("chrome://mozapps/content/plugins/pluginInstallerWizard.xul",
+                   "PFSWindow", "chrome,centerscreen,resizable=yes",
+                   {plugins: browser.missingPlugins, browser: browser});
+      }
+    };
+    let secondaryActions = null;
+    let options = { dismissed: true };
+
+    let showForFlash = Services.prefs.getBoolPref(kPrefNotifyMissingFlash);
+    if (pluginIdentifier == "flash" && showForFlash) {
+      secondaryActions = [{
+        label: gNavigatorBundle.getString("installPlugin.ignoreButton.label"),
+        accessKey: gNavigatorBundle.getString("installPlugin.ignoreButton.accesskey"),
+        callback: function () {
+          Services.prefs.setBoolPref(kPrefNotifyMissingFlash, false);
+        }
+      }];
+      options.dismissed = false;
+    }
+    PopupNotifications.show(browser, "plugins-not-found",
+                            messageString, "plugin-install-notification-icon",
+                            mainAction, secondaryActions, options);
+    return true;
+  },
   // Event listener for click-to-play plugins.
   _handleClickToPlayEvent: function PH_handleClickToPlayEvent(aPlugin) {
     let doc = aPlugin.ownerDocument;
@@ -749,7 +869,7 @@ var gPluginHandler = {
     }
   },
 
-  // event listener for missing/blocklisted/outdated plugins.
+  // event listener for blocklisted/outdated plugins.
   pluginUnavailable: function (plugin, eventType) {
     let browser = gBrowser.getBrowserForDocument(plugin.ownerDocument
                                                        .defaultView.top.document);
@@ -765,8 +885,6 @@ var gPluginHandler = {
     // In order of priority, they are: outdated > missing > blocklisted
     let outdatedNotification = notificationBox.getNotificationWithValue("outdated-plugins");
     let blockedNotification  = notificationBox.getNotificationWithValue("blocked-plugins");
-    let missingNotification  = notificationBox.getNotificationWithValue("missing-plugins");
-
 
     function showBlocklistInfo() {
       var url = formatURL("extensions.blocklist.detailsURL", true);
@@ -779,16 +897,6 @@ var gPluginHandler = {
       var url = formatURL("plugins.update.url", true);
       gBrowser.loadOneTab(url, {inBackground: false});
       return true;
-    }
-
-    function showPluginsMissing() {
-      // get the urls of missing plugins
-      var missingPlugins = gBrowser.selectedBrowser.missingPlugins;
-      if (missingPlugins) {
-        openDialog("chrome://mozapps/content/plugins/pluginInstallerWizard.xul",
-                   "PFSWindow", "chrome,centerscreen,resizable=yes",
-                   {plugins: missingPlugins, browser: gBrowser.selectedBrowser});
-      }
     }
 
     let notifications = {
@@ -820,17 +928,6 @@ var gPluginHandler = {
                                          callback  : showOutdatedPluginsInfo
                                       }],
                           },
-      PluginNotFound    : {
-                            barID   : "missing-plugins",
-                            iconURL : "chrome://mozapps/skin/plugins/notifyPluginGeneric.png",
-                            message : gNavigatorBundle.getString("missingpluginsMessage.title"),
-                            buttons : [{
-                                         label     : gNavigatorBundle.getString("missingpluginsMessage.button.label"),
-                                         accessKey : gNavigatorBundle.getString("missingpluginsMessage.button.accesskey"),
-                                         popup     : null,
-                                         callback  : showPluginsMissing
-                                      }],
-                            },
     };
 
     // If there is already an outdated plugin notification then do nothing
@@ -841,7 +938,7 @@ var gPluginHandler = {
       if (gPrefService.getBoolPref("plugins.hide_infobar_for_missing_plugin")) // XXX add a new pref?
         return;
 
-      if (blockedNotification || missingNotification)
+      if (blockedNotification)
         return;
     }
     else if (eventType == "PluginOutdated") {
@@ -849,19 +946,6 @@ var gPluginHandler = {
         return;
 
       // Cancel any notification about blocklisting/missing plugins
-      if (blockedNotification)
-        blockedNotification.close();
-      if (missingNotification)
-        missingNotification.close();
-    }
-    else if (eventType == "PluginNotFound") {
-      if (gPrefService.getBoolPref("plugins.hide_infobar_for_missing_plugin"))
-        return;
-
-      if (missingNotification)
-        return;
-
-      // Cancel any notification about blocklisting plugins
       if (blockedNotification)
         blockedNotification.close();
     }

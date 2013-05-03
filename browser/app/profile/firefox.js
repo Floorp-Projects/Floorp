@@ -612,6 +612,9 @@ pref("plugins.update.notifyUser", false);
 
 pref("plugins.click_to_play", false);
 
+// display door hanger if flash not installed
+pref("plugins.notifyMissingFlash", true);
+
 #ifdef XP_WIN
 pref("browser.preferences.instantApply", false);
 #else
