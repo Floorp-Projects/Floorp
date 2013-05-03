@@ -10,7 +10,10 @@
  Constructor(long arg1, IndirectlyImplementedInterface iface),
  // Constructor(long arg1, long arg2, (TestInterface or OnlyForUseInConstructor) arg3),
  NamedConstructor=Example,
- NamedConstructor=Example(DOMString str)
+ NamedConstructor=Example(DOMString str),
+ NamedConstructor=Example2(DictForConstructor dict, any any1, object obj1,
+                           object? obj2, sequence<Dict> seq, optional any any2,
+                           optional object obj3, optional object? obj4)
  ]
 interface TestExampleInterface {
   // Integer types
