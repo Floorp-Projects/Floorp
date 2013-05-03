@@ -1241,8 +1241,8 @@ bool
 DOMXrayTraits::enumerateNames(JSContext *cx, HandleObject wrapper, unsigned flags,
                               AutoIdVector &props)
 {
-    return XrayEnumerateProperties(cx, wrapper, getTargetObject(wrapper),
-                                   flags, props);
+    JS::Rooted<JSObject*> obj(cx, getTargetObject(wrapper));
+    return XrayEnumerateProperties(cx, wrapper, obj, flags, props);
 }
 
 bool
