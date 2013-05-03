@@ -34,27 +34,27 @@ CONFIGURE_SUBST_FILES += ['devtools/rootAnalysis/Makefile']
 # doing!
 EXPORTS += [
     'js-config.h',
-    'jscpucfg.h',
     'js.msg',
     'jsalloc.h',
     'jsapi.h',
     'jsclass.h',
     'jsclist.h',
+    'jscpucfg.h',
     'jsdbgapi.h',
     'jsdhash.h',
     'jsfriendapi.h',
     'jslock.h',
     'json.h',
-    'jsproxy.h',
+    'jsperf.h',
     'jsprf.h',
     'jsprototypes.h',
+    'jsproxy.h',
     'jsprvtd.h',
     'jspubtd.h',
     'jstypes.h',
     'jsutil.h',
     'jsversion.h',
     'jswrapper.h',
-    'jsperf.h',
 ]
 
 if CONFIG['HAVE_DTRACE']:

@@ -33,7 +33,10 @@ else:
     osdir = 'unix'
 
 EXPORTS += [
-    osdir + '/nsOSHelperAppService.h',
+    osdir + '/nsOSHelperAppService.h'
+]
+
+EXPORTS += [
     'nsExternalHelperAppService.h',
 ]
 

@@ -8,8 +8,8 @@ MODULE = 'content'
 XPIDL_MODULE = 'dom_webspeechrecognition'
 
 XPIDL_SOURCES = [
-  'nsIDOMSpeechRecognitionEvent.idl',
   'nsIDOMSpeechRecognitionError.idl',
+  'nsIDOMSpeechRecognitionEvent.idl',
   'nsISpeechRecognitionService.idl'
 ]
 
