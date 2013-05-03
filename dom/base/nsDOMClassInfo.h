@@ -338,7 +338,8 @@ protected:
   }
 
   static nsresult GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
-                                JSObject *obj, jsid id, bool *did_resolve);
+                                JSObject *obj, JS::Handle<jsid> id,
+                                bool *did_resolve);
 
 public:
   NS_IMETHOD PreCreate(nsISupports *nativeObj, JSContext *cx,
