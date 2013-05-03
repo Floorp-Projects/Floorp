@@ -84,6 +84,18 @@ XPCOMUtils.defineLazyModuleGetter(this, "IdentityService",
 XPCOMUtils.defineLazyModuleGetter(this, "Logger",
                                   "resource://gre/modules/identity/LogUtils.jsm");
 
+// The default persona uri; can be overwritten with toolkit.identity.uri pref.
+// Do this if you want to repoint to a different service for testing.
+// There's no point in setting up an observer to monitor the pref, as b2g prefs
+// can only be overwritten when the profie is recreated.  So just get the value
+// on start-up.
+let kPersonaUri = "https://firefoxos.persona.org";
+try {
+  kPersonaUri = Services.prefs.getCharPref("toolkit.identity.uri");
+} catch(noSuchPref) {
+  // stick with the default value
+}
+
 // JS shim that contains the callback functions that
 // live within the identity UI provisioning frame.
 const kIdentityShimFile = "chrome://browser/content/identity.js";
@@ -106,6 +118,8 @@ function log(...aMessageArgs) {
   Logger.log.apply(Logger, ["SignInToWebsiteController"].concat(aMessageArgs));
 }
 
+log("persona uri =", kPersonaUri);
+
 /*
  * ContentInterface encapsulates the our content functions.  There are only two:
  *
@@ -122,6 +136,7 @@ let ContentInterface = {
   },
 
   sendChromeEvent: function SignInToWebsiteController_sendChromeEvent(detail) {
+    detail.uri = kPersonaUri;
     this._getBrowser().shell.sendChromeEvent(detail);
   }
 };
@@ -271,9 +286,9 @@ Pipe.prototype = {
             mm = frameLoader.messageManager;
             try {
               mm.loadFrameScript(kIdentityShimFile, true);
-              log("Loaded shim " + kIdentityShimFile + "\n");
+              log("Loaded shim", kIdentityShimFile);
             } catch (e) {
-              log("Error loading ", kIdentityShimFile, " as a frame script: ", e);
+              log("Error loading", kIdentityShimFile, "as a frame script:", e);
             }
 
             // There are two messages that the delegate can send back: a "do
