@@ -113,7 +113,8 @@ private:
 };
 
 DOMMediaStream::DOMMediaStream()
-  : mStream(nullptr), mHintContents(0), mTrackTypesAvailable(0),
+  : mLogicalStreamStartTime(0),
+    mStream(nullptr), mHintContents(0), mTrackTypesAvailable(0),
     mNotifiedOfMediaStreamGraphShutdown(false)
 {
   SetIsDOMBinding();
@@ -146,7 +147,10 @@ DOMMediaStream::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 double
 DOMMediaStream::CurrentTime()
 {
-  return mStream ? MediaTimeToSeconds(mStream->GetCurrentTime()) : 0.0;
+  if (!mStream) {
+    return 0.0;
+  }
+  return MediaTimeToSeconds(mStream->GetCurrentTime() - mLogicalStreamStartTime);
 }
 
 void
