@@ -95,6 +95,8 @@ MOCHITEST_FILES =	chrome_wrappers_helper.html \
 		test_bug865260.html \
 		file_crosscompartment_weakmap.html \
 		test_crosscompartment_weakmap.html \
+		test_asmjs.html \
+		file_asmjs.js \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
