@@ -12,6 +12,7 @@
 #include "nsWrapperCache.h"
 #include "nsIDOMWindow.h"
 #include "StreamBuffer.h"
+#include "nsIRunnable.h"
 
 class nsXPCClassInfo;
 
@@ -49,6 +50,8 @@ class DOMMediaStream : public nsIDOMMediaStream,
   typedef dom::VideoStreamTrack VideoStreamTrack;
 
 public:
+  typedef uint8_t TrackTypeHints;
+
   DOMMediaStream();
   virtual ~DOMMediaStream();
 
@@ -84,35 +87,65 @@ public:
   bool CombineWithPrincipal(nsIPrincipal* aPrincipal);
 
   /**
+   * Called when this stream's MediaStreamGraph has been shut down. Normally
+   * MSGs are only shut down when all streams have been removed, so this
+   * will only be called during a forced shutdown due to application exit.
+   */
+  void NotifyMediaStreamGraphShutdown();
+
+  // Indicate what track types we eventually expect to add to this stream
+  enum {
+    HINT_CONTENTS_AUDIO = 1 << 0,
+    HINT_CONTENTS_VIDEO = 1 << 1
+  };
+  TrackTypeHints GetHintContents() const { return mHintContents; }
+  void SetHintContents(TrackTypeHints aHintContents) { mHintContents = aHintContents; }
+
+  /**
    * Create an nsDOMMediaStream whose underlying stream is a SourceMediaStream.
    */
   static already_AddRefed<DOMMediaStream>
-  CreateSourceStream(nsIDOMWindow* aWindow, uint32_t aHintContents);
-
-  // Hints to tell the SDP generator about whether this
-  // MediaStream probably has audio and/or video
-  enum {
-    HINT_CONTENTS_AUDIO = 0x00000001U,
-    HINT_CONTENTS_VIDEO = 0x00000002U
-  };
-  uint32_t GetHintContents() const { return mHintContents; }
-  void SetHintContents(uint32_t aHintContents) { mHintContents = aHintContents; }
+  CreateSourceStream(nsIDOMWindow* aWindow, TrackTypeHints aHintContents);
 
   /**
    * Create an nsDOMMediaStream whose underlying stream is a TrackUnionStream.
    */
   static already_AddRefed<DOMMediaStream>
-  CreateTrackUnionStream(nsIDOMWindow* aWindow, uint32_t aHintContents = 0);
+  CreateTrackUnionStream(nsIDOMWindow* aWindow, TrackTypeHints aHintContents = 0);
 
-  // Notifications from StreamListener
+  // Notifications from StreamListener.
+  // CreateDOMTrack should only be called when it's safe to run script.
   MediaStreamTrack* CreateDOMTrack(TrackID aTrackID, MediaSegment::Type aType);
   MediaStreamTrack* GetDOMTrackFor(TrackID aTrackID);
 
+  class OnTracksAvailableCallback {
+  public:
+    OnTracksAvailableCallback(uint8_t aExpectedTracks = 0)
+      : mExpectedTracks(aExpectedTracks) {}
+    virtual ~OnTracksAvailableCallback() {}
+    virtual void NotifyTracksAvailable(DOMMediaStream* aStream) = 0;
+    TrackTypeHints GetExpectedTracks() { return mExpectedTracks; }
+    void SetExpectedTracks(TrackTypeHints aExpectedTracks) { mExpectedTracks = aExpectedTracks; }
+  private:
+    TrackTypeHints mExpectedTracks;
+  };
+
+  // When one track of the appropriate type has been added for each bit set
+  // in aCallback->GetExpectedTracks(), run aCallback->NotifyTracksAvailable.
+  // It is allowed to do anything, including run script.
+  // aCallback may run immediately during this call if tracks are already
+  // available!
+  // We only care about track additions, we'll fire the notification even if
+  // some of the tracks have been removed.
+  // Takes ownership of aCallback.
+  void OnTracksAvailable(OnTracksAvailableCallback* aCallback);
+
 protected:
   void Destroy();
-  void InitSourceStream(nsIDOMWindow* aWindow, uint32_t aHintContents);
-  void InitTrackUnionStream(nsIDOMWindow* aWindow, uint32_t aHintContents);
+  void InitSourceStream(nsIDOMWindow* aWindow, TrackTypeHints aHintContents);
+  void InitTrackUnionStream(nsIDOMWindow* aWindow, TrackTypeHints aHintContents);
   void InitStreamCommon(MediaStream* aStream);
+  void CheckTracksAvailable();
 
   class StreamListener;
   friend class StreamListener;
@@ -130,9 +163,13 @@ protected:
   nsAutoTArray<nsRefPtr<MediaStreamTrack>,2> mTracks;
   nsRefPtr<StreamListener> mListener;
 
-  // tells the SDP generator about whether this
-  // MediaStream probably has audio and/or video
-  uint32_t mHintContents;
+  nsTArray<nsAutoPtr<OnTracksAvailableCallback> > mRunOnTracksAvailable;
+
+  // Indicate what track types we eventually expect to add to this stream
+  uint8_t mHintContents;
+  // Indicate what track types have been added to this stream
+  uint8_t mTrackTypesAvailable;
+  bool mNotifiedOfMediaStreamGraphShutdown;
 };
 
 class DOMLocalMediaStream : public DOMMediaStream,
@@ -153,13 +190,13 @@ public:
    * Create an nsDOMLocalMediaStream whose underlying stream is a SourceMediaStream.
    */
   static already_AddRefed<DOMLocalMediaStream>
-  CreateSourceStream(nsIDOMWindow* aWindow, uint32_t aHintContents);
+  CreateSourceStream(nsIDOMWindow* aWindow, TrackTypeHints aHintContents);
 
   /**
    * Create an nsDOMLocalMediaStream whose underlying stream is a TrackUnionStream.
    */
   static already_AddRefed<DOMLocalMediaStream>
-  CreateTrackUnionStream(nsIDOMWindow* aWindow, uint32_t aHintContents = 0);
+  CreateTrackUnionStream(nsIDOMWindow* aWindow, TrackTypeHints aHintContents = 0);
 };
 
 }
