@@ -80,8 +80,8 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk2':
 
     if CONFIG['MOZ_X11']:
         EXPORTS += [
-            'gfxXlibSurface.h',
             'gfxXlibNativeRenderer.h',
+            'gfxXlibSurface.h',
         ]
 
     if CONFIG['MOZ_PANGO']:
