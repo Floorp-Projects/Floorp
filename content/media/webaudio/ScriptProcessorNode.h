@@ -82,14 +82,14 @@ public:
 
   void Stop()
   {
-    mPlayingRef.Drop(this);
+    mPlayingRef.ForceDrop(this);
   }
 
 private:
   nsAutoPtr<SharedBuffers> mSharedBuffers;
   const uint32_t mBufferSize;
   const uint32_t mNumberOfOutputChannels;
-  SelfReference<ScriptProcessorNode> mPlayingRef; // a reference to self while planing
+  SelfCountedReference<ScriptProcessorNode> mPlayingRef; // a reference to self while planing
 };
 
 }
