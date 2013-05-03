@@ -24,7 +24,7 @@ function expectTypeError(func) {
 }
 
 function fuzzyCompare(a, b) {
-  return Math.abs(a - b) < 9e-3;
+  return Math.abs(a - b) < 5e-5;
 }
 
 function compareBuffers(buf1, buf2,
