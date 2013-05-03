@@ -614,14 +614,15 @@ protected:
 
   // False return value means we threw an exception.  True return value
   // but false "found" means we didn't have a subframe at that index.
-  bool GetSubframeWindow(JSContext *cx, JSObject *proxy, jsid id,
+  bool GetSubframeWindow(JSContext *cx, JS::Handle<JSObject*> proxy,
+                         JS::Handle<jsid> id,
                          JS::Value *vp, bool &found);
 
   // Returns a non-null window only if id is an index and we have a
   // window at that index.
   already_AddRefed<nsIDOMWindow> GetSubframeWindow(JSContext *cx,
-                                                   JSObject *proxy,
-                                                   jsid id);
+                                                   JS::Handle<JSObject*> proxy,
+                                                   JS::Handle<jsid> id);
 
   bool AppendIndexedPropertyNames(JSContext *cx, JSObject *proxy,
                                   JS::AutoIdVector &props);
@@ -869,8 +870,9 @@ nsOuterWindowProxy::iterate(JSContext *cx, JS::Handle<JSObject*> proxy,
 }
 
 bool
-nsOuterWindowProxy::GetSubframeWindow(JSContext *cx, JSObject *proxy,
-                                      jsid id, JS::Value* vp,
+nsOuterWindowProxy::GetSubframeWindow(JSContext *cx,
+                                      JS::Handle<JSObject*> proxy,
+                                      JS::Handle<jsid> id, JS::Value* vp,
                                       bool& found)
 {
   nsCOMPtr<nsIDOMWindow> frame = GetSubframeWindow(cx, proxy, id);
@@ -895,7 +897,9 @@ nsOuterWindowProxy::GetSubframeWindow(JSContext *cx, JSObject *proxy,
 }
 
 already_AddRefed<nsIDOMWindow>
-nsOuterWindowProxy::GetSubframeWindow(JSContext *cx, JSObject *proxy, jsid id)
+nsOuterWindowProxy::GetSubframeWindow(JSContext *cx,
+                                      JS::Handle<JSObject*> proxy,
+                                      JS::Handle<jsid> id)
 {
   int32_t index = GetArrayIndexFromId(cx, id);
   if (!IsArrayIndex(index)) {
