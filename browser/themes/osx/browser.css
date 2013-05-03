@@ -1657,8 +1657,48 @@ window[tabsontop="false"] richlistitem[type~="action"][actiontype="switchtab"][s
 
 /* social recommending panel */
 
-#social-mark-button {
+#share-button {
   -moz-image-region: rect(0, 16px, 16px, 0);
+}
+
+#socialUserPortrait {
+  width: 48px;
+  height: 48px;
+  list-style-image:url("chrome://global/skin/icons/information-32.png");
+}
+
+#socialUserDisplayName,
+#socialUserPortrait {
+  cursor: pointer;
+}
+
+#socialUserDisplayName {
+  -moz-appearance: none;
+  border: none;
+  background-color: transparent;
+  margin: 1px;
+  padding: 0;
+  font-size: 130%;
+  font-weight: bold;
+}
+
+#socialUserDisplayName > .button-box {
+  -moz-padding-start: 0;
+  padding-top: 0;
+  border-top-width: 0;
+}
+
+#socialUserDisplayName:hover {
+  color: -moz-nativehyperlinktext;
+  text-decoration: underline;
+}
+
+#unsharePopupText {
+  height: 48px;
+}
+
+#unsharePopupBottomButtons {
+  margin-top: 1em;
 }
 
 /* bookmarks menu-button */
