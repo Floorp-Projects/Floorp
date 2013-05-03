@@ -1437,7 +1437,7 @@ TelemetryImpl::GetAddonHistogramSnapshots(JSContext *cx, JS::Value *ret)
 bool
 TelemetryImpl::GetSQLStats(JSContext *cx, JS::Value *ret, bool includePrivateSql)
 {
-  JSObject *root_obj = JS_NewObject(cx, nullptr, nullptr, nullptr);
+  JS::Rooted<JSObject*> root_obj(cx, JS_NewObject(cx, nullptr, nullptr, nullptr));
   if (!root_obj)
     return false;
   *ret = OBJECT_TO_JSVAL(root_obj);
