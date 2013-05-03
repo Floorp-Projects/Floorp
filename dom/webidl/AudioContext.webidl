@@ -24,8 +24,8 @@ interface AudioContext : EventTarget {
     [Creator, Throws]
     AudioBuffer createBuffer(unsigned long numberOfChannels, unsigned long length, float sampleRate);
 
-    // [Creator, Throws]
-    // AudioBuffer createBuffer(ArrayBuffer buffer, boolean mixToMono);
+    [Creator, Throws]
+    AudioBuffer? createBuffer(ArrayBuffer buffer, boolean mixToMono);
 
     void decodeAudioData(ArrayBuffer audioData,
                          DecodeSuccessCallback successCallback,
