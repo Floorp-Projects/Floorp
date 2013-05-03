@@ -206,7 +206,8 @@ DOMProxyHandler::has(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid
 }
 
 bool
-DOMProxyHandler::AppendNamedPropertyIds(JSContext* cx, JSObject* proxy,
+DOMProxyHandler::AppendNamedPropertyIds(JSContext* cx,
+                                        JS::Handle<JSObject*> proxy,
                                         nsTArray<nsString>& names,
                                         JS::AutoIdVector& props)
 {
@@ -216,8 +217,8 @@ DOMProxyHandler::AppendNamedPropertyIds(JSContext* cx, JSObject* proxy,
       return false;
     }
 
-    jsid id;
-    if (!JS_ValueToId(cx, v, &id)) {
+    JS::Rooted<jsid> id(cx);
+    if (!JS_ValueToId(cx, v, id.address())) {
       return false;
     }
 

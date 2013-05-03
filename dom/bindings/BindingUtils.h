@@ -347,11 +347,13 @@ CreateInterfaceObjects(JSContext* cx, JS::Handle<JSObject*> global,
  * Define the unforgeable attributes on an object.
  */
 bool
-DefineUnforgeableAttributes(JSContext* cx, JSObject* obj,
+DefineUnforgeableAttributes(JSContext* cx, JS::Handle<JSObject*> obj,
                             const Prefable<const JSPropertySpec>* props);
 
 bool
-DefineWebIDLBindingPropertiesOnXPCProto(JSContext* cx, JSObject* proto, const NativeProperties* properties);
+DefineWebIDLBindingPropertiesOnXPCProto(JSContext* cx,
+                                        JS::Handle<JSObject*> proto,
+                                        const NativeProperties* properties);
 
 #ifdef _MSC_VER
 #define HAS_MEMBER_CHECK(_name)                                           \
@@ -1303,12 +1305,14 @@ JSBool
 ThrowingConstructor(JSContext* cx, unsigned argc, JS::Value* vp);
 
 bool
-GetPropertyOnPrototype(JSContext* cx, JSObject* proxy, jsid id, bool* found,
+GetPropertyOnPrototype(JSContext* cx, JS::Handle<JSObject*> proxy,
+                       JS::Handle<jsid> id, bool* found,
                        JS::Value* vp);
 
 bool
-HasPropertyOnPrototype(JSContext* cx, JSObject* proxy, DOMProxyHandler* handler,
-                       jsid id);
+HasPropertyOnPrototype(JSContext* cx, JS::Handle<JSObject*> proxy,
+                       DOMProxyHandler* handler,
+                       JS::Handle<jsid> id);
 
 template<class T>
 class NonNull
@@ -1606,8 +1610,10 @@ AddStringToIDVector(JSContext* cx, JS::AutoIdVector& vector, const char* name)
  *     interface or interface prototype object.
  */
 bool
-XrayResolveOwnProperty(JSContext* cx, JSObject* wrapper, JSObject* obj,
-                       jsid id, JSPropertyDescriptor* desc, unsigned flags);
+XrayResolveOwnProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
+                       JS::Handle<JSObject*> obj,
+                       JS::Handle<jsid> id,
+                       JSPropertyDescriptor* desc, unsigned flags);
 
 /**
  * This resolves operations, attributes and constants of the interfaces for obj.
@@ -1617,8 +1623,9 @@ XrayResolveOwnProperty(JSContext* cx, JSObject* wrapper, JSObject* obj,
  *     interface or interface prototype object.
  */
 bool
-XrayResolveNativeProperty(JSContext* cx, JSObject* wrapper, JSObject* obj,
-                          jsid id, JSPropertyDescriptor* desc);
+XrayResolveNativeProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
+                          JS::Handle<JSObject*> obj,
+                          JS::Handle<jsid> id, JSPropertyDescriptor* desc);
 
 /**
  * This enumerates indexed or named properties of obj and operations, attributes
@@ -1630,7 +1637,8 @@ XrayResolveNativeProperty(JSContext* cx, JSObject* wrapper, JSObject* obj,
  * flags are JSITER_* flags.
  */
 bool
-XrayEnumerateProperties(JSContext* cx, JSObject* wrapper, JSObject* obj,
+XrayEnumerateProperties(JSContext* cx, JS::Handle<JSObject*> wrapper,
+                        JS::Handle<JSObject*> obj,
                         unsigned flags, JS::AutoIdVector& props);
 
 extern NativePropertyHooks sWorkerNativePropertyHooks;
@@ -1713,7 +1721,8 @@ void SetXrayExpandoChain(JSObject *obj, JSObject *chain);
  * v contains the JSString for the value if the function returns true.
  */
 bool
-NativeToString(JSContext* cx, JSObject* wrapper, JSObject* obj, const char* pre,
+NativeToString(JSContext* cx, JS::Handle<JSObject*> wrapper,
+               JS::Handle<JSObject*> obj, const char* pre,
                const char* post, JS::Value* v);
 
 HAS_MEMBER(JSBindingFinalized)
@@ -1753,7 +1762,8 @@ ReparentWrapper(JSContext* aCx, JS::HandleObject aObj);
  * instance should not be a security wrapper.
  */
 JSBool
-InterfaceHasInstance(JSContext* cx, JSHandleObject obj, JSObject* instance,
+InterfaceHasInstance(JSContext* cx, JS::Handle<JSObject*> obj,
+                     JS::Handle<JSObject*> instance,
                      JSBool* bp);
 JSBool
 InterfaceHasInstance(JSContext* cx, JSHandleObject obj, JSMutableHandleValue vp,
