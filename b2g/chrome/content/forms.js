@@ -203,6 +203,8 @@ let FormAssistant = {
   scrollIntoViewTimeout: null,
   _focusedElement: null,
   _documentEncoder: null,
+  _editor: null,
+  _editing: false,
 
   get focusedElement() {
     if (this._focusedElement && Cu.isDeadWrapper(this._focusedElement))
@@ -228,12 +230,22 @@ let FormAssistant = {
     }
 
     this._documentEncoder = null;
+    if (this._editor) {
+      this._editor.removeEditorObserver(this);
+      this._editor = null;
+    }
 
     if (element) {
       element.addEventListener('mousedown', this);
       element.addEventListener('mouseup', this);
       if (isContentEditable(element)) {
         this._documentEncoder = getDocumentEncoder(element);
+      }
+      this._editor = getPlaintextEditor(element);
+      if (this._editor) {
+        // Add a nsIEditorObserver to monitor the text content of the focused
+        // element.
+        this._editor.addEditorObserver(this);
       }
     }
 
@@ -242,6 +254,15 @@ let FormAssistant = {
 
   get documentEncoder() {
     return this._documentEncoder;
+  },
+
+  // Implements nsIEditorObserver get notification when the text content of
+  // current input field has changed.
+  EditAction: function fa_editAction() {
+    if (this._editing) {
+      return;
+    }
+    this.sendKeyboardState(this.focusedElement);
   },
 
   handleEvent: function fa_handleEvent(evt) {
@@ -331,10 +352,14 @@ let FormAssistant = {
         break;
 
       case "keydown":
+        // Don't monitor the text change resulting from key event.
+        this._editing = true;
+
         // We use 'setTimeout' to wait until the input element accomplishes the
-        // change in selection range
+        // change in selection range or text content.
         content.setTimeout(function() {
           this.updateSelection();
+          this._editing = false;
         }.bind(this), 0);
         break;
     }
@@ -346,6 +371,7 @@ let FormAssistant = {
       return;
     }
 
+    this._editing = true;
     let json = msg.json;
     switch (msg.name) {
       case "Forms:Input:Value": {
@@ -396,6 +422,8 @@ let FormAssistant = {
         break;
       }
     }
+    this._editing = false;
+
   },
 
   showKeyboard: function fa_showKeyboard(target) {
@@ -525,7 +553,7 @@ function getJSON(element) {
   let attributeType = element.getAttribute("type") || "";
 
   if (attributeType) {
-    var typeLowerCase = attributeType.toLowerCase(); 
+    var typeLowerCase = attributeType.toLowerCase();
     switch (typeLowerCase) {
       case "datetime":
       case "datetime-local":
@@ -724,3 +752,27 @@ function setSelectionRange(element, start, end) {
   }
 }
 
+// Get nsIPlaintextEditor object from an input field
+function getPlaintextEditor(element) {
+  let editor = null;
+  // Get nsIEditor
+  if (element instanceof HTMLInputElement ||
+      element instanceof HTMLTextAreaElement) {
+    // Get from the <input> and <textarea> elements
+    editor = element.QueryInterface(Ci.nsIDOMNSEditableElement).editor;
+  } else if (isContentEditable(element)) {
+    // Get from content editable element
+    let win = element.ownerDocument.defaultView;
+    let editingSession = win.QueryInterface(Ci.nsIInterfaceRequestor)
+                            .getInterface(Ci.nsIWebNavigation)
+                            .QueryInterface(Ci.nsIInterfaceRequestor)
+                            .getInterface(Ci.nsIEditingSession);
+    if (editingSession) {
+      editor = editingSession.getEditorForWindow(win);
+    }
+  }
+  if (editor) {
+    editor.QueryInterface(Ci.nsIPlaintextEditor);
+  }
+  return editor;
+}
