@@ -51,6 +51,9 @@ private:
   nsCOMPtr<nsIMobileConnectionProvider> mProvider;
   nsRefPtr<Listener> mListener;
   nsRefPtr<icc::IccManager> mIccManager;
+  nsWeakPtr mWindow;
+
+  bool CheckPermission(const char* type);
 };
 
 } // namespace network
