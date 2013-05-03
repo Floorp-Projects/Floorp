@@ -110,30 +110,6 @@ AudioContext::CreateBuffer(JSContext* aJSContext, uint32_t aNumberOfChannels,
   return buffer.forget();
 }
 
-already_AddRefed<AudioBuffer>
-AudioContext::CreateBuffer(JSContext* aJSContext, ArrayBuffer& aBuffer,
-                          bool aMixToMono, ErrorResult& aRv)
-{
-  // TODO: handle aMixToMono
-
-  // Sniff the content of the media.
-  // Failed type sniffing will be handled by SyncDecodeMedia.
-  nsAutoCString contentType;
-  NS_SniffContent(NS_DATA_SNIFFER_CATEGORY, nullptr,
-                  aBuffer.Data(), aBuffer.Length(),
-                  contentType);
-
-  WebAudioDecodeJob job(contentType, aBuffer, this);
-
-  if (mDecoder.SyncDecodeMedia(contentType.get(),
-                               job.mBuffer, job.mLength, job) &&
-      job.mOutput) {
-    return job.mOutput.forget();
-  }
-
-  return nullptr;
-}
-
 namespace {
 
 bool IsValidBufferSize(uint32_t aBufferSize) {
