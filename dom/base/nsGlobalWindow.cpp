@@ -2467,7 +2467,8 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
   // alive etc.
 
   if ((!reUseInnerWindow || aDocument != oldDoc) && !aState) {
-    nsWindowSH::InstallGlobalScopePolluter(cx, newInnerWindow->mJSObject);
+    JS::Rooted<JSObject*> obj(cx, newInnerWindow->mJSObject);
+    nsWindowSH::InstallGlobalScopePolluter(cx, obj);
   }
 
   aDocument->SetScriptGlobalObject(newInnerWindow);
