@@ -608,8 +608,8 @@ IDBCursor::GetValue(JSContext* aCx,
       mRooted = true;
     }
 
-    jsval val;
-    if (!IDBObjectStore::DeserializeValue(aCx, mCloneReadInfo, &val)) {
+    JS::Rooted<JS::Value> val(aCx);
+    if (!IDBObjectStore::DeserializeValue(aCx, mCloneReadInfo, val.address())) {
       return NS_ERROR_DOM_DATA_CLONE_ERR;
     }
 
@@ -740,8 +740,8 @@ IDBCursor::Update(const jsval& aValue,
     }
   }
   else {
-    jsval keyVal;
-    rv = objectKey.ToJSVal(aCx, &keyVal);
+    JS::Rooted<JS::Value> keyVal(aCx);
+    rv = objectKey.ToJSVal(aCx, keyVal.address());
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = mObjectStore->Put(aValue, keyVal, aCx, 1, getter_AddRefs(request));
@@ -811,8 +811,8 @@ IDBCursor::Delete(JSContext* aCx,
 
   Key& objectKey = (mType == OBJECTSTORE) ? mKey : mObjectKey;
 
-  jsval key;
-  nsresult rv = objectKey.ToJSVal(aCx, &key);
+  JS::Rooted<JS::Value> key(aCx);
+  nsresult rv = objectKey.ToJSVal(aCx, key.address());
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIIDBRequest> request;

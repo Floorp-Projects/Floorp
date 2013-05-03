@@ -444,6 +444,34 @@ struct ParentObject {
   nsWrapperCache* const mWrapperCache;
 };
 
+// Representation for dates
+class Date {
+public:
+  // Not inlining much here to avoid the extra includes we'd need
+  Date();
+  Date(double aMilliseconds) :
+    mMsecSinceEpoch(aMilliseconds)
+  {}
+
+  bool IsUndefined() const;
+  double TimeStamp() const
+  {
+    return mMsecSinceEpoch;
+  }
+  void SetTimeStamp(double aMilliseconds)
+  {
+    mMsecSinceEpoch = aMilliseconds;
+  }
+  // Can return false if CheckedUnwrap fails.  This will NOT throw;
+  // callers should do it as needed.
+  bool SetTimeStamp(JSContext* cx, JSObject* obj);
+
+  bool ToDateObject(JSContext* cx, JS::Value* vp) const;
+
+private:
+  double mMsecSinceEpoch;
+};
+
 } // namespace dom
 } // namespace mozilla
 

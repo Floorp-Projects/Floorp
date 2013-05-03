@@ -139,6 +139,18 @@
   "CharacterData interface: calling after(union) on document.createComment(\"abc\") with too few arguments must throw TypeError": true,
   "CharacterData interface: document.createComment(\"abc\") must inherit property \"replace\" with the proper type (11)": true,
   "CharacterData interface: calling replace(union) on document.createComment(\"abc\") with too few arguments must throw TypeError": true,
+  "Node interface: existence and properties of interface object": true,
+  "Document interface: existence and properties of interface object": true,
+  "XMLDocument interface: existence and properties of interface object": true,
+  "DocumentFragment interface: existence and properties of interface object": true,
+  "DocumentType interface: existence and properties of interface object": true,
+  "Element interface: existence and properties of interface object": true,
+  "Attr interface: existence and properties of interface object": true,
+  "CharacterData interface: existence and properties of interface object": true,
+  "Text interface: existence and properties of interface object": true,
+  "ProcessingInstruction interface: existence and properties of interface object": true,
+  "Comment interface: existence and properties of interface object": true,
+  "DOMSettableTokenList interface: existence and properties of interface object": true,
   "NodeFilter interface: existence and properties of interface object": true,
   "NodeList interface: existence and properties of interface prototype object": true
 }

@@ -17,6 +17,26 @@ html|select[multiple] > scrollbar {
   -moz-appearance: scrollbar-small;
 }
 
+@media all and (-moz-overlay-scrollbars) {
+  scrollbar {
+    position: relative;
+    z-index: 2147483647;
+  }
+
+  scrollbar:not([active="true"]),
+  scrollbar[disabled="true"] {
+    visibility: hidden;
+  }
+
+  scrollbar[orient="vertical"] {
+    -moz-margin-start: -16px;
+  }
+
+  scrollbar[orient="horizontal"] {
+    margin-top: -16px;
+  }
+}
+
 /* ..... track ..... */
 
 slider {

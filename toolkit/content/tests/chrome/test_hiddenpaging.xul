@@ -98,11 +98,13 @@ function testListbox()
   var id = "listbox";
   var listbox = document.getElementById(id);
 
-  // Check that a scrollbar is visible by comparing the width of the listitem
-  // with the width of the listbox. This is a simple way to do this without
-  // checking the anonymous content.
-  ok(listbox.firstChild.getBoundingClientRect().width < listbox.getBoundingClientRect().width - 10,
-     id + ": Scrollbar visible");
+  if (!window.matchMedia("(-moz-overlay-scrollbars)").matches) {
+   // Check that a scrollbar is visible by comparing the width of the listitem
+   // with the width of the listbox. This is a simple way to do this without
+   // checking the anonymous content.
+   ok(listbox.firstChild.getBoundingClientRect().width < listbox.getBoundingClientRect().width - 10,
+      id + ": Scrollbar visible");
+ }
 
   var rowHeight = listbox.firstChild.getBoundingClientRect().height;
 

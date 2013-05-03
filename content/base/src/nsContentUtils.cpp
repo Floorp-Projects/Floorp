@@ -5839,8 +5839,9 @@ nsContentUtils::DispatchXULCommand(nsIContent* aTarget,
 
 // static
 nsresult
-nsContentUtils::WrapNative(JSContext *cx, JSObject *scope, nsISupports *native,
-                           nsWrapperCache *cache, const nsIID* aIID, JS::Value *vp,
+nsContentUtils::WrapNative(JSContext *cx, JS::Handle<JSObject*> scope,
+                           nsISupports *native, nsWrapperCache *cache,
+                           const nsIID* aIID, JS::Value *vp,
                            nsIXPConnectJSObjectHolder **aHolder,
                            bool aAllowWrapping)
 {
@@ -5929,7 +5930,7 @@ nsContentUtils::CreateBlobBuffer(JSContext* aCx,
   } else {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  JSObject* scope = JS_GetGlobalForScopeChain(aCx);
+  JS::Rooted<JSObject*> scope(aCx, JS_GetGlobalForScopeChain(aCx));
   return nsContentUtils::WrapNative(aCx, scope, blob, &aBlob, nullptr, true);
 }
 
@@ -6380,11 +6381,11 @@ nsContentUtils::IsPatternMatching(nsAString& aValue, nsAString& aPattern,
     return true;
   }
 
-  JS::Value rval = JS::NullValue();
+  JS::Rooted<JS::Value> rval(cx, JS::NullValue());
   size_t idx = 0;
   if (!JS_ExecuteRegExpNoStatics(cx, re,
                                  static_cast<jschar*>(aValue.BeginWriting()),
-                                 aValue.Length(), &idx, true, &rval)) {
+                                 aValue.Length(), &idx, true, rval.address())) {
     JS_ClearPendingException(cx);
     return true;
   }

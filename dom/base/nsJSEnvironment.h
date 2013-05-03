@@ -163,7 +163,7 @@ protected:
 
   // Helper to convert xpcom datatypes to jsvals.
   nsresult ConvertSupportsTojsvals(nsISupports *aArgs,
-                                   JSObject *aScope,
+                                   JS::Handle<JSObject*> aScope,
                                    uint32_t *aArgc,
                                    JS::Value **aArgv,
                                    mozilla::Maybe<nsRootedJSValueArray> &aPoolRelease);
@@ -172,7 +172,8 @@ protected:
 
   // given an nsISupports object (presumably an event target or some other
   // DOM object), get (or create) the JSObject wrapping it.
-  nsresult JSObjectFromInterface(nsISupports *aSup, JSObject *aScript,
+  nsresult JSObjectFromInterface(nsISupports *aSup,
+                                 JS::Handle<JSObject*> aScript,
                                  JSObject **aRet);
 
   // Report the pending exception on our mContext, if any.  This

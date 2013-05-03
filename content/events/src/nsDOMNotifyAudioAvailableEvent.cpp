@@ -10,7 +10,10 @@
 #include "nsContentUtils.h" // NS_DROP_JS_OBJECTS
 #include "jsfriendapi.h"
 
-nsDOMNotifyAudioAvailableEvent::nsDOMNotifyAudioAvailableEvent(mozilla::dom::EventTarget* aOwner,
+using namespace mozilla;
+using namespace mozilla::dom;
+
+nsDOMNotifyAudioAvailableEvent::nsDOMNotifyAudioAvailableEvent(EventTarget* aOwner,
                                                                nsPresContext* aPresContext,
                                                                nsEvent* aEvent,
                                                                uint32_t aEventType,
@@ -28,6 +31,7 @@ nsDOMNotifyAudioAvailableEvent::nsDOMNotifyAudioAvailableEvent(mozilla::dom::Eve
   if (mEvent) {
     mEvent->message = aEventType;
   }
+  SetIsDOMBinding();
 }
 
 DOMCI_DATA(NotifyAudioAvailableEvent, nsDOMNotifyAudioAvailableEvent)
@@ -93,7 +97,7 @@ nsDOMNotifyAudioAvailableEvent::GetFrameBuffer(JSContext* aCx, JS::Value* aResul
 NS_IMETHODIMP
 nsDOMNotifyAudioAvailableEvent::GetTime(float *aRetVal)
 {
-  *aRetVal = mTime;
+  *aRetVal = Time();
   return NS_OK;
 }
 
@@ -117,11 +121,42 @@ nsDOMNotifyAudioAvailableEvent::InitAudioAvailableEvent(const nsAString& aType,
   mFrameBufferLength = aFrameBufferLength;
   mTime = aTime;
   mAllowAudioData = aAllowAudioData;
+  mCachedArray = nullptr;
   return NS_OK;
 }
 
+void
+nsDOMNotifyAudioAvailableEvent::InitAudioAvailableEvent(const nsAString& aType,
+                                                        bool aCanBubble,
+                                                        bool aCancelable,
+                                                        const Nullable<Sequence<float> >& aFrameBuffer,
+                                                        uint32_t aFrameBufferLength,
+                                                        float aTime,
+                                                        bool aAllowAudioData,
+                                                        ErrorResult& aRv)
+{
+  if ((aFrameBuffer.IsNull() && aFrameBufferLength > 0) ||
+      (!aFrameBuffer.IsNull() &&
+       aFrameBuffer.Value().Length() < aFrameBufferLength)) {
+    aRv = NS_ERROR_UNEXPECTED;
+    return;
+  }
+
+  nsAutoArrayPtr<float> buffer;
+  if (!aFrameBuffer.IsNull()) {
+    buffer = new float[aFrameBufferLength];
+    memcpy(buffer.get(), aFrameBuffer.Value().Elements(),
+           aFrameBufferLength * sizeof(float));
+  }
+
+  aRv = InitAudioAvailableEvent(aType, aCanBubble, aCancelable,
+                                buffer.forget(),
+                                aFrameBufferLength,
+                                aTime, aAllowAudioData);
+}
+
 nsresult NS_NewDOMAudioAvailableEvent(nsIDOMEvent** aInstancePtrResult,
-                                      mozilla::dom::EventTarget* aOwner,
+                                      EventTarget* aOwner,
                                       nsPresContext* aPresContext,
                                       nsEvent *aEvent,
                                       uint32_t aEventType,
