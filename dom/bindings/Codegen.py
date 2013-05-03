@@ -229,7 +229,7 @@ def CallOnUnforgeableHolder(descriptor, code, isXrayCheck=None):
     if not isXrayCheck is None:
         pre = """// Scope for 'global', 'ac' and 'unforgeableHolder'
 {
-  JSObject* global;
+  JS::Rooted<JSObject*> global(cx);
   Maybe<JSAutoCompartment> ac;
   if (""" + isXrayCheck + """) {
     global = js::GetGlobalForObjectCrossCompartment(js::UncheckedUnwrap(proxy));
@@ -2273,8 +2273,8 @@ class CastableObjectUnwrapper():
             self.substitution["codeOnFailure"] = CGIndenter(CGGeneric(string.Template(
                 "${type} *objPtr;\n"
                 "xpc_qsSelfRef objRef;\n"
-                "JS::Value val = JS::ObjectValue(*${source});\n"
-                "nsresult rv = xpc_qsUnwrapArg<${type}>(cx, val, &objPtr, &objRef.ptr, &val);\n"
+                "JS::Rooted<JS::Value> val(cx, JS::ObjectValue(*${source}));\n"
+                "nsresult rv = xpc_qsUnwrapArg<${type}>(cx, val, &objPtr, &objRef.ptr, val.address());\n"
                 "if (NS_FAILED(rv)) {\n"
                 "${codeOnFailure}\n"
                 "}\n"
@@ -3689,7 +3689,7 @@ if (%s.IsNull()) {
                 'result' :  "%s[%s]" % (result, index),
                 'successCode': "break;",
                 'jsvalRef': "tmp",
-                'jsvalPtr': "&tmp",
+                'jsvalPtr': "tmp.address()",
                 'isCreator': isCreator,
                 'exceptionCode': exceptionCode,
                 'obj': "returnArray"
@@ -3705,7 +3705,7 @@ if (!returnArray) {
 }
 // Scope for 'tmp'
 {
-  jsval tmp;
+  JS::Rooted<JS::Value> tmp(cx);
   for (uint32_t %s = 0; %s < length; ++%s) {
     // Control block to let us common up the JS_DefineElement calls when there
     // are different ways to succeed at wrapping the object.
@@ -6597,7 +6597,7 @@ MOZ_ASSERT_IF(desc->obj, desc->obj == ${holder});"""
         else:
             namedGet = ""
 
-        return setOrIndexedGet + """JSObject* expando;
+        return setOrIndexedGet + """JS::Rooted<JSObject*> expando(cx);
 if (!isXray && (expando = GetExpandoObject(proxy))) {
   if (!JS_GetPropertyDescriptorById(cx, expando, id, flags, desc)) {
     return false;
@@ -6801,7 +6801,7 @@ if (!AppendNamedPropertyIds(cx, proxy, names, props)) {
             addUnforgeable = ""
         return """bool isXray = xpc::WrapperFactory::IsXrayWrapper(proxy);
 """ + addIndices + addUnforgeable + addNames + """
-JSObject* expando;
+JS::Rooted<JSObject*> expando(cx);
 if (!isXray && (expando = DOMProxyHandler::GetExpandoObject(proxy)) &&
     !js::GetPropertyNames(cx, expando, JSITER_OWNONLY | JSITER_HIDDEN, &props)) {
   return false;
@@ -6997,7 +6997,7 @@ class CGDOMJSProxyHandler_getElementIfPresent(ClassMethod):
                                          "UINT_TO_JSVAL(index)").define()
             get += """
 
-JSObject* expando = GetExpandoObject(proxy);
+JS::Rooted<JSObject*> expando(cx, GetExpandoObject(proxy));
 if (expando) {
   JSBool isPresent;
   if (!JS_GetElementIfPresent(cx, expando, index, expando, vp.address(), &isPresent)) {
@@ -7014,8 +7014,8 @@ if (expando) {
              "Should not have a XrayWrapper here");
 
 """ + get + """
-JSObject *proto;
-if (!js::GetObjectProto(cx, proxy, &proto)) {
+JS::Rooted<JSObject*> proto(cx);
+if (!js::GetObjectProto(cx, proxy, proto.address())) {
   return false;
 }
 if (proto) {
@@ -7551,13 +7551,13 @@ class CGDictionary(CGThing):
                                  "  return false;\n"
                                  "}" % propDef),
                 'jsvalRef': "temp",
-                'jsvalPtr': "&temp",
+                'jsvalPtr': "temp.address()",
                 'isCreator': False,
                 'obj': "parentObject"
             }, isMember=True)
         conversion = CGGeneric(innerTemplate)
         conversion = CGWrapper(conversion,
-                               pre=("JS::Value temp;\n"
+                               pre=("JS::Rooted<JS::Value> temp(cx);\n"
                                     "const %s& currentValue = %s;\n" %
                                     (declType.define(), memberData)
                                     ))
