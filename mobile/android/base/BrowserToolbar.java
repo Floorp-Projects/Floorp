@@ -74,7 +74,6 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
     private boolean mSiteSecurityVisible;
     private boolean mSwitchingTabs;
     private ShapedButton mTabs;
-    private int mTabsPaneWidth;
     private ImageButton mBack;
     private ImageButton mForward;
     public ImageButton mFavicon;
@@ -220,11 +219,9 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
 
         // This will clip the right edge's image at half of its width
         mAwesomeBarRightEdge = (ImageView) mLayout.findViewById(R.id.awesome_bar_right_edge);
-        mAwesomeBarRightEdge.getDrawable().setLevel(5000);
-
-        // This will hold the translation width inside the toolbar when the tabs
-        // pane is visible. It will affect the padding applied to the title TextView.
-        mTabsPaneWidth = 0;
+        if (mAwesomeBarRightEdge != null) {
+            mAwesomeBarRightEdge.getDrawable().setLevel(5000);
+        }
 
         mTitle = (GeckoTextView) mLayout.findViewById(R.id.awesome_bar_title);
         mTitlePadding = mTitle.getPaddingRight();
@@ -424,13 +421,6 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
         return mLayout;
     }
 
-    public void refreshBackground() {
-        mAddressBarBg.requestLayout();
-
-        if (mAwesomeBarRightEdge != null)
-            mAwesomeBarRightEdge.requestLayout();
-    }
-
     @Override
     public void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
         switch(msg) {
@@ -575,8 +565,11 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
             final int entryTranslation = getAwesomeBarEntryTranslation();
             final int curveTranslation = getAwesomeBarCurveTranslation();
 
-            proxy = AnimatorProxy.create(mAwesomeBarRightEdge);
-            proxy.setTranslationX(entryTranslation);
+            if (mAwesomeBarRightEdge != null) {
+                proxy = AnimatorProxy.create(mAwesomeBarRightEdge);
+                proxy.setTranslationX(entryTranslation);
+            }
+
             proxy = AnimatorProxy.create(mTabs);
             proxy.setTranslationX(curveTranslation);
             proxy = AnimatorProxy.create(mTabsCounter);
@@ -599,9 +592,13 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
         contentAnimator.setUseHardwareLayer(false);
 
         // Shrink the awesome entry back to its original size
-        contentAnimator.attach(mAwesomeBarRightEdge,
-                               PropertyAnimator.Property.TRANSLATION_X,
-                               0);
+
+        if (mAwesomeBarRightEdge != null) {
+            contentAnimator.attach(mAwesomeBarRightEdge,
+                                   PropertyAnimator.Property.TRANSLATION_X,
+                                   0);
+        }
+
         contentAnimator.attach(mTabs,
                                PropertyAnimator.Property.TRANSLATION_X,
                                0);
@@ -684,9 +681,13 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
         proxy.setAlpha(0);
 
         // Slide the right side elements of the toolbar
-        contentAnimator.attach(mAwesomeBarRightEdge,
-                               PropertyAnimator.Property.TRANSLATION_X,
-                               entryTranslation);
+
+        if (mAwesomeBarRightEdge != null) {
+            contentAnimator.attach(mAwesomeBarRightEdge,
+                                   PropertyAnimator.Property.TRANSLATION_X,
+                                   entryTranslation);
+        }
+
         contentAnimator.attach(mTabs,
                                PropertyAnimator.Property.TRANSLATION_X,
                                curveTranslation);
@@ -776,88 +777,6 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
         mTabs.setContentDescription((count > 1) ?
                                     mActivity.getString(R.string.num_tabs, count) :
                                     mActivity.getString(R.string.one_tab));
-        updateTabs(mActivity.areTabsShown());
-    }
-
-    public void prepareTabsAnimation(PropertyAnimator animator, int width) {
-        animator.attach(mAwesomeBarEntry,
-                        PropertyAnimator.Property.TRANSLATION_X,
-                        width);
-        animator.attach(mAddressBarBg,
-                        PropertyAnimator.Property.TRANSLATION_X,
-                        width);
-        animator.attach(mTabs,
-                        PropertyAnimator.Property.TRANSLATION_X,
-                        width);
-        animator.attach(mTabsCounter,
-                        PropertyAnimator.Property.TRANSLATION_X,
-                        width);
-        animator.attach(mBack,
-                        PropertyAnimator.Property.TRANSLATION_X,
-                        width);
-        animator.attach(mForward,
-                        PropertyAnimator.Property.TRANSLATION_X,
-                        width);
-        animator.attach(mTitle,
-                        PropertyAnimator.Property.TRANSLATION_X,
-                        width);
-        animator.attach(mFavicon,
-                        PropertyAnimator.Property.TRANSLATION_X,
-                        width);
-        animator.attach(mSiteSecurity,
-                        PropertyAnimator.Property.TRANSLATION_X,
-                        width);
-
-        // Uses the old mTabsPaneWidth.
-        adjustTabsAnimation(false);
-
-        mTabsPaneWidth = width;
-
-        // Only update title padding immediatelly when shrinking the browser
-        // toolbar. Leave the padding update to the end of the animation when
-        // expanding (see finishTabsAnimation()).
-        if (mTabsPaneWidth > 0)
-            setPageActionVisibility(mStop.getVisibility() == View.VISIBLE);
-    }
-
-    public void adjustTabsAnimation(boolean reset) {
-        int width = reset ? 0 : mTabsPaneWidth;
-        mAwesomeBarEntry.setTranslationX(width);
-        mAddressBarBg.setTranslationX(width);
-        mTabs.setTranslationX(width);
-        mTabsCounter.setTranslationX(width);
-        mBack.setTranslationX(width);
-        mForward.setTranslationX(width);
-        mTitle.setTranslationX(width);
-        mFavicon.setTranslationX(width);
-        mSiteSecurity.setTranslationX(width);
-
-        ((ViewGroup.MarginLayoutParams) mLayout.getLayoutParams()).leftMargin = reset ? mTabsPaneWidth : 0;
-    }
-
-    public void finishTabsAnimation() {
-        setPageActionVisibility(mStop.getVisibility() == View.VISIBLE);
-    }
-
-    public void adjustForTabsLayout(int width) {
-        mTabsPaneWidth = width;
-        adjustTabsAnimation(true);
-    }
-
-    public void updateTabs(boolean areTabsShown) {
-        if (areTabsShown)
-            mTabs.setImageLevel(TABS_EXPANDED);
-        else
-            mTabs.setImageLevel(TABS_CONTRACTED);
-
-        // A level change will not trigger onMeasure() for the tabs, where the path is created.
-        // Manually requesting a layout to re-calculate the path.
-        mTabs.requestLayout();
-    }
-
-    public void setIsSideBar(boolean isSideBar) {
-        Resources resources = mActivity.getResources();
-        mTabs.setBackgroundDrawable(resources.getDrawable(R.drawable.shaped_button));
     }
 
     public void setProgressVisibility(boolean visible) {
