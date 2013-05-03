@@ -297,7 +297,7 @@ gTests.push({
     // the test above will invoke the app bar
     yield hideContextUI();
 
-    Browser.closeTab(Browser.selectedTab);
+    Browser.closeTab(Browser.selectedTab, { forceClose: true });
     purgeEventQueue();
   }
 });
@@ -345,7 +345,7 @@ gTests.push({
     ContextMenuUI.hide();
     yield promise;
 
-    Browser.closeTab(Browser.selectedTab);
+    Browser.closeTab(Browser.selectedTab, { forceClose: true });
   }
 });
 
@@ -492,8 +492,7 @@ gTests.push({
     let imagetab = Browser.getTabFromChrome(event.originalTarget);
     ok(imagetab != null, "tab created");
 
-    Browser.closeTab(imagetab);
-    yield waitForEvent(imagetab.chromeTab.parentNode, "TabRemove");
+    Browser.closeTab(imagetab, { forceClose: true });
   }
 });
 

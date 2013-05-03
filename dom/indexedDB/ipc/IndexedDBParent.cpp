@@ -384,16 +384,16 @@ IndexedDBDatabaseParent::HandleRequestEvent(nsIDOMEvent* aEvent,
     return NS_OK;
   }
 
-  jsval result;
-  rv = mOpenRequest->GetResult(&result);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  MOZ_ASSERT(!JSVAL_IS_PRIMITIVE(result));
-
   nsIXPConnect* xpc = nsContentUtils::XPConnect();
   MOZ_ASSERT(xpc);
 
   SafeAutoJSContext cx;
+
+  JS::Rooted<JS::Value> result(cx);
+  rv = mOpenRequest->GetResult(result.address());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  MOZ_ASSERT(!JSVAL_IS_PRIMITIVE(result));
 
   nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
   rv = xpc->GetWrappedNativeOfJSObject(cx, JSVAL_TO_OBJECT(result),
@@ -536,8 +536,8 @@ IndexedDBDatabaseParent::HandleDatabaseEvent(nsIDOMEvent* aEvent,
     rv = changeEvent->GetOldVersion(&oldVersion);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    JS::Value newVersionVal;
-    rv = changeEvent->GetNewVersion(cx, &newVersionVal);
+    JS::Rooted<JS::Value> newVersionVal(cx);
+    rv = changeEvent->GetNewVersion(cx, newVersionVal.address());
     NS_ENSURE_SUCCESS(rv, rv);
 
     uint64_t newVersion;

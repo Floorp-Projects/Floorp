@@ -157,10 +157,10 @@ function hideContextUI()
 {
   purgeEventQueue();
   if (ContextUI.isVisible) {
-    info("is visible, waiting...");
     let promise = waitForEvent(Elements.tray, "transitionend", null, Elements.tray);
     if (ContextUI.dismiss())
     {
+      info("ContextUI dismissed, waiting...");
       return promise;
     }
     return true;
@@ -189,6 +189,8 @@ function fireAppBarDisplayEvent()
 /*=============================================================================
   Asynchronous test helpers
 =============================================================================*/
+let gOpenedTabs = [];
+
 /**
  *  Loads a URL in a new tab asynchronously.
  *
@@ -208,9 +210,24 @@ function addTab(aUrl) {
     yield tab.pageShowPromise;
 
     is(tab.browser.currentURI.spec, aUrl, aUrl + " is loaded");
-    registerCleanupFunction(function() Browser.closeTab(tab));
+
+    yield hideContextUI();
+
+    gOpenedTabs.push(tab);
+
     throw new Task.Result(tab);
   });
+}
+
+/**
+ * Cleans up tabs left open by addTab().
+ * This is being called at runTests() after the test loop.
+ */
+function cleanUpOpenedTabs() {
+  let tab;
+  while(tab = gOpenedTabs.shift()) {
+    Browser.closeTab(Browser.getTabFromChrome(tab.chromeTab), { forceClose: true })
+  }
 }
 
 /**
@@ -650,6 +667,7 @@ let gTests = [];
 
 function runTests() {
   waitForExplicitFinish();
+
   Task.spawn(function() {
     while((gCurrentTest = gTests.shift())){
       try {
@@ -672,6 +690,26 @@ function runTests() {
         info("END " + gCurrentTest.desc);
       }
     }
+
+    try {
+      cleanUpOpenedTabs();
+
+      let badTabs = [];
+      Browser.tabs.forEach(function(item, index, array) {
+        let location = item.browser.currentURI.spec;
+        if (index == 0 && location == "about:blank")
+          return;
+        ok(false, "Left over tab after test: '" + location + "'");
+        badTabs.push(item);
+      });
+
+      badTabs.forEach(function(item, index, array) {
+        Browser.closeTab(item, { forceClose: true });
+      });
+    } catch (ex) {
+      ok(false, "Cleanup tabs failed - " + ex);
+    }
+
     finish();
   });
 }

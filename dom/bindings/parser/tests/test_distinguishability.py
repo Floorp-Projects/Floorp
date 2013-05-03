@@ -157,7 +157,7 @@ def WebIDLTest(parser, harness):
                  "CallbackInterface?", "CallbackInterface2",
                  "object", "Callback", "Callback2", "optional Dict",
                  "optional Dict2", "sequence<long>", "sequence<short>",
-                 "long[]", "short[]" ]
+                 "long[]", "short[]", "Date", "Date?" ]
     # When we can parse Date and RegExp, we need to add them here.
 
     # Try to categorize things a bit to keep list lengths down
@@ -169,10 +169,11 @@ def WebIDLTest(parser, harness):
     interfaces = [ "Interface", "Interface?", "AncestorInterface",
                    "UnrelatedInterface", "ImplementedInterface" ]
     nullables = ["long?", "short?", "Interface?", "CallbackInterface?",
-                 "optional Dict", "optional Dict2"]
-    nonUserObjects = primitives + interfaces
+                 "optional Dict", "optional Dict2", "Date?"]
+    dates = [ "Date", "Date?" ]
+    nonUserObjects = primitives + interfaces + dates
     otherObjects = allBut(argTypes, nonUserObjects + ["object"])
-    notRelatedInterfaces = primitives + ["UnrelatedInterface"] + otherObjects
+    notRelatedInterfaces = primitives + ["UnrelatedInterface"] + otherObjects + dates
 
     # Build a representation of the distinguishability table as a dict
     # of dicts, holding True values where needed, holes elsewhere.
@@ -208,6 +209,8 @@ def WebIDLTest(parser, harness):
     setDistinguishable("sequence<short>", nonUserObjects)
     setDistinguishable("long[]", nonUserObjects)
     setDistinguishable("short[]", nonUserObjects)
+    setDistinguishable("Date", allBut(argTypes, dates + ["object"]))
+    setDistinguishable("Date?", allBut(argTypes, dates + nullables + ["object"]))
 
     def areDistinguishable(type1, type2):
         return data[type1].get(type2, False)

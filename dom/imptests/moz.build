@@ -26,6 +26,7 @@ DIRS += [
     'failures/webapps/DOMCore/tests/submissions/Opera',
     'failures/webapps/WebStorage/tests/submissions/Infraware',
     'failures/webapps/WebStorage/tests/submissions/Ms2ger',
+    'failures/webapps/XMLHttpRequest/tests/submissions/Ms2ger'
 ]
 
 include('editing.mozbuild')

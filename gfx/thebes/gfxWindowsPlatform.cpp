@@ -53,34 +53,9 @@ using namespace mozilla::gfx;
 #include "nsMemory.h"
 #endif
 
-/*
- * Required headers are not available in the current consumer preview Win8
- * dev kit, disabling for now.
- */
-#undef MOZ_WINSDK_TARGETVER
-
-/**
- * XXX below should be >= MOZ_NTDDI_WIN8 or such which is not defined yet
- */
-#if MOZ_WINSDK_TARGETVER > MOZ_NTDDI_WIN7
-#define ENABLE_GPU_MEM_REPORTER
-#endif
-
-#if defined CAIRO_HAS_D2D_SURFACE || defined ENABLE_GPU_MEM_REPORTER
 #include "nsIMemoryReporter.h"
-#endif
-
-#ifdef ENABLE_GPU_MEM_REPORTER
 #include <winternl.h>
-
-/**
- * XXX need to check that extern C is really needed with Win8 SDK.
- *     It was required for files I had available at push time.
- */
-extern "C" {
-#include <d3dkmthk.h>
-}
-#endif
+#include "d3dkmtQueryStatistics.h"
 
 using namespace mozilla;
 
@@ -190,7 +165,6 @@ typedef HRESULT(WINAPI*CreateDXGIFactory1Func)(
 );
 #endif
 
-#ifdef ENABLE_GPU_MEM_REPORTER
 class GPUAdapterMultiReporter : public nsIMemoryMultiReporter {
 
     // Callers must Release the DXGIAdapter after use or risk mem-leak
@@ -212,6 +186,14 @@ class GPUAdapterMultiReporter : public nsIMemoryMultiReporter {
     
 public:
     NS_DECL_ISUPPORTS
+
+    // nsIMemoryMultiReporter abstract method implementation
+    NS_IMETHOD
+    GetName(nsACString &aName)
+    {
+        aName.AssignLiteral("gpuadapter");
+        return NS_OK;
+    }
     
     // nsIMemoryMultiReporter abstract method implementation
     NS_IMETHOD
@@ -227,7 +209,7 @@ public:
         IDXGIAdapter *DXGIAdapter;
         
         HMODULE gdi32Handle;
-        PFND3DKMT_QUERYSTATISTICS queryD3DKMTStatistics;
+        PFND3DKMTQS queryD3DKMTStatistics;
         
         winVers = gfxWindowsPlatform::WindowsOSVersion(&buildNum);
         
@@ -236,35 +218,35 @@ public:
             return NS_OK;
         
         if (gdi32Handle = LoadLibrary(TEXT("gdi32.dll")))
-            queryD3DKMTStatistics = (PFND3DKMT_QUERYSTATISTICS)GetProcAddress(gdi32Handle, "D3DKMTQueryStatistics");
+            queryD3DKMTStatistics = (PFND3DKMTQS)GetProcAddress(gdi32Handle, "D3DKMTQueryStatistics");
         
         if (queryD3DKMTStatistics && GetDXGIAdapter(&DXGIAdapter)) {
             // Most of this block is understood thanks to wj32's work on Process Hacker
             
             DXGI_ADAPTER_DESC adapterDesc;
-            D3DKMT_QUERYSTATISTICS queryStatistics;
+            D3DKMTQS queryStatistics;
             
             DXGIAdapter->GetDesc(&adapterDesc);
             DXGIAdapter->Release();
             
-            memset(&queryStatistics, 0, sizeof(D3DKMT_QUERYSTATISTICS));
-            queryStatistics.Type = D3DKMT_QUERYSTATISTICS_PROCESS;
+            memset(&queryStatistics, 0, sizeof(D3DKMTQS));
+            queryStatistics.Type = D3DKMTQS_PROCESS;
             queryStatistics.AdapterLuid = adapterDesc.AdapterLuid;
             queryStatistics.hProcess = ProcessHandle;
             if (NT_SUCCESS(queryD3DKMTStatistics(&queryStatistics))) {
-                committedBytesUsed = queryStatistics.QueryResult.ProcessInformation.SystemMemory.BytesAllocated;
+                committedBytesUsed = queryStatistics.QueryResult.ProcessInfo.SystemMemory.BytesAllocated;
             }
             
-            memset(&queryStatistics, 0, sizeof(D3DKMT_QUERYSTATISTICS));
-            queryStatistics.Type = D3DKMT_QUERYSTATISTICS_ADAPTER;
+            memset(&queryStatistics, 0, sizeof(D3DKMTQS));
+            queryStatistics.Type = D3DKMTQS_ADAPTER;
             queryStatistics.AdapterLuid = adapterDesc.AdapterLuid;
             if (NT_SUCCESS(queryD3DKMTStatistics(&queryStatistics))) {
                 ULONG i;
-                ULONG segmentCount = queryStatistics.QueryResult.AdapterInformation.NbSegments;
+                ULONG segmentCount = queryStatistics.QueryResult.AdapterInfo.NbSegments;
                 
                 for (i = 0; i < segmentCount; i++) {
-                    memset(&queryStatistics, 0, sizeof(D3DKMT_QUERYSTATISTICS));
-                    queryStatistics.Type = D3DKMT_QUERYSTATISTICS_SEGMENT;
+                    memset(&queryStatistics, 0, sizeof(D3DKMTQS));
+                    queryStatistics.Type = D3DKMTQS_SEGMENT;
                     queryStatistics.AdapterLuid = adapterDesc.AdapterLuid;
                     queryStatistics.QuerySegment.SegmentId = i;
                     
@@ -272,24 +254,24 @@ public:
                         bool aperture;
                         
                         // SegmentInformation has a different definition in Win7 than later versions
-                        if (winVers > gfxWindowsPlatform::kWindows7)
-                            aperture = queryStatistics.QueryResult.SegmentInformation.Aperture;
+                        if (winVers < gfxWindowsPlatform::kWindows8)
+                            aperture = queryStatistics.QueryResult.SegmentInfoWin7.Aperture;
                         else
-                            aperture = queryStatistics.QueryResult.SegmentInformationV1.Aperture;
+                            aperture = queryStatistics.QueryResult.SegmentInfoWin8.Aperture;
                         
-                        memset(&queryStatistics, 0, sizeof(D3DKMT_QUERYSTATISTICS));
-                        queryStatistics.Type = D3DKMT_QUERYSTATISTICS_PROCESS_SEGMENT;
+                        memset(&queryStatistics, 0, sizeof(D3DKMTQS));
+                        queryStatistics.Type = D3DKMTQS_PROCESS_SEGMENT;
                         queryStatistics.AdapterLuid = adapterDesc.AdapterLuid;
                         queryStatistics.hProcess = ProcessHandle;
                         queryStatistics.QueryProcessSegment.SegmentId = i;
                         if (NT_SUCCESS(queryD3DKMTStatistics(&queryStatistics))) {
                             if (aperture)
                                 sharedBytesUsed += queryStatistics.QueryResult
-                                                                  .ProcessSegmentInformation
+                                                                  .ProcessSegmentInfo
                                                                   .BytesCommitted;
                             else
                                 dedicatedBytesUsed += queryStatistics.QueryResult
-                                                                     .ProcessSegmentInformation
+                                                                     .ProcessSegmentInfo
                                                                      .BytesCommitted;
                         }
                     }
@@ -325,7 +307,6 @@ public:
     }
 };
 NS_IMPL_ISUPPORTS1(GPUAdapterMultiReporter, nsIMemoryMultiReporter)
-#endif // ENABLE_GPU_MEM_REPORTER
 
 static __inline void
 BuildKeyNameFromFontName(nsAString &aName)
@@ -361,17 +342,13 @@ gfxWindowsPlatform::gfxWindowsPlatform()
 
     UpdateRenderMode();
 
-#ifdef ENABLE_GPU_MEM_REPORTER
     mGPUAdapterMultiReporter = new GPUAdapterMultiReporter();
     NS_RegisterMemoryMultiReporter(mGPUAdapterMultiReporter);
-#endif
 }
 
 gfxWindowsPlatform::~gfxWindowsPlatform()
 {
-#ifdef ENABLE_GPU_MEM_REPORTER
     NS_UnregisterMemoryMultiReporter(mGPUAdapterMultiReporter);
-#endif
     
     ::ReleaseDC(NULL, mScreenDC);
     // not calling FT_Done_FreeType because cairo may still hold references to

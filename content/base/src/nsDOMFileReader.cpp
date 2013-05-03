@@ -184,8 +184,8 @@ nsDOMFileReader::GetReadyState(uint16_t *aReadyState)
 JS::Value
 nsDOMFileReader::GetResult(JSContext* aCx, ErrorResult& aRv)
 {
-  JS::Value result = JS::UndefinedValue();
-  aRv = GetResult(aCx, &result);
+  JS::Rooted<JS::Value> result(aCx, JS::UndefinedValue());
+  aRv = GetResult(aCx, result.address());
   return result;
 }
 

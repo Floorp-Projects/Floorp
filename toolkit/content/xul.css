@@ -925,7 +925,7 @@ grippy {
 /********** scrollbar **********/
 
 /* Scrollbars are never flipped even if BiDI kicks in. */
-scrollbar {
+scrollbar[orient="horizontal"] {
   direction: ltr;
 }
 

@@ -1493,7 +1493,7 @@ GetAllKeysHelper::GetSuccessResult(JSContext* aCx,
 
   JSAutoRequest ar(aCx);
 
-  JSObject* array = JS_NewArrayObject(aCx, 0, NULL);
+  JS::Rooted<JSObject*> array(aCx, JS_NewArrayObject(aCx, 0, NULL));
   if (!array) {
     NS_WARNING("Failed to make array!");
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
@@ -1509,14 +1509,14 @@ GetAllKeysHelper::GetSuccessResult(JSContext* aCx,
       const Key& key = keys[index];
       NS_ASSERTION(!key.IsUnset(), "Bad key!");
 
-      jsval value;
-      nsresult rv = key.ToJSVal(aCx, &value);
+      JS::Rooted<JS::Value> value(aCx);
+      nsresult rv = key.ToJSVal(aCx, value.address());
       if (NS_FAILED(rv)) {
         NS_WARNING("Failed to get jsval for key!");
         return rv;
       }
 
-      if (!JS_SetElement(aCx, array, index, &value)) {
+      if (!JS_SetElement(aCx, array, index, value.address())) {
         NS_WARNING("Failed to set array element!");
         return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
       }

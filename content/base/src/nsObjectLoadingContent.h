@@ -144,7 +144,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent
      * that our plug-in, if any, is instantiated.
      */
     // Helper for WebIDL node wrapping
-    void SetupProtoChain(JSContext* aCx, JSObject* aObject);
+    void SetupProtoChain(JSContext* aCx, JS::Handle<JSObject*> aObject);
 
     // Remove plugin from protochain
     void TeardownProtoChain();

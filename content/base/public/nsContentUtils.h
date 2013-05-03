@@ -1683,7 +1683,7 @@ public:
    */
   static bool CanAccessNativeAnon();
 
-  static nsresult WrapNative(JSContext *cx, JSObject *scope,
+  static nsresult WrapNative(JSContext *cx, JS::Handle<JSObject*> scope,
                              nsISupports *native, const nsIID* aIID,
                              JS::Value *vp,
                              // If non-null aHolder will keep the Value alive
@@ -1696,7 +1696,7 @@ public:
   }
 
   // Same as the WrapNative above, but use this one if aIID is nsISupports' IID.
-  static nsresult WrapNative(JSContext *cx, JSObject *scope,
+  static nsresult WrapNative(JSContext *cx, JS::Handle<JSObject*> scope,
                              nsISupports *native, JS::Value *vp,
                              // If non-null aHolder will keep the Value alive
                              // while there's a ref to it
@@ -1706,7 +1706,7 @@ public:
     return WrapNative(cx, scope, native, nullptr, nullptr, vp, aHolder,
                       aAllowWrapping);
   }
-  static nsresult WrapNative(JSContext *cx, JSObject *scope,
+  static nsresult WrapNative(JSContext *cx, JS::Handle<JSObject*> scope,
                              nsISupports *native, nsWrapperCache *cache,
                              JS::Value *vp,
                              // If non-null aHolder will keep the Value alive
@@ -2146,12 +2146,12 @@ private:
   static bool CanCallerAccess(nsIPrincipal* aSubjectPrincipal,
                                 nsIPrincipal* aPrincipal);
 
-  static nsresult WrapNative(JSContext *cx, JSObject *scope,
+  static nsresult WrapNative(JSContext *cx, JS::Handle<JSObject*> scope,
                              nsISupports *native, nsWrapperCache *cache,
                              const nsIID* aIID, JS::Value *vp,
                              nsIXPConnectJSObjectHolder** aHolder,
                              bool aAllowWrapping);
-                            
+
   static nsresult DispatchEvent(nsIDocument* aDoc,
                                 nsISupports* aTarget,
                                 const nsAString& aEventName,

@@ -2142,7 +2142,7 @@ protected:
 
   // All document WrapNode implementations MUST call this method.  A
   // false return value means an exception was thrown.
-  bool PostCreateWrapper(JSContext* aCx, JSObject *aNewObject);
+  bool PostCreateWrapper(JSContext* aCx, JS::Handle<JSObject*> aNewObject);
 
   nsCString mReferrer;
   nsString mLastModified;

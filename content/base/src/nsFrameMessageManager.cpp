@@ -656,13 +656,14 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
         JSAutoCompartment ac(ctx, object);
 
         // The parameter for the listener function.
-        JSObject* param = JS_NewObject(ctx, nullptr, nullptr, nullptr);
+        JS::Rooted<JSObject*> param(ctx,
+          JS_NewObject(ctx, nullptr, nullptr, nullptr));
         NS_ENSURE_TRUE(param, NS_ERROR_OUT_OF_MEMORY);
 
-        JS::Value targetv;
-        nsContentUtils::WrapNative(ctx,
-                                   JS_GetGlobalForObject(ctx, object),
-                                   aTarget, &targetv, nullptr, true);
+        JS::Rooted<JS::Value> targetv(ctx);
+        JS::Rooted<JSObject*> global(ctx, JS_GetGlobalForObject(ctx, object));
+        nsContentUtils::WrapNative(ctx, global, aTarget, targetv.address(),
+                                   nullptr, true);
 
         // To keep compatibility with e10s message manager,
         // define empty objects array.
@@ -699,9 +700,9 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
         JS_DefineProperty(ctx, param, "data", json, nullptr, nullptr, JSPROP_ENUMERATE);
         JS_DefineProperty(ctx, param, "objects", objectsv, nullptr, nullptr, JSPROP_ENUMERATE);
 
-        JS::Value thisValue = JSVAL_VOID;
+        JS::Rooted<JS::Value> thisValue(ctx, JS::UndefinedValue());
 
-        JS::Value funval;
+        JS::Rooted<JS::Value> funval(ctx);
         if (JS_ObjectIsCallable(ctx, object)) {
           // If the listener is a JS function:
           funval.setObject(*object);
@@ -714,12 +715,13 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
           } else {
             defaultThisValue = aTarget;
           }
-          nsContentUtils::WrapNative(ctx,
-                                     JS_GetGlobalForObject(ctx, object),
-                                     defaultThisValue, &thisValue, nullptr, true);
+          JS::Rooted<JSObject*> global(ctx, JS_GetGlobalForObject(ctx, object));
+          nsContentUtils::WrapNative(ctx, global, defaultThisValue,
+                                     thisValue.address(), nullptr, true);
         } else {
           // If the listener is a JS object which has receiveMessage function:
-          if (!JS_GetProperty(ctx, object, "receiveMessage", &funval) ||
+          if (!JS_GetProperty(ctx, object, "receiveMessage",
+                              funval.address()) ||
               !funval.isObject())
             return NS_ERROR_UNEXPECTED;
 
@@ -732,7 +734,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
         JS::Rooted<JS::Value> argv(ctx, JS::ObjectValue(*param));
 
         {
-          JSObject* thisObject = JSVAL_TO_OBJECT(thisValue);
+          JS::Rooted<JSObject*> thisObject(ctx, thisValue.toObjectOrNull());
 
           JSAutoCompartment tac(ctx, thisObject);
           if (!JS_WrapValue(ctx, argv.address()))
@@ -1073,8 +1075,9 @@ nsFrameScriptExecutor::TryCacheLoadAndCompileScript(const nsAString& aURL,
                .setFileAndLine(url.get(), 1)
                .setPrincipals(nsJSPrincipals::get(mPrincipal));
         JS::RootedObject empty(mCx, nullptr);
-        JSScript* script = JS::Compile(mCx, empty, options,
-                                       dataString.get(), dataString.Length());
+        JS::Rooted<JSScript*> script(mCx,
+          JS::Compile(mCx, empty, options, dataString.get(),
+                      dataString.Length()));
 
         if (script) {
           nsAutoCString scheme;
@@ -1100,8 +1103,8 @@ bool
 nsFrameScriptExecutor::InitTabChildGlobalInternal(nsISupports* aScope,
                                                   const nsACString& aID)
 {
-  
-  nsCOMPtr<nsIJSRuntimeService> runtimeSvc = 
+
+  nsCOMPtr<nsIJSRuntimeService> runtimeSvc =
     do_GetService("@mozilla.org/js/xpc/RuntimeService;1");
   NS_ENSURE_TRUE(runtimeSvc, false);
 

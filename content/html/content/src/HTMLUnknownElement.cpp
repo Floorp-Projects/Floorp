@@ -18,15 +18,16 @@ NS_IMPL_RELEASE_INHERITED(HTMLUnknownElement, Element)
 JSObject*
 HTMLUnknownElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
-  JSObject* obj =
-    HTMLUnknownElementBinding::Wrap(aCx, aScope, this);
+  JS::Rooted<JSObject*> obj(aCx,
+    HTMLUnknownElementBinding::Wrap(aCx, aScope, this));
   if (obj && Substring(NodeName(), 0, 2).LowerCaseEqualsLiteral("x-")) {
     // If we have a registered x-tag then we fix the prototype.
     JSAutoCompartment ac(aCx, obj);
     nsDocument* document = static_cast<nsDocument*>(OwnerDoc());
-    JSObject* prototype = document->GetCustomPrototype(LocalName());
+    JS::Rooted<JSObject*> prototype(aCx,
+      document->GetCustomPrototype(LocalName()));
     if (prototype) {
-      NS_ENSURE_TRUE(JS_WrapObject(aCx, &prototype), nullptr);
+      NS_ENSURE_TRUE(JS_WrapObject(aCx, prototype.address()), nullptr);
       NS_ENSURE_TRUE(JS_SetPrototype(aCx, obj, prototype), nullptr);
     }
   }
