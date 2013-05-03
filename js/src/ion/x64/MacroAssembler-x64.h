@@ -432,6 +432,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         mov(ImmWord(lhs.addr), ScratchReg);
         branch32(cond, Address(ScratchReg, 0), rhs, label);
     }
+    void branch32(Condition cond, const AbsoluteAddress &lhs, Register rhs, Label *label) {
+        mov(ImmWord(lhs.addr), ScratchReg);
+        branch32(cond, Address(ScratchReg, 0), rhs, label);
+    }
 
     // Specialization for AbsoluteAddress.
     void branchPtr(Condition cond, const AbsoluteAddress &addr, const Register &ptr, Label *label) {

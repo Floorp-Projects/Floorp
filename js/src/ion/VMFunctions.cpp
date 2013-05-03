@@ -642,9 +642,19 @@ DebugEpilogue(JSContext *cx, BaselineFrame *frame, JSBool ok)
         DebugScopes::onPopStrictEvalScope(frame);
     }
 
+    // If the frame has a pushed SPS frame, make sure to pop it.
+    if (frame->hasPushedSPSFrame()) {
+        cx->runtime->spsProfiler.exit(cx, frame->script(), frame->maybeFun());
+        // Unset the pushedSPSFrame flag because DebugEpilogue may get called before
+        // Probes::exitScript in baseline during exception handling, and we don't
+        // want to double-pop SPS frames.
+        frame->unsetPushedSPSFrame();
+    }
+
     if (!ok) {
         // Pop this frame by updating ionTop, so that the exception handling
         // code will start at the previous frame.
+
         IonJSFrameLayout *prefix = frame->framePrefix();
         EnsureExitFrame(prefix);
         cx->mainThread().ionTop = (uint8_t *)prefix;

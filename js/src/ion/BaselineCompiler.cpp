@@ -519,7 +519,7 @@ BaselineCompiler::emitSPSPop()
     Label noPop;
     masm.branchTest32(Assembler::Zero, frame.addressOfFlags(),
                       Imm32(BaselineFrame::HAS_PUSHED_SPS_FRAME), &noPop);
-    masm.spsPopFrame(&cx->runtime->spsProfiler, R1.scratchReg());
+    masm.spsPopFrameSafe(&cx->runtime->spsProfiler, R1.scratchReg());
     masm.bind(&noPop);
 }
 
