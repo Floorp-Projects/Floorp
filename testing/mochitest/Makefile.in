@@ -40,6 +40,7 @@ _SERV_FILES = 	\
 		$(topsrcdir)/testing/mozbase/mozdevice/mozdevice/devicemanager.py \
 		$(topsrcdir)/testing/mozbase/mozdevice/mozdevice/devicemanagerADB.py \
 		$(topsrcdir)/testing/mozbase/mozdevice/mozdevice/devicemanagerSUT.py \
+		$(topsrcdir)/testing/mozbase/mozdevice/mozdevice/droid.py \
 		$(topsrcdir)/testing/mozbase/mozdevice/mozdevice/Zeroconf.py \
 		$(topsrcdir)/build/automationutils.py \
 		$(topsrcdir)/build/manifestparser.py \
