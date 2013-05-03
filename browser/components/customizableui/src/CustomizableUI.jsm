@@ -278,6 +278,26 @@ XPCOMUtils.defineLazyGetter(this, "gBuiltInWidgets", function() {
         win.gDevToolsBrowser.toggleToolboxCommand(win.gBrowser);
       }
     }
+  }, {
+    id: "add-ons-button",
+    name: "Add-ons",
+    shortcut: "Ctrl+Shift+A",
+    description: "Add-ons Manager",
+    defaultArea: CustomizableUI.AREA_PANEL,
+    allowedAreas: [CustomizableUI.AREA_PANEL],
+    icons: {
+      "16": "chrome://branding/content/icon16.png",
+      "32": "chrome://branding/content/icon48.png",
+      "48": "chrome://branding/content/icon48.png"
+    },
+    onCommand: function(aEvent) {
+      let win = aEvent.target &&
+                aEvent.target.ownerDocument &&
+                aEvent.target.ownerDocument.defaultView;
+      if (win && typeof win.BrowserOpenAddonsMgr == "function") {
+        win.BrowserOpenAddonsMgr();
+      }
+    }
   }];
 });
 
@@ -355,6 +375,7 @@ let gDefaultPlacements = new Map([
     "history-button",
     "fullscreen-button",
     "find-button",
+    "add-ons-button",
     "history-panelmenu",
     "bookmarks-panelmenu"
   ]]
