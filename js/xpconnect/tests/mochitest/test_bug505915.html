@@ -23,7 +23,10 @@ window.addEventListener("message", function () { gen.next() }, false);
 function go() {
     var ifr = $('ifr');
     try {
-        document.createTreeWalker(ifr.contentDocument, 0, null);
+        // NB: the contentDocument getter now returns null for cross-origin
+        // frames, so use SpecialPowers to get a security wrapper to the document.
+        var xdoc = SpecialPowers.unwrap(SpecialPowers.wrap(ifr).contentDocument)
+        document.createTreeWalker(xdoc, 0, null);
         ok(false, "should have thrown a security exception");
     } catch (e) {
         ok(/NS_ERROR_XPC_SECURITY_MANAGER_VETO/.test(e) ||
