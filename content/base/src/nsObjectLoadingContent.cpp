@@ -2838,6 +2838,11 @@ nsObjectLoadingContent::GetContentDocument()
     return nullptr;
   }
 
+  // Return null for cross-origin contentDocument.
+  if (!nsContentUtils::GetSubjectPrincipal()->Subsumes(sub_doc->NodePrincipal())) {
+    return nullptr;
+  }
+
   return sub_doc;
 }
 
