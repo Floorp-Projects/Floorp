@@ -5,9 +5,6 @@ this._scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
                      getService(Ci.mozIJSSubScriptLoader);
 this._scriptLoader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/ChromeUtils.js", ChromeUtils);
 
-XPCOMUtils.defineLazyModuleGetter(this, "FormHistory",
-  "resource://gre/modules/FormHistory.jsm");
-
 function test() {
   waitForExplicitFinish();
 
@@ -22,8 +19,6 @@ function test() {
   searchBar.value = "test";
 
   var ss = Services.search;
-
-  let testIterator;
 
   function observer(aSub, aTopic, aData) {
     switch (aData) {
@@ -187,62 +182,31 @@ function test() {
     content.location.href = "about:blank";
     simulateClick({ button: 2 }, searchButton);
     setTimeout(function() {
+
       is(gBrowser.tabs.length, preTabNo, "RightClick did not open new tab");
       is(gBrowser.currentURI.spec, "about:blank", "RightClick did nothing");
 
-      testIterator = testSearchHistory();
-      testIterator.next();
+      testSearchHistory();
     }, 5000);
-  }
-
-  function countEntries(name, value, message) {
-    let count = 0;
-    FormHistory.count({ fieldname: name, value: value },
-                      { handleResult: function(result) { count = result; },
-                        handleError: function(error) { throw error; },
-                        handleCompletion: function(reason) {
-                          if (!reason) {
-                            ok(count > 0, message);
-                            testIterator.next();
-                          }
-                        }
-                      });
   }
 
   function testSearchHistory() {
     var textbox = searchBar._textbox;
     for (var i = 0; i < searchEntries.length; i++) {
-      yield countEntries(textbox.getAttribute("autocompletesearchparam"), searchEntries[i],
-                         "form history entry '" + searchEntries[i] + "' should exist");
+      let exists = textbox._formHistSvc.entryExists(textbox.getAttribute("autocompletesearchparam"), searchEntries[i]);
+      ok(exists, "form history entry '" + searchEntries[i] + "' should exist");
     }
     testAutocomplete();
   }
 
   function testAutocomplete() {
     var popup = searchBar.textbox.popup;
-    popup.addEventListener("popupshown", function testACPopupShowing() {
-      popup.removeEventListener("popupshown", testACPopupShowing);
+    popup.addEventListener("popupshowing", function testACPopupShowing() {
+      popup.removeEventListener("popupshowing", testACPopupShowing);
       checkMenuEntries(searchEntries);
-      testClearHistory();
+      SimpleTest.executeSoon(finalize);
     });
     searchBar.textbox.showHistoryPopup();
-  }
-
-  function testClearHistory() {
-    let controller = searchBar.textbox.controllers.getControllerForCommand("cmd_clearhistory")
-    ok(controller.isCommandEnabled("cmd_clearhistory"), "Clear history command enabled");
-    controller.doCommand("cmd_clearhistory");
-    let count = 0;
-    FormHistory.count({ },
-                      { handleResult: function(result) { count = result; },
-                        handleError: function(error) { throw error; },
-                        handleCompletion: function(reason) {
-                          if (!reason) {
-                            ok(count == 0, "History cleared");
-                            finalize();
-                          }
-                        }
-                      });
   }
 
   function finalize() {

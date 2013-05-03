@@ -1,6 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 var testnum = 0;
 var fh;
@@ -10,7 +10,7 @@ function run_test()
   try {
 
   // ===== test init =====
-  var testfile = do_get_file("formhistory_v3v4.sqlite");
+  var testfile = do_get_file("formhistory_v2.sqlite");
   var profileDir = dirSvc.get("ProfD", Ci.nsIFile);
 
   // Cleanup from any previous tests or failures.
@@ -20,7 +20,7 @@ function run_test()
     destFile.remove(false);
 
   testfile.copyTo(profileDir, "formhistory.sqlite");
-  do_check_eq(3, getDBVersion(testfile));
+  do_check_eq(2, getDBVersion(testfile));
 
   fh = Cc["@mozilla.org/satchel/form-history;1"].
        getService(Ci.nsIFormHistory2);
@@ -30,11 +30,21 @@ function run_test()
   testnum++;
 
   // Check that the index was added
-  do_check_true(fh.DBConnection.tableExists("moz_deleted_formhistory"));
+  do_check_true(fh.DBConnection.indexExists("moz_formhistory_guid_index"));
   // check for upgraded schema.
   do_check_eq(CURRENT_SCHEMA, fh.DBConnection.schemaVersion);
-  // check that an entry still exists
+
   do_check_true(fh.entryExists("name-A", "value-A"));
+  var guid = getGUIDforID(fh.DBConnection, 1);
+  do_check_true(isGUID.test(guid));
+
+  // Add a new entry and check that it gets a GUID
+  do_check_false(fh.entryExists("name-B", "value-B"));
+  fh.addEntry("name-B", "value-B");
+  do_check_true(fh.entryExists("name-B", "value-B"));
+
+  guid = getGUIDforID(fh.DBConnection, 2);
+  do_check_true(isGUID.test(guid));
 
   } catch (e) {
     throw "FAILED in test #" + testnum + " -- " + e;

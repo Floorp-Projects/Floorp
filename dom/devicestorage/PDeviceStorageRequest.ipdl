@@ -39,12 +39,12 @@ struct EnumerationResponse
 
 struct FreeSpaceStorageResponse
 {
-  int64_t freeBytes;
+  uint64_t freeBytes;
 };
 
 struct UsedSpaceStorageResponse
 {
-  int64_t usedBytes;
+  uint64_t usedBytes;
 };
 
 struct AvailableStorageResponse
