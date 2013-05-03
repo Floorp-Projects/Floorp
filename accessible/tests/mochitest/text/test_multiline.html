@@ -335,12 +335,7 @@
       testTextAtOffset(13, BOUNDARY_WORD_START, "words\n", 13, 19, IDs);
 
       // BOUNDARY_WORD_END
-      testTextAtOffset(0, BOUNDARY_WORD_END, "oneword", 0, 7,
-                       "div", kTodo, kOk, kTodo,
-                       "divbr", kTodo, kOk, kTodo,
-                       "editable", kTodo, kOk, kTodo,
-                       "editablebr", kTodo, kOk, kTodo,
-                       "textarea", kTodo, kOk, kTodo);
+      testTextAtOffset(0, BOUNDARY_WORD_END, "oneword", 0, 7, IDs);
       testTextAtOffset(8, BOUNDARY_WORD_END, "\n\ntwo", 7, 12,
                        "div", kOk, kOk, kOk,
                        "divbr", kTodo, kTodo, kTodo,

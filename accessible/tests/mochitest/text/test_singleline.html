@@ -310,14 +310,10 @@
       testTextAtOffset(9, BOUNDARY_WORD_START, "friend", 9, 15, IDs);
       testTextAtOffset(10, BOUNDARY_WORD_START, "friend", 9, 15, IDs);
       testTextAtOffset(14, BOUNDARY_WORD_START, "friend", 9, 15, IDs);
-      testTextAtOffset(15, BOUNDARY_WORD_START, "", 15, 15,
-                       "input", kOk, kOk, kOk,
-                       "div", kOk, kOk, kOk,
-                       "editable", kOk, kOk, kOk,
-                       "textarea", kTodo, kTodo, kOk);
+      testTextAtOffset(15, BOUNDARY_WORD_START, "friend", 9, 15, IDs);
 
       // BOUNDARY_WORD_END
-      testTextAtOffset(0, BOUNDARY_WORD_END, "", 0, 0, IDs);
+      testTextAtOffset(0, BOUNDARY_WORD_END, "hello", 0, 5, IDs);
       testTextAtOffset(1, BOUNDARY_WORD_END, "hello", 0, 5, IDs);
       testTextAtOffset(5, BOUNDARY_WORD_END, "hello", 0, 5, IDs);
       testTextAtOffset(6, BOUNDARY_WORD_END, " my", 5, 8, IDs);
