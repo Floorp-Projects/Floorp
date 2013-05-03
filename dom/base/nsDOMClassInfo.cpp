@@ -4405,7 +4405,7 @@ ConstructorEnabled(const nsGlobalNameStruct *aStruct, nsGlobalWindow *aWin)
 // static
 nsresult
 nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
-                          JSObject *obj, jsid id, bool *did_resolve)
+                          JSObject *obj, JS::Handle<jsid> id, bool *did_resolve)
 {
   *did_resolve = false;
 
