@@ -140,7 +140,7 @@ public:
                                         JSObject&,
                                         JSObject*,
                                         const Sequence<Dict>&,
-                                        const Optional<JS::Value>&,
+                                        const Optional<LazyRootedValue>&,
                                         const Optional<NonNullLazyRootedObject>&,
                                         const Optional<LazyRootedObject>&,
                                         ErrorResult&);
@@ -429,7 +429,7 @@ public:
 
   // Any types
   void PassAny(JSContext*, JS::Value);
-  void PassOptionalAny(JSContext*, const Optional<JS::Value>&);
+  void PassOptionalAny(JSContext*, const Optional<LazyRootedValue>&);
   void PassAnyDefaultNull(JSContext*, JS::Value);
   JS::Value ReceiveAny(JSContext*);
 
