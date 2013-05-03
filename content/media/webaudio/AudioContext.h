@@ -98,10 +98,6 @@ public:
                uint32_t aLength, float aSampleRate,
                ErrorResult& aRv);
 
-  already_AddRefed<AudioBuffer>
-  CreateBuffer(JSContext* aJSContext, ArrayBuffer& aBuffer,
-               bool aMixToMono, ErrorResult& aRv);
-
   already_AddRefed<ScriptProcessorNode>
   CreateScriptProcessor(uint32_t aBufferSize,
                         uint32_t aNumberOfInputChannels,
