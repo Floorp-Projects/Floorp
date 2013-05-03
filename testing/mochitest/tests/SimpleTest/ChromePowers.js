@@ -72,6 +72,14 @@ ChromePowers.prototype.quit = function() {
   SpecialPowers._sendSyncMessage("SpecialPowers.Quit", {});
 };
 
+ChromePowers.prototype.focus = function(aWindow) {
+  // We come in here as SpecialPowers.focus, but SpecialPowers is really ChromePowers.
+  // For some reason this.<func> resolves to TestRunner, so using SpecialPowers
+  // allows us to use the ChromePowers object which we defined below.
+  if (aWindow)
+    aWindow.focus();
+};
+
 ChromePowers.prototype.executeAfterFlushingMessageQueue = function(aCallback) {
   aCallback();
 };
