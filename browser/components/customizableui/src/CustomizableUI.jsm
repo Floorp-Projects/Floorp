@@ -238,6 +238,26 @@ XPCOMUtils.defineLazyGetter(this, "gBuiltInWidgets", function() {
         win.gFindBar.onFindCommand();
       }
     }
+  }, {
+    id: "open-file-button",
+    name: "Open File",
+    shortcut: "Ctrl+O",
+    description: "Open file",
+    defaultArea: CustomizableUI.AREA_PANEL,
+    allowedAreas: [CustomizableUI.AREA_PANEL],
+    icons: {
+      "16": "chrome://branding/content/icon16.png",
+      "32": "chrome://branding/content/icon48.png",
+      "48": "chrome://branding/content/icon48.png"
+    },
+    onCommand: function(aEvent) {
+      let win = aEvent.target
+                && aEvent.target.ownerDocument
+                && aEvent.target.ownerDocument.defaultView;
+      if (win && typeof win.BrowserOpenFileWindow == "function") {
+        win.BrowserOpenFileWindow();
+      }
+    }
   }];
 });
 
@@ -316,7 +336,7 @@ let gDefaultPlacements = new Map([
     "fullscreen-button",
     "find-button",
     "history-panelmenu",
-    "bookmarks-panelmenu",
+    "bookmarks-panelmenu"
   ]]
 ]);
 
