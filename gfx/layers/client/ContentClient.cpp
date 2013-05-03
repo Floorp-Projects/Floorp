@@ -10,6 +10,9 @@
 #include "gfxUtils.h"
 #include "gfxPlatform.h"
 #include "mozilla/layers/LayerManagerComposite.h"
+#ifdef XP_WIN
+#include "gfxWindowsPlatform.h"
+#endif
 
 namespace mozilla {
 
@@ -21,11 +24,23 @@ namespace layers {
 ContentClient::CreateContentClient(CompositableForwarder* aForwarder)
 {
   if (aForwarder->GetCompositorBackendType() != LAYERS_OPENGL &&
+      aForwarder->GetCompositorBackendType() != LAYERS_D3D11 &&
       aForwarder->GetCompositorBackendType() != LAYERS_BASIC) {
-    return nullptr;
+        return nullptr;
   }
-  if (LayerManagerComposite::SupportsDirectTexturing() ||
-      PR_GetEnv("MOZ_FORCE_DOUBLE_BUFFERING")) {
+
+  bool useDoubleBuffering = false;
+
+#ifdef XP_WIN
+  if (aForwarder->GetCompositorBackendType() == LAYERS_D3D11) {
+    useDoubleBuffering = !!gfxWindowsPlatform::GetPlatform()->GetD2DDevice();
+  } else
+#endif
+  {
+    useDoubleBuffering = LayerManagerComposite::SupportsDirectTexturing();
+  }
+
+  if (useDoubleBuffering || PR_GetEnv("MOZ_FORCE_DOUBLE_BUFFERING")) {
     return new ContentClientDoubleBuffered(aForwarder);
   }
   return new ContentClientSingleBuffered(aForwarder);
