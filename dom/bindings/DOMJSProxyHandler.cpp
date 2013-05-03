@@ -60,10 +60,10 @@ DOMProxyHandler::GetAndClearExpandoObject(JSObject* obj)
 
 // static
 JSObject*
-DOMProxyHandler::EnsureExpandoObject(JSContext* cx, JSObject* obj)
+DOMProxyHandler::EnsureExpandoObject(JSContext* cx, JS::Handle<JSObject*> obj)
 {
   NS_ASSERTION(IsDOMProxy(obj), "expected a DOM proxy object");
-  JSObject* expando = GetExpandoObject(obj);
+  JS::Rooted<JSObject*> expando(cx, GetExpandoObject(obj));
   if (!expando) {
     expando = JS_NewObjectWithGivenProto(cx, nullptr, nullptr,
                                          js::GetObjectParent(obj));
@@ -110,8 +110,8 @@ DOMProxyHandler::getPropertyDescriptor(JSContext* cx, JS::Handle<JSObject*> prox
     return true;
   }
 
-  JSObject* proto;
-  if (!js::GetObjectProto(cx, proxy, &proto)) {
+  JS::Rooted<JSObject*> proto(cx);
+  if (!js::GetObjectProto(cx, proxy, proto.address())) {
     return false;
   }
   if (!proto) {
@@ -153,10 +153,11 @@ DOMProxyHandler::delete_(JSContext* cx, JS::Handle<JSObject*> proxy,
 {
   JSBool b = true;
 
-  JSObject* expando;
+  JS::Rooted<JSObject*> expando(cx);
   if (!xpc::WrapperFactory::IsXrayWrapper(proxy) && (expando = GetExpandoObject(proxy))) {
-    Value v;
-    if (!JS_DeletePropertyById2(cx, expando, id, &v) || !JS_ValueToBoolean(cx, v, &b)) {
+    JS::Rooted<Value> v(cx);
+    if (!JS_DeletePropertyById2(cx, expando, id, v.address()) ||
+        !JS_ValueToBoolean(cx, v, &b)) {
       return false;
     }
   }
@@ -168,8 +169,8 @@ DOMProxyHandler::delete_(JSContext* cx, JS::Handle<JSObject*> proxy,
 bool
 DOMProxyHandler::enumerate(JSContext* cx, JS::Handle<JSObject*> proxy, AutoIdVector& props)
 {
-  JSObject* proto;
-  if (!JS_GetPrototype(cx, proxy, &proto)) {
+  JS::Rooted<JSObject*> proto(cx);
+  if (!JS_GetPrototype(cx, proxy, proto.address())) {
     return false;
   }
   return getOwnPropertyNames(cx, proxy, props) &&
@@ -190,8 +191,8 @@ DOMProxyHandler::has(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid
   }
 
   // OK, now we have to look at the proto
-  JSObject *proto;
-  if (!js::GetObjectProto(cx, proxy, &proto)) {
+  JS::Rooted<JSObject*> proto(cx);
+  if (!js::GetObjectProto(cx, proxy, proto.address())) {
     return false;
   }
   if (!proto) {
@@ -212,8 +213,8 @@ DOMProxyHandler::AppendNamedPropertyIds(JSContext* cx,
                                         JS::AutoIdVector& props)
 {
   for (uint32_t i = 0; i < names.Length(); ++i) {
-    JS::Value v;
-    if (!xpc::NonVoidStringToJsval(cx, names[i], &v)) {
+    JS::Rooted<JS::Value> v(cx);
+    if (!xpc::NonVoidStringToJsval(cx, names[i], v.address())) {
       return false;
     }
 
@@ -233,7 +234,7 @@ DOMProxyHandler::AppendNamedPropertyIds(JSContext* cx,
 }
 
 int32_t
-IdToInt32(JSContext* cx, jsid id)
+IdToInt32(JSContext* cx, JS::Handle<jsid> id)
 {
   JSAutoRequest ar(cx);
 
