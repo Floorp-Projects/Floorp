@@ -198,6 +198,26 @@ XPCOMUtils.defineLazyGetter(this, "gBuiltInWidgets", function() {
         }
       }
     }
+  }, {
+    id: "save-page-button",
+    name: "Save Page",
+    shortcut: "Ctrl+S",
+    description: "Save this page",
+    defaultArea: CustomizableUI.AREA_PANEL,
+    allowedAreas: [CustomizableUI.AREA_PANEL],
+    icons: {
+      "16": "chrome://branding/content/icon16.png",
+      "32": "chrome://branding/content/icon48.png",
+      "48": "chrome://branding/content/icon48.png"
+    },
+    onCommand: function(aEvent) {
+      let win = aEvent.target &&
+                aEvent.target.ownerDocument &&
+                aEvent.target.ownerDocument.defaultView;
+      if (win && typeof win.saveDocument == "function") {
+        win.saveDocument(win.content.document);
+      }
+    }
   }];
 });
 
@@ -270,6 +290,7 @@ let gDefaultPlacements = new Map([
   ["PanelUI-contents", [
     "new-window-button",
     "privatebrowsing-button",
+    "save-page-button",
     "print-button",
     "history-button",
     "fullscreen-button",
