@@ -17,6 +17,7 @@
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
+#include "mozilla/LazyIdleThread.h"
 
 #include "nsAutoPtr.h"
 #include "nsDOMEvent.h"
@@ -55,17 +56,113 @@
 #endif
 
 #define DEVICESTORAGE_PROPERTIES "chrome://global/content/devicestorage.properties"
-#define DEVICESTORAGE_PICTURES   "pictures"
-#define DEVICESTORAGE_VIDEOS     "videos"
-#define DEVICESTORAGE_MUSIC      "music"
-#define DEVICESTORAGE_APPS       "apps"
-#define DEVICESTORAGE_SDCARD     "sdcard"
+#define DEFAULT_THREAD_TIMEOUT_MS 30000
 
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::dom::devicestorage;
 
 #include "nsDirectoryServiceDefs.h"
+
+StaticAutoPtr<DeviceStorageUsedSpaceCache> DeviceStorageUsedSpaceCache::sDeviceStorageUsedSpaceCache;
+
+DeviceStorageUsedSpaceCache::DeviceStorageUsedSpaceCache()
+  : mDirty(true)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  mIOThread = new LazyIdleThread(DEFAULT_THREAD_TIMEOUT_MS,
+                                 NS_LITERAL_CSTRING("DeviceStorageUsedSpaceCache I/O"));
+
+}
+
+DeviceStorageUsedSpaceCache::~DeviceStorageUsedSpaceCache()
+{
+}
+
+DeviceStorageUsedSpaceCache*
+DeviceStorageUsedSpaceCache::CreateOrGet()
+{
+  if (sDeviceStorageUsedSpaceCache) {
+    return sDeviceStorageUsedSpaceCache;
+  }
+
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  sDeviceStorageUsedSpaceCache = new DeviceStorageUsedSpaceCache();
+  ClearOnShutdown(&sDeviceStorageUsedSpaceCache);
+  return sDeviceStorageUsedSpaceCache;
+}
+
+nsresult
+DeviceStorageUsedSpaceCache::GetPicturesUsedSize(uint64_t* usedSize) {
+  if (mDirty == true) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  *usedSize = mPicturesUsedSize;
+  return NS_OK;
+}
+
+nsresult
+DeviceStorageUsedSpaceCache::GetMusicUsedSize(uint64_t* usedSize) {
+  if (mDirty == true) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  *usedSize = mMusicUsedSize;
+  return NS_OK;
+}
+
+nsresult
+DeviceStorageUsedSpaceCache::GetVideosUsedSize(uint64_t* usedSize) {
+  if (mDirty == true) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  *usedSize = mVideosUsedSize;
+  return NS_OK;
+}
+
+nsresult
+DeviceStorageUsedSpaceCache::GetTotalUsedSize(uint64_t* usedSize) {
+  if (mDirty == true) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  *usedSize = mTotalUsedSize;
+  return NS_OK;
+}
+
+nsresult
+DeviceStorageUsedSpaceCache::GetUsedSizeForType(const nsAString& aType,
+                                                uint64_t* usedSize) {
+  if (aType.EqualsLiteral(DEVICESTORAGE_PICTURES)) {
+    return GetPicturesUsedSize(usedSize);
+  }
+
+  if (aType.EqualsLiteral(DEVICESTORAGE_VIDEOS)) {
+    return GetVideosUsedSize(usedSize);
+  }
+
+  if (aType.EqualsLiteral(DEVICESTORAGE_MUSIC)) {
+    return GetMusicUsedSize(usedSize);
+  }
+
+  if (aType.EqualsLiteral(DEVICESTORAGE_SDCARD)) {
+    return GetTotalUsedSize(usedSize);
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+void
+DeviceStorageUsedSpaceCache::SetUsedSizes(uint64_t aPictureSize,
+                                          uint64_t aVideosSize,
+                                          uint64_t aMusicSize,
+                                          uint64_t aTotalUsedSize) {
+    mPicturesUsedSize = aPictureSize;
+    mVideosUsedSize = aVideosSize;
+    mMusicUsedSize = aMusicSize;
+    mTotalUsedSize = aTotalUsedSize;
+    mDirty = false;
+}
 
 class GlobalDirs : public RefCounted<GlobalDirs>
 {
@@ -82,7 +179,7 @@ public:
 
 static StaticRefPtr<GlobalDirs> sDirs;
 
-nsAutoPtr<DeviceStorageTypeChecker> DeviceStorageTypeChecker::sDeviceStorageTypeChecker;
+StaticAutoPtr<DeviceStorageTypeChecker> DeviceStorageTypeChecker::sDeviceStorageTypeChecker;
 
 DeviceStorageTypeChecker::DeviceStorageTypeChecker()
 {
@@ -196,6 +293,37 @@ DeviceStorageTypeChecker::Check(const nsAString& aType, nsIFile* aFile)
   }
 
   return false;
+}
+
+void
+DeviceStorageTypeChecker::GetTypeFromFile(nsIFile* aFile, nsAString& aType)
+{
+  NS_ASSERTION(aFile, "Calling Check without a file");
+
+  aType.AssignLiteral("Unknown");
+
+  nsString path;
+  aFile->GetPath(path);
+
+  int32_t dotIdx = path.RFindChar(PRUnichar('.'));
+  if (dotIdx == kNotFound) {
+    return;
+  }
+
+  nsAutoString extensionMatch;
+  extensionMatch.AssignLiteral("*");
+  extensionMatch.Append(Substring(path, dotIdx));
+  extensionMatch.AppendLiteral(";");
+
+  if (CaseInsensitiveFindInReadable(extensionMatch, mPicturesExtensions)) {
+    aType.AssignLiteral(DEVICESTORAGE_PICTURES);
+  }
+  else if (CaseInsensitiveFindInReadable(extensionMatch, mVideosExtensions)) {
+    aType.AssignLiteral(DEVICESTORAGE_VIDEOS);
+  }
+  else if (CaseInsensitiveFindInReadable(extensionMatch, mMusicExtensions)) {
+    aType.AssignLiteral(DEVICESTORAGE_MUSIC);
+  }
 }
 
 nsresult
@@ -317,6 +445,10 @@ public:
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
 
     obs->NotifyObservers(mFile, "file-watcher-notify", data.get());
+
+    DeviceStorageUsedSpaceCache* usedSpaceCache = DeviceStorageUsedSpaceCache::CreateOrGet();
+    NS_ASSERTION(usedSpaceCache, "DeviceStorageUsedSpaceCache is null");
+    usedSpaceCache->Invalidate();
     return NS_OK;
   }
 
@@ -762,8 +894,11 @@ DeviceStorageFile::collectFilesInternal(nsTArray<nsRefPtr<DeviceStorageFile> > &
 }
 
 void
-DeviceStorageFile::DirectoryDiskUsage(nsIFile* aFile, uint64_t* aSoFar, const nsAString& aStorageType)
-{
+DeviceStorageFile::DirectoryDiskUsage(nsIFile* aFile,
+                                      uint64_t* aPicturesSoFar,
+                                      uint64_t* aVideosSoFar,
+                                      uint64_t* aMusicSoFar,
+                                      uint64_t* aTotalSoFar) {
   if (!aFile) {
     return;
   }
@@ -808,18 +943,29 @@ DeviceStorageFile::DirectoryDiskUsage(nsIFile* aFile, uint64_t* aSoFar, const ns
       // for now, lets just totally ignore symlinks.
       NS_WARNING("DirectoryDiskUsage ignores symlinks");
     } else if (isDir) {
-      DirectoryDiskUsage(f, aSoFar, aStorageType);
+      DirectoryDiskUsage(f, aPicturesSoFar, aVideosSoFar, aMusicSoFar, aTotalSoFar);
     } else if (isFile) {
-
-      if (!typeChecker->Check(aStorageType, f)) {
-        continue;
-      }
 
       int64_t size;
       rv = f->GetFileSize(&size);
-      if (NS_SUCCEEDED(rv)) {
-        *aSoFar += size;
+      if (NS_FAILED(rv)) {
+        continue;
       }
+      DeviceStorageTypeChecker* typeChecker = DeviceStorageTypeChecker::CreateOrGet();
+      NS_ASSERTION(typeChecker, "DeviceStorageTypeChecker is null");
+      nsString type;
+      typeChecker->GetTypeFromFile(f, type);
+
+      if (type.EqualsLiteral(DEVICESTORAGE_PICTURES)) {
+        *aPicturesSoFar += size;
+      }
+      else if (type.EqualsLiteral(DEVICESTORAGE_VIDEOS)) {
+        *aVideosSoFar += size;
+      }
+      else if (type.EqualsLiteral(DEVICESTORAGE_MUSIC)) {
+        *aMusicSoFar += size;
+      }
+      *aTotalSoFar += size;
     }
   }
 }
@@ -1380,7 +1526,7 @@ public:
       mRequest.swap(aRequest);
     }
 
-  PostResultEvent(nsRefPtr<DOMRequest>& aRequest, const int64_t aValue)
+  PostResultEvent(nsRefPtr<DOMRequest>& aRequest, const uint64_t aValue)
     : mValue(aValue)
     {
       mRequest.swap(aRequest);
@@ -1412,7 +1558,7 @@ public:
 private:
   nsRefPtr<DeviceStorageFile> mFile;
   nsString mPath;
-  int64_t mValue;
+  uint64_t mValue;
   nsRefPtr<DOMRequest> mRequest;
 };
 
@@ -1542,22 +1688,54 @@ class UsedSpaceFileEvent : public nsRunnable
 {
 public:
   UsedSpaceFileEvent(DeviceStorageFile* aFile, nsRefPtr<DOMRequest>& aRequest)
-  : mFile(aFile)
-    {
-      mRequest.swap(aRequest);
-    }
+     : mFile(aFile)
+     {
+       mRequest.swap(aRequest);
+     }
 
   ~UsedSpaceFileEvent() {}
 
   NS_IMETHOD Run()
   {
     NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
-    nsCOMPtr<nsIRunnable> r;
-    uint64_t diskUsage = 0;
-    DeviceStorageFile::DirectoryDiskUsage(mFile->mFile, &diskUsage, mFile->mStorageType);
 
-    r = new PostResultEvent(mRequest, diskUsage);
+    DeviceStorageUsedSpaceCache* usedSpaceCache = DeviceStorageUsedSpaceCache::CreateOrGet();
+    NS_ASSERTION(usedSpaceCache, "DeviceStorageUsedSpaceCache is null");
+
+    uint64_t usedSize;
+    nsresult rv = usedSpaceCache->GetUsedSizeForType(mFile->mStorageType, &usedSize);
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIRunnable> r = new PostResultEvent(mRequest, usedSize);
+      NS_DispatchToMainThread(r);
+      return NS_OK;
+    }
+
+    uint64_t picturesUsage = 0, videosUsage = 0, musicUsage = 0, totalUsage = 0;
+    DeviceStorageFile::DirectoryDiskUsage(mFile->mFile, &picturesUsage,
+                                          &videosUsage, &musicUsage,
+                                          &totalUsage);
+    nsCOMPtr<nsIRunnable> r;
+
+    if (mFile->mStorageType.EqualsLiteral(DEVICESTORAGE_APPS)) {
+      // Don't cache this since it's for a different volume from the media.
+      r = new PostResultEvent(mRequest, totalUsage);
+    } else {
+      usedSpaceCache->SetUsedSizes(picturesUsage, videosUsage, musicUsage, totalUsage);
+
+      if (mFile->mStorageType.EqualsLiteral(DEVICESTORAGE_PICTURES)) {
+        r = new PostResultEvent(mRequest, picturesUsage);
+      }
+      else if (mFile->mStorageType.EqualsLiteral(DEVICESTORAGE_VIDEOS)) {
+        r = new PostResultEvent(mRequest, videosUsage);
+      }
+      else if (mFile->mStorageType.EqualsLiteral(DEVICESTORAGE_MUSIC)) {
+        r = new PostResultEvent(mRequest, musicUsage);
+      } else {
+        r = new PostResultEvent(mRequest, totalUsage);
+      }
+    }
     NS_DispatchToMainThread(r);
+
     return NS_OK;
   }
 
@@ -1587,7 +1765,7 @@ public:
       freeSpace = 0;
     }
 
-    r = new PostResultEvent(mRequest, freeSpace);
+    r = new PostResultEvent(mRequest, static_cast<uint64_t>(freeSpace));
     NS_DispatchToMainThread(r);
     return NS_OK;
   }
@@ -1836,8 +2014,13 @@ public:
           ContentChild::GetSingleton()->SendPDeviceStorageRequestConstructor(child, params);
           return NS_OK;
         }
+        // this needs to be dispatched to only one (1)
+        // thread or we will do more work than required.
+        DeviceStorageUsedSpaceCache* usedSpaceCache = DeviceStorageUsedSpaceCache::CreateOrGet();
+        NS_ASSERTION(usedSpaceCache, "DeviceStorageUsedSpaceCache is null");
         r = new UsedSpaceFileEvent(mFile, mRequest);
-        break;
+        usedSpaceCache->Dispatch(r);
+        return NS_OK;
       }
 
       case DEVICE_STORAGE_REQUEST_AVAILABLE:
@@ -1865,6 +2048,7 @@ public:
       NS_ASSERTION(target, "Must have stream transport service");
       target->Dispatch(r, NS_DISPATCH_NORMAL);
     }
+
     return NS_OK;
   }
 
@@ -2019,12 +2203,22 @@ nsDOMDeviceStorage::CreateDeviceStoragesFor(nsPIDOMWindow* aWin,
                                             const nsAString &aType,
                                             nsTArray<nsRefPtr<nsDOMDeviceStorage> > &aStores)
 {
+  nsresult rv;
+
+  if (!DeviceStorageTypeChecker::IsVolumeBased(aType)) {
+    nsRefPtr<nsDOMDeviceStorage> storage = new nsDOMDeviceStorage();
+    rv = storage->Init(aWin, aType, NS_LITERAL_STRING(""));
+    if (NS_SUCCEEDED(rv)) {
+      aStores.AppendElement(storage);
+    } else {
+    }
+    return;
+  }
   nsTArray<nsString>  volNames;
   GetOrderedVolumeNames(aType, volNames);
 
   nsTArray<nsString>::size_type numVolumeNames = volNames.Length();
   for (nsTArray<nsString>::index_type i = 0; i < numVolumeNames; i++) {
-    nsresult rv;
     nsRefPtr<nsDOMDeviceStorage> storage = new nsDOMDeviceStorage();
     rv = storage->Init(aWin, aType, volNames[i]);
     if (NS_FAILED(rv)) {
@@ -2220,6 +2414,9 @@ nsDOMDeviceStorage::FreeSpace(nsIDOMDOMRequest** aRetval)
 NS_IMETHODIMP
 nsDOMDeviceStorage::UsedSpace(nsIDOMDOMRequest** aRetval)
 {
+  DebugOnly<DeviceStorageUsedSpaceCache*> usedSpaceCache = DeviceStorageUsedSpaceCache::CreateOrGet();
+  NS_ASSERTION(usedSpaceCache, "DeviceStorageUsedSpaceCache is null");
+
   nsCOMPtr<nsPIDOMWindow> win = GetOwner();
   if (!win) {
     return NS_ERROR_UNEXPECTED;
@@ -2418,6 +2615,8 @@ nsDOMDeviceStorage::DispatchMountChangeEvent(nsAString& aType)
 NS_IMETHODIMP
 nsDOMDeviceStorage::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *aData)
 {
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
   if (!strcmp(aTopic, "file-watcher-update")) {
 
     DeviceStorageFile* file = static_cast<DeviceStorageFile*>(aSubject);
@@ -2454,6 +2653,11 @@ nsDOMDeviceStorage::Observe(nsISupports *aSubject, const char *aTopic, const PRU
       // ignore anything else.
       return NS_OK;
     }
+
+    DeviceStorageUsedSpaceCache* usedSpaceCache = DeviceStorageUsedSpaceCache::CreateOrGet();
+    NS_ASSERTION(usedSpaceCache, "DeviceStorageUsedSpaceCache is null");
+    usedSpaceCache->Invalidate();
+
     DispatchMountChangeEvent(type);
     return NS_OK;
   }
