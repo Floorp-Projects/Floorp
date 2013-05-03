@@ -10,6 +10,7 @@
 #include "MediaResource.h"
 #include "GStreamerReader.h"
 #include "GStreamerFormatHelper.h"
+#include "GStreamerMozVideoBuffer.h"
 #include "VideoUtils.h"
 #include "mozilla/dom/TimeRanges.h"
 #include "mozilla/Preferences.h"
@@ -38,8 +39,6 @@ static const int MAX_CHANNELS = 4;
 static const int SHORT_FILE_SIZE = 1024 * 1024;
 // The default resource->Read() size when working in push mode
 static const int DEFAULT_SOURCE_READ_SIZE = 50 * 1024;
-
-G_DEFINE_BOXED_TYPE(BufferData, buffer_data, BufferData::Copy, BufferData::Free);
 
 typedef enum {
   GST_PLAY_FLAG_VIDEO         = (1 << 0),
@@ -139,9 +138,7 @@ nsresult GStreamerReader::Init(MediaDecoderReader* aCloneDonor)
   gst_pad_add_event_probe(sinkpad,
       G_CALLBACK(&GStreamerReader::EventProbeCb), this);
   gst_object_unref(sinkpad);
-#if GST_VERSION_MICRO >= 36
   gst_pad_set_bufferalloc_function(sinkpad, GStreamerReader::AllocateVideoBufferCb);
-#endif
   gst_pad_set_element_private(sinkpad, this);
 
   mAudioSink = gst_parse_bin_from_description("capsfilter name=filter ! "
@@ -532,15 +529,11 @@ bool GStreamerReader::DecodeVideoFrame(bool &aKeyFrameSkip,
     return false;
 
   nsRefPtr<PlanarYCbCrImage> image;
-#if GST_VERSION_MICRO >= 36
-  const GstStructure* structure = gst_buffer_get_qdata(buffer,
-      g_quark_from_string("moz-reader-data"));
-  const GValue* value = gst_structure_get_value(structure, "image");
-  if (value) {
-    BufferData* data = reinterpret_cast<BufferData*>(g_value_get_boxed(value));
-    image = data->mImage;
-  }
-#endif
+  GstMozVideoBufferData* bufferdata = reinterpret_cast<GstMozVideoBufferData*>
+      GST_IS_MOZ_VIDEO_BUFFER(buffer)?gst_moz_video_buffer_get_data(GST_MOZ_VIDEO_BUFFER(buffer)):nullptr;
+
+  if(bufferdata)
+    image = bufferdata->mImage;
 
   if (!image) {
     /* Ugh, upstream is not calling gst_pad_alloc_buffer(). Fallback to
@@ -844,29 +837,18 @@ GstFlowReturn GStreamerReader::AllocateVideoBufferFull(GstPad* aPad,
   nsRefPtr<PlanarYCbCrImage> image = dont_AddRef(img);
 
   /* prepare a GstBuffer pointing to the underlying PlanarYCbCrImage buffer */
-  GstBuffer* buf = gst_buffer_new();
+  GstBuffer* buf = GST_BUFFER(gst_moz_video_buffer_new());
   GST_BUFFER_SIZE(buf) = aSize;
   /* allocate the actual YUV buffer */
   GST_BUFFER_DATA(buf) = image->AllocateAndGetNewBuffer(aSize);
 
   aImage = image;
 
-#if GST_VERSION_MICRO >= 36
-  /* create a GBoxed handle to hold the image */
-  BufferData* data = new BufferData(image);
+  /* create a GstMozVideoBufferData to hold the image */
+  GstMozVideoBufferData* bufferdata = new GstMozVideoBufferData(image);
 
-  /* store it in a GValue so we can put it in a GstStructure */
-  GValue value = {0,};
-  g_value_init(&value, buffer_data_get_type());
-  g_value_take_boxed(&value, data);
-
-  /* store the value in the structure */
-  GstStructure* structure = gst_structure_new("moz-reader-data", nullptr);
-  gst_structure_take_value(structure, "image", &value);
-
-  /* and attach the structure to the buffer */
-  gst_buffer_set_qdata(buf, g_quark_from_string("moz-reader-data"), structure);
-#endif
+  /* Attach bufferdata to our GstMozVideoBuffer, it will take care to free it */
+  gst_moz_video_buffer_set_data(GST_MOZ_VIDEO_BUFFER(buf), bufferdata);
 
   *aBuf = buf;
   return GST_FLOW_OK;
