@@ -141,8 +141,8 @@ public:
                                         JSObject*,
                                         const Sequence<Dict>&,
                                         const Optional<JS::Value>&,
-                                        const Optional<NonNull<JSObject> >&,
-                                        const Optional<JSObject*>&,
+                                        const Optional<NonNullLazyRootedObject>&,
+                                        const Optional<LazyRootedObject>&,
                                         ErrorResult&);
 
   // Integer types
@@ -436,8 +436,8 @@ public:
   // object types
   void PassObject(JSContext*, JSObject&);
   void PassNullableObject(JSContext*, JSObject*);
-  void PassOptionalObject(JSContext*, const Optional<NonNull<JSObject> >&);
-  void PassOptionalNullableObject(JSContext*, const Optional<JSObject*>&);
+  void PassOptionalObject(JSContext*, const Optional<NonNullLazyRootedObject>&);
+  void PassOptionalNullableObject(JSContext*, const Optional<LazyRootedObject>&);
   void PassOptionalNullableObjectWithDefaultValue(JSContext*, JSObject*);
   JSObject* ReceiveObject(JSContext*);
   JSObject* ReceiveNullableObject(JSContext*);
