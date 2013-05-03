@@ -185,10 +185,8 @@ function checkSocialUI(win) {
   isbool(win.SocialChatBar.isAvailable, enabled && Social.haveLoggedInUser(), "chatbar available?");
   isbool(!win.SocialChatBar.chatbar.hidden, enabled && Social.haveLoggedInUser(), "chatbar visible?");
 
-  let markVisible = enabled && provider.pageMarkInfo;
-  let canMark = markVisible && win.SocialMark.canMarkPage(win.gBrowser.currentURI);
-  isbool(!win.SocialMark.button.hidden, markVisible, "SocialMark button visible?");
-  isbool(!win.SocialMark.button.disabled, canMark, "SocialMark button enabled?");
+  let canShare = enabled && provider.recommendInfo && Social.haveLoggedInUser() && win.SocialShareButton.canSharePage(win.gBrowser.currentURI)
+  isbool(!win.SocialShareButton.shareButton.hidden, canShare, "share button visible?");
   isbool(!doc.getElementById("social-toolbar-item").hidden, active, "toolbar items visible?");
   if (active)
     is(win.SocialToolbar.button.style.listStyleImage, 'url("' + Social.defaultProvider.iconURL + '")', "toolbar button has provider icon");
@@ -203,7 +201,7 @@ function checkSocialUI(win) {
   isbool(!doc.getElementById("Social:ToggleNotifications").hidden, enabled, "Social:ToggleNotifications visible?");
   isbool(!doc.getElementById("Social:FocusChat").hidden, enabled && Social.haveLoggedInUser(), "Social:FocusChat visible?");
   isbool(doc.getElementById("Social:FocusChat").getAttribute("disabled"), enabled ? "false" : "true", "Social:FocusChat disabled?");
-  is(doc.getElementById("Social:TogglePageMark").getAttribute("disabled"), canMark ? "false" : "true", "Social:TogglePageMark enabled?");
+  is(doc.getElementById("Social:SharePage").getAttribute("disabled"), canShare ? "false" : "true", "Social:SharePage visible?");
 
   // broadcasters.
   isbool(!doc.getElementById("socialActiveBroadcaster").hidden, active, "socialActiveBroadcaster hidden?");
