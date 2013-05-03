@@ -73,7 +73,7 @@ class nsGeolocationRequest
   // Called by the geolocation device to notify that a location has changed.
   bool Update(nsIDOMGeoPosition* aPosition);
 
-  void SendLocation(nsIDOMGeoPosition* location, bool aCachePosition);
+  void SendLocation(nsIDOMGeoPosition* location);
   void MarkCleared();
   bool WantsHighAccuracy() {return mOptions && mOptions->enableHighAccuracy;}
   bool IsActive() {return !mCleared;}
@@ -92,7 +92,6 @@ class nsGeolocationRequest
   void NotifyError(int16_t errorCode);
   bool mAllowed;
   bool mCleared;
-  bool mIsFirstUpdate;
   bool mIsWatchPositionRequest;
 
   nsCOMPtr<nsITimer> mTimeoutTimer;
