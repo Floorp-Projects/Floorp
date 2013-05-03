@@ -743,6 +743,38 @@ class MacroAssembler : public MacroAssemblerSpecific
         addPtr(ImmWord(p->stack()), temp);
     }
 
+    // The safe version of the above method refrains from assuming that the fields
+    // of the SPSProfiler class are going to stay the same across different runs of
+    // the jitcode.  Ion can use the more efficient unsafe version because ion jitcode
+    // will not survive changes to to the profiler settings.  Baseline jitcode, however,
+    // can span these changes, so any hardcoded field values will be incorrect afterwards.
+    // All the sps-related methods used by baseline call |spsProfileEntryAddressSafe|.
+    void spsProfileEntryAddressSafe(SPSProfiler *p, int offset, Register temp,
+                                    Label *full)
+    {
+        movePtr(ImmWord(p->addressOfSizePointer()), temp);
+
+        // Load size pointer
+        loadPtr(Address(temp, 0), temp);
+
+        // Load size
+        load32(Address(temp, 0), temp);
+        if (offset != 0)
+            add32(Imm32(offset), temp);
+
+        // Test against max size.
+        branch32(Assembler::LessThanOrEqual, AbsoluteAddress(p->addressOfMaxSize()), temp, full);
+
+        // 4 * sizeof(void*) * idx = idx << (2 + log(sizeof(void*)))
+        JS_STATIC_ASSERT(sizeof(ProfileEntry) == 4 * sizeof(void*));
+        lshiftPtr(Imm32(2 + (sizeof(void*) == 4 ? 2 : 3)), temp);
+        push(temp);
+        movePtr(ImmWord(p->addressOfStack()), temp);
+        loadPtr(Address(temp, 0), temp);
+        addPtr(Address(StackPointer, 0), temp);
+        addPtr(Imm32(sizeof(size_t)), StackPointer);
+    }
+
   public:
 
     // These functions are needed by the IonInstrumentation interface defined in
@@ -758,7 +790,7 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     void spsUpdatePCIdx(SPSProfiler *p, Register idx, Register temp) {
         Label stackFull;
-        spsProfileEntryAddress(p, -1, temp, &stackFull);
+        spsProfileEntryAddressSafe(p, -1, temp, &stackFull);
         store32(idx, Address(temp, ProfileEntry::offsetOfPCIdx()));
         bind(&stackFull);
     }
@@ -782,7 +814,7 @@ class MacroAssembler : public MacroAssemblerSpecific
                       Register temp, Register temp2)
     {
         Label stackFull;
-        spsProfileEntryAddress(p, 0, temp, &stackFull);
+        spsProfileEntryAddressSafe(p, 0, temp, &stackFull);
 
         loadPtr(str, temp2);
         storePtr(temp2, Address(temp, ProfileEntry::offsetOfString()));
@@ -799,12 +831,20 @@ class MacroAssembler : public MacroAssemblerSpecific
 
         /* Always increment the stack size, whether or not we actually pushed. */
         bind(&stackFull);
-        movePtr(ImmWord(p->sizePointer()), temp);
+        movePtr(ImmWord(p->addressOfSizePointer()), temp);
+        loadPtr(Address(temp, 0), temp);
         add32(Imm32(1), Address(temp, 0));
     }
 
     void spsPopFrame(SPSProfiler *p, Register temp) {
         movePtr(ImmWord(p->sizePointer()), temp);
+        add32(Imm32(-1), Address(temp, 0));
+    }
+
+    // spsPropFrameSafe does not assume |profiler->sizePointer()| will stay constant.
+    void spsPopFrameSafe(SPSProfiler *p, Register temp) {
+        movePtr(ImmWord(p->addressOfSizePointer()), temp);
+        loadPtr(Address(temp, 0), temp);
         add32(Imm32(-1), Address(temp, 0));
     }
 
