@@ -20,6 +20,7 @@ MOCHITEST_FILES := \
   test_bug866570.html \
   test_bug866737.html \
   test_bug867089.html \
+  test_bug867174.html \
   test_analyserNode.html \
   test_AudioBuffer.html \
   test_AudioContext.html \
@@ -59,12 +60,5 @@ MOCHITEST_FILES := \
   audio.ogv \
   audio-expected.wav \
   $(NULL)
-
-# Disable this test on Android because it fails intermittently (bug 865642)
-ifneq ($(OS_TARGET),Android)
-MOCHITEST_FILES += \
-  test_bug867174.html \
-  $(NULL)
-endif
 
 include $(topsrcdir)/config/rules.mk
