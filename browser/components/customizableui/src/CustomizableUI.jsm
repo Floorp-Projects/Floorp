@@ -298,6 +298,26 @@ XPCOMUtils.defineLazyGetter(this, "gBuiltInWidgets", function() {
         win.BrowserOpenAddonsMgr();
       }
     }
+  }, {
+    id: "preferences-button",
+    name: "Preferences",
+    shortcut: "Ctrl+Shift+O",
+    description: "Preferences\u2026",
+    defaultArea: CustomizableUI.AREA_PANEL,
+    allowedAreas: [CustomizableUI.AREA_PANEL],
+    icons: {
+      "16": "chrome://branding/content/icon16.png",
+      "32": "chrome://branding/content/icon48.png",
+      "48": "chrome://branding/content/icon48.png"
+    },
+    onCommand: function(aEvent) {
+      let win = aEvent.target &&
+                aEvent.target.ownerDocument &&
+                aEvent.target.ownerDocument.defaultView;
+      if (win && typeof win.openPreferences == "function") {
+        win.openPreferences();
+      }
+    }
   }];
 });
 
@@ -375,6 +395,7 @@ let gDefaultPlacements = new Map([
     "history-button",
     "fullscreen-button",
     "find-button",
+    "preferences-button",
     "add-ons-button",
     "history-panelmenu",
     "bookmarks-panelmenu"
