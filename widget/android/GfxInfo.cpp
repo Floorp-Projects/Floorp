@@ -468,21 +468,21 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
         // Whitelist:
         //   All JB phones except for those in blocklist below
         // Blocklist:
-        //   Samsung SPH-L710 (Bug 812881)
-        //   Samsung SGH-T999 (Bug 812881)
-        //   Samsung SCH-I535 (Bug 812881)
-        //   Samsung GT-I8190 (Bug 812881)
-        //   Samsung SGH-I747M (Bug 812881)
-        //   Samsung SGH-I747 (Bug 812881)
+        //   Samsung devices from bug 812881 and 853522.
         //   All Sony devices (Bug 845734)
 
         bool isBlocklisted =
-          cModel.Equals("SAMSUNG-SPH-L710", nsCaseInsensitiveCStringComparator()) ||
-          cModel.Equals("SAMSUNG-SGH-T999", nsCaseInsensitiveCStringComparator()) ||
-          cModel.Equals("SAMSUNG-SCH-I535", nsCaseInsensitiveCStringComparator()) ||
-          cModel.Equals("SAMSUNG-GT-I8190", nsCaseInsensitiveCStringComparator()) ||
-          cModel.Equals("SAMSUNG-SGH-I747M", nsCaseInsensitiveCStringComparator()) ||
-          cModel.Equals("SAMSUNG-SGH-I747", nsCaseInsensitiveCStringComparator()) ||
+          cModel.Find("SCH-I535", true) ||
+          cModel.Find("SGH-I747", true) ||
+          cModel.Find("SGH-T999", true) ||
+          cModel.Find("SPH-L710", true) ||
+          cModel.Find("GT-I8190", true) ||
+          cModel.Find("GT-P3100", true) ||
+          cModel.Find("GT-P3110", true) ||
+          cModel.Find("GT-P3113", true) ||
+          cModel.Find("GT-P5100", true) ||
+          cModel.Find("GT-P5110", true) ||
+          cModel.Find("GT-P5113", true) ||
           cManufacturer.Equals("Sony", nsCaseInsensitiveCStringComparator());
 
         if (isBlocklisted) {
