@@ -637,6 +637,57 @@
                      onpopuphiding="WebrtcIndicator.clearPopup(this);"
                      oncommand="WebrtcIndicator.menuCommand(event.target);"/>
         </toolbarbutton>
+
+        <toolbaritem id="social-toolbar-item"
+                     class="chromeclass-toolbar-additional"
+                     removable="false"
+                     title="&socialToolbar.title;"
+                     hidden="true"
+                     skipintoolbarset="true"
+                     observes="socialActiveBroadcaster">
+          <toolbarbutton id="social-provider-button"
+                         class="toolbarbutton-1"
+                         type="menu">
+            <menupopup id="social-statusarea-popup">
+              <menuitem class="social-statusarea-user menuitem-iconic" pack="start" align="center"
+                        observes="socialBroadcaster_userDetails"
+                        oncommand="SocialUI.showProfile(); document.getElementById('social-statusarea-popup').hidePopup();">
+                <image class="social-statusarea-user-portrait"
+                       observes="socialBroadcaster_userDetails"/>
+                <vbox>
+                  <label class="social-statusarea-loggedInStatus"
+                         observes="socialBroadcaster_userDetails"/>
+                </vbox>
+              </menuitem>
+  #ifndef XP_WIN
+              <menuseparator class="social-statusarea-separator"/>
+  #endif
+              <menuitem class="social-toggle-sidebar-menuitem"
+                        type="checkbox"
+                        autocheck="false"
+                        command="Social:ToggleSidebar"
+                        label="&social.toggleSidebar.label;"
+                        accesskey="&social.toggleSidebar.accesskey;"/>
+              <menuitem class="social-toggle-notifications-menuitem"
+                        type="checkbox"
+                        autocheck="false"
+                        command="Social:ToggleNotifications"
+                        label="&social.toggleNotifications.label;"
+                        accesskey="&social.toggleNotifications.accesskey;"/>
+              <menuitem class="social-toggle-menuitem" command="Social:Toggle"/>
+              <menuseparator class="social-statusarea-separator"/>
+              <menuseparator class="social-provider-menu" hidden="true"/>
+              <menuitem class="social-addons-menuitem" command="Social:Addons"
+                        label="&social.addons.label;"/>
+              <menuitem label="&social.learnMore.label;"
+                        accesskey="&social.learnMore.accesskey;"
+                        oncommand="SocialUI.showLearnMore();"/>
+            </menupopup>
+          </toolbarbutton>
+          <toolbarbutton id="social-mark-button"
+                         class="toolbarbutton-1"
+                         command="Social:TogglePageMark"/>
+        </toolbaritem>
       </hbox>
 
       <toolbaritem id="PanelUI-button"
@@ -907,57 +958,6 @@
                      ondragexit="homeButtonObserver.onDragExit(event)"
                      onclick="BrowserGoHome(event);"
                      aboutHomeOverrideTooltip="&abouthome.pageTitle;"/>
-
-      <toolbaritem id="social-toolbar-item"
-                   class="chromeclass-toolbar-additional"
-                   removable="false"
-                   title="&socialToolbar.title;"
-                   hidden="true"
-                   skipintoolbarset="true"
-                   observes="socialActiveBroadcaster">
-        <toolbarbutton id="social-provider-button"
-                       class="toolbarbutton-1"
-                       type="menu">
-          <menupopup id="social-statusarea-popup">
-            <menuitem class="social-statusarea-user menuitem-iconic" pack="start" align="center"
-                      observes="socialBroadcaster_userDetails"
-                      oncommand="SocialUI.showProfile(); document.getElementById('social-statusarea-popup').hidePopup();">
-              <image class="social-statusarea-user-portrait"
-                     observes="socialBroadcaster_userDetails"/>
-              <vbox>
-                <label class="social-statusarea-loggedInStatus"
-                       observes="socialBroadcaster_userDetails"/>
-              </vbox>
-            </menuitem>
-#ifndef XP_WIN
-            <menuseparator class="social-statusarea-separator"/>
-#endif
-            <menuitem class="social-toggle-sidebar-menuitem"
-                      type="checkbox"
-                      autocheck="false"
-                      command="Social:ToggleSidebar"
-                      label="&social.toggleSidebar.label;"
-                      accesskey="&social.toggleSidebar.accesskey;"/>
-            <menuitem class="social-toggle-notifications-menuitem"
-                      type="checkbox"
-                      autocheck="false"
-                      command="Social:ToggleNotifications"
-                      label="&social.toggleNotifications.label;"
-                      accesskey="&social.toggleNotifications.accesskey;"/>
-            <menuitem class="social-toggle-menuitem" command="Social:Toggle"/>
-            <menuseparator class="social-statusarea-separator"/>
-            <menuseparator class="social-provider-menu" hidden="true"/>
-            <menuitem class="social-addons-menuitem" command="Social:Addons"
-                      label="&social.addons.label;"/>
-            <menuitem label="&social.learnMore.label;"
-                      accesskey="&social.learnMore.accesskey;"
-                      oncommand="SocialUI.showLearnMore();"/>
-          </menupopup>
-        </toolbarbutton>
-        <toolbarbutton id="social-mark-button"
-                       class="toolbarbutton-1"
-                       command="Social:TogglePageMark"/>
-      </toolbaritem>
 
       <toolbarbutton id="print-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                      label="&printButton.label;" command="cmd_print"

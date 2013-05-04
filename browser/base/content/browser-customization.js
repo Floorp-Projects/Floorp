@@ -80,7 +80,7 @@ let CustomizationHandler = {
       URLBarSetURI();
       XULBrowserWindow.asyncUpdateUI();
       BookmarksMenuButton.updateStarState();
-      SocialShareButton.updateShareState();
+      SocialMark.updateMarkState();
     }
 
     TabsInTitlebar.allowedBy("customizing-toolbars", true);
