@@ -25,7 +25,7 @@ extern PRLogModuleInfo* GetMediaManagerLog();
 NS_IMPL_THREADSAFE_ISUPPORTS1(MediaEngineWebRTCVideoSource, nsIRunnable)
 
 // ViEExternalRenderer Callback.
-#ifndef MOZ_WIDGET_GONK
+#ifndef MOZ_B2G_CAMERA
 int
 MediaEngineWebRTCVideoSource::FrameSizeChange(
    unsigned int w, unsigned int h, unsigned int streams)
@@ -156,7 +156,7 @@ MediaEngineWebRTCVideoSource::NotifyPull(MediaStreamGraph* aGraph,
 void
 MediaEngineWebRTCVideoSource::ChooseCapability(const MediaEnginePrefs &aPrefs)
 {
-#ifdef MOZ_WIDGET_GONK
+#ifdef MOZ_B2G_CAMERA
   mCapability.width  = aPrefs.mWidth;
   mCapability.height = aPrefs.mHeight;
 #else
@@ -224,7 +224,7 @@ nsresult
 MediaEngineWebRTCVideoSource::Allocate(const MediaEnginePrefs &aPrefs)
 {
   LOG((__FUNCTION__));
-#ifdef MOZ_WIDGET_GONK
+#ifdef MOZ_B2G_CAMERA
   ReentrantMonitorAutoEnter sync(mCallbackMonitor);
   if (mState == kReleased && mInitDone) {
     ChooseCapability(aPrefs);
@@ -262,13 +262,13 @@ MediaEngineWebRTCVideoSource::Deallocate()
 {
   LOG((__FUNCTION__));
   if (mSources.IsEmpty()) {
-#ifdef MOZ_WIDGET_GONK
+#ifdef MOZ_B2G_CAMERA
     ReentrantMonitorAutoEnter sync(mCallbackMonitor);
 #endif
     if (mState != kStopped && mState != kAllocated) {
       return NS_ERROR_FAILURE;
     }
-#ifdef MOZ_WIDGET_GONK
+#ifdef MOZ_B2G_CAMERA
     // We do not register success callback here
 
     NS_DispatchToMainThread(WrapRunnable(this,
@@ -319,7 +319,7 @@ MediaEngineWebRTCVideoSource::Start(SourceMediaStream* aStream, TrackID aID)
   aStream->AddTrack(aID, USECS_PER_S, 0, new VideoSegment());
   aStream->AdvanceKnownTracksTime(STREAM_TIME_MAX);
 
-#ifdef MOZ_WIDGET_GONK
+#ifdef MOZ_B2G_CAMERA
   ReentrantMonitorAutoEnter sync(mCallbackMonitor);
 #endif
 
@@ -328,7 +328,7 @@ MediaEngineWebRTCVideoSource::Start(SourceMediaStream* aStream, TrackID aID)
   }
   mImageContainer = layers::LayerManager::CreateImageContainer();
 
-#ifdef MOZ_WIDGET_GONK
+#ifdef MOZ_B2G_CAMERA
   NS_DispatchToMainThread(WrapRunnable(this,
                                        &MediaEngineWebRTCVideoSource::StartImpl,
                                        mCapability));
@@ -367,7 +367,7 @@ MediaEngineWebRTCVideoSource::Stop(SourceMediaStream *aSource, TrackID aID)
   if (!mSources.IsEmpty()) {
     return NS_OK;
   }
-#ifdef MOZ_WIDGET_GONK
+#ifdef MOZ_B2G_CAMERA
   ReentrantMonitorAutoEnter sync(mCallbackMonitor);
 #endif
   if (mState != kStarted) {
@@ -382,7 +382,7 @@ MediaEngineWebRTCVideoSource::Stop(SourceMediaStream *aSource, TrackID aID)
     // usage
     mImage = nullptr;
   }
-#ifdef MOZ_WIDGET_GONK
+#ifdef MOZ_B2G_CAMERA
   NS_DispatchToMainThread(WrapRunnable(this,
                                        &MediaEngineWebRTCVideoSource::StopImpl));
 #else
@@ -413,14 +413,14 @@ MediaEngineWebRTCVideoSource::Snapshot(uint32_t aDuration, nsIDOMFile** aFile)
    * return from this function after cleaning up the temporary stream object
    * and caling Stop() on the media source.
    */
-#ifdef MOZ_WIDGET_GONK
+#ifdef MOZ_B2G_CAMERA
   ReentrantMonitorAutoEnter sync(mCallbackMonitor);
 #endif
   *aFile = nullptr;
   if (!mInitDone || mState != kAllocated) {
     return NS_ERROR_FAILURE;
   }
-#ifdef MOZ_WIDGET_GONK
+#ifdef MOZ_B2G_CAMERA
   mLastCapture = nullptr;
 
   NS_DispatchToMainThread(WrapRunnable(this,
@@ -529,7 +529,7 @@ MediaEngineWebRTCVideoSource::Init()
 {
   mDeviceName[0] = '\0'; // paranoia
   mUniqueId[0] = '\0';
-#ifdef MOZ_WIDGET_GONK
+#ifdef MOZ_B2G_CAMERA
   nsCString deviceName;
   mCameraManager->GetCameraName(mCaptureIndex, deviceName);
 
@@ -579,7 +579,7 @@ MediaEngineWebRTCVideoSource::Shutdown()
   if (!mInitDone) {
     return;
   }
-#ifdef MOZ_WIDGET_GONK
+#ifdef MOZ_B2G_CAMERA
   ReentrantMonitorAutoEnter sync(mCallbackMonitor);
 #endif
   if (mState == kStarted) {
@@ -592,7 +592,7 @@ MediaEngineWebRTCVideoSource::Shutdown()
   if (mState == kAllocated || mState == kStopped) {
     Deallocate();
   }
-#ifndef MOZ_WIDGET_GONK
+#ifndef MOZ_B2G_CAMERA
   mViECapture->Release();
   mViERender->Release();
   mViEBase->Release();
@@ -601,7 +601,7 @@ MediaEngineWebRTCVideoSource::Shutdown()
   mInitDone = false;
 }
 
-#ifdef MOZ_WIDGET_GONK
+#ifdef MOZ_B2G_CAMERA
 
 // All these functions must be run on MainThread!
 void
