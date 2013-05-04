@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1366828228000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1367333049000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -279,6 +279,10 @@
                   </emItem>
       <emItem  blockID="i43" id="supportaccessplugin@gmail.com">
                         </emItem>
+      <emItem  blockID="i340" id="chiang@programmer.net">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                  </emItem>
       <emItem  blockID="i54" id="applebeegifts@mozilla.doslash.org">
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
@@ -341,8 +345,8 @@
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
                   </emItem>
-      <emItem  blockID="i282" id="{33e0daa6-3af3-d8b5-6752-10e949c61516}">
-                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+      <emItem  blockID="i56" id="flash@adobe.com">
+                        <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i216" id="fdm_ffext@freedownloadmanager.org">
@@ -492,8 +496,8 @@
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
                   </emItem>
-      <emItem  blockID="i56" id="flash@adobe.com">
-                        <versionRange  minVersion="0" maxVersion="*">
+      <emItem  blockID="i282" id="{33e0daa6-3af3-d8b5-6752-10e949c61516}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i45" id="{22119944-ED35-4ab1-910B-E619EA06A115}">
