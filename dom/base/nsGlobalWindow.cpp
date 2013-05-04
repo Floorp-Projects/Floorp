@@ -953,8 +953,9 @@ nsChromeOuterWindowProxy
 nsChromeOuterWindowProxy::singleton;
 
 static JSObject*
-NewOuterWindowProxy(JSContext *cx, JSObject *parent, bool isChrome)
+NewOuterWindowProxy(JSContext *cx, JSObject *aParent, bool isChrome)
 {
+  JS::Rooted<JSObject*> parent(cx, aParent);
   JSAutoCompartment ac(cx, parent);
   JS::Rooted<JSObject*> proto(cx);
   if (!js::GetObjectProto(cx, parent, proto.address()))
@@ -7366,11 +7367,11 @@ public:
                                   static_cast<nsGlobalWindow*>(window->GetCurrentInnerWindow());
       NS_ENSURE_TRUE(currentInner, NS_OK);
 
-      JSObject* obj = currentInner->FastGetGlobalJSObject();
+      JSContext* cx = nsContentUtils::GetSafeJSContext();
+
+      JS::Rooted<JSObject*> obj(cx, currentInner->FastGetGlobalJSObject());
       // We only want to nuke wrappers for the chrome->content case
       if (obj && !js::IsSystemCompartment(js::GetObjectCompartment(obj))) {
-        JSContext* cx = nsContentUtils::GetSafeJSContext();
-
         JSAutoRequest ar(cx);
         js::NukeCrossCompartmentWrappers(cx,
                                          js::ChromeCompartmentsOnly(),

@@ -185,8 +185,8 @@ nsJSScriptTimeoutHandler::Init(nsGlobalWindow *aWindow, bool *aIsInterval,
   ncc->GetArgc(&argc);
   ncc->GetArgvPtr(&argv);
 
-  JSFlatString *expr = nullptr;
-  JSObject *funobj = nullptr;
+  JS::Rooted<JSFlatString*> expr(cx);
+  JS::Rooted<JSObject*> funobj(cx);
 
   JSAutoRequest ar(cx);
 

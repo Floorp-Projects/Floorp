@@ -48,7 +48,7 @@ UnicodeToNative(JSContext* aCx, const jschar* aSource, size_t aSourceLen)
 BEGIN_WORKERS_NAMESPACE
 
 bool
-DefineChromeWorkerFunctions(JSContext* aCx, JSObject* aGlobal)
+DefineChromeWorkerFunctions(JSContext* aCx, JS::Handle<JSObject*> aGlobal)
 {
   // Currently ctypes is the only special property given to ChromeWorkers.
 #ifdef BUILD_CTYPES

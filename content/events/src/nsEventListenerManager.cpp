@@ -545,7 +545,7 @@ nsEventListenerManager::FindEventHandler(uint32_t aEventType,
 
 nsresult
 nsEventListenerManager::SetEventHandlerInternal(nsIScriptContext *aContext,
-                                                JSObject* aScopeObject,
+                                                JS::Handle<JSObject*> aScopeObject,
                                                 nsIAtom* aName,
                                                 const nsEventHandler& aHandler,
                                                 bool aPermitUntrustedEvents,
@@ -718,7 +718,8 @@ nsEventListenerManager::SetEventHandler(nsIAtom *aName,
   nsIScriptContext* context = global->GetScriptContext();
   NS_ENSURE_TRUE(context, NS_ERROR_FAILURE);
 
-  JSObject* scope = global->GetGlobalJSObject();
+  JS::Rooted<JSObject*> scope(context->GetNativeContext(),
+                              global->GetGlobalJSObject());
 
   nsListenerStruct *ls;
   rv = SetEventHandlerInternal(context, scope, aName, nsEventHandler(),
@@ -1193,7 +1194,7 @@ nsEventListenerManager::SetEventHandler(nsIAtom* aEventName,
   // Untrusted events are always permitted for non-chrome script
   // handlers.
   nsListenerStruct *ignored;
-  return SetEventHandlerInternal(nullptr, nullptr, aEventName,
+  return SetEventHandlerInternal(nullptr, JS::NullPtr(), aEventName,
                                  nsEventHandler(aHandler),
                                  !nsContentUtils::IsCallerChrome(), &ignored);
 }
@@ -1209,7 +1210,7 @@ nsEventListenerManager::SetEventHandler(OnErrorEventHandlerNonNull* aHandler)
   // Untrusted events are always permitted for non-chrome script
   // handlers.
   nsListenerStruct *ignored;
-  return SetEventHandlerInternal(nullptr, nullptr, nsGkAtoms::onerror,
+  return SetEventHandlerInternal(nullptr, JS::NullPtr(), nsGkAtoms::onerror,
                                  nsEventHandler(aHandler),
                                  !nsContentUtils::IsCallerChrome(), &ignored);
 }
@@ -1225,7 +1226,7 @@ nsEventListenerManager::SetEventHandler(BeforeUnloadEventHandlerNonNull* aHandle
   // Untrusted events are always permitted for non-chrome script
   // handlers.
   nsListenerStruct *ignored;
-  return SetEventHandlerInternal(nullptr, nullptr, nsGkAtoms::onbeforeunload,
+  return SetEventHandlerInternal(nullptr, JS::NullPtr(), nsGkAtoms::onbeforeunload,
                                  nsEventHandler(aHandler),
                                  !nsContentUtils::IsCallerChrome(), &ignored);
 }
