@@ -6,8 +6,6 @@
 
 %include shared.inc
 %filter substitution
-%define fgTabTexture linear-gradient(hsla(0,0%,100%,0.6), hsla(0,0%,100%,0.6) 0px, hsl(0,0%,99%) 1px, hsl(0,0%,92%))
-%define fgTabBackgroundMiddle linear-gradient(transparent, transparent)
 %define forwardTransitionLength 150ms
 %define conditionalForwardWithUrlbar window:not([chromehidden~=toolbar]) #navigator-toolbox[iconsize=large] > :-moz-any(#nav-bar[currentset*="unified-back-forward-button,urlbar-container"],#nav-bar:not([currentset])) > #nav-bar-customizationtarget > #unified-back-forward-button
 %define conditionalForwardWithUrlbarWidth 27
@@ -20,19 +18,26 @@
   opacity: .9;
 }
 
+#navigator-toolbox::after {
+  -moz-box-ordinal-group: 101; /* tabs toolbar is 100 */
+  background-image: linear-gradient(to top, hsla(0,0%,0%,.15), hsla(0,0%,0%,.15) 1px, hsla(0,0%,100%,.15) 1px, hsla(0,0%,100%,.15) 2px, transparent 3px);
+  content: "";
+  display: -moz-box;
+  height: 2px;
+  margin-top: -2px;
+}
+#navigator-toolbox[tabsontop=false]::after,
+#main-window[disablechrome] #navigator-toolbox::after {
+  visibility: collapse;
+}
+
 #navigator-toolbox toolbarbutton:-moz-lwtheme {
   color: inherit;
   text-shadow: inherit;
 }
 
-#PersonalToolbar:-moz-lwtheme,
-#nav-bar:-moz-lwtheme,
 #main-window[privatebrowsingmode=temporary] #nav-bar[tabsontop=false] {
   -moz-appearance: none !important;
-  background: none !important;
-  /* Switching to a lightweight theme shouldn't move the content area,
-     so avoid changing border widths here. */
-  border-color: transparent !important;
 }
 
 #main-window {
@@ -71,12 +76,6 @@ toolbarseparator {
   min-height: 22px;
 }
 
-toolbox[tabsontop=true] > toolbar:not(#TabsToolbar):not(#nav-bar):not(#toolbar-menubar),
-toolbox[tabsontop=false] > toolbar:not(#nav-bar) {
-  margin-top: -2px; /* overlay the bottom border of the toolbar above us */
-  padding-top: 1px !important;
-}
-
 toolbox[tabsontop=true] > toolbar:not(#TabsToolbar):not(#nav-bar):not(:-moz-lwtheme) {
   -moz-appearance: none;
   background: url(chrome://browser/skin/Toolbar-background-noise.png) hsl(0,0%,83%);
@@ -86,33 +85,20 @@ toolbox[tabsontop=true] > toolbar:not(#TabsToolbar):not(#nav-bar):not(:-moz-lwth
   padding-bottom: 4px !important;
 }
 
-#PersonalToolbar {
-  -moz-appearance: none;
-  background-color: -moz-mac-chrome-active;
-  border-bottom: 2px solid;
-  -moz-border-bottom-colors: hsla(0,0%,0%,.15) hsla(0,0%,100%,.15);
-}
-
 #nav-bar[tabsontop=true],
 #nav-bar[tabsontop=true][collapsed=true]:not([customizing]) + toolbar,
 #nav-bar[tabsontop=true][collapsed=true]:not([customizing]) + #customToolbars + #PersonalToolbar {
   -moz-appearance: none;
-  margin-top: 0; /* don't overlay the bottom border of the tabs toolbar */
   padding-top: 4px !important;
-  border-bottom: 2px solid;
-  -moz-border-bottom-colors: hsla(0,0%,0%,.15) hsla(0,0%,100%,.15);
   background: url(chrome://browser/skin/Toolbar-background-noise.png),
-              linear-gradient(hsl(0,0%,93%), hsl(0,0%,83%)); !important; /* override lwtheme style */
+              linear-gradient(hsl(0,0%,93%), hsl(0,0%,83%));
   background-clip: border-box;
   background-origin: border-box !important;
 }
 
-#PersonalToolbar:-moz-lwtheme,
-#nav-bar[tabsontop=true]:-moz-lwtheme,
-#nav-bar[tabsontop=true][collapsed=true]:not([customizing]) + toolbar:-moz-lwtheme,
-#nav-bar[tabsontop=true][collapsed=true]:not([customizing]) + #customToolbars + #PersonalToolbar:-moz-lwtheme {
-  background-color: transparent;
-  border-bottom-color: transparent;
+#navigator-toolbox[tabsontop=true] > toolbar:not(#TabsToolbar):-moz-lwtheme {
+  background-color: @toolbarColorLWT@;
+  background-image: url(chrome://browser/skin/Toolbar-background-noise.png);
 }
 
 #PersonalToolbar:not(:-moz-lwtheme):-moz-window-inactive,
@@ -2159,12 +2145,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 %define TABSONTOP_NEWTAB_BUTTON #tabbrowser-tabs[tabsontop="true"] > .tabbrowser-arrowscrollbox > .tabs-newtab-button
 %define TABSONBOTTOM_NEWTAB_BUTTON #tabbrowser-tabs[tabsontop="false"] > .tabbrowser-arrowscrollbox > .tabs-newtab-button
 
-.tab-background-start[selected=true]::before,
-.tab-background-end[selected=true]::before {
-  /* The fill is in the image of ::after on OS X */
-  background: none;
-}
-
 .tabbrowser-tabs[closebuttons="hidden"] > * > * > * > .tab-close-button:not([pinned]) {
   display: -moz-box;
   visibility: hidden;
@@ -2212,7 +2192,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 /*
  * Draw the bottom border of the tabstrip:
  */
-#TabsToolbar[tabsontop="true"]:not(:-moz-lwtheme)::after {
+#TabsToolbar::after {
   content: '';
   position: absolute;
   bottom: 0;

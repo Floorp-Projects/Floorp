@@ -20,6 +20,7 @@ browser.jar:
   skin/classic/browser/actionicon-tab@2x.png
   skin/classic/browser/appmenu.png
 * skin/classic/browser/browser.css                          (browser.css)
+* skin/classic/browser/browser-lightweightTheme.css
   skin/classic/browser/click-to-play-warning-stripes.png
   skin/classic/browser/customizableui/customization-mode-background.jpg (customizableui/customization-mode-background.jpg)
 * skin/classic/browser/engineManager.css                    (engineManager.css)
@@ -184,6 +185,7 @@ browser.jar:
   skin/classic/browser/tabbrowser/loading.png                            (tabbrowser/loading.png)
   skin/classic/browser/tabbrowser/loading@2x.png                         (tabbrowser/loading@2x.png)
   skin/classic/browser/tabbrowser/tab-active-middle.png                  (tabbrowser/tab-active-middle.png)
+  skin/classic/browser/tabbrowser/tab-active-middle-lwtheme.png          (tabbrowser/tab-active-middle-lwtheme.png)
   skin/classic/browser/tabbrowser/tab-arrow-left.png                     (tabbrowser/tab-arrow-left.png)
   skin/classic/browser/tabbrowser/tab-arrow-left@2x.png                  (tabbrowser/tab-arrow-left@2x.png)
   skin/classic/browser/tabbrowser/tab-arrow-right.png                    (tabbrowser/tab-arrow-right.png)

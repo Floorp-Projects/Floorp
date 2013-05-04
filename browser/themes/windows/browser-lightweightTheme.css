@@ -15,7 +15,7 @@
 #tabbrowser-tabs:not([movingtab]) > .tabbrowser-tab > .tab-stack > .tab-background > .tab-background-end[selected=true]:-moz-lwtheme::before {
   background-attachment: scroll, fixed;
   background-color: transparent;
-  background-image: @fgTabTexture@;/*, lwtHeader;*/
+  background-image: @fgTabTextureLWT@;/*, lwtHeader;*/
   background-position: 0 0, right top;
 }
 
@@ -23,7 +23,7 @@
   background-attachment: scroll, scroll, fixed;
   background-color: transparent;
   background-image: url(chrome://browser/skin/tabbrowser/tab-active-middle-lwtheme.png),
-                    @fgTabTexture@;/*,
+                    @fgTabTextureLWT@;/*,
                     lwtHeader;*/
   background-position: 0 0, 0 0, right top;
 }
