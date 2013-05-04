@@ -315,12 +315,8 @@ xptiInterfaceEntry::GetInfoForParam(uint16_t methodIndex,
     if(NS_FAILED(rv))
         return rv;
 
-    xptiInterfaceInfo* theInfo;
-    rv = entry->GetInterfaceInfo(&theInfo);    
-    if(NS_FAILED(rv))
-        return rv;
+    *info = entry->InterfaceInfo().get();
 
-    *info = static_cast<nsIInterfaceInfo*>(theInfo);
     return NS_OK;
 }
 
@@ -537,8 +533,8 @@ xptiInterfaceEntry::HasAncestor(const nsIID * iid, bool *_retval)
 
 /***************************************************/
 
-nsresult 
-xptiInterfaceEntry::GetInterfaceInfo(xptiInterfaceInfo** info)
+already_AddRefed<xptiInterfaceInfo> 
+xptiInterfaceEntry::InterfaceInfo()
 {
 #ifdef DEBUG
     XPTInterfaceInfoManager::GetSingleton()->mWorkingSet.mTableReentrantMonitor.
@@ -549,15 +545,10 @@ xptiInterfaceEntry::GetInterfaceInfo(xptiInterfaceInfo** info)
     if(!mInfo)
     {
         mInfo = new xptiInterfaceInfo(this);
-        if(!mInfo)
-        {
-            *info = nullptr;    
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
     }
     
-    NS_ADDREF(*info = mInfo);
-    return NS_OK;    
+    nsRefPtr<xptiInterfaceInfo> info = mInfo;
+    return info.forget();
 }
     
 void     
@@ -580,7 +571,8 @@ xptiInterfaceInfo::BuildParent()
                  !mParent &&
                  mEntry->Parent(),
                 "bad BuildParent call");
-    return NS_SUCCEEDED(mEntry->Parent()->GetInterfaceInfo(&mParent));
+    mParent = mEntry->Parent()->InterfaceInfo().get();
+    return true;
 }
 
 /***************************************************************************/
@@ -621,7 +613,7 @@ xptiInterfaceInfo::Release(void)
                                           mTableReentrantMonitor);
         LOG_INFO_MONITOR_ENTRY;
 
-        // If GetInterfaceInfo added and *released* a reference before we 
+        // If InterfaceInfo added and *released* a reference before we 
         // acquired the monitor then 'this' might already be dead. In that
         // case we would not want to try to access any instance data. We
         // would want to bail immediately. If 'this' is already dead then the
@@ -630,7 +622,7 @@ xptiInterfaceInfo::Release(void)
         if(entry && !entry->InterfaceInfoEquals(this))
             return 0;
 
-        // If GetInterfaceInfo added a reference before we acquired the monitor
+        // If InterfaceInfo added a reference before we acquired the monitor
         // then we want to bail out of here without destorying the object.
         if(mRefCnt)
             return 1;
