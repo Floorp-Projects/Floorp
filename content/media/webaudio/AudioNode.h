@@ -26,6 +26,7 @@ class ErrorResult;
 
 namespace dom {
 
+class AudioParam;
 struct ThreeDPoint;
 
 template<class T>
@@ -108,6 +109,9 @@ public:
   virtual void Connect(AudioNode& aDestination, uint32_t aOutput,
                        uint32_t aInput, ErrorResult& aRv);
 
+  virtual void Connect(AudioParam& aDestination, uint32_t aOutput,
+                       ErrorResult& aRv);
+
   virtual void Disconnect(uint32_t aOutput, ErrorResult& aRv);
 
   // The following two virtual methods must be implemented by each node type
@@ -153,6 +157,7 @@ public:
     AudioNode* mInputNode;
     nsRefPtr<MediaInputPort> mStreamPort;
     // The index of the input port this node feeds into.
+    // This is not used for connections to AudioParams.
     uint32_t mInputPort;
     // The index of the output port this node comes out of.
     uint32_t mOutputPort;
@@ -165,7 +170,10 @@ public:
     return mInputNodes;
   }
 
+  void RemoveOutputParam(AudioParam* aParam);
+
 private:
+  friend class AudioBufferSourceNode;
   // This could possibly delete 'this'.
   void DisconnectFromGraph();
 
@@ -197,6 +205,12 @@ private:
   // exact matching entry, since mOutputNodes doesn't include the port
   // identifiers and the same node could be connected on multiple ports.
   nsTArray<nsRefPtr<AudioNode> > mOutputNodes;
+  // For every mOutputParams entry, there is a corresponding entry in
+  // AudioParam::mInputNodes of the mOutputParams entry. We won't necessarily be
+  // able to identify the exact matching entry, since mOutputParams doesn't
+  // include the port identifiers and the same node could be connected on
+  // multiple ports.
+  nsTArray<nsRefPtr<AudioParam> > mOutputParams;
   uint32_t mChannelCount;
   ChannelCountMode mChannelCountMode;
   ChannelInterpretation mChannelInterpretation;

@@ -144,6 +144,18 @@ class SPSProfiler
     SPSProfiler(JSRuntime *rt);
     ~SPSProfiler();
 
+    uint32_t **addressOfSizePointer() {
+        return &size_;
+    }
+
+    uint32_t *addressOfMaxSize() {
+        return &max_;
+    }
+
+    ProfileEntry **addressOfStack() {
+        return &stack_;
+    }
+
     uint32_t *sizePointer() { return size_; }
     uint32_t maxSize() { return max_; }
     ProfileEntry *stack() { return stack_; }

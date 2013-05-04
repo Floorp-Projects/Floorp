@@ -168,7 +168,7 @@ typedef HRESULT(WINAPI*CreateDXGIFactory1Func)(
 class GPUAdapterMultiReporter : public nsIMemoryMultiReporter {
 
     // Callers must Release the DXGIAdapter after use or risk mem-leak
-    static bool GetDXGIAdapter(__out IDXGIAdapter **DXGIAdapter)
+    static bool GetDXGIAdapter(IDXGIAdapter **DXGIAdapter)
     {
         ID3D10Device1 *D2D10Device;
         IDXGIDevice *DXGIDevice;

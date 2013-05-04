@@ -6,7 +6,7 @@
 let SocialUI,
     SocialChatBar,
     SocialFlyout,
-    SocialMark,
+    SocialShareButton,
     SocialMenu,
     SocialToolbar,
     SocialSidebar;
@@ -25,7 +25,7 @@ SocialUI = {
   init: function SocialUI_init() {
     Services.obs.addObserver(this, "social:ambient-notification-changed", false);
     Services.obs.addObserver(this, "social:profile-changed", false);
-    Services.obs.addObserver(this, "social:page-mark-config", false);
+    Services.obs.addObserver(this, "social:recommend-info-changed", false);
     Services.obs.addObserver(this, "social:frameworker-error", false);
     Services.obs.addObserver(this, "social:provider-set", false);
     Services.obs.addObserver(this, "social:providers-changed", false);
@@ -42,7 +42,7 @@ SocialUI = {
     });
 
     SocialChatBar.init();
-    SocialMark.init();
+    SocialShareButton.init();
     SocialMenu.init();
     SocialToolbar.init();
     SocialSidebar.init();
@@ -61,7 +61,7 @@ SocialUI = {
   uninit: function SocialUI_uninit() {
     Services.obs.removeObserver(this, "social:ambient-notification-changed");
     Services.obs.removeObserver(this, "social:profile-changed");
-    Services.obs.removeObserver(this, "social:page-mark-config");
+    Services.obs.removeObserver(this, "social:recommend-info-changed");
     Services.obs.removeObserver(this, "social:frameworker-error");
     Services.obs.removeObserver(this, "social:provider-set");
     Services.obs.removeObserver(this, "social:providers-changed");
@@ -88,7 +88,7 @@ SocialUI = {
           SocialFlyout.unload();
           SocialChatBar.update();
           SocialSidebar.update();
-          SocialMark.update();
+          SocialShareButton.update();
           SocialToolbar.update();
           SocialMenu.populate();
           break;
@@ -109,13 +109,13 @@ SocialUI = {
         case "social:profile-changed":
           if (this._matchesCurrentProvider(data)) {
             SocialToolbar.updateProfile();
-            SocialMark.update();
+            SocialShareButton.update();
             SocialChatBar.update();
           }
           break;
-        case "social:page-mark-config":
+        case "social:recommend-info-changed":
           if (this._matchesCurrentProvider(data)) {
-            SocialMark.updateMarkState();
+            SocialShareButton.updateShareState();
           }
           break;
         case "social:frameworker-error":
@@ -566,81 +566,146 @@ SocialFlyout = {
   }
 }
 
-SocialMark = {
+SocialShareButton = {
   // Called once, after window load, when the Social.provider object is initialized
   init: function SSB_init() {
   },
 
-  get button() {
-    return document.getElementById("social-mark-button");
+  // Called when the Social.provider changes
+  update: function() {
+    this._updateButtonHiddenState();
+    let profileRow = document.getElementById("unsharePopupHeader");
+    let profile = SocialUI.enabled ? Social.provider.profile : null;
+    if (profile && profile.displayName) {
+      profileRow.hidden = false;
+      let portrait = document.getElementById("socialUserPortrait");
+      if (profile.portrait) {
+        portrait.setAttribute("src", profile.portrait);
+      } else {
+        portrait.removeAttribute("src");
+      }
+      let displayName = document.getElementById("socialUserDisplayName");
+      displayName.setAttribute("label", profile.displayName);
+    } else {
+      profileRow.hidden = true;
+    }
   },
 
-  canMarkPage: function SSB_canMarkPage(aURI) {
+  get shareButton() {
+    return document.getElementById("share-button");
+  },
+  get unsharePopup() {
+    return document.getElementById("unsharePopup");
+  },
+
+  dismissUnsharePopup: function SSB_dismissUnsharePopup() {
+    this.unsharePopup.hidePopup();
+  },
+
+  canSharePage: function SSB_canSharePage(aURI) {
     // We only allow sharing of http or https
     return aURI && (aURI.schemeIs('http') || aURI.schemeIs('https'));
   },
 
-  // Called when the Social.provider changes
-  update: function SSB_updateButtonState() {
-    let markButton = this.button;
-    // always show button if provider supports marks
-    markButton.hidden = !SocialUI.enabled || Social.provider.pageMarkInfo == null;
-    markButton.disabled = markButton.hidden || !this.canMarkPage(gBrowser.currentURI);
+  _updateButtonHiddenState: function SSB_updateButtonHiddenState() {
+    let shareButton = this.shareButton;
+    if (shareButton)
+      shareButton.hidden = !SocialUI.enabled || Social.provider.recommendInfo == null ||
+                           !Social.haveLoggedInUser() ||
+                           !this.canSharePage(gBrowser.currentURI);
 
     // also update the relevent command's disabled state so the keyboard
     // shortcut only works when available.
-    let cmd = document.getElementById("Social:TogglePageMark");
-    cmd.setAttribute("disabled", markButton.disabled ? "true" : "false");
+    let cmd = document.getElementById("Social:SharePage");
+    cmd.setAttribute("disabled", shareButton.hidden ? "true" : "false");
   },
 
-  togglePageMark: function(aCallback) {
-    if (this.button.disabled)
+  onClick: function SSB_onClick(aEvent) {
+    if (aEvent.button != 0)
       return;
-    this.toggleURIMark(gBrowser.currentURI, aCallback)
-  },
-  
-  toggleURIMark: function(aURI, aCallback) {
-    let update = function(marked) {
-      this._updateMarkState(marked);
-      if (aCallback)
-        aCallback(marked);
-    }.bind(this);
-    Social.isURIMarked(aURI, function(marked) {
-      if (marked) {
-        Social.unmarkURI(aURI, update);
-      } else {
-        Social.markURI(aURI, update);
-      }
-    });
+
+    // Don't bubble to the textbox, to avoid unwanted selection of the address.
+    aEvent.stopPropagation();
+
+    this.sharePage();
   },
 
-  updateMarkState: function SSB_updateMarkState() {
-    this.update();
-    Social.isURIMarked(gBrowser.currentURI, this._updateMarkState.bind(this));
+  panelShown: function SSB_panelShown(aEvent) {
+    function updateElement(id, attrs) {
+      let el = document.getElementById(id);
+      Object.keys(attrs).forEach(function(attr) {
+        el.setAttribute(attr, attrs[attr]);
+      });
+    }
+    let continueSharingButton = document.getElementById("unsharePopupContinueSharingButton");
+    continueSharingButton.focus();
+    let recommendInfo = Social.provider.recommendInfo;
+    updateElement("unsharePopupContinueSharingButton",
+                  {label: recommendInfo.messages.unshareCancelLabel,
+                   accesskey: recommendInfo.messages.unshareCancelAccessKey});
+    updateElement("unsharePopupStopSharingButton",
+                  {label: recommendInfo.messages.unshareConfirmLabel,
+                  accesskey: recommendInfo.messages.unshareConfirmAccessKey});
+    updateElement("socialUserPortrait",
+                  {"aria-label": recommendInfo.messages.portraitLabel});
+    updateElement("socialUserRecommendedText",
+                  {value: recommendInfo.messages.unshareLabel});
   },
 
-  _updateMarkState: function(currentPageMarked) {
-    // callback for isURIMarked
-    let markButton = this.button;
-    let pageMarkInfo = SocialUI.enabled ? Social.provider.pageMarkInfo : null;
+  sharePage: function SSB_sharePage() {
+    this.unsharePopup.hidden = false;
 
-    // Update the mark button, if present
-    if (!markButton || markButton.hidden || !pageMarkInfo)
+    let uri = gBrowser.currentURI;
+    if (!Social.isPageShared(uri)) {
+      Social.sharePage(uri);
+      this.updateShareState();
+    } else {
+      this.unsharePopup.openPopup(this.shareButton, "bottomcenter topright");
+    }
+  },
+
+  unsharePage: function SSB_unsharePage() {
+    Social.unsharePage(gBrowser.currentURI);
+    this.updateShareState();
+    this.dismissUnsharePopup();
+  },
+
+  updateShareState: function SSB_updateShareState() {
+    this._updateButtonHiddenState();
+
+    let shareButton = this.shareButton;
+    let currentPageShared = shareButton && !shareButton.hidden && Social.isPageShared(gBrowser.currentURI);
+
+    let recommendInfo = SocialUI.enabled ? Social.provider.recommendInfo : null;
+    // Provide a11y-friendly notification of share.
+    let status = document.getElementById("share-button-status");
+    if (status) {
+      // XXX - this should also be capable of reflecting that the page was
+      // unshared (ie, it needs to manage three-states: (1) nothing done, (2)
+      // shared, (3) shared then unshared)
+      // Note that we *do* have an appropriate string from the provider for
+      // this (recommendInfo.messages.unsharedLabel) but currently lack a way of
+      // tracking this state)
+      let statusString = currentPageShared && recommendInfo ?
+                           recommendInfo.messages.sharedLabel : "";
+      status.setAttribute("value", statusString);
+    }
+
+    // Update the share button, if present
+    if (!shareButton || shareButton.hidden)
       return;
 
     let imageURL;
-    if (!markButton.disabled && currentPageMarked) {
-      markButton.setAttribute("marked", "true");
-      markButton.setAttribute("label", pageMarkInfo.messages.markedLabel);
-      markButton.setAttribute("tooltiptext", pageMarkInfo.messages.markedTooltip);
-      imageURL = pageMarkInfo.images.marked;
+    if (currentPageShared) {
+      shareButton.setAttribute("shared", "true");
+      shareButton.setAttribute("tooltiptext", recommendInfo.messages.unshareTooltip);
+      imageURL = recommendInfo.images.unshare;
     } else {
-      markButton.removeAttribute("marked");
-      markButton.setAttribute("label", pageMarkInfo.messages.unmarkedLabel);
-      markButton.setAttribute("tooltiptext", pageMarkInfo.messages.unmarkedTooltip);
-      imageURL = pageMarkInfo.images.unmarked;
+      shareButton.removeAttribute("shared");
+      shareButton.setAttribute("tooltiptext", recommendInfo.messages.shareTooltip);
+      imageURL = recommendInfo.images.share;
     }
-    markButton.style.listStyleImage = "url(" + imageURL + ")";
+    shareButton.src = imageURL;
   }
 };
 
@@ -729,12 +794,8 @@ SocialToolbar = {
 
       let tbi = document.getElementById("social-toolbar-item");
       if (tbi) {
-        // SocialMark is the last button allways
-        let next = SocialMark.button.previousSibling;
-        while (next != tbi.firstChild) {
-          tbi.removeChild(next);
-          next = SocialMark.button.previousSibling;
-        }
+        while (tbi.lastChild != tbi.firstChild)
+          tbi.removeChild(tbi.lastChild);
       }
     }
   },
@@ -882,7 +943,7 @@ SocialToolbar = {
       toolbarButton.setAttribute("aria-label", ariaLabel);
     }
     let socialToolbarItem = document.getElementById("social-toolbar-item");
-    socialToolbarItem.insertBefore(toolbarButtons, SocialMark.button);
+    socialToolbarItem.appendChild(toolbarButtons);
 
     for (let frame of createdFrames) {
       if (frame.socialErrorListener) {

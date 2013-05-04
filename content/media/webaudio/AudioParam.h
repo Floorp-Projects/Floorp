@@ -37,7 +37,8 @@ public:
              float aDefaultValue);
   virtual ~AudioParam();
 
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(AudioParam)
+  NS_IMETHOD_(nsrefcnt) AddRef(void);
+  NS_IMETHOD_(nsrefcnt) Release(void);
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(AudioParam)
 
   AudioContext* GetParentObject() const
@@ -104,10 +105,44 @@ public:
     return mDefaultValue;
   }
 
+  AudioNode* Node() const
+  {
+    return mNode;
+  }
+
+  const nsTArray<AudioNode::InputNode>& InputNodes() const
+  {
+    return mInputNodes;
+  }
+
+  void RemoveInputNode(uint32_t aIndex)
+  {
+    mInputNodes.RemoveElementAt(aIndex);
+  }
+
+  AudioNode::InputNode* AppendInputNode()
+  {
+    return mInputNodes.AppendElement();
+  }
+
+  void DisconnectFromGraphAndDestroyStream();
+
+  // May create the stream if it doesn't exist
+  MediaStream* Stream();
+
+protected:
+  nsCycleCollectingAutoRefCnt mRefCnt;
+  NS_DECL_OWNINGTHREAD
+
 private:
   nsRefPtr<AudioNode> mNode;
+  // For every InputNode, there is a corresponding entry in mOutputParams of the
+  // InputNode's mInputNode.
+  nsTArray<AudioNode::InputNode> mInputNodes;
   CallbackType mCallback;
   const float mDefaultValue;
+  // The input port used to connect the AudioParam's stream to its node's stream
+  nsRefPtr<MediaInputPort> mNodeStreamPort;
 };
 
 }

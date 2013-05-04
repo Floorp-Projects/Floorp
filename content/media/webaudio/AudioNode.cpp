@@ -13,14 +13,18 @@
 namespace mozilla {
 namespace dom {
 
+static const uint32_t INVALID_PORT = 0xffffffff;
+
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(AudioNode, nsDOMEventTargetHelper)
   tmp->DisconnectFromGraph();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mContext)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mOutputNodes)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mOutputParams)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(AudioNode, nsDOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mContext)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOutputNodes)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOutputParams)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_ADDREF_INHERITED(AudioNode, nsDOMEventTargetHelper)
@@ -59,21 +63,24 @@ AudioNode::~AudioNode()
 {
   MOZ_ASSERT(mInputNodes.IsEmpty());
   MOZ_ASSERT(mOutputNodes.IsEmpty());
+  MOZ_ASSERT(mOutputParams.IsEmpty());
 }
 
+template <class InputNode>
 static uint32_t
-FindIndexOfNode(const nsTArray<AudioNode::InputNode>& aInputNodes, const AudioNode* aNode)
+FindIndexOfNode(const nsTArray<InputNode>& aInputNodes, const AudioNode* aNode)
 {
   for (uint32_t i = 0; i < aInputNodes.Length(); ++i) {
     if (aInputNodes[i].mInputNode == aNode) {
       return i;
     }
   }
-  return nsTArray<AudioNode::InputNode>::NoIndex;
+  return nsTArray<InputNode>::NoIndex;
 }
 
+template <class InputNode>
 static uint32_t
-FindIndexOfNodeWithPorts(const nsTArray<AudioNode::InputNode>& aInputNodes, const AudioNode* aNode,
+FindIndexOfNodeWithPorts(const nsTArray<InputNode>& aInputNodes, const AudioNode* aNode,
                          uint32_t aInputPort, uint32_t aOutputPort)
 {
   for (uint32_t i = 0; i < aInputNodes.Length(); ++i) {
@@ -83,7 +90,7 @@ FindIndexOfNodeWithPorts(const nsTArray<AudioNode::InputNode>& aInputNodes, cons
       return i;
     }
   }
-  return nsTArray<AudioNode::InputNode>::NoIndex;
+  return nsTArray<InputNode>::NoIndex;
 }
 
 void
@@ -112,6 +119,16 @@ AudioNode::DisconnectFromGraph()
     // It doesn't matter which one we remove, since we're going to remove all
     // entries for this node anyway.
     output->mInputNodes.RemoveElementAt(inputIndex);
+  }
+
+  while (!mOutputParams.IsEmpty()) {
+    uint32_t i = mOutputParams.Length() - 1;
+    nsRefPtr<AudioParam> output = mOutputParams[i].forget();
+    mOutputParams.RemoveElementAt(i);
+    uint32_t inputIndex = FindIndexOfNode(output->InputNodes(), this);
+    // It doesn't matter which one we remove, since we're going to remove all
+    // entries for this node anyway.
+    output->RemoveInputNode(inputIndex);
   }
 
   DestroyMediaStream();
@@ -157,6 +174,40 @@ AudioNode::Connect(AudioNode& aDestination, uint32_t aOutput,
 
   // This connection may have connected a panner and a source.
   Context()->UpdatePannerSource();
+}
+
+void
+AudioNode::Connect(AudioParam& aDestination, uint32_t aOutput,
+                   ErrorResult& aRv)
+{
+  if (aOutput >= NumberOfOutputs()) {
+    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return;
+  }
+
+  if (Context() != aDestination.GetParentObject()) {
+    aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+    return;
+  }
+
+  if (FindIndexOfNodeWithPorts(aDestination.InputNodes(), this, INVALID_PORT, aOutput) !=
+      nsTArray<AudioNode::InputNode>::NoIndex) {
+    // connection already exists.
+    return;
+  }
+
+  mOutputParams.AppendElement(&aDestination);
+  InputNode* input = aDestination.AppendInputNode();
+  input->mInputNode = this;
+  input->mInputPort = INVALID_PORT;
+  input->mOutputPort = aOutput;
+
+  MediaStream* stream = aDestination.Stream();
+  MOZ_ASSERT(stream->AsProcessedStream());
+  ProcessedMediaStream* ps = static_cast<ProcessedMediaStream*>(stream);
+
+  // Setup our stream as an input to the AudioParam's stream
+  input->mStreamPort = ps->AllocateInputPort(mStream, MediaInputPort::FLAG_BLOCK_INPUT);
 }
 
 void
@@ -224,6 +275,21 @@ AudioNode::Disconnect(uint32_t aOutput, ErrorResult& aRv)
     }
   }
 
+  for (int32_t i = mOutputParams.Length() - 1; i >= 0; --i) {
+    AudioParam* dest = mOutputParams[i];
+    for (int32_t j = dest->InputNodes().Length() - 1; j >= 0; --j) {
+      const InputNode& input = dest->InputNodes()[j];
+      if (input.mInputNode == this && input.mOutputPort == aOutput) {
+        dest->RemoveInputNode(j);
+        // Remove one instance of 'dest' from mOutputParams. There could be
+        // others, and it's not correct to remove them all since some of them
+        // could be for different output ports.
+        mOutputParams.RemoveElementAt(i);
+        break;
+      }
+    }
+  }
+
   // This disconnection may have disconnected a panner and a source.
   Context()->UpdatePannerSource();
 }
@@ -247,6 +313,12 @@ AudioNode::DestroyMediaStream()
     mStream->Destroy();
     mStream = nullptr;
   }
+}
+
+void
+AudioNode::RemoveOutputParam(AudioParam* aParam)
+{
+  mOutputParams.RemoveElement(aParam);
 }
 
 }

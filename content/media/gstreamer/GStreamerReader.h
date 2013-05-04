@@ -153,21 +153,6 @@ private:
   int fpsDen;
 };
 
-class BufferData {
-  public:
-    BufferData(layers::PlanarYCbCrImage* aImage) : mImage(aImage) {}
-
-    static void* Copy(void* aData) {
-      return new BufferData(reinterpret_cast<BufferData*>(aData)->mImage);
-    }
-
-    static void Free(void* aData) {
-      delete reinterpret_cast<BufferData*>(aData);
-    }
-
-    nsRefPtr<layers::PlanarYCbCrImage> mImage;
-};
-
 } // namespace mozilla
 
 #endif

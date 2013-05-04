@@ -213,6 +213,7 @@ VPATH +=	$(srcdir)/ion
 VPATH +=	$(srcdir)/ion/shared
 
 CPPSRCS +=	MIR.cpp \
+		BytecodeAnalysis.cpp \
 		BaselineCompiler.cpp \
 		BaselineIC.cpp \
 		BaselineFrame.cpp \

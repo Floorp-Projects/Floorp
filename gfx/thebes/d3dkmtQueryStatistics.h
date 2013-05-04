@@ -140,18 +140,18 @@ typedef struct _D3DKMTQS_QUERY_SEGMENT
 
 typedef struct _D3DKMTQS
 {
-    __in D3DKMTQS_TYPE Type;
-    __in LUID AdapterLuid;
-    __in_opt HANDLE hProcess;
-    __out D3DKMTQS_RESULT QueryResult;
+    D3DKMTQS_TYPE Type;
+    LUID AdapterLuid;
+    HANDLE hProcess;
+    D3DKMTQS_RESULT QueryResult;
 
     union
     {
-        __in D3DKMTQS_QUERY_SEGMENT QuerySegment;
-        __in D3DKMTQS_QUERY_SEGMENT QueryProcessSegment;
+        D3DKMTQS_QUERY_SEGMENT QuerySegment;
+        D3DKMTQS_QUERY_SEGMENT QueryProcessSegment;
     };
 } D3DKMTQS;
 
 extern "C" {
-typedef __checkReturn NTSTATUS (APIENTRY *PFND3DKMTQS)(__in const D3DKMTQS *);
+typedef __checkReturn NTSTATUS (APIENTRY *PFND3DKMTQS)(const D3DKMTQS *);
 }

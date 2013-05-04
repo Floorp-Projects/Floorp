@@ -205,6 +205,8 @@ TiledContentHost::RenderTile(const TiledTexture& aTile,
                                   textureRect.width / aTextureBounds.width,
                                   textureRect.height / aTextureBounds.height);
     mCompositor->DrawQuad(graphicsRect, aClipRect, aEffectChain, aOpacity, aTransform, aOffset);
+    mCompositor->DrawDiagnostics(gfx::Color(0.0,0.5,0.0,1.0),
+                                 graphicsRect, aClipRect, aTransform, aOffset);
   }
 
   aTile.mTextureHost->Unlock();
