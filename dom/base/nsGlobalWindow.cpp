@@ -2244,8 +2244,9 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     newInnerWindow = currentInner;
 
     if (aDocument != oldDoc) {
-      xpc_UnmarkGrayObject(currentInner->mJSObject);
-      if (!nsWindowSH::InvalidateGlobalScopePolluter(cx, currentInner->mJSObject)) {
+      JS::Rooted<JSObject*> obj(cx, currentInner->mJSObject);
+      xpc_UnmarkGrayObject(obj);
+      if (!nsWindowSH::InvalidateGlobalScopePolluter(cx, obj)) {
         return NS_ERROR_FAILURE;
       }
     }
