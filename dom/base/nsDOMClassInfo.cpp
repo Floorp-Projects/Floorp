@@ -57,7 +57,6 @@
 #include "nsGlobalWindow.h"
 #include "nsHistory.h"
 #include "nsIContent.h"
-#include "nsIAttribute.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMEvent.h"
@@ -152,7 +151,6 @@
 // includes needed for the prototype chain interfaces
 #include "nsIDOMNavigator.h"
 #include "nsIDOMBarProp.h"
-#include "mozilla/dom/Attr.h"
 #include "nsIDOMDataContainerEvent.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMCompositionEvent.h"
@@ -558,8 +556,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(Element, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(Attr, nsAttributeSH,
-                           NODE_SCRIPTABLE_FLAGS)
 
   // Misc Core related classes
 
@@ -1707,11 +1703,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIInlineEventHandlers)
     DOM_CLASSINFO_MAP_CONDITIONAL_ENTRY(nsITouchEventReceiver,
                                         nsDOMTouchEvent::PrefEnabled())
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(Attr, nsIDOMAttr)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMAttr)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(Event, nsIDOMEvent)
@@ -7560,15 +7551,6 @@ nsNonDOMObjectSH::GetFlags(uint32_t *aFlags)
   // to do something like implement nsISecurityCheckedComponent in a meaningful
   // way.
   *aFlags = nsIClassInfo::MAIN_THREAD_ONLY | nsIClassInfo::SINGLETON_CLASSINFO;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAttributeSH::GetFlags(uint32_t *aFlags)
-{
-  // Just like nsNodeSH, but without CONTENT_NODE
-  *aFlags = DOMCLASSINFO_STANDARD_FLAGS;
-
   return NS_OK;
 }
 
