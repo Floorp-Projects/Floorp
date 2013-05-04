@@ -3303,14 +3303,14 @@ CheckInternalCall(FunctionCompiler &f, ParseNode *callNode, const ModuleCompiler
     // against the declared return type when the definition was encountered.
 
     if (!(callee.returnType() <= use))
-        return f.fail("return type of callee not compatible with use", callNode);
+        return f.fail("return type of callee incompatible with use", callNode);
 
     *type = use.toReturnType();
     return true;
 }
 
 static bool
-CheckFuncPtrCall(FunctionCompiler &f, ParseNode *callNode, MDefinition **def, Type *type)
+CheckFuncPtrCall(FunctionCompiler &f, ParseNode *callNode, Use use, MDefinition **def, Type *type)
 {
     ParseNode *callee = CallCallee(callNode);
     ParseNode *elemBase = ElemBase(callee);
@@ -3357,7 +3357,10 @@ CheckFuncPtrCall(FunctionCompiler &f, ParseNode *callNode, MDefinition **def, Ty
     if (!f.funcPtrCall(*table, indexDef, args, def))
         return false;
 
-    *type = table->sig().returnType().toType();
+    if (!(table->sig().returnType() <= use))
+        return f.fail("return type of callee incompatible with use", callNode);
+
+    *type = use.toReturnType();
     return true;
 }
 
@@ -3451,7 +3454,7 @@ CheckCall(FunctionCompiler &f, ParseNode *call, Use use, MDefinition **def, Type
     ParseNode *callee = CallCallee(call);
 
     if (callee->isKind(PNK_ELEM))
-        return CheckFuncPtrCall(f, call, def, type);
+        return CheckFuncPtrCall(f, call, use, def, type);
 
     if (!callee->isKind(PNK_NAME))
         return f.fail("Unexpected callee expression type", callee);
