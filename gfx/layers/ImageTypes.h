@@ -65,7 +65,14 @@ enum ImageFormat {
   /**
    * An DXGI shared surface handle that can be shared with a remote process.
    */
-  REMOTE_IMAGE_DXGI_TEXTURE
+  REMOTE_IMAGE_DXGI_TEXTURE,
+
+  /**
+   * The D3D9_RGB32_TEXTURE format creates a D3D9SurfaceImage, and wraps a
+   * IDirect3DTexture9 in RGB32 layout.
+   */
+  D3D9_RGB32_TEXTURE
+
 };
 
 

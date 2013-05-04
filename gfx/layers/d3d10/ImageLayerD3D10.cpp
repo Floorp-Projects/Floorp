@@ -9,6 +9,7 @@
 #include "gfxWindowsSurface.h"
 #include "yuv_convert.h"
 #include "../d3d9/Nv3DVUtils.h"
+#include "D3D9SurfaceImage.h"
 
 #include "gfxWindowsPlatform.h"
 
@@ -88,7 +89,7 @@ ImageLayerD3D10::GetLayer()
 /**
  * Returns a shader resource view for a Cairo or remote image.
  * Returns nullptr if unsuccessful.
- * If successful, aHasAlpha will be true iff the resulting texture 
+ * If successful, aHasAlpha will be true iff the resulting texture
  * has an alpha component.
  */
 ID3D10ShaderResourceView*
@@ -137,6 +138,26 @@ ImageLayerD3D10::GetImageSRView(Image* aImage, bool& aHasAlpha, IDXGIKeyedMutex 
     }
 
     aHasAlpha = cairoImage->mSurface->GetContentType() == gfxASurface::CONTENT_COLOR_ALPHA;
+  } else if (aImage->GetFormat() == ImageFormat::D3D9_RGB32_TEXTURE) {
+    if (!aImage->GetBackendData(mozilla::layers::LAYERS_D3D10)) {
+      // Use resource sharing to open the D3D9 texture as a D3D10 texture,
+      HRESULT hr;
+      D3D9SurfaceImage* d3dImage = reinterpret_cast<D3D9SurfaceImage*>(aImage);
+      nsRefPtr<ID3D10Texture2D> texture;
+      hr = device()->OpenSharedResource(d3dImage->GetShareHandle(),
+                                        IID_ID3D10Texture2D,
+                                        (void**)getter_AddRefs(texture));
+      NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
+
+      nsAutoPtr<TextureD3D10BackendData> dat(new TextureD3D10BackendData());
+      dat->mTexture = texture;
+
+      hr = device()->CreateShaderResourceView(dat->mTexture, NULL, getter_AddRefs(dat->mSRView));
+      NS_ENSURE_TRUE(SUCCEEDED(hr) && dat->mSRView, nullptr);
+
+      aImage->SetBackendData(mozilla::layers::LAYERS_D3D10, dat.forget());
+    }
+    aHasAlpha = false;
   } else {
     NS_WARNING("Incorrect image type.");
     return nullptr;
@@ -188,9 +209,10 @@ ImageLayerD3D10::RenderLayer()
   ID3D10EffectTechnique *technique;
   nsRefPtr<IDXGIKeyedMutex> keyedMutex;
 
-  if (image->GetFormat() == ImageFormat::CAIRO_SURFACE || image->GetFormat() == ImageFormat::REMOTE_IMAGE_BITMAP ||
-      image->GetFormat() == ImageFormat::REMOTE_IMAGE_DXGI_TEXTURE)
-  {
+  if (image->GetFormat() == ImageFormat::CAIRO_SURFACE ||
+      image->GetFormat() == ImageFormat::REMOTE_IMAGE_BITMAP ||
+      image->GetFormat() == ImageFormat::REMOTE_IMAGE_DXGI_TEXTURE ||
+      image->GetFormat() == ImageFormat::D3D9_RGB32_TEXTURE) {
     NS_ASSERTION(image->GetFormat() != ImageFormat::CAIRO_SURFACE ||
                  !static_cast<CairoImage*>(image)->mSurface ||
                  static_cast<CairoImage*>(image)->mSurface->GetContentType() != gfxASurface::CONTENT_ALPHA,
@@ -278,7 +300,7 @@ ImageLayerD3D10::RenderLayer()
         mode = NV_STEREO_MODE_MONO;
         break;
       }
-      
+
       // Send control data even in mono case so driver knows to leave stereo mode.
       GetNv3DVUtils()->SendNv3DVControl(mode, true, FIREFOX_3DV_APP_HANDLE);
 
@@ -305,7 +327,7 @@ ImageLayerD3D10::RenderLayer()
         (float)yuvImage->GetData()->mPicSize.height / yuvImage->GetData()->mYSize.height)
        );
   }
-  
+
   bool resetTexCoords = image->GetFormat() == ImageFormat::PLANAR_YCBCR;
   image = nullptr;
   autoLock.Unlock();
@@ -387,7 +409,7 @@ ImageLayerD3D10::GetAsTexture(gfxIntSize* aSize)
   if (image->GetFormat() != ImageFormat::CAIRO_SURFACE) {
     return nullptr;
   }
-  
+
   *aSize = image->GetSize();
   bool dontCare;
   nsRefPtr<ID3D10ShaderResourceView> result = GetImageSRView(image, dontCare);
@@ -472,7 +494,7 @@ RemoteDXGITextureImage::GetD3D10TextureBackendData(ID3D10Device *aDevice)
   if (GetBackendData(mozilla::layers::LAYERS_D3D10)) {
     TextureD3D10BackendData *data =
       static_cast<TextureD3D10BackendData*>(GetBackendData(mozilla::layers::LAYERS_D3D10));
-    
+
     nsRefPtr<ID3D10Device> device;
     data->mTexture->GetDevice(getter_AddRefs(device));
 
