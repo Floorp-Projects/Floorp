@@ -5,10 +5,6 @@
 #ifndef CKMK_H
 #define CKMK_H 1
 
-#ifdef DEBUG
-static const char CKMK_CVS_ID[] = "@(#) $RCSfile$ $Revision$ $Date$";
-#endif /* DEBUG */
-
 #include <Security/SecKeychainSearch.h>
 #include <Security/SecKeychainItem.h>
 #include <Security/SecKeychain.h>

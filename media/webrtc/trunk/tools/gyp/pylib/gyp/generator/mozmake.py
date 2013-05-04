@@ -42,6 +42,7 @@ NO_MAKEFILE_RULE = 1
 NO_SUBMAKEFILES_RULE = 1
 
 include $(topsrcdir)/config/rules.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include %(common_mk_path)s
 """
 

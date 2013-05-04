@@ -534,10 +534,9 @@ public:
    * method is responsible for calling BeginObservingDocument() on the
    * presshell if the presshell should observe document mutations.
    */
-  virtual nsresult CreateShell(nsPresContext* aContext,
-                               nsViewManager* aViewManager,
-                               nsStyleSet* aStyleSet,
-                               nsIPresShell** aInstancePtrResult) = 0;
+  virtual already_AddRefed<nsIPresShell> CreateShell(nsPresContext* aContext,
+                                                     nsViewManager* aViewManager,
+                                                     nsStyleSet* aStyleSet) = 0;
   virtual void DeleteShell() = 0;
 
   nsIPresShell* GetShell() const
@@ -2142,7 +2141,7 @@ protected:
 
   // All document WrapNode implementations MUST call this method.  A
   // false return value means an exception was thrown.
-  bool PostCreateWrapper(JSContext* aCx, JSObject *aNewObject);
+  bool PostCreateWrapper(JSContext* aCx, JS::Handle<JSObject*> aNewObject);
 
   nsCString mReferrer;
   nsString mLastModified;

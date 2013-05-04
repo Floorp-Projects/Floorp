@@ -20,12 +20,16 @@ MOCHITEST_FILES := \
   test_bug866570.html \
   test_bug866737.html \
   test_bug867089.html \
+  test_bug867203.html \
   test_analyserNode.html \
   test_AudioBuffer.html \
   test_AudioContext.html \
   test_AudioListener.html \
   test_AudioParam.html \
+  test_audioParamExponentialRamp.html \
+  test_audioParamLinearRamp.html \
   test_audioBufferSourceNode.html \
+  test_audioBufferSourceNodeLazyLoopParam.html \
   test_audioBufferSourceNodeLoop.html \
   test_audioBufferSourceNodeLoopStartEnd.html \
   test_audioBufferSourceNodeLoopStartEndSame.html \
@@ -39,10 +43,11 @@ MOCHITEST_FILES := \
   test_dynamicsCompressorNode.html \
   test_gainNode.html \
   test_mixingRules.html \
+  test_nodeToParamConnection.html \
   test_pannerNode.html \
   test_scriptProcessorNode.html \
+  test_scriptProcessorNodeChannelCount.html \
   test_singleSourceDest.html \
-  test_audioBufferSourceNodeLazyLoopParam.html \
   ting.ogg \
   ting-expected.wav \
   ting-dualchannel44.1.ogg \

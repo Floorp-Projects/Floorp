@@ -56,7 +56,6 @@ CPP_UNIT_TESTS = \
                  TestObserverService.cpp \
                  TestPipe.cpp \
                  TestRefPtr.cpp \
-                 TestSettingsAPI.cpp \
                  TestTextFormatter.cpp \
                  TestTArray.cpp \
                  $(NULL)

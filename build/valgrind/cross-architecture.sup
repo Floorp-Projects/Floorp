@@ -307,9 +307,3 @@
    fun:_ZN7mozilla3dom7workers13WorkerPrivate9DoRunLoopEP9JSContext
    ...
 }
-{
-   Bug 866959
-   Memcheck:Cond
-   fun:_ZN16imgStatusTracker27CalculateAndApplyDifferenceEPS_
-   ...
-}

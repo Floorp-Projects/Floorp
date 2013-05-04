@@ -127,7 +127,7 @@ NS_IMETHODIMP nsScriptableRegion::GetRects(JSContext* aCx, JS::Value* aRects)
     return NS_OK;
   }
 
-  JSObject* destArray = JS_NewArrayObject(aCx, numRects * 4, NULL);
+  JS::Rooted<JSObject*> destArray(aCx, JS_NewArrayObject(aCx, numRects * 4, nullptr));
   if (!destArray) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

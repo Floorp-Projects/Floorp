@@ -4,8 +4,6 @@
 
 /*
  * CMS encryptedData methods.
- *
- * $Id$
  */
 
 #include "cmslocal.h"

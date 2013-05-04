@@ -56,8 +56,9 @@ MmsAttachmentDataToJSObject(JSContext* aContext,
 
   nsCOMPtr<nsIDOMBlob> blob = static_cast<BlobParent*>(aAttachment.contentParent())->GetBlob();
   JS::Value content;
+  JS::Rooted<JSObject*> global (aContext, JS_GetGlobalForScopeChain(aContext));
   nsresult rv = nsContentUtils::WrapNative(aContext,
-                                           JS_GetGlobalForScopeChain(aContext),
+                                           global,
                                            blob,
                                            &NS_GET_IID(nsIDOMBlob),
                                            &content);

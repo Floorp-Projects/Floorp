@@ -15,7 +15,6 @@
 #include "nsIXPCScriptable.h"
 
 #include <algorithm>
-#include "jsdbgapi.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/IDBFactoryBinding.h"
@@ -219,13 +218,13 @@ IDBFactory::Create(ContentParent* aContentParent,
   nsresult rv = xpc->CreateSandbox(cx, principal, getter_AddRefs(globalHolder));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  JSObject* global;
-  rv = globalHolder->GetJSObject(&global);
+  JS::Rooted<JSObject*> global(cx);
+  rv = globalHolder->GetJSObject(global.address());
   NS_ENSURE_SUCCESS(rv, rv);
 
   // The CreateSandbox call returns a proxy to the actual sandbox object. We
   // don't need a proxy here.
-  global = JS_UnwrapObject(global);
+  global = js::UncheckedUnwrap(global);
 
   JSAutoCompartment ac(cx, global);
 

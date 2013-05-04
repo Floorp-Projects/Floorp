@@ -24,6 +24,9 @@ DeviceStorageRequestParent::DeviceStorageRequestParent(const DeviceStorageParams
   , mActorDestoryed(false)
 {
   MOZ_COUNT_CTOR(DeviceStorageRequestParent);
+
+  DebugOnly<DeviceStorageUsedSpaceCache*> usedSpaceCache = DeviceStorageUsedSpaceCache::CreateOrGet();
+  NS_ASSERTION(usedSpaceCache, "DeviceStorageUsedSpaceCache is null");
 }
 
 void
@@ -90,14 +93,15 @@ DeviceStorageRequestParent::Dispatch()
 
     case DeviceStorageParams::TDeviceStorageUsedSpaceParams:
     {
+      DeviceStorageUsedSpaceCache* usedSpaceCache = DeviceStorageUsedSpaceCache::CreateOrGet();
+      NS_ASSERTION(usedSpaceCache, "DeviceStorageUsedSpaceCache is null");
+
       DeviceStorageUsedSpaceParams p = mParams;
 
       nsRefPtr<DeviceStorageFile> dsf = new DeviceStorageFile(p.type(), p.relpath());
       nsRefPtr<UsedSpaceFileEvent> r = new UsedSpaceFileEvent(this, dsf);
 
-      nsCOMPtr<nsIEventTarget> target = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
-      NS_ASSERTION(target, "Must have stream transport service");
-      target->Dispatch(r, NS_DISPATCH_NORMAL);
+      usedSpaceCache->Dispatch(r);
       break;
     }
 
@@ -254,7 +258,7 @@ DeviceStorageRequestParent::ActorDestroy(ActorDestroyReason)
 }
 
 DeviceStorageRequestParent::PostFreeSpaceResultEvent::PostFreeSpaceResultEvent(DeviceStorageRequestParent* aParent,
-                                                                               int64_t aFreeSpace)
+                                                                               uint64_t aFreeSpace)
   : CancelableRunnable(aParent)
   , mFreeSpace(aFreeSpace)
 {
@@ -272,8 +276,10 @@ DeviceStorageRequestParent::PostFreeSpaceResultEvent::CancelableRun() {
 }
 
 DeviceStorageRequestParent::PostUsedSpaceResultEvent::PostUsedSpaceResultEvent(DeviceStorageRequestParent* aParent,
-                                                                               int64_t aUsedSpace)
+                                                                               const nsAString& aType,
+                                                                               uint64_t aUsedSpace)
   : CancelableRunnable(aParent)
+  , mType(aType)
   , mUsedSpace(aUsedSpace)
 {
 }
@@ -488,7 +494,7 @@ DeviceStorageRequestParent::FreeSpaceFileEvent::CancelableRun()
     freeSpace = 0;
   }
 
-  r = new PostFreeSpaceResultEvent(mParent, freeSpace);
+  r = new PostFreeSpaceResultEvent(mParent, static_cast<uint64_t>(freeSpace));
   NS_DispatchToMainThread(r);
   return NS_OK;
 }
@@ -509,11 +515,41 @@ DeviceStorageRequestParent::UsedSpaceFileEvent::CancelableRun()
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
 
-  nsCOMPtr<nsIRunnable> r;
-  uint64_t diskUsage = 0;
-  DeviceStorageFile::DirectoryDiskUsage(mFile->mFile, &diskUsage, mFile->mStorageType);
+  DeviceStorageUsedSpaceCache* usedSpaceCache = DeviceStorageUsedSpaceCache::CreateOrGet();
+  NS_ASSERTION(usedSpaceCache, "DeviceStorageUsedSpaceCache is null");
 
-  r = new PostUsedSpaceResultEvent(mParent, diskUsage);
+  nsCOMPtr<nsIRunnable> r;
+
+  uint64_t usedSize;
+  nsresult rv = usedSpaceCache->GetUsedSizeForType(mFile->mStorageType, &usedSize);
+  if (NS_SUCCEEDED(rv)) {
+    r = new PostUsedSpaceResultEvent(mParent, mFile->mStorageType, usedSize);
+    NS_DispatchToMainThread(r);
+    return NS_OK;
+  }
+
+  uint64_t picturesUsage = 0, videosUsage = 0, musicUsage = 0, totalUsage = 0;
+  DeviceStorageFile::DirectoryDiskUsage(mFile->mFile, &picturesUsage,
+                                        &videosUsage, &musicUsage,
+                                        &totalUsage);
+  if (mFile->mStorageType.EqualsLiteral(DEVICESTORAGE_APPS)) {
+    // Don't cache this since it's for a different volume from the media.
+    r = new PostUsedSpaceResultEvent(mParent, mFile->mStorageType, totalUsage);
+  } else {
+    usedSpaceCache->SetUsedSizes(picturesUsage, videosUsage, musicUsage, totalUsage);
+
+    if (mFile->mStorageType.EqualsLiteral(DEVICESTORAGE_PICTURES)) {
+      r = new PostUsedSpaceResultEvent(mParent, mFile->mStorageType, picturesUsage);
+    }
+    else if (mFile->mStorageType.EqualsLiteral(DEVICESTORAGE_VIDEOS)) {
+      r = new PostUsedSpaceResultEvent(mParent, mFile->mStorageType, videosUsage);
+    }
+    else if (mFile->mStorageType.EqualsLiteral(DEVICESTORAGE_MUSIC)) {
+      r = new PostUsedSpaceResultEvent(mParent, mFile->mStorageType, musicUsage);
+    } else {
+      r = new PostUsedSpaceResultEvent(mParent, mFile->mStorageType, totalUsage);
+    }
+  }
   NS_DispatchToMainThread(r);
   return NS_OK;
 }
@@ -567,7 +603,7 @@ DeviceStorageRequestParent::ReadFileEvent::CancelableRun()
     return NS_OK;
   }
 
-  r = new PostBlobSuccessEvent(mParent, mFile, fileSize, mMimeType, modDate);
+  r = new PostBlobSuccessEvent(mParent, mFile, static_cast<uint64_t>(fileSize), mMimeType, modDate);
   NS_DispatchToMainThread(r);
   return NS_OK;
 }
@@ -670,7 +706,6 @@ DeviceStorageRequestParent::PostAvailableResultEvent::CancelableRun()
   unused << mParent->Send__delete__(mParent, response);
   return NS_OK;
 }
-
 
 } // namespace devicestorage
 } // namespace dom

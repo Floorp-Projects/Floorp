@@ -5,8 +5,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPIDL_SOURCES += [
-    'nsIDOMContactManager.idl',
     'nsIContactProperties.idl',
+    'nsIDOMContactManager.idl',
     'nsIDOMMozContactChangeEvent.idl',
 ]
 

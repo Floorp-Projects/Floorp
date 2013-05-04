@@ -176,6 +176,11 @@ parent:
     sync GetDPI() returns (float value);
 
     /**
+     * Gets the default scaling factor of the screen corresponding to this browser.
+     */
+    sync GetDefaultScale() returns (double value);
+
+    /**
      * Return native data of root widget
      */
     sync GetWidgetNativeData() returns (WindowsHandle value);

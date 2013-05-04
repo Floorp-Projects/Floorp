@@ -4,8 +4,6 @@
 
 /*
  * PKCS7 creation.
- *
- * $Id$
  */
 
 #include "p7local.h"

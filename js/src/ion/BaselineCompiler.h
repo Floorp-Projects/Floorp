@@ -13,9 +13,11 @@
 #include "jsinfer.h"
 #include "jsinterp.h"
 
+#include "IonAllocPolicy.h"
 #include "BaselineJIT.h"
 #include "BaselineIC.h"
 #include "FixedList.h"
+#include "BytecodeAnalysis.h"
 
 #if defined(JS_CPU_X86)
 # include "x86/BaselineCompiler-x86.h"

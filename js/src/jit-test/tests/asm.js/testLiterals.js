@@ -11,10 +11,10 @@ assertEq(asmLink(asmCompile(USE_ASM + 'function f(d) { d=+d; var e=1.0e2; e=d; r
 assertEq(asmLink(asmCompile(USE_ASM + 'function f(d) { d=+d; var e=-1.0e2; e=d; return +e } return f'))(0.1), 0.1);
 assertEq(asmLink(asmCompile(USE_ASM + 'function f(d) { d=+d; var e=1.0e0; e=d; return +e } return f'))(0.1), 0.1);
 assertEq(asmLink(asmCompile(USE_ASM + 'function f(d) { d=+d; var e=-1.0e0; e=d; return +e } return f'))(0.1), 0.1);
-assertEq(asmLink(asmCompile(USE_ASM + 'function f() { return 0.0 } function g() { var d=0.1; d=f(); return +d } return g'))(), 0);
-assertEq(asmLink(asmCompile(USE_ASM + 'function f() { return -0.0 } function g() { var d=0.1; d=f(); return +d } return g'))(), -0);
-assertEq(asmLink(asmCompile(USE_ASM + 'function f() { return 10.0 } function g() { var d=0.1; d=f(); return +d } return g'))(), 10);
-assertEq(asmLink(asmCompile(USE_ASM + 'function f() { return -10.0 } function g() { var d=0.1; d=f(); return +d } return g'))(), -10.0);
+assertEq(asmLink(asmCompile(USE_ASM + 'function f() { return 0.0 } function g() { var d=0.1; d=+f(); return +d } return g'))(), 0);
+assertEq(asmLink(asmCompile(USE_ASM + 'function f() { return -0.0 } function g() { var d=0.1; d=+f(); return +d } return g'))(), -0);
+assertEq(asmLink(asmCompile(USE_ASM + 'function f() { return 10.0 } function g() { var d=0.1; d=+f(); return +d } return g'))(), 10);
+assertEq(asmLink(asmCompile(USE_ASM + 'function f() { return -10.0 } function g() { var d=0.1; d=+f(); return +d } return g'))(), -10.0);
 
 assertAsmTypeFail(USE_ASM + "function f(i) { i=i|0; var j=1e10; j=i; return j|0 } return f");
 assertAsmTypeFail(USE_ASM + "function f(i) { i=i|0; var j=1e100; j=i; return j|0 } return f");

@@ -3,8 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 /*
  * certi.h - private data structures for the certificate library
- *
- * $Id$
  */
 #ifndef _CERTI_H_
 #define _CERTI_H_

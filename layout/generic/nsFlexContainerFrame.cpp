@@ -528,6 +528,24 @@ IsOrderLEQWithDOMFallback(nsIFrame* aFrame1,
     return order1 < order2;
   }
 
+  // If either frame is for generated content from :before or ::after, then
+  // we can't use nsContentUtils::PositionIsBefore(), since that method won't
+  // recognize generated content as being an actual sibling of other nodes.
+  // We know where ::before and ::after nodes *effectively* insert in the DOM
+  // tree, though (at the beginning & end), so we can just special-case them.
+  nsIAtom* pseudo1 = aFrame1->StyleContext()->GetPseudo();
+  nsIAtom* pseudo2 = aFrame2->StyleContext()->GetPseudo();
+  if (pseudo1 == nsCSSPseudoElements::before ||
+      pseudo2 == nsCSSPseudoElements::after) {
+    // frame1 is ::before and/or frame2 is ::after => frame1 is LEQ frame2.
+    return true;
+  }
+  if (pseudo1 == nsCSSPseudoElements::after ||
+      pseudo2 == nsCSSPseudoElements::before) {
+    // frame1 is ::after and/or frame2 is ::before => frame1 is not LEQ frame2.
+    return false;
+  }
+
   // Same "order" value --> use DOM position.
   nsIContent* content1 = GetContentForComparison(aFrame1);
   nsIContent* content2 = GetContentForComparison(aFrame2);

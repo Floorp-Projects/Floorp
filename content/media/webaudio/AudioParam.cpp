@@ -9,11 +9,36 @@
 #include "nsIDOMWindow.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/AudioParamBinding.h"
+#include "AudioNodeEngine.h"
+#include "AudioNodeStream.h"
 
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(AudioParam, mNode)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(AudioParam)
+  tmp->DisconnectFromGraphAndDestroyStream();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mNode)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(AudioParam)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mNode)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(AudioParam)
+
+NS_IMPL_CYCLE_COLLECTING_NATIVE_ADDREF(AudioParam)
+
+NS_IMETHODIMP_(nsrefcnt)
+AudioParam::Release()
+{
+  if (mRefCnt.get() == 1) {
+    // We are about to be deleted, disconnect the object from the graph before
+    // the derived type is destroyed.
+    DisconnectFromGraphAndDestroyStream();
+  }
+  NS_IMPL_CC_NATIVE_RELEASE_BODY(AudioParam)
+}
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(AudioParam, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(AudioParam, Release)
@@ -31,12 +56,88 @@ AudioParam::AudioParam(AudioNode* aNode,
 
 AudioParam::~AudioParam()
 {
+  MOZ_ASSERT(mInputNodes.IsEmpty());
 }
 
 JSObject*
 AudioParam::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return AudioParamBinding::Wrap(aCx, aScope, this);
+}
+
+void
+AudioParam::DisconnectFromGraphAndDestroyStream()
+{
+  // Addref this temporarily so the refcount bumping below doesn't destroy us
+  // prematurely
+  nsRefPtr<AudioParam> kungFuDeathGrip = this;
+
+  while (!mInputNodes.IsEmpty()) {
+    uint32_t i = mInputNodes.Length() - 1;
+    nsRefPtr<AudioNode> input = mInputNodes[i].mInputNode;
+    mInputNodes.RemoveElementAt(i);
+    input->RemoveOutputParam(this);
+  }
+
+  if (mNodeStreamPort) {
+    mNodeStreamPort->Destroy();
+    mNodeStreamPort = nullptr;
+  }
+
+  if (mStream) {
+    mStream->Destroy();
+    mStream = nullptr;
+  }
+}
+
+MediaStream*
+AudioParam::Stream()
+{
+  if (mStream) {
+    return mStream;
+  }
+
+  AudioNodeEngine* engine = new AudioNodeEngine(nullptr);
+  nsRefPtr<AudioNodeStream> stream = mNode->Context()->Graph()->CreateAudioNodeStream(engine, MediaStreamGraph::INTERNAL_STREAM);
+
+  // Force the input to have only one channel, and make it down-mix using
+  // the speaker rules if needed.
+  stream->SetChannelMixingParametersImpl(1, ChannelCountMode::Explicit, ChannelInterpretation::Speakers);
+  // Mark as an AudioParam helper stream
+  stream->SetAudioParamHelperStream();
+
+  mStream = stream.forget();
+
+  // Setup the AudioParam's stream as an input to the owner AudioNode's stream
+  MediaStream* nodeStream = mNode->Stream();
+  MOZ_ASSERT(nodeStream->AsProcessedStream());
+  ProcessedMediaStream* ps = static_cast<ProcessedMediaStream*>(nodeStream);
+  mNodeStreamPort = ps->AllocateInputPort(mStream, MediaInputPort::FLAG_BLOCK_INPUT);
+
+  // Let the MSG's copy of AudioParamTimeline know about the change in the stream
+  mCallback(mNode);
+
+  return mStream;
+}
+
+float
+AudioParamTimeline::AudioNodeInputValue(size_t aCounter) const
+{
+  MOZ_ASSERT(mStream);
+
+  // If we have a chunk produced by the AudioNode inputs to the AudioParam,
+  // get its value now.  We use aCounter to tell us which frame of the last
+  // AudioChunk to look at.
+  float audioNodeInputValue = 0.0f;
+  const AudioChunk& lastAudioNodeChunk =
+    static_cast<AudioNodeStream*>(mStream.get())->LastChunk();
+  if (!lastAudioNodeChunk.IsNull()) {
+    MOZ_ASSERT(lastAudioNodeChunk.GetDuration() == WEBAUDIO_BLOCK_SIZE);
+    audioNodeInputValue =
+      static_cast<const float*>(lastAudioNodeChunk.mChannelData[0])[aCounter];
+  }
+
+  return audioNodeInputValue;
 }
 
 }

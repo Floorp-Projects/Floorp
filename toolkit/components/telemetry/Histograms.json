@@ -3109,13 +3109,6 @@
     "extended_statistics_ok": true,
     "description": "Time (ms) it takes to upload the Health Report payload."
   },
-  "HEALTHREPORT_SAVE_LAST_PAYLOAD_MS": {
-    "kind": "exponential",
-    "high": "10000",
-    "n_buckets": 10,
-    "extended_statistics_ok": true,
-    "description": "Time (ms) it takes to persist the last submitted Health Report payload to disk."
-  },
   "HEALTHREPORT_COLLECT_CONSTANT_DATA_MS": {
     "kind": "exponential",
     "high": "20000",

@@ -59,17 +59,13 @@ window.tests = {
 // This is used to watch the blocked data bounce off CSP and allowed data 
 // get sent out to the wire.
 function examiner() {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-  var obsvc = Components.classes['@mozilla.org/observer-service;1']
-                        .getService(Components.interfaces.nsIObserverService);
-  obsvc.addObserver(this, "csp-on-violate-policy", false);
-  obsvc.addObserver(this, "http-on-modify-request", false);
+  SpecialPowers.addObserver(this, "csp-on-violate-policy", false);
+  SpecialPowers.addObserver(this, "http-on-modify-request", false);
 }
 examiner.prototype  = {
   observe: function(subject, topic, data) {
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
     // subject should be an nsURI, and should be either allowed or blocked.
-    if(!subject.QueryInterface)
+    if (!SpecialPowers.can_QI(subject))
       return;
       
     var testpat = new RegExp("testid=([a-z0-9_]+)");
@@ -79,34 +75,31 @@ examiner.prototype  = {
 
     if (topic === "http-on-modify-request") {
       //these things were allowed by CSP
-      var uri = subject.QueryInterface(Components.interfaces.nsIHttpChannel).URI;
-      if (!testpat.test(uri.asciiSpec)) return;
-      var testid = testpat.exec(uri.asciiSpec)[1];
+      var asciiSpec = SpecialPowers.getPrivilegedProps(SpecialPowers.do_QueryInterface(subject, "nsIHttpChannel"), "URI.asciiSpec");
+      if (!testpat.test(asciiSpec)) return;
+      var testid = testpat.exec(asciiSpec)[1];
 
       window.testResult(testid,
                         /_good/.test(testid),
-                        uri.asciiSpec + " allowed by csp");
+                        asciiSpec + " allowed by csp");
     }
 
     if(topic === "csp-on-violate-policy") {
       //these were blocked... record that they were blocked
-      var uri = subject.QueryInterface(Components.interfaces.nsIURI);
-      if (!testpat.test(uri.asciiSpec)) return;
-      var testid = testpat.exec(uri.asciiSpec)[1];
+      var asciiSpec = SpecialPowers.getPrivilegedProps(SpecialPowers.do_QueryInterface(subject, "nsIURI"), "asciiSpec");
+      if (!testpat.test(asciiSpec)) return;
+      var testid = testpat.exec(asciiSpec)[1];
       window.testResult(testid,
                         /_bad/.test(testid),
-                        uri.asciiSpec + " blocked by \"" + data + "\"");
+                        asciiSpec + " blocked by \"" + data + "\"");
     }
   },
 
   // must eventually call this to remove the listener, 
   // or mochitests might get borked.
   remove: function() {
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-    var obsvc = Components.classes['@mozilla.org/observer-service;1']
-                          .getService(Components.interfaces.nsIObserverService);
-    obsvc.removeObserver(this, "csp-on-violate-policy");
-    obsvc.removeObserver(this, "http-on-modify-request");
+    SpecialPowers.removeObserver(this, "csp-on-violate-policy");
+    SpecialPowers.removeObserver(this, "http-on-modify-request");
   }
 }
 

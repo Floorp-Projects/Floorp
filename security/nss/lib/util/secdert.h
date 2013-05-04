@@ -7,8 +7,6 @@
 /*
  * secdert.h - public data structures for the DER encoding and
  *	       decoding utilities library
- *
- * $Id$
  */
 
 #include "utilrename.h"

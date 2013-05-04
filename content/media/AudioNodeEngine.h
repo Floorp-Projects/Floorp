@@ -19,11 +19,6 @@ struct ThreeDPoint;
 
 class AudioNodeStream;
 
-// We ensure that the graph advances in steps that are multiples of the Web
-// Audio block size
-const uint32_t WEBAUDIO_BLOCK_SIZE_BITS = 7;
-const uint32_t WEBAUDIO_BLOCK_SIZE = 1 << WEBAUDIO_BLOCK_SIZE_BITS;
-
 /**
  * This class holds onto a set of immutable channel buffers. The storage
  * for the buffers must be malloced, but the buffer pointers and the malloc
@@ -154,7 +149,6 @@ public:
     : mNode(aNode)
     , mNodeMutex("AudioNodeEngine::mNodeMutex")
   {
-    MOZ_ASSERT(mNode, "The engine is constructed with a null node");
     MOZ_COUNT_CTOR(AudioNodeEngine);
   }
   virtual ~AudioNodeEngine()
@@ -209,6 +203,11 @@ public:
   }
 
   Mutex& NodeMutex() { return mNodeMutex;}
+
+  bool HasNode() const
+  {
+    return !!mNode;
+  }
 
   dom::AudioNode* Node() const
   {

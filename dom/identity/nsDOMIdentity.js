@@ -223,6 +223,7 @@ nsDOMIdentity.prototype = {
     // Get an assertion by using our observer api: watch + request.
     var self = this;
     this.watch({
+      _internal: true,
       oncancel: function get_oncancel() {
         if (aCallback) {
           aCallback(null);

@@ -22,7 +22,6 @@ struct VideoPlane {
 
 struct VideoFrame {
   int64_t mTimeUs;
-  int64_t mEndTimeUs;
   bool mKeyFrame;
   bool mShouldSkip;
   void *mData;

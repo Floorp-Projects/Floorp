@@ -154,6 +154,16 @@ var gPlayTests = [
   // Opus data in an ogg container
   { name:"detodos.opus", type:"audio/ogg; codecs=opus", duration:2.9135 },
 
+  // Multichannel Opus in an ogg container
+  { name:"test-1-mono.opus", type:"audio/ogg; codecs=opus", duration:1.044 },
+  { name:"test-2-stereo.opus", type:"audio/ogg; codecs=opus", duration:2.925 },
+  { name:"test-3-LCR.opus", type:"audio/ogg; codecs=opus", duration:4.214 },
+  { name:"test-4-quad.opus", type:"audio/ogg; codecs=opus", duration:6.234 },
+  { name:"test-5-5.0.opus", type:"audio/ogg; codecs=opus", duration:7.558 },
+  { name:"test-6-5.1.opus", type:"audio/ogg; codecs=opus", duration:10.333 },
+  { name:"test-7-6.1.opus", type:"audio/ogg; codecs=opus", duration:11.690 },
+  { name:"test-8-7.1.opus", type:"audio/ogg; codecs=opus", duration:13.478 },
+
   { name:"gizmo.mp4", type:"video/mp4", duration:5.56 },
 
   { name:"small-shot.m4a", type:"audio/mp4", duration:0.29 },

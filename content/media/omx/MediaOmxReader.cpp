@@ -43,7 +43,7 @@ nsresult MediaOmxReader::Init(MediaDecoderReader* aCloneDonor)
 }
 
 nsresult MediaOmxReader::ReadMetadata(VideoInfo* aInfo,
-                                        MetadataTags** aTags)
+                                      MetadataTags** aTags)
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
 
@@ -118,7 +118,7 @@ nsresult MediaOmxReader::ResetDecode()
 }
 
 bool MediaOmxReader::DecodeVideoFrame(bool &aKeyframeSkip,
-                                        int64_t aTimeThreshold)
+                                      int64_t aTimeThreshold)
 {
   // Record number of frames decoded and parsed. Automatically update the
   // stats counters using the AutoNotifyDecoded stack-based class.
@@ -339,7 +339,7 @@ void MediaOmxReader::OnDecodeThreadFinish() {
 
 void MediaOmxReader::OnDecodeThreadStart() {
   if (mOmxDecoder.get()) {
-    nsresult result = mOmxDecoder->Play();
+    DebugOnly<nsresult> result = mOmxDecoder->Play();
     NS_ASSERTION(result == NS_OK, "OmxDecoder should be in play state to continue decoding");
   }
 }

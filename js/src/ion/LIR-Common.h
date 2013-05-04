@@ -4354,7 +4354,7 @@ class LFunctionBoundary : public LInstructionHelper<0, 0, 1>
         return getTemp(0);
     }
 
-    RawScript script() {
+    JSScript *script() {
         return mir_->toFunctionBoundary()->script();
     }
 

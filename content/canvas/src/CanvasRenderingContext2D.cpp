@@ -1455,6 +1455,7 @@ CanvasRenderingContext2D::CreatePattern(const HTMLImageOrCanvasOrVideoElement& e
 
   // Ignore nullptr cairo surfaces! See bug 666312.
   if (!res.mSurface->CairoSurface() || res.mSurface->CairoStatus()) {
+    error.Throw(NS_ERROR_NOT_AVAILABLE);
     return nullptr;
   }
 
@@ -2810,9 +2811,7 @@ CanvasRenderingContext2D::SetMozDash(JSContext* cx,
 JS::Value
 CanvasRenderingContext2D::GetMozDash(JSContext* cx, ErrorResult& error)
 {
-  JS::Value mozDash;
-  error = DashArrayToJSVal(CurrentState().dash, cx, &mozDash);
-  return mozDash;
+  return DashArrayToJSVal(CurrentState().dash, cx, error);
 }
 
 void
@@ -3423,7 +3422,7 @@ CanvasRenderingContext2D::GetImageDataArray(JSContext* aCx,
     }
   }
 
-  JSObject* darray = JS_NewUint8ClampedArray(aCx, len.value());
+  JS::Rooted<JSObject*> darray(aCx, JS_NewUint8ClampedArray(aCx, len.value()));
   if (!darray) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

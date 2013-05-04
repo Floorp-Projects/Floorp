@@ -9,6 +9,7 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "jsdbgapi.h"
+#include "jswrapper.h"
 #include "mozilla/ModuleUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsMemory.h"
@@ -43,9 +44,9 @@ JSDebugger::AddClass(const JS::Value &global, JSContext* cx)
   if (!global.isObject()) {
     return NS_ERROR_INVALID_ARG;
   }
-  
-  JSObject* obj = &global.toObject();
-  obj = JS_UnwrapObjectAndInnerize(obj);
+
+  JS::RootedObject obj(cx, &global.toObject());
+  obj = js::UncheckedUnwrap(obj, /* stopAtOuter = */ false);
   if (!obj) {
     return NS_ERROR_FAILURE;
   }

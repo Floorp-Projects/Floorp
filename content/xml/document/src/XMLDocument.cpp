@@ -629,7 +629,7 @@ XMLDocument::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 JSObject*
 XMLDocument::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
-  JSObject* obj = XMLDocumentBinding::Wrap(aCx, aScope, this);
+  JS::Rooted<JSObject*> obj(aCx, XMLDocumentBinding::Wrap(aCx, aScope, this));
   if (obj && !PostCreateWrapper(aCx, obj)) {
     return nullptr;
   }

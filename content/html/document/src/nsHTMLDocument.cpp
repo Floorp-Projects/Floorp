@@ -304,14 +304,12 @@ nsHTMLDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
   SetContentTypeInternal(nsDependentCString("text/html"));
 }
 
-nsresult
+already_AddRefed<nsIPresShell>
 nsHTMLDocument::CreateShell(nsPresContext* aContext,
                             nsViewManager* aViewManager,
-                            nsStyleSet* aStyleSet,
-                            nsIPresShell** aInstancePtrResult)
+                            nsStyleSet* aStyleSet)
 {
-  return doCreateShell(aContext, aViewManager, aStyleSet, mCompatMode,
-                       aInstancePtrResult);
+  return doCreateShell(aContext, aViewManager, aStyleSet, mCompatMode);
 }
 
 void
@@ -2367,13 +2365,13 @@ nsHTMLDocument::NamedGetter(JSContext* cx, const nsAString& aName, bool& aFound,
     return nullptr;
   }
 
-  JS::Value val;
+  JS::Rooted<JS::Value> val(cx);
   { // Scope for auto-compartment
     JS::Rooted<JSObject*> wrapper(cx, GetWrapper());
     JSAutoCompartment ac(cx, wrapper);
     // XXXbz Should we call the (slightly misnamed, really) WrapNativeParent
     // here?
-    if (!dom::WrapObject(cx, wrapper, supp, cache, nullptr, &val)) {
+    if (!dom::WrapObject(cx, wrapper, supp, cache, nullptr, val.address())) {
       rv.Throw(NS_ERROR_OUT_OF_MEMORY);
       return nullptr;
     }

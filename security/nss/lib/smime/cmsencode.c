@@ -4,8 +4,6 @@
 
 /*
  * CMS encoding.
- *
- * $Id$
  */
 
 #include "cmslocal.h"
