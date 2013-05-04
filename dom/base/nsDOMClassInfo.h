@@ -157,7 +157,7 @@ protected:
   // Checks if id is a number and returns the number, if aIsNumber is
   // non-null it's set to true if the id is a number and false if it's
   // not a number. If id is not a number this method returns -1
-  static int32_t GetArrayIndexFromId(JSContext *cx, jsid id,
+  static int32_t GetArrayIndexFromId(JSContext *cx, JS::Handle<jsid> id,
                                      bool *aIsNumber = nullptr);
 
   static inline bool IsReadonlyReplaceable(jsid id)
@@ -338,7 +338,7 @@ protected:
   }
 
   static nsresult GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
-                                JSObject *obj, JS::Handle<jsid> id,
+                                JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
                                 bool *did_resolve);
 
 public:
@@ -376,7 +376,8 @@ public:
                                               JS::MutableHandle<JSObject*> objp);
   static JSBool GlobalScopePolluterGetProperty(JSContext *cx, JSHandleObject obj,
                                                JSHandleId id, JSMutableHandleValue vp);
-  static JSBool InvalidateGlobalScopePolluter(JSContext *cx, JSObject* obj);
+  static JSBool InvalidateGlobalScopePolluter(JSContext *cx,
+                                              JS::Handle<JSObject*> obj);
   static nsresult InstallGlobalScopePolluter(JSContext *cx,
                                              JS::Handle<JSObject*> obj);
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
@@ -635,7 +636,7 @@ protected:
   {
   }
 
-  static JSBool GetDocumentAllNodeList(JSContext *cx, JSObject *obj,
+  static JSBool GetDocumentAllNodeList(JSContext *cx, JS::Handle<JSObject*> obj,
                                        nsDocument *doc,
                                        nsContentList **nodeList);
 
@@ -662,7 +663,7 @@ public:
                          JSObject *obj, jsid id, jsval *vp, bool *_retval);
 
   static nsresult TryResolveAll(JSContext* cx, nsHTMLDocument* doc,
-                                JSObject* obj);
+                                JS::Handle<JSObject*> obj);
 
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
