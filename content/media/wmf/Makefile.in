@@ -14,6 +14,7 @@ LIBRARY_NAME	= gkconwmf_s
 LIBXUL_LIBRARY 	= 1
 
 CPPSRCS		= \
+		DXVA2Manager.cpp \
 		WMFByteStream.cpp \
 		WMFDecoder.cpp \
 		WMFReader.cpp \

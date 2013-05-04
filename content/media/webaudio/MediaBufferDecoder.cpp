@@ -91,6 +91,8 @@ public:
 
   virtual void OnReadMetadataCompleted() MOZ_FINAL MOZ_OVERRIDE;
 
+  virtual MediaDecoderOwner* GetOwner() MOZ_FINAL MOZ_OVERRIDE;
+
 private:
   // This monitor object is not really used to synchronize access to anything.
   // It's just there in order for us to be able to override
@@ -252,6 +254,13 @@ void
 BufferDecoder::OnReadMetadataCompleted()
 {
   // ignore
+}
+
+MediaDecoderOwner*
+BufferDecoder::GetOwner()
+{
+  // unknown
+  return nullptr;
 }
 
 class ReportResultTask : public nsRunnable
