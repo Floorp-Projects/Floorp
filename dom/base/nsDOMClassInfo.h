@@ -1076,27 +1076,6 @@ public:
   }
 };
 
-// Need this to override GetFlags() on nsNodeSH
-class nsAttributeSH : public nsNodeSH
-{
-protected:
-  nsAttributeSH(nsDOMClassInfoData* aData) : nsNodeSH(aData)
-  {
-  }
-
-  virtual ~nsAttributeSH()
-  {
-  }
-
-public:
-  NS_IMETHOD GetFlags(uint32_t *aFlags);
-
-  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
-  {
-    return new nsAttributeSH(aData);
-  }
-};
-
 class nsOfflineResourceListSH : public nsStringArraySH
 {
 protected:
