@@ -25,7 +25,6 @@
 #include "mozilla/dom/HTMLElementBinding.h"
 #include "mozilla/dom/DocumentBinding.h"
 #include "mozilla/dom/SVGElementBinding.h"
-#include "mozilla/dom/HTMLDocumentBinding.h"
 
 template<class T>
 struct ProtoIDAndDepth
@@ -53,7 +52,6 @@ NEW_BINDING(mozilla::dom::Element, Element);
 NEW_BINDING(nsGenericHTMLElement, HTMLElement);
 NEW_BINDING(nsIDocument, Document);
 NEW_BINDING(nsDocument, Document);
-NEW_BINDING(nsHTMLDocument, HTMLDocument);
 NEW_BINDING(nsSVGElement, SVGElement);
 NEW_BINDING(nsDOMEvent, Event);
 NEW_BINDING(nsDOMMouseEvent, MouseEvent);

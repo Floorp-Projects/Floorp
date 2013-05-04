@@ -89,11 +89,11 @@ function testVariablesFiltering()
       "There should be 0 variables displayed in the test scope");
     is(loadScope.querySelectorAll(".variables-view-variable:not([non-match])").length, 0,
       "There should be 0 variables displayed in the load scope");
-    is(globalScope.querySelectorAll(".variables-view-variable:not([non-match])").length, 1,
-      "There should be 1 variables displayed in the global scope");
+    is(globalScope.querySelectorAll(".variables-view-variable:not([non-match])").length, 2,
+      "There should be 2 variables displayed in the global scope");
 
-    is(innerScope.querySelectorAll(".variables-view-property:not([non-match])").length, 7,
-      "There should be 7 properties displayed in the inner scope");
+    is(innerScope.querySelectorAll(".variables-view-property:not([non-match])").length, 8,
+      "There should be 8 properties displayed in the inner scope");
     is(mathScope.querySelectorAll(".variables-view-property:not([non-match])").length, 0,
       "There should be 0 properties displayed in the math scope");
     is(testScope.querySelectorAll(".variables-view-property:not([non-match])").length, 0,
@@ -106,21 +106,25 @@ function testVariablesFiltering()
     is(innerScope.querySelectorAll(".variables-view-variable:not([non-match]) > .title > .name")[0].getAttribute("value"),
       "this", "The only inner variable displayed should be 'this'");
     is(innerScope.querySelectorAll(".variables-view-property:not([non-match]) > .title > .name")[0].getAttribute("value"),
-      "window", "The first inner property displayed should be 'window'");
+      "document", "The first inner property displayed should be 'document'");
     is(innerScope.querySelectorAll(".variables-view-property:not([non-match]) > .title > .name")[1].getAttribute("value"),
-      "document", "The second inner property displayed should be 'document'");
+      "window", "The second inner property displayed should be 'window'");
     is(innerScope.querySelectorAll(".variables-view-property:not([non-match]) > .title > .name")[2].getAttribute("value"),
-      "location", "The third inner property displayed should be 'location'");
+      "document", "The third inner property displayed should be 'document'");
     is(innerScope.querySelectorAll(".variables-view-property:not([non-match]) > .title > .name")[3].getAttribute("value"),
-      "__proto__", "The fourth inner property displayed should be '__proto__'");
+      "location", "The fourth inner property displayed should be 'location'");
     is(innerScope.querySelectorAll(".variables-view-property:not([non-match]) > .title > .name")[4].getAttribute("value"),
       "__proto__", "The fifth inner property displayed should be '__proto__'");
     is(innerScope.querySelectorAll(".variables-view-property:not([non-match]) > .title > .name")[5].getAttribute("value"),
-      "HTMLDocument", "The sixth inner property displayed should be 'HTMLDocument'");
+      "__proto__", "The sixth inner property displayed should be '__proto__'");
     is(innerScope.querySelectorAll(".variables-view-property:not([non-match]) > .title > .name")[6].getAttribute("value"),
       "HTMLDocument", "The seventh inner property displayed should be 'HTMLDocument'");
+    is(innerScope.querySelectorAll(".variables-view-property:not([non-match]) > .title > .name")[7].getAttribute("value"),
+      "HTMLDocument", "The eight inner property displayed should be 'HTMLDocument'");
 
     is(globalScope.querySelectorAll(".variables-view-variable:not([non-match]) > .title > .name")[0].getAttribute("value"),
+      "document", "The first global variable displayed should be 'document'");
+    is(globalScope.querySelectorAll(".variables-view-variable:not([non-match]) > .title > .name")[1].getAttribute("value"),
       "HTMLDocument", "The first global variable displayed should be 'HTMLDocument'");
   }
 
@@ -179,11 +183,11 @@ function testVariablesFiltering()
       "There should be 0 variables displayed in the test scope");
     is(loadScope.querySelectorAll(".variables-view-variable:not([non-match])").length, 0,
       "There should be 0 variables displayed in the load scope");
-    is(globalScope.querySelectorAll(".variables-view-variable:not([non-match])").length, 1,
-      "There should be 1 variables displayed in the global scope");
+    is(globalScope.querySelectorAll(".variables-view-variable:not([non-match])").length, 2,
+      "There should be 2 variables displayed in the global scope");
 
-    is(innerScope.querySelectorAll(".variables-view-property:not([non-match])").length, 7,
-      "There should be 7 properties displayed in the inner scope");
+    is(innerScope.querySelectorAll(".variables-view-property:not([non-match])").length, 8,
+      "There should be 8 properties displayed in the inner scope");
     is(mathScope.querySelectorAll(".variables-view-property:not([non-match])").length, 0,
       "There should be 0 properties displayed in the math scope");
     is(testScope.querySelectorAll(".variables-view-property:not([non-match])").length, 0,
@@ -196,21 +200,25 @@ function testVariablesFiltering()
     is(innerScope.querySelectorAll(".variables-view-variable:not([non-match]) > .title > .name")[0].getAttribute("value"),
       "this", "The only inner variable displayed should be 'this'");
     is(innerScope.querySelectorAll(".variables-view-property:not([non-match]) > .title > .name")[0].getAttribute("value"),
-      "window", "The first inner property displayed should be 'window'");
+      "document", "The first inner property displayed should be 'document'");
     is(innerScope.querySelectorAll(".variables-view-property:not([non-match]) > .title > .name")[1].getAttribute("value"),
-      "document", "The second inner property displayed should be 'document'");
+      "window", "The second inner property displayed should be 'window'");
     is(innerScope.querySelectorAll(".variables-view-property:not([non-match]) > .title > .name")[2].getAttribute("value"),
-      "location", "The third inner property displayed should be 'location'");
+      "document", "The third inner property displayed should be 'document'");
     is(innerScope.querySelectorAll(".variables-view-property:not([non-match]) > .title > .name")[3].getAttribute("value"),
-      "__proto__", "The fourth inner property displayed should be '__proto__'");
+      "location", "The fourth inner property displayed should be 'location'");
     is(innerScope.querySelectorAll(".variables-view-property:not([non-match]) > .title > .name")[4].getAttribute("value"),
       "__proto__", "The fifth inner property displayed should be '__proto__'");
     is(innerScope.querySelectorAll(".variables-view-property:not([non-match]) > .title > .name")[5].getAttribute("value"),
-      "HTMLDocument", "The sixth inner property displayed should be 'HTMLDocument'");
+      "__proto__", "The sixth inner property displayed should be '__proto__'");
     is(innerScope.querySelectorAll(".variables-view-property:not([non-match]) > .title > .name")[6].getAttribute("value"),
       "HTMLDocument", "The seventh inner property displayed should be 'HTMLDocument'");
+    is(innerScope.querySelectorAll(".variables-view-property:not([non-match]) > .title > .name")[7].getAttribute("value"),
+      "HTMLDocument", "The eight inner property displayed should be 'HTMLDocument'");
 
     is(globalScope.querySelectorAll(".variables-view-variable:not([non-match]) > .title > .name")[0].getAttribute("value"),
+      "document", "The first global variable displayed should be 'document'");
+    is(globalScope.querySelectorAll(".variables-view-variable:not([non-match]) > .title > .name")[1].getAttribute("value"),
       "HTMLDocument", "The first global variable displayed should be 'HTMLDocument'");
   }
 

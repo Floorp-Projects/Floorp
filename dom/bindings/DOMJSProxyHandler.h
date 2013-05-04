@@ -51,18 +51,7 @@ public:
   {
     MOZ_ASSERT(IsDOMProxy(obj), "expected a DOM proxy object");
     JS::Value v = js::GetProxyExtra(obj, JSPROXYSLOT_EXPANDO);
-    if (v.isObject()) {
-      return &v.toObject();
-    }
-
-    if (v.isUndefined()) {
-      return nullptr;
-    }
-
-    js::ExpandoAndGeneration* expandoAndGeneration =
-      static_cast<js::ExpandoAndGeneration*>(v.toPrivate());
-    v = expandoAndGeneration->expando;
-    return v.isUndefined() ? nullptr : &v.toObject();
+    return v.isUndefined() ? NULL : v.toObjectOrNull();
   }
   static JSObject* GetAndClearExpandoObject(JSObject* obj);
   static JSObject* EnsureExpandoObject(JSContext* cx,
@@ -71,12 +60,10 @@ public:
   const DOMClass& mClass;
 
 protected:
-  // Append the property names in "names" to "props". If
-  // shadowPrototypeProperties is false then skip properties that are also
-  // present on our proto chain.
+  // Append the property names in "names" that don't live on our proto
+  // chain to "props"
   bool AppendNamedPropertyIds(JSContext* cx, JS::Handle<JSObject*> proxy,
                               nsTArray<nsString>& names,
-                              bool shadowPrototypeProperties,
                               JS::AutoIdVector& props);
 };
 
