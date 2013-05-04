@@ -51,20 +51,20 @@ public:
   }
 
   static JSObject*
-  InitClass(JSContext* aCx, JSObject* aObj, bool aMainRuntime)
+  InitClass(JSContext* aCx, JS::Handle<JSObject*> aObj, bool aMainRuntime)
   {
-    JSObject* parentProto = NULL;
+    JS::Rooted<JSObject*> parentProto(aCx);
 
     if (aMainRuntime) {
-      jsval windowPropVal;
-      if (!JS_GetProperty(aCx, aObj, sClass.name, &windowPropVal)) {
+      JS::Rooted<JS::Value> windowPropVal(aCx);
+      if (!JS_GetProperty(aCx, aObj, sClass.name, windowPropVal.address())) {
         return NULL;
       }
 
       if (!JSVAL_IS_PRIMITIVE(windowPropVal)) {
-        jsval protoVal;
+        JS::Rooted<JS::Value> protoVal(aCx);
         if (!JS_GetProperty(aCx, JSVAL_TO_OBJECT(windowPropVal), "prototype",
-                            &protoVal)) {
+                            protoVal.address())) {
           return NULL;
         }
 
@@ -76,9 +76,9 @@ public:
 
     JSClass* clasp = parentProto ? &sMainRuntimeClass : &sClass;
 
-    JSObject* proto = JS_InitClass(aCx, aObj, parentProto, clasp, Construct, 0,
-                                   sProperties, sFunctions, sStaticProperties,
-                                   NULL);
+    JS::Rooted<JSObject*> proto(aCx, JS_InitClass(aCx, aObj, parentProto, clasp, Construct, 0,
+                                                  sProperties, sFunctions, sStaticProperties,
+                                                  nullptr));
     if (proto && !JS_DefineProperties(aCx, proto, sStaticProperties)) {
       return NULL;
     }
@@ -285,7 +285,7 @@ private:
   static JSBool
   PreventDefault(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
-    JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
+    JS::Rooted<JSObject*> obj(aCx, JS_THIS_OBJECT(aCx, aVp));
     if (!obj) {
       return false;
     }
@@ -305,7 +305,7 @@ private:
   static JSBool
   InitEvent(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
-    JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
+    JS::Rooted<JSObject*> obj(aCx, JS_THIS_OBJECT(aCx, aVp));
     if (!obj) {
       return false;
     }
@@ -315,9 +315,9 @@ private:
       return false;
     }
 
-    JSString* type;
+    JS::Rooted<JSString*> type(aCx);
     JSBool bubbles, cancelable;
-    if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "Sbb", &type,
+    if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "Sbb", type.address(),
                              &bubbles, &cancelable)) {
       return false;
     }
@@ -414,14 +414,14 @@ public:
   Create(JSContext* aCx, JSObject* aParent, JSAutoStructuredCloneBuffer& aData,
          nsTArray<nsCOMPtr<nsISupports> >& aClonedObjects, bool aMainRuntime)
   {
-    JSString* type = JS_InternString(aCx, "message");
+    JS::Rooted<JSString*> type(aCx, JS_InternString(aCx, "message"));
     if (!type) {
       return NULL;
     }
 
     JSClass* clasp = aMainRuntime ? &sMainRuntimeClass : &sClass;
 
-    JSObject* obj = JS_NewObject(aCx, clasp, NULL, aParent);
+    JS::Rooted<JSObject*> obj(aCx, JS_NewObject(aCx, clasp, NULL, aParent));
     if (!obj) {
       return NULL;
     }
@@ -540,8 +540,8 @@ private:
       nsTArray<nsCOMPtr<nsISupports> > clonedObjects;
       clonedObjects.SwapElements(event->mClonedObjects);
 
-      jsval data;
-      if (!buffer.read(aCx, &data,
+      JS::Rooted<JS::Value> data(aCx);
+      if (!buffer.read(aCx, data.address(),
                        WorkerStructuredCloneCallbacks(event->mMainRuntime))) {
         return false;
       }
@@ -558,7 +558,7 @@ private:
   static JSBool
   InitMessageEvent(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
-    JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
+    JS::Rooted<JSObject*> obj(aCx, JS_THIS_OBJECT(aCx, aVp));
     if (!obj) {
       return false;
     }
@@ -568,11 +568,12 @@ private:
       return false;
     }
 
-    JSString* type, *data, *origin;
+    JS::Rooted<JSString*> type(aCx), data(aCx), origin(aCx);
     JSBool bubbles, cancelable;
-    JSObject* source;
-    if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "SbbSSo", &type,
-                             &bubbles, &cancelable, &data, &origin, &source)) {
+    JS::Rooted<JSObject*> source(aCx);
+    if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "SbbSSo", type.address(),
+                             &bubbles, &cancelable, data.address(),
+                             origin.address(), source.address())) {
       return false;
     }
 
@@ -639,14 +640,14 @@ public:
   Create(JSContext* aCx, JSObject* aParent, JSString* aMessage,
          JSString* aFilename, uint32_t aLineNumber, bool aMainRuntime)
   {
-    JSString* type = JS_InternString(aCx, "error");
+    JS::Rooted<JSString*> type(aCx, JS_InternString(aCx, "error"));
     if (!type) {
       return NULL;
     }
 
     JSClass* clasp = aMainRuntime ? &sMainRuntimeClass : &sClass;
 
-    JSObject* obj = JS_NewObject(aCx, clasp, NULL, aParent);
+    JS::Rooted<JSObject*> obj(aCx, JS_NewObject(aCx, clasp, NULL, aParent));
     if (!obj) {
       return NULL;
     }
@@ -743,7 +744,7 @@ private:
   static JSBool
   InitErrorEvent(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
-    JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
+    JS::Rooted<JSObject*> obj(aCx, JS_THIS_OBJECT(aCx, aVp));
     if (!obj) {
       return false;
     }
@@ -753,12 +754,12 @@ private:
       return false;
     }
 
-    JSString* type, *message, *filename;
+    JS::Rooted<JSString*> type(aCx), message(aCx), filename(aCx);
     JSBool bubbles, cancelable;
     uint32_t lineNumber;
-    if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "SbbSSu", &type,
-                             &bubbles, &cancelable, &message, &filename,
-                             &lineNumber)) {
+    if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "SbbSSu", type.address(),
+                             &bubbles, &cancelable, message.address(),
+                             filename.address(), &lineNumber)) {
       return false;
     }
 
@@ -820,12 +821,12 @@ public:
   Create(JSContext* aCx, JSObject* aParent, JSString* aType,
          bool aLengthComputable, double aLoaded, double aTotal)
   {
-    JSString* type = JS_InternJSString(aCx, aType);
+    JS::Rooted<JSString*> type(aCx, JS_InternJSString(aCx, aType));
     if (!type) {
       return NULL;
     }
 
-    JSObject* obj = JS_NewObject(aCx, &sClass, NULL, aParent);
+    JS::Rooted<JSObject*> obj(aCx, JS_NewObject(aCx, &sClass, NULL, aParent));
     if (!obj) {
       return NULL;
     }
@@ -933,10 +934,10 @@ private:
       return false;
     }
 
-    JSString* type;
+    JS::Rooted<JSString*> type(aCx);
     JSBool bubbles, cancelable, lengthComputable;
     double loaded, total;
-    if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "Sbbbdd", &type,
+    if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "Sbbbdd", type.address(),
                              &bubbles, &cancelable, &lengthComputable, &loaded,
                              &total)) {
       return false;
@@ -992,9 +993,9 @@ BEGIN_WORKERS_NAMESPACE
 namespace events {
 
 bool
-InitClasses(JSContext* aCx, JSObject* aGlobal, bool aMainRuntime)
+InitClasses(JSContext* aCx, JS::Handle<JSObject*> aGlobal, bool aMainRuntime)
 {
-  JSObject* eventProto = Event::InitClass(aCx, aGlobal, aMainRuntime);
+  JS::Rooted<JSObject*> eventProto(aCx, Event::InitClass(aCx, aGlobal, aMainRuntime));
   if (!eventProto) {
     return false;
   }
@@ -1076,9 +1077,9 @@ DispatchEventToTarget(JSContext* aCx, JSObject* aTarget, JSObject* aEvent,
   JSBool preventDefaultCalled = false;
   if (hasProperty) {
     jsval argv[] = { OBJECT_TO_JSVAL(aEvent) };
-    jsval rval = JSVAL_VOID;
+    JS::Rooted<JS::Value> rval(aCx, JS::UndefinedValue());
     if (!JS_CallFunctionName(aCx, aTarget, kFunctionName, ArrayLength(argv),
-                             argv, &rval) ||
+                             argv, rval.address()) ||
         !JS_ValueToBoolean(aCx, rval, &preventDefaultCalled)) {
       return false;
     }
