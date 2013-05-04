@@ -3386,9 +3386,8 @@ FindConstructorFunc(const nsDOMClassInfoData *aDOMClassInfoData)
 static nsresult
 BaseStubConstructor(nsIWeakReference* aWeakOwner,
                     const nsGlobalNameStruct *name_struct, JSContext *cx,
-                    JSObject *aObj, unsigned argc, jsval *argv, jsval *rval)
+                    JS::Handle<JSObject*> obj, const JS::CallArgs &args)
 {
-  JS::Rooted<JSObject*> obj(cx, aObj);
   MOZ_ASSERT(obj);
 
   nsresult rv;
@@ -3430,16 +3429,16 @@ BaseStubConstructor(nsIWeakReference* aWeakOwner,
     }
 
     if (initializer) {
-      rv = initializer->Initialize(currentInner, cx, obj, argc, argv);
+      rv = initializer->Initialize(currentInner, cx, obj, args);
       if (NS_FAILED(rv)) {
         return rv;
       }
     } else {
       nsCOMPtr<nsIXPConnectWrappedJS> wrappedJS = do_QueryInterface(native);
 
-      JS::Rooted<JSObject*> object(cx);
-      wrappedJS->GetJSObject(object.address());
-      if (!object) {
+      JS::Rooted<JSObject*> thisObject(cx);
+      wrappedJS->GetJSObject(thisObject.address());
+      if (!thisObject) {
         return NS_ERROR_UNEXPECTED;
       }
 
@@ -3447,44 +3446,40 @@ BaseStubConstructor(nsIWeakReference* aWeakOwner,
       pusher.Push(cx);
 
       JSAutoRequest ar(cx);
-      JSAutoCompartment ac(cx, object);
+      JSAutoCompartment ac(cx, thisObject);
 
-      JS::Rooted<JS::Value> thisValue(cx, JS::UndefinedValue());
       JS::Rooted<JS::Value> funval(cx);
-      if (!JS_GetProperty(cx, object, "constructor", funval.address()) || !funval.isObject()) {
+      if (!JS_GetProperty(cx, thisObject, "constructor", funval.address()) ||
+          !funval.isObject()) {
         return NS_ERROR_UNEXPECTED;
       }
 
       // Check if the object is even callable.
       NS_ENSURE_STATE(JS_ObjectIsCallable(cx, &funval.toObject()));
-      thisValue.setObject(*object);
-
       {
-        JS::Rooted<JSObject*> thisObject(cx, &thisValue.toObject());
-
         // wrap parameters in the target compartment
         // we also pass in the calling window as the first argument
-        ++argc;
-        nsAutoArrayPtr<JS::Value> args(new JS::Value[argc]);
-        JS::AutoArrayRooter rooter(cx, 0, args);
+        unsigned argc = args.length() + 1;
+        nsAutoArrayPtr<JS::Value> argv(new JS::Value[argc]);
+        JS::AutoArrayRooter rooter(cx, 0, argv);
 
         nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
         nsCOMPtr<nsIDOMWindow> currentWin(do_GetInterface(currentInner));
         rv = WrapNative(cx, obj, currentWin, &NS_GET_IID(nsIDOMWindow),
-                        true, &args[0], getter_AddRefs(holder));
-        if (!JS_WrapValue(cx, &args[0]))
+                        true, &argv[0], getter_AddRefs(holder));
+        if (!JS_WrapValue(cx, &argv[0]))
           return NS_ERROR_FAILURE;
         rooter.changeLength(1);
 
         for (size_t i = 1; i < argc; ++i) {
-          args[i] = argv[i - 1];
-          if (!JS_WrapValue(cx, &args[i]))
+          argv[i] = args[i - 1];
+          if (!JS_WrapValue(cx, &argv[i]))
             return NS_ERROR_FAILURE;
           rooter.changeLength(i + 1);
         }
 
         JS::Value frval;
-        bool ret = JS_CallFunctionValue(cx, thisObject, funval, argc, args, &frval);
+        bool ret = JS_CallFunctionValue(cx, thisObject, funval, argc, argv, &frval);
 
         if (!ret) {
           return NS_ERROR_FAILURE;
@@ -3493,7 +3488,7 @@ BaseStubConstructor(nsIWeakReference* aWeakOwner,
     }
   }
 
-  return WrapNative(cx, obj, native, true, rval);
+  return WrapNative(cx, obj, native, true, args.rval().address());
 }
 
 static nsresult
@@ -3746,7 +3741,7 @@ public:
 
   nsresult Construct(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                      JS::Handle<JSObject*> obj, const JS::CallArgs &args,
-                     bool *_retval););
+                     bool *_retval);
 
   nsresult HasInstance(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                        JS::Handle<JSObject*> obj, const jsval &val, bool *bp,
@@ -3918,8 +3913,7 @@ nsDOMConstructor::Construct(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
   }
 
-  return BaseStubConstructor(mWeakOwner, name_struct, cx, obj, args.length(), args.array(),
-                             args.rval().address());
+  return BaseStubConstructor(mWeakOwner, name_struct, cx, obj, args);
 }
 
 nsresult
@@ -7498,7 +7492,7 @@ nsDOMConstructorSH::Call(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   }
 #endif
 
-  return wrapped->Construct(wrapper, cx, obj, argc, argv, vp, _retval);
+  return wrapped->Construct(wrapper, cx, obj, args, _retval);
 }
 
 NS_IMETHODIMP
@@ -7519,7 +7513,7 @@ nsDOMConstructorSH::Construct(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   }
 #endif
 
-  return wrapped->Construct(wrapper, cx, obj, argc, argv, vp, _retval);
+  return wrapped->Construct(wrapper, cx, obj, args, _retval);
 }
 
 NS_IMETHODIMP

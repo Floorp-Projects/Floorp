@@ -314,9 +314,9 @@ nsDOMEvent::SetTrusted(bool aTrusted)
 
 NS_IMETHODIMP
 nsDOMEvent::Initialize(nsISupports* aOwner, JSContext* aCx, JSObject* aObj,
-                       uint32_t aArgc, JS::Value* aArgv)
+                       const JS::CallArgs& aArgs)
 {
-  NS_ENSURE_TRUE(aArgc >= 1, NS_ERROR_XPC_NOT_ENOUGH_ARGS);
+  NS_ENSURE_TRUE(aArgs.length() >= 1, NS_ERROR_XPC_NOT_ENOUGH_ARGS);
 
   bool trusted = false;
   nsCOMPtr<nsPIDOMWindow> w = do_QueryInterface(aOwner);
@@ -336,7 +336,7 @@ nsDOMEvent::Initialize(nsISupports* aOwner, JSContext* aCx, JSObject* aObj,
   }
 
   JSAutoRequest ar(aCx);
-  JSString* jsstr = JS_ValueToString(aCx, aArgv[0]);
+  JSString* jsstr = JS_ValueToString(aCx, aArgs[0]);
   if (!jsstr) {
     return NS_ERROR_DOM_SYNTAX_ERR;
   }
@@ -346,7 +346,7 @@ nsDOMEvent::Initialize(nsISupports* aOwner, JSContext* aCx, JSObject* aObj,
   nsDependentJSString type;
   NS_ENSURE_STATE(type.init(aCx, jsstr));
 
-  nsresult rv = InitFromCtor(type, aCx, aArgc >= 2 ? &(aArgv[1]) : nullptr);
+  nsresult rv = InitFromCtor(type, aCx, aArgs.length() >= 2 ? &(aArgs[1]) : nullptr);
   NS_ENSURE_SUCCESS(rv, rv);
 
   SetTrusted(trusted);
