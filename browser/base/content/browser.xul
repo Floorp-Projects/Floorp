@@ -860,6 +860,7 @@
       <hbox class="titlebar-placeholder" type="fullscreen-button"
             ordinal="1000"/>
 #endif
+#endif
     </toolbar>
 
     <toolbarpalette id="BrowserToolbarPalette">
