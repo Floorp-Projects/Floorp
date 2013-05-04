@@ -22,14 +22,14 @@ PluginIdentifierParent::RecvRetain()
   mTemporaryRefs = 0;
 
   // Intern the jsid if necessary.
-  jsid id = NPIdentifierToJSId(mIdentifier);
+  SafeAutoJSContext cx;
+  JS::Rooted<jsid> id(cx, NPIdentifierToJSId(mIdentifier));
   if (JSID_IS_INT(id)) {
     return true;
   }
 
   // The following is what nsNPAPIPlugin.cpp does. Gross, but the API doesn't
   // give you a NPP to play with.
-  SafeAutoJSContext cx;
   JSAutoRequest ar(cx);
   JSString* str = JSID_TO_STRING(id);
   JSString* str2 = JS_InternJSString(cx, str);

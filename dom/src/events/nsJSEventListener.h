@@ -40,7 +40,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS(nsJSEventListener)
 
 protected:
-  virtual void UpdateScopeObject(JSObject* aScopeObject);
+  virtual void UpdateScopeObject(JS::Handle<JSObject*> aScopeObject);
 
   bool IsBlackForCC();
 };
