@@ -121,6 +121,32 @@ class LDivI : public LBinaryMath<2>
     }
 };
 
+class LDivPowTwoI : public LInstructionHelper<1, 1, 0>
+{
+    const int32_t shift_;
+
+  public:
+    LIR_HEADER(DivPowTwoI)
+
+    LDivPowTwoI(const LAllocation &lhs, int32_t shift)
+      : shift_(shift)
+    {
+        setOperand(0, lhs);
+    }
+
+    const LAllocation *numerator() {
+        return getOperand(0);
+    }
+
+    int32_t shift() {
+        return shift_;
+    }
+
+    MDiv *mir() const {
+        return mir_->toDiv();
+    }
+};
+
 class LModI : public LBinaryMath<3>
 {
   public:

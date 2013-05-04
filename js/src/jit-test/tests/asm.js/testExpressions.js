@@ -277,3 +277,41 @@ asmLink(asmCompile('glob','imp','buf', USE_ASM + "var i32=new glob.Int32Array(bu
 assertEq(new Int32Array(buf)[0], 42);
 
 assertEq(asmLink(asmCompile(USE_ASM + "function f() { var a=0,i=0; for (; ~~i!=4; i=(i+1)|0) { a = (a*5)|0; if (+(a>>>0) != 0.0) return 1; } return 0; } return f"))(), 0)
+
+// Signed integer division by a power of two.
+var f = asmLink(asmCompile(USE_ASM + "function f(i) { i=i|0; return ((i|0)/1)|0; } return f;"));
+for (let i = 0; i < 31; i++) {
+    assertEq(f(Math.pow(2,i)), Math.pow(2,i));
+    assertEq(f(Math.pow(2,i)-1), Math.pow(2,i)-1);
+    assertEq(f(-Math.pow(2,i)), -Math.pow(2,i));
+    assertEq(f(-Math.pow(2,i)-1), -Math.pow(2,i)-1);
+}
+assertEq(f(INT32_MIN), INT32_MIN);
+assertEq(f(INT32_MAX), INT32_MAX);
+var f = asmLink(asmCompile(USE_ASM + "function f(i) { i=i|0; return ((i|0)/2)|0; } return f;"));
+for (let i = 0; i < 31; i++) {
+    assertEq(f(Math.pow(2,i)), (Math.pow(2,i)/2)|0);
+    assertEq(f(Math.pow(2,i)-1), ((Math.pow(2,i)-1)/2)|0);
+    assertEq(f(-Math.pow(2,i)), (-Math.pow(2,i)/2)|0);
+    assertEq(f(-Math.pow(2,i)-1), ((-Math.pow(2,i)-1)/2)|0);
+}
+assertEq(f(INT32_MIN), (INT32_MIN/2)|0);
+assertEq(f(INT32_MAX), (INT32_MAX/2)|0);
+var f = asmLink(asmCompile(USE_ASM + "function f(i) { i=i|0; return ((i|0)/4)|0; } return f;"));
+for (let i = 0; i < 31; i++) {
+    assertEq(f(Math.pow(2,i)), (Math.pow(2,i)/4)|0);
+    assertEq(f(Math.pow(2,i)-1), ((Math.pow(2,i)-1)/4)|0);
+    assertEq(f(-Math.pow(2,i)), (-Math.pow(2,i)/4)|0);
+    assertEq(f(-Math.pow(2,i)-1), ((-Math.pow(2,i)-1)/4)|0);
+}
+assertEq(f(INT32_MIN), (INT32_MIN/4)|0);
+assertEq(f(INT32_MAX), (INT32_MAX/4)|0);
+var f = asmLink(asmCompile(USE_ASM + "function f(i) { i=i|0; return ((i|0)/1073741824)|0; } return f;"));
+for (let i = 0; i < 31; i++) {
+    assertEq(f(Math.pow(2,i)), (Math.pow(2,i)/Math.pow(2,30))|0);
+    assertEq(f(Math.pow(2,i)-1), ((Math.pow(2,i)-1)/Math.pow(2,30))|0);
+    assertEq(f(-Math.pow(2,i)), (-Math.pow(2,i)/Math.pow(2,30))|0);
+    assertEq(f(-Math.pow(2,i)-1), ((-Math.pow(2,i)-1)/Math.pow(2,30))|0);
+}
+assertEq(f(INT32_MIN), (INT32_MIN/Math.pow(2,30))|0);
+assertEq(f(INT32_MAX), (INT32_MAX/Math.pow(2,30))|0);
