@@ -298,7 +298,8 @@ static WMFModule sDLLs[] = {
   { L"mfplat.dll", NULL },
   { L"mfreadwrite.dll", NULL },
   { L"propsys.dll", NULL },
-  { L"mf.dll", NULL }
+  { L"mf.dll", NULL },
+  { L"dxva2.dll", NULL }
 };
 
 HRESULT
@@ -511,6 +512,25 @@ MFTEnumEx(GUID guidCategory,
   DECL_FUNCTION_PTR(MFTEnumEx, GUID, UINT32, const MFT_REGISTER_TYPE_INFO *, const MFT_REGISTER_TYPE_INFO *, IMFActivate ***, UINT32 *);
   ENSURE_FUNCTION_PTR(MFTEnumEx, mfplat.dll)
   return (MFTEnumExPtr)(guidCategory, Flags, pInputType, pOutputType, pppMFTActivate, pcMFTActivate);
+}
+
+HRESULT MFGetService(IUnknown *punkObject,
+                     REFGUID guidService,
+                     REFIID riid,
+                     LPVOID *ppvObject)
+{
+  DECL_FUNCTION_PTR(MFGetService, IUnknown*, REFGUID, REFIID, LPVOID *);
+  ENSURE_FUNCTION_PTR(MFGetService, mf.dll)
+  return (MFGetServicePtr)(punkObject, guidService, riid, ppvObject);
+}
+
+HRESULT
+DXVA2CreateDirect3DDeviceManager9(UINT *pResetToken,
+                                  IDirect3DDeviceManager9 **ppDXVAManager)
+{
+  DECL_FUNCTION_PTR(DXVA2CreateDirect3DDeviceManager9, UINT*, IDirect3DDeviceManager9 **);
+  ENSURE_FUNCTION_PTR(DXVA2CreateDirect3DDeviceManager9, dxva2.dll)
+  return (DXVA2CreateDirect3DDeviceManager9Ptr)(pResetToken, ppDXVAManager);
 }
 
 } // end namespace wmf
