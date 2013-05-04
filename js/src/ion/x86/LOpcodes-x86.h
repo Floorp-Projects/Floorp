@@ -13,6 +13,7 @@
     _(Box)                      \
     _(BoxDouble)                \
     _(DivI)                     \
+    _(DivPowTwoI)               \
     _(ModI)                     \
     _(ModPowTwoI)               \
     _(PowHalfD)                 \
