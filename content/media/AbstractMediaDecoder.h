@@ -22,6 +22,7 @@ class MediaResource;
 class ReentrantMonitor;
 class VideoFrameContainer;
 class TimedMetadata;
+class MediaDecoderOwner;
 
 typedef nsDataHashtable<nsCStringHashKey, nsCString> MetadataTags;
 
@@ -100,6 +101,10 @@ public:
   // May be called by the reader to notify this decoder that the metadata from
   // the media file has been read. Call on the decode thread only.
   virtual void OnReadMetadataCompleted() = 0;
+
+  // Returns the owner of this media decoder. The owner should only be used
+  // on the main thread.
+  virtual MediaDecoderOwner* GetOwner() = 0;
 
   // Stack based class to assist in notifying the frame statistics of
   // parsed and decoded frames. Use inside video demux & decode functions

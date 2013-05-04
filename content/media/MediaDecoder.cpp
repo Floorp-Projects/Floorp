@@ -1689,6 +1689,13 @@ MediaDecoder::IsWMFEnabled()
 }
 #endif
 
+MediaDecoderOwner*
+MediaDecoder::GetOwner()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  return mOwner;
+}
+
 MediaMemoryReporter* MediaMemoryReporter::sUniqueInstance;
 
 NS_MEMORY_REPORTER_IMPLEMENT(MediaDecodedVideoMemory,
