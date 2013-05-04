@@ -78,6 +78,9 @@ GTEST_CPPSRCS = \
         $(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+CPPSRCS += \
+        D3D9SurfaceImage.cpp \
+        $(NULL)
 ifdef MOZ_ENABLE_D3D9_LAYER
 CPPSRCS += \
         LayerManagerD3D9.cpp \
