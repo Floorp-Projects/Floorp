@@ -4066,7 +4066,7 @@ DoSetElemFallback(JSContext *cx, BaselineFrame *frame, ICSetElem_Fallback *stub,
               op == JSOP_INITELEM ||
               op == JSOP_INITELEM_ARRAY);
 
-    RootedObject obj(cx, ToObject(cx, objv));
+    RootedObject obj(cx, ToObjectFromStack(cx, objv));
     if (!obj)
         return false;
 
