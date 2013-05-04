@@ -128,20 +128,6 @@
   -moz-image-region: rect(0px, 48px, 16px, 32px);
 }
 
-#toolbox-tab-options {
-  list-style-image: url("chrome://browser/skin/devtools/option-icon.png");
-  -moz-image-region: rect(0px 16px 16px 0px);
-}
-
-#toolbox-tab-options[checked=true] {
-  -moz-image-region: rect(0px 32px 16px 16px);
-}
-
-#toolbox-tab-options > image {
-  opacity: 1;
-  -moz-margin-start: 0;
-}
-
 /* Tabs */
 
 .devtools-tabbar {

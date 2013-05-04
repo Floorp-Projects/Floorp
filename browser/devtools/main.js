@@ -29,6 +29,7 @@ Object.defineProperty(exports, "TargetFactory", {
 loader.lazyGetter(this, "osString", () => Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).OS);
 
 // Panels
+loader.lazyGetter(this, "OptionsPanel", function() require("devtools/framework/toolbox-options").OptionsPanel);
 loader.lazyGetter(this, "InspectorPanel", function() require("devtools/inspector/inspector-panel").InspectorPanel);
 loader.lazyImporter(this, "WebConsolePanel", "resource:///modules/WebConsolePanel.jsm");
 loader.lazyImporter(this, "DebuggerPanel", "resource:///modules/devtools/DebuggerPanel.jsm");
@@ -37,12 +38,14 @@ loader.lazyImporter(this, "ProfilerPanel", "resource:///modules/devtools/Profile
 loader.lazyImporter(this, "NetMonitorPanel", "resource:///modules/devtools/NetMonitorPanel.jsm");
 
 // Strings
+const toolboxProps = "chrome://browser/locale/devtools/toolbox.properties";
 const inspectorProps = "chrome://browser/locale/devtools/inspector.properties";
 const debuggerProps = "chrome://browser/locale/devtools/debugger.properties";
 const styleEditorProps = "chrome://browser/locale/devtools/styleeditor.properties";
 const webConsoleProps = "chrome://browser/locale/devtools/webconsole.properties";
 const profilerProps = "chrome://browser/locale/devtools/profiler.properties";
 const netMonitorProps = "chrome://browser/locale/devtools/netmonitor.properties";
+loader.lazyGetter(this, "toolboxStrings", () => Services.strings.createBundle(toolboxProps));
 loader.lazyGetter(this, "webConsoleStrings", () => Services.strings.createBundle(webConsoleProps));
 loader.lazyGetter(this, "debuggerStrings", () => Services.strings.createBundle(debuggerProps));
 loader.lazyGetter(this, "styleEditorStrings", () => Services.strings.createBundle(styleEditorProps));
@@ -54,12 +57,27 @@ let Tools = {};
 exports.Tools = Tools;
 
 // Definitions
+Tools.options = {
+  id: "options",
+  ordinal: 0,
+  url: "chrome://browser/content/devtools/framework/toolbox-options.xul",
+  icon: "chrome://browser/skin/devtools/tool-options.png",
+  tooltip: l10n("optionsButton.tooltip", toolboxStrings),
+  isTargetSupported: function(target) {
+    return true;
+  },
+  build: function(iframeWindow, toolbox) {
+    let panel = new OptionsPanel(iframeWindow, toolbox);
+    return panel.open();
+  }
+}
+
 Tools.webConsole = {
   id: "webconsole",
   key: l10n("cmd.commandkey", webConsoleStrings),
   accesskey: l10n("webConsoleCmd.accesskey", webConsoleStrings),
   modifiers: Services.appinfo.OS == "Darwin" ? "accel,alt" : "accel,shift",
-  ordinal: 0,
+  ordinal: 1,
   icon: "chrome://browser/skin/devtools/tool-webconsole.png",
   url: "chrome://browser/content/devtools/webconsole.xul",
   label: l10n("ToolboxWebconsole.label", webConsoleStrings),
@@ -74,33 +92,11 @@ Tools.webConsole = {
   }
 };
 
-Tools.jsdebugger = {
-  id: "jsdebugger",
-  key: l10n("open.commandkey", debuggerStrings),
-  accesskey: l10n("debuggerMenu.accesskey", debuggerStrings),
-  modifiers: osString == "Darwin" ? "accel,alt" : "accel,shift",
-  ordinal: 2,
-  killswitch: "devtools.debugger.enabled",
-  icon: "chrome://browser/skin/devtools/tool-debugger.png",
-  url: "chrome://browser/content/devtools/debugger.xul",
-  label: l10n("ToolboxDebugger.label", debuggerStrings),
-  tooltip: l10n("ToolboxDebugger.tooltip", debuggerStrings),
-
-  isTargetSupported: function(target) {
-    return true;
-  },
-
-  build: function(iframeWindow, toolbox) {
-    let panel = new DebuggerPanel(iframeWindow, toolbox);
-    return panel.open();
-  }
-};
-
 Tools.inspector = {
   id: "inspector",
   accesskey: l10n("inspector.accesskey", inspectorStrings),
   key: l10n("inspector.commandkey", inspectorStrings),
-  ordinal: 1,
+  ordinal: 2,
   modifiers: osString == "Darwin" ? "accel,alt" : "accel,shift",
   icon: "chrome://browser/skin/devtools/tool-inspector.png",
   url: "chrome://browser/content/devtools/inspector/inspector.xul",
@@ -117,10 +113,32 @@ Tools.inspector = {
   }
 };
 
+Tools.jsdebugger = {
+  id: "jsdebugger",
+  key: l10n("open.commandkey", debuggerStrings),
+  accesskey: l10n("debuggerMenu.accesskey", debuggerStrings),
+  modifiers: osString == "Darwin" ? "accel,alt" : "accel,shift",
+  ordinal: 3,
+  visibilityswitch: "devtools.debugger.enabled",
+  icon: "chrome://browser/skin/devtools/tool-debugger.png",
+  url: "chrome://browser/content/devtools/debugger.xul",
+  label: l10n("ToolboxDebugger.label", debuggerStrings),
+  tooltip: l10n("ToolboxDebugger.tooltip", debuggerStrings),
+
+  isTargetSupported: function(target) {
+    return true;
+  },
+
+  build: function(iframeWindow, toolbox) {
+    let panel = new DebuggerPanel(iframeWindow, toolbox);
+    return panel.open();
+  }
+};
+
 Tools.styleEditor = {
   id: "styleeditor",
   key: l10n("open.commandkey", styleEditorStrings),
-  ordinal: 3,
+  ordinal: 4,
   accesskey: l10n("open.accesskey", styleEditorStrings),
   modifiers: "shift",
   icon: "chrome://browser/skin/devtools/tool-styleeditor.png",
@@ -142,9 +160,9 @@ Tools.jsprofiler = {
   id: "jsprofiler",
   accesskey: l10n("profiler.accesskey", profilerStrings),
   key: l10n("profiler2.commandkey", profilerStrings),
-  ordinal: 4,
+  ordinal: 5,
   modifiers: "shift",
-  killswitch: "devtools.profiler.enabled",
+  visibilityswitch: "devtools.profiler.enabled",
   icon: "chrome://browser/skin/devtools/tool-profiler.png",
   url: "chrome://browser/content/devtools/profiler.xul",
   label: l10n("profiler.label", profilerStrings),
@@ -164,9 +182,9 @@ Tools.netMonitor = {
   id: "netmonitor",
   accesskey: l10n("netmonitor.accesskey", netMonitorStrings),
   key: l10n("netmonitor.commandkey", netMonitorStrings),
-  ordinal: 5,
+  ordinal: 6,
   modifiers: osString == "Darwin" ? "accel,alt" : "accel,shift",
-  killswitch: "devtools.netmonitor.enabled",
+  visibilityswitch: "devtools.netmonitor.enabled",
   icon: "chrome://browser/skin/devtools/tool-profiler.png",
   url: "chrome://browser/content/devtools/netmonitor.xul",
   label: l10n("netmonitor.label", netMonitorStrings),
@@ -183,6 +201,7 @@ Tools.netMonitor = {
 };
 
 let defaultTools = [
+  Tools.options,
   Tools.styleEditor,
   Tools.webConsole,
   Tools.jsdebugger,
@@ -201,7 +220,7 @@ var unloadObserver = {
   observe: function(subject, topic, data) {
     if (subject.wrappedJSObject === require("@loader/unload")) {
       Services.obs.removeObserver(unloadObserver, "sdk:loader:destroy");
-      for (let definition of defaultTools) {
+      for (let definition of gDevTools.getToolDefinitionArray()) {
         gDevTools.unregisterTool(definition.id);
       }
     }
