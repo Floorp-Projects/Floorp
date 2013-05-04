@@ -20,7 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=589543
 SimpleTest.waitForExplicitFinish();
 
 addLoadEvent(function() {
-  var doc = SpecialPowers.wrap($("testFrame").contentDocument);
+  var doc = SpecialPowers.wrap($("testFrame")).contentDocument;
   var daddy = doc.getElementById("feedSubscribeLine");
   var popup = doc.getAnonymousElementByAttribute(daddy, "anonid", "handlersMenuPopup");
   isnot(popup, null, "Feed preview should have a handlers popup");

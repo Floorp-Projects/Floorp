@@ -84,6 +84,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     virtual bool visitSubI(LSubI *ins);
     virtual bool visitMulI(LMulI *ins);
     virtual bool visitDivI(LDivI *ins);
+    virtual bool visitDivPowTwoI(LDivPowTwoI *ins);
     virtual bool visitModI(LModI *ins);
     virtual bool visitModPowTwoI(LModPowTwoI *ins);
     virtual bool visitBitNotI(LBitNotI *ins);

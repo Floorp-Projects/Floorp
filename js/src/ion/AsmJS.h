@@ -24,11 +24,6 @@ class AsmJSModule;
 namespace frontend { struct TokenStream; struct ParseNode; }
 namespace ion { class MIRGenerator; class LIRGraph; }
 
-// Return whether asm.js optimization is inhibitted by the platform or
-// dynamically disabled. (Exposed as JSNative for shell testing.)
-extern JSBool
-IsAsmJSCompilationAvailable(JSContext *cx, unsigned argc, Value *vp);
-
 // Called after parsing a function 'fn' which contains the "use asm" directive.
 // This function performs type-checking and code-generation. If type-checking
 // succeeds, the generated native function is assigned to |moduleFun|.
@@ -50,6 +45,11 @@ CompileAsmJS(JSContext *cx, frontend::TokenStream &ts, frontend::ParseNode *fn,
 // exception thrown when executing GetProperty on the arguments) is pending.
 extern JSBool
 LinkAsmJS(JSContext *cx, unsigned argc, JS::Value *vp);
+
+// The js::Native for the functions nested in an asm.js module. Calling this
+// native will trampoline into generated code.
+extern JSBool
+CallAsmJS(JSContext *cx, unsigned argc, JS::Value *vp);
 
 // Force any currently-executing asm.js code to call
 // js_HandleExecutionInterrupt.
@@ -156,6 +156,23 @@ IsAsmJSModuleNative(js::Native native)
     return false;
 }
 #endif
+
+// Exposed for shell testing:
+
+// Return whether asm.js optimization is inhibitted by the platform or
+// dynamically disabled:
+extern JSBool
+IsAsmJSCompilationAvailable(JSContext *cx, unsigned argc, Value *vp);
+
+// Return whether the given value is a function containing "use asm" that has
+// been validated according to the asm.js spec.
+extern JSBool
+IsAsmJSModule(JSContext *cx, unsigned argc, Value *vp);
+
+// Return whether the given value is a nested function in an asm.js module that
+// has been both compile- and link-time validated.
+extern JSBool
+IsAsmJSFunction(JSContext *cx, unsigned argc, Value *vp);
 
 } // namespace js
 

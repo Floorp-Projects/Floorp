@@ -92,14 +92,14 @@ public:
                                    mozilla::ErrorResult& error);
   JS::Value GetStrokeStyle(JSContext* cx, mozilla::ErrorResult& error);
 
-  void SetStrokeStyle(JSContext* cx, JS::Value& value)
+  void SetStrokeStyle(JSContext* cx, JS::Handle<JS::Value> value)
   {
     SetStyleFromJSValue(cx, value, STYLE_STROKE);
   }
 
   JS::Value GetFillStyle(JSContext* cx, mozilla::ErrorResult& error);
 
-  void SetFillStyle(JSContext* cx, JS::Value& value)
+  void SetFillStyle(JSContext* cx, JS::Handle<JS::Value> value)
   {
     SetStyleFromJSValue(cx, value, STYLE_FILL);
   }
@@ -471,7 +471,8 @@ protected:
   static mozilla::gfx::DrawTarget* sErrorTarget;
 
   // Some helpers.  Doesn't modify a color on failure.
-  void SetStyleFromJSValue(JSContext* cx, JS::Value& value, Style whichStyle);
+  void SetStyleFromJSValue(JSContext* cx, JS::Handle<JS::Value> value,
+			   Style whichStyle);
   void SetStyleFromString(const nsAString& str, Style whichStyle);
 
   void SetStyleFromGradient(CanvasGradient *gradient, Style whichStyle)

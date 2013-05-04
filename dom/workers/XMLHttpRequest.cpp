@@ -572,8 +572,8 @@ public:
       }
     }
     else {
-      jsval response;
-      mResponseResult = xhr->GetResponse(aCx, &response);
+      JS::Rooted<JS::Value> response(aCx);
+      mResponseResult = xhr->GetResponse(aCx, response.address());
       if (NS_SUCCEEDED(mResponseResult)) {
         if (JSVAL_IS_UNIVERSAL(response)) {
           mResponse = response;
@@ -692,8 +692,8 @@ public:
           nsTArray<nsCOMPtr<nsISupports> > clonedObjects;
           clonedObjects.SwapElements(mClonedObjects);
 
-          jsval response;
-          if (!responseBuffer.read(aCx, &response, callbacks, &clonedObjects)) {
+          JS::Rooted<JS::Value> response(aCx);
+          if (!responseBuffer.read(aCx, response.address(), callbacks, &clonedObjects)) {
             return false;
           }
 
@@ -1131,9 +1131,9 @@ public:
         ChromeWorkerStructuredCloneCallbacks(true) :
         WorkerStructuredCloneCallbacks(true);
 
-      jsval body;
-      if (mBody.read(cx, &body, callbacks, &mClonedObjects)) {
-        if (NS_FAILED(xpc->JSValToVariant(cx, &body,
+      JS::Rooted<JS::Value> body(cx);
+      if (mBody.read(cx, body.address(), callbacks, &mClonedObjects)) {
+        if (NS_FAILED(xpc->JSValToVariant(cx, body.address(),
                                           getter_AddRefs(variant)))) {
           rv = NS_ERROR_DOM_INVALID_STATE_ERR;
         }

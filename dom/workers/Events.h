@@ -15,7 +15,7 @@ BEGIN_WORKERS_NAMESPACE
 namespace events {
 
 bool
-InitClasses(JSContext* aCx, JSObject* aGlobal, bool aMainRuntime);
+InitClasses(JSContext* aCx, JS::Handle<JSObject*> aGlobal, bool aMainRuntime);
 
 JSObject*
 CreateGenericEvent(JSContext* aCx, JSString* aType, bool aBubbles,
