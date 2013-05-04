@@ -7,6 +7,7 @@
 #ifndef nsStringBuffer_h__
 #define nsStringBuffer_h__
 
+template<class T> struct already_AddRefed;
 
 /**
  * This structure precedes the string buffers "we" allocate.  It may be the
@@ -41,7 +42,7 @@ class nsStringBuffer
        *
        * @return new string buffer or null if out of memory.
        */
-      static nsStringBuffer* Alloc(size_t storageSize);
+      static already_AddRefed<nsStringBuffer> Alloc(size_t storageSize);
 
       /**
        * Resizes the given string buffer to the specified storage size.  This

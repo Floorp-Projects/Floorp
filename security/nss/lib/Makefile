@@ -62,3 +62,14 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 # (7) Execute "local" rules. (OPTIONAL).                              #
 #######################################################################
 
+ifeq ($(NSS_BUILD_WITHOUT_SOFTOKEN),1)
+# Not included when building nss without softoken
+UTIL_SRCDIR=
+FREEBL_SRCDIR=
+SOFTOKEN_SRCDIR=
+else
+# default is to include all
+UTIL_SRCDIR = util
+FREEBL_SRCDIR = freebl
+SOFTOKEN_SRCDIR = softoken
+endif

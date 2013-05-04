@@ -4,8 +4,6 @@
 
 /*
  * CMS recipientInfo methods.
- *
- * $Id$
  */
 
 #include "cmslocal.h"

@@ -36,6 +36,3 @@ values.
  Michael J. Fromberger <sting@linguist.dartmouth.edu>
  Copyright (C) 1998 Michael J. Fromberger, All Rights Reserved
  Thayer School of Engineering, Dartmouth College, Hanover, NH  USA
-
- $Date$
-

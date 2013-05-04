@@ -11,6 +11,11 @@
 
 namespace mozilla {
 
+class CameraPreviewFrameCallback {
+public:
+  virtual void OnNewFrame(const gfxIntSize& aIntrinsicSize, layers::Image* aImage);
+};
+
 /**
  * This is a stream for camere preview.
  *
@@ -42,11 +47,16 @@ public:
   // Call these on any thread.
   void SetCurrentFrame(const gfxIntSize& aIntrinsicSize, Image* aImage);
 
+  void SetFrameCallback(CameraPreviewFrameCallback* aCallback) {
+    mFrameCallback = aCallback;
+  }
+
 protected:
   // mMutex protects all the class' fields.
   // This class is not registered to MediaStreamGraph.
   // It needs to protect all the fields.
   Mutex mMutex;
+  CameraPreviewFrameCallback* mFrameCallback;
 };
 
 

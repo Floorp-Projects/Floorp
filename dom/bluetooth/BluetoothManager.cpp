@@ -68,10 +68,9 @@ public:
       return false;
     }
 
-    rv = nsContentUtils::WrapNative(sc->GetNativeContext(),
-                                    sc->GetNativeGlobal(),
-                                    adapter,
-                                    aValue);
+    JSContext* cx = sc->GetNativeContext();
+    JS::Rooted<JSObject*> global(cx, sc->GetNativeGlobal());
+    rv = nsContentUtils::WrapNative(cx, global, adapter, aValue);
     if (NS_FAILED(rv)) {
       NS_WARNING("Cannot create native object!");
       SetError(NS_LITERAL_STRING("BluetoothNativeObjectError"));

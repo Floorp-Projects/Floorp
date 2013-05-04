@@ -36,9 +36,6 @@
 #include "ocsp.h"
 #include "ocspti.h"     /* internals for pretty-printing routines *only* */
 
-#define VERSIONSTRING "$Revision$ ($Date$) $Author$"
-
-
 struct _DataBufferList;
 struct _DataBuffer;
 
@@ -1765,7 +1762,7 @@ int main(int argc,  char *argv[])
   SECStatus   rv;
 
   progName = argv[0];
-  optstate = PL_CreateOptState(argc,argv,"fvxhslp:");
+  optstate = PL_CreateOptState(argc,argv,"fxhslp:");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
     switch (optstate->option) {
     case 'f':
@@ -1773,9 +1770,6 @@ int main(int argc,  char *argv[])
       break;
     case 'h':
       hexparse++;
-      break;
-    case 'v':
-      PR_fprintf(PR_STDOUT,"Version: %s\n",VERSIONSTRING);
       break;
     case 's':
       sslparse++;

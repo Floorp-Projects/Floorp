@@ -13,8 +13,6 @@
  * When in FIPS 140 mode, the NSS Internal FIPS PKCS #11 Module will
  * compute the checksum for the NSS cryptographic boundary libraries
  * and compare the checksum with the value in .chk file.
- *
- * $Id$
  */
 
 #ifdef XP_UNIX

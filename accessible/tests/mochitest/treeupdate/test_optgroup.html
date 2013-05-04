@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Add and remove optgroup test</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+
+    function addOptGroup(aID)
+    {
+      this.selectNode = getNode(aID);
+      this.select = getAccessible(this.selectNode);
+
+      this.invoke = function addOptGroup_invoke()
+      {
+        var optGroup = document.createElement("optgroup");
+        for (i = 0; i < 2; i++) {
+          var opt = document.createElement("option");
+          opt.value = i;
+          opt.text = "Option: Value " + i;
+
+          optGroup.appendChild(opt);
+        }
+
+        this.selectNode.add(optGroup, null);
+        var option = document.createElement("option");
+        this.selectNode.add(option, null);
+      }
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, this.select)
+      ];
+
+      this.finalCheck = function addOptGroup_finalCheck()
+      {
+        var tree =
+          { COMBOBOX: [
+            { COMBOBOX_LIST: [
+              { GROUPING: [
+                { COMBOBOX_OPTION: [
+                  { TEXT_LEAF: [] }
+                ] },
+              { COMBOBOX_OPTION: [
+                  { TEXT_LEAF: [] }
+                ] },
+              ]},
+              { COMBOBOX_OPTION: [] }
+            ] }
+          ] };
+        testAccessibleTree(this.select, tree);
+      }
+
+      this.getID = function addOptGroup_getID()
+      {
+        return "test optgroup's insertion into a select";
+      }
+    }
+
+    function removeOptGroup(aID)
+    {
+      this.selectNode = getNode(aID);
+      this.select = getAccessible(this.selectNode);
+
+      this.invoke = function removeOptGroup_invoke()
+      {
+        this.option1Node = this.selectNode.firstChild.firstChild;
+        this.selectNode.removeChild(this.selectNode.firstChild);
+      }
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, this.select)
+      ];
+
+      this.finalCheck = function removeOptGroup_finalCheck()
+      {
+        var tree =
+          { COMBOBOX: [
+            { COMBOBOX_LIST: [
+              { COMBOBOX_OPTION: [] }
+            ] }
+          ] };
+        testAccessibleTree(this.select, tree);
+        is(isAccessible(this.option1Node), false, "removed option shouldn't be accessible anymore!");
+      }
+
+      this.getID = function removeOptGroup_getID()
+      {
+        return "test optgroup's removal from a select";
+      }
+    }
+
+//    gA11yEventDumpToConsole = true;
+
+    function doTest()
+    {
+      gQueue = new eventQueue();
+
+      gQueue.push(new addOptGroup("select"));
+      gQueue.push(new removeOptGroup("select"));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=616452"
+     title="Bug 616452 - Dynamically inserted select options aren't reflected in accessible tree">
+    Bug 616452</a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <select id="select"></select>
+
+  <div id="debug"/>
+</body>
+</html>

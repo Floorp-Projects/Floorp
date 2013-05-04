@@ -4,13 +4,10 @@
 
 /*
  * Support routines for SECItem data structure.
- *
- * $Id$
  */
 
 #include "seccomon.h"
 #include "secitem.h"
-#include "base64.h"
 #include "secerr.h"
 #include "secport.h"
 
@@ -360,7 +357,8 @@ loser:
     return(NULL);
 }
 
-void secitem_FreeArray(SECItemArray *array, PRBool zero_items, PRBool freeit)
+static void
+secitem_FreeArray(SECItemArray *array, PRBool zero_items, PRBool freeit)
 {
     unsigned int i;
 
@@ -378,6 +376,9 @@ void secitem_FreeArray(SECItemArray *array, PRBool zero_items, PRBool freeit)
             }
         }
     }
+    PORT_Free(array->items);
+    array->items = NULL;
+    array->len = 0;
 
     if (freeit)
         PORT_Free(array);

@@ -196,8 +196,8 @@ js::ObjectImpl::checkShapeConsistency()
 
     MOZ_ASSERT(isNative());
 
-    RawShape shape = lastProperty();
-    RawShape prev = NULL;
+    Shape *shape = lastProperty();
+    Shape *prev = NULL;
 
     if (inDictionaryMode()) {
         MOZ_ASSERT(shape->hasTable());
@@ -294,7 +294,7 @@ js::ObjectImpl::slotInRange(uint32_t slot, SentinelAllowed sentinel) const
  */
 MOZ_NEVER_INLINE
 #endif
-RawShape
+Shape *
 js::ObjectImpl::nativeLookup(JSContext *cx, jsid id)
 {
     MOZ_ASSERT(isNative());
@@ -643,9 +643,8 @@ js::GetProperty(JSContext *cx, Handle<ObjectImpl*> obj, Handle<ObjectImpl*> rece
             return false;
         }
 
-        PropDesc desc;
-        PropDesc::AutoRooter rootDesc(cx, &desc);
-        if (!GetOwnProperty(cx, current, pid, resolveFlags, &desc))
+        AutoPropDescRooter desc(cx);
+        if (!GetOwnProperty(cx, current, pid, resolveFlags, &desc.getPropDesc()))
             return false;
 
         /* No property?  Recur or bottom out. */

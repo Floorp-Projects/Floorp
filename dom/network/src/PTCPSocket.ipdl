@@ -11,11 +11,8 @@ include "mozilla/net/NeckoMessageUtils.h";
 
 using mozilla::void_t;
 
-struct JSError {
-  nsString message;
-  nsString filename;
-  uint32_t lineNumber;
-  uint32_t columnNumber;
+struct TCPError {
+  nsString name;
 };
 
 union SendableData {
@@ -26,7 +23,7 @@ union SendableData {
 union CallbackData {
   void_t;
   SendableData;
-  JSError;
+  TCPError;
 };
 
 namespace mozilla {

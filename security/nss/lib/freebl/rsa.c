@@ -4,8 +4,6 @@
 
 /*
  * RSA key generation, public key op, private key op.
- *
- * $Id$
  */
 #ifdef FREEBL_NO_DEPEND
 #include "stubs.h"

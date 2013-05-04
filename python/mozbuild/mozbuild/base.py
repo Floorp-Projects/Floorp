@@ -202,7 +202,7 @@ class MozbuildObject(ProcessExecutionMixin):
             srcdir=False, allow_parallel=True, line_handler=None,
             append_env=None, explicit_env=None, ignore_errors=False,
             ensure_exit_code=0, silent=True, print_directory=True,
-            pass_thru=False):
+            pass_thru=False, num_jobs=0):
         """Invoke make.
 
         directory -- Relative directory to look for Makefile in.
@@ -226,7 +226,10 @@ class MozbuildObject(ProcessExecutionMixin):
             args.extend(['-f', filename])
 
         if allow_parallel:
-            args.append('-j%d' % multiprocessing.cpu_count())
+            if num_jobs > 0:
+                args.append('-j%d' % num_jobs)
+            else:
+                args.append('-j%d' % multiprocessing.cpu_count())
 
         if ignore_errors:
             args.append('-k')

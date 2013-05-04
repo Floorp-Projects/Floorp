@@ -5,10 +5,6 @@
 #ifndef BASE_H
 #define BASE_H
 
-#ifdef DEBUG
-static const char BASE_CVS_ID[] = "@(#) $RCSfile$ $Revision$ $Date$";
-#endif /* DEBUG */
-
 /*
  * base.h
  *

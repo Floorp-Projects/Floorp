@@ -5,10 +5,6 @@
 #ifndef PKITM_H
 #define PKITM_H
 
-#ifdef DEBUG
-static const char PKITM_CVS_ID[] = "@(#) $RCSfile$ $Revision$ $Date$";
-#endif /* DEBUG */
-
 /*
  * pkitm.h
  *

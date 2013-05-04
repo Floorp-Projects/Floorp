@@ -300,11 +300,11 @@ function sendData() {
 function sendBig() {
   var yays = makeJointSuccess(['serverdata', 'clientdrain']),
       amount = 0;
-      
+
   server.ondata = function (data) {
     amount += data.length;
     if (amount === BIG_TYPED_ARRAY.length) {
-      yays.serverdata();      
+      yays.serverdata();
     }
   };
   sock.ondrain = function(evt) {
@@ -379,21 +379,25 @@ function bufferedClose() {
  * Connect to a port we know is not listening so an error is assured,
  * and make sure that onerror and onclose are fired on the client side.
  */
- 
+
 function badConnect() {
   // There's probably nothing listening on tcp port 2.
   sock = TCPSocket.open('127.0.0.1', 2);
 
   sock.onopen = makeFailureCase('open');
   sock.ondata = makeFailureCase('data');
-  sock.onclose = makeFailureCase('close');
 
   let success = makeSuccessCase('error');
-  sock.onerror = function(data) {
-    do_check_neq(data.data.message, '');
-    do_check_neq(data.data.fileName, '');
-    do_check_neq(data.data.lineNumber, 0);
-    success();
+  let gotError = false;
+  sock.onerror = function(event) {
+    do_check_eq(event.data.name, 'ConnectionRefusedError');
+    gotError = true;
+  };
+  sock.onclose = function() {
+    if (!gotError)
+      do_throw('got close without error!');
+    else
+      success();
   };
 }
 
@@ -505,7 +509,7 @@ add_test(cleanup);
 function run_test() {
   if (!gInChild)
     Services.prefs.setBoolPref('dom.mozTCPSocket.enabled', true);
-  
+
   server = new TestServer();
 
   run_next_test();

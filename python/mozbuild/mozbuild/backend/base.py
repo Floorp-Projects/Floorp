@@ -71,8 +71,9 @@ class BackendConsumeSummary(object):
 
     @property
     def total_summary(self):
+        efficiency_value = self.cpu_time / self.wall_time if self.wall_time else 100
         return 'Total wall time: {:.2f}s; CPU time: {:.2f}s; Efficiency: {:.0%}'.format(
-            self.wall_time, self.cpu_time, self.cpu_time / self.wall_time)
+            self.wall_time, self.cpu_time, efficiency_value)
 
     def summaries(self):
         yield self.reader_summary

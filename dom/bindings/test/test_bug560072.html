@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=560072
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 560072</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=560072">Mozilla Bug 560072</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 560072 **/
+is(document.body,
+   Object.getOwnPropertyDescriptor(HTMLDocument.prototype, "body").get.call(document),
+   "Should get body out of property descriptor");
+
+is(document.body,
+   Object.getOwnPropertyDescriptor(Object.getPrototypeOf(document), "body").get.call(document),
+   "Should get body out of property descriptor this way too");
+
+</script>
+</pre>
+</body>
+</html>

@@ -541,6 +541,17 @@ nsWindow::GetDPI()
     return NativeWindow()->xdpi;
 }
 
+double
+nsWindow::GetDefaultScaleInternal()
+{
+    double rawscale = GetDPI() / 192.0;
+    if (rawscale < 1.25)
+        return 1;
+    else if (rawscale < 1.75)
+        return 1.5;
+    return 2;
+}
+
 LayerManager *
 nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
                           LayersBackend aBackendHint,

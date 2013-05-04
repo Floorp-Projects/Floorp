@@ -37,15 +37,19 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
-  virtual bool SupportsMediaStreams() const MOZ_OVERRIDE
-  {
-    return true;
-  }
-
   virtual void Connect(AudioNode& aDestination, uint32_t aOutput,
                        uint32_t aInput, ErrorResult& aRv) MOZ_OVERRIDE
   {
     AudioNode::Connect(aDestination, aOutput, aInput, aRv);
+    if (!aRv.Failed()) {
+      mPlayingRef.Take(this);
+    }
+  }
+
+  virtual void Connect(AudioParam& aDestination, uint32_t aOutput,
+                       ErrorResult& aRv) MOZ_OVERRIDE
+  {
+    AudioNode::Connect(aDestination, aOutput, aRv);
     if (!aRv.Failed()) {
       mPlayingRef.Take(this);
     }

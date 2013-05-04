@@ -74,6 +74,7 @@ NS_IMPL_ISUPPORTS_INHERITED1(PuppetWidget, nsBaseWidget,
 PuppetWidget::PuppetWidget(TabChild* aTabChild)
   : mTabChild(aTabChild)
   , mDPI(-1)
+  , mDefaultScale(-1)
 {
   MOZ_COUNT_CTOR(PuppetWidget);
 }
@@ -632,6 +633,20 @@ PuppetWidget::GetDPI()
   }
 
   return mDPI;
+}
+
+double
+PuppetWidget::GetDefaultScaleInternal()
+{
+  if (mDefaultScale < 0) {
+    if (mTabChild) {
+      mTabChild->GetDefaultScale(&mDefaultScale);
+    } else {
+      mDefaultScale = 1;
+    }
+  }
+
+  return mDefaultScale;
 }
 
 void*

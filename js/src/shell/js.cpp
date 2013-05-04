@@ -984,7 +984,7 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
         if (!JSVAL_IS_VOID(v)) {
             global = JSVAL_IS_PRIMITIVE(v) ? NULL : JSVAL_TO_OBJECT(v);
             if (global) {
-                global = JS_UnwrapObject(global);
+                global = js::UncheckedUnwrap(global);
                 if (!global)
                     return false;
             }
@@ -1403,7 +1403,7 @@ AssertEq(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
-static RawScript
+static JSScript *
 ValueToScript(JSContext *cx, jsval v, JSFunction **funp = NULL)
 {
     RootedFunction fun(cx, JS_ValueToFunction(cx, v));
@@ -1485,7 +1485,7 @@ GetScriptAndPCArgs(JSContext *cx, unsigned argc, jsval *argv, MutableHandleScrip
 }
 
 static JSTrapStatus
-TrapHandler(JSContext *cx, RawScript, jsbytecode *pc, jsval *rvalArg,
+TrapHandler(JSContext *cx, JSScript *, jsbytecode *pc, jsval *rvalArg,
             jsval closure)
 {
     JSString *str = JSVAL_TO_STRING(closure);
@@ -1558,7 +1558,7 @@ Untrap(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static JSTrapStatus
-DebuggerAndThrowHandler(JSContext *cx, RawScript script, jsbytecode *pc, jsval *rval,
+DebuggerAndThrowHandler(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval,
                         void *closure)
 {
     return TrapHandler(cx, script, pc, rval, STRING_TO_JSVAL((JSString *)closure));
@@ -1862,7 +1862,7 @@ DisassembleScript(JSContext *cx, HandleScript script, HandleFunction fun, bool l
     if (recursive && script->hasObjects()) {
         ObjectArray *objects = script->objects();
         for (unsigned i = 0; i != objects->length; ++i) {
-            RawObject obj = objects->vector[i];
+            JSObject *obj = objects->vector[i];
             if (obj->isFunction()) {
                 Sprint(sp, "\n");
                 RootedFunction f(cx, obj->toFunction());

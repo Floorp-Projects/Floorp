@@ -4,8 +4,6 @@
 
 /*
  * Test program to mangle 1 bit in a binary
- *
- * $Id$
  */
 
 #include "nspr.h"

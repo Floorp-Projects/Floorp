@@ -21,6 +21,11 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(AudioBufferSourceNode)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mBuffer)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPlaybackRate)
   if (tmp->Context()) {
+    // AudioNode's Unlink implementation disconnects us from the graph
+    // too, but we need to do this right here to make sure that
+    // UnregisterAudioBufferSourceNode can properly untangle us from
+    // the possibly connected PannerNodes.
+    tmp->DisconnectFromGraph();
     tmp->Context()->UnregisterAudioBufferSourceNode(tmp);
   }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END_INHERITED(AudioNode)
@@ -304,12 +309,12 @@ public:
              mSampleRate == IdealAudioRate());
   }
 
-  void UpdateSampleRateIfNeeded(AudioNodeStream* aStream)
+  void UpdateSampleRateIfNeeded(AudioNodeStream* aStream, uint32_t aChannels)
   {
     if (mPlaybackRateTimeline.HasSimpleValue()) {
       mPlaybackRate = mPlaybackRateTimeline.GetValue();
     } else {
-      mPlaybackRate = mPlaybackRateTimeline.GetValueAtTime<TrackTicks>(aStream->GetCurrentPosition());
+      mPlaybackRate = mPlaybackRateTimeline.GetValueAtTime(aStream->GetCurrentPosition());
     }
 
     // Make sure the playback rate if something our resampler can work with.
@@ -319,7 +324,7 @@ public:
 
     uint32_t currentOutSampleRate, currentInSampleRate;
     if (ShouldResample()) {
-      SpeexResamplerState* resampler = Resampler(mChannels);
+      SpeexResamplerState* resampler = Resampler(aChannels);
       speex_resampler_get_rate(resampler, &currentInSampleRate, &currentOutSampleRate);
       uint32_t finalSampleRate = ComputeFinalOutSampleRate();
       if (currentOutSampleRate != finalSampleRate) {
@@ -345,7 +350,7 @@ public:
     // WebKit treats the playbackRate as a k-rate parameter in their code,
     // despite the spec saying that it should be an a-rate parameter. We treat
     // it as k-rate. Spec bug: https://www.w3.org/Bugs/Public/show_bug.cgi?id=21592
-    UpdateSampleRateIfNeeded(aStream);
+    UpdateSampleRateIfNeeded(aStream, channels);
 
     uint32_t written = 0;
     TrackTicks currentPosition = GetPosition(aStream);
@@ -412,7 +417,6 @@ AudioBufferSourceNode::AudioBufferSourceNode(AudioContext* aContext)
   , mOffset(0.0)
   , mDuration(std::numeric_limits<double>::min())
   , mPlaybackRate(new AudioParam(this, SendPlaybackRateToStream, 1.0f))
-  , mPannerNode(nullptr)
   , mLoop(false)
   , mStartCalled(false)
   , mOffsetAndDurationRemembered(false)

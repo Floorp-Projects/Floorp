@@ -93,23 +93,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=570341
         }
       }
     }
-    try {
-      SpecialPowers.setBoolPref('dom.enable_performance', wasEnabled);
-    } catch (err) {
-      todo(false, 'Exception in SpecialPowers: ' + err + ' at ' + err.stack);
-    }
 
     SimpleTest.finish()
   }
 
 window.onload = function() {
-  try {
-    wasEnabled = SpecialPowers.getBoolPref('dom.enable_performance');
-  } catch (err) {
-    todo(false, 'Exception in SpecialPowers: ' + err + ' at ' + err.stack);
-  }
-  SpecialPowers.setBoolPref('dom.enable_performance', true);
-
   var win = frames[0];
   win.addEventListener('unload', function(){
     unload = Date.now();

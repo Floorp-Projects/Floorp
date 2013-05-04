@@ -245,8 +245,13 @@ WEBRTC_VIDEO_CAPTURE_JAVA_FILES = \
   VideoCaptureDeviceInfoAndroid.java \
   $(NULL)
 
+WEBRTC_AUDIO_CAPTURE_JAVA_FILES = \
+  WebRTCAudioDevice.java \
+  $(NULL)
+
 WEBRTC_JAVA_FILES = \
   $(addprefix $(DEPTH)/media/webrtc/trunk/webrtc/modules/video_capture/android/java/org/webrtc/videoengine/, $(WEBRTC_VIDEO_CAPTURE_JAVA_FILES)) \
+  $(addprefix $(DEPTH)/media/webrtc/trunk/webrtc/modules/audio_device/android/org/webrtc/voiceengine/, $(WEBRTC_AUDIO_CAPTURE_JAVA_FILES)) \
   $(NULL)
 endif
 

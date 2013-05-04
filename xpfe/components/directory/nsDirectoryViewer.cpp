@@ -160,7 +160,7 @@ nsHTTPIndex::OnFTPControlLog(bool server, const char *msg)
     AutoPushJSContext cx(context->GetNativeContext());
     NS_ENSURE_TRUE(cx, NS_OK);
 
-    JSObject* global = JS_GetGlobalObject(cx);
+    JS::Rooted<JSObject*> global(cx, JS_GetGlobalObject(cx));
     NS_ENSURE_TRUE(global, NS_OK);
 
     JS::Value params[2];
@@ -173,13 +173,13 @@ nsHTTPIndex::OnFTPControlLog(bool server, const char *msg)
 
     params[0] = BOOLEAN_TO_JSVAL(server);
     params[1] = STRING_TO_JSVAL(jsMsgStr);
-    
+
     JS::Value val;
     JS_CallFunctionName(cx,
-                        global, 
+                        global,
                         "OnFTPControlLog",
-                        2, 
-                        params, 
+                        2,
+                        params,
                         &val);
     return NS_OK;
 }
@@ -236,7 +236,7 @@ nsHTTPIndex::OnStartRequest(nsIRequest *request, nsISupports* aContext)
     NS_ENSURE_TRUE(context, NS_ERROR_FAILURE);
 
     AutoPushJSContext cx(context->GetNativeContext());
-    JSObject* global = JS_GetGlobalObject(cx);
+    JS::Rooted<JSObject*> global(cx, JS_GetGlobalObject(cx));
 
     // Using XPConnect, wrap the HTTP index object...
     static NS_DEFINE_CID(kXPConnectCID, NS_XPCONNECT_CID);
@@ -253,17 +253,17 @@ nsHTTPIndex::OnStartRequest(nsIRequest *request, nsISupports* aContext)
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to xpconnect-wrap http-index");
     if (NS_FAILED(rv)) return rv;
 
-    JSObject* jsobj;
-    rv = wrapper->GetJSObject(&jsobj);
+    JS::Rooted<JSObject*> jsobj(cx);
+    rv = wrapper->GetJSObject(jsobj.address());
     NS_ASSERTION(NS_SUCCEEDED(rv),
                  "unable to get jsobj from xpconnect wrapper");
     if (NS_FAILED(rv)) return rv;
 
-    JS::Value jslistener = OBJECT_TO_JSVAL(jsobj);
+    JS::Rooted<JS::Value> jslistener(cx, OBJECT_TO_JSVAL(jsobj));
 
     // ...and stuff it into the global context
     JSAutoRequest ar(cx);
-    bool ok = JS_SetProperty(cx, global, "HTTPIndex", &jslistener);
+    bool ok = JS_SetProperty(cx, global, "HTTPIndex", jslistener.address());
     NS_ASSERTION(ok, "unable to set Listener property");
     if (!ok)
       return NS_ERROR_FAILURE;

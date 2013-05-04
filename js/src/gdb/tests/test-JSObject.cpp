@@ -12,8 +12,8 @@ FRAGMENT(JSObject, simple) {
 
   JSObject &plainRef = *plain;
   JSFunction &funcRef = *funcPtr;
-  js::RawObject plainRaw = plain;
-  js::RawObject funcRaw = func;
+  JSObject *plainRaw = plain;
+  JSObject *funcRaw = func;
 
   breakpoint();
 
@@ -30,7 +30,7 @@ FRAGMENT(JSObject, simple) {
 
 FRAGMENT(JSObject, null) {
   JS::Rooted<JSObject *> null(cx, NULL);
-  js::RawObject nullRaw = null;
+  JSObject *nullRaw = null;
 
   breakpoint();
 

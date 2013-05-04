@@ -49,7 +49,7 @@ class BaselineInspector
     ICEntry *prevLookedUpEntry;
 
   public:
-    BaselineInspector(JSContext *cx, RawScript rawScript)
+    BaselineInspector(JSContext *cx, JSScript *rawScript)
       : script(cx, rawScript), prevLookedUpEntry(NULL)
     {
         JS_ASSERT(script);

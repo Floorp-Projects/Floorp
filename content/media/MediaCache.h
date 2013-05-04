@@ -331,9 +331,7 @@ public:
 
   // Returns true when all streams for this resource are suspended or their
   // channel has ended.
-  // If aActiveResource is non-null, fills it with a pointer to a stream
-  // for this resource that is not suspended or ended.
-  bool AreAllStreamsForResourceSuspended(MediaResource** aActiveResource);
+  bool AreAllStreamsForResourceSuspended();
 
   // These methods must be called on a different thread from the main
   // thread. They should always be called on the same thread for a given

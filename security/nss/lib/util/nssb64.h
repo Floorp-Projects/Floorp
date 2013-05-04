@@ -4,8 +4,6 @@
 
 /*
  * Public prototypes for base64 encoding/decoding.
- *
- * $Id$
  */
 #ifndef _NSSB64_H_
 #define _NSSB64_H_

@@ -1017,7 +1017,11 @@ mjit::Compiler::inlineNativeFunction(uint32_t argc, bool callingNew)
                                       types::OBJECT_FLAG_LENGTH_OVERFLOW) &&
             !types::ArrayPrototypeHasIndexedProperty(cx, outerScript))
         {
-            return compileArrayConcat(thisTypes, argTypes, thisValue, arg);
+            // Don't inline if 'this' is packed and the argument may not be packed.
+            bool argPacked = !argTypes->hasObjectFlags(cx, types::OBJECT_FLAG_NON_PACKED);
+            bool thisPacked = !thisTypes->hasObjectFlags(cx, types::OBJECT_FLAG_NON_PACKED);
+            if (!(thisPacked && !argPacked))
+                return compileArrayConcat(thisTypes, argTypes, thisValue, arg);
         }
     } else if (argc == 2) {
         FrameEntry *arg1 = frame.peek(-2);

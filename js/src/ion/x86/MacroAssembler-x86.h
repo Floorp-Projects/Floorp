@@ -456,6 +456,10 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         cmpl(Operand(lhs), rhs);
         j(cond, label);
     }
+    void branch32(Condition cond, const AbsoluteAddress &lhs, Register rhs, Label *label) {
+        cmpl(Operand(lhs), rhs);
+        j(cond, label);
+    }
 
     template <typename T, typename S>
     void branchPtr(Condition cond, T lhs, S ptr, Label *label) {

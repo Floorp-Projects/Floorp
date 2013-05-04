@@ -247,8 +247,8 @@ assertEq(f(-5,false), 1);
 
 assertAsmTypeFail('glob','imp','b', USE_ASM + HEAP_IMPORTS + "function f() { return (i32[0]+1)|0 } return f");
 assertAsmTypeFail('glob','imp','b', USE_ASM + HEAP_IMPORTS + "function f() { return +(f64[0] + 1.0); } return f");
+assertAsmTypeFail('glob','imp','b', USE_ASM + HEAP_IMPORTS + "function f() { return +(f64[0] - 1.0); } return f");
 new Float64Array(BUF_64KB)[0] = 2.3;
-assertEq(asmLink(asmCompile('glob','imp','b', USE_ASM + HEAP_IMPORTS + "function f() { return +(f64[0] - 1.0) } return f"), this, null, BUF_64KB)(), 2.3-1);
 assertEq(asmLink(asmCompile('glob','imp','b', USE_ASM + HEAP_IMPORTS + "function f() { return +(f64[0] * 2.0) } return f"), this, null, BUF_64KB)(), 2.3*2);
 assertEq(asmLink(asmCompile('glob','imp','b', USE_ASM + HEAP_IMPORTS + "function f() { return +(f64[0] / 2.0) } return f"), this, null, BUF_64KB)(), 2.3/2);
 assertEq(asmLink(asmCompile('glob','imp','b', USE_ASM + HEAP_IMPORTS + "function f() { return +(f64[0] % 2.0) } return f"), this, null, BUF_64KB)(), 2.3%2);
@@ -273,7 +273,7 @@ assertEq(asmLink(asmCompile(USE_ASM + "function f() { return (4 | (!2))|0 } retu
 
 // get that order-of-operations right!
 var buf = new ArrayBuffer(4096);
-asmLink(asmCompile('glob','imp','buf', USE_ASM + "var i32=new glob.Int32Array(buf); var x=0; function a() { return x|0 } function b() { x=42; return 0 } function f() { i32[(b() & 0x3) >> 2] = a() } return f"), this, null, buf)();
+asmLink(asmCompile('glob','imp','buf', USE_ASM + "var i32=new glob.Int32Array(buf); var x=0; function a() { return x|0 } function b() { x=42; return 0 } function f() { i32[(b() & 0x3) >> 2] = a()|0 } return f"), this, null, buf)();
 assertEq(new Int32Array(buf)[0], 42);
 
 assertEq(asmLink(asmCompile(USE_ASM + "function f() { var a=0,i=0; for (; ~~i!=4; i=(i+1)|0) { a = (a*5)|0; if (+(a>>>0) != 0.0) return 1; } return 0; } return f"))(), 0)

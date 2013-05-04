@@ -296,6 +296,12 @@ public:
 
   // Get the current MediaResource being used. Its URI will be returned
   // by currentSrc. Returns what was passed to Load(), if Load() has been called.
+  // Note: The MediaResource is refcounted, but it outlives the MediaDecoder,
+  // so it's OK to use the reference returned by this function without
+  // refcounting, *unless* you need to store and use the reference after the
+  // MediaDecoder has been destroyed. You might need to do this if you're
+  // wrapping the MediaResource in some kind of byte stream interface to be
+  // passed to a platform decoder.
   MediaResource* GetResource() const MOZ_FINAL MOZ_OVERRIDE
   {
     return mResource;

@@ -46,12 +46,12 @@ namespace js {
 
 /* Create a dense array with no capacity allocated, length set to 0. */
 extern JSObject * JS_FASTCALL
-NewDenseEmptyArray(JSContext *cx, RawObject proto = NULL,
+NewDenseEmptyArray(JSContext *cx, JSObject *proto = NULL,
                    NewObjectKind newKind = GenericObject);
 
 /* Create a dense array with length and capacity == 'length', initialized length set to 0. */
 extern JSObject * JS_FASTCALL
-NewDenseAllocatedArray(JSContext *cx, uint32_t length, RawObject proto = NULL,
+NewDenseAllocatedArray(JSContext *cx, uint32_t length, JSObject *proto = NULL,
                        NewObjectKind newKind = GenericObject);
 
 /*
@@ -59,16 +59,16 @@ NewDenseAllocatedArray(JSContext *cx, uint32_t length, RawObject proto = NULL,
  * contents. This is useful, e.g., when accepting length from the user.
  */
 extern JSObject * JS_FASTCALL
-NewDenseUnallocatedArray(JSContext *cx, uint32_t length, RawObject proto = NULL,
+NewDenseUnallocatedArray(JSContext *cx, uint32_t length, JSObject *proto = NULL,
                          NewObjectKind newKind = GenericObject);
 
 /* Create a dense array with a copy of the dense array elements in src. */
 extern JSObject *
-NewDenseCopiedArray(JSContext *cx, uint32_t length, HandleObject src, uint32_t elementOffset, RawObject proto = NULL);
+NewDenseCopiedArray(JSContext *cx, uint32_t length, HandleObject src, uint32_t elementOffset, JSObject *proto = NULL);
 
 /* Create a dense array from the given array values, which must be rooted */
 extern JSObject *
-NewDenseCopiedArray(JSContext *cx, uint32_t length, const Value *values, RawObject proto = NULL,
+NewDenseCopiedArray(JSContext *cx, uint32_t length, const Value *values, JSObject *proto = NULL,
                     NewObjectKind newKind = GenericObject);
 
 /*
@@ -88,7 +88,7 @@ extern bool
 CanonicalizeArrayLengthValue(JSContext *cx, HandleValue v, uint32_t *canonicalized);
 
 /* Get the common shape used by all dense arrays with a prototype at globalObj. */
-extern RawShape
+extern Shape *
 GetDenseArrayShape(JSContext *cx, HandleObject globalObj);
 
 extern JSBool

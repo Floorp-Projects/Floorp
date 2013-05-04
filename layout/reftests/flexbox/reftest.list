@@ -224,3 +224,7 @@ fuzzy-if(gtk2Widget,1,66) == flexbox-widget-flex-items-1.html flexbox-widget-fle
 fuzzy-if(gtk2Widget,1,74) == flexbox-widget-flex-items-2.html flexbox-widget-flex-items-2-ref.html
 fuzzy-if(gtk2Widget,1,58) == flexbox-widget-flex-items-3.html flexbox-widget-flex-items-3-ref.html
 fuzzy-if(gtk2Widget,1,31) == flexbox-widget-flex-items-4.html flexbox-widget-flex-items-4-ref.html
+
+# Tests for flex containers with pseudo-elements
+== flexbox-with-pseudo-elements-1.html flexbox-with-pseudo-elements-1-ref.html
+== flexbox-with-pseudo-elements-2.html flexbox-with-pseudo-elements-2-ref.html

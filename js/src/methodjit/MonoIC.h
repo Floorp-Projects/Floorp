@@ -115,7 +115,7 @@ struct SetGlobalNameIC : public GlobalNameIC
     /* SET only. */
     ValueRemat vr;              /* RHS value. */
 
-    void patchInlineShapeGuard(Repatcher &repatcher, RawShape shape);
+    void patchInlineShapeGuard(Repatcher &repatcher, Shape *shape);
 };
 
 void JS_FASTCALL GetGlobalName(VMFrame &f, ic::GetGlobalNameIC *ic);

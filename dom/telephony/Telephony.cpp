@@ -296,14 +296,14 @@ Telephony::GetActive(JS::Value* aActive)
   nsresult rv;
   nsIScriptContext* sc = GetContextForEventHandlers(&rv);
   NS_ENSURE_SUCCESS(rv, rv);
-  AutoPushJSContext cx(sc ? sc->GetNativeContext() : nullptr);
-  if (sc) {
-    rv =
-      nsContentUtils::WrapNative(cx, sc->GetNativeGlobal(),
-                                 mActiveCall->ToISupports(), aActive);
-    NS_ENSURE_SUCCESS(rv, rv);
+  if (!sc) {
+    return NS_OK;
   }
-  return NS_OK;
+
+  AutoPushJSContext cx(sc->GetNativeContext());
+  JS::Rooted<JSObject*> global(cx, sc->GetNativeGlobal());
+  return nsContentUtils::WrapNative(cx, global, mActiveCall->ToISupports(),
+                                    aActive);
 }
 
 NS_IMETHODIMP
