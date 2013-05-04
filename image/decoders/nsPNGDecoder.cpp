@@ -287,7 +287,7 @@ nsPNGDecoder::WriteInternal(const char *aBuffer, uint32_t aCount)
       return;
 
     // Scan the header for the width and height bytes
-    PRUint32 pos = 0;
+    uint32_t pos = 0;
     const uint8_t *bptr = (uint8_t *)aBuffer;
 
     while (pos < aCount && mHeaderBytesRead < BYTES_NEEDED_FOR_DIMENSIONS) {
@@ -312,8 +312,8 @@ nsPNGDecoder::WriteInternal(const char *aBuffer, uint32_t aCount)
     if (mHeaderBytesRead == BYTES_NEEDED_FOR_DIMENSIONS) {
 
       // Grab the width and height, accounting for endianness (thanks libpng!)
-      PRUint32 width = png_get_uint_32(mSizeBytes);
-      PRUint32 height = png_get_uint_32(mSizeBytes + 4);
+      uint32_t width = png_get_uint_32(mSizeBytes);
+      uint32_t height = png_get_uint_32(mSizeBytes + 4);
 
       // Too big?
       if ((width > MOZ_PNG_MAX_DIMENSION) || (height > MOZ_PNG_MAX_DIMENSION)) {
