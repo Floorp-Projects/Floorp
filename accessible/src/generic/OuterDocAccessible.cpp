@@ -7,7 +7,7 @@
 
 #include "Accessible-inl.h"
 #include "nsAccUtils.h"
-#include "DocAccessible.h"
+#include "DocAccessible-inl.h"
 #include "Role.h"
 #include "States.h"
 
@@ -109,22 +109,25 @@ OuterDocAccessible::Shutdown()
 {
   // XXX: sometimes outerdoc accessible is shutdown because of layout style
   // change however the presshell of underlying document isn't destroyed and
-  // the document doesn't get pagehide events. Shutdown underlying document if
-  // any to avoid hanging document accessible.
+  // the document doesn't get pagehide events. Schedule a document rebind
+  // to its parent document. Otherwise a document accessible may be lost if its
+  // outerdoc has being recreated (see bug 862863 for details).
+
 #ifdef A11Y_LOG
   if (logging::IsEnabled(logging::eDocDestroy))
     logging::OuterDocDestroy(this);
 #endif
 
-  Accessible* childAcc = mChildren.SafeElementAt(0, nullptr);
-  if (childAcc) {
+  Accessible* child = mChildren.SafeElementAt(0, nullptr);
+  if (child) {
 #ifdef A11Y_LOG
     if (logging::IsEnabled(logging::eDocDestroy)) {
-      logging::DocDestroy("outerdoc's child document shutdown",
-                          childAcc->AsDoc()->DocumentNode());
+      logging::DocDestroy("outerdoc's child document rebind is scheduled",
+                          child->AsDoc()->DocumentNode());
     }
 #endif
-    childAcc->Shutdown();
+    RemoveChild(child);
+    mDoc->BindChildDocument(child->AsDoc());
   }
 
   AccessibleWrap::Shutdown();
