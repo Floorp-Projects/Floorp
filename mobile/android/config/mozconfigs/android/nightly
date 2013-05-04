@@ -11,6 +11,7 @@ ac_add_options --with-android-gnu-compiler-version=4.6
 ac_add_options --with-android-version=9
 ac_add_options --with-system-zlib
 ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
+ac_add_options --enable-profiling
 
 export JAVA_HOME=/tools/jdk6
 export MOZILLA_OFFICIAL=1

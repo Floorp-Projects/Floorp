@@ -381,7 +381,7 @@ struct IonScript
     size_t safepointsSize() const {
         return safepointsSize_;
     }
-    RawScript getScript(size_t i) const {
+    JSScript *getScript(size_t i) const {
         JS_ASSERT(i < scriptEntries_);
         return scriptList()[i];
     }

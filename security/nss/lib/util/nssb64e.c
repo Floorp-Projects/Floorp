@@ -4,8 +4,6 @@
 
 /*
  * Base64 encoding (binary to ascii).
- *
- * $Id$
  */
 
 #include "nssb64.h"

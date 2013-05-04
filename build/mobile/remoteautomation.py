@@ -74,7 +74,7 @@ class RemoteAutomation(Automation):
         status = proc.wait(timeout = maxTime)
         self.lastTestSeen = proc.getLastTestSeen
 
-        if (status == 1 and self._devicemanager.processExist(proc.procName)):
+        if (status == 1 and self._devicemanager.getTopActivity() == proc.procName):
             # Then we timed out, make sure Fennec is dead
             if maxTime:
                 print "TEST-UNEXPECTED-FAIL | %s | application ran for longer than " \
@@ -269,7 +269,7 @@ class RemoteAutomation(Automation):
             if timeout == None:
                 timeout = self.timeout
 
-            while (self.dm.processExist(self.procName)):
+            while (self.dm.getTopActivity() == self.procName):
                 t = self.stdout
                 if t != '': print t
                 time.sleep(interval)

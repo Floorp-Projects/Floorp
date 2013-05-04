@@ -191,7 +191,7 @@ class SetPropCompiler : public PICStubCompiler
         repatcher.relink(pic.slowPathCall, target);
     }
 
-    LookupStatus patchInline(RawShape shape)
+    LookupStatus patchInline(Shape *shape)
     {
         JS_ASSERT(!pic.inlinePathPatched);
         JaegerSpew(JSpew_PICs, "patch setprop inline at %p\n", pic.fastPathStart.executableAddress());
@@ -1010,7 +1010,7 @@ class GetPropCompiler : public PICStubCompiler
         return Lookup_Cacheable;
     }
 
-    LookupStatus patchInline(JSObject *holder, RawShape shape)
+    LookupStatus patchInline(JSObject *holder, Shape *shape)
     {
         spew("patch", "inline");
         Repatcher repatcher(f.chunk());
@@ -1045,7 +1045,7 @@ class GetPropCompiler : public PICStubCompiler
     }
 
     /* For JSPropertyOp getters. */
-    void generateGetterStub(Assembler &masm, RawShape shape, jsid userid,
+    void generateGetterStub(Assembler &masm, Shape *shape, jsid userid,
                             Label start, Vector<Jump, 8> &shapeMismatches)
     {
         /*
@@ -1155,7 +1155,7 @@ class GetPropCompiler : public PICStubCompiler
     }
 
     /* For getters backed by a JSNative. */
-    void generateNativeGetterStub(Assembler &masm, RawShape shape,
+    void generateNativeGetterStub(Assembler &masm, Shape *shape,
                                   Label start, Vector<Jump, 8> &shapeMismatches)
     {
        /*
@@ -1657,7 +1657,7 @@ class ScopeNameCompiler : public PICStubCompiler
         JS_ASSERT(obj == getprop.holder);
         JS_ASSERT(getprop.holder != &scopeChain->global());
 
-        RawShape shape = getprop.shape;
+        Shape *shape = getprop.shape;
         if (!shape->hasDefaultGetter())
             return disable("unhandled callobj sprop getter");
 
@@ -2170,7 +2170,7 @@ frameCountersOffset(VMFrame &f)
     }
 
     jsbytecode *pc;
-    RawScript script = cx->stack.currentScript(&pc);
+    JSScript *script = cx->stack.currentScript(&pc);
     offset += pc - script->code;
 
     return offset;

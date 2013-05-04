@@ -31,11 +31,6 @@ public:
     return mGain;
   }
 
-  virtual bool SupportsMediaStreams() const MOZ_OVERRIDE
-  {
-    return true;
-  }
-
 private:
   static void SendGainToStream(AudioNode* aNode);
 

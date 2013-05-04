@@ -3279,7 +3279,7 @@ Tab.prototype = {
 
         // For low-memory devices, don't allow reader mode since it takes up a lot of memory.
         // See https://bugzilla.mozilla.org/show_bug.cgi?id=792603 for details.
-        if (BrowserApp.isOnLowMemoryPlatform)
+        if (BrowserApp.isOnLowMemoryPlatform && !Services.prefs.getBoolPref("reader.force_allow"))
           return;
 
         // Once document is fully loaded, parse it
@@ -5360,7 +5360,8 @@ var PopupBlockerObserver = {
         let popupName = pageReport[i].popupWindowName;
 
         let parent = BrowserApp.selectedTab;
-        BrowserApp.addTab(popupURIspec, { parentId: parent.id });
+        let isPrivate = PrivateBrowsingUtils.isWindowPrivate(parent.browser.contentWindow);
+        BrowserApp.addTab(popupURIspec, { parentId: parent.id, isPrivate: isPrivate });
       }
     }
   }

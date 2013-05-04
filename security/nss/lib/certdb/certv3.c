@@ -4,8 +4,6 @@
 
 /*
  * Code for dealing with X509.V3 extensions.
- *
- * $Id$
  */
 
 #include "cert.h"

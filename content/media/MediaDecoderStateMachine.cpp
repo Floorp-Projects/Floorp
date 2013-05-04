@@ -3,6 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifdef XP_WIN
+// Include Windows headers required for enabling high precision timers.
+#include "Windows.h"
+#include "Mmsystem.h"
+#endif
+ 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/StandardInteger.h"
 #include "mozilla/Util.h"
@@ -421,6 +427,14 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   if (mAmpleVideoFrames < 2) {
     mAmpleVideoFrames = 2;
   }
+#ifdef XP_WIN
+  // Ensure high precision timers are enabled on Windows, otherwise the state
+  // machine thread isn't woken up at reliable intervals to set the next frame,
+  // and we drop frames while painting. Note that multiple calls to this
+  // function per-process is OK, provided each call is matched by a corresponding
+  // timeEndPeriod() call.
+  timeBeginPeriod(1);
+#endif
 }
 
 MediaDecoderStateMachine::~MediaDecoderStateMachine()
@@ -439,6 +453,9 @@ MediaDecoderStateMachine::~MediaDecoderStateMachine()
   mReader = nullptr;
  
   StateMachineTracker::Instance().CleanupGlobalStateMachine();
+#ifdef XP_WIN
+  timeEndPeriod(1);
+#endif
 }
 
 bool MediaDecoderStateMachine::HasFutureAudio() const {

@@ -442,7 +442,7 @@ private:
     // of obj (the last object on its parent chain). Callers MUST pass in a
     // non-null rv here.
     static nsIPrincipal*
-    GetFunctionObjectPrincipal(JSContext* cx, JSObject* obj, nsresult* rv);
+    GetFunctionObjectPrincipal(JSContext* cx, JS::Handle<JSObject*> obj, nsresult* rv);
 
     /**
      * Check capability levels for an |aObj| that implements

@@ -22,6 +22,7 @@ namespace mozilla {
 
 namespace dom {
 struct ThreeDPoint;
+class AudioParamTimeline;
 }
 
 class ThreadSharedFloatArrayBufferList;
@@ -49,7 +50,8 @@ public:
       mEngine(aEngine),
       mKind(aKind),
       mNumberOfInputChannels(2),
-      mMarkAsFinishedAfterThisBlock(false)
+      mMarkAsFinishedAfterThisBlock(false),
+      mAudioParamStream(false)
   {
     mMixingMode.mChannelCountMode = dom::ChannelCountMode::Max;
     mMixingMode.mChannelInterpretation = dom::ChannelInterpretation::Speakers;
@@ -74,6 +76,11 @@ public:
   void SetChannelMixingParameters(uint32_t aNumberOfChannels,
                                   dom::ChannelCountMode aChannelCountMoe,
                                   dom::ChannelInterpretation aChannelInterpretation);
+  void SetAudioParamHelperStream()
+  {
+    MOZ_ASSERT(!mAudioParamStream, "Can only do this once");
+    mAudioParamStream = true;
+  }
 
   virtual AudioNodeStream* AsAudioNodeStream() { return this; }
 
@@ -86,6 +93,14 @@ public:
   virtual void ProduceOutput(GraphTime aFrom, GraphTime aTo);
   TrackTicks GetCurrentPosition();
   bool AllInputsFinished() const;
+  bool IsAudioParamStream() const
+  {
+    return mAudioParamStream;
+  }
+  const AudioChunk& LastChunk() const
+  {
+    return mLastChunk;
+  }
 
   // Any thread
   AudioNodeEngine* Engine() { return mEngine; }
@@ -112,6 +127,8 @@ protected:
   // Whether the stream should be marked as finished as soon
   // as the current time range has been computed block by block.
   bool mMarkAsFinishedAfterThisBlock;
+  // Whether the stream is an AudioParamHelper stream.
+  bool mAudioParamStream;
 };
 
 }

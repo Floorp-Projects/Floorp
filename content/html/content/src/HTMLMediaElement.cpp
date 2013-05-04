@@ -1599,7 +1599,7 @@ HTMLMediaElement::MozGetMetadata(JSContext* cx, ErrorResult& aRv)
     return nullptr;
   }
 
-  JSObject* tags = JS_NewObject(cx, nullptr, nullptr, nullptr);
+  JS::Rooted<JSObject*> tags(cx, JS_NewObject(cx, nullptr, nullptr, nullptr));
   if (!tags) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -2088,21 +2088,47 @@ NS_IMETHODIMP HTMLMediaElement::Play()
   return rv.ErrorCode();
 }
 
-HTMLMediaElement::WakeLockBoolWrapper& HTMLMediaElement::WakeLockBoolWrapper::operator=(bool val) {
-  if (mValue == val)
+HTMLMediaElement::WakeLockBoolWrapper&
+HTMLMediaElement::WakeLockBoolWrapper::operator=(bool val) {
+  if (mValue == val) {
     return *this;
-  if (!mWakeLock && !val && mOuter) {
+  }
+
+  mValue = val;
+  UpdateWakeLock();
+  return *this;
+}
+
+void
+HTMLMediaElement::WakeLockBoolWrapper::SetCanPlay(bool aCanPlay)
+{
+  mCanPlay = aCanPlay;
+  UpdateWakeLock();
+}
+
+void
+HTMLMediaElement::WakeLockBoolWrapper::UpdateWakeLock()
+{
+  if (!mOuter) {
+    return;
+
+  }
+  bool playing = (!mValue && mCanPlay);
+
+  if (playing) {
     nsCOMPtr<nsIPowerManagerService> pmService =
       do_GetService(POWERMANAGERSERVICE_CONTRACTID);
-    NS_ENSURE_TRUE(pmService, *this);
+    NS_ENSURE_TRUE_VOID(pmService);
 
-    pmService->NewWakeLock(NS_LITERAL_STRING("Playing_media"), mOuter->OwnerDoc()->GetWindow(), getter_AddRefs(mWakeLock));
-  } else if (mWakeLock && val) {
-    mWakeLock->Unlock();
+    if (!mWakeLock) {
+      pmService->NewWakeLock(NS_LITERAL_STRING("cpu"),
+                             mOuter->OwnerDoc()->GetWindow(),
+                             getter_AddRefs(mWakeLock));
+    }
+  } else if (mWakeLock) {
+    // Wakelock 'unlocks' itself in its destructor.
     mWakeLock = nullptr;
   }
-  mValue = val;
-  return *this;
 }
 
 bool HTMLMediaElement::ParseAttribute(int32_t aNamespaceID,
@@ -2363,7 +2389,7 @@ nsresult HTMLMediaElement::InitializeDecoderAsClone(MediaDecoder* aOriginal)
     decoder->SetMediaSeekable(aOriginal->IsMediaSeekable());
   }
 
-  MediaResource* resource = originalResource->CloneData(decoder);
+  nsRefPtr<MediaResource> resource = originalResource->CloneData(decoder);
   if (!resource) {
     LOG(PR_LOG_DEBUG, ("%p Failed to cloned stream for decoder %p", this, decoder.get()));
     return NS_ERROR_FAILURE;
@@ -2395,7 +2421,7 @@ nsresult HTMLMediaElement::InitializeDecoderForChannel(nsIChannel* aChannel,
 
   LOG(PR_LOG_DEBUG, ("%p Created decoder %p for type %s", this, decoder.get(), mimeType.get()));
 
-  MediaResource* resource = MediaResource::Create(decoder, aChannel);
+  nsRefPtr<MediaResource> resource = MediaResource::Create(decoder, aChannel);
   if (!resource)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -3715,6 +3741,7 @@ void HTMLMediaElement::UpdateAudioChannelPlayingState()
     if (mPlayingThroughTheAudioChannel) {
       bool canPlay;
       mAudioChannelAgent->StartPlaying(&canPlay);
+      mPaused.SetCanPlay(canPlay);
     } else {
       mAudioChannelAgent->StopPlaying();
       mAudioChannelAgent = nullptr;
@@ -3728,6 +3755,7 @@ NS_IMETHODIMP HTMLMediaElement::CanPlayChanged(bool canPlay)
   NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
 
   UpdateChannelMuteState(canPlay);
+  mPaused.SetCanPlay(canPlay);
   return NS_OK;
 }
 

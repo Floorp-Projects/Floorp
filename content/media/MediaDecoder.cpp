@@ -409,7 +409,7 @@ MediaDecoder::~MediaDecoder()
 }
 
 nsresult MediaDecoder::OpenResource(MediaResource* aResource,
-                                        nsIStreamListener** aStreamListener)
+                                    nsIStreamListener** aStreamListener)
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (aStreamListener) {
@@ -425,7 +425,6 @@ nsresult MediaDecoder::OpenResource(MediaResource* aResource,
     nsresult rv = aResource->Open(aStreamListener);
     if (NS_FAILED(rv)) {
       LOG(PR_LOG_DEBUG, ("%p Failed to open stream!", this));
-      delete aResource;
       return rv;
     }
 
@@ -948,9 +947,7 @@ void MediaDecoder::NotifySuspendedStatusChanged()
   MOZ_ASSERT(NS_IsMainThread());
   if (!mResource)
     return;
-  MediaResource* activeStream;
-  bool suspended = mResource->IsSuspendedByCache(&activeStream);
-
+  bool suspended = mResource->IsSuspendedByCache();
   if (mOwner) {
     mOwner->NotifySuspendedByCache(suspended);
     UpdateReadyStateForData();

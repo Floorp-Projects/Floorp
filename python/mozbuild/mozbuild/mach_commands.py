@@ -21,8 +21,10 @@ from mozbuild.base import MachCommandBase
 
 BUILD_WHAT_HELP = '''
 What to build. Can be a top-level make target or a relative directory. If
-multiple options are provided, they will be built serially. BUILDING ONLY PARTS
-OF THE TREE CAN RESULT IN BAD TREE STATE. USE AT YOUR OWN RISK.
+multiple options are provided, they will be built serially. Takes dependency
+information from `topsrcdir/build/dumbmake-dependencies` to build additional
+targets as needed. BUILDING ONLY PARTS OF THE TREE CAN RESULT IN BAD TREE
+STATE. USE AT YOUR OWN RISK.
 '''.strip()
 
 FINDER_SLOW_MESSAGE = '''
@@ -45,8 +47,13 @@ class Build(MachCommandBase):
     """Interface to build the tree."""
 
     @Command('build', help='Build the tree.')
+    @CommandArgument('--jobs', '-j', default='0', metavar='jobs', type=int,
+        help='Number of concurrent jobs to run. Default is the number of CPUs.')
     @CommandArgument('what', default=None, nargs='*', help=BUILD_WHAT_HELP)
-    def build(self, what=None):
+    @CommandArgument('-X', '--disable-extra-make-dependencies',
+                     default=False, action='store_true',
+                     help='Do not add extra make dependencies.')
+    def build(self, what=None, disable_extra_make_dependencies=None, jobs=0):
         # This code is only meant to be temporary until the more robust tree
         # building code in bug 780329 lands.
         from mozbuild.compilation.warnings import WarningsCollector
@@ -87,6 +94,8 @@ class Build(MachCommandBase):
                     '|mach build| with no arguments.')
                 return 1
 
+            # Collect target pairs.
+            target_pairs = []
             for target in what:
                 path_arg = self._wrap_path_argument(target)
 
@@ -96,16 +105,36 @@ class Build(MachCommandBase):
                 if make_dir is None and make_target is None:
                     return 1
 
+                target_pairs.append((make_dir, make_target))
+
+            # Possibly add extra make depencies using dumbmake.
+            if not disable_extra_make_dependencies:
+                from dumbmake.dumbmake import (dependency_map,
+                                               add_extra_dependencies)
+                depfile = os.path.join(self.topsrcdir, 'build',
+                                       'dumbmake-dependencies')
+                with open(depfile) as f:
+                    dm = dependency_map(f.readlines())
+                new_pairs = list(add_extra_dependencies(target_pairs, dm))
+                self.log(logging.DEBUG, 'dumbmake',
+                         {'target_pairs': target_pairs,
+                          'new_pairs': new_pairs},
+                         'Added extra dependencies: will build {new_pairs} ' +
+                         'instead of {target_pairs}.')
+                target_pairs = new_pairs
+
+            # Build target pairs.
+            for make_dir, make_target in target_pairs:
                 status = self._run_make(directory=make_dir, target=make_target,
                     line_handler=on_line, log=False, print_directory=False,
-                    ensure_exit_code=False)
+                    ensure_exit_code=False, num_jobs=jobs)
 
                 if status != 0:
                     break
         else:
             status = self._run_make(srcdir=True, filename='client.mk',
                 line_handler=on_line, log=False, print_directory=False,
-                allow_parallel=False, ensure_exit_code=False)
+                allow_parallel=False, ensure_exit_code=False, num_jobs=jobs)
 
             self.log(logging.WARNING, 'warning_summary',
                 {'count': len(warnings_collector.database)},
@@ -291,7 +320,7 @@ class Warnings(MachCommandBase):
 @CommandProvider
 class GTestCommands(MachCommandBase):
     @Command('gtest', help='Run GTest unit tests.')
-    @CommandArgument('gtest_filter', default='*', nargs='?', metavar='gtest_filter',
+    @CommandArgument('gtest_filter', default=b"*", nargs='?', metavar='gtest_filter',
         help="test_filter is a ':'-separated list of wildcard patterns (called the positive patterns),"
              "optionally followed by a '-' and another ':'-separated pattern list (called the negative patterns).")
     @CommandArgument('--jobs', '-j', default='1', nargs='?', metavar='jobs', type=int,

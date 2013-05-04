@@ -529,7 +529,7 @@ public:
 
     // Was a backend provided?
     if (!mBackendChosen) {
-      mBackend = mManager->GetBackend();
+      mBackend = mManager->GetBackend(mWindowID);
     }
 
     // Was a device provided?
@@ -772,10 +772,12 @@ class GetUserMediaDevicesRunnable : public nsRunnable
 public:
   GetUserMediaDevicesRunnable(
     already_AddRefed<nsIGetUserMediaDevicesSuccessCallback> aSuccess,
-    already_AddRefed<nsIDOMGetUserMediaErrorCallback> aError)
+    already_AddRefed<nsIDOMGetUserMediaErrorCallback> aError,
+    uint64_t aWindowId)
     : mSuccess(aSuccess)
     , mError(aError)
     , mManager(MediaManager::GetInstance())
+    , mWindowId(aWindowId)
   {}
 
   NS_IMETHOD
@@ -786,11 +788,11 @@ public:
     uint32_t audioCount, videoCount, i;
 
     nsTArray<nsRefPtr<MediaEngineVideoSource> > videoSources;
-    mManager->GetBackend()->EnumerateVideoDevices(&videoSources);
+    mManager->GetBackend(mWindowId)->EnumerateVideoDevices(&videoSources);
     videoCount = videoSources.Length();
 
     nsTArray<nsRefPtr<MediaEngineAudioSource> > audioSources;
-    mManager->GetBackend()->EnumerateAudioDevices(&audioSources);
+    mManager->GetBackend(mWindowId)->EnumerateAudioDevices(&audioSources);
     audioCount = audioSources.Length();
 
     nsTArray<nsCOMPtr<nsIMediaDevice> > *devices =
@@ -821,6 +823,7 @@ private:
   already_AddRefed<nsIGetUserMediaDevicesSuccessCallback> mSuccess;
   already_AddRefed<nsIDOMGetUserMediaErrorCallback> mError;
   nsRefPtr<MediaManager> mManager;
+  uint64_t mWindowId;
 };
 
 MediaManager::MediaManager()
@@ -1047,7 +1050,16 @@ MediaManager::GetUserMedia(bool aPrivileged, nsPIDOMWindow* aWindow,
                                            );
   }
 
-#ifdef ANDROID
+#ifdef MOZ_WIDGET_GONK
+  if (mCameraManager == nullptr) {
+    mCameraManager = nsDOMCameraManager::CheckPermissionAndCreateInstance(aWindow);
+    if (!mCameraManager) {
+      aPrivileged = false;
+    }
+  }
+#endif
+
+#if defined(ANDROID) && !defined(MOZ_WIDGET_GONK)
   if (picture) {
     // ShowFilePickerForMimeType() must run on the Main Thread! (on Android)
     NS_DispatchToMainThread(gUMRunnable);
@@ -1113,7 +1125,7 @@ MediaManager::GetUserMediaDevices(nsPIDOMWindow* aWindow,
   nsCOMPtr<nsIDOMGetUserMediaErrorCallback> onError(aOnError);
 
   nsCOMPtr<nsIRunnable> gUMDRunnable = new GetUserMediaDevicesRunnable(
-    onSuccess.forget(), onError.forget()
+    onSuccess.forget(), onError.forget(), aWindow->WindowID()
   );
 
   nsCOMPtr<nsIThread> deviceThread;
@@ -1126,7 +1138,7 @@ MediaManager::GetUserMediaDevices(nsPIDOMWindow* aWindow,
 }
 
 MediaEngine*
-MediaManager::GetBackend()
+MediaManager::GetBackend(uint64_t aWindowId)
 {
   // Plugin backends as appropriate. The default engine also currently
   // includes picture support for Android.
@@ -1134,7 +1146,11 @@ MediaManager::GetBackend()
   MutexAutoLock lock(mMutex);
   if (!mBackend) {
 #if defined(MOZ_WEBRTC)
+  #ifndef MOZ_WIDGET_GONK
     mBackend = new MediaEngineWebRTC();
+  #else
+    mBackend = new MediaEngineWebRTC(mCameraManager, aWindowId);
+  #endif
 #else
     mBackend = new MediaEngineDefault();
 #endif

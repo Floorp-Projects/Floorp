@@ -160,29 +160,21 @@ nsSpeechTask::SendAudio(const JS::Value& aData, const JS::Value& aLandmarks,
   }
 
   JSAutoRequest ar(aCx);
-  JS::AutoObjectRooter tvr(aCx);
-
-  JSObject* darray = &aData.toObject();
+  JS::Rooted<JSObject*> darray(aCx, &aData.toObject());
   JSAutoCompartment ac(aCx, darray);
 
-  JSObject* tsrc = NULL;
+  JS::Rooted<JSObject*> tsrc(aCx, NULL);
 
   // Allow either Int16Array or plain JS Array
   if (JS_IsInt16Array(darray)) {
     tsrc = darray;
   } else if (JS_IsArrayObject(aCx, darray)) {
-    JSObject* nobj = JS_NewInt16ArrayFromArray(aCx, darray);
-
-    if (!nobj) {
-      return NS_ERROR_DOM_TYPE_MISMATCH_ERR;
-    }
-
-    tsrc = nobj;
-  } else {
-    return NS_ERROR_DOM_TYPE_MISMATCH_ERR;
+    tsrc = JS_NewInt16ArrayFromArray(aCx, darray);
   }
 
-  tvr.setObject(tsrc);
+  if (!tsrc) {
+    return NS_ERROR_DOM_TYPE_MISMATCH_ERR;
+  }
 
   uint32_t dataLength = JS_GetTypedArrayLength(tsrc);
 

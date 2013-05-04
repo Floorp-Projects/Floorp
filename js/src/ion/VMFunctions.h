@@ -254,7 +254,7 @@ template <> struct TypeToArgProperties<Handle<StaticBlockObject *> > {
     static const uint32_t result = TypeToArgProperties<StaticBlockObject *>::result | VMFunction::ByRef;
 };
 template <> struct TypeToArgProperties<HandleScript> {
-    static const uint32_t result = TypeToArgProperties<RawScript>::result | VMFunction::ByRef;
+    static const uint32_t result = TypeToArgProperties<JSScript *>::result | VMFunction::ByRef;
 };
 template <> struct TypeToArgProperties<HandleValue> {
     static const uint32_t result = TypeToArgProperties<Value>::result | VMFunction::ByRef;
@@ -491,7 +491,7 @@ bool GreaterThanOrEqual(JSContext *cx, MutableHandleValue lhs, MutableHandleValu
 template<bool Equal>
 bool StringsEqual(JSContext *cx, HandleString left, HandleString right, JSBool *res);
 
-JSBool ObjectEmulatesUndefined(RawObject obj);
+JSBool ObjectEmulatesUndefined(JSObject *obj);
 
 bool IteratorMore(JSContext *cx, HandleObject obj, JSBool *res);
 

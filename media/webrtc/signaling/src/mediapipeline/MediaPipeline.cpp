@@ -22,6 +22,9 @@
 #include "ImageTypes.h"
 #include "ImageContainer.h"
 #include "VideoUtils.h"
+#ifdef MOZ_WIDGET_GONK
+#include "GonkIOSurfaceImage.h"
+#endif
 #endif
 
 #include "logging.h"
@@ -789,46 +792,61 @@ void MediaPipelineTransmit::PipelineListener::ProcessVideoChunk(
   }
 
   ImageFormat format = img->GetFormat();
+#ifdef MOZ_WIDGET_GONK
+  if (format == GONK_IO_SURFACE) {
+    layers::GonkIOSurfaceImage *nativeImage = static_cast<layers::GonkIOSurfaceImage*>(img);
+    layers::SurfaceDescriptor handle = nativeImage->GetSurfaceDescriptor();
+    layers::SurfaceDescriptorGralloc grallocHandle = handle.get_SurfaceDescriptorGralloc();
 
-  if (format != PLANAR_YCBCR) {
-    MOZ_MTLOG(PR_LOG_ERROR, "Can't process non-YCBCR video");
+    android::sp<android::GraphicBuffer> graphicBuffer = layers::GrallocBufferActor::GetFrom(grallocHandle);
+    void *basePtr;
+    graphicBuffer->lock(android::GraphicBuffer::USAGE_SW_READ_MASK, &basePtr);
+    conduit->SendVideoFrame(static_cast<unsigned char*>(basePtr),
+                            (graphicBuffer->getWidth() * graphicBuffer->getHeight() * 3) / 2,
+                            graphicBuffer->getWidth(),
+                            graphicBuffer->getHeight(),
+                            mozilla::kVideoNV21, 0);
+    graphicBuffer->unlock();
+  } else
+#endif
+  if (format == PLANAR_YCBCR) {
+    // Cast away constness b/c some of the accessors are non-const
+    layers::PlanarYCbCrImage* yuv =
+    const_cast<layers::PlanarYCbCrImage *>(
+          static_cast<const layers::PlanarYCbCrImage *>(img));
+    // Big-time assumption here that this is all contiguous data coming
+    // from getUserMedia or other sources.
+    const layers::PlanarYCbCrImage::Data *data = yuv->GetData();
+
+    uint8_t *y = data->mYChannel;
+#ifdef DEBUG
+    uint8_t *cb = data->mCbChannel;
+    uint8_t *cr = data->mCrChannel;
+#endif
+    uint32_t width = yuv->GetSize().width;
+    uint32_t height = yuv->GetSize().height;
+    uint32_t length = yuv->GetDataSize();
+
+    // SendVideoFrame only supports contiguous YCrCb 4:2:0 buffers
+    // Verify it's contiguous and in the right order
+    MOZ_ASSERT(cb == (y + width*height) &&
+               cr == (cb + width*height/4));
+    // XXX Consider making this a non-debug-only check if we ever implement
+    // any subclasses of PlanarYCbCrImage that allow disjoint buffers such
+    // that y+3(width*height)/2 might go outside the allocation.
+    // GrallocPlanarYCbCrImage can have wider strides, and so in some cases
+    // would encode as garbage.  If we need to encode it we'll either want to
+    // modify SendVideoFrame or copy/move the data in the buffer.
+
+    // OK, pass it on to the conduit
+    MOZ_MTLOG(PR_LOG_DEBUG, "Sending a video frame");
+    // Not much for us to do with an error
+    conduit->SendVideoFrame(y, length, width, height, mozilla::kVideoI420, 0);
+  } else {
+    MOZ_MTLOG(PR_LOG_ERROR, "Unsupported video format");
     MOZ_ASSERT(PR_FALSE);
     return;
   }
-
-  // Cast away constness b/c some of the accessors are non-const
-  layers::PlanarYCbCrImage* yuv =
-    const_cast<layers::PlanarYCbCrImage *>(
-      static_cast<const layers::PlanarYCbCrImage *>(img));
-
-  // Big-time assumption here that this is all contiguous data coming
-  // from getUserMedia or other sources.
-  const layers::PlanarYCbCrImage::Data *data = yuv->GetData();
-
-  uint8_t *y = data->mYChannel;
-#ifdef DEBUG
-  uint8_t *cb = data->mCbChannel;
-  uint8_t *cr = data->mCrChannel;
-#endif
-  uint32_t width = yuv->GetSize().width;
-  uint32_t height = yuv->GetSize().height;
-  uint32_t length = yuv->GetDataSize();
-
-  // SendVideoFrame only supports contiguous YCrCb 4:2:0 buffers
-  // Verify it's contiguous and in the right order
-  MOZ_ASSERT(cb == (y + width*height) &&
-             cr == (cb + width*height/4));
-  // XXX Consider making this a non-debug-only check if we ever implement
-  // any subclasses of PlanarYCbCrImage that allow disjoint buffers such
-  // that y+3(width*height)/2 might go outside the allocation.
-  // GrallocPlanarYCbCrImage can have wider strides, and so in some cases
-  // would encode as garbage.  If we need to encode it we'll either want to
-  // modify SendVideoFrame or copy/move the data in the buffer.
-
-  // OK, pass it on to the conduit
-  MOZ_MTLOG(PR_LOG_DEBUG, "Sending a video frame");
-  // Not much for us to do with an error
-  conduit->SendVideoFrame(y, length, width, height, mozilla::kVideoI420, 0);
 }
 #endif
 

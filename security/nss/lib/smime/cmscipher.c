@@ -4,8 +4,6 @@
 
 /*
  * Encryption/decryption routines for CMS implementation, none of which are exported.
- *
- * $Id$
  */
 
 #include "cmslocal.h"

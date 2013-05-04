@@ -4,8 +4,6 @@
 
 /*
  * cert.h - public data structures and prototypes for the certificate library
- *
- * $Id$
  */
 
 #ifndef _CERT_H_

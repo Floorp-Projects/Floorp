@@ -1,0 +1,24 @@
+﻿<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=861958
+-->
+<head>
+  <meta charset="utf-8">
+  <title>bug 861958</title>
+  <script type="application/javascript">
+    function start() {
+      var o0 = new window.mozRTCPeerConnection();
+      var o1 = o0.createDataChannel("foo", {
+          "protocol": "text/char",
+          "preset": false,
+          "stream": 512
+      });
+      o0.close();
+    }
+  </script>
+</head>
+
+<body onload="start()">
+</body>
+</html>

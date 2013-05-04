@@ -4,8 +4,6 @@
 
 /*
  * Moved from secpkcs7.c
- *
- * $Id$
  */
  
 #include "cert.h"

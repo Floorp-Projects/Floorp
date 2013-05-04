@@ -14,6 +14,14 @@ ifdef BUILD_LIBPKIX_TESTS
 DIRS += libpkix
 endif
 
+ifeq ($(NSS_BUILD_WITHOUT_SOFTOKEN),1)
+BLTEST_SRCDIR=
+FIPSTEST_SRCDIR=
+else
+BLTEST_SRCDIR      = bltest
+FIPSTEST_SRCDIR    = fipstest
+endif
+
 LOWHASHTEST_SRCDIR=
 ifeq ($(FREEBL_LOWHASH),1)
 LOWHASHTEST_SRCDIR = lowhashtest  # Add the lowhashtest directory to DIRS.

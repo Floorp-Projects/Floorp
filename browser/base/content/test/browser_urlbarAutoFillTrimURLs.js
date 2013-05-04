@@ -14,7 +14,7 @@ function test() {
   registerCleanupFunction(function () {
     Services.prefs.clearUserPref(PREF_TRIMURL);
     Services.prefs.clearUserPref(PREF_AUTOFILL);
-    URLBarSetURI();
+    gURLBar.handleRevert();
   });
   Services.prefs.setBoolPref(PREF_TRIMURL, true);
   Services.prefs.setBoolPref(PREF_AUTOFILL, true);

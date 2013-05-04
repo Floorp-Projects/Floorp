@@ -27,6 +27,10 @@
 #include "mtransport/runnable_utils.h"
 #endif
 
+#ifdef MOZ_WIDGET_GONK
+#include "DOMCameraManager.h"
+#endif
+
 namespace mozilla {
 
 #ifdef PR_LOGGING
@@ -391,7 +395,7 @@ public:
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIMEDIAMANAGERSERVICE
 
-  MediaEngine* GetBackend();
+  MediaEngine* GetBackend(uint64_t aWindowId = 0);
   StreamListeners *GetWindowListeners(uint64_t aWindowId) {
     NS_ASSERTION(NS_IsMainThread(), "Only access windowlist on main thread");
 
@@ -449,6 +453,10 @@ private:
   MediaEngine* mBackend;
 
   static StaticRefPtr<MediaManager> sSingleton;
+
+#ifdef MOZ_WIDGET_GONK
+  nsRefPtr<nsDOMCameraManager> mCameraManager;
+#endif
 };
 
 } // namespace mozilla

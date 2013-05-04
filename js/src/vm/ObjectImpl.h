@@ -25,9 +25,7 @@ namespace js {
 class Debugger;
 class ObjectImpl;
 class Nursery;
-ForwardDeclare(Shape);
-
-class AutoPropDescArrayRooter;
+class Shape;
 
 static inline PropertyOp
 CastAsPropertyOp(JSObject *object)
@@ -132,7 +130,7 @@ struct PropDesc {
     }
 
   public:
-    friend class AutoPropDescArrayRooter;
+    friend class AutoPropDescRooter;
     friend void JS::AutoGCRooter::trace(JSTracer *trc);
 
     enum Enumerability { Enumerable = true, NonEnumerable = false };
@@ -293,29 +291,70 @@ struct PropDesc {
 
     bool wrapInto(JSContext *cx, HandleObject obj, const jsid &id, jsid *wrappedId,
                   PropDesc *wrappedDesc) const;
+};
 
-    class AutoRooter : private JS::CustomAutoRooter
+class AutoPropDescRooter : private JS::CustomAutoRooter
+{
+  public:
+    explicit AutoPropDescRooter(JSContext *cx
+                                MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : CustomAutoRooter(cx), skip(cx, &propDesc)
     {
-      public:
-        explicit AutoRooter(JSContext *cx, PropDesc *pd_
-                            MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-          : CustomAutoRooter(cx), pd(pd_), skip(cx, pd_)
-        {
-            MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-        }
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    }
 
-      private:
-        virtual void trace(JSTracer *trc) {
-            traceValue(trc, &pd->pd_, "PropDesc::AutoRooter pd");
-            traceValue(trc, &pd->value_, "PropDesc::AutoRooter value");
-            traceValue(trc, &pd->get_, "PropDesc::AutoRooter get");
-            traceValue(trc, &pd->set_, "PropDesc::AutoRooter set");
-        }
+    PropDesc& getPropDesc() { return propDesc; }
 
-        PropDesc *pd;
-        SkipRoot skip;
-        MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-     };
+    void initFromPropertyDescriptor(const PropertyDescriptor &desc) {
+        propDesc.initFromPropertyDescriptor(desc);
+    }
+
+    bool makeObject(JSContext *cx) {
+        return propDesc.makeObject(cx);
+    }
+
+    void setUndefined() { propDesc.setUndefined(); }
+    bool isUndefined() const { return propDesc.isUndefined(); }
+
+    bool hasGet() const { return propDesc.hasGet(); }
+    bool hasSet() const { return propDesc.hasSet(); }
+    bool hasValue() const { return propDesc.hasValue(); }
+    bool hasWritable() const { return propDesc.hasWritable(); }
+    bool hasEnumerable() const { return propDesc.hasEnumerable(); }
+    bool hasConfigurable() const { return propDesc.hasConfigurable(); }
+
+    Value pd() const { return propDesc.pd(); }
+    void clearPd() { propDesc.clearPd(); }
+
+    uint8_t attributes() const { return propDesc.attributes(); }
+
+    bool isAccessorDescriptor() const { return propDesc.isAccessorDescriptor(); }
+    bool isDataDescriptor() const { return propDesc.isDataDescriptor(); }
+    bool isGenericDescriptor() const { return propDesc.isGenericDescriptor(); }
+    bool configurable() const { return propDesc.configurable(); }
+    bool enumerable() const { return propDesc.enumerable(); }
+    bool writable() const { return propDesc.writable(); }
+
+    HandleValue value() const { return propDesc.value(); }
+    JSObject *getterObject() const { return propDesc.getterObject(); }
+    JSObject *setterObject() const { return propDesc.setterObject(); }
+    HandleValue getterValue() const { return propDesc.getterValue(); }
+    HandleValue setterValue() const { return propDesc.setterValue(); }
+
+    PropertyOp getter() const { return propDesc.getter(); }
+    StrictPropertyOp setter() const { return propDesc.setter(); }
+
+  private:
+    virtual void trace(JSTracer *trc) {
+        traceValue(trc, &propDesc.pd_, "AutoPropDescRooter pd");
+        traceValue(trc, &propDesc.value_, "AutoPropDescRooter value");
+        traceValue(trc, &propDesc.get_, "AutoPropDescRooter get");
+        traceValue(trc, &propDesc.set_, "AutoPropDescRooter set");
+    }
+
+    PropDesc propDesc;
+    SkipRoot skip;
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 class DenseElementsHeader;
@@ -364,7 +403,7 @@ class ElementsHeader
         } dense;
         class {
             friend class SparseElementsHeader;
-            RawShape shape;
+            Shape *shape;
         } sparse;
         class {
             friend class ArrayBufferElementsHeader;
@@ -455,7 +494,7 @@ class DenseElementsHeader : public ElementsHeader
 class SparseElementsHeader : public ElementsHeader
 {
   public:
-    RawShape shape() {
+    Shape *shape() {
         MOZ_ASSERT(ElementsHeader::isSparseElements());
         return sparse.shape;
     }
@@ -1317,9 +1356,9 @@ class ObjectImpl : public gc::Cell
     /* Compute dynamicSlotsCount() for this object. */
     inline uint32_t numDynamicSlots() const;
 
-    RawShape nativeLookup(JSContext *cx, jsid id);
-    inline RawShape nativeLookup(JSContext *cx, PropertyId pid);
-    inline RawShape nativeLookup(JSContext *cx, PropertyName *name);
+    Shape *nativeLookup(JSContext *cx, jsid id);
+    inline Shape *nativeLookup(JSContext *cx, PropertyId pid);
+    inline Shape *nativeLookup(JSContext *cx, PropertyName *name);
 
     inline bool nativeContains(JSContext *cx, jsid id);
     inline bool nativeContains(JSContext *cx, PropertyName* name);

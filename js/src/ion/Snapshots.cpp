@@ -30,7 +30,7 @@ using namespace js::ion;
 // Snapshot body, repeated "frame count" times, from oldest frame to newest frame.
 // Note that the first frame doesn't have the "parent PC" field.
 //
-//   [ptr] Debug only: RawScript
+//   [ptr] Debug only: JSScript *
 //   [vwu] pc offset
 //   [vwu] # of slots, including nargs
 // [slot*] N slot entries, where N = nargs + nfixed + stackDepth
@@ -296,7 +296,7 @@ SnapshotWriter::startSnapshot(uint32_t frameCount, BailoutKind kind, bool resume
 }
 
 void
-SnapshotWriter::startFrame(JSFunction *fun, RawScript script, jsbytecode *pc, uint32_t exprStack)
+SnapshotWriter::startFrame(JSFunction *fun, JSScript *script, jsbytecode *pc, uint32_t exprStack)
 {
     JS_ASSERT(CountArgSlots(script, fun) < SNAPSHOT_MAX_NARGS);
 

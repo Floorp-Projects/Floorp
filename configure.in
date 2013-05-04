@@ -171,6 +171,11 @@ if test -n "$gonkdir" ; then
     android_source="$gonkdir"
     ANDROID_SOURCE="$android_source"
     ANDROID_NDK="${ANDROID_SOURCE}/ndk"
+    dnl Default to ICS
+    ANDROID_VERSION=15
+    if test -n "${PLATFORM_SDK_VERSION}"; then
+        ANDROID_VERSION="${PLATFORM_SDK_VERSION}"
+    fi
 
     dnl set up compilers
     TOOLCHAIN_PREFIX="$gonk_toolchain_prefix"
@@ -196,7 +201,19 @@ if test -n "$gonkdir" ; then
         ;;
     esac
 
-    CPPFLAGS="-DANDROID -isystem $gonkdir/bionic/libc/$ARCH_DIR/include -isystem $gonkdir/bionic/libc/include/ -isystem $gonkdir/bionic/libc/kernel/common -isystem $gonkdir/bionic/libc/kernel/$ARCH_DIR -isystem $gonkdir/bionic/libm/include -I$gonkdir/frameworks/base/opengl/include -I$gonkdir/frameworks/base/native/include -I$gonkdir/hardware/libhardware/include -I$gonkdir/hardware/libhardware_legacy/include -I$gonkdir/system -I$gonkdir/system/core/include -isystem $gonkdir/bionic -I$gonkdir/frameworks/base/include -I$gonkdir/external/dbus -I$gonkdir/external/bluetooth/bluez/lib $CPPFLAGS -I$gonkdir/frameworks/base/services/sensorservice -I$gonkdir/frameworks/base/services/camera -I$gonkdir/system/media/wilhelm/include -I$gonkdir/frameworks/base/include/media/stagefright -I$gonkdir/frameworks/base/include/media/stagefright/openmax -I$gonkdir/frameworks/base/media/libstagefright/rtsp -I$gonkdir/frameworks/base/media/libstagefright/include -I$gonkdir/dalvik/libnativehelper/include/nativehelper"
+    case "$ANDROID_VERSION" in
+    15)
+        GONK_INCLUDES="-I$gonkdir/frameworks/base/opengl/include -I$gonkdir/frameworks/base/native/include -I$gonkdir/frameworks/base/include -I$gonkdir/frameworks/base/services/camera -I$gonkdir/frameworks/base/include/media/stagefright -I$gonkdir/frameworks/base/include/media/stagefright/openmax -I$gonkdir/frameworks/base/media/libstagefright/rtsp -I$gonkdir/frameworks/base/media/libstagefright/include -I$gonkdir/external/dbus -I$gonkdir/external/bluetooth/bluez/lib -I$gonkdir/dalvik/libnativehelper/include/nativehelper"
+        MOZ_B2G_BT=1
+        ;;
+    17)
+        GONK_INCLUDES="-I$gonkdir/frameworks/native/include"
+        ;;
+    *)
+        AC_MSG_ERROR([Unsupported platform version: $ANDROID_VERSION])
+        ;;
+    esac
+    CPPFLAGS="-DANDROID -isystem $gonkdir/bionic/libc/$ARCH_DIR/include -isystem $gonkdir/bionic/libc/include/ -isystem $gonkdir/bionic/libc/kernel/common -isystem $gonkdir/bionic/libc/kernel/$ARCH_DIR -isystem $gonkdir/bionic/libm/include -I$gonkdir/system -I$gonkdir/system/core/include -isystem $gonkdir/bionic -I$gonkdir/hardware/libhardware/include $GONK_INCLUDES $CPPFLAGS"
     CFLAGS="-mandroid -fno-short-enums -fno-exceptions $CFLAGS"
     CXXFLAGS="-mandroid -fno-short-enums -fno-exceptions -Wno-psabi $CXXFLAGS $STLPORT_CPPFLAGS"
     dnl Add -llog by default, since we use it all over the place.
@@ -219,6 +236,8 @@ if test -n "$gonkdir" ; then
     fi
 
     AC_DEFINE(ANDROID)
+    AC_DEFINE_UNQUOTED(ANDROID_VERSION, $ANDROID_VERSION)
+    AC_SUBST(ANDROID_VERSION)
     AC_DEFINE(HAVE_SYS_UIO_H)
     AC_DEFINE(HAVE_PTHREADS)
     CROSS_COMPILE=1
@@ -2015,7 +2034,6 @@ ia64*-hpux*)
     if test -n "$gonkdir"; then
         _PLATFORM_DEFAULT_TOOLKIT=cairo-gonk
         MOZ_B2G_RIL=1
-        MOZ_B2G_BT=1
         MOZ_B2G_FM=1
     else
         _PLATFORM_DEFAULT_TOOLKIT=cairo-android
@@ -2166,7 +2184,7 @@ ia64*-hpux*)
         XPCOM_FROZEN_LDOPTS='$(LIBXUL_DIST)/lib/xul.lib $(LIBXUL_DIST)/lib/mozalloc.lib'
         LIBXUL_LIBS='$(LIBXUL_DIST)/lib/xul.lib $(LIBXUL_DIST)/lib/mozalloc.lib'
         MOZ_COMPONENT_NSPR_LIBS='$(NSPR_LIBS)'
-        LDFLAGS="$LDFLAGS -LARGEADDRESSAWARE -NXCOMPAT"
+        LDFLAGS="$LDFLAGS -LARGEADDRESSAWARE -NXCOMPAT -RELEASE"
         dnl For profile-guided optimization
         PROFILE_GEN_CFLAGS="-GL"
         PROFILE_GEN_LDFLAGS="-LTCG:PGINSTRUMENT"
@@ -3535,34 +3553,6 @@ if test "$GNU_CC"; then
   fi
 
   TARGET_COMPILER_ABI="${TARGET_COMPILER_ABI-${ARM_ABI_PREFIX}gcc3}"
-fi
-
-dnl Check for support of modern template specialization syntax
-dnl Test code and requirement from scc@netscape.com.
-dnl Autoconf cut-and-paste job by waterson@netscape.com
-AC_CACHE_CHECK(for modern C++ template specialization syntax support,
-               ac_cv_cpp_modern_specialize_template_syntax,
-               [AC_TRY_COMPILE(template <class T> struct X { int a; };
-                               class Y {};
-                               template <> struct X<Y> { double a; };,
-                               X<int> int_x;
-                               X<Y> y_x;,
-                               ac_cv_cpp_modern_specialize_template_syntax=yes,
-                               ac_cv_cpp_modern_specialize_template_syntax=no)])
-if test "$ac_cv_cpp_modern_specialize_template_syntax" = no ; then
-  AC_MSG_ERROR([The C++ compiler does not support template specialization])
-fi
-
-dnl Some compilers support only full specialization, and some don't.
-AC_CACHE_CHECK(whether partial template specialization works,
-               ac_cv_cpp_partial_specialization,
-               [AC_TRY_COMPILE(template <class T> class Foo {};
-                               template <class T> class Foo<T*> {};,
-                               return 0;,
-                               ac_cv_cpp_partial_specialization=yes,
-                               ac_cv_cpp_partial_specialization=no)])
-if test "$ac_cv_cpp_partial_specialization" = yes ; then
-  AC_DEFINE(HAVE_CPP_PARTIAL_SPECIALIZATION)
 fi
 
 dnl Check to see if we can resolve ambiguity with |using|.
@@ -7422,6 +7412,7 @@ if test -n "$JS_CRASH_DIAGNOSTICS"; then
 fi
 
 MOZ_CHECK_CCACHE
+MOZ_CHECK_COMPILER_WRAPPER
 
 dnl ========================================================
 dnl = Enable static checking using gcc-dehydra

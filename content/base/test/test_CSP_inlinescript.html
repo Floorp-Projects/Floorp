@@ -3,6 +3,7 @@
 <head>
   <title>Test for Content Security Policy Frame Ancestors directive</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
@@ -24,25 +25,22 @@ var inlineScriptsTotal = 12;
 // This is used to watch the blocked data bounce off CSP and allowed data
 // get sent out to the wire.
 function examiner() {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-  this.obsvc = Components.classes['@mozilla.org/observer-service;1']
-                        .getService(Components.interfaces.nsIObserverService);
-  this.obsvc.addObserver(this, "csp-on-violate-policy", false);
+  SpecialPowers.addObserver(this, "csp-on-violate-policy", false);
 }
 examiner.prototype  = {
   observe: function(subject, topic, data) {
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
     // subject should be an nsURI, and should be either allowed or blocked.
-    if(!subject.QueryInterface) return;
+    if (!SpecialPowers.can_QI(subject))
+      return;
 
     if (topic === "csp-on-violate-policy") {
       var what = null;
       try {
         //these were blocked... record that they were blocked
-        what = subject.QueryInterface(Components.interfaces.nsIURI).asciiSpec;
+        what = SpecialPowers.getPrivilegedProps(SpecialPowers.do_QueryInterface(subject, "nsIURI"), "asciiSpec");
       } catch(e) {
         //if that fails, the subject is probably a string
-        what = subject.QueryInterface(Components.interfaces.nsISupportsCString).data;
+        what = SpecialPowers.getPrivilegedProps(SpecialPowers.do_QueryInterface(subject, "nsISupportsCString"), "data");
       }
       window.scriptBlocked(what, data);
     }
@@ -51,8 +49,7 @@ examiner.prototype  = {
   // must eventually call this to remove the listener,
   // or mochitests might get borked.
   remove: function() {
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-    this.obsvc.removeObserver(this, "csp-on-violate-policy");
+    SpecialPowers.removeObserver(this, "csp-on-violate-policy");
   }
 }
 
@@ -75,8 +72,6 @@ var scriptBlocked = function(testname, data) {
 
 // Check to see if all the tests have run
 var checkTestResults = function() {
-  dump("**** checkTestResults - ran : " + inlineScriptsThatRan + " blocked : " + inlineScriptsBlocked + " total: " + inlineScriptsTotal + "\n");
-
   // if any test is incomplete, keep waiting
   if (inlineScriptsThatRan + inlineScriptsBlocked < inlineScriptsTotal)
     return;
@@ -98,33 +93,21 @@ window.examiner = new examiner();
 SimpleTest.waitForExplicitFinish();
 
 function clickit() {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   var cspframe = document.getElementById('cspframe');
   var a = cspframe.contentDocument.getElementById('anchortoclick');
-  var evt = cspframe.contentDocument.createEvent("MouseEvents");
-  evt.initMouseEvent("click", true, true, cspframe.contentWindow,
-                      0,0,0,0,0, false, false, false, false, 0, null);
-  a.dispatchEvent(evt);
+  sendMouseEvent({type:'click'}, a, cspframe.contentWindow);
 }
 
 function clickit2() {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   var cspframe2 = document.getElementById('cspframe2');
   var a = cspframe2.contentDocument.getElementById('anchortoclick');
-  var evt = cspframe2.contentDocument.createEvent("MouseEvents");
-  evt.initMouseEvent("click", true, true, cspframe2.contentWindow,
-                      0,0,0,0,0, false, false, false, false, 0, null);
-  a.dispatchEvent(evt);
+  sendMouseEvent({type:'click'}, a, cspframe2.contentWindow);
 }
 
 function clickit3() {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   var cspframe3 = document.getElementById('cspframe3');
   var a = cspframe3.contentDocument.getElementById('anchortoclick');
-  var evt = cspframe3.contentDocument.createEvent("MouseEvents");
-  evt.initMouseEvent("click", true, true, cspframe3.contentWindow,
-                      0,0,0,0,0, false, false, false, false, 0, null);
-  a.dispatchEvent(evt);
+  sendMouseEvent({type:'click'}, a, cspframe3.contentWindow);
 }
 
 SpecialPowers.pushPrefEnv(

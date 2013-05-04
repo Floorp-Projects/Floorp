@@ -37,6 +37,7 @@ LIBS += \
   $(MOZ_ZLIB_LIBS) \
   $(NULL)
 OS_LDFLAGS += -Wl,--export-dynamic
+LOCAL_INCLUDES += -I$(ANDROID_SOURCE)/hardware/libhardware_legacy/include
 endif
 
 LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/xre
