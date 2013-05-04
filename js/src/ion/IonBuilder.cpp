@@ -4193,11 +4193,13 @@ MInstruction *
 IonBuilder::createDeclEnvObject(MDefinition *callee, MDefinition *scope)
 {
     // Create a template CallObject that we'll use to generate inline object
-    // creation.
+    // creation. Even though this template will get discarded at the end of
+    // compilation, it is used by the background compilation thread and thus
+    // cannot use the Nursery.
 
     RootedScript script(cx, script_);
     RootedFunction fun(cx, info().fun());
-    RootedObject templateObj(cx, DeclEnvObject::createTemplateObject(cx, fun));
+    RootedObject templateObj(cx, DeclEnvObject::createTemplateObject(cx, fun, gc::TenuredHeap));
     if (!templateObj)
         return NULL;
 
@@ -4227,10 +4229,12 @@ MInstruction *
 IonBuilder::createCallObject(MDefinition *callee, MDefinition *scope)
 {
     // Create a template CallObject that we'll use to generate inline object
-    // creation.
+    // creation. Even though this template will get discarded at the end of
+    // compilation, it is used by the background compilation thread and thus
+    // cannot use the Nursery.
 
     RootedScript scriptRoot(cx, script());
-    RootedObject templateObj(cx, CallObject::createTemplateObject(cx, scriptRoot));
+    RootedObject templateObj(cx, CallObject::createTemplateObject(cx, scriptRoot, gc::TenuredHeap));
     if (!templateObj)
         return NULL;
 

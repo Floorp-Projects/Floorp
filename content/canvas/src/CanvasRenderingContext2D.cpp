@@ -1254,7 +1254,7 @@ CanvasRenderingContext2D::GetMozCurrentTransformInverse(JSContext* cx,
 
 void
 CanvasRenderingContext2D::SetStyleFromJSValue(JSContext* cx,
-                                              JS::Value& value,
+                                              JS::Handle<JS::Value> value,
                                               Style whichStyle)
 {
   if (value.isString()) {
@@ -1269,9 +1269,10 @@ CanvasRenderingContext2D::SetStyleFromJSValue(JSContext* cx,
     nsCOMPtr<nsISupports> holder;
 
     CanvasGradient* gradient;
+    JS::Rooted<JS::Value> rootedVal(cx, value);
     nsresult rv = xpc_qsUnwrapArg<CanvasGradient>(cx, value, &gradient,
                                                   static_cast<nsISupports**>(getter_AddRefs(holder)),
-                                                  &value);
+                                                  rootedVal.address());
     if (NS_SUCCEEDED(rv)) {
       SetStyleFromGradient(gradient, whichStyle);
       return;
@@ -1280,7 +1281,7 @@ CanvasRenderingContext2D::SetStyleFromJSValue(JSContext* cx,
     CanvasPattern* pattern;
     rv = xpc_qsUnwrapArg<CanvasPattern>(cx, value, &pattern,
                                         static_cast<nsISupports**>(getter_AddRefs(holder)),
-                                        &value);
+                                        rootedVal.address());
     if (NS_SUCCEEDED(rv)) {
       SetStyleFromPattern(pattern, whichStyle);
       return;

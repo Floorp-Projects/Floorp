@@ -54,26 +54,27 @@ public:
     return v.isUndefined() ? NULL : v.toObjectOrNull();
   }
   static JSObject* GetAndClearExpandoObject(JSObject* obj);
-  static JSObject* EnsureExpandoObject(JSContext* cx, JSObject* obj);
+  static JSObject* EnsureExpandoObject(JSContext* cx,
+                                       JS::Handle<JSObject*> obj);
 
   const DOMClass& mClass;
 
 protected:
   // Append the property names in "names" that don't live on our proto
   // chain to "props"
-  bool AppendNamedPropertyIds(JSContext* cx, JSObject* proxy,
+  bool AppendNamedPropertyIds(JSContext* cx, JS::Handle<JSObject*> proxy,
                               nsTArray<nsString>& names,
                               JS::AutoIdVector& props);
 };
 
 extern jsid s_length_id;
 
-int32_t IdToInt32(JSContext* cx, jsid id);
+int32_t IdToInt32(JSContext* cx, JS::Handle<jsid> id);
 
 // XXXbz this should really return uint32_t, with the maximum value
 // meaning "not an index"...
 inline int32_t
-GetArrayIndexFromId(JSContext* cx, jsid id)
+GetArrayIndexFromId(JSContext* cx, JS::Handle<jsid> id)
 {
   if (MOZ_LIKELY(JSID_IS_INT(id))) {
     return JSID_TO_INT(id);
@@ -118,7 +119,7 @@ FillPropertyDescriptor(JSPropertyDescriptor* desc, JSObject* obj, JS::Value v, b
 }
 
 JSObject*
-EnsureExpandoObject(JSContext* cx, JSObject* obj);
+EnsureExpandoObject(JSContext* cx, JS::Handle<JSObject*> obj);
 
 } // namespace dom
 } // namespace mozilla

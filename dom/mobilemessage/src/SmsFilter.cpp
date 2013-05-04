@@ -77,12 +77,12 @@ SmsFilter::SetStartDate(JSContext* aCx, const JS::Value& aStartDate)
     return NS_ERROR_INVALID_ARG;
   }
 
-  JSObject& obj = aStartDate.toObject();
-  if (!JS_ObjectIsDate(aCx, &obj)) {
+  JS::Rooted<JSObject*> obj(aCx, &aStartDate.toObject());
+  if (!JS_ObjectIsDate(aCx, obj)) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  mData.startDate() = js_DateGetMsecSinceEpoch(&obj);
+  mData.startDate() = js_DateGetMsecSinceEpoch(obj);
   return NS_OK;
 }
 
@@ -112,12 +112,12 @@ SmsFilter::SetEndDate(JSContext* aCx, const JS::Value& aEndDate)
     return NS_ERROR_INVALID_ARG;
   }
 
-  JSObject& obj = aEndDate.toObject();
-  if (!JS_ObjectIsDate(aCx, &obj)) {
+  JS::Rooted<JSObject*> obj(aCx, &aEndDate.toObject());
+  if (!JS_ObjectIsDate(aCx, obj)) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  mData.endDate() = js_DateGetMsecSinceEpoch(&obj);
+  mData.endDate() = js_DateGetMsecSinceEpoch(obj);
   return NS_OK;
 }
 
@@ -167,19 +167,19 @@ SmsFilter::SetNumbers(JSContext* aCx, const JS::Value& aNumbers)
     return NS_ERROR_INVALID_ARG;
   }
 
-  JSObject& obj = aNumbers.toObject();
-  if (!JS_IsArrayObject(aCx, &obj)) {
+  JS::Rooted<JSObject*> obj(aCx, &aNumbers.toObject());
+  if (!JS_IsArrayObject(aCx, obj)) {
     return NS_ERROR_INVALID_ARG;
   }
 
   uint32_t size;
-  JS_ALWAYS_TRUE(JS_GetArrayLength(aCx, &obj, &size));
+  JS_ALWAYS_TRUE(JS_GetArrayLength(aCx, obj, &size));
 
   nsTArray<nsString> numbers;
 
   for (uint32_t i=0; i<size; ++i) {
-    JS::Value jsNumber;
-    if (!JS_GetElement(aCx, &obj, i, &jsNumber)) {
+    JS::Rooted<JS::Value> jsNumber(aCx);
+    if (!JS_GetElement(aCx, obj, i, jsNumber.address())) {
       return NS_ERROR_INVALID_ARG;
     }
 

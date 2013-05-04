@@ -195,9 +195,9 @@ struct WorkerStructuredCloneCallbacks
 
       // Read the information out of the stream.
       uint32_t width, height;
-      JS::Value dataArray;
+      JS::Rooted<JS::Value> dataArray(aCx);
       if (!JS_ReadUint32Pair(aReader, &width, &height) ||
-          !JS_ReadTypedArray(aReader, &dataArray))
+          !JS_ReadTypedArray(aReader, dataArray.address()))
       {
         return nullptr;
       }
@@ -697,7 +697,7 @@ public:
   bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
   {
-    JSObject* global = CreateDedicatedWorkerGlobalScope(aCx);
+    JS::Rooted<JSObject*> global(aCx, CreateDedicatedWorkerGlobalScope(aCx));
     if (!global) {
       NS_WARNING("Failed to make global!");
       return false;
@@ -721,7 +721,7 @@ public:
   bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
   {
-    JSObject* target = JS_GetGlobalObject(aCx);
+    JS::Rooted<JSObject*> target(aCx, JS_GetGlobalObject(aCx));
     NS_ASSERTION(target, "This must never be null!");
 
     aWorkerPrivate->CloseHandlerStarted();
@@ -785,7 +785,7 @@ public:
     mDataByteCount = 0;
 
     bool mainRuntime;
-    JSObject* target;
+    JS::Rooted<JSObject*> target(aCx);
     if (mTarget == ParentThread) {
       // Don't fire this event if the JS object has been disconnected from the
       // private object.
@@ -946,7 +946,7 @@ public:
       return true;
     }
 
-    JSObject* target = aWorkerPrivate->GetJSObject();
+    JS::Rooted<JSObject*> target(aCx, aWorkerPrivate->GetJSObject());
 
     uint64_t innerWindowId;
 
@@ -994,14 +994,14 @@ public:
       AssertIsOnMainThread();
     }
 
-    JSString* message = JS_NewUCStringCopyN(aCx, aMessage.get(),
-                                            aMessage.Length());
+    JS::Rooted<JSString*> message(aCx, JS_NewUCStringCopyN(aCx, aMessage.get(),
+                                                           aMessage.Length()));
     if (!message) {
       return false;
     }
 
-    JSString* filename = JS_NewUCStringCopyN(aCx, aFilename.get(),
-                                             aFilename.Length());
+    JS::Rooted<JSString*> filename(aCx, JS_NewUCStringCopyN(aCx, aFilename.get(),
+                                                            aFilename.Length()));
     if (!filename) {
       return false;
     }
@@ -1602,25 +1602,29 @@ NS_IMETHODIMP
 WorkerRunnable::Run()
 {
   JSContext* cx;
-  JSObject* targetCompartmentObject;
-  nsCxPusher pusher;
-
   nsRefPtr<WorkerPrivate> kungFuDeathGrip;
+  nsCxPusher pusher;
 
   if (mTarget == WorkerThread) {
     mWorkerPrivate->AssertIsOnWorkerThread();
     cx = mWorkerPrivate->GetJSContext();
-    targetCompartmentObject = JS_GetGlobalObject(cx);
   } else {
     kungFuDeathGrip = mWorkerPrivate;
     mWorkerPrivate->AssertIsOnParentThread();
     cx = mWorkerPrivate->ParentJSContext();
-    targetCompartmentObject = mWorkerPrivate->GetJSObject();
 
     if (!mWorkerPrivate->GetParent()) {
       AssertIsOnMainThread();
       pusher.Push(cx);
     }
+  }
+
+  JS::Rooted<JSObject*> targetCompartmentObject(cx);
+
+  if (mTarget == WorkerThread) {
+    targetCompartmentObject = JS_GetGlobalObject(cx);
+  } else {
+    targetCompartmentObject = mWorkerPrivate->GetJSObject();
   }
 
   NS_ASSERTION(cx, "Must have a context!");
@@ -2147,8 +2151,8 @@ WorkerPrivateParent<Derived>::ForgetMainThreadObjects(
 template <class Derived>
 bool
 WorkerPrivateParent<Derived>::PostMessage(JSContext* aCx,
-                                          JS::Value aMessage,
-                                          JS::Value aTransferable)
+                                          JS::Handle<JS::Value> aMessage,
+                                          JS::Handle<JS::Value> aTransferable)
 {
   AssertIsOnParentThread();
 
@@ -2413,8 +2417,8 @@ WorkerPrivate::~WorkerPrivate()
 
 // static
 already_AddRefed<WorkerPrivate>
-WorkerPrivate::Create(JSContext* aCx, JSObject* aObj, WorkerPrivate* aParent,
-                      JSString* aScriptURL, bool aIsChromeWorker)
+WorkerPrivate::Create(JSContext* aCx, JS::Handle<JSObject*> aObj, WorkerPrivate* aParent,
+                      JS::Handle<JSString*> aScriptURL, bool aIsChromeWorker)
 {
   nsCString domain;
   nsCOMPtr<nsIURI> baseURI;
@@ -3519,8 +3523,9 @@ WorkerPrivate::DestroySyncLoop(uint32_t aSyncLoopKey)
 }
 
 bool
-WorkerPrivate::PostMessageToParent(JSContext* aCx, jsval aMessage,
-                                   jsval aTransferable)
+WorkerPrivate::PostMessageToParent(JSContext* aCx,
+                                   JS::Handle<JS::Value> aMessage,
+                                   JS::Handle<JS::Value> aTransferable)
 {
   AssertIsOnWorkerThread();
 
@@ -3967,10 +3972,10 @@ WorkerPrivate::RunExpiredTimeouts(JSContext* aCx)
       }
     }
     else {
-      jsval rval;
+      JS::Rooted<JS::Value> rval(aCx);
       if (!JS_CallFunctionValue(aCx, global, info->mTimeoutVal,
                                 info->mExtraArgVals.Length(),
-                                info->mExtraArgVals.Elements(), &rval) &&
+                                info->mExtraArgVals.Elements(), rval.address()) &&
           !JS_ReportPendingException(aCx)) {
         retval = false;
         break;

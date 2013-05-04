@@ -388,8 +388,8 @@ JSBool PACDnsResolve(JSContext *cx, unsigned int argc, JS::Value *vp)
     return false;
   }
 
-  JSString *arg1 = nullptr;
-  if (!JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "S", &arg1))
+  JS::Rooted<JSString*> arg1(cx);
+  if (!JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "S", arg1.address()))
     return false;
 
   nsDependentJSString hostName;
@@ -429,8 +429,8 @@ JSBool PACMyIpAddress(JSContext *cx, unsigned int argc, JS::Value *vp)
 static
 JSBool PACProxyAlert(JSContext *cx, unsigned int argc, JS::Value *vp)
 {
-  JSString *arg1 = nullptr;
-  if (!JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "S", &arg1))
+  JS::Rooted<JSString*> arg1(cx);
+  if (!JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "S", arg1.address()))
     return false;
 
   nsDependentJSString message;
@@ -641,9 +641,9 @@ ProxyAutoConfig::GetProxyForURI(const nsCString &aTestURI,
     JS::RootedValue hostValue(cx, STRING_TO_JSVAL(hostString));
 
     JS::Value argv[2] = { uriValue, hostValue };
-    JS::Value rval;
+    JS::Rooted<JS::Value> rval(cx);
     JSBool ok = JS_CallFunctionName(cx, mJSRuntime->Global(),
-                                    "FindProxyForURL", 2, argv, &rval);
+                                    "FindProxyForURL", 2, argv, rval.address());
 
     if (ok && rval.isString()) {
       nsDependentJSString pacString;

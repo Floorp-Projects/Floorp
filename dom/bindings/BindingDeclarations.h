@@ -472,6 +472,77 @@ private:
   double mMsecSinceEpoch;
 };
 
+class NonNullLazyRootedObject : public Maybe<JS::Rooted<JSObject*> >
+{
+public:
+  operator JSObject&() const
+  {
+    MOZ_ASSERT(!empty() && ref(), "Can not alias null.");
+    return *ref();
+  }
+
+  operator JS::Rooted<JSObject*>&()
+  {
+    // Assert if we're empty, on purpose
+    return ref();
+  }
+
+  JSObject** Slot() // To make us look like a NonNull
+  {
+    // Assert if we're empty, on purpose
+    return ref().address();
+  }
+};
+
+class LazyRootedObject : public Maybe<JS::Rooted<JSObject*> >
+{
+public:
+  operator JSObject*() const
+  {
+    return empty() ? static_cast<JSObject*>(nullptr) : ref();
+  }
+
+  operator JS::Rooted<JSObject*>&()
+  {
+    // Assert if we're empty, on purpose
+    return ref();
+  }
+
+  JSObject** operator&()
+  {
+    // Assert if we're empty, on purpose
+    return ref().address();
+  }
+};
+
+class LazyRootedValue : public Maybe<JS::Rooted<JS::Value> >
+{
+public:
+  operator JS::Value() const
+  {
+    // Assert if we're empty, on purpose
+    return ref();
+  }
+
+  operator JS::Rooted<JS::Value>& ()
+  {
+    // Assert if we're empty, on purpose
+    return ref();
+  }
+
+  operator JS::Handle<JS::Value>()
+  {
+    // Assert if we're empty, on purpose
+    return ref();
+  }
+
+  JS::Value* operator&()
+  {
+    // Assert if we're empty, on purpose
+    return ref().address();
+  }
+};
+
 } // namespace dom
 } // namespace mozilla
 

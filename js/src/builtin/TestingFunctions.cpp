@@ -925,6 +925,22 @@ js::IsAsmJSCompilationAvailable(JSContext *cx, unsigned argc, Value *vp)
     args.rval().set(BooleanValue(false));
     return true;
 }
+
+JSBool
+js::IsAsmJSModule(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    args.rval().set(BooleanValue(false));
+    return true;
+}
+
+JSBool
+js::IsAsmJSFunction(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    args.rval().set(BooleanValue(false));
+    return true;
+}
 #endif
 
 static JSFunctionSpecWithHelp TestingFunctions[] = {
@@ -1070,6 +1086,16 @@ static JSFunctionSpecWithHelp TestingFunctions[] = {
 "isAsmJSCompilationAvailable",
 "  Returns whether asm.js compilation is currently available or whether it is disabled\n"
 "  (e.g., by the debugger)."),
+
+    JS_FN_HELP("isAsmJSModule", IsAsmJSModule, 1, 0,
+"isAsmJSModule(fn)",
+"  Returns whether the given value is a function containing \"use asm\" that has been\n"
+"  validated according to the asm.js spec."),
+
+    JS_FN_HELP("isAsmJSFunction", IsAsmJSFunction, 1, 0,
+"isAsmJSModule(fn)",
+"  Returns whether the given value is a nested function in an asm.js module that has been\n"
+"  both compile- and link-time validated."),
 
     JS_FN_HELP("inParallelSection", testingFunc_inParallelSection, 0, 0,
 "inParallelSection()",

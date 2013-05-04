@@ -35,7 +35,9 @@ RegExpObjectBuilder::getOrCreate()
     if (reobj_)
         return true;
 
-    JSObject *obj = NewBuiltinClassInstance(cx, &RegExpClass);
+    // Note: RegExp objects are always allocated in the tenured heap. This is
+    // not strictly required, but simplifies embedding them in jitcode.
+    JSObject *obj = NewBuiltinClassInstance(cx, &RegExpClass, TenuredObject);
     if (!obj)
         return false;
     obj->initPrivate(NULL);
@@ -49,7 +51,10 @@ RegExpObjectBuilder::getOrCreateClone(RegExpObject *proto)
 {
     JS_ASSERT(!reobj_);
 
-    JSObject *clone = NewObjectWithGivenProto(cx, &RegExpClass, proto, proto->getParent());
+    // Note: RegExp objects are always allocated in the tenured heap. This is
+    // not strictly required, but simplifies embedding them in jitcode.
+    JSObject *clone = NewObjectWithGivenProto(cx, &RegExpClass, proto, proto->getParent(),
+                                              TenuredObject);
     if (!clone)
         return false;
     clone->initPrivate(NULL);

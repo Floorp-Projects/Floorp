@@ -2838,6 +2838,11 @@ nsObjectLoadingContent::GetContentDocument()
     return nullptr;
   }
 
+  // Return null for cross-origin contentDocument.
+  if (!nsContentUtils::GetSubjectPrincipal()->Subsumes(sub_doc->NodePrincipal())) {
+    return nullptr;
+  }
+
   return sub_doc;
 }
 
@@ -2870,6 +2875,7 @@ nsObjectLoadingContent::LegacyCall(JSContext* aCx,
   // Now wrap things up into the compartment of "obj"
   JSAutoCompartment ac(aCx, obj);
   nsTArray<JS::Value> args(aArguments);
+  JS::AutoArrayRooter rooter(aCx, args.Length(), args.Elements());
   for (JS::Value *arg = args.Elements(), *arg_end = arg + args.Length();
        arg != arg_end;
        ++arg) {
