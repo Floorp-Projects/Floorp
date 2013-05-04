@@ -58,8 +58,8 @@
 //
 // An object is purple-safe if it satisfies the following properties:
 //
-//  - The object is scan-safe.  
-//  - If the object calls |nsCycleCollector::suspect(this)|, 
+//  - The object is scan-safe.
+//  - If the object calls |nsCycleCollector::suspect(this)|,
 //    it will null out the pointer from the purple buffer entry to
 //    the object before being destroyed.
 //
@@ -74,7 +74,7 @@
 // When we have a scannable set of purple nodes ready, we begin
 // our walks. During the walks, the nodes we |traverse| should only
 // feed us more scan-safe nodes, and should not adjust the refcounts
-// of those nodes. 
+// of those nodes.
 //
 // We do not |AddRef| or |Release| any objects during scanning. We
 // rely on the purple-safety of the roots that call |suspect| to
@@ -87,7 +87,7 @@
 // We *do* call |AddRef| and |Release| on every white object, on
 // either side of the calls to |Unlink|. This keeps the set of white
 // objects alive during the unlinking.
-// 
+//
 
 #if !defined(__MINGW32__)
 #ifdef WIN32
@@ -204,7 +204,7 @@ struct nsCycleCollectorParams
     bool mLogShutdown;
     bool mAllTracesAtShutdown;
     bool mDoNothing;
-    
+
     nsCycleCollectorParams() :
         mLogAll      (PR_GetEnv("XPCOM_CC_LOG_ALL") != NULL),
         mLogShutdown (PR_GetEnv("XPCOM_CC_LOG_SHUTDOWN") != NULL),
@@ -1478,7 +1478,7 @@ public:
         if (!mDisableLog) {
             fprintf(mStream, "%p [rc=%u] %s\n", (void*)aAddress, refCount,
                     aObjectDescription);
-        }                          
+        }
         if (mWantAfterProcessing) {
             CCGraphDescriber* d = mDescribers.AppendElement();
             NS_ENSURE_TRUE(d, NS_ERROR_OUT_OF_MEMORY);
@@ -1488,7 +1488,7 @@ public:
             d->mAddress = mCurrentAddress;
             d->mCnt = refCount;
             d->mName.Append(aObjectDescription);
-        }                     
+        }
         return NS_OK;
     }
     NS_IMETHOD NoteGCedObject(uint64_t aAddress, bool aMarked,
@@ -1529,7 +1529,7 @@ public:
     {
         if (!mDisableLog) {
             fputs("==========\n", mStream);
-        }                     
+        }
         return NS_OK;
     }
     NS_IMETHOD DescribeRoot(uint64_t aAddress, uint32_t aKnownEdges)
@@ -1678,7 +1678,7 @@ private:
     bool mDisableLog;
     bool mWantAfterProcessing;
     nsString mFilenameIdentifier;
-    nsCString mCurrentAddress; 
+    nsCString mCurrentAddress;
     nsTArray<CCGraphDescriber> mDescribers;
     uint32_t mNextIndex;
 };
@@ -1968,7 +1968,7 @@ GCGraphBuilder::DescribeGCedNode(bool isMarked, const char *objName)
 }
 
 NS_IMETHODIMP_(void)
-GCGraphBuilder::NoteXPCOMChild(nsISupports *child) 
+GCGraphBuilder::NoteXPCOMChild(nsISupports *child)
 {
     nsCString edgeName;
     if (WantDebugInfo()) {
@@ -2002,7 +2002,7 @@ GCGraphBuilder::NoteNativeChild(void *child,
 }
 
 NS_IMETHODIMP_(void)
-GCGraphBuilder::NoteJSChild(void *child) 
+GCGraphBuilder::NoteJSChild(void *child)
 {
     if (!child) {
         return;
@@ -2175,13 +2175,13 @@ nsPurpleBuffer::RemoveSkippable(bool removeChildlessNodes)
     VisitEntries(visitor);
 }
 
-void 
+void
 nsCycleCollector::SelectPurple(GCGraphBuilder &builder)
 {
     mPurpleBuf.SelectPointers(builder);
 }
 
-void 
+void
 nsCycleCollector::ForgetSkippable(bool removeChildlessNodes)
 {
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
@@ -2226,7 +2226,7 @@ struct ScanBlackVisitor
     }
 
     bool ShouldVisitNode(PtrInfo const *pi)
-    { 
+    {
         return pi->mColor != black;
     }
 
@@ -2248,7 +2248,7 @@ struct scanVisitor
     }
 
     bool ShouldVisitNode(PtrInfo const *pi)
-    { 
+    {
         return pi->mColor == grey;
     }
 
@@ -2317,7 +2317,7 @@ nsCycleCollector::ScanRoots()
     // On the assumption that most nodes will be black, it's
     // probably faster to use a GraphWalker than a
     // NodePool::Enumerator.
-    GraphWalker<scanVisitor>(scanVisitor(mWhiteNodeCount)).WalkFromRoots(mGraph); 
+    GraphWalker<scanVisitor>(scanVisitor(mWhiteNodeCount)).WalkFromRoots(mGraph);
 
     ScanWeakMaps();
 }
@@ -2334,8 +2334,8 @@ nsCycleCollector::CollectWhite(nsICycleCollectorListener *aListener)
     // set of whites "all at once", we have to ask each of them to drop
     // their outgoing links and assume this will cause the garbage cycle
     // to *mostly* self-destruct (except for the reference we continue
-    // to hold). 
-    // 
+    // to hold).
+    //
     // To do this "safely" we must make sure that the white nodes we're
     // operating on are stable for the duration of our operation. So we
     // make 3 sets of calls to language runtimes:
@@ -2602,7 +2602,7 @@ nsCycleCollector::Suspect(void *n, nsCycleCollectionParticipant *cp)
 
     // Re-entering ::Suspect during collection used to be a fault, but
     // we are canonicalizing nsISupports pointers using QI, so we will
-    // see some spurious refcount traffic here. 
+    // see some spurious refcount traffic here.
 
     if (mScanInProgress)
         return nullptr;
@@ -2629,7 +2629,7 @@ nsCycleCollector::CheckThreadSafety()
 // were reachable only from XPConnect roots that might participate in
 // cycles. We ask the JS runtime whether we need to force a GC before
 // this CC. It returns true on startup (before the mark bits have been set),
-// and also when UnmarkGray has run out of stack.  We also force GCs on shut 
+// and also when UnmarkGray has run out of stack.  We also force GCs on shut
 // down to collect cycles involving both DOM and JS.
 void
 nsCycleCollector::FixGrayBits(bool aForceGC)
