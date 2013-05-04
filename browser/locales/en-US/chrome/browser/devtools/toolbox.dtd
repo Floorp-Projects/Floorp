@@ -8,7 +8,6 @@
 <!ENTITY closeCmd.key  "W">
 
 <!ENTITY toolboxCloseButton.tooltip    "Close Developer Tools">
-<!ENTITY toolboxOptionsButton.tooltip  "Toggle Options Panel">
 <!ENTITY toolboxOptionsButton.key      "O">
 
 <!-- LOCALIZATION NOTE (options.context.label): This is the label for the

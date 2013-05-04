@@ -24,7 +24,7 @@ function test() {
 
   let toolDefinition = {
     id: "fakeTool4242",
-    killswitch: "devtools.fakeTool4242.enabled",
+    visibilityswitch: "devtools.fakeTool4242.enabled",
     url: toolURL,
     label: "FAKE TOOL!!!",
     isTargetSupported: function() true,
