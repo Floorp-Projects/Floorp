@@ -677,15 +677,17 @@ struct GetPropHelper {
     LookupStatus lookup() {
         RootedObject aobj(cx, obj);
         if (IsCacheableListBase(obj)) {
-            RootedId aid(cx, NameToId(name));
-            ListBaseShadowsResult shadows =
-                GetListBaseShadowsCheck()(cx, obj, aid);
-            if (shadows == ShadowCheckFailed)
-                return ic.error(cx);
-            // Either the property is shadowed or we need an additional check in
-            // the stub, which we haven't implemented.
-            if (shadows == Shadows || shadows == DoesntShadowUnique)
+            Value expandoValue = obj->getFixedSlot(GetListBaseExpandoSlot());
+
+            // Expando objects just hold any extra properties the object has been given by a
+            // script, and have no prototype or anything else that will complicate property
+            // lookups on them.
+            JS_ASSERT_IF(expandoValue.isObject(),
+                         expandoValue.toObject().isNative() && !expandoValue.toObject().getProto());
+
+            if (expandoValue.isObject() && expandoValue.toObject().nativeContains(cx, name))
                 return Lookup_Uncacheable;
+
             aobj = obj->getTaggedProto().toObjectOrNull();
         }
 

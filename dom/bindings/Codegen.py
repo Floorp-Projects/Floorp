@@ -995,10 +995,7 @@ def finalizeHook(descriptor, hookName, context):
         finalize = "self->%s(%s);" % (hookName, context)
     else:
         finalize = "JSBindingFinalized<%s>::Finalized(self);\n" % descriptor.nativeType
-        if descriptor.wrapperCache:
-            finalize += "ClearWrapper(self, self);\n"
-        if descriptor.interface.getExtendedAttribute('OverrideBuiltins'):
-            finalize += "self->mExpandoAndGeneration.expando = JS::UndefinedValue();\n"
+        finalize += "ClearWrapper(self, self);\n" if descriptor.wrapperCache else ""
         if descriptor.workers:
             finalize += "self->Release();"
         elif descriptor.nativeOwnership == 'nsisupports':
@@ -2008,11 +2005,6 @@ def CreateBindingJSObject(descriptor, properties, parent):
   if (!obj) {
     return NULL;
   }
-
-"""
-        if descriptor.interface.getExtendedAttribute('OverrideBuiltins'):
-            create += """  js::SetProxyExtra(obj, JSPROXYSLOT_EXPANDO,
-                    JS::PrivateValue(&aObject->mExpandoAndGeneration));
 
 """
     else:
@@ -6242,7 +6234,9 @@ class CGResolveOwnProperty(CGAbstractMethod):
                 ]
         CGAbstractMethod.__init__(self, descriptor, "ResolveOwnProperty", "bool", args)
     def definition_body(self):
-        return """  return js::GetProxyHandler(obj)->getOwnPropertyDescriptor(cx, wrapper, id, desc, flags);
+        return """  // We rely on getOwnPropertyDescriptor not shadowing prototype properties by named
+  // properties. If that changes we'll need to filter here.
+  return js::GetProxyHandler(obj)->getOwnPropertyDescriptor(cx, wrapper, id, desc, flags);
 """
 
 class CGEnumerateOwnProperties(CGAbstractMethod):
@@ -6253,7 +6247,9 @@ class CGEnumerateOwnProperties(CGAbstractMethod):
                 Argument('JS::AutoIdVector&', 'props')]
         CGAbstractMethod.__init__(self, descriptor, "EnumerateOwnProperties", "bool", args)
     def definition_body(self):
-        return """  return js::GetProxyHandler(obj)->getOwnPropertyNames(cx, wrapper, props);
+        return """  // We rely on getOwnPropertyNames not shadowing prototype properties by named
+  // properties. If that changes we'll need to filter here.
+  return js::GetProxyHandler(obj)->getOwnPropertyNames(cx, wrapper, props);
 """
 
 class CGPrototypeTraitsClass(CGClass):
@@ -6588,10 +6584,10 @@ MOZ_ASSERT_IF(desc->obj, desc->obj == ${holder});"""
             fillDescriptor = "FillPropertyDescriptor(desc, proxy, %s);\nreturn true;" % readonly
             templateValues = {'jsvalRef': 'desc->value', 'jsvalPtr': '&desc->value',
                               'obj': 'proxy', 'successCode': fillDescriptor}
-            condition = "!HasPropertyOnPrototype(cx, proxy, this, id)"
-            if self.descriptor.interface.getExtendedAttribute('OverrideBuiltins'):
-                condition = "(!isXray || %s)" % condition
-            condition = "!(flags & JSRESOLVE_ASSIGNING) && " + condition
+            # Once we start supporting OverrideBuiltins we need to make
+            # ResolveOwnProperty or EnumerateOwnProperties filter out named
+            # properties that shadow prototype properties.
+            condition = "!(flags & JSRESOLVE_ASSIGNING) && !HasPropertyOnPrototype(cx, proxy, this, id)"
             if self.descriptor.supportsIndexedProperties():
                 condition = "!IsArrayIndex(index) && " + condition
             namedGet = ("\n" +
@@ -6749,16 +6745,14 @@ class CGDOMJSProxyHandler_delete(ClassMethod):
             # We always return above for an index id in the case when we support
             # indexed properties, so we can just treat the id as a name
             # unconditionally here.
-            delete += (CGGeneric(namedBody).define() + "\n"
-                       "if (found) {\n"
-                       "  return true;\n"
+            delete += ("if (!HasPropertyOnPrototype(cx, proxy, this, id)) {\n" +
+                       CGIndenter(CGGeneric(namedBody)).define() + "\n"
+                       "  if (found) {\n"
+                       "    return true;\n"
+                       "  }\n"
                        "}\n")
-            if not self.descriptor.interface.getExtendedAttribute('OverrideBuiltins'):
-                delete = CGIfWrapper(CGGeneric(delete),
-                                     "!HasPropertyOnPrototype(cx, proxy, this, id)").define()
-        delete += """
 
-return dom::DOMProxyHandler::delete_(cx, proxy, id, bp);"""
+        delete += "return dom::DOMProxyHandler::delete_(cx, proxy, id, bp);";
 
         return delete
 
@@ -6785,17 +6779,13 @@ for (int32_t i = 0; i < int32_t(length); ++i) {
             addIndices = ""
 
         if self.descriptor.supportsNamedProperties():
-            if self.descriptor.interface.getExtendedAttribute('OverrideBuiltins'):
-                shadow = "!isXray"
-            else:
-                shadow = "false"
             addNames = """
 nsTArray<nsString> names;
 UnwrapProxy(proxy)->GetSupportedNames(names);
-if (!AppendNamedPropertyIds(cx, proxy, names, %s, props)) {
+if (!AppendNamedPropertyIds(cx, proxy, names, props)) {
   return false;
 }
-""" % shadow
+"""
         else:
             addNames = ""
 
@@ -6852,15 +6842,14 @@ class CGDOMJSProxyHandler_hasOwn(ClassMethod):
         if self.descriptor.supportsNamedProperties():
             # If we support indexed properties we always return above for index
             # property names, so no need to check for those here.
-            named = (CGProxyNamedPresenceChecker(self.descriptor).define() + "\n" +
-                     "*bp = found;\n")
-            if not self.descriptor.interface.getExtendedAttribute('OverrideBuiltins'):
-                named = CGIfWrapper(CGGeneric(named + "return true;\n"),
-                                    "!HasPropertyOnPrototype(cx, proxy, this, id)").define()
-                named += ("\n"
-                          "*bp = false;")
+            named = ("if (!HasPropertyOnPrototype(cx, proxy, this, id)) {\n" +
+                     CGIndenter(CGProxyNamedPresenceChecker(self.descriptor)).define() + "\n" +
+                     "  *bp = found;\n"
+                     "  return true;\n"
+                     "}\n" +
+                     "\n")
         else:
-            named = "*bp = false;"
+            named = ""
 
         return """MOZ_ASSERT(!xpc::WrapperFactory::IsXrayWrapper(proxy),
           "Should not have a XrayWrapper here");
@@ -6876,7 +6865,7 @@ if (expando) {
   }
 }
 
-""" + named + """
+""" + named + """*bp = false;
 return true;"""
 
 class CGDOMJSProxyHandler_get(ClassMethod):
@@ -6926,39 +6915,35 @@ if (expando) {
 } else {
   %s
 }
-
 """ % (stripTrailingWhitespace(getUnforgeableOrExpando.replace('\n', '\n  ')))
         else:
-            getIndexedOrExpando = getUnforgeableOrExpando + "\n\n"
+            getIndexedOrExpando = getUnforgeableOrExpando + "\n"
 
         if self.descriptor.supportsNamedProperties():
             getNamed = CGProxyNamedGetter(self.descriptor, templateValues)
             if self.descriptor.supportsIndexedProperties():
                 getNamed = CGIfWrapper(getNamed, "!IsArrayIndex(index)")
-            getNamed = getNamed.define() + "\n\n"
+            getNamed = getNamed.define() + "\n"
         else:
             getNamed = ""
-
-        getOnPrototype = """bool foundOnPrototype;
-if (!GetPropertyOnPrototype(cx, proxy, id, &foundOnPrototype, vp.address())) {
-  return false;
-}
-
-if (foundOnPrototype) {
-  return true;
-}
-
-"""
-        if self.descriptor.interface.getExtendedAttribute('OverrideBuiltins'):
-            getNamed = getNamed + getOnPrototype
-        else:
-            getNamed = getOnPrototype + getNamed
 
         return """MOZ_ASSERT(!xpc::WrapperFactory::IsXrayWrapper(proxy),
             "Should not have a XrayWrapper here");
 
-""" + getIndexedOrExpando + getNamed + """vp.setUndefined();
-return true;"""
+%s
+{  // Scope for this "found" so it doesn't leak to things below
+  bool found;
+  if (!GetPropertyOnPrototype(cx, proxy, id, &found, vp.address())) {
+    return false;
+  }
+
+  if (found) {
+    return true;
+  }
+}
+%s
+vp.setUndefined();
+return true;""" % (getIndexedOrExpando, getNamed)
 
 class CGDOMJSProxyHandler_className(ClassMethod):
     def __init__(self, descriptor):
