@@ -79,8 +79,8 @@ public:
   gfxASurface::gfxImageFormat format;
 
   // For size decodes
-  PRUint8  mSizeBytes[8]; // Space for width and height, both 4 bytes
-  PRUint32 mHeaderBytesRead;
+  uint8_t mSizeBytes[8]; // Space for width and height, both 4 bytes
+  uint32_t mHeaderBytesRead;
 
   // whether CMS or premultiplied alpha are forced off
   uint32_t mCMSMode;
