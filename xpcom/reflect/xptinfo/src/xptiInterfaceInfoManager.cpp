@@ -183,20 +183,13 @@ XPTInterfaceInfoManager::VerifyAndAddEntryIfNew(XPTInterfaceDirectoryEntry* ifac
 static nsresult 
 EntryToInfo(xptiInterfaceEntry* entry, nsIInterfaceInfo **_retval)
 {
-    xptiInterfaceInfo* info;
-    nsresult rv;
-
     if (!entry) {
         *_retval = nullptr;
         return NS_ERROR_FAILURE;    
     }
 
-    rv = entry->GetInterfaceInfo(&info);
-    if (NS_FAILED(rv))
-        return rv;
-
-    // Transfer the AddRef done by GetInterfaceInfo.
-    *_retval = static_cast<nsIInterfaceInfo*>(info);
+    nsRefPtr<xptiInterfaceInfo> info = entry->InterfaceInfo();
+    info.forget(_retval);
     return NS_OK;    
 }
 
@@ -271,10 +264,8 @@ xpti_ArrayAppender(const char* name, xptiInterfaceEntry* entry, void* arg)
     nsCOMArray<nsIInterfaceInfo>* array = static_cast<nsCOMArray<nsIInterfaceInfo>*>(arg);
 
     if (entry->GetScriptableFlag()) {
-        nsCOMPtr<nsIInterfaceInfo> ii;
-        if (NS_SUCCEEDED(EntryToInfo(entry, getter_AddRefs(ii)))) {
-            array->AppendElement(ii);
-        }
+        nsCOMPtr<nsIInterfaceInfo> ii = entry->InterfaceInfo();
+        array->AppendElement(ii);
     }
     return PL_DHASH_NEXT;
 }
