@@ -91,7 +91,22 @@ class DroidMixin(object):
         self.launchApplication(appName, ".App", intent, url=url, extras=extras)
 
 class DroidADB(DeviceManagerADB, DroidMixin):
-    pass
+
+    def getTopActivity(self):
+        package = None
+        data = self.shellCheckOutput(["dumpsys", "window", "input"])
+        # "dumpsys window input" produces many lines of input. The top/foreground
+        # activity is indicated by something like:
+        #   mFocusedApp=AppWindowToken{483e6db0 token=HistoryRecord{484dcad8 com.mozilla.SUTAgentAndroid/.SUTAgentAndroid}}
+        # Extract this line, ending in the forward slash:
+        m = re.search('mFocusedApp(.+)/', data)
+        if m:
+             line = m.group(0)
+             # Extract package name: string of non-whitespace ending in forward slash
+             m = re.search('(\S+)/$', line)
+             if m:
+                 package = m.group(1)
+        return package
 
 class DroidSUT(DeviceManagerSUT, DroidMixin):
 
@@ -118,6 +133,9 @@ class DroidSUT(DeviceManagerSUT, DroidMixin):
             return [ "--user", self._userSerial ]
 
         return []
+
+    def getTopActivity(self):
+        return self._runCmds([{ 'cmd': "activity" }]).strip()
 
 def DroidConnectByHWID(hwid, timeout=30, **kwargs):
     """Try to connect to the given device by waiting for it to show up using mDNS with the given timeout."""

@@ -37,9 +37,6 @@
                 label="&bookmarkThisLinkCmd.label;"
                 accesskey="&bookmarkThisLinkCmd.accesskey;"
                 oncommand="gContextMenu.bookmarkLink();"/>
-      <menuitem id="context-marklink"
-                accesskey="&social.marklink.accesskey;"
-                oncommand="gContextMenu.markLink();"/>
       <menuitem id="context-savelink"
                 label="&saveLinkCmd.label;"
                 accesskey="&saveLinkCmd.accesskey;"
@@ -225,9 +222,6 @@
                 label="&bookmarkPageCmd2.label;"
                 accesskey="&bookmarkPageCmd2.accesskey;"
                 oncommand="gContextMenu.bookmarkThisPage();"/>
-      <menuitem id="context-markpage"
-                accesskey="&social.markpage.accesskey;"
-                command="Social:TogglePageMark"/>
       <menuitem id="context-savepage"
                 label="&savePageCmd.label;"
                 accesskey="&savePageCmd.accesskey2;"

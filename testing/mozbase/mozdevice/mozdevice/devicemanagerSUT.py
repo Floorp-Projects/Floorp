@@ -508,7 +508,15 @@ class DeviceManagerSUT(DeviceManager):
         cmdline = '%s %s' % (self._formatEnvString(env), cmdline)
 
         # fireProcess may trigger an exception, but we won't handle it
-        self.fireProcess(cmdline, failIfRunning)
+        if cmd[0] == "am":
+            # Robocop tests spawn "am instrument". sutAgent's exec ensures that
+            # am has started before returning, so there is no point in having
+            # fireProcess wait for it to start. Also, since "am" does not show
+            # up in the process list while the test is running, waiting for it
+            # in fireProcess is difficult.
+            self.fireProcess(cmdline, failIfRunning, 0)
+        else:
+            self.fireProcess(cmdline, failIfRunning)
         return outputFile
 
     def killProcess(self, appname, forceKill=False):

@@ -333,14 +333,14 @@
                        "div", kOk, kOk, kOk,
                        "editable", kOk, kOk, kOk,
                        "textarea", kTodo, kOk, kTodo);
-      testTextAtOffset(22, BOUNDARY_WORD_START, "", 22, 22,
+      testTextAtOffset(22, BOUNDARY_WORD_START, "ran", 19, 22,
                        "input", kOk, kOk, kOk,
                        "div", kOk, kOk, kOk,
                        "editable", kOk, kOk, kOk,
-                       "textarea", kTodo, kTodo, kTodo);
+                       "textarea", kTodo, kOk, kTodo);
 
       // BOUNDARY_WORD_END
-      testTextAtOffset(0, BOUNDARY_WORD_END, "", 0, 0, IDs);
+      testTextAtOffset(0, BOUNDARY_WORD_END, "Brave", 0, 5, IDs);
       testTextAtOffset(4, BOUNDARY_WORD_END, "Brave", 0, 5, IDs);
       testTextAtOffset(5, BOUNDARY_WORD_END, "Brave", 0, 5, IDs);
       testTextAtOffset(6, BOUNDARY_WORD_END, " Sir", 5, 9, IDs);

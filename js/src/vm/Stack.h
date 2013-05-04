@@ -331,6 +331,8 @@ class AbstractFramePtr
     inline Value returnValue() const;
     inline void setReturnValue(const Value &rval) const;
 
+    inline bool hasPushedSPSFrame() const;
+
     inline void popBlock(JSContext *cx) const;
     inline void popWith(JSContext *cx) const;
 };

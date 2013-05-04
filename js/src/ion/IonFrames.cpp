@@ -495,8 +495,12 @@ HandleException(ResumeFromException *rfe)
 
             // Unwind profiler pseudo-stack
             JSScript *script = iter.script();
-            Probes::exitScript(cx, script, script->function(), NULL);
-
+            Probes::exitScript(cx, script, script->function(), iter.baselineFrame());
+            // After this point, any pushed SPS frame would have been popped if it needed
+            // to be.  Unset the flag here so that if we call DebugEpilogue below,
+            // it doesn't try to pop the SPS frame again.
+            iter.baselineFrame()->unsetPushedSPSFrame();
+ 
             if (cx->compartment->debugMode() && !calledDebugEpilogue) {
                 // If DebugEpilogue returns |true|, we have to perform a forced
                 // return, e.g. return frame->returnValue() to the caller.

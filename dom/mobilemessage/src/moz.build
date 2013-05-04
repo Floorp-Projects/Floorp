@@ -5,27 +5,27 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.dom.mobilemessage += [
+    'Constants.h',
+    'MobileMessageCallback.h',
+    'MobileMessageService.h',
     'SmsChild.h',
     'SmsParent.h',
-    'MobileMessageService.h',
     'SmsServicesFactory.h',
-    'Constants.h',
     'Types.h',
-    'MobileMessageCallback.h',
 ]
 
 if not CONFIG['MOZ_B2G_RIL']:
     EXPORTS.mozilla.dom.mobilemessage += [
-        'MobileMessageDatabaseService.h',
         'MmsService.h',
+        'MobileMessageDatabaseService.h',
     ]
 
 EXPORTS.mozilla.dom += [
-    'SmsManager.h',
-    'MobileMessageManager.h',
-    'SmsMessage.h',
     'MmsMessage.h',
-    'SmsSegmentInfo.h',
+    'MobileMessageManager.h',
     'SmsFilter.h',
+    'SmsManager.h',
+    'SmsMessage.h',
+    'SmsSegmentInfo.h',
 ]
 

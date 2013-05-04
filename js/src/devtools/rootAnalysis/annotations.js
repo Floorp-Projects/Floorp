@@ -28,6 +28,13 @@ function indirectCallCannotGC(caller, name)
     if (/CallDestroyScriptHook/.test(caller))
         return true;
 
+    // template method called during marking and hence cannot GC
+    if (name == "op" &&
+        /^bool js::WeakMap<Key, Value, HashPolicy>::keyNeedsMark\(JSObject\*\)/.test(caller))
+    {
+        return true;
+    }
+
     return false;
 }
 

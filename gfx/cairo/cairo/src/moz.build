@@ -60,8 +60,8 @@ if CONFIG['BUILD_CAIRO_SVG']:
 
 if CONFIG['MOZ_X11']:
     EXPORTS.cairo += [
-        'cairo-xlib.h',
         'cairo-xlib-xrender.h',
+        'cairo-xlib.h',
     ]
 
 if CONFIG['MOZ_ENABLE_CAIRO_FT']:
