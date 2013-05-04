@@ -71,21 +71,21 @@ FileRequest::NotifyHelperCompleted(FileHelper* aFileHelper)
   }
 
   // Otherwise we need to get the result from the helper.
-  JS::Value result;
-
   nsIScriptContext* sc = GetContextForEventHandlers(&rv);
   NS_ENSURE_STATE(sc);
 
   AutoPushJSContext cx(sc->GetNativeContext());
   NS_ASSERTION(cx, "Failed to get a context!");
 
-  JSObject* global = sc->GetNativeGlobal();
+  JS::Rooted<JS::Value> result(cx);
+
+  JS::Rooted<JSObject*> global(cx, sc->GetNativeGlobal());
   NS_ASSERTION(global, "Failed to get global object!");
 
   JSAutoRequest ar(cx);
   JSAutoCompartment ac(cx, global);
 
-  rv = aFileHelper->GetSuccessResult(cx, &result);
+  rv = aFileHelper->GetSuccessResult(cx, result.address());
   if (NS_FAILED(rv)) {
     NS_WARNING("GetSuccessResult failed!");
   }

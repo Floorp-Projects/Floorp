@@ -33,7 +33,7 @@ MmsAttachmentDataToJSObject(JSContext* aContext,
 {
   JSAutoRequest ar(aContext);
 
-  JSObject* obj = JS_NewObject(aContext, nullptr, nullptr, nullptr);
+  JS::Rooted<JSObject*> obj(aContext, JS_NewObject(aContext, nullptr, nullptr, nullptr));
   NS_ENSURE_TRUE(obj, nullptr);
 
   JSString* idStr = JS_NewUCStringCopyN(aContext,
@@ -78,7 +78,7 @@ GetParamsFromSendMmsMessageRequest(JSContext* aCx,
 {
   JSAutoRequest ar(aCx);
 
-  JSObject* paramsObj = JS_NewObject(aCx, nullptr, nullptr, nullptr);
+  JS::Rooted<JSObject*> paramsObj(aCx, JS_NewObject(aCx, nullptr, nullptr, nullptr));
   NS_ENSURE_TRUE(paramsObj, false);
 
   // smil
@@ -102,10 +102,10 @@ GetParamsFromSendMmsMessageRequest(JSContext* aCx,
   }
 
   // receivers
-  JSObject* receiverArray;
+  JS::Rooted<JSObject*> receiverArray(aCx);
   if (NS_FAILED(nsTArrayToJSArray(aCx,
                                   aRequest.receivers(),
-                                  &receiverArray))) {
+                                  receiverArray.address()))) {
     return false;
   }
   if (!JS_DefineProperty(aCx, paramsObj, "receivers",
@@ -114,15 +114,15 @@ GetParamsFromSendMmsMessageRequest(JSContext* aCx,
   }
 
   // attachments
-  JSObject* attachmentArray = JS_NewArrayObject(aCx,
-                                                aRequest.attachments().Length(),
-                                                nullptr);
+  JS::Rooted<JSObject*> attachmentArray(aCx, JS_NewArrayObject(aCx,
+                                                               aRequest.attachments().Length(),
+                                                               nullptr));
   for (uint32_t i = 0; i < aRequest.attachments().Length(); i++) {
-    JSObject *obj = MmsAttachmentDataToJSObject(aCx,
-                                                aRequest.attachments().ElementAt(i));
+    JS::Rooted<JSObject*> obj(aCx,
+      MmsAttachmentDataToJSObject(aCx, aRequest.attachments().ElementAt(i)));
     NS_ENSURE_TRUE(obj, false);
-    jsval val = JS::ObjectValue(*obj);
-    if (!JS_SetElement(aCx, attachmentArray, i, &val)) {
+    JS::Rooted<JS::Value> val(aCx, JS::ObjectValue(*obj));
+    if (!JS_SetElement(aCx, attachmentArray, i, val.address())) {
       return false;
     }
   }
@@ -420,12 +420,12 @@ SmsRequestParent::DoRequest(const SendMessageRequest& aRequest)
       nsCOMPtr<nsIMmsService> mmsService = do_GetService(MMS_SERVICE_CONTRACTID);
       NS_ENSURE_TRUE(mmsService, true);
 
-      JS::Value params;
       AutoJSContext cx;
+      JS::Rooted<JS::Value> params(cx);
       if (!GetParamsFromSendMmsMessageRequest(
               cx,
               aRequest.get_SendMmsMessageRequest(),
-              &params)) {
+              params.address())) {
         NS_WARNING("SmsRequestParent: Fail to build MMS params.");
         return true;
       }
