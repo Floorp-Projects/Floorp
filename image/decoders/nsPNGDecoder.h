@@ -79,15 +79,15 @@ public:
   gfxASurface::gfxImageFormat format;
 
   // For size decodes
-  uint8_t *mHeaderBuf;
-  uint32_t mHeaderBytesRead;
+  PRUint8  mSizeBytes[8]; // Space for width and height, both 4 bytes
+  PRUint32 mHeaderBytesRead;
+
+  // whether CMS or premultiplied alpha are forced off
+  uint32_t mCMSMode;
 
   uint8_t mChannels;
   bool mFrameHasNoAlpha;
   bool mFrameIsHidden;
-
-  // whether CMS or premultiplied alpha are forced off
-  uint32_t mCMSMode;
   bool mDisablePremultipliedAlpha;
 
   struct AnimFrameInfo
