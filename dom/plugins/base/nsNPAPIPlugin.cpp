@@ -1244,8 +1244,8 @@ _getpluginelement(NPP npp)
                   getter_AddRefs(holder));
   NS_ENSURE_TRUE(holder, nullptr);
 
-  JSObject* obj = nullptr;
-  holder->GetJSObject(&obj);
+  JS::Rooted<JSObject*> obj(cx);
+  holder->GetJSObject(obj.address());
   NS_ENSURE_TRUE(obj, nullptr);
 
   return nsJSObjWrapper::GetNewOrUsed(npp, cx, obj);
@@ -1494,8 +1494,7 @@ _evaluate(NPP npp, NPObject* npobj, NPString *script, NPVariant *result)
 
   JSAutoRequest req(cx);
 
-  JSObject *obj =
-    nsNPObjWrapper::GetNewOrUsed(npp, cx, npobj);
+  JS::Rooted<JSObject*> obj(cx, nsNPObjWrapper::GetNewOrUsed(npp, cx, npobj));
 
   if (!obj) {
     return false;

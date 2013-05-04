@@ -139,7 +139,7 @@ ArchiveRequest::ReaderReady(nsTArray<nsCOMPtr<nsIDOMFile> >& aFileList,
   AutoPushJSContext cx(sc->GetNativeContext());
   NS_ASSERTION(cx, "Failed to get a context!");
 
-  JSObject* global = sc->GetNativeGlobal();
+  JS::Rooted<JSObject*> global(cx, sc->GetNativeGlobal());
   NS_ASSERTION(global, "Failed to get global object!");
 
   JSAutoRequest ar(cx);
@@ -178,7 +178,7 @@ ArchiveRequest::GetFilenamesResult(JSContext* aCx,
                                    JS::Value* aValue,
                                    nsTArray<nsCOMPtr<nsIDOMFile> >& aFileList)
 {
-  JSObject* array = JS_NewArrayObject(aCx, aFileList.Length(), nullptr);
+  JS::Rooted<JSObject*> array(aCx, JS_NewArrayObject(aCx, aFileList.Length(), nullptr));
   nsresult rv;
 
   if (!array) {
@@ -237,7 +237,7 @@ ArchiveRequest::GetFilesResult(JSContext* aCx,
                                JS::Value* aValue,
                                nsTArray<nsCOMPtr<nsIDOMFile> >& aFileList)
 {
-  JSObject* array = JS_NewArrayObject(aCx, aFileList.Length(), nullptr);
+  JS::Rooted<JSObject*> array(aCx, JS_NewArrayObject(aCx, aFileList.Length(), nullptr));
   if (!array) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

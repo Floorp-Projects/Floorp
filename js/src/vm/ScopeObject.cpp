@@ -164,7 +164,7 @@ CallObject::create(JSContext *cx, HandleShape shape, HandleTypeObject type, Heap
  * callee) or used as a template for jit compilation.
  */
 CallObject *
-CallObject::createTemplateObject(JSContext *cx, HandleScript script)
+CallObject::createTemplateObject(JSContext *cx, HandleScript script, gc::InitialHeap heap)
 {
     RootedShape shape(cx, script->bindings.callObjShape());
     JS_ASSERT(shape->getObjectClass() == &CallClass);
@@ -177,7 +177,7 @@ CallObject::createTemplateObject(JSContext *cx, HandleScript script)
     JS_ASSERT(CanBeFinalizedInBackground(kind, &CallClass));
     kind = gc::GetBackgroundAllocKind(kind);
 
-    JSObject *obj = JSObject::create(cx, kind, gc::TenuredHeap, shape, type);
+    JSObject *obj = JSObject::create(cx, kind, heap, shape, type);
     if (!obj)
         return NULL;
 
@@ -193,7 +193,7 @@ CallObject::createTemplateObject(JSContext *cx, HandleScript script)
 CallObject *
 CallObject::create(JSContext *cx, HandleScript script, HandleObject enclosing, HandleFunction callee)
 {
-    CallObject *callobj = CallObject::createTemplateObject(cx, script);
+    CallObject *callobj = CallObject::createTemplateObject(cx, script, gc::DefaultHeap);
     if (!callobj)
         return NULL;
 
@@ -286,7 +286,7 @@ Class js::DeclEnvClass = {
  * scope and callee) or used as a template for jit compilation.
  */
 DeclEnvObject *
-DeclEnvObject::createTemplateObject(JSContext *cx, HandleFunction fun)
+DeclEnvObject::createTemplateObject(JSContext *cx, HandleFunction fun, gc::InitialHeap heap)
 {
     RootedTypeObject type(cx, cx->compartment->getNewType(cx, &DeclEnvClass, NULL));
     if (!type)
@@ -299,7 +299,7 @@ DeclEnvObject::createTemplateObject(JSContext *cx, HandleFunction fun)
     if (!emptyDeclEnvShape)
         return NULL;
 
-    RootedObject obj(cx, JSObject::create(cx, FINALIZE_KIND, gc::DefaultHeap, emptyDeclEnvShape, type));
+    RootedObject obj(cx, JSObject::create(cx, FINALIZE_KIND, heap, emptyDeclEnvShape, type));
     if (!obj)
         return NULL;
 
@@ -320,7 +320,7 @@ DeclEnvObject::createTemplateObject(JSContext *cx, HandleFunction fun)
 DeclEnvObject *
 DeclEnvObject::create(JSContext *cx, HandleObject enclosing, HandleFunction callee)
 {
-    RootedObject obj(cx, createTemplateObject(cx, callee));
+    RootedObject obj(cx, createTemplateObject(cx, callee, gc::DefaultHeap));
     if (!obj)
         return NULL;
 

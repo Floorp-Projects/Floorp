@@ -103,7 +103,7 @@ function prepareTest(nextTest, url) {
 // Tests a page with an unknown plugin in it.
 function test1() {
   var notificationBox = gBrowser.getNotificationBox(gTestBrowser);
-  ok(notificationBox.getNotificationWithValue("missing-plugins"), "Test 1, Should have displayed the missing plugin notification");
+  ok(PopupNotifications.getNotification("plugins-not-found", gTestBrowser), "Test 1, Should have displayed the missing plugin notification");
   ok(!notificationBox.getNotificationWithValue("blocked-plugins"), "Test 1, Should not have displayed the blocked plugin notification");
   ok(gTestBrowser.missingPlugins, "Test 1, Should be a missing plugin list");
   ok(gTestBrowser.missingPlugins.has("application/x-unknown"), "Test 1, Should know about application/x-unknown");
@@ -124,7 +124,7 @@ function test1() {
 // Tests a page with a working plugin in it.
 function test2() {
   var notificationBox = gBrowser.getNotificationBox(gTestBrowser);
-  ok(!notificationBox.getNotificationWithValue("missing-plugins"), "Test 2, Should not have displayed the missing plugin notification");
+  ok(!PopupNotifications.getNotification("plugins-not-found", gTestBrowser), "Test 2, Should not have displayed the missing plugin notification");
   ok(!notificationBox.getNotificationWithValue("blocked-plugins"), "Test 2, Should not have displayed the blocked plugin notification");
   ok(!gTestBrowser.missingPlugins, "Test 2, Should not be a missing plugin list");
 
@@ -137,7 +137,7 @@ function test2() {
 // Tests a page with a disabled plugin in it.
 function test3() {
   var notificationBox = gBrowser.getNotificationBox(gTestBrowser);
-  ok(!notificationBox.getNotificationWithValue("missing-plugins"), "Test 3, Should not have displayed the missing plugin notification");
+  ok(!PopupNotifications.getNotification("plugins-not-found", gTestBrowser), "Test 3, Should not have displayed the missing plugin notification");
   ok(!notificationBox.getNotificationWithValue("blocked-plugins"), "Test 3, Should not have displayed the blocked plugin notification");
   ok(!gTestBrowser.missingPlugins, "Test 3, Should not be a missing plugin list");
 
@@ -168,7 +168,7 @@ function prepareTest5() {
 // Tests a page with a blocked plugin in it.
 function test5() {
   var notificationBox = gBrowser.getNotificationBox(gTestBrowser);
-  ok(!notificationBox.getNotificationWithValue("missing-plugins"), "Test 5, Should not have displayed the missing plugin notification");
+  ok(!PopupNotifications.getNotification("plugins-not-found", gTestBrowser), "Test 5, Should not have displayed the missing plugin notification");
   ok(notificationBox.getNotificationWithValue("blocked-plugins"), "Test 5, Should have displayed the blocked plugin notification");
   ok(gTestBrowser.missingPlugins, "Test 5, Should be a missing plugin list");
   ok(gTestBrowser.missingPlugins.has("application/x-test"), "Test 5, Should know about application/x-test");
@@ -184,8 +184,8 @@ function test5() {
 // Tests a page with a blocked and unknown plugin in it.
 function test6() {
   var notificationBox = gBrowser.getNotificationBox(gTestBrowser);
-  ok(notificationBox.getNotificationWithValue("missing-plugins"), "Test 6, Should have displayed the missing plugin notification");
-  ok(!notificationBox.getNotificationWithValue("blocked-plugins"), "Test 6, Should not have displayed the blocked plugin notification");
+  ok(PopupNotifications.getNotification("plugins-not-found", gTestBrowser), "Test 6, Should have displayed the missing plugin notification");
+  ok(notificationBox.getNotificationWithValue("blocked-plugins"), "Test 6, Should have displayed the blocked plugin notification");
   ok(gTestBrowser.missingPlugins, "Test 6, Should be a missing plugin list");
   ok(gTestBrowser.missingPlugins.has("application/x-unknown"), "Test 6, Should know about application/x-unknown");
   ok(gTestBrowser.missingPlugins.has("application/x-test"), "Test 6, Should know about application/x-test");
@@ -196,8 +196,8 @@ function test6() {
 // Tests a page with a blocked and unknown plugin in it (alternate order to above).
 function test7() {
   var notificationBox = gBrowser.getNotificationBox(gTestBrowser);
-  ok(notificationBox.getNotificationWithValue("missing-plugins"), "Test 7, Should have displayed the missing plugin notification");
-  ok(!notificationBox.getNotificationWithValue("blocked-plugins"), "Test 7, Should not have displayed the blocked plugin notification");
+  ok(PopupNotifications.getNotification("plugins-not-found", gTestBrowser), "Test 7, Should have displayed the missing plugin notification");
+  ok(notificationBox.getNotificationWithValue("blocked-plugins"), "Test 7, Should have displayed the blocked plugin notification");
   ok(gTestBrowser.missingPlugins, "Test 7, Should be a missing plugin list");
   ok(gTestBrowser.missingPlugins.has("application/x-unknown"), "Test 7, Should know about application/x-unknown");
   ok(gTestBrowser.missingPlugins.has("application/x-test"), "Test 7, Should know about application/x-test");
@@ -214,7 +214,7 @@ function test7() {
 // Tests a page with a working plugin that is click-to-play
 function test8() {
   var notificationBox = gBrowser.getNotificationBox(gTestBrowser);
-  ok(!notificationBox.getNotificationWithValue("missing-plugins"), "Test 8, Should not have displayed the missing plugin notification");
+  ok(!PopupNotifications.getNotification("plugins-not-found", gTestBrowser), "Test 8, Should not have displayed the missing plugin notification");
   ok(!notificationBox.getNotificationWithValue("blocked-plugins"), "Test 8, Should not have displayed the blocked plugin notification");
   ok(!gTestBrowser.missingPlugins, "Test 8, Should not be a missing plugin list");
   ok(PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser), "Test 8, Should have a click-to-play notification");
@@ -230,7 +230,7 @@ function test8() {
 // Tests that activating one click-to-play plugin will activate only that plugin (part 1/3)
 function test9a() {
   var notificationBox = gBrowser.getNotificationBox(gTestBrowser);
-  ok(!notificationBox.getNotificationWithValue("missing-plugins"), "Test 9a, Should not have displayed the missing plugin notification");
+  ok(!PopupNotifications.getNotification("plugins-not-found", gTestBrowser), "Test 9a, Should not have displayed the missing plugin notification");
   ok(!notificationBox.getNotificationWithValue("blocked-plugins"), "Test 9a, Should not have displayed the blocked plugin notification");
   ok(!gTestBrowser.missingPlugins, "Test 9a, Should not be a missing plugin list");
   var notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
@@ -261,7 +261,7 @@ function test9a() {
 // Tests that activating one click-to-play plugin will activate only that plugin (part 2/3)
 function test9b() {
   var notificationBox = gBrowser.getNotificationBox(gTestBrowser);
-  ok(!notificationBox.getNotificationWithValue("missing-plugins"), "Test 9b, Should not have displayed the missing plugin notification");
+  ok(!PopupNotifications.getNotification("plugins-not-found", gTestBrowser), "Test 9b, Should not have displayed the missing plugin notification");
   ok(!notificationBox.getNotificationWithValue("blocked-plugins"), "Test 9b, Should not have displayed the blocked plugin notification");
   ok(!gTestBrowser.missingPlugins, "Test 9b, Should not be a missing plugin list");
   var notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
@@ -293,7 +293,7 @@ function test9b() {
 // Tests that activating one click-to-play plugin will activate only that plugin (part 3/3)
 function test9c() {
   var notificationBox = gBrowser.getNotificationBox(gTestBrowser);
-  ok(!notificationBox.getNotificationWithValue("missing-plugins"), "Test 9c, Should not have displayed the missing plugin notification");
+  ok(!PopupNotifications.getNotification("plugins-not-found", gTestBrowser), "Test 9c, Should not have displayed the missing plugin notification");
   ok(!notificationBox.getNotificationWithValue("blocked-plugins"), "Test 9c, Should not have displayed the blocked plugin notification");
   ok(!gTestBrowser.missingPlugins, "Test 9c, Should not be a missing plugin list");
   ok(!PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser), "Test 9c, Click to play notification should be removed now");
@@ -319,7 +319,7 @@ function test9c() {
 // Tests that activating a hidden click-to-play plugin through the notification works (part 1/2)
 function test10a() {
   var notificationBox = gBrowser.getNotificationBox(gTestBrowser);
-  ok(!notificationBox.getNotificationWithValue("missing-plugins"), "Test 10a, Should not have displayed the missing plugin notification");
+  ok(!PopupNotifications.getNotification("plugins-not-found", gTestBrowser), "Test 10a, Should not have displayed the missing plugin notification");
   ok(!notificationBox.getNotificationWithValue("blocked-plugins"), "Test 10a, Should not have displayed the blocked plugin notification");
   ok(!gTestBrowser.missingPlugins, "Test 10a, Should not be a missing plugin list");
   var popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);

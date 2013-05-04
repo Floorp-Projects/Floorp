@@ -614,14 +614,15 @@ protected:
 
   // False return value means we threw an exception.  True return value
   // but false "found" means we didn't have a subframe at that index.
-  bool GetSubframeWindow(JSContext *cx, JSObject *proxy, jsid id,
+  bool GetSubframeWindow(JSContext *cx, JS::Handle<JSObject*> proxy,
+                         JS::Handle<jsid> id,
                          JS::Value *vp, bool &found);
 
   // Returns a non-null window only if id is an index and we have a
   // window at that index.
   already_AddRefed<nsIDOMWindow> GetSubframeWindow(JSContext *cx,
-                                                   JSObject *proxy,
-                                                   jsid id);
+                                                   JS::Handle<JSObject*> proxy,
+                                                   JS::Handle<jsid> id);
 
   bool AppendIndexedPropertyNames(JSContext *cx, JSObject *proxy,
                                   JS::AutoIdVector &props);
@@ -869,8 +870,9 @@ nsOuterWindowProxy::iterate(JSContext *cx, JS::Handle<JSObject*> proxy,
 }
 
 bool
-nsOuterWindowProxy::GetSubframeWindow(JSContext *cx, JSObject *proxy,
-                                      jsid id, JS::Value* vp,
+nsOuterWindowProxy::GetSubframeWindow(JSContext *cx,
+                                      JS::Handle<JSObject*> proxy,
+                                      JS::Handle<jsid> id, JS::Value* vp,
                                       bool& found)
 {
   nsCOMPtr<nsIDOMWindow> frame = GetSubframeWindow(cx, proxy, id);
@@ -895,7 +897,9 @@ nsOuterWindowProxy::GetSubframeWindow(JSContext *cx, JSObject *proxy,
 }
 
 already_AddRefed<nsIDOMWindow>
-nsOuterWindowProxy::GetSubframeWindow(JSContext *cx, JSObject *proxy, jsid id)
+nsOuterWindowProxy::GetSubframeWindow(JSContext *cx,
+                                      JS::Handle<JSObject*> proxy,
+                                      JS::Handle<jsid> id)
 {
   int32_t index = GetArrayIndexFromId(cx, id);
   if (!IsArrayIndex(index)) {
@@ -949,8 +953,9 @@ nsChromeOuterWindowProxy
 nsChromeOuterWindowProxy::singleton;
 
 static JSObject*
-NewOuterWindowProxy(JSContext *cx, JSObject *parent, bool isChrome)
+NewOuterWindowProxy(JSContext *cx, JSObject *aParent, bool isChrome)
 {
+  JS::Rooted<JSObject*> parent(cx, aParent);
   JSAutoCompartment ac(cx, parent);
   JS::Rooted<JSObject*> proto(cx);
   if (!js::GetObjectProto(cx, parent, proto.address()))
@@ -2240,8 +2245,9 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     newInnerWindow = currentInner;
 
     if (aDocument != oldDoc) {
-      xpc_UnmarkGrayObject(currentInner->mJSObject);
-      if (!nsWindowSH::InvalidateGlobalScopePolluter(cx, currentInner->mJSObject)) {
+      JS::Rooted<JSObject*> obj(cx, currentInner->mJSObject);
+      xpc_UnmarkGrayObject(obj);
+      if (!nsWindowSH::InvalidateGlobalScopePolluter(cx, obj)) {
         return NS_ERROR_FAILURE;
       }
     }
@@ -7361,11 +7367,11 @@ public:
                                   static_cast<nsGlobalWindow*>(window->GetCurrentInnerWindow());
       NS_ENSURE_TRUE(currentInner, NS_OK);
 
-      JSObject* obj = currentInner->FastGetGlobalJSObject();
+      JSContext* cx = nsContentUtils::GetSafeJSContext();
+
+      JS::Rooted<JSObject*> obj(cx, currentInner->FastGetGlobalJSObject());
       // We only want to nuke wrappers for the chrome->content case
       if (obj && !js::IsSystemCompartment(js::GetObjectCompartment(obj))) {
-        JSContext* cx = nsContentUtils::GetSafeJSContext();
-
         JSAutoRequest ar(cx);
         js::NukeCrossCompartmentWrappers(cx,
                                          js::ChromeCompartmentsOnly(),
