@@ -2748,8 +2748,7 @@ nsDOMClassInfo::CheckAccess(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
 NS_IMETHODIMP
 nsDOMClassInfo::Call(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                     JSObject *obj, uint32_t argc, jsval *argv, jsval *vp,
-                     bool *_retval)
+                     JSObject *obj, const JS::CallArgs &args, bool *_retval)
 {
   NS_WARNING("nsDOMClassInfo::Call Don't call me!");
 
@@ -2758,8 +2757,8 @@ nsDOMClassInfo::Call(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
 NS_IMETHODIMP
 nsDOMClassInfo::Construct(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                          JSObject *obj, uint32_t argc, jsval *argv,
-                          jsval *vp, bool *_retval)
+                          JSObject *obj, const JS::CallArgs &args,
+                          bool *_retval)
 {
   NS_WARNING("nsDOMClassInfo::Construct Don't call me!");
 
@@ -3746,8 +3745,8 @@ public:
   nsresult PreCreate(JSContext *cx, JSObject *globalObj, JSObject **parentObj);
 
   nsresult Construct(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                     JS::Handle<JSObject*> obj, uint32_t argc, jsval *argv,
-                     jsval *vp, bool *_retval);
+                     JS::Handle<JSObject*> obj, const JS::CallArgs &args,
+                     bool *_retval););
 
   nsresult HasInstance(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                        JS::Handle<JSObject*> obj, const jsval &val, bool *bp,
@@ -3906,8 +3905,8 @@ nsDOMConstructor::PreCreate(JSContext *cx, JSObject *globalObj, JSObject **paren
 
 nsresult
 nsDOMConstructor::Construct(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
-                            JS::Handle<JSObject*> obj, uint32_t argc, jsval * argv,
-                            jsval * vp, bool *_retval)
+                            JS::Handle<JSObject*> obj, const JS::CallArgs &args,
+                            bool *_retval)
 {
   MOZ_ASSERT(obj);
 
@@ -3919,7 +3918,8 @@ nsDOMConstructor::Construct(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
   }
 
-  return BaseStubConstructor(mWeakOwner, name_struct, cx, obj, argc, argv, vp);
+  return BaseStubConstructor(mWeakOwner, name_struct, cx, obj, args.length(), args.array(),
+                             args.rval().address());
 }
 
 nsresult
@@ -7482,8 +7482,7 @@ nsDOMConstructorSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx
 
 NS_IMETHODIMP
 nsDOMConstructorSH::Call(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                         JSObject *aObj, uint32_t argc, jsval *argv, jsval *vp,
-                         bool *_retval)
+                         JSObject *aObj, const JS::CallArgs &args, bool *_retval)
 {
   JS::Rooted<JSObject*> obj(cx, aObj);
   MOZ_ASSERT(obj);
@@ -7504,8 +7503,7 @@ nsDOMConstructorSH::Call(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
 NS_IMETHODIMP
 nsDOMConstructorSH::Construct(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                              JSObject *aObj, uint32_t argc, jsval *argv,
-                              jsval *vp, bool *_retval)
+                              JSObject *aObj, const JS::CallArgs &args, bool *_retval)
 {
   JS::Rooted<JSObject*> obj(cx, aObj);
   MOZ_ASSERT(obj);

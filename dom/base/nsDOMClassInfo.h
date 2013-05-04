@@ -1039,12 +1039,10 @@ public:
                         JSObject *obj, jsid id, uint32_t flags,
                         JSObject **objp, bool *_retval);
   NS_IMETHOD Call(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                  JSObject *obj, uint32_t argc, jsval *argv, jsval *vp,
-                  bool *_retval);
+                  JSObject *obj, const JS::CallArgs &args, bool *_retval);
 
   NS_IMETHOD Construct(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                       JSObject *obj, uint32_t argc, jsval *argv,
-                       jsval *vp, bool *_retval);
+                       JSObject *obj, const JS::CallArgs &args, bool *_retval);
 
   NS_IMETHOD HasInstance(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          JSObject *obj, const jsval &val, bool *bp,

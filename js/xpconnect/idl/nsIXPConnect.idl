@@ -45,6 +45,7 @@ class nsWrapperCache;
 [ptr] native nsAXPCNativeCallContextPtr(nsAXPCNativeCallContext);
 [ptr] native nsWrapperCachePtr(nsWrapperCache);
       native ZoneSpecifier(uintptr_t);
+[ref] native JSCallArgsRef(const JS::CallArgs);
 
 /***************************************************************************/
 
