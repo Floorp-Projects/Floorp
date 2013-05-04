@@ -301,13 +301,8 @@ ICStub::trace(JSTracer *trc)
         MarkShape(trc, &propStub->holderShape(), "baseline-getpropnativeproto-stub-holdershape");
         break;
       }
-      case ICStub::GetProp_CallListBaseNative:
-      case ICStub::GetProp_CallListBaseWithGenerationNative: {
-        ICGetPropCallListBaseNativeStub *propStub;
-        if (kind() ==  ICStub::GetProp_CallListBaseNative)
-            propStub = toGetProp_CallListBaseNative();
-        else
-            propStub = toGetProp_CallListBaseWithGenerationNative();
+      case ICStub::GetProp_CallListBaseNative: {
+        ICGetProp_CallListBaseNative *propStub = toGetProp_CallListBaseNative();
         MarkShape(trc, &propStub->shape(), "baseline-getproplistbasenative-stub-shape");
         if (propStub->expandoShape()) {
             MarkShape(trc, &propStub->expandoShape(),
@@ -612,7 +607,6 @@ ICStubCompiler::guardProfilingEnabled(MacroAssembler &masm, Register scratch, La
     JS_ASSERT(kind == ICStub::Call_Scripted      || kind == ICStub::Call_AnyScripted     ||
               kind == ICStub::Call_Native        || kind == ICStub::GetProp_CallScripted ||
               kind == ICStub::GetProp_CallNative || kind == ICStub::GetProp_CallListBaseNative ||
-              kind == ICStub::GetProp_CallListBaseWithGenerationNative ||
               kind == ICStub::SetProp_CallScripted || kind == ICStub::SetProp_CallNative);
 
     // Guard on bit in frame that indicates if the SPS frame was pushed in the first
@@ -3042,8 +3036,6 @@ static void
 GenerateListBaseChecks(JSContext *cx, MacroAssembler &masm, Register object,
                        Address checkProxyHandlerAddr,
                        Address checkExpandoShapeAddr,
-                       Address *expandoAndGenerationAddr,
-                       Address *generationAddr,
                        Register scratch,
                        GeneralRegisterSet &listBaseRegSet,
                        Label *checkFailed)
@@ -3067,22 +3059,7 @@ GenerateListBaseChecks(JSContext *cx, MacroAssembler &masm, Register object,
     Label failListBaseCheck;
     Label listBaseOk;
 
-    if (expandoAndGenerationAddr) {
-        JS_ASSERT(generationAddr);
-
-        masm.loadPtr(*expandoAndGenerationAddr, tempVal.scratchReg());
-        masm.branchPrivatePtr(Assembler::NotEqual, expandoAddr, tempVal.scratchReg(),
-                              &failListBaseCheck);
-
-        masm.load32(*generationAddr, scratch);
-        masm.branch32(Assembler::NotEqual,
-                      Address(tempVal.scratchReg(), offsetof(ExpandoAndGeneration, expando)),
-                      scratch, &failListBaseCheck);
-
-        masm.loadValue(Address(tempVal.scratchReg(), 0), tempVal);
-    } else {
-        masm.loadValue(expandoAddr, tempVal);
-    }
+    masm.loadValue(expandoAddr, tempVal);
 
     // If the incoming object does not have an expando object then we're sure we're not
     // shadowing.
@@ -3116,7 +3093,7 @@ GenerateListBaseChecks(JSContext *cx, MacroAssembler &masm, Register object,
 static bool
 EffectlesslyLookupProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,
                            MutableHandleObject holder, MutableHandleShape shape,
-                           bool *checkListBase=NULL, bool *listBaseHasGeneration=NULL)
+                           bool *checkListBase=NULL)
 {
     shape.set(NULL);
     holder.set(NULL);
@@ -3128,21 +3105,19 @@ EffectlesslyLookupProperty(JSContext *cx, HandleObject obj, HandlePropertyName n
     // Check for list base if asked to.
     RootedObject checkObj(cx, obj);
     if (checkListBase && IsCacheableListBase(obj)) {
-        JS_ASSERT(listBaseHasGeneration);
-
         *checkListBase = isListBase = true;
         if (obj->hasUncacheableProto())
             return true;
 
-        RootedId id(cx, NameToId(name));
-        ListBaseShadowsResult shadows =
-            GetListBaseShadowsCheck()(cx, obj, id);
-        if (shadows == ShadowCheckFailed)
-            return false;
-        if (shadows == Shadows)
-            return true;
+        // Expando objects just hold any extra properties the object has been given by a script,
+        // and have no prototype or anything else that will complicate property lookups on them.
+        Value expandoVal = obj->getFixedSlot(GetListBaseExpandoSlot());
 
-        *listBaseHasGeneration = (shadows == DoesntShadowUnique);
+        JS_ASSERT_IF(expandoVal.isObject(),
+                     expandoVal.toObject().isNative() && !expandoVal.toObject().getProto());
+
+        if (expandoVal.isObject() && expandoVal.toObject().nativeContains(cx, name))
+            return true;
 
         checkObj = GetListBaseProto(obj);
     }
@@ -5112,32 +5087,6 @@ TryAttachLengthStub(JSContext *cx, HandleScript script, ICGetProp_Fallback *stub
 }
 
 static bool
-UpdateExistingGenerationalListBaseStub(ICGetProp_Fallback *stub,
-                                       HandleObject obj)
-{
-    Value expandoSlot = obj->getFixedSlot(GetListBaseExpandoSlot());
-    JS_ASSERT(!expandoSlot.isObject() && !expandoSlot.isUndefined());
-    ExpandoAndGeneration *expandoAndGeneration = (ExpandoAndGeneration*)expandoSlot.toPrivate();
-    for (ICStubConstIterator iter = stub->beginChainConst(); !iter.atEnd(); iter++) {
-        if (iter->isGetProp_CallListBaseWithGenerationNative()) {
-            ICGetProp_CallListBaseWithGenerationNative* updateStub =
-                iter->toGetProp_CallListBaseWithGenerationNative();
-            if (updateStub->expandoAndGeneration() == expandoAndGeneration) {
-                // Update generation
-                uint32_t generation = expandoAndGeneration->generation;
-                IonSpew(IonSpew_BaselineIC,
-                        "  Updating existing stub with generation, old value: %i, "
-                        "new value: %i", updateStub->generation(),
-                        generation);
-                updateStub->setGeneration(generation);
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
-static bool
 TryAttachNativeGetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc,
                            ICGetProp_Fallback *stub, HandlePropertyName name,
                            HandleValue val, HandleValue res, bool *attached)
@@ -5150,11 +5099,9 @@ TryAttachNativeGetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc,
     RootedObject obj(cx, &val.toObject());
 
     bool isListBase;
-    bool listBaseHasGeneration;
     RootedShape shape(cx);
     RootedObject holder(cx);
-    if (!EffectlesslyLookupProperty(cx, obj, name, &holder, &shape, &isListBase,
-                                    &listBaseHasGeneration))
+    if (!EffectlesslyLookupProperty(cx, obj, name, &holder, &shape, &isListBase))
         return false;
 
     if (!isListBase && !obj->isNative())
@@ -5211,27 +5158,19 @@ TryAttachNativeGetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc,
         JS_ASSERT(obj != holder);
         JS_ASSERT(callee->isNative());
 
-        IonSpew(IonSpew_BaselineIC, "  Generating GetProp(%s%s/NativeGetter %p) stub",
-                isListBase ? "ListBaseObj" : "NativeObj",
-                isListBase && listBaseHasGeneration ? "WithGeneration" : "",
-                callee->native());
-
         ICStub *newStub = NULL;
         if (isListBase) {
-            ICStub::Kind kind;
-            if (listBaseHasGeneration) {
-                if (UpdateExistingGenerationalListBaseStub(stub, obj)) {
-                    *attached = true;
-                    return true;
-                }
-                kind = ICStub::GetProp_CallListBaseWithGenerationNative;
-            } else {
-                kind = ICStub::GetProp_CallListBaseNative;
-            }
-            ICGetPropCallListBaseNativeCompiler compiler(cx, kind, monitorStub, obj, holder, callee,
+            IonSpew(IonSpew_BaselineIC, "  Generating GetProp(ListBaseObj/NativeGetter %p) stub",
+                        callee->native());
+
+            ICGetProp_CallListBaseNative::Compiler compiler(cx, monitorStub, obj, holder, callee,
                                                             pc - script->code);
             newStub = compiler.getStub(compiler.getStubSpace(script));
+
         } else {
+            IonSpew(IonSpew_BaselineIC, "  Generating GetProp(NativeObj/NativeGetter %p) stub",
+                        callee->native());
+
             ICGetProp_CallNative::Compiler compiler(cx, monitorStub, obj, holder, callee,
                                                     pc - script->code);
             newStub = compiler.getStub(compiler.getStubSpace(script));
@@ -5750,9 +5689,7 @@ ICGetProp_CallNative::Compiler::generateStubCode(MacroAssembler &masm)
 }
 
 bool
-ICGetPropCallListBaseNativeCompiler::generateStubCode(MacroAssembler &masm,
-                                                      Address* expandoAndGenerationAddr,
-                                                      Address* generationAddr)
+ICGetProp_CallListBaseNative::Compiler::generateStubCode(MacroAssembler &masm)
 {
     Label failure;
     GeneralRegisterSet regs(availableGeneralRegs(1));
@@ -5785,7 +5722,6 @@ ICGetPropCallListBaseNativeCompiler::generateStubCode(MacroAssembler &masm,
                 cx, masm, objReg,
                 Address(BaselineStubReg, ICGetProp_CallListBaseNative::offsetOfProxyHandler()),
                 Address(BaselineStubReg, ICGetProp_CallListBaseNative::offsetOfExpandoShape()),
-                expandoAndGenerationAddr, generationAddr,
                 scratch,
                 listBaseRegSet,
                 &failure);
@@ -5844,54 +5780,6 @@ ICGetPropCallListBaseNativeCompiler::generateStubCode(MacroAssembler &masm,
     return true;
 }
 
-bool
-ICGetPropCallListBaseNativeCompiler::generateStubCode(MacroAssembler &masm)
-{
-    if (kind == ICStub::GetProp_CallListBaseNative)
-        return generateStubCode(masm, NULL, NULL);
-
-    Address internalStructAddress(BaselineStubReg,
-        ICGetProp_CallListBaseWithGenerationNative::offsetOfInternalStruct());
-    Address generationAddress(BaselineStubReg,
-        ICGetProp_CallListBaseWithGenerationNative::offsetOfGeneration());
-    return generateStubCode(masm, &internalStructAddress, &generationAddress);
-}
-
-ICStub*
-ICGetPropCallListBaseNativeCompiler::getStub(ICStubSpace *space)
-{
-    RootedShape shape(cx, obj_->lastProperty());
-    RootedShape holderShape(cx, holder_->lastProperty());
-
-    Value expandoSlot = obj_->getFixedSlot(GetListBaseExpandoSlot());
-    RootedShape expandoShape(cx, NULL);
-    ExpandoAndGeneration *expandoAndGeneration;
-    int32_t generation;
-    Value expandoVal;
-    if (kind == ICStub::GetProp_CallListBaseNative) {
-        expandoVal = expandoSlot;
-    } else {
-        JS_ASSERT(kind == ICStub::GetProp_CallListBaseWithGenerationNative);
-        JS_ASSERT(!expandoSlot.isObject() && !expandoSlot.isUndefined());
-        expandoAndGeneration = (ExpandoAndGeneration*)expandoSlot.toPrivate();
-        expandoVal = expandoAndGeneration->expando;
-        generation = expandoAndGeneration->generation;
-    }
-
-    if (expandoVal.isObject())
-        expandoShape = expandoVal.toObject().lastProperty();
-
-    if (kind == ICStub::GetProp_CallListBaseNative) {
-        return ICGetProp_CallListBaseNative::New(
-            space, getStubCode(), firstMonitorStub_, shape, GetProxyHandler(obj_),
-            expandoShape, holder_, holderShape, getter_, pcOffset_);
-    }
-
-    return ICGetProp_CallListBaseWithGenerationNative::New(
-        space, getStubCode(), firstMonitorStub_, shape, GetProxyHandler(obj_),
-        expandoAndGeneration, generation, expandoShape, holder_, holderShape, getter_,
-        pcOffset_);
-}
 bool
 ICGetProp_ArgumentsLength::Compiler::generateStubCode(MacroAssembler &masm)
 {
@@ -7877,16 +7765,12 @@ ICCall_Native::ICCall_Native(IonCode *stubCode, ICStub *firstMonitorStub, Handle
     pcOffset_(pcOffset)
 { }
 
-ICGetPropCallListBaseNativeStub::ICGetPropCallListBaseNativeStub(Kind kind, IonCode *stubCode,
-                                                                 ICStub *firstMonitorStub,
-                                                                 HandleShape shape,
-                                                                 BaseProxyHandler *proxyHandler,
-                                                                 HandleShape expandoShape,
-                                                                 HandleObject holder,
-                                                                 HandleShape holderShape,
-                                                                 HandleFunction getter,
-                                                                 uint32_t pcOffset)
-  : ICMonitoredStub(kind, stubCode, firstMonitorStub),
+ICGetProp_CallListBaseNative::ICGetProp_CallListBaseNative(IonCode *stubCode, ICStub *firstMonitorStub,
+                                                           HandleShape shape, BaseProxyHandler *proxyHandler,
+                                                           HandleShape expandoShape, HandleObject holder,
+                                                           HandleShape holderShape, HandleFunction getter,
+                                                           uint32_t pcOffset)
+  : ICMonitoredStub(GetProp_CallListBaseNative, stubCode, firstMonitorStub),
     shape_(shape),
     proxyHandler_(proxyHandler),
     expandoShape_(expandoShape),
@@ -7896,22 +7780,16 @@ ICGetPropCallListBaseNativeStub::ICGetPropCallListBaseNativeStub(Kind kind, IonC
     pcOffset_(pcOffset)
 { }
 
-ICGetPropCallListBaseNativeCompiler::ICGetPropCallListBaseNativeCompiler(JSContext *cx,
-                                                                         ICStub::Kind kind,
-                                                                         ICStub *firstMonitorStub,
-                                                                         HandleObject obj,
-                                                                         HandleObject holder,
-                                                                         HandleFunction getter,
-                                                                         uint32_t pcOffset)
-  : ICStubCompiler(cx, kind),
+ICGetProp_CallListBaseNative::Compiler::Compiler(JSContext *cx, ICStub *firstMonitorStub, HandleObject obj,
+                                                 HandleObject holder, HandleFunction getter,
+                                                 uint32_t pcOffset)
+  : ICStubCompiler(cx, ICStub::GetProp_CallListBaseNative),
     firstMonitorStub_(firstMonitorStub),
     obj_(cx, obj),
     holder_(cx, holder),
     getter_(cx, getter),
     pcOffset_(pcOffset)
 {
-    JS_ASSERT(kind == ICStub::GetProp_CallListBaseNative ||
-              kind == ICStub::GetProp_CallListBaseWithGenerationNative);
     JS_ASSERT(obj_->isProxy());
     JS_ASSERT(GetProxyHandler(obj_)->family() == GetListBaseHandlerFamily());
 }

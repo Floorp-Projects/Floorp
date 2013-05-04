@@ -64,7 +64,7 @@ function testFrameParameters()
       is(globalNodes[3].querySelector(".name").getAttribute("value"), "document",
         "Should have the right property name for |document|.");
 
-      is(globalNodes[3].querySelector(".value").getAttribute("value"), "[object Proxy]",
+      is(globalNodes[3].querySelector(".value").getAttribute("value"), "[object HTMLDocument]",
         "Should have the right property value for |document|.");
 
       let buttonNode = gVars.getItemForNode(anonymousNodes[1]);
@@ -190,18 +190,18 @@ function testFrameParameters()
              .getAttribute("value"), '""',
             "'formMethod' in buttonProtoNode should have the right value.");
 
-          is(documentProtoNode.get("domain").target.querySelector(".name")
-             .getAttribute("value"), "domain",
-            "Should have the right property name for 'domain' in documentProtoNode.");
-          is(documentProtoNode.get("domain").target.querySelector(".value")
-             .getAttribute("value"), '"example.com"',
-            "'domain' in documentProtoNode should have the right value.");
-          is(documentProtoNode.get("cookie").target.querySelector(".name")
-             .getAttribute("value"), "cookie",
-            "Should have the right property name for 'cookie' in documentProtoNode.");
-          is(documentProtoNode.get("cookie").target.querySelector(".value")
-             .getAttribute("value"), '""',
-            "'cookie' in documentProtoNode should have the right value.");
+          is(documentProtoNode.get("baseURI").target.querySelector(".name")
+             .getAttribute("value"), "baseURI",
+            "Should have the right property name for 'baseURI' in documentProtoNode.");
+          is(documentProtoNode.get("baseURI").target.querySelector(".value")
+             .getAttribute("value"), '"' + TAB_URL + '"',
+            "'baseURI' in documentProtoNode should have the right value.");
+          is(documentProtoNode.get("URL").target.querySelector(".name")
+             .getAttribute("value"), "URL",
+            "Should have the right property name for 'URL' in documentProtoNode.");
+          is(documentProtoNode.get("URL").target.querySelector(".value")
+             .getAttribute("value"), '"' + TAB_URL + '"',
+            "'URL' in documentProtoNode should have the right value.");
 
           let buttonAsProtoProtoProtoNode = buttonAsProtoProtoNode.get("__proto__");
 

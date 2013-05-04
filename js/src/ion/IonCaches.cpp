@@ -634,7 +634,7 @@ GenerateListBaseChecks(JSContext *cx, MacroAssembler &masm, JSObject *obj,
     //      2. The object does not have expando properties, or has an expando
     //          which is known to not have the desired property.
     Address handlerAddr(object, JSObject::getFixedSlotOffset(JSSLOT_PROXY_HANDLER));
-    Address expandoSlotAddr(object, JSObject::getFixedSlotOffset(GetListBaseExpandoSlot()));
+    Address expandoAddr(object, JSObject::getFixedSlotOffset(GetListBaseExpandoSlot()));
 
     // Check that object is a ListBase.
     masm.branchPrivatePtr(Assembler::NotEqual, handlerAddr, ImmWord(GetProxyHandler(obj)), stubFailure);
@@ -649,27 +649,13 @@ GenerateListBaseChecks(JSContext *cx, MacroAssembler &masm, JSObject *obj,
     Label failListBaseCheck;
     Label listBaseOk;
 
-    Value expandoVal = obj->getFixedSlot(GetListBaseExpandoSlot());
-    masm.loadValue(expandoSlotAddr, tempVal);
-
-    if (!expandoVal.isObject() && !expandoVal.isUndefined()) {
-        masm.branchTestValue(Assembler::NotEqual, tempVal, expandoVal, &failListBaseCheck);
-
-        ExpandoAndGeneration *expandoAndGeneration = (ExpandoAndGeneration*)expandoVal.toPrivate();
-        masm.movePtr(ImmWord(expandoAndGeneration), tempVal.scratchReg());
-
-        masm.branch32(Assembler::NotEqual, Address(tempVal.scratchReg(), sizeof(Value)),
-                                                   Imm32(expandoAndGeneration->generation),
-                                                   &failListBaseCheck);
-
-        expandoVal = expandoAndGeneration->expando;
-        masm.loadValue(Address(tempVal.scratchReg(), 0), tempVal);
-    }
+    masm.loadValue(expandoAddr, tempVal);
 
     // If the incoming object does not have an expando object then we're sure we're not
     // shadowing.
     masm.branchTestUndefined(Assembler::Equal, tempVal, &listBaseOk);
 
+    Value expandoVal = obj->getFixedSlot(GetListBaseExpandoSlot());
     if (expandoVal.isObject()) {
         JS_ASSERT(!expandoVal.toObject().nativeContains(cx, name));
 
@@ -1258,20 +1244,16 @@ TryAttachNativeGetPropStub(JSContext *cx, IonScript *ion,
 
     RootedObject checkObj(cx, obj);
     if (IsCacheableListBase(obj)) {
-        RootedId id(cx, NameToId(name));
-        ListBaseShadowsResult shadows =
-            GetListBaseShadowsCheck()(cx, obj, id);
-        if (shadows == ShadowCheckFailed)
-            return false;
-        if (shadows == Shadows)
+        Value expandoVal = obj->getFixedSlot(GetListBaseExpandoSlot());
+
+        // Expando objects just hold any extra properties the object has been given by a script,
+        // and have no prototype or anything else that will complicate property lookups on them.
+        JS_ASSERT_IF(expandoVal.isObject(),
+                     expandoVal.toObject().isNative() && !expandoVal.toObject().getProto());
+
+        if (expandoVal.isObject() && expandoVal.toObject().nativeContains(cx, name))
             return true;
-        if (shadows == DoesntShadowUnique)
-            // We reset the cache to clear out an existing IC for this object
-            // (if there is one). The generation is a constant in the generated
-            // code and we will not have the same generation again for this
-            // object, so the generation check in the existing IC would always
-            // fail anyway.
-            cache.reset();
+
         checkObj = obj->getTaggedProto().toObjectOrNull();
     }
 
