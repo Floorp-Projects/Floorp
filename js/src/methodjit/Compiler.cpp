@@ -837,7 +837,7 @@ MakeJITScript(JSContext *cx, JSScript *script)
                     return NULL;
 
                 /* Add an edge for fallthrough from this chunk to the next one. */
-                if (!BytecodeNoFallThrough(op)) {
+                if (BytecodeFallsThrough(op)) {
                     CrossChunkEdge edge;
                     edge.source = offset;
                     edge.target = nextOffset;

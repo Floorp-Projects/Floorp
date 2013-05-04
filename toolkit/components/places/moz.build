@@ -13,11 +13,11 @@ XPIDL_SOURCES += [
 
 if CONFIG['MOZ_PLACES']:
     XPIDL_SOURCES += [
-        'mozIAsyncHistory.idl',
         'mozIAsyncFavicons.idl',
+        'mozIAsyncHistory.idl',
         'mozIAsyncLivemarks.idl',
-        'mozIPlacesAutoComplete.idl',
         'mozIColorAnalyzer.idl',
+        'mozIPlacesAutoComplete.idl',
         'nsIAnnotationService.idl',
         'nsIBrowserHistory.idl',
         'nsIFaviconService.idl',

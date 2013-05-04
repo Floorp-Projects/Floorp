@@ -20,7 +20,8 @@ from runtests import Mochitest
 from runtests import MochitestOptions
 from runtests import MochitestServer
 
-import devicemanager, devicemanagerADB, devicemanagerSUT
+import devicemanager
+import droid
 import manifestparser
 
 class RemoteOptions(MochitestOptions):
@@ -491,11 +492,11 @@ def main():
     options, args = parser.parse_args()
     if (options.dm_trans == "adb"):
         if (options.deviceIP):
-            dm = devicemanagerADB.DeviceManagerADB(options.deviceIP, options.devicePort, deviceRoot=options.remoteTestRoot)
+            dm = droid.DroidADB(options.deviceIP, options.devicePort, deviceRoot=options.remoteTestRoot)
         else:
-            dm = devicemanagerADB.DeviceManagerADB(deviceRoot=options.remoteTestRoot)
+            dm = droid.DroidADB(deviceRoot=options.remoteTestRoot)
     else:
-         dm = devicemanagerSUT.DeviceManagerSUT(options.deviceIP, options.devicePort, deviceRoot=options.remoteTestRoot)
+         dm = droid.DroidSUT(options.deviceIP, options.devicePort, deviceRoot=options.remoteTestRoot)
     auto.setDeviceManager(dm)
     options = parser.verifyRemoteOptions(options, auto)
     if (options == None):
