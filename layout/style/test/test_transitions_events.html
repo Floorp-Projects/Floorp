@@ -30,7 +30,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=531585
   transition-timing-function: cubic-bezier(0, 1, 1, 0);
 }
 
-/* make sure we don't get events for the pseudo-elements */
 #seven::before, #seven::after {
   content: "x";
   transition-duration: 50ms;
@@ -80,6 +79,7 @@ var got_three_left = false;
 var got_four_root = false;
 var got_body = false;
 var did_stops = false;
+var got_before = false;
 
 document.documentElement.addEventListener("transitionend",
   function(event) {
@@ -114,6 +114,15 @@ document.documentElement.addEventListener("transitionend",
          "elapsedTime for transitionend on body");
       got_body = true;
       finished_test();
+    } else if (event.target == $("seven")) {
+      if (!got_before) {
+        got_before = true;
+        is(event.pseudoElement, "::before");
+      } else {
+        is(event.pseudoElement, "::after");
+      }
+      is(event.propertyName, "color");
+      is(event.isTrusted, true);
     } else {
       if (!did_stops &&
           (event.target == $("five") || event.target == $("six"))) {
@@ -263,7 +272,6 @@ $("five").style.color = "lime";
 // then changing the value, so we should get no event.
 $("six").style.color = "lime";
 
-// We should get no events from transitions on pseudo-elements.
 $("seven").setAttribute("foo", "bar");
 
 setTimeout(function() {
@@ -290,6 +298,22 @@ setTimeout(poll_start_reversal, 200);
 
 // And make our own event to dispatch to the body.
 started_test();
+
+var e = new TransitionEvent("foo",
+                            {
+                              bubbles: true,
+                              cancelable: true,
+                              propertyName: "name",
+                              elapsedTime: 0.5,
+                              pseudoElement: "pseudo"
+                            });
+is(e.bubbles, true);
+is(e.cancelable, true);
+is(e.propertyName, "name");
+is(e.elapsedTime, "0.5");
+is(e.pseudoElement, "pseudo");
+is(e.isTrusted, false)
+
 var ev = document.createEvent("TransitionEvent"); // FIXME: un-specified
 ev.initTransitionEvent("transitionend", true, true,
                        "some-unknown-prop", -4.75);
