@@ -11,17 +11,6 @@
 #include "gfxPoint.h"
 #include "gfxASurface.h"
 
-/*
- * FIXME [bjacob] *** PURE CRAZYNESS WARNING ***
- *
- * This #define is actually needed here, because subclasses of ISurfaceAllocator,
- * namely ShadowLayerForwarder, will or will not override AllocGrallocBuffer
- * depending on whether MOZ_HAVE_SURFACEDESCRIPTORGRALLOC is defined.
- */
-#ifdef MOZ_WIDGET_GONK
-#define MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
-#endif
-
 class gfxSharedImageSurface;
 class gfxASurface;
 
