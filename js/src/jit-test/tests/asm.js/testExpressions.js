@@ -315,3 +315,12 @@ for (let i = 0; i < 31; i++) {
 }
 assertEq(f(INT32_MIN), (INT32_MIN/Math.pow(2,30))|0);
 assertEq(f(INT32_MAX), (INT32_MAX/Math.pow(2,30))|0);
+var f = asmLink(asmCompile(USE_ASM + "function f(i) { i=i|0; return ((((i|0)/1)|0)+i)|0; } return f;"));
+for (let i = 0; i < 31; i++) {
+    assertEq(f(Math.pow(2,i)), (Math.pow(2,i) * 2)|0);
+    assertEq(f(Math.pow(2,i) - 1), ((Math.pow(2,i) - 1) * 2)|0);
+    assertEq(f(-Math.pow(2,i)), (-Math.pow(2,i) * 2)|0);
+    assertEq(f(-Math.pow(2,i) - 1), ((-Math.pow(2,i) - 1) * 2)|0);
+}
+assertEq(f(INT32_MIN), (INT32_MIN * 2)|0);
+assertEq(f(INT32_MAX), (INT32_MAX * 2)|0);
