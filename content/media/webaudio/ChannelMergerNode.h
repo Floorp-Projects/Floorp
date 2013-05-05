@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef ChannelSplitterNode_h_
-#define ChannelSplitterNode_h_
+#ifndef ChannelMergerNode_h_
+#define ChannelMergerNode_h_
 
 #include "AudioNode.h"
 
@@ -14,21 +14,21 @@ namespace dom {
 
 class AudioContext;
 
-class ChannelSplitterNode : public AudioNode
+class ChannelMergerNode : public AudioNode
 {
 public:
-  ChannelSplitterNode(AudioContext* aContext,
-                      uint16_t aOutputCount);
+  ChannelMergerNode(AudioContext* aContext,
+                    uint16_t aInputCount);
 
   NS_DECL_ISUPPORTS_INHERITED
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
-  virtual uint16_t NumberOfOutputs() const MOZ_OVERRIDE { return mOutputCount; }
+  virtual uint16_t NumberOfInputs() const MOZ_OVERRIDE { return mInputCount; }
 
 private:
-  const uint16_t mOutputCount;
+  const uint16_t mInputCount;
 };
 
 }
