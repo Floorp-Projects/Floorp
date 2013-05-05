@@ -21,6 +21,7 @@ MOCHITEST_FILES = \
 		test_input_range_attr_order.html \
 		test_input_range_key_events.html \
 		test_input_range_mouse_and_touch_events.html \
+		test_input_range_rounding.html \
 		test_input_url.html \
 		test_pattern_attribute.html \
 		test_required_attribute.html \
