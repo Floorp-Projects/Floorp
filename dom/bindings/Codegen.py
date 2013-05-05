@@ -1093,7 +1093,9 @@ class CGConstructNavigatorObjectHelper(CGAbstractStaticMethod):
     """
     def __init__(self, descriptor):
         name = "ConstructNavigatorObjectHelper"
-        args = [Argument('GlobalObject&', 'global'), Argument('ErrorResult&', 'aRv')]
+        args = [Argument('JSContext*', 'cx'),
+                Argument('GlobalObject&', 'global'),
+                Argument('ErrorResult&', 'aRv')]
         rtype = 'already_AddRefed<%s>' % descriptor.name
         CGAbstractStaticMethod.__init__(self, descriptor, name, rtype, args)
 
@@ -1118,7 +1120,7 @@ class CGConstructNavigatorObject(CGAbstractMethod):
     return nullptr;
   }
   ErrorResult rv;
-  nsRefPtr<mozilla::dom::${descriptorName}> result = ConstructNavigatorObjectHelper(global, rv);
+  nsRefPtr<mozilla::dom::${descriptorName}> result = ConstructNavigatorObjectHelper(aCx, global, rv);
   rv.WouldReportJSException();
   if (rv.Failed()) {
     ThrowMethodFailedWithDetails<${mainThread}>(aCx, rv, "${descriptorName}", "navigatorConstructor");
@@ -8645,8 +8647,8 @@ def genConstructorBody(descriptor):
   // Initialize the object, if it implements nsIDOMGlobalPropertyInitializer.
   nsCOMPtr<nsIDOMGlobalPropertyInitializer> gpi = do_QueryInterface(implISupports);
   if (gpi) {
-    JS::Value initReturn = JSVAL_VOID;
-    nsresult rv = gpi->Init(window, &initReturn);
+    JS::Rooted<JS::Value> initReturn(cx);
+    nsresult rv = gpi->Init(window, initReturn.address());
     if (NS_FAILED(rv)) {
       aRv.Throw(rv);
       return nullptr;
@@ -8661,8 +8663,8 @@ def genConstructorBody(descriptor):
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
-  JSObject* jsImplObj;
-  if (NS_FAILED(implWrapped->GetJSObject(&jsImplObj))) {
+  JS::Rooted<JSObject*> jsImplObj(cx);
+  if (NS_FAILED(implWrapped->GetJSObject(jsImplObj.address()))) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
@@ -8784,7 +8786,7 @@ class CGJSImplClass(CGBindingImplClass):
                                     "%s(aParent)" % parentClass)
 
         constructor = ClassConstructor(
-            [Argument("JSObject*", "aJSImplObject"),
+            [Argument("JS::Handle<JSObject*>", "aJSImplObject"),
              Argument("nsPIDOMWindow*", "aParent")],
             visibility="public",
             baseConstructors=baseConstructors,
