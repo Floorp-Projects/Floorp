@@ -36,6 +36,18 @@ interface nsIPrincipal : nsISerializable
      */
     boolean equalsIgnoringDomain(in nsIPrincipal other);
 
+    %{C++
+    inline bool Equals(nsIPrincipal* aOther) {
+      bool equal = false;
+      return NS_SUCCEEDED(Equals(aOther, &equal)) && equal;
+    }
+
+    inline bool EqualsIgnoringDomain(nsIPrincipal* aOther) {
+      bool equal = false;
+      return NS_SUCCEEDED(EqualsIgnoringDomain(aOther, &equal)) && equal;
+    }
+    %}
+
     /**
      * Returns a hash value for the principal.
      */
@@ -99,6 +111,18 @@ interface nsIPrincipal : nsISerializable
      * ignores changes to document.domain.
      */
     boolean subsumesIgnoringDomain(in nsIPrincipal other);
+
+    %{C++
+    inline bool Subsumes(nsIPrincipal* aOther) {
+      bool subsumes = false;
+      return NS_SUCCEEDED(Subsumes(aOther, &subsumes)) && subsumes;
+    }
+
+    inline bool SubsumesIgnoringDomain(nsIPrincipal* aOther) {
+      bool subsumes = false;
+      return NS_SUCCEEDED(SubsumesIgnoringDomain(aOther, &subsumes)) && subsumes;
+    }
+    %}
 
     /**
      * Checks whether this principal is allowed to load the network resource

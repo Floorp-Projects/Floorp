@@ -1917,7 +1917,10 @@ DocAccessible::ShutdownChildrenInSubtree(Accessible* aAccessible)
       jdx++;
     }
 
-    ShutdownChildrenInSubtree(child);
+    // Don't cross document boundaries. The outerdoc shutdown takes care about
+    // its subdocument.
+    if (!child->IsDoc())
+      ShutdownChildrenInSubtree(child);
   }
 
   UnbindFromDocument(aAccessible);

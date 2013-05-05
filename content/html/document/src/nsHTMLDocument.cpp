@@ -2360,7 +2360,8 @@ nsHTMLDocument::NamedGetter(JSContext* cx, const nsAString& aName, bool& aFound,
     aFound = false;
     if (GetCompatibilityMode() == eCompatibility_NavQuirks &&
         aName.EqualsLiteral("all")) {
-      rv = nsHTMLDocumentSH::TryResolveAll(cx, this, GetWrapper());
+      JS::Rooted<JSObject*> obj(cx, GetWrapper());
+      rv = nsHTMLDocumentSH::TryResolveAll(cx, this, obj);
     }
     return nullptr;
   }

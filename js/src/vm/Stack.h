@@ -170,7 +170,7 @@ namespace ion {
  * InvokeArgsGuard can be pushed long before and popped long after the actual
  * call, during which time many stack-observing things can happen).
  */
-class CallArgsList : public JS::CallArgs
+class MOZ_STACK_CLASS CallArgsList : public JS::CallArgs
 {
     friend class StackSegment;
     CallArgsList *prev_;

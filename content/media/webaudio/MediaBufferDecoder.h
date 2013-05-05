@@ -28,11 +28,13 @@ class DecodeSuccessCallback;
 
 struct WebAudioDecodeJob
 {
+  // You may omit both the success and failure callback, or you must pass both.
+  // The callbacks are only necessary for asynchronous operation.
   WebAudioDecodeJob(const nsACString& aContentType,
                     const dom::ArrayBuffer& aBuffer,
                     dom::AudioContext* aContext,
-                    dom::DecodeSuccessCallback* aSuccessCallback,
-                    dom::DecodeErrorCallback* aFailureCallback);
+                    dom::DecodeSuccessCallback* aSuccessCallback = nullptr,
+                    dom::DecodeErrorCallback* aFailureCallback = nullptr);
   ~WebAudioDecodeJob();
 
   enum ErrorCode {
@@ -77,6 +79,9 @@ class MediaBufferDecoder
 public:
   void AsyncDecodeMedia(const char* aContentType, uint8_t* aBuffer,
                         uint32_t aLength, WebAudioDecodeJob& aDecodeJob);
+
+  bool SyncDecodeMedia(const char* aContentType, uint8_t* aBuffer,
+                       uint32_t aLength, WebAudioDecodeJob& aDecodeJob);
 
   void Shutdown();
 

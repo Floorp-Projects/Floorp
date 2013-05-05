@@ -87,8 +87,8 @@ function checkTest() {
 
     // The document generated from formsubmit.sjs contains the user/pass it
     // received inside <span id="blah">value</span>
-    var gotUser = iframe.contentDocument.getElementById("user").textContent;
-    var gotPass = iframe.contentDocument.getElementById("pass").textContent;
+    var gotUser = SpecialPowers.wrap(iframe).contentDocument.getElementById("user").textContent;
+    var gotPass = SpecialPowers.wrap(iframe).contentDocument.getElementById("pass").textContent;
 
 
     switch(testNum) {

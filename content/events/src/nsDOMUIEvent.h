@@ -135,9 +135,11 @@ public:
 
   virtual uint32_t Which()
   {
-    uint32_t w;
-    GetWhich(&w);
-    return w;
+    MOZ_ASSERT(mEvent->eventStructType != NS_KEY_EVENT,
+               "Key events should override Which()");
+    MOZ_ASSERT(mEvent->eventStructType != NS_MOUSE_EVENT,
+               "Mouse events should override Which()");
+    return 0;
   }
 
   already_AddRefed<nsINode> GetRangeParent();
@@ -167,15 +169,6 @@ protected:
   nsIntPoint GetMovementPoint();
   nsIntPoint GetLayerPoint();
   nsIntPoint GetPagePoint();
-
-  // Allow specializations.
-  virtual nsresult Which(uint32_t* aWhich)
-  {
-    NS_ENSURE_ARG_POINTER(aWhich);
-    // Usually we never reach here, as this is reimplemented for mouse and keyboard events.
-    *aWhich = 0;
-    return NS_OK;
-  }
 
   nsCOMPtr<nsIDOMWindow> mView;
   int32_t mDetail;

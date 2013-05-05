@@ -83,7 +83,7 @@ public:
   {
     // Pretend like someone passed null, so we can pick up the default values
     MozXMLHttpRequestParametersWorkers params;
-    if (!params.Init(aGlobal.GetContext(), JS::NullValue())) {
+    if (!params.Init(aGlobal.GetContext(), JS::NullHandleValue)) {
       aRv.Throw(NS_ERROR_UNEXPECTED);
       return nullptr;
     }
@@ -241,7 +241,7 @@ public:
   }
 
   JS::Value
-  GetInterface(JSContext* cx, JSObject* aIID, ErrorResult& aRv)
+  GetInterface(JSContext* cx, JSObject& aIID, ErrorResult& aRv)
   {
     aRv.Throw(NS_ERROR_FAILURE);
     return JSVAL_NULL;

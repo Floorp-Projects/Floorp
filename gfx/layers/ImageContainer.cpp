@@ -27,8 +27,8 @@
 #include "gfxD2DSurface.h"
 #include "gfxWindowsPlatform.h"
 #include <d3d10_1.h>
-
 #include "d3d10/ImageLayerD3D10.h"
+#include "D3D9SurfaceImage.h"
 #endif
 
 using namespace mozilla::ipc;
@@ -73,6 +73,12 @@ ImageFactory::CreateImage(const ImageFormat *aFormats,
 #ifdef MOZ_WIDGET_GONK
   if (FormatInList(aFormats, aNumFormats, GONK_IO_SURFACE)) {
     img = new GonkIOSurfaceImage();
+    return img.forget();
+  }
+#endif
+#ifdef XP_WIN
+  if (FormatInList(aFormats, aNumFormats, D3D9_RGB32_TEXTURE)) {
+    img = new D3D9SurfaceImage();
     return img.forget();
   }
 #endif

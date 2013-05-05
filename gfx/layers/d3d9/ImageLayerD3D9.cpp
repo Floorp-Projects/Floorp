@@ -12,9 +12,10 @@
 #include "gfxPlatform.h"
 #include "gfxImageSurface.h"
 #include "yuv_convert.h"
-#include "nsIServiceManager.h" 
-#include "nsIConsoleService.h" 
+#include "nsIServiceManager.h"
+#include "nsIConsoleService.h"
 #include "Nv3DVUtils.h"
+#include "D3D9SurfaceImage.h"
 
 namespace mozilla {
 namespace layers {
@@ -103,6 +104,30 @@ DataToTexture(IDirect3DDevice9 *aDevice,
 }
 
 static already_AddRefed<IDirect3DTexture9>
+OpenSharedTexture(const D3DSURFACE_DESC& aDesc,
+                  HANDLE aShareHandle,
+                  IDirect3DDevice9 *aDevice)
+{
+  MOZ_ASSERT(aDesc.Format == D3DFMT_X8R8G8B8);
+
+  // Open the frame from DXVA's device in our device using the resource
+  // sharing handle.
+  nsRefPtr<IDirect3DTexture9> sharedTexture;
+  HRESULT hr = aDevice->CreateTexture(aDesc.Width,
+                                      aDesc.Height,
+                                      1,
+                                      D3DUSAGE_RENDERTARGET,
+                                      D3DFMT_X8R8G8B8,
+                                      D3DPOOL_DEFAULT,
+                                      getter_AddRefs(sharedTexture),
+                                      &aShareHandle);
+  if (FAILED(hr)) {
+    NS_WARNING("Failed to open shared texture on our device");
+  }
+  return sharedTexture.forget();
+}
+
+static already_AddRefed<IDirect3DTexture9>
 SurfaceToTexture(IDirect3DDevice9 *aDevice,
                  gfxASurface *aSurface,
                  const gfxIntSize &aSize)
@@ -113,7 +138,7 @@ SurfaceToTexture(IDirect3DDevice9 *aDevice,
   if (!imageSurface) {
     imageSurface = new gfxImageSurface(aSize,
                                        gfxASurface::ImageFormatARGB32);
-    
+
     nsRefPtr<gfxContext> context = new gfxContext(imageSurface);
     context->SetSource(aSurface);
     context->SetOperator(gfxContext::OPERATOR_SOURCE);
@@ -301,7 +326,7 @@ ImageLayerD3D9::GetTexture(Image *aImage, bool& aHasAlpha)
   if (aImage->GetFormat() == REMOTE_IMAGE_BITMAP) {
     RemoteBitmapImage *remoteImage =
       static_cast<RemoteBitmapImage*>(aImage);
-      
+
     if (!aImage->GetBackendData(mozilla::layers::LAYERS_D3D9)) {
       nsAutoPtr<TextureD3D9BackendData> dat(new TextureD3D9BackendData());
       dat->mTexture = DataToTexture(device(), remoteImage->mData, remoteImage->mStride, remoteImage->mSize, D3DFMT_A8R8G8B8);
@@ -328,6 +353,18 @@ ImageLayerD3D9::GetTexture(Image *aImage, bool& aHasAlpha)
     }
 
     aHasAlpha = cairoImage->mSurface->GetContentType() == gfxASurface::CONTENT_COLOR_ALPHA;
+  } else if (aImage->GetFormat() == D3D9_RGB32_TEXTURE) {
+    if (!aImage->GetBackendData(mozilla::layers::LAYERS_D3D9)) {
+      // The texture in which the frame is stored belongs to DXVA's D3D9 device.
+      // We need to open it on our device before we can use it.
+      nsAutoPtr<TextureD3D9BackendData> backendData(new TextureD3D9BackendData());
+      D3D9SurfaceImage* image = static_cast<D3D9SurfaceImage*>(aImage);
+      backendData->mTexture = OpenSharedTexture(image->GetDesc(), image->GetShareHandle(), device());
+      if (backendData->mTexture) {
+        aImage->SetBackendData(mozilla::layers::LAYERS_D3D9, backendData.forget());
+      }
+    }
+    aHasAlpha = false;
   } else {
     NS_WARNING("Inappropriate image type.");
     return nullptr;
@@ -369,7 +406,8 @@ ImageLayerD3D9::RenderLayer()
   gfxIntSize size = image->GetSize();
 
   if (image->GetFormat() == CAIRO_SURFACE ||
-      image->GetFormat() == REMOTE_IMAGE_BITMAP)
+      image->GetFormat() == REMOTE_IMAGE_BITMAP ||
+      image->GetFormat() == D3D9_RGB32_TEXTURE)
   {
     NS_ASSERTION(image->GetFormat() != CAIRO_SURFACE ||
                  !static_cast<CairoImage*>(image)->mSurface ||
@@ -524,7 +562,7 @@ ImageLayerD3D9::GetAsTexture(gfxIntSize* aSize)
       image->GetFormat() != REMOTE_IMAGE_BITMAP) {
     return nullptr;
   }
-  
+
   bool dontCare;
   *aSize = image->GetSize();
   nsRefPtr<IDirect3DTexture9> result = GetTexture(image, dontCare);

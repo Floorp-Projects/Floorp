@@ -829,7 +829,8 @@ nsDOMEvent::DuplicatePrivateData()
         static_cast<nsTransitionEvent*>(mEvent);
       newEvent = new nsTransitionEvent(false, msg,
                                        oldTransitionEvent->propertyName,
-                                       oldTransitionEvent->elapsedTime);
+                                       oldTransitionEvent->elapsedTime,
+                                       oldTransitionEvent->pseudoElement);
       NS_ENSURE_TRUE(newEvent, NS_ERROR_OUT_OF_MEMORY);
       break;
     }

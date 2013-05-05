@@ -281,8 +281,8 @@ AsmJSActivation::~AsmJSActivation()
 static const unsigned ASM_MODULE_SLOT = 0;
 static const unsigned ASM_EXPORT_INDEX_SLOT = 1;
 
-static JSBool
-CallAsmJS(JSContext *cx, unsigned argc, Value *vp)
+extern JSBool
+js::CallAsmJS(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs callArgs = CallArgsFromVp(argc, vp);
     RootedFunction callee(cx, callArgs.callee().toFunction());

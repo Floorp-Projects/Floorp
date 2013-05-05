@@ -772,7 +772,7 @@ Navigator::Vibrate(const JS::Value& aPattern, JSContext* cx)
     }
   }
   else {
-    JSObject *obj = JSVAL_TO_OBJECT(aPattern);
+    JS::Rooted<JSObject*> obj(cx, aPattern.toObjectOrNull());
     uint32_t length;
     if (!JS_GetArrayLength(cx, obj, &length) || length > sMaxVibrateListLen) {
       return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
@@ -780,9 +780,9 @@ Navigator::Vibrate(const JS::Value& aPattern, JSContext* cx)
     pattern.SetLength(length);
 
     for (uint32_t i = 0; i < length; ++i) {
-      JS::Value v;
+      JS::Rooted<JS::Value> v(cx);
       int32_t pv;
-      if (JS_GetElement(cx, obj, i, &v) &&
+      if (JS_GetElement(cx, obj, i, v.address()) &&
           GetVibrationDurationFromJsval(v, cx, &pv)) {
         pattern[i] = pv;
       }
@@ -812,9 +812,7 @@ Navigator::Vibrate(const JS::Value& aPattern, JSContext* cx)
   }
   gVibrateWindowListener = new VibrateWindowListener(win, doc);
 
-  nsCOMPtr<nsIDOMWindow> domWindow =
-    do_QueryInterface(static_cast<nsIDOMWindow*>(win));
-  hal::Vibrate(pattern, domWindow);
+  hal::Vibrate(pattern, win);
   return NS_OK;
 }
 

@@ -459,7 +459,7 @@ public:
     return nullptr;
   }
 
-  already_AddRefed<nsIDOMWindow> GetChildWindow(jsid aName);
+  already_AddRefed<nsIDOMWindow> GetChildWindow(const nsAString& aName);
 
   // Returns true if dialogs need to be prevented from appearings for this
   // window. beingAbused returns whether dialogs are being abused.

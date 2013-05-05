@@ -31,7 +31,7 @@ TimeManager::Set(const JS::Value& date, JSContext* ctx) {
   double dateMSec;
 
   if (date.isObject()) {
-    JSObject* dateObj = JSVAL_TO_OBJECT(date);
+    JS::Rooted<JSObject*> dateObj(ctx, date.toObjectOrNull());
 
     if (JS_ObjectIsDate(ctx, dateObj) && js_DateIsValid(dateObj)) {
       dateMSec = js_DateGetMsecSinceEpoch(dateObj);

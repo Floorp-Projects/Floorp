@@ -43,6 +43,35 @@ class LDivI : public LBinaryMath<1>
     }
 };
 
+// Signed division by a power-of-two constant.
+class LDivPowTwoI : public LBinaryMath<0>
+{
+    const int32_t shift_;
+
+  public:
+    LIR_HEADER(DivPowTwoI)
+
+    LDivPowTwoI(const LAllocation &lhs, const LAllocation &lhsCopy, int32_t shift)
+      : shift_(shift)
+    {
+        setOperand(0, lhs);
+        setOperand(1, lhsCopy);
+    }
+
+    const LAllocation *numerator() {
+        return getOperand(0);
+    }
+    const LAllocation *numeratorCopy() {
+        return getOperand(1);
+    }
+    int32_t shift() const {
+        return shift_;
+    }
+    MDiv *mir() const {
+        return mir_->toDiv();
+    }
+};
+
 class LModI : public LBinaryMath<1>
 {
   public:
