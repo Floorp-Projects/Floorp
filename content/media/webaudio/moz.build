@@ -28,6 +28,7 @@ EXPORTS.mozilla.dom += [
     'AudioParam.h',
     'AudioProcessingEvent.h',
     'BiquadFilterNode.h',
+    'ChannelSplitterNode.h',
     'DelayNode.h',
     'DynamicsCompressorNode.h',
     'EnableWebAudioCheck.h',
