@@ -7,6 +7,7 @@
 #define nsRangeFrame_h___
 
 #include "mozilla/Attributes.h"
+#include "mozilla/Decimal.h"
 #include "nsContainerFrame.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsCOMPtr.h"
@@ -110,7 +111,7 @@ public:
    */
   bool ShouldUseNativeStyle() const;
 
-  double GetValueAtEventPoint(nsGUIEvent* aEvent);
+  mozilla::Decimal GetValueAtEventPoint(nsGUIEvent* aEvent);
 
   /**
    * Helper that's used when the value of the range changes to reposition the
