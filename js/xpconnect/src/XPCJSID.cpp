@@ -1,6 +1,6 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim: set ts=8 sts=4 et sw=4 tw=99: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -476,13 +476,15 @@ nsJSIID::Enumerate(nsIXPConnectWrappedNative *wrapper,
 static JSObject *
 FindObjectForHasInstance(JSContext *cx, HandleObject objArg)
 {
-    RootedObject obj(cx, objArg);
-    while (obj && !IS_WRAPPER_CLASS(js::GetObjectClass(obj)) && !IsDOMObject(obj))
-    {
-        if (js::IsWrapper(obj))
+    RootedObject obj(cx, objArg), proto(cx);
+    while (obj && !IS_WRAPPER_CLASS(js::GetObjectClass(obj)) && !IsDOMObject(obj)) {
+        if (js::IsWrapper(obj)) {
             obj = js::CheckedUnwrap(obj, /* stopAtOuter = */ false);
-        else if (!js::GetObjectProto(cx, obj, obj.address()))
+            continue;
+        }
+        if (!js::GetObjectProto(cx, obj, &proto))
             return nullptr;
+        obj = proto;
     }
     return obj;
 }
