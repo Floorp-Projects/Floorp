@@ -31,6 +31,8 @@
 #ifndef Decimal_h
 #define Decimal_h
 
+#include "mozilla/Types.h"
+
 #include <stdint.h>
 #include <wtf/Assertions.h>
 #include <wtf/text/WTFString.h>
@@ -93,29 +95,29 @@ public:
         Sign m_sign;
     };
 
-    Decimal(int32_t = 0);
-    Decimal(Sign, int exponent, uint64_t coefficient);
-    Decimal(const Decimal&);
+    MFBT_API Decimal(int32_t = 0);
+    MFBT_API Decimal(Sign, int exponent, uint64_t coefficient);
+    MFBT_API Decimal(const Decimal&);
 
-    Decimal& operator=(const Decimal&);
-    Decimal& operator+=(const Decimal&);
-    Decimal& operator-=(const Decimal&);
-    Decimal& operator*=(const Decimal&);
-    Decimal& operator/=(const Decimal&);
+    MFBT_API Decimal& operator=(const Decimal&);
+    MFBT_API Decimal& operator+=(const Decimal&);
+    MFBT_API Decimal& operator-=(const Decimal&);
+    MFBT_API Decimal& operator*=(const Decimal&);
+    MFBT_API Decimal& operator/=(const Decimal&);
 
-    Decimal operator-() const;
+    MFBT_API Decimal operator-() const;
 
-    bool operator==(const Decimal&) const;
-    bool operator!=(const Decimal&) const;
-    bool operator<(const Decimal&) const;
-    bool operator<=(const Decimal&) const;
-    bool operator>(const Decimal&) const;
-    bool operator>=(const Decimal&) const;
+    MFBT_API bool operator==(const Decimal&) const;
+    MFBT_API bool operator!=(const Decimal&) const;
+    MFBT_API bool operator<(const Decimal&) const;
+    MFBT_API bool operator<=(const Decimal&) const;
+    MFBT_API bool operator>(const Decimal&) const;
+    MFBT_API bool operator>=(const Decimal&) const;
 
-    Decimal operator+(const Decimal&) const;
-    Decimal operator-(const Decimal&) const;
-    Decimal operator*(const Decimal&) const;
-    Decimal operator/(const Decimal&) const;
+    MFBT_API Decimal operator+(const Decimal&) const;
+    MFBT_API Decimal operator-(const Decimal&) const;
+    MFBT_API Decimal operator*(const Decimal&) const;
+    MFBT_API Decimal operator/(const Decimal&) const;
 
     int exponent() const
     {
@@ -131,17 +133,17 @@ public:
     bool isSpecial() const { return m_data.isSpecial(); }
     bool isZero() const { return m_data.isZero(); }
 
-    Decimal abs() const;
-    Decimal ceiling() const;
-    Decimal floor() const;
-    Decimal remainder(const Decimal&) const;
-    Decimal round() const;
+    MFBT_API Decimal abs() const;
+    MFBT_API Decimal ceiling() const;
+    MFBT_API Decimal floor() const;
+    MFBT_API Decimal remainder(const Decimal&) const;
+    MFBT_API Decimal round() const;
 
-    double toDouble() const;
+    MFBT_API double toDouble() const;
     // Note: toString method supports infinity and nan but fromString not.
-    String toString() const;
+    MFBT_API String toString() const;
 
-    static Decimal fromDouble(double);
+    static MFBT_API Decimal fromDouble(double);
     // fromString supports following syntax EBNF:
     //  number ::= sign? digit+ ('.' digit*) (exponent-marker sign? digit+)?
     //          | sign? '.' digit+ (exponent-marker sign? digit+)?
@@ -149,13 +151,13 @@ public:
     //  exponent-marker ::= 'e' | 'E'
     //  digit ::= '0' | '1' | ... | '9'
     // Note: fromString doesn't support "infinity" and "nan".
-    static Decimal fromString(const String&);
-    static Decimal infinity(Sign);
-    static Decimal nan();
-    static Decimal zero(Sign);
+    static MFBT_API Decimal fromString(const String&);
+    static MFBT_API Decimal infinity(Sign);
+    static MFBT_API Decimal nan();
+    static MFBT_API Decimal zero(Sign);
 
     // You should not use below methods. We expose them for unit testing.
-    explicit Decimal(const EncodedData&);
+    MFBT_API explicit Decimal(const EncodedData&);
     const EncodedData& value() const { return m_data; }
 
 private:
@@ -165,10 +167,10 @@ private:
         int exponent;
     };
 
-    Decimal(double);
-    Decimal compareTo(const Decimal&) const;
+    MFBT_API Decimal(double);
+    MFBT_API Decimal compareTo(const Decimal&) const;
 
-    static AlignedOperands alignOperands(const Decimal& lhs, const Decimal& rhs);
+    static MFBT_API AlignedOperands alignOperands(const Decimal& lhs, const Decimal& rhs);
     static inline Sign invertSign(Sign sign) { return sign == Negative ? Positive : Negative; }
 
     Sign sign() const { return m_data.sign(); }
