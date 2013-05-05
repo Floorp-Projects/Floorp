@@ -3518,7 +3518,8 @@ nsGlobalWindow::GetContent(nsIDOMWindow** aContent)
   *aContent = nullptr;
 
   // First check for a named frame named "content"
-  nsCOMPtr<nsIDOMWindow> domWindow = GetChildWindow(nsDOMClassInfo::sContent_id);
+  nsCOMPtr<nsIDOMWindow> domWindow =
+    GetChildWindow(NS_LITERAL_STRING("content"));
   if (domWindow) {
     domWindow.forget(aContent);
     return NS_OK;
@@ -4800,15 +4801,13 @@ nsGlobalWindow::GetLength(uint32_t* aLength)
 }
 
 already_AddRefed<nsIDOMWindow>
-nsGlobalWindow::GetChildWindow(jsid aName)
+nsGlobalWindow::GetChildWindow(const nsAString& aName)
 {
-  const jschar *chars = JS_GetInternedStringChars(JSID_TO_STRING(aName));
-
   nsCOMPtr<nsIDocShellTreeNode> dsn(do_QueryInterface(GetDocShell()));
   NS_ENSURE_TRUE(dsn, nullptr);
 
   nsCOMPtr<nsIDocShellTreeItem> child;
-  dsn->FindChildWithName(reinterpret_cast<const PRUnichar*>(chars),
+  dsn->FindChildWithName(PromiseFlatString(aName).get(),
                          false, true, nullptr, nullptr,
                          getter_AddRefs(child));
 
