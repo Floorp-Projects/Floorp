@@ -3252,16 +3252,10 @@ void HTMLMediaElement::SuspendOrResumeElement(bool aPauseElement, bool aSuspendE
 void HTMLMediaElement::NotifyOwnerDocumentActivityChanged()
 {
   nsIDocument* ownerDoc = OwnerDoc();
-  if (UseAudioChannelService()) {
-    nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(OwnerDoc());
-    if (domDoc) {
-      bool hidden = false;
-      domDoc->GetHidden(&hidden);
-      // SetVisibilityState will update mChannelSuspended via the CanPlayChanged callback.
-      if (mPlayingThroughTheAudioChannel && mAudioChannelAgent) {
-        mAudioChannelAgent->SetVisibilityState(!hidden);
-      }
-    }
+  // SetVisibilityState will update mChannelSuspended via the CanPlayChanged callback.
+  if (UseAudioChannelService() && mPlayingThroughTheAudioChannel &&
+      mAudioChannelAgent) {
+    mAudioChannelAgent->SetVisibilityState(!ownerDoc->Hidden());
   }
   bool suspendEvents = !ownerDoc->IsActive() || !ownerDoc->IsVisible();
   bool pauseElement = suspendEvents || mChannelSuspended;
@@ -3729,13 +3723,7 @@ void HTMLMediaElement::UpdateAudioChannelPlayingState()
       }
       // Use a weak ref so the audio channel agent can't leak |this|.
       mAudioChannelAgent->InitWithWeakCallback(mAudioChannelType, this);
-
-      nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(OwnerDoc());
-      if (domDoc) {
-        bool hidden = false;
-        domDoc->GetHidden(&hidden);
-        mAudioChannelAgent->SetVisibilityState(!hidden);
-      }
+      mAudioChannelAgent->SetVisibilityState(!OwnerDoc()->Hidden());
     }
 
     if (mPlayingThroughTheAudioChannel) {
