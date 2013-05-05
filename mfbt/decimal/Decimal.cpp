@@ -510,11 +510,15 @@ Decimal Decimal::operator/(const Decimal& rhs) const
 
 bool Decimal::operator==(const Decimal& rhs) const
 {
+    if (isNaN() || rhs.isNaN())
+        return false;
     return m_data == rhs.m_data || compareTo(rhs).isZero();
 }
 
 bool Decimal::operator!=(const Decimal& rhs) const
 {
+    if (isNaN() || rhs.isNaN())
+        return true;
     if (m_data == rhs.m_data)
         return false;
     const Decimal result = compareTo(rhs);
@@ -533,6 +537,8 @@ bool Decimal::operator<(const Decimal& rhs) const
 
 bool Decimal::operator<=(const Decimal& rhs) const
 {
+    if (isNaN() || rhs.isNaN())
+        return false;
     if (m_data == rhs.m_data)
         return true;
     const Decimal result = compareTo(rhs);
@@ -551,6 +557,8 @@ bool Decimal::operator>(const Decimal& rhs) const
 
 bool Decimal::operator>=(const Decimal& rhs) const
 {
+    if (isNaN() || rhs.isNaN())
+        return false;
     if (m_data == rhs.m_data)
         return true;
     const Decimal result = compareTo(rhs);
