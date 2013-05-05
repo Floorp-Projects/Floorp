@@ -953,12 +953,11 @@ nsChromeOuterWindowProxy
 nsChromeOuterWindowProxy::singleton;
 
 static JSObject*
-NewOuterWindowProxy(JSContext *cx, JSObject *aParent, bool isChrome)
+NewOuterWindowProxy(JSContext *cx, JS::Handle<JSObject*> parent, bool isChrome)
 {
-  JS::Rooted<JSObject*> parent(cx, aParent);
   JSAutoCompartment ac(cx, parent);
   JS::Rooted<JSObject*> proto(cx);
-  if (!js::GetObjectProto(cx, parent, proto.address()))
+  if (!js::GetObjectProto(cx, parent, &proto))
     return nullptr;
 
   JSObject *obj = js::Wrapper::New(cx, parent, proto, parent,
@@ -2021,8 +2020,8 @@ nsGlobalWindow::CreateOuterObject(nsGlobalWindow* aNewInner)
 {
   AutoPushJSContext cx(mContext->GetNativeContext());
 
-  JSObject* outer = NewOuterWindowProxy(cx, aNewInner->FastGetGlobalJSObject(),
-                                        IsChromeWindow());
+  JS::Rooted<JSObject*> global(cx, aNewInner->FastGetGlobalJSObject());
+  JSObject* outer = NewOuterWindowProxy(cx, global, IsChromeWindow());
   if (!outer) {
     return NS_ERROR_FAILURE;
   }
@@ -2360,8 +2359,9 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
       mJSObject = mContext->GetNativeGlobal();
       SetWrapper(mJSObject);
     } else {
-      JSObject *outerObject = NewOuterWindowProxy(cx, xpc_UnmarkGrayObject(newInnerWindow->mJSObject),
-                                                  thisChrome);
+      JS::Rooted<JSObject*> global(cx,
+        xpc_UnmarkGrayObject(newInnerWindow->mJSObject));
+      JSObject* outerObject = NewOuterWindowProxy(cx, global, thisChrome);
       if (!outerObject) {
         NS_ERROR("out of memory");
         return NS_ERROR_FAILURE;
