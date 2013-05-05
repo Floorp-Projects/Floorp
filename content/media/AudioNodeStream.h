@@ -41,8 +41,6 @@ class AudioNodeStream : public ProcessedMediaStream {
 public:
   enum { AUDIO_TRACK = 1 };
 
-  typedef nsAutoTArray<AudioChunk, 1> OutputChunks;
-
   /**
    * Transfers ownership of aEngine to the new AudioNodeStream.
    */
@@ -99,9 +97,9 @@ public:
   {
     return mAudioParamStream;
   }
-  const OutputChunks& LastChunks() const
+  const AudioChunk& LastChunk() const
   {
-    return mLastChunks;
+    return mLastChunk;
   }
 
   // Any thread
@@ -111,12 +109,12 @@ protected:
   void FinishOutput();
 
   StreamBuffer::Track* EnsureTrack();
-  void ObtainInputBlock(AudioChunk& aTmpChunk, uint32_t aPortIndex);
+  AudioChunk* ObtainInputBlock(AudioChunk* aTmpChunk);
 
   // The engine that will generate output for this node.
   nsAutoPtr<AudioNodeEngine> mEngine;
   // The last block produced by this node.
-  OutputChunks mLastChunks;
+  AudioChunk mLastChunk;
   // Whether this is an internal or external stream
   MediaStreamGraph::AudioNodeStreamKind mKind;
   // The number of input channels that this stream requires. 0 means don't care.
