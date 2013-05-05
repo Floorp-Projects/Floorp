@@ -2232,9 +2232,7 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
     }
     mStyleAttrStyleSheet->Reset(aURI);
   } else {
-    mStyleAttrStyleSheet = new nsHTMLCSSStyleSheet();
-    nsresult rv = mStyleAttrStyleSheet->Init(aURI, this);
-    NS_ENSURE_SUCCESS(rv, rv);
+    mStyleAttrStyleSheet = new nsHTMLCSSStyleSheet(aURI, this);
   }
 
   // The loop over style sets below will handle putting this sheet
