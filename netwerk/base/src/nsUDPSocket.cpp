@@ -3,6 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/Attributes.h"
+#include "mozilla/Endian.h"
+
 #include "nsSocketTransport2.h"
 #include "nsUDPSocket.h"
 #include "nsProxyRelease.h"
@@ -11,7 +14,6 @@
 #include "nsNetCID.h"
 #include "prnetdb.h"
 #include "prio.h"
-#include "mozilla/Attributes.h"
 #include "nsNetAddr.h"
 #include "nsNetSegmentUtils.h"
 #include "NetworkActivityMonitor.h"
@@ -519,7 +521,7 @@ nsUDPSocket::GetPort(int32_t *aResult)
   else
     return NS_ERROR_NOT_INITIALIZED;
 
-  *aResult = (int32_t) PR_ntohs(port);
+  *aResult = static_cast<int32_t>(NetworkEndian::readUint16(&port));
   return NS_OK;
 }
 
