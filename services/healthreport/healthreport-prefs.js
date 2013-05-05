@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 pref("datareporting.healthreport.currentDaySubmissionFailureCount", 0);
-pref("datareporting.healthreport.documentServerURI", "https://data.mozilla.com/");
+pref("datareporting.healthreport.documentServerURI", "https://fhr.data.mozilla.com/");
 pref("datareporting.healthreport.documentServerNamespace", "metrics");
 pref("datareporting.healthreport.infoURL", "https://www.mozilla.org/legal/privacy/firefox.html#health-report");
 pref("datareporting.healthreport.logging.consoleEnabled", true);
