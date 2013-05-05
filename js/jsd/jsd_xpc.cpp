@@ -1289,8 +1289,13 @@ jsdScript::GetFunctionObject(jsdIValue **_rval)
     JSFunction *fun = JSD_GetJSFunction(mCx, mScript);
     if (!fun)
         return NS_ERROR_NOT_AVAILABLE;
-    
-    JSObject *obj = JS_GetFunctionObject(fun);
+
+    JSContext *jsContext = JSD_GetDefaultJSContext (mCx);
+    if (!jsContext) {
+        return NS_ERROR_FAILURE;
+    }
+
+    JS::RootedObject obj(jsContext, JS_GetFunctionObject(fun));
     if (!obj)
         return NS_ERROR_FAILURE;
 
@@ -1320,7 +1325,7 @@ jsdScript::GetFunctionSource(nsAString & aFunctionSource)
         NS_WARNING("No default context !?");
         return NS_ERROR_FAILURE;
     }
-    JSFunction *fun = JSD_GetJSFunction (mCx, mScript);
+    JS::RootedFunction fun(cx, JSD_GetJSFunction (mCx, mScript));
 
     JSAutoRequest ar(cx);
 
@@ -1330,7 +1335,7 @@ jsdScript::GetFunctionSource(nsAString & aFunctionSource)
         ac.construct(cx, JS_GetFunctionObject(fun));
         jsstr = JS_DecompileFunction (cx, fun, 4);
     } else {
-        JSScript *script = JSD_GetJSScript (mCx, mScript);
+        JS::RootedScript script(cx, JSD_GetJSScript (mCx, mScript));
         ac.construct(cx, script);
         jsstr = JS_DecompileScript (cx, script, "ppscript", 4);
     }
@@ -2504,7 +2509,7 @@ jsdService::DeactivateDebugger ()
     JSD_ClearDebugBreakHook (mCx);
     JSD_ClearTopLevelHook (mCx);
     JSD_ClearFunctionHook (mCx);
-    
+
     JSD_DebuggerOff (mCx);
 
     mCx = nullptr;
@@ -2532,7 +2537,7 @@ jsdService::ActivateDebugger (JSRuntime *rt)
         return NS_ERROR_FAILURE;
 
     JSContext *cx   = JSD_GetDefaultJSContext (mCx);
-    JSObject  *glob = JS_GetGlobalObject (cx);
+    JS::RootedObject glob(cx, JS_GetGlobalObject (cx));
 
     /* init xpconnect on the debugger's context in case xpconnect tries to
      * use it for stuff. */
@@ -2540,7 +2545,7 @@ jsdService::ActivateDebugger (JSRuntime *rt)
     nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID(), &rv);
     if (NS_FAILED(rv))
         return rv;
-    
+
     xpc->InitClasses (cx, glob);
 
     /* Start watching for script creation/destruction and manage jsdScript
