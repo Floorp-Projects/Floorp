@@ -1062,7 +1062,7 @@ FindObjectClass(JSContext* cx, JSObject* aGlobalObject)
   JS::Rooted<JSObject*> obj(cx), proto(cx, aGlobalObject);
   do {
     obj = proto;
-    js::GetObjectProto(cx, obj, proto.address());
+    js::GetObjectProto(cx, obj, &proto);
   } while (proto);
 
   sObjectClass = js::GetObjectJSClass(obj);
@@ -5171,7 +5171,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
     if (obj == realObj) {
       JS::Rooted<JSObject*> proto(cx);
-      if (!js::GetObjectProto(cx, obj, proto.address())) {
+      if (!js::GetObjectProto(cx, obj, &proto)) {
           *_retval = JS_FALSE;
           return NS_OK;
       }
@@ -6346,16 +6346,18 @@ nsHTMLDocumentSH::DocumentAllGetProperty(JSContext *cx, JSHandleObject obj_,
     return JS_TRUE;
   }
 
+  JS::Rooted<JSObject*> proto(cx);
   while (js::GetObjectJSClass(obj) != &sHTMLDocumentAllClass) {
-    if (!js::GetObjectProto(cx, obj, obj.address())) {
+    if (!js::GetObjectProto(cx, obj, &proto)) {
       return JS_FALSE;
     }
 
-    if (!obj) {
+    if (!proto) {
       NS_ERROR("The JS engine lies!");
-
       return JS_TRUE;
     }
+
+    obj = proto;
   }
 
   nsHTMLDocument *doc = GetDocument(obj);

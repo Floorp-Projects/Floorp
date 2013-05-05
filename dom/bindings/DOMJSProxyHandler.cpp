@@ -111,7 +111,7 @@ DOMProxyHandler::getPropertyDescriptor(JSContext* cx, JS::Handle<JSObject*> prox
   }
 
   JS::Rooted<JSObject*> proto(cx);
-  if (!js::GetObjectProto(cx, proxy, proto.address())) {
+  if (!js::GetObjectProto(cx, proxy, &proto)) {
     return false;
   }
   if (!proto) {
@@ -192,7 +192,7 @@ DOMProxyHandler::has(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid
 
   // OK, now we have to look at the proto
   JS::Rooted<JSObject*> proto(cx);
-  if (!js::GetObjectProto(cx, proxy, proto.address())) {
+  if (!js::GetObjectProto(cx, proxy, &proto)) {
     return false;
   }
   if (!proto) {
