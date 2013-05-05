@@ -44,7 +44,7 @@ test(function () { g.eval("var obj = {get x() { return 1; }, set x(v) { print(v)
 test(function () { return g.Function("a", "b", "return b - a;"); });
 
 // cloning a function with nested functions
-test(function () { g.clone(Function("x", "return x + 1")); });
+test(function () { g.clone(evaluate("(function(x) { return x + 1; })", {compileAndGo: false})); });
 
 // eval declaring a generator
 test(function () { g.eval("function r(n) { for (var i=0;i<n;i++) yield i; }"); });
