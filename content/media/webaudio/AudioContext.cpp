@@ -20,11 +20,13 @@
 #include "DynamicsCompressorNode.h"
 #include "BiquadFilterNode.h"
 #include "ScriptProcessorNode.h"
+#include "ChannelSplitterNode.h"
 #include "nsNetUtil.h"
 
 // Note that this number is an arbitrary large value to protect against OOM
 // attacks.
 const unsigned MAX_SCRIPT_PROCESSOR_CHANNELS = 10000;
+const unsigned MAX_CHANNEL_SPLITTER_OUTPUTS = UINT16_MAX;
 
 namespace mozilla {
 namespace dom {
@@ -206,6 +208,20 @@ AudioContext::CreatePanner()
   nsRefPtr<PannerNode> pannerNode = new PannerNode(this);
   mPannerNodes.PutEntry(pannerNode);
   return pannerNode.forget();
+}
+
+already_AddRefed<ChannelSplitterNode>
+AudioContext::CreateChannelSplitter(uint32_t aNumberOfOutputs, ErrorResult& aRv)
+{
+  if (aNumberOfOutputs == 0 ||
+      aNumberOfOutputs > MAX_CHANNEL_SPLITTER_OUTPUTS) {
+    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return nullptr;
+  }
+
+  nsRefPtr<ChannelSplitterNode> splitterNode =
+    new ChannelSplitterNode(this, aNumberOfOutputs);
+  return splitterNode.forget();
 }
 
 already_AddRefed<DynamicsCompressorNode>
