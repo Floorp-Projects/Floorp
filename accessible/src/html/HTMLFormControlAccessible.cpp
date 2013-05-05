@@ -580,7 +580,7 @@ HTMLRangeAccessible::GetMaximumValue(double* aMaximumValue)
   if (rv != NS_OK_NO_ARIA_VALUE)
     return rv;
 
-  *aMaximumValue = HTMLInputElement::FromContent(mContent)->GetMaximum();
+  *aMaximumValue = HTMLInputElement::FromContent(mContent)->GetMaximum().toDouble();
   return NS_OK;
 }
 
@@ -592,7 +592,7 @@ HTMLRangeAccessible::GetMinimumValue(double* aMinimumValue)
   if (rv != NS_OK_NO_ARIA_VALUE)
     return rv;
 
-  *aMinimumValue = HTMLInputElement::FromContent(mContent)->GetMinimum();
+  *aMinimumValue = HTMLInputElement::FromContent(mContent)->GetMinimum().toDouble();
   return NS_OK;
 }
 
@@ -604,7 +604,7 @@ HTMLRangeAccessible::GetMinimumIncrement(double* aMinimumIncrement)
   if (rv != NS_OK_NO_ARIA_VALUE)
     return rv;
 
-  *aMinimumIncrement = HTMLInputElement::FromContent(mContent)->GetStep();
+  *aMinimumIncrement = HTMLInputElement::FromContent(mContent)->GetStep().toDouble();
   return NS_OK;
 }
 
@@ -615,7 +615,7 @@ HTMLRangeAccessible::GetCurrentValue(double* aCurrentValue)
   if (rv != NS_OK_NO_ARIA_VALUE)
     return rv;
 
-  *aCurrentValue = HTMLInputElement::FromContent(mContent)->GetValueAsDouble();
+  *aCurrentValue = HTMLInputElement::FromContent(mContent)->GetValueAsDecimal().toDouble();
   return NS_OK;
 }
 
