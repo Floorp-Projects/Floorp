@@ -130,7 +130,7 @@ AudioParamTimeline::AudioNodeInputValue(size_t aCounter) const
   // AudioChunk to look at.
   float audioNodeInputValue = 0.0f;
   const AudioChunk& lastAudioNodeChunk =
-    static_cast<AudioNodeStream*>(mStream.get())->LastChunks()[0];
+    static_cast<AudioNodeStream*>(mStream.get())->LastChunk();
   if (!lastAudioNodeChunk.IsNull()) {
     MOZ_ASSERT(lastAudioNodeChunk.GetDuration() == WEBAUDIO_BLOCK_SIZE);
     audioNodeInputValue =

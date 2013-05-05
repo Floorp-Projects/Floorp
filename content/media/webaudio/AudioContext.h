@@ -44,8 +44,6 @@ class AudioBufferSourceNode;
 class AudioDestinationNode;
 class AudioListener;
 class BiquadFilterNode;
-class ChannelMergerNode;
-class ChannelSplitterNode;
 class DelayNode;
 class DynamicsCompressorNode;
 class GainNode;
@@ -143,12 +141,6 @@ public:
 
   already_AddRefed<PannerNode>
   CreatePanner();
-
-  already_AddRefed<ChannelSplitterNode>
-  CreateChannelSplitter(uint32_t aNumberOfOutputs, ErrorResult& aRv);
-
-  already_AddRefed<ChannelMergerNode>
-  CreateChannelMerger(uint32_t aNumberOfInputs, ErrorResult& aRv);
 
   already_AddRefed<DynamicsCompressorNode>
   CreateDynamicsCompressor();

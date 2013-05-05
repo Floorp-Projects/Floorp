@@ -719,20 +719,6 @@ protected:
  * the port and drop the graph's reference, destroying the object.
  */
 class MediaInputPort {
-  // Do not call this constructor directly. Instead call aDest->AllocateInputPort.
-  MediaInputPort(MediaStream* aSource, ProcessedMediaStream* aDest,
-                 uint32_t aFlags, uint16_t aInputNumber,
-                 uint16_t aOutputNumber)
-    : mSource(aSource)
-    , mDest(aDest)
-    , mFlags(aFlags)
-    , mInputNumber(aInputNumber)
-    , mOutputNumber(aOutputNumber)
-    , mGraph(nullptr)
-  {
-    MOZ_COUNT_CTOR(MediaInputPort);
-  }
-
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaInputPort)
 
@@ -749,6 +735,16 @@ public:
     // stream.
     FLAG_BLOCK_OUTPUT = 0x02
   };
+  // Do not call this constructor directly. Instead call aDest->AllocateInputPort.
+  MediaInputPort(MediaStream* aSource, ProcessedMediaStream* aDest,
+                 uint32_t aFlags)
+    : mSource(aSource)
+    , mDest(aDest)
+    , mFlags(aFlags)
+    , mGraph(nullptr)
+  {
+    MOZ_COUNT_CTOR(MediaInputPort);
+  }
   ~MediaInputPort()
   {
     MOZ_COUNT_DTOR(MediaInputPort);
@@ -770,9 +766,6 @@ public:
   // Any thread
   MediaStream* GetSource() { return mSource; }
   ProcessedMediaStream* GetDestination() { return mDest; }
-
-  uint16_t InputNumber() const { return mInputNumber; }
-  uint16_t OutputNumber() const { return mOutputNumber; }
 
   // Call on graph manager thread
   struct InputInterval {
@@ -802,10 +795,6 @@ protected:
   MediaStream* mSource;
   ProcessedMediaStream* mDest;
   uint32_t mFlags;
-  // The input and output numbers are optional, and are currently only used by
-  // Web Audio.
-  const uint16_t mInputNumber;
-  const uint16_t mOutputNumber;
 
   // Our media stream graph
   MediaStreamGraphImpl* mGraph;
@@ -828,9 +817,7 @@ public:
    * This stream can be removed by calling MediaInputPort::Remove().
    */
   already_AddRefed<MediaInputPort> AllocateInputPort(MediaStream* aStream,
-                                                     uint32_t aFlags = 0,
-                                                     uint16_t aInputNumber = 0,
-                                                     uint16_t aOutputNumber = 0);
+                                                     uint32_t aFlags = 0);
   /**
    * Force this stream into the finished state.
    */
