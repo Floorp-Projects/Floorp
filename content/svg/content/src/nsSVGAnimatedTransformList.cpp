@@ -25,6 +25,12 @@ nsSVGAnimatedTransformList::SetBaseValueString(const nsAString& aValue)
     return rv;
   }
 
+  return SetBaseValue(newBaseValue);
+}
+
+nsresult
+nsSVGAnimatedTransformList::SetBaseValue(const SVGTransformList& aValue)
+{
   SVGAnimatedTransformList *domWrapper =
     SVGAnimatedTransformList::GetDOMWrapperIfExists(this);
   if (domWrapper) {
@@ -33,14 +39,14 @@ nsSVGAnimatedTransformList::SetBaseValueString(const nsAString& aValue)
     // to remove DOM items from itself, and any removed DOM items need to copy
     // their internal counterpart values *before* we change them.
     //
-    domWrapper->InternalBaseValListWillChangeLengthTo(newBaseValue.Length());
+    domWrapper->InternalBaseValListWillChangeLengthTo(aValue.Length());
   }
 
   // We don't need to call DidChange* here - we're only called by
   // nsSVGElement::ParseAttribute under Element::SetAttr,
   // which takes care of notifying.
 
-  rv = mBaseVal.CopyFrom(newBaseValue);
+  nsresult rv = mBaseVal.CopyFrom(aValue);
   if (NS_FAILED(rv) && domWrapper) {
     // Attempting to increase mBaseVal's length failed - reduce domWrapper
     // back to the same length:
