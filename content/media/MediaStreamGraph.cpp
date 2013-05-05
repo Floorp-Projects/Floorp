@@ -1857,7 +1857,8 @@ MediaInputPort::SetGraphImpl(MediaStreamGraphImpl* aGraph)
 }
 
 already_AddRefed<MediaInputPort>
-ProcessedMediaStream::AllocateInputPort(MediaStream* aStream, uint32_t aFlags)
+ProcessedMediaStream::AllocateInputPort(MediaStream* aStream, uint32_t aFlags,
+                                        uint16_t aInputNumber, uint16_t aOutputNumber)
 {
   // This method creates two references to the MediaInputPort: one for
   // the main thread, and one for the MediaStreamGraph.
@@ -1874,7 +1875,8 @@ ProcessedMediaStream::AllocateInputPort(MediaStream* aStream, uint32_t aFlags)
     }
     nsRefPtr<MediaInputPort> mPort;
   };
-  nsRefPtr<MediaInputPort> port = new MediaInputPort(aStream, this, aFlags);
+  nsRefPtr<MediaInputPort> port = new MediaInputPort(aStream, this, aFlags,
+                                                     aInputNumber, aOutputNumber);
   port->SetGraphImpl(GraphImpl());
   GraphImpl()->AppendMessage(new Message(port));
   return port.forget();
