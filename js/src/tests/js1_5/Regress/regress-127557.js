@@ -28,14 +28,15 @@ var actualvalues = [];
 var expect= '';
 var expectedvalues = [];
 
-var f = Function("x","y","\
-                 function h() { return h_peer(); }               \
-                 function h_peer() { return (x + cnCOMMA + y); } \
-                 return h");
-
 if (typeof clone == 'function')
 {
   status = inSection(1);
+  var f = evaluate("(function(x, y) {\n" +
+                   "    function h() { return h_peer(); }\n" +
+                   "    function h_peer() { return (x + cnCOMMA + y); }\n" +
+                   "    return h;\n" +
+                   "})",
+                   {compileAndGo: false});
   var g = clone(f);
   g.prototype = new Object;
   var h = g(5,6);
