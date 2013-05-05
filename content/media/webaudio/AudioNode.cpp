@@ -168,8 +168,12 @@ AudioNode::Connect(AudioNode& aDestination, uint32_t aOutput,
     MOZ_ASSERT(aDestination.mStream->AsProcessedStream());
     ProcessedMediaStream* ps =
       static_cast<ProcessedMediaStream*>(aDestination.mStream.get());
+    MOZ_ASSERT(aInput <= UINT16_MAX, "Unexpected large input port number");
+    MOZ_ASSERT(aOutput <= UINT16_MAX, "Unexpected large output port number");
     input->mStreamPort =
-      ps->AllocateInputPort(mStream, MediaInputPort::FLAG_BLOCK_INPUT);
+      ps->AllocateInputPort(mStream, MediaInputPort::FLAG_BLOCK_INPUT,
+                            static_cast<uint16_t>(aInput),
+                            static_cast<uint16_t>(aOutput));
   }
 
   // This connection may have connected a panner and a source.
@@ -207,7 +211,9 @@ AudioNode::Connect(AudioParam& aDestination, uint32_t aOutput,
   ProcessedMediaStream* ps = static_cast<ProcessedMediaStream*>(stream);
 
   // Setup our stream as an input to the AudioParam's stream
-  input->mStreamPort = ps->AllocateInputPort(mStream, MediaInputPort::FLAG_BLOCK_INPUT);
+  MOZ_ASSERT(aOutput <= UINT16_MAX, "Unexpected large output port number");
+  input->mStreamPort = ps->AllocateInputPort(mStream, MediaInputPort::FLAG_BLOCK_INPUT,
+                                             0, static_cast<uint16_t>(aOutput));
 }
 
 void
