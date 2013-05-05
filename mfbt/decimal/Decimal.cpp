@@ -283,7 +283,7 @@ Decimal::Decimal(int32_t i32)
 }
 
 Decimal::Decimal(Sign sign, int exponent, uint64_t coefficient)
-    : m_data(sign, exponent, coefficient)
+    : m_data(sign, coefficient ? exponent : 0, coefficient)
 {
 }
 
