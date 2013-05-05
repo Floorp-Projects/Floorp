@@ -29,9 +29,11 @@ struct AnimationEventInfo {
 
   AnimationEventInfo(mozilla::dom::Element *aElement,
                      const nsString& aAnimationName,
-                     uint32_t aMessage, mozilla::TimeDuration aElapsedTime)
+                     uint32_t aMessage, mozilla::TimeDuration aElapsedTime,
+                     const nsAString& aPseudoElement)
     : mElement(aElement),
-      mEvent(true, aMessage, aAnimationName, aElapsedTime.ToSeconds())
+      mEvent(true, aMessage, aAnimationName, aElapsedTime.ToSeconds(),
+             aPseudoElement)
   {
   }
 
@@ -40,7 +42,8 @@ struct AnimationEventInfo {
   AnimationEventInfo(const AnimationEventInfo &aOther)
     : mElement(aOther.mElement),
       mEvent(true, aOther.mEvent.message,
-             aOther.mEvent.animationName, aOther.mEvent.elapsedTime)
+             aOther.mEvent.animationName, aOther.mEvent.elapsedTime,
+             aOther.mEvent.pseudoElement)
   {
   }
 };
@@ -145,7 +148,6 @@ struct ElementAnimations MOZ_FINAL
                                        TimeDuration aIterationDuration,
                                        double aIterationCount,
                                        uint32_t aDirection,
-                                       bool aIsForElement = true,
                                        ElementAnimation* aAnimation = nullptr,
                                        ElementAnimations* aEa = nullptr,
                                        EventArray* aEventsToDispatch = nullptr);
@@ -156,6 +158,15 @@ struct ElementAnimations MOZ_FINAL
 
   bool IsForElement() const { // rather than for a pseudo-element
     return mElementProperty == nsGkAtoms::animationsProperty;
+  }
+
+  nsString PseudoElement()
+  {
+    return mElementProperty == nsGkAtoms::animationsProperty ?
+             EmptyString() :
+             mElementProperty == nsGkAtoms::animationsOfBeforeProperty ?
+               NS_LITERAL_STRING("::before") :
+               NS_LITERAL_STRING("::after");
   }
 
   void PostRestyleForAnimation(nsPresContext *aPresContext) {

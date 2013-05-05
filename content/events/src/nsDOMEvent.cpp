@@ -840,7 +840,8 @@ nsDOMEvent::DuplicatePrivateData()
         static_cast<nsAnimationEvent*>(mEvent);
       newEvent = new nsAnimationEvent(false, msg,
                                       oldAnimationEvent->animationName,
-                                      oldAnimationEvent->elapsedTime);
+                                      oldAnimationEvent->elapsedTime,
+                                      oldAnimationEvent->pseudoElement);
       NS_ENSURE_TRUE(newEvent, NS_ERROR_OUT_OF_MEMORY);
       break;
     }
