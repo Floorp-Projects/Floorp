@@ -326,41 +326,6 @@ public:
 
   ~GetUserMediaStreamRunnable() {}
 
-  class TracksAvailableCallback : public DOMMediaStream::OnTracksAvailableCallback
-  {
-  public:
-    TracksAvailableCallback(MediaManager* aManager,
-                            nsIDOMGetUserMediaSuccessCallback* aSuccess,
-                            uint64_t aWindowID,
-                            DOMMediaStream* aStream)
-      : mWindowID(aWindowID), mSuccess(aSuccess), mManager(aManager),
-        mStream(aStream) {}
-    virtual void NotifyTracksAvailable(DOMMediaStream* aStream) MOZ_OVERRIDE
-    {
-      // We're in the main thread, so no worries here.
-      if (!(mManager->IsWindowStillActive(mWindowID))) {
-        return;
-      }
-
-      // This is safe since we're on main-thread, and the windowlist can only
-      // be invalidated from the main-thread (see OnNavigation)
-      LOG(("Returning success for getUserMedia()"));
-      mSuccess->OnSuccess(aStream);
-    }
-    uint64_t mWindowID;
-    nsRefPtr<nsIDOMGetUserMediaSuccessCallback> mSuccess;
-    nsRefPtr<MediaManager> mManager;
-    // Keep the DOMMediaStream alive until the NotifyTracksAvailable callback
-    // has fired, otherwise we might immediately destroy the DOMMediaStream and
-    // shut down the underlying MediaStream prematurely.
-    // This creates a cycle which is broken when NotifyTracksAvailable
-    // is fired (which will happen unless the browser shuts down,
-    // since we only add this callback when we've successfully appended
-    // the desired tracks in the MediaStreamGraph) or when
-    // DOMMediaStream::NotifyMediaStreamGraphShutdown is called.
-    nsRefPtr<DOMMediaStream> mStream;
-  };
-
   NS_IMETHOD
   Run()
   {
@@ -377,14 +342,13 @@ public:
     }
 
     // Create a media stream.
-    DOMMediaStream::TrackTypeHints hints =
-      (mAudioSource ? DOMMediaStream::HINT_CONTENTS_AUDIO : 0) |
-      (mVideoSource ? DOMMediaStream::HINT_CONTENTS_VIDEO : 0);
+    uint32_t hints = (mAudioSource ? DOMMediaStream::HINT_CONTENTS_AUDIO : 0);
+    hints |= (mVideoSource ? DOMMediaStream::HINT_CONTENTS_VIDEO : 0);
 
     nsRefPtr<nsDOMUserMediaStream> trackunion =
       nsDOMUserMediaStream::CreateTrackUnionStream(window, hints);
     if (!trackunion) {
-      nsCOMPtr<nsIDOMGetUserMediaErrorCallback> error = mError.forget();
+      nsCOMPtr<nsIDOMGetUserMediaErrorCallback> error(mError);
       LOG(("Returning error for getUserMedia() - no stream"));
       error->OnError(NS_LITERAL_STRING("NO_STREAM"));
       return NS_OK;
@@ -408,17 +372,11 @@ public:
     // when the page is invalidated (on navigation or close).
     mListener->Activate(stream.forget(), mAudioSource, mVideoSource);
 
-    TracksAvailableCallback* tracksAvailableCallback =
-      new TracksAvailableCallback(mManager, mSuccess, mWindowID, trackunion);
-
     // Dispatch to the media thread to ask it to start the sources,
-    // because that can take a while.
-    // Pass ownership of trackunion to the MediaOperationRunnable
-    // to ensure it's kept alive until the MediaOperationRunnable runs (at least).
+    // because that can take a while
     nsIThread *mediaThread = MediaManager::GetThread();
     nsRefPtr<MediaOperationRunnable> runnable(
-      new MediaOperationRunnable(MEDIA_START, mListener, trackunion,
-                                 tracksAvailableCallback,
+      new MediaOperationRunnable(MEDIA_START, mListener,
                                  mAudioSource, mVideoSource, false));
     mediaThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
 
@@ -449,14 +407,24 @@ public:
     }
 #endif
 
-    // We won't need mError now.
-    mError = nullptr;
+    // We're in the main thread, so no worries here either.
+    nsCOMPtr<nsIDOMGetUserMediaSuccessCallback> success(mSuccess);
+    nsCOMPtr<nsIDOMGetUserMediaErrorCallback> error(mError);
+
+    if (!(mManager->IsWindowStillActive(mWindowID))) {
+      return NS_OK;
+    }
+    // This is safe since we're on main-thread, and the windowlist can only
+    // be invalidated from the main-thread (see OnNavigation)
+    LOG(("Returning success for getUserMedia()"));
+    success->OnSuccess(static_cast<nsIDOMLocalMediaStream*>(trackunion));
+
     return NS_OK;
   }
 
 private:
-  nsRefPtr<nsIDOMGetUserMediaSuccessCallback> mSuccess;
-  nsRefPtr<nsIDOMGetUserMediaErrorCallback> mError;
+  already_AddRefed<nsIDOMGetUserMediaSuccessCallback> mSuccess;
+  already_AddRefed<nsIDOMGetUserMediaErrorCallback> mError;
   nsRefPtr<MediaEngineSource> mAudioSource;
   nsRefPtr<MediaEngineSource> mVideoSource;
   uint64_t mWindowID;
@@ -1530,8 +1498,7 @@ GetUserMediaCallbackMediaStreamListener::Invalidate()
   // Pass a ref to us (which is threadsafe) so it can query us for the
   // source stream info.
   runnable = new MediaOperationRunnable(MEDIA_STOP,
-                                        this, nullptr, nullptr,
-                                        mAudioSource, mVideoSource,
+                                        this, mAudioSource, mVideoSource,
                                         mFinished);
   mMediaThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
 }
