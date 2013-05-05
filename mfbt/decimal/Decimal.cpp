@@ -623,16 +623,16 @@ Decimal Decimal::ceiling() const
     if (exponent() >= 0)
         return *this;
 
-    uint64_t result = m_data.coefficient();
-    const int numberOfDigits = countDigits(result);
+    uint64_t coefficient = m_data.coefficient();
+    const int numberOfDigits = countDigits(coefficient);
     const int numberOfDropDigits = -exponent();
     if (numberOfDigits < numberOfDropDigits)
         return isPositive() ? Decimal(1) : zero(Positive);
 
-    result = scaleDown(result, numberOfDropDigits - 1);
-    if (sign() == Positive && result % 10 > 0)
-        result += 10;
-    result /= 10;
+    uint64_t result = scaleDown(coefficient, numberOfDropDigits);
+    uint64_t droppedDigits = coefficient - scaleUp(result, numberOfDropDigits);
+    if (droppedDigits && isPositive())
+        result += 1;
     return Decimal(sign(), 0, result);
 }
 
@@ -665,16 +665,17 @@ Decimal Decimal::floor() const
     if (exponent() >= 0)
         return *this;
 
-    uint64_t result = m_data.coefficient();
-    const int numberOfDigits = countDigits(result);
+    uint64_t coefficient = m_data.coefficient();
+    const int numberOfDigits = countDigits(coefficient);
     const int numberOfDropDigits = -exponent();
     if (numberOfDigits < numberOfDropDigits)
         return isPositive() ? zero(Positive) : Decimal(-1);
 
-    result = scaleDown(result, numberOfDropDigits - 1);
-    if (isNegative() && result % 10 > 0)
-        result += 10;
-    result /= 10;
+    uint64_t result = scaleDown(coefficient, numberOfDropDigits);
+    uint64_t droppedDigits = coefficient - scaleUp(result, numberOfDropDigits);
+    if (droppedDigits && isNegative()) {
+        result += 1;
+    }
     return Decimal(sign(), 0, result);
 }
 
@@ -920,6 +921,8 @@ Decimal Decimal::round() const
     if (numberOfDigits < numberOfDropDigits)
         return zero(Positive);
 
+    // We're implementing round-half-away-from-zero, so we only need the one
+    // (the most significant) fractional digit:
     result = scaleDown(result, numberOfDropDigits - 1);
     if (result % 10 >= 5)
         result += 10;
