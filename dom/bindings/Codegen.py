@@ -7015,7 +7015,7 @@ if (expando) {
 
 """ + get + """
 JS::Rooted<JSObject*> proto(cx);
-if (!js::GetObjectProto(cx, proxy, proto.address())) {
+if (!js::GetObjectProto(cx, proxy, &proto)) {
   return false;
 }
 if (proto) {

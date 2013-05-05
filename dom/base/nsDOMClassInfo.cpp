@@ -1062,7 +1062,7 @@ FindObjectClass(JSContext* cx, JSObject* aGlobalObject)
   JS::Rooted<JSObject*> obj(cx), proto(cx, aGlobalObject);
   do {
     obj = proto;
-    js::GetObjectProto(cx, obj, proto.address());
+    js::GetObjectProto(cx, obj, &proto);
   } while (proto);
 
   sObjectClass = js::GetObjectJSClass(obj);
@@ -3121,6 +3121,7 @@ static JSBool
 ChildWindowGetter(JSContext *cx, JSHandleObject obj, JSHandleId id,
                   JSMutableHandleValue vp)
 {
+  MOZ_ASSERT(JSID_IS_STRING(id));
   // Grab the native DOM window.
   vp.setUndefined();
   nsCOMPtr<nsISupports> winSupports =
@@ -3130,7 +3131,8 @@ ChildWindowGetter(JSContext *cx, JSHandleObject obj, JSHandleId id,
   nsGlobalWindow *win = nsGlobalWindow::FromSupports(winSupports);
 
   // Find the child, if it exists.
-  nsCOMPtr<nsIDOMWindow> child = win->GetChildWindow(id);
+  nsDependentJSString name(id);
+  nsCOMPtr<nsIDOMWindow> child = win->GetChildWindow(name);
   if (!child)
     return true;
 
@@ -3174,7 +3176,8 @@ nsWindowSH::GlobalScopePolluterNewResolve(JSContext *cx, JSHandleObject obj,
   nsGlobalWindow* win = static_cast<nsGlobalWindow*>(piWin.get());
 
   if (win->GetLength() > 0) {
-    nsCOMPtr<nsIDOMWindow> child_win = win->GetChildWindow(id);
+    nsDependentJSString name(id);
+    nsCOMPtr<nsIDOMWindow> child_win = win->GetChildWindow(name);
     if (child_win) {
       // We found a subframe of the right name, so define the property
       // on the GSP. This property is a read-only accessor. Shadowing via
@@ -5171,7 +5174,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
     if (obj == realObj) {
       JS::Rooted<JSObject*> proto(cx);
-      if (!js::GetObjectProto(cx, obj, proto.address())) {
+      if (!js::GetObjectProto(cx, obj, &proto)) {
           *_retval = JS_FALSE;
           return NS_OK;
       }
@@ -6346,16 +6349,18 @@ nsHTMLDocumentSH::DocumentAllGetProperty(JSContext *cx, JSHandleObject obj_,
     return JS_TRUE;
   }
 
+  JS::Rooted<JSObject*> proto(cx);
   while (js::GetObjectJSClass(obj) != &sHTMLDocumentAllClass) {
-    if (!js::GetObjectProto(cx, obj, obj.address())) {
+    if (!js::GetObjectProto(cx, obj, &proto)) {
       return JS_FALSE;
     }
 
-    if (!obj) {
+    if (!proto) {
       NS_ERROR("The JS engine lies!");
-
       return JS_TRUE;
     }
+
+    obj = proto;
   }
 
   nsHTMLDocument *doc = GetDocument(obj);
