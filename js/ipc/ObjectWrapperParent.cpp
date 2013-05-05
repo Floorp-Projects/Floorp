@@ -16,6 +16,7 @@
 #include "jsfriendapi.h"
 
 using namespace mozilla::jsipc;
+using namespace JS;
 
 namespace {
 
@@ -178,11 +179,13 @@ ObjectWrapperParent::GetJSObject(JSContext* cx) const
 }
 
 static ObjectWrapperParent*
-Unwrap(JSContext* cx, JSObject* obj)
+Unwrap(JSContext* cx, JSObject* objArg)
 {
+    RootedObject obj(cx, objArg), proto(cx);
     while (js::GetObjectClass(obj) != &ObjectWrapperParent::sCPOW_JSClass) {
-        if (!js::GetObjectProto(cx, obj, &obj) || !obj)
+        if (!js::GetObjectProto(cx, obj, &proto) || !proto)
             return NULL;
+        obj = proto;
     }
 
     ObjectWrapperParent* self =

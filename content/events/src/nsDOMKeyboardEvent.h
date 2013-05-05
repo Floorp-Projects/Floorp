@@ -76,10 +76,6 @@ public:
                        aCtrlKey, aAltKey, aShiftKey,aMetaKey,
                        aKeyCode, aCharCode);
   }
-
-protected:
-  // Specific implementation for a keyboard event.
-  virtual nsresult Which(uint32_t* aWhich);
 };
 
 

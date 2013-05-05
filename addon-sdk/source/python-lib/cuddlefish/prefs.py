@@ -56,9 +56,6 @@ DEFAULT_FIREFOX_PREFS = {
     'devtools.errorconsole.enabled' : True,
     'devtools.chrome.enabled' : True,
 
-    # Disable the feedback extension
-    'extensions.testpilot.runStudies' : False,
-
     # From:
     # http://hg.mozilla.org/mozilla-central/file/1dd81c324ac7/build/automation.py.in#l388
     # Make url-classifier updates so rare that they won't affect tests.

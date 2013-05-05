@@ -10,6 +10,11 @@
 #include "WMFByteStream.h"
 #include "WMFSourceReaderCallback.h"
 #include "mozilla/dom/TimeRanges.h"
+#include "mozilla/Preferences.h"
+#include "DXVA2Manager.h"
+#include "ImageContainer.h"
+#include "Layers.h"
+#include "mozilla/layers/LayersTypes.h"
 
 #ifndef MOZ_SAMPLE_TYPE_FLOAT32
 #error We expect 32bit float audio samples on desktop for the Windows Media Foundation media backend.
@@ -17,6 +22,10 @@
 
 #include "MediaDecoder.h"
 #include "VideoUtils.h"
+
+using mozilla::layers::Image;
+using mozilla::layers::LayerManager;
+using mozilla::layers::LayersBackend;
 
 namespace mozilla {
 
@@ -36,12 +45,14 @@ WMFReader::WMFReader(AbstractMediaDecoder* aDecoder)
     mAudioChannels(0),
     mAudioBytesPerSample(0),
     mAudioRate(0),
+    mVideoWidth(0),
     mVideoHeight(0),
     mVideoStride(0),
     mHasAudio(false),
     mHasVideo(false),
     mCanSeek(false),
-    mIsMP3Enabled(WMFDecoder::IsMP3Supported())
+    mIsMP3Enabled(WMFDecoder::IsMP3Supported()),
+    mUseHwAccel(false)
 {
   NS_ASSERTION(NS_IsMainThread(), "Must be on main thread.");
   MOZ_COUNT_CTOR(WMFReader);
@@ -77,6 +88,41 @@ WMFReader::OnDecodeThreadFinish()
   CoUninitialize();
 }
 
+bool
+WMFReader::InitializeDXVA()
+{
+  if (!Preferences::GetBool("media.windows-media-foundation.use-dxva", false)) {
+    return false;
+  }
+
+  // Extract the layer manager backend type so that we can determine
+  // whether it's worthwhile using DXVA. If we're not running with a D3D
+  // layer manager then the readback of decoded video frames from GPU to
+  // CPU memory grinds painting to a halt, and makes playback performance
+  // *worse*.
+  MediaDecoderOwner* owner = mDecoder->GetOwner();
+  NS_ENSURE_TRUE(owner, false);
+
+  HTMLMediaElement* element = owner->GetMediaElement();
+  NS_ENSURE_TRUE(element, false);
+
+  nsIDocument* doc = element->GetOwnerDocument();
+  NS_ENSURE_TRUE(doc, false);
+
+  nsRefPtr<LayerManager> layerManager = nsContentUtils::LayerManagerForDocument(doc);
+  NS_ENSURE_TRUE(layerManager, false);
+
+  if (layerManager->GetBackendType() != LayersBackend::LAYERS_D3D9 &&
+      layerManager->GetBackendType() != LayersBackend::LAYERS_D3D10) {
+    return false;
+  }
+
+  mDXVA2Manager = DXVA2Manager::Create();
+  NS_ENSURE_TRUE(mDXVA2Manager, false);
+
+  return true;
+}
+
 nsresult
 WMFReader::Init(MediaDecoderReader* aCloneDonor)
 {
@@ -94,7 +140,12 @@ WMFReader::Init(MediaDecoderReader* aCloneDonor)
 
   // Must be created on main thread.
   mByteStream = new WMFByteStream(mDecoder->GetResource(), mSourceReaderCallback);
-  return mByteStream->Init();
+  rv = mByteStream->Init();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mUseHwAccel = InitializeDXVA();
+
+  return NS_OK;
 }
 
 bool
@@ -302,9 +353,21 @@ HRESULT
 WMFReader::ConfigureVideoFrameGeometry(IMFMediaType* aMediaType)
 {
   NS_ENSURE_TRUE(aMediaType != nullptr, E_POINTER);
+  HRESULT hr;
+
+  // Verify that the video subtype is what we expect it to be.
+  // When using hardware acceleration/DXVA2 the video format should
+  // be NV12, which is DXVA2's preferred format. For software decoding
+  // we use YV12, as that's easier for us to stick into our rendering
+  // pipeline than NV12. NV12 has interleaved UV samples, whereas YV12
+  // is a planar format.
+  GUID videoFormat;
+  hr = aMediaType->GetGUID(MF_MT_SUBTYPE, &videoFormat);
+  NS_ENSURE_TRUE(videoFormat == MFVideoFormat_NV12 || !mUseHwAccel, E_FAIL);
+  NS_ENSURE_TRUE(videoFormat == MFVideoFormat_YV12 || mUseHwAccel, E_FAIL);
 
   nsIntRect pictureRegion;
-  HRESULT hr = GetPictureRegion(aMediaType, pictureRegion);
+  hr = GetPictureRegion(aMediaType, pictureRegion);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   UINT32 width = 0, height = 0;
@@ -331,6 +394,7 @@ WMFReader::ConfigureVideoFrameGeometry(IMFMediaType* aMediaType)
   // Success! Save state.
   mInfo.mDisplay = displaySize;
   GetDefaultStride(aMediaType, &mVideoStride);
+  mVideoWidth = width;
   mVideoHeight = height;
   mPictureRegion = pictureRegion;
 
@@ -361,11 +425,11 @@ WMFReader::ConfigureVideoDecoder()
   };
   HRESULT hr = ConfigureSourceReaderStream(mSourceReader,
                                            MF_SOURCE_READER_FIRST_VIDEO_STREAM,
-                                           MFVideoFormat_YV12,
+                                           mUseHwAccel ? MFVideoFormat_NV12 : MFVideoFormat_YV12,
                                            MP4VideoTypes,
                                            NS_ARRAY_LENGTH(MP4VideoTypes));
   if (FAILED(hr)) {
-    LOG("Failed to configured video output for MFVideoFormat_YV12");
+    LOG("Failed to configured video output");
     return hr;
   }
 
@@ -474,6 +538,15 @@ WMFReader::ReadMetadata(VideoInfo* aInfo,
   hr = attr->SetUnknown(MF_SOURCE_READER_ASYNC_CALLBACK, mSourceReaderCallback);
   NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
 
+  if (mUseHwAccel) {
+    hr = attr->SetUnknown(MF_SOURCE_READER_D3D_MANAGER,
+                          mDXVA2Manager->GetDXVADeviceManager());
+    if (FAILED(hr)) {
+      LOG("Failed to set DXVA2 D3D Device manager on source reader attributes");
+      mUseHwAccel = false;
+    }
+  }
+
   hr = wmf::MFCreateSourceReaderFromByteStream(mByteStream, attr, byRef(mSourceReader));
   NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
 
@@ -482,6 +555,27 @@ WMFReader::ReadMetadata(VideoInfo* aInfo,
 
   hr = ConfigureAudioDecoder();
   NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
+
+  if (mUseHwAccel && mInfo.mHasVideo) {
+    RefPtr<IMFTransform> videoDecoder;
+    hr = mSourceReader->GetServiceForStream(MF_SOURCE_READER_FIRST_VIDEO_STREAM,
+                                            GUID_NULL,
+                                            IID_IMFTransform,
+                                            (void**)(IMFTransform**)(byRef(videoDecoder)));
+
+    if (SUCCEEDED(hr)) {
+      ULONG_PTR manager = ULONG_PTR(mDXVA2Manager->GetDXVADeviceManager());
+      hr = videoDecoder->ProcessMessage(MFT_MESSAGE_SET_D3D_MANAGER,
+                                        manager);
+    }
+    if (FAILED(hr)) {
+      LOG("Failed to set DXVA2 D3D Device manager on decoder");
+      mUseHwAccel = false;
+    }
+  }
+  if (mInfo.mHasVideo) {
+    LOG("Using DXVA: %s", (mUseHwAccel ? "Yes" : "No"));
+  }
 
   // Abort if both video and audio failed to initialize.
   NS_ENSURE_TRUE(mInfo.mHasAudio || mInfo.mHasVideo, NS_ERROR_FAILURE);
@@ -585,6 +679,141 @@ WMFReader::DecodeAudioData()
   return true;
 }
 
+HRESULT
+WMFReader::CreateBasicVideoFrame(IMFSample* aSample,
+                                 int64_t aTimestampUsecs,
+                                 int64_t aDurationUsecs,
+                                 int64_t aOffsetBytes,
+                                 VideoData** aOutVideoData)
+{
+  NS_ENSURE_TRUE(aSample, E_POINTER);
+  NS_ENSURE_TRUE(aOutVideoData, E_POINTER);
+
+  *aOutVideoData = nullptr;
+
+  HRESULT hr;
+  RefPtr<IMFMediaBuffer> buffer;
+
+  // Must convert to contiguous buffer to use IMD2DBuffer interface.
+  hr = aSample->ConvertToContiguousBuffer(byRef(buffer));
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+
+  // Try and use the IMF2DBuffer interface if available, otherwise fallback
+  // to the IMFMediaBuffer interface. Apparently IMF2DBuffer is more efficient,
+  // but only some systems (Windows 8?) support it.
+  BYTE* data = nullptr;
+  LONG stride = 0;
+  RefPtr<IMF2DBuffer> twoDBuffer;
+  hr = buffer->QueryInterface(static_cast<IMF2DBuffer**>(byRef(twoDBuffer)));
+  if (SUCCEEDED(hr)) {
+    hr = twoDBuffer->Lock2D(&data, &stride);
+    NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+  } else {
+    hr = buffer->Lock(&data, NULL, NULL);
+    NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+    stride = mVideoStride;
+  }
+
+  // YV12, planar format: [YYYY....][VVVV....][UUUU....]
+  // i.e., Y, then V, then U.
+  VideoData::YCbCrBuffer b;
+
+  // Y (Y') plane
+  b.mPlanes[0].mData = data;
+  b.mPlanes[0].mStride = stride;
+  b.mPlanes[0].mHeight = mVideoHeight;
+  b.mPlanes[0].mWidth = mVideoWidth;
+  b.mPlanes[0].mOffset = 0;
+  b.mPlanes[0].mSkip = 0;
+
+  // The V and U planes are stored 16-row-aligned, so we need to add padding
+  // to the row heights to ensure the Y'CbCr planes are referenced properly.
+  uint32_t padding = 0;
+  if (mVideoHeight % 16 != 0) {
+    padding = 16 - (mVideoHeight % 16);
+  }
+  uint32_t y_size = stride * (mVideoHeight + padding);
+  uint32_t v_size = stride * (mVideoHeight + padding) / 4;
+  uint32_t halfStride = (stride + 1) / 2;
+  uint32_t halfHeight = (mVideoHeight + 1) / 2;
+  uint32_t halfWidth = (mVideoWidth + 1) / 2;
+
+  // U plane (Cb)
+  b.mPlanes[1].mData = data + y_size + v_size;
+  b.mPlanes[1].mStride = halfStride;
+  b.mPlanes[1].mHeight = halfHeight;
+  b.mPlanes[1].mWidth = halfWidth;
+  b.mPlanes[1].mOffset = 0;
+  b.mPlanes[1].mSkip = 0;
+
+  // V plane (Cr)
+  b.mPlanes[2].mData = data + y_size;
+  b.mPlanes[2].mStride = halfStride;
+  b.mPlanes[2].mHeight = halfHeight;
+  b.mPlanes[2].mWidth = halfWidth;
+  b.mPlanes[2].mOffset = 0;
+  b.mPlanes[2].mSkip = 0;
+
+  VideoData *v = VideoData::Create(mInfo,
+                                   mDecoder->GetImageContainer(),
+                                   aOffsetBytes,
+                                   aTimestampUsecs,
+                                   aTimestampUsecs + aDurationUsecs,
+                                   b,
+                                   false,
+                                   -1,
+                                   mPictureRegion);
+  if (twoDBuffer) {
+    twoDBuffer->Unlock2D();
+  } else {
+    buffer->Unlock();
+  }
+
+  *aOutVideoData = v;
+
+  return S_OK;
+}
+
+HRESULT
+WMFReader::CreateD3DVideoFrame(IMFSample* aSample,
+                               int64_t aTimestampUsecs,
+                               int64_t aDurationUsecs,
+                               int64_t aOffsetBytes,
+                               VideoData** aOutVideoData)
+{
+  NS_ENSURE_TRUE(aSample, E_POINTER);
+  NS_ENSURE_TRUE(aOutVideoData, E_POINTER);
+  NS_ENSURE_TRUE(mDXVA2Manager, E_ABORT);
+  NS_ENSURE_TRUE(mUseHwAccel, E_ABORT);
+
+  *aOutVideoData = nullptr;
+  HRESULT hr;
+
+  ImageFormat format = D3D9_RGB32_TEXTURE;
+  nsRefPtr<Image> image;
+  hr = mDXVA2Manager->CopyToImage(aSample,
+                                  nsIntSize(mPictureRegion.width, mPictureRegion.height),
+                                  mDecoder->GetImageContainer(),
+                                  getter_AddRefs(image));
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+  NS_ENSURE_TRUE(image, E_FAIL);
+
+  VideoData *v = VideoData::CreateFromImage(mInfo,
+                                            mDecoder->GetImageContainer(),
+                                            aOffsetBytes,
+                                            aTimestampUsecs,
+                                            aTimestampUsecs + aDurationUsecs,
+                                            image.forget(),
+                                            false,
+                                            -1,
+                                            mPictureRegion);
+
+  NS_ENSURE_TRUE(v, E_FAIL);
+  *aOutVideoData = v;
+
+  return S_OK;
+}
+
 bool
 WMFReader::DecodeVideoFrame(bool &aKeyframeSkip,
                             int64_t aTimeThreshold)
@@ -659,89 +888,14 @@ WMFReader::DecodeVideoFrame(bool &aKeyframeSkip,
   int64_t offset = mDecoder->GetResource()->Tell();
   int64_t duration = GetSampleDuration(sample);
 
-  RefPtr<IMFMediaBuffer> buffer;
-
-  // Must convert to contiguous buffer to use IMD2DBuffer interface.
-  hr = sample->ConvertToContiguousBuffer(byRef(buffer));
-  if (FAILED(hr)) {
-    NS_WARNING("ConvertToContiguousBuffer() failed!");
-    return true;
-  }
-
-  // Try and use the IMF2DBuffer interface if available, otherwise fallback
-  // to the IMFMediaBuffer interface. Apparently IMF2DBuffer is more efficient,
-  // but only some systems (Windows 8?) support it.
-  BYTE* data = nullptr;
-  LONG stride = 0;
-  RefPtr<IMF2DBuffer> twoDBuffer;
-  hr = buffer->QueryInterface(static_cast<IMF2DBuffer**>(byRef(twoDBuffer)));
-  if (SUCCEEDED(hr)) {
-    hr = twoDBuffer->Lock2D(&data, &stride);
-    NS_ENSURE_TRUE(SUCCEEDED(hr), false);
+  VideoData* v = nullptr;
+  if (mUseHwAccel) {
+    hr = CreateD3DVideoFrame(sample, timestamp, duration, offset, &v);
   } else {
-    hr = buffer->Lock(&data, NULL, NULL);
-    NS_ENSURE_TRUE(SUCCEEDED(hr), false);
-    stride = mVideoStride;
+    hr = CreateBasicVideoFrame(sample, timestamp, duration, offset, &v);
   }
+  NS_ENSURE_TRUE(SUCCEEDED(hr) && v, false);
 
-  // YV12, planar format: [YYYY....][VVVV....][UUUU....]
-  // i.e., Y, then V, then U.
-  VideoData::YCbCrBuffer b;
-
-  // Y (Y') plane
-  b.mPlanes[0].mData = data;
-  b.mPlanes[0].mStride = stride;
-  b.mPlanes[0].mHeight = mVideoHeight;
-  b.mPlanes[0].mWidth = stride;
-  b.mPlanes[0].mOffset = 0;
-  b.mPlanes[0].mSkip = 0;
-
-  // The V and U planes are stored 16-row-aligned, so we need to add padding
-  // to the row heights to ensure the Y'CbCr planes are referenced properly.
-  uint32_t padding = 0;
-  if (mVideoHeight % 16 != 0) {
-    padding = 16 - (mVideoHeight % 16);
-  }
-  uint32_t y_size = stride * (mVideoHeight + padding);
-  uint32_t v_size = stride * (mVideoHeight + padding) / 4;
-  uint32_t halfStride = (stride + 1) / 2;
-  uint32_t halfHeight = (mVideoHeight + 1) / 2;
-
-  // U plane (Cb)
-  b.mPlanes[1].mData = data + y_size + v_size;
-  b.mPlanes[1].mStride = halfStride;
-  b.mPlanes[1].mHeight = halfHeight;
-  b.mPlanes[1].mWidth = halfStride;
-  b.mPlanes[1].mOffset = 0;
-  b.mPlanes[1].mSkip = 0;
-
-  // V plane (Cr)
-  b.mPlanes[2].mData = data + y_size;
-  b.mPlanes[2].mStride = halfStride;
-  b.mPlanes[2].mHeight = halfHeight;
-  b.mPlanes[2].mWidth = halfStride;
-  b.mPlanes[2].mOffset = 0;
-  b.mPlanes[2].mSkip = 0;
-
-  VideoData *v = VideoData::Create(mInfo,
-                                   mDecoder->GetImageContainer(),
-                                   offset,
-                                   timestamp,
-                                   timestamp + duration,
-                                   b,
-                                   false,
-                                   -1,
-                                   mPictureRegion);
-  if (twoDBuffer) {
-    twoDBuffer->Unlock2D();
-  } else {
-    buffer->Unlock();
-  }
-
-  if (!v) {
-    NS_WARNING("Failed to create VideoData");
-    return false;
-  }
   parsed++;
   decoded++;
   mVideoQueue.Push(v);

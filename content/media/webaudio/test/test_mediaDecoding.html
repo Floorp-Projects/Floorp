@@ -1,0 +1,298 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test the decodeAudioData API</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script src="webaudio.js" type="text/javascript"></script>
+<script type="text/javascript">
+
+// These routines have been copied verbatim from WebKit, and are used in order
+// to convert a memory buffer into a wave buffer.
+function writeString(s, a, offset) {
+    for (var i = 0; i < s.length; ++i) {
+        a[offset + i] = s.charCodeAt(i);
+    }
+}
+
+function writeInt16(n, a, offset) {
+    n = Math.floor(n);
+
+    var b1 = n & 255;
+    var b2 = (n >> 8) & 255;
+
+    a[offset + 0] = b1;
+    a[offset + 1] = b2;
+}
+
+function writeInt32(n, a, offset) {
+    n = Math.floor(n);
+    var b1 = n & 255;
+    var b2 = (n >> 8) & 255;
+    var b3 = (n >> 16) & 255;
+    var b4 = (n >> 24) & 255;
+
+    a[offset + 0] = b1;
+    a[offset + 1] = b2;
+    a[offset + 2] = b3;
+    a[offset + 3] = b4;
+}
+
+function writeAudioBuffer(audioBuffer, a, offset) {
+    var n = audioBuffer.length;
+    var channels = audioBuffer.numberOfChannels;
+
+    for (var i = 0; i < n; ++i) {
+        for (var k = 0; k < channels; ++k) {
+            var buffer = audioBuffer.getChannelData(k);
+            var sample = buffer[i] * 32768.0;
+
+            // Clip samples to the limitations of 16-bit.
+            // If we don't do this then we'll get nasty wrap-around distortion.
+            if (sample < -32768)
+                sample = -32768;
+            if (sample > 32767)
+                sample = 32767;
+
+            writeInt16(sample, a, offset);
+            offset += 2;
+        }
+    }
+}
+
+function createWaveFileData(audioBuffer) {
+    var frameLength = audioBuffer.length;
+    var numberOfChannels = audioBuffer.numberOfChannels;
+    var sampleRate = audioBuffer.sampleRate;
+    var bitsPerSample = 16;
+    var byteRate = sampleRate * numberOfChannels * bitsPerSample/8;
+    var blockAlign = numberOfChannels * bitsPerSample/8;
+    var wavDataByteLength = frameLength * numberOfChannels * 2; // 16-bit audio
+    var headerByteLength = 44;
+    var totalLength = headerByteLength + wavDataByteLength;
+
+    var waveFileData = new Uint8Array(totalLength);
+
+    var subChunk1Size = 16; // for linear PCM
+    var subChunk2Size = wavDataByteLength;
+    var chunkSize = 4 + (8 + subChunk1Size) + (8 + subChunk2Size);
+
+    writeString("RIFF", waveFileData, 0);
+    writeInt32(chunkSize, waveFileData, 4);
+    writeString("WAVE", waveFileData, 8);
+    writeString("fmt ", waveFileData, 12);
+
+    writeInt32(subChunk1Size, waveFileData, 16);      // SubChunk1Size (4)
+    writeInt16(1, waveFileData, 20);                  // AudioFormat (2)
+    writeInt16(numberOfChannels, waveFileData, 22);   // NumChannels (2)
+    writeInt32(sampleRate, waveFileData, 24);         // SampleRate (4)
+    writeInt32(byteRate, waveFileData, 28);           // ByteRate (4)
+    writeInt16(blockAlign, waveFileData, 32);         // BlockAlign (2)
+    writeInt32(bitsPerSample, waveFileData, 34);      // BitsPerSample (4)
+
+    writeString("data", waveFileData, 36);
+    writeInt32(subChunk2Size, waveFileData, 40);      // SubChunk2Size (4)
+
+    // Write actual audio data starting at offset 44.
+    writeAudioBuffer(audioBuffer, waveFileData, 44);
+
+    return waveFileData;
+}
+
+</script>
+<script class="testbody" type="text/javascript">
+
+// fuzzTolerance and fuzzToleranceMobile are used to determine fuzziness
+// thresholds.  They're needed to make sure that we can deal with neglibible
+// differences in the binary buffer caused as a result of resampling the
+// audio.  fuzzToleranceMobile is typically larger on mobile platforms since
+// we do fixed-point resampling as opposed to floating-point resampling on
+// those platforms.
+var tests = [
+  // A normal ogg file, 44.1khz
+  {
+    url: "ting.ogg",
+    valid: true,
+    expected: "ting-expected.wav",
+    numberOfChannels: 2,
+    duration: 0.6936,
+    length: 33297,
+    fuzzTolerance: 12,
+    fuzzToleranceMobile: 15826
+  },
+  // An ogg file with two different channels, 44.1khz
+  {
+    url: "ting-dualchannel44.1.ogg",
+    valid: true,
+    expected: "ting-dualchannel44.1-expected.wav",
+    numberOfChannels: 2,
+    duration: 0.6936,
+    length: 33297,
+    fuzzTolerance: 16,
+    fuzzToleranceMobile: 16713
+  },
+  // An ogg file with two different channels, 48khz
+  {
+    url: "ting-dualchannel48.ogg",
+    valid: true,
+    expected: "ting-dualchannel48-expected.wav",
+    numberOfChannels: 2,
+    duration: 0.6373,
+    length: 30592,
+    fuzzTolerance: 9,
+    fuzzToleranceMobile: 2703
+  },
+  // An ogg file which needs to be resampled
+  {
+    url: "small-shot.ogg",
+    valid: true,
+    expected: "small-shot-expected.wav",
+    numberOfChannels: 2,
+    duration: 0.2760,
+    length: 13252,
+    fuzzTolerance: 72,
+    fuzzToleranceMobile: 14844
+  },
+  // A wave file
+  //{ url: "24bit-44khz.wav", valid: true, expected: "24bit-44khz-expected.wav" },
+  // A non-audio file
+  { url: "invalid.txt", valid: false },
+  // A webm file with no audio
+  { url: "noaudio.webm", valid: false },
+  // A video ogg file with audio
+  {
+    url: "audio.ogv",
+    valid: true,
+    expected: "audio-expected.wav",
+    numberOfChannels: 2,
+    duration: 1.0811,
+    length: 51896,
+    fuzzTolerance: 91427,
+    fuzzToleranceMobile: 119684
+  },
+  // Make sure decoding a wave file results in the same buffer
+  {
+    url: "audio-expected.wav",
+    valid: true,
+    expected: "audio-expected.wav",
+    numberOfChannels: 2,
+    duration: 1.0811,
+    length: 51896,
+    fuzzTolerance: 0,
+    fuzzToleranceMobile: 0
+  }
+];
+
+// Returns true if the memory buffers are less different that |fuzz| bytes
+function fuzzyMemcmp(buf1, buf2, fuzz) {
+  var result = true;
+  var difference = 0;
+  is(buf1.length, buf2.length, "same length");
+  for (var i = 0; i < buf1.length; ++i) {
+    if (buf1[i] != buf2[i]) {
+      ++difference;
+    }
+  }
+  if (difference > fuzz) {
+    ok(false, "Expected at most " + fuzz + " bytes difference, found " + difference + " bytes");
+  }
+  return difference <= fuzz;
+}
+
+function getFuzzTolerance(test) {
+  var kIsMobile =
+    navigator.userAgent.indexOf("Mobile") != -1 || // b2g
+    navigator.userAgent.indexOf("Android") != -1;  // android
+  return kIsMobile ? test.fuzzToleranceMobile : test.fuzzTolerance;
+}
+
+function checkAudioBuffer(buffer, test, callback) {
+  is(buffer.numberOfChannels, test.numberOfChannels, "Correct number of channels");
+  ok(Math.abs(buffer.duration - test.duration) < 1e-4, "Correct duration");
+  is(buffer.sampleRate, cx.sampleRate, "Correct sample rate");
+  is(buffer.length, test.length, "Correct length");
+
+  var wave = createWaveFileData(buffer);
+  var getExpected = new XMLHttpRequest();
+  getExpected.open("GET", test.expected, true);
+  getExpected.responseType = "arraybuffer";
+  getExpected.onload = function() {
+    ok(fuzzyMemcmp(wave, new Uint8Array(getExpected.response), getFuzzTolerance(test)), "Received expected decoded data");
+    callback();
+  };
+  getExpected.send();
+}
+
+function runTest(test, callback) {
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", test.url, true);
+  xhr.responseType = "arraybuffer";
+  xhr.onload = function() {
+    var expectCallback = false;
+    cx.decodeAudioData(xhr.response, function onSuccess(result) {
+      ok(expectCallback, "Success callback should fire asynchronously");
+      ok(test.valid, "Did expect success for test " + test.url);
+
+      checkAudioBuffer(result, test, function() {
+        result = cx.createBuffer(xhr.response, false);
+        checkAudioBuffer(result, test, callback);
+      });
+    }, function onFailure() {
+      ok(expectCallback, "Failure callback should fire asynchronously");
+      ok(!test.valid, "Did not expect failure for test " + test.url);
+      callback();
+    });
+    expectCallback = true;
+  };
+  xhr.send();
+}
+
+function runNextTest() {
+  if (tests.length) {
+    runTest(tests.shift(), runNextTest);
+  } else {
+    SpecialPowers.clearUserPref("media.webaudio.enabled");
+    SimpleTest.finish();
+  }
+}
+
+SpecialPowers.setBoolPref("media.webaudio.enabled", true);
+SimpleTest.waitForExplicitFinish();
+
+var cx = new AudioContext();
+
+// Run some simple tests first
+function callbackShouldNeverRun() {
+  ok(false, "callback should not fire");
+}
+expectTypeError(function() {
+  cx.decodeAudioData(null, callbackShouldNeverRun, callbackShouldNeverRun);
+});
+expectTypeError(function() {
+  cx.decodeAudioData(undefined, callbackShouldNeverRun, callbackShouldNeverRun);
+});
+expectTypeError(function() {
+  cx.decodeAudioData(123, callbackShouldNeverRun, callbackShouldNeverRun);
+});
+expectTypeError(function() {
+  cx.decodeAudioData("buffer", callbackShouldNeverRun, callbackShouldNeverRun);
+});
+expectTypeError(function() {
+  cx.decodeAudioData(new Uint8Array(100), callbackShouldNeverRun, callbackShouldNeverRun);
+});
+
+if (cx.sampleRate == 48000) {
+  // Now, let's get real!
+  runNextTest();
+} else {
+  todo(false, "Decoded data tests disabled; context sampleRate " + cx.sampleRate + " not supported");
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

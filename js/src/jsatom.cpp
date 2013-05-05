@@ -234,13 +234,12 @@ enum OwnCharsBehavior
  */
 JS_ALWAYS_INLINE
 static JSAtom *
-AtomizeAndTakeOwnership(JSContext *cx, const jschar *tbchars, size_t length,
-                           InternBehavior ib)
+AtomizeAndTakeOwnership(JSContext *cx, jschar *tbchars, size_t length, InternBehavior ib)
 {
     JS_ASSERT(tbchars[length] == 0);
 
     if (JSAtom *s = cx->runtime->staticStrings.lookup(tbchars, length)) {
-        js_free((void*)tbchars);
+        js_free(tbchars);
         return s;
     }
 
@@ -256,15 +255,15 @@ AtomizeAndTakeOwnership(JSContext *cx, const jschar *tbchars, size_t length,
     if (p) {
         JSAtom *atom = p->asPtr();
         p->setTagged(bool(ib));
-        js_free((void*)tbchars);
+        js_free(tbchars);
         return atom;
     }
 
     AutoEnterAtomsCompartment ac(cx);
 
-    JSFlatString *flat = js_NewString<CanGC>(cx, const_cast<jschar*>(tbchars), length);
+    JSFlatString *flat = js_NewString<CanGC>(cx, tbchars, length);
     if (!flat) {
-        js_free((void*)tbchars);
+        js_free(tbchars);
         return NULL;
     }
 

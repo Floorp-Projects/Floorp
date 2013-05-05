@@ -27,13 +27,13 @@
 
 #define _USE_MATH_DEFINES
 #include <cmath>
+#include <float.h>
 
 namespace WebCore {
 
 // Deal with denormals. They can very seriously impact performance on x86.
 
 // Define HAVE_DENORMAL if we support flushing denormals to zero.
-#include <float.h>
 #if defined(XP_WIN) && defined(_MSC_VER)
 #define HAVE_DENORMAL
 #endif
