@@ -1,0 +1,2 @@
+conformance/textures/tex-image-and-sub-image-2d-with-video.html
+conformance/textures/texture-npot-video.html

@@ -18,7 +18,6 @@ DOMCI_CLASS(DOMConstructor)
 // Core classes
 DOMCI_CLASS(DOMException)
 DOMCI_CLASS(Element)
-DOMCI_CLASS(Attr)
 
 // Event classes
 DOMCI_CLASS(Event)

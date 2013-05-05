@@ -21,8 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=494328
 SimpleTest.waitForExplicitFinish();
 
 addLoadEvent(function() {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var links = $("testFrame").contentDocument.getElementById("feedContent").querySelectorAll("div.enclosure > a");
+  var links = SpecialPowers.wrap($("testFrame")).contentDocument.getElementById("feedContent").querySelectorAll("div.enclosure > a");
   is(links[0].textContent, "Episode 1", "filename decoded incorrectly");
   is(links[1].textContent, "Episode #2", "filename decoded incorrectly");
   is(links[2].textContent, "http://www.example.com/podcasts/Episode #3/", "filename decoded incorrectly");

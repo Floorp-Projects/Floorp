@@ -112,7 +112,7 @@ protected:
       return false;
     }
 
-    JSString* scriptURL = JS_ValueToString(aCx, JS_ARGV(aCx, aVp)[0]);
+    JS::Rooted<JSString*> scriptURL(aCx, JS_ValueToString(aCx, JS_ARGV(aCx, aVp)[0]));
     if (!scriptURL) {
       return false;
     }
@@ -137,7 +137,7 @@ protected:
       parent->AssertIsOnWorkerThread();
     }
 
-    JSObject* obj = JS_NewObject(aCx, aClass, nullptr, nullptr);
+    JS::Rooted<JSObject*> obj(aCx, JS_NewObject(aCx, aClass, nullptr, nullptr));
     if (!obj) {
       return false;
     }
@@ -285,10 +285,10 @@ private:
       return !JS_IsExceptionPending(aCx);
     }
 
-    jsval message;
-    jsval transferable = JSVAL_VOID;
+    JS::Rooted<JS::Value> message(aCx);
+    JS::Rooted<JS::Value> transferable(aCx, JS::UndefinedValue());
     if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "v/v",
-                             &message, &transferable)) {
+                             message.address(), transferable.address())) {
       return false;
     }
 

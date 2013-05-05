@@ -5614,6 +5614,37 @@ js::IsAsmJSCompilationAvailable(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
+static bool
+IsMaybeWrappedNativeFunction(const Value &v, Native native)
+{
+    if (!v.isObject())
+        return false;
+
+    JSObject *obj = CheckedUnwrap(&v.toObject());
+    if (!obj)
+        return false;
+
+    return obj->isFunction() && obj->toFunction()->maybeNative() == native;
+}
+
+JSBool
+js::IsAsmJSModule(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    bool rval = args.hasDefined(0) && IsMaybeWrappedNativeFunction(args[0], LinkAsmJS);
+    args.rval().set(BooleanValue(rval));
+    return true;
+}
+
+JSBool
+js::IsAsmJSFunction(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    bool rval = args.hasDefined(0) && IsMaybeWrappedNativeFunction(args[0], CallAsmJS);
+    args.rval().set(BooleanValue(rval));
+    return true;
+}
+
 AsmJSModule::~AsmJSModule()
 {
     for (size_t i = 0; i < numFunctionCounts(); i++)

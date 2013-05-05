@@ -281,17 +281,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         cmpl(tagOf(address), ImmTag(JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET));
         return cond == Equal ? AboveOrEqual : Below;
     }
-    Condition testGCThing(Condition cond, const BaseIndex &address) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
-        cmpl(tagOf(address), ImmTag(JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET));
-        return cond == Equal ? AboveOrEqual : Below;
-    }
     Condition testMagic(Condition cond, const Address &address) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
-        cmpl(tagOf(address), ImmTag(JSVAL_TAG_MAGIC));
-        return cond;
-    }
-    Condition testMagic(Condition cond, const BaseIndex &address) {
         JS_ASSERT(cond == Equal || cond == NotEqual);
         cmpl(tagOf(address), ImmTag(JSVAL_TAG_MAGIC));
         return cond;
@@ -369,6 +359,56 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     Condition testPrimitive(Condition cond, const ValueOperand &value) {
         return testPrimitive(cond, value.typeReg());
     }
+
+
+    Condition testUndefined(Condition cond, const BaseIndex &address) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(tagOf(address), ImmTag(JSVAL_TAG_UNDEFINED));
+        return cond;
+    }
+    Condition testNull(Condition cond, const BaseIndex &address) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(tagOf(address), ImmTag(JSVAL_TAG_NULL));
+        return cond;
+    }
+    Condition testBoolean(Condition cond, const BaseIndex &address) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(tagOf(address), ImmTag(JSVAL_TAG_BOOLEAN));
+        return cond;
+    }
+    Condition testString(Condition cond, const BaseIndex &address) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(tagOf(address), ImmTag(JSVAL_TAG_STRING));
+        return cond;
+    }
+    Condition testInt32(Condition cond, const BaseIndex &address) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(tagOf(address), ImmTag(JSVAL_TAG_INT32));
+        return cond;
+    }
+    Condition testObject(Condition cond, const BaseIndex &address) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(tagOf(address), ImmTag(JSVAL_TAG_OBJECT));
+        return cond;
+    }
+    Condition testDouble(Condition cond, const BaseIndex &address) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        Condition actual = (cond == Equal) ? Below : AboveOrEqual;
+        cmpl(tagOf(address), ImmTag(JSVAL_TAG_CLEAR));
+        return actual;
+    }
+    Condition testMagic(Condition cond, const BaseIndex &address) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(tagOf(address), ImmTag(JSVAL_TAG_MAGIC));
+        return cond;
+    }
+    Condition testGCThing(Condition cond, const BaseIndex &address) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(tagOf(address), ImmTag(JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET));
+        return cond == Equal ? AboveOrEqual : Below;
+    }
+
+
 
     void branchTestValue(Condition cond, const ValueOperand &value, const Value &v, Label *label);
     void branchTestValue(Condition cond, const Address &valaddr, const ValueOperand &value,

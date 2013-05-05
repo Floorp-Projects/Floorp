@@ -2232,9 +2232,7 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
     }
     mStyleAttrStyleSheet->Reset(aURI);
   } else {
-    mStyleAttrStyleSheet = new nsHTMLCSSStyleSheet();
-    nsresult rv = mStyleAttrStyleSheet->Init(aURI, this);
-    NS_ENSURE_SUCCESS(rv, rv);
+    mStyleAttrStyleSheet = new nsHTMLCSSStyleSheet(aURI, this);
   }
 
   // The loop over style sets below will handle putting this sheet
@@ -5002,9 +5000,10 @@ nsDocument::Register(const nsAString& aName, const JS::Value& aOptions,
   ElementRegistrationOptions options;
   if (aOptionalArgc > 0) {
     JSAutoCompartment ac(aCx, GetWrapper());
-    NS_ENSURE_TRUE(JS_WrapValue(aCx, const_cast<JS::Value*>(&aOptions)),
+    JS::Rooted<JS::Value> opts(aCx, aOptions);
+    NS_ENSURE_TRUE(JS_WrapValue(aCx, opts.address()),
                    NS_ERROR_UNEXPECTED);
-    NS_ENSURE_TRUE(options.Init(aCx, aOptions),
+    NS_ENSURE_TRUE(options.Init(aCx, opts),
                    NS_ERROR_UNEXPECTED);
   }
 

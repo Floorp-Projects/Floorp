@@ -679,6 +679,44 @@ CodeGeneratorX86Shared::visitMulNegativeZeroCheck(MulNegativeZeroCheck *ool)
 }
 
 bool
+CodeGeneratorX86Shared::visitDivPowTwoI(LDivPowTwoI *ins)
+{
+    Register lhs = ToRegister(ins->numerator());
+    Register lhsCopy = ToRegister(ins->numeratorCopy());
+    Register output = ToRegister(ins->output());
+    int32_t shift = ins->shift();
+
+    // We use defineReuseInput so these should always be the same, which is
+    // convenient since all of our instructions here are two-address.
+    JS_ASSERT(lhs == output);
+
+    if (shift != 0) {
+        if (!ins->mir()->isTruncated()) {
+            // If the remainder is != 0, bailout since this must be a double.
+            masm.testl(lhs, Imm32(UINT32_MAX >> (32 - shift)));
+            if (!bailoutIf(Assembler::NonZero, ins->snapshot()))
+                return false;
+        }
+
+        // Adjust the value so that shifting produces a correctly rounded result
+        // when the numerator is negative. See 10-1 "Signed Division by a Known
+        // Power of 2" in Henry S. Warren, Jr.'s Hacker's Delight.
+        // Note that we wouldn't need to do this adjustment if we could use
+        // Range Analysis to find cases when the value is never negative. We
+        // wouldn't even need the lhsCopy either in that case.
+        if (shift > 1)
+            masm.sarl(Imm32(31), lhs);
+        masm.shrl(Imm32(32 - shift), lhs);
+        masm.addl(lhsCopy, lhs);
+
+        // Do the shift.
+        masm.sarl(Imm32(shift), lhs);
+    }
+
+    return true;
+}
+
+bool
 CodeGeneratorX86Shared::visitDivI(LDivI *ins)
 {
     Register remainder = ToRegister(ins->remainder());

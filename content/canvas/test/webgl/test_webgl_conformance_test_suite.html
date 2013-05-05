@@ -499,10 +499,16 @@ function start() {
                       .split('\n');
   }
 
-  if (kIsWindows && !kIsWindowsVistaOrHigher) {
-    testsToSkip = loadTextFileSynchronous('skipped_tests_winxp.txt')
-                      .replace(/\r/g, '') // convert to unix line breaks
-                      .split('\n');
+  if (kIsWindows) {
+    if (!kIsWindowsVistaOrHigher) {
+      testsToSkip = loadTextFileSynchronous('skipped_tests_winxp.txt')
+                        .replace(/\r/g, '') // convert to unix line breaks
+                        .split('\n');
+    } else {
+      testsToSkip = loadTextFileSynchronous('skipped_tests_win_vista.txt')
+                        .replace(/\r/g, '') // convert to unix line breaks
+                        .split('\n');
+    }
   }
 
   runTestSuite();

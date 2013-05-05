@@ -8,11 +8,13 @@
 
 #include "WMF.h"
 #include "MediaDecoderReader.h"
+#include "nsAutoPtr.h"
 
 namespace mozilla {
 
 class WMFByteStream;
 class WMFSourceReaderCallback;
+class DXVA2Manager;
 
 namespace dom {
 class TimeRanges;
@@ -57,9 +59,25 @@ private:
   HRESULT ConfigureVideoFrameGeometry(IMFMediaType* aMediaType);
   void GetSupportedAudioCodecs(const GUID** aCodecs, uint32_t* aNumCodecs);
 
+  HRESULT CreateBasicVideoFrame(IMFSample* aSample,
+                                int64_t aTimestampUsecs,
+                                int64_t aDurationUsecs,
+                                int64_t aOffsetBytes,
+                                VideoData** aOutVideoData);
+
+  HRESULT CreateD3DVideoFrame(IMFSample* aSample,
+                              int64_t aTimestampUsecs,
+                              int64_t aDurationUsecs,
+                              int64_t aOffsetBytes,
+                              VideoData** aOutVideoData);
+
+  // Attempt to initialize DXVA. Returns true on success.
+  bool InitializeDXVA();  
+
   RefPtr<IMFSourceReader> mSourceReader;
   RefPtr<WMFByteStream> mByteStream;
   RefPtr<WMFSourceReaderCallback> mSourceReaderCallback;
+  nsAutoPtr<DXVA2Manager> mDXVA2Manager;
 
   // Region inside the video frame that makes up the picture. Pixels outside
   // of this region should not be rendered.
@@ -69,12 +87,14 @@ private:
   uint32_t mAudioBytesPerSample;
   uint32_t mAudioRate;
 
+  uint32_t mVideoWidth;
   uint32_t mVideoHeight;
   uint32_t mVideoStride;
 
   bool mHasAudio;
   bool mHasVideo;
   bool mCanSeek;
+  bool mUseHwAccel;
 
   // We can't call WMFDecoder::IsMP3Supported() on non-main threads, since it
   // checks a pref, so we cache its value in mIsMP3Enabled and use that on

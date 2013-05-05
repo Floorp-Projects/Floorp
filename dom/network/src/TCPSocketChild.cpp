@@ -26,7 +26,7 @@ DeserializeArrayBuffer(JSObject* aObj,
   JSAutoRequest ar(cx);
   JSAutoCompartment ac(cx, aObj);
 
-  JSObject* obj = JS_NewArrayBuffer(cx, aBuffer.Length());
+  JS::Rooted<JSObject*> obj(cx, JS_NewArrayBuffer(cx, aBuffer.Length()));
   if (!obj)
     return false;
   uint8_t* data = JS_GetArrayBufferData(obj);
@@ -190,7 +190,7 @@ TCPSocketChild::Send(const JS::Value& aData,
 
   } else {
     NS_ENSURE_TRUE(aData.isObject(), NS_ERROR_FAILURE);
-    JSObject* obj = &aData.toObject();
+    JS::Rooted<JSObject*> obj(aCx, &aData.toObject());
     NS_ENSURE_TRUE(JS_IsArrayBufferObject(obj), NS_ERROR_FAILURE);
     uint32_t buflen = JS_GetArrayBufferByteLength(obj);
     aByteOffset = std::min(buflen, aByteOffset);

@@ -21,10 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=364677
 SimpleTest.waitForExplicitFinish();
 
 addLoadEvent(function() {
-  // Need privs because the feed seems to have an about:feeds principal or some
-  // such.  It's not same-origin with us in any case.
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  is($("testFrame").contentDocument.documentElement.id, "feedHandler",
+  is(SpecialPowers.wrap($("testFrame")).contentDocument.documentElement.id, "feedHandler",
      "Feed served as text/xml without a channel/link should have been sniffed");
 });
 addLoadEvent(SimpleTest.finish);
