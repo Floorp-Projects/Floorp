@@ -1,0 +1,64 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test ChannelMergerNode</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="webaudio.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  SpecialPowers.setBoolPref("media.webaudio.enabled", true);
+
+  var context = new AudioContext();
+  var buffers = [];
+  for (var j = 0; j < 4; ++j) {
+    var buffer = context.createBuffer(2, 2048, context.sampleRate);
+    for (var i = 0; i < 2048; ++i) {
+      buffer.getChannelData(0)[i] = Math.sin(440 * 2 * (j + 1) * Math.PI * i / context.sampleRate);
+      // Second channel is silent
+    }
+    buffers.push(buffer);
+  }
+  var emptyBuffer = context.createBuffer(1, 2048, context.sampleRate);
+
+  var destination = context.destination;
+
+  var merger = context.createChannelMerger();
+  is(merger.channelCount, 2, "merger node has 2 input channels by default");
+  is(merger.channelCountMode, "max", "Correct channelCountMode for the merger node");
+  is(merger.channelInterpretation, "speakers", "Correct channelCountInterpretation for the merger node");
+
+  for (var i = 0; i < 4; ++i) {
+    var source = context.createBufferSource();
+    source.buffer = buffers[i];
+    source.connect(merger, 0, i);
+    source.start(0);
+  }
+
+  var sp = context.createScriptProcessor(2048, 8);
+  merger.connect(sp);
+  sp.connect(destination);
+
+  sp.onaudioprocess = function(e) {
+    is(e.inputBuffer.numberOfChannels, 8, "Correct input channel count");
+    for (var i = 0; i < 4; ++i) {
+      compareBuffers(e.inputBuffer.getChannelData(i * 2), buffers[i].getChannelData(0));
+      compareBuffers(e.inputBuffer.getChannelData(i * 2 + 1), emptyBuffer.getChannelData(0));
+    }
+
+    sp.onaudioprocess = null;
+
+    SpecialPowers.clearUserPref("media.webaudio.enabled");
+    SimpleTest.finish();
+  };
+});
+
+</script>
+</pre>
+</body>
+</html>

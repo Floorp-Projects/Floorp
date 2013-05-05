@@ -36,6 +36,7 @@ MOCHITEST_FILES := \
   test_audioBufferSourceNodeNullBuffer.html \
   test_badConnect.html \
   test_biquadFilterNode.html \
+  test_channelMergerNode.html \
   test_channelSplitterNode.html \
   test_currentTime.html \
   test_delayNode.html \
