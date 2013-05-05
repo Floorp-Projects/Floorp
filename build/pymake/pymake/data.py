@@ -1670,8 +1670,11 @@ class Makefile(object):
         Inform the makefile of a target which is a candidate for being the default target,
         if there isn't already a default target.
         """
-        if self.defaulttarget is None and t != '.PHONY':
+        flavor, source, value = self.variables.get('.DEFAULT_GOAL')
+        if self.defaulttarget is None and t != '.PHONY' and value is None:
             self.defaulttarget = t
+            self.variables.set('.DEFAULT_GOAL', Variables.FLAVOR_SIMPLE,
+                               Variables.SOURCE_AUTOMATIC, t)
 
     def getpatternvariables(self, pattern):
         assert isinstance(pattern, Pattern)
