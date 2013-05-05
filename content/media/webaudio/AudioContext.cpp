@@ -114,8 +114,6 @@ already_AddRefed<AudioBuffer>
 AudioContext::CreateBuffer(JSContext* aJSContext, ArrayBuffer& aBuffer,
                           bool aMixToMono, ErrorResult& aRv)
 {
-  // TODO: handle aMixToMono
-
   // Sniff the content of the media.
   // Failed type sniffing will be handled by SyncDecodeMedia.
   nsAutoCString contentType;
@@ -128,7 +126,11 @@ AudioContext::CreateBuffer(JSContext* aJSContext, ArrayBuffer& aBuffer,
   if (mDecoder.SyncDecodeMedia(contentType.get(),
                                job.mBuffer, job.mLength, job) &&
       job.mOutput) {
-    return job.mOutput.forget();
+    nsRefPtr<AudioBuffer> buffer = job.mOutput.forget();
+    if (aMixToMono) {
+      buffer->MixToMono(aJSContext);
+    }
+    return buffer.forget();
   }
 
   return nullptr;
