@@ -155,8 +155,8 @@ public:
   // The following two virtual methods must be implemented by each node type
   // to provide their number of input and output ports. These numbers are
   // constant for the lifetime of the node. Both default to 1.
-  virtual uint32_t NumberOfInputs() const { return 1; }
-  virtual uint32_t NumberOfOutputs() const { return 1; }
+  virtual uint16_t NumberOfInputs() const { return 1; }
+  virtual uint16_t NumberOfOutputs() const { return 1; }
 
   uint32_t ChannelCount() const { return mChannelCount; }
   void SetChannelCount(uint32_t aChannelCount)
