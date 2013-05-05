@@ -1,0 +1,67 @@
+diff --git a/mfbt/decimal/Decimal.cpp b/mfbt/decimal/Decimal.cpp
+--- a/mfbt/decimal/Decimal.cpp
++++ b/mfbt/decimal/Decimal.cpp
+@@ -505,21 +505,25 @@ Decimal Decimal::operator/(const Decimal
+     if (remainder > divisor / 2)
+         ++result;
+ 
+     return Decimal(resultSign, resultExponent, result);
+ }
+ 
+ bool Decimal::operator==(const Decimal& rhs) const
+ {
++    if (isNaN() || rhs.isNaN())
++        return false;
+     return m_data == rhs.m_data || compareTo(rhs).isZero();
+ }
+ 
+ bool Decimal::operator!=(const Decimal& rhs) const
+ {
++    if (isNaN() || rhs.isNaN())
++        return true;
+     if (m_data == rhs.m_data)
+         return false;
+     const Decimal result = compareTo(rhs);
+     if (result.isNaN())
+         return false;
+     return !result.isZero();
+ }
+ 
+@@ -528,16 +532,18 @@ bool Decimal::operator<(const Decimal& r
+     const Decimal result = compareTo(rhs);
+     if (result.isNaN())
+         return false;
+     return !result.isZero() && result.isNegative();
+ }
+ 
+ bool Decimal::operator<=(const Decimal& rhs) const
+ {
++    if (isNaN() || rhs.isNaN())
++        return false;
+     if (m_data == rhs.m_data)
+         return true;
+     const Decimal result = compareTo(rhs);
+     if (result.isNaN())
+         return false;
+     return result.isZero() || result.isNegative();
+ }
+ 
+@@ -546,16 +552,18 @@ bool Decimal::operator>(const Decimal& r
+     const Decimal result = compareTo(rhs);
+     if (result.isNaN())
+         return false;
+     return !result.isZero() && result.isPositive();
+ }
+ 
+ bool Decimal::operator>=(const Decimal& rhs) const
+ {
++    if (isNaN() || rhs.isNaN())
++        return false;
+     if (m_data == rhs.m_data)
+         return true;
+     const Decimal result = compareTo(rhs);
+     if (result.isNaN())
+         return false;
+     return result.isZero() || !result.isNegative();
+ }
+ 
