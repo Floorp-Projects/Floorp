@@ -53,6 +53,8 @@ interface AudioContext : EventTarget {
 
     [Creator, Throws]
     ChannelSplitterNode createChannelSplitter(optional unsigned long numberOfOutputs = 6);
+    [Creator, Throws]
+    ChannelMergerNode createChannelMerger(optional unsigned long numberOfInputs = 6);
 
     [Creator]
     DynamicsCompressorNode createDynamicsCompressor();
