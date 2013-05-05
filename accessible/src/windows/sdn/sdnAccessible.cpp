@@ -7,7 +7,6 @@
 #include "sdnAccessible-inl.h"
 #include "ISimpleDOMNode_i.c"
 
-#include "nsAccessNodeWrap.h"
 #include "DocAccessibleWrap.h"
 
 #include "nsAttrName.h"
