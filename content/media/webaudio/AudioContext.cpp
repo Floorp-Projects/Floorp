@@ -20,6 +20,7 @@
 #include "DynamicsCompressorNode.h"
 #include "BiquadFilterNode.h"
 #include "ScriptProcessorNode.h"
+#include "ChannelMergerNode.h"
 #include "ChannelSplitterNode.h"
 #include "nsNetUtil.h"
 
@@ -27,6 +28,7 @@
 // attacks.
 const unsigned MAX_SCRIPT_PROCESSOR_CHANNELS = 10000;
 const unsigned MAX_CHANNEL_SPLITTER_OUTPUTS = UINT16_MAX;
+const unsigned MAX_CHANNEL_MERGER_INPUTS = UINT16_MAX;
 
 namespace mozilla {
 namespace dom {
@@ -222,6 +224,20 @@ AudioContext::CreateChannelSplitter(uint32_t aNumberOfOutputs, ErrorResult& aRv)
   nsRefPtr<ChannelSplitterNode> splitterNode =
     new ChannelSplitterNode(this, aNumberOfOutputs);
   return splitterNode.forget();
+}
+
+already_AddRefed<ChannelMergerNode>
+AudioContext::CreateChannelMerger(uint32_t aNumberOfInputs, ErrorResult& aRv)
+{
+  if (aNumberOfInputs == 0 ||
+      aNumberOfInputs > MAX_CHANNEL_MERGER_INPUTS) {
+    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return nullptr;
+  }
+
+  nsRefPtr<ChannelMergerNode> mergerNode =
+    new ChannelMergerNode(this, aNumberOfInputs);
+  return mergerNode.forget();
 }
 
 already_AddRefed<DynamicsCompressorNode>
