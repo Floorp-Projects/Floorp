@@ -1,0 +1,27 @@
+<!doctype html>
+<meta charset=utf-8>
+<title>[LenientThis]</title>
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<div id=log></div>
+<script>
+function noop1() { }
+function noop2() { }
+
+test(function() {
+  var desc = Object.getOwnPropertyDescriptor(Document.prototype, "onreadystatechange");
+
+  document.onreadystatechange = noop1;
+  assert_equals(document.onreadystatechange, noop1, "document.onreadystatechange == noop1");
+  assert_equals(desc.get.call({ }), undefined, "document.onreadystatechange getter.call({}) == undefined");
+}, "invoking Document.onreadystatechange's getter with an invalid this object returns undefined");
+
+test(function() {
+  var desc = Object.getOwnPropertyDescriptor(Document.prototype, "onreadystatechange");
+
+  document.onreadystatechange = noop1;
+  assert_equals(document.onreadystatechange, noop1, "document.onreadystatechange == noop1");
+  assert_equals(desc.set.call({ }, noop2), undefined, "document.onreadystatechange setter.call({}) == undefined");
+  assert_equals(document.onreadystatechange, noop1, "document.onreadystatechange == noop1 (still)");
+}, "invoking Document.onreadystatechange's setter with an invalid this object does nothing and returns undefined");
+</script>
