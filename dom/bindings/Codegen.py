@@ -3628,7 +3628,12 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
     """
     Reflect a C++ value stored in "result", of IDL type "type" into JS.  The
     "successCode" is the code to run once we have successfully done the
-    conversion.  The resulting string should be used with string.Template, it
+    conversion and must guarantee that execution of the conversion template
+    stops once the successCode has executed (e.g. by doing a 'return', or by
+    doing a 'break' if the entire conversion template is inside a block that
+    the 'break' will exit).
+
+    The resulting string should be used with string.Template.  It
     needs the following keys when substituting: jsvalPtr/jsvalRef/obj.
 
     Returns (templateString, infallibility of conversion template)
@@ -3914,9 +3919,13 @@ def wrapForType(type, descriptorProvider, templateValues, isMember=False):
       * 'result' (optional): the name of the variable in which the C++ value is
                              stored, if not supplied 'result' will be used as
                              the name
-      * 'successCode' (optional): the code to run once we have successfully done
-                                  the conversion, if not supplied 'return true;'
-                                  will be used as the code
+      * 'successCode' (optional): the code to run once we have successfully
+                                  done the conversion, if not supplied 'return
+                                  true;' will be used as the code.  The
+                                  successCode must ensure that once it runs no
+                                  more of the conversion template will be
+                                  executed (e.g. by doing a 'return' or 'break'
+                                  as appropriate).
       * 'isCreator' (optional): If true, we're wrapping for the return value of
                                 a [Creator] method.  Assumed false if not set.
       * 'exceptionCode' (optional): Code to run when a JS exception is thrown.
@@ -7574,7 +7583,8 @@ class CGDictionary(CGThing):
                 'result' : "currentValue",
                 'successCode' : ("if (!%s) {\n"
                                  "  return false;\n"
-                                 "}" % propDef),
+                                 "}\n"
+                                 "break;" % propDef),
                 'jsvalRef': "temp",
                 'jsvalPtr': "temp.address()",
                 'isCreator': False,
@@ -7587,15 +7597,17 @@ class CGDictionary(CGThing):
                                     (declType.define(), memberData)
                                     ))
 
+        # Now make sure that our successCode can actually break out of the
+        # conversion.  This incidentally gives us a scope for 'temp' and
+        # 'currentValue'.
+        conversion = CGWrapper(
+            CGIndenter(conversion),
+            pre=("do {\n"
+                 "  // block for our 'break' successCode and scope for 'temp' and 'currentValue'\n"),
+            post="\n} while(0);")
         if not member.defaultValue:
             # Only do the conversion if we have a value
             conversion = CGIfWrapper(conversion, "%s.WasPassed()" % memberLoc)
-        else:
-            # Make sure we have a scope for our stuff
-            conversion = CGWrapper(CGIndenter(conversion),
-                                   pre=("{\n"
-                                        "  // scope for 'temp' and 'currentValue'\n"),
-                                   post="\n}")
         return conversion
 
     @staticmethod
