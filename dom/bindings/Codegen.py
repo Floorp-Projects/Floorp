@@ -5075,6 +5075,7 @@ class CGGenericSetter(CGAbstractBindingMethod):
             unwrapFailureCode = (
                 "MOZ_ASSERT(!JS_IsExceptionPending(cx));\n"
                 "ReportLenientThisUnwrappingFailure(cx, obj);\n"
+                "JS_SET_RVAL(cx, vp, JS::UndefinedValue());\n"
                 "return true;")
         else:
             name = "genericSetter"
