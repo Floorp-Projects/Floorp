@@ -491,7 +491,7 @@ nsPrincipal::SetDomain(nsIURI* aDomain)
 
   // Recompute all wrappers between compartments using this principal and other
   // non-chrome compartments.
-  SafeAutoJSContext cx;
+  AutoSafeJSContext cx;
   JSPrincipals *principals = nsJSPrincipals::get(static_cast<nsIPrincipal*>(this));
   bool success = js::RecomputeWrappers(cx, js::ContentCompartmentsOnly(),
                                        js::CompartmentsWithPrincipals(principals));

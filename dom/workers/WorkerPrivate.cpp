@@ -76,7 +76,7 @@ using mozilla::MutexAutoLock;
 using mozilla::TimeDuration;
 using mozilla::TimeStamp;
 using mozilla::dom::workers::exceptions::ThrowDOMExceptionForNSResult;
-using mozilla::SafeAutoJSContext;
+using mozilla::AutoSafeJSContext;
 
 USING_WORKERS_NAMESPACE
 using namespace mozilla::dom::workers::events;
@@ -629,7 +629,7 @@ public:
   {
     AssertIsOnMainThread();
 
-    SafeAutoJSContext cx;
+    AutoSafeJSContext cx;
     JSAutoRequest ar(cx);
 
     mFinishedWorker->Finish(cx);

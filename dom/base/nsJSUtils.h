@@ -74,7 +74,7 @@ public:
    * In the case of string ids, getting the string's chars is infallible, so
    * the dependent string can be constructed directly.
    */
-  explicit nsDependentJSString(jsid id)
+  explicit nsDependentJSString(JS::Handle<jsid> id)
     : nsDependentString(JS_GetInternedStringChars(JSID_TO_STRING(id)),
                         JS_GetStringLength(JSID_TO_STRING(id)))
   {
