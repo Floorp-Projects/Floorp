@@ -876,6 +876,7 @@ var WebappsHelper = {
   init: function webapps_init() {
     Services.obs.addObserver(this, "webapps-launch", false);
     Services.obs.addObserver(this, "webapps-ask-install", false);
+    Services.obs.addObserver(this, "webapps-close", false);
   },
 
   registerInstaller: function webapps_registerInstaller(data) {
@@ -925,6 +926,12 @@ var WebappsHelper = {
           type: "webapps-ask-install",
           id: id,
           app: json.app
+        });
+        break;
+      case "webapps-close":
+        shell.sendChromeEvent({
+          "type": "webapps-close",
+          "manifestURL": json.manifestURL
         });
         break;
     }
