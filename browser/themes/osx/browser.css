@@ -3775,13 +3775,17 @@ toolbar[mode="icons"] > *|* > .toolbarbutton-badge[badge]:not([badge=""]):-moz-l
 
 .chatbar-button {
   background-color: #d9d9d9;
+  background-image: linear-gradient(rgba(255,255,255,.43), rgba(255,255,255,0));
+  border-top-left-radius: @toolbarbuttonCornerRadius@;
+  border-top-right-radius: @toolbarbuttonCornerRadius@;
 }
 
+.chatbar-button:hover,
 .chatbar-button[open="true"] {
   background-color: #f0f0f0;
 }
 
-.chatbar-button[activity] {
+.chatbar-button[activity]:not([open]) {
   background-image: radial-gradient(circle farthest-corner at center 2px, rgb(254,254,255) 3%, rgba(210,235,255,0.9) 12%, rgba(148,205,253,0.6) 30%, rgba(148,205,253,0.2) 70%);
 }
 
