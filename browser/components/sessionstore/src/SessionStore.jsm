@@ -967,8 +967,8 @@ let SessionStoreInternal = {
       this.onTabRemove(aWindow, tabbrowser.tabs[i], true);
     }
 
-    // cache the window state until the window is completely gone
-    aWindow.__SS_dyingCache = winData;
+    // Cache the window state until it is completely gone.
+    DyingWindowCache.set(aWindow, winData);
 
     delete aWindow.__SSi;
   },
@@ -1057,9 +1057,8 @@ let SessionStoreInternal = {
     this._lastSessionState = null;
     let openWindows = {};
     this._forEachBrowserWindow(function(aWindow) {
-      Array.forEach(aWindow.gBrowser.tabs, function(aTab) {
-        delete aTab.linkedBrowser.__SS_data;
-        delete aTab.linkedBrowser.__SS_tabStillLoading;
+      Array.forEach(aWindow.gBrowser.tabs, aTab => {
+        RestoringTabsData.remove(aTab.linkedBrowser);
         delete aTab.linkedBrowser.__SS_formDataSaved;
         delete aTab.linkedBrowser.__SS_hostSchemeData;
         if (aTab.linkedBrowser.__SS_restoreState)
@@ -1250,8 +1249,7 @@ let SessionStoreInternal = {
     let mm = browser.messageManager;
     MESSAGES.forEach(msg => mm.removeMessageListener(msg, this));
 
-    delete browser.__SS_data;
-    delete browser.__SS_tabStillLoading;
+    RestoringTabsData.remove(aTab.linkedBrowser);
     delete browser.__SS_formDataSaved;
     delete browser.__SS_hostSchemeData;
 
@@ -1328,8 +1326,7 @@ let SessionStoreInternal = {
       return;
     }
 
-    delete aBrowser.__SS_data;
-    delete aBrowser.__SS_tabStillLoading;
+    RestoringTabsData.remove(aBrowser);
     delete aBrowser.__SS_formDataSaved;
     this.saveStateDelayed(aWindow);
 
@@ -1448,12 +1445,16 @@ let SessionStoreInternal = {
   },
 
   getWindowState: function ssi_getWindowState(aWindow) {
-    if (!aWindow.__SSi && !aWindow.__SS_dyingCache)
-      throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
+    if ("__SSi" in aWindow) {
+      return this._toJSONString(this._getWindowState(aWindow));
+    }
 
-    if (!aWindow.__SSi)
-      return this._toJSONString({ windows: [aWindow.__SS_dyingCache] });
-    return this._toJSONString(this._getWindowState(aWindow));
+    if (DyingWindowCache.has(aWindow)) {
+      let data = DyingWindowCache.get(aWindow);
+      return this._toJSONString({ windows: [data] });
+    }
+
+    throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
   },
 
   setWindowState: function ssi_setWindowState(aWindow, aState, aOverwrite) {
@@ -1509,22 +1510,28 @@ let SessionStoreInternal = {
   },
 
   getClosedTabCount: function ssi_getClosedTabCount(aWindow) {
-    if (!aWindow.__SSi && aWindow.__SS_dyingCache)
-      return aWindow.__SS_dyingCache._closedTabs.length;
-    if (!aWindow.__SSi)
-      // XXXzeniko shouldn't we throw here?
-      return 0; // not a browser window, or not otherwise tracked by SS.
+    if ("__SSi" in aWindow) {
+      return this._windows[aWindow.__SSi]._closedTabs.length;
+    }
 
-    return this._windows[aWindow.__SSi]._closedTabs.length;
+    if (DyingWindowCache.has(aWindow)) {
+      return DyingWindowCache.get(aWindow)._closedTabs.length;
+    }
+
+    throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
   },
 
   getClosedTabData: function ssi_getClosedTabDataAt(aWindow) {
-    if (!aWindow.__SSi && !aWindow.__SS_dyingCache)
-      throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
+    if ("__SSi" in aWindow) {
+      return this._toJSONString(this._windows[aWindow.__SSi]._closedTabs);
+    }
 
-    if (!aWindow.__SSi)
-      return this._toJSONString(aWindow.__SS_dyingCache._closedTabs);
-    return this._toJSONString(this._windows[aWindow.__SSi]._closedTabs);
+    if (DyingWindowCache.has(aWindow)) {
+      let data = DyingWindowCache.get(aWindow);
+      return this._toJSONString(data._closedTabs);
+    }
+
+    throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
   },
 
   undoCloseTab: function ssi_undoCloseTab(aWindow, aIndex) {
@@ -1604,14 +1611,16 @@ let SessionStoreInternal = {
   },
 
   getWindowValue: function ssi_getWindowValue(aWindow, aKey) {
-    if (aWindow.__SSi) {
+    if ("__SSi" in aWindow) {
       var data = this._windows[aWindow.__SSi].extData || {};
       return data[aKey] || "";
     }
-    if (aWindow.__SS_dyingCache) {
-      data = aWindow.__SS_dyingCache.extData || {};
+
+    if (DyingWindowCache.has(aWindow)) {
+      let data = DyingWindowCache.get(aWindow).extData || {};
       return data[aKey] || "";
     }
+
     throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
   },
 
@@ -1638,10 +1647,13 @@ let SessionStoreInternal = {
     let data = {};
     if (aTab.__SS_extdata) {
       data = aTab.__SS_extdata;
-    }
-    else if (aTab.linkedBrowser.__SS_data && aTab.linkedBrowser.__SS_data.extData) {
-      // If the tab hasn't been fully restored, get the data from the to-be-restored data
-      data = aTab.linkedBrowser.__SS_data.extData;
+    } else {
+      let tabData = RestoringTabsData.get(aTab.linkedBrowser);
+      if (tabData && "extData" in tabData) {
+        // If the tab hasn't been fully restored yet,
+        // get the data from the to-be-restored data.
+        data = tabData.extData;
+      }
     }
     return data[aKey] || "";
   },
@@ -1652,13 +1664,14 @@ let SessionStoreInternal = {
     let saveTo;
     if (aTab.__SS_extdata) {
       saveTo = aTab.__SS_extdata;
-    }
-    else if (aTab.linkedBrowser.__SS_data && aTab.linkedBrowser.__SS_data.extData) {
-      saveTo = aTab.linkedBrowser.__SS_data.extData;
-    }
-    else {
-      aTab.__SS_extdata = {};
-      saveTo = aTab.__SS_extdata;
+    } else {
+      let tabData = RestoringTabsData.get(aTab.linkedBrowser);
+      if (tabData && "extData" in tabData) {
+        saveTo = tabData.extData;
+      } else {
+        aTab.__SS_extdata = {};
+        saveTo = aTab.__SS_extdata;
+      }
     }
     saveTo[aKey] = aStringValue;
     this.saveStateDelayed(aTab.ownerDocument.defaultView);
@@ -1666,14 +1679,16 @@ let SessionStoreInternal = {
 
   deleteTabValue: function ssi_deleteTabValue(aTab, aKey) {
     // We want to make sure that if data is accessed early, we attempt to delete
-    // that data from __SS_data as well. Otherwise we'll throw in cases where
-    // data can be set or read.
+    // that data from to-be-restored data as well. Otherwise we'll throw in
+    // cases where data can be set or read.
     let deleteFrom;
     if (aTab.__SS_extdata) {
       deleteFrom = aTab.__SS_extdata;
-    }
-    else if (aTab.linkedBrowser.__SS_data && aTab.linkedBrowser.__SS_data.extData) {
-      deleteFrom = aTab.linkedBrowser.__SS_data.extData;
+    } else {
+      let tabData = RestoringTabsData.get(aTab.linkedBrowser);
+      if (tabData && "extData" in tabData) {
+        deleteFrom = tabData.extData;
+      }
     }
 
     if (deleteFrom && deleteFrom[aKey])
@@ -1887,9 +1902,9 @@ let SessionStoreInternal = {
     if (!browser || !browser.currentURI)
       // can happen when calling this function right after .addTab()
       return tabData;
-    else if (browser.__SS_data && browser.__SS_tabStillLoading) {
+    else if (RestoringTabsData.has(browser)) {
       // use the data to be restored when the tab hasn't been completely loaded
-      tabData = browser.__SS_data;
+      tabData = RestoringTabsData.get(browser);
       if (aTab.pinned)
         tabData.pinned = true;
       else
@@ -1912,16 +1927,7 @@ let SessionStoreInternal = {
     }
     catch (ex) { } // this could happen if we catch a tab during (de)initialization
 
-    // XXXzeniko anchor navigation doesn't reset __SS_data, so we could reuse
-    //           data even when we shouldn't (e.g. Back, different anchor)
-    if (history && browser.__SS_data &&
-        browser.__SS_data.entries[history.index] &&
-        browser.__SS_data.entries[history.index].url == browser.currentURI.spec &&
-        history.index < this._sessionhistory_max_entries - 1 && !aFullData) {
-      tabData = browser.__SS_data;
-      tabData.index = history.index + 1;
-    }
-    else if (history && history.count > 0) {
+    if (history && history.count > 0) {
       browser.__SS_hostSchemeData = [];
       try {
         for (var j = 0; j < history.count; j++) {
@@ -1950,10 +1956,6 @@ let SessionStoreInternal = {
         }
       }
       tabData.index = history.index + 1;
-
-      // make sure not to cache privacy sensitive data which shouldn't get out
-      if (!aFullData)
-        browser.__SS_data = tabData;
     }
     else if (browser.currentURI.spec != "about:blank" ||
              browser.contentDocument.body.hasChildNodes()) {
@@ -2180,7 +2182,7 @@ let SessionStoreInternal = {
   _updateTextAndScrollDataForTab:
     function ssi_updateTextAndScrollDataForTab(aWindow, aBrowser, aTabData, aFullData) {
     // we shouldn't update data for incompletely initialized tabs
-    if (aBrowser.__SS_data && aBrowser.__SS_tabStillLoading)
+    if (RestoringTabsData.has(aBrowser))
       return;
 
     var tabIndex = (aTabData.index || aTabData.entries.length) - 1;
@@ -2984,11 +2986,9 @@ let SessionStoreInternal = {
       for (let name in tabData.attributes)
         this.xulAttributes[name] = true;
 
-      browser.__SS_tabStillLoading = true;
-
       // keep the data around to prevent dataloss in case
       // a tab gets closed before it's been properly restored
-      browser.__SS_data = tabData;
+      RestoringTabsData.set(browser, tabData);
       browser.__SS_restoreState = TAB_STATE_NEEDS_RESTORE;
       browser.setAttribute("pending", "true");
       tab.setAttribute("pending", "true");
@@ -3157,7 +3157,7 @@ let SessionStoreInternal = {
   restoreTab: function ssi_restoreTab(aTab) {
     let window = aTab.ownerDocument.defaultView;
     let browser = aTab.linkedBrowser;
-    let tabData = browser.__SS_data;
+    let tabData = RestoringTabsData.get(browser);
 
     // There are cases within where we haven't actually started a load. In that
     // that case we'll reset state changes we made and return false to the caller
@@ -4095,15 +4095,13 @@ let SessionStoreInternal = {
   /**
    * Determine if we can restore history into this tab.
    * This will be false when a tab has been removed (usually between
-   * restoreHistoryPrecursor && restoreHistory) or if the tab is still marked
-   * as loading.
+   * restoreHistoryPrecursor && restoreHistory).
    *
    * @param aTab
    * @returns boolean
    */
   _canRestoreTabHistory: function ssi_canRestoreTabHistory(aTab) {
-    return aTab.parentNode && aTab.linkedBrowser &&
-           aTab.linkedBrowser.__SS_tabStillLoading;
+    return aTab.parentNode && aTab.linkedBrowser;
   },
 
   /**
@@ -4573,6 +4571,54 @@ let TabRestoreQueue = {
     } else {
       throw new Error("restore queue: visible tab not found");
     }
+  }
+};
+
+// A map storing tabData belonging to xul:browsers of tabs. This will hold data
+// while a tab is restoring (i.e. loading). Because we can't query or use the
+// incomplete state of a loading tab we'll use data stored in the map if browser
+// state is collected while a tab is still restoring or if it's closed before
+// having restored fully.
+let RestoringTabsData = {
+  _data: new WeakMap(),
+
+  has: function (browser) {
+    return this._data.has(browser);
+  },
+
+  get: function (browser) {
+    return this._data.get(browser);
+  },
+
+  set: function (browser, data) {
+    this._data.set(browser, data);
+  },
+
+  remove: function (browser) {
+    this._data.delete(browser);
+  }
+};
+
+// A map storing a closed window's state data until it goes aways (is GC'ed).
+// This ensures that API clients can still read (but not write) states of
+// windows they still hold a reference to but we don't.
+let DyingWindowCache = {
+  _data: new WeakMap(),
+
+  has: function (window) {
+    return this._data.has(window);
+  },
+
+  get: function (window) {
+    return this._data.get(window);
+  },
+
+  set: function (window, data) {
+    this._data.set(window, data);
+  },
+
+  remove: function (window) {
+    this._data.delete(window);
   }
 };
 

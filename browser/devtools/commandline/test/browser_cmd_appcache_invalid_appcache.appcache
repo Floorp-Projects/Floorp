@@ -1,0 +1,55 @@
+# some comment
+
+CACHE MANIFEST
+# the above is a required line
+# this is a comment
+# spaces are ignored
+# blank lines are ignored
+
+images/sound-icon.png
+images/background.png
+
+NETWORK:
+/checking.cgi
+/checking.*
+
+CACHE:
+../rel.html
+../../rel.html
+../../../rel.html
+../../../../rel.html
+../../../../../rel.html
+/../invalid.html
+/test.css
+/test.js
+test.png
+browser_cmd_appcache_invalid_index.html
+/main/features.js
+/main/settings/index.css
+http://example.com/scene.jpg
+/section1/blockedbyfallback.html
+http://example.com/images/world.jpg
+/section2/blockedbyfallback.html
+browser_cmd_appcache_invalid_page1.html
+/main/home
+main/app.js
+browser_cmd_appcache_invalid_page2.html
+/settings/home
+/settings/app.js
+browser_cmd_appcache_invalid_page3.html
+http://example.com/logo.png
+http://example.com/check.png
+http://example.com/cr oss.png
+/checking*.png
+
+SETTINGS:
+prefer-online
+fast
+
+FALLBACK:
+/section1/ /offline1.html
+/section2/ offline2.html
+dadsdsd
+* offline3.html
+
+BLAH:
