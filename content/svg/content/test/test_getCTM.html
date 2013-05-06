@@ -45,8 +45,8 @@ function runTest()
   // root.nearestViewportElement == null
   is((function(){try{return root.getCTM()}catch(e){return e}})(), null, "root.getCTM()");
   // inner.nearestViewportElement == root
-  is((function(){try{return inner.getCTM().e}catch(e){return e}})(), 31, "inner.getCTM().e");
-  is((function(){try{return inner.getCTM().f}catch(e){return e}})(), 42, "inner.getCTM().f");
+  is((function(){try{return inner.getCTM().e}catch(e){return e}})(), 1, "inner.getCTM().e");
+  is((function(){try{return inner.getCTM().f}catch(e){return e}})(), 2, "inner.getCTM().f");
   // g1.nearestViewportElement == inner
   is((function(){try{return g1.getCTM().e}catch(e){return e}})(), 30, "g1.getCTM().e");
   is((function(){try{return g1.getCTM().f}catch(e){return e}})(), 40, "g1.getCTM().f");
@@ -75,8 +75,8 @@ function runTest()
   is((function(){try{return root.getScreenCTM().e}catch(e){return e}})(), 11, "root.getScreenCTM().e");
   is((function(){try{return root.getScreenCTM().f}catch(e){return e}})(), 22, "root.getScreenCTM().f");
   // inner.farthestViewportElement == root
-  is((function(){try{return inner.getScreenCTM().e}catch(e){return e}})(), 45, "inner.getScreenCTM().e");
-  is((function(){try{return inner.getScreenCTM().f}catch(e){return e}})(), 68, "inner.getScreenCTM().f");
+  is((function(){try{return inner.getScreenCTM().e}catch(e){return e}})(), 15, "inner.getScreenCTM().e");
+  is((function(){try{return inner.getScreenCTM().f}catch(e){return e}})(), 28, "inner.getScreenCTM().f");
   // g1.farthestViewportElement == root
   is((function(){try{return g1.getScreenCTM().e}catch(e){return e}})(), 45, "g1.getScreenCTM().e");
   is((function(){try{return g1.getScreenCTM().f}catch(e){return e}})(), 68, "g1.getScreenCTM().f");

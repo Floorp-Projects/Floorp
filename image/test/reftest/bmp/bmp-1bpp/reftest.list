@@ -1,7 +1,7 @@
 # BMP 1BPP tests
 
 # Images of various sizes
-== bmp-size-1x1-1bpp.bmp   bmp-size-1x1-1bpp.png
+fails-if(B2G) == bmp-size-1x1-1bpp.bmp   bmp-size-1x1-1bpp.png
 == bmp-size-2x2-1bpp.bmp   bmp-size-2x2-1bpp.png
 == bmp-size-3x3-1bpp.bmp   bmp-size-3x3-1bpp.png
 == bmp-size-4x4-1bpp.bmp   bmp-size-4x4-1bpp.png

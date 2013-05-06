@@ -1825,7 +1825,7 @@ default all:: $(PURGECACHES_FILES)
 $(PURGECACHES_FILES):
 	if test -d $(@D) ; then touch $@ ; fi
 
-.DEFAULT_GOAL ?= default
+.DEFAULT_GOAL := $(or $(OVERRIDE_DEFAULT_GOAL),default)
 
 #############################################################################
 # Derived targets and dependencies

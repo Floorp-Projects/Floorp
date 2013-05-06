@@ -224,7 +224,7 @@ DocAccessibleWrap::Shutdown()
   if (nsWinUtils::IsWindowEmulationStarted()) {
     // Destroy window created for root document.
     if (mDocFlags & eTabDocument) {
-      sHWNDCache.Remove(mHWND);
+      nsWinUtils::sHWNDCache.Remove(mHWND);
       ::DestroyWindow(static_cast<HWND>(mHWND));
     }
 
@@ -284,7 +284,7 @@ DocAccessibleWrap::DoInitialUpdate()
       mHWND = nsWinUtils::CreateNativeWindow(kClassNameTabContent, parentWnd,
                                              x, y, width, height, isActive);
 
-      sHWNDCache.Put(mHWND, this);
+      nsWinUtils::sHWNDCache.Put(mHWND, this);
 
     } else {
       DocAccessible* parentDocument = ParentDocument();

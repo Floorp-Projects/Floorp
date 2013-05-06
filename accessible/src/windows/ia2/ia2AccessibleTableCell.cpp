@@ -14,6 +14,7 @@
 #include "AccessibleWrap.h"
 #include "TableAccessible.h"
 #include "TableCellAccessible.h"
+#include "IUnknownImpl.h"
 
 #include "nsCOMPtr.h"
 #include "nsString.h"

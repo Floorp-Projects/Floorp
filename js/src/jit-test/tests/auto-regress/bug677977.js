@@ -20,7 +20,7 @@ dbg.onNewScript = function (s) {
 };
 assertEq(g.eval("eval('2 + 3')"), 5);
 this.gczeal(hits, 2);
-var fn = g.Function("a", "return 5 + a;");
+var fn = g.evaluate("(function (a) { return 5 + a; })", {compileAndGo: false});
 var g2 = newGlobal('new-compartment');
 dbg.addDebuggee(g2, dbg);
 g2.clone(fn);

@@ -14,6 +14,13 @@
 #include "ia2AccessibleHyperlink.h"
 #include "ia2AccessibleValue.h"
 
+#ifdef __GNUC__
+// Inheriting from both XPCOM and MSCOM interfaces causes a lot of warnings
+// about virtual functions being hidden by each other. This is done by
+// design, so silence the warning.
+#pragma GCC diagnostic ignored "-Woverloaded-virtual"
+#endif
+
 namespace mozilla {
 namespace a11y {
 
@@ -28,8 +35,8 @@ public: // construction, destruction
     Accessible(aContent, aDoc) { }
   virtual ~AccessibleWrap() { }
 
-    // nsISupports
-    NS_DECL_ISUPPORTS_INHERITED
+  // nsISupports
+  NS_DECL_ISUPPORTS_INHERITED
 
   public: // IUnknown methods - see iunknown.h for documentation
     STDMETHODIMP QueryInterface(REFIID, void**);

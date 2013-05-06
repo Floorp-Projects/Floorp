@@ -9107,7 +9107,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     // stopped in those cases. In the case where they do result in
     // data, the javascript: URL channel takes care of stopping
     // current network activity.
-    if (!bIsJavascript) {
+    if (!bIsJavascript && aFileName.IsVoid()) {
         // Stop any current network activity.
         // Also stop content if this is a zombie doc. otherwise 
         // the onload will be delayed by other loads initiated in the 

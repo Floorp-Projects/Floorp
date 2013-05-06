@@ -12,8 +12,6 @@
 namespace mozilla {
 namespace a11y {
 
-class nsAccessNodeWrap;
-
 /**
  * Used to get compatibility modes. Note, modes are computed at accessibility
  * start up time and aren't changed during lifetime.
@@ -47,7 +45,7 @@ private:
   Compatibility& operator = (const Compatibility&);
 
   /**
-   * Initialize compatibility mode. Called by nsAccessNodeWrap during
+   * Initialize compatibility mode. Called by platform (see Platform.h) during
    * accessibility initialization.
    */
   static void Init();

@@ -1775,14 +1775,17 @@ class nsAnimationEvent : public nsEvent
 {
 public:
   nsAnimationEvent(bool isTrusted, uint32_t msg,
-                   const nsString &animationNameArg, float elapsedTimeArg)
+                   const nsAString &animationNameArg, float elapsedTimeArg,
+                   const nsAString &pseudoElementArg)
     : nsEvent(isTrusted, msg, NS_ANIMATION_EVENT),
-      animationName(animationNameArg), elapsedTime(elapsedTimeArg)
+      animationName(animationNameArg), elapsedTime(elapsedTimeArg),
+      pseudoElement(pseudoElementArg)
   {
   }
 
   nsString animationName;
   float elapsedTime;
+  nsString pseudoElement;
 };
 
 /**
