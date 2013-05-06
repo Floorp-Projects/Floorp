@@ -428,16 +428,6 @@
 #ifdef CAN_DRAW_IN_TITLEBAR
 <vbox id="titlebar">
   <hbox id="titlebar-content">
-#ifdef MENUBAR_CAN_AUTOHIDE
-    <hbox id="appmenu-button-container">
-      <button id="appmenu-button"
-              type="menu"
-              label="&brandShortName;"
-              style="-moz-user-focus: ignore;">
-#include browser-appmenu.inc
-      </button>
-    </hbox>
-#endif
     <spacer id="titlebar-spacer" flex="1"/>
     <hbox id="titlebar-buttonbox-container" align="start"
 #ifdef XP_MACOSX
@@ -480,10 +470,6 @@
       </toolbaritem>
 
 #ifdef CAN_DRAW_IN_TITLEBAR
-#ifdef MENUBAR_CAN_AUTOHIDE
-      <hbox class="titlebar-placeholder" type="appmenu-button" ordinal="0"/>
-#endif
-
       <hbox class="titlebar-placeholder" type="caption-buttons"
 #ifdef XP_MACOSX
             ordinal="0"
@@ -766,13 +752,6 @@
       </toolbaritem>
     </toolbar>
 
-#ifdef MENUBAR_CAN_AUTOHIDE
-#ifndef CAN_DRAW_IN_TITLEBAR
-#define APPMENU_ON_TABBAR
-#endif
-#endif
-
-
     <toolbar id="TabsToolbar"
              class="toolbar-primary"
              fullscreentoolbar="true"
@@ -781,22 +760,8 @@
              iconsize="small" defaulticonsize="small" lockiconsize="true"
              aria-label="&tabsToolbar.label;"
              context="toolbar-context-menu"
-#ifdef APPMENU_ON_TABBAR
-             defaultset="appmenu-toolbar-button,tabbrowser-tabs,new-tab-button,alltabs-button,tabs-closebutton"
-#else
              defaultset="tabbrowser-tabs,new-tab-button,alltabs-button,tabs-closebutton"
-#endif
              collapsed="true">
-
-#ifdef APPMENU_ON_TABBAR
-      <toolbarbutton id="appmenu-toolbar-button"
-                     class="chromeclass-toolbar-additional"
-                     type="menu"
-                     label="&brandShortName;"
-                     tooltiptext="&appMenuButton.tooltip;">
-#include browser-appmenu.inc
-      </toolbarbutton>
-#endif
 
       <tabs id="tabbrowser-tabs"
             class="tabbrowser-tabs"
@@ -845,9 +810,6 @@
                      tooltiptext="&closeTab.label;"/>
 
 #ifdef CAN_DRAW_IN_TITLEBAR
-#ifdef MENUBAR_CAN_AUTOHIDE
-      <hbox class="titlebar-placeholder" type="appmenu-button" ordinal="0"/>
-#endif
       <hbox class="titlebar-placeholder" type="caption-buttons"
 #ifdef XP_MACOSX
             ordinal="0"
