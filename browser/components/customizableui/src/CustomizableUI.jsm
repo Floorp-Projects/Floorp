@@ -448,7 +448,8 @@ let CustomizableUIInternal = {
       let palette = aAreaNode.toolbox ? aAreaNode.toolbox.palette : null;
       let limit = currentNode.previousSibling;
       let node = container.lastChild;
-      while (node != limit) {
+      while (node && node != limit) {
+        let previousSibling = node.previousSibling;
         // Nodes opt-in to removability. If they're removable, and we haven't
         // seen them in the placements array, then we toss them into the palette
         // if one exists. If no palette exists, we just remove the node. If the
@@ -460,7 +461,7 @@ let CustomizableUIInternal = {
             container.removeChild(node);
           }
         }
-        node = node.previousSibling;
+        node = previousSibling;
       }
     }
   },
