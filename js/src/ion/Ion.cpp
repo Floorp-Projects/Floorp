@@ -103,6 +103,12 @@ ion::GetIonContext()
     return CurrentIonContext();
 }
 
+IonContext *
+ion::MaybeGetIonContext()
+{
+    return CurrentIonContext();
+}
+
 IonContext::IonContext(JSContext *cx, TempAllocator *temp)
   : runtime(cx->runtime),
     cx(cx),

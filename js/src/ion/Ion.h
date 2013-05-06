@@ -272,6 +272,7 @@ bool InitializeIon();
 
 // Get and set the current Ion context.
 IonContext *GetIonContext();
+IonContext *MaybeGetIonContext();
 
 bool SetIonContext(IonContext *ctx);
 
