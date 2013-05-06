@@ -84,6 +84,16 @@ Class::QueryInterface(REFIID aIID, void** aInstancePtr)                        \
   A11Y_TRYBLOCK_END                                                            \
 }
 
+#define IMPL_IUNKNOWN_QUERY_TAIL_AGGREGATED(Member)                            \
+  return Member->QueryInterface(aIID, aInstancePtr);                           \
+  A11Y_TRYBLOCK_END                                                            \
+}
+
+#define IMPL_IUNKNOWN_QUERY_TAIL_INHERITED(BaseClass)                          \
+  return BaseClass::QueryInterface(aIID, aInstancePtr);                        \
+  A11Y_TRYBLOCK_END                                                            \
+}
+
 #define IMPL_IUNKNOWN_QUERY_IFACE(Iface)                                       \
   if (aIID == IID_##Iface) {                                                   \
     *aInstancePtr = static_cast<Iface*>(this);                                 \
@@ -133,15 +143,13 @@ Class::QueryInterface(REFIID aIID, void** aInstancePtr)                        \
 #define IMPL_IUNKNOWN_INHERITED1(Class, Super0, Super1)                        \
   IMPL_IUNKNOWN_QUERY_HEAD(Class)                                              \
   IMPL_IUNKNOWN_QUERY_CLASS(Super1);                                           \
-  IMPL_IUNKNOWN_QUERY_CLASS(Super0)                                            \
-  IMPL_IUNKNOWN_QUERY_TAIL                                                     \
+  IMPL_IUNKNOWN_QUERY_TAIL_INHERITED(Super0)
 
 #define IMPL_IUNKNOWN_INHERITED2(Class, Super0, Super1, Super2)                \
   IMPL_IUNKNOWN_QUERY_HEAD(Class)                                              \
   IMPL_IUNKNOWN_QUERY_CLASS(Super1);                                           \
   IMPL_IUNKNOWN_QUERY_CLASS(Super2);                                           \
-  IMPL_IUNKNOWN_QUERY_CLASS(Super0)                                            \
-  IMPL_IUNKNOWN_QUERY_TAIL
+  IMPL_IUNKNOWN_QUERY_TAIL_INHERITED(Super0)
 
 
 /**
