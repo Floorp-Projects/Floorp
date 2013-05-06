@@ -8,7 +8,9 @@
 <!ENTITY % scratchpadDTD SYSTEM "chrome://browser/locale/devtools/scratchpad.dtd" >
  %scratchpadDTD;
 ]>
-<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/global.css"?>
+<?xml-stylesheet href="chrome://browser/skin/devtools/common.css"?>
+<?xml-stylesheet href="chrome://browser/skin/devtools/scratchpad.css"?>
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 <?xul-overlay href="chrome://browser/content/source-editor-overlay.xul"?>
 
@@ -280,7 +282,16 @@
 </popupset>
 
 <notificationbox id="scratchpad-notificationbox" flex="1">
-  <hbox id="scratchpad-editor" flex="1"/>
+  <hbox flex="1">
+    <vbox id="scratchpad-editor" flex="1"/>
+    <splitter class="devtools-side-splitter"
+              collapse="after"
+              state="collapsed"/>
+    <tabbox id="scratchpad-sidebar" class="devtools-sidebar-tabs" width="300">
+      <tabs/>
+      <tabpanels flex="1"/>
+    </tabbox>
+  </hbox>
 </notificationbox>
 
 </window>
