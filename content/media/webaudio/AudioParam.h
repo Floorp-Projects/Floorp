@@ -51,7 +51,7 @@ public:
 
   // We override SetValueCurveAtTime to convert the Float32Array to the wrapper
   // object.
-  void SetValueCurveAtTime(JSContext* cx, const Float32Array& aValues, double aStartTime, double aDuration, ErrorResult& aRv)
+  void SetValueCurveAtTime(const Float32Array& aValues, double aStartTime, double aDuration, ErrorResult& aRv)
   {
     AudioParamTimeline::SetValueCurveAtTime(aValues.Data(), aValues.Length(),
                                             aStartTime, aDuration, aRv);
