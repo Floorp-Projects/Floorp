@@ -17,7 +17,7 @@
   color: -moz-dialogText;
   background-color: -moz-dialog;
   background-image: /* Fade-out texture at the top, and blend with browser tab */
-                    linear-gradient(rgba(255,255,255,0.5), rgba(255,255,255,0) 30%),
+                    linear-gradient(rgba(255,255,255,0.45), rgba(255,255,255,0) 30%),
                     /* Texture */
                     url("chrome://global/skin/inContentUI/background-texture.png");
 }

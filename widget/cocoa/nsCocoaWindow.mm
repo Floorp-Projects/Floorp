@@ -1954,6 +1954,15 @@ void nsCocoaWindow::SetWindowAnimationType(nsIWidget::WindowAnimationType aType)
   mAnimationType = aType;
 }
 
+NS_IMETHODIMP nsCocoaWindow::SetNonClientMargins(nsIntMargin &margins)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  SetDrawsInTitlebar(margins.top == 0);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
 NS_IMETHODIMP nsCocoaWindow::SetWindowTitlebarColor(nscolor aColor, bool aActive)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
@@ -2471,7 +2480,54 @@ GetDPI(NSWindow* aWindow)
 - (void)cursorUpdated:(NSEvent*)aEvent;
 @end
 
+@interface NSView(FrameViewMethodSwizzling)
+- (void)FrameViewClass__drawTitleBar:(NSRect)aRect;
+@end
+
+@implementation NSView(FrameViewMethodSwizzling)
+
+- (void)FrameViewClass__drawTitleBar:(NSRect)aRect
+{
+  NSWindow* window = [self window];
+  if ([window isKindOfClass:[BaseWindow class]] &&
+      [(BaseWindow*)window drawsContentsIntoWindowFrame]) {
+    // Do not draw the title.
+    return;
+  }
+  [self FrameViewClass__drawTitleBar:aRect];
+}
+
+@end
+
+static NSMutableSet *gSwizzledFrameViewClasses = nil;
+
 @implementation BaseWindow
+
+// The frame of a window is implemented using undocumented NSView subclasses.
+// We disable window title drawing by overriding the _drawTitleBar: method on
+// these frame view classes. The class which is used for a window is
+// determined in the window's frameViewClassForStyleMask: method, so this is
+// where we make sure that we have swizzled the method on all encountered
+// classes.
++ (Class)frameViewClassForStyleMask:(NSUInteger)styleMask
+{
+  Class frameViewClass = [super frameViewClassForStyleMask:styleMask];
+
+  if (!gSwizzledFrameViewClasses) {
+    gSwizzledFrameViewClasses = [[NSMutableSet setWithCapacity:3] retain];
+    if (!gSwizzledFrameViewClasses) {
+      return frameViewClass;
+    }
+  }
+
+  if (![gSwizzledFrameViewClasses containsObject:frameViewClass]) {
+    nsToolkit::SwizzleMethods(frameViewClass, @selector(_drawTitleBar:),
+                              @selector(FrameViewClass__drawTitleBar:));
+    [gSwizzledFrameViewClasses addObject:frameViewClass];
+  }
+
+  return frameViewClass;
+}
 
 - (id)initWithContentRect:(NSRect)aContentRect styleMask:(NSUInteger)aStyle backing:(NSBackingStoreType)aBufferingType defer:(BOOL)aFlag
 {
@@ -2865,7 +2921,7 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
     [super setBackgroundColor:mColor];
     mBackgroundColor = [[NSColor whiteColor] retain];
 
-    mUnifiedToolbarHeight = 0.0f;
+    mUnifiedToolbarHeight = 22.0f;
 
     // setBottomCornerRounded: is a private API call, so we check to make sure
     // we respond to it just in case.
@@ -2941,6 +2997,7 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
                     [self frame].size.width, [self titlebarHeight]);
 }
 
+// Returns the unified height of titlebar + toolbar.
 - (float)unifiedToolbarHeight
 {
   return mUnifiedToolbarHeight;
@@ -2952,15 +3009,16 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
   return frameRect.size.height - [self contentRectForFrameRect:frameRect].size.height;
 }
 
+// Stores the complete height of titlebar + toolbar.
 - (void)setUnifiedToolbarHeight:(float)aHeight
 {
-  if ([self drawsContentsIntoWindowFrame] || aHeight == mUnifiedToolbarHeight)
+  if (aHeight == mUnifiedToolbarHeight)
     return;
 
   mUnifiedToolbarHeight = aHeight;
 
   // Update sheet positioning hint.
-  [self setContentBorderThickness:mUnifiedToolbarHeight forEdge:NSMaxYEdge];
+  [self setContentBorderThickness:mUnifiedToolbarHeight - [self titlebarHeight] forEdge:NSMaxYEdge];
 
   // Redraw the title bar. If we're inside painting, we'll do it right now,
   // otherwise we'll just invalidate it.
@@ -3147,18 +3205,18 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
 
 static void
 DrawNativeTitlebar(CGContextRef aContext, CGRect aTitlebarRect,
-                   float aToolbarHeight, BOOL aIsMain)
+                   float aUnifiedToolbarHeight, BOOL aIsMain)
 {
   if (aTitlebarRect.size.width * aTitlebarRect.size.height > CUIDRAW_MAX_AREA) {
     return;
   }
-  int unifiedHeight = aTitlebarRect.size.height + aToolbarHeight;
+
   CUIDraw([NSWindow coreUIRenderer], aTitlebarRect, aContext,
           (CFDictionaryRef)[NSDictionary dictionaryWithObjectsAndKeys:
             @"kCUIWidgetWindowFrame", @"widget",
             @"regularwin", @"windowtype",
             (aIsMain ? @"normal" : @"inactive"), @"state",
-            [NSNumber numberWithInt:unifiedHeight], @"kCUIWindowFrameUnifiedTitleBarHeightKey",
+            [NSNumber numberWithInt:aUnifiedToolbarHeight], @"kCUIWindowFrameUnifiedTitleBarHeightKey",
             [NSNumber numberWithBool:YES], @"kCUIWindowFrameDrawTitleSeparatorKey",
             nil],
           nil);
