@@ -1553,7 +1553,7 @@ toolbar[iconsize="small"] #bookmarks-menu-button[starred],
                     @fgTabTexture@;
 }
 
-.tabbrowser-tab {
+.tabbrowser-tab:-moz-lwtheme {
   color: inherit;
 }
 
