@@ -55,18 +55,6 @@ XPCJSContextStack::Pop()
     return cx;
 }
 
-static nsIPrincipal*
-GetPrincipalFromCx(JSContext *cx)
-{
-    nsIScriptContextPrincipal* scp = GetScriptContextPrincipalFromJSContext(cx);
-    if (scp) {
-        nsIScriptObjectPrincipal* globalData = scp->GetObjectPrincipal();
-        if (globalData)
-            return globalData->GetPrincipal();
-    }
-    return nullptr;
-}
-
 bool
 XPCJSContextStack::Push(JSContext *cx)
 {
