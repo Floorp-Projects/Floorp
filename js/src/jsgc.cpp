@@ -261,12 +261,6 @@ ArenaHeader::checkSynchronizedWithFreeList() const
      */
     JS_ASSERT(firstSpan.isSameNonEmptySpan(list));
 }
-
-bool
-js::gc::Cell::isTenured() const
-{
-    return !IsInsideNursery(runtime(), this);
-}
 #endif
 
 /* static */ void
