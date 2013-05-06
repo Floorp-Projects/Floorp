@@ -11230,43 +11230,53 @@ nsIDocument::Evaluate(const nsAString& aExpression, nsINode* aContextNode,
 
 // This is just a hack around the fact that window.document is not
 // [Unforgeable] yet.
-bool
-nsIDocument::PostCreateWrapper(JSContext* aCx, JS::Handle<JSObject*> aNewObject)
+JSObject*
+nsIDocument::WrapObject(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
   MOZ_ASSERT(IsDOMBinding());
+
+  JS::Rooted<JSObject*> obj(aCx, nsINode::WrapObject(aCx, aScope));
+  if (!obj) {
+    return nullptr;
+  }
 
   nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(GetScriptGlobalObject());
   if (!win) {
     // No window, nothing else to do here
-    return true;
+    return obj;
   }
 
   if (this != win->GetExtantDoc()) {
     // We're not the current document; we're also done here
-    return true;
+    return obj;
   }
 
-  JSAutoCompartment ac(aCx, aNewObject);
+  JSAutoCompartment ac(aCx, obj);
 
   JS::Rooted<JS::Value> winVal(aCx);
   nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-  nsresult rv = nsContentUtils::WrapNative(aCx, aNewObject, win,
+  nsresult rv = nsContentUtils::WrapNative(aCx, obj, win,
                                            &NS_GET_IID(nsIDOMWindow),
                                            winVal.address(),
                                            getter_AddRefs(holder),
                                            false);
   if (NS_FAILED(rv)) {
-    return Throw<true>(aCx, rv);
+    Throw<true>(aCx, rv);
+    return nullptr;
   }
 
   NS_NAMED_LITERAL_STRING(doc_str, "document");
 
-  return JS_DefineUCProperty(aCx, JSVAL_TO_OBJECT(winVal),
-                             reinterpret_cast<const jschar *>
-                                             (doc_str.get()),
-                             doc_str.Length(), JS::ObjectValue(*aNewObject),
-                             JS_PropertyStub, JS_StrictPropertyStub,
-                             JSPROP_READONLY | JSPROP_ENUMERATE);
+  if (!JS_DefineUCProperty(aCx, JSVAL_TO_OBJECT(winVal),
+                           reinterpret_cast<const jschar *>
+                                           (doc_str.get()),
+                           doc_str.Length(), JS::ObjectValue(*obj),
+                           JS_PropertyStub, JS_StrictPropertyStub,
+                           JSPROP_READONLY | JSPROP_ENUMERATE)) {
+    return nullptr;
+  }
+
+  return obj;
 }
 
 bool
