@@ -2765,6 +2765,7 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 
 #social-provider-button {
   -moz-image-region: rect(0, 16px, 16px, 0);
+  list-style-image: url(chrome://browser/skin/social/services-16.png);
 }
 
 #social-provider-button > .toolbarbutton-menu-dropmarker {

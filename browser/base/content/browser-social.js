@@ -694,13 +694,17 @@ SocialToolbar = {
 
   // Called when the Social.provider changes
   updateProvider: function () {
-    let provider = Social.provider || Social.defaultProvider;
+    let provider = Social.provider;
     if (provider) {
       this.button.setAttribute("label", provider.name);
       this.button.setAttribute("tooltiptext", provider.name);
       this.button.style.listStyleImage = "url(" + provider.iconURL + ")";
 
       this.updateProfile();
+    } else {
+      this.button.setAttribute("label", gNavigatorBundle.getString("service.toolbarbutton.label"));
+      this.button.setAttribute("tooltiptext", gNavigatorBundle.getString("service.toolbarbutton.tooltiptext"));
+      this.button.style.removeProperty("list-style-image");
     }
     this.updateButton();
   },
@@ -994,7 +998,7 @@ SocialToolbar = {
       menu.removeChild(providerMenuSep.previousSibling);
     }
     // only show a selection if enabled and there is more than one
-    if (!SocialUI.enabled || Social.providers.length < 2) {
+    if (Social.providers.length < 2) {
       providerMenuSep.hidden = true;
       return;
     }
