@@ -330,7 +330,6 @@ frontend::CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, CompileO
             return false;
     }
 
-    options.setCompileAndGo(false);
     Parser<FullParseHandler> parser(cx, options, chars, length, /* foldConstants = */ true);
     if (!parser.init())
         return false;
@@ -413,9 +412,17 @@ frontend::CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, CompileO
 #endif
 
     if (generateBytecode) {
+        /*
+         * The reason for checking fun->environment() below is that certain
+         * consumers of JS::CompileFunction, namely
+         * nsEventListenerManager::CompileEventHandlerInternal, passes in a
+         * NULL environment. This compiled function is never used, but instead
+         * is cloned immediately onto the right scope chain.
+         */
         BytecodeEmitter funbce(/* parent = */ NULL, &parser, funbox, script,
                                /* evalCaller = */ NullPtr(),
-                               /* hasGlobalScope = */ false, options.lineno);
+                               fun->environment() && fun->environment()->isGlobal(),
+                               options.lineno);
         if (!funbce.init())
             return false;
 

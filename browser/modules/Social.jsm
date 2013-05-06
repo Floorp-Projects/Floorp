@@ -15,6 +15,10 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "SocialService",
   "resource://gre/modules/SocialService.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
+  "resource://gre/modules/PlacesUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Promise",
+  "resource://gre/modules/commonjs/sdk/core/promise.js");
 
 // Add a pref observer for the enabled state
 function prefObserver(subject, topic, data) {
@@ -31,6 +35,46 @@ Services.obs.addObserver(function xpcomShutdown() {
   Services.obs.removeObserver(xpcomShutdown, "xpcom-shutdown");
   Services.prefs.removeObserver("social.enabled", prefObserver);
 }, "xpcom-shutdown", false);
+
+function promiseSetAnnotation(aURI, providerList) {
+  let deferred = Promise.defer();
+
+  // Delaying to catch issues with asynchronous behavior while waiting
+  // to implement asynchronous annotations in bug 699844.
+  Services.tm.mainThread.dispatch(function() {
+    try {
+      if (providerList && providerList.length > 0) {
+        PlacesUtils.annotations.setPageAnnotation(
+          aURI, "social/mark", JSON.stringify(providerList), 0,
+          PlacesUtils.annotations.EXPIRE_WITH_HISTORY);
+      } else {
+        PlacesUtils.annotations.removePageAnnotation(aURI, "social/mark");
+      }
+    } catch(e) {
+      Cu.reportError("SocialAnnotation failed: " + e);
+    }
+    deferred.resolve();
+  }, Ci.nsIThread.DISPATCH_NORMAL);
+
+  return deferred.promise;
+}
+
+function promiseGetAnnotation(aURI) {
+  let deferred = Promise.defer();
+
+  // Delaying to catch issues with asynchronous behavior while waiting
+  // to implement asynchronous annotations in bug 699844.
+  Services.tm.mainThread.dispatch(function() {
+    let val = null;
+    try {
+      val = PlacesUtils.annotations.getPageAnnotation(aURI, "social/mark");
+    } catch (ex) { }
+
+    deferred.resolve(val);
+  }, Ci.nsIThread.DISPATCH_NORMAL);
+
+  return deferred.promise;
+}
 
 this.Social = {
   initialized: false,
@@ -213,8 +257,8 @@ this.Social = {
       SocialService.removeProvider(origin);
   },
 
-  // Sharing functionality
-  _getShareablePageUrl: function Social_getShareablePageUrl(aURI) {
+  // Page Marking functionality
+  _getMarkablePageUrl: function Social_getMarkablePageUrl(aURI) {
     let uri = aURI.clone();
     try {
       // Setting userPass on about:config throws.
@@ -223,52 +267,96 @@ this.Social = {
     return uri.spec;
   },
 
-  isPageShared: function Social_isPageShared(aURI) {
-    let url = this._getShareablePageUrl(aURI);
-    return this._sharedUrls.hasOwnProperty(url);
+  isURIMarked: function(aURI, aCallback) {
+    promiseGetAnnotation(aURI).then(function(val) {
+      if (val) {
+        let providerList = JSON.parse(val);
+        val = providerList.indexOf(this.provider.origin) >= 0;
+      }
+      aCallback(!!val);
+    }.bind(this));
   },
 
-  sharePage: function Social_sharePage(aURI) {
+  markURI: function(aURI, aCallback) {
     // this should not be called if this.provider or the port is null
     if (!this.provider) {
-      Cu.reportError("Can't share a page when no provider is current");
+      Cu.reportError("Can't mark a page when no provider is current");
       return;
     }
     let port = this.provider.getWorkerPort();
     if (!port) {
-      Cu.reportError("Can't share page as no provider port is available");
+      Cu.reportError("Can't mark page as no provider port is available");
       return;
     }
-    let url = this._getShareablePageUrl(aURI);
-    this._sharedUrls[url] = true;
-    port.postMessage({
-      topic: "social.user-recommend",
-      data: { url: url }
-    });
-    port.close();
-  },
 
-  unsharePage: function Social_unsharePage(aURI) {
+    // update or set our annotation
+    promiseGetAnnotation(aURI).then(function(val) {
+
+      let providerList = val ? JSON.parse(val) : [];
+      let marked = providerList.indexOf(this.provider.origin) >= 0;
+      if (marked)
+        return;
+      providerList.push(this.provider.origin);
+      // we allow marking links in a page that may not have been visited yet.
+      // make sure there is a history entry for the uri, then annotate it.
+      let place = {
+        uri: aURI,
+        visits: [{
+          visitDate: Date.now() + 1000,
+          transitionType: Ci.nsINavHistoryService.TRANSITION_LINK
+        }]
+      };
+      PlacesUtils.asyncHistory.updatePlaces(place, {
+        handleError: function () Cu.reportError("couldn't update history for socialmark annotation"),
+        handleResult: function () {},
+        handleCompletion: function () {
+          promiseSetAnnotation(aURI, providerList).then();
+          // post to the provider
+          let url = this._getMarkablePageUrl(aURI);
+          port.postMessage({
+            topic: "social.page-mark",
+            data: { url: url, 'marked': true }
+          });
+          port.close();
+          if (aCallback)
+            schedule(function() { aCallback(true); } );
+        }.bind(this)
+      });
+    }.bind(this));
+  },
+  
+  unmarkURI: function(aURI, aCallback) {
     // this should not be called if this.provider or the port is null
     if (!this.provider) {
-      Cu.reportError("Can't unshare a page when no provider is current");
+      Cu.reportError("Can't mark a page when no provider is current");
       return;
     }
     let port = this.provider.getWorkerPort();
     if (!port) {
-      Cu.reportError("Can't unshare page as no provider port is available");
+      Cu.reportError("Can't mark page as no provider port is available");
       return;
     }
-    let url = this._getShareablePageUrl(aURI);
-    delete this._sharedUrls[url];
-    port.postMessage({
-      topic: "social.user-unrecommend",
-      data: { url: url }
-    });
-    port.close();
-  },
 
-  _sharedUrls: {},
+    // set our annotation
+    promiseGetAnnotation(aURI).then(function(val) {
+      let providerList = val ? JSON.parse(val) : [];
+      let marked = providerList.indexOf(this.provider.origin) >= 0;
+      if (marked) {
+        // remove the annotation
+        providerList.splice(providerList.indexOf(this.provider.origin), 1);
+        promiseSetAnnotation(aURI, providerList).then();
+      }
+      // post to the provider regardless
+      let url = this._getMarkablePageUrl(aURI);
+      port.postMessage({
+        topic: "social.page-mark",
+        data: { url: url, 'marked': false }
+      });
+      port.close();
+      if (aCallback)
+        schedule(function() { aCallback(false); } );
+    }.bind(this));
+  },
 
   setErrorListener: function(iframe, errorHandler) {
     if (iframe.socialErrorListener)

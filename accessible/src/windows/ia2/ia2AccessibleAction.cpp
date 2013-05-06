@@ -10,6 +10,7 @@
 #include "AccessibleAction_i.c"
 
 #include "AccessibleWrap.h"
+#include "IUnknownImpl.h"
 
 using namespace mozilla::a11y;
 
@@ -180,4 +181,3 @@ ia2AccessibleAction::get_localizedName(long aActionIndex, BSTR *aLocalizedName)
 
   A11Y_TRYBLOCK_END
 }
-

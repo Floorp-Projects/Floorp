@@ -23,7 +23,7 @@ CPPSRCS = \
   HTMLWin32ObjectAccessible.cpp \
   HyperTextAccessibleWrap.cpp \
   ImageAccessibleWrap.cpp \
-  nsAccessNodeWrap.cpp \
+  IUnknownImpl.cpp \
   nsWinUtils.cpp \
   Compatibility.cpp \
   EnumVariant.cpp \

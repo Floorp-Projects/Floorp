@@ -903,7 +903,8 @@ class IDLInterface(IDLObjectWithScope):
                   identifier == "NeedNewResolve" or
                   identifier == "JSImplementation" or
                   identifier == "HeaderFile" or
-                  identifier == "NavigatorProperty"):
+                  identifier == "NavigatorProperty" or
+                  identifier == "OverrideBuiltins"):
                 # Known attributes that we don't need to do anything with here
                 pass
             else:

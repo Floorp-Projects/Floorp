@@ -1147,7 +1147,7 @@ XPCWrappedNativeXrayTraits::call(JSContext *cx, HandleObject wrapper,
             return false;
         bool ok = true;
         nsresult rv = wn->GetScriptableInfo()->GetCallback()->Call(
-            wn, cx, wrapper, args.length(), args.array(), args.rval().address(), &ok);
+            wn, cx, wrapper, args, &ok);
         if (NS_FAILED(rv)) {
             if (ok)
                 XPCThrower::Throw(rv, cx);
@@ -1173,7 +1173,7 @@ XPCWrappedNativeXrayTraits::construct(JSContext *cx, HandleObject wrapper,
             return false;
         bool ok = true;
         nsresult rv = wn->GetScriptableInfo()->GetCallback()->Construct(
-            wn, cx, wrapper, args.length(), args.array(), args.rval().address(), &ok);
+            wn, cx, wrapper, args, &ok);
         if (NS_FAILED(rv)) {
             if (ok)
                 XPCThrower::Throw(rv, cx);
