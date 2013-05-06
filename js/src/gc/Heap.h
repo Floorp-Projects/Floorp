@@ -8,6 +8,7 @@
 #define gc_heap_h___
 
 #include "mozilla/Attributes.h"
+#include "mozilla/PodOperations.h"
 #include "mozilla/StandardInteger.h"
 
 #include <stddef.h>
@@ -665,6 +666,13 @@ const size_t ArenasPerChunk = ChunkBytesAvailable / BytesPerArenaWithHeader;
 struct ChunkBitmap
 {
     volatile uintptr_t bitmap[ArenaBitmapWords * ArenasPerChunk];
+
+  public:
+    ChunkBitmap() { }
+    ChunkBitmap(MoveRef<ChunkBitmap> b) {
+        mozilla::PodArrayCopy(bitmap, b->bitmap);
+    }
+
 
     MOZ_ALWAYS_INLINE void getMarkWordAndMask(const Cell *cell, uint32_t color,
                                               uintptr_t **wordp, uintptr_t *maskp)
