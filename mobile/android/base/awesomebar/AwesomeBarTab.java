@@ -8,6 +8,7 @@ package org.mozilla.gecko;
 import org.mozilla.gecko.AwesomeBar.ContextMenuSubject;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
 import org.mozilla.gecko.gfx.BitmapUtils;
+import org.mozilla.gecko.widget.FaviconView;
 
 import android.content.ContentResolver;
 import android.content.Context;
@@ -54,7 +55,7 @@ abstract public class AwesomeBarTab {
     protected class AwesomeEntryViewHolder {
         public TextView titleView;
         public TextView urlView;
-        public ImageView faviconView;
+        public FaviconView faviconView;
         public ImageView bookmarkIconView;
     }
 
@@ -87,20 +88,8 @@ abstract public class AwesomeBarTab {
         return mResources;
     }
 
-    protected void updateFavicon(ImageView faviconView, Cursor cursor) {
-        byte[] b = cursor.getBlob(cursor.getColumnIndexOrThrow(URLColumns.FAVICON));
-        Bitmap favicon = null;
-        if (b != null) {
-            Bitmap bitmap = BitmapUtils.decodeByteArray(b);
-            if (bitmap != null) {
-                favicon = Favicons.getInstance().scaleImage(bitmap);
-            }
-        }
-        updateFavicon(faviconView, favicon);
-    }
-
-    protected void updateFavicon(ImageView faviconView, Bitmap bitmap) {
-        faviconView.setImageBitmap(bitmap);
+    protected void updateFavicon(FaviconView faviconView, Bitmap bitmap, String key) {
+        faviconView.updateImage(bitmap, key);
     }
 
     protected void updateTitle(TextView titleView, Cursor cursor) {
