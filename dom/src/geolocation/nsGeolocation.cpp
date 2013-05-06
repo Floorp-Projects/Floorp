@@ -707,7 +707,7 @@ nsGeolocationService::HandleMozsettingChanged(const PRUnichar* aData)
     // The string that we're interested in will be a JSON string that looks like:
     //  {"key":"gelocation.enabled","value":true}
 
-    SafeAutoJSContext cx;
+    AutoSafeJSContext cx;
 
     nsDependentString dataStr(aData);
     JS::Rooted<JS::Value> val(cx);

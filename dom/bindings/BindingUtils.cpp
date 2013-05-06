@@ -1317,7 +1317,7 @@ MainThreadDictionaryBase::ParseJSON(const nsAString& aJSON,
                                     Maybe<JSAutoCompartment>& aAc,
                                     Maybe< JS::Rooted<JS::Value> >& aVal)
 {
-  SafeAutoJSContext cx;
+  AutoSafeJSContext cx;
   JS::Rooted<JSObject*> global(cx, JS_GetGlobalObject(cx));
   aAr.construct(static_cast<JSContext*>(cx));
   aAc.construct(static_cast<JSContext*>(cx), global);

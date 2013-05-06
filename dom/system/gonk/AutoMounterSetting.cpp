@@ -109,7 +109,7 @@ AutoMounterSetting::Observe(nsISupports* aSubject,
   // The string that we're interested in will be a JSON string that looks like:
   //  {"key":"ums.autoMount","value":true}
 
-  mozilla::SafeAutoJSContext cx;
+  mozilla::AutoSafeJSContext cx;
   nsDependentString dataStr(aData);
   JS::Value val;
   if (!JS_ParseJSON(cx, dataStr.get(), dataStr.Length(), &val) ||

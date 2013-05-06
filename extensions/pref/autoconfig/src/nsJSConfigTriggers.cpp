@@ -24,7 +24,7 @@
 #include "jswrapper.h"
 
 extern PRLogModuleInfo *MCD;
-using mozilla::SafeAutoJSContext;
+using mozilla::AutoSafeJSContext;
 
 //*****************************************************************************
 
@@ -50,7 +50,7 @@ nsresult CentralizedAdminPrefManagerInit()
 
 
     // Create a sandbox.
-    SafeAutoJSContext cx;
+    AutoSafeJSContext cx;
     JSAutoRequest ar(cx);
     nsCOMPtr<nsIXPConnectJSObjectHolder> sandbox;
     rv = xpc->CreateSandbox(cx, principal, getter_AddRefs(sandbox));
@@ -70,7 +70,7 @@ nsresult CentralizedAdminPrefManagerInit()
 nsresult CentralizedAdminPrefManagerFinish()
 {
     if (autoconfigSb) {
-        SafeAutoJSContext cx;
+        AutoSafeJSContext cx;
         JSAutoRequest ar(cx);
         JSAutoCompartment(cx, autoconfigSb);
         JS_RemoveObjectRoot(cx, &autoconfigSb);
@@ -113,7 +113,7 @@ nsresult EvaluateAdminConfigScript(const char *js_buffer, size_t length,
         return rv;
     }
 
-    SafeAutoJSContext cx;
+    AutoSafeJSContext cx;
     JSAutoRequest ar(cx);
     JSAutoCompartment ac(cx, autoconfigSb);
 

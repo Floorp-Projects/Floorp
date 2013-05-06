@@ -22,7 +22,7 @@ PluginIdentifierParent::RecvRetain()
   mTemporaryRefs = 0;
 
   // Intern the jsid if necessary.
-  SafeAutoJSContext cx;
+  AutoSafeJSContext cx;
   JS::Rooted<jsid> id(cx, NPIdentifierToJSId(mIdentifier));
   if (JSID_IS_INT(id)) {
     return true;
