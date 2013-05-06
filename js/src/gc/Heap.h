@@ -12,6 +12,7 @@
 
 #include <stddef.h>
 
+#include "jspubtd.h"
 #include "jstypes.h"
 #include "jsutil.h"
 
@@ -95,7 +96,7 @@ struct Cell
 
 #ifdef DEBUG
     inline bool isAligned() const;
-    bool isTenured() const;
+    inline bool isTenured() const;
 #endif
 
   protected:
@@ -993,6 +994,16 @@ bool
 Cell::isAligned() const
 {
     return Arena::isAligned(address(), arenaHeader()->getThingSize());
+}
+
+bool
+Cell::isTenured() const
+{
+#ifdef JSGC_GENERATIONAL
+    JS::shadow::Runtime *rt = js::gc::GetGCThingRuntime(this);
+    return uintptr_t(this) < rt->gcNurseryStart_ || uintptr_t(this) >= rt->gcNurseryEnd_;
+#endif
+    return true;
 }
 #endif
 
