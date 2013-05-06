@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+
+* { animation-name: a; animation-duration: 72ms }
+@keyframes a { 60% { transform: skewx(30deg); } }
+
+</style>
+</head>
+<body>
+
+<svg></svg>
+
+</body>
+</html>
