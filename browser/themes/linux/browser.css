@@ -213,7 +213,6 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
   -moz-binding: url("chrome://global/content/bindings/menu.xml#menuitem-iconic");
 }
 
-#appmenu_newNavigator,
 #placesContext_open\:newwindow,
 #menu_newNavigator,
 #context-openlink,
@@ -222,8 +221,6 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
   -moz-image-region: rect(0px 80px 16px 64px);
 }
 
-#appmenu_newTab,
-#appmenu_newTab_popup,
 #placesContext_open\:newtab,
 #placesContext_openContainer\:tabs,
 #menu_newNavigatorTab,
@@ -233,7 +230,6 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
   -moz-image-region: rect(0px 64px 16px 48px);
 }
 
-#appmenu_openFile,
 #menu_openFile {
   list-style-image: url("moz-icon://stock/gtk-open?size=menu");
 }
@@ -250,7 +246,6 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
   list-style-image: url("moz-icon://stock/gtk-media-pause?size=menu");
 }
 
-#appmenu_savePage,
 #menu_savePage,
 #context-savelink,
 #context-saveimage,
@@ -261,19 +256,15 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
   list-style-image: url("moz-icon://stock/gtk-save-as?size=menu");
 }
 
-#appmenu_printPreview,
 #menu_printPreview {
   list-style-image: url("moz-icon://stock/gtk-print-preview?size=menu");
 }
 
-#appmenu_print,
-#appmenu_print_popup,
 #menu_print,
 #context-printframe {
   list-style-image: url("moz-icon://stock/gtk-print?size=menu");
 }
 
-#appmenu-quit,
 #menu_FileQuitItem {
   list-style-image: url("moz-icon://stock/gtk-quit?size=menu");
 }
@@ -356,7 +347,6 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
   list-style-image: url("moz-icon://stock/gtk-select-all?size=menu");
 }
 
-#appmenu_find,
 #menu_find {
   list-style-image: url("moz-icon://stock/gtk-find?size=menu");
 }
@@ -365,8 +355,6 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
   list-style-image: url("moz-icon://stock/gtk-find?size=menu&state=disabled");
 }
 
-#appmenu_customize,
-#appmenu_preferences,
 #menu_preferences {
   list-style-image: url("moz-icon://stock/gtk-preferences?size=menu");
 }
@@ -449,15 +437,11 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
   list-style-image: url("moz-icon://stock/gtk-home?size=menu");
 }
 
-#appmenu_history,
-#appmenu_showAllHistory,
 #menu_showAllHistory {
   list-style-image: url("chrome://browser/skin/Toolbar-small.png");
   -moz-image-region: rect(0px 32px 16px 16px);
 }
 
-#appmenu_bookmarks,
-#appmenu_showAllBookmarks,
 #bookmarksShowAll {
   list-style-image: url("chrome://browser/skin/Toolbar-small.png");
   -moz-image-region: rect(0px 48px 16px 32px);
@@ -479,13 +463,11 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
   list-style-image: url("chrome://browser/skin/places/unsortedBookmarks.png");
 }
 
-#appmenu_downloads,
 #menu_openDownloads {
   list-style-image: url("chrome://browser/skin/Toolbar-small.png");
   -moz-image-region: rect(0px 16px 16px 0px);
 }
 
-#appmenu_addons,
 #menu_openAddons {
   list-style-image: url("chrome://mozapps/skin/extensions/extensionGeneric-16.png");
 }
@@ -496,8 +478,6 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
   list-style-image: url("moz-icon://stock/gtk-info?size=menu");
 }
 
-#appmenu_privateBrowsing,
-#appmenu_newPrivateWindow,
 #privateBrowsingItem {
   list-style-image: url("chrome://browser/skin/Privacy-16.png");
 }
@@ -506,18 +486,14 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
   list-style-image: url("moz-icon://stock/gtk-properties?size=menu");
 }
 
-#appmenu_sanitizeHistory,
 #sanitizeItem {
   list-style-image: url("moz-icon://stock/gtk-clear?size=menu");
 }
 
-#appmenu_help,
-#appmenu_openHelp,
 #menu_openHelp {
   list-style-image: url("moz-icon://stock/gtk-help?size=menu");
 }
 
-#appmenu_about,
 #aboutName {
   list-style-image: url("moz-icon://stock/gtk-about?size=menu");
 }
@@ -1770,44 +1746,6 @@ toolbarbutton.chevron > .toolbarbutton-icon {
   color: ButtonText;
   padding: 0 3px;
   margin-top: 10px;
-}
-
-/* Application button menu */
-
-.splitmenu-menuitem {
-  -moz-margin-end: 1px;
-}
-
-#appmenu-toolbar-button:not(:hover):not([open]):not(:-moz-lwtheme) {
-  color: inherit;
-}
-
-#appmenu-toolbar-button > .toolbarbutton-text,
-#appmenu-toolbar-button > .toolbarbutton-menu-dropmarker {
-  margin-top: -2px !important;
-  margin-bottom: -2px !important;
-}
-#appmenuSecondaryPane {
-  -moz-border-start: 1px solid ThreeDShadow;
-}
-#appmenuSecondaryPane-spacer {
-  min-height: 1em;
-}
-#appmenu-cut,
-#appmenu-editmenu-cut {
-  list-style-image: url("moz-icon://stock/gtk-cut?size=menu");
-}
-#appmenu-copy,
-#appmenu-editmenu-copy {
-  list-style-image: url("moz-icon://stock/gtk-copy?size=menu");
-}
-#appmenu-paste,
-#appmenu-editmenu-paste {
-  list-style-image: url("moz-icon://stock/gtk-paste?size=menu");
-}
-#wrapper-appmenu-toolbar-button,
-.appmenu-edit-button[disabled="true"] {
-  opacity: .3;
 }
 
 /* Add-on bar */
