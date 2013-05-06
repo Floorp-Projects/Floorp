@@ -4312,7 +4312,7 @@ if (global.Failed()) {
             # generating code for the legacycaller or not.
             assert idlNode.isIdentifierLess()
             # Pass in our thisVal
-            argsPre.append("JS_THIS_VALUE(cx, vp)")
+            argsPre.append("args.thisv()")
 
         cgThings.extend([CGArgumentConverter(arguments[i], i, self.getArgv(),
                                              self.getArgc(), self.descriptor,
@@ -4807,7 +4807,8 @@ class CGAbstractBindingMethod(CGAbstractStaticMethod):
     CGThing which is already properly indented.
     """
     def __init__(self, descriptor, name, args, unwrapFailureCode=None,
-                 getThisObj="JS_THIS_OBJECT(cx, vp)"):
+                 getThisObj="&args.computeThis(cx).toObject()",
+                 callArgs="JS::CallArgs args = JS::CallArgsFromVp(argc, vp);"):
         CGAbstractStaticMethod.__init__(self, descriptor, name, "JSBool", args)
 
         if unwrapFailureCode is None:
@@ -4815,18 +4816,20 @@ class CGAbstractBindingMethod(CGAbstractStaticMethod):
         else:
             self.unwrapFailureCode = unwrapFailureCode
         self.getThisObj = getThisObj
+        self.callArgs = callArgs
 
     def definition_body(self):
         # Our descriptor might claim that we're not castable, simply because
         # we're someone's consequential interface.  But for this-unwrapping, we
         # know that we're the real deal.  So fake a descriptor here for
         # consumption by CastableObjectUnwrapper.
-        getThis = CGGeneric("""JS::RootedObject obj(cx, %s);
+        getThis = CGGeneric("""%s
+JS::RootedObject obj(cx, %s);
 if (!obj) {
   return false;
 }
 
-%s* self;""" % (self.getThisObj, self.descriptor.nativeType))
+%s* self;""" % (self.callArgs, self.getThisObj, self.descriptor.nativeType))
         unwrapThis = CGGeneric(
             str(CastableObjectUnwrapper(
                         self.descriptor,
@@ -4939,7 +4942,7 @@ class CGNewResolveHook(CGAbstractBindingMethod):
         # Our "self" is actually the callee in this case, not the thisval.
         CGAbstractBindingMethod.__init__(
             self, descriptor, NEWRESOLVE_HOOK_NAME,
-            args, getThisObj="obj_")
+            args, getThisObj="obj_", callArgs="")
 
     def define(self):
         if not self._needNewResolve:
