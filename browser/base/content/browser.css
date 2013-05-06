@@ -131,7 +131,6 @@ toolbar[printpreview="true"] {
   pointer-events: none;
 }
 
-#main-window[tabsintitlebar] #appmenu-button-container,
 #main-window[tabsintitlebar] #titlebar-buttonbox {
   position: relative;
 }
@@ -202,27 +201,6 @@ toolbar[printpreview="true"] {
   background-position: bottom left;
 }
 
-splitmenu {
-  -moz-binding: url("chrome://browser/content/urlbarBindings.xml#splitmenu");
-}
-
-.splitmenu-menuitem {
-  -moz-binding: url("chrome://global/content/bindings/menu.xml#menuitem");
-  list-style-image: inherit;
-  -moz-image-region: inherit;
-}
-
-.splitmenu-menuitem[iconic="true"] {
-  -moz-binding: url("chrome://global/content/bindings/menu.xml#menuitem-iconic");
-}
-
-.splitmenu-menu > .menu-text,
-:-moz-any(.splitmenu-menu, .splitmenu-menuitem) > .menu-accel-container,
-#appmenu-editmenu > .menu-text,
-#appmenu-editmenu > .menu-accel-container {
-  display: none;
-}
-
 .menuitem-tooltip {
   -moz-binding: url("chrome://browser/content/urlbarBindings.xml#menuitem-tooltip");
 }
@@ -232,18 +210,6 @@ splitmenu {
 .menuitem-tooltip[type="radio"] {
   -moz-binding: url("chrome://browser/content/urlbarBindings.xml#menuitem-iconic-tooltip");
 }
-
-%ifdef MENUBAR_CAN_AUTOHIDE
-%ifndef CAN_DRAW_IN_TITLEBAR
-#appmenu-toolbar-button > .toolbarbutton-text {
-  display: -moz-box;
-}
-%endif
-
-#appmenu_offlineModeRecovery:not([checked=true]) {
-  display: none;
-}
-%endif
 
 /* Hide menu elements intended for keyboard access support */
 #main-menubar[openedwithkey=false] .show-only-for-keyboard {
