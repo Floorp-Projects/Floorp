@@ -297,9 +297,16 @@ public:
     return mStart + mPosition;
   }
 
-  int32_t ComputeFinalOutSampleRate() const
+  uint32_t ComputeFinalOutSampleRate()
   {
-    return static_cast<uint32_t>(IdealAudioRate() / (mPlaybackRate * mDopplerShift));
+    if (mPlaybackRate <= 0 || mPlaybackRate != mPlaybackRate) {
+      mPlaybackRate = 1.0f;
+    }
+    if (mDopplerShift <= 0 || mDopplerShift != mDopplerShift) {
+      mDopplerShift = 1.0f;
+    }
+    return WebAudioUtils::TruncateFloatToInt<uint32_t>(IdealAudioRate() /
+                                                       (mPlaybackRate * mDopplerShift));
   }
 
   bool ShouldResample() const
@@ -317,9 +324,11 @@ public:
       mPlaybackRate = mPlaybackRateTimeline.GetValueAtTime(aStream->GetCurrentPosition());
     }
 
-    // Make sure the playback rate if something our resampler can work with.
-    if (mPlaybackRate <= 0.0 || mPlaybackRate >= 1024) {
+    // Make sure the playback rate and the doppler shift are something
+    // our resampler can work with.
+    if (ComputeFinalOutSampleRate() == 0) {
       mPlaybackRate = 1.0;
+      mDopplerShift = 1.0;
     }
 
     uint32_t currentOutSampleRate, currentInSampleRate;
