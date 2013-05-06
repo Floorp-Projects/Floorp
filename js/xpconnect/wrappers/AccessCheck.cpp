@@ -35,6 +35,12 @@ GetCompartmentPrincipal(JSCompartment *compartment)
     return nsJSPrincipals::get(JS_GetCompartmentPrincipals(compartment));
 }
 
+nsIPrincipal *
+GetObjectPrincipal(JSObject *obj)
+{
+    return GetCompartmentPrincipal(js::GetObjectCompartment(obj));
+}
+
 // Does the principal of compartment a subsume the principal of compartment b?
 bool
 AccessCheck::subsumes(JSCompartment *a, JSCompartment *b)
