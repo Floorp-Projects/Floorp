@@ -47,6 +47,22 @@ toolkit/library
   profile
   services
   startupcache
-browser
-  toolkit/mozapps/extensions
+browser/app
+  browser/base
+  browser/components
+  browser/devtools
+  browser/locales
+  browser/modules
+  browser/themes
+  toolkit
+  toolkit/components
   toolkit/content
+  toolkit/crashreporter
+  toolkit/devtools
+  toolkit/forgetaboutsite
+  toolkit/identity
+  toolkit/modules
+  toolkit/mozapps/extensions
+  toolkit/profile
+  toolkit/themes
+  toolkit/webapps
