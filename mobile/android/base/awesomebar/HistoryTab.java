@@ -198,7 +198,7 @@ public class HistoryTab extends AwesomeBarTab {
                     favicon = Favicons.getInstance().scaleImage(bitmap);
                 }
             }
-            updateFavicon(viewHolder.faviconView, favicon);
+            updateFavicon(viewHolder.faviconView, favicon, url);
 
             Integer bookmarkId = (Integer) historyItem.get(Combined.BOOKMARK_ID);
             Integer display = (Integer) historyItem.get(Combined.DISPLAY);
