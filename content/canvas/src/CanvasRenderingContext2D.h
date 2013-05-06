@@ -505,7 +505,7 @@ protected:
   void EnsureWritablePath();
 
   // Ensures a path in UserSpace is available.
-  void EnsureUserSpacePath(const CanvasWindingRule& winding = CanvasWindingRuleValues::Nonzero);
+  void EnsureUserSpacePath(const CanvasWindingRule& winding = CanvasWindingRule::Nonzero);
 
   /**
    * Needs to be called before updating the transform. This makes a call to

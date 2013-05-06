@@ -1345,7 +1345,7 @@ nsIDocument::nsIDocument()
     mCharacterSet(NS_LITERAL_CSTRING("ISO-8859-1")),
     mNodeInfoManager(nullptr),
     mCompatMode(eCompatibility_FullStandards),
-    mVisibilityState(VisibilityStateValues::Hidden),
+    mVisibilityState(dom::VisibilityState::Hidden),
     mIsInitialDocumentInWindow(false),
     mMayStartLayout(true),
     mVisible(true),
@@ -10961,10 +10961,10 @@ nsDocument::GetVisibilityState() const
   // Otherwise, we're visible.
   if (!IsVisible() || !mWindow || !mWindow->GetOuterWindow() ||
       mWindow->GetOuterWindow()->IsBackground()) {
-    return VisibilityStateValues::Hidden;
+    return dom::VisibilityState::Hidden;
   }
 
-  return VisibilityStateValues::Visible;
+  return dom::VisibilityState::Visible;
 }
 
 /* virtual */ void
@@ -10999,7 +10999,8 @@ nsDocument::GetMozVisibilityState(nsAString& aState)
 NS_IMETHODIMP
 nsDocument::GetVisibilityState(nsAString& aState)
 {
-  const EnumEntry& entry = VisibilityStateValues::strings[mVisibilityState];
+  const EnumEntry& entry =
+    VisibilityStateValues::strings[static_cast<int>(mVisibilityState)];
   aState.AssignASCII(entry.value, entry.length);
   return NS_OK;
 }

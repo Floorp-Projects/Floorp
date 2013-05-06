@@ -2028,7 +2028,7 @@ public:
   }
   bool Hidden() const
   {
-    return mVisibilityState != mozilla::dom::VisibilityStateValues::Visible;
+    return mVisibilityState != mozilla::dom::VisibilityState::Visible;
   }
   bool MozHidden() // Not const because of WarnOnceAbout
   {

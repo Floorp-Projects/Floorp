@@ -41,13 +41,19 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(nsDOMParser, mOwner)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMParser)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMParser)
 
+static const char*
+StringFromSupportedType(SupportedType aType)
+{
+  return SupportedTypeValues::strings[static_cast<int>(aType)].value;
+}
+
 already_AddRefed<nsIDocument>
 nsDOMParser::ParseFromString(const nsAString& aStr, SupportedType aType,
                              ErrorResult& rv)
 {
   nsCOMPtr<nsIDOMDocument> domDocument;
   rv = ParseFromString(aStr,
-                       SupportedTypeValues::strings[aType].value,
+                       StringFromSupportedType(aType),
                        getter_AddRefs(domDocument));
   nsCOMPtr<nsIDocument> document(do_QueryInterface(domDocument));
   return document.forget();
@@ -121,7 +127,7 @@ nsDOMParser::ParseFromBuffer(const Sequence<uint8_t>& aBuf, uint32_t aBufLen,
   }
   nsCOMPtr<nsIDOMDocument> domDocument;
   rv = nsDOMParser::ParseFromBuffer(aBuf.Elements(), aBufLen,
-                                    SupportedTypeValues::strings[aType].value,
+                                    StringFromSupportedType(aType),
                                     getter_AddRefs(domDocument));
   nsCOMPtr<nsIDocument> document(do_QueryInterface(domDocument));
   return document.forget();
@@ -137,7 +143,7 @@ nsDOMParser::ParseFromBuffer(const Uint8Array& aBuf, uint32_t aBufLen,
   }
   nsCOMPtr<nsIDOMDocument> domDocument;
   rv = nsDOMParser::ParseFromBuffer(aBuf.Data(), aBufLen,
-                                    SupportedTypeValues::strings[aType].value,
+                                    StringFromSupportedType(aType),
                                     getter_AddRefs(domDocument));
   nsCOMPtr<nsIDocument> document(do_QueryInterface(domDocument));
   return document.forget();
@@ -175,7 +181,7 @@ nsDOMParser::ParseFromStream(nsIInputStream* aStream,
   rv = nsDOMParser::ParseFromStream(aStream,
                                     NS_ConvertUTF16toUTF8(aCharset).get(),
                                     aContentLength,
-                                    SupportedTypeValues::strings[aType].value,
+                                    StringFromSupportedType(aType),
                                     getter_AddRefs(domDocument));
   nsCOMPtr<nsIDocument> document(do_QueryInterface(domDocument));
   return document.forget();
