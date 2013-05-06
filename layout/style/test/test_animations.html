@@ -66,7 +66,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=435442
 
   #withbefore::before, #withafter::after {
     content: "";
-    animation: anim2 1s linear alternate infinite;
+    animation: anim2 1s linear alternate 3;
   }
 
   @keyframes multiprop {
@@ -135,6 +135,21 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=435442
 "use strict";
 
 /** Test for css3-animations (Bug 435442) **/
+
+var e = new AnimationEvent("foo",
+                            {
+                              bubbles: true,
+                              cancelable: true,
+                              animationName: "name",
+                              elapsedTime: 0.5,
+                              pseudoElement: "pseudo"
+                            });
+is(e.bubbles, true);
+is(e.cancelable, true);
+is(e.animationName, "name");
+is(e.elapsedTime, 0.5);
+is(e.pseudoElement, "pseudo");
+is(e.isTrusted, false)
 
 function advance_clock(milliseconds) {
   SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(milliseconds);
@@ -241,7 +256,8 @@ function test_fill_mode(fill_mode, fills_backwards, fills_forwards)
   advance_clock(1000);
   check_events([{ type: 'animationstart', target: div,
                   bubbles: true, cancelable: true,
-                  animationName: 'anim1', elapsedTime: 0.0 }],
+                  animationName: 'anim1', elapsedTime: 0.0,
+                  pseudoElement: "" }],
                "right after start in test_fill_mode");
   if (fills_backwards)
     is(cs.marginLeft, "0px", desc + "affects value at start of animation");
@@ -259,7 +275,8 @@ function test_fill_mode(fill_mode, fills_backwards, fills_forwards)
   advance_clock(125);
   check_events([{ type: 'animationend', target: div,
                   bubbles: true, cancelable: true,
-                  animationName: 'anim1', elapsedTime: 10.0 }],
+                  animationName: 'anim1', elapsedTime: 10.0,
+                  pseudoElement: "" }],
                "right after end in test_fill_mode");
   if (fills_forwards)
     is(cs.marginLeft, "100px", desc + "affects value at end of animation");
@@ -1183,7 +1200,8 @@ listen(); // rely on no flush having happened yet
 is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.4), 0.01,
           "large negative delay test at 0ms");
 check_events([{ type: 'animationstart', target: div,
-                animationName: 'anim2', elapsedTime: 3.6 }],
+                animationName: 'anim2', elapsedTime: 3.6,
+                pseudoElement: "" }],
              "right after start in large negative delay test");
 advance_clock(380);
 is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.02), 0.01,
@@ -1192,7 +1210,8 @@ check_events([]);
 advance_clock(20);
 is(cs.marginRight, "0px", "large negative delay test at 400ms");
 check_events([{ type: 'animationiteration', target: div,
-                animationName: 'anim2', elapsedTime: 4.0 }],
+                animationName: 'anim2', elapsedTime: 4.0,
+                pseudoElement: "" }],
              "right after start in large negative delay test");
 advance_clock(800);
 is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.8), 0.01,
@@ -1201,7 +1220,8 @@ check_events([]);
 advance_clock(200);
 is(cs.marginRight, "100px", "large negative delay test at 1400ms");
 check_events([{ type: 'animationend', target: div,
-                animationName: 'anim2', elapsedTime: 5.0 }],
+                animationName: 'anim2', elapsedTime: 5.0,
+                pseudoElement: "" }],
              "right after start in large negative delay test");
 done_div();
 
@@ -1237,7 +1257,11 @@ advance_clock(800);
 is(cs_before.marginRight, "0px", ":before test at 2000ms");
 advance_clock(300);
 is(cs_before.marginRight, "30px", ":before test at 2300ms");
-check_events([], "no events should be fired for animations on :before");
+advance_clock(700);
+check_events([ { type: "animationstart", animationName: "anim2", elapsedTime: 0, pseudoElement: "::before" },
+               { type: "animationiteration", animationName: "anim2", elapsedTime: 1.2, pseudoElement: "::before" },
+               { type: "animationiteration", animationName: "anim2", elapsedTime: 2, pseudoElement: "::before" },
+               { type: "animationend", animationName: "anim2", elapsedTime: 3, pseudoElement: "::before" }]);
 done_div();
 
 new_div("");
@@ -1254,7 +1278,11 @@ advance_clock(800);
 is(cs_after.marginRight, "0px", ":after test at 2000ms");
 advance_clock(300);
 is(cs_after.marginRight, "30px", ":after test at 2300ms");
-check_events([], "no events should be fired for animations on :after");
+advance_clock(700);
+check_events([ { type: "animationstart", animationName: "anim2", elapsedTime: 0, pseudoElement: "::after" },
+               { type: "animationiteration", animationName: "anim2", elapsedTime: 1.2, pseudoElement: "::after" },
+               { type: "animationiteration", animationName: "anim2", elapsedTime: 2, pseudoElement: "::after" },
+               { type: "animationend", animationName: "anim2", elapsedTime: 3, pseudoElement: "::after" }]);
 done_div();
 
 /**

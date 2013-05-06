@@ -31,6 +31,8 @@ webidl_files = \
   CaretPosition.webidl \
   CDATASection.webidl \
   CFStateChangeEvent.webidl \
+  ChannelMergerNode.webidl \
+  ChannelSplitterNode.webidl \
   CharacterData.webidl \
   ChildNode.webidl \
   ClientRect.webidl \

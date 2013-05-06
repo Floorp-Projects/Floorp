@@ -8,6 +8,7 @@
 #include "ApplicationAccessibleWrap.h"
 
 #include "AccessibleApplication_i.c"
+#include "IUnknownImpl.h"
 
 #include "nsIGfxInfo.h"
 #include "nsIPersistentProperties2.h"

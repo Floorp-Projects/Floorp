@@ -9,6 +9,15 @@
 #define mozilla_a11y_IUnknownImpl_h_
 
 #include <windows.h>
+#include "nsError.h"
+
+// Avoid warning C4509 like "nonstandard extension used:
+// 'AccessibleWrap::[acc_getName]' uses SEH and 'name' has destructor.
+// At this point we're catching a crash which is of much greater
+// importance than the missing dereference for the nsCOMPtr<>
+#ifdef _MSC_VER
+#pragma warning( disable : 4509 )
+#endif
 
 namespace mozilla {
 namespace a11y {
@@ -133,5 +142,36 @@ Class::QueryInterface(REFIID aIID, void** aInstancePtr)                        \
   IMPL_IUNKNOWN_QUERY_CLASS(Super2);                                           \
   IMPL_IUNKNOWN_QUERY_CLASS(Super0)                                            \
   IMPL_IUNKNOWN_QUERY_TAIL
+
+
+/**
+ * Wrap every method body by these macroses to pass exception to the crash
+ * reporter.
+ */
+#define A11Y_TRYBLOCK_BEGIN                                                    \
+  MOZ_SEH_TRY {
+
+#define A11Y_TRYBLOCK_END                                                      \
+  } MOZ_SEH_EXCEPT(mozilla::a11y::FilterExceptions(::GetExceptionCode(),       \
+                                                   GetExceptionInformation())) \
+  { }                                                                          \
+  return E_FAIL;
+
+
+namespace mozilla {
+namespace a11y {
+
+/**
+ * Converts nsresult to HRESULT.
+ */
+HRESULT GetHRESULT(nsresult aResult);
+
+/**
+ * Used to pass an exception to the crash reporter.
+ */
+int FilterExceptions(unsigned int aCode, EXCEPTION_POINTERS* aExceptionInfo);
+
+} // namespace a11y;
+} //namespace mozilla;
 
 #endif

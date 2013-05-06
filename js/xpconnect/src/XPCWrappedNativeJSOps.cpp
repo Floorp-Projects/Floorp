@@ -969,7 +969,7 @@ XPC_WN_Helper_Call(JSContext *cx, unsigned argc, jsval *vp)
 
     SLIM_LOG_WILL_MORPH(cx, obj);
     PRE_HELPER_STUB_NO_SLIM
-    Call(wrapper, cx, obj, args.length(), args.array(), args.rval().address(), &retval);
+    Call(wrapper, cx, obj, args, &retval);
     POST_HELPER_STUB
 }
 
@@ -990,7 +990,7 @@ XPC_WN_Helper_Construct(JSContext *cx, unsigned argc, jsval *vp)
 
     SLIM_LOG_WILL_MORPH(cx, obj);
     PRE_HELPER_STUB_NO_SLIM
-    Construct(wrapper, cx, obj, args.length(), args.array(), args.rval().address(), &retval);
+    Construct(wrapper, cx, obj, args, &retval);
     POST_HELPER_STUB
 }
 

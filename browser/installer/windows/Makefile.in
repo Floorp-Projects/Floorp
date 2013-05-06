@@ -65,7 +65,7 @@ else
 PPL_LOCALE_ARGS=$(call EXPAND_LOCALE_SRCDIR,browser/locales)/installer
 endif
 
-.DEFAULT_GOAL := installer
+OVERRIDE_DEFAULT_GOAL := installer
 installer::
 	$(MAKE) -C .. installer-stage
 	$(MAKE) $(CONFIG_DIR)/setup.exe

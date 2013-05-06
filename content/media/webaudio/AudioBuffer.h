@@ -96,7 +96,7 @@ public:
 
   // aContents should either come from JS_AllocateArrayBufferContents or
   // JS_StealArrayBufferContents.
-  void SetChannelDataFromArrayBufferContents(JSContext* aJSContext,
+  bool SetChannelDataFromArrayBufferContents(JSContext* aJSContext,
                                              uint32_t aChannel,
                                              void* aContents);
 
@@ -108,8 +108,10 @@ public:
                              uint32_t aChannel,
                              float* aContents);
 
+  void MixToMono(JSContext* aJSContext);
+
 protected:
-  void RestoreJSChannelData(JSContext* aJSContext);
+  bool RestoreJSChannelData(JSContext* aJSContext);
   void ClearJSChannels();
 
   nsRefPtr<AudioContext> mContext;

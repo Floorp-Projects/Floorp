@@ -24,7 +24,7 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
-  virtual uint32_t NumberOfOutputs() const MOZ_FINAL MOZ_OVERRIDE
+  virtual uint16_t NumberOfOutputs() const MOZ_FINAL MOZ_OVERRIDE
   {
     return 0;
   }
