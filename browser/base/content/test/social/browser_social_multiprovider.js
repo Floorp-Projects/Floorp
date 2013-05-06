@@ -49,7 +49,16 @@ var tests = {
       observeProviderSet(function () {
         waitForProviderLoad(function() {
           checkUIStateMatchesProvider(gProviders[1]);
-          next();
+          // disable social, click on the provider menuitem to switch providers
+          Social.enabled = false;
+          let menu = document.getElementById("social-statusarea-popup");
+          let el = menu.getElementsByAttribute("origin", gProviders[0].origin);
+          is(el.length, 1, "selected provider menu item exists");
+          el[0].click();
+          waitForProviderLoad(function() {
+            checkUIStateMatchesProvider(gProviders[0]);
+            next();
+          });
         });
       });
       Social.activateFromOrigin("https://test1.example.com");
