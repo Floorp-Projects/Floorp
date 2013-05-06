@@ -192,14 +192,14 @@ nsDOMMultipartFile::InitBlob(JSContext* aCx,
         return NS_ERROR_TYPE_ERR;
       }
       mContentType = d.mType;
-      nativeEOL = d.mEndings == EndingTypesValues::Native;
+      nativeEOL = d.mEndings == EndingTypes::Native;
     } else {
       BlobPropertyBagWorkers d;
       if (!d.Init(aCx, JS::Handle<JS::Value>::fromMarkedLocation(&aArgv[1]))) {
         return NS_ERROR_TYPE_ERR;
       }
       mContentType = d.mType;
-      nativeEOL = d.mEndings == EndingTypesValues::Native;
+      nativeEOL = d.mEndings == EndingTypes::Native;
     }
   }
 
