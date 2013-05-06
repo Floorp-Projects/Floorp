@@ -1872,7 +1872,7 @@ void
 CanvasRenderingContext2D::EnsureUserSpacePath(const CanvasWindingRule& winding)
 {
   FillRule fillRule = CurrentState().fillRule;
-  if(winding == CanvasWindingRuleValues::Evenodd)
+  if(winding == CanvasWindingRule::Evenodd)
     fillRule = FILL_EVEN_ODD;
 
   if (!mPath && !mPathBuilder && !mDSPathBuilder) {

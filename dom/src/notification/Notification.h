@@ -63,9 +63,9 @@ protected:
   static const nsString DirectionToString(NotificationDirection aDirection)
   {
     switch (aDirection) {
-    case NotificationDirectionValues::Ltr:
+    case NotificationDirection::Ltr:
       return NS_LITERAL_STRING("ltr");
-    case NotificationDirectionValues::Rtl:
+    case NotificationDirection::Rtl:
       return NS_LITERAL_STRING("rtl");
     default:
       return NS_LITERAL_STRING("auto");

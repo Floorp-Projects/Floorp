@@ -36,9 +36,9 @@ public:
   explicit PannerNodeEngine(AudioNode* aNode)
     : AudioNodeEngine(aNode)
     // Please keep these default values consistent with PannerNode::PannerNode below.
-    , mPanningModel(PanningModelTypeValues::HRTF)
+    , mPanningModel(PanningModelType::HRTF)
     , mPanningModelFunction(&PannerNodeEngine::HRTFPanningFunction)
-    , mDistanceModel(DistanceModelTypeValues::Inverse)
+    , mDistanceModel(DistanceModelType::Inverse)
     , mDistanceModelFunction(&PannerNodeEngine::InverseGainFunction)
     , mPosition()
     , mOrientation(1., 0., 0.)
@@ -62,10 +62,10 @@ public:
     case PannerNode::PANNING_MODEL:
       mPanningModel = PanningModelType(aParam);
       switch (mPanningModel) {
-        case PanningModelTypeValues::Equalpower:
+        case PanningModelType::Equalpower:
           mPanningModelFunction = &PannerNodeEngine::EqualPowerPanningFunction;
           break;
-        case PanningModelTypeValues::HRTF:
+        case PanningModelType::HRTF:
           mPanningModelFunction = &PannerNodeEngine::HRTFPanningFunction;
           break;
       }
@@ -73,13 +73,13 @@ public:
     case PannerNode::DISTANCE_MODEL:
       mDistanceModel = DistanceModelType(aParam);
       switch (mDistanceModel) {
-        case DistanceModelTypeValues::Inverse:
+        case DistanceModelType::Inverse:
           mDistanceModelFunction = &PannerNodeEngine::InverseGainFunction;
           break;
-        case DistanceModelTypeValues::Linear:
+        case DistanceModelType::Linear:
           mDistanceModelFunction = &PannerNodeEngine::LinearGainFunction;
           break;
-        case DistanceModelTypeValues::Exponential:
+        case DistanceModelType::Exponential:
           mDistanceModelFunction = &PannerNodeEngine::ExponentialGainFunction;
           break;
       }
@@ -175,8 +175,8 @@ PannerNode::PannerNode(AudioContext* aContext)
               ChannelCountMode::Clamped_max,
               ChannelInterpretation::Speakers)
   // Please keep these default values consistent with PannerNodeEngine::PannerNodeEngine above.
-  , mPanningModel(PanningModelTypeValues::HRTF)
-  , mDistanceModel(DistanceModelTypeValues::Inverse)
+  , mPanningModel(PanningModelType::HRTF)
+  , mDistanceModel(DistanceModelType::Inverse)
   , mPosition()
   , mOrientation(1., 0., 0.)
   , mVelocity()
