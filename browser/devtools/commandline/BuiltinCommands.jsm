@@ -21,6 +21,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "gDevTools",
                                   "resource:///modules/devtools/gDevTools.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "devtools",
                                   "resource:///modules/devtools/gDevTools.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AppCacheUtils",
+                                  "resource:///modules/devtools/AppCacheUtils.jsm");
 
 /* CmdAddon ---------------------------------------------------------------- */
 
@@ -2062,5 +2064,258 @@ XPCOMUtils.defineLazyModuleGetter(this, "devtools",
     var target = devtools.TargetFactory.forTab(tab);
     target.off("navigate", fireChange);
     target.once("navigate", fireChange);
+  }
+}(this));
+
+/* CmdAppCache ------------------------------------------------------- */
+
+(function(module) {
+  /**
+  * 'appcache' command
+  */
+
+  gcli.addCommand({
+    name: 'appcache',
+    description: gcli.lookup('appCacheDesc')
+  });
+
+  gcli.addConverter({
+    from: "appcacheerrors",
+    to: "view",
+    exec: function([errors, manifestURI], context) {
+      if (errors.length == 0) {
+        return context.createView({
+          html: "<span>" + gcli.lookup("appCacheValidatedSuccessfully") + "</span>"
+        });
+      }
+
+      let appcacheValidateHtml =
+        "<h4>Manifest URI: ${manifestURI}</h4>" +
+        "<ol>" +
+        "  <li foreach='error in ${errors}'>" +
+        "    ${error.msg}" +
+        "  </li>" +
+        "</ol>";
+
+      return context.createView({
+        html: "<div>" + appcacheValidateHtml + "</div>",
+        data: {
+          errors: errors,
+          manifestURI: manifestURI
+        }
+      });
+    }
+  });
+
+  gcli.addCommand({
+    name: 'appcache validate',
+    description: gcli.lookup('appCacheValidateDesc'),
+    manual: gcli.lookup('appCacheValidateManual'),
+    returnType: 'appcacheerrors',
+    params: [{
+      group: "options",
+      params: [
+        {
+          type: "string",
+          name: "uri",
+          description: gcli.lookup("appCacheValidateUriDesc"),
+          defaultValue: null,
+        }
+      ]
+    }],
+    exec: function(args, context) {
+      let utils;
+      let promise = context.createPromise();
+
+      if (args.uri) {
+        utils = new AppCacheUtils(args.uri);
+      } else {
+        let doc = context.environment.contentDocument;
+        utils = new AppCacheUtils(doc);
+      }
+
+      utils.validateManifest().then(function(errors) {
+        promise.resolve([errors, utils.manifestURI || "-"]);
+      });
+
+      return promise;
+    }
+  });
+
+  gcli.addCommand({
+    name: 'appcache clear',
+    description: gcli.lookup('appCacheClearDesc'),
+    manual: gcli.lookup('appCacheClearManual'),
+    exec: function(args, context) {
+      let utils = new AppCacheUtils(args.uri);
+      utils.clearAll();
+
+      return gcli.lookup("appCacheClearCleared");
+    }
+  });
+
+  gcli.addConverter({
+    from: "appcacheentries",
+    to: "view",
+    exec: function(entries, context) {
+      if (!entries) {
+        return context.createView({
+          html: "<span>" + gcli.lookup("appCacheManifestContainsErrors") + "</span>"
+        });
+      }
+
+      if (entries.length == 0) {
+        return context.createView({
+          html: "<span>" + gcli.lookup("appCacheNoResults") + "</span>"
+        });
+      }
+
+      let appcacheListEntries = "" +
+        "<ul class='gcli-appcache-list'>" +
+        "  <li foreach='entry in ${entries}'>" +
+        "    <table class='gcli-appcache-detail'>" +
+        "      <tr>" +
+        "        <td>" + gcli.lookup("appCacheListKey") + "</td>" +
+        "        <td>${entry.key}</td>" +
+        "      </tr>" +
+        "      <tr>" +
+        "        <td>" + gcli.lookup("appCacheListFetchCount") + "</td>" +
+        "        <td>${entry.fetchCount}</td>" +
+        "      </tr>" +
+        "      <tr>" +
+        "        <td>" + gcli.lookup("appCacheListLastFetched") + "</td>" +
+        "        <td>${entry.lastFetched}</td>" +
+        "      </tr>" +
+        "      <tr>" +
+        "        <td>" + gcli.lookup("appCacheListLastModified") + "</td>" +
+        "        <td>${entry.lastModified}</td>" +
+        "      </tr>" +
+        "      <tr>" +
+        "        <td>" + gcli.lookup("appCacheListExpirationTime") + "</td>" +
+        "        <td>${entry.expirationTime}</td>" +
+        "      </tr>" +
+        "      <tr>" +
+        "        <td>" + gcli.lookup("appCacheListDataSize") + "</td>" +
+        "        <td>${entry.dataSize}</td>" +
+        "      </tr>" +
+        "      <tr>" +
+        "        <td>" + gcli.lookup("appCacheListDeviceID") + "</td>" +
+        "        <td>${entry.deviceID} <span class='gcli-out-shortcut' " +
+        "onclick='${onclick}' ondblclick='${ondblclick}' " +
+        "data-command='appcache viewentry ${entry.key}'" +
+        ">" + gcli.lookup("appCacheListViewEntry") + "</span>" +
+        "        </td>" +
+        "      </tr>" +
+        "    </table>" +
+        "  </li>" +
+        "</ul>";
+
+      return context.createView({
+        html: appcacheListEntries,
+        data: {
+          entries: entries,
+          onclick: createUpdateHandler(context),
+          ondblclick: createExecuteHandler(context),
+        }
+      });
+    }
+  });
+
+  gcli.addCommand({
+    name: 'appcache list',
+    description: gcli.lookup('appCacheListDesc'),
+    manual: gcli.lookup('appCacheListManual'),
+    returnType: "appcacheentries",
+    params: [{
+      group: "options",
+      params: [
+        {
+          type: "string",
+          name: "search",
+          description: gcli.lookup("appCacheListSearchDesc"),
+          defaultValue: null,
+        },
+      ]
+    }],
+    exec: function(args, context) {
+      let doc = context.environment.contentDocument;
+      let utils = new AppCacheUtils();
+
+      let entries = utils.listEntries(args.search);
+      return entries;
+    }
+  });
+
+  gcli.addCommand({
+    name: 'appcache viewentry',
+    description: gcli.lookup('appCacheViewEntryDesc'),
+    manual: gcli.lookup('appCacheViewEntryManual'),
+    params: [
+      {
+        type: "string",
+        name: "key",
+        description: gcli.lookup("appCacheViewEntryKey"),
+        defaultValue: null,
+      }
+    ],
+    exec: function(args, context) {
+      let doc = context.environment.contentDocument;
+      let utils = new AppCacheUtils();
+
+      let result = utils.viewEntry(args.key);
+      if (result) {
+        return result;
+      }
+    }
+  });
+
+  /**
+   * Helper to find the 'data-command' attribute and call some action on it.
+   * @see |updateCommand()| and |executeCommand()|
+   */
+  function withCommand(element, action) {
+    let command = element.getAttribute("data-command");
+    if (!command) {
+      command = element.querySelector("*[data-command]")
+              .getAttribute("data-command");
+    }
+
+    if (command) {
+      action(command);
+    }
+    else {
+      console.warn("Missing data-command for " + util.findCssSelector(element));
+    }
+  }
+
+  /**
+   * Create a handler to update the requisition to contain the text held in the
+   * first matching data-command attribute under the currentTarget of the event.
+   * @param context Either a Requisition or an ExecutionContext or another object
+   * that contains an |update()| function that follows a similar contract.
+   */
+  function createUpdateHandler(context) {
+    return function(ev) {
+      withCommand(ev.currentTarget, function(command) {
+        context.update(command);
+      });
+    }
+  }
+
+  /**
+   * Create a handler to execute the text held in the data-command attribute
+   * under the currentTarget of the event.
+   * @param context Either a Requisition or an ExecutionContext or another object
+   * that contains an |update()| function that follows a similar contract.
+   */
+  function createExecuteHandler(context) {
+    return function(ev) {
+      withCommand(ev.currentTarget, function(command) {
+        context.exec({
+          visible: true,
+          typed: command
+        });
+      });
+    }
   }
 }(this));

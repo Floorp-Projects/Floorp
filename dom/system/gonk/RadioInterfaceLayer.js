@@ -258,7 +258,8 @@ function RadioInterfaceLayer() {
   };
 
   try {
-    this.rilContext.voice.lastKnownMcc = Services.prefs.getCharPref("ril.lastKnownMcc");
+    this.rilContext.voice.lastKnownMcc =
+      Services.prefs.getCharPref("ril.lastKnownMcc");
   } catch (e) {}
 
   this.voicemailInfo = {
@@ -1080,6 +1081,14 @@ RadioInterfaceLayer.prototype = {
         }
       }
 
+      // Update lastKnownNetwork
+      if (message.mcc && message.mnc) {
+        try {
+          Services.prefs.setCharPref("ril.lastKnownNetwork",
+                                     message.mcc + "-" + message.mnc);
+        } catch (e) {}
+      }
+
       voice.network = message;
       if (!message.batch) {
         this._sendMobileConnectionMessage("RIL:VoiceInfoChanged", voice);
@@ -1788,6 +1797,14 @@ RadioInterfaceLayer.prototype = {
     // RIL:IccInfoChanged corresponds to a DOM event that gets fired only
     // when the MCC or MNC codes have changed.
     this._sendMobileConnectionMessage("RIL:IccInfoChanged", message);
+
+    // Update lastKnownHomeNetwork.
+    if (message.mcc && message.mnc) {
+      try {
+        Services.prefs.setCharPref("ril.lastKnownHomeNetwork",
+                                   message.mcc + "-" + message.mnc);
+      } catch (e) {}
+    }
 
     // If spn becomes available, we should check roaming again.
     let oldSpn = oldIccInfo ? oldIccInfo.spn : null;
@@ -2679,7 +2696,14 @@ RadioInterfaceLayer.prototype = {
     let options = this._fragmentText(message, null, strict7BitEncoding);
     options.rilMessageType = "sendSMS";
     options.number = PhoneNumberUtils.normalize(number);
-    options.requestStatusReport = true;
+    let requestStatusReport;
+    try {
+      requestStatusReport =
+        Services.prefs.getBoolPref("dom.sms.requestStatusReport");
+    } catch (e) {
+      requestStatusReport = false;
+    }
+    options.requestStatusReport = requestStatusReport;
     if (options.segmentMaxSeq > 1) {
       options.segmentRef16Bit = this.segmentRef16Bit;
       options.segmentRef = this.nextSegmentRef;
