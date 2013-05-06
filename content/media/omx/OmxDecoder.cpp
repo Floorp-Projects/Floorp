@@ -12,6 +12,7 @@
 #include <stagefright/MetaData.h>
 #include <stagefright/OMXClient.h>
 #include <stagefright/OMXCodec.h>
+#include <OMX.h>
 
 #include "mozilla/Preferences.h"
 #include "mozilla/Types.h"
@@ -171,6 +172,14 @@ public:
   }
 };
 
+static sp<IOMX> sOMX = nullptr;
+static sp<IOMX> GetOMX() {
+  if(sOMX.get() == nullptr) {
+    sOMX = new OMX;
+    }
+  return sOMX;
+}
+
 bool OmxDecoder::Init() {
 #ifdef PR_LOGGING
   if (!gOmxDecoderLog) {
@@ -297,14 +306,28 @@ bool OmxDecoder::Init() {
     if (!strcasecmp(audioMime, "audio/raw")) {
       audioSource = audioTrack;
     } else {
+      // try to load hardware codec in mediaserver process.
+      int flags = kHardwareCodecsOnly;
       audioSource = OMXCodec::Create(omx,
                                      audioTrack->getFormat(),
                                      false, // decoder
-                                     audioTrack);
+                                     audioTrack,
+                                     nullptr,
+                                     flags);
     }
     if (audioSource == nullptr) {
-      NS_WARNING("Couldn't create OMX audio source");
-      return false;
+      // try to load software codec in this process.
+      int flags = kSoftwareCodecsOnly;
+      audioSource = OMXCodec::Create(GetOMX(),
+                                     audioTrack->getFormat(),
+                                     false, // decoder
+                                     audioTrack,
+                                     nullptr,
+                                     flags);
+      if (audioSource == nullptr) {
+        NS_WARNING("Couldn't create OMX audio source");
+        return false;
+      }
     }
     if (audioSource->start() != OK) {
       NS_WARNING("Couldn't start OMX audio source");
