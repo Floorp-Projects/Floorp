@@ -66,6 +66,8 @@ interface nsIRilContext : nsISupports
 
   readonly attribute DOMString cardState;
 
+  readonly attribute long retryCount;
+
   readonly attribute DOMString imsi;
 
   readonly attribute DOMString networkSelectionMode;

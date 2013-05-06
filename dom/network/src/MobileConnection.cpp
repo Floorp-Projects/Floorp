@@ -186,6 +186,17 @@ MobileConnection::GetCardState(nsAString& cardState)
 }
 
 NS_IMETHODIMP
+MobileConnection::GetRetryCount(int32_t* retryCount)
+{
+  *retryCount = 0;
+
+  if (!mProvider || !CheckPermission("mobileconnection")) {
+    return NS_OK;
+  }
+  return mProvider->GetRetryCount(retryCount);
+}
+
+NS_IMETHODIMP
 MobileConnection::GetIccInfo(nsIDOMMozMobileICCInfo** aIccInfo)
 {
   *aIccInfo = nullptr;

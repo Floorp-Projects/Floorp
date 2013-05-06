@@ -47,6 +47,7 @@ interface nsIMobileConnectionProvider : nsISupports
   void unregisterMobileConnectionMsg(in nsIMobileConnectionListener listener);
 
   readonly attribute DOMString cardState;
+  readonly attribute long retryCount;
   readonly attribute nsIDOMMozMobileICCInfo iccInfo;
   readonly attribute nsIDOMMozMobileConnectionInfo voiceConnectionInfo;
   readonly attribute nsIDOMMozMobileConnectionInfo dataConnectionInfo;
