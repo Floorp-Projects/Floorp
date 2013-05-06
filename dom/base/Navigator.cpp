@@ -1359,7 +1359,8 @@ Navigator::GetMozMobileConnection(nsIDOMMozMobileConnection** aMobileConnection)
     nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
     NS_ENSURE_TRUE(window, NS_OK);
 
-    if (!CheckPermission("mobileconnection")) {
+    if (!CheckPermission("mobileconnection") &&
+        !CheckPermission("mobilenetwork")) {
       return NS_OK;
     }
 
