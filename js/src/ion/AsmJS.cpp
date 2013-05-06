@@ -1059,7 +1059,6 @@ class ModuleCompiler
     typedef Vector<AsmJSGlobalAccess> GlobalAccessVector;
 
     JSContext *                    cx_;
-    IonContext                     ictx_;
     MacroAssembler                 masm_;
 
     ScopedJSDeletePtr<AsmJSModule> module_;
@@ -1091,7 +1090,6 @@ class ModuleCompiler
   public:
     ModuleCompiler(JSContext *cx, TokenStream &ts)
       : cx_(cx),
-        ictx_(cx->runtime),
         masm_(cx),
         moduleFunctionName_(NULL),
         globals_(cx),
@@ -4520,6 +4518,8 @@ CheckFunctionBodiesSequential(ModuleCompiler &m)
             return false;
 
         IonSpewNewFunction(&mirGen->graph(), NullPtr());
+
+        IonContext icx(m.cx()->compartment, &mirGen->temp());
 
         if (!OptimizeMIR(mirGen))
             return m.fail("Internal compiler failure (probably out of memory)", func.fn());
