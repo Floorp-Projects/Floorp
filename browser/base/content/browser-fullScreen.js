@@ -17,7 +17,7 @@ var FullScreen = {
       enterFS = !enterFS;
 
     // Toggle the View:FullScreen command, which controls elements like the
-    // fullscreen menuitem, menubars, and the appmenu.
+    // fullscreen menuitem, and menubars.
     document.getElementById("View:FullScreen").setAttribute("checked", enterFS);
 
 #ifdef XP_MACOSX
