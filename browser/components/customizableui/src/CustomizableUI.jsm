@@ -26,89 +26,6 @@ const kPrefCustomizationDebug        = "browser.uiCustomization.debug";
  */
 XPCOMUtils.defineLazyGetter(this, "gBuiltInWidgets", function() {
   return [{
-    id: "bookmarks-panelmenu",
-    type: "view",
-    viewId: "PanelUI-bookmarks",
-    name: "Bookmarks...",
-    description: "Bookmarks, yo!",
-    defaultArea: CustomizableUI.AREA_PANEL,
-    //XXXunf Need to enforce this, and make it optional.
-    allowedAreas: [CustomizableUI.AREA_PANEL],
-    icons: {
-      "16": "chrome://branding/content/icon16.png",
-      "32": "chrome://branding/content/icon48.png",
-      "48": "chrome://branding/content/icon48.png"
-    },
-    // These are automatically bound to the ViewShowing and ViewHiding events
-    // that the Panel will dispatch, targetted at the view referenced by
-    // viewId.
-    // XXXmconley: Is this too magical?
-    onViewShowing: function(aEvent) {
-      LOG("Bookmark view is being shown!");
-    },
-    onViewHiding: function(aEvent) {
-      LOG("Bookmark view is being hidden!");
-    }
-  }, {
-    id: "weather-indicator",
-    name: "Weather",
-    description: "Don't look out the window, look at your browser!",
-    defaultArea: CustomizableUI.AREA_PANEL,
-    //XXXunf Need to enforce this, and make it optional.
-    allowedAreas: [CustomizableUI.AREA_PANEL],
-    icons: {
-      "16": "chrome://branding/content/icon16.png",
-      "32": "chrome://branding/content/icon48.png",
-      "48": "chrome://branding/content/icon48.png"
-    }
-  }, {
-    id: "share-page",
-    name: "Share 1",
-    shortcut: "Ctrl+Alt+S",
-    description: "Share this page",
-    defaultArea: CustomizableUI.AREA_NAVBAR,
-    allowedAreas: [CustomizableUI.AREA_PANEL, CustomizableUI.AREA_NAVBAR],
-    icons: {
-      "16": "chrome://branding/content/icon16.png",
-      "32": "chrome://branding/content/icon48.png",
-      "48": "chrome://branding/content/icon48.png"
-    }
-  }, {
-    id: "share-page-2",
-    name: "Share 2",
-    shortcut: "Ctrl+Alt+S",
-    description: "Share this page",
-    defaultArea: CustomizableUI.AREA_PANEL,
-    allowedAreas: [CustomizableUI.AREA_PANEL],
-    icons: {
-      "16": "chrome://branding/content/icon16.png",
-      "32": "chrome://branding/content/icon48.png",
-      "48": "chrome://branding/content/icon48.png"
-    }
-  }, {
-    id: "share-page-3",
-    name: "Share 3",
-    shortcut: "Ctrl+Alt+S",
-    description: "Share this page",
-    allowedAreas: [CustomizableUI.AREA_PANEL],
-    icons: {
-      "16": "chrome://branding/content/icon16.png",
-      "32": "chrome://branding/content/icon48.png",
-      "48": "chrome://branding/content/icon48.png"
-    }
-  }, {
-    id: "share-page-4",
-    name: "Share 4",
-    shortcut: "Ctrl+Alt+S",
-    description: "Share this page",
-    defaultArea: CustomizableUI.AREA_PANEL,
-    allowedAreas: [CustomizableUI.AREA_PANEL],
-    icons: {
-      "16": "chrome://branding/content/icon16.png",
-      "32": "chrome://branding/content/icon48.png",
-      "48": "chrome://branding/content/icon48.png"
-    }
-  }, {
     id: "history-panelmenu",
     type: "view",
     viewId: "PanelUI-history",
@@ -382,7 +299,6 @@ let gDefaultPlacements = new Map([
     "downloads-button",
     "home-button",
     "social-toolbar-button",
-    "share-page"
   ]],
   ["PersonalToolbar", [
     "personal-bookmarks",
@@ -392,13 +308,11 @@ let gDefaultPlacements = new Map([
     "privatebrowsing-button",
     "save-page-button",
     "print-button",
-    "history-button",
+    "history-panelmenu",
     "fullscreen-button",
     "find-button",
     "preferences-button",
-    "add-ons-button",
-    "history-panelmenu",
-    "bookmarks-panelmenu"
+    "add-ons-button"
   ]]
 ]);
 
