@@ -689,3 +689,6 @@ pref("consoleservice.buffered", false);
 // Performance testing suggests 2k is a better page size for SQLite.
 pref("toolkit.storage.pageSize", 2048);
 #endif
+
+// The url of the manifest we use for ADU pings.
+pref("ping.manifestURL", "https://marketplace.firefox.com/packaged.webapp");
