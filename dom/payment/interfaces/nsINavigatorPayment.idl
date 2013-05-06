@@ -6,8 +6,8 @@
 
 interface nsIDOMDOMRequest;
 
-[scriptable, uuid(64e376f4-946e-406b-9360-bcfe78b53309)]
-interface nsIDOMNavigatorPayment : nsISupports
+[scriptable, uuid(44fb7308-7d7b-4975-8a27-e01fe9623bdb)]
+interface nsINavigatorPayment : nsISupports
 {
   // The 'jwts' parameter can be either a single DOMString or an array of
   // DOMStrings. In both cases, it represents the base64url encoded and
