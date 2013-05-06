@@ -6268,18 +6268,7 @@ let GsmPDUHelper = {
     let alphaLen = recordSize - ADN_FOOTER_SIZE_BYTES;
     let alphaId = this.readAlphaIdentifier(alphaLen);
 
-    let number;
-    let numLen = this.readHexOctet();
-    if (numLen != 0xff) {
-      if (numLen > ADN_MAX_BCD_NUMBER_BYTES) {
-        throw new Error("invalid length of BCD number/SSC contents - " + numLen);
-      }
-
-      number = this.readDiallingNumber(numLen);
-      Buf.seekIncoming((ADN_MAX_BCD_NUMBER_BYTES - numLen) * PDU_HEX_OCTET_SIZE);
-    } else {
-      Buf.seekIncoming(ADN_MAX_BCD_NUMBER_BYTES * PDU_HEX_OCTET_SIZE);
-    }
+    let number = this.readNumberWithLength();
 
     // Skip 2 unused octets, CCP and EXT1.
     Buf.seekIncoming(2 * PDU_HEX_OCTET_SIZE);
@@ -6309,29 +6298,7 @@ let GsmPDUHelper = {
 
     let alphaLen = recordSize - ADN_FOOTER_SIZE_BYTES;
     this.writeAlphaIdentifier(alphaLen, alphaId);
-
-    if (number) {
-      let numStart = number[0] == "+" ? 1 : 0;
-      let numDigits = number.length - numStart;
-      if (numDigits > ADN_MAX_NUMBER_DIGITS) {
-        number = number.substring(0, ADN_MAX_NUMBER_DIGITS + numStart);
-        numDigits = number.length - numStart;
-      }
-
-      // +1 for TON/NPI
-      let numLen = Math.ceil(numDigits / 2) + 1;
-      this.writeHexOctet(numLen);
-      this.writeDiallingNumber(number);
-      // Write trailing 0xff of Dialling Number.
-      for (let i = 0; i < ADN_MAX_BCD_NUMBER_BYTES - numLen; i++) {
-        this.writeHexOctet(0xff);
-      }
-    } else {
-      // +1 for numLen
-      for (let i = 0; i < ADN_MAX_BCD_NUMBER_BYTES + 1; i++) {
-        this.writeHexOctet(0xff);
-      }
-    }
+    this.writeNumberWithLength(number);
 
     // Write unused octets 0xff, CCP and EXT1.
     this.writeHexOctet(0xff);
@@ -6456,6 +6423,48 @@ let GsmPDUHelper = {
     }
     this.writeHexOctet(toa);
     this.writeSwappedNibbleBCD(number);
+  },
+
+  readNumberWithLength: function readNumberWithLength() {
+    let number;
+    let numLen = this.readHexOctet();
+    if (numLen != 0xff) {
+      if (numLen > ADN_MAX_BCD_NUMBER_BYTES) {
+        throw new Error("invalid length of BCD number/SSC contents - " + numLen);
+      }
+
+      number = this.readDiallingNumber(numLen);
+      Buf.seekIncoming((ADN_MAX_BCD_NUMBER_BYTES - numLen) * PDU_HEX_OCTET_SIZE);
+    } else {
+      Buf.seekIncoming(ADN_MAX_BCD_NUMBER_BYTES * PDU_HEX_OCTET_SIZE);
+    }
+
+    return number;
+  },
+
+  writeNumberWithLength: function writeNumberWithLength(number) {
+    if (number) {
+      let numStart = number[0] == "+" ? 1 : 0;
+      let numDigits = number.length - numStart;
+      if (numDigits > ADN_MAX_NUMBER_DIGITS) {
+        number = number.substring(0, ADN_MAX_NUMBER_DIGITS + numStart);
+        numDigits = number.length - numStart;
+      }
+
+      // +1 for TON/NPI
+      let numLen = Math.ceil(numDigits / 2) + 1;
+      this.writeHexOctet(numLen);
+      this.writeDiallingNumber(number);
+      // Write trailing 0xff of Dialling Number.
+      for (let i = 0; i < ADN_MAX_BCD_NUMBER_BYTES - numLen; i++) {
+        this.writeHexOctet(0xff);
+      }
+    } else {
+      // +1 for numLen
+      for (let i = 0; i < ADN_MAX_BCD_NUMBER_BYTES + 1; i++) {
+        this.writeHexOctet(0xff);
+      }
+    }
   },
 
   /**
@@ -10498,18 +10507,10 @@ let ICCRecordHelper = {
       let number = null;
       this._anrRecordSize = options.recordSize;
 
-      // Skip ANR Record ID.
+      // Skip EF_AAS Record ID.
       Buf.seekIncoming(1 * PDU_HEX_OCTET_SIZE);
 
-      let numLen = GsmPDUHelper.readHexOctet();
-      if (numLen != 0xff) {
-        if (numLen > ADN_MAX_BCD_NUMBER_BYTES) {
-          throw new Error("invalid length of BCD number/SSC contents - " + numLen);
-        }
-        number = GsmPDUHelper.readDiallingNumber(numLen);
-      } else {
-        Buf.seekIncoming(ADN_MAX_BCD_NUMBER_BYTES * PDU_HEX_OCTET_SIZE);
-      }
+      number = GsmPDUHelper.readNumberWithLength();
 
       // Skip 2 unused octets, CCP and EXT1.
       Buf.seekIncoming(2 * PDU_HEX_OCTET_SIZE);
