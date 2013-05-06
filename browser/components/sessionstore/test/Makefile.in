@@ -22,6 +22,7 @@ DISABLED_XPCSHELL_TESTS = \
 MOCHITEST_BROWSER_FILES = \
 	head.js \
 	browser_capabilities.js \
+	browser_dying_cache.js \
 	browser_form_restore_events.js \
 	browser_form_restore_events_sample.html \
 	browser_formdata_format.js \

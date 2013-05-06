@@ -5,7 +5,7 @@
 
 // Test the basic features of the Browser Console, bug 587757.
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-eval-in-stackframe.html";
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console.html?" + Date.now();
 
 function test()
 {
