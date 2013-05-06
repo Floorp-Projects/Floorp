@@ -68,8 +68,6 @@ function MarkupView(aInspector, aFrame, aControllerWindow)
   this._boundFocus = this._onFocus.bind(this);
   this._frame.addEventListener("focus", this._boundFocus, false);
 
-  this._boundOnLoadRootNode = this._onLoadRootNode.bind(this);
-
   this._initPreview();
 }
 
@@ -315,7 +313,10 @@ MarkupView.prototype = {
       var container = new RootContainer(this, aNode);
       this._elt.appendChild(container.elt);
       this._rootNode = aNode;
-      aNode.addEventListener("load", this._boundOnLoadRootNode, true);
+      aNode.addEventListener("load", function MP_watch_contentLoaded(aEvent) {
+        // Fake a childList mutation here.
+        this._mutationObserver([{target: aEvent.target, type: "childList"}]);
+      }.bind(this), true);
     }
 
     this._containers.set(aNode, container);
@@ -331,14 +332,6 @@ MarkupView.prototype = {
       this.importNode(parent, true);
     }
     return container;
-  },
-
-  /**
-   * Update the state of the tree once the root node is loaded.
-   */
-  _onLoadRootNode: function MV__onLoadRootNode(aEvent) {
-    // Fake a childList mutation here.
-    this._mutationObserver([{target: aEvent.target, type: "childList"}]);
   },
 
   /**
@@ -660,9 +653,6 @@ MarkupView.prototype = {
 
     this._inspector.selection.off("new-node", this._boundOnNewSelection);
     delete this._boundOnNewSelection;
-
-    this._rootNode.removeEventListener("load", this._boundOnLoadRootNode, true);
-    delete this._boundOnLoadRootNode;
 
     delete this._elt;
 
