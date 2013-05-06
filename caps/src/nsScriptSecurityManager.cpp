@@ -2585,7 +2585,7 @@ nsScriptSecurityManager::InitPolicies()
     }
 
     // Get a JS context - we need it to create internalized strings later.
-    SafeAutoJSContext cx;
+    AutoSafeJSContext cx;
     rv = InitDomainPolicy(cx, "default", mDefaultPolicy);
     NS_ENSURE_SUCCESS(rv, rv);
 

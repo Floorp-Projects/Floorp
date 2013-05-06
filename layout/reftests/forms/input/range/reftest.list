@@ -19,16 +19,16 @@ default-preferences pref(dom.experimental_forms_range,true)
 == input-value-prop.html input-75pct-common-ref.html
 == input-valueAsNumber-prop-unthemed.html input-75pct-unthemed-common-ref.html
 == input-valueAsNumber-prop.html input-75pct-common-ref.html
-== input-stepDown-unthemed.html input-75pct-unthemed-common-ref.html
-== input-stepDown.html input-75pct-common-ref.html
-== input-stepUp-unthemed.html input-75pct-unthemed-common-ref.html
-== input-stepUp.html input-75pct-common-ref.html
+fails-if(B2G) == input-stepDown-unthemed.html input-75pct-unthemed-common-ref.html
+fails-if(B2G) == input-stepDown.html input-75pct-common-ref.html
+fails-if(B2G) == input-stepUp-unthemed.html input-75pct-unthemed-common-ref.html
+fails-if(B2G) == input-stepUp.html input-75pct-common-ref.html
 
 # 'direction' property:
 == input-range-direction-unthemed-1.html input-range-direction-unthemed-1-ref.html
 
 # ::-moz-range-progress pseudo-element:
-== input-range-moz-range-progress-1.html input-range-moz-range-progress-1-ref.html
+fails-if(B2G) == input-range-moz-range-progress-1.html input-range-moz-range-progress-1-ref.html
 == input-range-moz-range-progress-2.html input-range-moz-range-progress-2-ref.html
 == input-range-moz-range-progress-3.html input-range-moz-range-progress-3-ref.html
 
