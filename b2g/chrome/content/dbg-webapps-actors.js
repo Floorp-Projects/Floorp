@@ -8,6 +8,12 @@ let Cu = Components.utils;
 let Cc = Components.classes;
 let Ci = Components.interfaces;
 
+Cu.import("resource://gre/modules/Webapps.jsm");
+Cu.import("resource://gre/modules/AppsUtils.jsm");
+Cu.import("resource://gre/modules/FileUtils.jsm");
+Cu.import('resource://gre/modules/Services.jsm');
+Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
+
 function debug(aMsg) {
   /*
   Cc["@mozilla.org/consoleservice;1"]
@@ -32,6 +38,7 @@ WebappsActor.prototype = {
   actorPrefix: "webapps",
 
   _registerApp: function wa_actorRegisterApp(aApp, aId, aDir) {
+    debug("registerApp");
     let reg = DOMApplicationRegistry;
     let self = this;
 
@@ -49,8 +56,12 @@ WebappsActor.prototype = {
     reg._readManifests([{ id: aId }], function(aResult) {
       let manifest = aResult[0].manifest;
       aApp.name = manifest.name;
-      reg._registerSystemMessages(manifest, aApp);
-      reg._registerActivities(manifest, aApp, true);
+      if ("_registerSystemMessages" in reg) {
+        reg._registerSystemMessages(manifest, aApp);
+      }
+      if ("_registerActivities" in reg) {
+        reg._registerActivities(manifest, aApp, true);
+      }
       reg._saveApps(function() {
         aApp.manifest = manifest;
         reg.broadcastMessage("Webapps:AddApp", { id: aId, app: aApp });
@@ -237,10 +248,6 @@ WebappsActor.prototype = {
   install: function wa_actorInstall(aRequest) {
     debug("install");
 
-    Cu.import("resource://gre/modules/Webapps.jsm");
-    Cu.import("resource://gre/modules/AppsUtils.jsm");
-    Cu.import("resource://gre/modules/FileUtils.jsm");
-
     let appId = aRequest.appId;
     if (!appId) {
       return { error: "missingParameter",
@@ -289,6 +296,87 @@ WebappsActor.prototype = {
     }
 
     return { appId: appId, path: appDir.path }
+  },
+
+  getAll: function wa_actorGetAll(aRequest) {
+    debug("getAll");
+
+    let defer = Promise.defer();
+    let reg = DOMApplicationRegistry;
+    reg.getAll(function onsuccess(apps) {
+      defer.resolve({ apps: apps });
+    });
+
+    return defer.promise;
+  },
+
+  uninstall: function wa_actorUninstall(aRequest) {
+    debug("uninstall");
+
+    let manifestURL = aRequest.manifestURL;
+    if (!manifestURL) {
+      return { error: "missingParameter",
+               message: "missing parameter manifestURL" };
+    }
+
+    let defer = Promise.defer();
+    let reg = DOMApplicationRegistry;
+    reg.uninstall(
+      manifestURL,
+      function onsuccess() {
+        defer.resolve({});
+      },
+      function onfailure(reason) {
+        defer.resolve({ error: reason });
+      }
+    );
+
+    return defer.promise;
+  },
+
+  launch: function wa_actorLaunch(aRequest) {
+    debug("launch");
+
+    let manifestURL = aRequest.manifestURL;
+    if (!manifestURL) {
+      return { error: "missingParameter",
+               message: "missing parameter manifestURL" };
+    }
+
+    let defer = Promise.defer();
+    let reg = DOMApplicationRegistry;
+    reg.launch(
+      aRequest.manifestURL,
+      aRequest.startPoint || "",
+      function onsuccess() {
+        defer.resolve({});
+      },
+      function onfailure(reason) {
+        defer.resolve({ error: reason });
+      });
+
+    return defer.promise;
+  },
+
+  close: function wa_actorLaunch(aRequest) {
+    debug("close");
+
+    let manifestURL = aRequest.manifestURL;
+    if (!manifestURL) {
+      return { error: "missingParameter",
+               message: "missing parameter manifestURL" };
+    }
+
+    let reg = DOMApplicationRegistry;
+    let app = reg.getAppByManifestURL(manifestURL);
+    if (!app) {
+      return { error: "missingParameter",
+               message: "No application for " + manifestURL };
+    }
+
+    reg.close(app);
+
+    return {};
   }
 };
 
@@ -296,7 +384,12 @@ WebappsActor.prototype = {
  * The request types this actor can handle.
  */
 WebappsActor.prototype.requestTypes = {
-  "install": WebappsActor.prototype.install
+  "install": WebappsActor.prototype.install,
+  "getAll": WebappsActor.prototype.getAll,
+  "launch": WebappsActor.prototype.launch,
+  "close": WebappsActor.prototype.close,
+  "uninstall": WebappsActor.prototype.uninstall
 };
 
 DebuggerServer.addGlobalActor(WebappsActor, "webappsActor");
+
