@@ -44,6 +44,16 @@
   padding-bottom: 10px;
 }
 
+.gcli-appcache-list {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+.gcli-appcache-detail {
+  padding-left: 20px;
+  padding-bottom: 10px;
+}
+
 .gcli-row-out .nowrap {
   white-space: nowrap;
 }
