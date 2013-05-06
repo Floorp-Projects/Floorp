@@ -829,13 +829,6 @@ jsd_SetExecutionHook(JSDContext*           jsdc,
     JSCompartment* oldCompartment;
 
     JSD_LOCK();
-
-    if ( JS_GetScriptIsSelfHosted(jsdscript->script) )
-    {
-        JSD_UNLOCK();
-        return JS_TRUE;
-    }
-
     if( ! hook )
     {
         jsd_ClearExecutionHook(jsdc, jsdscript, pc);
