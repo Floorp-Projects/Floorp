@@ -19,7 +19,7 @@ namespace dom {
 class MediaDocument : public nsHTMLDocument
 {
 public:
-  MediaDocument(bool aUseXPConnectToWrap = false);
+  MediaDocument();
   virtual ~MediaDocument();
 
   virtual nsresult Init();
