@@ -226,6 +226,16 @@ public:
             ++i;
           } while (i < mEvents.Length() &&
                    aTime == mEvents[i].template Time<TimeType>());
+
+          // SetTarget nodes can be handled no matter what their next node is (if they have one)
+          if (mEvents[i - 1].mType == AudioTimelineEvent::SetTarget) {
+            // Follow the curve, without regard to the next node
+            return ExponentialApproach(mEvents[i - 1].template Time<TimeType>(),
+                                       mValue, mEvents[i - 1].mValue,
+                                       mEvents[i - 1].mTimeConstant, aTime);
+          }
+
+          // For other event types
           return mEvents[i - 1].mValue;
         }
         previous = next;
@@ -335,10 +345,13 @@ public:
     return v1 + (v0 - v1) * expf(-(t - t0) / timeConstant);
   }
 
-  void ConvertEventTimesToTicks(int64_t (*aConvertor)(double aTime, void* aClosure), void* aClosure)
+  void ConvertEventTimesToTicks(int64_t (*aConvertor)(double aTime, void* aClosure), void* aClosure,
+                                int32_t aSampleRate)
   {
     for (unsigned i = 0; i < mEvents.Length(); ++i) {
       mEvents[i].SetTimeInTicks(aConvertor(mEvents[i].template Time<double>(), aClosure));
+      mEvents[i].mTimeConstant *= aSampleRate;
+      mEvents[i].mDuration *= aSampleRate;
     }
   }
 
