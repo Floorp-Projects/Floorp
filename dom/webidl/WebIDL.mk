@@ -153,6 +153,7 @@ webidl_files = \
   IDBFactory.webidl \
   IDBVersionChangeEvent.webidl \
   ImageData.webidl \
+  ImageDocument.webidl \
   InspectorUtils.webidl \
   KeyEvent.webidl \
   LinkStyle.webidl \
