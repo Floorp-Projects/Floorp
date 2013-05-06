@@ -649,8 +649,12 @@ pref("network.manage-offline-status", true);
 // increase the timeout clamp for background tabs to 15 minutes
 pref("dom.min_background_timeout_value", 900000);
 
+// The default state of reader mode works on loaded a page.
+pref("reader.parse-on-load.enabled", true);
+
+// Force to enable reader mode to parse on loaded a page.
 // Allow reader mode even on low-memory platforms
-pref("reader.force_allow", false);
+pref("reader.parse-on-load.force-enabled", false);
 
 // The default of font size in reader (1-7)
 pref("reader.font_size", 4);
