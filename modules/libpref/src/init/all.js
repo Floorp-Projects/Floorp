@@ -4068,7 +4068,6 @@ pref("dom.sms.enabled", false);
 // Enable Latin characters replacement with corresponding ones in GSM SMS
 // 7-bit default alphabet.
 pref("dom.sms.strict7BitEncoding", false);
-pref("dom.sms.requestStatusReport", false);
 
 // WebContacts
 pref("dom.mozContacts.enabled", false);
