@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ImageDocument.h"
+#include "mozilla/dom/ImageDocumentBinding.h"
 #include "nsRect.h"
 #include "nsIImageLoadingContent.h"
 #include "nsGenericHTMLElement.h"
@@ -124,7 +125,7 @@ ImageListener::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
 }
 
 ImageDocument::ImageDocument()
-  : MediaDocument(true),
+  : MediaDocument(),
     mOriginalZoomLevel(1.0)
 {
   // NOTE! nsDocument::operator new() zeroes out all members, so don't
@@ -147,8 +148,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_ADDREF_INHERITED(ImageDocument, MediaDocument)
 NS_IMPL_RELEASE_INHERITED(ImageDocument, MediaDocument)
 
-DOMCI_NODE_DATA(ImageDocument, ImageDocument)
-
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(ImageDocument)
   NS_HTML_DOCUMENT_INTERFACE_TABLE_BEGIN(ImageDocument)
     NS_INTERFACE_TABLE_ENTRY(ImageDocument, nsIImageDocument)
@@ -156,7 +155,6 @@ NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(ImageDocument)
     NS_INTERFACE_TABLE_ENTRY(ImageDocument, nsIDOMEventListener)
   NS_OFFSET_AND_INTERFACE_TABLE_END
   NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(ImageDocument)
 NS_INTERFACE_MAP_END_INHERITING(MediaDocument)
 
 
@@ -172,6 +170,16 @@ ImageDocument::Init()
   mFirstResize = true;
 
   return NS_OK;
+}
+
+JSObject*
+ImageDocument::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
+{
+  JS::Rooted<JSObject*> obj(aCx, ImageDocumentBinding::Wrap(aCx, aScope, this));
+  if (obj && !PostCreateWrapper(aCx, obj)) {
+    return nullptr;
+  }
+  return obj;
 }
 
 nsresult
@@ -287,46 +295,53 @@ ImageDocument::OnPageShow(bool aPersisted,
 NS_IMETHODIMP
 ImageDocument::GetImageResizingEnabled(bool* aImageResizingEnabled)
 {
-  *aImageResizingEnabled = true;
+  *aImageResizingEnabled = ImageResizingEnabled();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 ImageDocument::GetImageIsOverflowing(bool* aImageIsOverflowing)
 {
-  *aImageIsOverflowing = mImageIsOverflowing;
+  *aImageIsOverflowing = ImageIsOverflowing();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 ImageDocument::GetImageIsResized(bool* aImageIsResized)
 {
-  *aImageIsResized = mImageIsResized;
+  *aImageIsResized = ImageIsResized();
   return NS_OK;
+}
+
+already_AddRefed<imgIRequest>
+ImageDocument::GetImageRequest(ErrorResult& aRv)
+{
+  nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mImageContent);
+  nsCOMPtr<imgIRequest> imageRequest;
+  if (imageLoader) {
+    aRv = imageLoader->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
+                                  getter_AddRefs(imageRequest));
+  }
+  return imageRequest.forget();
 }
 
 NS_IMETHODIMP
 ImageDocument::GetImageRequest(imgIRequest** aImageRequest)
 {
-  nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mImageContent);
-  if (imageLoader) {
-    return imageLoader->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
-                                   aImageRequest);
-  }
-
-  *aImageRequest = nullptr;
-  return NS_OK;
+  ErrorResult rv;
+  *aImageRequest = GetImageRequest(rv).get();
+  return rv.ErrorCode();
 }
 
-NS_IMETHODIMP
+void
 ImageDocument::ShrinkToFit()
 {
   if (!mImageContent) {
-    return NS_OK;
+    return;
   }
   if (GetZoomLevel() != mOriginalZoomLevel && mImageIsResized &&
       !nsContentUtils::IsChildOfSameType(this)) {
-    return NS_OK;
+    return;
   }
 
   // Keep image content alive while changing the attributes.
@@ -337,24 +352,30 @@ ImageDocument::ShrinkToFit()
   
   // The view might have been scrolled when zooming in, scroll back to the
   // origin now that we're showing a shrunk-to-window version.
-  (void) ScrollImageTo(0, 0, false);
+  ScrollImageTo(0, 0, false);
 
   SetModeClass(eShrinkToFit);
   
   mImageIsResized = true;
   
   UpdateTitleAndCharset();
+}
 
+NS_IMETHODIMP
+ImageDocument::DOMShrinkToFit()
+{
+  ShrinkToFit();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-ImageDocument::RestoreImageTo(int32_t aX, int32_t aY)
+ImageDocument::DOMRestoreImageTo(int32_t aX, int32_t aY)
 {
-  return ScrollImageTo(aX, aY, true);
+  RestoreImageTo(aX, aY);
+  return NS_OK;
 }
 
-nsresult
+void
 ImageDocument::ScrollImageTo(int32_t aX, int32_t aY, bool restoreImage)
 {
   float ratio = GetRatio();
@@ -366,24 +387,23 @@ ImageDocument::ScrollImageTo(int32_t aX, int32_t aY, bool restoreImage)
 
   nsIPresShell *shell = GetShell();
   if (!shell)
-    return NS_OK;
+    return;
 
   nsIScrollableFrame* sf = shell->GetRootScrollFrameAsScrollable();
   if (!sf)
-    return NS_OK;
+    return;
 
   nsRect portRect = sf->GetScrollPortRect();
   sf->ScrollTo(nsPoint(nsPresContext::CSSPixelsToAppUnits(aX/ratio) - portRect.width/2,
                        nsPresContext::CSSPixelsToAppUnits(aY/ratio) - portRect.height/2),
                nsIScrollableFrame::INSTANT);
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 ImageDocument::RestoreImage()
 {
   if (!mImageContent) {
-    return NS_OK;
+    return;
   }
   // Keep image content alive while changing the attributes.
   nsCOMPtr<nsIContent> imageContent = mImageContent;
@@ -400,11 +420,16 @@ ImageDocument::RestoreImage()
   mImageIsResized = false;
   
   UpdateTitleAndCharset();
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
+ImageDocument::DOMRestoreImage()
+{
+  RestoreImage();
+  return NS_OK;
+}
+
+void
 ImageDocument::ToggleImageSize()
 {
   mShouldResize = true;
@@ -417,7 +442,12 @@ ImageDocument::ToggleImageSize()
     ResetZoomLevel();
     ShrinkToFit();
   }
+}
 
+NS_IMETHODIMP
+ImageDocument::DOMToggleImageSize()
+{
+  ToggleImageSize();
   return NS_OK;
 }
 

@@ -51,7 +51,31 @@ public:
 
   void DefaultCheckOverflowing() { CheckOverflowing(mResizeImageByDefault); }
 
-  virtual nsXPCClassInfo* GetClassInfo();
+  // WebIDL API
+  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
+    MOZ_OVERRIDE;
+
+  bool ImageResizingEnabled() const
+  {
+    return true;
+  }
+  bool ImageIsOverflowing() const
+  {
+    return mImageIsOverflowing;
+  }
+  bool ImageIsResized() const
+  {
+    return mImageIsResized;
+  }
+  already_AddRefed<imgIRequest> GetImageRequest(ErrorResult& aRv);
+  void ShrinkToFit();
+  void RestoreImage();
+  void RestoreImageTo(int32_t aX, int32_t aY)
+  {
+    ScrollImageTo(aX, aY, true);
+  }
+  void ToggleImageSize();
+
 protected:
   virtual nsresult CreateSyntheticDocument();
 
@@ -59,7 +83,7 @@ protected:
 
   void UpdateTitleAndCharset();
 
-  nsresult ScrollImageTo(int32_t aX, int32_t aY, bool restoreImage);
+  void ScrollImageTo(int32_t aX, int32_t aY, bool restoreImage);
 
   float GetRatio() {
     return std::min(mVisibleWidth / mImageWidth,
