@@ -412,6 +412,8 @@ function UpdateParser(aId, aUpdateKey, aUrl, aObserver) {
     this.request.open("GET", this.url, true);
     this.request.channel.notificationCallbacks = new CertUtils.BadCertHandler(!requireBuiltIn);
     this.request.channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE;
+    // Prevent the request from writing to cache.
+    this.request.channel.loadFlags |= Ci.nsIRequest.INHIBIT_CACHING;
     this.request.overrideMimeType("text/xml");
     var self = this;
     this.request.addEventListener("load", function loadEventListener(event) { self.onLoad() }, false);

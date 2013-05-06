@@ -39,7 +39,6 @@ function firstOnLoad(aEvent) {
   ss.getBrowserState();
 
   is(gBrowser.tabs[1], tab, "newly created tab should exist by now");
-  ok(tab.linkedBrowser.__SS_data, "newly created tab should be in save state");
 
   tab.linkedBrowser.loadURI(URI_TO_LOAD);
 }

@@ -122,20 +122,22 @@ MOCHITEST_BROWSER_FILES = \
 	browser_console.js \
 	browser_longstring_hang.js \
 	browser_console_consolejsm_output.js \
-  browser_webconsole_bug_837351_securityerrors.js \
+	browser_webconsole_bug_837351_securityerrors.js \
+	browser_bug_865871_variables_view_close_on_esc_key.js \
+	browser_bug_865288_repeat_different_objects.js \
 	head.js \
 	$(NULL)
 
 ifeq ($(OS_ARCH), Darwin)
 MOCHITEST_BROWSER_FILES += \
-        browser_webconsole_bug_804845_ctrl_key_nav.js \
+	browser_webconsole_bug_804845_ctrl_key_nav.js \
         $(NULL)
 endif
 
 ifeq ($(OS_ARCH),WINNT)
 MOCHITEST_BROWSER_FILES += \
-		browser_webconsole_bug_623749_ctrl_a_select_all_winnt.js \
-		$(NULL)
+	browser_webconsole_bug_623749_ctrl_a_select_all_winnt.js \
+	$(NULL)
 endif
 
 MOCHITEST_BROWSER_FILES += \
@@ -225,7 +227,7 @@ MOCHITEST_BROWSER_FILES += \
 	test-bug-821877-csperrors.html^headers^ \
 	test-eval-in-stackframe.html \
 	test-bug-859170-longstring-hang.html \
-  test-bug-837351-security-errors.html \
+	test-bug-837351-security-errors.html \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
