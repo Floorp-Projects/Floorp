@@ -1294,6 +1294,7 @@
             } else {
               this._tristateMenulist.selectedItem = this._alwaysActivateMenuitem;
             }
+            this._tristateMenulist.selectedItem.disabled = false;
             this._tristateMenulist.disabled = false;
           } else {
             this._tristateMenulist.disabled = true;
