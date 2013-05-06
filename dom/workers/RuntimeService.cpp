@@ -100,7 +100,7 @@ MOZ_STATIC_ASSERT(MAX_WORKERS_PER_DOMAIN >= 1,
     }                                                                          \
                                                                                \
     if (!workers.IsEmpty()) {                                                  \
-      SafeAutoJSContext cx;                                                    \
+      AutoSafeJSContext cx;                                                    \
       JSAutoRequest ar(cx);                                                    \
       for (uint32_t index = 0; index < workers.Length(); index++) {            \
         workers[index]-> _func (cx, __VA_ARGS__);                              \
@@ -1172,7 +1172,7 @@ RuntimeService::Cleanup()
         currentThread = NS_GetCurrentThread();
         NS_ASSERTION(currentThread, "This should never be null!");
 
-        SafeAutoJSContext cx;
+        AutoSafeJSContext cx;
         JSAutoRequest ar(cx);
 
         for (uint32_t index = 0; index < workers.Length(); index++) {

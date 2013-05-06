@@ -975,7 +975,7 @@ void
 nsFrameScriptExecutor::Shutdown()
 {
   if (sCachedScripts) {
-    SafeAutoJSContext cx;
+    AutoSafeJSContext cx;
     JSAutoRequest ar(cx);
     NS_ASSERTION(sCachedScripts != nullptr, "Need cached scripts");
     sCachedScripts->Enumerate(CachedScriptUnrooter, cx);
