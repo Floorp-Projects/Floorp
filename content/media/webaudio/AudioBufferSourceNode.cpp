@@ -428,6 +428,7 @@ AudioBufferSourceNode::AudioBufferSourceNode(AudioContext* aContext)
   , mPlaybackRate(new AudioParam(this, SendPlaybackRateToStream, 1.0f))
   , mLoop(false)
   , mStartCalled(false)
+  , mStopped(false)
   , mOffsetAndDurationRemembered(false)
 {
   mStream = aContext->Graph()->CreateAudioNodeStream(
@@ -561,6 +562,31 @@ void
 AudioBufferSourceNode::NotifyMainThreadStateChanged()
 {
   if (mStream->IsFinished()) {
+    class EndedEventDispatcher : public nsRunnable
+    {
+    public:
+      explicit EndedEventDispatcher(AudioBufferSourceNode* aNode)
+        : mNode(aNode) {}
+      NS_IMETHODIMP Run()
+      {
+        // If it's not safe to run scripts right now, schedule this to run later
+        if (!nsContentUtils::IsSafeToRunScript()) {
+          nsContentUtils::AddScriptRunner(this);
+          return NS_OK;
+        }
+
+        mNode->DispatchTrustedEvent(NS_LITERAL_STRING("ended"));
+        return NS_OK;
+      }
+    private:
+      nsRefPtr<AudioBufferSourceNode> mNode;
+    };
+    if (!mStopped) {
+      // Only dispatch the ended event once
+      NS_DispatchToMainThread(new EndedEventDispatcher(this));
+      mStopped = true;
+    }
+
     // Drop the playing reference
     // Warning: The below line might delete this.
     mPlayingRef.Drop(this);
