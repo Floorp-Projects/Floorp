@@ -2194,12 +2194,14 @@ toolbar[iconsize="small"] .toolbarbutton-badge-container {
 .chatbar-button {
   -moz-appearance: none;
   background-color: #d9d9d9;
+  background-image: linear-gradient(@toolbarHighlight@, rgba(255,255,255,0));
 }
 
 .chatbar-button > .toolbarbutton-icon {
   -moz-margin-end: 0;
 }
 
+.chatbar-button:hover,
 .chatbar-button[open="true"] {
   background-color: #f0f0f0;
 }
