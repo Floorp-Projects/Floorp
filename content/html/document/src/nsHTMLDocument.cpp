@@ -258,11 +258,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsDocument)
 JSObject*
 nsHTMLDocument::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  JS::Rooted<JSObject*> obj(aCx, HTMLDocumentBinding::Wrap(aCx, aScope, this));
-  if (obj && !PostCreateWrapper(aCx, obj)) {
-    return nullptr;
-  }
-  return obj;
+  return HTMLDocumentBinding::Wrap(aCx, aScope, this);
 }
 
 nsresult
