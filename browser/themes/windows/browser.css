@@ -2914,12 +2914,14 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 .chatbar-button {
   -moz-appearance: none;
   background-color: #c4cfde;
+  background-image: linear-gradient(rgba(255,255,255,.5), rgba(255,255,255,0));
 }
 
 .chatbar-button > .toolbarbutton-icon {
   -moz-margin-end: 0;
 }
 
+.chatbar-button:hover,
 .chatbar-button[open="true"] {
   background-color: #dae3f0;
 }
