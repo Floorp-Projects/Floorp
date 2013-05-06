@@ -1602,7 +1602,7 @@ nsDOMClassInfo::Init()
   sSecMan = sm;
   NS_ADDREF(sSecMan);
 
-  SafeAutoJSContext cx;
+  AutoSafeJSContext cx;
 
   DOM_CLASSINFO_MAP_BEGIN(Window, nsIDOMWindow)
     DOM_CLASSINFO_WINDOW_MAP_ENTRIES(nsGlobalWindow::HasIndexedDBSupport())

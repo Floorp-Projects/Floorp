@@ -341,7 +341,7 @@ SystemWorkerManager::Init()
   NS_ASSERTION(NS_IsMainThread(), "We can only initialize on the main thread");
   NS_ASSERTION(!mShutdown, "Already shutdown!");
 
-  mozilla::SafeAutoJSContext cx;
+  mozilla::AutoSafeJSContext cx;
 
   nsresult rv = InitWifi(cx);
   if (NS_FAILED(rv)) {

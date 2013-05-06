@@ -168,7 +168,7 @@ TimeZoneSettingObserver::Observe(nsISupports *aSubject,
   // The string that we're interested in will be a JSON string that looks like:
   // {"key":"time.timezone","value":"America/Chicago"}
 
-  SafeAutoJSContext cx;
+  AutoSafeJSContext cx;
 
   // Parse the JSON value.
   nsDependentString dataStr(aData);

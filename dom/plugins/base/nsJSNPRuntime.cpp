@@ -1926,7 +1926,7 @@ nsJSNPRuntime::OnPluginDestroy(NPP npp)
 
   // Use the safe JSContext here as we're not always able to find the
   // JSContext associated with the NPP any more.
-  SafeAutoJSContext cx;
+  AutoSafeJSContext cx;
   JSAutoRequest ar(cx);
 
   if (sNPObjWrappers.ops) {
