@@ -1,0 +1,22 @@
+diff --git a/mfbt/decimal/Decimal.cpp b/mfbt/decimal/Decimal.cpp
+--- a/mfbt/decimal/Decimal.cpp
++++ b/mfbt/decimal/Decimal.cpp
+@@ -278,17 +278,17 @@ bool Decimal::EncodedData::operator==(co
+ }
+ 
+ Decimal::Decimal(int32_t i32)
+     : m_data(i32 < 0 ? Negative : Positive, 0, i32 < 0 ? static_cast<uint64_t>(-static_cast<int64_t>(i32)) : static_cast<uint64_t>(i32))
+ {
+ }
+ 
+ Decimal::Decimal(Sign sign, int exponent, uint64_t coefficient)
+-    : m_data(sign, exponent, coefficient)
++    : m_data(sign, coefficient ? exponent : 0, coefficient)
+ {
+ }
+ 
+ Decimal::Decimal(const EncodedData& data)
+     : m_data(data)
+ {
+ }
+ 

@@ -208,7 +208,7 @@ IDBFactory::Create(ContentParent* aContentParent,
     do_CreateInstance("@mozilla.org/nullprincipal;1");
   NS_ENSURE_TRUE(principal, NS_ERROR_FAILURE);
 
-  SafeAutoJSContext cx;
+  AutoSafeJSContext cx;
   JSAutoRequest ar(cx);
 
   nsIXPConnect* xpc = nsContentUtils::XPConnect();

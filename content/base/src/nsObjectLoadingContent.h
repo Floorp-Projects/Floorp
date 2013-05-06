@@ -195,7 +195,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     {
       aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
     }
-    JS::Value LegacyCall(JSContext* aCx, JS::Value aThisVal,
+    JS::Value LegacyCall(JSContext* aCx, JS::Handle<JS::Value> aThisVal,
                          const mozilla::dom::Sequence<JS::Value>& aArguments,
                          mozilla::ErrorResult& aRv);
 
