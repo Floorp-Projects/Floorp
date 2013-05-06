@@ -42,6 +42,14 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
   readonly attribute DOMString cardState;
 
   /**
+   * Indicates the number of retries remaining when cardState equals 'pinRequired'
+   * or 'pukRequired'.  0 denotes the retry count is unavailable.
+   *
+   * Value is undefined for other cardState values.
+   */
+  readonly attribute long retryCount;
+
+  /**
    * Information stored in the device's ICC card.
    */
   readonly attribute nsIDOMMozMobileICCInfo iccInfo;
