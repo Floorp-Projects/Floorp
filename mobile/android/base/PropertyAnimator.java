@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko;
 
+import android.support.v4.view.ViewCompat;
 import android.os.Build;
 import android.os.Handler;
 import android.view.Choreographer;
@@ -131,6 +132,8 @@ public class PropertyAnimator implements Runnable {
             else if (element.property == Property.HEIGHT)
                 element.from = element.proxy.getHeight();
 
+            ViewCompat.setHasTransientState(element.view, true);
+
             if (shouldEnableHardwareLayer(element))
                 element.view.setLayerType(View.LAYER_TYPE_HARDWARE, null);
             else
@@ -155,6 +158,8 @@ public class PropertyAnimator implements Runnable {
         for (ElementHolder element : mElementsList) {
             if (snapToEndPosition)
                 invalidate(element, element.to);
+
+            ViewCompat.setHasTransientState(element.view, false);
 
             if (shouldEnableHardwareLayer(element))
                 element.view.setLayerType(View.LAYER_TYPE_NONE, null);
