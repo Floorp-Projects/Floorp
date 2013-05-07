@@ -11,6 +11,8 @@ pref("nglayout.debug.disable_xul_fastload", true);
 pref("devtools.errorconsole.enabled", true);
 #endif
 
+pref("services.sync.log.appender.console", "Trace");
+
 // Enable headless crash reporting by default
 pref("app.reportCrashes", true);
 
