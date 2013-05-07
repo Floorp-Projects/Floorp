@@ -780,7 +780,7 @@ void GrallocTextureHostOGL::BindTexture(GLenum aTextureUnit)
 bool
 GrallocTextureHostOGL::IsValid() const
 {
-  return !!mGraphicBuffer.get();
+  return !!mGL && !!mGraphicBuffer.get();
 }
 
 GrallocTextureHostOGL::~GrallocTextureHostOGL()
@@ -798,6 +798,9 @@ GrallocTextureHostOGL::~GrallocTextureHostOGL()
 bool
 GrallocTextureHostOGL::Lock()
 {
+  if (!IsValid()) {
+    return false;
+  }
   /*
    * The job of this function is to ensure that the texture is tied to the
    * android::GraphicBuffer, so that texturing will source the GraphicBuffer.
