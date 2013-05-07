@@ -97,36 +97,12 @@ function addTestGlobal(aName)
   return global;
 }
 
-function getTestGlobalContext(aClient, aName, aCallback) {
-  aClient.request({ "to": "root", "type": "listContexts" }, function(aResponse) {
-    for each (let context in aResponse.contexts) {
-      if (context.global == aName) {
-        aCallback(context);
-        return false;
-      }
-    }
-    aCallback(null);
-  });
-}
-
-function attachTestGlobalClient(aClient, aName, aCallback) {
-  getTestGlobalContext(aClient, aName, function(aContext) {
-    aClient.attachThread(aContext.actor, aCallback, { useSourceMaps: true });
-  });
-}
-
-function attachTestGlobalClientAndResume(aClient, aName, aCallback) {
-  attachTestGlobalClient(aClient, aName, function(aResponse, aThreadClient) {
-    aThreadClient.resume(function(aResponse) {
-      aCallback(aResponse, aThreadClient);
-    });
-  })
-}
-
-function getTestTab(aClient, aName, aCallback) {
-  gClient.listTabs(function (aResponse) {
+// List the DebuggerClient |aClient|'s tabs, look for one whose title is
+// |aTitle|, and apply |aCallback| to the packet's entry for that tab.
+function getTestTab(aClient, aTitle, aCallback) {
+  aClient.listTabs(function (aResponse) {
     for (let tab of aResponse.tabs) {
-      if (tab.title === aName) {
+      if (tab.title === aTitle) {
         aCallback(tab);
         return;
       }
@@ -135,19 +111,35 @@ function getTestTab(aClient, aName, aCallback) {
   });
 }
 
-function attachTestTab(aClient, aName, aCallback) {
-  getTestTab(aClient, aName, function (aTab) {
-    gClient.attachTab(aTab.actor, aCallback);
+// Attach to |aClient|'s tab whose title is |aTitle|; pass |aCallback| the
+// response packet and a TabClient instance referring to that tab.
+function attachTestTab(aClient, aTitle, aCallback) {
+  getTestTab(aClient, aTitle, function (aTab) {
+    aClient.attachTab(aTab.actor, aCallback);
   });
 }
 
-function attachTestTabAndResume(aClient, aName, aCallback) {
-  attachTestTab(aClient, aName, function (aResponse, aTabClient) {
+// Attach to |aClient|'s tab whose title is |aTitle|, and then attach to
+// that tab's thread. Pass |aCallback| the thread attach response packet, a
+// TabClient referring to the tab, and a ThreadClient referring to the
+// thread.
+function attachTestThread(aClient, aTitle, aCallback) {
+  attachTestTab(aClient, aTitle, function (aResponse, aTabClient) {
     aClient.attachThread(aResponse.threadActor, function (aResponse, aThreadClient) {
-      aThreadClient.resume(function (aResponse) {
-        aCallback(aResponse, aTabClient, aThreadClient);
-      });
+      aCallback(aResponse, aTabClient, aThreadClient);
     }, { useSourceMaps: true });
+  });
+}
+
+// Attach to |aClient|'s tab whose title is |aTitle|, attach to the tab's
+// thread, and then resume it. Pass |aCallback| the thread's response to
+// the 'resume' packet, a TabClient for the tab, and a ThreadClient for the
+// thread.
+function attachTestTabAndResume(aClient, aTitle, aCallback) {
+  attachTestThread(aClient, aTitle, function(aResponse, aTabClient, aThreadClient) {
+    aThreadClient.resume(function (aResponse) {
+      aCallback(aResponse, aTabClient, aThreadClient);
+    });
   });
 }
 

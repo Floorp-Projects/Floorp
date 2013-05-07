@@ -15,7 +15,7 @@ function run_test()
   gDebuggee = addTestGlobal("test-sources");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect(function () {
-    attachTestGlobalClientAndResume(gClient, "test-sources", function (aResponse, aThreadClient) {
+    attachTestTabAndResume(gClient, "test-sources", function (aResponse, aTabClient, aThreadClient) {
       gThreadClient = aThreadClient;
       test_simple_listsources();
     });
