@@ -30,6 +30,7 @@ endif
 _PGO_FILES = 	\
   automation.py \
   $(topsrcdir)/build/automationutils.py \
+  $(topsrcdir)/testing/profiles/prefs_general.js \
   profileserver.py \
   genpgocert.py \
   index.html \
