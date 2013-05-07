@@ -536,8 +536,12 @@ OPDEF(JSOP_TOID,          225, "toid",         NULL,  1,  1,  1,  0,  JOF_BYTE)
 /* Push the implicit 'this' value for calls to the associated name. */
 OPDEF(JSOP_IMPLICITTHIS,  226, "implicitthis", "",    5,  0,  1,  0,  JOF_ATOM)
 
-/* This opcode is the target of the entry jump for some loop. */
-OPDEF(JSOP_LOOPENTRY,     227, "loopentry",    NULL,  1,  0,  0,  0,  JOF_BYTE)
+/*
+ * This opcode is the target of the entry jump for some loop. The uint8 argument
+ * is the loop depth. This value starts at 1 and is just a hint: deeply
+ * nested loops all have the same value.
+ */
+OPDEF(JSOP_LOOPENTRY,     227, "loopentry",    NULL,  2,  0,  0,  0,  JOF_UINT8)
 
 /* Notes the point at which a value is pushed as an argument. */
 OPDEF(JSOP_NOTEARG,       228, "notearg",      NULL,  1,  0,  0,  0,  JOF_BYTE)
