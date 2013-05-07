@@ -32,6 +32,7 @@ _BROWSER_FILES = \
                  browser_social_window.js \
                  social_activate.html \
                  social_activate_iframe.html \
+                 browser_share.js \
                  social_panel.html \
                  social_mark_image.png \
                  social_sidebar.html \
@@ -39,6 +40,7 @@ _BROWSER_FILES = \
                  social_flyout.html \
                  social_window.html \
                  social_worker.js \
+                 share.html \
                  $(NULL)
 
 include $(topsrcdir)/config/rules.mk

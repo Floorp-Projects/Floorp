@@ -120,7 +120,7 @@
     </implementation>
 
     <handlers>
-      <handler event="focus">
+      <handler event="focus" phase="capturing">
         this.parentNode.selectedChat = this;
       </handler>
       <handler event="DOMTitleChanged"><![CDATA[
@@ -155,10 +155,10 @@
   <binding id="chatbar">
     <content>
       <xul:hbox align="end" pack="end" anonid="innerbox" class="chatbar-innerbox" mousethrough="always" flex="1">
+        <xul:spacer flex="1" anonid="spacer" class="chatbar-overflow-spacer"/>
         <xul:toolbarbutton anonid="nub" class="chatbar-button" type="menu" collapsed="true" mousethrough="never">
           <xul:menupopup anonid="nubMenu" oncommand="document.getBindingParent(this).showChat(event.target.chat)"/>
         </xul:toolbarbutton>
-        <xul:spacer flex="1" anonid="spacer" class="chatbar-overflow-spacer"/>
         <children/>
       </xul:hbox>
     </content>

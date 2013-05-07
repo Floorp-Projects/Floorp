@@ -72,8 +72,7 @@ class ClonedMessageData;
 
 class TabChildGlobal : public nsDOMEventTargetHelper,
                        public nsIContentFrameMessageManager,
-                       public nsIScriptObjectPrincipal,
-                       public nsIScriptContextPrincipal
+                       public nsIScriptObjectPrincipal
 {
 public:
   TabChildGlobal(TabChild* aTabChild);
@@ -124,7 +123,6 @@ public:
                                                     optional_argc);
   }
 
-  virtual nsIScriptObjectPrincipal* GetObjectPrincipal() { return this; }
   virtual JSContext* GetJSContextForEventHandlers();
   virtual nsIPrincipal* GetPrincipal();
 

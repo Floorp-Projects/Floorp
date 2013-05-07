@@ -65,12 +65,16 @@ function startTestAndWaitForSidebar(callback) {
     let topic = e.data.topic;
     switch (topic) {
       case "got-sidebar-message":
+        // if sidebar loaded too fast, we need a backup ping
+      case "got-isVisible-response":
         isSidebarLoaded = true;
         maybeCallback();
         break;
       case "test-init-done":
         if (isSidebarLoaded)
           maybeCallback();
+        else
+          port.postMessage({topic: "test-isVisible"});
         break;
     }
   }
@@ -102,7 +106,7 @@ function test() {
       // tab.linkedBrowser.contentWindow.focus()
       // but instead we must do:
       tab.linkedBrowser.contentDocument.getElementById("theinput").focus();
-      cb();
+      waitForCondition(function() isTabFocused(), cb, "tab should have focus");
     }
     let postSubTest = function(cb) {
       window.SocialChatBar.chatbar.removeAll();
@@ -138,10 +142,12 @@ var tests = {
           ok(isTabFocused(), "tab should still be focused");
           // re-request the same chat via user event.
           openChatViaUser();
-          is(SocialChatBar.chatbar.childElementCount, 1, "still exactly 1 chat open");
-          // should now be focused
-          ok(isChatFocused(SocialChatBar.chatbar.firstElementChild), "chat should be focused");
-          next();
+          waitForCondition(function() isChatFocused(SocialChatBar.chatbar.selectedChat),
+                           function() {
+            is(SocialChatBar.chatbar.childElementCount, 1, "still exactly 1 chat open");
+            is(SocialChatBar.chatbar.selectedChat, SocialChatBar.chatbar.firstElementChild, "chat should be selected");
+            next();
+          }, "chat should be focused");
         });
       });
     });
@@ -153,8 +159,11 @@ var tests = {
     startTestAndWaitForSidebar(function(port) {
       openChatViaUser();
       ok(SocialChatBar.chatbar.firstElementChild, "chat opened");
-      ok(isChatFocused(SocialChatBar.chatbar.firstElementChild), "chat should be focused");
-      next();
+      waitForCondition(function() isChatFocused(SocialChatBar.chatbar.selectedChat),
+                       function() {
+        is(SocialChatBar.chatbar.selectedChat, SocialChatBar.chatbar.firstElementChild, "chat is selected");
+        next();
+      }, "chat should be focused");
     });
   },
 
@@ -168,10 +177,14 @@ var tests = {
       openChatViaWorkerMessage(port, chatUrl, function() {
         is(chatbar.childElementCount, 1, "exactly 1 chat open");
         ok(chatbar.firstElementChild.minimized, "chat is minimized");
+        // bug 865086 opening minimized still sets the window as selected
+        todo(chatbar.selectedChat != chatbar.firstElementChild, "chat is not selected");
         ok(isTabFocused(), "tab should be focused");
         openChatViaSidebarMessage(port, {stealFocus: 1, id: 1}, function() {
           is(chatbar.childElementCount, 1, "still 1 chat open");
           ok(!chatbar.firstElementChild.minimized, "chat no longer minimized");
+          // bug 865086 because we marked it selected on open, it still is
+          todo(chatbar.selectedChat != chatbar.firstElementChild, "chat is not selected");
           ok(isTabFocused(), "tab should still be focused");
           next();
         });
@@ -192,9 +205,13 @@ var tests = {
         ok(isTabFocused(), "tab should still be focused");
         // pretend we clicked on the titlebar
         chatbox.onTitlebarClick({button: 0});
-        ok(!chatbox.minimized, "chat should have been restored");
-        ok(isChatFocused(chatbox), "chat should be focused");
-        next();
+        waitForCondition(function() isChatFocused(SocialChatBar.chatbar.selectedChat),
+                         function() {
+          ok(!chatbox.minimized, "chat should have been restored");
+          ok(isChatFocused(chatbox), "chat should be focused");
+          is(chatbox, SocialChatBar.chatbar.selectedChat, "chat is marked selected");
+          next();
+        }, "chat should have focus");
       });
     });
   },
@@ -211,11 +228,19 @@ var tests = {
           let chat2 = chat1.nextElementSibling || chat1.previousElementSibling;
           chatbar.selectedChat = chat1;
           chatbar.focus();
-          ok(isChatFocused(chat1), "first chat should be focused");
-          chat1.minimized = true;
-          // minimizing the chat with focus should give it to another.
-          ok(isChatFocused(chat2), "second chat should be focused");
-          next();
+          waitForCondition(function() isChatFocused(chat1),
+                           function() {
+            is(chat1, SocialChatBar.chatbar.selectedChat, "chat1 is marked selected");
+            isnot(chat2, SocialChatBar.chatbar.selectedChat, "chat2 is not marked selected");
+            chat1.minimized = true;
+            waitForCondition(function() isChatFocused(chat2),
+                             function() {
+              // minimizing the chat with focus should give it to another.
+              isnot(chat1, SocialChatBar.chatbar.selectedChat, "chat1 is not marked selected");
+              is(chat2, SocialChatBar.chatbar.selectedChat, "chat2 is marked selected");
+              next();
+            }, "chat2 should have focus");
+          }, "chat1 should have focus");
         });
       });
     });
@@ -269,30 +294,32 @@ var tests = {
           let chat2 = chat1.nextElementSibling || chat1.previousElementSibling;
           chatbar.selectedChat = chat2;
           chatbar.focus();
-          ok(isChatFocused(chat2), "new chat is focused");
-          // Our chats have 3 focusable elements, so it takes 4 TABs to move
-          // to the new chat.
-          sendTabAndWaitForFocus(chat2, "input1", function() {
-            is(chat2.iframe.contentDocument.activeElement.getAttribute("id"), "input1",
-               "first input field has focus");
-            ok(isChatFocused(chat2), "new chat still focused after first tab");
-            sendTabAndWaitForFocus(chat2, "input2", function() {
-              ok(isChatFocused(chat2), "new chat still focused after tab");
-              is(chat2.iframe.contentDocument.activeElement.getAttribute("id"), "input2",
-                 "second input field has focus");
-              sendTabAndWaitForFocus(chat2, "iframe", function() {
+          waitForCondition(function() isChatFocused(chatbar.selectedChat),
+                           function() {
+            // Our chats have 3 focusable elements, so it takes 4 TABs to move
+            // to the new chat.
+            sendTabAndWaitForFocus(chat2, "input1", function() {
+              is(chat2.iframe.contentDocument.activeElement.getAttribute("id"), "input1",
+                 "first input field has focus");
+              ok(isChatFocused(chat2), "new chat still focused after first tab");
+              sendTabAndWaitForFocus(chat2, "input2", function() {
                 ok(isChatFocused(chat2), "new chat still focused after tab");
-                is(chat2.iframe.contentDocument.activeElement.getAttribute("id"), "iframe",
-                   "iframe has focus");
-                // this tab now should move to the next chat, but focus the
-                // document element itself (hence the null eltid)
-                sendTabAndWaitForFocus(chat1, null, function() {
-                  ok(isChatFocused(chat1), "first chat is focused");
-                  next();
+                is(chat2.iframe.contentDocument.activeElement.getAttribute("id"), "input2",
+                   "second input field has focus");
+                sendTabAndWaitForFocus(chat2, "iframe", function() {
+                  ok(isChatFocused(chat2), "new chat still focused after tab");
+                  is(chat2.iframe.contentDocument.activeElement.getAttribute("id"), "iframe",
+                     "iframe has focus");
+                  // this tab now should move to the next chat, but focus the
+                  // document element itself (hence the null eltid)
+                  sendTabAndWaitForFocus(chat1, null, function() {
+                    ok(isChatFocused(chat1), "first chat is focused");
+                    next();
+                  });
                 });
               });
             });
-          });
+          }, "chat should have focus");
         });
       });
     });
@@ -310,17 +337,24 @@ var tests = {
       chat.addEventListener("DOMContentLoaded", function DOMContentLoaded() {
         chat.removeEventListener("DOMContentLoaded", DOMContentLoaded);
         chat.iframe.contentDocument.getElementById("input2").focus();
-        is(chat.iframe.contentDocument.activeElement.getAttribute("id"), "input2",
-           "correct input field has focus");
-        // set focus to the tab.
-        let tabb = gBrowser.getBrowserForTab(gBrowser.selectedTab);
-        Services.focus.moveFocus(tabb.contentWindow, null, Services.focus.MOVEFOCUS_ROOT, 0);
-        ok(isTabFocused(), "tab took focus");
-        chatbar.focus();
-        ok(isChatFocused(chat), "chat took focus");
-        is(chat.iframe.contentDocument.activeElement.getAttribute("id"), "input2",
-           "correct input field still has focus");
-        next();
+        waitForCondition(function() isChatFocused(chat),
+                         function() {
+          is(chat.iframe.contentDocument.activeElement.getAttribute("id"), "input2",
+             "correct input field has focus");
+          // set focus to the tab.
+          let tabb = gBrowser.getBrowserForTab(gBrowser.selectedTab);
+          Services.focus.moveFocus(tabb.contentWindow, null, Services.focus.MOVEFOCUS_ROOT, 0);
+          waitForCondition(function() isTabFocused(),
+                           function() {
+            chatbar.focus();
+            waitForCondition(function() isChatFocused(chat),
+                             function() {
+              is(chat.iframe.contentDocument.activeElement.getAttribute("id"), "input2",
+                 "correct input field still has focus");
+              next();
+            }, "chat took focus");
+          }, "tab has focus");
+        }, "chat took focus");
       });
     });
   },

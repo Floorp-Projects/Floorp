@@ -481,23 +481,36 @@ void
 mozilla::ReadAheadFile(mozilla::pathstr_t aFilePath, const size_t aOffset,
                        const size_t aCount, mozilla::filedesc_t* aOutFd)
 {
+#if defined(XP_WIN)
   if (!aFilePath) {
+    if (aOutFd) {
+      *aOutFd = INVALID_HANDLE_VALUE;
+    }
     return;
   }
-#if defined(XP_WIN)
   HANDLE fd = CreateFileW(aFilePath, GENERIC_READ, FILE_SHARE_READ,
                           NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL);
+  if (aOutFd) {
+    *aOutFd = fd;
+  }
   if (fd == INVALID_HANDLE_VALUE) {
     return;
   }
   ReadAhead(fd, aOffset, aCount);
-  if (aOutFd) {
-    *aOutFd = fd;
-  } else {
+  if (!aOutFd) {
     CloseHandle(fd);
   }
 #elif defined(LINUX) && !defined(ANDROID) || defined(XP_MACOSX)
+  if (!aFilePath) {
+    if (aOutFd) {
+      *aOutFd = -1;
+    }
+    return;
+  }
   int fd = open(aFilePath, O_RDONLY);
+  if (aOutFd) {
+    *aOutFd = fd;
+  }
   if (fd < 0) {
     return;
   }
@@ -505,6 +518,9 @@ mozilla::ReadAheadFile(mozilla::pathstr_t aFilePath, const size_t aOffset,
   if (aCount == SIZE_MAX) {
     struct stat st;
     if (fstat(fd, &st) < 0) {
+      if (!aOutFd) {
+        close(fd);
+      }
       return;
     }
     count = st.st_size;
@@ -512,9 +528,7 @@ mozilla::ReadAheadFile(mozilla::pathstr_t aFilePath, const size_t aOffset,
     count = aCount;
   }
   ReadAhead(fd, aOffset, count);
-  if (aOutFd) {
-    *aOutFd = fd;
-  } else {
+  if (!aOutFd) {
     close(fd);
   }
 #endif

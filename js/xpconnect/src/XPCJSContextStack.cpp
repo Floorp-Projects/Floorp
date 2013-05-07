@@ -16,6 +16,8 @@
 #include "mozilla/dom/BindingUtils.h"
 
 using namespace mozilla;
+using namespace JS;
+using namespace xpc;
 using mozilla::dom::DestroyProtoAndIfaceCache;
 
 /***************************************************************************/
@@ -53,18 +55,6 @@ XPCJSContextStack::Pop()
     return cx;
 }
 
-static nsIPrincipal*
-GetPrincipalFromCx(JSContext *cx)
-{
-    nsIScriptContextPrincipal* scp = GetScriptContextPrincipalFromJSContext(cx);
-    if (scp) {
-        nsIScriptObjectPrincipal* globalData = scp->GetObjectPrincipal();
-        if (globalData)
-            return globalData->GetPrincipal();
-    }
-    return nullptr;
-}
-
 bool
 XPCJSContextStack::Push(JSContext *cx)
 {
@@ -75,18 +65,20 @@ XPCJSContextStack::Push(JSContext *cx)
 
     XPCJSContextInfo &e = mStack[mStack.Length() - 1];
     if (e.cx) {
-        if (e.cx == cx) {
-            nsIScriptSecurityManager* ssm = XPCWrapper::GetSecurityManager();
-            if (ssm) {
-                if (nsIPrincipal* globalObjectPrincipal = GetPrincipalFromCx(cx)) {
-                    nsIPrincipal* subjectPrincipal = ssm->GetCxSubjectPrincipal(cx);
-                    bool equals = false;
-                    globalObjectPrincipal->Equals(subjectPrincipal, &equals);
-                    if (equals) {
-                        mStack.AppendElement(cx);
-                        return true;
-                    }
-                }
+        // The cx we're pushing is also stack-top. In general we still need to
+        // call JS_SaveFrameChain here. But if that would put us in a
+        // compartment that's same-origin with the current one, we can skip it.
+        nsIScriptSecurityManager* ssm = XPCWrapper::GetSecurityManager();
+        if ((e.cx == cx) && ssm) {
+            RootedObject defaultGlobal(cx, JS_GetGlobalObject(cx));
+            nsIPrincipal *currentPrincipal =
+              GetCompartmentPrincipal(js::GetContextCompartment(cx));
+            nsIPrincipal *defaultPrincipal = GetObjectPrincipal(defaultGlobal);
+            bool equal = false;
+            currentPrincipal->Equals(defaultPrincipal, &equal);
+            if (equal) {
+                mStack.AppendElement(cx);
+                return true;
             }
         }
 

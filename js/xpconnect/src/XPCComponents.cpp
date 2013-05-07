@@ -3799,7 +3799,6 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative *wrappe
 }
 
 class ContextHolder : public nsIScriptObjectPrincipal
-                    , public nsIScriptContextPrincipal
 {
 public:
     ContextHolder(JSContext *aOuterCx, HandleObject aSandbox, nsIPrincipal *aPrincipal);
@@ -3810,7 +3809,6 @@ public:
         return mJSContext;
     }
 
-    nsIScriptObjectPrincipal * GetObjectPrincipal() { return this; }
     nsIPrincipal * GetPrincipal() { return mPrincipal; }
 
     NS_DECL_ISUPPORTS
@@ -3823,7 +3821,7 @@ private:
     nsCOMPtr<nsIPrincipal> mPrincipal;
 };
 
-NS_IMPL_ISUPPORTS2(ContextHolder, nsIScriptObjectPrincipal, nsIScriptContextPrincipal)
+NS_IMPL_ISUPPORTS1(ContextHolder, nsIScriptObjectPrincipal)
 
 ContextHolder::ContextHolder(JSContext *aOuterCx,
                              HandleObject aSandbox,
