@@ -41,7 +41,7 @@ namespace mozilla {
 void
 MediaEngineWebRTC::EnumerateVideoDevices(nsTArray<nsRefPtr<MediaEngineVideoSource> >* aVSources)
 {
-#ifdef MOZ_WIDGET_GONK
+#ifdef MOZ_B2G_CAMERA
   MutexAutoLock lock(mMutex);
   if (!mCameraManager) {
     return;
