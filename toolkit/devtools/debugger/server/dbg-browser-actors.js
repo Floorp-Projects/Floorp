@@ -668,9 +668,6 @@ DebuggerProgressListener.prototype = {
     }
 
     if (isStart && aRequest instanceof Ci.nsIChannel) {
-      // If the request is about to happen in a new window, we are not concerned
-      // about the request.
-
       // Proceed normally only if the debuggee is not paused.
       if (this._tabActor.threadActor.state == "paused") {
         aRequest.suspend();
@@ -679,6 +676,7 @@ DebuggerProgressListener.prototype = {
         this._tabActor._pendingNavigation = aRequest;
       }
 
+      this._tabActor.threadActor.disableAllBreakpoints();
       this._tabActor.conn.send({
         from: this._tabActor.actorID,
         type: "tabNavigated",

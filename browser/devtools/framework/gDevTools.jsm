@@ -192,6 +192,7 @@ this.devtools = {
 };
 
 const FORBIDDEN_IDS = new Set(["toolbox", ""]);
+const MAX_ORDINAL = 99;
 
 /**
  * DevTools is a class that represents a set of developer tools, it holds a
@@ -274,8 +275,17 @@ DevTools.prototype = {
     }
   },
 
+  /**
+   * Sorting function used for sorting tools based on their ordinals.
+   */
+  ordinalSort: function DT_ordinalSort(d1, d2) {
+    let o1 = (typeof d1.ordinal == "number") ? d1.ordinal : MAX_ORDINAL;
+    let o2 = (typeof d2.ordinal == "number") ? d2.ordinal : MAX_ORDINAL;
+    return o1 - o2;
+  },
+
   getDefaultTools: function DT_getDefaultTools() {
-    return devtools.defaultTools;
+    return devtools.defaultTools.sort(this.ordinalSort);
   },
 
   getAdditionalTools: function DT_getAdditionalTools() {
@@ -285,7 +295,7 @@ DevTools.prototype = {
         tools.push(value);
       }
     }
-    return tools;
+    return tools.sort(this.ordinalSort);
   },
 
   /**
@@ -327,20 +337,12 @@ DevTools.prototype = {
    *         A sorted array of the tool definitions registered in this instance
    */
   getToolDefinitionArray: function DT_getToolDefinitionArray() {
-    const MAX_ORDINAL = 99;
-
     let definitions = [];
     for (let [id, definition] of this.getToolDefinitionMap()) {
       definitions.push(definition);
     }
 
-    definitions.sort(function(d1, d2) {
-      let o1 = (typeof d1.ordinal == "number") ? d1.ordinal : MAX_ORDINAL;
-      let o2 = (typeof d2.ordinal == "number") ? d2.ordinal : MAX_ORDINAL;
-      return o1 - o2;
-    });
-
-    return definitions;
+    return definitions.sort(this.ordinalSort);
   },
 
   /**
