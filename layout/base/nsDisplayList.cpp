@@ -797,6 +797,8 @@ nsDisplayListBuilder::EnterPresShell(nsIFrame* aReferenceFrame,
 
   nsRefPtr<nsCaret> caret = state->mPresShell->GetCaret();
   state->mCaretFrame = caret->GetCaretFrame();
+  NS_ASSERTION(state->mCaretFrame == caret->GetCaretFrame(),
+               "GetCaretFrame() is unstable");
 
   if (state->mCaretFrame) {
     // Check if the dirty rect intersects with the caret's dirty rect.
