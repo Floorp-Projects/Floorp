@@ -86,6 +86,7 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
     private TabCounter mTabsCounter;
     private ImageView mShadow;
     private GeckoImageButton mMenu;
+    private GeckoImageView mMenuIcon;
     private LinearLayout mActionItemBar;
     private MenuPopup mMenuPopup;
     private List<View> mFocusOrder;
@@ -360,11 +361,14 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
         mTitleSlideRight.setDuration(lockAnimDuration);
 
         mMenu = (GeckoImageButton) mLayout.findViewById(R.id.menu);
+        mMenuIcon = (GeckoImageView) mLayout.findViewById(R.id.menu_icon);
         mActionItemBar = (LinearLayout) mLayout.findViewById(R.id.menu_items);
         mHasSoftMenuButton = !HardwareUtils.hasMenuButton();
 
         if (mHasSoftMenuButton) {
             mMenu.setVisibility(View.VISIBLE);
+            mMenuIcon.setVisibility(View.VISIBLE);
+
             mMenu.setOnClickListener(new Button.OnClickListener() {
                 @Override
                 public void onClick(View view) {
@@ -954,6 +958,38 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
         mLayout.requestFocusFromTouch();
     }
 
+    public void prepareTabsAnimation(boolean tabsAreShown) {
+        if (!tabsAreShown) {
+            return;
+        }
+
+        ViewHelper.setAlpha(mTabsCounter, 0.0f);
+
+        if (mHasSoftMenuButton && !HardwareUtils.isTablet()) {
+            ViewHelper.setAlpha(mMenuIcon, 0.0f);
+        }
+    }
+
+    public void finishTabsAnimation(boolean tabsAreShown) {
+        if (tabsAreShown) {
+            return;
+        }
+
+        PropertyAnimator animator = new PropertyAnimator(150);
+
+        animator.attach(mTabsCounter,
+                        PropertyAnimator.Property.ALPHA,
+                        1.0f);
+
+        if (mHasSoftMenuButton && !HardwareUtils.isTablet()) {
+            animator.attach(mMenuIcon,
+                            PropertyAnimator.Property.ALPHA,
+                            1.0f);
+        }
+
+        animator.start();
+    }
+
     public void updateBackButton(boolean enabled) {
          Drawable drawable = mBack.getDrawable();
          if (drawable != null)
@@ -1109,6 +1145,7 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
             mTabs.setPrivateMode(isPrivate);
             mTitle.setPrivateMode(isPrivate);
             mMenu.setPrivateMode(isPrivate);
+            mMenuIcon.setPrivateMode(isPrivate);
 
             if (mBack instanceof BackButton)
                 ((BackButton) mBack).setPrivateMode(isPrivate);
