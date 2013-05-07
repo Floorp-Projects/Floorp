@@ -556,7 +556,7 @@ nsStandardURL::BuildNormalizedSpec(const char *spec)
     // generate the normalized URL string
     //
     // approxLen should be correct or 1 high
-    if (!EnsureStringLength(mSpec, approxLen+1)) // buf needs a trailing '\0' below
+    if (!mSpec.SetLength(approxLen+1, mozilla::fallible_t())) // buf needs a trailing '\0' below
         return NS_ERROR_OUT_OF_MEMORY;
     char *buf;
     mSpec.BeginWriting(buf);
