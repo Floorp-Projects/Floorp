@@ -284,7 +284,7 @@
             <scrollbox id="snapped-scrollbox" orient="vertical" flex="1">
               <vbox id="snapped-topsites">
                 <label class="meta-section-title" value="&startTopSitesHeader.label;"/>
-                <richgrid id="snapped-topsites-grid" rows="8" columns="1" flex="1"/>
+                <richgrid id="snapped-topsites-grid" class="canSnapTiles" rows="8" columns="1" flex="1"/>
               </vbox>
               <label class="meta-section-title" value="&startBookmarksHeader.label;"
                 onclick="PanelUI.show('bookmarks-container');"/>
