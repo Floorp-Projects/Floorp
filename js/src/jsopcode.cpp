@@ -1628,6 +1628,8 @@ DecompileArgumentFromStack(JSContext *cx, int formalIndex, char **res)
      * called the intrinsic.
      */
     StackIter frameIter(cx);
+    while (!frameIter.done() && !frameIter.isScript())
+        ++frameIter;
     JS_ASSERT(!frameIter.done());
 
     /*
@@ -1635,7 +1637,9 @@ DecompileArgumentFromStack(JSContext *cx, int formalIndex, char **res)
      * intrinsic.
      */
     ++frameIter;
-    if (frameIter.done())
+
+    /* If this frame isn't a script, we can't decompile. */
+    if (frameIter.done() || !frameIter.isScript())
         return true;
 
     RootedScript script(cx, frameIter.script());

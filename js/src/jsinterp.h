@@ -116,11 +116,25 @@ ValueToCallable(JSContext *cx, const Value &vp, int numToSkip = -1,
                 MaybeConstruct construct = NO_CONSTRUCT);
 
 /*
- * Invoke assumes that the given args have been pushed on the top of the
- * VM stack.
+ * InvokeKernel assumes that the given args have been pushed on the top of the
+ * VM stack. Additionally, if 'args' is contained in a CallArgsList, that they
+ * have already been marked 'active'.
  */
 extern bool
-Invoke(JSContext *cx, CallArgs args, MaybeConstruct construct = NO_CONSTRUCT);
+InvokeKernel(JSContext *cx, CallArgs args, MaybeConstruct construct = NO_CONSTRUCT);
+
+/*
+ * Invoke assumes that 'args' has been pushed (via ContextStack::pushInvokeArgs)
+ * and is currently at the top of the VM stack.
+ */
+inline bool
+Invoke(JSContext *cx, InvokeArgsGuard &args, MaybeConstruct construct = NO_CONSTRUCT)
+{
+    args.setActive();
+    bool ok = InvokeKernel(cx, args, construct);
+    args.setInactive();
+    return ok;
+}
 
 /*
  * This Invoke overload places the least requirements on the caller: it may be
@@ -140,11 +154,21 @@ InvokeGetterOrSetter(JSContext *cx, JSObject *obj, const Value &fval, unsigned a
                      Value *rval);
 
 /*
- * InvokeConstructor implement a function call from a constructor context
+ * InvokeConstructor* implement a function call from a constructor context
  * (e.g. 'new') handling the the creation of the new 'this' object.
  */
 extern bool
-InvokeConstructor(JSContext *cx, CallArgs args);
+InvokeConstructorKernel(JSContext *cx, CallArgs args);
+
+/* See the InvokeArgsGuard overload of Invoke. */
+inline bool
+InvokeConstructor(JSContext *cx, InvokeArgsGuard &args)
+{
+    args.setActive();
+    bool ok = InvokeConstructorKernel(cx, ImplicitCast<CallArgs>(args));
+    args.setInactive();
+    return ok;
+}
 
 /* See the fval overload of Invoke. */
 extern bool

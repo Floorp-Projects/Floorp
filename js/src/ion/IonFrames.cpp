@@ -90,17 +90,21 @@ IonFrameIterator::calleeToken() const
 JSFunction *
 IonFrameIterator::callee() const
 {
-    JS_ASSERT(isScripted());
-    JS_ASSERT(isFunctionFrame() || isParallelFunctionFrame());
-    if (isFunctionFrame())
-        return CalleeTokenToFunction(calleeToken());
-    return CalleeTokenToParallelFunction(calleeToken());
+    if (isScripted()) {
+        JS_ASSERT(isFunctionFrame() || isParallelFunctionFrame());
+        if (isFunctionFrame())
+            return CalleeTokenToFunction(calleeToken());
+        return CalleeTokenToParallelFunction(calleeToken());
+    }
+
+    JS_ASSERT(isNative());
+    return exitFrame()->nativeExit()->vp()[0].toObject().toFunction();
 }
 
 JSFunction *
 IonFrameIterator::maybeCallee() const
 {
-    if (isScripted() && (isFunctionFrame() || isParallelFunctionFrame()))
+    if ((isScripted() && (isFunctionFrame() || isParallelFunctionFrame())) || isNative())
         return callee();
     return NULL;
 }
