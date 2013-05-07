@@ -392,11 +392,13 @@ WrapperFactory::Rewrap(JSContext *cx, HandleObject existing, HandleObject obj,
         wrapper = &ChromeObjectWrapper::singleton;
 
     // If content is accessing a Components object or NAC, we need a special filter,
-    // even if the object is same origin.
+    // even if the object is same origin. Note that we allow access to NAC for
+    // remote-XUL whitelisted domains, since they don't have XBL scopes.
     } else if (IsComponentsObject(obj) && !AccessCheck::isChrome(target)) {
         wrapper = &FilteringWrapper<CrossCompartmentSecurityWrapper,
                                     ComponentsObjectPolicy>::singleton;
     } else if (AccessCheck::needsSystemOnlyWrapper(obj) &&
+               xpc::AllowXBLScope(target) &&
                !(targetIsChrome || (targetSubsumesOrigin && nsContentUtils::IsCallerXBL())))
     {
         wrapper = &FilteringWrapper<CrossCompartmentSecurityWrapper,
@@ -563,6 +565,11 @@ WrapperFactory::WrapSOWObject(JSContext *cx, JSObject *objArg)
 {
     RootedObject obj(cx, objArg);
     RootedObject proto(cx);
+
+    // If we're not allowing XBL scopes, that means we're running as a remote
+    // XUL domain, in which we can't have SOWs. We should never be called in
+    // that case.
+    MOZ_ASSERT(xpc::AllowXBLScope(js::GetContextCompartment(cx)));
     if (!JS_GetPrototype(cx, obj, proto.address()))
         return NULL;
     JSObject *wrapperObj =
