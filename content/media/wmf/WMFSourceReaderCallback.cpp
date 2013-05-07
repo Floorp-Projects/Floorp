@@ -37,12 +37,12 @@ NS_IMPL_THREADSAFE_ADDREF(WMFSourceReaderCallback)
 NS_IMPL_THREADSAFE_RELEASE(WMFSourceReaderCallback)
 
 WMFSourceReaderCallback::WMFSourceReaderCallback()
-  : mResultStatus(S_OK)
+  : mMonitor("WMFSourceReaderCallback")
+  , mResultStatus(S_OK)
   , mStreamFlags(0)
   , mTimestamp(0)
   , mSample(nullptr)
   , mReadFinished(false)
-  , mMonitor("WMFSourceReaderCallback")
 {
 #ifdef PR_LOGGING
   if (!gWMFSourceReaderCallbackLog) {
