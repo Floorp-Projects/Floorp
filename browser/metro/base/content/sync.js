@@ -65,7 +65,6 @@ let WeaveGlue = {
 
   _init: function () {
     this._bundle = Services.strings.createBundle("chrome://browser/locale/sync.properties");
-    this._msg = document.getElementById("prefs-messages");
 
     this._addListeners();
 
@@ -374,32 +373,8 @@ let WeaveGlue = {
   },
 
   disconnect: function disconnect() {
-    // Save credentials for undo
-    let undoData = this.setupData;
-
-    // Remove all credentials
     this.setupData = null;
     Weave.Service.startOver();
-
-    let message = this._bundle.GetStringFromName("notificationDisconnect.label");
-    let button = this._bundle.GetStringFromName("notificationDisconnect.button");
-    let buttons = [ {
-      label: button,
-      accessKey: "",
-      callback: function() { WeaveGlue.connect(undoData); }
-    } ];
-    this.showMessage(message, "undo-disconnect", buttons);
-
-    // Hide the notification when the panel is changed or closed.
-    let panel = document.getElementById("prefs-container");
-    panel.addEventListener("ToolPanelHidden", function onHide(aEvent) {
-      panel.removeEventListener(aEvent.type, onHide, false);
-      let notification = WeaveGlue._msg.getNotificationWithValue("undo-disconnect");
-      if (notification)
-        notification.close();
-    }, false);
-
-    Weave.Service.logout();
   },
 
   sync: function sync() {
@@ -573,14 +548,6 @@ let WeaveGlue = {
     // Make sure to update to a modified name, e.g., empty-string -> default
     Weave.Service.clientsEngine.localName = aInput.value;
     aInput.value = Weave.Service.clientsEngine.localName;
-  },
-
-  showMessage: function showMessage(aMsg, aValue, aButtons) {
-    let notification = this._msg.getNotificationWithValue(aValue);
-    if (notification)
-      return;
-
-    this._msg.appendNotification(aMsg, aValue, "", this._msg.PRIORITY_WARNING_LOW, aButtons);
   },
 
   _validateServer: function _validateServer(aURL) {
