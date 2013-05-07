@@ -7,6 +7,7 @@
 
 #include "nsDOMEvent.h"
 #include "SimToolKit.h"
+#include "mozilla/dom/MozStkCommandEventBinding.h"
 
 namespace mozilla {
 namespace dom {
@@ -46,10 +47,25 @@ public:
     return NS_OK;
   }
 
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
+  {
+    return mozilla::dom::MozStkCommandEventBinding::Wrap(aCx, aScope, this);
+  }
+
+  JS::Value GetCommand(JSContext* aCx, mozilla::ErrorResult& aRv)
+  {
+    JS::Rooted<JS::Value> retVal(aCx);
+    aRv = GetCommand(aCx, retVal.address());
+    return retVal;
+  }
+
 private:
   StkCommandEvent(mozilla::dom::EventTarget* aOwner)
   : nsDOMEvent(aOwner, nullptr, nullptr)
-  { }
+  {
+    SetIsDOMBinding();
+  }
 
   ~StkCommandEvent()
   { }

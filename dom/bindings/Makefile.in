@@ -73,6 +73,12 @@ LOCAL_INCLUDES += \
   $(NULL)
 endif
 
+ifdef MOZ_B2G_RIL
+LOCAL_INCLUDES += \
+  -I$(topsrcdir)/dom/icc/src \
+  $(NULL)
+endif
+
 EXTRA_MDDEPEND_FILES := $(addsuffix .pp,$(binding_cpp_files) $(binding_header_files))
 
 EXPORTS_GENERATED_FILES := $(exported_binding_headers)
