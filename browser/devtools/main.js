@@ -82,7 +82,7 @@ Tools.jsdebugger = {
   ordinal: 2,
   killswitch: "devtools.debugger.enabled",
   icon: "chrome://browser/skin/devtools/tool-debugger.png",
-  url: "chrome://browser/content/debugger.xul",
+  url: "chrome://browser/content/devtools/debugger.xul",
   label: l10n("ToolboxDebugger.label", debuggerStrings),
   tooltip: l10n("ToolboxDebugger.tooltip", debuggerStrings),
 
@@ -124,7 +124,7 @@ Tools.styleEditor = {
   accesskey: l10n("open.accesskey", styleEditorStrings),
   modifiers: "shift",
   icon: "chrome://browser/skin/devtools/tool-styleeditor.png",
-  url: "chrome://browser/content/styleeditor.xul",
+  url: "chrome://browser/content/devtools/styleeditor.xul",
   label: l10n("ToolboxStyleEditor.label", styleEditorStrings),
   tooltip: l10n("ToolboxStyleEditor.tooltip", styleEditorStrings),
 
@@ -146,7 +146,7 @@ Tools.jsprofiler = {
   modifiers: "shift",
   killswitch: "devtools.profiler.enabled",
   icon: "chrome://browser/skin/devtools/tool-profiler.png",
-  url: "chrome://browser/content/profiler.xul",
+  url: "chrome://browser/content/devtools/profiler.xul",
   label: l10n("profiler.label", profilerStrings),
   tooltip: l10n("profiler.tooltip", profilerStrings),
 

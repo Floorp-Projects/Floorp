@@ -25,6 +25,7 @@ _BROWSER_TEST_FILES = \
                  browser_styleeditor_private_perwindowpb.js \
                  browser_styleeditor_sv_keynav.js \
                  browser_styleeditor_sv_resize.js \
+                 browser_styleeditor_bug_740541_iframes.js \
                  browser_styleeditor_bug_851132_middle_click.js \
                  head.js \
                  helpers.js \
