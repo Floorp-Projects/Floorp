@@ -420,7 +420,7 @@ let Sync = {
     });
 
     let settingids = ["device", "connect", "connected", "disconnect", "lastsync", "pairdevice",
-                      "errordescription"];
+                      "errordescription", "accountinfo"];
     settingids.forEach(function(id) {
       elements[id] = document.getElementById("sync-" + id);
     });
@@ -440,6 +440,7 @@ let Sync = {
     let disconnect = this._elements.disconnect;
     let lastsync = this._elements.lastsync;
     let pairdevice = this._elements.pairdevice;
+    let accountinfo = this._elements.accountinfo;
 
     // This gets updated when an error occurs
     this._elements.errordescription.collapsed = true;
@@ -460,9 +461,15 @@ let Sync = {
       device.value = Weave.Service.clientsEngine.localName || "";
     }
 
+    // Account information header
+    accountinfo.collapsed = true;
     try {
-      let accountStr = this._bundle.formatStringFromName("account.label", [Weave.Service.identity.account], 1);
-      disconnect.setAttribute("title", accountStr);
+      let account = Weave.Service.identity.account;
+      if (account != null && isConfigured) {
+        let accountStr = this._bundle.formatStringFromName("account.label", [account], 1);
+        accountinfo.textContent = accountStr;
+        accountinfo.collapsed = false;
+      }
     } catch (ex) {}
 
     // If we're already locked, a sync is in progress..
@@ -508,6 +515,7 @@ let Sync = {
     this._updateUI();
 
     let errormsg = this._elements.errordescription;
+    let accountinfo = this._elements.accountinfo;
 
     // Show what went wrong with login if necessary
     if (aTopic == "weave:ui:login:error") {
