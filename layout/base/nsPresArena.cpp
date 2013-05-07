@@ -108,11 +108,7 @@ nsPresArena::Free(uint32_t aCode, void* aPtr)
   NS_ABORT_IF_FALSE(list, "no free list for pres arena object");
   NS_ABORT_IF_FALSE(list->mEntrySize > 0, "PresArena cannot free zero bytes");
 
-  char* p = reinterpret_cast<char*>(aPtr);
-  char* limit = p + list->mEntrySize;
-  for (; p < limit; p += sizeof(uintptr_t)) {
-    *reinterpret_cast<uintptr_t*>(p) = mozPoisonValue();
-  }
+  mozWritePoison(aPtr, list->mEntrySize);
 
   MOZ_MAKE_MEM_NOACCESS(aPtr, list->mEntrySize);
   list->mEntries.AppendElement(aPtr);

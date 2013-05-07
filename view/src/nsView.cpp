@@ -8,6 +8,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Likely.h"
+#include "mozilla/Poison.h"
 #include "nsIWidget.h"
 #include "nsViewManager.h"
 #include "nsIFrame.h"
@@ -132,14 +133,7 @@ nsView* nsView::GetViewFor(nsIWidget* aWidget)
 void nsView::Destroy()
 {
   this->~nsView();
-
-  const uintptr_t POISON = nsPresArena::GetPoisonValue();
-  char* p = reinterpret_cast<char*>(this);
-  char* limit = p + sizeof(*this);
-  for (; p < limit; p += sizeof(uintptr_t)) {
-    *reinterpret_cast<uintptr_t*>(p) = POISON;
-  }
-
+  mozWritePoison(this, sizeof(*this));
   nsView::operator delete(this);
 }
 
