@@ -231,7 +231,7 @@ public class AnimatorProxy {
 
         @Override
         public float getAlpha() {
-            return mTranslationX;
+            return mAlpha;
         }
 
         @Override
