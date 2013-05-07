@@ -7350,18 +7350,9 @@ class CGDictionary(CGThing):
         return (string.Template(
                 "struct ${selfName} ${inheritance}{\n"
                 "  ${selfName}() {}\n"
-                "  bool Init(JSContext* cx, JS::Handle<JS::Value> val);\n"
+                "  bool Init(JSContext* cx, JS::Handle<JS::Value> val);\n" +
+                ("  bool Init(const nsAString& aJSON);\n" if not self.workers else "") +
                 "  bool ToObject(JSContext* cx, JS::Handle<JSObject*> parentObject, JS::Value *vp) const;\n"
-                "\n" +
-                ("  bool Init(const nsAString& aJSON)\n"
-                 "  {\n"
-                 "    Maybe<JSAutoRequest> ar;\n"
-                 "    Maybe<JSAutoCompartment> ac;\n"
-                 "    Maybe< JS::Rooted<JS::Value> > json;\n"
-                 "    JSContext* cx = ParseJSON(aJSON, ar, ac, json);\n"
-                 "    NS_ENSURE_TRUE(cx, false);\n"
-                 "    return Init(cx, json.ref());\n"
-                 "  }\n" if not self.workers else "") +
                 "\n" +
                 "\n".join(memberDecls) + "\n"
                 "private:\n"
@@ -7454,6 +7445,17 @@ class CGDictionary(CGThing):
             "${initMembers}\n"
             "  return true;\n"
             "}\n"
+            "\n" +
+            ("bool\n"
+             "${selfName}::Init(const nsAString& aJSON)\n"
+             "{\n"
+             "  AutoSafeJSContext cx;\n"
+             "  JSAutoRequest ar(cx);\n"
+             "  JS::Rooted<JS::Value> json(cx);\n"
+             "  bool ok = ParseJSON(cx, aJSON, &json);\n"
+             "  NS_ENSURE_TRUE(ok, false);\n"
+             "  return Init(cx, json);\n"
+             "}\n" if not self.workers else "") +
             "\n"
             "bool\n"
             "${selfName}::ToObject(JSContext* cx, JS::Handle<JSObject*> parentObject, JS::Value *vp) const\n"
