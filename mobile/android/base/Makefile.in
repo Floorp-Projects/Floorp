@@ -166,6 +166,7 @@ FENNEC_JAVA_FILES = \
   TouchEventInterceptor.java \
   UpdateServiceHelper.java \
   VideoPlayer.java \
+  ViewHelper.java \
   WebAppAllocator.java \
   WebAppImpl.java \
   ZoomConstraints.java \
