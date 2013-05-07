@@ -20,7 +20,7 @@ if (fMain(4) !== 6)
     throw "f.main(4)";
 if (fMain(100) !== 4950)
     throw "f.main(100)";
-if (fMain(3000000) !== 4950)
-    throw "f.main(3000000)";
+if (fMain(5000) !== 4950)
+    throw "f.main(5000)";
 
 postMessage("ok");
