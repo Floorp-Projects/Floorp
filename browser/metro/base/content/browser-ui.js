@@ -77,6 +77,7 @@ var BrowserUI = {
   get _back() { return document.getElementById("cmd_back"); },
   get _forward() { return document.getElementById("cmd_forward"); },
 
+  lastKnownGoodURL: "", //used when the user wants to escape unfinished url entry
   init: function() {
     // listen content messages
     messageManager.addMessageListener("DOMTitleChanged", this);
@@ -642,6 +643,7 @@ var BrowserUI = {
 
   _setURI: function _setURI(aURL) {
     this._edit.value = aURL;
+    this.lastKnownGoodURL = aURL;
   },
 
   _urlbarClicked: function _urlbarClicked() {
@@ -727,6 +729,7 @@ var BrowserUI = {
     aEvent.preventDefault();
 
     if (this._edit.popupOpen) {
+      this._edit.value = this.lastKnownGoodURL;
       this._edit.closePopup();
       StartUI.hide();
       ContextUI.dismiss();
@@ -747,8 +750,9 @@ var BrowserUI = {
     }
 
     // Check open modal elements
-    if (DialogUI.modals.length > 0)
+    if (DialogUI.modals.length > 0) {
       return;
+    }
 
     // Check open panel
     if (PanelUI.isVisible) {
