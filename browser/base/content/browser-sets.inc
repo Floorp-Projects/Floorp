@@ -110,6 +110,7 @@
     <command id="History:UndoCloseWindow" oncommand="undoCloseWindow();"/>
     <command id="Browser:ToggleAddonBar" oncommand="toggleAddonBar();"/>
     <command id="Social:TogglePageMark" oncommand="SocialMark.togglePageMark();" disabled="true"/>
+    <command id="Social:SharePage" oncommand="SocialShare.sharePage();" disabled="true"/>
     <command id="Social:ToggleSidebar" oncommand="Social.toggleSidebar();"/>
     <command id="Social:ToggleNotifications" oncommand="Social.toggleNotifications();" hidden="true"/>
     <command id="Social:FocusChat" oncommand="SocialChatBar.focus();" hidden="true" disabled="true"/>

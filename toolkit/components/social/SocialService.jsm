@@ -136,6 +136,7 @@ function migrateSettings() {
     for (let origin in ActiveProviders._providers) {
       let prefname;
       let manifest;
+      let defaultManifest;
       try {
         prefname = getPrefnameFromOrigin(origin);
         manifest = JSON.parse(Services.prefs.getComplexValue(prefname, Ci.nsISupportsString).data);
@@ -148,14 +149,27 @@ function migrateSettings() {
         ActiveProviders.flush();
         continue;
       }
-      if (!manifest.updateDate) {
+      let needsUpdate = !manifest.updateDate;
+      // fx23 may have built-ins with shareURL
+      try {
+        defaultManifest = Services.prefs.getDefaultBranch(null)
+                        .getComplexValue(prefname, Ci.nsISupportsString).data;
+        defaultManifest = JSON.parse(defaultManifest);
+        if (defaultManifest.shareURL && !manifest.shareURL) {
+          manifest.shareURL = defaultManifest.shareURL;
+          needsUpdate = true;
+        }
+      } catch(e) {
+        // not a built-in, continue
+      }
+      if (needsUpdate) {
         // the provider was installed with an older build, so we will update the
         // timestamp and ensure the manifest is in user prefs
         delete manifest.builtin;
-        if (!manifest.updateDate) {
-          manifest.updateDate = Date.now();
+        // we're potentially updating for share, so always mark the updateDate
+        manifest.updateDate = Date.now();
+        if (!manifest.installDate)
           manifest.installDate = 0; // we don't know when it was installed
-        }
 
         let string = Cc["@mozilla.org/supports-string;1"].
                      createInstance(Ci.nsISupportsString);
@@ -404,7 +418,7 @@ this.SocialService = {
   },
 
   _manifestFromData: function(type, data, principal) {
-    let sameOriginRequired = ['workerURL', 'sidebarURL'];
+    let sameOriginRequired = ['workerURL', 'sidebarURL', 'shareURL'];
 
     if (type == 'directory') {
       // directory provided manifests must have origin in manifest, use that
@@ -422,7 +436,7 @@ this.SocialService = {
     // iconURL and name are required
     // iconURL may be a different origin (CDN or data url support) if this is
     // a whitelisted or directory listed provider
-    if (!data['workerURL'] || !data['sidebarURL']) {
+    if (!data['workerURL'] && !data['sidebarURL'] && !data['shareURL']) {
       Cu.reportError("SocialService.manifestFromData manifest missing required workerURL or sidebarURL.");
       return null;
     }
@@ -578,6 +592,7 @@ function SocialProvider(input) {
   this.icon64URL = input.icon64URL;
   this.workerURL = input.workerURL;
   this.sidebarURL = input.sidebarURL;
+  this.shareURL = input.shareURL;
   this.origin = input.origin;
   let originUri = Services.io.newURI(input.origin, null, null);
   this.principal = Services.scriptSecurityManager.getNoAppCodebasePrincipal(originUri);
