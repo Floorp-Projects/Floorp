@@ -4187,6 +4187,9 @@ pref("dom.mms.sendRetryInterval", 300000);
 pref("dom.mms.retrievalRetryCount", 4);
 pref("dom.mms.retrievalRetryIntervals", "60000,300000,600000,1800000");
 
+// Debug enabler for MMS.
+pref("mms.debugging.enabled", false);
+
 // If the user puts a finger down on an element and we think the user
 // might be executing a pan gesture, how long do we wait before
 // tentatively deciding the gesture is actually a tap and activating
