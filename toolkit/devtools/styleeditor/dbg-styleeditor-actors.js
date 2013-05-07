@@ -149,10 +149,14 @@ StyleEditorActor.prototype = {
     if (event) {
       this.win.removeEventListener("load", this._onDocumentLoaded, false);
     }
-    let styleSheets = [];
 
-    if (this.doc.styleSheets.length) {
-      this._addStyleSheets(this.doc.styleSheets);
+    let documents = [this.doc];
+    for (let doc of documents) {
+      this._addStyleSheets(doc.styleSheets);
+      // Recursively handle style sheets of the documents in iframes.
+      for (let iframe of doc.getElementsByTagName("iframe")) {
+        documents.push(iframe.contentDocument);
+      }
     }
   },
 
