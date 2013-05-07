@@ -674,16 +674,16 @@ nsToolkitProfileService::CreateDefaultProfileForApp(const nsACString& aProfileNa
 
     nsCString ini;
     ini.SetCapacity(512);
-    ini.AppendASCII("[General]\n");
-    ini.AppendASCII("StartWithLastProfile=1\n\n");
+    ini.AppendLiteral("[General]\n");
+    ini.AppendLiteral("StartWithLastProfile=1\n\n");
 
-    ini.AppendASCII("[Profile0]\n");
-    ini.AppendASCII("Name=default\n");
-    ini.AppendASCII("IsRelative=1\n");
-    ini.AppendASCII("Path=");
+    ini.AppendLiteral("[Profile0]\n");
+    ini.AppendLiteral("Name=default\n");
+    ini.AppendLiteral("IsRelative=1\n");
+    ini.AppendLiteral("Path=");
     ini.Append(profileDir);
-    ini.AppendASCII("\n");
-    ini.AppendASCII("Default=1\n\n");
+    ini.Append('\n');
+    ini.AppendLiteral("Default=1\n\n");
 
     FILE* writeFile;
     rv = profilesini->OpenANSIFileDesc("w", &writeFile);

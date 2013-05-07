@@ -137,7 +137,7 @@ nsICOEncoder::AddImageFrame(const uint8_t* aData,
     nsresult rv;
 
     nsAutoString params;
-    params.AppendASCII("bpp=");
+    params.AppendLiteral("bpp=");
     params.AppendInt(mICODirEntry.mBitCount);
 
     rv = mContainedEncoder->InitFromData(aData, aLength, aWidth, aHeight,
