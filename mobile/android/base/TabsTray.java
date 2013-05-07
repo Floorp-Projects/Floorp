@@ -5,7 +5,9 @@
 
 package org.mozilla.gecko;
 
-import org.mozilla.gecko.PropertyAnimator.Property;
+import org.mozilla.gecko.animation.PropertyAnimator;
+import org.mozilla.gecko.animation.PropertyAnimator.Property;
+import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.widget.TwoWayView;
 
 import android.content.Context;
