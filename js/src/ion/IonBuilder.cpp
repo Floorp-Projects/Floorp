@@ -6518,7 +6518,8 @@ IonBuilder::jsop_setelem()
             types::StackTypeSet::DoubleConversion conversion =
                 object->resultTypeSet()->convertDoubleElements(cx);
             if (conversion != types::StackTypeSet::AmbiguousDoubleConversion)
-                return jsop_setelem_dense(conversion, object, index, value);
+                return jsop_setelem_dense(conversion, SetElem_Normal,
+                                          object, index, value);
         }
     }
 
@@ -6537,6 +6538,7 @@ IonBuilder::jsop_setelem()
 
 bool
 IonBuilder::jsop_setelem_dense(types::StackTypeSet::DoubleConversion conversion,
+                               SetElemSafety safety,
                                MDefinition *obj, MDefinition *id, MDefinition *value)
 {
     MIRType elementType = DenseNativeElementType(cx, obj);
@@ -6565,15 +6567,22 @@ IonBuilder::jsop_setelem_dense(types::StackTypeSet::DoubleConversion conversion,
     MElements *elements = MElements::New(obj);
     current->add(elements);
 
-    bool writeHole = script()->analysis()->getCode(pc).arrayWriteHole;
-    SetElemICInspector icInspect(inspector->setElemICInspector(pc));
-    writeHole |= icInspect.sawOOBDenseWrite();
+    bool writeHole;
+    if (safety == SetElem_Normal) {
+        writeHole = script()->analysis()->getCode(pc).arrayWriteHole;
+        SetElemICInspector icInspect(inspector->setElemICInspector(pc));
+        writeHole |= icInspect.sawOOBDenseWrite();
+    } else {
+        writeHole = false;
+    }
 
     // Use MStoreElementHole if this SETELEM has written to out-of-bounds
     // indexes in the past. Otherwise, use MStoreElement so that we can hoist
     // the initialized length and bounds check.
     MStoreElementCommon *store;
     if (writeHole && writeOutOfBounds) {
+        JS_ASSERT(safety == SetElem_Normal);
+
         MStoreElementHole *ins = MStoreElementHole::New(obj, elements, id, newValue);
         store = ins;
 
@@ -6586,15 +6595,24 @@ IonBuilder::jsop_setelem_dense(types::StackTypeSet::DoubleConversion conversion,
         MInitializedLength *initLength = MInitializedLength::New(elements);
         current->add(initLength);
 
-        id = addBoundsCheck(id, initLength);
-
-        bool needsHoleCheck = !packed && !writeOutOfBounds;
+        bool needsHoleCheck;
+        if (safety == SetElem_Normal) {
+            id = addBoundsCheck(id, initLength);
+            needsHoleCheck = !packed && !writeOutOfBounds;
+        } else {
+            needsHoleCheck = false;
+        }
 
         MStoreElement *ins = MStoreElement::New(elements, id, newValue, needsHoleCheck);
         store = ins;
 
+        if (safety == SetElem_Unsafe)
+            ins->setRacy();
+
         current->add(ins);
-        current->push(value);
+
+        if (safety == SetElem_Normal)
+            current->push(value);
 
         if (!resumeAfter(ins))
             return false;
