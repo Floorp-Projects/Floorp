@@ -93,6 +93,7 @@ _LEAKTEST_DIR = $(DEPTH)/_leaktest
 _LEAKTEST_FILES =    \
 		automation.py \
 		automationutils.py \
+		$(topsrcdir)/testing/profiles/prefs_general.js \
 		leaktest.py \
 		bloatcycle.html \
 		$(topsrcdir)/build/pgo/server-locations.txt \
