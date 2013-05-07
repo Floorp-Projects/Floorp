@@ -871,6 +871,10 @@ setting[type="radio"] > vbox {
   -moz-box-orient: horizontal;
 }
 
+[viewstate="snapped"] .canSnapTiles .richgrid-item-desc {
+ -moz-margin-start: 8px;
+}
+
 /* if snapped, hide the fullscreen awesome screen, if viewstate is anything
  *  other than snapped, hide the snapped awesome screen */
 #start[viewstate="snapped"],
