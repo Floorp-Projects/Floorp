@@ -148,7 +148,7 @@ var BrowserUI = {
         FindHelperUI.init();
         PdfJs.init();
 #ifdef MOZ_SERVICES_SYNC
-        WeaveGlue.init();
+        Sync.init();
 #endif
       } catch(ex) {
         Util.dumpLn("Exception in delay load module:", ex.message);
@@ -1045,7 +1045,7 @@ var BrowserUI = {
         break;
       case "cmd_remoteTabs":
         if (Weave.Status.checkSetup() == Weave.CLIENT_NOT_CONFIGURED) {
-          WeaveGlue.open();
+          Sync.open();
         } else {
           PanelUI.show("remotetabs-container");
         }
@@ -1482,7 +1482,7 @@ var SyncPanelUI = {
     Elements.syncFlyout.addEventListener("PopupChanged", function onShow(aEvent) {
       if (aEvent.detail && aEvent.target === Elements.syncFlyout) {
         Elements.syncFlyout.removeEventListener("PopupChanged", onShow, false);
-        WeaveGlue.init();
+        Sync.init();
       }
     }, false);
   }
