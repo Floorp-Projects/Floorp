@@ -4575,6 +4575,29 @@ nsXPCComponents_Utils::IsXrayWrapper(const JS::Value &obj, bool* aRetval)
 }
 
 NS_IMETHODIMP
+nsXPCComponents_Utils::WaiveXrays(const JS::Value &aVal, JSContext *aCx, jsval *aRetval)
+{
+    *aRetval = aVal;
+    if (!xpc::WrapperFactory::WaiveXrayAndWrap(aCx, aRetval))
+        return NS_ERROR_FAILURE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPCComponents_Utils::UnwaiveXrays(const JS::Value &aVal, JSContext *aCx, jsval *aRetval)
+{
+    if (!aVal.isObject()) {
+        *aRetval = aVal;
+        return NS_OK;
+    }
+
+    *aRetval = ObjectValue(*js::UncheckedUnwrap(&aVal.toObject()));
+    if (!JS_WrapValue(aCx, aRetval))
+        return NS_ERROR_FAILURE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXPCComponents_Utils::GetClassName(const JS::Value &aObj, bool aUnwrap, JSContext *aCx, char **aRv)
 {
     if (!aObj.isObject())
