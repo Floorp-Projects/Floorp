@@ -13,14 +13,15 @@
  * is defined before <stdint.h> is included. */
 #define __STDC_LIMIT_MACROS
 
-/* Force-include hunspell_alloc_hooks.h for hunspell, so that we don't need to
- * modify it directly.
+/* Force-include hunspell_alloc_hooks.h and hunspell_fopen_hooks.h for hunspell,
+ * so that we don't need to modify it directly.
  *
  * HUNSPELL_STATIC is defined in extensions/spellcheck/hunspell/src/Makefile.in,
  * unless --enable-system-hunspell is defined.
  */
 #if defined(HUNSPELL_STATIC)
 #include "hunspell_alloc_hooks.h"
+#include "hunspell_fopen_hooks.h"
 #endif
 
 #endif /* _MOZILLA_CONFIG_H_ */
