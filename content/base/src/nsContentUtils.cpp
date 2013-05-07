@@ -3362,7 +3362,7 @@ nsContentUtils::GetWrapperSafeScriptFilename(nsIDocument *aDocument,
       // automation that the chrome document expects.
       nsAutoCString spec;
       docURI->GetSpec(spec);
-      spec.AppendASCII(" -> ");
+      spec.AppendLiteral(" -> ");
       spec.Append(aScriptURI);
 
       aScriptURI = spec;

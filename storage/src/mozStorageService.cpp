@@ -246,8 +246,8 @@ Service::getSingleton()
     nsCOMPtr<nsIPromptService> ps(do_GetService(NS_PROMPTSERVICE_CONTRACTID));
     if (ps) {
       nsAutoString title, message;
-      title.AppendASCII("SQLite Version Error");
-      message.AppendASCII("The application has been updated, but your version "
+      title.AppendLiteral("SQLite Version Error");
+      message.AppendLiteral("The application has been updated, but your version "
                           "of SQLite is too old and the application cannot "
                           "run.");
       (void)ps->Alert(nullptr, title.get(), message.get());
