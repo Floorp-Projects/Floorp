@@ -73,7 +73,6 @@ let Sync = {
     if (Weave.Status.checkSetup() != Weave.CLIENT_NOT_CONFIGURED) {
       // Put the settings UI into a state of "connecting..." if we are going to auto-connect
       this._elements.connect.firstChild.disabled = true;
-      this._elements.connect.setAttribute("title", this._bundle.GetStringFromName("connecting.label"));
 
       try {
         this._elements.device.value = Services.prefs.getCharPref("services.sync.client.name");
@@ -468,7 +467,6 @@ let Sync = {
     connected.collapsed = !isConfigured;
 
     if (!isConfigured) {
-      connect.setAttribute("title", this._bundle.GetStringFromName("notconnected.label"));
       connect.firstChild.disabled = false;
     }
 
