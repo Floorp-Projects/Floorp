@@ -111,7 +111,7 @@ function checkRequestResponse(request, data, context) {
 
   response = channel.getResponseHeader("Proxy-Authenticate");
   do_check_eq(response, "line 1\nline 2\nline 3");
-  
+
   channel.contentCharset = "UTF-8";
   do_check_eq(channel.contentCharset, "UTF-8");
   do_check_eq(channel.contentType, "text/plain");
