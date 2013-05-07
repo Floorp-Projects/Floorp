@@ -289,13 +289,9 @@ DEBUG_CheckUnwrapSafety(JSObject *obj, js::Wrapper *handler,
     if (AccessCheck::isChrome(target) || xpc::IsUniversalXPConnectEnabled(target)) {
         // If the caller is chrome (or effectively so), unwrap should always be allowed.
         MOZ_ASSERT(handler->isSafeToUnwrap());
-    } else if (WrapperFactory::IsComponentsObject(obj))
-    {
+    } else if (WrapperFactory::IsComponentsObject(obj)) {
         // The Components object that is restricted regardless of origin.
         MOZ_ASSERT(!handler->isSafeToUnwrap());
-    } else if (AccessCheck::needsSystemOnlyWrapper(obj)) {
-        // SOWs have a dynamic unwrap check, so we can't really say anything useful
-        // about them here :-(
     } else if (handler == &FilteringWrapper<CrossCompartmentSecurityWrapper, GentlyOpaque>::singleton) {
         // We explicitly use a SecurityWrapper to protect privileged callers from
         // less-privileged objects that they should never see. Skip the check in
@@ -401,8 +397,7 @@ WrapperFactory::Rewrap(JSContext *cx, HandleObject existing, HandleObject obj,
                xpc::AllowXBLScope(target) &&
                !(targetIsChrome || (targetSubsumesOrigin && nsContentUtils::IsCallerXBL())))
     {
-        wrapper = &FilteringWrapper<CrossCompartmentSecurityWrapper,
-                                    OnlyIfSubjectIsSystem>::singleton;
+        wrapper = &FilteringWrapper<CrossCompartmentSecurityWrapper, Opaque>::singleton;
     }
 
     // Normally, a non-xrayable non-waived content object that finds itself in
@@ -575,7 +570,7 @@ WrapperFactory::WrapSOWObject(JSContext *cx, JSObject *objArg)
     JSObject *wrapperObj =
         Wrapper::New(cx, obj, proto, JS_GetGlobalForObject(cx, obj),
                      &FilteringWrapper<SameCompartmentSecurityWrapper,
-                     OnlyIfSubjectIsSystem>::singleton);
+                     Opaque>::singleton);
     return wrapperObj;
 }
 

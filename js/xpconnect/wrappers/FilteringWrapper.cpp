@@ -29,13 +29,6 @@ FilteringWrapper<Base, Policy>::~FilteringWrapper()
 {
 }
 
-template <typename Base, typename Policy>
-bool
-FilteringWrapper<Base, Policy>::isSafeToUnwrap()
-{
-    return Policy::isSafeToUnwrap();
-}
-
 template <typename Policy>
 static bool
 Filter(JSContext *cx, HandleObject wrapper, AutoIdVector &props)
@@ -197,16 +190,16 @@ FilteringWrapper<Base, Policy>::enter(JSContext *cx, HandleObject wrapper,
     return true;
 }
 
-#define SOW FilteringWrapper<CrossCompartmentSecurityWrapper, OnlyIfSubjectIsSystem>
-#define SCSOW FilteringWrapper<SameCompartmentSecurityWrapper, OnlyIfSubjectIsSystem>
+// NB: don't need SOW here because the resulting wrapper would be identical to
+// NNXOW.
+#define SCSOW FilteringWrapper<SameCompartmentSecurityWrapper, Opaque>
 #define XOW FilteringWrapper<SecurityXrayXPCWN, CrossOriginAccessiblePropertiesOnly>
 #define DXOW   FilteringWrapper<SecurityXrayDOM, CrossOriginAccessiblePropertiesOnly>
 #define NNXOW FilteringWrapper<CrossCompartmentSecurityWrapper, Opaque>
 #define CW FilteringWrapper<SameCompartmentSecurityWrapper, ComponentsObjectPolicy>
 #define XCW FilteringWrapper<CrossCompartmentSecurityWrapper, ComponentsObjectPolicy>
 #define GO FilteringWrapper<CrossCompartmentSecurityWrapper, GentlyOpaque>
-template<> SOW SOW::singleton(WrapperFactory::SOW_FLAG);
-template<> SCSOW SCSOW::singleton(WrapperFactory::SOW_FLAG);
+template<> SCSOW SCSOW::singleton(0);
 template<> XOW XOW::singleton(0);
 template<> DXOW DXOW::singleton(0);
 template<> NNXOW NNXOW::singleton(0);
@@ -216,7 +209,6 @@ template<> XCW XCW::singleton(0);
 
 template<> GO GO::singleton(0);
 
-template class SOW;
 template class XOW;
 template class DXOW;
 template class NNXOW;
