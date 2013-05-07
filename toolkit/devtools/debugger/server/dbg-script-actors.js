@@ -741,6 +741,22 @@ ThreadActor.prototype = {
   },
 
   /**
+   * Disassociate all breakpoint actors from their scripts and clear the
+   * breakpoint handlers. This method can be used when the thread actor intends
+   * to keep the breakpoint store, but needs to clear any actual breakpoints,
+   * e.g. due to a page navigation. This way the breakpoint actors' script
+   * caches won't hold on to the Debugger.Script objects leaking memory.
+   */
+  disableAllBreakpoints: function () {
+    for (let url in this._breakpointStore) {
+      for (let line in this._breakpointStore[url]) {
+        let bp = this._breakpointStore[url][line];
+        bp.actor.removeScripts();
+      }
+    }
+  },
+
+  /**
    * Handle a protocol request to pause the debuggee.
    */
   onInterrupt: function TA_onInterrupt(aRequest) {
@@ -1268,8 +1284,11 @@ ThreadActor.prototype = {
         // affect the loop.
         for (let line = existing.length - 1; line >= 0; line--) {
           let bp = existing[line];
-          // Limit search to the line numbers contained in the new script.
-          if (bp && line >= aScript.startLine && line <= endLine) {
+          // Only consider breakpoints that are not already associated with
+          // scripts, and limit search to the line numbers contained in the new
+          // script.
+          if (bp && !bp.actor.scripts.length &&
+              line >= aScript.startLine && line <= endLine) {
             this._setBreakpoint(bp);
           }
         }
@@ -2051,6 +2070,16 @@ BreakpointActor.prototype = {
   },
 
   /**
+   * Remove the breakpoints from associated scripts and clear the script cache.
+   */
+  removeScripts: function () {
+    for (let script of this.scripts) {
+      script.clearBreakpoint(this);
+    }
+    this.scripts = [];
+  },
+
+  /**
    * A function that the engine calls when a breakpoint has been hit.
    *
    * @param aFrame Debugger.Frame
@@ -2079,12 +2108,9 @@ BreakpointActor.prototype = {
     // Remove from the breakpoint store.
     let scriptBreakpoints = this.threadActor._breakpointStore[this.location.url];
     delete scriptBreakpoints[this.location.line];
-    // Remove the actual breakpoint.
     this.threadActor._hooks.removeFromParentPool(this);
-    for (let script of this.scripts) {
-      script.clearBreakpoint(this);
-    }
-    this.scripts = null;
+    // Remove the actual breakpoint from the associated scripts.
+    this.removeScripts();
 
     return { from: this.actorID };
   }
