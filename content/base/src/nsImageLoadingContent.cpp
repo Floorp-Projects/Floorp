@@ -1296,11 +1296,11 @@ nsImageLoadingContent::UnbindFromTree(bool aDeep, bool aNullParent)
     doc->UnblockOnload(false);
 }
 
-nsresult
+void
 nsImageLoadingContent::TrackImage(imgIRequest* aImage, uint32_t aFlags /* = 0 */)
 {
   if (!aImage)
-    return NS_OK;
+    return;
 
   MOZ_ASSERT(aImage == mCurrentRequest || aImage == mPendingRequest,
              "Why haven't we heard of this request?");
@@ -1317,14 +1317,13 @@ nsImageLoadingContent::TrackImage(imgIRequest* aImage, uint32_t aFlags /* = 0 */
       doc->AddImage(mPendingRequest);
     }
   }
-  return NS_OK;
 }
 
-nsresult
+void
 nsImageLoadingContent::UntrackImage(imgIRequest* aImage, uint32_t aFlags /* = 0 */)
 {
   if (!aImage)
-    return NS_OK;
+    return;
 
   MOZ_ASSERT(aImage == mCurrentRequest || aImage == mPendingRequest,
              "Why haven't we heard of this request?");
@@ -1356,7 +1355,6 @@ nsImageLoadingContent::UntrackImage(imgIRequest* aImage, uint32_t aFlags /* = 0 
       aImage->RequestDiscard();
     }
   }
-  return NS_OK;
 }
 
 
