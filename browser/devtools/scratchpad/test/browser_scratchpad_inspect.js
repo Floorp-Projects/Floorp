@@ -12,47 +12,35 @@ function test()
     openScratchpad(runTests);
   }, true);
 
-  content.location = "data:text/html,<title>foobarBug636725</title>" +
-    "<p>test inspect() in Scratchpad";
+  content.location = "data:text/html;charset=utf8,<p>test inspect() in Scratchpad</p>";
 }
 
 function runTests()
 {
   let sp = gScratchpadWindow.Scratchpad;
 
-  sp.setText("document");
+  sp.setText("({ a: 'foobarBug636725' })");
 
   sp.inspect().then(function() {
+    let sidebar = sp.sidebar;
+    ok(sidebar.visible, "sidebar is open");
 
-    let propPanel = document.querySelector(".scratchpad_propertyPanel");
-    ok(propPanel, "property panel is open");
 
-    propPanel.addEventListener("popupshown", function onPopupShown() {
-      propPanel.removeEventListener("popupshown", onPopupShown, false);
+    let found = false;
 
-      let tree = propPanel.querySelector("tree");
-      ok(tree, "property panel tree found");
-
-      let column = tree.columns[0];
-      let found = false;
-
-      for (let i = 0; i < tree.view.rowCount; i++) {
-        let cell = tree.view.getCellText(i, column);
-        if (cell == 'title: "foobarBug636725"') {
-          found = true;
-          break;
+    outer: for (let scope in sidebar.variablesView) {
+      for (let [, obj] in scope) {
+        for (let [, prop] in obj) {
+          if (prop.name == "a" && prop.value == "foobarBug636725") {
+            found = true;
+            break outer;
+          }
         }
       }
-      ok(found, "found the document.title property");
+    }
 
-      executeSoon(function() {
-        propPanel.hidePopup();
+    ok(found, "found the property");
 
-        finish();
-      });
-    }, false);
-  }, function() {
-    notok(true, "document not found");
     finish();
   });
 }
