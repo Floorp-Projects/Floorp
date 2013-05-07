@@ -382,8 +382,8 @@ TransactionThreadPool::Dispatch(IDBTransaction* aTransaction,
 
 void
 TransactionThreadPool::WaitForDatabasesToComplete(
-                                       nsTArray<IDBDatabase*>& aDatabases,
-                                       nsIRunnable* aCallback)
+                                   nsTArray<nsRefPtr<IDBDatabase> >& aDatabases,
+                                   nsIRunnable* aCallback)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(!aDatabases.IsEmpty(), "No databases to wait on!");

@@ -495,7 +495,7 @@ nsDOMDataTransfer::MozGetDataAt(const nsAString& aFormat,
           nsresult rv = NS_OK;
           nsIScriptContext* c = pt->GetContextForEventHandlers(&rv);
           NS_ENSURE_TRUE(c && NS_SUCCEEDED(rv), NS_ERROR_DOM_SECURITY_ERR);
-          nsIScriptObjectPrincipal* sp = c->GetObjectPrincipal();
+          nsIScriptObjectPrincipal* sp = c->GetGlobalObject();
           NS_ENSURE_TRUE(sp, NS_ERROR_DOM_SECURITY_ERR);
           nsIPrincipal* dataPrincipal = sp->GetPrincipal();
           NS_ENSURE_TRUE(dataPrincipal, NS_ERROR_DOM_SECURITY_ERR);

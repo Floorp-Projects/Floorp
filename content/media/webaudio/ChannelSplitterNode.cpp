@@ -36,9 +36,10 @@ public:
       if (i < aInput[0].mChannelData.Length()) {
         // Split out existing channels
         AllocateAudioBlock(1, &aOutput[i]);
-        PodCopy(static_cast<float*>(const_cast<void*>(aOutput[i].mChannelData[0])),
-                static_cast<const float*>(aInput[0].mChannelData[i]),
-                WEBAUDIO_BLOCK_SIZE);
+        AudioBlockCopyChannelWithScale(
+            static_cast<const float*>(aInput[0].mChannelData[i]),
+            aInput[0].mVolume,
+            static_cast<float*>(const_cast<void*>(aOutput[i].mChannelData[0])));
       } else {
         // Pad with silent channels if needed
         aOutput[i].SetNull(WEBAUDIO_BLOCK_SIZE);

@@ -190,8 +190,13 @@ function checkSocialUI(win) {
   isbool(!win.SocialMark.button.hidden, markVisible, "SocialMark button visible?");
   isbool(!win.SocialMark.button.disabled, canMark, "SocialMark button enabled?");
   isbool(!doc.getElementById("social-toolbar-item").hidden, active, "toolbar items visible?");
-  if (active)
-    is(win.SocialToolbar.button.style.listStyleImage, 'url("' + Social.defaultProvider.iconURL + '")', "toolbar button has provider icon");
+  if (active) {
+    if (!enabled) {
+      ok(!win.SocialToolbar.button.style.listStyleImage, "toolbar button is default icon");
+    } else {
+      is(win.SocialToolbar.button.style.listStyleImage, 'url("' + Social.defaultProvider.iconURL + '")', "toolbar button has provider icon");
+    }
+  }
   // the menus should always have the provider name
   if (provider) {
     for (let id of ["menu_socialSidebar", "menu_socialAmbientMenu"])

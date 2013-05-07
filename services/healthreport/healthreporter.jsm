@@ -1146,7 +1146,7 @@ HealthReporter.prototype = Object.freeze({
 
     request.onSubmissionSuccess(this._now());
 
-#ifdef PRERELEASE_BUILD
+#ifndef RELEASE_BUILD
     // Intended to be temporary until we a) assess the impact b) bug 846133
     // deploys more robust storage for state.
     try {

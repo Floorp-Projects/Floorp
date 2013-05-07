@@ -35,6 +35,12 @@ GetCompartmentPrincipal(JSCompartment *compartment)
     return nsJSPrincipals::get(JS_GetCompartmentPrincipals(compartment));
 }
 
+nsIPrincipal *
+GetObjectPrincipal(JSObject *obj)
+{
+    return GetCompartmentPrincipal(js::GetObjectCompartment(obj));
+}
+
 // Does the principal of compartment a subsume the principal of compartment b?
 bool
 AccessCheck::subsumes(JSCompartment *a, JSCompartment *b)
@@ -252,13 +258,6 @@ AccessCheck::isCrossOriginAccessPermitted(JSContext *cx, JSObject *wrapperArg, j
 }
 
 bool
-AccessCheck::isSystemOnlyAccessPermitted(JSContext *cx)
-{
-    MOZ_ASSERT(cx == nsContentUtils::GetCurrentJSContext());
-    return nsContentUtils::CanAccessNativeAnon();
-}
-
-bool
 AccessCheck::needsSystemOnlyWrapper(JSObject *obj)
 {
     JSObject* wrapper = obj;
@@ -270,21 +269,6 @@ AccessCheck::needsSystemOnlyWrapper(JSObject *obj)
 
     XPCWrappedNative *wn = static_cast<XPCWrappedNative *>(js::GetObjectPrivate(obj));
     return wn->NeedsSOW();
-}
-
-bool
-OnlyIfSubjectIsSystem::isSafeToUnwrap()
-{
-    // It's nasty to use the context stack here, but the alternative is passing cx all
-    // the way down through CheckedUnwrap, which we just undid in a 100k patch. :-(
-    JSContext *cx = nsContentUtils::GetCurrentJSContext();
-    if (!cx)
-        return true;
-    // If XBL scopes are enabled for this compartment, this hook doesn't need to
-    // be dynamic at all, since SOWs can be opaque.
-    if (xpc::AllowXBLScope(js::GetContextCompartment(cx)))
-        return false;
-    return AccessCheck::isSystemOnlyAccessPermitted(cx);
 }
 
 enum Access { READ = (1<<0), WRITE = (1<<1), NO_ACCESS = 0 };

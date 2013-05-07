@@ -15,6 +15,7 @@ EXTRA_COMPONENTS = \
 	$(NULL)
 
 EXTRA_JS_MODULES = \
+	BackgroundPageThumbs.jsm \
 	PageThumbsWorker.js \
 	PageThumbs.jsm \
 	$(NULL)

@@ -656,8 +656,8 @@ CloneObject(JSContext *cx, HandleObject srcObj, CloneMemory &clonedObjects)
         clone = NewDenseEmptyArray(cx);
     } else {
         JS_ASSERT(srcObj->isNative());
-        clone = NewObjectWithClassProto(cx, srcObj->getClass(), NULL, cx->global(),
-                                        srcObj->tenuredGetAllocKind());
+        clone = NewObjectWithGivenProto(cx, srcObj->getClass(), NULL, cx->global(),
+                                        srcObj->tenuredGetAllocKind(), SingletonObject);
     }
     if (!clone || !clonedObjects.relookupOrAdd(p, srcObj.get(), clone.get()) ||
         !CloneProperties(cx, srcObj, clone, clonedObjects))

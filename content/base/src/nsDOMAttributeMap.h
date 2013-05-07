@@ -99,7 +99,7 @@ public:
   virtual ~nsDOMAttributeMap();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsDOMAttributeMap)
+  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS(nsDOMAttributeMap)
 
   // nsIDOMMozNamedAttrMap interface
   NS_DECL_NSIDOMMOZNAMEDATTRMAP
@@ -184,7 +184,7 @@ public:
   size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
 
 private:
-  Element *mContent; // Weak reference
+  nsCOMPtr<Element> mContent;
 
   /**
    * Cache of Attrs.
