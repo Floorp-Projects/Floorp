@@ -20,7 +20,7 @@ function run_test()
 
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect(function() {
-    attachTestGlobalClientAndResume(gClient, "test-grips", function(aResponse, aThreadClient) {
+    attachTestTabAndResume(gClient, "test-grips", function(aResponse, aTabClient, aThreadClient) {
       gThreadClient = aThreadClient;
       gThreadClient.addListener("unsolicitedPause", unsolicitedPauseListener);
       test_source();

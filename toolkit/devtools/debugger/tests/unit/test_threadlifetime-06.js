@@ -16,7 +16,7 @@ function run_test()
   gDebuggee = addTestGlobal("test-grips");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect(function() {
-    attachTestGlobalClientAndResume(gClient, "test-grips", function(aResponse, aThreadClient) {
+    attachTestTabAndResume(gClient, "test-grips", function(aResponse, aTabClient, aThreadClient) {
       gThreadClient = aThreadClient;
       test_thread_lifetime();
     });
