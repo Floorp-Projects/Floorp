@@ -12,6 +12,7 @@ let Sync = {
   _progressBar: null,
   _progressValue: 0,
   _progressMax: null,
+  _disconnecting: false,
 
   get _isSetup() {
     if (Weave.Status.checkSetup() == Weave.CLIENT_NOT_CONFIGURED) {
@@ -381,8 +382,31 @@ let Sync = {
     this.sync();
   },
 
+  // called when the user taps the disconnect button
+  onDisconnect: function onDisconnect() {
+    Weave.Service.logout();
+    let bundle = Services.strings.createBundle("chrome://branding/locale/brand.properties");
+    let brandName = bundle.GetStringFromName("brandShortName");
+    let warnStr = this._bundle.formatStringFromName("sync.disconnectPrompt", [brandName], 1);
+    this._elements.disconnectwarntitle.textContent = warnStr;
+    this._elements.disconnectwarnpanel.collapsed = false;
+  },
+
+  // called when the user taps the cancel button on
+  // the disconnect warning panel.
+  onCancelDisconnect: function onCancelDisconnect() {
+    this._elements.disconnectwarnpanel.collapsed = true;
+    this._updateUI();
+    Weave.Service.login();
+  },
+
+  // called when the user taps the remove button on
+  // the disconnect warning panel.
   disconnect: function disconnect() {
+    this._elements.disconnectwarnpanel.collapsed = true;
     this.setupData = null;
+    this._disconnecting = true;
+    this._updateUI();
     Weave.Service.startOver();
   },
 
@@ -396,6 +420,7 @@ let Sync = {
       "weave:service:sync:error", "weave:service:login:start",
       "weave:service:login:finish", "weave:service:login:error",
       "weave:ui:login:error",
+      "weave:service:start-over", "weave:service:start-over:finish",
       "weave:service:logout:finish"];
 
     // For each topic, add Sync the observer
@@ -420,7 +445,8 @@ let Sync = {
     });
 
     let settingids = ["device", "connect", "connected", "disconnect", "lastsync", "pairdevice",
-                      "errordescription", "accountinfo"];
+                      "errordescription", "accountinfo", "disconnectwarnpanel", "disconnectthrobber",
+                      "disconnectwarntitle"];
     settingids.forEach(function(id) {
       elements[id] = document.getElementById("sync-" + id);
     });
@@ -441,17 +467,31 @@ let Sync = {
     let lastsync = this._elements.lastsync;
     let pairdevice = this._elements.pairdevice;
     let accountinfo = this._elements.accountinfo;
+    let disconnectthrobber = this._elements.disconnectthrobber;
 
     // This gets updated when an error occurs
     this._elements.errordescription.collapsed = true;
 
     let isConfigured = (!this._loginError && this._isSetup);
 
+    // If we're in the process of disconnecting we are no longer configured.
+    if (this._disconnecting) {
+      isConfigured = false;
+      // display the throbber with the appropriate message
+      disconnectthrobber.collapsed = false;
+    } else {
+      disconnectthrobber.collapsed = true;
+    }
+
     connect.collapsed = isConfigured;
     connected.collapsed = !isConfigured;
     lastsync.collapsed = !isConfigured;
     device.collapsed = !isConfigured;
     disconnect.collapsed = !isConfigured;
+
+    if (this._disconnecting) {
+      connect.collapsed = true;
+    }
 
     // Set the device name text edit to configured name or the auto generated
     // name if we aren't set up.
@@ -506,6 +546,12 @@ let Sync = {
 
     // Make sure we're online when connecting/syncing
     Util.forceOnline();
+
+    if (aTopic == "weave:service:start-over") {
+      this._disconnecting = true;
+    } else if (aTopic == "weave:service:start-over:finish") {
+      this._disconnecting = false;
+    }
 
     // Can't do anything before settings are loaded
     if (this._elements == null)

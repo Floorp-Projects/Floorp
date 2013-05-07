@@ -14,6 +14,8 @@
 <!ENTITY sync.deviceName            "This device">
 <!-- remove this device button -->
 <!ENTITY sync.removebutton.label    "Remove this device">
+<!ENTITY sync.removewarn.note       "Your browser data on this device will remain intact, but you will no longer be able to sync with this account.">
+<!ENTITY sync.removethrobber.label  "Removing device">
 
 <!ENTITY sync.setup2.title          "Set up Sync">
 <!ENTITY sync.setup.pair2           "To activate, select &#x0022;Pair a device&#x0022; on your other device.">
@@ -26,6 +28,7 @@
 <!ENTITY sync.serverURL             "Server URL">
 <!ENTITY sync.setup.connect2        "Add device">
 <!ENTITY sync.setup.cancel          "Cancel">
+<!ENTITY sync.setup.remove          "Remove">
 <!ENTITY sync.setup.tutorial        "Show me how">
 <!ENTITY sync.setup.waiting2        "Waiting for other device…">
 
