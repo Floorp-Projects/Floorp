@@ -1199,17 +1199,3 @@ setting[type="radio"] > vbox {
   margin-left: -18px;
   pointer-events: auto;
 }
-
-/* Capture picker ------------------------------------------------------------- */
-
-#capturepicker-video {
-  border: @border_width_tiny@ solid white;
-}
-
-#capturepicker-container {
-  margin: @margin_normal@;
-}
-
-#capturepicker-container.vertical {
-  height: 330px;
-}
