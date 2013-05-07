@@ -13,12 +13,7 @@ var WebrtcUI = {
   handleRequest: function handleRequest(aSubject, aTopic, aData) {
     let { windowID: windowID, callID: callID } = JSON.parse(aData);
 
-    let someWindow = Services.wm.getMostRecentWindow("navigator:browser");
-    if (someWindow != window)
-      return;
-
-    let contentWindow = someWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-          .getInterface(Ci.nsIDOMWindowUtils).getOuterWindowWithId(windowID);
+    let contentWindow = Services.wm.getOuterWindowWithId(windowID);
     let browser = BrowserApp.getBrowserForWindow(contentWindow);
     let params = aSubject.QueryInterface(Ci.nsIMediaStreamOptions);
 
