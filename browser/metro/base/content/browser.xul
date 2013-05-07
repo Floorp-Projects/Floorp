@@ -402,6 +402,7 @@
 
     <flyoutpanel id="sync-flyoutpanel" headertext="&syncHeader.title;">
       <description>&sync.setup.description;</description> 
+      <description id="sync-accountinfo" collapsed="true"></description> 
       <description id="sync-lastsync" collapsed="true"></description> 
       <description id="sync-errordescription" collapsed="true"></description> 
       <setting id="sync-connect" type="control" collapsed="true">
