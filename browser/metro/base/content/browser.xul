@@ -402,17 +402,17 @@
 
     <flyoutpanel id="sync-flyoutpanel" headertext="&syncHeader.title;">
       <setting id="sync-connect" title="&sync.notconnected;" type="control">
-        <button label="&sync.connect;" oncommand="WeaveGlue.tryConnect();" />
+        <button label="&sync.connect;" oncommand="Sync.tryConnect();" />
       </setting>
       <setting id="sync-connected" class="setting-group" title="&sync.connected;" type="control" collapsed="true">
         <button id="sync-pairdevice" label="&sync.pair.button;" oncommand="SyncPairDevice.open();" />
       </setting>
       <setting id="sync-sync" class="setting-subgroup" type="control" collapsed="true">
-        <button id="sync-syncButton" label="&sync.syncNow2;" oncommand="WeaveGlue.sync();"/>
+        <button id="sync-syncButton" label="&sync.syncNow2;" oncommand="Sync.sync();"/>
       </setting>
-      <setting id="sync-device" class="setting-subgroup" type="string" title="&sync.deviceName;" onchange="WeaveGlue.changeName(this);" collapsed="true"/>
+      <setting id="sync-device" class="setting-subgroup" type="string" title="&sync.deviceName;" onchange="Sync.changeName(this);" collapsed="true"/>
       <setting id="sync-disconnect" class="setting-subgroup" type="control" collapsed="true">
-        <button label="&sync.disconnect;" oncommand="WeaveGlue.disconnect();" />
+        <button label="&sync.disconnect;" oncommand="Sync.disconnect();" />
       </setting>
     </flyoutpanel>
 
@@ -483,7 +483,7 @@
           <vbox id="syncsetup-simple" class="syncsetup-page" flex="1">
             <scrollbox id="sync-message" class="prompt-message" orient="vertical" flex="1">
               <description class="syncsetup-desc" flex="1">&sync.setup.pair2;</description>
-              <description class="link" flex="1" onclick="WeaveGlue.openTutorial();">&sync.setup.tutorial;</description>
+              <description class="link" flex="1" onclick="Sync.openTutorial();">&sync.setup.tutorial;</description>
               <separator/>
               <vbox flex="1" pack="center" align="start">
                 <description id="syncsetup-code1" class="syncsetup-code">....</description>
@@ -491,11 +491,11 @@
                 <description id="syncsetup-code3" class="syncsetup-code">....</description>
               </vbox>
               <separator/>
-              <description class="link" flex="1" onclick="WeaveGlue.openManual();">&sync.fallback;</description>
+              <description class="link" flex="1" onclick="Sync.openManual();">&sync.fallback;</description>
               <separator flex="1"/>
             </scrollbox>
             <hbox class="prompt-buttons">
-              <button class="prompt-button" oncommand="WeaveGlue.close();">&sync.setup.cancel;</button>
+              <button class="prompt-button" oncommand="Sync.close();">&sync.setup.cancel;</button>
             </hbox>
           </vbox>
           <vbox id="syncsetup-waiting" class="syncsetup-page" flex="1" hidden="true">
@@ -505,26 +505,26 @@
               <description id="syncsetup-waitingdownload-desc" class="syncsetup-desc" hidden="true" flex="1">&sync.setup.waitingdownload;</description>
             </vbox>
             <hbox class="prompt-buttons" pack="center" align="end">
-              <button id="syncsetup-waiting-cancel" class="prompt-button" oncommand="WeaveGlue.close();">&sync.setup.cancel;</button>
-              <button id="syncsetup-waiting-close" class="prompt-button" hidden="true" oncommand="WeaveGlue.close();">&sync.setup.close;</button>
+              <button id="syncsetup-waiting-cancel" class="prompt-button" oncommand="Sync.close();">&sync.setup.cancel;</button>
+              <button id="syncsetup-waiting-close" class="prompt-button" hidden="true" oncommand="Sync.close();">&sync.setup.close;</button>
             </hbox>
           </vbox>
           <vbox id="syncsetup-fallback" class="syncsetup-page" flex="1" hidden="true">
             <scrollbox class="prompt-message" orient="vertical" flex="1">
               <description class="syncsetup-desc" flex="1">&sync.setup.manual;</description>
               <separator/>
-              <textbox id="syncsetup-account" class="prompt-edit" placeholder="&sync.account;" oninput="WeaveGlue.canConnect();"/>
-              <textbox id="syncsetup-password" class="prompt-edit" placeholder="&sync.password;" type="password" oninput="WeaveGlue.canConnect();"/>
-              <textbox id="syncsetup-synckey" class="prompt-edit" placeholder="&sync.recoveryKey;" oninput="WeaveGlue.canConnect();"/>
+              <textbox id="syncsetup-account" class="prompt-edit" placeholder="&sync.account;" oninput="Sync.canConnect();"/>
+              <textbox id="syncsetup-password" class="prompt-edit" placeholder="&sync.password;" type="password" oninput="Sync.canConnect();"/>
+              <textbox id="syncsetup-synckey" class="prompt-edit" placeholder="&sync.recoveryKey;" oninput="Sync.canConnect();"/>
               <separator class="thin"/>
-              <checkbox id="syncsetup-usecustomserver" label="&sync.customServer;" oncommand="WeaveGlue.toggleCustomServer();"/>
+              <checkbox id="syncsetup-usecustomserver" label="&sync.customServer;" oncommand="Sync.toggleCustomServer();"/>
               <textbox id="syncsetup-customserver" class="prompt-edit" placeholder="&sync.serverURL;"/>
               <separator flex="1"/>
             </scrollbox>
             <hbox class="prompt-buttons">
-              <button class="prompt-button" oncommand="WeaveGlue.close();">&sync.setup.cancel;</button>
+              <button class="prompt-button" oncommand="Sync.close();">&sync.setup.cancel;</button>
               <separator/>
-              <button id="syncsetup-button-connect" class="prompt-button" oncommand="WeaveGlue.close(); WeaveGlue.connect();">&sync.setup.connect;</button>
+              <button id="syncsetup-button-connect" class="prompt-button" oncommand="Sync.close(); Sync.connect();">&sync.setup.connect;</button>
             </hbox>
           </vbox>
         </vbox>
@@ -540,7 +540,7 @@
           <vbox id="syncpair-simple" class="syncsetup-page" flex="1">
             <vbox id="sync-message" class="prompt-message" orient="vertical" flex="1">
               <description class="syncsetup-desc" flex="1">&sync.pair.description;</description>
-              <description class="link" flex="1" onclick="SyncPairDevice.close(); WeaveGlue.openTutorial();">&sync.setup.tutorial;</description>
+              <description class="link" flex="1" onclick="SyncPairDevice.close(); Sync.openTutorial();">&sync.setup.tutorial;</description>
               <separator/>
               <vbox align="center" flex="1">
                 <textbox id="syncpair-code1" class="syncsetup-code" oninput="SyncPairDevice.onTextBoxInput(this);"/>
