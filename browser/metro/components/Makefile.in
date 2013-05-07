@@ -30,7 +30,6 @@ EXTRA_COMPONENTS = \
         ContentDispatchChooser.js \
         FormAutoComplete.js \
         LoginManagerPrompter.js \
-        CapturePicker.js \
         $(NULL)
 
 ifdef MOZ_SAFE_BROWSING
