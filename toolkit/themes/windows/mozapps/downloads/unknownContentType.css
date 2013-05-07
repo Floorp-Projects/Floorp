@@ -12,6 +12,8 @@
 }
 
 #contentTypeImage {
+  height: 16px;
+  width: 16px;
   margin-top: 0px;
   margin-bottom: 0px;
   -moz-margin-start: 0px;
