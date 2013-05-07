@@ -1301,7 +1301,7 @@ StructuredCloneReadString(JSStructuredCloneReader* aReader,
   }
   length = SwapBytes(length);
 
-  if (!EnsureStringLength(aString, length)) {
+  if (!aString.SetLength(length, mozilla::fallible_t())) {
     NS_WARNING("Out of memory?");
     return false;
   }

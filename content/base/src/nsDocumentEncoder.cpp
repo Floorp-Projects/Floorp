@@ -549,7 +549,7 @@ ConvertAndWrite(const nsAString& aString,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoCString charXferString;
-  if (!EnsureStringLength(charXferString, charLength))
+  if (!charXferString.SetLength(charLength, fallible_t()))
     return NS_ERROR_OUT_OF_MEMORY;
 
   char* charXferBuf = charXferString.BeginWriting();
