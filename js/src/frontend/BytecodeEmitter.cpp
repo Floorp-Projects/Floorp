@@ -435,7 +435,23 @@ EmitLoopEntry(JSContext *cx, BytecodeEmitter *bce, ParseNode *nextpn)
             return false;
     }
 
-    return Emit1(cx, bce, JSOP_LOOPENTRY) >= 0;
+    /*
+     * Calculate loop depth. Note that this value is just a hint, so
+     * give up for deeply nested loops.
+     */
+    uint32_t loopDepth = 0;
+    StmtInfoBCE *stmt = bce->topStmt;
+    while (stmt) {
+        if (stmt->isLoop()) {
+            loopDepth++;
+            if (loopDepth >= 5)
+                break;
+        }
+        stmt = stmt->down;
+    }
+
+    JS_ASSERT(loopDepth > 0);
+    return Emit2(cx, bce, JSOP_LOOPENTRY, uint8_t(loopDepth)) >= 0;
 }
 
 /*
@@ -4530,11 +4546,13 @@ EmitDo(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     ptrdiff_t top = EmitLoopHead(cx, bce, pn->pn_left);
     if (top < 0)
         return false;
-    if (!EmitLoopEntry(cx, bce, NULL))
-        return false;
 
     StmtInfoBCE stmtInfo(cx);
     PushStatementBCE(bce, &stmtInfo, STMT_DO_LOOP, top);
+
+    if (!EmitLoopEntry(cx, bce, NULL))
+        return false;
+
     if (!EmitTree(cx, bce, pn->pn_left))
         return false;
 
