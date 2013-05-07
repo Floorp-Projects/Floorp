@@ -955,8 +955,12 @@
                      aboutHomeOverrideTooltip="&abouthome.pageTitle;"/>
 
       <toolbarbutton id="print-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     label="&printButton.label;" command="cmd_print"
-                     tooltiptext="&printButton.tooltip;"/>
+#ifdef XP_MACOSX
+                     command="cmd_print"
+#else
+                     command="cmd_printPreview"
+#endif
+                     label="&printButton.label;" tooltiptext="&printButton.tooltip;"/>
 
       <!-- This is a placeholder for the Downloads Indicator.  It is visible
            during the customization of the toolbar, in the palette, and before
