@@ -12,8 +12,7 @@
 
 enum PanningModelType {
   "equalpower",
-  "HRTF",
-  "soundfield"
+  "HRTF"
 };
 
 enum DistanceModelType {
