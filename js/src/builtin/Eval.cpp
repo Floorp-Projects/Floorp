@@ -286,6 +286,7 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, AbstractFrame
         CompileOptions options(cx);
         options.setFileAndLine(filename, lineno)
                .setCompileAndGo(true)
+               .setForEval(true)
                .setNoScriptRval(false)
                .setPrincipals(principals)
                .setOriginPrincipals(originPrincipals);
@@ -347,6 +348,7 @@ js::DirectEvalFromIon(JSContext *cx,
         CompileOptions options(cx);
         options.setFileAndLine(filename, lineno)
                .setCompileAndGo(true)
+               .setForEval(true)
                .setNoScriptRval(false)
                .setPrincipals(principals)
                .setOriginPrincipals(originPrincipals);
