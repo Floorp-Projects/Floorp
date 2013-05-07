@@ -8,6 +8,7 @@
 <?xml-stylesheet href="chrome://browser/skin/browser.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/forms.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/browser.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/cssthrobber.css" type="text/css"?>
 
 <!DOCTYPE window [
 <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
@@ -413,8 +414,25 @@
       </setting>
       <setting id="sync-device" class="setting-subgroup" type="string" title="&sync.deviceName;" onchange="Sync.changeName(this);" collapsed="true"/>
       <setting id="sync-disconnect" class="setting-subgroup" type="control" collapsed="true">
-        <button label="&sync.removebutton.label;" oncommand="Sync.disconnect();" />
+        <button label="&sync.removebutton.label;" oncommand="Sync.onDisconnect();" />
       </setting>
+      <vbox id="sync-disconnectwarnpanel" collapsed="true">
+        <description id="sync-disconnectwarntitle"></description>
+        <description id="sync-disconnectwarnmsg">&sync.removewarn.note;</description>
+        <hbox>
+          <spacer flex="1" />
+          <button label="&sync.setup.cancel;" oncommand="Sync.onCancelDisconnect();" />
+          <button label="&sync.setup.remove;" oncommand="Sync.disconnect();" />
+        </hbox>
+      </vbox>
+      <vbox id="sync-disconnectthrobber" collapsed="true">
+        <hbox>
+          <spacer flex="1" />
+          <cssthrobber id="syncdisconnectthrobber" />
+          <label>&sync.removethrobber.label;</label>
+          <spacer flex="1" />
+        </hbox>
+      </vbox>
     </flyoutpanel>
 
     <flyoutpanel id="prefs-flyoutpanel" headertext="&optionsHeader.title;">

@@ -720,6 +720,31 @@ flyoutpanel > settings:first-child {
   width: 400px;
 }
 
+#sync-disconnectwarntitle {
+  font-weight: bold;
+}
+
+#sync-disconnectthrobber {
+  margin-top: 25px;
+}
+
+#disconnectthrobber {
+  width: 25px;
+  height: 25px;
+}
+
+#syncdisconnectthrobber .progressContainer {
+  width: 25px;
+  height: 25px;
+  margin-right: 10px;
+}
+
+#syncdisconnectthrobber .progressBall {
+  margin: 2px;
+  width: 22px;
+  height: 22px;
+}
+
 /* About flyout pane */
 
 #about-flyoutpanel {
