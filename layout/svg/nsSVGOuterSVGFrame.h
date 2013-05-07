@@ -99,7 +99,7 @@ public:
     // Our anonymous wrapper performs the transforms. We simply
     // return whether we are transformed here but don't apply the transforms
     // themselves.
-    return GetFirstPrincipalChild()->IsTransformed();
+    return GetFirstPrincipalChild()->IsSVGTransformed();
   }
 
   // nsISVGSVGFrame interface:

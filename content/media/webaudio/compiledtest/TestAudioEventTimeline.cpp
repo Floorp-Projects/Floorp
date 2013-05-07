@@ -9,6 +9,7 @@
 #include <sstream>
 #include <limits>
 
+using namespace mozilla;
 using namespace mozilla::dom;
 using std::numeric_limits;
 
@@ -90,6 +91,8 @@ void TestSpecExample()
 
   ErrorResultMock rv;
 
+  float curve[] = { -1.0f, 0.0f, 1.0f };
+
   // This test is copied from the example in the Web Audio spec
   const double t0 = 0.0,
                t1 = 0.1,
@@ -97,8 +100,8 @@ void TestSpecExample()
                t3 = 0.3,
                t4 = 0.4,
                t5 = 0.6,
-               t6 = 0.7/*,
-               t7 = 1.0*/;
+               t6 = 0.7,
+               t7 = 1.0;
   timeline.SetValueAtTime(0.2f, t0, rv);
   is(rv, NS_OK, "SetValueAtTime succeeded");
   timeline.SetValueAtTime(0.3f, t1, rv);
@@ -113,7 +116,8 @@ void TestSpecExample()
   is(rv, NS_OK, "ExponentialRampToValueAtTime succeeded");
   timeline.ExponentialRampToValueAtTime(0.05f, t6, rv);
   is(rv, NS_OK, "ExponentialRampToValueAtTime succeeded");
-  // TODO: Add the SetValueCurveAtTime test
+  timeline.SetValueCurveAtTime(curve, ArrayLength(curve), t6, t7 - t6, rv);
+  is(rv, NS_OK, "SetValueCurveAtTime succeeded");
 
   is(timeline.GetValueAtTime(0.0), 0.2f, "Correct value");
   is(timeline.GetValueAtTime(0.05), 0.2f, "Correct value");
@@ -129,8 +133,9 @@ void TestSpecExample()
   is(timeline.GetValueAtTime(0.55), (0.15f * powf(0.75f / 0.15f, 0.15f / 0.2f)), "Correct value");
   is(timeline.GetValueAtTime(0.6), 0.75f, "Correct value");
   is(timeline.GetValueAtTime(0.65), (0.75f * powf(0.05 / 0.75f, 0.5f)), "Correct value");
-  is(timeline.GetValueAtTime(0.7), 0.05f, "Correct value");
-  is(timeline.GetValueAtTime(1.0), 0.05f, "Correct value");
+  is(timeline.GetValueAtTime(0.7), -1.0f, "Correct value");
+  is(timeline.GetValueAtTime(0.9), 0.0f, "Correct value");
+  is(timeline.GetValueAtTime(1.0), 1.0f, "Correct value");
 }
 
 void TestInvalidEvents()
@@ -139,6 +144,11 @@ void TestInvalidEvents()
   const float NaN = numeric_limits<float>::quiet_NaN();
   const float Infinity = numeric_limits<float>::infinity();
   Timeline timeline(10.0f);
+
+  float curve[] = { -1.0f, 0.0f, 1.0f };
+  float badCurve1[] = { -1.0f, NaN, 1.0f };
+  float badCurve2[] = { -1.0f, Infinity, 1.0f };
+  float badCurve3[] = { -1.0f, -Infinity, 1.0f };
 
   ErrorResultMock rv;
 
@@ -174,7 +184,26 @@ void TestInvalidEvents()
   is(rv, NS_ERROR_DOM_SYNTAX_ERR, "Correct error code returned");
   timeline.SetTargetAtTime(0.4f, -Infinity, 1.0, rv);
   is(rv, NS_ERROR_DOM_SYNTAX_ERR, "Correct error code returned");
-  // TODO: Test SetValueCurveAtTime
+  timeline.SetValueCurveAtTime(nullptr, 0, 1.0, 1.0, rv);
+  is(rv, NS_ERROR_DOM_SYNTAX_ERR, "Correct error code returned");
+  timeline.SetValueCurveAtTime(badCurve1, ArrayLength(badCurve1), 1.0, 1.0, rv);
+  is(rv, NS_ERROR_DOM_SYNTAX_ERR, "Correct error code returned");
+  timeline.SetValueCurveAtTime(badCurve2, ArrayLength(badCurve2), 1.0, 1.0, rv);
+  is(rv, NS_ERROR_DOM_SYNTAX_ERR, "Correct error code returned");
+  timeline.SetValueCurveAtTime(badCurve3, ArrayLength(badCurve3), 1.0, 1.0, rv);
+  is(rv, NS_ERROR_DOM_SYNTAX_ERR, "Correct error code returned");
+  timeline.SetValueCurveAtTime(curve, ArrayLength(curve), NaN, 1.0, rv);
+  is(rv, NS_ERROR_DOM_SYNTAX_ERR, "Correct error code returned");
+  timeline.SetValueCurveAtTime(curve, ArrayLength(curve), Infinity, 1.0, rv);
+  is(rv, NS_ERROR_DOM_SYNTAX_ERR, "Correct error code returned");
+  timeline.SetValueCurveAtTime(curve, ArrayLength(curve), -Infinity, 1.0, rv);
+  is(rv, NS_ERROR_DOM_SYNTAX_ERR, "Correct error code returned");
+  timeline.SetValueCurveAtTime(curve, ArrayLength(curve), 1.0, NaN, rv);
+  is(rv, NS_ERROR_DOM_SYNTAX_ERR, "Correct error code returned");
+  timeline.SetValueCurveAtTime(curve, ArrayLength(curve), 1.0, Infinity, rv);
+  is(rv, NS_ERROR_DOM_SYNTAX_ERR, "Correct error code returned");
+  timeline.SetValueCurveAtTime(curve, ArrayLength(curve), 1.0, -Infinity, rv);
+  is(rv, NS_ERROR_DOM_SYNTAX_ERR, "Correct error code returned");
 }
 
 void TestEventReplacement()

@@ -55,3 +55,6 @@ MOZ_APP_STATIC_INI=1
 MOZ_FENNEC=1
 
 MOZ_FOLD_LIBS=1
+
+# Enable navigator.mozPay
+MOZ_PAY=1

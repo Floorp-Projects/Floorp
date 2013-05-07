@@ -190,7 +190,7 @@ Client::WaitForStoragesToComplete(nsTArray<nsIOfflineStorage*>& aStorages,
   TransactionThreadPool* pool = TransactionThreadPool::Get();
   NS_ASSERTION(pool, "Should have checked if transaction service is active!");
 
-  nsTArray<IDBDatabase*> databases(aStorages.Length());
+  nsTArray<nsRefPtr<IDBDatabase> > databases(aStorages.Length());
   for (uint32_t index = 0; index < aStorages.Length(); index++) {
     IDBDatabase* database = IDBDatabase::FromStorage(aStorages[index]);
     if (!database) {

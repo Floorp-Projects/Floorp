@@ -8,7 +8,6 @@
 #define jsonparser_h___
 
 #include "mozilla/Attributes.h"
-#include "mozilla/RangedPtr.h"
 
 #include "jscntxt.h"
 #include "jsstr.h"

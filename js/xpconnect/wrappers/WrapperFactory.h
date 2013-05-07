@@ -16,8 +16,7 @@ namespace xpc {
 class WrapperFactory {
   public:
     enum { WAIVE_XRAY_WRAPPER_FLAG = js::Wrapper::LAST_USED_FLAG << 1,
-           IS_XRAY_WRAPPER_FLAG    = WAIVE_XRAY_WRAPPER_FLAG << 1,
-           SOW_FLAG                = IS_XRAY_WRAPPER_FLAG << 1 };
+           IS_XRAY_WRAPPER_FLAG    = WAIVE_XRAY_WRAPPER_FLAG << 1 };
 
     // Return true if any of any of the nested wrappers have the flag set.
     static bool HasWrapperFlag(JSObject *wrapper, unsigned flag) {
