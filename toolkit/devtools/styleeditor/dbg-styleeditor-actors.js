@@ -143,7 +143,8 @@ StyleEditorActor.prototype = {
   },
 
   /**
-   * Event handler for document loaded event.
+   * Event handler for document loaded event. Add actor for each stylesheet
+   * and send an event notifying of the load
    */
   _onDocumentLoaded: function(event) {
     if (event) {
@@ -151,40 +152,21 @@ StyleEditorActor.prototype = {
     }
 
     let documents = [this.doc];
+    var forms = [];
     for (let doc of documents) {
-      this._addStyleSheets(doc.styleSheets);
+      let sheetForms = this._addStyleSheets(doc.styleSheets);
+      forms = forms.concat(sheetForms);
       // Recursively handle style sheets of the documents in iframes.
       for (let iframe of doc.getElementsByTagName("iframe")) {
         documents.push(iframe.contentDocument);
       }
     }
-  },
 
-  /**
-   * Clear all the current stylesheet actors in map.
-   */
-  _clearStyleSheetActors: function() {
-    for (let actor in this._sheets) {
-      this.releaseActor(this._sheets[actor]);
-    }
-    this._sheets.clear();
-  },
-
-  /**
-   * Get the actors of all the stylesheets in the current document.
-   *
-   * @return {object} JSON message with the stylesheet actors' forms
-   */
-  onGetStyleSheets: function() {
-    let styleSheets = [];
-
-    for (let i = 0; i < this.doc.styleSheets.length; ++i) {
-      let styleSheet = this.doc.styleSheets[i];
-      let actor = this._createStyleSheetActor(styleSheet);
-      styleSheets.push(actor.form());
-    }
-
-    return { "styleSheets": styleSheets };
+    this.conn.send({
+      from: this.actorID,
+      type: "documentLoad",
+      styleSheets: forms
+    });
   },
 
   /**
@@ -194,6 +176,8 @@ StyleEditorActor.prototype = {
    *
    * @param {[DOMStyleSheet]} styleSheets
    *        Stylesheets to add
+   * @return {[object]}
+   *         Array of forms for each StyleSheetActor created
    */
   _addStyleSheets: function(styleSheets)
   {
@@ -207,27 +191,12 @@ StyleEditorActor.prototype = {
       sheets = sheets.concat(imports);
     }
 
-    let actors = sheets.map((sheet) => {
+    let forms = sheets.map((sheet) => {
       let actor = this._createStyleSheetActor(sheet);
       return actor.form();
     });
 
-    this._notifyStyleSheetsAdded(actors);
-  },
-
-  /**
-   * Send an event notifying that there are new style sheets
-   *
-   * @param  {[object]} actors
-   *         Forms of the new style sheet actors
-   */
-  _notifyStyleSheetsAdded: function(actors)
-  {
-    this.conn.send({
-      from: this.actorID,
-      type: "styleSheetsAdded",
-      styleSheets: actors
-    });
+    return forms;
   },
 
   /**
@@ -280,6 +249,26 @@ StyleEditorActor.prototype = {
     this._actorPool.addActor(actor);
     this._sheets.set(aStyleSheet, actor);
     return actor;
+  },
+
+  /**
+   * Clear all the current stylesheet actors in map.
+   */
+  _clearStyleSheetActors: function() {
+    for (let actor in this._sheets) {
+      this.releaseActor(this._sheets[actor]);
+    }
+    this._sheets.clear();
+  },
+
+  /**
+   * Get the actors of all the stylesheets in the current document.
+   *
+   * @return {object} JSON message with the stylesheet actors' forms
+   */
+  onGetStyleSheets: function() {
+    let forms = this._addStyleSheets(this.doc.styleSheets);
+    return { "styleSheets": forms };
   },
 
   /**
