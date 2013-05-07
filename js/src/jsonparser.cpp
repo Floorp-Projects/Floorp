@@ -6,6 +6,8 @@
 
 #include "jsonparser.h"
 
+#include "mozilla/RangedPtr.h"
+
 #include "jsarray.h"
 #include "jsnum.h"
 
