@@ -70,6 +70,7 @@ include $(topsrcdir)/config/rules.mk
 LDFLAGS += $(MOZ_ALLOW_HEAP_EXECUTE_FLAGS)
 
 ifeq ($(OS_ARCH),WINNT) #{
+EXTRA_DEPS += $(PROGRAM).manifest
 #
 # Control the default heap size.
 # This is the heap returned by GetProcessHeap().
