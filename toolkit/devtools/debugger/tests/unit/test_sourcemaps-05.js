@@ -17,7 +17,7 @@ function run_test()
   gDebuggee = addTestGlobal("test-source-map");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect(function() {
-    attachTestGlobalClientAndResume(gClient, "test-source-map", function(aResponse, aThreadClient) {
+    attachTestTabAndResume(gClient, "test-source-map", function(aResponse, aTabClient, aThreadClient) {
       gThreadClient = aThreadClient;
       test_relative_source_map();
     });
