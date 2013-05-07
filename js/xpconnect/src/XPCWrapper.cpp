@@ -34,9 +34,9 @@ UnwrapNW(JSContext *cx, unsigned argc, jsval *vp)
     return true;
   }
 
-  JS::RootedObject obj(cx, JSVAL_TO_OBJECT(v));
-  if (WrapperFactory::IsXrayWrapper(obj) && AccessCheck::wrapperSubsumes(obj)) {
-    return JS_GetProperty(cx, obj, "wrappedJSObject", vp);
+  if (AccessCheck::wrapperSubsumes(&v.toObject())) {
+    bool ok = xpc::WrapperFactory::WaiveXrayAndWrap(cx, v.address());
+    NS_ENSURE_TRUE(ok, false);
   }
 
   JS_SET_RVAL(cx, vp, v);
