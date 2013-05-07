@@ -61,7 +61,7 @@ function ProfileUI(uid, name, panel) {
   this.iframe = doc.createElement("iframe");
   this.iframe.setAttribute("flex", "1");
   this.iframe.setAttribute("id", "profiler-cleo-" + uid);
-  this.iframe.setAttribute("src", "devtools/cleopatra.html?" + uid);
+  this.iframe.setAttribute("src", "cleopatra.html?" + uid);
   this.iframe.setAttribute("hidden", "true");
 
   // Append our iframe and subscribe to postMessage events.

@@ -3483,7 +3483,7 @@ JSTerm.prototype = {
         aProperty.evaluationMacro = this._variablesViewSimpleValueEvalMacro;
       }
 
-      let grips = [aProperty.value, aProperty.gettter, aProperty.settter];
+      let grips = [aProperty.value, aProperty.getter, aProperty.setter];
       grips.forEach(addActorForDescriptor);
 
       let inspectable = !VariablesView.isPrimitive({ value: aProperty.value });
