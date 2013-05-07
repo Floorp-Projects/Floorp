@@ -3427,7 +3427,7 @@ nsresult nsDriveEnumerator::Init()
      * the length required for the string. */
     DWORD length = GetLogicalDriveStringsW(0, 0);
     /* The string is null terminated */
-    if (!EnsureStringLength(mDrives, length+1))
+    if (!mDrives.SetLength(length+1, fallible_t()))
         return NS_ERROR_OUT_OF_MEMORY;
     if (!GetLogicalDriveStringsW(length, mDrives.BeginWriting()))
         return NS_ERROR_FAILURE;

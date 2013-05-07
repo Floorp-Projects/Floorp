@@ -179,7 +179,7 @@ void txDouble::toString(double aValue, nsAString& aDest)
         ++length;
     // grow the string
     uint32_t oldlength = aDest.Length();
-    if (!EnsureStringLength(aDest, oldlength + length))
+    if (!aDest.SetLength(oldlength + length, mozilla::fallible_t()))
         return; // out of memory
     nsAString::iterator dest;
     aDest.BeginWriting(dest).advance(int32_t(oldlength));
