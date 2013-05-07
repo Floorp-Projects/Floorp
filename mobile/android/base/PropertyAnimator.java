@@ -108,6 +108,10 @@ public class PropertyAnimator implements Runnable {
     }
 
     public void start() {
+        if (mDuration == 0) {
+            return;
+        }
+
         mStartTime = AnimationUtils.currentAnimationTimeMillis();
 
         // Fix the from value based on current position and property
@@ -133,12 +137,10 @@ public class PropertyAnimator implements Runnable {
                 element.view.setDrawingCacheEnabled(true);
         }
 
-        if (mDuration != 0) {
-            mFramePoster.postFirstAnimationFrame();
+        mFramePoster.postFirstAnimationFrame();
 
-            if (mListener != null)
-                mListener.onPropertyAnimationStart();
-        }
+        if (mListener != null)
+            mListener.onPropertyAnimationStart();
     }
 
 
