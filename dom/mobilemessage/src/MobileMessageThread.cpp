@@ -184,7 +184,6 @@ MobileMessageThread::GetLastMessageType(nsAString& aLastMessageType)
     case eMessageType_MMS:
       aLastMessageType = MESSAGE_TYPE_MMS;
       break;
-    case eDeliveryState_Unknown:
     case eDeliveryState_EndGuard:
     default:
       MOZ_NOT_REACHED("We shouldn't get any other delivery state!");
