@@ -5258,6 +5258,7 @@ JS::CompileOptions::CompileOptions(JSContext *cx)
       filename(NULL),
       lineno(1),
       compileAndGo(cx->hasOption(JSOPTION_COMPILE_N_GO)),
+      forEval(false),
       noScriptRval(cx->hasOption(JSOPTION_NO_SCRIPT_RVAL)),
       selfHostingMode(false),
       userBit(false),
