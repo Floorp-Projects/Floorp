@@ -22,6 +22,13 @@ CPP_UNIT_TESTS = \
   TestWeakPtr.cpp \
   $(NULL)
 
+# These tests don't work with AddressSanitizer enabled
+ifndef MOZ_ASAN
+CPP_UNIT_TESTS += \
+  TestPoisonArea.cpp \
+  $(NULL)
+endif
+
 # in order to prevent rules.mk from trying to link to libraries that are
 # not available to MFBT, we have to reset these MOZ_GLUE*_LDFLAGS before including it
 # and LIBS_ after including it. For WRAP_LDFLAGS, it shouldn't matter.

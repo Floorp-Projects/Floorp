@@ -87,15 +87,6 @@ public:
   void SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
                            nsArenaMemoryStats* aArenaStats);
 
-  /**
-   * Get the poison value that can be used to fill a memory space with
-   * an address that leads to a safe crash when dereferenced.
-   *
-   * The caller is responsible for ensuring that a pres shell has been
-   * initialized before calling this.
-   */
-  static uintptr_t GetPoisonValue();
-
 private:
   NS_HIDDEN_(void*) Allocate(uint32_t aCode, size_t aSize);
   NS_HIDDEN_(void) Free(uint32_t aCode, void* aPtr);
