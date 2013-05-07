@@ -2569,103 +2569,6 @@ if test -z "$COMPILE_ENVIRONMENT"; then
     SKIP_LIBRARY_CHECKS=1
 fi
 
-dnl ========================================================
-dnl = Enable code optimization. ON by default.
-dnl ========================================================
-if test -z "$MOZ_OPTIMIZE_FLAGS"; then
-        MOZ_OPTIMIZE_FLAGS="-O"
-fi
-
-MOZ_ARG_ENABLE_STRING(optimize,
-[  --disable-optimize      Disable compiler optimization
-  --enable-optimize=[OPT] Specify compiler optimization flags [OPT=-O]],
-[ if test "$enableval" != "no"; then
-    MOZ_OPTIMIZE=1
-    if test -n "$enableval" -a "$enableval" != "yes"; then
-        MOZ_OPTIMIZE_FLAGS=`echo "$enableval" | sed -e 's|\\\ | |g'`
-        MOZ_OPTIMIZE=2
-    fi
-else
-    MOZ_OPTIMIZE=
-    MOZ_DISABLE_ICF=1
-fi ], MOZ_OPTIMIZE=1)
-
-MOZ_SET_FRAMEPTR_FLAGS
-
-if test "$COMPILE_ENVIRONMENT"; then
-if test -n "$MOZ_OPTIMIZE"; then
-    AC_MSG_CHECKING([for valid optimization flags])
-    _SAVE_CFLAGS=$CFLAGS
-    CFLAGS="$CFLAGS $MOZ_OPTIMIZE_FLAGS"
-    AC_TRY_COMPILE([#include <stdio.h>],
-        [printf("Hello World\n");],
-        _results=yes,
-        _results=no)
-    AC_MSG_RESULT([$_results])
-    if test "$_results" = "no"; then
-        AC_MSG_ERROR([These compiler flags are invalid: $MOZ_OPTIMIZE_FLAGS])
-    fi
-    CFLAGS=$_SAVE_CFLAGS
-fi
-fi # COMPILE_ENVIRONMENT
-
-AC_SUBST(MOZ_OPTIMIZE)
-AC_SUBST(MOZ_FRAMEPTR_FLAGS)
-AC_SUBST(MOZ_OPTIMIZE_FLAGS)
-AC_SUBST(MOZ_OPTIMIZE_LDFLAGS)
-AC_SUBST(MOZ_ALLOW_HEAP_EXECUTE_FLAGS)
-AC_SUBST(MOZ_OPTIMIZE_SIZE_TWEAK)
-AC_SUBST(MOZ_PGO_OPTIMIZE_FLAGS)
-
-dnl ========================================================
-dnl = Disable building with debug info.
-dnl = Debugging is OFF by default
-dnl ========================================================
-if test -z "$MOZ_DEBUG_FLAGS"; then
-  MOZ_DEBUG_FLAGS="-g"
-fi
-
-MOZ_ARG_ENABLE_STRING(debug,
-[  --enable-debug[=DBG]    Enable building with developer debug info
-                           (using compiler flags DBG)],
-[ if test "$enableval" != "no"; then
-    MOZ_DEBUG=1
-    MOZ_DISABLE_ICF=1
-    if test -n "$enableval" -a "$enableval" != "yes"; then
-        MOZ_DEBUG_FLAGS=`echo $enableval | sed -e 's|\\\ | |g'`
-        _MOZ_DEBUG_FLAGS_SET=1
-    fi
-  else
-    MOZ_DEBUG=
-  fi ],
-  MOZ_DEBUG=)
-
-MOZ_DEBUG_ENABLE_DEFS="-DDEBUG -D_DEBUG -DTRACING"
-MOZ_ARG_WITH_STRING(debug-label,
-[  --with-debug-label=LABELS
-                          Define DEBUG_<value> for each comma-separated
-                          value given.],
-[ for option in `echo $withval | sed 's/,/ /g'`; do
-    MOZ_DEBUG_ENABLE_DEFS="$MOZ_DEBUG_ENABLE_DEFS -DDEBUG_${option}"
-done])
-
-MOZ_DEBUG_DISABLE_DEFS="-DNDEBUG -DTRIMMED"
-
-if test -n "$MOZ_DEBUG"; then
-    AC_MSG_CHECKING([for valid debug flags])
-    _SAVE_CFLAGS=$CFLAGS
-    CFLAGS="$CFLAGS $MOZ_DEBUG_FLAGS"
-    AC_TRY_COMPILE([#include <stdio.h>],
-        [printf("Hello World\n");],
-        _results=yes,
-        _results=no)
-    AC_MSG_RESULT([$_results])
-    if test "$_results" = "no"; then
-        AC_MSG_ERROR([These compiler flags are invalid: $MOZ_DEBUG_FLAGS])
-    fi
-    CFLAGS=$_SAVE_CFLAGS
-fi
-
 MOZ_COMPILER_OPTS
 if test -z "$SKIP_COMPILER_CHECKS"; then
 dnl Checks for typedefs, structures, and compiler characteristics.
@@ -6988,6 +6891,61 @@ dnl ========================================================
 dnl MOZ_ARG_HEADER(Features that require extra sources)
 
 dnl ========================================================
+dnl =
+dnl = Debugging Options
+dnl =
+dnl ========================================================
+MOZ_ARG_HEADER(Debugging and Optimizations)
+
+dnl ========================================================
+dnl = Disable building with debug info.
+dnl = Debugging is OFF by default
+dnl ========================================================
+if test -z "$MOZ_DEBUG_FLAGS"; then
+  MOZ_DEBUG_FLAGS="-g"
+fi
+
+MOZ_ARG_ENABLE_STRING(debug,
+[  --enable-debug[=DBG]    Enable building with developer debug info
+                           (using compiler flags DBG)],
+[ if test "$enableval" != "no"; then
+    MOZ_DEBUG=1
+    if test -n "$enableval" -a "$enableval" != "yes"; then
+        MOZ_DEBUG_FLAGS=`echo $enableval | sed -e 's|\\\ | |g'`
+        _MOZ_DEBUG_FLAGS_SET=1
+    fi
+  else
+    MOZ_DEBUG=
+  fi ],
+  MOZ_DEBUG=)
+
+MOZ_DEBUG_ENABLE_DEFS="-DDEBUG -D_DEBUG -DTRACING"
+MOZ_ARG_WITH_STRING(debug-label,
+[  --with-debug-label=LABELS
+                          Define DEBUG_<value> for each comma-separated
+                          value given.],
+[ for option in `echo $withval | sed 's/,/ /g'`; do
+    MOZ_DEBUG_ENABLE_DEFS="$MOZ_DEBUG_ENABLE_DEFS -DDEBUG_${option}"
+done])
+
+MOZ_DEBUG_DISABLE_DEFS="-DNDEBUG -DTRIMMED"
+
+if test -n "$MOZ_DEBUG"; then
+    AC_MSG_CHECKING([for valid debug flags])
+    _SAVE_CFLAGS=$CFLAGS
+    CFLAGS="$CFLAGS $MOZ_DEBUG_FLAGS"
+    AC_TRY_COMPILE([#include <stdio.h>],
+        [printf("Hello World\n");],
+        _results=yes,
+        _results=no)
+    AC_MSG_RESULT([$_results])
+    if test "$_results" = "no"; then
+        AC_MSG_ERROR([These compiler flags are invalid: $MOZ_DEBUG_FLAGS])
+    fi
+    CFLAGS=$_SAVE_CFLAGS
+fi
+
+dnl ========================================================
 dnl enable mobile optimizations
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(mobile-optimize,
@@ -7000,6 +6958,53 @@ AC_SUBST(MOZ_GFX_OPTIMIZE_MOBILE)
 if test "$MOZ_GFX_OPTIMIZE_MOBILE"; then
     AC_DEFINE(MOZ_GFX_OPTIMIZE_MOBILE)
 fi
+
+dnl ========================================================
+dnl = Enable code optimization. ON by default.
+dnl ========================================================
+if test -z "$MOZ_OPTIMIZE_FLAGS"; then
+	MOZ_OPTIMIZE_FLAGS="-O"
+fi
+
+MOZ_ARG_ENABLE_STRING(optimize,
+[  --disable-optimize      Disable compiler optimization
+  --enable-optimize=[OPT] Specify compiler optimization flags [OPT=-O]],
+[ if test "$enableval" != "no"; then
+    MOZ_OPTIMIZE=1
+    if test -n "$enableval" -a "$enableval" != "yes"; then
+        MOZ_OPTIMIZE_FLAGS=`echo "$enableval" | sed -e 's|\\\ | |g'`
+        MOZ_OPTIMIZE=2
+    fi
+else
+    MOZ_OPTIMIZE=
+fi ], MOZ_OPTIMIZE=1)
+
+MOZ_SET_FRAMEPTR_FLAGS
+
+if test "$COMPILE_ENVIRONMENT"; then
+if test -n "$MOZ_OPTIMIZE"; then
+    AC_MSG_CHECKING([for valid optimization flags])
+    _SAVE_CFLAGS=$CFLAGS
+    CFLAGS="$CFLAGS $MOZ_OPTIMIZE_FLAGS"
+    AC_TRY_COMPILE([#include <stdio.h>],
+        [printf("Hello World\n");],
+        _results=yes,
+        _results=no)
+    AC_MSG_RESULT([$_results])
+    if test "$_results" = "no"; then
+        AC_MSG_ERROR([These compiler flags are invalid: $MOZ_OPTIMIZE_FLAGS])
+    fi
+    CFLAGS=$_SAVE_CFLAGS
+fi
+fi # COMPILE_ENVIRONMENT
+
+AC_SUBST(MOZ_OPTIMIZE)
+AC_SUBST(MOZ_FRAMEPTR_FLAGS)
+AC_SUBST(MOZ_OPTIMIZE_FLAGS)
+AC_SUBST(MOZ_OPTIMIZE_LDFLAGS)
+AC_SUBST(MOZ_ALLOW_HEAP_EXECUTE_FLAGS)
+AC_SUBST(MOZ_OPTIMIZE_SIZE_TWEAK)
+AC_SUBST(MOZ_PGO_OPTIMIZE_FLAGS)
 
 dnl ========================================================
 dnl = Enable generation of debug symbols
