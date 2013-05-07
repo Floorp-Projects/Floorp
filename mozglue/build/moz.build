@@ -30,6 +30,11 @@ if CONFIG['OS_TARGET'] == 'Android':
         'BionicGlue.cpp',
     ]
 
+if CONFIG['MOZ_NUWA_PROCESS']:
+    EXPORTS.ipc += [
+        'Nuwa.h',
+    ]
+
 EXPORTS.mozilla += [
     'SSE.h',
     'arm.h',
