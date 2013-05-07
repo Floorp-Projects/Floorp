@@ -11,7 +11,7 @@ interface nsIDOMMozMobileCFInfo;
 interface nsIDOMDOMRequest;
 interface nsIDOMWindow;
 
-[scriptable, uuid(2cb8e811-7eaf-4cb9-8aa8-581e7a245edc)]
+[scriptable, uuid(d919e279-b0e4-4bc0-8464-f5b37aa41484)]
 interface nsIMobileConnectionListener : nsISupports
 {
   void notifyVoiceChanged();
@@ -47,6 +47,7 @@ interface nsIMobileConnectionProvider : nsISupports
   void unregisterMobileConnectionMsg(in nsIMobileConnectionListener listener);
 
   readonly attribute DOMString cardState;
+  readonly attribute long retryCount;
   readonly attribute nsIDOMMozMobileICCInfo iccInfo;
   readonly attribute nsIDOMMozMobileConnectionInfo voiceConnectionInfo;
   readonly attribute nsIDOMMozMobileConnectionInfo dataConnectionInfo;

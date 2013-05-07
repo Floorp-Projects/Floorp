@@ -45,7 +45,7 @@
 #include "video_engine/include/vie_render.h"
 #include "video_engine/include/vie_capture.h"
 #include "video_engine/include/vie_file.h"
-#ifdef MOZ_WIDGET_GONK
+#ifdef MOZ_B2G_CAMERA
 #include "CameraPreviewMediaStream.h"
 #include "DOMCameraManager.h"
 #include "GonkCameraControl.h"
@@ -58,7 +58,7 @@
 
 namespace mozilla {
 
-#ifdef MOZ_WIDGET_GONK
+#ifdef MOZ_B2G_CAMERA
 class CameraAllocateRunnable;
 class GetCameraNameRunnable;
 #endif
@@ -82,7 +82,7 @@ class GetCameraNameRunnable;
  */
 class MediaEngineWebRTCVideoSource : public MediaEngineVideoSource
                                    , public nsRunnable
-#ifdef MOZ_WIDGET_GONK
+#ifdef MOZ_B2G_CAMERA
                                    , public nsICameraGetCameraCallback
                                    , public nsICameraPreviewStreamCallback
                                    , public nsICameraTakePictureCallback
@@ -94,7 +94,7 @@ class MediaEngineWebRTCVideoSource : public MediaEngineVideoSource
 #endif
 {
 public:
-#ifdef MOZ_WIDGET_GONK
+#ifdef MOZ_B2G_CAMERA
   MediaEngineWebRTCVideoSource(nsDOMCameraManager* aCameraManager,
     int aIndex, uint64_t aWindowId)
     : mCameraManager(aCameraManager)
@@ -155,7 +155,7 @@ public:
                           TrackTicks &aLastEndTime);
 
   NS_DECL_ISUPPORTS
-#ifdef MOZ_WIDGET_GONK
+#ifdef MOZ_B2G_CAMERA
   NS_DECL_NSICAMERAGETCAMERACALLBACK
   NS_DECL_NSICAMERAPREVIEWSTREAMCALLBACK
   NS_DECL_NSICAMERATAKEPICTURECALLBACK
@@ -200,7 +200,7 @@ private:
   void Shutdown();
 
   // Engine variables.
-#ifdef MOZ_WIDGET_GONK
+#ifdef MOZ_B2G_CAMERA
   // MediaEngine hold this DOM object, and the MediaEngine is hold by Navigator
   // Their life time is always much longer than this object. Use a raw-pointer
   // here should be safe.
@@ -337,7 +337,7 @@ private:
 class MediaEngineWebRTC : public MediaEngine
 {
 public:
-#ifdef MOZ_WIDGET_GONK
+#ifdef MOZ_B2G_CAMERA
   MediaEngineWebRTC(nsDOMCameraManager* aCameraManager, uint64_t aWindowId)
     : mMutex("mozilla::MediaEngineWebRTC")
     , mVideoEngine(nullptr)
@@ -387,7 +387,7 @@ private:
   nsRefPtrHashtable<nsStringHashKey, MediaEngineWebRTCVideoSource > mVideoSources;
   nsRefPtrHashtable<nsStringHashKey, MediaEngineWebRTCAudioSource > mAudioSources;
 
-#ifdef MOZ_WIDGET_GONK
+#ifdef MOZ_B2G_CAMERA
   // MediaEngine hold this DOM object, and the MediaEngine is hold by Navigator
   // Their life time is always much longer than this object. Use a raw-pointer
   // here should be safe.
