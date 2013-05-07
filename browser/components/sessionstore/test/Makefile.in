@@ -30,6 +30,7 @@ MOCHITEST_BROWSER_FILES = \
 	browser_input.js \
 	browser_input_sample.html \
 	browser_pageshow.js \
+	browser_windowRestore_perwindowpb.js \
 	browser_248970_b_perwindowpb.js \
 	browser_248970_b_sample.html \
 	browser_339445.js \
