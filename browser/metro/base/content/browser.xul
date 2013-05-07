@@ -402,14 +402,13 @@
 
     <flyoutpanel id="sync-flyoutpanel" headertext="&syncHeader.title;">
       <description>&sync.setup.description;</description> 
-      <setting id="sync-connect" type="control">
+      <description id="sync-lastsync" collapsed="true"></description> 
+      <description id="sync-errordescription" collapsed="true"></description> 
+      <setting id="sync-connect" type="control" collapsed="true">
         <button label="&sync.setupbutton.label;" oncommand="Sync.tryConnect();" />
       </setting>
       <setting id="sync-connected" class="setting-group" type="control" collapsed="true">
         <button id="sync-pairdevice" label="&sync.pair.button;" oncommand="SyncPairDevice.open();" />
-      </setting>
-      <setting id="sync-sync" class="setting-subgroup" type="control" collapsed="true">
-        <button id="sync-syncButton" label="&sync.syncNow2;" oncommand="Sync.sync();"/>
       </setting>
       <setting id="sync-device" class="setting-subgroup" type="string" title="&sync.deviceName;" onchange="Sync.changeName(this);" collapsed="true"/>
       <setting id="sync-disconnect" class="setting-subgroup" type="control" collapsed="true">
