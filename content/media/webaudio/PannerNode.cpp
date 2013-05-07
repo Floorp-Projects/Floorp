@@ -68,9 +68,6 @@ public:
         case PanningModelTypeValues::HRTF:
           mPanningModelFunction = &PannerNodeEngine::HRTFPanningFunction;
           break;
-        case PanningModelTypeValues::Soundfield:
-          mPanningModelFunction = &PannerNodeEngine::SoundfieldPanningFunction;
-          break;
       }
       break;
     case PannerNode::DISTANCE_MODEL:
@@ -144,7 +141,6 @@ public:
 
   void EqualPowerPanningFunction(const AudioChunk& aInput, AudioChunk* aOutput);
   void HRTFPanningFunction(const AudioChunk& aInput, AudioChunk* aOutput);
-  void SoundfieldPanningFunction(const AudioChunk& aInput, AudioChunk* aOutput);
 
   float LinearGainFunction(float aDistance);
   float InverseGainFunction(float aDistance);
@@ -227,14 +223,6 @@ float
 PannerNodeEngine::ExponentialGainFunction(float aDistance)
 {
   return pow(aDistance / mRefDistance, -mRolloffFactor);
-}
-
-void
-PannerNodeEngine::SoundfieldPanningFunction(const AudioChunk& aInput,
-                                            AudioChunk* aOutput)
-{
-  // not implemented: noop
-  *aOutput = aInput;
 }
 
 void
