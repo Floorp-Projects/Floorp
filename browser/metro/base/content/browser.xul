@@ -514,7 +514,7 @@
               <separator flex="1"/>
             </scrollbox>
             <hbox class="prompt-buttons">
-              <button class="prompt-button" oncommand="Sync.close();">&sync.setup.cancel;</button>
+              <button oncommand="Sync.close();">&sync.setup.cancel;</button>
             </hbox>
           </vbox>
           <vbox id="syncsetup-waiting" class="syncsetup-page" flex="1" hidden="true">
@@ -524,8 +524,8 @@
               <description id="syncsetup-waitingdownload-desc" class="syncsetup-desc" hidden="true" flex="1">&sync.setup.waitingdownload;</description>
             </vbox>
             <hbox class="prompt-buttons" pack="center" align="end">
-              <button id="syncsetup-waiting-cancel" class="prompt-button" oncommand="Sync.close();">&sync.setup.cancel;</button>
-              <button id="syncsetup-waiting-close" class="prompt-button" hidden="true" oncommand="Sync.close();">&sync.setup.close;</button>
+              <button id="syncsetup-waiting-cancel" oncommand="Sync.close();">&sync.setup.cancel;</button>
+              <button id="syncsetup-waiting-close" hidden="true" oncommand="Sync.close();">&sync.setup.close;</button>
             </hbox>
           </vbox>
           <vbox id="syncsetup-fallback" class="syncsetup-page" flex="1" hidden="true">
@@ -541,9 +541,9 @@
               <separator flex="1"/>
             </scrollbox>
             <hbox class="prompt-buttons">
-              <button class="prompt-button" oncommand="Sync.close();">&sync.setup.cancel;</button>
+              <button oncommand="Sync.close();">&sync.setup.cancel;</button>
               <separator/>
-              <button id="syncsetup-button-connect" class="prompt-button" oncommand="Sync.close(); Sync.connect();">&sync.setup.connect2;</button>
+              <button id="syncsetup-button-connect" oncommand="Sync.close(); Sync.connect();">&sync.setup.connect2;</button>
             </hbox>
           </vbox>
         </vbox>
@@ -568,8 +568,8 @@
               </vbox>
             </vbox>
             <hbox class="prompt-buttons" pack="center">
-              <button class="prompt-button" oncommand="SyncPairDevice.close();">&sync.setup.cancel;</button>
-              <button id="syncpair-connectbutton" class="prompt-button" disabled="true" oncommand="SyncPairDevice.connect();">&sync.setup.connect2;</button>
+              <button oncommand="SyncPairDevice.close();">&sync.setup.cancel;</button>
+              <button id="syncpair-connectbutton" disabled="true" oncommand="SyncPairDevice.connect();">&sync.setup.connect2;</button>
             </hbox>
           </vbox>
         </vbox>
