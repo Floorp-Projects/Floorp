@@ -4367,9 +4367,6 @@ EmitNormalFor(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
     if (EmitJump(cx, bce, op, top - bce->offset()) < 0)
         return false;
 
-    if (!bce->tryNoteList.append(JSTRY_LOOP, bce->stackDepth, top, bce->offset()))
-        return false;
-
     /* Now fixup all breaks and continues. */
     return PopStatementBCE(cx, bce);
 }
@@ -4556,9 +4553,6 @@ EmitDo(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     if (beq < 0)
         return false;
 
-    if (!bce->tryNoteList.append(JSTRY_LOOP, bce->stackDepth, top, bce->offset()))
-        return false;
-
     /*
      * Be careful: We must set noteIndex2 before noteIndex in case the noteIndex
      * note gets bigger.
@@ -4613,9 +4607,6 @@ EmitWhile(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
 
     ptrdiff_t beq = EmitJump(cx, bce, JSOP_IFNE, top - bce->offset());
     if (beq < 0)
-        return false;
-
-    if (!bce->tryNoteList.append(JSTRY_LOOP, bce->stackDepth, top, bce->offset()))
         return false;
 
     if (!SetSrcNoteOffset(cx, bce, noteIndex, 0, beq - jmp))

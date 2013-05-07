@@ -119,7 +119,7 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSNative native)
 types::StackTypeSet *
 IonBuilder::getInlineReturnTypeSet()
 {
-    return types::TypeScript::BytecodeTypes(script(), pc);
+    return script()->analysis()->bytecodeTypes(pc);
 }
 
 MIRType

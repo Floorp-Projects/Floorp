@@ -122,8 +122,13 @@ class Bytecode
 
   private:
 
-    /* If this is a JSOP_LOOPHEAD or JSOP_LOOPENTRY, information about the loop. */
-    LoopAnalysis *loop;
+    union {
+        /* If this is a JOF_TYPESET opcode, index into the observed types for the op. */
+        types::StackTypeSet *observedTypes;
+
+        /* If this is a JSOP_LOOPHEAD or JSOP_LOOPENTRY, information about the loop. */
+        LoopAnalysis *loop;
+    };
 
     /* --------- Lifetime analysis --------- */
 
@@ -879,6 +884,11 @@ class ScriptAnalysis
     bool incrementInitialValueObserved(jsbytecode *pc) {
         const JSCodeSpec *cs = &js_CodeSpec[*pc];
         return (cs->format & JOF_POST) && !popGuaranteed(pc);
+    }
+
+    types::StackTypeSet *bytecodeTypes(const jsbytecode *pc) {
+        JS_ASSERT(js_CodeSpec[*pc].format & JOF_TYPESET);
+        return getCode(pc).observedTypes;
     }
 
     const SSAValue &poppedValue(uint32_t offset, uint32_t which) {

@@ -121,8 +121,6 @@ mjit::Compiler::Compiler(JSContext *cx, JSScript *outerScript,
     gcNumber(cx->runtime->gcNumber),
     pcLengths(NULL)
 {
-    JS_ASSERT(cx->jaegerCompilationAllowed());
-
     if (!IsIonEnabled(cx)) {
         /* Once a script starts getting really hot we will inline calls in it. */
         if (!debugMode() && cx->typeInferenceEnabled() && globalObj &&
@@ -994,9 +992,6 @@ mjit::CanMethodJIT(JSContext *cx, JSScript *script, jsbytecode *pc,
     bool compiledOnce = false;
   checkOutput:
     if (!cx->methodJitEnabled)
-        return Compile_Abort;
-
-    if (!cx->jaegerCompilationAllowed())
         return Compile_Abort;
 
 #ifdef JS_ION
@@ -8128,7 +8123,7 @@ mjit::Compiler::testBarrier(RegisterID typeReg, RegisterID dataReg,
     if (!cx->typeInferenceEnabled() || !(js_CodeSpec[*PC].format & JOF_TYPESET))
         return state;
 
-    types::StackTypeSet *types = types::TypeScript::BytecodeTypes(script_, PC);
+    types::StackTypeSet *types = analysis->bytecodeTypes(PC);
     if (types->unknown()) {
         /*
          * If the result of this opcode is already unknown, there is no way for
@@ -8193,7 +8188,7 @@ mjit::Compiler::testPushedType(RejoinState rejoin, int which, bool ool)
     if (!cx->typeInferenceEnabled() || !(js_CodeSpec[*PC].format & JOF_TYPESET))
         return;
 
-    types::TypeSet *types = types::TypeScript::BytecodeTypes(script_, PC);
+    types::TypeSet *types = analysis->bytecodeTypes(PC);
     if (types->unknown())
         return;
 
