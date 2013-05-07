@@ -336,8 +336,6 @@ public class TabsTray extends TwoWayView
             public void onPropertyAnimationStart() { }
             @Override
             public void onPropertyAnimationEnd() {
-                // Reset view presentation as it will be recycled in the
-                // list view by the adapter.
                 AnimatorProxy proxy = AnimatorProxy.create(view);
                 proxy.setAlpha(1);
 
