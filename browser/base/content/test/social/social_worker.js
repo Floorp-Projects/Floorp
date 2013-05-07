@@ -133,6 +133,10 @@ onconnect = function(e) {
       case "test-isVisible-response":
         testPort.postMessage({topic: "got-isVisible-response", result: event.data.result});
         break;
+      case "share-data-message":
+        if (testPort)
+          testPort.postMessage({topic:"got-share-data-message", result: event.data.result});
+        break;
     }
   }
 }
