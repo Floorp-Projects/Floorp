@@ -183,7 +183,7 @@ const UnsolicitedNotifications = {
   "tabNavigated": "tabNavigated",
   "pageError": "pageError",
   "webappsEvent": "webappsEvent",
-  "styleSheetsAdded": "styleSheetsAdded"
+  "documentLoad": "documentLoad"
 };
 
 /**
