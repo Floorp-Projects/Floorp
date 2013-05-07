@@ -2897,7 +2897,7 @@ var gDetailView = {
       }
     }
 
-    let menulist = document.getElementById("detail-tristate-menulist");
+    let menulist = document.getElementById("detail-state-menulist");
     let addonType = AddonManager.addonTypes[this._addon.type];
     if (addonType.flags & AddonManager.TYPE_SUPPORTS_ASK_TO_ACTIVATE &&
         (hasPermission(this._addon, "ask_to_activate") ||
