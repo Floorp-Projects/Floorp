@@ -135,7 +135,7 @@ fun_getProperty(JSContext *cx, HandleObject obj_, HandleId id, MutableHandleValu
 
 #ifdef JS_METHODJIT
     StackFrame *fp = NULL;
-    if (iter.isScript() && !iter.isIon())
+    if (!iter.isIon())
         fp = iter.interpFrame();
 
     if (JSID_IS_ATOM(id, cx->names().caller) && fp && fp->prev()) {
