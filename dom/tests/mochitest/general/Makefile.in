@@ -51,18 +51,12 @@ MOCHITEST_FILES = \
 		test_interfaces.html \
 		test_idleapi_permissions.html \
 		test_stylesheetPI.html \
+		test_showModalDialog.html \
+		file_showModalDialog.html \
 		$(NULL)
 
 # Disable this test until bug 795711 is fixed.
 #		test_network_events.html \
-
-# Don't run modal dialog tests on mobile.
-ifneq ($(OS_TARGET),Android)
-MOCHITEST_FILES += \
-		test_showModalDialog.html \
-		file_showModalDialog.html \
-		$(NULL)
-endif
 
 MOCHITEST_CHROME_FILES = \
 		test_innerScreen.xul \
