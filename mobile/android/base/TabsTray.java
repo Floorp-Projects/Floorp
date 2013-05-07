@@ -336,15 +336,14 @@ public class TabsTray extends TwoWayView
             public void onPropertyAnimationStart() { }
             @Override
             public void onPropertyAnimationEnd() {
-                AnimatorProxy proxy = AnimatorProxy.create(view);
-                proxy.setAlpha(1);
+                ViewHelper.setAlpha(view, 1);
 
                 if (isVertical) {
-                    proxy.setHeight(originalSize);
-                    proxy.setTranslationX(0);
+                    ViewHelper.setHeight(view, originalSize);
+                    ViewHelper.setTranslationX(view, 0);
                 } else {
-                    proxy.setWidth(originalSize);
-                    proxy.setTranslationY(0);
+                    ViewHelper.setWidth(view, originalSize);
+                    ViewHelper.setTranslationY(view, 0);
                 }
 
                 Tabs tabs = Tabs.getInstance();
@@ -394,7 +393,6 @@ public class TabsTray extends TwoWayView
         private int mListHeight = 1;
 
         private View mSwipeView;
-        private AnimatorProxy mSwipeProxy;
         private int mSwipeViewPosition;
         private Runnable mPendingCheckForTap;
 
@@ -405,7 +403,6 @@ public class TabsTray extends TwoWayView
 
         public TabSwipeGestureListener() {
             mSwipeView = null;
-            mSwipeProxy = null;
             mSwipeViewPosition = TwoWayView.INVALID_POSITION;
             mSwiping = false;
             mEnabled = true;
@@ -493,7 +490,7 @@ public class TabsTray extends TwoWayView
                     int dismissTranslation = 0;
 
                     if (isVertical()) {
-                        float deltaX = mSwipeProxy.getTranslationX();
+                        float deltaX = ViewHelper.getTranslationX(mSwipeView);
 
                         if (Math.abs(deltaX) > mListWidth / 2) {
                             dismiss = true;
@@ -506,7 +503,7 @@ public class TabsTray extends TwoWayView
 
                         dismissTranslation = (dismissDirection ? mListWidth : -mListWidth);
                     } else {
-                        float deltaY = mSwipeProxy.getTranslationY();
+                        float deltaY = ViewHelper.getTranslationY(mSwipeView);
 
                         if (Math.abs(deltaY) > mListHeight / 2) {
                             dismiss = true;
@@ -528,7 +525,6 @@ public class TabsTray extends TwoWayView
                     mVelocityTracker = null;
                     mSwipeView = null;
                     mSwipeViewPosition = TwoWayView.INVALID_POSITION;
-                    mSwipeProxy = null;
 
                     mSwipeStartX = 0;
                     mSwipeStartY = 0;
@@ -571,17 +567,15 @@ public class TabsTray extends TwoWayView
                         cancelEvent.setAction(MotionEvent.ACTION_CANCEL |
                                 (e.getActionIndex() << MotionEvent.ACTION_POINTER_INDEX_SHIFT));
                         TabsTray.this.onTouchEvent(cancelEvent);
-
-                        mSwipeProxy = AnimatorProxy.create(mSwipeView);
                     }
 
                     if (mSwiping) {
                         if (isVertical)
-                            mSwipeProxy.setTranslationX(delta);
+                            ViewHelper.setTranslationX(mSwipeView, delta);
                         else
-                            mSwipeProxy.setTranslationY(delta);
+                            ViewHelper.setTranslationY(mSwipeView, delta);
 
-                        mSwipeProxy.setAlpha(Math.max(0.1f, Math.min(1f,
+                        ViewHelper.setAlpha(mSwipeView, Math.max(0.1f, Math.min(1f,
                                 1f - 2f * Math.abs(delta) / (isVertical ? mListWidth : mListHeight))));
 
                         return true;
