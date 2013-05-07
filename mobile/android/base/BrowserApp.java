@@ -928,6 +928,7 @@ abstract public class BrowserApp extends GeckoApp
         }
 
         mTabsPanel.prepareTabsAnimation(mMainLayoutAnimator);
+        mBrowserToolbar.prepareTabsAnimation(areTabsShown());
 
         // If the tabs layout is animating onto the screen, pin the dynamic
         // toolbar.
@@ -955,6 +956,8 @@ abstract public class BrowserApp extends GeckoApp
         }
 
         mTabsPanel.finishTabsAnimation();
+        mBrowserToolbar.finishTabsAnimation(areTabsShown());
+
         mMainLayoutAnimator = null;
     }
 
