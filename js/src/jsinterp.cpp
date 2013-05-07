@@ -311,10 +311,12 @@ js::RunScript(JSContext *cx, StackFrame *fp)
         StackIter iter(cx);
         if (!iter.done()) {
             ++iter;
-            JSScript *script = iter.script();
-            jsbytecode *pc = iter.pc();
-            if (UseNewType(cx, script, pc))
-                fp->setUseNewType();
+            if (iter.isScript()) {
+                JSScript *script = iter.script();
+                jsbytecode *pc = iter.pc();
+                if (UseNewType(cx, script, pc))
+                    fp->setUseNewType();
+            }
         }
     }
 
@@ -390,7 +392,7 @@ js::RunScript(JSContext *cx, StackFrame *fp)
  * when done.  Then push the return value.
  */
 bool
-js::Invoke(JSContext *cx, CallArgs args, MaybeConstruct construct)
+js::InvokeKernel(JSContext *cx, CallArgs args, MaybeConstruct construct)
 {
     JS_ASSERT(args.length() <= StackSpace::ARGS_LENGTH_MAX);
     JS_ASSERT(!cx->compartment->activeAnalysis);
@@ -478,7 +480,7 @@ js::Invoke(JSContext *cx, const Value &thisv, const Value &fval, unsigned argc, 
 }
 
 bool
-js::InvokeConstructor(JSContext *cx, CallArgs args)
+js::InvokeConstructorKernel(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(!FunctionClass.construct);
 
@@ -499,7 +501,7 @@ js::InvokeConstructor(JSContext *cx, CallArgs args)
         if (!fun->isInterpretedConstructor())
             return ReportIsNotFunction(cx, args.calleev().get(), args.length() + 1, CONSTRUCT);
 
-        if (!Invoke(cx, args, CONSTRUCT))
+        if (!InvokeKernel(cx, args, CONSTRUCT))
             return false;
 
         JS_ASSERT(args.rval().isObject());
@@ -2349,7 +2351,7 @@ BEGIN_CASE(JSOP_EVAL)
         if (!DirectEval(cx, args))
             goto error;
     } else {
-        if (!Invoke(cx, args))
+        if (!InvokeKernel(cx, args))
             goto error;
     }
     regs.sp = args.spAfterCall();
@@ -2396,10 +2398,10 @@ BEGIN_CASE(JSOP_FUNCALL)
     /* Don't bother trying to fast-path calls to scripted non-constructors. */
     if (!isFunction || !fun->isInterpretedConstructor()) {
         if (construct) {
-            if (!InvokeConstructor(cx, args))
+            if (!InvokeConstructorKernel(cx, args))
                 goto error;
         } else {
-            if (!Invoke(cx, args))
+            if (!InvokeKernel(cx, args))
                 goto error;
         }
         Value *newsp = args.spAfterCall();
