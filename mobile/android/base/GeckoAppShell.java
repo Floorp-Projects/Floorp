@@ -149,7 +149,7 @@ public class GeckoAppShell
     private static Sensor gProximitySensor = null;
     private static Sensor gLightSensor = null;
 
-    private static boolean mLocationHighAccuracy = false;
+    private static volatile boolean mLocationHighAccuracy;
 
     public static ActivityHandlerHelper sActivityHelper = new ActivityHandlerHelper();
     static NotificationClient sNotificationClient;
@@ -393,14 +393,52 @@ public class GeckoAppShell
         }
     }
 
+    private static float getLocationAccuracy(Location location) {
+        float radius = location.getAccuracy();
+        return (location.hasAccuracy() && radius > 0) ? radius : 1001;
+    }
+
+    private static Location getLastKnownLocation() {
+        Location lastKnownLocation = null;
+        LocationManager lm = getLocationManager();
+        List<String> providers = lm.getAllProviders();
+
+        for (String provider : providers) {
+            Location location = lm.getLastKnownLocation(provider);
+            if (location == null) {
+                continue;
+            }
+
+            if (lastKnownLocation == null) {
+                lastKnownLocation = location;
+                continue;
+            }
+
+            long timeDiff = location.getElapsedRealtimeNanos()
+                            - lastKnownLocation.getElapsedRealtimeNanos();
+
+            if (timeDiff > 0 ||
+                (timeDiff == 0 &&
+                 getLocationAccuracy(location) < getLocationAccuracy(lastKnownLocation))) {
+                lastKnownLocation = location;
+            }
+        }
+
+        return lastKnownLocation;
+    }
+
     public static void enableLocation(final boolean enable) {
         ThreadUtils.postToUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    LocationManager lm = (LocationManager)
-                        GeckoApp.mAppContext.getSystemService(Context.LOCATION_SERVICE);
+                    LocationManager lm = getLocationManager();
 
                     if (enable) {
+                        Location lastKnownLocation = getLastKnownLocation();
+                        if (lastKnownLocation != null) {
+                            GeckoApp.mAppContext.onLocationChanged(lastKnownLocation);
+                        }
+
                         Criteria criteria = new Criteria();
                         criteria.setSpeedRequired(false);
                         criteria.setBearingRequired(false);
@@ -420,16 +458,16 @@ public class GeckoAppShell
                             return;
 
                         Looper l = Looper.getMainLooper();
-                        Location loc = lm.getLastKnownLocation(provider);
-                        if (loc != null) {
-                            GeckoApp.mAppContext.onLocationChanged(loc);
-                        }
                         lm.requestLocationUpdates(provider, 100, (float).5, GeckoApp.mAppContext, l);
                     } else {
                         lm.removeUpdates(GeckoApp.mAppContext);
                     }
                 }
             });
+    }
+
+    private static LocationManager getLocationManager() {
+        return (LocationManager) GeckoApp.mAppContext.getSystemService(Context.LOCATION_SERVICE);
     }
 
     public static void enableLocationHighAccuracy(final boolean enable) {
