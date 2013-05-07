@@ -401,10 +401,11 @@
     </flyoutpanel>
 
     <flyoutpanel id="sync-flyoutpanel" headertext="&syncHeader.title;">
-      <setting id="sync-connect" title="&sync.notconnected;" type="control">
-        <button label="&sync.connect;" oncommand="Sync.tryConnect();" />
+      <description>&sync.setup.description;</description> 
+      <setting id="sync-connect" type="control">
+        <button label="&sync.setupbutton.label;" oncommand="Sync.tryConnect();" />
       </setting>
-      <setting id="sync-connected" class="setting-group" title="&sync.connected;" type="control" collapsed="true">
+      <setting id="sync-connected" class="setting-group" type="control" collapsed="true">
         <button id="sync-pairdevice" label="&sync.pair.button;" oncommand="SyncPairDevice.open();" />
       </setting>
       <setting id="sync-sync" class="setting-subgroup" type="control" collapsed="true">
@@ -412,7 +413,7 @@
       </setting>
       <setting id="sync-device" class="setting-subgroup" type="string" title="&sync.deviceName;" onchange="Sync.changeName(this);" collapsed="true"/>
       <setting id="sync-disconnect" class="setting-subgroup" type="control" collapsed="true">
-        <button label="&sync.disconnect;" oncommand="Sync.disconnect();" />
+        <button label="&sync.removebutton.label;" oncommand="Sync.disconnect();" />
       </setting>
     </flyoutpanel>
 
@@ -478,7 +479,7 @@
       <dialog id="syncsetup-dialog" class="content-dialog" flex="1">
         <vbox class="prompt-inner">
           <hbox class="prompt-title">
-            <description>&sync.setup.title;</description>
+            <description>&sync.setup2.title;</description>
           </hbox>
           <vbox id="syncsetup-simple" class="syncsetup-page" flex="1">
             <scrollbox id="sync-message" class="prompt-message" orient="vertical" flex="1">
@@ -524,7 +525,7 @@
             <hbox class="prompt-buttons">
               <button class="prompt-button" oncommand="Sync.close();">&sync.setup.cancel;</button>
               <separator/>
-              <button id="syncsetup-button-connect" class="prompt-button" oncommand="Sync.close(); Sync.connect();">&sync.setup.connect;</button>
+              <button id="syncsetup-button-connect" class="prompt-button" oncommand="Sync.close(); Sync.connect();">&sync.setup.connect2;</button>
             </hbox>
           </vbox>
         </vbox>
@@ -550,7 +551,7 @@
             </vbox>
             <hbox class="prompt-buttons" pack="center">
               <button class="prompt-button" oncommand="SyncPairDevice.close();">&sync.setup.cancel;</button>
-              <button id="syncpair-connectbutton" class="prompt-button" disabled="true" oncommand="SyncPairDevice.connect();">&sync.setup.connect;</button>
+              <button id="syncpair-connectbutton" class="prompt-button" disabled="true" oncommand="SyncPairDevice.connect();">&sync.setup.connect2;</button>
             </hbox>
           </vbox>
         </vbox>
