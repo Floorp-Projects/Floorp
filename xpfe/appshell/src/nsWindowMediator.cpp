@@ -18,6 +18,7 @@
 #include "nsWindowMediator.h"
 #include "nsIWindowMediatorListener.h"
 #include "nsXPIDLString.h"
+#include "nsGlobalWindow.h"
 
 #include "nsIDocShell.h"
 #include "nsIInterfaceRequestor.h"
@@ -318,6 +319,15 @@ nsWindowMediator::MostRecentWindowInfo(const PRUnichar* inType)
     listEnd = mOldestWindow;
   }
   return foundInfo;
+}
+
+NS_IMETHODIMP
+nsWindowMediator::GetOuterWindowWithId(uint64_t aWindowID,
+                                       nsIDOMWindow** aWindow)
+{
+  *aWindow = nsGlobalWindow::GetOuterWindowWithId(aWindowID);
+  NS_IF_ADDREF(*aWindow);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
