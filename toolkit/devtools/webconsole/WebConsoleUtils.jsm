@@ -158,6 +158,31 @@ this.WebConsoleUtils = {
   },
 
   /**
+   * Gets the window that has the given outer ID.
+   *
+   * @param integer aOuterId
+   * @param nsIDOMWindow [aHintWindow]
+   *        Optional, the window object used to QueryInterface to
+   *        nsIDOMWindowUtils. If this is not given,
+   *        Services.wm.getMostRecentWindow() is used.
+   * @return nsIDOMWindow|null
+   *         The window object with the given outer ID.
+   */
+  getWindowByOuterId: function WCU_getWindowByOuterId(aOuterId, aHintWindow)
+  {
+    let someWindow = aHintWindow || Services.wm.getMostRecentWindow(null);
+    let content = null;
+
+    if (someWindow) {
+      let windowUtils = someWindow.QueryInterface(Ci.nsIInterfaceRequestor).
+                                   getInterface(Ci.nsIDOMWindowUtils);
+      content = windowUtils.getOuterWindowWithId(aOuterId);
+    }
+
+    return content;
+  },
+
+  /**
    * Abbreviates the given source URL so that it can be displayed flush-right
    * without being too distracting.
    *
@@ -1306,7 +1331,8 @@ PageErrorListener.prototype =
       }
 
       let errorWindow =
-        Services.wm.getOuterWindowById(aScriptError.outerWindowID);
+        WebConsoleUtils.getWindowByOuterId(aScriptError.outerWindowID,
+                                           this.window);
       if (!errorWindow || errorWindow.top != this.window) {
         return;
       }
@@ -1445,7 +1471,8 @@ ConsoleAPIListener.prototype =
 
     let apiMessage = aMessage.wrappedJSObject;
     if (this.window) {
-      let msgWindow = Services.wm.getOuterWindowById(apiMessage.ID);
+      let msgWindow = WebConsoleUtils.getWindowByOuterId(apiMessage.ID,
+                                                         this.window);
       if (!msgWindow || msgWindow.top != this.window) {
         // Not the same window!
         return;
