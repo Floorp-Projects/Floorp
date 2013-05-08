@@ -292,10 +292,18 @@ nsContentTreeOwner::ContentShellRemoved(nsIDocShellTreeItem* aContentShell)
   return mXULWindow->ContentShellRemoved(aContentShell);
 }
 
-NS_IMETHODIMP nsContentTreeOwner::GetPrimaryContentShell(nsIDocShellTreeItem** aShell)
+NS_IMETHODIMP
+nsContentTreeOwner::GetPrimaryContentShell(nsIDocShellTreeItem** aShell)
 {
    NS_ENSURE_STATE(mXULWindow);
    return mXULWindow->GetPrimaryContentShell(aShell);
+}
+
+NS_IMETHODIMP
+nsContentTreeOwner::GetContentWindow(JSContext* aCx, JS::Value* aVal)
+{
+  NS_ENSURE_STATE(mXULWindow);
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsContentTreeOwner::SizeShellTo(nsIDocShellTreeItem* aShellItem,
