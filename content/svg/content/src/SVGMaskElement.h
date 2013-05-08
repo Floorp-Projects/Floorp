@@ -35,11 +35,11 @@ protected:
 
 public:
   // nsIContent interface
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const MOZ_OVERRIDE;
 
   // nsSVGSVGElement methods:
-  virtual bool HasValidDimensions() const;
+  virtual bool HasValidDimensions() const MOZ_OVERRIDE;
 
   // WebIDL
   already_AddRefed<nsIDOMSVGAnimatedEnumeration> MaskUnits();
@@ -51,8 +51,8 @@ public:
 
 protected:
 
-  virtual LengthAttributesInfo GetLengthInfo();
-  virtual EnumAttributesInfo GetEnumInfo();
+  virtual LengthAttributesInfo GetLengthInfo() MOZ_OVERRIDE;
+  virtual EnumAttributesInfo GetEnumInfo() MOZ_OVERRIDE;
 
   enum { ATTR_X, ATTR_Y, ATTR_WIDTH, ATTR_HEIGHT };
   nsSVGLength2 mLengthAttributes[4];

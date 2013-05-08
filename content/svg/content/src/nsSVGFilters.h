@@ -225,7 +225,7 @@ protected:
   }
 
   // nsSVGElement specializations:
-  virtual LengthAttributesInfo GetLengthInfo();
+  virtual LengthAttributesInfo GetLengthInfo() MOZ_OVERRIDE;
 
   enum { ATTR_X, ATTR_Y, ATTR_WIDTH, ATTR_HEIGHT };
   nsSVGLength2 mLengthAttributes[4];
@@ -266,32 +266,32 @@ public:
   virtual nsresult Filter(nsSVGFilterInstance* aInstance,
                           const nsTArray<const Image*>& aSources,
                           const Image* aTarget,
-                          const nsIntRect& aDataRect);
+                          const nsIntRect& aDataRect) MOZ_OVERRIDE;
   virtual bool AttributeAffectsRendering(
-          int32_t aNameSpaceID, nsIAtom* aAttribute) const;
-  virtual nsSVGString& GetResultImageName() { return mStringAttributes[RESULT]; }
-  virtual void GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources);
+          int32_t aNameSpaceID, nsIAtom* aAttribute) const MOZ_OVERRIDE;
+  virtual nsSVGString& GetResultImageName() MOZ_OVERRIDE { return mStringAttributes[RESULT]; }
+  virtual void GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources) MOZ_OVERRIDE;
   // XXX shouldn't we have ComputeTargetBBox here, since the output can
   // extend beyond the bounds of the inputs thanks to the convolution kernel?
   virtual void ComputeNeededSourceBBoxes(const nsIntRect& aTargetBBox,
-          nsTArray<nsIntRect>& aSourceBBoxes, const nsSVGFilterInstance& aInstance);
+          nsTArray<nsIntRect>& aSourceBBoxes, const nsSVGFilterInstance& aInstance) MOZ_OVERRIDE;
   virtual nsIntRect ComputeChangeBBox(const nsTArray<nsIntRect>& aSourceChangeBoxes,
-          const nsSVGFilterInstance& aInstance);
+          const nsSVGFilterInstance& aInstance) MOZ_OVERRIDE;
 
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFELightingElementBase::)
 
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const MOZ_OVERRIDE;
 
 protected:
   virtual bool OperatesOnSRGB(nsSVGFilterInstance*,
-                              int32_t, Image*) { return true; }
+                              int32_t, Image*) MOZ_OVERRIDE { return true; }
   virtual void
   LightPixel(const float *N, const float *L,
              nscolor color, uint8_t *targetData) = 0;
 
-  virtual NumberAttributesInfo GetNumberInfo();
-  virtual NumberPairAttributesInfo GetNumberPairInfo();
-  virtual StringAttributesInfo GetStringInfo();
+  virtual NumberAttributesInfo GetNumberInfo() MOZ_OVERRIDE;
+  virtual NumberPairAttributesInfo GetNumberPairInfo() MOZ_OVERRIDE;
+  virtual StringAttributesInfo GetStringInfo() MOZ_OVERRIDE;
 
   enum { SURFACE_SCALE, DIFFUSE_CONSTANT, SPECULAR_CONSTANT, SPECULAR_EXPONENT };
   nsSVGNumber2 mNumberAttributes[4];

@@ -62,12 +62,12 @@ public:
 
   // nsSVGElement specializations:
   virtual gfxMatrix PrependLocalTransformsTo(const gfxMatrix &aMatrix,
-                      TransformTypes aWhich = eAllTransforms) const;
-  virtual bool HasValidDimensions() const;
+                      TransformTypes aWhich = eAllTransforms) const MOZ_OVERRIDE;
+  virtual bool HasValidDimensions() const MOZ_OVERRIDE;
 
   // nsIContent interface
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const MOZ_OVERRIDE;
 
   // WebIDL
   already_AddRefed<nsIDOMSVGAnimatedString> Href();
@@ -81,7 +81,7 @@ protected:
   public:
     SourceReference(SVGUseElement* aContainer) : mContainer(aContainer) {}
   protected:
-    virtual void ElementChanged(Element* aFrom, Element* aTo) {
+    virtual void ElementChanged(Element* aFrom, Element* aTo) MOZ_OVERRIDE {
       nsReferencedElement::ElementChanged(aFrom, aTo);
       if (aFrom) {
         aFrom->RemoveMutationObserver(mContainer);
@@ -92,8 +92,8 @@ protected:
     SVGUseElement* mContainer;
   };
 
-  virtual LengthAttributesInfo GetLengthInfo();
-  virtual StringAttributesInfo GetStringInfo();
+  virtual LengthAttributesInfo GetLengthInfo() MOZ_OVERRIDE;
+  virtual StringAttributesInfo GetStringInfo() MOZ_OVERRIDE;
 
   /**
    * Returns true if our width and height should be used, or false if they
