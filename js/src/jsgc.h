@@ -1287,11 +1287,14 @@ class AutoSuppressGC
 
 #ifdef DEBUG
 /* Use this to avoid assertions when manipulating the wrapper map. */
-struct AutoDisableProxyCheck
+class AutoDisableProxyCheck
 {
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER;
     uintptr_t &count;
 
-    AutoDisableProxyCheck(JSRuntime *rt);
+  public:
+    AutoDisableProxyCheck(JSRuntime *rt
+                          MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
 
     ~AutoDisableProxyCheck() {
         count--;

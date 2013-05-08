@@ -182,6 +182,7 @@ class MinorCollectionTracer : public JSTracer
 
     /* Save and restore all of the runtime state we use during MinorGC. */
     bool priorNeedsBarrier;
+    AutoDisableProxyCheck disableStrictProxyChecking;
 
     /* Insert the given relocation entry into the list of things to visit. */
     JS_ALWAYS_INLINE void insertIntoFixupList(RelocationOverlay *entry) {
@@ -197,18 +198,17 @@ class MinorCollectionTracer : public JSTracer
         session(runtime, MinorCollecting),
         head(NULL),
         tail(&head),
-        priorNeedsBarrier(runtime->needsBarrier())
+        priorNeedsBarrier(runtime->needsBarrier()),
+        disableStrictProxyChecking(runtime)
     {
         JS_TracerInit(this, runtime, Nursery::MinorGCCallback);
         eagerlyTraceWeakMaps = TraceWeakMapKeysValues;
 
         runtime->gcNumber++;
         runtime->setNeedsBarrier(false);
-        ++runtime->gcDisableStrictProxyCheckingCount;
     }
 
     ~MinorCollectionTracer() {
-        --runtime->gcDisableStrictProxyCheckingCount;
         runtime->setNeedsBarrier(priorNeedsBarrier);
     }
 };
