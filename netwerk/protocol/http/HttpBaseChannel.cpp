@@ -1399,17 +1399,6 @@ HttpBaseChannel::SetLoadUnblocked(bool aLoadUnblocked)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-HttpBaseChannel::GetPacingTelemetryID(uint32_t *aID)
-{
-  *aID = 0;
-  // Don't record pacing algorithm for spdy because it is effectively
-  // bypassed by the protocol mux
-  if (!mResponseHead || !mResponseHead->PeekHeader(nsHttp::X_Firefox_Spdy))
-    *aID = gHttpHandler->PacingTelemetryID();
-  return NS_OK;
-}
-
 //-----------------------------------------------------------------------------
 // HttpBaseChannel::nsISupportsPriority
 //-----------------------------------------------------------------------------
