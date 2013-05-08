@@ -17,6 +17,9 @@
 <!ENTITY startBookmarksHeader.label       "Bookmarks">
 <!ENTITY startHistoryHeader.label         "Recent History">
 <!ENTITY startRemoteTabsHeader.label      "Tabs from Other Devices">
+<!-- LOCALIZATION NOTE (snappedRemoteTabsHeader.label): shortened version of startRemoteTabsHeader.label.
+     Needs to be two words or shorter to fit in narrow vertical space.-->
+<!ENTITY snappedRemoteTabsHeader.label    "Remote Tabs">
 
 <!ENTITY autocompleteResultsHeader.label  "Your Results">
 <!ENTITY autocompleteSearchesHeader.label "Internet Searches"> 
