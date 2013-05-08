@@ -207,7 +207,7 @@ bool nsPluginsDir::IsPluginFile(nsIFile* file)
     ++extension;
 
   uint32_t fullLength = strlen(filename);
-  uint32_t extLength = strlen(extension);
+  uint32_t extLength = extension ? strlen(extension) : 0;
   if (fullLength >= 7 && extLength == 3) {
     if (!PL_strncasecmp(filename, "np", 2) && !PL_strncasecmp(extension, "dll", 3)) {
       // don't load OJI-based Java plugins
