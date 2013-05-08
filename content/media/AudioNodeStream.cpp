@@ -53,10 +53,9 @@ void
 AudioNodeStream::SetStreamTimeParameterImpl(uint32_t aIndex, MediaStream* aRelativeToStream,
                                             double aStreamTime)
 {
-  StreamTime streamTime = std::max<MediaTime>(0, SecondsToMediaTime(aStreamTime));
-  GraphTime graphTime = aRelativeToStream->StreamTimeToGraphTime(streamTime);
-  StreamTime thisStreamTime = GraphTimeToStreamTimeOptimistic(graphTime);
-  TrackTicks ticks = TimeToTicksRoundUp(IdealAudioRate(), thisStreamTime);
+  TrackTicks ticks =
+      WebAudioUtils::ConvertDestinationStreamTimeToSourceStreamTime(
+          aStreamTime, this, aRelativeToStream);
   mEngine->SetStreamTimeParameter(aIndex, ticks);
 }
 
