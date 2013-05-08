@@ -6626,8 +6626,8 @@ nsContentUtils::ReleaseWrapper(void* aScriptObjectHolder,
     // can also be in the DOM expando hash, so we need to try to remove them
     // from both here.
     JSObject* obj = aCache->GetWrapperPreserveColor();
-    if (aCache->IsDOMBinding() && obj) {
-      xpc::GetObjectScope(obj)->RemoveDOMExpandoObject(obj);
+    if (aCache->IsDOMBinding() && obj && js::IsProxy(obj)) {
+        DOMProxyHandler::GetAndClearExpandoObject(obj);
     }
     aCache->SetPreservingWrapper(false);
     DropJSObjects(aScriptObjectHolder);
