@@ -29,7 +29,7 @@ ICCompare_Double::Compiler::generateStubCode(MacroAssembler &masm)
 
     // Check for NaN, if needed.
     Assembler::NaNCond nanCond = Assembler::NaNCondFromDoubleCondition(cond);
-    if (nanCond != Assembler::NaN_Unexpected) {
+    if (nanCond != Assembler::NaN_HandledByCond) {
       masm.j(Assembler::NoParity, &notNaN);
       masm.mov(Imm32(nanCond == Assembler::NaN_IsTrue), dest);
       masm.bind(&notNaN);
