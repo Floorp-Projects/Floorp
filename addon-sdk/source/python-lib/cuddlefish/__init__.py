@@ -899,7 +899,9 @@ def run(arguments=sys.argv[1:], target_cfg=None, pkg_cfg=None,
                   xpi_path=xpi_path,
                   harness_options=harness_options,
                   limit_to=used_files,
-                  extra_harness_options=extra_harness_options)
+                  extra_harness_options=extra_harness_options,
+                  bundle_sdk=True,
+                  pkgdir=options.pkgdir)
     else:
         from cuddlefish.runner import run_app
 
@@ -931,7 +933,8 @@ def run(arguments=sys.argv[1:], target_cfg=None, pkg_cfg=None,
                              env_root=env_root,
                              is_running_tests=(command == "test"),
                              overload_modules=options.overload_modules,
-                             bundle_sdk=options.bundle_sdk)
+                             bundle_sdk=options.bundle_sdk,
+                             pkgdir=options.pkgdir)
         except ValueError, e:
             print ""
             print "A given cfx option has an inappropriate value:"
