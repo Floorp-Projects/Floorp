@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 The Android Open Source Project
+ * Copyright (C) 2012 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,46 +14,31 @@
  * limitations under the License.
  */
 
-#ifndef ANDROID_SF_HWCOMPOSER_H
-#define ANDROID_SF_HWCOMPOSER_H
+#ifndef ANDROID_SF_GRAPHIC_BUFFER_ALLOC_H
+#define ANDROID_SF_GRAPHIC_BUFFER_ALLOC_H
 
-#include <utils/Vector.h>
+#include <stdint.h>
+#include <sys/types.h>
 
-#include "hardware/hwcomposer.h"
+#include <gui/IGraphicBufferAlloc.h>
+#include <ui/PixelFormat.h>
+#include <utils/Errors.h>
 
 namespace android {
 // ---------------------------------------------------------------------------
 
-class String8;
+class GraphicBuffer;
 
-class HWComposer
-{
+class GraphicBufferAlloc : public BnGraphicBufferAlloc {
 public:
-
-    HWComposer();
-    ~HWComposer();
-
-    int init();
-
-    // swap buffers using vendor specific implementation
-    status_t swapBuffers(hwc_display_t dpy, hwc_surface_t surf) const;
-
-protected:
-    struct cb_context {
-        hwc_procs_t procs;
-        HWComposer* hwc;
-    };
-    void invalidate();
-
-    hw_module_t const*      mModule;
-    hwc_composer_device_t*  mHwc;
-    hwc_display_t           mDpy;
-    hwc_surface_t           mSur;
-    cb_context              mCBContext;
+    GraphicBufferAlloc();
+    virtual ~GraphicBufferAlloc();
+    virtual sp<GraphicBuffer> createGraphicBuffer(uint32_t w, uint32_t h,
+        PixelFormat format, uint32_t usage, status_t* error);
 };
 
 
 // ---------------------------------------------------------------------------
 }; // namespace android
 
-#endif // ANDROID_SF_HWCOMPOSER_H
+#endif // ANDROID_SF_GRAPHIC_BUFFER_ALLOC_H

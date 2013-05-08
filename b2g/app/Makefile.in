@@ -22,17 +22,24 @@ ifndef LIBXUL_SDK
 CPPSRCS = nsBrowserApp.cpp
 
 ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
-CPPSRCS += BootAnimation.cpp
 LIBS += \
   -lui \
+  -lEGL \
   -lhardware_legacy \
   -lhardware \
   -lcutils \
   $(DEPTH)/media/libpng/$(LIB_PREFIX)mozpng.$(LIB_SUFFIX) \
+  $(DEPTH)/widget/gonk/libdisplay/$(LIB_PREFIX)display.$(LIB_SUFFIX) \
   $(MOZ_ZLIB_LIBS) \
   $(NULL)
+ifeq (17,$(ANDROID_VERSION))
+LIBS += \
+  -lgui \
+  -lsuspend \
+  $(NULL)
+endif
 OS_LDFLAGS += -Wl,--export-dynamic
-LOCAL_INCLUDES += -I$(ANDROID_SOURCE)/hardware/libhardware_legacy/include
+LOCAL_INCLUDES += -I$(topsrcdir)/widget/gonk/libdisplay
 endif
 
 LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/xre
