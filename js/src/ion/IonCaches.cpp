@@ -1193,8 +1193,13 @@ IsIdempotentAndMaybeHasHooks(IonCache &cache, JSObject *obj)
     return cache.idempotent() && !obj->hasIdempotentProtoChain();
 }
 
+/*
+ * The receiver is the object the get is actually happening on, and what should
+ * be used for missing-property checks.  The checkObj is the object that we want
+ * to do the get on if the property is present on it.
+ */
 static bool
-DetermineGetPropKind(JSContext *cx, IonCache &cache,
+DetermineGetPropKind(JSContext *cx, IonCache &cache, JSObject *receiver,
                      JSObject *checkObj, JSObject *holder, HandleShape shape,
                      TypedOrValueRegister output, bool allowGetters,
                      bool *readSlot, bool *callGetter)
@@ -1209,7 +1214,7 @@ DetermineGetPropKind(JSContext *cx, IonCache &cache,
     cache.getScriptedLocation(&script, &pc);
 
     if (IsCacheableGetPropReadSlot(checkObj, holder, shape) ||
-        IsCacheableNoProperty(checkObj, holder, shape, pc, output))
+        IsCacheableNoProperty(receiver, holder, shape, pc, output))
     {
         // With Proxies, we cannot garantee any property access as the proxy can
         // mask any property from the prototype chain.
@@ -1288,7 +1293,7 @@ TryAttachNativeGetPropStub(JSContext *cx, IonScript *ion,
 
     bool readSlot;
     bool callGetter;
-    if (!DetermineGetPropKind(cx, cache, checkObj, holder, shape, cache.output(),
+    if (!DetermineGetPropKind(cx, cache, obj, checkObj, holder, shape, cache.output(),
                               cache.allowGetters(), &readSlot, &callGetter))
     {
         return true;
@@ -1468,7 +1473,7 @@ ParallelGetPropertyIC::canAttachReadSlot(LockedJSContext &cx, JSObject *obj,
     // side-effects, so only check if we can cache slot reads.
     bool readSlot;
     bool callGetter;
-    if (!DetermineGetPropKind(cx, *this, obj, holder, shape, output(), false,
+    if (!DetermineGetPropKind(cx, *this, obj, obj, holder, shape, output(), false,
                               &readSlot, &callGetter) || !readSlot)
     {
         return false;

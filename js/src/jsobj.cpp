@@ -1781,8 +1781,13 @@ js::CloneObjectLiteral(JSContext *cx, HandleObject parent, HandleObject srcObj)
 {
     Rooted<TypeObject*> typeObj(cx);
     typeObj = cx->global()->getOrCreateObjectPrototype(cx)->getNewType(cx, &ObjectClass);
+
+    JS_ASSERT(srcObj->getClass() == &ObjectClass);
+    AllocKind kind = GetBackgroundAllocKind(GuessObjectGCKind(srcObj->numFixedSlots()));
+    JS_ASSERT_IF(srcObj->isTenured(), kind == srcObj->tenuredGetAllocKind());
+
     RootedShape shape(cx, srcObj->lastProperty());
-    return NewReshapedObject(cx, typeObj, parent, srcObj->tenuredGetAllocKind(), shape);
+    return NewReshapedObject(cx, typeObj, parent, kind, shape);
 }
 
 struct JSObject::TradeGutsReserved {

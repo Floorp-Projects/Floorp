@@ -43,7 +43,7 @@
         <description id="location" class="plain" crop="start" flex="1"/>
         <separator class="thin"/>
         <hbox align="center">
-          <label value="&whichIsA.label;" id="whichIsA"/>
+          <label value="&whichIs.label;"/>
           <textbox id="type" class="plain" readonly="true" flex="1" noinitialfocus="true"/>
         </hbox>
         <hbox align="center">
