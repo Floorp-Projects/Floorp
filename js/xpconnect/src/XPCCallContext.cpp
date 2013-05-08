@@ -37,34 +37,43 @@ XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
         mName(cx)
 {
     MOZ_ASSERT(cx);
-    Init(callerLanguage, callerLanguage == NATIVE_CALLER, obj, funobj,
+    Init(callerLanguage == NATIVE_CALLER, obj, funobj,
          INIT_SHOULD_LOOKUP_WRAPPER, name, argc, argv, rval);
 }
 
-XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
-                               JSContext* cx,
-                               JSBool callBeginRequest,
-                               HandleObject obj,
-                               HandleObject flattenedJSObject,
-                               XPCWrappedNative* wrapper,
-                               XPCWrappedNativeTearOff* tearOff)
+XPCCallContext::XPCCallContext(JSContext *cx)
     :   mState(INIT_FAILED),
         mXPC(nsXPConnect::GetXPConnect()),
         mXPCContext(nullptr),
         mJSContext(cx),
         mContextPopRequired(false),
         mDestroyJSContextInDestructor(false),
-        mCallerLanguage(callerLanguage),
+        mCallerLanguage(XPCContext::LANG_UNKNOWN),
         mScopeForNewJSObjects(cx),
-        mFlattenedJSObject(cx, flattenedJSObject),
-        mWrapper(wrapper),
-        mTearOff(tearOff),
+        mFlattenedJSObject(cx),
         mName(cx)
 {
-    MOZ_ASSERT(cx);
-    Init(callerLanguage, callBeginRequest, obj, NullPtr(),
-         WRAPPER_PASSED_TO_CONSTRUCTOR, JSID_VOIDHANDLE, NO_ARGS,
-         nullptr, nullptr);
+    // Called from XPCLazyCallContext only.
+    MOZ_ASSERT(mJSContext);
+}
+
+void
+XPCCallContext::LazyInit(XPCContext::LangType callerLanguage,
+                         JSBool callBeginRequest,
+                         HandleObject obj,
+                         HandleObject flattenedJSObject,
+                         XPCWrappedNative* wrapper,
+                         XPCWrappedNativeTearOff* tearOff)
+{
+    // Called from XPCLazyCallContext only.
+    MOZ_ASSERT(mState == INIT_FAILED);
+    MOZ_ASSERT(mJSContext);
+    mCallerLanguage = callerLanguage;
+    mFlattenedJSObject = flattenedJSObject;
+    mWrapper = wrapper;
+    mTearOff = tearOff;
+    Init(callBeginRequest, obj, NullPtr(), WRAPPER_PASSED_TO_CONSTRUCTOR,
+         JSID_VOIDHANDLE, NO_ARGS, nullptr, nullptr);
 }
 
 #define IS_TEAROFF_CLASS(clazz) ((clazz) == &XPC_WN_Tearoff_JSClass)
@@ -89,8 +98,7 @@ XPCCallContext::GetDefaultJSContext()
 }
 
 void
-XPCCallContext::Init(XPCContext::LangType callerLanguage,
-                     JSBool callBeginRequest,
+XPCCallContext::Init(JSBool callBeginRequest,
                      HandleObject obj,
                      HandleObject funobj,
                      WrapperInitOptions wrapperInitOptions,
