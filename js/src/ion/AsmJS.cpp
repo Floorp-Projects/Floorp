@@ -2488,7 +2488,7 @@ static bool
 CheckArgument(ModuleCompiler &m, ParseNode *arg, PropertyName **name)
 {
     if (!IsDefinition(arg))
-        return m.failName(arg, "duplicate argument name '%s' not allowed", arg->name());
+        return m.fail(arg, "duplicate argument name not allowed");
 
     if (MaybeDefinitionInitializer(arg))
         return m.fail(arg, "default arguments not allowed");

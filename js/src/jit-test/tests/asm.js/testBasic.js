@@ -99,6 +99,7 @@ function assertTypeFailInEval(str)
 assertTypeFailInEval('function f({}) { "use asm"; function g() {} return g }');
 assertTypeFailInEval('function f({global}) { "use asm"; function g() {} return g }');
 assertTypeFailInEval('function f(global, {imports}) { "use asm"; function g() {} return g }');
+assertTypeFailInEval('function f(g = 2) { "use asm"; function g() {} return g }');
 
 function assertLinkFailInEval(str)
 {
