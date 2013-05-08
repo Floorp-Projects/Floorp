@@ -354,6 +354,13 @@ class JSObject : public js::ObjectImpl
     inline bool hasUncacheableProto() const;
     inline bool setUncacheableProto(JSContext *cx);
 
+    /*
+     * Whether SETLELEM was used to access this object. See also the comment near
+     * PropertyTree::MAX_HEIGHT.
+     */
+    inline bool hadElementsAccess() const;
+    inline bool setHadElementsAccess(JSContext *cx);
+
   public:
     inline bool nativeEmpty() const;
 

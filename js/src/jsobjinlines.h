@@ -856,6 +856,16 @@ inline bool JSObject::setUncacheableProto(JSContext *cx)
     return setFlag(cx, js::BaseShape::UNCACHEABLE_PROTO, GENERATE_SHAPE);
 }
 
+inline bool JSObject::hadElementsAccess() const
+{
+    return lastProperty()->hasObjectFlag(js::BaseShape::HAD_ELEMENTS_ACCESS);
+}
+
+inline bool JSObject::setHadElementsAccess(JSContext *cx)
+{
+    return setFlag(cx, js::BaseShape::HAD_ELEMENTS_ACCESS);
+}
+
 inline bool JSObject::isBoundFunction() const
 {
     return lastProperty()->hasObjectFlag(js::BaseShape::BOUND_FUNCTION);
