@@ -2610,7 +2610,7 @@ _getvalueforurl(NPP instance, NPNURLVariable variable, const char *url,
       nsCOMPtr<nsIPluginHost> pluginHostCOM(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID));
       nsPluginHost *pluginHost = static_cast<nsPluginHost*>(pluginHostCOM.get());
       if (pluginHost && NS_SUCCEEDED(pluginHost->FindProxyForURL(url, value))) {
-        *len = *value ? PL_strlen(*value) : 0;
+        *len = *value ? strlen(*value) : 0;
         return NPERR_NO_ERROR;
       }
       break;
@@ -2636,7 +2636,7 @@ _getvalueforurl(NPP instance, NPNURLVariable variable, const char *url,
         return NPERR_GENERIC_ERROR;
       }
 
-      *len = PL_strlen(*value);
+      *len = strlen(*value);
       return NPERR_NO_ERROR;
     }
 

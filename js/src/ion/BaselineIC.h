@@ -324,6 +324,7 @@ class ICEntry
     _(Call_Scripted)            \
     _(Call_AnyScripted)         \
     _(Call_Native)              \
+    _(Call_ScriptedApplyArguments) \
                                 \
     _(GetElem_Fallback)         \
     _(GetElem_Native)           \
@@ -721,10 +722,11 @@ class ICStub
     static bool CanMakeCalls(ICStub::Kind kind) {
         JS_ASSERT(IsValidKind(kind));
         switch (kind) {
+          case Call_Fallback:
           case Call_Scripted:
           case Call_AnyScripted:
           case Call_Native:
-          case Call_Fallback:
+          case Call_ScriptedApplyArguments:
           case UseCount_Fallback:
           case GetProp_CallScripted:
           case GetProp_CallNative:
@@ -2751,6 +2753,13 @@ class ICGetElem_Fallback : public ICMonitoredFallbackStub
         return space->allocate<ICGetElem_Fallback>(code);
     }
 
+    void noteNonNativeAccess() {
+        extra_ = 1;
+    }
+    bool hasNonNativeAccess() const {
+        return extra_;
+    }
+
     // Compiler for this stub kind.
     class Compiler : public ICStubCompiler {
       protected:
@@ -3681,11 +3690,20 @@ class ICGetProp_Fallback : public ICMonitoredFallbackStub
     }
 
     static const size_t UNOPTIMIZABLE_ACCESS_BIT = 0;
+    static const size_t ACCESSED_GETTER_BIT = 1;
+
     void noteUnoptimizableAccess() {
         extra_ |= (1u << UNOPTIMIZABLE_ACCESS_BIT);
     }
     bool hadUnoptimizableAccess() const {
         return extra_ & (1u << UNOPTIMIZABLE_ACCESS_BIT);
+    }
+
+    void noteAccessedGetter() {
+        extra_ |= (1u << ACCESSED_GETTER_BIT);
+    }
+    bool hasAccessedGetter() const {
+        return extra_ & (1u << ACCESSED_GETTER_BIT);
     }
 
     class Compiler : public ICStubCompiler {
@@ -4770,6 +4788,9 @@ class ICCallStubCompiler : public ICStubCompiler
     { }
 
     void pushCallArguments(MacroAssembler &masm, GeneralRegisterSet regs, Register argcReg);
+    Register guardFunApply(MacroAssembler &masm, GeneralRegisterSet regs, Register argcReg,
+                           bool checkNative, Label *failure);
+    void pushCallerArguments(MacroAssembler &masm, GeneralRegisterSet regs);
 };
 
 class ICCall_Fallback : public ICMonitoredFallbackStub
@@ -4998,6 +5019,56 @@ class ICCall_Native : public ICMonitoredStub
 
         ICStub *getStub(ICStubSpace *space) {
             return ICCall_Native::New(space, getStubCode(), firstMonitorStub_, callee_, pcOffset_);
+        }
+    };
+};
+
+class ICCall_ScriptedApplyArguments : public ICMonitoredStub
+{
+    friend class ICStubSpace;
+
+  protected:
+    uint32_t pcOffset_;
+
+    ICCall_ScriptedApplyArguments(IonCode *stubCode, ICStub *firstMonitorStub, uint32_t pcOffset)
+      : ICMonitoredStub(ICStub::Call_ScriptedApplyArguments, stubCode, firstMonitorStub),
+        pcOffset_(pcOffset)
+    {}
+
+  public:
+    static inline ICCall_ScriptedApplyArguments *New(ICStubSpace *space, IonCode *code,
+                                                     ICStub *firstMonitorStub, uint32_t pcOffset)
+    {
+        if (!code)
+            return NULL;
+        return space->allocate<ICCall_ScriptedApplyArguments>(code, firstMonitorStub, pcOffset);
+    }
+
+    static size_t offsetOfPCOffset() {
+        return offsetof(ICCall_ScriptedApplyArguments, pcOffset_);
+    }
+
+    // Compiler for this stub kind.
+    class Compiler : public ICCallStubCompiler {
+      protected:
+        ICStub *firstMonitorStub_;
+        uint32_t pcOffset_;
+        bool generateStubCode(MacroAssembler &masm);
+
+        virtual int32_t getKey() const {
+            return static_cast<int32_t>(kind);
+        }
+
+      public:
+        Compiler(JSContext *cx, ICStub *firstMonitorStub, uint32_t pcOffset)
+          : ICCallStubCompiler(cx, ICStub::Call_ScriptedApplyArguments),
+            firstMonitorStub_(firstMonitorStub),
+            pcOffset_(pcOffset)
+        { }
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICCall_ScriptedApplyArguments::New(space, getStubCode(), firstMonitorStub_,
+                                                      pcOffset_);
         }
     };
 };

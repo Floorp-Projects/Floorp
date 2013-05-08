@@ -107,6 +107,7 @@ MobileMessageService::CreateThread(uint64_t aId,
                                    const JS::Value& aTimestamp,
                                    const nsAString& aBody,
                                    uint64_t aUnreadCount,
+                                   const nsAString& aLastMessageType,
                                    JSContext* aCx,
                                    nsIDOMMozMobileMessageThread** aThread)
 {
@@ -115,6 +116,7 @@ MobileMessageService::CreateThread(uint64_t aId,
                                      aTimestamp,
                                      aBody,
                                      aUnreadCount,
+                                     aLastMessageType,
                                      aCx,
                                      aThread);
 }

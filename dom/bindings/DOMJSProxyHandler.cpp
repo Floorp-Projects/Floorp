@@ -118,8 +118,8 @@ DOMProxyHandler::EnsureExpandoObject(JSContext* cx, JS::Handle<JSObject*> obj)
     expandoAndGeneration = nullptr;
   }
 
-  JSObject* expando = JS_NewObjectWithGivenProto(cx, nullptr, nullptr,
-                                                 js::GetObjectParent(obj));
+  JS::Rooted<JSObject*> expando(cx,
+    JS_NewObjectWithGivenProto(cx, nullptr, nullptr, js::GetObjectParent(obj)));
   if (!expando) {
     return nullptr;
   }

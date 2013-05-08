@@ -5919,7 +5919,7 @@ nsContentUtils::CreateArrayBuffer(JSContext *aCx, const nsACString& aData,
 nsresult
 nsContentUtils::CreateBlobBuffer(JSContext* aCx,
                                  const nsACString& aData,
-                                 JS::Value& aBlob)
+                                 JS::MutableHandle<JS::Value> aBlob)
 {
   uint32_t blobLen = aData.Length();
   void* blobData = moz_malloc(blobLen);
@@ -5931,7 +5931,8 @@ nsContentUtils::CreateBlobBuffer(JSContext* aCx,
     return NS_ERROR_OUT_OF_MEMORY;
   }
   JS::Rooted<JSObject*> scope(aCx, JS_GetGlobalForScopeChain(aCx));
-  return nsContentUtils::WrapNative(aCx, scope, blob, &aBlob, nullptr, true);
+  return nsContentUtils::WrapNative(aCx, scope, blob, aBlob.address(), nullptr,
+                                    true);
 }
 
 void
@@ -6625,8 +6626,8 @@ nsContentUtils::ReleaseWrapper(void* aScriptObjectHolder,
     // can also be in the DOM expando hash, so we need to try to remove them
     // from both here.
     JSObject* obj = aCache->GetWrapperPreserveColor();
-    if (aCache->IsDOMBinding() && obj) {
-      xpc::GetObjectScope(obj)->RemoveDOMExpandoObject(obj);
+    if (aCache->IsDOMBinding() && obj && js::IsProxy(obj)) {
+        DOMProxyHandler::GetAndClearExpandoObject(obj);
     }
     aCache->SetPreservingWrapper(false);
     DropJSObjects(aScriptObjectHolder);

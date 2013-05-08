@@ -1,0 +1,5 @@
+content    test    chrome/content/
+skin       test    classic/1.0 chrome/skin/
+
+locale     test  en-US  chrome/locale/en-US/
+locale     test  ja-JP  chrome/locale/ja-JP/

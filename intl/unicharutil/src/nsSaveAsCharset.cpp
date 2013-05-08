@@ -143,7 +143,7 @@ nsSaveAsCharset::HandleFallBack(uint32_t character, char **outString, int32_t *b
   char fallbackStr[256];
   nsresult rv = DoConversionFallBack(character, fallbackStr, 256);
   if (NS_SUCCEEDED(rv)) {
-    int32_t tempLen = (int32_t) PL_strlen(fallbackStr);
+    int32_t tempLen = (int32_t) strlen(fallbackStr);
 
     // reallocate if the buffer is not large enough
     if ((tempLen + estimatedLength) >= (*bufferLength - *currentPos)) {

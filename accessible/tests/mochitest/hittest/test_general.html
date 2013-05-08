@@ -49,7 +49,7 @@ if (!MAC) {
       // Not specific case, point is inside of btn accessible.
       var btn = getAccessible("btn");
       var btnText = btn.firstChild;
-      testChildAtPoint(btn, 1, 1, btnText, btnText);
+      testChildAtPoint(btn, 1, 1, btn, btn);
   
       // Not specific case, point is outside of btn accessible.
       testChildAtPoint(btn, -1, 1, null, null);

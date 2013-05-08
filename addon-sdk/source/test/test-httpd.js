@@ -77,3 +77,16 @@ exports.testDynamicServer = function (test) {
   }
 
 }
+
+exports.testAutomaticPortSelection = function (test) {
+  const srv = httpd.startServerAsync(-1);
+
+  test.waitUntilDone();
+
+  const port = srv.identity.primaryPort;
+  test.assert(0 <= port && port <= 65535);
+
+  srv.stop(function() {
+    test.done();
+  });
+}

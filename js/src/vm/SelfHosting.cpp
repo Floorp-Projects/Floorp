@@ -12,8 +12,8 @@
 #include "builtin/Intl.h"
 #include "builtin/ParallelArray.h"
 #include "gc/Marking.h"
+
 #include "vm/ForkJoin.h"
-#include "vm/ParallelDo.h"
 #include "vm/ThreadPool.h"
 
 #include "jsfuninlines.h"
@@ -238,44 +238,23 @@ js::intrinsic_Dump(JSContext *cx, unsigned argc, Value *vp)
 #endif
 
 /*
- * ParallelDo(func, feedback): Invokes |func| many times in parallel.
+ * ForkJoin(func, feedback): Invokes |func| many times in parallel.
  *
- * Executed based on the fork join pool described in vm/ForkJoin.h.
- * If func() has not been compiled for parallel execution, it will
- * first be invoked various times sequentially as a warmup phase,
- * which is used to gather TI information and to determine which
- * functions func() will invoke.
- *
- * func() should expect the following arguments:
- *
- *     func(id, n, warmup, args...)
- *
- * Here, |id| is the slice id. |n| is the total number of slices;
- * |warmup| is true if this is a warmup or recovery phase.
- * Typically, if |warmup| is true, you will want to do less work.
- *
- * The |feedback| argument is optional.  If provided, it should be a
- * closure.  This closure will be invoked with a double argument
- * representing the number of bailouts that occurred before a
- * successful parallel execution.  If the number is infinity, then
- * parallel execution was abandoned and |func| was simply invoked
- * sequentially.
- *
- * See ParallelArray.js for examples.
+ * See ForkJoin.cpp for details and ParallelArray.js for examples.
  */
 static JSBool
-intrinsic_ParallelDo(JSContext *cx, unsigned argc, Value *vp)
+intrinsic_ForkJoin(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return parallel::Do(cx, args);
+    return ForkJoin(cx, args);
 }
 
 /*
- * ParallelSlices(): Returns the number of parallel slices that will
- * be created by ParallelDo().
+ * ForkJoinSlices(): Returns the number of parallel slices that will
+ * be created by ForkJoin().
  */
 static JSBool
-intrinsic_ParallelSlices(JSContext *cx, unsigned argc, Value *vp)
+intrinsic_ForkJoinSlices(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     args.rval().setInt32(ForkJoinSlices(cx));
@@ -478,8 +457,8 @@ const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("DecompileArg",         intrinsic_DecompileArg,         2,0),
     JS_FN("RuntimeDefaultLocale", intrinsic_RuntimeDefaultLocale, 0,0),
 
-    JS_FN("ParallelDo",           intrinsic_ParallelDo,           2,0),
-    JS_FN("ParallelSlices",       intrinsic_ParallelSlices,       0,0),
+    JS_FN("ForkJoin",             intrinsic_ForkJoin,             2,0),
+    JS_FN("ForkJoinSlices",       intrinsic_ForkJoinSlices,       0,0),
     JS_FN("NewParallelArray",     intrinsic_NewParallelArray,     3,0),
     JS_FN("NewDenseArray",        intrinsic_NewDenseArray,        1,0),
     JS_FN("UnsafeSetElement",     intrinsic_UnsafeSetElement,     3,0),

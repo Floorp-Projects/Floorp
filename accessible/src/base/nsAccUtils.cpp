@@ -439,18 +439,21 @@ nsAccUtils::MustPrune(Accessible* aAccessible)
 { 
   roles::Role role = aAccessible->Role();
 
-  // We don't prune buttons any more however AT don't expect children inside of
-  // button in general, we allow menu buttons to have children to make them
-  // accessible.
-  return role == roles::MENUITEM || 
-    role == roles::COMBOBOX_OPTION ||
-    role == roles::OPTION ||
-    role == roles::ENTRY ||
-    role == roles::FLAT_EQUATION ||
-    role == roles::PASSWORD_TEXT ||
-    role == roles::TOGGLE_BUTTON ||
-    role == roles::GRAPHIC ||
-    role == roles::SLIDER ||
-    role == roles::PROGRESSBAR ||
-    role == roles::SEPARATOR;
+  // Don't prune the tree for certain roles if the tree is more complex than
+  // a single text leaf.
+  return
+    (role == roles::MENUITEM ||
+     role == roles::COMBOBOX_OPTION ||
+     role == roles::OPTION ||
+     role == roles::ENTRY ||
+     role == roles::FLAT_EQUATION ||
+     role == roles::PASSWORD_TEXT ||
+     role == roles::PUSHBUTTON ||
+     role == roles::TOGGLE_BUTTON ||
+     role == roles::GRAPHIC ||
+     role == roles::SLIDER ||
+     role == roles::PROGRESSBAR ||
+     role == roles::SEPARATOR) &&
+    aAccessible->ContentChildCount() == 1 &&
+    aAccessible->ContentChildAt(0)->IsTextLeaf();
 }

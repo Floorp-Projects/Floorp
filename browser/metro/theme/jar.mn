@@ -9,6 +9,7 @@ chrome.jar:
   skin/aboutPage.css                        (aboutPage.css)
   skin/about.css                            (about.css)
 * skin/flyoutpanel.css                      (flyoutpanel.css)
+* skin/cssthrobber.css                      (cssthrobber.css)
 * skin/browser.css                          (browser.css)
 * skin/content.css                          (content.css)
   skin/config.css                           (config.css)

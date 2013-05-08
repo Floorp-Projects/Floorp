@@ -31,9 +31,9 @@ protected:
 
 public:
   virtual bool AttributeAffectsRendering(
-          int32_t aNameSpaceID, nsIAtom* aAttribute) const;
+          int32_t aNameSpaceID, nsIAtom* aAttribute) const MOZ_OVERRIDE;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   // WebIDL
   already_AddRefed<nsIDOMSVGAnimatedNumber> X();
@@ -41,7 +41,7 @@ public:
   already_AddRefed<nsIDOMSVGAnimatedNumber> Z();
 
 protected:
-  virtual NumberAttributesInfo GetNumberInfo();
+  virtual NumberAttributesInfo GetNumberInfo() MOZ_OVERRIDE;
 
   enum { ATTR_X, ATTR_Y, ATTR_Z };
   nsSVGNumber2 mNumberAttributes[3];

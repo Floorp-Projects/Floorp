@@ -327,7 +327,7 @@ decode(const char *data, unsigned char **result, int32_t * _retval)
 {
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSSecureMessage::decode\n"));
   nsresult rv = NS_OK;
-  uint32_t len = PL_strlen(data);
+  uint32_t len = strlen(data);
   int adjust = 0;
 
   /* Compute length adjustment */

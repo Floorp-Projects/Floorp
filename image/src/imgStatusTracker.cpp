@@ -540,7 +540,7 @@ imgStatusTracker::CalculateAndApplyDifference(imgStatusTracker* other)
   if (diff.mUnblockedOnload) {
     mState &= ~stateBlockingOnload;
   }
-  mImageStatus = other->mImageStatus;
+
   mIsMultipart = other->mIsMultipart;
   mHadLastPart = other->mHadLastPart;
   mImageStatus |= other->mImageStatus;

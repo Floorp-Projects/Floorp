@@ -28,7 +28,7 @@ this.WebappsHandler = {
 
     switch (topic) {
       case "webapps-ask-install":
-        let chromeWin = this._getWindowByOuterId(data.oid);
+        let chromeWin = Services.wm.getOuterWindowById(data.oid);
         if (chromeWin)
           this.doInstall(data, chromeWin);
         break;
@@ -39,18 +39,6 @@ this.WebappsHandler = {
         WebappOSUtils.uninstall(data);
         break;
     }
-  },
-
-  _getWindowByOuterId: function(outerId) {
-    let someWindow = Services.wm.getMostRecentWindow(null);
-    if (!someWindow) {
-      return null;
-    }
-
-    let content = someWindow.QueryInterface(Ci.nsIInterfaceRequestor).
-                             getInterface(Ci.nsIDOMWindowUtils).
-                             getOuterWindowWithId(outerId);
-    return content;
   },
 
   doInstall: function(data, window) {

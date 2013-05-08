@@ -55,7 +55,6 @@ protected:
 private:
   nsAutoPtr<mozilla::hal::SwitchObserver> mObserver;
   nsCOMPtr<AudioChannelAgent>             mPhoneAudioAgent;
-  bool                                    mFMChannelIsMuted;
 };
 
 } /* namespace gonk */

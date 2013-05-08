@@ -11,7 +11,7 @@ const { Class, mix } = require("./core/heritage");
 const { addCollectionProperty } = require("./util/collection");
 const { ns } = require("./core/namespace");
 const { validateOptions, getTypeOf } = require("./deprecated/api-utils");
-const { URL } = require("./url");
+const { URL, isValidURI } = require("./url");
 const { WindowTracker, browserWindowIterator } = require("./deprecated/window-utils");
 const { isBrowser, getInnerId } = require("./window/utils");
 const { Ci } = require("chrome");
@@ -264,7 +264,13 @@ let labelledItemRules =  mix(baseItemRules, {
   },
   image: {
     map: stringOrNull,
-    is: ["string", "undefined", "null"]
+    is: ["string", "undefined", "null"],
+    ok: function (url) {
+      if (!url)
+        return true;
+      return isValidURI(url);
+    },
+    msg: "Image URL validation failed"
   }
 });
 

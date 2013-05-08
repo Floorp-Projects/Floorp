@@ -7350,18 +7350,9 @@ class CGDictionary(CGThing):
         return (string.Template(
                 "struct ${selfName} ${inheritance}{\n"
                 "  ${selfName}() {}\n"
-                "  bool Init(JSContext* cx, JS::Handle<JS::Value> val);\n"
+                "  bool Init(JSContext* cx, JS::Handle<JS::Value> val);\n" +
+                ("  bool Init(const nsAString& aJSON);\n" if not self.workers else "") +
                 "  bool ToObject(JSContext* cx, JS::Handle<JSObject*> parentObject, JS::Value *vp) const;\n"
-                "\n" +
-                ("  bool Init(const nsAString& aJSON)\n"
-                 "  {\n"
-                 "    Maybe<JSAutoRequest> ar;\n"
-                 "    Maybe<JSAutoCompartment> ac;\n"
-                 "    Maybe< JS::Rooted<JS::Value> > json;\n"
-                 "    JSContext* cx = ParseJSON(aJSON, ar, ac, json);\n"
-                 "    NS_ENSURE_TRUE(cx, false);\n"
-                 "    return Init(cx, json.ref());\n"
-                 "  }\n" if not self.workers else "") +
                 "\n" +
                 "\n".join(memberDecls) + "\n"
                 "private:\n"
@@ -7454,6 +7445,17 @@ class CGDictionary(CGThing):
             "${initMembers}\n"
             "  return true;\n"
             "}\n"
+            "\n" +
+            ("bool\n"
+             "${selfName}::Init(const nsAString& aJSON)\n"
+             "{\n"
+             "  AutoSafeJSContext cx;\n"
+             "  JSAutoRequest ar(cx);\n"
+             "  JS::Rooted<JS::Value> json(cx);\n"
+             "  bool ok = ParseJSON(cx, aJSON, &json);\n"
+             "  NS_ENSURE_TRUE(ok, false);\n"
+             "  return Init(cx, json);\n"
+             "}\n" if not self.workers else "") +
             "\n"
             "bool\n"
             "${selfName}::ToObject(JSContext* cx, JS::Handle<JSObject*> parentObject, JS::Value *vp) const\n"
@@ -8658,36 +8660,45 @@ def genConstructorBody(descriptor):
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
-  // Get the XPCOM component containing the JS implementation.
-  nsCOMPtr<nsISupports> implISupports = do_CreateInstance("${contractId}");
-  MOZ_ASSERT(implISupports, "Failed to get JS implementation instance from contract ID.");
-  if (!implISupports) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-  // Initialize the object, if it implements nsIDOMGlobalPropertyInitializer.
-  nsCOMPtr<nsIDOMGlobalPropertyInitializer> gpi = do_QueryInterface(implISupports);
-  if (gpi) {
-    JS::Rooted<JS::Value> initReturn(cx);
-    nsresult rv = gpi->Init(window, initReturn.address());
-    if (NS_FAILED(rv)) {
-      aRv.Throw(rv);
+
+  JS::Rooted<JSObject*> jsImplObj(cx);
+
+  // Make sure to have nothing on the JS context stack while creating and
+  // initializing the object, so exceptions from that will get reported
+  // properly, since those are never exceptions that a spec wants to be thrown.
+  {  // Scope for the nsCxPusher
+    nsCxPusher pusher;
+    pusher.PushNull();
+    // Get the XPCOM component containing the JS implementation.
+    nsCOMPtr<nsISupports> implISupports = do_CreateInstance("${contractId}");
+    if (!implISupports) {
+      NS_WARNING("Failed to get JS implementation for contract \\"${contractId}\\"");
+      aRv.Throw(NS_ERROR_FAILURE);
       return nullptr;
     }
-    MOZ_ASSERT(initReturn.isUndefined(),
-               "Expected nsIDOMGlobalPropertyInitializer to return undefined");
-  }
-  // Extract the JS implementation from the XPCOM object.
-  nsCOMPtr<nsIXPConnectWrappedJS> implWrapped = do_QueryInterface(implISupports);
-  MOZ_ASSERT(implWrapped, "Failed to get wrapped JS from XPCOM component.");
-  if (!implWrapped) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-  JS::Rooted<JSObject*> jsImplObj(cx);
-  if (NS_FAILED(implWrapped->GetJSObject(jsImplObj.address()))) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
+    // Initialize the object, if it implements nsIDOMGlobalPropertyInitializer.
+    nsCOMPtr<nsIDOMGlobalPropertyInitializer> gpi = do_QueryInterface(implISupports);
+    if (gpi) {
+      JS::Rooted<JS::Value> initReturn(cx);
+      nsresult rv = gpi->Init(window, initReturn.address());
+      if (NS_FAILED(rv)) {
+        aRv.Throw(rv);
+       return nullptr;
+      }
+      MOZ_ASSERT(initReturn.isUndefined(),
+                 "Expected nsIDOMGlobalPropertyInitializer to return undefined");
+    }
+    // Extract the JS implementation from the XPCOM object.
+    nsCOMPtr<nsIXPConnectWrappedJS> implWrapped = do_QueryInterface(implISupports);
+    MOZ_ASSERT(implWrapped, "Failed to get wrapped JS from XPCOM component.");
+    if (!implWrapped) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return nullptr;
+    }
+    if (NS_FAILED(implWrapped->GetJSObject(jsImplObj.address()))) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return nullptr;
+    }
   }
   // Build the C++ implementation.
   nsRefPtr<${implClass}> impl = new ${implClass}(jsImplObj, window);

@@ -187,13 +187,15 @@ SharedSurface_EGLImage::WaitSync()
     }
     MOZ_ASSERT(mEGL->IsExtensionSupported(GLLibraryEGL::KHR_fence_sync));
 
-    EGLTime waitMS = 500;
-    const EGLTime nsPerMS = 1000 * 1000;
-    EGLTime waitNS = waitMS * nsPerMS;
+    // Wait FOREVER, primarily because some NVIDIA (at least Tegra) drivers
+    // have ClientWaitSync returning immediately if the timeout delay is anything
+    // else than FOREVER.
+    //
+    // FIXME: should we try to use a finite timeout delay where possible?
     EGLint status = mEGL->fClientWaitSync(Display(),
                                           mSync,
                                           0,
-                                          waitNS);
+                                          LOCAL_EGL_FOREVER);
 
     if (status != LOCAL_EGL_CONDITION_SATISFIED) {
         return false;

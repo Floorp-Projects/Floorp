@@ -1568,7 +1568,10 @@ CodeGenerator::visitCallKnown(LCallKnown *call)
     masm.loadPtr(Address(calleereg, offsetof(JSFunction, u.i.script_)), objreg);
 
     // Load script jitcode.
-    masm.loadBaselineOrIonRaw(objreg, objreg, executionMode, &uncompiled);
+    if (call->mir()->needsArgCheck())
+        masm.loadBaselineOrIonRaw(objreg, objreg, executionMode, &uncompiled);
+    else
+        masm.loadBaselineOrIonNoArgCheck(objreg, objreg, executionMode, &uncompiled);
 
     // Nestle the StackPointer up to the argument vector.
     masm.freeStack(unusedStack);
@@ -2252,7 +2255,7 @@ CodeGenerator::maybeCreateScriptCounts()
             MResumePoint *resume = block->entryResumePoint();
             while (resume->caller())
                 resume = resume->caller();
-            uint32_t offset = resume->pc() - script->code;
+            DebugOnly<uint32_t> offset = resume->pc() - script->code;
             JS_ASSERT(offset < script->length);
         }
 
@@ -4902,6 +4905,10 @@ CodeGenerator::generate()
             return false;
     }
 
+    // Remember the entry offset to skip the argument check.
+    masm.flushBuffer();
+    setSkipArgCheckEntryOffset(masm.size());
+
     if (!generatePrologue())
         return false;
     if (!generateBody())
@@ -4951,6 +4958,7 @@ CodeGenerator::link()
                      graph.mir().numCallTargets());
 
     ionScript->setMethod(code);
+    ionScript->setSkipArgCheckEntryOffset(getSkipArgCheckEntryOffset());
 
     SetIonScript(script, executionMode, ionScript);
 
