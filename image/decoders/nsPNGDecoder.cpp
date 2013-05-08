@@ -140,7 +140,19 @@ void nsPNGDecoder::CreateFrame(png_uint_32 x_offset, png_uint_32 y_offset,
                                int32_t width, int32_t height,
                                gfxASurface::gfxImageFormat format)
 {
-  NeedNewFrame(mNumFrames, x_offset, y_offset, width, height, format);
+  // Our first full frame is automatically created by the image decoding
+  // infrastructure. Just use it as long as we're not creating a subframe.
+  MOZ_ASSERT(HasSize());
+  if (mNumFrames != 0 ||
+      x_offset != 0 || y_offset != 0 ||
+      width != mImageMetadata.GetWidth() || height != mImageMetadata.GetHeight()) {
+    NeedNewFrame(mNumFrames, x_offset, y_offset, width, height, format);
+  } else if (mNumFrames == 0) {
+    // Our preallocated frame matches up, with the possible exception of alpha.
+    if (format == gfxASurface::ImageFormatRGB24) {
+      GetCurrentFrame()->SetHasNoAlpha();
+    }
+  }
 
   mFrameRect.x = x_offset;
   mFrameRect.y = y_offset;
@@ -651,7 +663,7 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
     }
   }
 
-  if (!decoder->mFrameIsHidden) {
+  if (!decoder->mFrameIsHidden && decoder->NeedsNewFrame()) {
     /* We know that we need a new frame, so pause input so the decoder
      * infrastructure can give it to us.
      */
