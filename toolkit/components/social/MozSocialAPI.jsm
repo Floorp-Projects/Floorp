@@ -141,6 +141,32 @@ function attachToWindow(provider, targetWindow) {
         chromeWindow.SocialFlyout.panel.hidePopup();
       }
     },
+    // allow a provider to share to other providers through the browser
+    share: {
+      enumerable: true,
+      configurable: true,
+      writable: true,
+      value: function(data) {
+        let chromeWindow = getChromeWindow(targetWindow);
+        if (!chromeWindow.SocialShare || chromeWindow.SocialShare.shareButton.hidden)
+          throw new Error("Share is unavailable");
+        // ensure user action initates the share
+        let dwu = chromeWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                              .getInterface(Ci.nsIDOMWindowUtils);
+        if (!dwu.isHandlingUserInput)
+          throw new Error("Attempt to share without user input");
+
+        // limit to a few params we want to support for now
+        let dataOut = {};
+        for (let sub of ["url", "title", "description", "source"]) {
+          dataOut[sub] = data[sub];
+        }
+        if (data.image)
+          dataOut.previews = [data.image];
+
+        chromeWindow.SocialShare.sharePage(null, dataOut);
+      }
+    },
     getAttention: {
       enumerable: true,
       configurable: true,

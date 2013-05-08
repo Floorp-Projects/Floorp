@@ -3,8 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.gecko;
+package org.mozilla.gecko.animation;
 
+import android.support.v4.view.ViewCompat;
 import android.os.Build;
 import android.os.Handler;
 import android.view.Choreographer;
@@ -108,6 +109,10 @@ public class PropertyAnimator implements Runnable {
     }
 
     public void start() {
+        if (mDuration == 0) {
+            return;
+        }
+
         mStartTime = AnimationUtils.currentAnimationTimeMillis();
 
         // Fix the from value based on current position and property
@@ -127,18 +132,18 @@ public class PropertyAnimator implements Runnable {
             else if (element.property == Property.HEIGHT)
                 element.from = element.proxy.getHeight();
 
+            ViewCompat.setHasTransientState(element.view, true);
+
             if (shouldEnableHardwareLayer(element))
                 element.view.setLayerType(View.LAYER_TYPE_HARDWARE, null);
             else
                 element.view.setDrawingCacheEnabled(true);
         }
 
-        if (mDuration != 0) {
-            mFramePoster.postFirstAnimationFrame();
+        mFramePoster.postFirstAnimationFrame();
 
-            if (mListener != null)
-                mListener.onPropertyAnimationStart();
-        }
+        if (mListener != null)
+            mListener.onPropertyAnimationStart();
     }
 
 
@@ -153,6 +158,8 @@ public class PropertyAnimator implements Runnable {
         for (ElementHolder element : mElementsList) {
             if (snapToEndPosition)
                 invalidate(element, element.to);
+
+            ViewCompat.setHasTransientState(element.view, false);
 
             if (shouldEnableHardwareLayer(element))
                 element.view.setLayerType(View.LAYER_TYPE_NONE, null);

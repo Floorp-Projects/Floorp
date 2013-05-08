@@ -101,6 +101,37 @@ PodCopy(T* dst, const T* src, size_t nelem)
   }
 }
 
+template<typename T>
+MOZ_ALWAYS_INLINE static void
+PodCopy(volatile T* dst, const volatile T* src, size_t nelem)
+{
+  MOZ_ASSERT(dst != src);
+  MOZ_ASSERT_IF(src < dst,
+                PointerRangeSize(src, static_cast<const volatile T*>(dst)) >= nelem);
+  MOZ_ASSERT_IF(dst < src,
+                PointerRangeSize(static_cast<const volatile T*>(dst), src) >= nelem);
+
+  /*
+   * Volatile |dst| requires extra work, because it's undefined behavior to
+   * modify volatile objects using the mem* functions.  Just write out the
+   * loops manually, using operator= rather than memcpy for the same reason,
+   * and let the compiler optimize to the extent it can.
+   */
+  for (const volatile T* srcend = src + nelem; src < srcend; src++, dst++)
+    *dst = *src;
+}
+
+/*
+ * Copy the contents of the array |src| into the array |dst|, both of size N.
+ * The arrays must not overlap!
+ */
+template <class T, size_t N>
+static void
+PodArrayCopy(T (&dst)[N], const T (&src)[N])
+{
+  PodCopy(dst, src, N);
+}
+
 /**
  * Determine whether the |len| elements at |one| are memory-identical to the
  * |len| elements at |two|.

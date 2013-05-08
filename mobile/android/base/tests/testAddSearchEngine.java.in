@@ -1,0 +1,90 @@
+#filter substitution
+package @ANDROID_PACKAGE_NAME@.tests;
+
+import @ANDROID_PACKAGE_NAME@.*;
+import android.view.View;
+import android.widget.ListAdapter;
+import android.widget.ListView;
+import java.util.ArrayList;
+
+/**
+ * Test adding a search engine from an input field context menu
+ * Starting a test
+ * expected values.
+ */
+public class testAddSearchEngine extends BaseTest {
+
+    @Override
+    protected int getTestType() {
+        return TEST_MOCHITEST;
+    }
+
+    public void testAddSearchEngine() {
+        int height,width;
+        final int initialNumSearchEngines;
+        String blank = getAbsoluteUrl("/robocop/robocop_blank_01.html");
+        String url = getAbsoluteUrl("/robocop/robocop_search.html");
+
+        blockForGeckoReady();
+        loadUrl(blank);
+        waitForText("Browser Blank Page 01");
+
+        initialNumSearchEngines = getNumSearchEngines();
+        mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+        waitForText("Browser Blank Page 01");
+
+        loadUrl(url);
+        waitForText("Robocop Search Engine");
+
+        // Open the context menu for the intput field
+        height = mDriver.getGeckoTop() + 10;
+        width = mDriver.getGeckoLeft() + 20;
+        mAsserter.dumpLog("Long Clicking at width = " + String.valueOf(width) + " and height = " + String.valueOf(height));
+        mSolo.clickLongOnScreen(width,height);
+        if (!waitForText("Add Search Engine")) {
+            // TODO: clickLongOnScreen does not always work - known Robotium issue. Clicking a second time seems to work
+            mAsserter.dumpLog("Something went wrong and the context menu was not opened. Trying again");
+            mSolo.clickLongOnScreen(width,height);
+        }
+        mAsserter.ok(waitForText("Add Search Engine"), "Waiting for the context menu to be opened", "The context menu was opened");
+
+        // Add the search engine
+        mSolo.clickOnText("Add Search Engine");
+        waitForText("Cancel");
+        Device device = new Device();
+        if (device.version.equals("4.x")) {
+            // If the OS is ICS the vkb is opened when the popup is triggered so we need to close it in order to click the OK button
+            mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+            waitForText("OK"); // Make sure the OK button is visible
+        }
+        mSolo.clickOnButton("OK");
+        mAsserter.ok(!mSolo.searchText("Add Search Engine"), "Adding the search engine", "The add serach engine pop-up has been cloesed");
+
+        // Check that the number of search results has increased
+        mAsserter.is(getNumSearchEngines() ,initialNumSearchEngines + 1 , "The number of search results has increased");
+    }
+
+    public int getNumSearchEngines() {
+        ArrayList<ListView> views;
+        int searchEngineCount = 0;
+
+        // Start a search and wait for the search engine data to be displayed
+        Actions.EventExpecter enginesEventExpecter = mActions.expectGeckoEvent("SearchEngines:Data");
+        clickOnAwesomeBar();
+        waitForText("Bookmarks");
+        mActions.sendKeys("Firefox for Android");
+        enginesEventExpecter.blockForEvent();
+
+        views = mSolo.getCurrentListViews();
+        for (ListView view : views) {
+             ListAdapter adapter = view.getAdapter();
+             if (adapter != null) {
+                 searchEngineCount = adapter.getCount();
+             } else {
+                 searchEngineCount = -1;
+             }
+        }
+        mAsserter.isnot(searchEngineCount, -1, "There should be search engines displayed when text is entered");
+        return searchEngineCount;
+    }
+}

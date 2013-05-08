@@ -7,6 +7,8 @@
 
 #include "IUnknownImpl.h"
 
+#include "nsDebug.h"
+
 #ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
 #endif

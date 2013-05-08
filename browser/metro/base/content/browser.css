@@ -30,6 +30,10 @@ flyoutpanel {
   -moz-binding: url('chrome://browser/content/bindings/flyoutpanel.xml#flyoutpanelBinding');
 }
 
+cssthrobber {
+  -moz-binding: url('chrome://browser/content/bindings/cssthrobber.xml#cssthrobberBinding');
+}
+
 settings {
   -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#settings");
 }

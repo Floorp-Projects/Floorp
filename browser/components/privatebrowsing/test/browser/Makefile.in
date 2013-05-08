@@ -12,6 +12,8 @@ include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_BROWSER_FILES =  \
 		head.js \
+                browser_privatebrowsing_aboutHomeButtonAfterWindowClose.js \
+                browser_privatebrowsing_aboutSessionRestore.js \
 		browser_privatebrowsing_certexceptionsui.js \
 		browser_privatebrowsing_concurrent.js \
 		browser_privatebrowsing_concurrent_page.html \
@@ -32,6 +34,7 @@ MOCHITEST_BROWSER_FILES =  \
 		browser_privatebrowsing_localStorage_page1.html \
 		browser_privatebrowsing_localStorage_page2.html \
 		browser_privatebrowsing_nonbrowser.js \
+                browser_privatebrowsing_noSessionRestoreMenuOption.js \
 		browser_privatebrowsing_opendir.js \
 		browser_privatebrowsing_openlocation.js \
 		browser_privatebrowsing_openLocationLastURL.js \
