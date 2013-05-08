@@ -46,8 +46,8 @@ class IonCode : public gc::Cell
     uint32_t jumpRelocTableBytes_;    // Size of the jump relocation table.
     uint32_t dataRelocTableBytes_;    // Size of the data relocation table.
     uint32_t preBarrierTableBytes_;   // Size of the prebarrier table.
-    JSBool invalidated_;            // Whether the code object has been invalidated.
-                                    // This is necessary to prevent GC tracing.
+    JSBool invalidated_;              // Whether the code object has been invalidated.
+                                      // This is necessary to prevent GC tracing.
 
 #if JS_BITS_PER_WORD == 32
     // Ensure IonCode is gc::Cell aligned.
@@ -159,6 +159,9 @@ struct IonScript
 
     // Offset to OSR entrypoint from method_->raw(), or 0.
     uint32_t osrEntryOffset_;
+
+    // Offset to entrypoint skipping type arg check from method_->raw().
+    uint32_t skipArgCheckEntryOffset_;
 
     // Offset of the invalidation epilogue (which pushes this IonScript
     // and calls the invalidation thunk).
@@ -302,6 +305,9 @@ struct IonScript
     static inline size_t offsetOfOsrEntryOffset() {
         return offsetof(IonScript, osrEntryOffset_);
     }
+    static inline size_t offsetOfSkipArgCheckEntryOffset() {
+        return offsetof(IonScript, skipArgCheckEntryOffset_);
+    }
 
   public:
     IonCode *method() const {
@@ -326,6 +332,13 @@ struct IonScript
     }
     uint32_t osrEntryOffset() const {
         return osrEntryOffset_;
+    }
+    void setSkipArgCheckEntryOffset(uint32_t offset) {
+        JS_ASSERT(!skipArgCheckEntryOffset_);
+        skipArgCheckEntryOffset_ = offset;
+    }
+    uint32_t getSkipArgCheckEntryOffset() const {
+        return skipArgCheckEntryOffset_;
     }
     bool containsCodeAddress(uint8_t *addr) const {
         return method()->raw() <= addr && addr <= method()->raw() + method()->instructionsSize();
