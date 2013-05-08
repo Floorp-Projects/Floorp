@@ -334,6 +334,8 @@ public:
   // Return the alignment of the popup
   int8_t GetAlignmentPosition() const;
 
+  // Return the offset applied to the alignment of the popup
+  nscoord GetAlignmentOffset() const { return mAlignmentOffset; }
 protected:
 
   // returns the popup's level.
@@ -372,6 +374,24 @@ protected:
                        nscoord aMarginBegin, nscoord aMarginEnd,
                        nscoord aOffsetForContextMenu, FlipStyle aFlip,
                        bool* aFlipSide);
+
+  // check if the popup can fit into the available space by "sliding" (i.e.,
+  // by having the anchor arrow slide along one axis and only resizing if that
+  // can't provide the requested size). Only one axis can be slid - the other
+  // axis is "flipped" as normal. This method can handle either axis, but is
+  // only called for the sliding axis. All coordinates are in app units
+  // relative to the screen.
+  //   aScreenPoint - the point where the popup should appear
+  //   aSize - the size of the popup
+  //   aScreenBegin - the left or top edge of the screen
+  //   aScreenEnd - the right or bottom edge of the screen
+  //   aOffset - the amount by which the arrow must be slid such that it is
+  //             still aligned with the anchor.
+  // Result is the new size of the popup, which will typically be the same
+  // as aSize, unless aSize is greater than the screen width/height.
+  nscoord SlideOrResize(nscoord& aScreenPoint, nscoord aSize,
+                        nscoord aScreenBegin, nscoord aScreenEnd,
+                        nscoord *aOffset);
 
   // Move the popup to the position specified in its |left| and |top| attributes.
   void MoveToAttributePosition();
@@ -418,6 +438,12 @@ protected:
   int32_t mYPos;
   int32_t mScreenXPos;
   int32_t mScreenYPos;
+
+  // If the panel prefers to "slide" rather than resize, then the arrow gets
+  // positioned at this offset (along either the x or y axis, depending on
+  // mPosition)
+  nscoord mAlignmentOffset;
+
   // The value of the client offset of our widget the last time we positioned
   // ourselves. We store this so that we can detect when it changes but the
   // position of our widget didn't change.
@@ -434,6 +460,7 @@ protected:
   // One of nsIPopupBoxObject::ROLLUP_DEFAULT/ROLLUP_CONSUME/ROLLUP_NO_CONSUME
   int8_t mConsumeRollupEvent;
   bool mFlipBoth; // flip in both directions
+  bool mSlide; // allow the arrow to "slide" instead of resizing
 
   bool mIsOpenChanged; // true if the open state changed since the last layout
   bool mIsContextMenu; // true for context menus
