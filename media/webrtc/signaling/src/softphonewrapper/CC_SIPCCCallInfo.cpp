@@ -115,11 +115,11 @@ std::string CC_SIPCCCallInfo::callStateToString (cc_call_state_t state)
       case WAITINGFORDIGITS:
         statestr = "WAITINGFORDIGITS";
         break;
-      case CREATEOFFERSUCCESS:
-        statestr = "CREATEOFFERSUCCESS";
+      case CREATEOFFER:
+        statestr = "CREATEOFFER";
         break;
-      case CREATEANSWERSUCCESS:
-        statestr = "CREATEANSWERSUCCESS";
+      case CREATEANSWER:
+        statestr = "CREATEANSWER";
         break;
       case CREATEOFFERERROR:
         statestr = "CREATEOFFERERROR";
@@ -127,11 +127,11 @@ std::string CC_SIPCCCallInfo::callStateToString (cc_call_state_t state)
       case CREATEANSWERERROR:
         statestr = "CREATEANSWERERROR";
         break;
-      case SETLOCALDESCSUCCESS:
-        statestr = "SETLOCALDESCSUCCESS";
+      case SETLOCALDESC:
+        statestr = "SETLOCALDESC";
         break;
-      case SETREMOTEDESCSUCCESS:
-        statestr = "SETREMOTEDESCSUCCESS";
+      case SETREMOTEDESC:
+        statestr = "SETREMOTEDESC";
         break;
       case UPDATELOCALDESC:
         statestr = "UPDATELOCALDESC";
