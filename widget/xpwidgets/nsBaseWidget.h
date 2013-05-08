@@ -336,9 +336,6 @@ protected:
 
   virtual CompositorChild* GetRemoteRenderer() MOZ_OVERRIDE;
 
-  virtual mozilla::layers::LayersBackend GetPreferredCompositorBackend()
-  { return mUseLayersAcceleration ? mozilla::layers::LAYERS_OPENGL : mozilla::layers::LAYERS_BASIC; }
-
 protected:
   /**
    * Starts the OMTC compositor destruction sequence.

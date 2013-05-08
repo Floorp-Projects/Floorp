@@ -3202,6 +3202,13 @@ GetLayerManagerPrefs(LayerManagerPrefs* aManagerPrefs)
     aManagerPrefs->mDisableAcceleration || safeMode;
 }
 
+bool
+nsWindow::ShouldUseOffMainThreadCompositing()
+{
+  // OMTC doesn't work on Windows right now.
+  return false;
+}
+
 LayerManager*
 nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
                           LayersBackend aBackendHint,
@@ -3233,18 +3240,9 @@ nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
   RECT windowRect;
   ::GetClientRect(mWnd, &windowRect);
 
-  // Try OMTC first.
-  if (!mLayerManager && ShouldUseOffMainThreadCompositing()) {
-    // e10s uses the parameter to pass in the shadow manager from the TabChild
-    // so we don't expect to see it there since this doesn't support e10s.
-    NS_ASSERTION(aShadowManager == nullptr, "Async Compositor not supported with e10s");
-    CreateCompositor();
-  }
-
   if (!mLayerManager ||
       (!sAllowD3D9 && aPersistence == LAYER_MANAGER_PERSISTENT &&
-        mLayerManager->GetBackendType() == LAYERS_BASIC &&
-        !ShouldUseOffMainThreadCompositing())) {
+        mLayerManager->GetBackendType() == LAYERS_BASIC)) {
     // If D3D9 is not currently allowed but the permanent manager is required,
     // -and- we're currently using basic layers, run through this check.
     LayerManagerPrefs prefs;
@@ -7271,7 +7269,7 @@ bool nsWindow::AutoErase(HDC dc)
 void
 nsWindow::AllowD3D9Callback(nsWindow *aWindow)
 {
-  if (aWindow->mLayerManager && !aWindow->ShouldUseOffMainThreadCompositing()) {
+  if (aWindow->mLayerManager) {
     aWindow->mLayerManager->Destroy();
     aWindow->mLayerManager = NULL;
   }
@@ -7280,7 +7278,7 @@ nsWindow::AllowD3D9Callback(nsWindow *aWindow)
 void
 nsWindow::AllowD3D9WithReinitializeCallback(nsWindow *aWindow)
 {
-  if (aWindow->mLayerManager && !aWindow->ShouldUseOffMainThreadCompositing()) {
+  if (aWindow->mLayerManager) {
     aWindow->mLayerManager->Destroy();
     aWindow->mLayerManager = NULL;
     (void) aWindow->GetLayerManager();
@@ -7300,9 +7298,7 @@ nsWindow::StartAllowingD3D9(bool aReinitialize)
     // accelerated one, we *will* throw out all the current layer
     // managers.  We early-return here because currently, if
     // |disableAcceleration|, we will always use basic managers and
-    // it's a waste to recreate them. If we're using OMTC we don't want to
-    // recreate out layer manager and its compositor either. This is even
-    // more wasteful.
+    // it's a waste to recreate them.
     //
     // NB: the above implies that it's eminently possible for us to
     // skip this early return but still recreate basic managers.
