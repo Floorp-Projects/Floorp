@@ -8,8 +8,8 @@
 
 %{C++
 #define NS_WINDOWMEDIATOR_CID \
-{ 0x292e17c8, 0xccc1, 0x42e1, \
-  { 0xac, 0x8b, 0xaf, 0x61, 0x7d, 0x54, 0x13, 0xb1 } }
+{ 0x808b2fa3, 0x8a02, 0x49ca, \
+  { 0x91, 0x04, 0x5f, 0x77, 0x29, 0x9e, 0x09, 0x0b } }
 
 #define NS_WINDOWMEDIATOR_CONTRACTID \
   "@mozilla.org/appshell/window-mediator;1"
@@ -20,7 +20,7 @@ interface nsIWidget;
 interface nsIDOMWindow;
 interface nsIWindowMediatorListener;
 
-[scriptable, uuid(292e17c8-ccc1-42e1-ac8b-af617d5413b1)]
+[scriptable, uuid(808b2fa3-8a02-49ca-9104-5f77299e090b)]
 interface nsIWindowMediator: nsISupports
 {
   /** Return an enumerator which iterates over all windows of type aWindowType
@@ -68,6 +68,11 @@ interface nsIWindowMediator: nsISupports
     * @return the topmost window
     */
   nsIDOMWindow getMostRecentWindow(in wstring aWindowType);
+
+  /**
+   * Return the outer window with the given ID, if any.  Can return null.
+   */
+  nsIDOMWindow getOuterWindowWithId(in unsigned long long aOuterWindowID);
 
   /** Add the window to the list of known windows. Listeners (see
     * addListener) will be notified through their onOpenWindow method.

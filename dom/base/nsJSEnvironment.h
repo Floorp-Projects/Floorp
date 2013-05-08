@@ -44,8 +44,6 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsJSContext,
                                                          nsIScriptContext)
 
-  virtual nsIScriptObjectPrincipal* GetObjectPrincipal();
-
   virtual nsresult EvaluateString(const nsAString& aScript,
                                   JSObject& aScopeObject,
                                   JS::CompileOptions &aOptions,

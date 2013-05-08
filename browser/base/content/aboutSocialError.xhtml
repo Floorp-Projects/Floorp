@@ -47,6 +47,8 @@
 
       let modeMatch = queryString.match(/mode=([^&]+)/);
       let mode = modeMatch && modeMatch[1] ? modeMatch[1] : "";
+      let originMatch = queryString.match(/origin=([^&]+)/);
+      config.origin = originMatch && originMatch[1] ? decodeURIComponent(originMatch[1]) : "";
 
       switch (mode) {
         case "compactInfo":
@@ -77,7 +79,11 @@
       let browserBundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
 
       let productName = brandBundle.GetStringFromName("brandShortName");
-      let providerName = Social && Social.provider && Social.provider.name;
+      let provider = Social && Social.provider;
+      if (config.origin) {
+        provider = Social && Social._getProviderFromOrigin(config.origin);
+      }
+      let providerName = provider && provider.name;
 
       // Sets up the error message
       let msg = browserBundle.formatStringFromName("social.error.message", [productName, providerName], 2);

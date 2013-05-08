@@ -50,12 +50,16 @@ FENNEC_JAVA_FILES = \
   AllCapsTextView.java \
   AndroidImport.java \
   AndroidImportPreference.java \
-  AnimatorProxy.java \
   AnimatedHeightLayout.java \
   AppNotificationClient.java \
   AwesomeBar.java \
   AwesomebarResultHandler.java \
   AwesomeBarTabs.java \
+  animation/AnimatorProxy.java \
+  animation/HeightChangeAnimation.java \
+  animation/PropertyAnimator.java \
+  animation/Rotate3DAnimation.java \
+  animation/ViewHelper.java \
   awesomebar/AwesomeBarTab.java \
   awesomebar/AllPagesTab.java \
   awesomebar/BookmarksTab.java \
@@ -111,7 +115,6 @@ FENNEC_JAVA_FILES = \
   GeckoJavaSampler.java \
   GlobalHistory.java \
   GeckoViewsFactory.java \
-  HeightChangeAnimation.java \
   InputMethods.java \
   JavaAddonManager.java \
   LightweightTheme.java \
@@ -132,7 +135,6 @@ FENNEC_JAVA_FILES = \
   PrefsHelper.java \
   PrivateDataPreference.java \
   PrivateTab.java \
-  PropertyAnimator.java \
   ProfileMigrator.java \
   PromptService.java \
   Restarter.java \
@@ -143,7 +145,6 @@ FENNEC_JAVA_FILES = \
   ReaderModeUtils.java \
   RemoteTabs.java \
   RobocopAPI.java \
-  Rotate3DAnimation.java \
   ServiceNotificationClient.java \
   SessionParser.java \
   SetupScreen.java \

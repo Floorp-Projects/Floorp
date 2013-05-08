@@ -144,7 +144,7 @@ static void
 AppendToFormat(nsAString & aResult, const char* aFormat)
 {
   if (!aResult.IsEmpty()) {
-    aResult.AppendASCII(",");
+    aResult.Append(',');
   }
   aResult.AppendASCII(aFormat);
 }

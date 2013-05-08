@@ -18,7 +18,9 @@ include ../../content/xul/content/crashtests/crashtests.list
 include ../../content/xul/document/crashtests/crashtests.list
 include ../../content/xul/templates/src/crashtests/crashtests.list
 include ../../content/mathml/content/crashtests/crashtests.list
-include ../../content/media/test/crashtests/crashtests.list
+
+# Bug 868152 - webaudio crash on tegra platform
+skip-if(Android) include ../../content/media/test/crashtests/crashtests.list
 
 include ../../docshell/base/crashtests/crashtests.list
 

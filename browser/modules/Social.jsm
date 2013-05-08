@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["Social"];
+this.EXPORTED_SYMBOLS = ["Social", "OpenGraphBuilder"];
 
 const Ci = Components.interfaces;
 const Cc = Components.classes;
@@ -19,6 +19,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
   "resource://gre/modules/commonjs/sdk/core/promise.js");
+
+XPCOMUtils.defineLazyServiceGetter(this, "unescapeService",
+                                   "@mozilla.org/feed-unescapehtml;1",
+                                   "nsIScriptableUnescapeHTML");
 
 // Add a pref observer for the enabled state
 function prefObserver(subject, topic, data) {
@@ -433,4 +437,119 @@ SocialErrorListener.prototype = {
   onProgressChange: function SPL_onProgressChange() {},
   onStatusChange: function SPL_onStatusChange() {},
   onSecurityChange: function SPL_onSecurityChange() {},
+};
+
+
+this.OpenGraphBuilder = {
+  getData: function(browser) {
+    let res = {
+      url: this._validateURL(browser, browser.currentURI.spec),
+      title: browser.contentDocument.title,
+      previews: []
+    };
+    this._getMetaData(browser, res);
+    this._getLinkData(browser, res);
+    this._getPageData(browser, res);
+    return res;
+  },
+
+  _getMetaData: function(browser, o) {
+    // query for standardized meta data
+    let els = browser.contentDocument
+                  .querySelectorAll("head > meta[property], head > meta[name]");
+    if (els.length < 1)
+      return;
+    let url;
+    for (let el of els) {
+      let value = el.getAttribute("content")
+      if (!value)
+        continue;
+      value = unescapeService.unescape(value.trim());
+      switch (el.getAttribute("property") || el.getAttribute("name")) {
+        case "title":
+        case "og:title":
+          o.title = value;
+          break;
+        case "description":
+        case "og:description":
+          o.description = value;
+          break;
+        case "og:site_name":
+          o.siteName = value;
+          break;
+        case "medium":
+        case "og:type":
+          o.medium = value;
+          break;
+        case "og:video":
+          url = this._validateURL(browser, value);
+          if (url)
+            o.source = url;
+          break;
+        case "og:url":
+          url = this._validateURL(browser, value);
+          if (url)
+            o.url = url;
+          break;
+        case "og:image":
+          url = this._validateURL(browser, value);
+          if (url)
+            o.previews.push(url);
+          break;
+      }
+    }
+  },
+
+  _getLinkData: function(browser, o) {
+    let els = browser.contentDocument
+                  .querySelectorAll("head > link[rel], head > link[id]");
+    for (let el of els) {
+      let url = el.getAttribute("href");
+      if (!url)
+        continue;
+      url = this._validateURL(browser, unescapeService.unescape(url.trim()));
+      switch (el.getAttribute("rel") || el.getAttribute("id")) {
+        case "shorturl":
+        case "shortlink":
+          o.shortUrl = url;
+          break;
+        case "canonicalurl":
+        case "canonical":
+          o.url = url;
+          break;
+        case "image_src":
+          o.previews.push(url);
+          break;
+      }
+    }
+  },
+
+  // scrape through the page for data we want
+  _getPageData: function(browser, o) {
+    if (o.previews.length < 1)
+      o.previews = this._getImageUrls(browser);
+  },
+
+  _validateURL: function(browser, url) {
+    let uri = Services.io.newURI(browser.currentURI.resolve(url), null, null);
+    if (["http", "https", "ftp", "ftps"].indexOf(uri.scheme) < 0)
+      return null;
+    uri.userPass = "";
+    return uri.spec;
+  },
+
+  _getImageUrls: function(browser) {
+    let l = [];
+    let els = browser.contentDocument.querySelectorAll("img");
+    for (let el of els) {
+      let content = el.getAttribute("src");
+      if (content) {
+        l.push(this._validateURL(browser, unescapeService.unescape(content)));
+        // we don't want a billion images
+        if (l.length > 5)
+          break;
+      }
+    }
+    return l;
+  }
 };

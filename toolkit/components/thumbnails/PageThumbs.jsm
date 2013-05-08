@@ -237,6 +237,15 @@ this.PageThumbs = {
    */
   captureToCanvas: function PageThumbs_captureToCanvas(aWindow, aCanvas) {
     let telemetryCaptureTime = new Date();
+    this._captureToCanvas(aWindow, aCanvas);
+    let telemetry = Services.telemetry;
+    telemetry.getHistogramById("FX_THUMBNAILS_CAPTURE_TIME_MS")
+      .add(new Date() - telemetryCaptureTime);
+  },
+
+  // The background thumbnail service captures to canvas but doesn't want to
+  // participate in this service's telemetry, which is why this method exists.
+  _captureToCanvas: function PageThumbs__captureToCanvas(aWindow, aCanvas) {
     let [sw, sh, scale] = this._determineCropSize(aWindow, aCanvas);
     let ctx = aCanvas.getContext("2d");
 
@@ -253,10 +262,6 @@ this.PageThumbs = {
     }
 
     ctx.restore();
-
-    let telemetry = Services.telemetry;
-    telemetry.getHistogramById("FX_THUMBNAILS_CAPTURE_TIME_MS")
-      .add(new Date() - telemetryCaptureTime);
   },
 
   /**
@@ -278,27 +283,7 @@ this.PageThumbs = {
       try {
         let blob = yield this.captureToBlob(aBrowser.contentWindow);
         let buffer = yield TaskUtils.readBlob(blob);
-
-        let telemetryStoreTime = new Date();
-        yield PageThumbsStorage.writeData(url, new Uint8Array(buffer));
-
-        Services.telemetry.getHistogramById("FX_THUMBNAILS_STORE_TIME_MS")
-          .add(new Date() - telemetryStoreTime);
-
-        // We've been redirected. Create a copy of the current thumbnail for
-        // the redirect source. We need to do this because:
-        //
-        // 1) Users can drag any kind of links onto the newtab page. If those
-        //    links redirect to a different URL then we want to be able to
-        //    provide thumbnails for both of them.
-        //
-        // 2) The newtab page should actually display redirect targets, only.
-        //    Because of bug 559175 this information can get lost when using
-        //    Sync and therefore also redirect sources appear on the newtab
-        //    page. We also want thumbnails for those.
-        if (url != originalURL) {
-          yield PageThumbsStorage.copy(url, originalURL);
-        }
+        yield this._store(originalURL, url, buffer);
       } catch (_) {
         isSuccess = false;
       }
@@ -306,6 +291,39 @@ this.PageThumbs = {
         aCallback(isSuccess);
       }
     }).bind(this));
+  },
+
+  /**
+   * Stores data to disk for the given URLs.
+   *
+   * NB: The background thumbnail service calls this, too.
+   *
+   * @param aOriginalURL The URL with which the capture was initiated.
+   * @param aFinalURL The URL to which aOriginalURL ultimately resolved.
+   * @param aData An ArrayBuffer containing the image data.
+   * @return {Promise}
+   */
+  _store: function PageThumbs__store(aOriginalURL, aFinalURL, aData) {
+    return TaskUtils.spawn(function () {
+      let telemetryStoreTime = new Date();
+      yield PageThumbsStorage.writeData(aFinalURL, aData);
+      Services.telemetry.getHistogramById("FX_THUMBNAILS_STORE_TIME_MS")
+        .add(new Date() - telemetryStoreTime);
+
+      // We've been redirected. Create a copy of the current thumbnail for
+      // the redirect source. We need to do this because:
+      //
+      // 1) Users can drag any kind of links onto the newtab page. If those
+      //    links redirect to a different URL then we want to be able to
+      //    provide thumbnails for both of them.
+      //
+      // 2) The newtab page should actually display redirect targets, only.
+      //    Because of bug 559175 this information can get lost when using
+      //    Sync and therefore also redirect sources appear on the newtab
+      //    page. We also want thumbnails for those.
+      if (aFinalURL != aOriginalURL)
+        yield PageThumbsStorage.copy(aFinalURL, aOriginalURL);
+    });
   },
 
   /**
@@ -374,10 +392,12 @@ this.PageThumbs = {
 
   /**
    * Creates a new hidden canvas element.
+   * @param aWindow The document of this window will be used to create the
+   *                canvas.  If not given, the hidden window will be used.
    * @return The newly created canvas.
    */
-  _createCanvas: function PageThumbs_createCanvas() {
-    let doc = Services.appShell.hiddenDOMWindow.document;
+  _createCanvas: function PageThumbs_createCanvas(aWindow) {
+    let doc = (aWindow || Services.appShell.hiddenDOMWindow).document;
     let canvas = doc.createElementNS(HTML_NAMESPACE, "canvas");
     canvas.mozOpaque = true;
     canvas.mozImageSmoothingEnabled = true;
@@ -453,15 +473,16 @@ this.PageThumbsStorage = {
    * Write the contents of a thumbnail, off the main thread.
    *
    * @param {string} aURL The url for which to store a thumbnail.
-   * @param {string} aData The data to store in the thumbnail, as
+   * @param {ArrayBuffer} aData The data to store in the thumbnail, as
    * an ArrayBuffer. This array buffer is neutered and cannot be
    * reused after the copy.
    *
    * @return {Promise}
    */
-  writeData: function Storage_write(aURL, aData) {
+  writeData: function Storage_writeData(aURL, aData) {
     let path = this.getFilePathForURL(aURL);
     this.ensurePath();
+    aData = new Uint8Array(aData);
     let msg = [
       path,
       aData,

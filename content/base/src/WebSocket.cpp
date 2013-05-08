@@ -453,7 +453,7 @@ WebSocket::WebSocket()
   mCloseEventCode(nsIWebSocketChannel::CLOSE_ABNORMAL),
   mReadyState(WebSocket::CONNECTING),
   mOutgoingBufferedAmount(0),
-  mBinaryType(BinaryTypeValues::Blob),
+  mBinaryType(dom::BinaryType::Blob),
   mScriptLine(0),
   mInnerWindowID(0)
 {
@@ -888,10 +888,10 @@ WebSocket::CreateAndDispatchMessageEvent(const nsACString& aData,
   {
     JSAutoRequest ar(cx);
     if (isBinary) {
-      if (mBinaryType == BinaryTypeValues::Blob) {
+      if (mBinaryType == dom::BinaryType::Blob) {
         rv = nsContentUtils::CreateBlobBuffer(cx, aData, jsData);
         NS_ENSURE_SUCCESS(rv, rv);
-      } else if (mBinaryType == BinaryTypeValues::Arraybuffer) {
+      } else if (mBinaryType == dom::BinaryType::Arraybuffer) {
         JSObject* arrayBuf;
         rv = nsContentUtils::CreateArrayBuffer(cx, aData, &arrayBuf);
         NS_ENSURE_SUCCESS(rv, rv);

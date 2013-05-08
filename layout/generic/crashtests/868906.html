@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<meta charset="UTF-8">
+<script>
+
+function boom()
+{
+  var root = document.documentElement;
+  while(root.firstChild) { root.removeChild(root.firstChild); }
+  root.appendChild(document.createElement("body"));
+  root.offsetHeight;
+
+  var bigText = document.createTextNode("");
+  bigText.data += "\u202D";
+  bigText.data += "A";
+  bigText.data += "\x1C";
+  bigText.data += "\u062A";
+  bigText.data += "E";
+  bigText.data += "\u062E";
+  bigText.data += " ";
+  bigText.data += "\u202D";
+  bigText.data += "X";
+  bigText.data += "\x1C";
+  bigText.data += "Y";
+  root.appendChild(bigText);
+
+  var smallText = document.createTextNode("Z");
+  root.appendChild(smallText);
+
+  root.focus();
+
+  function del()
+  {
+    var range = document.createRange();
+    range.setStart(root, 0);
+    range.setEnd(bigText, bigText.data.length);
+    range.deleteContents();
+  }
+
+  del();
+
+  function finish() {
+    document.documentElement.removeAttribute('class');
+  }
+
+  setTimeout(finish, 0);
+}
+
+</script>
+</head>
+
+<body onload="boom();"></body>
+</html>

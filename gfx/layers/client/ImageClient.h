@@ -102,8 +102,6 @@ public:
     return mTextureInfo;
   }
 
-  static bool SupportsBackend(LayersBackend aBackend);
-
 private:
   RefPtr<TextureClient> mTextureClient;
   TextureInfo mTextureInfo;
@@ -132,8 +130,6 @@ public:
   {
     return TextureInfo(mType);
   }
-
-  static bool SupportsBackend(LayersBackend aBackend);
 
 protected:
   uint64_t mAsyncContainerID;

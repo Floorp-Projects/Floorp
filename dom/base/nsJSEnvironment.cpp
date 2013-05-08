@@ -973,7 +973,7 @@ static const char js_disable_explicit_compartment_gc[] =
 static const char js_baselinejit_content_str[] = JS_OPTIONS_DOT_STR "baselinejit.content";
 static const char js_baselinejit_chrome_str[]  = JS_OPTIONS_DOT_STR "baselinejit.chrome";
 static const char js_ion_content_str[]        = JS_OPTIONS_DOT_STR "ion.content";
-static const char js_asmjs_content_str[]      = JS_OPTIONS_DOT_STR "experimental_asmjs";
+static const char js_asmjs_content_str[]      = JS_OPTIONS_DOT_STR "asmjs";
 static const char js_ion_parallel_compilation_str[] = JS_OPTIONS_DOT_STR "ion.parallel_compilation";
 
 int
@@ -1229,7 +1229,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsJSContext)
   NS_INTERFACE_MAP_ENTRY(nsIScriptContext)
-  NS_INTERFACE_MAP_ENTRY(nsIScriptContextPrincipal)
   NS_INTERFACE_MAP_ENTRY(nsIXPCScriptNotify)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIScriptContext)
 NS_INTERFACE_MAP_END
@@ -1330,13 +1329,6 @@ nsJSContext::EvaluateString(const nsAString& aScript,
   if (aRetValue && !JS_WrapValue(mContext, aRetValue))
     return NS_ERROR_OUT_OF_MEMORY;
   return NS_OK;
-}
-
-nsIScriptObjectPrincipal*
-nsJSContext::GetObjectPrincipal()
-{
-  nsCOMPtr<nsIScriptObjectPrincipal> prin = do_QueryInterface(GetGlobalObject());
-  return prin;
 }
 
 nsresult
@@ -2549,11 +2541,11 @@ nsJSContext::ShrinkGCBuffersNow()
   JS::ShrinkGCBuffers(nsJSRuntime::sRuntime);
 }
 
-// Return true if any JSContext has a "global object" with a gray
-// parent. The intent is to look for JS Object windows. We don't merge
+// Return true if there exists a JSContext with a default global whose current
+// inner is gray. The intent is to look for JS Object windows. We don't merge
 // system compartments, so we don't use them to trigger merging CCs.
 static bool
-AnyGrayGlobalParent()
+AnyGrayCurrentContentInnerWindows()
 {
   if (!nsJSRuntime::sRuntime) {
     return false;
@@ -2561,13 +2553,20 @@ AnyGrayGlobalParent()
   JSContext *iter = nullptr;
   JSContext *cx;
   while ((cx = JS_ContextIterator(nsJSRuntime::sRuntime, &iter))) {
-    if (JSObject *global = JS_GetGlobalObject(cx)) {
-      if (JSObject *parent = js::GetObjectParent(global)) {
-        if (JS::GCThingIsMarkedGray(parent) &&
-            !js::IsSystemCompartment(js::GetObjectCompartment(parent))) {
-          return true;
-        }
-      }
+    // Skip anything without an nsIScriptContext, as well as any scx whose
+    // NativeGlobal() is not an outer window (this happens with XUL Prototype
+    // compilation scopes, for example, which we're not interested in).
+    nsIScriptContext *scx = GetScriptContextFromJSContext(cx);
+    JS::RootedObject global(cx, scx ? scx->GetNativeGlobal() : nullptr);
+    if (!global || !js::GetObjectParent(global)) {
+      continue;
+    }
+    // Grab the inner from the outer.
+    global = JS_ObjectToInnerObject(cx, global);
+    MOZ_ASSERT(!js::GetObjectParent(global));
+    if (JS::GCThingIsMarkedGray(global) &&
+        !js::IsSystemCompartment(js::GetObjectCompartment(global))) {
+      return true;
     }
   }
   return false;
@@ -2598,7 +2597,7 @@ DoMergingCC(bool aForced)
     return false;
   }
 
-  if (!aForced && AnyGrayGlobalParent()) {
+  if (!aForced && AnyGrayCurrentContentInnerWindows()) {
     sMergedInARow++;
     return true;
   } else {

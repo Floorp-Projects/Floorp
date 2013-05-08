@@ -13,7 +13,7 @@ interface nsIDOMMozMobileCellInfo;
 interface nsIDOMMozIccManager;
 interface nsIDOMMozMobileCFInfo;
 
-[scriptable, builtinclass, uuid(780de142-562c-4141-bd5c-5413fb1952d2)]
+[scriptable, builtinclass, uuid(0106c3fe-0064-40f8-b2e1-b8ad37b4c81e)]
 interface nsIDOMMozMobileConnection : nsIDOMEventTarget
 {
   const long ICC_SERVICE_CLASS_VOICE = (1 << 0);
@@ -40,6 +40,14 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
    * 'networkLocked', 'corporateLocked', 'serviceProviderLocked', 'ready'.
    */
   readonly attribute DOMString cardState;
+
+  /**
+   * Indicates the number of retries remaining when cardState equals 'pinRequired'
+   * or 'pukRequired'.  0 denotes the retry count is unavailable.
+   *
+   * Value is undefined for other cardState values.
+   */
+  readonly attribute long retryCount;
 
   /**
    * Information stored in the device's ICC card.
