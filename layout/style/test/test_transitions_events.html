@@ -110,7 +110,7 @@ document.documentElement.addEventListener("transitionend",
       is(event.propertyName, "some-unknown-prop",
          "propertyName for transitionend on body");
       // Reported time should (really?) be shortened by reversing.
-      is(event.elapsedTime, -4.75,
+      is(event.elapsedTime, 0.5,
          "elapsedTime for transitionend on body");
       got_body = true;
       finished_test();
@@ -301,25 +301,22 @@ setTimeout(poll_start_reversal, 200);
 // And make our own event to dispatch to the body.
 started_test();
 
-var e = new TransitionEvent("foo",
+var e = new TransitionEvent("transitionend",
                             {
                               bubbles: true,
                               cancelable: true,
-                              propertyName: "name",
+                              propertyName: "some-unknown-prop",
                               elapsedTime: 0.5,
                               pseudoElement: "pseudo"
                             });
 is(e.bubbles, true);
 is(e.cancelable, true);
-is(e.propertyName, "name");
+is(e.propertyName, "some-unknown-prop");
 is(e.elapsedTime, "0.5");
 is(e.pseudoElement, "pseudo");
 is(e.isTrusted, false)
 
-var ev = document.createEvent("TransitionEvent"); // FIXME: un-specified
-ev.initTransitionEvent("transitionend", true, true,
-                       "some-unknown-prop", -4.75);
-document.body.dispatchEvent(ev);
+document.body.dispatchEvent(e);
 
 </script>
 </pre>
