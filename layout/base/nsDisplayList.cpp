@@ -874,10 +874,15 @@ nsDisplayListBuilder::Allocate(size_t aSize) {
   return tmp;
 }
 
-DisplayItemClip*
+const DisplayItemClip*
 nsDisplayListBuilder::AllocateDisplayItemClip(const DisplayItemClip& aOriginal)
 {
   void* p = Allocate(sizeof(DisplayItemClip));
+  if (!aOriginal.GetRoundedRectCount()) {
+    memcpy(p, &aOriginal, sizeof(DisplayItemClip));
+    return static_cast<DisplayItemClip*>(p);
+  }
+
   DisplayItemClip* c = new (p) DisplayItemClip(aOriginal);
   mDisplayItemClipsToDestroy.AppendElement(c);
   return c;
