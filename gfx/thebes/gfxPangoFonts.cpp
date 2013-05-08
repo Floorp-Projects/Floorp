@@ -777,10 +777,6 @@ public:
         return mPangoFont;
     }
 
-#ifdef USE_SKIA
-    virtual mozilla::TemporaryRef<mozilla::gfx::GlyphRenderingOptions> GetGlyphRenderingOptions();
-#endif
-
 protected:
     virtual bool ShapeText(gfxContext      *aContext,
                            const PRUnichar *aText,
@@ -3235,36 +3231,3 @@ ApplyGdkScreenFontOptions(FcPattern *aPattern)
 }
 
 #endif // MOZ_WIDGET_GTK2
-
-#ifdef USE_SKIA
-mozilla::TemporaryRef<mozilla::gfx::GlyphRenderingOptions>
-gfxFcFont::GetGlyphRenderingOptions()
-{
-  cairo_scaled_font_t *scaled_font = CairoScaledFont();
-  cairo_font_options_t *options = cairo_font_options_create();
-  cairo_scaled_font_get_font_options(scaled_font, options);
-  cairo_hint_style_t hint_style = cairo_font_options_get_hint_style(options);     
-  cairo_font_options_destroy(options);
-
-  mozilla::gfx::FontHinting hinting;
-
-  switch (hint_style) {
-    case CAIRO_HINT_STYLE_NONE:
-      hinting = mozilla::gfx::FONT_HINTING_NONE;
-      break;
-    case CAIRO_HINT_STYLE_SLIGHT:
-      hinting = mozilla::gfx::FONT_HINTING_LIGHT;
-      break;
-    case CAIRO_HINT_STYLE_FULL:
-      hinting = mozilla::gfx::FONT_HINTING_FULL;
-      break;
-    default:
-      hinting = mozilla::gfx::FONT_HINTING_NORMAL;
-      break;
-  }
-
-  // We don't want to force the use of the autohinter over the font's built in hints
-  return mozilla::gfx::Factory::CreateCairoGlyphRenderingOptions(hinting, false);
-}
-#endif
-

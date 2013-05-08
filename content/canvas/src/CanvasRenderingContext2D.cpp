@@ -797,12 +797,7 @@ CanvasRenderingContext2D::EnsureTarget()
                                                                                  size.height),
                                                                       caps,
                                                                       mozilla::gl::GLContext::ContextFlagsNone);
-
-         if (mGLContext) {
-           mTarget = gfxPlatform::GetPlatform()->CreateDrawTargetForFBO(0, mGLContext, size, format);
-         } else {
-           mTarget = layerManager->CreateDrawTarget(size, format);
-         }
+         mTarget = gfxPlatform::GetPlatform()->CreateDrawTargetForFBO(0, mGLContext, size, format);
        } else
 #endif
          mTarget = layerManager->CreateDrawTarget(size, format);
