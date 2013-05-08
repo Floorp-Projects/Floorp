@@ -745,7 +745,7 @@ internalDecodeRFC2047Header(const char* aHeaderVal, const char* aDefaultCharset,
   // to UTF-8. Otherwise, just strips away CRLF. 
   if (PL_strstr(aHeaderVal, "=?") || 
       (aDefaultCharset && (!IsUTF8(nsDependentCString(aHeaderVal)) || 
-      Is7bitNonAsciiString(aHeaderVal, PL_strlen(aHeaderVal))))) {
+      Is7bitNonAsciiString(aHeaderVal, strlen(aHeaderVal))))) {
     DecodeRFC2047Str(aHeaderVal, aDefaultCharset, aOverrideCharset, aResult);
   } else if (aEatContinuations && 
              (PL_strchr(aHeaderVal, '\n') || PL_strchr(aHeaderVal, '\r'))) {

@@ -427,6 +427,12 @@ public:
 
   bool HasCurrentData() { return mHasCurrentData; }
 
+  DOMMediaStream* GetWrapper()
+  {
+    NS_ASSERTION(NS_IsMainThread(), "Only use DOMMediaStream on main thread");
+    return mWrapper;
+  }
+
 protected:
   virtual void AdvanceTimeVaryingValuesToCurrentTime(GraphTime aCurrentTime, GraphTime aBlockedTime)
   {

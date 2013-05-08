@@ -310,14 +310,15 @@ exports.testTrackWindows = function(test) {
           openWindow()
         }
         else {
-          let count = windows.length;
-          for each (let win in windows) {
-            win.close(function() {
-              if (--count == 0) {
-                test.done();
-              }
+          (function closeWindows(windows) {
+            if (!windows.length)
+              return test.done();
+
+            return windows.pop().close(function() {
+              test.pass('window was closed');
+              closeWindows(windows);
             });
-          }
+          })(windows)
         }
       },
 

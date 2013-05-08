@@ -556,6 +556,7 @@ IonScript::IonScript()
     deoptTable_(NULL),
     osrPc_(NULL),
     osrEntryOffset_(0),
+    skipArgCheckEntryOffset_(0),
     invalidateEpilogueOffset_(0),
     invalidateEpilogueDataOffset_(0),
     numBailouts_(0),

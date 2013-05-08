@@ -964,6 +964,38 @@ MacroAssembler::loadBaselineOrIonRaw(Register script, Register dest, ExecutionMo
 }
 
 void
+MacroAssembler::loadBaselineOrIonNoArgCheck(Register script, Register dest, ExecutionMode mode,
+                                            Label *failure)
+{
+    if (mode == SequentialExecution) {
+        loadPtr(Address(script, JSScript::offsetOfBaselineOrIonSkipArgCheck()), dest);
+        if (failure)
+            branchTestPtr(Assembler::Zero, dest, dest, failure);
+    } else {
+        // Find second register to get the offset to skip argument check
+        Register offset = script;
+        if (script == dest) {
+            GeneralRegisterSet regs(GeneralRegisterSet::All());
+            regs.take(dest);
+            offset = regs.takeAny();
+        }
+
+        loadPtr(Address(script, JSScript::offsetOfParallelIonScript()), dest);
+        if (failure)
+            branchPtr(Assembler::BelowOrEqual, dest, ImmWord(ION_COMPILING_SCRIPT), failure);
+
+        Push(offset);
+        load32(Address(script, IonScript::offsetOfSkipArgCheckEntryOffset()), offset);
+
+        loadPtr(Address(dest, IonScript::offsetOfMethod()), dest);
+        loadPtr(Address(dest, IonCode::offsetOfCode()), dest);
+        addPtr(offset, dest);
+
+        Pop(offset);
+    }
+}
+
+void
 MacroAssembler::loadBaselineFramePtr(Register framePtr, Register dest)
 {
     movePtr(framePtr, dest);
