@@ -413,9 +413,7 @@ public class GeckoAppShell
                 continue;
             }
 
-            long timeDiff = location.getElapsedRealtimeNanos()
-                            - lastKnownLocation.getElapsedRealtimeNanos();
-
+            long timeDiff = location.getTime() - lastKnownLocation.getTime();
             if (timeDiff > 0 ||
                 (timeDiff == 0 &&
                  getLocationAccuracy(location) < getLocationAccuracy(lastKnownLocation))) {
