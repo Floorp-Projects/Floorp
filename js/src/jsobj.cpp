@@ -38,6 +38,7 @@
 
 #include "frontend/TokenStream.h"
 #include "gc/Marking.h"
+#include "ion/BaselineJIT.h"
 #include "js/MemoryMetrics.h"
 #include "vm/Shape.h"
 
@@ -3768,6 +3769,20 @@ NativeGetInline(JSContext *cx,
             if (code)
                 code->accessGetter = true;
         }
+
+#ifdef JS_ION
+        if (script && script->hasBaselineScript()) {
+            switch (JSOp(*pc)) {
+              case JSOP_GETPROP:
+              case JSOP_CALLPROP:
+              case JSOP_LENGTH:
+                script->baselineScript()->noteAccessedGetter(pc - script->code);
+                break;
+              default:
+                break;
+            }
+        }
+#endif
     }
 
     if (!allowGC)
