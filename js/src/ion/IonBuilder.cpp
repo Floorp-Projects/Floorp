@@ -6229,8 +6229,14 @@ IonBuilder::jsop_getelem_dense()
 
     // If we can load the element as a definite double, make sure to check that
     // the array has been converted to homogenous doubles first.
+    //
+    // NB: We disable this optimization in parallel execution mode
+    // because it is inherently not threadsafe (how do you convert the
+    // array atomically when there might be concurrent readers)?
     types::StackTypeSet *objTypes = obj->resultTypeSet();
+    ExecutionMode executionMode = info().executionMode();
     bool loadDouble =
+        executionMode == SequentialExecution &&
         !barrier &&
         loopDepth_ &&
         !readOutOfBounds &&
