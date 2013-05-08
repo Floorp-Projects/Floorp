@@ -3531,6 +3531,12 @@ TryAttachGetElemStub(JSContext *cx, HandleScript script, ICGetElem_Fallback *stu
         return true;
     }
 
+    // GetElem operations on non-native objects other than typed arrays cannot
+    // be cached by either Baseline or Ion. Indicate this in the cache so that
+    // Ion does not generate a cache for this op.
+    if (!obj->isNative() && !obj->isTypedArray())
+        stub->noteNonNativeAccess();
+
     return true;
 }
 
@@ -5947,6 +5953,16 @@ ICGetProp_ArgumentsLength::Compiler::generateStubCode(MacroAssembler &masm)
     masm.bind(&failure);
     EmitStubGuardFailure(masm);
     return true;
+}
+
+void
+BaselineScript::noteAccessedGetter(uint32_t pcOffset)
+{
+    ICEntry &entry = icEntryFromPCOffset(pcOffset);
+    ICFallbackStub *stub = entry.fallbackStub();
+
+    if (stub->isGetProp_Fallback())
+        stub->toGetProp_Fallback()->noteAccessedGetter();
 }
 
 //
