@@ -353,13 +353,22 @@ nsDocShellTreeOwner::GetPrimaryContentShell(nsIDocShellTreeItem** aShell)
 {
    NS_ENSURE_ARG_POINTER(aShell);
 
-   if(mTreeOwner)
+   if (mTreeOwner)
        return mTreeOwner->GetPrimaryContentShell(aShell);
 
    *aShell = (mPrimaryContentShell ? mPrimaryContentShell : mWebBrowser->mDocShell);
    NS_IF_ADDREF(*aShell);
 
    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShellTreeOwner::GetContentWindow(JSContext* aCx, JS::Value* aVal)
+{
+  if (mTreeOwner)
+    return mTreeOwner->GetContentWindow(aCx, aVal);
+
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
