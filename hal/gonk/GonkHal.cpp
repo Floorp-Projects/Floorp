@@ -34,6 +34,7 @@
 #include "hardware_legacy/uevent.h"
 #include "hardware_legacy/vibrator.h"
 #include "hardware_legacy/power.h"
+#include "libdisplay/GonkDisplay.h"
 
 #include "base/message_loop.h"
 
@@ -513,7 +514,7 @@ GetScreenEnabled()
 void
 SetScreenEnabled(bool enabled)
 {
-  set_screen_state(enabled);
+  GetGonkDisplay()->SetEnabled(enabled);
   sScreenEnabled = enabled;
 }
 
