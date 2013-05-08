@@ -723,7 +723,7 @@ IonScript::copyBailoutTable(const SnapshotOffset *table)
 }
 
 void
-IonScript::copyConstants(const HeapValue *vp)
+IonScript::copyConstants(const Value *vp)
 {
     for (size_t i = 0; i < constantEntries_; i++)
         constants()[i].init(vp[i]);
