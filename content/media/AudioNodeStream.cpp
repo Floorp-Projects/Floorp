@@ -281,7 +281,8 @@ AudioNodeStream::ObtainInputBlock(AudioChunk& aTmpChunk, uint32_t aPortIndex)
   }
 
   uint32_t inputChunkCount = inputChunks.Length();
-  if (inputChunkCount == 0) {
+  if (inputChunkCount == 0 ||
+      (inputChunkCount == 1 && inputChunks[0]->mChannelData.Length() == 0)) {
     aTmpChunk.SetNull(WEBAUDIO_BLOCK_SIZE);
     return;
   }
