@@ -6510,7 +6510,8 @@ IonBuilder::jsop_setelem()
 
     int arrayType = TypedArray::TYPE_MAX;
     if (ElementAccessIsTypedArray(object, index, &arrayType))
-        return jsop_setelem_typed(arrayType, object, index, value);
+        return jsop_setelem_typed(arrayType, SetElem_Normal,
+                                  object, index, value);
 
     if (!PropertyWriteNeedsTypeBarrier(cx, current, &object, NULL, &value)) {
         if (ElementAccessIsDenseNative(object, index)) {
@@ -6651,6 +6652,7 @@ IonBuilder::jsop_setelem_typed_static(MDefinition *obj, MDefinition *id, MDefini
 
 bool
 IonBuilder::jsop_setelem_typed(int arrayType,
+                               SetElemSafety safety,
                                MDefinition *obj, MDefinition *id, MDefinition *value)
 {
     bool staticAccess = false;
@@ -6659,8 +6661,14 @@ IonBuilder::jsop_setelem_typed(int arrayType,
     if (staticAccess)
         return true;
 
-    SetElemICInspector icInspect(inspector->setElemICInspector(pc));
-    bool expectOOB = icInspect.sawOOBTypedArrayWrite();
+    bool expectOOB;
+    if (safety == SetElem_Normal) {
+        SetElemICInspector icInspect(inspector->setElemICInspector(pc));
+        expectOOB = icInspect.sawOOBTypedArrayWrite();
+    } else {
+        expectOOB = false;
+    }
+
     if (expectOOB)
         spew("Emitting OOB TypedArray SetElem");
 
@@ -6673,7 +6681,7 @@ IonBuilder::jsop_setelem_typed(int arrayType,
     MInstruction *length = getTypedArrayLength(obj);
     current->add(length);
 
-    if (!expectOOB) {
+    if (!expectOOB && safety == SetElem_Normal) {
         // Bounds check.
         id = addBoundsCheck(id, length);
     }
@@ -6696,7 +6704,10 @@ IonBuilder::jsop_setelem_typed(int arrayType,
     else
         ins = MStoreTypedArrayElement::New(elements, id, toWrite, arrayType);
     current->add(ins);
-    current->push(value);
+
+    if (safety == SetElem_Normal)
+        current->push(value);
+
     return resumeAfter(ins);
 }
 

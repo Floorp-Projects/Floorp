@@ -1034,28 +1034,11 @@ IonBuilder::inlineUnsafeSetTypedArrayElement(CallInfo &callInfo,
     // - arr is a typed array
     // - idx < length
 
-    uint32_t arri = base + 0;
-    uint32_t idxi = base + 1;
-    uint32_t elemi = base + 2;
+    MDefinition *obj = callInfo.getArg(base + 0);
+    MDefinition *id = callInfo.getArg(base + 1);
+    MDefinition *elem = callInfo.getArg(base + 2);
 
-    MInstruction *elements = getTypedArrayElements(callInfo.getArg(arri));
-    current->add(elements);
-
-    MToInt32 *id = MToInt32::New(callInfo.getArg(idxi));
-    current->add(id);
-
-    MDefinition *value = callInfo.getArg(elemi);
-    if (arrayType == TypedArray::TYPE_UINT8_CLAMPED) {
-        value = MClampToUint8::New(value);
-        current->add(value->toInstruction());
-    }
-
-    MStoreTypedArrayElement *store = MStoreTypedArrayElement::New(elements, id, value, arrayType);
-    store->setRacy();
-
-    current->add(store);
-
-    if (!resumeAfter(store))
+    if (!jsop_setelem_typed(arrayType, SetElem_Unsafe, obj, id, elem))
         return false;
 
     return true;

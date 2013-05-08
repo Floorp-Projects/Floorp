@@ -385,6 +385,7 @@ class IonBuilder : public MIRGenerator
     bool jsop_setelem_dense(types::StackTypeSet::DoubleConversion conversion,
                             MDefinition *object, MDefinition *index, MDefinition *value);
     bool jsop_setelem_typed(int arrayType,
+                            SetElemSafety safety,
                             MDefinition *object, MDefinition *index, MDefinition *value);
     bool jsop_setelem_typed_static(MDefinition *object, MDefinition *index, MDefinition *value,
                                    bool *psucceeded);
