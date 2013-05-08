@@ -20,6 +20,7 @@
 #elif defined(MOZ_WIDGET_GONK)
 #define GET_NATIVE_WINDOW(aWidget) ((EGLNativeWindowType)aWidget->GetNativeData(NS_NATIVE_WINDOW))
 #include "HwcComposer2D.h"
+#include "libdisplay/GonkDisplay.h"
 #endif
 
 #if defined(MOZ_X11)
@@ -273,7 +274,7 @@ public:
 #ifdef DEBUG
         printf_stderr("Initializing context %p surface %p on display %p\n", mContext, mSurface, EGL_DISPLAY());
 #endif
-#ifdef MOZ_WIDGET_GONK
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION <= 15
         if (!mIsOffscreen) {
             mHwc = HwcComposer2D::GetInstance();
             MOZ_ASSERT(!mHwc->Initialized());
@@ -593,9 +594,8 @@ public:
     {
         if (mSurface && !mPlatformContext) {
 #ifdef MOZ_WIDGET_GONK
-            if (mHwc)
-                return !mHwc->swapBuffers((hwc_display_t)EGL_DISPLAY(),
-                                          (hwc_surface_t)mSurface);
+            if (!mIsOffscreen)
+                return GetGonkDisplay()->SwapBuffers(EGL_DISPLAY(), mSurface);
             else
 #endif
                 return sEGLLibrary.fSwapBuffers(EGL_DISPLAY(), mSurface);
@@ -1593,6 +1593,9 @@ static const EGLint kEGLConfigAttribsRGBA32[] = {
     LOCAL_EGL_GREEN_SIZE,      8,
     LOCAL_EGL_BLUE_SIZE,       8,
     LOCAL_EGL_ALPHA_SIZE,      8,
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
+    LOCAL_EGL_FRAMEBUFFER_TARGET_ANDROID, LOCAL_EGL_TRUE,
+#endif
     LOCAL_EGL_NONE
 };
 
