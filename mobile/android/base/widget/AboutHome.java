@@ -10,6 +10,7 @@ import java.util.EnumSet;
 import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.LightweightTheme;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.ScrollAnimator;
 import org.mozilla.gecko.db.BrowserContract;
 
 import android.app.Activity;
@@ -46,6 +47,7 @@ public class AboutHome extends Fragment {
     private LastTabsSection mLastTabsSection;
     private RemoteTabsSection mRemoteTabsSection;
     private TopSitesView mTopSitesView;
+    private ScrollAnimator mScrollAnimator;
 
     public interface UriLoadListener {
         public void onAboutHomeUriLoad(String uriSpec);
@@ -64,6 +66,7 @@ public class AboutHome extends Fragment {
         super.onCreate(savedInstanceState);
 
         mLightweightTheme = ((GeckoApplication) getActivity().getApplication()).getLightweightTheme();
+        mScrollAnimator = new ScrollAnimator();
     }
 
     @Override
@@ -105,6 +108,7 @@ public class AboutHome extends Fragment {
 
         mAboutHomeView.setLightweightTheme(mLightweightTheme);
         mLightweightTheme.addListener(mAboutHomeView);
+        mAboutHomeView.setOnGenericMotionListener(mScrollAnimator);
 
         return mAboutHomeView;
     }
@@ -139,6 +143,7 @@ public class AboutHome extends Fragment {
         mLightweightTheme.removeListener(mAboutHomeView);
         getActivity().getContentResolver().unregisterContentObserver(mTabsContentObserver);
         mTopSitesView.onDestroy();
+        mScrollAnimator.cancel();
 
         mAboutHomeView = null;
         mAddonsSection = null;
