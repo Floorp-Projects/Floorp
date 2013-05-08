@@ -21,6 +21,13 @@ Cu.import("resource://gre/modules/OfflineCacheInstaller.jsm");
 Cu.import("resource://gre/modules/SystemMessagePermissionsChecker.jsm");
 Cu.import("resource://gre/modules/AppDownloadManager.jsm");
 
+#ifdef MOZ_WIDGET_GONK
+XPCOMUtils.defineLazyGetter(this, "libcutils", function() {
+  Cu.import("resource://gre/modules/systemlibs.js");
+  return libcutils;
+});
+#endif
+
 function debug(aMsg) {
   //dump("-*-*- Webapps.jsm : " + aMsg + "\n");
 }
@@ -1612,11 +1619,16 @@ this.DOMApplicationRegistry = {
     }
 
     // Try to download a new manifest.
-    function doRequest(oldManifest) {
+    function doRequest(oldManifest, headers) {
+      headers = headers || [];
       let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
                   .createInstance(Ci.nsIXMLHttpRequest);
       xhr.open("GET", aData.manifestURL, true);
       xhr.channel.loadFlags |= Ci.nsIRequest.INHIBIT_CACHING;
+      headers.forEach(function(aHeader) {
+        debug("Adding header: " + aHeader.name + ": " + aHeader.value);
+        xhr.setRequestHeader(aHeader.name, aHeader.value);
+      });
       xhr.responseType = "json";
       if (app.etag) {
         debug("adding manifest etag:" + app.etag);
@@ -1636,7 +1648,21 @@ this.DOMApplicationRegistry = {
 
     // Read the current app manifest file
     this._readManifests([{ id: id }], (function(aResult) {
-      doRequest.call(this, aResult[0].manifest);
+      let extraHeaders = [];
+#ifdef MOZ_WIDGET_GONK
+      let pingManifestURL;
+      try {
+        pingManifestURL = Services.prefs.getCharPref("ping.manifestURL");
+      } catch(e) { }
+
+      if (pingManifestURL && pingManifestURL == aData.manifestURL) {
+        // Get the device info.
+        let device = libcutils.property_get("ro.product.model");
+        extraHeaders.push({ name: "X-MOZ-B2G-DEVICE",
+                            value: device || "unknown" });
+      }
+#endif
+      doRequest.call(this, aResult[0].manifest, extraHeaders);
     }).bind(this));
   },
 

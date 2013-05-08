@@ -113,8 +113,8 @@ typedef CallbackObjectHolder<NodeFilter, nsIDOMNodeFilter> NodeFilterHolder;
 } // namespace mozilla
 
 #define NS_IDOCUMENT_IID \
-{ 0x4be4a58d, 0x7fce, 0x4315, \
-  { 0x9d, 0x6c, 0x8e, 0x9f, 0xc7, 0x2e, 0x51, 0xb } };
+{ 0x308f8444, 0x7679, 0x445a, \
+ { 0xa6, 0xcc, 0xb9, 0x5c, 0x61, 0xff, 0xe2, 0x66 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -2028,7 +2028,7 @@ public:
   }
   bool Hidden() const
   {
-    return mVisibilityState != mozilla::dom::VisibilityStateValues::Visible;
+    return mVisibilityState != mozilla::dom::VisibilityState::Visible;
   }
   bool MozHidden() // Not const because of WarnOnceAbout
   {
@@ -2098,6 +2098,9 @@ public:
 
   virtual nsHTMLDocument* AsHTMLDocument() { return nullptr; }
 
+  virtual JSObject* WrapObject(JSContext *aCx,
+                               JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+
 private:
   uint64_t mWarnedAbout;
 
@@ -2138,10 +2141,6 @@ protected:
   {
     return mContentType;
   }
-
-  // All document WrapNode implementations MUST call this method.  A
-  // false return value means an exception was thrown.
-  bool PostCreateWrapper(JSContext* aCx, JS::Handle<JSObject*> aNewObject);
 
   nsCString mReferrer;
   nsString mLastModified;

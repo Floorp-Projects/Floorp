@@ -29,22 +29,6 @@ GetScriptContextFromJSContext(JSContext *cx)
   return scx;
 }
 
-inline nsIScriptContextPrincipal*
-GetScriptContextPrincipalFromJSContext(JSContext *cx)
-{
-  if (!(::JS_GetOptions(cx) & JSOPTION_PRIVATE_IS_NSISUPPORTS)) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIScriptContextPrincipal> scx =
-    do_QueryInterface(static_cast<nsISupports *>
-                                 (::JS_GetContextPrivate(cx)));
-
-  // This will return a pointer to something that's about to be
-  // released, but that's ok here.
-  return scx;
-}
-
 // A factory function for turning a JS::Value argv into an nsIArray
 // but also supports an effecient way of extracting the original argv.
 // Bug 312003 describes why this must be "void *", but argv will be cast to

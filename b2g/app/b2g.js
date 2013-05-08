@@ -381,6 +381,7 @@ pref("dom.ipc.browser_frames.oop_by_default", false);
 // Temporary permission hack for WebSMS
 pref("dom.sms.enabled", true);
 pref("dom.sms.strict7BitEncoding", false); // Disabled by default.
+pref("dom.sms.requestStatusReport", true); // Enabled by default.
 
 // Temporary permission hack for WebContacts
 pref("dom.mozContacts.enabled", true);
@@ -689,3 +690,6 @@ pref("consoleservice.buffered", false);
 // Performance testing suggests 2k is a better page size for SQLite.
 pref("toolkit.storage.pageSize", 2048);
 #endif
+
+// The url of the manifest we use for ADU pings.
+pref("ping.manifestURL", "https://marketplace.firefox.com/packaged.webapp");

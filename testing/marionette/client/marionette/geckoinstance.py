@@ -12,6 +12,7 @@ class GeckoInstance(object):
 
     required_prefs = {"marionette.defaultPrefs.enabled": True,
                       "marionette.defaultPrefs.port": 2828,
+                      "startup.homepage_welcome_url": "about:blank",
                       "browser.warnOnQuit": False}
 
     def __init__(self, host, port, bin, profile):

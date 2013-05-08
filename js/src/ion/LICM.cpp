@@ -155,21 +155,6 @@ Loop::optimize()
             if (!invariantInstructions.append(ins))
                 return false;
 
-            // Loop through uses of invariant instruction and add back to work list.
-            for (MUseDefIterator iter(ins->toDefinition()); iter; iter++) {
-                MDefinition *consumer = iter.def();
-
-                if (consumer->isInWorklist())
-                    continue;
-
-                // if the consumer of this invariant instruction is in the
-                // loop, and it is also worth hoisting, then process it.
-                if (isInLoop(consumer) && isHoistable(consumer)) {
-                    if (!insertInWorklist(consumer->toInstruction()))
-                        return false;
-                }
-            }
-
             if (IonSpewEnabled(IonSpew_LICM))
                 fprintf(IonSpewFile, " Loop Invariant!\n");
         }
@@ -183,6 +168,27 @@ Loop::optimize()
 bool
 Loop::hoistInstructions(InstructionQueue &toHoist)
 {
+    // Iterate in post-order (uses before definitions)
+    for (int32_t i = toHoist.length() - 1; i >= 0; i--) {
+        MInstruction *ins = toHoist[i];
+
+        // Don't hoist MConstantElements, MConstant and MBox
+        // if it doesn't enable us to hoist one of its uses.
+        // We want those instructions as close as possible to their use.
+        if (ins->isConstantElements() || ins->isConstant() || ins->isBox()) {
+            bool loopInvariantUse = false;
+            for (MUseDefIterator use(ins); use; use++) {
+                if (use.def()->isLoopInvariant()) {
+                    loopInvariantUse = true;
+                    break;
+                }
+            }
+
+            if (!loopInvariantUse)
+                ins->setNotLoopInvariant();
+        }
+    }
+
     // Move all instructions to the preLoop_ block just before the control instruction.
     for (size_t i = 0; i < toHoist.length(); i++) {
         MInstruction *ins = toHoist[i];
@@ -192,6 +198,9 @@ Loop::hoistInstructions(InstructionQueue &toHoist)
         JS_ASSERT(!ins->isControlInstruction());
         JS_ASSERT(!ins->isEffectful());
         JS_ASSERT(ins->isMovable());
+
+        if (!ins->isLoopInvariant())
+            continue;
 
         if (checkHotness(ins->block())) {
             ins->block()->moveBefore(preLoop_->lastIns(), ins);
@@ -250,6 +259,7 @@ Loop::isLoopInvariant(MInstruction *ins)
             return false;
         }
     }
+
     return true;
 }
 

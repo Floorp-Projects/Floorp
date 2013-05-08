@@ -10,6 +10,10 @@ Components.utils.import("resource://services-sync/main.js");
  * Wraps a list/grid control implementing nsIDOMXULSelectControlElement and
  * fills it with the user's synced tabs.
  *
+ * Note, the Sync module takes care of initializing the sync service. We should
+ * not make calls that start sync or sync tabs since this module loads really
+ * early during startup.
+ *
  * @param    aSet         Control implementing nsIDOMXULSelectControlElement.
  * @param    aSetUIAccess The UI element that should be hidden when Sync is
  *                          disabled. Must sanely support 'hidden' attribute.
@@ -22,13 +26,10 @@ function RemoteTabsView(aSet, aSetUIAccess) {
 
   // Sync uses special voodoo observers.
   // If you want to change this code, talk to the fx-si team
-  Weave.Svc.Obs.add("weave:service:setup-complete", this);
   Weave.Svc.Obs.add("weave:service:sync:finish", this);
   Weave.Svc.Obs.add("weave:service:start-over", this);
   if (this.isSyncEnabled() ) {
-    this.populateTabs();
     this.populateGrid();
-    this.setUIAccessVisible(true);
   }
   else {
     this.setUIAccessVisible(false);
@@ -46,10 +47,6 @@ RemoteTabsView.prototype = {
 
   observe: function(subject, topic, data) {
     switch (topic) {
-      case "weave:service:setup-complete":
-        this.populateTabs();
-        this.setUIAccessVisible(true);
-        break;
       case "weave:service:sync:finish":
         this.populateGrid();
         break;
@@ -72,7 +69,7 @@ RemoteTabsView.prototype = {
     // Clear grid, We don't know what has happened to tabs since last sync
     // Also can result in duplicate tabs(bug 864614)
     this._set.clearAll();
-
+    let show = false;
     for (let [guid, client] in Iterator(tabsEngine.getAllClients())) {
       client.tabs.forEach(function({title, urlHistory, icon}) {
         let url = urlHistory[0];
@@ -80,6 +77,7 @@ RemoteTabsView.prototype = {
           return;
         }
         seenURLs.add(url);
+        show = true;
 
         // If we wish to group tabs by client, we should be looking for records
         //  of {type:client, clientName, class:{mobile, desktop}} and will
@@ -90,14 +88,10 @@ RemoteTabsView.prototype = {
 
       }, this);
     }
-  },
-
-  populateTabs: function populateTabs() {
-    Weave.Service.scheduler.scheduleNextSync(0);
+    this.setUIAccessVisible(show);
   },
 
   destruct: function destruct() {
-    Weave.Svc.Obs.remove("weave:service:setup-complete", this);
     Weave.Svc.Obs.remove("weave:engine:sync:finish", this);
     Weave.Svc.Obs.remove("weave:service:logout:start-over", this);
   },

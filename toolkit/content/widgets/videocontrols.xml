@@ -1031,7 +1031,7 @@
 
                 onFullscreenChange: function () {
                     if (this.isVideoInFullScreen()) {
-                        this.Utils._hideControlsTimeout = setTimeout(this._hideControlsFn, this.HIDE_CONTROLS_TIMEOUT_MS);
+                        Utils._hideControlsTimeout = setTimeout(this._hideControlsFn, this.HIDE_CONTROLS_TIMEOUT_MS);
                     }
                     this.setFullscreenButtonState();
                 },

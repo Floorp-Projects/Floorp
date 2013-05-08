@@ -23,6 +23,10 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/identity/IdentityUtils.jsm");
 
+XPCOMUtils.defineLazyServiceGetter(this, "uuidgen",
+                                   "@mozilla.org/uuid-generator;1",
+                                   "nsIUUIDGenerator");
+
 // This is the child process corresponding to nsIDOMIdentity
 XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
                                    "@mozilla.org/childprocessmessagemanager;1",
@@ -372,7 +376,10 @@ nsDOMIdentity.prototype = {
     // Setup identifiers for current window.
     let util = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                       .getInterface(Ci.nsIDOMWindowUtils);
-    this._id = util.outerWindowID;
+
+    // We need to inherit the id from the internalIdentity service.
+    // See comments below in that service's init.
+    this._id = this._identityInternal._id;
   },
 
   /**
@@ -590,14 +597,21 @@ nsDOMIdentityInternal.prototype = {
       Services.prefs.getPrefType(PREF_DEBUG) == Ci.nsIPrefBranch.PREF_BOOL
       && Services.prefs.getBoolPref(PREF_DEBUG);
 
-    this._identity = new nsDOMIdentity(this);
-
-    this._identity._init(aWindow);
-
     let util = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                       .getInterface(Ci.nsIDOMWindowUtils);
-    this._id = util.outerWindowID;
+
+    // To avoid cross-process windowId collisions, use a uuid as an
+    // almost certainly unique identifier.
+    //
+    // XXX Bug 869182 - use a combination of child process id and
+    // innerwindow id to construct the unique id.
+    this._id = uuidgen.generateUUID().toString();
     this._innerWindowID = util.currentInnerWindowID;
+
+    // nsDOMIdentity needs to know our _id, so this goes after
+    // its creation.
+    this._identity = new nsDOMIdentity(this);
+    this._identity._init(aWindow);
 
     this._log("init was called from " + aWindow.document.location);
 

@@ -342,20 +342,21 @@
       // BOUNDARY_WORD_END
       testTextAtOffset(0, BOUNDARY_WORD_END, "Brave", 0, 5, IDs);
       testTextAtOffset(4, BOUNDARY_WORD_END, "Brave", 0, 5, IDs);
-      testTextAtOffset(5, BOUNDARY_WORD_END, "Brave", 0, 5, IDs);
+      testTextAtOffset(5, BOUNDARY_WORD_END, " Sir", 5, 9, IDs);
       testTextAtOffset(6, BOUNDARY_WORD_END, " Sir", 5, 9, IDs);
       testTextAtOffset(8, BOUNDARY_WORD_END, " Sir", 5, 9, IDs);
-      testTextAtOffset(9, BOUNDARY_WORD_END, " Sir", 5, 9, IDs);
+      testTextAtOffset(9, BOUNDARY_WORD_END, "  Robin", 9, 16, IDs);
       testTextAtOffset(10, BOUNDARY_WORD_END, "  Robin", 9, 16, IDs);
       testTextAtOffset(11, BOUNDARY_WORD_END, "  Robin", 9, 16, IDs);
       testTextAtOffset(15, BOUNDARY_WORD_END, "  Robin", 9, 16, IDs);
-      testTextAtOffset(16, BOUNDARY_WORD_END, "  Robin", 9, 16, IDs);
+      testTextAtOffset(16, BOUNDARY_WORD_END, "   ran", 16, 22, IDs);
       testTextAtOffset(17, BOUNDARY_WORD_END, "   ran", 16, 22, IDs);
       testTextAtOffset(18, BOUNDARY_WORD_END, "   ran", 16, 22, IDs);
       testTextAtOffset(19, BOUNDARY_WORD_END, "   ran", 16, 22, IDs);
       testTextAtOffset(20, BOUNDARY_WORD_END, "   ran", 16, 22, IDs);
       testTextAtOffset(21, BOUNDARY_WORD_END, "   ran", 16, 22, IDs);
-      testTextAtOffset(22, BOUNDARY_WORD_END, "   ran", 16, 22, IDs);
+      testTextAtOffset(22, BOUNDARY_WORD_END, "   ran", 16, 22, ["input", "div", "editable"]);
+      testTextAtOffset(22, BOUNDARY_WORD_END, "   ran\n", 16, 23, [ "textarea" ]);
 
       SimpleTest.finish();
     }

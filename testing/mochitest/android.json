@@ -118,12 +118,6 @@
  "content/media/test/test_too_many_elements.html": "bug 775227",
  "content/media/test/test_wave_data_s16.html": "TIMED_OUT",
  "content/media/test/test_wave_data_u8.html": "TIMED_OUT",
- "content/media/webaudio/test/test_currentTime.html": "bug 868116",
- "content/media/webaudio/test/test_delayNode.html": "bug 865642",
- "content/media/webaudio/test/test_delayNodeWithGain.html": "bug 865642",
- "content/media/webaudio/test/test_gainNode.html": "bug 865642",
- "content/media/webaudio/test/test_scriptProcessorNode.html": "bug 865642",
- "content/media/webaudio/test/test_scriptProcessorNodeChannelCount.html": "bug 865642",
  "content/media/webspeech/synth/ipc/test/test_ipc.html": "bug 857673",
  "content/media/webspeech/recognition/test/test_nested_eventloop.html": "",
  "content/smil/test/test_smilRepeatTiming.xhtml": "TIMED_OUT",
@@ -197,6 +191,7 @@
  "dom/tests/mochitest/general/test_497898.html": "",
  "dom/tests/mochitest/general/test_focusrings.xul": "TIMED_OUT",
  "dom/tests/mochitest/general/test_vibrator.html": "CRASH_SUTAGENT",
+ "dom/tests/mochitest/general/test_showModalDialog.html": "Don't run modal tests on Android",
  "dom/tests/mochitest/geolocation/test_allowCurrent.html": "TIMED_OUT",
  "dom/tests/mochitest/geolocation/test_allowWatch.html": "TIMED_OUT",
  "dom/tests/mochitest/geolocation/test_cachedPosition.html": "TIMED_OUT",
@@ -295,6 +290,7 @@
  "layout/style/test/test_visited_pref.html": "TIMED_OUT",
  "layout/style/test/test_visited_reftests.html": "TIMED_OUT",
  "layout/xul/base/test/test_bug511075.html": "bug 798806",
+ "parser/htmlparser/tests/mochitest/test_bug709083.html": "bug 737020",
  "parser/htmlparser/tests/mochitest/test_html5_tree_construction.html": "TIMED_OUT",
  "parser/htmlparser/tests/mochitest/test_html5_tree_construction_part2.html": "TIMED_OUT",
  "robocop": "TIMED_OUT",
@@ -339,6 +335,8 @@
  "widget/tests/test_bug760802.html": "",
  "dom/tests/mochitest/ajax/offline": "SLOW_DIRECTORY",
  "layout/base/tests": "SLOW_DIRECTORY",
- "Harness_sanity/test_bug816847.html": "No test app installed"
+ "Harness_sanity/test_bug816847.html": "No test app installed",
+ "Harness_sanity/test_sanityEventUtils.html": "bug 688052",
+ "Harness_sanity/test_sanitySimpletest.html": "bug 688052"
  }
 }

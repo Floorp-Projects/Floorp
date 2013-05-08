@@ -3,25 +3,32 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 
+<!-- flyout header -->
 <!ENTITY syncHeader.title           "Sync">
-<!ENTITY sync.notconnected          "Not connected">
-<!ENTITY sync.connect               "Connect">
-<!ENTITY sync.connected             "Connected">
-<!ENTITY sync.deviceName            "This device">
-<!ENTITY sync.disconnect            "Disconnect">
+<!-- not connected yet -->
+<!ENTITY sync.setup.description     "Access your bookmarks, passwords, and open tabs across your devices">
+<!ENTITY sync.setupbutton.label     "Set up Sync">
+<!-- sync now button -->
 <!ENTITY sync.syncNow2              "Sync now">
+<!-- device name text edit -->
+<!ENTITY sync.deviceName            "This device">
+<!-- remove this device button -->
+<!ENTITY sync.removebutton.label    "Remove this device">
+<!ENTITY sync.removewarn.note       "Your browser data on this device will remain intact, but you will no longer be able to sync with this account.">
+<!ENTITY sync.removethrobber.label  "Removing device">
 
-<!ENTITY sync.setup.title           "Connect to Sync">
+<!ENTITY sync.setup2.title          "Set up Sync">
 <!ENTITY sync.setup.pair2           "To activate, select &#x0022;Pair a device&#x0022; on your other device.">
-<!ENTITY sync.fallback              "I'm not near my computer…">
+<!ENTITY sync.fallback              "Enter or edit account information…">
 <!ENTITY sync.setup.manual          "Enter your Sync account information">
 <!ENTITY sync.account               "Account Name">
 <!ENTITY sync.password              "Password">
 <!ENTITY sync.recoveryKey           "Recovery Key">
 <!ENTITY sync.customServer          "Use custom server">
 <!ENTITY sync.serverURL             "Server URL">
-<!ENTITY sync.setup.connect         "Connect">
+<!ENTITY sync.setup.connect2        "Add device">
 <!ENTITY sync.setup.cancel          "Cancel">
+<!ENTITY sync.setup.remove          "Remove">
 <!ENTITY sync.setup.tutorial        "Show me how">
 <!ENTITY sync.setup.waiting2        "Waiting for other device…">
 

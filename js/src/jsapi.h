@@ -3844,6 +3844,7 @@ struct JS_PUBLIC_API(CompileOptions) {
     const char *filename;
     unsigned lineno;
     bool compileAndGo;
+    bool forEval;
     bool noScriptRval;
     bool selfHostingMode;
     bool userBit;
@@ -3862,6 +3863,7 @@ struct JS_PUBLIC_API(CompileOptions) {
         filename = f; lineno = l; return *this;
     }
     CompileOptions &setCompileAndGo(bool cng) { compileAndGo = cng; return *this; }
+    CompileOptions &setForEval(bool eval) { forEval = eval; return *this; }
     CompileOptions &setNoScriptRval(bool nsr) { noScriptRval = nsr; return *this; }
     CompileOptions &setSelfHostingMode(bool shm) { selfHostingMode = shm; return *this; }
     CompileOptions &setUserBit(bool bit) { userBit = bit; return *this; }

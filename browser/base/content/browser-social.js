@@ -7,6 +7,7 @@ let SocialUI,
     SocialChatBar,
     SocialFlyout,
     SocialMark,
+    SocialShare,
     SocialMenu,
     SocialToolbar,
     SocialSidebar;
@@ -19,6 +20,12 @@ const PANEL_MIN_WIDTH = 330;
 
 XPCOMUtils.defineLazyModuleGetter(this, "SharedFrame",
   "resource:///modules/SharedFrame.jsm");
+
+XPCOMUtils.defineLazyGetter(this, "OpenGraphBuilder", function() {
+  let tmp = {};
+  Cu.import("resource:///modules/Social.jsm", tmp);
+  return tmp.OpenGraphBuilder;
+});
 
 SocialUI = {
   // Called on delayed startup to initialize the UI
@@ -43,6 +50,7 @@ SocialUI = {
 
     SocialChatBar.init();
     SocialMark.init();
+    SocialShare.init();
     SocialMenu.init();
     SocialToolbar.init();
     SocialSidebar.init();
@@ -87,6 +95,7 @@ SocialUI = {
 
           SocialFlyout.unload();
           SocialChatBar.update();
+          SocialShare.update();
           SocialSidebar.update();
           SocialMark.update();
           SocialToolbar.update();
@@ -97,6 +106,7 @@ SocialUI = {
           this._updateActiveUI();
           // and the multi-provider menu
           SocialToolbar.populateProviderMenus();
+          SocialShare.populateProviderMenu();
           break;
 
         // Provider-specific notifications
@@ -384,7 +394,13 @@ function sizeSocialPanelToContent(panel, iframe) {
   if (!doc || !doc.body) {
     return;
   }
+  // We need an element to use for sizing our panel.  See if the body defines
+  // an id for that element, otherwise use the body itself.
   let body = doc.body;
+  let bodyId = body.getAttribute("contentid");
+  if (bodyId) {
+    body = doc.getElementById(bodyId) || doc.body;
+  }
   // offsetHeight/Width don't include margins, so account for that.
   let cs = doc.defaultView.getComputedStyle(body);
   let computedHeight = parseInt(cs.marginTop) + body.offsetHeight + parseInt(cs.marginBottom);
@@ -566,6 +582,301 @@ SocialFlyout = {
   }
 }
 
+SocialShare = {
+  // Called once, after window load, when the Social.provider object is initialized
+  init: function() {},
+
+  get panel() {
+    return document.getElementById("social-share-panel");
+  },
+
+  get iframe() {
+    // first element is our menu vbox.
+    if (this.panel.childElementCount == 1)
+      return null;
+    else
+      return this.panel.lastChild;
+  },
+
+  _createFrame: function() {
+    let panel = this.panel;
+    if (!SocialUI.enabled || this.iframe)
+      return;
+    this.panel.hidden = false;
+    // create and initialize the panel for this window
+    let iframe = document.createElement("iframe");
+    iframe.setAttribute("type", "content");
+    iframe.setAttribute("class", "social-share-frame");
+    iframe.setAttribute("flex", "1");
+    panel.appendChild(iframe);
+    this.populateProviderMenu();
+  },
+  
+  getSelectedProvider: function() {
+    let provider;
+    let lastProviderOrigin = this.iframe && this.iframe.getAttribute("origin");
+    if (lastProviderOrigin) {
+      provider = Social._getProviderFromOrigin(lastProviderOrigin);
+    }
+    if (!provider)
+      provider = Social.provider || Social.defaultProvider;
+    // if our provider has no shareURL, select the first one that does
+    if (provider && !provider.shareURL) {
+      let providers = [p for (p of Social.providers) if (p.shareURL)];
+      provider = providers.length > 0  && providers[0];
+    }
+    return provider;
+  },
+
+  populateProviderMenu: function() {
+    if (!this.iframe)
+      return;
+    let providers = [p for (p of Social.providers) if (p.shareURL)];
+    let hbox = document.getElementById("social-share-provider-buttons");
+    // selectable providers are inserted before the provider-menu seperator,
+    // remove any menuitems in that area
+    while (hbox.firstChild) {
+      hbox.removeChild(hbox.firstChild);
+    }
+    // reset our share toolbar
+    // only show a selection if there is more than one
+    if (!SocialUI.enabled || providers.length < 2) {
+      this.panel.firstChild.hidden = true;
+      return;
+    }
+    let selectedProvider = this.getSelectedProvider();
+    for (let provider of providers) {
+      let button = document.createElement("toolbarbutton");
+      button.setAttribute("class", "toolbarbutton share-provider-button");
+      button.setAttribute("type", "radio");
+      button.setAttribute("group", "share-providers");
+      button.setAttribute("image", provider.iconURL);
+      button.setAttribute("tooltiptext", provider.name);
+      button.setAttribute("origin", provider.origin);
+      button.setAttribute("oncommand", "SocialShare.sharePage(this.getAttribute('origin')); this.checked=true;");
+      if (provider == selectedProvider) {
+        this.defaultButton = button;
+      }
+      hbox.appendChild(button);
+    }
+    if (!this.defaultButton) {
+      this.defaultButton = hbox.firstChild
+    }
+    this.defaultButton.setAttribute("checked", "true");
+    this.panel.firstChild.hidden = false;
+  },
+
+  get shareButton() {
+    return document.getElementById("social-share-button");
+  },
+
+  canSharePage: function(aURI) {
+    // we do not enable sharing from private sessions
+    if (PrivateBrowsingUtils.isWindowPrivate(window))
+      return false;
+
+    if (!aURI || !(aURI.schemeIs('http') || aURI.schemeIs('https')))
+      return false;
+
+    // The share button and context menus are disabled if the current tab has
+    // defined no-store. However, a share from other content is still possible
+    // (eg. via mozSocial or future use of web activities).  If the URI is not
+    // the current tab URI, we cannot validate the no-store header on the URI.
+    if (aURI != gBrowser.currentURI)
+      return true;
+
+    // we want to ensure this is a successful load and that the page is locally
+    // cacheable since that is a common mechanism for sensitive pages to avoid
+    // storing sensitive data in cache.
+    let channel = gBrowser.docShell.currentDocumentChannel;
+    let httpChannel;
+    try {
+      httpChannel = channel.QueryInterface(Ci.nsIHttpChannel);
+    } catch (e) {
+      /* Not an HTTP channel. */
+      Cu.reportError("cannot share without httpChannel");
+      return false;
+    }
+
+    // Continue only if we have a 2xx status code.
+    try {
+      if (!httpChannel.requestSucceeded)
+        return false;
+    } catch (e) {
+      // Can't get response information from the httpChannel
+      // because mResponseHead is not available.
+      return false;
+    }
+
+    // Cache-Control: no-store.
+    if (httpChannel.isNoStoreResponse()) {
+      Cu.reportError("cannot share cache-control: no-share");
+      return false;
+    }
+
+    return true;
+  },
+
+  update: function() {
+    let shareButton = this.shareButton;
+    shareButton.hidden = !SocialUI.enabled ||
+                         [p for (p of Social.providers) if (p.shareURL)].length == 0;
+    shareButton.disabled = shareButton.hidden || !this.canSharePage(gBrowser.currentURI);
+
+    // also update the relevent command's disabled state so the keyboard
+    // shortcut only works when available.
+    let cmd = document.getElementById("Social:SharePage");
+    cmd.setAttribute("disabled", shareButton.disabled ? "true" : "false");
+  },
+
+  onShowing: function() {
+    this.shareButton.setAttribute("open", "true");
+  },
+
+  onHidden: function() {
+    this.shareButton.removeAttribute("open");
+    this.iframe.setAttribute("src", "data:text/plain;charset=utf8,")
+    this.currentShare = null;
+  },
+
+  setErrorMessage: function() {
+    let iframe = this.iframe;
+    if (!iframe)
+      return;
+
+    iframe.removeAttribute("src");
+    iframe.webNavigation.loadURI("about:socialerror?mode=compactInfo&origin=" +
+                                 encodeURIComponent(iframe.getAttribute("origin")),
+                                 null, null, null, null);
+    sizeSocialPanelToContent(this.panel, iframe);
+  },
+
+  sharePage: function(providerOrigin, graphData) {
+    // if providerOrigin is undefined, we use the last-used provider, or the
+    // current/default provider.  The provider selection in the share panel
+    // will call sharePage with an origin for us to switch to.
+    this._createFrame();
+    let iframe = this.iframe;
+    let provider;
+    if (providerOrigin)
+      provider = Social._getProviderFromOrigin(providerOrigin);
+    else
+      provider = this.getSelectedProvider();
+    if (!provider || !provider.shareURL)
+      return;
+
+    // graphData is an optional param that either defines the full set of data
+    // to be shared, or partial data about the current page. It is set by a call
+    // in mozSocial API, or via nsContentMenu calls. If it is present, it MUST
+    // define at least url. If it is undefined, we're sharing the current url in
+    // the browser tab.
+    let sharedURI = graphData ? Services.io.newURI(graphData.url, null, null) :
+                                gBrowser.currentURI;
+    if (!this.canSharePage(sharedURI))
+      return;
+
+    // the point of this action type is that we can use existing share
+    // endpoints (e.g. oexchange) that do not support additional
+    // socialapi functionality.  One tweak is that we shoot an event
+    // containing the open graph data.
+    let pageData = graphData ? graphData : this.currentShare;
+    if (!pageData || sharedURI == gBrowser.currentURI) {
+      pageData = OpenGraphBuilder.getData(gBrowser);
+      if (graphData) {
+        // overwrite data retreived from page with data given to us as a param
+        for (let p in graphData) {
+          pageData[p] = graphData[p];
+        }
+      }
+    }
+    this.currentShare = pageData;
+
+    let shareEndpoint = this._generateShareEndpointURL(provider.shareURL, pageData);
+
+    this._dynamicResizer = new DynamicResizeWatcher();
+    // if we've already loaded this provider/page share endpoint, we don't want
+    // to add another load event listener.
+    let reload = true;
+    let endpointMatch = shareEndpoint == iframe.getAttribute("src");
+    let docLoaded = iframe.contentDocument && iframe.contentDocument.readyState == "complete";
+    if (endpointMatch && docLoaded) {
+      reload = shareEndpoint != iframe.contentDocument.location.spec;
+    }
+    if (!reload) {
+      this._dynamicResizer.start(this.panel, iframe);
+      iframe.docShell.isActive = true;
+      iframe.docShell.isAppTab = true;
+      let evt = iframe.contentDocument.createEvent("CustomEvent");
+      evt.initCustomEvent("OpenGraphData", true, true, JSON.stringify(pageData));
+      iframe.contentDocument.documentElement.dispatchEvent(evt);
+    } else {
+      // first time load, wait for load and dispatch after load
+      iframe.addEventListener("load", function panelBrowserOnload(e) {
+        iframe.removeEventListener("load", panelBrowserOnload, true);
+        iframe.docShell.isActive = true;
+        iframe.docShell.isAppTab = true;
+        setTimeout(function() {
+          if (SocialShare._dynamicResizer) { // may go null if hidden quickly
+            SocialShare._dynamicResizer.start(iframe.parentNode, iframe);
+          }
+        }, 0);
+        let evt = iframe.contentDocument.createEvent("CustomEvent");
+        evt.initCustomEvent("OpenGraphData", true, true, JSON.stringify(pageData));
+        iframe.contentDocument.documentElement.dispatchEvent(evt);
+      }, true);
+    }
+    // always ensure that origin belongs to the endpoint
+    let uri = Services.io.newURI(shareEndpoint, null, null);
+    iframe.setAttribute("origin", provider.origin);
+    iframe.setAttribute("src", shareEndpoint);
+
+    let navBar = document.getElementById("nav-bar");
+    let anchor = navBar.getAttribute("mode") == "text" ?
+                   document.getAnonymousElementByAttribute(this.shareButton, "class", "toolbarbutton-text") :
+                   document.getAnonymousElementByAttribute(this.shareButton, "class", "toolbarbutton-icon");
+    this.panel.openPopup(anchor, "bottomcenter topright", 0, 0, false, false);
+    Social.setErrorListener(iframe, this.setErrorMessage.bind(this));
+  },
+
+  _generateShareEndpointURL: function(shareURL, pageData) {
+    // support for existing share endpoints by supporting their querystring
+    // arguments. parse the query string template and do replacements where
+    // necessary the query names may be different than ours, so we could see
+    // u=%{url} or url=%{url}
+    let [shareEndpoint, queryString] = shareURL.split("?");
+    let query = {};
+    if (queryString) {
+      queryString.split('&').forEach(function (val) {
+        let [name, value] = val.split('=');
+        let p = /%\{(.+)\}/.exec(value);
+        if (!p) {
+          // preserve non-template query vars
+          query[name] = value;
+        } else if (pageData[p[1]]) {
+          query[name] = pageData[p[1]];
+        } else if (p[1] == "body") {
+          // build a body for emailers
+          let body = "";
+          if (pageData.title)
+            body += pageData.title + "\n\n";
+          if (pageData.description)
+            body += pageData.description + "\n\n";
+          if (pageData.text)
+            body += pageData.text + "\n\n";
+          body += pageData.url;
+          query["body"] = body;
+        }
+      });
+    }
+    var str = [];
+    for (let p in query)
+       str.push(p + "=" + encodeURIComponent(query[p]));
+    if (str.length)
+      shareEndpoint = shareEndpoint + "?" + str.join("&");
+    return shareEndpoint;
+  }
+};
+
 SocialMark = {
   // Called once, after window load, when the Social.provider object is initialized
   init: function SSB_init() {
@@ -598,7 +909,7 @@ SocialMark = {
       return;
     this.toggleURIMark(gBrowser.currentURI, aCallback)
   },
-  
+
   toggleURIMark: function(aURI, aCallback) {
     let update = function(marked) {
       this._updateMarkState(marked);
@@ -694,13 +1005,17 @@ SocialToolbar = {
 
   // Called when the Social.provider changes
   updateProvider: function () {
-    let provider = Social.provider || Social.defaultProvider;
+    let provider = Social.provider;
     if (provider) {
       this.button.setAttribute("label", provider.name);
       this.button.setAttribute("tooltiptext", provider.name);
       this.button.style.listStyleImage = "url(" + provider.iconURL + ")";
 
       this.updateProfile();
+    } else {
+      this.button.setAttribute("label", gNavigatorBundle.getString("service.toolbarbutton.label"));
+      this.button.setAttribute("tooltiptext", gNavigatorBundle.getString("service.toolbarbutton.tooltiptext"));
+      this.button.style.removeProperty("list-style-image");
     }
     this.updateButton();
   },
@@ -994,11 +1309,12 @@ SocialToolbar = {
       menu.removeChild(providerMenuSep.previousSibling);
     }
     // only show a selection if enabled and there is more than one
-    if (!SocialUI.enabled || Social.providers.length < 2) {
+    let providers = [p for (p of Social.providers) if (p.workerURL || p.sidebarURL)];
+    if (providers.length < 2) {
       providerMenuSep.hidden = true;
       return;
     }
-    for (let provider of Social.providers) {
+    for (let provider of providers) {
       let menuitem = document.createElement("menuitem");
       menuitem.className = "menuitem-iconic social-provider-menuitem";
       menuitem.setAttribute("image", provider.iconURL);
