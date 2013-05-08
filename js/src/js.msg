@@ -196,7 +196,7 @@ MSG_DEF(JSMSG_BAD_CLONE_FUNOBJ_SCOPE, 142, 0, JSEXN_TYPEERR, "bad cloned functio
 MSG_DEF(JSMSG_UNUSED143,              143, 0, JSEXN_NONE, "")
 MSG_DEF(JSMSG_ILLEGAL_CHARACTER,      144, 0, JSEXN_SYNTAXERR, "illegal character")
 MSG_DEF(JSMSG_BAD_OCTAL,              145, 1, JSEXN_SYNTAXERR, "{0} is not a legal ECMA-262 octal constant")
-MSG_DEF(JSMSG_UNUSED146,              146, 0, JSEXN_NONE, "")
+MSG_DEF(JSMSG_REPEAT_RANGE,           146, 0, JSEXN_RANGEERR, "repeat count must be positive and less than inifinity")
 MSG_DEF(JSMSG_UNCAUGHT_EXCEPTION,     147, 1, JSEXN_INTERNALERR, "uncaught exception: {0}")
 MSG_DEF(JSMSG_INVALID_BACKREF,        148, 0, JSEXN_SYNTAXERR, "non-octal digit in an escape sequence that doesn't match a back-reference")
 MSG_DEF(JSMSG_BAD_BACKREF,            149, 0, JSEXN_SYNTAXERR, "back-reference exceeds number of capturing parentheses")
