@@ -3156,7 +3156,7 @@ fsmdef_ev_createoffer (sm_event_t *event) {
             return (fsmdef_release(fcb, cause, FALSE));
         }
 
-        ui_create_offer(evCreateOffer, line, call_id,
+        ui_create_offer(evCreateOfferSuccess, line, call_id,
             dcb->caller_id.call_instance_id,
             strlib_malloc(local_sdp,-1), PC_NO_ERROR, NULL);
         free(local_sdp);
@@ -3228,7 +3228,7 @@ fsmdef_ev_createoffer (sm_event_t *event) {
     dcb->local_sdp_complete = TRUE;
 
     /* Pass offer SDP back to UI */
-    ui_create_offer(evCreateOffer, line, call_id,
+    ui_create_offer(evCreateOfferSuccess, line, call_id,
         dcb->caller_id.call_instance_id,
         strlib_malloc(msg_body.parts[0].body, -1), PC_NO_ERROR, NULL);
     cc_free_msg_body_parts(&msg_body);
@@ -3298,7 +3298,7 @@ fsmdef_ev_createanswer (sm_event_t *event) {
             return (fsmdef_release(fcb, cause, FALSE));
         }
 
-        ui_create_answer(evCreateAnswer, line, call_id,
+        ui_create_answer(evCreateAnswerSuccess, line, call_id,
             dcb->caller_id.call_instance_id,
             strlib_malloc(local_sdp,-1), PC_NO_ERROR, NULL);
         free(local_sdp);
@@ -3398,7 +3398,7 @@ fsmdef_ev_createanswer (sm_event_t *event) {
     dcb->local_sdp_complete = TRUE;
 
     /* Pass SDP back to UI */
-    ui_create_answer(evCreateAnswer, line, call_id,
+    ui_create_answer(evCreateAnswerSuccess, line, call_id,
         dcb->caller_id.call_instance_id,
         strlib_malloc(msg_body.parts[0].body, -1), PC_NO_ERROR, NULL);
     cc_free_msg_body_parts(&msg_body);
@@ -3555,7 +3555,7 @@ fsmdef_ev_setlocaldesc(sm_event_t *event) {
         return (SM_RC_END);
     }
 
-    ui_set_local_description(evSetLocalDesc, msg->line, msg->call_id,
+    ui_set_local_description(evSetLocalDescSuccess, msg->line, msg->call_id,
         dcb->caller_id.call_instance_id, strlib_malloc(local_sdp,-1),
         PC_NO_ERROR, NULL);
 
@@ -3781,7 +3781,7 @@ fsmdef_ev_setremotedesc(sm_event_t *event) {
         return (SM_RC_END);
     }
 
-    ui_set_remote_description(evSetRemoteDesc, line, call_id,
+    ui_set_remote_description(evSetRemoteDescSuccess, line, call_id,
         dcb->caller_id.call_instance_id, strlib_malloc(remote_sdp,-1),
         PC_NO_ERROR, NULL);
 
