@@ -103,6 +103,9 @@ class BaselineInspector
     MIRType expectedResultType(jsbytecode *pc);
     MCompare::CompareType expectedCompareType(jsbytecode *pc);
     MIRType expectedBinaryArithSpecialization(jsbytecode *pc);
+
+    bool hasSeenNonNativeGetElement(jsbytecode *pc);
+    bool hasSeenAccessedGetter(jsbytecode *pc);
 };
 
 } // namespace ion
