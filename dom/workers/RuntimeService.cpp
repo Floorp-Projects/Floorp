@@ -179,7 +179,7 @@ const char* gPrefsToWatch[] = {
   JS_OPTIONS_DOT_STR "mem.max",
   JS_OPTIONS_DOT_STR "baselinejit.content",
   JS_OPTIONS_DOT_STR "ion.content",
-  JS_OPTIONS_DOT_STR "experimental_asmjs",
+  JS_OPTIONS_DOT_STR "asmjs",
   "dom.workers.mem.gc_allocation_threshold_mb"
 
 #ifdef JS_GC_ZEAL

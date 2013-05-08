@@ -203,7 +203,7 @@ nsresult nsReadConfig::readConfigFile()
     // If vendor is not nullptr, do this check
     if (NS_SUCCEEDED(rv)) {
 
-        fileNameLen = PL_strlen(lockFileName);
+        fileNameLen = strlen(lockFileName);
     
         // lockVendor and lockFileName should be the same with the addtion of 
         // .cfg to the filename by checking this post reading of the cfg file 

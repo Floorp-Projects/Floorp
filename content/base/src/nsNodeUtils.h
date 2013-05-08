@@ -153,7 +153,7 @@ public:
                         nsINode **aResult)
   {
     return CloneAndAdopt(aNode, true, aDeep, aNewNodeInfoManager,
-                         nullptr, aNodesWithProperties, nullptr, aResult);
+                         JS::NullPtr(), aNodesWithProperties, nullptr, aResult);
   }
 
   /**
@@ -162,7 +162,7 @@ public:
   static nsresult Clone(nsINode *aNode, bool aDeep, nsINode **aResult)
   {
     nsCOMArray<nsINode> dummyNodeWithProperties;
-    return CloneAndAdopt(aNode, true, aDeep, nullptr, nullptr,
+    return CloneAndAdopt(aNode, true, aDeep, nullptr, JS::NullPtr(),
                          dummyNodeWithProperties, aNode->GetParent(), aResult);
   }
 
@@ -184,7 +184,7 @@ public:
    *                             descendants) with properties.
    */
   static nsresult Adopt(nsINode *aNode, nsNodeInfoManager *aNewNodeInfoManager,
-                        JSObject *aReparentScope,
+                        JS::Handle<JSObject*> aReparentScope,
                         nsCOMArray<nsINode> &aNodesWithProperties)
   {
     nsCOMPtr<nsINode> node;
@@ -294,7 +294,7 @@ private:
    */
   static nsresult CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
                                 nsNodeInfoManager *aNewNodeInfoManager,
-                                JSObject *aReparentScope,
+                                JS::Handle<JSObject*> aReparentScope,
                                 nsCOMArray<nsINode> &aNodesWithProperties,
                                 nsINode *aParent, nsINode **aResult);
 };

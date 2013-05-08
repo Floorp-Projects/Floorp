@@ -27,6 +27,18 @@ public:
   nsSVGPathGeometryElement(already_AddRefed<nsINodeInfo> aNodeInfo);
 
   virtual bool AttributeDefinesGeometry(const nsIAtom *aName);
+
+  /**
+   * Returns true if this element's geometry depends on the width or height of its
+   * coordinate context (typically the viewport established by its nearest <svg>
+   * ancestor). In other words, returns true if one of the attributes for which
+   * AttributeDefinesGeometry returns true has a percentage value.
+   *
+   * This could be moved up to a more general class so it can be used for non-leaf
+   * elements, but that would require care and for now there's no need.
+   */
+  bool GeometryDependsOnCoordCtx();
+
   virtual bool IsMarkable();
   virtual void GetMarkPoints(nsTArray<nsSVGMark> *aMarks);
   virtual void ConstructPath(gfxContext *aCtx) = 0;

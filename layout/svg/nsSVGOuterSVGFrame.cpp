@@ -423,14 +423,27 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*           aPresContext,
 
   uint32_t changeBits = 0;
   if (newViewportSize != oldViewportSize) {
-    if (oldViewportSize.width <= 0.0f || oldViewportSize.height <= 0.0f) {
-      // The overflow rects of our child frames will be empty if we had a
-      // [synthetic] viewBox during our last reflow, since under
-      // FinishAndStoreOverflow() the nsDisplayTransform::TransformRect call
-      // will have ended up calling SVGSVGElement::GetViewBoxTransform()
-      // which will have returned the identity matrix due to our viewport
-      // having been zero-sized. Mark all our child frames as dirty so that we
-      // reflow them below and update their overflow rects:
+    // When our viewport size changes, we may need to update the overflow rects
+    // of our child frames. This is the case if:
+    //
+    //  * We have a real/synthetic viewBox (a children-only transform), since
+    //    the viewBox transform will change as the viewport dimensions change.
+    //
+    //  * We do not have a real/synthetic viewBox, but the last time we
+    //    reflowed (or the last time UpdateOverflow() was called) we did.
+    //
+    // We only handle the former case here, in which case we mark all our child
+    // frames as dirty so that we reflow them below and update their overflow
+    // rects.
+    //
+    // In the latter case, updating of overflow rects is handled for removal of
+    // real viewBox (the viewBox attribute) in AttributeChanged. Synthetic
+    // viewBox "removal" (e.g. a document references the same SVG via both an
+    // <svg:image> and then as a CSS background image (a synthetic viewBox is
+    // used when painting the former, but not when painting the latter)) is
+    // handled in SVGSVGElement::FlushImageTransformInvalidation.
+    //
+    if (svgElem->HasViewBoxRect() || svgElem->ShouldSynthesizeViewBox()) {
       nsIFrame* anonChild = GetFirstPrincipalChild();
       anonChild->AddStateBits(NS_FRAME_IS_DIRTY);
       for (nsIFrame* child = anonChild->GetFirstPrincipalChild(); child;

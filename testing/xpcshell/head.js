@@ -463,19 +463,45 @@ function do_execute_soon(callback, aName) {
   }, Components.interfaces.nsIThread.DISPATCH_NORMAL);
 }
 
-function do_throw(text, stack) {
-  if (!stack)
-    stack = Components.stack.caller;
-
-  _passed = false;
-  _dump("TEST-UNEXPECTED-FAIL | " + stack.filename + " | " + text +
-        " - See following stack:\n");
-  var frame = Components.stack;
-  while (frame != null) {
-    _dump(frame + "\n");
-    frame = frame.caller;
+/**
+ * Shows an error message and the current stack and aborts the test.
+ *
+ * @param error  A message string or an Error object.
+ * @param stack  null or nsIStackFrame object or a string containing
+ *               \n separated stack lines (as in Error().stack).
+ */
+function do_throw(error, stack) {
+  let filename = "";
+  if (!stack) {
+    if (error instanceof Error) {
+      // |error| is an exception object
+      filename = error.fileName;
+      stack = error.stack;
+    } else {
+      stack = Components.stack.caller;
+    }
   }
 
+  if (stack instanceof Components.interfaces.nsIStackFrame)
+    filename = stack.filename;
+
+  _dump("TEST-UNEXPECTED-FAIL | " + filename + " | " + error +
+        " - See following stack:\n");
+
+  if (stack instanceof Components.interfaces.nsIStackFrame) {
+    let frame = stack;
+    while (frame != null) {
+      _dump(frame + "\n");
+      frame = frame.caller;
+    }
+  } else if (typeof stack == "string") {
+    let stackLines = stack.split("\n");
+    for (let line of stackLines) {
+      _dump(line + "\n");
+    }
+  }
+
+  _passed = false;
   _do_quit();
   throw Components.results.NS_ERROR_ABORT;
 }

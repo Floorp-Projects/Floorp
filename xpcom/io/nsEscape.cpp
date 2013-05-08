@@ -192,7 +192,7 @@ nsEscapeHTML(const char * string)
 {
     char *rv = nullptr;
     /* XXX Hardcoded max entity len. The +1 is for the trailing null. */
-    uint32_t len = PL_strlen(string);
+    uint32_t len = strlen(string);
     if (len >= (UINT32_MAX / 6))
       return nullptr;
 

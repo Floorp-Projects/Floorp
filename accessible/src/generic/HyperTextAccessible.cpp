@@ -1070,9 +1070,6 @@ HyperTextAccessible::GetTextAtOffset(int32_t aOffset,
   if (offset < 0)
     return NS_ERROR_INVALID_ARG;
 
-  EWordMovementType wordMovementType = eDefaultBehavior;
-  bool moveForwardThenBack = true;
-
   switch (aBoundaryType) {
     case BOUNDARY_CHAR:
       return GetCharAt(aOffset, eGetAt, aText, aStartOffset, aEndOffset) ?

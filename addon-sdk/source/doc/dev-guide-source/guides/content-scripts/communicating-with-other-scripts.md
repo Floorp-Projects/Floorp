@@ -21,7 +21,7 @@ using either the `port.emit()` API or the `postMessage()` API. See the
 articles on
 [using `postMessage()`](dev-guide/guides/content-scripts/using-postmessage.html)
 and
-[using `port`](dev-guide/guides/content-scripts//using-port.html) for details.
+[using `port`](dev-guide/guides/content-scripts/using-port.html) for details.
 
 ## Content Scripts ##
 

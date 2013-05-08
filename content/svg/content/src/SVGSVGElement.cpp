@@ -706,9 +706,8 @@ SVGSVGElement::ChildrenOnlyTransformChanged(uint32_t aFlags)
     changeHint = nsChangeHint_ReconstructFrame;
   } else {
     // We just assume the old and new transforms are different.
-    changeHint = nsChangeHint(nsChangeHint_RepaintFrame |
-                   nsChangeHint_UpdateOverflow |
-                   nsChangeHint_ChildrenOnlyTransform);
+    changeHint = nsChangeHint(nsChangeHint_UpdateOverflow |
+                              nsChangeHint_ChildrenOnlyTransform);
   }
 
   // If we're not reconstructing the frame tree, then we only call

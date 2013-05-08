@@ -10,18 +10,42 @@ module.metadata = {
 
 const { Cc, Ci, Cu } = require("chrome");
 const base64 = require("../base64");
+const { defer } = require("../core/promise");
+const { newURI } = require("../url/utils");
 
 const IOService = Cc["@mozilla.org/network/io-service;1"].
   getService(Ci.nsIIOService);
 
+const { deprecateFunction } = require('../util/deprecate');
 const { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm");
 const FaviconService = Cc["@mozilla.org/browser/favicon-service;1"].
                           getService(Ci.nsIFaviconService);
-const { deprecateFunction } = require("../util/deprecate");
+const AsyncFavicons = FaviconService.QueryInterface(Ci.mozIAsyncFavicons);
 
 const PNG_B64 = "data:image/png;base64,";
 const DEF_FAVICON_URI = "chrome://mozapps/skin/places/defaultFavicon.png";
 let   DEF_FAVICON = null;
+
+/**
+ * Takes URI of the page and returns a promise that resolves
+ * to the page's favicon URI.
+ * @param {String} uri
+ * @param {Function} (callback)
+ * @returns {Promise}
+ */
+
+exports.getFavicon = function getFavicon(uri, callback) {
+  let pageURI = newURI(uri);
+  let deferred = defer();
+  AsyncFavicons.getFaviconURLForPage(pageURI, function (aURI) {
+    if (aURI && aURI.spec)
+      deferred.resolve(aURI.spec.toString());
+    else
+      deferred.reject(null);
+  });
+  if (callback) deferred.promise.then(callback, callback);
+  return deferred.promise;
+};
 
 /**
  * Takes URI of the page and returns associated favicon URI.
@@ -30,7 +54,7 @@ let   DEF_FAVICON = null;
  * @param {String} uri
  * @returns {String}
  */
-exports.getFaviconURIForLocation = function getFaviconURIForLocation(uri) {
+function getFaviconURIForLocation(uri) {
   let pageURI = NetUtil.newURI(uri);
   try {
     return FaviconService.getFaviconDataAsDataURL(
@@ -44,6 +68,7 @@ exports.getFaviconURIForLocation = function getFaviconURIForLocation(uri) {
     return DEF_FAVICON;
   }
 }
+exports.getFaviconURIForLocation = getFaviconURIForLocation;
 
 /**
  * Takes chrome URI and returns content under that URI.

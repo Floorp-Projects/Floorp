@@ -482,12 +482,25 @@ ParticularProcessPriorityManager::Init()
 ParticularProcessPriorityManager::~ParticularProcessPriorityManager()
 {
   LOGP("Destroying ParticularProcessPriorityManager.");
-  UnregisterWakeLockObserver(this);
+
+  // Unregister our wake lock observer if ShutDown hasn't been called.  (The
+  // wake lock observer takes raw refs, so we don't want to take chances here!)
+  // We don't call UnregisterWakeLockObserver unconditionally because the code
+  // will print a warning if it's called unnecessarily.
+
+  if (mContentParent) {
+    UnregisterWakeLockObserver(this);
+  }
 }
 
 /* virtual */ void
 ParticularProcessPriorityManager::Notify(const WakeLockInformation& aInfo)
 {
+  if (!mContentParent) {
+    // We've been shut down.
+    return;
+  }
+
   bool* dest = nullptr;
   if (aInfo.topic().EqualsLiteral("cpu")) {
     dest = &mHoldsCPUWakeLock;
@@ -804,6 +817,8 @@ void
 ParticularProcessPriorityManager::ShutDown()
 {
   MOZ_ASSERT(mContentParent);
+
+  UnregisterWakeLockObserver(this);
 
   if (mResetPriorityTimer) {
     mResetPriorityTimer->Cancel();

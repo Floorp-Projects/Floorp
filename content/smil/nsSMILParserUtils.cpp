@@ -116,7 +116,7 @@ GetUnsignedIntAndEndParen(const nsAString& aStr, uint32_t& aResult)
 inline bool
 ConsumeSubstring(const char*& aStart, const char* aEnd, const char* aSubstring)
 {
-  size_t substrLen = PL_strlen(aSubstring);
+  size_t substrLen = strlen(aSubstring);
 
   if (static_cast<size_t>(aEnd - aStart) < substrLen)
     return false;

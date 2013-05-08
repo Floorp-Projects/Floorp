@@ -178,6 +178,8 @@ LOCAL_INCLUDES += \
         -I$(topsrcdir)/content/events/src \
         -I$(ANDROID_SOURCE)/frameworks/base/include/media/stagefright \
         -I$(ANDROID_SOURCE)/frameworks/base/include/media/stagefright/openmax \
+        -I$(ANDROID_SOURCE)/frameworks/av/include/media/stagefright \
+        -I$(ANDROID_SOURCE)/frameworks/native/include/media/openmax \
         $(NULL)
 
 CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(MOZ_PIXMAN_CFLAGS) $(TK_CFLAGS)

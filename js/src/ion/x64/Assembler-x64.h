@@ -180,8 +180,8 @@ class Operand
     Kind kind_ : 3;
     int32_t base_ : 5;
     Scale scale_ : 3;
-    int32_t disp_;
     int32_t index_ : 5;
+    int32_t disp_;
 
   public:
     explicit Operand(Register reg)
@@ -201,15 +201,15 @@ class Operand
       : kind_(SCALE),
         base_(address.base.code()),
         scale_(address.scale),
-        disp_(address.offset),
-        index_(address.index.code())
+        index_(address.index.code()),
+        disp_(address.offset)
     { }
     Operand(Register base, Register index, Scale scale, int32_t disp = 0)
       : kind_(SCALE),
         base_(base.code()),
         scale_(scale),
-        disp_(disp),
-        index_(index.code())
+        index_(index.code()),
+        disp_(disp)
     { }
     Operand(Register reg, int32_t disp)
       : kind_(REG_DISP),
@@ -217,12 +217,12 @@ class Operand
         disp_(disp)
     { }
 
-    Address toAddress() {
+    Address toAddress() const {
         JS_ASSERT(kind() == REG_DISP);
         return Address(Register::FromCode(base()), disp());
     }
 
-    BaseIndex toBaseIndex() {
+    BaseIndex toBaseIndex() const {
         JS_ASSERT(kind() == SCALE);
         return BaseIndex(Register::FromCode(base()), Register::FromCode(index()), scale(), disp());
     }

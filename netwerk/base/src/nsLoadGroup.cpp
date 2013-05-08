@@ -825,43 +825,7 @@ nsLoadGroup::GetRootLoadGroup(nsILoadGroup * *aRootLoadGroup)
 NS_IMETHODIMP
 nsLoadGroup::OnEndPageLoad(nsIChannel *aDefaultChannel)
 {
-    // On page load of a page with at least 32 resources we want to record
-    // telemetry on which rate pacing algorithm was used to load the page and
-    // the page load time.
-    uint32_t requests = mTimedNonCachedRequestsUntilOnEndPageLoad;
-    mTimedNonCachedRequestsUntilOnEndPageLoad = 0;
-
-    nsCOMPtr<nsITimedChannel> timedChannel =
-        do_QueryInterface(aDefaultChannel);
-    if (!timedChannel)
-        return NS_OK;
-
-    nsCOMPtr<nsIHttpChannelInternal> internalHttpChannel =
-        do_QueryInterface(timedChannel);
-    if (!internalHttpChannel)
-        return NS_OK;
-
-    TimeStamp cacheReadStart;
-    TimeStamp asyncOpen;
-    uint32_t telemetryID;
-    nsresult rv = timedChannel->GetCacheReadStart(&cacheReadStart);
-    if (NS_SUCCEEDED(rv))
-        rv = timedChannel->GetAsyncOpen(&asyncOpen);
-    if (NS_SUCCEEDED(rv))
-        rv = internalHttpChannel->GetPacingTelemetryID(&telemetryID);
-    if (NS_FAILED(rv))
-        return NS_OK;
-
-    // Nothing to do if we don't have a start time or this was
-    // from the cache or we don't know what profile was used
-    if (asyncOpen.IsNull() || !cacheReadStart.IsNull() || !telemetryID)
-        return NS_OK;
-
-    if (requests < 32)
-        return NS_OK;
-
-    Telemetry::AccumulateTimeDelta(static_cast<Telemetry::ID>(telemetryID),
-                                   asyncOpen);
+    // for the moment, nothing to do here.
     return NS_OK;
 }
 

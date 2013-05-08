@@ -258,14 +258,14 @@
   function getElementsByTagName(tag) {
     tag = tag.toUpperCase();
     let elems = [];
-    let allTags = (tag == "*");
+    let allTags = (tag === "*");
     function getElems(node) {
       let length = node.childNodes.length;
       for (let i = 0; i < length; i++) {
         let child = node.childNodes[i];
-        if (child.nodeType != 1)
+        if (child.nodeType !== 1)
           continue;
-        if (allTags || (child.tagName == tag))
+        if (allTags || (child.tagName === tag))
           elems.push(child);
         getElems(child);
       }
@@ -309,7 +309,7 @@
     removeChild: function (child) {
       let childNodes = this.childNodes;
       let childIndex = childNodes.indexOf(child);
-      if (childIndex == -1) {
+      if (childIndex === -1) {
         throw "removeChild: node not found";
       } else {
         child.parentNode = null;
@@ -320,7 +320,7 @@
     replaceChild: function (newNode, oldNode) {
       let childNodes = this.childNodes;
       let childIndex = childNodes.indexOf(oldNode);
-      if (childIndex == -1) {
+      if (childIndex === -1) {
         throw "replaceChild: node not found";
       } else {
         if (newNode.parentNode)
@@ -383,7 +383,7 @@
     getElementById: function (id) {
       function getElem(node) {
         let length = node.childNodes.length;
-        if (node.id == id)
+        if (node.id === id)
           return node;
         for (let i = 0; i < length; i++) {
           let el = getElem(node.childNodes[i]);
@@ -463,7 +463,7 @@
             // serialize attribute list
             for (let j = 0; j < child.attributes.length; j++) {
               let attr = child.attributes[j];
-              let quote = (attr.value.indexOf('"') == -1 ? '"' : "'");
+              let quote = (attr.value.indexOf('"') === -1 ? '"' : "'");
               arr.push(" " + attr.name + '=' + quote + attr.value + quote);
             }
 
@@ -518,7 +518,7 @@
         let nodes = node.childNodes;
         for (let i = 0; i < nodes.length; i++) {
           let child = nodes[i];
-          if (child.nodeType == 3) {
+          if (child.nodeType === 3) {
             text.push(child.textContent);
           } else {
             getText(child);
@@ -536,7 +536,7 @@
     getAttribute: function (name) {
       for (let i = this.attributes.length; --i >= 0;) {
         let attr = this.attributes[i];
-        if (attr.name == name)
+        if (attr.name === name)
           return attr.value;
       }
       return undefined;
@@ -545,7 +545,7 @@
     setAttribute: function (name, value) {
       for (let i = this.attributes.length; --i >= 0;) {
         let attr = this.attributes[i];
-        if (attr.name == name) {
+        if (attr.name === name) {
           attr.value = value;
           return;
         }
@@ -556,7 +556,7 @@
     removeAttribute: function (name) {
       for (let i = this.attributes.length; --i >= 0;) {
         let attr = this.attributes[i];
-        if (attr.name == name) {
+        if (attr.name === name) {
           this.attributes.splice(i, 1);
           break;
         }
@@ -583,7 +583,7 @@
       for (let i = 0; i < styles.length; i++) {
         let style = styles[i].split(":");
         let name = style[0].trim();
-        if (name == styleName)
+        if (name === styleName)
           return style[1].trim();
       }
 
@@ -598,7 +598,7 @@
         let next = value.indexOf(";", index) + 1;
         let length = next - index - 1;
         let style = (length > 0 ? value.substr(index, length) : value.substr(index));
-        if (style.substr(0, style.indexOf(":")).trim() == styleName) {
+        if (style.substr(0, style.indexOf(":")).trim() === styleName) {
           value = value.substr(0, index).trim() + (next ? " " + value.substr(next).trim() : "");
           break;
         }
@@ -649,7 +649,7 @@
     readString: function (quote) {
       let str;
       let n = this.html.indexOf(quote, this.currentChar);
-      if (n == -1) {
+      if (n === -1) {
         this.currentChar = this.html.length;
         str = null;
       } else {
@@ -668,7 +668,7 @@
       let name = "";
 
       let n = this.html.indexOf("=", this.currentChar);
-      if (n == -1) {
+      if (n === -1) {
         this.currentChar = this.html.length;
       } else {
         // Read until a '=' character is hit; this will be the attribute key
@@ -681,7 +681,7 @@
 
       // After a '=', we should see a '"' for the attribute value
       let c = this.nextChar();
-      if (c != '"' && c != "'") {
+      if (c !== '"' && c !== "'") {
         error("expecting '\"'");
         return;
       }
@@ -710,7 +710,7 @@
 
       // Read the Element tag name
       let tag = "";
-      while (c != " " && c != ">" && c != "/") {
+      while (c !== " " && c !== ">" && c !== "/") {
         if (c === undefined)
           return null;
         tag += c;
@@ -723,12 +723,12 @@
       let node = new Element(tag);
 
       // Read Element attributes
-      while (c != "/" && c != ">") {
+      while (c !== "/" && c !== ">") {
         if (c === undefined)
           return null;
         while (this.match(" "));
         c = this.nextChar();
-        if (c != "/" && c != ">") {
+        if (c !== "/" && c !== ">") {
           --this.currentChar;
           this.readAttribute(node);
         }
@@ -736,10 +736,10 @@
 
       // If this is a self-closing tag, read '/>'
       let closed = tag in voidElems;
-      if (c == "/") {
+      if (c === "/") {
         closed = true;
         c = this.nextChar();
-        if (c != ">") {
+        if (c !== ">") {
           error("expected '>'");
           return null;
         }
@@ -756,7 +756,7 @@
      */
     match: function (str) {
       let strlen = str.length;
-      if (this.html.substr(this.currentChar, strlen) == str) {
+      if (this.html.substr(this.currentChar, strlen) === str) {
         this.currentChar += strlen;
         return true;
       }
@@ -769,7 +769,7 @@
      */
     discardTo: function (str) {
       let index = this.html.indexOf(str, this.currentChar) + str.length;
-      if (index == -1)
+      if (index === -1)
         this.currentChar = this.html.length;
       this.currentChar = index;
     },
@@ -781,7 +781,7 @@
       let child;
       while (child = this.readNode()) {
         // Don't keep Comment nodes
-        if (child.nodeType != 8) {
+        if (child.nodeType !== 8) {
           node.childNodes.push(child);
           child.parentNode = node;
         }
@@ -801,11 +801,11 @@
         return null;
 
       // Read any text as Text node
-      if (c != "<") {
+      if (c !== "<") {
         --this.currentChar;
         let node = new Text();
         let n = this.html.indexOf("<", this.currentChar);
-        if (n == -1) {
+        if (n === -1) {
           node.textContent = this.html.substring(this.currentChar, this.html.length);
           this.currentChar = this.html.length;
         } else {
@@ -821,16 +821,16 @@
       // textContent, but we don't really care about Comment nodes (we throw
       // them away in readChildren()). So just returning an empty Comment node
       // here is sufficient.
-      if (c == "!" || c == "?") {
+      if (c === "!" || c === "?") {
         this.currentChar++;
         if (this.match("--")) {
           this.discardTo("-->");
         } else {
           let c = this.nextChar();
-          while (c != ">") {
+          while (c !== ">") {
             if (c === undefined)
               return null;
-            if (c == '"' || c == "'")
+            if (c === '"' || c === "'")
               this.readString(c);
             c = this.nextChar();
           }
@@ -840,14 +840,14 @@
 
       // If we're reading a closing tag, return null. This means we've reached
       // the end of this set of child nodes.
-      if (c == "/") {
+      if (c === "/") {
         --this.currentChar;
         return null;
       }
 
       // Otherwise, we're looking at an Element node
       let result = this.makeElementNode();
-      if (result == null)
+      if (result === null)
         return null;
 
       let [node, closed] = result;
@@ -863,13 +863,13 @@
         }
       }
 
-      if (localName == "title") {
+      if (localName === "title") {
         this.doc.title = node.textContent.trim();
-      } else if (localName == "head") {
+      } else if (localName === "head") {
         this.doc.head = node;
-      } else if (localName == "body") {
+      } else if (localName === "body") {
         this.doc.body = node;
-      } else if (localName == "html") {
+      } else if (localName === "html") {
         this.doc.documentElement = node;
       }
 
@@ -889,7 +889,7 @@
       if (doc.documentElement) {
         for (let i = doc.childNodes.length; --i >= 0;) {
           let child = doc.childNodes[i];
-          if (child != doc.documentElement) {
+          if (child !== doc.documentElement) {
             doc.removeChild(child);
           }
         }

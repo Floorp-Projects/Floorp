@@ -296,7 +296,7 @@ nsDiskCache::Hash(const char * key, PLDHashNumber initval)
   const uint8_t *k = reinterpret_cast<const uint8_t*>(key);
   uint32_t a, b, c, len, length;
 
-  length = PL_strlen(key);
+  length = strlen(key);
   /* Set up the internal state */
   len = length;
   a = b = 0x9e3779b9;  /* the golden ratio; an arbitrary value */

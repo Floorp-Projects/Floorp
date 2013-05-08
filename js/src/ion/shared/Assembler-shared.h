@@ -150,8 +150,8 @@ struct Address
     Address() { mozilla::PodZero(this); }
 };
 
-// Specifies an address computed in the form of a register base and a constant,
-// 32-bit offset.
+// Specifies an address computed in the form of a register base, a register
+// index with a scale, and a constant, 32-bit offset.
 struct BaseIndex
 {
     Register base;

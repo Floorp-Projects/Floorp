@@ -2697,6 +2697,47 @@ exports.testItemImage = function (test) {
   });
 };
 
+// Test image URL validation.
+exports.testItemImageValidURL = function (test) {
+  test = new TestHelper(test);
+  let loader = test.newLoader();
+ 
+  test.assertRaises(function(){
+      new loader.cm.Item({
+        label: "item 1",
+        image: "foo"
+      })
+    }, "Image URL validation failed"
+  );
+
+  test.assertRaises(function(){
+      new loader.cm.Item({
+        label: "item 2",
+        image: false
+      })
+    }, "Image URL validation failed"
+  );
+
+  test.assertRaises(function(){
+      new loader.cm.Item({
+        label: "item 3",
+        image: 0
+      })
+    }, "Image URL validation failed"
+  );
+   
+  let imageURL = require("sdk/self").data.url("moz_favicon.ico");
+  let item4 = new loader.cm.Item({ label: "item 4", image: imageURL });
+  let item5 = new loader.cm.Item({ label: "item 5", image: null });
+  let item6 = new loader.cm.Item({ label: "item 6", image: undefined });
+
+  test.assertEqual(item4.image, imageURL, "Should be proper image URL");
+  test.assertEqual(item5.image, null, "Should be null image");
+  test.assertEqual(item6.image, undefined, "Should be undefined image");
+
+  test.done();
+}
+
 
 // Menu.destroy should destroy the item tree rooted at that menu.
 exports.testMenuDestroy = function (test) {

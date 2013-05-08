@@ -26,6 +26,7 @@ chrome.jar:
   content/bindings/appbar.xml                  (content/bindings/appbar.xml)
   content/bindings/flyoutpanel.xml             (content/bindings/flyoutpanel.xml)
   content/bindings/selectionoverlay.xml        (content/bindings/selectionoverlay.xml)
+  content/bindings/cssthrobber.xml             (content/bindings/cssthrobber.xml)
 
   content/prompt/alert.xul                     (content/prompt/alert.xul)
   content/prompt/confirm.xul                   (content/prompt/confirm.xul)

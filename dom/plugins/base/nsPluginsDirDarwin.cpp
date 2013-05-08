@@ -108,7 +108,7 @@ static char* CFStringRefToUTF8Buffer(CFStringRef cfString)
   }
 
   newBuffer = static_cast<char*>(NS_Realloc(newBuffer,
-                                            PL_strlen(newBuffer) + 1));
+                                            strlen(newBuffer) + 1));
   return newBuffer;
 }
 
@@ -350,7 +350,7 @@ static char* p2cstrdup(StringPtr pstr)
 static char* GetNextPluginStringFromHandle(Handle h, short *index)
 {
   char *ret = p2cstrdup((unsigned char*)(*h + *index));
-  *index += (ret ? PL_strlen(ret) : 0) + 1;
+  *index += (ret ? strlen(ret) : 0) + 1;
   return ret;
 }
 

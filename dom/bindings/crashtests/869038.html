@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+
+function boom()
+{
+  var frame = document.createElementNS("http://www.w3.org/1999/xhtml", "iframe");
+  document.body.appendChild(frame);
+  var frameDoc = frame.contentDocument;
+  frameDoc.contentEditable = "true";
+  document.body.removeChild(frame);
+  SpecialPowers.gc();
+  frameDoc.focus();
+}
+
+</script>
+</head>
+
+<body onload="boom();"></body>
+</html>

@@ -797,6 +797,8 @@ nsDisplayListBuilder::EnterPresShell(nsIFrame* aReferenceFrame,
 
   nsRefPtr<nsCaret> caret = state->mPresShell->GetCaret();
   state->mCaretFrame = caret->GetCaretFrame();
+  NS_ASSERTION(state->mCaretFrame == caret->GetCaretFrame(),
+               "GetCaretFrame() is unstable");
 
   if (state->mCaretFrame) {
     // Check if the dirty rect intersects with the caret's dirty rect.
@@ -872,10 +874,15 @@ nsDisplayListBuilder::Allocate(size_t aSize) {
   return tmp;
 }
 
-DisplayItemClip*
+const DisplayItemClip*
 nsDisplayListBuilder::AllocateDisplayItemClip(const DisplayItemClip& aOriginal)
 {
   void* p = Allocate(sizeof(DisplayItemClip));
+  if (!aOriginal.GetRoundedRectCount()) {
+    memcpy(p, &aOriginal, sizeof(DisplayItemClip));
+    return static_cast<DisplayItemClip*>(p);
+  }
+
   DisplayItemClip* c = new (p) DisplayItemClip(aOriginal);
   mDisplayItemClipsToDestroy.AppendElement(c);
   return c;
