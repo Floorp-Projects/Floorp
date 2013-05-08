@@ -6,7 +6,6 @@
 #include "DrawTargetSkia.h"
 #include "SourceSurfaceSkia.h"
 #include "ScaledFontBase.h"
-#include "ScaledFontCairo.h"
 #include "skia/SkDevice.h"
 
 #ifdef USE_SKIA_GPU
@@ -275,15 +274,21 @@ DrawTargetSkia::DrawSurface(SourceSurface *aSurface,
   MarkChanged();
 
   SkRect destRect = RectToSkRect(aDest);
-  SkIRect sourceRect = RectToSkIRect(aSource);
+  SkRect sourceRect = RectToSkRect(aSource);
 
+  SkMatrix matrix;
+  matrix.setRectToRect(sourceRect, destRect, SkMatrix::kFill_ScaleToFit);
+  
   const SkBitmap& bitmap = static_cast<SourceSurfaceSkia*>(aSurface)->GetBitmap();
  
   AutoPaintSetup paint(mCanvas.get(), aOptions);
+  SkShader *shader = SkShader::CreateBitmapShader(bitmap, SkShader::kClamp_TileMode, SkShader::kClamp_TileMode);
+  shader->setLocalMatrix(matrix);
+  SkSafeUnref(paint.mPaint.setShader(shader));
   if (aSurfOptions.mFilter != FILTER_LINEAR) {
     paint.mPaint.setFilterBitmap(false);
   }
-  mCanvas->drawBitmapRect(bitmap, &sourceRect, destRect, &paint.mPaint);
+  mCanvas->drawRect(destRect, paint.mPaint);
 }
 
 void
@@ -440,7 +445,7 @@ DrawTargetSkia::FillGlyphs(ScaledFont *aFont,
                            const GlyphBuffer &aBuffer,
                            const Pattern &aPattern,
                            const DrawOptions &aOptions,
-                           const GlyphRenderingOptions *aRenderingOptions)
+                           const GlyphRenderingOptions*)
 {
   if (aFont->GetType() != FONT_MAC &&
       aFont->GetType() != FONT_SKIA &&
@@ -456,30 +461,7 @@ DrawTargetSkia::FillGlyphs(ScaledFont *aFont,
   paint.mPaint.setTypeface(skiaFont->GetSkTypeface());
   paint.mPaint.setTextSize(SkFloatToScalar(skiaFont->mSize));
   paint.mPaint.setTextEncoding(SkPaint::kGlyphID_TextEncoding);
-
-  if (aRenderingOptions) {
-    switch (static_cast<const GlyphRenderingOptionsCairo*>(aRenderingOptions)->GetHinting()) {
-      case FONT_HINTING_NONE:
-        paint.mPaint.setHinting(SkPaint::kNo_Hinting);
-        break;
-      case FONT_HINTING_LIGHT:
-        paint.mPaint.setHinting(SkPaint::kSlight_Hinting);
-        break;
-      case FONT_HINTING_NORMAL:
-        paint.mPaint.setHinting(SkPaint::kNormal_Hinting);
-        break;
-      case FONT_HINTING_FULL:
-        paint.mPaint.setHinting(SkPaint::kFull_Hinting);
-        break;
-    }
-
-    if (static_cast<const GlyphRenderingOptionsCairo*                                 >(aRenderingOptions)->GetAutoHinting()) {
-      paint.mPaint.setAutohinted(true);
-    }
-  } else {
-    paint.mPaint.setHinting(SkPaint::kNormal_Hinting);
-  }
-
+  
   std::vector<uint16_t> indices;
   std::vector<SkPoint> offsets;
   indices.resize(aBuffer.mNumGlyphs);

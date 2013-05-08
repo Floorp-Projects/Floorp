@@ -8,15 +8,10 @@
 
 #include "2D.h"
 
-// Skia uses cairo_scaled_font_t as the internal font type in ScaledFont
-#if defined(USE_SKIA) || defined(USE_CAIRO)
-#define USE_CAIRO_SCALED_FONT
-#endif
-
 #ifdef USE_SKIA
 #include "skia/SkTypeface.h"
 #endif
-#ifdef USE_CAIRO_SCALED_FONT
+#ifdef USE_CAIRO
 #include "cairo.h"
 #endif
 
@@ -44,7 +39,7 @@ public:
   // Not true, but required to instantiate a ScaledFontBase.
   virtual FontType GetType() const { return FONT_SKIA; }
 
-#ifdef USE_CAIRO_SCALED_FONT
+#ifdef USE_CAIRO
   cairo_scaled_font_t* GetCairoScaledFont() { return mScaledFont; }
   void SetCairoScaledFont(cairo_scaled_font_t* font);
 #endif
@@ -54,7 +49,7 @@ protected:
 #ifdef USE_SKIA
   SkTypeface* mTypeface;
 #endif
-#ifdef USE_CAIRO_SCALED_FONT
+#ifdef USE_CAIRO
   cairo_scaled_font_t* mScaledFont;
 #endif
   Float mSize;
