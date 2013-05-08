@@ -28,12 +28,12 @@ protected:
 
 public:
   // nsSVGSVGElement methods:
-  virtual bool HasValidDimensions() const;
+  virtual bool HasValidDimensions() const MOZ_OVERRIDE;
 
   // nsSVGPathGeometryElement methods:
-  virtual void ConstructPath(gfxContext *aCtx);
+  virtual void ConstructPath(gfxContext *aCtx) MOZ_OVERRIDE;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   // WebIDL
   already_AddRefed<SVGAnimatedLength> X();
@@ -45,7 +45,7 @@ public:
 
 protected:
 
-  virtual LengthAttributesInfo GetLengthInfo();
+  virtual LengthAttributesInfo GetLengthInfo() MOZ_OVERRIDE;
 
   enum { ATTR_X, ATTR_Y, ATTR_WIDTH, ATTR_HEIGHT, ATTR_RX, ATTR_RY };
   nsSVGLength2 mLengthAttributes[6];
