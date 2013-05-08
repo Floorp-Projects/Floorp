@@ -124,6 +124,9 @@ struct BytecodeEmitter
     bool            emittingRunOnceLambda:1; /* true while emitting a lambda which is only
                                                 expected to run once. */
 
+    bool            insideEval:1;       /* True if compiling an eval-expression or a function
+                                           nested inside an eval. */
+
     const bool      hasGlobalScope:1;   /* frontend::CompileScript's scope chain is the
                                            global object */
 
@@ -139,8 +142,8 @@ struct BytecodeEmitter
      * destruction.
      */
     BytecodeEmitter(BytecodeEmitter *parent, Parser<FullParseHandler> *parser, SharedContext *sc,
-                    HandleScript script, HandleScript evalCaller, bool hasGlobalScope,
-                    uint32_t lineNum, bool selfHostingMode = false);
+                    HandleScript script, bool insideEval, HandleScript evalCaller,
+                    bool hasGlobalScope, uint32_t lineNum, bool selfHostingMode = false);
     bool init();
 
     bool isAliasedName(ParseNode *pn);

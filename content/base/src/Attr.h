@@ -72,8 +72,8 @@ public:
   static void Initialize();
   static void Shutdown();
 
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(Attr,
-                                                         nsIAttribute)
+  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_AMBIGUOUS(Attr,
+                                                                   nsIAttribute)
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
 

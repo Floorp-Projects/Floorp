@@ -42,7 +42,7 @@ public:
   using nsDocument::SetDocumentURI;
   using nsDocument::GetPlugins;
 
-  nsHTMLDocument(bool aUseXPConnectToWrap = false);
+  nsHTMLDocument();
   virtual nsresult Init();
 
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);

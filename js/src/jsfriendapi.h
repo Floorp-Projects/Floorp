@@ -723,9 +723,6 @@ JS_FRIEND_API(jsbytecode*)
 ProfilingGetPC(JSRuntime *rt, JSScript *script, void *ip);
 
 #ifdef JS_THREADSAFE
-JS_FRIEND_API(void *)
-GetOwnerThread(const JSContext *cx);
-
 JS_FRIEND_API(bool)
 ContextHasOutstandingRequests(const JSContext *cx);
 #endif

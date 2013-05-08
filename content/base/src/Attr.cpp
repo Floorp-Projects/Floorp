@@ -29,6 +29,13 @@
 #include "nsAsyncDOMEvent.h"
 #include "nsWrapperCacheInlines.h"
 
+nsIAttribute::nsIAttribute(nsDOMAttributeMap* aAttrMap,
+                           already_AddRefed<nsINodeInfo> aNodeInfo,
+                           bool aNsAware)
+: nsINode(aNodeInfo), mAttrMap(aAttrMap), mNsAware(aNsAware)
+{
+}
+
 namespace mozilla {
 namespace dom {
 
@@ -56,6 +63,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Attr)
   if (!nsINode::Traverse(tmp, cb)) {
     return NS_SUCCESS_INTERRUPTED_TRAVERSE;
   }
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAttrMap)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(Attr)
@@ -64,7 +72,32 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Attr)
   nsINode::Unlink(tmp);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mAttrMap)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(Attr)
+  Element* ownerElement = tmp->GetContentInternal();
+  if (tmp->IsBlack()) {
+    if (ownerElement) {
+      // The attribute owns the element via attribute map so we can
+      // mark it when the attribute is certainly alive.
+      mozilla::dom::FragmentOrElement::MarkNodeChildren(ownerElement);
+    }
+    return true;
+  }
+  if (ownerElement &&
+      mozilla::dom::FragmentOrElement::CanSkip(ownerElement, true)) {
+    return true;
+  }
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_END
+
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_BEGIN(Attr)
+  return tmp->IsBlackAndDoesNotNeedTracing(static_cast<nsIAttribute*>(tmp));
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_END
+
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(Attr)
+  return tmp->IsBlack();
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 
 // QueryInterface implementation for Attr
 NS_INTERFACE_TABLE_HEAD(Attr)
@@ -72,6 +105,7 @@ NS_INTERFACE_TABLE_HEAD(Attr)
   NS_NODE_INTERFACE_TABLE5(Attr, nsIDOMAttr, nsIAttribute, nsIDOMNode,
                            nsIDOMEventTarget, EventTarget)
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(Attr)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIAttribute)
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsISupportsWeakReference,
                                  new nsNodeSupportsWeakRefTearoff(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMXPathNSResolver,

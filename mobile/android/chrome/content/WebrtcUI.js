@@ -79,7 +79,7 @@ var WebrtcUI = {
       return;
 
     let host = aBrowser.contentDocument.documentURIObject.asciiHost;
-    let requestor = chromeWin.BrowserApp.manifest ? "'" + chromeWin.BrowserApp.manifest.name  + "'" : host;
+    let requestor = BrowserApp.manifest ? "'" + BrowserApp.manifest.name  + "'" : host;
     let stringBundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
     let message = stringBundle.formatStringFromName("getUserMedia.share" + requestType + ".message", [ requestor ], 1);
 
