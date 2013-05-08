@@ -291,7 +291,7 @@
                 onclick="PanelUI.show('bookmarks-container');"/>
               <label class="meta-section-title" value="&startHistoryHeader.label;"
                 onclick="PanelUI.show('history-container');" inputProcessing="true"/>
-              <label class="meta-section-title" value="&startRemoteTabsHeader.label;"
+              <label id="snappedRemoteTabsLabel" class="meta-section-title" value="&snappedRemoteTabsHeader.label;"
                 onclick="PanelUI.show('remotetabs-container');" inputProcessing="true"/>
             </scrollbox>
           </vbox>
