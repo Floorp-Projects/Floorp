@@ -1768,8 +1768,9 @@ JSBool
 InterfaceHasInstance(JSContext* cx, JSHandleObject obj, JSMutableHandleValue vp,
                      JSBool* bp);
 
-// Helper for lenient getters/setters to report to console
-void
+// Helper for lenient getters/setters to report to console.  If this
+// returns false, we couldn't even get a global.
+bool
 ReportLenientThisUnwrappingFailure(JSContext* cx, JS::Handle<JSObject*> obj);
 
 inline JSObject*

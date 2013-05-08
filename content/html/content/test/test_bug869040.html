@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=869040
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 869040</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=869040">Mozilla Bug 869040</a>
+<p id="display"></p>
+<div id="content" style="display: none" data-foo="present1" data-bar="present2">
+
+</div>
+<pre id="test">
+</pre>
+  <script type="application/javascript">
+
+  /** Test for Bug 869040 **/
+    var foo = "default1";
+    var dataset = $("content").dataset;
+    for (var i = 0; i < 100000; ++i)
+      foo = dataset.foo;
+
+    var bar = "default2";
+    for (var j = 0; j < 100; ++j)
+      bar = dataset.bar;
+
+    is(foo, "present1", "Our IC should work");
+    is(bar, "present2", "Our non-IC case should work");
+  </script>
+</body>
+</html>
