@@ -10,7 +10,7 @@ interface nsIDOMNode;
 interface nsIDOMEvent;
 interface nsIDOMClientRect;
 
-[scriptable, uuid(DF60BA02-005B-4F61-AB1C-5632D0779DB4)]
+[scriptable, uuid(b1192cac-467b-42ca-88d6-fcdec5bb4ef7)]
 interface nsIPopupBoxObject : nsISupports
 {
   /**
@@ -171,6 +171,7 @@ interface nsIPopupBoxObject : nsISupports
    *  anchor node or point, accounting for any flipping that occurred.
    */
   readonly attribute AString alignmentPosition;
+  readonly attribute long alignmentOffset;
 };
 
 %{C++

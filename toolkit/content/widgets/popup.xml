@@ -134,6 +134,14 @@
         ]]>
         </getter>
       </property>
+
+      <property name="alignmentOffset" readonly="true">
+        <getter>
+        <![CDATA[
+          return this.popupBoxObject.alignmentOffset;
+        ]]>
+        </getter>
+      </property>
       
       <method name="enableKeyboardNavigator">
         <parameter name="aEnableKeyboardNavigator"/>
@@ -390,11 +398,20 @@
         var container = document.getAnonymousElementByAttribute(this, "anonid", "container");
         var arrowbox = document.getAnonymousElementByAttribute(this, "anonid", "arrowbox");
 
+        // if this panel has a "sliding" arrow, we may have previously set margins...
+        arrowbox.style.removeProperty("margin");
+
         var position = this.alignmentPosition;
         if (position.indexOf("start_") == 0 || position.indexOf("end_") == 0) {
           container.orient = "";
           arrowbox.orient = "vertical";
-          arrowbox.pack = (position.indexOf("_after") > 0) ? "end" : "start";
+          if (position.indexOf("_after") > 0) {
+            arrowbox.pack = "end";
+            arrowbox.style.marginBottom = this.alignmentOffset + "px";
+          } else {
+            arrowbox.pack = "start";
+            arrowbox.style.marginTop = this.alignmentOffset + "px";
+          }
 
           // The assigned side stays the same regardless of direction.
           var isRTL = (window.getComputedStyle(this).direction == "rtl");
@@ -411,7 +428,13 @@
         else if (position.indexOf("before_") == 0 || position.indexOf("after_") == 0) {
           container.orient = "vertical";
           arrowbox.orient = "";
-          arrowbox.pack = (position.indexOf("_end") > 0) ? "end" : "start";
+          if (position.indexOf("_end") > 0) {
+            arrowbox.pack = "end";
+            arrowbox.style.marginRight = this.alignmentOffset + "px";
+          } else {
+            arrowbox.pack = "start";
+            arrowbox.style.marginLeft = this.alignmentOffset + "px";
+          }
 
           if (position.indexOf("before_") == 0) {
             container.dir = "reverse";
