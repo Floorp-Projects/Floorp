@@ -69,8 +69,13 @@ interface nsIWebBrowserChrome : nsISupports
     // flags are specified, the opened window will inherit the privacy
     // status of its opener.  If there is no opener window, the new
     // window will be non-private.
+    //
+    // CHROME_PRIVATE_LIFETIME causes the docshell to affect private-browsing
+    // session lifetime.  This flag is currently respected only for remote
+    // docshells.
     const unsigned long CHROME_PRIVATE_WINDOW         = 0x00010000;
     const unsigned long CHROME_NON_PRIVATE_WINDOW     = 0x00020000;
+    const unsigned long CHROME_PRIVATE_LIFETIME       = 0x00040000;
 
     // Prevents new window animations on Mac OS X Lion.  Ignored on other
     // platforms.

@@ -86,14 +86,14 @@ FileHandle::Open(const nsAString& aMode,
   FileMode mode;
   if (aOptionalArgCount) {
     if (aMode.EqualsLiteral("readwrite")) {
-      mode = FileModeValues::Readwrite;
+      mode = FileMode::Readwrite;
     } else if (aMode.EqualsLiteral("readonly")) {
-      mode = FileModeValues::Readonly;
+      mode = FileMode::Readonly;
     } else {
       return NS_ERROR_TYPE_ERR;
     }
   } else {
-    mode = FileModeValues::Readonly;
+    mode = FileMode::Readonly;
   }
 
   ErrorResult rv;
@@ -112,15 +112,15 @@ FileHandle::Open(FileMode aMode, ErrorResult& aError)
     return nullptr;
   }
 
-  MOZ_STATIC_ASSERT(static_cast<uint32_t>(FileModeValues::Readonly) ==
+  MOZ_STATIC_ASSERT(static_cast<uint32_t>(FileMode::Readonly) ==
                     static_cast<uint32_t>(LockedFile::READ_ONLY),
                     "Enum values should match.");
-  MOZ_STATIC_ASSERT(static_cast<uint32_t>(FileModeValues::Readwrite) ==
+  MOZ_STATIC_ASSERT(static_cast<uint32_t>(FileMode::Readwrite) ==
                     static_cast<uint32_t>(LockedFile::READ_WRITE),
                     "Enum values should match.");
 
   nsRefPtr<LockedFile> lockedFile =
-    LockedFile::Create(this, static_cast<LockedFile::Mode>(aMode));
+    LockedFile::Create(this, LockedFile::Mode(static_cast<int>(aMode)));
   if (!lockedFile) {
     aError.Throw(NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR);
     return nullptr;

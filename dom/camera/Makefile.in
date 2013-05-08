@@ -38,7 +38,7 @@ CPPSRCS += \
   AudioParameter.cpp \
   GonkRecorderProfiles.cpp \
   $(NULL)
-else ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
+else ifeq ($(MOZ_OMX_DECODER),1)
 CPPSRCS += \
   FallbackCameraManager.cpp \
   FallbackCameraControl.cpp \

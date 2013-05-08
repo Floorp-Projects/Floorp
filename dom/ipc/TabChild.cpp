@@ -688,6 +688,14 @@ TabChild::Init()
 
   nsCOMPtr<nsIDocShell> docShell = do_GetInterface(mWebNav);
   MOZ_ASSERT(docShell);
+
+  docShell->SetAffectPrivateSessionLifetime(
+      mChromeFlags & nsIWebBrowserChrome::CHROME_PRIVATE_LIFETIME);
+  nsCOMPtr<nsILoadContext> loadContext = do_GetInterface(mWebNav);
+  MOZ_ASSERT(loadContext);
+  loadContext->SetPrivateBrowsing(
+      mChromeFlags & nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW);
+
   nsCOMPtr<nsIWebProgress> webProgress = do_GetInterface(docShell);
   NS_ENSURE_TRUE(webProgress, NS_ERROR_FAILURE);
   webProgress->AddProgressListener(this, nsIWebProgress::NOTIFY_LOCATION);
@@ -2296,7 +2304,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(TabChildGlobal)
   NS_INTERFACE_MAP_ENTRY(nsIMessageSender)
   NS_INTERFACE_MAP_ENTRY(nsISyncMessageSender)
   NS_INTERFACE_MAP_ENTRY(nsIContentFrameMessageManager)
-  NS_INTERFACE_MAP_ENTRY(nsIScriptContextPrincipal)
   NS_INTERFACE_MAP_ENTRY(nsIScriptObjectPrincipal)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(ContentFrameMessageManager)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)

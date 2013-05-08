@@ -22,6 +22,19 @@ addLoadEvent(function() {
 
   var source = context.createBufferSource();
 
+  var eventsReceived = 0;
+  function eventReceived() {
+    if (++eventsReceived == 2) {
+      SpecialPowers.clearUserPref("media.webaudio.enabled");
+      SimpleTest.finish();
+    }
+  }
+
+  source.onended = function(e) {
+    is(e.target, source, "Correct target for the ended event");
+    eventReceived();
+  };
+
   var sp = context.createScriptProcessor(2048);
   source.start(0);
   source.buffer = buffer;
@@ -40,8 +53,7 @@ addLoadEvent(function() {
       sp.onaudioprocess = null;
       sp.disconnect(context.destination);
 
-      SpecialPowers.clearUserPref("media.webaudio.enabled");
-      SimpleTest.finish();
+      eventReceived();
     };
   };
 });

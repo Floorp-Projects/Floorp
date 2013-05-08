@@ -80,6 +80,9 @@ def build_dict(env=os.environ):
 
     # crashreporter
     d["crashreporter"] = 'MOZ_CRASHREPORTER' in env and env['MOZ_CRASHREPORTER'] == '1'
+
+    # asan
+    d["asan"] = 'MOZ_ASAN' in env and env['MOZ_ASAN'] == '1'
     return d
 
 def write_json(file, env=os.environ):

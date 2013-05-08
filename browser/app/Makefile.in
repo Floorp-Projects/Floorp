@@ -92,6 +92,9 @@ endif
 
 ifeq ($(OS_ARCH),WINNT)
 RCINCLUDE = splash.rc
+# Rebuild firefox.exe if the manifest changes - it's included by splash.rc.
+# (this dependency should really be just for firefox.exe, not other targets)
+EXTRA_DEPS += $(PROGRAM).manifest
 ifndef GNU_CC
 RCFLAGS += -DMOZ_PHOENIX -I$(srcdir)
 else

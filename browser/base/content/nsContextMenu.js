@@ -318,6 +318,19 @@ nsContextMenu.prototype = {
       }.bind(this));
     }
     this.showItem("context-marklink", enableLinkMark);
+
+    // SocialShare
+    let shareButton = SocialShare.shareButton;
+    let shareEnabled = shareButton && !shareButton.disabled && !this.onSocial;
+    let pageShare = shareEnabled && !(this.isContentSelected ||
+                            this.onTextInput || this.onLink || this.onImage ||
+                            this.onVideo || this.onAudio);
+    this.showItem("context-sharepage", pageShare);
+    this.showItem("context-shareselect", shareEnabled && this.isContentSelected);
+    this.showItem("context-sharelink", shareEnabled && (this.onLink || this.onPlainTextLink) && !this.onMailtoLink);
+    this.showItem("context-shareimage", shareEnabled && this.onImage);
+    this.showItem("context-sharevideo", shareEnabled && this.onVideo);
+    this.setItemAttr("context-sharevideo", "disabled", !this.mediaURL);
   },
 
   initSpellingItems: function() {
@@ -1496,6 +1509,22 @@ nsContextMenu.prototype = {
   markLink: function CM_markLink() {
     // send link to social
     SocialMark.toggleURIMark(this.linkURI);
+  },
+
+  shareLink: function CM_shareLink() {
+    SocialShare.sharePage(null, { url: this.linkURI.spec });
+  },
+
+  shareImage: function CM_shareImage() {
+    SocialShare.sharePage(null, { url: this.imageURL, previews: [ this.mediaURL ] });
+  },
+
+  shareVideo: function CM_shareVideo() {
+    SocialShare.sharePage(null, { url: this.mediaURL, source: this.mediaURL });
+  },
+
+  shareSelect: function CM_shareSelect(selection) {
+    SocialShare.sharePage(null, { url: this.browser.currentURI.spec, text: selection });
   },
 
   savePageAs: function CM_savePageAs() {

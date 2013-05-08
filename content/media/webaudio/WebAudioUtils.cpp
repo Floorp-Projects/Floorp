@@ -53,7 +53,7 @@ WebAudioUtils::ConvertAudioParamToTicks(AudioParamTimeline& aParam,
   ConvertTimeToTickHelper ctth;
   ctth.mSourceStream = aSource;
   ctth.mDestinationStream = aDest;
-  aParam.ConvertEventTimesToTicks(ConvertTimeToTickHelper::Convert, &ctth);
+  aParam.ConvertEventTimesToTicks(ConvertTimeToTickHelper::Convert, &ctth, IdealAudioRate());
 }
 
 }

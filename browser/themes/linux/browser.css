@@ -1441,6 +1441,64 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   list-style-image: url("chrome://browser/skin/Info.png");
 }
 
+
+/* social share panel */
+
+.social-share-frame {
+  background: linear-gradient(to bottom, rgba(242,242,242,.99), rgba(242,242,242,.95));
+  border-left: 1px solid #f8f8f8;
+  width: 330px;
+  height: 150px;
+  /* we resize our panels dynamically, make it look nice */
+  transition: height 100ms ease-out, width 100ms ease-out;
+}
+
+#social-share-button {
+  list-style-image: url("chrome://browser/skin/social/share-button.png");
+}
+
+#social-share-button[open],
+#social-share-button:hover:active {
+  list-style-image: url("chrome://browser/skin/social/share-button-active.png");
+}
+
+.social-share-toolbar {
+  border-right: 1px solid #dedede;
+  background: linear-gradient(to bottom, rgba(247,247,247,.99), rgba(247,247,247,.95));
+}
+
+#social-share-provider-buttons {
+  border-right: 1px solid #fbfbfb;
+  padding: 6px;
+}
+
+#social-share-provider-buttons > .share-provider-button {
+  padding: 6px;
+  margin: 0;
+  border: none;
+  border-radius: 2px;
+}
+
+#social-share-provider-buttons > .share-provider-button[checked],
+#social-share-provider-buttons > .share-provider-button:active {
+  padding: 5px;
+  border: 1px solid #b5b5b8;
+  box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+#social-share-provider-buttons > .share-provider-button[checked] {
+  background: linear-gradient(to bottom, #d9d9d9, #e3e3e3);
+}
+
+#social-share-provider-buttons > .share-provider-button > .toolbarbutton-text {
+  display: none;
+}
+#social-share-provider-buttons > .share-provider-button > .toolbarbutton-icon {
+  width: 16px;
+  min-height: 16px;
+  max-height: 16px;
+}
+
 /* social recommending panel */
 
 #social-mark-button {
@@ -2094,6 +2152,11 @@ toolbar[mode="text"] toolbarbutton.chevron > .toolbarbutton-icon {
   -moz-margin-end: 2px;
 }
 
+#social-provider-button {
+  -moz-image-region: rect(0, 16px, 16px, 0);
+  list-style-image: url(chrome://browser/skin/social/services-16.png);
+}
+
 #social-provider-button > .toolbarbutton-menu-dropmarker {
   display: none;
 }
@@ -2189,12 +2252,14 @@ toolbar[iconsize="small"] .toolbarbutton-badge-container {
 .chatbar-button {
   -moz-appearance: none;
   background-color: #d9d9d9;
+  background-image: linear-gradient(@toolbarHighlight@, rgba(255,255,255,0));
 }
 
 .chatbar-button > .toolbarbutton-icon {
   -moz-margin-end: 0;
 }
 
+.chatbar-button:hover,
 .chatbar-button[open="true"] {
   background-color: #f0f0f0;
 }
