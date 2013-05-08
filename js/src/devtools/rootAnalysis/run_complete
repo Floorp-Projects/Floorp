@@ -164,7 +164,7 @@ close(OUT);
 
 for my $pid (@waitpids) {
     waitpid($pid, 0);
-    $status ||= $s? >> 8;
+    $status ||= $? >> 8;
 }
 
 print "Exiting run_complete with status $status\n";
