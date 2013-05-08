@@ -56,6 +56,14 @@ enum MessageClass {
   eMessageClass_EndGuard
 };
 
+// For ThreadData.
+enum MessageType {
+  eMessageType_SMS = 0,
+  eMessageType_MMS,
+  // This state should stay at the end.
+  eMessageType_EndGuard
+};
+
 } // namespace mobilemessage
 } // namespace dom
 } // namespace mozilla
@@ -100,6 +108,16 @@ struct ParamTraits<mozilla::dom::mobilemessage::MessageClass>
   : public EnumSerializer<mozilla::dom::mobilemessage::MessageClass,
                           mozilla::dom::mobilemessage::eMessageClass_Normal,
                           mozilla::dom::mobilemessage::eMessageClass_EndGuard>
+{};
+
+/**
+ * MessageType class serializer.
+ */
+template <>
+struct ParamTraits<mozilla::dom::mobilemessage::MessageType>
+  : public EnumSerializer<mozilla::dom::mobilemessage::MessageType,
+                          mozilla::dom::mobilemessage::eMessageType_SMS,
+                          mozilla::dom::mobilemessage::eMessageType_EndGuard>
 {};
 
 } // namespace IPC
