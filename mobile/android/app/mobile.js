@@ -649,8 +649,12 @@ pref("network.manage-offline-status", true);
 // increase the timeout clamp for background tabs to 15 minutes
 pref("dom.min_background_timeout_value", 900000);
 
+// The default state of reader mode works on loaded a page.
+pref("reader.parse-on-load.enabled", true);
+
+// Force to enable reader mode to parse on loaded a page.
 // Allow reader mode even on low-memory platforms
-pref("reader.force_allow", false);
+pref("reader.parse-on-load.force-enabled", false);
 
 // The default of font size in reader (1-7)
 pref("reader.font_size", 4);
@@ -716,6 +720,12 @@ pref("browser.contentHandlers.types.3.type", "application/vnd.mozilla.maybe.feed
 // Enable Web Audio for Firefox for Android in Nightly and Aurora
 pref("media.webaudio.enabled", true);
 #endif
+
+pref("dom.payment.provider.0.name", "Firefox Marketplace");
+pref("dom.payment.provider.0.description", "marketplace.firefox.com");
+pref("dom.payment.provider.0.uri", "https://marketplace.firefox.com/mozpay/?req=");
+pref("dom.payment.provider.0.type", "mozilla/payments/pay/v1");
+pref("dom.payment.provider.0.requestMethod", "GET");
 
 // This needs more tests and stability fixes first, as well as UI.
 pref("media.navigator.enabled", false);

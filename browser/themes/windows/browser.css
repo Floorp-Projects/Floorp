@@ -1713,6 +1713,93 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   -moz-image-region: rect(0, 48px, 16px, 32px);
 }
 
+
+/* social share panel */
+
+#social-share-panel > iframe {
+  background: linear-gradient(to bottom, #f0f4f7, #fafbfc);
+  width: 300px;
+  height: 150px;
+}
+
+#social-share-button {
+  list-style-image: url(chrome://browser/skin/social/share-button.png);
+  -moz-image-region: rect(0, 16px, 16px, 0);
+}
+
+.social-share-toolbar {
+  border-right: 1px solid #e2e5e8;
+  background: linear-gradient(to bottom, #ffffff, #f5f7fa);
+}
+
+#social-share-provider-buttons {
+  padding: 6px;
+}
+
+#social-share-provider-buttons > .share-provider-button {
+  -moz-appearance: none;
+  padding: 5px;
+  margin: 1px;
+  border: none;
+  background: none;
+  border-radius: 2px;
+}
+
+#social-share-provider-buttons > .share-provider-button[checked="true"]:not([disabled="true"]),
+#social-share-provider-buttons > .share-provider-button:hover,
+#social-share-provider-buttons > .share-provider-button:active {
+  padding: 4px;
+  border: 1px solid #aeb8c1;
+  box-shadow: inset 1px 1px 1px rgba(10, 31, 51, 0.1);
+}
+
+#social-share-provider-buttons > .share-provider-button[checked="true"]:not([disabled="true"]) {
+  background: linear-gradient(to bottom, rgba(230,232,234,.65), #d2d5d9);
+}
+
+#social-share-provider-buttons > .share-provider-button > .toolbarbutton-text {
+  display: none;
+}
+#social-share-provider-buttons > .share-provider-button > .toolbarbutton-icon {
+  width: 16px;
+  min-height: 16px;
+  max-height: 16px;
+}
+
+/* fixup corners for share panel */
+.social-panel > .social-panel-frame {
+  border-radius: inherit;
+}
+
+#social-share-panel {
+  max-height: 600px;
+  min-height: 100px;
+  max-width: 800px;
+  min-width: 300px;
+}
+
+.social-share-frame {
+  background: linear-gradient(to bottom, #f0f4f7, #fafbfc);
+  width: 330px;
+  height: 150px;
+  border-top-left-radius: none;
+  border-bottom-left-radius: none;
+  border-top-right-radius: inherit;
+  border-bottom-right-radius: inherit;
+  /* we resize our panels dynamically, make it look nice */
+  transition: height 100ms ease-out, width 100ms ease-out;
+}
+
+#social-share-panel > .social-share-toolbar {
+  border-top-left-radius: inherit;
+  border-bottom-left-radius: inherit;
+}
+
+#social-share-provider-buttons {
+  border-top-left-radius: inherit;
+  border-bottom-left-radius: inherit;
+}
+
 /* social recommending panel */
 
 #social-mark-button {
@@ -2765,6 +2852,7 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 
 #social-provider-button {
   -moz-image-region: rect(0, 16px, 16px, 0);
+  list-style-image: url(chrome://browser/skin/social/services-16.png);
 }
 
 #social-provider-button > .toolbarbutton-menu-dropmarker {
@@ -2913,12 +3001,14 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 .chatbar-button {
   -moz-appearance: none;
   background-color: #c4cfde;
+  background-image: linear-gradient(rgba(255,255,255,.5), rgba(255,255,255,0));
 }
 
 .chatbar-button > .toolbarbutton-icon {
   -moz-margin-end: 0;
 }
 
+.chatbar-button:hover,
 .chatbar-button[open="true"] {
   background-color: #dae3f0;
 }

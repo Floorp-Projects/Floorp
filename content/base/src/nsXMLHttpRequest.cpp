@@ -847,8 +847,8 @@ nsXMLHttpRequest::StaticAssertions()
 {
 #define ASSERT_ENUM_EQUAL(_lc, _uc) \
   MOZ_STATIC_ASSERT(\
-    XMLHttpRequestResponseTypeValues::_lc                \
-    == XMLHttpRequestResponseType(XML_HTTP_RESPONSE_TYPE_ ## _uc), \
+    static_cast<int>(XMLHttpRequestResponseType::_lc)  \
+    == XML_HTTP_RESPONSE_TYPE_ ## _uc, \
     #_uc " should match")
 
   ASSERT_ENUM_EQUAL(_empty, DEFAULT);
@@ -899,7 +899,7 @@ void
 nsXMLHttpRequest::SetResponseType(XMLHttpRequestResponseType aType,
                                   ErrorResult& aRv)
 {
-  SetResponseType(ResponseTypeEnum(aType), aRv);
+  SetResponseType(ResponseTypeEnum(static_cast<int>(aType)), aRv);
 }
 
 void

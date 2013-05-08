@@ -197,7 +197,7 @@ NS_NewHTMLDocument(nsIDocument** aInstancePtrResult, bool aLoadedAsData)
   // NOTE! nsDocument::operator new() zeroes out all members, so don't
   // bother initializing members to 0.
 
-nsHTMLDocument::nsHTMLDocument(bool aUseXPConnectToWrap)
+nsHTMLDocument::nsHTMLDocument()
   : nsDocument("text/html")
 {
   // NOTE! nsDocument::operator new() zeroes out all members, so don't
@@ -207,9 +207,7 @@ nsHTMLDocument::nsHTMLDocument(bool aUseXPConnectToWrap)
   mDefaultElementType = kNameSpaceID_XHTML;
   mCompatMode = eCompatibility_NavQuirks;
 
-  if (!aUseXPConnectToWrap) {
-    SetIsDOMBinding();
-  }
+  SetIsDOMBinding();
 }
 
 
@@ -260,17 +258,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsDocument)
 JSObject*
 nsHTMLDocument::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-#ifdef DEBUG
-  // Don't do it yet for image documents
-  nsCOMPtr<nsIImageDocument> imgDoc = do_QueryObject(this);
-  MOZ_ASSERT(!imgDoc, "Who called SetIsDOMBinding()?");
-#endif
-
-  JS::Rooted<JSObject*> obj(aCx, HTMLDocumentBinding::Wrap(aCx, aScope, this));
-  if (obj && !PostCreateWrapper(aCx, obj)) {
-    return nullptr;
-  }
-  return obj;
+  return HTMLDocumentBinding::Wrap(aCx, aScope, this);
 }
 
 nsresult

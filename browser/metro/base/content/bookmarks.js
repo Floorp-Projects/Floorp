@@ -354,14 +354,7 @@ BookmarksView.prototype = {
           for (let bookmarkId of this._toRemove) {
             this._bookmarkService.removeItem(bookmarkId);
           }
-
           this._toRemove = null;
-          this._set.clearSelection();
-
-          // Clear context app bar
-          let event = document.createEvent("Events");
-          event.initEvent("MozContextActionsChange", true, false);
-          this._set.dispatchEvent(event);
         }
         break;
 

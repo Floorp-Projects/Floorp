@@ -6,6 +6,7 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.util.GeckoJarReader;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UiAsyncTask;
@@ -50,6 +51,7 @@ public class Favicons {
     private long mNextFaviconLoadId;
     private LruCache<String, Bitmap> mFaviconsCache;
     private LruCache<String, Long> mFailedCache;
+    private LruCache<String, Integer> mColorCache;
     private static final String USER_AGENT = GeckoApp.mAppContext.getDefaultUAString();
     private AndroidHttpClient mHttpClient;
 
@@ -73,6 +75,9 @@ public class Favicons {
 
         // Create a failed favicon memory cache that has up to 64 entries
         mFailedCache = new LruCache<String, Long>(64);
+
+        // Create a cache to store favicon dominant colors
+        mColorCache = new LruCache<String, Integer>(256);
     }
 
     private synchronized AndroidHttpClient getHttpClient() {
@@ -215,6 +220,17 @@ public class Favicons {
             image = Bitmap.createScaledBitmap(image, sFaviconSmallSize, sFaviconSmallSize, false);
         }
         return image;
+    }
+
+    public int getFaviconColor(Bitmap image, String key) {
+        Integer color = mColorCache.get(key);
+        if (color != null) {
+            return color;
+        }
+
+        color = BitmapUtils.getDominantColor(image);
+        mColorCache.put(key, color);
+        return color;
     }
 
     public void attachToContext(Context context) {

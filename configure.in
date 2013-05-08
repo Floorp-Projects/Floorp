@@ -3907,6 +3907,26 @@ else
 fi
 AC_SUBST(GRE_MILESTONE)
 
+# set RELEASE_BUILD and NIGHTLY_BUILD variables depending on the cycle we're in
+# The logic works like this:
+# - if we have "a1" in GRE_MILESTONE, we're building Nightly (define NIGHTLY_BUILD)
+# - otherwise, if we have "a" in GRE_MILESTONE, we're building Nightly or Aurora
+# - otherwise, we're building Release/Beta (define RELEASE_BUILD)
+case "$GRE_MILESTONE" in
+  *a1*)
+      NIGHTLY_BUILD=1
+      AC_DEFINE(NIGHTLY_BUILD)
+      ;;
+  *a*)
+      ;;
+  *)
+      RELEASE_BUILD=1
+      AC_DEFINE(RELEASE_BUILD)
+      ;;
+esac
+AC_SUBST(NIGHTLY_BUILD)
+AC_SUBST(RELEASE_BUILD)
+
 dnl system libevent Support
 dnl ========================================================
 MOZ_ARG_WITH_STRING(system-libevent,
@@ -4352,7 +4372,6 @@ AC_DEFINE_UNQUOTED(MOZ_UPDATE_CHANNEL, $MOZ_UPDATE_CHANNEL)
 AC_SUBST(MOZ_UPDATE_CHANNEL)
 
 # Allow the application to influence configure with a confvars.sh script.
-
 AC_MSG_CHECKING([if app-specific confvars.sh exists])
 if test -f "${srcdir}/${MOZ_BUILD_APP}/confvars.sh" ; then
   AC_MSG_RESULT([${srcdir}/${MOZ_BUILD_APP}/confvars.sh])
@@ -4360,6 +4379,19 @@ if test -f "${srcdir}/${MOZ_BUILD_APP}/confvars.sh" ; then
 else
   AC_MSG_RESULT([no])
 fi
+
+# Allow influencing configure with a defines.sh script.
+. "${srcdir}/build/defines.sh"
+
+# If we're not building a release build, define EARLY_BETA_OR_EARLIER if it is
+# set in defines.sh
+if test "$BUILDING_RELEASE"; then
+  # Override value in defines.sh, if any
+  EARLY_BETA_OR_EARLIER=
+elif test "$EARLY_BETA_OR_EARLIER"; then
+  AC_DEFINE(EARLY_BETA_OR_EARLIER)
+fi
+AC_SUBST(EARLY_BETA_OR_EARLIER)
 
 # Allow the application to provide a subconfigure script
 if test -f "${srcdir}/${MOZ_BUILD_APP}/configure.in" ; then
@@ -9164,6 +9196,7 @@ UNIVERSAL_BINARY=${UNIVERSAL_BINARY} \
 MOZ_CRASHREPORTER=${MOZ_CRASHREPORTER} \
 MOZ_APP_NAME=${MOZ_APP_NAME} \
 TOPSRCDIR=${_topsrcdir} \
+MOZ_ASAN=${MOZ_ASAN} \
   $PYTHON ${_topsrcdir}/config/writemozinfo.py ./mozinfo.json.tmp
 if cmp -s ./mozinfo.json.tmp ./mozinfo.json; then
   rm ./mozinfo.json.tmp

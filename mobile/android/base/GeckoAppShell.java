@@ -808,6 +808,12 @@ public class GeckoAppShell
         return getHandlersForIntent(intent);
     }
 
+    static boolean hasHandlersForIntent(Intent intent) {
+        PackageManager pm = GeckoApp.mAppContext.getPackageManager();
+        List<ResolveInfo> list = pm.queryIntentActivities(intent, 0);
+        return !list.isEmpty();
+    }
+
     static String[] getHandlersForIntent(Intent intent) {
         PackageManager pm = GeckoApp.mAppContext.getPackageManager();
         List<ResolveInfo> list = pm.queryIntentActivities(intent, 0);
@@ -828,10 +834,10 @@ public class GeckoAppShell
 
     static Intent getIntentForActionString(String aAction) {
         // Default to the view action if no other action as been specified.
-        if (aAction != null && aAction.length() > 0)
-            return new Intent(aAction);
-        else
+        if (TextUtils.isEmpty(aAction)) {
             return new Intent(Intent.ACTION_VIEW);
+        }
+        return new Intent(aAction);
     }
 
     static String getExtensionFromMimeType(String aMimeType) {
@@ -1069,20 +1075,26 @@ public class GeckoAppShell
         final String scheme = uri.getScheme();
 
         final Intent intent;
-        if ("vnd.youtube".equals(scheme) && getHandlersForURL(targetURI, action).length == 0) {
-            // Special case youtube to fallback to our own player
+
+        // Compute our most likely intent, then check to see if there are any
+        // custom handlers that would apply.
+        // Start with the original URI. If we end up modifying it, we'll
+        // overwrite it.
+        final Intent likelyIntent = getIntentForActionString(action);
+        likelyIntent.setData(uri);
+
+        if ("vnd.youtube".equals(scheme) && !hasHandlersForIntent(likelyIntent)) {
+            // Special-case YouTube to use our own player if no system handler
+            // exists.
             intent = new Intent(VideoPlayer.VIDEO_ACTION);
             intent.setClassName(AppConstants.ANDROID_PACKAGE_NAME,
                                 "org.mozilla.gecko.VideoPlayer");
+            intent.setData(uri);
         } else {
-            intent = getIntentForActionString(action);
+            intent = likelyIntent;
         }
 
-        // Start with the original URI. If we end up modifying it,
-        // we'll overwrite it.
-        intent.setData(uri);
-
-        // Have a special handling for the SMS, as the message body
+        // Have a special handling for SMS, as the message body
         // is not extracted from the URI automatically.
         if (!"sms".equals(scheme)) {
             return intent;

@@ -23,10 +23,11 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ContentChild.h"
 
-#include "mozilla/Util.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Likely.h"
+#include "mozilla/Poison.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/Util.h"
 
 #include "nsAppRunner.h"
 #include "mozilla/AppData.h"
@@ -918,6 +919,10 @@ nsXULAppInfo::SetEnabled(bool aEnabled)
       if (!xreDirectory)
         return NS_ERROR_FAILURE;
     }
+    AnnotateCrashReport(NS_LITERAL_CSTRING("FramePoisonBase"),
+                        nsPrintfCString("%.16llx", uint64_t(gMozillaPoisonBase)));
+    AnnotateCrashReport(NS_LITERAL_CSTRING("FramePoisonSize"),
+                        nsPrintfCString("%lu", uint32_t(gMozillaPoisonSize)));
     return CrashReporter::SetExceptionHandler(xreDirectory, true);
   }
   else {
@@ -2846,18 +2851,6 @@ XREMain::XRE_mainInit(bool* aExitFlag)
   if (fire_glxtest_process()) {
     *aExitFlag = true;
     return 0;
-  }
-#endif
-
-#ifdef XP_WIN
-  {
-    // Vista API.  Mozilla is DPI Aware.
-    typedef BOOL (*SetProcessDPIAwareFunc)(VOID);
-    SetProcessDPIAwareFunc setDPIAware = (SetProcessDPIAwareFunc)
-      GetProcAddress(LoadLibraryW(L"user32.dll"), "SetProcessDPIAware");
-    if (setDPIAware) {
-      setDPIAware();
-    }
   }
 #endif
 

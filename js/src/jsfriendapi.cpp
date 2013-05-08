@@ -754,12 +754,6 @@ js::CallContextDebugHandler(JSContext *cx, JSScript *script, jsbytecode *bc, Val
 }
 
 #ifdef JS_THREADSAFE
-void *
-js::GetOwnerThread(const JSContext *cx)
-{
-    return cx->runtime->ownerThread();
-}
-
 JS_FRIEND_API(bool)
 js::ContextHasOutstandingRequests(const JSContext *cx)
 {

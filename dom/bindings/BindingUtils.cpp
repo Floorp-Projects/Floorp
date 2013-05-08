@@ -1311,26 +1311,17 @@ SetXrayExpandoChain(JSObject* obj, JSObject* chain)
   }
 }
 
-JSContext*
-MainThreadDictionaryBase::ParseJSON(const nsAString& aJSON,
-                                    Maybe<JSAutoRequest>& aAr,
-                                    Maybe<JSAutoCompartment>& aAc,
-                                    Maybe< JS::Rooted<JS::Value> >& aVal)
+bool
+MainThreadDictionaryBase::ParseJSON(JSContext *aCx,
+                                    const nsAString& aJSON,
+                                    JS::MutableHandle<JS::Value> aVal)
 {
-  AutoSafeJSContext cx;
-  JS::Rooted<JSObject*> global(cx, JS_GetGlobalObject(cx));
-  aAr.construct(static_cast<JSContext*>(cx));
-  aAc.construct(static_cast<JSContext*>(cx), global);
-  aVal.construct(static_cast<JSContext*>(cx), JS::UndefinedValue());
   if (aJSON.IsEmpty()) {
-    return cx;
+    return true;
   }
-  if (!JS_ParseJSON(cx,
-                    static_cast<const jschar*>(PromiseFlatString(aJSON).get()),
-                    aJSON.Length(), aVal.ref().address())) {
-    return nullptr;
-  }
-  return cx;
+  return JS_ParseJSON(aCx,
+                      static_cast<const jschar*>(PromiseFlatString(aJSON).get()),
+                      aJSON.Length(), aVal.address());
 }
 
 static JSString*

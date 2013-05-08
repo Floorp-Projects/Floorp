@@ -191,10 +191,6 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
     startcode->stackDepth = 0;
     codeArray[0] = startcode;
 
-    /* Number of JOF_TYPESET opcodes we have encountered. */
-    unsigned nTypeSets = 0;
-    types::TypeSet *typeArray = script_->types->typeArray();
-
     unsigned offset, nextOffset = 0;
     while (nextOffset < length) {
         offset = nextOffset;
@@ -269,22 +265,6 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
             JS_ASSERT(stackDepth >= nuses);
             stackDepth -= nuses;
             stackDepth += ndefs;
-        }
-
-        /*
-         * Assign an observed type set to each reachable JOF_TYPESET opcode.
-         * This may be less than the number of type sets in the script if some
-         * are unreachable, and may be greater in case the number of type sets
-         * overflows a uint16_t. In the latter case a single type set will be
-         * used for the observed types of all ops after the overflow.
-         */
-        if ((js_CodeSpec[op].format & JOF_TYPESET) && cx->typeInferenceEnabled()) {
-            if (nTypeSets < script_->nTypeSets) {
-                code->observedTypes = typeArray[nTypeSets++].toStackTypeSet();
-            } else {
-                JS_ASSERT(nTypeSets == UINT16_MAX);
-                code->observedTypes = typeArray[nTypeSets - 1].toStackTypeSet();
-            }
         }
 
         switch (op) {
@@ -393,7 +373,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
                     if (catchOffset > forwardCatch)
                         forwardCatch = catchOffset;
 
-                    if (tn->kind != JSTRY_ITER) {
+                    if (tn->kind != JSTRY_ITER && tn->kind != JSTRY_LOOP) {
                         if (!addJump(cx, catchOffset, &nextOffset, &forwardJump, &forwardLoop, stackDepth))
                             return;
                         getCode(catchOffset).exceptionEntry = true;
@@ -1495,7 +1475,7 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
                 if (startOffset == offset + 1) {
                     unsigned catchOffset = startOffset + tn->length;
 
-                    if (tn->kind != JSTRY_ITER) {
+                    if (tn->kind != JSTRY_ITER && tn->kind != JSTRY_LOOP) {
                         checkBranchTarget(cx, catchOffset, branchTargets, values, stackDepth);
                         checkExceptionTarget(cx, catchOffset, exceptionTargets);
                     }

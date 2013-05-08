@@ -12,7 +12,6 @@
 #include <string.h>
 
 #include "mozilla/PodOperations.h"
-#include "mozilla/RangedPtr.h"
 #include "mozilla/Util.h"
 
 #include "jstypes.h"

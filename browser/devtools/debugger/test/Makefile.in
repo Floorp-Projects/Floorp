@@ -15,7 +15,6 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_clean-exit.js \
 	browser_dbg_cmd.js \
 	$(browser_dbg_cmd_break.js disabled until bug 722727 is fixed) \
-	browser_dbg_createChrome.js \
 	$(browser_dbg_createRemote.js disabled for intermittent failures, bug 753225) \
 	browser_dbg_debuggerstatement.js \
 	browser_dbg_listtabs.js \
@@ -137,6 +136,14 @@ MOCHITEST_BROWSER_PAGES = \
 	test-location-changes-bp.js \
 	test-location-changes-bp.html \
 	$(NULL)
+
+ifneq (Linux,$(OS_ARCH))
+MOCHITEST_BROWSER_TESTS += \
+	browser_dbg_createChrome.js \
+	$(NULL)
+else
+$(browser_dbg_createChrome.js disabled to fix for ubuntu hangs, bug 847558)
+endif
 
 MOCHITEST_BROWSER_FILES_PARTS = MOCHITEST_BROWSER_TESTS MOCHITEST_BROWSER_PAGES
 

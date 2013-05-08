@@ -27,7 +27,7 @@
     <ImageView android:id="@+id/awesome_bar_entry"
                style="@style/AddressBar.Button"
                android:layout_marginLeft="4dp"
-               android:layout_marginRight="-22dp"
+               android:layout_marginRight="-19dp"
                android:layout_marginTop="5dp"
                android:layout_marginBottom="5dp"
                android:layout_centerVertical="true"
@@ -59,11 +59,17 @@
                         style="@style/AddressBar.ImageButton"
                         android:layout_width="48dip"
                         android:layout_alignParentRight="true"
-                        android:gravity="center_vertical"
-                        android:src="@drawable/menu_level"
                         android:contentDescription="@string/menu"
                         android:background="@drawable/shaped_button"
                         android:visibility="gone"/>
+
+    <Gecko.ImageView android:id="@+id/menu_icon"
+                     style="@style/AddressBar.ImageButton"
+                     android:layout_alignLeft="@id/menu"
+                     android:layout_alignRight="@id/menu"
+                     android:gravity="center_vertical"
+                     android:src="@drawable/menu_level"
+                     android:visibility="gone"/>
 
     <Gecko.ShapedButton android:id="@+id/tabs"
                         style="@style/AddressBar.ImageButton"
