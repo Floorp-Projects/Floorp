@@ -5,8 +5,8 @@
 
 #ifdef XP_WIN
 // Include Windows headers required for enabling high precision timers.
-#include "Windows.h"
-#include "Mmsystem.h"
+#include "windows.h"
+#include "mmsystem.h"
 #endif
  
 #include "mozilla/DebugOnly.h"
@@ -414,7 +414,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   // If we've got more than mAmpleVideoFrames decoded video frames waiting in
   // the video queue, we will not decode any more video frames until some have
   // been consumed by the play state machine thread.
-#if defined(MOZ_WIDGET_GONK) || defined(MOZ_MEDIA_PLUGINS)
+#if defined(MOZ_OMX_DECODER) || defined(MOZ_MEDIA_PLUGINS)
   // On B2G and Android this is decided by a similar value which varies for
   // each OMX decoder |OMX_PARAM_PORTDEFINITIONTYPE::nBufferCountMin|. This
   // number must be less than the OMX equivalent or gecko will think it is

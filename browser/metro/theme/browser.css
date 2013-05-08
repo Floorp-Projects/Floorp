@@ -720,6 +720,31 @@ flyoutpanel > settings:first-child {
   width: 400px;
 }
 
+#sync-disconnectwarntitle {
+  font-weight: bold;
+}
+
+#sync-disconnectthrobber {
+  margin-top: 25px;
+}
+
+#disconnectthrobber {
+  width: 25px;
+  height: 25px;
+}
+
+#syncdisconnectthrobber .progressContainer {
+  width: 25px;
+  height: 25px;
+  margin-right: 10px;
+}
+
+#syncdisconnectthrobber .progressBall {
+  margin: 2px;
+  width: 22px;
+  height: 22px;
+}
+
 /* About flyout pane */
 
 #about-flyoutpanel {
@@ -869,6 +894,10 @@ setting[type="radio"] > vbox {
 /*tile content should be on same line in snapped view */
 #snapped-topsites-grid > richgriditem > .richgrid-item-content {
   -moz-box-orient: horizontal;
+}
+
+[viewstate="snapped"] .canSnapTiles .richgrid-item-desc {
+ -moz-margin-start: 8px;
 }
 
 /* if snapped, hide the fullscreen awesome screen, if viewstate is anything
@@ -1169,18 +1198,4 @@ setting[type="radio"] > vbox {
   margin-top: -30px;
   margin-left: -18px;
   pointer-events: auto;
-}
-
-/* Capture picker ------------------------------------------------------------- */
-
-#capturepicker-video {
-  border: @border_width_tiny@ solid white;
-}
-
-#capturepicker-container {
-  margin: @margin_normal@;
-}
-
-#capturepicker-container.vertical {
-  height: 330px;
 }

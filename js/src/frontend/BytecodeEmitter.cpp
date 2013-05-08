@@ -90,8 +90,8 @@ struct frontend::StmtInfoBCE : public StmtInfoBase
 
 BytecodeEmitter::BytecodeEmitter(BytecodeEmitter *parent,
                                  Parser<FullParseHandler> *parser, SharedContext *sc,
-                                 HandleScript script, HandleScript evalCaller, bool hasGlobalScope,
-                                 uint32_t lineNum, bool selfHostingMode)
+                                 HandleScript script, bool insideEval, HandleScript evalCaller,
+                                 bool hasGlobalScope, uint32_t lineNum, bool selfHostingMode)
   : sc(sc),
     parent(parent),
     script(sc->context, script),
@@ -114,9 +114,11 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter *parent,
     hasSingletons(false),
     emittingForInit(false),
     emittingRunOnceLambda(false),
+    insideEval(insideEval),
     hasGlobalScope(hasGlobalScope),
     selfHostingMode(selfHostingMode)
 {
+    JS_ASSERT_IF(evalCaller, insideEval);
 }
 
 bool
@@ -433,7 +435,23 @@ EmitLoopEntry(JSContext *cx, BytecodeEmitter *bce, ParseNode *nextpn)
             return false;
     }
 
-    return Emit1(cx, bce, JSOP_LOOPENTRY) >= 0;
+    /*
+     * Calculate loop depth. Note that this value is just a hint, so
+     * give up for deeply nested loops.
+     */
+    uint32_t loopDepth = 0;
+    StmtInfoBCE *stmt = bce->topStmt;
+    while (stmt) {
+        if (stmt->isLoop()) {
+            loopDepth++;
+            if (loopDepth >= 5)
+                break;
+        }
+        stmt = stmt->down;
+    }
+
+    JS_ASSERT(loopDepth > 0);
+    return Emit2(cx, bce, JSOP_LOOPENTRY, uint8_t(loopDepth)) >= 0;
 }
 
 /*
@@ -1096,11 +1114,10 @@ EmitEnterBlock(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, JSOp op)
 
 /*
  * Try to convert a *NAME op to a *GNAME op, which optimizes access to
- * undeclared globals. Return true if a conversion was made.
+ * globals. Return true if a conversion was made.
  *
- * This conversion is not made if we are in strict mode. In eval code nested
- * within (strict mode) eval code, access to an undeclared "global" might
- * merely be to a binding local to that outer eval:
+ * Don't convert to *GNAME ops within strict-mode eval, since access
+ * to a "global" might merely be to a binding local to that eval:
  *
  *   "use strict";
  *   var x = "global";
@@ -1136,7 +1153,7 @@ TryConvertToGname(BytecodeEmitter *bce, ParseNode *pn, JSOp *op)
         bce->hasGlobalScope &&
         !(bce->sc->isFunctionBox() && bce->sc->asFunctionBox()->mightAliasLocals()) &&
         !pn->isDeoptimized() &&
-        !bce->sc->strict)
+        !(bce->sc->strict && bce->insideEval))
     {
         // If you change anything here, you might also need to change
         // js::ReportIfUndeclaredVarAssignment.
@@ -4367,6 +4384,9 @@ EmitNormalFor(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
     if (EmitJump(cx, bce, op, top - bce->offset()) < 0)
         return false;
 
+    if (!bce->tryNoteList.append(JSTRY_LOOP, bce->stackDepth, top, bce->offset()))
+        return false;
+
     /* Now fixup all breaks and continues. */
     return PopStatementBCE(cx, bce);
 }
@@ -4450,8 +4470,9 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             script->bindings = funbox->bindings;
 
             uint32_t lineNum = bce->parser->tokenStream.srcCoords.lineNum(pn->pn_pos.begin);
-            BytecodeEmitter bce2(bce, bce->parser, funbox, script, bce->evalCaller,
-                                 bce->hasGlobalScope, lineNum, bce->selfHostingMode);
+            BytecodeEmitter bce2(bce, bce->parser, funbox, script, bce->insideEval,
+                                 bce->evalCaller, bce->hasGlobalScope, lineNum,
+                                 bce->selfHostingMode);
             if (!bce2.init())
                 return false;
 
@@ -4525,11 +4546,13 @@ EmitDo(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     ptrdiff_t top = EmitLoopHead(cx, bce, pn->pn_left);
     if (top < 0)
         return false;
-    if (!EmitLoopEntry(cx, bce, NULL))
-        return false;
 
     StmtInfoBCE stmtInfo(cx);
     PushStatementBCE(bce, &stmtInfo, STMT_DO_LOOP, top);
+
+    if (!EmitLoopEntry(cx, bce, NULL))
+        return false;
+
     if (!EmitTree(cx, bce, pn->pn_left))
         return false;
 
@@ -4551,6 +4574,9 @@ EmitDo(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
      */
     ptrdiff_t beq = EmitJump(cx, bce, JSOP_IFNE, top - bce->offset());
     if (beq < 0)
+        return false;
+
+    if (!bce->tryNoteList.append(JSTRY_LOOP, bce->stackDepth, top, bce->offset()))
         return false;
 
     /*
@@ -4607,6 +4633,9 @@ EmitWhile(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
 
     ptrdiff_t beq = EmitJump(cx, bce, JSOP_IFNE, top - bce->offset());
     if (beq < 0)
+        return false;
+
+    if (!bce->tryNoteList.append(JSTRY_LOOP, bce->stackDepth, top, bce->offset()))
         return false;
 
     if (!SetSrcNoteOffset(cx, bce, noteIndex, 0, beq - jmp))

@@ -41,6 +41,8 @@ class AudioNodeStream : public ProcessedMediaStream {
 public:
   enum { AUDIO_TRACK = 1 };
 
+  typedef nsAutoTArray<AudioChunk, 1> OutputChunks;
+
   /**
    * Transfers ownership of aEngine to the new AudioNodeStream.
    */
@@ -53,8 +55,8 @@ public:
       mMarkAsFinishedAfterThisBlock(false),
       mAudioParamStream(false)
   {
-    mMixingMode.mChannelCountMode = dom::ChannelCountMode::Max;
-    mMixingMode.mChannelInterpretation = dom::ChannelInterpretation::Speakers;
+    mChannelCountMode = dom::ChannelCountMode::Max;
+    mChannelInterpretation = dom::ChannelInterpretation::Speakers;
     // AudioNodes are always producing data
     mHasCurrentData = true;
     MOZ_COUNT_CTOR(AudioNodeStream);
@@ -97,9 +99,9 @@ public:
   {
     return mAudioParamStream;
   }
-  const AudioChunk& LastChunk() const
+  const OutputChunks& LastChunks() const
   {
-    return mLastChunk;
+    return mLastChunks;
   }
 
   // Any thread
@@ -109,21 +111,19 @@ protected:
   void FinishOutput();
 
   StreamBuffer::Track* EnsureTrack();
-  AudioChunk* ObtainInputBlock(AudioChunk* aTmpChunk);
+  void ObtainInputBlock(AudioChunk& aTmpChunk, uint32_t aPortIndex);
 
   // The engine that will generate output for this node.
   nsAutoPtr<AudioNodeEngine> mEngine;
   // The last block produced by this node.
-  AudioChunk mLastChunk;
+  OutputChunks mLastChunks;
   // Whether this is an internal or external stream
   MediaStreamGraph::AudioNodeStreamKind mKind;
   // The number of input channels that this stream requires. 0 means don't care.
   uint32_t mNumberOfInputChannels;
   // The mixing modes
-  struct {
-    dom::ChannelCountMode mChannelCountMode : 16;
-    dom::ChannelInterpretation mChannelInterpretation : 16;
-  } mMixingMode;
+  dom::ChannelCountMode mChannelCountMode;
+  dom::ChannelInterpretation mChannelInterpretation;
   // Whether the stream should be marked as finished as soon
   // as the current time range has been computed block by block.
   bool mMarkAsFinishedAfterThisBlock;

@@ -1,0 +1,102 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+%filter substitution
+%include defines.inc
+
+.progressContainer {
+}
+
+.progressBall {
+  position: absolute;
+  opacity: 0;
+  transform: rotate(225deg);
+  animation: orbit 7.15s infinite;
+}
+
+.progressBall:nth-child(1) {
+  animation-delay: 1.56s;
+}
+
+.progressBall:nth-child(2) {
+  animation-delay: 0.31s;
+}
+
+.progressBall:nth-child(3) {
+  animation-delay: 0.62s;
+}
+
+.progressBall:nth-child(4) {
+  animation-delay: 0.94s;
+}
+
+.progressBall:nth-child(5) {
+  animation-delay: 1.25s;
+}
+
+.progressBall:nth-child(1)::after,
+.progressBall:nth-child(2)::after,
+.progressBall:nth-child(3)::after,
+.progressBall:nth-child(4)::after,
+.progressBall:nth-child(5)::after {
+  content: "";
+  display: block;
+  width: 5px;
+  height: 5px;
+  border-radius: 5px;
+  position: absolute;
+  background: #0095dd;
+  left:0px;
+  top:0px;
+}
+
+
+@keyframes orbit {
+  0% {
+    opacity: 1;
+    z-index:99;
+    transform: rotate(180deg);
+    animation-timing-function: ease-out;
+  }
+
+  7% {
+    opacity: 1;
+    transform: rotate(300deg);
+    animation-timing-function: linear;
+    origin:0%;
+  }
+
+  30% {
+    opacity: 1;
+    transform:rotate(410deg);
+    animation-timing-function: ease-in-out;
+    origin:7%;
+  }
+
+  39% {
+    opacity: 1;
+    transform: rotate(645deg);
+    animation-timing-function: linear;
+    origin:30%;
+  }
+
+  70% {
+    opacity: 1;
+    transform: rotate(770deg);
+    animation-timing-function: ease-out;
+    origin:39%;
+  }
+
+  75% {
+    opacity: 1;
+    transform: rotate(900deg);
+    animation-timing-function: ease-out;
+    origin:70%;
+  }
+
+  76%, 100% {
+    opacity: 0;
+    transform:rotate(900deg);
+  }
+}

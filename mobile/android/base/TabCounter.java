@@ -5,6 +5,8 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.animation.Rotate3DAnimation;
+
 import android.content.Context;
 import android.os.Build;
 import android.view.accessibility.AccessibilityNodeInfo;

@@ -26,6 +26,8 @@ CPPSRCS := \
   AudioParam.cpp \
   AudioProcessingEvent.cpp \
   BiquadFilterNode.cpp \
+  ChannelMergerNode.cpp \
+  ChannelSplitterNode.cpp \
   DelayNode.cpp \
   DynamicsCompressorNode.cpp \
   EnableWebAudioCheck.cpp \

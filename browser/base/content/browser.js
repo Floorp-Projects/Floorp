@@ -3405,7 +3405,8 @@ function BrowserToolboxCustomizeDone(aToolboxChanged) {
     URLBarSetURI();
     XULBrowserWindow.asyncUpdateUI();
     BookmarksMenuButton.updateStarState();
-    SocialShareButton.updateShareState();
+    SocialMark.updateMarkState();
+    SocialShare.update();
   }
 
   TabsInTitlebar.allowedBy("customizing-toolbars", true);
@@ -3879,7 +3880,8 @@ var XULBrowserWindow = {
 
         // Update starring UI
         BookmarksMenuButton.updateStarState();
-        SocialShareButton.updateShareState();
+        SocialMark.updateMarkState();
+        SocialShare.update();
       }
 
       // Show or hide browser chrome based on the whitelist

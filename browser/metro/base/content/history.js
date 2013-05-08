@@ -194,7 +194,6 @@ HistoryView.prototype = {
           this._set.dispatchEvent(event);
 
           this._toRemove = null;
-          this._set.clearSelection();
         }
         break;
 

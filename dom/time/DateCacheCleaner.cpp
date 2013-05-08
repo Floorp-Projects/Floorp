@@ -30,7 +30,7 @@ public:
   }
   void Notify(const SystemTimezoneChangeInformation& aSystemTimezoneChangeInfo)
   {
-    mozilla::SafeAutoJSContext cx;
+    mozilla::AutoSafeJSContext cx;
     JSAutoRequest ar(cx);
     JS_ClearDateCaches(cx);
   }

@@ -1050,7 +1050,7 @@ MediaManager::GetUserMedia(bool aPrivileged, nsPIDOMWindow* aWindow,
                                            );
   }
 
-#ifdef MOZ_WIDGET_GONK
+#ifdef MOZ_B2G_CAMERA
   if (mCameraManager == nullptr) {
     mCameraManager = nsDOMCameraManager::CheckPermissionAndCreateInstance(aWindow);
     if (!mCameraManager) {
@@ -1146,7 +1146,7 @@ MediaManager::GetBackend(uint64_t aWindowId)
   MutexAutoLock lock(mMutex);
   if (!mBackend) {
 #if defined(MOZ_WEBRTC)
-  #ifndef MOZ_WIDGET_GONK
+  #ifndef MOZ_B2G_CAMERA
     mBackend = new MediaEngineWebRTC();
   #else
     mBackend = new MediaEngineWebRTC(mCameraManager, aWindowId);

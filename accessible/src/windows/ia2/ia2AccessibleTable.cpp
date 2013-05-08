@@ -12,6 +12,7 @@
 #include "AccessibleTable2_i.c"
 
 #include "AccessibleWrap.h"
+#include "IUnknownImpl.h"
 #include "Statistics.h"
 #include "TableAccessible.h"
 

@@ -25,3 +25,6 @@ if [ -z "$CXX" ]; then
 fi
 
 ac_add_options --with-ccache
+
+# Enable ECMAScript Internationalization API
+ac_add_options --enable-intl-api

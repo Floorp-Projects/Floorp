@@ -10,6 +10,7 @@
 #include "AccessibleHyperlink_i.c"
 
 #include "AccessibleWrap.h"
+#include "IUnknownImpl.h"
 
 using namespace mozilla::a11y;
 

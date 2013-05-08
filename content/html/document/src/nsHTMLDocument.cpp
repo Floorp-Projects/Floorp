@@ -102,7 +102,9 @@
 #include "nsHtml5Parser.h"
 #include "nsIDOMJSWindow.h"
 #include "nsSandboxFlags.h"
+#include "nsIImageDocument.h"
 #include "mozilla/dom/HTMLBodyElement.h"
+#include "mozilla/dom/HTMLDocumentBinding.h"
 #include "nsCharsetSource.h"
 #include "nsIStringBundle.h"
 #include "nsDOMClassInfo.h"
@@ -204,6 +206,8 @@ nsHTMLDocument::nsHTMLDocument()
   mIsRegularHTML = true;
   mDefaultElementType = kNameSpaceID_XHTML;
   mCompatMode = eCompatibility_NavQuirks;
+
+  SetIsDOMBinding();
 }
 
 
@@ -251,6 +255,11 @@ NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLDocument)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(HTMLDocument)
 NS_INTERFACE_MAP_END_INHERITING(nsDocument)
 
+JSObject*
+nsHTMLDocument::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
+{
+  return HTMLDocumentBinding::Wrap(aCx, aScope, this);
+}
 
 nsresult
 nsHTMLDocument::Init()
@@ -1660,14 +1669,13 @@ nsHTMLDocument::Open(JSContext* cx,
     SetIsInitialDocument(false);
 
     nsCOMPtr<nsIScriptGlobalObject> newScope(do_QueryReferent(mScopeObject));
-    if (oldScope && newScope != oldScope) {
-      nsIXPConnect *xpc = nsContentUtils::XPConnect();
-      rv = xpc->ReparentWrappedNativeIfFound(cx, oldScope->GetGlobalJSObject(),
-                                             newScope->GetGlobalJSObject(),
-                                             static_cast<nsINode*>(this));
+    JS::RootedObject wrapper(cx, GetWrapper());
+    if (oldScope && newScope != oldScope && wrapper) {
+      rv = mozilla::dom::ReparentWrapper(cx, wrapper);
       if (rv.Failed()) {
         return nullptr;
       }
+      nsIXPConnect *xpc = nsContentUtils::XPConnect();
       rv = xpc->RescueOrphansInScope(cx, oldScope->GetGlobalJSObject());
       if (rv.Failed()) {
         return nullptr;
@@ -2385,10 +2393,8 @@ static PLDHashOperator
 IdentifierMapEntryAddNames(nsIdentifierMapEntry* aEntry, void* aArg)
 {
   nsTArray<nsString>* aNames = static_cast<nsTArray<nsString>*>(aArg);
-  Element* idElement;
   if (aEntry->HasNameElement() ||
-      ((idElement = aEntry->GetIdElement()) &&
-       nsGenericHTMLElement::ShouldExposeIdAsHTMLDocumentProperty(idElement))) {
+      aEntry->HasIdElementExposedAsHTMLDocumentProperty()) {
     aNames->AppendElement(aEntry->GetKey());
   }
   return PL_DHASH_NEXT;

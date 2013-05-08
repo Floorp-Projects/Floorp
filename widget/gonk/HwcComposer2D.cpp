@@ -166,7 +166,7 @@ PrepareLayerRects(nsIntRect aVisible, const gfxMatrix& aTransform,
 
     //clip to buffer size
     crop.IntersectRect(crop, aBufferRect);
-    crop.RoundOut();
+    crop.Round();
 
     if (crop.IsEmpty()) {
         LOGD("Skip layer");
@@ -175,7 +175,7 @@ PrepareLayerRects(nsIntRect aVisible, const gfxMatrix& aTransform,
 
     //propagate buffer clipping back to visible rect
     visibleRectScreen = aTransform.TransformBounds(crop);
-    visibleRectScreen.RoundOut();
+    visibleRectScreen.Round();
 
     // Map from layer space to buffer space
     crop -= aBufferRect.TopLeft();
@@ -191,6 +191,52 @@ PrepareLayerRects(nsIntRect aVisible, const gfxMatrix& aTransform,
     aVisibleRegionScreen->bottom = visibleRectScreen.y + visibleRectScreen.height;
 
     return true;
+}
+
+/**
+ * Prepares hwc layer visible region required for hwc composition
+ *
+ * @param aVisible Input. Layer's unclipped visible region
+ *        The origin is the top-left corner of the layer
+ * @param aTransform Input. Layer's transformation matrix
+ *        It transforms from layer space to screen space
+ * @param aClip Input. A clipping rectangle.
+ *        The origin is the top-left corner of the screen
+ * @param aBufferRect Input. The layer's buffer bounds
+ *        The origin is the top-left corner of the layer
+ * @param aVisibleRegionScreen Output. Visible region in screen space.
+ *        The origin is the top-left corner of the screen
+ * @return true if the layer should be rendered.
+ *         false if the layer can be skipped
+ */
+static bool
+PrepareVisibleRegion(const nsIntRegion& aVisible,
+                     const gfxMatrix& aTransform,
+                     nsIntRect aClip, nsIntRect aBufferRect,
+                     RectVector* aVisibleRegionScreen) {
+
+    nsIntRegionRectIterator rect(aVisible);
+    bool isVisible = false;
+    while (const nsIntRect* visibleRect = rect.Next()) {
+        hwc_rect_t visibleRectScreen;
+        gfxRect screenRect;
+
+        screenRect.IntersectRect(gfxRect(*visibleRect), aBufferRect);
+        screenRect = aTransform.TransformBounds(screenRect);
+        screenRect.IntersectRect(screenRect, aClip);
+        screenRect.Round();
+        if (screenRect.IsEmpty()) {
+            continue;
+        }
+        visibleRectScreen.left = screenRect.x;
+        visibleRectScreen.top  = screenRect.y;
+        visibleRectScreen.right  = screenRect.XMost();
+        visibleRectScreen.bottom = screenRect.YMost();
+        aVisibleRegionScreen->push_back(visibleRectScreen);
+        isVisible = true;
+    }
+
+    return isVisible;
 }
 
 /**
@@ -251,18 +297,8 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
     }
 
     float opacity = aLayer->GetEffectiveOpacity();
-    if (opacity <= 0) {
-        LOGD("Layer is fully transparent so skip rendering");
-        return true;
-    }
-    else if (opacity < 1) {
+    if (opacity < 1) {
         LOGD("Layer has planar semitransparency which is unsupported");
-        return false;
-    }
-
-    if (visibleRegion.GetNumRects() > 1) {
-        // FIXME/bug 808339
-        LOGD("Layer has nontrivial visible region");
         return false;
     }
 
@@ -302,9 +338,13 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
 
     LayerOGL* layerGL = static_cast<LayerOGL*>(aLayer->ImplData());
     LayerRenderState state = layerGL->GetRenderState();
+    nsIntSize surfaceSize;
 
-    if (!state.mSurface ||
-        state.mSurface->type() != SurfaceDescriptor::TSurfaceDescriptorGralloc) {
+    if (state.mSurface &&
+        state.mSurface->type() == SurfaceDescriptor::TSurfaceDescriptorGralloc) {
+        surfaceSize = state.mSurface->get_SurfaceDescriptorGralloc().size();
+    }
+    else {
         if (aLayer->AsColorLayer() && mColorFill) {
             fillColor = true;
         } else {
@@ -338,10 +378,10 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
     } else {
         if(state.mHasOwnOffset) {
             bufferRect = nsIntRect(state.mOffset.x, state.mOffset.y,
-                int(buffer->getWidth()), int(buffer->getHeight()));
+                surfaceSize.width, surfaceSize.height);
         } else {
             bufferRect = nsIntRect(visibleRect.x, visibleRect.y,
-                int(buffer->getWidth()), int(buffer->getHeight()));
+                surfaceSize.width, surfaceSize.height);
         }
     }
 
@@ -385,12 +425,30 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
 
         hwcLayer.transform |= state.YFlipped() ? HWC_TRANSFORM_FLIP_V : 0;
         hwc_region_t region;
-        region.numRects = 1;
-        region.rects = &(hwcLayer.displayFrame);
+        if (visibleRegion.GetNumRects() > 1) {
+            mVisibleRegions.push_back(RectVector());
+            RectVector* visibleRects = &(mVisibleRegions.back());
+            if(!PrepareVisibleRegion(visibleRegion,
+                                     transform * aGLWorldTransform,
+                                     clip,
+                                     bufferRect,
+                                     visibleRects)) {
+                return true;
+            }
+            region.numRects = visibleRects->size();
+            region.rects = &((*visibleRects)[0]);
+        } else {
+            region.numRects = 1;
+            region.rects = &(hwcLayer.displayFrame);
+        }
         hwcLayer.visibleRegionScreen = region;
     } else {
         hwcLayer.flags |= HWC_COLOR_FILL;
-        ColorLayer* colorLayer = static_cast<ColorLayer*>(layerGL->GetLayer());
+        ColorLayer* colorLayer = aLayer->AsColorLayer();
+        if (colorLayer->GetColor().a < 1.0) {
+            LOGD("Color layer has semitransparency which is unsupported");
+            return false;
+        }
         hwcLayer.transform = colorLayer->GetColor().Packed();
     }
 
@@ -411,6 +469,10 @@ HwcComposer2D::TryRender(Layer* aRoot,
     if (mList) {
         mList->numHwLayers = 0;
     }
+
+    // XXX: The clear() below means all rect vectors will be have to be
+    // reallocated. We may want to avoid this if possible
+    mVisibleRegions.clear();
 
     if (!PrepareLayerList(aRoot,
                           mScreenRect,

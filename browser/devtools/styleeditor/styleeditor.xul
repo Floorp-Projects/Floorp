@@ -7,13 +7,13 @@
  %styleEditorDTD;
 ]>
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
-<?xml-stylesheet href="chrome://browser/content/splitview.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/content/devtools/splitview.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/devtools/common.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/devtools/splitview.css" type="text/css"?>
-<?xml-stylesheet href="chrome://browser/content/styleeditor.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/content/devtools/styleeditor.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/devtools/styleeditor.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
-<?xul-overlay href="chrome://browser/content/source-editor-overlay.xul"?>
+<?xul-overlay href="chrome://browser/content/devtools/source-editor-overlay.xul"?>
 <xul:window xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns="http://www.w3.org/1999/xhtml"
         id="style-editor-chrome-window">

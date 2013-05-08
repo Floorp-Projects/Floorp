@@ -1245,7 +1245,7 @@ bool nsXULWindow::LoadMiscPersistentAttributesFromXUL()
   rv = windowElement->GetAttribute(ZLEVEL_ATTRIBUTE, stateString);
   if (NS_SUCCEEDED(rv) && stateString.Length() > 0) {
     nsresult errorCode;
-    uint32_t zLevel = stateString.ToInteger(&errorCode);
+    int32_t zLevel = stateString.ToInteger(&errorCode);
     if (NS_SUCCEEDED(errorCode) && zLevel >= lowestZ && zLevel <= highestZ)
       SetZLevel(zLevel);
   }

@@ -565,7 +565,7 @@ js::ExecuteKernel(JSContext *cx, HandleScript script, JSObject &scopeChainArg, c
     if (!cx->stack.pushExecuteFrame(cx, script, thisv, scopeChain, type, evalInFrame, &efg))
         return false;
 
-    if (!script->ensureRanAnalysis(cx))
+    if (!script->ensureHasTypes(cx))
         return false;
     TypeScript::SetThis(cx, script, efg.fp()->thisValue());
 
@@ -922,7 +922,7 @@ TryNoteIter::settle()
 #define FETCH_OBJECT(cx, n, obj)                                              \
     JS_BEGIN_MACRO                                                            \
         HandleValue val = HandleValue::fromMarkedLocation(&regs.sp[n]);       \
-        obj = ToObject(cx, (val));                                            \
+        obj = ToObjectFromStack(cx, (val));                                   \
         if (!obj)                                                             \
             goto error;                                                       \
     JS_END_MACRO
@@ -3366,7 +3366,11 @@ END_CASE(JSOP_ARRAYPUSH)
                 regs.sp -= 1;
                 if (!ok)
                     goto error;
+                break;
               }
+
+              case JSTRY_LOOP:
+                break;
            }
         }
 

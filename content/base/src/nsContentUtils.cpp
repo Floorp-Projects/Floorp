@@ -3362,7 +3362,7 @@ nsContentUtils::GetWrapperSafeScriptFilename(nsIDocument *aDocument,
       // automation that the chrome document expects.
       nsAutoCString spec;
       docURI->GetSpec(spec);
-      spec.AppendASCII(" -> ");
+      spec.AppendLiteral(" -> ");
       spec.Append(aScriptURI);
 
       aScriptURI = spec;
@@ -6805,7 +6805,7 @@ AutoJSContext::operator JSContext*()
   return mCx;
 }
 
-SafeAutoJSContext::SafeAutoJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL)
+AutoSafeJSContext::AutoSafeJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL)
   : AutoJSContext(true MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT)
 {
 }

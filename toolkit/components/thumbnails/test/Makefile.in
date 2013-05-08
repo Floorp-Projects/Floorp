@@ -12,6 +12,7 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _BROWSER_FILES = \
+	browser_thumbnails_background.js \
 	browser_thumbnails_capture.js \
 	browser_thumbnails_expiration.js \
 	browser_thumbnails_privacy.js \
@@ -25,6 +26,7 @@ _BROWSER_FILES = \
 	background_red_scroll.html \
 	background_red_redirect.sjs \
 	privacy_cache_control.sjs \
+	thumbnails_background.sjs \
 	$(NULL)
 
 libs::	$(_BROWSER_FILES)

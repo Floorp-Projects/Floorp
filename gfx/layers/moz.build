@@ -56,7 +56,9 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
             'ReadbackManagerD3D10.h',
         ]
         EXPORTS.mozilla.layers += [
+            'CompositorD3D11.h',
             'ShadowLayerUtilsD3D10.h',
+            'TextureD3D11.h',
         ]
 
 EXPORTS.gfxipc += [

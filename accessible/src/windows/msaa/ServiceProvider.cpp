@@ -23,9 +23,8 @@ namespace a11y {
 
 IMPL_IUNKNOWN_QUERY_HEAD(ServiceProvider)
   IMPL_IUNKNOWN_QUERY_IFACE(IServiceProvider)
-  return mAccessible->QueryInterface(aIID, aInstancePtr);
-A11Y_TRYBLOCK_END
-  }
+IMPL_IUNKNOWN_QUERY_TAIL_AGGREGATED(mAccessible)
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // IServiceProvider

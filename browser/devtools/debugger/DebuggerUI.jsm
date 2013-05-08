@@ -9,7 +9,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-const DBG_XUL = "chrome://browser/content/debugger.xul";
+const DBG_XUL = "chrome://browser/content/devtools/debugger.xul";
 const DBG_STRINGS_URI = "chrome://browser/locale/devtools/debugger.properties";
 const CHROME_DEBUGGER_PROFILE_NAME = "-chrome-debugger";
 
@@ -488,13 +488,16 @@ ChromeDebuggerProcess.prototype = {
   close: function RDP_close() {
     dumpn("Closing chrome debugging process");
     if (!this.globalUI) {
+      dumpn("globalUI is missing");
       return;
     }
     delete this.globalUI._chromeDebugger;
 
     if (this._dbgProcess.isRunning) {
+      dumpn("Killing chrome debugging process...");
       this._dbgProcess.kill();
     }
+    dumpn("...done.");
     if (typeof this._closeCallback == "function") {
       this._closeCallback.call({}, this);
     }

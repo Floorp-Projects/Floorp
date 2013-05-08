@@ -37,6 +37,13 @@
                 label="&bookmarkThisLinkCmd.label;"
                 accesskey="&bookmarkThisLinkCmd.accesskey;"
                 oncommand="gContextMenu.bookmarkLink();"/>
+      <menuitem id="context-marklink"
+                accesskey="&social.marklink.accesskey;"
+                oncommand="gContextMenu.markLink();"/>
+      <menuitem id="context-sharelink"
+                label="&shareLinkCmd.label;"
+                accesskey="&shareLinkCmd.accesskey;"
+                oncommand="gContextMenu.shareLink();"/>
       <menuitem id="context-savelink"
                 label="&saveLinkCmd.label;"
                 accesskey="&saveLinkCmd.accesskey;"
@@ -157,6 +164,10 @@
                 label="&saveImageCmd.label;"
                 accesskey="&saveImageCmd.accesskey;"
                 oncommand="gContextMenu.saveMedia();"/>
+      <menuitem id="context-shareimage"
+                label="&shareImageCmd.label;"
+                accesskey="&shareImageCmd.accesskey;"
+                oncommand="gContextMenu.shareImage();"/>
       <menuitem id="context-sendimage"
                 label="&emailImageCmd.label;"
                 accesskey="&emailImageCmd.accesskey;"
@@ -173,6 +184,10 @@
                 label="&saveVideoCmd.label;"
                 accesskey="&saveVideoCmd.accesskey;"
                 oncommand="gContextMenu.saveMedia();"/>
+      <menuitem id="context-sharevideo"
+                label="&shareVideoCmd.label;"
+                accesskey="&shareVideoCmd.accesskey;"
+                oncommand="gContextMenu.shareVideo();"/>
       <menuitem id="context-saveaudio"
                 label="&saveAudioCmd.label;"
                 accesskey="&saveAudioCmd.accesskey;"
@@ -222,6 +237,13 @@
                 label="&bookmarkPageCmd2.label;"
                 accesskey="&bookmarkPageCmd2.accesskey;"
                 oncommand="gContextMenu.bookmarkThisPage();"/>
+      <menuitem id="context-markpage"
+                accesskey="&social.markpage.accesskey;"
+                command="Social:TogglePageMark"/>
+      <menuitem id="context-sharepage"
+                label="&sharePageCmd.label;"
+                accesskey="&sharePageCmd.accesskey;"
+                oncommand="SocialShare.sharePage();"/>
       <menuitem id="context-savepage"
                 label="&savePageCmd.label;"
                 accesskey="&savePageCmd.accesskey2;"
@@ -265,6 +287,10 @@
                 oncommand="AddKeywordForSearchField();"/>
       <menuitem id="context-searchselect"
                 oncommand="BrowserSearch.loadSearchFromContext(getBrowserSelection());"/>
+      <menuitem id="context-shareselect"
+                label="&shareSelectCmd.label;"
+                accesskey="&shareSelectCmd.accesskey;"
+                oncommand="gContextMenu.shareSelect(getBrowserSelection());"/>
       <menuseparator id="frame-sep"/>
       <menu id="frame" label="&thisFrameMenu.label;" accesskey="&thisFrameMenu.accesskey;">
         <menupopup>

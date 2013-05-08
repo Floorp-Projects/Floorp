@@ -205,50 +205,17 @@
       </vbox>
     </panel>
 
-    <panel id="unsharePopup"
+    <panel id="social-share-panel"
+           class="social-panel"
            type="arrow"
-           orient="vertical"
-           ignorekeys="true"
-           hidden="true"
-           onpopupshown="SocialShareButton.panelShown(event);"
+           orient="horizontal"
+           onpopupshowing="SocialShare.onShowing()"
+           onpopuphidden="SocialShare.onHidden()"
            consumeoutsideclicks="true"
-           level="top">
-      <!-- Note that 'label', 'accesskey', 'value' and 'aria-label' attributes
-           for many of these elements are supplied by the provider and filled
-           in at runtime
-      -->
-      <row id="unsharePopupHeader" align="center">
-        <vbox align="center">
-          <image id="socialUserPortrait" onclick="SocialUI.showProfile();"/>
-        </vbox>
-        <vbox id="unsharePopupText">
-          <button id="socialUserDisplayName" pack="start"
-                  oncommand="SocialUI.showProfile();"/>
-          <spacer flex="1"/>
-          <label id="socialUserRecommendedText"/>
-        </vbox>
-      </row>
-      <hbox id="unsharePopupBottomButtons" pack="end">
-#ifdef XP_UNIX
-        <button id="unsharePopupStopSharingButton"
-                class="unsharePopupBottomButton"
-                command="Social:UnsharePage"/>
-        <button id="unsharePopupContinueSharingButton"
-                class="unsharePopupBottomButton"
-                default="true"
-                autofocus="autofocus"
-                oncommand="SocialShareButton.dismissUnsharePopup();"/>
-#else
-        <button id="unsharePopupContinueSharingButton"
-                class="unsharePopupBottomButton"
-                default="true"
-                autofocus="autofocus"
-                oncommand="SocialShareButton.dismissUnsharePopup();"/>
-        <button id="unsharePopupStopSharingButton"
-                class="unsharePopupBottomButton"
-                command="Social:UnsharePage"/>
-#endif
-      </hbox>
+           hidden="true">
+      <vbox class="social-share-toolbar">
+        <vbox id="social-share-provider-buttons" flex="1"/>
+      </vbox>
     </panel>
 
     <panel id="social-notification-panel"
@@ -614,13 +581,6 @@
                    hidden="true"
                    tooltiptext="&pageReportIcon.tooltip;"
                    onclick="gPopupBlockerObserver.onReportButtonClick(event);"/>
-
-            <label id="share-button-status" collapsed="true" role="status"/>
-            <image id="share-button"
-                   class="urlbar-icon"
-                   hidden="true"
-                   onclick="SocialShareButton.onClick(event);"/>
-
             <image id="go-button"
                    class="urlbar-icon"
                    tooltiptext="&goEndCap.tooltip;"
@@ -757,6 +717,13 @@
                      onclick="BrowserGoHome(event);"
                      aboutHomeOverrideTooltip="&abouthome.pageTitle;"/>
 
+      <toolbarbutton id="social-share-button"
+                     class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     hidden="true"
+                     label="&sharePageCmd.label;"
+                     tooltiptext="&sharePageCmd.label;"
+                     command="Social:SharePage"/>
+
       <toolbaritem id="social-toolbar-item"
                    class="chromeclass-toolbar-additional"
                    removable="false"
@@ -794,7 +761,7 @@
                       label="&social.toggleNotifications.label;"
                       accesskey="&social.toggleNotifications.accesskey;"/>
             <menuitem class="social-toggle-menuitem" command="Social:Toggle"/>
-            <menuseparator class="social-statusarea-separator"/>
+            <menuseparator/>
             <menuseparator class="social-provider-menu" hidden="true"/>
             <menuitem class="social-addons-menuitem" command="Social:Addons"
                       label="&social.addons.label;"/>
@@ -803,6 +770,11 @@
                       oncommand="SocialUI.showLearnMore();"/>
           </menupopup>
         </toolbarbutton>
+        <toolbarbutton id="social-mark-button"
+                       class="toolbarbutton-1"
+                       hidden="true"
+                       disabled="true"
+                       command="Social:TogglePageMark"/>
       </toolbaritem>
 
       <hbox id="window-controls" hidden="true" pack="end">
