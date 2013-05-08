@@ -265,7 +265,7 @@ NewInitParallelArray(JSContext *cx, HandleObject templateObject)
     JS_ASSERT(templateObject->getClass() == &ParallelArrayObject::class_);
     JS_ASSERT(!templateObject->hasSingletonType());
 
-    RootedObject obj(cx, ParallelArrayObject::newInstance(cx));
+    RootedObject obj(cx, ParallelArrayObject::newInstance(cx, TenuredObject));
     if (!obj)
         return NULL;
 
