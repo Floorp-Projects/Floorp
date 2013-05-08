@@ -9,10 +9,13 @@ import java.util.ArrayList;
 
 /**
  * Test adding a search engine from an input field context menu
- * Starting a test
- * expected values.
+ * 1. Get the number of existing search engines
+ * 2. Load a page with a text field, open the context menu and add a search engine from the page
+ * 3. Get the number of search engines after adding the new one
  */
 public class testAddSearchEngine extends BaseTest {
+
+    final int MAX_TRIES = 5;
 
     @Override
     protected int getTestType() {
@@ -28,11 +31,8 @@ public class testAddSearchEngine extends BaseTest {
         blockForGeckoReady();
         loadUrl(blank);
         waitForText("Browser Blank Page 01");
-
-        initialNumSearchEngines = getNumSearchEngines();
-        mActions.sendSpecialKey(Actions.SpecialKey.BACK);
-        waitForText("Browser Blank Page 01");
-
+        initialNumSearchEngines = getNumSearchEngines("Browser Blank Page 01");
+        
         loadUrl(url);
         waitForText("Robocop Search Engine");
 
@@ -61,30 +61,44 @@ public class testAddSearchEngine extends BaseTest {
         mAsserter.ok(!mSolo.searchText("Add Search Engine"), "Adding the search engine", "The add serach engine pop-up has been cloesed");
 
         // Check that the number of search results has increased
-        mAsserter.is(getNumSearchEngines() ,initialNumSearchEngines + 1 , "The number of search results has increased");
+        mAsserter.is(getNumSearchEngines("Robocop Search Engine") ,initialNumSearchEngines + 1 , "The number of search results has increased");
     }
 
-    public int getNumSearchEngines() {
+    public int getNumSearchEngines(String waitText) {
         ArrayList<ListView> views;
         int searchEngineCount = 0;
+        int oldSearchEngineCount = -1;
 
-        // Start a search and wait for the search engine data to be displayed
-        Actions.EventExpecter enginesEventExpecter = mActions.expectGeckoEvent("SearchEngines:Data");
-        clickOnAwesomeBar();
-        waitForText("Bookmarks");
-        mActions.sendKeys("Firefox for Android");
-        enginesEventExpecter.blockForEvent();
+        for (int i = 0; i < MAX_TRIES; i++ ) {
+            // Start a search and wait for the search engine data to be displayed
+            Actions.EventExpecter enginesEventExpecter = mActions.expectGeckoEvent("SearchEngines:Data");
+            clickOnAwesomeBar();
+            waitForText("Bookmarks");
+            mActions.sendKeys("Firefox for Android");
+            enginesEventExpecter.blockForEvent();
 
-        views = mSolo.getCurrentListViews();
-        for (ListView view : views) {
-             ListAdapter adapter = view.getAdapter();
-             if (adapter != null) {
-                 searchEngineCount = adapter.getCount();
-             } else {
-                 searchEngineCount = -1;
-             }
+            views = mSolo.getCurrentListViews();
+            for (ListView view : views) {
+                 ListAdapter adapter = view.getAdapter();
+                 if (adapter != null) {
+                     searchEngineCount = adapter.getCount();
+                 } else {
+                     searchEngineCount = -1;
+                 }
+            }
+            // Close the Awesomescreen
+            mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+            waitForText(waitText);
+            if (searchEngineCount == oldSearchEngineCount) {
+                mAsserter.isnot(searchEngineCount, -1, "Search engine number could be determined correctly");
+                return searchEngineCount;
+            } else {
+                oldSearchEngineCount = searchEngineCount;
+            }
         }
-        mAsserter.isnot(searchEngineCount, -1, "There should be search engines displayed when text is entered");
-        return searchEngineCount;
+
+    // Since the number of Search Engine count was different on every try fail the test
+    mAsserter.is(searchEngineCount,oldSearchEngineCount, "The search engine count could not be established correctly");
+    return searchEngineCount;
     }
 }
