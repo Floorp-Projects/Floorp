@@ -60,7 +60,7 @@
             throw new Error("Expected");
           }, getFail(new Error));
           throw new Error("Expected");
-        });
+        }, getFail(new Error));
       }, getFail(new Error));
       throw new Error("Expected");
     });
@@ -74,7 +74,7 @@
 
   function getFail(where) {
     return function (err) {
-      window.onerror = onOldError;
+      window.onerror = oldOnError;
       unexpectedCallbackAndFinish(where)(err);
     };
   }
