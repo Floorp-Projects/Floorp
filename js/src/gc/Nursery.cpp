@@ -181,7 +181,7 @@ class MinorCollectionTracer : public JSTracer
     RelocationOverlay **tail;
 
     /* Save and restore all of the runtime state we use during MinorGC. */
-    bool priorNeedsBarrier;
+    bool savedNeedsBarrier;
     AutoDisableProxyCheck disableStrictProxyChecking;
 
     /* Insert the given relocation entry into the list of things to visit. */
@@ -198,7 +198,7 @@ class MinorCollectionTracer : public JSTracer
         session(runtime, MinorCollecting),
         head(NULL),
         tail(&head),
-        priorNeedsBarrier(runtime->needsBarrier()),
+        savedNeedsBarrier(runtime->needsBarrier()),
         disableStrictProxyChecking(runtime)
     {
         JS_TracerInit(this, runtime, Nursery::MinorGCCallback);
@@ -206,10 +206,14 @@ class MinorCollectionTracer : public JSTracer
 
         runtime->gcNumber++;
         runtime->setNeedsBarrier(false);
+        for (ZonesIter zone(rt); !zone.done(); zone.next())
+            zone->saveNeedsBarrier(false);
     }
 
     ~MinorCollectionTracer() {
-        runtime->setNeedsBarrier(priorNeedsBarrier);
+        runtime->setNeedsBarrier(savedNeedsBarrier);
+        for (ZonesIter zone(runtime); !zone.done(); zone.next())
+            zone->restoreNeedsBarrier();
     }
 };
 
@@ -242,6 +246,14 @@ js::Nursery::allocateFromTenured(Zone *zone, AllocKind thingKind)
         zone->allocator.arenas.checkEmptyFreeList(thingKind);
         t = zone->allocator.arenas.allocateFromArena(zone, thingKind);
     }
+
+    /*
+     * Pre barriers are disabled during minor collection, however, we still
+     * want objects to be allocated black if an incremental GC is in progress.
+     */
+    if (zone->savedNeedsBarrier())
+        static_cast<Cell *>(t)->markIfUnmarked();
+
     return t;
 }
 
