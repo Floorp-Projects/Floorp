@@ -204,7 +204,7 @@ ReadLine(/*in/out*/ const char* & nextLineStart, /*out*/ nsCString & line,
     const char* eol = PL_strpbrk(nextLineStart, "\r\n");
 
     if (!eol) { // Reached end of file before newline
-      eol = nextLineStart + PL_strlen(nextLineStart);
+      eol = nextLineStart + strlen(nextLineStart);
     }
 
     line.Append(nextLineStart, eol - nextLineStart);

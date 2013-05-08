@@ -63,14 +63,18 @@ public:
   {
     MOZ_ASSERT(mSource == aStream, "Invalid source stream");
 
-    *aOutput = aInput;
-    if (mGain.HasSimpleValue()) {
+    if (aInput.IsNull()) {
+      // If input is silent, so is the output
+      aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
+    } else if (mGain.HasSimpleValue()) {
       // Optimize the case where we only have a single value set as the volume
+      *aOutput = aInput;
       aOutput->mVolume *= mGain.GetValue();
     } else {
       // First, compute a vector of gains for each track tick based on the
       // timeline at hand, and then for each channel, multiply the values
       // in the buffer with the gain vector.
+      AllocateAudioBlock(aInput.mChannelData.Length(), aOutput);
 
       // Compute the gain values for the duration of the input AudioChunk
       // XXX we need to add a method to AudioEventTimeline to compute this buffer directly.
@@ -82,9 +86,10 @@ public:
 
       // Apply the gain to the output buffer
       for (size_t channel = 0; channel < aOutput->mChannelData.Length(); ++channel) {
+        const float* inputBuffer = static_cast<const float*> (aInput.mChannelData[channel]);
         float* buffer = static_cast<float*> (const_cast<void*>
                           (aOutput->mChannelData[channel]));
-        AudioBlockCopyChannelWithScale(buffer, computedGain, buffer);
+        AudioBlockCopyChannelWithScale(inputBuffer, computedGain, buffer);
       }
     }
   }

@@ -27,6 +27,8 @@ MACPORTS_URL = {'8': 'https://distfiles.macports.org/MacPorts/MacPorts-2.1.3-10.
                 '7': 'https://distfiles.macports.org/MacPorts/MacPorts-2.1.3-10.7-Lion.pkg',
                 '6': 'https://distfiles.macports.org/MacPorts/MacPorts-2.1.3-10.6-SnowLeopard.pkg',}
 
+MACPORTS_CLANG_PACKAGE = 'clang-3.2'
+
 RE_CLANG_VERSION = re.compile('Apple (?:clang|LLVM) version (\d+\.\d+)')
 
 APPLE_CLANG_MINIMUM_VERSION = StrictVersion('4.0')
@@ -204,13 +206,13 @@ class OSXBootstrapper(BaseBootstrapper):
                 continue
 
             if not printed:
-                print(PACKAGE_MANAGER_PACKAGES)
+                print(PACKAGE_MANAGER_PACKAGES % ('Homebrew',))
                 printed = True
 
             subprocess.check_call([brew, '-v', 'install', package])
 
         if self.os_version < StrictVersion('10.7') and 'llvm' not in installed:
-            print(HOMEBREW_OLD_CLANG)
+            print(PACKAGE_MANAGER_OLD_CLANG % ('Homebrew',))
 
             subprocess.check_call([brew, '-v', 'install', 'llvm',
                 '--with-clang', '--all-targets'])
@@ -229,11 +231,15 @@ class OSXBootstrapper(BaseBootstrapper):
 
         missing = [package for package in packages if package not in installed]
         if missing:
+            print(PACKAGE_MANAGER_PACKAGES % ('MacPorts',))
             self.run_as_root([port, '-v', 'install'] + missing)
 
-        if self.os_version < StrictVersion('10.7') and 'llvm' not in installed:
-            print(MACPORTS_OLD_CLANG)
-            self.run_as_root([port, '-v', 'install', 'llvm'])
+        if self.os_version < StrictVersion('10.7') and MACPORTS_CLANG_PACKAGE not in installed:
+            print(PACKAGE_MANAGER_OLD_CLANG % ('MacPorts',))
+            self.run_as_root([port, '-v', 'install', MACPORTS_CLANG_PACKAGE])
+
+        self.run_as_root([port, 'select', '--set', 'python', 'python27'])
+        self.run_as_root([port, 'select', '--set', 'clang', 'mp-' + MACPORTS_CLANG_PACKAGE])
 
     def ensure_package_manager(self):
         '''

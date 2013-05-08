@@ -8660,36 +8660,45 @@ def genConstructorBody(descriptor):
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
-  // Get the XPCOM component containing the JS implementation.
-  nsCOMPtr<nsISupports> implISupports = do_CreateInstance("${contractId}");
-  MOZ_ASSERT(implISupports, "Failed to get JS implementation instance from contract ID.");
-  if (!implISupports) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-  // Initialize the object, if it implements nsIDOMGlobalPropertyInitializer.
-  nsCOMPtr<nsIDOMGlobalPropertyInitializer> gpi = do_QueryInterface(implISupports);
-  if (gpi) {
-    JS::Rooted<JS::Value> initReturn(cx);
-    nsresult rv = gpi->Init(window, initReturn.address());
-    if (NS_FAILED(rv)) {
-      aRv.Throw(rv);
+
+  JS::Rooted<JSObject*> jsImplObj(cx);
+
+  // Make sure to have nothing on the JS context stack while creating and
+  // initializing the object, so exceptions from that will get reported
+  // properly, since those are never exceptions that a spec wants to be thrown.
+  {  // Scope for the nsCxPusher
+    nsCxPusher pusher;
+    pusher.PushNull();
+    // Get the XPCOM component containing the JS implementation.
+    nsCOMPtr<nsISupports> implISupports = do_CreateInstance("${contractId}");
+    if (!implISupports) {
+      NS_WARNING("Failed to get JS implementation for contract \\"${contractId}\\"");
+      aRv.Throw(NS_ERROR_FAILURE);
       return nullptr;
     }
-    MOZ_ASSERT(initReturn.isUndefined(),
-               "Expected nsIDOMGlobalPropertyInitializer to return undefined");
-  }
-  // Extract the JS implementation from the XPCOM object.
-  nsCOMPtr<nsIXPConnectWrappedJS> implWrapped = do_QueryInterface(implISupports);
-  MOZ_ASSERT(implWrapped, "Failed to get wrapped JS from XPCOM component.");
-  if (!implWrapped) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-  JS::Rooted<JSObject*> jsImplObj(cx);
-  if (NS_FAILED(implWrapped->GetJSObject(jsImplObj.address()))) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
+    // Initialize the object, if it implements nsIDOMGlobalPropertyInitializer.
+    nsCOMPtr<nsIDOMGlobalPropertyInitializer> gpi = do_QueryInterface(implISupports);
+    if (gpi) {
+      JS::Rooted<JS::Value> initReturn(cx);
+      nsresult rv = gpi->Init(window, initReturn.address());
+      if (NS_FAILED(rv)) {
+        aRv.Throw(rv);
+       return nullptr;
+      }
+      MOZ_ASSERT(initReturn.isUndefined(),
+                 "Expected nsIDOMGlobalPropertyInitializer to return undefined");
+    }
+    // Extract the JS implementation from the XPCOM object.
+    nsCOMPtr<nsIXPConnectWrappedJS> implWrapped = do_QueryInterface(implISupports);
+    MOZ_ASSERT(implWrapped, "Failed to get wrapped JS from XPCOM component.");
+    if (!implWrapped) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return nullptr;
+    }
+    if (NS_FAILED(implWrapped->GetJSObject(jsImplObj.address()))) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return nullptr;
+    }
   }
   // Build the C++ implementation.
   nsRefPtr<${implClass}> impl = new ${implClass}(jsImplObj, window);
