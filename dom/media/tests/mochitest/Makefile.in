@@ -40,7 +40,6 @@ MOCHITEST_FILES = \
   test_peerConnection_bug827843.html \
   test_peerConnection_bug834153.html \
   test_peerConnection_bug835370.html \
-  test_peerConnection_bug840344.html \
   head.js \
   mediaStreamPlayback.js \
   pc.js \
