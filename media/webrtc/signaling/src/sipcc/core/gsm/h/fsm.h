@@ -67,10 +67,7 @@ typedef enum {
 
 typedef enum {
     FSMDEF_S_MIN = -1,
-
     FSMDEF_S_IDLE,
-
-    /* SIP States */
     FSMDEF_S_COLLECT_INFO,
     FSMDEF_S_CALL_SENT,
     FSMDEF_S_OUTGOING_PROCEEDING,
@@ -86,15 +83,6 @@ typedef enum {
     FSMDEF_S_HOLDING,
     FSMDEF_S_RESUME_PENDING,
     FSMDEF_S_PRESERVED,
-
-    /* WebRTC States */
-    FSMDEF_S_STABLE,
-    FSMDEF_S_HAVE_LOCAL_OFFER,
-    FSMDEF_S_HAVE_REMOTE_OFFER,
-    FSMDEF_S_HAVE_REMOTE_PRANSWER,
-    FSMDEF_S_HAVE_LOCAL_PRANSWER,
-    FSMDEF_S_CLOSED,
-
     FSMDEF_S_MAX
 } fsmdef_states_t;
 
