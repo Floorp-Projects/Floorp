@@ -49,6 +49,7 @@ MOCHITEST_FILES := \
   test_delayNodeWithGain.html \
   test_dynamicsCompressorNode.html \
   test_gainNode.html \
+  test_gainNodeInLoop.html \
   test_mediaDecoding.html \
   test_mixingRules.html \
   test_nodeToParamConnection.html \
