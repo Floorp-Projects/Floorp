@@ -1606,6 +1606,29 @@ nsDisplayBackgroundImage::WriteDebugInfo(FILE *aOutput)
 }
 #endif
 
+static nsStyleContext* GetBackgroundStyleContext(nsIFrame* aFrame)
+{
+  nsStyleContext *sc;
+  if (!nsCSSRendering::FindBackground(aFrame, &sc)) {
+    // We don't want to bail out if moz-appearance is set on a root
+    // node. If it has a parent content node, bail because it's not
+    // a root, other wise keep going in order to let the theme stuff
+    // draw the background. The canvas really should be drawing the
+    // bg, but there's no way to hook that up via css.
+    if (!aFrame->StyleDisplay()->mAppearance) {
+      return nullptr;
+    }
+
+    nsIContent* content = aFrame->GetContent();
+    if (!content || content->GetParent()) {
+      return nullptr;
+    }
+
+    sc = aFrame->StyleContext();
+  }
+  return sc;
+}
+
 /*static*/ nsresult
 nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuilder,
                                                      nsIFrame* aFrame,
@@ -1616,8 +1639,11 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
   const nsStyleBackground* bg = nullptr;
   nsPresContext* presContext = aFrame->PresContext();
   bool isThemed = aFrame->IsThemed();
-  if (!isThemed && nsCSSRendering::FindBackground(aFrame, &bgSC)) {
-    bg = bgSC->StyleBackground();
+  if (!isThemed) {
+    bgSC = GetBackgroundStyleContext(aFrame);
+    if (bgSC) {
+      bg = bgSC->StyleBackground();
+    }
   }
 
   bool drawBackgroundColor = false;
