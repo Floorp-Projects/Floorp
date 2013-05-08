@@ -7,6 +7,16 @@
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
 </head>
 <body>
-  <iframe sandbox='allow-scripts allow-top-navigation allow-same-origin' id='if_1' src="file_iframe_sandbox_e_if1.html?Test 11: Nested navigate _top:%20" height="10" width="10"></iframe>
+  <script>
+    window.addEventListener("message", receiveMessage, false);
+
+    function receiveMessage(event)
+    {
+      SimpleTest.executeSoon(function() {
+        window.close();
+      });
+    }
+  </script>
+  <iframe sandbox='allow-scripts allow-top-navigation allow-same-origin' id='if_1' src="file_iframe_sandbox_e_if1.html" height="10" width="10"></iframe>
 </body>
 </html>
