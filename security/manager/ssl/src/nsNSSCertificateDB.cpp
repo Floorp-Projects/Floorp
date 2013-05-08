@@ -1330,7 +1330,7 @@ nsNSSCertificateDB::ConstructX509FromBase64(const char *base64,
 
   // sure would be nice to have a smart pointer class for PL_ allocations
   // unfortunately, we cannot distinguish out-of-memory from bad-input here
-  uint32_t len = strlen(base64);
+  uint32_t len = base64 ? strlen(base64) : 0;
   char *certDER = PL_Base64Decode(base64, len, nullptr);
   if (!certDER)
     return NS_ERROR_ILLEGAL_VALUE;
