@@ -112,7 +112,7 @@ public:
   virtual TextureSourceD3D11* AsSourceD3D11() MOZ_OVERRIDE { return this; }
 
   virtual ID3D11Texture2D *GetD3D11Texture() MOZ_OVERRIDE {
-    return mIsTiled ? mTileTextures[mCurrentTile] : TextureSourceD3D11::GetD3D11Texture();
+    return mIsTiled ? mTileTextures[mCurrentTile].get() : TextureSourceD3D11::GetD3D11Texture();
   }
 
   virtual gfx::IntSize GetSize() const MOZ_OVERRIDE;
