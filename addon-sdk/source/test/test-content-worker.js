@@ -8,6 +8,7 @@ const { Cc, Ci } = require("chrome");
 const { setTimeout } = require("sdk/timers");
 const { LoaderWithHookedConsole } = require("sdk/test/loader");
 const { Worker } = require("sdk/content/worker");
+const { close } = require("sdk/window/helpers");
 
 const DEFAULT_CONTENT_URL = "data:text/html;charset=utf-8,foo";
 
@@ -64,8 +65,8 @@ function WorkerTest(url, callback) {
         // ... before loading the expected doc and waiting for its load event
         loadAndWait(browser, url, function onDocumentLoaded() {
           callback(assert, browser, function onTestDone() {
-            chromeWindow.close();
-            done();
+
+            close(chromeWindow).then(done);
           });
         });
       });
@@ -318,8 +319,7 @@ exports["test:chrome is unwrapped"] = function(assert, done) {
       onMessage: function(msg) {
         assert.ok(msg,
           "content script has an unwrapped access to chrome document");
-        window.close();
-        done();
+        close(window).then(done);
       }
     });
 
