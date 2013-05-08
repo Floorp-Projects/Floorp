@@ -97,10 +97,7 @@ MediaEngineWebRTC::EnumerateVideoDevices(nsTArray<nsRefPtr<MediaEngineVideoSourc
   JNIEnv *env;
   jint res = jvm->AttachCurrentThread(&env, NULL);
 
-  if (webrtc::VideoEngine::SetAndroidObjects(jvm, (void*)context) != 0) {
-    LOG(("VieCapture:SetAndroidObjects Failed"));
-    return;
-  }
+  webrtc::VideoEngine::SetAndroidObjects(jvm, (void*)context);
 
   env->DeleteGlobalRef(context);
 #endif
@@ -233,10 +230,7 @@ MediaEngineWebRTC::EnumerateAudioDevices(nsTArray<nsRefPtr<MediaEngineAudioSourc
   JNIEnv *env;
   jvm->AttachCurrentThread(&env, NULL);
 
-  if (webrtc::VoiceEngine::SetAndroidObjects(jvm, (void*)context) != 0) {
-      LOG(("VoiceEngine:SetAndroidObjects Failed"));
-      return;
-  }
+  webrtc::VoiceEngine::SetAndroidObjects(jvm, (void*)context);
 
   env->DeleteGlobalRef(context);
 #endif
