@@ -8,10 +8,6 @@
 #include "mozilla/layers/TextureClientOGL.h"
 #include "mozilla/layers/LayerTransactionChild.h"
 #include "mozilla/layers/CompositableForwarder.h"
-#ifdef XP_WIN
-#include "mozilla/layers/TextureD3D11.h"
-#include "gfxWindowsPlatform.h"
-#endif
 
 namespace mozilla {
 namespace layers {
@@ -100,20 +96,17 @@ CompositableClient::CreateTextureClient(TextureClientType aTextureClientType)
     }
     break;
   case TEXTURE_YCBCR:
-    if (parentBackend == LAYERS_OPENGL || parentBackend == LAYERS_D3D11) {
+    if (parentBackend == LAYERS_OPENGL) {
       result = new TextureClientShmemYCbCr(GetForwarder(), GetTextureInfo());
     }
     break;
   case TEXTURE_CONTENT:
-#ifdef XP_WIN
-    if (parentBackend == LAYERS_D3D11 && gfxWindowsPlatform::GetPlatform()->GetD2DDevice()) {
-      result = new TextureClientD3D11(GetForwarder(), GetTextureInfo());
-      break;
-    }
-#endif
      // fall through to TEXTURE_SHMEM
   case TEXTURE_SHMEM:
-    result = new TextureClientShmem(GetForwarder(), GetTextureInfo());
+    if (parentBackend == LAYERS_OPENGL ||
+        parentBackend == LAYERS_BASIC) {
+      result = new TextureClientShmem(GetForwarder(), GetTextureInfo());
+    }
     break;
   default:
     MOZ_ASSERT(false, "Unhandled texture client type");
