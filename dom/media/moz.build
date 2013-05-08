@@ -12,7 +12,6 @@ TEST_DIRS += ['tests/mochitest']
 XPIDL_SOURCES += [
     'nsIDOMMediaStream.idl',
     'nsIDOMNavigatorUserMedia.idl',
-    'nsIDOMRTCPeerConnection.idl',
     'nsIMediaManager.idl',
 ]
 

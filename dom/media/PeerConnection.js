@@ -13,11 +13,15 @@ const PC_CONTRACT = "@mozilla.org/dom/peerconnection;1";
 const PC_ICE_CONTRACT = "@mozilla.org/dom/rtcicecandidate;1";
 const PC_SESSION_CONTRACT = "@mozilla.org/dom/rtcsessiondescription;1";
 const PC_MANAGER_CONTRACT = "@mozilla.org/dom/peerconnectionmanager;1";
+const PC_ICEEVENT_CONTRACT = "@mozilla.org/dom/rtcpeerconnectioniceevent;1";
+const MSEVENT_CONTRACT = "@mozilla.org/dom/mediastreamevent;1";
 
-const PC_CID = Components.ID("{7cb2b368-b1ce-4560-acac-8e0dbda7d3d0}");
-const PC_ICE_CID = Components.ID("{8c5dbd70-2c8e-4ecb-a5ad-2fc919099f01}");
-const PC_SESSION_CID = Components.ID("{5f21ffd9-b73f-4ba0-a685-56b4667aaf1c}");
+const PC_CID = Components.ID("{9878b414-afaa-4176-a887-1e02b3b047c2}");
+const PC_ICE_CID = Components.ID("{02b9970c-433d-4cc2-923d-f7028ac66073}");
+const PC_SESSION_CID = Components.ID("{1775081b-b62d-4954-8ffe-a067bbf508a7}");
 const PC_MANAGER_CID = Components.ID("{7293e901-2be3-4c02-b4bd-cbef6fc24f78}");
+const PC_ICEEVENT_CID = Components.ID("{b9cd25a7-9859-4f9e-8f84-ef5181ff36c0}");
+const MSEVENT_CID = Components.ID("{a722a8a9-2290-4e99-a5ed-07b504292d08}");
 
 // Global list of PeerConnection objects, so they can be cleaned up when
 // a page is torn down. (Maps inner window ID to an array of PC objects).
@@ -33,17 +37,7 @@ GlobalPCList.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
                                          Ci.nsISupportsWeakReference,
                                          Ci.IPeerConnectionManager]),
-
   classID: PC_MANAGER_CID,
-  classInfo: XPCOMUtils.generateCI({classID: PC_MANAGER_CID,
-                                    contractID: PC_MANAGER_CONTRACT,
-                                    classDescription: "PeerConnectionManager",
-                                    interfaces: [
-                                      Ci.nsIObserver,
-                                      Ci.nsISupportsWeakReference,
-                                      Ci.IPeerConnectionManager
-                                    ]}),
-
   _xpcom_factory: {
     createInstance: function(outer, iid) {
       if (outer) {
@@ -56,9 +50,9 @@ GlobalPCList.prototype = {
   addPC: function(pc) {
     let winID = pc._winID;
     if (this._list[winID]) {
-      this._list[winID].push(Components.utils.getWeakReference(pc));
+      this._list[winID].push(Cu.getWeakReference(pc));
     } else {
-      this._list[winID] = [Components.utils.getWeakReference(pc)];
+      this._list[winID] = [Cu.getWeakReference(pc)];
     }
     this.removeNullRefs(winID);
   },
@@ -123,82 +117,88 @@ GlobalPCList.prototype = {
 };
 let _globalPCList = new GlobalPCList();
 
-function IceCandidate(candidate) {
-  this.candidate = candidate;
-  this.sdpMid = null;
-  this.sdpMLineIndex = null;
+function RTCIceCandidate() {
+  this.candidate = this.sdpMid = this.sdpMLineIndex = null;
 }
-IceCandidate.prototype = {
+RTCIceCandidate.prototype = {
+  classDescription: "mozRTCIceCandidate",
   classID: PC_ICE_CID,
+  contractID: PC_ICE_CONTRACT,
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports,
+                                         Ci.nsIDOMGlobalPropertyInitializer]),
 
-  classInfo: XPCOMUtils.generateCI({classID: PC_ICE_CID,
-                                    contractID: PC_ICE_CONTRACT,
-                                    classDescription: "IceCandidate",
-                                    interfaces: [
-                                      Ci.nsIDOMRTCIceCandidate
-                                    ],
-                                    flags: Ci.nsIClassInfo.DOM_OBJECT}),
+  init: function(win) { this._win = win; },
 
-  QueryInterface: XPCOMUtils.generateQI([
-    Ci.nsIDOMRTCIceCandidate, Ci.nsIDOMGlobalObjectConstructor
-  ]),
-
-  constructor: function(win, candidateInitDict) {
-    if (this._win) {
-      throw new Components.Exception("Constructor already called");
-    }
-    this._win = win;
-    if (candidateInitDict !== undefined) {
-      this.candidate = candidateInitDict.candidate || null;
-      this.sdpMid = candidateInitDict.sdpMid || null;
-      this.sdpMLineIndex = candidateInitDict.sdpMLineIndex === null ?
-            null : candidateInitDict.sdpMLineIndex + 1;
-    } else {
-      this.candidate = this.sdpMid = this.sdpMLineIndex = null;
-    }
+  __init: function(dict) {
+    this.candidate = dict.candidate;
+    this.sdpMid = dict.sdpMid;
+    this.sdpMLineIndex = ("sdpMLineIndex" in dict)? dict.sdpMLineIndex+1 : null;
   }
 };
 
-function SessionDescription(type, sdp) {
-  this.type = type;
-  this.sdp = sdp;
+function RTCSessionDescription() {
+  this.type = this.sdp = null;
 }
-SessionDescription.prototype = {
+RTCSessionDescription.prototype = {
+  classDescription: "mozRTCSessionDescription",
   classID: PC_SESSION_CID,
+  contractID: PC_SESSION_CONTRACT,
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports,
+                                         Ci.nsIDOMGlobalPropertyInitializer]),
 
-  classInfo: XPCOMUtils.generateCI({classID: PC_SESSION_CID,
-                                    contractID: PC_SESSION_CONTRACT,
-                                    classDescription: "SessionDescription",
-                                    interfaces: [
-                                      Ci.nsIDOMRTCSessionDescription
-                                    ],
-                                    flags: Ci.nsIClassInfo.DOM_OBJECT}),
+  init: function(win) { this._win = win; },
 
-  QueryInterface: XPCOMUtils.generateQI([
-    Ci.nsIDOMRTCSessionDescription, Ci.nsIDOMGlobalObjectConstructor
-  ]),
+  __init: function(dict) {
+    this.type = dict.type;
+    this.sdp  = dict.sdp;
+  }
+};
 
-  constructor: function(win, descriptionInitDict) {
-    if (this._win) {
-      throw new Components.Exception("Constructor already called");
-    }
-    this._win = win;
-    if (descriptionInitDict !== undefined) {
-      this.type = descriptionInitDict.type || null;
-      this.sdp = descriptionInitDict.sdp || null;
-    } else {
-      this.type = this.sdp = null;
-    }
+function MediaStreamEvent() {
+  this.type = this._stream = null;
+}
+MediaStreamEvent.prototype = {
+  classDescription: "MediaStreamEvent",
+  classID: MSEVENT_CID,
+  contractID: MSEVENT_CONTRACT,
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports,
+                                         Ci.nsIDOMGlobalPropertyInitializer]),
+
+  init: function(win) { this._win = win; },
+
+  __init: function(type, dict) {
+    this.type = type;
+    this.__DOM_IMPL__.initEvent(type, dict.bubbles || false,
+                                dict.cancelable || false);
+    this._stream = dict.stream;
   },
 
-  toString: function() {
-    return JSON.stringify({
-      type: this.type, sdp: this.sdp
-    });
-  }
+  get stream() { return this._stream; }
 };
 
-function PeerConnection() {
+function RTCPeerConnectionIceEvent() {
+  this.type = this._candidate = null;
+}
+RTCPeerConnectionIceEvent.prototype = {
+  classDescription: "RTCPeerConnectionIceEvent",
+  classID: PC_ICEEVENT_CID,
+  contractID: PC_ICEEVENT_CONTRACT,
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports,
+                                         Ci.nsIDOMGlobalPropertyInitializer]),
+
+  init: function(win) { this._win = win; },
+
+  __init: function(type, dict) {
+    this.type = type;
+    this.__DOM_IMPL__.initEvent(type, dict.bubbles || false,
+                                dict.cancelable || false);
+    this._candidate = dict.candidate || null;
+  },
+
+  get candidate() { return this._candidate; }
+};
+
+function RTCPeerConnection() {
   this._queue = [];
 
   this._pc = null;
@@ -224,11 +224,9 @@ function PeerConnection() {
    */
   this._pending = false;
 
-  // Public attributes.
-  this.onaddstream = null;
+  // Event handlers
   this.onopen = null;
   this.onremovestream = null;
-  this.onicecandidate = null;
   this.onstatechange = null;
   this.ongatheringchange = null;
   this.onicechange = null;
@@ -238,26 +236,17 @@ function PeerConnection() {
   this.onconnection = null;
   this.onclosedconnection = null;
 }
-PeerConnection.prototype = {
+RTCPeerConnection.prototype = {
+  classDescription: "mozRTCPeerConnection",
   classID: PC_CID,
+  contractID: PC_CONTRACT,
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports,
+                                         Ci.nsIDOMGlobalPropertyInitializer,
+                                         Ci.nsISupportsWeakReference]),
+  init: function(win) { this._win = win; },
 
-  classInfo: Cu.getDOMClassInfo("RTCPeerConnection"),
-
-  QueryInterface: XPCOMUtils.generateQI([
-    Ci.nsIDOMRTCPeerConnection,
-    Ci.nsIDOMGlobalObjectConstructor,
-    Ci.nsISupportsWeakReference
-  ]),
-
-  // Constructor is an explicit function, because of nsIDOMGlobalObjectConstructor.
-  constructor: function(win, rtcConfig) {
-    if (!Services.prefs.getBoolPref("media.peerconnection.enabled")) {
-      throw new Components.Exception("PeerConnection not enabled (did you set the pref?)");
-    }
-    if (this._win) {
-      throw new Components.Exception("RTCPeerConnection constructor already called");
-    }
-    if (!rtcConfig ||
+  __init: function(rtcConfig) {
+    if (!rtcConfig.iceServers ||
         !Services.prefs.getBoolPref("media.peerconnection.use_document_iceservers")) {
       rtcConfig = {iceServers:
         JSON.parse(Services.prefs.getCharPref("media.peerconnection.default_iceservers"))};
@@ -275,11 +264,10 @@ PeerConnection.prototype = {
     // Nothing starts until ICE gathering completes.
     this._queueOrRun({
       func: this._getPC().initialize,
-      args: [this._observer, win, rtcConfig, Services.tm.currentThread],
+      args: [this._observer, this._win, rtcConfig, Services.tm.currentThread],
       wait: true
     });
 
-    this._win = win;
     this._winID = this._win.QueryInterface(Ci.nsIInterfaceRequestor)
                            .getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
 
@@ -289,7 +277,7 @@ PeerConnection.prototype = {
 
   _getPC: function() {
     if (!this._pc) {
-      throw new Components.Exception("PeerConnection is gone (did you turn on Offline mode?)");
+      throw new Components.Exception("RTCPeerConnection is gone (did you enter Offline mode?)");
     }
     return this._pc;
   },
@@ -335,19 +323,14 @@ PeerConnection.prototype = {
    * An RTCConfiguration looks like this:
    *
    * { "iceServers": [ { url:"stun:23.21.150.121" },
-   *                   { url:"turn:user@turn.example.org", credential:"mypass"} ] }
+   *                   { url:"turn:turn.example.org",
+   *                     username:"jib", credential:"mypass"} ] }
    *
-   * We check for basic structure and well-formed stun/turn urls, but not
-   * validity of servers themselves, before passing along to C++.
+   * WebIDL normalizes structure for us, so we test well-formed stun/turn urls,
+   * but not validity of servers themselves, before passing along to C++.
    * ErrorMsg is passed in to detail which array-entry failed, if any.
    */
   _mustValidateRTCConfiguration: function(rtcConfig, errorMsg) {
-    function isObject(obj) {
-      return obj && (typeof obj === "object");
-    }
-    function isArraylike(obj) {
-      return isObject(obj) && ("length" in obj);
-    }
     function nicerNewURI(uriStr, errorMsg) {
       let ios = Cc['@mozilla.org/network/io-service;1'].getService(Ci.nsIIOService);
       try {
@@ -363,20 +346,12 @@ PeerConnection.prototype = {
         throw new Components.Exception(errorMsg + " - improper scheme: " + url.scheme,
                                        Cr.NS_ERROR_MALFORMED_URI);
       }
-      if (server.credential && isObject(server.credential)) {
-        throw new Components.Exception(errorMsg + " - invalid credential");
+    }
+    if (rtcConfig.iceServers) {
+      let len = rtcConfig.iceServers.length;
+      for (let i=0; i < len; i++) {
+        mustValidateServer (rtcConfig.iceServers[i], errorMsg);
       }
-    }
-    if (!isObject(rtcConfig)) {
-      throw new Components.Exception(errorMsg);
-    }
-    if (!isArraylike(rtcConfig.iceServers)) {
-      throw new Components.Exception(errorMsg +
-                                     " - iceServers [] property not present");
-    }
-    let len = rtcConfig.iceServers.length;
-    for (let i=0; i < len; i++) {
-      mustValidateServer (rtcConfig.iceServers[i], errorMsg);
     }
   },
 
@@ -465,6 +440,24 @@ PeerConnection.prototype = {
       throw new Components.Exception("Peer connection is closed");
     }
   },
+
+  dispatchEvent: function(event) {
+    this.__DOM_IMPL__.dispatchEvent(event);
+  },
+
+  getEventHandler: function(type) {
+    return this.__DOM_IMPL__.getEventHandler(type);
+  },
+
+  setEventHandler: function(type, handler) {
+    this.__DOM_IMPL__.setEventHandler(type, handler);
+  },
+
+  get onaddstream()    { return this.getEventHandler("onaddstream"); },
+  get onicecandidate() { return this.getEventHandler("onicecandidate"); },
+
+  set onaddstream(handler) { this.setEventHandler("onaddstream", handler); },
+  set onicecandidate(h)    { this.setEventHandler("onicecandidate", h); },
 
   createOffer: function(onSuccess, onError, constraints) {
     if (!constraints) {
@@ -581,21 +574,17 @@ PeerConnection.prototype = {
     });
   },
 
-  updateIce: function(config, constraints, restart) {
-    return Cr.NS_ERROR_NOT_IMPLEMENTED;
+  updateIce: function(config, constraints) {
+    throw new Components.Exception ("updateIce not yet implemented",
+                                    Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
 
   addIceCandidate: function(cand, onSuccess, onError) {
-    if (!cand) {
-      throw new Components.Exception("NULL candidate passed to addIceCandidate!");
-    }
-
-    if (!cand.candidate || !cand.sdpMLineIndex) {
+    if (!cand.candidate && !cand.sdpMLineIndex) {
       throw new Components.Exception("Invalid candidate passed to addIceCandidate!");
     }
-
-    this._onAddIceCandidateSuccess = onSuccess;
-    this._onAddIceCandidateError = onError;
+    this._onAddIceCandidateSuccess = onSuccess || null;
+    this._onAddIceCandidateError = onError || null;
 
     this._queueOrRun({
       func: this._getPC().addIceCandidate,
@@ -605,6 +594,9 @@ PeerConnection.prototype = {
   },
 
   addStream: function(stream, constraints) {
+    if (stream.currentTime === undefined) {
+      throw new Components.Exception("Invalid stream passed to addStream!");
+    }
     // TODO: Implement constraints.
     this._queueOrRun({
       func: this._getPC().addStream,
@@ -615,7 +607,8 @@ PeerConnection.prototype = {
 
   removeStream: function(stream) {
      //Bug844295: Not implemeting this functionality.
-     return Cr.NS_ERROR_NOT_IMPLEMENTED;
+     throw new Components.Exception ("removeStream not yet implemented",
+                                     Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
 
   close: function() {
@@ -627,15 +620,21 @@ PeerConnection.prototype = {
     this._closed = true;
   },
 
-  get localStreams() {
+  getLocalStreams: function() {
     this._checkClosed();
     return this._getPC().localStreams;
   },
 
-  get remoteStreams() {
+  getRemoteStreams: function() {
     this._checkClosed();
     return this._getPC().remoteStreams;
   },
+
+  // Four backwards-compatible attributes (to pass mochitests)
+  get localStreams() { return this.getLocalStreams(); },
+  get remoteStreams() { return this.getRemoteStreams(); },
+  set localDescription(desc) { this.setLocalDescription(desc); },
+  set remoteDescription(desc) { this.setLocalDescription(desc); },
 
   get localDescription() {
     this._checkClosed();
@@ -643,10 +642,8 @@ PeerConnection.prototype = {
     if (sdp.length == 0) {
       return null;
     }
-    return {
-      type: this._localType, sdp: sdp,
-      __exposedProps__: { type: "rw", sdp: "rw" }
-    };
+    return new this._win.mozRTCSessionDescription({ type: this._localType,
+                                                    sdp: sdp });
   },
 
   get remoteDescription() {
@@ -655,10 +652,8 @@ PeerConnection.prototype = {
     if (sdp.length == 0) {
       return null;
     }
-    return {
-      type: this._remoteType, sdp: sdp,
-      __exposedProps__: { type: "rw", sdp: "rw" }
-    };
+    return new this._win.mozRTCSessionDescription({ type: this._remoteType,
+                                                    sdp: sdp });
   },
 
   get readyState() {
@@ -692,7 +687,7 @@ PeerConnection.prototype = {
   createDataChannel: function(label, dict) {
     this._checkClosed();
     if (dict == undefined) {
-	dict = {};
+      dict = {};
     }
     if (dict.maxRetransmitTime != undefined &&
         dict.maxRetransmitNum != undefined) {
@@ -765,85 +760,56 @@ PeerConnectionObserver.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.IPeerConnectionObserver,
                                          Ci.nsISupportsWeakReference]),
 
+  dispatchEvent: function(event) {
+    this._dompc.dispatchEvent(event);
+  },
+
   callCB: function(callback, arg) {
     if (callback) {
       try {
-        callback.onCallback(arg);
+        callback(arg);
       } catch(e) {
         // A content script (user-provided) callback threw an error. We don't
         // want this to take down peerconnection, but we still want the user
         // to see it, so we catch it, report it, and move on.
-        //
-        // We do stack parsing in two different places for different reasons:
-
-        var msg;
-        if (e.result == Cr.NS_ERROR_XPC_JS_THREW_JS_OBJECT) {
-          // TODO(jib@mozilla.com): Revisit once bug 862153 is fixed.
-          //
-          // The actual content script frame is unavailable due to bug 862153,
-          // so users see file and line # into this file, which is not helpful.
-          //
-          // 1) Fix up the error message itself to differentiate between the
-          //    22 places we call callCB() in this file, using plain JS stack.
-          //
-          // Tweak the existing NS_ERROR_XPC_JS_THREW_JS_OBJECT message:
-          // -'Error: x' when calling method: [RTCPeerConCallback::onCallback]
-          // +'Error: x' when calling method: [RTCPeerConCallback::onCreateOfferError]
-
-          let caller = Error().stack.split("\n")[1].split("@")[0];
-          // caller ~= "PeerConnectionObserver.prototype.onCreateOfferError"
-
-          msg = e.message.replace("::onCallback", "::" + caller.split(".")[2]);
-        } else {
-          msg = e.message;
-        }
-
-        // Log error message to web console and window.onerror, if present.
-        //
-        // 2) nsIScriptError doesn't understand the nsIStackFrame format, so
-        //    do the translation by extracting file and line from XPCOM stack:
-        //
-        // e.location ~= "JS frame :: file://.js :: RTCPCCb::onCallback :: line 1"
-
-        let stack = e.location.toString().split(" :: ");
-        let file = stack[1];
-        let line = parseInt(stack[3].split(" ")[1]);
-
-        let scriptErrorClass = Cc["@mozilla.org/scripterror;1"];
-        let scriptError = scriptErrorClass.createInstance(Ci.nsIScriptError);
-        scriptError.initWithWindowID(msg, file, null, line, 0,
-                                     Ci.nsIScriptError.exceptionFlag,
-                                     "content javascript",
-                                     this._dompc._winID);
-        let console = Cc["@mozilla.org/consoleservice;1"].
-            getService(Ci.nsIConsoleService);
-        console.logMessage(scriptError);
-
-        // Safely call onerror directly if present (necessary for testing)
-        try {
-          if (typeof this._dompc._win.onerror === "function") {
-            this._dompc._win.onerror(msg, file, line);
-          }
-        } catch(e) {
-          // If onerror itself throws, service it.
-          try {
-            let scriptError = scriptErrorClass.createInstance(Ci.nsIScriptError);
-            scriptError.initWithWindowID(e.message, e.fileName, null,
-                                         e.lineNumber, 0,
-                                         Ci.nsIScriptError.exceptionFlag,
-                                         "content javascript",
-                                         this._dompc._winID);
-            console.logMessage(scriptError);
-          } catch(e) {}
-        }
+        this.reportError(e.message, e.fileName, e.lineNumber);
       }
     }
   },
 
-  onCreateOfferSuccess: function(offer) {
+  // Log error message to web console and window.onerror, if present.
+  reportError: function(msg, file, line) {
+    let scriptErrorClass = Cc["@mozilla.org/scripterror;1"];
+    let scriptError = scriptErrorClass.createInstance(Ci.nsIScriptError);
+    scriptError.initWithWindowID(msg, file, null, line,0,
+                                 Ci.nsIScriptError.exceptionFlag,
+                                 "content javascript", this._dompc._winID);
+    let console = Cc["@mozilla.org/consoleservice;1"].
+      getService(Ci.nsIConsoleService);
+    console.logMessage(scriptError);
+
+    // Safely call onerror directly if present (necessary for testing)
+    try {
+      if (typeof this._dompc._win.onerror === "function") {
+        this._dompc._win.onerror(msg, file, line);
+      }
+    } catch(e) {
+      // If onerror itself throws, service it.
+      try {
+        let scriptError = scriptErrorClass.createInstance(Ci.nsIScriptError);
+        scriptError.initWithWindowID(e.message, e.fileName, null, e.lineNumber,
+                                     0, Ci.nsIScriptError.exceptionFlag,
+                                     "content javascript",
+                                     this._dompc._winID);
+        console.logMessage(scriptError);
+      } catch(e) {}
+    }
+  },
+
+  onCreateOfferSuccess: function(sdp) {
     this.callCB(this._dompc._onCreateOfferSuccess,
-                { type: "offer", sdp: offer,
-                __exposedProps__: { type: "rw", sdp: "rw" } });
+                new this._dompc._win.mozRTCSessionDescription({ type: "offer",
+                                                                sdp: sdp }));
     this._dompc._executeNext();
   },
 
@@ -852,10 +818,10 @@ PeerConnectionObserver.prototype = {
     this._dompc._executeNext();
   },
 
-  onCreateAnswerSuccess: function(answer) {
+  onCreateAnswerSuccess: function(sdp) {
     this.callCB (this._dompc._onCreateAnswerSuccess,
-                 { type: "answer", sdp: answer,
-                 __exposedProps__: { type: "rw", sdp: "rw" } });
+                 new this._dompc._win.mozRTCSessionDescription({ type: "answer",
+                                                                 sdp: sdp }));
     this._dompc._executeNext();
   },
 
@@ -943,21 +909,19 @@ PeerConnectionObserver.prototype = {
     }
   },
 
-  onAddStream: function(stream, type) {
-    this.callCB(this._dompc.onaddstream,
-                { stream: stream, type: type,
-                __exposedProps__: { stream: "r", type: "r" } });
+  onAddStream: function(stream) {
+    this.dispatchEvent(new this._dompc._win.MediaStreamEvent("addstream",
+                                                             { stream: stream }));
   },
 
   onRemoveStream: function(stream, type) {
-    this.callCB(this._dompc.onremovestream,
-                { stream: stream, type: type,
-                __exposedProps__: { stream: "r", type: "r" } });
+    this.dispatchEvent(new this._dompc._win.MediaStreamEvent("removestream",
+                                                             { stream: stream }));
   },
 
-  foundIceCandidate: function(cand) {
-    this.callCB(this._dompc.onicecandidate,
-                {candidate: cand, __exposedProps__: { candidate: "rw" } });
+  foundIceCandidate: function(c) {
+    this.dispatchEvent(new this._dompc._win.RTCPeerConnectionIceEvent("icecandidate",
+                                                                      { candidate: c }));
   },
 
   notifyDataChannel: function(channel) {
@@ -975,5 +939,6 @@ PeerConnectionObserver.prototype = {
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory(
-  [GlobalPCList, IceCandidate, SessionDescription, PeerConnection]
+  [GlobalPCList, RTCIceCandidate, RTCSessionDescription, RTCPeerConnection,
+   RTCPeerConnectionIceEvent, MediaStreamEvent]
 );
