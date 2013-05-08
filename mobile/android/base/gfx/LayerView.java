@@ -388,7 +388,7 @@ public class LayerView extends FrameLayout {
     private Bitmap getDrawable(int resId) {
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inScaled = false;
-        return BitmapFactory.decodeResource(getContext().getResources(), resId, options);
+        return BitmapUtils.decodeResource(getContext(), resId, options);
     }
 
     Bitmap getShadowPattern() {
