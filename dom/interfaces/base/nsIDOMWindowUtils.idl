@@ -1111,6 +1111,7 @@ interface nsIDOMWindowUtils : nsISupports {
 
   /**
    * Return the outer window with the given ID, if any.  Can return null.
+   * @deprecated Use nsIWindowMediator.getOuterWindowWithId.  See bug 865664.
    */
   nsIDOMWindow getOuterWindowWithId(in unsigned long long aOuterWindowID);
 
