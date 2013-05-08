@@ -423,14 +423,14 @@ class MacroAssemblerX86Shared : public Assembler
     }
 
     void emitSet(Assembler::Condition cond, const Register &dest,
-                 Assembler::NaNCond ifNaN = Assembler::NaN_Unexpected) {
+                 Assembler::NaNCond ifNaN = Assembler::NaN_HandledByCond) {
         if (GeneralRegisterSet(Registers::SingleByteRegs).has(dest)) {
             // If the register we're defining is a single byte register,
             // take advantage of the setCC instruction
             setCC(cond, dest);
             movzxbl(dest, dest);
 
-            if (ifNaN != Assembler::NaN_Unexpected) {
+            if (ifNaN != Assembler::NaN_HandledByCond) {
                 Label noNaN;
                 j(Assembler::NoParity, &noNaN);
                 if (ifNaN == Assembler::NaN_IsTrue)
