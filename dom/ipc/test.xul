@@ -253,6 +253,9 @@
       },
       openDialog: function(aType, aName, aFeatures, aArguments, aFrameElement) {
         alert(aType + ", " + aName + ", " + aFeatures + ", " + aArguments + ", " + aFrameElement);
+      },
+      get contentWindow() {
+        return null;
       }
     }
 
