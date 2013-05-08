@@ -687,6 +687,8 @@ nr_stun_remove_duplicate_addrs(nr_transport_addr addrs[], int remove_loopback, i
     return _status;
 }
 
+#ifndef USE_PLATFORM_NR_STUN_GET_ADDRS
+
 int
 nr_stun_get_addrs(nr_transport_addr addrs[], int maxaddrs, int drop_loopback, int *count)
 {
@@ -712,3 +714,4 @@ nr_stun_get_addrs(nr_transport_addr addrs[], int maxaddrs, int drop_loopback, in
     return _status;
 }
 
+#endif
