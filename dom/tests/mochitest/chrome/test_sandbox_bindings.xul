@@ -29,7 +29,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741267
       var win = $("t").contentWindow;
       var sandbox = Components.utils.Sandbox(win, { sandboxPrototype: win });
 
-      is(sandbox._content, sandbox.content, "_content and content returned the same thing");
+      is(sandbox._content, undefined, "_content does nothing over Xray");
 
       try {
         var css = Components.utils.evalInSandbox("CSSStyleDeclaration", sandbox);
