@@ -379,7 +379,7 @@ nsFrameMessageManager::SendSyncMessage(const nsAString& aMessageName,
   if (mCallback->DoSendSyncMessage(aMessageName, data, &retval)) {
     JSAutoRequest ar(aCx);
     uint32_t len = retval.Length();
-    JSObject* dataArray = JS_NewArrayObject(aCx, len, nullptr);
+    JS::Rooted<JSObject*> dataArray(aCx, JS_NewArrayObject(aCx, len, nullptr));
     NS_ENSURE_TRUE(dataArray, NS_ERROR_OUT_OF_MEMORY);
 
     for (uint32_t i = 0; i < len; ++i) {
@@ -387,12 +387,13 @@ nsFrameMessageManager::SendSyncMessage(const nsAString& aMessageName,
         continue;
       }
 
-      JS::Value ret = JSVAL_VOID;
+      JS::Rooted<JS::Value> ret(aCx);
       if (!JS_ParseJSON(aCx, static_cast<const jschar*>(retval[i].get()),
-                        retval[i].Length(), &ret)) {
+                        retval[i].Length(), ret.address())) {
         return NS_ERROR_UNEXPECTED;
       }
-      NS_ENSURE_TRUE(JS_SetElement(aCx, dataArray, i, &ret), NS_ERROR_OUT_OF_MEMORY);
+      NS_ENSURE_TRUE(JS_SetElement(aCx, dataArray, i, ret.address()),
+                     NS_ERROR_OUT_OF_MEMORY);
     }
 
     *aRetval = OBJECT_TO_JSVAL(dataArray);
@@ -632,8 +633,8 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
   JSContext *cxToUse = mContext ? mContext
                                 : (aContext ? aContext
                                             : nsContentUtils::GetSafeJSContext());
+  JS::Rooted<JSObject*> objectsArray(cxToUse, aObjectsArray);
   AutoPushJSContext ctx(cxToUse);
-  JS::Rooted<JSObject*> objectsArray(ctx, aObjectsArray);
   if (mListeners.Length()) {
     nsCOMPtr<nsIAtom> name = do_GetAtom(aMessage);
     MMListenerRemover lr(this);
@@ -687,10 +688,10 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
           JS_ClearPendingException(ctx);
           return NS_OK;
         }
-        JSString* jsMessage =
+        JS::Rooted<JSString*> jsMessage(ctx,
           JS_NewUCStringCopyN(ctx,
                               static_cast<const jschar*>(aMessage.BeginReading()),
-                              aMessage.Length());
+                              aMessage.Length()));
         NS_ENSURE_TRUE(jsMessage, NS_ERROR_OUT_OF_MEMORY);
         JS_DefineProperty(ctx, param, "target", targetv, nullptr, nullptr, JSPROP_ENUMERATE);
         JS_DefineProperty(ctx, param, "name",
@@ -1008,8 +1009,8 @@ nsFrameScriptExecutor::LoadFrameScriptInternal(const nsAString& aURL)
       // Need to scope JSAutoRequest to happen after Push but before Pop,
       // at least for now. See bug 584673.
       JSAutoRequest ar(mCx);
-      JSObject* global = nullptr;
-      mGlobal->GetJSObject(&global);
+      JS::Rooted<JSObject*> global(mCx);
+      mGlobal->GetJSObject(global.address());
       if (global) {
         (void) JS_ExecuteScript(mCx, global, holder->mScript, nullptr);
       }
@@ -1067,8 +1068,8 @@ nsFrameScriptExecutor::TryCacheLoadAndCompileScript(const nsAString& aURL,
       // Need to scope JSAutoRequest to happen after Push but before Pop,
       // at least for now. See bug 584673.
       JSAutoRequest ar(mCx);
-      JSObject* global = nullptr;
-      mGlobal->GetJSObject(&global);
+      JS::Rooted<JSObject*> global(mCx);
+      mGlobal->GetJSObject(global.address());
       if (global) {
         JSAutoCompartment ac(mCx, global);
         JS::CompileOptions options(mCx);
@@ -1137,8 +1138,8 @@ nsFrameScriptExecutor::InitTabChildGlobalInternal(nsISupports* aScope,
   NS_ENSURE_SUCCESS(rv, false);
 
     
-  JSObject* global = nullptr;
-  rv = mGlobal->GetJSObject(&global);
+  JS::Rooted<JSObject*> global(cx);
+  rv = mGlobal->GetJSObject(global.address());
   NS_ENSURE_SUCCESS(rv, false);
 
   JS_SetGlobalObject(cx, global);
