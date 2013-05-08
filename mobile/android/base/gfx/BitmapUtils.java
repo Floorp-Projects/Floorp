@@ -5,6 +5,8 @@
 
 package org.mozilla.gecko.gfx;
 
+import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -106,6 +108,20 @@ public final class BitmapUtils {
         }
 
         return bitmap;
+    }
+
+    public static Bitmap decodeResource(Context context, int id) {
+        return decodeResource(context, id, null);
+    }
+
+    public static Bitmap decodeResource(Context context, int id, BitmapFactory.Options options) {
+        Resources resources = context.getResources();
+        try {
+            return BitmapFactory.decodeResource(resources, id, options);
+        } catch (OutOfMemoryError e) {
+            Log.e(LOGTAG, "decodeResource() OOM! Resource id=" + id, e);
+            return null;
+        }
     }
 
     public static int getDominantColor(Bitmap source) {

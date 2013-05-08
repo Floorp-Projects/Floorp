@@ -28,7 +28,6 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.ImageFormat;
@@ -799,12 +798,12 @@ public class GeckoAppShell
         }
 
         // draw the overlay
-        Bitmap overlay = BitmapFactory.decodeResource(GeckoApp.mAppContext.getResources(), R.drawable.home_bg);
+        Bitmap overlay = BitmapUtils.decodeResource(GeckoApp.mAppContext, R.drawable.home_bg);
         canvas.drawBitmap(overlay, null, new Rect(0, 0, size, size), null);
 
         // draw the favicon
         if (aSource == null)
-            aSource = BitmapFactory.decodeResource(GeckoApp.mAppContext.getResources(), R.drawable.home_star);
+            aSource = BitmapUtils.decodeResource(GeckoApp.mAppContext, R.drawable.home_star);
 
         // by default, we scale the icon to this size
         int sWidth = insetSize / 2;
