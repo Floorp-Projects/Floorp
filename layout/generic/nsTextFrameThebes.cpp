@@ -6345,6 +6345,9 @@ nsTextFrame::GetChildFrameContainingOffset(int32_t   aContentOffset,
       if (aContentOffset == next->GetContentOffset()) {
         if (aHint) {
           f = next;
+          if (f->GetContentLength() == 0) {
+            continue; // use the last of the empty frames with this offset
+          }
         }
         break;
       }
@@ -6358,6 +6361,9 @@ nsTextFrame::GetChildFrameContainingOffset(int32_t   aContentOffset,
       if (aContentOffset == f->GetContentOffset()) {
         if (!aHint) {
           f = prev;
+          if (f->GetContentLength() == 0) {
+            continue; // use the first of the empty frames with this offset
+          }
         }
         break;
       }

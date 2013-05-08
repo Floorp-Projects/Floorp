@@ -50,11 +50,11 @@ public:
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE = 0;
 
   // nsIContent
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const MOZ_OVERRIDE;
 
   virtual nsSVGAnimatedTransformList*
-    GetAnimatedTransformList(uint32_t aFlags = 0);
-  virtual nsIAtom* GetTransformListAttrName() const {
+    GetAnimatedTransformList(uint32_t aFlags = 0) MOZ_OVERRIDE;
+  virtual nsIAtom* GetTransformListAttrName() const MOZ_OVERRIDE {
     return nsGkAtoms::gradientTransform;
   }
 
@@ -65,8 +65,8 @@ public:
   already_AddRefed<nsIDOMSVGAnimatedString> Href();
 
 protected:
-  virtual EnumAttributesInfo GetEnumInfo();
-  virtual StringAttributesInfo GetStringInfo();
+  virtual EnumAttributesInfo GetEnumInfo() MOZ_OVERRIDE;
+  virtual StringAttributesInfo GetStringInfo() MOZ_OVERRIDE;
 
   enum { GRADIENTUNITS, SPREADMETHOD };
   nsSVGEnum mEnumAttributes[2];
@@ -98,7 +98,7 @@ protected:
                              JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
 public:
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   // WebIDL
   already_AddRefed<SVGAnimatedLength> X1();
@@ -108,7 +108,7 @@ public:
 
 protected:
 
-  virtual LengthAttributesInfo GetLengthInfo();
+  virtual LengthAttributesInfo GetLengthInfo() MOZ_OVERRIDE;
 
   enum { ATTR_X1, ATTR_Y1, ATTR_X2, ATTR_Y2 };
   nsSVGLength2 mLengthAttributes[4];
@@ -132,7 +132,7 @@ protected:
                              JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
 public:
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   // WebIDL
   already_AddRefed<SVGAnimatedLength> Cx();
@@ -142,7 +142,7 @@ public:
   already_AddRefed<SVGAnimatedLength> Fy();
 protected:
 
-  virtual LengthAttributesInfo GetLengthInfo();
+  virtual LengthAttributesInfo GetLengthInfo() MOZ_OVERRIDE;
 
   enum { ATTR_CX, ATTR_CY, ATTR_R, ATTR_FX, ATTR_FY };
   nsSVGLength2 mLengthAttributes[5];

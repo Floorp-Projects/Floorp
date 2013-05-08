@@ -2090,10 +2090,7 @@ MarionetteDriverActor.prototype = {
         break;
       case "Marionette:switchToFrame":
         // Switch to a remote frame.
-        let thisWin = this.getCurrentWindow();
-        let frameWindow = thisWin.QueryInterface(Ci.nsIInterfaceRequestor)
-                                 .getInterface(Ci.nsIDOMWindowUtils)
-                                 .getOuterWindowWithId(message.json.win);
+        let frameWindow = Services.wm.getOuterWindowWithId(message.json.win);
         let thisFrame = frameWindow.document.getElementsByTagName("iframe")[message.json.frame];
         let mm = thisFrame.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader.messageManager;
 
@@ -2126,10 +2123,8 @@ MarionetteDriverActor.prototype = {
         // This code processes the content listener's registration information
         // and either accepts the listener, or ignores it
         let nullPrevious = (this.curBrowser.curFrameId == null);
-        let curWin = this.getCurrentWindow();
-        let listenerWindow = curWin.QueryInterface(Ci.nsIInterfaceRequestor)
-                                   .getInterface(Ci.nsIDOMWindowUtils)
-                                   .getOuterWindowWithId(message.json.value);
+        let listenerWindow =
+          Services.wm.getOuterWindowWithId(message.json.value);
 
         if (!listenerWindow || (listenerWindow.location.href != message.json.href) &&
             (this.currentRemoteFrame !== null)) {

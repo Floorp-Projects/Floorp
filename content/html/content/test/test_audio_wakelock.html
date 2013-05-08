@@ -1,0 +1,113 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=868943
+-->
+<head>
+  <title>Test for Bug 868943</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=868943">Mozilla Bug 868943</a>
+<p id="display"></p>
+<div id="content">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 868943 **/
+
+SpecialPowers.addPermission("power", true, document);
+
+function testAudioPlayPause() {
+  var lockState = true;
+  var count = 0;
+
+  var content = document.getElementById('content');
+
+  var audio = document.createElement('audio');
+  audio.src = "wakelock.ogg";
+  content.appendChild(audio);
+
+  audio.addEventListener('progress', function() {
+    lockState = false;
+    audio.pause();
+  });
+
+  navigator.mozPower.addWakeLockListener(function testAudioPlayListener(topic, state) {
+    is(topic, "cpu", "Audio element locked the target == cpu");
+    var locked = state == "locked-foreground" ||
+                 state == "locked-background";
+
+    is(locked, lockState, "Audio element locked the cpu - no paused");
+    count++;
+
+    // count == 1 is when the cpu wakelock is created
+    // count == 2 is when the cpu wakelock is released
+
+    if (count == 2) {
+      content.removeChild(audio);
+      navigator.mozPower.removeWakeLockListener(testAudioPlayListener);
+      runTests();
+    }
+  });
+
+  audio.play();
+}
+
+function testAudioPlay() {
+  var lockState = true;
+  var count = 0;
+
+  var content = document.getElementById('content');
+
+  var audio = document.createElement('audio');
+  audio.src = "wakelock.ogg";
+  content.appendChild(audio);
+
+  navigator.mozPower.addWakeLockListener(function testAudioPlayListener(topic, state) {
+    is(topic, "cpu", "Audio element locked the target == cpu");
+    var locked = state == "locked-foreground" ||
+                 state == "locked-background";
+
+    is(locked, lockState, "Audio element locked the cpu - no paused");
+    count++;
+
+    // count == 1 is when the cpu wakelock is created: the wakelock must be
+    // created when the media element starts playing.
+    // count == 2 is when the cpu wakelock is released.
+
+    if (count == 1) {
+      // The next step is to unlock the resource.
+      lockState = false;
+    } else if (count == 2) {
+      content.removeChild(audio);
+      navigator.mozPower.removeWakeLockListener(testAudioPlayListener);
+      runTests();
+    }
+  });
+
+  audio.play();
+}
+
+var tests = [ testAudioPlayPause, testAudioPlay ];
+function runTests() {
+  if (!tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  var test =  tests.pop();
+  test();
+};
+
+SimpleTest.waitForExplicitFinish();
+runTests();
+
+</script>
+</pre>
+</body>
+</html>

@@ -29,10 +29,10 @@ protected:
                              JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
 public:
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   virtual bool AttributeAffectsRendering(
-          int32_t aNameSpaceID, nsIAtom* aAttribute) const;
+          int32_t aNameSpaceID, nsIAtom* aAttribute) const MOZ_OVERRIDE;
 
   const nsSVGString* GetIn1() { return &mStringAttributes[IN1]; }
 
@@ -40,7 +40,7 @@ public:
   already_AddRefed<nsIDOMSVGAnimatedString> In1();
 
 protected:
-  virtual StringAttributesInfo GetStringInfo();
+  virtual StringAttributesInfo GetStringInfo() MOZ_OVERRIDE;
 
   enum { IN1 };
   nsSVGString mStringAttributes[1];

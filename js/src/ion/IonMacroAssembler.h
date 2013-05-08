@@ -874,6 +874,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
 
     void loadBaselineOrIonRaw(Register script, Register dest, ExecutionMode mode, Label *failure);
+    void loadBaselineOrIonNoArgCheck(Register callee, Register dest, ExecutionMode mode, Label *failure);
 
     void loadBaselineFramePtr(Register framePtr, Register dest);
 

@@ -91,6 +91,18 @@ class CodeGeneratorShared : public LInstructionVisitor
         return osrEntryOffset_;
     }
 
+    // The offset of the first instruction of the body.
+    // This skips the arguments type checks.
+    size_t skipArgCheckEntryOffset_;
+
+    inline void setSkipArgCheckEntryOffset(size_t offset) {
+        JS_ASSERT(skipArgCheckEntryOffset_ == 0);
+        skipArgCheckEntryOffset_ = offset;
+    }
+    inline size_t getSkipArgCheckEntryOffset() const {
+        return skipArgCheckEntryOffset_;
+    }
+
     typedef js::Vector<SafepointIndex, 8, SystemAllocPolicy> SafepointIndices;
 
     bool markArgumentSlots(LSafepoint *safepoint);

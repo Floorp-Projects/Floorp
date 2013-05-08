@@ -31,6 +31,7 @@ MOCHITEST_FILES := \
   test_audioParamLinearRamp.html \
   test_audioParamSetCurveAtTime.html \
   test_audioParamSetTargetAtTime.html \
+  test_audioParamTimelineDestinationOffset.html \
   test_audioBufferSourceNode.html \
   test_audioBufferSourceNodeLazyLoopParam.html \
   test_audioBufferSourceNodeLoop.html \
@@ -48,6 +49,7 @@ MOCHITEST_FILES := \
   test_delayNodeWithGain.html \
   test_dynamicsCompressorNode.html \
   test_gainNode.html \
+  test_gainNodeInLoop.html \
   test_mediaDecoding.html \
   test_mixingRules.html \
   test_nodeToParamConnection.html \

@@ -162,7 +162,8 @@ ErrorResult::ReportJSException(JSContext* cx)
 namespace dom {
 
 bool
-DefineConstants(JSContext* cx, JSObject* obj, const ConstantSpec* cs)
+DefineConstants(JSContext* cx, JS::Handle<JSObject*> obj,
+                const ConstantSpec* cs)
 {
   for (; cs->name; ++cs) {
     JSBool ok =
@@ -176,15 +177,15 @@ DefineConstants(JSContext* cx, JSObject* obj, const ConstantSpec* cs)
 }
 
 static inline bool
-Define(JSContext* cx, JSObject* obj, const JSFunctionSpec* spec) {
+Define(JSContext* cx, JS::Handle<JSObject*> obj, const JSFunctionSpec* spec) {
   return JS_DefineFunctions(cx, obj, spec);
 }
 static inline bool
-Define(JSContext* cx, JSObject* obj, const JSPropertySpec* spec) {
+Define(JSContext* cx, JS::Handle<JSObject*> obj, const JSPropertySpec* spec) {
   return JS_DefineProperties(cx, obj, spec);
 }
 static inline bool
-Define(JSContext* cx, JSObject* obj, const ConstantSpec* spec) {
+Define(JSContext* cx, JS::Handle<JSObject*> obj, const ConstantSpec* spec) {
   return DefineConstants(cx, obj, spec);
 }
 
@@ -1311,26 +1312,17 @@ SetXrayExpandoChain(JSObject* obj, JSObject* chain)
   }
 }
 
-JSContext*
-MainThreadDictionaryBase::ParseJSON(const nsAString& aJSON,
-                                    Maybe<JSAutoRequest>& aAr,
-                                    Maybe<JSAutoCompartment>& aAc,
-                                    Maybe< JS::Rooted<JS::Value> >& aVal)
+bool
+MainThreadDictionaryBase::ParseJSON(JSContext *aCx,
+                                    const nsAString& aJSON,
+                                    JS::MutableHandle<JS::Value> aVal)
 {
-  AutoSafeJSContext cx;
-  JS::Rooted<JSObject*> global(cx, JS_GetGlobalObject(cx));
-  aAr.construct(static_cast<JSContext*>(cx));
-  aAc.construct(static_cast<JSContext*>(cx), global);
-  aVal.construct(static_cast<JSContext*>(cx), JS::UndefinedValue());
   if (aJSON.IsEmpty()) {
-    return cx;
+    return true;
   }
-  if (!JS_ParseJSON(cx,
-                    static_cast<const jschar*>(PromiseFlatString(aJSON).get()),
-                    aJSON.Length(), aVal.ref().address())) {
-    return nullptr;
-  }
-  return cx;
+  return JS_ParseJSON(aCx,
+                      static_cast<const jschar*>(PromiseFlatString(aJSON).get()),
+                      aJSON.Length(), aVal.address());
 }
 
 static JSString*

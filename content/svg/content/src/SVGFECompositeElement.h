@@ -43,16 +43,16 @@ public:
   virtual nsresult Filter(nsSVGFilterInstance* aInstance,
                           const nsTArray<const Image*>& aSources,
                           const Image* aTarget,
-                          const nsIntRect& aDataRect);
+                          const nsIntRect& aDataRect) MOZ_OVERRIDE;
   virtual bool AttributeAffectsRendering(
-          int32_t aNameSpaceID, nsIAtom* aAttribute) const;
-  virtual nsSVGString& GetResultImageName() { return mStringAttributes[RESULT]; }
-  virtual void GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources);
+          int32_t aNameSpaceID, nsIAtom* aAttribute) const MOZ_OVERRIDE;
+  virtual nsSVGString& GetResultImageName() MOZ_OVERRIDE { return mStringAttributes[RESULT]; }
+  virtual void GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources) MOZ_OVERRIDE;
   virtual nsIntRect ComputeTargetBBox(const nsTArray<nsIntRect>& aSourceBBoxes,
-          const nsSVGFilterInstance& aInstance);
+          const nsSVGFilterInstance& aInstance) MOZ_OVERRIDE;
 
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   // WebIDL
   already_AddRefed<nsIDOMSVGAnimatedString> In1();
@@ -65,9 +65,9 @@ public:
   void SetK(float k1, float k2, float k3, float k4);
 
 protected:
-  virtual NumberAttributesInfo GetNumberInfo();
-  virtual EnumAttributesInfo GetEnumInfo();
-  virtual StringAttributesInfo GetStringInfo();
+  virtual NumberAttributesInfo GetNumberInfo() MOZ_OVERRIDE;
+  virtual EnumAttributesInfo GetEnumInfo() MOZ_OVERRIDE;
+  virtual StringAttributesInfo GetStringInfo() MOZ_OVERRIDE;
 
   enum { ATTR_K1, ATTR_K2, ATTR_K3, ATTR_K4 };
   nsSVGNumber2 mNumberAttributes[4];

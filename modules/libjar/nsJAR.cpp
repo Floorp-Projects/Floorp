@@ -455,7 +455,7 @@ nsJAR::ReadLine(const char** src)
 
   if (eol == nullptr) // Probably reached end of file before newline
   {
-    length = PL_strlen(*src);
+    length = strlen(*src);
     if (length == 0) // immediate end-of-file
       *src = nullptr;
     else             // some data left on this line

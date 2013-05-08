@@ -382,7 +382,7 @@ nsNodeUtils::CloneNodeImpl(nsINode *aNode, bool aDeep,
 nsresult
 nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
                            nsNodeInfoManager *aNewNodeInfoManager,
-                           JSObject *aReparentScope,
+                           JS::Handle<JSObject*> aReparentScope,
                            nsCOMArray<nsINode> &aNodesWithProperties,
                            nsINode *aParent, nsINode **aResult)
 {

@@ -675,8 +675,8 @@ nsContentList::NamedItem(JSContext* cx, const nsAString& name,
   }
   JS::Rooted<JSObject*> wrapper(cx, GetWrapper());
   JSAutoCompartment ac(cx, wrapper);
-  JS::Value v;
-  if (!mozilla::dom::WrapObject(cx, wrapper, item, item, nullptr, &v)) {
+  JS::Rooted<JS::Value> v(cx);
+  if (!mozilla::dom::WrapObject(cx, wrapper, item, item, nullptr, v.address())) {
     error.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }

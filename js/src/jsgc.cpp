@@ -1909,8 +1909,8 @@ void
 js::TriggerGC(JSRuntime *rt, JS::gcreason::Reason reason)
 {
     /* Wait till end of parallel section to trigger GC. */
-    if (ForkJoinSlice *slice = ForkJoinSlice::Current()) {
-        slice->requestGC(reason);
+    if (InParallelSection()) {
+        ForkJoinSlice::Current()->requestGC(reason);
         return;
     }
 
@@ -1926,9 +1926,12 @@ js::TriggerGC(JSRuntime *rt, JS::gcreason::Reason reason)
 void
 js::TriggerZoneGC(Zone *zone, JS::gcreason::Reason reason)
 {
-    /* Wait till end of parallel section to trigger GC. */
-    if (ForkJoinSlice *slice = ForkJoinSlice::Current()) {
-        slice->requestZoneGC(zone, reason);
+    /*
+     * If parallel threads are running, wait till they
+     * are stopped to trigger GC.
+     */
+    if (InParallelSection()) {
+        ForkJoinSlice::Current()->requestZoneGC(zone, reason);
         return;
     }
 

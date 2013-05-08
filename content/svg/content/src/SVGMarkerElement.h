@@ -75,11 +75,11 @@ private:
     nsSVGOrientType *mVal; // kept alive because it belongs to content
     nsRefPtr<nsSVGElement> mSVGElement;
 
-    NS_IMETHOD GetBaseVal(uint16_t* aResult)
+    NS_IMETHOD GetBaseVal(uint16_t* aResult) MOZ_OVERRIDE
       { *aResult = mVal->GetBaseValue(); return NS_OK; }
-    NS_IMETHOD SetBaseVal(uint16_t aValue)
+    NS_IMETHOD SetBaseVal(uint16_t aValue) MOZ_OVERRIDE
       { return mVal->SetBaseValue(aValue, mSVGElement); }
-    NS_IMETHOD GetAnimVal(uint16_t* aResult)
+    NS_IMETHOD GetAnimVal(uint16_t* aResult) MOZ_OVERRIDE
       { *aResult = mVal->GetAnimValue(); return NS_OK; }
   };
 };
@@ -99,13 +99,13 @@ protected:
 
 public:
   // nsIContent interface
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* name) const;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* name) const MOZ_OVERRIDE;
 
   virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
-                             bool aNotify);
+                             bool aNotify) MOZ_OVERRIDE;
 
   // nsSVGSVGElement methods:
-  virtual bool HasValidDimensions() const;
+  virtual bool HasValidDimensions() const MOZ_OVERRIDE;
 
   // public helpers
   gfxMatrix GetMarkerTransform(float aStrokeWidth,
@@ -113,7 +113,7 @@ public:
   nsSVGViewBoxRect GetViewBoxRect();
   gfxMatrix GetViewBoxTransform();
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   nsSVGOrientType* GetOrientType() { return &mOrientType; }
 
@@ -134,15 +134,15 @@ protected:
 
   virtual bool ParseAttribute(int32_t aNameSpaceID, nsIAtom* aName,
                                 const nsAString& aValue,
-                                nsAttrValue& aResult);
+                                nsAttrValue& aResult) MOZ_OVERRIDE;
 
   void SetParentCoordCtxProvider(SVGSVGElement *aContext);
 
-  virtual LengthAttributesInfo GetLengthInfo();
-  virtual AngleAttributesInfo GetAngleInfo();
-  virtual EnumAttributesInfo GetEnumInfo();
-  virtual nsSVGViewBox *GetViewBox();
-  virtual SVGAnimatedPreserveAspectRatio *GetPreserveAspectRatio();
+  virtual LengthAttributesInfo GetLengthInfo() MOZ_OVERRIDE;
+  virtual AngleAttributesInfo GetAngleInfo() MOZ_OVERRIDE;
+  virtual EnumAttributesInfo GetEnumInfo() MOZ_OVERRIDE;
+  virtual nsSVGViewBox *GetViewBox() MOZ_OVERRIDE;
+  virtual SVGAnimatedPreserveAspectRatio *GetPreserveAspectRatio() MOZ_OVERRIDE;
 
   enum { REFX, REFY, MARKERWIDTH, MARKERHEIGHT };
   nsSVGLength2 mLengthAttributes[4];

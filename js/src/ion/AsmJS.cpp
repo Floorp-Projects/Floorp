@@ -23,6 +23,10 @@ using namespace mozilla;
 
 using namespace js::ion;
 
+#ifdef MOZ_VTUNE
+# include "jitprofiling.h"
+#endif
+
 #ifdef JS_ASMJS
 
 /*****************************************************************************/
@@ -1359,6 +1363,14 @@ class ModuleCompiler
         return module_->addExportedFunction(FunctionObject(func->fn()), maybeFieldName,
                                             Move(argCoercions), returnType);
     }
+
+#ifdef MOZ_VTUNE
+    bool trackProfiledFunction(const Func &func, unsigned endCodeOffset) {
+        JSAtom *name = FunctionName(func.fn());
+        unsigned startCodeOffset = func.codeLabel()->offset();
+        return module_->trackProfiledFunction(name, startCodeOffset, endCodeOffset);
+    }
+#endif
 
     void setFirstPassComplete() {
         JS_ASSERT(currentPass_ == 1);
@@ -4589,6 +4601,13 @@ GenerateAsmJSCode(ModuleCompiler &m, ModuleCompiler::Func &func,
         return false;
     }
 
+#ifdef MOZ_VTUNE
+    if (iJIT_IsProfilingActive() == iJIT_SAMPLING_ON) {
+        if (!m.trackProfiledFunction(func, m.masm().size()))
+            return false;
+    }
+#endif
+
     // A single MacroAssembler is reused for all function compilations so
     // that there is a single linear code segment for each module. To avoid
     // spiking memory, a LifoAllocScope in the caller frees all MIR/LIR
@@ -5660,8 +5679,7 @@ js::CompileAsmJS(JSContext *cx, TokenStream &ts, ParseNode *fn, const CompileOpt
         return Warn(cx, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by lack of floating point support");
 
     if (!cx->hasOption(JSOPTION_ASMJS))
-        return Warn(cx, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by javascript.options.experimental_asmjs "
-                                                 "in about:config");
+        return Warn(cx, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by javascript.options.asmjs in about:config");
 
     if (cx->compartment->debugMode())
         return Warn(cx, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by debugger");

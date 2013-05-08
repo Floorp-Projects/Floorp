@@ -6,7 +6,7 @@ const { browserWindows } = require('sdk/windows');
 const tabs = require('sdk/tabs');
 const { pb } = require('./private-browsing/helper');
 const { isPrivate } = require('sdk/private-browsing');
-const { openTab } = require('sdk/tabs/utils');
+const { openTab, closeTab, getTabContentWindow } = require('sdk/tabs/utils');
 const { open, close } = require('sdk/window/helpers');
 const { windows } = require('sdk/window/utils');
 const { getMostRecentBrowserWindow } = require('sdk/window/utils');
@@ -16,16 +16,16 @@ if (isGlobalPBSupported) {
   exports.testGetTabs = function(assert, done) {
     pb.once('start', function() {
       tabs.open({
-      	url: 'about:blank',
-      	inNewWindow: true,
-      	onOpen: function(tab) {
+        url: 'about:blank',
+        inNewWindow: true,
+        onOpen: function(tab) {
           assert.equal(getTabs().length, 2, 'there are two tabs');
           assert.equal(browserWindows.length, 2, 'there are two windows');
           pb.once('stop', function() {
-          	done();
+            done();
           });
           pb.deactivate();
-      	}
+        }
       });
     });
     pb.activate();
@@ -34,10 +34,10 @@ if (isGlobalPBSupported) {
 else if (isWindowPBSupported) {
   exports.testGetTabs = function(assert, done) {
     open(null, {
-      features: {
-      	private: true,
-      	toolbar: true,
-      	chrome: true
+        features: {
+        private: true,
+        toolbar: true,
+        chrome: true
       }
     }).then(function(window) {
       assert.ok(isPrivate(window), 'new tab is private');
@@ -53,17 +53,21 @@ else if (isWindowPBSupported) {
 }
 else if (isTabPBSupported) {
   exports.testGetTabs = function(assert, done) {
-    tabs.once('open', function(tab) {
-      assert.ok(isPrivate(tab), 'new tab is private');
-      assert.equal(getTabs().length, 2, 'there are two tabs found');
-      assert.equal(browserWindows.length, 1, 'there is one window');
-      tab.close(function() {
-        done();
-      });
-	});
-    openTab(getMostRecentBrowserWindow(), 'about:blank', {
+    let startTabCount = getTabs().length;
+    let tab = openTab(getMostRecentBrowserWindow(), 'about:blank', {
       isPrivate: true
     });
+
+    assert.ok(isPrivate(getTabContentWindow(tab)), 'new tab is private');
+    let utils_tabs = getTabs();
+    assert.equal(utils_tabs.length, startTabCount + 1,
+                 'there are two tabs found');
+    assert.equal(utils_tabs[utils_tabs.length-1], tab,
+                 'the last tab is the opened tab');
+    assert.equal(browserWindows.length, 1, 'there is only one window');
+    closeTab(tab);
+
+    done();
   };
 }
 

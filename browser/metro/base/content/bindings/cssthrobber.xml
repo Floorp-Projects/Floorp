@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<bindings
+    xmlns="http://www.mozilla.org/xbl"
+    xmlns:xbl="http://www.mozilla.org/xbl"
+    xmlns:html="http://www.w3.org/1999/xhtml"
+    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <binding id="cssthrobberBinding" extends="xul:box">
+    <content>
+      <html:div class="progressContainer">
+        <html:div class="progressBall" />
+        <html:div class="progressBall" />
+        <html:div class="progressBall" />
+        <html:div class="progressBall" />
+        <html:div class="progressBall" />
+      </html:div>
+    </content>
+  </binding>
+</bindings>

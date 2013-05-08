@@ -11,8 +11,6 @@
 #include "jsinterpinlines.h"
 #include "jscompartmentinlines.h"
 
-#include "vm/ParallelDo.h"
-
 using namespace js;
 using namespace ion;
 

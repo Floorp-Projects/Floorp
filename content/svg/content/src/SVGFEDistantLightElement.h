@@ -31,16 +31,16 @@ protected:
 
 public:
   virtual bool AttributeAffectsRendering(
-          int32_t aNameSpaceID, nsIAtom* aAttribute) const;
+          int32_t aNameSpaceID, nsIAtom* aAttribute) const MOZ_OVERRIDE;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   // WebIDL
   already_AddRefed<nsIDOMSVGAnimatedNumber> Azimuth();
   already_AddRefed<nsIDOMSVGAnimatedNumber> Elevation();
 
 protected:
-  virtual NumberAttributesInfo GetNumberInfo();
+  virtual NumberAttributesInfo GetNumberInfo() MOZ_OVERRIDE;
 
   enum { AZIMUTH, ELEVATION };
   nsSVGNumber2 mNumberAttributes[2];

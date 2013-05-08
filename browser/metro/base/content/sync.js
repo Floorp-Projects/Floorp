@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let WeaveGlue = {
+let Sync = {
   setupData: null,
   _boundOnEngineSync: null,     // Needed to unhook the observers in close().
   _boundOnServiceSync: null,
@@ -12,6 +12,21 @@ let WeaveGlue = {
   _progressBar: null,
   _progressValue: 0,
   _progressMax: null,
+  _disconnecting: false,
+
+  get _isSetup() {
+    if (Weave.Status.checkSetup() == Weave.CLIENT_NOT_CONFIGURED) {
+      return false;
+    }
+    // check for issues related to failed logins that do not have anything to
+    // do with network, server, and other non-client issues. See the login
+    // failure status codes in sync service.
+    return (Weave.Status.login != Weave.LOGIN_FAILED_NO_USERNAME &&
+            Weave.Status.login != Weave.LOGIN_FAILED_NO_PASSWORD &&
+            Weave.Status.login != Weave.LOGIN_FAILED_NO_PASSPHRASE &&
+            Weave.Status.login != Weave.LOGIN_FAILED_INVALID_PASSPHRASE &&
+            Weave.Status.login != Weave.LOGIN_FAILED_LOGIN_REJECTED);
+  },
 
   init: function init() {
     if (this._bundle) {
@@ -24,6 +39,7 @@ let WeaveGlue = {
 
     if (service.ready) {
       this._init();
+      Weave.Service.scheduler.scheduleNextSync(10*1000); // ten seconds after we startup
     } else {
       Services.obs.addObserver(this, "weave:service:ready", false);
       service.ensureLoaded();
@@ -65,23 +81,17 @@ let WeaveGlue = {
 
   _init: function () {
     this._bundle = Services.strings.createBundle("chrome://browser/locale/sync.properties");
-    this._msg = document.getElementById("prefs-messages");
 
     this._addListeners();
 
     this.setupData = { account: "", password: "" , synckey: "", serverURL: "" };
 
-    if (Weave.Status.checkSetup() != Weave.CLIENT_NOT_CONFIGURED) {
-      // Put the settings UI into a state of "connecting..." if we are going to auto-connect
-      this._elements.connect.firstChild.disabled = true;
-      this._elements.connect.setAttribute("title", this._bundle.GetStringFromName("connecting.label"));
-
-      try {
-        this._elements.device.value = Services.prefs.getCharPref("services.sync.client.name");
-      } catch(e) {}
-    } else if (Weave.Status.login != Weave.LOGIN_FAILED_NO_USERNAME) {
+    if (this._isSetup) {
       this.loadSetupData();
     }
+
+    // Update the state of the ui
+    this._updateUI();
 
     this._boundOnEngineSync = this.onEngineSync.bind(this);
     this._boundOnServiceSync = this.onServiceSync.bind(this);
@@ -370,40 +380,39 @@ let WeaveGlue = {
     Weave.Service.identity.syncKey = this.setupData.synckey;
     Weave.Service.persistLogin();
     Weave.Svc.Obs.notify("weave:service:setup-complete");
-    setTimeout(function () { Weave.Service.sync(); }, 0);
+    this.sync();
   },
 
-  disconnect: function disconnect() {
-    // Save credentials for undo
-    let undoData = this.setupData;
-
-    // Remove all credentials
-    this.setupData = null;
-    Weave.Service.startOver();
-
-    let message = this._bundle.GetStringFromName("notificationDisconnect.label");
-    let button = this._bundle.GetStringFromName("notificationDisconnect.button");
-    let buttons = [ {
-      label: button,
-      accessKey: "",
-      callback: function() { WeaveGlue.connect(undoData); }
-    } ];
-    this.showMessage(message, "undo-disconnect", buttons);
-
-    // Hide the notification when the panel is changed or closed.
-    let panel = document.getElementById("prefs-container");
-    panel.addEventListener("ToolPanelHidden", function onHide(aEvent) {
-      panel.removeEventListener(aEvent.type, onHide, false);
-      let notification = WeaveGlue._msg.getNotificationWithValue("undo-disconnect");
-      if (notification)
-        notification.close();
-    }, false);
-
+  // called when the user taps the disconnect button
+  onDisconnect: function onDisconnect() {
     Weave.Service.logout();
+    let bundle = Services.strings.createBundle("chrome://branding/locale/brand.properties");
+    let brandName = bundle.GetStringFromName("brandShortName");
+    let warnStr = this._bundle.formatStringFromName("sync.disconnectPrompt", [brandName], 1);
+    this._elements.disconnectwarntitle.textContent = warnStr;
+    this._elements.disconnectwarnpanel.collapsed = false;
+  },
+
+  // called when the user taps the cancel button on
+  // the disconnect warning panel.
+  onCancelDisconnect: function onCancelDisconnect() {
+    this._elements.disconnectwarnpanel.collapsed = true;
+    this._updateUI();
+    Weave.Service.login();
+  },
+
+  // called when the user taps the remove button on
+  // the disconnect warning panel.
+  disconnect: function disconnect() {
+    this._elements.disconnectwarnpanel.collapsed = true;
+    this.setupData = null;
+    this._disconnecting = true;
+    this._updateUI();
+    Weave.Service.startOver();
   },
 
   sync: function sync() {
-    Weave.Service.sync();
+    Weave.Service.scheduler.scheduleNextSync(0);
   },
 
   _addListeners: function _addListeners() {
@@ -412,27 +421,23 @@ let WeaveGlue = {
       "weave:service:sync:error", "weave:service:login:start",
       "weave:service:login:finish", "weave:service:login:error",
       "weave:ui:login:error",
+      "weave:service:start-over", "weave:service:start-over:finish",
       "weave:service:logout:finish"];
 
-    // For each topic, add WeaveGlue the observer
+    // For each topic, add Sync the observer
     topics.forEach(function(topic) {
-      Services.obs.addObserver(WeaveGlue, topic, false);
+      Services.obs.addObserver(Sync, topic, false);
     });
 
     // Remove them on unload
     addEventListener("unload", function() {
       topics.forEach(function(topic) {
-        Services.obs.removeObserver(WeaveGlue, topic);
+        Services.obs.removeObserver(Sync, topic);
       });
     }, false);
   },
 
   get _elements() {
-    // Do a quick test to see if the options exist yet
-    let syncButton = document.getElementById("sync-syncButton");
-    if (syncButton == null)
-      return null;
-
     // Get all the setting nodes from the add-ons display
     let elements = {};
     let setupids = ["account", "password", "synckey", "usecustomserver", "customserver"];
@@ -440,7 +445,9 @@ let WeaveGlue = {
       elements[id] = document.getElementById("syncsetup-" + id);
     });
 
-    let settingids = ["device", "connect", "connected", "disconnect", "sync", "pairdevice"];
+    let settingids = ["device", "connect", "connected", "disconnect", "lastsync", "pairdevice",
+                      "errordescription", "accountinfo", "disconnectwarnpanel", "disconnectthrobber",
+                      "disconnectwarntitle"];
     settingids.forEach(function(id) {
       elements[id] = document.getElementById("sync-" + id);
     });
@@ -448,6 +455,87 @@ let WeaveGlue = {
     // Replace the getter with the collection of settings
     delete this._elements;
     return this._elements = elements;
+  },
+
+  _updateUI: function _updateUI() {
+    if (this._elements == null)
+      return;
+
+    let connect = this._elements.connect;
+    let connected = this._elements.connected;
+    let device = this._elements.device;
+    let disconnect = this._elements.disconnect;
+    let lastsync = this._elements.lastsync;
+    let pairdevice = this._elements.pairdevice;
+    let accountinfo = this._elements.accountinfo;
+    let disconnectthrobber = this._elements.disconnectthrobber;
+
+    // This gets updated when an error occurs
+    this._elements.errordescription.collapsed = true;
+
+    let isConfigured = (!this._loginError && this._isSetup);
+
+    // If we're in the process of disconnecting we are no longer configured.
+    if (this._disconnecting) {
+      isConfigured = false;
+      // display the throbber with the appropriate message
+      disconnectthrobber.collapsed = false;
+    } else {
+      disconnectthrobber.collapsed = true;
+    }
+
+    connect.collapsed = isConfigured;
+    connected.collapsed = !isConfigured;
+    lastsync.collapsed = !isConfigured;
+    device.collapsed = !isConfigured;
+    disconnect.collapsed = !isConfigured;
+
+    if (this._disconnecting) {
+      connect.collapsed = true;
+    }
+
+    // Set the device name text edit to configured name or the auto generated
+    // name if we aren't set up.
+    try {
+      device.value = Services.prefs.getCharPref("services.sync.client.name");
+    } catch(ex) {
+      device.value = Weave.Service.clientsEngine.localName || "";
+    }
+
+    // Account information header
+    accountinfo.collapsed = true;
+    try {
+      let account = Weave.Service.identity.account;
+      if (account != null && isConfigured) {
+        let accountStr = this._bundle.formatStringFromName("account.label", [account], 1);
+        accountinfo.textContent = accountStr;
+        accountinfo.collapsed = false;
+      }
+    } catch (ex) {}
+
+    // If we're already locked, a sync is in progress..
+    if (Weave.Service.locked && isConfigured) {
+      connect.firstChild.disabled = true;
+    }
+
+    // Show the day-of-week and time (HH:MM) of last sync
+    let lastSync = Weave.Svc.Prefs.get("lastSync");
+    lastsync.textContent = "";
+    if (lastSync != null) {
+      let syncDate = new Date(lastSync).toLocaleFormat("%A %I:%M %p");
+      let dateStr = this._bundle.formatStringFromName("lastSync2.label", [syncDate], 1);
+      lastsync.textContent = dateStr;
+    }
+
+    // Check the lock again on a timeout since it's set after observers notify
+    setTimeout(function(self) {
+      // Prevent certain actions when the service is locked
+      if (Weave.Service.locked) {
+        connect.firstChild.disabled = true;
+      } else {
+        connect.firstChild.disabled = false;
+      }
+    }, 100, this);
   },
 
   observe: function observe(aSubject, aTopic, aData) {
@@ -460,24 +548,27 @@ let WeaveGlue = {
     // Make sure we're online when connecting/syncing
     Util.forceOnline();
 
+    if (aTopic == "weave:service:start-over") {
+      this._disconnecting = true;
+    } else if (aTopic == "weave:service:start-over:finish") {
+      this._disconnecting = false;
+    }
+
     // Can't do anything before settings are loaded
     if (this._elements == null)
       return;
 
-    // Make some aliases
-    let connect = this._elements.connect;
-    let connected = this._elements.connected;
-    let device = this._elements.device;
-    let disconnect = this._elements.disconnect;
-    let sync = this._elements.sync;
-    let pairdevice = this._elements.pairdevice;
+    // Update the state of the ui
+    this._updateUI();
+
+    let errormsg = this._elements.errordescription;
+    let accountinfo = this._elements.accountinfo;
 
     // Show what went wrong with login if necessary
     if (aTopic == "weave:ui:login:error") {
       this._loginError = true;
-      connect.setAttribute("desc", Weave.Utils.getErrorString(Weave.Status.login));
-    } else {
-      connect.removeAttribute("desc");
+      errormsg.textContent = Weave.Utils.getErrorString(Weave.Status.login);
+      errormsg.collapsed = false;
     }
 
     if (aTopic == "weave:service:login:finish") {
@@ -487,52 +578,11 @@ let WeaveGlue = {
         this.loadSetupData();
     }
 
-    let isConfigured = (!this._loginError && Weave.Status.checkSetup() != Weave.CLIENT_NOT_CONFIGURED);
-
-    connect.collapsed = isConfigured;
-    connected.collapsed = !isConfigured;
-
-    if (!isConfigured) {
-      connect.setAttribute("title", this._bundle.GetStringFromName("notconnected.label"));
-      connect.firstChild.disabled = false;
-    }
-
-    sync.collapsed = !isConfigured;
-    device.collapsed = !isConfigured;
-    disconnect.collapsed = !isConfigured;
-
-    // Check the lock on a timeout because it's set just after notifying
-    setTimeout(function(self) {
-      // Prevent certain actions when the service is locked
-      if (Weave.Service.locked) {
-        connect.firstChild.disabled = true;
-        sync.firstChild.disabled = true;
-
-        if (aTopic == "weave:service:login:start")
-          connect.setAttribute("title", self._bundle.GetStringFromName("connecting.label"));
-
-        if (aTopic == "weave:service:sync:start")
-          sync.setAttribute("title", self._bundle.GetStringFromName("lastSyncInProgress2.label"));
-      } else {
-        connect.firstChild.disabled = false;
-        sync.firstChild.disabled = false;
-      }
-    }, 0, this);
-
-    // Dynamically generate some strings
-    let accountStr = this._bundle.formatStringFromName("account.label", [Weave.Service.identity.account], 1);
-    disconnect.setAttribute("title", accountStr);
-
-    // Show the day-of-week and time (HH:MM) of last sync
-    let lastSync = Weave.Svc.Prefs.get("lastSync");
-    if (lastSync != null) {
-      let syncDate = new Date(lastSync).toLocaleFormat("%a %H:%M");
-      let dateStr = this._bundle.formatStringFromName("lastSync2.label", [syncDate], 1);
-      sync.setAttribute("title", dateStr);
-    }
-
     // Check for a storage format update, update the user and load the Sync update page
     if (aTopic =="weave:service:sync:error") {
+      errormsg.textContent = Weave.Utils.getErrorString(Weave.Status.sync);
+      errormsg.collapsed = false;
+
       let clientOutdated = false, remoteOutdated = false;
       if (Weave.Status.sync == Weave.VERSION_OUT_OF_DATE) {
         clientOutdated = true;
@@ -565,22 +615,12 @@ let WeaveGlue = {
           Browser.addTab("https://services.mozilla.com/update/", true, Browser.selectedTab);
       }
     }
-
-    device.value = Weave.Service.clientsEngine.localName || "";
   },
 
   changeName: function changeName(aInput) {
     // Make sure to update to a modified name, e.g., empty-string -> default
     Weave.Service.clientsEngine.localName = aInput.value;
     aInput.value = Weave.Service.clientsEngine.localName;
-  },
-
-  showMessage: function showMessage(aMsg, aValue, aButtons) {
-    let notification = this._msg.getNotificationWithValue(aValue);
-    if (notification)
-      return;
-
-    this._msg.appendNotification(aMsg, aValue, "", this._msg.PRIORITY_WARNING_LOW, aButtons);
   },
 
   _validateServer: function _validateServer(aURL) {
@@ -595,7 +635,7 @@ let WeaveGlue = {
   },
 
   openTutorial: function _openTutorial() {
-    WeaveGlue.close();
+    Sync.close();
 
     let formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].getService(Ci.nsIURLFormatter);
     let url = formatter.formatURLPref("app.sync.tutorialURL");

@@ -32,7 +32,7 @@ if CONFIG['MOZ_WMF']:
 
 PARALLEL_DIRS += ['webrtc']
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+if CONFIG['MOZ_OMX_DECODER']:
     PARALLEL_DIRS += ['omx']
 
 if CONFIG['MOZ_WEBSPEECH']:

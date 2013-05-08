@@ -38,7 +38,7 @@ CompileScriptForPrincipalsVersionOrigin(JSContext *cx, JS::HandleObject obj,
 }
 
 JSScript *
-FreezeThaw(JSContext *cx, JSScript *script)
+FreezeThaw(JSContext *cx, JS::HandleScript script)
 {
     // freeze
     uint32_t nbytes;
@@ -47,9 +47,10 @@ FreezeThaw(JSContext *cx, JSScript *script)
         return NULL;
 
     // thaw
-    script = JS_DecodeScript(cx, memory, nbytes, script->principals(), script->originPrincipals);
+    JSScript *script2 = JS_DecodeScript(cx, memory, nbytes,
+                                        script->principals(), script->originPrincipals);
     js_free(memory);
-    return script;
+    return script2;
 }
 
 static JSScript *
@@ -123,9 +124,9 @@ JSScript *createScriptViaXDR(JSPrincipals *prin, JSPrincipals *orig, int testCas
         "f;\n";
 
     JS::RootedObject global(cx, JS_GetGlobalObject(cx));
-    JSScript *script = CompileScriptForPrincipalsVersionOrigin(cx, global, prin, orig,
-                                                               src, strlen(src), "test", 1,
-                                                               JSVERSION_DEFAULT);
+    JS::RootedScript script(cx, CompileScriptForPrincipalsVersionOrigin(cx, global, prin, orig,
+                                                                        src, strlen(src), "test", 1,
+                                                                        JSVERSION_DEFAULT));
     if (!script)
         return NULL;
 
@@ -163,7 +164,7 @@ BEGIN_TEST(testXDR_bug506491)
         "var f = makeClosure('0;', 'status', 'ok');\n";
 
     // compile
-    JSScript *script = JS_CompileScript(cx, global, s, strlen(s), __FILE__, __LINE__);
+    JS::RootedScript script(cx, JS_CompileScript(cx, global, s, strlen(s), __FILE__, __LINE__));
     CHECK(script);
 
     script = FreezeThaw(cx, script);
@@ -187,7 +188,7 @@ END_TEST(testXDR_bug506491)
 BEGIN_TEST(testXDR_bug516827)
 {
     // compile an empty script
-    JSScript *script = JS_CompileScript(cx, global, "", 0, __FILE__, __LINE__);
+    JS::RootedScript script(cx, JS_CompileScript(cx, global, "", 0, __FILE__, __LINE__));
     CHECK(script);
 
     script = FreezeThaw(cx, script);
@@ -208,7 +209,7 @@ BEGIN_TEST(testXDR_source)
         NULL
     };
     for (const char **s = samples; *s; s++) {
-        JSScript *script = JS_CompileScript(cx, global, *s, strlen(*s), __FILE__, __LINE__);
+        JS::RootedScript script(cx, JS_CompileScript(cx, global, *s, strlen(*s), __FILE__, __LINE__));
         CHECK(script);
         script = FreezeThaw(cx, script);
         CHECK(script);

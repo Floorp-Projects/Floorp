@@ -208,15 +208,15 @@ nsresult nsDateTimeFormatUnix::FormatTMTime(nsILocale* locale,
   // generate data/time string
   char *old_locale = setlocale(LC_TIME, nullptr);
   (void) setlocale(LC_TIME, mPlatformLocale.get());
-  if (PL_strlen(fmtD) && PL_strlen(fmtT)) {
+  if (strlen(fmtD) && strlen(fmtT)) {
     PL_strncat(fmtD, " ", NSDATETIME_FORMAT_BUFFER_LEN);
     PL_strncat(fmtD, fmtT, NSDATETIME_FORMAT_BUFFER_LEN);
     strftime(strOut, NSDATETIME_FORMAT_BUFFER_LEN, fmtD, tmTime);
   }
-  else if (PL_strlen(fmtD) && !PL_strlen(fmtT)) {
+  else if (strlen(fmtD) && !strlen(fmtT)) {
     strftime(strOut, NSDATETIME_FORMAT_BUFFER_LEN, fmtD, tmTime);
   }
-  else if (!PL_strlen(fmtD) && PL_strlen(fmtT)) {
+  else if (!strlen(fmtD) && strlen(fmtT)) {
     strftime(strOut, NSDATETIME_FORMAT_BUFFER_LEN, fmtT, tmTime);
   }
   else {
@@ -225,7 +225,7 @@ nsresult nsDateTimeFormatUnix::FormatTMTime(nsILocale* locale,
   (void) setlocale(LC_TIME, old_locale);
 
   // convert result to unicode
-  int32_t srcLength = (int32_t) PL_strlen(strOut);
+  int32_t srcLength = (int32_t) strlen(strOut);
   int32_t unicharLength = NSDATETIME_FORMAT_BUFFER_LEN*2;
   PRUnichar unichars[NSDATETIME_FORMAT_BUFFER_LEN*2];   // buffer for date and time
 

@@ -911,6 +911,9 @@ SetObjectElementOperation(JSContext *cx, Handle<JSObject*> obj, HandleId id, con
         }
     }
 
+    if (obj->isNative() && !obj->setHadElementsAccess(cx))
+        return false;
+
     RootedValue tmp(cx, value);
     return JSObject::setGeneric(cx, obj, obj, id, &tmp, strict);
 }

@@ -86,15 +86,25 @@ ClientEngine.prototype = {
                 .getService(Ci.nsIEnvironment);
     let user = env.get("USER") || env.get("USERNAME") ||
                Svc.Prefs.get("account") || Svc.Prefs.get("username");
+
+    let appName;
     let brand = new StringBundle("chrome://branding/locale/brand.properties");
-    let app = brand.get("brandShortName");
+    let brandName = brand.get("brandShortName");
+    try {
+      let syncStrings = new StringBundle("chrome://browser/locale/sync.properties");
+      appName = syncStrings.getFormattedString("sync.defaultAccountApplication", [brandName]);
+    } catch (ex) {}
+    appName = appName || brandName;
 
-    let system = Cc["@mozilla.org/system-info;1"]
-                   .getService(Ci.nsIPropertyBag2).get("device") ||
-                 Cc["@mozilla.org/network/protocol;1?name=http"]
-                   .getService(Ci.nsIHttpProtocolHandler).oscpu;
+    let system =
+      // 'device' is defined on unix systems
+      Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2).get("device") ||
+      // hostname of the system, usually assigned by the user or admin
+      Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2).get("host") ||
+      // fall back on ua info string
+      Cc["@mozilla.org/network/protocol;1?name=http"].getService(Ci.nsIHttpProtocolHandler).oscpu;
 
-    return this.localName = Str.sync.get("client.name2", [user, app, system]);
+    return this.localName = Str.sync.get("client.name2", [user, appName, system]);
   },
   set localName(value) Svc.Prefs.set("client.name", value),
 

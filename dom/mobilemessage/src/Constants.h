@@ -40,6 +40,9 @@ extern const char* kMmsReceivedObserverTopic;
 #define MESSAGE_CLASS_CLASS_2 NS_LITERAL_STRING("class-2")
 #define MESSAGE_CLASS_CLASS_3 NS_LITERAL_STRING("class-3")
 
+#define MESSAGE_TYPE_SMS NS_LITERAL_STRING("sms")
+#define MESSAGE_TYPE_MMS NS_LITERAL_STRING("mms")
+
 } // namespace mobilemessage
 } // namespace dom
 } // namespace mozilla

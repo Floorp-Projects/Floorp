@@ -1968,62 +1968,6 @@
     "extended_statistics_ok": true,
     "description": "Time spent in nsDiskCacheStreamIO::Close() on the main thread (ms)"
   },
-  "HTTP_PLT_RATE_PACING_0": {
-    "kind": "exponential",
-    "low": 100,
-    "high": "30000",
-    "n_buckets": 100,
-    "extended_statistics_ok": true,
-    "description": "HTTP: Total page load time (ms) with rate pacing algorithm 0 (burst=32, hz=100, par=6)"
-  },
-  "HTTP_PLT_RATE_PACING_1": {
-    "kind": "exponential",
-    "low": 100,
-    "high": "30000",
-    "n_buckets": 100,
-    "extended_statistics_ok": true,
-    "description": "HTTP: Total page load time (ms) with rate pacing algorithm 1 (burst=16, hz=100, par=6)"
-  },
-  "HTTP_PLT_RATE_PACING_2": {
-    "kind": "exponential",
-    "low": 100,
-    "high": "30000",
-    "n_buckets": 100,
-    "extended_statistics_ok": true,
-    "description": "HTTP: Total page load time (ms) with rate pacing algorithm 2 (burst=32, hz=200, par=6)"
-  },
-  "HTTP_PLT_RATE_PACING_3": {
-    "kind": "exponential",
-    "low": 100,
-    "high": "30000",
-    "n_buckets": 100,
-    "extended_statistics_ok": true,
-    "description": "HTTP: Total page load time (ms) with rate pacing algorithm 3 (burst=32, hz=50, par=6)"
-  },
-  "HTTP_PLT_RATE_PACING_4": {
-    "kind": "exponential",
-    "low": 100,
-    "high": "30000",
-    "n_buckets": 100,
-    "extended_statistics_ok": true,
-    "description": "HTTP: Total page load time (ms) with rate pacing algorithm 4 (burst=32, hz=1, par=8)"
-  },
-  "HTTP_PLT_RATE_PACING_5": {
-    "kind": "exponential",
-    "low": 100,
-    "high": "30000",
-    "n_buckets": 100,
-    "extended_statistics_ok": true,
-    "description": "HTTP: Total page load time (ms) with rate pacing algorithm 5 (burst=32, hz=1, par=16)"
-  },
-  "HTTP_PLT_RATE_PACING_6": {
-    "kind": "exponential",
-    "low": 100,
-    "high": "30000",
-    "n_buckets": 100,
-    "extended_statistics_ok": true,
-    "description": "HTTP: Total page load time (ms) with rate pacing algorithm 6 (burst=1000, hz=1000, par=1000)"
-  },
   "IDLE_NOTIFY_BACK_MS": {
     "kind": "exponential",
     "high": "5000",

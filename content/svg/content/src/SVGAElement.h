@@ -34,27 +34,27 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsINode interface methods
-  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
-  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
+  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor) MOZ_OVERRIDE;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   // nsILink
-  NS_IMETHOD LinkAdded() { return NS_OK; }
-  NS_IMETHOD LinkRemoved() { return NS_OK; }
+  NS_IMETHOD LinkAdded() MOZ_OVERRIDE { return NS_OK; }
+  NS_IMETHOD LinkRemoved() MOZ_OVERRIDE { return NS_OK; }
 
   // nsIContent
   virtual nsresult BindToTree(nsIDocument *aDocument, nsIContent *aParent,
                               nsIContent *aBindingParent,
-                              bool aCompileEventHandlers);
+                              bool aCompileEventHandlers) MOZ_OVERRIDE;
   virtual void UnbindFromTree(bool aDeep = true,
-                              bool aNullParent = true);
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
-  virtual bool IsFocusable(int32_t *aTabIndex = nullptr, bool aWithMouse = false);
-  virtual bool IsLink(nsIURI** aURI) const;
-  virtual void GetLinkTarget(nsAString& aTarget);
-  virtual nsLinkState GetLinkState() const;
-  virtual already_AddRefed<nsIURI> GetHrefURI() const;
-  virtual nsEventStates IntrinsicState() const;
+                              bool aNullParent = true) MOZ_OVERRIDE;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const MOZ_OVERRIDE;
+  virtual bool IsFocusable(int32_t *aTabIndex = nullptr, bool aWithMouse = false) MOZ_OVERRIDE;
+  virtual bool IsLink(nsIURI** aURI) const MOZ_OVERRIDE;
+  virtual void GetLinkTarget(nsAString& aTarget) MOZ_OVERRIDE;
+  virtual nsLinkState GetLinkState() const MOZ_OVERRIDE;
+  virtual already_AddRefed<nsIURI> GetHrefURI() const MOZ_OVERRIDE;
+  virtual nsEventStates IntrinsicState() const MOZ_OVERRIDE;
   nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, bool aNotify)
   {
@@ -62,9 +62,9 @@ public:
   }
   virtual nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
-                           bool aNotify);
+                           bool aNotify) MOZ_OVERRIDE;
   virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
-                             bool aNotify);
+                             bool aNotify) MOZ_OVERRIDE;
 
   // WebIDL
   already_AddRefed<nsIDOMSVGAnimatedString> Href();
@@ -74,7 +74,7 @@ public:
 
 protected:
 
-  virtual StringAttributesInfo GetStringInfo();
+  virtual StringAttributesInfo GetStringInfo() MOZ_OVERRIDE;
 
   enum { HREF, TARGET };
   nsSVGString mStringAttributes[2];
