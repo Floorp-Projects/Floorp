@@ -473,6 +473,18 @@ JSObject::addProperty(JSContext *cx, HandleObject obj, HandleId id,
                                spp, allowDictionary);
 }
 
+static bool
+ShouldConvertToDictionary(JSObject *obj)
+{
+    /*
+     * Use a lower limit if this object is likely a hashmap (SETELEM was used
+     * to set properties).
+     */
+    if (obj->hadElementsAccess())
+        return obj->lastProperty()->entryCount() >= PropertyTree::MAX_HEIGHT_WITH_ELEMENTS_ACCESS;
+    return obj->lastProperty()->entryCount() >= PropertyTree::MAX_HEIGHT;
+}
+
 /* static */ Shape *
 JSObject::addPropertyInternal(JSContext *cx, HandleObject obj, HandleId id,
                               PropertyOp getter, StrictPropertyOp setter,
@@ -492,7 +504,8 @@ JSObject::addPropertyInternal(JSContext *cx, HandleObject obj, HandleId id,
             (slot == obj->lastProperty()->maybeSlot() + 1);
         JS_ASSERT_IF(!allowDictionary, stableSlot);
         if (allowDictionary &&
-            (!stableSlot || obj->lastProperty()->entryCount() >= PropertyTree::MAX_HEIGHT)) {
+            (!stableSlot || ShouldConvertToDictionary(obj)))
+        {
             if (!obj->toDictionaryMode(cx))
                 return NULL;
             table = &obj->lastProperty()->table();
