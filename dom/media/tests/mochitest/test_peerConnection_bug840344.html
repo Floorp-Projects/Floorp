@@ -54,10 +54,10 @@
     [
       "SET_REMOTE_DESCRIPTION",
       function (test) {
-        var osd = new mozRTCSessionDescription(offer);
-        test.pcLocal.setRemoteDescription(osd, function () {
-          test.next();
-        });
+        test.pcLocal.setRemoteDescription(new mozRTCSessionDescription(offer),
+                                          function () {
+                                            test.next();
+                                          });
       }
     ],
     [

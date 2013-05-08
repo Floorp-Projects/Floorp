@@ -26,7 +26,6 @@ using namespace std;
 #include "PeerConnectionCtx.h"
 #include "runnable_utils.h"
 #include "nsStaticComponents.h"
-#include "nsIDOMRTCPeerConnection.h"
 #include "nsServiceManagerUtils.h"
 #include "nsNetUtil.h"
 #include "nsIIOService.h"
@@ -325,14 +324,14 @@ TestObserver::OnStateChange(uint32_t state_type)
 
 
 NS_IMETHODIMP
-TestObserver::OnAddStream(nsIDOMMediaStream *stream, const char *type)
+TestObserver::OnAddStream(nsIDOMMediaStream *stream)
 {
   PR_ASSERT(stream);
 
   DOMMediaStream *ms = static_cast<DOMMediaStream *>(stream);
 
-  cout << "OnAddStream called hints=" << ms->GetHintContents() << " type=" << type << " thread=" <<
-    PR_GetCurrentThread() << endl ;
+  cout << "OnAddStream called hints=" << ms->GetHintContents()
+      << " thread=" << PR_GetCurrentThread() << endl ;
 
   onAddStreamCalled = true;
 

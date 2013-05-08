@@ -162,6 +162,7 @@ webidl_files = \
   Location.webidl \
   MediaError.webidl \
   MediaStream.webidl \
+  MediaStreamEvent.webidl \
   MediaStreamTrack.webidl \
   MessageEvent.webidl \
   MouseEvent.webidl \
@@ -193,6 +194,10 @@ webidl_files = \
   Rect.webidl \
   RGBColor.webidl \
   RTCConfiguration.webidl \
+  RTCIceCandidate.webidl \
+  RTCPeerConnection.webidl \
+  RTCPeerConnectionIceEvent.webidl \
+  RTCSessionDescription.webidl \
   Screen.webidl \
   ScriptProcessorNode.webidl \
   ScrollAreaEvent.webidl \
