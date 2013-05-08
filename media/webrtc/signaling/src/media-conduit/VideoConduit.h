@@ -145,15 +145,22 @@ public:
 
 
   WebrtcVideoConduit():
-                      mVideoEngine(NULL),
-                      mTransport(NULL),
-                      mRenderer(NULL),
+                      mVideoEngine(nullptr),
+                      mTransport(nullptr),
+                      mRenderer(nullptr),
                       mEngineTransmitting(false),
                       mEngineReceiving(false),
                       mEngineRendererStarted(false),
                       mChannel(-1),
                       mCapId(-1),
-                      mCurSendCodecConfig(NULL)
+                      mCurSendCodecConfig(nullptr),
+                      mPtrViEBase(nullptr),
+                      mPtrViECapture(nullptr),
+                      mPtrViECodec(nullptr),
+                      mPtrViENetwork(nullptr),
+                      mPtrViERender(nullptr),
+                      mPtrExtCapture(nullptr),
+                      mPtrRTP(nullptr)
 
   {
   }
