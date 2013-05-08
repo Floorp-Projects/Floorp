@@ -45,8 +45,9 @@ function test2()
   prefBranch.setBoolPref("siteSettings", false);
 
   // Sanitize now so we can test that canClear is correct. Formdata is cleared asynchronously.
-  s.sanitize();
-  s.canClearItem("formdata", clearDone1, s);
+  s.sanitize().then(function() {
+    s.canClearItem("formdata", clearDone1, s);
+  });
 }
 
 function clearDone1(aItemName, aResult, aSanitizer)
@@ -59,8 +60,9 @@ function clearDone1(aItemName, aResult, aSanitizer)
 function inputEntered(aItemName, aResult, aSanitizer)
 {
   ok(aResult, "formdata can be cleared after input");
-  aSanitizer.sanitize();
-  aSanitizer.canClearItem("formdata", clearDone2);
+  aSanitizer.sanitize().then(function() {
+    aSanitizer.canClearItem("formdata", clearDone2);
+  });
 }
 
 function clearDone2(aItemName, aResult)
