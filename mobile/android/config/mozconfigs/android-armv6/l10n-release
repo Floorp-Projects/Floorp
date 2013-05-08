@@ -12,8 +12,15 @@ ac_add_options --enable-application=mobile/android
 # Android
 ac_add_options --target=arm-linux-androideabi
 ac_add_options --with-arch=armv6
-ac_add_options --with-android-ndk="/tools/android-ndk-r8c"
-ac_add_options --with-android-sdk="/tools/android-sdk-r16/platforms/android-16"
+
+if test `uname -m` = 'x86_64'; then
+  ac_add_options --with-android-ndk="$topsrcdir/android-ndk-r8e-arm-gcc4.6"
+  ac_add_options --with-android-sdk="$topsrcdir/android-sdk-linux/platforms/android-16"
+else
+  ac_add_options --with-android-ndk="/tools/android-ndk-r8c"
+  ac_add_options --with-android-sdk="/tools/android-sdk-r16/platforms/android-16"
+fi
+
 ac_add_options --with-android-gnu-compiler-version=4.6
 ac_add_options --with-android-version=9
 ac_add_options --with-system-zlib
