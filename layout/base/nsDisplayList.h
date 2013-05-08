@@ -483,7 +483,7 @@ public:
    * Allocate a new DisplayListClip in the arena. Will be cleaned up
    * automatically when the arena goes away.
    */
-  DisplayItemClip* AllocateDisplayItemClip(const DisplayItemClip& aOriginal);
+  const DisplayItemClip* AllocateDisplayItemClip(const DisplayItemClip& aOriginal);
 
   /**
    * A helper class to temporarily set the value of
