@@ -434,9 +434,8 @@ IonBuilder::build()
     if (!current)
         return false;
 
-    IonSpew(IonSpew_Scripts, "Analyzing script %s:%d (%p) (usecount=%d) (maxloopcount=%d)",
-            script()->filename(), script()->lineno, (void *)script(), (int)script()->getUseCount(),
-            (int)script()->getMaxLoopCount());
+    IonSpew(IonSpew_Scripts, "Analyzing script %s:%d (%p) (usecount=%d)",
+            script()->filename(), script()->lineno, (void *)script(), (int)script()->getUseCount());
 
     if (!graph().addScript(script()))
         return false;
@@ -4750,6 +4749,49 @@ TestAreKnownDOMTypes(JSContext *cx, types::TypeSet *inTypes)
     return false;
 }
 
+
+static bool
+ArgumentTypesMatch(MDefinition *def, types::StackTypeSet *calleeTypes)
+{
+    if (def->resultTypeSet()) {
+        JS_ASSERT(def->type() == MIRType_Value || def->mightBeType(def->type()));
+        return def->resultTypeSet()->isSubset(calleeTypes);
+    }
+
+    if (def->type() == MIRType_Value)
+        return false;
+
+    return calleeTypes->mightBeType(ValueTypeFromMIRType(def->type()));
+}
+
+static bool
+TestNeedsArgumentCheck(JSContext *cx, HandleFunction target, CallInfo &callInfo)
+{
+    // If we have a known target, check if the caller arg types are a subset of callee.
+    // Since typeset accumulates and can't decrease that means we don't need to check
+    // the arguments anymore.
+    if (!target->isInterpreted())
+        return true;
+
+    RootedScript targetScript(cx, target->nonLazyScript());
+    if (!targetScript->hasAnalysis())
+        return true;
+
+    if (!ArgumentTypesMatch(callInfo.thisArg(), types::TypeScript::ThisTypes(targetScript)))
+        return true;
+    uint32_t expected_args = Min<uint32_t>(callInfo.argc(), target->nargs);
+    for (size_t i = 0; i < expected_args; i++) {
+        if (!ArgumentTypesMatch(callInfo.getArg(i), types::TypeScript::ArgTypes(targetScript, i)))
+            return true;
+    }
+    for (size_t i = callInfo.argc(); i < target->nargs; i++) {
+        if (!types::TypeScript::ArgTypes(targetScript, i)->mightBeType(JSVAL_TYPE_UNDEFINED))
+            return true;
+    }
+
+    return false;
+}
+
 MCall *
 IonBuilder::makeCallHelper(HandleFunction target, CallInfo &callInfo, bool cloneAtCallsite)
 {
@@ -4819,6 +4861,7 @@ IonBuilder::makeCallHelper(HandleFunction target, CallInfo &callInfo, bool clone
         current->add(newThis);
 
         thisArg = newThis;
+        callInfo.setThis(newThis);
     }
 
     // Pass |this| and function.
@@ -4843,6 +4886,9 @@ IonBuilder::makeCallHelper(HandleFunction target, CallInfo &callInfo, bool clone
             call->setDOMFunction();
         }
     }
+
+    if (target && !TestNeedsArgumentCheck(cx, target, callInfo))
+        call->disableArgCheck();
 
     call->initFunction(callInfo.fun());
 
