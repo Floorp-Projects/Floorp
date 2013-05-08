@@ -26,89 +26,6 @@ const kPrefCustomizationDebug        = "browser.uiCustomization.debug";
  */
 XPCOMUtils.defineLazyGetter(this, "gBuiltInWidgets", function() {
   return [{
-    id: "bookmarks-panelmenu",
-    type: "view",
-    viewId: "PanelUI-bookmarks",
-    name: "Bookmarks...",
-    description: "Bookmarks, yo!",
-    defaultArea: CustomizableUI.AREA_PANEL,
-    //XXXunf Need to enforce this, and make it optional.
-    allowedAreas: [CustomizableUI.AREA_PANEL],
-    icons: {
-      "16": "chrome://branding/content/icon16.png",
-      "32": "chrome://branding/content/icon48.png",
-      "48": "chrome://branding/content/icon48.png"
-    },
-    // These are automatically bound to the ViewShowing and ViewHiding events
-    // that the Panel will dispatch, targetted at the view referenced by
-    // viewId.
-    // XXXmconley: Is this too magical?
-    onViewShowing: function(aEvent) {
-      LOG("Bookmark view is being shown!");
-    },
-    onViewHiding: function(aEvent) {
-      LOG("Bookmark view is being hidden!");
-    }
-  }, {
-    id: "weather-indicator",
-    name: "Weather",
-    description: "Don't look out the window, look at your browser!",
-    defaultArea: CustomizableUI.AREA_PANEL,
-    //XXXunf Need to enforce this, and make it optional.
-    allowedAreas: [CustomizableUI.AREA_PANEL],
-    icons: {
-      "16": "chrome://branding/content/icon16.png",
-      "32": "chrome://branding/content/icon48.png",
-      "48": "chrome://branding/content/icon48.png"
-    }
-  }, {
-    id: "share-page",
-    name: "Share 1",
-    shortcut: "Ctrl+Alt+S",
-    description: "Share this page",
-    defaultArea: CustomizableUI.AREA_NAVBAR,
-    allowedAreas: [CustomizableUI.AREA_PANEL, CustomizableUI.AREA_NAVBAR],
-    icons: {
-      "16": "chrome://branding/content/icon16.png",
-      "32": "chrome://branding/content/icon48.png",
-      "48": "chrome://branding/content/icon48.png"
-    }
-  }, {
-    id: "share-page-2",
-    name: "Share 2",
-    shortcut: "Ctrl+Alt+S",
-    description: "Share this page",
-    defaultArea: CustomizableUI.AREA_PANEL,
-    allowedAreas: [CustomizableUI.AREA_PANEL],
-    icons: {
-      "16": "chrome://branding/content/icon16.png",
-      "32": "chrome://branding/content/icon48.png",
-      "48": "chrome://branding/content/icon48.png"
-    }
-  }, {
-    id: "share-page-3",
-    name: "Share 3",
-    shortcut: "Ctrl+Alt+S",
-    description: "Share this page",
-    allowedAreas: [CustomizableUI.AREA_PANEL],
-    icons: {
-      "16": "chrome://branding/content/icon16.png",
-      "32": "chrome://branding/content/icon48.png",
-      "48": "chrome://branding/content/icon48.png"
-    }
-  }, {
-    id: "share-page-4",
-    name: "Share 4",
-    shortcut: "Ctrl+Alt+S",
-    description: "Share this page",
-    defaultArea: CustomizableUI.AREA_PANEL,
-    allowedAreas: [CustomizableUI.AREA_PANEL],
-    icons: {
-      "16": "chrome://branding/content/icon16.png",
-      "32": "chrome://branding/content/icon48.png",
-      "48": "chrome://branding/content/icon48.png"
-    }
-  }, {
     id: "history-panelmenu",
     type: "view",
     viewId: "PanelUI-history",
@@ -198,6 +115,126 @@ XPCOMUtils.defineLazyGetter(this, "gBuiltInWidgets", function() {
         }
       }
     }
+  }, {
+    id: "save-page-button",
+    name: "Save Page",
+    shortcut: "Ctrl+S",
+    description: "Save this page",
+    defaultArea: CustomizableUI.AREA_PANEL,
+    allowedAreas: [CustomizableUI.AREA_PANEL],
+    icons: {
+      "16": "chrome://branding/content/icon16.png",
+      "32": "chrome://branding/content/icon48.png",
+      "48": "chrome://branding/content/icon48.png"
+    },
+    onCommand: function(aEvent) {
+      let win = aEvent.target &&
+                aEvent.target.ownerDocument &&
+                aEvent.target.ownerDocument.defaultView;
+      if (win && typeof win.saveDocument == "function") {
+        win.saveDocument(win.content.document);
+      }
+    }
+  }, {
+    id: "find-button",
+    name: "Find",
+    shortcut: "Ctrl+F",
+    description: "Find in this page",
+    defaultArea: CustomizableUI.AREA_PANEL,
+    allowedAreas: [CustomizableUI.AREA_PANEL],
+    icons: {
+      "16": "chrome://branding/content/icon16.png",
+      "32": "chrome://branding/content/icon48.png",
+      "48": "chrome://branding/content/icon48.png"
+    },
+    onCommand: function(aEvent) {
+      let win = aEvent.target &&
+                aEvent.target.ownerDocument &&
+                aEvent.target.ownerDocument.defaultView;
+      if (win && win.gFindBar) {
+        win.gFindBar.onFindCommand();
+      }
+    }
+  }, {
+    id: "open-file-button",
+    name: "Open File",
+    shortcut: "Ctrl+O",
+    description: "Open file",
+    defaultArea: CustomizableUI.AREA_PANEL,
+    allowedAreas: [CustomizableUI.AREA_PANEL],
+    icons: {
+      "16": "chrome://branding/content/icon16.png",
+      "32": "chrome://branding/content/icon48.png",
+      "48": "chrome://branding/content/icon48.png"
+    },
+    onCommand: function(aEvent) {
+      let win = aEvent.target
+                && aEvent.target.ownerDocument
+                && aEvent.target.ownerDocument.defaultView;
+      if (win && typeof win.BrowserOpenFileWindow == "function") {
+        win.BrowserOpenFileWindow();
+      }
+    }
+  }, {
+    id: "developer-button",
+    name: "Developer",
+    shortcut: "Shift+F11",
+    description: "Toggle Developer Tools",
+    defaultArea: CustomizableUI.AREA_PANEL,
+    allowedAreas: [CustomizableUI.AREA_PANEL],
+    icons: {
+      "16": "chrome://branding/content/icon16.png",
+      "32": "chrome://branding/content/icon48.png",
+      "48": "chrome://branding/content/icon48.png"
+    },
+    onCommand: function(aEvent) {
+      let win = aEvent.target &&
+                aEvent.target.ownerDocument &&
+                aEvent.target.ownerDocument.defaultView;
+      if (win && win.gDevToolsBrowser) {
+        win.gDevToolsBrowser.toggleToolboxCommand(win.gBrowser);
+      }
+    }
+  }, {
+    id: "add-ons-button",
+    name: "Add-ons",
+    shortcut: "Ctrl+Shift+A",
+    description: "Add-ons Manager",
+    defaultArea: CustomizableUI.AREA_PANEL,
+    allowedAreas: [CustomizableUI.AREA_PANEL],
+    icons: {
+      "16": "chrome://branding/content/icon16.png",
+      "32": "chrome://branding/content/icon48.png",
+      "48": "chrome://branding/content/icon48.png"
+    },
+    onCommand: function(aEvent) {
+      let win = aEvent.target &&
+                aEvent.target.ownerDocument &&
+                aEvent.target.ownerDocument.defaultView;
+      if (win && typeof win.BrowserOpenAddonsMgr == "function") {
+        win.BrowserOpenAddonsMgr();
+      }
+    }
+  }, {
+    id: "preferences-button",
+    name: "Preferences",
+    shortcut: "Ctrl+Shift+O",
+    description: "Preferences\u2026",
+    defaultArea: CustomizableUI.AREA_PANEL,
+    allowedAreas: [CustomizableUI.AREA_PANEL],
+    icons: {
+      "16": "chrome://branding/content/icon16.png",
+      "32": "chrome://branding/content/icon48.png",
+      "48": "chrome://branding/content/icon48.png"
+    },
+    onCommand: function(aEvent) {
+      let win = aEvent.target &&
+                aEvent.target.ownerDocument &&
+                aEvent.target.ownerDocument.defaultView;
+      if (win && typeof win.openPreferences == "function") {
+        win.openPreferences();
+      }
+    }
   }];
 });
 
@@ -262,7 +299,6 @@ let gDefaultPlacements = new Map([
     "downloads-button",
     "home-button",
     "social-toolbar-button",
-    "share-page"
   ]],
   ["PersonalToolbar", [
     "personal-bookmarks",
@@ -270,11 +306,13 @@ let gDefaultPlacements = new Map([
   ["PanelUI-contents", [
     "new-window-button",
     "privatebrowsing-button",
+    "save-page-button",
     "print-button",
-    "history-button",
-    "fullscreen-button",
     "history-panelmenu",
-    "bookmarks-panelmenu",
+    "fullscreen-button",
+    "find-button",
+    "preferences-button",
+    "add-ons-button"
   ]]
 ]);
 

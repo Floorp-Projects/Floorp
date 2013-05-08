@@ -205,6 +205,11 @@ CustomizeMode.prototype = {
     let browser = document.getElementById("browser");
     browser.parentNode.selectedPanel = browser;
 
+    // We need to set this._customizing to false before removing the tab
+    // or the TabSelect event handler will think that we are exiting
+    // customization mode for a second time.
+    this._customizing = false;
+
     if (this.browser.selectedBrowser.currentURI.spec == kAboutURI) {
       let custBrowser = this.browser.selectedBrowser;
       if (custBrowser.canGoBack) {
@@ -220,7 +225,6 @@ CustomizeMode.prototype = {
     }
 
     this._changed = false;
-    this._customizing = false;
   },
 
   populatePalette: function() {
