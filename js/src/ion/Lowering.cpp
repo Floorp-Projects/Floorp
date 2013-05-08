@@ -659,7 +659,7 @@ LIRGenerator::visitTest(MTest *test)
         }
 
         // Compare and branch doubles.
-        if (comp->compareType() == MCompare::Compare_Double) {
+        if (comp->isDoubleComparison()) {
             LAllocation lhs = useRegister(left);
             LAllocation rhs = useRegister(right);
             LCompareDAndBranch *lir = new LCompareDAndBranch(lhs, rhs, ifTrue, ifFalse);
@@ -835,12 +835,8 @@ LIRGenerator::visitCompare(MCompare *comp)
     }
 
     // Compare doubles.
-    if (comp->compareType() == MCompare::Compare_Double ||
-        comp->compareType() == MCompare::Compare_DoubleMaybeCoerceLHS ||
-        comp->compareType() == MCompare::Compare_DoubleMaybeCoerceRHS)
-    {
+    if (comp->isDoubleComparison())
         return define(new LCompareD(useRegister(left), useRegister(right)), comp);
-    }
 
     // Compare values.
     if (comp->compareType() == MCompare::Compare_Value) {
