@@ -49,7 +49,16 @@ var tests = {
       observeProviderSet(function () {
         waitForProviderLoad(function() {
           checkUIStateMatchesProvider(gProviders[1]);
-          next();
+          // disable social, click on the provider menuitem to switch providers
+          Social.enabled = false;
+          let menu = document.getElementById("social-statusarea-popup");
+          let el = menu.getElementsByAttribute("origin", gProviders[0].origin);
+          is(el.length, 1, "selected provider menu item exists");
+          el[0].click();
+          waitForProviderLoad(function() {
+            checkUIStateMatchesProvider(gProviders[0]);
+            next();
+          });
         });
       });
       Social.activateFromOrigin("https://test1.example.com");
@@ -59,10 +68,6 @@ var tests = {
 
 function checkUIStateMatchesProvider(provider) {
   let profileData = getExpectedProfileData(provider);
-  // Bug 789863 - share button uses 'displayName', toolbar uses 'userName'
-  // Check the "share button"
-  let displayNameEl = document.getElementById("socialUserDisplayName");
-  is(displayNameEl.getAttribute("label"), profileData.displayName, "display name matches provider profile");
   // The toolbar
   let loginStatus = document.getElementsByClassName("social-statusarea-loggedInStatus");
   for (let label of loginStatus) {

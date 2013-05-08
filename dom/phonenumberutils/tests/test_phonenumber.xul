@@ -101,6 +101,28 @@ function Format(dial, currentRegion, nationalNumber, region, nationalFormat, int
   }
 }
 
+function TestProperties(dial, currentRegion) {
+  var result = PhoneNumber.Parse(dial, currentRegion);
+  if (result) {
+    ok(true, "found it");
+    ok(true, "InternationalFormat: " + result.internationalFormat);
+    ok(true, "InternationalNumber: " + result.internationalNumber);
+    ok(true, "NationalNumber: " + result.nationalNumber);
+    ok(true, "NationalFormat: " + result.nationalFormat);
+  } else {
+    ok(true, "not found");
+  }
+}
+
+TestProperties("+0988782456");
+TestProperties("+33442020", "ES");
+TestProperties("+43987614", "ES");
+TestProperties("+0988782456");
+TestProperties("+34556657");
+TestProperties("+66554433");
+TestProperties("+43442075");
+TestProperties("+13442074");
+
 // Test whether could a string be a phone number.
 IsPlain(null, false);
 IsPlain("", false);

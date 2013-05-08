@@ -236,17 +236,17 @@ Btoa(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static JSBool
-File(JSContext *cx, unsigned argc, jsval *vp)
+File(JSContext *cx, unsigned argc, Value *vp)
 {
-    nsresult rv;
+    CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (!argc) {
+    if (args.length() == 0) {
         XPCThrower::Throw(NS_ERROR_UNEXPECTED, cx);
         return false;
     }
 
     nsCOMPtr<nsISupports> native;
-    rv = nsDOMMultipartFile::NewFile(getter_AddRefs(native));
+    nsresult rv = nsDOMMultipartFile::NewFile(getter_AddRefs(native));
     if (NS_FAILED(rv)) {
         XPCThrower::Throw(rv, cx);
         return false;
@@ -255,7 +255,7 @@ File(JSContext *cx, unsigned argc, jsval *vp)
     nsCOMPtr<nsIJSNativeInitializer> initializer = do_QueryInterface(native);
     NS_ASSERTION(initializer, "what?");
 
-    rv = initializer->Initialize(nullptr, cx, nullptr, argc, JS_ARGV(cx, vp));
+    rv = initializer->Initialize(nullptr, cx, nullptr, args);
     if (NS_FAILED(rv)) {
         XPCThrower::Throw(rv, cx);
         return false;
@@ -270,26 +270,23 @@ File(JSContext *cx, unsigned argc, jsval *vp)
     JSObject* glob = JS_GetGlobalForScopeChain(cx);
 
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-    RootedValue retval(cx);
     rv = xpc->WrapNativeToJSVal(cx, glob, native, nullptr,
                                 &NS_GET_IID(nsISupports),
-                                true, retval.address(), nullptr);
+                                true, args.rval().address(), nullptr);
     if (NS_FAILED(rv)) {
         XPCThrower::Throw(rv, cx);
         return false;
     }
-
-    JS_SET_RVAL(cx, vp, retval);
     return true;
 }
 
 static JSBool
-Blob(JSContext *cx, unsigned argc, jsval *vp)
+Blob(JSContext *cx, unsigned argc, Value *vp)
 {
-    nsresult rv;
+    CallArgs args = CallArgsFromVp(argc, vp);
 
     nsCOMPtr<nsISupports> native;
-    rv = nsDOMMultipartFile::NewBlob(getter_AddRefs(native));
+    nsresult rv = nsDOMMultipartFile::NewBlob(getter_AddRefs(native));
     if (NS_FAILED(rv)) {
         XPCThrower::Throw(rv, cx);
         return false;
@@ -298,7 +295,7 @@ Blob(JSContext *cx, unsigned argc, jsval *vp)
     nsCOMPtr<nsIJSNativeInitializer> initializer = do_QueryInterface(native);
     NS_ASSERTION(initializer, "what?");
 
-    rv = initializer->Initialize(nullptr, cx, nullptr, argc, JS_ARGV(cx, vp));
+    rv = initializer->Initialize(nullptr, cx, nullptr, args);
     if (NS_FAILED(rv)) {
         XPCThrower::Throw(rv, cx);
         return false;
@@ -313,16 +310,13 @@ Blob(JSContext *cx, unsigned argc, jsval *vp)
     JSObject* glob = JS_GetGlobalForScopeChain(cx);
 
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-    RootedValue retval(cx);
     rv = xpc->WrapNativeToJSVal(cx, glob, native, nullptr,
                                 &NS_GET_IID(nsISupports),
-                                true, retval.address(), nullptr);
+                                true, args.rval().address(), nullptr);
     if (NS_FAILED(rv)) {
         XPCThrower::Throw(rv, cx);
         return false;
     }
-
-    JS_SET_RVAL(cx, vp, retval);
     return true;
 }
 
@@ -452,6 +446,12 @@ mozJSComponentLoader::ReallyInit()
     nsresult rv;
 
     mReuseLoaderGlobal = Preferences::GetBool("jsloader.reuseGlobal");
+
+    // XXXkhuey B2G child processes have some sort of preferences race that
+    // results in getting the wrong value.
+#ifdef MOZ_B2G
+    mReuseLoaderGlobal = true;
+#endif
 
     /*
      * Get the JSRuntime from the runtime svc, if possible.

@@ -6,26 +6,21 @@ var gDebuggee;
 
 function run_test()
 {
-  DebuggerServer.addActors("resource://test/testactors.js");
-
-  // Allow incoming connections.
-  DebuggerServer.init(function () { return true; });
+  initTestDebuggerServer();
   gDebuggee = testGlobal("test-1");
   DebuggerServer.addTestGlobal(gDebuggee);
 
   let transport = DebuggerServer.connectPipe();
   gClient = new DebuggerClient(transport);
   gClient.connect(function(aType, aTraits) {
-    getTestGlobalContext(gClient, "test-1", function(aContext) {
-      test_attach(aContext);
-    });
+    attachTestTab(gClient, "test-1", test_attach);
   });
   do_test_pending();
 }
 
-function test_attach(aContext)
+function test_attach(aResponse, aTabClient)
 {
-  gClient.attachThread(aContext.actor, function(aResponse, aThreadClient) {
+  gClient.attachThread(aResponse.threadActor, function(aResponse, aThreadClient) {
     do_check_eq(aThreadClient.paused, true);
     aThreadClient.resume(function() {
       test_interrupt();

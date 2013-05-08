@@ -96,9 +96,10 @@ public:
 
   virtual bool IsSVGTransformed(gfxMatrix *aOwnTransform,
                                 gfxMatrix *aFromParentTransform) const {
-    // Outer-<svg> can transform its children with viewBox, currentScale and
-    // currentTranslate, but it itself is not transformed by SVG transforms.
-    return false;
+    // Our anonymous wrapper performs the transforms. We simply
+    // return whether we are transformed here but don't apply the transforms
+    // themselves.
+    return GetFirstPrincipalChild()->IsSVGTransformed();
   }
 
   // nsISVGSVGFrame interface:
@@ -254,13 +255,6 @@ public:
    * @see nsGkAtoms::svgOuterSVGAnonChildFrame
    */
   virtual nsIAtom* GetType() const;
-
-  virtual bool IsSVGTransformed(gfxMatrix *aOwnTransform,
-                                gfxMatrix *aFromParentTransform) const {
-    // Outer-<svg> can transform its children with viewBox, currentScale and
-    // currentTranslate, but it itself is not transformed by _SVG_ transforms.
-    return false;
-  }
 
   // nsSVGContainerFrame methods:
   virtual gfxMatrix GetCanvasTM(uint32_t aFor) {

@@ -24,14 +24,10 @@ _TEST_FILES = \
   test_bug816847.html \
   test_sanity_cleanup.html \
   test_sanity_cleanup2.html \
+  test_sanityEventUtils.html \
+  test_sanitySimpletest.html \
   $(NULL)
 
-ifneq ($(OS_TARGET),Android)
-# Disabled on Android for permaorange, see bug 688052
-  _TEST_FILES += \
-  test_sanityEventUtils.html \
-  test_sanitySimpletest.html
-endif
 # Copy the sanity tests into a subdirectory, so the top level is all dirs
 # in the test screen.
 libs:: $(_TEST_FILES)

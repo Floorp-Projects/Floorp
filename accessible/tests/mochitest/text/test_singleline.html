@@ -315,10 +315,10 @@
       // BOUNDARY_WORD_END
       testTextAtOffset(0, BOUNDARY_WORD_END, "hello", 0, 5, IDs);
       testTextAtOffset(1, BOUNDARY_WORD_END, "hello", 0, 5, IDs);
-      testTextAtOffset(5, BOUNDARY_WORD_END, "hello", 0, 5, IDs);
+      testTextAtOffset(5, BOUNDARY_WORD_END, " my", 5, 8, IDs);
       testTextAtOffset(6, BOUNDARY_WORD_END, " my", 5, 8, IDs);
       testTextAtOffset(7, BOUNDARY_WORD_END, " my", 5, 8, IDs);
-      testTextAtOffset(8, BOUNDARY_WORD_END, " my", 5, 8, IDs);
+      testTextAtOffset(8, BOUNDARY_WORD_END, " friend", 8, 15, IDs);
       testTextAtOffset(9, BOUNDARY_WORD_END, " friend", 8, 15, IDs);
       testTextAtOffset(10, BOUNDARY_WORD_END, " friend", 8, 15, IDs);
       testTextAtOffset(14, BOUNDARY_WORD_END, " friend", 8, 15, IDs);

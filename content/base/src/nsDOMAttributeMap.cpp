@@ -20,6 +20,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsNodeInfoManager.h"
 #include "nsUnicharUtils.h"
+#include "nsWrapperCacheInlines.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -62,6 +63,7 @@ nsDOMAttributeMap::DropReference()
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMAttributeMap)
   tmp->DropReference();
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mContent)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 
@@ -80,9 +82,33 @@ TraverseMapEntry(nsAttrHashKey::KeyType aKey, nsRefPtr<Attr>& aData,
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMAttributeMap)
   tmp->mAttributeCache.Enumerate(TraverseMapEntry, &cb);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mContent)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(nsDOMAttributeMap)
+
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsDOMAttributeMap)
+  if (tmp->IsBlack()) {
+    if (tmp->mContent) {
+      // The map owns the element so we can mark it when the
+      // map itself is certainly alive.
+      mozilla::dom::FragmentOrElement::MarkNodeChildren(tmp->mContent);
+    }
+    return true;
+  }
+  if (tmp->mContent &&
+      mozilla::dom::FragmentOrElement::CanSkip(tmp->mContent, true)) {
+    return true;
+  }
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_END
+
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_BEGIN(nsDOMAttributeMap)
+  return tmp->IsBlackAndDoesNotNeedTracing(tmp);
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_END
+
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(nsDOMAttributeMap)
+  return tmp->IsBlack();
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 
 // QueryInterface implementation for nsDOMAttributeMap
 NS_INTERFACE_TABLE_HEAD(nsDOMAttributeMap)
@@ -335,7 +361,10 @@ nsDOMAttributeMap::RemoveNamedItem(const nsAString& aName,
 already_AddRefed<Attr>
 nsDOMAttributeMap::RemoveNamedItem(const nsAString& aName, ErrorResult& aError)
 {
-  NS_ENSURE_TRUE(mContent, nullptr);
+  if (!mContent) {
+    aError.Throw(NS_ERROR_DOM_NOT_FOUND_ERR);
+    return nullptr;
+  }
 
   nsCOMPtr<nsINodeInfo> ni = mContent->GetExistingAttrNameFromQName(aName);
   if (!ni) {

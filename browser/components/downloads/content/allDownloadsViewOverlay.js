@@ -791,6 +791,10 @@ function DownloadsPlacesView(aRichListBox, aActive = true) {
   let downloadsData = DownloadsCommon.getData(window.opener || window);
   downloadsData.addView(this);
 
+  // Get the Download button out of the attention state since we're about to
+  // view all downloads.
+  DownloadsCommon.getIndicatorData(window).attention = false;
+
   // Make sure to unregister the view if the window is closed.
   window.addEventListener("unload", function() {
     window.controllers.removeController(this);

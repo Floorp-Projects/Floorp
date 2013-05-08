@@ -109,8 +109,8 @@
     <command id="History:UndoCloseTab" oncommand="undoCloseTab();"/>
     <command id="History:UndoCloseWindow" oncommand="undoCloseWindow();"/>
     <command id="Browser:ToggleAddonBar" oncommand="toggleAddonBar();"/>
-    <command id="Social:SharePage" oncommand="SocialShareButton.sharePage();" disabled="true"/>
-    <command id="Social:UnsharePage" oncommand="SocialShareButton.unsharePage();"/>
+    <command id="Social:TogglePageMark" oncommand="SocialMark.togglePageMark();" disabled="true"/>
+    <command id="Social:SharePage" oncommand="SocialShare.sharePage();" disabled="true"/>
     <command id="Social:ToggleSidebar" oncommand="Social.toggleSidebar();"/>
     <command id="Social:ToggleNotifications" oncommand="Social.toggleNotifications();" hidden="true"/>
     <command id="Social:FocusChat" oncommand="SocialChatBar.focus();" hidden="true" disabled="true"/>
@@ -350,8 +350,8 @@
 # overridden for other purposes there.
     <key id="viewBookmarksSidebarWinKb" key="&bookmarksWinCmd.commandkey;" command="viewBookmarksSidebar" modifiers="accel"/>
 #endif
-    
-    <key id="sharePage" key="&sharePageCmd.commandkey;" command="Social:SharePage" modifiers="accel,shift"/>
+
+    <key id="markPage" key="&markPageCmd.commandkey;" command="Social:TogglePageMark" modifiers="accel,shift"/>
     <key id="focusChatBar" key="&social.chatBar.commandkey;" command="Social:FocusChat" modifiers="accel,shift"/>
 
     <key id="key_stop" keycode="VK_ESCAPE" command="Browser:Stop"/>

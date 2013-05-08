@@ -39,7 +39,7 @@
 #include "MediaPluginReader.h"
 #include "MediaPluginHost.h"
 #endif
-#ifdef MOZ_WIDGET_GONK
+#ifdef MOZ_OMX_DECODER
 #include "MediaOmxDecoder.h"
 #include "MediaOmxReader.h"
 #include "nsIPrincipal.h"
@@ -196,7 +196,7 @@ IsGStreamerSupportedType(const nsACString& aMimeType)
 }
 #endif
 
-#ifdef MOZ_WIDGET_GONK
+#ifdef MOZ_OMX_DECODER
 static const char* const gOmxTypes[7] = {
   "audio/mpeg",
   "audio/mp4",
@@ -334,7 +334,7 @@ DecoderTraits::CanHandleMediaType(const char* aMIMEType,
     return CANPLAY_MAYBE;
   }
 #endif
-#ifdef MOZ_WIDGET_GONK
+#ifdef MOZ_OMX_DECODER
   if (IsOmxSupportedType(nsDependentCString(aMIMEType))) {
     codecList = gH264Codecs;
     result = CANPLAY_MAYBE;
@@ -400,7 +400,7 @@ DecoderTraits::CreateDecoder(const nsACString& aType, MediaDecoderOwner* aOwner)
     decoder = new WaveDecoder();
   }
 #endif
-#ifdef MOZ_WIDGET_GONK
+#ifdef MOZ_OMX_DECODER
   if (IsOmxSupportedType(aType)) {
     // AMR audio is enabled for MMS, but we are discouraging Web and App
     // developers from using AMR, thus we only allow AMR to be played on WebApps.
@@ -472,7 +472,7 @@ MediaDecoderReader* DecoderTraits::CreateReader(const nsACString& aType, Abstrac
     decoderReader = new WaveReader(aDecoder);
   } else
 #endif
-#ifdef MOZ_WIDGET_GONK
+#ifdef MOZ_OMX_DECODER
   if (IsOmxSupportedType(aType)) {
     decoderReader = new MediaOmxReader(aDecoder);
   } else
@@ -508,7 +508,7 @@ bool DecoderTraits::IsSupportedInVideoDocument(const nsACString& aType)
 #ifdef MOZ_OGG
     IsOggType(aType) ||
 #endif
-#ifdef MOZ_WIDGET_GONK
+#ifdef MOZ_OMX_DECODER
     IsOmxSupportedType(aType) ||
 #endif
 #ifdef MOZ_WEBM

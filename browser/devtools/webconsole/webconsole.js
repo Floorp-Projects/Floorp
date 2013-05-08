@@ -1062,7 +1062,8 @@ WebConsoleFrame.prototype = {
         if (!timer) {
           return;
         }
-        body = l10n.getFormatStr("timeEnd", [timer.name, timer.duration]);
+        let duration = Math.round(timer.duration * 100) / 100;
+        body = l10n.getFormatStr("timeEnd", [timer.name, duration]);
         clipboardText = body;
         break;
       }
@@ -1097,6 +1098,9 @@ WebConsoleFrame.prototype = {
 
     if (objectActors.size > 0) {
       node._objectActors = objectActors;
+
+      let repeatNode = node.querySelector(".webconsole-msg-repeat");
+      repeatNode._uid += [...objectActors].join("-");
     }
 
     // Make the node bring up the variables view, to allow the user to inspect
@@ -1105,7 +1109,10 @@ WebConsoleFrame.prototype = {
       node._stacktrace = aMessage.stacktrace;
 
       this.makeOutputMessageLink(node, () =>
-        this.jsterm.openVariablesView({ rawObject: node._stacktrace }));
+        this.jsterm.openVariablesView({
+          rawObject: node._stacktrace,
+          autofocus: true,
+        }));
     }
 
     return node;
@@ -1136,11 +1143,11 @@ WebConsoleFrame.prototype = {
    */
   _consoleLogClick: function WCF__consoleLogClick(aAnchor, aObjectActor)
   {
-    let options = {
+    this.jsterm.openVariablesView({
       label: aAnchor.textContent,
       objectActor: aObjectActor,
-    };
-    this.jsterm.openVariablesView(options);
+      autofocus: true,
+    });
   },
 
   /**
@@ -2648,6 +2655,7 @@ function JSTerm(aWebConsoleFrame)
   this._inputEventHandler = this.inputEventHandler.bind(this);
   this._fetchVarProperties = this._fetchVarProperties.bind(this);
   this._fetchVarLongString = this._fetchVarLongString.bind(this);
+  this._onKeypressInVariablesView = this._onKeypressInVariablesView.bind(this);
 
   EventEmitter.decorate(this);
 }
@@ -3006,6 +3014,8 @@ JSTerm.prototype = {
    *        - targetElement: optional nsIDOMElement to append the variables view
    *        to. An iframe element is used as a container for the view. If this
    *        option is not used, then the variables view opens in the sidebar.
+   *        - autofocus: optional boolean, |true| if you want to give focus to
+   *        the variables view window after open, |false| otherwise.
    * @return object
    *         A Promise object that is resolved when the variables view has
    *         opened. The new variables view instance is given to the callbacks.
@@ -3023,10 +3033,15 @@ JSTerm.prototype = {
         view = this._createVariablesView(viewOptions);
         if (!aOptions.targetElement) {
           this._variablesView = view;
+          aWindow.addEventListener("keypress", this._onKeypressInVariablesView);
         }
       }
       aOptions.view = view;
       this._updateVariablesView(aOptions);
+
+      this.sidebar.show();
+      aOptions.autofocus && aWindow.focus();
+
       this.emit("variablesview-open", view, aOptions);
       return view;
     };
@@ -3048,7 +3063,9 @@ JSTerm.prototype = {
       aOptions.targetElement.appendChild(iframe);
     }
     else {
-      this._createSidebar();
+      if (!this.sidebar) {
+        this._createSidebar();
+      }
       promise = this._addVariablesViewSidebarTab();
     }
 
@@ -3063,11 +3080,9 @@ JSTerm.prototype = {
    */
   _createSidebar: function JST__createSidebar()
   {
-    if (!this.sidebar) {
-      let tabbox = this.hud.document.querySelector("#webconsole-sidebar");
-      let ToolSidebar = devtools.require("devtools/framework/sidebar").ToolSidebar;
-      this.sidebar = new ToolSidebar(tabbox, this);
-    }
+    let tabbox = this.hud.document.querySelector("#webconsole-sidebar");
+    let ToolSidebar = devtools.require("devtools/framework/sidebar").ToolSidebar;
+    this.sidebar = new ToolSidebar(tabbox, this);
     this.sidebar.show();
   },
 
@@ -3103,6 +3118,27 @@ JSTerm.prototype = {
     }
 
     return deferred.promise;
+  },
+
+  /**
+   * The keypress event handler for the Variables View sidebar. Currently this
+   * is used for removing the sidebar when Escape is pressed.
+   *
+   * @private
+   * @param nsIDOMEvent aEvent
+   *        The keypress DOM event object.
+   */
+  _onKeypressInVariablesView: function JST__onKeypressInVariablesView(aEvent)
+  {
+    let tag = aEvent.target.nodeName;
+    if (aEvent.keyCode != Ci.nsIDOMKeyEvent.DOM_VK_ESCAPE || aEvent.shiftKey ||
+        aEvent.altKey || aEvent.ctrlKey || aEvent.metaKey ||
+        ["input", "textarea", "select", "textbox"].indexOf(tag) > -1) {
+        return;
+    }
+
+    this._sidebarDestroy();
+    this.inputNode.focus();
   },
 
   /**
@@ -3447,7 +3483,7 @@ JSTerm.prototype = {
         aProperty.evaluationMacro = this._variablesViewSimpleValueEvalMacro;
       }
 
-      let grips = [aProperty.value, aProperty.gettter, aProperty.settter];
+      let grips = [aProperty.value, aProperty.getter, aProperty.setter];
       grips.forEach(addActorForDescriptor);
 
       let inspectable = !VariablesView.isPrimitive({ value: aProperty.value });
@@ -3761,6 +3797,9 @@ JSTerm.prototype = {
         if (this.autocompletePopup.isOpen) {
           this.clearCompletion();
           aEvent.preventDefault();
+        }
+        else if (this.sidebar) {
+          this._sidebarDestroy();
         }
         break;
 
@@ -4167,13 +4206,15 @@ JSTerm.prototype = {
     this.openVariablesView({
       label: VariablesView.getString(aResponse.result),
       objectActor: aResponse.result,
+      autofocus: true,
     });
   },
 
   /**
-   * Destroy the JSTerm object. Call this method to avoid memory leaks.
+   * Destroy the sidebar.
+   * @private
    */
-  destroy: function JST_destroy()
+  _sidebarDestroy: function JST__sidebarDestroy()
   {
     if (this._variablesView) {
       let actors = this._objectActorsInVariablesViews.get(this._variablesView);
@@ -4185,9 +4226,20 @@ JSTerm.prototype = {
     }
 
     if (this.sidebar) {
+      this.sidebar.hide();
       this.sidebar.destroy();
       this.sidebar = null;
     }
+
+    this.emit("sidebar-closed");
+  },
+
+  /**
+   * Destroy the JSTerm object. Call this method to avoid memory leaks.
+   */
+  destroy: function JST_destroy()
+  {
+    this._sidebarDestroy();
 
     this.clearCompletion();
     this.clearOutput();

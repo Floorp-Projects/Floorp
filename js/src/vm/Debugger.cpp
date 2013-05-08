@@ -3915,6 +3915,7 @@ js::EvaluateInEnv(JSContext *cx, Handle<Env*> env, HandleValue thisv, AbstractFr
     CompileOptions options(cx);
     options.setPrincipals(env->compartment()->principals)
            .setCompileAndGo(true)
+           .setForEval(true)
            .setNoScriptRval(false)
            .setFileAndLine(filename, lineno);
     RootedScript callerScript(cx, frame ? frame.script() : NULL);

@@ -9,6 +9,15 @@
 #define mozilla_a11y_IUnknownImpl_h_
 
 #include <windows.h>
+#include "nsError.h"
+
+// Avoid warning C4509 like "nonstandard extension used:
+// 'AccessibleWrap::[acc_getName]' uses SEH and 'name' has destructor.
+// At this point we're catching a crash which is of much greater
+// importance than the missing dereference for the nsCOMPtr<>
+#ifdef _MSC_VER
+#pragma warning( disable : 4509 )
+#endif
 
 namespace mozilla {
 namespace a11y {
@@ -75,6 +84,16 @@ Class::QueryInterface(REFIID aIID, void** aInstancePtr)                        \
   A11Y_TRYBLOCK_END                                                            \
 }
 
+#define IMPL_IUNKNOWN_QUERY_TAIL_AGGREGATED(Member)                            \
+  return Member->QueryInterface(aIID, aInstancePtr);                           \
+  A11Y_TRYBLOCK_END                                                            \
+}
+
+#define IMPL_IUNKNOWN_QUERY_TAIL_INHERITED(BaseClass)                          \
+  return BaseClass::QueryInterface(aIID, aInstancePtr);                        \
+  A11Y_TRYBLOCK_END                                                            \
+}
+
 #define IMPL_IUNKNOWN_QUERY_IFACE(Iface)                                       \
   if (aIID == IID_##Iface) {                                                   \
     *aInstancePtr = static_cast<Iface*>(this);                                 \
@@ -124,14 +143,43 @@ Class::QueryInterface(REFIID aIID, void** aInstancePtr)                        \
 #define IMPL_IUNKNOWN_INHERITED1(Class, Super0, Super1)                        \
   IMPL_IUNKNOWN_QUERY_HEAD(Class)                                              \
   IMPL_IUNKNOWN_QUERY_CLASS(Super1);                                           \
-  IMPL_IUNKNOWN_QUERY_CLASS(Super0)                                            \
-  IMPL_IUNKNOWN_QUERY_TAIL                                                     \
+  IMPL_IUNKNOWN_QUERY_TAIL_INHERITED(Super0)
 
 #define IMPL_IUNKNOWN_INHERITED2(Class, Super0, Super1, Super2)                \
   IMPL_IUNKNOWN_QUERY_HEAD(Class)                                              \
   IMPL_IUNKNOWN_QUERY_CLASS(Super1);                                           \
   IMPL_IUNKNOWN_QUERY_CLASS(Super2);                                           \
-  IMPL_IUNKNOWN_QUERY_CLASS(Super0)                                            \
-  IMPL_IUNKNOWN_QUERY_TAIL
+  IMPL_IUNKNOWN_QUERY_TAIL_INHERITED(Super0)
+
+
+/**
+ * Wrap every method body by these macroses to pass exception to the crash
+ * reporter.
+ */
+#define A11Y_TRYBLOCK_BEGIN                                                    \
+  MOZ_SEH_TRY {
+
+#define A11Y_TRYBLOCK_END                                                      \
+  } MOZ_SEH_EXCEPT(mozilla::a11y::FilterExceptions(::GetExceptionCode(),       \
+                                                   GetExceptionInformation())) \
+  { }                                                                          \
+  return E_FAIL;
+
+
+namespace mozilla {
+namespace a11y {
+
+/**
+ * Converts nsresult to HRESULT.
+ */
+HRESULT GetHRESULT(nsresult aResult);
+
+/**
+ * Used to pass an exception to the crash reporter.
+ */
+int FilterExceptions(unsigned int aCode, EXCEPTION_POINTERS* aExceptionInfo);
+
+} // namespace a11y;
+} //namespace mozilla;
 
 #endif

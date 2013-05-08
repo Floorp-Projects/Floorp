@@ -90,6 +90,7 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain,
      * and non-zero static level requires callerFrame.
      */
     JS_ASSERT_IF(evalCaller, options.compileAndGo);
+    JS_ASSERT_IF(evalCaller, options.forEval);
     JS_ASSERT_IF(staticLevel != 0, evalCaller);
 
     if (!CheckLength(cx, length))
@@ -146,8 +147,8 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain,
     JS_ASSERT_IF(globalScope, globalScope->isNative());
     JS_ASSERT_IF(globalScope, JSCLASS_HAS_GLOBAL_FLAG_AND_SLOTS(globalScope->getClass()));
 
-    BytecodeEmitter bce(/* parent = */ NULL, &parser, &globalsc, script, evalCaller, !!globalScope,
-                        options.lineno, options.selfHostingMode);
+    BytecodeEmitter bce(/* parent = */ NULL, &parser, &globalsc, script, options.forEval, evalCaller,
+                        !!globalScope, options.lineno, options.selfHostingMode);
     if (!bce.init())
         return NULL;
 
@@ -330,7 +331,8 @@ frontend::CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, CompileO
             return false;
     }
 
-    options.setCompileAndGo(false);
+    JS_ASSERT(!options.forEval);
+
     Parser<FullParseHandler> parser(cx, options, chars, length, /* foldConstants = */ true);
     if (!parser.init())
         return false;
@@ -413,9 +415,17 @@ frontend::CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, CompileO
 #endif
 
     if (generateBytecode) {
+        /*
+         * The reason for checking fun->environment() below is that certain
+         * consumers of JS::CompileFunction, namely
+         * nsEventListenerManager::CompileEventHandlerInternal, passes in a
+         * NULL environment. This compiled function is never used, but instead
+         * is cloned immediately onto the right scope chain.
+         */
         BytecodeEmitter funbce(/* parent = */ NULL, &parser, funbox, script,
-                               /* evalCaller = */ NullPtr(),
-                               /* hasGlobalScope = */ false, options.lineno);
+                               /* insideEval = */ false, /* evalCaller = */ NullPtr(),
+                               fun->environment() && fun->environment()->isGlobal(),
+                               options.lineno);
         if (!funbce.init())
             return false;
 

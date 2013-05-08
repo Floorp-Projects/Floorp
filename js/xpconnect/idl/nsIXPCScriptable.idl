@@ -19,7 +19,7 @@
  * boolean to PR_TRUE before making the call.  Implementations may skip writing
  * to *_retval unless they want to return PR_FALSE.
  */
-[uuid(33b9d098-e680-4e4c-88a2-57cccceac145)]
+[uuid(155d1863-2b0b-4f5e-b800-05184944156b)]
 interface nsIXPCScriptable : nsISupports
 {
     /* bitflags used for 'flags' (only 32 bits available!) */
@@ -122,11 +122,11 @@ interface nsIXPCScriptable : nsISupports
 
     boolean call(in nsIXPConnectWrappedNative wrapper,
                 in JSContextPtr cx, in JSObjectPtr obj,
-                in uint32_t argc, in JSValPtr argv, in JSValPtr vp);
+                in JSCallArgsRef args);
 
     boolean construct(in nsIXPConnectWrappedNative wrapper,
                      in JSContextPtr cx, in JSObjectPtr obj,
-                     in uint32_t argc, in JSValPtr argv, in JSValPtr vp);
+                     in JSCallArgsRef args);
 
     boolean hasInstance(in nsIXPConnectWrappedNative wrapper,
                        in JSContextPtr cx, in JSObjectPtr obj,

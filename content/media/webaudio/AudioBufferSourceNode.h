@@ -29,7 +29,7 @@ public:
     }
     AudioNode::DestroyMediaStream();
   }
-  virtual uint32_t NumberOfInputs() const MOZ_FINAL MOZ_OVERRIDE
+  virtual uint16_t NumberOfInputs() const MOZ_FINAL MOZ_OVERRIDE
   {
     return 0;
   }
@@ -105,6 +105,8 @@ public:
   }
   void SendDopplerShiftToStream(double aDopplerShift);
 
+  IMPL_EVENT_HANDLER(ended)
+
   virtual void NotifyMainThreadStateChanged() MOZ_OVERRIDE;
 
 private:
@@ -142,6 +144,7 @@ private:
   SelfReference<AudioBufferSourceNode> mPlayingRef; // a reference to self while playing
   bool mLoop;
   bool mStartCalled;
+  bool mStopped;
   bool mOffsetAndDurationRemembered;
 };
 

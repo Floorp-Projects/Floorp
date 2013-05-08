@@ -31,6 +31,7 @@ EXTRA_COMPONENTS = \
         BlocklistPrompt.js \
         NSSDialogService.js \
         SiteSpecificUserAgent.js \
+        PaymentsUI.js \
         $(NULL)
 
 include $(topsrcdir)/config/rules.mk

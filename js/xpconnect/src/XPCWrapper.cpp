@@ -29,18 +29,14 @@ UnwrapNW(JSContext *cx, unsigned argc, jsval *vp)
   }
 
   JS::RootedValue v(cx, JS_ARGV(cx, vp)[0]);
-  if (JSVAL_IS_PRIMITIVE(v)) {
-    return ThrowException(NS_ERROR_INVALID_ARG, cx);
-  }
-
-  JS::RootedObject obj(cx, JSVAL_TO_OBJECT(v));
-  if (!js::IsWrapper(obj)) {
+  if (!v.isObject() || !js::IsWrapper(&v.toObject())) {
     JS_SET_RVAL(cx, vp, v);
     return true;
   }
 
-  if (WrapperFactory::IsXrayWrapper(obj) && AccessCheck::wrapperSubsumes(obj)) {
-    return JS_GetProperty(cx, obj, "wrappedJSObject", vp);
+  if (AccessCheck::wrapperSubsumes(&v.toObject())) {
+    bool ok = xpc::WrapperFactory::WaiveXrayAndWrap(cx, v.address());
+    NS_ENSURE_TRUE(ok, false);
   }
 
   JS_SET_RVAL(cx, vp, v);
@@ -54,19 +50,13 @@ XrayWrapperConstructor(JSContext *cx, unsigned argc, jsval *vp)
     return ThrowException(NS_ERROR_XPC_NOT_ENOUGH_ARGS, cx);
   }
 
-  if (JSVAL_IS_PRIMITIVE(vp[2])) {
-    return ThrowException(NS_ERROR_ILLEGAL_VALUE, cx);
-  }
-
-  JSObject *obj = JSVAL_TO_OBJECT(vp[2]);
-  if (!js::IsWrapper(obj)) {
-    *vp = OBJECT_TO_JSVAL(obj);
+  JS::RootedValue v(cx, JS_ARGV(cx, vp)[0]);
+  if (!v.isObject()) {
+    JS_SET_RVAL(cx, vp, v);
     return true;
   }
 
-  obj = js::UncheckedUnwrap(obj);
-
-  *vp = OBJECT_TO_JSVAL(obj);
+  *vp = JS::ObjectValue(*js::UncheckedUnwrap(&v.toObject()));
   return JS_WrapValue(cx, vp);
 }
 // static

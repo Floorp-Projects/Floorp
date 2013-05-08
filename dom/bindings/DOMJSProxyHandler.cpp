@@ -37,11 +37,35 @@ DefineStaticJSVals(JSContext* cx)
 
 int HandlerFamily;
 
+js::ListBaseShadowsResult
+DOMListShadows(JSContext* cx, JSHandleObject proxy, JSHandleId id)
+{
+  JS::Value v = js::GetProxyExtra(proxy, JSPROXYSLOT_EXPANDO);
+  if (v.isObject()) {
+    JSBool hasOwn;
+    if (!JS_AlreadyHasOwnPropertyById(cx, &v.toObject(), id, &hasOwn))
+      return js::ShadowCheckFailed;
+
+    return hasOwn ? js::Shadows : js::DoesntShadow;
+  }
+
+  if (v.isUndefined()) {
+    return js::DoesntShadow;
+  }
+
+  bool hasOwn;
+  if (!GetProxyHandler(proxy)->hasOwn(cx, proxy, id, &hasOwn))
+    return js::ShadowCheckFailed;
+
+  return hasOwn ? js::Shadows : js::DoesntShadowUnique;
+}
+
 // Store the information for the specialized ICs.
 struct SetListBaseInformation
 {
   SetListBaseInformation() {
-    js::SetListBaseInformation((void*) &HandlerFamily, js::JSSLOT_PROXY_EXTRA + JSPROXYSLOT_EXPANDO);
+    js::SetListBaseInformation((void*) &HandlerFamily,
+                               js::JSSLOT_PROXY_EXTRA + JSPROXYSLOT_EXPANDO, DOMListShadows);
   }
 };
 
@@ -51,11 +75,27 @@ SetListBaseInformation gSetListBaseInformation;
 JSObject*
 DOMProxyHandler::GetAndClearExpandoObject(JSObject* obj)
 {
-  JSObject* expando = GetExpandoObject(obj);
-  XPCWrappedNativeScope* scope = xpc::GetObjectScope(obj);
-  scope->RemoveDOMExpandoObject(obj);
-  js::SetProxyExtra(obj, JSPROXYSLOT_EXPANDO, UndefinedValue());
-  return expando;
+  MOZ_ASSERT(IsDOMProxy(obj), "expected a DOM proxy object");
+  JS::Value v = js::GetProxyExtra(obj, JSPROXYSLOT_EXPANDO);
+  if (v.isUndefined()) {
+    return nullptr;
+  }
+
+  if (v.isObject()) {
+    js::SetProxyExtra(obj, JSPROXYSLOT_EXPANDO, UndefinedValue());
+  } else {
+    js::ExpandoAndGeneration* expandoAndGeneration =
+      static_cast<js::ExpandoAndGeneration*>(v.toPrivate());
+    v = expandoAndGeneration->expando;
+    if (v.isUndefined()) {
+      return nullptr;
+    }
+    expandoAndGeneration->expando = UndefinedValue();
+  }
+
+  xpc::GetObjectScope(obj)->RemoveDOMExpandoObject(obj);
+
+  return &v.toObject();
 }
 
 // static
@@ -63,25 +103,42 @@ JSObject*
 DOMProxyHandler::EnsureExpandoObject(JSContext* cx, JS::Handle<JSObject*> obj)
 {
   NS_ASSERTION(IsDOMProxy(obj), "expected a DOM proxy object");
-  JS::Rooted<JSObject*> expando(cx, GetExpandoObject(obj));
+  JS::Value v = js::GetProxyExtra(obj, JSPROXYSLOT_EXPANDO);
+  if (v.isObject()) {
+    return &v.toObject();
+  }
+
+  js::ExpandoAndGeneration* expandoAndGeneration;
+  if (!v.isUndefined()) {
+    expandoAndGeneration = static_cast<js::ExpandoAndGeneration*>(v.toPrivate());
+    if (expandoAndGeneration->expando.isObject()) {
+      return &expandoAndGeneration->expando.toObject();
+    }
+  } else {
+    expandoAndGeneration = nullptr;
+  }
+
+  JSObject* expando = JS_NewObjectWithGivenProto(cx, nullptr, nullptr,
+                                                 js::GetObjectParent(obj));
   if (!expando) {
-    expando = JS_NewObjectWithGivenProto(cx, nullptr, nullptr,
-                                         js::GetObjectParent(obj));
-    if (!expando) {
-      return NULL;
-    }
+    return nullptr;
+  }
 
-    XPCWrappedNativeScope* scope = xpc::GetObjectScope(obj);
-    if (!scope->RegisterDOMExpandoObject(obj)) {
-      return NULL;
-    }
+  XPCWrappedNativeScope* scope = xpc::GetObjectScope(obj);
+  if (!scope->RegisterDOMExpandoObject(obj)) {
+    return nullptr;
+  }
 
-    nsWrapperCache* cache;
-    CallQueryInterface(UnwrapDOMObject<nsISupports>(obj), &cache);
-    cache->SetPreservingWrapper(true);
+  nsWrapperCache* cache;
+  CallQueryInterface(UnwrapDOMObject<nsISupports>(obj), &cache);
+  cache->SetPreservingWrapper(true);
 
+  if (expandoAndGeneration) {
+    expandoAndGeneration->expando.setObject(*expando);
+  } else {
     js::SetProxyExtra(obj, JSPROXYSLOT_EXPANDO, ObjectValue(*expando));
   }
+
   return expando;
 }
 
@@ -210,6 +267,7 @@ bool
 DOMProxyHandler::AppendNamedPropertyIds(JSContext* cx,
                                         JS::Handle<JSObject*> proxy,
                                         nsTArray<nsString>& names,
+                                        bool shadowPrototypeProperties,
                                         JS::AutoIdVector& props)
 {
   for (uint32_t i = 0; i < names.Length(); ++i) {
@@ -223,7 +281,8 @@ DOMProxyHandler::AppendNamedPropertyIds(JSContext* cx,
       return false;
     }
 
-    if (!HasPropertyOnPrototype(cx, proxy, this, id)) {
+    if (shadowPrototypeProperties ||
+        !HasPropertyOnPrototype(cx, proxy, this, id)) {
       if (!props.append(id)) {
         return false;
       }

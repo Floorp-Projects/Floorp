@@ -20,6 +20,7 @@ MOCHITEST_FILES := \
   test_bug866570.html \
   test_bug866737.html \
   test_bug867089.html \
+  test_bug867174.html \
   test_bug867203.html \
   test_analyserNode.html \
   test_AudioBuffer.html \
@@ -28,6 +29,8 @@ MOCHITEST_FILES := \
   test_AudioParam.html \
   test_audioParamExponentialRamp.html \
   test_audioParamLinearRamp.html \
+  test_audioParamSetCurveAtTime.html \
+  test_audioParamSetTargetAtTime.html \
   test_audioBufferSourceNode.html \
   test_audioBufferSourceNodeLazyLoopParam.html \
   test_audioBufferSourceNodeLoop.html \
@@ -36,6 +39,10 @@ MOCHITEST_FILES := \
   test_audioBufferSourceNodeNullBuffer.html \
   test_badConnect.html \
   test_biquadFilterNode.html \
+  test_channelMergerNode.html \
+  test_channelMergerNodeWithVolume.html \
+  test_channelSplitterNode.html \
+  test_channelSplitterNodeWithVolume.html \
   test_currentTime.html \
   test_delayNode.html \
   test_delayNodeWithGain.html \
@@ -54,12 +61,18 @@ MOCHITEST_FILES := \
   ting-dualchannel44.1-expected.wav \
   ting-dualchannel48.ogg \
   ting-dualchannel48-expected.wav \
+  ting-mono-expected.wav \
+  ting-mono-dualchannel44.1-expected.wav \
+  ting-mono-dualchannel48-expected.wav \
   small-shot.ogg \
   small-shot-expected.wav \
+  small-shot-mono-expected.wav \
   invalid.txt \
   noaudio.webm \
   audio.ogv \
   audio-expected.wav \
+  audio-mono-expected.wav \
+  audio-mono-expected-2.wav \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

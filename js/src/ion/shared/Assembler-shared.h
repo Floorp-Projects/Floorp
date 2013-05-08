@@ -150,8 +150,8 @@ struct Address
     Address() { mozilla::PodZero(this); }
 };
 
-// Specifies an address computed in the form of a register base and a constant,
-// 32-bit offset.
+// Specifies an address computed in the form of a register base, a register
+// index with a scale, and a constant, 32-bit offset.
 struct BaseIndex
 {
     Register base;
@@ -261,7 +261,7 @@ class Label : public LabelBase
         // Note: the condition is a hack to silence this assert when OOM testing,
         // see bug 756614.
         if (!js_IonOptions.parallelCompilation)
-            JS_ASSERT_IF(!GetIonContext()->runtime->hadOutOfMemory, !used());
+            JS_ASSERT_IF(MaybeGetIonContext() && !GetIonContext()->runtime->hadOutOfMemory, !used());
 #endif
     }
 };

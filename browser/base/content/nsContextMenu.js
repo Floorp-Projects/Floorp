@@ -292,6 +292,45 @@ nsContextMenu.prototype = {
                   this.onTextInput && top.gBidiUI);
     this.showItem("context-bidi-page-direction-toggle",
                   !this.onTextInput && top.gBidiUI);
+    
+    // SocialMarks
+    let marksEnabled = SocialUI.enabled && Social.provider.pageMarkInfo;
+    let enablePageMark = marksEnabled && !(this.isContentSelected ||
+                            this.onTextInput || this.onLink || this.onImage ||
+                            this.onVideo || this.onAudio || this.onSocial);
+    let enableLinkMark = marksEnabled && ((this.onLink && !this.onMailtoLink &&
+                                           !this.onSocial) || this.onPlainTextLink);
+    if (enablePageMark) {
+      Social.isURIMarked(gBrowser.currentURI, function(marked) {
+        let label = marked ? "social.unmarkpage.label" : "social.markpage.label";
+        let provider = Social.provider || Social.defaultProvider;
+        let menuLabel = gNavigatorBundle.getFormattedString(label, [provider.name]);
+        this.setItemAttr("context-markpage", "label", menuLabel);
+      }.bind(this));
+    }
+    this.showItem("context-markpage", enablePageMark);
+    if (enableLinkMark) {
+      Social.isURIMarked(this.linkURI, function(marked) {
+        let label = marked ? "social.unmarklink.label" : "social.marklink.label";
+        let provider = Social.provider || Social.defaultProvider;
+        let menuLabel = gNavigatorBundle.getFormattedString(label, [provider.name]);
+        this.setItemAttr("context-marklink", "label", menuLabel);
+      }.bind(this));
+    }
+    this.showItem("context-marklink", enableLinkMark);
+
+    // SocialShare
+    let shareButton = SocialShare.shareButton;
+    let shareEnabled = shareButton && !shareButton.disabled && !this.onSocial;
+    let pageShare = shareEnabled && !(this.isContentSelected ||
+                            this.onTextInput || this.onLink || this.onImage ||
+                            this.onVideo || this.onAudio);
+    this.showItem("context-sharepage", pageShare);
+    this.showItem("context-shareselect", shareEnabled && this.isContentSelected);
+    this.showItem("context-sharelink", shareEnabled && (this.onLink || this.onPlainTextLink) && !this.onMailtoLink);
+    this.showItem("context-shareimage", shareEnabled && this.onImage);
+    this.showItem("context-sharevideo", shareEnabled && this.onVideo);
+    this.setItemAttr("context-sharevideo", "disabled", !this.mediaURL);
   },
 
   initSpellingItems: function() {
@@ -1465,6 +1504,27 @@ nsContextMenu.prototype = {
                                        , itemId: itemId
                                        }, window.top);
     }
+  },
+
+  markLink: function CM_markLink() {
+    // send link to social
+    SocialMark.toggleURIMark(this.linkURI);
+  },
+
+  shareLink: function CM_shareLink() {
+    SocialShare.sharePage(null, { url: this.linkURI.spec });
+  },
+
+  shareImage: function CM_shareImage() {
+    SocialShare.sharePage(null, { url: this.imageURL, previews: [ this.mediaURL ] });
+  },
+
+  shareVideo: function CM_shareVideo() {
+    SocialShare.sharePage(null, { url: this.mediaURL, source: this.mediaURL });
+  },
+
+  shareSelect: function CM_shareSelect(selection) {
+    SocialShare.sharePage(null, { url: this.browser.currentURI.spec, text: selection });
   },
 
   savePageAs: function CM_savePageAs() {

@@ -17,7 +17,7 @@ if (typeof arguments[0] != 'string' || typeof arguments[1] != 'string')
 var gcFunctionsFile = arguments[0];
 var suppressedFunctionsFile = arguments[1];
 var gcTypesFile = arguments[2];
-var batch = arguments[3]|0;
+var batch = (arguments[3]|0) || 1;
 var numBatches = (arguments[4]|0) || 1;
 var tmpfile = arguments[5] || "tmp.txt";
 
@@ -502,7 +502,7 @@ for (var nameIndex = start; nameIndex <= end; nameIndex++) {
         body.suppressed = [];
     for (var body of functionBodies)
         computeSuppressedPoints(body);
-     processBodies();
+    processBodies();
 
     xdb.free_string(name);
     xdb.free_string(data);

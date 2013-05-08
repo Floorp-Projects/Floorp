@@ -98,7 +98,8 @@ const char* const MediaDocument::sFormatNames[4] =
 };
 
 MediaDocument::MediaDocument()
-    : mDocumentElementInserted(false)
+    : nsHTMLDocument(),
+      mDocumentElementInserted(false)
 {
 }
 MediaDocument::~MediaDocument()

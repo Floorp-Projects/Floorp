@@ -60,11 +60,11 @@ let specialPowersObserver = new specialpowers.SpecialPowersObserver();
 specialPowersObserver.init();
 
 let mm = container.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader.messageManager;
-container.focus();
 mm.addMessageListener("SPPrefService", specialPowersObserver);
 mm.addMessageListener("SPProcessCrashService", specialPowersObserver);
 mm.addMessageListener("SPPingService", specialPowersObserver);
 mm.addMessageListener("SpecialPowers.Quit", specialPowersObserver);
+mm.addMessageListener("SpecialPowers.Focus", specialPowersObserver);
 mm.addMessageListener("SPPermissionManager", specialPowersObserver);
 
 mm.loadFrameScript(CHILD_LOGGER_SCRIPT, true);

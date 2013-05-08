@@ -571,7 +571,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
 
             // set the search engine icon (e.g., Google) for the row
             FlowLayout suggestionView = viewHolder.suggestionView;
-            updateFavicon(viewHolder.iconView, engine.icon);
+            updateFavicon(viewHolder.iconView, engine.icon, engine.name);
 
             // user-entered search term is first suggestion
             viewHolder.userEnteredTextView.setText(mSearchTerm);
@@ -934,7 +934,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
     private void displayFavicon(AwesomeEntryViewHolder viewHolder) {
         final String url = viewHolder.urlView.getText().toString();
         Bitmap bitmap = Favicons.getInstance().getFaviconFromMemCache(url);
-        updateFavicon(viewHolder.faviconView, bitmap);
+        updateFavicon(viewHolder.faviconView, bitmap, url);
     }
 
     private void updateFavicons() {

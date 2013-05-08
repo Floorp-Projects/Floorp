@@ -1,0 +1,75 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test ChannelSplitterNode</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="webaudio.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  SpecialPowers.setBoolPref("media.webaudio.enabled", true);
+
+  var context = new AudioContext();
+  var buffer = context.createBuffer(4, 2048, context.sampleRate);
+  var expectedBuffer = context.createBuffer(4, 2048, context.sampleRate);
+  for (var j = 0; j < 4; ++j) {
+    for (var i = 0; i < 2048; ++i) {
+      buffer.getChannelData(j)[i] = Math.sin(440 * 2 * (j + 1) * Math.PI * i / context.sampleRate);
+      expectedBuffer.getChannelData(j)[i] = buffer.getChannelData(j)[i] / 2;
+    }
+  }
+  var emptyBuffer = context.createBuffer(1, 2048, context.sampleRate);
+
+  var destination = context.destination;
+
+  var source = context.createBufferSource();
+
+  var splitter = context.createChannelSplitter();
+  is(splitter.channelCount, 2, "splitter node has 2 input channels by default");
+  is(splitter.channelCountMode, "max", "Correct channelCountMode for the splitter node");
+  is(splitter.channelInterpretation, "speakers", "Correct channelCountInterpretation for the splitter node");
+
+  source.buffer = buffer;
+  var gain = context.createGain();
+  gain.gain.value = 0.5;
+  source.connect(gain);
+  gain.connect(splitter);
+
+  var channelsSeen = 0;
+  function createHandler(i) {
+    return function(e) {
+      is(e.inputBuffer.numberOfChannels, 1, "Correct input channel count");
+      if (i < 4) {
+        compareBuffers(e.inputBuffer.getChannelData(0), expectedBuffer.getChannelData(i));
+      } else {
+        compareBuffers(e.inputBuffer.getChannelData(0), emptyBuffer.getChannelData(0));
+      }
+      e.target.onaudioprocess = null;
+      ++channelsSeen;
+
+      if (channelsSeen == 6) {
+        SpecialPowers.clearUserPref("media.webaudio.enabled");
+        SimpleTest.finish();
+      }
+    };
+  }
+
+  for (var i = 0; i < 6; ++i) {
+    var sp = context.createScriptProcessor(2048, 1);
+    splitter.connect(sp, i);
+    sp.onaudioprocess = createHandler(i);
+    sp.connect(destination);
+  }
+
+  source.start(0);
+});
+
+</script>
+</pre>
+</body>
+</html>

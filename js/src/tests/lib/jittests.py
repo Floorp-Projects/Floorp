@@ -140,6 +140,8 @@ class Test:
                         test.jitflags.append('--no-jm')
                     elif name == 'ion-eager':
                         test.jitflags.append('--ion-eager')
+                    elif name == 'no-ion':
+                        test.jitflags.append('--no-ion')
                     elif name == 'dump-bytecode':
                         test.jitflags.append('--dump-bytecode')
                     else:

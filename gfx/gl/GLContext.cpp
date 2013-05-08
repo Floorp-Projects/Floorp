@@ -2831,8 +2831,10 @@ GLContext::ReportOutstandingNames()
 void
 GLContext::GuaranteeResolve()
 {
-   mScreen->AssureBlitted();
-   fFinish();
+    if (mScreen) {
+        mScreen->AssureBlitted();
+    }
+    fFinish();
 }
 
 const gfxIntSize&

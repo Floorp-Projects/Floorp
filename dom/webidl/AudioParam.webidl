@@ -30,8 +30,8 @@ interface AudioParam {
 
     // Sets an array of arbitrary parameter values starting at time for the given duration. 
     // The number of values will be scaled to fit into the desired duration. 
-    // [Throws]
-    // void setValueCurveAtTime(Float32Array values, double startTime, double duration);
+    [Throws]
+    void setValueCurveAtTime(Float32Array values, double startTime, double duration);
 
     // Cancels all scheduled parameter changes with times greater than or equal to startTime. 
     void cancelScheduledValues(double startTime);
