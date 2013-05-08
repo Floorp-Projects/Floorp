@@ -51,6 +51,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     protected String mRawBaseUrl;
     private String mLogFile;
     protected String mProfile;
+    public Device mDevice;
 
     protected void blockForGeckoReady() {
         try {
@@ -119,6 +120,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         mSolo = new Solo(getInstrumentation(), mActivity);
         mDriver = new FennecNativeDriver(mActivity, mSolo, rootPath);
         mActions = new FennecNativeActions(mActivity, mSolo, getInstrumentation(), mAsserter);
+        mDevice = new Device();
     }
 
     @Override
@@ -359,6 +361,25 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
             mAsserter.dumpLog("waitForText timeout on "+text);
         }
         return rc;
+    }
+
+    /** 
+     * Select <item> from Menu > "Settings" > <section>
+     */
+    public void selectSettingsItem(String section, String item) {
+        String itemName = "^" + item + "$";
+        selectMenuItem("Settings");
+        // On tablets, settings are arranged in a hierarchy; if the item is not 
+        // in the first ("General") section, the section must be selected first.
+        if (mDevice.type.equals("tablet") && 
+            section != null &&
+            !section.equals("General")) {
+            String sectionName = "^" + section + "$";
+            waitForText(sectionName);
+            mSolo.clickOnText(sectionName);
+        }
+        waitForText(itemName);
+        mSolo.clickOnText(itemName);
     }
 
     public final void selectMenuItem(String menuItemName) {
