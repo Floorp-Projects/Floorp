@@ -30,7 +30,8 @@ NS_IMETHODIMP
 TelephonyListener::CallStateChanged(uint32_t aCallIndex,
                                     uint16_t aCallState,
                                     const nsAString& aNumber,
-                                    bool aIsActive)
+                                    bool aIsActive,
+                                    bool aIsOutgoing)
 {
   BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
   hfp->HandleCallStateChanged(aCallIndex, aCallState, aNumber, true);
@@ -43,6 +44,7 @@ TelephonyListener::EnumerateCallState(uint32_t aCallIndex,
                                       uint16_t aCallState,
                                       const nsAString_internal& aNumber,
                                       bool aIsActive,
+                                      bool aIsOutgoing,
                                       bool* aResult)
 {
   BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
