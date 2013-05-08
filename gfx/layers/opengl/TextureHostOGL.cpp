@@ -263,7 +263,6 @@ SharedTextureHostOGL::SwapTexturesImpl(const SurfaceDescriptor& aImage,
     mTextureTarget = handleDetails.mTarget;
     mShaderProgram = handleDetails.mProgramType;
     mFormat = FormatFromShaderType(mShaderProgram);
-    mTextureTransform = handleDetails.mTextureTransform;
   }
 }
 
@@ -288,6 +287,20 @@ SharedTextureHostOGL::Unlock()
   mGL->DetachSharedHandle(mShareType, mSharedHandle);
   mGL->fBindTexture(LOCAL_GL_TEXTURE_2D, 0);
 }
+
+
+gfx3DMatrix
+SharedTextureHostOGL::GetTextureTransform() MOZ_OVERRIDE
+{
+  GLContext::SharedHandleDetails handleDetails;
+  // GetSharedHandleDetails can call into Java which we'd
+  // rather not do from the compositor
+  if (mSharedHandle) {
+    mGL->GetSharedHandleDetails(mShareType, mSharedHandle, handleDetails);
+  }
+  return handleDetails.mTextureTransform;
+}
+
 
 void
 SurfaceStreamHostOGL::SetCompositor(Compositor* aCompositor)
