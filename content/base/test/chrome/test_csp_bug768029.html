@@ -28,9 +28,6 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 const DEFAULT_CSP_PRIV = "default-src *; script-src 'self'; style-src 'self' 'unsafe-inline'; object-src 'none'";
 const DEFAULT_CSP_CERT = "default-src *; script-src 'self'; style-src 'self'; object-src 'none'";
 
-if (navigator.platform.startsWith("Linux")) {
-  SimpleTest.expectAssertions(0, 1); // bug 846137, ASSERTION: wrong thread: 'PR_GetCurrentThread() == gSocketThread'
-}
 SimpleTest.waitForExplicitFinish();
 
 var gData = [
