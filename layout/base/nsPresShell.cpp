@@ -2226,7 +2226,7 @@ PresShell::CompleteScroll(bool aForward)
   if (scrollFrame) {
     scrollFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1),
                           nsIScrollableFrame::WHOLE,
-                          nsIScrollableFrame::SMOOTH);
+                          nsIScrollableFrame::INSTANT);
   }
   return NS_OK;
 }
