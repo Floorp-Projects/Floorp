@@ -125,6 +125,13 @@ template<>
 struct IsSupportedPass2<unsigned long>
 { static const bool value = true; };
 
+template<>
+struct IsSupportedPass2<long long>
+{ static const bool value = true; };
+
+template<>
+struct IsSupportedPass2<unsigned long long>
+{ static const bool value = true; };
 
 /*
  * Step 2: some integer-traits kind of stuff.
