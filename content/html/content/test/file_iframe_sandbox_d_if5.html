@@ -9,12 +9,11 @@
 <script type="application/javascript">
 function doTest() {
   sendMouseEvent({type:'click'}, 'anchor');
-  window.parent.postMessage("test attempted", "*");
 }
 </script>
 <body onload="doTest()">
   I am sandboxed with 'allow-scripts allow-same-origin'
 
-  <a href="file_iframe_sandbox_navigation_fail.html?Test 4: Navigate sibling iframe by name:%20" target='if_sibling' id='anchor'>
+  <a href="file_iframe_sandbox_navigation_fail.html" target='sibling' id='anchor'>
 </body>
 </html>

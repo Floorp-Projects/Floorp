@@ -7,15 +7,7 @@
 </head>
 <script type="application/javascript">
 function doTest() {
-  if (location.search == "?onreload") {
-    try {
-      window.parent.modify_if_8();
-    } catch (error) {
-      window.parent.postMessage({ok: true, desc: "allow-same-origin is no longer in effect after reload - parent access blocked."}, "*");
-    }
-  } else {
-    window.parent.modify_if_8();
-  }
+  window.parent.modify_if_8();
 }
 </script>
 <body onload="doTest()">

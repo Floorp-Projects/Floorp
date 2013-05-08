@@ -10,8 +10,8 @@
 // needed to forward the message to the main test page
 window.addEventListener("message", receiveMessage, false);
 
-function receiveMessage(event) {
-  window.parent.postMessage(event.data, "*");
+function receiveMessage(event) { 
+  window.parent.postMessage({ok: event.data.ok, desc: event.data.desc}, "*");
 }
 
 function doTest() {
@@ -23,6 +23,6 @@ function doTest() {
 
   <iframe name="foo" src="file_iframe_sandbox_navigation_start.html" height="10" width="10"></iframe>
 
-  <a href="file_iframe_sandbox_navigation_pass.html?Test 2:%20" target='foo' id='anchor'>
+  <a href="file_iframe_sandbox_navigation_pass.html?if2" target='foo' id='anchor'>
 </body>
 </html>

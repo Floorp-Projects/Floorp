@@ -10,8 +10,7 @@ FAIL
 </body>
 <script>
   function doStuff() {
-    var testContext = unescape(location.search.substring(1));
-    window.parent.postMessage({ok: false, desc: testContext + "this navigation should NOT be allowed by a sandboxed document", addToAttempted: false}, "*");
+    window.parent.postMessage({ok: false, desc: "this navigation should NOT be allowed by a sandboxed document"}, "*");
   }
 </script>
 </html>

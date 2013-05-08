@@ -7,11 +7,7 @@
 </head>
 <script type="application/javascript">
 function doTest() {
-  try {
-    window.parent.ok_wrapper(false, "a sandboxed document when navigated should still NOT be same-origin with its parent");
-  } catch(error) {
-    window.parent.postMessage({ok: true, desc: "sandboxed document's attempt to access parent after navigation blocked, as not same-origin."}, "*");
-  }
+  window.parent.ok_wrapper(false, "a sandboxed document when navigated should still NOT be same-origin with its parent");
 }
 </script>
 <body onload="doTest()">
