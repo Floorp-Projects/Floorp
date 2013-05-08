@@ -110,7 +110,7 @@ NS_IMETHODIMP nsPrintSettingsX::ReadPageFormatFromPrefs()
 
   // decode the base64
   char* decodedData = PL_Base64Decode(encodedData.get(), encodedData.Length(), nullptr);
-  NSData* data = [NSData dataWithBytes:decodedData length:PL_strlen(decodedData)];
+  NSData* data = [NSData dataWithBytes:decodedData length:strlen(decodedData)];
   if (!data)
     return NS_ERROR_FAILURE;
 

@@ -328,7 +328,7 @@ XPTInterfaceInfoManager::EnumerateInterfacesWhoseNamesStartWith(const char *pref
         return NS_ERROR_UNEXPECTED;
 
     ReentrantMonitorAutoEnter monitor(mWorkingSet.mTableReentrantMonitor);
-    ArrayAndPrefix args = {array, prefix, PL_strlen(prefix)};
+    ArrayAndPrefix args = {array, prefix, strlen(prefix)};
     mWorkingSet.mNameTable.EnumerateRead(xpti_ArrayPrefixAppender, &args);
 
     return array->Enumerate(_retval);

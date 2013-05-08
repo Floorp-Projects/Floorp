@@ -565,12 +565,12 @@ pref_DeleteItem(PLDHashTable *table, PLDHashEntryHdr *heh, uint32_t i, void *arg
 {
     PrefHashEntry* he = static_cast<PrefHashEntry*>(heh);
     const char *to_delete = (const char *) arg;
-    int len = PL_strlen(to_delete);
+    int len = strlen(to_delete);
 
     /* note if we're deleting "ldap" then we want to delete "ldap.xxx"
         and "ldap" (if such a leaf node exists) but not "ldap_1.xxx" */
     if (to_delete && (PL_strncmp(he->key, to_delete, (uint32_t) len) == 0 ||
-        (len-1 == (int)PL_strlen(he->key) && PL_strncmp(he->key, to_delete, (uint32_t)(len-1)) == 0)))
+        (len-1 == (int)strlen(he->key) && PL_strncmp(he->key, to_delete, (uint32_t)(len-1)) == 0)))
         return PL_DHASH_REMOVE;
 
     return PL_DHASH_NEXT;
@@ -579,7 +579,7 @@ pref_DeleteItem(PLDHashTable *table, PLDHashEntryHdr *heh, uint32_t i, void *arg
 nsresult
 PREF_DeleteBranch(const char *branch_name)
 {
-    int len = (int)PL_strlen(branch_name);
+    int len = (int)strlen(branch_name);
 
     if (!gHashTable.ops)
         return NS_ERROR_NOT_INITIALIZED;
@@ -951,7 +951,7 @@ static nsresult pref_DoCallback(const char* changed_pref)
         if ( node->func &&
              PL_strncmp(changed_pref,
                         node->domain,
-                        PL_strlen(node->domain)) == 0 )
+                        strlen(node->domain)) == 0 )
         {
             nsresult rv2 = (*node->func) (changed_pref, node->data);
             if (NS_FAILED(rv2))
