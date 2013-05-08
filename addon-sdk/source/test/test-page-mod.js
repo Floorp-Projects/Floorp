@@ -375,10 +375,11 @@ exports.testRelatedTabNoRequireTab = function(test) {
     include: url,
     onAttach: function(worker) {
       test.assertEqual(worker.tab.url, url, "Worker.tab.url is valid");
-      worker.tab.close();
-      pageMod.destroy();
-      loader.unload();
-      test.done();
+      worker.tab.close(function() {
+        pageMod.destroy();
+        loader.unload();
+        test.done();
+      });
     }
   });
 
@@ -426,8 +427,7 @@ exports.testWorksWithExistingTabs = function(test) {
           timer.setTimeout(function() {
             pageModOnExisting.destroy();
             pageModOffExisting.destroy();
-            tab.close();
-            test.done();
+            tab.close(test.done.bind(test));
           }, 0);
         }
       });
@@ -471,11 +471,13 @@ exports.testTabWorkerOnMessage = function(test) {
             }
             else if (this.tab.url === url2) {
               mod.destroy();
-              worker1.tab.close();
-              worker1.destroy();
-              worker.tab.close();
-              worker.destroy();
-              test.done();
+              worker1.tab.close(function() {
+                worker1.destroy();
+                worker.tab.close(function() {
+                  worker.destroy();
+                  test.done();
+                });
+              });
             }
           }
         });
@@ -507,11 +509,9 @@ exports.testAutomaticDestroy = function(test) {
     url: "about:",
     onReady: function onReady(tab) {
       test.pass("check automatic destroy");
-      tab.close();
-      test.done();
+      tab.close(test.done.bind(test));
     }
   });
-
 }
 
 exports.testAttachToTabsOnly = function(test) {
@@ -856,8 +856,7 @@ exports.testPageModCssAutomaticDestroy = function(test) {
         "PageMod contentStyle is removed after loader's unload"
       );
 
-      tab.close();
-      test.done();
+      tab.close(test.done.bind(test));
     }
   });
 };
@@ -882,10 +881,11 @@ exports.testPageModTimeout = function(test) {
         test.pass("timer was scheduled")
         worker.port.on("fired", function(data) {
           test.assertEqual(id, data, "timer was fired")
-          tab.close()
-          worker.destroy()
-          loader.unload()
-          test.done()
+          tab.close(function() {
+            worker.destroy()
+            loader.unload()
+            test.done()
+          });
         })
       })
     }
@@ -921,11 +921,12 @@ exports.testPageModcancelTimeout = function(test) {
       })
       worker.port.on("timeout", function(id) {
         test.pass("timer was scheduled")
-        tab.close();
-        worker.destroy();
-        mod.destroy();
-        loader.unload();
-        test.done();
+        tab.close(function() {
+          worker.destroy();
+          mod.destroy();
+          loader.unload();
+          test.done();
+        });
       })
     }
   });

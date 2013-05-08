@@ -201,7 +201,7 @@ private:
       }
     }
 
-    int32_t srcLength = PL_strlen(src);
+    int32_t srcLength = strlen(src);
 
     if (mDecoder) {
       int32_t unicharLength = srcLength;

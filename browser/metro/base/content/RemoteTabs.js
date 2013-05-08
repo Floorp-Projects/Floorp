@@ -19,10 +19,10 @@ Components.utils.import("resource://services-sync/main.js");
  *                          disabled. Must sanely support 'hidden' attribute.
  *                          You may only have one UI access point at this time.
  */
-function RemoteTabsView(aSet, aSetUIAccess) {
+function RemoteTabsView(aSet, aSetUIAccessList) {
   this._set = aSet;
   this._set.controller = this;
-  this._uiAccessElement = aSetUIAccess;
+  this._uiAccessElements = aSetUIAccessList;
 
   // Sync uses special voodoo observers.
   // If you want to change this code, talk to the fx-si team
@@ -38,7 +38,7 @@ function RemoteTabsView(aSet, aSetUIAccess) {
 
 RemoteTabsView.prototype = {
   _set: null,
-  _uiAccessElement: null,
+  _uiAccessElements: [],
 
   handleItemClick: function tabview_handleItemClick(aItem) {
     let url = aItem.getAttribute("value");
@@ -57,7 +57,9 @@ RemoteTabsView.prototype = {
   },
 
   setUIAccessVisible: function setUIAccessVisible(aVisible) {
-    this._uiAccessElement.hidden = !aVisible;
+    for (let elem of this._uiAccessElements) {
+      elem.hidden = !aVisible;
+    }
   },
 
   populateGrid: function populateGrid() {
@@ -108,7 +110,8 @@ let RemoteTabsStartView = {
 
   init: function init() {
     let vbox = document.getElementById("start-remotetabs");
-    this._view = new RemoteTabsView(this._grid, vbox);
+    let uiList = [vbox];
+    this._view = new RemoteTabsView(this._grid, uiList);
   },
 
   uninit: function uninit() {
@@ -127,9 +130,11 @@ let RemoteTabsPanelView = {
   get visible() { return PanelUI.isPaneVisible("remotetabs-container"); },
 
   init: function init() {
-    //decks are fragile, don't hide the tab panel(bad things happen), hide link.
+    //decks are fragile, don't hide the tab panel(bad things happen), hide link in menu.
     let menuEntry = document.getElementById("menuitem-remotetabs");
-    this._view = new RemoteTabsView(this._grid, menuEntry);
+    let snappedEntry = document.getElementById("snappedRemoteTabsLabel");
+    let uiList = [menuEntry, snappedEntry];
+    this._view = new RemoteTabsView(this._grid, uiList);
   },
 
   show: function show() {
