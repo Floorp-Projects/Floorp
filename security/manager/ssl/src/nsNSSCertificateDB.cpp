@@ -123,7 +123,7 @@ nsNSSCertificateDB::FindCertByDBKey(const char *aDBkey, nsISupports *aToken,
   //unsigned long moduleID,slotID;
 
   dummy = NSSBase64_DecodeBuffer(nullptr, &keyItem, aDBkey,
-                                 (uint32_t)PL_strlen(aDBkey)); 
+                                 (uint32_t)strlen(aDBkey)); 
   if (!dummy || keyItem.len < NS_NSS_LONG*4) {
     PR_FREEIF(keyItem.data);
     return NS_ERROR_INVALID_ARG;
@@ -1330,7 +1330,7 @@ nsNSSCertificateDB::ConstructX509FromBase64(const char *base64,
 
   // sure would be nice to have a smart pointer class for PL_ allocations
   // unfortunately, we cannot distinguish out-of-memory from bad-input here
-  uint32_t len = PL_strlen(base64);
+  uint32_t len = strlen(base64);
   char *certDER = PL_Base64Decode(base64, len, nullptr);
   if (!certDER)
     return NS_ERROR_ILLEGAL_VALUE;
