@@ -9,14 +9,16 @@
 </head>
 <script type="application/javascript">
 function doTest() {
-  document.getElementById('anchor').href = "file_iframe_sandbox_top_navigation_fail.html" + location.search;
-  window.top.opener.postMessage("test attempted", "*");
   sendMouseEvent({type:'click'}, 'anchor');
+
+   SimpleTest.executeSoon(function() {
+     window.parent.postMessage("close", "*");
+   });
 }
 </script>
 <body onload="doTest()">
   I am sandboxed with 'allow-scripts'
 
-  <a target='_top' id='anchor'>
+  <a href="file_iframe_sandbox_top_navigation_fail.html" target='_top' id='anchor'>
 </body>
 </html>
