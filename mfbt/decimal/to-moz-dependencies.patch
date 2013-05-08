@@ -1,0 +1,333 @@
+diff --git a/mfbt/decimal/Decimal.cpp b/mfbt/decimal/Decimal.cpp
+--- a/mfbt/decimal/Decimal.cpp
++++ b/mfbt/decimal/Decimal.cpp
+@@ -23,27 +23,22 @@
+  * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+  * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+  * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  */
+ 
+-#include "config.h"
+ #include "Decimal.h"
++#include "moz-decimal-utils.h"
+ 
+ #include <algorithm>
+ #include <float.h>
+ 
+-#include <wtf/Assertions.h>
+-#include <wtf/MathExtras.h>
+-#include <wtf/Noncopyable.h>
+-#include <wtf/text/StringBuilder.h>
+-
+ namespace WebCore {
+ 
+ namespace DecimalPrivate {
+ 
+ static int const ExponentMax = 1023;
+ static int const ExponentMin = -1023;
+ static int const Precision = 18;
+ 
+@@ -685,17 +680,17 @@ Decimal Decimal::floor() const
+         result += 1;
+     }
+     return Decimal(sign(), 0, result);
+ }
+ 
+ Decimal Decimal::fromDouble(double doubleValue)
+ {
+     if (std::isfinite(doubleValue))
+-        return fromString(String::numberToStringECMAScript(doubleValue));
++        return fromString(mozToString(doubleValue));
+ 
+     if (std::isinf(doubleValue))
+         return infinity(doubleValue < 0 ? Negative : Positive);
+ 
+     return nan();
+ }
+ 
+ Decimal Decimal::fromString(const String& str)
+@@ -937,17 +932,17 @@ Decimal Decimal::round() const
+     result /= 10;
+     return Decimal(sign(), 0, result);
+ }
+ 
+ double Decimal::toDouble() const
+ {
+     if (isFinite()) {
+         bool valid;
+-        const double doubleValue = toString().toDouble(&valid);
++        const double doubleValue = mozToDouble(toString(), &valid);
+         return valid ? doubleValue : std::numeric_limits<double>::quiet_NaN();
+     }
+ 
+     if (isInfinity())
+         return isNegative() ? -std::numeric_limits<double>::infinity() : std::numeric_limits<double>::infinity();
+ 
+     return std::numeric_limits<double>::quiet_NaN();
+ }
+@@ -990,17 +985,17 @@ String Decimal::toString() const
+             ++coefficient;
+ 
+         while (originalExponent < 0 && coefficient && !(coefficient % 10)) {
+             coefficient /= 10;
+             ++originalExponent;
+         }
+     }
+ 
+-    const String digits = String::number(coefficient);
++    const String digits = mozToString(coefficient);
+     int coefficientLength = static_cast<int>(digits.length());
+     const int adjustedExponent = originalExponent + coefficientLength - 1;
+     if (originalExponent <= 0 && adjustedExponent >= -6) {
+         if (!originalExponent) {
+             builder.append(digits);
+             return builder.toString();
+         }
+ 
+@@ -1032,15 +1027,28 @@ String Decimal::toString() const
+         if (adjustedExponent) {
+             builder.append(adjustedExponent < 0 ? "e" : "e+");
+             builder.appendNumber(adjustedExponent);
+         }
+     }
+     return builder.toString();
+ }
+ 
++bool Decimal::toString(char* strBuf, size_t bufLength) const
++{
++  ASSERT(bufLength > 0);
++  String str = toString();
++  size_t length = str.copy(strBuf, bufLength);
++  if (length < bufLength) {
++    strBuf[length] = '\0';
++    return true;
++  }
++  strBuf[bufLength - 1] = '\0';
++  return false;
++}
++
+ Decimal Decimal::zero(Sign sign)
+ {
+     return Decimal(EncodedData(sign, EncodedData::ClassZero));
+ }
+ 
+ } // namespace WebCore
+ 
+diff --git a/mfbt/decimal/Decimal.h b/mfbt/decimal/Decimal.h
+--- a/mfbt/decimal/Decimal.h
++++ b/mfbt/decimal/Decimal.h
+@@ -23,24 +23,41 @@
+  * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+  * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+  * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  */
+ 
++/**
++ * Imported from:
++ * http://src.chromium.org/viewvc/blink/trunk/Source/core/platform/Decimal.h
++ * Check hg log for the svn rev of the last update from Blink core.
++ */
++
+ #ifndef Decimal_h
+ #define Decimal_h
+ 
++#include "mozilla/Assertions.h"
++#include "mozilla/StandardInteger.h"
+ #include "mozilla/Types.h"
+ 
+-#include <stdint.h>
+-#include <wtf/Assertions.h>
+-#include <wtf/text/WTFString.h>
++#include <string>
++
++#ifndef ASSERT
++#define DEFINED_ASSERT_FOR_DECIMAL_H 1
++#define ASSERT MOZ_ASSERT
++#endif
++
++// To use WTF_MAKE_FAST_ALLOCATED we'd need:
++// http://src.chromium.org/viewvc/blink/trunk/Source/wtf/FastMalloc.h
++// Since we don't allocate Decimal objects, no need.
++#define WTF_MAKE_FAST_ALLOCATED \
++  void ignore_this_dummy_method() MOZ_DELETE
+ 
+ namespace WebCore {
+ 
+ namespace DecimalPrivate {
+ class SpecialValueHandler;
+ }
+ 
+ // This class represents decimal base floating point number.
+@@ -136,27 +153,28 @@ public:
+     MFBT_API Decimal abs() const;
+     MFBT_API Decimal ceiling() const;
+     MFBT_API Decimal floor() const;
+     MFBT_API Decimal remainder(const Decimal&) const;
+     MFBT_API Decimal round() const;
+ 
+     MFBT_API double toDouble() const;
+     // Note: toString method supports infinity and nan but fromString not.
+-    MFBT_API String toString() const;
++    MFBT_API std::string toString() const;
++    MFBT_API bool toString(char* strBuf, size_t bufLength) const;
+ 
+     static MFBT_API Decimal fromDouble(double);
+     // fromString supports following syntax EBNF:
+     //  number ::= sign? digit+ ('.' digit*) (exponent-marker sign? digit+)?
+     //          | sign? '.' digit+ (exponent-marker sign? digit+)?
+     //  sign ::= '+' | '-'
+     //  exponent-marker ::= 'e' | 'E'
+     //  digit ::= '0' | '1' | ... | '9'
+     // Note: fromString doesn't support "infinity" and "nan".
+-    static MFBT_API Decimal fromString(const String&);
++    static MFBT_API Decimal fromString(const std::string& aValue);
+     static MFBT_API Decimal infinity(Sign);
+     static MFBT_API Decimal nan();
+     static MFBT_API Decimal zero(Sign);
+ 
+     // You should not use below methods. We expose them for unit testing.
+     MFBT_API explicit Decimal(const EncodedData&);
+     const EncodedData& value() const { return m_data; }
+ 
+@@ -175,10 +193,21 @@ private:
+ 
+     Sign sign() const { return m_data.sign(); }
+ 
+     EncodedData m_data;
+ };
+ 
+ } // namespace WebCore
+ 
++namespace mozilla {
++  typedef WebCore::Decimal Decimal;
++}
++
++#undef WTF_MAKE_FAST_ALLOCATED
++
++#ifdef DEFINED_ASSERT_FOR_DECIMAL_H
++#undef DEFINED_ASSERT_FOR_DECIMAL_H
++#undef ASSERT
++#endif
++
+ #endif // Decimal_h
+ 
+diff --git a/mfbt/decimal/moz-decimal-utils.h b/mfbt/decimal/moz-decimal-utils.h
+new file mode 100644
+--- /dev/null
++++ b/mfbt/decimal/moz-decimal-utils.h
+@@ -0,0 +1,109 @@
++/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
++
++#ifndef MOZ_DECIMAL_UTILS_H
++#define MOZ_DECIMAL_UTILS_H
++
++// This file contains extra includes, defines and typedefs to allow compilation
++// of Decimal.cpp under the Mozilla source without blink core dependencies. Do
++// not include it into any file other than Decimal.cpp.
++
++#include "../double-conversion/double-conversion.h"
++#include "mozilla/Util.h"
++#include "mozilla/Casting.h"
++#include "mozilla/FloatingPoint.h"
++#include "mozilla/NullPtr.h"
++
++#include <cmath>
++#include <cstring>
++#include <iomanip>
++#include <limits>
++#include <sstream>
++
++#ifndef UINT64_C
++// For Android toolchain
++#define UINT64_C(c) (c ## ULL)
++#endif
++
++#ifdef ASSERT
++#undef ASSERT
++#endif
++#define ASSERT MOZ_ASSERT
++
++#define ASSERT_NOT_REACHED() MOZ_NOT_REACHED("")
++
++#define WTF_MAKE_NONCOPYABLE(ClassName) \
++  private: \
++    ClassName(const ClassName&) MOZ_DELETE; \
++    void operator=(const ClassName&) MOZ_DELETE;
++
++#if defined(_MSC_VER) && (_MSC_VER <= 1700)
++namespace std {
++  inline bool isinf(double num) { return MOZ_DOUBLE_IS_INFINITE(num); }
++  inline bool isnan(double num) { return MOZ_DOUBLE_IS_NaN(num); }
++  inline bool isfinite(double num) { return MOZ_DOUBLE_IS_FINITE(num); }
++}
++#endif
++
++typedef std::string String;
++
++double mozToDouble(const String &aStr, bool *valid) {
++  double_conversion::StringToDoubleConverter converter(
++    double_conversion::StringToDoubleConverter::NO_FLAGS,
++    MOZ_DOUBLE_NaN(), MOZ_DOUBLE_NaN(), nullptr, nullptr);
++  const char* str = aStr.c_str();
++  int length = mozilla::SafeCast<int>(strlen(str));
++  int processed_char_count; // unused - NO_FLAGS requires the whole string to parse
++  double result = converter.StringToDouble(str, length, &processed_char_count);
++  *valid = MOZ_DOUBLE_IS_FINITE(result);
++  return result;
++}
++
++String mozToString(double aNum) {
++  char buffer[64];
++  int buffer_length = mozilla::ArrayLength(buffer);
++  const double_conversion::DoubleToStringConverter& converter =
++    double_conversion::DoubleToStringConverter::EcmaScriptConverter();
++  double_conversion::StringBuilder builder(buffer, buffer_length);
++  converter.ToShortest(aNum, &builder);
++  return String(builder.Finalize());
++}
++
++String mozToString(int64_t aNum) {
++  std::ostringstream o;
++  o << std::setprecision(std::numeric_limits<int64_t>::digits10) << aNum;
++  return o.str();
++}
++
++String mozToString(uint64_t aNum) {
++  std::ostringstream o;
++  o << std::setprecision(std::numeric_limits<uint64_t>::digits10) << aNum;
++  return o.str();
++}
++
++class StringBuilder
++{
++public:
++  void append(char c) {
++    mStr += c;
++  }
++  void appendLiteral(const char *aStr) {
++    mStr += aStr;
++  }
++  void appendNumber(int aNum) {
++    mStr += mozToString(int64_t(aNum));
++  }
++  void append(const String& aStr) {
++    mStr += aStr;
++  }
++  std::string toString() const {
++    return mStr;
++  }
++private:
++  std::string mStr;
++};
++
++#endif
++

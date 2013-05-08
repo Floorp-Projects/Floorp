@@ -1047,16 +1047,6 @@ nsGenericHTMLElement::GetBaseTarget(nsAString& aBaseTarget) const
 
 //----------------------------------------------------------------------
 
-static bool
-CanHaveName(nsIAtom* aTag)
-{
-  return aTag == nsGkAtoms::img ||
-         aTag == nsGkAtoms::form ||
-         aTag == nsGkAtoms::applet ||
-         aTag == nsGkAtoms::embed ||
-         aTag == nsGkAtoms::object;
-}
-
 bool
 nsGenericHTMLElement::ParseAttribute(int32_t aNamespaceID,
                                      nsIAtom* aAttribute,

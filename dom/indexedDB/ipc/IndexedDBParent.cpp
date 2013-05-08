@@ -387,7 +387,7 @@ IndexedDBDatabaseParent::HandleRequestEvent(nsIDOMEvent* aEvent,
   nsIXPConnect* xpc = nsContentUtils::XPConnect();
   MOZ_ASSERT(xpc);
 
-  SafeAutoJSContext cx;
+  AutoSafeJSContext cx;
 
   JS::Rooted<JS::Value> result(cx);
   rv = mOpenRequest->GetResult(result.address());

@@ -20,7 +20,7 @@ _BROWSER_FILES = \
                  browser_social_activation.js \
                  browser_social_perwindowPB.js \
                  browser_social_toolbar.js \
-                 browser_social_shareButton.js \
+                 browser_social_markButton.js \
                  browser_social_sidebar.js \
                  browser_social_flyout.js \
                  browser_social_mozSocial_API.js \
@@ -32,13 +32,15 @@ _BROWSER_FILES = \
                  browser_social_window.js \
                  social_activate.html \
                  social_activate_iframe.html \
+                 browser_share.js \
                  social_panel.html \
-                 social_share_image.png \
+                 social_mark_image.png \
                  social_sidebar.html \
                  social_chat.html \
                  social_flyout.html \
                  social_window.html \
                  social_worker.js \
+                 share.html \
                  $(NULL)
 
 include $(topsrcdir)/config/rules.mk

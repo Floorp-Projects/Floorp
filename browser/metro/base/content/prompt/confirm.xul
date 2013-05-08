@@ -34,8 +34,8 @@
     </vbox>
   
     <hbox id="prompt-confirm-buttons-box" class="prompt-buttons">
-      <button class="prompt-button button-default" label="&ok.label;" command="cmd_ok"/>
-      <button class="prompt-button" label="&cancel.label;" command="cmd_cancel"/>
+      <button class="button-default" label="&ok.label;" command="cmd_ok"/>
+      <button label="&cancel.label;" command="cmd_cancel"/>
     </hbox>
   </vbox>
 </dialog>

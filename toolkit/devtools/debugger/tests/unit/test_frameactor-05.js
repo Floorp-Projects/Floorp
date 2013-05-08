@@ -16,7 +16,7 @@ function run_test()
   gDebuggee = addTestGlobal("test-stack");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect(function() {
-    attachTestGlobalClientAndResume(gClient, "test-stack", function(aResponse, aThreadClient) {
+    attachTestTabAndResume(gClient, "test-stack", function(aResponse, aTabClient, aThreadClient) {
       gThreadClient = aThreadClient;
       test_pause_frame();
     });

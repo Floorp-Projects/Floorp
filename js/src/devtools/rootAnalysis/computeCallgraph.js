@@ -7,7 +7,23 @@ load('annotations.js');
 load('suppressedPoints.js');
 
 var subclasses = {};
+var superclasses = {};
 var classFunctions = {};
+
+function addClassEntry(index, name, other)
+{
+    if (!(name in index)) {
+        index[name] = [other];
+        return;
+    }
+
+    for (var entry of index[name]) {
+        if (entry == other)
+            return;
+    }
+
+    index[name].push(other);
+}
 
 function processCSU(csuName, csu)
 {
@@ -18,15 +34,8 @@ function processCSU(csuName, csu)
             var superclass = field.Field[1].Type.Name;
             var subclass = field.Field[1].FieldCSU.Type.Name;
             assert(subclass == csuName);
-            if (!(superclass in subclasses))
-                subclasses[superclass] = [];
-            var found = false;
-            for (var sub of subclasses[superclass]) {
-                if (sub == subclass)
-                    found = true;
-            }
-            if (!found)
-                subclasses[superclass].push(subclass);
+            addClassEntry(subclasses, superclass, subclass);
+            addClassEntry(superclasses, subclass, superclass);
         }
         if ("Variable" in field) {
             // Note: not dealing with overloading correctly.
@@ -41,6 +50,25 @@ function processCSU(csuName, csu)
 
 function findVirtualFunctions(csu, field)
 {
+    var worklist = [csu];
+
+    // Virtual call targets on subclasses of nsISupports may be incomplete,
+    // if the interface is scriptable. Just treat all indirect calls on
+    // nsISupports objects as potentially GC'ing, except AddRef/Release
+    // which should never enter the JS engine (even when calling dtors).
+    while (worklist.length) {
+        var csu = worklist.pop();
+        if (csu == "nsISupports") {
+            if (field == "AddRef" || field == "Release")
+                return [];
+            return null;
+        }
+        if (csu in superclasses) {
+            for (var superclass of superclasses[csu])
+                worklist.push(superclass);
+        }
+    }
+
     var functions = [];
     var worklist = [csu];
 
@@ -111,17 +139,20 @@ function processBody(caller, body)
                 var field = callee.Exp[0].Field;
                 var fieldName = field.Name[0];
                 var csuName = field.FieldCSU.Type.Name;
-                if ("FieldInstanceFunction" in field && csuName != "nsISupports") {
-                    // virtual function call.
-                    var functions = findVirtualFunctions(csuName, fieldName);
+                var functions = null;
+                if ("FieldInstanceFunction" in field)
+                    functions = findVirtualFunctions(csuName, fieldName);
+                if (functions) {
+                    // Known set of virtual call targets.
                     for (var name of functions) {
                         if (!(name in seen)) {
                             print("D " + prologue + memo(name));
                             seen[name] = true;
                         }
                     }
-                } else if (csuName != "nsISupports" || fieldName == "QueryInterface") {
-                    // indirect call through a field.
+                } else {
+                    // Unknown set of call targets. Non-virtual field call,
+                    // or virtual call on an nsISupports object.
                     print("F " + prologue + "CLASS " + csuName + " FIELD " + fieldName);
                 }
             } else if (callee.Exp[0].Kind == "Var") {

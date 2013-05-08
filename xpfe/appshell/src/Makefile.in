@@ -28,5 +28,7 @@ CPPSRCS		= \
 		nsAppShellFactory.cpp \
 		$(NULL)
 
+LOCAL_INCLUDES += -I$(topsrcdir)/dom/base
+
 include $(topsrcdir)/config/rules.mk
 

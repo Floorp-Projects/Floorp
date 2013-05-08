@@ -257,7 +257,6 @@ TopSitesView.prototype = {
       case "MozAppbarDismissing":
         // clean up when the context appbar is dismissed - we don't remember selections
         this._lastSelectedSites = null;
-        this._set.clearSelection();
     }
   },
 

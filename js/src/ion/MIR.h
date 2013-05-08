@@ -2737,7 +2737,7 @@ class MBitXor : public MBinaryBitwiseInstruction
         return this;
     }
     MDefinition *foldIfEqual() {
-        return MConstant::New(Int32Value(0));
+        return this;
     }
 };
 

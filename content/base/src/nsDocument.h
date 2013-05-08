@@ -178,6 +178,7 @@ public:
    * GetIdElement(true) if non-null.
    */
   void SetImageElement(Element* aElement);
+  bool HasIdElementExposedAsHTMLDocumentProperty();
 
   bool HasContentChangeCallback() { return mChangeCallbacks != nullptr; }
   void AddContentChangeCallback(nsIDocument::IDTargetObserver aCallback,
@@ -1139,6 +1140,9 @@ public:
   virtual void SetTitle(const nsAString& aTitle, mozilla::ErrorResult& rv);
 
   static void XPCOMShutdown();
+
+  js::ExpandoAndGeneration mExpandoAndGeneration;
+
 protected:
   already_AddRefed<nsIPresShell> doCreateShell(nsPresContext* aContext,
                                                nsViewManager* aViewManager,

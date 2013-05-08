@@ -103,6 +103,12 @@ ion::GetIonContext()
     return CurrentIonContext();
 }
 
+IonContext *
+ion::MaybeGetIonContext()
+{
+    return CurrentIonContext();
+}
+
 IonContext::IonContext(JSContext *cx, TempAllocator *temp)
   : runtime(cx->runtime),
     cx(cx),
@@ -2491,17 +2497,15 @@ ion::UsesBeforeIonRecompile(JSScript *script, jsbytecode *pc)
     JS_ASSERT(pc == script->code || JSOp(*pc) == JSOP_LOOPENTRY);
 
     uint32_t minUses = js_IonOptions.usesBeforeCompile;
-    if (JSOp(*pc) != JSOP_LOOPENTRY || !script->hasAnalysis() || js_IonOptions.eagerCompilation)
-        return minUses;
-
-    analyze::LoopAnalysis *loop = script->analysis()->getLoop(pc);
-    if (!loop)
+    if (JSOp(*pc) != JSOP_LOOPENTRY || js_IonOptions.eagerCompilation)
         return minUses;
 
     // It's more efficient to enter outer loops, rather than inner loops, via OSR.
     // To accomplish this, we use a slightly higher threshold for inner loops.
-    // Note that we use +1 to prefer non-OSR over OSR.
-    return minUses + (loop->depth + 1) * 100;
+    // Note that the loop depth is always > 0 so we will prefer non-OSR over OSR.
+    uint32_t loopDepth = GET_UINT8(pc);
+    JS_ASSERT(loopDepth > 0);
+    return minUses + loopDepth * 100;
 }
 
 void

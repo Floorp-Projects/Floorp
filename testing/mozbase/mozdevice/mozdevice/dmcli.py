@@ -19,32 +19,34 @@ class DMCli(object):
 
     def __init__(self):
         self.commands = { 'install': { 'function': self.install,
-                                       'args': [ { 'name': 'file', 'nargs': None } ],
+                                       'args': [ { 'name': 'file' } ],
                                        'help': 'push this package file to the device and install it' },
                           'uninstall': { 'function': self.uninstall,
-                                         'args': [ { 'name': 'packagename', 'nargs': None } ],
+                                         'args': [ { 'name': 'packagename' } ],
                                          'help': 'uninstall the named app from the device' },
                           'killapp': { 'function': self.kill,
                                        'args': [ { 'name': 'process_name', 'nargs': '*' } ],
                                        'help': 'kills any processes with name(s) on device' },
                           'launchapp': { 'function': self.launchapp,
-                                         'args': [ { 'name': 'appname', 'nargs': None },
-                                                   { 'name': 'activity_name',
-                                                     'nargs': None },
+                                         'args': [ { 'name': 'appname' },
+                                                   { 'name': 'activity_name' },
                                                    { 'name': '--intent',
                                                      'action': 'store',
                                                      'default': 'android.intent.action.VIEW' },
                                                    { 'name': '--url',
-                                                     'action': 'store' }
+                                                     'action': 'store' },
+                                                   { 'name': '--no-fail-if-running',
+                                                     'action': 'store_true',
+                                                     'help': 'Don\'t fail if application is already running' }
                                                 ],
                                       'help': 'launches application on device' },
                           'push': { 'function': self.push,
-                                    'args': [ { 'name': 'local_file', 'nargs': None },
-                                              { 'name': 'remote_file', 'nargs': None }
+                                    'args': [ { 'name': 'local_file' },
+                                              { 'name': 'remote_file' }
                                               ],
                                     'help': 'copy file/dir to device' },
                           'pull': { 'function': self.pull,
-                                    'args': [ { 'name': 'local_file', 'nargs': None },
+                                    'args': [ { 'name': 'local_file' },
                                               { 'name': 'remote_file', 'nargs': '?' } ],
                                     'help': 'copy file/dir from device' },
                           'shell': { 'function': self.shell,
@@ -63,27 +65,27 @@ class DMCli(object):
                                        'help': 'get logcat from device'
                                 },
                           'ls': { 'function': self.listfiles,
-                                  'args': [ { 'name': 'remote_dir', 'nargs': None } ],
+                                  'args': [ { 'name': 'remote_dir' } ],
                                   'help': 'list files on device'
                                 },
                           'rm': { 'function': self.removefile,
-                                  'args': [ { 'name': 'remote_file', 'nargs': None } ],
+                                  'args': [ { 'name': 'remote_file' } ],
                                   'help': 'remove file from device'
                                 },
                           'isdir': { 'function': self.isdir,
-                                     'args': [ { 'name': 'remote_dir', 'nargs': None } ],
+                                     'args': [ { 'name': 'remote_dir' } ],
                                      'help': 'print if remote file is a directory'
                                 },
                           'mkdir': { 'function': self.mkdir,
-                                     'args': [ { 'name': 'remote_dir', 'nargs': None } ],
+                                     'args': [ { 'name': 'remote_dir' } ],
                                      'help': 'makes a directory on device'
                                 },
                           'rmdir': { 'function': self.rmdir,
-                                     'args': [ { 'name': 'remote_dir', 'nargs': None } ],
+                                     'args': [ { 'name': 'remote_dir' } ],
                                      'help': 'recursively remove directory from device'
                                 },
                           'screencap': { 'function': self.screencap,
-                                         'args': [ { 'name': 'png_file', 'nargs': None } ],
+                                         'args': [ { 'name': 'png_file' } ],
                                          'help': 'capture screenshot of device in action'
                                          },
                           'sutver': { 'function': self.sutver,
@@ -96,16 +98,20 @@ class DMCli(object):
                                       'help': 'reboot the device'
                                    },
                           'isfile': { 'function': self.isfile,
-                                      'args': [ { 'name': 'remote_file', 'nargs': None } ],
+                                      'args': [ { 'name': 'remote_file' } ],
                                       'help': 'check whether a file exists on the device'
                                    },
                           'launchfennec': { 'function': self.launchfennec,
-                                            'args': [ { 'name': 'appname', 'nargs': None },
+                                            'args': [ { 'name': 'appname' },
                                                       { 'name': '--intent', 'action': 'store',
                                                         'default': 'android.intent.action.VIEW' },
                                                       { 'name': '--url', 'action': 'store' },
                                                       { 'name': '--extra-args', 'action': 'store' },
-                                                      { 'name': '--mozenv', 'action': 'store' } ],
+                                                      { 'name': '--mozenv', 'action': 'store' },
+                                                      { 'name': '--no-fail-if-running',
+                                                        'action': 'store_true',
+                                                        'help': 'Don\'t fail if application is already running' }
+                                                      ],
                                             'help': 'launch fennec'
                                             },
                           'getip': { 'function': self.getip,
@@ -162,8 +168,8 @@ class DMCli(object):
             subparser = subparsers.add_parser(commandname, help=commandprops['help'])
             if commandprops.get('args'):
                 for arg in commandprops['args']:
-                    subparser.add_argument(arg['name'], nargs=arg.get('nargs'),
-                                           action=arg.get('action'))
+                    kwargs = { k: v for k,v in arg.items() if k is not 'name' }
+                    subparser.add_argument(arg['name'], **kwargs)
             subparser.set_defaults(func=commandprops['function'])
 
     def getDevice(self, dmtype="adb", hwid=None, host=None, port=None,
@@ -229,7 +235,8 @@ class DMCli(object):
 
     def launchapp(self, args):
         self.dm.launchApplication(args.appname, args.activity_name,
-                                  args.intent, args.url)
+                                  args.intent, url=args.url,
+                                  failIfRunning=(not args.no_fail_if_running))
 
     def kill(self, args):
         for name in args.process_name:
@@ -309,7 +316,8 @@ class DMCli(object):
     def launchfennec(self, args):
         self.dm.launchFennec(args.appname, intent=args.intent,
                              mozEnv=args.mozenv,
-                             extraArgs=args.extra_args, url=args.url)
+                             extraArgs=args.extra_args, url=args.url,
+                             failIfRunning=(not args.no_fail_if_running))
 
     def getip(self, args):
         if args.interface:

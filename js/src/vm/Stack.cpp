@@ -1732,6 +1732,8 @@ StackIter::isGlobalFrame() const
             return data_.ionFrames_.baselineFrame()->isGlobalFrame();
         JS_ASSERT(!script()->isForEval());
         return !script()->function();
+#else
+        break;
 #endif
       case NATIVE:
         return false;
@@ -1754,6 +1756,8 @@ StackIter::isEvalFrame() const
             return data_.ionFrames_.baselineFrame()->isEvalFrame();
         JS_ASSERT(!script()->isForEval());
         return false;
+#else
+        break;
 #endif
       case NATIVE:
         return false;
@@ -1966,6 +1970,8 @@ StackIter::unaliasedActual(unsigned i, MaybeCheckAliasing checkAliasing) const
 #ifdef JS_ION
         JS_ASSERT(data_.ionFrames_.isBaselineJS());
         return data_.ionFrames_.baselineFrame()->unaliasedActual(i, checkAliasing);
+#else
+        break;
 #endif
       case NATIVE:
         break;
@@ -2020,6 +2026,8 @@ StackIter::hasArgsObj() const
 #ifdef JS_ION
         JS_ASSERT(data_.ionFrames_.isBaselineJS());
         return data_.ionFrames_.baselineFrame()->hasArgsObj();
+#else
+        break;
 #endif
       case NATIVE:
         break;

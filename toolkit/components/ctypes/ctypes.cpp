@@ -115,9 +115,7 @@ NS_IMETHODIMP
 Module::Call(nsIXPConnectWrappedNative* wrapper,
              JSContext* cx,
              JSObject* obj,
-             uint32_t argc,
-             JS::Value* argv,
-             JS::Value* vp,
+             const JS::CallArgs& args,
              bool* _retval)
 {
   mozJSComponentLoader* loader = mozJSComponentLoader::Get();

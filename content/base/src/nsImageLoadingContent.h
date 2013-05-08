@@ -337,11 +337,11 @@ protected:
   enum {
     SKIP_FRAME_CHECK = 0x1
   };
-  nsresult TrackImage(imgIRequest* aImage, uint32_t aFlags = 0);
+  void TrackImage(imgIRequest* aImage, uint32_t aFlags = 0);
   enum {
     REQUEST_DISCARD = 0x1
   };
-  nsresult UntrackImage(imgIRequest* aImage, uint32_t aFlags = 0);
+  void UntrackImage(imgIRequest* aImage, uint32_t aFlags = 0);
 
   /* MEMBERS */
   nsRefPtr<imgRequestProxy> mCurrentRequest;

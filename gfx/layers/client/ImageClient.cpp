@@ -28,19 +28,13 @@ ImageClient::CreateImageClient(CompositableType aCompositableHostType,
   RefPtr<ImageClient> result = nullptr;
   switch (aCompositableHostType) {
   case BUFFER_IMAGE_SINGLE:
-    if (ImageClientSingle::SupportsBackend(aForwarder->GetCompositorBackendType())) {
-      result = new ImageClientSingle(aForwarder, aFlags, BUFFER_IMAGE_SINGLE);
-    }
+    result = new ImageClientSingle(aForwarder, aFlags, BUFFER_IMAGE_SINGLE);
     break;
   case BUFFER_IMAGE_BUFFERED:
-    if (ImageClientSingle::SupportsBackend(aForwarder->GetCompositorBackendType())) {
-      result = new ImageClientSingle(aForwarder, aFlags, BUFFER_IMAGE_BUFFERED);
-    }
+    result = new ImageClientSingle(aForwarder, aFlags, BUFFER_IMAGE_BUFFERED);
     break;
   case BUFFER_BRIDGE:
-    if (ImageClientBridge::SupportsBackend(aForwarder->GetCompositorBackendType())) {
-      result = new ImageClientBridge(aForwarder, aFlags);
-    }
+    result = new ImageClientBridge(aForwarder, aFlags);
     break;
   case BUFFER_UNKNOWN:
     result = nullptr;
@@ -222,26 +216,6 @@ void
 ImageClientSingle::Updated()
 {
   mForwarder->UpdateTexture(this, 1, mTextureClient->GetDescriptor());
-}
-
-bool
-ImageClientSingle::SupportsBackend(LayersBackend aBackend)
-{
-  if (aBackend == LAYERS_OPENGL ||
-      aBackend == LAYERS_BASIC) {
-    return true;
-  }
-  return false;
-}
-
-bool
-ImageClientBridge::SupportsBackend(LayersBackend aBackend)
-{
-  if (aBackend == LAYERS_OPENGL ||
-      aBackend == LAYERS_BASIC) {
-    return true;
-  }
-  return false;
 }
 
 ImageClientBridge::ImageClientBridge(CompositableForwarder* aFwd,

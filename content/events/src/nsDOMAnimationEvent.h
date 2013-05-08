@@ -25,14 +25,21 @@ public:
   NS_FORWARD_TO_NSDOMEVENT
   NS_DECL_NSIDOMANIMATIONEVENT
 
+  static already_AddRefed<nsDOMAnimationEvent>
+  Constructor(const mozilla::dom::GlobalObject& aGlobal,
+              const nsAString& aType,
+              const mozilla::dom::AnimationEventInit& aParam,
+              mozilla::ErrorResult& aRv);
+
   virtual JSObject* WrapObject(JSContext* aCx,
-			       JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
+                               JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
   {
     return mozilla::dom::AnimationEventBinding::Wrap(aCx, aScope, this);
   }
 
   // xpidl implementation
   // GetAnimationName(nsAString& aAnimationName);
+  // GetPseudoElement(nsAString& aPseudoElement);
 
   float ElapsedTime()
   {
@@ -44,10 +51,12 @@ public:
                           bool aCancelable,
                           const nsAString& aAnimationName,
                           float aElapsedTime,
+                          const mozilla::dom::Optional<nsAString>& aPseudoElement,
                           mozilla::ErrorResult& aRv)
   {
     aRv = InitAnimationEvent(aType, aCanBubble, aCancelable, aAnimationName,
-                             aElapsedTime);
+                             aElapsedTime, aPseudoElement.WasPassed() ?
+                               aPseudoElement.Value() : EmptyString());
   }
 private:
   nsAnimationEvent* AnimationEvent() {

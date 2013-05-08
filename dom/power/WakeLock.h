@@ -34,6 +34,11 @@ public:
   NS_DECL_NSIDOMEVENTLISTENER
   NS_DECL_NSIOBSERVER
 
+  // Note: WakeLock lives for the lifetime of the document in order to avoid
+  // exposing GC behavior to pages. This means that
+  // |var foo = navigator.requestWakeLock('cpu'); foo = null;|
+  // doesn't unlock the 'cpu' resource.
+
   WakeLock();
   virtual ~WakeLock();
 

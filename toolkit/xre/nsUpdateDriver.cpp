@@ -531,7 +531,7 @@ SwitchToUpdatedApp(nsIFile *greDir, nsIFile *updateDir, nsIFile *statusFile,
 
   // Append a special token to the PID in order to let the updater know that it
   // just needs to replace the update directory.
-  pid.AppendASCII("/replace");
+  pid.AppendLiteral("/replace");
 
   int argc = appArgc + 5;
   char **argv = new char*[argc + 1];

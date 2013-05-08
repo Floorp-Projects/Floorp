@@ -497,6 +497,11 @@ bool sScreenEnabled = true;
 // internal wake locks aren't counted here.)
 bool sCpuSleepAllowed = true;
 
+// Some CPU wake locks may be acquired internally in HAL. We use a counter to
+// keep track of these needs. Note we have to hold |sInternalLockCpuMonitor|
+// when reading or writing this variable to ensure thread-safe.
+int32_t sInternalLockCpuCount = 0;
+
 } // anonymous namespace
 
 bool
@@ -549,6 +554,30 @@ SetScreenBrightness(double brightness)
   hal::SetLight(hal::eHalLightID_Buttons, aConfig);
 }
 
+static Monitor* sInternalLockCpuMonitor = nullptr;
+
+static void
+UpdateCpuSleepState()
+{
+  sInternalLockCpuMonitor->AssertCurrentThreadOwns();
+  bool allowed = sCpuSleepAllowed && !sInternalLockCpuCount;
+  WriteToFile(allowed ? wakeUnlockFilename : wakeLockFilename, "gecko");
+}
+
+static void
+InternalLockCpu() {
+  MonitorAutoLock monitor(*sInternalLockCpuMonitor);
+  ++sInternalLockCpuCount;
+  UpdateCpuSleepState();
+}
+
+static void
+InternalUnlockCpu() {
+  MonitorAutoLock monitor(*sInternalLockCpuMonitor);
+  --sInternalLockCpuCount;
+  UpdateCpuSleepState();
+}
+
 bool
 GetCpuSleepAllowed()
 {
@@ -558,8 +587,9 @@ GetCpuSleepAllowed()
 void
 SetCpuSleepAllowed(bool aAllowed)
 {
-  WriteToFile(aAllowed ? wakeUnlockFilename : wakeLockFilename, "gecko");
+  MonitorAutoLock monitor(*sInternalLockCpuMonitor);
   sCpuSleepAllowed = aAllowed;
+  UpdateCpuSleepState();
 }
 
 static light_device_t* sLights[hal::eHalLightID_Count];	// will be initialized to NULL
@@ -732,7 +762,7 @@ SetTimezone(const nsCString& aTimezoneSpec)
 
   int32_t oldTimezoneOffsetMinutes = GetTimezoneOffset();
   property_set("persist.sys.timezone", aTimezoneSpec.get());
-  // this function is automatically called by the other time conversion
+  // This function is automatically called by the other time conversion
   // functions that depend on the timezone. To be safe, we call it manually.
   tzset();
   int32_t newTimezoneOffsetMinutes = GetTimezoneOffset();
@@ -799,38 +829,41 @@ UnlockScreenOrientation()
   OrientationObserver::GetInstance()->UnlockScreenOrientation();
 }
 
-
+// This thread will wait for the alarm firing by a blocking IO.
 static pthread_t sAlarmFireWatcherThread;
 
-// If |sAlarmData| is non-null, it's owned by the watcher thread.
-typedef struct AlarmData {
-
+// If |sAlarmData| is non-null, it's owned by the alarm-watcher thread.
+struct AlarmData {
 public:
-  AlarmData(int aFd) : mFd(aFd), mGeneration(sNextGeneration++), mShuttingDown(false) {}
+  AlarmData(int aFd) : mFd(aFd),
+                       mGeneration(sNextGeneration++),
+                       mShuttingDown(false) {}
   ScopedClose mFd;
   int mGeneration;
   bool mShuttingDown;
 
   static int sNextGeneration;
 
-} AlarmData;
+};
 
 int AlarmData::sNextGeneration = 0;
 
 AlarmData* sAlarmData = NULL;
 
 class AlarmFiredEvent : public nsRunnable {
-
 public:
   AlarmFiredEvent(int aGeneration) : mGeneration(aGeneration) {}
 
   NS_IMETHOD Run() {
     // Guard against spurious notifications caused by an alarm firing
     // concurrently with it being disabled.
-    if (sAlarmData && !sAlarmData->mShuttingDown && mGeneration == sAlarmData->mGeneration) {
+    if (sAlarmData && !sAlarmData->mShuttingDown &&
+        mGeneration == sAlarmData->mGeneration) {
       hal::NotifyAlarmFired();
     }
-
+    // The fired alarm event has been delivered to the observer (if needed);
+    // we can now release a CPU wake lock.
+    InternalUnlockCpu();
     return NS_OK;
   }
 
@@ -871,11 +904,18 @@ WaitForAlarm(void* aData)
     // while awaiting an alarm to be programmed.
     do {
       alarmTypeFlags = ioctl(alarmData->mFd, ANDROID_ALARM_WAIT);
-    } while (alarmTypeFlags < 0 && errno == EINTR && !alarmData->mShuttingDown);
+    } while (alarmTypeFlags < 0 && errno == EINTR &&
+             !alarmData->mShuttingDown);
 
-    if (!alarmData->mShuttingDown &&
-        alarmTypeFlags >= 0 && (alarmTypeFlags & ANDROID_ALARM_RTC_WAKEUP_MASK)) {
-      NS_DispatchToMainThread(new AlarmFiredEvent(alarmData->mGeneration));
+    if (!alarmData->mShuttingDown && alarmTypeFlags >= 0 &&
+        (alarmTypeFlags & ANDROID_ALARM_RTC_WAKEUP_MASK)) {
+      // To make sure the observer can get the alarm firing notification
+      // *on time* (the system won't sleep during the process in any way),
+      // we need to acquire a CPU wake lock before firing the alarm event.
+      InternalLockCpu();
+      nsRefPtr<AlarmFiredEvent> event =
+        new AlarmFiredEvent(alarmData->mGeneration);
+      NS_DispatchToMainThread(event);
     }
   }
 
@@ -910,10 +950,15 @@ EnableAlarm()
   pthread_attr_init(&attr);
   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 
-  int status = pthread_create(&sAlarmFireWatcherThread, &attr, WaitForAlarm, alarmData.get());
+  // Initialize the monitor for internally locking CPU to ensure thread-safe
+  // before running the alarm-watcher thread.
+  sInternalLockCpuMonitor = new Monitor("sInternalLockCpuMonitor");
+  int status = pthread_create(&sAlarmFireWatcherThread, &attr, WaitForAlarm,
+                              alarmData.get());
   if (status) {
     alarmData = NULL;
-    HAL_LOG(("Failed to create alarm watcher thread. Status: %d.", status));
+    delete sInternalLockCpuMonitor;
+    HAL_LOG(("Failed to create alarm-watcher thread. Status: %d.", status));
     return false;
   }
 
@@ -936,6 +981,8 @@ DisableAlarm()
   // data pointed at by sAlarmData.
   DebugOnly<int> err = pthread_kill(sAlarmFireWatcherThread, SIGUSR1);
   MOZ_ASSERT(!err);
+
+  delete sInternalLockCpuMonitor;
 }
 
 bool
@@ -950,8 +997,9 @@ SetAlarm(int32_t aSeconds, int32_t aNanoseconds)
   ts.tv_sec = aSeconds;
   ts.tv_nsec = aNanoseconds;
 
-  // currently we only support RTC wakeup alarm type
-  const int result = ioctl(sAlarmData->mFd, ANDROID_ALARM_SET(ANDROID_ALARM_RTC_WAKEUP), &ts);
+  // Currently we only support RTC wakeup alarm type.
+  const int result = ioctl(sAlarmData->mFd,
+                           ANDROID_ALARM_SET(ANDROID_ALARM_RTC_WAKEUP), &ts);
 
   if (result < 0) {
     HAL_LOG(("Unable to set alarm: %s.", strerror(errno)));

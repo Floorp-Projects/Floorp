@@ -59,12 +59,14 @@ interface nsIVoicemailInfo : nsISupports
   readonly attribute DOMString displayName;
 };
 
-[scriptable, uuid(f7ff9856-5c55-4ba2-9b64-bfc0ace169e7)]
+[scriptable, uuid(2f1c8055-322e-490a-b1e1-4ccd5d546b3c)]
 interface nsIRilContext : nsISupports
 {
   readonly attribute DOMString radioState;
 
   readonly attribute DOMString cardState;
+
+  readonly attribute long retryCount;
 
   readonly attribute DOMString imsi;
 

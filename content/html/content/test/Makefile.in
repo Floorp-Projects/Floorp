@@ -351,6 +351,8 @@ MOCHITEST_FILES = \
 		test_bug839371.html \
 		test_element_prototype.html \
 		test_formData.html \
+		test_audio_wakelock.html \
+		wakelock.ogg \
 		$(NULL)
 
 MOCHITEST_BROWSER_FILES = \

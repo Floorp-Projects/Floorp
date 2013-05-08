@@ -1,6 +1,6 @@
-skip-if(Android) load 459439-1.html
+load 459439-1.html
 load 466607-1.html
-skip-if(Android) load 466945-1.html
+load 466945-1.html
 load 468763-1.html
 load 474744-1.html
 HTTP load 481136-1.html # needs to be HTTP to recognize the ogg as an audio file?
@@ -8,7 +8,7 @@ load 493915-1.html
 skip-if(Android) load 495794-1.html
 load 492286-1.xhtml
 load 576612-1.html
-skip-if(Android) load 691096-1.html # Android sound API can't handle playing large number of sounds at once.
+skip-if(Android||B2G) load 691096-1.html # Android sound API can't handle playing large number of sounds at once, bug 852821 for B2G
 load 752784-1.html
 skip-if(Android||B2G) HTTP load 795892-1.html # load failed, bug 833371 for B2G
 skip-if(Android||B2G) load 789075-1.html # load failed, bug 833371 for B2G
