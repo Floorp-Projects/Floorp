@@ -927,6 +927,12 @@ CrashesProvider.prototype = Object.freeze({
 
     let m = this.getMeasurement("crashes", 1);
 
+    // Aggregate counts locally to avoid excessive storage interaction.
+    let counts = {
+      pending: new Metrics.DailyValues(),
+      submitted: new Metrics.DailyValues(),
+    };
+
     // FUTURE detect mtimes in the future and react more intelligently.
     for (let filename in pending) {
       let modified = pending[filename].modified;
@@ -935,7 +941,7 @@ CrashesProvider.prototype = Object.freeze({
         continue;
       }
 
-      yield m.incrementDailyCounter("pending", modified);
+      counts.pending.appendValue(modified, 1);
     }
 
     for (let filename in submitted) {
@@ -945,7 +951,15 @@ CrashesProvider.prototype = Object.freeze({
         continue;
       }
 
-      yield m.incrementDailyCounter("submitted", modified);
+      counts.submitted.appendValue(modified, 1);
+    }
+
+    for (let [date, values] in counts.pending) {
+      yield m.incrementDailyCounter("pending", date, values.length);
+    }
+
+    for (let [date, values] in counts.submitted) {
+      yield m.incrementDailyCounter("submitted", date, values.length);
     }
 
     yield this.setState("lastCheck", "" + now.getTime());

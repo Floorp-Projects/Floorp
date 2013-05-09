@@ -207,7 +207,8 @@
               <spacer flex="1"/>
               <label id="telemetryLearnMore"
                      class="text-link"
-                     value="&telemetryLearnMore.label;"/>
+                     value="&telemetryLearnMore.label;"
+                     onclick="gAdvancedPane.openTextLink(event)"/>
             </hbox>
           </groupbox>
 #endif
@@ -223,7 +224,8 @@
               <spacer flex="1"/>
               <label id="FHRLearnMore"
                      class="text-link"
-                     value="&healthReportLearnMore.label;"/>
+                     value="&healthReportLearnMore.label;"
+                     onclick="gAdvancedPane.openTextLink(event)"/>
             </hbox>
           </groupbox>
 #endif
@@ -240,7 +242,8 @@
               <spacer flex="1"/>
               <label id="crashReporterLearnMore"
                      class="text-link"
-                     value="&crashReporterLearnMore.label;"/>
+                     value="&crashReporterLearnMore.label;"
+                     onclick="gAdvancedPane.openTextLink(event)"/>
             </hbox>
           </groupbox>
 #endif
