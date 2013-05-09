@@ -1034,7 +1034,7 @@ ContextStack::pushExecuteFrame(JSContext *cx, HandleScript script, const Value &
 
         StackSegment &seg = *frameIter.seg();
 
-        StackIter iter(cx->runtime, seg);
+        ScriptFrameIter iter(cx->runtime, seg);
         /* Debug-mode currently disables Ion compilation. */
         JS_ASSERT_IF(evalInFrame.isStackFrame(), !evalInFrame.asStackFrame()->runningInIon());
         JS_ASSERT_IF(evalInFrame.compartment() == iter.compartment(), !iter.isIonOptimizedJS());
@@ -1212,13 +1212,13 @@ ContextStack::restoreFrameChain()
 /*****************************************************************************/
 
 void
-StackIter::poisonRegs()
+ScriptFrameIter::poisonRegs()
 {
     data_.pc_ = (jsbytecode *)0xbad;
 }
 
 void
-StackIter::popFrame()
+ScriptFrameIter::popFrame()
 {
     StackFrame *oldfp = data_.fp_;
     JS_ASSERT(data_.seg_->contains(oldfp));
@@ -1234,7 +1234,7 @@ StackIter::popFrame()
 }
 
 void
-StackIter::settleOnNewSegment()
+ScriptFrameIter::settleOnNewSegment()
 {
     if (FrameRegs *regs = data_.seg_->maybeRegs())
         data_.pc_ = regs->pc;
@@ -1243,7 +1243,7 @@ StackIter::settleOnNewSegment()
 }
 
 void
-StackIter::startOnSegment(StackSegment *seg)
+ScriptFrameIter::startOnSegment(StackSegment *seg)
 {
     data_.seg_ = seg;
     data_.fp_ = data_.seg_->maybefp();
@@ -1253,12 +1253,12 @@ StackIter::startOnSegment(StackSegment *seg)
 /*
  * Given the iterator's current value of fp_ (initialized on construction or
  * after operator++ popped the previous call), "settle" the iterator on a new
- * StackIter::State value. The goal is to present the client a simple linear
- * sequence of scripted calls while covering up unpleasant stack implementation
- * details:
+ * ScriptFrameIter::State value. The goal is to present the client a simple
+ * linear sequence of scripted calls while covering up unpleasant stack
+ * implementation details:
  *  - The frame chain can be "saved" and "restored" (see JS_SaveFrameChain).
- *    This artificially cuts the call chain and the StackIter client may want
- *    to continue through this cut to the previous frame by passing
+ *    This artificially cuts the call chain and the ScriptFrameIter client may
+ *    want to continue through this cut to the previous frame by passing
  *    GO_THROUGH_SAVED.
  *  - fp->prev can be in a different contiguous segment from fp. In this case,
  *    the current values of sp/pc after calling popFrame are incorrect and
@@ -1269,7 +1269,7 @@ StackIter::startOnSegment(StackSegment *seg)
 # pragma optimize("g", off)
 #endif
 void
-StackIter::settleOnNewState()
+ScriptFrameIter::settleOnNewState()
 {
     /*
      * There are elements of the fp_ chain that we want to skip over so iterate
@@ -1295,7 +1295,7 @@ StackIter::settleOnNewState()
             /* Eval-in-frame allows jumping into the middle of a segment. */
             if (containsFrame && data_.seg_->fp() != data_.fp_) {
                 /* Avoid duplicating logic; seg_ contains fp_, so no iloop. */
-                StackIter tmp = *this;
+                ScriptFrameIter tmp = *this;
                 tmp.startOnSegment(data_.seg_);
                 tmp.settleOnNewState();
                 while (tmp.data_.fp_ != data_.fp_)
@@ -1355,7 +1355,7 @@ StackIter::settleOnNewState()
 # pragma optimize("", on)
 #endif
 
-StackIter::Data::Data(JSContext *cx, PerThreadData *perThread, SavedOption savedOption)
+ScriptFrameIter::Data::Data(JSContext *cx, PerThreadData *perThread, SavedOption savedOption)
   : perThread_(perThread),
     cx_(cx),
     savedOption_(savedOption)
@@ -1366,7 +1366,7 @@ StackIter::Data::Data(JSContext *cx, PerThreadData *perThread, SavedOption saved
 {
 }
 
-StackIter::Data::Data(JSContext *cx, JSRuntime *rt, StackSegment *seg)
+ScriptFrameIter::Data::Data(JSContext *cx, JSRuntime *rt, StackSegment *seg)
   : perThread_(&rt->mainThread),
     cx_(cx),
     savedOption_(STOP_AT_SAVED)
@@ -1377,7 +1377,7 @@ StackIter::Data::Data(JSContext *cx, JSRuntime *rt, StackSegment *seg)
 {
 }
 
-StackIter::Data::Data(const StackIter::Data &other)
+ScriptFrameIter::Data::Data(const ScriptFrameIter::Data &other)
   : perThread_(other.perThread_),
     cx_(other.cx_),
     savedOption_(other.savedOption_),
@@ -1392,7 +1392,7 @@ StackIter::Data::Data(const StackIter::Data &other)
 {
 }
 
-StackIter::StackIter(JSContext *cx, SavedOption savedOption)
+ScriptFrameIter::ScriptFrameIter(JSContext *cx, SavedOption savedOption)
   : data_(cx, &cx->runtime->mainThread, savedOption)
 #ifdef JS_ION
     , ionInlineFrames_(cx, (js::ion::IonFrameIterator*) NULL)
@@ -1411,7 +1411,7 @@ StackIter::StackIter(JSContext *cx, SavedOption savedOption)
     }
 }
 
-StackIter::StackIter(JSRuntime *rt, StackSegment &seg)
+ScriptFrameIter::ScriptFrameIter(JSRuntime *rt, StackSegment &seg)
   : data_(seg.cx(), rt, &seg)
 #ifdef JS_ION
     , ionInlineFrames_(seg.cx(), (js::ion::IonFrameIterator*) NULL)
@@ -1425,7 +1425,7 @@ StackIter::StackIter(JSRuntime *rt, StackSegment &seg)
     settleOnNewState();
 }
 
-StackIter::StackIter(const StackIter &other)
+ScriptFrameIter::ScriptFrameIter(const ScriptFrameIter &other)
   : data_(other.data_)
 #ifdef JS_ION
     , ionInlineFrames_(other.data_.seg_->cx(),
@@ -1434,7 +1434,7 @@ StackIter::StackIter(const StackIter &other)
 {
 }
 
-StackIter::StackIter(const Data &data)
+ScriptFrameIter::ScriptFrameIter(const Data &data)
   : data_(data)
 #ifdef JS_ION
     , ionInlineFrames_(data.cx_, data_.ionFrames_.isOptimizedJS() ? &data_.ionFrames_ : NULL)
@@ -1445,7 +1445,7 @@ StackIter::StackIter(const Data &data)
 
 #ifdef JS_ION
 void
-StackIter::nextIonFrame()
+ScriptFrameIter::nextIonFrame()
 {
     if (data_.ionFrames_.isOptimizedJS()) {
         ionInlineFrames_.resetOn(&data_.ionFrames_);
@@ -1457,7 +1457,7 @@ StackIter::nextIonFrame()
 }
 
 void
-StackIter::popIonFrame()
+ScriptFrameIter::popIonFrame()
 {
     // Keep fp which describes all ion frames.
     poisonRegs();
@@ -1499,7 +1499,7 @@ StackIter::popIonFrame()
 }
 
 void
-StackIter::popBaselineDebuggerFrame()
+ScriptFrameIter::popBaselineDebuggerFrame()
 {
     ion::BaselineFrame *prevBaseline = data_.fp_->prevBaselineFrame();
 
@@ -1512,8 +1512,8 @@ StackIter::popBaselineDebuggerFrame()
 }
 #endif
 
-StackIter &
-StackIter::operator++()
+ScriptFrameIter &
+ScriptFrameIter::operator++()
 {
     switch (data_.state_) {
       case DONE:
@@ -1541,14 +1541,14 @@ StackIter::operator++()
 }
 
 bool
-StackIter::operator==(const StackIter &rhs) const
+ScriptFrameIter::operator==(const ScriptFrameIter &rhs) const
 {
     return done() == rhs.done() &&
            (done() || data_.fp_ == rhs.data_.fp_);
 }
 
-StackIter::Data *
-StackIter::copyData() const
+ScriptFrameIter::Data *
+ScriptFrameIter::copyData() const
 {
 #ifdef JS_ION
     /*
@@ -1561,7 +1561,7 @@ StackIter::copyData() const
 }
 
 JSCompartment *
-StackIter::compartment() const
+ScriptFrameIter::compartment() const
 {
     switch (data_.state_) {
       case DONE:
@@ -1580,7 +1580,7 @@ StackIter::compartment() const
 }
 
 bool
-StackIter::isFunctionFrame() const
+ScriptFrameIter::isFunctionFrame() const
 {
     switch (data_.state_) {
       case DONE:
@@ -1602,7 +1602,7 @@ StackIter::isFunctionFrame() const
 }
 
 bool
-StackIter::isGlobalFrame() const
+ScriptFrameIter::isGlobalFrame() const
 {
     switch (data_.state_) {
       case DONE:
@@ -1624,7 +1624,7 @@ StackIter::isGlobalFrame() const
 }
 
 bool
-StackIter::isEvalFrame() const
+ScriptFrameIter::isEvalFrame() const
 {
     switch (data_.state_) {
       case DONE:
@@ -1646,7 +1646,7 @@ StackIter::isEvalFrame() const
 }
 
 bool
-StackIter::isNonEvalFunctionFrame() const
+ScriptFrameIter::isNonEvalFunctionFrame() const
 {
     JS_ASSERT(!done());
     switch (data_.state_) {
@@ -1662,7 +1662,7 @@ StackIter::isNonEvalFunctionFrame() const
 }
 
 bool
-StackIter::isGeneratorFrame() const
+ScriptFrameIter::isGeneratorFrame() const
 {
     switch (data_.state_) {
       case DONE:
@@ -1677,7 +1677,7 @@ StackIter::isGeneratorFrame() const
 }
 
 bool
-StackIter::isConstructing() const
+ScriptFrameIter::isConstructing() const
 {
     switch (data_.state_) {
       case DONE:
@@ -1699,7 +1699,7 @@ StackIter::isConstructing() const
 }
 
 AbstractFramePtr
-StackIter::abstractFramePtr() const
+ScriptFrameIter::abstractFramePtr() const
 {
     switch (data_.state_) {
       case DONE:
@@ -1719,7 +1719,7 @@ StackIter::abstractFramePtr() const
 }
 
 void
-StackIter::updatePcQuadratic()
+ScriptFrameIter::updatePcQuadratic()
 {
     switch (data_.state_) {
       case DONE:
@@ -1756,7 +1756,7 @@ StackIter::updatePcQuadratic()
 }
 
 JSFunction *
-StackIter::callee() const
+ScriptFrameIter::callee() const
 {
     switch (data_.state_) {
       case DONE:
@@ -1779,7 +1779,7 @@ StackIter::callee() const
 }
 
 Value
-StackIter::calleev() const
+ScriptFrameIter::calleev() const
 {
     switch (data_.state_) {
       case DONE:
@@ -1799,7 +1799,7 @@ StackIter::calleev() const
 }
 
 unsigned
-StackIter::numActualArgs() const
+ScriptFrameIter::numActualArgs() const
 {
     switch (data_.state_) {
       case DONE:
@@ -1823,7 +1823,7 @@ StackIter::numActualArgs() const
 }
 
 Value
-StackIter::unaliasedActual(unsigned i, MaybeCheckAliasing checkAliasing) const
+ScriptFrameIter::unaliasedActual(unsigned i, MaybeCheckAliasing checkAliasing) const
 {
     switch (data_.state_) {
       case DONE:
@@ -1843,7 +1843,7 @@ StackIter::unaliasedActual(unsigned i, MaybeCheckAliasing checkAliasing) const
 }
 
 JSObject *
-StackIter::scopeChain() const
+ScriptFrameIter::scopeChain() const
 {
     switch (data_.state_) {
       case DONE:
@@ -1864,7 +1864,7 @@ StackIter::scopeChain() const
 }
 
 CallObject &
-StackIter::callObj() const
+ScriptFrameIter::callObj() const
 {
     JS_ASSERT(callee()->isHeavyweight());
 
@@ -1875,7 +1875,7 @@ StackIter::callObj() const
 }
 
 bool
-StackIter::hasArgsObj() const
+ScriptFrameIter::hasArgsObj() const
 {
     switch (data_.state_) {
       case DONE:
@@ -1895,7 +1895,7 @@ StackIter::hasArgsObj() const
 }
 
 ArgumentsObject &
-StackIter::argsObj() const
+ScriptFrameIter::argsObj() const
 {
     JS_ASSERT(hasArgsObj());
 
@@ -1917,7 +1917,7 @@ StackIter::argsObj() const
 }
 
 bool
-StackIter::computeThis() const
+ScriptFrameIter::computeThis() const
 {
     JS_ASSERT(!done());
     if (!isIonOptimizedJS()) {
@@ -1928,7 +1928,7 @@ StackIter::computeThis() const
 }
 
 Value
-StackIter::thisv() const
+ScriptFrameIter::thisv() const
 {
     switch (data_.state_) {
       case DONE:
@@ -1949,7 +1949,7 @@ StackIter::thisv() const
 }
 
 Value
-StackIter::returnValue() const
+ScriptFrameIter::returnValue() const
 {
     switch (data_.state_) {
       case DONE:
@@ -1968,7 +1968,7 @@ StackIter::returnValue() const
 }
 
 void
-StackIter::setReturnValue(const Value &v)
+ScriptFrameIter::setReturnValue(const Value &v)
 {
     switch (data_.state_) {
       case DONE:
@@ -1989,7 +1989,7 @@ StackIter::setReturnValue(const Value &v)
 }
 
 size_t
-StackIter::numFrameSlots() const
+ScriptFrameIter::numFrameSlots() const
 {
     switch (data_.state_) {
       case DONE:
@@ -2014,7 +2014,7 @@ StackIter::numFrameSlots() const
 }
 
 Value
-StackIter::frameSlotValue(size_t index) const
+ScriptFrameIter::frameSlotValue(size_t index) const
 {
     switch (data_.state_) {
       case DONE:
@@ -2162,7 +2162,7 @@ AbstractFramePtr::evalPrevScopeChain(JSRuntime *rt) const
         ++alliter;
 
     /* Eval frames are not compiled by Ion, though their caller might be. */
-    StackIter iter(rt, *alliter.seg());
+    ScriptFrameIter iter(rt, *alliter.seg());
     while (iter.isIonOptimizedJS() || iter.abstractFramePtr() != *this)
         ++iter;
     ++iter;
