@@ -6923,13 +6923,11 @@ function getDataCommandAttribute(element) {
  * @param typed The contents of the input field
  */
 Requisition.prototype.update = function(typed) {
-  if (typeof HTMLElement !== 'undefined') {
-    if (typed instanceof HTMLElement) {
-      typed = getDataCommandAttribute(typed);
-    }
-    if (typed != null && typed.targetElement instanceof HTMLElement) {
-      typed = getDataCommandAttribute(typed.targetElement);
-    }
+  if (typeof HTMLElement !== 'undefined' && typed instanceof HTMLElement) {
+    typed = getDataCommandAttribute(typed);
+  }
+  if (typeof Event !== 'undefined' && typed instanceof Event) {
+    typed = getDataCommandAttribute(typed.currentTarget);
   }
 
   this._structuralChangeInProgress = true;
