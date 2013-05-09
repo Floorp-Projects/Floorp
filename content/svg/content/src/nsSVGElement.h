@@ -89,26 +89,26 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
-  virtual const nsAttrValue* DoGetClasses() const;
+  virtual const nsAttrValue* DoGetClasses() const MOZ_OVERRIDE;
   void DidAnimateClass();
 
   // nsIContent interface methods
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              bool aCompileEventHandlers);
+                              bool aCompileEventHandlers) MOZ_OVERRIDE;
 
   virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
-                             bool aNotify);
+                             bool aNotify) MOZ_OVERRIDE;
 
   virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                              int32_t aModType) const;
+                                              int32_t aModType) const MOZ_OVERRIDE;
 
-  virtual bool IsNodeOfType(uint32_t aFlags) const;
+  virtual bool IsNodeOfType(uint32_t aFlags) const MOZ_OVERRIDE;
 
-  NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
+  NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker) MOZ_OVERRIDE;
 
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const MOZ_OVERRIDE;
 
   static const MappedAttributeEntry sFillStrokeMap[];
   static const MappedAttributeEntry sGraphicsMap[];
@@ -319,12 +319,12 @@ protected:
   // See the comment in nsSVGElement::WillChangeValue.
   virtual nsresult BeforeSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                                  const nsAttrValueOrString* aValue,
-                                 bool aNotify) MOZ_FINAL { return NS_OK; }
+                                 bool aNotify) MOZ_OVERRIDE MOZ_FINAL { return NS_OK; }
 #endif // DEBUG
   virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
-                                const nsAttrValue* aValue, bool aNotify);
+                                const nsAttrValue* aValue, bool aNotify) MOZ_OVERRIDE;
   virtual bool ParseAttribute(int32_t aNamespaceID, nsIAtom* aAttribute,
-                                const nsAString& aValue, nsAttrValue& aResult);
+                                const nsAString& aValue, nsAttrValue& aResult) MOZ_OVERRIDE;
   static nsresult ReportAttributeParseFailure(nsIDocument* aDocument,
                                               nsIAtom* aAttribute,
                                               const nsAString& aValue);

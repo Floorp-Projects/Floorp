@@ -19,7 +19,6 @@
 #include "EdgeCaseAnalysis.h"
 #include "RangeAnalysis.h"
 #include "LinearScan.h"
-#include "vm/ParallelDo.h"
 #include "ParallelArrayAnalysis.h"
 #include "jscompartment.h"
 #include "vm/ThreadPool.h"
@@ -556,6 +555,7 @@ IonScript::IonScript()
     deoptTable_(NULL),
     osrPc_(NULL),
     osrEntryOffset_(0),
+    skipArgCheckEntryOffset_(0),
     invalidateEpilogueOffset_(0),
     invalidateEpilogueDataOffset_(0),
     numBailouts_(0),
@@ -723,7 +723,7 @@ IonScript::copyBailoutTable(const SnapshotOffset *table)
 }
 
 void
-IonScript::copyConstants(const HeapValue *vp)
+IonScript::copyConstants(const Value *vp)
 {
     for (size_t i = 0; i < constantEntries_; i++)
         constants()[i].init(vp[i]);

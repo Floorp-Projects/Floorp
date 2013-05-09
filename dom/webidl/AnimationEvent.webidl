@@ -23,15 +23,3 @@ dictionary AnimationEventInit : EventInit {
   float elapsedTime = 0;
   DOMString pseudoElement = "";
 };
-
-// initAnimationEvent is a legacy method, and removed from the latest version
-// of the specification.
-partial interface AnimationEvent {
-  [Throws]
-  void initAnimationEvent(DOMString type,
-                          boolean canBubble,
-                          boolean cancelable,
-                          DOMString animationName,
-                          float elapsedTime,
-                          optional DOMString pseudoElement);
-};

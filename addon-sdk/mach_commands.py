@@ -25,7 +25,8 @@ class JetpackRunner(MozbuildObject):
 
 @CommandProvider
 class MachCommands(MachCommandBase):
-    @Command('jetpack-test', help='Runs the jetpack test suite.')
+    @Command('jetpack-test', category='testing',
+        description='Runs the jetpack test suite.')
     def run_jetpack_test(self, **params):
         # We should probably have a utility function to ensure the tree is
         # ready to run tests. Until then, we just create the state dir (in

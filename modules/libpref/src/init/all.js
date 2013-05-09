@@ -1011,13 +1011,7 @@ pref("network.http.spdy.send-buffer-size", 131072);
 
 pref("network.http.diagnostics", false);
 
-#ifdef RELEASE_BUILD
-pref("network.http.pacing.requests.enabled", false);
-pref("network.http.pacing.requests.abtest", false);
-#else
 pref("network.http.pacing.requests.enabled", true);
-pref("network.http.pacing.requests.abtest", true);
-#endif
 pref("network.http.pacing.requests.min-parallelism", 6);
 pref("network.http.pacing.requests.hz", 100);
 pref("network.http.pacing.requests.burst", 32);

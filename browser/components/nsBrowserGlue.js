@@ -1170,7 +1170,7 @@ BrowserGlue.prototype = {
   },
 
   _migrateUI: function BG__migrateUI() {
-    const UI_VERSION = 12;
+    const UI_VERSION = 13;
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul#";
     let currentUIVersion = 0;
     try {
@@ -1361,6 +1361,14 @@ BrowserGlue.prototype = {
         }
         this._setPersist(toolbarResource, currentsetResource, currentset);
       }
+    }
+
+    if (currentUIVersion < 13) {
+      try {
+        if (Services.prefs.getBoolPref("plugins.hide_infobar_for_missing_plugin"))
+          Services.prefs.setBoolPref("plugins.notifyMissingFlash", false);
+      }
+      catch (ex) {}
     }
 
     if (this._dirty)

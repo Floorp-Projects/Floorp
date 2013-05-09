@@ -71,6 +71,39 @@ LIRGeneratorX86Shared::visitPowHalf(MPowHalf *ins)
 }
 
 bool
+LIRGeneratorX86Shared::lowerForShift(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir,
+                                     MDefinition *lhs, MDefinition *rhs)
+{
+    ins->setOperand(0, useRegisterAtStart(lhs));
+
+    // shift operator should be constant or in register ecx
+    // x86 can't shift a non-ecx register
+    if (rhs->isConstant())
+        ins->setOperand(1, useOrConstant(rhs));
+    else
+        ins->setOperand(1, useFixed(rhs, ecx));
+
+    return defineReuseInput(ins, mir, 0);
+}
+
+bool
+LIRGeneratorX86Shared::lowerForALU(LInstructionHelper<1, 1, 0> *ins, MDefinition *mir,
+                                   MDefinition *input)
+{
+    ins->setOperand(0, useRegisterAtStart(input));
+    return defineReuseInput(ins, mir, 0);
+}
+
+bool
+LIRGeneratorX86Shared::lowerForALU(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir,
+                                   MDefinition *lhs, MDefinition *rhs)
+{
+    ins->setOperand(0, useRegisterAtStart(lhs));
+    ins->setOperand(1, useOrConstant(rhs));
+    return defineReuseInput(ins, mir, 0);
+}
+
+bool
 LIRGeneratorX86Shared::lowerMulI(MMul *mul, MDefinition *lhs, MDefinition *rhs)
 {
     // Note: lhs is used twice, so that we can restore the original value for the
@@ -198,3 +231,12 @@ LIRGeneratorX86Shared::visitConstant(MConstant *ins)
     return LIRGeneratorShared::visitConstant(ins);
 }
 
+bool
+LIRGeneratorX86Shared::lowerTruncateDToInt32(MTruncateToInt32 *ins)
+{
+    MDefinition *opd = ins->input();
+    JS_ASSERT(opd->type() == MIRType_Double);
+
+    LDefinition maybeTemp = Assembler::HasSSE3() ? LDefinition::BogusTemp() : tempFloat();
+    return define(new LTruncateDToInt32(useRegister(opd), maybeTemp), ins);
+}

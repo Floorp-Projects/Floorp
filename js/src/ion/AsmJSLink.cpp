@@ -15,6 +15,10 @@
 
 #include "Ion.h"
 
+#ifdef MOZ_VTUNE
+# include "jitprofiling.h"
+#endif
+
 using namespace js;
 using namespace js::ion;
 using namespace mozilla;
@@ -423,6 +427,46 @@ HandleDynamicLinkFailure(JSContext *cx, CallArgs args, AsmJSModule &module, Hand
     return true;
 }
 
+#ifdef MOZ_VTUNE
+static bool
+SendFunctionsToVTune(JSContext *cx, AsmJSModule &module)
+{
+    uint8_t *base = module.functionCode();
+
+    for (unsigned i = 0; i < module.numProfiledFunctions(); i++) {
+        const AsmJSModule::ProfiledFunction &func = module.profiledFunction(i);
+
+        uint8_t *start = base + func.startCodeOffset;
+        uint8_t *end   = base + func.endCodeOffset;
+        JS_ASSERT(end >= start);
+
+        unsigned method_id = iJIT_GetNewMethodID();
+        if (method_id == 0)
+            return false;
+
+        JSAutoByteString bytes;
+        const char *method_name = js_AtomToPrintableString(cx, func.name, &bytes);
+        if (!method_name)
+            return false;
+
+        iJIT_Method_Load method;
+        method.method_id = method_id;
+        method.method_name = const_cast<char *>(method_name);
+        method.method_load_address = (void *)start;
+        method.method_size = unsigned(end - start);
+        method.line_number_size = 0;
+        method.line_number_table = NULL;
+        method.class_id = 0;
+        method.class_file_name = NULL;
+        method.source_file_name = NULL;
+
+        iJIT_NotifyEvent(iJVM_EVENT_TYPE_METHOD_LOAD_FINISHED, (void *)&method);
+    }
+
+    return true;
+}
+#endif
+
 JSBool
 js::LinkAsmJS(JSContext *cx, unsigned argc, JS::Value *vp)
 {
@@ -437,6 +481,11 @@ js::LinkAsmJS(JSContext *cx, unsigned argc, JS::Value *vp)
         RootedPropertyName name(cx, fun->name());
         return HandleDynamicLinkFailure(cx, args, module, name);
     }
+
+#if defined(MOZ_VTUNE)
+    if (!SendFunctionsToVTune(cx, module))
+        return false;
+#endif
 
     if (module.numExportedFunctions() == 1) {
         const AsmJSModule::ExportedFunction &func = module.exportedFunction(0);

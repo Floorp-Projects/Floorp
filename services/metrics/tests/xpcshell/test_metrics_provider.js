@@ -97,6 +97,10 @@ add_task(function test_measurement_storage_basic() {
   count = yield provider.storage.getDailyCounterCountFromFieldID(counterID, yesterday);
   do_check_eq(count, 1);
 
+  yield m.incrementDailyCounter("daily-counter", now, 4);
+  count = yield provider.storage.getDailyCounterCountFromFieldID(counterID, now);
+  do_check_eq(count, 6);
+
   // Daily discrete numeric.
   let dailyDiscreteNumericID = m.fieldID("daily-discrete-numeric");
   yield m.addDailyDiscreteNumeric("daily-discrete-numeric", 5, now);

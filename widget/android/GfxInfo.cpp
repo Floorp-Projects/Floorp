@@ -472,17 +472,17 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
         //   All Sony devices (Bug 845734)
 
         bool isBlocklisted =
-          cModel.Find("SCH-I535", true) ||
-          cModel.Find("SGH-I747", true) ||
-          cModel.Find("SGH-T999", true) ||
-          cModel.Find("SPH-L710", true) ||
-          cModel.Find("GT-I8190", true) ||
-          cModel.Find("GT-P3100", true) ||
-          cModel.Find("GT-P3110", true) ||
-          cModel.Find("GT-P3113", true) ||
-          cModel.Find("GT-P5100", true) ||
-          cModel.Find("GT-P5110", true) ||
-          cModel.Find("GT-P5113", true) ||
+          cModel.Find("SCH-I535", true) != -1 ||
+          cModel.Find("SGH-I747", true) != -1 ||
+          cModel.Find("SGH-T999", true) != -1 ||
+          cModel.Find("SPH-L710", true) != -1 ||
+          cModel.Find("GT-I8190", true) != -1 ||
+          cModel.Find("GT-P3100", true) != -1 ||
+          cModel.Find("GT-P3110", true) != -1 ||
+          cModel.Find("GT-P3113", true) != -1 ||
+          cModel.Find("GT-P5100", true) != -1 ||
+          cModel.Find("GT-P5110", true) != -1 ||
+          cModel.Find("GT-P5113", true) != -1 ||
           cManufacturer.Equals("Sony", nsCaseInsensitiveCStringComparator());
 
         if (isBlocklisted) {

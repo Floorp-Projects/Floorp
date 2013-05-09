@@ -162,7 +162,8 @@ ErrorResult::ReportJSException(JSContext* cx)
 namespace dom {
 
 bool
-DefineConstants(JSContext* cx, JSObject* obj, const ConstantSpec* cs)
+DefineConstants(JSContext* cx, JS::Handle<JSObject*> obj,
+                const ConstantSpec* cs)
 {
   for (; cs->name; ++cs) {
     JSBool ok =
@@ -176,15 +177,15 @@ DefineConstants(JSContext* cx, JSObject* obj, const ConstantSpec* cs)
 }
 
 static inline bool
-Define(JSContext* cx, JSObject* obj, const JSFunctionSpec* spec) {
+Define(JSContext* cx, JS::Handle<JSObject*> obj, const JSFunctionSpec* spec) {
   return JS_DefineFunctions(cx, obj, spec);
 }
 static inline bool
-Define(JSContext* cx, JSObject* obj, const JSPropertySpec* spec) {
+Define(JSContext* cx, JS::Handle<JSObject*> obj, const JSPropertySpec* spec) {
   return JS_DefineProperties(cx, obj, spec);
 }
 static inline bool
-Define(JSContext* cx, JSObject* obj, const ConstantSpec* spec) {
+Define(JSContext* cx, JS::Handle<JSObject*> obj, const ConstantSpec* spec) {
   return DefineConstants(cx, obj, spec);
 }
 
@@ -1630,6 +1631,7 @@ GlobalObject::GlobalObject(JSContext* aCx, JSObject* aObject)
   Maybe<JSAutoCompartment> ac;
   mGlobalJSObject = GetGlobalObject<true>(aCx, aObject, ac);
   if (!mGlobalJSObject) {
+    mGlobalObject = nullptr;
     return;
   }
 
@@ -1716,14 +1718,18 @@ InterfaceHasInstance(JSContext* cx, JSHandleObject obj, JSMutableHandleValue vp,
   return InterfaceHasInstance(cx, obj, instanceObject, bp);
 }
 
-void
+bool
 ReportLenientThisUnwrappingFailure(JSContext* cx, JS::Handle<JSObject*> obj)
 {
   GlobalObject global(cx, obj);
+  if (global.Failed()) {
+    return false;
+  }
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(global.Get());
   if (window && window->GetDoc()) {
     window->GetDoc()->WarnOnceAbout(nsIDocument::eLenientThis);
   }
+  return true;
 }
 
 // Date implementation methods

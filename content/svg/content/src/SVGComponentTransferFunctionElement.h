@@ -39,7 +39,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   virtual bool AttributeAffectsRendering(
-          int32_t aNameSpaceID, nsIAtom* aAttribute) const;
+          int32_t aNameSpaceID, nsIAtom* aAttribute) const MOZ_OVERRIDE;
 
   virtual int32_t GetChannel() = 0;
   bool GenerateLookupTable(uint8_t* aTable);
@@ -56,9 +56,9 @@ public:
   already_AddRefed<nsIDOMSVGAnimatedNumber> Offset();
 
 protected:
-  virtual NumberAttributesInfo GetNumberInfo();
-  virtual EnumAttributesInfo GetEnumInfo();
-  virtual NumberListAttributesInfo GetNumberListInfo();
+  virtual NumberAttributesInfo GetNumberInfo() MOZ_OVERRIDE;
+  virtual EnumAttributesInfo GetEnumInfo() MOZ_OVERRIDE;
+  virtual NumberListAttributesInfo GetNumberListInfo() MOZ_OVERRIDE;
 
   enum { TABLEVALUES };
   SVGAnimatedNumberList mNumberListAttributes[1];
@@ -92,9 +92,9 @@ protected:
     : SVGComponentTransferFunctionElement(aNodeInfo) {}
 
 public:
-  virtual int32_t GetChannel() { return 0; }
+  virtual int32_t GetChannel() MOZ_OVERRIDE { return 0; }
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   virtual JSObject* WrapNode(JSContext* aCx,
                              JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
@@ -118,9 +118,9 @@ protected:
     : SVGComponentTransferFunctionElement(aNodeInfo) {}
 
 public:
-  virtual int32_t GetChannel() { return 1; }
+  virtual int32_t GetChannel() MOZ_OVERRIDE { return 1; }
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   virtual JSObject* WrapNode(JSContext* aCx,
                              JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
@@ -144,9 +144,9 @@ protected:
     : SVGComponentTransferFunctionElement(aNodeInfo) {}
 
 public:
-  virtual int32_t GetChannel() { return 2; }
+  virtual int32_t GetChannel() MOZ_OVERRIDE { return 2; }
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   virtual JSObject* WrapNode(JSContext* aCx,
                              JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
@@ -170,9 +170,9 @@ protected:
     : SVGComponentTransferFunctionElement(aNodeInfo) {}
 
 public:
-  virtual int32_t GetChannel() { return 3; }
+  virtual int32_t GetChannel() MOZ_OVERRIDE { return 3; }
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   virtual JSObject* WrapNode(JSContext* aCx,
                              JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
