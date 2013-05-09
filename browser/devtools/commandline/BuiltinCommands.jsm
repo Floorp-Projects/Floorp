@@ -1603,15 +1603,15 @@ XPCOMUtils.defineLazyModuleGetter(this, "AppCacheUtils",
 (function(module) {
   gcli.addCommand({
     name: "tools",
-    description: gcli.lookup("toolsDesc"),
-    manual: gcli.lookup("toolsManual"),
+    description: gcli.lookupFormat("toolsDesc2", [BRAND_SHORT_NAME]),
+    manual: gcli.lookupFormat("toolsManual2", [BRAND_SHORT_NAME]),
     get hidden() gcli.hiddenByChromePref(),
   });
 
   gcli.addCommand({
     name: "tools srcdir",
     description: gcli.lookup("toolsSrcdirDesc"),
-    manual: gcli.lookup("toolsSrcdirManual"),
+    manual: gcli.lookupFormat("toolsSrcdirManual2", [BRAND_SHORT_NAME]),
     get hidden() gcli.hiddenByChromePref(),
     params: [
       {
@@ -1662,7 +1662,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "AppCacheUtils",
     returnType: "string",
     exec: function(args, context) {
       devtools.reload();
-      return gcli.lookup("toolsReloaded");
+      return gcli.lookup("toolsReloaded2");
     }
   });
 }(this));
