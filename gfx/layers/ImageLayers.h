@@ -24,7 +24,8 @@ class THEBES_API ImageLayer : public Layer {
 public:
   enum ScaleMode {
     SCALE_NONE,
-    SCALE_STRETCH
+    SCALE_STRETCH,
+    SCALE_SENTINEL
   // Unimplemented - SCALE_PRESERVE_ASPECT_RATIO_CONTAIN
   };
 
@@ -54,8 +55,11 @@ public:
    */
   void SetScaleToSize(const gfxIntSize &aSize, ScaleMode aMode)
   {
-    mScaleToSize = aSize;
-    mScaleMode = aMode;
+    if (mScaleToSize != aSize || mScaleMode != aMode) {
+      mScaleToSize = aSize;
+      mScaleMode = aMode;
+      Mutated();
+    }
   }
 
 
