@@ -288,7 +288,7 @@ private:
   bool mReportCSPViolations;
 
 protected:
-  WorkerPrivateParent(JSContext* aCx, JSObject* aObject, WorkerPrivate* aParent,
+  WorkerPrivateParent(JSContext* aCx, JS::Handle<JSObject*> aObject, WorkerPrivate* aParent,
                       JSContext* aParentJSContext, const nsAString& aScriptURL,
                       bool aIsChromeWorker, const nsACString& aDomain,
                       nsCOMPtr<nsPIDOMWindow>& aWindow,
@@ -896,7 +896,7 @@ public:
   }
 
 private:
-  WorkerPrivate(JSContext* aCx, JSObject* aObject, WorkerPrivate* aParent,
+  WorkerPrivate(JSContext* aCx, JS::Handle<JSObject*> aObject, WorkerPrivate* aParent,
                 JSContext* aParentJSContext, const nsAString& aScriptURL,
                 bool aIsChromeWorker, const nsACString& aDomain,
                 nsCOMPtr<nsPIDOMWindow>& aWindow,
