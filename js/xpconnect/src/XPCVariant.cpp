@@ -416,14 +416,7 @@ XPCVariant::VariantDataToJS(XPCLazyCallContext& lccx,
 
     // We ASSUME that the variant implementation can do these conversions...
 
-    nsXPTCVariant xpctvar;
     nsID iid;
-    nsAutoString astring;
-    nsAutoCString cString;
-    nsUTF8String utf8String;
-    uint32_t size;
-    xpctvar.flags = 0;
-    JSBool success;
 
     NS_ABORT_IF_FALSE(js::IsObjectInContextCompartment(lccx.GetScopeForNewJSObjects(), cx),
                       "bad scope for new JSObjects");
@@ -440,100 +433,134 @@ XPCVariant::VariantDataToJS(XPCLazyCallContext& lccx,
         case nsIDataType::VTYPE_FLOAT:
         case nsIDataType::VTYPE_DOUBLE:
         {
-            // Easy. Handle inline.
-            if (NS_FAILED(variant->GetAsDouble(&xpctvar.val.d)))
+            double d;
+            if (NS_FAILED(variant->GetAsDouble(&d)))
                 return false;
-            *pJSVal = JS_NumberValue(xpctvar.val.d);
+            *pJSVal = JS_NumberValue(d);
             return true;
         }
         case nsIDataType::VTYPE_BOOL:
         {
-            // Easy. Handle inline.
-            if (NS_FAILED(variant->GetAsBool(&xpctvar.val.b)))
+            bool b;
+            if (NS_FAILED(variant->GetAsBool(&b)))
                 return false;
-            *pJSVal = BOOLEAN_TO_JSVAL(xpctvar.val.b);
+            *pJSVal = BOOLEAN_TO_JSVAL(b);
             return true;
         }
         case nsIDataType::VTYPE_CHAR:
-            if (NS_FAILED(variant->GetAsChar(&xpctvar.val.c)))
+        {
+            char c;
+            if (NS_FAILED(variant->GetAsChar(&c)))
                 return false;
-            xpctvar.type = (uint8_t)TD_CHAR;
-            break;
+            return XPCConvert::NativeData2JS(lccx, pJSVal, (const void*)&c, TD_CHAR, &iid, pErr);
+        }
         case nsIDataType::VTYPE_WCHAR:
-            if (NS_FAILED(variant->GetAsWChar(&xpctvar.val.wc)))
+        {
+            PRUnichar wc;
+            if (NS_FAILED(variant->GetAsWChar(&wc)))
                 return false;
-            xpctvar.type = (uint8_t)TD_WCHAR;
-            break;
+            return XPCConvert::NativeData2JS(lccx, pJSVal, (const void*)&wc, TD_WCHAR, &iid, pErr);
+        }
         case nsIDataType::VTYPE_ID:
+        {
             if (NS_FAILED(variant->GetAsID(&iid)))
                 return false;
-            xpctvar.type = (uint8_t)TD_PNSIID;
-            xpctvar.val.p = &iid;
-            break;
+            nsID *v = &iid;
+            return XPCConvert::NativeData2JS(lccx, pJSVal, (const void*)&v, TD_PNSIID, &iid, pErr);
+        }
         case nsIDataType::VTYPE_ASTRING:
+        {
+            nsAutoString astring;
             if (NS_FAILED(variant->GetAsAString(astring)))
                 return false;
-            xpctvar.type = (uint8_t)TD_ASTRING;
-            xpctvar.val.p = &astring;
-            break;
+            nsAutoString *v = &astring;
+            return XPCConvert::NativeData2JS(lccx, pJSVal, (const void*)&v, TD_ASTRING, &iid, pErr);
+        }
         case nsIDataType::VTYPE_DOMSTRING:
+        {
+            nsAutoString astring;
             if (NS_FAILED(variant->GetAsAString(astring)))
                 return false;
-            xpctvar.type = (uint8_t)TD_DOMSTRING;
-            xpctvar.val.p = &astring;
-            break;
+            nsAutoString *v = &astring;
+            return XPCConvert::NativeData2JS(lccx, pJSVal, (const void*)&v,
+                                             TD_DOMSTRING, &iid, pErr);
+        }
         case nsIDataType::VTYPE_CSTRING:
+        {
+            nsAutoCString cString;
             if (NS_FAILED(variant->GetAsACString(cString)))
                 return false;
-            xpctvar.type = (uint8_t)TD_CSTRING;
-            xpctvar.val.p = &cString;
-            break;
+            nsAutoCString *v = &cString;
+            return XPCConvert::NativeData2JS(lccx, pJSVal, (const void*)&v,
+                                             TD_CSTRING, &iid, pErr);
+        }
         case nsIDataType::VTYPE_UTF8STRING:
+        {
+            nsUTF8String utf8String;
             if (NS_FAILED(variant->GetAsAUTF8String(utf8String)))
                 return false;
-            xpctvar.type = (uint8_t)TD_UTF8STRING;
-            xpctvar.val.p = &utf8String;
-            break;
+            nsUTF8String *v = &utf8String;
+            return XPCConvert::NativeData2JS(lccx, pJSVal, (const void*)&v,
+                                             TD_UTF8STRING, &iid, pErr);
+        }
         case nsIDataType::VTYPE_CHAR_STR:
-            if (NS_FAILED(variant->GetAsString((char**)&xpctvar.val.p)))
+        {
+            char *pc;
+            if (NS_FAILED(variant->GetAsString(&pc)))
                 return false;
-            xpctvar.type = (uint8_t)TD_PSTRING;
-            xpctvar.SetValNeedsCleanup();
-            break;
+            bool success = XPCConvert::NativeData2JS(lccx, pJSVal, (const void*)&pc,
+                                                     TD_PSTRING, &iid, pErr);
+            nsMemory::Free(pc);
+            return success;
+        }
         case nsIDataType::VTYPE_STRING_SIZE_IS:
-            if (NS_FAILED(variant->GetAsStringWithSize(&size,
-                                                       (char**)&xpctvar.val.p)))
+        {
+            char *pc;
+            uint32_t size;
+            if (NS_FAILED(variant->GetAsStringWithSize(&size, &pc)))
                 return false;
-            xpctvar.type = (uint8_t)TD_PSTRING_SIZE_IS;
-            xpctvar.SetValNeedsCleanup();
-            break;
+            bool success = XPCConvert::NativeStringWithSize2JS(cx, pJSVal, (const void*)&pc,
+                                                               TD_PSTRING_SIZE_IS, size, pErr);
+            nsMemory::Free(pc);
+            return success;
+        }
         case nsIDataType::VTYPE_WCHAR_STR:
-            if (NS_FAILED(variant->GetAsWString((PRUnichar**)&xpctvar.val.p)))
+        {
+            PRUnichar *pwc;
+            if (NS_FAILED(variant->GetAsWString(&pwc)))
                 return false;
-            xpctvar.type = (uint8_t)TD_PWSTRING;
-            xpctvar.SetValNeedsCleanup();
-            break;
+            bool success = XPCConvert::NativeData2JS(lccx, pJSVal, (const void*)&pwc,
+                                                     TD_PSTRING, &iid, pErr);
+            nsMemory::Free(pwc);
+            return success;
+        }
         case nsIDataType::VTYPE_WSTRING_SIZE_IS:
-            if (NS_FAILED(variant->GetAsWStringWithSize(&size,
-                                                        (PRUnichar**)&xpctvar.val.p)))
+        {
+            PRUnichar *pwc;
+            uint32_t size;
+            if (NS_FAILED(variant->GetAsWStringWithSize(&size, &pwc)))
                 return false;
-            xpctvar.type = (uint8_t)TD_PWSTRING_SIZE_IS;
-            xpctvar.SetValNeedsCleanup();
-            break;
+            bool success = XPCConvert::NativeStringWithSize2JS(cx, pJSVal, (const void*)&pwc,
+                                                               TD_PWSTRING_SIZE_IS, size, pErr);
+            nsMemory::Free(pwc);
+            return success;
+        }
         case nsIDataType::VTYPE_INTERFACE:
         case nsIDataType::VTYPE_INTERFACE_IS:
         {
+            nsISupports *pi;
             nsID* piid;
-            if (NS_FAILED(variant->GetAsInterface(&piid, &xpctvar.val.p)))
+            if (NS_FAILED(variant->GetAsInterface(&piid, (void **)&pi)))
                 return false;
 
             iid = *piid;
             nsMemory::Free((char*)piid);
 
-            xpctvar.type = (uint8_t)TD_INTERFACE_IS_TYPE;
-            if (xpctvar.val.p)
-                xpctvar.SetValNeedsCleanup();
-            break;
+            bool success = XPCConvert::NativeData2JS(lccx, pJSVal, (const void*)&pi,
+                                                     TD_INTERFACE_IS_TYPE, &iid, pErr);
+            if (pi)
+                pi->Release();
+            return success;
         }
         case nsIDataType::VTYPE_ARRAY:
         {
@@ -550,7 +577,7 @@ XPCVariant::VariantDataToJS(XPCLazyCallContext& lccx,
 
             // must exit via VARIANT_DONE from here on...
             du.mType = nsIDataType::VTYPE_ARRAY;
-            success = false;
+            bool success = false;
 
             nsXPTType conversionType;
             uint16_t elementType = du.u.array.mArrayType;
@@ -633,32 +660,6 @@ VARIANT_DONE:
             NS_ERROR("bad type in variant!");
             return false;
     }
-
-    // If we are here then we need to convert the data in the xpctvar.
-
-    if (xpctvar.type.TagPart() == TD_PSTRING_SIZE_IS ||
-        xpctvar.type.TagPart() == TD_PWSTRING_SIZE_IS) {
-        success = XPCConvert::NativeStringWithSize2JS(cx, pJSVal,
-                                                      (const void*)&xpctvar.val,
-                                                      xpctvar.type,
-                                                      size, pErr);
-    } else {
-        success = XPCConvert::NativeData2JS(lccx, pJSVal,
-                                            (const void*)&xpctvar.val,
-                                            xpctvar.type,
-                                            &iid, pErr);
-    }
-
-    // We may have done something in the above code that requires cleanup.
-    if (xpctvar.DoesValNeedCleanup()) {
-        if (type == nsIDataType::VTYPE_INTERFACE ||
-            type == nsIDataType::VTYPE_INTERFACE_IS)
-            ((nsISupports*)xpctvar.val.p)->Release();
-        else
-            nsMemory::Free((char*)xpctvar.val.p);
-    }
-
-    return success;
 }
 
 /***************************************************************************/

@@ -1417,10 +1417,12 @@ nsXPCComponents_Results::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
 /* bool newResolve (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in jsval id, in uint32_t flags, out JSObjectPtr objp); */
 NS_IMETHODIMP
 nsXPCComponents_Results::NewResolve(nsIXPConnectWrappedNative *wrapper,
-                                    JSContext * cx, JSObject * obj,
-                                    jsid id, uint32_t flags,
+                                    JSContext *cx, JSObject *objArg,
+                                    jsid idArg, uint32_t flags,
                                     JSObject * *objp, bool *_retval)
 {
+    RootedObject obj(cx, objArg);
+    RootedId id(cx, idArg);
     JSAutoByteString name;
 
     if (JSID_IS_STRING(id) && name.encodeLatin1(cx, JSID_TO_STRING(id))) {
@@ -4957,14 +4959,14 @@ JSBool
 nsXPCComponents::AttachComponentsObject(XPCCallContext& ccx,
                                         XPCWrappedNativeScope* aScope)
 {
-    JSObject *components = aScope->GetComponentsJSObject(ccx);
+    RootedObject components(ccx, aScope->GetComponentsJSObject(ccx));
     if (!components)
         return false;
 
-    JSObject *global = aScope->GetGlobalJSObject();
+    RootedObject global(ccx, aScope->GetGlobalJSObject());
     MOZ_ASSERT(js::IsObjectInContextCompartment(global, ccx));
 
-    jsid id = ccx.GetRuntime()->GetStringID(XPCJSRuntime::IDX_COMPONENTS);
+    RootedId id(ccx, ccx.GetRuntime()->GetStringID(XPCJSRuntime::IDX_COMPONENTS));
     JSPropertyOp getter = AccessCheck::isChrome(global) ? nullptr
                                                         : &ContentComponentsGetterOp;
     return JS_DefinePropertyById(ccx, global, id, js::ObjectValue(*components),
