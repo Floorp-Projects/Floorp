@@ -240,27 +240,32 @@ def MochitestCommand(func):
 
 @CommandProvider
 class MachCommands(MachCommandBase):
-    @Command('mochitest-plain', help='Run a plain mochitest.')
+    @Command('mochitest-plain', category='testing',
+        description='Run a plain mochitest.')
     @MochitestCommand
     def run_mochitest_plain(self, test_file, **kwargs):
         return self.run_mochitest(test_file, 'plain', **kwargs)
 
-    @Command('mochitest-chrome', help='Run a chrome mochitest.')
+    @Command('mochitest-chrome', category='testing',
+        description='Run a chrome mochitest.')
     @MochitestCommand
     def run_mochitest_chrome(self, test_file, **kwargs):
         return self.run_mochitest(test_file, 'chrome', **kwargs)
 
-    @Command('mochitest-browser', help='Run a mochitest with browser chrome.')
+    @Command('mochitest-browser', category='testing',
+        description='Run a mochitest with browser chrome.')
     @MochitestCommand
     def run_mochitest_browser(self, test_file, **kwargs):
         return self.run_mochitest(test_file, 'browser', **kwargs)
 
-    @Command('mochitest-metro', help='Run a mochitest with metro browser chrome.')
+    @Command('mochitest-metro', category='testing',
+        description='Run a mochitest with metro browser chrome.')
     @MochitestCommand
     def run_mochitest_metro(self, test_file, **kwargs):
         return self.run_mochitest(test_file, 'metro', **kwargs)
 
-    @Command('mochitest-a11y', help='Run an a11y mochitest.')
+    @Command('mochitest-a11y', category='testing',
+        description='Run an a11y mochitest.')
     @MochitestCommand
     def run_mochitest_a11y(self, test_file, **kwargs):
         return self.run_mochitest(test_file, 'a11y', **kwargs)

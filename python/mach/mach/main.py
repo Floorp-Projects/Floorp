@@ -17,7 +17,13 @@ import traceback
 import uuid
 import sys
 
-from .base import CommandContext
+from .base import (
+    CommandContext,
+    MachError,
+    NoCommandError,
+    UnknownCommandError,
+    UnrecognizedArgumentError,
+)
 
 from .decorators import (
     CommandArgument,
@@ -26,23 +32,39 @@ from .decorators import (
 )
 
 from .config import ConfigSettings
+from .dispatcher import CommandAction
 from .logging import LoggingManager
-
 from .registrar import Registrar
 
 
-# Settings for argument parser that don't get proxied to sub-module. i.e. these
-# are things consumed by the driver itself.
-CONSUMED_ARGUMENTS = [
-    'settings_file',
-    'verbose',
-    'logfile',
-    'log_interval',
-    'command',
-    'mach_class',
-    'mach_method',
-    'mach_pass_context',
-]
+AVATAR = '''
+                       _.-;:q=._
+                      .' j=""^k;:\.
+                     ; .F       ";`Y
+                    ,;.J_        ;'j
+                  ,-;"^7F       : .F
+                 ,-'-_<.        ;gj.
+                ;  _,._`\.     : `T"5
+                : `?8w7 `J  ,-'" -^q.
+                 \;._ _,=' ;   n58L Y.
+                   F;";  .' k_ `^'  j'
+                   J;:: ;     "y:-='
+                    L;;==      |:;   jT\\
+                    L;:;J      J:L  7:;'
+                    I;|:.L     |:k J:.'
+                    |;J:.|     ;.I F.:
+                    J;:L::     |.| |.J
+                    J:`J.`.    :.J |. L
+                     L :k:`._ ,',j J; |
+                     I :`=.:."_".'  L J
+                     |.:  `"-=-'    |.J
+                     `: :           ;:;
+                      J: :         /.;'
+                       k;.\.    _.;:Y'
+                        `Y;."-=';:='
+                          `"==="'
+'''
+
 
 MACH_ERROR = r'''
 The error occurred in mach itself. This is likely a bug in mach itself or a
@@ -73,6 +95,24 @@ The error occurred in code that was called by the mach command. This is either
 a bug in the called code itself or in the way that mach is calling it.
 
 You should consider filing a bug for this issue.
+'''.lstrip()
+
+NO_COMMAND_ERROR = r'''
+It looks like you tried to run mach without a command.
+
+Run |mach help| to show a list of commands.
+'''.lstrip()
+
+UNKNOWN_COMMAND_ERROR = r'''
+It looks like you are trying to %s an unknown mach command: %s
+
+Run |mach help| to show a list of commands.
+'''.lstrip()
+
+UNRECOGNIZED_ARGUMENT_ERROR = r'''
+It looks like you passed an unrecognized argument into mach.
+
+The %s command does not accept the arguments: %s
 '''.lstrip()
 
 
@@ -177,6 +217,11 @@ To see more help for a specific command, run:
 
         imp.load_source(module_name, path)
 
+    def define_category(self, name, title, description, priority=50):
+        """Provide a description for a named command category."""
+
+        Registrar.register_category(name, title, description, priority)
+
     def run(self, argv, stdin=None, stdout=None, stderr=None):
         """Runs mach with arguments provided from the command line.
 
@@ -248,18 +293,21 @@ To see more help for a specific command, run:
             parser.print_usage()
             return 0
 
-        args = parser.parse_args(argv)
-
-        if args.command == 'help':
-            if args.subcommand is None:
-                parser.usage = \
-                    '%(prog)s [global arguments] command [command arguments]'
-                parser.print_help()
-                return 0
-
-            handler = Registrar.command_handlers[args.subcommand]
-            handler.parser.print_help()
-            return 0
+        try:
+            args = parser.parse_args(argv)
+        except NoCommandError:
+            print(AVATAR)
+            print(NO_COMMAND_ERROR)
+            return 1
+        except UnknownCommandError as e:
+            print(AVATAR)
+            print(UNKNOWN_COMMAND_ERROR % (e.verb, e.command))
+            return 1
+        except UnrecognizedArgumentError as e:
+            print(AVATAR)
+            print(UNRECOGNIZED_ARGUMENT_ERROR % (e.command,
+                ' '.join(e.arguments)))
+            return 1
 
         # Add JSON logging to a file if requested.
         if args.logfile:
@@ -279,27 +327,25 @@ To see more help for a specific command, run:
 
         self.load_settings(args)
 
-        stripped = {k: getattr(args, k) for k in vars(args) if k not in
-            CONSUMED_ARGUMENTS}
+        if not hasattr(args, 'mach_handler'):
+            raise MachError('ArgumentParser result missing mach handler info.')
 
         context = CommandContext(topdir=self.cwd, cwd=self.cwd,
             settings=self.settings, log_manager=self.log_manager,
             commands=Registrar)
 
-        if not hasattr(args, 'mach_class'):
-            raise Exception('ArgumentParser result missing mach_class.')
+        handler = getattr(args, 'mach_handler')
+        cls = handler.cls
 
-        cls = getattr(args, 'mach_class')
-
-        if getattr(args, 'mach_pass_context'):
+        if handler.pass_context:
             instance = cls(context)
         else:
             instance = cls()
 
-        fn = getattr(instance, getattr(args, 'mach_method'))
+        fn = getattr(instance, handler.method)
 
         try:
-            result = fn(**stripped)
+            result = fn(**vars(args.command_args))
 
             if not result:
                 result = 0
@@ -419,17 +465,11 @@ To see more help for a specific command, run:
         """Returns an argument parser for the command-line interface."""
 
         parser = ArgumentParser(add_help=False,
-            usage='%(prog)s [global arguments]')
+            usage='%(prog)s [global arguments] command [command arguments]')
 
         # Order is important here as it dictates the order the auto-generated
         # help messages are printed.
-        subparser = parser.add_subparsers(dest='command', title='Commands')
-        parser.set_defaults(command='help')
-
         global_group = parser.add_argument_group('Global Arguments')
-
-        global_group.add_argument('-h', '--help', action='help',
-            help='Show this help message and exit.')
 
         #global_group.add_argument('--settings', dest='settings_file',
         #    metavar='FILENAME', help='Path to settings file.')
@@ -446,14 +486,10 @@ To see more help for a specific command, run:
                 'than relative time. Note that this is NOT execution time '
                 'if there are parallel operations.')
 
-        Registrar.populate_argument_parser(subparser)
+        # We need to be last because CommandAction swallows all remaining
+        # arguments and argparse parses arguments in the order they were added.
+        parser.add_argument('command', action=CommandAction,
+            registrar=Registrar)
 
         return parser
 
-    @Command('help', help='Show mach usage info or help for a command.')
-    @CommandArgument('subcommand', default=None, nargs='?',
-        help='Command to show help info for.')
-    def _help(self, subcommand=None):
-        # The built-in handler doesn't pass the original ArgumentParser into
-        # handlers (yet). This command is currently handled by _run().
-        assert False
