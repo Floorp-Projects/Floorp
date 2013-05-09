@@ -2062,6 +2062,21 @@ chatbox {
 
 %include ../shared/customizableui/customizeMode.inc.css
 
+#main-window[customizing] #tab-view-deck {
+  background-image: url("chrome://browser/skin/customizableui/customizeMode-gridTexture.png"),
+                    url("chrome://browser/skin/customizableui/background-noise-toolbar.png"),
+                    linear-gradient(to bottom, #bcbcbc, #b5b5b5);
+  background-attachment: fixed;
+}
+
+#main-window[customizing] #tab-view-deck {
+  padding: 2em;
+}
+
+#main-window[customizing] #tab-view-deck > #browser-panel {
+  box-shadow: 0 0 3px #333;
+}
+
 /* End customization mode */
 
 .click-to-play-plugins-notification-content {
