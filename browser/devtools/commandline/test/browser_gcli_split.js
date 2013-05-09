@@ -36,7 +36,6 @@ function test() {
 'use strict';
 
 // var assert = require('test/assert');
-var cli = require('gcli/cli');
 var Requisition = require('gcli/cli').Requisition;
 var canon = require('gcli/canon');
 // var mockCommands = require('gclitest/mockCommands');
@@ -52,26 +51,26 @@ exports.shutdown = function(options) {
 
 exports.testSplitSimple = function(options) {
   var args;
-  var requisition = new Requisition();
+  var requ = new Requisition();
 
-  args = cli.tokenize('s');
-  requisition._split(args);
+  args = requ._tokenize('s');
+  requ._split(args);
   assert.is(0, args.length);
-  assert.is('s', requisition.commandAssignment.arg.text);
+  assert.is('s', requ.commandAssignment.arg.text);
 };
 
 exports.testFlatCommand = function(options) {
   var args;
-  var requisition = new Requisition();
+  var requ = new Requisition();
 
-  args = cli.tokenize('tsv');
-  requisition._split(args);
+  args = requ._tokenize('tsv');
+  requ._split(args);
   assert.is(0, args.length);
-  assert.is('tsv', requisition.commandAssignment.value.name);
+  assert.is('tsv', requ.commandAssignment.value.name);
 
-  args = cli.tokenize('tsv a b');
-  requisition._split(args);
-  assert.is('tsv', requisition.commandAssignment.value.name);
+  args = requ._tokenize('tsv a b');
+  requ._split(args);
+  assert.is('tsv', requ.commandAssignment.value.name);
   assert.is(2, args.length);
   assert.is('a', args[0].text);
   assert.is('b', args[1].text);
@@ -84,14 +83,14 @@ exports.testJavascript = function(options) {
   }
 
   var args;
-  var requisition = new Requisition();
+  var requ = new Requisition();
 
-  args = cli.tokenize('{');
-  requisition._split(args);
+  args = requ._tokenize('{');
+  requ._split(args);
   assert.is(1, args.length);
   assert.is('', args[0].text);
-  assert.is('', requisition.commandAssignment.arg.text);
-  assert.is('{', requisition.commandAssignment.value.name);
+  assert.is('', requ.commandAssignment.arg.text);
+  assert.is('{', requ.commandAssignment.value.name);
 };
 
 // BUG 663081 - add tests for sub commands
