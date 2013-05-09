@@ -12,6 +12,8 @@
  * and create derivative works of this document.
  */
 
+interface DOMStringMap;
+
 interface HTMLElement : Element {
   // metadata attributes
            attribute DOMString title;
