@@ -15,7 +15,8 @@ class BuiltinCommands(object):
     def __init__(self, context):
         self.context = context
 
-    @Command('mach-debug-commands', help='Show info about available mach commands.')
+    @Command('mach-debug-commands', category='misc',
+        description='Show info about available mach commands.')
     def commands(self):
         import inspect
 
