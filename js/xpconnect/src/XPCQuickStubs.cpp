@@ -213,11 +213,11 @@ GetMemberInfo(JSObject *obj, jsid memberId, const char **ifaceName)
 static void
 GetMethodInfo(JSContext *cx, jsval *vp, const char **ifaceNamep, jsid *memberIdp)
 {
-    JSObject *funobj = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
+    RootedObject funobj(cx, JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)));
     NS_ASSERTION(JS_ObjectIsFunction(cx, funobj),
                  "JSNative callee should be Function object");
-    JSString *str = JS_GetFunctionId(JS_GetObjectFunction(funobj));
-    jsid methodId = str ? INTERNED_STRING_TO_JSID(cx, str) : JSID_VOID;
+    RootedString str(cx, JS_GetFunctionId(JS_GetObjectFunction(funobj)));
+    RootedId methodId(cx, str ? INTERNED_STRING_TO_JSID(cx, str) : JSID_VOID);
     GetMemberInfo(JSVAL_TO_OBJECT(vp[1]), methodId, ifaceNamep);
     *memberIdp = methodId;
 }
@@ -361,8 +361,8 @@ void
 xpc_qsThrowBadArg(JSContext *cx, nsresult rv, jsval *vp, unsigned paramnum)
 {
     const char *ifaceName;
-    jsid memberId;
-    GetMethodInfo(cx, vp, &ifaceName, &memberId);
+    RootedId memberId(cx);
+    GetMethodInfo(cx, vp, &ifaceName, memberId.address());
     ThrowBadArg(cx, rv, ifaceName, memberId, NULL, paramnum);
 }
 
@@ -381,8 +381,9 @@ xpc_qsThrowBadArgWithDetails(JSContext *cx, nsresult rv, unsigned paramnum,
 
 void
 xpc_qsThrowBadSetterValue(JSContext *cx, nsresult rv,
-                          JSObject *obj, jsid propId)
+                          JSObject *obj, jsid propIdArg)
 {
+    RootedId propId(cx, propIdArg);
     const char *ifaceName;
     GetMemberInfo(obj, propId, &ifaceName);
     ThrowBadArg(cx, rv, ifaceName, propId, NULL, 0);

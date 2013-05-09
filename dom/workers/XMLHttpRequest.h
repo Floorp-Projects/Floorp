@@ -289,7 +289,7 @@ private:
   MaybeDispatchPrematureAbortEvents(ErrorResult& aRv);
 
   void
-  DispatchPrematureAbortEvent(JSObject* aTarget, uint8_t aEventType,
+  DispatchPrematureAbortEvent(JS::Handle<JSObject*> aTarget, uint8_t aEventType,
                               bool aUploadTarget, ErrorResult& aRv);
 
   bool

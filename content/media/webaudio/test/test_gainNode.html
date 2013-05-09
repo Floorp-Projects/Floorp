@@ -10,57 +10,49 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-SimpleTest.waitForExplicitFinish();
-addLoadEvent(function() {
-  SpecialPowers.setBoolPref("media.webaudio.enabled", true);
+var gTest = {
+  length: 2048,
+  numberOfChannels: 1,
+  createGraph: function(context) {
+    var buffer = context.createBuffer(1, 2048, context.sampleRate);
+    for (var i = 0; i < 2048; ++i) {
+      buffer.getChannelData(0)[i] = Math.sin(440 * 2 * Math.PI * i / context.sampleRate);
+    }
 
-  var context = new AudioContext();
-  var buffer = context.createBuffer(1, 2048, context.sampleRate);
-  for (var i = 0; i < 2048; ++i) {
-    buffer.getChannelData(0)[i] = Math.sin(440 * 2 * Math.PI * i / context.sampleRate);
-  }
-  var expectedBuffer = context.createBuffer(1, 2048, context.sampleRate);
-  for (var i = 0; i < 2048; ++i) {
-    expectedBuffer.getChannelData(0)[i] = buffer.getChannelData(0)[i] / 2;
-  }
+    var source = context.createBufferSource();
 
-  var destination = context.destination;
+    var gain = context.createGain();
 
-  var source = context.createBufferSource();
+    var gain2 = context.createGainNode();
+    isnot(gain, gain2, "createGainNode should create a different gain node");
 
-  var gain = context.createGain();
+    source.buffer = buffer;
 
-  var gain2 = context.createGainNode();
-  isnot(gain, gain2, "createGainNode should create a different gain node");
+    source.connect(gain);
 
-  source.buffer = buffer;
+    ok(gain.gain, "The audioparam member must exist");
+    is(gain.gain.value, 1.0, "Correct initial value");
+    is(gain.gain.defaultValue, 1.0, "Correct default value");
+    gain.gain.value = 0.5;
+    is(gain.gain.value, 0.5, "Correct initial value");
+    is(gain.gain.defaultValue, 1.0, "Correct default value");
+    is(gain.channelCount, 2, "gain node has 2 input channels by default");
+    is(gain.channelCountMode, "max", "Correct channelCountMode for the gain node");
+    is(gain.channelInterpretation, "speakers", "Correct channelCountInterpretation for the gain node");
 
-  source.connect(gain);
-  var sp = context.createScriptProcessor(2048, 1);
-  gain.connect(sp);
-  sp.connect(destination);
+    source.start(0);
+    return gain;
+  },
+  createExpectedBuffers: function(context) {
+    var expectedBuffer = context.createBuffer(1, 2048, context.sampleRate);
+    for (var i = 0; i < 2048; ++i) {
+      expectedBuffer.getChannelData(0)[i] = Math.sin(440 * 2 * Math.PI * i / context.sampleRate) / 2;
+    }
+    return expectedBuffer;
+  },
+};
 
-  ok(gain.gain, "The audioparam member must exist");
-  is(gain.gain.value, 1.0, "Correct initial value");
-  is(gain.gain.defaultValue, 1.0, "Correct default value");
-  gain.gain.value = 0.5;
-  is(gain.gain.value, 0.5, "Correct initial value");
-  is(gain.gain.defaultValue, 1.0, "Correct default value");
-  is(gain.channelCount, 2, "gain node has 2 input channels by default");
-  is(gain.channelCountMode, "max", "Correct channelCountMode for the gain node");
-  is(gain.channelInterpretation, "speakers", "Correct channelCountInterpretation for the gain node");
-
-  source.start(0);
-  sp.onaudioprocess = function(e) {
-    is(e.inputBuffer.numberOfChannels, 1, "Correct input channel count");
-    compareBuffers(e.inputBuffer.getChannelData(0), expectedBuffer.getChannelData(0));
-
-    sp.onaudioprocess = null;
-
-    SpecialPowers.clearUserPref("media.webaudio.enabled");
-    SimpleTest.finish();
-  };
-});
+runTest();
 
 </script>
 </pre>

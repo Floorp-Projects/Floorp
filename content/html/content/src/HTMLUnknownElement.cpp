@@ -24,8 +24,8 @@ HTMLUnknownElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
     // If we have a registered x-tag then we fix the prototype.
     JSAutoCompartment ac(aCx, obj);
     nsDocument* document = static_cast<nsDocument*>(OwnerDoc());
-    JS::Rooted<JSObject*> prototype(aCx,
-      document->GetCustomPrototype(LocalName()));
+    JS::Rooted<JSObject*> prototype(aCx);
+    document->GetCustomPrototype(LocalName(), &prototype);
     if (prototype) {
       NS_ENSURE_TRUE(JS_WrapObject(aCx, prototype.address()), nullptr);
       NS_ENSURE_TRUE(JS_SetPrototype(aCx, obj, prototype), nullptr);

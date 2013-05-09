@@ -88,21 +88,17 @@ IonFrameIterator::calleeToken() const
 JSFunction *
 IonFrameIterator::callee() const
 {
-    if (isScripted()) {
-        JS_ASSERT(isFunctionFrame() || isParallelFunctionFrame());
-        if (isFunctionFrame())
-            return CalleeTokenToFunction(calleeToken());
-        return CalleeTokenToParallelFunction(calleeToken());
-    }
-
-    JS_ASSERT(isNative());
-    return exitFrame()->nativeExit()->vp()[0].toObject().toFunction();
+    JS_ASSERT(isScripted());
+    JS_ASSERT(isFunctionFrame() || isParallelFunctionFrame());
+    if (isFunctionFrame())
+        return CalleeTokenToFunction(calleeToken());
+    return CalleeTokenToParallelFunction(calleeToken());
 }
 
 JSFunction *
 IonFrameIterator::maybeCallee() const
 {
-    if ((isScripted() && (isFunctionFrame() || isParallelFunctionFrame())) || isNative())
+    if (isScripted() && (isFunctionFrame() || isParallelFunctionFrame()))
         return callee();
     return NULL;
 }
@@ -523,8 +519,8 @@ HandleException(ResumeFromException *rfe)
         if (current) {
             // Unwind the frame by updating ionTop. This is necessary so that
             // (1) debugger exception unwind and leave frame hooks don't see this
-            // frame when they use StackIter, and (2) StackIter does not crash
-            // when accessing an IonScript that's destroyed by the
+            // frame when they use ScriptFrameIter, and (2) ScriptFrameIter does
+            // not crash when accessing an IonScript that's destroyed by the
             // ionScript->decref call.
             EnsureExitFrame(current);
             cx->mainThread().ionTop = (uint8_t *)current;
