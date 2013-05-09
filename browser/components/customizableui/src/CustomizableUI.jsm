@@ -610,7 +610,8 @@ let CustomizableUIInternal = {
         this.ensureButtonClosesPanel(widgetNode);
       }
 
-      let nextNode = container.querySelector("#" + nextNodeId);
+      let nextNode = nextNodeId ? container.querySelector(idToSelector(nextNodeId))
+                                : null;
       container.insertBefore(widgetNode, nextNode);
       this._addParentFlex(widgetNode);
     }
@@ -657,13 +658,16 @@ let CustomizableUIInternal = {
 
     for (let areaNode of areaNodes) {
       let container = areaNode.customizationTarget;
-      let widgetNode = container.ownerDocument.getElementById(aWidgetId);
+      let [provider, widgetNode] = this.getWidgetNode(aWidgetId,
+                                                      container.ownerDocument,
+                                                      areaNode.toolbox);
       if (!widgetNode) {
         ERROR("Widget not found, unable to move");
         continue;
       }
 
-      let nextNode = container.querySelector("#" + nextNodeId);
+      let nextNode = nextNodeId ? container.querySelector(idToSelector(nextNodeId))
+                                : null;
       container.insertBefore(widgetNode, nextNode);
     }
   },
@@ -756,7 +760,7 @@ let CustomizableUIInternal = {
     if (aToolbox.palette) {
       // Attempt to locate a node with a matching ID within
       // the palette.
-      return aToolbox.palette.querySelector("#" + aId);
+      return aToolbox.palette.querySelector(idToSelector(aId));
     }
     return null;
   },
@@ -990,10 +994,12 @@ let CustomizableUIInternal = {
     }
 
     let placements = gPlacements.get(oldPlacement.area);
-    if (aPosition < 0) {
+    if (typeof aPosition != "number") {
+      aPosition = placements.length;
+    } else if (aPosition < 0) {
       aPosition = 0;
-    } else if (aPosition > placements.length - 1) {
-      aPosition = placements.length - 1;
+    } else if (aPosition > placements.length) {
+      aPosition = placements.length;
     }
 
     if (aPosition == oldPlacement.position) {
@@ -1736,7 +1742,7 @@ function XULWidgetGroupWrapper(aWidgetId) {
     if (!instance) {
       // Toolbar palettes aren't part of the document, so elements in there
       // won't be found via document.getElementById().
-      instance = aWindow.gNavToolbox.palette.querySelector("#" + aWidgetId);
+      instance = aWindow.gNavToolbox.palette.querySelector(idToSelector(aWidgetId));
     }
 
     let wrapper = gWrapperCache.get(instance);
@@ -1766,5 +1772,9 @@ function XULWidgetSingleWrapper(aWidgetId, aNode) {
   Object.freeze(this);
 }
 
+// When IDs contain special characters, we need to escape them for use with querySelector:
+function idToSelector(aId) {
+  return "#" + aId.replace(/[ !"'#$%&\(\)*+\-,.\/:;<=>?@\[\\\]^`{|}~]/g, '\\$&');
+}
 
 CustomizableUIInternal.initialize();
