@@ -3396,8 +3396,15 @@ class Parser(Tokenizer):
         try:
             if self.globalScope()._lookupIdentifier(identifier):
                 p[0] = self.globalScope()._lookupIdentifier(identifier)
+                if not isinstance(p[0], IDLExternalInterface):
+                    raise WebIDLError("Name collision between external "
+                                      "interface declaration for identifier "
+                                      "%s and %s" % (identifier.name, p[0]),
+                                      [location, p[0].location])
                 return
-        except:
+        except Exception, ex:
+            if isinstance(ex, WebIDLError):
+                raise ex
             pass
 
         p[0] = IDLExternalInterface(location, self.globalScope(), identifier)
