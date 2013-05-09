@@ -19,12 +19,14 @@
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
 #include "nsTArrayHelpers.h"
+#include "nsThreadUtils.h"
 
 #include "TelephonyCall.h"
 
 #define NS_RILCONTENTHELPER_CONTRACTID "@mozilla.org/ril/content-helper;1"
 
 USING_TELEPHONY_NAMESPACE
+using namespace mozilla::dom;
 
 namespace {
 
@@ -56,8 +58,27 @@ public:
   }
 };
 
+class Telephony::EnumerationAck : public nsRunnable
+{
+  nsRefPtr<Telephony> mTelephony;
+
+public:
+  EnumerationAck(Telephony* aTelephony)
+  : mTelephony(aTelephony)
+  {
+    MOZ_ASSERT(mTelephony);
+  }
+
+  NS_IMETHOD Run()
+  {
+    mTelephony->NotifyCallsChanged(nullptr);
+    return NS_OK;
+  }
+};
+
 Telephony::Telephony()
-: mActiveCall(nullptr), mCallsArray(nullptr), mRooted(false)
+: mActiveCall(nullptr), mCallsArray(nullptr), mRooted(false),
+  mEnumerated(false)
 {
   if (!gTelephonyList) {
     gTelephonyList = new TelephonyList();
@@ -145,13 +166,15 @@ Telephony::NoteDialedCallFromOtherInstance(const nsAString& aNumber)
 nsresult
 Telephony::NotifyCallsChanged(TelephonyCall* aCall)
 {
-  if (aCall->CallState() == nsITelephonyProvider::CALL_STATE_DIALING ||
-      aCall->CallState() == nsITelephonyProvider::CALL_STATE_ALERTING ||
-      aCall->CallState() == nsITelephonyProvider::CALL_STATE_CONNECTED) {
-    NS_ASSERTION(!mActiveCall, "Already have an active call!");
-    mActiveCall = aCall;
-  } else if (mActiveCall && mActiveCall->CallIndex() == aCall->CallIndex()) {
-    mActiveCall = nullptr;
+  if (aCall) {
+    if (aCall->CallState() == nsITelephonyProvider::CALL_STATE_DIALING ||
+        aCall->CallState() == nsITelephonyProvider::CALL_STATE_ALERTING ||
+        aCall->CallState() == nsITelephonyProvider::CALL_STATE_CONNECTED) {
+      NS_ASSERTION(!mActiveCall, "Already have an active call!");
+      mActiveCall = aCall;
+    } else if (mActiveCall && mActiveCall->CallIndex() == aCall->CallIndex()) {
+      mActiveCall = nullptr;
+    }
   }
 
   return DispatchCallEvent(NS_LITERAL_STRING("callschanged"), aCall);
@@ -232,6 +255,8 @@ NS_IMPL_RELEASE_INHERITED(Telephony, nsDOMEventTargetHelper)
 DOMCI_DATA(Telephony, Telephony)
 
 NS_IMPL_ISUPPORTS1(Telephony::Listener, nsITelephonyListener)
+
+// nsIDOMTelephony
 
 NS_IMETHODIMP
 Telephony::Dial(const nsAString& aNumber, nsIDOMTelephonyCall** aResult)
@@ -362,7 +387,176 @@ Telephony::StopTone()
 }
 
 NS_IMPL_EVENT_HANDLER(Telephony, incoming)
-NS_IMPL_EVENT_HANDLER(Telephony, callschanged)
+
+NS_IMETHODIMP
+Telephony::GetOncallschanged(JSContext* aCx, JS::Value* aValue)
+{
+  GetEventHandler(nsGkAtoms::oncallschanged, aCx, aValue);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+Telephony::SetOncallschanged(JSContext* aCx, const JS::Value& aValue)
+{
+  JS::Value value;
+  GetEventHandler(nsGkAtoms::oncallschanged, aCx, &value);
+  if (aValue == value) {
+    // The event handler is being set to itself.
+    return NS_OK;
+  }
+
+  nsresult rv = SetEventHandler(nsGkAtoms::oncallschanged, aCx, aValue);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  // Fire oncallschanged on the next tick if the calls array is ready.
+  EnqueueEnumerationAck();
+
+  return NS_OK;
+}
+
+// nsIDOMEventTarget
+
+NS_IMETHODIMP
+Telephony::AddEventListener(const nsAString& aType,
+                            nsIDOMEventListener* aListener, bool aUseCapture,
+                            bool aWantsUntrusted, uint8_t aArgc)
+{
+  nsresult rv = nsDOMEventTargetHelper::AddEventListener(aType, aListener,
+                                                         aUseCapture,
+                                                         aWantsUntrusted,
+                                                         aArgc);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aType.EqualsLiteral("callschanged")) {
+    // Fire oncallschanged on the next tick if the calls array is ready.
+    EnqueueEnumerationAck();
+  }
+
+  return NS_OK;
+}
+
+void
+Telephony::AddEventListener(const nsAString& aType,
+                            nsIDOMEventListener* aListener, bool aUseCapture,
+                            const Nullable<bool>& aWantsUntrusted,
+                            ErrorResult& aRv)
+{
+  nsDOMEventTargetHelper::AddEventListener(aType, aListener, aUseCapture,
+                                           aWantsUntrusted, aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  if (aType.EqualsLiteral("callschanged")) {
+    // Fire oncallschanged on the next tick if the calls array is ready.
+    EnqueueEnumerationAck();
+  }
+}
+
+NS_IMETHODIMP
+Telephony::AddSystemEventListener(const nsAString& aType,
+                                  nsIDOMEventListener* aListener,
+                                  bool aUseCapture, bool aWantsUntrusted,
+                                  uint8_t aArgc)
+{
+  nsresult rv = nsDOMEventTargetHelper::AddSystemEventListener(aType, aListener,
+                                                               aUseCapture,
+                                                               aWantsUntrusted,
+                                                               aArgc);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aType.EqualsLiteral("callschanged")) {
+    // Fire oncallschanged on the next tick if the calls array is ready.
+    EnqueueEnumerationAck();
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+Telephony::RemoveEventListener(const nsAString& aType,
+                               nsIDOMEventListener* aListener,
+                               bool aUseCapture)
+{
+  return nsDOMEventTargetHelper::RemoveEventListener(aType, aListener, false);
+}
+
+NS_IMETHODIMP
+Telephony::RemoveSystemEventListener(const nsAString& aType,
+                                     nsIDOMEventListener* aListener,
+                                     bool aUseCapture)
+{
+  return nsDOMEventTargetHelper::RemoveSystemEventListener(aType, aListener,
+                                                           aUseCapture);
+}
+
+NS_IMETHODIMP
+Telephony::DispatchEvent(nsIDOMEvent* aEvt, bool* aRetval)
+{
+  return nsDOMEventTargetHelper::DispatchEvent(aEvt, aRetval);
+}
+
+EventTarget*
+Telephony::GetTargetForDOMEvent()
+{
+  return nsDOMEventTargetHelper::GetTargetForDOMEvent();
+}
+
+EventTarget*
+Telephony::GetTargetForEventTargetChain()
+{
+  return nsDOMEventTargetHelper::GetTargetForEventTargetChain();
+}
+
+nsresult
+Telephony::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+{
+  return nsDOMEventTargetHelper::PreHandleEvent(aVisitor);
+}
+
+nsresult
+Telephony::WillHandleEvent(nsEventChainPostVisitor& aVisitor)
+{
+  return nsDOMEventTargetHelper::WillHandleEvent(aVisitor);
+}
+
+nsresult
+Telephony::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
+{
+  return nsDOMEventTargetHelper::PostHandleEvent(aVisitor);
+}
+
+nsresult
+Telephony::DispatchDOMEvent(nsEvent* aEvent, nsIDOMEvent* aDOMEvent,
+                            nsPresContext* aPresContext,
+                            nsEventStatus* aEventStatus)
+{
+  return nsDOMEventTargetHelper::DispatchDOMEvent(aEvent, aDOMEvent,
+                                                  aPresContext,
+                                                  aEventStatus);
+}
+
+nsEventListenerManager*
+Telephony::GetListenerManager(bool aMayCreate)
+{
+  return nsDOMEventTargetHelper::GetListenerManager(aMayCreate);
+}
+
+nsIScriptContext*
+Telephony::GetContextForEventHandlers(nsresult* aRv)
+{
+  return nsDOMEventTargetHelper::GetContextForEventHandlers(aRv);
+}
+
+JSContext*
+Telephony::GetJSContextForEventHandlers()
+{
+  return nsDOMEventTargetHelper::GetJSContextForEventHandlers();
+}
+
+// nsITelephonyListener
 
 NS_IMETHODIMP
 Telephony::CallStateChanged(uint32_t aCallIndex, uint16_t aCallState,
@@ -441,6 +635,19 @@ Telephony::CallStateChanged(uint32_t aCallIndex, uint16_t aCallState,
 }
 
 NS_IMETHODIMP
+Telephony::EnumerateCallStateComplete()
+{
+  MOZ_ASSERT(!mEnumerated);
+
+  mEnumerated = true;
+
+  if (NS_FAILED(NotifyCallsChanged(nullptr))) {
+    NS_WARNING("Failed to notify calls changed!");
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 Telephony::EnumerateCallState(uint32_t aCallIndex, uint16_t aCallState,
                               const nsAString& aNumber, bool aIsActive,
                               bool aIsOutgoing, bool aIsEmergency,
@@ -506,7 +713,9 @@ nsresult
 Telephony::DispatchCallEvent(const nsAString& aType,
                              nsIDOMTelephonyCall* aCall)
 {
-  MOZ_ASSERT(aCall);
+  // We will notify enumeration being completed by firing oncallschanged.
+  // We only ever have a null call with that event type.
+  MOZ_ASSERT(aCall || aType.EqualsLiteral("callschanged"));
 
   nsCOMPtr<nsIDOMEvent> event;
   NS_NewDOMCallEvent(getter_AddRefs(event), this, nullptr, nullptr);
@@ -518,6 +727,19 @@ Telephony::DispatchCallEvent(const nsAString& aType,
   NS_ENSURE_SUCCESS(rv, rv);
 
   return DispatchTrustedEvent(callEvent);
+}
+
+void
+Telephony::EnqueueEnumerationAck()
+{
+  if (!mEnumerated) {
+    return;
+  }
+
+  nsCOMPtr<nsIRunnable> task = new EnumerationAck(this);
+  if (NS_FAILED(NS_DispatchToCurrentThread(task))) {
+    NS_WARNING("Failed to dispatch to current thread!");
+  }
 }
 
 nsresult
