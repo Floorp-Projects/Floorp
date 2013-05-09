@@ -534,6 +534,11 @@ NS_IMETHODIMP nsCocoaWindow::Destroy()
   return NS_OK;
 }
 
+nsIWidget* nsCocoaWindow::GetParent()
+{
+  return mParent;
+}
+
 nsIWidget* nsCocoaWindow::GetSheetWindowParent(void)
 {
   if (mWindowType != eWindowType_sheet)
