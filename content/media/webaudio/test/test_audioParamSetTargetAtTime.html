@@ -10,53 +10,44 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-SimpleTest.waitForExplicitFinish();
-addLoadEvent(function() {
-  SpecialPowers.setBoolPref("media.webaudio.enabled", true);
+var V0 = 0.1;
+var V1 = 0.9;
+var T0 = 0;
+var TimeConstant = 10;
 
-  var context = new AudioContext();
+var gTest = {
+  length: 2048,
+  numberOfChannels: 1,
+  createGraph: function(context) {
+    var sourceBuffer = context.createBuffer(1, 2048, context.sampleRate);
+    for (var i = 0; i < 2048; ++i) {
+      sourceBuffer.getChannelData(0)[i] = 1;
+    }
 
-  var V0 = 0.1;
-  var V1 = 0.9;
-  var T0 = 0;
-  var T1 = 2048 / context.sampleRate;
-  var TimeConstant = 10;
+    var source = context.createBufferSource();
+    source.buffer = sourceBuffer;
 
-  var sourceBuffer = context.createBuffer(1, 2048, context.sampleRate);
-  for (var i = 0; i < 2048; ++i) {
-    sourceBuffer.getChannelData(0)[i] = 1;
-  }
-  var expectedBuffer = context.createBuffer(1, 2048, context.sampleRate);
-  for (var i = 0; i < 2048; ++i) {
-    var t = i / context.sampleRate;
-    expectedBuffer.getChannelData(0)[i] = V1 + (V0 - V1) * Math.exp(-(t - T0) / TimeConstant);
-  }
+    var gain = context.createGain();
+    gain.gain.value = V0;
+    gain.gain.setTargetAtTime(V1, T0, TimeConstant);
 
-  var destination = context.destination;
+    source.connect(gain);
 
-  var source = context.createBufferSource();
-  source.buffer = sourceBuffer;
+    source.start(0);
+    return gain;
+  },
+  createExpectedBuffers: function(context) {
+    var T1 = 2048 / context.sampleRate;
+    var expectedBuffer = context.createBuffer(1, 2048, context.sampleRate);
+    for (var i = 0; i < 2048; ++i) {
+      var t = i / context.sampleRate;
+      expectedBuffer.getChannelData(0)[i] = V1 + (V0 - V1) * Math.exp(-(t - T0) / TimeConstant);
+    }
+    return expectedBuffer;
+  },
+};
 
-  var gain = context.createGain();
-  gain.gain.value = V0;
-  gain.gain.setTargetAtTime(V1, T0, TimeConstant);
-
-  var sp = context.createScriptProcessor(2048, 1);
-  source.connect(gain);
-  gain.connect(sp);
-  sp.connect(destination);
-
-  source.start(0);
-  sp.onaudioprocess = function(e) {
-    is(e.inputBuffer.numberOfChannels, 1, "Correct input channel count");
-    compareBuffers(e.inputBuffer.getChannelData(0), expectedBuffer.getChannelData(0));
-
-    sp.onaudioprocess = null;
-
-    SpecialPowers.clearUserPref("media.webaudio.enabled");
-    SimpleTest.finish();
-  };
-});
+runTest();
 
 </script>
 </pre>
