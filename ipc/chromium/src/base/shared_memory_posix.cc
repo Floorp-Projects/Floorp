@@ -194,29 +194,15 @@ bool SharedMemory::CreateOrOpen(const std::wstring &name,
   // not portable."
   if (size && (posix_flags & (O_RDWR | O_CREAT))) {
     // Get current size.
-    size_t current_size = 0;
     struct stat stat;
     if (fstat(fileno(fp), &stat) != 0)
       return false;
-    current_size = stat.st_size;
-    // Possibly grow.
-    if (current_size < size) {
-      if (fseeko(fp, current_size, SEEK_SET) != 0)
+    size_t current_size = stat.st_size;
+    if (current_size != size) {
+      if (ftruncate(fileno(fp), size) != 0)
         return false;
-      size_t writesize = size - current_size;
-      scoped_array<char> buf(new char[writesize]);
-      memset(buf.get(), 0, writesize);
-      if (fwrite(buf.get(), 1, writesize, fp) != writesize) {
-          return false;
-      }
-      if (fflush(fp) != 0)
+      if (fseeko(fp, size, SEEK_SET) != 0)
         return false;
-    } else if (current_size > size) {
-      // possibly shrink.
-      if ((ftruncate(fileno(fp), size) != 0) ||
-          (fflush(fp) != 0)) {
-        return false;
-      }
     }
   }
 
