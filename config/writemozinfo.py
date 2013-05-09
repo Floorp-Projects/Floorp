@@ -29,11 +29,10 @@ def build_dict(env=os.environ):
         raise Exception("Missing required environment variables: %s" %
                         ', '.join(missing))
 
-    if 'MOZCONFIG' in env:
-        d["mozconfig"] = env["MOZCONFIG"]
+    d["topsrcdir"] = env["TOPSRCDIR"]
 
-    if 'TOPSRCDIR' in env:
-        d["topsrcdir"] = env["TOPSRCDIR"]
+    if 'MOZCONFIG' in env:
+        d["mozconfig"] = os.path.join(d['topsrcdir'], env["MOZCONFIG"])
 
     # os
     o = env["OS_TARGET"]
