@@ -63,17 +63,6 @@ public:
   {
     return mListenerManager.HasListeners();
   }
-
-  void SetEventHandler(JSContext*, const nsAString& aType, JSObject* aHandler,
-                       ErrorResult& rv)
-  {
-    rv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-  }
-
-  JSObject* GetEventHandler(JSContext*, const nsAString& aType)
-  {
-    return nullptr;
-  }
 };
 
 END_WORKERS_NAMESPACE
