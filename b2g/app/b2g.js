@@ -717,3 +717,6 @@ pref("captivedetect.canonicalContent", "success\n");
 
 // The url of the manifest we use for ADU pings.
 pref("ping.manifestURL", "https://marketplace.firefox.com/packaged.webapp");
+
+// Enable the disk space watcher
+pref("disk_space_watcher.enabled", true);
