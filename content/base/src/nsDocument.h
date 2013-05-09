@@ -1043,11 +1043,9 @@ public:
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
 
-  JSObject* GetCustomPrototype(const nsAString& aElementName)
+  void GetCustomPrototype(const nsAString& aElementName, JS::MutableHandle<JSObject*> prototype)
   {
-    JSObject* prototype = nullptr;
-    mCustomPrototypes.Get(aElementName, &prototype);
-    return prototype;
+    mCustomPrototypes.Get(aElementName, prototype.address());
   }
 
   static bool RegisterEnabled();
