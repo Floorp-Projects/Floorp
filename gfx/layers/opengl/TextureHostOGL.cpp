@@ -51,19 +51,26 @@ CreateTextureHostOGL(SurfaceDescriptorType aDescriptorType,
 }
 
 static void
-MakeTextureIfNeeded(gl::GLContext* gl, GLuint& aTexture)
+MakeTextureIfNeeded(gl::GLContext* gl, GLenum aTarget, GLuint& aTexture)
 {
   if (aTexture != 0)
     return;
 
+  GLenum target = aTarget;
+  // GL_TEXTURE_EXTERNAL requires us to initialize the texture
+  // using the GL_TEXTURE_2D attachment.
+  if (target == LOCAL_GL_TEXTURE_EXTERNAL) {
+    target = LOCAL_GL_TEXTURE_2D;
+  }
+
   gl->fGenTextures(1, &aTexture);
 
-  gl->fBindTexture(LOCAL_GL_TEXTURE_2D, aTexture);
+  gl->fBindTexture(target, aTexture);
 
-  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
-  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
-  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
-  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
+  gl->fTexParameteri(target, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
+  gl->fTexParameteri(target, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
+  gl->fTexParameteri(target, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
+  gl->fTexParameteri(target, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
 }
 
 static gl::TextureImage::Flags
@@ -269,7 +276,7 @@ SharedTextureHostOGL::SwapTexturesImpl(const SurfaceDescriptor& aImage,
 bool
 SharedTextureHostOGL::Lock()
 {
-  MakeTextureIfNeeded(mGL, mTextureHandle);
+  MakeTextureIfNeeded(mGL, mTextureTarget, mTextureHandle);
 
   mGL->fActiveTexture(LOCAL_GL_TEXTURE0);
   mGL->fBindTexture(mTextureTarget, mTextureHandle);
