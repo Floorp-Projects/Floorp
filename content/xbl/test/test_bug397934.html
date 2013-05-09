@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=397934
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 397934</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  SimpleTest.waitForExplicitFinish();
+
+  // Embed the real test. It will take care of everything else.
+  function setup() {
+    SpecialPowers.pushPrefEnv({'set': [['dom.use_xbl_scopes_for_remote_xul', false]]}, go);
+  }
+  function go() {
+    $('ifr').setAttribute('src', 'file_bug397934.xhtml');
+  }
+
+  </script>
+</head>
+<body onload="setup();">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=397934">Mozilla Bug 397934</a>
+<p id="display"></p>
+<div id="content">
+<iframe id="ifr"></iframe>
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
