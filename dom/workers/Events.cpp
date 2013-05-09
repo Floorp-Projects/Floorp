@@ -87,8 +87,8 @@ public:
   }
 
   static JSObject*
-  Create(JSContext* aCx, JSObject* aParent, JSString* aType, bool aBubbles,
-         bool aCancelable, bool aMainRuntime)
+  Create(JSContext* aCx, JS::Handle<JSObject*> aParent, JS::Handle<JSString*> aType,
+         bool aBubbles, bool aCancelable, bool aMainRuntime)
   {
     JSClass* clasp = aMainRuntime ? &sMainRuntimeClass : &sClass;
 
@@ -411,7 +411,7 @@ public:
   }
 
   static JSObject*
-  Create(JSContext* aCx, JSObject* aParent, JSAutoStructuredCloneBuffer& aData,
+  Create(JSContext* aCx, JS::Handle<JSObject*> aParent, JSAutoStructuredCloneBuffer& aData,
          nsTArray<nsCOMPtr<nsISupports> >& aClonedObjects, bool aMainRuntime)
   {
     JS::Rooted<JSString*> type(aCx, JS_InternString(aCx, "message"));
@@ -637,8 +637,8 @@ public:
   }
 
   static JSObject*
-  Create(JSContext* aCx, JSObject* aParent, JSString* aMessage,
-         JSString* aFilename, uint32_t aLineNumber, bool aMainRuntime)
+  Create(JSContext* aCx, JS::Handle<JSObject*> aParent, JS::Handle<JSString*> aMessage,
+         JS::Handle<JSString*> aFilename, uint32_t aLineNumber, bool aMainRuntime)
   {
     JS::Rooted<JSString*> type(aCx, JS_InternString(aCx, "error"));
     if (!type) {
@@ -818,7 +818,7 @@ public:
   }
 
   static JSObject*
-  Create(JSContext* aCx, JSObject* aParent, JSString* aType,
+  Create(JSContext* aCx, JS::Handle<JSObject*> aParent, JSString* aType,
          bool aLengthComputable, double aLoaded, double aTotal)
   {
     JS::Rooted<JSString*> type(aCx, JS_InternJSString(aCx, aType));
@@ -924,7 +924,7 @@ private:
   static JSBool
   InitProgressEvent(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
-    JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
+    JS::Rooted<JSObject*> obj(aCx, JS_THIS_OBJECT(aCx, aVp));
     if (!obj) {
       return false;
     }
@@ -1006,10 +1006,10 @@ InitClasses(JSContext* aCx, JS::Handle<JSObject*> aGlobal, bool aMainRuntime)
 }
 
 JSObject*
-CreateGenericEvent(JSContext* aCx, JSString* aType, bool aBubbles,
+CreateGenericEvent(JSContext* aCx, JS::Handle<JSString*> aType, bool aBubbles,
                    bool aCancelable, bool aMainRuntime)
 {
-  JSObject* global = JS_GetGlobalForScopeChain(aCx);
+  JS::Rooted<JSObject*> global(aCx, JS_GetGlobalForScopeChain(aCx));
   return Event::Create(aCx, global, aType, aBubbles, aCancelable, aMainRuntime);
 }
 
@@ -1018,15 +1018,16 @@ CreateMessageEvent(JSContext* aCx, JSAutoStructuredCloneBuffer& aData,
                    nsTArray<nsCOMPtr<nsISupports> >& aClonedObjects,
                    bool aMainRuntime)
 {
-  JSObject* global = JS_GetGlobalForScopeChain(aCx);
+  JS::Rooted<JSObject*> global(aCx, JS_GetGlobalForScopeChain(aCx));
   return MessageEvent::Create(aCx, global, aData, aClonedObjects, aMainRuntime);
 }
 
 JSObject*
-CreateErrorEvent(JSContext* aCx, JSString* aMessage, JSString* aFilename,
-                 uint32_t aLineNumber, bool aMainRuntime)
+CreateErrorEvent(JSContext* aCx, JS::Handle<JSString*> aMessage,
+                 JS::Handle<JSString*> aFilename, uint32_t aLineNumber,
+                 bool aMainRuntime)
 {
-  JSObject* global = JS_GetGlobalForScopeChain(aCx);
+  JS::Rooted<JSObject*> global(aCx, JS_GetGlobalForScopeChain(aCx));
   return ErrorEvent::Create(aCx, global, aMessage, aFilename, aLineNumber,
                             aMainRuntime);
 }
@@ -1035,7 +1036,7 @@ JSObject*
 CreateProgressEvent(JSContext* aCx, JSString* aType, bool aLengthComputable,
                     double aLoaded, double aTotal)
 {
-  JSObject* global = JS_GetGlobalForScopeChain(aCx);
+  JS::Rooted<JSObject*> global(aCx, JS_GetGlobalForScopeChain(aCx));
   return ProgressEvent::Create(aCx, global, aType, aLengthComputable, aLoaded,
                                aTotal);
 }
@@ -1065,8 +1066,8 @@ EventImmediatePropagationStopped(JSObject* aEvent)
 }
 
 bool
-DispatchEventToTarget(JSContext* aCx, JSObject* aTarget, JSObject* aEvent,
-                      bool* aPreventDefaultCalled)
+DispatchEventToTarget(JSContext* aCx, JS::Handle<JSObject*> aTarget,
+                      JS::Handle<JSObject*> aEvent, bool* aPreventDefaultCalled)
 {
   static const char kFunctionName[] = "dispatchEvent";
   JSBool hasProperty;

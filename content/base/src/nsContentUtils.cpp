@@ -1669,8 +1669,8 @@ nsIDocument*
 nsContentUtils::GetDocumentFromCaller()
 {
   JSContext *cx = nullptr;
-  JSObject *obj = nullptr;
-  sXPConnect->GetCaller(&cx, &obj);
+  JS::Rooted<JSObject*> obj(cx);
+  sXPConnect->GetCaller(&cx, obj.address());
   NS_ASSERTION(cx && obj, "Caller ensures something is running");
 
   JSAutoCompartment ac(cx, obj);

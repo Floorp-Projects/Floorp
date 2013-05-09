@@ -111,37 +111,9 @@ namespace ion {
  * segment's "current regs", which contains the stack pointer 'sp'. In the
  * interpreter, sp is adjusted as individual values are pushed and popped from
  * the stack and the FrameRegs struct (pointed by the StackSegment) is a local
- * var of js::Interpret. JIT code simulates this by lazily updating FrameRegs
+ * var of js::Interpret. JM JIT code simulates this by lazily updating FrameRegs
  * when calling from JIT code into the VM. Ideally, we'd like to remove all
  * dependence on FrameRegs outside the interpreter.
- *
- * A call to a native (C++) function does not push a frame. Instead, an array
- * of values is passed to the native. The layout of this array is abstracted by
- * JS::CallArgs. With respect to the StackSegment layout above, the args to a
- * native call are inserted anywhere there can be values. A sample memory layout
- * looks like:
- *
- *                          regs
- *       .------------------------------------------.
- *       |                                          V
- *       |                                fp .--FrameRegs--. sp
- *       |                                   V             V
- * |StackSegment| native call | values |StackFrame| values | native call |
- *       |       vp <--argc--> end                        vp <--argc--> end
- *       |           CallArgs <------------------------------ CallArgs
- *       |                                 prev                  ^
- *       `-------------------------------------------------------'
- *                                    calls
- *
- * Here there are two native calls on the stack. The start of each native arg
- * range is recorded by a CallArgs element which is prev-linked like stack
- * frames. Note that, in full generality, native and scripted calls can
- * interleave arbitrarily. Thus, the end of a segment is the maximum of its
- * current frame and its current native call. Similarly, the top of the entire
- * thread stack is the end of its current segment.
- *
- * Note that, between any two StackFrames there may be any number
- * of native calls, so the meaning of 'prev' is not 'directly called by'.
  *
  * An additional feature (perhaps not for much longer: bug 650361) is that
  * multiple independent "contexts" can interleave (LIFO) on a single contiguous
@@ -160,51 +132,6 @@ namespace ion {
  * the js::ContextStack object stored in JSContext. ContextStack is the primary
  * interface to the rest of the engine for pushing and popping the stack.
  */
-
-/*****************************************************************************/
-
-/*
- * For calls to natives, the InvokeArgsGuard object provides a record of the
- * call for the debugger's callstack. For this to work, the InvokeArgsGuard
- * record needs to know when the call is actually active (because the
- * InvokeArgsGuard can be pushed long before and popped long after the actual
- * call, during which time many stack-observing things can happen).
- */
-class MOZ_STACK_CLASS CallArgsList : public JS::CallArgs
-{
-    friend class StackSegment;
-    CallArgsList *prev_;
-    bool active_;
-  protected:
-    CallArgsList() : prev_(NULL), active_(false) {}
-  public:
-    friend CallArgsList CallArgsListFromVp(unsigned, Value *, CallArgsList *);
-    friend CallArgsList CallArgsListFromArgv(unsigned, Value *, CallArgsList *);
-    CallArgsList *prev() const { return prev_; }
-    bool active() const { return active_; }
-    void setActive() { active_ = true; }
-    void setInactive() { active_ = false; }
-};
-
-JS_ALWAYS_INLINE CallArgsList
-CallArgsListFromArgv(unsigned argc, Value *argv, CallArgsList *prev)
-{
-    CallArgsList args;
-#ifdef DEBUG
-    args.usedRval_ = false;
-#endif
-    args.argv_ = argv;
-    args.argc_ = argc;
-    args.prev_ = prev;
-    args.active_ = false;
-    return args;
-}
-
-JS_ALWAYS_INLINE CallArgsList
-CallArgsListFromVp(unsigned argc, Value *vp, CallArgsList *prev)
-{
-    return CallArgsListFromArgv(argc, vp + 2, prev);
-}
 
 /*****************************************************************************/
 
@@ -470,7 +397,7 @@ class StackFrame
     friend class FrameRegs;
     friend class ContextStack;
     friend class StackSpace;
-    friend class StackIter;
+    friend class ScriptFrameIter;
     friend class CallObject;
     friend class ClonedBlockObject;
     friend class ArgumentsObject;
@@ -610,8 +537,8 @@ class StackFrame
     /*
      * To handle eval-in-frame with a baseline JIT frame, |prev_| points to the
      * entry frame and prevBaselineFrame_ to the actual BaselineFrame. This is
-     * done so that StackIter can skip JIT frames pushed on top of the baseline
-     * frame (these frames should not appear in stack traces).
+     * done so that ScriptFrameIter can skip JIT frames pushed on top of the
+     * baseline frame (these frames should not appear in stack traces).
      */
     ion::BaselineFrame *prevBaselineFrame() const {
         JS_ASSERT(isEvalFrame());
@@ -1388,8 +1315,8 @@ class StackSegment
     /* Execution registers for most recent script in this segment (or null). */
     FrameRegs *regs_;
 
-    /* Call args for most recent native call in this segment (or null). */
-    CallArgsList *calls_;
+    /* End of CallArgs pushed by pushInvokeArgs. */
+    Value *invokeArgsEnd_;
 
 #if JS_BITS_PER_WORD == 32
     /*
@@ -1404,13 +1331,12 @@ class StackSegment
     StackSegment(JSContext *cx,
                  StackSegment *prevInContext,
                  StackSegment *prevInMemory,
-                 FrameRegs *regs,
-                 CallArgsList *calls)
+                 FrameRegs *regs)
       : cx_(cx),
         prevInContext_(prevInContext),
         prevInMemory_(prevInMemory),
         regs_(regs),
-        calls_(calls)
+        invokeArgsEnd_(NULL)
     {}
 
     /* A segment is followed in memory by the arguments of the first call. */
@@ -1442,23 +1368,6 @@ class StackSegment
         return regs_ ? regs_->pc : NULL;
     }
 
-    CallArgsList &calls() const {
-        JS_ASSERT(calls_);
-        return *calls_;
-    }
-
-    CallArgsList *maybeCalls() const {
-        return calls_;
-    }
-
-    Value *callArgv() const {
-        return calls_->array();
-    }
-
-    Value *maybeCallArgv() const {
-        return calls_ ? calls_->array() : NULL;
-    }
-
     JSContext *cx() const {
         return cx_;
     }
@@ -1476,12 +1385,11 @@ class StackSegment
     }
 
     bool isEmpty() const {
-        return !calls_ && !regs_;
+        return !regs_;
     }
 
     bool contains(const StackFrame *fp) const;
     bool contains(const FrameRegs *regs) const;
-    bool contains(const CallArgsList *call) const;
 
     StackFrame *computeNextFrame(const StackFrame *fp, size_t maxDepth) const;
 
@@ -1489,9 +1397,17 @@ class StackSegment
 
     FrameRegs *pushRegs(FrameRegs &regs);
     void popRegs(FrameRegs *regs);
-    void pushCall(CallArgsList &callList);
-    void pointAtCall(CallArgsList &callList);
-    void popCall();
+
+    Value *invokeArgsEnd() const {
+        return invokeArgsEnd_;
+    }
+    void pushInvokeArgsEnd(Value *end, Value **prev) {
+        *prev = invokeArgsEnd_;
+        invokeArgsEnd_ = end;
+    }
+    void popInvokeArgsEnd(Value *prev) {
+        invokeArgsEnd_ = prev;
+    }
 
     /* For jit access: */
 
@@ -1669,7 +1585,7 @@ class ContextStack
     friend class GeneratorFrameGuard;
     void popGeneratorFrame(const GeneratorFrameGuard &gfg);
 
-    friend class StackIter;
+    friend class ScriptFrameIter;
 
   public:
     ContextStack(JSContext *cx);
@@ -1799,14 +1715,15 @@ class ContextStack
 
 /*****************************************************************************/
 
-class InvokeArgsGuard : public CallArgsList
+class InvokeArgsGuard : public JS::CallArgs
 {
     friend class ContextStack;
     ContextStack *stack_;
+    Value *prevInvokeArgsEnd_;
     bool pushedSeg_;
     void setPushed(ContextStack &stack) { JS_ASSERT(!pushed()); stack_ = &stack; }
   public:
-    InvokeArgsGuard() : CallArgsList(), stack_(NULL), pushedSeg_(false) {}
+    InvokeArgsGuard() : CallArgs(), stack_(NULL), prevInvokeArgsEnd_(NULL), pushedSeg_(false) {}
     ~InvokeArgsGuard() { if (pushed()) stack_->popInvokeArgs(*this); }
     bool pushed() const { return !!stack_; }
     void pop() { stack_->popInvokeArgs(*this); stack_ = NULL; }
@@ -1884,15 +1801,15 @@ struct DefaultHasher<AbstractFramePtr> {
  * The SavedOption parameter additionally lets the iterator continue through
  * breaks in the callstack (from JS_SaveFrameChain). The default is to stop.
  */
-class StackIter
+class ScriptFrameIter
 {
   public:
     enum SavedOption { STOP_AT_SAVED, GO_THROUGH_SAVED };
-    enum State { DONE, SCRIPTED, NATIVE, ION };
+    enum State { DONE, SCRIPTED, ION };
 
     /*
-     * Unlike StackIter itself, StackIter::Data can be allocated on the heap,
-     * so this structure should not contain any GC things.
+     * Unlike ScriptFrameIter itself, ScriptFrameIter::Data can be allocated on
+     * the heap, so this structure should not contain any GC things.
      */
     struct Data
     {
@@ -1903,13 +1820,9 @@ class StackIter
         State        state_;
 
         StackFrame   *fp_;
-        CallArgsList *calls_;
 
         StackSegment *seg_;
         jsbytecode   *pc_;
-        CallArgs      args_;
-
-        bool          poppedCallDuringSettle_;
 
 #ifdef JS_ION
         ion::IonActivationIterator ionActivations_;
@@ -1931,7 +1844,6 @@ class StackIter
 
     void poisonRegs();
     void popFrame();
-    void popCall();
 #ifdef JS_ION
     void nextIonFrame();
     void popIonFrame();
@@ -1942,33 +1854,23 @@ class StackIter
     void startOnSegment(StackSegment *seg);
 
   public:
-    StackIter(JSContext *cx, SavedOption = STOP_AT_SAVED);
-    StackIter(JSRuntime *rt, StackSegment &seg);
-    StackIter(const StackIter &iter);
-    StackIter(const Data &data);
+    ScriptFrameIter(JSContext *cx, SavedOption = STOP_AT_SAVED);
+    ScriptFrameIter(JSRuntime *rt, StackSegment &seg);
+    ScriptFrameIter(const ScriptFrameIter &iter);
+    ScriptFrameIter(const Data &data);
 
     bool done() const { return data_.state_ == DONE; }
-    StackIter &operator++();
+    ScriptFrameIter &operator++();
 
     Data *copyData() const;
 
-    bool operator==(const StackIter &rhs) const;
-    bool operator!=(const StackIter &rhs) const { return !(*this == rhs); }
+    bool operator==(const ScriptFrameIter &rhs) const;
+    bool operator!=(const ScriptFrameIter &rhs) const { return !(*this == rhs); }
 
     JSCompartment *compartment() const;
 
-    bool poppedCallDuringSettle() const { return data_.poppedCallDuringSettle_; }
-
-    bool isScript() const {
-        JS_ASSERT(!done());
-#ifdef JS_ION
-        if (data_.state_ == ION)
-            return data_.ionFrames_.isScripted();
-#endif
-        return data_.state_ == SCRIPTED;
-    }
     JSScript *script() const {
-        JS_ASSERT(isScript());
+        JS_ASSERT(!done());
         if (data_.state_ == SCRIPTED)
             return interpFrame()->script();
 #ifdef JS_ION
@@ -2001,15 +1903,6 @@ class StackIter
 #endif
     }
 
-    bool isNativeCall() const {
-        JS_ASSERT(!done());
-#ifdef JS_ION
-        if (data_.state_ == ION)
-            return data_.ionFrames_.isNative();
-#endif
-        return data_.state_ == NATIVE;
-    }
-
     bool isFunctionFrame() const;
     bool isGlobalFrame() const;
     bool isEvalFrame() const;
@@ -2027,9 +1920,9 @@ class StackIter
      * contents of the frame are ignored by Ion code (and GC) and thus
      * immediately become garbage and must not be touched directly.
      */
-    StackFrame *interpFrame() const { JS_ASSERT(isScript() && !isIon()); return data_.fp_; }
+    StackFrame *interpFrame() const { JS_ASSERT(data_.state_ == SCRIPTED); return data_.fp_; }
 
-    jsbytecode *pc() const { JS_ASSERT(isScript()); return data_.pc_; }
+    jsbytecode *pc() const { JS_ASSERT(!done()); return data_.pc_; }
     void        updatePcQuadratic();
     JSFunction *callee() const;
     Value       calleev() const;
@@ -2058,48 +1951,27 @@ class StackIter
     size_t      numFrameSlots() const;
     Value       frameSlotValue(size_t index) const;
 
-    CallArgs nativeArgs() const { JS_ASSERT(isNativeCall()); return data_.args_; }
-
     template <class Op>
     inline void ionForEachCanonicalActualArg(JSContext *cx, Op op);
 };
 
-/* A filtering of the StackIter to only stop at scripts. */
-class ScriptFrameIter : public StackIter
+/* A filtering of the ScriptFrameIter to only stop at non-self-hosted scripts. */
+class NonBuiltinScriptFrameIter : public ScriptFrameIter
 {
     void settle() {
-        while (!done() && !isScript())
-            StackIter::operator++();
+        while (!done() && script()->selfHosted)
+            ScriptFrameIter::operator++();
     }
 
   public:
-    ScriptFrameIter(JSContext *cx, StackIter::SavedOption opt = StackIter::STOP_AT_SAVED)
-      : StackIter(cx, opt) { settle(); }
+    NonBuiltinScriptFrameIter(JSContext *cx, ScriptFrameIter::SavedOption opt = ScriptFrameIter::STOP_AT_SAVED)
+        : ScriptFrameIter(cx, opt) { settle(); }
 
-    ScriptFrameIter(const StackIter::Data &data)
-      : StackIter(data)
+    NonBuiltinScriptFrameIter(const ScriptFrameIter::Data &data)
+      : ScriptFrameIter(data)
     {}
 
-    ScriptFrameIter &operator++() { StackIter::operator++(); settle(); return *this; }
-};
-
-/* A filtering of the StackIter to only stop at non-self-hosted scripts. */
-class NonBuiltinScriptFrameIter : public StackIter
-{
-    void settle() {
-        while (!done() && (!isScript() || script()->selfHosted))
-            StackIter::operator++();
-    }
-
-  public:
-    NonBuiltinScriptFrameIter(JSContext *cx, StackIter::SavedOption opt = StackIter::STOP_AT_SAVED)
-        : StackIter(cx, opt) { settle(); }
-
-    NonBuiltinScriptFrameIter(const StackIter::Data &data)
-      : StackIter(data)
-    {}
-
-    NonBuiltinScriptFrameIter &operator++() { StackIter::operator++(); settle(); return *this; }
+    NonBuiltinScriptFrameIter &operator++() { ScriptFrameIter::operator++(); settle(); return *this; }
 };
 
 /*****************************************************************************/

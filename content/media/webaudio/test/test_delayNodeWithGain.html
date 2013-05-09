@@ -10,51 +10,43 @@
 <script src="webaudio.js" type="text/javascript"></script>
 <script class="testbody" type="text/javascript">
 
-SimpleTest.waitForExplicitFinish();
-addLoadEvent(function() {
-  SpecialPowers.setBoolPref("media.webaudio.enabled", true);
+var gTest = {
+  length: 4096,
+  numberOfChannels: 1,
+  createGraph: function(context) {
+    var buffer = context.createBuffer(1, 2048, context.sampleRate);
+    for (var i = 0; i < 2048; ++i) {
+      buffer.getChannelData(0)[i] = Math.sin(440 * 2 * Math.PI * i / context.sampleRate);
+    }
 
-  var context = new AudioContext();
-  var buffer = context.createBuffer(1, 2048, context.sampleRate);
-  for (var i = 0; i < 2048; ++i) {
-    buffer.getChannelData(0)[i] = Math.sin(440 * 2 * Math.PI * i / context.sampleRate);
-  }
-  var expectedBuffer = context.createBuffer(1, 2048 * 2, context.sampleRate);
-  for (var i = 2048; i < 2048 * 2; ++i) {
-    expectedBuffer.getChannelData(0)[i] = buffer.getChannelData(0)[i - 2048] / 2;
-  }
+    var source = context.createBufferSource();
 
-  var destination = context.destination;
+    var delay = context.createDelay();
 
-  var source = context.createBufferSource();
+    source.buffer = buffer;
 
-  var delay = context.createDelay();
+    var gain = context.createGain();
+    gain.gain.value = 0.5;
 
-  source.buffer = buffer;
+    source.connect(gain);
+    gain.connect(delay);
 
-  var gain = context.createGain();
-  gain.gain.value = 0.5;
+    // Delay the source stream by 2048 frames
+    delay.delayTime.value = 2048 / context.sampleRate;
 
-  source.connect(gain);
-  gain.connect(delay);
-  var sp = context.createScriptProcessor(2048 * 2, 1);
-  delay.connect(sp);
-  sp.connect(destination);
+    source.start(0);
+    return delay;
+  },
+  createExpectedBuffers: function(context) {
+    var expectedBuffer = context.createBuffer(1, 2048 * 2, context.sampleRate);
+    for (var i = 2048; i < 2048 * 2; ++i) {
+      expectedBuffer.getChannelData(0)[i] = Math.sin(440 * 2 * Math.PI * (i - 2048) / context.sampleRate) / 2;
+    }
+    return expectedBuffer;
+  },
+};
 
-  // Delay the source stream by 2048 frames
-  delay.delayTime.value = 2048 / context.sampleRate;
-
-  source.start(0);
-  sp.onaudioprocess = function(e) {
-    is(e.inputBuffer.numberOfChannels, 1, "Correct input channel count");
-    compareBuffers(e.inputBuffer.getChannelData(0), expectedBuffer.getChannelData(0));
-
-    sp.onaudioprocess = null;
-
-    SpecialPowers.clearUserPref("media.webaudio.enabled");
-    SimpleTest.finish();
-  };
-});
+runTest();
 
 </script>
 </pre>

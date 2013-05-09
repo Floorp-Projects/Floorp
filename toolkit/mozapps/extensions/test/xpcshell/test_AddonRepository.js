@@ -72,6 +72,7 @@ var GET_RESULTS = [{
                             caption:      "Caption 2 - 1"
                           }],
   homepageURL:            BASE_URL + "/learnmore1.html",
+  learnmoreURL:           BASE_URL + "/learnmore1.html",
   supportURL:             BASE_URL + "/support1.html",
   contributionURL:        BASE_URL + "/meetDevelopers1.html",
   contributionAmount:     "$11.11",
@@ -151,6 +152,7 @@ var SEARCH_RESULTS = [{
                           }],
   homepageURL:            BASE_URL + "/learnmore2.html",
   supportURL:             BASE_URL + "/support2.html",
+  learnmoreURL:           BASE_URL + "/learnmore2.html",
   contributionURL:        BASE_URL + "/meetDevelopers2.html",
   contributionAmount:     null,
   repositoryStatus:       4,
@@ -190,6 +192,7 @@ var SEARCH_RESULTS = [{
                           }],
   homepageURL:            BASE_URL + "/homepage3.html",
   supportURL:             BASE_URL + "/support3.html",
+  learnmoreURL:           BASE_URL + "/learnmore3.html",
   contributionURL:        BASE_URL + "/meetDevelopers3.html",
   contributionAmount:     "$11.11",
   averageRating:          2,
