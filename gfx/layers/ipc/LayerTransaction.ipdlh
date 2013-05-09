@@ -17,6 +17,7 @@ include "mozilla/TimeStamp.h";
 include "mozilla/dom/ScreenOrientation.h";
 include "nsCSSProperty.h";
 include "gfxipc/ShadowLayerUtils.h";
+include "ImageLayers.h";
 
 using gfxPoint3D;
 using nscoord;
@@ -29,6 +30,7 @@ using nsCSSProperty;
 using mozilla::dom::ScreenOrientation;
 using mozilla::layers::TextureInfo;
 using mozilla::gfx::Margin;
+using mozilla::layers::ImageLayer::ScaleMode;
 
 namespace mozilla {
 namespace layers {
@@ -202,7 +204,7 @@ struct ContainerLayerAttributes {
 struct ColorLayerAttributes     { LayerColor color; };
 struct CanvasLayerAttributes    { GraphicsFilterType filter; nsIntRect bounds; };
 struct RefLayerAttributes       { int64_t id; };
-struct ImageLayerAttributes     { GraphicsFilterType filter; };
+struct ImageLayerAttributes     { GraphicsFilterType filter; gfxIntSize scaleToSize; ScaleMode scaleMode; };
 
 union SpecificLayerAttributes {
   null_t;

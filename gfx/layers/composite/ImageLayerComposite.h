@@ -39,6 +39,8 @@ public:
   virtual void RenderLayer(const nsIntPoint& aOffset,
                            const nsIntRect& aClipRect);
 
+  virtual void ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface) MOZ_OVERRIDE;
+
   virtual void CleanupResources() MOZ_OVERRIDE;
 
   CompositableHost* GetCompositableHost() MOZ_OVERRIDE;
