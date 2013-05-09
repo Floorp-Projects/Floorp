@@ -111,14 +111,15 @@ panelsubview toolbarbutton > .toolbarbutton-text,
 
 .PanelUI-pageControls toolbarbutton {
   min-width: 7em;
-  max-width: 7em;
 }
 
 .PanelUI-pageControls toolbarbutton > .toolbarbutton-icon {
   -moz-margin-end: 0;
 }
 
-#PanelUI-contents[type="grid"] toolbarbutton {
+#PanelUI-contents[type="grid"] toolbarbutton,
+#customization-palette toolbarbutton {
+  -moz-appearance: none;
   -moz-box-orient: vertical;
   min-width: 7em;
   max-width: 7em;
@@ -126,7 +127,8 @@ panelsubview toolbarbutton > .toolbarbutton-text,
   max-height: 6em;
 }
 
-#PanelUI-contents[type="grid"] toolbarbutton .toolbarbutton-icon {
+#PanelUI-contents[type="grid"] toolbarbutton > .toolbarbutton-icon,
+#customization-palette toolbarbutton > .toolbarbutton-icon {
   min-width: calc(8em / 3);
   max-width: calc(8em / 3);
   min-height: calc(8em / 3);
@@ -171,7 +173,8 @@ panelsubview toolbarbutton > .toolbarbutton-text,
 
 panelmainview toolbarbutton,
 panelsubview toolbarbutton,
-#customizationui-widget-panel toolbarbutton {
+#customizationui-widget-panel toolbarbutton,
+.customizationmode-button {
   -moz-appearance: none;
   padding: 2px 6px;
   background: hsla(210,32%,93%,0) padding-box;
@@ -189,6 +192,7 @@ panelmainview toolbarbutton:not([disabled]):not([checked]):not([open]):not(:acti
 panelsubview toolbarbutton:not([disabled]):not([checked]):not([open]):not(:active):hover,
 #customizationui-widget-panel toolbarbutton:not([disabled]):not([checked]):not([open]):not(:active):hover,
 #PanelUI-mainView .PanelUI-pageControls toolbarbutton,
+.customizationmode-button,
 #PanelUI-mainView #PanelUI-customize-btn {
   background-image: -moz-linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,100%,.1));
   border-color: hsla(210,54%,20%,.15) hsla(210,54%,20%,.2) hsla(210,54%,20%,.25);
@@ -199,6 +203,7 @@ panelsubview toolbarbutton:not([disabled]):not([checked]):not([open]):not(:activ
 
 panelmainview toolbarbutton:not([disabled]):-moz-any([open],[checked],:hover:active),
 panelsubview toolbarbutton:not([disabled]):-moz-any([open],[checked],:hover:active),
+.customizationmode-button:hover:active,
 #customizationui-widget-panel toolbarbutton:not([disabled]):-moz-any([open],[checked],:hover:active) {
   background-image: -moz-linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,100%,.1));
   background-color: hsla(210,54%,20%,.15);
