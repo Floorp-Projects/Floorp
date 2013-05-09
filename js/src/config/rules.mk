@@ -1627,6 +1627,21 @@ endif
 endif
 
 endif
+
+
+ifneq (,$(filter export,$(MAKECMDGOALS)))
+MDDEPEND_FILES		:= $(strip $(wildcard $(addprefix $(MDDEPDIR)/,$(EXTRA_EXPORT_MDDEPEND_FILES))))
+
+ifneq (,$(MDDEPEND_FILES))
+ifdef .PYMAKE
+includedeps $(MDDEPEND_FILES)
+else
+include $(MDDEPEND_FILES)
+endif
+endif
+
+endif
+
 #############################################################################
 
 -include $(topsrcdir)/$(MOZ_BUILD_APP)/app-rules.mk
