@@ -10,7 +10,6 @@ XPIDL_SOURCES += [
     'nsIDOMSVGAnimatedInteger.idl',
     'nsIDOMSVGAnimatedLength.idl',
     'nsIDOMSVGAnimatedNumber.idl',
-    'nsIDOMSVGAnimatedRect.idl',
     'nsIDOMSVGAnimatedString.idl',
     'nsIDOMSVGDocument.idl',
     'nsIDOMSVGElement.idl',

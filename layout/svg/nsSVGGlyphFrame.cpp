@@ -1286,7 +1286,8 @@ nsSVGGlyphFrame::GetExtentOfChar(uint32_t charnum, dom::SVGIRect **_retval)
                             metrics.mAscent + metrics.mDescent));
   tmpCtx->IdentityMatrix();
 
-  nsRefPtr<dom::SVGRect> rect = NS_NewSVGRect(tmpCtx->GetUserPathExtent());
+  nsRefPtr<dom::SVGRect> rect =
+    NS_NewSVGRect(mContent, tmpCtx->GetUserPathExtent());
 
   rect.forget(_retval);
   return NS_OK;

@@ -12,16 +12,36 @@
 #include "mozilla/dom/SVGRectBinding.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
+#include "nsWrapperCache.h"
+#include "nsIContent.h"
+
+class nsSVGElement;
 
 namespace mozilla {
 namespace dom {
 
-class SVGIRect : public nsIDOMSVGRect
+class SVGIRect : public nsIDOMSVGRect,
+                 public nsWrapperCache
 {
 public:
+  SVGIRect(nsIContent* aParent)
+    : mParent(aParent)
+  {
+    SetIsDOMBinding();
+  }
+
+  virtual ~SVGIRect()
+  {
+  }
+
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
   {
     return SVGRectBinding::Wrap(aCx, aScope, this);
+  }
+
+  nsIContent* GetParentObject() const
+  {
+    return mParent;
   }
 
   virtual float X() const = 0;
@@ -99,6 +119,9 @@ public:
     SetHeight(aHeight, rv);
     return rv.ErrorCode();
   }
+
+private:
+  nsCOMPtr<nsIContent> mParent;
 };
 
 } // namespace dom
