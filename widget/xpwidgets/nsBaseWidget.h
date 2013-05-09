@@ -118,6 +118,7 @@ public:
   virtual void            CreateCompositor(int aWidth, int aHeight);
   virtual void            PrepareWindowEffects() {}
   virtual void            CleanupWindowEffects() {}
+  virtual void            PreRender(LayerManager* aManager) {}
   virtual void            DrawWindowUnderlay(LayerManager* aManager, nsIntRect aRect) {}
   virtual void            DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect) {}
   virtual void            UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries) {}
