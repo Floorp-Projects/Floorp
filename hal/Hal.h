@@ -249,7 +249,7 @@ void AdjustSystemClock(int64_t aDeltaMilliseconds);
 
 /**
  * Set timezone
- * @param aTimezoneSpec The definition can be found in 
+ * @param aTimezoneSpec The definition can be found in
  * http://en.wikipedia.org/wiki/List_of_tz_database_time_zones
  */
 void SetTimezone(const nsCString& aTimezoneSpec);
@@ -303,14 +303,14 @@ void NotifySystemTimezoneChange(
 
 /**
  * Reboot the device.
- * 
+ *
  * This API is currently only allowed to be used from the main process.
  */
 void Reboot();
 
 /**
  * Power off the device.
- * 
+ *
  * This API is currently only allowed to be used from the main process.
  */
 void PowerOff();
@@ -423,7 +423,7 @@ void RegisterSwitchObserver(hal::SwitchDevice aDevice, hal::SwitchObserver *aSwi
 void UnregisterSwitchObserver(hal::SwitchDevice aDevice, hal::SwitchObserver *aSwitchObserver);
 
 /**
- * Notify the state of the switch. 
+ * Notify the state of the switch.
  *
  * This API is internal to hal; clients shouldn't call it directly.
  */
@@ -557,7 +557,7 @@ hal::FMRadioSettings GetFMBandSettings(hal::FMRadioCountry aCountry);
  * Start a watchdog to compulsively shutdown the system if it hangs.
  * @param aMode Specify how to shutdown the system.
  * @param aTimeoutSecs Specify the delayed seconds to shutdown the system.
- * 
+ *
  * This API is currently only allowed to be used from the main process.
  */
 void StartForceQuitWatchdog(hal::ShutdownMode aMode, int32_t aTimeoutSecs);
@@ -576,6 +576,20 @@ void StartMonitoringGamepadStatus();
  * Stop monitoring the status of gamepads attached to the system.
  */
 void StopMonitoringGamepadStatus();
+
+/**
+ * Start monitoring disk space for low space situations.
+ *
+ * This API is currently only allowed to be used from the main process.
+ */
+void StartDiskSpaceWatcher();
+
+/**
+ * Stop monitoring disk space for low space situations.
+ *
+ * This API is currently only allowed to be used from the main process.
+ */
+void StopDiskSpaceWatcher();
 
 } // namespace MOZ_HAL_NAMESPACE
 } // namespace mozilla

@@ -1158,5 +1158,21 @@ void FactoryReset()
   PROXY_IF_SANDBOXED(FactoryReset());
 }
 
+void
+StartDiskSpaceWatcher()
+{
+  AssertMainProcess();
+  AssertMainThread();
+  PROXY_IF_SANDBOXED(StartDiskSpaceWatcher());
+}
+
+void
+StopDiskSpaceWatcher()
+{
+  AssertMainProcess();
+  AssertMainThread();
+  PROXY_IF_SANDBOXED(StopDiskSpaceWatcher());
+}
+
 } // namespace hal
 } // namespace mozilla
