@@ -98,11 +98,6 @@ private:
 public:
   struct DOMBaseVal MOZ_FINAL : public mozilla::dom::SVGIRect
   {
-    using mozilla::dom::SVGIRect::SetX;
-    using mozilla::dom::SVGIRect::SetY;
-    using mozilla::dom::SVGIRect::SetWidth;
-    using mozilla::dom::SVGIRect::SetHeight;
-
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_CYCLE_COLLECTION_CLASS(DOMBaseVal)
 
@@ -144,11 +139,6 @@ public:
 
   struct DOMAnimVal MOZ_FINAL : public mozilla::dom::SVGIRect
   {
-    using mozilla::dom::SVGIRect::SetX;
-    using mozilla::dom::SVGIRect::SetY;
-    using mozilla::dom::SVGIRect::SetWidth;
-    using mozilla::dom::SVGIRect::SetHeight;
-
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_CYCLE_COLLECTION_CLASS(DOMAnimVal)
 
