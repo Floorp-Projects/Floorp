@@ -118,7 +118,7 @@ LIRGenerator::visitParCheckOverRecursed(MParCheckOverRecursed *ins)
     LParCheckOverRecursed *lir = new LParCheckOverRecursed(
         useRegister(ins->parSlice()),
         temp());
-    if (!add(lir))
+    if (!add(lir, ins))
         return false;
     if (!assignSafepoint(lir, ins))
         return false;
@@ -293,8 +293,7 @@ LIRGenerator::visitPassArg(MPassArg *arg)
 
     // Known types can move constant types and/or payloads.
     LStackArgT *stack = new LStackArgT(argslot, useRegisterOrConstant(opd));
-    stack->setMir(arg);
-    return add(stack);
+    return add(stack, arg);
 }
 
 bool
@@ -1640,9 +1639,11 @@ LIRGenerator::visitParSlice(MParSlice *ins)
 bool
 LIRGenerator::visitParWriteGuard(MParWriteGuard *ins)
 {
-    return add(new LParWriteGuard(useFixed(ins->parSlice(), CallTempReg0),
-                                  useFixed(ins->object(), CallTempReg1),
-                                  tempFixed(CallTempReg2)));
+    LParWriteGuard *lir = new LParWriteGuard(useFixed(ins->parSlice(), CallTempReg0),
+                                             useFixed(ins->object(), CallTempReg1),
+                                             tempFixed(CallTempReg2));
+    lir->setMir(ins);
+    return add(lir, ins);
 }
 
 bool
@@ -1651,7 +1652,7 @@ LIRGenerator::visitParCheckInterrupt(MParCheckInterrupt *ins)
     LParCheckInterrupt *lir = new LParCheckInterrupt(
         useRegister(ins->parSlice()),
         temp());
-    if (!add(lir))
+    if (!add(lir, ins))
         return false;
     if (!assignSafepoint(lir, ins))
         return false;
@@ -2610,8 +2611,7 @@ LIRGenerator::visitAsmJSCall(MAsmJSCall *ins)
 
     LInstruction *lir = new LAsmJSCall(args, ins->numOperands());
     if (ins->type() == MIRType_None) {
-        lir->setMir(ins);
-        return add(lir);
+        return add(lir, ins);
     }
     return defineReturn(lir, ins);
 }
