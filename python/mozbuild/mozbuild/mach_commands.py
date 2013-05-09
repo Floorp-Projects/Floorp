@@ -46,7 +46,7 @@ Preferences.
 class Build(MachCommandBase):
     """Interface to build the tree."""
 
-    @Command('build', help='Build the tree.')
+    @Command('build', category='build', description='Build the tree.')
     @CommandArgument('--jobs', '-j', default='0', metavar='jobs', type=int,
         help='Number of concurrent jobs to run. Default is the number of CPUs.')
     @CommandArgument('what', default=None, nargs='*', help=BUILD_WHAT_HELP)
@@ -224,7 +224,8 @@ class Build(MachCommandBase):
         print(FINDER_SLOW_MESSAGE % finder_percent)
 
 
-    @Command('configure', help='Configure the tree (run configure and config.status')
+    @Command('configure', category='build',
+        description='Configure the tree (run configure and config.status')
     def configure(self):
         def on_line(line):
             self.log(logging.INFO, 'build_output', {'line': line}, '{line}')
@@ -240,7 +241,8 @@ class Build(MachCommandBase):
         return status
 
 
-    @Command('clobber', help='Clobber the tree (delete the object directory).')
+    @Command('clobber', category='build',
+        description='Clobber the tree (delete the object directory).')
     def clobber(self):
         try:
             self.remove_objdir()
@@ -276,8 +278,8 @@ class Warnings(MachCommandBase):
 
         return database
 
-    @Command('warnings-summary',
-        help='Show a summary of compiler warnings.')
+    @Command('warnings-summary', category='post-build',
+        description='Show a summary of compiler warnings.')
     @CommandArgument('report', default=None, nargs='?',
         help='Warnings report to display. If not defined, show the most '
             'recent report.')
@@ -295,7 +297,8 @@ class Warnings(MachCommandBase):
 
         print('%d\tTotal' % total)
 
-    @Command('warnings-list', help='Show a list of compiler warnings.')
+    @Command('warnings-list', category='post-build',
+        description='Show a list of compiler warnings.')
     @CommandArgument('report', default=None, nargs='?',
         help='Warnings report to display. If not defined, show the most '
             'recent report.')
@@ -319,7 +322,8 @@ class Warnings(MachCommandBase):
 
 @CommandProvider
 class GTestCommands(MachCommandBase):
-    @Command('gtest', help='Run GTest unit tests.')
+    @Command('gtest', category='testing',
+        description='Run GTest unit tests.')
     @CommandArgument('gtest_filter', default=b"*", nargs='?', metavar='gtest_filter',
         help="test_filter is a ':'-separated list of wildcard patterns (called the positive patterns),"
              "optionally followed by a '-' and another ':'-separated pattern list (called the negative patterns).")
@@ -381,7 +385,8 @@ class GTestCommands(MachCommandBase):
 
 @CommandProvider
 class ClangCommands(MachCommandBase):
-    @Command('clang-complete', help='Generate a .clang_complete file.')
+    @Command('clang-complete', category='devenv',
+        description='Generate a .clang_complete file.')
     def clang_complete(self):
         import shlex
 
@@ -435,7 +440,8 @@ class ClangCommands(MachCommandBase):
 class Package(MachCommandBase):
     """Package the built product for distribution."""
 
-    @Command('package', help='Package the built product for distribution as an APK, DMG, etc.')
+    @Command('package', category='post-build',
+        description='Package the built product for distribution as an APK, DMG, etc.')
     def package(self):
         return self._run_make(directory=".", target='package', ensure_exit_code=False)
 
@@ -443,7 +449,8 @@ class Package(MachCommandBase):
 class Install(MachCommandBase):
     """Install a package."""
 
-    @Command('install', help='Install the package on the machine, or on a device.')
+    @Command('install', category='post-build',
+        description='Install the package on the machine, or on a device.')
     def install(self):
         return self._run_make(directory=".", target='install', ensure_exit_code=False)
 
@@ -451,8 +458,9 @@ class Install(MachCommandBase):
 class RunProgram(MachCommandBase):
     """Launch the compiled binary"""
 
-    @Command('run', help='Run the compiled program.', prefix_chars='+')
-    @CommandArgument('params', default=None, nargs='*',
+    @Command('run', category='post-build', allow_all_args=True,
+        description='Run the compiled program.')
+    @CommandArgument('params', default=None, nargs='...',
         help='Command-line arguments to pass to the program.')
     def run(self, params):
         try:
@@ -471,8 +479,9 @@ class RunProgram(MachCommandBase):
 class DebugProgram(MachCommandBase):
     """Debug the compiled binary"""
 
-    @Command('debug', help='Debug the compiled program.', prefix_chars='+')
-    @CommandArgument('params', default=None, nargs='*',
+    @Command('debug', category='post-build', allow_all_args=True,
+        description='Debug the compiled program.')
+    @CommandArgument('params', default=None, nargs='...',
         help='Command-line arguments to pass to the program.')
     def debug(self, params):
         import which
@@ -498,13 +507,15 @@ class DebugProgram(MachCommandBase):
 class Buildsymbols(MachCommandBase):
     """Produce a package of debug symbols suitable for use with Breakpad."""
 
-    @Command('buildsymbols', help='Produce a package of Breakpad-format symbols.')
+    @Command('buildsymbols', category='post-build',
+        description='Produce a package of Breakpad-format symbols.')
     def buildsymbols(self):
         return self._run_make(directory=".", target='buildsymbols', ensure_exit_code=False)
 
 @CommandProvider
 class Makefiles(MachCommandBase):
-    @Command('empty-makefiles', help='Find empty Makefile.in in the tree.')
+    @Command('empty-makefiles', category='build-dev',
+        description='Find empty Makefile.in in the tree.')
     def empty(self):
         import pymake.parser
         import pymake.parserdata
