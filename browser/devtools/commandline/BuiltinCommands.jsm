@@ -976,7 +976,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "AppCacheUtils",
     returnType: "cookies",
     exec: function Command_cookieList(args, context) {
       let host = context.environment.document.location.host;
-      if (host == null || host == "") {
+      if (host == null) {
         throw new Error(gcli.lookup("cookieListOutNonePage"));
       }
 
