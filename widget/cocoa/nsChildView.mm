@@ -2857,10 +2857,13 @@ NSEvent* gLastDragMouseDownEvent = nil;
   targetContext->Clip();
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
-  bool painted;
+  bool painted = false;
   if (mGeckoChild->GetLayerManager()->GetBackendType() == LAYERS_BASIC) {
     nsBaseWidget::AutoLayerManagerSetup
       setupLayerManager(mGeckoChild, targetContext, BUFFER_NONE);
+    painted = mGeckoChild->PaintWindow(region, aIsAlternate);
+  } else if (mGeckoChild->GetLayerManager()->GetBackendType() == LAYERS_CLIENT) {
+    // We only need this so that we actually get DidPaintWindow fired
     painted = mGeckoChild->PaintWindow(region, aIsAlternate);
   }
 
