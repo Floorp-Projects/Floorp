@@ -36,19 +36,18 @@ function test() {
 'use strict';
 
 // var assert = require('test/assert');
-var Requisition = require('gcli/cli').Requisition;
+var cli = require('gcli/cli');
 
 exports.testBlanks = function(options) {
   var args;
-  var requ = new Requisition();
 
-  args = requ._tokenize('');
+  args = cli.tokenize('');
   assert.is(1, args.length);
   assert.is('', args[0].text);
   assert.is('', args[0].prefix);
   assert.is('', args[0].suffix);
 
-  args = requ._tokenize(' ');
+  args = cli.tokenize(' ');
   assert.is(1, args.length);
   assert.is('', args[0].text);
   assert.is(' ', args[0].prefix);
@@ -57,16 +56,15 @@ exports.testBlanks = function(options) {
 
 exports.testTokSimple = function(options) {
   var args;
-  var requ = new Requisition();
 
-  args = requ._tokenize('s');
+  args = cli.tokenize('s');
   assert.is(1, args.length);
   assert.is('s', args[0].text);
   assert.is('', args[0].prefix);
   assert.is('', args[0].suffix);
   assert.is('Argument', args[0].type);
 
-  args = requ._tokenize('s s');
+  args = cli.tokenize('s s');
   assert.is(2, args.length);
   assert.is('s', args[0].text);
   assert.is('', args[0].prefix);
@@ -80,23 +78,22 @@ exports.testTokSimple = function(options) {
 
 exports.testJavascript = function(options) {
   var args;
-  var requ = new Requisition();
 
-  args = requ._tokenize('{x}');
+  args = cli.tokenize('{x}');
   assert.is(1, args.length);
   assert.is('x', args[0].text);
   assert.is('{', args[0].prefix);
   assert.is('}', args[0].suffix);
   assert.is('ScriptArgument', args[0].type);
 
-  args = requ._tokenize('{ x }');
+  args = cli.tokenize('{ x }');
   assert.is(1, args.length);
   assert.is('x', args[0].text);
   assert.is('{ ', args[0].prefix);
   assert.is(' }', args[0].suffix);
   assert.is('ScriptArgument', args[0].type);
 
-  args = requ._tokenize('{x} {y}');
+  args = cli.tokenize('{x} {y}');
   assert.is(2, args.length);
   assert.is('x', args[0].text);
   assert.is('{', args[0].prefix);
@@ -107,7 +104,7 @@ exports.testJavascript = function(options) {
   assert.is('}', args[1].suffix);
   assert.is('ScriptArgument', args[1].type);
 
-  args = requ._tokenize('{x}{y}');
+  args = cli.tokenize('{x}{y}');
   assert.is(2, args.length);
   assert.is('x', args[0].text);
   assert.is('{', args[0].prefix);
@@ -118,21 +115,21 @@ exports.testJavascript = function(options) {
   assert.is('}', args[1].suffix);
   assert.is('ScriptArgument', args[1].type);
 
-  args = requ._tokenize('{');
+  args = cli.tokenize('{');
   assert.is(1, args.length);
   assert.is('', args[0].text);
   assert.is('{', args[0].prefix);
   assert.is('', args[0].suffix);
   assert.is('ScriptArgument', args[0].type);
 
-  args = requ._tokenize('{ ');
+  args = cli.tokenize('{ ');
   assert.is(1, args.length);
   assert.is('', args[0].text);
   assert.is('{ ', args[0].prefix);
   assert.is('', args[0].suffix);
   assert.is('ScriptArgument', args[0].type);
 
-  args = requ._tokenize('{x');
+  args = cli.tokenize('{x');
   assert.is(1, args.length);
   assert.is('x', args[0].text);
   assert.is('{', args[0].prefix);
@@ -142,30 +139,29 @@ exports.testJavascript = function(options) {
 
 exports.testRegularNesting = function(options) {
   var args;
-  var requ = new Requisition();
 
-  args = requ._tokenize('{"x"}');
+  args = cli.tokenize('{"x"}');
   assert.is(1, args.length);
   assert.is('"x"', args[0].text);
   assert.is('{', args[0].prefix);
   assert.is('}', args[0].suffix);
   assert.is('ScriptArgument', args[0].type);
 
-  args = requ._tokenize('{\'x\'}');
+  args = cli.tokenize('{\'x\'}');
   assert.is(1, args.length);
   assert.is('\'x\'', args[0].text);
   assert.is('{', args[0].prefix);
   assert.is('}', args[0].suffix);
   assert.is('ScriptArgument', args[0].type);
 
-  args = requ._tokenize('"{x}"');
+  args = cli.tokenize('"{x}"');
   assert.is(1, args.length);
   assert.is('{x}', args[0].text);
   assert.is('"', args[0].prefix);
   assert.is('"', args[0].suffix);
   assert.is('Argument', args[0].type);
 
-  args = requ._tokenize('\'{x}\'');
+  args = cli.tokenize('\'{x}\'');
   assert.is(1, args.length);
   assert.is('{x}', args[0].text);
   assert.is('\'', args[0].prefix);
@@ -175,23 +171,22 @@ exports.testRegularNesting = function(options) {
 
 exports.testDeepNesting = function(options) {
   var args;
-  var requ = new Requisition();
 
-  args = requ._tokenize('{{}}');
+  args = cli.tokenize('{{}}');
   assert.is(1, args.length);
   assert.is('{}', args[0].text);
   assert.is('{', args[0].prefix);
   assert.is('}', args[0].suffix);
   assert.is('ScriptArgument', args[0].type);
 
-  args = requ._tokenize('{{x} {y}}');
+  args = cli.tokenize('{{x} {y}}');
   assert.is(1, args.length);
   assert.is('{x} {y}', args[0].text);
   assert.is('{', args[0].prefix);
   assert.is('}', args[0].suffix);
   assert.is('ScriptArgument', args[0].type);
 
-  args = requ._tokenize('{{w} {{{x}}}} {y} {{{z}}}');
+  args = cli.tokenize('{{w} {{{x}}}} {y} {{{z}}}');
 
   assert.is(3, args.length);
 
@@ -210,7 +205,7 @@ exports.testDeepNesting = function(options) {
   assert.is('}', args[2].suffix);
   assert.is('ScriptArgument', args[2].type);
 
-  args = requ._tokenize('{{w} {{{x}}} {y} {{{z}}}');
+  args = cli.tokenize('{{w} {{{x}}} {y} {{{z}}}');
 
   assert.is(1, args.length);
 
@@ -222,10 +217,9 @@ exports.testDeepNesting = function(options) {
 
 exports.testStrangeNesting = function(options) {
   var args;
-  var requ = new Requisition();
 
   // Note: When we get real JS parsing this should break
-  args = requ._tokenize('{"x}"}');
+  args = cli.tokenize('{"x}"}');
 
   assert.is(2, args.length);
 
@@ -242,9 +236,8 @@ exports.testStrangeNesting = function(options) {
 
 exports.testComplex = function(options) {
   var args;
-  var requ = new Requisition();
 
-  args = requ._tokenize(' 1234  \'12 34\'');
+  args = cli.tokenize(' 1234  \'12 34\'');
 
   assert.is(2, args.length);
 
@@ -258,7 +251,7 @@ exports.testComplex = function(options) {
   assert.is('\'', args[1].suffix);
   assert.is('Argument', args[1].type);
 
-  args = requ._tokenize('12\'34 "12 34" \\'); // 12'34 "12 34" \
+  args = cli.tokenize('12\'34 "12 34" \\'); // 12'34 "12 34" \
 
   assert.is(3, args.length);
 
@@ -280,9 +273,8 @@ exports.testComplex = function(options) {
 
 exports.testPathological = function(options) {
   var args;
-  var requ = new Requisition();
 
-  args = requ._tokenize('a\\ b \\t\\n\\r \\\'x\\\" \'d'); // a_b \t\n\r \'x\" 'd
+  args = cli.tokenize('a\\ b \\t\\n\\r \\\'x\\\" \'d'); // a_b \t\n\r \'x\" 'd
 
   assert.is(4, args.length);
 

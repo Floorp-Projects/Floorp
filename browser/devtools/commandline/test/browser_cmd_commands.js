@@ -15,17 +15,6 @@ function test() {
   }).then(finish);
 }
 
-tests.testEcho = function(options) {
-  return helpers.audit(options, [
-    {
-      setup: "echo message",
-      exec: {
-        output: "message",
-      }
-    }
-  ]);
-};
-
 tests.testConsole = function(options) {
   let deferred = Promise.defer();
   let hud = null;
