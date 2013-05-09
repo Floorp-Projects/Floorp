@@ -1847,6 +1847,11 @@ class MCompare
     CompareType compareType() const {
         return compareType_;
     }
+    bool isDoubleComparison() const {
+        return compareType() == Compare_Double ||
+               compareType() == Compare_DoubleMaybeCoerceLHS ||
+               compareType() == Compare_DoubleMaybeCoerceRHS;
+    }
     void setCompareType(CompareType type) {
         compareType_ = type;
     }

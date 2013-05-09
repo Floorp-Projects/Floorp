@@ -185,7 +185,7 @@ EventListenerManager::TraceInternal(JSTracer* aTrc) const
          listenerElem;
          listenerElem = listenerElem->getNext()) {
       JS_CallObjectTracer(aTrc,
-                          listenerElem->mListener,
+                          &const_cast<ListenerData*>(listenerElem)->mListener,
                           "EventListenerManager listener object");
     }
   }

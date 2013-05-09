@@ -545,10 +545,6 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
         }
         break;
 #endif
-      case LAYERS_CLIENT:
-        // Do nothing, the compositor will handle drawing.
-        break;
-
       default:
         NS_ERROR("Unknown layers backend used!");
         break;

@@ -16,7 +16,8 @@ from mach.decorators import (
 
 @CommandProvider
 class MachCommands(MachCommandBase):
-    @Command('marionette-test', help='Run a Marionette test.')
+    @Command('marionette-test', category='testing',
+        description='Run a Marionette test.')
     @CommandArgument('--homedir', dest='b2g_path',
         help='For B2G testing, the path to the B2G repo.')
     @CommandArgument('--emulator', choices=['x86', 'arm'],

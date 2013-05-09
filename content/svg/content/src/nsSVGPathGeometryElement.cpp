@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsSVGPathGeometryElement.h"
+#include "nsSVGLength2.h"
 
 //----------------------------------------------------------------------
 // Implementation
@@ -24,6 +25,19 @@ nsSVGPathGeometryElement::AttributeDefinesGeometry(const nsIAtom *aName)
     }
   }
 
+  return false;
+}
+
+bool
+nsSVGPathGeometryElement::GeometryDependsOnCoordCtx()
+{
+  // Check the nsSVGLength2 attribute
+  LengthAttributesInfo info = const_cast<nsSVGPathGeometryElement*>(this)->GetLengthInfo();
+  for (uint32_t i = 0; i < info.mLengthCount; i++) {
+    if (info.mLengths[i].GetSpecifiedUnitType() == nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
+      return true;
+    }   
+  }
   return false;
 }
 

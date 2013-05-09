@@ -5,11 +5,19 @@
 
 package org.mozilla.gecko.gfx;
 
+import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.net.Uri;
 import android.util.Base64;
 import android.util.Log;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 public final class BitmapUtils {
     private static final String LOGTAG = "GeckoBitmapUtils";
@@ -48,6 +56,72 @@ public final class BitmapUtils {
         }
 
         return bitmap;
+    }
+
+    public static Bitmap decodeStream(InputStream inputStream) {
+        try {
+            return BitmapFactory.decodeStream(inputStream);
+        } catch (OutOfMemoryError e) {
+            Log.e(LOGTAG, "decodeStream() OOM!", e);
+            return null;
+        }
+    }
+
+    public static Bitmap decodeUrl(Uri uri) {
+        return decodeUrl(uri.toString());
+    }
+
+    public static Bitmap decodeUrl(String urlString) {
+        URL url;
+
+        try {
+            url = new URL(urlString);
+        } catch(MalformedURLException e) {
+            Log.w(LOGTAG, "decodeUrl: malformed URL " + urlString);
+            return null;
+        }
+
+        return decodeUrl(url);
+    }
+
+    public static Bitmap decodeUrl(URL url) {
+        InputStream stream = null;
+
+        try {
+            stream = url.openStream();
+        } catch(IOException e) {
+            Log.w(LOGTAG, "decodeUrl: IOException downloading " + url);
+            return null;
+        }
+
+        if (stream == null) {
+            Log.w(LOGTAG, "decodeUrl: stream not found downloading " + url);
+            return null;
+        }
+
+        Bitmap bitmap = decodeStream(stream);
+
+        try {
+            stream.close();
+        } catch(IOException e) {
+            Log.w(LOGTAG, "decodeUrl: IOException closing stream " + url, e);
+        }
+
+        return bitmap;
+    }
+
+    public static Bitmap decodeResource(Context context, int id) {
+        return decodeResource(context, id, null);
+    }
+
+    public static Bitmap decodeResource(Context context, int id, BitmapFactory.Options options) {
+        Resources resources = context.getResources();
+        try {
+            return BitmapFactory.decodeResource(resources, id, options);
+        } catch (OutOfMemoryError e) {
+            Log.e(LOGTAG, "decodeResource() OOM! Resource id=" + id, e);
+            return null;
+        }
     }
 
     public static int getDominantColor(Bitmap source) {

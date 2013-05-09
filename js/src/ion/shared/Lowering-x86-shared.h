@@ -27,6 +27,11 @@ class LIRGeneratorX86Shared : public LIRGeneratorShared
     bool visitGuardShape(MGuardShape *ins);
     bool visitGuardObjectType(MGuardObjectType *ins);
     bool visitPowHalf(MPowHalf *ins);
+    bool lowerForShift(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir, MDefinition *lhs,
+                       MDefinition *rhs);
+    bool lowerForALU(LInstructionHelper<1, 1, 0> *ins, MDefinition *mir, MDefinition *input);
+    bool lowerForALU(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir, MDefinition *lhs,
+                     MDefinition *rhs);
     bool visitConstant(MConstant *ins);
     bool visitAsmJSNeg(MAsmJSNeg *ins);
     bool visitAsmJSUDiv(MAsmJSUDiv *ins);
@@ -36,6 +41,7 @@ class LIRGeneratorX86Shared : public LIRGeneratorShared
     bool lowerModI(MMod *mod);
     bool lowerUrshD(MUrsh *mir);
     bool lowerConstantDouble(double d, MInstruction *ins);
+    bool lowerTruncateDToInt32(MTruncateToInt32 *ins);
 };
 
 } // namespace ion
