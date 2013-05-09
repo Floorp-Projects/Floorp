@@ -90,20 +90,11 @@ public:
   nsresult SetEventHandler(nsIAtom* aType,
                            JSContext* aCx,
                            const JS::Value& aValue);
-  void SetEventHandler(nsIAtom* aType,
-                       mozilla::dom::EventHandlerNonNull* aHandler,
-                       mozilla::ErrorResult& rv)
-  {
-    rv = GetListenerManager(true)->SetEventHandler(aType, aHandler);
-  }
+  using mozilla::dom::EventTarget::SetEventHandler;
   void GetEventHandler(nsIAtom* aType,
                        JSContext* aCx,
                        JS::Value* aValue);
-  mozilla::dom::EventHandlerNonNull* GetEventHandler(nsIAtom* aType)
-  {
-    nsEventListenerManager* elm = GetListenerManager(false);
-    return elm ? elm->GetEventHandler(aType) : nullptr;
-  }
+  using mozilla::dom::EventTarget::GetEventHandler;
 
   nsresult CheckInnerWindowCorrectness()
   {
