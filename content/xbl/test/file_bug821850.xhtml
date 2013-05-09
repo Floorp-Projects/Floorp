@@ -40,12 +40,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=821850
           ok(bound, "bound is non-null");
           is(bound.method('baz'), "method:baz", "Xray methods work");
           is(bound.prop, "propVal", "Property Xrays work");
-          is(bound.primitiveField, 2, "Field Xrays work");
-          is(bound.objectField.bar.a, 1, "Field Xrays work on objects");
-          is(bound.contentField.foo, 10, "Field Xrays work on content objects");
-          var hole = bound.contentField.rabbit.hole;
-          ok(hole.win === XPCNativeWrapper.unwrap(window), "Xray vision remains waived when hitting a native object");
-          ok(!Cu.isXrayWrapper(hole.win), "Xray is waived");
+          is(bound.primitiveField, undefined, "Xrays don't show fields");
+          is(bound.wrappedJSObject.primitiveField, 2, "Waiving Xrays show fields");
 
           // This gets invoked by an event handler.
           window.finish = function() {
@@ -54,7 +50,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=821850
             is(bound.wrappedJSObject.method('bay'), "hah", "Xray waived methods work");
             is(bound.prop, "set:someOtherVal", "Xray props work");
             is(bound.wrappedJSObject.prop, "redefined", "Xray waived props work");
-            is(bound.primitiveField, 321, "Can't do anything about redefined fields");
+            is(bound.wrappedJSObject.primitiveField, 321, "Can't do anything about redefined fields");
 
             SimpleTest.finish();
           }
@@ -63,8 +59,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=821850
           win.go();
         </constructor>
         <field name="primitiveField">2</field>
-        <field name="objectField">({ foo: 2, bar: {a: 1} })</field>
-        <field name="contentField">XPCNativeWrapper.unwrap(window).contentVal</field>
         <method name="method">
           <parameter name="arg" />
           <body>
@@ -127,8 +121,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=821850
     // Inspect the bound element.
     var bound = document.getElementById('bound');
     is(bound.primitiveField, 2, "Can see primitive fields");
-    is(typeof bound.objectField, "object", "objectField exists");
-    checkThrows(function() bound.objectField.foo);
     is(bound.method("foo"), "method:foo", "Can invoke XBL method from content");
     is(bound.prop, "propVal", "Can access properties from content");
     bound.prop = "someOtherVal";
