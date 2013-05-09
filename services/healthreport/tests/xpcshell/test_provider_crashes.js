@@ -126,13 +126,17 @@ add_task(function test_collect() {
   let tomorrow = new Date(now.getTime() + MILLISECONDS_PER_DAY);
   let yesterday = new Date(now.getTime() - MILLISECONDS_PER_DAY);
 
-  let yesterdayID = createFakeCrash(false, yesterday);
-  let tomorrowID = createFakeCrash(false, tomorrow);
+  createFakeCrash(false, yesterday);
+
+  // Create multiple to test that multiple are handled properly.
+  createFakeCrash(false, tomorrow);
+  createFakeCrash(false, tomorrow);
+  createFakeCrash(false, tomorrow);
 
   yield provider.collectConstantData();
   values = yield m.getValues();
   do_check_eq(values.days.size, 11);
-  do_check_eq(values.days.getDay(tomorrow).get("pending"), 1);
+  do_check_eq(values.days.getDay(tomorrow).get("pending"), 3);
 
   for each (let date in gPending) {
     let day = values.days.getDay(date);
