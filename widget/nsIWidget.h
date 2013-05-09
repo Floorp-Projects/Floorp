@@ -92,8 +92,8 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #endif
 
 #define NS_IWIDGET_IID \
-{ 0x16da2e50, 0x0fee, 0x4719, \
-  { 0x93, 0x37, 0xce, 0xd4, 0xdd, 0xd2, 0x22, 0x53 } }
+{ 0x37b67cb4, 0x140c, 0x4d46, \
+  { 0xa9, 0xf8, 0x28, 0xcc, 0x08, 0x3d, 0x1f, 0x54 } }
 
 /*
  * Window shadow styles
@@ -1168,6 +1168,8 @@ class nsIWidget : public nsISupports {
      * OMTC is not enabled.
      */
     virtual void CleanupWindowEffects() = 0;
+
+    virtual void PreRender(LayerManager* aManager) = 0;
 
     /**
      * Called before the LayerManager draws the layer tree.
