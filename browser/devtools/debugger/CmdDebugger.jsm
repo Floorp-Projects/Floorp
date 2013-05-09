@@ -157,7 +157,7 @@ gcli.addCommand({
       description: gcli.lookup("breakaddlineLineDesc")
     }
   ],
-  returnType: "string",
+  returnType: "html",
   exec: function(args, context) {
     args.type = "line";
 
@@ -201,7 +201,7 @@ gcli.addCommand({
       description: gcli.lookup("breakdelBreakidDesc")
     }
   ],
-  returnType: "string",
+  returnType: "html",
   exec: function(args, context) {
     let dbg = getPanel(context, "jsdebugger");
     if (!dbg) {
@@ -381,7 +381,7 @@ gcli.addCommand({
   name: "dbg list",
   description: gcli.lookup("dbgListSourcesDesc"),
   params: [],
-  returnType: "dom",
+  returnType: "html",
   exec: function(args, context) {
     let dbg = getPanel(context, "jsdebugger");
     let doc = context.environment.chromeDocument;

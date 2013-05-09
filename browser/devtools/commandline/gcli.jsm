@@ -88,20 +88,18 @@ var mozl10n = {};
 
 })(mozl10n);
 
-define('gcli/index', ['require', 'exports', 'module' , 'gcli/types/basic', 'gcli/types/selection', 'gcli/types/command', 'gcli/types/javascript', 'gcli/types/node', 'gcli/types/resource', 'gcli/types/setting', 'gcli/settings', 'gcli/ui/intro', 'gcli/ui/focus', 'gcli/ui/fields/basic', 'gcli/ui/fields/javascript', 'gcli/ui/fields/selection', 'gcli/commands/connect', 'gcli/commands/context', 'gcli/commands/help', 'gcli/commands/pref', 'gcli/canon', 'gcli/converters', 'gcli/ui/ffdisplay'], function(require, exports, module) {
+define('gcli/index', ['require', 'exports', 'module' , 'gcli/types/basic', 'gcli/types/command', 'gcli/types/javascript', 'gcli/types/node', 'gcli/types/resource', 'gcli/types/setting', 'gcli/types/selection', 'gcli/settings', 'gcli/ui/intro', 'gcli/ui/focus', 'gcli/ui/fields/basic', 'gcli/ui/fields/javascript', 'gcli/ui/fields/selection', 'gcli/commands/help', 'gcli/commands/pref', 'gcli/canon', 'gcli/converters', 'gcli/ui/ffdisplay'], function(require, exports, module) {
 
   'use strict';
 
   // Internal startup process. Not exported
-  // The basic/selection are depended on by others so they must come first
   require('gcli/types/basic').startup();
-  require('gcli/types/selection').startup();
-
   require('gcli/types/command').startup();
   require('gcli/types/javascript').startup();
   require('gcli/types/node').startup();
   require('gcli/types/resource').startup();
   require('gcli/types/setting').startup();
+  require('gcli/types/selection').startup();
 
   require('gcli/settings').startup();
   require('gcli/ui/intro').startup();
@@ -110,8 +108,6 @@ define('gcli/index', ['require', 'exports', 'module' , 'gcli/types/basic', 'gcli
   require('gcli/ui/fields/javascript').startup();
   require('gcli/ui/fields/selection').startup();
 
-  require('gcli/commands/connect').startup();
-  require('gcli/commands/context').startup();
   require('gcli/commands/help').startup();
   require('gcli/commands/pref').startup();
 
@@ -191,21 +187,21 @@ var ArrayArgument = require('gcli/argument').ArrayArgument;
  * Registration and de-registration.
  */
 exports.startup = function() {
-  types.addType(StringType);
-  types.addType(NumberType);
-  types.addType(BooleanType);
-  types.addType(BlankType);
-  types.addType(DelegateType);
-  types.addType(ArrayType);
+  types.registerType(StringType);
+  types.registerType(NumberType);
+  types.registerType(BooleanType);
+  types.registerType(BlankType);
+  types.registerType(DelegateType);
+  types.registerType(ArrayType);
 };
 
 exports.shutdown = function() {
-  types.removeType(StringType);
-  types.removeType(NumberType);
-  types.removeType(BooleanType);
-  types.removeType(BlankType);
-  types.removeType(DelegateType);
-  types.removeType(ArrayType);
+  types.unregisterType(StringType);
+  types.unregisterType(NumberType);
+  types.unregisterType(BooleanType);
+  types.unregisterType(BlankType);
+  types.unregisterType(DelegateType);
+  types.unregisterType(ArrayType);
 };
 
 
@@ -481,12 +477,6 @@ Object.defineProperty(DelegateType.prototype, 'isImportant', {
   enumerable: true
 });
 
-/**
- * DelegateType is designed to be inherited from, so DelegateField needs a way
- * to check if something works like a delegate without using 'name'
- */
-DelegateType.prototype.isDelegate = true;
-
 DelegateType.prototype.name = 'delegate';
 
 exports.DelegateType = DelegateType;
@@ -527,7 +517,7 @@ function ArrayType(typeSpec) {
   Object.keys(typeSpec).forEach(function(key) {
     this[key] = typeSpec[key];
   }, this);
-  this.subtype = types.createType(this.subtype);
+  this.subtype = types.getType(this.subtype);
 }
 
 ArrayType.prototype = Object.create(Type.prototype);
@@ -975,18 +965,11 @@ exports.promiseEach = function(array, action, scope) {
  * - we don't get stack traces out from console.error(ex);
  */
 exports.errorHandler = function(ex) {
+  console.error(ex);
   if (ex instanceof Error) {
-    // V8 weirdly includes the exception message in the stack
-    if (ex.stack.indexOf(ex.message) !== -1) {
-      console.error(ex.stack);
-    }
-    else {
-      console.error('' + ex);
-      console.error(ex.stack);
-    }
-  }
-  else {
-    console.error(ex);
+    // Bizarrely the error message is part of the stack on node, but we'd
+    // rather have it twice than not at all
+    console.error(ex.stack);
   }
 };
 
@@ -1311,6 +1294,56 @@ exports.createUrlLookup = function(callingModule) {
       return filename + '/' + path;
     }
   };
+};
+
+/**
+ * Helper to find the 'data-command' attribute and call some action on it.
+ * @see |updateCommand()| and |executeCommand()|
+ */
+function withCommand(element, action) {
+  var command = element.getAttribute('data-command');
+  if (!command) {
+    command = element.querySelector('*[data-command]')
+            .getAttribute('data-command');
+  }
+
+  if (command) {
+    action(command);
+  }
+  else {
+    console.warn('Missing data-command for ' + util.findCssSelector(element));
+  }
+}
+
+/**
+ * Update the requisition to contain the text of the clicked element
+ * @param element The clicked element, containing either a data-command
+ * attribute directly or in a nested element, from which we get the command
+ * to be executed.
+ * @param context Either a Requisition or an ExecutionContext or another object
+ * that contains an |update()| function that follows a similar contract.
+ */
+exports.updateCommand = function(element, context) {
+  withCommand(element, function(command) {
+    context.update(command);
+  });
+};
+
+/**
+ * Execute the text contained in the element that was clicked
+ * @param element The clicked element, containing either a data-command
+ * attribute directly or in a nested element, from which we get the command
+ * to be executed.
+ * @param context Either a Requisition or an ExecutionContext or another object
+ * that contains an |update()| function that follows a similar contract.
+ */
+exports.executeCommand = function(element, context) {
+  withCommand(element, function(command) {
+    context.exec({
+      visible: true,
+      typed: command
+    });
+  });
 };
 
 
@@ -1989,28 +2022,16 @@ exports.getTypeNames = function() {
  * #getType() is called with a 'name' that matches Type.prototype.name we will
  * pass the typeSpec into this constructor.
  */
-exports.addType = function(type) {
+exports.registerType = function(type) {
   if (typeof type === 'object') {
-    if (!type.name) {
-      throw new Error('All registered types must have a name');
-    }
-
     if (type instanceof Type) {
+      if (!type.name) {
+        throw new Error('All registered types must have a name');
+      }
       registeredTypes[type.name] = type;
     }
     else {
-      if (!type.parent) {
-        throw new Error('\'parent\' property required for object declarations');
-      }
-      var name = type.name;
-      var parent = type.parent;
-      type.name = parent;
-      delete type.parent;
-
-      registeredTypes[name] = exports.createType(type);
-
-      type.name = name;
-      type.parent = parent;
+      throw new Error('Can\'t registerType using: ' + type);
     }
   }
   else if (typeof type === 'function') {
@@ -2024,58 +2045,47 @@ exports.addType = function(type) {
   }
 };
 
+exports.registerTypes = function registerTypes(newTypes) {
+  Object.keys(newTypes).forEach(function(name) {
+    var type = newTypes[name];
+    type.name = name;
+    newTypes.registerType(type);
+  });
+};
+
 /**
  * Remove a type from the list available to the system
  */
-exports.removeType = function(type) {
+exports.deregisterType = function(type) {
   delete registeredTypes[type.name];
 };
 
 /**
- * Find a type, previously registered using #addType()
+ * Find a type, previously registered using #registerType()
  */
-exports.createType = function(typeSpec) {
+exports.getType = function(typeSpec) {
+  var type;
   if (typeof typeSpec === 'string') {
-    typeSpec = { name: typeSpec };
+    type = registeredTypes[typeSpec];
+    if (typeof type === 'function') {
+      type = new type({});
+    }
+    return type;
   }
 
-  if (typeof typeSpec !== 'object') {
-    throw new Error('Can\'t extract type from ' + typeSpec);
-  }
-
-  if (!typeSpec.name) {
-    throw new Error('Missing \'name\' member to typeSpec');
-  }
-
-  var newType;
-  var type = registeredTypes[typeSpec.name];
-
-  if (!type) {
-    console.error('Known types: ' + Object.keys(registeredTypes).join(', '));
-    throw new Error('Unknown type: \'' + typeSpec.name + '\'');
-  }
-
-  if (typeof type === 'function') {
-    newType = new type(typeSpec);
-  }
-  else {
-    // Shallow clone 'type'
-    newType = {};
-    for (var key in type) {
-      newType[key] = type[key];
+  if (typeof typeSpec === 'object') {
+    if (!typeSpec.name) {
+      throw new Error('Missing \'name\' member to typeSpec');
     }
 
-    // Copy the properties of typeSpec onto the new type
-    for (var key in typeSpec) {
-      newType[key] = typeSpec[key];
+    type = registeredTypes[typeSpec.name];
+    if (typeof type === 'function') {
+      type = new type(typeSpec);
     }
-
-    if (typeof newType.constructor === 'function') {
-      newType.constructor();
-    }
+    return type;
   }
 
-  return newType;
+  throw new Error('Can\'t extract type from ' + typeSpec);
 };
 
 
@@ -2713,11 +2723,11 @@ var BlankArgument = require('gcli/argument').BlankArgument;
  * Registration and de-registration.
  */
 exports.startup = function() {
-  types.addType(SelectionType);
+  types.registerType(SelectionType);
 };
 
 exports.shutdown = function() {
-  types.removeType(SelectionType);
+  types.unregisterType(SelectionType);
 };
 
 
@@ -3052,12 +3062,6 @@ SelectionType.prototype._findValue = function(lookup, value) {
   return index;
 };
 
-/**
- * SelectionType is designed to be inherited from, so SelectionField needs a way
- * to check if something works like a selection without using 'name'
- */
-SelectionType.prototype.isSelection = true;
-
 SelectionType.prototype.name = 'selection';
 
 exports.SelectionType = SelectionType;
@@ -3218,13 +3222,13 @@ var Conversion = require('gcli/types').Conversion;
  * Registration and de-registration.
  */
 exports.startup = function() {
-  types.addType(CommandType);
-  types.addType(ParamType);
+  types.registerType(CommandType);
+  types.registerType(ParamType);
 };
 
 exports.shutdown = function() {
-  types.removeType(CommandType);
-  types.removeType(ParamType);
+  types.unregisterType(CommandType);
+  types.unregisterType(ParamType);
 };
 
 
@@ -3362,9 +3366,10 @@ CommandType.prototype.parse = function(arg, context) {
  * limitations under the License.
  */
 
-define('gcli/canon', ['require', 'exports', 'module' , 'util/promise', 'util/util', 'util/l10n', 'gcli/types'], function(require, exports, module) {
+define('gcli/canon', ['require', 'exports', 'module' , 'util/promise', 'util/util', 'util/l10n', 'gcli/types', 'gcli/types/basic', 'gcli/types/selection'], function(require, exports, module) {
 
 'use strict';
+var canon = exports;
 
 var Promise = require('util/promise');
 var util = require('util/util');
@@ -3372,6 +3377,8 @@ var l10n = require('util/l10n');
 
 var types = require('gcli/types');
 var Status = require('gcli/types').Status;
+var BooleanType = require('gcli/types/basic').BooleanType;
+var SelectionType = require('gcli/types/selection').SelectionType;
 
 /**
  * Implement the localization algorithm for any documentation objects (i.e.
@@ -3493,7 +3500,7 @@ function Command(commandSpec) {
   }, this);
 }
 
-exports.Command = Command;
+canon.Command = Command;
 
 
 /**
@@ -3526,7 +3533,7 @@ function Parameter(paramSpec, command, groupName) {
   }
 
   var typeSpec = this.type;
-  this.type = types.createType(typeSpec);
+  this.type = types.getType(typeSpec);
   if (this.type == null) {
     console.error('Known types: ' + types.getTypeNames().join(', '));
     throw new Error('In ' + this.command.name + '/' + this.name +
@@ -3535,7 +3542,7 @@ function Parameter(paramSpec, command, groupName) {
 
   // boolean parameters have an implicit defaultValue:false, which should
   // not be changed. See the docs.
-  if (this.type.name === 'boolean' &&
+  if (this.type instanceof BooleanType &&
       this.paramSpec.defaultValue !== undefined) {
     throw new Error('In ' + this.command.name + '/' + this.name +
                     ': boolean parameters can not have a defaultValue.' +
@@ -3569,7 +3576,7 @@ function Parameter(paramSpec, command, groupName) {
   // All parameters that can only be set via a named parameter must have a
   // non-undefined default value
   if (!this.isPositionalAllowed && this.paramSpec.defaultValue === undefined &&
-      this.type.getBlank == null && !(this.type.name === 'boolean')) {
+      this.type.getBlank == null && !(this.type instanceof BooleanType)) {
     throw new Error('In ' + this.command.name + '/' + this.name +
                     ': Missing defaultValue for optional parameter.');
   }
@@ -3666,23 +3673,23 @@ Object.defineProperty(Parameter.prototype, 'isPositionalAllowed', {
   enumerable: true
 });
 
-exports.Parameter = Parameter;
+canon.Parameter = Parameter;
 
 
 /**
- * A canon is a store for a list of commands
+ * A lookup hash of our registered commands
  */
-function Canon() {
-  // A lookup hash of our registered commands
-  this._commands = {};
-  // A sorted list of command names, we regularly want them in order, so pre-sort
-  this._commandNames = [];
-  // A lookup of the original commandSpecs by command name
-  this._commandSpecs = {};
+var commands = {};
 
-  // Enable people to be notified of changes to the list of commands
-  this.onCanonChange = util.createEvent('canon.onCanonChange');
-}
+/**
+ * A sorted list of command names, we regularly want them in order, so pre-sort
+ */
+var commandNames = [];
+
+/**
+ * A lookup of the original commandSpecs by command name
+ */
+var commandSpecs = {};
 
 /**
  * Add a command to the canon of known commands.
@@ -3691,23 +3698,23 @@ function Canon() {
  * @param commandSpec The command and its metadata.
  * @return The new command
  */
-Canon.prototype.addCommand = function(commandSpec) {
-  if (this._commands[commandSpec.name] != null) {
+canon.addCommand = function addCommand(commandSpec) {
+  if (commands[commandSpec.name] != null) {
     // Roughly canon.removeCommand() without the event call, which we do later
-    delete this._commands[commandSpec.name];
-    this._commandNames = this._commandNames.filter(function(test) {
+    delete commands[commandSpec.name];
+    commandNames = commandNames.filter(function(test) {
       return test !== commandSpec.name;
     });
   }
 
   var command = new Command(commandSpec);
-  this._commands[commandSpec.name] = command;
-  this._commandNames.push(commandSpec.name);
-  this._commandNames.sort();
+  commands[commandSpec.name] = command;
+  commandNames.push(commandSpec.name);
+  commandNames.sort();
 
-  this._commandSpecs[commandSpec.name] = commandSpec;
+  commandSpecs[commandSpec.name] = commandSpec;
 
-  this.onCanonChange();
+  canon.onCanonChange();
   return command;
 };
 
@@ -3717,23 +3724,23 @@ Canon.prototype.addCommand = function(commandSpec) {
  * @param commandOrName Either a command name or the command itself.
  * @return true if a command was removed, false otherwise.
  */
-Canon.prototype.removeCommand = function(commandOrName) {
+canon.removeCommand = function removeCommand(commandOrName) {
   var name = typeof commandOrName === 'string' ?
           commandOrName :
           commandOrName.name;
 
-  if (!this._commands[name]) {
+  if (!commands[name]) {
     return false;
   }
 
   // See start of canon.addCommand if changing this code
-  delete this._commands[name];
-  delete this._commandSpecs[name];
-  this._commandNames = this._commandNames.filter(function(test) {
+  delete commands[name];
+  delete commandSpecs[name];
+  commandNames = commandNames.filter(function(test) {
     return test !== name;
   });
 
-  this.onCanonChange();
+  canon.onCanonChange();
   return true;
 };
 
@@ -3741,135 +3748,40 @@ Canon.prototype.removeCommand = function(commandOrName) {
  * Retrieve a command by name
  * @param name The name of the command to retrieve
  */
-Canon.prototype.getCommand = function(name) {
+canon.getCommand = function getCommand(name) {
   // '|| undefined' is to silence 'reference to undefined property' warnings
-  return this._commands[name] || undefined;
+  return commands[name] || undefined;
 };
 
 /**
  * Get an array of all the registered commands.
  */
-Canon.prototype.getCommands = function() {
-  return Object.keys(this._commands).map(function(name) {
-    return this._commands[name];
+canon.getCommands = function getCommands() {
+  // return Object.values(commands);
+  return Object.keys(commands).map(function(name) {
+    return commands[name];
   }, this);
 };
 
 /**
  * Get an array containing the names of the registered commands.
  */
-Canon.prototype.getCommandNames = function() {
-  return this._commandNames.slice(0);
+canon.getCommandNames = function getCommandNames() {
+  return commandNames.slice(0);
 };
 
 /**
  * Get access to the stored commandMetaDatas (i.e. before they were made into
  * instances of Command/Parameters) so we can remote them.
  */
-Canon.prototype.getCommandSpecs = function() {
-  var specs = {};
-
-  Object.keys(this._commandSpecs).forEach(function(name) {
-    var spec = this._commandSpecs[name];
-    if (spec.exec == null) {
-      spec.isParent = true;
-    }
-    specs[name] = spec;
-  }.bind(this));
-
-  return specs;
+canon.getCommandSpecs = function getCommandSpecs() {
+  return commandSpecs;
 };
 
 /**
- * Add a set of commands that are executed somewhere else.
- * @param prefix The name prefix that we assign to all command names
- * @param commandSpecs Presumably as obtained from getCommandSpecs on remote
- * @param remoter Function to call on exec of a new remote command. This is
- * defined just like an exec function (i.e. that takes args/context as params
- * and returns a promise) with one extra feature, that the context includes a
- * 'commandName' property that contains the original command name.
- * @param to URL-like string that describes where the commands are executed.
- * This is to complete the parent command description.
+ * Enable people to be notified of changes to the list of commands
  */
-Canon.prototype.addProxyCommands = function(prefix, commandSpecs, remoter, to) {
-  var names = Object.keys(commandSpecs);
-
-  if (this._commands[prefix] != null) {
-    throw new Error(l10n.lookupFormat('canonProxyExists', [ prefix ]));
-  }
-
-  // We need to add the parent command so all the commands from the other
-  // system have a parent
-  this.addCommand({
-    name: prefix,
-    isProxy: true,
-    description: l10n.lookupFormat('canonProxyDesc', [ to ]),
-    manual: l10n.lookupFormat('canonProxyManual', [ to ])
-  });
-
-  names.forEach(function(name) {
-    var commandSpec = commandSpecs[name];
-
-    if (!commandSpec.isParent) {
-      commandSpec.exec = function(args, context) {
-        context.commandName = name;
-        return remoter(args, context);
-      }.bind(this);
-    }
-
-    commandSpec.name = prefix + ' ' + commandSpec.name;
-    commandSpec.isProxy = true;
-    this.addCommand(commandSpec);
-  }.bind(this));
-};
-
-/**
- * Add a set of commands that are executed somewhere else.
- * @param prefix The name prefix that we assign to all command names
- * @param commandSpecs Presumably as obtained from getCommandSpecs on remote
- * @param remoter Function to call on exec of a new remote command. This is
- * defined just like an exec function (i.e. that takes args/context as params
- * and returns a promise) with one extra feature, that the context includes a
- * 'commandName' property that contains the original command name.
- * @param to URL-like string that describes where the commands are executed.
- * This is to complete the parent command description.
- */
-Canon.prototype.removeProxyCommands = function(prefix) {
-  var toRemove = [];
-  Object.keys(this._commandSpecs).forEach(function(name) {
-    if (name.indexOf(prefix) === 0) {
-      toRemove.push(name);
-    }
-  }.bind(this));
-
-  var removed = [];
-  toRemove.forEach(function(name) {
-    var command = this.getCommand(name);
-    if (command.isProxy) {
-      this.removeCommand(name);
-      removed.push(name);
-    }
-    else {
-      console.error('Skipping removal of \'' + name +
-                    '\' because it is not a proxy command.');
-    }
-  }.bind(this));
-
-  return removed;
-};
-
-var canon = new Canon();
-
-exports.Canon = Canon;
-exports.addCommand = canon.addCommand.bind(canon);
-exports.removeCommand = canon.removeCommand.bind(canon);
-exports.onCanonChange = canon.onCanonChange;
-exports.getCommands = canon.getCommands.bind(canon);
-exports.getCommand = canon.getCommand.bind(canon);
-exports.getCommandNames = canon.getCommandNames.bind(canon);
-exports.getCommandSpecs = canon.getCommandSpecs.bind(canon);
-exports.addProxyCommands = canon.addProxyCommands.bind(canon);
-exports.removeProxyCommands = canon.removeProxyCommands.bind(canon);
+canon.onCanonChange = util.createEvent('canon.onCanonChange');
 
 /**
  * CommandOutputManager stores the output objects generated by executed
@@ -3884,7 +3796,7 @@ function CommandOutputManager() {
   this.onOutput = util.createEvent('CommandOutputManager.onOutput');
 }
 
-exports.CommandOutputManager = CommandOutputManager;
+canon.CommandOutputManager = CommandOutputManager;
 
 
 });
@@ -3921,11 +3833,11 @@ var Status = types.Status;
  * Registration and de-registration.
  */
 exports.startup = function() {
-  types.addType(JavascriptType);
+  types.registerType(JavascriptType);
 };
 
 exports.shutdown = function() {
-  types.removeType(JavascriptType);
+  types.unregisterType(JavascriptType);
 };
 
 /**
@@ -4486,13 +4398,13 @@ var BlankArgument = require('gcli/argument').BlankArgument;
  * Registration and de-registration.
  */
 exports.startup = function() {
-  types.addType(NodeType);
-  types.addType(NodeListType);
+  types.registerType(NodeType);
+  types.registerType(NodeListType);
 };
 
 exports.shutdown = function() {
-  types.removeType(NodeType);
-  types.removeType(NodeListType);
+  types.unregisterType(NodeType);
+  types.unregisterType(NodeListType);
 };
 
 /**
@@ -4728,11 +4640,11 @@ var SelectionType = require('gcli/types/selection').SelectionType;
  * Registration and de-registration.
  */
 exports.startup = function() {
-  types.addType(ResourceType);
+  types.registerType(ResourceType);
 };
 
 exports.shutdown = function() {
-  types.removeType(ResourceType);
+  types.unregisterType(ResourceType);
   exports.clearResourceCache();
 };
 
@@ -5032,66 +4944,73 @@ var ResourceCache = {
  * limitations under the License.
  */
 
-define('gcli/types/setting', ['require', 'exports', 'module' , 'gcli/settings', 'gcli/types'], function(require, exports, module) {
+define('gcli/types/setting', ['require', 'exports', 'module' , 'gcli/settings', 'gcli/types', 'gcli/types/selection', 'gcli/types/basic'], function(require, exports, module) {
 
 'use strict';
 
 var settings = require('gcli/settings');
 var types = require('gcli/types');
+var SelectionType = require('gcli/types/selection').SelectionType;
+var DelegateType = require('gcli/types/basic').DelegateType;
 
-/**
- * A type for selecting a known setting
- */
-var settingType = {
-  constructor: function() {
-    settings.onChange.add(function(ev) {
-      this.clearCache();
-    }, this);
-  },
-  name: 'setting',
-  parent: 'selection',
-  cacheable: true,
-  lookup: function() {
-    return settings.getAll().map(function(setting) {
-      return { name: setting.name, value: setting };
-    });
-  }
-};
-
-/**
- * A type for entering the value of a known setting
- * Customizations:
- * - settingParamName The name of the setting parameter so we can customize the
- *   type that we are expecting to read
- */
-var settingValueType = {
-  name: 'settingValue',
-  parent: 'delegate',
-  settingParamName: 'setting',
-  delegateType: function(context) {
-    if (context != null) {
-      var setting = context.getArgsObject()[this.settingParamName];
-      if (setting != null) {
-        return setting.type;
-      }
-    }
-
-    return types.createType('blank');
-  }
-};
 
 /**
  * Registration and de-registration.
  */
 exports.startup = function() {
-  types.addType(settingType);
-  types.addType(settingValueType);
+  types.registerType(SettingType);
+  types.registerType(SettingValueType);
 };
 
 exports.shutdown = function() {
-  types.removeType(settingType);
-  types.removeType(settingValueType);
+  types.unregisterType(SettingType);
+  types.unregisterType(SettingValueType);
 };
+
+/**
+ * A type for selecting a known setting
+ */
+function SettingType(typeSpec) {
+  settings.onChange.add(function(ev) {
+    this.clearCache();
+  }, this);
+}
+
+SettingType.prototype = new SelectionType({ cacheable: true });
+
+SettingType.prototype.lookup = function() {
+  return settings.getAll().map(function(setting) {
+    return { name: setting.name, value: setting };
+  });
+};
+
+SettingType.prototype.name = 'setting';
+
+
+/**
+ * A type for entering the value of a known setting
+ * @param typeSpec Customization object, can contain the following:
+ * - settingParamName The name of the setting parameter so we can customize the
+ *   type that we are expecting to read
+ */
+function SettingValueType(typeSpec) {
+  this.settingParamName = typeSpec.settingParamName || 'setting';
+}
+
+SettingValueType.prototype = Object.create(DelegateType.prototype);
+
+SettingValueType.prototype.delegateType = function(context) {
+  if (context != null) {
+    var setting = context.getArgsObject()[this.settingParamName];
+    if (setting != null) {
+      return setting.type;
+    }
+  }
+
+  return types.getType('blank');
+};
+
+SettingValueType.prototype.name = 'settingValue';
 
 
 });
@@ -5174,13 +5093,13 @@ Object.defineProperty(Setting.prototype, 'type', {
   get: function() {
     switch (imports.prefBranch.getPrefType(this.name)) {
       case imports.prefBranch.PREF_BOOL:
-        return types.createType('boolean');
+        return types.getType('boolean');
 
       case imports.prefBranch.PREF_INT:
-        return types.createType('number');
+        return types.getType('number');
 
       case imports.prefBranch.PREF_STRING:
-        return types.createType('string');
+        return types.getType('string');
 
       default:
         throw new Error('Unknown type for ' + this.name);
@@ -5404,10 +5323,11 @@ exports.removeSetting = function() { };
  * limitations under the License.
  */
 
-define('gcli/ui/intro', ['require', 'exports', 'module' , 'util/l10n', 'gcli/settings', 'gcli/ui/view', 'gcli/cli', 'text!gcli/ui/intro.html'], function(require, exports, module) {
+define('gcli/ui/intro', ['require', 'exports', 'module' , 'util/util', 'util/l10n', 'gcli/settings', 'gcli/ui/view', 'gcli/cli', 'text!gcli/ui/intro.html'], function(require, exports, module) {
 
 'use strict';
 
+var util = require('util/util');
 var l10n = require('util/l10n');
 var settings = require('gcli/settings');
 var view = require('gcli/ui/view');
@@ -5439,7 +5359,7 @@ exports.shutdown = function() {
 /**
  * Called when the UI is ready to add a welcome message to the output
  */
-exports.maybeShowIntro = function(commandOutputManager, conversionContext) {
+exports.maybeShowIntro = function(commandOutputManager, context) {
   if (hideIntro.value) {
     return;
   }
@@ -5448,25 +5368,25 @@ exports.maybeShowIntro = function(commandOutputManager, conversionContext) {
   output.type = 'view';
   commandOutputManager.onOutput({ output: output });
 
-  var viewData = this.createView(conversionContext, output);
+  var viewData = this.createView(context, output);
 
-  output.complete({ isTypedData: true, type: 'view', data: viewData });
+  output.complete(viewData);
 };
 
 /**
  * Called when the UI is ready to add a welcome message to the output
  */
-exports.createView = function(conversionContext, output) {
+exports.createView = function(context, output) {
   return view.createView({
     html: require('text!gcli/ui/intro.html'),
     options: { stack: 'intro.html' },
     data: {
       l10n: l10n.propertyLookup,
       onclick: function(ev) {
-        conversionContext.update(ev.currentTarget);
+        util.updateCommand(ev.currentTarget, context);
       },
       ondblclick: function(ev) {
-        conversionContext.updateExec(ev.currentTarget);
+        util.executeCommand(ev.currentTarget, context);
       },
       showHideButton: (output != null),
       onGotIt: function(ev) {
@@ -5610,7 +5530,7 @@ define('util/domtemplate', ['require', 'exports', 'module' ], function(require, 
  * limitations under the License.
  */
 
-define('gcli/cli', ['require', 'exports', 'module' , 'util/promise', 'util/util', 'util/l10n', 'gcli/ui/view', 'gcli/canon', 'gcli/types', 'gcli/argument'], function(require, exports, module) {
+define('gcli/cli', ['require', 'exports', 'module' , 'util/promise', 'util/util', 'util/l10n', 'gcli/ui/view', 'gcli/canon', 'gcli/types', 'gcli/types/basic', 'gcli/argument'], function(require, exports, module) {
 
 'use strict';
 
@@ -5624,6 +5544,10 @@ var CommandOutputManager = require('gcli/canon').CommandOutputManager;
 
 var Status = require('gcli/types').Status;
 var Conversion = require('gcli/types').Conversion;
+var ArrayType = require('gcli/types/basic').ArrayType;
+var StringType = require('gcli/types/basic').StringType;
+var BooleanType = require('gcli/types/basic').BooleanType;
+var NumberType = require('gcli/types/basic').NumberType;
 
 var Argument = require('gcli/argument').Argument;
 var ArrayArgument = require('gcli/argument').ArrayArgument;
@@ -5921,7 +5845,7 @@ function UnassignedAssignment(requisition, arg) {
   this.onAssignmentChange = util.createEvent('UnassignedAssignment.onAssignmentChange');
 
   // synchronize is ok because we can be sure that param type is synchronous
-  var parsed = this.param.type.parse(arg, requisition.executionContext);
+  var parsed = this.param.type.parse(arg, requisition.context);
   this.conversion = util.synchronize(parsed);
   this.conversion.assign(this);
 }
@@ -5932,7 +5856,6 @@ UnassignedAssignment.prototype.getStatus = function(arg) {
   return this.conversion.getStatus();
 };
 
-exports.logErrors = true;
 
 /**
  * A Requisition collects the information needed to execute a command.
@@ -5974,6 +5897,7 @@ function Requisition(environment, doc, commandOutputManager) {
       // Ignore
     }
   }
+  this.context = exports.createExecutionContext(this);
 
   this.commandOutputManager = commandOutputManager || new CommandOutputManager();
 
@@ -6005,10 +5929,6 @@ function Requisition(environment, doc, commandOutputManager) {
   // argument positions
   this._structuralChangeInProgress = false;
 
-  // We can set a prefix to typed commands to make it easier to focus on
-  // Allowing us to type "add -a; commit" in place of "git add -a; git commit"
-  this.prefix = '';
-
   this.commandAssignment.onAssignmentChange.add(this._commandAssignmentChanged, this);
   this.commandAssignment.onAssignmentChange.add(this._assignmentChanged, this);
 
@@ -6026,110 +5946,6 @@ Requisition.prototype.destroy = function() {
   delete this.document;
   delete this.environment;
 };
-
-var legacy = false;
-
-/**
- * Functions and data related to the execution of a command
- */
-Object.defineProperty(Requisition.prototype, 'executionContext', {
-  get: function() {
-    if (this._executionContext == null) {
-      this._executionContext = {
-        defer: function() {
-          return Promise.defer();
-        },
-        typedData: function(type, data) {
-          return {
-            isTypedData: true,
-            data: data,
-            type: type
-          };
-        },
-        getArgsObject: this.getArgsObject.bind(this)
-      };
-
-      // Alias requisition so we're clear about what's what
-      var requisition = this;
-      Object.defineProperty(this._executionContext, 'typed', {
-        get: function() { return requisition.toString(); },
-        enumerable: true
-      });
-      Object.defineProperty(this._executionContext, 'environment', {
-        get: function() { return requisition.environment; },
-        enumerable: true
-      });
-
-      /**
-       * This is a temporary property that will change and/or be removed.
-       * Do not use it
-       */
-      Object.defineProperty(this._executionContext, '__dlhjshfw', {
-        get: function() { return requisition; },
-        enumerable: false
-      });
-
-      if (legacy) {
-        this._executionContext.createView = view.createView;
-        this._executionContext.exec = this.exec.bind(this);
-        this._executionContext.update = this.update.bind(this);
-        this._executionContext.updateExec = this.updateExec.bind(this);
-
-        Object.defineProperty(this._executionContext, 'document', {
-          get: function() { return requisition.document; },
-          enumerable: true
-        });
-      }
-    }
-
-    return this._executionContext;
-  },
-  enumerable: true
-});
-
-/**
- * Functions and data related to the conversion of the output of a command
- */
-Object.defineProperty(Requisition.prototype, 'conversionContext', {
-  get: function() {
-    if (this._conversionContext == null) {
-      this._conversionContext = {
-        defer: function() {
-          return Promise.defer();
-        },
-
-        createView: view.createView,
-        exec: this.exec.bind(this),
-        update: this.update.bind(this),
-        updateExec: this.updateExec.bind(this)
-      };
-
-      // Alias requisition so we're clear about what's what
-      var requisition = this;
-
-      Object.defineProperty(this._conversionContext, 'document', {
-        get: function() { return requisition.document; },
-        enumerable: true
-      });
-      Object.defineProperty(this._conversionContext, 'environment', {
-        get: function() { return requisition.environment; },
-        enumerable: true
-      });
-
-      /**
-       * This is a temporary property that will change and/or be removed.
-       * Do not use it
-       */
-      Object.defineProperty(this._conversionContext, '__dlhjshfw', {
-        get: function() { return requisition; },
-        enumerable: false
-      });
-    }
-
-    return this._conversionContext;
-  },
-  enumerable: true
-});
 
 /**
  * When any assignment changes, we might need to update the _args array to
@@ -6381,7 +6197,7 @@ Requisition.prototype.setAssignment = function(assignment, arg, options) {
     setAssignmentInternal(arg);
   }
   else {
-    var parsed = assignment.param.type.parse(arg, this.executionContext);
+    var parsed = assignment.param.type.parse(arg, this.context);
     return parsed.then(function(conversion) {
       setAssignmentInternal(conversion);
     }.bind(this));
@@ -6512,10 +6328,9 @@ Requisition.prototype._addSpace = function(assignment) {
  */
 Requisition.prototype.decrement = function(assignment) {
   var replacement = assignment.param.type.decrement(assignment.conversion.value,
-                                                    this.executionContext);
+                                                    this.context);
   if (replacement != null) {
-    var str = assignment.param.type.stringify(replacement,
-                                              this.executionContext);
+    var str = assignment.param.type.stringify(replacement, this.context);
     var arg = assignment.conversion.arg.beget({ text: str });
     var promise = this.setAssignment(assignment, arg);
     util.synchronize(promise);
@@ -6527,10 +6342,9 @@ Requisition.prototype.decrement = function(assignment) {
  */
 Requisition.prototype.increment = function(assignment) {
   var replacement = assignment.param.type.increment(assignment.conversion.value,
-                                                    this.executionContext);
+                                                    this.context);
   if (replacement != null) {
-    var str = assignment.param.type.stringify(replacement,
-                                              this.executionContext);
+    var str = assignment.param.type.stringify(replacement, this.context);
     var arg = assignment.conversion.arg.beget({ text: str });
     var promise = this.setAssignment(assignment, arg);
     util.synchronize(promise);
@@ -6556,7 +6370,7 @@ Requisition.prototype.toCanonicalString = function() {
     // named parameters in place of positional params. Both can wait.
     if (assignment.value !== assignment.param.defaultValue) {
       line.push(' ');
-      line.push(type.stringify(assignment.value, this.executionContext));
+      line.push(type.stringify(assignment.value, this.context));
     }
   }, this);
 
@@ -6581,7 +6395,7 @@ Requisition.prototype.toCanonicalString = function() {
  * <li>part: One of ['prefix'|'text'|suffix'] - how was this char understood
  * </ul>
  * <p>
- * The Argument objects are as output from #tokenize() rather than as applied
+ * The Argument objects are as output from #_tokenize() rather than as applied
  * to Assignments by #_assign() (i.e. they are not instances of NamedArgument,
  * ArrayArgument, etc).
  * <p>
@@ -6851,23 +6665,20 @@ Requisition.prototype.exec = function(options) {
   };
 
   var onError = function(ex) {
-    if (exports.logErrors) {
-      util.errorHandler(ex);
-    }
-
-    var data = ex.isTypedData ? ex : {
+    output.complete({
       isTypedData: true,
       data: ex,
-      type: 'error'
-    };
-    output.complete(data, true);
+      type: "exception"
+    }, true);
   };
 
   try {
-    var reply = command.exec(args, this.executionContext);
-    Promise.resolve(reply).then(onDone, onError);
+    var reply = command.exec(args, this.context);
+
+    this._then(reply, onDone, onError);
   }
   catch (ex) {
+    console.error(ex);
     onError(ex);
   }
 
@@ -6897,9 +6708,8 @@ Requisition.prototype.clear = function() {
   this._args = [ arg ];
 
   var commandType = this.commandAssignment.param.type;
-  var promise = commandType.parse(arg, this.executionContext);
-  this.setAssignment(this.commandAssignment,
-                     util.synchronize(promise),
+  var conversion = util.synchronize(commandType.parse(arg, this.context));
+  this.setAssignment(this.commandAssignment, conversion,
                      { skipArgUpdate: true });
 
   this._structuralChangeInProgress = false;
@@ -6907,16 +6717,32 @@ Requisition.prototype.clear = function() {
 };
 
 /**
- * Helper to find the 'data-command' attribute, used by |update()|
+ * Different types of promise have different ways of doing 'then'. This is a
+ * catch-all so we can ignore the differences. It also handles concrete values
+ * and calls onDone directly if thing is not a promise.
+ * @param thing The value to test for 'promiseness'
+ * @param onDone The action to take if thing is resolved
+ * @param onError The action to take if thing is rejected
  */
-function getDataCommandAttribute(element) {
-  var command = element.getAttribute('data-command');
-  if (!command) {
-    command = element.querySelector('*[data-command]')
-                     .getAttribute('data-command');
+Requisition.prototype._then = function(thing, onDone, onError) {
+  var then = null;
+  if (thing != null && typeof thing.then === 'function') {
+    // Simple promises with a then function
+    then = thing.then;
   }
-  return command;
-}
+  else if (thing != null && thing.promise != null &&
+                typeof thing.promise.then === 'function') {
+    // Deprecated: When we're passed a deferred rather than a promise
+    then = thing.promise.then;
+  }
+
+  if (then != null) {
+    then(onDone, onError);
+  }
+  else {
+    onDone(thing);
+  }
+};
 
 /**
  * Called by the UI when ever the user interacts with a command line input
@@ -6932,7 +6758,7 @@ Requisition.prototype.update = function(typed) {
 
   this._structuralChangeInProgress = true;
 
-  this._args = exports.tokenize(typed);
+  this._args = this._tokenize(typed);
   var args = this._args.slice(0); // i.e. clone
 
   return this._split(args).then(function() {
@@ -6970,7 +6796,7 @@ Object.defineProperty(Requisition.prototype, '_summaryJson', {
 });
 
 /**
- * tokenize() is a state machine. These are the states.
+ * Requisition._tokenize() is a state machine. These are the states.
  */
 var In = {
   /**
@@ -7023,7 +6849,7 @@ var In = {
  * if the user has gone to the trouble of pasting a TAB character into the
  * input field (or whatever it takes), they probably mean it.
  */
-exports.tokenize = function(typed) {
+Requisition.prototype._tokenize = function(typed) {
   // For blank input, place a dummy empty argument into the list
   if (typed == null || typed.length === 0) {
     return [ new Argument('', '', '') ];
@@ -7226,32 +7052,14 @@ Requisition.prototype._split = function(args) {
 
   var argsUsed = 1;
 
-  var promise;
   var commandType = this.commandAssignment.param.type;
   while (argsUsed <= args.length) {
     var arg = (argsUsed === 1) ?
               args[0] :
               new MergedArgument(args, 0, argsUsed);
-
-    // Making the commandType.parse() promise as synchronous is OK because we
-    // know that commandType is a synchronous type.
-
-    if (this.prefix != null && this.prefix != '') {
-      var prefixArg = new Argument(this.prefix, '', ' ');
-      var prefixedArg = new MergedArgument([ prefixArg, arg ]);
-
-      promise = commandType.parse(prefixedArg, this.executionContext);
-      conversion = util.synchronize(promise);
-
-      if (conversion.value == null) {
-        promise = commandType.parse(arg, this.executionContext);
-        conversion = util.synchronize(promise);
-      }
-    }
-    else {
-      promise = commandType.parse(arg, this.executionContext);
-      conversion = util.synchronize(promise);
-    }
+    // Making this promise synchronous is OK because we know that commandType
+    // is a synchronous type.
+    conversion = util.synchronize(commandType.parse(arg, this.context));
 
     // We only want to carry on if this command is a parent command,
     // which means that there is a commandAssignment, but not one with
@@ -7317,7 +7125,7 @@ Requisition.prototype._assign = function(args) {
   // text, then we put all the params into the first param
   if (this.assignmentCount === 1) {
     var assignment = this.getAssignment(0);
-    if (assignment.param.type.name === 'string') {
+    if (assignment.param.type instanceof StringType) {
       var arg = (args.length === 1) ? args[0] : new MergedArgument(args);
       outstanding.push(this.setAssignment(assignment, arg, noArgUp));
       return util.all(outstanding);
@@ -7344,7 +7152,7 @@ Requisition.prototype._assign = function(args) {
         });
 
         // boolean parameters don't have values, default to false
-        if (assignment.param.type.name === 'boolean') {
+        if (assignment.param.type instanceof BooleanType) {
           arg = new TrueNamedArgument(arg);
         }
         else {
@@ -7355,7 +7163,7 @@ Requisition.prototype._assign = function(args) {
           arg = new NamedArgument(arg, valueArg);
         }
 
-        if (assignment.param.type.name === 'array') {
+        if (assignment.param.type instanceof ArrayType) {
           var arrayArg = arrayArgs[assignment.param.name];
           if (!arrayArg) {
             arrayArg = new ArrayArgument();
@@ -7387,7 +7195,7 @@ Requisition.prototype._assign = function(args) {
 
     // If this is a positional array argument, then it swallows the
     // rest of the arguments.
-    if (assignment.param.type.name === 'array') {
+    if (assignment.param.type instanceof ArrayType) {
       var arrayArg = arrayArgs[assignment.param.name];
       if (!arrayArg) {
         arrayArg = new ArrayArgument();
@@ -7404,7 +7212,7 @@ Requisition.prototype._assign = function(args) {
         var arg = args.splice(0, 1)[0];
         // --foo and -f are named parameters, -4 is a number. So '-' is either
         // the start of a named parameter or a number depending on the context
-        var isIncompleteName = assignment.param.type.name === 'number' ?
+        var isIncompleteName = assignment.param.type instanceof NumberType ?
             /-[-a-zA-Z_]/.test(arg.text) :
             arg.text.charAt(0) === '-';
 
@@ -7443,53 +7251,107 @@ function Output(options) {
   this.canonical = options.canonical || '';
   this.hidden = options.hidden === true ? true : false;
 
-  this.type = undefined;
+  this.type = this.command.returnType;
   this.data = undefined;
   this.completed = false;
   this.error = false;
   this.start = new Date();
 
-  this._deferred = Promise.defer();
-  this.promise = this._deferred.promise;
+  this.deferred = Promise.defer();
+  this.then = this.deferred.promise.then;
 
   this.onClose = util.createEvent('Output.onClose');
+  this.onChange = util.createEvent('Output.onChange');
 }
 
 /**
- * Called when there is data to display, and the command has finished executing
- * See changed() for details on parameters.
+ * Called when there is data to display, but the command is still executing
+ * @param data The new data. If the data structure has been altered but the
+ * root object is still the same, The same root object should be passed in the
+ * data parameter.
+ * @param ev Optional additional event data, for example to explain how the
+ * data structure has changed
  */
-Output.prototype.complete = function(data, error) {
-  this.end = new Date();
-  this.duration = this.end.getTime() - this.start.getTime();
-  this.completed = true;
-  this.error = error;
-
+Output.prototype.changed = function(data, ev) {
   if (data != null && data.isTypedData) {
     this.data = data.data;
     this.type = data.type;
   }
   else {
     this.data = data;
-    this.type = this.command.returnType;
     if (this.type == null) {
-      this.type = (this.data == null) ? 'undefined' : typeof this.data;
+      this.type = typeof this.data;
     }
   }
 
-  if (this.type === 'object') {
-    throw new Error('No type from output of ' + this.typed);
-  }
+  ev = ev || {};
+  ev.output = this;
+  this.onChange(ev);
+};
+
+/**
+ * Called when there is data to display, and the command has finished executing
+ * See changed() for details on parameters.
+ */
+Output.prototype.complete = function(data, error, ev) {
+  this.end = new Date();
+  this.duration = this.end.getTime() - this.start.getTime();
+  this.completed = true;
+  this.error = error;
+
+  this.changed(data, ev);
 
   if (error) {
-    this._deferred.reject();
+    this.deferred.reject();
   }
   else {
-    this._deferred.resolve();
+    this.deferred.resolve();
   }
 };
 
 exports.Output = Output;
+
+/**
+ * Functions and data related to the execution of a command
+ */
+exports.createExecutionContext = function(requisition) {
+  var context = {
+    exec: requisition.exec.bind(requisition),
+    update: requisition.update.bind(requisition),
+    updateExec: requisition.updateExec.bind(requisition),
+    createView: view.createView,
+    typedData: function(data, type) {
+      return {
+        isTypedData: true,
+        data: data,
+        type: type
+      };
+    },
+    getArgsObject: requisition.getArgsObject.bind(requisition),
+    defer: function() {
+      return Promise.defer();
+    },
+    /**
+     * @deprecated Use defer() instead, which does the same thing, but is not
+     * confusingly named
+     */
+    createPromise: function() {
+      return Promise.defer();
+    }
+  };
+
+  Object.defineProperty(context, 'environment', {
+    get: function() { return requisition.environment; },
+    enumerable : true
+  });
+
+  Object.defineProperty(context, 'document', {
+    get: function() { return requisition.document; },
+    enumerable : true
+  });
+
+  return context;
+};
 
 
 });
@@ -7945,7 +7807,7 @@ exports.FocusManager = FocusManager;
  * limitations under the License.
  */
 
-define('gcli/ui/fields/basic', ['require', 'exports', 'module' , 'util/util', 'util/l10n', 'gcli/argument', 'gcli/types', 'gcli/ui/fields'], function(require, exports, module) {
+define('gcli/ui/fields/basic', ['require', 'exports', 'module' , 'util/util', 'util/l10n', 'gcli/argument', 'gcli/types', 'gcli/types/basic', 'gcli/ui/fields'], function(require, exports, module) {
 
 'use strict';
 
@@ -7957,6 +7819,12 @@ var TrueNamedArgument = require('gcli/argument').TrueNamedArgument;
 var FalseNamedArgument = require('gcli/argument').FalseNamedArgument;
 var ArrayArgument = require('gcli/argument').ArrayArgument;
 var ArrayConversion = require('gcli/types').ArrayConversion;
+
+var StringType = require('gcli/types/basic').StringType;
+var NumberType = require('gcli/types/basic').NumberType;
+var BooleanType = require('gcli/types/basic').BooleanType;
+var DelegateType = require('gcli/types/basic').DelegateType;
+var ArrayType = require('gcli/types/basic').ArrayType;
 
 var Field = require('gcli/ui/fields').Field;
 var fields = require('gcli/ui/fields');
@@ -8022,7 +7890,7 @@ StringField.prototype.getConversion = function() {
 };
 
 StringField.claim = function(type, context) {
-  return type.name === 'string' ? Field.MATCH : Field.BASIC;
+  return type instanceof StringType ? Field.MATCH : Field.BASIC;
 };
 
 
@@ -8054,7 +7922,7 @@ function NumberField(type, options) {
 NumberField.prototype = Object.create(Field.prototype);
 
 NumberField.claim = function(type, context) {
-  return type.name === 'number' ? Field.MATCH : Field.NO_MATCH;
+  return type instanceof NumberType ? Field.MATCH : Field.NO_MATCH;
 };
 
 NumberField.prototype.destroy = function() {
@@ -8099,7 +7967,7 @@ function BooleanField(type, options) {
 BooleanField.prototype = Object.create(Field.prototype);
 
 BooleanField.claim = function(type, context) {
-  return type.name === 'boolean' ? Field.MATCH : Field.NO_MATCH;
+  return type instanceof BooleanType ? Field.MATCH : Field.NO_MATCH;
 };
 
 BooleanField.prototype.destroy = function() {
@@ -8166,7 +8034,7 @@ DelegateField.prototype.update = function() {
 };
 
 DelegateField.claim = function(type, context) {
-  return type.isDelegate ? Field.MATCH : Field.NO_MATCH;
+  return type instanceof DelegateType ? Field.MATCH : Field.NO_MATCH;
 };
 
 DelegateField.prototype.destroy = function() {
@@ -8228,7 +8096,7 @@ function ArrayField(type, options) {
 ArrayField.prototype = Object.create(Field.prototype);
 
 ArrayField.claim = function(type, context) {
-  return type.name === 'array' ? Field.MATCH : Field.NO_MATCH;
+  return type instanceof ArrayType ? Field.MATCH : Field.NO_MATCH;
 };
 
 ArrayField.prototype.destroy = function() {
@@ -8320,13 +8188,15 @@ ArrayField.prototype._onAdd = function(ev, subConversion) {
  * limitations under the License.
  */
 
-define('gcli/ui/fields', ['require', 'exports', 'module' , 'util/promise', 'util/util'], function(require, exports, module) {
+define('gcli/ui/fields', ['require', 'exports', 'module' , 'util/promise', 'util/util', 'gcli/types/basic'], function(require, exports, module) {
 
 'use strict';
 
 var Promise = require('util/promise');
 var util = require('util/util');
 var KeyEvent = require('util/util').KeyEvent;
+
+var BlankType = require('gcli/types/basic').BlankType;
 
 /**
  * A Field is a way to get input for a single parameter.
@@ -8538,7 +8408,7 @@ function BlankField(type, options) {
 BlankField.prototype = Object.create(Field.prototype);
 
 BlankField.claim = function(type, context) {
-  return type.name === 'blank' ? Field.MATCH : Field.NO_MATCH;
+  return type instanceof BlankType ? Field.MATCH : Field.NO_MATCH;
 };
 
 BlankField.prototype.setConversion = function(conversion) {
@@ -8569,7 +8439,7 @@ exports.addField(BlankField);
  * limitations under the License.
  */
 
-define('gcli/ui/fields/javascript', ['require', 'exports', 'module' , 'util/util', 'util/promise', 'gcli/types', 'gcli/argument', 'gcli/ui/fields/menu', 'gcli/ui/fields'], function(require, exports, module) {
+define('gcli/ui/fields/javascript', ['require', 'exports', 'module' , 'util/util', 'util/promise', 'gcli/types', 'gcli/argument', 'gcli/types/javascript', 'gcli/ui/fields/menu', 'gcli/ui/fields'], function(require, exports, module) {
 
 'use strict';
 
@@ -8579,6 +8449,7 @@ var Promise = require('util/promise');
 var Status = require('gcli/types').Status;
 var Conversion = require('gcli/types').Conversion;
 var ScriptArgument = require('gcli/argument').ScriptArgument;
+var JavascriptType = require('gcli/types/javascript').JavascriptType;
 
 var Menu = require('gcli/ui/fields/menu').Menu;
 var Field = require('gcli/ui/fields').Field;
@@ -8635,7 +8506,7 @@ function JavascriptField(type, options) {
 JavascriptField.prototype = Object.create(Field.prototype);
 
 JavascriptField.claim = function(type, context) {
-  return type.name === 'javascript' ? Field.TOOLTIP_MATCH : Field.NO_MATCH;
+  return type instanceof JavascriptType ? Field.TOOLTIP_MATCH : Field.NO_MATCH;
 };
 
 JavascriptField.prototype.destroy = function() {
@@ -8655,7 +8526,7 @@ JavascriptField.prototype.setConversion = function(conversion) {
   this.input.value = conversion.arg.text;
 
   var prefixLen = 0;
-  if (this.type.name === 'javascript') {
+  if (this.type instanceof JavascriptType) {
     var typed = conversion.arg.text;
     var lastDot = typed.lastIndexOf('.');
     if (lastDot !== -1) {
@@ -8966,7 +8837,7 @@ define("text!gcli/ui/fields/menu.html", [], "\n" +
  * limitations under the License.
  */
 
-define('gcli/ui/fields/selection', ['require', 'exports', 'module' , 'util/promise', 'util/util', 'util/l10n', 'gcli/argument', 'gcli/types', 'gcli/ui/fields/menu', 'gcli/ui/fields'], function(require, exports, module) {
+define('gcli/ui/fields/selection', ['require', 'exports', 'module' , 'util/promise', 'util/util', 'util/l10n', 'gcli/argument', 'gcli/types', 'gcli/types/basic', 'gcli/types/selection', 'gcli/ui/fields/menu', 'gcli/ui/fields'], function(require, exports, module) {
 
 'use strict';
 
@@ -8977,6 +8848,8 @@ var l10n = require('util/l10n');
 var Argument = require('gcli/argument').Argument;
 var Status = require('gcli/types').Status;
 var Conversion = require('gcli/types').Conversion;
+var BooleanType = require('gcli/types/basic').BooleanType;
+var SelectionType = require('gcli/types/selection').SelectionType;
 
 var Menu = require('gcli/ui/fields/menu').Menu;
 var Field = require('gcli/ui/fields').Field;
@@ -9032,10 +8905,10 @@ function SelectionField(type, options) {
 SelectionField.prototype = Object.create(Field.prototype);
 
 SelectionField.claim = function(type, context) {
-  if (type.name === 'boolean') {
+  if (type instanceof BooleanType) {
     return Field.BASIC;
   }
-  return type.isSelection ? Field.DEFAULT : Field.NO_MATCH;
+  return type instanceof SelectionType ? Field.DEFAULT : Field.NO_MATCH;
 };
 
 SelectionField.prototype.destroy = function() {
@@ -9094,7 +8967,7 @@ function SelectionTooltipField(type, options) {
 SelectionTooltipField.prototype = Object.create(Field.prototype);
 
 SelectionTooltipField.claim = function(type, context) {
-  return type.getType(context).isSelection ?
+  return type.getType(context) instanceof SelectionType ?
       Field.TOOLTIP_MATCH :
       Field.NO_MATCH;
 };
@@ -9188,366 +9061,20 @@ SelectionTooltipField.DEFAULT_VALUE = '__SelectionTooltipField.DEFAULT_VALUE';
  * limitations under the License.
  */
 
-define('gcli/commands/connect', ['require', 'exports', 'module' , 'util/l10n', 'gcli/types', 'gcli/canon', 'util/connect/connector'], function(require, exports, module) {
+define('gcli/commands/help', ['require', 'exports', 'module' , 'util/util', 'util/l10n', 'gcli/canon', 'gcli/ui/view', 'text!gcli/commands/help_man.html', 'text!gcli/commands/help_list.html', 'text!gcli/commands/help.css'], function(require, exports, module) {
 
 'use strict';
 
-var l10n = require('util/l10n');
-var types = require('gcli/types');
-var canon = require('gcli/canon');
-var connector = require('util/connect/connector');
-
-/**
- * A lookup of the current connection
- */
-var connections = {};
-
-/**
- * 'connect' command
- */
-var connect = {
-  name: 'connect',
-  description: l10n.lookup('connectDesc'),
-  manual: l10n.lookup('connectManual'),
-  params: [
-    {
-      name: 'prefix',
-      type: 'string',
-      description: l10n.lookup('connectPrefixDesc')
-    },
-    {
-      name: 'host',
-      type: 'string',
-      description: l10n.lookup('connectHostDesc'),
-      defaultValue: 'localhost',
-      option: true
-    },
-    {
-      name: 'port',
-      type: { name: 'number', max: 65536, min: 0 },
-      description: l10n.lookup('connectPortDesc'),
-      defaultValue: connector.defaultPort,
-      option: true
-    }
-  ],
-  returnType: 'string',
-
-  exec: function(args, context) {
-    if (connections[args.prefix] != null) {
-      throw new Error(l10n.lookupFormat('connectDupReply', [ args.prefix ]));
-    }
-
-    var cxp = connector.connect(args.prefix, args.host, args.port);
-    return cxp.then(function(connection) {
-      connections[args.prefix] = connection;
-
-      return connection.getCommandSpecs().then(function(commandSpecs) {
-        var remoter = this.createRemoter(args.prefix, connection);
-        canon.addProxyCommands(args.prefix, commandSpecs, remoter);
-
-        // commandSpecs doesn't include the parent command that we added
-        return l10n.lookupFormat('connectReply',
-                                 [ Object.keys(commandSpecs).length + 1 ]);
-      }.bind(this));
-    }.bind(this));
-  },
-
-  /**
-   * When we register a set of remote commands, we need to provide the canon
-   * with a proxy executor. This is that executor.
-   */
-  createRemoter: function(prefix, connection) {
-    return function(cmdArgs, context) {
-      var typed = context.typed;
-      if (typed.indexOf(prefix) !== 0) {
-        throw new Error("Missing prefix");
-      }
-      typed = typed.substring(prefix.length).replace(/^ */, "");
-
-      return connection.execute(typed, cmdArgs).then(function(reply) {
-        var typedData = context.typedData(reply.type, reply.data);
-        if (!reply.error) {
-          return typedData;
-        }
-        else {
-          throw typedData;
-        }
-      });
-    }.bind(this);
-  }
-};
-
-/**
- * 'connection' type
- */
-var connection = {
-  name: 'connection',
-  parent: 'selection',
-  lookup: function() {
-    return Object.keys(connections).map(function(prefix) {
-      return { name: prefix, value: connections[prefix] };
-    });
-  }
-};
-
-/**
- * 'disconnect' command
- */
-var disconnect = {
-  name: 'disconnect',
-  description: l10n.lookup('disconnectDesc'),
-  manual: l10n.lookup('disconnectManual'),
-  params: [
-    {
-      name: 'prefix',
-      type: 'connection',
-      description: l10n.lookup('disconnectPrefixDesc'),
-    }
-  ],
-  returnType: 'string',
-
-  exec: function(args, context) {
-    return args.prefix.disconnect().then(function() {
-      var removed = canon.removeProxyCommands(args.prefix.prefix);
-      delete connections[args.prefix.prefix];
-      return l10n.lookupFormat('disconnectReply', [ removed.length ]);
-    });
-  }
-};
-
-
-/**
- * Registration and de-registration.
- */
-exports.startup = function() {
-  types.addType(connection);
-
-  canon.addCommand(connect);
-  canon.addCommand(disconnect);
-};
-
-exports.shutdown = function() {
-  canon.removeCommand(connect);
-  canon.removeCommand(disconnect);
-
-  types.removeType(connection);
-};
-
-
-});
-/*
- * Copyright 2012, Mozilla Foundation and contributors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-define('util/connect/connector', ['require', 'exports', 'module' ], function(require, exports, module) {
-
-'use strict';
-
-/**
- * Create a new Connection and begin the connect process so the connection
- * object can't be used until it is connected.
- */
-exports.connect = function(prefix, host, port) {
-  var builtinCommands = Components.utils.import('resource:///modules/devtools/BuiltinCommands.jsm', {});
-  return builtinCommands.connect(prefix, host, port);
-};
-
-/**
- * What port should we use by default?
- */
-Object.defineProperty(exports, 'defaultPort', {
-  get: function() {
-    Components.utils.import("resource://gre/modules/Services.jsm");
-    return Services.prefs.getIntPref("devtools.debugger.chrome-debugging-port");
-  },
-  enumerable: true
-});
-
-
-});
-/*
- * Copyright 2012, Mozilla Foundation and contributors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-define('gcli/commands/context', ['require', 'exports', 'module' , 'util/l10n', 'gcli/canon'], function(require, exports, module) {
-
-'use strict';
-
+var util = require('util/util');
 var l10n = require('util/l10n');
 var canon = require('gcli/canon');
+var view = require('gcli/ui/view');
 
-/**
- * 'context' command
- */
-var contextCmdSpec = {
-  name: 'context',
-  description: l10n.lookup('contextDesc'),
-  manual: l10n.lookup('contextManual'),
-  params: [
-   {
-     name: 'prefix',
-     type: 'command',
-     description: l10n.lookup('contextPrefixDesc'),
-     defaultValue: null
-   }
-  ],
-  returnType: 'string',
-  exec: function echo(args, context) {
-    // Do not copy this code
-    var requisition = context.__dlhjshfw;
-
-    if (args.prefix == null) {
-      requisition.prefix = null;
-      return l10n.lookup('contextEmptyReply');
-    }
-
-    if (args.prefix.exec != null) {
-      throw new Error(l10n.lookupFormat('contextNotParentError',
-                                        [ args.prefix.name ]));
-    }
-
-    requisition.prefix = args.prefix.name;
-    return l10n.lookupFormat('contextReply', [ args.prefix.name ]);
-  }
-};
-
-/**
- * Registration and de-registration.
- */
-exports.startup = function() {
-  canon.addCommand(contextCmdSpec);
-};
-
-exports.shutdown = function() {
-  canon.removeCommand(contextCmdSpec);
-};
-
-});
-/*
- * Copyright 2012, Mozilla Foundation and contributors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-define('gcli/commands/help', ['require', 'exports', 'module' , 'util/l10n', 'gcli/canon', 'gcli/converters', 'text!gcli/commands/help_man.html', 'text!gcli/commands/help_list.html', 'text!gcli/commands/help.css'], function(require, exports, module) {
-
-'use strict';
-
-var l10n = require('util/l10n');
-var canon = require('gcli/canon');
-var converters = require('gcli/converters');
-
-var helpManHtml = require('text!gcli/commands/help_man.html');
-var helpListHtml = require('text!gcli/commands/help_list.html');
-var helpCss = require('text!gcli/commands/help.css');
-
-/**
- * Convert a command into a man page
- */
-var commandConverterSpec = {
-  from: 'commandData',
-  to: 'view',
-  exec: function(commandData, context) {
-    return context.createView({
-      html: helpManHtml,
-      options: { allowEval: true, stack: 'help_man.html' },
-      data: {
-        l10n: l10n.propertyLookup,
-        onclick: context.update,
-        ondblclick: context.updateExec,
-        describe: function(item) {
-          return item.manual || item.description;
-        },
-        getTypeDescription: function(param) {
-          var input = '';
-          if (param.defaultValue === undefined) {
-            input = l10n.lookup('helpManRequired');
-          }
-          else if (param.defaultValue === null) {
-            input = l10n.lookup('helpManOptional');
-          }
-          else {
-            input = param.defaultValue;
-          }
-          return '(' + param.type.name + ', ' + input + ')';
-        },
-        command: commandData.command,
-        subcommands: commandData.subcommands
-      },
-      css: helpCss,
-      cssId: 'gcli-help'
-    });
-  }
-};
-
-/**
- * Convert a list of commands into a formatted list
- */
-var commandsConverterSpec = {
-  from: 'commandsData',
-  to: 'view',
-  exec: function(commandsData, context) {
-    var heading;
-    if (commandsData.commands.length === 0) {
-      heading = l10n.lookupFormat('helpListNone', [ commandsData.prefix ]);
-    }
-    else if (commandsData.prefix == null) {
-      heading = l10n.lookup('helpListAll');
-    }
-    else {
-      heading = l10n.lookupFormat('helpListPrefix', [ commandsData.prefix ]);
-    }
-
-    return context.createView({
-      html: helpListHtml,
-      options: { allowEval: true, stack: 'help_list.html' },
-      data: {
-        l10n: l10n.propertyLookup,
-        includeIntro: commandsData.prefix == null,
-        heading: heading,
-        onclick: context.update,
-        ondblclick: context.updateExec,
-        matchingCommands: commandsData.commands
-      },
-      css: helpCss,
-      cssId: 'gcli-help'
-    });
-  }
-};
+// Storing the HTML on exports allows other builds to alter the help template
+// but still allowing dryice to do it's dependency thing properly
+exports.helpManHtml = require('text!gcli/commands/help_man.html');
+exports.helpListHtml = require('text!gcli/commands/help_list.html');
+exports.helpCss = require('text!gcli/commands/help.css');
 
 /**
  * 'help' command
@@ -9565,19 +9092,26 @@ var helpCommandSpec = {
       defaultValue: null
     }
   ],
+  returnType: 'view',
 
   exec: function(args, context) {
-    var command = canon.getCommand(args.search || undefined);
-    if (command) {
-      return context.typedData('commandData', {
-        command: command,
-        subcommands: getSubCommands(command)
+    var match = canon.getCommand(args.search || undefined);
+    if (match) {
+      return view.createView({
+        html: exports.helpManHtml,
+        options: { allowEval: true, stack: 'help_man.html' },
+        data: getManTemplateData(match, context),
+        css: exports.helpCss,
+        cssId: 'gcli-help'
       });
     }
 
-    return context.typedData('commandsData', {
-      prefix: args.search,
-      commands: getMatchingCommands(args.search)
+    return view.createView({
+      html: exports.helpListHtml,
+      options: { allowEval: true, stack: 'help_list.html' },
+      data: getListTemplateData(args, context),
+      css: exports.helpCss,
+      cssId: 'gcli-help'
     });
   }
 };
@@ -9587,360 +9121,113 @@ var helpCommandSpec = {
  */
 exports.startup = function() {
   canon.addCommand(helpCommandSpec);
-  converters.addConverter(commandConverterSpec);
-  converters.addConverter(commandsConverterSpec);
 };
 
 exports.shutdown = function() {
   canon.removeCommand(helpCommandSpec);
-  converters.removeConverter(commandConverterSpec);
-  converters.removeConverter(commandsConverterSpec);
 };
 
 /**
  * Create a block of data suitable to be passed to the help_list.html template
  */
-function getMatchingCommands(prefix) {
-  var commands = canon.getCommands().filter(function(command) {
+function getListTemplateData(args, context) {
+  var matchingCommands = canon.getCommands().filter(function(command) {
     if (command.hidden) {
       return false;
     }
 
-    if (prefix && command.name.indexOf(prefix) !== 0) {
+    if (args.search && command.name.indexOf(args.search) !== 0) {
       // Filtered out because they don't match the search
       return false;
     }
-    if (!prefix && command.name.indexOf(' ') != -1) {
+    if (!args.search && command.name.indexOf(' ') != -1) {
       // We don't show sub commands with plain 'help'
       return false;
     }
     return true;
   });
-  commands.sort(function(c1, c2) {
+  matchingCommands.sort(function(c1, c2) {
     return c1.name.localeCompare(c2.name);
   });
 
-  return commands;
-}
-
-/**
- * Find all the sub commands of the given command
- */
-function getSubCommands(command) {
-  if (command.exec != null) {
-    return [];
+  var heading;
+  if (matchingCommands.length === 0) {
+    heading = l10n.lookupFormat('helpListNone', [ args.search ]);
+  }
+  else if (args.search == null) {
+    heading = l10n.lookup('helpListAll');
+  }
+  else {
+    heading = l10n.lookupFormat('helpListPrefix', [ args.search ]);
   }
 
-  var subcommands = canon.getCommands().filter(function(subcommand) {
-    return subcommand.name.indexOf(command.name) === 0 &&
-            subcommand.name !== command.name;
-  });
-
-  subcommands.sort(function(c1, c2) {
-    return c1.name.localeCompare(c2.name);
-  });
-
-  return subcommands;
-}
-
-});
-/*
- * Copyright 2012, Mozilla Foundation and contributors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-define('gcli/converters', ['require', 'exports', 'module' , 'util/util', 'util/promise'], function(require, exports, module) {
-
-'use strict';
-
-var util = require('util/util');
-var Promise = require('util/promise');
-
-// It's probably easiest to read this bottom to top
-
-/**
- * Best guess at creating a DOM element from random data
- */
-var fallbackDomConverter = {
-  from: '*',
-  to: 'dom',
-  exec: function(data, conversionContext) {
-    if (data == null) {
-      return conversionContext.document.createTextNode('');
-    }
-
-    if (typeof HTMLElement !== 'undefined' && data instanceof HTMLElement) {
-      return data;
-    }
-
-    var node = util.createElement(conversionContext.document, 'p');
-    util.setContents(node, data.toString());
-    return node;
-  }
-};
-
-/**
- * Best guess at creating a string from random data
- */
-var fallbackStringConverter = {
-  from: '*',
-  to: 'string',
-  exec: function(data, conversionContext) {
-    if (data.isView) {
-      return data.toDom(conversionContext.document).textContent;
-    }
-
-    if (typeof HTMLElement !== 'undefined' && data instanceof HTMLElement) {
-      return data.textContent;
-    }
-
-    return data == null ? '' : data.toString();
-  }
-};
-
-/**
- * Convert a view object to a DOM element
- */
-var viewDomConverter = {
-  from: 'view',
-  to: 'dom',
-  exec: function(view, conversionContext) {
-    return view.toDom(conversionContext.document);
-  }
-};
-
-/**
- * Convert a view object to a string
- */
-var viewStringConverter = {
-  from: 'view',
-  to: 'string',
-  exec: function(view, conversionContext) {
-    return view.toDom(conversionContext.document).textContent;
-  }
-};
-
-/**
- * Convert a terminal object (to help traditional CLI integration) to an element
- */
-var terminalDomConverter = {
-  from: 'terminal',
-  to: 'dom',
-  createTextArea: function(text, conversionContext) {
-    var node = util.createElement(conversionContext.document, 'textarea');
-    node.classList.add('gcli-row-subterminal');
-    node.readOnly = true;
-    node.textContent = text;
-    return node;
-  },
-  exec: function(data, context) {
-    if (Array.isArray(data)) {
-      var node = util.createElement(conversionContext.document, 'div');
-      data.forEach(function(member) {
-        node.appendChild(this.createTextArea(member, conversionContext));
-      });
-      return node;
-    }
-    return this.createTextArea(data);
-  }
-};
-
-/**
- * Several converters are just data.toString inside a 'p' element
- */
-function nodeFromDataToString(data, conversionContext) {
-  var node = util.createElement(conversionContext.document, 'p');
-  node.textContent = data.toString();
-  return node;
-}
-
-/**
- * Convert a string to a DOM element
- */
-var stringDomConverter = {
-  from: 'string',
-  to: 'dom',
-  exec: nodeFromDataToString
-};
-
-/**
- * Convert a number to a DOM element
- */
-var numberDomConverter = {
-  from: 'number',
-  to: 'dom',
-  exec: nodeFromDataToString
-};
-
-/**
- * Convert a number to a DOM element
- */
-var booleanDomConverter = {
-  from: 'boolean',
-  to: 'dom',
-  exec: nodeFromDataToString
-};
-
-/**
- * Convert a number to a DOM element
- */
-var undefinedDomConverter = {
-  from: 'undefined',
-  to: 'dom',
-  exec: function(data, conversionContext) {
-    return util.createElement(conversionContext.document, 'span');
-  }
-};
-
-/**
- * Convert a string to a DOM element
- */
-var errorDomConverter = {
-  from: 'error',
-  to: 'dom',
-  exec: function(ex, conversionContext) {
-    var node = util.createElement(conversionContext.document, 'p');
-    node.className = "gcli-error";
-    node.textContent = ex;
-    return node;
-  }
-};
-
-/**
- * Create a new converter by using 2 converters, one after the other
- */
-function getChainConverter(first, second) {
-  if (first.to !== second.from) {
-    throw new Error('Chain convert impossible: ' + first.to + '!=' + second.from);
-  }
   return {
-    from: first.from,
-    to: second.to,
-    exec: function(data, conversionContext) {
-      var intermediate = first.exec(data, conversionContext);
-      return second.exec(intermediate, conversionContext);
+    l10n: l10n.propertyLookup,
+    includeIntro: args.search == null,
+    matchingCommands: matchingCommands,
+    heading: heading,
+
+    onclick: function(ev) {
+      util.updateCommand(ev.currentTarget, context);
+    },
+
+    ondblclick: function(ev) {
+      util.executeCommand(ev.currentTarget, context);
     }
   };
 }
 
 /**
- * This is where we cache the converters that we know about
+ * Create a block of data suitable to be passed to the help_man.html template
  */
-var converters = {
-  from: {}
-};
+function getManTemplateData(command, context) {
+  var manTemplateData = {
+    l10n: l10n.propertyLookup,
+    command: command,
 
-/**
- * Add a new converter to the cache
- */
-exports.addConverter = function(converter) {
-  var fromMatch = converters.from[converter.from];
-  if (fromMatch == null) {
-    fromMatch = {};
-    converters.from[converter.from] = fromMatch;
-  }
+    onclick: function(ev) {
+      util.updateCommand(ev.currentTarget, context);
+    },
 
-  fromMatch[converter.to] = converter;
-};
+    ondblclick: function(ev) {
+      util.executeCommand(ev.currentTarget, context);
+    },
 
-/**
- * Remove an existing converter from the cache
- */
-exports.removeConverter = function(converter) {
-  var fromMatch = converters.from[converter.from];
-  if (fromMatch == null) {
-    return;
-  }
+    describe: function(item) {
+      return item.manual || item.description;
+    },
 
-  if (fromMatch[converter.to] === converter) {
-    fromMatch[converter.to] = null;
-  }
-};
-
-/**
- * Work out the best converter that we've got, for a given conversion.
- */
-function getConverter(from, to) {
-  var fromMatch = converters.from[from];
-  if (fromMatch == null) {
-    return getFallbackConverter(from, to);
-  }
-
-  var converter = fromMatch[to];
-  if (converter == null) {
-    // Someone is going to love writing a graph search algorithm to work out
-    // the smallest number of conversions, or perhaps the least 'lossy'
-    // conversion but for now the only 2 step conversion is foo->view->dom,
-    // which we are going to special case.
-    if (to === 'dom') {
-      converter = fromMatch['view'];
-      if (converter != null) {
-        return getChainConverter(converter, viewDomConverter);
+    getTypeDescription: function(param) {
+      var input = '';
+      if (param.defaultValue === undefined) {
+        input = l10n.lookup('helpManRequired');
       }
-    }
-    if (to === 'string') {
-      converter = fromMatch['view'];
-      if (converter != null) {
-        return getChainConverter(converter, viewStringConverter);
+      else if (param.defaultValue === null) {
+        input = l10n.lookup('helpManOptional');
       }
+      else {
+        input = param.defaultValue;
+      }
+      return '(' + param.type.name + ', ' + input + ')';
     }
-    return getFallbackConverter(from, to);
-  }
-  return converter;
+  };
+
+  Object.defineProperty(manTemplateData, 'subcommands', {
+    get: function() {
+      var matching = canon.getCommands().filter(function(subcommand) {
+        return subcommand.name.indexOf(command.name) === 0 &&
+                subcommand.name !== command.name;
+      });
+      matching.sort(function(c1, c2) {
+        return c1.name.localeCompare(c2.name);
+      });
+      return matching;
+    },
+    enumerable: true
+  });
+
+  return manTemplateData;
 }
-
-/**
- * Helper for getConverter to pick the best fallback converter
- */
-function getFallbackConverter(from, to) {
-  console.error('No converter from ' + from + ' to ' + to + '. Using fallback');
-
-  if (to === 'dom') {
-    return fallbackDomConverter;
-  }
-
-  if (to === 'string') {
-    return fallbackStringConverter;
-  }
-
-  throw new Error('No conversion possible from ' + from + ' to ' + to + '.');
-}
-
-/**
- * Convert some data from one type to another
- * @param data The object to convert
- * @param from The type of the data right now
- * @param to The type that we would like the data in
- * @param conversionContext An execution context (i.e. simplified requisition) which is
- * often required for access to a document, or createView function
- */
-exports.convert = function(data, from, to, conversionContext) {
-  if (from === to) {
-    return Promise.resolve(data);
-  }
-  return Promise.resolve(getConverter(from, to).exec(data, conversionContext));
-};
-
-exports.addConverter(viewDomConverter);
-exports.addConverter(viewStringConverter);
-exports.addConverter(terminalDomConverter);
-exports.addConverter(stringDomConverter);
-exports.addConverter(numberDomConverter);
-exports.addConverter(booleanDomConverter);
-exports.addConverter(undefinedDomConverter);
-exports.addConverter(errorDomConverter);
-
 
 });
 define("text!gcli/commands/help_man.html", [], "\n" +
@@ -10103,7 +9390,7 @@ var prefSetCmdSpec = {
   exec: function(args, context) {
     if (!exports.allowSet.value &&
         args.setting.name !== exports.allowSet.name) {
-      return context.typedData('prefSetWarning', null);
+      return context.typedData(null, 'prefSetWarning');
     }
 
     args.setting.value = args.value;
@@ -10120,7 +9407,7 @@ var prefSetWarningConverterSpec = {
       data: {
         l10n: l10n.propertyLookup,
         activate: function() {
-          context.updateExec('pref set ' + exports.allowSet.name + ' true');
+          context.exec('pref set ' + exports.allowSet.name + ' true');
         }
       }
     });
@@ -10170,6 +9457,245 @@ exports.shutdown = function() {
   settings.removeSetting(allowSetSettingSpec);
   exports.allowSet = undefined;
 };
+
+
+});
+/*
+ * Copyright 2012, Mozilla Foundation and contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+define('gcli/converters', ['require', 'exports', 'module' , 'util/util', 'util/promise'], function(require, exports, module) {
+
+'use strict';
+
+var util = require('util/util');
+var Promise = require('util/promise');
+
+// It's probably easiest to read this bottom to top
+
+/**
+ * Best guess at creating a DOM element from random data
+ */
+var fallbackDomConverter = {
+  from: '*',
+  to: 'dom',
+  exec: function(data, context) {
+    if (data == null) {
+      return context.document.createTextNode('');
+    }
+
+    if (typeof HTMLElement !== 'undefined' && data instanceof HTMLElement) {
+      return data;
+    }
+
+    var node = util.createElement(context.document, 'p');
+    util.setContents(node, data.toString());
+    return node;
+  }
+};
+
+/**
+ * Best guess at creating a string from random data
+ */
+var fallbackStringConverter = {
+  from: '*',
+  to: 'string',
+  exec: function(data, context) {
+    if (data.isView) {
+      return data.toDom(context.document).textContent;
+    }
+
+    if (typeof HTMLElement !== 'undefined' && data instanceof HTMLElement) {
+      return data.textContent;
+    }
+
+    return data == null ? '' : data.toString();
+  }
+};
+
+/**
+ * Convert a view object to a DOM element
+ */
+var viewDomConverter = {
+  from: 'view',
+  to: 'dom',
+  exec: function(data, context) {
+    return data.toDom(context.document);
+  }
+};
+
+/**
+ * Convert a terminal object (to help traditional CLI integration) to an element
+ */
+var terminalDomConverter = {
+  from: 'terminal',
+  to: 'dom',
+  createTextArea: function(text) {
+    var node = util.createElement(context.document, 'textarea');
+    node.classList.add('gcli-row-subterminal');
+    node.readOnly = true;
+    node.textContent = text;
+    return node;
+  },
+  exec: function(data, context) {
+    if (Array.isArray(data)) {
+      var node = util.createElement(context.document, 'div');
+      data.forEach(function(member) {
+        node.appendChild(this.createTextArea(member));
+      });
+      return node;
+    }
+    return this.createTextArea(data);
+  }
+};
+
+/**
+ * Convert a string to a DOM element
+ */
+var stringDomConverter = {
+  from: 'string',
+  to: 'dom',
+  exec: function(data, context) {
+    var node = util.createElement(context.document, 'p');
+    node.textContent = data;
+    return node;
+  }
+};
+
+/**
+ * Convert a string to a DOM element
+ */
+var exceptionDomConverter = {
+  from: 'exception',
+  to: 'dom',
+  exec: function(ex, context) {
+    var node = util.createElement(context.document, 'p');
+    node.className = "gcli-exception";
+    node.textContent = ex;
+    return node;
+  }
+};
+
+/**
+ * Create a new converter by using 2 converters, one after the other
+ */
+function getChainConverter(first, second) {
+  if (first.to !== second.from) {
+    throw new Error('Chain convert impossible: ' + first.to + '!=' + second.from);
+  }
+  return {
+    from: first.from,
+    to: second.to,
+    exec: function(data, context) {
+      var intermediate = first.exec(data, context);
+      return second.exec(intermediate, context);
+    }
+  };
+}
+
+/**
+ * This is where we cache the converters that we know about
+ */
+var converters = {
+  from: {}
+};
+
+/**
+ * Add a new converter to the cache
+ */
+exports.addConverter = function(converter) {
+  var fromMatch = converters.from[converter.from];
+  if (fromMatch == null) {
+    fromMatch = {};
+    converters.from[converter.from] = fromMatch;
+  }
+
+  fromMatch[converter.to] = converter;
+};
+
+/**
+ * Remove an existing converter from the cache
+ */
+exports.removeConverter = function(converter) {
+  var fromMatch = converters.from[converter.from];
+  if (fromMatch == null) {
+    return;
+  }
+
+  if (fromMatch[converter.to] === converter) {
+    fromMatch[converter.to] = null;
+  }
+};
+
+/**
+ * Work out the best converter that we've got, for a given conversion.
+ */
+function getConverter(from, to) {
+  var fromMatch = converters.from[from];
+  if (fromMatch == null) {
+    return getFallbackConverter(to);
+  }
+  var converter = fromMatch[to];
+  if (converter == null) {
+    // Someone is going to love writing a graph search algorithm to work out
+    // the smallest number of conversions, or perhaps the least 'lossy'
+    // conversion but for now the only 2 step conversion is foo->view->dom,
+    // which we are going to special case.
+    if (to === 'dom') {
+      converter = fromMatch['view'];
+      if (converter != null) {
+        return getChainConverter(converter, viewDomConverter);
+      }
+    }
+    return getFallbackConverter(to);
+  }
+  return converter;
+}
+
+/**
+ * Helper for getConverter to pick the best fallback converter
+ */
+function getFallbackConverter(to) {
+  if (to == 'dom') {
+    return fallbackDomConverter;
+  }
+  if (to == 'string') {
+    return fallbackStringConverter;
+  }
+  throw new Error('No conversion possible from ' + from + ' to ' + to + '.');
+}
+
+/**
+ * Convert some data from one type to another
+ * @param data The object to convert
+ * @param from The type of the data right now
+ * @param to The type that we would like the data in
+ * @param context An execution context (i.e. simplified requisition) which is
+ * often required for access to a document, or createView function
+ */
+exports.convert = function(data, from, to, context) {
+  if (from === to) {
+    return data;
+  }
+  return Promise.resolve(getConverter(from, to).exec(data, context));
+};
+
+exports.addConverter(viewDomConverter);
+exports.addConverter(terminalDomConverter);
+exports.addConverter(stringDomConverter);
+exports.addConverter(exceptionDomConverter);
 
 
 });

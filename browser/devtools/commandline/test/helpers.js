@@ -24,7 +24,8 @@ let require = (Cu.import("resource://gre/modules/devtools/Require.jsm", {})).req
 Components.utils.import("resource:///modules/devtools/gcli.jsm", {});
 
 let console = (Cu.import("resource://gre/modules/devtools/Console.jsm", {})).console;
-let TargetFactory = (Cu.import("resource:///modules/devtools/gDevTools.jsm", {})).devtools.TargetFactory;
+let devtools = (Cu.import("resource:///modules/devtools/gDevTools.jsm", {})).devtools;
+let TargetFactory = devtools.TargetFactory;
 
 let Promise = (Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", {})).Promise;
 let assert = { ok: ok, is: is, log: info };
@@ -157,7 +158,6 @@ helpers.runTests = function(options, tests) {
   });
 
   var recover = function(error) {
-    ok(false, error);
     console.error(error);
   };
 
@@ -341,7 +341,7 @@ helpers._createDebugCheck = function(options) {
     output += '      current: \'' + helpers._actual.current(options) + '\',\n';
     output += '      status: \'' + helpers._actual.status(options) + '\',\n';
     output += '      options: ' + outputArray(helpers._actual.options(options)) + ',\n';
-    output += '      message: \'' + helpers._actual.message(options) + '\',\n';
+    output += '      error: \'' + helpers._actual.message(options) + '\',\n';
     output += '      predictions: ' + outputArray(predictions) + ',\n';
     output += '      unassigned: ' + outputArray(requisition._unassigned) + ',\n';
     output += '      outputState: \'' + helpers._actual.outputState(options) + '\',\n';
@@ -378,8 +378,6 @@ helpers._createDebugCheck = function(options) {
     output += '    exec: {\n';
     output += '      output: \'\',\n';
     output += '      completed: true,\n';
-    output += '      type: \'string\',\n';
-    output += '      error: false\n';
     output += '    }\n';
     output += '  }\n';
     output += ']);';
@@ -704,7 +702,7 @@ helpers._check = function(options, name, checks) {
  */
 helpers._exec = function(options, name, expected) {
   if (expected == null) {
-    return Promise.resolve({});
+    return Promise.resolve();
   }
 
   var output = options.display.requisition.exec({ hidden: true });
@@ -717,32 +715,20 @@ helpers._exec = function(options, name, expected) {
 
   if (!options.window.document.createElement) {
     assert.log('skipping output tests (missing doc.createElement) for ' + name);
-    return Promise.resolve({ output: output });
+    return Promise.resolve();
   }
 
   if (!('output' in expected)) {
-    return Promise.resolve({ output: output });
+    return Promise.resolve();
   }
+
+  var deferred = Promise.defer();
 
   var checkOutput = function() {
     var div = options.window.document.createElement('div');
-    var conversionContext = options.display.requisition.conversionContext;
-
-    if ('type' in expected) {
-      assert.is(output.type,
-                expected.type,
-                'output.type for: ' + name);
-    }
-
-    if ('error' in expected) {
-      assert.is(output.error,
-                expected.error,
-                'output.error for: ' + name);
-    }
-
-    var convertPromise = converters.convert(output.data, output.type, 'dom',
-                                            conversionContext);
-    return convertPromise.then(function(node) {
+    var nodePromise = converters.convert(output.data, output.type, 'dom',
+                                         options.display.requisition.context);
+    nodePromise.then(function(node) {
       div.appendChild(node);
       var actualOutput = div.textContent.trim();
 
@@ -771,11 +757,24 @@ helpers._exec = function(options, name, expected) {
         doTest(expected.output, actualOutput);
       }
 
-      return { output: output, text: actualOutput };
+      deferred.resolve(actualOutput);
     });
   };
 
-  return output.promise.then(checkOutput, checkOutput);
+  if (output.completed !== false) {
+    checkOutput();
+  }
+  else {
+    var changed = function() {
+      if (output.completed !== false) {
+        checkOutput();
+        output.onChange.remove(changed);
+      }
+    };
+    output.onChange.add(changed);
+  }
+
+  return deferred.promise;
 };
 
 /**
@@ -790,15 +789,15 @@ helpers._setup = function(options, name, action) {
     return Promise.resolve(action());
   }
 
-  return Promise.reject('\'setup\' property must be a string or a function. Is ' + action);
+  return Promise.reject('setup must be a string or a function');
 };
 
 /**
  * Helper to shutdown the test
  */
-helpers._post = function(name, action, data) {
+helpers._post = function(name, action, output) {
   if (typeof action === 'function') {
-    return Promise.resolve(action(data.output, data.text));
+    return Promise.resolve(action(output));
   }
   return Promise.resolve(action);
 };
@@ -944,22 +943,19 @@ helpers.audit = function(options, audits) {
       if (typeof chunkLen !== 'number') {
         chunkLen = 1;
       }
-
-      if (assert.currentTest) {
-        var responseTime = (new Date().getTime() - start) / chunkLen;
-        totalResponseTime += responseTime;
-        if (responseTime > maxResponseTime) {
-          maxResponseTime = responseTime;
-          maxResponseCulprit = assert.currentTest + '/' + name;
-        }
-        averageOver++;
+      var responseTime = (new Date().getTime() - start) / chunkLen;
+      totalResponseTime += responseTime;
+      if (responseTime > maxResponseTime) {
+        maxResponseTime = responseTime;
+        maxResponseCulprit = assert.currentTest + '/' + name;
       }
+      averageOver++;
 
       var checkDone = helpers._check(options, name, audit.check);
       return checkDone.then(function() {
         var execDone = helpers._exec(options, name, audit.exec);
-        return execDone.then(function(data) {
-          return helpers._post(name, audit.post, data).then(function() {
+        return execDone.then(function(output) {
+          return helpers._post(name, audit.post, output).then(function() {
             if (assert.testLogging) {
               log('- END \'' + name + '\' in ' + assert.currentTest);
             }
@@ -967,8 +963,9 @@ helpers.audit = function(options, audits) {
         });
       });
     });
-  }).then(function() {
-    return options.display.inputter.setInput('');
+  }).then(null, function(ex) {
+    console.error(ex.stack);
+    throw(ex);
   });
 };
 
