@@ -1,7 +1,5 @@
 #/usr/bin/env python
-#
-#$Id: _common.py 1524 2012-08-16 15:06:32Z g.rodola $
-#
+
 # Copyright (c) 2009, Jay Loden, Giampaolo Rodola'. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
@@ -169,7 +167,6 @@ del AF_INET, AF_INET6, AF_UNIX, SOCK_STREAM, SOCK_DGRAM, socket
 # --- namedtuples
 
 # system
-nt_sys_cputimes = namedtuple('cputimes', 'user nice system idle iowait irq softirq')
 nt_sysmeminfo = namedtuple('usage', 'total used free percent')
 # XXX - would 'available' be better than 'free' as for virtual_memory() nt?
 nt_swapmeminfo = namedtuple('swap', 'total used free percent sin sout')

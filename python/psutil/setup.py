@@ -1,7 +1,5 @@
 #!/usr/bin/env python
-#
-# $Id: setup.py 1469 2012-07-18 16:00:39Z g.rodola $
-#
+
 # Copyright (c) 2009, Jay Loden, Giampaolo Rodola'. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
@@ -137,6 +135,7 @@ def main():
               'Programming Language :: Python :: 3.0',
               'Programming Language :: Python :: 3.1',
               'Programming Language :: Python :: 3.2',
+              'Programming Language :: Python :: 3.3',
               'Topic :: System :: Monitoring',
               'Topic :: System :: Networking',
               'Topic :: System :: Networking :: Monitoring',
