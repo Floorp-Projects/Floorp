@@ -740,7 +740,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
         anim1.setDuration(ANIMATION_DURATION);
         anim1.setInterpolator(new AccelerateInterpolator());
         anim1.setFillAfter(true);
-        mSuggestionsOptInPrompt.findViewById(R.id.prompt_container).setAnimation(anim1);
+        final View promptContainer = mSuggestionsOptInPrompt.findViewById(R.id.prompt_container);
 
         TranslateAnimation anim2 = new TranslateAnimation(0, 0, 0, -1 * mSuggestionsOptInPrompt.getHeight());
         anim2.setDuration(ANIMATION_DURATION);
@@ -784,7 +784,8 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
             }
         });
 
-        mSuggestionsOptInPrompt.startAnimation(anim1);
+        promptContainer.startAnimation(anim1);
+        mSuggestionsOptInPrompt.startAnimation(anim2);
         getListView().startAnimation(anim2);
     }
 
