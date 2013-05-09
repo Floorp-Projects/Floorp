@@ -33,6 +33,7 @@ MOCHITEST_FILES := \
   test_audioParamSetTargetAtTime.html \
   test_audioParamTimelineDestinationOffset.html \
   test_audioBufferSourceNode.html \
+  test_audioBufferSourceNodeEnded.html \
   test_audioBufferSourceNodeLazyLoopParam.html \
   test_audioBufferSourceNodeLoop.html \
   test_audioBufferSourceNodeLoopStartEnd.html \
