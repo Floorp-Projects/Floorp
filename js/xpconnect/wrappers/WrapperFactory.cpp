@@ -283,7 +283,7 @@ WrapperFactory::PrepareForWrapping(JSContext *cx, HandleObject scope,
 
 #ifdef DEBUG
 static void
-DEBUG_CheckUnwrapSafety(JSObject *obj, js::Wrapper *handler,
+DEBUG_CheckUnwrapSafety(HandleObject obj, js::Wrapper *handler,
                         JSCompartment *origin, JSCompartment *target)
 {
     if (AccessCheck::isChrome(target) || xpc::IsUniversalXPConnectEnabled(target)) {
