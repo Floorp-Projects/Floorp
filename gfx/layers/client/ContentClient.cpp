@@ -189,7 +189,8 @@ ContentClientRemote::CreateBuffer(ContentType aType,
 
   nsRefPtr<gfxASurface> ret = mTextureClient->LockSurface();
   if (aFlags & BUFFER_COMPONENT_ALPHA) {
-    *aWhiteSurface = mTextureClientOnWhite->LockSurface();
+    nsRefPtr<gfxASurface> retWhite = mTextureClientOnWhite->LockSurface();
+    *aWhiteSurface = retWhite.forget().get();
   }
   return ret.forget();
 }

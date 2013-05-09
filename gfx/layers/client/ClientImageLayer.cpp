@@ -114,12 +114,16 @@ ClientImageLayer::RenderLayer()
 
   if (!mImageClient ||
       !mImageClient->UpdateImage(mContainer, GetContentFlags())) {
-    mImageClient = ImageClient::CreateImageClient(GetImageClientType(),
+    CompositableType type = GetImageClientType();
+    if (type == BUFFER_UNKNOWN) {
+      return;
+    }
+    mImageClient = ImageClient::CreateImageClient(type,
                                                   ClientManager(),
                                                   mForceSingleTile
                                                     ? ForceSingleTile
                                                     : 0);
-    if (GetImageClientType() == BUFFER_BRIDGE) {
+    if (type == BUFFER_BRIDGE) {
       static_cast<ImageClientBridge*>(mImageClient.get())->SetLayer(this);
     }
 
