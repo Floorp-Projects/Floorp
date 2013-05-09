@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>GCLI cookie command test</title>
+</head>
+<body>
+
+  <p>Cookie test</p>
+  <p id=result></p>
+  <script type="text/javascript">
+    document.cookie = "zap=zep";
+    document.cookie = "zip=zop";
+    document.getElementById("result").innerHTML = document.cookie;
+  </script>
+
+</body>
+</html>
