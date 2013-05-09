@@ -31,7 +31,6 @@ MOCHITEST_BROWSER_FILES = \
   browser_cmd_appcache_valid_page2.html \
   browser_cmd_appcache_valid_page3.html \
   browser_cmd_commands.js \
-  browser_cmd_cookie.html \
   browser_cmd_cookie.js \
   browser_cmd_jsb.js \
   browser_cmd_jsb_script.jsi \

@@ -519,9 +519,9 @@ exports.testSpaceComplete = function(options) {
           msg: { status: 'INCOMPLETE', message: '' },
           num: { status: 'VALID' },
           sel: { status: 'VALID' },
-          bool: { value: false, status: 'VALID' },
+          bool: { value: false,status: 'VALID' },
           num2: { status: 'VALID' },
-          bool2: { value: false, status: 'VALID' },
+          bool2: { value: false,status: 'VALID' },
           sel2: {
             value: 'with space',
             arg: ' --sel2 \'with space\' ',
