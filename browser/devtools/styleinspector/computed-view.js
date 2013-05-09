@@ -12,7 +12,7 @@ let {CssLogic} = require("devtools/styleinspector/css-logic");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PluralForm.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource:///modules/devtools/Templater.jsm");
+Cu.import("resource://gre/modules/devtools/Templater.jsm");
 
 Cu.import("resource:///modules/devtools/gDevTools.jsm");
 

@@ -19,7 +19,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "console",
                                   "resource://gre/modules/devtools/Console.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "gcli",
-                                  "resource:///modules/devtools/gcli.jsm");
+                                  "resource://gre/modules/devtools/gcli.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "CmdCommands",
                                   "resource:///modules/devtools/BuiltinCommands.jsm");
@@ -153,7 +153,7 @@ let CommandUtils = {
   createEnvironment: function(chromeDocument, contentDocument) {
     let environment = {
       chromeDocument: chromeDocument,
-      contentDocument: contentDocument, // Use of contentDocument is deprecated
+      chromeWindow: chromeDocument.defaultView,
 
       document: contentDocument,
       window: contentDocument.defaultView
@@ -765,6 +765,7 @@ function OutputPanel(aDevToolbar, aLoadCallback)
   this.displayedOutput = undefined;
 
   this._onload = this._onload.bind(this);
+  this._update = this._update.bind(this);
   this._frame.addEventListener("load", this._onload, true);
 
   this.loaded = false;
@@ -902,18 +903,28 @@ OutputPanel.prototype._outputChanged = function OP_outputChanged(aEvent)
   this.remove();
 
   this.displayedOutput = aEvent.output;
-  this.update();
-
-  this.displayedOutput.onChange.add(this.update, this);
   this.displayedOutput.onClose.add(this.remove, this);
+
+  if (this.displayedOutput.completed) {
+    this._update();
+  }
+  else {
+    this.displayedOutput.promise.then(this._update, this._update)
+                                .then(null, console.error);
+  }
 };
 
 /**
  * Called when displayed Output says it's changed or from outputChanged, which
  * happens when there is a new displayed Output.
  */
-OutputPanel.prototype.update = function OP_update()
+OutputPanel.prototype._update = function OP_update()
 {
+  // destroy has been called, bail out
+  if (this._div == null) {
+    return;
+  }
+
   // Empty this._div
   while (this._div.hasChildNodes()) {
     this._div.removeChild(this._div.firstChild);
@@ -923,7 +934,7 @@ OutputPanel.prototype.update = function OP_update()
     let requisition = this._devtoolbar.display.requisition;
     let nodePromise = converters.convert(this.displayedOutput.data,
                                          this.displayedOutput.type, 'dom',
-                                         requisition.context);
+                                         requisition.conversionContext);
     nodePromise.then(function(node) {
       while (this._div.hasChildNodes()) {
         this._div.removeChild(this._div.firstChild);
@@ -954,7 +965,6 @@ OutputPanel.prototype.remove = function OP_remove()
   }
 
   if (this.displayedOutput) {
-    this.displayedOutput.onChange.remove(this.update, this);
     this.displayedOutput.onClose.remove(this.remove, this);
     delete this.displayedOutput;
   }
