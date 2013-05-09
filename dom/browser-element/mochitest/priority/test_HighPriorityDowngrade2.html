@@ -1,0 +1,77 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that high-priority processes downgrade the CPU priority of regular
+processes.
+
+This is just like test_HighPriorityDowngrade, except instead of waiting for the
+high-priority process's wake lock to expire, we kill the process by removing
+its iframe from the DOM.
+-->
+<head>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="../browserElementTestHelpers.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="application/javascript;version=1.7">
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+browserElementTestHelpers.setEnabledPref(true);
+browserElementTestHelpers.addPermission();
+browserElementTestHelpers.enableProcessPriorityManager();
+SpecialPowers.addPermission("embed-apps", true, document);
+
+function runTest() {
+  var iframe = document.createElement('iframe');
+  iframe.setAttribute('mozbrowser', true);
+
+  iframe.src = browserElementTestHelpers.emptyPage1;
+
+  var highPriorityIframe = null;
+  var childID = null;
+
+  expectProcessCreated().then(function(chid) {
+    childID = chid;
+    return expectPriorityChange(childID, 'FOREGROUND', 'CPU_NORMAL');
+  }).then(function() {
+    // Create a new, high-priority iframe.
+    highPriorityIframe = document.createElement('iframe');
+    highPriorityIframe.setAttribute('mozbrowser', true);
+    highPriorityIframe.setAttribute('expecting-system-message', true);
+    highPriorityIframe.setAttribute('mozapptype', 'critical');
+    highPriorityIframe.setAttribute('mozapp', 'http://example.org/manifest.webapp');
+    highPriorityIframe.src = browserElementTestHelpers.emptyPage2;
+
+    var p = Promise.all(
+      [expectPriorityChange(childID, 'FOREGROUND', 'CPU_LOW'),
+       expectMozbrowserEvent(highPriorityIframe, 'loadend')]
+    );
+
+    document.body.appendChild(highPriorityIframe);
+
+    return p;
+  }).then(function() {
+    // Killing the high-priority iframe should cause our CPU priority to go back
+    // up to regular.
+    var p = expectPriorityChange(childID, 'FOREGROUND', 'CPU_NORMAL');
+    document.body.removeChild(highPriorityIframe);
+    return p;
+  }).then(SimpleTest.finish);
+
+  document.body.appendChild(iframe);
+}
+
+addEventListener('testready', function() {
+  // Cause the CPU wake lock taken on behalf of the high-priority process never
+  // to time out during this test.
+  SpecialPowers.pushPrefEnv(
+    {set: [["dom.ipc.systemMessageCPULockTimeoutSec", 1000]]},
+    runTest);
+});
+
+</script>
+</body>
+</html>

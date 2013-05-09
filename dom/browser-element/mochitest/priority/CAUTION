@@ -1,0 +1,15 @@
+A word to the wise:
+
+You must ensure that if your test finishes successfully, no processes have
+priority FOREGROUND_HIGH.
+
+If you don't do this, expect to see tests randomly fail with mysterious
+FOREGROUND --> FOREGROUND priority transitions.
+
+What's happening in this case is that your FOREGROUND_HIGH process lives until
+the beginning of the next test.  This causes the process started by the next
+test to have low CPU priority.  Then the FOREGROUND_HIGH process dies, because
+its iframe gets GC'ed, and we transition the new test's process from low CPU
+priority to regular CPU priority.
+
+Ouch.
