@@ -2199,7 +2199,7 @@ Request.prototype.complete = function(error, type, data) {
       },
     },
     tooltipText: gcli.lookup("paintflashingTooltip"),
-    description: gcli.lookup('paintflashingOnDesc'),
+    description: gcli.lookup('paintflashingToggleDesc'),
     manual: gcli.lookup('paintflashingManual'),
     exec: function(args, context) {
       var gBrowser = context.environment.chromeDocument.defaultView.gBrowser;
