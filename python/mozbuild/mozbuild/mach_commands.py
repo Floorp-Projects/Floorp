@@ -4,6 +4,7 @@
 
 from __future__ import print_function, unicode_literals
 
+import getpass
 import logging
 import operator
 import os
@@ -187,6 +188,9 @@ class Build(MachCommandBase):
 
         for proc in psutil.process_iter():
             if proc.name != 'Finder':
+                continue
+
+            if proc.username != getpass.getuser():
                 continue
 
             # Try to isolate system finder as opposed to other "Finder"
