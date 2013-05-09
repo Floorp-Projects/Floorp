@@ -1135,7 +1135,7 @@ typedef JSObject *(*ReadStructuredCloneOp)(JSContext *cx, JSStructuredCloneReade
  * Return true on success, false on error/exception.
  */
 typedef JSBool (*WriteStructuredCloneOp)(JSContext *cx, JSStructuredCloneWriter *w,
-                                         JSObject *obj, void *closure);
+                                         JS::Handle<JSObject*> obj, void *closure);
 
 /*
  * This is called when JS_WriteStructuredClone is given an invalid transferable.

@@ -1461,7 +1461,7 @@ IDBObjectStore::StructuredCloneReadCallback(JSContext* aCx,
 JSBool
 IDBObjectStore::StructuredCloneWriteCallback(JSContext* aCx,
                                              JSStructuredCloneWriter* aWriter,
-                                             JSObject* aObj,
+                                             JS::Handle<JSObject*> aObj,
                                              void* aClosure)
 {
   StructuredCloneWriteInfo* cloneWriteInfo =
