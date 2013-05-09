@@ -42,9 +42,7 @@ function postTestCleanup(callback) {
 }
 
 function addBuiltinManifest(manifest) {
-  let prefname = getManifestPrefname(manifest);
-  setBuiltinManifestPref(prefname, manifest);
-  return prefname;
+  setManifestPref("social.manifest."+manifest.origin, manifest);
 }
 
 function addTab(url, callback) {
@@ -79,78 +77,6 @@ function activateIFrameProvider(domain, callback) {
   let activationURL = domain+"/browser/browser/base/content/test/social/social_activate_iframe.html"
   addTab(activationURL, function(tab) {
     sendActivationEvent(tab, callback, false);
-  });
-}
-
-function waitForProviderLoad(cb) {
-  Services.obs.addObserver(function providerSet(subject, topic, data) {
-    Services.obs.removeObserver(providerSet, "social:provider-set");
-    info("social:provider-set observer was notified");
-    waitForCondition(function() {
-      let sbrowser = document.getElementById("social-sidebar-browser");
-      return Social.provider.profile &&
-             Social.provider.profile.displayName &&
-             sbrowser.docShellIsActive;
-    }, function() {
-      // executeSoon to let the browser UI observers run first
-      executeSoon(cb);
-    },
-    "waitForProviderLoad: provider profile was not set");
-  }, "social:provider-set", false);
-}
-
-
-function getAddonItemInList(aId, aList) {
-  var item = aList.firstChild;
-  while (item) {
-    if ("mAddon" in item && item.mAddon.id == aId) {
-      aList.ensureElementIsVisible(item);
-      return item;
-    }
-    item = item.nextSibling;
-  }
-  return null;
-}
-
-function clickAddonRemoveButton(tab, aCallback) {
-  AddonManager.getAddonsByTypes(["service"], function(aAddons) {
-    let addon = aAddons[0];
-
-    let doc = tab.linkedBrowser.contentDocument;
-    let list = doc.getElementById("addon-list");
-
-    let item = getAddonItemInList(addon.id, list);
-    isnot(item, null, "Should have found the add-on in the list");
-
-    var button = doc.getAnonymousElementByAttribute(item, "anonid", "remove-btn");
-    isnot(button, null, "Should have a remove button");
-    ok(!button.disabled, "Button should not be disabled");
-
-    EventUtils.synthesizeMouseAtCenter(button, { }, doc.defaultView);
-
-    // Force XBL to apply
-    item.clientTop;
-
-    is(item.getAttribute("pending"), "uninstall", "Add-on should be uninstalling");
-
-    executeSoon(function() { aCallback(addon); });
-  });
-}
-
-function activateOneProvider(manifest, finishActivation, aCallback) {
-  activateProvider(manifest.origin, function() {
-    waitForProviderLoad(function() {
-      ok(!SocialUI.activationPanel.hidden, "activation panel is showing");
-      is(Social.provider.origin, manifest.origin, "new provider is active");
-      checkSocialUI();
-
-      if (finishActivation)
-        document.getElementById("social-activation-button").click();
-      else
-        document.getElementById("social-undoactivation-button").click();
-
-      executeSoon(aCallback);
-    });
   });
 }
 
@@ -213,26 +139,41 @@ var tests = {
   testActivationFirstProvider: function(next) {
     Services.prefs.setCharPref("social.whitelist", gTestDomains.join(","));
     // first up we add a manifest entry for a single provider.
-    activateOneProvider(gProviders[0], false, function() {
-      // we deactivated leaving no providers left, so Social is disabled.
-      ok(!Social.provider, "should be no provider left after disabling");
+    activateProvider(gTestDomains[0], function() {
+      ok(!SocialUI.activationPanel.hidden, "activation panel should be showing");
+      is(Social.provider.origin, gTestDomains[0], "new provider is active");
       checkSocialUI();
-      Services.prefs.clearUserPref("social.whitelist");
-      next();
+      // hit "undo"
+      document.getElementById("social-undoactivation-button").click();
+      executeSoon(function() {
+        // we deactivated leaving no providers left, so Social is disabled.
+        ok(!Social.provider, "should be no provider left after disabling");
+        checkSocialUI();
+        Services.prefs.clearUserPref("social.whitelist");
+        next();
+      })
     });
   },
 
   testActivationBuiltin: function(next) {
-    let prefname = addBuiltinManifest(gProviders[0]);
+    let prefname = getManifestPrefname(gProviders[0]);
+    setBuiltinManifestPref(prefname, gProviders[0]);
     is(SocialService.getOriginActivationType(gTestDomains[0]), "builtin", "manifest is builtin");
     // first up we add a manifest entry for a single provider.
-    activateOneProvider(gProviders[0], false, function() {
-      // we deactivated leaving no providers left, so Social is disabled.
-      ok(!Social.provider, "should be no provider left after disabling");
+    activateProvider(gTestDomains[0], function() {
+      ok(!SocialUI.activationPanel.hidden, "activation panel should be showing");
+      is(Social.provider.origin, gTestDomains[0], "new provider is active");
       checkSocialUI();
-      resetBuiltinManifestPref(prefname);
-      next();
-    });
+      // hit "undo"
+      document.getElementById("social-undoactivation-button").click();
+      executeSoon(function() {
+        // we deactivated leaving no providers left, so Social is disabled.
+        ok(!Social.provider, "should be no provider left after disabling");
+        checkSocialUI();
+        resetBuiltinManifestPref(prefname);
+        next();
+      })
+    }, true);
   },
 
   testActivationMultipleProvider: function(next) {
@@ -247,14 +188,20 @@ var tests = {
         Social.provider = Social.providers[1];
         checkSocialUI();
         // activate the last provider.
-        let prefname = addBuiltinManifest(gProviders[2]);
-        activateOneProvider(gProviders[2], false, function() {
-          // we deactivated - the first provider should be enabled.
-          is(Social.provider.origin, Social.providers[1].origin, "original provider should have been reactivated");
+        addBuiltinManifest(gProviders[2]);
+        activateProvider(gTestDomains[2], function() {
+          ok(!SocialUI.activationPanel.hidden, "activation panel should be showing");
+          is(Social.provider.origin, gTestDomains[2], "new provider is active");
           checkSocialUI();
-          Services.prefs.clearUserPref("social.whitelist");
-          resetBuiltinManifestPref(prefname);
-          next();
+          // hit "undo"
+          document.getElementById("social-undoactivation-button").click();
+          executeSoon(function() {
+            // we deactivated - the first provider should be enabled.
+            is(Social.provider.origin, Social.providers[1].origin, "original provider should have been reactivated");
+            checkSocialUI();
+            Services.prefs.clearUserPref("social.whitelist");
+            next();
+          });
         });
       });
     });
@@ -269,75 +216,23 @@ var tests = {
         // activate the last provider.
         addBuiltinManifest(gProviders[2]);
         activateProvider(gTestDomains[2], function() {
-          waitForProviderLoad(function() {
-            ok(!SocialUI.activationPanel.hidden, "activation panel is showing");
-            is(Social.provider.origin, gTestDomains[2], "new provider is active");
+          ok(!SocialUI.activationPanel.hidden, "activation panel should be showing");
+          is(Social.provider.origin, gTestDomains[2], "new provider is active");
+          checkSocialUI();
+          // A bit contrived, but set a new provider current while the
+          // activation ui is up.
+          Social.provider = Social.providers[1];
+          // hit "undo"
+          document.getElementById("social-undoactivation-button").click();
+          executeSoon(function() {
+            // we deactivated - the same provider should be enabled.
+            is(Social.provider.origin, Social.providers[1].origin, "original provider still be active");
             checkSocialUI();
-            // A bit contrived, but set a new provider current while the
-            // activation ui is up.
-            Social.provider = Social.providers[1];
-            // hit "undo"
-            document.getElementById("social-undoactivation-button").click();
-            executeSoon(function() {
-              // we deactivated - the same provider should be enabled.
-              is(Social.provider.origin, Social.providers[1].origin, "original provider still be active");
-              checkSocialUI();
-              Services.prefs.clearUserPref("social.whitelist");
-              next();
-            });
+            Services.prefs.clearUserPref("social.whitelist");
+            next();
           });
         });
       });
     });
   },
-
-  testAddonManagerDoubleInstall: function(next) {
-    Services.prefs.setCharPref("social.whitelist", gTestDomains.join(","));
-    // Create a new tab and load about:addons
-    let blanktab = gBrowser.addTab();
-    gBrowser.selectedTab = blanktab;
-    BrowserOpenAddonsMgr('addons://list/service');
-
-    is(blanktab, gBrowser.selectedTab, "Current tab should be blank tab");
-
-    gBrowser.selectedBrowser.addEventListener("load", function tabLoad() {
-      gBrowser.selectedBrowser.removeEventListener("load", tabLoad, true);
-      let browser = blanktab.linkedBrowser;
-      is(browser.currentURI.spec, "about:addons", "about:addons should load into blank tab.");
-
-      addBuiltinManifest(gProviders[0]);
-      activateOneProvider(gProviders[0], true, function() {
-        gBrowser.removeTab(gBrowser.selectedTab);
-        tabsToRemove.pop();
-        // uninstall the provider
-        clickAddonRemoveButton(blanktab, function(addon) {
-          checkSocialUI();
-          activateOneProvider(gProviders[0], true, function() {
-
-            // after closing the addons tab, verify provider is still installed
-            gBrowser.tabContainer.addEventListener("TabClose", function onTabClose() {
-              gBrowser.tabContainer.removeEventListener("TabClose", onTabClose);
-              AddonManager.getAddonsByTypes(["service"], function(aAddons) {
-                is(aAddons.length, 1, "there can be only one");
-                Services.prefs.clearUserPref("social.whitelist");
-                next();
-              });
-            });
-
-            // verify only one provider in list
-            AddonManager.getAddonsByTypes(["service"], function(aAddons) {
-              is(aAddons.length, 1, "there can be only one");
-
-              let doc = blanktab.linkedBrowser.contentDocument;
-              let list = doc.getElementById("addon-list");
-              is(list.childNodes.length, 1, "only one addon is displayed");
-
-              gBrowser.removeTab(blanktab);
-            });
-
-          });
-        });
-      });
-    }, true);
-  }
 }
