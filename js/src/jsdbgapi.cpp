@@ -1370,20 +1370,20 @@ JSBrokenFrameIterator::JSBrokenFrameIterator(JSContext *cx)
 
 JSBrokenFrameIterator::~JSBrokenFrameIterator()
 {
-    js_free((StackIter::Data *)data_);
+    js_free((ScriptFrameIter::Data *)data_);
 }
 
 bool
 JSBrokenFrameIterator::done() const
 {
-    NonBuiltinScriptFrameIter iter(*(StackIter::Data *)data_);
+    NonBuiltinScriptFrameIter iter(*(ScriptFrameIter::Data *)data_);
     return iter.done();
 }
 
 JSBrokenFrameIterator &
 JSBrokenFrameIterator::operator++()
 {
-    StackIter::Data *data = (StackIter::Data *)data_;
+    ScriptFrameIter::Data *data = (ScriptFrameIter::Data *)data_;
     NonBuiltinScriptFrameIter iter(*data);
     ++iter;
     *data = iter.data_;
@@ -1393,20 +1393,20 @@ JSBrokenFrameIterator::operator++()
 JSAbstractFramePtr
 JSBrokenFrameIterator::abstractFramePtr() const
 {
-    NonBuiltinScriptFrameIter iter(*(StackIter::Data *)data_);
+    NonBuiltinScriptFrameIter iter(*(ScriptFrameIter::Data *)data_);
     return Jsvalify(iter.abstractFramePtr());
 }
 
 jsbytecode *
 JSBrokenFrameIterator::pc() const
 {
-    NonBuiltinScriptFrameIter iter(*(StackIter::Data *)data_);
+    NonBuiltinScriptFrameIter iter(*(ScriptFrameIter::Data *)data_);
     return iter.pc();
 }
 
 bool
 JSBrokenFrameIterator::isConstructing() const
 {
-    NonBuiltinScriptFrameIter iter(*(StackIter::Data *)data_);
+    NonBuiltinScriptFrameIter iter(*(ScriptFrameIter::Data *)data_);
     return iter.isConstructing();
 }

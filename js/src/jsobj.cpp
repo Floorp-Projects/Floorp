@@ -5204,7 +5204,7 @@ JS_FRIEND_API(void)
 js_DumpStackFrame(JSContext *cx, StackFrame *start)
 {
     /* This should only called during live debugging. */
-    ScriptFrameIter i(cx, StackIter::GO_THROUGH_SAVED);
+    ScriptFrameIter i(cx, ScriptFrameIter::GO_THROUGH_SAVED);
     if (!start) {
         if (i.done()) {
             fprintf(stderr, "no stack for cx = %p\n", (void*) cx);
@@ -5278,7 +5278,7 @@ js_DumpBacktrace(JSContext *cx)
     Sprinter sprinter(cx);
     sprinter.init();
     size_t depth = 0;
-    for (StackIter i(cx); !i.done(); ++i, ++depth) {
+    for (ScriptFrameIter i(cx); !i.done(); ++i, ++depth) {
         const char *filename = JS_GetScriptFilename(cx, i.script());
         unsigned line = JS_PCToLineNumber(cx, i.script(), i.pc());
         JSScript *script = i.script();
