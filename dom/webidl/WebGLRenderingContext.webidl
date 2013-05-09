@@ -15,13 +15,6 @@
 // This IDL depends on the typed array specification defined at:
 // https://www.khronos.org/registry/typedarray/specs/latest/typedarrays.idl
 
-// XXXbz all sorts of forward declarations for things that are not new
-// bindings yet.
-interface Event;
-interface HTMLCanvasElement;
-interface HTMLVideoElement;
-interface ImageData;
-
 typedef unsigned long  GLenum;
 typedef boolean        GLboolean;
 typedef unsigned long  GLbitfield;

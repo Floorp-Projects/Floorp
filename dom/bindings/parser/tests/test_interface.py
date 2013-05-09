@@ -321,6 +321,49 @@ def WebIDLTest(parser, harness):
     threw = False
     try:
         parser.parse("""
+            dictionary A {
+                boolean x;
+            };
+            interface A;
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+    harness.ok(threw,
+               "Should not allow a name collision between external interface "
+               "and other object")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            interface A {
+                readonly attribute boolean x;
+            };
+            interface A;
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+    harness.ok(threw,
+               "Should not allow a name collision between external interface "
+               "and interface")
+
+    parser = parser.reset()
+    parser.parse("""
+        interface A;
+        interface A;
+    """)
+    results = parser.finish()
+    harness.ok(len(results) == 1 and
+               isinstance(results[0], WebIDL.IDLExternalInterface),
+               "Should allow name collisions between external interface "
+               "declarations")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
             [SomeRandomAnnotation]
             interface A {
                 readonly attribute boolean y;
