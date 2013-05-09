@@ -8,6 +8,7 @@
 
 #include "mozilla/layers/Compositor.h"
 #include "mozilla/layers/TextureClient.h"
+#include "gfxWindowsPlatform.h"
 #include <d3d11.h>
 #include <vector>
 
