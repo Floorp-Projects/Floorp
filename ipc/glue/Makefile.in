@@ -61,7 +61,6 @@ else
 CPPSRCS += ProcessUtils_none.cpp
 endif
 
-include $(topsrcdir)/ipc/app/defs.mk
 DEFINES += -DMOZ_CHILD_PROCESS_NAME=\"$(MOZ_CHILD_PROCESS_NAME)\"
 DEFINES += -DMOZ_CHILD_PROCESS_BUNDLE=\"$(MOZ_CHILD_PROCESS_BUNDLE)\"
 
@@ -69,7 +68,3 @@ include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 include $(topsrcdir)/config/rules.mk
-
-# Since we get the value of MOZ_CHILD_PROCESS_NAME from another file make sure
-# to rebuild if that file changes.
-$(CPPSRCS:%.cpp=%.$(OBJ_SUFFIX)): $(topsrcdir)/ipc/app/defs.mk
