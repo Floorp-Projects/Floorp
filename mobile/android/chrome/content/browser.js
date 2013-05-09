@@ -6225,13 +6225,16 @@ var WebappsUI = {
                     origin: aData.app.origin,
                     iconURL: fullsizeIcon
                   });
-                  let message = Strings.browser.GetStringFromName("webapps.alertSuccess");
-                  let alerts = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
-                  alerts.showAlertNotification("drawable://alert_app", manifest.name, message, true, "", {
-                    observe: function () {
-                      self.openURL(aData.app.manifestURL, aData.app.origin);
-                    }
-                  }, "webapp");
+                  if (!!aData.isPackage) {
+                    // For packaged apps, put a notification in the notification bar.
+                    let message = Strings.browser.GetStringFromName("webapps.alertSuccess");
+                    let alerts = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
+                    alerts.showAlertNotification("drawable://alert_app", manifest.name, message, true, "", {
+                      observe: function () {
+                        self.openURL(aData.app.manifestURL, aData.app.origin);
+                      }
+                    }, "webapp");
+                  }
                 } catch(ex) {
                   console.log(ex);
                 }
