@@ -123,8 +123,10 @@ function execTests() {
   }
 
   doCommand("cmd_scrollBottom");
+  yield;
   testScrollCommand("cmd_scrollBottom", root.scrollHeight - 100);
   doCommand("cmd_scrollTop");
+  yield;
   testScrollCommand("cmd_scrollTop", 0);
 
   doCommand("cmd_scrollPageDown");
