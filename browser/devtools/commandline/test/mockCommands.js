@@ -29,127 +29,50 @@ Cu.import("resource:///modules/devtools/gcli.jsm", {});
 
 var mockCommands = {};
 
+// We use an alias for exports here because this module is used in Firefox
+// mochitests where we don't have define/require
+
+'use strict';
+
 var util = require('util/util');
 var canon = require('gcli/canon');
-
 var types = require('gcli/types');
-var SelectionType = require('gcli/types/selection').SelectionType;
-var DelegateType = require('gcli/types/basic').DelegateType;
 
+mockCommands.option1 = { };
+mockCommands.option2 = { };
+mockCommands.option3 = { };
 
-/**
- * Registration and de-registration.
- */
-mockCommands.setup = function(opts) {
-  // setup/shutdown needs to register/unregister types, however that means we
-  // need to re-initialize mockCommands.option1 and mockCommands.option2 with
-  // the actual types
-  mockCommands.option1.type = types.getType('string');
-  mockCommands.option2.type = types.getType('number');
-
-  types.registerType(mockCommands.optionType);
-  types.registerType(mockCommands.optionValue);
-
-  canon.addCommand(mockCommands.tsv);
-  canon.addCommand(mockCommands.tsr);
-  canon.addCommand(mockCommands.tso);
-  canon.addCommand(mockCommands.tse);
-  canon.addCommand(mockCommands.tsj);
-  canon.addCommand(mockCommands.tsb);
-  canon.addCommand(mockCommands.tss);
-  canon.addCommand(mockCommands.tsu);
-  canon.addCommand(mockCommands.tsf);
-  canon.addCommand(mockCommands.tsn);
-  canon.addCommand(mockCommands.tsnDif);
-  canon.addCommand(mockCommands.tsnExt);
-  canon.addCommand(mockCommands.tsnExte);
-  canon.addCommand(mockCommands.tsnExten);
-  canon.addCommand(mockCommands.tsnExtend);
-  canon.addCommand(mockCommands.tsnDeep);
-  canon.addCommand(mockCommands.tsnDeepDown);
-  canon.addCommand(mockCommands.tsnDeepDownNested);
-  canon.addCommand(mockCommands.tsnDeepDownNestedCmd);
-  canon.addCommand(mockCommands.tselarr);
-  canon.addCommand(mockCommands.tsm);
-  canon.addCommand(mockCommands.tsg);
-  canon.addCommand(mockCommands.tshidden);
-  canon.addCommand(mockCommands.tscook);
-  canon.addCommand(mockCommands.tslong);
-};
-
-mockCommands.shutdown = function(opts) {
-  canon.removeCommand(mockCommands.tsv);
-  canon.removeCommand(mockCommands.tsr);
-  canon.removeCommand(mockCommands.tso);
-  canon.removeCommand(mockCommands.tse);
-  canon.removeCommand(mockCommands.tsj);
-  canon.removeCommand(mockCommands.tsb);
-  canon.removeCommand(mockCommands.tss);
-  canon.removeCommand(mockCommands.tsu);
-  canon.removeCommand(mockCommands.tsf);
-  canon.removeCommand(mockCommands.tsn);
-  canon.removeCommand(mockCommands.tsnDif);
-  canon.removeCommand(mockCommands.tsnExt);
-  canon.removeCommand(mockCommands.tsnExte);
-  canon.removeCommand(mockCommands.tsnExten);
-  canon.removeCommand(mockCommands.tsnExtend);
-  canon.removeCommand(mockCommands.tsnDeep);
-  canon.removeCommand(mockCommands.tsnDeepDown);
-  canon.removeCommand(mockCommands.tsnDeepDownNested);
-  canon.removeCommand(mockCommands.tsnDeepDownNestedCmd);
-  canon.removeCommand(mockCommands.tselarr);
-  canon.removeCommand(mockCommands.tsm);
-  canon.removeCommand(mockCommands.tsg);
-  canon.removeCommand(mockCommands.tshidden);
-  canon.removeCommand(mockCommands.tscook);
-  canon.removeCommand(mockCommands.tslong);
-
-  types.deregisterType(mockCommands.optionType);
-  types.deregisterType(mockCommands.optionValue);
-};
-
-
-mockCommands.option1 = { type: types.getType('string') };
-mockCommands.option2 = { type: types.getType('number') };
-mockCommands.option3 = { type: types.getType({
-  name: 'selection',
-  lookup: [
-    { name: 'one', value: 1 },
-    { name: 'two', value: 2 },
-    { name: 'three', value: 3 }
-  ]
-})};
-
-mockCommands.optionType = new SelectionType({
+mockCommands.optionType = {
   name: 'optionType',
+  parent: 'selection',
   lookup: [
     { name: 'option1', value: mockCommands.option1 },
     { name: 'option2', value: mockCommands.option2 },
     { name: 'option3', value: mockCommands.option3 }
   ]
-});
+};
 
-mockCommands.optionValue = new DelegateType({
+mockCommands.optionValue = {
   name: 'optionValue',
-  delegateType: function(context) {
-    if (context != null) {
-      var option = context.getArgsObject().optionType;
+  parent: 'delegate',
+  delegateType: function(executionContext) {
+    if (executionContext != null) {
+      var option = executionContext.getArgsObject().optionType;
       if (option != null) {
         return option.type;
       }
     }
-    return types.getType('blank');
+    return types.createType('blank');
   }
-});
+};
 
 mockCommands.onCommandExec = util.createEvent('commands.onCommandExec');
 
 function createExec(name) {
-  return function(args, context) {
+  return function(args, executionContext) {
     var data = {
-      command: mockCommands[name],
       args: args,
-      context: context
+      context: executionContext
     };
     mockCommands.onCommandExec(data);
     var argsOut = Object.keys(args).map(function(key) {
@@ -159,7 +82,7 @@ function createExec(name) {
   };
 }
 
-mockCommands.tsv = {
+var tsv = {
   name: 'tsv',
   params: [
     { name: 'optionType', type: 'optionType' },
@@ -168,19 +91,19 @@ mockCommands.tsv = {
   exec: createExec('tsv')
 };
 
-mockCommands.tsr = {
+var tsr = {
   name: 'tsr',
   params: [ { name: 'text', type: 'string' } ],
   exec: createExec('tsr')
 };
 
-mockCommands.tso = {
+var tso = {
   name: 'tso',
   params: [ { name: 'text', type: 'string', defaultValue: null } ],
   exec: createExec('tso')
 };
 
-mockCommands.tse = {
+var tse = {
   name: 'tse',
   params: [
     { name: 'node', type: 'node' },
@@ -195,88 +118,88 @@ mockCommands.tse = {
   exec: createExec('tse')
 };
 
-mockCommands.tsj = {
+var tsj = {
   name: 'tsj',
   params: [ { name: 'javascript', type: 'javascript' } ],
   exec: createExec('tsj')
 };
 
-mockCommands.tsb = {
+var tsb = {
   name: 'tsb',
   params: [ { name: 'toggle', type: 'boolean' } ],
   exec: createExec('tsb')
 };
 
-mockCommands.tss = {
+var tss = {
   name: 'tss',
   exec: createExec('tss')
 };
 
-mockCommands.tsu = {
+var tsu = {
   name: 'tsu',
   params: [ { name: 'num', type: { name: 'number', max: 10, min: -5, step: 3 } } ],
   exec: createExec('tsu')
 };
 
-mockCommands.tsf = {
+var tsf = {
   name: 'tsf',
   params: [ { name: 'num', type: { name: 'number', allowFloat: true, max: 11.5, min: -6.5, step: 1.5 } } ],
   exec: createExec('tsf')
 };
 
-mockCommands.tsn = {
+var tsn = {
   name: 'tsn'
 };
 
-mockCommands.tsnDif = {
+var tsnDif = {
   name: 'tsn dif',
   description: 'tsn dif',
   params: [ { name: 'text', type: 'string', description: 'tsn dif text' } ],
   exec: createExec('tsnDif')
 };
 
-mockCommands.tsnExt = {
+var tsnExt = {
   name: 'tsn ext',
   params: [ { name: 'text', type: 'string' } ],
   exec: createExec('tsnExt')
 };
 
-mockCommands.tsnExte = {
+var tsnExte = {
   name: 'tsn exte',
   params: [ { name: 'text', type: 'string' } ],
   exec: createExec('tsnExte')
 };
 
-mockCommands.tsnExten = {
+var tsnExten = {
   name: 'tsn exten',
   params: [ { name: 'text', type: 'string' } ],
   exec: createExec('tsnExten')
 };
 
-mockCommands.tsnExtend = {
+var tsnExtend = {
   name: 'tsn extend',
   params: [ { name: 'text', type: 'string' } ],
   exec: createExec('tsnExtend')
 };
 
-mockCommands.tsnDeep = {
+var tsnDeep = {
   name: 'tsn deep'
 };
 
-mockCommands.tsnDeepDown = {
+var tsnDeepDown = {
   name: 'tsn deep down'
 };
 
-mockCommands.tsnDeepDownNested = {
+var tsnDeepDownNested = {
   name: 'tsn deep down nested'
 };
 
-mockCommands.tsnDeepDownNestedCmd = {
+var tsnDeepDownNestedCmd = {
   name: 'tsn deep down nested cmd',
   exec: createExec('tsnDeepDownNestedCmd')
 };
 
-mockCommands.tshidden = {
+var tshidden = {
   name: 'tshidden',
   hidden: true,
   params: [
@@ -308,7 +231,7 @@ mockCommands.tshidden = {
   exec: createExec('tshidden')
 };
 
-mockCommands.tselarr = {
+var tselarr = {
   name: 'tselarr',
   params: [
     { name: 'num', type: { name: 'selection', data: [ '1', '2', '3' ] } },
@@ -317,7 +240,7 @@ mockCommands.tselarr = {
   exec: createExec('tselarr')
 };
 
-mockCommands.tsm = {
+var tsm = {
   name: 'tsm',
   description: 'a 3-param test selection|string|number',
   params: [
@@ -328,7 +251,7 @@ mockCommands.tsm = {
   exec: createExec('tsm')
 };
 
-mockCommands.tsg = {
+var tsg = {
   name: 'tsg',
   description: 'a param group test',
   params: [
@@ -371,7 +294,7 @@ mockCommands.tsg = {
   exec: createExec('tsg')
 };
 
-mockCommands.tscook = {
+var tscook = {
   name: 'tscook',
   description: 'param group test to catch problems with cookie command',
   params: [
@@ -411,10 +334,9 @@ mockCommands.tscook = {
   exec: createExec('tscook')
 };
 
-mockCommands.tslong = {
+var tslong = {
   name: 'tslong',
   description: 'long param tests to catch problems with the jsb command',
-  returnValue:'string',
   params: [
     {
       name: 'msg',
@@ -471,6 +393,147 @@ mockCommands.tslong = {
     }
   ],
   exec: createExec('tslong')
+};
+
+var tsfail = {
+  name: 'tsfail',
+  description: 'test errors',
+  params: [
+    {
+      name: 'method',
+      type: {
+        name: 'selection',
+        data: [
+          'reject', 'rejecttyped',
+          'throwerror', 'throwstring', 'throwinpromise',
+          'noerror'
+        ]
+      }
+    }
+  ],
+  exec: function(args, context) {
+    if (args.method === 'reject') {
+      var deferred = context.defer();
+      setTimeout(function() {
+        deferred.reject('rejected promise');
+      }, 10);
+      return deferred.promise;
+    }
+
+    if (args.method === 'rejecttyped') {
+      var deferred = context.defer();
+      setTimeout(function() {
+        deferred.reject(context.typedData('number', 54));
+      }, 10);
+      return deferred.promise;
+    }
+
+    if (args.method === 'throwinpromise') {
+      var deferred = context.defer();
+      setTimeout(function() {
+        deferred.resolve('should be lost');
+      }, 10);
+      return deferred.promise.then(function() {
+        var t = null;
+        return t.foo;
+      });
+    }
+
+    if (args.method === 'throwerror') {
+      throw new Error('thrown error');
+    }
+
+    if (args.method === 'throwstring') {
+      throw 'thrown string';
+    }
+
+    return 'no error';
+  }
+};
+
+mockCommands.commands = {};
+
+/**
+ * Registration and de-registration.
+ */
+mockCommands.setup = function(opts) {
+  // setup/shutdown needs to register/unregister types, however that means we
+  // need to re-initialize mockCommands.option1 and mockCommands.option2 with
+  // the actual types
+  mockCommands.option1.type = types.createType('string');
+  mockCommands.option2.type = types.createType('number');
+  mockCommands.option3.type = types.createType({
+    name: 'selection',
+    lookup: [
+      { name: 'one', value: 1 },
+      { name: 'two', value: 2 },
+      { name: 'three', value: 3 }
+    ]
+  });
+
+  types.addType(mockCommands.optionType);
+  types.addType(mockCommands.optionValue);
+
+  mockCommands.commands.tsv = canon.addCommand(tsv);
+  mockCommands.commands.tsr = canon.addCommand(tsr);
+  mockCommands.commands.tso = canon.addCommand(tso);
+  mockCommands.commands.tse = canon.addCommand(tse);
+  mockCommands.commands.tsj = canon.addCommand(tsj);
+  mockCommands.commands.tsb = canon.addCommand(tsb);
+  mockCommands.commands.tss = canon.addCommand(tss);
+  mockCommands.commands.tsu = canon.addCommand(tsu);
+  mockCommands.commands.tsf = canon.addCommand(tsf);
+  mockCommands.commands.tsn = canon.addCommand(tsn);
+  mockCommands.commands.tsnDif = canon.addCommand(tsnDif);
+  mockCommands.commands.tsnExt = canon.addCommand(tsnExt);
+  mockCommands.commands.tsnExte = canon.addCommand(tsnExte);
+  mockCommands.commands.tsnExten = canon.addCommand(tsnExten);
+  mockCommands.commands.tsnExtend = canon.addCommand(tsnExtend);
+  mockCommands.commands.tsnDeep = canon.addCommand(tsnDeep);
+  mockCommands.commands.tsnDeepDown = canon.addCommand(tsnDeepDown);
+  mockCommands.commands.tsnDeepDownNested = canon.addCommand(tsnDeepDownNested);
+  mockCommands.commands.tsnDeepDownNestedCmd = canon.addCommand(tsnDeepDownNestedCmd);
+  mockCommands.commands.tselarr = canon.addCommand(tselarr);
+  mockCommands.commands.tsm = canon.addCommand(tsm);
+  mockCommands.commands.tsg = canon.addCommand(tsg);
+  mockCommands.commands.tshidden = canon.addCommand(tshidden);
+  mockCommands.commands.tscook = canon.addCommand(tscook);
+  mockCommands.commands.tslong = canon.addCommand(tslong);
+  mockCommands.commands.tsfail = canon.addCommand(tsfail);
+};
+
+mockCommands.shutdown = function(opts) {
+  canon.removeCommand(tsv);
+  canon.removeCommand(tsr);
+  canon.removeCommand(tso);
+  canon.removeCommand(tse);
+  canon.removeCommand(tsj);
+  canon.removeCommand(tsb);
+  canon.removeCommand(tss);
+  canon.removeCommand(tsu);
+  canon.removeCommand(tsf);
+  canon.removeCommand(tsn);
+  canon.removeCommand(tsnDif);
+  canon.removeCommand(tsnExt);
+  canon.removeCommand(tsnExte);
+  canon.removeCommand(tsnExten);
+  canon.removeCommand(tsnExtend);
+  canon.removeCommand(tsnDeep);
+  canon.removeCommand(tsnDeepDown);
+  canon.removeCommand(tsnDeepDownNested);
+  canon.removeCommand(tsnDeepDownNestedCmd);
+  canon.removeCommand(tselarr);
+  canon.removeCommand(tsm);
+  canon.removeCommand(tsg);
+  canon.removeCommand(tshidden);
+  canon.removeCommand(tscook);
+  canon.removeCommand(tslong);
+  canon.removeCommand(tsfail);
+
+  types.removeType(mockCommands.optionType);
+  types.removeType(mockCommands.optionValue);
+
+  mockCommands.commands = {};
 };
 
 

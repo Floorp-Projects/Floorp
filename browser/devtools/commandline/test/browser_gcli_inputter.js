@@ -40,22 +40,15 @@ var KeyEvent = require('util/util').KeyEvent;
 // var mockCommands = require('gclitest/mockCommands');
 
 var latestEvent = undefined;
-var latestOutput = undefined;
 var latestData = undefined;
 
 var outputted = function(ev) {
-  function updateData() {
-    latestData = latestOutput.data;
-  }
-
-  if (latestOutput != null) {
-    ev.output.onChange.remove(updateData);
-  }
-
   latestEvent = ev;
-  latestOutput = ev.output;
 
-  ev.output.onChange.add(updateData);
+  ev.output.promise.then(function() {
+    latestData = ev.output.data;
+    ev.output.onClose();
+  });
 };
 
 
@@ -71,7 +64,6 @@ exports.shutdown = function(options) {
 
 exports.testOutput = function(options) {
   latestEvent = undefined;
-  latestOutput = undefined;
   latestData = undefined;
 
   var inputter = options.display.inputter;
@@ -103,8 +95,6 @@ exports.testOutput = function(options) {
       var ev3 = { keyCode: KeyEvent.DOM_VK_ESCAPE };
       return inputter.handleKeyUp(ev3).then(function() {
         assert.ok(!focusManager._helpRequested, 'ESCAPE = anti help');
-
-        latestOutput.onClose();
       });
     });
 

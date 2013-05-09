@@ -3,7 +3,8 @@
 
 // Tests that the cookie commands works as they should
 
-const TEST_URI = "data:text/html;charset=utf-8,gcli-cookie";
+const TEST_URI = "http://example.com/browser/browser/devtools/commandline/"+
+                 "test/browser_cmd_cookie.html";
 
 function test() {
   helpers.addTabWithToolbar(TEST_URI, function(options) {
@@ -79,14 +80,14 @@ function test() {
       {
         setup: "cookie list",
         exec: {
-          output: 'No cookies found for host'
+          output: [ /zap=zep/, /zip=zop/, /Edit/ ]
         }
       },
       {
-        setup: "cookie set fruit banana",
+        setup: "cookie set zup banana",
         check: {
           args: {
-            name: { value: 'fruit' },
+            name: { value: 'zup' },
             value: { value: 'banana' },
           }
         },
@@ -97,24 +98,56 @@ function test() {
       {
         setup: "cookie list",
         exec: {
-          output: [ /fruit=banana/, /Expires:/, /Edit/ ]
+          output: [ /zap=zep/, /zip=zop/, /zup=banana/, /Edit/ ]
         }
       },
       {
-        setup: "cookie remove fruit",
-        check: {
-          args: {
-            name: { value: 'fruit' },
-          }
-        },
-        exec: {
-          output: ""
-        }
+        setup: "cookie remove zip",
+        exec: { },
       },
       {
         setup: "cookie list",
         exec: {
-          output: 'No cookies found for host'
+          output: [ /zap=zep/, /zup=banana/, /Edit/ ]
+        },
+        post: function(output, text) {
+          ok(!text.contains("zip"), "");
+          ok(!text.contains("zop"), "");
+        }
+      },
+      {
+        setup: "cookie remove zap",
+        exec: { },
+      },
+      {
+        setup: "cookie list",
+        exec: {
+          output: [ /zup=banana/, /Edit/ ]
+        },
+        post: function(output, text) {
+          ok(!text.contains("zap"), "");
+          ok(!text.contains("zep"), "");
+          ok(!text.contains("zip"), "");
+          ok(!text.contains("zop"), "");
+        }
+      },
+      {
+        setup: "cookie remove zup",
+        exec: { }
+      },
+      {
+        setup: "cookie list",
+        exec: {
+          output: 'No cookies found for host example.com'
+        },
+        post: function(output, text) {
+          ok(!text.contains("zap"), "");
+          ok(!text.contains("zep"), "");
+          ok(!text.contains("zip"), "");
+          ok(!text.contains("zop"), "");
+          ok(!text.contains("zup"), "");
+          ok(!text.contains("banana"), "");
+          ok(!text.contains("Edit"), "");
         }
       },
     ]);
