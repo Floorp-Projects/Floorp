@@ -846,16 +846,16 @@ BluetoothHfpManager::ReceiveSocketData(BluetoothSocket* aSocket,
     nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
     data.AppendInt(newVgs);
     os->NotifyObservers(nullptr, "bluetooth-volume-change", data.get());
-  } else if (msg.Find("AT+BLDN") != -1) {
+  } else if ((msg.Find("AT+BLDN") != -1) || (msg.Find("ATD>") != -1)) {
+    // Dialer app of FFOS v1 does not have plan to support Memory Dailing.
+    // However, in order to pass Bluetooth HFP certification, we have to
+    // make a call when we receive AT command 'ATD>n'. The solution here
+    // is firing a 'BLDN' event to Dialer to do 'Last Number Redial'.
     NotifyDialer(NS_LITERAL_STRING("BLDN"));
   } else if (msg.Find("ATA") != -1) {
     NotifyDialer(NS_LITERAL_STRING("ATA"));
   } else if (msg.Find("AT+CHUP") != -1) {
     NotifyDialer(NS_LITERAL_STRING("CHUP"));
-  } else if (msg.Find("ATD>") != -1) {
-    // Currently, we don't support memory dialing in Dialer app
-    SendLine("ERROR");
-    return;
   } else if (msg.Find("AT+CLCC") != -1) {
     SendCommand("+CLCC: ");
   } else if (msg.Find("ATD") != -1) {
