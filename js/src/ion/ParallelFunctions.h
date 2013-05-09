@@ -55,7 +55,13 @@ ParallelResult ParGreaterThanOrEqual(ForkJoinSlice *slice, MutableHandleValue v1
 ParallelResult ParStringsEqual(ForkJoinSlice *slice, HandleString v1, HandleString v2, JSBool *);
 ParallelResult ParStringsUnequal(ForkJoinSlice *slice, HandleString v1, HandleString v2, JSBool *);
 
-void ParallelAbort(JSScript *script);
+void ParallelAbort(ParallelBailoutCause cause,
+                   JSScript *outermostScript,
+                   JSScript *currentScript,
+                   jsbytecode *bytecode);
+
+void PropagateParallelAbort(JSScript *outermostScript,
+                            JSScript *currentScript);
 
 void TraceLIR(uint32_t bblock, uint32_t lir, uint32_t execModeInt,
               const char *lirOpName, const char *mirOpName,

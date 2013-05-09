@@ -26,6 +26,7 @@ class CodeGenerator;
 class MacroAssembler;
 class IonCache;
 class OutOfLineParallelAbort;
+class OutOfLinePropagateParallelAbort;
 
 template <class ArgSeq, class StoreOutputTo>
 class OutOfLineCallVM;
@@ -36,7 +37,6 @@ class CodeGeneratorShared : public LInstructionVisitor
 {
     js::Vector<OutOfLineCode *, 0, SystemAllocPolicy> outOfLineCode_;
     OutOfLineCode *oolIns;
-    OutOfLineParallelAbort *oolParallelAbort_;
 
     MacroAssembler &ensureMasm(MacroAssembler *masm);
     mozilla::Maybe<MacroAssembler> maybeMasm_;
@@ -344,13 +344,28 @@ class CodeGeneratorShared : public LInstructionVisitor
     bool visitOutOfLineTruncateSlow(OutOfLineTruncateSlow *ool);
 
   public:
-    // When compiling parallel code, all bailouts just abort funnel to
-    // this same point and hence abort execution altogether:
-    virtual bool visitOutOfLineParallelAbort(OutOfLineParallelAbort *ool) = 0;
     bool callTraceLIR(uint32_t blockIndex, LInstruction *lir, const char *bailoutName = NULL);
 
-  protected:
-    bool ensureOutOfLineParallelAbort(Label **result);
+    // Parallel aborts:
+    //
+    //    Parallel aborts work somewhat differently from sequential
+    //    bailouts.  When an abort occurs, we first invoke
+    //    ParReportBailout() and then we return JS_ION_ERROR.  Each
+    //    call on the stack will check for this error return and
+    //    propagate it upwards until the C++ code that invoked the ion
+    //    code is reached.
+    //
+    //    The snapshot that is provided to `oolParallelAbort` is currently
+    //    only used for error reporting, so that we can provide feedback
+    //    to the user about which instruction aborted and (perhaps) why.
+    OutOfLineParallelAbort *oolParallelAbort(ParallelBailoutCause cause,
+                                             MBasicBlock *basicBlock,
+                                             jsbytecode *bytecode);
+    OutOfLineParallelAbort *oolParallelAbort(ParallelBailoutCause cause,
+                                             LInstruction *lir);
+    OutOfLinePropagateParallelAbort *oolPropagateParallelAbort(LInstruction *lir);
+    virtual bool visitOutOfLineParallelAbort(OutOfLineParallelAbort *ool) = 0;
+    virtual bool visitOutOfLinePropagateParallelAbort(OutOfLinePropagateParallelAbort *ool) = 0;
 };
 
 // An out-of-line path is generated at the end of the function.
@@ -592,13 +607,51 @@ CodeGeneratorShared::visitOutOfLineCallVM(OutOfLineCallVM<ArgSeq, StoreOutputTo>
     return true;
 }
 
-
-// An out-of-line parallel abort thunk.
+// Initiate a parallel abort.  The snapshot is used to record the
+// cause.
 class OutOfLineParallelAbort : public OutOfLineCode
 {
+  private:
+    ParallelBailoutCause cause_;
+    MBasicBlock *basicBlock_;
+    jsbytecode *bytecode_;
+
   public:
-    OutOfLineParallelAbort()
+    OutOfLineParallelAbort(ParallelBailoutCause cause,
+                           MBasicBlock *basicBlock,
+                           jsbytecode *bytecode)
+      : cause_(cause),
+        basicBlock_(basicBlock),
+        bytecode_(bytecode)
     { }
+
+    ParallelBailoutCause cause() {
+        return cause_;
+    }
+
+    MBasicBlock *basicBlock() {
+        return basicBlock_;
+    }
+
+    jsbytecode *bytecode() {
+        return bytecode_;
+    }
+
+    bool generate(CodeGeneratorShared *codegen);
+};
+
+// Used when some callee has aborted.
+class OutOfLinePropagateParallelAbort : public OutOfLineCode
+{
+  private:
+    LInstruction *lir_;
+
+  public:
+    OutOfLinePropagateParallelAbort(LInstruction *lir)
+      : lir_(lir)
+    { }
+
+    LInstruction *lir() { return lir_; }
 
     bool generate(CodeGeneratorShared *codegen);
 };
