@@ -1,12 +1,12 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 "use strict";
 
 const { Cc, Ci } = require('chrome');
 const { Symbiont } = require('sdk/content/symbiont');
-const self = require("sdk/self");
+const self = require('sdk/self');
+const { close } = require('sdk/window/helpers');
 
 function makeWindow() {
   let content =
@@ -78,9 +78,9 @@ exports["test:communication with worker global scope"] = function(assert, done) 
 
   function onMessage2(message) {
     if (5 == message) {
-      window.close();
-      done();
-    } else {
+      close(window).then(done);
+    }
+    else {
       assert.equal(message, 3, "Program gets message via onMessage2.");
       contentSymbiont.postMessage(4)
     }

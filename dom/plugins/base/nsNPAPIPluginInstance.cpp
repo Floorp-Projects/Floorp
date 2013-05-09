@@ -255,7 +255,7 @@ nsresult nsNPAPIPluginInstance::Initialize(nsNPAPIPlugin *aPlugin, nsPluginInsta
   mOwner = aOwner;
 
   if (aMIMEType) {
-    mMIMEType = (char*)PR_Malloc(PL_strlen(aMIMEType) + 1);
+    mMIMEType = (char*)PR_Malloc(strlen(aMIMEType) + 1);
     if (mMIMEType) {
       PL_strcpy(mMIMEType, aMIMEType);
     }
@@ -1810,7 +1810,7 @@ nsNPAPIPluginInstance::CheckJavaC2PJSObjectQuirk(uint16_t paramCount,
   for (uint16_t i = 0; i < paramCount; ++i) {
     if (PL_strcasecmp(paramNames[i], "code") == 0) {
       haveCodeParam = true;
-      if (PL_strlen(paramValues[i]) > 0) {
+      if (strlen(paramValues[i]) > 0) {
         isCodeParamEmpty = false;
       }
       break;

@@ -42,6 +42,15 @@ struct WebAudioUtils {
   }
 
   /**
+   * Convert a time in second relative to the destination stream to
+   * TrackTicks relative to the source stream.
+   */
+  static TrackTicks
+  ConvertDestinationStreamTimeToSourceStreamTime(double aTime,
+                                                 MediaStream* aSource,
+                                                 MediaStream* aDestination);
+
+  /**
    * Converts AudioParamTimeline floating point time values to tick values
    * with respect to a source and a destination AudioNodeStream.
    *

@@ -239,6 +239,10 @@ class ObjectPtr
         return *this;
     }
 
+    void trace(JSTracer *trc, const char *name) {
+        JS_CallObjectTracer(trc, &value, name);
+    }
+
     JSObject &operator*() const { return *value; }
     JSObject *operator->() const { return value; }
     operator JSObject *() const { return value; }

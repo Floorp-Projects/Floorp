@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test AudioParam timeline events scheduled after the destination stream has started playback</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="webaudio.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  SpecialPowers.setBoolPref("media.webaudio.enabled", true);
+
+  var context = new AudioContext();
+
+  var sourceBuffer = context.createBuffer(1, 2048, context.sampleRate);
+  for (var i = 0; i < 2048; ++i) {
+    sourceBuffer.getChannelData(0)[i] = 1;
+  }
+  var emptyBuffer = context.createBuffer(1, 16384, context.sampleRate);
+
+  setTimeout(function() {
+    var source = context.createBufferSource();
+    source.buffer = sourceBuffer;
+    source.start(context.currentTime);
+    source.stop(context.currentTime + sourceBuffer.duration);
+
+    var gain = context.createGain();
+    gain.gain.setValueAtTime(0, context.currentTime);
+    gain.gain.setTargetAtTime(0, context.currentTime + sourceBuffer.duration, 1);
+    source.connect(gain);
+
+    var sp = context.createScriptProcessor(16384, 1);
+    gain.connect(sp);
+    sp.connect(context.destination);
+
+    sp.onaudioprocess = function(e) {
+      is(e.inputBuffer.numberOfChannels, 1, "Correct input channel count");
+      compareBuffers(e.inputBuffer.getChannelData(0), emptyBuffer.getChannelData(0));
+
+      sp.onaudioprocess = null;
+
+      SpecialPowers.clearUserPref("media.webaudio.enabled");
+      SimpleTest.finish();
+    };
+  }, 100);
+});
+
+</script>
+</pre>
+</body>
+</html>

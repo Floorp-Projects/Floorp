@@ -659,7 +659,7 @@ LIRGenerator::visitTest(MTest *test)
         }
 
         // Compare and branch doubles.
-        if (comp->compareType() == MCompare::Compare_Double) {
+        if (comp->isDoubleComparison()) {
             LAllocation lhs = useRegister(left);
             LAllocation rhs = useRegister(right);
             LCompareDAndBranch *lir = new LCompareDAndBranch(lhs, rhs, ifTrue, ifFalse);
@@ -835,12 +835,8 @@ LIRGenerator::visitCompare(MCompare *comp)
     }
 
     // Compare doubles.
-    if (comp->compareType() == MCompare::Compare_Double ||
-        comp->compareType() == MCompare::Compare_DoubleMaybeCoerceLHS ||
-        comp->compareType() == MCompare::Compare_DoubleMaybeCoerceRHS)
-    {
+    if (comp->isDoubleComparison())
         return define(new LCompareD(useRegister(left), useRegister(right)), comp);
-    }
 
     // Compare values.
     if (comp->compareType() == MCompare::Compare_Value) {
@@ -862,8 +858,10 @@ ReorderCommutative(MDefinition **lhsp, MDefinition **rhsp)
     MDefinition *lhs = *lhsp;
     MDefinition *rhs = *rhsp;
 
-    // Put the constant in the right-hand side, if there is one.
-    if (lhs->isConstant()) {
+    // Ensure that if there is a constant, then it is in rhs.
+    // In addition, since clobbering binary operations clobber the left
+    // operand, prefer a lhs operand with no further uses.
+    if (lhs->isConstant() || rhs->useCount() == 1) {
         *rhsp = lhs;
         *lhsp = rhs;
     }
@@ -1160,6 +1158,7 @@ LIRGenerator::visitAdd(MAdd *ins)
 
     if (ins->specialization() == MIRType_Double) {
         JS_ASSERT(lhs->type() == MIRType_Double);
+        ReorderCommutative(&lhs, &rhs);
         return lowerForFPU(new LMathD(JSOP_ADD), ins, lhs, rhs);
     }
 

@@ -32,7 +32,7 @@ protected:
                              JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
 public:
-  virtual bool SubregionIsUnionOfRegions() { return false; }
+  virtual bool SubregionIsUnionOfRegions() MOZ_OVERRIDE { return false; }
 
   // interfaces:
   NS_DECL_ISUPPORTS_INHERITED
@@ -40,27 +40,27 @@ public:
   virtual nsresult Filter(nsSVGFilterInstance* aInstance,
                           const nsTArray<const Image*>& aSources,
                           const Image* aTarget,
-                          const nsIntRect& aDataRect);
+                          const nsIntRect& aDataRect) MOZ_OVERRIDE;
   virtual bool AttributeAffectsRendering(
-          int32_t aNameSpaceID, nsIAtom* aAttribute) const;
-  virtual nsSVGString& GetResultImageName() { return mStringAttributes[RESULT]; }
+          int32_t aNameSpaceID, nsIAtom* aAttribute) const MOZ_OVERRIDE;
+  virtual nsSVGString& GetResultImageName() MOZ_OVERRIDE { return mStringAttributes[RESULT]; }
   virtual nsIntRect ComputeTargetBBox(const nsTArray<nsIntRect>& aSourceBBoxes,
-          const nsSVGFilterInstance& aInstance);
+          const nsSVGFilterInstance& aInstance) MOZ_OVERRIDE;
 
   // nsIContent
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const MOZ_OVERRIDE;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
-                                const nsAttrValue* aValue, bool aNotify);
+                                const nsAttrValue* aValue, bool aNotify) MOZ_OVERRIDE;
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              bool aCompileEventHandlers);
-  virtual void UnbindFromTree(bool aDeep, bool aNullParent);
-  virtual nsEventStates IntrinsicState() const;
+                              bool aCompileEventHandlers) MOZ_OVERRIDE;
+  virtual void UnbindFromTree(bool aDeep, bool aNullParent) MOZ_OVERRIDE;
+  virtual nsEventStates IntrinsicState() const MOZ_OVERRIDE;
 
-  NS_IMETHODIMP Notify(imgIRequest *aRequest, int32_t aType, const nsIntRect* aData);
+  NS_IMETHODIMP Notify(imgIRequest *aRequest, int32_t aType, const nsIntRect* aData) MOZ_OVERRIDE;
 
   void MaybeLoadSVGImage();
 
@@ -76,10 +76,10 @@ private:
 
 protected:
   virtual bool OperatesOnSRGB(nsSVGFilterInstance*,
-                                int32_t, Image*) { return true; }
+                                int32_t, Image*) MOZ_OVERRIDE { return true; }
 
-  virtual SVGAnimatedPreserveAspectRatio *GetPreserveAspectRatio();
-  virtual StringAttributesInfo GetStringInfo();
+  virtual SVGAnimatedPreserveAspectRatio *GetPreserveAspectRatio() MOZ_OVERRIDE;
+  virtual StringAttributesInfo GetStringInfo() MOZ_OVERRIDE;
 
   enum { RESULT, HREF };
   nsSVGString mStringAttributes[2];

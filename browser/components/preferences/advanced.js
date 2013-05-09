@@ -146,6 +146,15 @@ var gAdvancedPane = {
   // DATA CHOICES TAB
 
   /**
+   * opening links behind a modal dialog is poor form. Work around flawed text-link handling here.
+   */
+  openTextLink: function (evt) {
+    let where = Services.prefs.getBoolPref("browser.preferences.instantApply") ? "tab" : "window";
+    openUILinkIn(evt.target.getAttribute("href"), where);
+    evt.preventDefault();
+  },
+
+  /**
    * Set up or hide the Learn More links for various data collection options
    */
   _setupLearnMoreLink: function (pref, element) {

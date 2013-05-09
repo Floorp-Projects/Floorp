@@ -25,17 +25,12 @@
 #include "nsTArray.h"
 #include "nsDataHashtable.h"
 
-#include "mozilla/RefPtr.h"
-
 #include <windows.h>
 #include <objbase.h>
 
 #ifdef CAIRO_HAS_D2D_SURFACE
 #include <dxgi.h>
 #endif
-
-class ID3D11Device;
-class IDXGIAdapter1;
 
 class nsIMemoryMultiReporter;
 
@@ -260,7 +255,6 @@ public:
     cairo_device_t *GetD2DDevice() { return mD2DDevice; }
     ID3D10Device1 *GetD3D10Device() { return mD2DDevice ? cairo_d2d_device_get_device(mD2DDevice) : nullptr; }
 #endif
-    ID3D11Device *GetD3D11Device();
 
     static bool IsOptimus();
 
@@ -273,7 +267,6 @@ protected:
 
 private:
     void Init();
-    IDXGIAdapter1 *GetDXGIAdapter();
 
     bool mUseDirectWrite;
     bool mUsingGDIFonts;
@@ -287,9 +280,6 @@ private:
 #ifdef CAIRO_HAS_D2D_SURFACE
     cairo_device_t *mD2DDevice;
 #endif
-    mozilla::RefPtr<IDXGIAdapter1> mAdapter;
-    mozilla::RefPtr<ID3D11Device> mD3D11Device;
-    bool mD3D11DeviceInitialized;
 
     virtual qcms_profile* GetPlatformCMSOutputProfile();
 

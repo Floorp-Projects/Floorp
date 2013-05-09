@@ -43,8 +43,8 @@ def print_extra(extra):
 
 @CommandProvider
 class MozbuildFileCommands(object):
-    @Command('mozbuild-reference',
-        help='View reference documentation on mozbuild files.')
+    @Command('mozbuild-reference', category='build-dev',
+        description='View reference documentation on mozbuild files.')
     @CommandArgument('symbol', default=None, nargs='*',
         help='Symbol to view help on. If not specified, all will be shown.')
     @CommandArgument('--name-only', '-n', default=False, action='store_true',

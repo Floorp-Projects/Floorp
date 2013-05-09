@@ -15,7 +15,6 @@
 #include "IonAnalysis.h"
 
 #include "vm/Stack.h"
-#include "vm/ParallelDo.h"
 
 namespace js {
 namespace ion {
