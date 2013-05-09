@@ -80,7 +80,7 @@ gcli.addCommand({
       }
 
       if (profile.isFinished) {
-        throw gcli.lookup("profilerAlradyFinished");
+        throw gcli.lookup("profilerAlreadyFinished");
       }
 
       panel.switchToProfile(profile, function () profile.start());
