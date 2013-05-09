@@ -283,11 +283,11 @@ CodeGeneratorX86Shared::bailout(const T &binder, LSnapshot *snapshot)
     CompileInfo &info = snapshot->mir()->block()->info();
     switch (info.executionMode()) {
       case ParallelExecution: {
-        // In parallel mode, make no attempt to recover, just signal an error.
-        Label *ool;
-        if (!ensureOutOfLineParallelAbort(&ool))
-            return false;
-        binder(masm, ool);
+        // in parallel mode, make no attempt to recover, just signal an error.
+        OutOfLineParallelAbort *ool = oolParallelAbort(ParallelBailoutUnsupported,
+                                                       snapshot->mir()->block(),
+                                                       snapshot->mir()->pc());
+        binder(masm, ool->entry());
         return true;
       }
       case SequentialExecution:
