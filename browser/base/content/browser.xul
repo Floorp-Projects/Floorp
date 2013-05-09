@@ -997,22 +997,6 @@
                          tooltiptext="&devToolbarCloseButton.tooltiptext;"/>
 #endif
    </toolbar>
-
-    <toolbar id="addon-bar"
-             toolbarname="&addonBarCmd.label;" accesskey="&addonBarCmd.accesskey;"
-             collapsed="true"
-             class="toolbar-primary chromeclass-toolbar"
-             context="toolbar-context-menu" toolboxid="navigator-toolbox"
-             mode="icons" iconsize="small" defaulticonsize="small"
-             lockiconsize="true"
-             defaultset="addonbar-closebutton,spring,status-bar"
-             key="key_toggleAddonBar">
-      <toolbarbutton id="addonbar-closebutton"
-                     class="close-icon"
-                     tooltiptext="&addonBarCloseButton.tooltip;"
-                     oncommand="setToolbarVisibility(this.parentNode, false);"/>
-      <statusbar id="status-bar" ordinal="1000"/>
-    </toolbar>
   </vbox>
 
   <svg:svg height="0">

@@ -137,7 +137,6 @@ MOCHITEST_BROWSER_FILES = \
                  browser_bug595507.js \
                  browser_bug596687.js \
                  browser_bug597218.js \
-                 browser_bug598923.js \
                  browser_bug609700.js \
                  browser_bug623155.js \
                  browser_bug623893.js \
@@ -282,9 +281,6 @@ MOCHITEST_BROWSER_FILES = \
                  app_bug575561.html \
                  app_subframe_bug575561.html \
                  browser_contentAreaClick.js \
-                 browser_addon_bar_close_button.js \
-                 browser_addon_bar_shortcut.js \
-                 browser_addon_bar_aomlistener.js \
                  test_bug628179.html \
                  browser_wyciwyg_urlbarCopying.js \
                  test_wyciwyg_copying.html \

@@ -521,8 +521,8 @@ menuitem.bookmark-item {
   transition: background-color .4s;
 }
 
-:-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1,
-:-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-button,
+#TabsToolbar .toolbarbutton-1,
+#TabsToolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button,
 .tabbrowser-arrowscrollbox > .scrollbutton-up,
 .tabbrowser-arrowscrollbox > .scrollbutton-down {
   -moz-appearance: none;
@@ -540,17 +540,6 @@ menuitem.bookmark-item {
                     linear-gradient(transparent, rgba(0,0,0,.25) 30%);
   background-position: 1px -1px, 0 -1px, 100% -1px;
   background-size: calc(100% - 2px) 100%, 1px 100%, 1px 100%;
-  background-repeat: no-repeat;
-}
-
-#addon-bar .toolbarbutton-1:not([disabled]):hover,
-#addon-bar .toolbarbutton-1[open],
-#addon-bar .toolbarbutton-1 > .toolbarbutton-menubutton-button:not([disabled]):hover {
-  background-image: linear-gradient(to top, transparent, rgba(0,0,0,.15)),
-                    linear-gradient(to top, transparent, rgba(0,0,0,.15) 30%),
-                    linear-gradient(to top, transparent, rgba(0,0,0,.15) 30%);
-  background-position: left, left, right;
-  background-size: auto, 1px 100%, 1px 100%;
   background-repeat: no-repeat;
 }
 
@@ -2156,44 +2145,6 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 
 #ctrlTab-showAll {
   margin-top: .5em;
-}
-
-/* Add-on bar */
-
-#addon-bar {
-  -moz-appearance: none;
-  min-height: 20px;
-  border-top-style: none;
-  border-bottom-style: none;
-  padding-top: 1px;
-  background-image: linear-gradient(rgba(0,0,0,.15) 1px, rgba(255,255,255,.15) 1px);
-  background-size: 100% 2px;
-  background-repeat: no-repeat;
-}
-
-#status-bar {
-  -moz-appearance: none;
-  background-color: transparent;
-  border: none;
-  min-height: 0;
-}
-
-#addon-bar[customizing] > #status-bar {
-  opacity: .5;
-  background-image: repeating-linear-gradient(135deg,
-                                              rgba(255,255,255,.3), rgba(255,255,255,.3) 5px,
-                                              rgba(0,0,0,.3) 5px, rgba(0,0,0,.3) 10px);
-}
-
-#status-bar > statusbarpanel {
-  border-width: 0;
-  -moz-appearance: none;
-}
-
-#addonbar-closebutton {
-  border: none;
-  padding: 0 5px;
-  -moz-appearance: none;
 }
 
 /* Status panel */
