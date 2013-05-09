@@ -33,8 +33,6 @@ function runTest()
 
   window.frames[0].focus();
   document.commandDispatcher.getControllerForCommand("cmd_moveBottom").doCommand("cmd_moveBottom");
-
-  ok(frames[0].scrollY > 0, "scrollY for non-showcaret");
   is(sel1.focusNode, frames[0].document.body, "focusNode for non-showcaret");
   is(sel1.focusOffset, 0, "focusOffset for non-showcaret");
 
@@ -49,6 +47,22 @@ function runTest()
 
   otherWindow = window.open("window_showcaret.xul", "_blank", "chrome,width=400,height=200");
   otherWindow.addEventListener("focus", otherWindowFocused, false);
+
+  var sel1 = frames[0].getSelection();
+  sel1.collapse(frames[0].document.body, 0);
+
+  var sel2 = frames[1].getSelection();
+  sel2.collapse(frames[1].document.body, 0);
+  window.frames[0].focus();
+  document.commandDispatcher.getControllerForCommand("cmd_moveBottom").doCommand("cmd_moveBottom");
+
+  /* We aren't sure exactly how long the cmd_moveBottom will take.
+   * Therefore, check for success every second. If we don't have success within 10 seconds, assume the scroll
+   * will never pass the test and fail it.
+   */
+
+  var timeoutUntilFail = window.setTimeout(scrollYTimeout, 10000);
+  var testScroll = self.setInterval(function(){continueTest()}, 10);
 }
 
 function otherWindowFocused()
@@ -71,6 +85,19 @@ function otherWindowFocused()
 
   otherWindow.close();
   SimpleTest.finish();
+}
+
+function continueTest() {
+  if (frames[0].scrollY > 0) {
+    return;
+  }
+  testScroll = window.clearInterval(testScroll);
+  window.clearTimeout(timeoutUntilFail);
+  return;
+}
+
+function scrollYTimeout() {
+  ok(frames[0].scrollY > 0, "scrollY for non-showcaret");
 }
 
 ]]>
