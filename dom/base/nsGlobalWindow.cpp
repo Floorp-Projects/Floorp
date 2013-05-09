@@ -6626,7 +6626,7 @@ PostMessageReadStructuredClone(JSContext* cx,
 static JSBool
 PostMessageWriteStructuredClone(JSContext* cx,
                                 JSStructuredCloneWriter* writer,
-                                JSObject* obj,
+                                JS::Handle<JSObject*> obj,
                                 void *closure)
 {
   StructuredCloneInfo* scInfo = static_cast<StructuredCloneInfo*>(closure);

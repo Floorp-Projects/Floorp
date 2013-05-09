@@ -304,6 +304,10 @@ UA_BUILDID=$(shell echo $(ANDROID_VERSION_CODE) | cut -c1-8)
 
 MOZ_BUILD_TIMESTAMP=$(shell echo `$(PYTHON) $(topsrcdir)/toolkit/xre/make-platformini.py --print-timestamp`)
 
+ifdef MOZ_UPDATER
+DEFINES +=  -DMOZ_UPDATER=$(MOZ_UPDATER)
+endif
+
 # Mangle our package name to avoid Bug 750548.
 DEFINES += \
   -DMANGLED_ANDROID_PACKAGE_NAME=$(subst fennec,f3nn3c,$(ANDROID_PACKAGE_NAME)) \
@@ -324,7 +328,6 @@ DEFINES += \
   -DMOZ_APP_BUILDID=$(MOZ_APP_BUILDID) \
   -DMOZ_APP_ABI=$(TARGET_XPCOM_ABI) \
   -DMOZ_BUILD_TIMESTAMP=$(MOZ_BUILD_TIMESTAMP) \
-  -DMOZ_UPDATER=$(MOZ_UPDATER) \
   -DOS_TARGET=$(OS_TARGET) \
   $(NULL)
 

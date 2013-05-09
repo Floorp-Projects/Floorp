@@ -3423,7 +3423,7 @@ NS_DOMReadStructuredClone(JSContext* cx,
 JSBool
 NS_DOMWriteStructuredClone(JSContext* cx,
                            JSStructuredCloneWriter* writer,
-                           JSObject* obj,
+                           JS::Handle<JSObject*> obj,
                            void *closure)
 {
   ImageData* imageData;

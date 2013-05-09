@@ -10,44 +10,32 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-SimpleTest.waitForExplicitFinish();
-addLoadEvent(function() {
-  SpecialPowers.setBoolPref("media.webaudio.enabled", true);
+var gTest = {
+  length: 16384,
+  numberOfChannels: 1,
+  createGraphAsync: function(context, callback) {
+    var sourceBuffer = context.createBuffer(1, 2048, context.sampleRate);
+    for (var i = 0; i < 2048; ++i) {
+      sourceBuffer.getChannelData(0)[i] = 1;
+    }
 
-  var context = new AudioContext();
+    setTimeout(function() {
+      var source = context.createBufferSource();
+      source.buffer = sourceBuffer;
+      source.start(context.currentTime);
+      source.stop(context.currentTime + sourceBuffer.duration);
 
-  var sourceBuffer = context.createBuffer(1, 2048, context.sampleRate);
-  for (var i = 0; i < 2048; ++i) {
-    sourceBuffer.getChannelData(0)[i] = 1;
-  }
-  var emptyBuffer = context.createBuffer(1, 16384, context.sampleRate);
+      var gain = context.createGain();
+      gain.gain.setValueAtTime(0, context.currentTime);
+      gain.gain.setTargetAtTime(0, context.currentTime + sourceBuffer.duration, 1);
+      source.connect(gain);
 
-  setTimeout(function() {
-    var source = context.createBufferSource();
-    source.buffer = sourceBuffer;
-    source.start(context.currentTime);
-    source.stop(context.currentTime + sourceBuffer.duration);
+      callback(gain);
+    }, 100);
+  },
+};
 
-    var gain = context.createGain();
-    gain.gain.setValueAtTime(0, context.currentTime);
-    gain.gain.setTargetAtTime(0, context.currentTime + sourceBuffer.duration, 1);
-    source.connect(gain);
-
-    var sp = context.createScriptProcessor(16384, 1);
-    gain.connect(sp);
-    sp.connect(context.destination);
-
-    sp.onaudioprocess = function(e) {
-      is(e.inputBuffer.numberOfChannels, 1, "Correct input channel count");
-      compareBuffers(e.inputBuffer.getChannelData(0), emptyBuffer.getChannelData(0));
-
-      sp.onaudioprocess = null;
-
-      SpecialPowers.clearUserPref("media.webaudio.enabled");
-      SimpleTest.finish();
-    };
-  }, 100);
-});
+runTest();
 
 </script>
 </pre>

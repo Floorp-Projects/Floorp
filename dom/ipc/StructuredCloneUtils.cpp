@@ -107,8 +107,8 @@ Read(JSContext* aCx, JSStructuredCloneReader* aReader, uint32_t aTag,
 }
 
 JSBool
-Write(JSContext* aCx, JSStructuredCloneWriter* aWriter, JSObject* aObj,
-      void* aClosure)
+Write(JSContext* aCx, JSStructuredCloneWriter* aWriter,
+      JS::Handle<JSObject*> aObj, void* aClosure)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aClosure);

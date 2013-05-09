@@ -18,7 +18,7 @@ bool
 InitClasses(JSContext* aCx, JS::Handle<JSObject*> aGlobal, bool aMainRuntime);
 
 JSObject*
-CreateGenericEvent(JSContext* aCx, JSString* aType, bool aBubbles,
+CreateGenericEvent(JSContext* aCx, JS::Handle<JSString*> aType, bool aBubbles,
                    bool aCancelable, bool aMainRuntime);
 
 JSObject*
@@ -27,7 +27,8 @@ CreateMessageEvent(JSContext* aCx, JSAutoStructuredCloneBuffer& aData,
                    bool aMainRuntime);
 
 JSObject*
-CreateErrorEvent(JSContext* aCx, JSString* aMessage, JSString* aFilename,
+CreateErrorEvent(JSContext* aCx, JS::Handle<JSString*> aMessage,
+                 JS::Handle<JSString*> aFilename,
                  uint32_t aLineNumber, bool aMainRuntime);
 
 JSObject*
@@ -47,8 +48,8 @@ bool
 EventImmediatePropagationStopped(JSObject* aEvent);
 
 bool
-DispatchEventToTarget(JSContext* aCx, JSObject* aTarget, JSObject* aEvent,
-                      bool* aPreventDefaultCalled);
+DispatchEventToTarget(JSContext* aCx, JS::Handle<JSObject*> aTarget,
+                      JS::Handle<JSObject*> aEvent, bool* aPreventDefaultCalled);
 
 } // namespace events
 
