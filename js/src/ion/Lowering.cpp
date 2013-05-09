@@ -2744,7 +2744,7 @@ void
 LIRGenerator::updateResumeState(MInstruction *ins)
 {
     lastResumePoint_ = ins->resumePoint();
-    if (IonSpewEnabled(IonSpew_Snapshots))
+    if (IonSpewEnabled(IonSpew_Snapshots) && lastResumePoint_)
         SpewResumePoint(NULL, ins, lastResumePoint_);
 }
 
