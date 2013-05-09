@@ -3091,7 +3091,8 @@ RasterImage::DrawWithPreDownscaleIfNeeded(imgFrame *aFrame,
                       mSize.height - framerect.YMost(),
                       framerect.x);
 
-  frame->Draw(aContext, aFilter, userSpaceToImageSpace, aFill, padding, subimage);
+  frame->Draw(aContext, aFilter, userSpaceToImageSpace, aFill, padding, subimage,
+              aFlags);
 }
 
 //******************************************************************************
