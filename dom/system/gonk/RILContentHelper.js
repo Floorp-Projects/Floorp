@@ -1327,6 +1327,9 @@ RILContentHelper.prototype = {
     if (this.voicemailStatus.messageCount != message.msgCount) {
       changed = true;
       this.voicemailStatus.messageCount = message.msgCount;
+    } else if (message.msgCount == -1) {
+      // For MWI using DCS the message count is not available
+      changed = true;
     }
 
     if (this.voicemailStatus.returnNumber != message.returnNumber) {
