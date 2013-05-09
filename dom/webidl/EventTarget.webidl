@@ -27,3 +27,13 @@ interface EventTarget {
   [Throws]
   boolean dispatchEvent(Event event);
 };
+
+// Mozilla extensions for use by JS-implemented event targets to
+// implement on* properties.
+partial interface EventTarget {
+  [ChromeOnly, Throws]
+  void setEventHandler(DOMString type, EventHandler handler);
+
+  [ChromeOnly]
+  EventHandler getEventHandler(DOMString type);
+};
