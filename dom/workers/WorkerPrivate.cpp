@@ -214,8 +214,8 @@ struct WorkerStructuredCloneCallbacks
   }
 
   static JSBool
-  Write(JSContext* aCx, JSStructuredCloneWriter* aWriter, JSObject* aObj,
-        void* aClosure)
+  Write(JSContext* aCx, JSStructuredCloneWriter* aWriter,
+        JS::Handle<JSObject*> aObj, void* aClosure)
   {
     NS_ASSERTION(aClosure, "Null pointer!");
 
@@ -361,8 +361,8 @@ struct MainThreadWorkerStructuredCloneCallbacks
   }
 
   static JSBool
-  Write(JSContext* aCx, JSStructuredCloneWriter* aWriter, JSObject* aObj,
-        void* aClosure)
+  Write(JSContext* aCx, JSStructuredCloneWriter* aWriter,
+        JS::Handle<JSObject*> aObj, void* aClosure)
   {
     AssertIsOnMainThread();
 
@@ -449,8 +449,8 @@ struct ChromeWorkerStructuredCloneCallbacks
   }
 
   static JSBool
-  Write(JSContext* aCx, JSStructuredCloneWriter* aWriter, JSObject* aObj,
-        void* aClosure)
+  Write(JSContext* aCx, JSStructuredCloneWriter* aWriter,
+        JS::Handle<JSObject*> aObj, void* aClosure)
   {
     return WorkerStructuredCloneCallbacks::Write(aCx, aWriter, aObj, aClosure);
   }
@@ -495,8 +495,8 @@ struct MainThreadChromeWorkerStructuredCloneCallbacks
   }
 
   static JSBool
-  Write(JSContext* aCx, JSStructuredCloneWriter* aWriter, JSObject* aObj,
-        void* aClosure)
+  Write(JSContext* aCx, JSStructuredCloneWriter* aWriter,
+        JS::Handle<JSObject*> aObj, void* aClosure)
   {
     AssertIsOnMainThread();
 
@@ -724,12 +724,12 @@ public:
 
     aWorkerPrivate->CloseHandlerStarted();
 
-    JSString* type = JS_InternString(aCx, "close");
+    JS::Rooted<JSString*> type(aCx, JS_InternString(aCx, "close"));
     if (!type) {
       return false;
     }
 
-    JSObject* event = CreateGenericEvent(aCx, type, false, false, false);
+    JS::Rooted<JSObject*> event(aCx, CreateGenericEvent(aCx, type, false, false, false));
     if (!event) {
       return false;
     }
@@ -813,8 +813,8 @@ public:
 
     NS_ASSERTION(target, "This should never be null!");
 
-    JSObject* event =
-      CreateMessageEvent(aCx, buffer, mClonedObjects, mainRuntime);
+    JS::Rooted<JSObject*> event(aCx,
+      CreateMessageEvent(aCx, buffer, mClonedObjects, mainRuntime));
     if (!event) {
       return false;
     }
@@ -980,11 +980,12 @@ public:
 
   static bool
   ReportError(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
-              bool aFireAtScope, JSObject* aTarget, const nsString& aMessage,
+              bool aFireAtScope, JSObject* target, const nsString& aMessage,
               const nsString& aFilename, const nsString& aLine,
               uint32_t aLineNumber, uint32_t aColumnNumber, uint32_t aFlags,
               uint32_t aErrorNumber, uint64_t aInnerWindowId)
   {
+    JS::Rooted<JSObject*> aTarget(aCx, target);
     if (aWorkerPrivate) {
       aWorkerPrivate->AssertIsOnWorkerThread();
     }
@@ -1009,8 +1010,8 @@ public:
     if (!JSREPORT_IS_WARNING(aFlags)) {
       // First fire an ErrorEvent at the worker.
       if (aTarget) {
-        JSObject* event =
-          CreateErrorEvent(aCx, message, filename, aLineNumber, !aWorkerPrivate);
+        JS::Rooted<JSObject*> event(aCx,
+          CreateErrorEvent(aCx, message, filename, aLineNumber, !aWorkerPrivate));
         if (!event) {
           return false;
         }
@@ -1037,8 +1038,8 @@ public:
         if (aWorkerPrivate ||
             !(sgo = nsJSUtils::GetStaticScriptGlobal(aTarget))) {
           // Fire a normal ErrorEvent if we're running on a worker thread.
-          JSObject* event =
-            CreateErrorEvent(aCx, message, filename, aLineNumber, false);
+          JS::Rooted<JSObject*> event(aCx,
+            CreateErrorEvent(aCx, message, filename, aLineNumber, false));
           if (!event) {
             return false;
           }
@@ -1790,7 +1791,8 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(WorkerPrivate::MemoryReporter,
 
 template <class Derived>
 WorkerPrivateParent<Derived>::WorkerPrivateParent(
-                                     JSContext* aCx, JSObject* aObject,
+                                     JSContext* aCx,
+                                     JS::Handle<JSObject*> aObject,
                                      WorkerPrivate* aParent,
                                      JSContext* aParentJSContext,
                                      const nsAString& aScriptURL,
@@ -2380,7 +2382,7 @@ WorkerPrivateParent<Derived>::ParentJSContext() const
   return mParentJSContext;
 }
 
-WorkerPrivate::WorkerPrivate(JSContext* aCx, JSObject* aObject,
+WorkerPrivate::WorkerPrivate(JSContext* aCx, JS::Handle<JSObject*> aObject,
                              WorkerPrivate* aParent,
                              JSContext* aParentJSContext,
                              const nsAString& aScriptURL, bool aIsChromeWorker,
