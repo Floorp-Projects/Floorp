@@ -11,7 +11,7 @@ const BRAND_SHORT_NAME = Cc["@mozilla.org/intl/stringbundle;1"].
 
 this.EXPORTED_SYMBOLS = [ ];
 
-Cu.import("resource:///modules/devtools/gcli.jsm");
+Cu.import("resource://gre/modules/devtools/gcli.jsm");
 
 /* Responsive Mode commands */
 gcli.addCommand({

@@ -75,8 +75,8 @@ function test() {
           exec: {
             output: [ /page1/, /page2/, /page3/ ]
           },
-          post: function(output) {
-            ok(!output.contains("index"), "index is not contained in output");
+          post: function(output, text) {
+            ok(!text.contains("index"), "index is not contained in output");
           }
         },
 
@@ -137,11 +137,11 @@ function test() {
           exec: {
             output: [ /no results/ ]
           },
-          post: function(output) {
-            ok(!output.contains("index"), "index is not contained in output");
-            ok(!output.contains("page1"), "page1 is not contained in output");
-            ok(!output.contains("page2"), "page1 is not contained in output");
-            ok(!output.contains("page3"), "page1 is not contained in output");
+          post: function(output, text) {
+            ok(!text.contains("index"), "index is not contained in output");
+            ok(!text.contains("page1"), "page1 is not contained in output");
+            ok(!text.contains("page2"), "page1 is not contained in output");
+            ok(!text.contains("page3"), "page1 is not contained in output");
           }
         },
 
