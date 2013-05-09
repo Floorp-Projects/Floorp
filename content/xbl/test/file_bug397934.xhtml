@@ -4,8 +4,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=397934
 -->
 <head>
   <title>Test for Bug 397934</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
   <bindings xmlns="http://www.mozilla.org/xbl">
     <binding id="ancestor">
       <implementation>
@@ -59,8 +57,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=397934
 <![CDATA[
 
 /** Test for Bug 397934 **/
-SimpleTest.waitForExplicitFinish();
-addLoadEvent(function() {
+SimpleTest = parent.SimpleTest;
+ok = parent.ok;
+is = parent.is;
+$ = function(x) { return document.getElementById(x); }
+window.onload = function() {
   var d;
   d = $("display1");
   is(d.storage, window,
@@ -105,8 +106,8 @@ addLoadEvent(function() {
      "test2" + ": Undefined field should override ancestor binding");
   is(typeof(d.testAncestor), "undefined",
      "test2" + ": Undefined field should really override ancestor binding");
-});
-addLoadEvent(SimpleTest.finish);
+  SimpleTest.finish();
+}
 
 ]]>
 </script>

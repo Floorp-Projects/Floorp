@@ -4,8 +4,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=372769
 -->
 <head>
   <title>Test for Bug 372769</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
   <bindings xmlns="http://www.mozilla.org/xbl">
     <binding id="test1">
       <implementation>
@@ -84,8 +82,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=372769
 <![CDATA[
 
 /** Test for Bug 372769 **/
-SimpleTest.waitForExplicitFinish();
-addLoadEvent(function() {
+
+SimpleTest = parent.SimpleTest;
+ok = parent.ok;
+is = parent.is;
+$ = function(x) { return document.getElementById(x); }
+
+window.onload = function() {
   var d = $("display1");
   is(d.one, 1, "Should be able to read field");
 
@@ -168,9 +171,8 @@ addLoadEvent(function() {
   }
   is(found, true, "Enumeration is broken");
   is(d["twenty-one"], 21, "Should be 21");
-  
-});
-addLoadEvent(SimpleTest.finish);
+  SimpleTest.finish();
+}
 ]]>
 </script>
 </pre>
