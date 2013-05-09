@@ -66,11 +66,6 @@ public:
     mHeight = aHeight;
   }
 
-  using mozilla::dom::SVGIRect::SetX;
-  using mozilla::dom::SVGIRect::SetY;
-  using mozilla::dom::SVGIRect::SetWidth;
-  using mozilla::dom::SVGIRect::SetHeight;
-
 protected:
   float mX, mY, mWidth, mHeight;
 };
