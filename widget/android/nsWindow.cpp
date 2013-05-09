@@ -986,6 +986,11 @@ nsWindow::DrawTo(gfxASurface *targetSurface, const nsIntRect &invalidRect)
                 break;
             }
 
+            case mozilla::layers::LAYERS_CLIENT: {
+                mWidgetListener->PaintWindow(this, region, 0);
+                break;
+            }
+
             case mozilla::layers::LAYERS_OPENGL: {
 
                 static_cast<mozilla::layers::LayerManagerOGL*>(GetLayerManager(nullptr))->
