@@ -1696,6 +1696,7 @@ needs-focus != 703186-1.html 703186-2.html
 == 714519-2-q.html 714519-2-ref.html
 skip-if(B2G) fuzzy-if(true,1,21) fuzzy-if(cocoaWidget,1,170) fuzzy-if(Android&&browserIsRemote,7,157) fails-if(Android&&!browserIsRemote) == 718521.html 718521-ref.html # bug 760270 # bug 773482
 == 720987.html 720987-ref.html
+== 722888-1.html 722888-1-ref.html
 == 722923-1.html 722923-1-ref.html
 == 723484-1.html 723484-1-ref.html
 == 728983-1.html 728983-1-ref.html
