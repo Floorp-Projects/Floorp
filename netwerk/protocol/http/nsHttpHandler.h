@@ -108,10 +108,9 @@ public:
     bool           CritialRequestPrioritization() { return mCritialRequestPrioritization; }
 
     bool           UseRequestTokenBucket() { return mRequestTokenBucketEnabled; }
-    uint16_t       RequestTokenBucketMinParallelism();
-    uint32_t       RequestTokenBucketHz();
-    uint32_t       RequestTokenBucketBurst();
-    uint32_t       PacingTelemetryID();
+    uint16_t       RequestTokenBucketMinParallelism() { return mRequestTokenBucketMinParallelism; }
+    uint32_t       RequestTokenBucketHz() { return mRequestTokenBucketHz; }
+    uint32_t       RequestTokenBucketBurst() {return mRequestTokenBucketBurst; }
 
     bool           PromptTempRedirect()      { return mPromptTempRedirect; }
 
@@ -425,8 +424,6 @@ private:
     // For Rate Pacing of HTTP/1 requests through a netwerk/base/src/EventTokenBucket
     // Active requests <= *MinParallelism are not subject to the rate pacing
     bool           mRequestTokenBucketEnabled;
-    bool           mRequestTokenBucketABTestEnabled;
-    uint32_t       mRequestTokenBucketABTestProfile;
     uint16_t       mRequestTokenBucketMinParallelism;
     uint32_t       mRequestTokenBucketHz;  // EventTokenBucket HZ
     uint32_t       mRequestTokenBucketBurst; // EventTokenBucket Burst

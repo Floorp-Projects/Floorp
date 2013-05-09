@@ -128,7 +128,7 @@ protected:
   _trace(JSTracer* aTrc) MOZ_OVERRIDE
   {
     for (int32_t i = 0; i < SLOT_COUNT; i++) {
-      JS_CallValueTracer(aTrc, mSlots[i], "WorkerGlobalScope instance slot");
+      JS_CallValueTracer(aTrc, &mSlots[i], "WorkerGlobalScope instance slot");
     }
     mWorker->TraceInternal(aTrc);
     EventTarget::_trace(aTrc);
@@ -355,7 +355,7 @@ private:
 
     JSFunction* adaptor =
       js::NewFunctionWithReserved(aCx, UnwrapErrorEvent, 1, 0,
-                                  JS_GetGlobalObject(aCx), "unwrap");
+                                  JS_GetGlobalForScopeChain(aCx), "unwrap");
     if (!adaptor) {
       return false;
     }

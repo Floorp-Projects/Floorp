@@ -28,15 +28,7 @@ class LIRGeneratorX64 : public LIRGeneratorX86Shared
                 LUse::Policy policy = LUse::REGISTER, bool useAtStart = false);
     bool useBoxFixed(LInstruction *lir, size_t n, MDefinition *mir, Register reg1, Register);
 
-    bool lowerForShift(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir, MDefinition *lhs,
-                       MDefinition *rhs);
-
-    bool lowerForALU(LInstructionHelper<1, 1, 0> *ins, MDefinition *mir, MDefinition *input);
-    bool lowerForALU(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir, MDefinition *lhs,
-                     MDefinition *rhs);
     bool lowerForFPU(LMathD *ins, MDefinition *mir, MDefinition *lhs, MDefinition *rhs);
-
-    bool lowerTruncateDToInt32(MTruncateToInt32 *ins);
 
     LGetPropertyCacheT *newLGetPropertyCacheT(MGetPropertyCache *ins);
 

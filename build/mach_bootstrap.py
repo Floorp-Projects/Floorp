@@ -51,6 +51,41 @@ MACH_MODULES = [
     'tools/mach_commands.py',
 ]
 
+
+CATEGORIES = {
+    'build': {
+        'short': 'Build Commands',
+        'long': 'Interact with the build system',
+        'priority': 80,
+    },
+    'post-build': {
+        'short': 'Post-build Commands',
+        'long': 'Common actions performed after completing a build.',
+        'priority': 70,
+    },
+    'testing': {
+        'short': 'Testing',
+        'long': 'Run tests.',
+        'priority': 60,
+    },
+    'devenv': {
+        'short': 'Development Environment',
+        'long': 'Set up and configure your development environment.',
+        'priority': 50,
+    },
+    'build-dev': {
+        'short': 'Low-level Build System Interaction',
+        'long': 'Interact with specific parts of the build system.',
+        'priority': 20,
+    },
+    'misc': {
+        'short': 'Potpourri',
+        'long': 'Potent potables and assorted snacks.',
+        'priority': 10,
+    }
+}
+
+
 def bootstrap(topsrcdir, mozilla_dir=None):
     if mozilla_dir is None:
         mozilla_dir = topsrcdir
@@ -70,6 +105,11 @@ def bootstrap(topsrcdir, mozilla_dir=None):
         import mach.main
 
     mach = mach.main.Mach(topsrcdir)
+    for category, meta in CATEGORIES.items():
+        mach.define_category(category, meta['short'], meta['long'],
+            meta['priority'])
+
     for path in MACH_MODULES:
         mach.load_commands_from_file(os.path.join(mozilla_dir, path))
+
     return mach

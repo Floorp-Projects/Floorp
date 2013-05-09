@@ -470,7 +470,7 @@ FunctionEnd
     ${EndIf}
   ${EndIf}
 
-  WriteRegStr ${RegKey} "$0\shell\open\command" "" "$8"
+  WriteRegStr ${RegKey} "$0\shell\open\command" "" "$\"$8$\""
 
   WriteRegStr ${RegKey} "$0\shell\properties" "" "$(CONTEXT_OPTIONS)"
   WriteRegStr ${RegKey} "$0\shell\properties\command" "" "$\"$8$\" -preferences"
@@ -582,7 +582,7 @@ FunctionEnd
     ${WriteRegStr2} $1 "$0" "DisplayVersion" "${AppVersion}" 0
     ${WriteRegStr2} $1 "$0" "InstallLocation" "$8" 0
     ${WriteRegStr2} $1 "$0" "Publisher" "Mozilla" 0
-    ${WriteRegStr2} $1 "$0" "UninstallString" "$8\uninstall\helper.exe" 0
+    ${WriteRegStr2} $1 "$0" "UninstallString" "$\"$8\uninstall\helper.exe$\"" 0
     ${WriteRegStr2} $1 "$0" "URLInfoAbout" "${URLInfoAbout}" 0
     ${WriteRegStr2} $1 "$0" "URLUpdateInfo" "${URLUpdateInfo}" 0
     ${WriteRegDWORD2} $1 "$0" "NoModify" 1 0

@@ -241,6 +241,13 @@ public:
         return mScriptObject;
     }
 
+    void TraceScriptObject(JSTracer* aTrc)
+    {
+        if (mScriptObject) {
+            JS_CallScriptTracer(aTrc, &mScriptObject, "active window XUL prototype script");
+        }
+    }
+
     nsCOMPtr<nsIURI>         mSrcURI;
     uint32_t                 mLineNo;
     bool                     mSrcLoading;

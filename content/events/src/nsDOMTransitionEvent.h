@@ -46,18 +46,6 @@ public:
     return TransitionEvent()->elapsedTime;
   }
 
-  void InitTransitionEvent(const nsAString& aType,
-                           bool aCanBubble,
-                           bool aCancelable,
-                           const nsAString& aPropertyName,
-                           float aElapsedTime,
-                           const mozilla::dom::Optional<nsAString>& aPseudoElement,
-                           mozilla::ErrorResult& aRv)
-  {
-    aRv = InitTransitionEvent(aType, aCanBubble, aCancelable, aPropertyName,
-                              aElapsedTime, aPseudoElement.WasPassed() ?
-                                aPseudoElement.Value() : EmptyString());
-  }
 private:
   nsTransitionEvent* TransitionEvent() {
     NS_ABORT_IF_FALSE(mEvent->eventStructType == NS_TRANSITION_EVENT,

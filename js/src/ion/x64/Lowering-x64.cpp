@@ -4,8 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ion/MIR.h"
 #include "Lowering-x64.h"
+
+#include "ion/MIR.h"
 #include "Assembler-x64.h"
 #include "ion/shared/Lowering-shared-inl.h"
 
@@ -76,36 +77,6 @@ LIRGeneratorX64::visitReturn(MReturn *ret)
     LReturn *ins = new LReturn;
     ins->setOperand(0, useFixed(opd, JSReturnReg));
     return add(ins);
-}
-
-bool
-LIRGeneratorX64::lowerForShift(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir, MDefinition *lhs, MDefinition *rhs)
-{
-    ins->setOperand(0, useRegisterAtStart(lhs));
-
-    // shift operator should be constant or in register rcx
-    // x86 can't shift a non-ecx register
-    if (rhs->isConstant())
-        ins->setOperand(1, useOrConstant(rhs));
-    else
-        ins->setOperand(1, useFixed(rhs, rcx));
-
-    return defineReuseInput(ins, mir, 0);
-}
-
-bool
-LIRGeneratorX64::lowerForALU(LInstructionHelper<1, 1, 0> *ins, MDefinition *mir, MDefinition *input)
-{
-    ins->setOperand(0, useRegisterAtStart(input));
-    return defineReuseInput(ins, mir, 0);
-}
-
-bool
-LIRGeneratorX64::lowerForALU(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir, MDefinition *lhs, MDefinition *rhs)
-{
-    ins->setOperand(0, useRegisterAtStart(lhs));
-    ins->setOperand(1, useOrConstant(rhs));
-    return defineReuseInput(ins, mir, 0);
 }
 
 bool
@@ -204,15 +175,6 @@ LGetPropertyCacheT *
 LIRGeneratorX64::newLGetPropertyCacheT(MGetPropertyCache *ins)
 {
     return new LGetPropertyCacheT(useRegister(ins->object()), LDefinition::BogusTemp());
-}
-
-bool
-LIRGeneratorX64::lowerTruncateDToInt32(MTruncateToInt32 *ins)
-{
-    MDefinition *opd = ins->input();
-    JS_ASSERT(opd->type() == MIRType_Double);
-
-    return define(new LTruncateDToInt32(useRegister(opd), LDefinition::BogusTemp()), ins);
 }
 
 bool

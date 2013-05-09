@@ -12,11 +12,11 @@
   <binding id="cssthrobberBinding" extends="xul:box">
     <content>
       <html:div class="progressContainer">
-        <html:div class="progressBall progressBall" />
-        <html:div class="progressBall progressBall" />
-        <html:div class="progressBall progressBall" />
-        <html:div class="progressBall progressBall" />
-        <html:div class="progressBall progressBall" />
+        <html:div class="progressBall" />
+        <html:div class="progressBall" />
+        <html:div class="progressBall" />
+        <html:div class="progressBall" />
+        <html:div class="progressBall" />
       </html:div>
     </content>
   </binding>

@@ -27,6 +27,6 @@ EXPORTS.mozilla.gfx += [
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     EXPORTS.mozilla.gfx += [
-        'QuartzSupport.h',
         'MacIOSurface.h',
+        'QuartzSupport.h',
     ]
