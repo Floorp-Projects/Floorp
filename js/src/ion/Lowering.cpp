@@ -1022,14 +1022,15 @@ LIRGenerator::visitMinMax(MMinMax *ins)
     MDefinition *first = ins->getOperand(0);
     MDefinition *second = ins->getOperand(1);
 
+    ReorderCommutative(&first, &second);
+
     if (ins->specialization() == MIRType_Int32) {
-        ReorderCommutative(&first, &second);
         LMinMaxI *lir = new LMinMaxI(useRegisterAtStart(first), useRegisterOrConstant(second));
         return defineReuseInput(lir, ins, 0);
-    } else {
-        LMinMaxD *lir = new LMinMaxD(useRegisterAtStart(first), useRegister(second));
-        return defineReuseInput(lir, ins, 0);
     }
+
+    LMinMaxD *lir = new LMinMaxD(useRegisterAtStart(first), useRegister(second));
+    return defineReuseInput(lir, ins, 0);
 }
 
 bool
@@ -1207,6 +1208,7 @@ LIRGenerator::visitMul(MMul *ins)
     }
     if (ins->specialization() == MIRType_Double) {
         JS_ASSERT(lhs->type() == MIRType_Double);
+        ReorderCommutative(&lhs, &rhs);
 
         // If our LHS is a constant -1.0, we can optimize to an LNegD.
         if (lhs->isConstant() && lhs->toConstant()->value() == DoubleValue(-1.0))
