@@ -778,8 +778,8 @@ public:
                 nsCycleCollectionParticipant *cp = aEntry->mParticipant;
                 CanonicalizeParticipant(&obj, &cp);
                 cp->UnmarkIfPurple(obj);
-                --aBuffer.mCount;
             }
+            --aBuffer.mCount;
         }
     };
 
@@ -910,7 +910,7 @@ nsPurpleBuffer::SelectPointers(GCGraphBuilder &aBuilder)
     SelectPointersVisitor visitor(aBuilder);
     VisitEntries(visitor);
 
-    MOZ_ASSERT(mCount == 0, "AddPurpleRoot failed");
+    NS_ASSERTION(mCount == 0, "AddPurpleRoot failed");
     if (mCount == 0) {
         FreeBlocks();
         InitBlocks();
@@ -1872,14 +1872,17 @@ PtrInfo*
 GCGraphBuilder::AddNode(void *s, nsCycleCollectionParticipant *aParticipant)
 {
     PtrToNodeEntry *e = static_cast<PtrToNodeEntry*>(PL_DHashTableOperate(&mPtrToNodeMap, s, PL_DHASH_ADD));
-    if (!e)
+    if (!e) {
+        NS_WARNING("Hash table add in GCGraphBuilder::AddNode failed");
         return nullptr;
+    }
 
     PtrInfo *result;
     if (!e->mNode) {
         // New entry.
         result = mNodeBuilder.Add(s, aParticipant);
         e->mNode = result;
+        NS_ASSERTION(result, "mNodeBuilder.Add returned null");
     } else {
         result = e->mNode;
         MOZ_ASSERT(result->mParticipant == aParticipant,
@@ -2066,6 +2069,7 @@ AddPurpleRoot(GCGraphBuilder &builder, void *root, nsCycleCollectionParticipant 
     if (builder.WantAllTraces() || !cp->CanSkipInCC(root)) {
         PtrInfo *pinfo = builder.AddNode(root, cp);
         if (!pinfo) {
+            NS_WARNING("builder.AddNode returned null");
             return false;
         }
     }
