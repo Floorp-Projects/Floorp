@@ -56,12 +56,7 @@ tests.testConsole = function(options) {
         }
       }
     ]).then(function() {
-      // FIXME: Remove this hack once bug 842347 is fixed
-      // Gak - our promises impl causes so many stack frames that we blow up the
-      // JS engine. Jumping to a new event with a truncated stack solves this.
-      executeSoon(function() {
-        deferred.resolve();
-      });
+      deferred.resolve();
     });
   };
 
