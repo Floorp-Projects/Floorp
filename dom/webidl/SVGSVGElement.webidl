@@ -12,7 +12,6 @@
 
 interface SVGAnimatedString;
 interface SVGViewSpec;
-interface SVGPoint;
 
 interface SVGSVGElement : SVGGraphicsElement {
 
