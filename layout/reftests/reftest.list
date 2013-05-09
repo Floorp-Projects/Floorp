@@ -43,7 +43,7 @@ skip-if(B2G) include box-properties/reftest.list
 skip-if(Android||B2G) include box-shadow/reftest.list
 
 # bugs/
-skip-if(Android) include bugs/reftest.list
+include bugs/reftest.list
 
 # canvas 2D
 include canvas/reftest.list
