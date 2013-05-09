@@ -115,6 +115,14 @@ public:
     } else {
       MOZ_ASSERT(mInitParams.mStatus == InitParams::INITIALIZED);
       mGL->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mFBO);
+      GLenum result = mGL->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
+      if (result != LOCAL_GL_FRAMEBUFFER_COMPLETE) {
+        nsAutoCString msg;
+        msg.AppendPrintf("Framebuffer not complete -- error 0x%x, aFBOTextureTarget 0x%x, aRect.width %d, aRect.height %d",
+                         result, mInitParams.mFBOTextureTarget, mInitParams.mSize.width, mInitParams.mSize.height);
+        NS_WARNING(msg.get());
+      }
+
       mCompositor->PrepareViewport(mInitParams.mSize, mTransform);
     }
   }

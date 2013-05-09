@@ -1870,6 +1870,14 @@ nsChildView::CleanupWindowEffects()
 }
 
 void
+nsChildView::PreRender(LayerManager* aManager)
+{
+  nsAutoPtr<GLManager> manager(GLManager::CreateGLManager(aManager));
+  NSOpenGLContext *glContext = (NSOpenGLContext *)manager->gl()->GetNativeData(GLContext::NativeGLContext);
+  [(ChildView*)mView preRender:glContext];
+}
+
+void
 nsChildView::DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect)
 {
   nsAutoPtr<GLManager> manager(GLManager::CreateGLManager(aManager));
@@ -2302,6 +2310,20 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   mGLContext = aGLContext;
   [mGLContext retain];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+-(void)preRender:(NSOpenGLContext *)aGLContext
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  if (!mGLContext) {
+    [self setGLContext:aGLContext];
+  }
+
+  [aGLContext setView:self];
+  [aGLContext update];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
