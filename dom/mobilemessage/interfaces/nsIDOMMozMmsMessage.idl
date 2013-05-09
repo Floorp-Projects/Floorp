@@ -13,7 +13,7 @@ dictionary MmsAttachment
   nsIDOMBlob content;
 };
 
-[scriptable, builtinclass, uuid(e916d5c8-dbf4-4fdc-a463-793b67491863)]
+[scriptable, builtinclass, uuid(2e5e1c16-b7af-11e2-af04-8f4b1610a600)]
 interface nsIDOMMozMmsMessage : nsISupports
 {
   /**
@@ -39,7 +39,7 @@ interface nsIDOMMozMmsMessage : nsISupports
   readonly attribute jsval     receivers;      // DOMString[]
 
   [implicit_jscontext]
-  readonly attribute jsval     timestamp;      // Date
+  readonly attribute jsval     timestamp;      // Date object
 
   readonly attribute boolean   read;
   readonly attribute DOMString subject;
@@ -49,6 +49,7 @@ interface nsIDOMMozMmsMessage : nsISupports
   readonly attribute jsval     attachments;    // MmsAttachment[]
 
   [implicit_jscontext]
-  readonly attribute jsval     expiryDate;     // Expiry date of manually
-                                               // downloading multimedia message.
+  readonly attribute jsval     expiryDate;     // Date object
+                                               // Expiry date for an MMS to be
+                                               // manually downloaded.
 };
