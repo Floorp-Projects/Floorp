@@ -310,7 +310,8 @@ ParStrictlyEqualImpl(ForkJoinSlice *slice, MutableHandleValue lhs, MutableHandle
             return ParLooselyEqualImpl<Equal>(slice, lhs, rhs, res);
     }
 
-    return TP_RETRY_SEQUENTIALLY;
+    *res = false;
+    return TP_SUCCESS;
 }
 
 ParallelResult

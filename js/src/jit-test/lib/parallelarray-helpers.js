@@ -146,10 +146,11 @@ function assertEqParallelArray(a, b) {
   } while (bump(iv));
 }
 
-function assertParallelArrayModesEq(modes, acc, opFunction, cmpFunction) {
+function assertParallelArrayModesEq(modes, acc, opFunction, cmpFunction, expect) {
   if (!cmpFunction) { cmpFunction = assertStructuralEq; }
+  if (!expect) { expect = "success"; }
   modes.forEach(function (mode) {
-    var result = opFunction({ mode: mode, expect: "success" });
+    var result = opFunction({ mode: mode, expect: expect });
     cmpFunction(acc, result);
   });
 }
@@ -177,7 +178,7 @@ function comparePerformance(opts) {
     }
 }
 
-function compareAgainstArray(jsarray, opname, func, cmpFunction) {
+function compareAgainstArray(jsarray, opname, func, cmpFunction, expect) {
   var expected = jsarray[opname].apply(jsarray, [func]);
   var parray = new ParallelArray(jsarray);
 
@@ -189,7 +190,7 @@ function compareAgainstArray(jsarray, opname, func, cmpFunction) {
     var result = parray[opname].apply(parray, [func, m]);
     // print(result.toString());
     return result;
-  }, cmpFunction);
+  }, cmpFunction, expect);
 }
 
 function testFilter(jsarray, func, cmpFunction) {
