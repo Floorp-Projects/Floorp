@@ -1,0 +1,106 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=868996
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 868996</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 868996 **/
+  SimpleTest.waitForExplicitFinish();
+
+  var sb1, sb2;
+  var Cu = SpecialPowers.Cu;
+  
+  function testOpenerSet() {
+    // Use setTimeout to make the relevant onerror run in this window
+    var win = window.open("data:text/html,<script>opener.setTimeout(opener.basicOpenerTest, 0, this)</" + "script>");
+    // A sandbox for the window
+    sb1 = new Cu.Sandbox(win, {wantXrays: true })
+    sb1.win = win
+    // And a sandbox using the expanded principal.
+    sb2 = new Cu.Sandbox([win], {wantXrays: true })
+    sb2.win = win
+  }
+
+  function evalsb(str, sb) {
+    // Have to unwrap() to get objects we care about
+    return SpecialPowers.unwrap(Cu.evalInSandbox(str, sb));
+  }
+
+  function basicOpenerTest(win) {
+    is(win.opener, window, "Opening a window should give it the right opener");
+    is(evalsb("win.opener", sb1), window,
+       "Reading opener in sandbox 1 should work");
+    is(evalsb("win.opener", sb2), window,
+       "Reading opener in sandbox 2 should work");
+
+    win.opener = $("x").contentWindow;
+    evalsb("win.opener = win.opener.document.getElementById('y').contentWindow", sb1);
+    evalsb("win.opener = win.opener.document.getElementById('z').contentWindow", sb2);
+
+    is(win.opener, $("x").contentWindow, "Should be able to set an opener to a different window");
+    is(evalsb("win.opener", sb1), $("y").contentWindow,
+       "Should be able to set the opener to a different window in a sandbox one");
+    is(evalsb("win.opener", sb2), $("z").contentWindow,
+       "Should be able to set the opener to a different window in a sandbox two");
+
+    win.location = "data:text/html,<script>opener.setTimeout(opener.continueOpenerTest, 0, this);</" + "script>";
+  }
+
+  function continueOpenerTest(win) {
+    is(win.opener, window, "Navigating a window should have reset the opener we stashed on it temporarily");
+    is(evalsb("win.opener", sb1), window,
+       "Navigating a window should have reset the opener in sb1");
+    is(evalsb("win.opener", sb2), window,
+       "Navigating a window should have reset the opener in sb2");
+
+    win.opener = null;
+    is(win.opener, null, "Should be able to set the opener to null");
+    is(evalsb("win.opener", sb1), null,
+       "Setting the opener to null should be visible in sb1");
+    is(evalsb("win.opener", sb2), null,
+       "Setting the opener to null should be visible in sb2");
+
+    win.location = "data:text/html,Loaded";
+    // Now poll for that load, since we have no way for the window to
+    // communicate with us now
+    setTimeout(checkForLoad, 0, win);
+  }
+
+  function checkForLoad(win) {
+    if (!win.document.documentElement ||
+        win.document.documentElement.textContent != "Loaded") {
+      setTimeout(checkForLoad, 0, win);
+      return;
+    }
+
+    is(win.opener, null, "Null opener should persist across navigations");
+    is(evalsb("win.opener", sb1), null,
+       "Null opener should persist across navigations in sb1");
+    is(evalsb("win.opener", sb2), null,
+       "Null opener should persist across navigations in sb2");
+
+    win.close();
+    SimpleTest.finish();
+  }
+
+  addLoadEvent(testOpenerSet);
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=868996">Mozilla Bug 868996</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<iframe id="x"></iframe>
+<iframe id="y"></iframe>
+<iframe id="z"></iframe>
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
