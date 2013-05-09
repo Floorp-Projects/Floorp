@@ -35,7 +35,7 @@ WriteFile(
   ssize_t ret;
   size_t offt;
 
-  fd = TEMP_FAILURE_RETRY(
+  fd = MOZ_TEMP_FAILURE_RETRY(
     open(aFilename, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
   if (fd == -1) {
     fprintf(stderr, "open(): %s: %s\n", aFilename, strerror(errno));
@@ -44,7 +44,8 @@ WriteFile(
 
   offt = 0;
   do {
-    ret = TEMP_FAILURE_RETRY(write(fd, (char*)aContents + offt, aContentsLen - offt));
+    ret = MOZ_TEMP_FAILURE_RETRY(
+      write(fd, (char*)aContents + offt, aContentsLen - offt));
     if (ret == -1) {
       fprintf(stderr, "write(): %s: %s\n", aFilename, strerror(errno));
       close(fd);
@@ -53,7 +54,7 @@ WriteFile(
     offt += ret;
   } while (offt < aContentsLen);
 
-  ret = TEMP_FAILURE_RETRY(close(fd));
+  ret = MOZ_TEMP_FAILURE_RETRY(close(fd));
   if (ret == -1) {
     fprintf(stderr, "close(): %s: %s\n", aFilename, strerror(errno));
     return false;
