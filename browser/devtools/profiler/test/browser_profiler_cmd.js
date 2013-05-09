@@ -3,7 +3,7 @@
 
 const URL = "data:text/html;charset=utf8,<p>JavaScript Profiler test</p>";
 
-let gcli = Cu.import("resource:///modules/devtools/gcli.jsm", {}).gcli;
+let gcli = Cu.import("resource://gre/modules/devtools/gcli.jsm", {}).gcli;
 let gTarget, gPanel, gOptions;
 
 function cmd(typed, expected="") {

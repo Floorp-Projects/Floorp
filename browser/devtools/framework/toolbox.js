@@ -37,7 +37,7 @@ XPCOMUtils.defineLazyGetter(this, "toolboxStrings", function() {
 XPCOMUtils.defineLazyGetter(this, "Requisition", function() {
   let scope = {};
   Cu.import("resource://gre/modules/devtools/Require.jsm", scope);
-  Cu.import("resource:///modules/devtools/gcli.jsm", scope);
+  Cu.import("resource://gre/modules/devtools/gcli.jsm", {});
 
   let req = scope.require;
   return req('gcli/cli').Requisition;
