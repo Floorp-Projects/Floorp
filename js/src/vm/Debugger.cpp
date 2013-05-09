@@ -430,7 +430,7 @@ Debugger::getScriptFrame(JSContext *cx, const ScriptFrameIter &iter, MutableHand
             NewObjectWithGivenProto(cx, &DebuggerFrame_class, proto, NULL);
         if (!frameobj)
             return false;
-        StackIter::Data *data = iter.copyData();
+        ScriptFrameIter::Data *data = iter.copyData();
         if (!data)
             return false;
         frameobj->setPrivate(data);
@@ -513,7 +513,7 @@ Debugger::slowPathOnEnterFrame(JSContext *cx, AbstractFramePtr frame, MutableHan
 }
 
 static void
-DebuggerFrame_freeStackIterData(FreeOp *fop, JSObject *obj);
+DebuggerFrame_freeScriptFrameIterData(FreeOp *fop, JSObject *obj);
 
 /*
  * Handle leaving a frame with debuggers watching. |frameOk| indicates whether
@@ -589,7 +589,7 @@ Debugger::slowPathOnLeaveFrame(JSContext *cx, AbstractFramePtr frame, bool frame
         Debugger *dbg = r.frontDebugger();
         JS_ASSERT(dbg == Debugger::fromChildJSObject(frameobj));
 
-        DebuggerFrame_freeStackIterData(cx->runtime->defaultFreeOp(), frameobj);
+        DebuggerFrame_freeScriptFrameIterData(cx->runtime->defaultFreeOp(), frameobj);
 
         /* If this frame had an onStep handler, adjust the script's count. */
         if (!frameobj->getReservedSlot(JSSLOT_DEBUGFRAME_ONSTEP_HANDLER).isUndefined() &&
@@ -2034,7 +2034,7 @@ Debugger::getNewestFrame(JSContext *cx, unsigned argc, Value *vp)
         if (i.isIonOptimizedJS())
             continue;
         if (dbg->observesFrame(i.abstractFramePtr())) {
-            ScriptFrameIter iter(i.seg()->cx(), StackIter::GO_THROUGH_SAVED);
+            ScriptFrameIter iter(i.seg()->cx(), ScriptFrameIter::GO_THROUGH_SAVED);
             while (iter.isIonOptimizedJS() || iter.abstractFramePtr() != i.abstractFramePtr())
                 ++iter;
             return dbg->getScriptFrame(cx, iter, args.rval());
@@ -2226,7 +2226,7 @@ Debugger::removeDebuggeeGlobal(FreeOp *fop, GlobalObject *global,
     for (FrameMap::Enum e(frames); !e.empty(); e.popFront()) {
         AbstractFramePtr frame = e.front().key;
         if (&frame.script()->global() == global) {
-            DebuggerFrame_freeStackIterData(fop, e.front().value);
+            DebuggerFrame_freeScriptFrameIterData(fop, e.front().value);
             e.removeFront();
         }
     }
@@ -3333,9 +3333,9 @@ Debugger::handleBaselineOsr(JSContext *cx, StackFrame *from, ion::BaselineFrame 
         Debugger *dbg = r.frontDebugger();
         JS_ASSERT(dbg == Debugger::fromChildJSObject(frameobj));
 
-        // Update frame object's StackIter::data pointer.
-        DebuggerFrame_freeStackIterData(cx->runtime->defaultFreeOp(), frameobj);
-        StackIter::Data *data = iter.copyData();
+        // Update frame object's ScriptFrameIter::data pointer.
+        DebuggerFrame_freeScriptFrameIterData(cx->runtime->defaultFreeOp(), frameobj);
+        ScriptFrameIter::Data *data = iter.copyData();
         if (!data)
             return false;
         frameobj->setPrivate(data);
@@ -3482,16 +3482,16 @@ static const JSFunctionSpec DebuggerScript_methods[] = {
 /*** Debugger.Frame ******************************************************************************/
 
 static void
-DebuggerFrame_freeStackIterData(FreeOp *fop, JSObject *obj)
+DebuggerFrame_freeScriptFrameIterData(FreeOp *fop, JSObject *obj)
 {
-    fop->delete_((StackIter::Data *)obj->getPrivate());
+    fop->delete_((ScriptFrameIter::Data *)obj->getPrivate());
     obj->setPrivate(NULL);
 }
 
 static void
 DebuggerFrame_finalize(FreeOp *fop, JSObject *obj)
 {
-    DebuggerFrame_freeStackIterData(fop, obj);
+    DebuggerFrame_freeScriptFrameIterData(fop, obj);
 }
 
 Class DebuggerFrame_class = {
@@ -3540,7 +3540,7 @@ CheckThisFrame(JSContext *cx, const CallArgs &args, const char *fnname, bool che
     RootedObject thisobj(cx, CheckThisFrame(cx, args, fnname, true));        \
     if (!thisobj)                                                            \
         return false;                                                        \
-    ScriptFrameIter iter(*(StackIter::Data *)thisobj->getPrivate());
+    ScriptFrameIter iter(*(ScriptFrameIter::Data *)thisobj->getPrivate());
 
 #define THIS_FRAME_OWNER(cx, argc, vp, fnname, args, thisobj, iter, dbg)       \
     THIS_FRAME(cx, argc, vp, fnname, args, thisobj, iter);                     \

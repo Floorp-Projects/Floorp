@@ -261,7 +261,7 @@ ConvertFrames(JSContext *cx, IonActivation *activation, IonBailoutIterator &it)
         // Avoid creating duplicate interpreter frames. This is necessary to
         // avoid blowing out the interpreter stack, and must be used in
         // conjunction with inline-OSR from within bailouts (since each Ion
-        // activation must be tied to a unique JSStackFrame for StackIter to
+        // activation must be tied to a unique StackFrame for ScriptFrameIter to
         // work).
         //
         // Note: If the entry frame is a placeholder (a stub frame pushed for
@@ -667,7 +667,7 @@ ion::ThunkToInterpreter(Value *vp)
         // completing the OSR inline.
         //
         // Note that we set runningInIon so that if we re-enter C++ from within
-        // the inlined OSR, StackIter will know to traverse these frames.
+        // the inlined OSR, ScriptFrameIter will know to traverse these frames.
         StackFrame *fp = cx->fp();
 
         fp->setRunningInIon();

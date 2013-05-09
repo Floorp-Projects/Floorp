@@ -1627,7 +1627,7 @@ DecompileArgumentFromStack(JSContext *cx, int formalIndex, char **res)
      * Settle on the nearest script frame, which should be the builtin that
      * called the intrinsic.
      */
-    StackIter frameIter(cx);
+    ScriptFrameIter frameIter(cx);
     JS_ASSERT(!frameIter.done());
 
     /*

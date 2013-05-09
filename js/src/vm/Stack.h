@@ -397,7 +397,7 @@ class StackFrame
     friend class FrameRegs;
     friend class ContextStack;
     friend class StackSpace;
-    friend class StackIter;
+    friend class ScriptFrameIter;
     friend class CallObject;
     friend class ClonedBlockObject;
     friend class ArgumentsObject;
@@ -537,8 +537,8 @@ class StackFrame
     /*
      * To handle eval-in-frame with a baseline JIT frame, |prev_| points to the
      * entry frame and prevBaselineFrame_ to the actual BaselineFrame. This is
-     * done so that StackIter can skip JIT frames pushed on top of the baseline
-     * frame (these frames should not appear in stack traces).
+     * done so that ScriptFrameIter can skip JIT frames pushed on top of the
+     * baseline frame (these frames should not appear in stack traces).
      */
     ion::BaselineFrame *prevBaselineFrame() const {
         JS_ASSERT(isEvalFrame());
@@ -1585,7 +1585,7 @@ class ContextStack
     friend class GeneratorFrameGuard;
     void popGeneratorFrame(const GeneratorFrameGuard &gfg);
 
-    friend class StackIter;
+    friend class ScriptFrameIter;
 
   public:
     ContextStack(JSContext *cx);
@@ -1801,15 +1801,15 @@ struct DefaultHasher<AbstractFramePtr> {
  * The SavedOption parameter additionally lets the iterator continue through
  * breaks in the callstack (from JS_SaveFrameChain). The default is to stop.
  */
-class StackIter
+class ScriptFrameIter
 {
   public:
     enum SavedOption { STOP_AT_SAVED, GO_THROUGH_SAVED };
     enum State { DONE, SCRIPTED, ION };
 
     /*
-     * Unlike StackIter itself, StackIter::Data can be allocated on the heap,
-     * so this structure should not contain any GC things.
+     * Unlike ScriptFrameIter itself, ScriptFrameIter::Data can be allocated on
+     * the heap, so this structure should not contain any GC things.
      */
     struct Data
     {
@@ -1854,18 +1854,18 @@ class StackIter
     void startOnSegment(StackSegment *seg);
 
   public:
-    StackIter(JSContext *cx, SavedOption = STOP_AT_SAVED);
-    StackIter(JSRuntime *rt, StackSegment &seg);
-    StackIter(const StackIter &iter);
-    StackIter(const Data &data);
+    ScriptFrameIter(JSContext *cx, SavedOption = STOP_AT_SAVED);
+    ScriptFrameIter(JSRuntime *rt, StackSegment &seg);
+    ScriptFrameIter(const ScriptFrameIter &iter);
+    ScriptFrameIter(const Data &data);
 
     bool done() const { return data_.state_ == DONE; }
-    StackIter &operator++();
+    ScriptFrameIter &operator++();
 
     Data *copyData() const;
 
-    bool operator==(const StackIter &rhs) const;
-    bool operator!=(const StackIter &rhs) const { return !(*this == rhs); }
+    bool operator==(const ScriptFrameIter &rhs) const;
+    bool operator!=(const ScriptFrameIter &rhs) const { return !(*this == rhs); }
 
     JSCompartment *compartment() const;
 
@@ -1955,35 +1955,23 @@ class StackIter
     inline void ionForEachCanonicalActualArg(JSContext *cx, Op op);
 };
 
-/* A filtering of the StackIter to only stop at scripts. */
-class ScriptFrameIter : public StackIter
-{
-  public:
-    ScriptFrameIter(JSContext *cx, StackIter::SavedOption opt = StackIter::STOP_AT_SAVED)
-      : StackIter(cx, opt) { }
-
-    ScriptFrameIter(const StackIter::Data &data)
-      : StackIter(data)
-    {}
-};
-
-/* A filtering of the StackIter to only stop at non-self-hosted scripts. */
-class NonBuiltinScriptFrameIter : public StackIter
+/* A filtering of the ScriptFrameIter to only stop at non-self-hosted scripts. */
+class NonBuiltinScriptFrameIter : public ScriptFrameIter
 {
     void settle() {
         while (!done() && script()->selfHosted)
-            StackIter::operator++();
+            ScriptFrameIter::operator++();
     }
 
   public:
-    NonBuiltinScriptFrameIter(JSContext *cx, StackIter::SavedOption opt = StackIter::STOP_AT_SAVED)
-        : StackIter(cx, opt) { settle(); }
+    NonBuiltinScriptFrameIter(JSContext *cx, ScriptFrameIter::SavedOption opt = ScriptFrameIter::STOP_AT_SAVED)
+        : ScriptFrameIter(cx, opt) { settle(); }
 
-    NonBuiltinScriptFrameIter(const StackIter::Data &data)
-      : StackIter(data)
+    NonBuiltinScriptFrameIter(const ScriptFrameIter::Data &data)
+      : ScriptFrameIter(data)
     {}
 
-    NonBuiltinScriptFrameIter &operator++() { StackIter::operator++(); settle(); return *this; }
+    NonBuiltinScriptFrameIter &operator++() { ScriptFrameIter::operator++(); settle(); return *this; }
 };
 
 /*****************************************************************************/

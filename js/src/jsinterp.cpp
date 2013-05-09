@@ -308,7 +308,7 @@ js::RunScript(JSContext *cx, StackFrame *fp)
     if (fp->isFunctionFrame() && fp->isConstructing() && !fp->isGeneratorFrame() &&
         cx->typeInferenceEnabled())
     {
-        StackIter iter(cx);
+        ScriptFrameIter iter(cx);
         if (!iter.done()) {
             ++iter;
             JSScript *script = iter.script();

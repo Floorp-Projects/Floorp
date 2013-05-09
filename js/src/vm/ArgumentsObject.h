@@ -123,7 +123,7 @@ class ArgumentsObject : public JSObject
      * This allows function-local analysis to determine that formals are
      * not aliased and generally simplifies arguments objects.
      */
-    static ArgumentsObject *createUnexpected(JSContext *cx, StackIter &iter);
+    static ArgumentsObject *createUnexpected(JSContext *cx, ScriptFrameIter &iter);
     static ArgumentsObject *createUnexpected(JSContext *cx, AbstractFramePtr frame);
 #if defined(JS_ION)
     static ArgumentsObject *createForIon(JSContext *cx, ion::IonJSFrameLayout *frame,
