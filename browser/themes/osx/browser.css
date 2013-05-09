@@ -2492,9 +2492,9 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
  * Tabstrip & add-on bar toolbar buttons
  */
 
-:-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1,
-:-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-button,
-:-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
+#TabsToolbar .toolbarbutton-1,
+#TabsToolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button,
+#TabsToolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
   -moz-appearance: none;
   /* !important flags needed because of bug 561154: */
   margin: 0 !important;
@@ -2505,31 +2505,31 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   box-shadow: none !important;
 }
 
-:-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1:not([type="menu-button"]),
-:-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-button {
+#TabsToolbar .toolbarbutton-1:not([type="menu-button"]),
+#TabsToolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   margin: 0;
   padding: 0 1px;
 }
 
-:-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
+#TabsToolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
   padding-left: 4px;
   padding-right: 4px;
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled]):hover,
 .tabbrowser-arrowscrollbox > .scrollbutton-down:not([disabled]):hover,
-:-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1:not([type="menu-button"]):not([disabled]):not([open]):hover,
-:-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-button:not([disabled]):hover,
-:-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1:not([disabled]):not([buttonover]):hover > .toolbarbutton-menubutton-dropmarker {
+#TabsToolbar .toolbarbutton-1:not([type="menu-button"]):not([disabled]):not([open]):hover,
+#TabsToolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button:not([disabled]):hover,
+#TabsToolbar .toolbarbutton-1:not([disabled]):not([buttonover]):hover > .toolbarbutton-menubutton-dropmarker {
   background-image: linear-gradient(transparent, rgba(0,0,0,.15)) !important;
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled]):hover:active,
 .tabbrowser-arrowscrollbox > .scrollbutton-down:not([disabled]):hover:active,
-:-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1:not([type="menu-button"]):not([disabled]):hover:active,
-:-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1[type="menu"][open],
-:-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-button:not([disabled]):hover:active,
-:-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1[open]:not([disabled]):hover > .toolbarbutton-menubutton-dropmarker {
+#TabsToolbar .toolbarbutton-1:not([type="menu-button"]):not([disabled]):hover:active,
+#TabsToolbar .toolbarbutton-1[type="menu"][open],
+#TabsToolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button:not([disabled]):hover:active,
+#TabsToolbar .toolbarbutton-1[open]:not([disabled]):hover > .toolbarbutton-menubutton-dropmarker {
   background-image: linear-gradient(transparent, rgba(0,0,0,.3)) !important;
 }
 
@@ -3190,46 +3190,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 #ctrlTab-showAll {
   margin-top: .5em;
-}
-
-/* Add-on bar */
-
-#addon-bar {
-  min-height: 18px;
-  padding-right: 16px; /* replace with -moz-padding-end when/if bug 631729 gets fixed */
-}
-
-#addon-bar:not(:-moz-lwtheme) {
-  -moz-appearance: statusbar;
-}
-
-#status-bar {
-  -moz-appearance: none;
-  padding-right: 0;
-}
-
-#addon-bar[customizing] > #status-bar {
-  opacity: .5;
-  background-image: repeating-linear-gradient(135deg,
-                                              rgba(255,255,255,.3), rgba(255,255,255,.3) 5px,
-                                              rgba(0,0,0,.3) 5px, rgba(0,0,0,.3) 10px);
-}
-
-#status-bar > statusbarpanel {
-  border-width: 0;
-  -moz-appearance: none;
-}
-
-#addonbar-closebutton {
-  padding: 0;
-  margin: 0 6px;
-  border: none;
-}
-
-@media (min-resolution: 2dppx) {
-  #addonbar-closebutton > .toolbarbutton-icon {
-    width: 16px;
-  }
 }
 
 /* Status panel */
