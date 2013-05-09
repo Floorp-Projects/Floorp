@@ -3537,12 +3537,6 @@ IonBuilder::makeInliningDecision(JSFunction *target, CallInfo &callInfo)
                                       targetScript->filename(), targetScript->lineno);
             return false;
         }
-
-        if (targetScript->analysis()->hasLoops()) {
-            IonSpew(IonSpew_Inlining, "%s:%d - Vetoed: big function that contains a loop",
-                                      targetScript->filename(), targetScript->lineno);
-            return false;
-        }
      }
 
     // Always inline the empty script up to the inlining depth.
