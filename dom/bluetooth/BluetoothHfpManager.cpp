@@ -50,9 +50,15 @@ namespace {
   StaticAutoPtr<BluetoothHfpManager> gBluetoothHfpManager;
   StaticRefPtr<BluetoothHfpManagerObserver> sHfpObserver;
   bool gInShutdown = false;
+  static const char kHfpCrlf[] = "\xd\xa";
+
+  // Sending ringtone related
   static bool sStopSendingRingFlag = true;
   static int sRingInterval = 3000; //unit: ms
-  static const char kHfpCrlf[] = "\xd\xa";
+
+  // Wait for 2 seconds for Dialer processing event 'BLDN'. '2' seconds is a
+  // magic number. The mechanism should be revised once we can get call history.
+  static int sWaitingForProcessingBLDNInterval = 2000; //unit: ms
 } // anonymous namespace
 
 /* CallState for sCINDItems[CINDType::CALL].value
@@ -263,6 +269,20 @@ BluetoothHfpManagerObserver::Observe(nsISupports* aSubject,
 
 NS_IMPL_ISUPPORTS1(BluetoothHfpManagerObserver, nsIObserver)
 
+class BluetoothHfpManager::RespondToBLDNTask : public Task
+{
+private:
+  void Run() MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(gBluetoothHfpManager);
+
+    if (!gBluetoothHfpManager->mBLDNProcessed) {
+      gBluetoothHfpManager->mBLDNProcessed = true;
+      gBluetoothHfpManager->SendLine("ERROR");
+    }
+  }
+};
+
 class BluetoothHfpManager::SendRingIndicatorTask : public Task
 {
 public:
@@ -384,6 +404,7 @@ BluetoothHfpManager::Reset()
   mCMEE = false;
   mCMER = false;
   mReceiveVgsFlag = false;
+  mBLDNProcessed = true;
 
   ResetCallArray();
 }
@@ -851,7 +872,16 @@ BluetoothHfpManager::ReceiveSocketData(BluetoothSocket* aSocket,
     // However, in order to pass Bluetooth HFP certification, we have to
     // make a call when we receive AT command 'ATD>n'. The solution here
     // is firing a 'BLDN' event to Dialer to do 'Last Number Redial'.
+    mBLDNProcessed = false;
     NotifyDialer(NS_LITERAL_STRING("BLDN"));
+
+    MessageLoop::current()->
+      PostDelayedTask(FROM_HERE, new RespondToBLDNTask(),
+                      sWaitingForProcessingBLDNInterval);
+
+    // Don't send response 'OK' here because we'll respond later in either
+    // RespondToBLDNTask or HandleCallStateChanged()
+    return;
   } else if (msg.Find("ATA") != -1) {
     NotifyDialer(NS_LITERAL_STRING("ATA"));
   } else if (msg.Find("AT+CHUP") != -1) {
@@ -1250,6 +1280,11 @@ BluetoothHfpManager::HandleCallStateChanged(uint32_t aCallIndex,
       }
       break;
     case nsITelephonyProvider::CALL_STATE_DIALING:
+      if (!mBLDNProcessed) {
+        SendLine("OK");
+        mBLDNProcessed = true;
+      }
+
       mCurrentCallArray[aCallIndex].mDirection = false;
       UpdateCIND(CINDType::CALLSETUP, CallSetupState::OUTGOING, aSend);
 

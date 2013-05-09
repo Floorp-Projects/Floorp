@@ -79,9 +79,11 @@ public:
 
 private:
   class GetVolumeTask;
+  class RespondToBLDNTask;
   class SendRingIndicatorTask;
 
   friend class GetVolumeTask;
+  friend class RespondToBLDNTask;
   friend class SendRingIndicatorTask;
   friend class BluetoothHfpManagerObserver;
 
@@ -113,6 +115,7 @@ private:
   bool mFirstCKPD;
   int mNetworkSelectionMode;
   bool mReceiveVgsFlag;
+  bool mBLDNProcessed;
   nsString mDevicePath;
   nsString mMsisdn;
   nsString mOperatorName;
