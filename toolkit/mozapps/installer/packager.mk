@@ -307,8 +307,6 @@ NON_DIST_FILES = \
 
 UPLOAD_EXTRA_FILES += gecko-unsigned-unaligned.apk
 
-include $(MOZILLA_DIR)/ipc/app/defs.mk
-
 DIST_FILES += $(MOZ_CHILD_PROCESS_NAME)
 
 ifeq ($(CPU_ARCH),x86)

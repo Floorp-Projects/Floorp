@@ -37,8 +37,6 @@ DEFINES += \
 	$(NULL)
 
 DEFINES += -DJAREXT=
-
-include $(topsrcdir)/ipc/app/defs.mk
 DEFINES += -DMOZ_CHILD_PROCESS_NAME=$(MOZ_CHILD_PROCESS_NAME)
 
 ifdef MOZ_PKG_MANIFEST_P
