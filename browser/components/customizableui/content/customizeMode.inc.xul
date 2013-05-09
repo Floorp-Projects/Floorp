@@ -41,8 +41,7 @@
       </vbox>
     </deck>
   </hbox>
-  <hbox pack="end">
+  <hbox pack="start">
     <button oncommand="gCustomizeMode.reset();" label="&customizeMode.restoreDefaults;"/>
-    <button oncommand="BrowserToolboxCustomizeDone();" label="&customizeMode.done;"/>
   </hbox>
 </vbox>
