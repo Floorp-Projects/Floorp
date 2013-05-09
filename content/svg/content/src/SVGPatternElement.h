@@ -54,7 +54,7 @@ public:
   }
 
   // WebIDL
-  already_AddRefed<nsIDOMSVGAnimatedRect> ViewBox();
+  already_AddRefed<SVGAnimatedRect> ViewBox();
   already_AddRefed<DOMSVGAnimatedPreserveAspectRatio> PreserveAspectRatio();
   already_AddRefed<nsIDOMSVGAnimatedEnumeration> PatternUnits();
   already_AddRefed<nsIDOMSVGAnimatedEnumeration> PatternContentUnits();

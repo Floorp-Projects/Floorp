@@ -118,7 +118,7 @@ public:
   nsSVGOrientType* GetOrientType() { return &mOrientType; }
 
   // WebIDL
-  already_AddRefed<nsIDOMSVGAnimatedRect> ViewBox();
+  already_AddRefed<SVGAnimatedRect> ViewBox();
   already_AddRefed<DOMSVGAnimatedPreserveAspectRatio> PreserveAspectRatio();
   already_AddRefed<SVGAnimatedLength> RefX();
   already_AddRefed<SVGAnimatedLength> RefY();

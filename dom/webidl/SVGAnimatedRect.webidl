@@ -10,11 +10,9 @@
  * liability, trademark and document use rules apply.
  */
 
-[NoInterfaceObject]
-interface SVGFitToViewBox {
-  [Constant]
-  readonly attribute SVGAnimatedRect viewBox;
-  [Constant]
-  readonly attribute SVGAnimatedPreserveAspectRatio preserveAspectRatio;
+interface SVGAnimatedRect {
+  [GetterThrows]
+  readonly attribute SVGRect? baseVal;
+  [GetterThrows]
+  readonly attribute SVGRect? animVal;
 };
-
