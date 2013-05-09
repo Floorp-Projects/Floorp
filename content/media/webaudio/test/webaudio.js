@@ -56,3 +56,92 @@ function compareBuffers(buf1, buf2,
      " with source offset " + sourceOffset + " and desitnation offset " +
      destOffset);
 }
+
+function getEmptyBuffer(context, length) {
+  return context.createBuffer(gTest.numberOfChannels, length, context.sampleRate);
+}
+
+/**
+ * This function assumes that the test file defines a single gTest variable with
+ * the following properties and methods:
+ *
+ * + length: mandatory property equal to the total number of frames which we
+ *           are waiting to see in the output.
+ * + numberOfChannels: optional property which specifies the number of channels
+ *                     in the output.  The default value is 2.
+ * + createGraph: mandatory method which takes a context object and does
+ *                everything needed in order to set up the Web Audio graph.
+ *                This function returns the node to be inspected.
+ * + createGraphAsync: async version of createGraph.  This function takes
+ *                     a callback which should be called with an argument
+ *                     set to the node to be inspected when the callee is
+ *                     ready to proceed with the test.  Either this function
+ *                     or createGraph must be provided.
+ * + createExpectedBuffers: optional method which takes a context object and
+ *                          returns either one expected buffer or an array of
+ *                          them, designating what is expected to be observed
+ *                          in the output.  If omitted, the output is expected
+ *                          to be silence.  The sum of the length of the expected
+ *                          buffers should be equal to gTest.length.  This
+ *                          function is guaranteed to be called before createGraph.
+ */
+function runTest()
+{
+  function done() {
+    SpecialPowers.clearUserPref("media.webaudio.enabled");
+    SimpleTest.finish();
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  addLoadEvent(function() {
+    SpecialPowers.setBoolPref("media.webaudio.enabled", true);
+
+    if (!gTest.numberOfChannels) {
+      gTest.numberOfChannels = 2; // default
+    }
+
+    var context = new AudioContext();
+    if (!gTest.createExpectedBuffers) {
+      // Assume that the output is silence
+      var expectedBuffers = getEmptyBuffer(context, gTest.length);
+    } else {
+      var expectedBuffers = gTest.createExpectedBuffers(context);
+    }
+    if (!(expectedBuffers instanceof Array)) {
+      expectedBuffers = [expectedBuffers];
+    }
+    var expectedFrames = 0;
+    for (var i = 0; i < expectedBuffers.length; ++i) {
+      is(expectedBuffers[i].numberOfChannels, gTest.numberOfChannels,
+         "Correct number of channels for expected buffer " + i);
+      expectedFrames += expectedBuffers[i].length;
+    }
+    is(expectedFrames, gTest.length, "Correct number of expected frames");
+
+    if (gTest.createGraphAsync) {
+      gTest.createGraphAsync(context, function(nodeToInspect) {
+        testOutput(nodeToInspect);
+      });
+    } else {
+      testOutput(gTest.createGraph(context));
+    }
+
+    function testOutput(nodeToInspect) {
+      var sp = context.createScriptProcessor(expectedBuffers[0].length, gTest.numberOfChannels);
+      nodeToInspect.connect(sp);
+      sp.connect(context.destination);
+      sp.onaudioprocess = function(e) {
+        var expectedBuffer = expectedBuffers.shift();
+        is(e.inputBuffer.numberOfChannels, expectedBuffer.numberOfChannels,
+           "Correct number of input buffer channels");
+        for (var i = 0; i < e.inputBuffer.numberOfChannels; ++i) {
+          compareBuffers(e.inputBuffer.getChannelData(i), expectedBuffer.getChannelData(i));
+        }
+        if (expectedBuffers.length == 0) {
+          sp.onaudioprocess = null;
+          done();
+        }
+      };
+    }
+  });
+}

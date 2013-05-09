@@ -10,33 +10,22 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-SimpleTest.waitForExplicitFinish();
-addLoadEvent(function() {
-  SpecialPowers.setBoolPref("media.webaudio.enabled", true);
+var gTest = {
+  length: 2048,
+  numberOfChannels: 1,
+  createGraph: function(context) {
+    var buffer = context.createBuffer(1, 0, context.sampleRate);
 
-  var context = new AudioContext();
-  var buffer = context.createBuffer(1, 0, context.sampleRate);
+    var source = context.createBufferSource();
+    source.buffer = buffer;
 
-  var expectedBuffer = context.createBuffer(1, 2048, context.sampleRate);
+    source.loop = true;
+    source.start(0);
+    return source;
+  },
+};
 
-  var source = context.createBufferSource();
-  source.buffer = buffer;
-
-  var sp = context.createScriptProcessor(2048, 1);
-  source.loop = true;
-  source.start(0);
-  source.connect(sp);
-  sp.connect(context.destination);
-  sp.onaudioprocess = function(e) {
-    is(e.inputBuffer.numberOfChannels, 1, "input buffer must have only one channel");
-    compareBuffers(e.inputBuffer.getChannelData(0), expectedBuffer.getChannelData(0));
-
-    sp.onaudioprocess = null;
-
-    SpecialPowers.clearUserPref("media.webaudio.enabled");
-    SimpleTest.finish();
-  };
-});
+runTest();
 
 </script>
 </pre>
