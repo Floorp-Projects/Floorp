@@ -357,10 +357,7 @@ class CGList(CGThing):
     """
     def __init__(self, children, joiner=""):
         CGThing.__init__(self)
-        # Make a copy of the kids into a list, because if someone passes in a
-        # generator we won't be able to both declare and define ourselves, or
-        # define ourselves more than once!
-        self.children = list(children)
+        self.children = children
         self.joiner = joiner
     def append(self, child):
         self.children.append(child)

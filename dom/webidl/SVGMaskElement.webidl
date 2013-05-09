@@ -11,6 +11,7 @@
  */
 
 interface SVGAnimatedEnumeration;
+interface SVGAnimatedLength;
 
 interface SVGMaskElement : SVGElement {
 
