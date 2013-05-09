@@ -1524,9 +1524,6 @@ case "$target" in
     MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
     MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
     MOZ_OPTIMIZE_FLAGS="-O3 -fno-stack-protector"
-    if test -n "$CLANG_CXX"; then
-      MOZ_OPTIMIZE_FLAGS="$MOZ_OPTIMIZE_FLAGS -fno-vectorize"
-    fi
     CFLAGS="$CFLAGS -fno-common"
     CXXFLAGS="$CXXFLAGS -fno-common"
     DLL_SUFFIX=".dylib"
@@ -1620,9 +1617,6 @@ ia64*-hpux*)
 
     MOZ_GFX_OPTIMIZE_MOBILE=1
     MOZ_OPTIMIZE_FLAGS="-O3 -freorder-blocks -fno-reorder-functions"
-    if test -n "$CLANG_CXX"; then
-      MOZ_OPTIMIZE_FLAGS="$MOZ_OPTIMIZE_FLAGS -fno-vectorize"
-    fi
     # The Maemo builders don't know about this flag
     MOZ_ARM_VFP_FLAGS="-mfpu=vfp"
     ;;
@@ -1644,9 +1638,6 @@ ia64*-hpux*)
         MOZ_PGO_OPTIMIZE_FLAGS="-O3"
         MOZ_OPTIMIZE_FLAGS="-O3 -freorder-blocks $MOZ_OPTIMIZE_SIZE_TWEAK"
         MOZ_DEBUG_FLAGS="-g"
-    fi
-    if test -n "$CLANG_CXX"; then
-      MOZ_OPTIMIZE_FLAGS="$MOZ_OPTIMIZE_FLAGS -fno-vectorize"
     fi
 
     TARGET_NSPR_MDCPUCFG='\"md/_linux.cfg\"'
