@@ -173,8 +173,6 @@ parent:
     sync GetCurrentSwitchState(SwitchDevice aDevice)
       returns (SwitchState aState);
 
-    SetProcessPriority(int aPid, ProcessPriority aPriority);
-
     FactoryReset();
 
 child:
