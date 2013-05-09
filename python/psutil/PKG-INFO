@@ -1,12 +1,12 @@
 Metadata-Version: 1.1
 Name: psutil
-Version: 0.6.1
+Version: 0.7.1
 Summary: A process and system utilities module for Python
 Home-page: http://code.google.com/p/psutil/
 Author: Giampaolo Rodola
 Author-email: g.rodola <at> gmail <dot> com
 License: License :: OSI Approved :: BSD License
-Download-URL: http://psutil.googlecode.com/files/psutil-0.6.1.tar.gz
+Download-URL: http://psutil.googlecode.com/files/psutil-0.7.1.tar.gz
 Description: ===========
         Quick links
         ===========
@@ -238,6 +238,7 @@ Classifier: Programming Language :: Python :: 3
 Classifier: Programming Language :: Python :: 3.0
 Classifier: Programming Language :: Python :: 3.1
 Classifier: Programming Language :: Python :: 3.2
+Classifier: Programming Language :: Python :: 3.3
 Classifier: Topic :: System :: Monitoring
 Classifier: Topic :: System :: Networking
 Classifier: Topic :: System :: Networking :: Monitoring
