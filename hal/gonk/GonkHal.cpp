@@ -1056,29 +1056,25 @@ EnsureKernelLowMemKillerParamsSet()
   nsAutoCString adjParams;
   nsAutoCString minfreeParams;
 
-  const char* priorityClasses[] = {
-    "master",
-    "foregroundHigh",
-    "foreground",
-    "backgroundPerceivable",
-    "backgroundHomescreen",
-    "background"
-  };
-  for (size_t i = 0; i < NS_ARRAY_LENGTH(priorityClasses); i++) {
+  for (int i = 0; i < NUM_PROCESS_PRIORITY; i++) {
     // The system doesn't function correctly if we're missing these prefs, so
     // crash loudly.
 
+    ProcessPriority priority = static_cast<ProcessPriority>(i);
+
     int32_t oomScoreAdj;
-    if (!NS_SUCCEEDED(Preferences::GetInt(nsPrintfCString(
-          "hal.processPriorityManager.gonk.%sOomScoreAdjust",
-          priorityClasses[i]).get(), &oomScoreAdj))) {
+    if (!NS_SUCCEEDED(Preferences::GetInt(
+          nsPrintfCString("hal.processPriorityManager.gonk.%s.OomScoreAdjust",
+                          ProcessPriorityToString(priority)).get(),
+          &oomScoreAdj))) {
       MOZ_CRASH();
     }
 
     int32_t killUnderMB;
-    if (!NS_SUCCEEDED(Preferences::GetInt(nsPrintfCString(
-          "hal.processPriorityManager.gonk.%sKillUnderMB",
-          priorityClasses[i]).get(), &killUnderMB))) {
+    if (!NS_SUCCEEDED(Preferences::GetInt(
+          nsPrintfCString("hal.processPriorityManager.gonk.%s.KillUnderMB",
+                          ProcessPriorityToString(priority)).get(),
+          &killUnderMB))) {
       MOZ_CRASH();
     }
 
@@ -1187,9 +1183,12 @@ SetNiceForPid(int aPid, int aNice)
 }
 
 void
-SetProcessPriority(int aPid, ProcessPriority aPriority)
+SetProcessPriority(int aPid,
+                   ProcessPriority aPriority,
+                   ProcessCPUPriority aCPUPriority)
 {
-  HAL_LOG(("SetProcessPriority(pid=%d, priority=%d)", aPid, aPriority));
+  HAL_LOG(("SetProcessPriority(pid=%d, priority=%d, cpuPriority=%d)",
+           aPid, aPriority, aCPUPriority));
 
   // If this is the first time SetProcessPriority was called, set the kernel's
   // OOM parameters according to our prefs.
@@ -1200,43 +1199,12 @@ SetProcessPriority(int aPid, ProcessPriority aPriority)
   // SetProcessPriority being called early in startup.
   EnsureKernelLowMemKillerParamsSet();
 
-  const char* priorityStr = NULL;
-  switch (aPriority) {
-  case PROCESS_PRIORITY_BACKGROUND:
-    priorityStr = "background";
-    break;
-  case PROCESS_PRIORITY_BACKGROUND_HOMESCREEN:
-    priorityStr = "backgroundHomescreen";
-    break;
-  case PROCESS_PRIORITY_BACKGROUND_PERCEIVABLE:
-    priorityStr = "backgroundPerceivable";
-    break;
-  case PROCESS_PRIORITY_FOREGROUND:
-    priorityStr = "foreground";
-    break;
-  case PROCESS_PRIORITY_FOREGROUND_HIGH:
-    priorityStr = "foregroundHigh";
-    break;
-  case PROCESS_PRIORITY_MASTER:
-    priorityStr = "master";
-    break;
-  default:
-    // PROCESS_PRIORITY_UNKNOWN ends up in this branch, along with invalid enum
-    // values.
-    NS_ERROR("Invalid process priority!");
-    return;
-  }
-
-  // Notice that you can disable oom_adj and renice by deleting the prefs
-  // hal.processPriorityManager{foreground,background,master}{OomAdjust,Nice}.
-
   int32_t oomScoreAdj = 0;
   nsresult rv = Preferences::GetInt(nsPrintfCString(
-    "hal.processPriorityManager.gonk.%sOomScoreAdjust",
-    priorityStr).get(), &oomScoreAdj);
+    "hal.processPriorityManager.gonk.%s.OomScoreAdjust",
+    ProcessPriorityToString(aPriority)).get(), &oomScoreAdj);
 
   if (NS_SUCCEEDED(rv)) {
-
     int clampedOomScoreAdj = clamped<int>(oomScoreAdj, OOM_SCORE_ADJ_MIN,
                                                        OOM_SCORE_ADJ_MAX);
     if(clampedOomScoreAdj != oomScoreAdj) {
@@ -1258,14 +1226,33 @@ SetProcessPriority(int aPid, ProcessPriority aPriority)
       WriteToFile(nsPrintfCString("/proc/%d/oom_adj", aPid).get(),
                   nsPrintfCString("%d", oomAdj).get());
     }
+  } else {
+    LOG("Unable to read oom_score_adj pref for priority %s; "
+        "are the prefs messed up?",
+        ProcessPriorityToString(aPriority));
+    MOZ_ASSERT(false);
   }
 
   int32_t nice = 0;
-  rv = Preferences::GetInt(nsPrintfCString(
-    "hal.processPriorityManager.gonk.%sNice", priorityStr).get(), &nice);
-  if (NS_SUCCEEDED(rv)) {
-    HAL_LOG(("Setting nice for pid %d to %d", aPid, nice));
 
+  if (aCPUPriority == PROCESS_CPU_PRIORITY_NORMAL) {
+    rv = Preferences::GetInt(
+      nsPrintfCString("hal.processPriorityManager.gonk.%s.Nice",
+                      ProcessPriorityToString(aPriority)).get(),
+      &nice);
+  } else if (aCPUPriority == PROCESS_CPU_PRIORITY_LOW) {
+    rv = Preferences::GetInt("hal.processPriorityManager.gonk.LowCPUNice",
+                             &nice);
+  } else {
+    LOG("Unable to read niceness pref for priority %s; "
+        "are the prefs messed up?",
+        ProcessPriorityToString(aPriority));
+    MOZ_ASSERT(false);
+    rv = NS_ERROR_FAILURE;
+  }
+
+  if (NS_SUCCEEDED(rv)) {
+    LOG("Setting nice for pid %d to %d", aPid, nice);
     SetNiceForPid(aPid, nice);
   }
 }
