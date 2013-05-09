@@ -23,7 +23,8 @@ class Settings(object):
     def __init__(self, context):
         self.settings = context.settings
 
-    @Command('settings-list', help='Show available config settings.')
+    @Command('settings-list', category='devenv',
+        description='Show available config settings.')
     def list_settings(self):
         """List available settings in a concise list."""
         for section in sorted(self.settings):
@@ -31,8 +32,8 @@ class Settings(object):
                 short, full = self.settings.option_help(section, option)
                 print('%s.%s -- %s' % (section, option, short))
 
-    @Command('settings-create',
-        help='Print a new settings file with usage info.')
+    @Command('settings-create', category='devenv',
+        description='Print a new settings file with usage info.')
     def create(self):
         """Create an empty settings file with full documentation."""
         wrapper = TextWrapper(initial_indent='# ', subsequent_indent='# ')

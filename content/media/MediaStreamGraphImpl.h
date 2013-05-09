@@ -103,11 +103,19 @@ protected:
  * file. It's not in the anonymous namespace because MediaStream needs to
  * be able to friend it.
  *
- * Currently we only have one per process.
+ * Currently we have one global instance per process, and one per each
+ * OfflineAudioContext object.
  */
 class MediaStreamGraphImpl : public MediaStreamGraph {
 public:
-  MediaStreamGraphImpl();
+  /**
+   * Set aRealtime to true in order to create a MediaStreamGraph which provides
+   * support for real-time audio and video.  Set it to false in order to create
+   * a non-realtime instance which just churns through its inputs and produces
+   * output.  Those objects currently only support audio, and are used to
+   * implement OfflineAudioContext.  They do not support MediaStream inputs.
+   */
+  explicit MediaStreamGraphImpl(bool aRealtime);
   ~MediaStreamGraphImpl()
   {
     NS_ASSERTION(IsEmpty(),
@@ -506,6 +514,11 @@ public:
    * RunInStableState at the next stable state.
    */
   bool mPostedRunInStableState;
+  /**
+   * True when processing real-time audio/video.  False when processing non-realtime
+   * audio.
+   */
+  bool mRealtime;
 };
 
 }

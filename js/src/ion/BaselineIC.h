@@ -2753,6 +2753,13 @@ class ICGetElem_Fallback : public ICMonitoredFallbackStub
         return space->allocate<ICGetElem_Fallback>(code);
     }
 
+    void noteNonNativeAccess() {
+        extra_ = 1;
+    }
+    bool hasNonNativeAccess() const {
+        return extra_;
+    }
+
     // Compiler for this stub kind.
     class Compiler : public ICStubCompiler {
       protected:
@@ -3683,11 +3690,20 @@ class ICGetProp_Fallback : public ICMonitoredFallbackStub
     }
 
     static const size_t UNOPTIMIZABLE_ACCESS_BIT = 0;
+    static const size_t ACCESSED_GETTER_BIT = 1;
+
     void noteUnoptimizableAccess() {
         extra_ |= (1u << UNOPTIMIZABLE_ACCESS_BIT);
     }
     bool hadUnoptimizableAccess() const {
         return extra_ & (1u << UNOPTIMIZABLE_ACCESS_BIT);
+    }
+
+    void noteAccessedGetter() {
+        extra_ |= (1u << ACCESSED_GETTER_BIT);
+    }
+    bool hasAccessedGetter() const {
+        return extra_ & (1u << ACCESSED_GETTER_BIT);
     }
 
     class Compiler : public ICStubCompiler {

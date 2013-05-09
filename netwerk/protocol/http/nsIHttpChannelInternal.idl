@@ -34,7 +34,7 @@ interface nsIHttpUpgradeListener : nsISupports
  * using any feature exposed by this interface, be aware that this interface
  * will change and you will be broken.  You have been warned.
  */
-[scriptable, uuid(68074a18-49a8-44d8-852c-320ad4b1d308)]
+[scriptable, uuid(2cd7f6a6-63f3-4bd6-a0f5-6e3d6dcff81b)]
 interface nsIHttpChannelInternal : nsISupports
 {
     /**
@@ -172,11 +172,4 @@ interface nsIHttpChannelInternal : nsISupports
      */
     attribute boolean loadUnblocked;
 
-    /**
-     * bug 819734 we implement experimental rate pacing strategies for pages
-     * with large numbers of subresources. Several experimental profiles are
-     * available and this attribute corresponds to the profile used for this
-     * channel. (or at least the one active when it is queried.)
-     */
-     readonly attribute uint32_t pacingTelemetryID;
 };

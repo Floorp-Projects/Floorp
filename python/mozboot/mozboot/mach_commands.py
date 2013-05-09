@@ -15,8 +15,8 @@ from mach.decorators import (
 class Bootstrap(object):
     """Bootstrap system and mach for optimal development experience."""
 
-    @Command('bootstrap',
-        help='Install required system packages for building.')
+    @Command('bootstrap', category='devenv',
+        description='Install required system packages for building.')
     def bootstrap(self):
         from mozboot.bootstrap import Bootstrapper
 

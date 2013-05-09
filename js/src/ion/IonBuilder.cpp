@@ -6156,9 +6156,13 @@ IonBuilder::jsop_getelem()
     bool cacheable = obj->mightBeType(MIRType_Object) && !obj->mightBeType(MIRType_String) &&
         (index->mightBeType(MIRType_Int32) || index->mightBeType(MIRType_String));
 
+    bool nonNativeGetElement =
+        script()->analysis()->getCode(pc).nonNativeGetElement ||
+        inspector->hasSeenNonNativeGetElement(pc);
+
     // Turn off cacheing if the element is int32 and we've seen non-native objects as the target
     // of this getelem.
-    if (index->mightBeType(MIRType_Int32) && script()->analysis()->getCode(pc).nonNativeGetElement)
+    if (index->mightBeType(MIRType_Int32) && nonNativeGetElement)
         cacheable = false;
 
     types::StackTypeSet *types = types::TypeScript::BytecodeTypes(script(), pc);
@@ -7491,7 +7495,9 @@ IonBuilder::getPropTryCache(bool *emitted, HandlePropertyName name, HandleId id,
                             bool barrier, types::StackTypeSet *types)
 {
     JS_ASSERT(*emitted == false);
-    bool accessGetter = script()->analysis()->getCode(pc).accessGetter;
+    bool accessGetter =
+        script()->analysis()->getCode(pc).accessGetter ||
+        inspector->hasSeenAccessedGetter(pc);
 
     MDefinition *obj = current->peek(-1);
 

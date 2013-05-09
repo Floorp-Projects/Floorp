@@ -65,11 +65,9 @@ XPCTraceableVariant::~XPCTraceableVariant()
 
 void XPCTraceableVariant::TraceJS(JSTracer* trc)
 {
-    jsval val = GetJSValPreserveColor();
-
-    MOZ_ASSERT(JSVAL_IS_TRACEABLE(val));
+    MOZ_ASSERT(JSVAL_IS_TRACEABLE(mJSVal));
     JS_SET_TRACING_DETAILS(trc, GetTraceName, this, 0);
-    JS_CallValueTracer(trc, val, "XPCTraceableVariant::mJSVal");
+    JS_CallValueTracer(trc, &mJSVal, "XPCTraceableVariant::mJSVal");
 }
 
 // static

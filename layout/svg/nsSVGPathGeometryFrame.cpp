@@ -353,12 +353,17 @@ nsSVGPathGeometryFrame::NotifySVGChanged(uint32_t aFlags)
   NS_ABORT_IF_FALSE(aFlags & (TRANSFORM_CHANGED | COORD_CONTEXT_CHANGED),
                     "Invalidation logic may need adjusting");
 
-  // Ancestor changes can't affect how we render from the perspective of
-  // any rendering observers that we may have, so we don't need to
-  // invalidate them. We also don't need to invalidate ourself, since our
-  // changed ancestor will have invalidated its entire area, which includes
-  // our area.
-  nsSVGUtils::ScheduleReflowSVG(this);
+  // Changes to our ancestors may affect how we render when we are rendered as
+  // part of our ancestor (specifically, if our coordinate context changes size
+  // and we have percentage lengths defining our geometry, then we need to be
+  // reflowed). However, ancestor changes cannot affect how we render when we
+  // are rendered as part of any rendering observers that we may have.
+  // Therefore no need to notify rendering observers here.
+
+  if ((aFlags & COORD_CONTEXT_CHANGED) &&
+      static_cast<nsSVGPathGeometryElement*>(mContent)->GeometryDependsOnCoordCtx()) {
+    nsSVGUtils::ScheduleReflowSVG(this);
+  }
 }
 
 SVGBBox
