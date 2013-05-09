@@ -1568,7 +1568,10 @@ CodeGenerator::visitCallKnown(LCallKnown *call)
     masm.loadPtr(Address(calleereg, offsetof(JSFunction, u.i.script_)), objreg);
 
     // Load script jitcode.
-    masm.loadBaselineOrIonRaw(objreg, objreg, executionMode, &uncompiled);
+    if (call->mir()->needsArgCheck())
+        masm.loadBaselineOrIonRaw(objreg, objreg, executionMode, &uncompiled);
+    else
+        masm.loadBaselineOrIonNoArgCheck(objreg, objreg, executionMode, &uncompiled);
 
     // Nestle the StackPointer up to the argument vector.
     masm.freeStack(unusedStack);
@@ -2252,7 +2255,7 @@ CodeGenerator::maybeCreateScriptCounts()
             MResumePoint *resume = block->entryResumePoint();
             while (resume->caller())
                 resume = resume->caller();
-            uint32_t offset = resume->pc() - script->code;
+            DebugOnly<uint32_t> offset = resume->pc() - script->code;
             JS_ASSERT(offset < script->length);
         }
 
@@ -4902,6 +4905,10 @@ CodeGenerator::generate()
             return false;
     }
 
+    // Remember the entry offset to skip the argument check.
+    masm.flushBuffer();
+    setSkipArgCheckEntryOffset(masm.size());
+
     if (!generatePrologue())
         return false;
     if (!generateBody())
@@ -4915,6 +4922,27 @@ CodeGenerator::generate()
 
     return !masm.oom();
 }
+
+#ifdef JSGC_GENERATIONAL
+/*
+ * IonScripts normally live as long as their owner JSScript; however, they can
+ * occasionally get destroyed outside the context of a GC by FinishInvalidationOf.
+ * Because of this case, we cannot use the normal store buffer to guard them.
+ * Instead we use the generic buffer to mark the owner script, which will mark the
+ * IonScript's fields, if it is still alive.
+ */
+class IonScriptRefs : public gc::BufferableRef
+{
+    JSScript *script_;
+
+  public:
+    IonScriptRefs(JSScript *script) : script_(script) {}
+    virtual bool match(void *location) { return false; }
+    virtual void mark(JSTracer *trc) {
+        gc::MarkScriptUnbarriered(trc, &script_, "script for IonScript");
+    }
+};
+#endif // JSGC_GENERATIONAL
 
 bool
 CodeGenerator::link()
@@ -4951,6 +4979,7 @@ CodeGenerator::link()
                      graph.mir().numCallTargets());
 
     ionScript->setMethod(code);
+    ionScript->setSkipArgCheckEntryOffset(getSkipArgCheckEntryOffset());
 
     SetIonScript(script, executionMode, ionScript);
 
@@ -4993,6 +5022,9 @@ CodeGenerator::link()
         ionScript->copySnapshots(&snapshots_);
     if (graph.numConstants())
         ionScript->copyConstants(graph.constantPool());
+#ifdef JSGC_GENERATIONAL
+    cx->runtime->gcStoreBuffer.putGeneric(IonScriptRefs(script));
+#endif
     JS_ASSERT(graph.mir().numScripts() > 0);
     ionScript->copyScriptEntries(graph.mir().scripts());
     if (graph.mir().numCallTargets() > 0)

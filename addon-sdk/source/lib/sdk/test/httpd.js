@@ -511,7 +511,7 @@ nsHttpServer.prototype =
       dumpn(">>> listening on port " + socket.port + ", " + maxConnections +
             " pending connections");
       socket.asyncListen(this);
-      this._identity._initialize(port, host, true);
+      this._identity._initialize(socket.port, host, true);
       this._socket = socket;
     }
     catch (e)
@@ -5178,7 +5178,6 @@ function server(port, basePath)
   if (lp)
     srv.registerDirectory("/", lp);
   srv.registerContentType("sjs", SJS_TYPE);
-  srv.identity.setPrimary("http", "localhost", port);
   srv.start(port);
 
   var thread = gThreadManager.currentThread;
@@ -5205,7 +5204,6 @@ function startServerAsync(port, basePath)
   if (lp)
     srv.registerDirectory("/", lp);
   srv.registerContentType("sjs", "sjs");
-  srv.identity.setPrimary("http", "localhost", port);
   srv.start(port);
   return srv;
 }

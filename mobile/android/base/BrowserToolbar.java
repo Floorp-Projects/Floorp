@@ -883,42 +883,42 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
         }
     }
 
-    private void setTitle(String title) {
+    private void setTitle(CharSequence title) {
         Tab tab = Tabs.getInstance().getSelectedTab();
-        CharSequence displayTitle = title;
 
-        // Keep the title unchanged if the tab is entering reader mode
-        if (tab != null && tab.isEnteringReaderMode())
-            return;
+        if (tab != null) {
+            // Keep the title unchanged if the tab is entering reader mode
+            if (tab.isEnteringReaderMode()) {
+                return;
+            }
 
-        // Setting a null title will ensure we just see the "Enter Search or Address"
-        // placeholder text. Because "about:home" and "about:privatebrowsing" don't
-        // have titles, their display titles will always match their URLs.
-        if (tab != null && ("about:home".equals(title) ||
-                            "about:privatebrowsing".equals(title))) {
-            displayTitle = null;
-        }
+            // Setting a null title will ensure we just see the "Enter Search or Address"
+            // placeholder text. Because "about:home" and "about:privatebrowsing" don't
+            // have titles, their display titles will always match their URLs.
+            if ("about:home".equals(title) || "about:privatebrowsing".equals(title)) {
+                title = null;
+            }
 
-        if (mShowUrl && displayTitle != null) {
-            title = StringUtils.stripScheme(tab.getURL());
-            title = StringUtils.stripCommonSubdomains(title);
-            displayTitle = title;
+            if (mShowUrl && title != null) {
+                title = StringUtils.stripScheme(tab.getURL());
+                title = StringUtils.stripCommonSubdomains(title.toString());
 
-            // highlight the domain name if we find one
-            String baseDomain = tab.getBaseDomain();
-            if (!TextUtils.isEmpty(baseDomain)) {
-                SpannableStringBuilder builder = new SpannableStringBuilder(title);
-                int index = title.indexOf(baseDomain);
-                if (index > -1) {
-                    builder.setSpan(mUrlColor, 0, title.length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
-                    builder.setSpan(tab.isPrivate() ? mPrivateDomainColor : mDomainColor, index, index+baseDomain.length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
+                // highlight the domain name if we find one
+                String baseDomain = tab.getBaseDomain();
+                if (!TextUtils.isEmpty(baseDomain)) {
+                    SpannableStringBuilder builder = new SpannableStringBuilder(title);
+                    int index = title.toString().indexOf(baseDomain);
+                    if (index > -1) {
+                        builder.setSpan(mUrlColor, 0, title.length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
+                        builder.setSpan(tab.isPrivate() ? mPrivateDomainColor : mDomainColor, index, index+baseDomain.length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
 
-                    displayTitle = builder;
+                        title = builder;
+                    }
                 }
             }
         }
 
-        mTitle.setText(displayTitle);
+        mTitle.setText(title);
         mLayout.setContentDescription(title != null ? title : mTitle.getHint());
     }
 

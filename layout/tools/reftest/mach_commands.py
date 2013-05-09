@@ -127,22 +127,25 @@ def ReftestCommand(func):
 
 @CommandProvider
 class MachCommands(MachCommandBase):
-    @Command('reftest', help='Run a reftest.')
+    @Command('reftest', category='testing', description='Run reftests.')
     @ReftestCommand
     def run_reftest(self, test_file, **kwargs):
         return self._run_reftest(test_file, suite='reftest', **kwargs)
 
-    @Command('reftest-ipc', help='Run IPC reftests.')
+    @Command('reftest-ipc', category='testing',
+        description='Run IPC reftests.')
     @ReftestCommand
     def run_ipc(self, test_file, **kwargs):
         return self._run_reftest(test_file, suite='reftest-ipc', **kwargs)
 
-    @Command('crashtest', help='Run a crashtest.')
+    @Command('crashtest', category='testing',
+        description='Run crashtests.')
     @ReftestCommand
     def run_crashtest(self, test_file, **kwargs):
         return self._run_reftest(test_file, suite='crashtest', **kwargs)
 
-    @Command('crashtest-ipc', help='Run IPC crashtests.')
+    @Command('crashtest-ipc', category='testing',
+        description='Run IPC crashtests.')
     @ReftestCommand
     def run_crashtest_ipc(self, test_file, **kwargs):
         return self._run_reftest(test_file, suite='crashtest-ipc', **kwargs)

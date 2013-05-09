@@ -1617,11 +1617,10 @@ public:
     TraceWrappedNativesInAllScopes(JSTracer* trc, XPCJSRuntime* rt);
 
     void TraceSelf(JSTracer *trc) {
-        JSObject *obj = GetGlobalJSObjectPreserveColor();
-        MOZ_ASSERT(obj);
-        JS_CallObjectTracer(trc, obj, "XPCWrappedNativeScope::mGlobalJSObject");
+        MOZ_ASSERT(mGlobalJSObject);
+        mGlobalJSObject.trace(trc, "XPCWrappedNativeScope::mGlobalJSObject");
         if (mXBLScope)
-            JS_CallObjectTracer(trc, mXBLScope, "XPCWrappedNativeScope::mXBLScope");
+            mXBLScope.trace(trc, "XPCWrappedNativeScope::mXBLScope");
     }
 
     static void
@@ -2428,7 +2427,7 @@ public:
 
     void TraceSelf(JSTracer *trc) {
         if (mJSProtoObject)
-            JS_CallObjectTracer(trc, mJSProtoObject, "XPCWrappedNativeProto::mJSProtoObject");
+            mJSProtoObject.trace(trc, "XPCWrappedNativeProto::mJSProtoObject");
     }
 
     void TraceInside(JSTracer *trc) {
@@ -2826,9 +2825,7 @@ public:
             GetProto()->TraceSelf(trc);
         else
             GetScope()->TraceSelf(trc);
-        JSObject* wrapper = GetWrapperPreserveColor();
-        if (wrapper)
-            JS_CallObjectTracer(trc, wrapper, "XPCWrappedNative::mWrapper");
+        TraceWrapper(trc);
         if (mFlatJSObject && mFlatJSObject != INVALID_OBJECT &&
             JS_IsGlobalObject(mFlatJSObject))
         {
@@ -2847,7 +2844,7 @@ public:
         // normally somebody else is doing that. Be careful not to trace the
         // bogus INVALID_OBJECT value we can have during init, though.
         if (mFlatJSObject && mFlatJSObject != INVALID_OBJECT) {
-            JS_CallObjectTracer(trc, mFlatJSObject,
+            JS_CallObjectTracer(trc, &mFlatJSObject,
                                 "XPCWrappedNative::mFlatJSObject");
         }
     }
@@ -2900,6 +2897,12 @@ public:
         JS::IncrementalObjectBarrier(GetWrapperPreserveColor());
         intptr_t newval = intptr_t(obj) | (mWrapperWord & FLAG_MASK);
         mWrapperWord = newval;
+    }
+
+    void TraceWrapper(JSTracer *trc)
+    {
+        JS_CallMaskedObjectTracer(trc, reinterpret_cast<uintptr_t *>(&mWrapperWord),
+                                  (uintptr_t)FLAG_MASK, "XPCWrappedNative::mWrapper");
     }
 
     // Returns the relevant same-compartment security if applicable, or

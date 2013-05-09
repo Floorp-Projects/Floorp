@@ -9,7 +9,7 @@ function test() {
   waitForExplicitFinish();
 
   // Need to load a http/https/ftp/ftps page for the social mark button to appear
-  let tab = gBrowser.selectedTab = gBrowser.addTab("https://example.com", {skipAnimation: true});
+  let tab = gBrowser.selectedTab = gBrowser.addTab("https://test1.example.com", {skipAnimation: true});
   tab.linkedBrowser.addEventListener("load", function tabLoad(event) {
     tab.linkedBrowser.removeEventListener("load", tabLoad, true);
     executeSoon(tabLoaded);
@@ -74,10 +74,11 @@ function testInitial(finishcb) {
 }
 
 function testStillMarkedIn2Tabs() {
-  let toMark = "http://example.com";
+  let toMark = "http://test2.example.com";
   let markUri = Services.io.newURI(toMark, null, null);
   let markButton = SocialMark.button;
   let initialTab = gBrowser.selectedTab;
+  info("initialTab has loaded " + gBrowser.currentURI.spec);
   is(markButton.hasAttribute("marked"), false, "SocialMark button should not have 'marked' for the initial tab");
   let tab1 = gBrowser.selectedTab = gBrowser.addTab(toMark);
   let tab1b = gBrowser.getBrowserForTab(tab1);
@@ -99,21 +100,25 @@ function testStillMarkedIn2Tabs() {
             // and switching to the first tab (with the same URL) should still reflect marked.
             gBrowser.selectedTab = tab1;
             is(markButton.hasAttribute("marked"), true, "SocialMark button should reflect the marked state");
+            // wait for tabselect
+            gBrowser.tabContainer.addEventListener("TabSelect", function onTabSelect() {
+              gBrowser.tabContainer.removeEventListener("TabSelect", onTabSelect, false);
+              waitForCondition(function() !markButton.hasAttribute("marked"), function() {
+                gBrowser.selectedTab = tab1;
+      
+                SocialMark.togglePageMark(function() {
+                  Social.isURIMarked(gBrowser.currentURI, function(marked) {
+                    ok(!marked, "page is unmarked in annotations");
+                    is(markButton.hasAttribute("marked"), false, "mark button should not be marked");
+                    gBrowser.removeTab(tab1);
+                    gBrowser.removeTab(tab2);
+                    executeSoon(testStillMarkedAfterReopen);
+                  });
+                });
+              }, "button has been unmarked");
+            }, false);
             // but switching back the initial one should reflect not marked.
             gBrowser.selectedTab = initialTab;
-            waitForCondition(function() !markButton.hasAttribute("marked"), function() {
-              gBrowser.selectedTab = tab1;
-    
-              SocialMark.togglePageMark(function() {
-                Social.isURIMarked(gBrowser.currentURI, function(marked) {
-                  ok(!marked, "page is unmarked in annotations");
-                  is(markButton.hasAttribute("marked"), false, "mark button should not be marked");
-                  gBrowser.removeTab(tab1);
-                  gBrowser.removeTab(tab2);
-                  executeSoon(testStillMarkedAfterReopen);
-                });
-              });
-            }, "button has been unmarked");
           });
         }, "button has been marked");
       });
@@ -123,7 +128,7 @@ function testStillMarkedIn2Tabs() {
 }
 
 function testStillMarkedAfterReopen() {
-  let toMark = "http://example.com";
+  let toMark = "http://test2.example.com";
   let markButton = SocialMark.button;
 
   is(markButton.hasAttribute("marked"), false, "Reopen: SocialMark button should not have 'marked' for the initial tab");
@@ -154,7 +159,7 @@ function testStillMarkedAfterReopen() {
 }
 
 function testOnlyMarkCertainUrlsTabSwitch() {
-  let toMark = "http://example.com";
+  let toMark = "http://test2.example.com";
   let notSharable = "about:blank";
   let markButton = SocialMark.button;
   let tab = gBrowser.selectedTab = gBrowser.addTab(toMark);
@@ -179,7 +184,7 @@ function testOnlyMarkCertainUrlsTabSwitch() {
 }
 
 function testOnlyMarkCertainUrlsSameTab() {
-  let toMark = "http://example.com";
+  let toMark = "http://test2.example.com";
   let notSharable = "about:blank";
   let markButton = SocialMark.button;
   let tab = gBrowser.selectedTab = gBrowser.addTab(toMark);

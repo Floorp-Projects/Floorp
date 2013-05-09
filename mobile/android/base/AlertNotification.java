@@ -5,16 +5,16 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.gfx.BitmapUtils;
+
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.util.Log;
 import android.widget.RemoteViews;
 
-import java.net.URL;
 import java.text.NumberFormat;
 
 public class AlertNotification
@@ -54,8 +54,7 @@ public class AlertNotification
         int layout = R.layout.notification_icon_text;
         RemoteViews view = new RemoteViews(mContext.getPackageName(), layout);
         try {
-            URL url = new URL(aIconUri.toString());
-            Bitmap bm = BitmapFactory.decodeStream(url.openStream());
+            Bitmap bm = BitmapUtils.decodeUrl(aIconUri);
             if (bm == null) {
                 Log.e(LOGTAG, "failed to decode icon");
                 return;

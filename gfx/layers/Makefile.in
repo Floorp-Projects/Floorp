@@ -14,7 +14,6 @@ VPATH       = \
   $(srcdir)/opengl \
   $(srcdir)/d3d9 \
   $(srcdir)/d3d10 \
-  $(srcdir)/d3d11 \
   $(srcdir)/ipc \
   $(NULL)
 
@@ -98,13 +97,11 @@ ifdef MOZ_ENABLE_D3D10_LAYER
 CPPSRCS += \
         CanvasLayerD3D10.cpp \
         ColorLayerD3D10.cpp \
-        CompositorD3D11.cpp \
         ContainerLayerD3D10.cpp \
         ImageLayerD3D10.cpp \
         LayerManagerD3D10.cpp \
         ReadbackManagerD3D10.cpp \
         ShadowLayerUtilsD3D10.cpp \
-        TextureD3D11.cpp \
         ThebesLayerD3D10.cpp \
         $(NULL)
 endif

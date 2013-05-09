@@ -118,7 +118,6 @@ CPPSRCS		= \
 		FoldConstants.cpp \
 		Intl.cpp \
 		NameFunctions.cpp \
-		ParallelDo.cpp \
 		ParallelArray.cpp \
 		ParseMaps.cpp \
 		ParseNode.cpp \
@@ -706,10 +705,13 @@ NSPR_STATIC_PATH = $(DIST)/lib
 endif
 
 ifdef MOZ_VTUNE
-#CXXFLAGS += -IC:/Program\ Files/Intel/VTune/Analyzer/Include
-#EXTRA_DSO_LDOPTS += C:/Program\ Files/Intel/VTune/Analyzer/Lib/VtuneApi.lib
-#LIBS +=  C:/Program\ Files/Intel/VTune/Analyzer/Lib/VtuneApi.lib
-endif
+ifeq ($(OS_ARCH), WINNT)
+EXTRA_DSO_LDOPTS += $(VTUNE_LIBRARIES)
+LIBS += $(VTUNE_LIBRARIES)
+else
+SHARED_LIBRARY_LIBS += $(VTUNE_LIBRARIES)
+endif # WINNT
+endif # MOZ_VTUNE
 
 ifdef MOZ_ETW
 # This will get the ETW provider resources into the library mozjs.dll

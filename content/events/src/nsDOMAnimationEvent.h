@@ -46,18 +46,6 @@ public:
     return AnimationEvent()->elapsedTime;
   }
 
-  void InitAnimationEvent(const nsAString& aType,
-                          bool aCanBubble,
-                          bool aCancelable,
-                          const nsAString& aAnimationName,
-                          float aElapsedTime,
-                          const mozilla::dom::Optional<nsAString>& aPseudoElement,
-                          mozilla::ErrorResult& aRv)
-  {
-    aRv = InitAnimationEvent(aType, aCanBubble, aCancelable, aAnimationName,
-                             aElapsedTime, aPseudoElement.WasPassed() ?
-                               aPseudoElement.Value() : EmptyString());
-  }
 private:
   nsAnimationEvent* AnimationEvent() {
     NS_ABORT_IF_FALSE(mEvent->eventStructType == NS_ANIMATION_EVENT,

@@ -23,15 +23,3 @@ dictionary TransitionEventInit : EventInit {
   float elapsedTime = 0;
   DOMString pseudoElement = "";
 };
-
-// initTransitionEvent is a legacy method, and removed from the latest version
-// of the specification.
-partial interface TransitionEvent {
-  [Throws]
-  void initTransitionEvent(DOMString aType,
-                           boolean aCanBubble,
-                           boolean aCancelable,
-                           DOMString aPropertyName,
-                           float aElapsedTime,
-                           optional DOMString pseudoElement);
-};

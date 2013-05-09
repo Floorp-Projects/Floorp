@@ -16,7 +16,7 @@
 <!ENTITY  rememberChoice.label        "Do this automatically for files like this from now on.">
 <!ENTITY  rememberChoice.accesskey    "a">
 
-<!ENTITY  whichIsA.label              "which is a:">
+<!ENTITY  whichIs.label              "which is:">
 
 <!ENTITY  chooseHandlerMac.label      "Choose…">
 <!ENTITY  chooseHandlerMac.accesskey  "C">

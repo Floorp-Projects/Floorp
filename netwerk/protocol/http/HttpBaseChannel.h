@@ -149,7 +149,6 @@ public:
   NS_IMETHOD SetLoadAsBlocking(bool aLoadAsBlocking);
   NS_IMETHOD GetLoadUnblocked(bool *aLoadUnblocked);
   NS_IMETHOD SetLoadUnblocked(bool aLoadUnblocked);
-  NS_IMETHOD GetPacingTelemetryID(uint32_t *aID);
   
   inline void CleanRedirectCacheChainIfNecessary()
   {

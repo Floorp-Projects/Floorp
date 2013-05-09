@@ -402,8 +402,8 @@ XPCWrappedNativeScope::TraceWrappedNativesInAllScopes(JSTracer* trc, XPCJSRuntim
     for (XPCWrappedNativeScope* cur = gScopes; cur; cur = cur->mNext) {
         cur->mWrappedNativeMap->Enumerate(WrappedNativeJSGCThingTracer, trc);
         if (cur->mDOMExpandoSet) {
-            for (DOMExpandoSet::Range r = cur->mDOMExpandoSet->all(); !r.empty(); r.popFront())
-                JS_CallObjectTracer(trc, r.front(), "DOM expando object");
+            for (DOMExpandoSet::Enum e(*cur->mDOMExpandoSet); !e.empty(); e.popFront())
+                JS_CallHashSetObjectTracer(trc, e, e.front(), "DOM expando object");
         }
     }
 }

@@ -256,9 +256,8 @@ TraceProtoAndIfaceCache(JSTracer* trc, JSObject* obj)
     return;
   JSObject** protoAndIfaceArray = GetProtoAndIfaceArray(obj);
   for (size_t i = 0; i < kProtoAndIfaceCacheCount; ++i) {
-    JSObject* proto = protoAndIfaceArray[i];
-    if (proto) {
-      JS_CallObjectTracer(trc, proto, "protoAndIfaceArray[i]");
+    if (protoAndIfaceArray[i]) {
+      JS_CallObjectTracer(trc, &protoAndIfaceArray[i], "protoAndIfaceArray[i]");
     }
   }
 }
@@ -277,7 +276,8 @@ DestroyProtoAndIfaceCache(JSObject* obj)
  * Add constants to an object.
  */
 bool
-DefineConstants(JSContext* cx, JSObject* obj, const ConstantSpec* cs);
+DefineConstants(JSContext* cx, JS::Handle<JSObject*> obj,
+                const ConstantSpec* cs);
 
 struct JSNativeHolder
 {
@@ -1767,8 +1767,9 @@ JSBool
 InterfaceHasInstance(JSContext* cx, JSHandleObject obj, JSMutableHandleValue vp,
                      JSBool* bp);
 
-// Helper for lenient getters/setters to report to console
-void
+// Helper for lenient getters/setters to report to console.  If this
+// returns false, we couldn't even get a global.
+bool
 ReportLenientThisUnwrappingFailure(JSContext* cx, JS::Handle<JSObject*> obj);
 
 inline JSObject*

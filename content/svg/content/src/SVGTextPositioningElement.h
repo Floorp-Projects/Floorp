@@ -36,8 +36,8 @@ protected:
     : SVGTextPositioningElementBase(aNodeInfo)
   {}
 
-  virtual LengthListAttributesInfo GetLengthListInfo();
-  virtual NumberListAttributesInfo GetNumberListInfo();
+  virtual LengthListAttributesInfo GetLengthListInfo() MOZ_OVERRIDE;
+  virtual NumberListAttributesInfo GetNumberListInfo() MOZ_OVERRIDE;
 
   enum { ATTR_X, ATTR_Y, ATTR_DX, ATTR_DY };
   SVGAnimatedLengthList mLengthListAttributes[4];

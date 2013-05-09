@@ -56,9 +56,13 @@ nsDOMTransitionEvent::Constructor(const mozilla::dom::GlobalObject& aGlobal,
   nsCOMPtr<mozilla::dom::EventTarget> t = do_QueryInterface(aGlobal.Get());
   nsRefPtr<nsDOMTransitionEvent> e = new nsDOMTransitionEvent(t, nullptr, nullptr);
   bool trusted = e->Init(t);
-  aRv = e->InitTransitionEvent(aType, aParam.mBubbles, aParam.mCancelable,
-                               aParam.mPropertyName, aParam.mElapsedTime,
-                               aParam.mPseudoElement);
+
+  aRv = e->InitEvent(aType, aParam.mBubbles, aParam.mCancelable);
+
+  e->TransitionEvent()->propertyName = aParam.mPropertyName;
+  e->TransitionEvent()->elapsedTime = aParam.mElapsedTime;
+  e->TransitionEvent()->pseudoElement = aParam.mPseudoElement;
+
   e->SetTrusted(trusted);
   return e.forget();
 }
@@ -81,23 +85,6 @@ NS_IMETHODIMP
 nsDOMTransitionEvent::GetPseudoElement(nsAString& aPseudoElement)
 {
   aPseudoElement = TransitionEvent()->pseudoElement;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMTransitionEvent::InitTransitionEvent(const nsAString & typeArg,
-                                          bool canBubbleArg,
-                                          bool cancelableArg,
-                                          const nsAString & propertyNameArg,
-                                          float elapsedTimeArg,
-                                          const nsAString& aPseudoElement)
-{
-  nsresult rv = nsDOMEvent::InitEvent(typeArg, canBubbleArg, cancelableArg);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  TransitionEvent()->propertyName = propertyNameArg;
-  TransitionEvent()->elapsedTime = elapsedTimeArg;
-  TransitionEvent()->pseudoElement = aPseudoElement;
   return NS_OK;
 }
 

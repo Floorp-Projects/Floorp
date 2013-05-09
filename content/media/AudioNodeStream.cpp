@@ -53,10 +53,9 @@ void
 AudioNodeStream::SetStreamTimeParameterImpl(uint32_t aIndex, MediaStream* aRelativeToStream,
                                             double aStreamTime)
 {
-  StreamTime streamTime = std::max<MediaTime>(0, SecondsToMediaTime(aStreamTime));
-  GraphTime graphTime = aRelativeToStream->StreamTimeToGraphTime(streamTime);
-  StreamTime thisStreamTime = GraphTimeToStreamTimeOptimistic(graphTime);
-  TrackTicks ticks = TimeToTicksRoundUp(IdealAudioRate(), thisStreamTime);
+  TrackTicks ticks =
+      WebAudioUtils::ConvertDestinationStreamTimeToSourceStreamTime(
+          aStreamTime, this, aRelativeToStream);
   mEngine->SetStreamTimeParameter(aIndex, ticks);
 }
 
@@ -282,7 +281,8 @@ AudioNodeStream::ObtainInputBlock(AudioChunk& aTmpChunk, uint32_t aPortIndex)
   }
 
   uint32_t inputChunkCount = inputChunks.Length();
-  if (inputChunkCount == 0) {
+  if (inputChunkCount == 0 ||
+      (inputChunkCount == 1 && inputChunks[0]->mChannelData.Length() == 0)) {
     aTmpChunk.SetNull(WEBAUDIO_BLOCK_SIZE);
     return;
   }
