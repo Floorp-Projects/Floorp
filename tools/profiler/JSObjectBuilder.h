@@ -54,7 +54,6 @@ private:
   void operator delete[](void*);
 
   JSContext *mCx;
-  JSObject *mObj;
   int mOk;
 };
 
