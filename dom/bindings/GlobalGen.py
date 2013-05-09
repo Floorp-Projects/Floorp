@@ -55,13 +55,13 @@ def main():
         parser.parse(''.join(lines), fullPath)
     parserResults = parser.finish()
 
-    # Write the parser results out to a pickle.
-    resultsFile = open('ParserResults.pkl', 'wb')
-    cPickle.dump(parserResults, resultsFile, -1)
-    resultsFile.close()
-
     # Load the configuration.
     config = Configuration(configFile, parserResults)
+
+    # Write the configuration out to a pickle.
+    resultsFile = open('ParserResults.pkl', 'wb')
+    cPickle.dump(config, resultsFile, -1)
+    resultsFile.close()
 
     # Generate the prototype list.
     generate_file(config, 'PrototypeList', 'declare')

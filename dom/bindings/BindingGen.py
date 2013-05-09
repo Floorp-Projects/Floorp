@@ -35,13 +35,10 @@ def main():
     configFile = os.path.normpath(args[0])
     srcPrefix = os.path.normpath(args[1])
 
-    # Load the parsing results
+    # Load the configuration
     f = open('ParserResults.pkl', 'rb')
-    parserData = cPickle.load(f)
+    config = cPickle.load(f)
     f.close()
-
-    # Create the configuration data.
-    config = Configuration(configFile, parserData)
 
     def readFile(f):
         file = open(f, 'rb')
