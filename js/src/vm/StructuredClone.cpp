@@ -32,6 +32,8 @@
 #include "mozilla/Endian.h"
 #include "mozilla/FloatingPoint.h"
 
+#include <algorithm>
+
 #include "jsapi.h"
 #include "jscntxt.h"
 #include "jsdate.h"
