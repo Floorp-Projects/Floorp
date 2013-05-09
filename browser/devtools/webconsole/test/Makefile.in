@@ -125,6 +125,7 @@ MOCHITEST_BROWSER_FILES = \
 	browser_webconsole_bug_837351_securityerrors.js \
 	browser_bug_865871_variables_view_close_on_esc_key.js \
 	browser_bug_865288_repeat_different_objects.js \
+	browser_jsterm_inspect.js \
 	head.js \
 	$(NULL)
 

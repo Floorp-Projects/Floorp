@@ -1269,6 +1269,23 @@ this.JSTermHelpers = function JSTermHelpers(aOwner)
   };
 
   /**
+   * Inspects the passed aObject. This is done by opening the PropertyPanel.
+   *
+   * @param object aObject
+   *        Object to inspect.
+   */
+  aOwner.sandbox.inspect = function JSTH_inspect(aObject)
+  {
+    let dbgObj = aOwner.makeDebuggeeValue(aObject);
+    let grip = aOwner.createValueGrip(dbgObj);
+    aOwner.helperResult = {
+      type: "inspectObject",
+      input: aOwner.evalInput,
+      object: grip,
+    };
+  };
+
+  /**
    * Prints aObject to the output.
    *
    * @param object aObject
