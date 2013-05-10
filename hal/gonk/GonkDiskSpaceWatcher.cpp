@@ -278,7 +278,6 @@ void
 StartDiskSpaceWatcher()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aService);
 
   // Bail out if called several times.
   if (gHalDiskSpaceWatcher != nullptr) {
