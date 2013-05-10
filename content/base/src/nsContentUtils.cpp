@@ -231,6 +231,7 @@ bool nsContentUtils::sIsFullScreenApiEnabled = false;
 bool nsContentUtils::sTrustedFullScreenOnly = true;
 bool nsContentUtils::sFullscreenApiIsContentOnly = false;
 bool nsContentUtils::sIsIdleObserverAPIEnabled = false;
+bool nsContentUtils::sIsPerformanceTimingEnabled = false;
 
 uint32_t nsContentUtils::sHandlingInputTimeout = 1000;
 
@@ -426,6 +427,9 @@ nsContentUtils::Init()
                                "full-screen-api.allow-trusted-requests-only");
 
   sIsIdleObserverAPIEnabled = Preferences::GetBool("dom.idle-observers-api.enabled", true);
+
+  Preferences::AddBoolVarCache(&sIsPerformanceTimingEnabled,
+                               "dom.enable_performance", true);
 
   Preferences::AddUintVarCache(&sHandlingInputTimeout,
                                "dom.event.handling-user-input-time-limit",
