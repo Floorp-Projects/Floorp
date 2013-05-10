@@ -127,6 +127,7 @@ MOCHITEST_BROWSER_FILES = \
 	browser_bug_865288_repeat_different_objects.js \
 	browser_jsterm_inspect.js \
 	browser_bug_869003_inspect_cross_domain_object.js \
+	browser_bug_862916_console_dir_and_filter_off.js \
 	head.js \
 	$(NULL)
 
