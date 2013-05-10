@@ -10,11 +10,6 @@
   transition-timing-function: ease-out;
 }
 
-#main-window[customizing] .tabbrowser-tab:not([selected]),
-#main-window[customizing] .tabs-newtab-button {
-  opacity: 0.4;
-}
-
 #main-window[customizing] .customization-target {
   border: 1px dashed #bbb;
   margin: 3px;

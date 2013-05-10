@@ -170,7 +170,16 @@ CustomizeMode.prototype = {
     let window = this.window;
     let document = this.document;
 
-    document.documentElement.removeAttribute("customizing");
+    let documentElement = document.documentElement;
+    documentElement.setAttribute("customize-exiting", "true");
+    let tabViewDeck = document.getElementById("tab-view-deck");
+    tabViewDeck.addEventListener("transitionend", function onTransitionEnd(evt) {
+      if (evt.propertyName != "padding-top")
+        return;
+      tabViewDeck.removeEventListener("transitionend", onTransitionEnd);
+      documentElement.removeAttribute("customize-exiting");
+    });
+    documentElement.removeAttribute("customizing");
 
     for (let target of this.areas) {
       for (let toolbarItem of target.children) {
