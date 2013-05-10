@@ -95,8 +95,6 @@ MOCHITEST_FILES	= \
 	missing.html \
 	jupiter.jpg \
 	test_cancelOfflineCache.html \
-	test_lowDeviceStorage.html \
-	test_lowDeviceStorageDuringUpdate.html \
 	$(NULL)
 
 # test_offlineMode.html disabled due to bug 656943
