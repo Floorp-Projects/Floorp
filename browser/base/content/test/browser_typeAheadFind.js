@@ -15,7 +15,7 @@ function test() {
       ok(true, "pageshow listener called");
       waitForFocus(onFocus, testWindow.content);
     }, true);
-    gBrowser.loadURI("data:text/html,<h1>A Page</h1>");
+    testWindow.gBrowser.loadURI("data:text/html,<h1>A Page</h1>");
   });
 }
 
