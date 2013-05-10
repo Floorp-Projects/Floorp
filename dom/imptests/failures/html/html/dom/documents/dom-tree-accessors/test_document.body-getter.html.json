@@ -1,0 +1,8 @@
+{
+  "Frameset followed by body inside the html element": true,
+  "Body followed by frameset inside a non-HTML html element": true,
+  "Frameset inside an x element followed by a frameset": true,
+  "Frameset as the root node": true,
+  "Body as the root node with a frameset child": true,
+  "Frameset as the root node with a body child": true
+}
