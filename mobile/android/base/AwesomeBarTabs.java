@@ -40,7 +40,7 @@ public class AwesomeBarTabs extends TabHost
 
     public interface OnUrlOpenListener {
         public void onUrlOpen(String url, String title);
-        public void onSearch(String engine, String text);
+        public void onSearch(SearchEngine engine, String text);
         public void onEditSuggestion(String suggestion);
     }
 
