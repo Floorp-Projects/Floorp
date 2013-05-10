@@ -9,6 +9,7 @@
 
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/unused.h"
+#include "nsIDiskSpaceWatcher.h"
 
 namespace mozilla {
 namespace dom {
@@ -294,10 +295,10 @@ DOMStorageDBParent::ReleaseIPDLReference()
 
 namespace { // anon
 
-class SendScopesHavingDataRunnable : public nsRunnable
+class SendInitialChildDataRunnable : public nsRunnable
 {
 public:
-  SendScopesHavingDataRunnable(DOMStorageDBParent* aParent)
+  SendInitialChildDataRunnable(DOMStorageDBParent* aParent)
     : mParent(aParent)
   {}
 
@@ -313,6 +314,21 @@ private:
       InfallibleTArray<nsCString> scopes;
       db->GetScopesHavingData(&scopes);
       mozilla::unused << mParent->SendScopesHavingData(scopes);
+    }
+
+    // We need to check if the device is in a low disk space situation, so
+    // we can forbid in that case any write in localStorage.
+    nsCOMPtr<nsIDiskSpaceWatcher> diskSpaceWatcher =
+      do_GetService("@mozilla.org/toolkit/disk-space-watcher;1");
+    if (!diskSpaceWatcher) {
+      NS_WARNING("Could not get disk information from DiskSpaceWatcher");
+      return NS_OK;
+    }
+    bool lowDiskSpace = false;
+    diskSpaceWatcher->GetIsDiskFull(&lowDiskSpace);
+    if (lowDiskSpace) {
+      mozilla::unused << mParent->SendObserve(
+        nsDependentCString("low-disk-space"), EmptyCString());
     }
 
     return NS_OK;
@@ -336,8 +352,8 @@ DOMStorageDBParent::DOMStorageDBParent()
 
   // Cannot send directly from here since the channel
   // is not completely built at this moment.
-  nsRefPtr<SendScopesHavingDataRunnable> r =
-    new SendScopesHavingDataRunnable(this);
+  nsRefPtr<SendInitialChildDataRunnable> r =
+    new SendInitialChildDataRunnable(this);
   NS_DispatchToCurrentThread(r);
 }
 
