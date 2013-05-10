@@ -742,6 +742,10 @@ SocialProvider.prototype = {
   setAmbientNotification: function(notification) {
     if (!this.profile.userName)
       throw new Error("unable to set notifications while logged out");
+    if (!this.ambientNotificationIcons[notification.name] &&
+        Object.keys(this.ambientNotificationIcons).length >= 3) {
+      throw new Error("ambient notification limit reached");
+    }
     this.ambientNotificationIcons[notification.name] = notification;
 
     Services.obs.notifyObservers(null, "social:ambient-notification-changed", this.origin);
