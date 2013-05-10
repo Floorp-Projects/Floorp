@@ -279,12 +279,14 @@
 }
 
 .side-menu-widget-container[with-arrow=true]:-moz-locale-dir(ltr),
-.side-menu-widget-item-or-group[with-arrow=true]:-moz-locale-dir(ltr) {
+.side-menu-widget-group[with-arrow=true]:-moz-locale-dir(ltr),
+.side-menu-widget-item[with-arrow=true]:-moz-locale-dir(ltr) {
   box-shadow: inset -1px 0 0 #222426;
 }
 
 .side-menu-widget-container[with-arrow=true]:-moz-locale-dir(rtl),
-.side-menu-widget-item-or-group[with-arrow=true]:-moz-locale-dir(rtl) {
+.side-menu-widget-group[with-arrow=true]:-moz-locale-dir(rtl),
+.side-menu-widget-item[with-arrow=true]:-moz-locale-dir(rtl) {
   box-shadow: inset 1px 0 0 #222426;
 }
 

@@ -183,6 +183,7 @@ function debug_tab_pane(aURL, aOnDebugging, aBeforeTabAdded) {
         info("Debugger has started");
         dbg._view.Variables.lazyEmpty = false;
         dbg._view.Variables.lazyAppend = false;
+        dbg._view.Variables.lazyExpand = false;
         aOnDebugging(tab, debuggee, dbg);
       });
     });
@@ -206,6 +207,7 @@ function debug_remote(aURL, aOnDebugging, aBeforeTabAdded) {
       info("Remote Debugger has started");
       win._dbgwin.DebuggerView.Variables.lazyEmpty = false;
       win._dbgwin.DebuggerView.Variables.lazyAppend = false;
+      win._dbgwin.DebuggerView.Variables.lazyExpand = false;
       aOnDebugging(tab, debuggee, win);
     });
   });
