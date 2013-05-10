@@ -51,6 +51,7 @@ MOCHITEST_FILES	= \
     test_localStorageQuotaSessionOnly.html \
     test_localStorageQuotaSessionOnly2.html \
     test_localStorageKeyOrder.html \
+    test_lowDeviceStorage.html \
     test_storageConstructor.html \
     $(NULL)
 
