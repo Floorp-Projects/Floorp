@@ -1086,15 +1086,17 @@ MmsService.prototype = {
     gSystemMessenger.broadcastMessage(aName, {
       type:           aDomMessage.type,
       id:             aDomMessage.id,
+      threadId:       aDomMessage.threadId,
       delivery:       aDomMessage.delivery,
       deliveryStatus: aDomMessage.deliveryStatus,
       sender:         aDomMessage.sender,
       receivers:      aDomMessage.receivers,
-      timestamp:      aDomMessage.timestamp.getTime(),
+      timestamp:      aDomMessage.timestamp,
       read:           aDomMessage.read,
       subject:        aDomMessage.subject,
       smil:           aDomMessage.smil,
-      attachments:    aDomMessage.attachments
+      attachments:    aDomMessage.attachments,
+      expiryDate:     aDomMessage.expiryDate
     });
   },
 
