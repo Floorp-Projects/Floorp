@@ -289,7 +289,7 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
         String result = null;
         try {
             while (null == (result = mPromptQueue.poll(1, TimeUnit.MILLISECONDS))) {
-                GeckoAppShell.processNextNativeEvent();
+                GeckoAppShell.processNextNativeEvent(false);
             }
         } catch (InterruptedException e) {
         }
