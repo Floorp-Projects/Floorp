@@ -24,11 +24,11 @@ public class testAllPagesTab extends BaseTest {
     private static final String ABOUT_HOME_URL = "about:home";
     private static ListView listview = null;
 
-    private String[] bookmarks = new String[] {
-        "about:firefox",
-        "about:home",
-        "http://support.mozilla.org/en-US/products/mobile",
-        "https://addons.mozilla.org/en-US/android/"
+    private String[] mBookmarks = new String[] {
+        "Firefox: About your browser",
+        "Firefox Start",
+        "Firefox: Support",
+        "Firefox: Customize with add-ons"
     };
 
     @Override
@@ -44,12 +44,12 @@ public class testAllPagesTab extends BaseTest {
         loadUrl(url);
 
         testList(url);
-        testClick(url);
+        testClick("about:firefox");
         testContextMenu(url);
     }
 
     private void testList(String url) {
-        final ListView list = getAllPagesList(bookmarks[0], 5);
+        final ListView list = getAllPagesList(mBookmarks[0], 5);
 
         // some basic checks for the tab strip
         TabWidget tabwidget = (TabWidget)mSolo.getView(TabWidget.class, 0);
@@ -87,8 +87,7 @@ public class testAllPagesTab extends BaseTest {
                         loadUrl = string;
                     }
 
-                    int index = Arrays.binarySearch(bookmarks, string);
-                    if (index > -1) {
+                    if (isBookmark(mBookmarks, string)) {
                         expectedImages = 2;
                     }
                 } else if (v instanceof ImageView) {
@@ -109,13 +108,14 @@ public class testAllPagesTab extends BaseTest {
     }
 
     private void testContextMenu(String url) {
-        ListView list = getAllPagesList(bookmarks[0], 5);
+        ListView list = getAllPagesList(mBookmarks[0], 5);
 
         View child = list.getChildAt(0);
         mAsserter.ok(child != null, "first list item can be retrieved", child != null ? child.toString() : "null!");
         mSolo.clickLongOnView(child);
 
         // TODO: Test clicking these does the right thing
+        mAsserter.ok(mSolo.waitForText("Open in New Tab"), "Context menu has Open in New Tab option", "Open in New Tab");
         mAsserter.ok(mSolo.waitForText("Share"), "Context menu has Share option", "Share");
         mAsserter.ok(mSolo.searchText("Remove", true), "Context menu has Remove option", "Remove");
         mAsserter.ok(mSolo.searchText("Add to Home Screen", true), "Context menu has Add to Home Screen option", "Add to Home Screen");
@@ -125,10 +125,12 @@ public class testAllPagesTab extends BaseTest {
     }
 
     private void testClick(String url) {
-        ListView list = getAllPagesList(bookmarks[0], 5);
+        ListView list = getAllPagesList(mBookmarks[0], 5);
 
         Actions.EventExpecter contentEventExpecter = mActions.expectGeckoEvent("DOMContentLoaded");
-        View child = list.getChildAt(0);
+
+        // Avoid clicking the first item. Its the first item because its in an open tab, and will just switch to it
+        View child = list.getChildAt(1);
         mAsserter.ok(child != null, "first list item can be retrieved", child != null ? child.toString() : "null!");
         // dump text for this child, to be sure of which list item is clicked
         ArrayList<View> views = mSolo.getViews(child);
@@ -143,6 +145,7 @@ public class testAllPagesTab extends BaseTest {
         mSolo.clickOnView(child);
         contentEventExpecter.blockForEvent();
         contentEventExpecter.unregisterListener();
+        mSolo.sleep(500);
         verifyUrl(url);
     }
 
