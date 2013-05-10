@@ -766,7 +766,6 @@ BluetoothHfpManager::ReceiveSocketData(BluetoothSocket* aSocket,
     message.Append(NS_ConvertUTF16toUTF8(mOperatorName));
     message.AppendLiteral("\"");
     SendLine(message.get());
-    return;
   } else if (msg.Find("AT+VTS=") != -1) {
     ParseAtCommand(msg, 7, atCommandValues);
 
