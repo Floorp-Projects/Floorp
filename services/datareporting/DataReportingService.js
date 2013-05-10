@@ -258,14 +258,13 @@ DataReportingService.prototype = Object.freeze({
       }
     }
 
-    // The reporter initializes in the background.
     this._healthReporter = new ns.HealthReporter(HEALTHREPORT_BRANCH,
                                                  this.policy,
                                                  this.sessionRecorder);
 
     // Wait for initialization to finish so if a shutdown occurs before init
     // has finished we don't adversely affect app startup on next run.
-    this._healthReporter.onInit().then(function onInit() {
+    this._healthReporter.init().then(function onInit() {
       this._prefs.set("service.firstRun", true);
     }.bind(this));
   },

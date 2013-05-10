@@ -161,7 +161,11 @@ BagheeraClient.prototype = Object.freeze({
     request.loadFlags = this._loadFlags;
     request.timeout = this.DEFAULT_TIMEOUT_MSEC;
 
+    let deleteID;
+
     if (options.deleteID) {
+      deleteID = options.deleteID;
+      this._log.debug("Will delete " + deleteID);
       request.setHeader("X-Obsolete-Document", options.deleteID);
     }
 
@@ -186,6 +190,7 @@ BagheeraClient.prototype = Object.freeze({
     let result = new BagheeraClientRequestResult();
     result.namespace = namespace;
     result.id = id;
+    result.deleteID = deleteID;
 
     request.onComplete = this._onComplete.bind(this, request, deferred, result);
     request.post(data);
