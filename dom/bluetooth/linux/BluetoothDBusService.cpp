@@ -21,7 +21,6 @@
 #include "BluetoothHfpManager.h"
 #include "BluetoothOppManager.h"
 #include "BluetoothReplyRunnable.h"
-#include "BluetoothScoManager.h"
 #include "BluetoothUnixSocketConnector.h"
 #include "BluetoothUtils.h"
 #include "BluetoothUuid.h"
@@ -838,41 +837,10 @@ public:
       return NS_ERROR_FAILURE;
     }
 
-    BluetoothScoManager* sco = BluetoothScoManager::Get();
-    if (!sco || !sco->Listen()) {
-      NS_WARNING("Failed to start listening for BluetoothScoManager!");
-      return NS_ERROR_FAILURE;
-    }
-
     BluetoothOppManager* opp = BluetoothOppManager::Get();
     if (!opp || !opp->Listen()) {
       NS_WARNING("Failed to start listening for BluetoothOppManager!");
       return NS_ERROR_FAILURE;
-    }
-
-    return NS_OK;
-  }
-};
-
-class ShutdownProfileManagersRunnable : public nsRunnable
-{
-public:
-  NS_IMETHOD
-  Run()
-  {
-    BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
-    if (hfp) {
-      hfp->Disconnect();
-    }
-
-    BluetoothOppManager* opp = BluetoothOppManager::Get();
-    if (opp) {
-      opp->Disconnect();
-    }
-
-    BluetoothScoManager* sco = BluetoothScoManager::Get();
-    if (sco) {
-      sco->Disconnect();
     }
 
     return NS_OK;
