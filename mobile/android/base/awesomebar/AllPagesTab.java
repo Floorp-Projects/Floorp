@@ -359,9 +359,9 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
     }
 
     private class AwesomeBarSearchEngineItem implements AwesomeBarItem {
-        private String mSearchEngine;
+        private SearchEngine mSearchEngine;
 
-        public AwesomeBarSearchEngineItem(String searchEngine) {
+        public AwesomeBarSearchEngineItem(SearchEngine searchEngine) {
             mSearchEngine = searchEngine;
         }
 
@@ -428,7 +428,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
             }
 
             // return search engine
-            return new AwesomeBarSearchEngineItem(mSearchEngines.get(engineIndex).name);
+            return new AwesomeBarSearchEngineItem(mSearchEngines.get(engineIndex));
         }
 
         private int getEngineIndex(int position) {
@@ -549,7 +549,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
                         if (v != viewHolder.userEnteredView && !StringUtils.isSearchQuery(suggestion, false)) {
                             listener.onUrlOpen(suggestion, null);
                         } else {
-                            listener.onSearch(engine.name, suggestion);
+                            listener.onSearch(engine, suggestion);
                         }
                     }
                 }
@@ -619,22 +619,6 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
         }
     };
 
-    private class SearchEngine {
-        public String name;
-        public Bitmap icon;
-        public ArrayList<String> suggestions;
-
-        public SearchEngine(String name) {
-            this(name, null);
-        }
-
-        public SearchEngine(String name, Bitmap icon) {
-            this.name = name;
-            this.icon = icon;
-            this.suggestions = new ArrayList<String>();
-        }
-    };
-
     /**
      * Sets suggestions associated with the current suggest engine.
      * If there is no suggest engine, this does nothing.
@@ -662,11 +646,12 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
             for (int i = 0; i < engines.length(); i++) {
                 JSONObject engineJSON = engines.getJSONObject(i);
                 String name = engineJSON.getString("name");
+                String identifier = engineJSON.getString("identifier");
                 String iconURI = engineJSON.getString("iconURI");
                 Bitmap icon = BitmapUtils.getBitmapFromDataURI(iconURI);
                 if (name.equals(suggestEngine) && suggestTemplate != null) {
                     // suggest engine should be at the front of the list
-                    searchEngines.add(0, new SearchEngine(name, icon));
+                    searchEngines.add(0, new SearchEngine(name, identifier, icon));
 
                     // The only time Tabs.getInstance().getSelectedTab() should
                     // be null is when we're restoring after a crash. We should
@@ -676,7 +661,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
                     if (tab == null || !tab.isPrivate())
                         mSuggestClient = new SuggestClient(GeckoApp.mAppContext, suggestTemplate, SUGGESTION_TIMEOUT, SUGGESTION_MAX);
                 } else {
-                    searchEngines.add(new SearchEngine(name, icon));
+                    searchEngines.add(new SearchEngine(name, identifier, icon));
                 }
             }
 
