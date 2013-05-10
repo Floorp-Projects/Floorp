@@ -61,6 +61,7 @@ abstract public class AwesomeBarTab {
 
     protected class AwesomeEntryViewHolder {
         public TextView titleView;
+        public String url;
         public TextView urlView;
         public FaviconView faviconView;
         public ImageView bookmarkIconView;
@@ -166,20 +167,21 @@ abstract public class AwesomeBarTab {
         }
     }
 
-    protected void updateUrl(TextView urlView, Cursor cursor) {
+    protected void updateUrl(AwesomeEntryViewHolder holder, Cursor cursor) {
         int urlIndex = cursor.getColumnIndexOrThrow(URLColumns.URL);
         String url = cursor.getString(urlIndex);
-        updateUrl(urlView, url);
+        updateUrl(holder, url);
     }
-
-    protected void updateUrl(TextView urlView, String url) {
+    
+    protected void updateUrl(AwesomeEntryViewHolder holder, String url) {
         Integer tabId = getOpenTabs().get(url);
+        holder.url = url;
         if (tabId != null) {
-            urlView.setText(R.string.awesomebar_switch_to_tab);
-            urlView.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_awesomebar_tab, 0, 0, 0);
+            holder.urlView.setText(R.string.awesomebar_switch_to_tab);
+            holder.urlView.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_awesomebar_tab, 0, 0, 0);
         } else {
-            urlView.setText(url);
-            urlView.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
+            holder.urlView.setText(url);
+            holder.urlView.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
         }
     }
 
