@@ -87,13 +87,9 @@ public:
                mozilla::ipc::UnixSocketConsumer* aConsumer) MOZ_OVERRIDE;
 
   virtual nsresult
-  GetSocketViaService(const nsAString& aObjectPath,
-                      const nsAString& aService,
-                      BluetoothSocketType aType,
-                      bool aAuth,
-                      bool aEncrypt,
-                      mozilla::ipc::UnixSocketConsumer* aConsumer,
-                      BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+  GetServiceChannel(const nsAString& aObjectPath,
+                    const nsAString& aServiceUuid,
+                    BluetoothProfileManagerBase* aManager) MOZ_OVERRIDE;
 
   virtual bool
   SetPinCodeInternal(const nsAString& aDeviceAddress,
