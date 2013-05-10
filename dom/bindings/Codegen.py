@@ -108,7 +108,7 @@ class CGNativePropertyHooks(CGThing):
             prototypeID += "_ID_Count"
         parent = self.descriptor.interface.parent
         parentHooks = ("&" + toBindingNamespace(parent.identifier.name) + "::sNativePropertyHooks"
-                       if parent else 'NULL')
+                       if parent else 'nullptr')
 
         return CGWrapper(CGIndenter(CGList([CGGeneric(resolveOwnProperty),
                                             CGGeneric(enumerateOwnProperties),
@@ -183,10 +183,10 @@ DOMJSClass Class = {
     %s,
     JS_ConvertStub,
     %s, /* finalize */
-    NULL,                  /* checkAccess */
+    nullptr,               /* checkAccess */
     %s, /* call */
-    NULL,                  /* hasInstance */
-    NULL,                  /* construct */
+    nullptr,               /* hasInstance */
+    nullptr,               /* construct */
     %s, /* trace */
     JSCLASS_NO_INTERNAL_MEMBERS
   },
@@ -1393,7 +1393,7 @@ class PropertyDefiner:
             # And the actual spec
             specs.append(specTemplate % getDataTuple(member))
         specs.append(specTerminator)
-        prefableSpecs.append("  { false, NULL }");
+        prefableSpecs.append("  { false, nullptr }");
 
         specType = "const " + specType
         arrays = (("static %s %s_specs[] = {\n" +
@@ -1847,7 +1847,7 @@ if (!unforgeableHolder) {
             domClass,
             properties,
             chromeProperties,
-            '"' + self.descriptor.interface.identifier.name + '"' if needInterfaceObject else "NULL"))
+            '"' + self.descriptor.interface.identifier.name + '"' if needInterfaceObject else "nullptr"))
         if UseHolderForUnforgeable(self.descriptor):
             assert needInterfacePrototypeObject
             setUnforgeableHolder = CGGeneric(
@@ -2009,7 +2009,7 @@ def CreateBindingJSObject(descriptor, properties, parent):
         create = """  obj = NewProxyObject(aCx, DOMProxyHandler::getInstance(),
                        JS::PrivateValue(aObject), proto, %s);
   if (!obj) {
-    return NULL;
+    return nullptr;
   }
 
 """
@@ -2021,7 +2021,7 @@ def CreateBindingJSObject(descriptor, properties, parent):
     else:
         create = """  obj = JS_NewObject(aCx, &Class.mBase, proto, %s);
   if (!obj) {
-    return NULL;
+    return nullptr;
   }
 
   js::SetReservedSlot(obj, DOM_OBJECT_SLOT, PRIVATE_TO_JSVAL(aObject));
@@ -2148,7 +2148,7 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
     GetRealParentObject(aObject,
                         WrapNativeParent(aCx, aScope, aObject->GetParentObject())));
   if (!parent) {
-    return NULL;
+    return nullptr;
   }
 
   // That might have ended up wrapping us already, due to the wonders
@@ -2165,7 +2165,7 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
   JS::Rooted<JSObject*> global(aCx, JS_GetGlobalForObject(aCx, parent));
   JS::Handle<JSObject*> proto = GetProtoObject(aCx, global);
   if (!proto) {
-    return NULL;
+    return nullptr;
   }
 
 %s
@@ -2213,7 +2213,7 @@ class CGWrapNonWrapperCacheMethod(CGAbstractMethod):
   JS::Rooted<JSObject*> global(aCx, JS_GetGlobalForObject(aCx, aScope));
   JS::Handle<JSObject*> proto = GetProtoObject(aCx, global);
   if (!proto) {
-    return NULL;
+    return nullptr;
   }
 
 %s
@@ -3011,7 +3011,7 @@ for (uint32_t i = 0; i < length; ++i) {
             templateBody += "${declName} = tmp;"
 
         templateBody = wrapObjectTemplate(templateBody, type,
-                                          "${declName} = NULL",
+                                          "${declName} = nullptr",
                                           failureCode)
 
         declType = CGGeneric(declType)
@@ -3066,7 +3066,7 @@ for (uint32_t i = 0; i < length; ++i) {
         elif not isOptional:
             template += "${declName} = ${holderName}.addr();"
         template = wrapObjectTemplate(template, type,
-                                      "%s = NULL" % nullableTarget,
+                                      "%s = nullptr" % nullableTarget,
                                       failureCode)
 
         if holderType is not None:
@@ -5403,7 +5403,7 @@ MOZ_END_ENUM_CLASS(%s)
         strings = """
   const EnumEntry %s[%d] = {
     %s,
-    { NULL, 0 }
+    { nullptr, 0 }
   };
 """ % (ENUM_ENTRY_VARIABLE_NAME, self.nEnumStrings(),
        ",\n    ".join(['{"' + val + '", ' + str(len(val)) + '}' for val in self.enum.values()]))
@@ -6650,7 +6650,7 @@ if (!isXray && (expando = GetExpandoObject(proxy))) {
   }
 }
 """ + namedGet + """
-desc->obj = NULL;
+desc->obj = nullptr;
 return true;"""
 
 class CGDOMJSProxyHandler_defineProperty(ClassMethod):
