@@ -145,6 +145,7 @@ SmsParent::SmsParent()
   }
 
   obs->AddObserver(this, kSmsReceivedObserverTopic, false);
+  obs->AddObserver(this, kSmsRetrievingObserverTopic, false);
   obs->AddObserver(this, kSmsSendingObserverTopic, false);
   obs->AddObserver(this, kSmsSentObserverTopic, false);
   obs->AddObserver(this, kSmsFailedObserverTopic, false);
@@ -161,6 +162,7 @@ SmsParent::ActorDestroy(ActorDestroyReason why)
   }
 
   obs->RemoveObserver(this, kSmsReceivedObserverTopic);
+  obs->RemoveObserver(this, kSmsRetrievingObserverTopic);
   obs->RemoveObserver(this, kSmsSendingObserverTopic);
   obs->RemoveObserver(this, kSmsSentObserverTopic);
   obs->RemoveObserver(this, kSmsFailedObserverTopic);
@@ -180,6 +182,17 @@ SmsParent::Observe(nsISupports* aSubject, const char* aTopic,
     }
 
     unused << SendNotifyReceivedMessage(msgData);
+    return NS_OK;
+  }
+
+  if (!strcmp(aTopic, kSmsRetrievingObserverTopic)) {
+    MobileMessageData msgData;
+    if (!GetMobileMessageDataFromMessage(aSubject, msgData)) {
+      NS_ERROR("Got a 'sms-retrieving' topic without a valid message!");
+      return NS_OK;
+    }
+
+    unused << SendNotifyRetrievingMessage(msgData);
     return NS_OK;
   }
 

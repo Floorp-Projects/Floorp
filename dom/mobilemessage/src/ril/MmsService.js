@@ -28,6 +28,7 @@ const kSmsSendingObserverTopic           = "sms-sending";
 const kSmsSentObserverTopic              = "sms-sent";
 const kSmsFailedObserverTopic            = "sms-failed";
 const kSmsReceivedObserverTopic          = "sms-received";
+const kSmsRetrievingObserverTopic        = "sms-retrieving";
 
 const kNetworkInterfaceStateChangedTopic = "network-interface-state-changed";
 const kXpcomShutdownObserverTopic        = "xpcom-shutdown";
@@ -1039,18 +1040,20 @@ MmsService.prototype = {
   },
 
   /**
-   * @param contentLocation
+   * @param aContentLocation
    *        X-Mms-Content-Location of the message.
-   * @param callback [optional]
+   * @param aCallback [optional]
    *        A callback function that takes two arguments: one for X-Mms-Status,
    *        the other parsed MMS message.
+   * @param aDomMessage
+   *        The nsIDOMMozMmsMessage object.
    */
-  retrieveMessage: function retrieveMessage(contentLocation, callback) {
-    // TODO: bug 810099 - support onretrieving event
-    // TODO: bug 809832 - support customizable max incoming/outgoing message size.
+  retrieveMessage: function retrieveMessage(aContentLocation, aCallback, aDomMessage) {
+    // Notifying observers an MMS message is retrieving.
+    Services.obs.notifyObservers(aDomMessage, kSmsRetrievingObserverTopic, null);
 
-    let transaction = new RetrieveTransaction(contentLocation);
-    transaction.run(callback);
+    let transaction = new RetrieveTransaction(aContentLocation);
+    transaction.run(aCallback);
   },
 
   /**
@@ -1275,7 +1278,8 @@ MmsService.prototype = {
         .saveReceivedMessage(savableMessage,
                              this.saveReceivedMessageCallback.bind(this,
                                                                    retrievalMode,
-                                                                   savableMessage));
+                                                                   savableMessage),
+                             domMessage);
     }).bind(this));
   },
 
