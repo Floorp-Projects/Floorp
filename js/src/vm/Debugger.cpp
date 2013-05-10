@@ -4505,7 +4505,7 @@ DebuggerObject_defineProperties(JSContext *cx, unsigned argc, Value *vp)
         ac.construct(cx, obj);
         RootedId id(cx);
         for (size_t i = 0; i < n; i++) {
-            if (!rewrappedIds.append(jsid()) || !rewrappedDescs.append())
+            if (!rewrappedIds.append(JSID_VOID) || !rewrappedDescs.append())
                 return false;
             id = ids[i];
             if (!unwrappedDescs[i].wrapInto(cx, obj, id, &rewrappedIds[i], &rewrappedDescs[i]))

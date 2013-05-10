@@ -299,3 +299,25 @@ function addTab(url, callback) {
     executeSoon(function() {callback(tab)});
   }, true);
 }
+
+function selectBrowserTab(tab, callback) {
+  if (gBrowser.selectedTab == tab) {
+    executeSoon(function() {callback(tab)});
+    return;
+  }
+  gBrowser.tabContainer.addEventListener("TabSelect", function onTabSelect() {
+    gBrowser.tabContainer.removeEventListener("TabSelect", onTabSelect, false);
+    is(gBrowser.selectedTab, tab, "browser tab is selected");
+    executeSoon(function() {callback(tab)});
+  });
+  gBrowser.selectedTab = tab;
+}
+
+function loadIntoTab(tab, url, callback) {
+  tab.linkedBrowser.addEventListener("load", function tabLoad(event) {
+    tab.linkedBrowser.removeEventListener("load", tabLoad, true);
+    executeSoon(function() {callback(tab)});
+  }, true);
+  tab.linkedBrowser.loadURI(url);
+}
+
