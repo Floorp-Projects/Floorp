@@ -10233,7 +10233,8 @@ nsGlobalWindow::RunTimeoutHandler(nsTimeout* aTimeout,
     JS::CompileOptions options(cx);
     options.setFileAndLine(filename, lineNo)
            .setVersion(JSVERSION_DEFAULT);
-    aScx->EvaluateString(nsDependentString(script), *FastGetGlobalJSObject(),
+    JS::Rooted<JSObject*> global(cx, FastGetGlobalJSObject());
+    aScx->EvaluateString(nsDependentString(script), global,
                          options, /*aCoerceToString = */ false, nullptr);
   } else {
     // Hold strong ref to ourselves while we call the callback.

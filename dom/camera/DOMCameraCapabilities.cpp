@@ -27,7 +27,8 @@ NS_IMPL_ADDREF(DOMCameraCapabilities)
 NS_IMPL_RELEASE(DOMCameraCapabilities)
 
 static nsresult
-ParseZoomRatioItemAndAdd(JSContext* aCx, JSObject* aArray, uint32_t aIndex, const char* aStart, char** aEnd)
+ParseZoomRatioItemAndAdd(JSContext* aCx, JS::Handle<JSObject*> aArray,
+                         uint32_t aIndex, const char* aStart, char** aEnd)
 {
   if (!*aEnd) {
     // make 'aEnd' follow the same semantics as strchr().
@@ -53,7 +54,8 @@ ParseZoomRatioItemAndAdd(JSContext* aCx, JSObject* aArray, uint32_t aIndex, cons
 }
 
 static nsresult
-ParseStringItemAndAdd(JSContext* aCx, JSObject* aArray, uint32_t aIndex, const char* aStart, char** aEnd)
+ParseStringItemAndAdd(JSContext* aCx, JS::Handle<JSObject*> aArray,
+                      uint32_t aIndex, const char* aStart, char** aEnd)
 {
   JSString* s;
 
@@ -75,7 +77,8 @@ ParseStringItemAndAdd(JSContext* aCx, JSObject* aArray, uint32_t aIndex, const c
 }
 
 static nsresult
-ParseDimensionItemAndAdd(JSContext* aCx, JSObject* aArray, uint32_t aIndex, const char* aStart, char** aEnd)
+ParseDimensionItemAndAdd(JSContext* aCx, JS::Handle<JSObject*> aArray,
+                         uint32_t aIndex, const char* aStart, char** aEnd)
 {
   char* x;
 
@@ -84,18 +87,18 @@ ParseDimensionItemAndAdd(JSContext* aCx, JSObject* aArray, uint32_t aIndex, cons
     aEnd = nullptr;
   }
 
-  JS::Value w = INT_TO_JSVAL(strtol(aStart, &x, 10));
-  JS::Value h = INT_TO_JSVAL(strtol(x + 1, aEnd, 10));
+  JS::Rooted<JS::Value> w(aCx, INT_TO_JSVAL(strtol(aStart, &x, 10)));
+  JS::Rooted<JS::Value> h(aCx, INT_TO_JSVAL(strtol(x + 1, aEnd, 10)));
 
-  JSObject* o = JS_NewObject(aCx, nullptr, nullptr, nullptr);
+  JS::Rooted<JSObject*> o(aCx, JS_NewObject(aCx, nullptr, nullptr, nullptr));
   if (!o) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  if (!JS_SetProperty(aCx, o, "width", &w)) {
+  if (!JS_SetProperty(aCx, o, "width", w.address())) {
     return NS_ERROR_FAILURE;
   }
-  if (!JS_SetProperty(aCx, o, "height", &h)) {
+  if (!JS_SetProperty(aCx, o, "height", h.address())) {
     return NS_ERROR_FAILURE;
   }
 
@@ -108,19 +111,22 @@ ParseDimensionItemAndAdd(JSContext* aCx, JSObject* aArray, uint32_t aIndex, cons
 }
 
 nsresult
-DOMCameraCapabilities::ParameterListToNewArray(JSContext* aCx, JSObject** aArray, uint32_t aKey, ParseItemAndAddFunc aParseItemAndAdd)
+DOMCameraCapabilities::ParameterListToNewArray(JSContext* aCx,
+                                               JS::MutableHandle<JSObject*> aArray,
+                                               uint32_t aKey,
+                                               ParseItemAndAddFunc aParseItemAndAdd)
 {
   NS_ENSURE_TRUE(mCamera, NS_ERROR_NOT_AVAILABLE);
 
   const char* value = mCamera->GetParameterConstChar(aKey);
   if (!value) {
     // in case we get nonsense data back
-    *aArray = nullptr;
+    aArray.set(nullptr);
     return NS_OK;
   }
 
-  *aArray = JS_NewArrayObject(aCx, 0, nullptr);
-  if (!*aArray) {
+  aArray.set(JS_NewArrayObject(aCx, 0, nullptr));
+  if (!aArray) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -141,7 +147,7 @@ DOMCameraCapabilities::ParameterListToNewArray(JSContext* aCx, JSObject** aArray
      */
     q = const_cast<char*>(strchr(p, ','));
     if (q != p) { // skip consecutive delimiters, just in case
-      rv = aParseItemAndAdd(aCx, *aArray, index, p, &q);
+      rv = aParseItemAndAdd(aCx, aArray, index, p, &q);
       NS_ENSURE_SUCCESS(rv, rv);
       ++index;
     }
@@ -151,13 +157,13 @@ DOMCameraCapabilities::ParameterListToNewArray(JSContext* aCx, JSObject** aArray
     }
   }
 
-  return JS_FreezeObject(aCx, *aArray) ? NS_OK : NS_ERROR_FAILURE;
+  return JS_FreezeObject(aCx, aArray) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 nsresult
 DOMCameraCapabilities::StringListToNewObject(JSContext* aCx, JS::Value* aArray, uint32_t aKey)
 {
-  JSObject* array;
+  JS::Rooted<JSObject*> array(aCx);
 
   nsresult rv = ParameterListToNewArray(aCx, &array, aKey, ParseStringItemAndAdd);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -169,7 +175,7 @@ DOMCameraCapabilities::StringListToNewObject(JSContext* aCx, JS::Value* aArray, 
 nsresult
 DOMCameraCapabilities::DimensionListToNewObject(JSContext* aCx, JS::Value* aArray, uint32_t aKey)
 {
-  JSObject* array;
+  JS::Rooted<JSObject*> array(aCx);
   nsresult rv;
 
   rv = ParameterListToNewArray(aCx, &array, aKey, ParseDimensionItemAndAdd);
@@ -333,7 +339,7 @@ DOMCameraCapabilities::GetZoomRatios(JSContext* cx, JS::Value* aZoomRatios)
     return NS_OK;
   }
 
-  JSObject* array;
+  JS::Rooted<JSObject*> array(cx);
 
   nsresult rv = ParameterListToNewArray(cx, &array, CAMERA_PARAM_SUPPORTED_ZOOMRATIOS, ParseZoomRatioItemAndAdd);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -357,24 +363,24 @@ DOMCameraCapabilities::GetVideoSizes(JSContext* cx, JS::Value* aVideoSizes)
     return NS_OK;
   }
 
-  JSObject* array = JS_NewArrayObject(cx, 0, nullptr);
+  JS::Rooted<JSObject*> array(cx, JS_NewArrayObject(cx, 0, nullptr));
   if (!array) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
   for (uint32_t i = 0; i < sizes.Length(); ++i) {
-    JSObject* o = JS_NewObject(cx, nullptr, nullptr, nullptr);
-    JS::Value v = INT_TO_JSVAL(sizes[i].width);
-    if (!JS_SetProperty(cx, o, "width", &v)) {
+    JS::Rooted<JSObject*> o(cx, JS_NewObject(cx, nullptr, nullptr, nullptr));
+    JS::Rooted<JS::Value> v(cx, INT_TO_JSVAL(sizes[i].width));
+    if (!JS_SetProperty(cx, o, "width", v.address())) {
       return NS_ERROR_FAILURE;
     }
     v = INT_TO_JSVAL(sizes[i].height);
-    if (!JS_SetProperty(cx, o, "height", &v)) {
+    if (!JS_SetProperty(cx, o, "height", v.address())) {
       return NS_ERROR_FAILURE;
     }
 
     v = OBJECT_TO_JSVAL(o);
-    if (!JS_SetElement(cx, array, i, &v)) {
+    if (!JS_SetElement(cx, array, i, v.address())) {
       return NS_ERROR_FAILURE;
     }
   }
@@ -395,8 +401,8 @@ DOMCameraCapabilities::GetRecorderProfiles(JSContext* cx, JS::Value* aRecorderPr
     return NS_OK;
   }
 
-  JSObject* o = nullptr;  // keeps the compiler from emitting a warning
-  nsresult rv = profileMgr->GetJsObject(cx, &o);
+  JS::Rooted<JSObject*> o(cx);
+  nsresult rv = profileMgr->GetJsObject(cx, o.address());
   NS_ENSURE_SUCCESS(rv, rv);
 
   *aRecorderProfiles = OBJECT_TO_JSVAL(o);
