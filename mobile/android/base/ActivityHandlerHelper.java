@@ -141,7 +141,8 @@ public class ActivityHandlerHelper {
 
     private Intent getFilePickerIntent(Context context, String aMimeType) {
         ArrayList<Intent> intents = new ArrayList<Intent>();
-        PromptService.PromptListItem[] items = getItemsAndIntentsForFilePicker(context, aMimeType, intents);
+        final PromptService.PromptListItem[] items =
+            getItemsAndIntentsForFilePicker(context, aMimeType, intents);
 
         if (intents.size() == 0) {
             Log.i(LOGTAG, "no activities for the file picker!");
@@ -152,17 +153,18 @@ public class ActivityHandlerHelper {
             return intents.get(0);
         }
 
-        Runnable filePicker = new FilePickerPromptRunnable(getFilePickerTitle(context, aMimeType), items);
-        ThreadUtils.postToUiThread(filePicker);
+        final PromptService ps = GeckoApp.mAppContext.getPromptService();
+        final String title = getFilePickerTitle(context, aMimeType);
 
-        String promptServiceResult = "";
-        try {
-            promptServiceResult = PromptService.waitForReturn();
-        } catch (InterruptedException e) {
-            Log.e(LOGTAG, "showing prompt failed: ",  e);
-            return null;
-        }
+        // Runnable has to be called to show an intent-like
+        // context menu UI using the PromptService.
+        ThreadUtils.postToUiThread(new Runnable() {
+            @Override public void run() {
+                ps.show(title, "", items, false);
+            }
+        });
 
+        String promptServiceResult = ps.getResponse();
         int itemId = -1;
         try {
             itemId = new JSONObject(promptServiceResult).getInt("button");
@@ -226,24 +228,5 @@ public class ActivityHandlerHelper {
             return true;
         }
         return false;
-    }
-
-    /**
-     * The FilePickerPromptRunnable has to be called to show an intent-like
-     * context menu UI using the PromptService.
-     */
-    private static class FilePickerPromptRunnable implements Runnable {
-        private final String mTitle;
-        private final PromptService.PromptListItem[] mItems;
-
-        public FilePickerPromptRunnable(String aTitle, PromptService.PromptListItem[] aItems) {
-            mTitle = aTitle;
-            mItems = aItems;
-        }
-
-        @Override
-        public void run() {
-            GeckoApp.mAppContext.getPromptService().show(mTitle, "", mItems, false);
-        }
     }
 }
