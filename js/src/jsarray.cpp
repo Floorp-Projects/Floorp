@@ -47,6 +47,7 @@ using namespace js::types;
 
 using mozilla::ArrayLength;
 using mozilla::DebugOnly;
+using mozilla::IsNaN;
 using mozilla::PointerRangeSize;
 
 JSBool
@@ -1471,7 +1472,7 @@ SortComparatorFunction::operator()(const Value &a, const Value &b, bool *lessOrE
      * 'consistent compare functions' that don't return NaN, but is silent
      * about what the result should be. So we currently ignore it.
      */
-    *lessOrEqualp = (MOZ_DOUBLE_IS_NaN(cmp) || cmp <= 0);
+    *lessOrEqualp = (IsNaN(cmp) || cmp <= 0);
     return true;
 }
 

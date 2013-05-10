@@ -10,8 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-PROGRAM		= ucgendat
-
 CSRCS		= ucgendat.c
 
 # XXX need configure test

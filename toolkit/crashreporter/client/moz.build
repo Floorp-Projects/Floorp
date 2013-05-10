@@ -6,6 +6,8 @@
 
 MODULE = 'crashreporter'
 
+if CONFIG['OS_TARGET'] != 'Android':
+    PROGRAM = 'crashreporter'
 # The xpcshell test case here verifies that the CA certificate list
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk2' and CONFIG['MOZ_PLATFORM_MAEMO']:
     XPCSHELL_TESTS_MANIFESTS += ['maemo-unit/xpcshell.ini']

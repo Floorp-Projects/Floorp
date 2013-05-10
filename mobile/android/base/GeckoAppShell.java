@@ -212,7 +212,7 @@ public class GeckoAppShell
         sendEventToGecko(GeckoEvent.createVisitedEvent(uri));
     }
 
-    public static native void processNextNativeEvent();
+    public static native void processNextNativeEvent(boolean mayWait);
 
     public static native void notifyBatteryChange(double aLevel, boolean aCharging, double aRemainingTime);
 

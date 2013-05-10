@@ -11,12 +11,15 @@
 #include "nsIDOMEventListener.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/Nullable.h"
+#include "nsIAtom.h"
+
 class nsDOMEvent;
 
 namespace mozilla {
 namespace dom {
 
 class EventListener;
+class EventHandlerNonNull;
 
 // IID for the dom::EventTarget interface
 #define NS_EVENTTARGET_IID \
@@ -43,6 +46,24 @@ public:
                                    bool aCapture,
                                    ErrorResult& aRv);
   bool DispatchEvent(nsDOMEvent& aEvent, ErrorResult& aRv);
+
+  EventHandlerNonNull* GetEventHandler(const nsAString& aType)
+  {
+    nsCOMPtr<nsIAtom> type = do_GetAtom(aType);
+    return GetEventHandler(type);
+  }
+
+  void SetEventHandler(const nsAString& aType, EventHandlerNonNull* aHandler,
+                       ErrorResult& rv)
+  {
+    nsCOMPtr<nsIAtom> type = do_GetAtom(aType);
+    return SetEventHandler(type, aHandler, rv);
+  }
+
+protected:
+  EventHandlerNonNull* GetEventHandler(nsIAtom* aType);
+  void SetEventHandler(nsIAtom* aType, EventHandlerNonNull* aHandler,
+                       ErrorResult& rv);
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(EventTarget, NS_EVENTTARGET_IID)

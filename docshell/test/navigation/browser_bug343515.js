@@ -87,6 +87,8 @@ function step1() {
 }
 
 function step2() {
+  is(testPath + "bug343515_pg1.html", ctx.tab1Browser.currentURI.spec,
+     "Got expected tab 1 url in step 2");
 
   // Our current tab should still be active
   ok(isActive(ctx.tab0Window), "Tab 0 should still be active");
@@ -107,6 +109,8 @@ function step2() {
 }
 
 function step3() {
+  is(testPath + "bug343515_pg2.html", ctx.tab2Browser.currentURI.spec,
+     "Got expected tab 2 url in step 3");
 
   // Tab 0 should be inactive, Tab 1 should be active
   ok(!isActive(ctx.tab0Window), "Tab 0 should be inactive");
@@ -115,6 +119,8 @@ function step3() {
   // Tab 2's window _and_ its iframes should be inactive
   ok(!isActive(ctx.tab2Window), "Tab 2 should be inactive");
   is(ctx.tab2Window.frames.length, 2, "Tab 2 should have 2 iframes");
+  for (var i = 0; i < ctx.tab2Window.frames.length; i++)
+    info("step 3, frame " + i + " info: " + ctx.tab2Window.frames[i].location);
   ok(!isActive(ctx.tab2Window.frames[0]), "Tab2 iframe 0 should be inactive");
   ok(!isActive(ctx.tab2Window.frames[1]), "Tab2 iframe 1 should be inactive");
 
@@ -124,6 +130,8 @@ function step3() {
 }
 
 function step4() {
+  is(testPath + "bug343515_pg3.html", ctx.tab2Browser.currentURI.spec,
+     "Got expected tab 2 url in step 4");
 
   // Tab 0 should be inactive, Tab 1 should be active
   ok(!isActive(ctx.tab0Window), "Tab 0 should be inactive");
@@ -132,6 +140,8 @@ function step4() {
   // Tab2 and all descendants should be inactive
   ok(!isActive(ctx.tab2Window), "Tab 2 should be inactive");
   is(ctx.tab2Window.frames.length, 2, "Tab 2 should have 2 iframes");
+  for (var i = 0; i < ctx.tab2Window.frames.length; i++)
+    info("step 4, frame " + i + " info: " + ctx.tab2Window.frames[i].location);
   is(ctx.tab2Window.frames[0].frames.length, 1, "Tab 2 iframe 0 should have 1 iframes");
   ok(!isActive(ctx.tab2Window.frames[0]), "Tab2 iframe 0 should be inactive");
   ok(!isActive(ctx.tab2Window.frames[0].frames[0]), "Tab2 iframe 0 subiframe 0 should be inactive");

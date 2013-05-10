@@ -308,15 +308,13 @@ js::RunScript(JSContext *cx, StackFrame *fp)
     if (fp->isFunctionFrame() && fp->isConstructing() && !fp->isGeneratorFrame() &&
         cx->typeInferenceEnabled())
     {
-        StackIter iter(cx);
+        ScriptFrameIter iter(cx);
         if (!iter.done()) {
             ++iter;
-            if (iter.isScript()) {
-                JSScript *script = iter.script();
-                jsbytecode *pc = iter.pc();
-                if (UseNewType(cx, script, pc))
-                    fp->setUseNewType();
-            }
+            JSScript *script = iter.script();
+            jsbytecode *pc = iter.pc();
+            if (UseNewType(cx, script, pc))
+                fp->setUseNewType();
         }
     }
 
@@ -392,7 +390,7 @@ js::RunScript(JSContext *cx, StackFrame *fp)
  * when done.  Then push the return value.
  */
 bool
-js::InvokeKernel(JSContext *cx, CallArgs args, MaybeConstruct construct)
+js::Invoke(JSContext *cx, CallArgs args, MaybeConstruct construct)
 {
     JS_ASSERT(args.length() <= StackSpace::ARGS_LENGTH_MAX);
     JS_ASSERT(!cx->compartment->activeAnalysis);
@@ -480,7 +478,7 @@ js::Invoke(JSContext *cx, const Value &thisv, const Value &fval, unsigned argc, 
 }
 
 bool
-js::InvokeConstructorKernel(JSContext *cx, CallArgs args)
+js::InvokeConstructor(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(!FunctionClass.construct);
 
@@ -501,7 +499,7 @@ js::InvokeConstructorKernel(JSContext *cx, CallArgs args)
         if (!fun->isInterpretedConstructor())
             return ReportIsNotFunction(cx, args.calleev().get(), args.length() + 1, CONSTRUCT);
 
-        if (!InvokeKernel(cx, args, CONSTRUCT))
+        if (!Invoke(cx, args, CONSTRUCT))
             return false;
 
         JS_ASSERT(args.rval().isObject());
@@ -729,13 +727,13 @@ js::StrictlyEqual(JSContext *cx, const Value &lref, const Value &rref, bool *equ
 static inline bool
 IsNegativeZero(const Value &v)
 {
-    return v.isDouble() && MOZ_DOUBLE_IS_NEGATIVE_ZERO(v.toDouble());
+    return v.isDouble() && mozilla::IsNegativeZero(v.toDouble());
 }
 
 static inline bool
 IsNaN(const Value &v)
 {
-    return v.isDouble() && MOZ_DOUBLE_IS_NaN(v.toDouble());
+    return v.isDouble() && mozilla::IsNaN(v.toDouble());
 }
 
 bool
@@ -2342,7 +2340,7 @@ BEGIN_CASE(JSOP_EVAL)
         if (!DirectEval(cx, args))
             goto error;
     } else {
-        if (!InvokeKernel(cx, args))
+        if (!Invoke(cx, args))
             goto error;
     }
     regs.sp = args.spAfterCall();
@@ -2389,10 +2387,10 @@ BEGIN_CASE(JSOP_FUNCALL)
     /* Don't bother trying to fast-path calls to scripted non-constructors. */
     if (!isFunction || !fun->isInterpretedConstructor()) {
         if (construct) {
-            if (!InvokeConstructorKernel(cx, args))
+            if (!InvokeConstructor(cx, args))
                 goto error;
         } else {
-            if (!InvokeKernel(cx, args))
+            if (!Invoke(cx, args))
                 goto error;
         }
         Value *newsp = args.spAfterCall();
@@ -2635,7 +2633,7 @@ BEGIN_CASE(JSOP_TABLESWITCH)
         i = rref.toInt32();
     } else {
         double d;
-        /* Don't use MOZ_DOUBLE_IS_INT32; treat -0 (double) as 0. */
+        /* Don't use mozilla::DoubleIsInt32; treat -0 (double) as 0. */
         if (!rref.isDouble() || (d = rref.toDouble()) != (i = int32_t(rref.toDouble())))
             DO_NEXT_OP(len);
     }

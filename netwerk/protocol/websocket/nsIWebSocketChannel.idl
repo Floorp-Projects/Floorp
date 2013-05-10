@@ -19,7 +19,7 @@ interface nsIInputStream;
  * We are also making it scriptable for now, but this may change once we have
  * WebSockets for Workers.
  */
-[scriptable, uuid(0683E9A4-994D-11E1-9478-1E356188709B)]
+[scriptable, uuid(9ee5874c-ec39-4bc2-b2d7-194a4c98c9d2)]
 interface nsIWebSocketChannel : nsISupports
 {
     /**

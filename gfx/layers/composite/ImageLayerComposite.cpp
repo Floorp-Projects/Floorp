@@ -90,6 +90,34 @@ ImageLayerComposite::RenderLayer(const nsIntPoint& aOffset,
                         clipRect);
 }
 
+void 
+ImageLayerComposite::ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface)
+{
+  gfx3DMatrix local = GetLocalTransform();
+
+  // Snap image edges to pixel boundaries
+  gfxRect sourceRect(0, 0, 0, 0);
+  if (mImageHost && mImageHost->GetTextureHost()) {
+    IntSize size = mImageHost->GetTextureHost()->GetSize();
+    sourceRect.SizeTo(size.width, size.height);
+    if (mScaleMode != SCALE_NONE &&
+        sourceRect.width != 0.0 && sourceRect.height != 0.0) {
+      NS_ASSERTION(mScaleMode == SCALE_STRETCH,
+                   "No other scalemodes than stretch and none supported yet.");
+      local.Scale(mScaleToSize.width / sourceRect.width,
+                  mScaleToSize.height / sourceRect.height, 1.0);
+    }
+  }
+  // Snap our local transform first, and snap the inherited transform as well.
+  // This makes our snapping equivalent to what would happen if our content
+  // was drawn into a ThebesLayer (gfxContext would snap using the local
+  // transform, then we'd snap again when compositing the ThebesLayer).
+  mEffectiveTransform =
+      SnapTransform(local, sourceRect, nullptr) *
+      SnapTransformTranslation(aTransformToSurface, nullptr);
+  ComputeEffectiveTransformForMaskLayer(aTransformToSurface);
+}
+
 CompositableHost*
 ImageLayerComposite::GetCompositableHost() {
   return mImageHost.get();

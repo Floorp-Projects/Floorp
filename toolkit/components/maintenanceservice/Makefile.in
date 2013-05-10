@@ -21,7 +21,6 @@ CPPSRCS = \
 # For debugging purposes only
 #DEFINES += -DDISABLE_UPDATER_AUTHENTICODE_CHECK
 
-PROGRAM = maintenanceservice$(BIN_SUFFIX)
 DIST_PROGRAM = maintenanceservice$(BIN_SUFFIX)
 
 # Don't link the maintenanceservice against mozglue.dll. See bug 687139 and

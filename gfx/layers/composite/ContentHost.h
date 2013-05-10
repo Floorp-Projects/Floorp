@@ -37,6 +37,8 @@ public:
 #ifdef MOZ_DUMP_PAINTING
   virtual already_AddRefed<gfxImageSurface> Dump() { return nullptr; }
 #endif
+  
+  virtual void SetPaintWillResample(bool aResample) { }
 
 protected:
   ContentHost(const TextureInfo& aTextureInfo)
@@ -99,7 +101,7 @@ public:
 
   virtual TextureHost* GetTextureHost() MOZ_OVERRIDE;
 
-  void SetPaintWillResample(bool aResample) { mPaintWillResample = aResample; }
+  virtual void SetPaintWillResample(bool aResample) { mPaintWillResample = aResample; }
   // The client has destroyed its texture clients and we should destroy our
   // texture hosts and SurfaceDescriptors. Note that we don't immediately
   // destroy our front buffer so that we can continue to composite.

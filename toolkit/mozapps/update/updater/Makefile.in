@@ -22,8 +22,6 @@ CPPSRCS += \
   $(NULL)
 endif
 
-PROGRAM = updater$(BIN_SUFFIX)
-
 # Don't link the updater against libmozglue. See bug 687139
 MOZ_GLUE_LDFLAGS =
 MOZ_GLUE_PROGRAM_LDFLAGS =

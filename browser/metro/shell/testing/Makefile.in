@@ -23,8 +23,6 @@ include $(topsrcdir)/config/config.mk
 # We want this exe in dist/bin
 DIST_SUBDIR =
 
-PROGRAM = metrotestharness$(BIN_SUFFIX)
-
 CPPSRCS	= \
 	metrotestharness.cpp \
 	$(NULL)

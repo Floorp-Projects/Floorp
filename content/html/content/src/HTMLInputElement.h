@@ -581,7 +581,7 @@ public:
   double ValueAsNumber() const
   {
     return DoesValueAsNumberApply() ? GetValueAsDecimal().toDouble()
-                                    : MOZ_DOUBLE_NaN();
+                                    : UnspecifiedNaN();
   }
 
   void SetValueAsNumber(double aValue, ErrorResult& aRv);

@@ -324,6 +324,7 @@ typedef NSInteger NSEventGestureAxis;
 - (BOOL)isInFailingLeftClickThrough;
 
 - (void)setGLContext:(NSOpenGLContext *)aGLContext;
+- (void)preRender:(NSOpenGLContext *)aGLContext;
 
 // Simple gestures support
 //
@@ -517,6 +518,7 @@ public:
   virtual gfxASurface* GetThebesSurface();
   virtual void PrepareWindowEffects() MOZ_OVERRIDE;
   virtual void CleanupWindowEffects() MOZ_OVERRIDE;
+  virtual void PreRender(LayerManager* aManager) MOZ_OVERRIDE;
   virtual void DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect) MOZ_OVERRIDE;
 
   virtual void UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries);

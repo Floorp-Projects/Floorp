@@ -89,6 +89,39 @@ MmsMessage::MmsMessage(const mobilemessage::MmsMessageData& aData)
   }
 }
 
+/**
+ * A helper function to convert the JS value to an integer value for time.
+ *
+ * @params aCx
+ *         The JS context.
+ * @params aTime
+ *         Can be an object or a number.
+ * @params aReturn
+ *         The integer value to return.
+ * @return NS_OK if the convertion succeeds.
+ */
+static nsresult
+convertTimeToInt(JSContext* aCx, const JS::Value& aTime, uint64_t& aReturn)
+{
+  if (aTime.isObject()) {
+    JSObject* timestampObj = &aTime.toObject();
+    if (!JS_ObjectIsDate(aCx, timestampObj)) {
+      return NS_ERROR_INVALID_ARG;
+    }
+    aReturn = js_DateGetMsecSinceEpoch(timestampObj);
+  } else {
+    if (!aTime.isNumber()) {
+      return NS_ERROR_INVALID_ARG;
+    }
+    double number = aTime.toNumber();
+    if (static_cast<uint64_t>(number) != number) {
+      return NS_ERROR_INVALID_ARG;
+    }
+    aReturn = static_cast<uint64_t>(number);
+  }
+  return NS_OK;
+}
+
 /* static */ nsresult
 MmsMessage::Create(int32_t               aId,
                    const uint64_t        aThreadId,
@@ -188,22 +221,8 @@ MmsMessage::Create(int32_t               aId,
 
   // Set |timestamp|.
   uint64_t timestamp;
-  if (aTimestamp.isObject()) {
-    JSObject* timestampObj = &aTimestamp.toObject();
-    if (!JS_ObjectIsDate(aCx, timestampObj)) {
-      return NS_ERROR_INVALID_ARG;
-    }
-    timestamp = js_DateGetMsecSinceEpoch(timestampObj);
-  } else {
-    if (!aTimestamp.isNumber()) {
-      return NS_ERROR_INVALID_ARG;
-    }
-    double number = aTimestamp.toNumber();
-    if (static_cast<uint64_t>(number) != number) {
-      return NS_ERROR_INVALID_ARG;
-    }
-    timestamp = static_cast<uint64_t>(number);
-  }
+  nsresult rv = convertTimeToInt(aCx, aTimestamp, timestamp);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Set |attachments|.
   if (!aAttachments.isObject()) {
@@ -224,7 +243,7 @@ MmsMessage::Create(int32_t               aId,
     }
 
     MmsAttachment attachment;
-    nsresult rv = attachment.Init(aCx, &attachmentJsVal);
+    rv = attachment.Init(aCx, &attachmentJsVal);
     NS_ENSURE_SUCCESS(rv, rv);
 
     attachments.AppendElement(attachment);
@@ -232,22 +251,8 @@ MmsMessage::Create(int32_t               aId,
 
   // Set |expiryDate|.
   uint64_t expiryDate;
-  if (aExpiryDate.isObject()) {
-    JSObject* expiryDateObj = &aExpiryDate.toObject();
-    if (!JS_ObjectIsDate(aCx, expiryDateObj)) {
-      return NS_ERROR_INVALID_ARG;
-    }
-    expiryDate = js_DateGetMsecSinceEpoch(expiryDateObj);
-  } else {
-    if (!aExpiryDate.isNumber()) {
-      return NS_ERROR_INVALID_ARG;
-    }
-    double number = aExpiryDate.toNumber();
-    if (static_cast<uint64_t>(number) != number) {
-      return NS_ERROR_INVALID_ARG;
-    }
-    expiryDate = static_cast<uint64_t>(number);
-  }
+  rv = convertTimeToInt(aCx, aExpiryDate, expiryDate);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDOMMozMmsMessage> message = new MmsMessage(aId,
                                                          aThreadId,

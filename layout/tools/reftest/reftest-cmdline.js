@@ -76,7 +76,11 @@ RefTestCmdLineHandler.prototype =
     var prefs = Components.classes["@mozilla.org/preferences-service;1"].
                 getService(Components.interfaces.nsIPrefService);
     var branch = prefs.getDefaultBranch("");
-    branch.setBoolPref("dom.use_xbl_scopes_for_remote_xul", true);
+    // For mochitests, we're more interested in testing the behavior of in-
+    // content XBL bindings, so we set this pref to true. In reftests, we're
+    // more interested in testing the behavior of XBL as it works in chrome,
+    // so we want this pref to be false.
+    branch.setBoolPref("dom.use_xbl_scopes_for_remote_xul", false);
     branch.setBoolPref("gfx.color_management.force_srgb", true);
     branch.setBoolPref("browser.dom.window.dump.enabled", true);
     branch.setIntPref("ui.caretBlinkTime", -1);
