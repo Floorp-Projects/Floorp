@@ -80,7 +80,8 @@ Tools.webConsole = {
   ordinal: 1,
   icon: "chrome://browser/skin/devtools/tool-webconsole.png",
   url: "chrome://browser/content/devtools/webconsole.xul",
-  label: l10n("ToolboxWebconsole.label", webConsoleStrings),
+  label: l10n("ToolboxTabWebconsole.label", webConsoleStrings),
+  menuLabel: l10n("MenuWebconsole.label", webConsoleStrings),
   tooltip: l10n("ToolboxWebconsole.tooltip", webConsoleStrings),
 
   isTargetSupported: function(target) {
