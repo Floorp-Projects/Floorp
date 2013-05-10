@@ -63,15 +63,23 @@ this.SideMenuWidget = function SideMenuWidget(aNode, aShowArrows = true) {
 
 SideMenuWidget.prototype = {
   /**
+   * Specifies if groups in this container should be sorted alphabetically.
+   */
+  sortedGroups: true,
+
+  /**
    * Specifies if this container should try to keep the selected item visible.
    * (For example, when new items are added the selection is brought into view).
    */
   maintainSelectionVisible: true,
 
   /**
-   * Specifies if groups in this container should be sorted alphabetically.
+   * Specifies that the container viewport should be "stuck" to the
+   * bottom. That is, the container is automatically scrolled down to
+   * keep appended items visible, but only when the scroll position is
+   * already at the bottom.
    */
-  sortedGroups: true,
+  autoscrollWithAppendedItems: false,
 
   /**
    * Inserts an item in this container at the specified index, optionally
@@ -92,13 +100,23 @@ SideMenuWidget.prototype = {
     // Invalidate any notices set on this widget.
     this.removeAttribute("notice");
 
-    if (this.maintainSelectionVisible) {
-      this.ensureSelectionIsVisible({ withGroup: true, delayed: true });
-    }
+    let maintainScrollAtBottom =
+      this.autoscrollWithAppendedItems &&
+      (aIndex < 0 || aIndex >= this._orderedMenuElementsArray.length) &&
+      (this._list.scrollTop + this._list.clientHeight >= this._list.scrollHeight);
 
     let group = this._getGroupForName(aGroup);
     let item = this._getItemForGroup(group, aContents, aTooltip);
-    return item.insertSelfAt(aIndex);
+    let element = item.insertSelfAt(aIndex);
+
+    if (this.maintainSelectionVisible) {
+      this.ensureSelectionIsVisible({ withGroup: true, delayed: true });
+    }
+    if (maintainScrollAtBottom) {
+      this._list.scrollTop = this._list.scrollHeight;
+    }
+
+    return element;
   },
 
   /**

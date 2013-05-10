@@ -1,0 +1,36 @@
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Network Monitor test page</title>
+  </head>
+
+  <body>
+    <p>Infinite GETs</p>
+
+    <script type="text/javascript">
+      function get(aAddress, aCallback) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", aAddress, true);
+
+        xhr.onreadystatechange = function() {
+          if (this.readyState == this.DONE) {
+            aCallback();
+          }
+        };
+        xhr.send(null);
+      }
+
+      // Use a count parameter to defeat caching.
+      var count = 0;
+
+      function performRequests() {
+        get("request_" + (count++), function() {
+          setTimeout(performRequests, 0);
+        });
+      }
+    </script>
+  </body>
+
+</html>

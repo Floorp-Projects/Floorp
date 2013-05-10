@@ -12,6 +12,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_BROWSER_TESTS = \
 	browser_net_aaa_leaktest.js \
+	browser_net_autoscroll.js \
 	browser_net_simple-init.js \
 	browser_net_page-nav.js \
 	browser_net_prefs-and-l10n.js \
@@ -44,6 +45,7 @@ MOCHITEST_BROWSER_PAGES = \
 	html_jsonp-test-page.html \
 	html_json-long-test-page.html \
 	html_sorting-test-page.html \
+	html_infinite-get-page.html \
 	sjs_simple-test-server.sjs \
 	sjs_content-type-test-server.sjs \
 	sjs_status-codes-test-server.sjs \

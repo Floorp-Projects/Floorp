@@ -21,6 +21,7 @@ const POST_DATA_URL = EXAMPLE_URL + "html_post-data-test-page.html";
 const JSONP_URL = EXAMPLE_URL + "html_jsonp-test-page.html";
 const JSON_LONG_URL = EXAMPLE_URL + "html_json-long-test-page.html";
 const SORTING_URL = EXAMPLE_URL + "html_sorting-test-page.html";
+const INFINITE_GET_URL = EXAMPLE_URL + "html_infinite-get-page.html";
 
 const SIMPLE_SJS = EXAMPLE_URL + "sjs_simple-test-server.sjs";
 const CONTENT_TYPE_SJS = EXAMPLE_URL + "sjs_content-type-test-server.sjs";
