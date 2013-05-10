@@ -186,7 +186,7 @@ public class HistoryTab extends AwesomeBarTab {
             String url = (String) historyItem.get(URLColumns.URL);
 
             updateTitle(viewHolder.titleView, title, url);
-            updateUrl(viewHolder.urlView, url);
+            updateUrl(viewHolder, url);
 
             byte[] b = (byte[]) historyItem.get(URLColumns.FAVICON);
             Bitmap favicon = null;

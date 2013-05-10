@@ -523,7 +523,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
                     throw new IllegalStateException("Couldn't move cursor to position " + position);
 
                 updateTitle(viewHolder.titleView, cursor);
-                updateUrl(viewHolder.urlView, cursor);
+                updateUrl(viewHolder, cursor);
                 updateBookmarkIcon(viewHolder.bookmarkIconView, cursor);
                 displayFavicon(viewHolder);
             }
@@ -911,13 +911,18 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
     }
 
     private void displayFavicon(AwesomeEntryViewHolder viewHolder) {
-        final String url = viewHolder.urlView.getText().toString();
+        final String url = viewHolder.url;
         Bitmap bitmap = Favicons.getInstance().getFaviconFromMemCache(url);
         updateFavicon(viewHolder.faviconView, bitmap, url);
     }
 
     private void updateFavicons() {
         ListView listView = getListView();
+        AwesomeBarCursorAdapter adapter = getCursorAdapter();
+        Cursor cursor = adapter.getCursor();
+        if (cursor == null)
+            return;
+
         for (int i = 0; i < listView.getChildCount(); i++) {
             final View view = listView.getChildAt(i);
             final Object tag = view.getTag();
