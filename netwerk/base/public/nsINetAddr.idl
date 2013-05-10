@@ -6,13 +6,18 @@
 
 #include "nsISupports.idl"
 
+%{ C++
+#include "mozilla/net/DNS.h"
+%}
+native NetAddr(mozilla::net::NetAddr);
+
 /**
  * nsINetAddr
  *
  * This interface represents a native NetAddr struct in a readonly
  * interface.
  */
-[scriptable, uuid(4f7c40b0-fc7d-42a4-a642-1b2a703c10f6)]
+[scriptable, uuid(652B9EC5-D159-45D7-9127-50BB559486CD)]
 interface nsINetAddr : nsISupports
 {
     /**
@@ -71,4 +76,9 @@ interface nsINetAddr : nsISupports
     const unsigned long FAMILY_INET = 1;
     const unsigned long FAMILY_INET6 = 2;
     const unsigned long FAMILY_LOCAL = 3;
+
+    /**
+     * @return the underlying NetAddr struct.
+     */
+    [noscript] NetAddr getNetAddr();
 };
