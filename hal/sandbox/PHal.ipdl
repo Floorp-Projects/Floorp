@@ -64,10 +64,10 @@ struct SwitchEvent {
 };
 
 struct WakeLockInformation {
+  nsString topic;
   uint32_t numLocks;
   uint32_t numHidden;
   uint64_t[] lockingProcesses;
-  nsString topic;
 };
 
 struct ScreenConfiguration {
