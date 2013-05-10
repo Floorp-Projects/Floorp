@@ -11,7 +11,6 @@
 #include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
 #include "nsTextFormatter.h"
-#include "nsCycleCollectorUtils.h"
 
 // NOTE: much of the fancy footwork is done in xpcstubs.cpp
 
@@ -151,8 +150,6 @@ nsXPCWrappedJS::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 nsrefcnt
 nsXPCWrappedJS::AddRef(void)
 {
-    if (!MOZ_LIKELY(NS_IsMainThread() || NS_IsCycleCollectorThread()))
-        MOZ_CRASH();
     nsrefcnt cnt = NS_AtomicIncrementRefcnt(mRefCnt);
     NS_LOG_ADDREF(this, cnt, "nsXPCWrappedJS", sizeof(*this));
 
@@ -167,8 +164,6 @@ nsXPCWrappedJS::AddRef(void)
 nsrefcnt
 nsXPCWrappedJS::Release(void)
 {
-    if (!MOZ_LIKELY(NS_IsMainThread() || NS_IsCycleCollectorThread()))
-        MOZ_CRASH();
     NS_PRECONDITION(0 != mRefCnt, "dup release");
 
     if (mMainThreadOnly && !NS_IsMainThread()) {
@@ -282,10 +277,6 @@ nsXPCWrappedJS::GetNewOrUsed(JSContext* cx,
                              nsISupports* aOuter,
                              nsXPCWrappedJS** wrapperResult)
 {
-    // Do a release-mode assert against accessing nsXPCWrappedJS off-main-thread.
-    if (!MOZ_LIKELY(NS_IsMainThread() || NS_IsCycleCollectorThread()))
-        MOZ_CRASH();
-
     JS::RootedObject jsObj(cx, aJSObj);
     JSObject2WrappedJSMap* map;
     nsXPCWrappedJS* root = nullptr;
@@ -568,10 +559,6 @@ nsXPCWrappedJS::CallMethod(uint16_t methodIndex,
                            const XPTMethodDescriptor* info,
                            nsXPTCMiniVariant* params)
 {
-    // Do a release-mode assert against accessing nsXPCWrappedJS off-main-thread.
-    if (!MOZ_LIKELY(NS_IsMainThread() || NS_IsCycleCollectorThread()))
-        MOZ_CRASH();
-
     if (!IsValid())
         return NS_ERROR_UNEXPECTED;
     if (NS_IsMainThread() != mMainThread) {
