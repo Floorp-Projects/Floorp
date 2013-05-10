@@ -10,6 +10,7 @@
 #include "mozilla/dom/indexedDB/IndexedDatabase.h"
 
 #include "nsIIndexedDatabaseManager.h"
+#include "nsIObserver.h"
 
 #include "mozilla/Mutex.h"
 #include "nsClassHashtable.h"
@@ -31,11 +32,13 @@ BEGIN_INDEXEDDB_NAMESPACE
 
 class FileManager;
 
-class IndexedDatabaseManager MOZ_FINAL : public nsIIndexedDatabaseManager
+class IndexedDatabaseManager MOZ_FINAL : public nsIIndexedDatabaseManager,
+                                         public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIINDEXEDDATABASEMANAGER
+  NS_DECL_NSIOBSERVER
 
   // Returns a non-owning reference.
   static IndexedDatabaseManager*
@@ -59,6 +62,16 @@ public:
 #else
   {
     return sIsMainProcess;
+  }
+#endif
+
+  static bool
+  InLowDiskSpaceMode()
+#ifdef DEBUG
+  ;
+#else
+  {
+    return !!sLowDiskSpaceMode;
   }
 #endif
 
@@ -121,6 +134,7 @@ private:
   mozilla::Mutex mFileMutex;
 
   static bool sIsMainProcess;
+  static int32_t sLowDiskSpaceMode;
 };
 
 END_INDEXEDDB_NAMESPACE
