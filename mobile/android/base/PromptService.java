@@ -48,7 +48,7 @@ import android.widget.TimePicker;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
-import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 
 public class PromptService implements OnClickListener, OnCancelListener, OnItemClickListener, GeckoEventResponder {
@@ -60,7 +60,7 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
     private AlertDialog mDialog;
 
     private final LayoutInflater mInflater;
-    private final SynchronousQueue<String> mPromptQueue;
+    private final ConcurrentLinkedQueue<String> mPromptQueue;
     private final int mGroupPaddingSize;
     private final int mLeftRightTextWithIconPadding;
     private final int mTopBottomTextWithIconPadding;
@@ -71,7 +71,7 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
 
     PromptService() {
         mInflater = LayoutInflater.from(GeckoApp.mAppContext);
-        mPromptQueue = new SynchronousQueue<String>();
+        mPromptQueue = new ConcurrentLinkedQueue<String>();
 
         Resources res = GeckoApp.mAppContext.getResources();
         mGroupPaddingSize = (int) (res.getDimension(R.dimen.prompt_service_group_padding_size));
@@ -286,14 +286,11 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
     public String getResponse() {
         // we only handle one kind of message in handleMessage, and this is the
         // response we provide for that message
-        String result = null;
-        try {
-            while (null == (result = mPromptQueue.poll(1, TimeUnit.MILLISECONDS))) {
-                GeckoAppShell.processNextNativeEvent(false);
-            }
-        } catch (InterruptedException e) {
+        String result;
+        while (null == (result = mPromptQueue.poll())) {
+            GeckoAppShell.processNextNativeEvent(true);
         }
-        return result != null ? result : "";
+        return result;
     }
 
     private View applyInputStyle(View view) {
@@ -459,14 +456,9 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
         mButtons = null;
         mDialog = null;
         mSelected = null;
-        try {
-            if (!mPromptQueue.offer(aReturn, 5, TimeUnit.SECONDS)) {
-                ThreadUtils.dumpAllStackTraces();
-                throw new ThreadUtils.UiThreadBlockedException();
-            }
-        } catch(InterruptedException ex) {
-            Log.d(LOGTAG, "mPromptQueue not ready yet");
-        }
+        mPromptQueue.offer(aReturn);
+        // poke the Gecko thread in case it's waiting for new events
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createNoOpEvent());
     }
 
     private void processMessage(JSONObject geckoObject) {
