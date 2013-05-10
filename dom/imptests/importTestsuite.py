@@ -20,9 +20,23 @@ import sys
 import parseManifest
 import writeBuildFiles
 
-def parseManifestFile(dest, dir):
-    subdirs, mochitests, _, __, supportfiles = parseManifest.parseManifestFile("hg-%s/%s/MANIFEST" % (dest, dir))
-    return subdirs, mochitests, supportfiles
+def readManifests(iden, dirs):
+    def parseManifestFile(iden, path):
+        pathstr = "hg-%s/%s/MANIFEST" % (iden, path)
+        subdirs, mochitests, _, __, supportfiles = parseManifest.parseManifestFile(pathstr)
+        return subdirs, mochitests, supportfiles
+
+    data = []
+    for path in dirs:
+        subdirs, mochitests, supportfiles = parseManifestFile(iden, path)
+        data.append({
+          "path": path,
+          "mochitests": mochitests,
+          "supportfiles": supportfiles,
+        })
+        data.extend(readManifests(iden, ["%s/%s" % (path, d) for d in subdirs]))
+    return data
+
 
 def getData(confFile):
     """This function parses a file of the form
@@ -56,24 +70,16 @@ def copy(dest, directories):
     """Copy mochitests and support files from the external HG directory to their
     place in mozilla-central.
     """
-    print("Copying %s..." % directories)
+    print("Copying tests...")
     for d in directories:
-        subdirs, mochitests, supportfiles = parseManifestFile(dest, d)
-        sourcedir = makePath("hg-%s" % dest, d)
-        destdir = makePath(dest, d)
+        sourcedir = makePath("hg-%s" % dest, d["path"])
+        destdir = makePath(dest, d["path"])
         os.makedirs(destdir)
 
-        for mochitest in mochitests:
+        for mochitest in d["mochitests"]:
             shutil.copy("%s/%s" % (sourcedir, mochitest), "%s/test_%s" % (destdir, mochitest))
-        for support in supportfiles:
+        for support in d["supportfiles"]:
             shutil.copy("%s/%s" % (sourcedir, support), "%s/%s" % (destdir, support))
-
-        if len(subdirs):
-            if d:
-                importDirs(dest, ["%s/%s" % (d, subdir) for subdir in subdirs])
-            else:
-                # Empty directory, i.e., the repository root
-                importDirs(dest, subdirs)
 
 def printMozbuildFile(dest, directories):
     """Create a .mozbuild file to be included into the main moz.build, which
@@ -82,7 +88,7 @@ def printMozbuildFile(dest, directories):
     print("Creating mozbuild...")
     path = dest + ".mozbuild"
     with open(path, 'w') as fh:
-        normalized = [makePath(dest, d) for d in directories]
+        normalized = [makePath(dest, d["path"]) for d in directories]
         result = writeBuildFiles.substMozbuild("importTestsuite.py",
             normalized)
         fh.write(result)
@@ -94,22 +100,17 @@ def printBuildFiles(dest, directories):
     """
     print("Creating build files...")
     for d in directories:
-        path = makePath(dest, d)
-        print("Creating Makefile.in in %s..." % path)
+        path = makePath(dest, d["path"])
 
-        subdirs, mochitests, supportfiles = parseManifestFile(dest, d)
-
-        files = ["test_%s" % (mochitest, ) for mochitest in mochitests]
-        files.extend(supportfiles)
+        files = ["test_%s" % (mochitest, ) for mochitest in d["mochitests"]]
+        files.extend(d["supportfiles"])
 
         with open(path + "/Makefile.in", "w") as fh:
             result = writeBuildFiles.substMakefile("importTestsuite.py", files)
             fh.write(result)
 
-        print("Creating moz.build in %s..." % path)
         with open(path + "/moz.build", "w") as fh:
-            result = writeBuildFiles.substMozbuild("importTestsuite.py",
-                subdirs)
+            result = writeBuildFiles.substMozbuild("importTestsuite.py", [])
             fh.write(result)
 
 
@@ -118,10 +119,6 @@ def hgadd(dest, directories):
     print("hg addremoving...")
     for d in directories:
         subprocess.check_call(["hg", "addremove", "%s/%s" % (dest, d)])
-
-def importDirs(dest, directories):
-    copy(dest, directories)
-    printBuildFiles(dest, directories)
 
 def removeAndCloneRepo(vcs, url, dest):
     """Replaces the repo at dest by a fresh clone from url using vcs"""
@@ -144,9 +141,12 @@ def importRepo(confFile):
 
         removeAndCloneRepo(vcs, url, hgdest)
 
-        print("Going to import %s..." % directories)
-        importDirs(dest, directories)
-        printMozbuildFile(dest, directories)
+        data = readManifests(iden, directories)
+        print("Going to import %s..." % [d["path"] for d in data])
+
+        copy(dest, data)
+        printBuildFiles(dest, data)
+        printMozbuildFile(dest, data)
         hgadd(dest, directories)
         print("Removing %s again..." % hgdest)
         subprocess.check_call(["rm", "-rf", hgdest])
