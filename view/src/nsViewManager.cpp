@@ -1036,13 +1036,6 @@ nsViewManager::SetViewZIndex(nsView *aView, bool aAutoZIndex, int32_t aZIndex, b
   }
 }
 
-void
-nsViewManager::GetDeviceContext(nsDeviceContext *&aContext)
-{
-  aContext = mContext;
-  NS_IF_ADDREF(aContext);
-}
-
 nsViewManager*
 nsViewManager::IncrementDisableRefreshCount()
 {

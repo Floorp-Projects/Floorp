@@ -10,9 +10,7 @@ relativesrcdir := @relativesrcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_FILES := \
-  test_document.body-getter-body-and-frameset.html \
-  test_document.body-getter-foreign-frameset.html \
-  test_document.body-getter-frameset-and-body.html \
+  test_document.body-getter.html \
   test_document.body-setter-01.html \
   test_document.embeds-document.plugins-01.html \
   test_Document.getElementsByClassName-null-undef.html \
@@ -28,6 +26,11 @@ MOCHITEST_FILES := \
   test_document.title-07.html \
   test_Element.getElementsByClassName-null-undef.html \
   test_nameditem-01.html \
+  test_nameditem-02.html \
+  test_nameditem-03.html \
+  test_nameditem-04.html \
+  test_nameditem-05.html \
+  test_nameditem-06.html \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

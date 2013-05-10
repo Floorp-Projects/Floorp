@@ -10,11 +10,16 @@ relativesrcdir := @relativesrcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_FILES := \
-  test_document.body-getter-frameset-and-body.html.json \
+  test_document.body-getter.html.json \
   test_document.title-03.html.json \
   test_document.title-04.xhtml.json \
   test_document.title-06.html.json \
   test_document.title-07.html.json \
+  test_nameditem-02.html.json \
+  test_nameditem-03.html.json \
+  test_nameditem-04.html.json \
+  test_nameditem-05.html.json \
+  test_nameditem-06.html.json \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
