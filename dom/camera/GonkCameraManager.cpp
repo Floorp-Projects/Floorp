@@ -20,6 +20,9 @@
 #include "GonkCameraControl.h"
 #include "DOMCameraManager.h"
 #include "CameraCommon.h"
+#include "mozilla/ErrorResult.h"
+
+using namespace mozilla;
 
 // From nsDOMCameraManager, but gonk-specific!
 nsresult
@@ -129,4 +132,49 @@ nsDOMCameraManager::GetListOfCameras(uint32_t *aCount, char * **aCameras)
   *aCameras = cameras;
   *aCount = arraySize - offset;
   return NS_OK;
+}
+
+void
+nsDOMCameraManager::GetListOfCameras(nsTArray<nsString>& aList, ErrorResult& aRv)
+{
+  int32_t count = android::Camera::getNumberOfCameras();
+  if (count <= 0) {
+    return;
+  }
+
+  DOM_CAMERA_LOGI("getListOfCameras : getNumberOfCameras() returned %d\n", count);
+
+  // Allocate 2 extra slots to reserve space for 'front' and 'back' cameras
+  // at the front of the array--we will collapse any empty slots below.
+  aList.SetLength(2);
+  uint32_t extraIdx = 2;
+  bool gotFront = false, gotBack = false;
+  while (count--) {
+    nsCString cameraName;
+    nsresult result = GetCameraName(count, cameraName);
+    if (result != NS_OK) {
+      continue;
+    }
+
+    // The first camera we find named 'back' gets slot 0; and the first
+    // we find named 'front' gets slot 1.  All others appear after these.
+    if (cameraName.EqualsLiteral("back")) {
+      CopyUTF8toUTF16(cameraName, aList[0]);
+      gotBack = true;
+    } else if (cameraName.EqualsLiteral("front")) {
+      CopyUTF8toUTF16(cameraName, aList[1]);
+      gotFront = true;
+    } else {
+      CopyUTF8toUTF16(cameraName, *aList.InsertElementAt(extraIdx));
+      extraIdx++;
+    }
+  }
+
+  if (!gotFront) {
+    aList.RemoveElementAt(1);
+  }
+  
+  if (!gotBack) {
+    aList.RemoveElementAt(0);
+  }
 }
