@@ -1214,29 +1214,22 @@ private:
     XPCCallContext(const XPCCallContext& r); // not implemented
     XPCCallContext& operator= (const XPCCallContext& r); // not implemented
 
-    // The following are for construction from XPCLazyCallContext. Delay doing
-    // the initialization work until we know that the XPCCallContext will
-    // actually be needed, but still eagerly construct the overall
-    // XPCCallContext because it contains Rooted<T> fields that must be
-    // destroyed in LIFO order. An XPCCallContext will always push its
-    // Rooted<T>'s onto the stack upon construction, and then pop them off in
-    // LIFO order during its destruction, regardless of whether LazyInit ever
-    // gets called.
     friend class XPCLazyCallContext;
-    XPCCallContext(JSContext *cx);
-    void LazyInit(XPCContext::LangType callerLanguage,
-                  JSBool callBeginRequest,
-                  JS::HandleObject obj,
-                  JS::HandleObject flattenedJSObject,
-                  XPCWrappedNative* wn,
-                  XPCWrappedNativeTearOff* tearoff);
+    XPCCallContext(XPCContext::LangType callerLanguage,
+                   JSContext* cx,
+                   JSBool callBeginRequest,
+                   JS::HandleObject obj,
+                   JS::HandleObject flattenedJSObject,
+                   XPCWrappedNative* wn,
+                   XPCWrappedNativeTearOff* tearoff);
 
     enum WrapperInitOptions {
         WRAPPER_PASSED_TO_CONSTRUCTOR,
         INIT_SHOULD_LOOKUP_WRAPPER
     };
 
-    void Init(JSBool callBeginRequest,
+    void Init(XPCContext::LangType callerLanguage,
+              JSBool callBeginRequest,
               JS::HandleObject obj,
               JS::HandleObject funobj,
               WrapperInitOptions wrapperInitOptions,
@@ -1330,6 +1323,7 @@ public:
         : mCallBeginRequest(callerLanguage == NATIVE_CALLER ?
                             CALL_BEGINREQUEST : DONT_CALL_BEGINREQUEST),
           mCcx(nullptr),
+          mCcxToDestroy(nullptr),
           mCx(cx),
           mCallerLanguage(callerLanguage),
           mObj(cx, obj),
@@ -1341,16 +1335,6 @@ public:
         NS_ASSERTION(callerLanguage == NATIVE_CALLER ||
                      callerLanguage == JS_CALLER,
                      "Can't deal with unknown caller language!");
-        // Construct with placement new to allow for the other constructor,
-        // which accepts an existing XPCCallContext to use. This constructed
-        // XPCCallContext may never be needed, in which case its LazyInit will
-        // not be invoked, but it must be eagerly constructed here in order to
-        // maintain LIFO order of its Rooted<T> fields and the ones contained
-        // in XPCLazyCallContext. (If its construction were delayed, then any
-        // Rooted<T> created in between the construction of XPCLazyCallContext
-        // and the LazyInit call would not get destroyed during
-        // ~XPCLazyCallContext and therefore would not follow LIFO ordering.)
-        mCcxToDestroy = new (mData.addr()) XPCCallContext(mCx);
 #ifdef DEBUG
         AssertContextIsTopOfStack(cx);
 #endif
@@ -1404,15 +1388,16 @@ public:
     XPCCallContext &GetXPCCallContext()
     {
         if (!mCcx) {
+            XPCCallContext *data = mData.addr();
             xpc_UnmarkGrayObject(mObj);
             xpc_UnmarkGrayObject(mFlattenedJSObject);
-            mCcxToDestroy = mCcx = mData.addr();
-            mCcx->LazyInit(mCallerLanguage,
-                           mCallBeginRequest == CALL_BEGINREQUEST,
-                           mObj,
-                           mFlattenedJSObject,
-                           mWrapper,
-                           mTearOff);
+            mCcxToDestroy = mCcx =
+                new (data) XPCCallContext(mCallerLanguage, mCx,
+                                          mCallBeginRequest == CALL_BEGINREQUEST,
+                                          mObj,
+                                          mFlattenedJSObject,
+                                          mWrapper,
+                                          mTearOff);
             if (!mCcx->IsValid()) {
                 NS_ERROR("This is not supposed to fail!");
             }
