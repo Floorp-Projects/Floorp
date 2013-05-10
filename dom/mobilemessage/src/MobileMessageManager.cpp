@@ -213,29 +213,29 @@ MobileMessageManager::GetMessageMoz(int32_t aId, nsIDOMDOMRequest** aRequest)
 }
 
 nsresult
-MobileMessageManager::Delete(int32_t aId, nsIDOMDOMRequest** aRequest)
+MobileMessageManager::GetMessageId(AutoPushJSContext &aCx,
+                                   const JS::Value &aMessage, int32_t &aId)
 {
-  nsCOMPtr<nsIMobileMessageDatabaseService> mobileMessageDBService =
-    do_GetService(MOBILE_MESSAGE_DATABASE_SERVICE_CONTRACTID);
-  NS_ENSURE_TRUE(mobileMessageDBService, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIDOMMozSmsMessage> smsMessage =
+    do_QueryInterface(nsContentUtils::XPConnect()->GetNativeOfWrapper(aCx, &aMessage.toObject()));
+  if (smsMessage) {
+    return smsMessage->GetId(&aId);
+  }
 
-  nsRefPtr<DOMRequest> request = new DOMRequest(GetOwner());
-  nsCOMPtr<nsIMobileMessageCallback> msgCallback = new MobileMessageCallback(request);
-  nsresult rv = mobileMessageDBService->DeleteMessage(aId, msgCallback);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIDOMMozMmsMessage> mmsMessage =
+    do_QueryInterface(nsContentUtils::XPConnect()->GetNativeOfWrapper(aCx, &aMessage.toObject()));
+  if (mmsMessage) {
+    return mmsMessage->GetId(&aId);
+  }
 
-  request.forget(aRequest);
-  return NS_OK;
+  return NS_ERROR_INVALID_ARG;
 }
 
 NS_IMETHODIMP
 MobileMessageManager::Delete(const JS::Value& aParam, nsIDOMDOMRequest** aRequest)
 {
-  if (aParam.isInt32()) {
-    return Delete(aParam.toInt32(), aRequest);
-  }
-
-  if (!aParam.isObject()) {
+  // We expect Int32, SmsMessage, MmsMessage, Int32[], SmsMessage[], MmsMessage[]
+  if (!aParam.isObject() && !aParam.isInt32()) {
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -244,22 +244,61 @@ MobileMessageManager::Delete(const JS::Value& aParam, nsIDOMDOMRequest** aReques
   AutoPushJSContext cx(sc->GetNativeContext());
   NS_ENSURE_STATE(sc);
 
-  int32_t id;
-  nsCOMPtr<nsIDOMMozSmsMessage> smsMessage =
-    do_QueryInterface(nsContentUtils::XPConnect()->GetNativeOfWrapper(cx, &aParam.toObject()));
-  if (smsMessage) {
-    smsMessage->GetId(&id);
+  int32_t id, *idArray;
+  uint32_t size;
+
+  if (aParam.isInt32()) {
+    // Single Integer Message ID
+    id = aParam.toInt32();
+
+    size = 1;
+    idArray = &id;
+  } else if (!JS_IsArrayObject(cx, &aParam.toObject())) {
+    // Single SmsMessage/MmsMessage object
+    rv = GetMessageId(cx, aParam, id);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    size = 1;
+    idArray = &id;
   } else {
-    nsCOMPtr<nsIDOMMozMmsMessage> mmsMessage =
-      do_QueryInterface(nsContentUtils::XPConnect()->GetNativeOfWrapper(cx, &aParam.toObject()));
-    if (mmsMessage) {
-      mmsMessage->GetId(&id);
-    } else {
-      return NS_ERROR_INVALID_ARG;
+    // Int32[], SmsMessage[], or MmsMessage[]
+    JSObject& ids = aParam.toObject();
+
+    JS_ALWAYS_TRUE(JS_GetArrayLength(cx, &ids, &size));
+    nsAutoArrayPtr<int32_t> idAutoArray(new int32_t[size]);
+
+    JS::Value idJsValue;
+    for (uint32_t i = 0; i < size; i++) {
+      if (!JS_GetElement(cx, &ids, i, &idJsValue)) {
+        return NS_ERROR_INVALID_ARG;
+      }
+
+      if (idJsValue.isInt32()) {
+        idAutoArray[i] = idJsValue.toInt32();
+      } else if (idJsValue.isObject()) {
+        rv = GetMessageId(cx, idJsValue, id);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        idAutoArray[i] = id;
+      }
     }
+
+    idArray = idAutoArray.forget();
   }
 
-  return Delete(id, aRequest);
+  nsCOMPtr<nsIMobileMessageDatabaseService> dbService =
+    do_GetService(MOBILE_MESSAGE_DATABASE_SERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(dbService, NS_ERROR_FAILURE);
+
+  nsRefPtr<DOMRequest> request = new DOMRequest(GetOwner());
+  nsCOMPtr<nsIMobileMessageCallback> msgCallback =
+    new MobileMessageCallback(request);
+
+  rv = dbService->DeleteMessage(idArray, size, msgCallback);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  request.forget(aRequest);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

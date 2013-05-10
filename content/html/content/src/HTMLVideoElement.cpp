@@ -30,6 +30,7 @@
 
 #include "nsEventDispatcher.h"
 #include "nsIDOMProgressEvent.h"
+#include "nsIPowerManagerService.h"
 #include "MediaError.h"
 #include "MediaDecoder.h"
 
@@ -233,6 +234,52 @@ JSObject*
 HTMLVideoElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return HTMLVideoElementBinding::Wrap(aCx, aScope, this);
+}
+
+void
+HTMLVideoElement::NotifyOwnerDocumentActivityChanged()
+{
+  HTMLMediaElement::NotifyOwnerDocumentActivityChanged();
+  WakeLockUpdate();
+}
+
+void
+HTMLVideoElement::WakeLockCreate()
+{
+  WakeLockUpdate();
+}
+
+void
+HTMLVideoElement::WakeLockRelease()
+{
+  WakeLockUpdate();
+}
+
+void
+HTMLVideoElement::WakeLockUpdate()
+{
+  bool hidden = true;
+
+  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(OwnerDoc());
+  if (domDoc) {
+    domDoc->GetHidden(&hidden);
+  }
+
+  if (mScreenWakeLock && (mPaused || hidden)) {
+    mScreenWakeLock->Unlock();
+    mScreenWakeLock = nullptr;
+    return;
+  }
+
+  if (!mScreenWakeLock && !mPaused && !hidden) {
+    nsCOMPtr<nsIPowerManagerService> pmService =
+      do_GetService(POWERMANAGERSERVICE_CONTRACTID);
+    NS_ENSURE_TRUE_VOID(pmService);
+
+    pmService->NewWakeLock(NS_LITERAL_STRING("screen"),
+                           OwnerDoc()->GetWindow(),
+                           getter_AddRefs(mScreenWakeLock));
+  }
 }
 
 } // namespace dom

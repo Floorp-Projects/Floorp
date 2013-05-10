@@ -13,6 +13,7 @@
 #include "jsapi.h"
 #include "xpcpublic.h"
 #include "nsServiceManagerUtils.h"
+#include "nsTArrayHelpers.h"
 
 namespace mozilla {
 namespace dom {
@@ -117,9 +118,29 @@ MobileMessageCallback::NotifyGetMessageFailed(int32_t aError)
 }
 
 NS_IMETHODIMP
-MobileMessageCallback::NotifyMessageDeleted(bool aDeleted)
+MobileMessageCallback::NotifyMessageDeleted(bool *aDeleted, uint32_t aSize)
 {
-  return NotifySuccess(aDeleted ? JSVAL_TRUE : JSVAL_FALSE);
+  if (aSize == 1) {
+    return NotifySuccess(aDeleted[0] ? JSVAL_TRUE : JSVAL_FALSE);
+  }
+
+  nsresult rv;
+  nsIScriptContext* sc = mDOMRequest->GetContextForEventHandlers(&rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(sc, NS_ERROR_FAILURE);
+
+  AutoPushJSContext cx(sc->GetNativeContext());
+  NS_ENSURE_TRUE(cx, NS_ERROR_FAILURE);
+
+  JSObject *deleteArrayObj = JS_NewArrayObject(cx, aSize, NULL);
+  JS::Value jsValTrue = BOOLEAN_TO_JSVAL(1);
+  JS::Value jsValFalse = BOOLEAN_TO_JSVAL(0);
+  for (uint32_t i = 0; i < aSize; i++) {
+    JS_SetElement(cx, deleteArrayObj, i,
+                  aDeleted[i] ? &jsValTrue : &jsValFalse);
+  }
+
+  return NotifySuccess(OBJECT_TO_JSVAL(deleteArrayObj));
 }
 
 NS_IMETHODIMP

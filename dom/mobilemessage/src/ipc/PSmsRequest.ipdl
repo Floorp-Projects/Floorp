@@ -48,7 +48,7 @@ struct ReplyGetMessageFail
 
 struct ReplyMessageDelete
 {
-  bool deleted;
+  bool[] deleted;
 };
 
 struct ReplyMessageDeleteFail

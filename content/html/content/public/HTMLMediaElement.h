@@ -121,7 +121,7 @@ public:
    * Call this to reevaluate whether we should start/stop due to our owner
    * document being active, inactive, visible or hidden.
    */
-  void NotifyOwnerDocumentActivityChanged();
+  virtual void NotifyOwnerDocumentActivityChanged();
 
   // Called by the video decoder object, on the main thread,
   // when it has read the metadata containing video dimensions,
@@ -536,9 +536,15 @@ protected:
     bool mValue;
     bool mCanPlay;
     HTMLMediaElement* mOuter;
-
-    nsCOMPtr<nsIDOMMozWakeLock> mWakeLock;
   };
+
+  /**
+   * These two methods are called by the WakeLockBoolWrapper when the wakelock
+   * has to be created or released.
+   */
+  virtual void WakeLockCreate();
+  virtual void WakeLockRelease();
+  nsCOMPtr<nsIDOMMozWakeLock> mWakeLock;
 
   /**
    * Logs a warning message to the web console to report various failures.

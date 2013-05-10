@@ -108,9 +108,17 @@ public:
 
   bool MozHasAudio() const;
 
+  void NotifyOwnerDocumentActivityChanged() MOZ_OVERRIDE;
+
 protected:
   virtual JSObject* WrapNode(JSContext* aCx,
                              JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+
+  virtual void WakeLockCreate();
+  virtual void WakeLockRelease();
+  void WakeLockUpdate();
+
+  nsCOMPtr<nsIDOMMozWakeLock> mScreenWakeLock;
 };
 
 } // namespace dom
