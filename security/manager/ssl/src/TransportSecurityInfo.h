@@ -90,6 +90,7 @@ private:
   uint32_t mSecurityState;
   int32_t mSubRequestsBrokenSecurity;
   int32_t mSubRequestsNoSecurity;
+  nsString mShortDesc;
 
   PRErrorCode mErrorCode;
   ::mozilla::psm::SSLErrorMessageType mErrorMessageType;
