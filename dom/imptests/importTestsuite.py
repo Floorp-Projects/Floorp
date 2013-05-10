@@ -61,7 +61,7 @@ def copyTest(source, dest):
     if os.path.exists(source + HEADERS_SUFFIX):
         shutil.copy(source + HEADERS_SUFFIX, dest + HEADERS_SUFFIX)
 
-def copy(thissrcdir, dest, directories):
+def copy(dest, directories):
     """Copy mochitests and support files from the external HG directory to their
     place in mozilla-central.
     """
@@ -79,10 +79,10 @@ def copy(thissrcdir, dest, directories):
 
         if len(subdirs):
             if d:
-                importDirs(thissrcdir, dest, ["%s/%s" % (d, subdir) for subdir in subdirs])
+                importDirs(dest, ["%s/%s" % (d, subdir) for subdir in subdirs])
             else:
                 # Empty directory, i.e., the repository root
-                importDirs(thissrcdir, dest, subdirs)
+                importDirs(dest, subdirs)
 
 def printMozbuildFile(dest, directories):
     """Create a .mozbuild file to be included into the main moz.build, which
@@ -98,7 +98,7 @@ def printMozbuildFile(dest, directories):
 
     subprocess.check_call(["hg", "add", path])
 
-def printBuildFiles(thissrcdir, dest, directories):
+def printBuildFiles(dest, directories):
     """Create Makefile.in files for each directory that contains tests we import.
     """
     print("Creating build files...")
@@ -129,9 +129,9 @@ def hgadd(dest, directories):
     for d in directories:
         subprocess.check_call(["hg", "addremove", "%s/%s" % (dest, d)])
 
-def importDirs(thissrcdir, dest, directories):
-    copy(thissrcdir, dest, directories)
-    printBuildFiles(thissrcdir, dest, directories)
+def importDirs(dest, directories):
+    copy(dest, directories)
+    printBuildFiles(dest, directories)
 
 def removeAndCloneRepo(vcs, url, dest):
     """Replaces the repo at dest by a fresh clone from url using vcs"""
@@ -143,7 +143,7 @@ def removeAndCloneRepo(vcs, url, dest):
     print("Cloning %s to %s with %s..." % (url, dest, vcs))
     subprocess.check_call([vcs, "clone", url, dest])
 
-def importRepo(confFile, thissrcdir):
+def importRepo(confFile):
     try:
         vcs, url, iden, directories = getData(confFile)
         dest = iden
@@ -155,7 +155,7 @@ def importRepo(confFile, thissrcdir):
         removeAndCloneRepo(vcs, url, hgdest)
 
         print("Going to import %s..." % directories)
-        importDirs(thissrcdir, dest, directories)
+        importDirs(dest, directories)
         printMozbuildFile(dest, directories)
         hgadd(dest, directories)
         print("Removing %s again..." % hgdest)
@@ -169,5 +169,5 @@ if __name__ == "__main__":
     if len(sys.argv) != 2:
         print("Need one argument.")
     else:
-        importRepo(sys.argv[1], "dom/imptests")
+        importRepo(sys.argv[1])
 
