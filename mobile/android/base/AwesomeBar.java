@@ -99,8 +99,12 @@ public class AwesomeBar extends GeckoActivity
             }
 
             @Override
-            public void onSearch(String engine, String text) {
-                openSearchAndFinish(text, engine);
+            public void onSearch(SearchEngine engine, String text) {
+                Intent resultIntent = new Intent();
+                resultIntent.putExtra(URL_KEY, text);
+                resultIntent.putExtra(TARGET_KEY, mTarget);
+                resultIntent.putExtra(SEARCH_KEY, engine.name);
+                finishWithResult(resultIntent);
             }
 
             @Override
@@ -379,37 +383,31 @@ public class AwesomeBar extends GeckoActivity
         final int index = url.indexOf(' ');
 
         // Check for a keyword if the URL looks like a search query
-        if (StringUtils.isSearchQuery(url, true)) {
-            ThreadUtils.postToBackgroundThread(new Runnable() {
-                @Override
-                public void run() {
-                    String keywordUrl = null;
-                    String keywordSearch = "";
-                    if (index == -1) {
-                        keywordUrl = BrowserDB.getUrlForKeyword(getContentResolver(), url);
-                    } else {
-                        keywordUrl = BrowserDB.getUrlForKeyword(getContentResolver(), url.substring(0, index));
-                        keywordSearch = url.substring(index + 1);
-                    }
-                    if (keywordUrl == null) {
-                        openUrlAndFinish(url, "", true);
-                    } else {
-                        String search = URLEncoder.encode(keywordSearch);
-                        openUrlAndFinish(keywordUrl.replace("%s", search), "", true);
-                    }
-                }
-            });
-        } else {
+        if (!StringUtils.isSearchQuery(url, true)) {
             openUrlAndFinish(url, "", true);
+            return;
         }
-    }
+        ThreadUtils.postToBackgroundThread(new Runnable() {
+            @Override
+            public void run() {
+                final String keyword;
+                final String keywordSearch;
 
-    private void openSearchAndFinish(String url, String engine) {
-        Intent resultIntent = new Intent();
-        resultIntent.putExtra(URL_KEY, url);
-        resultIntent.putExtra(TARGET_KEY, mTarget);
-        resultIntent.putExtra(SEARCH_KEY, engine);
-        finishWithResult(resultIntent);
+                if (index == -1) {
+                    keyword = url;
+                    keywordSearch = "";
+                } else {
+                    keyword = url.substring(0, index);
+                    keywordSearch = url.substring(index + 1);
+                }
+
+                final String keywordUrl = BrowserDB.getUrlForKeyword(getContentResolver(), keyword);
+                final String searchUrl = (keywordUrl != null)
+                                       ? keywordUrl.replace("%s", URLEncoder.encode(keywordSearch))
+                                       : url;
+                openUrlAndFinish(searchUrl, "", true);
+            }
+        });
     }
 
     @Override
