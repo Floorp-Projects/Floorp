@@ -28,26 +28,25 @@ def parseManifestFile(dest, dir):
 
 def getData(confFile):
     """This function parses a file of the form
-    URL of remote repository|Name of the destination directory
+    (hg or git)|URL of remote repository|identifier for the local directory
     First directory of tests
     ...
     Last directory of tests"""
-    repo = ""
-    dest = ""
+    vcs = ""
+    url = ""
+    iden = ""
     directories = []
     try:
         with open(confFile, 'r') as fp:
             first = True
             for line in fp:
                 if first:
-                    idx = line.index("|")
-                    repo = line[:idx].strip()
-                    dest = line[idx + 1:].strip()
+                    vcs, url, iden = line.strip().split("|")
                     first = False
                 else:
                     directories.append(line.strip())
     finally:
-        return repo, dest, directories
+        return vcs, url, iden, directories
 
 def makePath(a, b):
     if not b:
@@ -134,17 +133,27 @@ def importDirs(thissrcdir, dest, directories):
     copy(thissrcdir, dest, directories)
     printBuildFiles(thissrcdir, dest, directories)
 
+def removeAndCloneRepo(vcs, url, dest):
+    """Replaces the repo at dest by a fresh clone from url using vcs"""
+    assert vcs in ('hg', 'git')
+
+    print("Removing %s..." % dest)
+    subprocess.check_call(["rm", "-rf", dest])
+
+    print("Cloning %s to %s with %s..." % (url, dest, vcs))
+    subprocess.check_call([vcs, "clone", url, dest])
+
 def importRepo(confFile, thissrcdir):
     try:
-        repo, dest, directories = getData(confFile)
-        hgdest = "hg-%s" % (dest, )
-        print("Going to clone %s to %s..." % (repo, hgdest))
+        vcs, url, iden, directories = getData(confFile)
+        dest = iden
+        hgdest = "hg-%s" % iden
+
         print("Removing %s..." % dest)
         subprocess.check_call(["rm", "-rf", dest])
-        print("Removing %s..." % hgdest)
-        subprocess.check_call(["rm", "-rf", hgdest])
-        print("Cloning %s to %s..." % (repo, hgdest))
-        subprocess.check_call(["hg", "clone", repo, hgdest])
+
+        removeAndCloneRepo(vcs, url, hgdest)
+
         print("Going to import %s..." % directories)
         importDirs(thissrcdir, dest, directories)
         printMozbuildFile(dest, directories)
