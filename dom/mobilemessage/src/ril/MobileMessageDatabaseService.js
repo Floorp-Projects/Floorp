@@ -1417,9 +1417,9 @@ MobileMessageDatabaseService.prototype = {
     };
   },
 
-  deleteMessage: function deleteMessage(messageId, aRequest) {
-    if (DEBUG) debug("deleteMessage: message id " + messageId);
-    let deleted = false;
+  deleteMessage: function deleteMessage(messageIds, length, aRequest) {
+    if (DEBUG) debug("deleteMessage: message ids " + JSON.stringify(messageIds));
+    let deleted = [];
     let self = this;
     this.newTxn(READ_WRITE, function (error, txn, stores) {
       if (error) {
@@ -1436,34 +1436,37 @@ MobileMessageDatabaseService.prototype = {
       const messageStore = stores[0];
       const threadStore = stores[1];
 
-      let deleted = false;
-
       txn.oncomplete = function oncomplete(event) {
         if (DEBUG) debug("Transaction " + txn + " completed.");
-        aRequest.notifyMessageDeleted(deleted);
+        aRequest.notifyMessageDeleted(deleted, length);
       };
 
-      messageStore.get(messageId).onsuccess = function(event) {
-        let messageRecord = event.target.result;
-        if (messageRecord) {
-          if (DEBUG) debug("Deleting message id " + messageId);
+      for (let i = 0; i < length; i++) {
+        let messageId = messageIds[i];
+        deleted[i] = false;
+        messageStore.get(messageId).onsuccess = function(messageIndex, event) {
+          let messageRecord = event.target.result;
+          let messageId = messageIds[messageIndex];
+          if (messageRecord) {
+            if (DEBUG) debug("Deleting message id " + messageId);
 
-          // First actually delete the message.
-          messageStore.delete(messageId).onsuccess = function(event) {
-            if (DEBUG) debug("Message id " + messageId + " deleted");
-            deleted = true;
+            // First actually delete the message.
+            messageStore.delete(messageId).onsuccess = function(event) {
+              if (DEBUG) debug("Message id " + messageId + " deleted");
+              deleted[messageIndex] = true;
 
-            // Then update unread count and most recent message.
-            self.updateThreadByMessageChange(messageStore,
-                                             threadStore,
-                                             messageRecord.threadId,
-                                             messageId,
-                                             messageRecord.read);
-          };
-        } else if (DEBUG) {
-          debug("Message id " + messageId + " does not exist");
-        }
-      };
+              // Then update unread count and most recent message.
+              self.updateThreadByMessageChange(messageStore,
+                                               threadStore,
+                                               messageRecord.threadId,
+                                               messageId,
+                                               messageRecord.read);
+              };
+          } else if (DEBUG) {
+            debug("Message id " + messageId + " does not exist");
+          }
+        }.bind(null, i);
+      }
     }, [MESSAGE_STORE_NAME, THREAD_STORE_NAME]);
   },
 

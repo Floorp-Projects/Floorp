@@ -143,9 +143,15 @@ function expectOnlyOneProcessCreated() {
 }
 
 // Returns a promise which is resolved or rejected the next time the process
-// childID changes its priority.  We resolve if the priority matches
-// expectedPriority, and we reject otherwise.
-function expectPriorityChange(childID, expectedPriority) {
+// childID changes its priority.  We resolve if the (priority, CPU priority)
+// tuple matches (expectedPriority, expectedCPUPriority) and we reject
+// otherwise.
+//
+// expectedCPUPriority is an optional argument; if it's not specified, we
+// resolve if priority matches expectedPriority.
+
+function expectPriorityChange(childID, expectedPriority,
+                              /* optional */ expectedCPUPriority) {
   var deferred = Promise.defer();
 
   var observed = false;
@@ -156,7 +162,7 @@ function expectPriorityChange(childID, expectedPriority) {
         return;
       }
 
-      [id, priority] = data.split(":");
+      [id, priority, cpuPriority] = data.split(":");
       if (id != childID) {
         return;
       }
@@ -169,10 +175,17 @@ function expectPriorityChange(childID, expectedPriority) {
          'Expected priority of childID ' + childID +
          ' to change to ' + expectedPriority);
 
-      if (priority == expectedPriority) {
-        deferred.resolve(priority);
+      if (expectedCPUPriority) {
+        is(cpuPriority, expectedCPUPriority,
+           'Expected CPU priority of childID ' + childID +
+           ' to change to ' + expectedCPUPriority);
+      }
+
+      if (priority == expectedPriority &&
+          (!expectedCPUPriority || expectedCPUPriority == cpuPriority)) {
+        deferred.resolve();
       } else {
-        deferred.reject(priority);
+        deferred.reject();
       }
     }
   );

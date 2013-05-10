@@ -1089,7 +1089,8 @@ RILContentHelper.prototype = {
         this._deliverEvent("_telephonyListeners",
                            "callStateChanged",
                            [msg.json.callIndex, msg.json.state,
-                            msg.json.number, msg.json.isActive]);
+                            msg.json.number, msg.json.isActive,
+                            msg.json.isOutgoing]);
         break;
       case "RIL:CallError":
         this._deliverEvent("_telephonyListeners",
@@ -1198,7 +1199,7 @@ RILContentHelper.prototype = {
       try {
         keepGoing =
           callback.enumerateCallState(call.callIndex, call.state, call.number,
-                                      call.isActive);
+                                      call.isActive, call.isOutgoing);
       } catch (e) {
         debug("callback handler for 'enumerateCallState' threw an " +
               " exception: " + e);

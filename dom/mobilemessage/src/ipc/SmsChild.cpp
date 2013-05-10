@@ -177,11 +177,14 @@ SmsRequestChild::Recv__delete__(const MessageReply& aReply)
     case MessageReply::TReplyGetMessageFail:
       mReplyRequest->NotifyGetMessageFailed(aReply.get_ReplyGetMessageFail().error());
       break;
-    case MessageReply::TReplyMessageDelete:
-      mReplyRequest->NotifyMessageDeleted(aReply.get_ReplyMessageDelete().deleted());
+    case MessageReply::TReplyMessageDelete: {
+        const InfallibleTArray<bool>& deletedResult = aReply.get_ReplyMessageDelete().deleted();
+        mReplyRequest->NotifyMessageDeleted(const_cast<bool *>(deletedResult.Elements()),
+                                            deletedResult.Length());
+      }
       break;
     case MessageReply::TReplyMessageDeleteFail:
-      mReplyRequest->NotifyMessageDeleted(aReply.get_ReplyMessageDeleteFail().error());
+      mReplyRequest->NotifyDeleteMessageFailed(aReply.get_ReplyMessageDeleteFail().error());
       break;
     case MessageReply::TReplyMarkeMessageRead:
       mReplyRequest->NotifyMessageMarkedRead(aReply.get_ReplyMarkeMessageRead().read());
