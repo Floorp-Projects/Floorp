@@ -243,10 +243,8 @@ EnsureWindowVisible(HWND hwnd)
     HWND parentHwnd = GetParent(hwnd);
     RECT parentRect;
     GetWindowRect(parentHwnd, &parentRect);
-    BOOL b = SetWindowPos(hwnd, NULL, 
-                          parentRect.left, 
-                          parentRect.top, 0, 0, 
-                          SWP_NOACTIVATE | SWP_NOSIZE | SWP_NOZORDER);
+    SetWindowPos(hwnd, NULL, parentRect.left, parentRect.top, 0, 0,
+                 SWP_NOACTIVATE | SWP_NOSIZE | SWP_NOZORDER);
   }
 }
 
