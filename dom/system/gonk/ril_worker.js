@@ -3259,9 +3259,9 @@ let RIL = {
           newCall.number = "+" + newCall.number;
         }
         if (newCall.state == CALL_STATE_INCOMING) {
-          newCall.direction = 'incoming';
+          newCall.isOutgoing = false;
         } else if (newCall.state == CALL_STATE_DIALING) {
-          newCall.direction = 'outgoing';
+          newCall.isOutgoing = true;
         }
         // Add to our map.
         this.currentCalls[newCall.callIndex] = newCall;
