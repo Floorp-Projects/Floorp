@@ -212,7 +212,7 @@ public class ActivityHandlerHelper {
 
         try {
             while (null == (filePickerResult = mFilePickerResult.poll(1, TimeUnit.MILLISECONDS))) {
-                GeckoAppShell.processNextNativeEvent();
+                GeckoAppShell.processNextNativeEvent(false);
             }
         } catch (InterruptedException e) {
             Log.e(LOGTAG, "showing file picker failed: ",  e);
