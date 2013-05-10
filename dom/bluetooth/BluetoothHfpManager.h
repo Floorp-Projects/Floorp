@@ -8,6 +8,7 @@
 #define mozilla_dom_bluetooth_bluetoothhfpmanager_h__
 
 #include "BluetoothCommon.h"
+#include "BluetoothProfileManagerBase.h"
 #include "BluetoothSocketObserver.h"
 #include "BluetoothTelephonyListener.h"
 #include "mozilla/ipc/UnixSocket.h"
@@ -51,6 +52,7 @@ enum BluetoothCmeError {
 };
 
 class BluetoothHfpManager : public BluetoothSocketObserver
+                          , public BluetoothProfileManagerBase
 {
 public:
   static BluetoothHfpManager* Get();
@@ -62,8 +64,11 @@ public:
   virtual void OnConnectSuccess(BluetoothSocket* aSocket) MOZ_OVERRIDE;
   virtual void OnConnectError(BluetoothSocket* aSocket) MOZ_OVERRIDE;
   virtual void OnDisconnect(BluetoothSocket* aSocket) MOZ_OVERRIDE;
+  virtual void OnGetServiceChannel(const nsAString& aDeviceAddress,
+                                   const nsAString& aServiceUuid,
+                                   int aChannel) MOZ_OVERRIDE;
 
-  bool Connect(const nsAString& aDeviceObjectPath,
+  void Connect(const nsAString& aDeviceObjectPath,
                const bool aIsHandsfree,
                BluetoothReplyRunnable* aRunnable);
   void Disconnect();

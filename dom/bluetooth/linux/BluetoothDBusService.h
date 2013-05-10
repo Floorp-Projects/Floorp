@@ -85,13 +85,9 @@ public:
                mozilla::ipc::UnixSocketConsumer* aConsumer);
 
   virtual nsresult
-  GetSocketViaService(const nsAString& aObjectPath,
-                      const nsAString& aService,
-                      BluetoothSocketType aType,
-                      bool aAuth,
-                      bool aEncrypt,
-                      mozilla::ipc::UnixSocketConsumer* aConsumer,
-                      BluetoothReplyRunnable* aRunnable);
+  GetServiceChannel(const nsAString& aObjectPath,
+                    const nsAString& aServiceUuid,
+                    BluetoothProfileManagerBase* aManager);
 
   virtual nsresult
   CreatePairedDeviceInternal(const nsAString& aDeviceAddress,
