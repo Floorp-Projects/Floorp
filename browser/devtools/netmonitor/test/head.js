@@ -20,10 +20,12 @@ const STATUS_CODES_URL = EXAMPLE_URL + "html_status-codes-test-page.html";
 const POST_DATA_URL = EXAMPLE_URL + "html_post-data-test-page.html";
 const JSONP_URL = EXAMPLE_URL + "html_jsonp-test-page.html";
 const JSON_LONG_URL = EXAMPLE_URL + "html_json-long-test-page.html";
+const SORTING_URL = EXAMPLE_URL + "html_sorting-test-page.html";
 
 const SIMPLE_SJS = EXAMPLE_URL + "sjs_simple-test-server.sjs";
 const CONTENT_TYPE_SJS = EXAMPLE_URL + "sjs_content-type-test-server.sjs";
 const STATUS_CODES_SJS = EXAMPLE_URL + "sjs_status-codes-test-server.sjs";
+const SORTING_SJS = EXAMPLE_URL + "sjs_sorting-test-server.sjs";
 
 const TEST_IMAGE = EXAMPLE_URL + "test-image.png";
 
