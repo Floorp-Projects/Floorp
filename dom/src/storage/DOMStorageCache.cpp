@@ -194,11 +194,6 @@ DOMStorageCache::ProcessUsageDelta(const DOMStorage* aStorage, int64_t aDelta)
 bool
 DOMStorageCache::ProcessUsageDelta(uint32_t aGetDataSetIndex, const int64_t aDelta)
 {
-  // Check if we are in a low disk space situation
-  if (aDelta > 0 && mManager && mManager->IsLowDiskSpace()) {
-    return false;
-  }
-
   // Check limit per this origin
   Data& data = mData[aGetDataSetIndex];
   uint64_t newOriginUsage = data.mOriginQuotaUsage + aDelta;
