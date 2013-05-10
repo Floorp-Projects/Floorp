@@ -1,0 +1,6 @@
+{
+  "If there are two applets, a collection should be returned. (name)": true,
+  "If there are two applets, a collection should be returned. (id)": true,
+  "If there are two applets, a collection should be returned. (name and id)": true,
+  "If there are two applets, a collection should be returned. (id and name)": true
+}

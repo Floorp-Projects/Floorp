@@ -8,6 +8,7 @@ DIRS += [
     'failures/editing/conformancetest',
     'failures/editing/selecttest',
     'failures/html/html/browsers/the-window-object',
+    'failures/html/html/browsers/the-window-object/named-access-on-the-window-object',
     'failures/html/html/dom/documents/dom-tree-accessors',
     'failures/html/html/dom/documents/dom-tree-accessors/document.getElementsByName',
     'failures/html/html/dom/elements/global-attributes',
