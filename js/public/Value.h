@@ -924,13 +924,13 @@ class Value
 
     bool setNumber(double d) {
         int32_t i;
-        if (MOZ_DOUBLE_IS_INT32(d, &i)) {
+        if (mozilla::DoubleIsInt32(d, &i)) {
             setInt32(i);
             return true;
-        } else {
-            setDouble(d);
-            return false;
         }
+
+        setDouble(d);
+        return false;
     }
 
     void setObjectOrNull(JSObject *arg) {

@@ -16,6 +16,7 @@ from ..frontend.data import (
     SandboxDerived,
     VariablePassthru,
     Exports,
+    Program,
     XpcshellManifests,
 )
 from ..util import FileAvoidWrite
@@ -214,6 +215,9 @@ class RecursiveMakeBackend(BuildBackend):
         elif isinstance(obj, Exports):
             self._process_exports(obj.exports, backend_file)
 
+        elif isinstance(obj, Program):
+            self._process_program(obj.program, backend_file)
+
         elif isinstance(obj, XpcshellManifests):
             self._process_xpcshell_manifests(obj.xpcshell_manifests, backend_file)
 
@@ -324,6 +328,9 @@ class RecursiveMakeBackend(BuildBackend):
         for subdir in sorted(children):
             self._process_exports(children[subdir], backend_file,
                                   namespace=namespace + subdir)
+
+    def _process_program(self, program, backend_file):
+        backend_file.write('PROGRAM = %s\n' % program)
 
     def _process_xpcshell_manifests(self, manifest, backend_file, namespace=""):
         backend_file.write('XPCSHELL_TESTS += %s\n' % os.path.dirname(manifest))

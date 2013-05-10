@@ -161,7 +161,7 @@ stubs::SlowCall(VMFrame &f, uint32_t argc)
 
     if (!MaybeCloneAndPatchCallee(f.cx, args, fscript, f.pc()))
         THROW();
-    if (!InvokeKernel(f.cx, args))
+    if (!Invoke(f.cx, args))
         THROW();
 
     types::TypeScript::Monitor(f.cx, fscript, f.pc(), args.rval());
@@ -175,7 +175,7 @@ stubs::SlowNew(VMFrame &f, uint32_t argc)
 
     if (!MaybeCloneAndPatchCallee(f.cx, args, fscript, f.pc()))
         THROW();
-    if (!InvokeConstructorKernel(f.cx, args))
+    if (!InvokeConstructor(f.cx, args))
         THROW();
 
     types::TypeScript::Monitor(f.cx, fscript, f.pc(), args.rval());
@@ -432,7 +432,7 @@ stubs::UncachedNewHelper(VMFrame &f, uint32_t argc, UncachedCallResult &ucr)
         if (!UncachedInlineCall(f, INITIAL_CONSTRUCT, &ucr.codeAddr, &ucr.unjittable, argc))
             THROW();
     } else {
-        if (!InvokeConstructorKernel(cx, args))
+        if (!InvokeConstructor(cx, args))
             THROW();
         types::TypeScript::Monitor(f.cx, fscript, f.pc(), args.rval());
     }
@@ -460,7 +460,7 @@ stubs::Eval(VMFrame &f, uint32_t argc)
     CallArgs args = CallArgsFromSp(argc, f.regs.sp);
 
     if (!IsBuiltinEvalForScope(f.fp()->scopeChain(), args.calleev())) {
-        if (!InvokeKernel(f.cx, args))
+        if (!Invoke(f.cx, args))
             THROW();
 
         RootedScript fscript(f.cx, f.script());
@@ -505,7 +505,7 @@ stubs::UncachedCallHelper(VMFrame &f, uint32_t argc, bool lowered, UncachedCallR
         }
     }
 
-    if (!InvokeKernel(f.cx, args))
+    if (!Invoke(f.cx, args))
         THROW();
 
     types::TypeScript::Monitor(f.cx, fscript, f.pc(), args.rval());
@@ -1026,7 +1026,7 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
         nextDepth = analysis->getCode(nextpc).stackDepth;
         enter.destroy();
         f.regs.sp = nextsp + 2 + f.u.call.dynamicArgc;
-        if (!InvokeKernel(cx, CallArgsFromSp(f.u.call.dynamicArgc, f.regs.sp)))
+        if (!Invoke(cx, CallArgsFromSp(f.u.call.dynamicArgc, f.regs.sp)))
             return js_InternalThrow(f);
         nextsp[-1] = nextsp[0];
         f.regs.pc = nextpc;

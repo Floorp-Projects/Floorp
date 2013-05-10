@@ -51,7 +51,7 @@ public:
   // TODO: Noone's implementing this anymore, should see if we need this.
   virtual GLenum GetTextureTarget() const { return LOCAL_GL_TEXTURE_2D; }
   virtual GLenum GetWrapMode() const = 0;// { return LOCAL_GL_CLAMP_TO_EDGE; } // default
-  virtual gfx3DMatrix GetTextureTransform() const { return gfx3DMatrix(); }
+  virtual gfx3DMatrix GetTextureTransform() { return gfx3DMatrix(); }
 };
 
 inline gl::ShaderProgramType
@@ -360,10 +360,7 @@ public:
              gfxASurface::CONTENT_COLOR;
   }
 
-  virtual gfx3DMatrix GetTextureTransform() const MOZ_OVERRIDE
-  {
-    return mTextureTransform;
-  }
+  virtual gfx3DMatrix GetTextureTransform() MOZ_OVERRIDE;
 
 #ifdef MOZ_LAYERS_HAVE_LOG
   virtual const char* Name() { return "SharedTextureHostOGL"; }
@@ -380,7 +377,6 @@ protected:
   gl::SharedTextureHandle mSharedHandle;
   gl::ShaderProgramType mShaderProgram;
   gl::GLContext::SharedTextureShareType mShareType;
-  gfx3DMatrix mTextureTransform;
 };
 
 class SurfaceStreamHostOGL : public TextureHost
@@ -580,7 +576,9 @@ public:
       return gl::RGBAExternalLayerProgramType;
     }
     MOZ_ASSERT(mTextureTarget == LOCAL_GL_TEXTURE_2D);
-    return GetProgramTypeForTexture(this);
+    return mFormat == gfx::FORMAT_B8G8R8A8 || mFormat == gfx::FORMAT_B8G8R8X8
+           ? gl::BGRALayerProgramType
+           : gl::RGBALayerProgramType;
   }
 
   GLenum GetWrapMode() const MOZ_OVERRIDE

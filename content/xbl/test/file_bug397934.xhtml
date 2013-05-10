@@ -1,0 +1,117 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=397934
+-->
+<head>
+  <title>Test for Bug 397934</title>
+  <bindings xmlns="http://www.mozilla.org/xbl">
+    <binding id="ancestor">
+      <implementation>
+        <field name="testAncestor">"ancestor"</field>
+      </implementation>
+    </binding>
+    <binding id="test1" extends="#ancestor">
+      <implementation>
+        <constructor>
+          this.storage = window;
+        </constructor>
+        <field name="window"></field>
+        <field name="storage">null</field>
+        <field name="parentNode"></field>
+        <field name="ownerDocument">"ownerDocument"</field>
+        <field name="emptyTest1"></field>
+        <field name="emptyTest1">"empty1"</field>
+        <field name="emptyTest2">"empty2"</field>        
+        <field name="emptyTest2"></field>
+        <field name="testAncestor"></field>
+        <field name="testEvalOnce">XPCNativeWrapper.unwrap(window).counter++; undefined</field>
+      </implementation>
+    </binding>
+    <binding id="test2" extends="#ancestor">
+      <implementation>
+        <constructor>
+          this.storage = window;
+        </constructor>
+        <field name="window">undefined</field>
+        <field name="storage">null</field>
+        <field name="parentNode">undefined</field>
+        <field name="ownerDocument">"ownerDocument"</field>
+        <field name="emptyTest1">undefined</field>
+        <field name="emptyTest1">"empty1"</field>
+        <field name="emptyTest2">"empty2"</field>        
+        <field name="emptyTest2">undefined</field>
+        <field name="testAncestor">undefined</field>
+      </implementation>
+    </binding>
+  </bindings>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=397934">Mozilla Bug 397934</a>
+<p id="display1" style="-moz-binding: url(#test1)"></p>
+<p id="display2" style="-moz-binding: url(#test2)"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+
+/** Test for Bug 397934 **/
+SimpleTest = parent.SimpleTest;
+ok = parent.ok;
+is = parent.is;
+$ = function(x) { return document.getElementById(x); }
+window.onload = function() {
+  var d;
+  d = $("display1");
+  is(d.storage, window,
+     "test1" +
+       ": |window| in the constructor should have resolved to our window");
+  is(d.ownerDocument, "ownerDocument",
+     "test1" + ": Control to test field overriding DOM prop");
+  is(d.parentNode, document.body, "test1" + ": unexpected parent");
+  is(d.emptyTest1, undefined,
+     "test1" + ": First field wins even if undefined");
+  is(typeof(d.emptyTest1), "undefined",
+     "test1" + ": First field wins even if undefined, double-check");
+  is(d.emptyTest2, "empty2",
+     "test1" + ": First field wins");
+  is(d.testAncestor, "ancestor",
+     "test1" + ": Empty field should not override ancestor binding");
+
+  var win = window;
+  win.counter = 0;
+  d.testEvalOnce;
+  d.testEvalOnce;
+  is(win.counter, 1, "Field should have evaluated once and only once");
+
+  d = $("display2");
+  is(d.storage, undefined,
+     "test2" +
+       ": |window| in the constructor should have resolved to undefined");
+  is(typeof(d.storage), "undefined",
+     "test2" +
+       ": |window| in the constructor should really have resolved to undefined");
+  is(d.ownerDocument, "ownerDocument",
+     "test2" + ": Control to test field overriding DOM prop");
+  is(d.parentNode, undefined, "test2" + ": unexpected parent");
+  is(typeof(d.parentNode), "undefined", "test2" + ": unexpected parent for real");
+  is(d.emptyTest1, undefined,
+     "test2" + ": First field wins even if undefined");
+  is(typeof(d.emptyTest1), "undefined",
+     "test2" + ": First field wins even if undefined, double-check");
+  is(d.emptyTest2, "empty2",
+     "test2" + ": First field wins");
+  is(d.testAncestor, undefined,
+     "test2" + ": Undefined field should override ancestor binding");
+  is(typeof(d.testAncestor), "undefined",
+     "test2" + ": Undefined field should really override ancestor binding");
+  SimpleTest.finish();
+}
+
+]]>
+</script>
+</pre>
+</body>
+</html>
+

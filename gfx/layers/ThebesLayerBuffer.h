@@ -315,9 +315,11 @@ protected:
   /**
    * Get a context at the specified resolution for updating |aBounds|,
    * which must be contained within a single quadrant.
+   *
+   * Optionally returns the TopLeft coordinate of the quadrant being drawn to.
    */
   already_AddRefed<gfxContext>
-  GetContextForQuadrantUpdate(const nsIntRect& aBounds, ContextSource aSource);
+  GetContextForQuadrantUpdate(const nsIntRect& aBounds, ContextSource aSource, nsIntPoint* aTopLeft = nullptr);
 
   static bool IsClippingCheap(gfxContext* aTarget, const nsIntRegion& aRegion);
 

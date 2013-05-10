@@ -68,11 +68,11 @@ Java_org_mozilla_gecko_GeckoAppShell_notifyGeckoOfEvent(JNIEnv *jenv, jclass jc,
 }
 
 NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_processNextNativeEvent(JNIEnv *jenv, jclass)
+Java_org_mozilla_gecko_GeckoAppShell_processNextNativeEvent(JNIEnv *jenv, jclass, jboolean mayWait)
 {
     // poke the appshell
     if (nsAppShell::gAppShell)
-        nsAppShell::gAppShell->ProcessNextNativeEvent(false);
+        nsAppShell::gAppShell->ProcessNextNativeEvent(mayWait != JNI_FALSE);
 }
 
 NS_EXPORT void JNICALL

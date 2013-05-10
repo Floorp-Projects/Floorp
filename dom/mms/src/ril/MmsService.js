@@ -995,9 +995,7 @@ MmsService.prototype = {
    *        merged with the extra retrieval confirmation.
    */
   mergeRetrievalConfirmation: function mergeRetrievalConfirmation(intermediate, savable) {
-    if (intermediate.headers["Date"]) {
-      savable.timestamp = Date.parse(intermediate.headers["Date"]);
-    }
+    savable.timestamp = Date.now();
     if (intermediate.headers.from) {
       savable.sender = intermediate.headers.from.address;
     } else {
@@ -1432,8 +1430,9 @@ MmsService.prototype = {
     });
   },
 
-  retrieve: function retrieve(id, aRequest) {
-    gMobileMessageDatabaseService.getMessageRecordById(id,
+  retrieve: function retrieve(aMessageId, aRequest) {
+    if (DEBUG) debug("Retrieving message with ID " + aMessageId);
+    gMobileMessageDatabaseService.getMessageRecordById(aMessageId,
         (function notifyResult(aRv, aMessageRecord) {
       if (Ci.nsIMobileMessageCallback.SUCCESS_NO_ERROR != aRv) {
         if (DEBUG) debug("Function getMessageRecordById() return error.");
@@ -1441,26 +1440,32 @@ MmsService.prototype = {
         return;
       }
       if ("mms" != aMessageRecord.type) {
-        if (DEBUG) debug("Type of message record is not mms");
+        if (DEBUG) debug("Type of message record is not 'mms'.");
         aRequest.notifyGetMessageFailed(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
         return;
       }
-      if (!aMessageRecord.headers ||
-          !aMessageRecord.headers["x-mms-content-location"]) {
+      if (!aMessageRecord.headers) {
+        if (DEBUG) debug("Must need the MMS' headers to proceed the retrieve.");
+        aRequest.notifyGetMessageFailed(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
+        return;
+      }
+      if (!aMessageRecord.headers["x-mms-content-location"]) {
         if (DEBUG) debug("Can't find mms content url in database.");
         aRequest.notifyGetMessageFailed(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
         return;
       }
 
       // Cite 6.2 "Multimedia Message Notification" in OMA-TS-MMS_ENC-V1_3-20110913-A:
-      //   The field has only one format, relative. The recipient client calculates this
-      //   length of time relative to the time it receives the notification.
-      let expiriedDate = aMessageRecord.timestamp +
-        aMessageRecord.headers["x-mms-expiry"] * 1000;
-      if (expiriedDate < Date.now()) {
-        aRequest.notifyGetMessageFailed(Ci.nsIMobileMessageCallback.NOT_FOUND_ERROR);
-        if (DEBUG) debug("This notification indication is expired.");
-        return;
+      // The field has only one format, relative. The recipient client calculates
+      // this length of time relative to the time it receives the notification.
+      if (aMessageRecord.headers["x-mms-expiry"] != undefined) {
+        let expiryDate = aMessageRecord.timestamp +
+                         aMessageRecord.headers["x-mms-expiry"] * 1000;
+        if (expiryDate < Date.now()) {
+          if (DEBUG) debug("The message to be retrieved is expired.");
+          aRequest.notifyGetMessageFailed(Ci.nsIMobileMessageCallback.NOT_FOUND_ERROR);
+          return;
+        }
       }
 
       let url =  aMessageRecord.headers["x-mms-content-location"].uri;

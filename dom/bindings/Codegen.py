@@ -2046,10 +2046,12 @@ def GetAccessCheck(descriptor, object):
 
     returns a string
     """
+    accessCheck = "xpc::AccessCheck::isChrome(%s)" % object
     if descriptor.workers:
-        accessCheck = "mozilla::dom::workers::GetWorkerPrivateFromContext(aCx)->IsChromeWorker()"
-    else:
-        accessCheck = "xpc::AccessCheck::isChrome(%s)" % object
+        # We sometimes set up worker things on the main thread, in which case we
+        # want to use the main-thread accessCheck above.  Otherwise, we want to
+        # check for a ChromeWorker.
+        accessCheck = "(NS_IsMainThread() ? %s : mozilla::dom::workers::GetWorkerPrivateFromContext(aCx)->IsChromeWorker())" % accessCheck
     return accessCheck
 
 def InitUnforgeablePropertiesOnObject(descriptor, obj, properties, failureReturnValue=""):
@@ -2256,11 +2258,11 @@ def numericValue(t, v):
     if (t == IDLType.Tags.unrestricted_double or
         t == IDLType.Tags.unrestricted_float):
         if v == float("inf"):
-            return "MOZ_DOUBLE_POSITIVE_INFINITY()"
+            return "mozilla::PositiveInfinity()"
         if v == float("-inf"):
-            return "MOZ_DOUBLE_NEGATIVE_INFINITY()"
+            return "mozilla::NegativeInfinity()"
         if math.isnan(v):
-            return "MOZ_DOUBLE_NaN()"
+            return "mozilla::UnspecifiedNaN()"
     return "%s%s" % (v, numericSuffixes[t])
 
 class CastableObjectUnwrapper():
@@ -3393,8 +3395,8 @@ for (uint32_t i = 0; i < length; ++i) {
         else:
             nonFiniteCode = ("  ThrowErrorMessage(cx, MSG_NOT_FINITE);\n"
                              "%s" % exceptionCodeIndented.define())
-        template += (" else if (!MOZ_DOUBLE_IS_FINITE(%s)) {\n"
-                     "  // Note: MOZ_DOUBLE_IS_FINITE will do the right thing\n"
+        template += (" else if (!mozilla::IsFinite(%s)) {\n"
+                     "  // Note: mozilla::IsFinite will do the right thing\n"
                      "  //       when passed a non-finite float too.\n"
                      "%s\n"
                      "}" % (readLoc, nonFiniteCode))
@@ -7972,7 +7974,8 @@ class CGBindingRoot(CGThing):
                           # Have to include nsDOMQS.h to get fast arg unwrapping
                           # for old-binding things with castability.
                           'nsDOMQS.h'
-                          ] + (['WorkerPrivate.h'] if hasWorkerStuff else []),
+                          ] + (['WorkerPrivate.h',
+                                'nsThreadUtils.h'] if hasWorkerStuff else []),
                          curr,
                          config,
                          jsImplemented)
@@ -8653,11 +8656,34 @@ class CGJSImplMethod(CGNativeMember):
         if self.name != 'Constructor':
             raise TypeError("Named constructors are not supported for JS implemented WebIDL. See bug 851287.")
         if len(self.signature[1]) != 0:
-            raise TypeError("Constructors with arguments are unsupported. See bug 851178.")
-        return genConstructorBody(self.descriptor)
+            args = self.getArgs(self.signature[0], self.signature[1])
+            # The first two arguments to the constructor implementation are not
+            # arguments to the WebIDL constructor, so don't pass them to __Init()
+            assert args[0].argType == 'const GlobalObject&'
+            assert args[1].argType == 'JSContext*'
+            args = args[2:]
+            constructorArgs = [arg.name for arg in args]
+            initCall = """
+  // Wrap the object before calling __Init so that __DOM_IMPL__ is available.
+  nsCOMPtr<nsIGlobalObject> globalHolder = do_QueryInterface(window);
+  JS::Rooted<JSObject*> scopeObj(cx, globalHolder->GetGlobalJSObject());
+  JS::Rooted<JS::Value> wrappedVal(cx);
+  if (!WrapNewBindingObject(cx, scopeObj, impl, wrappedVal.address())) {
+    MOZ_ASSERT(JS_IsExceptionPending(cx));
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+  // Initialize the object with the constructor arguments.
+  impl->mImpl->__Init(%s);
+  if (aRv.Failed()) {
+    return nullptr;
+  }""" % (", ".join(constructorArgs))
+        else:
+            initCall = ""
+        return genConstructorBody(self.descriptor, initCall)
 
-def genConstructorBody(descriptor):
-        return string.Template(
+def genConstructorBody(descriptor, initCall=""):
+    return string.Template(
 """  // Get the window to use as a parent and for initialization.
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(global.Get());
   if (!window) {
@@ -8705,9 +8731,10 @@ def genConstructorBody(descriptor):
     }
   }
   // Build the C++ implementation.
-  nsRefPtr<${implClass}> impl = new ${implClass}(jsImplObj, window);
+  nsRefPtr<${implClass}> impl = new ${implClass}(jsImplObj, window);${initCall}
   return impl.forget();""").substitute({"implClass" : descriptor.name,
-                 "contractId" : descriptor.interface.getJSImplementation()
+                 "contractId" : descriptor.interface.getJSImplementation(),
+                 "initCall" : initCall
                  })
 
 # We're always fallible
@@ -8984,6 +9011,11 @@ class CGCallbackInterface(CGCallback):
                    if m.isMethod() and not m.isStatic()]
         methods = [CallbackOperation(m, sig, descriptor) for m in methods
                    for sig in m.signatures()]
+        if iface.isJSImplemented() and iface.ctor():
+            sigs = descriptor.interface.ctor().signatures()
+            if len(sigs) != 1:
+                raise TypeError("We only handle one constructor.  See bug 869268.")
+            methods.append(CGJSImplInitOperation(sigs[0], descriptor))
         CGCallback.__init__(self, iface, descriptor, "CallbackInterface",
                             methods, getters=getters, setters=setters)
 
@@ -9256,15 +9288,14 @@ class CallCallback(CallbackMethod):
     def getCallableDecl(self):
         return "JS::Rooted<JS::Value> callable(cx, JS::ObjectValue(*mCallback));\n"
 
-class CallbackOperation(CallbackMethod):
-    def __init__(self, method, signature, descriptor):
-        self.singleOperation = descriptor.interface.isSingleOperationInterface()
-        self.ensureASCIIName(method)
-        self.methodName = method.identifier.name
-        CallbackMethod.__init__(self, signature,
-                                MakeNativeName(self.methodName),
-                                descriptor,
-                                self.singleOperation)
+class CallbackOperationBase(CallbackMethod):
+    """
+    Common class for implementing various callback operations.
+    """
+    def __init__(self, signature, jsName, nativeName, descriptor, singleOperation):
+        self.singleOperation = singleOperation
+        self.methodName = jsName
+        CallbackMethod.__init__(self, signature, nativeName, descriptor, singleOperation)
 
     def getThisObj(self):
         if not self.singleOperation:
@@ -9294,6 +9325,17 @@ class CallbackOperation(CallbackMethod):
             '} else {\n'
             '%s'
             '}\n' % CGIndenter(CGGeneric(getCallableFromProp)).define())
+
+class CallbackOperation(CallbackOperationBase):
+    """
+    Codegen actual WebIDL operations on callback interfaces.
+    """
+    def __init__(self, method, signature, descriptor):
+        self.ensureASCIIName(method)
+        jsName = method.identifier.name
+        CallbackOperationBase.__init__(self, signature,
+                                       jsName, MakeNativeName(jsName),
+                                       descriptor, descriptor.interface.isSingleOperationInterface())
 
 class CallbackGetter(CallbackMember):
     def __init__(self, attr, descriptor):
@@ -9349,6 +9391,15 @@ class CallbackSetter(CallbackMember):
 
     def getArgcDecl(self):
         return None
+
+class CGJSImplInitOperation(CallbackOperationBase):
+    """
+    Codegen the __Init() method used to pass along constructor arguments for JS-implemented WebIDL.
+    """
+    def __init__(self, sig, descriptor):
+        assert sig in descriptor.interface.ctor().signatures()
+        CallbackOperationBase.__init__(self, (BuiltinTypes[IDLBuiltinType.Types.void], sig[1]),
+                                       "__init", "__Init", descriptor, False)
 
 class GlobalGenRoots():
     """

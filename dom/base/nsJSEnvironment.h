@@ -326,7 +326,7 @@ JSObject* NS_DOMReadStructuredClone(JSContext* cx,
 
 JSBool NS_DOMWriteStructuredClone(JSContext* cx,
                                   JSStructuredCloneWriter* writer,
-                                  JSObject* obj, void *closure);
+                                  JS::Handle<JSObject*> obj, void *closure);
 
 void NS_DOMStructuredCloneError(JSContext* cx, uint32_t errorid);
 

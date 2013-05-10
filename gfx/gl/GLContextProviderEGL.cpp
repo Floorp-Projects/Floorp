@@ -614,7 +614,7 @@ public:
     virtual already_AddRefed<TextureImage>
     TileGenFunc(const nsIntSize& aSize,
                 TextureImage::ContentType aContentType,
-                TextureImage::Flags aFlags = TextureImage::NoFlags);
+                TextureImage::Flags aFlags = TextureImage::NoFlags) MOZ_OVERRIDE;
     // hold a reference to the given surface
     // for the lifetime of this context.
     void HoldSurface(gfxASurface *aSurf) {
@@ -1536,8 +1536,8 @@ GLContextEGL::CreateTextureImage(const nsIntSize& aSize,
 
 already_AddRefed<TextureImage>
 GLContextEGL::TileGenFunc(const nsIntSize& aSize,
-                                 TextureImage::ContentType aContentType,
-                                 TextureImage::Flags aFlags)
+                          TextureImage::ContentType aContentType,
+                          TextureImage::Flags aFlags)
 {
   MakeCurrent();
 

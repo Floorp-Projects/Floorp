@@ -119,22 +119,13 @@ mozilla::fallocate(PRFileDesc *aFD, int64_t aLength)
 
 #ifdef ReadSysFile_PRESENT
 
-#undef TEMP_FAILURE_RETRY
-#define TEMP_FAILURE_RETRY(exp) (__extension__({ \
-  typeof (exp) _rc; \
-  do { \
-    _rc = (exp); \
-  } while (_rc == -1 && errno == EINTR); \
-  _rc; \
-}))
-
 bool
 mozilla::ReadSysFile(
   const char* aFilename,
   char* aBuf,
   size_t aBufSize)
 {
-  int fd = TEMP_FAILURE_RETRY(open(aFilename, O_RDONLY));
+  int fd = MOZ_TEMP_FAILURE_RETRY(open(aFilename, O_RDONLY));
   if (fd < 0) {
     return false;
   }
@@ -145,7 +136,8 @@ mozilla::ReadSysFile(
   ssize_t bytesRead;
   size_t offset = 0;
   do {
-    bytesRead = TEMP_FAILURE_RETRY(read(fd, aBuf + offset, aBufSize - offset));
+    bytesRead = MOZ_TEMP_FAILURE_RETRY(
+      read(fd, aBuf + offset, aBufSize - offset));
     if (bytesRead == -1) {
       return false;
     }

@@ -30,7 +30,7 @@ public class testHistory extends PixelTest {
         loadAndPaint(url3);
         verifyPageTitle("Browser Blank Page 03");
 
-        final ListView hList = openHistoryList();
+        final ListView hList = getHistoryList("Today|Yesterday");
         mAsserter.ok(hList != null, "checking history exists", "history exists");
 
         // Click on the history item and wait for the page to load
@@ -62,23 +62,11 @@ public class testHistory extends PixelTest {
             }
         }, MAX_WAIT_MS);
 
-        Actions.EventExpecter contentEventExpecter = mActions.expectGeckoEvent("DOMContentLoaded");
         mAsserter.isnot(mFirstChild, null, "Got history item");
         mSolo.clickOnView(mFirstChild);
-        contentEventExpecter.blockForEvent();
-        contentEventExpecter.unregisterListener();
+        // The first item here (since it was just visited) should be a "Switch to tab" item
+        // i.e. don't expect a DOMCOntentLoaded event
+        verifyPageTitle("Browser Blank Page 03");
         verifyUrl(url3);
-    }
-
-    protected ListView openHistoryList() {
-        Activity awesomeBarActivity = clickOnAwesomeBar();
-        mSolo.clickOnText("History");
-
-        ArrayList<ListView> views = mSolo.getCurrentListViews();
-        for (ListView view : views) {
-            if (view.getTag() == "history")
-                return view;
-        }
-        return null;
     }
 }

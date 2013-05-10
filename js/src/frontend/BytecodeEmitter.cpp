@@ -52,6 +52,7 @@ using namespace js::gc;
 using namespace js::frontend;
 
 using mozilla::DebugOnly;
+using mozilla::DoubleIsInt32;
 using mozilla::PodCopy;
 
 static bool
@@ -2115,7 +2116,7 @@ EmitNumberOp(JSContext *cx, double dval, BytecodeEmitter *bce)
     ptrdiff_t off;
     jsbytecode *pc;
 
-    if (MOZ_DOUBLE_IS_INT32(dval, &ival)) {
+    if (DoubleIsInt32(dval, &ival)) {
         if (ival == 0)
             return Emit1(cx, bce, JSOP_ZERO) >= 0;
         if (ival == 1)
@@ -2272,7 +2273,7 @@ EmitSwitch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             }
 
             int32_t i;
-            if (!MOZ_DOUBLE_IS_INT32(pn4->pn_dval, &i)) {
+            if (!DoubleIsInt32(pn4->pn_dval, &i)) {
                 switchOp = JSOP_CONDSWITCH;
                 continue;
             }

@@ -4,8 +4,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-interface StyleSheet;
-
 interface XMLStylesheetProcessingInstruction : ProcessingInstruction {
   readonly attribute StyleSheet? sheet;
 };

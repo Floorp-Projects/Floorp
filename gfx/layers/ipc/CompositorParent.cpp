@@ -13,6 +13,9 @@
 #include "CompositorParent.h"
 #include "mozilla/layers/CompositorOGL.h"
 #include "mozilla/layers/BasicCompositor.h"
+#ifdef XP_WIN
+#include "mozilla/layers/CompositorD3D11.h"
+#endif
 #include "LayerTransactionParent.h"
 #include "nsIWidget.h"
 #include "nsGkAtoms.h"
@@ -568,6 +571,11 @@ CompositorParent::AllocPLayerTransaction(const LayersBackend& aBackendHint,
   } else if (aBackendHint == mozilla::layers::LAYERS_BASIC) {
     mLayerManager =
       new LayerManagerComposite(new BasicCompositor(mWidget));
+#ifdef XP_WIN
+  } else if (aBackendHint == mozilla::layers::LAYERS_D3D11) {
+    mLayerManager =
+      new LayerManagerComposite(new CompositorD3D11(mWidget));
+#endif
   } else {
     NS_ERROR("Unsupported backend selected for Async Compositor");
     return nullptr;

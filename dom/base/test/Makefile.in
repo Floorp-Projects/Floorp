@@ -29,6 +29,7 @@ MOCHITEST_FILES = \
   test_domcursor.html \
   test_named_frames.html \
   test_Image_constructor.html \
+  test_setting_opener.html \
   $(NULL)
 
 MOCHITEST_CHROME_FILES = \

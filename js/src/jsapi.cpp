@@ -502,7 +502,7 @@ JS_ValueToNumber(JSContext *cx, jsval valueArg, double *dp)
 JS_PUBLIC_API(JSBool)
 JS_DoubleIsInt32(double d, int32_t *ip)
 {
-    return MOZ_DOUBLE_IS_INT32(d, ip);
+    return mozilla::DoubleIsInt32(d, ip);
 }
 
 JS_PUBLIC_API(int32_t)
@@ -566,7 +566,7 @@ JS_ValueToInt32(JSContext *cx, jsval vArg, int32_t *ip)
         return false;
     }
 
-    if (MOZ_DOUBLE_IS_NaN(d) || d <= -2147483649.0 || 2147483648.0 <= d) {
+    if (mozilla::IsNaN(d) || d <= -2147483649.0 || 2147483648.0 <= d) {
         js_ReportValueError(cx, JSMSG_CANT_CONVERT,
                             JSDVG_SEARCH_STACK, v, NullPtr());
         return false;

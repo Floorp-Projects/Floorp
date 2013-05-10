@@ -248,6 +248,9 @@ class CodeGenerator : public CodeGeneratorSpecific
 
     bool visitOutOfLineParNewGCThing(OutOfLineParNewGCThing *ool);
     bool visitOutOfLineParallelAbort(OutOfLineParallelAbort *ool);
+    bool visitOutOfLinePropagateParallelAbort(OutOfLinePropagateParallelAbort *ool);
+    void loadJSScriptForBlock(MBasicBlock *block, Register reg);
+    void loadOutermostJSScript(Register reg);
 
     // Inline caches visitors.
     bool visitOutOfLineCache(OutOfLineUpdateCache *ool);
@@ -281,17 +284,19 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool addGetPropertyCache(LInstruction *ins, RegisterSet liveRegs, Register objReg,
                              PropertyName *name, TypedOrValueRegister output,
                              bool allowGetters);
+    bool checkForParallelBailout(LInstruction *lir);
 
-    bool checkForParallelBailout();
     bool generateBranchV(const ValueOperand &value, Label *ifTrue, Label *ifFalse, FloatRegister fr);
 
-    bool emitParAllocateGCThing(const Register &objReg,
+    bool emitParAllocateGCThing(LInstruction *lir,
+                                const Register &objReg,
                                 const Register &threadContextReg,
                                 const Register &tempReg1,
                                 const Register &tempReg2,
                                 JSObject *templateObj);
 
-    bool emitParCallToUncompiledScript(Register calleeReg);
+    bool emitParCallToUncompiledScript(LInstruction *lir,
+                                       Register calleeReg);
 
     void emitLambdaInit(const Register &resultReg,
                         const Register &scopeChainReg,

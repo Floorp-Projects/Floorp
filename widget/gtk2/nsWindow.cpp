@@ -95,6 +95,7 @@ using namespace mozilla::widget;
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsAutoPtr.h"
 #include "BasicLayers.h"
+#include "ClientLayerManager.h"
 
 extern "C" {
 #define PIXMAN_DONT_DEFINE_STDINT
@@ -121,6 +122,7 @@ extern "C" {
 
 using namespace mozilla;
 using namespace mozilla::widget;
+using namespace mozilla::layers;
 using mozilla::gl::GLContext;
 using mozilla::layers::LayerManagerOGL;
 
@@ -2122,7 +2124,8 @@ nsWindow::OnExposeEvent(cairo_t *cr)
         return TRUE;
     }
     // If this widget uses OMTC...
-    if (GetLayerManager()->AsShadowForwarder() && GetLayerManager()->AsShadowForwarder()->HasShadowManager()) {
+    if (GetLayerManager()->AsShadowForwarder() && GetLayerManager()->AsShadowForwarder()->HasShadowManager() &&
+        Compositor::GetBackend() != LAYERS_BASIC) {
         listener->DidPaintWindow();
 
         g_free(rects);
@@ -2194,8 +2197,14 @@ nsWindow::OnExposeEvent(cairo_t *cr)
 
     bool painted = false;
     {
-      AutoLayerManagerSetup setupLayerManager(this, ctx, layerBuffering);
-      painted = listener->PaintWindow(this, region, 0);
+      if (GetLayerManager()->GetBackendType() == LAYERS_BASIC) {
+        AutoLayerManagerSetup setupLayerManager(this, ctx, layerBuffering);
+        painted = listener->PaintWindow(this, region, 0);
+      } else if (GetLayerManager()->GetBackendType() == LAYERS_CLIENT) {
+        ClientLayerManager *manager = static_cast<ClientLayerManager*>(GetLayerManager());
+        manager->SetShadowTarget(ctx);
+        painted = listener->PaintWindow(this, region, 0);
+      }
     }
 
 #ifdef MOZ_X11

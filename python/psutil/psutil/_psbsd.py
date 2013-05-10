@@ -1,7 +1,5 @@
 #!/usr/bin/env python
-#
-# $Id: _psbsd.py 1498 2012-07-24 21:41:28Z g.rodola $
-#
+
 # Copyright (c) 2009, Jay Loden, Giampaolo Rodola'. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
@@ -11,26 +9,46 @@
 import errno
 import os
 import sys
+import warnings
 
 import _psutil_bsd
 import _psutil_posix
 from psutil import _psposix
-from psutil.error import AccessDenied, NoSuchProcess, TimeoutExpired
-from psutil._compat import namedtuple
+from psutil._error import AccessDenied, NoSuchProcess, TimeoutExpired
+from psutil._compat import namedtuple, wraps
 from psutil._common import *
 
 __extra__all__ = []
 
 # --- constants
 
-NUM_CPUS = _psutil_bsd.get_num_cpus()
-BOOT_TIME = _psutil_bsd.get_system_boot_time()
-TOTAL_PHYMEM = _psutil_bsd.get_virtual_mem()[0]
-_TERMINAL_MAP = _psposix._get_terminal_map()
+# Since these constants get determined at import time we do not want to
+# crash immediately; instead we'll set them to None and most likely
+# we'll crash later as they're used for determining process CPU stats
+# and creation_time
+try:
+    NUM_CPUS = _psutil_bsd.get_num_cpus()
+except Exception:
+    NUM_CPUS = None
+    warnings.warn("couldn't determine platform's NUM_CPUS", RuntimeWarning)
+try:
+    TOTAL_PHYMEM = _psutil_bsd.get_virtual_mem()[0]
+except Exception:
+    TOTAL_PHYMEM = None
+    warnings.warn("couldn't determine platform's TOTAL_PHYMEM", RuntimeWarning)
+try:
+    BOOT_TIME = _psutil_bsd.get_system_boot_time()
+except Exception:
+    BOOT_TIME = None
+    warnings.warn("couldn't determine platform's BOOT_TIME", RuntimeWarning)
+
+
 _PAGESIZE = os.sysconf("SC_PAGE_SIZE")
 _cputimes_ntuple = namedtuple('cputimes', 'user nice system idle irq')
 
 # --- public functions
+
+get_system_boot_time = _psutil_bsd.get_system_boot_time
 
 nt_virtmem_info = namedtuple('vmem', ' '.join([
     # all platforms
@@ -124,14 +142,14 @@ network_io_counters = _psutil_bsd.get_network_io_counters
 disk_io_counters = _psutil_bsd.get_disk_io_counters
 
 
-def wrap_exceptions(method):
-    """Call method(self, pid) into a try/except clause so that if an
-    OSError "No such process" exception is raised we assume the process
-    has died and raise psutil.NoSuchProcess instead.
+def wrap_exceptions(fun):
+    """Decorator which translates bare OSError exceptions into
+    NoSuchProcess and AccessDenied.
     """
+    @wraps(fun)
     def wrapper(self, *args, **kwargs):
         try:
-            return method(self, *args, **kwargs)
+            return fun(self, *args, **kwargs)
         except OSError:
             err = sys.exc_info()[1]
             if err.errno == errno.ESRCH:
@@ -179,8 +197,9 @@ class Process(object):
     @wrap_exceptions
     def get_process_terminal(self):
         tty_nr = _psutil_bsd.get_process_tty_nr(self.pid)
+        tmap = _psposix._get_terminal_map()
         try:
-            return _TERMINAL_MAP[tty_nr]
+            return tmap[tty_nr]
         except KeyError:
             return None
 

@@ -95,6 +95,7 @@ public class BookmarksTab extends AwesomeBarTab {
 
     @Override
     public void destroy() {
+        super.destroy();
         // Can't use getters for adapter. It will create one if null.
         if (mCursorAdapter != null && mView != null) {
             ListView list = (ListView)mView;
@@ -203,18 +204,13 @@ public class BookmarksTab extends AwesomeBarTab {
         }
 
         // Otherwise, just open the URL
-        AwesomeBarTabs.OnUrlOpenListener listener = getUrlListener();
-        if (listener == null) {
-            return;
-        }
-
         String url = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.URL));
         String title = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.TITLE));
         long parentId = cursor.getLong(cursor.getColumnIndexOrThrow(Bookmarks.PARENT));
         if (parentId == Bookmarks.FIXED_READING_LIST_ID) {
             url = ReaderModeUtils.getAboutReaderForUrl(url, true);
         }
-        listener.onUrlOpen(url, title);
+        sendToListener(url, title);
     }
 
     private class BookmarksListAdapter extends SimpleCursorAdapter {
@@ -343,7 +339,7 @@ public class BookmarksTab extends AwesomeBarTab {
 
             if (viewType == VIEW_TYPE_ITEM) {
                 updateTitle(viewHolder.titleView, cursor);
-                updateUrl(viewHolder.urlView, cursor);
+                updateUrl(viewHolder, cursor);
 
                 byte[] b = cursor.getBlob(cursor.getColumnIndexOrThrow(URLColumns.FAVICON));
                 Bitmap favicon = null;
@@ -465,12 +461,10 @@ public class BookmarksTab extends AwesomeBarTab {
         if (subject == null)
             return subject;
 
-        MenuInflater inflater = new MenuInflater(mContext);
-        inflater.inflate(R.menu.awesomebar_contextmenu, menu);
+        setupMenu(menu, subject);
         
         menu.findItem(R.id.remove_history).setVisible(false);
         menu.findItem(R.id.open_in_reader).setVisible(false);
-        menu.setHeaderTitle(subject.title);
 
         return subject;
     }

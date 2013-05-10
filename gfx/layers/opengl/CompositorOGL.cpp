@@ -24,6 +24,8 @@
 
 #include "gfxCrashReporterUtils.h"
 
+#include "nsMathUtils.h"
+
 #include "GeckoProfiler.h"
 #include <algorithm>
 
@@ -546,10 +548,10 @@ CompositorOGL::BindAndDrawQuadWithTextureRect(ShaderProgramOGL *aProg,
   // We need to convert back to actual texels here to get proper behaviour with
   // our GL helper functions. Should fix this sometime.
   // I want to vomit.
-  IntRect texCoordRect = IntRect(aTexCoordRect.x * aTexture->GetSize().width,
-                                 aTexCoordRect.y * aTexture->GetSize().height,
-                                 aTexCoordRect.width * aTexture->GetSize().width,
-                                 aTexCoordRect.height * aTexture->GetSize().height);
+  IntRect texCoordRect = IntRect(NS_roundf(aTexCoordRect.x * aTexture->GetSize().width),
+                                 NS_roundf(aTexCoordRect.y * aTexture->GetSize().height),
+                                 NS_roundf(aTexCoordRect.width * aTexture->GetSize().width),
+                                 NS_roundf(aTexCoordRect.height * aTexture->GetSize().height));
 
   // This is fairly disgusting - if the texture should be flipped it will have a
   // negative height, in which case we un-invert the texture coords and pass the

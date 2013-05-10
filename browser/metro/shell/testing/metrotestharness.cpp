@@ -219,12 +219,15 @@ static bool Launch()
   }
   Log(L"App model id='%s'", appModelID);
 
-  // Hand off focus rights to the out-of-process activation server. Without
-  // this the metro interface won't launch.
-  hr = CoAllowSetForegroundWindow(activateMgr, NULL);
-  if (FAILED(hr)) {
-    Fail(L"CoAllowSetForegroundWindow result %X", hr);
-    return false;
+  // Hand off focus rights if the terminal has focus to the out-of-process
+  // activation server (explorer.exe). Without this the metro interface
+  // won't launch.
+  if (GetForegroundWindow() == GetConsoleWindow()) {
+    hr = CoAllowSetForegroundWindow(activateMgr, NULL);
+    if (FAILED(hr)) {
+      Fail(L"CoAllowSetForegroundWindow result %X", hr);
+      return false;
+    }
   }
 
   Log(L"Harness process id: %d", GetCurrentProcessId());

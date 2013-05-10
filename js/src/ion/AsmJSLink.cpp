@@ -151,8 +151,8 @@ ValidateGlobalConstant(JSContext *cx, AsmJSModule::Global &global, HandleValue g
         return LinkFail(cx, "global constant value needs to be a number");
 
     // NaN != NaN
-    if (MOZ_DOUBLE_IS_NaN(global.constantValue())) {
-        if (!MOZ_DOUBLE_IS_NaN(v.toNumber()))
+    if (IsNaN(global.constantValue())) {
+        if (!IsNaN(v.toNumber()))
             return LinkFail(cx, "global constant value needs to be NaN");
     } else {
         if (v.toNumber() != global.constantValue())

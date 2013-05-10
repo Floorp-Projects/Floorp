@@ -28,8 +28,6 @@ EXTRA_DSO_LDOPTS = \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
-PROGRAM         = mozilla-xremote-client$(BIN_SUFFIX)
-
 PROGCPPSRCS = \
   mozilla-xremote-client.cpp \
   XRemoteClient.cpp \

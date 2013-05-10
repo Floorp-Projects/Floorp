@@ -125,7 +125,7 @@ Key::EncodeJSValInternal(JSContext* aCx, const jsval aVal,
 
   if (JSVAL_IS_DOUBLE(aVal)) {
     double d = JSVAL_TO_DOUBLE(aVal);
-    if (MOZ_DOUBLE_IS_NaN(d)) {
+    if (mozilla::IsNaN(d)) {
       return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
     }
     EncodeNumber(d, eFloat + aTypeOffset);

@@ -10,6 +10,10 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
+// We do not use our generic graph test framework here because
+// the splitter node is special in that it creates multiple
+// output ports.
+
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() {
   SpecialPowers.setBoolPref("media.webaudio.enabled", true);

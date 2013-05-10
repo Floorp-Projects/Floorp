@@ -8,6 +8,7 @@
 
 #include "gfxRect.h"
 #include "mozilla/dom/SVGIRect.h"
+#include "nsSVGElement.h"
 
 ////////////////////////////////////////////////////////////////////////
 // SVGRect class
@@ -18,7 +19,8 @@ namespace dom {
 class SVGRect MOZ_FINAL : public SVGIRect
 {
 public:
-  SVGRect(float x=0.0f, float y=0.0f, float w=0.0f, float h=0.0f);
+  SVGRect(nsIContent* aParent, float x=0.0f, float y=0.0f, float w=0.0f,
+          float h=0.0f);
 
   // nsISupports interface:
   NS_DECL_ISUPPORTS
@@ -64,11 +66,6 @@ public:
     mHeight = aHeight;
   }
 
-  using mozilla::dom::SVGIRect::SetX;
-  using mozilla::dom::SVGIRect::SetY;
-  using mozilla::dom::SVGIRect::SetWidth;
-  using mozilla::dom::SVGIRect::SetHeight;
-
 protected:
   float mX, mY, mWidth, mHeight;
 };
@@ -77,9 +74,10 @@ protected:
 } // namespace mozilla
 
 already_AddRefed<mozilla::dom::SVGRect>
-NS_NewSVGRect(float x=0.0f, float y=0.0f, float width=0.0f, float height=0.0f);
+NS_NewSVGRect(nsIContent* aParent, float x=0.0f, float y=0.0f,
+              float width=0.0f, float height=0.0f);
 
 already_AddRefed<mozilla::dom::SVGRect>
-NS_NewSVGRect(const gfxRect& rect);
+NS_NewSVGRect(nsIContent* aParent, const gfxRect& rect);
 
 #endif //mozilla_dom_SVGRect_h

@@ -10,45 +10,36 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-SimpleTest.waitForExplicitFinish();
-addLoadEvent(function() {
-  SpecialPowers.setBoolPref("media.webaudio.enabled", true);
-
-  var context = new AudioContext();
-  // silence for half of the buffer, ones after that.
-  var expectedBuffer = context.createBuffer(1, 2048, context.sampleRate);
-  var buffer = context.createBuffer(1, 2048, context.sampleRate);
-  for (var i = 1024; i < 2048; i++) {
-    buffer.getChannelData(0)[i] = 1;
-  }
-  for (var i = 0; i < 2048; i++) {
-    expectedBuffer.getChannelData(0)[i] = 1;
-  }
-
-  var source = context.createBufferSource();
-
-  var sp = context.createScriptProcessor(2048);
-  // we start at the 1024 frames, we should only have ones.
-  source.loop = true;
-  source.loopStart = 1024 / context.sampleRate;
-  source.loopEnd = 2048 / context.sampleRate;
-  source.buffer = buffer;
-  source.start(0, 1024 / context.sampleRate, 1024 / context.sampleRate);
-  source.connect(sp);
-  sp.connect(context.destination);
-  var eventReceived = 0;
-  sp.onaudioprocess = function(e) {
-    eventReceived++;
-    compareBuffers(e.inputBuffer.getChannelData(0), expectedBuffer.getChannelData(0));
-
-    if (eventReceived > 2){
-      sp.onaudioprocess = null;
-
-      SpecialPowers.clearUserPref("media.webaudio.enabled");
-      SimpleTest.finish();
+var gTest = {
+  length: 4096,
+  numberOfChannels: 1,
+  createGraph: function(context) {
+    // silence for half of the buffer, ones after that.
+    var buffer = context.createBuffer(1, 2048, context.sampleRate);
+    for (var i = 1024; i < 2048; i++) {
+      buffer.getChannelData(0)[i] = 1;
     }
-  };
-});
+
+    var source = context.createBufferSource();
+
+    // we start at the 1024 frames, we should only have ones.
+    source.loop = true;
+    source.loopStart = 1024 / context.sampleRate;
+    source.loopEnd = 2048 / context.sampleRate;
+    source.buffer = buffer;
+    source.start(0, 1024 / context.sampleRate, 1024 / context.sampleRate);
+    return source;
+  },
+  createExpectedBuffers: function(context) {
+    var expectedBuffer = context.createBuffer(1, 4096, context.sampleRate);
+    for (var i = 0; i < 4096; i++) {
+      expectedBuffer.getChannelData(0)[i] = 1;
+    }
+    return expectedBuffer;
+  },
+};
+
+runTest();
 
 </script>
 </pre>

@@ -35,6 +35,7 @@ import android.view.ContextMenu.ContextMenuInfo;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
@@ -56,6 +57,7 @@ public class AwesomeBar extends GeckoActivity
     private static final String LOGTAG = "GeckoAwesomeBar";
 
     public static final String URL_KEY = "url";
+    public static final String TAB_KEY = "tab";
     public static final String CURRENT_URL_KEY = "currenturl";
     public static final String TARGET_KEY = "target";
     public static final String SEARCH_KEY = "search";
@@ -99,8 +101,12 @@ public class AwesomeBar extends GeckoActivity
             }
 
             @Override
-            public void onSearch(String engine, String text) {
-                openSearchAndFinish(text, engine);
+            public void onSearch(SearchEngine engine, String text) {
+                Intent resultIntent = new Intent();
+                resultIntent.putExtra(URL_KEY, text);
+                resultIntent.putExtra(TARGET_KEY, mTarget);
+                resultIntent.putExtra(SEARCH_KEY, engine.name);
+                finishWithResult(resultIntent);
             }
 
             @Override
@@ -115,6 +121,13 @@ public class AwesomeBar extends GeckoActivity
                         imm.showSoftInput(mText, InputMethodManager.SHOW_IMPLICIT);
                     }
                 });
+            }
+
+            @Override
+            public void onSwitchToTab(final int tabId) {
+                Intent resultIntent = new Intent();
+                resultIntent.putExtra(TAB_KEY, Integer.toString(tabId));
+                finishWithResult(resultIntent);
             }
         });
 
@@ -379,37 +392,31 @@ public class AwesomeBar extends GeckoActivity
         final int index = url.indexOf(' ');
 
         // Check for a keyword if the URL looks like a search query
-        if (StringUtils.isSearchQuery(url, true)) {
-            ThreadUtils.postToBackgroundThread(new Runnable() {
-                @Override
-                public void run() {
-                    String keywordUrl = null;
-                    String keywordSearch = "";
-                    if (index == -1) {
-                        keywordUrl = BrowserDB.getUrlForKeyword(getContentResolver(), url);
-                    } else {
-                        keywordUrl = BrowserDB.getUrlForKeyword(getContentResolver(), url.substring(0, index));
-                        keywordSearch = url.substring(index + 1);
-                    }
-                    if (keywordUrl == null) {
-                        openUrlAndFinish(url, "", true);
-                    } else {
-                        String search = URLEncoder.encode(keywordSearch);
-                        openUrlAndFinish(keywordUrl.replace("%s", search), "", true);
-                    }
-                }
-            });
-        } else {
+        if (!StringUtils.isSearchQuery(url, true)) {
             openUrlAndFinish(url, "", true);
+            return;
         }
-    }
+        ThreadUtils.postToBackgroundThread(new Runnable() {
+            @Override
+            public void run() {
+                final String keyword;
+                final String keywordSearch;
 
-    private void openSearchAndFinish(String url, String engine) {
-        Intent resultIntent = new Intent();
-        resultIntent.putExtra(URL_KEY, url);
-        resultIntent.putExtra(TARGET_KEY, mTarget);
-        resultIntent.putExtra(SEARCH_KEY, engine);
-        finishWithResult(resultIntent);
+                if (index == -1) {
+                    keyword = url;
+                    keywordSearch = "";
+                } else {
+                    keyword = url.substring(0, index);
+                    keywordSearch = url.substring(index + 1);
+                }
+
+                final String keywordUrl = BrowserDB.getUrlForKeyword(getContentResolver(), keyword);
+                final String searchUrl = (keywordUrl != null)
+                                       ? keywordUrl.replace("%s", URLEncoder.encode(keywordSearch))
+                                       : url;
+                openUrlAndFinish(searchUrl, "", true);
+            }
+        });
     }
 
     @Override
@@ -585,8 +592,28 @@ public class AwesomeBar extends GeckoActivity
         final byte[] b = mContextMenuSubject.favicon;
         final String title = mContextMenuSubject.title;
         final String keyword = mContextMenuSubject.keyword;
+        final int display = mContextMenuSubject.display;
 
         switch (item.getItemId()) {
+            case R.id.open_private_tab:
+            case R.id.open_new_tab: {
+                if (url == null) {
+                    Log.e(LOGTAG, "Can't open in new tab because URL is null");
+                    break;
+                }
+
+                String newTabUrl = url;
+                if (display == Combined.DISPLAY_READER)
+                    newTabUrl = ReaderModeUtils.getAboutReaderForUrl(url, true);
+
+                int flags = Tabs.LOADURL_NEW_TAB;
+                if (item.getItemId() == R.id.open_private_tab)
+                    flags |= Tabs.LOADURL_PRIVATE;
+
+                Tabs.getInstance().loadUrl(newTabUrl, flags);
+                Toast.makeText(this, R.string.new_tab_opened, Toast.LENGTH_SHORT).show();
+                break;
+            }
             case R.id.open_in_reader: {
                 if (url == null) {
                     Log.e(LOGTAG, "Can't open in reader mode because URL is null");

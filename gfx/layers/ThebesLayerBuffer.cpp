@@ -297,7 +297,7 @@ FillSurface(gfxASurface* aSurface, const nsIntRegion& aRegion,
 }
 
 already_AddRefed<gfxContext>
-ThebesLayerBuffer::GetContextForQuadrantUpdate(const nsIntRect& aBounds, ContextSource aSource)
+ThebesLayerBuffer::GetContextForQuadrantUpdate(const nsIntRect& aBounds, ContextSource aSource, nsIntPoint *aTopLeft)
 {
   EnsureBuffer();
 
@@ -341,6 +341,10 @@ ThebesLayerBuffer::GetContextForQuadrantUpdate(const nsIntRect& aBounds, Context
   nsIntRect quadrantRect = GetQuadrantRectangle(sideX, sideY);
   NS_ASSERTION(quadrantRect.Contains(aBounds), "Messed up quadrants");
   ctx->Translate(-gfxPoint(quadrantRect.x, quadrantRect.y));
+
+  if (aTopLeft) {
+    *aTopLeft = nsIntPoint(quadrantRect.x, quadrantRect.y);
+  }
 
   return ctx.forget();
 }
@@ -566,6 +570,11 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
           nsIntPoint dest = mBufferRect.TopLeft() - destBufferRect.TopLeft();
           if (mBuffer) {
             mBuffer->MovePixels(srcRect, dest);
+            if (mode == Layer::SURFACE_COMPONENT_ALPHA) {
+              EnsureBufferOnWhite();
+              MOZ_ASSERT(mBufferOnWhite);
+              mBufferOnWhite->MovePixels(srcRect, dest);
+            }
           } else {
             RefPtr<SourceSurface> source = mDTBuffer->Snapshot();
             mDTBuffer->CopySurface(source,
@@ -666,12 +675,14 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
   invalidate.Sub(aLayer->GetValidRegion(), destBufferRect);
   result.mRegionToInvalidate.Or(result.mRegionToInvalidate, invalidate);
 
-  result.mContext = GetContextForQuadrantUpdate(drawBounds, BUFFER_BOTH);
+  nsIntPoint topLeft;
+  result.mContext = GetContextForQuadrantUpdate(drawBounds, BUFFER_BOTH, &topLeft);
 
   if (mode == Layer::SURFACE_COMPONENT_ALPHA) {
     MOZ_ASSERT(mBuffer && mBufferOnWhite, "Must not be using azure!");
-    FillSurface(mBuffer, result.mRegionToDraw, result.mRegionToDraw.GetBounds().TopLeft(), gfxRGBA(0.0, 0.0, 0.0, 1.0));
-    FillSurface(mBufferOnWhite, result.mRegionToDraw, result.mRegionToDraw.GetBounds().TopLeft(), gfxRGBA(1.0, 1.0, 1.0, 1.0));
+    FillSurface(mBuffer, result.mRegionToDraw, topLeft, gfxRGBA(0.0, 0.0, 0.0, 1.0));
+    FillSurface(mBufferOnWhite, result.mRegionToDraw, topLeft, gfxRGBA(1.0, 1.0, 1.0, 1.0));
+    gfxUtils::ClipToRegionSnapped(result.mContext, result.mRegionToDraw);
   } else if (contentType == gfxASurface::CONTENT_COLOR_ALPHA && !isClear) {
     if (result.mContext->IsCairo()) {
       gfxUtils::ClipToRegionSnapped(result.mContext, result.mRegionToDraw);

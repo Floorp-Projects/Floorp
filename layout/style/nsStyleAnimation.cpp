@@ -883,13 +883,13 @@ MOZ_ALWAYS_INLINE float
 EnsureNotNan(float aValue)
 {
   // This would benefit from a MOZ_FLOAT_IS_NaN if we had one.
-  return MOZ_LIKELY(!MOZ_DOUBLE_IS_NaN(aValue)) ? aValue : 0;
+  return MOZ_LIKELY(!mozilla::IsNaN(aValue)) ? aValue : 0;
 }
 template<>
 MOZ_ALWAYS_INLINE double
 EnsureNotNan(double aValue)
 {
-  return MOZ_LIKELY(!MOZ_DOUBLE_IS_NaN(aValue)) ? aValue : 0;
+  return MOZ_LIKELY(!mozilla::IsNaN(aValue)) ? aValue : 0;
 }
 
 template <typename T>
@@ -3219,14 +3219,14 @@ nsStyleAnimation::Value::Value(float aPercent, PercentConstructorType)
 {
   mUnit = eUnit_Percent;
   mValue.mFloat = aPercent;
-  MOZ_ASSERT(!MOZ_DOUBLE_IS_NaN(mValue.mFloat));
+  MOZ_ASSERT(!mozilla::IsNaN(mValue.mFloat));
 }
 
 nsStyleAnimation::Value::Value(float aFloat, FloatConstructorType)
 {
   mUnit = eUnit_Float;
   mValue.mFloat = aFloat;
-  MOZ_ASSERT(!MOZ_DOUBLE_IS_NaN(mValue.mFloat));
+  MOZ_ASSERT(!mozilla::IsNaN(mValue.mFloat));
 }
 
 nsStyleAnimation::Value::Value(nscolor aColor, ColorConstructorType)
@@ -3258,7 +3258,7 @@ nsStyleAnimation::Value::operator=(const Value& aOther)
     case eUnit_Percent:
     case eUnit_Float:
       mValue.mFloat = aOther.mValue.mFloat;
-      MOZ_ASSERT(!MOZ_DOUBLE_IS_NaN(mValue.mFloat));
+      MOZ_ASSERT(!mozilla::IsNaN(mValue.mFloat));
       break;
     case eUnit_Color:
       mValue.mColor = aOther.mValue.mColor;
@@ -3370,7 +3370,7 @@ nsStyleAnimation::Value::SetPercentValue(float aPercent)
   FreeValue();
   mUnit = eUnit_Percent;
   mValue.mFloat = aPercent;
-  MOZ_ASSERT(!MOZ_DOUBLE_IS_NaN(mValue.mFloat));
+  MOZ_ASSERT(!mozilla::IsNaN(mValue.mFloat));
 }
 
 void
@@ -3379,7 +3379,7 @@ nsStyleAnimation::Value::SetFloatValue(float aFloat)
   FreeValue();
   mUnit = eUnit_Float;
   mValue.mFloat = aFloat;
-  MOZ_ASSERT(!MOZ_DOUBLE_IS_NaN(mValue.mFloat));
+  MOZ_ASSERT(!mozilla::IsNaN(mValue.mFloat));
 }
 
 void

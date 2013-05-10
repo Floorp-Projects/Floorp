@@ -18,9 +18,10 @@ bool
 InitClass(JSContext* aCx, JSObject* aGlobal);
 
 JSObject*
-Create(JSContext* aCx, JSString* aHref, JSString* aProtocol, JSString* aHost,
-       JSString* aHostname, JSString* aPort, JSString* aPathname,
-       JSString* aSearch, JSString* aHash);
+Create(JSContext* aCx, JS::Handle<JSString*> aHref, JS::Handle<JSString*> aProtocol,
+       JS::Handle<JSString*> aHost, JS::Handle<JSString*> aHostname,
+       JS::Handle<JSString*> aPort, JS::Handle<JSString*> aPathname,
+       JS::Handle<JSString*> aSearch, JS::Handle<JSString*> aHash);
 
 } // namespace location
 

@@ -36,6 +36,7 @@
 #include "mozilla/layers/CompositorTypes.h"
 #include "FrameMetrics.h"
 #include "nsCSSProperty.h"
+#include "ImageLayers.h"
 
 #ifdef _MSC_VER
 #pragma warning( disable : 4800 )
@@ -57,6 +58,7 @@ typedef gfxASurface::gfxImageFormat PixelFormat;
 typedef gfxASurface::gfxSurfaceType gfxSurfaceType;
 typedef gfxPattern::GraphicsFilter GraphicsFilterType;
 typedef layers::LayersBackend LayersBackend;
+typedef layers::ImageLayer::ScaleMode ScaleMode;
 
 // This is a cross-platform approximation to HANDLE, which we expect
 // to be typedef'd to void* or thereabouts.
@@ -611,6 +613,13 @@ struct ParamTraits<mozilla::layers::LayersBackend>
   : public EnumSerializer<mozilla::layers::LayersBackend,
                           mozilla::layers::LAYERS_NONE,
                           mozilla::layers::LAYERS_LAST>
+{};
+
+template <>
+struct ParamTraits<mozilla::ScaleMode>
+  : public EnumSerializer<mozilla::ScaleMode,
+                          mozilla::layers::ImageLayer::SCALE_NONE,
+                          mozilla::layers::ImageLayer::SCALE_SENTINEL>
 {};
 
 template <>

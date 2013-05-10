@@ -564,23 +564,8 @@ pref("dom.ipc.processPriorityManager.enabled", true);
 pref("dom.ipc.processPriorityManager.backgroundGracePeriodMS", 1000);
 pref("dom.ipc.processPriorityManager.temporaryPriorityLockMS", 5000);
 
-// Kernel parameters for how processes are killed on low-memory.
-pref("gonk.systemMemoryPressureRecoveryPollMS", 5000);
-pref("hal.processPriorityManager.gonk.masterOomScoreAdjust", 0);
-pref("hal.processPriorityManager.gonk.masterKillUnderMB", 4);
-pref("hal.processPriorityManager.gonk.foregroundHighOomScoreAdjust", 67);
-pref("hal.processPriorityManager.gonk.foregroundHighKillUnderMB", 5);
-pref("hal.processPriorityManager.gonk.foregroundOomScoreAdjust", 134);
-pref("hal.processPriorityManager.gonk.foregroundKillUnderMB", 6);
-pref("hal.processPriorityManager.gonk.backgroundPerceivableOomScoreAdjust", 200);
-pref("hal.processPriorityManager.gonk.backgroundPerceivableKillUnderMB", 7);
-pref("hal.processPriorityManager.gonk.backgroundHomescreenOomScoreAdjust", 267);
-pref("hal.processPriorityManager.gonk.backgroundHomescreenKillUnderMB", 8);
-pref("hal.processPriorityManager.gonk.backgroundOomScoreAdjust", 400);
-pref("hal.processPriorityManager.gonk.backgroundKillUnderMB", 20);
-pref("hal.processPriorityManager.gonk.notifyLowMemUnderMB", 10);
-
-// Niceness values (i.e., CPU priorities) for B2G processes.
+// Kernel parameters for process priorities.  These affect how processes are
+// killed on low-memory and their relative CPU priorities.
 //
 // Note: The maximum nice value on Linux is 19, but the max value you should
 // use here is 18.  NSPR adds 1 to some threads' nice values, to mark
@@ -589,12 +574,47 @@ pref("hal.processPriorityManager.gonk.notifyLowMemUnderMB", 10);
 // niceness.  Then when we reniced the process to (say) 10, all threads would
 // /still/ have the same niceness; we'd effectively have erased NSPR's thread
 // priorities.
-pref("hal.processPriorityManager.gonk.masterNice", 0);
-pref("hal.processPriorityManager.gonk.foregroundHighNice", 0);
-pref("hal.processPriorityManager.gonk.foregroundNice", 1);
-pref("hal.processPriorityManager.gonk.backgroundPerceivableNice", 10);
-pref("hal.processPriorityManager.gonk.backgroundHomescreenNice", 18);
-pref("hal.processPriorityManager.gonk.backgroundNice", 18);
+
+pref("hal.processPriorityManager.gonk.MASTER.OomScoreAdjust", 0);
+pref("hal.processPriorityManager.gonk.MASTER.KillUnderMB", 4);
+pref("hal.processPriorityManager.gonk.MASTER.Nice", 0);
+
+pref("hal.processPriorityManager.gonk.FOREGROUND_HIGH.OomScoreAdjust", 67);
+pref("hal.processPriorityManager.gonk.FOREGROUND_HIGH.KillUnderMB", 5);
+pref("hal.processPriorityManager.gonk.FOREGROUND_HIGH.Nice", 0);
+
+pref("hal.processPriorityManager.gonk.FOREGROUND.OomScoreAdjust", 134);
+pref("hal.processPriorityManager.gonk.FOREGROUND.KillUnderMB", 6);
+pref("hal.processPriorityManager.gonk.FOREGROUND.Nice", 1);
+
+pref("hal.processPriorityManager.gonk.BACKGROUND_PERCEIVABLE.OomScoreAdjust", 200);
+pref("hal.processPriorityManager.gonk.BACKGROUND_PERCEIVABLE.KillUnderMB", 7);
+pref("hal.processPriorityManager.gonk.BACKGROUND_PERCEIVABLE.Nice", 10);
+
+pref("hal.processPriorityManager.gonk.BACKGROUND_HOMESCREEN.OomScoreAdjust", 267);
+pref("hal.processPriorityManager.gonk.BACKGROUND_HOMESCREEN.KillUnderMB", 8);
+pref("hal.processPriorityManager.gonk.BACKGROUND_HOMESCREEN.Nice", 18);
+
+pref("hal.processPriorityManager.gonk.BACKGROUND.OomScoreAdjust", 400);
+pref("hal.processPriorityManager.gonk.BACKGROUND.KillUnderMB", 20);
+pref("hal.processPriorityManager.gonk.BACKGROUND.Nice", 18);
+
+// Processes get this niceness when they have low CPU priority.
+pref("hal.processPriorityManager.gonk.LowCPUNice", 18);
+
+// Fire a memory pressure event when the system has less than Xmb of memory
+// remaining.  You should probably set this just above Y.KillUnderMB for
+// the highest priority class Y that you want to make an effort to keep alive.
+// (For example, we want BACKGROUND_PERCEIVABLE to stay alive.)  If you set
+// this too high, then we'll send out a memory pressure event every Z seconds
+// (see below), even while we have processes that we would happily kill in
+// order to free up memory.
+pref("hal.processPriorityManager.gonk.notifyLowMemUnderMB", 10);
+
+// We wait this long before polling the memory-pressure fd after seeing one
+// memory pressure event.  (When we're not under memory pressure, we sit
+// blocked on a poll(), and this pref has no effect.)
+pref("gonk.systemMemoryPressureRecoveryPollMS", 5000);
 
 #ifndef DEBUG
 // Enable pre-launching content processes for improved startup time
@@ -697,3 +717,6 @@ pref("captivedetect.canonicalContent", "success\n");
 
 // The url of the manifest we use for ADU pings.
 pref("ping.manifestURL", "https://marketplace.firefox.com/packaged.webapp");
+
+// Enable the disk space watcher
+pref("disk_space_watcher.enabled", true);
