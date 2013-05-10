@@ -1712,7 +1712,7 @@ skip-if(B2G) == 751012-1b.html 751012-1-ref.html
 == 690643-1.html 690643-1-ref.html
 == 748692-1a.html 748692-1-ref.html
 == 748692-1b.html 748692-1-ref.html
-fails-if(Android) == 753329-1.html about:blank
+random-if(Android) == 753329-1.html about:blank
 == 758561-1.html 758561-1-ref.html
 fuzzy-if(true,1,19) fails-if(d2d) == 759036-1.html 759036-1-ref.html
 fuzzy-if(true,17,5859) == 759036-2.html 759036-2-ref.html
