@@ -408,16 +408,8 @@ FileUpdateDispatcher::Observe(nsISupports *aSubject,
       NS_WARNING("Device storage file looks invalid!");
       return NS_OK;
     }
-
-    nsString fullpath;
-    nsresult rv = file->mFile->GetPath(fullpath);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("Could not get path from the nsIFile!");
-      return NS_OK;
-    }
-
     ContentChild::GetSingleton()->SendFilePathUpdateNotify(file->mStorageType,
-                                                           fullpath,
+                                                           file->mPath,
                                                            NS_ConvertUTF16toUTF8(aData));
   } else {
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
