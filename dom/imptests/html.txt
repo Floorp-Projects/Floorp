@@ -2,10 +2,10 @@ git+ssh://git@github.com:w3c/web-platform-tests.git|html
 domxpath
 html/browsers/browsing-the-web/read-media
 html/browsers/the-window-object
-html/dom/documents/dta
+html/dom/documents/dom-tree-accessors
 html/dom/elements/global-attributes
 html/editing/the-hidden-attribute
-html/obsolete/implreq/oeaaa
+html/obsolete/requirements-for-implementations/other-elements-attributes-and-apis
 html/semantics/document-metadata/the-title-element
 html/semantics/forms/the-form-element
 html/semantics/forms/the-option-element
