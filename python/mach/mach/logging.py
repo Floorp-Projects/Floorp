@@ -108,7 +108,7 @@ class StructuredTerminalFormatter(StructuredHumanFormatter):
         if s.startswith('TEST-PASS'):
             result = self.terminal.green(s[0:9]) + s[9:]
         elif s.startswith('TEST-UNEXPECTED'):
-            result = self.terminal.red(s[0:20]) + s[21:]
+            result = self.terminal.red(s[0:20]) + s[20:]
 
         return result
 
