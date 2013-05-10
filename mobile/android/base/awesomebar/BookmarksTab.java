@@ -339,7 +339,7 @@ public class BookmarksTab extends AwesomeBarTab {
 
             if (viewType == VIEW_TYPE_ITEM) {
                 updateTitle(viewHolder.titleView, cursor);
-                updateUrl(viewHolder.urlView, cursor);
+                updateUrl(viewHolder, cursor);
 
                 byte[] b = cursor.getBlob(cursor.getColumnIndexOrThrow(URLColumns.FAVICON));
                 Bitmap favicon = null;
