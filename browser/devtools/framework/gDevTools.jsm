@@ -729,7 +729,7 @@ let gDevToolsBrowser = {
 
     let bc = doc.createElement("broadcaster");
     bc.id = "devtoolsMenuBroadcaster_" + id;
-    bc.setAttribute("label", toolDefinition.label);
+    bc.setAttribute("label", toolDefinition.menuLabel || toolDefinition.label);
     bc.setAttribute("command", cmd.id);
 
     if (key) {

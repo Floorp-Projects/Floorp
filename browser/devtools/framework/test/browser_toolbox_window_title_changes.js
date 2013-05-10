@@ -16,7 +16,7 @@ function test() {
   const TOOL_ID_1 = "webconsole";
   const TOOL_ID_2 = "jsdebugger";
 
-  const LABEL_1 = "Web Console";
+  const LABEL_1 = "Console";
   const LABEL_2 = "Debugger";
 
   let toolbox;
