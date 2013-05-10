@@ -25,13 +25,13 @@ import android.util.Log;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 
 public class ActivityHandlerHelper {
     private static final String LOGTAG = "GeckoActivityHandlerHelper";
 
-    private final SynchronousQueue<String> mFilePickerResult;
+    private final ConcurrentLinkedQueue<String> mFilePickerResult;
 
     private final ActivityResultHandlerMap mActivityResultHandlerMap;
     private final FilePickerResultHandlerSync mFilePickerResultHandlerSync;
@@ -39,8 +39,18 @@ public class ActivityHandlerHelper {
     private final CameraImageResultHandler mCameraImageResultHandler;
     private final CameraVideoResultHandler mCameraVideoResultHandler;
 
+    @SuppressWarnings("serial")
     public ActivityHandlerHelper() {
-        mFilePickerResult = new SynchronousQueue<String>();
+        mFilePickerResult = new ConcurrentLinkedQueue<String>() {
+            @Override public boolean offer(String e) {
+                if (super.offer(e)) {
+                    // poke the Gecko thread in case it's waiting for new events
+                    GeckoAppShell.sendEventToGecko(GeckoEvent.createNoOpEvent());
+                    return true;
+                }
+                return false;
+            }
+        };
         mActivityResultHandlerMap = new ActivityResultHandlerMap();
         mFilePickerResultHandlerSync = new FilePickerResultHandlerSync(mFilePickerResult);
         mAwesomebarResultHandler = new AwesomebarResultHandler();
@@ -208,16 +218,10 @@ public class ActivityHandlerHelper {
             return "";
         }
 
-        String filePickerResult = "";
-
-        try {
-            while (null == (filePickerResult = mFilePickerResult.poll(1, TimeUnit.MILLISECONDS))) {
-                GeckoAppShell.processNextNativeEvent(false);
-            }
-        } catch (InterruptedException e) {
-            Log.e(LOGTAG, "showing file picker failed: ",  e);
+        String filePickerResult;
+        while (null == (filePickerResult = mFilePickerResult.poll())) {
+            GeckoAppShell.processNextNativeEvent(true);
         }
-
         return filePickerResult;
     }
 
