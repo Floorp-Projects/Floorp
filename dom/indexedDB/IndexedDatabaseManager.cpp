@@ -185,7 +185,7 @@ IndexedDatabaseManager::Init()
       do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID);
     NS_ENSURE_STATE(ss);
 
-    nsCOMPtr<nsIObserverService> obs = GetObserverService();
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     NS_ENSURE_STATE(obs);
 
     nsresult rv =
