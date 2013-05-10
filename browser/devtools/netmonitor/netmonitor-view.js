@@ -271,6 +271,7 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
 
     this.node = new SideMenuWidget($("#requests-menu-contents"), false);
     this.node.maintainSelectionVisible = false;
+    this.node.autoscrollWithAppendedItems = true;
 
     this.node.addEventListener("mousedown", this._onMouseDown, false);
     this.node.addEventListener("select", this._onSelect, false);
