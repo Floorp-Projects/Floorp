@@ -48,6 +48,8 @@
 
 using namespace mozilla;
 
+#define SECURITY_STRING_BUNDLE_URL "chrome://pipnss/locale/security.properties"
+
 #define IS_SECURE(state) ((state & 0xFFFF) == STATE_IS_SECURE)
 
 #if defined(PR_LOGGING)
@@ -189,6 +191,17 @@ nsSecureBrowserUIImpl::Init(nsIDOMWindow *aWindow)
   mWindow = do_GetWeakReference(pwin, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsCOMPtr<nsIStringBundleService> service(do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv));
+  if (NS_FAILED(rv)) return rv;
+  
+  // We do not need to test for mStringBundle here...
+  // Anywhere we use it, we will test before using.  Some
+  // embedded users of PSM may want to reuse our
+  // nsSecureBrowserUIImpl implementation without the
+  // bundle.
+  service->CreateBundle(SECURITY_STRING_BUNDLE_URL, getter_AddRefs(mStringBundle));
+  
+  
   // hook up to the form post notifications:
   nsCOMPtr<nsIObserverService> svc(do_GetService("@mozilla.org/observer-service;1", &rv));
   if (NS_SUCCEEDED(rv)) {
@@ -322,6 +335,36 @@ nsSecureBrowserUIImpl::SetDocShell(nsIDocShell *aDocShell)
   nsresult rv;
   mDocShell = do_GetWeakReference(aDocShell, &rv);
   return rv;
+}
+
+NS_IMETHODIMP
+nsSecureBrowserUIImpl::GetTooltipText(nsAString& aText)
+{
+  lockIconState state;
+  nsXPIDLString tooltip;
+
+  {
+    ReentrantMonitorAutoEnter lock(mReentrantMonitor);
+    state = mNotifiedSecurityState;
+    tooltip = mInfoTooltip;
+  }
+
+  if (state == lis_mixed_security)
+  {
+    GetBundleString(NS_LITERAL_STRING("SecurityButtonMixedContentTooltipText").get(),
+                    aText);
+  }
+  else if (!tooltip.IsEmpty())
+  {
+    aText = tooltip;
+  }
+  else
+  {
+    GetBundleString(NS_LITERAL_STRING("SecurityButtonTooltipText").get(),
+                    aText);
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -461,6 +504,7 @@ void nsSecureBrowserUIImpl::ResetStateTracking()
 {
   ReentrantMonitorAutoEnter lock(mReentrantMonitor);
 
+  mInfoTooltip.Truncate();
   mDocumentRequestsInProgress = 0;
   if (mTransferringRequests.ops) {
     PL_DHashTableFinish(&mTransferringRequests);
@@ -484,6 +528,9 @@ nsSecureBrowserUIImpl::EvaluateAndUpdateSecurityState(nsIRequest* aRequest, nsIS
   bool updateStatus = false;
   nsCOMPtr<nsISSLStatus> temp_SSLStatus;
 
+  bool updateTooltip = false;
+  nsXPIDLString temp_InfoTooltip;
+
     temp_NewToplevelSecurityState = GetSecurityStateFromSecurityInfo(info);
 
     PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
@@ -503,6 +550,14 @@ nsSecureBrowserUIImpl::EvaluateAndUpdateSecurityState(nsIRequest* aRequest, nsIS
       }
     }
 
+    if (info) {
+      nsCOMPtr<nsITransportSecurityInfo> secInfo(do_QueryInterface(info));
+      if (secInfo) {
+        updateTooltip = true;
+        secInfo->GetShortSecurityDescription(getter_Copies(temp_InfoTooltip));
+      }
+    }
+
   // assume temp_NewToplevelSecurityState was set in this scope!
   // see code that is directly above
 
@@ -513,6 +568,9 @@ nsSecureBrowserUIImpl::EvaluateAndUpdateSecurityState(nsIRequest* aRequest, nsIS
     mNewToplevelIsEV = temp_NewToplevelIsEV;
     if (updateStatus) {
       mSSLStatus = temp_SSLStatus;
+    }
+    if (updateTooltip) {
+      mInfoTooltip = temp_InfoTooltip;
     }
     PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
            ("SecureUI:%p: remember securityInfo %p\n", this,
@@ -530,7 +588,8 @@ nsSecureBrowserUIImpl::EvaluateAndUpdateSecurityState(nsIRequest* aRequest, nsIS
     mRestoreSubrequests = false;
   }
 
-  return UpdateSecurityState(aRequest, withNewLocation, updateStatus);
+  return UpdateSecurityState(aRequest, withNewLocation, 
+                             updateStatus, updateTooltip);
 }
 
 void
@@ -1252,7 +1311,7 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
       }
 
       if (temp_NewToplevelSecurityStateKnown)
-        return UpdateSecurityState(aRequest, false, false);
+        return UpdateSecurityState(aRequest, false, false, false);
     }
 
     return NS_OK;
@@ -1272,7 +1331,8 @@ void nsSecureBrowserUIImpl::ObtainEventSink(nsIChannel *channel,
 
 nsresult nsSecureBrowserUIImpl::UpdateSecurityState(nsIRequest* aRequest, 
                                                     bool withNewLocation, 
-                                                    bool withUpdateStatus)
+                                                    bool withUpdateStatus, 
+                                                    bool withUpdateTooltip)
 {
   lockIconState warnSecurityState = lis_no_security;
   nsresult rv = NS_OK;
@@ -1280,7 +1340,7 @@ nsresult nsSecureBrowserUIImpl::UpdateSecurityState(nsIRequest* aRequest,
   // both parameters are both input and outout
   bool flagsChanged = UpdateMyFlags(warnSecurityState);
 
-  if (flagsChanged || withNewLocation || withUpdateStatus)
+  if (flagsChanged || withNewLocation || withUpdateStatus || withUpdateTooltip)
     rv = TellTheWorld(warnSecurityState, aRequest);
 
   return rv;
@@ -1347,6 +1407,7 @@ bool nsSecureBrowserUIImpl::UpdateMyFlags(lockIconState &warnSecurityState)
     if (lis_no_security == newSecurityState)
     {
       mSSLStatus = nullptr;
+      mInfoTooltip.Truncate();
     }
   }
 
@@ -1486,7 +1547,7 @@ nsSecureBrowserUIImpl::OnLocationChange(nsIWebProgress* aWebProgress,
   }
 
   if (temp_NewToplevelSecurityStateKnown)
-    return UpdateSecurityState(aRequest, true, false);
+    return UpdateSecurityState(aRequest, true, false, false);
 
   return NS_OK;
 }
@@ -1574,6 +1635,32 @@ nsSecureBrowserUIImpl::IsURLJavaScript(nsIURI* aURL, bool* value)
     return NS_OK;
 
   return aURL->SchemeIs("javascript", value);
+}
+
+void
+nsSecureBrowserUIImpl::GetBundleString(const PRUnichar* name,
+                                       nsAString &outString)
+{
+  nsCOMPtr<nsIStringBundle> temp_StringBundle;
+
+  {
+    ReentrantMonitorAutoEnter lock(mReentrantMonitor);
+    temp_StringBundle = mStringBundle;
+  }
+
+  if (temp_StringBundle && name) {
+    PRUnichar *ptrv = nullptr;
+    if (NS_SUCCEEDED(temp_StringBundle->GetStringFromName(name,
+                                                          &ptrv)))
+      outString = ptrv;
+    else
+      outString.SetLength(0);
+
+    nsMemory::Free(ptrv);
+
+  } else {
+    outString.SetLength(0);
+  }
 }
 
 nsresult
