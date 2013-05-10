@@ -9474,6 +9474,11 @@ fi
 dist=$MOZ_BUILD_ROOT/dist
 ac_configure_args="$_SUBDIR_CONFIG_ARGS"
 ac_configure_args="$ac_configure_args --enable-threadsafe"
+if test "A" = "A"; then # "$MOZ_BUILDAPP" != "browser", when desktop builds this
+    # The Internationalization API is currently disabled in all non-standalone
+    # SpiderMonkey builds, but it should be turned on for desktop builds soon.
+    ac_configure_args="$ac_configure_args --disable-intl-api"
+fi
 if test "$BUILD_CTYPES"; then
     # Build js-ctypes on the platforms we can.
     ac_configure_args="$ac_configure_args --enable-ctypes"
