@@ -2219,7 +2219,8 @@ Rebase(JSScript *dst, JSScript *src, T *srcp)
 }
 
 JSScript *
-js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, HandleScript src)
+js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, HandleScript src,
+                NewObjectKind newKind /* = GenericObject */)
 {
     /* NB: Keep this in sync with XDRScript. */
 
@@ -2271,7 +2272,8 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
                 else
                     enclosingScope = fun;
 
-                clone = CloneInterpretedFunction(cx, enclosingScope, innerFun);
+                clone = CloneInterpretedFunction(cx, enclosingScope, innerFun,
+                                                 src->selfHosted ? TenuredObject : newKind);
             } else {
                 /*
                  * Clone object literals emitted for the JSOP_NEWOBJECT opcode. We only emit that
@@ -2385,7 +2387,8 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
 }
 
 bool
-js::CloneFunctionScript(JSContext *cx, HandleFunction original, HandleFunction clone)
+js::CloneFunctionScript(JSContext *cx, HandleFunction original, HandleFunction clone,
+                        NewObjectKind newKind /* = GenericObject */)
 {
     JS_ASSERT(clone->isInterpreted());
 
@@ -2399,7 +2402,7 @@ js::CloneFunctionScript(JSContext *cx, HandleFunction original, HandleFunction c
 
     clone->mutableScript().init(NULL);
 
-    JSScript *cscript = CloneScript(cx, scope, clone, script);
+    JSScript *cscript = CloneScript(cx, scope, clone, script, newKind);
     if (!cscript)
         return false;
 
