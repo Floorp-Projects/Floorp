@@ -102,6 +102,13 @@
   display: none;
 }
 
+.hidden-message {
+  display: block;
+  visibility: hidden;
+  height: 0;
+  overflow: hidden;
+}
+
 /* WebConsole colored drops */
 
 .webconsole-filter-button[checked] {

@@ -857,6 +857,10 @@ WebConsoleFrame.prototype = {
       isFiltered = true;
     }
 
+    if (isFiltered && aNode.classList.contains("webconsole-msg-inspector")) {
+      aNode.classList.add("hidden-message");
+    }
+
     return isFiltered;
   },
 
@@ -2174,8 +2178,12 @@ WebConsoleFrame.prototype = {
         targetElement: viewContainer,
         hideFilterInput: true,
       };
-      this.jsterm.openVariablesView(options)
-        .then((aView) => node._variablesView = aView);
+      this.jsterm.openVariablesView(options).then((aView) => {
+        node._variablesView = aView;
+        if (node.classList.contains("hidden-message")) {
+          node.classList.remove("hidden-message");
+        }
+      });
 
       let bodyContainer = this.document.createElement("vbox");
       bodyContainer.flex = 1;
@@ -3039,8 +3047,9 @@ JSTerm.prototype = {
       aOptions.view = view;
       this._updateVariablesView(aOptions);
 
-      this.sidebar.show();
-      aOptions.autofocus && aWindow.focus();
+      if (!aOptions.targetElement && aOptions.autofocus) {
+        aWindow.focus();
+      }
 
       this.emit("variablesview-open", view, aOptions);
       return view;
