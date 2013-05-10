@@ -25,10 +25,10 @@
 }
 
 .requests-menu-subitem {
-  padding: 0 4px;
+  padding: 4px;
 }
 
-.requests-menu-header:not(:last-of-type),
+.requests-menu-header:not(:last-child),
 .requests-menu-subitem:not(:last-child) {
   -moz-border-end: 1px solid hsla(210,8%,5%,.25);
   box-shadow: 1px 0 0 hsla(210,16%,76%,.1);
@@ -112,24 +112,35 @@
   width: 8em;
 }
 
-.requests-menu-header.requests-menu-waterfall {
+/* Network requests table: waterfall header */
+
+#requests-menu-timeline-label {
   -moz-padding-start: 8px;
   -moz-padding-end: 8px;
-  text-align: center;
 }
 
-/* Network request waterfall */
+.requests-menu-timings-division {
+  width: 100px;
+  padding-top: 1px;
+  -moz-padding-start: 4px;
+  -moz-border-start: 1px dotted #999;
+  font-size: 90%;
+  text-align: left;
+  pointer-events: none;
+}
+
+.requests-menu-timings-division:not(:first-child) {
+  -moz-margin-start: -100px !important; /* Don't affect layout. */
+}
+
+/* Network requests table: waterfall items */
 
 .requests-menu-subitem.requests-menu-waterfall {
   -moz-padding-start: 4px;
   -moz-padding-end: 4px;
-  background-size: 5px;
-  background-image:
-    -moz-linear-gradient(left,
-      transparent 25%,
-      rgba(255,255,255,0.02) 25%,
-      rgba(255,255,255,0.02) 75%,
-      transparent 75%);
+  background-repeat: repeat-y; /* Background created on a <canvas> in js. */
+  margin-top: -1px; /* Compensate borders. */
+  margin-bottom: -1px;
 }
 
 .requests-menu-timings {
@@ -211,6 +222,10 @@
 
 .side-menu-widget-item:nth-child(even) {
   background: rgba(255,255,255,0.05);
+}
+
+.side-menu-widget-item-contents {
+  padding: 0px 4px;
 }
 
 /* Network request details */
