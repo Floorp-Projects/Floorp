@@ -185,6 +185,14 @@ toolbar[printpreview="true"] {
   direction: rtl;
 }
 
+#urlbar-container {
+  min-width: 50ch;
+}
+
+#search-container {
+  min-width: 25ch;
+}
+
 #main-window:-moz-lwtheme {
   background-repeat: no-repeat;
   background-position: top right;
