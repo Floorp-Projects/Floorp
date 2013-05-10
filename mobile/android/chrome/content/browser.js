@@ -3055,12 +3055,25 @@ Tab.prototype = {
       // within the screen size, so remeasure when the page size remains within
       // the threshold of screen + margins, in case it's sizing itself relative
       // to the viewport.
-      if (((Math.round(viewport.pageBottom - viewport.pageTop)
-              <= gScreenHeight + gViewportMargins.top + gViewportMargins.bottom)
-             != this.viewportExcludesVerticalMargins) ||
-          ((Math.round(viewport.pageRight - viewport.pageLeft)
-              <= gScreenWidth + gViewportMargins.left + gViewportMargins.right)
-             != this.viewportExcludesHorizontalMargins)) {
+      let hasHorizontalMargins = gViewportMargins.left > 0 || gViewportMargins.right > 0;
+      let hasVerticalMargins = gViewportMargins.top > 0 || gViewportMargins.bottom > 0;
+      let pageHeightGreaterThanScreenHeight, pageWidthGreaterThanScreenWidth;
+
+      if (hasHorizontalMargins) {
+        pageWidthGreaterThanScreenWidth =
+            Math.round(viewport.pageRight - viewport.pageLeft)
+            > gScreenWidth + gViewportMargins.left + gViewportMargins.right;
+      }
+      if (hasVerticalMargins) {
+        pageHeightGreaterThanScreenHeight =
+            Math.round(viewport.pageBottom - viewport.pageTop)
+            > gScreenHeight + gViewportMargins.top + gViewportMargins.bottom;
+      }
+
+      if ((hasHorizontalMargins
+           && (pageWidthGreaterThanScreenWidth != this.viewportExcludesHorizontalMargins)) ||
+          (hasVerticalMargins
+           && (pageHeightGreaterThanScreenHeight != this.viewportExcludesVerticalMargins))) {
         if (!this.viewportMeasureCallback) {
           this.viewportMeasureCallback = setTimeout(function() {
             this.viewportMeasureCallback = null;
@@ -3074,6 +3087,12 @@ Tab.prototype = {
             }
           }.bind(this), kViewportRemeasureThrottle);
         }
+      } else if (this.viewportMeasureCallback) {
+        // If the page changed size twice since we last measured the viewport and
+        // the latest size change reveals we don't need to remeasure, cancel any
+        // pending remeasure.
+        clearTimeout(this.viewportMeasureCallback);
+        this.viewportMeasureCallback = null;
       }
     }
   },
