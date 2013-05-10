@@ -46,6 +46,7 @@
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Attributes.h"
+#include "nsIDiskSpaceWatcher.h"
 
 using namespace mozilla;
 
@@ -261,6 +262,7 @@ NS_IMPL_ISUPPORTS3(nsOfflineCacheUpdateService,
 nsOfflineCacheUpdateService::nsOfflineCacheUpdateService()
     : mDisabled(false)
     , mUpdateRunning(false)
+    , mLowFreeSpace(false)
 {
 }
 
@@ -286,6 +288,15 @@ nsOfflineCacheUpdateService::Init()
     nsresult rv = observerService->AddObserver(this,
                                                NS_XPCOM_SHUTDOWN_OBSERVER_ID,
                                                true);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Get the current status of the disk in terms of free space and observe
+    // low device storage notifications.
+    nsCOMPtr<nsIDiskSpaceWatcher> diskSpaceWatcherService =
+      do_GetService("@mozilla.org/toolkit/disk-space-watcher;1");
+    diskSpaceWatcherService->GetIsDiskFull(&mLowFreeSpace);
+
+    rv = observerService->AddObserver(this, "disk-space-watcher", false);
     NS_ENSURE_SUCCESS(rv, rv);
 
     gOfflineCacheUpdateService = this;
@@ -408,6 +419,11 @@ nsOfflineCacheUpdateService::ProcessNextUpdate()
 
     if (mUpdates.Length() > 0) {
         mUpdateRunning = true;
+        // Canceling the update before Begin() call will make the update
+        // asynchronously finish with an error.
+        if (mLowFreeSpace) {
+            mUpdates[0]->Cancel();
+        }
         return mUpdates[0]->Begin();
     }
 
@@ -597,6 +613,17 @@ nsOfflineCacheUpdateService::Observe(nsISupports     *aSubject,
         if (mUpdates.Length() > 0)
             mUpdates[0]->Cancel();
         mDisabled = true;
+    }
+
+    if (!strcmp(aTopic, "disk-space-watcher")) {
+        if (NS_LITERAL_STRING("full").Equals(aData)) {
+            mLowFreeSpace = true;
+            for (uint32_t i = 0; i < mUpdates.Length(); i++) {
+                mUpdates[i]->Cancel();
+            }
+        } else if (NS_LITERAL_STRING("free").Equals(aData)) {
+            mLowFreeSpace = false;
+        }
     }
 
     return NS_OK;
