@@ -32,6 +32,8 @@ enum DeliveryStatus {
   eDeliveryStatus_Success,
   eDeliveryStatus_Pending,
   eDeliveryStatus_Error,
+  eDeliveryStatus_Reject,
+  eDeliveryStatus_Manual,
   // This state should stay at the end.
   eDeliveryStatus_EndGuard
 };
