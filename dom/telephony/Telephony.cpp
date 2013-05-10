@@ -366,7 +366,8 @@ NS_IMPL_EVENT_HANDLER(Telephony, callschanged)
 
 NS_IMETHODIMP
 Telephony::CallStateChanged(uint32_t aCallIndex, uint16_t aCallState,
-                            const nsAString& aNumber, bool aIsActive)
+                            const nsAString& aNumber, bool aIsActive,
+                            bool aIsOutgoing)
 {
   NS_ASSERTION(aCallIndex != kOutgoingPlaceholderCallIndex,
                "This should never happen!");
@@ -441,7 +442,7 @@ Telephony::CallStateChanged(uint32_t aCallIndex, uint16_t aCallState,
 NS_IMETHODIMP
 Telephony::EnumerateCallState(uint32_t aCallIndex, uint16_t aCallState,
                               const nsAString& aNumber, bool aIsActive,
-                              bool* aContinue)
+                              bool aIsOutgoing, bool* aContinue)
 {
   // Make sure we don't somehow add duplicates.
   for (uint32_t index = 0; index < mCalls.Length(); index++) {
