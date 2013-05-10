@@ -190,16 +190,27 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
      * Click on the awesome bar element and return the resulting activity.
      * @return The created activity, or null if the awesome bar cannot be clicked.
      */
+    private Activity mAwesomeActivity;
     protected final Activity clickOnAwesomeBar() {
-        Activity activity = null;
-        Element awesomebar = mDriver.findElement(mActivity, "browser_toolbar");
-        if (awesomebar != null) {
-            activity = getActivityFromClick(awesomebar);
-            if (activity == null) {
-                mAsserter.dumpLog("failed to click on awesome bar!");
+        mAwesomeActivity = null;
+        boolean success = waitForTest(new BooleanTest() {
+            @Override
+            public boolean test() {
+                Element awesomebar = mDriver.findElement(mActivity, "browser_toolbar");
+                if (awesomebar != null) {
+                    mAwesomeActivity = getActivityFromClick(awesomebar);
+                    if (mAwesomeActivity == null) {
+                        mAsserter.dumpLog("failed to click on awesome bar!");
+                    }
+                    return mSolo.waitForText("History", 1, MAX_WAIT_MS);
+                }
+                return false;
             }
-        }
-        return activity;
+        }, MAX_WAIT_MS*5);
+
+        if (!success)
+            mAsserter.dumpLog("failed to find History");
+        return mAwesomeActivity;
     }
 
     protected final void enterUrl(String url) {
@@ -434,6 +445,14 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         mAsserter.is(tabCountInt, expectedTabCount, "The correct number of tabs are opened");
     }
 
+    protected boolean isBookmark(String[] bookmarks, String aValue) {
+        for (int i = 0; i < bookmarks.length; i++) {
+            if (bookmarks[i].equals(aValue))
+                return true;
+        }
+        return false;
+    }
+
     private ListView getAwesomeList(String waitText, int expectedChildCount,
          String clickText, String tagName, String callerName) {
         ArrayList<ListView> views;
@@ -613,7 +632,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         mSolo.clickOnText("Bookmarks");
         child = list.getChildAt(bookmarkIndex);
         mAsserter.ok(child != null, "edit item can be retrieved", child != null ? child.toString() : "null!");
-        waitForText("about:home|Firefox");
+        waitForText("Switch to tab");
         mSolo.clickLongOnView(child);
         waitForText("Share");
         mSolo.clickOnText("Edit");
@@ -637,13 +656,14 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         mSolo.clickOnText("Bookmarks");
         child = list.getChildAt(bookmarkIndex);
         mAsserter.ok(child != null, "check item can be retrieved", child != null ? child.toString() : "null!");
-        waitForText("about:home|Firefox");
+        waitForText("Switch to tab");
         mSolo.clickLongOnView(child);
         waitForText("Share");
         mSolo.clickOnText("Edit");
         waitForText("Edit Bookmark");
 
         // If the OS is not Gingerbread the vkb will be opened so we need to close it in order to press the "Cancel" button
+        // XXX: This is not true on all devices, but is true on our current automation test machines...
         if (!(mDevice.version.equals("2.x"))) {
             mActions.sendSpecialKey(Actions.SpecialKey.BACK); // close the VKB
         }
