@@ -253,7 +253,7 @@ ModifyWakeLock(const nsAString& aTopic,
   if (sActiveListeners &&
       (oldState != ComputeWakeLockState(totalCount.numLocks,
                                         totalCount.numHidden) ||
-       processWasLocked != processCount.numLocks > 0)) {
+       processWasLocked != (processCount.numLocks > 0))) {
 
     WakeLockInformation info;
     GetWakeLockInfo(aTopic, &info);
