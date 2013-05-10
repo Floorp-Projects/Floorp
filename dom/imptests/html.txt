@@ -1,4 +1,4 @@
-git+ssh://git@github.com:w3c/web-platform-tests.git|html
+git|git://github.com/w3c/web-platform-tests.git|html
 domxpath
 html/browsers/browsing-the-web/read-media
 html/browsers/the-window-object
