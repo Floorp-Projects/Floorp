@@ -86,6 +86,11 @@ NS_IMETHODIMP DiskSpaceWatcher::GetIsDiskFull(bool* aIsDiskFull)
   return NS_OK;
 }
 
+// GetFreeSpace is a macro on windows, and that messes up with the c++
+// compiler.
+#ifdef XP_WIN
+#undef GetFreeSpace
+#endif
 /* readonly attribute long freeSpace; */
 NS_IMETHODIMP DiskSpaceWatcher::GetFreeSpace(uint64_t* aFreeSpace)
 {
