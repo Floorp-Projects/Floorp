@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsContentUtils.h"
 #include "nsDebug.h"
 #include "nsPIDOMWindow.h"
 #include "mozilla/Services.h"
@@ -12,20 +13,21 @@
 #include "nsDOMClassInfo.h"
 #include "DictionaryHelpers.h"
 #include "CameraCommon.h"
+#include "mozilla/dom/CameraManagerBinding.h"
 
 using namespace mozilla;
-using namespace dom;
+using namespace mozilla::dom;
 
 DOMCI_DATA(CameraManager, nsIDOMCameraManager)
 
-NS_IMPL_CYCLE_COLLECTION_1(nsDOMCameraManager,
-                           mCameraThread)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(nsDOMCameraManager, mWindow)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMCameraManager)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIObserver)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMCameraManager)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCameraManager)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CameraManager)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMCameraManager)
@@ -55,12 +57,14 @@ GetCameraLog()
 WindowTable nsDOMCameraManager::sActiveWindows;
 bool nsDOMCameraManager::sActiveWindowsInitialized = false;
 
-nsDOMCameraManager::nsDOMCameraManager(uint64_t aWindowId)
-  : mWindowId(aWindowId)
+nsDOMCameraManager::nsDOMCameraManager(nsPIDOMWindow* aWindow)
+  : mWindowId(aWindow->WindowID())
   , mCameraThread(nullptr)
+  , mWindow(aWindow)
 {
   /* member initializers and constructor code */
   DOM_CAMERA_LOGT("%s:%d : this=%p, windowId=%llx\n", __func__, __LINE__, this, mWindowId);
+  SetIsDOMBinding();
 }
 
 nsDOMCameraManager::~nsDOMCameraManager()
@@ -93,7 +97,7 @@ nsDOMCameraManager::CheckPermissionAndCreateInstance(nsPIDOMWindow* aWindow)
   }
 
   nsRefPtr<nsDOMCameraManager> cameraManager =
-    new nsDOMCameraManager(aWindow->WindowID());
+    new nsDOMCameraManager(aWindow);
 
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   obs->AddObserver(cameraManager, "xpcom-shutdown", true);
@@ -130,6 +134,42 @@ nsDOMCameraManager::GetCamera(const JS::Value& aOptions, nsICameraGetCameraCallb
 
   Register(cameraControl);
   return NS_OK;
+}
+
+void
+nsDOMCameraManager::GetCamera(JSContext* aCx, const JS::Value aOptions,
+                              nsICameraGetCameraCallback* onSuccess,
+                              const Optional<nsICameraErrorCallback*>& onError,
+                              ErrorResult& aRv)
+{
+  uint32_t cameraId = 0;  // back (or forward-facing) camera by default
+  mozilla::idl::CameraSelector selector;
+
+  aRv = selector.Init(aCx, &aOptions);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  if (selector.camera.EqualsLiteral("front")) {
+    cameraId = 1;
+  }
+
+  // reuse the same camera thread to conserve resources
+  if (!mCameraThread) {
+    aRv = NS_NewThread(getter_AddRefs(mCameraThread));
+    if (aRv.Failed()) {
+      return;
+    }
+  }
+
+  DOM_CAMERA_LOGT("%s:%d\n", __func__, __LINE__);
+
+  // Creating this object will trigger the onSuccess handler
+  nsCOMPtr<nsDOMCameraControl> cameraControl =
+    new nsDOMCameraControl(cameraId, mCameraThread,
+                           onSuccess, onError.WasPassed() ? onError.Value() : nullptr, mWindowId);
+
+  Register(cameraControl);
 }
 
 void
@@ -206,4 +246,10 @@ nsDOMCameraManager::IsWindowStillActive(uint64_t aWindowId)
   }
 
   return !!sActiveWindows.Get(aWindowId);
+}
+
+JSObject*
+nsDOMCameraManager::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+{
+  return CameraManagerBinding::Wrap(aCx, aScope, this);
 }

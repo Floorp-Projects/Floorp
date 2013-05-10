@@ -4,6 +4,10 @@
 
 #include "DOMCameraManager.h"
 
+#include "mozilla/ErrorResult.h"
+
+using namespace mozilla;
+
 // From nsDOMCameraManager.
 nsresult
 nsDOMCameraManager::GetNumberOfCameras(int32_t& aDeviceCount)
@@ -22,4 +26,10 @@ NS_IMETHODIMP
 nsDOMCameraManager::GetListOfCameras(uint32_t *aCount, char * **aCameras)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+void
+nsDOMCameraManager::GetListOfCameras(nsTArray<nsString>& aList, ErrorResult& aRv)
+{
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
 }
