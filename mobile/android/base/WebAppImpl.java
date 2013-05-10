@@ -32,7 +32,8 @@ public class WebAppImpl extends GeckoApp {
     private URL mOrigin;
     private TextView mTitlebarText = null;
     private View mTitlebar = null;
-    private View mSplashscreen = null;
+
+    private View mSplashscreen;
 
     protected int getIndex() { return 0; }
 
@@ -46,6 +47,8 @@ public class WebAppImpl extends GeckoApp {
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
+
+        mSplashscreen = (RelativeLayout) findViewById(R.id.splashscreen);
         if (!GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoRunning)) {
             overridePendingTransition(R.anim.grow_fade_in_center, android.R.anim.fade_out);
             showSplash();
@@ -95,8 +98,6 @@ public class WebAppImpl extends GeckoApp {
     }
 
     private void showSplash() {
-        mSplashscreen = (RelativeLayout) findViewById(R.id.splashscreen);
-
         SharedPreferences prefs = getSharedPreferences("webapps", Context.MODE_PRIVATE | Context.MODE_MULTI_PROCESS);
 
         // get the favicon dominant color, stored when the app was installed
@@ -174,7 +175,7 @@ public class WebAppImpl extends GeckoApp {
                 }
                 break;
             case LOADED:
-                if (mSplashscreen.getVisibility() == View.VISIBLE) {
+                if (mSplashscreen != null && mSplashscreen.getVisibility() == View.VISIBLE) {
                     Animation fadeout = AnimationUtils.loadAnimation(this, android.R.anim.fade_out);
                     fadeout.setAnimationListener(new Animation.AnimationListener() {
                         @Override
@@ -190,7 +191,7 @@ public class WebAppImpl extends GeckoApp {
                 }
                 break;
             case START:
-                if (mSplashscreen.getVisibility() == View.VISIBLE) {
+                if (mSplashscreen != null && mSplashscreen.getVisibility() == View.VISIBLE) {
                     View area = findViewById(R.id.splashscreen_progress);
                     area.setVisibility(View.VISIBLE);
                     Animation fadein = AnimationUtils.loadAnimation(this, android.R.anim.fade_in);
