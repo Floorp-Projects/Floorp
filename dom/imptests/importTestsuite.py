@@ -23,15 +23,16 @@ import writeBuildFiles
 def readManifests(iden, dirs):
     def parseManifestFile(iden, path):
         pathstr = "hg-%s/%s/MANIFEST" % (iden, path)
-        subdirs, mochitests, _, __, supportfiles = parseManifest.parseManifestFile(pathstr)
-        return subdirs, mochitests, supportfiles
+        subdirs, mochitests, reftests, _, supportfiles = parseManifest.parseManifestFile(pathstr)
+        return subdirs, mochitests, reftests, supportfiles
 
     data = []
     for path in dirs:
-        subdirs, mochitests, supportfiles = parseManifestFile(iden, path)
+        subdirs, mochitests, reftests, supportfiles = parseManifestFile(iden, path)
         data.append({
           "path": path,
           "mochitests": mochitests,
+          "reftests": reftests,
           "supportfiles": supportfiles,
         })
         data.extend(readManifests(iden, ["%s/%s" % (path, d) for d in subdirs]))
@@ -86,6 +87,14 @@ def makeDestPath(a, b):
     return shorten(makePathInternal(a, b))
 
 
+def extractReftestFiles(reftests):
+    """Returns the set of files referenced in the reftests argument"""
+    files = set()
+    for line in reftests:
+        files.update([line[1], line[2]])
+    return files
+
+
 def copy(dest, directories):
     """Copy mochitests and support files from the external HG directory to their
     place in mozilla-central.
@@ -96,8 +105,12 @@ def copy(dest, directories):
         destdir = makeDestPath(dest, d["path"])
         os.makedirs(destdir)
 
+        reftestfiles = extractReftestFiles(d["reftests"])
+
         for mochitest in d["mochitests"]:
             shutil.copy("%s/%s" % (sourcedir, mochitest), "%s/test_%s" % (destdir, mochitest))
+        for reftest in sorted(reftestfiles):
+            shutil.copy("%s/%s" % (sourcedir, reftest), "%s/%s" % (destdir, reftest))
         for support in d["supportfiles"]:
             shutil.copy("%s/%s" % (sourcedir, support), "%s/%s" % (destdir, support))
 
@@ -132,6 +145,12 @@ def printBuildFiles(dest, directories):
         with open(path + "/moz.build", "w") as fh:
             result = writeBuildFiles.substMozbuild("importTestsuite.py", [])
             fh.write(result)
+
+        if d["reftests"]:
+            with open(path + "/reftest.list", "w") as fh:
+                result = writeBuildFiles.substReftestList("importTestsuite.py",
+                    d["reftests"])
+                fh.write(result)
 
 
 def hgadd(dest, directories):
