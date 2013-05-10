@@ -237,8 +237,7 @@ void nsView::DoResetWidgetBounds(bool aMoveOnly,
   // Stash a copy of these and use them so we can handle this being deleted (say
   // from sync painting/flushing from Show/Move/Resize on the widget).
   nsIntRect newBounds;
-  nsRefPtr<nsDeviceContext> dx;
-  mViewManager->GetDeviceContext(*getter_AddRefs(dx));
+  nsRefPtr<nsDeviceContext> dx = mViewManager->GetDeviceContext();
 
   nsWindowType type;
   widget->GetWindowType(type);
@@ -519,8 +518,7 @@ nsresult nsView::CreateWidget(nsWidgetInitData *aWidgetInitData,
 
   nsIntRect trect = CalcWidgetBounds(aWidgetInitData->mWindowType);
 
-  nsRefPtr<nsDeviceContext> dx;
-  mViewManager->GetDeviceContext(*getter_AddRefs(dx));
+  nsRefPtr<nsDeviceContext> dx = mViewManager->GetDeviceContext();
 
   nsIWidget* parentWidget =
     GetParent() ? GetParent()->GetNearestWidget(nullptr) : nullptr;
@@ -558,8 +556,7 @@ nsresult nsView::CreateWidgetForParent(nsIWidget* aParentWidget,
 
   nsIntRect trect = CalcWidgetBounds(aWidgetInitData->mWindowType);
 
-  nsRefPtr<nsDeviceContext> dx;
-  mViewManager->GetDeviceContext(*getter_AddRefs(dx));
+  nsRefPtr<nsDeviceContext> dx = mViewManager->GetDeviceContext();
 
   mWindow =
     aParentWidget->CreateChild(trect, dx, aWidgetInitData).get();
@@ -584,8 +581,7 @@ nsresult nsView::CreateWidgetForPopup(nsWidgetInitData *aWidgetInitData,
 
   nsIntRect trect = CalcWidgetBounds(aWidgetInitData->mWindowType);
 
-  nsRefPtr<nsDeviceContext> dx;
-  mViewManager->GetDeviceContext(*getter_AddRefs(dx));
+  nsRefPtr<nsDeviceContext> dx = mViewManager->GetDeviceContext();
 
   // XXX/cjones: having these two separate creation cases seems ... um
   // ... unnecessary, but it's the way the old code did it.  Please
@@ -653,8 +649,7 @@ nsresult nsView::AttachToTopLevelWidget(nsIWidget* aWidget)
     }
   }
 
-  nsRefPtr<nsDeviceContext> dx;
-  mViewManager->GetDeviceContext(*getter_AddRefs(dx));
+  nsRefPtr<nsDeviceContext> dx = mViewManager->GetDeviceContext();
 
   // Note, the previous device context will be released. Detaching
   // will not restore the old one.
@@ -952,8 +947,7 @@ nsView::WindowResized(nsIWidget* aWidget, int32_t aWidth, int32_t aHeight)
   // window creation
   SetForcedRepaint(true);
   if (this == mViewManager->GetRootView()) {
-    nsRefPtr<nsDeviceContext> devContext;
-    mViewManager->GetDeviceContext(*getter_AddRefs(devContext));
+    nsRefPtr<nsDeviceContext> devContext = mViewManager->GetDeviceContext();
     // ensure DPI is up-to-date, in case of window being opened and sized
     // on a non-default-dpi display (bug 829963)
     devContext->CheckDPIChange();
