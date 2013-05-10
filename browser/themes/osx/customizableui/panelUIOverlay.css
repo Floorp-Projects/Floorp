@@ -11,6 +11,17 @@
   list-style-image: url("chrome://browser/skin/Toolbar.png");
 }
 
+.PanelUI-pageControls toolbarbutton:not(:first-child) {
+  -moz-margin-start: 0;
+}
+.PanelUI-pageControls toolbarbutton:not(:last-child) {
+  -moz-margin-end: 0;
+}
+.PanelUI-pageControls toolbarbutton:not(:first-child):not(:last-child) {
+  margin-left: 0;
+  margin-right: 0;
+}
+
 #PanelUI-cut-btn {
   -moz-image-region: rect(0, 260px, 20px, 240px);
 }

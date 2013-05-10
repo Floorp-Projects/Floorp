@@ -170,14 +170,6 @@ CustomizeMode.prototype = {
     let window = this.window;
     let document = this.document;
 
-    if (this._changed) {
-      // XXXmconley: At first, it seems strange to also persist the old way with
-      //             currentset - but this might actually be useful for switching
-      //             to old builds. We might want to keep this around for a little
-      //             bit.
-      this.persistCurrentSets();
-    }
-
     document.documentElement.removeAttribute("customizing");
 
     for (let target of this.areas) {
@@ -190,6 +182,14 @@ CustomizeMode.prototype = {
       target.removeEventListener("dragover", this);
       target.removeEventListener("dragexit", this);
       target.removeEventListener("drop", this);
+    }
+
+    if (this._changed) {
+      // XXXmconley: At first, it seems strange to also persist the old way with
+      //             currentset - but this might actually be useful for switching
+      //             to old builds. We might want to keep this around for a little
+      //             bit.
+      this.persistCurrentSets();
     }
 
     // And drop all area references.
