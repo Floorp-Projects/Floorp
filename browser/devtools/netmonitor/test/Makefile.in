@@ -25,6 +25,7 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_net_post-data.js \
 	browser_net_jsonp.js \
 	browser_net_json-long.js \
+	browser_net_timeline_ticks.js \
 	head.js \
 	$(NULL)
 
