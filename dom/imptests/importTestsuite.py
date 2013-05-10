@@ -60,11 +60,31 @@ def getData(confFile):
     finally:
         return vcs, url, iden, directories
 
-def makePath(a, b):
+
+def makePathInternal(a, b):
     if not b:
         # Empty directory, i.e., the repository root.
         return a
     return "%s/%s" % (a, b)
+
+
+def makeSourcePath(a, b):
+    """Make a path in the source (upstream) directory."""
+    return makePathInternal("hg-%s" % a, b)
+
+
+def makeDestPath(a, b):
+    """Make a path in the destination (mozilla-central) directory, shortening as
+    appropriate."""
+    def shorten(path):
+        path = path.replace('dom-tree-accessors', 'dta')
+        path = path.replace('document.getElementsByName', 'doc.gEBN')
+        path = path.replace('requirements-for-implementations', 'implreq')
+        path = path.replace('other-elements-attributes-and-apis', 'oeaaa')
+        return path
+
+    return shorten(makePathInternal(a, b))
+
 
 def copy(dest, directories):
     """Copy mochitests and support files from the external HG directory to their
@@ -72,8 +92,8 @@ def copy(dest, directories):
     """
     print("Copying tests...")
     for d in directories:
-        sourcedir = makePath("hg-%s" % dest, d["path"])
-        destdir = makePath(dest, d["path"])
+        sourcedir = makeSourcePath(dest, d["path"])
+        destdir = makeDestPath(dest, d["path"])
         os.makedirs(destdir)
 
         for mochitest in d["mochitests"]:
@@ -88,7 +108,7 @@ def printMozbuildFile(dest, directories):
     print("Creating mozbuild...")
     path = dest + ".mozbuild"
     with open(path, 'w') as fh:
-        normalized = [makePath(dest, d["path"]) for d in directories]
+        normalized = [makeDestPath(dest, d["path"]) for d in directories]
         result = writeBuildFiles.substMozbuild("importTestsuite.py",
             normalized)
         fh.write(result)
@@ -100,7 +120,7 @@ def printBuildFiles(dest, directories):
     """
     print("Creating build files...")
     for d in directories:
-        path = makePath(dest, d["path"])
+        path = makeDestPath(dest, d["path"])
 
         files = ["test_%s" % (mochitest, ) for mochitest in d["mochitests"]]
         files.extend(d["supportfiles"])
@@ -118,7 +138,7 @@ def hgadd(dest, directories):
     """Inform hg of the files in |directories|."""
     print("hg addremoving...")
     for d in directories:
-        subprocess.check_call(["hg", "addremove", "%s/%s" % (dest, d)])
+        subprocess.check_call(["hg", "addremove", makeDestPath(dest, d)])
 
 def removeAndCloneRepo(vcs, url, dest):
     """Replaces the repo at dest by a fresh clone from url using vcs"""
