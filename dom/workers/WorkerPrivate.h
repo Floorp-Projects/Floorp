@@ -41,7 +41,7 @@ class nsIURI;
 class nsPIDOMWindow;
 class nsITimer;
 class nsIXPCScriptNotify;
-namespace JS { class RuntimeStats; }
+namespace JS { struct RuntimeStats; }
 
 BEGIN_WORKERS_NAMESPACE
 
