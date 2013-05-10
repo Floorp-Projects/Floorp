@@ -1,7 +1,5 @@
 #!/usr/bin/env python
-#
-# $Id: test_memory_leaks.py 1499 2012-07-25 12:42:31Z g.rodola $
-#
+
 # Copyright (c) 2009, Jay Loden, Giampaolo Rodola'. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
@@ -149,7 +147,11 @@ class TestProcessObjectLeaks(Base):
         self.execute('get_ionice')
 
     def test_set_ionice(self):
-        self.execute('set_ionice', psutil.IOPRIO_CLASS_NONE)
+        if WINDOWS:
+            value = psutil.Process(os.getpid()).get_ionice()
+            self.execute('set_ionice', value)
+        else:
+            self.execute('set_ionice', psutil.IOPRIO_CLASS_NONE)
 
     def test_username(self):
         self.execute('username')

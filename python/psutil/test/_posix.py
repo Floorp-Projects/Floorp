@@ -1,7 +1,5 @@
 #!/usr/bin/env python
-#
-# $Id: _posix.py 1386 2012-06-27 15:44:36Z g.rodola $
-#
+
 # Copyright (c) 2009, Jay Loden, Giampaolo Rodola'. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
@@ -19,7 +17,7 @@ import psutil
 
 from psutil._compat import PY3
 from test_psutil import (get_test_subprocess, reap_children, PYTHON, LINUX, OSX,
-                         BSD, ignore_access_denied, sh, skipIf)
+                         BSD, skip_on_access_denied, sh, skipIf)
 
 
 def ps(cmd):
@@ -72,7 +70,7 @@ class PosixSpecificTestCase(unittest.TestCase):
         username_psutil = psutil.Process(self.pid).username
         self.assertEqual(username_ps, username_psutil)
 
-    @ignore_access_denied
+    @skip_on_access_denied()
     def test_process_rss_memory(self):
         # give python interpreter some time to properly initialize
         # so that the results are the same
@@ -81,7 +79,7 @@ class PosixSpecificTestCase(unittest.TestCase):
         rss_psutil = psutil.Process(self.pid).get_memory_info()[0] / 1024
         self.assertEqual(rss_ps, rss_psutil)
 
-    @ignore_access_denied
+    @skip_on_access_denied()
     def test_process_vsz_memory(self):
         # give python interpreter some time to properly initialize
         # so that the results are the same

@@ -1,0 +1,5 @@
+{
+  "If there are two imgs, a collection should be returned. (name)": true,
+  "If there is one img, it should not be returned (id)": true,
+  "If there are two imgs, nothing should be returned. (id)": true
+}
