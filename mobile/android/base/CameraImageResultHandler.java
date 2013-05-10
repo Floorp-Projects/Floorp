@@ -13,31 +13,27 @@ import android.text.format.Time;
 import android.util.Log;
 
 import java.io.File;
-import java.util.concurrent.SynchronousQueue;
+import java.util.Queue;
 
 class CameraImageResultHandler implements ActivityResultHandler {
     private static final String LOGTAG = "GeckoCameraImageResultHandler";
 
-    private final SynchronousQueue<String> mFilePickerResult;
+    private final Queue<String> mFilePickerResult;
 
-    CameraImageResultHandler(SynchronousQueue<String> resultQueue) {
+    CameraImageResultHandler(Queue<String> resultQueue) {
         mFilePickerResult = resultQueue;
     }
 
     @Override
     public void onActivityResult(int resultCode, Intent data) {
-        try {
-            if (resultCode != Activity.RESULT_OK) {
-                mFilePickerResult.put("");
-                return;
-            }
-
-            File file = new File(Environment.getExternalStorageDirectory(), sImageName);
-            sImageName = "";
-            mFilePickerResult.put(file.getAbsolutePath());
-        } catch (InterruptedException e) {
-            Log.i(LOGTAG, "error returning file picker result", e);
+        if (resultCode != Activity.RESULT_OK) {
+            mFilePickerResult.offer("");
+            return;
         }
+
+        File file = new File(Environment.getExternalStorageDirectory(), sImageName);
+        sImageName = "";
+        mFilePickerResult.offer(file.getAbsolutePath());
     }
 
     // this code is really hacky and doesn't belong anywhere so I'm putting it here for now
