@@ -1362,7 +1362,7 @@ ContentParent::RecvFirstIdle()
     // use as an indicator that it's a good time to prelaunch another process.
     // If we prelaunch any sooner than this, then we'll be competing with the
     // child process and slowing it down.
-    PreallocatedProcessManager::AllocateOnIdle();
+    PreallocatedProcessManager::AllocateAfterDelay();
     return true;
 }
 
