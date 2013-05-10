@@ -7863,6 +7863,11 @@ class CGBindingRoot(CGThing):
         descriptors = config.getDescriptors(webIDLFile=webIDLFile,
                                             hasInterfaceOrInterfacePrototypeObject=True,
                                             skipGen=False)
+        def descriptorRequiresPreferences(desc):
+            iface = desc.interface
+            return any(m.getExtendedAttribute("Pref") for m in iface.members + [iface]);
+        requiresPreferences = any(descriptorRequiresPreferences(d) for d in descriptors)
+        hasOwnedDescriptors = any(d.nativeOwnership == 'owned' for d in descriptors)
         hasWorkerStuff = len(config.getDescriptors(webIDLFile=webIDLFile,
                                                    workers=True)) != 0
         mainDictionaries = config.getDictionaries(webIDLFile=webIDLFile,
@@ -7962,7 +7967,6 @@ class CGBindingRoot(CGThing):
                           'mozilla/dom/DOMJSClass.h',
                           'mozilla/dom/DOMJSProxyHandler.h'],
                          ['mozilla/dom/BindingUtils.h',
-                          'mozilla/dom/NonRefcountedDOMObject.h',
                           'mozilla/dom/Nullable.h',
                           'PrimitiveConversions.h',
                           'XPCQuickStubs.h',
@@ -7970,12 +7974,13 @@ class CGBindingRoot(CGThing):
                           'nsDOMQS.h',
                           'AccessCheck.h',
                           'nsContentUtils.h',
-                          'mozilla/Preferences.h',
                           # Have to include nsDOMQS.h to get fast arg unwrapping
                           # for old-binding things with castability.
                           'nsDOMQS.h'
                           ] + (['WorkerPrivate.h',
-                                'nsThreadUtils.h'] if hasWorkerStuff else []),
+                                'nsThreadUtils.h'] if hasWorkerStuff else [])
+                            + (['mozilla/Preferences.h'] if requiresPreferences else [])
+                            + (['mozilla/dom/NonRefcountedDOMObject.h'] if hasOwnedDescriptors else []),
                          curr,
                          config,
                          jsImplemented)
