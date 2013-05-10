@@ -10,7 +10,7 @@ interface nsIDOMDOMRequest;
 interface nsIDOMBlob;
 interface nsIDOMBluetoothDevice;
 
-[scriptable, builtinclass, uuid(88a5638f-f55a-4d67-8437-392d0a9a87c7)]
+[scriptable, builtinclass, uuid(7058d214-3575-4913-99ad-0980296f617a)]
 interface nsIDOMBluetoothAdapter : nsIDOMEventTarget
 {
   readonly attribute DOMString address;
@@ -57,6 +57,11 @@ interface nsIDOMBluetoothAdapter : nsIDOMEventTarget
   nsIDOMDOMRequest sendFile(in DOMString aDeviceAddress, in nsIDOMBlob aBlob);
   nsIDOMDOMRequest stopSendingFile(in DOMString aDeviceAddress);
   nsIDOMDOMRequest confirmReceivingFile(in DOMString aDeviceAddress, in bool aConfirmation);
+
+  // Connect/Disconnect SCO (audio) connection
+  nsIDOMDOMRequest connectSco();
+  nsIDOMDOMRequest disconnectSco();
+  nsIDOMDOMRequest isScoConnected();
 
   // Fired when discoverying and any device is discovered.
   [implicit_jscontext] attribute jsval ondevicefound;
