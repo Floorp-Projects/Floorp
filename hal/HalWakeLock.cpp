@@ -14,30 +14,11 @@
 #include "nsIPropertyBag2.h"
 #include "nsObserverService.h"
 
+using namespace mozilla;
 using namespace mozilla::hal;
 
-namespace mozilla {
-namespace hal {
-
-WakeLockState
-ComputeWakeLockState(int aNumLocks, int aNumHidden)
-{
-  if (aNumLocks == 0) {
-    return WAKE_LOCK_STATE_UNLOCKED;
-  } else if (aNumLocks == aNumHidden) {
-    return WAKE_LOCK_STATE_HIDDEN;
-  } else {
-    return WAKE_LOCK_STATE_VISIBLE;
-  }
-}
-
-} // hal
-} // mozilla
-
-namespace mozilla {
-namespace hal_impl {
-
 namespace {
+
 struct LockCount {
   LockCount()
     : numLocks(0)
@@ -47,15 +28,33 @@ struct LockCount {
   uint32_t numHidden;
   nsTArray<uint64_t> processes;
 };
+
 typedef nsDataHashtable<nsUint64HashKey, LockCount> ProcessLockTable;
 typedef nsClassHashtable<nsStringHashKey, ProcessLockTable> LockTable;
 
-static int sActiveListeners = 0;
-static StaticAutoPtr<LockTable> sLockTable;
-static bool sInitialized = false;
-static bool sIsShuttingDown = false;
+int sActiveListeners = 0;
+StaticAutoPtr<LockTable> sLockTable;
+bool sInitialized = false;
+bool sIsShuttingDown = false;
 
-static PLDHashOperator
+WakeLockInformation
+WakeLockInfoFromLockCount(const nsAString& aTopic, const LockCount& aLockCount)
+{
+  // TODO: Once we abandon b2g18, we can switch this to use the
+  // WakeLockInformation constructor, which is better because it doesn't let us
+  // forget to assign a param.  For now we have to do it this way, because
+  // b2g18 doesn't have the nsTArray <--> InfallibleTArray conversion (bug
+  // 819791).
+
+  WakeLockInformation info;
+  info.topic() = aTopic;
+  info.numLocks() = aLockCount.numLocks;
+  info.numHidden() = aLockCount.numHidden;
+  info.lockingProcesses().AppendElements(aLockCount.processes);
+  return info;
+}
+
+PLDHashOperator
 CountWakeLocks(const uint64_t& aKey, LockCount aCount, void* aUserArg)
 {
   MOZ_ASSERT(aUserArg);
@@ -80,19 +79,17 @@ RemoveChildFromList(const nsAString& aKey, nsAutoPtr<ProcessLockTable>& aTable,
 
   PLDHashOperator op = PL_DHASH_NEXT;
   uint64_t childID = *static_cast<uint64_t*>(aUserArg);
-  if (aTable->Get(childID, NULL)) {
+  if (aTable->Get(childID, nullptr)) {
     aTable->Remove(childID);
+
+    LockCount totalCount;
+    aTable->EnumerateRead(CountWakeLocks, &totalCount);
+    if (!totalCount.numLocks) {
+      op = PL_DHASH_REMOVE;
+    }
+
     if (sActiveListeners) {
-      LockCount totalCount;
-      WakeLockInformation info;
-      aTable->EnumerateRead(CountWakeLocks, &totalCount);
-      if (!totalCount.numLocks) {
-        op = PL_DHASH_REMOVE;
-      }
-      info.numLocks() = totalCount.numLocks;
-      info.numHidden() = totalCount.numHidden;
-      info.topic() = aKey;
-      NotifyWakeLockChange(info);
+      NotifyWakeLockChange(WakeLockInfoFromLockCount(aKey, totalCount));
     }
   }
 
@@ -152,7 +149,7 @@ CleanupOnContentShutdown::Observe(nsISupports* aSubject, const char* aTopic, con
   return NS_OK;
 }
 
-static void
+void
 Init()
 {
   sLockTable = new LockTable();
@@ -165,7 +162,28 @@ Init()
     obs->AddObserver(new CleanupOnContentShutdown(), "ipc:content-shutdown", false);
   }
 }
+
 } // anonymous namespace
+
+namespace mozilla {
+
+namespace hal {
+
+WakeLockState
+ComputeWakeLockState(int aNumLocks, int aNumHidden)
+{
+  if (aNumLocks == 0) {
+    return WAKE_LOCK_STATE_UNLOCKED;
+  } else if (aNumLocks == aNumHidden) {
+    return WAKE_LOCK_STATE_HIDDEN;
+  } else {
+    return WAKE_LOCK_STATE_VISIBLE;
+  }
+}
+
+} // namespace hal
+
+namespace hal_impl {
 
 void
 EnableWakeLockNotifications()
@@ -215,6 +233,7 @@ ModifyWakeLock(const nsAString& aTopic,
   MOZ_ASSERT(aHiddenAdjust >= 0 || totalCount.numHidden > 0);
 
   WakeLockState oldState = ComputeWakeLockState(totalCount.numLocks, totalCount.numHidden);
+  bool processWasLocked = processCount.numLocks > 0;
 
   processCount.numLocks += aLockAdjust;
   processCount.numHidden += aHiddenAdjust;
@@ -231,9 +250,11 @@ ModifyWakeLock(const nsAString& aTopic,
     sLockTable->Remove(aTopic);
   }
 
-  WakeLockState newState = ComputeWakeLockState(totalCount.numLocks, totalCount.numHidden);
+  if (sActiveListeners &&
+      (oldState != ComputeWakeLockState(totalCount.numLocks,
+                                        totalCount.numHidden) ||
+       processWasLocked != (processCount.numLocks > 0))) {
 
-  if (sActiveListeners && oldState != newState) {
     WakeLockInformation info;
     GetWakeLockInfo(aTopic, &info);
     NotifyWakeLockChange(info);
@@ -245,6 +266,7 @@ GetWakeLockInfo(const nsAString& aTopic, WakeLockInformation* aWakeLockInfo)
 {
   if (sIsShuttingDown) {
     NS_WARNING("You don't want to get wake lock information during xpcom-shutdown!");
+    *aWakeLockInfo = WakeLockInformation();
     return;
   }
   if (!sInitialized) {
@@ -253,17 +275,12 @@ GetWakeLockInfo(const nsAString& aTopic, WakeLockInformation* aWakeLockInfo)
 
   ProcessLockTable* table = sLockTable->Get(aTopic);
   if (!table) {
-    aWakeLockInfo->numLocks() = 0;
-    aWakeLockInfo->numHidden() = 0;
-    aWakeLockInfo->topic() = aTopic;
+    *aWakeLockInfo = WakeLockInfoFromLockCount(aTopic, LockCount());
     return;
   }
   LockCount totalCount;
   table->EnumerateRead(CountWakeLocks, &totalCount);
-  aWakeLockInfo->numLocks() = totalCount.numLocks;
-  aWakeLockInfo->numHidden() = totalCount.numHidden;
-  aWakeLockInfo->lockingProcesses() = totalCount.processes;
-  aWakeLockInfo->topic() = aTopic;
+  *aWakeLockInfo = WakeLockInfoFromLockCount(aTopic, totalCount);
 }
 
 } // hal_impl
