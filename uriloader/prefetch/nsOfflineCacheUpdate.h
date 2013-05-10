@@ -239,6 +239,8 @@ private:
     nsresult Finish();
     nsresult FinishNoNotify();
 
+    void AsyncFinishWithError();
+
     // Find one non-pinned cache group and evict it.
     nsresult EvictOneNonPinned();
 
@@ -355,6 +357,7 @@ private:
 
     bool mDisabled;
     bool mUpdateRunning;
+    bool mLowFreeSpace;
 };
 
 #endif
