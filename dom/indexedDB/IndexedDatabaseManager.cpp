@@ -513,7 +513,7 @@ IndexedDatabaseManager::Observe(nsISupports* aSubject, const char* aTopic,
   NS_ASSERTION(IsMainProcess(), "Wrong process!");
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (!strcmp(aTopic, LOW_DISK_SPACE_OBSERVER_ID)) {
+  if (!strcmp(aTopic, DISKSPACEWATCHER_OBSERVER_TOPIC)) {
     NS_ASSERTION(aData, "No data?!");
 
     const nsDependentString data(aData);
