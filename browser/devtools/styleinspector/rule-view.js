@@ -941,8 +941,8 @@ CssRuleView.prototype = {
    */
   nodeChanged: function CssRuleView_nodeChanged()
   {
-    // Ignore refreshes during editing.
-    if (this.isEditing) {
+    // Ignore refreshes during editing or when no element is selected.
+    if (this.isEditing || !this._elementStyle) {
       return;
     }
 
