@@ -319,6 +319,23 @@ nsAttrAndChildArray::GetAttr(nsIAtom* aLocalName, int32_t aNamespaceID) const
 }
 
 const nsAttrValue*
+nsAttrAndChildArray::GetAttr(const nsAString& aLocalName) const
+{
+  uint32_t i, slotCount = AttrSlotCount();
+  for (i = 0; i < slotCount && AttrSlotIsTaken(i); ++i) {
+    if (ATTRS(mImpl)[i].mName.Equals(aLocalName)) {
+      return &ATTRS(mImpl)[i].mValue;
+    }
+  }
+
+  if (mImpl && mImpl->mMappedAttrs) {
+    return mImpl->mMappedAttrs->GetAttr(aLocalName);
+  }
+
+  return nullptr;
+}
+
+const nsAttrValue*
 nsAttrAndChildArray::GetAttr(const nsAString& aName,
                              nsCaseTreatment aCaseSensitive) const
 {
