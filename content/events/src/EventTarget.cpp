@@ -22,5 +22,19 @@ EventTarget::RemoveEventListener(const nsAString& aType,
   }
 }
 
+EventHandlerNonNull*
+EventTarget::GetEventHandler(nsIAtom* aType)
+{
+  nsEventListenerManager* elm = GetListenerManager(false);
+  return elm ? elm->GetEventHandler(aType) : nullptr;
+}
+
+void
+EventTarget::SetEventHandler(nsIAtom* aType, EventHandlerNonNull* aHandler,
+                             ErrorResult& rv)
+{
+  rv = GetListenerManager(true)->SetEventHandler(aType, aHandler);
+}
+
 } // namespace dom
 } // namespace mozilla

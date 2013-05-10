@@ -942,12 +942,6 @@ IonBuilder::inlineUnsafeSetElement(CallInfo &callInfo)
         {
             return InliningStatus_NotInlined;
         }
-
-        if (obj->resultTypeSet()->convertDoubleElements(cx) !=
-            types::StackTypeSet::DontConvertToDoubles)
-        {
-            return InliningStatus_NotInlined;
-        }
     }
 
     callInfo.unwrapArgs();
@@ -985,7 +979,8 @@ IonBuilder::inlineUnsafeSetElement(CallInfo &callInfo)
 }
 
 bool
-IonBuilder::inlineUnsafeSetDenseArrayElement(CallInfo &callInfo, uint32_t base)
+IonBuilder::inlineUnsafeSetDenseArrayElement(
+    CallInfo &callInfo, uint32_t base)
 {
     // Note: we do not check the conditions that are asserted as true
     // in intrinsic_UnsafeSetElement():
@@ -994,33 +989,14 @@ IonBuilder::inlineUnsafeSetDenseArrayElement(CallInfo &callInfo, uint32_t base)
     // Furthermore, note that inlineUnsafeSetElement ensures the type of the
     // value is reflected in the JSID_VOID property of the array.
 
-    uint32_t arri = base + 0;
-    uint32_t idxi = base + 1;
-    uint32_t elemi = base + 2;
+    MDefinition *obj = callInfo.getArg(base + 0);
+    MDefinition *id = callInfo.getArg(base + 1);
+    MDefinition *elem = callInfo.getArg(base + 2);
 
-    MElements *elements = MElements::New(callInfo.getArg(arri));
-    current->add(elements);
-
-    MToInt32 *id = MToInt32::New(callInfo.getArg(idxi));
-    current->add(id);
-
-    // We disable the hole check for this store.  This implies that if
-    // there were setters on the prototype, they would not be invoked.
-    // But this is actually the desired behavior.
-
-    MStoreElement *store = MStoreElement::New(elements, id,
-                                              callInfo.getArg(elemi),
-                                              /* needsHoleCheck = */ false);
-    store->setRacy();
-
-    if (callInfo.getArg(arri)->resultTypeSet()->propertyNeedsBarrier(cx, JSID_VOID))
-        store->setNeedsBarrier();
-
-    current->add(store);
-
-    if (!resumeAfter(store))
+    types::StackTypeSet::DoubleConversion conversion =
+        obj->resultTypeSet()->convertDoubleElements(cx);
+    if (!jsop_setelem_dense(conversion, SetElem_Unsafe, obj, id, elem))
         return false;
-
     return true;
 }
 
@@ -1034,28 +1010,11 @@ IonBuilder::inlineUnsafeSetTypedArrayElement(CallInfo &callInfo,
     // - arr is a typed array
     // - idx < length
 
-    uint32_t arri = base + 0;
-    uint32_t idxi = base + 1;
-    uint32_t elemi = base + 2;
+    MDefinition *obj = callInfo.getArg(base + 0);
+    MDefinition *id = callInfo.getArg(base + 1);
+    MDefinition *elem = callInfo.getArg(base + 2);
 
-    MInstruction *elements = getTypedArrayElements(callInfo.getArg(arri));
-    current->add(elements);
-
-    MToInt32 *id = MToInt32::New(callInfo.getArg(idxi));
-    current->add(id);
-
-    MDefinition *value = callInfo.getArg(elemi);
-    if (arrayType == TypedArray::TYPE_UINT8_CLAMPED) {
-        value = MClampToUint8::New(value);
-        current->add(value->toInstruction());
-    }
-
-    MStoreTypedArrayElement *store = MStoreTypedArrayElement::New(elements, id, value, arrayType);
-    store->setRacy();
-
-    current->add(store);
-
-    if (!resumeAfter(store))
+    if (!jsop_setelem_typed(arrayType, SetElem_Unsafe, obj, id, elem))
         return false;
 
     return true;

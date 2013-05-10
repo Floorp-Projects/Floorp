@@ -10,13 +10,11 @@ XPIDL_SOURCES += [
     'nsIDOMSVGAnimatedInteger.idl',
     'nsIDOMSVGAnimatedLength.idl',
     'nsIDOMSVGAnimatedNumber.idl',
-    'nsIDOMSVGAnimatedRect.idl',
     'nsIDOMSVGAnimatedString.idl',
     'nsIDOMSVGDocument.idl',
     'nsIDOMSVGElement.idl',
     'nsIDOMSVGLength.idl',
     'nsIDOMSVGNumber.idl',
-    'nsIDOMSVGRect.idl',
 ]
 
 XPIDL_MODULE = 'dom_svg'

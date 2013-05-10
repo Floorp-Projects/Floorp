@@ -28,7 +28,7 @@ double
 txUnionNodeTest::getDefaultPriority()
 {
     NS_ERROR("Don't call getDefaultPriority on txUnionPattern");
-    return MOZ_DOUBLE_NaN();
+    return mozilla::UnspecifiedNaN();
 }
 
 bool

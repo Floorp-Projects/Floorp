@@ -155,6 +155,15 @@ public class Tabs implements GeckoEventListener {
         return count;
     }
 
+    public synchronized int isOpen(String url) {
+        for (Tab tab : mOrder) {
+            if (tab.getURL().equals(url)) {
+                return tab.getId();
+            }
+        }
+        return -1;
+    }
+
     // Must be synchronized to avoid racing on mContentObserver.
     private void lazyRegisterBookmarkObserver() {
         if (mContentObserver == null) {

@@ -10,53 +10,35 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-SimpleTest.waitForExplicitFinish();
-addLoadEvent(function() {
-  SpecialPowers.setBoolPref("media.webaudio.enabled", true);
-
-  var context = new AudioContext();
-  var buffer = context.createBuffer(1, 2048, context.sampleRate);
-  for (var i = 0; i < 2048; ++i) {
-    buffer.getChannelData(0)[i] = Math.sin(440 * 2 * Math.PI * i / context.sampleRate);
-  }
-
-  var source = context.createBufferSource();
-
-  var eventsReceived = 0;
-  function eventReceived() {
-    if (++eventsReceived == 2) {
-      SpecialPowers.clearUserPref("media.webaudio.enabled");
-      SimpleTest.finish();
+var gTest = {
+  length: 4096,
+  createGraph: function(context) {
+    var buffer = context.createBuffer(1, 2048, context.sampleRate);
+    for (var i = 0; i < 2048; ++i) {
+      buffer.getChannelData(0)[i] = Math.sin(440 * 2 * Math.PI * i / context.sampleRate);
     }
-  }
 
-  source.onended = function(e) {
-    is(e.target, source, "Correct target for the ended event");
-    eventReceived();
-  };
+    var source = context.createBufferSource();
 
-  var sp = context.createScriptProcessor(2048);
-  source.start(0);
-  source.buffer = buffer;
-  source.connect(sp);
-  sp.connect(context.destination);
-  sp.onaudioprocess = function(e) {
-    compareBuffers(e.inputBuffer.getChannelData(0), buffer.getChannelData(0));
-    compareBuffers(e.inputBuffer.getChannelData(1), buffer.getChannelData(0));
+    var sp = context.createScriptProcessor(2048);
+    source.start(0);
+    source.buffer = buffer;
+    return source;
+  },
+  createExpectedBuffers: function(context) {
+    var buffers = [];
+    var buffer = context.createBuffer(2, 2048, context.sampleRate);
+    for (var i = 0; i < 2048; ++i) {
+      buffer.getChannelData(0)[i] = Math.sin(440 * 2 * Math.PI * i / context.sampleRate);
+      buffer.getChannelData(1)[i] = buffer.getChannelData(0)[i];
+    }
+    buffers.push(buffer);
+    buffers.push(getEmptyBuffer(context, 2048));
+    return buffers;
+  },
+};
 
-    // On the next iteration, we'll get a silence buffer
-    sp.onaudioprocess = function(e) {
-      var emptyBuffer = context.createBuffer(1, 2048, context.sampleRate);
-      compareBuffers(e.inputBuffer.getChannelData(0), emptyBuffer.getChannelData(0));
-      compareBuffers(e.inputBuffer.getChannelData(1), emptyBuffer.getChannelData(0));
-
-      sp.onaudioprocess = null;
-      sp.disconnect(context.destination);
-
-      eventReceived();
-    };
-  };
-});
+runTest();
 
 </script>
 </pre>

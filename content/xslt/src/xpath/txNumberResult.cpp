@@ -49,7 +49,7 @@ bool NumberResult::booleanValue() {
   // OG+
   // As per the XPath spec, the boolean value of a number is true if and only if
   // it is neither positive 0 nor negative 0 nor NaN
-  return (bool)(value != 0.0 && !MOZ_DOUBLE_IS_NaN(value));
+  return (bool)(value != 0.0 && !mozilla::IsNaN(value));
   // OG-
 } //-- booleanValue
 

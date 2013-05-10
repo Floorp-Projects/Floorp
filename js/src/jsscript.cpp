@@ -2820,7 +2820,7 @@ JSScript::argumentsOptimizationFailed(JSContext *cx, HandleScript script)
          * arguments object right after restoring the StackFrame and before
          * entering the interpreter (in ion::ThunkToInterpreter).  This delay is
          * safe since the engine avoids any observation of a StackFrame when it
-         * beginsIonActivation (see StackIter::interpFrame comment).
+         * beginsIonActivation (see ScriptFrameIter::interpFrame comment).
          */
         if (i.isIonOptimizedJS())
             continue;

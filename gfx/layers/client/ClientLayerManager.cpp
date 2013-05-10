@@ -374,6 +374,7 @@ ClientLayerManager::GetBackendName(nsAString& aName)
     case LAYERS_OPENGL: aName.AssignLiteral("OpenGL"); return;
     case LAYERS_D3D9: aName.AssignLiteral("Direct3D 9"); return;
     case LAYERS_D3D10: aName.AssignLiteral("Direct3D 10"); return;
+    case LAYERS_D3D11: aName.AssignLiteral("Direct3D 11"); return;
     default: NS_RUNTIMEABORT("Invalid backend");
   }
 }

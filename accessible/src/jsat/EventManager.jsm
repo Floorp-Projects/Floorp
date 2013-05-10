@@ -189,7 +189,7 @@ this.EventManager = {
         if (aEvent.isFromUserInput) {
           // XXX support live regions as well.
           let event = aEvent.QueryInterface(Ci.nsIAccessibleTextChangeEvent);
-          let isInserted = event.isInserted();
+          let isInserted = event.isInserted;
           let txtIface = aEvent.accessible.QueryInterface(Ci.nsIAccessibleText);
 
           let text = '';

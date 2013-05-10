@@ -322,6 +322,7 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
         ImageLayer* imageLayer = static_cast<ImageLayer*>(layer);
         const ImageLayerAttributes& attrs = specific.get_ImageLayerAttributes();
         imageLayer->SetFilter(attrs.filter());
+        imageLayer->SetScaleToSize(attrs.scaleToSize(), attrs.scaleMode());
         break;
       }
       default:

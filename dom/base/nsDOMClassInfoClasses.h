@@ -105,11 +105,9 @@ DOMCI_CLASS(TimeEvent)
 DOMCI_CLASS(SVGAnimatedEnumeration)
 DOMCI_CLASS(SVGAnimatedInteger)
 DOMCI_CLASS(SVGAnimatedNumber)
-DOMCI_CLASS(SVGAnimatedRect)
 DOMCI_CLASS(SVGAnimatedString)
 DOMCI_CLASS(SVGLength)
 DOMCI_CLASS(SVGNumber)
-DOMCI_CLASS(SVGRect)
 
 // Canvas
 DOMCI_CLASS(MozCanvasPrintState)

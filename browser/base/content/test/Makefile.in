@@ -318,7 +318,6 @@ _BROWSER_FILES = \
                  browser_bug676619.js \
                  download_page.html \
                  browser_URLBarSetURI.js \
-                 browser_bookmark_titles.js \
                  browser_pageInfo_plugins.js \
                  browser_pageInfo.js \
                  feed_tab.html \
@@ -330,11 +329,12 @@ _BROWSER_FILES = \
                  healthreport_testRemoteCommands.html \
                  $(NULL)
 
-# Disable test on Windows due to frequent failures (bug 841341)
+# Disable tests on Windows due to frequent failures (bugs 825739, 841341)
 ifneq (windows,$(MOZ_WIDGET_TOOLKIT))
 _BROWSER_FILES += \
-                browser_popupNotification.js \
-                $(NULL)
+                 browser_bookmark_titles.js \
+                 browser_popupNotification.js \
+                 $(NULL)
 endif
 
 ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))

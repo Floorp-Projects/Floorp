@@ -10,6 +10,11 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
+// We do not use our generic graph test framework here because
+// the testing logic here is sort of complicated, and would
+// not be easy to map to OfflineAudioContext, as ScriptProcessorNodes
+// can experience delays.
+
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() {
   SpecialPowers.setBoolPref("media.webaudio.enabled", true);

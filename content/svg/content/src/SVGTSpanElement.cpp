@@ -52,11 +52,8 @@ SVGTSpanElement::IsAttributeMapped(const nsIAtom* name) const
     SVGTSpanElementBase::IsAttributeMapped(name);
 }
 
-//----------------------------------------------------------------------
-// nsSVGElement overrides
-
 bool
-SVGTSpanElement::IsEventName(nsIAtom* aName)
+SVGTSpanElement::IsEventAttributeName(nsIAtom* aName)
 {
   return nsContentUtils::IsEventAttributeName(aName, EventNameType_SVGGraphic);
 }

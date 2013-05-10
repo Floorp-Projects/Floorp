@@ -1669,8 +1669,8 @@ nsIDocument*
 nsContentUtils::GetDocumentFromCaller()
 {
   JSContext *cx = nullptr;
-  JSObject *obj = nullptr;
-  sXPConnect->GetCaller(&cx, &obj);
+  JS::Rooted<JSObject*> obj(cx);
+  sXPConnect->GetCaller(&cx, obj.address());
   NS_ASSERTION(cx && obj, "Caller ensures something is running");
 
   JSAutoCompartment ac(cx, obj);
@@ -1755,23 +1755,6 @@ nsContentUtils::LookupBindingMember(JSContext* aCx, nsIContent *aContent,
   if (!binding)
     return true;
   return binding->LookupMember(aCx, aId, aDesc);
-}
-
-// static
-bool
-nsContentUtils::IsBindingField(JSContext* aCx, nsIContent* aContent,
-                               JS::HandleId aId)
-{
-  nsXBLBinding* binding = aContent->OwnerDoc()->BindingManager()
-                                  ->GetBinding(aContent);
-  if (!binding)
-    return false;
-
-  if (!JSID_IS_STRING(aId))
-    return false;
-  nsDependentJSString name(aId);
-
-  return binding->HasField(name);
 }
 
 // static

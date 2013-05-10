@@ -712,7 +712,8 @@ private:
   bool IsInUpdateImageContainer() { return mInUpdateImageContainer; }
   enum RequestDecodeType {
       ASYNCHRONOUS,
-      SOMEWHAT_SYNCHRONOUS
+      SYNCHRONOUS_NOTIFY,
+      SYNCHRONOUS_NOTIFY_AND_SOME_DECODE
   };
   NS_IMETHOD RequestDecodeCore(RequestDecodeType aDecodeType);
 

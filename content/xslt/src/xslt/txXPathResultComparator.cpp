@@ -214,10 +214,10 @@ int txResultNumberComparator::compareValues(txObject* aVal1, txObject* aVal2)
     double dval1 = ((NumberValue*)aVal1)->mVal;
     double dval2 = ((NumberValue*)aVal2)->mVal;
 
-    if (MOZ_DOUBLE_IS_NaN(dval1))
-        return MOZ_DOUBLE_IS_NaN(dval2) ? 0 : -mAscending;
+    if (mozilla::IsNaN(dval1))
+        return mozilla::IsNaN(dval2) ? 0 : -mAscending;
 
-    if (MOZ_DOUBLE_IS_NaN(dval2))
+    if (mozilla::IsNaN(dval2))
         return mAscending;
 
     if (dval1 == dval2)

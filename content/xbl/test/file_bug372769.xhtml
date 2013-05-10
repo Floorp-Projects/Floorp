@@ -1,0 +1,181 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=372769
+-->
+<head>
+  <title>Test for Bug 372769</title>
+  <bindings xmlns="http://www.mozilla.org/xbl">
+    <binding id="test1">
+      <implementation>
+        <field name="one">1</field>
+        <field name="two">9</field>
+        <field name="three">3</field>
+        <field name="four">10</field>
+        <field name="five">11</field>
+        <field name="six">this.four = 4; 6;</field>
+        <field name="seven">this.five = 5; 7;</field>
+      </implementation>
+    </binding>
+
+    <binding id="test2">
+      <implementation>
+        <!-- Tests for recursive resolves -->
+        <field name="eight">this.eight</field>
+        <field name="nine">this.ten</field>
+        <field name="ten">this.nine</field>
+        <!-- Tests for non-DOM overrides -->
+        <field name="eleven">11</field>
+        <field name="twelve">12</field>
+        <!-- Tests for DOM overrides -->
+        <field name="parentNode">this.parentNode</field>
+        <field name="ownerDocument">"ownerDocument override"</field>
+      </implementation>
+    </binding>
+
+    <binding id="test3-ancestor">
+      <implementation>
+        <field name="thirteen">"13 ancestor"</field>
+        <field name="fourteen">"14 ancestor"</field>
+        <property name="fifteen" readonly="true" onget="return '15 ancestor'"/>
+      </implementation>
+    </binding>
+
+    <binding id="test3" extends="#test3-ancestor">
+      <implementation>
+        <field name="thirteen">13</field>
+        <field name="fifteen">15</field>
+        <field name="sixteen">16</field>
+        <field name="sixteen">"16 later"</field>
+        <field name="seventeen">17</field>
+        <field name="eighteen">"18 field"</field>
+        <property name="eighteen" readonly="true" onget="return 18"/>
+        <property name="nineteen" readonly="true" onget="return 19"/>
+        <field name="nineteen">"19 field"</field>
+      </implementation>
+    </binding>
+
+    <binding id="test4">
+      <implementation>
+        <field name="twenty">for (var i in this) ; 20;</field>
+      </implementation>
+    </binding>
+
+      <binding id="test5">
+      <implementation>
+        <field name="twenty-one">for (var i in this) ; 21;</field>
+      </implementation>
+    </binding>
+</bindings>  
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=372769">Mozilla Bug 372769</a>
+<p id="display1" style="-moz-binding: url(#test1)"></p>
+<p id="display2" style="-moz-binding: url(#test2)"></p>
+<p id="display3" style="-moz-binding: url(#test3)"></p>
+<p id="display4" style="-moz-binding: url(#test4)"></p>
+<p id="display5" style="-moz-binding: url(#test5)"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+
+/** Test for Bug 372769 **/
+
+SimpleTest = parent.SimpleTest;
+ok = parent.ok;
+is = parent.is;
+$ = function(x) { return document.getElementById(x); }
+
+window.onload = function() {
+  var d = $("display1");
+  is(d.one, 1, "Should be able to read field");
+
+  d.two = 2;
+  is(d.two, 2, "Should be able to write field");
+
+  is("three" in d, true, 'Should have a property named "three"');
+  is(d.three, 3, "Should be 3");
+
+  is(d.four, 10, "Unexpected value so far");
+
+  // Save "five" for now
+
+  is(d.six, 6, "Should be 6");
+
+  is(d.four, 4, "Now should be 4");
+
+  d.four = 9;
+  is(d.four, 9, "Just set it to 9");
+  
+  var found = false;
+  for (var prop in d) {
+    if (prop == "seven") {
+      found = true;
+      break;
+    }
+  }
+  is(found, true, "Enumeration is broken");
+
+  is(d.four, 9, "Shouldn't have rerun field six");
+  is(d.five, 11, "Shouldn't have run field 7");
+  is(d.seven, 7, "Should be 7")
+  is(d.five, 5, "Should have run field 7");
+
+  d = $("display2");
+  is(typeof(d.eight), "undefined", "Recursive resolve should bail out");
+  is(typeof(d.nine), "undefined", "Recursive double resolve should bail out");
+  is(typeof(d.ten), "undefined",
+     "This recursive double resolve should bail out too");
+
+  // Get .eleven so it's resolved now
+  is(d.eleven, 11, "Unexpected value for .eleven");
+  var newProto = {};
+  newProto.eleven = "Proto 11";
+  newProto.twelve = "Proto 12";  
+  newProto.__proto__ = d.__proto__;
+  d.__proto__ = newProto;
+  is(d.eleven, 11, "Proto should not have affected this");
+  is(d.twelve, "Proto 12", "Proto should have overridden 'twelve'");
+  
+  is(d.parentNode, undefined, "We overrode this, yes we did");
+  is(typeof(d.parentNode), "undefined", "This is a recursive resolve too");
+  is(d.ownerDocument, "ownerDocument override",
+     "Should have overridden ownerDocument");
+
+  d = $("display3");
+  is(d.thirteen, 13, "descendant should win here");
+  is(d.fourteen, "14 ancestor",
+     "ancestor should win if descendant does nothing")
+  is(d.fifteen, 15,
+     "Field beats ancestor's property, since the latter lives on higher proto")
+  is(d.sixteen, 16, "First field wins");
+  is(d.__proto__.seventeen, undefined, "Shouldn't have this on proto");
+  is(typeof(d.__proto__.seventeen), "undefined",
+     "Really, should be undefined");
+  is(d.seventeen, 17, "Should have this prop on the node itself, though");
+  is(d.eighteen, 18, "Property beats field");
+  is(d.nineteen, 19, "Property still beats field");
+
+  d = $("display4");
+  is(d.twenty, 20, "Should be 20");
+
+  d = $("display5");
+  found = false;
+  for (var prop2 in d) {
+    if (prop2 == "twenty-one") {
+      found = true;
+      break;
+    }
+  }
+  is(found, true, "Enumeration is broken");
+  is(d["twenty-one"], 21, "Should be 21");
+  SimpleTest.finish();
+}
+]]>
+</script>
+</pre>
+</body>
+</html>
+

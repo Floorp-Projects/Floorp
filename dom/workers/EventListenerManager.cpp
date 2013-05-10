@@ -287,8 +287,9 @@ EventListenerManager::GetEventListener(const jsid& aType) const
 
 bool
 EventListenerManager::DispatchEvent(JSContext* aCx, const EventTarget& aTarget,
-                                    JSObject* aEvent, ErrorResult& aRv) const
+                                    JSObject* event, ErrorResult& aRv) const
 {
+  JS::Rooted<JSObject*> aEvent(aCx, event);
   using namespace mozilla::dom::workers::events;
 
   if (!IsSupportedEventClass(aEvent)) {
@@ -296,8 +297,8 @@ EventListenerManager::DispatchEvent(JSContext* aCx, const EventTarget& aTarget,
     return false;
   }
 
-  jsval val;
-  if (!JS_GetProperty(aCx, aEvent, "target", &val)) {
+  JS::Rooted<JS::Value> val(aCx);
+  if (!JS_GetProperty(aCx, aEvent, "target", val.address())) {
     aRv.Throw(NS_ERROR_FAILURE);
     return false;
   }
@@ -312,10 +313,10 @@ EventListenerManager::DispatchEvent(JSContext* aCx, const EventTarget& aTarget,
     return false;
   }
 
-  JSString* eventType;
+  JS::Rooted<JSString*> eventType(aCx);
   JSBool eventIsTrusted;
 
-  if (!JS_GetProperty(aCx, aEvent, "type", &val) ||
+  if (!JS_GetProperty(aCx, aEvent, "type", val.address()) ||
       !(eventType = JS_ValueToString(aCx, val)) ||
       !(eventType = JS_InternJSString(aCx, eventType))) {
     aRv.Throw(NS_ERROR_FAILURE);
@@ -324,7 +325,7 @@ EventListenerManager::DispatchEvent(JSContext* aCx, const EventTarget& aTarget,
 
   // We have already ensure that the event is one of our types of events so
   // there is no need to worry about this property being faked.
-  if (!JS_GetProperty(aCx, aEvent, "isTrusted", &val) ||
+  if (!JS_GetProperty(aCx, aEvent, "isTrusted", val.address()) ||
       !JS_ValueToBoolean(aCx, val, &eventIsTrusted)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return false;
@@ -382,10 +383,10 @@ EventListenerManager::DispatchEvent(JSContext* aCx, const EventTarget& aTarget,
     // out of memory or the operation callback has indicated that we should
     // stop running.
 
-    jsval listenerVal = listeners[index];
+    JS::Rooted<JS::Value> listenerVal(aCx, listeners[index]);
 
-    JSObject* listenerObj;
-    if (!JS_ValueToObject(aCx, listenerVal, &listenerObj)) {
+    JS::Rooted<JSObject*> listenerObj(aCx);
+    if (!JS_ValueToObject(aCx, listenerVal, listenerObj.address())) {
       if (!JS_ReportPendingException(aCx)) {
         aRv.Throw(NS_ERROR_FAILURE);
         return false;
@@ -395,7 +396,7 @@ EventListenerManager::DispatchEvent(JSContext* aCx, const EventTarget& aTarget,
 
     static const char sHandleEventChars[] = "handleEvent";
 
-    JSObject* thisObj = aTarget.GetJSObject();
+    JS::Rooted<JSObject*> thisObj(aCx, aTarget.GetJSObject());
 
     JSBool hasHandleEvent;
     if (!JS_HasProperty(aCx, listenerObj, sHandleEventChars, &hasHandleEvent)) {
@@ -407,7 +408,7 @@ EventListenerManager::DispatchEvent(JSContext* aCx, const EventTarget& aTarget,
     }
 
     if (hasHandleEvent) {
-      if (!JS_GetProperty(aCx, listenerObj, sHandleEventChars, &listenerVal)) {
+      if (!JS_GetProperty(aCx, listenerObj, sHandleEventChars, listenerVal.address())) {
         if (!JS_ReportPendingException(aCx)) {
           aRv.Throw(NS_ERROR_FAILURE);
           return false;

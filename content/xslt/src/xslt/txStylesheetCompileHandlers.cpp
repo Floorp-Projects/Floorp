@@ -271,7 +271,7 @@ getNumberAttr(txStylesheetAttr* aAttributes,
               txStylesheetCompilerState& aState,
               double& aNumber)
 {
-    aNumber = MOZ_DOUBLE_NaN();
+    aNumber = UnspecifiedNaN();
     txStylesheetAttr* attr = nullptr;
     nsresult rv = getStyleAttr(aAttributes, aAttrCount, kNameSpaceID_None,
                                aName, aRequired, &attr);
@@ -280,7 +280,7 @@ getNumberAttr(txStylesheetAttr* aAttributes,
     }
 
     aNumber = txDouble::toDouble(attr->mValue);
-    if (MOZ_DOUBLE_IS_NaN(aNumber) && (aRequired || !aState.fcp())) {
+    if (mozilla::IsNaN(aNumber) && (aRequired || !aState.fcp())) {
         // XXX ErrorReport: number parse failure
         return NS_ERROR_XSLT_PARSE_FAILURE;
     }
@@ -520,7 +520,7 @@ txFnStartLREStylesheet(int32_t aNamespaceID,
     NS_ENSURE_SUCCESS(rv, rv);
 
     txExpandedName nullExpr;
-    double prio = MOZ_DOUBLE_NaN();
+    double prio = UnspecifiedNaN();
 
     nsAutoPtr<txPattern> match(new txRootPattern());
     NS_ENSURE_TRUE(match, NS_ERROR_OUT_OF_MEMORY);
@@ -1113,7 +1113,7 @@ txFnStartTemplate(int32_t aNamespaceID,
                       aState, mode);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    double prio = MOZ_DOUBLE_NaN();
+    double prio = UnspecifiedNaN();
     rv = getNumberAttr(aAttributes, aAttrCount, nsGkAtoms::priority,
                        false, aState, prio);
     NS_ENSURE_SUCCESS(rv, rv);

@@ -20,10 +20,6 @@ endif
 # Mozilla distribution.
 HOST_PROGRAM = mar$(HOST_BIN_SUFFIX)
 
-ifdef MOZ_ENABLE_SIGNMAR
-PROGRAM = signmar$(BIN_SUFFIX)
-endif
-
 # Don't link the against libmozglue because we don't need it.
 MOZ_GLUE_LDFLAGS =
 MOZ_GLUE_PROGRAM_LDFLAGS =

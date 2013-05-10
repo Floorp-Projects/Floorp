@@ -6,3 +6,5 @@
 
 MODULE = 'TestStreamConv'
 
+PROGRAM = 'TestStreamConv'
+

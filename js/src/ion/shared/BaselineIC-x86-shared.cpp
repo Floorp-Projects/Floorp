@@ -23,9 +23,9 @@ ICCompare_Double::Compiler::generateStubCode(MacroAssembler &masm)
     Register dest = R0.scratchReg();
 
     Assembler::DoubleCondition cond = JSOpToDoubleCondition(op);
+    masm.xorl(dest, dest);
     masm.compareDouble(cond, FloatReg0, FloatReg1);
     masm.setCC(Assembler::ConditionFromDoubleCondition(cond), dest);
-    masm.movzxbl(dest, dest);
 
     // Check for NaN, if needed.
     Assembler::NaNCond nanCond = Assembler::NaNCondFromDoubleCondition(cond);

@@ -41,9 +41,9 @@
 
 #if defined(_MSC_VER) && (_MSC_VER <= 1700)
 namespace std {
-  inline bool isinf(double num) { return MOZ_DOUBLE_IS_INFINITE(num); }
-  inline bool isnan(double num) { return MOZ_DOUBLE_IS_NaN(num); }
-  inline bool isfinite(double num) { return MOZ_DOUBLE_IS_FINITE(num); }
+  inline bool isinf(double num) { return mozilla::IsInfinite(num); }
+  inline bool isnan(double num) { return mozilla::IsNaN(num); }
+  inline bool isfinite(double num) { return mozilla::IsFinite(num); }
 }
 #endif
 
@@ -52,12 +52,12 @@ typedef std::string String;
 double mozToDouble(const String &aStr, bool *valid) {
   double_conversion::StringToDoubleConverter converter(
     double_conversion::StringToDoubleConverter::NO_FLAGS,
-    MOZ_DOUBLE_NaN(), MOZ_DOUBLE_NaN(), nullptr, nullptr);
+    mozilla::UnspecifiedNaN(), mozilla::UnspecifiedNaN(), nullptr, nullptr);
   const char* str = aStr.c_str();
   int length = mozilla::SafeCast<int>(strlen(str));
   int processed_char_count; // unused - NO_FLAGS requires the whole string to parse
   double result = converter.StringToDouble(str, length, &processed_char_count);
-  *valid = MOZ_DOUBLE_IS_FINITE(result);
+  *valid = mozilla::IsFinite(result);
   return result;
 }
 

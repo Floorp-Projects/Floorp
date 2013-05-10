@@ -10,9 +10,12 @@ namespace mozilla {
 namespace hal_impl {
 
 void
-SetProcessPriority(int aPid, ProcessPriority aPriority)
+SetProcessPriority(int aPid,
+                   ProcessPriority aPriority,
+                   ProcessCPUPriority aCPUPriority)
 {
-  HAL_LOG(("FallbackProcessPriority - SetProcessPriority(%d, %d)\n", aPid, aPriority));
+  HAL_LOG(("FallbackProcessPriority - SetProcessPriority(%d, %s)\n",
+           aPid, ProcessPriorityToString(aPriority, aCPUPriority)));
 }
 
 } // hal_impl

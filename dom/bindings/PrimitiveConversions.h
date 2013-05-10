@@ -223,7 +223,7 @@ PrimitiveConversionTraits_EnforceRange(JSContext* cx, const double& d, T* retval
   MOZ_STATIC_ASSERT(std::numeric_limits<T>::is_integer,
                     "This can only be applied to integers!");
 
-  if (!MOZ_DOUBLE_IS_FINITE(d)) {
+  if (!mozilla::IsFinite(d)) {
     return ThrowErrorMessage(cx, MSG_ENFORCE_RANGE_NON_FINITE, TypeName<T>::value());
   }
 
@@ -251,7 +251,7 @@ PrimitiveConversionTraits_Clamp(JSContext* cx, const double& d, T* retval)
   MOZ_STATIC_ASSERT(std::numeric_limits<T>::is_integer,
                     "This can only be applied to integers!");
 
-  if (MOZ_DOUBLE_IS_NaN(d)) {
+  if (mozilla::IsNaN(d)) {
     *retval = 0;
     return true;
   }
@@ -264,7 +264,7 @@ PrimitiveConversionTraits_Clamp(JSContext* cx, const double& d, T* retval)
     return true;
   }
 
-  MOZ_ASSERT(MOZ_DOUBLE_IS_FINITE(d));
+  MOZ_ASSERT(mozilla::IsFinite(d));
 
   // Banker's rounding (round ties towards even).
   // We move away from 0 by 0.5f and then truncate.  That gets us the right

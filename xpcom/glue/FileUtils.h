@@ -154,6 +154,14 @@ and run in non-GONK builds. */
 #define ReadSysFile_PRESENT
 #endif /* ReadSysFile_PRESENT */
 
+#define MOZ_TEMP_FAILURE_RETRY(exp) (__extension__({ \
+  typeof (exp) _rc; \
+  do { \
+    _rc = (exp); \
+  } while (_rc == -1 && errno == EINTR); \
+  _rc; \
+}))
+
 /**
  * Read the contents of a file.
  * This function is intended for reading a single-lined text files from

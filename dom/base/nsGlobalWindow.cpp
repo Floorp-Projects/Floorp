@@ -3885,9 +3885,37 @@ nsGlobalWindow::GetOpener(nsIDOMWindow** aOpener)
 NS_IMETHODIMP
 nsGlobalWindow::SetOpener(nsIDOMWindow* aOpener)
 {
-  // check if we were called from a privileged chrome script.
-  // If not, opener is settable only to null.
+  // Check if we were called from a privileged chrome script.  If not, and if
+  // aOpener is not null, just define aOpener on our inner window's JS object,
+  // wapped into the current compartment so that for Xrays we define on the Xray
+  // expando object, but don't set it on the outer window, so that it'll get
+  // reset on navigation.  This is just like replaceable properties, but we're
+  // not quite readonly.
   if (aOpener && !nsContentUtils::IsCallerChrome()) {
+    // JS_WrapObject will outerize, so we don't care if aOpener is an inner.
+    nsCOMPtr<nsIGlobalObject> glob = do_QueryInterface(aOpener);
+    NS_ENSURE_STATE(glob);
+
+    AutoJSContext cx;
+    JSAutoRequest ar(cx);
+    // Note we explicitly do NOT enter any particular compartment here; we want
+    // the caller compartment in cases when we have a caller, so that we define
+    // expandos on Xrays as needed.
+
+    JS::Rooted<JSObject*> otherObj(cx, glob->GetGlobalJSObject());
+    NS_ENSURE_STATE(otherObj);
+
+    JS::Rooted<JSObject*> thisObj(cx, mJSObject);
+    NS_ENSURE_STATE(mJSObject);
+
+    if (!JS_WrapObject(cx, otherObj.address()) ||
+        !JS_WrapObject(cx, thisObj.address()) ||
+        !JS_DefineProperty(cx, thisObj, "opener", JS::ObjectValue(*otherObj),
+                           JS_PropertyStub, JS_StrictPropertyStub,
+                           JSPROP_ENUMERATE)) {
+      return NS_ERROR_FAILURE;
+    }
+
     return NS_OK;
   }
 
@@ -6626,7 +6654,7 @@ PostMessageReadStructuredClone(JSContext* cx,
 static JSBool
 PostMessageWriteStructuredClone(JSContext* cx,
                                 JSStructuredCloneWriter* writer,
-                                JSObject* obj,
+                                JS::Handle<JSObject*> obj,
                                 void *closure)
 {
   StructuredCloneInfo* scInfo = static_cast<StructuredCloneInfo*>(closure);
