@@ -1208,6 +1208,7 @@ void
 BluetoothHfpManager::HandleCallStateChanged(uint32_t aCallIndex,
                                             uint16_t aCallState,
                                             const nsAString& aNumber,
+                                            const bool aIsOutgoing,
                                             bool aSend)
 {
   if (!IsConnected()) {
@@ -1222,6 +1223,7 @@ BluetoothHfpManager::HandleCallStateChanged(uint32_t aCallIndex,
 
   uint16_t prevCallState = mCurrentCallArray[aCallIndex].mState;
   mCurrentCallArray[aCallIndex].mState = aCallState;
+  mCurrentCallArray[aCallIndex].mDirection = !aIsOutgoing;
 
   // Same logic as implementation in ril_worker.js
   if (aNumber.Length() && aNumber[0] == '+') {
@@ -1240,7 +1242,6 @@ BluetoothHfpManager::HandleCallStateChanged(uint32_t aCallIndex,
       SendCommand("+CIEV: ", CINDType::CALLHELD);
       break;
     case nsITelephonyProvider::CALL_STATE_INCOMING:
-      mCurrentCallArray[aCallIndex].mDirection = true;
 
       if (mCurrentCallIndex) {
         if (mCCWA) {
@@ -1274,14 +1275,12 @@ BluetoothHfpManager::HandleCallStateChanged(uint32_t aCallIndex,
         mBLDNProcessed = true;
       }
 
-      mCurrentCallArray[aCallIndex].mDirection = false;
       UpdateCIND(CINDType::CALLSETUP, CallSetupState::OUTGOING, aSend);
 
       mSocket->GetAddress(address);
       OpenScoSocket(address);
       break;
     case nsITelephonyProvider::CALL_STATE_ALERTING:
-      mCurrentCallArray[aCallIndex].mDirection = false;
       UpdateCIND(CINDType::CALLSETUP, CallSetupState::OUTGOING_ALERTING, aSend);
 
       // If there's an ongoing call when the headset is just connected, we have
