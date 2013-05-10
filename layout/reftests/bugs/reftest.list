@@ -947,7 +947,7 @@ fails-if(!B2G) == 411585-3.html 411585-3-ref.html # bug 426909
 == 412352-2.html 412352-2-ref.html
 == 412607-1a.html 412607-1-ref.html
 == 412607-1b.html 412607-1-ref.html
-skip-if(B2G) fails-if(Android) == 412679-1.html 412679-1-ref.html
+skip-if(B2G) random-if(Android) == 412679-1.html 412679-1-ref.html
 skip-if(B2G) == 412679-2.html 412679-2-ref.html
 == 413027-1.html 413027-1-ref.html
 fails == 413027-2.html 413027-2-ref.html
@@ -1583,7 +1583,7 @@ skip-if(B2G) fuzzy-if(d2d,52,1051) fails-if(Android) fuzzy-if(OSX==10.8,129,1068
 skip-if(!browserIsRemote) == 593243-1.html 593243-1-ref.html # bug 593168
 skip-if(!browserIsRemote) == 593243-2.html 593243-2-ref.html # bug 593168
 == 593544-1.html 593544-1-ref.html
-fails-if(Android) == 594333-1.html 594333-1-ref.html
+random-if(Android) == 594333-1.html 594333-1-ref.html
 == 594624-1.html 594624-1-ref.html
 == 594737-1.html 594737-1-ref.html
 == 597721-1.html 597721-1-ref.html
