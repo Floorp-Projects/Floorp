@@ -181,9 +181,13 @@ this.CommandUtils = CommandUtils;
  * to using panels.
  */
 XPCOMUtils.defineLazyGetter(this, "isLinux", function () {
+  return OS == "Linux";
+});
+
+XPCOMUtils.defineLazyGetter(this, "OS", function () {
   let os = Components.classes["@mozilla.org/xre/app-info;1"]
            .getService(Components.interfaces.nsIXULRuntime).OS;
-  return os == "Linux";
+  return os;
 });
 
 /**
@@ -792,33 +796,6 @@ OutputPanel.prototype._onload = function OP_onload()
 };
 
 /**
- * Determine the scrollbar width in the current document.
- *
- * @private
- */
-Object.defineProperty(OutputPanel.prototype, 'scrollbarWidth', {
-  get: function() {
-    if (this.__scrollbarWidth) {
-      return this.__scrollbarWidth;
-    }
-
-    let hbox = this.document.createElementNS(XUL_NS, "hbox");
-    hbox.setAttribute("style", "height: 0%; overflow: hidden");
-
-    let scrollbar = this.document.createElementNS(XUL_NS, "scrollbar");
-    scrollbar.setAttribute("orient", "vertical");
-    hbox.appendChild(scrollbar);
-
-    this.document.documentElement.appendChild(hbox);
-    this.__scrollbarWidth = scrollbar.clientWidth;
-    this.document.documentElement.removeChild(hbox);
-
-    return this.__scrollbarWidth;
-  },
-  enumerable: true
-});
-
-/**
  * Prevent the popup from hiding if it is not permitted via this.canHide.
  */
 OutputPanel.prototype._onpopuphiding = function OP_onpopuphiding(aEvent)
@@ -863,13 +840,32 @@ OutputPanel.prototype._resize = function CLP_resize()
   // Set max panel width to match any content with a max of the width of the
   // browser window.
   let maxWidth = this._panel.ownerDocument.documentElement.clientWidth;
-  let width = Math.min(maxWidth, this.document.documentElement.scrollWidth);
 
-  // Add scrollbar width to content size in case a scrollbar is needed.
-  width += this.scrollbarWidth;
+  // Adjust max width according to OS.
+  // We'd like to put this in CSS but we can't:
+  //   body { width: calc(min(-5px, max-content)); }
+  //   #_panel { max-width: -5px; }
+  switch(OS) {
+    case "Linux":
+      maxWidth -= 5;
+      break;
+    case "Darwin":
+      maxWidth -= 25;
+      break;
+    case "WINNT":
+      maxWidth -= 5;
+      break;
+  }
+
+  this.document.body.style.width = "-moz-max-content";
+  let style = this._frame.contentWindow.getComputedStyle(this.document.body);
+  let frameWidth = parseInt(style.width, 10);
+  let width = Math.min(maxWidth, frameWidth);
+  this.document.body.style.width = width + "px";
 
   // Set the width of the iframe.
   this._frame.style.minWidth = width + "px";
+  this._panel.style.maxWidth = maxWidth + "px";
 
   // browserAdjustment is used to correct the panel height according to the
   // browsers borders etc.
