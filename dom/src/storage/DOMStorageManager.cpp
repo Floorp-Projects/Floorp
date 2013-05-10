@@ -109,7 +109,6 @@ NS_IMPL_ISUPPORTS1(DOMStorageManager,
 
 DOMStorageManager::DOMStorageManager(nsPIDOMStorage::StorageType aType)
   : mType(aType)
-  , mLowDiskSpace(false)
 {
   mCaches.Init(10);
   DOMStorageObserver* observer = DOMStorageObserver::Self();
@@ -564,22 +563,6 @@ DOMStorageManager::Observe(const char* aTopic, const nsACString& aScopePrefix)
     mCaches.EnumerateEntries(ClearCacheEnumerator, &data);
 
     mCaches.Clear();
-    return NS_OK;
-  }
-
-  if (!strcmp(aTopic, "low-disk-space")) {
-    if (mType == LocalStorage) {
-      mLowDiskSpace = true;
-    }
-
-    return NS_OK;
-  }
-
-  if (!strcmp(aTopic, "no-low-disk-space")) {
-    if (mType == LocalStorage) {
-      mLowDiskSpace = false;
-    }
-
     return NS_OK;
   }
 
