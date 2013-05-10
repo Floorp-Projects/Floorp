@@ -2185,7 +2185,7 @@ bool CanConvertTypedArrayItemTo(JSObject *baseType, JSObject *valObj, JSContext 
 //    caller; 'freePointer' will be set to indicate this.
 JSBool
 ImplicitConvert(JSContext* cx,
-                jsval val,
+                HandleValue val,
                 JSObject* targetType_,
                 void* buffer,
                 bool isArgument,
@@ -4792,16 +4792,12 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj_, JSObject* fieldsOb
         return JS_FALSE;
       fieldRootsArray[i] = OBJECT_TO_JSVAL(fieldType);
 
-      // Make sure each field name is unique, and add it to the hash.
+      // Make sure each field name is unique
       FieldInfoHash::AddPtr entryPtr = fields->lookupForAdd(name);
       if (entryPtr) {
         JS_ReportError(cx, "struct fields must have unique names");
         return JS_FALSE;
       }
-      ASSERT_OK(fields->add(entryPtr, name, FieldInfo()));
-      FieldInfo& info = entryPtr->value;
-      info.mType = fieldType;
-      info.mIndex = i;
 
       // Add the field to the StructType's 'prototype' property.
       if (!JS_DefineUCProperty(cx, prototype,
@@ -4820,7 +4816,14 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj_, JSObject* fieldsOb
         JS_ReportError(cx, "size overflow");
         return JS_FALSE;
       }
+
+      // Add field name to the hash
+      FieldInfo info;
+      info.mType = fieldType;
+      info.mIndex = i;
       info.mOffset = fieldOffset;
+      ASSERT_OK(fields->add(entryPtr, name, info));
+
       structSize = fieldOffset + fieldSize;
 
       if (fieldAlign > structAlign)
@@ -5032,7 +5035,7 @@ StructType::ConstructData(JSContext* cx,
     for (FieldInfoHash::Range r = fields->all(); !r.empty(); r.popFront()) {
       const FieldInfo& field = r.front().value;
       STATIC_ASSUME(field.mIndex < fields->count());  /* Quantified invariant */
-      if (!ImplicitConvert(cx, args[field.mIndex], field.mType,
+      if (!ImplicitConvert(cx, args.handleAt(field.mIndex), field.mType,
              buffer + field.mOffset,
              false, NULL))
         return JS_FALSE;
@@ -5670,7 +5673,7 @@ typedef Array<AutoValue, 16> AutoValueAutoArray;
 
 static JSBool
 ConvertArgument(JSContext* cx,
-                jsval arg,
+                HandleValue arg,
                 JSObject* type,
                 AutoValue* value,
                 AutoValueAutoArray* strings)
@@ -5750,7 +5753,7 @@ FunctionType::Call(JSContext* cx,
   }
 
   for (unsigned i = 0; i < argcFixed; ++i)
-    if (!ConvertArgument(cx, args[i], fninfo->mArgTypes[i], &values[i], &strings))
+    if (!ConvertArgument(cx, args.handleAt(i), fninfo->mArgTypes[i], &values[i], &strings))
       return false;
 
   if (fninfo->mIsVariadic) {
@@ -5775,7 +5778,7 @@ FunctionType::Call(JSContext* cx,
           !(type = PrepareType(cx, OBJECT_TO_JSVAL(type))) ||
           // Relying on ImplicitConvert only for the limited purpose of
           // converting one CType to another (e.g., T[] to T*).
-          !ConvertArgument(cx, args[i], type, &values[i], &strings) ||
+          !ConvertArgument(cx, args.handleAt(i), type, &values[i], &strings) ||
           !(fninfo->mFFITypes[i] = CType::GetFFIType(cx, type))) {
         // These functions report their own errors.
         return false;
