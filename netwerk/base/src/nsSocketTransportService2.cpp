@@ -947,8 +947,6 @@ nsSocketTransportService::ProbeMaxCount()
         return;
     mProbedMaxCount = true;
 
-    int32_t startedMaxCount = gMaxCount;
-
     // Allocate and test a PR_Poll up to the gMaxCount number of unconnected
     // sockets. See bug 692260 - windows should be able to handle 1000 sockets
     // in select() without a problem, but LSPs have been known to balk at lower

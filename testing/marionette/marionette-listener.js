@@ -127,6 +127,7 @@ function startListeners() {
   addMessageListenerId("Marionette:getElementText", getElementText);
   addMessageListenerId("Marionette:getElementTagName", getElementTagName);
   addMessageListenerId("Marionette:isElementDisplayed", isElementDisplayed);
+  addMessageListenerId("Marionette:getElementValueOfCssProperty", getElementValueOfCssProperty)
   addMessageListenerId("Marionette:getElementSize", getElementSize);
   addMessageListenerId("Marionette:isElementEnabled", isElementEnabled);
   addMessageListenerId("Marionette:isElementSelected", isElementSelected);
@@ -200,6 +201,7 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:getElementAttribute", getElementAttribute);
   removeMessageListenerId("Marionette:getElementTagName", getElementTagName);
   removeMessageListenerId("Marionette:isElementDisplayed", isElementDisplayed);
+  removeMessageListenerId("Marionette:getElementValueOfCssProperty", getElementValueOfCssProperty);
   removeMessageListenerId("Marionette:getElementSize", getElementSize);
   removeMessageListenerId("Marionette:isElementEnabled", isElementEnabled);
   removeMessageListenerId("Marionette:isElementSelected", isElementSelected);
@@ -1422,6 +1424,27 @@ function isElementDisplayed(msg) {
   try {
     let el = elementManager.getKnownElement(msg.json.element, curWindow);
     sendResponse({value: utils.isElementDisplayed(el)}, command_id);
+  }
+  catch (e) {
+    sendError(e.message, e.code, e.stack, command_id);
+  }
+}
+
+/**
+ * Return the property of the computed style of an element
+ *
+ * @param object aRequest
+ *               'element' member holds the reference id to
+ *               the element that will be checked
+ *               'propertyName' is the CSS rule that is being requested
+ */
+function getElementValueOfCssProperty(msg){
+  let command_id = msg.json.command_id;
+  let propertyName = msg.json.propertyName;
+  try {
+    let el = elementManager.getKnownElement(msg.json.element, curWindow);
+    sendResponse({value: curWindow.document.defaultView.getComputedStyle(el, null).getPropertyValue(propertyName)},
+                 command_id);
   }
   catch (e) {
     sendError(e.message, e.code, e.stack, command_id);

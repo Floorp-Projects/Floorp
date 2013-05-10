@@ -1659,6 +1659,21 @@ MarionetteDriverActor.prototype = {
   },
 
   /**
+   * Return the property of the computed style of an element
+   *
+   * @param object aRequest
+   *               'element' member holds the reference id to
+   *               the element that will be checked
+   *               'propertyName' is the CSS rule that is being requested
+   */
+  getElementValueOfCssProperty: function MDA_getElementValueOfCssProperty(aRequest){
+    let command_id = this.command_id = this.getCommandId();
+    this.sendAsync("getElementValueOfCssProperty",
+                   {element: aRequest.element, propertyName: aRequest.propertyName},
+                   command_id);
+  },
+
+  /**
    * Check if element is enabled
    *
    * @param object aRequest
@@ -2194,6 +2209,7 @@ MarionetteDriverActor.prototype.requestTypes = {
   "getElementText": MarionetteDriverActor.prototype.getElementText,
   "getElementTagName": MarionetteDriverActor.prototype.getElementTagName,
   "isElementDisplayed": MarionetteDriverActor.prototype.isElementDisplayed,
+  "getElementValueOfCssProperty": MarionetteDriverActor.prototype.getElementValueOfCssProperty,
   "getElementSize": MarionetteDriverActor.prototype.getElementSize,
   "isElementEnabled": MarionetteDriverActor.prototype.isElementEnabled,
   "isElementSelected": MarionetteDriverActor.prototype.isElementSelected,
