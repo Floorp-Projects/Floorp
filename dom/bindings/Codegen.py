@@ -2046,10 +2046,12 @@ def GetAccessCheck(descriptor, object):
 
     returns a string
     """
+    accessCheck = "xpc::AccessCheck::isChrome(%s)" % object
     if descriptor.workers:
-        accessCheck = "mozilla::dom::workers::GetWorkerPrivateFromContext(aCx)->IsChromeWorker()"
-    else:
-        accessCheck = "xpc::AccessCheck::isChrome(%s)" % object
+        # We sometimes set up worker things on the main thread, in which case we
+        # want to use the main-thread accessCheck above.  Otherwise, we want to
+        # check for a ChromeWorker.
+        accessCheck = "(NS_IsMainThread() ? %s : mozilla::dom::workers::GetWorkerPrivateFromContext(aCx)->IsChromeWorker())" % accessCheck
     return accessCheck
 
 def InitUnforgeablePropertiesOnObject(descriptor, obj, properties, failureReturnValue=""):
@@ -7972,7 +7974,8 @@ class CGBindingRoot(CGThing):
                           # Have to include nsDOMQS.h to get fast arg unwrapping
                           # for old-binding things with castability.
                           'nsDOMQS.h'
-                          ] + (['WorkerPrivate.h'] if hasWorkerStuff else []),
+                          ] + (['WorkerPrivate.h',
+                                'nsThreadUtils.h'] if hasWorkerStuff else []),
                          curr,
                          config,
                          jsImplemented)
