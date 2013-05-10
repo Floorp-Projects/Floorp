@@ -316,7 +316,7 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
         options.setFileAndLine(mURL.get(), 1)
                .setVersion(JSVERSION_DEFAULT);
         rv = scriptContext->EvaluateString(NS_ConvertUTF8toUTF16(script),
-                                           *globalJSObject, options,
+                                           globalJSObject, options,
                                            /* aCoerceToString = */ true,
                                            v.address());
 
