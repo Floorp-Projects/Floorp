@@ -1,0 +1,91 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Low device storage</title>
+
+<script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="text/javascript" src="/tests/dom/tests/mochitest/ajax/offline/offlineTests.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<script type="text/javascript">
+
+/**
+ * This test checks that an offline cache update scheduled *after* a low device
+ * storage situation appears is canceled. It basically does:
+ *
+ * 1. Notifies to the offline cache update service about a fake
+ *    low device storage situation.
+ * 2. Schedules an update and observes for its notifications.
+ * 3. We are supposed to recieve an error event notifying about the cancelation
+ *    of the update because of the low storage situation.
+ * 4. Notifies to the offline cache update service that we've recovered from
+ *    the low storage situation.
+ */
+
+var updateService = Cc['@mozilla.org/offlinecacheupdate-service;1']
+                    .getService(Ci.nsIOfflineCacheUpdateService);
+
+var obs = SpecialPowers.Cc["@mozilla.org/observer-service;1"]
+                       .getService(SpecialPowers.Ci.nsIObserverService);
+
+var errorReceived = false;
+
+function finish() {
+  obs.notifyObservers(updateService, "disk-space-watcher", "free");
+
+  OfflineTest.teardown();
+  OfflineTest.finish();
+}
+
+if (OfflineTest.setup()) {
+  obs.notifyObservers(updateService, "disk-space-watcher", "full");
+
+  var updateObserver = {
+    updateStateChanged: function (aUpdate, aState) {
+      switch(aState) {
+        case Ci.nsIOfflineCacheUpdateObserver.STATE_ERROR:
+          aUpdate.removeObserver(this);
+          errorReceived = true;
+          OfflineTest.ok(true, "Expected error. Update canceled");
+          finish();
+        break;
+        case Ci.nsIOfflineCacheUpdateObserver.STATE_FINISHED:
+          OfflineTest.ok(errorReceived,
+                         "Finished after receiving the expected error");
+          finish();
+        break;
+        case Ci.nsIOfflineCacheUpdateObserver.STATE_NOUPDATE:
+          aUpdate.removeObserver(this);
+          OfflineTest.ok(false, "No update");
+          finish();
+          break;
+        case Ci.nsIOfflineCacheUpdateObserver.STATE_DOWNLOADING:
+        case Ci.nsIOfflineCacheUpdateObserver.STATE_ITEMSTARTED:
+        case Ci.nsIOfflineCacheUpdateObserver.STATE_ITEMPROGRESS:
+          aUpdate.removeObserver(this);
+          OfflineTest.ok(false, "The update was supposed to be canceled");
+          finish();
+          break;
+      }
+    },
+    applicationCacheAvailable: function() {}
+  };
+
+  var manifest = "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/simpleManifest.cacheManifest";
+  var ioService = Cc["@mozilla.org/network/io-service;1"]
+                  .getService(Ci.nsIIOService);
+  var manifestURI = ioService.newURI(manifest, null, null);
+  var documentURI = ioService.newURI(document.documentURI, null, null);
+  var update = updateService.scheduleUpdate(manifestURI, documentURI, window);
+  update.addObserver(updateObserver, false);
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+
+</head>
+
+<body>
+
+</body>
+</html>
