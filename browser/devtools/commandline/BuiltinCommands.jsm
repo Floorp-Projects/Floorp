@@ -2154,62 +2154,50 @@ XPCOMUtils.defineLazyModuleGetter(this, "AppCacheUtils",
     }
   });
 
+  let appcacheListEntries = "" +
+    "<ul class='gcli-appcache-list'>" +
+    "  <li foreach='entry in ${entries}'>" +
+    "    <table class='gcli-appcache-detail'>" +
+    "      <tr>" +
+    "        <td>" + gcli.lookup("appCacheListKey") + "</td>" +
+    "        <td>${entry.key}</td>" +
+    "      </tr>" +
+    "      <tr>" +
+    "        <td>" + gcli.lookup("appCacheListFetchCount") + "</td>" +
+    "        <td>${entry.fetchCount}</td>" +
+    "      </tr>" +
+    "      <tr>" +
+    "        <td>" + gcli.lookup("appCacheListLastFetched") + "</td>" +
+    "        <td>${entry.lastFetched}</td>" +
+    "      </tr>" +
+    "      <tr>" +
+    "        <td>" + gcli.lookup("appCacheListLastModified") + "</td>" +
+    "        <td>${entry.lastModified}</td>" +
+    "      </tr>" +
+    "      <tr>" +
+    "        <td>" + gcli.lookup("appCacheListExpirationTime") + "</td>" +
+    "        <td>${entry.expirationTime}</td>" +
+    "      </tr>" +
+    "      <tr>" +
+    "        <td>" + gcli.lookup("appCacheListDataSize") + "</td>" +
+    "        <td>${entry.dataSize}</td>" +
+    "      </tr>" +
+    "      <tr>" +
+    "        <td>" + gcli.lookup("appCacheListDeviceID") + "</td>" +
+    "        <td>${entry.deviceID} <span class='gcli-out-shortcut' " +
+    "onclick='${onclick}' ondblclick='${ondblclick}' " +
+    "data-command='appcache viewentry ${entry.key}'" +
+    ">" + gcli.lookup("appCacheListViewEntry") + "</span>" +
+    "        </td>" +
+    "      </tr>" +
+    "    </table>" +
+    "  </li>" +
+    "</ul>";
+
   gcli.addConverter({
     from: "appcacheentries",
     to: "view",
     exec: function(entries, context) {
-      if (!entries) {
-        return context.createView({
-          html: "<span>" + gcli.lookup("appCacheManifestContainsErrors") + "</span>"
-        });
-      }
-
-      if (entries.length == 0) {
-        return context.createView({
-          html: "<span>" + gcli.lookup("appCacheNoResults") + "</span>"
-        });
-      }
-
-      let appcacheListEntries = "" +
-        "<ul class='gcli-appcache-list'>" +
-        "  <li foreach='entry in ${entries}'>" +
-        "    <table class='gcli-appcache-detail'>" +
-        "      <tr>" +
-        "        <td>" + gcli.lookup("appCacheListKey") + "</td>" +
-        "        <td>${entry.key}</td>" +
-        "      </tr>" +
-        "      <tr>" +
-        "        <td>" + gcli.lookup("appCacheListFetchCount") + "</td>" +
-        "        <td>${entry.fetchCount}</td>" +
-        "      </tr>" +
-        "      <tr>" +
-        "        <td>" + gcli.lookup("appCacheListLastFetched") + "</td>" +
-        "        <td>${entry.lastFetched}</td>" +
-        "      </tr>" +
-        "      <tr>" +
-        "        <td>" + gcli.lookup("appCacheListLastModified") + "</td>" +
-        "        <td>${entry.lastModified}</td>" +
-        "      </tr>" +
-        "      <tr>" +
-        "        <td>" + gcli.lookup("appCacheListExpirationTime") + "</td>" +
-        "        <td>${entry.expirationTime}</td>" +
-        "      </tr>" +
-        "      <tr>" +
-        "        <td>" + gcli.lookup("appCacheListDataSize") + "</td>" +
-        "        <td>${entry.dataSize}</td>" +
-        "      </tr>" +
-        "      <tr>" +
-        "        <td>" + gcli.lookup("appCacheListDeviceID") + "</td>" +
-        "        <td>${entry.deviceID} <span class='gcli-out-shortcut' " +
-        "onclick='${onclick}' ondblclick='${ondblclick}' " +
-        "data-command='appcache viewentry ${entry.key}'" +
-        ">" + gcli.lookup("appCacheListViewEntry") + "</span>" +
-        "        </td>" +
-        "      </tr>" +
-        "    </table>" +
-        "  </li>" +
-        "</ul>";
-
       return context.createView({
         html: appcacheListEntries,
         data: {

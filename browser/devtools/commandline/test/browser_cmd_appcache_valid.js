@@ -31,6 +31,25 @@ function test() {
         },
 
         {
+          setup: function() {
+            Services.prefs.setBoolPref("browser.cache.disk.enable", false);
+            helpers.setInput(options, 'appcache list', 13);
+          },
+          check: {
+            input:  'appcache list',
+            markup: 'VVVVVVVVVVVVV',
+            status: 'VALID',
+            args: {},
+          },
+          exec: {
+            output: [ /cache is disabled/ ]
+          },
+          post: function(output) {
+            Services.prefs.setBoolPref("browser.cache.disk.enable", true);
+          }
+        },
+
+        {
           setup: 'appcache list',
           check: {
             input:  'appcache list',
