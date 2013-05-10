@@ -270,6 +270,15 @@ public:
   ConfirmReceivingFile(const nsAString& aDeviceAddress, bool aConfirm,
                        BluetoothReplyRunnable* aRunnable) = 0;
 
+  virtual void
+  ConnectSco(BluetoothReplyRunnable* aRunnable) = 0;
+
+  virtual void
+  DisconnectSco(BluetoothReplyRunnable* aRunnable) = 0;
+
+  virtual void
+  IsScoConnected(BluetoothReplyRunnable* aRunnable) = 0;
+
   bool
   IsEnabled() const
   {

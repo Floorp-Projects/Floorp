@@ -138,6 +138,16 @@ public:
   ConfirmReceivingFile(const nsAString& aDeviceAddress,
                        bool aConfirm,
                        BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+
+  virtual void
+  ConnectSco(BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+
+  virtual void
+  DisconnectSco(BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+
+  virtual void
+  IsScoConnected(BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+
 protected:
   BluetoothServiceChildProcess();
   virtual ~BluetoothServiceChildProcess();
