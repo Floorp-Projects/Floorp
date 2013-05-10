@@ -1,0 +1,2 @@
+include html/html/dom/elements/global-attributes/reftest.list
+include html/html/editing/the-hidden-attribute/reftest.list
