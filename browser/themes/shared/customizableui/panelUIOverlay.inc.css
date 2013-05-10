@@ -2,6 +2,34 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+panelmultiview {
+  -moz-binding: url("chrome://browser/content/customizableui/panelUI.xml#panelmultiview");
+}
+
+panelmainview,
+panelsubview {
+  display: -moz-box;
+  -moz-box-orient: vertical;
+}
+
+panelmainview {
+  transition: transform 150ms;
+}
+
+panelmultiview > panelsubview:not([current]) {
+  display: none;
+}
+
+.panel-subviews {
+  background-image: linear-gradient(to bottom, white 1px, rgba(255, 255, 255, 0) 15px);
+  background-color: -moz-dialog;
+  box-shadow: -1px 0px 0px rgba(0, 0, 0, 0.2), -1px 0px 2px rgba(0, 0, 0, 0.1), 1px 0px 0px rgba(255, 255, 255, 0.2) inset;
+  margin-left: 38px;
+}
+
+.panel-viewstack[view="main"] > .panel-subviews {
+  transform: translateX(@menuPanelWidth@);
+}
 
 #PanelUI-contents[type="list"] > toolbarbutton {
   -moz-binding: url("chrome://browser/content/panelUI.xml#toolbarbutton");
@@ -55,61 +83,8 @@
   padding: .5em 1em;
 }
 
-#PanelUI-container {
-  overflow: hidden;
-}
-
-#PanelUI-popup[panelopen="true"] > #PanelUI-container,
-#PanelUI-mainView-spring {
-  transition: height 150ms;
-}
-
-#PanelUI-popup[panelopen="true"] > #PanelUI-container > #PanelUI-viewStack > #PanelUI-mainView {
-  transition: transform 150ms;
-}
-
-#PanelUI-viewStack[view="main"] > #PanelUI-clickCapturer {
-  pointer-events: none;
-}
-
-#PanelUI-viewStack {
-  position: relative;
-}
-
-#PanelUI-viewStack,
-#PanelUI-container {
-  min-width: @menuPanelWidth@;
-}
-
-#PanelUI-mainView-spring {
-  height: 0;
-}
-
-#PanelUI-subViews {
-  -moz-stack-sizing: ignore;
-  background-image: linear-gradient(to bottom, white 1px, rgba(255, 255, 255, 0) 15px);
-  background-color: -moz-dialog;
-  box-shadow: -1px 0px 0px rgba(0, 0, 0, 0.2), -1px 0px 2px rgba(0, 0, 0, 0.1), 1px 0px 0px rgba(255, 255, 255, 0.2) inset;
-  margin-left: 38px;
-  transform: translateX(@menuPanelWidth@);
-  transition: transform 150ms;
-  overflow-y: hidden;
-}
-
-#PanelUI-subViews > .PanelUI-subView:not([current]) {
-  display: none;
-}
-
-#PanelUI-viewStack[view="subview"] > #PanelUI-subViews {
-  transform: translateX(0);
-}
-
-#PanelUI-contents[type="list"] > toolbarbutton {
-  -moz-box-orient: horizontal;
-}
-
 #PanelUI-contents[type="list"] toolbarbutton > .toolbarbutton-text,
-#PanelUI-subViews toolbarbutton > .toolbarbutton-text,
+panelsubview toolbarbutton > .toolbarbutton-text,
 #customizationui-widget-panel toolbarbutton > .toolbarbutton-text {
   text-align: start;
   -moz-padding-start: 8px;
@@ -136,14 +111,15 @@
 
 .PanelUI-pageControls toolbarbutton {
   min-width: 7em;
-  max-width: 7em;
 }
 
 .PanelUI-pageControls toolbarbutton > .toolbarbutton-icon {
   -moz-margin-end: 0;
 }
 
-#PanelUI-contents[type="grid"] toolbarbutton {
+#PanelUI-contents[type="grid"] toolbarbutton,
+#customization-palette toolbarbutton {
+  -moz-appearance: none;
   -moz-box-orient: vertical;
   min-width: 7em;
   max-width: 7em;
@@ -151,7 +127,8 @@
   max-height: 6em;
 }
 
-#PanelUI-contents[type="grid"] toolbarbutton .toolbarbutton-icon {
+#PanelUI-contents[type="grid"] toolbarbutton > .toolbarbutton-icon,
+#customization-palette toolbarbutton > .toolbarbutton-icon {
   min-width: calc(8em / 3);
   max-width: calc(8em / 3);
   min-height: calc(8em / 3);
@@ -194,9 +171,10 @@
   display: none;
 }
 
-#PanelUI-subViews toolbarbutton,
-#PanelUI-mainView toolbarbutton,
-#customizationui-widget-panel toolbarbutton {
+panelmainview toolbarbutton,
+panelsubview toolbarbutton,
+#customizationui-widget-panel toolbarbutton,
+.customizationmode-button {
   -moz-appearance: none;
   padding: 2px 6px;
   background: hsla(210,32%,93%,0) padding-box;
@@ -210,10 +188,11 @@
   transition-duration: 150ms;
 }
 
-#PanelUI-subViews toolbarbutton:not([disabled]):not([checked]):not([open]):not(:active):hover,
-#PanelUI-mainView toolbarbutton:not([disabled]):not([checked]):not([open]):not(:active):hover,
+panelmainview toolbarbutton:not([disabled]):not([checked]):not([open]):not(:active):hover,
+panelsubview toolbarbutton:not([disabled]):not([checked]):not([open]):not(:active):hover,
 #customizationui-widget-panel toolbarbutton:not([disabled]):not([checked]):not([open]):not(:active):hover,
 #PanelUI-mainView .PanelUI-pageControls toolbarbutton,
+.customizationmode-button,
 #PanelUI-mainView #PanelUI-customize-btn {
   background-image: -moz-linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,100%,.1));
   border-color: hsla(210,54%,20%,.15) hsla(210,54%,20%,.2) hsla(210,54%,20%,.25);
@@ -222,8 +201,9 @@
               0 0 2px hsla(210,54%,20%,.1);
 }
 
-#PanelUI-subViews toolbarbutton:not([disabled]):-moz-any([open],[checked],:hover:active),
-#PanelUI-mainView toolbarbutton:not([disabled]):-moz-any([open],[checked],:hover:active),
+panelmainview toolbarbutton:not([disabled]):-moz-any([open],[checked],:hover:active),
+panelsubview toolbarbutton:not([disabled]):-moz-any([open],[checked],:hover:active),
+.customizationmode-button:hover:active,
 #customizationui-widget-panel toolbarbutton:not([disabled]):-moz-any([open],[checked],:hover:active) {
   background-image: -moz-linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,100%,.1));
   background-color: hsla(210,54%,20%,.15);
@@ -240,7 +220,7 @@
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
 }
 
-#PanelUI-contents > toolbarbutton.panelui-mainview-anchor {
+toolbarbutton.panel-multiview-anchor {
   background-color: Highlight;
   background-image: linear-gradient(rgba(255,255,255,0.3), rgba(255,255,255,0));
   background-repeat: repeat-x;
