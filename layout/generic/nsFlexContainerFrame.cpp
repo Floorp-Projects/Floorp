@@ -1056,6 +1056,26 @@ nsFlexContainerFrame::GetType() const
   return nsGkAtoms::flexContainerFrame;
 }
 
+/* virtual */
+int
+nsFlexContainerFrame::GetSkipSides() const
+{
+  // (same as nsBlockFrame's GetSkipSides impl)
+  if (IS_TRUE_OVERFLOW_CONTAINER(this)) {
+    return (1 << NS_SIDE_TOP) | (1 << NS_SIDE_BOTTOM);
+  }
+
+  int skip = 0;
+  if (GetPrevInFlow()) {
+    skip |= 1 << NS_SIDE_TOP;
+  }
+  nsIFrame* nif = GetNextInFlow();
+  if (nif && !IS_TRUE_OVERFLOW_CONTAINER(nif)) {
+    skip |= 1 << NS_SIDE_BOTTOM;
+  }
+  return skip;
+}
+
 #ifdef DEBUG
 NS_IMETHODIMP
 nsFlexContainerFrame::GetFrameName(nsAString& aResult) const
