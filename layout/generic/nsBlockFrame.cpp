@@ -6002,8 +6002,9 @@ nsBlockFrame::RecoverFloatsFor(nsIFrame*       aFrame,
 int
 nsBlockFrame::GetSkipSides() const
 {
-  if (IS_TRUE_OVERFLOW_CONTAINER(this))
+  if (IS_TRUE_OVERFLOW_CONTAINER(this)) {
     return (1 << NS_SIDE_TOP) | (1 << NS_SIDE_BOTTOM);
+  }
 
   int skip = 0;
   if (GetPrevInFlow()) {
