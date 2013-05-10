@@ -1046,6 +1046,7 @@ nsDOMDeviceStorage::SetRootDirectoryForType(const nsAString& aType,
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   obs->AddObserver(this, "file-watcher-update", false);
+  obs->AddObserver(this, "disk-space-watcher", false);
   mRootDirectory = f;
   mStorageType = aType;
 }
@@ -2169,6 +2170,7 @@ nsDOMDeviceStorage::Shutdown()
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   obs->RemoveObserver(this, "file-watcher-update");
+  obs->RemoveObserver(this, "disk-space-watcher");
 }
 
 void
@@ -2621,6 +2623,18 @@ nsDOMDeviceStorage::Observe(nsISupports *aSubject, const char *aTopic, const PRU
 
     DeviceStorageFile* file = static_cast<DeviceStorageFile*>(aSubject);
     Notify(NS_ConvertUTF16toUTF8(aData).get(), file);
+    return NS_OK;
+  } else if (!strcmp(aTopic, "disk-space-watcher")) {
+    // 'disk-space-watcher' notifications are sent when there is a modification
+    // of a file in a specific location while a low device storage situation
+    // exists or after recovery of a low storage situation. For Firefox OS,
+    // these notifications are specific for apps storage.
+    nsRefPtr<DeviceStorageFile> file = new DeviceStorageFile(mStorageType);
+    if (!strcmp(NS_ConvertUTF16toUTF8(aData).get(), "full")) {
+      Notify("low-disk-space", file);
+    } else if (!strcmp(NS_ConvertUTF16toUTF8(aData).get(), "free")) {
+      Notify("available-disk-space", file);
+    }
     return NS_OK;
   }
 
