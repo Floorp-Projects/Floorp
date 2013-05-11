@@ -1192,9 +1192,6 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
       // above, which we would have previously hit for aFrame's previous
       // continuation).
       newContext = prevContinuationContext;
-      // We don't know what changes the previous continuation had, so
-      // assume the worst.
-      nonInheritedHints = nsChangeHint_Hints_NotHandledForDescendants;
     }
     else if (pseudoTag == nsCSSAnonBoxes::mozNonElement) {
       NS_ASSERTION(localContent,
