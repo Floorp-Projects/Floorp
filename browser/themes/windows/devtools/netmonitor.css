@@ -17,7 +17,9 @@
 }
 
 #requests-menu-toolbar {
+  padding: 0;
   -moz-padding-start: 4px;
+  height: 33px;
 }
 
 .requests-menu-header:first-child {
@@ -42,6 +44,7 @@
   -moz-appearance: none;
   background: none;
   min-width: 10px;
+  min-height: 32px; /* Remaining 1px comes from border of the button. */
   margin: 0;
   border: none;
   padding: 2px 0px;
@@ -363,6 +366,14 @@ box.requests-menu-status[code^="5"] {
 
 /* Responsive sidebar */
 @media (max-width: 700px) {
+  #requests-menu-toolbar {
+    height: 24px;
+  }
+
+  .requests-menu-header-button {
+    min-height: 23px; /* Remaining 1px comes from border of the button. */
+  }
+
   #details-pane {
     max-width: none;
     margin: 0 !important;
