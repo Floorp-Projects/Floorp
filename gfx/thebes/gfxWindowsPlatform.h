@@ -34,8 +34,10 @@
 #include <dxgi.h>
 #endif
 
+// This header is available in the June 2010 SDK and in the Win8 SDK
+#include <d3dcommon.h>
 // Win 8.0 SDK types we'll need when building using older sdks.
-#if MOZ_WINSDK_TARGETVER <= 0x06010000
+#if !defined(D3D_FEATURE_LEVEL_11_1) // defined in the 8.0 SDK only
 #define D3D_FEATURE_LEVEL_11_1 static_cast<D3D_FEATURE_LEVEL>(0xb100)
 #define D3D_FL9_1_REQ_TEXTURE2D_U_OR_V_DIMENSION 2048
 #define D3D_FL9_3_REQ_TEXTURE2D_U_OR_V_DIMENSION 4096

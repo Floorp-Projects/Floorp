@@ -20,7 +20,8 @@ MobileMessageDatabaseService::GetMessageMoz(int32_t aMessageId,
 }
 
 NS_IMETHODIMP
-MobileMessageDatabaseService::DeleteMessage(int32_t aMessageId,
+MobileMessageDatabaseService::DeleteMessage(int32_t *aMessageIds,
+                                            uint32_t aLength,
                                             nsIMobileMessageCallback* aRequest)
 {
   NS_ERROR("We should not be here!");

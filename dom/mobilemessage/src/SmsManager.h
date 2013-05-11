@@ -39,13 +39,14 @@ private:
   nsresult Send(JSContext* aCx, JSObject* aGlobal, JS::Handle<JSString*> aNumber,
                 const nsAString& aMessage, JS::Value* aRequest);
 
-  /**
-   * Internal Delete() method used to delete a message.
-   */
-  nsresult Delete(int32_t aId, nsIDOMDOMRequest** aRequest);
-
   nsresult DispatchTrustedSmsEventToSelf(const nsAString& aEventName,
                                          nsIDOMMozSmsMessage* aMessage);
+
+  /**
+   * Helper to get message ID from SMS Message object
+   */
+  nsresult GetSmsMessageId(AutoPushJSContext &aCx, const JS::Value &aSmsMessage,
+                           int32_t &aId);
 };
 
 } // namespace dom

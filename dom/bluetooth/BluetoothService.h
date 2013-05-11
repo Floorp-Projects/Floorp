@@ -8,6 +8,7 @@
 #define mozilla_dom_bluetooth_bluetootheventservice_h__
 
 #include "BluetoothCommon.h"
+#include "BluetoothProfileManagerBase.h"
 #include "mozilla/dom/ipc/Blob.h"
 #include "nsAutoPtr.h"
 #include "nsClassHashtable.h"
@@ -181,7 +182,7 @@ public:
               const BluetoothNamedValue& aValue,
               BluetoothReplyRunnable* aRunnable) = 0;
 
-  /** 
+  /**
    * Get the path of a device
    *
    * @param aAdapterPath Path to the Adapter that's communicating with the device
@@ -210,14 +211,20 @@ public:
                bool aEncrypt,
                mozilla::ipc::UnixSocketConsumer* aConsumer) = 0;
 
+  /**
+   * Get corresponding service channel of specific service on remote device.
+   * It's usually the very first step of establishing an outbound connection.
+   *
+   * @param aObjectPath Object path of remote device
+   * @param aServiceUuid UUID of the target service
+   * @param aManager Instance which has callback function OnGetServiceChannel()
+   *
+   * @return NS_OK if the task begins, NS_ERROR_FAILURE otherwise
+   */
   virtual nsresult
-  GetSocketViaService(const nsAString& aObjectPath,
-                      const nsAString& aService,
-                      BluetoothSocketType aType,
-                      bool aAuth,
-                      bool aEncrypt,
-                      mozilla::ipc::UnixSocketConsumer* aSocketConsumer,
-                      BluetoothReplyRunnable* aRunnable) = 0;
+  GetServiceChannel(const nsAString& aObjectPath,
+                    const nsAString& aServiceUuid,
+                    BluetoothProfileManagerBase* aManager) = 0;
 
   virtual bool
   SetPinCodeInternal(const nsAString& aDeviceAddress, const nsAString& aPinCode,
@@ -262,6 +269,15 @@ public:
   virtual void
   ConfirmReceivingFile(const nsAString& aDeviceAddress, bool aConfirm,
                        BluetoothReplyRunnable* aRunnable) = 0;
+
+  virtual void
+  ConnectSco(BluetoothReplyRunnable* aRunnable) = 0;
+
+  virtual void
+  DisconnectSco(BluetoothReplyRunnable* aRunnable) = 0;
+
+  virtual void
+  IsScoConnected(BluetoothReplyRunnable* aRunnable) = 0;
 
   bool
   IsEnabled() const
