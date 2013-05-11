@@ -1645,8 +1645,6 @@ nsFrameManager::ComputeStyleChangeFor(nsIFrame          *aFrame,
     aChangeList->AppendChange(aFrame, content, aMinChange);
   }
 
-  nsChangeHint topLevelChange = aMinChange;
-
   nsIFrame* frame = aFrame;
   nsIFrame* frame2 = aFrame;
 
@@ -1672,16 +1670,15 @@ nsFrameManager::ComputeStyleChangeFor(nsIFrame          *aFrame,
       // Inner loop over next-in-flows of the current frame
       nsChangeHint frameChange =
         ReResolveStyleContext(GetPresContext(), frame, nullptr,
-                              aChangeList, topLevelChange, nsChangeHint(0),
+                              aChangeList, aMinChange, nsChangeHint(0),
                               aRestyleDescendants ?
                                 eRestyle_Subtree : eRestyle_Self,
                               aRestyleTracker,
                               eSendAllNotifications,
                               visibleKidsOfHiddenElement,
                               treeMatchContext);
-      NS_UpdateHint(topLevelChange, frameChange);
 
-      if (topLevelChange & nsChangeHint_ReconstructFrame) {
+      if (frameChange & nsChangeHint_ReconstructFrame) {
         // If it's going to cause a framechange, then don't bother
         // with the continuations or special siblings since they'll be
         // clobbered by the frame reconstruct anyway.
