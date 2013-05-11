@@ -232,9 +232,36 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         contentEventExpecter.unregisterListener();
     }
 
+    /**
+     * Load <code>url</code> using the awesome bar UI and sending key strokes.
+     *
+     * This method waits synchronously for the <code>DOMContentLoaded</code>
+     * message from Gecko before returning.
+     */
     protected final void loadUrl(String url) {
         enterUrl(url);
         hitEnterAndWait();
+    }
+
+    /**
+     * Load <code>url</code> using reflection and the internal
+     * <code>org.mozilla.gecko.Tabs</code> API.
+     *
+     * This method does not wait for any confirmation from Gecko before
+     * returning.
+     */
+    protected final void loadUrlInTab(final String url) {
+        try {
+            ClassLoader classLoader = getActivity().getClassLoader();
+            Class tabsClass = classLoader.loadClass("org.mozilla.gecko.Tabs");
+            Method getInstance = tabsClass.getMethod("getInstance");
+            Method loadUrlInTab = tabsClass.getMethod("loadUrlInTab", String.class);
+            Object tabs = getInstance.invoke(null);
+            loadUrlInTab.invoke(tabs, new Object[] { url });
+        } catch (Exception e) {
+            mAsserter.dumpLog("Exception in loadUrlInTab", e);
+            throw new RuntimeException(e);
+        }
     }
 
     public final void verifyUrl(String url) {
