@@ -6,10 +6,12 @@
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://services-common/observers.js");
+Cu.import("resource://services-common/utils.js");
 Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
 Cu.import("resource://gre/modules/Metrics.jsm");
+Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
-Cu.import("resource://gre/modules/services/healthreport/healthreporter.jsm");
+let bsp = Cu.import("resource://gre/modules/services/healthreport/healthreporter.jsm");
 Cu.import("resource://gre/modules/services/healthreport/providers.jsm");
 Cu.import("resource://gre/modules/services/datareporting/policy.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -24,6 +26,8 @@ const SERVER_HOSTNAME = "localhost";
 const SERVER_PORT = 8080;
 const SERVER_URI = "http://" + SERVER_HOSTNAME + ":" + SERVER_PORT;
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
+
+const HealthReporterState = bsp.HealthReporterState;
 
 
 function defineNow(policy, now) {
@@ -59,7 +63,9 @@ function getJustReporter(name, uri=SERVER_URI, inspected=false) {
   });
 
   let type = inspected ? InspectedHealthReporter : HealthReporter;
-  reporter = new type(branch + "healthreport.", policy);
+  // Define per-instance state file so tests don't interfere with each other.
+  reporter = new type(branch + "healthreport.", policy, null,
+                      "state-" + name + ".json");
 
   return reporter;
 }
@@ -67,7 +73,7 @@ function getJustReporter(name, uri=SERVER_URI, inspected=false) {
 function getReporter(name, uri, inspected) {
   return Task.spawn(function init() {
     let reporter = getJustReporter(name, uri, inspected);
-    yield reporter.onInit();
+    yield reporter.init();
 
     yield reporter._providerManager.registerProviderFromType(
       HealthReportProvider);
@@ -127,11 +133,9 @@ add_task(function test_constructor() {
   try {
     do_check_eq(reporter.lastPingDate.getTime(), 0);
     do_check_null(reporter.lastSubmitID);
-
-    reporter.lastSubmitID = "foo";
-    do_check_eq(reporter.lastSubmitID, "foo");
-    reporter.lastSubmitID = null;
-    do_check_null(reporter.lastSubmitID);
+    do_check_eq(typeof(reporter._state), "object");
+    do_check_eq(reporter._state.lastPingDate.getTime(), 0);
+    do_check_eq(reporter._state.remoteIDs.length, 0);
 
     let failed = false;
     try {
@@ -165,6 +169,8 @@ add_task(function test_shutdown_storage_in_progress() {
     reporter._initiateShutdown();
   };
 
+  reporter.init();
+
   reporter._waitForShutdown();
   do_check_eq(reporter.providerManagerShutdownCount, 0);
   do_check_eq(reporter.storageCloseCount, 1);
@@ -181,6 +187,8 @@ add_task(function test_shutdown_provider_manager_in_progress() {
     reporter._initiateShutdown();
   };
 
+  reporter.init();
+
   // This will hang if shutdown logic is busted.
   reporter._waitForShutdown();
   do_check_eq(reporter.providerManagerShutdownCount, 1);
@@ -196,6 +204,8 @@ add_task(function test_shutdown_when_provider_manager_errors() {
     print("Throwing fake error.");
     throw new Error("Fake error during provider manager initialization.");
   };
+
+  reporter.init();
 
   // This will hang if shutdown logic is busted.
   reporter._waitForShutdown();
@@ -285,7 +295,8 @@ add_task(function test_json_payload_simple() {
     do_check_eq(Object.keys(original.data.days).length, 0);
     do_check_false("notInitialized" in original);
 
-    reporter.lastPingDate = new Date(now.getTime() - 24 * 60 * 60 * 1000 - 10);
+    yield reporter._state.setLastPingDate(
+      new Date(now.getTime() - 24 * 60 * 60 * 1000 - 10));
 
     original = JSON.parse(yield reporter.getJSONPayload());
     do_check_eq(original.lastPingDate, reporter._formatDate(reporter.lastPingDate));
@@ -608,6 +619,16 @@ add_task(function test_data_submission_success() {
     do_check_eq(data.uploadSuccess, 1);
     do_check_eq(Object.keys(data).length, 3);
 
+    let d = reporter.lastPingDate;
+    let id = reporter.lastSubmitID;
+
+    reporter._shutdown();
+
+    // Ensure reloading state works.
+    reporter = yield getReporter("data_submission_success");
+    do_check_eq(reporter.lastSubmitID, id);
+    do_check_eq(reporter.lastPingDate.getTime(), d.getTime());
+
     reporter._shutdown();
   } finally {
     yield shutdownServer(server);
@@ -761,8 +782,9 @@ add_task(function test_collect_when_upload_disabled() {
   let name = "healthreport-testing-collect_when_upload_disabled-healthreport-lastDailyCollection";
   let pref = "app.update.lastUpdateTime." + name;
   do_check_false(Services.prefs.prefHasUserValue(pref));
+
   try {
-    yield reporter.onInit();
+    yield reporter.init();
     do_check_true(Services.prefs.prefHasUserValue(pref));
 
     // We would ideally ensure the timer fires and does the right thing.
@@ -828,7 +850,7 @@ add_task(function test_upload_on_init_failure() {
   reporter._policy.recordUserAcceptance();
   let error = false;
   try {
-    yield reporter.onInit();
+    yield reporter.init();
   } catch (ex) {
     error = true;
   } finally {
@@ -850,5 +872,163 @@ add_task(function test_upload_on_init_failure() {
 
   reporter._shutdown();
   yield shutdownServer(server);
+});
+
+add_task(function test_state_prefs_conversion_simple() {
+  let reporter = getJustReporter("state_prefs_conversion");
+  let prefs = reporter._prefs;
+
+  let lastSubmit = new Date();
+  prefs.set("lastSubmitID", "lastID");
+  CommonUtils.setDatePref(prefs, "lastPingTime", lastSubmit);
+
+  try {
+    yield reporter.init();
+
+    do_check_eq(reporter._state.lastSubmitID, "lastID");
+    do_check_eq(reporter._state.remoteIDs.length, 1);
+    do_check_eq(reporter._state.lastPingDate.getTime(), lastSubmit.getTime());
+    do_check_eq(reporter._state.lastPingDate.getTime(), reporter.lastPingDate.getTime());
+    do_check_eq(reporter._state.lastSubmitID, reporter.lastSubmitID);
+    do_check_true(reporter.haveRemoteData());
+
+    // User set preferences should have been wiped out.
+    do_check_false(prefs.isSet("lastSubmitID"));
+    do_check_false(prefs.isSet("lastPingTime"));
+  } finally {
+    reporter._shutdown();
+  }
+});
+
+// If the saved JSON file does not contain an object, we should reset
+// automatically.
+add_task(function test_state_no_json_object() {
+  let reporter = getJustReporter("state_shared");
+  yield CommonUtils.writeJSON("hello", reporter._state._filename);
+
+  try {
+    yield reporter.init();
+
+    do_check_eq(reporter.lastPingDate.getTime(), 0);
+    do_check_null(reporter.lastSubmitID);
+
+    let o = yield CommonUtils.readJSON(reporter._state._filename);
+    do_check_eq(typeof(o), "object");
+    do_check_eq(o.v, 1);
+    do_check_eq(o.lastPingTime, 0);
+    do_check_eq(o.remoteIDs.length, 0);
+  } finally {
+    reporter._shutdown();
+  }
+});
+
+// If we encounter a future version, we reset state to the current version.
+add_task(function test_state_future_version() {
+  let reporter = getJustReporter("state_shared");
+  yield CommonUtils.writeJSON({v: 2, remoteIDs: ["foo"], lastPingTime: 2412},
+                              reporter._state._filename);
+  try {
+    yield reporter.init();
+
+    do_check_eq(reporter.lastPingDate.getTime(), 0);
+    do_check_null(reporter.lastSubmitID);
+
+    // While the object is updated, we don't save the file.
+    let o = yield CommonUtils.readJSON(reporter._state._filename);
+    do_check_eq(o.v, 2);
+    do_check_eq(o.lastPingTime, 2412);
+    do_check_eq(o.remoteIDs.length, 1);
+  } finally {
+    reporter._shutdown();
+  }
+});
+
+// Test recovery if the state file contains invalid JSON.
+add_task(function test_state_invalid_json() {
+  let reporter = getJustReporter("state_shared");
+
+  let encoder = new TextEncoder();
+  let arr = encoder.encode("{foo: bad value, 'bad': as2,}");
+  let path = reporter._state._filename;
+  yield OS.File.writeAtomic(path, arr, {tmpPath: path + ".tmp"});
+
+  try {
+    yield reporter.init();
+
+    do_check_eq(reporter.lastPingDate.getTime(), 0);
+    do_check_null(reporter.lastSubmitID);
+  } finally {
+    reporter._shutdown();
+  }
+});
+
+add_task(function test_state_multiple_remote_ids() {
+  let [reporter, server] = yield getReporterAndServer("state_multiple_remote_ids");
+
+  let now = new Date(Date.now() - 5000);
+
+  server.setDocument(reporter.serverNamespace, "id1", "foo");
+  server.setDocument(reporter.serverNamespace, "id2", "bar");
+
+  try {
+    yield reporter._state.addRemoteID("id1");
+    yield reporter._state.addRemoteID("id2");
+    yield reporter._state.setLastPingDate(now);
+    do_check_eq(reporter._state.remoteIDs.length, 2);
+    do_check_eq(reporter._state.remoteIDs[0], "id1");
+    do_check_eq(reporter._state.remoteIDs[1], "id2");
+    do_check_eq(reporter.lastSubmitID, "id1");
+
+    let deferred = Promise.defer();
+    let request = new DataSubmissionRequest(deferred, now);
+    reporter.requestDataUpload(request);
+    yield deferred.promise;
+
+    do_check_eq(reporter._state.remoteIDs.length, 2);
+    do_check_eq(reporter._state.remoteIDs[0], "id2");
+    do_check_true(reporter.lastPingDate.getTime() > now.getTime());
+    do_check_false(server.hasDocument(reporter.serverNamespace, "id1"));
+    do_check_true(server.hasDocument(reporter.serverNamespace, "id2"));
+
+    let o = CommonUtils.readJSON(reporter._state._filename);
+    do_check_eq(reporter._state.remoteIDs.length, 2);
+    do_check_eq(reporter._state.remoteIDs[0], "id2");
+    do_check_eq(reporter._state.remoteIDs[1], reporter._state.remoteIDs[1]);
+  } finally {
+    yield shutdownServer(server);
+    reporter._shutdown();
+  }
+});
+
+// If we have a state file then downgrade to prefs, the prefs should be
+// reimported and should supplement existing state.
+add_task(function test_state_downgrade_upgrade() {
+  let reporter = getJustReporter("state_shared");
+
+  let now = new Date();
+
+  yield CommonUtils.writeJSON({v: 1, remoteIDs: ["id1", "id2"], lastPingTime: now.getTime()},
+                              reporter._state._filename);
+
+  let prefs = reporter._prefs;
+  prefs.set("lastSubmitID", "prefID");
+  prefs.set("lastPingTime", "" + (now.getTime() + 1000));
+
+  try {
+    yield reporter.init();
+
+    do_check_eq(reporter.lastSubmitID, "id1");
+    do_check_eq(reporter._state.remoteIDs.length, 3);
+    do_check_eq(reporter._state.remoteIDs[2], "prefID");
+    do_check_eq(reporter.lastPingDate.getTime(), now.getTime() + 1000);
+    do_check_false(prefs.isSet("lastSubmitID"));
+    do_check_false(prefs.isSet("lastPingTime"));
+
+    let o = yield CommonUtils.readJSON(reporter._state._filename);
+    do_check_eq(o.remoteIDs.length, 3);
+    do_check_eq(o.lastPingTime, now.getTime() + 1000);
+  } finally {
+    reporter._shutdown();
+  }
 });
 
