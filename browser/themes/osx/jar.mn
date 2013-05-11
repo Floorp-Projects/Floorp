@@ -298,6 +298,7 @@ browser.jar:
   skin/classic/browser/devtools/tool-inspector.png          (devtools/tool-inspector.png)
   skin/classic/browser/devtools/tool-styleeditor.png        (devtools/tool-styleeditor.png)
   skin/classic/browser/devtools/tool-profiler.png           (devtools/tool-profiler.png)
+  skin/classic/browser/devtools/tool-network.png            (devtools/tool-network.png)
   skin/classic/browser/devtools/close.png                   (devtools/close.png)
   skin/classic/browser/devtools/undock.png                  (devtools/undock.png)
   skin/classic/browser/devtools/font-inspector.css          (devtools/font-inspector.css)
