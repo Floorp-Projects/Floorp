@@ -125,12 +125,12 @@ static void
 AppendDistroSearchDirs(nsIProperties* aDirSvc, nsCOMArray<nsIFile> &array)
 {
   nsCOMPtr<nsIFile> searchPlugins;
-  nsresult rv = aDirSvc->Get(NS_XPCOM_CURRENT_PROCESS_DIR,
+  nsresult rv = aDirSvc->Get(XRE_EXECUTABLE_FILE,
                              NS_GET_IID(nsIFile),
                              getter_AddRefs(searchPlugins));
   if (NS_FAILED(rv))
     return;
-  searchPlugins->AppendNative(NS_LITERAL_CSTRING("distribution"));
+  searchPlugins->SetNativeLeafName(NS_LITERAL_CSTRING("distribution"));
   searchPlugins->AppendNative(NS_LITERAL_CSTRING("searchplugins"));
 
   bool exists;
