@@ -261,6 +261,11 @@ SettingsListener.observe('debug.log-animations.enabled', false, function(value) 
   Services.prefs.setBoolPref('layers.offmainthreadcomposition.log-animations', value);
 });
 
+// =================== Device Storage ====================
+SettingsListener.observe('device.storage.writable.name', false, function(value) {
+  Services.prefs.setBoolPref('device.storage.writable.name', value);
+});
+
 // =================== Privacy ====================
 SettingsListener.observe('privacy.donottrackheader.enabled', false, function(value) {
   Services.prefs.setBoolPref('privacy.donottrackheader.enabled', value);
