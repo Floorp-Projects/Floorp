@@ -3,6 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/PlacesUtils.jsm");
 
 function run_test() {
   initApp();
@@ -13,10 +14,12 @@ function run_test() {
     { // normal provider
       name: "provider 1",
       origin: "https://example1.com",
+      sidebarURL: "https://example1.com/sidebar/",
     },
     { // provider without workerURL
       name: "provider 2",
-      origin: "https://example2.com"
+      origin: "https://example2.com",
+      sidebarURL: "https://example2.com/sidebar/",
     }
   ];
 
@@ -46,6 +49,7 @@ function run_test() {
   runner.appendIterator(testAddRemoveProvider(manifests, next));
   runner.appendIterator(testIsSameOrigin(manifests, next));
   runner.appendIterator(testResolveUri  (manifests, next));
+  runner.appendIterator(testOrderedProviders(manifests, next));
   runner.next();
 }
 
@@ -167,4 +171,27 @@ function testResolveUri(manifests, next) {
   do_check_eq(provider.resolveUri("/foo.html").spec, provider.origin + "/foo.html");
   do_check_eq(provider.resolveUri("http://somewhereelse.com/foo.html").spec, "http://somewhereelse.com/foo.html");
   do_check_eq(provider.resolveUri("data:text/html,<p>hi").spec, "data:text/html,<p>hi");
+}
+
+function testOrderedProviders(manifests, next) {
+  let providers = yield SocialService.getProviderList(next);
+
+  // add visits for only one of the providers
+  let visits = [];
+  let startDate = Date.now() * 1000;
+  for (let i = 0; i < 10; i++) {
+    visits.push({
+      uri: Services.io.newURI(providers[1].sidebarURL + i, null, null),
+      visitDate: startDate + i
+    });
+  }
+
+  promiseAddVisits(visits).then(next);
+  yield;
+  let orderedProviders = yield SocialService.getOrderedProviderList(next);
+  do_check_eq(orderedProviders[0], providers[1]);
+  do_check_eq(orderedProviders[1], providers[0]);
+  do_check_true(orderedProviders[0].frecency > orderedProviders[1].frecency);
+  promiseClearHistory().then(next);
+  yield;
 }

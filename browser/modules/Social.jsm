@@ -152,7 +152,7 @@ this.Social = {
     this.initialized = true;
 
     // Retrieve the current set of providers, and set the current provider.
-    SocialService.getProviderList(function (providers) {
+    SocialService.getOrderedProviderList(function (providers) {
       this._updateProviderCache(providers);
     }.bind(this));
 
