@@ -9,7 +9,6 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/AddonManager.jsm");
-Cu.import("resource://gre/modules/PlacesUtils.jsm");
 
 const URI_EXTENSION_STRINGS  = "chrome://mozapps/locale/extensions/extensions.properties";
 const ADDON_TYPE_SERVICE     = "service";
@@ -20,10 +19,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "getFrameWorkerHandle", "resource://gre/
 XPCOMUtils.defineLazyModuleGetter(this, "WorkerAPI", "resource://gre/modules/WorkerAPI.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "MozSocialAPI", "resource://gre/modules/MozSocialAPI.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DeferredTask", "resource://gre/modules/DeferredTask.jsm");
-
-XPCOMUtils.defineLazyServiceGetter(this, "etld",
-                                   "@mozilla.org/network/effective-tld-service;1",
-                                   "nsIEffectiveTLDService");
 
 /**
  * The SocialService is the public API to social providers - it tracks which
@@ -81,59 +76,6 @@ let SocialServiceInternal = {
     }
     let originUri = Services.io.newURI(origin, null, null);
     return originUri.hostPort.replace('.','-');
-  },
-  orderedProviders: function(aCallback) {
-    if (SocialServiceInternal.providerArray.length < 2) {
-      schedule(function () {
-        aCallback(SocialServiceInternal.providerArray);
-      });
-      return;
-    }
-    // query moz_hosts for frecency.  since some providers may not have a
-    // frecency entry, we need to later sort on our own. We use the providers
-    // object below as an easy way to later record the frecency on the provider
-    // object from the query results.
-    let hosts = [];
-    let providers = {};
-
-    for (p of SocialServiceInternal.providerArray) {
-      p.frecency = 0;
-      providers[p.domain] = p;
-      hosts.push(p.domain);
-    };
-
-    // cannot bind an array to stmt.params so we have to build the string
-    let stmt = PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
-                                 .DBConnection.createAsyncStatement(
-      "SELECT host, frecency FROM moz_hosts WHERE host IN (" +
-      [ '"' + host + '"' for each (host in hosts) ].join(",") + ") "
-    );
-
-    try {
-      stmt.executeAsync({
-        handleResult: function(aResultSet) {
-          let row;
-          while ((row = aResultSet.getNextRow())) {
-            let rh = row.getResultByName("host");
-            let frecency = row.getResultByName("frecency");
-            providers[rh].frecency = parseInt(frecency) || 0;
-          }
-        },
-        handleError: function(aError) {
-          Cu.reportError(aError.message + " (Result = " + aError.result + ")");
-        },
-        handleCompletion: function(aReason) {
-          // the query may not have returned all our providers, so we have
-          // stamped the frecency on the provider and sort here. This makes sure
-          // all enabled providers get sorted even with frecency zero.
-          let providerList = SocialServiceInternal.providerArray;
-          // reverse sort
-          aCallback(providerList.sort(function(a, b) b.frecency - a.frecency));
-        }
-      });
-    } finally {
-      stmt.finalize();
-    }
   }
 };
 
@@ -383,8 +325,9 @@ this.SocialService = {
     SocialServiceInternal.providers[provider.origin] = provider;
     ActiveProviders.add(provider.origin);
 
-    this.getOrderedProviderList(function (providers) {
-      this._notifyProviderListeners("provider-added", providers);
+    schedule(function () {
+      this._notifyProviderListeners("provider-added",
+                                    SocialServiceInternal.providerArray);
       if (onDone)
         onDone(provider);
     }.bind(this));
@@ -417,8 +360,9 @@ this.SocialService = {
       AddonManagerPrivate.notifyAddonChanged(addon.id, ADDON_TYPE_SERVICE, false);
     }
 
-    this.getOrderedProviderList(function (providers) {
-      this._notifyProviderListeners("provider-removed", providers);
+    schedule(function () {
+      this._notifyProviderListeners("provider-removed",
+                                    SocialServiceInternal.providerArray);
       if (onDone)
         onDone();
     }.bind(this));
@@ -432,16 +376,11 @@ this.SocialService = {
     }).bind(this));
   },
 
-  // Returns an unordered array of installed providers
-  getProviderList: function(onDone) {
+  // Returns an array of installed providers.
+  getProviderList: function getProviderList(onDone) {
     schedule(function () {
       onDone(SocialServiceInternal.providerArray);
     });
-  },
-
-  // Returns an array of installed providers, sorted by frecency
-  getOrderedProviderList: function(onDone) {
-    SocialServiceInternal.orderedProviders(onDone);
   },
 
   getOriginActivationType: function(origin) {
@@ -673,12 +612,6 @@ function SocialProvider(input) {
   this.principal = Services.scriptSecurityManager.getNoAppCodebasePrincipal(originUri);
   this.ambientNotificationIcons = {};
   this.errorState = null;
-  this.frecency = 0;
-  try {
-    this.domain = etld.getBaseDomainFromHost(originUri.host);
-  } catch(e) {
-    this.domain = originUri.host;
-  }
 }
 
 SocialProvider.prototype = {
