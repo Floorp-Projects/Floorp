@@ -130,6 +130,8 @@ abstract public class BrowserApp extends GeckoApp
 
     private SharedPreferencesHelper mSharedPreferencesHelper;
 
+    private OrderedBroadcastHelper mOrderedBroadcastHelper;
+
     @Override
     public void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
         switch(msg) {
@@ -401,6 +403,7 @@ abstract public class BrowserApp extends GeckoApp
         Distribution.init(this, getPackageResourcePath());
         JavaAddonManager.getInstance().init(getApplicationContext());
         mSharedPreferencesHelper = new SharedPreferencesHelper(getApplicationContext());
+        mOrderedBroadcastHelper = new OrderedBroadcastHelper(getApplicationContext());
 
         if (AppConstants.MOZ_ANDROID_BEAM && Build.VERSION.SDK_INT >= 14) {
             NfcAdapter nfc = NfcAdapter.getDefaultAdapter(this);
@@ -499,6 +502,11 @@ abstract public class BrowserApp extends GeckoApp
         if (mSharedPreferencesHelper != null) {
             mSharedPreferencesHelper.uninit();
             mSharedPreferencesHelper = null;
+        }
+
+        if (mOrderedBroadcastHelper != null) {
+            mOrderedBroadcastHelper.uninit();
+            mOrderedBroadcastHelper = null;
         }
 
         unregisterEventListener("CharEncoding:Data");

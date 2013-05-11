@@ -73,7 +73,7 @@ FENNEC_JAVA_FILES = \
   CanvasDelegate.java \
   CheckableLinearLayout.java \
   ClickableWhenDisabledEditText.java \
-  SyncPreference.java \
+  CustomEditText.java \
   db/BrowserDB.java \
   db/LocalBrowserDB.java \
   db/DBUtils.java \
@@ -130,7 +130,7 @@ FENNEC_JAVA_FILES = \
   NotificationHandler.java \
   NotificationService.java \
   NSSBridge.java \
-  CustomEditText.java \
+  OrderedBroadcastHelper.java \
   PrefsHelper.java \
   PrivateDataPreference.java \
   PrivateTab.java \
@@ -154,6 +154,7 @@ FENNEC_JAVA_FILES = \
   SmsManager.java \
   SuggestClient.java \
   SurfaceBits.java \
+  SyncPreference.java \
   Tab.java \
   TabCounter.java \
   Tabs.java \
