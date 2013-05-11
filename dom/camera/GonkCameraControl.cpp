@@ -34,8 +34,6 @@
 #include <media/mediaplayer.h>
 #include "nsPrintfCString.h"
 #include "nsIObserverService.h"
-#include "nsIVolume.h"
-#include "nsIVolumeService.h"
 #include "DOMCameraManager.h"
 #include "GonkCameraHwMgr.h"
 #include "DOMCameraCapabilities.h"
@@ -907,22 +905,7 @@ nsGonkCameraControl::StartRecordingImpl(StartRecordingTask* aStartRecording)
    */
   nsCOMPtr<nsIFile> filename = aStartRecording->mFolder;
   filename->AppendRelativePath(aStartRecording->mFilename);
-
-  nsString fullpath;
-  filename->GetPath(fullpath);
-
-  nsCOMPtr<nsIVolumeService> vs = do_GetService(NS_VOLUMESERVICE_CONTRACTID);
-  NS_ENSURE_TRUE(vs, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIVolume> vol;
-  nsresult rv = vs->GetVolumeByPath(fullpath, getter_AddRefs(vol));
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_INVALID_ARG);
-
-  nsString volName;
-  vol->GetName(volName);
-
   mVideoFile = new DeviceStorageFile(NS_LITERAL_STRING("videos"),
-                                     volName,
                                      aStartRecording->mFilename);
 
   nsAutoCString nativeFilename;
@@ -940,7 +923,7 @@ nsGonkCameraControl::StartRecordingImpl(StartRecordingTask* aStartRecording)
     return NS_ERROR_FAILURE;
   }
 
-  rv = SetupRecording(fd, aStartRecording->mOptions.rotation, aStartRecording->mOptions.maxFileSizeBytes, aStartRecording->mOptions.maxVideoLengthMs);
+  nsresult rv = SetupRecording(fd, aStartRecording->mOptions.rotation, aStartRecording->mOptions.maxFileSizeBytes, aStartRecording->mOptions.maxVideoLengthMs);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mRecorder->start() != OK) {
