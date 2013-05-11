@@ -2945,6 +2945,11 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 
   PROFILER_LABEL("IndexedDB", "AddHelper::DoDatabaseWork");
 
+  if (IndexedDatabaseManager::InLowDiskSpaceMode()) {
+    NS_WARNING("Refusing to add more data because disk space is low!");
+    return NS_ERROR_DOM_INDEXEDDB_QUOTA_ERR;
+  }
+
   nsresult rv;
   bool keyUnset = mKey.IsUnset();
   int64_t osid = mObjectStore->Id();
@@ -3913,6 +3918,11 @@ CreateIndexHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   NS_ASSERTION(IndexedDatabaseManager::IsMainProcess(), "Wrong process!");
 
   PROFILER_LABEL("IndexedDB", "CreateIndexHelper::DoDatabaseWork");
+
+  if (IndexedDatabaseManager::InLowDiskSpaceMode()) {
+    NS_WARNING("Refusing to create index because disk space is low!");
+    return NS_ERROR_DOM_INDEXEDDB_QUOTA_ERR;
+  }
 
   // Insert the data into the database.
   nsCOMPtr<mozIStorageStatement> stmt =

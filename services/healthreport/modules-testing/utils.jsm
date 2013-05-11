@@ -216,8 +216,8 @@ this.createFakeCrash = function (submitted=false, date=new Date()) {
  *
  * The purpose of this type is to aid testing of startup and shutdown.
  */
-this.InspectedHealthReporter = function (branch, policy) {
-  HealthReporter.call(this, branch, policy);
+this.InspectedHealthReporter = function (branch, policy, recorder, stateLeaf) {
+  HealthReporter.call(this, branch, policy, recorder, stateLeaf);
 
   this.onStorageCreated = null;
   this.onProviderManagerInitialized = null;

@@ -462,15 +462,22 @@ BluetoothHfpManager::Get()
 }
 
 void
-BluetoothHfpManager::NotifySettings()
+BluetoothHfpManager::NotifyStatusChanged(const nsAString& aType)
 {
   nsString type, name;
   BluetoothValue v;
   InfallibleTArray<BluetoothNamedValue> parameters;
-  type.AssignLiteral("bluetooth-hfp-status-changed");
+  type = aType;
 
   name.AssignLiteral("connected");
-  v = IsConnected();
+  if (type.EqualsLiteral("bluetooth-hfp-status-changed")) {
+    v = IsConnected();
+  } else if (type.EqualsLiteral("bluetooth-sco-status-changed")) {
+    v = IsScoConnected();
+  } else {
+    NS_WARNING("Wrong type for NotifyStatusChanged");
+    return;
+  }
   parameters.AppendElement(BluetoothNamedValue(name, v));
 
   name.AssignLiteral("address");
@@ -1410,7 +1417,7 @@ BluetoothHfpManager::OnConnectSuccess(BluetoothSocket* aSocket)
   // Cache device path for NotifySettings() since we can't get socket address
   // when a headset disconnect with us
   mSocket->GetAddress(mDeviceAddress);
-  NotifySettings();
+  NotifyStatusChanged(NS_LITERAL_STRING("bluetooth-hfp-status-changed"));
 
   ListenSco();
 }
@@ -1461,7 +1468,7 @@ BluetoothHfpManager::OnDisconnect(BluetoothSocket* aSocket)
   DisconnectSco();
 
   Listen();
-  NotifySettings();
+  NotifyStatusChanged(NS_LITERAL_STRING("bluetooth-hfp-status-changed"));
   Reset();
 }
 
@@ -1503,6 +1510,7 @@ BluetoothHfpManager::OnScoConnectSuccess()
   }
 
   NotifyAudioManager(mDeviceAddress);
+  NotifyStatusChanged(NS_LITERAL_STRING("bluetooth-sco-status-changed"));
 
   mScoSocketStatus = mScoSocket->GetConnectionStatus();
 }
@@ -1526,6 +1534,7 @@ BluetoothHfpManager::OnScoDisconnect()
   if (mScoSocketStatus == SocketConnectionStatus::SOCKET_CONNECTED) {
     ListenSco();
     NotifyAudioManager(EmptyString());
+    NotifyStatusChanged(NS_LITERAL_STRING("bluetooth-sco-status-changed"));
   }
 }
 
@@ -1577,6 +1586,7 @@ BluetoothHfpManager::ConnectSco(BluetoothReplyRunnable* aRunnable)
   NS_ENSURE_TRUE(bs, false);
   nsresult rv = bs->GetScoSocket(mDeviceAddress, true, false, mScoSocket);
 
+  mScoSocketStatus = mSocket->GetConnectionStatus();
   return NS_SUCCEEDED(rv);
 }
 
