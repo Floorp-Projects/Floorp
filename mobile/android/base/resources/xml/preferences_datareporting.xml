@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!-- Data choices preference screen for pre-v11. Matches xml-v11/preferences_datareporting.xml -->
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+                  xmlns:gecko="http://schemas.android.com/apk/res-auto"
+                  android:title="@string/pref_category_datareporting"
+                  android:enabled="false">
+
+    <CheckBoxPreference android:key="datareporting.telemetry.enabled"
+                        android:title="@string/datareporting_telemetry_title"
+                        android:summary="@string/datareporting_telemetry_summary" />
+
+    <CheckBoxPreference android:key="android.not_a_preference.healthreport.uploadEnabled"
+                        android:title="@string/datareporting_fhr_title"
+                        android:summary="@string/datareporting_fhr_summary"
+                        android:defaultValue="true" />
+
+    <CheckBoxPreference android:key="datareporting.crashreporter.submitEnabled"
+                        android:title="@string/datareporting_crashreporter_title"
+                        android:summary="@string/datareporting_crashreporter_summary"
+                        android:defaultValue="false" />
+
+</PreferenceScreen>
