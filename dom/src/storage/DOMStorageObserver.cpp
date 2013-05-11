@@ -304,12 +304,9 @@ DOMStorageObserver::Observe(nsISupports* aSubject,
   }
 
   if (!strcmp(aTopic, "disk-space-watcher")) {
-    printf_stderr("******## receive disk-space-watcher\n");
     if (NS_LITERAL_STRING("full").Equals(aData)) {
-      printf_stderr("******## got full\n");
       Notify("low-disk-space");
     } else if (NS_LITERAL_STRING("free").Equals(aData)) {
-      printf_stderr("******## got free\n");
       Notify("no-low-disk-space");
     }
 
