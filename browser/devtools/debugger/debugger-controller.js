@@ -797,7 +797,9 @@ StackFrames.prototype = {
       case "object":
         // Add nodes for every variable in scope.
         this.activeThread.pauseGrip(env.object).getPrototypeAndProperties(function(aResponse) {
-          this._insertScopeVariables(aResponse.ownProperties, aScope);
+          let { ownProperties, safeGetterValues } = aResponse;
+          this._mergeSafeGetterValues(ownProperties, safeGetterValues);
+          this._insertScopeVariables(ownProperties, aScope);
 
           // Signal that variables have been fetched.
           window.dispatchEvent(document, "Debugger:FetchedVariables");
@@ -903,8 +905,10 @@ StackFrames.prototype = {
     let grip = aVar._sourceGrip;
 
     this.activeThread.pauseGrip(grip).getPrototypeAndProperties(function(aResponse) {
-      let { ownProperties, prototype } = aResponse;
+      let { ownProperties, prototype, safeGetterValues } = aResponse;
       let sortable = VariablesView.NON_SORTABLE_CLASSES.indexOf(grip.class) == -1;
+
+      this._mergeSafeGetterValues(ownProperties, safeGetterValues);
 
       // Add all the variable properties.
       if (ownProperties) {
@@ -930,6 +934,33 @@ StackFrames.prototype = {
       window.dispatchEvent(document, "Debugger:FetchedProperties");
       DebuggerView.Variables.commitHierarchy();
     }.bind(this));
+  },
+
+  /**
+   * Merge the safe getter values descriptors into the "own properties" object
+   * that comes from a "prototypeAndProperties" response packet. This is needed
+   * for Variables View.
+   *
+   * @private
+   * @param object aOwnProperties
+   *        The |ownProperties| object that will get the new safe getter values.
+   * @param object aSafeGetterValues
+   *        The |safeGetterValues| object.
+   */
+  _mergeSafeGetterValues:
+  function SF__mergeSafeGetterValues(aOwnProperties, aSafeGetterValues) {
+    // Merge the safe getter values into one object such that we can use it
+    // in VariablesView.
+    for (let name of Object.keys(aSafeGetterValues)) {
+      if (name in aOwnProperties) {
+        aOwnProperties[name].getterValue = aSafeGetterValues[name].getterValue;
+        aOwnProperties[name].getterPrototypeLevel = aSafeGetterValues[name]
+                                                    .getterPrototypeLevel;
+      }
+      else {
+        aOwnProperties[name] = aSafeGetterValues[name];
+      }
+    }
   },
 
   /**

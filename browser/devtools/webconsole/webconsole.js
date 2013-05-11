@@ -3509,8 +3509,21 @@ JSTerm.prototype = {
 
     let client = new GripClient(this.hud.proxy.client, grip);
     client.getPrototypeAndProperties((aResponse) => {
-      let { ownProperties, prototype } = aResponse;
+      let { ownProperties, prototype, safeGetterValues } = aResponse;
       let sortable = VariablesView.NON_SORTABLE_CLASSES.indexOf(grip.class) == -1;
+
+      // Merge the safe getter values into one object such that we can use it
+      // in VariablesView.
+      for (let name of Object.keys(safeGetterValues)) {
+        if (name in ownProperties) {
+          ownProperties[name].getterValue = safeGetterValues[name].getterValue;
+          ownProperties[name].getterPrototypeLevel = safeGetterValues[name]
+                                                     .getterPrototypeLevel;
+        }
+        else {
+          ownProperties[name] = safeGetterValues[name];
+        }
+      }
 
       // Add all the variable properties.
       if (ownProperties) {

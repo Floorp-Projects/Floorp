@@ -1978,6 +1978,13 @@ function Variable(aScope, aName, aDescriptor) {
   this._activateNameInput = this._activateNameInput.bind(this);
   this._activateValueInput = this._activateValueInput.bind(this);
 
+  // Treat safe getter descriptors as descriptors with a value.
+  if ("getterValue" in aDescriptor) {
+    aDescriptor.value = aDescriptor.getterValue;
+    delete aDescriptor.get;
+    delete aDescriptor.set;
+  }
+
   Scope.call(this, aScope, aName, this._initialDescriptor = aDescriptor);
   this.setGrip(aDescriptor.value);
   this._symbolicName = aName;
@@ -2002,6 +2009,8 @@ ViewHelpers.create({ constructor: Variable, proto: Scope.prototype }, {
    *             - { value: { type: "object", class: "Object" } }
    *             - { get: { type: "object", class: "Function" },
    *                 set: { type: "undefined" } }
+   *             - { get: { type "object", class: "Function" },
+   *                 getterValue: "foo", getterPrototypeLevel: 2 }
    * @param boolean aRelaxed
    *        True if name duplicates should be allowed.
    * @return Property
@@ -2381,14 +2390,17 @@ ViewHelpers.create({ constructor: Variable, proto: Scope.prototype }, {
       let configurableLabel = document.createElement("label");
       let enumerableLabel = document.createElement("label");
       let writableLabel = document.createElement("label");
+      let safeGetterLabel = document.createElement("label");
       configurableLabel.setAttribute("value", "configurable");
       enumerableLabel.setAttribute("value", "enumerable");
       writableLabel.setAttribute("value", "writable");
+      safeGetterLabel.setAttribute("value", "native-getter");
 
       tooltip.setAttribute("orient", "horizontal");
       tooltip.appendChild(configurableLabel);
       tooltip.appendChild(enumerableLabel);
       tooltip.appendChild(writableLabel);
+      tooltip.appendChild(safeGetterLabel);
 
       this._target.appendChild(tooltip);
       this._target.setAttribute("tooltip", tooltip.id);
@@ -2426,6 +2438,9 @@ ViewHelpers.create({ constructor: Variable, proto: Scope.prototype }, {
     }
     if (!descriptor.null && !descriptor.writable && !this.ownerView.getter && !this.ownerView.setter) {
       this._target.setAttribute("non-writable", "");
+    }
+    if (descriptor && "getterValue" in descriptor) {
+      this._target.setAttribute("safe-getter", "");
     }
     if (name == "this") {
       this._target.setAttribute("self", "");
