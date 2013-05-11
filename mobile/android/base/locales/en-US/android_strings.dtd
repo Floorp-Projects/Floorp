@@ -132,6 +132,11 @@ size. -->
 <!ENTITY pref_private_data_siteSettings2 "Site settings">
 <!ENTITY pref_private_data_downloadFiles "Downloaded files">
 
+<!ENTITY datareporting_notification_title "&brandShortName; stats &amp; data">
+<!ENTITY datareporting_notification_action "Choose what to share">
+<!ENTITY datareporting_notification_summary "To improve your experience, &brandShortName; automatically sends some information to &vendorShortName;.">
+<!ENTITY datareporting_notification_summary_short "To improve your experience, &brandShortName;…">
+
 <!-- Localization note (datareporting_fhr_title, datareporting_fhr_summary,
      reporting_telemetry_title, datareporting_telemetry_summary,
      datareporting_crashreporter_summary) : These match the strings in

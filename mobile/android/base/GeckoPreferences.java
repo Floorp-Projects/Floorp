@@ -51,18 +51,18 @@ public class GeckoPreferences
 {
     private static final String LOGTAG = "GeckoPreferences";
 
+    private static final String NON_PREF_PREFIX = "android.not_a_preference.";
     public static final String INTENT_EXTRA_RESOURCES = "resource";
+    public static String PREFS_HEALTHREPORT_UPLOAD_ENABLED = NON_PREF_PREFIX + "healthreport.uploadEnabled";
 
     private static boolean sIsCharEncodingEnabled = false;
     private boolean mInitialized = false;
 
-    private static final String NON_PREF_PREFIX = "android.not_a_preference.";
     // These match keys in resources/xml/preferences.xml.in.
     private static String PREFS_ANNOUNCEMENTS_ENABLED = NON_PREF_PREFIX + "privacy.announcements.enabled";
     private static String PREFS_DATA_REPORTING_PREFERENCES = NON_PREF_PREFIX + "datareporting.preferences";
     private static String PREFS_TELEMETRY_ENABLED = "datareporting.telemetry.enabled";
     private static String PREFS_CRASHREPORTER_ENABLED = "datareporting.crashreporter.submitEnabled";
-    private static String PREFS_HEALTHREPORT_UPLOAD_ENABLED = NON_PREF_PREFIX + "healthreport.uploadEnabled";
     private static String PREFS_MENU_CHAR_ENCODING = "browser.menu.showCharacterEncoding";
     private static String PREFS_MP_ENABLED = "privacy.masterpassword.enabled";
     private static String PREFS_UPDATER_AUTODOWNLOAD = "app.update.autodownload";
