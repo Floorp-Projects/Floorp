@@ -39,7 +39,7 @@ void CleanupOSFileConstants();
  * This function creates or uses JS object |OS.Constants| to store
  * all its constants.
  */
-bool DefineOSFileConstants(JSContext *cx, JSObject *global);
+bool DefineOSFileConstants(JSContext *cx, JS::Handle<JSObject*> global);
 
 /**
  * XPConnect initializer, for use in the main thread.

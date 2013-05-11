@@ -64,7 +64,7 @@ public:
   // Called when using IndexedDB from a JS component or a JSM in the current
   // process.
   static nsresult Create(JSContext* aCx,
-                         JSObject* aOwningObject,
+                         JS::Handle<JSObject*> aOwningObject,
                          ContentParent* aContentParent,
                          IDBFactory** aFactory);
 
@@ -158,7 +158,8 @@ public:
   }
 
   int16_t
-  Cmp(JSContext* aCx, JS::Value aFirst, JS::Value aSecond, ErrorResult& aRv);
+  Cmp(JSContext* aCx, JS::Handle<JS::Value> aFirst,
+      JS::Handle<JS::Value> aSecond, ErrorResult& aRv);
 
   already_AddRefed<nsIIDBOpenDBRequest>
   OpenForPrincipal(JSContext* aCx, nsIPrincipal* aPrincipal,
