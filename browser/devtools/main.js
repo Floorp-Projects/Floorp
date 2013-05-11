@@ -186,7 +186,7 @@ Tools.netMonitor = {
   ordinal: 6,
   modifiers: osString == "Darwin" ? "accel,alt" : "accel,shift",
   visibilityswitch: "devtools.netmonitor.enabled",
-  icon: "chrome://browser/skin/devtools/tool-profiler.png",
+  icon: "chrome://browser/skin/devtools/tool-network.png",
   url: "chrome://browser/content/devtools/netmonitor.xul",
   label: l10n("netmonitor.label", netMonitorStrings),
   tooltip: l10n("netmonitor.tooltip", netMonitorStrings),
