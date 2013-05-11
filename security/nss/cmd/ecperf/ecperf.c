@@ -304,7 +304,7 @@ M_TimeOperation(void (*threadFunc)(void *),
  * in the hexadecimal string must be optional.
  */
 static SECItem *
-hexString2SECItem(PRArenaPool *arena, SECItem *item, const char *str)
+hexString2SECItem(PLArenaPool *arena, SECItem *item, const char *str)
 {
     int i = 0;
     int byteval = 0;

@@ -1194,7 +1194,7 @@ DoChallengeResponse(SECKEYPrivateKey *privKey,
     CMMFPOPODecKeyRespContent  *respContent = NULL;
     CERTCertificate            *myCert      = NULL;
     CERTGeneralName            *myGenName   = NULL;
-    PRArenaPool                *poolp       = NULL;
+    PLArenaPool                *poolp       = NULL;
     PRFileDesc                 *fileDesc;
     SECItem                    *publicValue;
     SECItem                    *keyID;

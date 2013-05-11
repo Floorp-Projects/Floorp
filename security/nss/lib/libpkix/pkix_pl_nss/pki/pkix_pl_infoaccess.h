@@ -35,7 +35,7 @@ pkix_pl_InfoAccess_CreateList(
 PKIX_Error *
 pkix_pl_InfoAccess_ParseLocation(
         PKIX_PL_GeneralName *generalName,
-        PRArenaPool *arena,
+        PLArenaPool *arena,
         LDAPRequestParams *request,
         char **pDomainName,
         void *plContext);

@@ -31,7 +31,7 @@ PKIX_PL_NssContext_Create(
         void **pNssContext)
 {
         PKIX_PL_NssContext *context = NULL;
-        PRArenaPool *arena = NULL;
+        PLArenaPool *arena = NULL;
         void *plContext = NULL;
 
         PKIX_ENTER(CONTEXT, "PKIX_PL_NssContext_Create");

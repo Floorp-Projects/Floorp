@@ -286,13 +286,13 @@ SECOidData *SECOID_FindOIDByTag(SECOidTag tagnum)
     return SECOID_FindOIDByTag_Util(tagnum);
 }
 
-SECStatus SECOID_SetAlgorithmID(PRArenaPool *arena, SECAlgorithmID *aid,
+SECStatus SECOID_SetAlgorithmID(PLArenaPool *arena, SECAlgorithmID *aid,
 				   SECOidTag tag, SECItem *params)
 {
     return SECOID_SetAlgorithmID_Util(arena, aid, tag, params);
 }
 
-SECStatus SECOID_CopyAlgorithmID(PRArenaPool *arena, SECAlgorithmID *dest,
+SECStatus SECOID_CopyAlgorithmID(PLArenaPool *arena, SECAlgorithmID *dest,
 				    SECAlgorithmID *src)
 {
     return SECOID_CopyAlgorithmID_Util(arena, dest, src);
@@ -324,7 +324,7 @@ SECOidTag SECOID_AddEntry(const SECOidData * src)
     return SECOID_AddEntry_Util(src);
 }
 
-SECItem *SECITEM_AllocItem(PRArenaPool *arena, SECItem *item,
+SECItem *SECITEM_AllocItem(PLArenaPool *arena, SECItem *item,
 				  unsigned int len)
 {
     return SECITEM_AllocItem_Util(arena, item, len);
@@ -340,7 +340,7 @@ PRBool SECITEM_ItemsAreEqual(const SECItem *a, const SECItem *b)
     return SECITEM_ItemsAreEqual_Util(a, b);
 }
 
-SECStatus SECITEM_CopyItem(PRArenaPool *arena, SECItem *to, 
+SECStatus SECITEM_CopyItem(PLArenaPool *arena, SECItem *to,
                                   const SECItem *from)
 {
     return SECITEM_CopyItem_Util(arena, to, from);
@@ -351,7 +351,7 @@ SECItem *SECITEM_DupItem(const SECItem *from)
     return SECITEM_DupItem_Util(from);
 }
 
-SECItem *SECITEM_ArenaDupItem(PRArenaPool *arena, const SECItem *from)
+SECItem *SECITEM_ArenaDupItem(PLArenaPool *arena, const SECItem *from)
 {
     return SECITEM_ArenaDupItem_Util(arena, from);
 }
@@ -378,7 +378,7 @@ void SGN_DestroyDigestInfo(SGNDigestInfo *info)
     SGN_DestroyDigestInfo_Util(info);
 }
 
-SECStatus  SGN_CopyDigestInfo(PRArenaPool *poolp,
+SECStatus  SGN_CopyDigestInfo(PLArenaPool *poolp,
 					SGNDigestInfo *a, 
 					SGNDigestInfo *b)
 {
@@ -390,7 +390,7 @@ SECComparison SGN_CompareDigestInfo(SGNDigestInfo *a, SGNDigestInfo *b)
     return SGN_CompareDigestInfo_Util(a, b);
 }
 
-SECStatus DER_Encode(PRArenaPool *arena, SECItem *dest, DERTemplate *t,
+SECStatus DER_Encode(PLArenaPool *arena, SECItem *dest, DERTemplate *t,
 			   void *src)
 {
     return DER_Encode_Util(arena, dest, t, src);
@@ -407,17 +407,17 @@ long DER_GetInteger(const SECItem *src)
     return DER_GetInteger_Util(src);
 }
 
-SECStatus DER_TimeToUTCTime(SECItem *result, int64 time)
+SECStatus DER_TimeToUTCTime(SECItem *result, PRTime time)
 {
     return DER_TimeToUTCTime_Util(result, time);
 }
 
-SECStatus DER_AsciiToTime(int64 *result, const char *string)
+SECStatus DER_AsciiToTime(PRTime *result, const char *string)
 {
     return DER_AsciiToTime_Util(result, string);
 }
 
-SECStatus DER_UTCTimeToTime(int64 *result, const SECItem *time)
+SECStatus DER_UTCTimeToTime(PRTime *result, const SECItem *time)
 {
     return DER_UTCTimeToTime_Util(result, time);
 }
@@ -442,23 +442,23 @@ char *DER_TimeChoiceDayToAscii(SECItem *timechoice)
     return DER_TimeChoiceDayToAscii_Util(timechoice);
 }
 
-SECStatus DER_TimeToGeneralizedTime(SECItem *dst, int64 gmttime)
+SECStatus DER_TimeToGeneralizedTime(SECItem *dst, PRTime gmttime)
 {
     return DER_TimeToGeneralizedTime_Util(dst, gmttime);
 }
 
-SECStatus DER_TimeToGeneralizedTimeArena(PRArenaPool* arenaOpt,
-                                                SECItem *dst, int64 gmttime)
+SECStatus DER_TimeToGeneralizedTimeArena(PLArenaPool* arenaOpt,
+                                         SECItem *dst, PRTime gmttime)
 {
     return DER_TimeToGeneralizedTimeArena_Util(arenaOpt, dst, gmttime);
 }
 
-SECStatus DER_GeneralizedTimeToTime(int64 *dst, const SECItem *time)
+SECStatus DER_GeneralizedTimeToTime(PRTime *dst, const SECItem *time)
 {
     return DER_GeneralizedTimeToTime_Util(dst, time);
 }
 
-char *CERT_GenTime2FormattedAscii (int64 genTime, char *format)
+char *CERT_GenTime2FormattedAscii(PRTime genTime, char *format)
 {
     return CERT_GenTime2FormattedAscii_Util(genTime, format);
 }
@@ -468,13 +468,13 @@ SECStatus DER_DecodeTimeChoice(PRTime* output, const SECItem* input)
     return DER_DecodeTimeChoice_Util(output, input);
 }
 
-SECStatus DER_EncodeTimeChoice(PRArenaPool* arena, SECItem* output,
+SECStatus DER_EncodeTimeChoice(PLArenaPool* arena, SECItem* output,
                                        PRTime input)
 {
     return DER_EncodeTimeChoice_Util(arena, output, input);
 }
 
-SEC_ASN1DecoderContext *SEC_ASN1DecoderStart(PRArenaPool *pool,
+SEC_ASN1DecoderContext *SEC_ASN1DecoderStart(PLArenaPool *pool,
 						    void *dest,
 						    const SEC_ASN1Template *t)
 {
@@ -522,21 +522,21 @@ void SEC_ASN1DecoderClearNotifyProc(SEC_ASN1DecoderContext *cx)
     SEC_ASN1DecoderClearNotifyProc_Util(cx);
 }
 
-SECStatus SEC_ASN1Decode(PRArenaPool *pool, void *dest,
+SECStatus SEC_ASN1Decode(PLArenaPool *pool, void *dest,
 				const SEC_ASN1Template *t,
 				const char *buf, long len)
 {
     return SEC_ASN1Decode_Util(pool, dest, t, buf, len);
 }
 
-SECStatus SEC_ASN1DecodeItem(PRArenaPool *pool, void *dest,
+SECStatus SEC_ASN1DecodeItem(PLArenaPool *pool, void *dest,
 				    const SEC_ASN1Template *t,
 				    const SECItem *src)
 {
     return SEC_ASN1DecodeItem_Util(pool, dest, t, src);
 }
 
-SECStatus SEC_QuickDERDecodeItem(PRArenaPool* arena, void* dest,
+SECStatus SEC_QuickDERDecodeItem(PLArenaPool* arena, void* dest,
                      const SEC_ASN1Template* templateEntry,
                      const SECItem* src)
 {
@@ -607,19 +607,19 @@ SECStatus SEC_ASN1Encode(const void *src, const SEC_ASN1Template *t,
     return SEC_ASN1Encode_Util(src, t, output_proc, output_arg);
 }
 
-SECItem * SEC_ASN1EncodeItem(PRArenaPool *pool, SECItem *dest,
+SECItem * SEC_ASN1EncodeItem(PLArenaPool *pool, SECItem *dest,
 				    const void *src, const SEC_ASN1Template *t)
 {
     return SEC_ASN1EncodeItem_Util(pool, dest, src, t);
 }
 
-SECItem * SEC_ASN1EncodeInteger(PRArenaPool *pool,
+SECItem * SEC_ASN1EncodeInteger(PLArenaPool *pool,
 				       SECItem *dest, long value)
 {
     return SEC_ASN1EncodeInteger_Util(pool, dest, value);
 }
 
-SECItem * SEC_ASN1EncodeUnsignedInteger(PRArenaPool *pool,
+SECItem * SEC_ASN1EncodeUnsignedInteger(PLArenaPool *pool,
 					       SECItem *dest,
 					       unsigned long value)
 {
@@ -699,14 +699,14 @@ NSSBase64Encoder_Destroy (NSSBase64Encoder *data, PRBool abort_p)
 }
 
 SECItem *
-NSSBase64_DecodeBuffer (PRArenaPool *arenaOpt, SECItem *outItemOpt,
+NSSBase64_DecodeBuffer (PLArenaPool *arenaOpt, SECItem *outItemOpt,
 			const char *inStr, unsigned int inLen)
 {
     return NSSBase64_DecodeBuffer_Util(arenaOpt, outItemOpt, inStr, inLen);
 }
 
 char *
-NSSBase64_EncodeItem (PRArenaPool *arenaOpt, char *outStrOpt,
+NSSBase64_EncodeItem (PLArenaPool *arenaOpt, char *outStrOpt,
 		      unsigned int maxOutLen, SECItem *inItem)
 {
     return NSSBase64_EncodeItem_Util(arenaOpt, outStrOpt, maxOutLen, inItem);

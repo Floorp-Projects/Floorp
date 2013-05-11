@@ -569,7 +569,7 @@ loser:
 }
 
 static CK_RV
-sftkdb_CreateObject(PRArenaPool *arena, SFTKDBHandle *handle, 
+sftkdb_CreateObject(PLArenaPool *arena, SFTKDBHandle *handle,
 	SDB *db, CK_OBJECT_HANDLE *objectID,
         CK_ATTRIBUTE *template, CK_ULONG count)
 {
@@ -1016,7 +1016,7 @@ loser:
  *
  */
 static CK_RV
-sftkdb_resolveConflicts(PRArenaPool *arena, CK_OBJECT_CLASS objectType, 
+sftkdb_resolveConflicts(PLArenaPool *arena, CK_OBJECT_CLASS objectType,
 			CK_ATTRIBUTE *ptemplate, CK_ULONG *plen)
 {
     CK_ATTRIBUTE *attr;
@@ -1088,7 +1088,7 @@ sftkdb_resolveConflicts(PRArenaPool *arena, CK_OBJECT_CLASS objectType,
  * set an attribute and sign it if necessary
  */
 static CK_RV
-sftkdb_setAttributeValue(PRArenaPool *arena, SFTKDBHandle *handle, 
+sftkdb_setAttributeValue(PLArenaPool *arena, SFTKDBHandle *handle,
 	SDB *db, CK_OBJECT_HANDLE objectID, const CK_ATTRIBUTE *template, 
 	CK_ULONG count)
 {
@@ -1735,7 +1735,7 @@ sftkdb_getULongFromTemplate(CK_ATTRIBUTE_TYPE type,
  *    CKA_ID the it has returned in the passed.
  */
 static CK_RV
-sftkdb_incrementCKAID(PRArenaPool *arena, CK_ATTRIBUTE *ptemplate)
+sftkdb_incrementCKAID(PLArenaPool *arena, CK_ATTRIBUTE *ptemplate)
 {
     unsigned char *buf = ptemplate->pValue;
     CK_ULONG len = ptemplate->ulValueLen;
@@ -1829,7 +1829,7 @@ typedef enum {
  *   any SFTKDB_MODIFY_OBJECT returns.
  */
 sftkdbUpdateStatus
-sftkdb_reconcileTrustEntry(PRArenaPool *arena, CK_ATTRIBUTE *target, 
+sftkdb_reconcileTrustEntry(PLArenaPool *arena, CK_ATTRIBUTE *target,
 			   CK_ATTRIBUTE *source)
 {
     CK_ULONG targetTrust = sftkdb_getULongFromTemplate(target->type,
@@ -1916,7 +1916,7 @@ const CK_ATTRIBUTE_TYPE sftkdb_trustList[] =
  * trust object (overwriting the existing one).
  */
 static sftkdbUpdateStatus
-sftkdb_reconcileTrust(PRArenaPool *arena, SDB *db, CK_OBJECT_HANDLE id, 
+sftkdb_reconcileTrust(PLArenaPool *arena, SDB *db, CK_OBJECT_HANDLE id,
 		      CK_ATTRIBUTE *ptemplate, CK_ULONG *plen)
 {
     CK_ATTRIBUTE trustTemplate[SFTK_TRUST_TEMPLATE_COUNT];
@@ -2002,7 +2002,7 @@ done:
 }
 
 static sftkdbUpdateStatus
-sftkdb_handleIDAndName(PRArenaPool *arena, SDB *db, CK_OBJECT_HANDLE id, 
+sftkdb_handleIDAndName(PLArenaPool *arena, SDB *db, CK_OBJECT_HANDLE id,
 		      CK_ATTRIBUTE *ptemplate, CK_ULONG *plen)
 {
     sftkdbUpdateStatus update = SFTKDB_DO_NOTHING;
@@ -2081,7 +2081,7 @@ sftkdb_handleIDAndName(PRArenaPool *arena, SDB *db, CK_OBJECT_HANDLE id,
  * as SFTK_DONT_UPDATE and SFTK_UPDATE respectively.
  */
 static PRBool
-sftkdb_updateObjectTemplate(PRArenaPool *arena, SDB *db, 
+sftkdb_updateObjectTemplate(PLArenaPool *arena, SDB *db,
 		    CK_OBJECT_CLASS objectType, 
 		    CK_ATTRIBUTE *ptemplate, CK_ULONG *plen,
 		    CK_OBJECT_HANDLE *targetID)

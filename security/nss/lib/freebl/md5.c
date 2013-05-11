@@ -198,7 +198,7 @@ MD5_Hash(unsigned char *dest, const char *src)
 }
 
 SECStatus 
-MD5_HashBuf(unsigned char *dest, const unsigned char *src, uint32 src_length)
+MD5_HashBuf(unsigned char *dest, const unsigned char *src, PRUint32 src_length)
 {
 	unsigned int len;
 	MD5Context cx;

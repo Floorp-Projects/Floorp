@@ -1007,7 +1007,7 @@ loser:
 }
 
 SECStatus
-NSS_CMSSignedData_AddDigest(PRArenaPool *poolp,
+NSS_CMSSignedData_AddDigest(PLArenaPool *poolp,
 				NSSCMSSignedData *sigd,
 				SECOidTag digestalgtag,
 				SECItem *digest)

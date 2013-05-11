@@ -47,7 +47,7 @@ DIRS = lib  \
  selfserv  \
  signtool \
  signver \
- shlibsign \
+ $(SHLIBSIGN_SRCDIR) \
  smimetools  \
  ssltap  \
  strsclnt \

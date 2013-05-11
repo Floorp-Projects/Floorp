@@ -40,6 +40,14 @@
 #endif
 #include "prtypes.h"
 
+#if !defined(XP_BEOS) && !defined(XP_OS2) && !defined(XP_UNIX) || defined(NTO)
+typedef PRUintn uint;
+#endif
+typedef PRUint8 uint8;
+typedef PRUint16 uint16;
+typedef PRInt32 int32;
+typedef PRUint32 uint32;
+
 #include <limits.h>
 
 #ifdef __DBINTERFACE_PRIVATE

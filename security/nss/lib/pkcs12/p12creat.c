@@ -19,7 +19,7 @@ SEC_PKCS12PFXItem *
 sec_pkcs12_new_pfx(void)
 {
     SEC_PKCS12PFXItem   *pfx = NULL;
-    PRArenaPool     *poolp = NULL;
+    PLArenaPool     *poolp = NULL;
 
     poolp = PORT_NewArena(SEC_ASN1_DEFAULT_ARENA_SIZE);	/* XXX Different size? */
     if(poolp == NULL)
@@ -43,7 +43,7 @@ loser:
  * the new structure is returned.
  */
 SEC_PKCS12AuthenticatedSafe *
-sec_pkcs12_new_asafe(PRArenaPool *poolp)
+sec_pkcs12_new_asafe(PLArenaPool *poolp)
 {
     SEC_PKCS12AuthenticatedSafe  *asafe = NULL;
     void *mark;
@@ -68,7 +68,7 @@ loser:
  * length 0 with the first element being NULL 
  */
 SEC_PKCS12SafeContents *
-sec_pkcs12_create_safe_contents(PRArenaPool *poolp)
+sec_pkcs12_create_safe_contents(PLArenaPool *poolp)
 {
     SEC_PKCS12SafeContents *safe;
     void *mark;
@@ -174,7 +174,7 @@ loser:
 
 /* creates a baggage witha NULL terminated 0 length list */
 SEC_PKCS12Baggage *
-sec_pkcs12_create_baggage(PRArenaPool *poolp)
+sec_pkcs12_create_baggage(PLArenaPool *poolp)
 {
     SEC_PKCS12Baggage *luggage;
     void *mark;

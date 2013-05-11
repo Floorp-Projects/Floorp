@@ -1016,7 +1016,7 @@ PK11_ClearSlotList(PK11SlotInfo *slot)
  * turn a PKCS11 Static Label into a string
  */
 char *
-PK11_MakeString(PRArenaPool *arena,char *space,
+PK11_MakeString(PLArenaPool *arena,char *space,
 					char *staticString,int stringLen)
 {
 	int i;
