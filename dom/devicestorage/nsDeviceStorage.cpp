@@ -2503,7 +2503,7 @@ ExtractDateFromOptions(JSContext* aCx, const JS::Value& aOptions)
   if (!JSVAL_IS_VOID(aOptions) && !aOptions.isNull()) {
     nsresult rv = params.Init(aCx, &aOptions);
     if (NS_SUCCEEDED(rv) && !JSVAL_IS_VOID(params.since) && !params.since.isNull() && params.since.isObject()) {
-      JSObject* obj = JSVAL_TO_OBJECT(params.since);
+      JS::Rooted<JSObject*> obj(aCx, JSVAL_TO_OBJECT(params.since));
       if (JS_ObjectIsDate(aCx, obj) && js_DateIsValid(obj)) {
         result = js_DateGetMsecSinceEpoch(obj);
       }
