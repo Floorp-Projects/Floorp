@@ -127,8 +127,8 @@ function testVariablesFiltering()
       "There should be 0 properties displayed in the math scope");
     is(testScope.querySelectorAll(".variables-view-property:not([non-match])").length, 0,
       "There should be 0 properties displayed in the test scope");
-    is(loadScope.querySelectorAll(".variables-view-property:not([non-match])").length, 1,
-      "There should be 1 property displayed in the load scope");
+    ok(loadScope.querySelectorAll(".variables-view-property:not([non-match])").length > 1,
+      "There should be more than one property displayed in the load scope");
     isnot(globalScope.querySelectorAll(".variables-view-property:not([non-match])").length, 0,
       "There should be some properties displayed in the global scope");
   }
@@ -157,8 +157,8 @@ function testVariablesFiltering()
       "There should be 0 properties displayed in the math scope");
     is(testScope.querySelectorAll(".variables-view-property:not([non-match])").length, 0,
       "There should be 0 properties displayed in the test scope");
-    is(loadScope.querySelectorAll(".variables-view-property:not([non-match])").length, 1,
-      "There should be 1 property displayed in the load scope");
+    ok(loadScope.querySelectorAll(".variables-view-property:not([non-match])").length > 1,
+      "There should be more than one properties displayed in the load scope");
     isnot(globalScope.querySelectorAll(".variables-view-property:not([non-match])").length, 0,
       "There should be some properties displayed in the global scope");
   }
