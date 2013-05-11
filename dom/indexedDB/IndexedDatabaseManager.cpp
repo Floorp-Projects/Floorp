@@ -7,15 +7,18 @@
 #include "IndexedDatabaseManager.h"
 
 #include "nsIConsoleService.h"
+#include "nsIDiskSpaceWatcher.h"
 #include "nsIDOMScriptObjectFactory.h"
 #include "nsIFile.h"
 #include "nsIFileStorage.h"
+#include "nsIObserverService.h"
 #include "nsIScriptError.h"
 
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/quota/Utilities.h"
 #include "mozilla/dom/TabContext.h"
+#include "mozilla/Services.h"
 #include "mozilla/storage.h"
 #include "nsContentUtils.h"
 #include "nsEventDispatcher.h"
@@ -25,6 +28,11 @@
 #include "IDBFactory.h"
 #include "IDBKeyRange.h"
 #include "IDBRequest.h"
+
+// The two possible values for the data argument when receiving the disk space
+// observer notification.
+#define LOW_DISK_SPACE_DATA_FULL "full"
+#define LOW_DISK_SPACE_DATA_FREE "free"
 
 USING_INDEXEDDB_NAMESPACE
 using namespace mozilla::dom;
@@ -92,6 +100,7 @@ IndexedDatabaseManager::~IndexedDatabaseManager()
 }
 
 bool IndexedDatabaseManager::sIsMainProcess = false;
+int32_t IndexedDatabaseManager::sLowDiskSpaceMode = 0;
 
 // static
 IndexedDatabaseManager*
@@ -106,6 +115,24 @@ IndexedDatabaseManager::GetOrCreate()
 
   if (!gInstance) {
     sIsMainProcess = XRE_GetProcessType() == GeckoProcessType_Default;
+
+    if (sIsMainProcess) {
+      // See if we're starting up in low disk space conditions.
+      nsCOMPtr<nsIDiskSpaceWatcher> watcher =
+        do_GetService(DISKSPACEWATCHER_CONTRACTID);
+      if (watcher) {
+        bool isDiskFull;
+        if (NS_SUCCEEDED(watcher->GetIsDiskFull(&isDiskFull))) {
+          sLowDiskSpaceMode = isDiskFull ? 1 : 0;
+        }
+        else {
+          NS_WARNING("GetIsDiskFull failed!");
+        }
+      }
+      else {
+        NS_WARNING("No disk space watcher component available!");
+      }
+    }
 
     nsRefPtr<IndexedDatabaseManager> instance(new IndexedDatabaseManager());
 
@@ -146,13 +173,27 @@ IndexedDatabaseManager::FactoryCreate()
 nsresult
 IndexedDatabaseManager::Init()
 {
-  // Make sure that the quota manager is up.
-  NS_ENSURE_TRUE(QuotaManager::GetOrCreate(), NS_ERROR_FAILURE);
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  // Must initialize the storage service on the main thread.
-  nsCOMPtr<mozIStorageService> ss =
-    do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID);
-  NS_ENSURE_TRUE(ss, NS_ERROR_FAILURE);
+  // Make sure that the quota manager is up.
+  QuotaManager* qm = QuotaManager::GetOrCreate();
+  NS_ENSURE_STATE(qm);
+
+  // During Init() we can't yet call IsMainProcess(), just check sIsMainProcess
+  // directly.
+  if (sIsMainProcess) {
+    // Must initialize the storage service on the main thread.
+    nsCOMPtr<mozIStorageService> ss =
+      do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID);
+    NS_ENSURE_STATE(ss);
+
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    NS_ENSURE_STATE(obs);
+
+    nsresult rv =
+      obs->AddObserver(this, DISKSPACEWATCHER_OBSERVER_TOPIC, false);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   return NS_OK;
 }
@@ -279,7 +320,7 @@ IndexedDatabaseManager::IsClosed()
 }
 
 #ifdef DEBUG
-//static
+// static
 bool
 IndexedDatabaseManager::IsMainProcess()
 {
@@ -288,6 +329,16 @@ IndexedDatabaseManager::IsMainProcess()
   NS_ASSERTION((XRE_GetProcessType() == GeckoProcessType_Default) ==
                sIsMainProcess, "XRE_GetProcessType changed its tune!");
   return sIsMainProcess;
+}
+
+//static
+bool
+IndexedDatabaseManager::InLowDiskSpaceMode()
+{
+  NS_ASSERTION(gInstance,
+               "InLowDiskSpaceMode() called before indexedDB has been "
+               "initialized!");
+  return !!sLowDiskSpaceMode;
 }
 #endif
 
@@ -394,7 +445,8 @@ IndexedDatabaseManager::AsyncDeleteFile(FileManager* aFileManager,
 
 NS_IMPL_ADDREF(IndexedDatabaseManager)
 NS_IMPL_RELEASE_WITH_DESTROY(IndexedDatabaseManager, Destroy())
-NS_IMPL_QUERY_INTERFACE1(IndexedDatabaseManager, nsIIndexedDatabaseManager)
+NS_IMPL_QUERY_INTERFACE2(IndexedDatabaseManager, nsIIndexedDatabaseManager,
+                                                 nsIObserver)
 
 NS_IMETHODIMP
 IndexedDatabaseManager::InitWindowless(const jsval& aObj, JSContext* aCx)
@@ -453,6 +505,35 @@ IndexedDatabaseManager::InitWindowless(const jsval& aObj, JSContext* aCx)
 
   return NS_OK;
 }
+
+NS_IMETHODIMP
+IndexedDatabaseManager::Observe(nsISupports* aSubject, const char* aTopic,
+                                const PRUnichar* aData)
+{
+  NS_ASSERTION(IsMainProcess(), "Wrong process!");
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  if (!strcmp(aTopic, DISKSPACEWATCHER_OBSERVER_TOPIC)) {
+    NS_ASSERTION(aData, "No data?!");
+
+    const nsDependentString data(aData);
+
+    if (data.EqualsLiteral(LOW_DISK_SPACE_DATA_FULL)) {
+      PR_ATOMIC_SET(&sLowDiskSpaceMode, 1);
+    }
+    else if (data.EqualsLiteral(LOW_DISK_SPACE_DATA_FREE)) {
+      PR_ATOMIC_SET(&sLowDiskSpaceMode, 0);
+    }
+    else {
+      NS_NOTREACHED("Unknown data value!");
+    }
+
+    return NS_OK;
+  }
+
+   NS_NOTREACHED("Unknown topic!");
+   return NS_ERROR_UNEXPECTED;
+ }
 
 AsyncDeleteFileRunnable::AsyncDeleteFileRunnable(FileManager* aFileManager,
                                                  int64_t aFileId)
