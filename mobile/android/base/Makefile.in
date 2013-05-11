@@ -1091,10 +1091,6 @@ ifdef MOZ_WEBRTC
 ALL_JARS += jars/webrtc.jar
 endif
 
-INSTALL_TARGETS += fennec_ids
-fennec_ids_FILES := fennec_ids.txt
-fennec_ids_DEST := $(DIST)
-
 include $(topsrcdir)/config/rules.mk
 
 # Override the Java settings with some specific android settings
@@ -1260,9 +1256,6 @@ R.java: $(MOZ_APP_ICON) $(RESOURCES) $(RES_DRAWABLE) $(RES_BRANDING_DRAWABLE_MDP
 
 gecko.ap_: AndroidManifest.xml res/drawable-mdpi/icon.png res/drawable-hdpi/icon.png res/drawable-xhdpi/icon.png res/drawable-xxhdpi/icon.png $(RESOURCES) $(RES_DRAWABLE) $(RES_BRANDING_DRAWABLE_MDPI) $(PP_RES_XML) res/values/strings.xml FORCE
 	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar  -S res -F $@
-
-fennec_ids.txt: fennec-ids-generator.py R.java
-	$(PYTHON) $(topsrcdir)/mobile/android/base/fennec-ids-generator.py -i R.java -o $@
 
 libs:: classes.dex package-name.txt jni-stubs.inc
 	$(INSTALL) classes.dex $(FINAL_TARGET)
