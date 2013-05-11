@@ -428,7 +428,7 @@ done:
 static char *nssutil_nullString = "";
 
 static char *
-nssutil_formatValue(PRArenaPool *arena, char *value, char quote)
+nssutil_formatValue(PLArenaPool *arena, char *value, char quote)
 {
     char *vp,*vp2,*retval;
     int size = 0, escapes = 0;
@@ -620,7 +620,7 @@ nssutil_argDecodeSingleSlotInfo(char *name, char *params,
 
 /* parse all the slot specific parameters. */
 struct NSSUTILPreSlotInfoStr *
-NSSUTIL_ArgParseSlotInfo(PRArenaPool *arena, char *slotParams, int *retCount)
+NSSUTIL_ArgParseSlotInfo(PLArenaPool *arena, char *slotParams, int *retCount)
 {
     char *slotIndex;
     struct NSSUTILPreSlotInfoStr *slotInfo = NULL;

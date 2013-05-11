@@ -140,11 +140,11 @@ nsslowkey_FindKeyNicknameByPublicKey(NSSLOWKEYDBHandle *handle,
  * smaller version of EC_FillParams. In this code, we only need
  * oid and DER data.
  */
-SECStatus LGEC_FillParams(PRArenaPool *arena, const SECItem *encodedParams, 
+SECStatus LGEC_FillParams(PLArenaPool *arena, const SECItem *encodedParams,
     ECParams *params);
 
 /* Copy all of the fields from srcParams into dstParams */
-SECStatus LGEC_CopyParams(PRArenaPool *arena, ECParams *dstParams,
+SECStatus LGEC_CopyParams(PLArenaPool *arena, ECParams *dstParams,
 	      const ECParams *srcParams);
 #endif
 SEC_END_PROTOS

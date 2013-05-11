@@ -664,7 +664,7 @@ SECStatus NSS_CMSRecipientInfo_GetCertAndKey(NSSCMSRecipientInfo *ri,
     return rv;
 }
 
-SECStatus NSS_CMSRecipientInfo_Encode(PRArenaPool* poolp,
+SECStatus NSS_CMSRecipientInfo_Encode(PLArenaPool* poolp,
                                       const NSSCMSRecipientInfo *src,
                                       SECItem* returned)
 {

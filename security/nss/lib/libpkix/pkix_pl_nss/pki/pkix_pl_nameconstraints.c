@@ -278,7 +278,7 @@ pkix_pl_CertNameConstraints_CheckNameSpaceNssNames(
         CERTNameConstraints **nssNameConstraintsList = NULL;
         CERTNameConstraints *nssNameConstraints = NULL;
         CERTGeneralName *nssMatchName = NULL;
-        PRArenaPool *arena = NULL;
+        PLArenaPool *arena = NULL;
         PKIX_UInt32 numItems = 0;
         PKIX_UInt32 i;
         SECStatus status = SECSuccess;
@@ -1191,7 +1191,7 @@ PKIX_PL_CertNameConstraints_CheckNamesInNameSpace(
         CERTNameConstraints **nssNameConstraintsList = NULL;
         CERTNameConstraints *nssNameConstraints = NULL;
         CERTGeneralName *nssMatchName = NULL;
-        PRArenaPool *arena = NULL;
+        PLArenaPool *arena = NULL;
         PKIX_PL_GeneralName *name = NULL;
         PKIX_UInt32 numNameItems = 0;
         PKIX_UInt32 numNCItems = 0;

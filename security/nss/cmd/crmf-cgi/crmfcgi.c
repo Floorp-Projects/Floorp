@@ -280,7 +280,7 @@ ErrorCode
 initOldCertReq(CERTCertificateRequest *oldCertReq,
 	       CERTName *subject, CERTSubjectPublicKeyInfo *spki)
 {
-  PRArenaPool *poolp;
+  PLArenaPool *poolp;
 
   poolp = oldCertReq->arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
   SEC_ASN1EncodeInteger(poolp, &oldCertReq->version, 
@@ -494,7 +494,7 @@ createCMMFResponse(CertResponseInfo *issuedCerts, int numCerts,
   CERTCertList *caList;
   int i;
   SECStatus srv;
-  PRArenaPool *poolp;
+  PLArenaPool *poolp;
   SECItem *der;
 
   certRepContent = CMMF_CreateCertRepContent();
@@ -783,7 +783,7 @@ issueChallenge(CertResponseInfo *issuedCerts, int numCerts,
   CMMFPOPODecKeyChallContent *chalContent = NULL;
   int i;
   SECStatus srv;
-  PRArenaPool *poolp;
+  PLArenaPool *poolp;
   CERTGeneralName *genName;
   SECItem *challDER = NULL;
   char *chall64, *certRepContentDER;

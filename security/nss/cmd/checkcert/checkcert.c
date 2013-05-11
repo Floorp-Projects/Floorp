@@ -201,7 +201,7 @@ OurVerifySignedData(CERTSignedData *sd, CERTCertificate *cert)
 static
 CERTCertificate *createEmptyCertificate(void)
 {
-    PRArenaPool *arena = 0;
+    PLArenaPool *arena = 0;
     CERTCertificate *c = 0;
 
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
@@ -232,7 +232,7 @@ int main(int argc, char **argv)
     char *progName=0;
     PRFileDesc *inFile=0, *issuerCertFile=0;
     SECItem derCert, derIssuerCert;
-    PRArenaPool *arena=0;
+    PLArenaPool *arena=0;
     CERTSignedData *signedData=0;
     CERTCertificate *cert=0, *issuerCert=0;
     SECKEYPublicKey *rsapubkey=0;

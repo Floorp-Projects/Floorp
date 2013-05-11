@@ -66,16 +66,13 @@ cipher_main()
           failedStr=""
           inOff=0
           res=0
-          # If nss was built without softoken use the system installed bltest tool. 
-          # The FREEBL_BINDIR location is platform dependent. See the comments
-          # regarding this location in tests/common/init.sh. 
           while [ $inOff -lt 8 ]
           do
              outOff=0
              while [ $outOff -lt 8 ]
              do
                  echo "bltest -T -m $PARAM -d $CIPHERTESTDIR -1 $inOff -2 $outOff"
-                 ${PROFTOOL} ${FREEBL_BINDIR}/bltest${PROG_SUFFIX} -T -m $PARAM -d $CIPHERTESTDIR -1 $inOff -2 $outOff
+                 ${PROFTOOL} ${BINDIR}/bltest${PROG_SUFFIX} -T -m $PARAM -d $CIPHERTESTDIR -1 $inOff -2 $outOff
                  if [ $? -ne 0 ]; then
                      failedStr="$failedStr[$inOff:$outOff]"
                  fi

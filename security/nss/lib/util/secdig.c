@@ -23,7 +23,7 @@
  */
 
 SECItem *
-SGN_EncodeDigestInfo(PRArenaPool *poolp, SECItem *dest, SGNDigestInfo *diginfo)
+SGN_EncodeDigestInfo(PLArenaPool *poolp, SECItem *dest, SGNDigestInfo *diginfo)
 {
     return SEC_ASN1EncodeItem (poolp, dest, diginfo, sgn_DigestInfoTemplate);
 }
@@ -33,7 +33,7 @@ SGN_CreateDigestInfo(SECOidTag algorithm, unsigned char *sig, unsigned len)
 {
     SGNDigestInfo *di;
     SECStatus rv;
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     SECItem *null_param;
     SECItem dummy_value;
 
@@ -101,7 +101,7 @@ SGN_CreateDigestInfo(SECOidTag algorithm, unsigned char *sig, unsigned len)
 SGNDigestInfo *
 SGN_DecodeDigestInfo(SECItem *didata)
 {
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     SGNDigestInfo *di;
     SECStatus rv = SECFailure;
     SECItem      diCopy   = {siBuffer, NULL, 0};
@@ -141,7 +141,7 @@ SGN_DestroyDigestInfo(SGNDigestInfo *di)
 }
 
 SECStatus 
-SGN_CopyDigestInfo(PRArenaPool *poolp, SGNDigestInfo *a, SGNDigestInfo *b)
+SGN_CopyDigestInfo(PLArenaPool *poolp, SGNDigestInfo *a, SGNDigestInfo *b)
 {
     SECStatus rv;
     void *mark;

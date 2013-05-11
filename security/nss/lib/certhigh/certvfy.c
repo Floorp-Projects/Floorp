@@ -96,7 +96,7 @@ CERT_VerifySignedDataWithPublicKeyInfo(CERTSignedData *sd,
  */
 SECStatus
 CERT_VerifySignedData(CERTSignedData *sd, CERTCertificate *cert,
-		      int64 t, void *wincx)
+		      PRTime t, void *wincx)
 {
     SECKEYPublicKey *pubKey = 0;
     SECStatus        rv     = SECFailure;
@@ -120,7 +120,7 @@ CERT_VerifySignedData(CERTSignedData *sd, CERTCertificate *cert,
 
 SECStatus
 SEC_CheckCRL(CERTCertDBHandle *handle,CERTCertificate *cert,
-	     CERTCertificate *caCert, int64 t, void * wincx)
+	     CERTCertificate *caCert, PRTime t, void * wincx)
 {
     return CERT_CheckCRL(cert, caCert, NULL, t, wincx);
 }
@@ -129,7 +129,7 @@ SEC_CheckCRL(CERTCertDBHandle *handle,CERTCertificate *cert,
  * Find the issuer of a cert.  Use the authorityKeyID if it exists.
  */
 CERTCertificate *
-CERT_FindCertIssuer(CERTCertificate *cert, int64 validTime, SECCertUsage usage)
+CERT_FindCertIssuer(CERTCertificate *cert, PRTime validTime, SECCertUsage usage)
 {
     NSSCertificate *me;
     NSSTime *nssTime;
@@ -305,7 +305,7 @@ cert_AddToVerifyLog(CERTVerifyLog *log, CERTCertificate *cert, long error,
 static SECStatus
 cert_VerifyCertChainOld(CERTCertDBHandle *handle, CERTCertificate *cert,
 		     PRBool checkSig, PRBool* sigerror,
-                     SECCertUsage certUsage, int64 t, void *wincx,
+                     SECCertUsage certUsage, PRTime t, void *wincx,
                      CERTVerifyLog *log, PRBool* revoked)
 {
     SECTrustType trustType;
@@ -322,7 +322,7 @@ cert_VerifyCertChainOld(CERTCertDBHandle *handle, CERTCertificate *cert,
     unsigned int caCertType;
     unsigned int requiredCAKeyUsage;
     unsigned int requiredFlags;
-    PRArenaPool *arena = NULL;
+    PLArenaPool *arena = NULL;
     CERTGeneralName *namesList = NULL;
     CERTCertificate **certsList      = NULL;
     int certsListLen = 16;
@@ -691,7 +691,7 @@ done:
 SECStatus
 cert_VerifyCertChain(CERTCertDBHandle *handle, CERTCertificate *cert,
                      PRBool checkSig, PRBool* sigerror,
-                     SECCertUsage certUsage, int64 t, void *wincx,
+                     SECCertUsage certUsage, PRTime t, void *wincx,
                      CERTVerifyLog *log, PRBool* revoked)
 {
     if (CERT_GetUsePKIXForValidation()) {
@@ -704,7 +704,7 @@ cert_VerifyCertChain(CERTCertDBHandle *handle, CERTCertificate *cert,
 
 SECStatus
 CERT_VerifyCertChain(CERTCertDBHandle *handle, CERTCertificate *cert,
-		     PRBool checkSig, SECCertUsage certUsage, int64 t,
+		     PRBool checkSig, SECCertUsage certUsage, PRTime t,
 		     void *wincx, CERTVerifyLog *log)
 {
     return cert_VerifyCertChain(handle, cert, checkSig, NULL, certUsage, t,
@@ -716,7 +716,7 @@ CERT_VerifyCertChain(CERTCertDBHandle *handle, CERTCertificate *cert,
  */
 SECStatus
 CERT_VerifyCACertForUsage(CERTCertDBHandle *handle, CERTCertificate *cert,
-		PRBool checkSig, SECCertUsage certUsage, int64 t,
+		PRBool checkSig, SECCertUsage certUsage, PRTime t,
 		void *wincx, CERTVerifyLog *log)
 {
     SECTrustType trustType;
@@ -1067,7 +1067,7 @@ cert_CheckLeafTrust(CERTCertificate *cert, SECCertUsage certUsage,
  */
 SECStatus
 CERT_VerifyCertificate(CERTCertDBHandle *handle, CERTCertificate *cert,
-		PRBool checkSig, SECCertificateUsage requiredUsages, int64 t,
+		PRBool checkSig, SECCertificateUsage requiredUsages, PRTime t,
 		void *wincx, CERTVerifyLog *log, SECCertificateUsage* returnedUsages)
 {
     SECStatus rv;
@@ -1232,7 +1232,7 @@ loser:
 
 SECStatus
 CERT_VerifyCert(CERTCertDBHandle *handle, CERTCertificate *cert,
-		PRBool checkSig, SECCertUsage certUsage, int64 t,
+		PRBool checkSig, SECCertUsage certUsage, PRTime t,
 		void *wincx, CERTVerifyLog *log)
 {
     SECStatus rv;
@@ -1386,7 +1386,7 @@ CERT_VerifyCertNow(CERTCertDBHandle *handle, CERTCertificate *cert,
 CERTCertificate *
 CERT_FindMatchingCert(CERTCertDBHandle *handle, SECItem *derName,
 		      CERTCertOwner owner, SECCertUsage usage,
-		      PRBool preferTrusted, int64 validTime, PRBool validOnly)
+		      PRBool preferTrusted, PRTime validTime, PRBool validOnly)
 {
     CERTCertList *certList = NULL;
     CERTCertificate *cert = NULL;
@@ -1504,7 +1504,7 @@ CERT_FilterCertListByCANames(CERTCertList *certList, int nCANames,
     int n;
     char **names;
     PRBool found;
-    int64 time;
+    PRTime time;
     
     if ( nCANames <= 0 ) {
 	return(SECSuccess);
@@ -1580,7 +1580,7 @@ CERT_FilterCertListByCANames(CERTCertList *certList, int nCANames,
  *		not yet good.
  */
 char *
-CERT_GetCertNicknameWithValidity(PRArenaPool *arena, CERTCertificate *cert,
+CERT_GetCertNicknameWithValidity(PLArenaPool *arena, CERTCertificate *cert,
 				 char *expiredString, char *notYetGoodString)
 {
     SECCertTimeValidity validity;
@@ -1652,7 +1652,7 @@ CERT_NicknameStringsFromCertList(CERTCertList *certList, char *expiredString,
 				 char *notYetGoodString)
 {
     CERTCertNicknames *names;
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     CERTCertListNode *node;
     char **nn;
     
@@ -1787,7 +1787,7 @@ loser:
 }
 
 CERTCertList *
-CERT_GetCertChainFromCert(CERTCertificate *cert, int64 time, SECCertUsage usage)
+CERT_GetCertChainFromCert(CERTCertificate *cert, PRTime time, SECCertUsage usage)
 {
     CERTCertList *chain = NULL;
     int count = 0;
