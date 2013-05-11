@@ -229,9 +229,8 @@ public class testHistoryTab extends PixelTest {
         if (success == true && mChild != null) {
             mSolo.clickOnView(mChild);
             contentEventExpecter.blockForEvent();
-            // Disable this test because its flaky (see bug 870768)
-            // mSolo.sleep(500);
-            // verifyUrl(url);
+            mSolo.sleep(500);
+            verifyUrl(url);
         } else {
             mAsserter.ok(false, "waiting for history item", "history item available");
         }
