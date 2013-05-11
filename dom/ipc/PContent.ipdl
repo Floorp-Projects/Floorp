@@ -65,25 +65,24 @@ struct FontListEntry {
 struct DeviceStorageFreeSpaceParams
 {
   nsString type;
-  nsString storageName;
+  nsString relpath;
 };
 
 struct DeviceStorageUsedSpaceParams
 {
   nsString type;
-  nsString storageName;
+  nsString relpath;
 };
 
 struct DeviceStorageAvailableParams
 {
   nsString type;
-  nsString storageName;
+  nsString relpath;
 };
 
 struct DeviceStorageAddParams
 {
   nsString type;
-  nsString storageName;
   nsString relpath;
   PBlob blob;
 };
@@ -91,7 +90,6 @@ struct DeviceStorageAddParams
 struct DeviceStorageGetParams
 {
   nsString type;
-  nsString storageName;
   nsString rootDir;
   nsString relpath;
 };
@@ -99,15 +97,13 @@ struct DeviceStorageGetParams
 struct DeviceStorageDeleteParams
 {
   nsString type;
-  nsString storageName;
   nsString relpath;
 };
 
 struct DeviceStorageEnumerationParams
 {
   nsString type;
-  nsString storageName;
-  nsString rootdir;
+  nsString relpath;
   uint64_t since;
 };
 
@@ -350,8 +346,7 @@ child:
     // Notify child that last-pb-context-exited notification was observed
     LastPrivateDocShellDestroyed();
 
-    FilePathUpdate(nsString storageType, nsString storageName, nsString filepath,
-                   nsCString reasons);
+    FilePathUpdate(nsString type, nsString filepath, nsCString reasons);
 
     FileSystemUpdate(nsString fsName, nsString mountPoint, int32_t fsState,
                      int32_t mountGeneration);
@@ -499,7 +494,6 @@ parent:
     async AudioChannelChangedNotification();
 
     async FilePathUpdateNotify(nsString aType,
-                               nsString aStorageName,
                                nsString aFilepath,
                                nsCString aReason);
     // get nsIVolumeService to broadcast volume information

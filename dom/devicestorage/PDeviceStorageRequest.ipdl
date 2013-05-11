@@ -27,14 +27,13 @@ struct BlobResponse
 
 struct DeviceStorageFileValue
 {
-  nsString storageName;
   nsString name;
 };
 
 struct EnumerationResponse
 {
   nsString type;
-  nsString rootdir;
+  nsString relpath;
   DeviceStorageFileValue[] paths;
 };
 

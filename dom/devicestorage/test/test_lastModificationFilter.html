@@ -35,18 +35,6 @@ function verifyAndDelete(prefix, files, e) {
   }
 
   var filename = e.target.result.name;
-  if (filename[0] == "/") {
-    // We got /storgaeName/prefix/filename
-    // Remove the storageName (this shows up on FirefoxOS)
-    filename = filename.substring(1); // Remove leading slash
-    var slashIndex = filename.indexOf("/");
-    if (slashIndex >= 0) {
-      filename = filename.substring(slashIndex + 1); // Remove storageName
-    }
-  }
-  if (filename.startsWith(prefix)) {
-    filename = filename.substring(prefix.length + 1); // Remove prefix
-  }
 
   var index = files.indexOf(filename);
   ok(index > -1, "filename should be in the enumeration : " + e.target.result.name);

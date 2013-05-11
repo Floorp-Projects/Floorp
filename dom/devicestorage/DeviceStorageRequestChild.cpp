@@ -51,9 +51,7 @@ DeviceStorageRequestChild::Recv__delete__(const DeviceStorageResponseValue& aVal
 
     case DeviceStorageResponseValue::TSuccessResponse:
     {
-      nsString compositePath;
-      mFile->GetCompositePath(compositePath);
-      JS::Value result = StringToJsval(mRequest->GetOwner(), compositePath);
+      JS::Value result = StringToJsval(mRequest->GetOwner(), mFile->mPath);
       mRequest->FireSuccess(result);
       break;
     }
@@ -103,8 +101,7 @@ DeviceStorageRequestChild::Recv__delete__(const DeviceStorageResponseValue& aVal
       uint32_t count = r.paths().Length();
       for (uint32_t i = 0; i < count; i++) {
         nsRefPtr<DeviceStorageFile> dsf = new DeviceStorageFile(r.type(),
-                                                                r.paths()[i].storageName(),
-                                                                r.rootdir(),
+                                                                r.relpath(),
                                                                 r.paths()[i].name());
         cursor->mFiles.AppendElement(dsf);
       }
