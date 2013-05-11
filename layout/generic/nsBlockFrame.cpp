@@ -6420,7 +6420,6 @@ nsBlockFrame::ChildIsDirty(nsIFrame* aChild)
       // frame destruction, leading to null placeholders, but we're safe
       // ignoring those.
       if (placeholderPath) {
-        nsIFrame *placeholderPathFC = placeholderPath->GetFirstContinuation();
         for (;;) {
           nsIFrame *parent = placeholderPath->GetParent();
           if (parent->GetContent() == mContent &&
