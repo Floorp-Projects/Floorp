@@ -121,7 +121,7 @@ MOCHITEST_FILES = \
 
 #   test_bug847147.html disabled for timeouts
 #   test_writer_starvation.html  disabled for infinite loops, bug 595368
-#   test_lowDiskSpace.html disabled
+#   test_lowDiskSpace.html disabled for perma-orange, bug 861903
 
 ifeq (browser,$(MOZ_BUILD_APP))
 MOCHITEST_BROWSER_FILES = \
