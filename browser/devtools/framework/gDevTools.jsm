@@ -222,8 +222,8 @@ DevTools.prototype = {
    *
    * Each toolDefinition has the following properties:
    * - id: Unique identifier for this tool (string|required)
-   * - killswitch: Property name to allow us to turn this tool on/off globally
-   *               (string|required) (TODO: default to devtools.{id}.enabled?)
+   * - visibilityswitch: Property name to allow us to hide this tool from the
+   *                     DevTools Toolbox.
    * - icon: URL pointing to a graphic which will be used as the src for an
    *         16x16 img tag (string|required)
    * - url: URL pointing to a XUL/XHTML document containing the user interface
@@ -241,7 +241,7 @@ DevTools.prototype = {
       throw new Error("Invalid definition.id");
     }
 
-    toolDefinition.killswitch = toolDefinition.killswitch ||
+    toolDefinition.visibilityswitch = toolDefinition.visibilityswitch ||
         "devtools." + toolId + ".enabled";
     this._tools.set(toolId, toolDefinition);
 
@@ -307,21 +307,17 @@ DevTools.prototype = {
    */
   getToolDefinitionMap: function DT_getToolDefinitionMap() {
     let tools = new Map();
-    let disabledTools = [];
-    try {
-      disabledTools = JSON.parse(Services.prefs.getCharPref("devtools.toolbox.disabledTools"));
-    } catch(ex) {}
 
     for (let [key, value] of this._tools) {
       let enabled;
 
       try {
-        enabled = Services.prefs.getBoolPref(value.killswitch);
+        enabled = Services.prefs.getBoolPref(value.visibilityswitch);
       } catch(e) {
         enabled = true;
       }
 
-      if (enabled && disabledTools.indexOf(key) == -1) {
+      if (enabled || value.id == "options") {
         tools.set(key, value);
       }
     }
@@ -454,7 +450,7 @@ DevTools.prototype = {
   destroy: function() {
     Services.obs.removeObserver(this.destroy, "quit-application");
 
-    for (let [key, tool] of this._tools) {
+    for (let [key, tool] of this.getToolDefinitionMap()) {
       this.unregisterTool(key, true);
     }
 
@@ -578,15 +574,23 @@ let gDevToolsBrowser = {
   },
 
   /**
-   * Add the menuitem for a tool to all open browser windows. Also toggles the
-   * kill switch preference of the tool.
+   * Add the menuitem for a tool to all open browser windows.
    *
    * @param {object} toolDefinition
    *        properties of the tool to add
    */
   _addToolToWindows: function DT_addToolToWindows(toolDefinition) {
-    // Set the kill switch pref boolean to true
-    Services.prefs.setBoolPref(toolDefinition.killswitch, true);
+    // No menu item or global shortcut is required for options panel.
+    if (toolDefinition.id == "options") {
+      return;
+    }
+
+    // Skip if the tool is disabled.
+    try {
+      if (!Services.prefs.getBoolPref(toolDefinition.visibilityswitch)) {
+        return;
+      }
+    } catch(e) {}
 
     // We need to insert the new tool in the right place, which means knowing
     // the tool that comes before the tool that we're trying to add
@@ -642,6 +646,17 @@ let gDevToolsBrowser = {
     let fragMenuItems = doc.createDocumentFragment();
 
     for (let toolDefinition of gDevTools.getToolDefinitionArray()) {
+      if (toolDefinition.id == "options") {
+        continue;
+      }
+
+      // Skip if the tool is disabled.
+      try {
+        if (!Services.prefs.getBoolPref(toolDefinition.visibilityswitch)) {
+          continue;
+        }
+      } catch(e) {}
+
       let elements = gDevToolsBrowser._createToolMenuElements(toolDefinition, doc);
 
       if (!elements) {
@@ -714,7 +729,7 @@ let gDevToolsBrowser = {
 
     let bc = doc.createElement("broadcaster");
     bc.id = "devtoolsMenuBroadcaster_" + id;
-    bc.setAttribute("label", toolDefinition.label);
+    bc.setAttribute("label", toolDefinition.menuLabel || toolDefinition.label);
     bc.setAttribute("command", cmd.id);
 
     if (key) {
@@ -767,16 +782,12 @@ let gDevToolsBrowser = {
   },
 
   /**
-   * Remove the menuitem for a tool to all open browser windows. Also sets the
-   * kill switch boolean pref to false.
+   * Remove the menuitem for a tool to all open browser windows.
    *
-   * @param {object} toolId
+   * @param {string} toolId
    *        id of the tool to remove
-   * @param {string} killswitch
-   *        The kill switch preference string of the tool
    */
-  _removeToolFromWindows: function DT_removeToolFromWindows(toolId, killswitch) {
-    Services.prefs.setBoolPref(killswitch, false);
+  _removeToolFromWindows: function DT_removeToolFromWindows(toolId) {
     for (let win of gDevToolsBrowser._trackedBrowserWindows) {
       gDevToolsBrowser._removeToolFromMenu(toolId, win.document);
     }
@@ -854,15 +865,10 @@ gDevTools.on("tool-registered", function(ev, toolId) {
 });
 
 gDevTools.on("tool-unregistered", function(ev, toolId) {
-  let killswitch;
-  if (typeof toolId == "string") {
-    killswitch = "devtools." + toolId + ".enabled";
-  }
-  else {
-    killswitch = toolId.killswitch;
+  if (typeof toolId != "string") {
     toolId = toolId.id;
   }
-  gDevToolsBrowser._removeToolFromWindows(toolId, killswitch);
+  gDevToolsBrowser._removeToolFromWindows(toolId);
 });
 
 gDevTools.on("toolbox-ready", gDevToolsBrowser._updateMenuCheckbox);

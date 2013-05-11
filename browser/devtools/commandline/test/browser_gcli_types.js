@@ -49,15 +49,22 @@ function forEachType(options, typeSpec, callback) {
     }
     else if (name === 'delegate') {
       typeSpec.delegateType = function() {
-        return types.getType('string');
+        return types.createType('string');
       };
     }
     else if (name === 'array') {
       typeSpec.subtype = 'string';
     }
 
-    var type = types.getType(typeSpec);
+    var type = types.createType(typeSpec);
     callback(type);
+
+    // Clean up
+    delete typeSpec.name;
+    delete typeSpec.requisition;
+    delete typeSpec.data;
+    delete typeSpec.delegateType;
+    delete typeSpec.subtype;
   });
 }
 

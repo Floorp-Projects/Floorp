@@ -758,7 +758,6 @@ exports.testSingleFloat = function(options) {
         current: '__command',
         status: 'ERROR',
         error: '',
-        predictions: [ ],
         unassigned: [ ],
         args: {
           command: { name: 'tsf' },

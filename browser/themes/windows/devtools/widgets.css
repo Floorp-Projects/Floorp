@@ -279,12 +279,14 @@
 }
 
 .side-menu-widget-container[with-arrow=true]:-moz-locale-dir(ltr),
-.side-menu-widget-item-or-group[with-arrow=true]:-moz-locale-dir(ltr) {
+.side-menu-widget-group[with-arrow=true]:-moz-locale-dir(ltr),
+.side-menu-widget-item[with-arrow=true]:-moz-locale-dir(ltr) {
   box-shadow: inset -1px 0 0 #222426;
 }
 
 .side-menu-widget-container[with-arrow=true]:-moz-locale-dir(rtl),
-.side-menu-widget-item-or-group[with-arrow=true]:-moz-locale-dir(rtl) {
+.side-menu-widget-group[with-arrow=true]:-moz-locale-dir(rtl),
+.side-menu-widget-item[with-arrow=true]:-moz-locale-dir(rtl) {
   box-shadow: inset 1px 0 0 #222426;
 }
 
@@ -507,6 +509,10 @@
   border-bottom: 1px dashed #f99;
 }
 
+.variable-or-property[safe-getter] > .title > .name {
+  border-bottom: 1px dashed #8b0;
+}
+
 .variable-or-property[non-writable] > .title:after {
   content: " ";
   display: inline-block;
@@ -538,6 +544,10 @@
 .variable-or-property[non-configurable] > tooltip > label[value=configurable],
 .variable-or-property[non-writable] > tooltip > label[value=writable] {
   text-decoration: line-through;
+}
+
+.variable-or-property:not([safe-getter]) > tooltip > label[value=native-getter] {
+  display: none;
 }
 
 /* Variables and properties editing */
