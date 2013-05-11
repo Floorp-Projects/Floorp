@@ -207,18 +207,3 @@ function readFile(aFileName) {
     s.close();
   }
 }
-
-function writeFile(aFileName, aContent) {
-  let file = do_get_file(aFileName, true);
-  let stream = Cc["@mozilla.org/network/file-output-stream;1"]
-    .createInstance(Ci.nsIFileOutputStream);
-  stream.init(file, -1, -1, 0);
-  try {
-    do {
-      let numWritten = stream.write(aContent, aContent.length);
-      aContent = aContent.slice(numWritten);
-    } while (aContent.length > 0);
-  } finally {
-    stream.close();
-  }
-}
