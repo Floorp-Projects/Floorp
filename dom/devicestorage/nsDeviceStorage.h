@@ -28,6 +28,7 @@ class nsPIDOMWindow;
 #include "prtime.h"
 #include "DeviceStorage.h"
 #include "mozilla/dom/devicestorage/DeviceStorageRequestChild.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/StaticPtr.h"
 
 namespace mozilla {
@@ -64,52 +65,71 @@ public:
   class InvalidateRunnable MOZ_FINAL : public nsRunnable
   {
     public:
-      InvalidateRunnable(DeviceStorageUsedSpaceCache* aCache) {
-        mOwner = aCache;
-      }
+      InvalidateRunnable(DeviceStorageUsedSpaceCache* aCache, 
+                         const nsAString& aStorageName)
+        : mCache(aCache)
+        , mStorageName(aStorageName) {}
 
       ~InvalidateRunnable() {}
 
-      NS_IMETHOD Run() {
-        mOwner->mDirty = true;
+      NS_IMETHOD Run()
+      {
+        mozilla::RefPtr<DeviceStorageUsedSpaceCache::CacheEntry> cacheEntry;
+        cacheEntry = mCache->GetCacheEntry(mStorageName);
+        if (cacheEntry) {
+          cacheEntry->mDirty = true;
+        }
         return NS_OK;
       }
     private:
-      DeviceStorageUsedSpaceCache* mOwner;
+      DeviceStorageUsedSpaceCache* mCache;
+      nsString mStorageName;
   };
 
-  void Invalidate() {
+  void Invalidate(const nsAString& aStorageName)
+  {
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
     NS_ASSERTION(mIOThread, "Null mIOThread!");
 
-    nsRefPtr<InvalidateRunnable> r = new InvalidateRunnable(this);
+    nsRefPtr<InvalidateRunnable> r = new InvalidateRunnable(this, aStorageName);
     mIOThread->Dispatch(r, NS_DISPATCH_NORMAL);
   }
 
-  void Dispatch(nsIRunnable* aRunnable) {
+  void Dispatch(nsIRunnable* aRunnable)
+  {
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
     NS_ASSERTION(mIOThread, "Null mIOThread!");
 
     mIOThread->Dispatch(aRunnable, NS_DISPATCH_NORMAL);
   }
 
-  nsresult GetUsedSizeForType(const nsAString& aStorageType, uint64_t* usedSize);
-  void SetUsedSizes(uint64_t aPictureSize, uint64_t aVideosSize,
+  nsresult GetUsedSizeForType(const nsAString& aStorageType,
+                              const nsAString& aStorageName,
+                              uint64_t* usedSize);
+  nsresult AccumUsedSizes(const nsAString& aStorageName,
+                          uint64_t* aPictureSize, uint64_t* aVideosSize,
+                          uint64_t* aMusicSize, uint64_t* aTotalSize);
+
+  void SetUsedSizes(const nsAString& aStorageName,
+                    uint64_t aPictureSize, uint64_t aVideosSize,
                     uint64_t aMusicSize, uint64_t aTotalSize);
 
 private:
   friend class InvalidateRunnable;
 
-  nsresult GetPicturesUsedSize(uint64_t* usedSize);
-  nsresult GetMusicUsedSize(uint64_t* usedSize);
-  nsresult GetVideosUsedSize(uint64_t* usedSize);
-  nsresult GetTotalUsedSize(uint64_t* usedSize);
+  class CacheEntry : public mozilla::RefCounted<CacheEntry> 
+  {
+  public:
+    bool mDirty;
+    nsString mStorageName;
+    uint64_t mPicturesUsedSize;
+    uint64_t mVideosUsedSize;
+    uint64_t mMusicUsedSize;
+    uint64_t mTotalUsedSize;
+  };
+  mozilla::TemporaryRef<CacheEntry> GetCacheEntry(const nsAString& aStorageName);
 
-  bool mDirty;
-  uint64_t mPicturesUsedSize;
-  uint64_t mVideosUsedSize;
-  uint64_t mMusicUsedSize;
-  uint64_t mTotalUsedSize;
+  nsTArray<mozilla::RefPtr<CacheEntry> > mCacheEntries;
 
   nsCOMPtr<nsIThread> mIOThread;
 
@@ -129,6 +149,7 @@ public:
   bool Check(const nsAString& aType, nsIDOMBlob* aBlob);
   bool Check(const nsAString& aType, nsIFile* aFile);
   void GetTypeFromFile(nsIFile* aFile, nsAString& aType);
+  void GetTypeFromFileName(const nsAString& aFileName, nsAString& aType);
 
   static nsresult GetPermissionForType(const nsAString& aType, nsACString& aPermissionResult);
   static nsresult GetAccessForRequest(const DeviceStorageRequestType aRequestType, nsACString& aAccessResult);
@@ -203,9 +224,5 @@ nsIFileToJsval(nsPIDOMWindow* aWindow, DeviceStorageFile* aFile);
 
 JS::Value
 InterfaceToJsval(nsPIDOMWindow* aWindow, nsISupports* aObject, const nsIID* aIID);
-
-#ifdef MOZ_WIDGET_GONK
-nsresult GetSDCardStatus(nsAString& aPath, nsAString& aState);
-#endif
 
 #endif
