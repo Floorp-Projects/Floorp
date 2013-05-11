@@ -77,6 +77,7 @@ FENNEC_JAVA_FILES = \
   db/BrowserDB.java \
   db/LocalBrowserDB.java \
   db/DBUtils.java \
+  DataReportingNotification.java \
   Distribution.java \
   Divider.java \
   DoorHanger.java \
@@ -853,6 +854,7 @@ RES_DRAWABLE_MDPI_V11 = \
   res/drawable-mdpi-v11/alert_addon.png \
   res/drawable-mdpi-v11/alert_app.png \
   res/drawable-mdpi-v11/alert_download.png \
+  res/drawable-mdpi-v11/firefox_settings_alert.png \
   res/drawable-mdpi-v11/ic_menu_addons.png \
   res/drawable-mdpi-v11/ic_menu_apps.png \
   res/drawable-mdpi-v11/ic_menu_back.png \
@@ -878,6 +880,7 @@ RES_DRAWABLE_HDPI_V11 = \
   res/drawable-hdpi-v11/alert_addon.png \
   res/drawable-hdpi-v11/alert_app.png \
   res/drawable-hdpi-v11/alert_download.png \
+  res/drawable-hdpi-v11/firefox_settings_alert.png \
   res/drawable-hdpi-v11/ic_menu_addons.png \
   res/drawable-hdpi-v11/ic_menu_apps.png \
   res/drawable-hdpi-v11/ic_menu_back.png \
@@ -903,6 +906,7 @@ RES_DRAWABLE_XHDPI_V11 = \
   res/drawable-xhdpi-v11/alert_addon.png \
   res/drawable-xhdpi-v11/alert_app.png \
   res/drawable-xhdpi-v11/alert_download.png \
+  res/drawable-xhdpi-v11/firefox_settings_alert.png \
   res/drawable-xhdpi-v11/ic_menu_addons.png \
   res/drawable-xhdpi-v11/ic_menu_apps.png \
   res/drawable-xhdpi-v11/ic_menu_back.png \
