@@ -17,7 +17,7 @@ let EventEmitter = require("devtools/shared/event-emitter");
 let {editableField, InplaceEditor} = require("devtools/shared/inplace-editor");
 
 Cu.import("resource:///modules/devtools/LayoutHelpers.jsm");
-Cu.import("resource:///modules/devtools/Templater.jsm");
+Cu.import("resource://gre/modules/devtools/Templater.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
 /**

@@ -27,6 +27,7 @@ _BROWSER_TEST_FILES = \
                  browser_styleeditor_sv_resize.js \
                  browser_styleeditor_bug_740541_iframes.js \
                  browser_styleeditor_bug_851132_middle_click.js \
+                 browser_styleeditor_nostyle.js \
                  head.js \
                  helpers.js \
                  four.html \
@@ -39,6 +40,7 @@ _BROWSER_TEST_FILES = \
                  media.html \
                  media-small.css \
                  minified.html \
+                 nostyle.html \
                  resources_inpage.jsi \
                  resources_inpage1.css \
                  resources_inpage2.css \

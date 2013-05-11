@@ -941,8 +941,8 @@ CssRuleView.prototype = {
    */
   nodeChanged: function CssRuleView_nodeChanged()
   {
-    // Ignore refreshes during editing.
-    if (this.isEditing) {
+    // Ignore refreshes during editing or when no element is selected.
+    if (this.isEditing || !this._elementStyle) {
       return;
     }
 
@@ -1324,6 +1324,7 @@ function TextPropertyEditor(aRuleEditor, aProperty)
   this.doc = aRuleEditor.doc;
   this.prop = aProperty;
   this.prop.editor = this;
+  this.browserWindow = this.doc.defaultView.top;
 
   let sheet = this.prop.rule.sheet;
   let href = sheet ? CssLogic.href(sheet) : null;
@@ -1520,9 +1521,14 @@ TextPropertyEditor.prototype = {
         href: this.resolveURI(resourceURI)
       });
 
-      a.addEventListener("click", function(aEvent) {
+      a.addEventListener("click", (aEvent) => {
+
         // Clicks within the link shouldn't trigger editing.
         aEvent.stopPropagation();
+        aEvent.preventDefault();
+
+        this.browserWindow.openUILinkIn(aEvent.target.href, "tab");
+
       }, false);
 
       appendText(this.valueSpan, val.split(resourceURI)[1]);

@@ -116,21 +116,6 @@
   -moz-image-region: rect(0px, 48px, 16px, 32px);
 }
 
-#toolbox-tab-options {
-  list-style-image: url("chrome://browser/skin/devtools/option-icon.png");
-  -moz-image-region: rect(0px 16px 16px 0px);
-  border-left: 1px solid hsla(206,37%,4%,.45);
-}
-
-#toolbox-tab-options[checked=true] {
-  -moz-image-region: rect(0px 32px 16px 16px);
-}
-
-#toolbox-tab-options > image {
-  opacity: 1;
-  -moz-margin-start: 0;
-}
-
 /* Tabs */
 
 .devtools-tabbar {
@@ -148,6 +133,7 @@
 
 #toolbox-tabs {
   margin: 0;
+  border-left: 1px solid hsla(206,37%,4%,.45);
 }
 
 .devtools-tab {
@@ -164,13 +150,16 @@
   background-repeat: no-repeat;
   background-position: left, right;
   border-right: 1px solid hsla(206,37%,4%,.45);
-  -moz-box-align: center;
 }
 
 .devtools-tab > image {
   -moz-margin-end: 0;
-  -moz-margin-start: 8px;
+  -moz-margin-start: 4px;
   opacity: 0.6;
+}
+
+#toolbox-tab-options > image {
+  margin: 0 8px;
 }
 
 .devtools-tab > label {
