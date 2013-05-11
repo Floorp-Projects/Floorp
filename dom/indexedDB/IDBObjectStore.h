@@ -99,7 +99,7 @@ public:
   static bool
   SerializeValue(JSContext* aCx,
                  StructuredCloneWriteInfo& aCloneWriteInfo,
-                 jsval aValue);
+                 JS::Handle<JS::Value> aValue);
 
   template <class DeserializationTraits>
   static JSObject*
@@ -257,8 +257,8 @@ protected:
   ~IDBObjectStore();
 
   nsresult GetAddInfo(JSContext* aCx,
-                      jsval aValue,
-                      jsval aKeyVal,
+                      JS::Handle<JS::Value> aValue,
+                      JS::Handle<JS::Value> aKeyVal,
                       StructuredCloneWriteInfo& aCloneWriteInfo,
                       Key& aKey,
                       nsTArray<IndexUpdateInfo>& aUpdateInfoArray);

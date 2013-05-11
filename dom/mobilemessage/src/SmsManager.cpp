@@ -141,7 +141,7 @@ SmsManager::GetSegmentInfoForText(const nsAString& aText,
 }
 
 nsresult
-SmsManager::Send(JSContext* aCx, JSObject* aGlobal, JS::Handle<JSString*> aNumber,
+SmsManager::Send(JSContext* aCx, JS::Handle<JSObject*> aGlobal, JS::Handle<JSString*> aNumber,
                  const nsAString& aMessage, JS::Value* aRequest)
 {
   nsCOMPtr<nsISmsService> smsService = do_GetService(SMS_SERVICE_CONTRACTID);

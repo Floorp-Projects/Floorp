@@ -154,7 +154,7 @@ CameraControlImpl::Get(JSContext* aCx, uint32_t aKey, JS::Value* aValue)
     CameraRegion* r = &regionArray[i];
     JS::Rooted<JS::Value> v(aCx);
 
-    JSObject* o = JS_NewObject(aCx, nullptr, nullptr, nullptr);
+    JS::Rooted<JSObject*> o(aCx, JS_NewObject(aCx, nullptr, nullptr, nullptr));
     if (!o) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
