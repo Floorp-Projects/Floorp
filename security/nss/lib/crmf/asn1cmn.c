@@ -115,7 +115,7 @@ const SEC_ASN1Template CMMFPOPODecKeyChallContentTemplate[] = {
 };
 
 SECStatus
-cmmf_decode_process_cert_response(PRArenaPool      *poolp, 
+cmmf_decode_process_cert_response(PLArenaPool      *poolp,
 				  CERTCertDBHandle *db,
 				  CMMFCertResponse *inCertResp)
 {
@@ -158,7 +158,7 @@ cmmf_get_certorenccertchoice_from_der(SECItem *der)
 }
 
 static SECStatus
-cmmf_decode_process_certorenccert(PRArenaPool       *poolp,
+cmmf_decode_process_certorenccert(PLArenaPool       *poolp,
 				  CERTCertDBHandle  *db,
 				  CMMFCertOrEncCert *inCertOrEncCert)
 {
@@ -208,7 +208,7 @@ cmmf_decode_process_certorenccert(PRArenaPool       *poolp,
 }
 
 SECStatus 
-cmmf_decode_process_certified_key_pair(PRArenaPool          *poolp,
+cmmf_decode_process_certified_key_pair(PLArenaPool          *poolp,
 				       CERTCertDBHandle     *db,
 				       CMMFCertifiedKeyPair *inCertKeyPair)
 {

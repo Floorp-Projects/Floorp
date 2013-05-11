@@ -179,3 +179,5 @@ endif
 DEFINES += -DUSE_UTIL_DIRECTLY
 USE_UTIL_DIRECTLY = 1
 
+# Build with NO_NSPR_10_SUPPORT to avoid using obsolete NSPR features
+DEFINES += -DNO_NSPR_10_SUPPORT

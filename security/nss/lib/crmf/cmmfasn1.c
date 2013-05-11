@@ -52,7 +52,7 @@ CMMF_EncodePOPODecKeyChallContent(CMMFPOPODecKeyChallContent *inDecKeyChall,
 CMMFPOPODecKeyRespContent*
 CMMF_CreatePOPODecKeyRespContentFromDER(const char *buf, long len)
 {
-    PRArenaPool               *poolp;
+    PLArenaPool               *poolp;
     CMMFPOPODecKeyRespContent *decKeyResp;
     SECStatus                  rv;
 
@@ -92,7 +92,7 @@ CMMFKeyRecRepContent*
 CMMF_CreateKeyRecRepContentFromDER(CERTCertDBHandle *db, const char *buf, 
 				   long len)
 {
-    PRArenaPool          *poolp;
+    PLArenaPool          *poolp;
     CMMFKeyRecRepContent *keyRecContent;
     SECStatus             rv;
 

@@ -100,7 +100,7 @@ typedef struct certDBEntryListNodeStr  certDBEntryListNode;
  */
 typedef struct 
 {
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     int index;
     certDBEntryListNode *pSubject;
 } certDBEntryMap;
@@ -113,7 +113,7 @@ typedef struct
  */
 typedef struct
 {
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     int index;
     int numCerts;
     certDBEntryListNode **pCerts;
@@ -256,7 +256,7 @@ dumpCertificate(CERTCertificate *cert, int num, PRFileDesc *outfile)
     PR_fprintf(outfile, "## SERIAL NUMBER:  ");
     printHexString(outfile, &cert->serialNumber);
     {  /*  XXX should be separate function.  */
-	int64 timeBefore, timeAfter;
+	PRTime timeBefore, timeAfter;
 	PRExplodedTime beforePrintable, afterPrintable;
 	char *beforestr, *afterstr;
 	DER_DecodeTimeChoice(&timeBefore, &cert->validity.notBefore);
@@ -360,7 +360,7 @@ mapCertEntries(certDBArray *dbArray)
     certDBEntryListNode *certNode, *subjNode;
     certDBSubjectEntryMap *smap;
     certDBEntryMap *map;
-    PRArenaPool *tmparena;
+    PLArenaPool *tmparena;
     SECItem derSubject;
     SECItem certKey;
     PRCList *cElem, *sElem;
@@ -924,7 +924,7 @@ fillDBEntryArray(NSSLOWCERTCertDBHandle *handle, certDBEntryType type,
     certDBEntryListNode *node;
     certDBEntryMap *mnode;
     certDBSubjectEntryMap *smnode;
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     int count = 0;
 
     /* Initialize a dummy entry in the list.  The list head will be the

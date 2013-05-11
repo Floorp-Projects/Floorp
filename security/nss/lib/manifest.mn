@@ -16,7 +16,12 @@ DEPTH      = ..
 #  smime
 #  ckfw (builtins module)
 #  crmf jar (not dll's)
-DIRS = $(UTIL_SRCDIR) $(FREEBL_SRCDIR) $(SQLITE_SRCDIR) $(DBM_SRCDIR) $(SOFTOKEN_SRCDIR) \
+DIRS = \
+	$(UTIL_SRCDIR) \
+	$(FREEBL_SRCDIR) \
+	$(SQLITE_SRCDIR) \
+	$(DBM_SRCDIR) \
+	$(SOFTOKEN_SRCDIR) \
 	base dev pki \
 	libpkix \
 	certdb certhigh pk11wrap cryptohi nss \

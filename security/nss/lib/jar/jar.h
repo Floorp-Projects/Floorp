@@ -141,7 +141,7 @@ typedef struct JAR_Physical_ {
     unsigned long length;
     unsigned long uncompressed_length;
 #if defined(XP_UNIX) || defined(XP_BEOS)
-    uint16 mode;
+    PRUint16 mode;
 #endif
 } JAR_Physical;
 

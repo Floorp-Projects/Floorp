@@ -71,7 +71,7 @@ typedef struct sec_asn1e_state_struct {
  * it is passed to SEC_ASN1EncoderFinish().
  */
 struct sec_EncoderContext_struct {
-    PRArenaPool *our_pool;		/* for our internal allocs */
+    PLArenaPool *our_pool;		/* for our internal allocs */
 
     sec_asn1e_state *current;
     sec_asn1e_parse_status status;
@@ -1308,7 +1308,7 @@ SEC_ASN1EncoderContext *
 SEC_ASN1EncoderStart (const void *src, const SEC_ASN1Template *theTemplate,
 		      SEC_ASN1WriteProc output_proc, void *output_arg)
 {
-    PRArenaPool *our_pool;
+    PLArenaPool *our_pool;
     SEC_ASN1EncoderContext *cx;
 
     our_pool = PORT_NewArena (SEC_ASN1_DEFAULT_ARENA_SIZE);
@@ -1477,7 +1477,7 @@ sec_asn1e_encode_item_store (void *arg, const char *buf, unsigned long len,
  * XXX This seems like a reasonable general-purpose function (for SECITEM_)?
  */
 static SECItem *
-sec_asn1e_allocate_item (PRArenaPool *poolp, SECItem *dest, unsigned long len)
+sec_asn1e_allocate_item (PLArenaPool *poolp, SECItem *dest, unsigned long len)
 {
     if (poolp != NULL) {
 	void *release;
@@ -1520,7 +1520,7 @@ sec_asn1e_allocate_item (PRArenaPool *poolp, SECItem *dest, unsigned long len)
 
 
 SECItem *
-SEC_ASN1EncodeItem (PRArenaPool *poolp, SECItem *dest, const void *src,
+SEC_ASN1EncodeItem (PLArenaPool *poolp, SECItem *dest, const void *src,
 		    const SEC_ASN1Template *theTemplate)
 {
     unsigned long encoding_length;
@@ -1552,7 +1552,7 @@ SEC_ASN1EncodeItem (PRArenaPool *poolp, SECItem *dest, const void *src,
 
 
 static SECItem *
-sec_asn1e_integer(PRArenaPool *poolp, SECItem *dest, unsigned long value,
+sec_asn1e_integer(PLArenaPool *poolp, SECItem *dest, unsigned long value,
 		  PRBool is_unsigned)
 {
     unsigned long copy;
@@ -1599,14 +1599,14 @@ sec_asn1e_integer(PRArenaPool *poolp, SECItem *dest, unsigned long value,
 
 
 SECItem *
-SEC_ASN1EncodeInteger(PRArenaPool *poolp, SECItem *dest, long value)
+SEC_ASN1EncodeInteger(PLArenaPool *poolp, SECItem *dest, long value)
 {
     return sec_asn1e_integer (poolp, dest, (unsigned long) value, PR_FALSE);
 }
 
 
 SECItem *
-SEC_ASN1EncodeUnsignedInteger(PRArenaPool *poolp,
+SEC_ASN1EncodeUnsignedInteger(PLArenaPool *poolp,
 			      SECItem *dest, unsigned long value)
 {
     return sec_asn1e_integer (poolp, dest, value, PR_TRUE);

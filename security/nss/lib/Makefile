@@ -64,9 +64,9 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 
 ifeq ($(NSS_BUILD_WITHOUT_SOFTOKEN),1)
 # Not included when building nss without softoken
-UTIL_SRCDIR=
-FREEBL_SRCDIR=
-SOFTOKEN_SRCDIR=
+UTIL_SRCDIR =
+FREEBL_SRCDIR =
+SOFTOKEN_SRCDIR =
 else
 # default is to include all
 UTIL_SRCDIR = util

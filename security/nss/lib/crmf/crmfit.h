@@ -9,7 +9,7 @@
 
 struct CRMFCertReqMessagesStr {
     CRMFCertReqMsg **messages;
-    PRArenaPool     *poolp;
+    PLArenaPool     *poolp;
 };
 
 struct CRMFCertExtensionStr {
@@ -107,7 +107,7 @@ struct CRMFCertRequestStr {
     /* The following members are used by the internal implementation, but
      * are not part of the encoding.
      */
-    PRArenaPool *poolp;
+    PLArenaPool *poolp;
     PRUint32     requestID; /* This is the value that will be encoded into
 			     * the certReqId field.
 			     */
@@ -125,7 +125,7 @@ struct CRMFCertReqMsgStr {
     SECItem                     derPOP;
     /* This arena will be used for allocating memory when decoding.
      */
-    PRArenaPool *poolp;
+    PLArenaPool *poolp;
     PRBool       isDecoded;
 };
 

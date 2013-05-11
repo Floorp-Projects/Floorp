@@ -146,7 +146,7 @@ typedef LDAPAttributeValueAssertion              LDAPLessOrEqualFilter;
 typedef LDAPAttributeValueAssertion              LDAPApproxMatchFilter;
 
 struct LDAPLocationStruct {
-        PRArenaPool *arena;
+        PLArenaPool *arena;
         void *serverSite;
         void **filterString;
         void **attrBitString;

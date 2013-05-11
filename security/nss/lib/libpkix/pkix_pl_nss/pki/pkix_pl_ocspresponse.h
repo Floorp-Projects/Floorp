@@ -25,7 +25,7 @@ extern "C" {
 #define MAX_OCSP_RESPONSE_LEN (64*1024)
 
 struct PKIX_PL_OcspResponseStruct{
-        PRArenaPool *arena;
+        PLArenaPool *arena;
         const PKIX_PL_OcspRequest *request;
         const SEC_HttpClientFcn *httpClient;
         SEC_HTTP_SERVER_SESSION serverSession;
@@ -33,7 +33,7 @@ struct PKIX_PL_OcspResponseStruct{
         PKIX_PL_VerifyCallback verifyFcn;
         SECItem *encodedResponse;
         CERTCertDBHandle *handle;
-        int64 producedAt;
+        PRTime producedAt;
         PKIX_PL_Date *producedAtDate;
         PKIX_PL_Cert *pkixSignerCert;
         CERTOCSPResponse *nssOCSPResponse;

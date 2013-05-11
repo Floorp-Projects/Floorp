@@ -127,7 +127,7 @@ extern char *DER_GeneralizedDayToAscii(SECItem *gentime);
 extern char *DER_TimeChoiceDayToAscii(SECItem *timechoice);
 
 /*
-** Convert a PRTime time to a DER encoded Generalized time
+** Convert a PRTime to a DER encoded Generalized time
 ** gmttime must be on or after January 1, year 1 and
 ** before January 1, 10000.
 */
