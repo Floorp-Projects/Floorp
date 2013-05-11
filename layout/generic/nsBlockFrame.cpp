@@ -6660,6 +6660,15 @@ nsBlockFrame::RenumberListsInBlock(nsPresContext* aPresContext,
     }
   } while (bifLineIter.Next());
 
+  // We need to set NS_FRAME_HAS_DIRTY_CHILDREN bits up the tree between
+  // the bullet and the caller of RenumberLists.  But the caller itself
+  // has to be responsible for setting the bit itself, since that caller
+  // might be making a FrameNeedsReflow call, which requires that the
+  // bit not be set yet.
+  if (renumberedABullet && aDepth != 0) {
+    aBlockFrame->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
+  }
+
   return renumberedABullet;
 }
 
@@ -6704,8 +6713,18 @@ nsBlockFrame::RenumberListsFor(nsPresContext* aPresContext,
         if (changed) {
           kidRenumberedABullet = true;
 
-          // The ordinal changed - mark the bullet frame dirty.
-          listItem->ChildIsDirty(bullet);
+          // The ordinal changed - mark the bullet frame, and any
+          // intermediate frames between it and the block (are there
+          // ever any?), dirty.
+          // The calling code will make the necessary FrameNeedsReflow
+          // call for the list ancestor.
+          bullet->AddStateBits(NS_FRAME_IS_DIRTY);
+          nsIFrame *f = bullet;
+          do {
+            nsIFrame *parent = f->GetParent();
+            parent->ChildIsDirty(f);
+            f = parent;
+          } while (f != listItem);
         }
       }
 
