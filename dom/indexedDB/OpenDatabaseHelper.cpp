@@ -1876,6 +1876,19 @@ OpenDatabaseHelper::CreateDatabaseConnection(
 
   PROFILER_LABEL("IndexedDB", "OpenDatabaseHelper::CreateDatabaseConnection");
 
+  nsresult rv;
+  bool exists;
+
+  if (IndexedDatabaseManager::InLowDiskSpaceMode()) {
+    rv = aDBFile->Exists(&exists);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!exists) {
+      NS_WARNING("Refusing to create database because disk space is low!");
+      return NS_ERROR_DOM_INDEXEDDB_QUOTA_ERR;
+    }
+  }
+
   nsCOMPtr<nsIFileURL> dbFileUrl =
     IDBFactory::GetDatabaseFileURL(aDBFile, aOrigin);
   NS_ENSURE_TRUE(dbFileUrl, NS_ERROR_FAILURE);
@@ -1885,8 +1898,7 @@ OpenDatabaseHelper::CreateDatabaseConnection(
   NS_ENSURE_TRUE(ss, NS_ERROR_FAILURE);
 
   nsCOMPtr<mozIStorageConnection> connection;
-  nsresult rv =
-    ss->OpenDatabaseWithFileURL(dbFileUrl, getter_AddRefs(connection));
+  rv = ss->OpenDatabaseWithFileURL(dbFileUrl, getter_AddRefs(connection));
   if (rv == NS_ERROR_FILE_CORRUPTED) {
     // If we're just opening the database during origin initialization, then
     // we don't want to erase any files. The failure here will fail origin
@@ -1899,7 +1911,6 @@ OpenDatabaseHelper::CreateDatabaseConnection(
     rv = aDBFile->Remove(false);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    bool exists;
     rv = aFMDirectory->Exists(&exists);
     NS_ENSURE_SUCCESS(rv, rv);
 
