@@ -555,10 +555,15 @@ public class GeckoPreferences
 
         pref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
-            public boolean onPreferenceChange(Preference preference, Object newValue) {
-                settings.edit()
-                        .putBoolean(BrowserToolbar.PREFS_SHOW_URL, newValue.toString().equals(entries[0]))
-                        .commit();
+            public boolean onPreferenceChange(Preference preference, final Object newValue) {
+                ThreadUtils.postToBackgroundThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        settings.edit()
+                                .putBoolean(BrowserToolbar.PREFS_SHOW_URL, newValue.toString().equals(entries[0]))
+                                .commit();
+                    }
+                });
                 pref.setSummary(newValue.toString());
                 return true;
             }
