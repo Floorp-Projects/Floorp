@@ -149,11 +149,11 @@ function testVariablesFiltering()
       "There should be 0 variables displayed in the test scope");
     is(loadScope.querySelectorAll(".variables-view-variable:not([non-match])").length, 0,
       "There should be 0 variables displayed in the load scope");
-    is(globalScope.querySelectorAll(".variables-view-variable:not([non-match])").length, 1,
-      "There should be 1 variable displayed in the global scope");
+    is(globalScope.querySelectorAll(".variables-view-variable:not([non-match])").length, 3,
+      "There should be 3 variables displayed in the global scope");
 
-    is(innerScope.querySelectorAll(".variables-view-property:not([non-match])").length, 6,
-      "There should be 6 properties displayed in the inner scope");
+    ok(innerScope.querySelectorAll(".variables-view-property:not([non-match])").length > 6,
+      "There should be more than 6 properties displayed in the inner scope");
     is(mathScope.querySelectorAll(".variables-view-property:not([non-match])").length, 0,
       "There should be 0 properties displayed in the math scope");
     is(testScope.querySelectorAll(".variables-view-property:not([non-match])").length, 0,
@@ -165,21 +165,19 @@ function testVariablesFiltering()
 
     is(innerScope.querySelectorAll(".variables-view-variable:not([non-match]) > .title > .name")[0].getAttribute("value"),
       "this", "The only inner variable displayed should be 'this'");
-    is(innerScope.querySelectorAll(".variables-view-property:not([non-match]) > .title > .name")[0].getAttribute("value"),
-      "window", "The first inner property displayed should be 'window'");
-    is(innerScope.querySelectorAll(".variables-view-property:not([non-match]) > .title > .name")[1].getAttribute("value"),
-      "document", "The second inner property displayed should be 'document'");
     is(innerScope.querySelectorAll(".variables-view-property:not([non-match]) > .title > .name")[2].getAttribute("value"),
-      "location", "The third inner property displayed should be 'location'");
+      "window", "The third inner property displayed should be 'window'");
     is(innerScope.querySelectorAll(".variables-view-property:not([non-match]) > .title > .name")[3].getAttribute("value"),
-      "__proto__", "The fourth inner property displayed should be '__proto__'");
+      "document", "The fourth inner property displayed should be 'document'");
     is(innerScope.querySelectorAll(".variables-view-property:not([non-match]) > .title > .name")[4].getAttribute("value"),
-      "Location", "The fifth inner property displayed should be 'Location'");
-    is(innerScope.querySelectorAll(".variables-view-property:not([non-match]) > .title > .name")[5].getAttribute("value"),
-      "Location", "The sixth inner property displayed should be 'Location'");
+      "location", "The fifth inner property displayed should be 'location'");
 
     is(globalScope.querySelectorAll(".variables-view-variable:not([non-match]) > .title > .name")[0].getAttribute("value"),
-      "Location", "The only global variable displayed should be 'Location'");
+      "location", "The first global variable displayed should be 'location'");
+    is(globalScope.querySelectorAll(".variables-view-variable:not([non-match]) > .title > .name")[1].getAttribute("value"),
+      "locationbar", "The second global variable displayed should be 'locationbar'");
+    is(globalScope.querySelectorAll(".variables-view-variable:not([non-match]) > .title > .name")[2].getAttribute("value"),
+      "Location", "The third global variable displayed should be 'Location'");
   }
 
   function test2()
@@ -237,11 +235,11 @@ function testVariablesFiltering()
       "There should be 0 variables displayed in the test scope");
     is(loadScope.querySelectorAll(".variables-view-variable:not([non-match])").length, 0,
       "There should be 0 variables displayed in the load scope");
-    is(globalScope.querySelectorAll(".variables-view-variable:not([non-match])").length, 1,
-      "There should be 1 variable displayed in the global scope");
+    is(globalScope.querySelectorAll(".variables-view-variable:not([non-match])").length, 3,
+      "There should be 3 variables displayed in the global scope");
 
-    is(innerScope.querySelectorAll(".variables-view-property:not([non-match])").length, 6,
-      "There should be 6 properties displayed in the inner scope");
+    ok(innerScope.querySelectorAll(".variables-view-property:not([non-match])").length > 6,
+      "There should be more than 6 properties displayed in the inner scope");
     is(mathScope.querySelectorAll(".variables-view-property:not([non-match])").length, 0,
       "There should be 0 properties displayed in the math scope");
     is(testScope.querySelectorAll(".variables-view-property:not([non-match])").length, 0,
@@ -253,21 +251,19 @@ function testVariablesFiltering()
 
     is(innerScope.querySelectorAll(".variables-view-variable:not([non-match]) > .title > .name")[0].getAttribute("value"),
       "this", "The only inner variable displayed should be 'this'");
-    is(innerScope.querySelectorAll(".variables-view-property:not([non-match]) > .title > .name")[0].getAttribute("value"),
-      "window", "The first inner property displayed should be 'window'");
-    is(innerScope.querySelectorAll(".variables-view-property:not([non-match]) > .title > .name")[1].getAttribute("value"),
-      "document", "The second inner property displayed should be 'document'");
     is(innerScope.querySelectorAll(".variables-view-property:not([non-match]) > .title > .name")[2].getAttribute("value"),
-      "location", "The third inner property displayed should be 'location'");
+      "window", "The third inner property displayed should be 'window'");
     is(innerScope.querySelectorAll(".variables-view-property:not([non-match]) > .title > .name")[3].getAttribute("value"),
-      "__proto__", "The fourth inner property displayed should be '__proto__'");
+      "document", "The fourth inner property displayed should be 'document'");
     is(innerScope.querySelectorAll(".variables-view-property:not([non-match]) > .title > .name")[4].getAttribute("value"),
-      "Location", "The fifth inner property displayed should be 'Location'");
-    is(innerScope.querySelectorAll(".variables-view-property:not([non-match]) > .title > .name")[5].getAttribute("value"),
-      "Location", "The sixth inner property displayed should be 'Location'");
+      "location", "The fifth inner property displayed should be 'location'");
 
     is(globalScope.querySelectorAll(".variables-view-variable:not([non-match]) > .title > .name")[0].getAttribute("value"),
-      "Location", "The only global variable displayed should be 'Location'");
+      "location", "The first global variable displayed should be 'location'");
+    is(globalScope.querySelectorAll(".variables-view-variable:not([non-match]) > .title > .name")[1].getAttribute("value"),
+      "locationbar", "The second global variable displayed should be 'locationbar'");
+    is(globalScope.querySelectorAll(".variables-view-variable:not([non-match]) > .title > .name")[2].getAttribute("value"),
+      "Location", "The second global variable displayed should be 'Location'");
   }
 
   var scopes = gDebugger.DebuggerView.Variables._list,
