@@ -953,21 +953,38 @@ NS_IMETHODIMP Navigator::GetDeviceStorage(const nsAString &aType, nsIDOMDeviceSt
     return NS_OK;
   }
 
-  nsCOMPtr<nsPIDOMWindow> win(do_QueryReferent(mWindow));
+  // We're going to obsolete getDeviceStorage, but want to leave it in for
+  // compatability right now. So we do essentially the same thing as GetDeviceStorages
+  // but only take the first element of the array.
 
-  if (!win || !win->GetOuterWindow() || !win->GetDocShell()) {
-    return NS_ERROR_FAILURE;
-  }
+  NS_WARNING("navigator.getDeviceStorage is deprecated. Returning navigator.getDeviceStorages[0]");
 
-  nsRefPtr<nsDOMDeviceStorage> storage;
-  nsDOMDeviceStorage::CreateDeviceStorageFor(win, aType, getter_AddRefs(storage));
+  nsCOMPtr<nsIVariant> variantArray;
 
-  if (!storage) {
+  nsresult rv = GetDeviceStorages(aType, getter_AddRefs(variantArray));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  uint16_t dataType;
+  variantArray->GetDataType(&dataType);
+
+  if (dataType != nsIDataType::VTYPE_ARRAY) {
+    NS_ASSERTION(dataType == nsIDataType::VTYPE_EMPTY_ARRAY,
+                 "Expecting an empty array");
     return NS_OK;
   }
 
-  NS_ADDREF(*_retval = storage.get());
-  mDeviceStorageStores.AppendElement(storage);
+  uint16_t valueType;
+  nsIID iid;
+  uint32_t valueCount;
+  void* rawArray;
+  variantArray->GetAsArray(&valueType, &iid, &valueCount, &rawArray);
+  NS_ASSERTION(valueCount > 0, "Expecting non-zero array size");
+  nsIDOMDeviceStorage** values = static_cast<nsIDOMDeviceStorage**>(rawArray);
+  *_retval = values[0];
+  for (uint32_t i = 1; i < valueCount; i++) {
+    values[i]->Release();
+  }
+  nsMemory::Free(rawArray);
   return NS_OK;
 }
 

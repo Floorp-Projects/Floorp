@@ -34,18 +34,6 @@ function enumerateSuccess(e) {
   }
   
   var filename = e.target.result.name;
-  if (filename[0] == "/") {
-    // We got /storgaeName/prefix/filename
-    // Remove the storageName (this shows up on FirefoxOS)
-    filename = filename.substring(1); // Remove leading slash
-    var slashIndex = filename.indexOf("/");
-    if (slashIndex >= 0) {
-      filename = filename.substring(slashIndex + 1); // Remove storageName
-    }
-  }
-  if (filename.startsWith(prefix)) {
-    filename = filename.substring(prefix.length + 1); // Remove prefix
-  }
 
   var index = files.indexOf(filename);
   files.remove(index);
@@ -53,7 +41,7 @@ function enumerateSuccess(e) {
   ok(index > -1, "filename should be in the enumeration : " + e.target.result.name);
 
   // clean up
-  var cleanup = storage.delete(e.target.result.name);
+  var cleanup = storage.delete(prefix + "/" + filename);
   cleanup.onsuccess = function(e) {}  // todo - can i remove this?
 
   e.target.continue();
