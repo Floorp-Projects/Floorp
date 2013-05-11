@@ -61,7 +61,19 @@ function getError(e) {
 
 function addSuccess(e) {
 
-  ok(e.target.result == gFileName, "File name should match");
+  var filename = e.target.result;
+  if (filename[0] == "/") {
+    // We got /storgaeName/prefix/filename
+    // Remove the storageName (this shows up on FirefoxOS)
+    filename = filename.substring(1); // Remove leading slash
+    var slashIndex = filename.indexOf("/");
+    if (slashIndex >= 0) {
+      filename = filename.substring(slashIndex + 1); // Remove storageName
+    }
+  }
+  ok(filename == gFileName, "File name should match");
+  // Since we now have the fully qualified name, change gFileName to that.
+  gFileName = e.target.result;
 
   var storage = navigator.getDeviceStorage("pictures");
   request = storage.get(gFileName);

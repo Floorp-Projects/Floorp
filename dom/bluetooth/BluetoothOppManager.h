@@ -109,7 +109,6 @@ private:
   bool IsReservedChar(PRUnichar c);
   void ClearQueue();
   void RetrieveSentFileName();
-  DeviceStorageFile* CreateDeviceStorageFile(nsIFile* aFile);
   void NotifyAboutFileChange();
 
   /**

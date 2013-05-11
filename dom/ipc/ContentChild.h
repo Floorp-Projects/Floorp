@@ -186,9 +186,12 @@ public:
 
     virtual bool RecvLastPrivateDocShellDestroyed();
 
-    virtual bool RecvFilePathUpdate(const nsString& type, const nsString& path, const nsCString& reason);
+    virtual bool RecvFilePathUpdate(const nsString& aStorageType,
+                                    const nsString& aStorageName,
+                                    const nsString& aPath,
+                                    const nsCString& aReason);
     virtual bool RecvFileSystemUpdate(const nsString& aFsName,
-                                      const nsString& aName,
+                                      const nsString& aVolumeName,
                                       const int32_t& aState,
                                       const int32_t& aMountGeneration);
 
