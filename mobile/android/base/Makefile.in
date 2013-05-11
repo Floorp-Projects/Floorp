@@ -149,6 +149,7 @@ FENNEC_JAVA_FILES = \
   SessionParser.java \
   SetupScreen.java \
   ShapedButton.java \
+  SharedPreferencesHelper.java \
   SiteIdentityPopup.java \
   SmsManager.java \
   SuggestClient.java \
