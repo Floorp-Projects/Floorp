@@ -361,6 +361,11 @@ Toolbox.prototype = {
       this.selectTool(id);
     }.bind(this, id));
 
+    // spacer lets us center the image and label, while allowing cropping
+    let spacer = this.doc.createElement("spacer");
+    spacer.setAttribute("flex", "1");
+    radio.appendChild(spacer);
+
     if (toolDefinition.icon) {
       let image = this.doc.createElement("image");
       image.setAttribute("src", toolDefinition.icon);

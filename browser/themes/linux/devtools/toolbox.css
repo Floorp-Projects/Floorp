@@ -161,15 +161,18 @@
   background-repeat: no-repeat;
   background-position: left, right;
   border-right: 1px solid hsla(206,37%,4%,.45);
-  -moz-box-align: center;
 }
 
 .devtools-tab > image {
   border: none;
   -moz-margin-end: 0;
-  -moz-margin-start: 8px;
+  -moz-margin-start: 4px;
   opacity: 0.6;
   max-height: 16px;
+}
+
+#toolbox-tab-options > image {
+  margin: 0 8px;
 }
 
 .devtools-tab > label {
