@@ -437,7 +437,7 @@ test-pref(font.size.inflation.emPerLine,15) asserts(1-100) load font-inflation-7
 load 762902.html
 load 762764-1.html
 load 786740-1.html
-asserts(12) test-pref(layout.css.flexbox.enabled,true) load 798020-1.html
+asserts(8) test-pref(layout.css.flexbox.enabled,true) load 798020-1.html
 test-pref(layout.css.flexbox.enabled,true) load 798235-1.html
 test-pref(layout.css.flexbox.enabled,true) load 799207-1.html
 asserts(12) test-pref(layout.css.flexbox.enabled,true) load 799207-2.html
