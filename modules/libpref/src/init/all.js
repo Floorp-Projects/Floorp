@@ -999,6 +999,10 @@ pref("network.http.rendering-critical-requests-prioritization", true);
 // IPv6 connectivity.
 pref("network.http.fast-fallback-to-IPv4", true);
 
+// The maximum amount of time the cache session lock can be held
+// before a new transaction bypasses the cache. In milliseconds.
+pref("network.http.bypass-cachelock-threshold", 250);
+
 // Try and use SPDY when using SSL
 pref("network.http.spdy.enabled", true);
 pref("network.http.spdy.enabled.v2", true);
