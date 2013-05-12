@@ -140,11 +140,11 @@ STUB_DECLARE(PRStatus,PR_WaitCondVar,(PRCondVar *cvar,
 			PRIntervalTime timeout));
 
 
-STUB_DECLARE(SECItem *,SECITEM_AllocItem_Util,(PRArenaPool *arena, 
+STUB_DECLARE(SECItem *,SECITEM_AllocItem_Util,(PLArenaPool *arena,
 			SECItem *item,unsigned int len));
 STUB_DECLARE(SECComparison,SECITEM_CompareItem_Util,(const SECItem *a, 
 			const SECItem *b));
-STUB_DECLARE(SECStatus,SECITEM_CopyItem_Util,(PRArenaPool *arena, 
+STUB_DECLARE(SECStatus,SECITEM_CopyItem_Util,(PLArenaPool *arena,
 			SECItem *to,const SECItem *from));
 STUB_DECLARE(void,SECITEM_FreeItem_Util,(SECItem *zap, PRBool freeit));
 STUB_DECLARE(void,SECITEM_ZfreeItem_Util,(SECItem *zap, PRBool freeit));
@@ -486,7 +486,7 @@ SECITEM_FreeItem_stub(SECItem *zap, PRBool freeit)
 }
 
 extern SECItem *
-SECITEM_AllocItem_stub(PRArenaPool *arena, SECItem *item, unsigned int len)
+SECITEM_AllocItem_stub(PLArenaPool *arena, SECItem *item, unsigned int len)
 {
     STUB_SAFE_CALL3(SECITEM_AllocItem_Util, arena, item, len); 
     abort();
@@ -502,7 +502,7 @@ SECITEM_CompareItem_stub(const SECItem *a, const SECItem *b)
 }
 
 extern SECStatus 
-SECITEM_CopyItem_stub(PRArenaPool *arena, SECItem *to, const SECItem *from)
+SECITEM_CopyItem_stub(PLArenaPool *arena, SECItem *to, const SECItem *from)
 {
     STUB_SAFE_CALL3(SECITEM_CopyItem_Util, arena, to, from);
     abort();

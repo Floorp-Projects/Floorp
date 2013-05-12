@@ -36,7 +36,7 @@ getCaAndSubjectCert(CERTCertDBHandle *certHandle,
 }
 
 static SECItem *
-encode(PRArenaPool *arena, CERTOCSPCertID *cid, CERTCertificate *ca)
+encode(PLArenaPool *arena, CERTOCSPCertID *cid, CERTCertificate *ca)
 {
     SECItem *response;
     PRTime now = PR_Now();
@@ -66,7 +66,7 @@ encode(PRArenaPool *arena, CERTOCSPCertID *cid, CERTCertificate *ca)
 }
 
 static SECItem *
-encodeRevoked(PRArenaPool *arena, CERTOCSPCertID *cid, CERTCertificate *ca)
+encodeRevoked(PLArenaPool *arena, CERTOCSPCertID *cid, CERTCertificate *ca)
 {
     SECItem *response;
     PRTime now = PR_Now();
@@ -124,7 +124,7 @@ main(int argc, char **argv)
     CERTCertDBHandle *certHandle = NULL;
     CERTCertificate *caCert = NULL, *cert = NULL;
     CERTOCSPCertID *cid = NULL;
-    PRArenaPool *arena = NULL;
+    PLArenaPool *arena = NULL;
     PRTime now = PR_Now();
     
     SECItem *encoded = NULL;

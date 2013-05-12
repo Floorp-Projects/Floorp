@@ -154,7 +154,7 @@ const SEC_ASN1Template lg_nsslowkey_ECPrivateKeyTemplate[] = {
  * oid and DER data.
  */
 SECStatus
-LGEC_FillParams(PRArenaPool *arena, const SECItem *encodedParams, 
+LGEC_FillParams(PLArenaPool *arena, const SECItem *encodedParams,
     ECParams *params)
 {
     SECOidTag tag;
@@ -194,7 +194,7 @@ LGEC_FillParams(PRArenaPool *arena, const SECItem *encodedParams,
 /* Copy all of the fields from srcParams into dstParams
  */
 SECStatus
-LGEC_CopyParams(PRArenaPool *arena, ECParams *dstParams,
+LGEC_CopyParams(PLArenaPool *arena, ECParams *dstParams,
 	      const ECParams *srcParams)
 {
     SECStatus rv = SECFailure;

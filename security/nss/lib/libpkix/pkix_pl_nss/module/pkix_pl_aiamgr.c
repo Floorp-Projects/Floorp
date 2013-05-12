@@ -387,7 +387,7 @@ pkix_pl_AIAMgr_GetLDAPCerts(
         PKIX_PL_GeneralName *location = NULL;
         PKIX_PL_LdapClient *client = NULL;
         LDAPRequestParams request;
-        PRArenaPool *arena = NULL;
+        PLArenaPool *arena = NULL;
         char *domainName = NULL;
 	void *nbio = NULL;
 

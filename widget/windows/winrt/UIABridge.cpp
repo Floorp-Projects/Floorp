@@ -33,7 +33,8 @@ using namespace ABI::Windows::System;
 
 #define MIDL_DEFINE_GUID(type,name,l,w1,w2,b1,b2,b3,b4,b5,b6,b7,b8) \
  const type name = {l,w1,w2,{b1,b2,b3,b4,b5,b6,b7,b8}}
-MIDL_DEFINE_GUID(IID, IID_IUIABridge,0x343159D8,0xB1E9,0x4464,0x82,0xFC,0xB1,0x2C,0x7A,0x47,0x3C,0xF1);
+MIDL_DEFINE_GUID(IID, IID_IUIABridge, 0xc78b35b5, 0x5db, 0x43aa, 0xae, 0x73, 0x94, 0xc2, 0x33, 0xa9, 0x3c, 0x98);
+
 
 namespace mozilla {
 namespace widget {

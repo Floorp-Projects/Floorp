@@ -511,7 +511,7 @@ cleanup:
  *
  * PARAMETERS
  *  "arena"
- *      Address of a PRArenaPool to be used in populating the LDAPLocation.
+ *      Address of a PLArenaPool to be used in populating the LDAPLocation.
  *      Must be non-NULL.
  *  "startPos"
  *      The address of char string that contains a subset of ldap location.
@@ -533,7 +533,7 @@ cleanup:
  */
 static PKIX_Error *
 pkix_pl_InfoAccess_ParseTokens(
-        PRArenaPool *arena,
+        PLArenaPool *arena,
         char **startPos, /* return update */
         char ***tokens,
         char separator,
@@ -662,7 +662,7 @@ pkix_pl_UnescapeURL(
  *
  *  This function parses the GeneralName pointed to by "generalName" into the
  *  fields of the LDAPRequestParams pointed to by "request" and a domainName
- *  pointed to by "pDomainName", using the PRArenaPool pointed to by "arena" to
+ *  pointed to by "pDomainName", using the PLArenaPool pointed to by "arena" to
  *  allocate storage for the request components and for the domainName string.
  *
  *  The expected GeneralName string should be in the format described by the
@@ -679,7 +679,7 @@ pkix_pl_UnescapeURL(
  *      Address of the GeneralName whose LDAPLocation is to be parsed. Must be
  *      non-NULL.
  *  "arena"
- *      Address of PRArenaPool to be used for the domainName and for components
+ *      Address of PLArenaPool to be used for the domainName and for components
  *      of the LDAPRequest. Must be non-NULL.
  *  "request"
  *      Address of the LDAPRequestParams into which request components are
@@ -698,7 +698,7 @@ pkix_pl_UnescapeURL(
 PKIX_Error *
 pkix_pl_InfoAccess_ParseLocation(
         PKIX_PL_GeneralName *generalName,
-        PRArenaPool *arena,
+        PLArenaPool *arena,
         LDAPRequestParams *request,
         char **pDomainName,
         void *plContext)

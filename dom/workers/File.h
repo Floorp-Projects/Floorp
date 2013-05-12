@@ -19,7 +19,7 @@ BEGIN_WORKERS_NAMESPACE
 namespace file {
 
 bool
-InitClasses(JSContext* aCx, JSObject* aGlobal);
+InitClasses(JSContext* aCx, JS::Handle<JSObject*> aGlobal);
 
 JSObject*
 CreateBlob(JSContext* aCx, nsIDOMBlob* aBlob);

@@ -4578,6 +4578,8 @@ nsCSSFrameConstructor::FindMathMLData(Element* aElement,
       
 
   static const FrameConstructionDataByTag sMathMLData[] = {
+    SIMPLE_MATHML_CREATE(annotation_, NS_NewMathMLTokenFrame),
+    SIMPLE_MATHML_CREATE(annotation_xml_, NS_NewMathMLmrowFrame),
     SIMPLE_MATHML_CREATE(mi_, NS_NewMathMLTokenFrame),
     SIMPLE_MATHML_CREATE(mn_, NS_NewMathMLTokenFrame),
     SIMPLE_MATHML_CREATE(ms_, NS_NewMathMLTokenFrame),

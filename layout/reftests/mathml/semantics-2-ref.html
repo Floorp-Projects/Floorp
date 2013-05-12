@@ -1,0 +1,19 @@
+<!doctype html>
+<html>
+<head>
+  <title>Various tests for semantics</title>
+  <meta charset="utf-8"/>
+</head>
+
+<body>
+  <p>Empty semantics (invalid): <math><maction></maction></math></p>
+  <p>annotation (invalid): <math><mrow><mtext>annotation</mtext></mrow></math></p>
+  <p>annotation-xml (invalid): <math><mrow><mrow><mtext>annotation-xml</mtext></mrow></mrow></math></p>
+  <p>presentation MathML (no annotations): <math><mrow><mtext>presentation MathML</mtext></mrow></math></p>
+  <p>content MathML (no annotations): <math><maction actiontype="toggle"><csymbol>content MathML</csymbol></maction></math></p>
+  <p>presentation MathML ; annotation: <math><mrow><mtext>presentation MathML</mtext></mrow></math></p>
+  <p>presentation MathML ; annotation-xml: <math><mrow><mtext>presentation MathML</mtext></mrow></math></p>
+  <p>content MathML ; annotation: <math><mrow><mtext>annotation</mtext></mrow></math></p>
+  <p>content MathML ; annotation-xml: <math><mrow><mrow><mtext>annotation-xml</mtext></mrow></mrow></math></p>
+</body>
+</html>

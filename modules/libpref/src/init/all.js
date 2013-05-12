@@ -86,6 +86,9 @@ pref("dom.workers.enabled", true);
 // The number of workers per domain allowed to run concurrently.
 pref("dom.workers.maxPerDomain", 20);
 
+// Whether nonzero values can be returned from performance.timing.*
+pref("dom.enable_performance", true);
+
 // Fastback caching - if this pref is negative, then we calculate the number
 // of content viewers to cache based on the amount of available memory.
 pref("browser.sessionhistory.max_total_viewers", -1);
@@ -3272,7 +3275,7 @@ pref("font.name.serif.ko", "Charis SIL Compact");
 pref("font.name.sans-serif.ko", "Open Sans");
 pref("font.name.monospace.ko", "Droid Sans Mono");
 pref("font.name-list.serif.ko", "HYSerif");
-pref("font.name-list.sans-serif.ko", "SmartGothic, DroidSansFallback, Droid Sans Fallback");
+pref("font.name-list.sans-serif.ko", "SmartGothic, NanumGothic, DroidSansFallback, Droid Sans Fallback");
 
 pref("font.name.serif.th", "Charis SIL Compact");
 pref("font.name.sans-serif.th", "Open Sans");

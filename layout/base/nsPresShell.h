@@ -89,7 +89,6 @@ public:
   virtual NS_HIDDEN_(nsresult) Initialize(nscoord aWidth, nscoord aHeight);
   virtual NS_HIDDEN_(nsresult) ResizeReflow(nscoord aWidth, nscoord aHeight);
   virtual NS_HIDDEN_(nsresult) ResizeReflowOverride(nscoord aWidth, nscoord aHeight);
-  virtual NS_HIDDEN_(void) StyleChangeReflow();
   virtual NS_HIDDEN_(nsIPageSequenceFrame*) GetPageSequenceFrame() const;
   virtual NS_HIDDEN_(nsIFrame*) GetRealPrimaryFrameFor(nsIContent* aContent) const;
 

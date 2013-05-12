@@ -647,17 +647,6 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
         ulimit -c unlimited
     fi 
 
-    #################################################################
-    # If we built nss without softoken use the system installed tool.
-    # Fedora, for example, uses /usr/lib${ARCH}/unsupported-tools but
-    # other platform may place the system installed tests somewhere else.
-    # The FREEBL_BINDIR environment variable will have been set by the
-    # package maintainer.
-    if [ ${NSS_BUILD_WITHOUT_SOFTOKEN} = "1" ]; then
-        export FREEBL_BINDIR=${FREEBL_BINDIR}
-    else
-        export FREEBL_BINDIR=${BINDIR}
-    fi
     SCRIPTNAME=$0
     INIT_SOURCED=TRUE   #whatever one does - NEVER export this one please
 fi

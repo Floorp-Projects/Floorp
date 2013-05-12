@@ -18,9 +18,9 @@ using mozilla::net::gNeckoChild;
 namespace IPC {
 
 bool
-DeserializeArrayBuffer(JSObject* aObj,
+DeserializeArrayBuffer(JS::Handle<JSObject*> aObj,
                        const InfallibleTArray<uint8_t>& aBuffer,
-                       JS::Value* aVal)
+                       JS::MutableHandle<JS::Value> aVal)
 {
   JSContext* cx = nsContentUtils::GetSafeJSContext();
   JSAutoRequest ar(cx);
@@ -33,7 +33,7 @@ DeserializeArrayBuffer(JSObject* aObj,
   if (!data)
     return false;
   memcpy(data, aBuffer.Elements(), aBuffer.Length());
-  *aVal = OBJECT_TO_JSVAL(obj);
+  aVal.set(OBJECT_TO_JSVAL(obj));
   return true;
 }
 
@@ -135,8 +135,10 @@ TCPSocketChild::RecvCallback(const nsString& aType,
     const SendableData& data = aData.get_SendableData();
 
     if (data.type() == SendableData::TArrayOfuint8_t) {
-      JS::Value val;
-      bool ok = IPC::DeserializeArrayBuffer(mSocketObj, data.get_ArrayOfuint8_t(), &val);
+      JSContext* cx = nsContentUtils::GetSafeJSContext();
+      JS::Rooted<JS::Value> val(cx);
+      JS::Rooted<JSObject*> socket(cx, mSocketObj);
+      bool ok = IPC::DeserializeArrayBuffer(socket, data.get_ArrayOfuint8_t(), &val);
       NS_ENSURE_TRUE(ok, true);
       rv = mSocket->CallListenerArrayBuffer(aType, val);
 
