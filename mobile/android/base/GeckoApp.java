@@ -2504,7 +2504,7 @@ abstract public class GeckoApp
         switch(item.getItemId()) {
             case R.id.pasteandgo: {
                 String text = GeckoAppShell.getClipboardText();
-                if (text != null && !TextUtils.isEmpty(text)) {
+                if (!TextUtils.isEmpty(text)) {
                     Tabs.getInstance().loadUrl(text);
                 }
                 return true;
@@ -2515,7 +2515,7 @@ abstract public class GeckoApp
             }
             case R.id.paste: {
                 String text = GeckoAppShell.getClipboardText();
-                if (text != null && !TextUtils.isEmpty(text)) {
+                if (!TextUtils.isEmpty(text)) {
                     showAwesomebar(AwesomeBar.Target.CURRENT_TAB, text);
                 }
                 return true;
