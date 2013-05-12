@@ -5,11 +5,19 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const HTML_NS = "http://www.w3.org/1999/xhtml";
 const EPSILON = 0.001;
+const RESIZE_REFRESH_RATE = 50; // ms
 const REQUESTS_REFRESH_RATE = 50; // ms
 const REQUESTS_HEADERS_SAFE_BOUNDS = 30; // px
-const REQUESTS_WATERFALL_SAFE_BOUNDS = 100; // px
-const REQUESTS_WATERFALL_BACKGROUND_PATTERN = [5, 250, 1000, 2000]; // ms
+const REQUESTS_WATERFALL_SAFE_BOUNDS = 90; // px
+const REQUESTS_WATERFALL_HEADER_TICKS_MULTIPLE = 5; // ms
+const REQUESTS_WATERFALL_HEADER_TICKS_SPACING_MIN = 60; // px
+const REQUESTS_WATERFALL_BACKGROUND_TICKS_MULTIPLE = 5; // ms
+const REQUESTS_WATERFALL_BACKGROUND_TICKS_SCALES = 3;
+const REQUESTS_WATERFALL_BACKGROUND_TICKS_SPACING_MIN = 10; // px
+const REQUESTS_WATERFALL_BACKGROUND_TICKS_OPACITY_MIN = 10; // byte
+const REQUESTS_WATERFALL_BACKGROUND_TICKS_OPACITY_ADD = 16; // byte
 const DEFAULT_HTTP_VERSION = "HTTP/1.1";
 const HEADERS_SIZE_DECIMALS = 3;
 const CONTENT_SIZE_DECIMALS = 2;
@@ -47,8 +55,6 @@ const GENERIC_VARIABLES_VIEW_SETTINGS = {
   eval: () => {},
   switch: () => {}
 };
-
-function $(aSelector, aTarget = document) aTarget.querySelector(aSelector);
 
 /**
  * Object defining the network monitor view components.
@@ -157,6 +163,7 @@ let NetMonitorView = {
       $("#details-pane").selectedIndex = aTabIndex;
     }
   },
+
   /**
    * Lazily initializes and returns a promise for a SourceEditor instance.
    *
@@ -264,6 +271,7 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
 
     this.node = new SideMenuWidget($("#requests-menu-contents"), false);
     this.node.maintainSelectionVisible = false;
+    this.node.autoscrollWithAppendedItems = true;
 
     this.node.addEventListener("mousedown", this._onMouseDown, false);
     this.node.addEventListener("select", this._onSelect, false);
@@ -321,7 +329,6 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
 
     // Append a network request item to this container.
     let requestItem = this.push(menuView, {
-      relaxed: true, /* this container should allow dupes & degenerates */
       attachment: {
         id: aId,
         startedDeltaMillis: unixTime - this._firstRequestStartedMillis,
@@ -332,9 +339,132 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
       finalize: this._onRequestItemRemoved
     });
 
+    $("#details-pane-toggle").disabled = false;
     $(".requests-menu-empty-notice").hidden = true;
+
     this._cache.set(aId, requestItem);
   },
+
+  /**
+   * Sorts all network requests in this container by a specified detail.
+   *
+   * @param string aType
+   *        Either "status", "method", "file", "domain", "type" or "size".
+   */
+  sortBy: function NVRM_sortBy(aType) {
+    let target = $("#requests-menu-" + aType + "-button");
+    let headers = document.querySelectorAll(".requests-menu-header-button");
+
+    for (let header of headers) {
+      if (header != target) {
+        header.removeAttribute("sorted");
+        header.removeAttribute("tooltiptext");
+      }
+    }
+
+    let direction = "";
+    if (target) {
+      if (!target.hasAttribute("sorted")) {
+        target.setAttribute("sorted", direction = "ascending");
+        target.setAttribute("tooltiptext", L10N.getStr("networkMenu.sortedAsc"));
+      } else if (target.getAttribute("sorted") == "ascending") {
+        target.setAttribute("sorted", direction = "descending");
+        target.setAttribute("tooltiptext", L10N.getStr("networkMenu.sortedDesc"));
+      } else {
+        target.removeAttribute("sorted");
+        target.removeAttribute("tooltiptext");
+      }
+    }
+
+    // Sort by timing.
+    if (!target || !direction) {
+      this.sortContents(this._byTiming);
+    }
+    // Sort by whatever was requested.
+    else switch (aType) {
+      case "status":
+        if (direction == "ascending") {
+          this.sortContents(this._byStatus);
+        } else {
+          this.sortContents((a, b) => !this._byStatus(a, b));
+        }
+        break;
+      case "method":
+        if (direction == "ascending") {
+          this.sortContents(this._byMethod);
+        } else {
+          this.sortContents((a, b) => !this._byMethod(a, b));
+        }
+        break;
+      case "file":
+        if (direction == "ascending") {
+          this.sortContents(this._byFile);
+        } else {
+          this.sortContents((a, b) => !this._byFile(a, b));
+        }
+        break;
+      case "domain":
+        if (direction == "ascending") {
+          this.sortContents(this._byDomain);
+        } else {
+          this.sortContents((a, b) => !this._byDomain(a, b));
+        }
+        break;
+      case "type":
+        if (direction == "ascending") {
+          this.sortContents(this._byType);
+        } else {
+          this.sortContents((a, b) => !this._byType(a, b));
+        }
+        break;
+      case "size":
+        if (direction == "ascending") {
+          this.sortContents(this._bySize);
+        } else {
+          this.sortContents((a, b) => !this._bySize(a, b));
+        }
+        break;
+    }
+  },
+
+  /**
+   * Predicates used when sorting items.
+   *
+   * @param MenuItem aFirst
+   *        The first menu item used in the comparison.
+   * @param MenuItem aSecond
+   *        The second menu item used in the comparison.
+   * @return number
+   *         -1 to sort aFirst to a lower index than aSecond
+   *          0 to leave aFirst and aSecond unchanged with respect to each other
+   *          1 to sort aSecond to a lower index than aFirst
+   */
+  _byTiming: (aFirst, aSecond) =>
+    aFirst.attachment.startedMillis > aSecond.attachment.startedMillis,
+
+  _byStatus: (aFirst, aSecond) =>
+    aFirst.attachment.status > aSecond.attachment.status,
+
+  _byMethod: (aFirst, aSecond) =>
+    aFirst.attachment.method > aSecond.attachment.method,
+
+  _byFile: (aFirst, aSecond) =>
+    !aFirst.target || !aSecond.target ? -1 :
+      $(".requests-menu-file", aFirst.target).getAttribute("value").toLowerCase() >
+      $(".requests-menu-file", aSecond.target).getAttribute("value").toLowerCase(),
+
+  _byDomain: (aFirst, aSecond) =>
+    !aFirst.target || !aSecond.target ? -1 :
+      $(".requests-menu-domain", aFirst.target).getAttribute("value").toLowerCase() >
+      $(".requests-menu-domain", aSecond.target).getAttribute("value").toLowerCase(),
+
+  _byType: (aFirst, aSecond) =>
+    !aFirst.target || !aSecond.target ? -1 :
+      $(".requests-menu-type", aFirst.target).getAttribute("value").toLowerCase() >
+      $(".requests-menu-type", aSecond.target).getAttribute("value").toLowerCase(),
+
+  _bySize: (aFirst, aSecond) =>
+    aFirst.attachment.contentSize > aSecond.attachment.contentSize,
 
   /**
    * Schedules adding additional information to a network request.
@@ -356,8 +486,8 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
     if (!this.lazyUpdate) {
       return void this._flushRequests();
     }
-    window.clearTimeout(this._updateTimeout);
-    this._updateTimeout = window.setTimeout(this._flushRequests, REQUESTS_REFRESH_RATE);
+    // Allow requests to settle down first.
+    drain("update-requests", REQUESTS_REFRESH_RATE, () => this._flushRequests());
   },
 
   /**
@@ -444,8 +574,12 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
         NetMonitorView.NetworkDetails.populate(selectedItem.attachment);
       }
     }
+
     // We're done flushing all the requests, clear the update queue.
     this._updateQueue = [];
+
+    // Make sure all the requests are sorted.
+    this.sortContents();
   },
 
   /**
@@ -584,38 +718,19 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
   },
 
   /**
-   * Rescales and redraws all the waterfalls in this container.
+   * Rescales and redraws all the waterfall views in this container.
    *
    * @param boolean aReset
    *        True if this container's width was changed.
    */
   _flushWaterfallViews: function NVRM__flushWaterfallViews(aReset) {
-    // To avoid expensive operations like getBoundingClientRect(), the
-    // waterfalls width is cached. However, in certain scenarios like when
-    // the window is resized, this needs to be invalidated.
+    // To avoid expensive operations like getBoundingClientRect() and
+    // rebuilding the waterfall background each time a new request comes in,
+    // stuff is cached. However, in certain scenarios like when the window
+    // is resized, this needs to be invalidated.
     if (aReset) {
       this._cachedWaterfallWidth = 0;
-
-      let table = $("#network-table");
-      let toolbar = $("#requests-menu-toolbar");
-      let columns = [
-        [".requests-menu-waterfall", "waterfall-overflows"],
-        [".requests-menu-size", "size-overflows"],
-        [".requests-menu-type", "type-overflows"],
-        [".requests-menu-domain", "domain-overflows"]
-      ];
-
-      // Flush headers.
-      columns.forEach(([, attribute]) => table.removeAttribute(attribute));
-      let availableWidth = toolbar.getBoundingClientRect().width;
-
-      // Hide overflowing columns.
-      columns.forEach(([className, attribute]) => {
-        let bounds = $(".requests-menu-header" + className).getBoundingClientRect();
-        if (bounds.right > availableWidth - REQUESTS_HEADERS_SAFE_BOUNDS) {
-          table.setAttribute(attribute, "");
-        }
-      });
+      this._hideOverflowingColumns();
     }
 
     // Determine the scaling to be applied to all the waterfalls so that
@@ -623,6 +738,11 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
     let availableWidth = this._waterfallWidth - REQUESTS_WATERFALL_SAFE_BOUNDS;
     let longestWidth = this._lastRequestEndedMillis - this._firstRequestStartedMillis;
     let scale = Math.min(Math.max(availableWidth / longestWidth, EPSILON), 1);
+
+    // Redraw and set the canvas background for each waterfall view.
+    this._showWaterfallDivisionLabels(scale);
+    this._drawWaterfallBackground(scale);
+    this._flushWaterfallBackgrounds();
 
     // Apply CSS transforms to each waterfall in this container totalTime
     // accurately translate and resize as needed.
@@ -649,6 +769,145 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
       endCapNode.style.transform = revScaleX + " translateX(-0.5px)";
       totalNode.style.transform = revScaleX;
     }
+  },
+
+  /**
+   * Creates the labels displayed on the waterfall header in this container.
+   *
+   * @param number aScale
+   *        The current waterfall scale.
+   */
+  _showWaterfallDivisionLabels: function NVRM__showWaterfallDivisionLabels(aScale) {
+    let container = $("#requests-menu-waterfall-header-box");
+    let availableWidth = this._waterfallWidth - REQUESTS_WATERFALL_SAFE_BOUNDS;
+
+    // Nuke all existing labels.
+    while (container.hasChildNodes()) {
+      container.firstChild.remove();
+    }
+
+    // Build new millisecond tick labels...
+    let timingStep = REQUESTS_WATERFALL_HEADER_TICKS_MULTIPLE;
+    let optimalTickIntervalFound = false;
+
+    while (!optimalTickIntervalFound) {
+      // Ignore any divisions that would end up being too close to each other.
+      let scaledStep = aScale * timingStep;
+      if (scaledStep < REQUESTS_WATERFALL_HEADER_TICKS_SPACING_MIN) {
+        timingStep <<= 1;
+        continue;
+      }
+      optimalTickIntervalFound = true;
+
+      // Insert one label for each division on the current scale.
+      let fragment = document.createDocumentFragment();
+
+      for (let x = 0; x < availableWidth; x += scaledStep) {
+        let divisionMS = (x / aScale).toFixed(0);
+        let translateX = "translateX(" + (x | 0) + "px)";
+
+        let node = document.createElement("label");
+        let text = L10N.getFormatStr("networkMenu.divisionMS", divisionMS);
+        node.className = "plain requests-menu-timings-division";
+        node.style.transform = translateX;
+
+        node.setAttribute("value", text);
+        fragment.appendChild(node);
+      }
+      container.appendChild(fragment);
+    }
+  },
+
+  /**
+   * Creates the background displayed on each waterfall view in this container.
+   *
+   * @param number aScale
+   *        The current waterfall scale.
+   */
+  _drawWaterfallBackground: function NVRM__drawWaterfallBackground(aScale) {
+    if (!this._canvas || !this._ctx) {
+      this._canvas = document.createElementNS(HTML_NS, "canvas");
+      this._ctx = this._canvas.getContext("2d");
+    }
+    let canvas = this._canvas;
+    let ctx = this._ctx;
+
+    // Nuke the context.
+    let canvasWidth = canvas.width = this._waterfallWidth;
+    let canvasHeight = canvas.height = 1; // Awww yeah, 1px, repeats on Y axis.
+
+    // Start over.
+    let imageData = ctx.createImageData(canvasWidth, canvasHeight);
+    let pixelArray = imageData.data;
+
+    let buf = new ArrayBuffer(pixelArray.length);
+    let buf8 = new Uint8ClampedArray(buf);
+    let data32 = new Uint32Array(buf);
+
+    // Build new millisecond tick lines...
+    let timingStep = REQUESTS_WATERFALL_BACKGROUND_TICKS_MULTIPLE;
+    let alphaComponent = REQUESTS_WATERFALL_BACKGROUND_TICKS_OPACITY_MIN;
+    let optimalTickIntervalFound = false;
+
+    while (!optimalTickIntervalFound) {
+      // Ignore any divisions that would end up being too close to each other.
+      let scaledStep = aScale * timingStep;
+      if (scaledStep < REQUESTS_WATERFALL_BACKGROUND_TICKS_SPACING_MIN) {
+        timingStep <<= 1;
+        continue;
+      }
+      optimalTickIntervalFound = true;
+
+      // Insert one pixel for each division on each scale.
+      for (let i = 1; i <= REQUESTS_WATERFALL_BACKGROUND_TICKS_SCALES; i++) {
+        let increment = scaledStep * Math.pow(2, i);
+        for (let x = 0; x < canvasWidth; x += increment) {
+          data32[x | 0] = (alphaComponent << 24) | (255 << 16) | (255 <<  8) | 255;
+        }
+        alphaComponent += REQUESTS_WATERFALL_BACKGROUND_TICKS_OPACITY_ADD;
+      }
+    }
+
+    // Flush the image data and cache the waterfall background.
+    pixelArray.set(buf8);
+    ctx.putImageData(imageData, 0, 0);
+    this._cachedWaterfallBackground = "url(" + canvas.toDataURL() + ")";
+  },
+
+  /**
+   * Reapplies the current waterfall background on all request items.
+   */
+  _flushWaterfallBackgrounds: function NVRM__flushWaterfallBackgrounds() {
+    for (let [, { target }] of this._cache) {
+      let waterfallNode = $(".requests-menu-waterfall", target);
+      waterfallNode.style.backgroundImage = this._cachedWaterfallBackground;
+    }
+  },
+
+  /**
+   * Hides the overflowing columns in the requests table.
+   */
+  _hideOverflowingColumns: function NVRM__hideOverflowingColumns() {
+    let table = $("#network-table");
+    let toolbar = $("#requests-menu-toolbar");
+    let columns = [
+      ["#requests-menu-waterfall-header-box", "waterfall-overflows"],
+      ["#requests-menu-size-header-box", "size-overflows"],
+      ["#requests-menu-type-header-box", "type-overflows"],
+      ["#requests-menu-domain-header-box", "domain-overflows"]
+    ];
+
+    // Flush headers.
+    columns.forEach(([, attribute]) => table.removeAttribute(attribute));
+    let availableWidth = toolbar.getBoundingClientRect().width;
+
+    // Hide the columns.
+    columns.forEach(([id, attribute]) => {
+      let bounds = $(id).getBoundingClientRect();
+      if (bounds.right > availableWidth - REQUESTS_HEADERS_SAFE_BOUNDS) {
+        table.setAttribute(attribute, "");
+      }
+    });
   },
 
   /**
@@ -685,7 +944,8 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
    * The resize listener for this container's window.
    */
   _onResize: function NVRM__onResize(e) {
-    this._flushWaterfallViews(true);
+    // Allow requests to settle down first.
+    drain("resize-events", RESIZE_REFRESH_RATE, () => this._flushWaterfallViews(true));
   },
 
   /**
@@ -721,7 +981,7 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
   get _waterfallWidth() {
     if (this._cachedWaterfallWidth == 0) {
       let container = $("#requests-menu-toolbar");
-      let waterfall = $("#requests-menu-waterfall-label");
+      let waterfall = $("#requests-menu-waterfall-header-box");
       let containerBounds = container.getBoundingClientRect();
       let waterfallBounds = waterfall.getBoundingClientRect();
       this._cachedWaterfallWidth = containerBounds.width - waterfallBounds.left;
@@ -730,11 +990,15 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
   },
 
   _cache: null,
+  _canvas: null,
+  _ctx: null,
   _cachedWaterfallWidth: 0,
+  _cachedWaterfallBackground: null,
   _firstRequestStartedMillis: -1,
   _lastRequestEndedMillis: -1,
   _updateQueue: [],
-  _updateTimeout: null
+  _updateTimeout: null,
+  _resizeTimeout: null
 });
 
 /**
@@ -1116,7 +1380,7 @@ create({ constructor: NetworkDetailsView, proto: MenuContainer.prototype }, {
         $("#response-content-textarea-box").hidden = false;
         NetMonitorView.editor("#response-content-textarea").then((aEditor) => {
           aEditor.setMode(SourceEditor.MODES.TEXT);
-          aEditor.setText(aString);
+          aEditor.setText(NetworkHelper.convertToUnicode(aString, "UTF-8"));
 
           // Maybe set a more appropriate mode in the Source Editor if possible.
           for (let key in CONTENT_MIME_TYPE_MAPPINGS) {
@@ -1212,6 +1476,22 @@ create({ constructor: NetworkDetailsView, proto: MenuContainer.prototype }, {
   _requestCookies: "",
   _responseCookies: ""
 });
+
+/**
+ * DOM query helper.
+ */
+function $(aSelector, aTarget = document) aTarget.querySelector(aSelector);
+
+/**
+ * Helper for draining a rapid succession of events and invoking a callback
+ * once everything settles down.
+ */
+function drain(aId, aWait, aCallback) {
+  window.clearTimeout(drain.store.get(aId));
+  drain.store.set(aId, window.setTimeout(aCallback, aWait));
+}
+
+drain.store = new Map();
 
 /**
  * Preliminary setup for the NetMonitorView object.

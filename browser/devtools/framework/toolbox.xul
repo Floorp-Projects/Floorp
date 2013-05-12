@@ -34,10 +34,6 @@
         <hbox id="toolbox-dock-buttons"/>
       </hbox>
 #endif
-      <toolbarbutton id="toolbox-tab-options"
-                     autocheck="false"
-                     class="command-button toolbox-tab devtools-tab"
-                     tooltiptext="&toolboxOptionsButton.tooltip;"/>
       <hbox id="toolbox-tabs" flex="1">
       </hbox>
       <hbox id="toolbox-buttons" pack="end"/>
@@ -51,14 +47,6 @@
 #endif
     </toolbar>
     <deck id="toolbox-deck" flex="1">
-      <vbox id="toolbox-panel-options"
-            class="toolbox-panel">
-        <iframe id="toolbox-panel-iframe-options"
-                class="toolbox-panel-iframe"
-                flex="1" forceOwnRefreshDriver=""
-                src="chrome://browser/content/devtools/framework/toolbox-options.xul">
-        </iframe>
-      </vbox>
     </deck>
   </notificationbox>
 </window>
