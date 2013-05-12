@@ -128,10 +128,9 @@ VariablesView.prototype = {
     }
 
     let list = this._list;
-    let firstChild;
 
-    while (firstChild = list.firstChild) {
-      list.removeChild(firstChild);
+    while (list.hasChildNodes()) {
+      list.firstChild.remove();
     }
 
     this._store.length = 0;
@@ -163,7 +162,7 @@ VariablesView.prototype = {
     this._store.length = 0;
     this._itemsByElement.clear();
 
-    this._emptyTimeout = this.window.setTimeout(function() {
+    this._emptyTimeout = this.window.setTimeout(() => {
       this._emptyTimeout = null;
 
       prevList.removeEventListener("keypress", this._onViewKeyPress, false);
@@ -178,7 +177,7 @@ VariablesView.prototype = {
         this._appendEmptyNotice();
         this._toggleSearchVisibility(false);
       }
-    }.bind(this), aTimeout);
+    }, aTimeout);
   },
 
   /**
@@ -197,6 +196,12 @@ VariablesView.prototype = {
    * @see Scope.prototype._lazyAppend
    */
   lazyAppend: true,
+
+  /**
+   * Specifies if nodes in this view may be expanded lazily.
+   * @see Scope.prototype.expand
+   */
+  lazyExpand: true,
 
   /**
    * Function called each time a variable or property's value is changed via
@@ -403,7 +408,7 @@ VariablesView.prototype = {
     if (!this._searchboxContainer) {
       return;
     }
-    this._searchboxContainer.parentNode.removeChild(this._searchboxContainer);
+    this._searchboxContainer.remove();
     this._searchboxNode.removeEventListener("input", this._onSearchboxInput, false);
     this._searchboxNode.removeEventListener("keypress", this._onSearchboxKeyPress, false);
 
@@ -642,15 +647,17 @@ VariablesView.prototype = {
    * Focuses the next scope, variable or property in this view.
    * @see VariablesView.prototype._focusChange
    */
-  focusNextItem: function VV_focusNextItem(aMaintainViewFocusedFlag)
-    this._focusChange("advanceFocus", aMaintainViewFocusedFlag),
+  focusNextItem: function VV_focusNextItem(aMaintainViewFocusedFlag) {
+    this._focusChange("advanceFocus", aMaintainViewFocusedFlag)
+  },
 
   /**
    * Focuses the previous scope, variable or property in this view.
    * @see VariablesView.prototype._focusChange
    */
-  focusPrevItem: function VV_focusPrevItem(aMaintainViewFocusedFlag)
-    this._focusChange("rewindFocus", aMaintainViewFocusedFlag),
+  focusPrevItem: function VV_focusPrevItem(aMaintainViewFocusedFlag) {
+    this._focusChange("rewindFocus", aMaintainViewFocusedFlag)
+  },
 
   /**
    * Focuses the next or previous scope, variable or property in this view.
@@ -761,7 +768,6 @@ VariablesView.prototype = {
         if (!item._isArrowVisible) {
           return;
         }
-
         // Expand scopes, variables and properties before advancing focus.
         if (!item._isExpanded) {
           item.expand();
@@ -1051,7 +1057,8 @@ VariablesView.getterOrSetterEvalMacro = function(aItem, aCurrentString) {
 VariablesView.getterOrSetterDeleteCallback = function(aItem) {
   aItem._disable();
 
-  // Make sure the right getter/setter to value override macro is applied to the target object.
+  // Make sure the right getter/setter to value override macro is applied
+  // to the target object.
   aItem.ownerView.eval(aItem.evaluationMacro(aItem, ""));
 
   return true; // Don't hide the element.
@@ -1237,7 +1244,7 @@ Scope.prototype = {
     // even if they were already displayed before. In this case, show a throbber
     // to suggest that this scope is expanding.
     if (!this._isExpanding &&
-         this._variablesView.lazyAppend &&
+         this._variablesView.lazyExpand &&
          this._store.size > LAZY_APPEND_BATCH) {
       this._isExpanding = true;
 
@@ -1971,6 +1978,13 @@ function Variable(aScope, aName, aDescriptor) {
   this._activateNameInput = this._activateNameInput.bind(this);
   this._activateValueInput = this._activateValueInput.bind(this);
 
+  // Treat safe getter descriptors as descriptors with a value.
+  if ("getterValue" in aDescriptor) {
+    aDescriptor.value = aDescriptor.getterValue;
+    delete aDescriptor.get;
+    delete aDescriptor.set;
+  }
+
   Scope.call(this, aScope, aName, this._initialDescriptor = aDescriptor);
   this.setGrip(aDescriptor.value);
   this._symbolicName = aName;
@@ -1995,6 +2009,8 @@ ViewHelpers.create({ constructor: Variable, proto: Scope.prototype }, {
    *             - { value: { type: "object", class: "Object" } }
    *             - { get: { type: "object", class: "Function" },
    *                 set: { type: "undefined" } }
+   *             - { get: { type "object", class: "Function" },
+   *                 getterValue: "foo", getterPrototypeLevel: 2 }
    * @param boolean aRelaxed
    *        True if name duplicates should be allowed.
    * @return Property
@@ -2374,14 +2390,17 @@ ViewHelpers.create({ constructor: Variable, proto: Scope.prototype }, {
       let configurableLabel = document.createElement("label");
       let enumerableLabel = document.createElement("label");
       let writableLabel = document.createElement("label");
+      let safeGetterLabel = document.createElement("label");
       configurableLabel.setAttribute("value", "configurable");
       enumerableLabel.setAttribute("value", "enumerable");
       writableLabel.setAttribute("value", "writable");
+      safeGetterLabel.setAttribute("value", "native-getter");
 
       tooltip.setAttribute("orient", "horizontal");
       tooltip.appendChild(configurableLabel);
       tooltip.appendChild(enumerableLabel);
       tooltip.appendChild(writableLabel);
+      tooltip.appendChild(safeGetterLabel);
 
       this._target.appendChild(tooltip);
       this._target.setAttribute("tooltip", tooltip.id);
@@ -2419,6 +2438,9 @@ ViewHelpers.create({ constructor: Variable, proto: Scope.prototype }, {
     }
     if (!descriptor.null && !descriptor.writable && !this.ownerView.getter && !this.ownerView.setter) {
       this._target.setAttribute("non-writable", "");
+    }
+    if (descriptor && "getterValue" in descriptor) {
+      this._target.setAttribute("safe-getter", "");
     }
     if (name == "this") {
       this._target.setAttribute("self", "");

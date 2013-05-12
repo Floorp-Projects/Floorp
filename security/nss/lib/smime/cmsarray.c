@@ -27,7 +27,7 @@
  * This allocates space for the array of pointers
  */
 void **
-NSS_CMSArray_Alloc(PRArenaPool *poolp, int n)
+NSS_CMSArray_Alloc(PLArenaPool *poolp, int n)
 {
     return (void **)PORT_ArenaZAlloc(poolp, n * sizeof(void *));
 }
@@ -38,7 +38,7 @@ NSS_CMSArray_Alloc(PRArenaPool *poolp, int n)
  * The array of pointers is either created (if array was empty before) or grown.
  */
 SECStatus
-NSS_CMSArray_Add(PRArenaPool *poolp, void ***array, void *obj)
+NSS_CMSArray_Add(PLArenaPool *poolp, void ***array, void *obj)
 {
     void **p;
     int n;

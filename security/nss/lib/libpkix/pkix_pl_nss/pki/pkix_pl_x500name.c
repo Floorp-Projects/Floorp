@@ -292,7 +292,7 @@ pkix_pl_X500Name_CreateFromUtf8(
         void *plContext)
 {
         PKIX_PL_X500Name *x500Name = NULL;
-        PRArenaPool *arena = NULL;
+        PLArenaPool *arena = NULL;
         CERTName *nssDN = NULL;
         SECItem *resultSecItem = NULL;
         
@@ -396,7 +396,7 @@ PKIX_PL_X500Name_CreateFromCERTName(
         PKIX_PL_X500Name **pName,
         void *plContext)
 {
-        PRArenaPool *arena = NULL;
+        PLArenaPool *arena = NULL;
         SECStatus rv = SECFailure;
         PKIX_PL_X500Name *x500Name = NULL;
 
@@ -557,7 +557,7 @@ cleanup:
  *      Address of X500Name whose CERTName flag is to be encoded. Must be
  *      non-NULL.
  *  "arena"
- *      Address of the PRArenaPool to be used in the encoding, and in which
+ *      Address of the PLArenaPool to be used in the encoding, and in which
  *      "pSECName" will be allocated. Must be non-NULL.
  *  "pSECName"
  *      Address where result will be stored. Must be non-NULL.
@@ -574,7 +574,7 @@ cleanup:
 PKIX_Error *
 pkix_pl_X500Name_GetDERName(
         PKIX_PL_X500Name *xname,
-        PRArenaPool *arena,
+        PLArenaPool *arena,
         SECItem **pDERName,
         void *plContext)
 {

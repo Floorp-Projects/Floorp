@@ -175,12 +175,16 @@ class TestWriteJson(unittest.TestCase):
         """
         write_json(self.f, env={'OS_TARGET':'WINNT',
                                 'TARGET_CPU':'i386',
+                                'TOPSRCDIR':'/tmp',
+                                'MOZCONFIG':'foo',
                                 'MOZ_WIDGET_TOOLKIT':'windows'})
         with open(self.f) as f:
             d = json.load(f)
             self.assertEqual('win', d['os'])
             self.assertEqual('x86', d['processor'])
             self.assertEqual('windows', d['toolkit'])
+            self.assertEqual('/tmp', d['topsrcdir'])
+            self.assertEqual(os.path.normpath('/tmp/foo'), d['mozconfig'])
             self.assertEqual(32, d['bits'])
 
     def testFileObj(self):

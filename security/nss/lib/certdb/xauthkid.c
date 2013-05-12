@@ -35,7 +35,7 @@ const SEC_ASN1Template CERTAuthKeyIDTemplate[] = {
 
 
 
-SECStatus CERT_EncodeAuthKeyID (PRArenaPool *arena, CERTAuthKeyID *value, SECItem *encodedValue)
+SECStatus CERT_EncodeAuthKeyID (PLArenaPool *arena, CERTAuthKeyID *value, SECItem *encodedValue)
 {
     SECStatus rv = SECFailure;
  
@@ -78,7 +78,7 @@ SECStatus CERT_EncodeAuthKeyID (PRArenaPool *arena, CERTAuthKeyID *value, SECIte
 }
 
 CERTAuthKeyID *
-CERT_DecodeAuthKeyID (PRArenaPool *arena, const SECItem *encodedValue)
+CERT_DecodeAuthKeyID (PLArenaPool *arena, const SECItem *encodedValue)
 {
     CERTAuthKeyID * value = NULL;
     SECStatus       rv    = SECFailure;

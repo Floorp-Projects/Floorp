@@ -643,11 +643,11 @@ get_serial_number(Pair  *data)
 
 
 typedef SECStatus (* EXTEN_VALUE_ENCODER)
-		(PRArenaPool *extHandle, void *value, SECItem *encodedValue);
+		(PLArenaPool *extHandle, void *value, SECItem *encodedValue);
 
 static SECStatus 
 EncodeAndAddExtensionValue(
-	PRArenaPool          *arena, 
+	PLArenaPool          *arena,
 	void                 *extHandle, 
 	void                 *value, 
 	PRBool 		     criticality,
@@ -713,10 +713,10 @@ static CERTOidSequence *
 CreateOidSequence(void)
 {
   CERTOidSequence *rv = (CERTOidSequence *)NULL;
-  PRArenaPool *arena = (PRArenaPool *)NULL;
+  PLArenaPool *arena = (PLArenaPool *)NULL;
 
   arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-  if( (PRArenaPool *)NULL == arena ) {
+  if( (PLArenaPool *)NULL == arena ) {
     goto loser;
   }
 
@@ -734,7 +734,7 @@ CreateOidSequence(void)
   return rv;
 
  loser:
-  if( (PRArenaPool *)NULL != arena ) {
+  if( (PLArenaPool *)NULL != arena ) {
     PORT_FreeArena(arena, PR_FALSE);
   }
 
@@ -941,7 +941,7 @@ AddAuthKeyID (void              *extHandle,
 	      CERTCertDBHandle  *handle)
 {
     CERTAuthKeyID               *authKeyID = NULL;    
-    PRArenaPool                 *arena = NULL;
+    PLArenaPool                 *arena = NULL;
     SECStatus                   rv = SECSuccess;
     CERTCertificate             *issuerCert = NULL;
     CERTGeneralName             *genNames;
@@ -1013,7 +1013,7 @@ AddPrivKeyUsagePeriod(void             *extHandle,
 {
     char *notBeforeStr;
     char *notAfterStr;
-    PRArenaPool *arena = NULL;
+    PLArenaPool *arena = NULL;
     SECStatus rv = SECSuccess;
     CERTPrivKeyUsagePeriod *pkup;
 
@@ -1439,14 +1439,14 @@ string_to_binary(char  *string)
 		high_digit = *string - '0';
 	    } else {
 		*string = toupper(*string);
-		high_digit = *string - 'A';
+		high_digit = *string - 'A' + 10;
 	    }
 	    string++;
 	    if (*string >= '0' && *string <= '9') {
 		low_digit = *string - '0';
 	    } else {
 		*string = toupper(*string);
-		low_digit = *string = 'A';
+		low_digit = *string - 'A' + 10;
 	    }
 	    (rv->len)++;
 	} else {
@@ -1471,7 +1471,7 @@ string_to_binary(char  *string)
 static SECStatus
 MakeGeneralName(char             *name, 
 		CERTGeneralName  *genName,
-		PRArenaPool      *arena)
+		PLArenaPool      *arena)
 {
     SECItem                      *oid;
     SECOidData                   *oidData;
@@ -1611,7 +1611,7 @@ MakeGeneralName(char             *name,
 static CERTGeneralName *
 MakeAltName(Pair             *data, 
 	    char             *which, 
-	    PRArenaPool      *arena)
+	    PLArenaPool      *arena)
 {
     CERTGeneralName          *SubAltName;
     CERTGeneralName          *current;
@@ -1672,7 +1672,7 @@ MakeAltName(Pair             *data,
 
 static CERTNameConstraints *
 MakeNameConstraints(Pair             *data, 
-		    PRArenaPool      *arena)
+		    PLArenaPool      *arena)
 {
     CERTNameConstraints      *NameConstraints;
     CERTNameConstraint       *current = NULL;
@@ -1794,7 +1794,7 @@ AddAltName(void              *extHandle,
 	   int               type)
 {
     PRBool             autoIssuer = PR_FALSE;
-    PRArenaPool        *arena = NULL;
+    PLArenaPool        *arena = NULL;
     CERTGeneralName    *genName = NULL;
     char               *which = NULL;
     char               *name = NULL;
@@ -1864,7 +1864,7 @@ static SECStatus
 AddNameConstraints(void  *extHandle,
 		   Pair  *data)
 {
-    PRArenaPool         *arena = NULL;
+    PLArenaPool         *arena = NULL;
     CERTNameConstraints *constraints = NULL;
     SECStatus           rv = SECSuccess;
 
@@ -2111,7 +2111,7 @@ SignCert(CERTCertificate   *cert,
     SECItem                der;
     SECKEYPrivateKey       *caPrivateKey = NULL;
     SECStatus              rv;
-    PRArenaPool            *arena;
+    PLArenaPool            *arena;
     SECOidTag              algID;
 
     if (which_key == 0) {

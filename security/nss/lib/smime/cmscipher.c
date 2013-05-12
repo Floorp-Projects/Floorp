@@ -117,7 +117,7 @@ NSS_CMSCipherContext_StartDecrypt(PK11SymKey *key, SECAlgorithmID *algid)
  * have two simple cover functions which call it. 
  */
 NSSCMSCipherContext *
-NSS_CMSCipherContext_StartEncrypt(PRArenaPool *poolp, PK11SymKey *key, SECAlgorithmID *algid)
+NSS_CMSCipherContext_StartEncrypt(PLArenaPool *poolp, PK11SymKey *key, SECAlgorithmID *algid)
 {
     NSSCMSCipherContext *cc;
     void *ciphercx;

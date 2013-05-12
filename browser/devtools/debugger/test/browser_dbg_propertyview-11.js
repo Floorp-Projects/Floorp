@@ -61,15 +61,17 @@ function testFrameParameters()
       is(anonymousNodes[2].querySelector(".value").getAttribute("value"), "[object Object]",
         "Should have the right property value for |buttonAsProto|.");
 
-      is(globalNodes[3].querySelector(".name").getAttribute("value"), "document",
+      let globalScopeObject = gVars.getScopeForNode(globalScope);
+      let documentNode = globalScopeObject.get("document");
+
+      is(documentNode.target.querySelector(".name").getAttribute("value"), "document",
         "Should have the right property name for |document|.");
 
-      is(globalNodes[3].querySelector(".value").getAttribute("value"), "[object HTMLDocument]",
+      is(documentNode.target.querySelector(".value").getAttribute("value"), "[object HTMLDocument]",
         "Should have the right property value for |document|.");
 
       let buttonNode = gVars.getItemForNode(anonymousNodes[1]);
       let buttonAsProtoNode = gVars.getItemForNode(anonymousNodes[2]);
-      let documentNode = gVars.getItemForNode(globalNodes[3]);
 
       is(buttonNode.expanded, false,
         "The buttonNode should not be expanded at this point.");
@@ -131,30 +133,46 @@ function testFrameParameters()
            .getAttribute("value").search(/object/) != -1,
           "'__proto__' in documentNode should be an object.");
 
-        let buttonProtoNode = buttonNode.get("__proto__");
-        let buttonAsProtoProtoNode = buttonAsProtoNode.get("__proto__");
-        let documentProtoNode = documentNode.get("__proto__");
+        // Now the main course: make sure that the native getters for WebIDL
+        // attributes have been called and a value has been returned.
+        is(buttonNode.get("type").target.querySelector(".name")
+           .getAttribute("value"), "type",
+          "Should have the right property name for 'type' in buttonProtoNode.");
+        is(buttonNode.get("type").target.querySelector(".value")
+           .getAttribute("value"), '"submit"',
+          "'type' in buttonProtoNode should have the right value.");
+        is(buttonNode.get("formMethod").target.querySelector(".name")
+           .getAttribute("value"), "formMethod",
+          "Should have the right property name for 'formMethod' in buttonProtoNode.");
+        is(buttonNode.get("formMethod").target.querySelector(".value")
+           .getAttribute("value"), '""',
+          "'formMethod' in buttonProtoNode should have the right value.");
 
-        is(buttonProtoNode.expanded, false,
-          "The buttonProtoNode should not be expanded at this point.");
+        is(documentNode.get("domain").target.querySelector(".name")
+           .getAttribute("value"), "domain",
+          "Should have the right property name for 'domain' in documentProtoNode.");
+        is(documentNode.get("domain").target.querySelector(".value")
+           .getAttribute("value"), '"example.com"',
+          "'domain' in documentProtoNode should have the right value.");
+        is(documentNode.get("cookie").target.querySelector(".name")
+           .getAttribute("value"), "cookie",
+          "Should have the right property name for 'cookie' in documentProtoNode.");
+        is(documentNode.get("cookie").target.querySelector(".value")
+           .getAttribute("value"), '""',
+          "'cookie' in documentProtoNode should have the right value.");
+
+        let buttonAsProtoProtoNode = buttonAsProtoNode.get("__proto__");
+
         is(buttonAsProtoProtoNode.expanded, false,
           "The buttonAsProtoProtoNode should not be expanded at this point.");
-        is(documentProtoNode.expanded, false,
-          "The documentProtoNode should not be expanded at this point.");
 
         // Expand the prototypes of 'button', 'buttonAsProto' and 'document'
         // tree nodes. This causes their properties to be retrieved and
         // displayed.
-        buttonProtoNode.expand();
         buttonAsProtoProtoNode.expand();
-        documentProtoNode.expand();
 
-        is(buttonProtoNode.expanded, true,
-          "The buttonProtoNode should be expanded at this point.");
         is(buttonAsProtoProtoNode.expanded, true,
           "The buttonAsProtoProtoNode should be expanded at this point.");
-        is(documentProtoNode.expanded, true,
-          "The documentProtoNode should be expanded at this point.");
 
 
         // Poll every few milliseconds until the properties are retrieved.
@@ -168,86 +186,27 @@ function testFrameParameters()
             window.clearInterval(intervalID1);
             return resumeAndFinish();
           }
-          if (!buttonProtoNode._retrieved ||
-              !buttonAsProtoProtoNode._retrieved ||
-              !documentProtoNode._retrieved) {
+          if (!buttonAsProtoProtoNode._retrieved) {
             return;
           }
           window.clearInterval(intervalID1);
 
-          // Now the main course: make sure that the native getters for WebIDL
-          // attributes have been called and a value has been returned.
-          is(buttonProtoNode.get("type").target.querySelector(".name")
+          // Test this more involved case that reuses an object that is
+          // present in another cache line.
+          is(buttonAsProtoProtoNode.get("type").target.querySelector(".name")
              .getAttribute("value"), "type",
-            "Should have the right property name for 'type' in buttonProtoNode.");
-          is(buttonProtoNode.get("type").target.querySelector(".value")
+            "Should have the right property name for 'type' in buttonAsProtoProtoProtoNode.");
+          is(buttonAsProtoProtoNode.get("type").target.querySelector(".value")
              .getAttribute("value"), '"submit"',
-            "'type' in buttonProtoNode should have the right value.");
-          is(buttonProtoNode.get("formMethod").target.querySelector(".name")
+            "'type' in buttonAsProtoProtoProtoNode should have the right value.");
+          is(buttonAsProtoProtoNode.get("formMethod").target.querySelector(".name")
              .getAttribute("value"), "formMethod",
-            "Should have the right property name for 'formMethod' in buttonProtoNode.");
-          is(buttonProtoNode.get("formMethod").target.querySelector(".value")
+            "Should have the right property name for 'formMethod' in buttonAsProtoProtoProtoNode.");
+          is(buttonAsProtoProtoNode.get("formMethod").target.querySelector(".value")
              .getAttribute("value"), '""',
-            "'formMethod' in buttonProtoNode should have the right value.");
+            "'formMethod' in buttonAsProtoProtoProtoNode should have the right value.");
 
-          is(documentProtoNode.get("domain").target.querySelector(".name")
-             .getAttribute("value"), "domain",
-            "Should have the right property name for 'domain' in documentProtoNode.");
-          is(documentProtoNode.get("domain").target.querySelector(".value")
-             .getAttribute("value"), '"example.com"',
-            "'domain' in documentProtoNode should have the right value.");
-          is(documentProtoNode.get("cookie").target.querySelector(".name")
-             .getAttribute("value"), "cookie",
-            "Should have the right property name for 'cookie' in documentProtoNode.");
-          is(documentProtoNode.get("cookie").target.querySelector(".value")
-             .getAttribute("value"), '""',
-            "'cookie' in documentProtoNode should have the right value.");
-
-          let buttonAsProtoProtoProtoNode = buttonAsProtoProtoNode.get("__proto__");
-
-          is(buttonAsProtoProtoProtoNode.expanded, false,
-            "The buttonAsProtoProtoProtoNode should not be expanded at this point.");
-
-          // Expand the prototype of the prototype of 'buttonAsProto' tree
-          // node. This causes its properties to be retrieved and displayed.
-          buttonAsProtoProtoProtoNode.expand();
-
-          is(buttonAsProtoProtoProtoNode.expanded, true,
-            "The buttonAsProtoProtoProtoNode should be expanded at this point.");
-
-          // Poll every few milliseconds until the properties are retrieved.
-          // It's important to set the timer in the chrome window, because the
-          // content window timers are disabled while the debuggee is paused.
-          let count3 = 0;
-          let intervalID2 = window.setInterval(function(){
-            info("count3: " + count3);
-            if (++count3 > 50) {
-              ok(false, "Timed out while polling for the properties.");
-              window.clearInterval(intervalID2);
-              return resumeAndFinish();
-            }
-            if (!buttonAsProtoProtoProtoNode._retrieved) {
-              return;
-            }
-            window.clearInterval(intervalID2);
-
-            // Test this more involved case that reuses an object that is
-            // present in another cache line.
-            is(buttonAsProtoProtoProtoNode.get("type").target.querySelector(".name")
-               .getAttribute("value"), "type",
-              "Should have the right property name for 'type' in buttonAsProtoProtoProtoNode.");
-            is(buttonAsProtoProtoProtoNode.get("type").target.querySelector(".value")
-               .getAttribute("value"), '"submit"',
-              "'type' in buttonAsProtoProtoProtoNode should have the right value.");
-            is(buttonAsProtoProtoProtoNode.get("formMethod").target.querySelector(".name")
-               .getAttribute("value"), "formMethod",
-              "Should have the right property name for 'formMethod' in buttonAsProtoProtoProtoNode.");
-            is(buttonAsProtoProtoProtoNode.get("formMethod").target.querySelector(".value")
-               .getAttribute("value"), '""',
-              "'formMethod' in buttonAsProtoProtoProtoNode should have the right value.");
-
-            resumeAndFinish();
-          }, 100);
+          resumeAndFinish();
         }, 100);
       }, 100);
     }}, 0);

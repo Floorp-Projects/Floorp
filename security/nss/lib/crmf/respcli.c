@@ -22,7 +22,7 @@ CMMFCertRepContent*
 CMMF_CreateCertRepContentFromDER(CERTCertDBHandle *db, const char *buf, 
 				 long len)
 {
-    PRArenaPool        *poolp;
+    PLArenaPool        *poolp;
     CMMFCertRepContent *certRepContent;
     SECStatus           rv;
     int                 i;

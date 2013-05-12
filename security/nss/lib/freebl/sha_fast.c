@@ -405,7 +405,7 @@ SHA1_DestroyContext(SHA1Context *cx, PRBool freeit)
 }
 
 SECStatus
-SHA1_HashBuf(unsigned char *dest, const unsigned char *src, uint32 src_length)
+SHA1_HashBuf(unsigned char *dest, const unsigned char *src, PRUint32 src_length)
 {
     SHA1Context ctx;
     unsigned int outLen;

@@ -349,7 +349,7 @@ SSL_ExportKeyingMaterial(PRFileDesc *fd,
     /* construct PRF arguments */
     valLen = SSL3_RANDOM_LENGTH * 2;
     if (hasContext) {
-	valLen += 2 /* uint16 length */ + contextLen;
+	valLen += 2 /* PRUint16 length */ + contextLen;
     }
     val = PORT_Alloc(valLen);
     if (!val) {

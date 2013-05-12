@@ -1254,7 +1254,7 @@ nsJSContext::GetCCRefcnt()
 
 nsresult
 nsJSContext::EvaluateString(const nsAString& aScript,
-                            JSObject& aScopeObject,
+                            JS::Handle<JSObject*> aScopeObject,
                             JS::CompileOptions& aOptions,
                             bool aCoerceToString,
                             JS::Value* aRetValue)
@@ -1278,10 +1278,10 @@ nsJSContext::EvaluateString(const nsAString& aScript,
   nsCxPusher pusher;
   pusher.Push(mContext);
 
-  xpc_UnmarkGrayObject(&aScopeObject);
+  xpc_UnmarkGrayObject(aScopeObject);
   nsAutoMicroTask mt;
 
-  JSPrincipals* p = JS_GetCompartmentPrincipals(js::GetObjectCompartment(&aScopeObject));
+  JSPrincipals* p = JS_GetCompartmentPrincipals(js::GetObjectCompartment(aScopeObject));
   aOptions.setPrincipals(p);
 
   bool ok = false;
@@ -1295,11 +1295,11 @@ nsJSContext::EvaluateString(const nsAString& aScript,
   // cx and potentially call JS_RestoreFrameChain.
   XPCAutoRequest ar(mContext);
   {
-    JSAutoCompartment ac(mContext, &aScopeObject);
+    JSAutoCompartment ac(mContext, aScopeObject);
 
     ++mExecuteDepth;
 
-    JS::RootedObject rootedScope(mContext, &aScopeObject);
+    JS::RootedObject rootedScope(mContext, aScopeObject);
     ok = JS::Evaluate(mContext, rootedScope, aOptions,
                       PromiseFlatString(aScript).get(),
                       aScript.Length(), aRetValue);
@@ -1390,8 +1390,9 @@ nsJSContext::CompileScript(const PRUnichar* aText,
 
 nsresult
 nsJSContext::ExecuteScript(JSScript* aScriptObject,
-                           JSObject* aScopeObject)
+                           JSObject* aScopeObject_)
 {
+  JS::Rooted<JSObject*> aScopeObject(mContext, aScopeObject_);
   NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
 
   if (!mScriptsEnabled) {

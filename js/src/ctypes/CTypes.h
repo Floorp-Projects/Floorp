@@ -316,7 +316,7 @@ JSBool InitTypeClasses(JSContext* cx, JSHandleObject parent);
 JSBool ConvertToJS(JSContext* cx, JSHandleObject typeObj, JSHandleObject dataObj,
   void* data, bool wantPrimitive, bool ownResult, jsval* result);
 
-JSBool ImplicitConvert(JSContext* cx, jsval val, JSObject* targetType,
+JSBool ImplicitConvert(JSContext* cx, JSHandleValue val, JSObject* targetType,
   void* buffer, bool isArgument, bool* freePointer);
 
 JSBool ExplicitConvert(JSContext* cx, JSHandleValue val, JSHandleObject targetType,

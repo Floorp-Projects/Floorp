@@ -19,7 +19,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "console",
                                   "resource://gre/modules/devtools/Console.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "gcli",
-                                  "resource:///modules/devtools/gcli.jsm");
+                                  "resource://gre/modules/devtools/gcli.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "CmdCommands",
                                   "resource:///modules/devtools/BuiltinCommands.jsm");
@@ -153,7 +153,7 @@ let CommandUtils = {
   createEnvironment: function(chromeDocument, contentDocument) {
     let environment = {
       chromeDocument: chromeDocument,
-      contentDocument: contentDocument, // Use of contentDocument is deprecated
+      chromeWindow: chromeDocument.defaultView,
 
       document: contentDocument,
       window: contentDocument.defaultView
@@ -181,9 +181,13 @@ this.CommandUtils = CommandUtils;
  * to using panels.
  */
 XPCOMUtils.defineLazyGetter(this, "isLinux", function () {
+  return OS == "Linux";
+});
+
+XPCOMUtils.defineLazyGetter(this, "OS", function () {
   let os = Components.classes["@mozilla.org/xre/app-info;1"]
            .getService(Components.interfaces.nsIXULRuntime).OS;
-  return os == "Linux";
+  return os;
 });
 
 /**
@@ -761,6 +765,7 @@ function OutputPanel(aDevToolbar, aLoadCallback)
   this.displayedOutput = undefined;
 
   this._onload = this._onload.bind(this);
+  this._update = this._update.bind(this);
   this._frame.addEventListener("load", this._onload, true);
 
   this.loaded = false;
@@ -790,33 +795,6 @@ OutputPanel.prototype._onload = function OP_onload()
     delete this._loadCallback;
   }
 };
-
-/**
- * Determine the scrollbar width in the current document.
- *
- * @private
- */
-Object.defineProperty(OutputPanel.prototype, 'scrollbarWidth', {
-  get: function() {
-    if (this.__scrollbarWidth) {
-      return this.__scrollbarWidth;
-    }
-
-    let hbox = this.document.createElementNS(XUL_NS, "hbox");
-    hbox.setAttribute("style", "height: 0%; overflow: hidden");
-
-    let scrollbar = this.document.createElementNS(XUL_NS, "scrollbar");
-    scrollbar.setAttribute("orient", "vertical");
-    hbox.appendChild(scrollbar);
-
-    this.document.documentElement.appendChild(hbox);
-    this.__scrollbarWidth = scrollbar.clientWidth;
-    this.document.documentElement.removeChild(hbox);
-
-    return this.__scrollbarWidth;
-  },
-  enumerable: true
-});
 
 /**
  * Prevent the popup from hiding if it is not permitted via this.canHide.
@@ -863,13 +841,32 @@ OutputPanel.prototype._resize = function CLP_resize()
   // Set max panel width to match any content with a max of the width of the
   // browser window.
   let maxWidth = this._panel.ownerDocument.documentElement.clientWidth;
-  let width = Math.min(maxWidth, this.document.documentElement.scrollWidth);
 
-  // Add scrollbar width to content size in case a scrollbar is needed.
-  width += this.scrollbarWidth;
+  // Adjust max width according to OS.
+  // We'd like to put this in CSS but we can't:
+  //   body { width: calc(min(-5px, max-content)); }
+  //   #_panel { max-width: -5px; }
+  switch(OS) {
+    case "Linux":
+      maxWidth -= 5;
+      break;
+    case "Darwin":
+      maxWidth -= 25;
+      break;
+    case "WINNT":
+      maxWidth -= 5;
+      break;
+  }
+
+  this.document.body.style.width = "-moz-max-content";
+  let style = this._frame.contentWindow.getComputedStyle(this.document.body);
+  let frameWidth = parseInt(style.width, 10);
+  let width = Math.min(maxWidth, frameWidth);
+  this.document.body.style.width = width + "px";
 
   // Set the width of the iframe.
   this._frame.style.minWidth = width + "px";
+  this._panel.style.maxWidth = maxWidth + "px";
 
   // browserAdjustment is used to correct the panel height according to the
   // browsers borders etc.
@@ -906,18 +903,28 @@ OutputPanel.prototype._outputChanged = function OP_outputChanged(aEvent)
   this.remove();
 
   this.displayedOutput = aEvent.output;
-  this.update();
-
-  this.displayedOutput.onChange.add(this.update, this);
   this.displayedOutput.onClose.add(this.remove, this);
+
+  if (this.displayedOutput.completed) {
+    this._update();
+  }
+  else {
+    this.displayedOutput.promise.then(this._update, this._update)
+                                .then(null, console.error);
+  }
 };
 
 /**
  * Called when displayed Output says it's changed or from outputChanged, which
  * happens when there is a new displayed Output.
  */
-OutputPanel.prototype.update = function OP_update()
+OutputPanel.prototype._update = function OP_update()
 {
+  // destroy has been called, bail out
+  if (this._div == null) {
+    return;
+  }
+
   // Empty this._div
   while (this._div.hasChildNodes()) {
     this._div.removeChild(this._div.firstChild);
@@ -927,7 +934,7 @@ OutputPanel.prototype.update = function OP_update()
     let requisition = this._devtoolbar.display.requisition;
     let nodePromise = converters.convert(this.displayedOutput.data,
                                          this.displayedOutput.type, 'dom',
-                                         requisition.context);
+                                         requisition.conversionContext);
     nodePromise.then(function(node) {
       while (this._div.hasChildNodes()) {
         this._div.removeChild(this._div.firstChild);
@@ -958,7 +965,6 @@ OutputPanel.prototype.remove = function OP_remove()
   }
 
   if (this.displayedOutput) {
-    this.displayedOutput.onChange.remove(this.update, this);
     this.displayedOutput.onClose.remove(this.remove, this);
     delete this.displayedOutput;
   }

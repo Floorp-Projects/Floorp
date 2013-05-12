@@ -157,7 +157,7 @@ IDBFactory::Create(nsPIDOMWindow* aWindow,
 // static
 nsresult
 IDBFactory::Create(JSContext* aCx,
-                   JSObject* aOwningObject,
+                   JS::Handle<JSObject*> aOwningObject,
                    ContentParent* aContentParent,
                    IDBFactory** aFactory)
 {
@@ -534,7 +534,7 @@ IDBFactory::OpenInternal(const nsAString& aName,
   NS_ASSERTION(mWindow || mOwningObject, "Must have one of these!");
 
   nsCOMPtr<nsPIDOMWindow> window;
-  JSObject* scriptOwner = nullptr;
+  JS::Rooted<JSObject*> scriptOwner(aCallingCx);
   StoragePrivilege privilege;
 
   if (mWindow) {
@@ -622,8 +622,8 @@ IDBFactory::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 }
 
 int16_t
-IDBFactory::Cmp(JSContext* aCx, JS::Value aFirst, JS::Value aSecond,
-                ErrorResult& aRv)
+IDBFactory::Cmp(JSContext* aCx, JS::Handle<JS::Value> aFirst,
+                JS::Handle<JS::Value> aSecond, ErrorResult& aRv)
 {
   Key first, second;
   nsresult rv = first.SetFromJSVal(aCx, aFirst);

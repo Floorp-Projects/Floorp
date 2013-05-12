@@ -492,7 +492,7 @@ SHA256_EndRaw(SHA256Context *ctx, unsigned char *digest,
 
 SECStatus 
 SHA256_HashBuf(unsigned char *dest, const unsigned char *src, 
-               uint32 src_length)
+               PRUint32 src_length)
 {
     SHA256Context ctx;
     unsigned int outLen;
@@ -594,7 +594,7 @@ SHA224_EndRaw(SHA256Context *ctx, unsigned char *digest,
 
 SECStatus 
 SHA224_HashBuf(unsigned char *dest, const unsigned char *src,
-               uint32 src_length)
+               PRUint32 src_length)
 {
     SHA256Context ctx;
     unsigned int outLen;
@@ -1296,7 +1296,7 @@ SHA512_EndRaw(SHA512Context *ctx, unsigned char *digest,
 
 SECStatus 
 SHA512_HashBuf(unsigned char *dest, const unsigned char *src, 
-               uint32 src_length)
+               PRUint32 src_length)
 {
     SHA512Context ctx;
     unsigned int outLen;
@@ -1412,7 +1412,7 @@ SHA384_EndRaw(SHA384Context *ctx, unsigned char *digest,
 
 SECStatus 
 SHA384_HashBuf(unsigned char *dest, const unsigned char *src,
-			  uint32 src_length)
+	       PRUint32 src_length)
 {
     SHA512Context ctx;
     unsigned int outLen;

@@ -15,17 +15,6 @@ function test() {
   }).then(finish);
 }
 
-tests.testEcho = function(options) {
-  return helpers.audit(options, [
-    {
-      setup: "echo message",
-      exec: {
-        output: "message",
-      }
-    }
-  ]);
-};
-
 tests.testConsole = function(options) {
   let deferred = Promise.defer();
   let hud = null;
@@ -67,12 +56,7 @@ tests.testConsole = function(options) {
         }
       }
     ]).then(function() {
-      // FIXME: Remove this hack once bug 842347 is fixed
-      // Gak - our promises impl causes so many stack frames that we blow up the
-      // JS engine. Jumping to a new event with a truncated stack solves this.
-      executeSoon(function() {
-        deferred.resolve();
-      });
+      deferred.resolve();
     });
   };
 

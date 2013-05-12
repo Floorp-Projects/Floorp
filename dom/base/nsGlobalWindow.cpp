@@ -2029,7 +2029,7 @@ nsGlobalWindow::CreateOuterObject(nsGlobalWindow* aNewInner)
   AutoPushJSContext cx(mContext->GetNativeContext());
 
   JS::Rooted<JSObject*> global(cx, aNewInner->FastGetGlobalJSObject());
-  JSObject* outer = NewOuterWindowProxy(cx, global, IsChromeWindow());
+  JS::Rooted<JSObject*> outer(cx, NewOuterWindowProxy(cx, global, IsChromeWindow()));
   if (!outer) {
     return NS_ERROR_FAILURE;
   }
@@ -2040,7 +2040,7 @@ nsGlobalWindow::CreateOuterObject(nsGlobalWindow* aNewInner)
 }
 
 nsresult
-nsGlobalWindow::SetOuterObject(JSContext* aCx, JSObject* aOuterObject)
+nsGlobalWindow::SetOuterObject(JSContext* aCx, JS::Handle<JSObject*> aOuterObject)
 {
   // Force our context's global object to be the outer.
   // NB: JS_SetGlobalObject sets aCx->compartment.
@@ -2393,7 +2393,8 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
         JS_SetParent(cx, mJSObject, newInnerWindow->mJSObject);
 
-        rv = SetOuterObject(cx, mJSObject);
+        JS::Rooted<JSObject*> obj(cx, mJSObject);
+        rv = SetOuterObject(cx, obj);
         NS_ENSURE_SUCCESS(rv, rv);
 
         NS_ASSERTION(!JS_IsExceptionPending(cx),
@@ -10233,7 +10234,8 @@ nsGlobalWindow::RunTimeoutHandler(nsTimeout* aTimeout,
     JS::CompileOptions options(cx);
     options.setFileAndLine(filename, lineNo)
            .setVersion(JSVERSION_DEFAULT);
-    aScx->EvaluateString(nsDependentString(script), *FastGetGlobalJSObject(),
+    JS::Rooted<JSObject*> global(cx, FastGetGlobalJSObject());
+    aScx->EvaluateString(nsDependentString(script), global,
                          options, /*aCoerceToString = */ false, nullptr);
   } else {
     // Hold strong ref to ourselves while we call the callback.

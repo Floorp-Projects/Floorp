@@ -38,6 +38,7 @@ function test() {
 // var helpers = require('gclitest/helpers');
 var canon = require('gcli/canon');
 // var assert = require('test/assert');
+var Canon = canon.Canon;
 
 var startCount = undefined;
 var events = undefined;
@@ -157,8 +158,6 @@ exports.testAddRemove2 = function(options) {
   return helpers.audit(options, [
     {
       setup: 'testadd',
-      check: {
-      },
       exec: {
         output: /^3$/
       },
@@ -198,5 +197,75 @@ exports.testAddRemove3 = function(options) {
 
   canon.onCanonChange.remove(canonChange);
 };
+
+exports.testAltCanon = function(options) {
+  var altCanon = new Canon();
+
+  var tss = {
+    name: 'tss',
+    params: [
+      { name: 'str', type: 'string' },
+      { name: 'num', type: 'number' },
+      { name: 'opt', type: { name: 'selection', data: [ '1', '2', '3' ] } },
+    ],
+    exec: function(args, context) {
+      return context.commandName + ':' +
+              args.str + ':' + args.num + ':' + args.opt;
+    }
+  };
+  altCanon.addCommand(tss);
+
+  var commandSpecs = altCanon.getCommandSpecs();
+  assert.is(JSON.stringify(commandSpecs),
+            '{"tss":{"name":"tss","params":[' +
+              '{"name":"str","type":"string"},' +
+              '{"name":"num","type":"number"},' +
+              '{"name":"opt","type":{"name":"selection","data":["1","2","3"]}}]}}',
+            'JSON.stringify(commandSpecs)');
+
+  var remoter = function(args, context) {
+    assert.is(context.commandName, 'tss', 'commandName is tss');
+
+    var cmd = altCanon.getCommand(context.commandName);
+    return cmd.exec(args, context);
+  };
+
+  canon.addProxyCommands('proxy', commandSpecs, remoter, 'test');
+
+  var parent = canon.getCommand('proxy');
+  assert.is(parent.name, 'proxy', 'Parent command called proxy');
+
+  var child = canon.getCommand('proxy tss');
+  assert.is(child.name, 'proxy tss', 'child command called proxy tss');
+
+  return helpers.audit(options, [
+    {
+      setup:    'proxy tss foo 6 3',
+      check: {
+        input:  'proxy tss foo 6 3',
+        hints:                    '',
+        markup: 'VVVVVVVVVVVVVVVVV',
+        cursor: 17,
+        status: 'VALID',
+        args: {
+          str: { value: 'foo', status: 'VALID' },
+          num: { value: 6, status: 'VALID' },
+          opt: { value: '3', status: 'VALID' }
+        }
+      },
+      exec: {
+        output: 'tss:foo:6:3'
+      },
+      post: function() {
+        canon.removeCommand('proxy');
+        canon.removeCommand('proxy tss');
+
+        assert.is(canon.getCommand('proxy'), undefined, 'remove proxy');
+        assert.is(canon.getCommand('proxy tss'), undefined, 'remove proxy tss');
+      }
+    }
+  ]);
+};
+
 
 // });

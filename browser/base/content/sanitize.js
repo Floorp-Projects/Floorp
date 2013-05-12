@@ -6,6 +6,10 @@
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "FormHistory",
+                                  "resource://gre/modules/FormHistory.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Promise",
+                                  "resource://gre/modules/commonjs/sdk/core/promise.js");
 
 function Sanitizer() {}
 Sanitizer.prototype = {
@@ -16,9 +20,16 @@ Sanitizer.prototype = {
       this.items[aItemName].clear();
   },
 
-  canClearItem: function (aItemName)
+  canClearItem: function (aItemName, aCallback, aArg)
   {
-    return this.items[aItemName].canClear;
+    let canClear = this.items[aItemName].canClear;
+    if (typeof canClear == "function") {
+      canClear(aCallback, aArg);
+      return false;
+    }
+
+    aCallback(aItemName, canClear, aArg);
+    return canClear;
   },
   
   prefDomain: "",
@@ -29,44 +40,58 @@ Sanitizer.prototype = {
   },
   
   /**
-   * Deletes privacy sensitive data in a batch, according to user preferences
-   *
-   * @returns  null if everything's fine;  an object in the form
-   *           { itemName: error, ... } on (partial) failure
+   * Deletes privacy sensitive data in a batch, according to user preferences.
+   * Returns a promise which is resolved if no errors occurred.  If an error
+   * occurs, a message is reported to the console and all other items are still
+   * cleared before the promise is finally rejected.
    */
   sanitize: function ()
   {
+    var deferred = Promise.defer();
     var psvc = Components.classes["@mozilla.org/preferences-service;1"]
                          .getService(Components.interfaces.nsIPrefService);
     var branch = psvc.getBranch(this.prefDomain);
-    var errors = null;
+    var seenError = false;
 
     // Cache the range of times to clear
     if (this.ignoreTimespan)
       var range = null;  // If we ignore timespan, clear everything
     else
       range = this.range || Sanitizer.getClearRange();
-      
+
+    let itemCount = Object.keys(this.items).length;
+    let onItemComplete = function() {
+      if (!--itemCount) {
+        seenError ? deferred.reject() : deferred.resolve();
+      }
+    };
     for (var itemName in this.items) {
-      var item = this.items[itemName];
+      let item = this.items[itemName];
       item.range = range;
-      if ("clear" in item && item.canClear && branch.getBoolPref(itemName)) {
-        // Some of these clear() may raise exceptions (see bug #265028)
-        // to sanitize as much as possible, we catch and store them, 
-        // rather than fail fast.
-        // Callers should check returned errors and give user feedback
-        // about items that could not be sanitized
-        try {
-          item.clear();
-        } catch(er) {
-          if (!errors) 
-            errors = {};
-          errors[itemName] = er;
-          dump("Error sanitizing " + itemName + ": " + er + "\n");
-        }
+      if ("clear" in item && branch.getBoolPref(itemName)) {
+        let clearCallback = (itemName, aCanClear) => {
+          // Some of these clear() may raise exceptions (see bug #265028)
+          // to sanitize as much as possible, we catch and store them,
+          // rather than fail fast.
+          // Callers should check returned errors and give user feedback
+          // about items that could not be sanitized
+          let item = this.items[itemName];
+          try {
+            if (aCanClear)
+              item.clear();
+          } catch(er) {
+            seenError = true;
+            Cu.reportError("Error sanitizing " + itemName + ": " + er + "\n");
+          }
+          onItemComplete();
+        };
+        this.canClearItem(itemName, clearCallback);
+      } else {
+        onItemComplete();
       }
     }
-    return errors;
+
+    return deferred.promise;
   },
   
   // Time span only makes sense in certain cases.  Consumers who want
@@ -231,15 +256,14 @@ Sanitizer.prototype = {
             findBar.clear();
         }
 
-        let formHistory = Components.classes["@mozilla.org/satchel/form-history;1"]
-                                    .getService(Components.interfaces.nsIFormHistory2);
-        if (this.range)
-          formHistory.removeEntriesByTimeframe(this.range[0], this.range[1]);
-        else
-          formHistory.removeAllEntries();
+        let change = { op: "remove" };
+        if (this.range) {
+          [ change.firstUsedStart, change.firstUsedEnd ] = this.range;
+        }
+        FormHistory.update(change);
       },
 
-      get canClear()
+      canClear : function(aCallback, aArg)
       {
         var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1']
                                       .getService(Components.interfaces.nsIWindowMediator);
@@ -251,17 +275,27 @@ Sanitizer.prototype = {
             let transactionMgr = searchBar.textbox.editor.transactionManager;
             if (searchBar.value ||
                 transactionMgr.numberOfUndoItems ||
-                transactionMgr.numberOfRedoItems)
-              return true;
+                transactionMgr.numberOfRedoItems) {
+              aCallback("formdata", true, aArg);
+              return false;
+            }
           }
           let findBar = currentDocument.getElementById("FindToolbar");
-          if (findBar && findBar.canClear)
-            return true;
+          if (findBar && findBar.canClear) {
+            aCallback("formdata", true, aArg);
+            return false;
+          }
         }
 
-        let formHistory = Components.classes["@mozilla.org/satchel/form-history;1"]
-                                    .getService(Components.interfaces.nsIFormHistory2);
-        return formHistory.hasEntries;
+        let count = 0;
+        let countDone = {
+          handleResult : function(aResult) count = aResult,
+          handleError : function(aError) Components.utils.reportError(aError),
+          handleCompletion :
+            function(aReason) { aCallback("formdata", aReason == 0 && count > 0, aArg); }
+        };
+        FormHistory.count({}, countDone);
+        return false;
       }
     },
     
@@ -486,9 +520,8 @@ Sanitizer._checkAndSanitize = function()
     // this is a shutdown or a startup after an unclean exit
     var s = new Sanitizer();
     s.prefDomain = "privacy.clearOnShutdown.";
-    s.sanitize() || // sanitize() returns null on full success
+    s.sanitize().then(function() {
       prefs.setBoolPref(Sanitizer.prefDidShutdown, true);
+    });
   }
 };
-
-

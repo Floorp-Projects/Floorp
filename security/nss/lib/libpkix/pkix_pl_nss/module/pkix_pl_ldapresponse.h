@@ -52,7 +52,7 @@ pkix_pl_LdapResponse_IsComplete(
 
 PKIX_Error *
 pkix_pl_LdapResponse_Decode(
-        PRArenaPool *arena,
+        PLArenaPool *arena,
         PKIX_PL_LdapResponse *response,
         SECStatus *pStatus,
         void *plContext);

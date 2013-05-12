@@ -58,7 +58,7 @@ CERT_StartCRLEntryExtensions(CERTCrl *crl, CERTCrlEntry *entry)
     return (cert_StartExtensions (entry, crl->arena, SetCrlEntryExts));
 }
 
-SECStatus CERT_FindCRLNumberExten (PRArenaPool *arena, CERTCrl *crl,
+SECStatus CERT_FindCRLNumberExten (PLArenaPool *arena, CERTCrl *crl,
                                    SECItem *value)
 {
     SECItem encodedExtenValue;
@@ -100,7 +100,7 @@ SECStatus CERT_FindCRLEntryReasonExten (CERTCrlEntry *crlEntry,
     SECItem wrapperItem = {siBuffer,0};
     SECItem tmpItem = {siBuffer,0};
     SECStatus rv;
-    PRArenaPool *arena = NULL;
+    PLArenaPool *arena = NULL;
 
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);   
     if ( ! arena ) {
@@ -135,7 +135,7 @@ loser:
     return (rv);
 }
 
-SECStatus CERT_FindInvalidDateExten (CERTCrl *crl, int64 *value)
+SECStatus CERT_FindInvalidDateExten (CERTCrl *crl, PRTime *value)
 {
     SECItem encodedExtenValue;
     SECItem decodedExtenValue = {siBuffer,0};

@@ -443,7 +443,7 @@ der_encode(unsigned char *buf, DERTemplate *dtemplate, void *src)
 
 
 SECStatus
-DER_Encode(PRArenaPool *arena, SECItem *dest, DERTemplate *dtemplate, void *src)
+DER_Encode(PLArenaPool *arena, SECItem *dest, DERTemplate *dtemplate, void *src)
 {
     unsigned int contents_len, header_len;
 

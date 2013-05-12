@@ -90,6 +90,11 @@ class nsIntervalSet;
 // (including <BR CLEAR="..."> frames)
 #define NS_BLOCK_HAS_CLEAR_CHILDREN         NS_FRAME_STATE_BIT(27)
 
+// This block has had a child marked dirty, so before we reflow we need
+// to look through the lines to find any such children and mark
+// appropriate lines dirty.
+#define NS_BLOCK_LOOK_FOR_DIRTY_FRAMES      NS_FRAME_STATE_BIT(61)
+
 // Are our cached intrinsic widths intrinsic widths for font size
 // inflation?  i.e., what was the current state of
 // GetPresContext()->mInflationDisabledForShrinkWrap at the time they
