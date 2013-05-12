@@ -8,7 +8,7 @@
 
 #include "nsIDOMKeyEvent.h"
 #include "nsDOMUIEvent.h"
-#include "mozilla/dom/KeyEventBinding.h"
+#include "mozilla/dom/KeyboardEventBinding.h"
 
 class nsDOMKeyboardEvent : public nsDOMUIEvent,
                            public nsIDOMKeyEvent
@@ -29,7 +29,7 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
   {
-    return mozilla::dom::KeyEventBinding::Wrap(aCx, aScope, this);
+    return mozilla::dom::KeyboardEventBinding::Wrap(aCx, aScope, this);
   }
 
   bool AltKey()
