@@ -11522,26 +11522,13 @@ nsGlobalChromeWindow::SetCursor(const nsAString& aCursor)
   nsresult rv = NS_OK;
   int32_t cursor;
 
-  // use C strings to keep the code/data size down
-  NS_ConvertUTF16toUTF8 cursorString(aCursor);
-
-  if (cursorString.Equals("auto"))
+  if (aCursor.EqualsLiteral("auto"))
     cursor = NS_STYLE_CURSOR_AUTO;
   else {
     nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(aCursor);
     if (eCSSKeyword_UNKNOWN == keyword ||
         !nsCSSProps::FindKeyword(keyword, nsCSSProps::kCursorKTable, cursor)) {
-      // XXX remove the following three values (leave return NS_OK) after 1.8
-      // XXX since they should have been -moz- prefixed (covered by FindKeyword).
-      // XXX (also remove |cursorString| at that point?).
-      if (cursorString.Equals("grab"))
-        cursor = NS_STYLE_CURSOR_GRAB;
-      else if (cursorString.Equals("grabbing"))
-        cursor = NS_STYLE_CURSOR_GRABBING;
-      else if (cursorString.Equals("spinning"))
-        cursor = NS_STYLE_CURSOR_SPINNING;
-      else
-        return NS_OK;
+      return NS_OK;
     }
   }
 
