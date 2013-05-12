@@ -7725,6 +7725,11 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
 
     // if frame has view, will already be invalidated
     if (aChange & nsChangeHint_RepaintFrame) {
+      // Note that this whole block will be skipped when painting is suppressed
+      // (due to our caller ApplyRendingChangeToTree() discarding the
+      // nsChangeHint_RepaintFrame hint).  If you add handling for any other
+      // hints within this block, be sure that they too should be ignored when
+      // painting is suppressed.
       needInvalidatingPaint = true;
       aFrame->InvalidateFrameSubtree();
       if (aChange & nsChangeHint_UpdateEffects &&
