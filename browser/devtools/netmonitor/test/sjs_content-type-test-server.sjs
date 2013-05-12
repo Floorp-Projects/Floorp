@@ -11,6 +11,13 @@ function handleRequest(request, response) {
 
   Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer).initWithCallback(() => {
     switch (format) {
+      case "txt": {
+        response.setStatusLine(request.httpVersion, 200, "DA DA DA");
+        response.setHeader("Content-Type", "text/plain", false);
+        response.write("Братан, ты вообще качаешься?");
+        response.finish();
+        break;
+      }
       case "xml": {
         response.setStatusLine(request.httpVersion, 200, "OK");
         response.setHeader("Content-Type", "text/xml; charset=utf-8", false);
