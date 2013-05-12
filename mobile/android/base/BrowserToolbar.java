@@ -197,7 +197,7 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
                 inflater.inflate(R.menu.titlebar_contextmenu, menu);
 
                 String clipboard = GeckoAppShell.getClipboardText();
-                if (clipboard == null || TextUtils.isEmpty(clipboard)) {
+                if (TextUtils.isEmpty(clipboard)) {
                     menu.findItem(R.id.pasteandgo).setVisible(false);
                     menu.findItem(R.id.paste).setVisible(false);
                 }
