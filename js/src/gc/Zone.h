@@ -113,9 +113,30 @@ struct Zone : private JS::shadow::Zone, public js::gc::GraphNodeBase<JS::Zone>
 
   private:
     bool                         ionUsingBarriers_;
-  public:
 
+    /*
+     * This flag saves the value of needsBarrier_ during minor collection,
+     * since needsBarrier_ is always set to false during minor collection.
+     * Outside of minor collection, the value of savedNeedsBarrier_ is
+     * undefined.
+     */
+    bool                         savedNeedsBarrier_;
+
+  public:
     bool                         active;  // GC flag, whether there are active frames
+
+    void saveNeedsBarrier(bool newNeeds) {
+        savedNeedsBarrier_ = needsBarrier_;
+        needsBarrier_ = newNeeds;
+    }
+
+    void restoreNeedsBarrier() {
+        needsBarrier_ = savedNeedsBarrier_;
+    }
+
+    bool savedNeedsBarrier() const {
+        return savedNeedsBarrier_;
+    }
 
     bool needsBarrier() const {
         return needsBarrier_;

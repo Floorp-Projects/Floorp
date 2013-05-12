@@ -1723,6 +1723,7 @@ DebugScopes::addDebugScope(JSContext *cx, const ScopeIter &si, DebugScopeObject 
         js_ReportOutOfMemory(cx);
         return false;
     }
+    HashTableWriteBarrierPost(cx->runtime, &scopes->liveScopes, &debugScope.scope());
 
     return true;
 }
@@ -1872,10 +1873,12 @@ DebugScopes::onGeneratorFrameChange(AbstractFramePtr from, AbstractFramePtr to, 
              */
             JS_ASSERT(toIter.scope().compartment() == cx->compartment);
             LiveScopeMap::AddPtr livePtr = scopes->liveScopes.lookupForAdd(&toIter.scope());
-            if (livePtr)
+            if (livePtr) {
                 livePtr->value = to;
-            else
+            } else {
                 scopes->liveScopes.add(livePtr, &toIter.scope(), to);  // OOM here?
+                HashTableWriteBarrierPost(cx->runtime, &scopes->liveScopes, &toIter.scope());
+            }
         } else {
             ScopeIter si(toIter, from, cx);
             JS_ASSERT(si.frame().scopeChain()->compartment() == cx->compartment);
@@ -1936,6 +1939,7 @@ DebugScopes::updateLiveScopes(JSContext *cx)
                     return false;
                 if (!scopes->liveScopes.put(&si.scope(), frame))
                     return false;
+                HashTableWriteBarrierPost(cx->runtime, &scopes->liveScopes, &si.scope());
             }
         }
 

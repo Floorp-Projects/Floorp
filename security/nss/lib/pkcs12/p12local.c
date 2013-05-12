@@ -253,7 +253,7 @@ sec_pkcs12_generate_key_from_password(SECOidTag algorithm,
     unsigned char *pre_hash=NULL;
     unsigned char *hash_dest=NULL;
     SECStatus res;
-    PRArenaPool *poolp;
+    PLArenaPool *poolp;
     SECItem *key = NULL;
     int key_len = 0;
 
@@ -339,7 +339,7 @@ sec_pkcs12_generate_old_mac(SECItem *key,
 			    SECItem *msg)
 {
     SECStatus res;
-    PRArenaPool *temparena = NULL;
+    PLArenaPool *temparena = NULL;
     unsigned char *hash_dest=NULL, *hash_src1=NULL, *hash_src2 = NULL;
     int i;
     SECItem *mac = NULL;
@@ -482,7 +482,7 @@ sec_pkcs12_compute_thumbprint(SECItem *der_cert)
 {
     SGNDigestInfo *thumb = NULL;
     SECItem digest;
-    PRArenaPool *temparena = NULL;
+    PLArenaPool *temparena = NULL;
     SECStatus rv = SECFailure;
 
     if(der_cert == NULL)
@@ -884,7 +884,7 @@ sec_pkcs12_find_object(SEC_PKCS12SafeContents *safe,
  * required double 0 byte be placed at the end of the string
  */
 PRBool
-sec_pkcs12_convert_item_to_unicode(PRArenaPool *arena, SECItem *dest,
+sec_pkcs12_convert_item_to_unicode(PLArenaPool *arena, SECItem *dest,
 				   SECItem *src, PRBool zeroTerm,
 				   PRBool asciiConvert, PRBool toUnicode)
 {

@@ -429,7 +429,7 @@ nsXBLProtoImplField::InstallField(nsIScriptContext* aContext,
          .setUserBit(true); // Flag us as XBL
   rv = context->EvaluateString(nsDependentString(mFieldText,
                                                  mFieldTextLength),
-                               *wrappedNode, options,
+                               wrappedNode, options,
                                /* aCoerceToString = */ false,
                                result.address());
   if (NS_FAILED(rv)) {

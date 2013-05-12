@@ -266,7 +266,7 @@ pkix_pl_OcspRequest_Create(
         SECStatus rv = SECFailure;
         SECItem *encoding = NULL;
         CERTOCSPRequest *certRequest = NULL;
-        int64 time = 0;
+        PRTime time = 0;
         PRBool addServiceLocatorExtension = PR_FALSE;
         CERTCertificate *nssCert = NULL;
         CERTCertificate *nssSignerCert = NULL;

@@ -14,7 +14,7 @@
  * we assume (and use) XP memory (re)allocation.
  */
 unsigned char *
-CBC_PadBuffer(PRArenaPool *arena, unsigned char *inbuf, unsigned int inlen,
+CBC_PadBuffer(PLArenaPool *arena, unsigned char *inbuf, unsigned int inlen,
 	      unsigned int *outlen, int blockSize)
 {
     unsigned char *outbuf;

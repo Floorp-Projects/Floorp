@@ -271,7 +271,7 @@ NSS_CMSSignerInfo_VerifyCertificate(NSSCMSSignerInfo *signerinfo, CERTCertDBHand
 			    SECCertUsage certusage)
 {
     CERTCertificate *cert;
-    int64 stime;
+    PRTime stime;
 
     if ((cert = NSS_CMSSignerInfo_GetSigningCertificate(signerinfo, certdb)) == NULL) {
 	signerinfo->verificationStatus = NSSCMSVS_SigningCertNotFound;

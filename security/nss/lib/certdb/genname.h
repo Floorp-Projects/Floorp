@@ -18,20 +18,20 @@ SEC_BEGIN_PROTOS
 extern const SEC_ASN1Template CERT_GeneralNamesTemplate[];
 
 extern SECItem **
-cert_EncodeGeneralNames(PRArenaPool *arena, CERTGeneralName *names);
+cert_EncodeGeneralNames(PLArenaPool *arena, CERTGeneralName *names);
 
 extern CERTGeneralName *
-cert_DecodeGeneralNames(PRArenaPool *arena, SECItem **encodedGenName);
+cert_DecodeGeneralNames(PLArenaPool *arena, SECItem **encodedGenName);
 
 extern SECStatus
 cert_DestroyGeneralNames(CERTGeneralName *name);
 
 extern SECStatus 
-cert_EncodeNameConstraints(CERTNameConstraints *constraints, PRArenaPool *arena,
+cert_EncodeNameConstraints(CERTNameConstraints *constraints, PLArenaPool *arena,
 			   SECItem *dest);
 
 extern CERTNameConstraints *
-cert_DecodeNameConstraints(PRArenaPool *arena, const SECItem *encodedConstraints);
+cert_DecodeNameConstraints(PLArenaPool *arena, const SECItem *encodedConstraints);
 
 extern CERTGeneralName *
 cert_CombineNamesLists(CERTGeneralName *list1, CERTGeneralName *list2);
@@ -51,7 +51,7 @@ SECStatus
 CERT_CompareGeneralName(CERTGeneralName *a, CERTGeneralName *b);
 
 SECStatus
-CERT_CopyGeneralName(PRArenaPool      *arena, 
+CERT_CopyGeneralName(PLArenaPool      *arena,
 		     CERTGeneralName  *dest, 
 		     CERTGeneralName  *src);
 
@@ -74,7 +74,7 @@ CERT_CompareGeneralNameLists(CERTGeneralNameList *a, CERTGeneralNameList *b);
 void *
 CERT_GetGeneralNameFromListByType(CERTGeneralNameList *list,
 				  CERTGeneralNameType type,
-				  PRArenaPool *arena);
+				  PLArenaPool *arena);
 
 /* Adds a name to the tail of the list */
 void
@@ -98,7 +98,7 @@ SECStatus
 CERT_CompareNameSpace(CERTCertificate  *cert,
 		      CERTGeneralName  *namesList,
  		      CERTCertificate **certsList,
- 		      PRArenaPool      *reqArena,
+ 		      PLArenaPool      *reqArena,
  		      CERTCertificate **pBadCert);
 
 SEC_END_PROTOS

@@ -224,7 +224,7 @@ PK11_ImportPublicKey(PK11SlotInfo *slot, SECKEYPublicKey *pubKey,
  * take an attribute and copy it into a secitem
  */
 static CK_RV
-pk11_Attr2SecItem(PRArenaPool *arena, const CK_ATTRIBUTE *attr, SECItem *item) 
+pk11_Attr2SecItem(PLArenaPool *arena, const CK_ATTRIBUTE *attr, SECItem *item)
 {
     item->data = NULL;
 
@@ -254,7 +254,7 @@ pk11_Attr2SecItem(PRArenaPool *arena, const CK_ATTRIBUTE *attr, SECItem *item)
  * Point length = (Roundup(curveLenInBits/8)*2+1)
  */
 static int
-pk11_get_EC_PointLenInBytes(PRArenaPool *arena, const SECItem *ecParams)
+pk11_get_EC_PointLenInBytes(PLArenaPool *arena, const SECItem *ecParams)
 {
    SECItem oid;
    SECOidTag tag;
@@ -366,7 +366,7 @@ pk11_get_EC_PointLenInBytes(PRArenaPool *arena, const SECItem *ecParams)
  * the passed in arena.
  */
 static CK_RV
-pk11_get_Decoded_ECPoint(PRArenaPool *arena, const SECItem *ecParams, 
+pk11_get_Decoded_ECPoint(PLArenaPool *arena, const SECItem *ecParams,
 	const CK_ATTRIBUTE *ecPoint, SECItem *publicKeyValue)
 {
     SECItem encodedPublicValue;
@@ -546,8 +546,8 @@ SECKEYPublicKey *
 PK11_ExtractPublicKey(PK11SlotInfo *slot,KeyType keyType,CK_OBJECT_HANDLE id)
 {
     CK_OBJECT_CLASS keyClass = CKO_PUBLIC_KEY;
-    PRArenaPool *arena;
-    PRArenaPool *tmp_arena;
+    PLArenaPool *arena;
+    PLArenaPool *tmp_arena;
     SECKEYPublicKey *pubKey;
     int templateCount = 0;
     CK_KEY_TYPE pk11KeyType;
@@ -730,7 +730,7 @@ SECKEYPrivateKey *
 PK11_MakePrivKey(PK11SlotInfo *slot, KeyType keyType, 
 			PRBool isTemp, CK_OBJECT_HANDLE privID, void *wincx)
 {
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     SECKEYPrivateKey *privKey;
     PRBool isPrivate;
     SECStatus rv;
@@ -876,7 +876,7 @@ pk11_loadPrivKeyWithFlags(PK11SlotInfo *slot,SECKEYPrivateKey *privKey,
     CK_BBOOL ckfalse = CK_FALSE;
     CK_ATTRIBUTE *attrs = NULL, *ap;
     const int templateSize = sizeof(privTemplate)/sizeof(privTemplate[0]);
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     CK_OBJECT_HANDLE objectID;
     int i, count = 0;
     int extra_count = 0;
@@ -1512,7 +1512,7 @@ PK11_MakeKEAPubKey(unsigned char *keyData,int length)
     SECKEYPublicKey *pubk;
     SECItem pkData;
     SECStatus rv;
-    PRArenaPool *arena;
+    PLArenaPool *arena;
 
     pkData.data = keyData;
     pkData.len = length;
@@ -1726,7 +1726,7 @@ PK11_ExportEncryptedPrivKeyInfo(
    void             *wincx)     /* context for password callback ? */
 {
     SECKEYEncryptedPrivateKeyInfo *epki      = NULL;
-    PRArenaPool                   *arena     = NULL;
+    PLArenaPool                   *arena     = NULL;
     SECAlgorithmID                *algid;
     SECOidTag			  pbeAlgTag = SEC_OID_UNKNOWN;
     SECItem                       *crypto_param = NULL;
@@ -1932,7 +1932,7 @@ PK11_GetPQGParamsFromPrivateKey(SECKEYPrivateKey *privKey)
 	{ CKA_BASE, NULL, 0 },
     };
     int pTemplateLen = sizeof(pTemplate)/sizeof(pTemplate[0]);
-    PRArenaPool *arena = NULL;
+    PLArenaPool *arena = NULL;
     SECKEYPQGParams *params;
     CK_RV crv;
 

@@ -130,7 +130,6 @@ ArchiveRequest::ReaderReady(nsTArray<nsCOMPtr<nsIDOMFile> >& aFileList,
     return NS_OK;
   }
 
-  JS::Value result;
   nsresult rv;
 
   nsIScriptContext* sc = GetContextForEventHandlers(&rv);
@@ -145,17 +144,18 @@ ArchiveRequest::ReaderReady(nsTArray<nsCOMPtr<nsIDOMFile> >& aFileList,
   JSAutoRequest ar(cx);
   JSAutoCompartment ac(cx, global);
 
+  JS::Rooted<JS::Value> result(cx);
   switch (mOperation) {
     case GetFilenames:
-      rv = GetFilenamesResult(cx, &result, aFileList);
+      rv = GetFilenamesResult(cx, result.address(), aFileList);
       break;
 
     case GetFile:
-      rv = GetFileResult(cx, &result, aFileList);
+      rv = GetFileResult(cx, result.address(), aFileList);
       break;
 
       case GetFiles:
-        rv = GetFilesResult(cx, &result, aFileList);
+        rv = GetFilesResult(cx, result.address(), aFileList);
         break;
   }
 

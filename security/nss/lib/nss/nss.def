@@ -1032,6 +1032,8 @@ PK11_SignWithSymKey;
 CERT_EncodeNameConstraintsExtension;
 PK11_Decrypt;
 PK11_Encrypt;
+CERT_PostOCSPRequest;
+CERT_AddCertToListHead;
 ;+    local:
 ;+       *;
 ;+};
