@@ -101,8 +101,8 @@ ObjectWrapperParent::CheckOperation(JSContext* cx,
     switch (status->type()) {
     case OperationStatus::TJSVariant:
         {
-            jsval thrown;
-            if (jsval_from_JSVariant(cx, status->get_JSVariant(), &thrown))
+            JS::RootedValue thrown(cx);
+            if (jsval_from_JSVariant(cx, status->get_JSVariant(), thrown.address()))
                 JS_SetPendingException(cx, thrown);
             *status = JS_FALSE;
         }
@@ -530,7 +530,7 @@ ObjectWrapperParent::NewEnumerateNext(JSContext* cx, jsval* statep, jsid* idp)
         jsid_from_nsString(cx, out_id, idp))
     {
         JSObject* obj = GetJSObject(cx);
-        AutoResolveFlag arf(obj);
+        JS::Rooted<AutoResolveFlag> arf(cx, obj);
         return JS_DefinePropertyById(cx, obj, *idp, JSVAL_VOID, NULL, NULL,
                                      JSPROP_ENUMERATE);
     }
@@ -604,7 +604,7 @@ ObjectWrapperParent::CPOW_NewResolve(JSContext *cx, JSHandleObject obj, JSHandle
         return JS_FALSE;
 
     if (objp) {
-        AutoResolveFlag arf(objp);
+        JS::Rooted<AutoResolveFlag> arf(cx, objp.get());
         JS::RootedObject obj2(cx, objp);
         JS_DefinePropertyById(cx, obj2, id, JSVAL_VOID, NULL, NULL,
                               JSPROP_ENUMERATE);
@@ -647,7 +647,7 @@ ObjectWrapperParent::CPOW_Call(JSContext* cx, unsigned argc, jsval* vp)
 {
     CPOW_LOG(("Calling CPOW_Call..."));
 
-    JSObject* thisobj = JS_THIS_OBJECT(cx, vp);
+    JS::RootedObject thisobj(cx, JS_THIS_OBJECT(cx, vp));
     if (!thisobj)
         return JS_FALSE;
 
