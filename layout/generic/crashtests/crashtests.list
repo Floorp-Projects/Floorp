@@ -243,6 +243,7 @@ asserts(0-2) load 421671.html # Bug 481035
 load 422283-1.html
 load 422301-1.html
 load 423055-1.html
+load 423098.html
 load 423264-1.html
 load 424629.html
 load 425253-1.html
