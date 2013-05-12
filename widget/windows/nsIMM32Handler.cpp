@@ -1772,8 +1772,8 @@ nsIMM32Handler::GetCharacterRectOfSelectedTextAt(nsWindow* aWindow,
     if (mCursorPosition != NO_IME_CARET) {
       uint32_t cursorPosition =
         std::min<uint32_t>(mCursorPosition, mCompositionString.Length());
+      NS_ASSERTION(offset >= cursorPosition, "offset is less than cursorPosition!");
       offset -= cursorPosition;
-      NS_ASSERTION(offset >= 0, "offset is negative!");
     }
   }
 

@@ -1254,11 +1254,6 @@ int main(int argc, char **argv)
 		    FPRINTF(stderr, "%s: PR_Poll returned zero!\n", progName);
 		    return 1;
 		}
-		/* Must milliPause between PR_Poll and PR_GetConnectStatus,
-		 * Or else winsock gets mighty confused.
-		 * Sleep(0);
-		 */
-		milliPause(1);
 		status = PR_GetConnectStatus(pollset);
 		if (status == PR_SUCCESS) {
 		    break;

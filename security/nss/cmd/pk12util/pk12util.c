@@ -244,7 +244,7 @@ p12u_ucs2_ascii_conversion_function(PRBool	   toUnicode,
 }
 
 SECStatus
-P12U_UnicodeConversion(PRArenaPool *arena, SECItem *dest, SECItem *src,
+P12U_UnicodeConversion(PLArenaPool *arena, SECItem *dest, SECItem *src,
 		       PRBool toUnicode, PRBool swapBytes)
 {
     unsigned int allocLen;
@@ -558,7 +558,7 @@ p12u_WriteToExportFile(void *arg, const char *buf, unsigned long len)
 	return;
     }
 
-    writeLen = PR_Write(p12cxt->file, (unsigned char *)buf, (int32)len);
+    writeLen = PR_Write(p12cxt->file, (unsigned char *)buf, (PRInt32)len);
 
     if(writeLen != (int)len) {
 	PR_Close(p12cxt->file);

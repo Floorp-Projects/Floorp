@@ -174,7 +174,7 @@ typedef z_stream FAR *z_streamp;
                         /* basic functions */
 
 #ifdef MOZILLA_CLIENT
-PR_PUBLIC_API(extern const char *) zlibVersion (void);
+PR_EXTERN(const char *)    zlibVersion    (void);
 #else
 extern const char * EXPORT zlibVersion OF((void));
 #endif
@@ -208,7 +208,7 @@ extern int EXPORT deflateInit OF((z_streamp strm, int level));
 
 
 #ifdef MOZILLA_CLIENT
-PR_PUBLIC_API(extern int) deflate (z_streamp strm, int flush);
+PR_EXTERN(int)    deflate    (z_streamp strm, int flush);
 #else
 extern int EXPORT deflate OF((z_streamp strm, int flush));
 #endif
@@ -281,7 +281,7 @@ extern int EXPORT deflate OF((z_streamp strm, int flush));
 
 
 #ifdef MOZILLA_CLIENT
-PR_PUBLIC_API(extern int) deflateEnd (z_streamp strm);
+PR_EXTERN(int)    deflateEnd    (z_streamp strm);
 #else
 extern int EXPORT deflateEnd OF((z_streamp strm));
 #endif
@@ -315,7 +315,7 @@ extern int EXPORT inflateInit OF((z_streamp strm));
 
 
 #ifdef MOZILLA_CLIENT
-PR_PUBLIC_API(extern int) inflate (z_streamp strm, int flush);
+PR_EXTERN(int)    inflate    (z_streamp strm, int flush);
 #else
 extern int EXPORT inflate OF((z_streamp strm, int flush));
 #endif
@@ -374,7 +374,7 @@ extern int EXPORT inflate OF((z_streamp strm, int flush));
 
 
 #ifdef MOZILLA_CLIENT
-PR_PUBLIC_API(extern int) inflateEnd (z_streamp strm);
+PR_EXTERN(int)    inflateEnd    (z_streamp strm);
 #else
 extern int EXPORT inflateEnd OF((z_streamp strm));
 #endif
@@ -454,9 +454,9 @@ extern int EXPORT deflateInit2 OF((z_streamp strm,
 */
                             
 #ifdef MOZILLA_CLIENT
-PR_PUBLIC_API(extern int) deflateSetDictionary (z_streamp strm,
-                                           const Bytef *dictionary,
-				           uInt  dictLength);
+PR_EXTERN(int)    deflateSetDictionary    (z_streamp strm,
+					   const Bytef *dictionary,
+					   uInt  dictLength);
 #else
 extern int EXPORT deflateSetDictionary OF((z_streamp strm,
                                            const Bytef *dictionary,
@@ -489,7 +489,7 @@ extern int EXPORT deflateSetDictionary OF((z_streamp strm,
 */
 
 #ifdef MOZILLA_CLIENT
-PR_PUBLIC_API(extern int) deflateCopy (z_streamp dest, z_streamp source);
+PR_EXTERN(int)    deflateCopy    (z_streamp dest, z_streamp source);
 #else
 extern int EXPORT deflateCopy OF((z_streamp dest, z_streamp source));
 #endif
@@ -515,7 +515,7 @@ extern int EXPORT deflateCopy OF((z_streamp dest, z_streamp source));
 */
 
 #ifdef MOZILLA_CLIENT
-PR_PUBLIC_API(extern int) deflateReset (z_streamp strm);
+PR_EXTERN(int)    deflateReset    (z_streamp strm);
 #else
 extern int EXPORT deflateReset OF((z_streamp strm));
 #endif
@@ -530,7 +530,7 @@ extern int EXPORT deflateReset OF((z_streamp strm));
 */
 
 #ifdef MOZILLA_CLIENT
-PR_PUBLIC_API(extern int) deflateParams (z_streamp strm, int level, int strategy);
+PR_EXTERN(int)    deflateParams    (z_streamp strm, int level, int strategy);
 #else
 extern int EXPORT deflateParams OF((z_streamp strm, int level, int strategy));
 #endif
@@ -587,8 +587,8 @@ extern int EXPORT inflateInit2 OF((z_streamp strm,
 */
 
 #ifdef MOZILLA_CLIENT
-PR_PUBLIC_API(extern int) inflateSetDictionary (z_streamp strm,
-				           const Bytef *dictionary,
+PR_EXTERN(int)    inflateSetDictionary    (z_streamp strm,
+					   const Bytef *dictionary,
 					   uInt  dictLength);
 #else
 extern int EXPORT inflateSetDictionary OF((z_streamp strm,
@@ -612,7 +612,7 @@ extern int EXPORT inflateSetDictionary OF((z_streamp strm,
 */
 
 #ifdef MOZILLA_CLIENT
-PR_PUBLIC_API(extern int) inflateSync (z_streamp strm);
+PR_EXTERN(int)    inflateSync    (z_streamp strm);
 #else
 extern int EXPORT inflateSync OF((z_streamp strm));
 #endif
@@ -631,7 +631,7 @@ extern int EXPORT inflateSync OF((z_streamp strm));
 */
 
 #ifdef MOZILLA_CLIENT
-PR_PUBLIC_API(extern int) inflateReset (z_streamp strm);
+PR_EXTERN(int)    inflateReset    (z_streamp strm);
 #else
 extern int EXPORT inflateReset OF((z_streamp strm));
 #endif
@@ -656,7 +656,7 @@ extern int EXPORT inflateReset OF((z_streamp strm));
 */
 
 #ifdef MOZILLA_CLIENT
-PR_PUBLIC_API(extern int) compress (Bytef *dest,   uLongf *destLen,
+PR_EXTERN(int)    compress    (Bytef *dest,   uLongf *destLen,
 			       const Bytef *source, uLong sourceLen);
 #else
 extern int EXPORT compress OF((Bytef *dest,   uLongf *destLen,
@@ -676,10 +676,10 @@ extern int EXPORT compress OF((Bytef *dest,   uLongf *destLen,
 */
 
 #ifdef MOZILLA_CLIENT
-PR_PUBLIC_API(extern int) uncompress (Bytef *dest,   uLongf *destLen,
+PR_EXTERN(int)    uncompress    (Bytef *dest, uLongf *destLen,
 				 const Bytef *source, uLong sourceLen);
 #else
-extern int EXPORT uncompress OF((Bytef *dest,   uLongf *destLen,
+extern int EXPORT uncompress OF((Bytef *dest, uLongf *destLen,
 				 const Bytef *source, uLong sourceLen));
 #endif
 /*
@@ -702,7 +702,7 @@ extern int EXPORT uncompress OF((Bytef *dest,   uLongf *destLen,
 typedef voidp gzFile;
 
 #ifdef MOZILLA_CLIENT
-PR_PUBLIC_API(extern gzFile) gzopen  (const char *path, const char *mode);
+PR_EXTERN(gzFile)    gzopen     (const char *path, const char *mode);
 #else
 extern gzFile EXPORT gzopen  OF((const char *path, const char *mode));
 #endif
@@ -718,7 +718,7 @@ extern gzFile EXPORT gzopen  OF((const char *path, const char *mode));
 */
 
 #ifdef MOZILLA_CLIENT
-PR_PUBLIC_API(extern gzFile) gzdopen  (int fd, const char *mode);
+PR_EXTERN(gzFile)    gzdopen     (int fd, const char *mode);
 #else
 extern gzFile EXPORT gzdopen  OF((int fd, const char *mode));
 #endif
@@ -735,7 +735,7 @@ extern gzFile EXPORT gzdopen  OF((int fd, const char *mode));
 */
 
 #ifdef MOZILLA_CLIENT
-PR_PUBLIC_API(extern int)    gzread  (gzFile file, voidp buf, unsigned len);
+PR_EXTERN(int)       gzread     (gzFile file, voidp buf, unsigned len);
 #else
 extern int EXPORT    gzread  OF((gzFile file, voidp buf, unsigned len));
 #endif
@@ -747,7 +747,7 @@ extern int EXPORT    gzread  OF((gzFile file, voidp buf, unsigned len));
    end of file, -1 for error). */
 
 #ifdef MOZILLA_CLIENT
-PR_PUBLIC_API(extern int)    gzwrite (gzFile file, const voidp buf, unsigned len);
+PR_EXTERN(int)       gzwrite    (gzFile file, const voidp buf, unsigned len);
 #else
 extern int EXPORT    gzwrite OF((gzFile file, const voidp buf, unsigned len));
 #endif
@@ -758,7 +758,7 @@ extern int EXPORT    gzwrite OF((gzFile file, const voidp buf, unsigned len));
 */
 
 #ifdef MOZILLA_CLIENT
-PR_PUBLIC_API(extern int)    gzflush (gzFile file, int flush);
+PR_EXTERN(int)       gzflush    (gzFile file, int flush);
 #else
 extern int EXPORT    gzflush OF((gzFile file, int flush));
 #endif
@@ -772,7 +772,7 @@ extern int EXPORT    gzflush OF((gzFile file, int flush));
 */
 
 #ifdef MOZILLA_CLIENT
-PR_PUBLIC_API(extern int)    gzclose (gzFile file);
+PR_EXTERN(int)       gzclose    (gzFile file);
 #else
 extern int EXPORT    gzclose OF((gzFile file));
 #endif
@@ -783,7 +783,7 @@ extern int EXPORT    gzclose OF((gzFile file));
 */
 
 #ifdef MOZILLA_CLIENT
-PR_PUBLIC_API(extern const char *) gzerror (gzFile file, int *errnum);
+PR_EXTERN(const char *)    gzerror    (gzFile file, int *errnum);
 #else
 extern const char * EXPORT gzerror OF((gzFile file, int *errnum));
 #endif
@@ -804,7 +804,7 @@ extern const char * EXPORT gzerror OF((gzFile file, int *errnum));
 */
 
 #ifdef MOZILLA_CLIENT
-PR_PUBLIC_API(extern uLong) adler32 (uLong adler, const Bytef *buf, uInt len);
+PR_EXTERN(uLong)    adler32    (uLong adler, const Bytef *buf, uInt len);
 #else
 extern uLong EXPORT adler32 OF((uLong adler, const Bytef *buf, uInt len));
 #endif
@@ -825,7 +825,7 @@ extern uLong EXPORT adler32 OF((uLong adler, const Bytef *buf, uInt len));
 */
 
 #ifdef MOZILLA_CLIENT
-PR_PUBLIC_API(extern uLong) crc32   (uLong crc, const Bytef *buf, uInt len);
+PR_EXTERN(uLong)    crc32      (uLong crc, const Bytef *buf, uInt len);
 #else
 extern uLong EXPORT crc32   OF((uLong crc, const Bytef *buf, uInt len));
 #endif
@@ -851,15 +851,15 @@ extern uLong EXPORT crc32   OF((uLong crc, const Bytef *buf, uInt len));
  * and the compiler's view of z_stream:
  */
 #ifdef MOZILLA_CLIENT
-PR_PUBLIC_API(extern int) deflateInit_ (z_streamp strm, int level, const char *version, 
-					int stream_size);
-PR_PUBLIC_API(extern int) inflateInit_ (z_streamp strm, const char *version, 
-					int stream_size);
-PR_PUBLIC_API(extern int) deflateInit2_ (z_streamp strm, int  level, int  method, 
-					 int windowBits, int memLevel, int strategy, 
-					 const char *version, int stream_size);
-PR_PUBLIC_API(extern int) inflateInit2_ (z_streamp strm, int  windowBits, 
-					 const char *version, int stream_size);
+PR_EXTERN(int) deflateInit (z_streamp strm, int level, const char *version,
+			    int stream_size);
+PR_EXTERN(int) inflateInit_(z_streamp strm, const char *version,
+			    int stream_size);
+PR_EXTERN(int) deflateInit2_(z_streamp strm, int  level, int  method,
+			     int windowBits, int memLevel, int strategy,
+			     const char *version, int stream_size);
+PR_EXTERN(int) inflateInit2_(z_streamp strm, int  windowBits,
+			     const char *version, int stream_size);
 #else
 extern int EXPORT deflateInit_ OF((z_streamp strm, int level, const char *version, 
 				   int stream_size));

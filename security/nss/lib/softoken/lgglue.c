@@ -166,7 +166,7 @@ done:
  * various keys and attributes.
  */
 static SECStatus
-sftkdb_encrypt_stub(PRArenaPool *arena, SDB *sdb, SECItem *plainText,
+sftkdb_encrypt_stub(PLArenaPool *arena, SDB *sdb, SECItem *plainText,
 		    SECItem **cipherText)
 {
     SFTKDBHandle *handle = sdb->app_private;

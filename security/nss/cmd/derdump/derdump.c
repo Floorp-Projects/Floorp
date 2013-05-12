@@ -34,7 +34,7 @@ int main(int argc, char **argv)
     PRFileDesc *inFile;
     SECItem der;
     SECStatus rv;
-    int16 xp_error;
+    PRInt16 xp_error;
     PRBool raw = PR_FALSE;
     PLOptState *optstate;
     PLOptStatus status;

@@ -163,7 +163,7 @@ static SECStatus
 crmf_decode_process_pop(CRMFCertReqMsg *inCertReqMsg)
 {
      SECItem               *derPOP;
-     PRArenaPool           *poolp;
+     PLArenaPool           *poolp;
      CRMFProofOfPossession *pop;
      void                  *mark;
      SECStatus              rv;
@@ -217,7 +217,7 @@ crmf_decode_process_pop(CRMFCertReqMsg *inCertReqMsg)
 }
 
 static SECStatus
-crmf_decode_process_single_control(PRArenaPool *poolp, 
+crmf_decode_process_single_control(PLArenaPool *poolp,
 				   CRMFControl *inControl)
 {
     const SEC_ASN1Template *asn1Template = NULL;
@@ -245,7 +245,7 @@ crmf_decode_process_controls(CRMFCertReqMsg *inCertReqMsg)
 {
     int           i, numControls;
     SECStatus     rv;
-    PRArenaPool  *poolp;
+    PLArenaPool  *poolp;
     CRMFControl **controls;
     
     numControls = CRMF_CertRequestGetNumControls(inCertReqMsg->certReq);
@@ -285,7 +285,7 @@ crmf_decode_process_single_reqmsg(CRMFCertReqMsg *inCertReqMsg)
 CRMFCertReqMsg*
 CRMF_CreateCertReqMsgFromDER (const char * buf, long len)
 {
-    PRArenaPool    *poolp;
+    PLArenaPool    *poolp;
     CRMFCertReqMsg *certReqMsg;
     SECStatus       rv;
 
@@ -322,7 +322,7 @@ CRMF_CreateCertReqMessagesFromDER(const char *buf, long len)
     long                 arenaSize;
     int                  i;
     SECStatus            rv;
-    PRArenaPool         *poolp;
+    PLArenaPool         *poolp;
     CRMFCertReqMessages *certReqMsgs;
 
     PORT_Assert (buf != NULL);

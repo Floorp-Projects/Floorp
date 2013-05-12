@@ -38,7 +38,7 @@ static CERTSignedCrl *FindCRL
     cert = CERT_FindCertByNicknameOrEmailAddr(certHandle, name);
     if (!cert) {
         CERTName *certName = NULL;
-        PRArenaPool *arena = NULL;
+        PLArenaPool *arena = NULL;
     
         certName = CERT_AsciiToName(name);
         if (certName) {
@@ -93,7 +93,7 @@ static void ListCRLNames (CERTCertDBHandle *certHandle, int crlType, PRBool dele
     CERTCrlHeadNode *crlList = NULL;
     CERTCrlNode *crlNode = NULL;
     CERTName *name = NULL;
-    PRArenaPool *arena = NULL;
+    PLArenaPool *arena = NULL;
     SECStatus rv;
 
     do {
@@ -284,7 +284,7 @@ SECStatus ImportCRL (CERTCertDBHandle *certHandle, char *url, int type,
 SECStatus DumpCRL(PRFileDesc *inFile)
 {
     int rv;
-    PRArenaPool *arena = NULL;
+    PLArenaPool *arena = NULL;
     CERTSignedCrl *newCrl = NULL;
     
     SECItem crlDER;
@@ -362,7 +362,7 @@ FindSigningCert(CERTCertDBHandle *certHandle, CERTSignedCrl *signCrl,
 }
 
 static CERTSignedCrl*
-CreateModifiedCRLCopy(PRArenaPool *arena, CERTCertDBHandle *certHandle,
+CreateModifiedCRLCopy(PLArenaPool *arena, CERTCertDBHandle *certHandle,
                 CERTCertificate **cert, char *certNickName,
                 PRFileDesc *inFile, PRInt32 decodeOptions,
                 PRInt32 importOptions)
@@ -370,7 +370,7 @@ CreateModifiedCRLCopy(PRArenaPool *arena, CERTCertDBHandle *certHandle,
     SECItem crlDER = {0, NULL, 0};
     CERTSignedCrl *signCrl = NULL;
     CERTSignedCrl *modCrl = NULL;
-    PRArenaPool *modArena = NULL;
+    PLArenaPool *modArena = NULL;
     SECStatus rv = SECSuccess;
 
     if (!arena || !certHandle || !certNickName) {
@@ -464,7 +464,7 @@ CreateModifiedCRLCopy(PRArenaPool *arena, CERTCertDBHandle *certHandle,
 
 
 static CERTSignedCrl*
-CreateNewCrl(PRArenaPool *arena, CERTCertDBHandle *certHandle,
+CreateNewCrl(PLArenaPool *arena, CERTCertDBHandle *certHandle,
              CERTCertificate *cert)
 { 
     CERTSignedCrl *signCrl = NULL;
@@ -673,7 +673,7 @@ GenerateCRL (CERTCertDBHandle *certHandle, char *certNickName,
 {
     CERTCertificate *cert = NULL;
     CERTSignedCrl *signCrl = NULL;
-    PRArenaPool *arena = NULL;
+    PLArenaPool *arena = NULL;
     SECStatus rv;
     SECOidTag hashAlgTag = SEC_OID_UNKNOWN;
 

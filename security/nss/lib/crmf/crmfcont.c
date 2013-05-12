@@ -31,7 +31,7 @@ crmf_add_new_control(CRMFCertRequest *inCertReq,SECOidTag inTag,
 {
     SECOidData  *oidData;
     SECStatus    rv;
-    PRArenaPool *poolp;
+    PLArenaPool *poolp;
     int          numControls = 0;
     CRMFControl *newControl;
     CRMFControl **controls;
@@ -152,7 +152,7 @@ CRMF_DestroyEncryptedValue(CRMFEncryptedValue *inEncrValue)
 }
 
 SECStatus
-crmf_copy_encryptedvalue_secalg(PRArenaPool     *poolp,
+crmf_copy_encryptedvalue_secalg(PLArenaPool     *poolp,
 				SECAlgorithmID  *srcAlgId,
 				SECAlgorithmID **destAlgId)
 {
@@ -178,7 +178,7 @@ crmf_copy_encryptedvalue_secalg(PRArenaPool     *poolp,
 }
 
 SECStatus
-crmf_copy_encryptedvalue(PRArenaPool        *poolp,
+crmf_copy_encryptedvalue(PLArenaPool        *poolp,
 			 CRMFEncryptedValue *srcValue,
 			 CRMFEncryptedValue *destValue)
 {
@@ -241,7 +241,7 @@ crmf_copy_encryptedvalue(PRArenaPool        *poolp,
 }
 
 SECStatus 
-crmf_copy_encryptedkey(PRArenaPool       *poolp,
+crmf_copy_encryptedkey(PLArenaPool       *poolp,
 		       CRMFEncryptedKey  *srcEncrKey,
 		       CRMFEncryptedKey  *destEncrKey)
 {
@@ -605,7 +605,7 @@ crmf_decode_params(SECItem *inParams)
 {
     SECItem     *params;
     SECStatus    rv      = SECFailure;
-    PRArenaPool *poolp;
+    PLArenaPool *poolp;
 
     poolp = PORT_NewArena(CRMF_DEFAULT_ARENA_SIZE);
     if (poolp == NULL) {
@@ -641,7 +641,7 @@ crmf_get_key_size_from_mech(CK_MECHANISM_TYPE mechType)
 }
 
 SECStatus
-crmf_encrypted_value_unwrap_priv_key(PRArenaPool        *poolp,
+crmf_encrypted_value_unwrap_priv_key(PLArenaPool        *poolp,
 				     CRMFEncryptedValue *encValue,
 				     SECKEYPrivateKey   *privKey,
 				     SECKEYPublicKey    *newPubKey,
@@ -900,7 +900,7 @@ CRMF_DestroyEncryptedKey(CRMFEncryptedKey *inEncrKey)
 }
 
 SECStatus
-crmf_copy_pkiarchiveoptions(PRArenaPool           *poolp,
+crmf_copy_pkiarchiveoptions(PLArenaPool           *poolp,
 			    CRMFPKIArchiveOptions *destOpt,
 			    CRMFPKIArchiveOptions *srcOpt)
 {
@@ -1009,7 +1009,7 @@ crmf_get_pkiarchiveoptions_subtemplate(CRMFControl *inControl)
 }
 
 static SECStatus
-crmf_encode_pkiarchiveoptions(PRArenaPool *poolp, CRMFControl *inControl)
+crmf_encode_pkiarchiveoptions(PLArenaPool *poolp, CRMFControl *inControl)
 {
     const SEC_ASN1Template *asn1Template;
 
@@ -1034,7 +1034,7 @@ CRMF_CertRequestSetPKIArchiveOptions(CRMFCertRequest       *inCertReq,
 				     CRMFPKIArchiveOptions *inOptions)
 {
     CRMFControl *newControl;
-    PRArenaPool *poolp;
+    PLArenaPool *poolp;
     SECStatus    rv;
     void        *mark;
     

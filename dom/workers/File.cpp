@@ -65,7 +65,7 @@ public:
 
 private:
   static nsIDOMBlob*
-  GetInstancePrivate(JSContext* aCx, JSObject* aObj, const char* aFunctionName)
+  GetInstancePrivate(JSContext* aCx, JS::Handle<JSObject*> aObj, const char* aFunctionName)
   {
     nsIDOMBlob* blob = GetPrivate(aObj);
     if (blob) {
@@ -158,7 +158,7 @@ private:
   static JSBool
   Slice(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
-    JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
+    JS::Rooted<JSObject*> obj(aCx, JS_THIS_OBJECT(aCx, aVp));
     if (!obj) {
       return false;
     }
@@ -271,7 +271,7 @@ public:
 
 private:
   static nsIDOMFile*
-  GetInstancePrivate(JSContext* aCx, JSObject* aObj, const char* aFunctionName)
+  GetInstancePrivate(JSContext* aCx, JS::Handle<JSObject*> aObj, const char* aFunctionName)
   {
     nsIDOMFile* file = GetPrivate(aObj);
     if (file) {
@@ -412,7 +412,7 @@ CreateBlob(JSContext* aCx, nsIDOMBlob* aBlob)
 }
 
 bool
-InitClasses(JSContext* aCx, JSObject* aGlobal)
+InitClasses(JSContext* aCx, JS::Handle<JSObject*> aGlobal)
 {
   JSObject* blobProto = Blob::InitClass(aCx, aGlobal);
   return blobProto && File::InitClass(aCx, aGlobal, blobProto);

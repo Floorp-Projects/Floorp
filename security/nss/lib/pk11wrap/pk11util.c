@@ -1058,7 +1058,7 @@ secmod_HandleWaitForSlotEvent(SECMODModule *mod,  unsigned long flags,
 	SECMOD_GetReadLock(moduleLock);
 	for (i=0; i < mod->slotCount; i++) {
 	    PK11SlotInfo *slot = mod->slots[i];
-	    uint16 series;
+	    PRUint16 series;
 	    PRBool present;
 
 	    /* perm modules do not change */

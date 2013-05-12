@@ -40,7 +40,7 @@ CountArray(void **array)
 }
 
 static void **
-AddToArray(PRArenaPool *arena, void **array, void *element)
+AddToArray(PLArenaPool *arena, void **array, void *element)
 {
     unsigned count;
     void **ap;
@@ -84,7 +84,7 @@ CERT_GetAVATag(CERTAVA *ava)
 }
 
 static SECStatus
-SetupAVAType(PRArenaPool *arena, SECOidTag type, SECItem *it, unsigned *maxLenp)
+SetupAVAType(PLArenaPool *arena, SECOidTag type, SECItem *it, unsigned *maxLenp)
 {
     unsigned char *oid;
     unsigned oidLen;
@@ -116,7 +116,7 @@ SetupAVAType(PRArenaPool *arena, SECOidTag type, SECItem *it, unsigned *maxLenp)
 }
 
 static SECStatus
-SetupAVAValue(PRArenaPool *arena, int valueType, const SECItem *in, 
+SetupAVAValue(PLArenaPool *arena, int valueType, const SECItem *in,
               SECItem *out, unsigned maxLen)
 {
     PRUint8 *value, *cp, *ucs4Val;
@@ -167,7 +167,7 @@ SetupAVAValue(PRArenaPool *arena, int valueType, const SECItem *in,
 }
 
 CERTAVA *
-CERT_CreateAVAFromRaw(PRArenaPool *pool, const SECItem * OID, 
+CERT_CreateAVAFromRaw(PLArenaPool *pool, const SECItem * OID,
                       const SECItem * value)
 {
     CERTAVA *ava;
@@ -187,7 +187,7 @@ CERT_CreateAVAFromRaw(PRArenaPool *pool, const SECItem * OID,
 }
 
 CERTAVA *
-CERT_CreateAVAFromSECItem(PRArenaPool *arena, SECOidTag kind, int valueType, 
+CERT_CreateAVAFromSECItem(PLArenaPool *arena, SECOidTag kind, int valueType,
                           SECItem *value)
 {
     CERTAVA *ava;
@@ -211,7 +211,7 @@ CERT_CreateAVAFromSECItem(PRArenaPool *arena, SECOidTag kind, int valueType,
 }
 
 CERTAVA *
-CERT_CreateAVA(PRArenaPool *arena, SECOidTag kind, int valueType, char *value)
+CERT_CreateAVA(PLArenaPool *arena, SECOidTag kind, int valueType, char *value)
 {
     SECItem item = { siBuffer, NULL, 0 };
 
@@ -222,7 +222,7 @@ CERT_CreateAVA(PRArenaPool *arena, SECOidTag kind, int valueType, char *value)
 }
 
 CERTAVA *
-CERT_CopyAVA(PRArenaPool *arena, CERTAVA *from)
+CERT_CopyAVA(PLArenaPool *arena, CERTAVA *from)
 {
     CERTAVA *ava;
     int rv;
@@ -249,7 +249,7 @@ static const SEC_ASN1Template cert_RDNTemplate[] = {
 
 
 CERTRDN *
-CERT_CreateRDN(PRArenaPool *arena, CERTAVA *ava0, ...)
+CERT_CreateRDN(PLArenaPool *arena, CERTAVA *ava0, ...)
 {
     CERTAVA *ava;
     CERTRDN *rdn;
@@ -290,14 +290,14 @@ CERT_CreateRDN(PRArenaPool *arena, CERTAVA *ava0, ...)
 }
 
 SECStatus
-CERT_AddAVA(PRArenaPool *arena, CERTRDN *rdn, CERTAVA *ava)
+CERT_AddAVA(PLArenaPool *arena, CERTRDN *rdn, CERTAVA *ava)
 {
     rdn->avas = (CERTAVA**) AddToArray(arena, (void**) rdn->avas, ava);
     return rdn->avas ? SECSuccess : SECFailure;
 }
 
 SECStatus
-CERT_CopyRDN(PRArenaPool *arena, CERTRDN *to, CERTRDN *from)
+CERT_CopyRDN(PLArenaPool *arena, CERTRDN *to, CERTRDN *from)
 {
     CERTAVA **avas, *fava, *tava;
     SECStatus rv = SECSuccess;
@@ -340,7 +340,7 @@ CERT_CreateName(CERTRDN *rdn0, ...)
     va_list ap;
     unsigned count;
     CERTRDN **rdnp;
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
     if ( !arena ) {
@@ -395,7 +395,7 @@ CERT_DestroyName(CERTName *name)
 {
     if (name)
     {
-        PRArenaPool *arena = name->arena;
+        PLArenaPool *arena = name->arena;
         name->rdns = NULL;
 	name->arena = NULL;
 	if (arena) PORT_FreeArena(arena, PR_FALSE);
@@ -410,7 +410,7 @@ CERT_AddRDN(CERTName *name, CERTRDN *rdn)
 }
 
 SECStatus
-CERT_CopyName(PRArenaPool *arena, CERTName *to, const CERTName *from)
+CERT_CopyName(PLArenaPool *arena, CERTName *to, const CERTName *from)
 {
     CERTRDN **rdns, *frdn, *trdn;
     SECStatus rv = SECSuccess;

@@ -37,7 +37,7 @@ crmf_destroy_validity(CRMFOptionalValidity *inValidity, PRBool freeit)
 }
 
 static SECStatus 
-crmf_copy_cert_request_validity(PRArenaPool           *poolp,
+crmf_copy_cert_request_validity(PLArenaPool           *poolp,
 				CRMFOptionalValidity **destValidity,
 				CRMFOptionalValidity  *srcValidity)
 {
@@ -73,7 +73,7 @@ crmf_copy_cert_request_validity(PRArenaPool           *poolp,
 }
 
 static SECStatus
-crmf_copy_extensions(PRArenaPool        *poolp, 
+crmf_copy_extensions(PLArenaPool        *poolp,
 		     CRMFCertTemplate   *destTemplate,
 		     CRMFCertExtension **srcExt)
 {
@@ -119,7 +119,7 @@ crmf_copy_extensions(PRArenaPool        *poolp,
 }
 
 static SECStatus
-crmf_copy_cert_request_template(PRArenaPool      *poolp, 
+crmf_copy_cert_request_template(PLArenaPool      *poolp,
 				CRMFCertTemplate *destTemplate,
 				CRMFCertTemplate *srcTemplate)
 {
@@ -201,7 +201,7 @@ crmf_copy_cert_request_template(PRArenaPool      *poolp,
 }
 
 static CRMFControl*
-crmf_copy_control(PRArenaPool *poolp, CRMFControl *srcControl)
+crmf_copy_control(PLArenaPool *poolp, CRMFControl *srcControl)
 {
     CRMFControl *newControl;
     SECStatus    rv;
@@ -246,7 +246,7 @@ crmf_copy_control(PRArenaPool *poolp, CRMFControl *srcControl)
 }
 
 static SECStatus
-crmf_copy_cert_request_controls(PRArenaPool     *poolp, 
+crmf_copy_cert_request_controls(PLArenaPool     *poolp,
 				CRMFCertRequest *destReq, 
 				CRMFCertRequest *srcReq)
 {
@@ -285,7 +285,7 @@ crmf_copy_cert_request_controls(PRArenaPool     *poolp,
 
 
 CRMFCertRequest*
-crmf_copy_cert_request(PRArenaPool *poolp, CRMFCertRequest *srcReq)
+crmf_copy_cert_request(PLArenaPool *poolp, CRMFCertRequest *srcReq)
 {
     CRMFCertRequest *newReq = NULL;
     SECStatus        rv;
@@ -338,7 +338,7 @@ CRMF_DestroyGetValidity(CRMFGetValidity *inValidity)
 }
 
 SECStatus
-crmf_make_bitstring_copy(PRArenaPool *arena, SECItem *dest, SECItem *src)
+crmf_make_bitstring_copy(PLArenaPool *arena, SECItem *dest, SECItem *src)
 {
     int origLenBits;
     int bytesToCopy;

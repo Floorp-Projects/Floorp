@@ -104,7 +104,7 @@ static nsresult
 convertTimeToInt(JSContext* aCx, const JS::Value& aTime, uint64_t& aReturn)
 {
   if (aTime.isObject()) {
-    JSObject* timestampObj = &aTime.toObject();
+    JS::Rooted<JSObject*> timestampObj(aCx, &aTime.toObject());
     if (!JS_ObjectIsDate(aCx, timestampObj)) {
       return NS_ERROR_INVALID_ARG;
     }
@@ -160,7 +160,7 @@ MmsMessage::Create(int32_t               aId,
   if (!aDeliveryStatus.isObject()) {
     return NS_ERROR_INVALID_ARG;
   }
-  JSObject* deliveryStatusObj = &aDeliveryStatus.toObject();
+  JS::Rooted<JSObject*> deliveryStatusObj(aCx, &aDeliveryStatus.toObject());
   if (!JS_IsArrayObject(aCx, deliveryStatusObj)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -169,9 +169,9 @@ MmsMessage::Create(int32_t               aId,
   JS_ALWAYS_TRUE(JS_GetArrayLength(aCx, deliveryStatusObj, &length));
 
   nsTArray<DeliveryStatus> deliveryStatus;
+  JS::Rooted<JS::Value> statusJsVal(aCx);
   for (uint32_t i = 0; i < length; ++i) {
-    JS::Value statusJsVal;
-    if (!JS_GetElement(aCx, deliveryStatusObj, i, &statusJsVal) ||
+    if (!JS_GetElement(aCx, deliveryStatusObj, i, statusJsVal.address()) ||
         !statusJsVal.isString()) {
       return NS_ERROR_INVALID_ARG;
     }
@@ -199,7 +199,7 @@ MmsMessage::Create(int32_t               aId,
   if (!aReceivers.isObject()) {
     return NS_ERROR_INVALID_ARG;
   }
-  JSObject* receiversObj = &aReceivers.toObject();
+  JS::Rooted<JSObject*> receiversObj(aCx, &aReceivers.toObject());
   if (!JS_IsArrayObject(aCx, receiversObj)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -207,9 +207,9 @@ MmsMessage::Create(int32_t               aId,
   JS_ALWAYS_TRUE(JS_GetArrayLength(aCx, receiversObj, &length));
 
   nsTArray<nsString> receivers;
+  JS::Rooted<JS::Value> receiverJsVal(aCx);
   for (uint32_t i = 0; i < length; ++i) {
-    JS::Value receiverJsVal;
-    if (!JS_GetElement(aCx, receiversObj, i, &receiverJsVal) ||
+    if (!JS_GetElement(aCx, receiversObj, i, receiverJsVal.address()) ||
         !receiverJsVal.isString()) {
       return NS_ERROR_INVALID_ARG;
     }
@@ -228,7 +228,7 @@ MmsMessage::Create(int32_t               aId,
   if (!aAttachments.isObject()) {
     return NS_ERROR_INVALID_ARG;
   }
-  JSObject* attachmentsObj = &aAttachments.toObject();
+  JS::Rooted<JSObject*> attachmentsObj(aCx, &aAttachments.toObject());
   if (!JS_IsArrayObject(aCx, attachmentsObj)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -236,14 +236,14 @@ MmsMessage::Create(int32_t               aId,
   nsTArray<MmsAttachment> attachments;
   JS_ALWAYS_TRUE(JS_GetArrayLength(aCx, attachmentsObj, &length));
 
+  JS::Rooted<JS::Value> attachmentJsVal(aCx);
   for (uint32_t i = 0; i < length; ++i) {
-    JS::Value attachmentJsVal;
-    if (!JS_GetElement(aCx, attachmentsObj, i, &attachmentJsVal)) {
+    if (!JS_GetElement(aCx, attachmentsObj, i, attachmentJsVal.address())) {
       return NS_ERROR_INVALID_ARG;
     }
 
     MmsAttachment attachment;
-    rv = attachment.Init(aCx, &attachmentJsVal);
+    rv = attachment.Init(aCx, attachmentJsVal.address());
     NS_ENSURE_SUCCESS(rv, rv);
 
     attachments.AppendElement(attachment);
@@ -389,8 +389,8 @@ MmsMessage::GetDeliveryStatus(JSContext* aCx, JS::Value* aDeliveryStatus)
     tempStrArray.AppendElement(statusStr);
   }
 
-  JSObject* deliveryStatusObj = nullptr;
-  nsresult rv = nsTArrayToJSArray(aCx, tempStrArray, &deliveryStatusObj);
+  JS::Rooted<JSObject*> deliveryStatusObj(aCx);
+  nsresult rv = nsTArrayToJSArray(aCx, tempStrArray, deliveryStatusObj.address());
   NS_ENSURE_SUCCESS(rv, rv);
 
   aDeliveryStatus->setObject(*deliveryStatusObj);
@@ -407,8 +407,8 @@ MmsMessage::GetSender(nsAString& aSender)
 NS_IMETHODIMP
 MmsMessage::GetReceivers(JSContext* aCx, JS::Value* aReceivers)
 {
-  JSObject* reveiversObj = nullptr;
-  nsresult rv = nsTArrayToJSArray(aCx, mReceivers, &reveiversObj);
+  JS::Rooted<JSObject*> reveiversObj(aCx);
+  nsresult rv = nsTArrayToJSArray(aCx, mReceivers, reveiversObj.address());
   NS_ENSURE_SUCCESS(rv, rv);
 
   aReceivers->setObject(*reveiversObj);
@@ -457,16 +457,16 @@ MmsMessage::GetAttachments(JSContext* aCx, JS::Value* aAttachments)
     return NS_OK;
   }
 
-  JSObject* attachments = JS_NewArrayObject(aCx, length, nullptr);
+  JS::Rooted<JSObject*> attachments(aCx, JS_NewArrayObject(aCx, length, nullptr));
   NS_ENSURE_TRUE(attachments, NS_ERROR_OUT_OF_MEMORY);
 
   for (uint32_t i = 0; i < length; ++i) {
     const MmsAttachment &attachment = mAttachments[i];
 
-    JSObject* attachmentObj = JS_NewObject(aCx, nullptr, nullptr, nullptr);
+    JS::Rooted<JSObject*> attachmentObj(aCx, JS_NewObject(aCx, nullptr, nullptr, nullptr));
     NS_ENSURE_TRUE(attachmentObj, NS_ERROR_OUT_OF_MEMORY);
 
-    JS::Value tmpJsVal;
+    JS::Rooted<JS::Value> tmpJsVal(aCx);
     JSString* tmpJsStr;
 
     // Get |attachment.mId|.
@@ -499,7 +499,7 @@ MmsMessage::GetAttachments(JSContext* aCx, JS::Value* aAttachments)
                                              global,
                                              attachment.content,
                                              &NS_GET_IID(nsIDOMBlob),
-                                             &tmpJsVal);
+                                             tmpJsVal.address());
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!JS_DefineProperty(aCx, attachmentObj, "content", tmpJsVal,
@@ -508,7 +508,7 @@ MmsMessage::GetAttachments(JSContext* aCx, JS::Value* aAttachments)
     }
 
     tmpJsVal = OBJECT_TO_JSVAL(attachmentObj);
-    if (!JS_SetElement(aCx, attachments, i, &tmpJsVal)) {
+    if (!JS_SetElement(aCx, attachments, i, tmpJsVal.address())) {
       return NS_ERROR_FAILURE;
     }
   }

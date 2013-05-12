@@ -184,6 +184,7 @@
 @BINPATH@/components/dom_canvas.xpt
 @BINPATH@/components/dom_contacts.xpt
 @BINPATH@/components/dom_alarm.xpt
+@BINPATH@/components/dom_push.xpt
 @BINPATH@/components/dom_core.xpt
 @BINPATH@/components/dom_css.xpt
 @BINPATH@/components/dom_devicestorage.xpt
@@ -432,6 +433,7 @@
 @BINPATH@/components/satchel.manifest
 @BINPATH@/components/nsFormAutoComplete.js
 @BINPATH@/components/nsFormHistory.js
+@BINPATH@/components/FormHistoryStartup.js
 @BINPATH@/components/nsInputListAutoComplete.js
 @BINPATH@/components/contentSecurityPolicy.manifest
 @BINPATH@/components/contentSecurityPolicy.js
@@ -518,6 +520,8 @@
 @BINPATH@/components/NavigatorPropertyHelper.manifest
 @BINPATH@/components/AlarmsManager.js
 @BINPATH@/components/AlarmsManager.manifest
+@BINPATH@/components/Push.js
+@BINPATH@/components/Push.manifest
 @BINPATH@/components/TCPSocket.js
 @BINPATH@/components/TCPSocketParentIntermediary.js
 @BINPATH@/components/TCPSocket.manifest

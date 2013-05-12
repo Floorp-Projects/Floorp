@@ -581,6 +581,9 @@
                    hidden="true"
                    tooltiptext="&pageReportIcon.tooltip;"
                    onclick="gPopupBlockerObserver.onReportButtonClick(event);"/>
+            <image id="star-button"
+                   class="urlbar-icon"
+                   onclick="BookmarkingUI.onCommand(event);"/>
             <image id="go-button"
                    class="urlbar-icon"
                    tooltiptext="&goEndCap.tooltip;"
@@ -635,21 +638,20 @@
                      class="toolbarbutton-1 chromeclass-toolbar-additional"
                      persist="class"
                      removable="true"
-                     type="menu-button"
+                     type="menu"
                      label="&bookmarksMenuButton.label;"
                      tooltiptext="&bookmarksMenuButton.tooltip;"
                      ondragenter="PlacesMenuDNDHandler.onDragEnter(event);"
                      ondragover="PlacesMenuDNDHandler.onDragOver(event);"
                      ondragleave="PlacesMenuDNDHandler.onDragLeave(event);"
-                     ondrop="PlacesMenuDNDHandler.onDrop(event);"
-                     oncommand="BookmarksMenuButton.onCommand(event);">
+                     ondrop="PlacesMenuDNDHandler.onDrop(event);">
         <menupopup id="BMB_bookmarksPopup"
                    placespopup="true"
                    context="placesContext"
                    openInTabs="children"
                    oncommand="BookmarksEventHandler.onCommand(event, this.parentNode._placesView);"
                    onclick="BookmarksEventHandler.onClick(event, this.parentNode._placesView);"
-                   onpopupshowing="BookmarksMenuButton.onPopupShowing(event);
+                   onpopupshowing="BookmarkingUI.onPopupShowing(event);
                                    if (!this.parentNode._placesView)
                                      new PlacesMenu(event, 'place:folder=BOOKMARKS_MENU');"
                    tooltip="bhTooltip" popupsinherittooltip="true">
@@ -665,6 +667,13 @@
                     command="Browser:ShowAllBookmarks"
                     key="manBookmarkKb"/>
           <menuseparator/>
+          <menuitem id="BMB_bookmarkThisPage"
+#ifndef XP_MACOSX
+                    class="menuitem-iconic"
+#endif
+                    label="&bookmarkThisPageCmd.label;"
+                    command="Browser:AddBookmarkAs"
+                    key="addBookmarkAsKb"/>
           <menuitem id="BMB_subscribeToPageMenuitem"
 #ifndef XP_MACOSX
                     class="menuitem-iconic"

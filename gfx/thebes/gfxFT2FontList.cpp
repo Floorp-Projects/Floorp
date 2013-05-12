@@ -1203,6 +1203,7 @@ gfxFT2FontList::FindFontsInDir(const nsCString& aDir, FontNameCache *aFNC)
         "DroidSansThai.ttf",
         "MTLmr3m.ttf",
         "MTLc3m.ttf",
+        "NanumGothic.ttf",
         "DroidSansJapanese.ttf",
         "DroidSansFallback.ttf"
     };

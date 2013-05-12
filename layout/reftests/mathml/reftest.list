@@ -61,6 +61,8 @@ skip-if(B2G) == quotes-1.xhtml quotes-1-ref.xhtml
 == embellished-op-5-1.html embellished-op-5-ref.html
 == embellished-op-5-2.html embellished-op-5-ref.html
 == semantics-1.xhtml semantics-1-ref.xhtml
+== semantics-2.html semantics-2-ref.html
+== semantics-3.html semantics-3-ref.html
 != mathcolor-1.xml mathcolor-1-ref.xml
 != mathcolor-2.xml mathcolor-2-ref.xml
 != mathcolor-3.xml mathcolor-3-ref.xml

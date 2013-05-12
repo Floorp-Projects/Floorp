@@ -19,7 +19,7 @@ extern "C" {
 
 
 struct PKIX_PL_X500NameStruct{
-        PRArenaPool *arena; /* X500Name arena. Shared arena with nssDN
+        PLArenaPool *arena; /* X500Name arena. Shared arena with nssDN
                              * and derName */
         CERTName nssDN;
         SECItem derName;    /* adding DER encoded CERTName to the structure
@@ -33,7 +33,7 @@ PKIX_Error *pkix_pl_X500Name_RegisterSelf(void *plContext);
 
 PKIX_Error *pkix_pl_X500Name_GetDERName(
         PKIX_PL_X500Name *xname,
-        PRArenaPool *arena,
+        PLArenaPool *arena,
         SECItem **pSECName,
         void *plContext);
 

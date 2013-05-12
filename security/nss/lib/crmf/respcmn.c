@@ -99,7 +99,7 @@ crmf_create_prtime(SECItem *src, PRTime **dest)
 }
 
 CRMFCertExtension*
-crmf_copy_cert_extension(PRArenaPool *poolp, CRMFCertExtension *inExtension)
+crmf_copy_cert_extension(PLArenaPool *poolp, CRMFCertExtension *inExtension)
 {
     PRBool             isCritical;
     SECOidTag          id;
@@ -214,7 +214,7 @@ cmmf_DestroyCertOrEncCert(CMMFCertOrEncCert *certOrEncCert, PRBool freeit)
 }
 
 SECStatus
-cmmf_copy_secitem (PRArenaPool *poolp, SECItem *dest, SECItem *src)
+cmmf_copy_secitem (PLArenaPool *poolp, SECItem *dest, SECItem *src)
 {
     SECStatus rv;
 
@@ -246,7 +246,7 @@ CMMF_DestroyCertifiedKeyPair(CMMFCertifiedKeyPair *inCertKeyPair)
 }
 
 SECStatus
-cmmf_CopyCertResponse(PRArenaPool      *poolp, 
+cmmf_CopyCertResponse(PLArenaPool      *poolp,
 		      CMMFCertResponse *dest,
 		      CMMFCertResponse *src)
 {
@@ -284,7 +284,7 @@ cmmf_CopyCertResponse(PRArenaPool      *poolp,
 }
 
 static SECStatus
-cmmf_CopyCertOrEncCert(PRArenaPool *poolp, CMMFCertOrEncCert *dest,
+cmmf_CopyCertOrEncCert(PLArenaPool *poolp, CMMFCertOrEncCert *dest,
 		       CMMFCertOrEncCert *src)
 {
     SECStatus           rv = SECSuccess;
@@ -318,7 +318,7 @@ cmmf_CopyCertOrEncCert(PRArenaPool *poolp, CMMFCertOrEncCert *dest,
 }
 
 SECStatus
-cmmf_CopyCertifiedKeyPair(PRArenaPool *poolp, CMMFCertifiedKeyPair *dest,
+cmmf_CopyCertifiedKeyPair(PLArenaPool *poolp, CMMFCertifiedKeyPair *dest,
 			  CMMFCertifiedKeyPair *src)
 {
     SECStatus rv;
@@ -353,7 +353,7 @@ cmmf_CopyCertifiedKeyPair(PRArenaPool *poolp, CMMFCertifiedKeyPair *dest,
 }
 
 SECStatus
-cmmf_CopyPKIStatusInfo(PRArenaPool *poolp, CMMFPKIStatusInfo *dest,
+cmmf_CopyPKIStatusInfo(PLArenaPool *poolp, CMMFPKIStatusInfo *dest,
 		       CMMFPKIStatusInfo *src)
 {
     SECStatus rv;
@@ -385,7 +385,7 @@ cmmf_CertOrEncCertGetCertificate(CMMFCertOrEncCert *certOrEncCert,
 
 SECStatus 
 cmmf_PKIStatusInfoSetStatus(CMMFPKIStatusInfo    *statusInfo,
-			    PRArenaPool          *poolp,
+			    PLArenaPool          *poolp,
 			    CMMFPKIStatus         inStatus)
 {
     SECItem *dummy;

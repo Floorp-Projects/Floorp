@@ -15,21 +15,21 @@ typedef struct CERTAltNameEncodedContextStr {
 SEC_BEGIN_PROTOS
 
 extern SECStatus
-CERT_EncodePrivateKeyUsagePeriod(PRArenaPool *arena, 
+CERT_EncodePrivateKeyUsagePeriod(PLArenaPool *arena,
                                 CERTPrivKeyUsagePeriod *pkup,
 				SECItem *encodedValue);
 
 extern SECStatus
-CERT_EncodeNameConstraintsExtension(PRArenaPool *arena, 
+CERT_EncodeNameConstraintsExtension(PLArenaPool *arena,
                                     CERTNameConstraints  *value,
 			            SECItem *encodedValue);
 
 extern SECStatus 
-CERT_EncodeIA5TypeExtension(PRArenaPool *arena, char *value, 
+CERT_EncodeIA5TypeExtension(PLArenaPool *arena, char *value,
                             SECItem *encodedValue);
 
 SECStatus
-cert_EncodeAuthInfoAccessExtension(PRArenaPool *arena,
+cert_EncodeAuthInfoAccessExtension(PLArenaPool *arena,
 				   CERTAuthInfoAccess **info,
 				   SECItem *dest);
 SEC_END_PROTOS

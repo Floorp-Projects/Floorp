@@ -230,12 +230,12 @@ DOMException::Create(JSContext* aCx, nsresult aNSResult)
     return NULL;
   }
 
-  JSString* jsname = JS_NewStringCopyZ(aCx, name);
+  JS::Rooted<JSString*> jsname(aCx, JS_NewStringCopyZ(aCx, name));
   if (!jsname) {
     return NULL;
   }
 
-  JSString* jsmessage = JS_NewStringCopyZ(aCx, message);
+  JS::Rooted<JSString*> jsmessage(aCx, JS_NewStringCopyZ(aCx, message));
   if (!jsmessage) {
     return NULL;
   }

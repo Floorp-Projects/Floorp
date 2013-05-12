@@ -292,15 +292,15 @@ private:
       return false;
     }
 
-    jsval rval = JSVAL_VOID;
+    JS::Rooted<JS::Value> rval(aCx, JS::UndefinedValue());
     if (!JS_CallFunctionValue(aCx, JSVAL_TO_OBJECT(scope), listener,
-                              ArrayLength(argv), argv, &rval)) {
+                              ArrayLength(argv), argv, rval.address())) {
       JS_ReportPendingException(aCx);
       return false;
     }
 
     if (JSVAL_IS_BOOLEAN(rval) && JSVAL_TO_BOOLEAN(rval) &&
-        !JS_CallFunctionName(aCx, event, "preventDefault", 0, NULL, &rval)) {
+        !JS_CallFunctionName(aCx, event, "preventDefault", 0, NULL, rval.address())) {
       return false;
     }
 

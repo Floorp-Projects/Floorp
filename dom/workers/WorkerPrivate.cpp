@@ -204,8 +204,8 @@ struct WorkerStructuredCloneCallbacks
       MOZ_ASSERT(dataArray.isObject());
 
       // Construct the ImageData.
-      JSObject* obj = imagedata::Create(aCx, width, height,
-                                        &dataArray.toObject());
+      JS::Rooted<JSObject*> dataObj(aCx, &dataArray.toObject());
+      JSObject* obj = imagedata::Create(aCx, width, height, dataObj);
       return obj;
     }
 

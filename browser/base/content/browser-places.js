@@ -312,8 +312,8 @@ var PlacesCommandHook = {
     // 1. the bookmarks menu button
     // 2. the page-proxy-favicon
     // 3. the content area
-    if (BookmarksMenuButton.anchor) {
-      StarUI.showEditBookmarkPopup(itemId, BookmarksMenuButton.anchor,
+    if (BookmarkingUI.anchor) {
+      StarUI.showEditBookmarkPopup(itemId, BookmarkingUI.anchor,
                                    "bottomcenter topright");
       return;
     }
@@ -991,12 +991,14 @@ let PlacesToolbarHelper = {
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-//// BookmarksMenuButton
+//// BookmarkingUI
 
 /**
- * Handles the bookmarks menu-button in the toolbar.
+ * Handles the bookmarks star button in the URL bar, as well as the bookmark
+ * menu button.
  */
-let BookmarksMenuButton = {
+
+let BookmarkingUI = {
   get button() {
     if (!this._button) {
       this._button = document.getElementById("bookmarks-menu-button");
@@ -1005,22 +1007,18 @@ let BookmarksMenuButton = {
   },
 
   get star() {
-    if (!this._star && this.button) {
-      this._star = document.getAnonymousElementByAttribute(this.button,
-                                                           "anonid",
-                                                           "button");
+    if (!this._star) {
+      this._star = document.getElementById("star-button");
     }
     return this._star;
   },
 
   get anchor() {
-    if (!this._anchor && this.star && isElementVisible(this.star)) {
+    if (this.star && isElementVisible(this.star)) {
       // Anchor to the icon, so the panel looks more natural.
-      this._anchor = document.getAnonymousElementByAttribute(this.star,
-                                                             "class",
-                                                             "toolbarbutton-icon");
+      return this.star;
     }
-    return this._anchor;
+    return null;
   },
 
   STATUS_UPDATING: -1,
@@ -1029,9 +1027,9 @@ let BookmarksMenuButton = {
   get status() {
     if (this._pendingStmt)
       return this.STATUS_UPDATING;
-    return this.button &&
-           this.button.hasAttribute("starred") ? this.STATUS_STARRED
-                                               : this.STATUS_UNSTARRED;
+    return this.star &&
+           this.star.hasAttribute("starred") ? this.STATUS_STARRED
+                                             : this.STATUS_UNSTARRED;
   },
 
   get _starredTooltip()
@@ -1055,11 +1053,11 @@ let BookmarksMenuButton = {
    * reasons.
    */
   _popupNeedsUpdate: true,
-  onToolbarVisibilityChange: function BMB_onToolbarVisibilityChange() {
+  onToolbarVisibilityChange: function BUI_onToolbarVisibilityChange() {
     this._popupNeedsUpdate = true;
   },
 
-  onPopupShowing: function BMB_onPopupShowing(event) {
+  onPopupShowing: function BUI_onPopupShowing(event) {
     // Don't handle events for submenus.
     if (event.target != event.currentTarget)
       return;
@@ -1093,26 +1091,21 @@ let BookmarksMenuButton = {
   /**
    * Handles star styling based on page proxy state changes.
    */
-  onPageProxyStateChanged: function BMB_onPageProxyStateChanged(aState) {
+  onPageProxyStateChanged: function BUI_onPageProxyStateChanged(aState) {
     if (!this.star) {
       return;
     }
 
     if (aState == "invalid") {
       this.star.setAttribute("disabled", "true");
-      this.button.removeAttribute("starred");
+      this.star.removeAttribute("starred");
     }
     else {
       this.star.removeAttribute("disabled");
     }
-    this._updateStyle();
   },
 
-  _updateStyle: function BMB__updateStyle() {
-    if (!this.star) {
-      return;
-    }
-
+  _updateToolbarStyle: function BUI__updateToolbarStyle() {
     let personalToolbar = document.getElementById("PersonalToolbar");
     let onPersonalToolbar = this.button.parentNode == personalToolbar ||
                             this.button.parentNode.parentNode == personalToolbar;
@@ -1127,7 +1120,7 @@ let BookmarksMenuButton = {
     }
   },
 
-  _uninitView: function BMB__uninitView() {
+  _uninitView: function BUI__uninitView() {
     // When an element with a placesView attached is removed and re-inserted,
     // XBL reapplies the binding causing any kind of issues and possible leaks,
     // so kill current view and let popupshowing generate a new one.
@@ -1136,24 +1129,22 @@ let BookmarksMenuButton = {
     }
   },
 
-  customizeStart: function BMB_customizeStart() {
+  customizeStart: function BUI_customizeStart() {
     this._uninitView();
   },
 
-  customizeChange: function BMB_customizeChange() {
-    this._updateStyle();
+  customizeChange: function BUI_customizeChange() {
+    this._updateToolbarStyle();
   },
 
-  customizeDone: function BMB_customizeDone() {
+  customizeDone: function BUI_customizeDone() {
     delete this._button;
-    delete this._star;
-    delete this._anchor;
     this.onToolbarVisibilityChange();
-    this._updateStyle();
+    this._updateToolbarStyle();
   },
 
   _hasBookmarksObserver: false,
-  uninit: function BMB_uninit() {
+  uninit: function BUI_uninit() {
     this._uninitView();
 
     if (this._hasBookmarksObserver) {
@@ -1166,8 +1157,8 @@ let BookmarksMenuButton = {
     }
   },
 
-  updateStarState: function BMB_updateStarState() {
-    if (!this.button || (this._uri && gBrowser.currentURI.equals(this._uri))) {
+  updateStarState: function BUI_updateStarState() {
+    if (!this.star || (this._uri && gBrowser.currentURI.equals(this._uri))) {
       return;
     }
 
@@ -1215,22 +1206,22 @@ let BookmarksMenuButton = {
     }, this);
   },
 
-  _updateStar: function BMB__updateStar() {
-    if (!this.button) {
+  _updateStar: function BUI__updateStar() {
+    if (!this.star) {
       return;
     }
 
     if (this._itemIds.length > 0) {
-      this.button.setAttribute("starred", "true");
-      this.button.setAttribute("tooltiptext", this._starredTooltip);
+      this.star.setAttribute("starred", "true");
+      this.star.setAttribute("tooltiptext", this._starredTooltip);
     }
     else {
-      this.button.removeAttribute("starred");
-      this.button.setAttribute("tooltiptext", this._unstarredTooltip);
+      this.star.removeAttribute("starred");
+      this.star.setAttribute("tooltiptext", this._unstarredTooltip);
     }
   },
 
-  onCommand: function BMB_onCommand(aEvent) {
+  onCommand: function BUI_onCommand(aEvent) {
     if (aEvent.target != aEvent.currentTarget) {
       return;
     }
@@ -1241,12 +1232,8 @@ let BookmarksMenuButton = {
   },
 
   // nsINavBookmarkObserver
-  onItemAdded: function BMB_onItemAdded(aItemId, aParentId, aIndex, aItemType,
+  onItemAdded: function BUI_onItemAdded(aItemId, aParentId, aIndex, aItemType,
                                         aURI) {
-    if (!this.button) {
-      return;
-    }
-
     if (aURI && aURI.equals(this._uri)) {
       // If a new bookmark has been added to the tracked uri, register it.
       if (this._itemIds.indexOf(aItemId) == -1) {
@@ -1256,11 +1243,7 @@ let BookmarksMenuButton = {
     }
   },
 
-  onItemRemoved: function BMB_onItemRemoved(aItemId) {
-    if (!this.button) {
-      return;
-    }
-
+  onItemRemoved: function BUI_onItemRemoved(aItemId) {
     let index = this._itemIds.indexOf(aItemId);
     // If one of the tracked bookmarks has been removed, unregister it.
     if (index != -1) {
@@ -1269,12 +1252,8 @@ let BookmarksMenuButton = {
     }
   },
 
-  onItemChanged: function BMB_onItemChanged(aItemId, aProperty,
+  onItemChanged: function BUI_onItemChanged(aItemId, aProperty,
                                             aIsAnnotationProperty, aNewValue) {
-    if (!this.button) {
-      return;
-    }
-
     if (aProperty == "uri") {
       let index = this._itemIds.indexOf(aItemId);
       // If the changed bookmark was tracked, check if it is now pointing to
@@ -1299,5 +1278,5 @@ let BookmarksMenuButton = {
 
   QueryInterface: XPCOMUtils.generateQI([
     Ci.nsINavBookmarkObserver
-  ]),
+  ])
 };
