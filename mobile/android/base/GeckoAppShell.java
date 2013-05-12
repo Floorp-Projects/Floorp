@@ -1194,7 +1194,6 @@ public class GeckoAppShell
     }
 
     private static SynchronousQueue<String> sClipboardQueue = new SynchronousQueue<String>();
-    private static String EMPTY_STRING = new String();
 
     static String getClipboardText() {
         // If we're on the UI thread or the background thread, we have a looper on the thread
@@ -1210,15 +1209,15 @@ public class GeckoAppShell
             public void run() {
                 String text = getClipboardTextImpl();
                 try {
-                    sClipboardQueue.put(text != null ? text : EMPTY_STRING);
+                    sClipboardQueue.put(text != null ? text : "");
                 } catch (InterruptedException ie) {}
             }
         });
         try {
-            String ret = sClipboardQueue.take();
-            return (EMPTY_STRING.equals(ret) ? null : ret);
-        } catch (InterruptedException ie) {}
-        return null;
+            return sClipboardQueue.take();
+        } catch (InterruptedException ie) {
+            return "";
+        }
     }
 
     static void setClipboardText(final String text) {
