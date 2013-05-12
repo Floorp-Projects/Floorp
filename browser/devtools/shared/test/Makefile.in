@@ -14,7 +14,6 @@ include $(DEPTH)/config/autoconf.mk
 DISABLED_XPCSHELL_TESTS = unit
 
 MOCHITEST_BROWSER_FILES = \
-  browser_browser_basic.js \
   browser_require_basic.js \
   browser_templater_basic.js \
   browser_toolbar_basic.js \

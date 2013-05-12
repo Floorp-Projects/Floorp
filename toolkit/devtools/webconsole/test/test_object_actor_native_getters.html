@@ -1,0 +1,106 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf8">
+  <title>Test for the native getters in object actors</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript;version=1.8" src="common.js"></script>
+  <!-- Any copyright is dedicated to the Public Domain.
+     - http://creativecommons.org/publicdomain/zero/1.0/ -->
+</head>
+<body>
+<p>Test for the native getters in object actors</p>
+
+<script class="testbody" type="text/javascript;version=1.8">
+SimpleTest.waitForExplicitFinish();
+
+let expectedProps = [];
+let expectedSafeGetters = [];
+
+function startTest()
+{
+  removeEventListener("load", startTest);
+
+  attachConsole(["ConsoleAPI"], onAttach, true);
+}
+
+function onAttach(aState, aResponse)
+{
+  onConsoleCall = onConsoleCall.bind(null, aState);
+  aState.dbgClient.addListener("consoleAPICall", onConsoleCall);
+
+  top.console.log("hello", document);
+
+  expectedProps = {
+    "location": {
+      get: {
+        type: "object",
+        class: "Function",
+        actor: /[a-z]/,
+      },
+    },
+  };
+
+  expectedSafeGetters = {
+    "title": {
+      getterValue: /native getters in object actors/,
+      getterPrototypeLevel: 2,
+    },
+    "styleSheets": {
+      getterValue: "[object Object]",
+      getterPrototypeLevel: 2,
+    },
+  };
+}
+
+function onConsoleCall(aState, aType, aPacket)
+{
+  is(aPacket.from, aState.actor, "console API call actor");
+
+  info("checking the console API call packet");
+
+  checkConsoleAPICall(aPacket.message, {
+    level: "log",
+    filename: /test_object_actor/,
+    functionName: "onAttach",
+    arguments: ["hello", {
+      type: "object",
+      actor: /[a-z]/,
+    }],
+  });
+
+  aState.dbgClient.removeListener("consoleAPICall", onConsoleCall);
+
+  info("inspecting object properties");
+  let args = aPacket.message.arguments;
+  onProperties = onProperties.bind(null, aState);
+
+  let client = new GripClient(aState.dbgClient, args[1]);
+  client.getPrototypeAndProperties(onProperties);
+}
+
+function onProperties(aState, aResponse)
+{
+  let props = aResponse.ownProperties;
+  let keys = Object.keys(props);
+  info(keys.length + " ownProperties: " + keys);
+
+  ok(keys.length >= Object.keys(expectedProps).length, "number of properties");
+
+  info("check ownProperties");
+  checkObject(props, expectedProps);
+  info("check safeGetterValues");
+  checkObject(aResponse.safeGetterValues, expectedSafeGetters);
+
+  expectedProps = [];
+  expectedSafeGetters = [];
+
+  closeDebugger(aState, function() {
+    SimpleTest.finish();
+  });
+}
+
+addEventListener("load", startTest);
+</script>
+</body>
+</html>
