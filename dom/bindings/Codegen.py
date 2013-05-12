@@ -3553,8 +3553,8 @@ def instantiateJSToNativeConversion(info, replacements, argcAndIndex=None):
     originalHolderName = replacements["holderName"]
     if holderType is not None:
         if dealWithOptional:
-            replacements["holderName"] = "%s.Value()" % originalHolderName
-            holderType = CGTemplatedType("Optional", holderType)
+            replacements["holderName"] = "%s.ref()" % originalHolderName
+            holderType = CGTemplatedType("Maybe", holderType)
             holderCtorArgs = None
         elif holderArgs is not None:
             holderCtorArgs = CGWrapper(holderArgs, pre="(", post=")")
@@ -3592,7 +3592,7 @@ def instantiateJSToNativeConversion(info, replacements, argcAndIndex=None):
                            declArgs.define() if declArgs else "")))
             if holderType is not None:
                 holderConstruct = CGIndenter(
-                    CGGeneric("%s.Construct(%s);" %
+                    CGGeneric("%s.construct(%s);" %
                               (originalHolderName,
                                holderArgs.define() if holderArgs else "")))
             else:
