@@ -9,6 +9,7 @@
 #define __mozilla_widget_GfxInfoCollector_h__
 
 #include "jsapi.h"
+#include "mozilla/Attributes.h"
 
 namespace mozilla {
 namespace widget {
@@ -16,7 +17,7 @@ namespace widget {
 
 /* this is handy wrapper around JSAPI to make it more pleasant to use.
  * We collect the JSAPI errors and so that callers don't need to */
-class InfoObject
+class MOZ_STACK_CLASS InfoObject
 {
   friend class GfxInfoBase;
 
@@ -46,14 +47,14 @@ class InfoObject
   }
 
   void DefineProperty(const char *name, const char *value)
-  { 
+  {
     nsAutoString string = NS_ConvertASCIItoUTF16(value);
-    DefineProperty(name, string); 
+    DefineProperty(name, string);
   }
 
   private:
   // We need to ensure that this object lives on the stack so that GC sees it properly
-  InfoObject(JSContext *aCx) : mCx(aCx), mOk(JS_TRUE)
+  InfoObject(JSContext *aCx) : mCx(aCx), mObj(aCx), mOk(JS_TRUE)
   {
     mObj = JS_NewObject(mCx, NULL, NULL, NULL);
     if (!mObj)
@@ -62,7 +63,7 @@ class InfoObject
   InfoObject(InfoObject&);
 
   JSContext *mCx;
-  JSObject *mObj;
+  JS::Rooted<JSObject*> mObj;
   JSBool mOk;
 };
 
