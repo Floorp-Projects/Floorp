@@ -7725,22 +7725,13 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
 
     // if frame has view, will already be invalidated
     if (aChange & nsChangeHint_RepaintFrame) {
-      if (aFrame->IsFrameOfType(nsIFrame::eSVG) &&
+      needInvalidatingPaint = true;
+      aFrame->InvalidateFrameSubtree();
+      if (aChange & nsChangeHint_UpdateEffects &&
+          aFrame->IsFrameOfType(nsIFrame::eSVG) &&
           !(aFrame->GetStateBits() & NS_STATE_IS_OUTER_SVG)) {
-        if (aChange & nsChangeHint_UpdateEffects) {
-          needInvalidatingPaint = true;
-          nsSVGEffects::InvalidateRenderingObservers(aFrame);
-          // Need to update our overflow rects:
-          nsSVGUtils::ScheduleReflowSVG(aFrame);
-        } else {
-          needInvalidatingPaint = true;
-          // Just invalidate our area:
-          nsSVGEffects::InvalidateRenderingObservers(aFrame);
-          aFrame->InvalidateFrameSubtree();
-        }
-      } else {
-        needInvalidatingPaint = true;
-        aFrame->InvalidateFrameSubtree();
+        // Need to update our overflow rects:
+        nsSVGUtils::ScheduleReflowSVG(aFrame);
       }
     }
     if (aChange & nsChangeHint_UpdateTextPath) {
