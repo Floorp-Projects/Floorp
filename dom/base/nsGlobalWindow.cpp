@@ -2504,7 +2504,8 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
       newInnerWindow->InnerSetNewDocument(aDocument);
 
       // Initialize DOM classes etc on the inner window.
-      rv = mContext->InitClasses(newInnerWindow->mJSObject);
+      JS::Rooted<JSObject*> obj(cx, newInnerWindow->mJSObject);
+      rv = mContext->InitClasses(obj);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -3189,7 +3190,8 @@ nsGlobalWindow::DefineArgumentsProperty(nsIArray *aArguments)
     return NS_OK;
   }
 
-  return GetContextInternal()->SetProperty(mJSObject, "arguments", aArguments);
+  JS::Rooted<JSObject*> obj(cx, mJSObject);
+  return GetContextInternal()->SetProperty(obj, "arguments", aArguments);
 }
 
 //*****************************************************************************

@@ -754,7 +754,7 @@ extern JS_FRIEND_API(bool)
 IsContextRunningJS(JSContext *cx);
 
 typedef void
-(* AnalysisPurgeCallback)(JSRuntime *rt, JSFlatString *desc);
+(* AnalysisPurgeCallback)(JSRuntime *rt, JS::Handle<JSFlatString*> desc);
 
 extern JS_FRIEND_API(AnalysisPurgeCallback)
 SetAnalysisPurgeCallback(JSRuntime *rt, AnalysisPurgeCallback callback);
