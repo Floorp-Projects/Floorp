@@ -185,6 +185,9 @@ StatementJSHelper::GetProperty(nsIXPConnectWrappedNative *aWrapper,
   if (!JSID_IS_STRING(aId))
     return NS_OK;
 
+  JS::Rooted<JSObject*> scope(aCtx, aScopeObj);
+  JS::Rooted<jsid> id(aCtx, aId);
+
 #ifdef DEBUG
   {
     nsCOMPtr<mozIStorageStatement> isStatement(
@@ -197,8 +200,6 @@ StatementJSHelper::GetProperty(nsIXPConnectWrappedNative *aWrapper,
     static_cast<mozIStorageStatement *>(aWrapper->Native())
   );
 
-  JS::RootedObject scope(aCtx, aScopeObj);
-  JS::RootedId id(aCtx, aId);
   JSFlatString *str = JSID_TO_FLAT_STRING(id);
   if (::JS_FlatStringEqualsAscii(str, "row"))
     return getRow(stmt, aCtx, scope, _result);
