@@ -186,7 +186,7 @@ fuzzy-if(Android,9,980) == gradient-live-01d.svg gradient-live-01-ref.svg
 == marker-orientation-01.svg marker-orientation-01-ref.svg
 == mask-basic-01.svg pass.svg
 == mask-basic-02.svg mask-basic-02-ref.svg
-#== mask-basic-03.svg pass.svg
+== mask-basic-03.svg pass.svg
 == mask-extref-dataURI-01.svg pass.svg
 == mask-containing-masked-content-01.svg pass.svg
 == mask-transformed-01.svg mask-transformed-01-ref.svg
