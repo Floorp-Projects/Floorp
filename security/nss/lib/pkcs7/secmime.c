@@ -361,7 +361,7 @@ smime_fill_capability (smime_capability *cap)
 static long
 smime_choose_cipher (CERTCertificate *scert, CERTCertificate **rcerts)
 {
-    PRArenaPool *poolp;
+    PLArenaPool *poolp;
     long chosen_cipher;
     int *cipher_abilities;
     int *cipher_votes;

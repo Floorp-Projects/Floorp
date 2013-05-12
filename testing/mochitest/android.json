@@ -89,6 +89,7 @@
  "content/html/content/test/test_fullscreen-api.html": "TIMED_OUT",
  "content/html/content/test/test_iframe_sandbox_plugins.html": "",
  "content/html/content/test/test_object_plugin_nav.html": "TIMED_OUT",
+ "content/html/content/test/test_video_wakelock.html": "bug 871015",
  "content/html/document/test/test_bug199692.html": "bug 811644",
  "content/html/document/test/test_bug369370.html": "",
  "content/html/document/test/test_bug391777.html": "",

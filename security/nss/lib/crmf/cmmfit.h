@@ -70,7 +70,7 @@ struct CMMFCertResponseStr {
 struct CMMFCertRepContentStr {
     CERTCertificate  **caPubs;
     CMMFCertResponse **response;
-    PRArenaPool       *poolp;
+    PLArenaPool       *poolp;
     PRBool             isDecoded;
 };
 
@@ -91,14 +91,14 @@ struct CMMFRandStr {
 
 struct CMMFPOPODecKeyChallContentStr {
     CMMFChallenge **challenges;
-    PRArenaPool    *poolp;
+    PLArenaPool    *poolp;
     int             numChallenges;
     int             numAllocated;
 };
 
 struct CMMFPOPODecKeyRespContentStr {
     SECItem     **responses;
-    PRArenaPool  *poolp;
+    PLArenaPool  *poolp;
 };
 
 struct CMMFKeyRecRepContentStr {
@@ -106,7 +106,7 @@ struct CMMFKeyRecRepContentStr {
     CERTCertificate       *newSigCert;
     CERTCertificate      **caCerts;
     CMMFCertifiedKeyPair **keyPairHist;
-    PRArenaPool           *poolp;
+    PLArenaPool           *poolp;
     int                    numKeyPairs;
     int                    allocKeyPairs;
     PRBool                 isDecoded;

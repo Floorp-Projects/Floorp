@@ -129,6 +129,13 @@ Download.prototype = {
   error: null,
 
   /**
+   * Indicates the start time of the download.  When the download starts,
+   * this property is set to a valid Date object.  The default value is null
+   * before the download starts.
+   */
+  startTime: null,
+
+  /**
    * Indicates whether this download's "progress" property is able to report
    * partial progress while the download proceeds, and whether the value in
    * totalBytes is relevant.  This depends on the saver and the download source.
@@ -237,6 +244,7 @@ Download.prototype = {
     this.progress = 0;
     this.totalBytes = 0;
     this.currentBytes = 0;
+    this.startTime = new Date();
 
     // Create a new deferred object and an associated promise before starting
     // the actual download.  We store it on the download as the current attempt.

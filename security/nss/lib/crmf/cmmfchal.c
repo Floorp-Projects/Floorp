@@ -14,7 +14,7 @@
 #include "keyhi.h"
 
 static int
-cmmf_create_witness_and_challenge(PRArenaPool     *poolp,
+cmmf_create_witness_and_challenge(PLArenaPool     *poolp,
 				  CMMFChallenge   *challenge,
 				  long             inRandom,
 				  SECItem         *senderDER,
@@ -126,7 +126,7 @@ cmmf_create_first_challenge(CMMFPOPODecKeyChallContent *challContent,
     SECOidData     *oidData;
     CMMFChallenge  *challenge;
     SECAlgorithmID *algId;
-    PRArenaPool    *poolp;
+    PLArenaPool    *poolp;
     SECStatus       rv;
 
     oidData = SECOID_FindOIDByTag(SEC_OID_SHA1);
@@ -156,7 +156,7 @@ cmmf_create_first_challenge(CMMFPOPODecKeyChallContent *challContent,
 CMMFPOPODecKeyChallContent*
 CMMF_CreatePOPODecKeyChallContent (void)
 {
-    PRArenaPool *poolp;
+    PLArenaPool *poolp;
     CMMFPOPODecKeyChallContent *challContent;
 
     poolp = PORT_NewArena(CRMF_DEFAULT_ARENA_SIZE);
@@ -181,7 +181,7 @@ CMMF_POPODecKeyChallContentSetNextChallenge
 				     void                       *passwdArg)
 {
     CMMFChallenge               *curChallenge;
-    PRArenaPool                 *genNamePool = NULL, *poolp;
+    PLArenaPool                 *genNamePool = NULL, *poolp;
     SECStatus                    rv;
     SECItem                     *genNameDER;
     void                        *mark;

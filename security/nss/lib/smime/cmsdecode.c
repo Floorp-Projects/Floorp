@@ -44,12 +44,12 @@ static SECStatus nss_cms_after_data(NSSCMSDecoderContext *p7dcx);
 static SECStatus nss_cms_after_end(NSSCMSDecoderContext *p7dcx);
 static void      nss_cms_decoder_work_data(NSSCMSDecoderContext *p7dcx, 
 		 const unsigned char *data, unsigned long len, PRBool final);
-static NSSCMSDecoderData *nss_cms_create_decoder_data(PRArenaPool *poolp);
+static NSSCMSDecoderData *nss_cms_create_decoder_data(PLArenaPool *poolp);
 
 extern const SEC_ASN1Template NSSCMSMessageTemplate[];
 
 static NSSCMSDecoderData *
-nss_cms_create_decoder_data(PRArenaPool *poolp)
+nss_cms_create_decoder_data(PLArenaPool *poolp)
 {
     NSSCMSDecoderData *decoderData = NULL;
 
@@ -591,7 +591,7 @@ nss_cms_decoder_update_filter (void *arg, const char *data, unsigned long len,
  * "decrypt_key_cb", "decrypt_key_cb_arg" - callback function for getting bulk key for encryptedData
  */
 NSSCMSDecoderContext *
-NSS_CMSDecoder_Start(PRArenaPool *poolp,
+NSS_CMSDecoder_Start(PLArenaPool *poolp,
 		      NSSCMSContentCallback cb, void *cb_arg,
 		      PK11PasswordFunc pwfn, void *pwfn_arg,
 		      NSSCMSGetDecryptKeyCallback decrypt_key_cb, 

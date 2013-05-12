@@ -84,7 +84,7 @@ PK11_DestroyTokenObject(PK11SlotInfo *slot,CK_OBJECT_HANDLE object) {
  */
 SECStatus
 PK11_ReadAttribute(PK11SlotInfo *slot, CK_OBJECT_HANDLE id,
-	 CK_ATTRIBUTE_TYPE type, PRArenaPool *arena, SECItem *result) {
+	 CK_ATTRIBUTE_TYPE type, PLArenaPool *arena, SECItem *result) {
     CK_ATTRIBUTE attr = { 0, NULL, 0 };
     CK_RV crv;
 
@@ -173,7 +173,7 @@ PK11_HasAttributeSet( PK11SlotInfo *slot, CK_OBJECT_HANDLE id,
  * provided, allocate space out of the arena.
  */
 CK_RV
-PK11_GetAttributes(PRArenaPool *arena,PK11SlotInfo *slot,
+PK11_GetAttributes(PLArenaPool *arena,PK11SlotInfo *slot,
 			CK_OBJECT_HANDLE obj,CK_ATTRIBUTE *attr, int count)
 {
     int i;
@@ -1736,7 +1736,7 @@ PK11_MatchItem(PK11SlotInfo *slot, CK_OBJECT_HANDLE searchID,
     /* if you change the array, change the variable below as well */
     CK_OBJECT_HANDLE peerID;
     CK_OBJECT_HANDLE parent;
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     CK_RV crv;
 
     /* now we need to create space for the public key */

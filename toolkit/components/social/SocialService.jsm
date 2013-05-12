@@ -501,7 +501,6 @@ this.SocialService = {
   },
 
   installProvider: function(aDOMDocument, data, installCallback) {
-    let sourceURI = aDOMDocument.location.href;
     let installOrigin = aDOMDocument.nodePrincipal.origin;
 
     let id = getAddonIDFromOrigin(installOrigin);
@@ -509,6 +508,21 @@ this.SocialService = {
     if (Services.blocklist.getAddonBlocklistState(id, version) == Ci.nsIBlocklistService.STATE_BLOCKED)
       throw new Error("installProvider: provider with origin [" +
                       installOrigin + "] is blocklisted");
+
+    AddonManager.getAddonByID(id, function(aAddon) {
+      if (aAddon && aAddon.userDisabled) {
+        aAddon.cancelUninstall();
+        aAddon.userDisabled = false;
+      }
+      schedule(function () {
+        this._installProvider(aDOMDocument, data, installCallback);
+      }.bind(this));
+    }.bind(this));
+  },
+
+  _installProvider: function(aDOMDocument, data, installCallback) {
+    let sourceURI = aDOMDocument.location.href;
+    let installOrigin = aDOMDocument.nodePrincipal.origin;
 
     let installType = this.getOriginActivationType(installOrigin);
     let manifest;
@@ -742,6 +756,10 @@ SocialProvider.prototype = {
   setAmbientNotification: function(notification) {
     if (!this.profile.userName)
       throw new Error("unable to set notifications while logged out");
+    if (!this.ambientNotificationIcons[notification.name] &&
+        Object.keys(this.ambientNotificationIcons).length >= 3) {
+      throw new Error("ambient notification limit reached");
+    }
     this.ambientNotificationIcons[notification.name] = notification;
 
     Services.obs.notifyObservers(null, "social:ambient-notification-changed", this.origin);
@@ -848,6 +866,7 @@ function AddonInstaller(sourceURI, aManifest, installCallback) {
   aManifest.updateDate = Date.now();
   // get the existing manifest for installDate
   let manifest = SocialServiceInternal.getManifestByOrigin(aManifest.origin);
+  let isNewInstall = !manifest;
   if (manifest && manifest.installDate)
     aManifest.installDate = manifest.installDate;
   else
@@ -856,15 +875,19 @@ function AddonInstaller(sourceURI, aManifest, installCallback) {
   this.sourceURI = sourceURI;
   this.install = function() {
     let addon = this.addon;
-    AddonManagerPrivate.callInstallListeners("onExternalInstall", null, addon, null, false);
-    AddonManagerPrivate.callAddonListeners("onInstalling", addon, false);
+    if (isNewInstall) {
+      AddonManagerPrivate.callInstallListeners("onExternalInstall", null, addon, null, false);
+      AddonManagerPrivate.callAddonListeners("onInstalling", addon, false);
+    }
 
     let string = Cc["@mozilla.org/supports-string;1"].
                  createInstance(Ci.nsISupportsString);
     string.data = JSON.stringify(aManifest);
     Services.prefs.setComplexValue(getPrefnameFromOrigin(aManifest.origin), Ci.nsISupportsString, string);
 
-    AddonManagerPrivate.callAddonListeners("onInstalled", addon);
+    if (isNewInstall) {
+      AddonManagerPrivate.callAddonListeners("onInstalled", addon);
+    }
     installCallback(aManifest);
   };
   this.cancel = function() {
@@ -1100,14 +1123,6 @@ AddonWrapper.prototype = {
   },
 
   cancelUninstall: function() {
-    let prefName = getPrefnameFromOrigin(this.manifest.origin);
-    if (Services.prefs.prefHasUserValue(prefName))
-      throw new Error(this.manifest.name + " is not marked to be uninstalled");
-    // ensure we're set into prefs
-    let string = Cc["@mozilla.org/supports-string;1"].
-                 createInstance(Ci.nsISupportsString);
-    string.data = JSON.stringify(this.manifest);
-    Services.prefs.setComplexValue(prefName, Ci.nsISupportsString, string);
     this._pending -= AddonManager.PENDING_UNINSTALL;
     AddonManagerPrivate.callAddonListeners("onOperationCancelled", this);
   }

@@ -26,7 +26,7 @@
 
 typedef struct SEC_PKCS5PBEParameterStr SEC_PKCS5PBEParameter;
 struct SEC_PKCS5PBEParameterStr {
-    PRArenaPool     *poolp;
+    PLArenaPool     *poolp;
     SECItem         salt;           /* octet string */
     SECItem         iteration;      /* integer */
     SECItem         keyLength;	/* PKCS5v2 only */
@@ -39,7 +39,7 @@ struct SEC_PKCS5PBEParameterStr {
  * and SEC_OID_PKCS5_PBMAC1
  */
 struct sec_pkcs5V2ParameterStr {
-    PRArenaPool    *poolp;
+    PLArenaPool    *poolp;
     SECAlgorithmID pbeAlgId;   /* real pbe algorithms */
     SECAlgorithmID cipherAlgId; /* encryption/mac */
 };
@@ -144,9 +144,9 @@ sec_pkcs5GetCryptoFromAlgTag(SECOidTag algorithm)
  *  if arena is passed in, use it, otherwise create a new arena.
  */
 sec_pkcs5V2Parameter *
-sec_pkcs5_v2_get_v2_param(PRArenaPool *arena, SECAlgorithmID *algid)
+sec_pkcs5_v2_get_v2_param(PLArenaPool *arena, SECAlgorithmID *algid)
 {
-    PRArenaPool *localArena = NULL;
+    PLArenaPool *localArena = NULL;
     sec_pkcs5V2Parameter *pbeV2_param;
     SECStatus rv;
 
@@ -313,7 +313,7 @@ int
 sec_pkcs5v2_key_length(SECAlgorithmID *algid)
 {
     SECOidTag algorithm;
-    PRArenaPool *arena = NULL;
+    PLArenaPool *arena = NULL;
     SEC_PKCS5PBEParameter p5_param;
     SECStatus rv;
     int length = -1;
@@ -471,7 +471,7 @@ sec_pkcs5_create_pbe_parameter(SECOidTag algorithm,
 			int keyLength,
 			SECOidTag prfAlg)
 {
-    PRArenaPool *poolp = NULL;
+    PLArenaPool *poolp = NULL;
     SEC_PKCS5PBEParameter *pbe_param = NULL;
     SECStatus rv= SECSuccess; 
     void *dummy = NULL;
@@ -559,7 +559,7 @@ sec_pkcs5CreateAlgorithmID(SECOidTag algorithm,
 			   SECItem *salt, 
 			   int iteration)
 {
-    PRArenaPool *poolp = NULL;
+    PLArenaPool *poolp = NULL;
     SECAlgorithmID *algid, *ret_algid = NULL;
     SECOidTag pbeAlgorithm = algorithm;
     SECItem der_param;
@@ -740,7 +740,7 @@ pbe_PK11AlgidToParam(SECAlgorithmID *algid,SECItem *mech)
     SEC_PKCS5PBEParameter p5_param;
     SECItem *salt = NULL;
     SECOidTag algorithm = SECOID_GetAlgorithmTag(algid);
-    PRArenaPool *arena = NULL;
+    PLArenaPool *arena = NULL;
     SECStatus rv = SECFailure;
     unsigned char *paramData = NULL;
     unsigned char *pSalt = NULL;
@@ -868,7 +868,7 @@ loser:
  * PBE algorithmID's directly.
  */
 SECStatus
-PBE_PK11ParamToAlgid(SECOidTag algTag, SECItem *param, PRArenaPool *arena, 
+PBE_PK11ParamToAlgid(SECOidTag algTag, SECItem *param, PLArenaPool *arena,
 		     SECAlgorithmID *algId)
 {
     CK_PBE_PARAMS *pbe_param;

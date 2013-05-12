@@ -65,7 +65,7 @@ nsDOMStringMap::WrapObject(JSContext *cx, JS::Handle<JSObject*> scope)
 
 void
 nsDOMStringMap::NamedGetter(const nsAString& aProp, bool& found,
-                            nsString& aResult) const
+                            DOMString& aResult) const
 {
   nsAutoString attr;
 
@@ -74,10 +74,7 @@ nsDOMStringMap::NamedGetter(const nsAString& aProp, bool& found,
     return;
   }
 
-  nsCOMPtr<nsIAtom> attrAtom = do_GetAtom(attr);
-  MOZ_ASSERT(attrAtom, "Should be infallible");
-
-  found = mElement->GetAttr(kNameSpaceID_None, attrAtom, aResult);
+  found = mElement->GetAttr(attr, aResult);
 }
 
 void
@@ -139,16 +136,15 @@ nsDOMStringMap::GetSupportedNames(nsTArray<nsString>& aNames)
   // Iterate through all the attributes and add property
   // names corresponding to data attributes to return array.
   for (uint32_t i = 0; i < attrCount; ++i) {
-    nsAutoString attrString;
     const nsAttrName* attrName = mElement->GetAttrNameAt(i);
     // Skip the ones that are not in the null namespace
     if (attrName->NamespaceID() != kNameSpaceID_None) {
       continue;
     }
-    attrName->LocalName()->ToString(attrString);
 
     nsAutoString prop;
-    if (!AttrToDataProp(attrString, prop)) {
+    if (!AttrToDataProp(nsDependentAtomString(attrName->LocalName()),
+                        prop)) {
       continue;
     }
 
@@ -161,23 +157,21 @@ nsDOMStringMap::GetSupportedNames(nsTArray<nsString>& aNames)
  * (ex. aBigFish to data-a-big-fish).
  */
 bool nsDOMStringMap::DataPropToAttr(const nsAString& aProp,
-                                      nsAString& aResult)
+                                    nsAutoString& aResult)
 {
-  const PRUnichar* cur = aProp.BeginReading();
-  const PRUnichar* end = aProp.EndReading();
-
-  // String corresponding to the data attribute on the element.
-  nsAutoString attr;
-  // Length of attr will be at least the length of the property + 5 for "data-".
-  attr.SetCapacity(aProp.Length() + 5);
-
-  attr.Append(NS_LITERAL_STRING("data-"));
+  // aResult is an autostring, so don't worry about setting its capacity:
+  // SetCapacity is slow even when it's a no-op and we already have enough
+  // storage there for most cases, probably.
+  aResult.AppendLiteral("data-");
 
   // Iterate property by character to form attribute name.
   // Return syntax error if there is a sequence of "-" followed by a character
   // in the range "a" to "z".
   // Replace capital characters with "-" followed by lower case character.
   // Otherwise, simply append character to attribute name.
+  const PRUnichar* start = aProp.BeginReading();
+  const PRUnichar* end = aProp.EndReading();
+  const PRUnichar* cur = start;
   for (; cur < end; ++cur) {
     const PRUnichar* next = cur + 1;
     if (PRUnichar('-') == *cur && next < end &&
@@ -187,15 +181,17 @@ bool nsDOMStringMap::DataPropToAttr(const nsAString& aProp,
     }
 
     if (PRUnichar('A') <= *cur && *cur <= PRUnichar('Z')) {
+      // Append the characters in the range [start, cur)
+      aResult.Append(start, cur - start);
       // Uncamel-case characters in the range of "A" to "Z".
-      attr.Append(PRUnichar('-'));
-      attr.Append(*cur - 'A' + 'a');
-    } else {
-      attr.Append(*cur);
+      aResult.Append(PRUnichar('-'));
+      aResult.Append(*cur - 'A' + 'a');
+      start = next; // We've already appended the thing at *cur
     }
   }
 
-  aResult.Assign(attr);
+  aResult.Append(start, cur - start);
+
   return true;
 }
 
@@ -204,7 +200,7 @@ bool nsDOMStringMap::DataPropToAttr(const nsAString& aProp,
  * (ex. data-a-big-fish to aBigFish).
  */
 bool nsDOMStringMap::AttrToDataProp(const nsAString& aAttr,
-                                      nsAString& aResult)
+                                    nsAutoString& aResult)
 {
   // If the attribute name does not begin with "data-" then it can not be
   // a data attribute.
@@ -216,9 +212,8 @@ bool nsDOMStringMap::AttrToDataProp(const nsAString& aAttr,
   const PRUnichar* cur = aAttr.BeginReading() + 5;
   const PRUnichar* end = aAttr.EndReading();
 
-  // Dataset property name. Ensure that the string is large enough to store
-  // all the characters in the property name.
-  nsAutoString prop;
+  // Don't try to mess with aResult's capacity: the probably-no-op SetCapacity()
+  // call is not that fast.
 
   // Iterate through attrName by character to form property name.
   // If there is a sequence of "-" followed by a character in the range "a" to
@@ -229,15 +224,14 @@ bool nsDOMStringMap::AttrToDataProp(const nsAString& aAttr,
     if (PRUnichar('-') == *cur && next < end && 
         PRUnichar('a') <= *next && *next <= PRUnichar('z')) {
       // Upper case the lower case letters that follow a "-".
-      prop.Append(*next - 'a' + 'A');
+      aResult.Append(*next - 'a' + 'A');
       // Consume character to account for "-" character.
       ++cur;
     } else {
       // Simply append character if camel case is not necessary.
-      prop.Append(*cur);
+      aResult.Append(*cur);
     }
   }
 
-  aResult.Assign(prop);
   return true;
 }

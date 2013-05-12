@@ -158,7 +158,7 @@ typedef struct ECDHEKeyPairStr {
 static ECDHEKeyPair gECDHEKeyPairs[ec_pastLastName];
 
 SECStatus 
-ssl3_ECName2Params(PRArenaPool * arena, ECName curve, SECKEYECParams * params)
+ssl3_ECName2Params(PLArenaPool * arena, ECName curve, SECKEYECParams * params)
 {
     SECOidData *oidData = NULL;
 
@@ -570,7 +570,7 @@ ssl3_CreateECDHEphemeralKeys(sslSocket *ss, ECName ec_curve)
 SECStatus
 ssl3_HandleECDHServerKeyExchange(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 {
-    PRArenaPool *    arena     = NULL;
+    PLArenaPool *    arena     = NULL;
     SECKEYPublicKey *peerKey   = NULL;
     PRBool           isTLS;
     SECStatus        rv;

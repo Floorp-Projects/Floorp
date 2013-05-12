@@ -30,7 +30,7 @@ typedef enum {
 typedef struct NSSPKCS5PBEParameterStr NSSPKCS5PBEParameter;
 
 struct NSSPKCS5PBEParameterStr {
-    PRArenaPool *poolp;
+    PLArenaPool *poolp;
     SECItem	salt;		/* octet string */
     SECItem	iteration;	/* integer */
     SECItem	keyLength;	/* integer */
@@ -60,7 +60,7 @@ SEC_BEGIN_PROTOS
  * Otherwise, a pointer to the algorithm id is returned.
  */
 extern SECAlgorithmID *
-nsspkcs5_CreateAlgorithmID(PRArenaPool *arena, SECOidTag algorithm, 
+nsspkcs5_CreateAlgorithmID(PLArenaPool *arena, SECOidTag algorithm,
 						NSSPKCS5PBEParameter *pbe);
 
 /*
