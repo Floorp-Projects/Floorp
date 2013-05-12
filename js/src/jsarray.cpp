@@ -2759,6 +2759,15 @@ static const JSFunctionSpec array_methods[] = {
          {"some",               {NULL, NULL},       1,0, "ArraySome"},
          {"every",              {NULL, NULL},       1,0, "ArrayEvery"},
 
+#ifdef ENABLE_PARALLEL_JS
+    /* Parallelizable and pure methods. */
+         {"pmap",              {NULL, NULL},        2,0, "ArrayParallelMap"},
+         {"preduce",           {NULL, NULL},        2,0, "ArrayParallelReduce"},
+         {"pscan",             {NULL, NULL},        2,0, "ArrayParallelScan"},
+         {"pscatter",          {NULL, NULL},        5,0, "ArrayParallelScatter"},
+         {"pfilter",           {NULL, NULL},        2,0, "ArrayParallelFilter"},
+#endif
+
     JS_FN("iterator",           JS_ArrayIterator,   0,0),
     JS_FS_END
 };
@@ -2773,6 +2782,12 @@ static const JSFunctionSpec array_static_methods[] = {
          {"some",               {NULL, NULL},       2,0, "ArrayStaticSome"},
          {"reduce",             {NULL, NULL},       2,0, "ArrayStaticReduce"},
          {"reduceRight",        {NULL, NULL},       2,0, "ArrayStaticReduceRight"},
+
+#ifdef ENABLE_PARALLEL_JS
+    /* Parallelizable and pure static methods. */
+         {"pbuild",             {NULL, NULL},       3,0, "ArrayStaticParallelBuild"},
+#endif
+
     JS_FS_END
 };
 
