@@ -1,4 +1,4 @@
-// |jit-test| error: RangeError
+// |jit-test| error: TypeError
 //
 // Run with --ion-eager.
 if (getBuildConfiguration().parallelJS) {
@@ -14,5 +14,5 @@ if (getBuildConfiguration().parallelJS) {
   } catch(exc1) {}
   reportCompare();
 } else {
-  throw new RangeError();
+  throw new TypeError();
 }
