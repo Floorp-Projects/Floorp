@@ -27,7 +27,7 @@
 SECStatus
 NSS_CMSArray_SortByDER(void **objs, const SEC_ASN1Template *objtemplate, void **objs2)
 {
-    PRArenaPool *poolp;
+    PLArenaPool *poolp;
     int num_objs;
     SECItem **enc_objs;
     SECStatus rv = SECFailure;

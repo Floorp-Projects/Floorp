@@ -18,7 +18,7 @@ SECOID_GetAlgorithmTag(SECAlgorithmID *id)
 }
 
 SECStatus
-SECOID_SetAlgorithmID(PRArenaPool *arena, SECAlgorithmID *id, SECOidTag which,
+SECOID_SetAlgorithmID(PLArenaPool *arena, SECAlgorithmID *id, SECOidTag which,
 		      SECItem *params)
 {
     SECOidData *oiddata;
@@ -97,7 +97,7 @@ SECOID_SetAlgorithmID(PRArenaPool *arena, SECAlgorithmID *id, SECOidTag which,
 }
 
 SECStatus
-SECOID_CopyAlgorithmID(PRArenaPool *arena, SECAlgorithmID *to, SECAlgorithmID *from)
+SECOID_CopyAlgorithmID(PLArenaPool *arena, SECAlgorithmID *to, SECAlgorithmID *from)
 {
     SECStatus rv;
 

@@ -406,7 +406,6 @@ create({ constructor: StackFramesView, proto: MenuContainer.prototype }, {
     // Append a stack frame item to this container.
     let stackframeItem = this.push(frameView, {
       index: 0, /* specifies on which position should the item be appended */
-      relaxed: true, /* this container should allow dupes & degenerates */
       attachment: {
         popup: menuEntry,
         depth: aDepth
@@ -946,7 +945,7 @@ FilterView.prototype = {
     view.node.hideEmptyGroups();
 
     // Ensure the currently selected item is visible.
-    view.node.ensureSelectionIsVisible(true);
+    view.node.ensureSelectionIsVisible({ withGroup: true });
 
     // Remember the previously searched file to avoid redundant filtering.
     this._prevSearchedFile = aFile;

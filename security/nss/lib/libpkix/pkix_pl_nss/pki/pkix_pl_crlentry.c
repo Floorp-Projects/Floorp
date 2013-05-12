@@ -218,7 +218,7 @@ pkix_pl_CRLEntry_Extensions_Hashcode(
         void *plContext)
 {
         CERTCertExtension *extension = NULL;
-        PRArenaPool *arena = NULL;
+        PLArenaPool *arena = NULL;
         PKIX_UInt32 extHash = 0;
         PKIX_UInt32 hashValue = 0;
         SECItem *derBytes = NULL;
@@ -393,7 +393,7 @@ pkix_pl_CRLEntry_Extensions_Equals(
         CERTCertExtension **secondExtensions;
         CERTCertExtension *firstExtension = NULL;
         CERTCertExtension *secondExtension = NULL;
-        PRArenaPool *arena = NULL;
+        PLArenaPool *arena = NULL;
         PKIX_Boolean cmpResult = PKIX_FALSE;
         SECItem *firstDerBytes = NULL;
         SECItem *secondDerBytes = NULL;

@@ -142,7 +142,7 @@ SGN_End(SGNContext *cx, SECItem *result)
     int signatureLen;
     SECStatus rv;
     SECItem digder, sigitem;
-    PRArenaPool *arena = 0;
+    PLArenaPool *arena = 0;
     SECKEYPrivateKey *privKey = cx->key;
     SGNDigestInfo *di = 0;
 
@@ -298,7 +298,7 @@ SEC_ASN1_CHOOSER_IMPLEMENT(CERT_SignedDataTemplate)
 
 
 SECStatus
-SEC_DerSignData(PRArenaPool *arena, SECItem *result, 
+SEC_DerSignData(PLArenaPool *arena, SECItem *result,
 	const unsigned char *buf, int len, SECKEYPrivateKey *pk,
 	SECOidTag algID)
 {
@@ -369,7 +369,7 @@ SGN_Digest(SECKEYPrivateKey *privKey,
     int modulusLen;
     SECStatus rv;
     SECItem digder;
-    PRArenaPool *arena = 0;
+    PLArenaPool *arena = 0;
     SGNDigestInfo *di = 0;
 
 

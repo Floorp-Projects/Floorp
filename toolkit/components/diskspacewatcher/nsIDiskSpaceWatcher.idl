@@ -4,6 +4,12 @@
 
 #include "nsISupports.idl"
 
+%{ C++
+#ifdef XP_WIN
+#undef GetFreeSpace
+#endif
+%}
+
 [scriptable, uuid(3aceba74-2ed5-4e99-8fe4-06e90e2b8ef0)]
 interface nsIDiskSpaceWatcher : nsISupports
 {

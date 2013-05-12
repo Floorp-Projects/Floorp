@@ -266,7 +266,7 @@ SECKEY_DestroyPublicKey(SECKEYPublicKey *pubk)
 }
 
 SECStatus
-SECKEY_CopySubjectPublicKeyInfo(PRArenaPool *arena,
+SECKEY_CopySubjectPublicKeyInfo(PLArenaPool *arena,
 			     CERTSubjectPublicKeyInfo *to,
 			     CERTSubjectPublicKeyInfo *from)
 {
@@ -445,7 +445,7 @@ SECKEY_UpdateCertPQG(CERTCertificate * subjectCert)
  * a V3 certificate data structure.  */ 
 
 SECStatus
-SECKEY_DSADecodePQG(PRArenaPool *arena, SECKEYPublicKey *pubk, SECItem *params) {
+SECKEY_DSADecodePQG(PLArenaPool *arena, SECKEYPublicKey *pubk, SECItem *params) {
     SECStatus rv;
     SECItem newparams;
 
@@ -550,7 +550,7 @@ seckey_ExtractPublicKey(CERTSubjectPublicKeyInfo *spki)
     SECKEYPublicKey *pubk;
     SECItem os, newOs, newParms;
     SECStatus rv;
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     SECOidTag tag;
 
     arena = PORT_NewArena (DER_DEFAULT_CHUNKSIZE);
@@ -1026,7 +1026,7 @@ SECKEYPrivateKey *
 SECKEY_CopyPrivateKey(const SECKEYPrivateKey *privk)
 {
     SECKEYPrivateKey *copyk;
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     
     if (!privk || !privk->pkcs11Slot) {
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
@@ -1072,7 +1072,7 @@ SECKEYPublicKey *
 SECKEY_CopyPublicKey(const SECKEYPublicKey *pubk)
 {
     SECKEYPublicKey *copyk;
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     SECStatus rv = SECSuccess;
 
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
@@ -1157,7 +1157,7 @@ SECKEYPublicKey *
 SECKEY_ConvertToPublicKey(SECKEYPrivateKey *privk)
 {
     SECKEYPublicKey *pubk;
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     CERTCertificate *cert;
     SECStatus rv;
 
@@ -1216,7 +1216,7 @@ CERTSubjectPublicKeyInfo *
 SECKEY_CreateSubjectPublicKeyInfo(SECKEYPublicKey *pubk)
 {
     CERTSubjectPublicKeyInfo *spki;
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     SECItem params = { siBuffer, NULL, 0 };
 
     if (!pubk) {
@@ -1346,7 +1346,7 @@ SECKEY_DestroySubjectPublicKeyInfo(CERTSubjectPublicKeyInfo *spki)
 SECKEYPublicKey *
 SECKEY_DecodeDERPublicKey(SECItem *pubkder)
 {
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     SECKEYPublicKey *pubk;
     SECStatus rv;
     SECItem newPubkder;
@@ -1427,7 +1427,7 @@ finish:
 CERTSubjectPublicKeyInfo *
 SECKEY_DecodeDERSubjectPublicKeyInfo(SECItem *spkider)
 {
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     CERTSubjectPublicKeyInfo *spki;
     SECStatus rv;
     SECItem newSpkider;
@@ -1492,7 +1492,7 @@ SECKEY_ConvertAndDecodePublicKeyAndChallenge(char *pkacstr, char *challenge,
     CERTPublicKeyAndChallenge pkac;
     SECStatus rv;
     SECItem signedItem;
-    PRArenaPool *arena = NULL;
+    PLArenaPool *arena = NULL;
     CERTSignedData sd;
     SECItem sig;
     SECKEYPublicKey *pubKey = NULL;
@@ -1587,7 +1587,7 @@ void
 SECKEY_DestroyPrivateKeyInfo(SECKEYPrivateKeyInfo *pvk,
 			     PRBool freeit)
 {
-    PRArenaPool *poolp;
+    PLArenaPool *poolp;
 
     if(pvk != NULL) {
 	if(pvk->arena) {
@@ -1618,7 +1618,7 @@ void
 SECKEY_DestroyEncryptedPrivateKeyInfo(SECKEYEncryptedPrivateKeyInfo *epki,
 				      PRBool freeit)
 {
-    PRArenaPool *poolp;
+    PLArenaPool *poolp;
 
     if(epki != NULL) {
 	if(epki->arena) {
@@ -1645,7 +1645,7 @@ SECKEY_DestroyEncryptedPrivateKeyInfo(SECKEYEncryptedPrivateKeyInfo *epki,
 }
 
 SECStatus
-SECKEY_CopyPrivateKeyInfo(PRArenaPool *poolp,
+SECKEY_CopyPrivateKeyInfo(PLArenaPool *poolp,
 			  SECKEYPrivateKeyInfo *to,
 			  SECKEYPrivateKeyInfo *from)
 {
@@ -1669,7 +1669,7 @@ SECKEY_CopyPrivateKeyInfo(PRArenaPool *poolp,
 }
 
 SECStatus
-SECKEY_CopyEncryptedPrivateKeyInfo(PRArenaPool *poolp, 
+SECKEY_CopyEncryptedPrivateKeyInfo(PLArenaPool *poolp,
 				   SECKEYEncryptedPrivateKeyInfo *to,
 				   SECKEYEncryptedPrivateKeyInfo *from)
 {
@@ -1706,7 +1706,7 @@ SECKEY_ImportDERPublicKey(SECItem *derKey, CK_KEY_TYPE type)
     SECKEYPublicKey *pubk = NULL;
     SECStatus rv = SECFailure;
     SECItem newDerKey;
-    PRArenaPool *arena = NULL;
+    PLArenaPool *arena = NULL;
 
     if (!derKey) {
         return NULL;
@@ -1766,7 +1766,7 @@ finish:
 SECKEYPrivateKeyList*
 SECKEY_NewPrivateKeyList(void)
 {
-    PRArenaPool *arena = NULL;
+    PLArenaPool *arena = NULL;
     SECKEYPrivateKeyList *ret = NULL;
 
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
@@ -1843,7 +1843,7 @@ loser:
 SECKEYPublicKeyList*
 SECKEY_NewPublicKeyList(void)
 {
-    PRArenaPool *arena = NULL;
+    PLArenaPool *arena = NULL;
     SECKEYPublicKeyList *ret = NULL;
 
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);

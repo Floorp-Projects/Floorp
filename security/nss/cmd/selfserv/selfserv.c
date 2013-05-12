@@ -1066,7 +1066,7 @@ void stop_server()
 }
 
 SECItemArray *
-makeTryLaterOCSPResponse(PRArenaPool *arena)
+makeTryLaterOCSPResponse(PLArenaPool *arena)
 {
     SECItemArray *result = NULL;
     SECItem *ocspResponse = NULL;
@@ -1087,7 +1087,7 @@ makeTryLaterOCSPResponse(PRArenaPool *arena)
 }
 
 SECItemArray *
-makeCorruptedOCSPResponse(PRArenaPool *arena)
+makeCorruptedOCSPResponse(PLArenaPool *arena)
 {
     SECItemArray *result = NULL;
     SECItem *ocspResponse = NULL;
@@ -1107,7 +1107,7 @@ makeCorruptedOCSPResponse(PRArenaPool *arena)
 }
 
 SECItemArray *
-makeSignedOCSPResponse(PRArenaPool *arena, ocspStaplingModeType osm,
+makeSignedOCSPResponse(PLArenaPool *arena, ocspStaplingModeType osm,
 		       PRFileDesc *model_sock, CERTCertificate *cert)
 {
     SECItemArray *result = NULL;
@@ -1216,7 +1216,7 @@ handle_connection(
     char               fileName[513];
     char               proto[128];
     PRDescIdentity     aboveLayer = PR_INVALID_IO_LAYER;
-    PRArenaPool *arena = NULL;
+    PLArenaPool *arena = NULL;
     ocspStaplingModeType osm;
 
     pBuf   = buf;

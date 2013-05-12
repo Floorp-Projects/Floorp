@@ -108,7 +108,7 @@ SignFile(FILE *outFile, PRFileDesc *inFile, CERTCertificate *cert)
     char *data;
     SECKEYPrivateKey *privKey;
     SECOidTag algID;
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     CERTSignedData sd;
     SECItem *result;
 

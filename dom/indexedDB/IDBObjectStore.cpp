@@ -584,11 +584,11 @@ GenerateRequest(IDBObjectStore* aObjectStore, JSContext* aCx)
                             aObjectStore->Transaction(), aCx);
 }
 
-struct GetAddInfoClosure
+struct MOZ_STACK_CLASS GetAddInfoClosure
 {
   IDBObjectStore* mThis;
   StructuredCloneWriteInfo& mCloneWriteInfo;
-  jsval mValue;
+  JS::Handle<JS::Value> mValue;
 };
 
 nsresult
@@ -599,8 +599,7 @@ GetAddInfoCallback(JSContext* aCx, void* aClosure)
   data->mCloneWriteInfo.mOffsetToKeyProp = 0;
   data->mCloneWriteInfo.mTransaction = data->mThis->Transaction();
 
-  if (!IDBObjectStore::SerializeValue(aCx, data->mCloneWriteInfo,
-                                      data->mValue)) {
+  if (!IDBObjectStore::SerializeValue(aCx, data->mCloneWriteInfo, data->mValue)) {
     return NS_ERROR_DOM_DATA_CLONE_ERR;
   }
 
@@ -1241,7 +1240,7 @@ IDBObjectStore::DeserializeValue(JSContext* aCx,
 bool
 IDBObjectStore::SerializeValue(JSContext* aCx,
                                StructuredCloneWriteInfo& aCloneWriteInfo,
-                               jsval aValue)
+                               JS::Handle<JS::Value> aValue)
 {
   NS_ASSERTION(NS_IsMainThread(),
                "Should only be serializing on the main thread!");
@@ -1739,8 +1738,8 @@ IDBObjectStore::~IDBObjectStore()
 
 nsresult
 IDBObjectStore::GetAddInfo(JSContext* aCx,
-                           jsval aValue,
-                           jsval aKeyVal,
+                           JS::Handle<JS::Value> aValue,
+                           JS::Handle<JS::Value> aKeyVal,
                            StructuredCloneWriteInfo& aCloneWriteInfo,
                            Key& aKey,
                            nsTArray<IndexUpdateInfo>& aUpdateInfoArray)
@@ -1827,7 +1826,8 @@ IDBObjectStore::AddOrPut(const jsval& aValue,
   Key key;
   nsTArray<IndexUpdateInfo> updateInfo;
 
-  nsresult rv = GetAddInfo(aCx, aValue, keyval, cloneWriteInfo, key,
+  JS::Rooted<JS::Value> value(aCx, aValue);
+  nsresult rv = GetAddInfo(aCx, value, keyval, cloneWriteInfo, key,
                            updateInfo);
   if (NS_FAILED(rv)) {
     return rv;
@@ -2945,6 +2945,11 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 
   PROFILER_LABEL("IndexedDB", "AddHelper::DoDatabaseWork");
 
+  if (IndexedDatabaseManager::InLowDiskSpaceMode()) {
+    NS_WARNING("Refusing to add more data because disk space is low!");
+    return NS_ERROR_DOM_INDEXEDDB_QUOTA_ERR;
+  }
+
   nsresult rv;
   bool keyUnset = mKey.IsUnset();
   int64_t osid = mObjectStore->Id();
@@ -3913,6 +3918,11 @@ CreateIndexHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   NS_ASSERTION(IndexedDatabaseManager::IsMainProcess(), "Wrong process!");
 
   PROFILER_LABEL("IndexedDB", "CreateIndexHelper::DoDatabaseWork");
+
+  if (IndexedDatabaseManager::InLowDiskSpaceMode()) {
+    NS_WARNING("Refusing to create index because disk space is low!");
+    return NS_ERROR_DOM_INDEXEDDB_QUOTA_ERR;
+  }
 
   // Insert the data into the database.
   nsCOMPtr<mozIStorageStatement> stmt =

@@ -513,9 +513,4 @@ function run_test() {
   server = new TestServer();
 
   run_next_test();
-
-  do_timeout(10000, function() {
-    do_throw(
-      "The test should never take this long unless the system is hosed.");
-  });
 }

@@ -239,7 +239,7 @@ RSA_NewKey(int keySizeInBits, SECItem *publicExponent)
     SECStatus rv = SECSuccess;
     int prerr = 0;
     RSAPrivateKey *key = NULL;
-    PRArenaPool *arena = NULL;
+    PLArenaPool *arena = NULL;
     /* Require key size to be a multiple of 16 bits. */
     if (!publicExponent || keySizeInBits % 16 != 0 ||
 	    BAD_RSA_KEY_SIZE(keySizeInBits/8, publicExponent->len)) {
@@ -260,7 +260,7 @@ RSA_NewKey(int keySizeInBits, SECItem *publicExponent)
     }
     key->arena = arena;
     /* length of primes p and q (in bytes) */
-    primeLen = keySizeInBits / (2 * BITS_PER_BYTE);
+    primeLen = keySizeInBits / (2 * PR_BITS_PER_BYTE);
     MP_DIGITS(&p) = 0;
     MP_DIGITS(&q) = 0;
     MP_DIGITS(&e) = 0;
@@ -653,7 +653,7 @@ cleanup:
 SECStatus
 RSA_PopulatePrivateKey(RSAPrivateKey *key)
 {
-    PRArenaPool *arena = NULL;
+    PLArenaPool *arena = NULL;
     PRBool needPublicExponent = PR_TRUE;
     PRBool needPrivateExponent = PR_TRUE;
     PRBool hasModulus = PR_FALSE;
@@ -712,7 +712,7 @@ RSA_PopulatePrivateKey(RSAPrivateKey *key)
 	if (key->prime1.data[0] == 0) {
 	   primeLen--;
 	}
-	keySizeInBits = primeLen * 2 * BITS_PER_BYTE;
+	keySizeInBits = primeLen * 2 * PR_BITS_PER_BYTE;
         SECITEM_TO_MPINT(key->prime1, &p);
 	prime_count++;
     }
@@ -721,7 +721,7 @@ RSA_PopulatePrivateKey(RSAPrivateKey *key)
 	if (key->prime2.data[0] == 0) {
 	   primeLen--;
 	}
-	keySizeInBits = primeLen * 2 * BITS_PER_BYTE;
+	keySizeInBits = primeLen * 2 * PR_BITS_PER_BYTE;
         SECITEM_TO_MPINT(key->prime2, prime_count ? &q : &p);
 	prime_count++;
     }
@@ -731,7 +731,7 @@ RSA_PopulatePrivateKey(RSAPrivateKey *key)
 	if (key->modulus.data[0] == 0) {
 	   modLen--;
 	}
-	keySizeInBits = modLen * BITS_PER_BYTE;
+	keySizeInBits = modLen * PR_BITS_PER_BYTE;
 	SECITEM_TO_MPINT(key->modulus, &n);
 	hasModulus = PR_TRUE;
     }
@@ -1354,7 +1354,7 @@ RSA_PrivateKeyOpDoubleChecked(RSAPrivateKey *key,
 }
 
 static SECStatus
-swap_in_key_value(PRArenaPool *arena, mp_int *mpval, SECItem *buffer)
+swap_in_key_value(PLArenaPool *arena, mp_int *mpval, SECItem *buffer)
 {
     int len;
     mp_err err = MP_OKAY;

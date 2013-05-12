@@ -53,8 +53,8 @@
 #include "pkcs11f.h"
 
 typedef struct {
-    uint8 client_version[2];
-    uint8 random[46];
+    PRUint8 client_version[2];
+    PRUint8 random[46];
 } SSL3RSAPreMasterSecret;
 
 static void sftk_Null(void *data, PRBool freeit)
@@ -3287,7 +3287,7 @@ nsc_SetupHMACKeyGen(CK_MECHANISM_PTR pMechanism, NSSPKCS5PBEParameter **pbe)
     SECItem  salt;
     CK_PBE_PARAMS *pbe_params = NULL;
     NSSPKCS5PBEParameter *params;
-    PRArenaPool *arena = NULL;
+    PLArenaPool *arena = NULL;
     SECStatus rv;
 
     *pbe = NULL;
@@ -5337,11 +5337,11 @@ sftk_MapKeySize(CK_KEY_TYPE keyType)
  */
 static CK_RV sftk_compute_ANSI_X9_63_kdf(CK_BYTE **key, CK_ULONG key_len, SECItem *SharedSecret,
 		CK_BYTE_PTR SharedInfo, CK_ULONG SharedInfoLen,
-		SECStatus Hash(unsigned char *, const unsigned char *, uint32),
+		SECStatus Hash(unsigned char *, const unsigned char *, PRUint32),
 		CK_ULONG HashLen)
 {
     unsigned char *buffer = NULL, *output_buffer = NULL;
-    uint32 buffer_len, max_counter, i;
+    PRUint32 buffer_len, max_counter, i;
     SECStatus rv;
 
     /* Check that key_len isn't too long.  The maximum key length could be

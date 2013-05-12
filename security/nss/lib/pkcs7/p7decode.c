@@ -44,7 +44,7 @@ struct SEC_PKCS7DecoderContextStr {
     SECKEYGetPasswordKey pwfn;
     void *pwfn_arg;
     struct sec_pkcs7_decoder_worker worker;
-    PRArenaPool *tmp_poolp;
+    PLArenaPool *tmp_poolp;
     int error;
     SEC_PKCS7GetDecryptKeyCallback dkcb;
     void *dkcb_arg;
@@ -306,7 +306,7 @@ sec_pkcs7_decoder_start_digests (SEC_PKCS7DecoderContext *p7dcx, int depth,
  */
 static SECStatus
 sec_pkcs7_decoder_finish_digests (SEC_PKCS7DecoderContext *p7dcx,
-				  PRArenaPool *poolp,
+				  PLArenaPool *poolp,
 				  SECItem ***digestsp)
 {
     struct sec_pkcs7_decoder_worker *worker;
@@ -583,7 +583,7 @@ no_decryption:
 
 static SECStatus
 sec_pkcs7_decoder_finish_decrypt (SEC_PKCS7DecoderContext *p7dcx,
-				  PRArenaPool *poolp,
+				  PLArenaPool *poolp,
 				  SEC_PKCS7EncryptedContentInfo *enccinfo)
 {
     struct sec_pkcs7_decoder_worker *worker;
@@ -958,7 +958,7 @@ SEC_PKCS7DecoderStart(SEC_PKCS7DecoderContentCallback cb, void *cb_arg,
     SEC_PKCS7DecoderContext *p7dcx;
     SEC_ASN1DecoderContext *dcx;
     SEC_PKCS7ContentInfo *cinfo;
-    PRArenaPool *poolp;
+    PLArenaPool *poolp;
 
     poolp = PORT_NewArena (1024);		/* XXX what is right value? */
     if (poolp == NULL)
@@ -1758,7 +1758,7 @@ SEC_PKCS7VerifySignature(SEC_PKCS7ContentInfo *cinfo,
 			 PRBool keepcerts)
 {
     return sec_pkcs7_verify_signature (cinfo, certusage,
-				       NULL, HASH_AlgNULL, keepcerts, 0);
+				       NULL, HASH_AlgNULL, keepcerts, NULL);
 }
 
 /*
@@ -1867,7 +1867,7 @@ sec_pkcs7_get_signer_cert_info(SEC_PKCS7ContentInfo *cinfo, int selector)
 	 * some valid usage to pass in.
 	 */
 	(void) sec_pkcs7_verify_signature (cinfo, certUsageEmailSigner,
-					   NULL, HASH_AlgNULL, PR_FALSE, 0);
+					   NULL, HASH_AlgNULL, PR_FALSE, NULL);
 	signercert = signerinfos[0]->cert;
 	if (signercert == NULL)
 	    return NULL;

@@ -74,7 +74,7 @@ pkix_pl_CrlDp_Create(
     pkix_pl_CrlDp **pPkixDP,
     void *plContext)
 {
-    PRArenaPool *rdnArena = NULL;
+    PLArenaPool *rdnArena = NULL;
     CERTName *issuerNameCopy = NULL;
     pkix_pl_CrlDp *dpl = NULL;
 

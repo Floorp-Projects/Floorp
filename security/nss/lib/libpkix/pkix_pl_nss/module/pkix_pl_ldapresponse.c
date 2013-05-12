@@ -528,7 +528,7 @@ pkix_pl_LdapResponse_IsComplete(
  *
  * PARAMETERS
  *  "arena"
- *      The address of the PRArenaPool to be used in the decoding. Must be
+ *      The address of the PLArenaPool to be used in the decoding. Must be
  *      non-NULL.
  *  "response"
  *      The address of the LdapResponse whose DER data is to be decoded. Must
@@ -547,7 +547,7 @@ pkix_pl_LdapResponse_IsComplete(
  */
 PKIX_Error *
 pkix_pl_LdapResponse_Decode(
-        PRArenaPool *arena,
+        PLArenaPool *arena,
         PKIX_PL_LdapResponse *response,
         SECStatus *pStatus,
         void *plContext)

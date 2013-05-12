@@ -39,6 +39,7 @@ MOCHITEST_FILES = \
   test_invalid_version.js \
   test_key_requirements.js \
   test_keys.js \
+  test_lowDiskSpace.js \
   test_multientry.js \
   test_names_sorted.js \
   test_object_identity.js \

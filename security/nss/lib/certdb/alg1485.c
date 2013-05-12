@@ -363,7 +363,7 @@ loser:
  * points to first character after separator.
  */
 static CERTAVA *
-ParseRFC1485AVA(PRArenaPool *arena, const char **pbp, const char *endptr)
+ParseRFC1485AVA(PLArenaPool *arena, const char **pbp, const char *endptr)
 {
     CERTAVA *a;
     const NameToKind *n2k;
@@ -1137,7 +1137,7 @@ char *
 CERT_DerNameToAscii(SECItem *dername)
 {
     int rv;
-    PRArenaPool *arena = NULL;
+    PLArenaPool *arena = NULL;
     CERTName name;
     char *retstr = NULL;
     
@@ -1164,7 +1164,7 @@ loser:
 }
 
 static char *
-avaToString(PRArenaPool *arena, CERTAVA *ava)
+avaToString(PLArenaPool *arena, CERTAVA *ava)
 {
     char *    buf       = NULL;
     SECItem*  avaValue;
@@ -1198,7 +1198,7 @@ avaToString(PRArenaPool *arena, CERTAVA *ava)
  * This code returns the FIRST one found, the most general one found.
  */
 static char *
-CERT_GetNameElement(PRArenaPool *arena, const CERTName *name, int wantedTag)
+CERT_GetNameElement(PLArenaPool *arena, const CERTName *name, int wantedTag)
 {
     CERTRDN** rdns = name->rdns;
     CERTRDN*  rdn;
@@ -1222,7 +1222,7 @@ CERT_GetNameElement(PRArenaPool *arena, const CERTName *name, int wantedTag)
  * This is particularly appropriate for Common Name.  See RFC 2818.
  */
 static char *
-CERT_GetLastNameElement(PRArenaPool *arena, const CERTName *name, int wantedTag)
+CERT_GetLastNameElement(PLArenaPool *arena, const CERTName *name, int wantedTag)
 {
     CERTRDN** rdns    = name->rdns;
     CERTRDN*  rdn;
@@ -1249,7 +1249,7 @@ CERT_GetCertificateEmailAddress(CERTCertificate *cert)
     SECStatus rv;
     CERTGeneralName *nameList = NULL;
     CERTGeneralName *current;
-    PRArenaPool *arena = NULL;
+    PLArenaPool *arena = NULL;
     int i;
     
     subAltName.data = NULL;
@@ -1381,7 +1381,7 @@ cert_GetCertificateEmailAddresses(CERTCertificate *cert)
     char *           rawEmailAddr = NULL;
     char *           addrBuf      = NULL;
     char *           pBuf         = NULL;
-    PRArenaPool *    tmpArena     = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+    PLArenaPool *    tmpArena     = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
     PRUint32         maxLen       = 0;
     PRInt32          finalLen     = 0;
     SECStatus        rv;

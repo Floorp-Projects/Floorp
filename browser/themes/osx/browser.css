@@ -901,7 +901,8 @@ toolbar[mode="icons"] #forward-button:-moz-lwtheme {
 
 /* bookmark sidebar & menu buttons */
 
-#bookmarks-button {
+#bookmarks-button,
+#bookmarks-menu-button {
   -moz-image-region: rect(0, 180px, 20px, 160px);
 }
 
@@ -909,14 +910,33 @@ toolbar[mode="icons"] #forward-button:-moz-lwtheme {
   -moz-image-region: rect(20px, 180px, 40px, 160px);
 }
 
+#bookmarks-menu-button.bookmark-item {
+  -moz-image-region: rect(2px, 178px, 18px, 162px);
+  list-style-image: url("chrome://browser/skin/Toolbar.png");
+}
+
 @media (min-resolution: 2dppx) {
-  #bookmarks-button {
+  #bookmarks-button,
+  #bookmarks-menu-button {
     -moz-image-region: rect(0, 360px, 40px, 320px);
   }
 
   #bookmarks-button[checked="true"] {
     -moz-image-region: rect(40px, 360px, 80px, 320px);
   }
+
+  #bookmarks-menu-button.bookmark-item {
+    -moz-image-region: rect(4px, 356px, 36px, 324px);
+    list-style-image: url("chrome://browser/skin/Toolbar@2x.png");
+  }
+
+  #bookmarks-menu-button.bookmark-item > .toolbarbutton-icon {
+    width: 16px;
+  }
+}
+
+#bookmarks-menu-button.toolbarbutton-1 {
+  -moz-box-orient: horizontal;
 }
 
 /* print button */
@@ -1717,49 +1737,35 @@ window[tabsontop="false"] richlistitem[type~="action"][actiontype="switchtab"][s
   -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
-/* bookmarks menu-button */
-
-#bookmarks-menu-button {
-  -moz-image-region: rect(0px 500px 20px 480px);
-}
-
-#bookmarks-menu-button[starred] {
-  -moz-image-region: rect(20px 500px 40px 480px);
-}
-
-#bookmarks-menu-button.bookmark-item {
+/* Star button */
+#star-button {
   list-style-image: url("chrome://browser/skin/places/star-icons.png");
-  -moz-image-region: rect(0px 16px 16px 0px);
+  -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
-#bookmarks-menu-button.bookmark-item[starred] {
-  -moz-image-region: rect(0px 32px 16px 16px);
+#star-button:hover:active,
+#star-button[starred="true"] {
+  -moz-image-region: rect(0, 32px, 16px, 16px);
 }
 
-#bookmarks-menu-button.bookmark-item > .toolbarbutton-menubutton-button {
-  padding: 0;
+#star-button:hover:active[starred="true"] {
+  -moz-image-region: rect(0, 48px, 16px, 32px);
 }
 
 @media (min-resolution: 2dppx) {
-  #bookmarks-menu-button {
-    -moz-image-region: rect(0px, 1000px, 40px, 960px);
+  #star-button {
+    list-style-image: url("chrome://browser/skin/places/star-icons.png");
+    -moz-image-region: rect(0, 32px, 32px, 0);
+    width: 22px;
   }
 
-  #bookmarks-menu-button[starred] {
-    -moz-image-region: rect(40px, 1000px, 80px, 960px);
+  #star-button:hover:active,
+  #star-button[starred="true"] {
+    -moz-image-region: rect(0, 64px, 32px, 32px);
   }
 
-  #bookmarks-menu-button.bookmark-item {
-    list-style-image: url("chrome://browser/skin/places/star-icons@2x.png");
-    -moz-image-region: rect(0px 32px 32px 0px);
-  }
-
-  #bookmarks-menu-button.bookmark-item[starred] {
-    -moz-image-region: rect(0px 64px 32px 32px);
-  }
-
-  #bookmarks-menu-button.bookmark-item > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
-    width: 16px;
+  #star-button:hover:active[starred="true"] {
+    -moz-image-region: rect(0, 96px, 32px, 64px);
   }
 }
 

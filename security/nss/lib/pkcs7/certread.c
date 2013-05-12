@@ -123,7 +123,7 @@ SEC_ReadPKCS7Certs(SECItem *pkcs7Item, CERTImportCertificateFunc f, void *arg)
     SECStatus rv;
     SECItem **certs;
     int count;
-    PRArenaPool *arena;
+    PLArenaPool *arena;
 
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
     if ( arena == NULL ) {
@@ -177,7 +177,7 @@ SEC_ReadCertSequence(SECItem *certsItem, CERTImportCertificateFunc f, void *arg)
     SECItem **certs;
     int count;
     SECItem **rawCerts = NULL;
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     ContentInfo contentInfo;
 
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
@@ -499,7 +499,7 @@ loser:
 }
 
 typedef struct {
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     SECItem cert;
 } collect_args;
 

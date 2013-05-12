@@ -157,7 +157,7 @@ pkix_pl_Pk11CertStore_CertQuery(
         CERTCertificate *nssCert = NULL;
         CERTCertDBHandle *dbHandle = NULL;
 
-        PRArenaPool *arena = NULL;
+        PLArenaPool *arena = NULL;
         SECItem *nameItem = NULL;
         void *wincx = NULL;
 

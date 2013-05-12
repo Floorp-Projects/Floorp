@@ -8,14 +8,14 @@ import "oaidl.idl";
 import "oleacc.idl";
 import "Inspectable.idl";
 
-  [uuid(343159D8-B1E9-4464-82FC-B12C7A473CF1)]
+  [uuid(C78B35B5-05DB-43AA-AE73-94C233A93C98)]
   interface IUIABridge : IInspectable {
     HRESULT Init([in] IInspectable* view, [in] IInspectable* window, [in] LONG_PTR inner);
     HRESULT Disconnect();
     HRESULT FocusChangeEvent();
   };
 
-  [uuid(2153B284-F946-4209-908D-AB8AA1FED09C)]
+  [uuid(9F57311C-E8AE-4991-8D9F-E069EEE96D85)]
   interface IUIAElement : IInspectable {
     HRESULT SetFocusInternal([in] LONG_PTR accessible);
     HRESULT ClearFocus();

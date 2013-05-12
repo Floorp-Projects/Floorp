@@ -43,7 +43,7 @@ class ParallelArrayObject : public JSObject
     // object for you, since ParallelArray type objects must be setup
     // in a rather particular way to interact well with the
     // self-hosted code.  See constructHelper() for details.
-    static JSObject *newInstance(JSContext *cx);
+    static JSObject *newInstance(JSContext *cx, NewObjectKind newKind = GenericObject);
 
     // Get the constructor function for argc number of arguments.
     static JSFunction *getConstructor(JSContext *cx, unsigned argc);

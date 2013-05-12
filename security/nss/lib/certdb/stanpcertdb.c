@@ -693,7 +693,7 @@ CERT_FindCertByNicknameOrEmailAddrForUsage(CERTCertDBHandle *handle,
 
 static void 
 add_to_subject_list(CERTCertList *certList, CERTCertificate *cert,
-                    PRBool validOnly, int64 sorttime)
+                    PRBool validOnly, PRTime sorttime)
 {
     SECStatus secrv;
     if (!validOnly ||
@@ -810,8 +810,8 @@ SECStatus
 certdb_SaveSingleProfile(CERTCertificate *cert, const char *emailAddr, 
 				SECItem *emailProfile, SECItem *profileTime)
 {
-    int64 oldtime;
-    int64 newtime;
+    PRTime oldtime;
+    PRTime newtime;
     SECStatus rv = SECFailure;
     PRBool saveit;
     SECItem oldprof, oldproftime;

@@ -126,10 +126,15 @@
 var numSubmittedForms = 0;
 var numInputFields = 101;
 
-function startTest() {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-  ok(!fh.hasEntries, "checking for initially empty storage");
+function checkInitialState() {
+  countEntries(null, null,
+    function (num) {
+      ok(!num, "checking for initially empty storage");
+      startTest();
+    });
+}
 
+function startTest() {
   // Fill in values for the various fields. We could just set the <input>'s
   // value attribute, but we don't save default form values (and we want to
   // ensure unsaved values are because of autocomplete=off or whatever).
@@ -140,50 +145,42 @@ function startTest() {
   button.click();
 }
 
+// Make sure that the first (numInputFields - 1) were not saved (as they were not changed).
+// Call done() when finished.
+function checkCountEntries(formNum, index, done)
+{
+  countEntries("test" + index, index,
+    function (num) {
+      ok(!num, "checking unsaved value " + index);
+      if (index < numInputFields) {
+        checkCountEntries(formNum, index + 1, done);
+      }
+      else {
+        done(formNum);
+      }
+    });
+}
 
 // Called by each form's onsubmit handler.
 function checkSubmit(formNum) {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
   ok(true, "form " + formNum + " submitted");
   numSubmittedForms++;
-
-  // make sure that the first (numInputFields - 1) were not saved (as they were not changed)
-  for (i = 1; i < numInputFields; i++) {
-    ok(!fh.entryExists("test" + i, i), "checking unsaved value " + i);
-  }
 
   // make sure that the field # numInputFields was saved
   checkForSave("test" + numInputFields, numInputFields + " changed", "checking saved value " + numInputFields);
 
-
-  // End the test at the last form.
-  if (formNum == 1) {
-    is(numSubmittedForms, 1, "Ensuring all forms were submitted.");
-    Services.obs.removeObserver(checkObserver, "satchel-storage-changed");
-    SimpleTest.finish();
-    return false; // return false to cancel current form submission
-  }
-
-  checkObserver.waitForChecks(function() {
-    // submit the next form.
-    var button = getFormSubmitButton(formNum + 1);
-    button.click();
-  });
+  checkCountEntries(formNum, 1, checkSubmitCounted);
 
   return false; // cancel current form submission
 }
 
+function checkSubmitCounted(formNum) {
+  is(numSubmittedForms, 1, "Ensuring all forms were submitted.");
+  SimpleTest.finish();
+  return false;
+}
 
-netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
-var fh = Components.classes["@mozilla.org/satchel/form-history;1"].
-         getService(Components.interfaces.nsIFormHistory2);
-ok(fh != null, "Got formHistory service");
-
-window.onload = startTest;
-
-Services.obs.addObserver(checkObserver, "satchel-storage-changed", false);
+window.onload = checkInitialState;
 
 SimpleTest.waitForExplicitFinish();
 
