@@ -6,7 +6,7 @@
 
 interface WindowProxy;
 
-interface KeyEvent : UIEvent
+interface KeyboardEvent : UIEvent
 {
   const unsigned long DOM_VK_CANCEL         = 0x03;
   const unsigned long DOM_VK_HELP           = 0x06;
