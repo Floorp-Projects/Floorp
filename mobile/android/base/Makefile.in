@@ -51,6 +51,7 @@ FENNEC_JAVA_FILES = \
   AndroidImportPreference.java \
   AnimatedHeightLayout.java \
   AppNotificationClient.java \
+  AutocompleteHandler.java \
   AwesomeBar.java \
   AwesomebarResultHandler.java \
   AwesomeBarTabs.java \

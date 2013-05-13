@@ -47,10 +47,6 @@ import android.widget.Toast;
 
 import java.net.URLEncoder;
 
-interface AutocompleteHandler {
-    void onAutocomplete(String res);
-}
-
 public class AwesomeBar extends GeckoActivity
                         implements AutocompleteHandler,
                                    TextWatcher {

@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.BrowserToolbar.EditingTarget;
 import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserDB;
@@ -84,6 +85,8 @@ abstract public class BrowserApp extends GeckoApp
     private static final int READER_ADD_SUCCESS = 0;
     private static final int READER_ADD_FAILED = 1;
     private static final int READER_ADD_DUPLICATE = 2;
+
+    private static final int NO_ANIMATION = 0;
 
     public static BrowserToolbar mBrowserToolbar;
     private HomePager mHomePager;
@@ -291,7 +294,11 @@ abstract public class BrowserApp extends GeckoApp
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (onKey(null, keyCode, event)) {
+        if (!mBrowserToolbar.isEditing() && onKey(null, keyCode, event)) {
+            return true;
+        }
+
+        if (mBrowserToolbar.onKey(keyCode, event)) {
             return true;
         }
 
@@ -371,6 +378,30 @@ abstract public class BrowserApp extends GeckoApp
         mBrowserToolbar = new BrowserToolbar(this);
         mBrowserToolbar.from(actionBar);
 
+        mBrowserToolbar.setOnActivateListener(new BrowserToolbar.OnActivateListener() {
+            public void onActivate() {
+                enterEditingMode(EditingTarget.CURRENT_TAB);
+            }
+        });
+
+        mBrowserToolbar.setOnCommitListener(new BrowserToolbar.OnCommitListener() {
+            public void onCommit(EditingTarget target) {
+                commitEditingMode(target);
+            }
+        });
+
+        mBrowserToolbar.setOnDismissListener(new BrowserToolbar.OnDismissListener() {
+            public void onDismiss() {
+                dismissEditingMode();
+            }
+        });
+
+        mBrowserToolbar.setOnFilterListener(new BrowserToolbar.OnFilterListener() {
+            public void onFilter(String searchText, AutocompleteHandler handler) {
+                filterEditingMode(searchText, handler);
+            }
+        });
+
         // Intercept key events for gamepad shortcuts
         actionBar.setOnKeyListener(this);
 
@@ -439,6 +470,15 @@ abstract public class BrowserApp extends GeckoApp
         });
     }
 
+    @Override
+    public void onBackPressed() {
+        if (dismissEditingMode()) {
+            return;
+        }
+
+        super.onBackPressed();
+    }
+
     private void setDynamicToolbarEnabled(boolean enabled) {
         if (enabled) {
             if (mLayerView != null) {
@@ -470,7 +510,7 @@ abstract public class BrowserApp extends GeckoApp
 
     @Override
     public boolean onSearchRequested() {
-        return showAwesomebar(AwesomeBar.Target.CURRENT_TAB);
+        return enterEditingMode(EditingTarget.CURRENT_TAB);
     }
 
     @Override
@@ -490,7 +530,7 @@ abstract public class BrowserApp extends GeckoApp
             case R.id.paste: {
                 String text = GeckoAppShell.getClipboardText();
                 if (!TextUtils.isEmpty(text)) {
-                    showAwesomebar(AwesomeBar.Target.CURRENT_TAB, text);
+                    enterEditingMode(EditingTarget.CURRENT_TAB, text);
                 }
                 return true;
             }
@@ -536,41 +576,6 @@ abstract public class BrowserApp extends GeckoApp
         }
         return false;
     }
-
-    public boolean showAwesomebar(AwesomeBar.Target aTarget) {
-        return showAwesomebar(aTarget, null);
-    }
-
-    public boolean showAwesomebar(AwesomeBar.Target aTarget, String aUrl) {
-        Intent intent = new Intent(getBaseContext(), AwesomeBar.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
-        intent.putExtra(AwesomeBar.TARGET_KEY, aTarget.name());
-
-        // If we were passed in a URL, show it.
-        if (aUrl != null && !TextUtils.isEmpty(aUrl)) {
-            intent.putExtra(AwesomeBar.CURRENT_URL_KEY, aUrl);
-        } else if (aTarget == AwesomeBar.Target.CURRENT_TAB) {
-            // Otherwise, if we're editing the current tab, show its URL.
-            Tab tab = Tabs.getInstance().getSelectedTab();
-            if (tab != null) {
-                // Check to see if there's a user-entered search term, which we save
-                // whenever the user performs a search.
-                aUrl = tab.getUserSearch();
-                if (TextUtils.isEmpty(aUrl)) {
-                    aUrl = tab.getURL();
-                }
-                if (aUrl != null) {
-                    intent.putExtra(AwesomeBar.CURRENT_URL_KEY, aUrl);
-                }
-            }
-        }
-
-        int requestCode = GeckoAppShell.sActivityHelper.makeRequestCodeForAwesomebar();
-        startActivityForResult(intent, requestCode);
-        overridePendingTransition (R.anim.awesomebar_fade_in, R.anim.awesomebar_hold_still);
-        return true;
-    }
-
 
     @Override
     public void setAccessibilityEnabled(boolean enabled) {
@@ -786,29 +791,6 @@ abstract public class BrowserApp extends GeckoApp
         mTabsPanel.refresh();
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        String url = null;
-
-        // Don't update the url in the toolbar if the activity was cancelled.
-        if (resultCode == Activity.RESULT_OK && data != null) {
-            // Don't update the url if the activity was launched to pick a site.
-            String targetKey = data.getStringExtra(AwesomeBar.TARGET_KEY);
-            if (!AwesomeBar.Target.PICK_SITE.toString().equals(targetKey)) {
-                // Update the toolbar with the url that was just entered.
-                url = data.getStringExtra(AwesomeBar.URL_KEY);
-            }
-        }
-
-        // We always need to call fromAwesomeBarSearch to perform the toolbar animation.
-        mBrowserToolbar.fromAwesomeBarSearch(url);
-
-        // Trigger any tab-related events after we start restoring
-        // the toolbar state above to make ensure animations happen
-        // on the correct order.
-        super.onActivityResult(requestCode, resultCode, data);
-    }
-
     public View getActionBarLayout() {
         RelativeLayout actionBar = (RelativeLayout) LayoutInflater.from(this).inflate(R.layout.browser_toolbar, null);
         actionBar.setLayoutParams(new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.FILL_PARENT,
@@ -986,7 +968,7 @@ abstract public class BrowserApp extends GeckoApp
 
     @Override
     public void addTab() {
-        showAwesomebar(AwesomeBar.Target.NEW_TAB);
+        enterEditingMode(EditingTarget.NEW_TAB);
     }
 
     @Override
@@ -1143,7 +1125,72 @@ abstract public class BrowserApp extends GeckoApp
         mHomePager.updateAboutHome(EnumSet.of(AboutHome.UpdateFlags.TOP_SITES));
     }
 
-    private void showHomePager() {
+    public boolean enterEditingMode(EditingTarget target) {
+        return enterEditingMode(target, null);
+    }
+
+    boolean enterEditingMode(EditingTarget target, String url) {
+        // If we're editing the current tab, show its URL.
+        if (TextUtils.isEmpty(url) && target == EditingTarget.CURRENT_TAB) {
+            Tab tab = Tabs.getInstance().getSelectedTab();
+            if (tab != null) {
+                // Check to see if there's a user-entered search term, which we save
+                // whenever the user performs a search.
+                url = tab.getUserSearch();
+                if (TextUtils.isEmpty(url)) {
+                    url = tab.getURL();
+                }
+            }
+        }
+
+        mBrowserToolbar.startEditing(target, url);
+        animateShowHomePager();
+
+        return true;
+    }
+
+    void commitEditingMode(EditingTarget target) {
+        if (!mBrowserToolbar.isEditing()) {
+            return;
+        }
+
+        final String url = mBrowserToolbar.stopEditing();
+        animateHideHomePager();
+
+        int flags = Tabs.LOADURL_USER_ENTERED;
+        if (target == EditingTarget.NEW_TAB) {
+            flags |= Tabs.LOADURL_NEW_TAB;
+        }
+
+        if (!TextUtils.isEmpty(url)) {
+            Tabs.getInstance().loadUrl(url, flags);
+        }
+    }
+
+    boolean dismissEditingMode() {
+        if (!mBrowserToolbar.isEditing()) {
+            return false;
+        }
+
+        final String url = mBrowserToolbar.stopEditing();
+        animateHideHomePager();
+
+        return true;
+    }
+
+    void filterEditingMode(String searchTerm, AutocompleteHandler handler) {
+        // FIXME: implement actual awesomebar search
+    }
+
+    private void animateShowHomePager() {
+        showHomePagerWithAnimation(true);
+    }
+
+     private void showHomePager() {
+        showHomePagerWithAnimation(false);
+    }
+
+    private void showHomePagerWithAnimation(boolean animate) {
         if (mHomePager.isVisible()) {
             return;
         }
@@ -1157,16 +1204,31 @@ abstract public class BrowserApp extends GeckoApp
             mLayerView.getLayerMarginsAnimator().showMargins(true);
         }
 
+        // FIXME: do animation if animate is true
         mHomePager.show(getSupportFragmentManager());
 
         mBrowserToolbar.setNextFocusDownId(R.id.abouthome_content);
     }
 
+    private void animateHideHomePager() {
+        hideHomePagerWithAnimation(true);
+    }
+
     private void hideHomePager() {
+        hideHomePagerWithAnimation(false);
+    }
+
+    private void hideHomePagerWithAnimation(boolean animate) {
         if (!mHomePager.isVisible()) {
             return;
         }
 
+        final Tab tab = Tabs.getInstance().getSelectedTab();
+        if (tab != null && isAboutHome(tab)) {
+            return;
+        }
+
+        // FIXME: do animation if animate is true
         mHomePager.hide();
 
         mBrowserToolbar.setShadowVisibility(true);
@@ -1663,7 +1725,14 @@ abstract public class BrowserApp extends GeckoApp
     @Override
     public void onAboutHomeUriLoad(String url) {
         mBrowserToolbar.setProgressVisibility(true);
-        Tabs.getInstance().loadUrl(url);
+
+        int flags = Tabs.LOADURL_NONE;
+        if (mBrowserToolbar.getEditingTarget() == EditingTarget.NEW_TAB) {
+            flags |= Tabs.LOADURL_NEW_TAB;
+        }
+
+        Tabs.getInstance().loadUrl(url, flags);
+        mBrowserToolbar.stopEditing();
     }
 
     @Override
