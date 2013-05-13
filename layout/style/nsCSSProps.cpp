@@ -1013,6 +1013,13 @@ const int32_t nsCSSProps::kFontKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
+const int32_t nsCSSProps::kFontKerningKTable[] = {
+  eCSSKeyword_auto, NS_FONT_KERNING_AUTO,
+  eCSSKeyword_none, NS_FONT_KERNING_NONE,
+  eCSSKeyword_normal, NS_FONT_KERNING_NORMAL,
+  eCSSKeyword_UNKNOWN,-1
+};
+
 const int32_t nsCSSProps::kFontSizeKTable[] = {
   eCSSKeyword_xx_small, NS_STYLE_FONT_SIZE_XXSMALL,
   eCSSKeyword_x_small, NS_STYLE_FONT_SIZE_XSMALL,
@@ -1046,9 +1053,69 @@ const int32_t nsCSSProps::kFontStyleKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
+const int32_t nsCSSProps::kFontSynthesisKTable[] = {
+  eCSSKeyword_weight, NS_FONT_SYNTHESIS_WEIGHT,
+  eCSSKeyword_style, NS_FONT_SYNTHESIS_STYLE,
+  eCSSKeyword_UNKNOWN,-1
+};
+
+
 const int32_t nsCSSProps::kFontVariantKTable[] = {
   eCSSKeyword_normal, NS_STYLE_FONT_VARIANT_NORMAL,
   eCSSKeyword_small_caps, NS_STYLE_FONT_VARIANT_SMALL_CAPS,
+  eCSSKeyword_UNKNOWN,-1
+};
+
+const int32_t nsCSSProps::kFontVariantCapsKTable[] = {
+  eCSSKeyword_small_caps, NS_FONT_VARIANT_CAPS_SMALLCAPS,
+  eCSSKeyword_all_small_caps, NS_FONT_VARIANT_CAPS_ALLSMALL,
+  eCSSKeyword_petite_caps, NS_FONT_VARIANT_CAPS_PETITECAPS,
+  eCSSKeyword_all_petite_caps, NS_FONT_VARIANT_CAPS_ALLPETITE,
+  eCSSKeyword_titling_caps, NS_FONT_VARIANT_CAPS_TITLING,
+  eCSSKeyword_unicase, NS_FONT_VARIANT_CAPS_UNICASE,
+  eCSSKeyword_UNKNOWN,-1
+};
+
+const int32_t nsCSSProps::kFontVariantEastAsianKTable[] = {
+  eCSSKeyword_jis78, NS_FONT_VARIANT_EAST_ASIAN_JIS78,
+  eCSSKeyword_jis83, NS_FONT_VARIANT_EAST_ASIAN_JIS83,
+  eCSSKeyword_jis90, NS_FONT_VARIANT_EAST_ASIAN_JIS90,
+  eCSSKeyword_jis04, NS_FONT_VARIANT_EAST_ASIAN_JIS04,
+  eCSSKeyword_simplified, NS_FONT_VARIANT_EAST_ASIAN_SIMPLIFIED,
+  eCSSKeyword_traditional, NS_FONT_VARIANT_EAST_ASIAN_TRADITIONAL,
+  eCSSKeyword_full_width, NS_FONT_VARIANT_EAST_ASIAN_FULL_WIDTH,
+  eCSSKeyword_proportional_width, NS_FONT_VARIANT_EAST_ASIAN_PROP_WIDTH,
+  eCSSKeyword_ruby, NS_FONT_VARIANT_EAST_ASIAN_RUBY,
+  eCSSKeyword_UNKNOWN,-1
+};
+
+const int32_t nsCSSProps::kFontVariantLigaturesKTable[] = {
+  eCSSKeyword_common_ligatures, NS_FONT_VARIANT_LIGATURES_COMMON,
+  eCSSKeyword_no_common_ligatures, NS_FONT_VARIANT_LIGATURES_NO_COMMON,
+  eCSSKeyword_discretionary_ligatures, NS_FONT_VARIANT_LIGATURES_DISCRETIONARY,
+  eCSSKeyword_no_discretionary_ligatures, NS_FONT_VARIANT_LIGATURES_NO_DISCRETIONARY,
+  eCSSKeyword_historical_ligatures, NS_FONT_VARIANT_LIGATURES_HISTORICAL,
+  eCSSKeyword_no_historical_ligatures, NS_FONT_VARIANT_LIGATURES_NO_HISTORICAL,
+  eCSSKeyword_contextual, NS_FONT_VARIANT_LIGATURES_CONTEXTUAL,
+  eCSSKeyword_no_contextual, NS_FONT_VARIANT_LIGATURES_NO_CONTEXTUAL,
+  eCSSKeyword_UNKNOWN,-1
+};
+
+const int32_t nsCSSProps::kFontVariantNumericKTable[] = {
+  eCSSKeyword_lining_nums, NS_FONT_VARIANT_NUMERIC_LINING,
+  eCSSKeyword_oldstyle_nums, NS_FONT_VARIANT_NUMERIC_OLDSTYLE,
+  eCSSKeyword_proportional_nums, NS_FONT_VARIANT_NUMERIC_PROPORTIONAL,
+  eCSSKeyword_tabular_nums, NS_FONT_VARIANT_NUMERIC_TABULAR,
+  eCSSKeyword_diagonal_fractions, NS_FONT_VARIANT_NUMERIC_DIAGONAL_FRACTIONS,
+  eCSSKeyword_stacked_fractions, NS_FONT_VARIANT_NUMERIC_STACKED_FRACTIONS,
+  eCSSKeyword_slashed_zero, NS_FONT_VARIANT_NUMERIC_SLASHZERO,
+  eCSSKeyword_ordinal, NS_FONT_VARIANT_NUMERIC_ORDINAL,
+  eCSSKeyword_UNKNOWN,-1
+};
+
+const int32_t nsCSSProps::kFontVariantPositionKTable[] = {
+  eCSSKeyword_super, NS_FONT_VARIANT_POSITION_SUPER,
+  eCSSKeyword_sub, NS_FONT_VARIANT_POSITION_SUB,
   eCSSKeyword_UNKNOWN,-1
 };
 
@@ -2072,11 +2139,18 @@ static const nsCSSProperty gFontSubpropTable[] = {
   eCSSProperty_font_weight,
   eCSSProperty_font_size,
   eCSSProperty_line_height,
-  eCSSProperty_font_size_adjust, // XXX Added LDB.
-  eCSSProperty_font_stretch, // XXX Added LDB.
+  eCSSProperty_font_size_adjust,
+  eCSSProperty_font_stretch,
   eCSSProperty__x_system_font,
   eCSSProperty_font_feature_settings,
   eCSSProperty_font_language_override,
+  eCSSProperty_font_kerning,
+  eCSSProperty_font_synthesis,
+  eCSSProperty_font_variant_caps,
+  eCSSProperty_font_variant_east_asian,
+  eCSSProperty_font_variant_ligatures,
+  eCSSProperty_font_variant_numeric,
+  eCSSProperty_font_variant_position,
   eCSSProperty_UNKNOWN
 };
 

@@ -192,7 +192,7 @@ public:
   static nsCSSProperty OtherNameFor(nsCSSProperty aProperty);
 
   // Given a CSS Property and a Property Enum Value
-  // Return back a const nsString& representation of the 
+  // Return back a const nsString& representation of the
   // value. Return back nullstr if no value is found
   static const nsAFlatCString& LookupPropertyValue(nsCSSProperty aProperty, int32_t aValue);
 
@@ -398,10 +398,17 @@ public:
   static const int32_t kFloatKTable[];
   static const int32_t kFloatEdgeKTable[];
   static const int32_t kFontKTable[];
+  static const int32_t kFontKerningKTable[];
   static const int32_t kFontSizeKTable[];
   static const int32_t kFontStretchKTable[];
   static const int32_t kFontStyleKTable[];
+  static const int32_t kFontSynthesisKTable[];
   static const int32_t kFontVariantKTable[];
+  static const int32_t kFontVariantCapsKTable[];
+  static const int32_t kFontVariantEastAsianKTable[];
+  static const int32_t kFontVariantLigaturesKTable[];
+  static const int32_t kFontVariantNumericKTable[];
+  static const int32_t kFontVariantPositionKTable[];
   static const int32_t kFontWeightKTable[];
   static const int32_t kIMEModeKTable[];
   static const int32_t kLineHeightKTable[];
