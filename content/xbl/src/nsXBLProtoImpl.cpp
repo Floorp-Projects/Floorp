@@ -177,8 +177,8 @@ nsXBLProtoImpl::InitTargetObjects(nsXBLPrototypeBinding* aBinding,
   AutoPushJSContext cx(aContext->GetNativeContext());
   JS::Rooted<JSObject*> global(cx, sgo->GetGlobalJSObject());
   nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
-  JS::Value v;
-  rv = nsContentUtils::WrapNative(cx, global, aBoundElement, &v,
+  JS::Rooted<JS::Value> v(cx);
+  rv = nsContentUtils::WrapNative(cx, global, aBoundElement, v.address(),
                                   getter_AddRefs(wrapper));
   NS_ENSURE_SUCCESS(rv, rv);
 
