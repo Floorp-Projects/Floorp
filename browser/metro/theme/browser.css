@@ -52,7 +52,8 @@
 }
 
 #tray[startpage],
-#tray[visible]:not([expanded])  {
+#tray[visible]:not([expanded]),
+#tray[visible][expanded][viewstate="snapped"] {
   transform: translateY(-@tabs_height@);
 }
 
@@ -516,11 +517,6 @@ documenttab[selected] .documenttab-selection {
 #toolbar-transition[viewstate="snapped"],
 #tray[tabsonly] #toolbar-transition {
   visibility: collapse;
-}
-
-/* If we're in the small snap view, compress and simplify the UI. */
-#tray[visible][expanded][viewstate="snapped"] {
-  margin-top: -@tabs_height@ !important;
 }
 
 #toolbar[viewstate="snapped"] {
