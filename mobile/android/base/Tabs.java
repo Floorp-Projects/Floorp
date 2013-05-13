@@ -293,13 +293,13 @@ public class Tabs implements GeckoEventListener {
         if (tab == null)
             return;
 
+        int tabId = tab.getId();
+        removeTab(tabId);
+
         if (nextTab == null)
             nextTab = loadUrl("about:home", LOADURL_NEW_TAB);
 
         selectTab(nextTab.getId());
-
-        int tabId = tab.getId();
-        removeTab(tabId);
 
         tab.onDestroy();
 
