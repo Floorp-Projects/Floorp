@@ -50,6 +50,22 @@ struct NS_GFX nsFont {
   // The variant of the font (normal, small-caps)
   uint8_t variant;
 
+  // Variant subproperties
+  // (currently -moz- versions, will replace variant above eventually)
+  uint8_t variantCaps;
+  uint8_t variantLigatures;
+  uint8_t variantNumeric;
+  uint8_t variantPosition;
+
+  uint16_t variantEastAsian;
+
+  // Some font-variant-alternates property values require
+  // font-specific settings defined via @font-feature-values rules.
+  // These are resolved *after* font matching occurs.
+
+  // -- bitmask for both enumerated and functional propvals
+  uint16_t variantAlternates;
+
   // The decorations on the font (underline, overline,
   // line-through). The decorations can be binary or'd together.
   uint8_t decorations;
@@ -78,17 +94,21 @@ struct NS_GFX nsFont {
   // (see http://www.microsoft.com/typography/otspec/languagetags.htm).
   nsString languageOverride;
 
+  // Kerning
+  uint8_t kerning;
+
+  // Synthesis setting, controls use of fake bolding/italics
+  uint8_t synthesis;
+
   // Initialize the font struct with an ASCII name
   nsFont(const char* aName, uint8_t aStyle, uint8_t aVariant,
          uint16_t aWeight, int16_t aStretch, uint8_t aDecoration,
-         nscoord aSize, float aSizeAdjust=0.0f,
-         const nsString* aLanguageOverride = nullptr);
+         nscoord aSize);
 
   // Initialize the font struct with a (potentially) unicode name
   nsFont(const nsString& aName, uint8_t aStyle, uint8_t aVariant,
          uint16_t aWeight, int16_t aStretch, uint8_t aDecoration,
-         nscoord aSize, float aSizeAdjust=0.0f,
-         const nsString* aLanguageOverride = nullptr);
+         nscoord aSize);
 
   // Make a copy of the given font
   nsFont(const nsFont& aFont);
