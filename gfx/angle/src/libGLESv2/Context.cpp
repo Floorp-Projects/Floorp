@@ -10,6 +10,7 @@
 #include "libGLESv2/Context.h"
 
 #include <algorithm>
+#include <sstream>
 
 #include "libEGL/Display.h"
 
@@ -35,6 +36,16 @@
 
 namespace gl
 {
+static const char* makeStaticString(const std::string& str)
+{
+    static std::set<std::string> strings;
+    std::set<std::string>::iterator it = strings.find(str);
+    if (it != strings.end())
+      return it->c_str();
+
+    return strings.insert(str).first->c_str();
+}
+
 Context::Context(const egl::Config *config, const gl::Context *shareContext, bool notifyResets, bool robustAccess) : mConfig(config)
 {
     ASSERT(robustAccess == false);   // Unimplemented
@@ -146,6 +157,9 @@ Context::Context(const egl::Config *config, const gl::Context *shareContext, boo
     mState.packAlignment = 4;
     mState.unpackAlignment = 4;
     mState.packReverseRowOrder = false;
+
+    mExtensionString = NULL;
+    mRendererString = NULL;
 
     mVertexDataManager = NULL;
     mIndexDataManager = NULL;
@@ -317,7 +331,7 @@ void Context::makeCurrent(egl::Display *display, egl::Surface *surface)
         mSupportsLuminanceAlphaTextures = mDisplay->getLuminanceAlphaTextureSupport();
         mSupportsDepthTextures = mDisplay->getDepthTextureSupport();
         mSupportsTextureFilterAnisotropy = mMaxTextureAnisotropy >= 2.0f;
-
+        mSupportsDerivativeInstructions = (mDeviceCaps.PS20Caps.Caps & D3DPS20CAPS_GRADIENTINSTRUCTIONS) != 0;
         mSupports32bitIndices = mDeviceCaps.MaxVertexIndex >= (1 << 16);
 
         mNumCompressedTextureFormats = 0;
@@ -2665,6 +2679,21 @@ void Context::readPixels(GLint x, GLint y, GLsizei width, GLsizei height,
                    (rect.right - rect.left) * fastPixelSize);
             continue;
         }
+        else if (desc.Format == D3DFMT_A8R8G8B8 &&
+                 format == GL_RGBA &&
+                 type == GL_UNSIGNED_BYTE)
+        {
+            // Fast path for swapping red with blue
+            for (int i = 0; i < rect.right - rect.left; i++)
+            {
+                unsigned int argb = *(unsigned int*)(source + 4 * i + j * inputPitch);
+                *(unsigned int*)(dest + 4 * i + j * outputPitch) =
+                    (argb & 0xFF00FF00) |       // Keep alpha and green
+                    (argb & 0x00FF0000) >> 16 | // Move red to blue
+                    (argb & 0x000000FF) << 16;  // Move blue to red
+            }
+            continue;
+        }
 
         for (int i = 0; i < rect.right - rect.left; i++)
         {
@@ -3621,6 +3650,11 @@ bool Context::supportsTextureFilterAnisotropy() const
     return mSupportsTextureFilterAnisotropy;
 }
 
+bool Context::supportsDerivativeInstructions() const
+{
+    return mSupportsDerivativeInstructions;
+}
+
 float Context::getTextureMaxAnisotropy() const
 {
     return mMaxTextureAnisotropy;
@@ -3872,124 +3906,144 @@ void Context::setVertexAttribDivisor(GLuint index, GLuint divisor)
 // Vendor extensions
 void Context::initExtensionString()
 {
-    mExtensionString = "";
+    std::string extensionString = "";
 
     // OES extensions
     if (supports32bitIndices())
     {
-        mExtensionString += "GL_OES_element_index_uint ";
+        extensionString += "GL_OES_element_index_uint ";
     }
 
-    mExtensionString += "GL_OES_packed_depth_stencil ";
-    mExtensionString += "GL_OES_get_program_binary ";
-    mExtensionString += "GL_OES_rgb8_rgba8 ";
-    mExtensionString += "GL_OES_standard_derivatives ";
+    extensionString += "GL_OES_packed_depth_stencil ";
+    extensionString += "GL_OES_get_program_binary ";
+    extensionString += "GL_OES_rgb8_rgba8 ";
+    if (supportsDerivativeInstructions())
+    {
+        extensionString += "GL_OES_standard_derivatives ";
+    }
 
     if (supportsFloat16Textures())
     {
-        mExtensionString += "GL_OES_texture_half_float ";
+        extensionString += "GL_OES_texture_half_float ";
     }
     if (supportsFloat16LinearFilter())
     {
-        mExtensionString += "GL_OES_texture_half_float_linear ";
+        extensionString += "GL_OES_texture_half_float_linear ";
     }
     if (supportsFloat32Textures())
     {
-        mExtensionString += "GL_OES_texture_float ";
+        extensionString += "GL_OES_texture_float ";
     }
     if (supportsFloat32LinearFilter())
     {
-        mExtensionString += "GL_OES_texture_float_linear ";
+        extensionString += "GL_OES_texture_float_linear ";
     }
 
     if (supportsNonPower2Texture())
     {
-        mExtensionString += "GL_OES_texture_npot ";
+        extensionString += "GL_OES_texture_npot ";
     }
 
     // Multi-vendor (EXT) extensions
     if (supportsOcclusionQueries())
     {
-        mExtensionString += "GL_EXT_occlusion_query_boolean ";
+        extensionString += "GL_EXT_occlusion_query_boolean ";
     }
 
-    mExtensionString += "GL_EXT_read_format_bgra ";
-    mExtensionString += "GL_EXT_robustness ";
+    extensionString += "GL_EXT_read_format_bgra ";
+    extensionString += "GL_EXT_robustness ";
 
     if (supportsDXT1Textures())
     {
-        mExtensionString += "GL_EXT_texture_compression_dxt1 ";
+        extensionString += "GL_EXT_texture_compression_dxt1 ";
     }
 
     if (supportsTextureFilterAnisotropy())
     {
-        mExtensionString += "GL_EXT_texture_filter_anisotropic ";
+        extensionString += "GL_EXT_texture_filter_anisotropic ";
     }
 
-    mExtensionString += "GL_EXT_texture_format_BGRA8888 ";
-    mExtensionString += "GL_EXT_texture_storage ";
+    extensionString += "GL_EXT_texture_format_BGRA8888 ";
+    extensionString += "GL_EXT_texture_storage ";
 
     // ANGLE-specific extensions
     if (supportsDepthTextures())
     {
-        mExtensionString += "GL_ANGLE_depth_texture ";
+        extensionString += "GL_ANGLE_depth_texture ";
     }
 
-    mExtensionString += "GL_ANGLE_framebuffer_blit ";
+    extensionString += "GL_ANGLE_framebuffer_blit ";
     if (getMaxSupportedSamples() != 0)
     {
-        mExtensionString += "GL_ANGLE_framebuffer_multisample ";
+        extensionString += "GL_ANGLE_framebuffer_multisample ";
     }
 
     if (supportsInstancing())
     {
-        mExtensionString += "GL_ANGLE_instanced_arrays ";
+        extensionString += "GL_ANGLE_instanced_arrays ";
     }
 
-    mExtensionString += "GL_ANGLE_pack_reverse_row_order ";
+    extensionString += "GL_ANGLE_pack_reverse_row_order ";
 
     if (supportsDXT3Textures())
     {
-        mExtensionString += "GL_ANGLE_texture_compression_dxt3 ";
+        extensionString += "GL_ANGLE_texture_compression_dxt3 ";
     }
     if (supportsDXT5Textures())
     {
-        mExtensionString += "GL_ANGLE_texture_compression_dxt5 ";
+        extensionString += "GL_ANGLE_texture_compression_dxt5 ";
     }
 
-    mExtensionString += "GL_ANGLE_texture_usage ";
-    mExtensionString += "GL_ANGLE_translated_shader_source ";
+    extensionString += "GL_ANGLE_texture_usage ";
+    extensionString += "GL_ANGLE_translated_shader_source ";
 
     // Other vendor-specific extensions
     if (supportsEventQueries())
     {
-        mExtensionString += "GL_NV_fence ";
+        extensionString += "GL_NV_fence ";
     }
 
-    std::string::size_type end = mExtensionString.find_last_not_of(' ');
+    std::string::size_type end = extensionString.find_last_not_of(' ');
     if (end != std::string::npos)
     {
-        mExtensionString.resize(end+1);
+        extensionString.resize(end+1);
     }
+
+    mExtensionString = makeStaticString(extensionString);
 }
 
 const char *Context::getExtensionString() const
 {
-    return mExtensionString.c_str();
+    return mExtensionString;
 }
 
 void Context::initRendererString()
 {
     D3DADAPTER_IDENTIFIER9 *identifier = mDisplay->getAdapterIdentifier();
 
-    mRendererString = "ANGLE (";
-    mRendererString += identifier->Description;
-    mRendererString += ")";
+    std::ostringstream rendererString;
+    rendererString << "ANGLE (";
+
+    rendererString << identifier->Description;
+
+    if (mDisplay->isD3d9ExDevice())
+    {
+        rendererString << " Direct3D9Ex";
+    }
+    else
+    {
+        rendererString << " Direct3D9";
+    }
+
+    rendererString << " vs_" << D3DSHADER_VERSION_MAJOR(mDeviceCaps.VertexShaderVersion) << "_" << D3DSHADER_VERSION_MINOR(mDeviceCaps.VertexShaderVersion);
+    rendererString << " ps_" << D3DSHADER_VERSION_MAJOR(mDeviceCaps.PixelShaderVersion) << "_" << D3DSHADER_VERSION_MINOR(mDeviceCaps.PixelShaderVersion) << ")";
+
+    mRendererString = makeStaticString(rendererString.str());
 }
 
 const char *Context::getRendererString() const
 {
-    return mRendererString.c_str();
+    return mRendererString;
 }
 
 void Context::blitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, 

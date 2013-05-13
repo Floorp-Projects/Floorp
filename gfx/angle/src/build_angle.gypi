@@ -9,7 +9,8 @@
   'target_defaults': {
     'defines': [
       'ANGLE_DISABLE_TRACE',
-      'ANGLE_PRELOADED_D3DCOMPILER_MODULE_NAMES={ L"d3dcompiler_46.dll", L"d3dcompiler_43.dll" }',
+      'ANGLE_COMPILE_OPTIMIZATION_LEVEL=D3DCOMPILE_OPTIMIZATION_LEVEL1',
+      'ANGLE_PRELOADED_D3DCOMPILER_MODULE_NAMES={ TEXT("d3dcompiler_46.dll"), TEXT("d3dcompiler_43.dll") }',
     ],
   },
   'targets': [
@@ -19,10 +20,10 @@
       'include_dirs': [
       ],
       'sources': [
-        'compiler/preprocessor/Diagnostics.cpp',
-        'compiler/preprocessor/Diagnostics.h',
-        'compiler/preprocessor/DirectiveHandler.cpp',
-        'compiler/preprocessor/DirectiveHandler.h',
+        'compiler/preprocessor/DiagnosticsBase.cpp',
+        'compiler/preprocessor/DiagnosticsBase.h',
+        'compiler/preprocessor/DirectiveHandlerBase.cpp',
+        'compiler/preprocessor/DirectiveHandlerBase.h',
         'compiler/preprocessor/DirectiveParser.cpp',
         'compiler/preprocessor/DirectiveParser.h',
         'compiler/preprocessor/ExpressionParser.cpp',
@@ -46,6 +47,10 @@
         'compiler/preprocessor/Tokenizer.cpp',
         'compiler/preprocessor/Tokenizer.h',
       ],
+      # TODO(jschuh): http://crbug.com/167187
+      'msvs_disabled_warnings': [
+        4267,
+      ],      
     },
     {
       'target_name': 'translator_common',
@@ -59,8 +64,6 @@
         'COMPILER_IMPLEMENTATION',
       ],
       'sources': [
-        'compiler/ArrayBoundsClamper.cpp',
-        'compiler/ArrayBoundsClamper.h',
         'compiler/BaseTypes.h',
         'compiler/BuiltInFunctionEmulator.cpp',
         'compiler/BuiltInFunctionEmulator.h',
@@ -136,9 +139,13 @@
         'compiler/timing/RestrictFragmentShaderTiming.h',
         'compiler/timing/RestrictVertexShaderTiming.cpp',
         'compiler/timing/RestrictVertexShaderTiming.h',
+        'third_party/compiler/ArrayBoundsClamper.cpp',
+        'third_party/compiler/ArrayBoundsClamper.h',
       ],
       'conditions': [
         ['OS=="win"', {
+          # TODO(jschuh): http://crbug.com/167187 size_t -> int
+          'msvs_disabled_warnings': [ 4267 ],
           'sources': ['compiler/ossource_win.cpp'],
         }, { # else: posix
           'sources': ['compiler/ossource_posix.cpp'],
@@ -172,6 +179,8 @@
         'compiler/VersionGLSL.cpp',
         'compiler/VersionGLSL.h',
       ],
+      # TODO(jschuh): http://crbug.com/167187 size_t -> int
+      'msvs_disabled_warnings': [ 4267 ],
     },
   ],
   'conditions': [
@@ -202,6 +211,8 @@
             'compiler/SearchSymbol.cpp',
             'compiler/SearchSymbol.h',
           ],
+          # TODO(jschuh): http://crbug.com/167187 size_t -> int
+          'msvs_disabled_warnings': [ 4267 ],
         },
         {
           'target_name': 'libGLESv2',
@@ -210,7 +221,6 @@
           'include_dirs': [
             '.',
             '../include',
-            '$(DXSDK_DIR)/include',
           ],
           'sources': [
             'common/angleutils.h',
@@ -264,9 +274,10 @@
             'libGLESv2/utilities.cpp',
             'libGLESv2/utilities.h',
           ],
+          # TODO(jschuh): http://crbug.com/167187 size_t -> int
+          'msvs_disabled_warnings': [ 4267 ],
           'msvs_settings': {
             'VCLinkerTool': {
-              'AdditionalLibraryDirectories': ['$(DXSDK_DIR)/lib/x86'],
               'AdditionalDependencies': [
                 'd3d9.lib',
               ],
@@ -280,7 +291,6 @@
           'include_dirs': [
             '.',
             '../include',
-            '$(DXSDK_DIR)/include',
           ],
           'sources': [
             'common/angleutils.h',
@@ -301,17 +311,14 @@
             'libEGL/Surface.cpp',
             'libEGL/Surface.h',
           ],
+          # TODO(jschuh): http://crbug.com/167187 size_t -> int
+          'msvs_disabled_warnings': [ 4267 ],
           'msvs_settings': {
             'VCLinkerTool': {
-              'AdditionalLibraryDirectories': ['$(DXSDK_DIR)/lib/x86'],
               'AdditionalDependencies': [
                 'd3d9.lib',
                 'dxguid.lib',
-                'dwmapi.lib',
               ],
-              'DelayLoadDLLs': [
-                'dwmapi.dll',
-              ]
             }
           },
         },

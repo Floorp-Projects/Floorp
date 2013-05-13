@@ -91,6 +91,9 @@
 #include "compiler/ParseHelper.h"
 #include "GLSLANG/ShaderLang.h"
 
+#define YYENABLE_NLS 0
+#define YYLTYPE_IS_TRIVIAL 1
+
 #define YYLEX_PARAM context->scanner
 
 
@@ -657,27 +660,27 @@ static const yytype_int16 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,   165,   165,   200,   203,   216,   221,   226,   232,   235,
-     314,   317,   418,   428,   441,   449,   549,   552,   560,   564,
-     571,   575,   582,   588,   597,   605,   660,   667,   677,   680,
-     690,   700,   721,   722,   723,   728,   729,   738,   750,   751,
-     759,   770,   774,   775,   785,   795,   805,   818,   819,   829,
-     842,   846,   850,   854,   855,   868,   869,   882,   883,   896,
-     897,   914,   915,   928,   929,   930,   931,   932,   936,   939,
-     950,   958,   985,   990,   997,  1035,  1038,  1045,  1053,  1074,
-    1095,  1106,  1135,  1140,  1150,  1155,  1165,  1168,  1171,  1174,
-    1180,  1187,  1190,  1212,  1230,  1254,  1277,  1281,  1299,  1307,
-    1339,  1359,  1448,  1457,  1480,  1483,  1489,  1497,  1505,  1513,
-    1523,  1530,  1533,  1536,  1542,  1545,  1560,  1564,  1568,  1572,
-    1581,  1586,  1591,  1596,  1601,  1606,  1611,  1616,  1621,  1626,
-    1632,  1638,  1644,  1649,  1654,  1663,  1672,  1677,  1690,  1690,
-    1704,  1704,  1713,  1716,  1731,  1767,  1771,  1777,  1785,  1801,
-    1805,  1809,  1810,  1816,  1817,  1818,  1819,  1820,  1824,  1825,
-    1825,  1825,  1835,  1836,  1840,  1840,  1841,  1841,  1846,  1849,
-    1859,  1862,  1868,  1869,  1873,  1881,  1885,  1895,  1900,  1917,
-    1917,  1922,  1922,  1929,  1929,  1937,  1940,  1946,  1949,  1955,
-    1959,  1966,  1973,  1980,  1987,  1998,  2007,  2011,  2018,  2021,
-    2027,  2027
+       0,   168,   168,   203,   206,   219,   224,   229,   235,   238,
+     317,   320,   421,   431,   444,   452,   552,   555,   563,   567,
+     574,   578,   585,   591,   600,   608,   663,   670,   680,   683,
+     693,   703,   724,   725,   726,   731,   732,   741,   753,   754,
+     762,   773,   777,   778,   788,   798,   808,   821,   822,   832,
+     845,   849,   853,   857,   858,   871,   872,   885,   886,   899,
+     900,   917,   918,   931,   932,   933,   934,   935,   939,   942,
+     953,   961,   988,   993,  1007,  1045,  1048,  1055,  1063,  1084,
+    1105,  1116,  1145,  1150,  1160,  1165,  1175,  1178,  1181,  1184,
+    1190,  1197,  1200,  1222,  1240,  1264,  1287,  1291,  1309,  1317,
+    1349,  1369,  1458,  1467,  1490,  1493,  1499,  1507,  1515,  1523,
+    1533,  1540,  1543,  1546,  1552,  1555,  1570,  1574,  1578,  1582,
+    1591,  1596,  1601,  1606,  1611,  1616,  1621,  1626,  1631,  1636,
+    1642,  1648,  1654,  1659,  1664,  1673,  1682,  1687,  1700,  1700,
+    1714,  1714,  1723,  1726,  1741,  1777,  1781,  1787,  1795,  1811,
+    1815,  1819,  1820,  1826,  1827,  1828,  1829,  1830,  1834,  1835,
+    1835,  1835,  1845,  1846,  1850,  1850,  1851,  1851,  1856,  1859,
+    1869,  1872,  1878,  1879,  1883,  1891,  1895,  1905,  1910,  1927,
+    1927,  1932,  1932,  1939,  1939,  1947,  1950,  1956,  1959,  1965,
+    1969,  1976,  1983,  1990,  1997,  2008,  2017,  2021,  2028,  2031,
+    2037,  2037
 };
 #endif
 
@@ -2168,36 +2171,36 @@ yyreduce:
         }
         if ((yyvsp[(1) - (4)].interm.intermTypedNode)->getType().getQualifier() == EvqConst && (yyvsp[(3) - (4)].interm.intermTypedNode)->getQualifier() == EvqConst) {
             if ((yyvsp[(1) - (4)].interm.intermTypedNode)->isArray()) { // constant folding for arrays
-                (yyval.interm.intermTypedNode) = context->addConstArrayNode((yyvsp[(3) - (4)].interm.intermTypedNode)->getAsConstantUnion()->getUnionArrayPointer()->getIConst(), (yyvsp[(1) - (4)].interm.intermTypedNode), (yyvsp[(2) - (4)].lex).line);
+                (yyval.interm.intermTypedNode) = context->addConstArrayNode((yyvsp[(3) - (4)].interm.intermTypedNode)->getAsConstantUnion()->getIConst(0), (yyvsp[(1) - (4)].interm.intermTypedNode), (yyvsp[(2) - (4)].lex).line);
             } else if ((yyvsp[(1) - (4)].interm.intermTypedNode)->isVector()) {  // constant folding for vectors
                 TVectorFields fields;
                 fields.num = 1;
-                fields.offsets[0] = (yyvsp[(3) - (4)].interm.intermTypedNode)->getAsConstantUnion()->getUnionArrayPointer()->getIConst(); // need to do it this way because v.xy sends fields integer array
+                fields.offsets[0] = (yyvsp[(3) - (4)].interm.intermTypedNode)->getAsConstantUnion()->getIConst(0); // need to do it this way because v.xy sends fields integer array
                 (yyval.interm.intermTypedNode) = context->addConstVectorNode(fields, (yyvsp[(1) - (4)].interm.intermTypedNode), (yyvsp[(2) - (4)].lex).line);
             } else if ((yyvsp[(1) - (4)].interm.intermTypedNode)->isMatrix()) { // constant folding for matrices
-                (yyval.interm.intermTypedNode) = context->addConstMatrixNode((yyvsp[(3) - (4)].interm.intermTypedNode)->getAsConstantUnion()->getUnionArrayPointer()->getIConst(), (yyvsp[(1) - (4)].interm.intermTypedNode), (yyvsp[(2) - (4)].lex).line);
+                (yyval.interm.intermTypedNode) = context->addConstMatrixNode((yyvsp[(3) - (4)].interm.intermTypedNode)->getAsConstantUnion()->getIConst(0), (yyvsp[(1) - (4)].interm.intermTypedNode), (yyvsp[(2) - (4)].lex).line);
             }
         } else {
             if ((yyvsp[(3) - (4)].interm.intermTypedNode)->getQualifier() == EvqConst) {
-                if (((yyvsp[(1) - (4)].interm.intermTypedNode)->isVector() || (yyvsp[(1) - (4)].interm.intermTypedNode)->isMatrix()) && (yyvsp[(1) - (4)].interm.intermTypedNode)->getType().getNominalSize() <= (yyvsp[(3) - (4)].interm.intermTypedNode)->getAsConstantUnion()->getUnionArrayPointer()->getIConst() && !(yyvsp[(1) - (4)].interm.intermTypedNode)->isArray() ) {
+                if (((yyvsp[(1) - (4)].interm.intermTypedNode)->isVector() || (yyvsp[(1) - (4)].interm.intermTypedNode)->isMatrix()) && (yyvsp[(1) - (4)].interm.intermTypedNode)->getType().getNominalSize() <= (yyvsp[(3) - (4)].interm.intermTypedNode)->getAsConstantUnion()->getIConst(0) && !(yyvsp[(1) - (4)].interm.intermTypedNode)->isArray() ) {
                     std::stringstream extraInfoStream;
-                    extraInfoStream << "field selection out of range '" << (yyvsp[(3) - (4)].interm.intermTypedNode)->getAsConstantUnion()->getUnionArrayPointer()->getIConst() << "'";
+                    extraInfoStream << "field selection out of range '" << (yyvsp[(3) - (4)].interm.intermTypedNode)->getAsConstantUnion()->getIConst(0) << "'";
                     std::string extraInfo = extraInfoStream.str();
                     context->error((yyvsp[(2) - (4)].lex).line, "", "[", extraInfo.c_str());
                     context->recover();
                 } else {
                     if ((yyvsp[(1) - (4)].interm.intermTypedNode)->isArray()) {
                         if ((yyvsp[(1) - (4)].interm.intermTypedNode)->getType().getArraySize() == 0) {
-                            if ((yyvsp[(1) - (4)].interm.intermTypedNode)->getType().getMaxArraySize() <= (yyvsp[(3) - (4)].interm.intermTypedNode)->getAsConstantUnion()->getUnionArrayPointer()->getIConst()) {
-                                if (context->arraySetMaxSize((yyvsp[(1) - (4)].interm.intermTypedNode)->getAsSymbolNode(), (yyvsp[(1) - (4)].interm.intermTypedNode)->getTypePointer(), (yyvsp[(3) - (4)].interm.intermTypedNode)->getAsConstantUnion()->getUnionArrayPointer()->getIConst(), true, (yyvsp[(2) - (4)].lex).line))
+                            if ((yyvsp[(1) - (4)].interm.intermTypedNode)->getType().getMaxArraySize() <= (yyvsp[(3) - (4)].interm.intermTypedNode)->getAsConstantUnion()->getIConst(0)) {
+                                if (context->arraySetMaxSize((yyvsp[(1) - (4)].interm.intermTypedNode)->getAsSymbolNode(), (yyvsp[(1) - (4)].interm.intermTypedNode)->getTypePointer(), (yyvsp[(3) - (4)].interm.intermTypedNode)->getAsConstantUnion()->getIConst(0), true, (yyvsp[(2) - (4)].lex).line))
                                     context->recover();
                             } else {
                                 if (context->arraySetMaxSize((yyvsp[(1) - (4)].interm.intermTypedNode)->getAsSymbolNode(), (yyvsp[(1) - (4)].interm.intermTypedNode)->getTypePointer(), 0, false, (yyvsp[(2) - (4)].lex).line))
                                     context->recover();
                             }
-                        } else if ( (yyvsp[(3) - (4)].interm.intermTypedNode)->getAsConstantUnion()->getUnionArrayPointer()->getIConst() >= (yyvsp[(1) - (4)].interm.intermTypedNode)->getType().getArraySize()) {
+                        } else if ( (yyvsp[(3) - (4)].interm.intermTypedNode)->getAsConstantUnion()->getIConst(0) >= (yyvsp[(1) - (4)].interm.intermTypedNode)->getType().getArraySize()) {
                             std::stringstream extraInfoStream;
-                            extraInfoStream << "array index out of range '" << (yyvsp[(3) - (4)].interm.intermTypedNode)->getAsConstantUnion()->getUnionArrayPointer()->getIConst() << "'";
+                            extraInfoStream << "array index out of range '" << (yyvsp[(3) - (4)].interm.intermTypedNode)->getAsConstantUnion()->getIConst(0) << "'";
                             std::string extraInfo = extraInfoStream.str();
                             context->error((yyvsp[(2) - (4)].lex).line, "", "[", extraInfo.c_str());
                             context->recover();
@@ -2465,7 +2468,7 @@ yyreduce:
                     (yyval.interm.intermTypedNode)->getAsAggregate()->setName(fnCandidate->getMangledName());
 
                     TQualifier qual;
-                    for (int i = 0; i < fnCandidate->getParamCount(); ++i) {
+                    for (size_t i = 0; i < fnCandidate->getParamCount(); ++i) {
                         qual = fnCandidate->getParam(i).type->getQualifier();
                         if (qual == EvqOut || qual == EvqInOut) {
                             if (context->lValueErrorCheck((yyval.interm.intermTypedNode)->getLine(), "assign", (yyval.interm.intermTypedNode)->getAsAggregate()->getSequence()[i]->getAsTyped())) {
@@ -3051,7 +3054,7 @@ yyreduce:
         prototype->setType(function.getReturnType());
         prototype->setName(function.getName());
         
-        for (int i = 0; i < function.getParamCount(); i++)
+        for (size_t i = 0; i < function.getParamCount(); i++)
         {
             const TParameter &param = function.getParam(i);
             if (param.name != 0)
@@ -3085,7 +3088,14 @@ yyreduce:
   case 73:
 
     {
-        context->symbolTable.setDefaultPrecision( (yyvsp[(3) - (4)].interm.type).type, (yyvsp[(2) - (4)].interm.precision) );
+        if (((yyvsp[(2) - (4)].interm.precision) == EbpHigh) && (context->shaderType == SH_FRAGMENT_SHADER) && !context->fragmentPrecisionHigh) {
+            context->error((yyvsp[(1) - (4)].lex).line, "precision is not supported in fragment shader", "highp");
+            context->recover();
+        }
+        if (!context->symbolTable.setDefaultPrecision( (yyvsp[(3) - (4)].interm.type), (yyvsp[(2) - (4)].interm.precision) )) {
+            context->error((yyvsp[(1) - (4)].lex).line, "illegal type argument for default precision qualifier", getBasicString((yyvsp[(3) - (4)].interm.type).type));
+            context->recover();
+        }
         (yyval.interm.intermNode) = 0;
     }
     break;
@@ -3107,7 +3117,7 @@ yyreduce:
                 context->error((yyvsp[(2) - (2)].lex).line, "overloaded functions must have the same return type", (yyvsp[(1) - (2)].interm.function)->getReturnType().getBasicString());
                 context->recover();
             }
-            for (int i = 0; i < prevDec->getParamCount(); ++i) {
+            for (size_t i = 0; i < prevDec->getParamCount(); ++i) {
                 if (prevDec->getParam(i).type->getQualifier() != (yyvsp[(1) - (2)].interm.function)->getParam(i).type->getQualifier()) {
                     context->error((yyvsp[(2) - (2)].lex).line, "overloaded functions must have the same parameter qualifiers", (yyvsp[(1) - (2)].interm.function)->getParam(i).type->getQualifierString());
                     context->recover();
@@ -4473,7 +4483,7 @@ yyreduce:
         // knows where to find parameters.
         //
         TIntermAggregate* paramNodes = new TIntermAggregate;
-        for (int i = 0; i < function->getParamCount(); i++) {
+        for (size_t i = 0; i < function->getParamCount(); i++) {
             const TParameter& param = function->getParam(i);
             if (param.name != 0) {
                 TVariable *variable = new TVariable(param.name, *param.type);
@@ -4749,5 +4759,4 @@ yyreturn:
 int glslang_parse(TParseContext* context) {
     return yyparse(context);
 }
-
 
