@@ -1397,14 +1397,14 @@ nsXULTemplateBuilder::InitHTMLTemplateRoot()
 
     if (mDB) {
         // database
-        JS::Rooted<JS::Value> jsdatabase(jscontext);
+        JS::Value jsdatabase;
         rv = nsContentUtils::WrapNative(jscontext, scope, mDB,
                                         &NS_GET_IID(nsIRDFCompositeDataSource),
-                                        jsdatabase.address(), getter_AddRefs(wrapper));
+                                        &jsdatabase, getter_AddRefs(wrapper));
         NS_ENSURE_SUCCESS(rv, rv);
 
         bool ok;
-        ok = JS_SetProperty(jscontext, jselement, "database", jsdatabase.address());
+        ok = JS_SetProperty(jscontext, jselement, "database", &jsdatabase);
         NS_ASSERTION(ok, "unable to set database property");
         if (! ok)
             return NS_ERROR_FAILURE;
@@ -1412,16 +1412,16 @@ nsXULTemplateBuilder::InitHTMLTemplateRoot()
 
     {
         // builder
-        JS::Rooted<JS::Value> jsbuilder(jscontext);
+        JS::Value jsbuilder;
         nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
         rv = nsContentUtils::WrapNative(jscontext, jselement,
                                         static_cast<nsIXULTemplateBuilder*>(this),
                                         &NS_GET_IID(nsIXULTemplateBuilder),
-                                        jsbuilder.address(), getter_AddRefs(wrapper));
+                                        &jsbuilder, getter_AddRefs(wrapper));
         NS_ENSURE_SUCCESS(rv, rv);
 
         bool ok;
-        ok = JS_SetProperty(jscontext, jselement, "builder", jsbuilder.address());
+        ok = JS_SetProperty(jscontext, jselement, "builder", &jsbuilder);
         if (! ok)
             return NS_ERROR_FAILURE;
     }
