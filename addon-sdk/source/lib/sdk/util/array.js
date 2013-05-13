@@ -73,10 +73,11 @@ exports.remove = function remove(array, element) {
  * @returns {Array}
  */
 exports.unique = function unique(array) {
-  return array.reduce(function(values, element) {
-    add(values, element);
-    return values;
-  }, []);
+  var value = [];
+  return array.forEach(function(element) {
+    add(value, element);
+  });
+  return value;
 };
 
 exports.flatten = function flatten(array){
