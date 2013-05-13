@@ -396,6 +396,7 @@ test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineTh
 load 770381-1.html
 load 795646.html
 load 813372-1.html
+asserts-if(gtk2Widget,0-1) load 822865.html # bug 540078
 load 833604-1.html
 load 835056.html
 load 836990-1.html
