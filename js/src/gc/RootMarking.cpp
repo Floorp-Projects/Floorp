@@ -769,12 +769,6 @@ js::gc::MarkRuntime(JSTracer *trc, bool useSavedRoots)
             c->debugScopes->mark(trc);
     }
 
-#ifdef JS_METHODJIT
-    /* We need to expand inline frames before stack scanning. */
-    for (ZonesIter zone(rt); !zone.done(); zone.next())
-        mjit::ExpandInlineFrames(zone);
-#endif
-
     rt->stackSpace.mark(trc);
 
 #ifdef JS_ION

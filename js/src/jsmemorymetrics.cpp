@@ -253,16 +253,13 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
         CompartmentStats *cStats = GetCompartmentStats(script->compartment());
         cStats->gcHeapScripts += thingSize;
         cStats->scriptData += script->sizeOfData(rtStats->mallocSizeOf_);
-#ifdef JS_METHODJIT
-        cStats->jaegerData += script->sizeOfJitScripts(rtStats->mallocSizeOf_);
-# ifdef JS_ION
+#ifdef JS_ION
         size_t baselineData = 0, baselineStubsFallback = 0;
         ion::SizeOfBaselineData(script, rtStats->mallocSizeOf_, &baselineData,
                                 &baselineStubsFallback);
         cStats->baselineData += baselineData;
         cStats->baselineStubsFallback += baselineStubsFallback;
         cStats->ionData += ion::SizeOfIonData(script, rtStats->mallocSizeOf_);
-# endif
 #endif
 
         ScriptSource *ss = script->scriptSource();
@@ -275,11 +272,9 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
       }
 
       case JSTRACE_IONCODE: {
-#ifdef JS_METHODJIT
-# ifdef JS_ION
+#ifdef JS_ION
         zStats->gcHeapIonCodes += thingSize;
         // The code for a script is counted in ExecutableAllocator::sizeOfCode().
-# endif
 #endif
         break;
       }

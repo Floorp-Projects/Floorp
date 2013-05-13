@@ -33,10 +33,6 @@
 #include "vm/StringBuffer.h"
 #include "vm/Xdr.h"
 
-#ifdef JS_METHODJIT
-#include "methodjit/MethodJIT.h"
-#endif
-
 #include "jsfuninlines.h"
 #include "jsinferinlines.h"
 #include "jsinterpinlines.h"
@@ -132,28 +128,6 @@ fun_getProperty(JSContext *cx, HandleObject obj_, HandleId id, MutableHandleValu
         vp.setObject(*argsobj);
         return true;
     }
-
-#ifdef JS_METHODJIT
-    StackFrame *fp = NULL;
-    if (!iter.isIon())
-        fp = iter.interpFrame();
-
-    if (JSID_IS_ATOM(id, cx->names().caller) && fp && fp->prev()) {
-        /*
-         * If the frame was called from within an inlined frame, mark the
-         * innermost function as uninlineable to expand its frame and allow us
-         * to recover its callee object.
-         */
-        InlinedSite *inlined;
-        jsbytecode *prevpc = fp->prevpc(&inlined);
-        if (inlined) {
-            mjit::JITChunk *chunk = fp->prev()->jit()->chunk(prevpc);
-            JSFunction *fun = chunk->inlineFrames()[inlined->inlineIndex].fun;
-            fun->nonLazyScript()->uninlineable = true;
-            MarkTypeObjectFlags(cx, fun, OBJECT_FLAG_UNINLINEABLE);
-        }
-    }
-#endif
 
     if (JSID_IS_ATOM(id, cx->names().caller)) {
         ++iter;

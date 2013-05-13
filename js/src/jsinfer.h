@@ -101,10 +101,6 @@ class RootedBase<TaggedProto> : public TaggedProtoOperations<Rooted<TaggedProto>
 
 class CallObject;
 
-namespace mjit {
-    struct JITScript;
-}
-
 namespace ion {
     struct IonScript;
 }
@@ -1280,7 +1276,6 @@ typedef HashMap<AllocationSiteKey,ReadBarriered<TypeObject>,AllocationSiteKey,Sy
 struct CompilerOutput
 {
     enum Kind {
-        MethodJIT,
         Ion,
         ParallelIon
     };
@@ -1301,7 +1296,6 @@ struct CompilerOutput
     Kind kind() const { return static_cast<Kind>(kindInt); }
     void setKind(Kind k) { kindInt = k; }
 
-    mjit::JITScript *mjit() const;
     ion::IonScript *ion() const;
 
     bool isValid() const;
