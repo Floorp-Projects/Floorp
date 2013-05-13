@@ -391,3 +391,96 @@ function ArrayStaticReduceRight(list, callbackfn) {
     else
         return callFunction(ArrayReduceRight, list, callbackfn);
 }
+
+#ifdef ENABLE_PARALLEL_JS
+
+/* Include the common 1D operations. */
+#define PA_LENGTH(a) (a.length)
+#define PA_GET(a, i) (a[i])
+#define PA_NEW(length, buffer, offset) buffer
+
+#define PA_MAP_NAME     ArrayParallelMap
+#define PA_REDUCE_NAME  ArrayParallelReduce
+#define PA_SCAN_NAME    ArrayParallelScan
+#define PA_SCATTER_NAME ArrayParallelScatter
+#define PA_FILTER_NAME  ArrayParallelFilter
+
+#include "ParallelArrayCommonOps.js"
+
+#undef PA_LENGTH
+#undef PA_GET
+#undef PA_NEW
+#undef PA_MAP_NAME
+#undef PA_REDUCE_NAME
+#undef PA_SCAN_NAME
+#undef PA_SCATTER_NAME
+#undef PA_FILTER_NAME
+
+/**
+ * "Comprehension form": This is the function invoked for |Array.pbuild(len,
+ * fn)| Itt creates a new array with length |len| where index |i| is equal to
+ * |fn(i)|.
+ *
+ * The final |mode| argument is an internal argument used only
+ * during our unit-testing.
+ */
+function ArrayStaticParallelBuild(length, func, mode) {
+  if (!IS_UINT32(length))
+    ThrowError(JSMSG_PAR_ARRAY_BAD_ARG, "");
+  if (!IsCallable(func))
+    ThrowError(JSMSG_NOT_FUNCTION, DecompileArg(1, func));
+
+  var buffer = NewDenseArray(length);
+
+  parallel: for (;;) {
+    // Avoid parallel compilation if we are already nested in another
+    // parallel section or the user told us not to parallelize. The
+    // use of a for (;;) loop is working around some ion limitations:
+    //
+    // - Breaking out of named blocks does not currently work (bug 684384);
+    // - Unreachable Code Elim. can't properly handle if (a && b) (bug 669796)
+    if (ShouldForceSequential())
+      break parallel;
+    if (!TRY_PARALLEL(mode))
+      break parallel;
+
+    var chunks = ComputeNumChunks(length);
+    var numSlices = ParallelSlices();
+    var info = ComputeAllSliceBounds(chunks, numSlices);
+    ParallelDo(constructSlice, CheckParallel(mode));
+    return buffer;
+  }
+
+  // Sequential fallback:
+  ASSERT_SEQUENTIAL_IS_OK(mode);
+  fill(0, length);
+  return buffer;
+
+  function constructSlice(sliceId, numSlices, warmup) {
+    var chunkPos = info[SLICE_POS(sliceId)];
+    var chunkEnd = info[SLICE_END(sliceId)];
+
+    if (warmup && chunkEnd > chunkPos)
+      chunkEnd = chunkPos + 1;
+
+    while (chunkPos < chunkEnd) {
+      var indexStart = chunkPos << CHUNK_SHIFT;
+      var indexEnd = std_Math_min(indexStart + CHUNK_SIZE, length);
+      fill(indexStart, indexEnd);
+      UnsafeSetElement(info, SLICE_POS(sliceId), ++chunkPos);
+    }
+  }
+
+  function fill(indexStart, indexEnd) {
+    for (var i = indexStart; i < indexEnd; i++)
+      UnsafeSetElement(buffer, i, func(i));
+  }
+}
+
+/*
+ * Mark the comprehension form as clone-at-callsite. See note in
+ * ParallelArrayCommonOps.js
+ */
+SetScriptHints(ArrayStaticParallelBuild, { cloneAtCallsite: true });
+
+#endif /* ENABLE_PARALLEL_JS */

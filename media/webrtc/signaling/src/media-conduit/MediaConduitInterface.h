@@ -167,6 +167,7 @@ public:
    * and attaches the new to the Conduit.
    */
   virtual MediaConduitErrorCode AttachRenderer(RefPtr<VideoRenderer> aRenderer) = 0;
+  virtual void DetachRenderer() = 0;
 
   /**
    * Function to deliver a capture video frame for encoding and transport

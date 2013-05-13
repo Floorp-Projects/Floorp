@@ -139,6 +139,7 @@ class ArrayBufferObject : public JSObject
                               uint8_t **data);
 
     static inline void setElementsHeader(js::ObjectElements *header, uint32_t bytes);
+    static inline uint32_t getElementsHeaderInitializedLength(const js::ObjectElements *header);
 
     void addView(JSObject *view);
 

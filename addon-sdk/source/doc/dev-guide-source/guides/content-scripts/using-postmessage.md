@@ -39,7 +39,7 @@ function. Again, `panel` and `page` integrate `worker` directly:
     panel.postMessage(addonMessage);
 
 However, for `page-mod` objects you need to listen to the `onAttach` event
-and use the worker supplied to that:
+and use the [worker](modules/sdk/content/worker.html#Worker) supplied to that:
 
     var pageMod = require('sdk/page-mod').PageMod({
       include: ['*'],

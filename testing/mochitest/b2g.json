@@ -86,6 +86,7 @@
     "dom/file/test/test_request_readyState.html":"",
     "dom/file/test/test_stream_tracking.html":"",
     "dom/indexedDB/ipc/test_ipc.html":"",
+    "dom/indexedDB/test/test_lowDiskSpace.html":"",
     "dom/tests/mochitest/ajax/offline/test_noManifest.html":"",
     "dom/tests/mochitest/bugs/test_bug437361.html":"",
     "dom/tests/mochitest/general/test_bug629535.html":"",
