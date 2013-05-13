@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2002-2012 The ANGLE Project Authors. All rights reserved.
+// Copyright (c) 2002-2013 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -593,7 +593,7 @@ TIntermNode* TIntermediate::addSelection(TIntermTyped* cond, TIntermNodePair nod
     //
 
     if (cond->getAsTyped() && cond->getAsTyped()->getAsConstantUnion()) {
-        if (cond->getAsTyped()->getAsConstantUnion()->getUnionArrayPointer()->getBConst() == true)
+        if (cond->getAsConstantUnion()->getBConst(0) == true)
             return nodePair.node1 ? setAggregateOperator(nodePair.node1, EOpSequence, nodePair.node1->getLine()) : NULL;
         else
             return nodePair.node2 ? setAggregateOperator(nodePair.node2, EOpSequence, nodePair.node2->getLine()) : NULL;
@@ -647,7 +647,7 @@ TIntermTyped* TIntermediate::addSelection(TIntermTyped* cond, TIntermTyped* true
     //
 
     if (cond->getAsConstantUnion() && trueBlock->getAsConstantUnion() && falseBlock->getAsConstantUnion()) {
-        if (cond->getAsConstantUnion()->getUnionArrayPointer()->getBConst())
+        if (cond->getAsConstantUnion()->getBConst(0))
             return trueBlock;
         else
             return falseBlock;
@@ -846,6 +846,7 @@ bool TIntermUnary::promote(TInfoSink&)
     }
 
     setType(operand->getType());
+    type.setQualifier(EvqTemporary);
 
     return true;
 }
@@ -1162,7 +1163,7 @@ TIntermTyped* TIntermConstantUnion::fold(TOperator op, TIntermTyped* constantNod
             case EbtFloat:
                 if (rightUnionArray[i] == 0.0f) {
                     infoSink.info.message(EPrefixWarning, "Divide by zero error during constant folding", getLine());
-                    tempConstArray[i].setFConst(FLT_MAX);
+                    tempConstArray[i].setFConst(unionArray[i].getFConst() < 0 ? -FLT_MAX : FLT_MAX);
                 } else
                     tempConstArray[i].setFConst(unionArray[i].getFConst() / rightUnionArray[i].getFConst());
                 break;
@@ -1377,7 +1378,6 @@ TIntermTyped* TIntermConstantUnion::fold(TOperator op, TIntermTyped* constantNod
 
 TIntermTyped* TIntermediate::promoteConstantUnion(TBasicType promoteTo, TIntermConstantUnion* node)
 {
-    ConstantUnion *rightUnionArray = node->getUnionArrayPointer();
     int size = node->getType().getObjectSize();
 
     ConstantUnion *leftUnionArray = new ConstantUnion[size];
@@ -1388,13 +1388,13 @@ TIntermTyped* TIntermediate::promoteConstantUnion(TBasicType promoteTo, TIntermC
             case EbtFloat:
                 switch (node->getType().getBasicType()) {
                     case EbtInt:
-                        leftUnionArray[i].setFConst(static_cast<float>(rightUnionArray[i].getIConst()));
+                        leftUnionArray[i].setFConst(static_cast<float>(node->getIConst(i)));
                         break;
                     case EbtBool:
-                        leftUnionArray[i].setFConst(static_cast<float>(rightUnionArray[i].getBConst()));
+                        leftUnionArray[i].setFConst(static_cast<float>(node->getBConst(i)));
                         break;
                     case EbtFloat:
-                        leftUnionArray[i] = rightUnionArray[i];
+                        leftUnionArray[i].setFConst(static_cast<float>(node->getFConst(i)));
                         break;
                     default:
                         infoSink.info.message(EPrefixInternalError, "Cannot promote", node->getLine());
@@ -1404,13 +1404,13 @@ TIntermTyped* TIntermediate::promoteConstantUnion(TBasicType promoteTo, TIntermC
             case EbtInt:
                 switch (node->getType().getBasicType()) {
                     case EbtInt:
-                        leftUnionArray[i] = rightUnionArray[i];
+                        leftUnionArray[i].setIConst(static_cast<int>(node->getIConst(i)));
                         break;
                     case EbtBool:
-                        leftUnionArray[i].setIConst(static_cast<int>(rightUnionArray[i].getBConst()));
+                        leftUnionArray[i].setIConst(static_cast<int>(node->getBConst(i)));
                         break;
                     case EbtFloat:
-                        leftUnionArray[i].setIConst(static_cast<int>(rightUnionArray[i].getFConst()));
+                        leftUnionArray[i].setIConst(static_cast<int>(node->getFConst(i)));
                         break;
                     default:
                         infoSink.info.message(EPrefixInternalError, "Cannot promote", node->getLine());
@@ -1420,13 +1420,13 @@ TIntermTyped* TIntermediate::promoteConstantUnion(TBasicType promoteTo, TIntermC
             case EbtBool:
                 switch (node->getType().getBasicType()) {
                     case EbtInt:
-                        leftUnionArray[i].setBConst(rightUnionArray[i].getIConst() != 0);
+                        leftUnionArray[i].setBConst(node->getIConst(i) != 0);
                         break;
                     case EbtBool:
-                        leftUnionArray[i] = rightUnionArray[i];
+                        leftUnionArray[i].setBConst(node->getBConst(i));
                         break;
                     case EbtFloat:
-                        leftUnionArray[i].setBConst(rightUnionArray[i].getFConst() != 0.0f);
+                        leftUnionArray[i].setBConst(node->getFConst(i) != 0.0f);
                         break;
                     default:
                         infoSink.info.message(EPrefixInternalError, "Cannot promote", node->getLine());

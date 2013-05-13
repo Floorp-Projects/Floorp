@@ -134,8 +134,8 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Diagnostics.cpp" />
-    <ClCompile Include="DirectiveHandler.cpp" />
+    <ClCompile Include="DiagnosticsBase.cpp" />
+    <ClCompile Include="DirectiveHandlerBase.cpp" />
     <ClCompile Include="DirectiveParser.cpp" />
     <ClCompile Include="ExpressionParser.cpp" />
     <ClCompile Include="Input.cpp" />

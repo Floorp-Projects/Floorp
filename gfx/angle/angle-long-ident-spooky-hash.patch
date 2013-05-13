@@ -1,10 +1,10 @@
 # HG changeset patch
-# Parent 6a165b9e45205190517515abec94429715303081
+# Parent 262218204644915abb2add8aa52195c24035c293
 
 diff --git a/gfx/angle/Makefile.in b/gfx/angle/Makefile.in
 --- a/gfx/angle/Makefile.in
 +++ b/gfx/angle/Makefile.in
-@@ -73,16 +73,17 @@ CPPSRCS += \
+@@ -84,16 +84,17 @@ CPPSRCS += \
    intermOut.cpp \
    IntermTraverse.cpp \
    MapLongVariableNames.cpp \
@@ -37,7 +37,7 @@ diff --git a/gfx/angle/src/compiler/MapLongVariableNames.cpp b/gfx/angle/src/com
  
  namespace {
  
- TString mapLongName(int id, const TString& name, bool isGlobal)
+ TString mapLongName(size_t id, const TString& name, bool isGlobal)
  {
      ASSERT(name.size() > MAX_SHORTENED_IDENTIFIER_SIZE);
      TStringStream stream;
@@ -723,7 +723,7 @@ new file mode 100644
 diff --git a/gfx/angle/src/libGLESv2/Makefile.in b/gfx/angle/src/libGLESv2/Makefile.in
 --- a/gfx/angle/src/libGLESv2/Makefile.in
 +++ b/gfx/angle/src/libGLESv2/Makefile.in
-@@ -86,16 +86,17 @@ CPPSRCS += \
+@@ -91,16 +91,17 @@ CPPSRCS += \
    intermOut.cpp \
    IntermTraverse.cpp \
    MapLongVariableNames.cpp \

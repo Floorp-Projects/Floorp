@@ -1,4 +1,3 @@
-                                             
 Name
 
     ANGLE_pack_reverse_row_order
@@ -27,7 +26,7 @@ Version
 
 Number
 
-    TBD
+    OpenGL ES Extension #110
 
 Dependencies
 
