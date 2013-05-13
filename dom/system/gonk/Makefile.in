@@ -28,6 +28,10 @@ FAIL_ON_WARNINGS := 1
 
 include $(topsrcdir)/dom/dom-config.mk
 
+CPPSRCS = \
+  SystemWorkerManager.cpp \
+  $(NULL)
+
 LOCAL_INCLUDES = \
   -I$(topsrcdir)/dom/base \
   -I$(topsrcdir)/dom/src/geolocation \
@@ -36,6 +40,26 @@ LOCAL_INCLUDES = \
   -I$(topsrcdir)/dom/bluetooth \
   -I$(topsrcdir)/content/events/src \
   $(NULL)
+
+ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
+CPPSRCS += \
+  AudioManager.cpp \
+  AutoMounter.cpp \
+  AutoMounterSetting.cpp \
+  GonkGPSGeolocationProvider.cpp \
+  AudioChannelManager.cpp \
+  nsVolume.cpp \
+  nsVolumeMountLock.cpp \
+  nsVolumeService.cpp \
+  nsVolumeStat.cpp \
+  TimeZoneSettingObserver.cpp \
+  Volume.cpp \
+  VolumeCommand.cpp \
+  VolumeManager.cpp \
+  VolumeServiceIOThread.cpp \
+  VolumeServiceTest.cpp \
+  $(NULL)
+endif
 
 EXTRA_COMPONENTS = \
   NetworkManager.manifest \

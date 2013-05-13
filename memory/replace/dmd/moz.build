@@ -10,9 +10,3 @@ EXPORTS += [
     'DMD.h',
 ]
 
-CPP_SOURCES += [
-    'DMD.cpp',
-    'HashFunctions.cpp',
-    'nsStackWalk.cpp',
-]
-

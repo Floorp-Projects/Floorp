@@ -16,6 +16,12 @@ LOCAL_INCLUDES = \
   -I$(topsrcdir)/toolkit/crashreporter/google-breakpad/src \
   $(NULL)
 
+CPPSRCS	= \
+  linux_dumper.cc \
+  linux_ptrace_dumper.cc \
+  minidump_writer.cc \
+  $(NULL)
+
 # need static lib
 FORCE_STATIC_LIB = 1
 

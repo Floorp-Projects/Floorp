@@ -24,6 +24,10 @@ ifndef _MSC_VER
 FAIL_ON_WARNINGS = 1
 endif # !_MSC_VER
 
+CPPSRCS = \
+	$(MTRANSPORT_LCPPSRCS) \
+	$(NULL)
+
 include $(srcdir)/../objs.mk
 
 

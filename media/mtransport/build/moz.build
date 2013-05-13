@@ -24,7 +24,3 @@ EXPORTS.mtransport += [
     '../transportlayerprsock.h',
 ]
 
-CPP_SOURCES += [
-    '$(MTRANSPORT_LCPPSRCS)',
-]
-

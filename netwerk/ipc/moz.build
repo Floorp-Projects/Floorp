@@ -22,12 +22,3 @@ EXPORTS.mozilla.net += [
     'RemoteOpenFileParent.h',
 ]
 
-CPP_SOURCES += [
-    'ChannelEventQueue.cpp',
-    'NeckoChild.cpp',
-    'NeckoCommon.cpp',
-    'NeckoParent.cpp',
-    'RemoteOpenFileChild.cpp',
-    'RemoteOpenFileParent.cpp',
-]
-

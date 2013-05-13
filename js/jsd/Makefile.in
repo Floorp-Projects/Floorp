@@ -15,6 +15,9 @@ relativesrcdir  = @relativesrcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= jsd
+CPPSRCS	 = \
+		jsd_xpc.cpp \
+		jshash.cpp
 IS_COMPONENT = 1
 LIBXUL_LIBRARY = 1
 
@@ -28,6 +31,20 @@ DISABLED_XPCSHELL_TESTS  = test
 ifdef JS_THREADSAFE
 DEFINES         += -DJS_THREADSAFE
 endif
+
+CPPSRCS		+= \
+		  jsdebug.cpp \
+		  jsd_atom.cpp \
+		  jsd_high.cpp \
+		  jsd_hook.cpp \
+		  jsd_lock.cpp \
+		  jsd_obj.cpp \
+		  jsd_scpt.cpp \
+		  jsd_stak.cpp \
+		  jsd_step.cpp \
+		  jsd_text.cpp \
+		  jsd_val.cpp \
+		  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

@@ -14,6 +14,43 @@ LIBRARY_NAME	= xpcomds_s
 LIBXUL_LIBRARY	= 1
 MOZILLA_INTERNAL_API = 1
 
+
+CPPSRCS		= \
+		nsArray.cpp \
+		nsAtomTable.cpp \
+		nsAtomService.cpp \
+		nsByteBuffer.cpp \
+		nsCRT.cpp \
+		nsHashPropertyBag.cpp \
+		nsHashtable.cpp \
+		nsINIParserImpl.cpp \
+		nsObserverList.cpp \
+		nsObserverService.cpp \
+		nsProperties.cpp \
+		nsPersistentProperties.cpp \
+		nsStaticNameTable.cpp \
+		nsStringEnumerator.cpp \
+		nsSupportsArray.cpp \
+		nsSupportsArrayEnumerator.cpp \
+		nsSupportsPrimitives.cpp \
+		nsUnicharBuffer.cpp \
+		nsVariant.cpp \
+		$(NULL)
+
+ifdef HAVE_CLOCK_MONOTONIC
+CPPSRCS += TimeStamp_posix.cpp
+else ifeq ($(OS_ARCH),Darwin)
+CPPSRCS += TimeStamp_darwin.cpp
+else ifeq ($(OS_ARCH),WINNT)
+CPPSRCS += TimeStamp_windows.cpp
+else
+$(error No TimeStamp implementation on this platform.  Build will not succeed)
+endif
+
+ifeq ($(OS_ARCH),WINNT)
+CPPSRCS += nsWindowsRegKey.cpp
+endif
+
 EXTRA_COMPONENTS = \
   nsINIProcessor.js \
   nsINIProcessor.manifest \

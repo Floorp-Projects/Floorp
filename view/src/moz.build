@@ -6,8 +6,3 @@
 
 MODULE = 'view'
 
-CPP_SOURCES += [
-    'nsView.cpp',
-    'nsViewManager.cpp',
-]
-

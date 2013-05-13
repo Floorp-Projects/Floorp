@@ -26,4 +26,12 @@ LOCAL_INCLUDES += \
   $(NULL)
 
 
+CPPSRCS = \
+  SkANP.cpp \
+  ANPCanvas.cpp \
+  ANPPaint.cpp \
+  ANPPath.cpp \
+  ANPTypeface.cpp \
+  $(NULL)
+
 include $(topsrcdir)/config/rules.mk

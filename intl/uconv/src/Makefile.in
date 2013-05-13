@@ -16,6 +16,30 @@ IS_COMPONENT	= 1
 MODULE_NAME	= nsUConvModule
 LIBXUL_LIBRARY = 1
 
+CPPSRCS		= \
+		nsUConvModule.cpp \
+		nsConverterInputStream.cpp \
+		nsConverterOutputStream.cpp \
+		nsTextToSubURI.cpp \
+		nsCharsetConverterManager.cpp \
+		nsUTF8ConverterService.cpp \
+		nsUTF8ToUnicode.cpp \
+		nsUnicodeToUTF8.cpp \
+		nsScriptableUConv.cpp \
+		nsISO88591ToUnicode.cpp \
+		nsCP1252ToUnicode.cpp \
+		nsMacRomanToUnicode.cpp \
+		nsUnicodeToISO88591.cpp \
+		nsUnicodeToCP1252.cpp \
+		nsUnicodeToMacRoman.cpp \
+		$(NULL)
+
+# Are we targeting x86-32 or x86-64?  If so, we want to include the SSE2
+# version of nsUTF8ToUnicodeSSE2.cpp.
+ifneq (,$(INTEL_ARCHITECTURE))
+CPPSRCS			+= nsUTF8ToUnicodeSSE2.cpp
+endif
+
 LOCAL_INCLUDES	= -I$(srcdir)/../util \
 		  -I$(srcdir)/../ucvlatin \
 		  -I$(srcdir)/../ucvibm \

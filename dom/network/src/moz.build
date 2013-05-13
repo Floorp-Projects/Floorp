@@ -12,14 +12,3 @@ EXPORTS.mozilla.dom.network += [
     'Utils.h',
 ]
 
-CPP_SOURCES += [
-    'Connection.cpp',
-    'TCPSocketChild.cpp',
-    'TCPSocketParent.cpp',
-    'Utils.cpp',
-]
-
-if CONFIG['MOZ_B2G_RIL']:
-    CPP_SOURCES += [
-        'MobileConnection.cpp',
-    ]

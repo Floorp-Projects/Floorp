@@ -17,6 +17,16 @@ MODULE_NAME    = RemoteServiceModule
 
 LIBXUL_LIBRARY = 1
 
+
+CPPSRCS += nsXRemoteService.cpp
+ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
+CPPSRCS += nsGTKRemoteService.cpp
+endif
+
+ifeq (qt,$(MOZ_WIDGET_TOOLKIT))
+CPPSRCS += nsQtRemoteService.cpp
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS += $(TK_CFLAGS)

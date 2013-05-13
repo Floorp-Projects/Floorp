@@ -14,34 +14,9 @@ DIRS += [
 if CONFIG['OS_ARCH'] == 'WINNT':
     DIRS += ['windows']
 
-if CONFIG['OS_TARGET'] == 'WINNT':
-    CPP_SOURCES += [
-        'TestBase64.cpp',
-    ]
-
-if CONFIG['WRAP_STL_INCLUDES']:
-    CPP_SOURCES += [
-        'TestSTLWrappers.cpp',
-    ]
-
 if CONFIG['DEHYDRA_PATH']:
     DIRS += ['static-checker']
 
 MODULE = 'xpcom'
 
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
-
-CPP_SOURCES += [
-    'TestArguments.cpp',
-    'TestBlockingProcess.cpp',
-    'TestCallTemplates.cpp',
-    'TestINIParser.cpp',
-    'TestPRIntN.cpp',
-    'TestQuickReturn.cpp',
-    'TestRacingServiceManager.cpp',
-    'TestRegistrationOrder.cpp',
-    'TestThreadPoolListener.cpp',
-    'TestTimers.cpp',
-    'TestUnicodeArguments.cpp',
-    'nsIFileEnumerator.cpp',
-]

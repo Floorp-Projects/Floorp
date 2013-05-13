@@ -6,18 +6,3 @@
 
 MODULE = 'dom'
 
-if CONFIG['MOZ_MAEMO_LIBLOCATION']:
-    CPP_SOURCES += [
-        'MaemoLocationProvider.cpp',
-    ]
-
-if CONFIG['MOZ_PLATFORM_MAEMO']:
-    CPP_SOURCES += [
-        'nsHapticFeedback.cpp',
-    ]
-
-if CONFIG['MOZ_ENABLE_QTMOBILITY']:
-    CPP_SOURCES += [
-        'moc_QTMLocationProvider.cpp',
-        'QTMLocationProvider.cpp',
-    ]

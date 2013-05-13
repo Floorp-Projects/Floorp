@@ -6,10 +6,3 @@
 
 MODULE = 'uconv'
 
-CPP_SOURCES += [
-    'nsUCConstructors.cpp',
-    'nsUCSupport.cpp',
-    'nsUnicodeDecodeHelper.cpp',
-    'nsUnicodeEncodeHelper.cpp',
-]
-

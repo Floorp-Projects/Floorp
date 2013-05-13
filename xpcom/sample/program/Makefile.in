@@ -10,6 +10,10 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+# We must specify CPPSRCS in order to link using the proper c++ linker
+# on certain platforms.
+CPPSRCS = nsTestSample.cpp
+
 # SIMPLE_PROGRAMS compiles a single .cpp file into an executable
 SIMPLE_PROGRAMS = nsTestSample$(BIN_SUFFIX)
 

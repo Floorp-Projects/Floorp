@@ -50,10 +50,6 @@ DIRS += ['client']
 
 if CONFIG['MOZ_CRASHREPORTER_INJECTOR']:
     DIRS += ['injector']
-    CPP_SOURCES += [
-        'LoadLibraryRemote.cpp',
-        'InjectCrashReporter.cpp',
-    ]
 
 TEST_TOOL_DIRS += ['test']
 
@@ -61,9 +57,5 @@ MODULE = 'crashreporter'
 
 EXPORTS += [
     'nsExceptionHandler.h',
-]
-
-CPP_SOURCES += [
-    'nsExceptionHandler.cpp',
 ]
 

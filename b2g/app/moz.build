@@ -9,10 +9,3 @@ if not CONFIG['LIBXUL_SDK']:
         PROGRAM = CONFIG['MOZ_APP_NAME'] + "-bin"
     else:
         PROGRAM = CONFIG['MOZ_APP_NAME']
-    CPP_SOURCES += [
-        'nsBrowserApp.cpp',
-    ]
-    if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-        CPP_SOURCES += [
-            'BootAnimation.cpp',
-        ]

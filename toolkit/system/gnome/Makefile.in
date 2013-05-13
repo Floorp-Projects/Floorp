@@ -14,6 +14,30 @@ FORCE_SHARED_LIB = 1
 IS_COMPONENT	= 1
 FAIL_ON_WARNINGS = 1
 
+
+CPPSRCS = \
+  nsGnomeModule.cpp \
+  $(NULL)
+
+ifdef MOZ_ENABLE_GCONF
+CPPSRCS += \
+  nsGConfService.cpp \
+  $(NULL)
+endif
+
+ifdef MOZ_ENABLE_GNOMEVFS
+CPPSRCS += \
+	nsGnomeVFSService.cpp \
+	$(NULL)
+endif
+
+ifdef MOZ_ENABLE_GIO
+CPPSRCS += \
+	nsGIOService.cpp \
+	nsGSettingsService.cpp \
+	$(NULL)
+endif
+
 EXTRA_DSO_LDOPTS += \
 		$(XPCOM_GLUE_LDOPTS) \
 		$(XPCOM_FROZEN_LDOPTS) \

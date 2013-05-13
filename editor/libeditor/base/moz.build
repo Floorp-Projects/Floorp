@@ -8,28 +8,3 @@ TEST_DIRS += ['tests']
 
 MODULE = 'editor'
 
-CPP_SOURCES += [
-    'ChangeAttributeTxn.cpp',
-    'ChangeCSSInlineStyleTxn.cpp',
-    'CreateElementTxn.cpp',
-    'DeleteNodeTxn.cpp',
-    'DeleteRangeTxn.cpp',
-    'DeleteTextTxn.cpp',
-    'EditAggregateTxn.cpp',
-    'EditTxn.cpp',
-    'IMETextTxn.cpp',
-    'InsertElementTxn.cpp',
-    'InsertTextTxn.cpp',
-    'JoinElementTxn.cpp',
-    'PlaceholderTxn.cpp',
-    'SetDocTitleTxn.cpp',
-    'SplitElementTxn.cpp',
-    'nsEditor.cpp',
-    'nsEditorCommands.cpp',
-    'nsEditorController.cpp',
-    'nsEditorEventListener.cpp',
-    'nsEditorUtils.cpp',
-    'nsSelectionState.cpp',
-    'nsStyleSheetTxns.cpp',
-]
-

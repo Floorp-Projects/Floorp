@@ -14,7 +14,24 @@ FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY   = 1
 
 
+CPPSRCS          = mozHunspell.cpp \
+                   mozHunspellDirProvider.cpp \
+                   $(NULL)
+
 ifndef MOZ_NATIVE_HUNSPELL
+CPPSRCS         += affentry.cpp \
+                   affixmgr.cpp \
+                   csutil.cpp \
+                   dictmgr.cpp \
+                   filemgr.cpp \
+                   hashmgr.cpp \
+                   hunspell.cpp \
+                   hunzip.cpp \
+                   phonet.cpp \
+                   replist.cpp \
+                   suggestmgr.cpp \
+                   $(NULL)
+
 # This variable is referenced in configure.in.  Make sure to change that file
 # too if you need to change this variable.
 DEFINES = -DHUNSPELL_STATIC

@@ -16,6 +16,11 @@ LIBXUL_LIBRARY = 1
 FORCE_STATIC_LIB = 1
 FAIL_ON_WARNINGS := 1
 
+CPPSRCS = \
+  Notification.cpp \
+  DesktopNotification.cpp \
+  $(NULL)
+
 LOCAL_INCLUDES = \
   -I$(topsrcdir)/dom/base \
   -I$(topsrcdir)/dom/ipc \

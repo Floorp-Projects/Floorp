@@ -12,6 +12,3 @@ MODULE = 'xulrunner'
 # for Mac OS X and 'xulrunner-stub' for all other platforms.
 PROGRAM = CONFIG['XULRUNNER_STUB_NAME']
 
-CPP_SOURCES += [
-    'nsXULStub.cpp',
-]

@@ -9,6 +9,15 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+CPPSRCS = \
+  maintenanceservice.cpp \
+  serviceinstall.cpp \
+  workmonitor.cpp \
+  certificatecheck.cpp \
+  servicebase.cpp \
+  registrycertificates.cpp \
+  $(NULL)
+
 # For debugging purposes only
 #DEFINES += -DDISABLE_UPDATER_AUTHENTICODE_CHECK
 

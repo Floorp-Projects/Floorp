@@ -6,31 +6,3 @@
 
 MODULE = 'layout'
 
-CPP_SOURCES += [
-    'nsMathMLChar.cpp',
-    'nsMathMLContainerFrame.cpp',
-    'nsMathMLFrame.cpp',
-    'nsMathMLOperators.cpp',
-    'nsMathMLSelectedFrame.cpp',
-    'nsMathMLTokenFrame.cpp',
-    'nsMathMLmactionFrame.cpp',
-    'nsMathMLmencloseFrame.cpp',
-    'nsMathMLmfencedFrame.cpp',
-    'nsMathMLmfracFrame.cpp',
-    'nsMathMLmmultiscriptsFrame.cpp',
-    'nsMathMLmoFrame.cpp',
-    'nsMathMLmpaddedFrame.cpp',
-    'nsMathMLmphantomFrame.cpp',
-    'nsMathMLmrootFrame.cpp',
-    'nsMathMLmrowFrame.cpp',
-    'nsMathMLmspaceFrame.cpp',
-    'nsMathMLmsqrtFrame.cpp',
-    'nsMathMLmstyleFrame.cpp',
-    'nsMathMLmsubFrame.cpp',
-    'nsMathMLmsubsupFrame.cpp',
-    'nsMathMLmsupFrame.cpp',
-    'nsMathMLmtableFrame.cpp',
-    'nsMathMLmunderoverFrame.cpp',
-    'nsMathMLsemanticsFrame.cpp',
-]
-

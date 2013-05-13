@@ -15,6 +15,8 @@ USE_STATIC_LIBS = 1
 STL_FLAGS =
 MOZ_GLUE_LDFLAGS =
 
+CPPSRCS = injector.cpp
+
 SHARED_LIBRARY_LIBS += ../breakpad-windows-standalone/$(LIB_PREFIX)google_breakpad_standalone_s.$(LIB_SUFFIX)
 
 include $(topsrcdir)/config/config.mk

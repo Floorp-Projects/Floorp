@@ -30,14 +30,12 @@ DEFINES += -DMOZ_MAINTENANCE_SERVICE=$(MOZ_MAINTENANCE_SERVICE)
 endif
 
 ifneq (android,$(MOZ_WIDGET_TOOLKIT))
-# TODO: Remove when SIMPLE_PROGRAMS is in moz.build
-cppsrcs = \
+CPPSRCS = \
   TestAUSReadStrings.cpp \
   TestAUSHelper.cpp \
   $(NULL)
 
-# TODO: Base off of CPP_SOURCES in moz.build
-SIMPLE_PROGRAMS = $(cppsrcs:.cpp=$(BIN_SUFFIX))
+SIMPLE_PROGRAMS = $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
 INI_TEST_FILES = \
   TestAUSReadStrings1.ini \

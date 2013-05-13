@@ -20,4 +20,8 @@ LOCAL_INCLUDES = \
   -I$(srcdir)/../.. \
   $(NULL)
 
+CPPSRCS = \
+  TestFileUtils.cpp \
+  $(NULL)
+
 include $(topsrcdir)/config/rules.mk

@@ -8,11 +8,3 @@ DIRS += ['stub']
 
 PROGRAM = 'jprof'
 
-CPP_SOURCES += [
-    'bfd.cpp',
-    'coff.cpp',
-    'elf.cpp',
-    'intcnt.cpp',
-    'leaky.cpp',
-    'strset.cpp',
-]

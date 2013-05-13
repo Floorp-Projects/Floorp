@@ -6,7 +6,3 @@
 
 MODULE = 'appcomps'
 
-CPP_SOURCES += [
-    'nsModule.cpp',
-]
-

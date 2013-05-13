@@ -13,6 +13,42 @@ include $(DEPTH)/config/autoconf.mk
 LIBRARY_NAME    = xpconnect_s
 FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1
+CPPSRCS		= \
+		nsScriptError.cpp \
+		nsXPConnect.cpp \
+		XPCCallContext.cpp \
+		XPCComponents.cpp \
+		XPCContext.cpp \
+		XPCConvert.cpp \
+		XPCDebug.cpp \
+		XPCException.cpp \
+		XPCJSID.cpp \
+		XPCJSRuntime.cpp \
+		XPCLocale.cpp \
+		XPCLog.cpp \
+		XPCMaps.cpp \
+		XPCModule.cpp \
+		XPCRuntimeService.cpp  \
+		XPCStack.cpp \
+		XPCString.cpp \
+		XPCJSContextStack.cpp \
+		XPCThrower.cpp \
+		XPCWrappedJS.cpp \
+		XPCVariant.cpp \
+		XPCWrappedJSClass.cpp \
+		XPCWrappedNative.cpp \
+		XPCWrappedNativeInfo.cpp \
+		XPCWrappedNativeJSOps.cpp \
+		XPCWrappedNativeProto.cpp \
+		XPCWrappedNativeScope.cpp \
+		XPCJSWeakReference.cpp \
+		XPCWrapper.cpp \
+		XPCQuickStubs.cpp \
+		dom_quickstubs.cpp \
+		DictionaryHelpers.cpp \
+		GeneratedEvents.cpp \
+		$(NULL)
+
 include $(topsrcdir)/config/config.mk
 
 LOCAL_INCLUDES = \

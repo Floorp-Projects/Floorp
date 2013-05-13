@@ -20,6 +20,13 @@ LOCAL_INCLUDES	= \
 	-I$(srcdir)/../../build \
 	$(NULL)
 
+CPPSRCS		= \
+	$(XPCOM_GLUE_SRC_LCPPSRCS)   \
+	nsStringAPI.cpp              \
+	nsXPCOMGlue.cpp              \
+	$(LINKSRC)                   \
+	$(NULL)
+
 SDK_HEADERS     = \
 	nsXPCOMGlue.h \
 	$(NULL)

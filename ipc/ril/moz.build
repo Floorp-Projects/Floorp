@@ -10,7 +10,3 @@ EXPORTS.mozilla.ipc += [
     'Ril.h',
 ]
 
-CPP_SOURCES += [
-    'Ril.cpp',
-]
-

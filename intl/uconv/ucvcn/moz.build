@@ -10,14 +10,3 @@ EXPORTS += [
     'nsUCvCnCID.h',
 ]
 
-CPP_SOURCES += [
-    'nsGBKConvUtil.cpp',
-    'nsGBKToUnicode.cpp',
-    'nsHZToUnicode.cpp',
-    'nsISO2022CNToUnicode.cpp',
-    'nsUnicodeToGB2312V2.cpp',
-    'nsUnicodeToGBK.cpp',
-    'nsUnicodeToHZ.cpp',
-    'nsUnicodeToISO2022CN.cpp',
-]
-

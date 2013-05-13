@@ -6,8 +6,3 @@
 
 MODULE = 'content'
 
-CPP_SOURCES += [
-    'nsMathMLElement.cpp',
-    'nsMathMLElementFactory.cpp',
-]
-

@@ -17,7 +17,3 @@ XPIDL_MODULE = 'commandlines'
 
 MODULE = 'toolkitcomps'
 
-CPP_SOURCES += [
-    'nsCommandLine.cpp',
-]
-

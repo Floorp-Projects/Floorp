@@ -13,6 +13,19 @@ include $(DEPTH)/config/autoconf.mk
 LIBRARY_NAME = accessibility_html_s
 LIBXUL_LIBRARY = 1
 
+
+
+CPPSRCS = \
+  HTMLCanvasAccessible.cpp \
+  HTMLElementAccessibles.cpp \
+  HTMLFormControlAccessible.cpp \
+  HTMLImageMapAccessible.cpp \
+  HTMLLinkAccessible.cpp \
+  HTMLListAccessible.cpp \
+  HTMLSelectAccessible.cpp \
+  HTMLTableAccessible.cpp \
+  $(NULL)
+
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
 

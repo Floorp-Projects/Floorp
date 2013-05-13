@@ -6,7 +6,3 @@
 
 MODULE = 'omxplugingb'
 
-CPP_SOURCES += [
-    'OmxPlugin236.cpp',
-]
-

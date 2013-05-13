@@ -13,6 +13,14 @@ LIBRARY_NAME	= gkprinting_s
 LIBXUL_LIBRARY	= 1
 FAIL_ON_WARNINGS = 1
 
+CPPSRCS		= \
+		nsPrintEngine.cpp \
+		nsPrintData.cpp \
+		nsPrintObject.cpp \
+		nsPagePrintTimer.cpp \
+		nsPrintPreviewListener.cpp \
+		$(NULL)
+
 FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk

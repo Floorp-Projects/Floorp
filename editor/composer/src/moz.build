@@ -6,14 +6,3 @@
 
 MODULE = 'editor'
 
-CPP_SOURCES += [
-    'nsComposeTxtSrvFilter.cpp',
-    'nsComposerCommands.cpp',
-    'nsComposerCommandsUpdater.cpp',
-    'nsComposerController.cpp',
-    'nsComposerDocumentCommands.cpp',
-    'nsComposerRegistration.cpp',
-    'nsEditingSession.cpp',
-    'nsEditorSpellCheck.cpp',
-]
-

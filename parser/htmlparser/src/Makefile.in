@@ -20,4 +20,24 @@ SHARED_LIBRARY_LIBS = \
 		$(DEPTH)/parser/xml/src/$(LIB_PREFIX)saxp.$(LIB_SUFFIX) \
 		$(NULL)
 
+CPPSRCS = \
+		nsScannerString.cpp \
+		nsDTDUtils.cpp      \
+		nsHTMLTokenizer.cpp \
+		nsElementTable.cpp  \
+		nsExpatDriver.cpp   \
+		CNavDTD.cpp         \
+		nsHTMLEntities.cpp  \
+		nsHTMLTags.cpp      \
+		nsHTMLTokens.cpp    \
+		nsParser.cpp        \
+		CParserContext.cpp  \
+		nsParserService.cpp \
+		nsParserModule.cpp  \
+		nsParserNode.cpp    \
+		nsScanner.cpp       \
+		nsToken.cpp         \
+		nsParserMsgUtils.cpp\
+		$(NULL)
+
 include $(topsrcdir)/config/rules.mk

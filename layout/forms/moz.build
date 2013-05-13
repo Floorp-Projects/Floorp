@@ -16,23 +16,3 @@ EXPORTS += [
     'nsITextControlFrame.h',
 ]
 
-CPP_SOURCES += [
-    'nsButtonFrameRenderer.cpp',
-    'nsComboboxControlFrame.cpp',
-    'nsFieldSetFrame.cpp',
-    'nsFileControlFrame.cpp',
-    'nsFormControlFrame.cpp',
-    'nsGfxButtonControlFrame.cpp',
-    'nsGfxCheckboxControlFrame.cpp',
-    'nsGfxRadioControlFrame.cpp',
-    'nsHTMLButtonControlFrame.cpp',
-    'nsImageControlFrame.cpp',
-    'nsLegendFrame.cpp',
-    'nsListControlFrame.cpp',
-    'nsMeterFrame.cpp',
-    'nsProgressFrame.cpp',
-    'nsRangeFrame.cpp',
-    'nsSelectsAreaFrame.cpp',
-    'nsTextControlFrame.cpp',
-]
-

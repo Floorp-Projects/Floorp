@@ -22,8 +22,3 @@ XPIDL_FLAGS += [
 
 MODULE = 'dom'
 
-CPP_SOURCES += [
-    'Telephony.cpp',
-    'TelephonyCall.cpp',
-]
-

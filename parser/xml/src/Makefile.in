@@ -15,6 +15,12 @@ MOZILLA_INTERNAL_API = 1
 LIBXUL_LIBRARY	= 1
 
 
+CPPSRCS		= \
+		nsSAXAttributes.cpp \
+		nsSAXLocator.cpp \
+		nsSAXXMLReader.cpp \
+		$(NULL)
+
 FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk

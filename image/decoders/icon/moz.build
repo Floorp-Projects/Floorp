@@ -10,9 +10,3 @@ XPIDL_SOURCES += [
 
 MODULE = 'imgicon'
 
-CPP_SOURCES += [
-    'nsIconModule.cpp',
-    'nsIconProtocolHandler.cpp',
-    'nsIconURI.cpp',
-]
-

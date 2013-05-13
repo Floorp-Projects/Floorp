@@ -17,6 +17,10 @@ EXPORT_LIBRARY	= 1
 LIBXUL_LIBRARY	= 1
 
 
+CPPSRCS		= \
+		nsWebBrowserModule.cpp		\
+		$(NULL)
+
 SHARED_LIBRARY_LIBS= \
 		../webBrowser/$(LIB_PREFIX)nsWebBrowser_s.$(LIB_SUFFIX) \
 		$(NULL)

@@ -28,29 +28,3 @@ EXPORTS.mozilla.dom.workers.bindings += [
     'XMLHttpRequestUpload.h',
 ]
 
-CPP_SOURCES += [
-    'ChromeWorkerScope.cpp',
-    'DOMBindingBase.cpp',
-    'EventListenerManager.cpp',
-    'EventTarget.cpp',
-    'Events.cpp',
-    'Exceptions.cpp',
-    'File.cpp',
-    'FileReaderSync.cpp',
-    'ImageData.cpp',
-    'Location.cpp',
-    'Navigator.cpp',
-    'Principal.cpp',
-    'RuntimeService.cpp',
-    'ScriptLoader.cpp',
-    'TextDecoder.cpp',
-    'TextEncoder.cpp',
-    'URL.cpp',
-    'Worker.cpp',
-    'WorkerPrivate.cpp',
-    'WorkerScope.cpp',
-    'XMLHttpRequest.cpp',
-    'XMLHttpRequestEventTarget.cpp',
-    'XMLHttpRequestUpload.cpp',
-]
-

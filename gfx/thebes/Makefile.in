@@ -23,8 +23,45 @@ LOCAL_INCLUDES += \
 	-I$(topsrcdir)/content/xml/document/src \
 	$(NULL)
 
+CPPSRCS	= \
+	gfx3DMatrix.cpp \
+	gfxASurface.cpp \
+	gfxAlphaRecovery.cpp \
+	gfxBlur.cpp \
+	gfxCachedTempSurface.cpp \
+	gfxContext.cpp \
+	gfxDrawable.cpp \
+	gfxImageSurface.cpp \
+	gfxFont.cpp \
+	gfxFontMissingGlyphs.cpp \
+	gfxFontTest.cpp \
+	gfxFontUtils.cpp \
+	gfxMatrix.cpp \
+	gfxPath.cpp \
+	gfxPattern.cpp \
+	gfxPlatform.cpp \
+	gfxPlatformFontList.cpp \
+	gfxRect.cpp \
+	gfxSkipChars.cpp \
+	gfxTeeSurface.cpp \
+	gfxUserFontSet.cpp \
+	gfxUtils.cpp \
+	gfxScriptItemizer.cpp \
+	gfxGraphiteShaper.cpp \
+	gfxHarfBuzzShaper.cpp \
+	gfxBaseSharedMemorySurface.cpp \
+	gfxReusableSurfaceWrapper.cpp \
+	nsSurfaceTexture.cpp \
+	gfxSVGGlyphs.cpp \
+	$(NULL)
+
 ifeq ($(MOZ_WIDGET_TOOLKIT),$(findstring $(MOZ_WIDGET_TOOLKIT),android gtk2 gonk qt))
 DEFINES += -DMOZ_ENABLE_FREETYPE
+endif
+
+# Are we targeting x86 or x64?  If so, build gfxAlphaRecoverySSE2.cpp.
+ifneq (,$(INTEL_ARCHITECTURE))
+CPPSRCS += gfxAlphaRecoverySSE2.cpp
 endif
 
 SHARED_LIBRARY_LIBS += \
@@ -33,6 +70,30 @@ SHARED_LIBRARY_LIBS += \
 
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+
+CPPSRCS	+= 	gfxWindowsPlatform.cpp \
+		gfxWindowsSurface.cpp \
+		gfxWindowsNativeDrawing.cpp \
+		nsUnicodeRange.cpp \
+		$(NULL)
+
+ifdef MOZ_ENABLE_DWRITE_FONT
+CPPSRCS	+= gfxDWriteFonts.cpp \
+	   gfxDWriteShaper.cpp \
+	   gfxDWriteTextAnalysis.cpp \
+	   gfxDWriteCommon.cpp \
+	   gfxD2DSurface.cpp \
+	   gfxDWriteFontList.cpp \
+	   $(NULL)
+endif
+
+CPPSRCS	+= gfxGDIFont.cpp \
+	   gfxGDIFontList.cpp \
+	   gfxGDIShaper.cpp \
+	   gfxUniscribeShaper.cpp \
+	   $(NULL)
+
+CPPSRCS +=	gfxPDFSurface.cpp
 
 ifdef MOZ_ENABLE_D3D9_LAYER
 DEFINES +=	-DMOZ_ENABLE_D3D9_LAYER
@@ -46,18 +107,96 @@ ACDEFINES +=	-UWIN32_LEAN_AND_MEAN
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),android)
+CPPSRCS += \
+	gfxAndroidPlatform.cpp \
+	gfxFT2Fonts.cpp \
+	gfxFT2FontBase.cpp \
+	gfxFT2Utils.cpp \
+	gfxFT2FontList.cpp \
+	gfxPDFSurface.cpp \
+	nsUnicodeRange.cpp \
+	$(NULL)
 # This is set for "normal Android", that is, when Gecko is running on
 # top of the android java runtime.
 DEFINES +=	-DMOZ_USING_ANDROID_JAVA_WIDGETS
 endif
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),gonk)
+CPPSRCS += \
+	gfxAndroidPlatform.cpp \
+	gfxFT2Fonts.cpp \
+	gfxFT2FontBase.cpp \
+	gfxFT2Utils.cpp \
+	gfxFT2FontList.cpp \
+	gfxPDFSurface.cpp \
+	nsUnicodeRange.cpp \
+	$(NULL)
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
+CPPSRCS	+=	gfxOS2Fonts.cpp \
+		gfxOS2Platform.cpp \
+		gfxOS2Surface.cpp \
+		nsUnicodeRange.cpp \
+		gfxFontconfigUtils.cpp \
+		$(NULL)
+CPPSRCS +=	gfxPDFSurface.cpp
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+
+ifdef MOZ_PANGO
+CPPSRCS += gfxPangoFonts.cpp
+else
+CPPSRCS += gfxFT2Fonts.cpp
+endif
+
+ifdef MOZ_X11
+CPPSRCS += gfxXlibSurface.cpp gfxXlibNativeRenderer.cpp
+endif
+
+CPPSRCS +=  gfxPlatformGtk.cpp gfxGdkNativeRenderer.cpp
+CPPSRCS +=	gfxPDFSurface.cpp gfxPSSurface.cpp
+CPPSRCS +=	gfxFontconfigUtils.cpp
+CPPSRCS +=	gfxFT2FontBase.cpp
+CPPSRCS +=	gfxFT2Utils.cpp
+CPPSRCS +=	nsUnicodeRange.cpp
+
+endif
+
 ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
+CPPSRCS += gfxQtPlatform.cpp gfxQPainterSurface.cpp
+ifdef MOZ_X11
+CPPSRCS += gfxXlibSurface.cpp gfxQtNativeRenderer.cpp
+endif
+ifdef MOZ_PANGO
+CPPSRCS += gfxPangoFonts.cpp
+else
+CPPSRCS += gfxFT2Fonts.cpp
+endif
+CPPSRCS +=	gfxFT2FontBase.cpp
+CPPSRCS +=	gfxFT2Utils.cpp
+CPPSRCS +=	gfxFontconfigUtils.cpp
+CPPSRCS +=	nsUnicodeRange.cpp
+CPPSRCS +=	gfxPDFSurface.cpp
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+CPPSRCS	+= \
+	gfxQuartzSurface.cpp \
+	gfxQuartzImageSurface.cpp \
+	gfxPlatformMac.cpp \
+	gfxMacFont.cpp \
+	gfxCoreTextShaper.cpp \
+	$(NULL)
+#CPPSRCS +=	gfxPDFSurface.cpp
+CPPSRCS +=      nsUnicodeRange.cpp
+CPPSRCS +=      gfxQuartzNativeDrawing.cpp
+
 CMMSRCS = \
 	gfxMacPlatformFontList.mm \
 	$(NULL)
+
 endif
 
 DEFINES += \

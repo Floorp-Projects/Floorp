@@ -6,15 +6,3 @@
 
 MODULE = 'shellservice'
 
-if CONFIG['OS_ARCH'] == 'WINNT':
-    CPP_SOURCES += [
-        'nsWindowsShellService.cpp',
-    ]
-elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
-    CPP_SOURCES += [
-        'nsMacShellService.cpp',
-    ]
-elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk2':
-    CPP_SOURCES += [
-        'nsGNOMEShellService.cpp',
-    ]

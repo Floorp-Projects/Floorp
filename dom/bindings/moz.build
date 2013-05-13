@@ -28,14 +28,3 @@ EXPORTS.mozilla.dom += [
     'UnionConversions.h',
     'UnionTypes.h',
 ]
-
-CPP_SOURCES += [
-    '$(linked_binding_cpp_files)',
-    'RegisterBindings.cpp',
-    'UnionTypes.cpp',
-    'BindingUtils.cpp',
-    'CallbackInterface.cpp',
-    'CallbackObject.cpp',
-    'DOMJSProxyHandler.cpp',
-]
-

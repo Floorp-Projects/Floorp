@@ -20,6 +20,13 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../../build \
 		$(NULL)
 
+CPPSRCS		= \
+		$(XPCOM_GLUE_SRC_LCPPSRCS) \
+		$(XPCOM_GLUENS_SRC_LCPPSRCS) \
+		nsStringAPI.cpp \
+		GenericModule.cpp \
+		$(NULL)
+
 SDK_LIBRARY     =                        \
 		$(LIB_PREFIX)xpcomglue_s_nomozalloc.$(LIB_SUFFIX) \
 		$(NULL)

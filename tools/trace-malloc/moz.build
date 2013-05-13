@@ -6,8 +6,3 @@
 
 if not CONFIG['MOZ_PROFILE_GENERATE']:
     PROGRAM = 'spacetrace'
-
-CPP_SOURCES += [
-    '$(EXTRACPPSRCS)',
-    '$(SIMPLECPPSRCS)',
-]

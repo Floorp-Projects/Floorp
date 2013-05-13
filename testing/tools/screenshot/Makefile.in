@@ -12,6 +12,7 @@ include $(DEPTH)/config/autoconf.mk
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 ifdef MOZ_X11
 
+CPPSRCS = gdk-screenshot.cpp
 LOCAL_INCLUDES = $(MOZ_GTK2_CFLAGS)
 OS_LIBS = $(MOZ_GTK2_LIBS) $(XSS_LIBS)
 
@@ -20,6 +21,7 @@ endif # GTK2
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 
+CPPSRCS = win32-screenshot.cpp
 OS_LIBS += $(call EXPAND_LIBNAME,gdiplus)
 MOZ_GLUE_PROGRAM_LDFLAGS =
 USE_STATIC_LIBS = 1

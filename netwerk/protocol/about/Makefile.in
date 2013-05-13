@@ -16,6 +16,14 @@ LIBXUL_LIBRARY = 1
 
 FORCE_STATIC_LIB = 1
 
+CPPSRCS = \
+  nsAboutProtocolHandler.cpp \
+  nsAboutBlank.cpp \
+  nsAboutBloat.cpp \
+  nsAboutCache.cpp \
+  nsAboutCacheEntry.cpp \
+  $(NULL)
+
 LOCAL_INCLUDES = \
   -I$(srcdir)/../../base/src \
   $(NULL)

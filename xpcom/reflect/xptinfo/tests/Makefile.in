@@ -12,6 +12,8 @@ include $(DEPTH)/config/autoconf.mk
 
 SIMPLE_PROGRAMS	= TestInterfaceInfo$(BIN_SUFFIX)
 
+CPPSRCS		= TestInterfaceInfo.cpp
+
 LIBS		= \
 		$(XPCOM_GLUE_LDOPTS) \
 		$(NSPR_LIBS) \

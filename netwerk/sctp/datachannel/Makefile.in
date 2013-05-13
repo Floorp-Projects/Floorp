@@ -15,6 +15,10 @@ LIBXUL_LIBRARY = 1
 FORCE_STATIC_LIB = 1
 NO_PROFILE_GUIDED_OPTIMIZE = 1 # Don't PGO
 
+CPPSRCS = \
+  DataChannel.cpp \
+  $(NULL)
+
 LOCAL_INCLUDES = \
   -I$(topsrcdir)/xpcom/ds \
   -I$(srcdir)/../src \

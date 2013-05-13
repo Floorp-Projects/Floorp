@@ -12,6 +12,7 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= testcompnoaslr
 IS_COMPONENT	= 1
+CPPSRCS	= TestComponent.cpp
 NO_DIST_INSTALL = 1
 FORCE_SHARED_LIB = 1
 

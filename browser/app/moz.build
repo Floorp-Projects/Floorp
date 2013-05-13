@@ -8,6 +8,3 @@ DIRS += ['profile/extensions']
 
 PROGRAM = CONFIG['MOZ_APP_NAME']
 
-CPP_SOURCES += [
-    'nsBrowserApp.cpp',
-]

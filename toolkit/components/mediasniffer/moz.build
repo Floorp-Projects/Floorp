@@ -12,8 +12,3 @@ EXPORTS += [
     'nsMediaSniffer.h',
 ]
 
-CPP_SOURCES += [
-    'nsMediaSniffer.cpp',
-    'nsMediaSnifferModule.cpp',
-]
-

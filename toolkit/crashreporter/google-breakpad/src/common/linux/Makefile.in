@@ -18,7 +18,17 @@ LOCAL_INCLUDES = \
   -I$(topsrcdir)/toolkit/crashreporter/google-breakpad/src \
   $(NULL)
 
+CPPSRCS	= \
+  elfutils.cc \
+  file_id.cc \
+  guid_creator.cc \
+  linux_libc_support.cc \
+  memory_mapped_file.cc \
+  safe_readlink.cc \
+  $(NULL)
+
 ifneq (Android,$(OS_TARGET))
+CPPSRCS += http_upload.cc
 else
 TARGET_LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/crashreporter/google-breakpad/src/common/android/include/
 endif

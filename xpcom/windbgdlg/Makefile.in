@@ -12,6 +12,8 @@ include $(DEPTH)/config/autoconf.mk
 
 SIMPLE_PROGRAMS	= windbgdlg$(BIN_SUFFIX)
 
+CPPSRCS		= windbgdlg.cpp
+
 MOZ_WINCONSOLE = 0
 include $(topsrcdir)/config/rules.mk
 

@@ -18,7 +18,25 @@ endif
 
 LOCAL_INCLUDES 	= -I$(srcdir)/..
 
+CPPSRCS	= \
+  string_conversion.cc \
+  module.cc \
+  unique_string.cc \
+  pathname_stripper.cc \
+  logging.cc \
+  $(NULL)
+
 ifneq (WINNT,$(OS_TARGET))
+CPPSRCS += \
+  md5.cc \
+  dwarf/bytereader.cc \
+  dwarf_cfi_to_module.cc \
+  dwarf/dwarf2reader.cc \
+  dwarf_cu_to_module.cc \
+  language.cc \
+  dwarf/dwarf2diehandler.cc \
+  dwarf_line_to_module.cc \
+  $(NULL)
 ifdef MOZ_CRASHREPORTER
 HOST_CPPSRCS = \
   string_conversion.cc \
@@ -37,6 +55,12 @@ HOST_CPPSRCS = \
 endif
 endif
 
+ifeq ($(OS_ARCH),Linux)
+CPPSRCS += \
+  linux/dump_symbols.cc \
+  linux/elf_symbols_to_module.cc
+endif
+
 ifeq ($(OS_ARCH),Darwin)
 CMMSRCS += \
   mac/dump_syms.mm
@@ -51,6 +75,13 @@ VPATH += $(srcdir)/android
 SSRCS := breakpad_getcontext.S
 TARGET_LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/crashreporter/google-breakpad/src/common/android/include/
 DEFINES += -DNO_STABS_SUPPORT
+else
+ifneq (WINNT,$(OS_TARGET))
+CPPSRCS += \
+  stabs_to_module.cc \
+  stabs_reader.cc \
+  $(NULL)
+endif
 endif
 
 ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))

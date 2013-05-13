@@ -17,6 +17,8 @@ MODULE_NAME = mozStorageModule
 LIBXUL_LIBRARY = 1
 
 
+CPPSRCS = mozStorageModule.cpp
+
 LOCAL_INCLUDES = \
 	$(SQLITE_CFLAGS) \
 	-I$(srcdir)/../src

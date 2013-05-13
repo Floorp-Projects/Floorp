@@ -6,7 +6,3 @@
 
 MODULE = 'nkgnomevfs'
 
-CPP_SOURCES += [
-    'nsGnomeVFSProtocolHandler.cpp',
-]
-

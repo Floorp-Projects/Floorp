@@ -6,8 +6,3 @@
 
 MODULE = 'crash_generation'
 
-CPP_SOURCES += [
-    'crash_generation_client.cc',
-    'crash_generation_server.cc',
-]
-

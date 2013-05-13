@@ -20,10 +20,25 @@ LOCAL_INCLUDES += -I$(srcdir)/../../../../xptinfo/src
 include $(topsrcdir)/config/config.mk
 
 ifneq ($(TARGET_CPU),x86_64)
+
 ifndef GNU_CXX
 # FIXME: bug 413019
 OS_COMPILE_CXXFLAGS += -GL-
+CPPSRCS         := xptcinvoke.cpp xptcstubs.cpp
+else  #!GNU_CXX
+CPPSRCS         := xptcinvoke_x86_gnu.cpp xptcstubs.cpp
 endif #!GNU_CXX
+
+else # !x86_64
+
+ifndef GNU_CXX
+CPPSRCS		:= xptcinvoke_x86_64.cpp xptcstubs_x86_64.cpp
+ASFILES		:= xptcinvoke_asm_x86_64.asm xptcstubs_asm_x86_64.asm
+else #!GNU_CXX
+CPPSRCS		:= xptcinvoke_x86_64.cpp xptcstubs_x86_64_gnu.cpp
+ASFILES		:= xptcinvoke_asm_x86_64_gnu.s
+endif #!GNU_CXX
+
 endif #!x86_64
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

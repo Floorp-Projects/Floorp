@@ -13,6 +13,29 @@ LIBRARY_NAME = accessibility_toolkit_s
 EXPORT_LIBRARY = ..
 LIBXUL_LIBRARY = 1
 
+
+CPPSRCS = \
+  AccessibleWrap.cpp \
+  ApplicationAccessibleWrap.cpp \
+  AtkSocketAccessible.cpp \
+  DocAccessibleWrap.cpp \
+  nsMaiInterfaceComponent.cpp \
+  nsMaiInterfaceAction.cpp \
+  nsMaiInterfaceText.cpp \
+  nsMaiInterfaceEditableText.cpp \
+  nsMaiInterfaceSelection.cpp \
+  nsMaiInterfaceValue.cpp \
+  nsMaiHyperlink.cpp \
+  nsMaiInterfaceHypertext.cpp \
+  nsMaiInterfaceHyperlinkImpl.cpp \
+  nsMaiInterfaceTable.cpp \
+  nsMaiInterfaceDocument.cpp \
+  nsMaiInterfaceImage.cpp \
+  Platform.cpp \
+  RootAccessibleWrap.cpp \
+  UtilInterface.cpp \
+  $(NULL)
+
 # we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
 

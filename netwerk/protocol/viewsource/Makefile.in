@@ -16,6 +16,11 @@ LIBXUL_LIBRARY = 1
 
 FORCE_STATIC_LIB = 1
 
+CPPSRCS = \
+  nsViewSourceHandler.cpp \
+  nsViewSourceChannel.cpp \
+  $(NULL)
+
 LOCAL_INCLUDES = \
   -I$(srcdir)/../../base/src \
   $(NULL)

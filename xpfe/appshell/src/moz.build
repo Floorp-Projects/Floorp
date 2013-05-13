@@ -8,14 +8,3 @@ PARALLEL_DIRS += ['test']
 
 MODULE = 'appshell'
 
-CPP_SOURCES += [
-    'nsAppShellFactory.cpp',
-    'nsAppShellService.cpp',
-    'nsAppShellWindowEnumerator.cpp',
-    'nsChromeTreeOwner.cpp',
-    'nsContentTreeOwner.cpp',
-    'nsWebShellWindow.cpp',
-    'nsWindowMediator.cpp',
-    'nsXULWindow.cpp',
-]
-

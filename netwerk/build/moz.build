@@ -10,7 +10,3 @@ EXPORTS += [
     'nsNetCID.h',
 ]
 
-CPP_SOURCES += [
-    'nsNetModule.cpp',
-]
-

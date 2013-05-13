@@ -6,8 +6,3 @@
 
 MODULE = 'rdf'
 
-CPP_SOURCES += [
-    'nsFileSystemDataSource.cpp',
-    'nsLocalStore.cpp',
-]
-
