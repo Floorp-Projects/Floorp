@@ -9,6 +9,8 @@ html {
 body {
   margin-top: 20px;
   margin-bottom: 20px;
+  -moz-transition-property: background-color, color;
+  -moz-transition-duration: 0.7s;
 }
 
 .light {
