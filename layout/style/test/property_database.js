@@ -2491,7 +2491,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "normal" ],
 		other_values: [ "small-caps" ],
-		invalid_values: []
+		invalid_values: [ "small-caps normal" ]
 	},
 	"font-weight": {
 		domProp: "fontWeight",
@@ -4273,9 +4273,11 @@ if (SpecialPowers.getBoolPref("layout.css.font-features.enabled")) {
 			type: CSS_TYPE_LONGHAND,
 			initial_values: [ "normal" ],
 			other_values: [ "historical-forms",
-	                        "styleset(alt-a, alt-b)", "character-variant(a, b, c)", "annotation(circled)" ],
+	                        "styleset(alt-a, alt-b)", "character-variant(a, b, c)", "annotation(circled)",
+	                        "swash(squishy)", "styleset(complex\\ blob, a)", "annotation(\\62 lah)" ],
 			invalid_values: [ "historical-forms normal", "historical-forms historical-forms",
-	                          "swash", "swash(3)", "annotation(a, b)", "ornaments(a,b)" ]
+	                          "swash", "swash(3)", "annotation(a, b)", "ornaments(a,b)",
+	                          "styleset(1234blah)", "annotation(a), annotation(b)", "annotation(a) normal" ]
 		},
 	 	"font-variant-caps": {
 			domProp: "fontVariantCaps",
@@ -4283,7 +4285,7 @@ if (SpecialPowers.getBoolPref("layout.css.font-features.enabled")) {
 			type: CSS_TYPE_LONGHAND,
 			initial_values: [ "normal" ],
 			other_values: [ "small-caps", "all-small-caps", "petite-caps", "all-petite-caps", "titling-caps", "unicase" ],
-			invalid_values: []
+			invalid_values: [ "normal small-caps", "petite-caps normal", "unicase unicase" ]
 		},
 		"font-variant-east-asian": {
 			domProp: "fontVariantEastAsian",
@@ -4320,7 +4322,7 @@ if (SpecialPowers.getBoolPref("layout.css.font-features.enabled")) {
 			                "proportional-nums slashed-zero diagonal-fractions oldstyle-nums ordinal" ],
 			invalid_values: [ "lining-nums normal", "lining-nums oldstyle-nums", "lining-nums normal slashed-zero ordinal",
 			                  "proportional-nums tabular-nums", "diagonal-fractions stacked-fractions", "slashed-zero diagonal-fractions slashed-zero",
-			                  "lining-nums slashed-zero diagonal-fractions oldstyle-nums" ]
+			                  "lining-nums slashed-zero diagonal-fractions oldstyle-nums", "diagonal-fractions diagonal-fractions" ]
 		},
 		"font-variant-position": {
 			domProp: "fontVariantPosition",
@@ -4328,7 +4330,7 @@ if (SpecialPowers.getBoolPref("layout.css.font-features.enabled")) {
 			type: CSS_TYPE_LONGHAND,
 			initial_values: [ "normal" ],
 			other_values: [ "super", "sub" ],
-			invalid_values: [ "super sub" ]
+			invalid_values: [ "normal sub", "super sub" ]
 		},
 		"font-synthesis": {
 			domProp: "fontSynthesis",
@@ -4336,7 +4338,7 @@ if (SpecialPowers.getBoolPref("layout.css.font-features.enabled")) {
 			type: CSS_TYPE_LONGHAND,
 			initial_values: [ "weight style" ],
 			other_values: [ "none", "weight", "style" ],
-			invalid_values: [ "weight none", "style none", "none style", "weight 10px" ]
+			invalid_values: [ "weight none", "style none", "none style", "weight 10px", "weight weight", "style style" ]
 		}
 	};
 	for (var prop in fontFeatureProperties) {

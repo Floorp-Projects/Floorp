@@ -846,15 +846,10 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
       break;
 
     case eCSSProperty_font_synthesis:
-      if (intValue == 0) {
-        AppendASCIItoUTF16(nsCSSProps::LookupPropertyValue(aProperty, intValue),
-                           aResult);
-      } else {
-        nsStyleUtil::AppendBitmaskCSSValue(aProperty, intValue,
-                                           NS_FONT_SYNTHESIS_WEIGHT,
-                                           NS_FONT_SYNTHESIS_STYLE,
-                                           aResult);
-      }
+      nsStyleUtil::AppendBitmaskCSSValue(aProperty, intValue,
+                                         NS_FONT_SYNTHESIS_WEIGHT,
+                                         NS_FONT_SYNTHESIS_STYLE,
+                                         aResult);
       break;
 
     case eCSSProperty_font_variant_east_asian:
@@ -1110,8 +1105,8 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
       const nsCSSValueList *list = GetPairValue().mYValue.GetListValue();
       nsAutoTArray<gfxAlternateValue,8> altValues;
 
-      nsStyleUtil::AppendAlternateValues(list, altValues);
-      nsStyleUtil::AppendFunctionalAlternates(altValues, out);
+      nsStyleUtil::ComputeFunctionalAlternates(list, altValues);
+      nsStyleUtil::SerializeFunctionalAlternates(altValues, out);
       aResult.Append(out);
     } else {
       GetPairValue().AppendToString(aProperty, aResult);
