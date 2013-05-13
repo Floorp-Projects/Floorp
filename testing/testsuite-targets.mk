@@ -63,12 +63,12 @@ RUN_MOCHITEST_REMOTE = \
     --testing-modules-dir=$(call core_abspath,_tests/modules) \
     $(SYMBOLS_PATH) $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS)
 
-RUN_MOCHITEST_ROBOCOP = \
+RUN_MOCHITEST_ROBOTIUM = \
   rm -f ./$@.log && \
   $(PYTHON) _tests/testing/mochitest/runtestsremote.py \
-    --robocop-apk=$(DEPTH)/build/mobile/robocop/robocop-debug-signed.apk \
-    --robocop-ini=$(DEPTH)/build/mobile/robocop/robocop.ini \
+    --robocop-apk=$(DIST)/robocop.apk \
     --robocop-ids=$(DIST)/fennec_ids.txt \
+    --robocop-ini=$(DEPTH)/build/mobile/robocop/robocop.ini \
     --console-level=INFO --log-file=./$@.log --file-level=INFO $(DM_FLAGS) --dm_trans=$(DM_TRANS) \
     --app=$(TEST_PACKAGE_NAME) --deviceIP=${TEST_DEVICE} --xre-path=${MOZ_HOST_BIN} \
     $(SYMBOLS_PATH) $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS)
@@ -97,17 +97,14 @@ mochitest-remote:
         $(RUN_MOCHITEST_REMOTE); \
     fi
 
-mochitest-robotium: mochitest-robocop
-	@echo "mochitest-robotium is deprecated -- please use mochitest-robocop"
-
-mochitest-robocop: DM_TRANS?=adb
-mochitest-robocop:
+mochitest-robotium: DM_TRANS?=adb
+mochitest-robotium:
 	@if [ ! -f ${MOZ_HOST_BIN}/xpcshell ]; then \
         echo "please prepare your host with the environment variable MOZ_HOST_BIN"; \
     elif [ "${TEST_DEVICE}" = "" -a "$(DM_TRANS)" != "adb" ]; then \
         echo "please prepare your host with the environment variable TEST_DEVICE"; \
     else \
-        $(RUN_MOCHITEST_ROBOCOP); \
+        $(RUN_MOCHITEST_ROBOTIUM); \
     fi
 
 ifdef MOZ_B2G
