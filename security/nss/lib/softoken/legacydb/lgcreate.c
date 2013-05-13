@@ -401,7 +401,7 @@ lg_createPublicKeyObject(SDB *sdb, CK_KEY_TYPE key_type,
     SECItem *pubKey;
 #ifdef NSS_ENABLE_ECC
     SECItem pubKey2Space = {siBuffer, NULL, 0};
-    PRArenaPool *arena = NULL;
+    PLArenaPool *arena = NULL;
 #endif /* NSS_ENABLE_ECC */
     NSSLOWKEYDBHandle *keyHandle = NULL;
 	

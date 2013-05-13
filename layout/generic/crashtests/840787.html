@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  document.documentElement.offsetHeight;
+  document.getElementById("outer").lastChild.data = "Y";
+  document.documentElement.offsetHeight;
+}
+
+</script>
+</head>
+<body onload="boom();">
+<div id="outer" style="-moz-column-width: 1px;"><div style="-moz-column-width: 1px;"><div style="height: 50px;"></div><div style="float: left; height: 466px;"></div><div></div></div>X</div>
+</body>
+</html>

@@ -73,8 +73,22 @@ struct THEBES_API gfxFontStyle {
     // or inferred from the charset
     nsRefPtr<nsIAtom> language;
 
+    // Features are composed of (1) features from style rules (2) features
+    // from feature setttings rules and (3) family-specific features.  (1) and
+    // (3) are guaranteed to be mutually exclusive
+
     // custom opentype feature settings
     nsTArray<gfxFontFeature> featureSettings;
+
+    // Some font-variant property values require font-specific settings
+    // defined via @font-feature-values rules.  These are resolved after
+    // font matching occurs.
+
+    // -- list of value tags for specific alternate features
+    nsTArray<gfxAlternateValue> alternateValues;
+
+    // -- object used to look these up once the font is matched
+    nsRefPtr<gfxFontFeatureValueSet> featureValueLookup;
 
     // The logical size of the font, in pixels
     gfxFloat size;
@@ -144,7 +158,9 @@ struct THEBES_API gfxFontStyle {
             (*reinterpret_cast<const uint32_t*>(&sizeAdjust) ==
              *reinterpret_cast<const uint32_t*>(&other.sizeAdjust)) &&
             (featureSettings == other.featureSettings) &&
-            (languageOverride == other.languageOverride);
+            (languageOverride == other.languageOverride) &&
+            (alternateValues == other.alternateValues) &&
+            (featureValueLookup == other.featureValueLookup);
     }
 
     static void ParseFontFeatureSettings(const nsString& aFeatureString,
@@ -1147,9 +1163,10 @@ public:
 
     // returns true if features exist in output, false otherwise
     static bool
-    MergeFontFeatures(const nsTArray<gfxFontFeature>& aStyleRuleFeatures,
+    MergeFontFeatures(const gfxFontStyle *aStyle,
                       const nsTArray<gfxFontFeature>& aFontFeatures,
                       bool aDisableLigatures,
+                      const nsAString& aFamilyName,
                       nsDataHashtable<nsUint32HashKey,uint32_t>& aMergedFeatures);
 
 protected:
@@ -1579,6 +1596,10 @@ public:
 
     virtual mozilla::TemporaryRef<mozilla::gfx::ScaledFont> GetScaledFont(mozilla::gfx::DrawTarget *aTarget)
     { return gfxPlatform::GetPlatform()->GetScaledFontForFont(aTarget, this); }
+
+    bool KerningDisabled() {
+        return mKerningSet && !mKerningEnabled;
+    }
 
 protected:
 

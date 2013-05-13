@@ -168,7 +168,7 @@ sec_pkcs12_convert_nickname_list(char **nicknames)
  * a return of NULL indicates an error
  */
 static SEC_PKCS12CertAndCRL *
-sec_pkcs12_get_cert(PRArenaPool *poolp,
+sec_pkcs12_get_cert(PLArenaPool *poolp,
 		       CERTCertificate *add_cert, 
 		       SECItem *nickname)
 {
@@ -240,7 +240,7 @@ sec_pkcs12_get_cert(PRArenaPool *poolp,
  * an error is indicated by a return of NULL
  */
 static SEC_PKCS12PrivateKey *
-sec_pkcs12_get_private_key(PRArenaPool *poolp,
+sec_pkcs12_get_private_key(PLArenaPool *poolp,
 			   SECItem *nickname,
 			   CERTCertificate *cert,
 			   void *wincx)
@@ -305,7 +305,7 @@ sec_pkcs12_get_private_key(PRArenaPool *poolp,
  * an error is indicated by a return of NULL
  */
 static SEC_PKCS12ESPVKItem *
-sec_pkcs12_get_shrouded_key(PRArenaPool *poolp,
+sec_pkcs12_get_shrouded_key(PLArenaPool *poolp,
 			    SECItem *nickname,
 			    CERTCertificate *cert,
 			    SECOidTag algorithm, 
@@ -588,7 +588,7 @@ loser:
 
 /* append a certificate onto the end of a cert bag */
 static SECStatus 
-sec_pkcs12_append_cert_to_bag(PRArenaPool *arena,
+sec_pkcs12_append_cert_to_bag(PLArenaPool *arena,
 			      SEC_PKCS12SafeBag *safebag,
 			      CERTCertificate *cert,
 			      SECItem *nickname)
@@ -754,7 +754,7 @@ sec_pkcs12_package_certs_and_keys(SECItem **nicknames,
 				  PKCS12UnicodeConvertFunction unicodeFn,
 				  void *wincx)
 {
-    PRArenaPool *permArena;
+    PLArenaPool *permArena;
     SEC_PKCS12SafeContents *safe = NULL;
     SEC_PKCS12Baggage *baggage = NULL;
 
@@ -924,7 +924,7 @@ sec_pkcs12_encode_safe_contents(SEC_PKCS12SafeContents *safe)
 {
     SECItem *dsafe = NULL, *tsafe;
     void *dummy = NULL;
-    PRArenaPool *arena;
+    PLArenaPool *arena;
 
     if(safe == NULL) {
 	return NULL;
@@ -983,7 +983,7 @@ sec_pkcs12_get_auth_safe(SEC_PKCS12SafeContents *safe,
 			 void *wincx)
 {
     SECItem *src = NULL, *dest = NULL, *psalt = NULL;
-    PRArenaPool *poolp;
+    PLArenaPool *poolp;
     SEC_PKCS12AuthenticatedSafe *asafe;
     SEC_PKCS7ContentInfo *safe_cinfo = NULL;
     SEC_PKCS7ContentInfo *asafe_cinfo = NULL;

@@ -38,7 +38,17 @@ function onChange(e) {
 
   dump("we saw: " + e.path + " " + e.reason + "\n");
 
-  if (e.path == gFileName) {
+  var filename = e.path;
+  if (filename[0] == "/") {
+    // We got /storgaeName/prefix/filename
+    // Remove the storageName (this shows up on FirefoxOS)
+    filename = filename.substring(1); // Remove leading slash
+    var slashIndex = filename.indexOf("/");
+    if (slashIndex >= 0) {
+      filename = filename.substring(slashIndex + 1); // Remove storageName
+    }
+  }
+  if (filename == gFileName) {
     ok(true, "we saw the file get created");
     storage.removeEventListener("change", onChange);
     devicestorage_cleanup();

@@ -1135,7 +1135,7 @@ PK11_ParamFromAlgid(SECAlgorithmID *algid)
     CK_RC2_PARAMS *     rc2_ecb_params = NULL;
     CK_RC5_CBC_PARAMS * rc5_cbc_params = NULL;
     CK_RC5_PARAMS *     rc5_ecb_params = NULL;
-    PRArenaPool *       arena          = NULL;
+    PLArenaPool *       arena          = NULL;
     SECItem *           mech           = NULL;
     SECOidTag           algtag;
     SECStatus           rv;
@@ -1518,7 +1518,7 @@ PK11_GenerateNewParam(CK_MECHANISM_TYPE type, PK11SymKey *key)
 /* turn a PKCS #11 parameter into a DER Encoded Algorithm ID */
 SECStatus
 PK11_ParamToAlgid(SECOidTag algTag, SECItem *param, 
-				PRArenaPool *arena, SECAlgorithmID *algid) {
+				PLArenaPool *arena, SECAlgorithmID *algid) {
     CK_RC2_CBC_PARAMS *rc2_params;
     sec_rc2cbcParameter rc2;
     CK_RC5_CBC_PARAMS *rc5_params;

@@ -27,7 +27,7 @@ typedef enum {
 } PKIX_PL_LdapAttr;
 
 struct PKIX_PL_LdapRequestStruct{
-        PRArenaPool *arena;
+        PLArenaPool *arena;
         PKIX_UInt32 msgnum;
         char *issuerDN;
         ScopeType scope;
@@ -46,7 +46,7 @@ struct PKIX_PL_LdapRequestStruct{
 
 PKIX_Error *
 pkix_pl_LdapRequest_Create(
-        PRArenaPool *arena,
+        PLArenaPool *arena,
         PKIX_UInt32 msgnum,
         char *issuerDN,
         ScopeType scope,

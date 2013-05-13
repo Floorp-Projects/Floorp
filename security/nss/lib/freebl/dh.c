@@ -44,7 +44,7 @@ dh_GetSecretKeyLen(unsigned int primeLen)
 SECStatus 
 DH_GenParam(int primeLen, DHParams **params)
 {
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     DHParams *dhparams;
     unsigned char *pb = NULL;
     unsigned char *ab = NULL;
@@ -135,7 +135,7 @@ cleanup:
 SECStatus 
 DH_NewKey(DHParams *params, DHPrivateKey **privKey)
 {
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     DHPrivateKey *key;
     mp_int g, xa, p, Ya;
     mp_err   err = MP_OKAY;

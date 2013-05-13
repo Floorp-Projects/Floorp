@@ -12,6 +12,7 @@ include $(DEPTH)/config/autoconf.mk
 DEFINES += -DAB_CD=$(MOZ_UI_LOCALE) \
            -DPACKAGE=browser \
            -DMOZ_APP_VERSION=$(MOZ_APP_VERSION) \
+           -DANDROID_PACKAGE_NAME=$(ANDROID_PACKAGE_NAME) \
            $(NULL)
 
 include $(topsrcdir)/config/rules.mk

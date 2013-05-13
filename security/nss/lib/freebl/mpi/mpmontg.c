@@ -626,9 +626,9 @@ typedef unsigned int mp_weave_word;
  * mp_digits where each digit is stored in big endian order.
  * 
  * since we need to interleave on a byte by byte basis, we need to collect 
- * several mpi structures together into a single uint32 before we write. We
- * also need to make sure the uint32 is arranged so that the first value of 
- * the first array winds up in b[0]. This means construction of that uint32
+ * several mpi structures together into a single PRUint32 before we write. We
+ * also need to make sure the PRUint32 is arranged so that the first value of
+ * the first array winds up in b[0]. This means construction of that PRUint32
  * is endian specific (even though the layout of the mp_digits in the array 
  * is always big endian).
  *

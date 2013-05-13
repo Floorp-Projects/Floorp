@@ -113,10 +113,10 @@ ParallelArrayObject::getConstructor(JSContext *cx, unsigned argc)
 }
 
 /*static*/ JSObject *
-ParallelArrayObject::newInstance(JSContext *cx)
+ParallelArrayObject::newInstance(JSContext *cx, NewObjectKind newKind /* = GenericObject */)
 {
     gc::AllocKind kind = gc::GetGCObjectKind(NumFixedSlots);
-    RootedObject result(cx, NewBuiltinClassInstance(cx, &class_, kind));
+    RootedObject result(cx, NewBuiltinClassInstance(cx, &class_, kind, newKind));
     if (!result)
         return NULL;
 
@@ -130,7 +130,7 @@ ParallelArrayObject::newInstance(JSContext *cx)
 /*static*/ JSBool
 ParallelArrayObject::constructHelper(JSContext *cx, MutableHandleFunction ctor, CallArgs &args0)
 {
-    RootedObject result(cx, newInstance(cx));
+    RootedObject result(cx, newInstance(cx, TenuredObject));
     if (!result)
         return false;
 

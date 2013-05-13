@@ -475,6 +475,10 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
   list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.png");
 }
 
+#BMB_bookmarkThisPage {
+  list-style-image: url("chrome://browser/skin/places/starPage.png");
+}
+
 #BMB_unsortedBookmarks {
   list-style-image: url("chrome://browser/skin/places/unsortedBookmarks.png");
 }
@@ -649,8 +653,17 @@ toolbar[mode="full"] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   -moz-image-region: rect(0px 48px 24px 24px);
 }
 
-#bookmarks-button {
+#bookmarks-button,
+#bookmarks-menu-button {
   -moz-image-region: rect(0px 72px 24px 48px);
+}
+
+#bookmarks-menu-button.bookmark-item {
+  list-style-image: url("chrome://browser/skin/Toolbar-small.png");
+}
+
+#bookmarks-menu-button.toolbarbutton-1 {
+  -moz-box-orient: horizontal;
 }
 
 #print-button {
@@ -806,7 +819,9 @@ toolbar[iconsize="small"] #history-button {
   -moz-image-region: rect(0px 32px 16px 16px);
 }
 
-toolbar[iconsize="small"] #bookmarks-button {
+toolbar[iconsize="small"] #bookmarks-button,
+toolbar[iconsize="small"] #bookmarks-menu-button,
+#bookmarks-menu-button.bookmark-item {
   -moz-image-region: rect(0px 48px 16px 32px);
 }
 
@@ -1505,27 +1520,16 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
+/* Star button */
+#star-button {
+  list-style-image: url("chrome://browser/skin/places/starPage.png");
+}
+
+#star-button[starred="true"] {
+  list-style-image: url("chrome://browser/skin/places/pageStarred.png");
+}
+
 /* bookmarks menu-button */
-
-#bookmarks-menu-button {
-  list-style-image: url("chrome://browser/skin/Toolbar.png");
-  -moz-image-region: rect(0px 216px 24px 192px);
-}
-
-#bookmarks-menu-button[starred] {
-  -moz-image-region: rect(24px 216px 48px 192px);
-}
-
-toolbar[iconsize="small"] #bookmarks-menu-button,
-#bookmarks-menu-button.bookmark-item {
-  list-style-image: url("chrome://browser/skin/Toolbar-small.png");
-  -moz-image-region: rect(0px 144px 16px 128px);
-}
-
-toolbar[iconsize="small"] #bookmarks-menu-button[starred],
-#bookmarks-menu-button.bookmark-item[starred] {
-  -moz-image-region: rect(16px 144px 32px 128px);
-}
 
 #bookmarks-menu-button[disabled] > .toolbarbutton-icon,
 #bookmarks-menu-button[disabled] > .toolbarbutton-menu-dropmarker,

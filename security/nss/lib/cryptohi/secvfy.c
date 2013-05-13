@@ -182,7 +182,7 @@ sec_DecodeSigAlg(const SECKEYPublicKey *key, SECOidTag sigAlg,
              const SECItem *param, SECOidTag *encalg, SECOidTag *hashalg)
 {
     int len;
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     SECStatus rv;
     SECItem oid;
 

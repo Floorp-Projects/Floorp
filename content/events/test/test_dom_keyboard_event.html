@@ -88,6 +88,8 @@ function testInitializingUntrustedEvent()
     e.initKeyEvent(kTest.type, kTest.bubbles, kTest.cancelable, kTest.view,
                    kTest.ctrlKey, kTest.altKey, kTest.shiftKey, kTest.metaKey,
                    kTest.keyCode, kTest.charCode);
+    is(e.toString(), "[object KeyboardEvent]",
+       description + 'class string should be "KeyboardEvent"');
 
     for (var attr in kTest) {
       if (attr == "createEventArg") {

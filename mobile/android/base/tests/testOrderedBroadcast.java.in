@@ -1,0 +1,65 @@
+#filter substitution
+package @ANDROID_PACKAGE_NAME@.tests;
+
+import @ANDROID_PACKAGE_NAME@.*;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import android.app.Activity;
+
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+
+import android.util.Log;
+
+
+public class testOrderedBroadcast extends JavascriptTest {
+    protected BroadcastReceiver mReceiver;
+
+    public testOrderedBroadcast() {
+        super("testOrderedBroadcast.js");
+    }
+
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
+
+        mAsserter.dumpLog("Registering org.mozilla.gecko.test.receiver broadcast receiver");
+
+        JSONObject o = new JSONObject();
+        o.put("c", "efg");
+        o.put("d", 456);
+        final String data = o.toString();
+
+        IntentFilter filter = new IntentFilter();
+        filter.addAction("org.mozilla.gecko.test.receiver");
+
+        mReceiver = new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    setResultCode(Activity.RESULT_OK);
+                    setResultData(data);
+                }
+            };
+
+        // We must register the receiver in a Fennec context to avoid a
+        // SecurityException.
+        getActivity().getApplicationContext().registerReceiver(mReceiver, filter);
+    }
+
+    @Override
+    public void tearDown() throws Exception {
+        super.tearDown();
+
+        mAsserter.dumpLog("Unregistering org.mozilla.gecko.test.receiver broadcast receiver");
+
+        if (mReceiver != null) {
+            getActivity().getApplicationContext().unregisterReceiver(mReceiver);
+            mReceiver = null;
+        }
+    }
+}

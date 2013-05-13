@@ -333,11 +333,11 @@ static SECStatus CheckSequenceTemplate(const SEC_ASN1Template* sequenceTemplate)
 
 static SECStatus DecodeItem(void* dest,
                      const SEC_ASN1Template* templateEntry,
-                     SECItem* src, PRArenaPool* arena, PRBool checkTag);
+                     SECItem* src, PLArenaPool* arena, PRBool checkTag);
 
 static SECStatus DecodeSequence(void* dest,
                      const SEC_ASN1Template* templateEntry,
-                     SECItem* src, PRArenaPool* arena)
+                     SECItem* src, PLArenaPool* arena)
 {
     SECStatus rv = SECSuccess;
     SECItem source;
@@ -389,7 +389,7 @@ static SECStatus DecodeSequence(void* dest,
 
 static SECStatus DecodeInline(void* dest,
                      const SEC_ASN1Template* templateEntry,
-                     SECItem* src, PRArenaPool* arena, PRBool checkTag)
+                     SECItem* src, PLArenaPool* arena, PRBool checkTag)
 {
     const SEC_ASN1Template* inlineTemplate = 
         SEC_ASN1GetSubtemplate (templateEntry, dest, PR_FALSE);
@@ -399,7 +399,7 @@ static SECStatus DecodeInline(void* dest,
 
 static SECStatus DecodePointer(void* dest,
                      const SEC_ASN1Template* templateEntry,
-                     SECItem* src, PRArenaPool* arena, PRBool checkTag)
+                     SECItem* src, PLArenaPool* arena, PRBool checkTag)
 {
     const SEC_ASN1Template* ptrTemplate = 
         SEC_ASN1GetSubtemplate (templateEntry, dest, PR_FALSE);
@@ -418,7 +418,7 @@ static SECStatus DecodePointer(void* dest,
 
 static SECStatus DecodeImplicit(void* dest,
                      const SEC_ASN1Template* templateEntry,
-                     SECItem* src, PRArenaPool* arena)
+                     SECItem* src, PLArenaPool* arena)
 {
     if (templateEntry->kind & SEC_ASN1_POINTER)
     {
@@ -434,7 +434,7 @@ static SECStatus DecodeImplicit(void* dest,
 
 static SECStatus DecodeChoice(void* dest,
                      const SEC_ASN1Template* templateEntry,
-                     SECItem* src, PRArenaPool* arena)
+                     SECItem* src, PLArenaPool* arena)
 {
     SECStatus rv = SECSuccess;
     SECItem choice;
@@ -483,7 +483,7 @@ static SECStatus DecodeChoice(void* dest,
 
 static SECStatus DecodeGroup(void* dest,
                      const SEC_ASN1Template* templateEntry,
-                     SECItem* src, PRArenaPool* arena)
+                     SECItem* src, PLArenaPool* arena)
 {
     SECStatus rv = SECSuccess;
     SECItem source;
@@ -571,7 +571,7 @@ static SECStatus DecodeGroup(void* dest,
 
 static SECStatus DecodeExplicit(void* dest,
                      const SEC_ASN1Template* templateEntry,
-                     SECItem* src, PRArenaPool* arena)
+                     SECItem* src, PLArenaPool* arena)
 {
     SECStatus rv = SECSuccess;
     SECItem subItem;
@@ -598,7 +598,7 @@ static SECStatus DecodeExplicit(void* dest,
 
 static SECStatus DecodeItem(void* dest,
                      const SEC_ASN1Template* templateEntry,
-                     SECItem* src, PRArenaPool* arena, PRBool checkTag)
+                     SECItem* src, PLArenaPool* arena, PRBool checkTag)
 {
     SECStatus rv = SECSuccess;
     SECItem temp;
@@ -868,7 +868,7 @@ static SECStatus DecodeItem(void* dest,
 
 /* the function below is the public one */
 
-SECStatus SEC_QuickDERDecodeItem(PRArenaPool* arena, void* dest,
+SECStatus SEC_QuickDERDecodeItem(PLArenaPool* arena, void* dest,
                      const SEC_ASN1Template* templateEntry,
                      const SECItem* src)
 {

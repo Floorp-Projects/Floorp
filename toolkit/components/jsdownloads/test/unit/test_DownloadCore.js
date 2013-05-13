@@ -47,6 +47,7 @@ add_task(function test_download_initial_final_state()
   do_check_false(download.canceled);
   do_check_true(download.error === null);
   do_check_eq(download.progress, 0);
+  do_check_true(download.startTime === null);
 
   // Starts the download and waits for completion.
   yield download.start();
@@ -56,6 +57,7 @@ add_task(function test_download_initial_final_state()
   do_check_false(download.canceled);
   do_check_true(download.error === null);
   do_check_eq(download.progress, 100);
+  do_check_true(isValidDate(download.startTime));
 });
 
 /**
@@ -673,4 +675,26 @@ add_task(function test_download_error_restart()
   do_check_eq(download.progress, 100);
 
   yield promiseVerifyContents(download.target.file, TEST_DATA_SHORT);
+});
+
+
+/**
+ * Checks the startTime gets updated even after a restart.
+ */
+add_task(function test_download_cancel_immediately_restart_and_check_startTime()
+{
+  let download = yield promiseSimpleDownload();
+
+  download.start();
+  let startTime = download.startTime;
+  do_check_true(isValidDate(download.startTime));
+
+  yield download.cancel();
+  do_check_eq(download.startTime.getTime(), startTime.getTime());
+
+  // Wait for a timeout.
+  yield promiseTimeout(10);
+
+  yield download.start();
+  do_check_true(download.startTime.getTime() > startTime.getTime());
 });

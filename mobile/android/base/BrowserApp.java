@@ -128,6 +128,10 @@ abstract public class BrowserApp extends GeckoApp
     // after restoring from a saved state, so we use this tag to identify it.
     private static final String ABOUTHOME_TAG = "abouthome";
 
+    private SharedPreferencesHelper mSharedPreferencesHelper;
+
+    private OrderedBroadcastHelper mOrderedBroadcastHelper;
+
     @Override
     public void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
         switch(msg) {
@@ -398,6 +402,8 @@ abstract public class BrowserApp extends GeckoApp
 
         Distribution.init(this, getPackageResourcePath());
         JavaAddonManager.getInstance().init(getApplicationContext());
+        mSharedPreferencesHelper = new SharedPreferencesHelper(getApplicationContext());
+        mOrderedBroadcastHelper = new OrderedBroadcastHelper(getApplicationContext());
 
         if (AppConstants.MOZ_ANDROID_BEAM && Build.VERSION.SDK_INT >= 14) {
             NfcAdapter nfc = NfcAdapter.getDefaultAdapter(this);
@@ -492,6 +498,16 @@ abstract public class BrowserApp extends GeckoApp
         }
         if (mBrowserToolbar != null)
             mBrowserToolbar.onDestroy();
+
+        if (mSharedPreferencesHelper != null) {
+            mSharedPreferencesHelper.uninit();
+            mSharedPreferencesHelper = null;
+        }
+
+        if (mOrderedBroadcastHelper != null) {
+            mOrderedBroadcastHelper.uninit();
+            mOrderedBroadcastHelper = null;
+        }
 
         unregisterEventListener("CharEncoding:Data");
         unregisterEventListener("CharEncoding:State");
@@ -824,6 +840,12 @@ abstract public class BrowserApp extends GeckoApp
                             menu.findItem(R.id.settings).setEnabled(true);
                     }
                 });
+
+                // Display notification for Mozilla data reporting, if data should be collected.
+                if (AppConstants.MOZ_DATA_REPORTING) {
+                    DataReportingNotification.checkAndNotifyPolicy(BrowserApp.mAppContext);
+                }
+
             } else if (event.equals("Telemetry:Gather")) {
                 Telemetry.HistogramAdd("PLACES_PAGES_COUNT", BrowserDB.getCount(getContentResolver(), "history"));
                 Telemetry.HistogramAdd("PLACES_BOOKMARKS_COUNT", BrowserDB.getCount(getContentResolver(), "bookmarks"));

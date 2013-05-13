@@ -13,7 +13,7 @@
 CMMFPOPODecKeyChallContent*
 CMMF_CreatePOPODecKeyChallContentFromDER(const char *buf, long len)
 {
-    PRArenaPool                *poolp;
+    PLArenaPool                *poolp;
     CMMFPOPODecKeyChallContent *challContent;
     SECStatus                   rv;
 
@@ -90,7 +90,7 @@ CMMF_POPODecKeyChallContDecryptChallenge(CMMFPOPODecKeyChallContent *inChalCont,
 {
     CMMFChallenge  *challenge;
     SECItem        *decryptedRand=NULL;
-    PRArenaPool    *poolp  = NULL;
+    PLArenaPool    *poolp  = NULL;
     SECAlgorithmID *owf;
     SECStatus       rv     = SECFailure;
     SECOidTag       tag;
@@ -204,7 +204,7 @@ CMMF_EncodePOPODecKeyRespContent(long                     *inDecodedRand,
 				 CRMFEncoderOutputCallback inCallback,
 				 void                     *inArg)
 {
-    PRArenaPool *poolp;
+    PLArenaPool *poolp;
     CMMFPOPODecKeyRespContent *response;
     SECItem *currItem;
     SECStatus rv=SECFailure;

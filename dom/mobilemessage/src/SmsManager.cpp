@@ -141,7 +141,7 @@ SmsManager::GetSegmentInfoForText(const nsAString& aText,
 }
 
 nsresult
-SmsManager::Send(JSContext* aCx, JSObject* aGlobal, JS::Handle<JSString*> aNumber,
+SmsManager::Send(JSContext* aCx, JS::Handle<JSObject*> aGlobal, JS::Handle<JSString*> aNumber,
                  const nsAString& aMessage, JS::Value* aRequest)
 {
   nsCOMPtr<nsISmsService> smsService = do_GetService(SMS_SERVICE_CONTRACTID);
@@ -295,20 +295,20 @@ SmsManager::Delete(const JS::Value& aParam, nsIDOMDOMRequest** aRequest)
     idArray = &id;
   } else {
     // Int32[] or SmsMessage[]
-    JSObject& ids = aParam.toObject();
+    JS::Rooted<JSObject*> ids(cx, &aParam.toObject());
 
-    JS_ALWAYS_TRUE(JS_GetArrayLength(cx, &ids, &size));
+    JS_ALWAYS_TRUE(JS_GetArrayLength(cx, ids, &size));
     nsAutoArrayPtr<int32_t> idAutoArray(new int32_t[size]);
 
-    JS::Value idJsValue;
+    JS::Rooted<JS::Value> idJsValue(cx);
     for (uint32_t i = 0; i < size; i++) {
-      if (!JS_GetElement(cx, &ids, i, &idJsValue)) {
+      if (!JS_GetElement(cx, ids, i, idJsValue.address())) {
         return NS_ERROR_INVALID_ARG;
       }
 
-      if (idJsValue.isInt32()) {
-        idAutoArray[i] = idJsValue.toInt32();
-      } else if (idJsValue.isObject()) {
+      if (idJsValue.get().isInt32()) {
+        idAutoArray[i] = idJsValue.get().toInt32();
+      } else if (idJsValue.get().isObject()) {
         rv = GetSmsMessageId(cx, idJsValue, id);
         NS_ENSURE_SUCCESS(rv, rv);
 

@@ -52,6 +52,13 @@ public class AppConstants {
     null;
 #endif
 
+    public static final boolean MOZ_SERVICES_HEALTHREPORT =
+#ifdef MOZ_SERVICES_HEALTHREPORT
+    true;
+#else
+    false;
+#endif
+
     public static final boolean MOZ_TELEMETRY_ON_BY_DEFAULT =
 #ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
     true;
@@ -62,6 +69,20 @@ public class AppConstants {
     public static final boolean MOZ_TELEMETRY_REPORTING =
 #ifdef MOZ_TELEMETRY_REPORTING
     true;
+#else
+    false;
+#endif
+
+    public static final boolean MOZ_CRASHREPORTER =
+#if MOZ_CRASHREPORTER
+    true;
+#else
+    false;
+#endif
+
+    public static final boolean MOZ_DATA_REPORTING =
+#ifdef MOZ_DATA_REPORTING
+      true;
 #else
     false;
 #endif

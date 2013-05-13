@@ -1,0 +1,21 @@
+<html>
+<head>
+<script>
+function doe2(i) {
+document.documentElement.offsetHeight;
+document.getElementById('a').setAttribute('style', 'display: -moz-inline-box;');
+document.documentElement.offsetHeight;
+}
+</script>
+</head>
+<body style="float: right; -moz-column-count: 2; height: 20%;" onload="setTimeout(doe2,0);">
+  <div style="display: none;"></div>
+  <ul style="display: -moz-inline-box;"></ul>
+  <span id="a">
+    <ul style="display: -moz-grid; overflow: scroll;"></ul>
+      <span style="display: -moz-inline-box; height: 10px;">
+        <span style="position: absolute;"></span>
+      </span>
+  </span>
+</body>
+</html>

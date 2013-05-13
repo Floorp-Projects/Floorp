@@ -74,10 +74,10 @@ public:
   InitClass(JSContext* aCx, JSObject* aObj, JSObject* aParentProto,
             bool aMainRuntime)
   {
-    JSObject* proto =
+    JS::Rooted<JSObject*> proto(aCx,
       js::InitClassWithReserved(aCx, aObj, aParentProto, ProtoClass(),
                                 Construct, 0, sProperties, sFunctions,
-                                NULL, NULL);
+                                NULL, NULL));
     if (!proto) {
       return NULL;
     }
@@ -188,7 +188,7 @@ private:
 
     NS_ConvertASCIItoUTF16 nameStr(name + 2);
     ErrorResult rv;
-    JSObject* listener = worker->GetEventListener(nameStr, rv);
+    JS::Rooted<JSObject*> listener(aCx, worker->GetEventListener(nameStr, rv));
 
     if (rv.Failed()) {
       JS_ReportError(aCx, "Failed to get listener!");
@@ -211,8 +211,8 @@ private:
       return !JS_IsExceptionPending(aCx);
     }
 
-    JSObject* listener;
-    if (!JS_ValueToObject(aCx, aVp, &listener)) {
+    JS::Rooted<JSObject*> listener(aCx);
+    if (!JS_ValueToObject(aCx, aVp, listener.address())) {
       return false;
     }
 
@@ -389,9 +389,9 @@ public:
   InitClass(JSContext* aCx, JSObject* aObj, JSObject* aParentProto,
             bool aMainRuntime)
   {
-    JSObject* proto =
+    JS::Rooted<JSObject*> proto(aCx,
       js::InitClassWithReserved(aCx, aObj, aParentProto, ProtoClass(),
-                                Construct, 0, NULL, NULL, NULL, NULL);
+                                Construct, 0, NULL, NULL, NULL, NULL));
     if (!proto) {
       return NULL;
     }
