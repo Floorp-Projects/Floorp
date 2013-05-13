@@ -328,6 +328,8 @@ UPLOAD_EXTRA_FILES += robocop.apk
 UPLOAD_EXTRA_FILES += fennec_ids.txt
 ROBOCOP_PATH = $(call core_abspath,$(_ABS_DIST)/../build/mobile/robocop)
 INNER_ROBOCOP_PACKAGE= \
+  $(PYTHON) $(abspath $(topsrcdir)/build/mobile/robocop/parse_ids.py) -i $(call core_abspath,$(DEPTH)/mobile/android/base/R.java) -o $(call core_abspath,$(DEPTH)/build/mobile/robocop/fennec_ids.txt) && \
+  $(NSINSTALL) $(call core_abspath,$(DEPTH)/build/mobile/robocop/fennec_ids.txt) $(_ABS_DIST) && \
   $(APKBUILDER) $(_ABS_DIST)/robocop-raw.apk -v $(APKBUILDER_FLAGS) -z $(ROBOCOP_PATH)/robocop.ap_ -f $(ROBOCOP_PATH)/classes.dex && \
   $(JARSIGNER) $(_ABS_DIST)/robocop-raw.apk && \
   $(ZIPALIGN) -f -v 4 $(_ABS_DIST)/robocop-raw.apk $(_ABS_DIST)/robocop.apk

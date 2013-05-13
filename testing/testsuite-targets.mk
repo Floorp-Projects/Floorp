@@ -65,13 +65,11 @@ RUN_MOCHITEST_REMOTE = \
 
 RUN_MOCHITEST_ROBOTIUM = \
   rm -f ./$@.log && \
-  $(PYTHON) _tests/testing/mochitest/runtestsremote.py \
-    --robocop-path=$(DIST) \
-    --robocop-ids=$(DIST)/fennec_ids.txt \
-    --robocop=$(DEPTH)/build/mobile/robocop/robocop.ini \
+  $(PYTHON) _tests/testing/mochitest/runtestsremote.py --robocop-path=$(DEPTH)/dist \
+    --robocop-ids=$(DEPTH)/build/mobile/robocop/fennec_ids.txt \
     --console-level=INFO --log-file=./$@.log --file-level=INFO $(DM_FLAGS) --dm_trans=$(DM_TRANS) \
     --app=$(TEST_PACKAGE_NAME) --deviceIP=${TEST_DEVICE} --xre-path=${MOZ_HOST_BIN} \
-    $(SYMBOLS_PATH) $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS)
+    --robocop=$(DEPTH)/build/mobile/robocop/robocop.ini $(SYMBOLS_PATH) $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS)
 
 ifndef NO_FAIL_ON_TEST_ERRORS
 define check_test_error_internal
@@ -97,6 +95,7 @@ mochitest-remote:
         $(RUN_MOCHITEST_REMOTE); \
     fi
 
+mochitest-robotium: robotium-id-map
 mochitest-robotium: DM_TRANS?=adb
 mochitest-robotium:
 	@if [ ! -f ${MOZ_HOST_BIN}/xpcshell ]; then \
@@ -436,10 +435,16 @@ make-stage-dir:
 stage-b2g: make-stage-dir
 	$(NSINSTALL) $(topsrcdir)/b2g/test/b2g-unittest-requirements.txt $(PKG_STAGE)/b2g
 
+robotium-id-map:
+ifeq ($(MOZ_BUILD_APP),mobile/android)
+	$(PYTHON) $(DEPTH)/build/mobile/robocop/parse_ids.py -i $(DEPTH)/mobile/android/base/R.java -o $(DEPTH)/build/mobile/robocop/fennec_ids.txt
+endif
+
+stage-mochitest: robotium-id-map
 stage-mochitest: make-stage-dir
 	$(MAKE) -C $(DEPTH)/testing/mochitest stage-package
 ifeq ($(MOZ_BUILD_APP),mobile/android)
-	$(NSINSTALL) $(DIST)/fennec_ids.txt $(PKG_STAGE)/mochitest
+	$(NSINSTALL) $(DEPTH)/build/mobile/robocop/fennec_ids.txt $(PKG_STAGE)/mochitest
 endif
 
 stage-reftest: make-stage-dir
