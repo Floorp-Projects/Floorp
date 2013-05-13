@@ -39,6 +39,7 @@
 #include "CSSCalc.h"
 #include "nsPrintfCString.h"
 #include "nsRenderingContext.h"
+#include "nsStyleUtil.h"
 
 #include "mozilla/LookAndFeel.h"
 
@@ -3288,6 +3289,49 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
               aParentFont->mFont.synthesis,
               defaultVariableFont->synthesis,
               0, 0, 0, systemFont.synthesis);
+
+  // font-variant-alternates: enum (bit field) + functions, inherit, initial
+  const nsCSSValue* variantAlternatesValue =
+    aRuleData->ValueForFontVariantAlternates();
+  int32_t variantAlternates = 0;
+
+  switch (variantAlternatesValue->GetUnit()) {
+  case eCSSUnit_Initial:
+    aFont->mFont.CopyAlternates(*defaultVariableFont);
+    break;
+
+  case eCSSUnit_Inherit:
+    aFont->mFont.CopyAlternates(aParentFont->mFont);
+    aCanStoreInRuleTree = false;
+    break;
+
+  case eCSSUnit_Normal:
+    aFont->mFont.variantAlternates = 0;
+    aFont->mFont.alternateValues.Clear();
+    aFont->mFont.featureValueLookup = nullptr;
+    break;
+
+  case eCSSUnit_Pair:
+    NS_ASSERTION(variantAlternatesValue->GetPairValue().mXValue.GetUnit() ==
+                   eCSSUnit_Enumerated, "strange unit for variantAlternates");
+    variantAlternates =
+      variantAlternatesValue->GetPairValue().mXValue.GetIntValue();
+    aFont->mFont.variantAlternates = variantAlternates;
+
+    if (variantAlternates & NS_FONT_VARIANT_ALTERNATES_FUNCTIONAL_MASK) {
+      // fetch the feature lookup object from the styleset
+      aFont->mFont.featureValueLookup =
+        aPresContext->StyleSet()->GetFontFeatureValuesLookup();
+
+      nsStyleUtil::AppendAlternateValues(
+        variantAlternatesValue->GetPairValue().mYValue.GetListValue(),
+        aFont->mFont.alternateValues);
+    }
+    break;
+
+  default:
+    break;
+  }
 
   // font-variant-caps: enum, inherit, initial
   SetDiscrete(*aRuleData->ValueForFontVariantCaps(),

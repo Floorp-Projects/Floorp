@@ -194,6 +194,9 @@ nsChangeHint nsStyleFont::CalcFontDifference(const nsFont& aFont1, const nsFont&
       (aFont1.name == aFont2.name) &&
       (aFont1.kerning == aFont2.kerning) &&
       (aFont1.synthesis == aFont2.synthesis) &&
+      (aFont1.variantAlternates == aFont2.variantAlternates) &&
+      (aFont1.alternateValues == aFont2.alternateValues) &&
+      (aFont1.featureValueLookup == aFont2.featureValueLookup) &&
       (aFont1.variantCaps == aFont2.variantCaps) &&
       (aFont1.variantEastAsian == aFont2.variantEastAsian) &&
       (aFont1.variantLigatures == aFont2.variantLigatures) &&

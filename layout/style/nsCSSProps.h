@@ -404,6 +404,8 @@ public:
   static const int32_t kFontStyleKTable[];
   static const int32_t kFontSynthesisKTable[];
   static const int32_t kFontVariantKTable[];
+  static const int32_t kFontVariantAlternatesKTable[];
+  static const int32_t kFontVariantAlternatesFuncsKTable[];
   static const int32_t kFontVariantCapsKTable[];
   static const int32_t kFontVariantEastAsianKTable[];
   static const int32_t kFontVariantLigaturesKTable[];
