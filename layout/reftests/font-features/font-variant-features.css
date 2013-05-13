@@ -1,0 +1,21 @@
+body { margin: 10px; }
+
+@font-face {
+  font-family: gsub-test;
+  src: url(../fonts/gsubtest/gsubtest-lookup3.otf);
+}
+
+td.prop {
+  font-family: Menlo, monospace;
+  font-weight: normal;
+  text-align: left;
+  font-size: 80%;
+}
+
+td.features {
+  font-family: gsub-test;
+}
+
+.invalid {
+  color: red;
+}
