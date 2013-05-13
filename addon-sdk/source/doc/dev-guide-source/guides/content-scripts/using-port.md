@@ -79,8 +79,7 @@ user-defined messages.
 ### Accessing `port` in the Add-on Script ###
 
 In the add-on code, the channel of communication between the add-on and a
-particular content script context is encapsulated by the 
-[`worker`](modules/sdk/content/worker.html#Worker) object. Thus
+particular content script context is encapsulated by the `worker` object. Thus
 the `port` object for communicating with a content script is a property of the
 corresponding `worker` object.
 
@@ -118,8 +117,7 @@ handle multiple pages, each with its own context in which the content scripts
 are executing, so it needs a separate channel (worker) for each page.
 
 So `page-mod` does not integrate the worker API directly: instead, each time a
-content script is attached to a page, the 
-[worker](modules/sdk/content/worker.html#Worker) associated with the page is
+content script is attached to a page, the worker associated with the page is
 supplied to the page-mod in its `onAttach` function. By supplying a target for
 this function in the page-mod's constructor you can register to receive
 messages from the content script, and take a reference to the worker so as to
