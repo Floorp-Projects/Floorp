@@ -621,7 +621,9 @@ public class Tabs implements GeckoEventListener {
         JSONObject args = new JSONObject();
         Tab added = null;
         boolean delayLoad = (flags & LOADURL_DELAY_LOAD) != 0;
-        boolean background = (flags & LOADURL_BACKGROUND) != 0;
+
+        // delayLoad implies background tab
+        boolean background = delayLoad || (flags & LOADURL_BACKGROUND) != 0;
 
         try {
             boolean isPrivate = (flags & LOADURL_PRIVATE) != 0;
