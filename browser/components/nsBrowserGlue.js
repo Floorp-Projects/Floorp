@@ -1360,6 +1360,25 @@ BrowserGlue.prototype = {
       catch (ex) {}
     }
 
+    if (currentUIVersion < 13) {
+      // Migrate users from text or text&icons mode to icons mode.
+      let toolbarResources = [this._rdf.GetResource(BROWSER_DOCURL + "navigator-toolbox"),
+                              this._rdf.GetResource(BROWSER_DOCURL + "nav-bar"),
+                              this._rdf.GetResource(BROWSER_DOCURL + "PersonalToolbar"),
+                              this._rdf.GetResource(BROWSER_DOCURL + "addon-bar")];
+      let modeResource = this._rdf.GetResource("mode");
+      let iconsizeResource = this._rdf.GetResource("iconsize");
+      for (let toolbarResource of toolbarResources) {
+        let toolbarMode = this._getPersist(toolbarResource, modeResource);
+        if (toolbarMode != "icons") {
+          this._setPersist(toolbarResource, modeResource, "icons");
+          // If the user wasn't previously using icons mode, switch
+          // them to the default (large icon mode).
+          this._setPersist(toolbarResource, iconsizeResource, "large");
+        }
+      }
+    }
+
     if (this._dirty)
       this._dataSource.QueryInterface(Ci.nsIRDFRemoteDataSource).Flush();
 
