@@ -13,7 +13,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_CHROME_FILES = \
 		MozEnteredDomFullscreen_chrome.xul \
-		test_fullscreen.xul \
 		fullscreen.xul \
 		test_fullscreen_preventdefault.xul \
 		fullscreen_preventdefault.xul \
@@ -75,9 +74,11 @@ endif
 ifneq (Linux,$(OS_ARCH))
 MOCHITEST_CHROME_FILES += \
 		test_resize_move_windows.xul \
+		test_fullscreen.xul \
 		$(NULL)
 else
 $(filter disabled-on-linux-for-timeouts--bug-834716, test_resize_move_windows.xul)
+$(filter disabled-on-linux-for-timeouts--bug-867745, test_fullscreen.xul)
 endif
 
 ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
