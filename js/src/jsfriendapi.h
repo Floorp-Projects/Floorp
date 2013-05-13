@@ -754,7 +754,7 @@ extern JS_FRIEND_API(bool)
 IsContextRunningJS(JSContext *cx);
 
 typedef void
-(* AnalysisPurgeCallback)(JSRuntime *rt, JSFlatString *desc);
+(* AnalysisPurgeCallback)(JSRuntime *rt, JS::Handle<JSFlatString*> desc);
 
 extern JS_FRIEND_API(AnalysisPurgeCallback)
 SetAnalysisPurgeCallback(JSRuntime *rt, AnalysisPurgeCallback callback);
@@ -960,6 +960,135 @@ enum ViewType {
 };
 
 } /* namespace ArrayBufferView */
+
+/*
+ * A helper for building up an ArrayBuffer object's data
+ * before creating the ArrayBuffer itself.  Will do doubling
+ * based reallocation, up to an optional maximum growth given.
+ *
+ * When all the data has been appended, call getArrayBuffer,
+ * passing in the JSContext* for which the ArrayBuffer object
+ * is to be created.  This also implicitly resets the builder,
+ * or it can be reset explicitly at any point by calling reset().
+ */
+class ArrayBufferBuilder
+{
+    void *rawcontents_;
+    uint8_t *dataptr_;
+    uint32_t capacity_;
+    uint32_t length_;
+  public:
+    ArrayBufferBuilder()
+        : rawcontents_(NULL),
+          dataptr_(NULL),
+          capacity_(0),
+          length_(0)
+    {
+    }
+
+    ~ArrayBufferBuilder() {
+        reset();
+    }
+
+    void reset() {
+        if (rawcontents_)
+            JS_free(NULL, rawcontents_);
+        rawcontents_ = dataptr_ = NULL;
+        capacity_ = length_ = 0;
+    }
+
+    // will truncate if newcap is < length()
+    bool setCapacity(uint32_t newcap) {
+        if (!JS_ReallocateArrayBufferContents(NULL, newcap, &rawcontents_, &dataptr_))
+            return false;
+
+        capacity_ = newcap;
+        if (length_ > newcap)
+            length_ = newcap;
+
+        return true;
+    }
+
+    // Append datalen bytes from data to the current buffer.  If we
+    // need to grow the buffer, grow by doubling the size up to a
+    // maximum of maxgrowth (if given).  If datalen is greater than
+    // what the new capacity would end up as, then grow by datalen.
+    //
+    // The data parameter must not overlap with anything beyond the
+    // builder's current valid contents [0..length)
+    bool append(const uint8_t *newdata, uint32_t datalen, uint32_t maxgrowth = 0) {
+        if (length_ + datalen > capacity_) {
+            uint32_t newcap;
+            // double while under maxgrowth or if not specified
+            if (!maxgrowth || capacity_ < maxgrowth)
+                newcap = capacity_ * 2;
+            else
+                newcap = capacity_ + maxgrowth;
+
+            // but make sure there's always enough to satisfy our request
+            if (newcap < length_ + datalen)
+                newcap = length_ + datalen;
+
+            // did we overflow?
+            if (newcap < capacity_)
+                return false;
+
+            if (!setCapacity(newcap))
+                return false;
+        }
+
+        // assert that the region isn't overlapping so we can memcpy;
+        JS_ASSERT(!areOverlappingRegions(newdata, datalen, dataptr_ + length_, datalen));
+
+        memcpy(dataptr_ + length_, newdata, datalen);
+        length_ += datalen;
+
+        return true;
+    }
+
+    uint8_t *data() {
+        return dataptr_;
+    }
+
+    uint32_t length() {
+        return length_;
+    }
+
+    uint32_t capacity() {
+        return capacity_;
+    }
+
+    JSObject* getArrayBuffer(JSContext *cx) {
+        if (capacity_ > length_) {
+            if (!setCapacity(length_))
+                return NULL;
+        }
+
+        JSObject* obj = JS_NewArrayBufferWithContents(cx, rawcontents_);
+        if (!obj)
+            return NULL;
+
+        rawcontents_ = dataptr_ = NULL;
+        length_ = capacity_ = 0;
+
+        return obj;
+    }
+
+protected:
+
+    static bool areOverlappingRegions(const uint8_t *start1, uint32_t length1,
+                                      const uint8_t *start2, uint32_t length2)
+    {
+        const uint8_t *end1 = start1 + length1;
+        const uint8_t *end2 = start2 + length2;
+
+        const uint8_t *max_start = start1 > start2 ? start1 : start2;
+        const uint8_t *min_end   = end1 < end2 ? end1 : end2;
+
+        return max_start < min_end;
+    }
+};
+
 } /* namespace js */
 
 typedef js::ArrayBufferView::ViewType JSArrayBufferViewType;

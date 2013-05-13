@@ -665,8 +665,9 @@ pref("reader.font_size", 4);
 // The default of margin size in reader (5%-25%)
 pref("reader.margin_size", 5);
 
-// The default color scheme in reader (light, dark, sepia)
-pref("reader.color_scheme", "light");
+// The default color scheme in reader (light, dark, sepia, auto)
+// auto = color automatically adjusts according to ambient light level
+pref("reader.color_scheme", "auto");
 
 // The font type in reader (sans-serif, serif)
 pref("reader.font_type", "sans-serif");

@@ -49,6 +49,7 @@ StatementRow::GetProperty(nsIXPConnectWrappedNative *aWrapper,
 {
   NS_ENSURE_TRUE(mStatement, NS_ERROR_NOT_INITIALIZED);
 
+  JS::RootedObject scope(aCtx, aScopeObj);
   if (JSID_IS_STRING(aId)) {
     ::JSAutoByteString idBytes(aCtx, JSID_TO_STRING(aId));
     NS_ENSURE_TRUE(!!idBytes, NS_ERROR_OUT_OF_MEMORY);
@@ -95,7 +96,7 @@ StatementRow::GetProperty(nsIXPConnectWrappedNative *aWrapper,
       // Copy the blob over to the JS array.
       for (uint32_t i = 0; i < length; i++) {
         jsval val = INT_TO_JSVAL(blob[i]);
-        if (!::JS_SetElement(aCtx, aScopeObj, i, &val)) {
+        if (!::JS_SetElement(aCtx, scope, i, &val)) {
           *_retval = false;
           return NS_OK;
         }

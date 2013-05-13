@@ -65,12 +65,14 @@ let AboutReader = function(doc, win) {
     { name: gStrings.GetStringFromName("aboutReader.colorSchemeLight"),
       value: "light"},
     { name: gStrings.GetStringFromName("aboutReader.colorSchemeDark"),
-      value: "dark"}
+      value: "dark"},
+    { name: gStrings.GetStringFromName("aboutReader.colorSchemeAuto"),
+      value: "auto"}
   ];
 
   let colorScheme = Services.prefs.getCharPref("reader.color_scheme");
-  this._setupSegmentedButton("color-scheme-buttons", colorSchemeOptions, colorScheme, this._setColorScheme.bind(this));
-  this._setColorScheme(colorScheme);
+  this._setupSegmentedButton("color-scheme-buttons", colorSchemeOptions, colorScheme, this._setColorSchemePref.bind(this));
+  this._setColorSchemePref(colorScheme);
 
   let fontTypeOptions = [
     { name: gStrings.GetStringFromName("aboutReader.fontTypeSansSerif"),
@@ -219,6 +221,10 @@ AboutReader.prototype = {
         this._updateImageMargins();
         break;
 
+      case "devicelight":
+        this._handleDeviceLight(aEvent.value);
+        break;
+
       case "unload":
         Services.obs.removeObserver(this, "Reader:Add");
         Services.obs.removeObserver(this, "Reader:Remove");
@@ -316,6 +322,18 @@ AboutReader.prototype = {
     Services.prefs.setIntPref("reader.font_size", this._fontSize);
   },
 
+  _handleDeviceLight: function Reader_handleDeviceLight(luxValue) {
+    // Ignore changes that are within a certain threshold of previous lux values.
+    if ((this._colorScheme === "dark" && luxValue < 50) ||
+        (this._colorScheme === "light" && luxValue > 25))
+      return;
+
+    if (luxValue < 30)
+      this._setColorScheme("dark");
+    else
+      this._setColorScheme("light");
+  },
+
   _setColorScheme: function Reader_setColorScheme(newColorScheme) {
     if (this._colorScheme === newColorScheme)
       return;
@@ -327,8 +345,19 @@ AboutReader.prototype = {
 
     this._colorScheme = newColorScheme;
     bodyClasses.add(this._colorScheme);
+  },
 
-    Services.prefs.setCharPref("reader.color_scheme", this._colorScheme);
+  // Pref values include "dark", "light", and "auto", which automatically switches
+  // between light and dark color schemes based on the ambient light level.
+  _setColorSchemePref: function Reader_setColorSchemePref(colorSchemePref) {
+    if (colorSchemePref === "auto") {
+      this._win.addEventListener("devicelight", this, false);
+    } else {
+      this._win.removeEventListener("devicelight", this, false);
+      this._setColorScheme(colorSchemePref);
+    }
+
+    Services.prefs.setCharPref("reader.color_scheme", colorSchemePref);
   },
 
   _setFontType: function Reader_setFontType(newFontType) {
