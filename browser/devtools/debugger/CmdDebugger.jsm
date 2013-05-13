@@ -5,7 +5,7 @@
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 this.EXPORTED_SYMBOLS = [ ];
 
-Cu.import("resource:///modules/devtools/gcli.jsm");
+Cu.import("resource://gre/modules/devtools/gcli.jsm");
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 
 XPCOMUtils.defineLazyModuleGetter(this, "gDevTools",
@@ -157,7 +157,7 @@ gcli.addCommand({
       description: gcli.lookup("breakaddlineLineDesc")
     }
   ],
-  returnType: "html",
+  returnType: "string",
   exec: function(args, context) {
     args.type = "line";
 
@@ -201,7 +201,7 @@ gcli.addCommand({
       description: gcli.lookup("breakdelBreakidDesc")
     }
   ],
-  returnType: "html",
+  returnType: "string",
   exec: function(args, context) {
     let dbg = getPanel(context, "jsdebugger");
     if (!dbg) {
@@ -381,7 +381,7 @@ gcli.addCommand({
   name: "dbg list",
   description: gcli.lookup("dbgListSourcesDesc"),
   params: [],
-  returnType: "html",
+  returnType: "dom",
   exec: function(args, context) {
     let dbg = getPanel(context, "jsdebugger");
     let doc = context.environment.chromeDocument;

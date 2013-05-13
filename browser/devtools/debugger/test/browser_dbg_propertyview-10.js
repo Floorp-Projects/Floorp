@@ -61,10 +61,13 @@ function testWithFrame()
       is(innerNodes[1].querySelector(".value").getAttribute("value"), "1",
         "Should have the right property value for |one|.");
 
-      is(globalNodes[3].querySelector(".name").getAttribute("value"), "document",
+      let globalScopeObject = gDebugger.DebuggerView.Variables.getScopeForNode(globalScope);
+      let documentNode = globalScopeObject.get("document");
+
+      is(documentNode.target.querySelector(".name").getAttribute("value"), "document",
         "Should have the right property name for |document|.");
 
-      is(globalNodes[3].querySelector(".value").getAttribute("value"), "[object HTMLDocument]",
+      is(documentNode.target.querySelector(".value").getAttribute("value"), "[object HTMLDocument]",
         "Should have the right property value for |document|.");
 
       let len = globalNodes.length - 1;

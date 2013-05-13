@@ -61,7 +61,7 @@ exports.testAllPredictions1 = function(options) {
     return;
   }
 
-  var resource = types.getType('resource');
+  var resource = types.createType('resource');
   return resource.getLookup().then(function(opts) {
     assert.ok(opts.length > 1, 'have all resources');
 
@@ -77,7 +77,7 @@ exports.testScriptPredictions = function(options) {
     return;
   }
 
-  var resource = types.getType({ name: 'resource', include: 'text/javascript' });
+  var resource = types.createType({ name: 'resource', include: 'text/javascript' });
   return resource.getLookup().then(function(opts) {
     assert.ok(opts.length > 1, 'have js resources');
 
@@ -93,7 +93,7 @@ exports.testStylePredictions = function(options) {
     return;
   }
 
-  var resource = types.getType({ name: 'resource', include: 'text/css' });
+  var resource = types.createType({ name: 'resource', include: 'text/css' });
   return resource.getLookup().then(function(opts) {
     assert.ok(opts.length >= 1, 'have css resources');
 
@@ -109,11 +109,11 @@ exports.testAllPredictions2 = function(options) {
     return;
   }
 
-  var scriptRes = types.getType({ name: 'resource', include: 'text/javascript' });
+  var scriptRes = types.createType({ name: 'resource', include: 'text/javascript' });
   return scriptRes.getLookup().then(function(scriptOptions) {
-    var styleRes = types.getType({ name: 'resource', include: 'text/css' });
+    var styleRes = types.createType({ name: 'resource', include: 'text/css' });
     return styleRes.getLookup().then(function(styleOptions) {
-      var allRes = types.getType({ name: 'resource' });
+      var allRes = types.createType({ name: 'resource' });
       return allRes.getLookup().then(function(allOptions) {
         assert.is(scriptOptions.length + styleOptions.length,
                   allOptions.length,
@@ -129,9 +129,9 @@ exports.testAllPredictions3 = function(options) {
     return;
   }
 
-  var res1 = types.getType({ name: 'resource' });
+  var res1 = types.createType({ name: 'resource' });
   return res1.getLookup().then(function(options1) {
-    var res2 = types.getType('resource');
+    var res2 = types.createType('resource');
     return res2.getLookup().then(function(options2) {
       assert.is(options1.length, options2.length, 'type spec');
     });
