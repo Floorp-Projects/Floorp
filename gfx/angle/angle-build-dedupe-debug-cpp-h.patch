@@ -58,13 +58,13 @@ diff --git a/gfx/angle/src/compiler/OutputGLSLBase.cpp b/gfx/angle/src/compiler/
 -#include "compiler/debug.h"
 +#include "compiler/compiler_debug.h"
  
+ #include <cfloat>
+ 
  namespace
  {
  TString arrayBrackets(const TType& type)
  {
      ASSERT(type.isArray());
-     TInfoSinkBase out;
-     out << "[" << type.getArraySize() << "]";
 diff --git a/gfx/angle/src/compiler/OutputHLSL.cpp b/gfx/angle/src/compiler/OutputHLSL.cpp
 --- a/gfx/angle/src/compiler/OutputHLSL.cpp
 +++ b/gfx/angle/src/compiler/OutputHLSL.cpp
@@ -79,14 +79,14 @@ diff --git a/gfx/angle/src/compiler/OutputHLSL.cpp b/gfx/angle/src/compiler/Outp
  #include "common/angleutils.h"
 -#include "compiler/debug.h"
 +#include "compiler/compiler_debug.h"
- #include "compiler/InfoSink.h"
- #include "compiler/UnfoldShortCircuit.h"
- #include "compiler/SearchSymbol.h"
  #include "compiler/DetectDiscontinuity.h"
+ #include "compiler/InfoSink.h"
+ #include "compiler/SearchSymbol.h"
+ #include "compiler/UnfoldShortCircuit.h"
  
- #include <stdio.h>
  #include <algorithm>
- 
+ #include <cfloat>
+ #include <stdio.h>
 diff --git a/gfx/angle/src/compiler/Types.h b/gfx/angle/src/compiler/Types.h
 --- a/gfx/angle/src/compiler/Types.h
 +++ b/gfx/angle/src/compiler/Types.h

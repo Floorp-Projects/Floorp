@@ -11,7 +11,6 @@ include $(DEPTH)/config/autoconf.mk
 
 # On Windows, we don't automatically get "lib" prepended, but we need it.
 LIBRARY_NAME     = libEGL
-MODULE_NAME      = libegl
 FORCE_SHARED_LIB = 1
 
 # ANGLE uses the STL, so we can't use our derpy STL wrappers.
@@ -20,6 +19,11 @@ STL_FLAGS =
 # ANGLE uses exceptions internally, so we need to have exception handling
 # support
 ENABLE_CXX_EXCEPTIONS = 1
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+# Enable unwind semantics for exception handlers in response to warning C4530.
+OS_CPPFLAGS += -EHsc
+endif
 
 # Since we're building off in our own world, we don't want to have
 # mozilla-config.h and -DMOZILLA_CLIENT automatically included and defined, so
@@ -30,7 +34,7 @@ OS_COMPILE_CXXFLAGS = $(OS_CPPFLAGS)
 DEFINES += -DANGLE_BUILD -DNOMINMAX -DLIBEGL_EXPORTS -D_CRT_SECURE_NO_DEPRECATE
 
 DEFINES += -DANGLE_DISABLE_TRACE
-DEFINES += -DANGLE_COMPILE_OPTIMIZATION_LEVEL=D3DCOMPILE_OPTIMIZATION_LEVEL0
+DEFINES += -DANGLE_COMPILE_OPTIMIZATION_LEVEL=D3DCOMPILE_OPTIMIZATION_LEVEL1
 
 ifndef MOZ_DEBUG
 DEFINES += -D_SECURE_SCL=0

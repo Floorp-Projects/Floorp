@@ -11,9 +11,9 @@
 
 #include "libGLESv2/D3DConstantTable.h"
 
+#include "common/system.h"
 #include <d3d9.h>
 #include <d3d9types.h>
-#include <windows.h>
 #include <mmsystem.h>
 
 #include "libGLESv2/BinaryStream.h"

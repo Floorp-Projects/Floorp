@@ -10,10 +10,9 @@
 
 #include <limits>
 #include <stdio.h>
-#include <windows.h>
 
 #include "common/debug.h"
-
+#include "common/system.h"
 #include "libGLESv2/mathutil.h"
 #include "libGLESv2/Context.h"
 

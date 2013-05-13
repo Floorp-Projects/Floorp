@@ -69,7 +69,7 @@
             ],
             'RuntimeTypeInfo': 'false',
             'WarningLevel': '4',
-            'DisableSpecificWarnings': '4100;4127;4189;4239;4244;4245;4512;4702',
+            'DisableSpecificWarnings': [4100, 4127, 4189, 4239, 4244, 4245, 4512, 4702],
           },
           'VCLinkerTool': {
             'FixedBaseAddress': '1',
@@ -79,11 +79,23 @@
             # Most of the executables we'll ever create are tests
             # and utilities with console output.
             'SubSystem': '1',  # /SUBSYSTEM:CONSOLE
+            'AdditionalLibraryDirectories': [
+              '$(ProgramFiles)/Windows Kits/8.0/Lib/win8/um/x86',
+            ],
+          },
+          'VCLibrarianTool': {
+            'AdditionalLibraryDirectories': [
+              '$(ProgramFiles)/Windows Kits/8.0/Lib/win8/um/x86',
+            ],
           },
           'VCResourceCompilerTool': {
             'Culture': '1033',
           },
         },
+        'msvs_system_include_dirs': [
+          '$(ProgramFiles)/Windows Kits/8.0/Include/shared',
+          '$(ProgramFiles)/Windows Kits/8.0/Include/um',
+        ],
       },  # Common
       'Debug': {
         'inherit_from': ['Common'],
