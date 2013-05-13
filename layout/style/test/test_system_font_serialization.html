@@ -50,7 +50,7 @@ e.setAttribute("style", "font: inherit; font-family: Helvetica;");
 
 var cssTextStr = "font-style: inherit; font-variant: inherit; font-weight: inherit; font-size: inherit; line-height: inherit; font-size-adjust: inherit; font-stretch: inherit; -moz-font-feature-settings: inherit; -moz-font-language-override: inherit;";
 if (SpecialPowers.getBoolPref("layout.css.font-features.enabled")) {
-  cssTextStr += " font-kerning: inherit; font-synthesis: inherit; font-variant-caps: inherit; font-variant-east-asian: inherit; font-variant-ligatures: inherit; font-variant-numeric: inherit; font-variant-position: inherit;"
+  cssTextStr += " font-kerning: inherit; font-synthesis: inherit; font-variant-alternates: inherit; font-variant-caps: inherit; font-variant-east-asian: inherit; font-variant-ligatures: inherit; font-variant-numeric: inherit; font-variant-position: inherit;"
 }
 
 is(e.style.cssText, cssTextStr + " font-family: Helvetica;", "don't serialize system font for font:inherit");

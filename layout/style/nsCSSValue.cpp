@@ -1095,7 +1095,27 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
 
     aResult.AppendLiteral(")");
   } else if (eCSSUnit_Pair == unit) {
-    GetPairValue().AppendToString(aProperty, aResult);
+    if (eCSSProperty_font_variant_alternates == aProperty) {
+      int32_t intValue = GetPairValue().mXValue.GetIntValue();
+      nsAutoString out;
+
+      // simple, enumerated values
+      nsStyleUtil::AppendBitmaskCSSValue(aProperty,
+          intValue & NS_FONT_VARIANT_ALTERNATES_ENUMERATED_MASK,
+          NS_FONT_VARIANT_ALTERNATES_HISTORICAL,
+          NS_FONT_VARIANT_ALTERNATES_HISTORICAL,
+          out);
+
+      // functional values
+      const nsCSSValueList *list = GetPairValue().mYValue.GetListValue();
+      nsAutoTArray<gfxAlternateValue,8> altValues;
+
+      nsStyleUtil::AppendAlternateValues(list, altValues);
+      nsStyleUtil::AppendFunctionalAlternates(altValues, out);
+      aResult.Append(out);
+    } else {
+      GetPairValue().AppendToString(aProperty, aResult);
+    }
   } else if (eCSSUnit_Triplet == unit) {
     GetTripletValue().AppendToString(aProperty, aResult);
   } else if (eCSSUnit_Rect == unit) {
