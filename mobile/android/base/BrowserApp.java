@@ -43,6 +43,7 @@ import android.nfc.NfcAdapter;
 import android.nfc.NfcEvent;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.InputDevice;
 import android.view.KeyEvent;
@@ -477,6 +478,110 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     @Override
+    public boolean onSearchRequested() {
+        return showAwesomebar(AwesomeBar.Target.CURRENT_TAB);
+    }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        switch(item.getItemId()) {
+            case R.id.pasteandgo: {
+                String text = GeckoAppShell.getClipboardText();
+                if (!TextUtils.isEmpty(text)) {
+                    Tabs.getInstance().loadUrl(text);
+                }
+                return true;
+            }
+            case R.id.site_settings: {
+                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Permissions:Get", null));
+                return true;
+            }
+            case R.id.paste: {
+                String text = GeckoAppShell.getClipboardText();
+                if (!TextUtils.isEmpty(text)) {
+                    showAwesomebar(AwesomeBar.Target.CURRENT_TAB, text);
+                }
+                return true;
+            }
+            case R.id.share: {
+                shareCurrentUrl();
+                return true;
+            }
+            case R.id.subscribe: {
+                Tab tab = Tabs.getInstance().getSelectedTab();
+                if (tab != null && tab.getFeedsEnabled()) {
+                    JSONObject args = new JSONObject();
+                    try {
+                        args.put("tabId", tab.getId());
+                    } catch (JSONException e) {
+                        Log.e(LOGTAG, "error building json arguments");
+                    }
+                    GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Feeds:Subscribe", args.toString()));
+                }
+                return true;
+            }
+            case R.id.copyurl: {
+                Tab tab = Tabs.getInstance().getSelectedTab();
+                if (tab != null) {
+                    String url = tab.getURL();
+                    if (url != null) {
+                        GeckoAppShell.setClipboardText(url);
+                    }
+                }
+                return true;
+            }
+            case R.id.add_to_launcher: {
+                Tab tab = Tabs.getInstance().getSelectedTab();
+                if (tab != null) {
+                    String url = tab.getURL();
+                    String title = tab.getDisplayTitle();
+                    Bitmap favicon = tab.getFavicon();
+                    if (url != null && title != null) {
+                        GeckoAppShell.createShortcut(title, url, url, favicon == null ? null : favicon, "");
+                    }
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean showAwesomebar(AwesomeBar.Target aTarget) {
+        return showAwesomebar(aTarget, null);
+    }
+
+    public boolean showAwesomebar(AwesomeBar.Target aTarget, String aUrl) {
+        Intent intent = new Intent(getBaseContext(), AwesomeBar.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+        intent.putExtra(AwesomeBar.TARGET_KEY, aTarget.name());
+
+        // If we were passed in a URL, show it.
+        if (aUrl != null && !TextUtils.isEmpty(aUrl)) {
+            intent.putExtra(AwesomeBar.CURRENT_URL_KEY, aUrl);
+        } else if (aTarget == AwesomeBar.Target.CURRENT_TAB) {
+            // Otherwise, if we're editing the current tab, show its URL.
+            Tab tab = Tabs.getInstance().getSelectedTab();
+            if (tab != null) {
+                // Check to see if there's a user-entered search term, which we save
+                // whenever the user performs a search.
+                aUrl = tab.getUserSearch();
+                if (TextUtils.isEmpty(aUrl)) {
+                    aUrl = tab.getURL();
+                }
+                if (aUrl != null) {
+                    intent.putExtra(AwesomeBar.CURRENT_URL_KEY, aUrl);
+                }
+            }
+        }
+
+        int requestCode = GeckoAppShell.sActivityHelper.makeRequestCodeForAwesomebar();
+        startActivityForResult(intent, requestCode);
+        overridePendingTransition (R.anim.awesomebar_fade_in, R.anim.awesomebar_hold_still);
+        return true;
+    }
+
+
+    @Override
     public void setAccessibilityEnabled(boolean enabled) {
         if (mAccessibilityEnabled == enabled) {
             return;
@@ -571,6 +676,22 @@ abstract public class BrowserApp extends GeckoApp
 
         // Intercept key events for gamepad shortcuts
         mLayerView.setOnKeyListener(this);
+    }
+
+    private void shareCurrentUrl() {
+        Tab tab = Tabs.getInstance().getSelectedTab();
+        if (tab == null)
+          return;
+
+        String url = tab.getURL();
+        if (url == null)
+            return;
+
+        if (ReaderModeUtils.isAboutReader(url))
+            url = ReaderModeUtils.getUrlFromAboutReader(url);
+
+        GeckoAppShell.openUriExternal(url, "text/plain", "", "",
+                                      Intent.ACTION_SEND, tab.getDisplayTitle());
     }
 
     private void setToolbarMargin(int margin) {
