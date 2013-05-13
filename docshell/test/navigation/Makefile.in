@@ -54,6 +54,7 @@ MOCHITEST_FILES += \
 endif
 
 MOCHITEST_BROWSER_FILES = \
+		browser_bug343515.js \
 		bug343515_pg1.html \
 		bug343515_pg2.html \
 		bug343515_pg3.html \
@@ -61,13 +62,5 @@ MOCHITEST_BROWSER_FILES = \
 		bug343515_pg3_2.html \
 		bug343515_pg3_1_1.html \
 		$(NULL)
-
-# browser_bug343515.js disabled on Windows & OS X for intermittent failures
-# (see bug 765192 and bug 813242)
-ifneq (,$(filter-out WINNT Darwin,$(OS_ARCH)))
-MOCHITEST_BROWSER_FILES += \
-		browser_bug343515.js \
-		$(NULL)
-endif
 
 include $(topsrcdir)/config/rules.mk
