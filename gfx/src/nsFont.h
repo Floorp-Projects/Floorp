@@ -12,6 +12,7 @@
 #include "nsTArray.h"
 #include "gfxFontConstants.h"
 #include "gfxFontFeatures.h"
+#include "nsAutoPtr.h"
 
 // XXX we need a method to enumerate all of the possible fonts on the
 // system across family, weight, style, size, etc. But not here!
@@ -86,6 +87,12 @@ struct NS_GFX nsFont {
   // needs to be done.
   float sizeAdjust;
 
+  // -- list of value tags for font-specific alternate features
+  nsTArray<gfxAlternateValue> alternateValues;
+
+  // -- object used to look these up once the font is matched
+  nsRefPtr<gfxFontFeatureValueSet> featureValueLookup;
+
   // Font features from CSS font-feature-settings
   nsTArray<gfxFontFeature> fontFeatureSettings;
 
@@ -125,6 +132,8 @@ struct NS_GFX nsFont {
   bool BaseEquals(const nsFont& aOther) const;
 
   nsFont& operator=(const nsFont& aOther);
+
+  void CopyAlternates(const nsFont& aOther);
 
   // Add featureSettings into style
   void AddFontFeaturesToStyle(gfxFontStyle *aStyle) const;

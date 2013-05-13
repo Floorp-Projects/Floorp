@@ -981,6 +981,7 @@ gfxHarfBuzzShaper::ShapeText(gfxContext      *aContext,
     if (MergeFontFeatures(style,
                           mFont->GetFontEntry()->mFeatureSettings,
                           aShapedText->DisableLigatures(),
+                          mFont->GetFontEntry()->FamilyName(),
                           mergedFeatures))
     {
         // enumerate result and insert into hb_feature array

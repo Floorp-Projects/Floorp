@@ -80,6 +80,16 @@ struct THEBES_API gfxFontStyle {
     // custom opentype feature settings
     nsTArray<gfxFontFeature> featureSettings;
 
+    // Some font-variant property values require font-specific settings
+    // defined via @font-feature-values rules.  These are resolved after
+    // font matching occurs.
+
+    // -- list of value tags for specific alternate features
+    nsTArray<gfxAlternateValue> alternateValues;
+
+    // -- object used to look these up once the font is matched
+    nsRefPtr<gfxFontFeatureValueSet> featureValueLookup;
+
     // The logical size of the font, in pixels
     gfxFloat size;
 
@@ -152,7 +162,9 @@ struct THEBES_API gfxFontStyle {
              *reinterpret_cast<const uint32_t*>(&other.sizeAdjust)) &&
             (kerning == other.kerning) &&
             (featureSettings == other.featureSettings) &&
-            (languageOverride == other.languageOverride);
+            (languageOverride == other.languageOverride) &&
+            (alternateValues == other.alternateValues) &&
+            (featureValueLookup == other.featureValueLookup);
     }
 
     static void ParseFontFeatureSettings(const nsString& aFeatureString,
@@ -1158,6 +1170,7 @@ public:
     MergeFontFeatures(const gfxFontStyle *aStyle,
                       const nsTArray<gfxFontFeature>& aFontFeatures,
                       bool aDisableLigatures,
+                      const nsAString& aFamilyName,
                       nsDataHashtable<nsUint32HashKey,uint32_t>& aMergedFeatures);
 
 protected:
