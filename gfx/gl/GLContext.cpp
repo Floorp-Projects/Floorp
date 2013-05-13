@@ -80,6 +80,7 @@ static const char *sExtensionNames[] = {
     "GL_OES_EGL_sync",
     "GL_OES_EGL_image_external",
     "GL_EXT_packed_depth_stencil",
+    "GL_OES_element_index_uint",
     nullptr
 };
 

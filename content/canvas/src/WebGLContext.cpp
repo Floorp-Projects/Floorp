@@ -943,6 +943,8 @@ bool WebGLContext::IsExtensionSupported(JSContext *cx, WebGLExtensionID ext) con
     }
 
     switch (ext) {
+        case OES_element_index_uint:
+            return !gl->IsGLES2() || gl->IsExtensionSupported(GLContext::OES_element_index_uint);
         case OES_standard_derivatives:
         case WEBGL_lose_context:
             // We always support these extensions.
@@ -1013,7 +1015,11 @@ WebGLContext::GetExtension(JSContext *cx, const nsAString& aName, ErrorResult& r
     WebGLExtensionID ext = WebGLExtensionID_unknown_extension;
 
     // step 1: figure what extension is wanted
-    if (CompareWebGLExtensionName(name, "OES_texture_float"))
+    if (CompareWebGLExtensionName(name, "OES_element_index_uint"))
+    {
+        ext = OES_element_index_uint;
+    }
+    else if (CompareWebGLExtensionName(name, "OES_texture_float"))
     {
         ext = OES_texture_float;
     }
@@ -1075,6 +1081,9 @@ WebGLContext::GetExtension(JSContext *cx, const nsAString& aName, ErrorResult& r
     if (!IsExtensionEnabled(ext)) {
         WebGLExtensionBase *obj = nullptr;
         switch (ext) {
+            case OES_element_index_uint:
+                obj = new WebGLExtensionElementIndexUint(this);
+                break;
             case OES_standard_derivatives:
                 obj = new WebGLExtensionStandardDerivatives(this);
                 break;
@@ -1439,6 +1448,8 @@ WebGLContext::GetSupportedExtensions(JSContext *cx, Nullable< nsTArray<nsString>
 
     nsTArray<nsString>& arr = retval.SetValue();
 
+    if (IsExtensionSupported(cx, OES_element_index_uint))
+        arr.AppendElement(NS_LITERAL_STRING("OES_element_index_uint"));
     if (IsExtensionSupported(cx, OES_texture_float))
         arr.AppendElement(NS_LITERAL_STRING("OES_texture_float"));
     if (IsExtensionSupported(cx, OES_standard_derivatives))
