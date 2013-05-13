@@ -230,6 +230,7 @@
            side="right"
            type="arrow"
            hidden="true"
+           flip="slide"
            rolluponmousewheel="true"
            consumeoutsideclicks="false"
            noautofocus="true"

@@ -33,7 +33,6 @@ PARALLEL_DIRS += [
     'prompts',
     'protobuf',
     'reflect',
-    'social',
     'startup',
     'statusfilter',
     'telemetry',
@@ -43,6 +42,9 @@ PARALLEL_DIRS += [
     'viewconfig',
     'viewsource',
 ]
+
+if CONFIG['MOZ_SOCIAL']:
+    PARALLEL_DIRS += ['social']
 
 if CONFIG['BUILD_CTYPES']:
     PARALLEL_DIRS += ['ctypes']

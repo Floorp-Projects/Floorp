@@ -120,7 +120,7 @@ var tests = [
     expectedMono: "ting-mono-expected.wav",
     numberOfChannels: 2,
     duration: 0.6936,
-    length: 33297,
+    length: 33294,
     fuzzTolerance: 12,
     fuzzToleranceMobile: 15826
   },
@@ -131,8 +131,8 @@ var tests = [
     expected: "ting-dualchannel44.1-expected.wav",
     expectedMono: "ting-mono-dualchannel44.1-expected.wav",
     numberOfChannels: 2,
-    duration: 0.6936,
-    length: 33297,
+    duration: 0.6932,
+    length: 33274,
     fuzzTolerance: 16,
     fuzzToleranceMobile: 16713
   },
@@ -156,7 +156,7 @@ var tests = [
     expectedMono: "small-shot-mono-expected.wav",
     numberOfChannels: 2,
     duration: 0.2760,
-    length: 13252,
+    length: 13248,
     fuzzTolerance: 72,
     fuzzToleranceMobile: 14844
   },
@@ -173,8 +173,8 @@ var tests = [
     expected: "audio-expected.wav",
     expectedMono: "audio-mono-expected.wav",
     numberOfChannels: 2,
-    duration: 1.0811,
-    length: 51896,
+    duration: 1.0807,
+    length: 51872,
     fuzzTolerance: 91427,
     fuzzToleranceMobile: 119684
   },
@@ -185,8 +185,8 @@ var tests = [
     expected: "audio-expected.wav",
     expectedMono: "audio-mono-expected-2.wav",
     numberOfChannels: 2,
-    duration: 1.0811,
-    length: 51896,
+    duration: 1.0807,
+    length: 51872,
     fuzzTolerance: 0,
     fuzzToleranceMobile: 0
   }
@@ -218,6 +218,9 @@ function getFuzzTolerance(test) {
 function checkAudioBuffer(buffer, test, callback, monoTest) {
   is(buffer.numberOfChannels, monoTest ? 1 : test.numberOfChannels, "Correct number of channels");
   ok(Math.abs(buffer.duration - test.duration) < 1e-4, "Correct duration");
+  if (Math.abs(buffer.duration - test.duration) >= 1e-4) {
+    ok(false, "got: " + buffer.duration  + ", expected: " + test.duration);
+  }
   is(buffer.sampleRate, cx.sampleRate, "Correct sample rate");
   is(buffer.length, test.length, "Correct length");
 

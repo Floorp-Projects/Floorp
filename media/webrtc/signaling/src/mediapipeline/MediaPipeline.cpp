@@ -112,10 +112,12 @@ nsresult MediaPipeline::Init_s() {
 }
 
 
-// Disconnect us from the transport so that we can cleanly destruct
-// the pipeline on the main thread.
+// Disconnect us from the transport so that we can cleanly destruct the
+// pipeline on the main thread.  ShutdownMedia_m() must have already been
+// called
 void MediaPipeline::ShutdownTransport_s() {
   ASSERT_ON_THREAD(sts_thread_);
+  MOZ_ASSERT(!stream_); // verifies that ShutdownMedia_m() has run
 
   disconnect_all();
   transport_->Detach();
@@ -1020,6 +1022,7 @@ nsresult MediaPipelineReceiveVideo::Init() {
   listener_->AddSelf(new VideoSegment());
 #endif
 
+  // Always happens before we can DetachMediaStream()
   static_cast<VideoSessionConduit *>(conduit_.get())->
       AttachRenderer(renderer_);
 

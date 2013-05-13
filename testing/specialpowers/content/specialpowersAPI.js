@@ -1485,4 +1485,19 @@ SpecialPowersAPI.prototype = {
   isWindowPrivate: function(win) {
     return PrivateBrowsingUtils.isWindowPrivate(win);
   },
+
+  notifyObserversInParentProcess: function(subject, topic, data) {
+    if (subject) {
+      throw new Error("Can't send subject to another process!");
+    }
+    if (this.isMainProcess()) {
+      return this.notifyObservers(subject, topic, data);
+    }
+    var msg = {
+      'op': 'notify',
+      'observerTopic': topic,
+      'observerData': data
+    };
+    this._sendSyncMessage('SPObserverService', msg);
+  },
 };

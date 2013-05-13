@@ -19,8 +19,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
 this.DistributionCustomizer = function DistributionCustomizer() {
   let dirSvc = Cc["@mozilla.org/file/directory_service;1"].
                getService(Ci.nsIProperties);
-  let iniFile = dirSvc.get("XCurProcD", Ci.nsIFile);
-  iniFile.append("distribution");
+  let iniFile = dirSvc.get("XREExeF", Ci.nsIFile);
+  iniFile.leafName = "distribution";
   iniFile.append("distribution.ini");
   if (iniFile.exists())
     this._iniFile = iniFile;

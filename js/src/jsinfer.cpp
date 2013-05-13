@@ -6931,7 +6931,8 @@ TypeCompartment::maybePurgeAnalysis(JSContext *cx, bool force)
             return;
         }
 
-        cx->runtime->analysisPurgeCallback(cx->runtime, &desc->asFlat());
+        JS::Rooted<JSFlatString*> flat(cx, &desc->asFlat());
+        cx->runtime->analysisPurgeCallback(cx->runtime, flat);
     }
 }
 

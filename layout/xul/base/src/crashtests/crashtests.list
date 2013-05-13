@@ -47,6 +47,7 @@ load 387033-1.xhtml
 load 387080-1.xul
 load 391974-1.html
 load 394120-1.xhtml
+load 397293.xhtml
 load 397304-1.html
 load 398326-1.xhtml
 load 399013.xul
@@ -69,6 +70,7 @@ load 464149-1.xul
 asserts-if(winWidget,1) load 464407-1.xhtml # Bug 450974
 load 467481-1.xul
 load 470063-1.html
+load 470272.html
 load 472189.xul
 load 475133.html
 load 488210-1.xhtml

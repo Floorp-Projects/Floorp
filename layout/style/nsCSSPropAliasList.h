@@ -55,3 +55,5 @@ CSS_PROP_ALIAS(-moz-animation-iteration-count, animation_iteration_count, MozAni
 CSS_PROP_ALIAS(-moz-animation-name, animation_name, MozAnimationName, "layout.css.prefixes.animations")
 CSS_PROP_ALIAS(-moz-animation-play-state, animation_play_state, MozAnimationPlayState, "layout.css.prefixes.animations")
 CSS_PROP_ALIAS(-moz-animation-timing-function, animation_timing_function, MozAnimationTimingFunction, "layout.css.prefixes.animations")
+CSS_PROP_ALIAS(font-feature-settings, font_feature_settings, FontFeatureSettings, "layout.css.font-features.enabled")
+CSS_PROP_ALIAS(font-language-override, font_language_override, FontLanguageOverride, "layout.css.font-features.enabled")

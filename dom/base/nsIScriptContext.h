@@ -130,8 +130,8 @@ public:
    * @return NS_OK if the function was successfully bound
    */
   virtual nsresult BindCompiledEventHandler(nsISupports* aTarget,
-                                            JSObject* aScope,
-                                            JSObject* aHandler,
+                                            JS::Handle<JSObject*> aScope,
+                                            JS::Handle<JSObject*> aHandler,
                                             JS::MutableHandle<JSObject*> aBoundHandler) = 0;
 
   /**
@@ -217,7 +217,8 @@ public:
 
   // SetProperty is suspect and jst believes should not be needed.  Currenly
   // used only for "arguments".
-  virtual nsresult SetProperty(JSObject* aTarget, const char* aPropName, nsISupports* aVal) = 0;
+  virtual nsresult SetProperty(JS::Handle<JSObject*> aTarget,
+                               const char* aPropName, nsISupports* aVal) = 0;
   /** 
    * Called to set/get information if the script context is
    * currently processing a script tag
@@ -236,7 +237,7 @@ public:
    * call DidInitializeContext() when a context is fully
    * (successfully) initialized.
    */
-  virtual nsresult InitClasses(JSObject* aGlobalObj) = 0;
+  virtual nsresult InitClasses(JS::Handle<JSObject*> aGlobalObj) = 0;
 
   /**
    * Tell the context we're about to be reinitialize it.

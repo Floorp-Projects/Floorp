@@ -19,6 +19,12 @@
 <![CDATA[
 var anchor, panel, arrow;
 
+function is_close(got, exp, msg) {
+  // on some platforms we see differences of a fraction of a pixel - so
+  // allow any difference of < 1 pixels as being OK.
+  ok(Math.abs(got - exp) < 1, msg + ": " + got + " should be equal(-ish) to " + exp);
+}
+
 function isArrowPositionedOn(side, offset) {
   var arrowRect = arrow.getBoundingClientRect();
   var arrowMidX = (arrowRect.left + arrowRect.right) / 2;
@@ -48,11 +54,6 @@ function isArrowPositionedOn(side, offset) {
       ok(false, "invalid position " + where);
       break;
   }
-  function is_close(got, exp, msg) {
-    // on some platforms we see differences of a fraction of a pixel - so
-    // allow any difference of < 1 pixels as being OK.
-    ok(Math.abs(got - exp) < 1, msg + ": " + got + " should be equal to " + exp);
-  }
   // Now check the arrow really is pointing where we expect.  The middle of
   // the arrow should be pointing exactly to the left (or right) side of the
   // anchor rect, +- any offsets.
@@ -78,7 +79,17 @@ function isArrowPositionedOn(side, offset) {
   }
 }
 
+function openSlidingPopup(position, callback) {
+  panel.setAttribute("flip", "slide");
+  _openPopup(position, callback);
+}
+
 function openPopup(position, callback) {
+  panel.setAttribute("flip", "both");
+  _openPopup(position, callback);
+}
+
+function _openPopup(position, callback) {
   // this is very ugly: the panel CSS sets the arrow's list-style-image based
   // on the 'side' attribute.  If the setting of the 'side' attribute causes
   // the image to change, we may get the popupshown event before the new
@@ -218,19 +229,64 @@ var tests = [
     });
   }],
 
-  ['veryWidePanel', 'middle', function(next) {
-    openPopup("after_end", function() {
+  ['veryWidePanel-after_end', 'middle', function(next) {
+    openSlidingPopup("after_end", function() {
       var origArrowRect = arrow.getBoundingClientRect();
       // Now move it such that the arrow can't be at either end of the panel but
-      // instead somewhere in the middle as that is the only way things fit.
-      // XXX - these tests might not be quite correct even when bug 812943
-      // is fixed.
+      // instead somewhere in the middle as that is the only way things fit,
+      // meaning the arrow should "slide" down the panel.
       panel.sizeTo(window.innerWidth - 10, 60);
-      todo_is(panel.getBoundingClientRect().width, window.innerWidth - 10, "Bug 812943 - width is what we requested.")
+      is(panel.getBoundingClientRect().width, window.innerWidth - 10, "width is what we requested.")
       // the arrow should not have moved.
       var curArrowRect = arrow.getBoundingClientRect();
-      todo_is(curArrowRect.left, origArrowRect.left, "Bug 812943 - arrow should not have moved");
-      is(curArrowRect.top, origArrowRect.top, "arrow should not have moved up or down");
+      is_close(curArrowRect.left, origArrowRect.left, "arrow should not have moved");
+      is_close(curArrowRect.top, origArrowRect.top, "arrow should not have moved up or down");
+      next();
+    });
+  }],
+
+  ['veryWidePanel-before_start', 'middle', function(next) {
+    openSlidingPopup("before_start", function() {
+      var origArrowRect = arrow.getBoundingClientRect();
+      // Now size it such that the arrow can't be at either end of the panel but
+      // instead somewhere in the middle as that is the only way things fit.
+      panel.sizeTo(window.innerWidth - 10, 60);
+      is(panel.getBoundingClientRect().width, window.innerWidth - 10, "width is what we requested")
+      // the arrow should not have moved.
+      var curArrowRect = arrow.getBoundingClientRect();
+      is_close(curArrowRect.left, origArrowRect.left, "arrow should not have moved");
+      is_close(curArrowRect.top, origArrowRect.top, "arrow should not have moved up or down");
+      next();
+    });
+  }],
+
+  ['veryTallPanel-start_after', 'middle', function(next) {
+    openSlidingPopup("start_after", function() {
+      var origArrowRect = arrow.getBoundingClientRect();
+      // Now move it such that the arrow can't be at either end of the panel but
+      // instead somewhere in the middle as that is the only way things fit,
+      // meaning the arrow should "slide" down the panel.
+      panel.sizeTo(100, window.innerHeight - 10);
+      is(panel.getBoundingClientRect().height, window.innerHeight - 10, "height is what we requested.")
+      // the arrow should not have moved.
+      var curArrowRect = arrow.getBoundingClientRect();
+      is_close(curArrowRect.left, origArrowRect.left, "arrow should not have moved");
+      is_close(curArrowRect.top, origArrowRect.top, "arrow should not have moved up or down");
+      next();
+    });
+  }],
+
+  ['veryTallPanel-start_before', 'middle', function(next) {
+    openSlidingPopup("start_before", function() {
+      var origArrowRect = arrow.getBoundingClientRect();
+      // Now size it such that the arrow can't be at either end of the panel but
+      // instead somewhere in the middle as that is the only way things fit.
+      panel.sizeTo(100, window.innerHeight - 10);
+      is(panel.getBoundingClientRect().height, window.innerHeight - 10, "height is what we requested")
+      // the arrow should not have moved.
+      var curArrowRect = arrow.getBoundingClientRect();
+      is_close(curArrowRect.left, origArrowRect.left, "arrow should not have moved");
+      is_close(curArrowRect.top, origArrowRect.top, "arrow should not have moved up or down");
       next();
     });
   }],

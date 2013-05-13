@@ -162,22 +162,24 @@ StatementParams::NewResolve(nsIXPConnectWrappedNative *aWrapper,
   // because we want to allow the prototype chain to be checked for the
   // property.
 
+  JS::RootedObject scope(aCtx, aScopeObj);
+  JS::RootedId id(aCtx, aId);
   bool resolved = false;
   bool ok = true;
-  if (JSID_IS_INT(aId)) {
-    uint32_t idx = JSID_TO_INT(aId);
+  if (JSID_IS_INT(id)) {
+    uint32_t idx = JSID_TO_INT(id);
 
     // Ensure that our index is within range.  We do not care about the
     // prototype chain being checked here.
     if (idx >= mParamCount)
       return NS_ERROR_INVALID_ARG;
 
-    ok = ::JS_DefineElement(aCtx, aScopeObj, idx, JSVAL_VOID, nullptr,
+    ok = ::JS_DefineElement(aCtx, scope, idx, JSVAL_VOID, nullptr,
                             nullptr, JSPROP_ENUMERATE);
     resolved = true;
   }
-  else if (JSID_IS_STRING(aId)) {
-    JSString *str = JSID_TO_STRING(aId);
+  else if (JSID_IS_STRING(id)) {
+    JSString *str = JSID_TO_STRING(id);
     size_t nameLength;
     const jschar *nameChars = JS_GetStringCharsAndLength(aCtx, str, &nameLength);
     NS_ENSURE_TRUE(nameChars, NS_ERROR_UNEXPECTED);
@@ -188,14 +190,14 @@ StatementParams::NewResolve(nsIXPConnectWrappedNative *aWrapper,
     uint32_t idx;
     nsresult rv = mStatement->GetParameterIndex(name, &idx);
     if (NS_SUCCEEDED(rv)) {
-      ok = ::JS_DefinePropertyById(aCtx, aScopeObj, aId, JSVAL_VOID, nullptr,
+      ok = ::JS_DefinePropertyById(aCtx, scope, id, JSVAL_VOID, nullptr,
                                    nullptr, JSPROP_ENUMERATE);
       resolved = true;
     }
   }
 
   *_retval = ok;
-  *_objp = resolved && ok ? aScopeObj : nullptr;
+  *_objp = resolved && ok ? scope.get() : nullptr;
   return NS_OK;
 }
 

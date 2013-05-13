@@ -90,8 +90,8 @@ Dashboard::GetSockets()
         dict.mReceived += mSock.data[i].received;
     }
 
-    JS::Value val;
-    if (!dict.ToObject(cx, JS::NullPtr(), &val)) {
+    JS::RootedValue val(cx);
+    if (!dict.ToObject(cx, JS::NullPtr(), val.address())) {
         mSock.cb = nullptr;
         mSock.data.Clear();
         return NS_ERROR_FAILURE;
@@ -197,8 +197,8 @@ Dashboard::GetHttpConnections()
         }
     }
 
-    JS::Value val;
-    if (!dict.ToObject(cx, JS::NullPtr(), &val)) {
+    JS::RootedValue val(cx);
+    if (!dict.ToObject(cx, JS::NullPtr(), val.address())) {
         mHttp.cb = nullptr;
         mHttp.data.Clear();
         return NS_ERROR_FAILURE;
@@ -337,8 +337,8 @@ Dashboard::GetWebSocketConnections()
         *encrypted.AppendElement() = mWs.data[i].mEncrypted;
     }
 
-    JS::Value val;
-    if (!dict.ToObject(cx, JS::NullPtr(), &val)) {
+    JS::RootedValue val(cx);
+    if (!dict.ToObject(cx, JS::NullPtr(), val.address())) {
         mWs.cb = nullptr;
         mWs.data.Clear();
         return NS_ERROR_FAILURE;
@@ -426,8 +426,8 @@ Dashboard::GetDNSCacheEntries()
             CopyASCIItoUTF16("ipv4", *family.AppendElement());
     }
 
-    JS::Value val;
-    if (!dict.ToObject(cx, JS::NullPtr(), &val)) {
+    JS::RootedValue val(cx);
+    if (!dict.ToObject(cx, JS::NullPtr(), val.address())) {
         mDns.cb = nullptr;
         mDns.data.Clear();
         return NS_ERROR_FAILURE;
