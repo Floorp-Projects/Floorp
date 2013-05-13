@@ -1812,6 +1812,19 @@ CSS_PROP_FONT(
     offsetof(nsStyleFont, mFont.variant),
     eStyleAnimType_EnumU8)
 CSS_PROP_FONT(
+    font-variant-alternates,
+    font_variant_alternates,
+    FontVariantAlternates,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_VALUE_PARSER_FUNCTION |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
+        CSS_PROPERTY_APPLIES_TO_PLACEHOLDER,
+    "layout.css.font-features.enabled",
+    VARIANT_HK,
+    kFontVariantAlternatesKTable,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
+CSS_PROP_FONT(
     font-variant-caps,
     font_variant_caps,
     FontVariantCaps,

@@ -4267,6 +4267,16 @@ if (SpecialPowers.getBoolPref("layout.css.font-features.enabled")) {
 			other_values: [ "normal", "none" ],
 			invalid_values: [ "on" ]
 		},
+		"font-variant-alternates": {
+			domProp: "fontVariantAlternates",
+			inherited: true,
+			type: CSS_TYPE_LONGHAND,
+			initial_values: [ "normal" ],
+			other_values: [ "historical-forms",
+	                        "styleset(alt-a, alt-b)", "character-variant(a, b, c)", "annotation(circled)" ],
+			invalid_values: [ "historical-forms normal", "historical-forms historical-forms",
+	                          "swash", "swash(3)", "annotation(a, b)", "ornaments(a,b)" ]
+		},
 	 	"font-variant-caps": {
 			domProp: "fontVariantCaps",
 			inherited: true,
@@ -4332,7 +4342,7 @@ if (SpecialPowers.getBoolPref("layout.css.font-features.enabled")) {
 	for (var prop in fontFeatureProperties) {
 		gCSSProperties[prop] = fontFeatureProperties[prop];
 	}
-	var fontAdditions = [ "font-kerning", "font-synthesis", "font-variant-caps", "font-variant-east-asian", "font-variant-ligatures", "font-variant-numeric", "font-variant-position" ];
+	var fontAdditions = [ "font-kerning", "font-synthesis", "font-variant-alternates", "font-variant-caps", "font-variant-east-asian", "font-variant-ligatures", "font-variant-numeric", "font-variant-position" ];
 	gCSSProperties["font"].subproperties = gCSSProperties["font"].subproperties.concat(fontAdditions);
 }
 

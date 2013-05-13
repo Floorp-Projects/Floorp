@@ -1380,6 +1380,37 @@ nsComputedDOMStyle::DoGetFontSynthesis()
 }
 
 CSSValue*
+nsComputedDOMStyle::DoGetFontVariantAlternates()
+{
+  nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+
+  int32_t intValue = StyleFont()->mFont.variantAlternates;
+
+  if (0 == intValue) {
+    val->SetIdent(eCSSKeyword_normal);
+    return val;
+  }
+
+  // first, include enumerated values
+  nsAutoString valueStr;
+
+  nsStyleUtil::AppendBitmaskCSSValue(eCSSProperty_font_variant_alternates,
+    intValue & NS_FONT_VARIANT_ALTERNATES_ENUMERATED_MASK,
+    NS_FONT_VARIANT_ALTERNATES_HISTORICAL,
+    NS_FONT_VARIANT_ALTERNATES_HISTORICAL, valueStr);
+
+  // next, include functional values if present
+  if (intValue & NS_FONT_VARIANT_ALTERNATES_FUNCTIONAL_MASK) {
+    nsStyleUtil::AppendFunctionalAlternates(StyleFont()->mFont.alternateValues,
+                                            valueStr);
+  }
+
+  val->SetString(valueStr);
+  return val;
+}
+
+
+CSSValue*
 nsComputedDOMStyle::DoGetFontVariantCaps()
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
@@ -4898,6 +4929,7 @@ nsComputedDOMStyle::GetQueryablePropertyMap(uint32_t* aLength)
     COMPUTED_STYLE_MAP_ENTRY(font_style,                    FontStyle),
     COMPUTED_STYLE_MAP_ENTRY(font_synthesis,                FontSynthesis),
     COMPUTED_STYLE_MAP_ENTRY(font_variant,                  FontVariant),
+    COMPUTED_STYLE_MAP_ENTRY(font_variant_alternates,       FontVariantAlternates),
     COMPUTED_STYLE_MAP_ENTRY(font_variant_caps,             FontVariantCaps),
     COMPUTED_STYLE_MAP_ENTRY(font_variant_east_asian,       FontVariantEastAsian),
     COMPUTED_STYLE_MAP_ENTRY(font_variant_ligatures,        FontVariantLigatures),

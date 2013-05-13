@@ -1066,6 +1066,21 @@ const int32_t nsCSSProps::kFontVariantKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
+const int32_t nsCSSProps::kFontVariantAlternatesKTable[] = {
+  eCSSKeyword_historical_forms, NS_FONT_VARIANT_ALTERNATES_HISTORICAL,
+  eCSSKeyword_UNKNOWN,-1
+};
+
+const int32_t nsCSSProps::kFontVariantAlternatesFuncsKTable[] = {
+  eCSSKeyword_stylistic, NS_FONT_VARIANT_ALTERNATES_STYLISTIC,
+  eCSSKeyword_styleset, NS_FONT_VARIANT_ALTERNATES_STYLESET,
+  eCSSKeyword_character_variant, NS_FONT_VARIANT_ALTERNATES_CHARACTER_VARIANT,
+  eCSSKeyword_swash, NS_FONT_VARIANT_ALTERNATES_SWASH,
+  eCSSKeyword_ornaments, NS_FONT_VARIANT_ALTERNATES_ORNAMENTS,
+  eCSSKeyword_annotation, NS_FONT_VARIANT_ALTERNATES_ANNOTATION,
+  eCSSKeyword_UNKNOWN,-1
+};
+
 const int32_t nsCSSProps::kFontVariantCapsKTable[] = {
   eCSSKeyword_small_caps, NS_FONT_VARIANT_CAPS_SMALLCAPS,
   eCSSKeyword_all_small_caps, NS_FONT_VARIANT_CAPS_ALLSMALL,
@@ -2146,6 +2161,7 @@ static const nsCSSProperty gFontSubpropTable[] = {
   eCSSProperty_font_language_override,
   eCSSProperty_font_kerning,
   eCSSProperty_font_synthesis,
+  eCSSProperty_font_variant_alternates,
   eCSSProperty_font_variant_caps,
   eCSSProperty_font_variant_east_asian,
   eCSSProperty_font_variant_ligatures,
