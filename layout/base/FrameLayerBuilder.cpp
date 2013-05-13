@@ -2626,6 +2626,11 @@ ContainerState::Finish(uint32_t* aTextContentFlags, LayerManagerData* aData)
   *aTextContentFlags = textContentFlags;
 }
 
+static inline gfxSize RoundToFloatPrecision(const gfxSize& aSize)
+{
+  return gfxSize(float(aSize.width), float(aSize.height));
+}
+
 static bool
 ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
                            nsDisplayListBuilder* aDisplayListBuilder,
@@ -2687,7 +2692,7 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
       scale = nsLayoutUtils::GetMaximumAnimatedScale(aContainerFrame->GetContent());
     } else {
       //Scale factors are normalized to a power of 2 to reduce the number of resolution changes
-      scale = transform2d.ScaleFactors(true);
+      scale = RoundToFloatPrecision(transform2d.ScaleFactors(true));
       // For frames with a changing transform that's not just a translation,
       // round scale factors up to nearest power-of-2 boundary so that we don't
       // keep having to redraw the content as it scales up and down. Rounding up to nearest
@@ -2703,7 +2708,7 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
         bool clamp = true;
         gfxMatrix oldFrameTransform2d;
         if (aLayer->GetBaseTransform().Is2D(&oldFrameTransform2d)) {
-          gfxSize oldScale = oldFrameTransform2d.ScaleFactors(true);
+          gfxSize oldScale = RoundToFloatPrecision(oldFrameTransform2d.ScaleFactors(true));
           if (oldScale == scale || oldScale == gfxSize(1.0, 1.0)) {
             clamp = false;
           }

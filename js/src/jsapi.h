@@ -3604,12 +3604,19 @@ JS_StealArrayBufferContents(JSContext *cx, JSObject *obj, void **contents,
  * required. The pointer to pass to JS_NewArrayBufferWithContents is returned
  * in |contents|. The pointer to the |nbytes| of usable memory is returned in
  * |data|. (*|contents| will contain a header before |data|.) The only legal
- * operations on *|contents| is to free it or pass it to
- * JS_NewArrayBufferWithContents.
+ * operations on *|contents| is to free it, or pass it to
+ * JS_NewArrayBufferWithContents or JS_ReallocateArrayBufferContents.
  */
 extern JS_PUBLIC_API(JSBool)
 JS_AllocateArrayBufferContents(JSContext *cx, uint32_t nbytes, void **contents, uint8_t **data);
 
+/*
+ * Reallocate memory allocated by JS_AllocateArrayBufferContents, growing or shrinking it
+ * as appropriate.  The new data pointer will be returned in data.  If *contents is NULL,
+ * behaves like JS_AllocateArrayBufferContents.
+ */
+extern JS_PUBLIC_API(JSBool)
+JS_ReallocateArrayBufferContents(JSContext *cx, uint32_t nbytes, void **contents, uint8_t **data);
 
 extern JS_PUBLIC_API(JSIdArray *)
 JS_Enumerate(JSContext *cx, JSObject *obj);

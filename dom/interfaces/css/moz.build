@@ -8,6 +8,7 @@ XPIDL_SOURCES += [
     'nsIDOMCSSCharsetRule.idl',
     'nsIDOMCSSConditionRule.idl',
     'nsIDOMCSSFontFaceRule.idl',
+    'nsIDOMCSSFontFeatureValuesRule.idl',
     'nsIDOMCSSGroupingRule.idl',
     'nsIDOMCSSImportRule.idl',
     'nsIDOMCSSMediaRule.idl',

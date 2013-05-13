@@ -2600,6 +2600,17 @@ HTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
     FireChangeEventIfNeeded();
   }
 
+  if (mType == NS_FORM_INPUT_RANGE &&
+      (aVisitor.mEvent->message == NS_FOCUS_CONTENT ||
+       aVisitor.mEvent->message == NS_BLUR_CONTENT)) {
+    // Just as nsGenericHTMLFormElement::PreHandleEvent calls
+    // nsIFormControlFrame::SetFocus, we handle focus here.
+    nsIFrame* frame = GetPrimaryFrame();
+    if (frame) {
+      frame->InvalidateFrameSubtree();
+    }
+  }
+
   return nsGenericHTMLFormElement::PreHandleEvent(aVisitor);
 }
 

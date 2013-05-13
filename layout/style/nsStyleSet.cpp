@@ -110,6 +110,7 @@ nsStyleSet::nsStyleSet()
     mInShutdown(false),
     mAuthorStyleDisabled(false),
     mInReconstruct(false),
+    mInitFontFeatureValuesLookup(true),
     mDirty(0),
     mUnusedRuleNodeCount(0)
 {
@@ -1104,7 +1105,7 @@ nsStyleSet::WalkRuleProcessors(nsIStyleRuleProcessor::EnumFunc aFunc,
 
   if (mRuleProcessors[ePresHintSheet])
     (*aFunc)(mRuleProcessors[ePresHintSheet], aData);
-  
+
   bool cutOffInheritance = false;
   if (mBindingManager) {
     // We can supply additional document-level sheets that should be walked.
@@ -1541,6 +1542,59 @@ nsStyleSet::AppendKeyframesRules(nsPresContext* aPresContext,
 }
 
 bool
+nsStyleSet::AppendFontFeatureValuesRules(nsPresContext* aPresContext,
+                                 nsTArray<nsCSSFontFeatureValuesRule*>& aArray)
+{
+  NS_ENSURE_FALSE(mInShutdown, false);
+
+  for (uint32_t i = 0; i < NS_ARRAY_LENGTH(gCSSSheetTypes); ++i) {
+    nsCSSRuleProcessor *ruleProc = static_cast<nsCSSRuleProcessor*>
+                                    (mRuleProcessors[gCSSSheetTypes[i]].get());
+    if (ruleProc &&
+        !ruleProc->AppendFontFeatureValuesRules(aPresContext, aArray))
+    {
+      return false;
+    }
+  }
+  return true;
+}
+
+already_AddRefed<gfxFontFeatureValueSet>
+nsStyleSet::GetFontFeatureValuesLookup()
+{
+  if (mInitFontFeatureValuesLookup) {
+    mInitFontFeatureValuesLookup = false;
+
+    nsTArray<nsCSSFontFeatureValuesRule*> rules;
+    AppendFontFeatureValuesRules(PresContext(), rules);
+
+    mFontFeatureValuesLookup = new gfxFontFeatureValueSet();
+
+    uint32_t i, numRules = rules.Length();
+    for (i = 0; i < numRules; i++) {
+      nsCSSFontFeatureValuesRule *rule = rules[i];
+
+      const nsTArray<nsString>& familyList = rule->GetFamilyList();
+      const nsTArray<gfxFontFeatureValueSet::FeatureValues>&
+        featureValues = rule->GetFeatureValues();
+
+      // for each family
+      uint32_t f, numFam;
+
+      numFam = familyList.Length();
+      for (f = 0; f < numFam; f++) {
+        const nsString& family = familyList.ElementAt(f);
+        nsAutoString silly(family);
+        mFontFeatureValuesLookup->AddFontFeatureValues(silly, featureValues);
+      }
+    }
+  }
+
+  nsRefPtr<gfxFontFeatureValueSet> lookup = mFontFeatureValuesLookup;
+  return lookup.forget();
+}
+
+bool
 nsStyleSet::AppendPageRules(nsPresContext* aPresContext,
                             nsTArray<nsCSSPageRule*>& aArray)
 {
@@ -1812,7 +1866,7 @@ struct MOZ_STACK_CLASS AttributeData : public AttributeRuleProcessorData {
       mHint(nsRestyleHint(0))
   {}
   nsRestyleHint   mHint;
-}; 
+};
 
 static bool
 SheetHasAttributeStyle(nsIStyleRuleProcessor* aProcessor, void *aData)

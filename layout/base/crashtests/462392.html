@@ -1,0 +1,43 @@
+<html>
+<head>
+	<title>Crash</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<meta http-equiv="Content-Style-Type" content="text/css">
+	<meta http-equiv="Content-Script-Type" content="text/javascript">
+	<style type="text/css">
+
+	</style>
+	<script type="text/javascript">
+
+	function run() {
+	    var ifr = document.getElementById("if");
+	    var cd = ifr.contentDocument;
+	    cd.open();
+	    cd.write("<body onresize='parent.setup(); location.reload()'>");
+	    cd.close();
+
+	    // resize the child
+	    ifr.style.width = "500px";
+	}
+
+	function setup() {
+	    var ifr = document.getElementById("if");
+	    var cd = ifr.contentDocument;
+
+	    // put a pending repaint on the child
+	    cd.body.style.backgroundColor = 'green';
+	    
+	    // put a pending reframe that destroys the frame on the parent
+	    ifr.style.display = 'none';
+
+	    // Let the location.reload() call RebuildAllStyleData.
+	}
+
+	</script>
+</head>
+<body onload="run()">
+
+<iframe id="if"></iframe>
+
+</body>
+</html>

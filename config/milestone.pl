@@ -71,10 +71,9 @@ if (defined(@TEMPLATE_FILE)) {
     }
   }
 } elsif(defined($opt_uaversion)) {
-  my $uaversion = Moz::Milestone::getMilestoneMajor($milestone) . "." .
-                   Moz::Milestone::getMilestoneMinor($milestone);
-  # strip off trailing pre-release indicators
-  $uaversion =~ s/[a-z]+\d*$//;
+  # Only expose the major milestone in the UA string, hide the patch level
+  # (bugs 572659 and 870868).
+  my $uaversion = Moz::Milestone::getMilestoneMajor($milestone) . ".0";
   print "$uaversion\n";
 } else {
   print "$milestone\n";

@@ -61,6 +61,21 @@ var all_but_one = {
   "-moz-font-feature-settings": "normal", // has to be default value
   "-moz-font-language-override": "normal" // has to be default value
 };
+if (SpecialPowers.getBoolPref("layout.css.font-features.enabled")) {
+  var featureDefs = {
+    "font-kerning": "auto", // has to be default value
+    "font-synthesis": "weight style", // has to be default value
+    "font-variant-alternates": "normal", // has to be default value
+    "font-variant-caps": "normal", // has to be default value
+    "font-variant-east-asian": "normal", // has to be default value
+    "font-variant-ligatures": "normal", // has to be default value
+    "font-variant-numeric": "normal", // has to be default value
+    "font-variant-position": "normal" // has to be default value
+  };
+  for (var prop in featureDefs) {
+    all_but_one[prop] = featureDefs[prop];
+  }
+}
 for (var prop in all_but_one) {
   s.setProperty(prop, all_but_one[prop], "");
 }

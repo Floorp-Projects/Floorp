@@ -60,8 +60,9 @@ HasFileExtention(const char* name, const char* ext)
 static JSDScript*
 _newJSDScript(JSDContext*  jsdc,
               JSContext    *cx,
-              JSScript     *script)
+              JSScript     *script_)
 {
+    JS::RootedScript script(cx, script_);
     if ( JS_GetScriptIsSelfHosted(script) )
         return NULL;
 
@@ -281,9 +282,10 @@ jsd_FindJSDScript( JSDContext*  jsdc,
 JSDScript *
 jsd_FindOrCreateJSDScript(JSDContext    *jsdc,
                           JSContext     *cx,
-                          JSScript      *script,
+                          JSScript      *script_,
                           JSAbstractFramePtr frame)
 {
+    JS::RootedScript script(cx, script_);
     JSDScript *jsdscript;
     JS_ASSERT(JSD_SCRIPTS_LOCKED(jsdc));
 
@@ -672,19 +674,20 @@ jsd_NewScriptHookProc(
 void
 jsd_DestroyScriptHookProc( 
                 JSFreeOp    *fop,
-                JSScript    *script,
+                JSScript    *script_,
                 void*       callerdata )
 {
     JSDScript* jsdscript = NULL;
     JSDContext* jsdc = (JSDContext*) callerdata;
+    JS::RootedScript script(jsdc->dumbContext, script_);
     JSD_ScriptHookProc      hook;
     void*                   hookData;
-    
+
     JSD_ASSERT_VALID_CONTEXT(jsdc);
 
     if( JSD_IS_DANGEROUS_THREAD(jsdc) )
         return;
-    
+
     JSD_LOCK_SCRIPTS(jsdc);
     jsdscript = jsd_FindJSDScript(jsdc, script);
     JSD_UNLOCK_SCRIPTS(jsdc);
@@ -770,9 +773,10 @@ _isActiveHook(JSDContext* jsdc, JSScript *script, JSDExecHook* jsdhook)
 
 
 JSTrapStatus
-jsd_TrapHandler(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval,
+jsd_TrapHandler(JSContext *cx, JSScript *script_, jsbytecode *pc, jsval *rval,
                 jsval closure)
 {
+    JS::RootedScript script(cx, script_);
     JSDExecHook* jsdhook = (JSDExecHook*) JSVAL_TO_PRIVATE(closure);
     JSD_ExecutionHookProc hook;
     void* hookData;

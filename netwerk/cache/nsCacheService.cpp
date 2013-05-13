@@ -1071,12 +1071,13 @@ private:
  *****************************************************************************/
 nsCacheService *   nsCacheService::gService = nullptr;
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsCacheService, nsICacheService)
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsCacheService, nsICacheService, nsICacheServiceInternal)
 
 nsCacheService::nsCacheService()
     : mObserver(nullptr),
       mLock("nsCacheService.mLock"),
       mCondVar(mLock, "nsCacheService.mCondVar"),
+      mTimeStampLock("nsCacheService.mTimeStampLock"),
       mInitialized(false),
       mClearingEntries(false),
       mEnableMemoryDevice(true),
@@ -1526,6 +1527,24 @@ NS_IMETHODIMP nsCacheService::GetCacheIOTarget(nsIEventTarget * *aCacheIOTarget)
     }
 
     return rv;
+}
+
+/* nsICacheServiceInternal
+ * readonly attribute double lockHeldTime;
+*/
+NS_IMETHODIMP nsCacheService::GetLockHeldTime(double *aLockHeldTime)
+{
+    MutexAutoLock lock(mTimeStampLock);
+
+    if (mLockAcquiredTimeStamp.IsNull()) {
+        *aLockHeldTime = 0.0;
+    }
+    else {
+        *aLockHeldTime = 
+            (TimeStamp::Now() - mLockAcquiredTimeStamp).ToMilliseconds();
+    }
+
+    return NS_OK;
 }
 
 /**
@@ -2598,6 +2617,20 @@ nsCacheService::OnDataSizeChange(nsCacheEntry * entry, int32_t deltaSize)
 }
 
 void
+nsCacheService::LockAcquired()
+{
+    MutexAutoLock lock(mTimeStampLock);
+    mLockAcquiredTimeStamp = TimeStamp::Now();
+}
+
+void
+nsCacheService::LockReleased()
+{
+    MutexAutoLock lock(mTimeStampLock);
+    mLockAcquiredTimeStamp = TimeStamp();
+}
+
+void
 nsCacheService::Lock(mozilla::Telemetry::ID mainThreadLockerID)
 {
     mozilla::Telemetry::ID lockerID;
@@ -2615,6 +2648,7 @@ nsCacheService::Lock(mozilla::Telemetry::ID mainThreadLockerID)
     MOZ_EVENT_TRACER_WAIT(nsCacheService::gService, "net::cache::lock");
 
     gService->mLock.Lock();
+    gService->LockAcquired();
 
     TimeStamp stop(TimeStamp::Now());
     MOZ_EVENT_TRACER_EXEC(nsCacheService::gService, "net::cache::lock");
@@ -2635,6 +2669,7 @@ nsCacheService::Unlock()
     nsTArray<nsISupports*> doomed;
     doomed.SwapElements(gService->mDoomedObjects);
 
+    gService->LockReleased();
     gService->mLock.Unlock();
 
     MOZ_EVENT_TRACER_DONE(nsCacheService::gService, "net::cache::lock");

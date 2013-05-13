@@ -9,6 +9,8 @@ html {
 body {
   margin-top: 20px;
   margin-bottom: 20px;
+  -moz-transition-property: background-color, color;
+  -moz-transition-duration: 0.7s;
 }
 
 .light {
@@ -438,6 +440,8 @@ body {
 }
 
 .segmented-button {
+  display: flex;
+  flex-direction: row;
   list-style: none;
   margin: 0;
   padding: 5px;
@@ -445,7 +449,8 @@ body {
 }
 
 .segmented-button > li {
-  display: inline-block;
+  flex: 1 1 auto;
+  text-align: center;
   padding: 1px 5px;
   border-left: 1px solid #ccc;
 }
@@ -458,7 +463,7 @@ body {
 .segmented-button > li > a:hover
 .segmented-button > li > a:visited {
   display: block;
-  padding: 10px 34px;
+  padding: 10px 16px;
   text-decoration: none;
   color: black;
   border-radius: 4px;
