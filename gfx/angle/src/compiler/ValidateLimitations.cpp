@@ -421,7 +421,7 @@ bool ValidateLimitations::validateFunctionCall(TIntermAggregate* node)
         return true;
 
     // List of param indices for which loop indices are used as argument.
-    typedef std::vector<int> ParamIndex;
+    typedef std::vector<size_t> ParamIndex;
     ParamIndex pIndex;
     TIntermSequence& params = node->getSequence();
     for (TIntermSequence::size_type i = 0; i < params.size(); ++i) {

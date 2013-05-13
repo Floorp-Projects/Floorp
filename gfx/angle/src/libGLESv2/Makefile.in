@@ -12,7 +12,6 @@ include $(DEPTH)/config/autoconf.mk
 
 # On Windows, we don't automatically get "lib" prepended, but we need it.
 LIBRARY_NAME     = libGLESv2
-MODULE_NAME      = libglesv2
 FORCE_SHARED_LIB = 1
 
 # ANGLE uses the STL, so we can't use our derpy STL wrappers.
@@ -22,8 +21,13 @@ STL_FLAGS =
 # support
 ENABLE_CXX_EXCEPTIONS = 1
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+# Enable unwind semantics for exception handlers in response to warning C4530.
+OS_CPPFLAGS += -EHsc
+endif
+
 # Since we're building off in our own world, we don't want to have
-# mozilla-config.h and -DMOZILLA_CLIENT automatically included and defined, so
+#
 # we just overwrite OS_COMPILE_C(XX)FLAGS.
 OS_COMPILE_CFLAGS   = $(OS_CPPFLAGS)
 OS_COMPILE_CXXFLAGS = $(OS_CPPFLAGS)
@@ -36,15 +40,16 @@ endif
 
 # The below is a rough translation of build_angle.gypi,
 # copied from src/Makefile.in.
+
 DEFINES += -DANGLE_DISABLE_TRACE
-DEFINES += -DANGLE_COMPILE_OPTIMIZATION_LEVEL=D3DCOMPILE_OPTIMIZATION_LEVEL0
+DEFINES += -DANGLE_COMPILE_OPTIMIZATION_LEVEL=D3DCOMPILE_OPTIMIZATION_LEVEL1
 
 # Target: 'preprocessor'
 # src/compiler/preprocessor:
 VPATH += $(srcdir)/../compiler/preprocessor
 CPPSRCS += \
-  PreprocessorDiagnostics.cpp \
-  PreprocessorDirectiveHandler.cpp \
+  DiagnosticsBase.cpp \
+  DirectiveHandlerBase.cpp \
   DirectiveParser.cpp \
   ExpressionParser.cpp \
   Input.cpp \
@@ -58,7 +63,7 @@ CPPSRCS += \
 
 # Target: 'translator_common'
 #   Requires: 'preprocessor'
-LOCAL_INCLUDES = \
+LOCAL_INCLUDES += \
   -I$(srcdir)/../../include \
   -I$(srcdir)/../../include/KHR \
   -I$(srcdir)/..
@@ -68,7 +73,6 @@ DEFINES += -DCOMPILER_IMPLEMENTATION
 VPATH += $(srcdir)/../compiler
 # src/compiler:
 CPPSRCS += \
-  ArrayBoundsClamper.cpp \
   BuiltInFunctionEmulator.cpp \
   Compiler.cpp \
   compiler_debug.cpp \
@@ -113,6 +117,12 @@ VPATH += $(srcdir)/../compiler/timing
 CPPSRCS += \
   RestrictFragmentShaderTiming.cpp \
   RestrictVertexShaderTiming.cpp \
+  $(NULL)
+
+VPATH += $(srcdir)/../third_party/compiler
+# src/third_party/compiler:
+CPPSRCS += \
+  ArrayBoundsClamper.cpp \
   $(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
@@ -188,15 +198,9 @@ TextureSSE2.$(OBJ_SUFFIX): CXXFLAGS+=-msse2
 
 OS_CXXFLAGS := $(filter-out -fno-exceptions,$(OS_CXXFLAGS)) -fexceptions
 OS_LIBS += -ld3d9
-ifdef MOZ_D3DX9_VERSION
-OS_LIBS += -ld3dcompiler_$(MOZ_D3DX9_VERSION)
-else
-OS_LIBS += -ld3dcompiler
-endif
 
 else
 
-EXTRA_DSO_LDOPTS = "$(MOZ_DIRECTX_SDK_PATH)/lib/$(MOZ_DIRECTX_SDK_CPU_SUFFIX)/d3d9.lib" \
-                   "$(MOZ_DIRECTX_SDK_PATH)/lib/$(MOZ_DIRECTX_SDK_CPU_SUFFIX)/D3DCompiler.lib"
+EXTRA_DSO_LDOPTS = "$(MOZ_DIRECTX_SDK_PATH)/lib/$(MOZ_DIRECTX_SDK_CPU_SUFFIX)/d3d9.lib"
 
 endif
