@@ -298,7 +298,6 @@ private:
 MOZ_BEGIN_ENUM_CLASS(PhaseEnum, int)
   Decode,
   AllocateBuffer,
-  CopyBuffer,
   Done
 MOZ_END_ENUM_CLASS(PhaseEnum)
 
@@ -350,7 +349,6 @@ private:
 
   void Decode();
   void AllocateBuffer();
-  void CopyBuffer();
   void CallbackTheResult();
 
   void Cleanup()
@@ -384,11 +382,7 @@ MediaDecodeTask::Run()
   case PhaseEnum::AllocateBuffer:
     AllocateBuffer();
     break;
-  case PhaseEnum::CopyBuffer:
-    CopyBuffer();
-    break;
   case PhaseEnum::Done:
-    CallbackTheResult();
     break;
   }
 
@@ -439,19 +433,40 @@ MediaDecodeTask::RunNextPhase()
 
   switch (mPhase) {
   case PhaseEnum::AllocateBuffer:
-  case PhaseEnum::Done:
     MOZ_ASSERT(!NS_IsMainThread());
     NS_DispatchToMainThread(this);
     break;
-  case PhaseEnum::CopyBuffer:
-    MOZ_ASSERT(NS_IsMainThread());
-    mThreadPool->Dispatch(this, nsIThreadPool::DISPATCH_NORMAL);
-    break;
   case PhaseEnum::Decode:
+  case PhaseEnum::Done:
     MOZ_NOT_REACHED("Invalid phase Decode");
     break;
   }
 }
+
+class AutoResampler {
+public:
+  AutoResampler()
+    : mResampler(nullptr)
+  {}
+  ~AutoResampler()
+  {
+    if (mResampler) {
+      speex_resampler_destroy(mResampler);
+    }
+  }
+  operator SpeexResamplerState*() const
+  {
+    MOZ_ASSERT(mResampler);
+    return mResampler;
+  }
+  void operator=(SpeexResamplerState* aResampler)
+  {
+    mResampler = aResampler;
+  }
+
+private:
+  SpeexResamplerState* mResampler;
+};
 
 void
 MediaDecodeTask::Decode()
@@ -493,20 +508,147 @@ MediaDecodeTask::Decode()
     return;
   }
 
-  // Ask the main thread to allocate a large enough typed array to fit the data
-  mDecodeJob.mFrames = frameCount;
-  mDecodeJob.mChannels = channelCount;
-  mDecodeJob.mSourceSampleRate = sampleRate;
-
   const uint32_t destSampleRate = mDecodeJob.mContext->SampleRate();
+  AutoResampler resampler;
 
-  mDecodeJob.mResampledFrames = mDecodeJob.mFrames;
-  if (mDecodeJob.mSourceSampleRate != destSampleRate) {
-    mDecodeJob.mResampledFrames = static_cast<uint32_t>(
+  uint32_t resampledFrames = frameCount;
+  if (sampleRate != destSampleRate) {
+    resampledFrames = static_cast<uint32_t>(
         static_cast<uint64_t>(destSampleRate) *
         static_cast<uint64_t>(frameCount) /
-        static_cast<uint64_t>(mDecodeJob.mSourceSampleRate)
+        static_cast<uint64_t>(sampleRate)
       );
+
+    resampler = speex_resampler_init(channelCount,
+                                     sampleRate,
+                                     destSampleRate,
+                                     SPEEX_RESAMPLER_QUALITY_DEFAULT, nullptr);
+    speex_resampler_skip_zeros(resampler);
+    resampledFrames += speex_resampler_get_output_latency(resampler);
+  }
+
+  // Allocate the channel buffers.  Note that if we end up resampling, we may
+  // write fewer bytes than mResampledFrames to the output buffer, in which
+  // case mWriteIndex will tell us how many valid samples we have.
+  static const fallible_t fallible = fallible_t();
+  bool memoryAllocationSuccess = true;
+  if (!mDecodeJob.mChannelBuffers.SetLength(channelCount)) {
+    memoryAllocationSuccess = false;
+  } else {
+    for (uint32_t i = 0; i < channelCount; ++i) {
+      mDecodeJob.mChannelBuffers[i] = new(fallible) float[resampledFrames];
+      if (!mDecodeJob.mChannelBuffers[i]) {
+        memoryAllocationSuccess = false;
+        break;
+      }
+    }
+  }
+  if (!memoryAllocationSuccess) {
+    ReportFailureOnMainThread(WebAudioDecodeJob::UnknownError);
+    return;
+  }
+
+  nsAutoPtr<AudioData> audioData;
+  while ((audioData = audioQueue.PopFront())) {
+    audioData->EnsureAudioBuffer(); // could lead to a copy :(
+    AudioDataValue* bufferData = static_cast<AudioDataValue*>
+      (audioData->mAudioBuffer->Data());
+
+    if (sampleRate != destSampleRate) {
+      const uint32_t expectedOutSamples = static_cast<uint32_t>(
+          static_cast<uint64_t>(destSampleRate) *
+          static_cast<uint64_t>(audioData->mFrames) /
+          static_cast<uint64_t>(sampleRate)
+        );
+#ifdef MOZ_SAMPLE_TYPE_S16
+      AudioDataValue* resampledBuffer = new(fallible) AudioDataValue[channelCount * expectedOutSamples];
+#endif
+
+      for (uint32_t i = 0; i < audioData->mChannels; ++i) {
+        uint32_t inSamples = audioData->mFrames;
+        uint32_t outSamples = expectedOutSamples;
+
+#ifdef MOZ_SAMPLE_TYPE_S16
+        speex_resampler_process_int(resampler, i, &bufferData[i * audioData->mFrames], &inSamples,
+                                    &resampledBuffer[i * expectedOutSamples],
+                                    &outSamples);
+
+        ConvertAudioSamples(&resampledBuffer[i * expectedOutSamples],
+                            mDecodeJob.mChannelBuffers[i] + mDecodeJob.mWriteIndex,
+                            outSamples);
+#else
+        speex_resampler_process_float(resampler, i, &bufferData[i * audioData->mFrames], &inSamples,
+                                      mDecodeJob.mChannelBuffers[i] + mDecodeJob.mWriteIndex,
+                                      &outSamples);
+#endif
+
+        if (i == audioData->mChannels - 1) {
+          mDecodeJob.mWriteIndex += outSamples;
+          MOZ_ASSERT(mDecodeJob.mWriteIndex <= resampledFrames);
+        }
+      }
+
+#ifdef MOZ_SAMPLE_TYPE_S16
+      delete[] resampledBuffer;
+#endif
+    } else {
+      for (uint32_t i = 0; i < audioData->mChannels; ++i) {
+        ConvertAudioSamples(&bufferData[i * audioData->mFrames],
+                            mDecodeJob.mChannelBuffers[i] + mDecodeJob.mWriteIndex,
+                            audioData->mFrames);
+
+        if (i == audioData->mChannels - 1) {
+          mDecodeJob.mWriteIndex += audioData->mFrames;
+        }
+      }
+    }
+  }
+
+  if (sampleRate != destSampleRate) {
+    int inputLatency = speex_resampler_get_input_latency(resampler);
+    int outputLatency = speex_resampler_get_output_latency(resampler);
+    AudioDataValue* zero = (AudioDataValue*)calloc(inputLatency, sizeof(AudioDataValue));
+
+#ifdef MOZ_SAMPLE_TYPE_S16
+    AudioDataValue* resampledBuffer = new(fallible) AudioDataValue[channelCount * outputLatency];
+    if (!resampledBuffer || !zero) {
+#else
+    if (!zero) {
+#endif
+      // Out of memory!
+      ReportFailureOnMainThread(WebAudioDecodeJob::UnknownError);
+      return;
+    }
+
+    for (uint32_t i = 0; i < channelCount; ++i) {
+      uint32_t inSamples = inputLatency;
+      uint32_t outSamples = outputLatency;
+
+#ifdef MOZ_SAMPLE_TYPE_S16
+      speex_resampler_process_int(resampler, i, zero, &inSamples,
+                                  &resampledBuffer[i * outputLatency],
+                                  &outSamples);
+
+      ConvertAudioSamples(&resampledBuffer[i * outputLatency],
+                          mDecodeJob.mChannelBuffers[i] + mDecodeJob.mWriteIndex,
+                          outSamples);
+#else
+      speex_resampler_process_float(resampler, i, zero, &inSamples,
+                                    mDecodeJob.mChannelBuffers[i] + mDecodeJob.mWriteIndex,
+                                    &outSamples);
+#endif
+
+      if (i == channelCount - 1) {
+        mDecodeJob.mWriteIndex += outSamples;
+        MOZ_ASSERT(mDecodeJob.mWriteIndex <= resampledFrames);
+      }
+    }
+
+    free(zero);
+
+#ifdef MOZ_SAMPLE_TYPE_S16
+    delete[] resampledBuffer;
+#endif
   }
 
   mPhase = PhaseEnum::AllocateBuffer;
@@ -523,93 +665,8 @@ MediaDecodeTask::AllocateBuffer()
     return;
   }
 
-  mPhase = PhaseEnum::CopyBuffer;
-  RunNextPhase();
-}
-
-void
-MediaDecodeTask::CopyBuffer()
-{
-  MOZ_ASSERT(!mThreadPool == NS_IsMainThread(),
-             "We should be on the main thread only if we don't have a thread pool");
-
-  MOZ_ASSERT(mDecodeJob.mOutput);
-  MOZ_ASSERT(mDecodeJob.mChannels);
-  MOZ_ASSERT(mDecoderReader);
-
-  SpeexResamplerState* resampler = nullptr;
-
-  MediaQueue<AudioData>& audioQueue = mDecoderReader->AudioQueue();
-
-  const uint32_t destSampleRate = mDecodeJob.mContext->SampleRate();
-  if (mDecodeJob.mSourceSampleRate != destSampleRate) {
-    resampler = speex_resampler_init(mDecodeJob.mChannels,
-                                     mDecodeJob.mSourceSampleRate,
-                                     destSampleRate,
-                                     SPEEX_RESAMPLER_QUALITY_DEFAULT, nullptr);
-  }
-
-  uint32_t framesCopied = 0;
-
-  nsAutoPtr<AudioData> audioData;
-  while ((audioData = audioQueue.PopFront())) {
-    audioData->EnsureAudioBuffer(); // could lead to a copy :(
-    AudioDataValue* bufferData = static_cast<AudioDataValue*>
-      (audioData->mAudioBuffer->Data());
-
-    AudioDataValue* resampledBuffer = bufferData;
-
-    // We cannot use mDecodeJob.mResampledFrames here because we are dealing
-    // with only part of the audio frames, not all of it.
-    const uint32_t expectedOutSamples = static_cast<uint32_t>(
-        static_cast<uint64_t>(destSampleRate) *
-        static_cast<uint64_t>(audioData->mFrames) /
-        static_cast<uint64_t>(mDecodeJob.mSourceSampleRate)
-      );
-    if (mDecodeJob.mSourceSampleRate != destSampleRate) {
-      static const fallible_t fallible = fallible_t();
-      resampledBuffer = new(fallible) AudioDataValue[mDecodeJob.mChannels * expectedOutSamples];
-
-      if (!resampledBuffer) {
-        // Out of memory!
-        ReportFailureOnMainThread(WebAudioDecodeJob::UnknownError);
-        return;
-      }
-
-      for (uint32_t i = 0; i < audioData->mChannels; ++i) {
-        uint32_t inSamples = audioData->mFrames;
-        uint32_t outSamples = expectedOutSamples;
-
-#ifdef MOZ_SAMPLE_TYPE_S16
-        speex_resampler_process_int(resampler, i, &bufferData[i * audioData->mFrames], &inSamples,
-                                    &resampledBuffer[i * expectedOutSamples],
-                                    &outSamples);
-#else
-        speex_resampler_process_float(resampler, i, &bufferData[i * audioData->mFrames], &inSamples,
-                                      &resampledBuffer[i * expectedOutSamples],
-                                      &outSamples);
-#endif
-      }
-    }
-
-    for (uint32_t i = 0; i < audioData->mChannels; ++i) {
-      ConvertAudioSamples(&resampledBuffer[i * expectedOutSamples],
-                          &mDecodeJob.mChannelBuffers[i].second[framesCopied],
-                          expectedOutSamples);
-    }
-    framesCopied += expectedOutSamples;
-
-    if (resampledBuffer != bufferData) {
-      delete[] resampledBuffer;
-    }
-  }
-
-  if (resampler) {
-    speex_resampler_destroy(resampler);
-  }
-
   mPhase = PhaseEnum::Done;
-  RunNextPhase();
+  CallbackTheResult();
 }
 
 void
@@ -620,32 +677,7 @@ MediaDecodeTask::CallbackTheResult()
   Cleanup();
 
   // Now, we're ready to call the script back with the resulting buffer
-  if (!mDecodeJob.FinalizeBufferData()) {
-    ReportFailureOnMainThread(WebAudioDecodeJob::UnknownError);
-  }
-
   mDecodeJob.OnSuccess(WebAudioDecodeJob::NoError);
-}
-
-bool
-WebAudioDecodeJob::FinalizeBufferData()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mOutput);
-  MOZ_ASSERT(mChannels == mChannelBuffers.Length());
-
-  AutoPushJSContext cx(mContext->GetJSContext());
-  if (!cx) {
-    return false;
-  }
-
-  for (uint32_t i = 0; i < mChannels; ++i) {
-    if (!mOutput->SetChannelDataFromArrayBufferContents(cx, i, mChannelBuffers[i].first)) {
-      return false;
-    }
-  }
-
-  return true;
 }
 
 bool
@@ -661,27 +693,13 @@ WebAudioDecodeJob::AllocateBuffer()
   }
 
   // Now create the AudioBuffer
-  mOutput = new AudioBuffer(mContext, mResampledFrames, mContext->SampleRate());
-  if (!mOutput->InitializeBuffers(mChannels, cx)) {
+  mOutput = new AudioBuffer(mContext, mWriteIndex, mContext->SampleRate());
+  if (!mOutput->InitializeBuffers(mChannelBuffers.Length(), cx)) {
     return false;
   }
 
-  if (!mChannelBuffers.SetCapacity(mChannels)) {
-    return false;
-  }
-  for (uint32_t i = 0; i < mChannels; ++i) {
-    JS::RootedObject channelObj(cx, mOutput->GetChannelData(i));
-    JS::RootedObject arrayBuffer(cx, JS_GetArrayBufferViewBuffer(channelObj));
-    if (!arrayBuffer) {
-      return false;
-    }
-    void* contents;
-    uint8_t* data;
-    if (JS_FALSE == JS_StealArrayBufferContents(cx, arrayBuffer, &contents, &data)) {
-      return false;
-    }
-    mChannelBuffers.AppendElement(
-      std::make_pair(contents, reinterpret_cast<float*>(data)));
+  for (uint32_t i = 0; i < mChannelBuffers.Length(); ++i) {
+    mOutput->SetRawChannelContents(cx, i, mChannelBuffers[i]);
   }
 
   return true;
@@ -774,17 +792,11 @@ MediaBufferDecoder::Shutdown() {
 }
 
 WebAudioDecodeJob::WebAudioDecodeJob(const nsACString& aContentType,
-                                     const ArrayBuffer& aBuffer,
                                      AudioContext* aContext,
                                      DecodeSuccessCallback* aSuccessCallback,
                                      DecodeErrorCallback* aFailureCallback)
   : mContentType(aContentType)
-  , mBuffer(aBuffer.Data())
-  , mLength(aBuffer.Length())
-  , mChannels(0)
-  , mSourceSampleRate(0)
-  , mFrames(0)
-  , mResampledFrames(0)
+  , mWriteIndex(0)
   , mContext(aContext)
   , mSuccessCallback(aSuccessCallback)
   , mFailureCallback(aFailureCallback)

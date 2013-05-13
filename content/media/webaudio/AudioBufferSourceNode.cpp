@@ -338,6 +338,7 @@ public:
       uint32_t finalSampleRate = ComputeFinalOutSampleRate();
       if (currentOutSampleRate != finalSampleRate) {
         speex_resampler_set_rate(resampler, currentInSampleRate, finalSampleRate);
+        speex_resampler_skip_zeros(mResampler);
       }
     }
   }
