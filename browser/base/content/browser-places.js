@@ -621,8 +621,8 @@ HistoryMenu.prototype = {
       let m = document.createElement("menuitem");
       m.setAttribute("label", menuLabel);
       let selectedTab = undoItem.tabs[undoItem.selected - 1];
-      if (selectedTab.attributes.image) {
-        let iconURL = selectedTab.attributes.image;
+      if (selectedTab.image) {
+        let iconURL = selectedTab.image;
         // don't initiate a connection just to fetch a favicon (see bug 467828)
         if (/^https?:/.test(iconURL))
           iconURL = "moz-anno:favicon:" + iconURL;
