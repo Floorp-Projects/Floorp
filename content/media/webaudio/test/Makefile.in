@@ -34,6 +34,8 @@ MOCHITEST_FILES := \
   test_audioParamTimelineDestinationOffset.html \
   test_audioBufferSourceNode.html \
   test_audioBufferSourceNodeEnded.html \
+  test_audioBufferSourceNodeGain.html \
+  test_audioBufferSourceNodeGainInLoop.html \
   test_audioBufferSourceNodeLazyLoopParam.html \
   test_audioBufferSourceNodeLoop.html \
   test_audioBufferSourceNodeLoopStartEnd.html \
@@ -48,6 +50,7 @@ MOCHITEST_FILES := \
   test_currentTime.html \
   test_delayNode.html \
   test_delayNodeWithGain.html \
+  test_delayNodeWithGainAlternate.html \
   test_dynamicsCompressorNode.html \
   test_gainNode.html \
   test_gainNodeInLoop.html \

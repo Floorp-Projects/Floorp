@@ -175,7 +175,7 @@ jsd_GetValueString(JSDContext* jsdc, JSDValue* jsdval)
     JSContext* cx = jsdc->dumbContext;
     JSExceptionState* exceptionState;
     JSCompartment* oldCompartment = NULL;
-    jsval stringval;
+    JS::RootedValue stringval(cx);
     JS::RootedString string(cx);
     JS::RootedObject scopeObj(cx);
 
@@ -205,7 +205,7 @@ jsd_GetValueString(JSDContext* jsdc, JSDValue* jsdval)
         stringval = STRING_TO_JSVAL(string);
         oldCompartment = JS_EnterCompartment(cx, jsdc->glob);
     }
-    if(!string || !JS_WrapValue(cx, &stringval)) {
+    if(!string || !JS_WrapValue(cx, stringval.address())) {
         if(oldCompartment)
             JS_LeaveCompartment(cx, oldCompartment);
         JS_EndRequest(cx);
@@ -323,7 +323,7 @@ jsd_GetValueWrappedJSVal(JSDContext* jsdc, JSDValue* jsdval)
 {
     JSContext* cx = JSD_GetDefaultJSContext(jsdc);
     JS::RootedObject obj(cx);
-    jsval val = jsdval->val;
+    JS::RootedValue val(cx, jsdval->val);
     if (!JSVAL_IS_PRIMITIVE(val)) {
         JSAutoCompartment ac(cx, JSVAL_TO_OBJECT(val));
         obj = JS_ObjectToOuterObject(cx, JSVAL_TO_OBJECT(val));

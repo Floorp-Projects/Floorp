@@ -407,16 +407,7 @@ function sizeSocialPanelToContent(panel, iframe) {
   let height = Math.max(computedHeight, PANEL_MIN_HEIGHT);
   let computedWidth = parseInt(cs.marginLeft) + body.offsetWidth + parseInt(cs.marginRight);
   let width = Math.max(computedWidth, PANEL_MIN_WIDTH);
-  let wDiff = width - iframe.getBoundingClientRect().width;
-  // A panel resize will move the right margin - if that is where the anchor
-  // arrow is, the arrow will be mis-aligned from the anchor.  So we move the
-  // popup to compensate for that.  See bug 799014.
-  if (wDiff !== 0 && panel.getAttribute("side") == "right") {
-    let box = panel.boxObject;
-    panel.moveTo(box.screenX - wDiff, box.screenY);
-  }
-  iframe.style.height = height + "px";
-  iframe.style.width = width + "px";
+  panel.sizeTo(width, height);
 }
 
 function DynamicResizeWatcher() {
@@ -564,13 +555,7 @@ SocialFlyout = {
     sizeSocialPanelToContent(panel, iframe);
     let anchor = document.getElementById("social-sidebar-browser");
     if (panel.state == "open") {
-      // this is painful - there is no way to say "move to a new anchor offset",
-      // only "move to new screen pos".  So we remember the last yOffset,
-      // calculate the adjustment needed to the new yOffset, then calc the
-      // screen Y position.
-      let yAdjust = yOffset - this.yOffset;
-      let box = panel.boxObject;
-      panel.moveTo(box.screenX, box.screenY + yAdjust);
+      panel.moveToAnchor(anchor, "start_before", 0, yOffset, false);
     } else {
       panel.openPopup(anchor, "start_before", 0, yOffset, false, false);
       // Force a layout flush by calling .clientTop so
@@ -578,7 +563,6 @@ SocialFlyout = {
       panel.firstChild.clientTop;
       Social.setErrorListener(iframe, this.setFlyoutErrorMessage.bind(this))
     }
-    this.yOffset = yOffset;
   }
 }
 

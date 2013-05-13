@@ -1,0 +1,21 @@
+<html>
+<head>
+<script>
+function doe() {
+document.getElementById('a').style.display = 'table-column-group';
+document.body.offsetHeight;
+}
+</script>
+
+<style>
+div::before { content:"b";}
+div::after { content:"a";}
+</style>
+</head>
+
+<body onload="document.body.offsetHeight; setTimeout(doe,0);">
+<div style="display: table;">
+  <span id="a" style="display: table-header-group; "></span>
+</div>
+</body>
+</html>

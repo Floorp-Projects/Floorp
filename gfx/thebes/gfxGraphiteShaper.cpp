@@ -192,8 +192,13 @@ gfxGraphiteShaper::ShapeText(gfxContext      *aContext,
 
     nsDataHashtable<nsUint32HashKey,uint32_t> mergedFeatures;
 
-    if (MergeFontFeatures(style->featureSettings, entry->mFeatureSettings,
-                          aShapedText->DisableLigatures(), mergedFeatures)) {
+    // if style contains font-specific features
+    if (MergeFontFeatures(style,
+                          mFont->GetFontEntry()->mFeatureSettings,
+                          aShapedText->DisableLigatures(),
+                          mFont->GetFontEntry()->FamilyName(),
+                          mergedFeatures))
+    {
         // enumerate result and insert into Graphite feature list
         GrFontFeatures f = {mGrFace, grFeatures};
         mergedFeatures.Enumerate(AddFeature, &f);

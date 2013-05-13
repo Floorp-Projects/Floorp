@@ -34,6 +34,7 @@ fi
 MOZ_CAPTURE=1
 MOZ_RAW=1
 MOZ_PLACES=
+MOZ_SOCIAL=
 MOZ_ANDROID_HISTORY=1
 
 # Needed for building our components as part of libxul

@@ -155,7 +155,7 @@ webidl_files = \
   ImageData.webidl \
   ImageDocument.webidl \
   InspectorUtils.webidl \
-  KeyEvent.webidl \
+  KeyboardEvent.webidl \
   LinkStyle.webidl \
   LocalMediaStream.webidl \
   Location.webidl \

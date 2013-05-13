@@ -139,6 +139,7 @@
         mm.addMessageListener("SPPingService", spObserver);
         mm.addMessageListener("SpecialPowers.Quit", spObserver);
         mm.addMessageListener("SPPermissionManager", spObserver);
+        mm.addMessageListener("SPObserverService", spObserver);
 
         mm.addMessageListener("test:indexedDB:ipcTestMessage", onTestMessage);
         mm.addMessageListener("test:indexedDB:ipcProcessType", onProcessType);
