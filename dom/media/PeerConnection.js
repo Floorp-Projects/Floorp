@@ -83,7 +83,7 @@ GlobalPCList.prototype = {
         this._list[winID].forEach(function(pcref) {
           let pc = pcref.get();
           if (pc !== null) {
-            pc._pc.close(false);
+            pc._pc.close();
             delete pc._observer;
             pc._pc = null;
           }
@@ -92,8 +92,10 @@ GlobalPCList.prototype = {
       }
     } else if (topic == "profile-change-net-teardown" ||
                topic == "network:offline-about-to-go-offline") {
-      // Delete all peerconnections on shutdown - synchronously (we need
-      // them to be done deleting transports before we return)!
+      // Delete all peerconnections on shutdown - mostly synchronously (we
+      // need them to be done deleting transports and streams before we
+      // return)!  All socket operations must be queued to STS thread
+      // before we return to here.
       // Also kill them if "Work Offline" is selected - more can be created
       // while offline, but attempts to connect them should fail.
       let array;
@@ -101,7 +103,7 @@ GlobalPCList.prototype = {
         array.forEach(function(pcref) {
           let pc = pcref.get();
           if (pc !== null) {
-            pc._pc.close(true);
+            pc._pc.close();
             delete pc._observer;
             pc._pc = null;
           }
