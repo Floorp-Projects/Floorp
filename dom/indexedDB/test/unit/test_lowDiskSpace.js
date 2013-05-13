@@ -41,7 +41,8 @@ function testSteps()
     }
     else {
       info("Changing low disk mode to: " + data);
-      SpecialPowers.notifyObservers(null, "disk-space-watcher", data);
+      SpecialPowers.notifyObserversInParentProcess(null, "disk-space-watcher",
+                                                   data);
       lowDiskMode = val;
     }
   }
