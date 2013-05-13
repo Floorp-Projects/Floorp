@@ -184,30 +184,6 @@ CPPSRCS += 	TraceLogging.cpp
 
 endif
 
-ifdef ENABLE_METHODJIT
-
-###############################################
-# BEGIN include sources for the method JIT
-#
-VPATH += 	$(srcdir)/methodjit
-
-CPPSRCS += 	MethodJIT.cpp \
-		StubCalls.cpp \
-		Compiler.cpp \
-		FrameState.cpp \
-		FastArithmetic.cpp \
-		FastBuiltins.cpp \
-		FastOps.cpp \
-		LoopState.cpp \
-		StubCompiler.cpp \
-		MonoIC.cpp \
-		PolyIC.cpp \
-		ImmutableSync.cpp \
-		InvokeHelpers.cpp \
-		Retcon.cpp \
-		TrampolineCompiler.cpp \
-		$(NULL)
-
 # Ion
 ifdef ENABLE_ION
 VPATH +=	$(srcdir)/ion
@@ -336,17 +312,6 @@ CPPSRCS +=	Lowering-arm.cpp \
 endif #ENABLE_ION
 endif
 endif #ENABLE_ION
-ifeq (sparc, $(findstring sparc,$(TARGET_CPU)))
-ASFILES +=	TrampolineSparc.s
-endif
-ifeq (mips, $(findstring mips,$(TARGET_CPU)))
-CPPSRCS +=	TrampolineMIPS.cpp
-endif
-#
-# END enclude sources for the method JIT
-#############################################
-
-endif
 
 ###############################################
 # BEGIN include sources for the Nitro assembler
@@ -366,10 +331,6 @@ CPPSRCS += 	ExecutableAllocator.cpp \
 		YarrCanonicalizeUCS2.cpp \
 		$(NONE)
 
-ifdef ENABLE_METHODJIT_SPEW
-CPPSRCS += Logging.cpp
-endif
-
 ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
 CPPSRCS += ExecutableAllocatorPosix.cpp \
            OSAllocatorPosix.cpp \
@@ -386,9 +347,8 @@ CPPSRCS += ExecutableAllocatorOS2.cpp \
            $(NONE)
 endif
 
-ifneq (,$(ENABLE_METHODJIT)$(ENABLE_ION)$(ENABLE_YARR_JIT))
+ifneq (,$(ENABLE_ION)$(ENABLE_YARR_JIT))
 VPATH += 	$(srcdir)/assembler/assembler \
-		$(srcdir)/methodjit \
 		$(NONE)
 
 CPPSRCS +=	ARMAssembler.cpp \
@@ -1000,33 +960,11 @@ selfhosted.out.h: $(selfhosted_out_h_deps)
 # the code in js/src/assembler.
 CXXFLAGS += -DUSE_SYSTEM_MALLOC=1 -DENABLE_ASSEMBLER=1
 
-ifneq (,$(ENABLE_YARR_JIT)$(ENABLE_METHODJIT))
+ifneq (,$(ENABLE_YARR_JIT))
 CXXFLAGS +=  -DENABLE_JIT=1
 endif
 
 INCLUDES +=	-I$(srcdir)/assembler -I$(srcdir)/yarr
-
-ifdef ENABLE_METHODJIT
-# Build a standalone test program that exercises the assembler
-# sources a bit.
-TESTMAIN_OBJS = \
-		Assertions.$(OBJ_SUFFIX) \
-		ExecutableAllocator.$(OBJ_SUFFIX) \
-		ARMAssembler.$(OBJ_SUFFIX) \
-		MacroAssemblerARM.$(OBJ_SUFFIX) \
-		TestMain.$(OBJ_SUFFIX) \
-		jsutil.$(OBJ_SUFFIX) \
-		jslog2.$(OBJ_SUFFIX)
-
-ifeq ($(OS_ARCH),WINNT)
-TESTMAIN_OBJS += ExecutableAllocatorWin.$(OBJ_SUFFIX)
-else
-TESTMAIN_OBJS += ExecutableAllocatorPosix.$(OBJ_SUFFIX)
-endif
-
-TestMain$(HOST_BIN_SUFFIX): $(TESTMAIN_OBJS)
-	$(CXX) -o TestMain$(HOST_BIN_SUFFIX) $(TESTMAIN_OBJS)
-endif
 
 #
 # END kludges for the Nitro assembler

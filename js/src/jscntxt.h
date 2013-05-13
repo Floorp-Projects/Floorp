@@ -124,10 +124,6 @@ class AutoCycleDetector
 extern void
 TraceCycleDetectionSet(JSTracer *trc, ObjectSet &set);
 
-namespace mjit {
-class JaegerRuntime;
-}
-
 class MathCache;
 
 namespace ion {
@@ -747,16 +743,12 @@ struct JSRuntime : public JS::shadow::Runtime,
      */
     JSC::ExecutableAllocator *execAlloc_;
     WTF::BumpPointerAllocator *bumpAlloc_;
-#ifdef JS_METHODJIT
-    js::mjit::JaegerRuntime *jaegerRuntime_;
-#endif
     js::ion::IonRuntime *ionRuntime_;
 
     JSObject *selfHostingGlobal_;
 
     JSC::ExecutableAllocator *createExecutableAllocator(JSContext *cx);
     WTF::BumpPointerAllocator *createBumpPointerAllocator(JSContext *cx);
-    js::mjit::JaegerRuntime *createJaegerRuntime(JSContext *cx);
     js::ion::IonRuntime *createIonRuntime(JSContext *cx);
 
   public:
@@ -773,18 +765,6 @@ struct JSRuntime : public JS::shadow::Runtime,
     WTF::BumpPointerAllocator *getBumpPointerAllocator(JSContext *cx) {
         return bumpAlloc_ ? bumpAlloc_ : createBumpPointerAllocator(cx);
     }
-#ifdef JS_METHODJIT
-    js::mjit::JaegerRuntime *getJaegerRuntime(JSContext *cx) {
-        return jaegerRuntime_ ? jaegerRuntime_ : createJaegerRuntime(cx);
-    }
-    bool hasJaegerRuntime() const {
-        return jaegerRuntime_;
-    }
-    js::mjit::JaegerRuntime &jaegerRuntime() {
-        JS_ASSERT(hasJaegerRuntime());
-        return *jaegerRuntime_;
-    }
-#endif
     js::ion::IonRuntime *getIonRuntime(JSContext *cx) {
         return ionRuntime_ ? ionRuntime_ : createIonRuntime(cx);
     }
@@ -1744,15 +1724,9 @@ struct JSContext : js::ContextFriendFields,
     /* Location to stash the iteration value between JSOP_MOREITER and JSOP_ITERNEXT. */
     js::Value           iterValue;
 
-#ifdef JS_METHODJIT
-    bool methodJitEnabled;
     bool jitIsBroken;
 
-    js::mjit::JaegerRuntime &jaegerRuntime() { return runtime->jaegerRuntime(); }
-#endif
-
     inline bool typeInferenceEnabled() const;
-    inline bool jaegerCompilationAllowed() const;
 
     void updateJITEnabled();
 
@@ -2154,16 +2128,6 @@ JS_CHECK_OPERATION_LIMIT(JSContext *cx)
     JS_ASSERT_REQUEST_DEPTH(cx);
     return !cx->runtime->interrupt || js_InvokeOperationCallback(cx);
 }
-
-namespace js {
-
-#ifdef JS_METHODJIT
-namespace mjit {
-void ExpandInlineFrames(JS::Zone *zone);
-}
-#endif
-
-} /* namespace js */
 
 namespace js {
 

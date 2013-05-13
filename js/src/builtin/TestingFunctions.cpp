@@ -16,7 +16,6 @@
 #include "jswrapper.h"
 
 #include "builtin/TestingFunctions.h"
-#include "methodjit/MethodJIT.h"
 #include "vm/ForkJoin.h"
 
 #include "vm/Stack-inl.h"
@@ -168,14 +167,6 @@ GetBuildConfiguration(JSContext *cx, unsigned argc, jsval *vp)
     value = BooleanValue(false);
 #endif
     if (!JS_SetProperty(cx, info, "oom-backtraces", &value))
-        return false;
-
-#ifdef JS_METHODJIT
-    value = BooleanValue(true);
-#else
-    value = BooleanValue(false);
-#endif
-    if (!JS_SetProperty(cx, info, "methodjit", &value))
         return false;
 
 #ifdef ENABLE_PARALLEL_JS
@@ -816,45 +807,6 @@ DumpHeapComplete(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
-JSBool
-MJitChunkLimit(JSContext *cx, unsigned argc, jsval *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    if (argc != 1) {
-        RootedObject callee(cx, &args.callee());
-        ReportUsageError(cx, callee, "Wrong number of arguments");
-        return JS_FALSE;
-    }
-
-    if (cx->runtime->alwaysPreserveCode) {
-        JS_ReportError(cx, "Can't change chunk limit after gcPreserveCode()");
-        return JS_FALSE;
-    }
-
-    for (CompartmentsIter c(cx->runtime); !c.done(); c.next()) {
-        if (c->lastAnimationTime != 0) {
-            JS_ReportError(cx, "Can't change chunk limit if code may be preserved");
-            return JS_FALSE;
-        }
-    }
-
-    double t;
-    if (!JS_ValueToNumber(cx, args[0], &t))
-        return JS_FALSE;
-
-#ifdef JS_METHODJIT
-    mjit::SetChunkLimit((uint32_t) t);
-#endif
-
-    // Clear out analysis information which might refer to code compiled with
-    // the previous chunk limit.
-    JS_GC(cx->runtime);
-
-    vp->setUndefined();
-    return true;
-}
-
 static JSBool
 Terminate(JSContext *cx, unsigned arg, jsval *vp)
 {
@@ -1055,10 +1007,6 @@ static JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("dumpHeapComplete", DumpHeapComplete, 1, 0,
 "dumpHeapComplete([filename])",
 "  Dump reachable and unreachable objects to a file."),
-
-    JS_FN_HELP("mjitChunkLimit", MJitChunkLimit, 1, 0,
-"mjitChunkLimit(N)",
-"  Specify limit on compiled chunk size during mjit compilation."),
 
     JS_FN_HELP("terminate", Terminate, 0, 0,
 "terminate()",

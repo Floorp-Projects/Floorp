@@ -12,7 +12,6 @@
 #include "jscntxt.h"
 #include "jscompartment.h"
 
-#include "methodjit/MethodJIT.h"
 #include "vm/Stack.h"
 #ifdef JS_ION
 #include "ion/BaselineFrame.h"
@@ -73,14 +72,6 @@ StackFrame::compartment() const
     return scopeChain()->compartment();
 }
 
-#ifdef JS_METHODJIT
-inline mjit::JITScript *
-StackFrame::jit()
-{
-    return script()->getJIT(isConstructing(), script()->zone()->compileBarriers());
-}
-#endif
-
 inline void
 StackFrame::initPrev(JSContext *cx)
 {
@@ -88,13 +79,11 @@ StackFrame::initPrev(JSContext *cx)
     if (FrameRegs *regs = cx->maybeRegs()) {
         prev_ = regs->fp();
         prevpc_ = regs->pc;
-        prevInline_ = regs->inlined();
         JS_ASSERT(uint32_t(prevpc_ - prev_->script()->code) < prev_->script()->length);
     } else {
         prev_ = NULL;
 #ifdef DEBUG
         prevpc_ = (jsbytecode *)0xbadc;
-        prevInline_ = (InlinedSite *)0xbadc;
 #endif
     }
 }
@@ -107,36 +96,10 @@ StackFrame::resetGeneratorPrev(JSContext *cx)
 }
 
 inline void
-StackFrame::initInlineFrame(JSFunction *fun, StackFrame *prevfp, jsbytecode *prevpc)
-{
-    /*
-     * Note: no need to ensure the scopeChain is instantiated for inline
-     * frames. Functions which use the scope chain are never inlined.
-     */
-    flags_ = StackFrame::FUNCTION;
-    exec.fun = fun;
-    resetInlinePrev(prevfp, prevpc);
-
-    if (prevfp->hasPushedSPSFrame())
-        setPushedSPSFrame();
-}
-
-inline void
-StackFrame::resetInlinePrev(StackFrame *prevfp, jsbytecode *prevpc)
-{
-    JS_ASSERT_IF(flags_ & StackFrame::HAS_PREVPC, prevInline_);
-    flags_ |= StackFrame::HAS_PREVPC;
-    prev_ = prevfp;
-    prevpc_ = prevpc;
-    prevInline_ = NULL;
-}
-
-inline void
 StackFrame::initCallFrame(JSContext *cx, JSFunction &callee,
                           JSScript *script, uint32_t nactual, StackFrame::Flags flagsArg)
 {
     JS_ASSERT((flagsArg & ~(CONSTRUCTING |
-                            LOWERED_CALL_APPLY |
                             OVERFLOW_ARGS |
                             UNDERFLOW_ARGS)) == 0);
     JS_ASSERT(callee.nonLazyScript() == script);
@@ -163,7 +126,6 @@ inline void
 StackFrame::initFixupFrame(StackFrame *prev, StackFrame::Flags flags, void *ncode, unsigned nactual)
 {
     JS_ASSERT((flags & ~(CONSTRUCTING |
-                         LOWERED_CALL_APPLY |
                          FUNCTION |
                          OVERFLOW_ARGS |
                          UNDERFLOW_ARGS)) == 0);
@@ -463,27 +425,6 @@ ContextStack::pushInlineFrame(JSContext *cx, FrameRegs &regs, const CallArgs &ar
     return true;
 }
 
-JS_ALWAYS_INLINE StackFrame *
-ContextStack::getFixupFrame(JSContext *cx, MaybeReportError report,
-                            const CallArgs &args, JSFunction *fun, HandleScript script,
-                            void *ncode, InitialFrameFlags initial, Value **stackLimit)
-{
-    JS_ASSERT(onTop());
-    JS_ASSERT(fun->nonLazyScript() == args.callee().toFunction()->nonLazyScript());
-    JS_ASSERT(fun->nonLazyScript() == script);
-
-    StackFrame::Flags flags = ToFrameFlags(initial);
-    StackFrame *fp = getCallFrame(cx, report, args, fun, script, &flags);
-    if (!fp)
-        return NULL;
-
-    /* Do not init late prologue or regs; this is done by jit code. */
-    fp->initFixupFrame(cx->fp(), flags, ncode, args.length());
-
-    *stackLimit = space().conservativeEnd_;
-    return fp;
-}
-
 JS_ALWAYS_INLINE void
 ContextStack::popInlineFrame(FrameRegs &regs)
 {
@@ -526,21 +467,6 @@ ContextStack::currentScript(jsbytecode **ppc,
         ion::GetPcScript(cx_, &script, ppc);
         if (!allowCrossCompartment && script->compartment() != cx_->compartment)
             return NULL;
-        return script;
-    }
-#endif
-
-#ifdef JS_METHODJIT
-    mjit::CallSite *inlined = regs.inlined();
-    if (inlined) {
-        mjit::JITChunk *chunk = fp->jit()->chunk(regs.pc);
-        JS_ASSERT(inlined->inlineIndex < chunk->nInlineFrames);
-        mjit::InlineFrame *frame = &chunk->inlineFrames()[inlined->inlineIndex];
-        JSScript *script = frame->fun->nonLazyScript();
-        if (!allowCrossCompartment && script->compartment() != cx_->compartment)
-            return NULL;
-        if (ppc)
-            *ppc = script->code + inlined->pcOffset;
         return script;
     }
 #endif

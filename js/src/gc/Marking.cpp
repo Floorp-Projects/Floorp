@@ -11,7 +11,6 @@
 
 #include "gc/Marking.h"
 #include "gc/Nursery-inl.h"
-#include "methodjit/MethodJIT.h"
 #include "vm/Shape.h"
 
 #include "jsobjinlines.h"
