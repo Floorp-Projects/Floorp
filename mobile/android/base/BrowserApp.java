@@ -76,6 +76,8 @@ abstract public class BrowserApp extends GeckoApp
 
     private static final String PREF_CHROME_DYNAMICTOOLBAR = "browser.chrome.dynamictoolbar";
 
+    private static final String ABOUT_HOME = "about:home";
+
     private static final int TABS_ANIMATION_DURATION = 450;
 
     private static final int READER_ADD_SUCCESS = 0;
@@ -143,7 +145,7 @@ abstract public class BrowserApp extends GeckoApp
                 // fall through
             case SELECTED:
                 if (Tabs.getInstance().isSelectedTab(tab)) {
-                    if ("about:home".equals(tab.getURL())) {
+                    if (isAboutHome(tab)) {
                         showAboutHome();
 
                         if (isDynamicToolbarEnabled()) {
@@ -477,6 +479,10 @@ abstract public class BrowserApp extends GeckoApp
         return mDynamicToolbarEnabled && !mAccessibilityEnabled;
     }
 
+    private boolean isAboutHome(Tab tab) {
+        return TextUtils.equals(ABOUT_HOME, tab.getURL());
+    }
+
     @Override
     public boolean onSearchRequested() {
         return showAwesomebar(AwesomeBar.Target.CURRENT_TAB);
@@ -659,7 +665,7 @@ abstract public class BrowserApp extends GeckoApp
             if (!isExternalURL) {
                 // show about:home if we aren't restoring previous session
                 if (mRestoreMode == RESTORE_NONE) {
-                    Tab tab = Tabs.getInstance().loadUrl("about:home", Tabs.LOADURL_NEW_TAB);
+                    Tab tab = Tabs.getInstance().loadUrl(ABOUT_HOME, Tabs.LOADURL_NEW_TAB);
                 }
             } else {
                 int flags = Tabs.LOADURL_NEW_TAB | Tabs.LOADURL_USER_ENTERED;
@@ -1497,7 +1503,7 @@ abstract public class BrowserApp extends GeckoApp
                                tab.getContentType().equals("application/vnd.mozilla.xul+xml")));
 
         // Disable find in page for about:home, since it won't work on Java content
-        findInPage.setEnabled(!tab.getURL().equals("about:home"));
+        findInPage.setEnabled(!isAboutHome(tab));
 
         charEncoding.setVisible(GeckoPreferences.getCharEncodingState());
 
