@@ -1511,6 +1511,11 @@ WebGLContext::DrawElements(WebGLenum mode, WebGLsizei count, WebGLenum type,
     } else if (type == LOCAL_GL_UNSIGNED_BYTE) {
         checked_byteCount = count;
         first = byteOffset;
+    } else if (type == LOCAL_GL_UNSIGNED_INT && IsExtensionEnabled(OES_element_index_uint)) {
+        checked_byteCount = 4 * CheckedUint32(count);
+        if (byteOffset % 4 != 0)
+            return ErrorInvalidOperation("drawElements: invalid byteOffset for UNSIGNED_INT (must be a multiple of 4)");
+        first = byteOffset / 4;
     } else {
         return ErrorInvalidEnum("drawElements: type must be UNSIGNED_SHORT or UNSIGNED_BYTE");
     }
