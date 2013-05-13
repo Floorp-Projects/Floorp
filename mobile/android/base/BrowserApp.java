@@ -13,6 +13,7 @@ import org.mozilla.gecko.gfx.GeckoLayerClient;
 import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.PanZoomController;
+import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.util.FloatUtils;
 import org.mozilla.gecko.util.GamepadUtils;
 import org.mozilla.gecko.util.HardwareUtils;
@@ -82,7 +83,7 @@ abstract public class BrowserApp extends GeckoApp
     private static final int READER_ADD_DUPLICATE = 2;
 
     public static BrowserToolbar mBrowserToolbar;
-    private AboutHome mAboutHome;
+    private HomePager mHomePager;
     protected Telemetry.Timer mAboutHomeStartupTimer = null;
 
     private static final int ADDON_MENU_OFFSET = 1000;
@@ -124,10 +125,6 @@ abstract public class BrowserApp extends GeckoApp
 
     private Integer mPrefObserverId;
 
-    // Tag for the AboutHome fragment. The fragment is automatically attached
-    // after restoring from a saved state, so we use this tag to identify it.
-    private static final String ABOUTHOME_TAG = "abouthome";
-
     private SharedPreferencesHelper mSharedPreferencesHelper;
 
     private OrderedBroadcastHelper mOrderedBroadcastHelper;
@@ -143,14 +140,14 @@ abstract public class BrowserApp extends GeckoApp
             case SELECTED:
                 if (Tabs.getInstance().isSelectedTab(tab)) {
                     if ("about:home".equals(tab.getURL())) {
-                        showAboutHome();
+                        showHomePager();
 
                         if (isDynamicToolbarEnabled()) {
                             // Show the toolbar.
                             mLayerView.getLayerMarginsAnimator().showMargins(false);
                         }
                     } else {
-                        hideAboutHome();
+                        hideHomePager();
                     }
 
                     // Dismiss any SiteIdentity Popup
@@ -224,7 +221,7 @@ abstract public class BrowserApp extends GeckoApp
                 case KeyEvent.KEYCODE_BUTTON_Y:
                     // Toggle/focus the address bar on gamepad-y button.
                     if (mBrowserToolbar.isVisible()) {
-                        if (isDynamicToolbarEnabled() && !mAboutHome.getUserVisibleHint()) {
+                        if (isDynamicToolbarEnabled() && !mHomePager.isVisible()) {
                             if (mLayerView != null) {
                                 mLayerView.getLayerMarginsAnimator().hideMargins(false);
                                 mLayerView.requestFocus();
@@ -333,8 +330,7 @@ abstract public class BrowserApp extends GeckoApp
         ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
-                if (mAboutHome != null)
-                    mAboutHome.setLastTabsVisibility(false);
+                mHomePager.setAboutHomeLastTabsVisibility(false);
             }
         });
 
@@ -357,28 +353,17 @@ abstract public class BrowserApp extends GeckoApp
                 // If we get a gamepad panning MotionEvent while the focus is not on the layerview,
                 // put the focus on the layerview and carry on
                 if (mLayerView != null && !mLayerView.hasFocus() && GamepadUtils.isPanningControl(event)) {
-                    if (mAboutHome.getUserVisibleHint()) {
+                    if (mHomePager.isVisible()) {
                         mLayerView.requestFocus();
                     } else {
-                        mAboutHome.requestFocus();
+                        mHomePager.requestFocus();
                     }
                 }
                 return false;
             }
         });
 
-        // Find the Fragment if it was already added from a restored instance state.
-        mAboutHome = (AboutHome) getSupportFragmentManager().findFragmentByTag(ABOUTHOME_TAG);
-
-        if (mAboutHome == null) {
-            // AboutHome will be dynamically attached and detached as
-            // about:home is shown. Adding/removing the fragment is not synchronous,
-            // so we can't use Fragment#isVisible() to determine whether the
-            // about:home is shown. Instead, we use Fragment#getUserVisibleHint()
-            // with the hint we set ourselves.
-            mAboutHome = AboutHome.newInstance();
-            mAboutHome.setUserVisibleHint(false);
-        }
+        mHomePager = (HomePager) findViewById(R.id.abouthome_pager);
 
         mBrowserToolbar = new BrowserToolbar(this);
         mBrowserToolbar.from(actionBar);
@@ -463,7 +448,7 @@ abstract public class BrowserApp extends GeckoApp
             if (mLayerView != null) {
                 mLayerView.getLayerClient().setOnMetricsChangedListener(null);
             }
-            mAboutHome.setPadding(0, 0, 0, 0);
+            mHomePager.setPadding(0, 0, 0, 0);
             if (mBrowserToolbar != null) {
                 mBrowserToolbar.getLayout().scrollTo(0, 0);
             }
@@ -580,7 +565,7 @@ abstract public class BrowserApp extends GeckoApp
 
     @Override
     public void onMetricsChanged(ImmutableViewportMetrics aMetrics) {
-        if (mAboutHome.getUserVisibleHint() || mBrowserToolbar == null) {
+        if (mHomePager.isVisible() || mBrowserToolbar == null) {
             return;
         }
 
@@ -595,7 +580,7 @@ abstract public class BrowserApp extends GeckoApp
 
     @Override
     public void onPanZoomStopped() {
-        if (!isDynamicToolbarEnabled() || mAboutHome.getUserVisibleHint()) {
+        if (!isDynamicToolbarEnabled() || mHomePager.isVisible()) {
             return;
         }
 
@@ -613,7 +598,7 @@ abstract public class BrowserApp extends GeckoApp
             height = mBrowserToolbar.getLayout().getHeight();
         }
 
-        if (!isDynamicToolbarEnabled() || mAboutHome.getUserVisibleHint()) {
+        if (!isDynamicToolbarEnabled() || mHomePager.isVisible()) {
             // Use aVisibleHeight here so that when the dynamic toolbar is
             // enabled, the padding will animate with the toolbar becoming
             // visible.
@@ -621,7 +606,7 @@ abstract public class BrowserApp extends GeckoApp
                 // When the dynamic toolbar is enabled, set the padding on the
                 // about:home widget directly - this is to avoid resizing the
                 // LayerView, which can cause visible artifacts.
-                mAboutHome.setPadding(0, height, 0, 0);
+                mHomePager.setPadding(0, height, 0, 0);
             } else {
                 setToolbarMargin(height);
                 height = 0;
@@ -1028,11 +1013,11 @@ abstract public class BrowserApp extends GeckoApp
 
     /* About:home UI */
     void updateAboutHomeTopSites() {
-        mAboutHome.update(EnumSet.of(AboutHome.UpdateFlags.TOP_SITES));
+        mHomePager.updateAboutHome(EnumSet.of(AboutHome.UpdateFlags.TOP_SITES));
     }
 
-    private void showAboutHome() {
-        if (mAboutHome.getUserVisibleHint()) {
+    private void showHomePager() {
+        if (mHomePager.isVisible()) {
             return;
         }
 
@@ -1045,29 +1030,17 @@ abstract public class BrowserApp extends GeckoApp
             mLayerView.getLayerMarginsAnimator().showMargins(true);
         }
 
-        // We use commitAllowingStateLoss() instead of commit() here to avoid an
-        // IllegalStateException. showAboutHome() and hideAboutHome() are
-        // executed inside of tab's onChange() callback. Since that callback can
-        // be triggered asynchronously from Gecko, it's possible that this
-        // method can be called while Fennec is in the background. If that
-        // happens, using commit() would throw an IllegalStateException since
-        // it can't be used between the Activity's onSaveInstanceState() and
-        // onResume().
-        getSupportFragmentManager().beginTransaction()
-                .add(R.id.gecko_layout, mAboutHome, ABOUTHOME_TAG).commitAllowingStateLoss();
-        mAboutHome.setUserVisibleHint(true);
+        mHomePager.show(getSupportFragmentManager());
 
         mBrowserToolbar.setNextFocusDownId(R.id.abouthome_content);
     }
 
-    private void hideAboutHome() {
-        if (!mAboutHome.getUserVisibleHint()) {
+    private void hideHomePager() {
+        if (!mHomePager.isVisible()) {
             return;
         }
 
-        getSupportFragmentManager().beginTransaction()
-                .remove(mAboutHome).commitAllowingStateLoss();
-        mAboutHome.setUserVisibleHint(false);
+        mHomePager.hide();
 
         mBrowserToolbar.setShadowVisibility(true);
         mBrowserToolbar.setNextFocusDownId(R.id.layer_view);

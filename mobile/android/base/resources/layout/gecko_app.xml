@@ -28,6 +28,12 @@
 
             <include layout="@layout/shared_ui_components"/>
 
+            <org.mozilla.gecko.home.HomePager android:id="@+id/abouthome_pager"
+                                              android:layout_width="fill_parent"
+                                              android:layout_height="fill_parent"
+                                              android:background="@color/background_normal"
+                                              android:visibility="gone"/>
+
         </RelativeLayout>
 
         <org.mozilla.gecko.FindInPageBar android:id="@+id/find_in_page"
