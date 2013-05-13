@@ -22,34 +22,75 @@
       <toolbar id="requests-menu-toolbar"
                class="devtools-toolbar"
                align="center">
-        <label id="requests-menu-status-and-method-label"
-               class="plain requests-menu-header requests-menu-status-and-method"
-               value="&netmonitorUI.toolbar.method;"
-               crop="end"/>
-        <label id="requests-menu-file-label"
-               class="plain requests-menu-header requests-menu-file"
-               value="&netmonitorUI.toolbar.file;"
-               crop="end"/>
-        <label id="requests-menu-domain-label"
-               class="plain requests-menu-header requests-menu-domain"
-               value="&netmonitorUI.toolbar.domain;"
-               crop="end"/>
-        <label id="requests-menu-type-label"
-               class="plain requests-menu-header requests-menu-type"
-               value="&netmonitorUI.toolbar.type;"
-               crop="end"/>
-        <label id="requests-menu-size-label"
-               class="plain requests-menu-header requests-menu-size"
-               value="&netmonitorUI.toolbar.size;"
-               crop="end"/>
-        <label id="requests-menu-waterfall-label"
-               class="plain requests-menu-header requests-menu-waterfall"
-               value="&netmonitorUI.toolbar.waterfall;"
-               crop="end"/>
+        <hbox id="toolbar-labels" flex="1">
+          <hbox id="requests-menu-status-and-method-header-box"
+                class="requests-menu-header requests-menu-status-and-method"
+                align="center">
+            <button id="requests-menu-status-button"
+                    class="requests-menu-header-button requests-menu-status"
+                    onclick="NetMonitorView.RequestsMenu.sortBy('status')">
+              &netmonitorUI.toolbar.status;
+            </button>
+            <button id="requests-menu-method-button"
+                    class="requests-menu-header-button requests-menu-method"
+                    onclick="NetMonitorView.RequestsMenu.sortBy('method')"
+                    flex="1">
+              &netmonitorUI.toolbar.method;
+            </button>
+          </hbox>
+          <hbox id="requests-menu-file-header-box"
+                class="requests-menu-header requests-menu-file"
+                align="center">
+            <button id="requests-menu-file-button"
+                    class="requests-menu-header-button requests-menu-file"
+                    onclick="NetMonitorView.RequestsMenu.sortBy('file')"
+                    flex="1">
+              &netmonitorUI.toolbar.file;
+            </button>
+          </hbox>
+          <hbox id="requests-menu-domain-header-box"
+                class="requests-menu-header requests-menu-domain"
+                align="center">
+            <button id="requests-menu-domain-button"
+                    class="requests-menu-header-button requests-menu-domain"
+                    onclick="NetMonitorView.RequestsMenu.sortBy('domain')"
+                    flex="1">
+              &netmonitorUI.toolbar.domain;
+            </button>
+          </hbox>
+          <hbox id="requests-menu-type-header-box"
+                class="requests-menu-header requests-menu-type"
+                align="center">
+            <button id="requests-menu-type-button"
+                    class="requests-menu-header-button requests-menu-type"
+                    onclick="NetMonitorView.RequestsMenu.sortBy('type')"
+                    flex="1">
+              &netmonitorUI.toolbar.type;
+            </button>
+          </hbox>
+          <hbox id="requests-menu-size-header-box"
+                class="requests-menu-header requests-menu-size"
+                align="center">
+            <button id="requests-menu-size-button"
+                    class="requests-menu-header-button requests-menu-size"
+                    onclick="NetMonitorView.RequestsMenu.sortBy('size')"
+                    flex="1">
+              &netmonitorUI.toolbar.size;
+            </button>
+          </hbox>
+          <hbox id="requests-menu-waterfall-header-box"
+                class="requests-menu-header requests-menu-waterfall"
+                align="center">
+            <label id="requests-menu-waterfall-label"
+                   class="plain requests-menu-waterfall"
+                   value="&netmonitorUI.toolbar.waterfall;"/>
+          </hbox>
+        </hbox>
         <spacer id="toolbar-spacer" flex="1"/>
         <toolbarbutton id="details-pane-toggle"
                        class="devtools-toolbarbutton"
                        tooltiptext="&netmonitorUI.panesButton.tooltip;"
+                       disabled="true"
                        tabindex="0"/>
       </toolbar>
       <label class="plain requests-menu-empty-notice"
@@ -58,7 +99,7 @@
         <hbox id="requests-menu-item-template" hidden="true">
           <hbox class="requests-menu-subitem requests-menu-status-and-method"
                 align="center">
-            <hbox class="requests-menu-status"/>
+            <box class="requests-menu-status"/>
             <label class="plain requests-menu-method"
                    crop="end"
                    flex="1"/>
@@ -124,7 +165,7 @@
                   align="center">
               <label class="plain tabpanel-summary-label"
                      value="&netmonitorUI.summary.status;"/>
-              <hbox id="headers-summary-status-circle"
+              <box id="headers-summary-status-circle"
                     class="requests-menu-status"/>
               <label id="headers-summary-status-value"
                      class="plain tabpanel-summary-value"

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+  "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd" [
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
+%brandDTD;
+<!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
+%globalDTD;
+<!ENTITY % aboutHealthReportDTD SYSTEM "chrome://browser/locale/aboutHealthReport.dtd" >
+%aboutHealthReportDTD;
+]>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+   <title>&abouthealth.pagetitle;</title>
+   <link rel="icon" type="image/png" sizes="64x64"
+     href="chrome://branding/content/favicon64.png" />
+   <link rel="stylesheet"
+     href="chrome://browser/skin/aboutHealthReport.css"
+     type="text/css" />
+   <script type="text/javascript;version=1.8"
+     src="chrome://browser/content/aboutHealthReport.js" />
+  </head>
+  <body onload="healthReportWrapper.init();"
+        onunload="healthReportWrapper.uninit();">
+    <iframe id="remote-report"/>
+  </body>
+</html>

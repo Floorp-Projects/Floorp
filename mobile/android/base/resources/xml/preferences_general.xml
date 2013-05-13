@@ -5,9 +5,8 @@
 
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
                   xmlns:gecko="http://schemas.android.com/apk/res-auto"
+                  android:title="@string/pref_category_general"
                   android:enabled="false">
-
-    <PreferenceCategory android:title="@string/pref_category_general">
 
         <org.mozilla.gecko.LinkPreference android:title="@string/pref_about_firefox"
                                           url="about:" />
@@ -30,8 +29,6 @@
            android:positiveButtonText="@string/bookmarkhistory_button_import"
            android:negativeButtonText="@string/button_cancel"
            android:persistent="false" />
-
-    </PreferenceCategory>
 
 </PreferenceScreen>
 

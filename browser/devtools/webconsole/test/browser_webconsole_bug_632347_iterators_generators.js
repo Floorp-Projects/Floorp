@@ -27,8 +27,6 @@ function consoleOpened(HUD) {
   let result = win.gen1.next();
   let completion = JSPropertyProvider(win, "gen1.");
   is(completion, null, "no matches for gen1");
-  ok(!WCU.isObjectInspectable(win.gen1),
-     "gen1 is not inspectable");
 
   is(result+1, win.gen1.next(), "gen1.next() did not execute");
 
@@ -36,8 +34,6 @@ function consoleOpened(HUD) {
 
   completion = JSPropertyProvider(win, "gen2.");
   is(completion, null, "no matches for gen2");
-  ok(!WCU.isObjectInspectable(win.gen2),
-     "gen2 is not inspectable");
 
   is((result/2+1)*2, win.gen2.next(),
      "gen2.next() did not execute");
@@ -48,8 +44,6 @@ function consoleOpened(HUD) {
 
   completion = JSPropertyProvider(win, "iter1.");
   is(completion, null, "no matches for iter1");
-  ok(!WCU.isObjectInspectable(win.iter1),
-     "iter1 is not inspectable");
 
   result = win.iter1.next();
   is(result[0], "baz", "iter1.next() [0] is correct");
@@ -57,14 +51,10 @@ function consoleOpened(HUD) {
 
   completion = JSPropertyProvider(content, "iter2.");
   is(completion, null, "no matches for iter2");
-  ok(!WCU.isObjectInspectable(win.iter2),
-     "iter2 is not inspectable");
 
   completion = JSPropertyProvider(win, "window.");
   ok(completion, "matches available for window");
   ok(completion.matches.length, "matches available for window (length)");
-  ok(WCU.isObjectInspectable(win),
-     "window is inspectable");
 
   jsterm.clearOutput();
 

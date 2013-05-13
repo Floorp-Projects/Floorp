@@ -5,60 +5,62 @@
 
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
                   xmlns:gecko="http://schemas.android.com/apk/res-auto"
+                  android:title="@string/pref_category_privacy"
                   android:enabled="false">
 
-    <PreferenceCategory android:title="@string/pref_category_privacy">
+    <ListPreference android:key="network.cookie.cookieBehavior"
+                    android:title="@string/pref_cookies_menu"
+                    android:entries="@array/pref_cookies_entries"
+                    android:entryValues="@array/pref_cookies_values"
+                    android:persistent="false" />
 
-        <ListPreference android:key="network.cookie.cookieBehavior"
-                        android:title="@string/pref_cookies_menu"
-                        android:entries="@array/pref_cookies_entries"
-                        android:entryValues="@array/pref_cookies_values"
+    <!-- keys prefixed with "android.not_a_preference." are not synced with Gecko -->
+    <org.mozilla.gecko.PrivateDataPreference
+                        android:key="android.not_a_preference.privacy.clear"
+                        android:title="@string/pref_clear_private_data"
+                        android:persistent="true"
+                        android:positiveButtonText="@string/button_clear_data"
+                        gecko:entries="@array/pref_private_data_entries"
+                        gecko:entryKeys="@array/pref_private_data_keys"
+                        gecko:initialValues="@array/pref_private_data_values" />
+
+    <ListPreference android:key="privacy.donottrackheader"
+                    android:title="@string/pref_donottrack_menu"
+                    android:entries="@array/pref_donottrack_entries"
+                    android:entryValues="@array/pref_donottrack_values"
+                    android:persistent="false" />
+
+    <CheckBoxPreference android:key="signon.rememberSignons"
+                        android:title="@string/pref_remember_signons"
+                        android:defaultValue="true"
                         android:persistent="false" />
 
-        <!-- keys prefixed with "android.not_a_preference." are not synced with Gecko -->
-        <org.mozilla.gecko.PrivateDataPreference
-                            android:key="android.not_a_preference.privacy.clear"
-                            android:title="@string/pref_clear_private_data"
-                            android:persistent="true"
-                            android:positiveButtonText="@string/button_clear_data"
-                            gecko:entries="@array/pref_private_data_entries"
-                            gecko:entryKeys="@array/pref_private_data_keys"
-                            gecko:initialValues="@array/pref_private_data_values" />
-
-        <ListPreference android:key="privacy.donottrackheader"
-                        android:title="@string/pref_donottrack_menu"
-                        android:entries="@array/pref_donottrack_entries"
-                        android:entryValues="@array/pref_donottrack_values"
+    <CheckBoxPreference android:key="privacy.masterpassword.enabled"
+                        android:title="@string/pref_use_master_password"
+                        android:defaultValue="false"
                         android:persistent="false" />
 
-        <CheckBoxPreference android:key="signon.rememberSignons"
-                            android:title="@string/pref_remember_signons"
-                            android:defaultValue="true"
-                            android:persistent="false" />
+    <CheckBoxPreference android:key="browser.search.suggest.enabled"
+                        android:title="@string/pref_search_suggestions"
+                        android:defaultValue="true"
+                        android:persistent="false" />
 
-        <CheckBoxPreference android:key="privacy.masterpassword.enabled"
-                            android:title="@string/pref_use_master_password"
-                            android:defaultValue="false"
-                            android:persistent="false" />
-
-        <CheckBoxPreference android:key="browser.search.suggest.enabled"
-                            android:title="@string/pref_search_suggestions"
-                            android:defaultValue="true"
-                            android:persistent="false" />
-
-        <CheckBoxPreference android:key="toolkit.telemetry.enabled"
-                            android:title="@string/pref_telemetry"
-                            android:persistent="false" />
-
-        <CheckBoxPreference android:key="android.not_a_preference.privacy.announcements.enabled"
-                            android:title="@string/pref_show_product_announcements"
-                            android:defaultValue="true"
-                            android:persistent="true" />
-
-        <ListPreference android:key="android.not_a_preference.privacy.titlebar"
-                        android:title="@string/pref_titlebar_mode"
+    <CheckBoxPreference android:key="android.not_a_preference.privacy.announcements.enabled"
+                        android:title="@string/pref_show_product_announcements"
+                        android:defaultValue="true"
                         android:persistent="true" />
 
-    </PreferenceCategory>
+    <ListPreference android:key="android.not_a_preference.privacy.titlebar"
+                    android:title="@string/pref_titlebar_mode"
+                    android:persistent="true" />
+
+    <PreferenceScreen android:key="android.not_a_preference.datareporting.preferences"
+                      android:title="@string/pref_category_datareporting"
+                      android:fragment="org.mozilla.gecko.GeckoPreferenceFragment" >
+
+        <extra android:name="resource"
+               android:value="preferences_datareporting" />
+
+    </PreferenceScreen>
 
 </PreferenceScreen>
