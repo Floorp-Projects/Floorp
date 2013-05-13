@@ -23,8 +23,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef THIRD_PARTY_COMPILER_ARRAY_BOUNDS_CLAMPER_H_
-#define THIRD_PARTY_COMPILER_ARRAY_BOUNDS_CLAMPER_H_
+#ifndef COMPILER_ARRAY_BOUNDS_CLAMPER_H_
+#define COMPILER_ARRAY_BOUNDS_CLAMPER_H_
 
 #include "GLSLANG/ShaderLang.h"
 
@@ -35,16 +35,12 @@ class ArrayBoundsClamper {
 public:
     ArrayBoundsClamper();
 
-    // Must be set before compiling any shaders to ensure consistency
-    // between the translated shaders and any necessary prequel.
-    void SetClampingStrategy(ShArrayIndexClampingStrategy clampingStrategy);
+    // Output array clamp function source into the shader source.
+    void OutputClampingFunctionDefinition(TInfoSinkBase& out) const;
 
     // Marks nodes in the tree that index arrays indirectly as
     // requiring clamping.
     void MarkIndirectArrayBoundsForClamping(TIntermNode* root);
-
-    // If necessary, output array clamp function source into the shader source.
-    void OutputClampingFunctionDefinition(TInfoSinkBase& out) const;
 
     void Cleanup()
     {
@@ -54,9 +50,8 @@ public:
 private:
     bool GetArrayBoundsClampDefinitionNeeded() const { return mArrayBoundsClampDefinitionNeeded; }
     void SetArrayBoundsClampDefinitionNeeded() { mArrayBoundsClampDefinitionNeeded = true; }
-
-    ShArrayIndexClampingStrategy mClampingStrategy;
+    
     bool mArrayBoundsClampDefinitionNeeded;
 };
 
-#endif // THIRD_PARTY_COMPILER_ARRAY_BOUNDS_CLAMPER_H_
+#endif // COMPILER_ARRAY_BOUNDS_CLAMPER_H_

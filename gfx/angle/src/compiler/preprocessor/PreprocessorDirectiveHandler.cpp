@@ -4,7 +4,7 @@
 // found in the LICENSE file.
 //
 
-#include "DirectiveHandlerBase.h"
+#include "DirectiveHandler.h"
 
 namespace pp
 {

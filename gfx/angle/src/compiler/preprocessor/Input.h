@@ -7,7 +7,6 @@
 #ifndef COMPILER_PREPROCESSOR_INPUT_H_
 #define COMPILER_PREPROCESSOR_INPUT_H_
 
-#include <stddef.h>
 #include <vector>
 
 namespace pp
@@ -18,18 +17,18 @@ class Input
 {
   public:
     Input();
-    Input(size_t count, const char* const string[], const int length[]);
+    Input(int count, const char* const string[], const int length[]);
 
-    size_t count() const { return mCount; }
-    const char* string(size_t index) const { return mString[index]; }
-    size_t length(size_t index) const { return mLength[index]; }
+    int count() const { return mCount; }
+    const char* string(int index) const { return mString[index]; }
+    int length(int index) const { return mLength[index]; }
 
-    size_t read(char* buf, size_t maxSize);
+    int read(char* buf, int maxSize);
 
     struct Location
     {
-        size_t sIndex;  // String index;
-        size_t cIndex;  // Char index.
+        int sIndex;  // String index;
+        int cIndex;  // Char index.
 
         Location() : sIndex(0), cIndex(0) { }
     };
@@ -37,9 +36,9 @@ class Input
 
   private:
     // Input.
-    size_t mCount;
+    int mCount;
     const char* const* mString;
-    std::vector<size_t> mLength;
+    std::vector<int> mLength;
 
     Location mReadLoc;
 };

@@ -11,8 +11,7 @@
 
 #include <intrin.h>
 #include <math.h>
-
-#include "common/system.h"
+#include <windows.h>
 
 namespace gl
 {

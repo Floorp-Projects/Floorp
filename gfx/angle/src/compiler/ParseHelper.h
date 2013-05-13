@@ -58,7 +58,6 @@ struct TParseContext {
     const TType* currentFunctionType;  // the return type of the function that's currently being parsed
     bool functionReturnsValue;   // true if a non-void function has a return
     bool checksPrecisionErrors;  // true if an error will be generated when a variable is declared without precision, explicit or implicit.
-    bool fragmentPrecisionHigh;  // true if highp precision is supported in the fragment language.
     TString HashErrMsg;
     bool AfterEOF;
     TDiagnostics diagnostics;
@@ -135,7 +134,7 @@ struct TParseContext {
     bool structNestingErrorCheck(TSourceLoc line, const TType& fieldType);
 };
 
-int PaParseStrings(size_t count, const char* const string[], const int length[],
+int PaParseStrings(int count, const char* const string[], const int length[],
                    TParseContext* context);
 
 #endif // _PARSER_HELPER_INCLUDED_
