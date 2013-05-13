@@ -983,7 +983,6 @@ selfhosting_srcs := \
 
 selfhosted_out_h_deps := \
   $(selfhosting_srcs) \
-  $(srcdir)/builtin/ParallelArrayCommonOps.js \
   $(srcdir)/js.msg \
   $(srcdir)/builtin/embedjs.py \
   $(NULL)
