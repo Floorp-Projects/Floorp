@@ -10,8 +10,6 @@ relativesrcdir  = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DISABLED_XPCSHELL_TESTS = unit
-
 # For now we're copying the actual Util code.
 # We should make this into a jsm module. See bug 848137
 XPCSHELL_RESOURCES = \

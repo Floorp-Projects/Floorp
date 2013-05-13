@@ -17,16 +17,6 @@ CPP_UNIT_TESTS = \
                  TestPlainTextSerializer.cpp \
                  $(NULL)
 
-
-DISABLED_XPCSHELL_TESTS = \
-               unit \
-               $(NULL)
-# FIXME/bug 575918: out-of-process xpcshell is broken on OS X
-ifneq ($(OS_ARCH),Darwin)
-DISABLED_XPCSHELL_TESTS += unit_ipc
-endif
-
-
 # Split files arbitrarily in three groups to not run into too-long command lines
 # which break on Windows (see bug 563151 and bug 831989)
 MOCHITEST_FILES_A = \

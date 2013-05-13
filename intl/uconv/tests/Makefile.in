@@ -11,8 +11,6 @@ relativesrcdir = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DISABLED_XPCSHELL_TESTS	= unit
-
 # Tests disabled because they dont work in libxul builds.
 #MOZILLA_INTERNAL_API = 1
 #
