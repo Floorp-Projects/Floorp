@@ -97,6 +97,43 @@
                         android:layout_marginTop="12dip"
                         android:layout_alignRight="@id/tabs"/>
 
+    <LinearLayout android:id="@+id/awesome_bar_edit_container"
+                  style="@style/AddressBar.Button"
+                  android:layout_marginLeft="4dp"
+                  android:layout_marginRight="4dp"
+                  android:paddingLeft="8dp"
+                  android:visibility="gone"
+                  android:orientation="horizontal">
+
+        <view class="org.mozilla.gecko.CustomEditText"
+              android:id="@+id/awesome_bar_edit_text"
+              style="@style/AddressBar.Button"
+              android:layout_width="fill_parent"
+              android:layout_height="fill_parent"
+              android:layout_weight="1.0"
+              android:hint="@string/awesomebar_default_text"
+              android:textColor="@color/awesome_bar_title"
+              android:textColorHint="@color/awesome_bar_title_hint"
+              android:textColorHighlight="@color/url_bar_text_highlight"
+              android:textSelectHandle="@drawable/handle_middle"
+              android:textSelectHandleLeft="@drawable/handle_start"
+              android:textSelectHandleRight="@drawable/handle_end"
+              android:textCursorDrawable="@null"
+              android:inputType="textUri|textNoSuggestions"
+              android:imeOptions="actionSearch|flagNoExtractUi|flagNoFullscreen"
+              android:selectAllOnFocus="true"
+              android:singleLine="true"
+              android:gravity="center_vertical|left"
+              gecko:autoUpdateTheme="false"/>
+
+        <ImageButton android:id="@+id/go"
+                     style="@style/AddressBar.ImageButton.Icon"
+                     android:src="@drawable/ic_awesomebar_go"
+                     android:contentDescription="@string/go"
+                     android:visibility="gone"/>
+
+    </LinearLayout>
+
     <LinearLayout android:id="@+id/awesome_bar_display_container"
                   style="@style/AddressBar.Button"
                   android:layout_toLeftOf="@id/tabs"
