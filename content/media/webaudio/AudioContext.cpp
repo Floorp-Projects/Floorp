@@ -125,10 +125,10 @@ AudioContext::CreateBuffer(JSContext* aJSContext, ArrayBuffer& aBuffer,
                   aBuffer.Data(), aBuffer.Length(),
                   contentType);
 
-  WebAudioDecodeJob job(contentType, aBuffer, this);
+  WebAudioDecodeJob job(contentType, this);
 
   if (mDecoder.SyncDecodeMedia(contentType.get(),
-                               job.mBuffer, job.mLength, job) &&
+                               aBuffer.Data(), aBuffer.Length(), job) &&
       job.mOutput) {
     nsRefPtr<AudioBuffer> buffer = job.mOutput.forget();
     if (aMixToMono) {
@@ -284,10 +284,10 @@ AudioContext::DecodeAudioData(const ArrayBuffer& aBuffer,
     failureCallback = aFailureCallback.Value().get();
   }
   nsAutoPtr<WebAudioDecodeJob> job(
-    new WebAudioDecodeJob(contentType, aBuffer, this,
+    new WebAudioDecodeJob(contentType, this,
                           &aSuccessCallback, failureCallback));
   mDecoder.AsyncDecodeMedia(contentType.get(),
-                            job->mBuffer, job->mLength, *job);
+                            aBuffer.Data(), aBuffer.Length(), *job);
   // Transfer the ownership to mDecodeJobs
   mDecodeJobs.AppendElement(job.forget());
 }
