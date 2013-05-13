@@ -49,7 +49,7 @@ extern SECItem *sec_PKCS7AttributeValue (SEC_PKCS7Attribute *attr);
 /*
  * Encode a set of attributes (found in "src").
  */
-extern SECItem *sec_PKCS7EncodeAttributes (PRArenaPool *poolp,
+extern SECItem *sec_PKCS7EncodeAttributes (PLArenaPool *poolp,
 					   SECItem *dest, void *src);
 
 /*
@@ -71,7 +71,7 @@ sec_PKCS7CreateDecryptObject (PK11SymKey *key, SECAlgorithmID *algid);
  * and fill in the algorithm id.
  */
 extern sec_PKCS7CipherObject *
-sec_PKCS7CreateEncryptObject (PRArenaPool *poolp, PK11SymKey *key,
+sec_PKCS7CreateEncryptObject (PLArenaPool *poolp, PK11SymKey *key,
 			      SECOidTag algtag, SECAlgorithmID *algid);
 
 /*

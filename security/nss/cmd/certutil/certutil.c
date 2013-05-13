@@ -51,7 +51,7 @@ GetCertRequest(const SECItem *reqDER)
 {
     CERTCertificateRequest *certReq = NULL;
     CERTSignedData signedData;
-    PRArenaPool *arena = NULL;
+    PLArenaPool *arena = NULL;
     SECStatus rv;
 
     do {
@@ -190,7 +190,7 @@ CertReq(SECKEYPrivateKey *privk, SECKEYPublicKey *pubk, KeyType keyType,
     SECItem *encoding;
     SECOidTag signAlgTag;
     SECStatus rv;
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     void *extHandle;
     SECItem signedReq = { siBuffer, NULL, 0 };
 
@@ -601,7 +601,7 @@ ValidateCert(CERTCertDBHandle *handle, char *name, char *date,
 {
     SECStatus rv;
     CERTCertificate *cert = NULL;
-    int64 timeBoundary;
+    PRTime timeBoundary;
     SECCertificateUsage usage;
     CERTVerifyLog reallog;
     CERTVerifyLog *log = NULL;
@@ -1720,7 +1720,7 @@ SignCert(CERTCertDBHandle *handle, CERTCertificate *cert, PRBool selfsign,
     SECItem der;
     SECKEYPrivateKey *caPrivateKey = NULL;    
     SECStatus rv;
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     SECOidTag algID;
     void *dummy;
 

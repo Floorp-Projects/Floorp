@@ -50,7 +50,7 @@ pkix_pl_LdapCertStore_DecodeCrossCertPair(
         LDAPCertPair certPair = {{ siBuffer, NULL, 0 }, { siBuffer, NULL, 0 }};
         SECStatus rv = SECFailure;
 
-        PRArenaPool *tempArena = NULL;
+        PLArenaPool *tempArena = NULL;
 
         PKIX_ENTER(CERTSTORE, "pkix_pl_LdapCertStore_DecodeCrossCertPair");
         PKIX_NULLCHECK_TWO(derCCPItem, certList);
@@ -408,7 +408,7 @@ pkix_pl_LdapCertStore_DestroyAVAList(
  *
  * PARAMETERS:
  *  "arena"
- *      The address of the PRArenaPool used in creating the filter. Must be
+ *      The address of the PLArenaPool used in creating the filter. Must be
  *       non-NULL.
  *  "name"
  *      The address of the X500Name whose components define the desired
@@ -426,7 +426,7 @@ pkix_pl_LdapCertStore_DestroyAVAList(
  */
 static PKIX_Error *
 pkix_pl_LdapCertStore_MakeNameAVAList(
-        PRArenaPool *arena,
+        PLArenaPool *arena,
         PKIX_PL_X500Name *subjectName, 
         LDAPNameComponent ***pList,
         void *plContext)
@@ -570,7 +570,7 @@ pkix_pl_LdapCertStore_GetCert(
         PKIX_List **pCertList,
         void *plContext)
 {
-        PRArenaPool *requestArena = NULL;
+        PLArenaPool *requestArena = NULL;
         LDAPRequestParams requestParams;
         void *pollDesc = NULL;
         PKIX_Int32 minPathLen = 0;
@@ -806,7 +806,7 @@ pkix_pl_LdapCertStore_GetCRL(
 {
         LDAPRequestParams requestParams;
         void *pollDesc = NULL;
-        PRArenaPool *requestArena = NULL;
+        PLArenaPool *requestArena = NULL;
         PKIX_UInt32 numNames = 0;
         PKIX_UInt32 thisName = 0;
         PKIX_PL_CRL *candidate = NULL;

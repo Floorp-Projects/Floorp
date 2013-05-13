@@ -426,7 +426,7 @@ nsspkcs5_PKCS12PBE(const SECHashObject *hashObject,
 		   NSSPKCS5PBEParameter *pbe_param, SECItem *pwitem, 
 		   PBEBitGenID bitGenPurpose, unsigned int bytesNeeded)
 {
-    PRArenaPool *arena = NULL;
+    PLArenaPool *arena = NULL;
     unsigned int SLen,PLen;
     unsigned int hashLength = hashObject->length;
     unsigned char *S, *P;
@@ -741,7 +741,7 @@ finish_des:
 NSSPKCS5PBEParameter *
 nsspkcs5_NewParam(SECOidTag alg, SECItem *salt, int iterator)
 {
-    PRArenaPool *arena = NULL;
+    PLArenaPool *arena = NULL;
     NSSPKCS5PBEParameter *pbe_param = NULL;
     SECStatus rv = SECFailure;
 
@@ -1277,7 +1277,7 @@ loser:
  * SECOID_DestroyAlgorithmID
  */
 SECAlgorithmID *
-nsspkcs5_CreateAlgorithmID(PRArenaPool *arena, SECOidTag algorithm, 
+nsspkcs5_CreateAlgorithmID(PLArenaPool *arena, SECOidTag algorithm,
 					NSSPKCS5PBEParameter *pbe_param)
 {
     SECAlgorithmID *algid, *ret_algid = NULL;

@@ -128,7 +128,7 @@ extern NSSLOWCERTCertificate *
 nsslowcert_DecodeDERCertificate (SECItem *derSignedCert, char *nickname);
 
 SECStatus
-nsslowcert_KeyFromDERCert(PRArenaPool *arena, SECItem *derCert, SECItem *key);
+nsslowcert_KeyFromDERCert(PLArenaPool *arena, SECItem *derCert, SECItem *key);
 
 certDBEntrySMime *
 nsslowcert_ReadDBSMimeEntry(NSSLOWCERTCertDBHandle *certHandle,

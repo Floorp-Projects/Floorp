@@ -625,6 +625,7 @@ MOCHITEST_FILES_C= \
 		badMessageEvent2.eventsource \
 		badMessageEvent2.eventsource^headers^ \
 		test_object.html \
+		test_bug869006.html \
 		$(NULL)
 
 # OOP tests don't work on Windows (bug 763081) or native-fennec

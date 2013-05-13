@@ -94,6 +94,11 @@ class HTMLElement(object):
     def location(self):
         return self.marionette._send_message('getElementPosition', 'value', element=self.id)
 
+    def value_of_css_property(self, property_name):
+        return self.marionette._send_message('getElementValueOfCssProperty', 'value',
+                                             element=self.id,
+                                             propertyName=property_name)
+
 class Actions(object):
     def __init__(self, marionette):
         self.action_chain = []

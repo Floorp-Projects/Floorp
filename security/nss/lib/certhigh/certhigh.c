@@ -80,7 +80,7 @@ CERT_FindUserCertsByUsage(CERTCertDBHandle *handle,
     CERTCertificate *cert = NULL;
     CERTCertList *certList = NULL;
     SECStatus rv;
-    int64 time;
+    PRTime time;
     CERTCertListNode *node = NULL;
     CERTCertListNode *freenode = NULL;
     int n;
@@ -228,7 +228,7 @@ CERT_FindUserCertByUsage(CERTCertDBHandle *handle,
     CERTCertificate *cert = NULL;
     CERTCertList *certList = NULL;
     SECStatus rv;
-    int64 time;
+    PRTime time;
     
     time = PR_Now();
     
@@ -458,7 +458,7 @@ CollectNicknames( NSSCertificate *c, void *data)
 CERTCertNicknames *
 CERT_GetCertNicknames(CERTCertDBHandle *handle, int what, void *wincx)
 {
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     CERTCertNicknames *names;
     int i;
     stringNode *node;
@@ -588,7 +588,7 @@ CollectDistNames( CERTCertificate *cert, SECItem *k, void *data)
 CERTDistNames *
 CERT_DupDistNames(CERTDistNames *orig)
 {
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     CERTDistNames *names;
     int i;
     SECStatus rv;
@@ -636,7 +636,7 @@ loser:
 CERTDistNames *
 CERT_GetSSLCACerts(CERTCertDBHandle *handle)
 {
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     CERTDistNames *names;
     int i;
     SECStatus rv;
@@ -698,7 +698,7 @@ CERTDistNames *
 CERT_DistNamesFromCertList(CERTCertList *certList)
 {
     CERTDistNames *   dnames = NULL;
-    PRArenaPool *     arena;
+    PLArenaPool *     arena;
     CERTCertListNode *node = NULL;
     SECItem *         names = NULL;
     int               listLen = 0, i = 0;
@@ -746,7 +746,7 @@ CERT_DistNamesFromNicknames(CERTCertDBHandle *handle, char **nicknames,
 			   int nnames)
 {
     CERTDistNames *dnames = NULL;
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     int i, rv;
     SECItem *names = NULL;
     CERTCertificate *cert = NULL;
@@ -788,7 +788,7 @@ CERT_FindCertByNameString(CERTCertDBHandle *handle, char *nameStr)
     CERTName *name;
     SECItem *nameItem;
     CERTCertificate *cert = NULL;
-    PRArenaPool *arena = NULL;
+    PLArenaPool *arena = NULL;
     
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
     
@@ -1024,7 +1024,7 @@ CERT_CertChainFromCert(CERTCertificate *cert, SECCertUsage usage,
     CERTCertificateList *chain = NULL;
     NSSCertificate **stanChain;
     NSSCertificate *stanCert;
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     NSSUsage nssUsage;
     int i, len;
     NSSTrustDomain *td   = STAN_GetDefaultTrustDomain();
@@ -1116,7 +1116,7 @@ CERT_CertListFromCert(CERTCertificate *cert)
 {
     CERTCertificateList *chain = NULL;
     int rv;
-    PRArenaPool *arena;
+    PLArenaPool *arena;
 
     /* arena for SecCertificateList */
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
@@ -1147,7 +1147,7 @@ CERTCertificateList *
 CERT_DupCertList(const CERTCertificateList * oldList)
 {
     CERTCertificateList *newList = NULL;
-    PRArenaPool         *arena   = NULL;
+    PLArenaPool         *arena   = NULL;
     SECItem             *newItem;
     SECItem             *oldItem;
     int                 len      = oldList->len;

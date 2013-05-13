@@ -9,7 +9,7 @@
 #include <cassert>
 #include <sstream>
 
-#include "Diagnostics.h"
+#include "DiagnosticsBase.h"
 #include "DirectiveParser.h"
 #include "Macro.h"
 #include "MacroExpander.h"
@@ -48,7 +48,7 @@ Preprocessor::~Preprocessor()
     delete mImpl;
 }
 
-bool Preprocessor::init(int count,
+bool Preprocessor::init(size_t count,
                         const char* const string[],
                         const int length[])
 {

@@ -73,10 +73,11 @@ FENNEC_JAVA_FILES = \
   CanvasDelegate.java \
   CheckableLinearLayout.java \
   ClickableWhenDisabledEditText.java \
-  SyncPreference.java \
+  CustomEditText.java \
   db/BrowserDB.java \
   db/LocalBrowserDB.java \
   db/DBUtils.java \
+  DataReportingNotification.java \
   Distribution.java \
   Divider.java \
   DoorHanger.java \
@@ -130,7 +131,7 @@ FENNEC_JAVA_FILES = \
   NotificationHandler.java \
   NotificationService.java \
   NSSBridge.java \
-  CustomEditText.java \
+  OrderedBroadcastHelper.java \
   PrefsHelper.java \
   PrivateDataPreference.java \
   PrivateTab.java \
@@ -149,10 +150,12 @@ FENNEC_JAVA_FILES = \
   SessionParser.java \
   SetupScreen.java \
   ShapedButton.java \
+  SharedPreferencesHelper.java \
   SiteIdentityPopup.java \
   SmsManager.java \
   SuggestClient.java \
   SurfaceBits.java \
+  SyncPreference.java \
   Tab.java \
   TabCounter.java \
   Tabs.java \
@@ -280,6 +283,7 @@ FENNEC_PP_JAVA_FILES = \
   $(NULL)
 
 FENNEC_PP_XML_FILES = \
+  res/xml/preferences_nonfragment.xml \
   res/xml/searchable.xml \
   $(NULL)
 
@@ -531,11 +535,17 @@ RES_VALUES_V14 = \
 
 RES_XML = \
   res/xml/preference_headers.xml \
+  res/xml/preferences_main.xml \
   res/xml/preferences_general.xml \
-  res/xml/preferences_privacy.xml \
   res/xml/preferences_content.xml \
+  res/xml/preferences_privacy.xml \
+  res/xml/preferences_datareporting.xml \
   $(SYNC_RES_XML) \
   $(NULL)
+
+RES_XML_V11 = \
+  res/xml-v11/preferences_datareporting.xml \
+	$(NULL)
 
 RES_ANIM = \
   res/anim/awesomebar_fade_in.xml \
@@ -844,6 +854,7 @@ RES_DRAWABLE_MDPI_V11 = \
   res/drawable-mdpi-v11/alert_addon.png \
   res/drawable-mdpi-v11/alert_app.png \
   res/drawable-mdpi-v11/alert_download.png \
+  res/drawable-mdpi-v11/firefox_settings_alert.png \
   res/drawable-mdpi-v11/ic_menu_addons.png \
   res/drawable-mdpi-v11/ic_menu_apps.png \
   res/drawable-mdpi-v11/ic_menu_back.png \
@@ -869,6 +880,7 @@ RES_DRAWABLE_HDPI_V11 = \
   res/drawable-hdpi-v11/alert_addon.png \
   res/drawable-hdpi-v11/alert_app.png \
   res/drawable-hdpi-v11/alert_download.png \
+  res/drawable-hdpi-v11/firefox_settings_alert.png \
   res/drawable-hdpi-v11/ic_menu_addons.png \
   res/drawable-hdpi-v11/ic_menu_apps.png \
   res/drawable-hdpi-v11/ic_menu_back.png \
@@ -894,6 +906,7 @@ RES_DRAWABLE_XHDPI_V11 = \
   res/drawable-xhdpi-v11/alert_addon.png \
   res/drawable-xhdpi-v11/alert_app.png \
   res/drawable-xhdpi-v11/alert_download.png \
+  res/drawable-xhdpi-v11/firefox_settings_alert.png \
   res/drawable-xhdpi-v11/ic_menu_addons.png \
   res/drawable-xhdpi-v11/ic_menu_apps.png \
   res/drawable-xhdpi-v11/ic_menu_back.png \
@@ -1042,7 +1055,7 @@ MOZ_ANDROID_DRAWABLES += \
 
 MOZ_BRANDING_DRAWABLE_MDPI = $(shell if test -e $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn; then cat $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn | tr '\n' ' ';  fi)
 
-RESOURCES=$(RES_LAYOUT) $(RES_LAYOUT_LARGE_LAND_V11) $(RES_LAYOUT_LARGE_V11) $(RES_LAYOUT_XLARGE_V11) $(RES_LAYOUT_XLARGE_LAND_V11) $(RES_VALUES) $(RES_VALUES_LAND) $(RES_VALUES_V11) $(RES_VALUES_LARGE_V11) $(RES_VALUES_LARGE_LAND_V11) $(RES_VALUES_XLARGE_V11) $(RES_VALUES_LAND_V14) $(RES_VALUES_V14) $(RES_XML) $(RES_ANIM) $(RES_DRAWABLE_MDPI) $(RES_DRAWABLE_LDPI) $(RES_DRAWABLE_HDPI) $(RES_DRAWABLE_XHDPI) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_DRAWABLE_LARGE_MDPI_V11) $(RES_DRAWABLE_LARGE_HDPI_V11) $(RES_DRAWABLE_LARGE_XHDPI_V11) $(RES_DRAWABLE_XLARGE_MDPI_V11) $(RES_DRAWABLE_XLARGE_HDPI_V11) $(RES_DRAWABLE_XLARGE_XHDPI_V11) $(RES_COLOR) $(RES_MENU)
+RESOURCES=$(RES_LAYOUT) $(RES_LAYOUT_LARGE_LAND_V11) $(RES_LAYOUT_LARGE_V11) $(RES_LAYOUT_XLARGE_V11) $(RES_LAYOUT_XLARGE_LAND_V11) $(RES_VALUES) $(RES_VALUES_LAND) $(RES_VALUES_V11) $(RES_VALUES_LARGE_V11) $(RES_VALUES_LARGE_LAND_V11) $(RES_VALUES_XLARGE_V11) $(RES_VALUES_LAND_V14) $(RES_VALUES_V14) $(RES_XML) $(RES_XML_V11) $(RES_ANIM) $(RES_DRAWABLE_MDPI) $(RES_DRAWABLE_LDPI) $(RES_DRAWABLE_HDPI) $(RES_DRAWABLE_XHDPI) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_DRAWABLE_LARGE_MDPI_V11) $(RES_DRAWABLE_LARGE_HDPI_V11) $(RES_DRAWABLE_LARGE_XHDPI_V11) $(RES_DRAWABLE_XLARGE_MDPI_V11) $(RES_DRAWABLE_XLARGE_HDPI_V11) $(RES_DRAWABLE_XLARGE_XHDPI_V11) $(RES_COLOR) $(RES_MENU)
 
 RES_DIRS= \
   res/layout                    \
@@ -1056,6 +1069,7 @@ RES_DIRS= \
   res/values-xlarge-v11         \
   res/values-land-v14           \
   res/xml                       \
+  res/xml-v11                   \
   res/anim                      \
   res/drawable-ldpi             \
   res/drawable-mdpi             \

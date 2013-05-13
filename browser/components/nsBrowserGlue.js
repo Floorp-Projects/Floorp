@@ -1344,22 +1344,11 @@ BrowserGlue.prototype = {
       let currentset = this._getPersist(toolbarResource, currentsetResource);
       // Need to migrate only if toolbar is customized.
       if (currentset) {
-        if (currentset.contains("bookmarks-menu-button-container"))
-          currentset = currentset.replace(/(^|,)bookmarks-menu-button-container($|,)/,"$2");
-
-        // Now insert the new button.
-        if (currentset.contains("downloads-button")) {
-          currentset = currentset.replace(/(^|,)downloads-button($|,)/,
-                                          "$1bookmarks-menu-button,downloads-button$2");
-        } else if (currentset.contains("home-button")) {
-          currentset = currentset.replace(/(^|,)home-button($|,)/,
-                                          "$1bookmarks-menu-button,home-button$2");
-        } else {
-          // Just append.
-          currentset = currentset.replace(/(^|,)window-controls($|,)/,
-                                          "$1bookmarks-menu-button,window-controls$2")
+        if (currentset.contains("bookmarks-menu-button-container")) {
+          currentset = currentset.replace(/(^|,)bookmarks-menu-button-container($|,)/,
+                                          "$1bookmarks-menu-button$2");
+          this._setPersist(toolbarResource, currentsetResource, currentset);
         }
-        this._setPersist(toolbarResource, currentsetResource, currentset);
       }
     }
 

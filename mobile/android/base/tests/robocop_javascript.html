@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<head>
+<meta charset="UTF-8">
+<title>Mochitest Robotium Javascript Test Harness</title>
+<link rel="author" title="nalexander" href="mailto:nalexander@mozilla.com">
+<script type="application/javascript;version=1.8" src="robocop_testharness.js"></script>
+<script>
+var param = /[&?]path=([^&]+)/.exec(location.search);
+if (param) {
+  // We encode so that absolute URLs can be provided.  Since the
+  // encoding of a relative filename is just the filename, no special
+  // processing is needed for the most common case.
+  var src = decodeURIComponent(param[1]);
+  document.title = src;
+
+  // Provided by robocop_testharness.js.
+  testOneFile(src);
+}
+</script>
+</head>

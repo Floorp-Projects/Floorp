@@ -148,7 +148,7 @@ crlgen_CommitEntryData(PLHashEntry *he, PRIntn i, void *arg)
 
 /* Copy char * datainto allocated in arena SECItem */
 static SECStatus 
-crlgen_SetString(PRArenaPool *arena, const char *dataIn, SECItem *value)
+crlgen_SetString(PLArenaPool *arena, const char *dataIn, SECItem *value)
 {
     SECItem item;
 
@@ -166,7 +166,7 @@ crlgen_SetString(PRArenaPool *arena, const char *dataIn, SECItem *value)
 
 /* Creates CERTGeneralName from parsed data for the Authority Key Extension */
 static CERTGeneralName *
-crlgen_GetGeneralName (PRArenaPool *arena, CRLGENGeneratorData *crlGenData,
+crlgen_GetGeneralName (PLArenaPool *arena, CRLGENGeneratorData *crlGenData,
                        const char *data)
 {
     CERTGeneralName *namesList = NULL;
@@ -314,7 +314,7 @@ crlgen_GetGeneralName (PRArenaPool *arena, CRLGENGeneratorData *crlGenData,
 
 /* Creates CERTGeneralName from parsed data for the Authority Key Extension */
 static CERTGeneralName *
-crlgen_DistinguishedName (PRArenaPool *arena, CRLGENGeneratorData *crlGenData,
+crlgen_DistinguishedName (PLArenaPool *arena, CRLGENGeneratorData *crlGenData,
                           const char *data)
 {
     CERTName *directoryName = NULL;
@@ -365,7 +365,7 @@ crlgen_AddAuthKeyID (CRLGENGeneratorData *crlGenData,
 {
     void *extHandle = NULL;
     CERTAuthKeyID *authKeyID = NULL;
-    PRArenaPool *arena = NULL;
+    PLArenaPool *arena = NULL;
     SECStatus rv = SECSuccess;
 
     PORT_Assert(dataArr && crlGenData);
@@ -429,7 +429,7 @@ crlgen_AddIssuerAltNames(CRLGENGeneratorData *crlGenData,
                           const char **dataArr)
 {
     CERTGeneralName *nameList = NULL;
-    PRArenaPool *arena = NULL;
+    PLArenaPool *arena = NULL;
     void *extHandle = NULL;
     SECStatus rv = SECSuccess;
 
@@ -489,7 +489,7 @@ crlgen_AddIssuerAltNames(CRLGENGeneratorData *crlGenData,
 static SECStatus
 crlgen_AddCrlNumber(CRLGENGeneratorData *crlGenData, const char **dataArr)
 {
-    PRArenaPool *arena = NULL;
+    PLArenaPool *arena = NULL;
     SECItem encodedItem;
     void *extHandle = crlGenData->crlExtHandle;
     void *dummy;
@@ -540,7 +540,7 @@ crlgen_AddCrlNumber(CRLGENGeneratorData *crlGenData, const char **dataArr)
 /* Creates Cert Revocation Reason code extension. Encodes it and
  * returns as SECItem structure */
 static SECItem*
-crlgen_CreateReasonCode(PRArenaPool *arena, const char **dataArr,
+crlgen_CreateReasonCode(PLArenaPool *arena, const char **dataArr,
                         int *extCode)
 {
     SECItem *encodedItem;
@@ -590,7 +590,7 @@ crlgen_CreateReasonCode(PRArenaPool *arena, const char **dataArr,
 /* Creates Cert Invalidity Date extension. Encodes it and
  * returns as SECItem structure */
 static SECItem*
-crlgen_CreateInvalidityDate(PRArenaPool *arena, const char **dataArr,
+crlgen_CreateInvalidityDate(PLArenaPool *arena, const char **dataArr,
                        int *extCode)
 {
     SECItem *encodedItem;
@@ -634,7 +634,7 @@ crlgen_CreateInvalidityDate(PRArenaPool *arena, const char **dataArr,
 static SECStatus
 crlgen_AddEntryExtension(CRLGENGeneratorData *crlGenData,
                          const char **dataArr, char *extName,
-                         SECItem* (*extCreator)(PRArenaPool *arena,
+                         SECItem* (*extCreator)(PLArenaPool *arena,
                                                 const char **dataArr,
                                                 int *extCode))
 {
@@ -643,7 +643,7 @@ crlgen_AddEntryExtension(CRLGENGeneratorData *crlGenData,
     int extCode = 0;
     PRUint64 lastRange ;
     SECItem *ext = NULL;
-    PRArenaPool *arena = NULL;
+    PLArenaPool *arena = NULL;
 
 
     PORT_Assert(crlGenData &&  dataArr);
@@ -719,7 +719,7 @@ CRLGEN_CommitExtensionsAndEntries(CRLGENGeneratorData *crlGenData)
 {
     int size = 0;
     CERTCrl *crl;
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     SECStatus rv = SECSuccess;
     void *mark;
 
@@ -898,7 +898,7 @@ crlgen_SetTimeField(CRLGENGeneratorData *crlGenData, char *value,
                     PRBool setThisUpdate)
 {
     CERTSignedCrl *signCrl;
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     CERTCrl *crl;
     int length = 0;
     SECItem *timeDest = NULL;
@@ -987,7 +987,7 @@ crlgen_AddCert(CRLGENGeneratorData *crlGenData,
 {
     CERTSignedCrl *signCrl;
     SECItem *certIdItem;
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     PRUint64 rangeFrom = 0, rangeTo = 0, i = 0;
     int timeValLength = -1;
     SECStatus rv = SECFailure;
@@ -1079,7 +1079,7 @@ static SECStatus
 crlgen_RmCert(CRLGENGeneratorData *crlGenData, char *certId)
 {
     PRUint64 i = 0;
-    PRArenaPool *arena;
+    PLArenaPool *arena;
 
     PORT_Assert(crlGenData && certId);
     if (!crlGenData || !certId) {

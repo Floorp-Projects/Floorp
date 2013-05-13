@@ -99,12 +99,14 @@ HBGetTable(hb_face_t *face, hb_tag_t aTag, void *aUserData)
  */
 
 struct FontCallbackData {
-    FontCallbackData(gfxHarfBuzzShaper *aShaper, gfxContext *aContext)
-        : mShaper(aShaper), mContext(aContext)
+    FontCallbackData(gfxHarfBuzzShaper *aShaper, gfxContext *aContext,
+                     bool aKerning)
+        : mShaper(aShaper), mContext(aContext), mKerning(aKerning)
     { }
 
     gfxHarfBuzzShaper *mShaper;
     gfxContext        *mContext;
+    bool               mKerning;
 };
 
 #define UNICODE_BMP_LIMIT 0x10000
@@ -644,7 +646,13 @@ HBGetHKerning(hb_font_t *font, void *font_data,
 {
     const FontCallbackData *fcd =
         static_cast<const FontCallbackData*>(font_data);
-    return fcd->mShaper->GetHKerning(first_glyph, second_glyph);
+
+    // return 0 if kerning is explicitly disabled
+    if (fcd->mKerning) {
+        return fcd->mShaper->GetHKerning(first_glyph, second_glyph);
+    } else {
+        return 0.0;
+    }
 }
 
 /*
@@ -956,7 +964,9 @@ gfxHarfBuzzShaper::ShapeText(gfxContext      *aContext,
         return false;
     }
 
-    FontCallbackData fcd(this, aContext);
+    const gfxFontStyle *style = mFont->GetStyle();
+    // kerning is enabled *except* when explicitly disabled (font-kerning: none)
+    FontCallbackData fcd(this, aContext, !mFont->KerningDisabled());
     hb_font_t *font = hb_font_create(mHBFace);
     hb_font_set_funcs(font, sHBFontFuncs, &fcd, nullptr);
     hb_font_set_ppem(font, mFont->GetAdjustedSize(), mFont->GetAdjustedSize());
@@ -966,13 +976,15 @@ gfxHarfBuzzShaper::ShapeText(gfxContext      *aContext,
     nsAutoTArray<hb_feature_t,20> features;
 
     gfxFontEntry *entry = mFont->GetFontEntry();
-    const gfxFontStyle *style = mFont->GetStyle();
 
     nsDataHashtable<nsUint32HashKey,uint32_t> mergedFeatures;
 
-    if (MergeFontFeatures(style->featureSettings,
-                      mFont->GetFontEntry()->mFeatureSettings,
-                      aShapedText->DisableLigatures(), mergedFeatures)) {
+    if (MergeFontFeatures(style,
+                          mFont->GetFontEntry()->mFeatureSettings,
+                          aShapedText->DisableLigatures(),
+                          mFont->GetFontEntry()->FamilyName(),
+                          mergedFeatures))
+    {
         // enumerate result and insert into hb_feature array
         mergedFeatures.Enumerate(AddFeature, &features);
     }

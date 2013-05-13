@@ -148,7 +148,7 @@ breakLines(char *string)
 CERTCertificatePolicies *
 CERT_DecodeCertificatePoliciesExtension(const SECItem *extnValue)
 {
-    PRArenaPool *arena = NULL;
+    PLArenaPool *arena = NULL;
     SECStatus rv;
     CERTCertificatePolicies *policies;
     CERTPolicyInfo **policyInfos, *policyInfo;
@@ -224,7 +224,7 @@ CERT_DestroyCertificatePoliciesExtension(CERTCertificatePolicies *policies)
 CERTCertificatePolicyMappings *
 CERT_DecodePolicyMappingsExtension(SECItem *extnValue)
 {
-    PRArenaPool *arena = NULL;
+    PLArenaPool *arena = NULL;
     SECStatus rv;
     CERTCertificatePolicyMappings *mappings;
     SECItem newExtnValue;
@@ -282,7 +282,7 @@ CERT_DecodePolicyConstraintsExtension
                               const SECItem *encodedValue)
 {
     CERTCertificatePolicyConstraints decodeContext;
-    PRArenaPool *arena = NULL;
+    PLArenaPool *arena = NULL;
     SECStatus rv = SECSuccess;
 
     /* initialize so we can tell when an optional component is omitted */
@@ -338,7 +338,7 @@ SECStatus CERT_DecodeInhibitAnyExtension
         (CERTCertificateInhibitAny *decodedValue, SECItem *encodedValue)
 {
     CERTCertificateInhibitAny decodeContext;
-    PRArenaPool *arena = NULL;
+    PLArenaPool *arena = NULL;
     SECStatus rv = SECSuccess;
 
     /* make a new arena */
@@ -370,7 +370,7 @@ SECStatus CERT_DecodeInhibitAnyExtension
 CERTUserNotice *
 CERT_DecodeUserNotice(SECItem *noticeItem)
 {
-    PRArenaPool *arena = NULL;
+    PLArenaPool *arena = NULL;
     SECStatus rv;
     CERTUserNotice *userNotice;
     SECItem newNoticeItem;
@@ -604,7 +604,7 @@ const SEC_ASN1Template CERT_OidSeqTemplate[] = {
 CERTOidSequence *
 CERT_DecodeOidSequence(const SECItem *seqItem)
 {
-    PRArenaPool *arena = NULL;
+    PLArenaPool *arena = NULL;
     SECStatus rv;
     CERTOidSequence *oidSeq;
     SECItem newSeqItem;
@@ -708,7 +708,7 @@ done:
 
 
 SECStatus
-CERT_EncodePolicyConstraintsExtension(PRArenaPool *arena,
+CERT_EncodePolicyConstraintsExtension(PLArenaPool *arena,
                                       CERTCertificatePolicyConstraints *constr,
                                       SECItem *dest)
 {
@@ -727,7 +727,7 @@ CERT_EncodePolicyConstraintsExtension(PRArenaPool *arena,
 }
 
 SECStatus
-CERT_EncodePolicyMappingExtension(PRArenaPool *arena,
+CERT_EncodePolicyMappingExtension(PLArenaPool *arena,
                                   CERTCertificatePolicyMappings *mapping,
                                   SECItem *dest)
 {
@@ -748,7 +748,7 @@ CERT_EncodePolicyMappingExtension(PRArenaPool *arena,
 
 
 SECStatus
-CERT_EncodeCertPoliciesExtension(PRArenaPool *arena,
+CERT_EncodeCertPoliciesExtension(PLArenaPool *arena,
                                  CERTPolicyInfo **info,
                                  SECItem *dest)
 {
@@ -767,7 +767,7 @@ CERT_EncodeCertPoliciesExtension(PRArenaPool *arena,
 }
 
 SECStatus
-CERT_EncodeUserNotice(PRArenaPool *arena,
+CERT_EncodeUserNotice(PLArenaPool *arena,
                       CERTUserNotice *notice,
                       SECItem *dest)
 {
@@ -787,7 +787,7 @@ CERT_EncodeUserNotice(PRArenaPool *arena,
 }
 
 SECStatus
-CERT_EncodeNoticeReference(PRArenaPool *arena,
+CERT_EncodeNoticeReference(PLArenaPool *arena,
                            CERTNoticeReference *reference,
                            SECItem *dest)
 {
@@ -807,7 +807,7 @@ CERT_EncodeNoticeReference(PRArenaPool *arena,
 }
 
 SECStatus
-CERT_EncodeInhibitAnyExtension(PRArenaPool *arena,
+CERT_EncodeInhibitAnyExtension(PLArenaPool *arena,
                                CERTCertificateInhibitAny *certInhibitAny,
                                SECItem *dest)
 {

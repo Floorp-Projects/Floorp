@@ -228,7 +228,7 @@ class IonCache
     LinkStatus linkCode(JSContext *cx, MacroAssembler &masm, IonScript *ion, IonCode **code);
     // Fixup variables and update jumps in the list of stubs.  Increment the
     // number of attached stubs accordingly.
-    void attachStub(MacroAssembler &masm, StubAttacher &attacher, IonCode *code);
+    void attachStub(MacroAssembler &masm, StubAttacher &attacher, Handle<IonCode *> code);
 
     // Combine both linkStub and attachStub into one function. In addition, it
     // produces a spew augmented with the attachKind string.

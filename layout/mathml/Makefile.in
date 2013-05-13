@@ -47,6 +47,7 @@ CPPSRCS =         nsMathMLChar.cpp		        \
                   nsMathMLmstyleFrame.cpp		\
                   nsMathMLmsqrtFrame.cpp		\
                   nsMathMLmrootFrame.cpp		\
+                  nsMathMLSelectedFrame.cpp		\
                   nsMathMLmactionFrame.cpp		\
                   nsMathMLmencloseFrame.cpp		\
                   nsMathMLsemanticsFrame.cpp		\

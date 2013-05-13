@@ -9,6 +9,7 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/AddonManager.jsm");
+Cu.import("resource://gre/modules/PlacesUtils.jsm");
 
 const URI_EXTENSION_STRINGS  = "chrome://mozapps/locale/extensions/extensions.properties";
 const ADDON_TYPE_SERVICE     = "service";
@@ -19,6 +20,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "getFrameWorkerHandle", "resource://gre/
 XPCOMUtils.defineLazyModuleGetter(this, "WorkerAPI", "resource://gre/modules/WorkerAPI.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "MozSocialAPI", "resource://gre/modules/MozSocialAPI.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DeferredTask", "resource://gre/modules/DeferredTask.jsm");
+
+XPCOMUtils.defineLazyServiceGetter(this, "etld",
+                                   "@mozilla.org/network/effective-tld-service;1",
+                                   "nsIEffectiveTLDService");
 
 /**
  * The SocialService is the public API to social providers - it tracks which
@@ -76,6 +81,59 @@ let SocialServiceInternal = {
     }
     let originUri = Services.io.newURI(origin, null, null);
     return originUri.hostPort.replace('.','-');
+  },
+  orderedProviders: function(aCallback) {
+    if (SocialServiceInternal.providerArray.length < 2) {
+      schedule(function () {
+        aCallback(SocialServiceInternal.providerArray);
+      });
+      return;
+    }
+    // query moz_hosts for frecency.  since some providers may not have a
+    // frecency entry, we need to later sort on our own. We use the providers
+    // object below as an easy way to later record the frecency on the provider
+    // object from the query results.
+    let hosts = [];
+    let providers = {};
+
+    for (p of SocialServiceInternal.providerArray) {
+      p.frecency = 0;
+      providers[p.domain] = p;
+      hosts.push(p.domain);
+    };
+
+    // cannot bind an array to stmt.params so we have to build the string
+    let stmt = PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
+                                 .DBConnection.createAsyncStatement(
+      "SELECT host, frecency FROM moz_hosts WHERE host IN (" +
+      [ '"' + host + '"' for each (host in hosts) ].join(",") + ") "
+    );
+
+    try {
+      stmt.executeAsync({
+        handleResult: function(aResultSet) {
+          let row;
+          while ((row = aResultSet.getNextRow())) {
+            let rh = row.getResultByName("host");
+            let frecency = row.getResultByName("frecency");
+            providers[rh].frecency = parseInt(frecency) || 0;
+          }
+        },
+        handleError: function(aError) {
+          Cu.reportError(aError.message + " (Result = " + aError.result + ")");
+        },
+        handleCompletion: function(aReason) {
+          // the query may not have returned all our providers, so we have
+          // stamped the frecency on the provider and sort here. This makes sure
+          // all enabled providers get sorted even with frecency zero.
+          let providerList = SocialServiceInternal.providerArray;
+          // reverse sort
+          aCallback(providerList.sort(function(a, b) b.frecency - a.frecency));
+        }
+      });
+    } finally {
+      stmt.finalize();
+    }
   }
 };
 
@@ -325,9 +383,8 @@ this.SocialService = {
     SocialServiceInternal.providers[provider.origin] = provider;
     ActiveProviders.add(provider.origin);
 
-    schedule(function () {
-      this._notifyProviderListeners("provider-added",
-                                    SocialServiceInternal.providerArray);
+    this.getOrderedProviderList(function (providers) {
+      this._notifyProviderListeners("provider-added", providers);
       if (onDone)
         onDone(provider);
     }.bind(this));
@@ -360,9 +417,8 @@ this.SocialService = {
       AddonManagerPrivate.notifyAddonChanged(addon.id, ADDON_TYPE_SERVICE, false);
     }
 
-    schedule(function () {
-      this._notifyProviderListeners("provider-removed",
-                                    SocialServiceInternal.providerArray);
+    this.getOrderedProviderList(function (providers) {
+      this._notifyProviderListeners("provider-removed", providers);
       if (onDone)
         onDone();
     }.bind(this));
@@ -376,11 +432,16 @@ this.SocialService = {
     }).bind(this));
   },
 
-  // Returns an array of installed providers.
-  getProviderList: function getProviderList(onDone) {
+  // Returns an unordered array of installed providers
+  getProviderList: function(onDone) {
     schedule(function () {
       onDone(SocialServiceInternal.providerArray);
     });
+  },
+
+  // Returns an array of installed providers, sorted by frecency
+  getOrderedProviderList: function(onDone) {
+    SocialServiceInternal.orderedProviders(onDone);
   },
 
   getOriginActivationType: function(origin) {
@@ -501,7 +562,6 @@ this.SocialService = {
   },
 
   installProvider: function(aDOMDocument, data, installCallback) {
-    let sourceURI = aDOMDocument.location.href;
     let installOrigin = aDOMDocument.nodePrincipal.origin;
 
     let id = getAddonIDFromOrigin(installOrigin);
@@ -509,6 +569,21 @@ this.SocialService = {
     if (Services.blocklist.getAddonBlocklistState(id, version) == Ci.nsIBlocklistService.STATE_BLOCKED)
       throw new Error("installProvider: provider with origin [" +
                       installOrigin + "] is blocklisted");
+
+    AddonManager.getAddonByID(id, function(aAddon) {
+      if (aAddon && aAddon.userDisabled) {
+        aAddon.cancelUninstall();
+        aAddon.userDisabled = false;
+      }
+      schedule(function () {
+        this._installProvider(aDOMDocument, data, installCallback);
+      }.bind(this));
+    }.bind(this));
+  },
+
+  _installProvider: function(aDOMDocument, data, installCallback) {
+    let sourceURI = aDOMDocument.location.href;
+    let installOrigin = aDOMDocument.nodePrincipal.origin;
 
     let installType = this.getOriginActivationType(installOrigin);
     let manifest;
@@ -598,6 +673,12 @@ function SocialProvider(input) {
   this.principal = Services.scriptSecurityManager.getNoAppCodebasePrincipal(originUri);
   this.ambientNotificationIcons = {};
   this.errorState = null;
+  this.frecency = 0;
+  try {
+    this.domain = etld.getBaseDomainFromHost(originUri.host);
+  } catch(e) {
+    this.domain = originUri.host;
+  }
 }
 
 SocialProvider.prototype = {
@@ -742,6 +823,10 @@ SocialProvider.prototype = {
   setAmbientNotification: function(notification) {
     if (!this.profile.userName)
       throw new Error("unable to set notifications while logged out");
+    if (!this.ambientNotificationIcons[notification.name] &&
+        Object.keys(this.ambientNotificationIcons).length >= 3) {
+      throw new Error("ambient notification limit reached");
+    }
     this.ambientNotificationIcons[notification.name] = notification;
 
     Services.obs.notifyObservers(null, "social:ambient-notification-changed", this.origin);
@@ -848,6 +933,7 @@ function AddonInstaller(sourceURI, aManifest, installCallback) {
   aManifest.updateDate = Date.now();
   // get the existing manifest for installDate
   let manifest = SocialServiceInternal.getManifestByOrigin(aManifest.origin);
+  let isNewInstall = !manifest;
   if (manifest && manifest.installDate)
     aManifest.installDate = manifest.installDate;
   else
@@ -856,15 +942,19 @@ function AddonInstaller(sourceURI, aManifest, installCallback) {
   this.sourceURI = sourceURI;
   this.install = function() {
     let addon = this.addon;
-    AddonManagerPrivate.callInstallListeners("onExternalInstall", null, addon, null, false);
-    AddonManagerPrivate.callAddonListeners("onInstalling", addon, false);
+    if (isNewInstall) {
+      AddonManagerPrivate.callInstallListeners("onExternalInstall", null, addon, null, false);
+      AddonManagerPrivate.callAddonListeners("onInstalling", addon, false);
+    }
 
     let string = Cc["@mozilla.org/supports-string;1"].
                  createInstance(Ci.nsISupportsString);
     string.data = JSON.stringify(aManifest);
     Services.prefs.setComplexValue(getPrefnameFromOrigin(aManifest.origin), Ci.nsISupportsString, string);
 
-    AddonManagerPrivate.callAddonListeners("onInstalled", addon);
+    if (isNewInstall) {
+      AddonManagerPrivate.callAddonListeners("onInstalled", addon);
+    }
     installCallback(aManifest);
   };
   this.cancel = function() {
@@ -1100,14 +1190,6 @@ AddonWrapper.prototype = {
   },
 
   cancelUninstall: function() {
-    let prefName = getPrefnameFromOrigin(this.manifest.origin);
-    if (Services.prefs.prefHasUserValue(prefName))
-      throw new Error(this.manifest.name + " is not marked to be uninstalled");
-    // ensure we're set into prefs
-    let string = Cc["@mozilla.org/supports-string;1"].
-                 createInstance(Ci.nsISupportsString);
-    string.data = JSON.stringify(this.manifest);
-    Services.prefs.setComplexValue(prefName, Ci.nsISupportsString, string);
     this._pending -= AddonManager.PENDING_UNINSTALL;
     AddonManagerPrivate.callAddonListeners("onOperationCancelled", this);
   }

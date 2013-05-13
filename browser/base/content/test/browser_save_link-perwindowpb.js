@@ -10,11 +10,12 @@ let NetUtil = tempScope.NetUtil;
 
 // Trigger a save of a link in public mode, then trigger an identical save
 // in private mode and ensure that the second request is differentiated from
-// the first by checking the cookies that are sent.
-
+// the first by checking that cookies set by the first response are not sent
+// during the second request.
 function triggerSave(aWindow, aCallback) {
   var fileName;
   let testBrowser = aWindow.gBrowser.selectedBrowser;
+  // This page sets a cookie if and only if a cookie does not exist yet
   testBrowser.loadURI("http://mochi.test:8888/browser/browser/base/content/test/bug792517-2.html");
   testBrowser.addEventListener("pageshow", function pageShown(event) {
     if (event.target.location == "about:blank")
@@ -46,8 +47,11 @@ function triggerSave(aWindow, aCallback) {
       MockFilePicker.filterIndex = 1; // kSaveAsType_URL
     };
 
-    mockTransferCallback = function(a) {
-      onTransferComplete(aWindow, a, destFile, destDir);
+    mockTransferCallback = function(downloadSuccess) {
+      onTransferComplete(aWindow, downloadSuccess, destDir);
+      destDir.remove(true);
+      ok(!destDir.exists(), "Destination dir should be removed");
+      ok(!destFile.exists(), "Destination file should be removed");
       mockTransferCallback = function(){};
     }
 
@@ -58,33 +62,19 @@ function triggerSave(aWindow, aCallback) {
     event.target.hidePopup();
   }
 
-  function onTransferComplete(aWindow, downloadSuccess, destFile, destDir) {
+  function onTransferComplete(aWindow, downloadSuccess, destDir) {
     ok(downloadSuccess, "Link should have been downloaded successfully");
     aWindow.gBrowser.removeCurrentTab();
 
-    // Give the request a chance to finish
-    executeSoon(function() aCallback(destFile, destDir));
+    executeSoon(function() aCallback());
   }
-}
-
-function readFile(file, callback) {
-  let channel = NetUtil.newChannel(file);
-  channel.contentType = "application/javascript";
-
-  NetUtil.asyncFetch(channel, function(inputStream, status) {
-    ok(Components.isSuccessCode(status),
-       "file was read successfully");
-
-    let content = NetUtil.readInputStreamToString(inputStream,
-                                                  inputStream.available());
-    executeSoon(function() callback(content));
-  });
 }
 
 function test() {
   waitForExplicitFinish();
 
   var windowsToClose = [];
+  var gNumSet = 0;
   function testOnWindow(options, callback) {
     var win = OpenBrowserWindow(options);
     win.addEventListener("load", function onLoad() {
@@ -102,22 +92,53 @@ function test() {
     windowsToClose.forEach(function(win) {
       win.close();
     });
+    Services.obs.removeObserver(observer, "http-on-modify-request");
+    Services.obs.removeObserver(observer, "http-on-examine-response");
   });
+ 
+  function observer(subject, topic, state) {
+    if (topic == "http-on-modify-request") {
+      onModifyRequest(subject);
+    } else if (topic == "http-on-examine-response") {
+      onExamineResponse(subject);
+    }
+  }
+
+  function onExamineResponse(subject) {
+    let channel = subject.QueryInterface(Ci.nsIHttpChannel);
+    try {
+      let cookies = channel.getResponseHeader("set-cookie");
+      // From browser/base/content/test/bug792715.sjs, we receive a Set-Cookie
+      // header with foopy=1 when there are no cookies for that domain.
+      is(cookies, "foopy=1", "Cookie should be foopy=1");
+      gNumSet += 1;
+    } catch (ex if ex.result == Cr.NS_ERROR_NOT_AVAILABLE) { }
+  }
+
+  function onModifyRequest(subject) {
+    let channel = subject.QueryInterface(Ci.nsIHttpChannel);
+    try {
+      let cookies = channel.getRequestHeader("cookie");
+      // From browser/base/content/test/bug792715.sjs, we should never send a
+      // cookie because we are making only 2 requests: one in public mode, and
+      // one in private mode.
+      throw "We should never send a cookie in this test";
+    } catch (ex if ex.result == Cr.NS_ERROR_NOT_AVAILABLE) { }
+  }
+
+  Services.obs.addObserver(observer, "http-on-modify-request", false);
+  Services.obs.addObserver(observer, "http-on-examine-response", false);
 
   testOnWindow(undefined, function(win) {
-    triggerSave(win, function(destFile, destDir) {
-      readFile(destFile, function(content) {
-        is(content, "cookie-not-present", "no cookie should be sent");
-        destDir.remove(true);
+    // The first save from a regular window sets a cookie.
+    triggerSave(win, function() {
+      is(gNumSet, 1, "1 cookie should be set");
 
-        testOnWindow({private: true}, function(win) {
-          triggerSave(win, function(destFile, destDir) {
-            readFile(destFile, function(content) {
-              is(content, "cookie-not-present", "no cookie should be sent");
-              destDir.remove(true);
-              finish();
-            });
-          });
+      // The second save from a private window also sets a cookie.
+      testOnWindow({private: true}, function(win) {
+        triggerSave(win, function() {
+          is(gNumSet, 2, "2 cookies should be set");
+          finish();
         });
       });
     });

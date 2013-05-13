@@ -48,9 +48,15 @@ T RandomInteger(T a, T b)
 template<typename T>
 GLenum GLType()
 {
-  return sizeof(T) == 1
-             ? LOCAL_GL_UNSIGNED_BYTE
-             : LOCAL_GL_UNSIGNED_SHORT;
+  switch (sizeof(T))
+  {
+    case 4:  return LOCAL_GL_UNSIGNED_INT;
+    case 2:  return LOCAL_GL_UNSIGNED_SHORT;
+    case 1:  return LOCAL_GL_UNSIGNED_BYTE;
+    default:
+      VERIFY(false);
+      return 0;
+  }
 }
 
 template<typename T>
@@ -79,6 +85,7 @@ void CheckValidate(WebGLElementArrayCache& c, size_t firstByte, size_t countByte
 {
   CheckValidateOneType<uint8_t>(c, firstByte, countBytes);
   CheckValidateOneType<uint16_t>(c, firstByte, countBytes);
+  CheckValidateOneType<uint32_t>(c, firstByte, countBytes);
 }
 
 template<typename T>
@@ -115,13 +122,34 @@ void CheckSanity()
   MOZ_ASSERT(numElems > 10);
   VERIFY( c.Validate(type, numElems - 10, 10, numElems - 10));
   VERIFY(!c.Validate(type, numElems - 11, 10, numElems - 10));
+}
+
+template<typename T>
+void CheckUintOverflow()
+{
+  // This test is only for integer types smaller than uint32_t
+  MOZ_STATIC_ASSERT(sizeof(T) < sizeof(uint32_t), "This test is only for integer types \
+                    smaller than uint32_t");
+
+  const size_t numElems = 64; // should be significantly larger than tree leaf size to
+                              // ensure we exercise some nontrivial tree-walking
+  T data[numElems];
+  size_t numBytes = numElems * sizeof(T);
+  MOZ_ASSERT(numBytes == sizeof(data));
+
+  GLenum type = GLType<T>();
+
+  WebGLElementArrayCache c;
+
+  for(size_t i = 0; i < numElems; i++)
+    data[i] = numElems - i;
+  c.BufferData(data, numBytes);
 
   // bug 825205
-  if (sizeof(T) < sizeof(uint32_t)) {
-    uint32_t bigValWrappingToZero = uint32_t(T(-1)) + 1;
-    VERIFY(c.Validate(type, bigValWrappingToZero,     0, numElems));
-    VERIFY(c.Validate(type, bigValWrappingToZero - 1, 0, numElems));
-  }
+  uint32_t bigValWrappingToZero = uint32_t(T(-1)) + 1;
+  VERIFY( c.Validate(type, bigValWrappingToZero,     0, numElems));
+  VERIFY( c.Validate(type, bigValWrappingToZero - 1, 0, numElems));
+  VERIFY(!c.Validate(type,                        0, 0, numElems));
 }
 
 int main(int argc, char *argv[])
@@ -130,6 +158,10 @@ int main(int argc, char *argv[])
 
   CheckSanity<uint8_t>();
   CheckSanity<uint16_t>();
+  CheckSanity<uint32_t>();
+
+  CheckUintOverflow<uint8_t>();
+  CheckUintOverflow<uint16_t>();
 
   nsTArray<uint8_t> v, vsub;
   WebGLElementArrayCache b;

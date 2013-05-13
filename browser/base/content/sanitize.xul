@@ -27,7 +27,7 @@
             title="&sanitizeDialog2.title;"
             noneverythingtitle="&sanitizeDialog2.title;"
             style="width: &dialog.width2;;"
-            ondialogaccept="gSanitizePromptDialog.sanitize();">
+            ondialogaccept="return gSanitizePromptDialog.sanitize();">
 
   <prefpane id="SanitizeDialogPane" onpaneload="gSanitizePromptDialog.init();">
     <stringbundle id="bundleBrowser"

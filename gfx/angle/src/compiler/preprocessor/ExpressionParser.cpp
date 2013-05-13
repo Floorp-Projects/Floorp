@@ -85,7 +85,11 @@
 
 #if defined(__GNUC__)
 // Triggered by the auto-generated pplval variable.
+#if !defined(__clang__) && ((__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 7))
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#else
 #pragma GCC diagnostic ignored "-Wuninitialized"
+#endif
 #elif defined(_MSC_VER)
 #pragma warning(disable: 4065 4701)
 #endif
@@ -95,7 +99,7 @@
 #include <cassert>
 #include <sstream>
 
-#include "Diagnostics.h"
+#include "DiagnosticsBase.h"
 #include "Lexer.h"
 #include "Token.h"
 
@@ -105,6 +109,8 @@ typedef __int64 YYSTYPE;
 #include <stdint.h>
 typedef intmax_t YYSTYPE;
 #endif  // _MSC_VER
+#define YYENABLE_NLS 0
+#define YYLTYPE_IS_TRIVIAL 1
 #define YYSTYPE_IS_TRIVIAL 1
 #define YYSTYPE_IS_DECLARED 1
 
@@ -467,9 +473,9 @@ static const yytype_int8 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    85,    85,    92,    93,    96,    99,   102,   105,   108,
-     111,   114,   117,   120,   123,   126,   129,   132,   135,   138,
-     151,   164,   167,   170,   173,   176,   179
+       0,    90,    90,    97,    98,   101,   104,   107,   110,   113,
+     116,   119,   122,   125,   128,   131,   134,   137,   140,   143,
+     156,   169,   172,   175,   178,   181,   184
 };
 #endif
 

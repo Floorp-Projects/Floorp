@@ -1180,7 +1180,7 @@ IonBuilder::inlineParallelArrayTail(CallInfo &callInfo,
 
     // Create the MIR to allocate the new parallel array.  Take the type
     // object is taken from the prediction set.
-    RootedObject templateObject(cx, ParallelArrayObject::newInstance(cx));
+    RootedObject templateObject(cx, ParallelArrayObject::newInstance(cx, TenuredObject));
     if (!templateObject)
         return InliningStatus_Error;
     templateObject->setType(typeObject);
@@ -1241,7 +1241,7 @@ IonBuilder::inlineNewDenseArrayForParallelExecution(CallInfo &callInfo)
         return InliningStatus_NotInlined;
     types::TypeObject *typeObject = returnTypes->getTypeObject(0);
 
-    RootedObject templateObject(cx, NewDenseAllocatedArray(cx, 0));
+    RootedObject templateObject(cx, NewDenseAllocatedArray(cx, 0, NULL, TenuredObject));
     if (!templateObject)
         return InliningStatus_Error;
     templateObject->setType(typeObject);

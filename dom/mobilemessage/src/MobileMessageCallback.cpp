@@ -132,7 +132,7 @@ MobileMessageCallback::NotifyMessageDeleted(bool *aDeleted, uint32_t aSize)
   AutoPushJSContext cx(sc->GetNativeContext());
   NS_ENSURE_TRUE(cx, NS_ERROR_FAILURE);
 
-  JSObject *deleteArrayObj = JS_NewArrayObject(cx, aSize, NULL);
+  JS::Rooted<JSObject*> deleteArrayObj(cx, JS_NewArrayObject(cx, aSize, NULL));
   JS::Value jsValTrue = BOOLEAN_TO_JSVAL(1);
   JS::Value jsValFalse = BOOLEAN_TO_JSVAL(0);
   for (uint32_t i = 0; i < aSize; i++) {

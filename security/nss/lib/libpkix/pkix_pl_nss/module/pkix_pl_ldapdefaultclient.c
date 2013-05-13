@@ -32,7 +32,7 @@
  *
  * PARAMETERS:
  *  "arena"
- *      The address of the PRArenaPool used in encoding the message. Must be
+ *      The address of the PLArenaPool used in encoding the message. Must be
  *       non-NULL.
  *  "versionData"
  *      The Int32 containing the version number to be encoded in the Bind
@@ -57,7 +57,7 @@
  */
 static PKIX_Error *
 pkix_pl_LdapDefaultClient_MakeBind(
-        PRArenaPool *arena,
+        PLArenaPool *arena,
         PKIX_Int32 versionData,
         LDAPBindAPI *bindAPI,
         PKIX_UInt32 msgNum,
@@ -135,7 +135,7 @@ cleanup:
  *
  * PARAMETERS:
  *  "arena"
- *      The address of the PRArenaPool used in encoding the message. Must be
+ *      The address of the PLArenaPool used in encoding the message. Must be
  *       non-NULL.
  *  "msgNum"
  *      The Int32 containing the MessageID to be encoded in the Unbind message.
@@ -154,7 +154,7 @@ cleanup:
  */
 static PKIX_Error *
 pkix_pl_LdapDefaultClient_MakeUnbind(
-        PRArenaPool *arena,
+        PLArenaPool *arena,
         PKIX_UInt32 msgNum,
         SECItem **pUnbindMsg,
         void *plContext)
@@ -202,7 +202,7 @@ cleanup:
  *
  * PARAMETERS:
  *  "arena"
- *      The address of the PRArenaPool used in encoding the message. Must be
+ *      The address of the PLArenaPool used in encoding the message. Must be
  *       non-NULL.
  *  "msgNum"
  *      The Int32 containing the MessageID to be encoded in the Abandon message.
@@ -221,7 +221,7 @@ cleanup:
  */
 static PKIX_Error *
 pkix_pl_LdapDefaultClient_MakeAbandon(
-        PRArenaPool *arena,
+        PLArenaPool *arena,
         PKIX_UInt32 msgNum,
         SECItem **pAbandonMsg,
         void *plContext)
@@ -267,7 +267,7 @@ cleanup:
  *
  * PARAMETERS:
  *  "arena"
- *      The address of the PRArenaPool to be used in decoding the message. Must
+ *      The address of the PLArenaPool to be used in decoding the message. Must
  *      be  non-NULL.
  *  "src"
  *      The address of the SECItem containing the DER- (or BER-)encoded string.
@@ -289,7 +289,7 @@ cleanup:
  */
 static PKIX_Error *
 pkix_pl_LdapDefaultClient_DecodeBindResponse(
-        PRArenaPool *arena,
+        PLArenaPool *arena,
         SECItem *src,
         LDAPMessage *pBindResponse,
         SECStatus *pStatus,
@@ -576,7 +576,7 @@ pkix_pl_LdapDefaultClient_CreateHelper(
         PKIX_PL_LdapDefaultClient *ldapDefaultClient = NULL;
         PKIX_PL_Socket_Callback *callbackList;
         PRFileDesc *fileDesc = NULL;
-        PRArenaPool *arena = NULL;
+        PLArenaPool *arena = NULL;
 
         PKIX_ENTER(LDAPDEFAULTCLIENT, "pkix_pl_LdapDefaultClient_CreateHelper");
         PKIX_NULLCHECK_TWO(socket, pClient);
@@ -2149,7 +2149,7 @@ cleanup:
  *
  * PARAMETERS:
  *  "arena"
- *      The address of the PRArenaPool used in creating the filter. Must be
+ *      The address of the PLArenaPool used in creating the filter. Must be
  *       non-NULL.
  *  "nameComponent"
  *      The address of a NULL-terminated list of LDAPNameComponents
@@ -2167,7 +2167,7 @@ cleanup:
  */
 static PKIX_Error *
 pkix_pl_LdapDefaultClient_MakeAndFilter(
-        PRArenaPool *arena,
+        PLArenaPool *arena,
         LDAPNameComponent **nameComponents,
         LDAPFilter **pFilter,
         void *plContext)

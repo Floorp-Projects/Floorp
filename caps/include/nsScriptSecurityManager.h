@@ -409,7 +409,8 @@ private:
                            uint32_t aAction);
 
     nsresult
-    LookupPolicy(nsIPrincipal* principal,
+    LookupPolicy(JSContext* cx,
+                 nsIPrincipal* principal,
                  ClassInfoData& aClassData, jsid aProperty,
                  uint32_t aAction,
                  ClassPolicy** aCachedClassPolicy,

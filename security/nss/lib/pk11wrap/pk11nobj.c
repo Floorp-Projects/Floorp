@@ -33,7 +33,7 @@
 extern const NSSError NSS_ERROR_NOT_FOUND;
 
 CK_TRUST
-pk11_GetTrustField(PK11SlotInfo *slot, PRArenaPool *arena, 
+pk11_GetTrustField(PK11SlotInfo *slot, PLArenaPool *arena,
                    CK_OBJECT_HANDLE id, CK_ATTRIBUTE_TYPE type)
 {
   CK_TRUST rv = 0;
@@ -55,7 +55,7 @@ pk11_GetTrustField(PK11SlotInfo *slot, PRArenaPool *arena,
 PRBool
 pk11_HandleTrustObject(PK11SlotInfo *slot, CERTCertificate *cert, CERTCertTrust *trust)
 {
-  PRArenaPool *arena;
+  PLArenaPool *arena;
 
   CK_ATTRIBUTE tobjTemplate[] = {
     { CKA_CLASS, NULL, 0 },
@@ -719,7 +719,7 @@ CERTSignedCrl * crl_storeCRL (PK11SlotInfo *slot,char *url,
 /* import the CRL into the token */
 
 CERTSignedCrl* PK11_ImportCRL(PK11SlotInfo * slot, SECItem *derCRL, char *url,
-    int type, void *wincx, PRInt32 importOptions, PRArenaPool* arena,
+    int type, void *wincx, PRInt32 importOptions, PLArenaPool* arena,
     PRInt32 decodeoptions)
 {
     CERTSignedCrl *newCrl, *crl;

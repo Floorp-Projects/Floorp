@@ -72,17 +72,17 @@ struct PK11SlotInfoStr {
 			 * seconds */
     int authTransact;   /* allow multiple authentications off one password if
 		         * they are all part of the same transaction */
-    int64 authTime;     /* when were we last authenticated */
+    PRTime authTime;	/* when were we last authenticated */
     int minPassword;	/* smallest legal password */
     int maxPassword;	/* largest legal password */
-    uint16 series;	/* break up the slot info into various groups of 
+    PRUint16 series;	/* break up the slot info into various groups of
 			 * inserted tokens so that keys and certs can be
 			 * invalidated */
-    uint16 flagSeries;	/* record the last series for the last event
+    PRUint16 flagSeries;/* record the last series for the last event
                          * returned for this slot */
     PRBool flagState;	/* record the state of the last event returned for this
 			 * slot. */
-    uint16 wrapKey;	/* current wrapping key for SSL master secrets */
+    PRUint16 wrapKey;	/* current wrapping key for SSL master secrets */
     CK_MECHANISM_TYPE wrapMechanism;
 			/* current wrapping mechanism for current wrapKey */
     CK_OBJECT_HANDLE refKeys[1]; /* array of existing wrapping keys for */
@@ -128,7 +128,7 @@ struct PK11SymKeyStr {
     PK11Origin	      origin;	/* where this key came from 
                                  * (see def in secmodt.h) */
     PK11SymKey        *parent;  /* potential owner key of the session */
-    uint16 series;		/* break up the slot info into various groups 
+    PRUint16 series;		/* break up the slot info into various groups
 				 * of inserted tokens so that keys and certs 
 				 * can be invalidated */
     void *userData;		/* random data the application can attach to

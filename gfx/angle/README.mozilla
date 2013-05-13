@@ -1,6 +1,6 @@
 This is the ANGLE project, from http://code.google.com/p/angleproject/
 
-Current revision: r1561
+Current revision: r2042
 
 
 == Applied local patches ==
@@ -13,11 +13,12 @@ In this order:
     To:     "src/compiler/compiler_debug.{cpp,h}"
     Repair includes accordingly.
     
-  angle-build-dedupe-preproc-files.patch:
-    Rename: "src/compiler/preprocessor/Diagnostics.cpp"
-    To:     "src/compiler/preprocessor/PreprocessorDiagnostics.cpp"
-    Rename: "src/compiler/preprocessor/DirectiveHandler.cpp"
-    To:     "src/compiler/preprocessor/PreprocessorDirectiveHandler.cpp"
+  angle-build-d3dcompiler-list.patch:
+    Move `ANGLE_PRELOADED_D3DCOMPILER_MODULE_NAMES` define from make files to
+    Display.cpp, where it's used.
+    
+  angle-build-khrplatform-h-path.patch:
+    Fix include path for khrplatform.h.
   
   angle-long-ident-spooky-hash.patch:
     Use Spooky Hash for long identifier hashing. See bug 676071.
@@ -25,13 +26,10 @@ In this order:
   angle-faceforward-emu.patch:
     Adds emulation for faceforward(float,float,float), which is needed to
     prevent crashing on Mac+Intel. See bug 771406.
-
-  angle-r1638.patch
-    Adds uniform array index clamping on non-Windows platforms.
-    Windows would require r1719, r1733, r1734.
-
-  angle-cross-compilation.patch
-    Fixes cross compilation on case sensitive OSes.
+  
+  angle-default-clamp-strat.patch:
+    Fixes TCompiler::Init to treat `resources.ArrayIndexClampingStrategy`
+    as a request for the default strategy.
 
 In addition to these patches, the Makefile.in files are ours, they're not present in
 upsteam ANGLE. Therefore, changes made to the Makefile.in files should not be stored

@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2002-2012 The ANGLE Project Authors. All rights reserved.
+// Copyright (c) 2002-2013 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -33,7 +33,7 @@ bool TParseContext::parseVectorFields(const TString& compString, int vecSize, TV
     enum {
         exyzw,
         ergba,
-        estpq,
+        estpq
     } fieldSet[4];
 
     for (int i = 0; i < fields.num; ++i) {
@@ -286,7 +286,7 @@ bool TParseContext::lValueErrorCheck(int line, const char* op, TIntermTyped* nod
                 
                 for (TIntermSequence::iterator p = aggrNode->getSequence().begin(); 
                                                p != aggrNode->getSequence().end(); p++) {
-                    int value = (*p)->getAsTyped()->getAsConstantUnion()->getUnionArrayPointer()->getIConst();
+                    int value = (*p)->getAsTyped()->getAsConstantUnion()->getIConst(0);
                     offset[value]++;     
                     if (offset[value] > 1) {
                         error(line, " l-value of swizzle cannot have duplicate components", op);
@@ -493,7 +493,7 @@ bool TParseContext::constructorErrorCheck(int line, TIntermNode* node, TFunction
     bool overFull = false;
     bool matrixInMatrix = false;
     bool arrayArg = false;
-    for (int i = 0; i < function.getParamCount(); ++i) {
+    for (size_t i = 0; i < function.getParamCount(); ++i) {
         const TParameter& param = function.getParam(i);
         size += param.type->getObjectSize();
         
@@ -512,7 +512,7 @@ bool TParseContext::constructorErrorCheck(int line, TIntermNode* node, TFunction
     if (constType)
         type->setQualifier(EvqConst);
 
-    if (type->isArray() && type->getArraySize() != function.getParamCount()) {
+    if (type->isArray() && static_cast<size_t>(type->getArraySize()) != function.getParamCount()) {
         error(line, "array constructor needs one argument per array element", "constructor");
         return true;
     }
@@ -680,7 +680,7 @@ bool TParseContext::arraySizeErrorCheck(int line, TIntermTyped* expr, int& size)
         return true;
     }
 
-    size = constant->getUnionArrayPointer()->getIConst();
+    size = constant->getIConst(0);
 
     if (size <= 0) {
         error(line, "array size must be a positive integer", "");
@@ -1313,7 +1313,6 @@ TIntermTyped* TParseContext::addConstVectorNode(TVectorFields& fields, TIntermTy
     ConstantUnion *unionArray;
     if (tempConstantNode) {
         unionArray = tempConstantNode->getUnionArrayPointer();
-        ASSERT(unionArray);
 
         if (!unionArray) {
             return node;
@@ -1507,7 +1506,7 @@ bool TParseContext::structNestingErrorCheck(TSourceLoc line, const TType& fieldT
 //
 // Returns 0 for success.
 //
-int PaParseStrings(int count, const char* const string[], const int length[],
+int PaParseStrings(size_t count, const char* const string[], const int length[],
                    TParseContext* context) {
     if ((count == 0) || (string == NULL))
         return 1;

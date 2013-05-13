@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.DataReportingNotification;
 import org.mozilla.gecko.background.announcements.AnnouncementsBroadcastService;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.gfx.BitmapUtils;
@@ -1571,10 +1572,8 @@ abstract public class GeckoApp
 
         initializeChrome(passedUri, isExternalURL);
 
-        // Show telemetry door hanger if we aren't restoring a session
         if (mRestoreMode == RESTORE_NONE) {
             Tabs.getInstance().notifyListeners(null, Tabs.TabEvents.RESTORED);
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Telemetry:Prompt", null));
         }
 
         Telemetry.HistogramAdd("FENNEC_STARTUP_GECKOAPP_ACTION", startupAction.ordinal());

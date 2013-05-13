@@ -984,7 +984,7 @@ var BrowserApp = {
           prefs.push(pref);
           continue;
         // Handle do-not-track preference
-        case "privacy.donottrackheader": {
+        case "privacy.donottrackheader":
           pref.type = "string";
 
           let enableDNT = Services.prefs.getBoolPref("privacy.donottrackheader.enabled");
@@ -998,7 +998,28 @@ var BrowserApp = {
 
           prefs.push(pref);
           continue;
-        }
+#ifdef MOZ_CRASHREPORTER
+        // Crash reporter submit pref must be fetched from nsICrashReporter service.
+        case "datareporting.crashreporter.submitEnabled":
+          pref.type = "bool";
+          pref.value = CrashReporter.submitReports;
+          prefs.push(pref);
+          continue;
+#endif
+      }
+
+      // Pref name translation.
+      switch (prefName) {
+#ifdef MOZ_TELEMETRY_REPORTING
+        // Telemetry pref differs based on build.
+        case Telemetry.SHARED_PREF_TELEMETRY_ENABLED:
+#ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
+          prefName = "toolkit.telemetry.enabledPreRelease";
+#else
+          prefName = "toolkit.telemetry.enabled";
+#endif
+          break;
+#endif
       }
 
       try {
@@ -1114,6 +1135,12 @@ var BrowserApp = {
         Services.prefs.setBoolPref(SearchEngines.PREF_SUGGEST_PROMPTED, true);
         break;
 
+#ifdef MOZ_CRASHREPORTER
+      // Crash reporter preference is in a service; set and return.
+      case "datareporting.crashreporter.submitEnabled":
+        CrashReporter.submitReports = json.value;
+        return;
+#endif
       // When sending to Java, we normalized special preferences that use
       // integers and strings to represent booleans. Here, we convert them back
       // to their actual types so we can store them.
@@ -1122,6 +1149,20 @@ var BrowserApp = {
         json.type = "int";
         json.value = parseInt(json.value);
         break;
+    }
+
+    // Pref name translation.
+    switch (json.name) {
+#ifdef MOZ_TELEMETRY_REPORTING
+      // Telemetry pref differs based on build.
+      case Telemetry.SHARED_PREF_TELEMETRY_ENABLED:
+#ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
+        json.name = "toolkit.telemetry.enabledPreRelease";
+#else
+        json.name = "toolkit.telemetry.enabled";
+#endif
+        break;
+#endif
     }
 
     switch (json.type) {
@@ -3055,12 +3096,25 @@ Tab.prototype = {
       // within the screen size, so remeasure when the page size remains within
       // the threshold of screen + margins, in case it's sizing itself relative
       // to the viewport.
-      if (((Math.round(viewport.pageBottom - viewport.pageTop)
-              <= gScreenHeight + gViewportMargins.top + gViewportMargins.bottom)
-             != this.viewportExcludesVerticalMargins) ||
-          ((Math.round(viewport.pageRight - viewport.pageLeft)
-              <= gScreenWidth + gViewportMargins.left + gViewportMargins.right)
-             != this.viewportExcludesHorizontalMargins)) {
+      let hasHorizontalMargins = gViewportMargins.left > 0 || gViewportMargins.right > 0;
+      let hasVerticalMargins = gViewportMargins.top > 0 || gViewportMargins.bottom > 0;
+      let pageHeightGreaterThanScreenHeight, pageWidthGreaterThanScreenWidth;
+
+      if (hasHorizontalMargins) {
+        pageWidthGreaterThanScreenWidth =
+            Math.round(viewport.pageRight - viewport.pageLeft)
+            > gScreenWidth + gViewportMargins.left + gViewportMargins.right;
+      }
+      if (hasVerticalMargins) {
+        pageHeightGreaterThanScreenHeight =
+            Math.round(viewport.pageBottom - viewport.pageTop)
+            > gScreenHeight + gViewportMargins.top + gViewportMargins.bottom;
+      }
+
+      if ((hasHorizontalMargins
+           && (pageWidthGreaterThanScreenWidth != this.viewportExcludesHorizontalMargins)) ||
+          (hasVerticalMargins
+           && (pageHeightGreaterThanScreenHeight != this.viewportExcludesVerticalMargins))) {
         if (!this.viewportMeasureCallback) {
           this.viewportMeasureCallback = setTimeout(function() {
             this.viewportMeasureCallback = null;
@@ -3074,6 +3128,12 @@ Tab.prototype = {
             }
           }.bind(this), kViewportRemeasureThrottle);
         }
+      } else if (this.viewportMeasureCallback) {
+        // If the page changed size twice since we last measured the viewport and
+        // the latest size change reveals we don't need to remeasure, cancel any
+        // pending remeasure.
+        clearTimeout(this.viewportMeasureCallback);
+        this.viewportMeasureCallback = null;
       }
     }
   },
@@ -4667,7 +4727,7 @@ var FormAssistant = {
 
           if (this._showValidationMessage(focused))
             break;
-          this._showAutoCompleteSuggestions(focused);
+          this._showAutoCompleteSuggestions(focused, function () {});
         } else {
           // temporarily hide the form assist popup while we're panning or zooming the page
           this._hideFormAssistPopup();
@@ -4737,8 +4797,14 @@ var FormAssistant = {
         // only be available if an invalid form was submitted)
         if (this._showValidationMessage(currentElement))
           break;
-        if (!this._showAutoCompleteSuggestions(currentElement))
-          this._hideFormAssistPopup();
+
+        let checkResultsClick = hasResults => {
+          if (!hasResults) {
+            this._hideFormAssistPopup();
+          }
+        };
+
+        this._showAutoCompleteSuggestions(currentElement, checkResultsClick);
         break;
 
       case "input":
@@ -4746,13 +4812,18 @@ var FormAssistant = {
 
         // Since we can only show one popup at a time, prioritze autocomplete
         // suggestions over a form validation message
-        if (this._showAutoCompleteSuggestions(currentElement))
-          break;
-        if (this._showValidationMessage(currentElement))
-          break;
+        let checkResultsInput = hasResults => {
+          if (hasResults)
+            return;
 
-        // If we're not showing autocomplete suggestions, hide the form assist popup
-        this._hideFormAssistPopup();
+          if (!this._showValidationMessage(currentElement))
+            return;
+
+          // If we're not showing autocomplete suggestions, hide the form assist popup
+          this._hideFormAssistPopup();
+        };
+
+        this._showAutoCompleteSuggestions(currentElement, checkResultsInput);
         break;
 
       // Reset invalid submit state on each pageshow
@@ -4776,27 +4847,31 @@ var FormAssistant = {
   },
 
   // Retrieves autocomplete suggestions for an element from the form autocomplete service.
-  _getAutoCompleteSuggestions: function _getAutoCompleteSuggestions(aSearchString, aElement) {
+  // aCallback(array_of_suggestions) is called when results are available.
+  _getAutoCompleteSuggestions: function _getAutoCompleteSuggestions(aSearchString, aElement, aCallback) {
     // Cache the form autocomplete service for future use
     if (!this._formAutoCompleteService)
       this._formAutoCompleteService = Cc["@mozilla.org/satchel/form-autocomplete;1"].
                                       getService(Ci.nsIFormAutoComplete);
 
-    let results = this._formAutoCompleteService.autoCompleteSearch(aElement.name || aElement.id,
-                                                                   aSearchString, aElement, null);
-    let suggestions = [];
-    for (let i = 0; i < results.matchCount; i++) {
-      let value = results.getValueAt(i);
+    let resultsAvailable = function (results) {
+      let suggestions = [];
+      for (let i = 0; i < results.matchCount; i++) {
+        let value = results.getValueAt(i);
 
-      // Do not show the value if it is the current one in the input field
-      if (value == aSearchString)
-        continue;
+        // Do not show the value if it is the current one in the input field
+        if (value == aSearchString)
+          continue;
 
-      // Supply a label and value, since they can differ for datalist suggestions
-      suggestions.push({ label: value, value: value });
-    }
+        // Supply a label and value, since they can differ for datalist suggestions
+        suggestions.push({ label: value, value: value });
+        aCallback(suggestions);
+      }
+    };
 
-    return suggestions;
+    this._formAutoCompleteService.autoCompleteSearchAsync(aElement.name || aElement.id,
+                                                          aSearchString, aElement, null,
+                                                          resultsAvailable);
   },
 
   /**
@@ -4833,40 +4908,47 @@ var FormAssistant = {
   },
 
   // Retrieves autocomplete suggestions for an element from the form autocomplete service
-  // and sends the suggestions to the Java UI, along with element position data.
-  // Returns true if there are suggestions to show, false otherwise.
-  _showAutoCompleteSuggestions: function _showAutoCompleteSuggestions(aElement) {
-    if (!this._isAutoComplete(aElement))
-      return false;
+  // and sends the suggestions to the Java UI, along with element position data. As
+  // autocomplete queries are asynchronous, calls aCallback when done with a true
+  // argument if results were found and false if no results were found.
+  _showAutoCompleteSuggestions: function _showAutoCompleteSuggestions(aElement, aCallback) {
+    if (!this._isAutoComplete(aElement)) {
+      aCallback(false);
+      return;
+    }
 
     // Don't display the form auto-complete popup after the user starts typing
     // to avoid confusing somes IME. See bug 758820 and bug 632744.
     if (this._isBlocklisted && aElement.value.length > 0) {
-      return false;
+      aCallback(false);
+      return;
     }
 
-    let autoCompleteSuggestions = this._getAutoCompleteSuggestions(aElement.value, aElement);
-    let listSuggestions = this._getListSuggestions(aElement);
+    let resultsAvailable = autoCompleteSuggestions => {
+      // On desktop, we show datalist suggestions below autocomplete suggestions,
+      // without duplicates removed.
+      let listSuggestions = this._getListSuggestions(aElement);
+      let suggestions = autoCompleteSuggestions.concat(listSuggestions);
 
-    // On desktop, we show datalist suggestions below autocomplete suggestions,
-    // without duplicates removed.
-    let suggestions = autoCompleteSuggestions.concat(listSuggestions);
+      // Return false if there are no suggestions to show
+      if (!suggestions.length) {
+        aCallback(false);
+        return;
+      }
 
-    // Return false if there are no suggestions to show
-    if (!suggestions.length)
-      return false;
+      sendMessageToJava({
+        type:  "FormAssist:AutoComplete",
+        suggestions: suggestions,
+        rect: ElementTouchHelper.getBoundingContentRect(aElement)
+      });
 
-    sendMessageToJava({
-      type:  "FormAssist:AutoComplete",
-      suggestions: suggestions,
-      rect: ElementTouchHelper.getBoundingContentRect(aElement)
-    });
+      // Keep track of input element so we can fill it in if the user
+      // selects an autocomplete suggestion
+      this._currentInputElement = aElement;
+      aCallback(true);
+    };
 
-    // Keep track of input element so we can fill it in if the user
-    // selects an autocomplete suggestion
-    this._currentInputElement = aElement;
-
-    return true;
+    this._getAutoCompleteSuggestions(aElement.value, aElement, resultsAvailable);
   },
 
   // Only show a validation message if the user submitted an invalid form,
@@ -6435,30 +6517,14 @@ var RemoteDebugger = {
 };
 
 var Telemetry = {
-#ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
-  _PREF_TELEMETRY_ENABLED: "toolkit.telemetry.enabledPreRelease",
-  _PREF_TELEMETRY_DISPLAYED: "toolkit.telemetry.notifiedOptOut",
-#else
-  _PREF_TELEMETRY_ENABLED: "toolkit.telemetry.enabled",
-  _PREF_TELEMETRY_DISPLAYED: "toolkit.telemetry.prompted",
-#endif
-  _PREF_TELEMETRY_REJECTED: "toolkit.telemetry.rejected",
-  _PREF_TELEMETRY_SERVER_OWNER: "toolkit.telemetry.server_owner",
-
-  // This is used to reprompt Beta/GA users and notify again
-  // Nightly/Aurora users when privacy message changes
-  _TELEMETRY_DISPLAY_REV: @MOZ_TELEMETRY_DISPLAY_REV@,
+  SHARED_PREF_TELEMETRY_ENABLED: "datareporting.telemetry.enabled",
 
   init: function init() {
-    Services.obs.addObserver(this, "Preferences:Set", false);
     Services.obs.addObserver(this, "Telemetry:Add", false);
-    Services.obs.addObserver(this, "Telemetry:Prompt", false);
   },
 
   uninit: function uninit() {
-    Services.obs.removeObserver(this, "Preferences:Set");
     Services.obs.removeObserver(this, "Telemetry:Add");
-    Services.obs.removeObserver(this, "Telemetry:Prompt");
   },
 
   addData: function addData(aHistogramId, aValue) {
@@ -6468,131 +6534,10 @@ var Telemetry = {
   },
 
   observe: function observe(aSubject, aTopic, aData) {
-    if (aTopic == "Preferences:Set") {
-      // if user changes telemetry pref, treat it like they have been prompted
-      let pref = JSON.parse(aData);
-      if (pref.name == this._PREF_TELEMETRY_ENABLED) {
-        Services.prefs.setIntPref(this._PREF_TELEMETRY_DISPLAYED, this._TELEMETRY_DISPLAY_REV);
-        Services.prefs.setBoolPref(this._PREF_TELEMETRY_REJECTED, !pref.value);
-      }
-    } else if (aTopic == "Telemetry:Add") {
+    if (aTopic == "Telemetry:Add") {
       let json = JSON.parse(aData);
       this.addData(json.name, json.value);
-    } else if (aTopic == "Telemetry:Prompt") {
-#ifdef MOZ_TELEMETRY_REPORTING
-      this.prompt();
-#endif
     }
-  },
-
-  prompt: function prompt() {
-    let brandShortName = Strings.brand.GetStringFromName("brandShortName");
-    let serverOwner = Services.prefs.getCharPref(this._PREF_TELEMETRY_SERVER_OWNER);
-    let telemetryEnabled = Services.prefs.getBoolPref(this._PREF_TELEMETRY_ENABLED);
-    let message;
-    let buttons;
-    let self = this;
-
-    /*
-     * Display an opt-out notification when telemetry is enabled by default,
-     * an opt-in prompt otherwise.
-     *
-     * But do not display this prompt/notification if:
-     *
-     * - The last accepted/refused policy (either by accepting the prompt or by
-     *   manually flipping the telemetry preference) is already at version
-     *   TELEMETRY_DISPLAY_REV or higher (to avoid the prompt in tests).
-     */
-    let telemetryDisplayed;
-    try {
-      telemetryDisplayed = Services.prefs.getIntPref(self._PREF_TELEMETRY_DISPLAYED);
-    } catch(e) {}
-    if (telemetryDisplayed >= self._TELEMETRY_DISPLAY_REV)
-      return;
-
-#ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
-    /*
-     * Additionally, in opt-out builds, don't display the notification if:
-     *
-     * - Telemetry is disabled
-     * - Telemetry was explicitly refused through the UI
-     * - Opt-in telemetry was already enabled, don't notify the user until next
-     *   policy update. (Do the check only at first run with opt-out builds)
-     */
-
-    let telemetryEnabled = Services.prefs.getBoolPref(self._PREF_TELEMETRY_ENABLED);
-    if (!telemetryEnabled)
-      return;
-
-    // If telemetry was explicitly refused through the UI,
-    // also disable opt-out telemetry and bail out.
-    let telemetryRejected = false;
-    try {
-      telemetryRejected = Services.prefs.getBoolPref(self._PREF_TELEMETRY_REJECTED);
-    } catch(e) {}
-    if (telemetryRejected) {
-      Services.prefs.setBoolPref(self._PREF_TELEMETRY_ENABLED, false);
-      Services.prefs.setIntPref(self._PREF_TELEMETRY_DISPLAYED, self._TELEMETRY_DISPLAY_REV);
-      return;
-    }
-
-    // If opt-in telemetry was already enabled, don't notify the user until next
-    // policy update. (Do the check only at first run with opt-out builds)
-    let optInTelemetryEnabled = false;
-    try {
-      optInTelemetryEnabled = Services.prefs.getBoolPref("toolkit.telemetry.enabled");
-    } catch(e) {}
-    if (optInTelemetryEnabled && telemetryDisplayed === undefined) {
-      Services.prefs.setBoolPref(self._PREF_TELEMETRY_REJECTED, false);
-      Services.prefs.setIntPref(self._PREF_TELEMETRY_DISPLAYED, self._TELEMETRY_DISPLAY_REV);
-      return;
-    }
-
-    message = Strings.browser.formatStringFromName("telemetry.optout.message2",
-                                                    [brandShortName, serverOwner, brandShortName], 3);
-    buttons = [
-      {
-        label: Strings.browser.GetStringFromName("telemetry.optout.ok"),
-        callback: function () {
-          Services.prefs.setIntPref(self._PREF_TELEMETRY_DISPLAYED, self._TELEMETRY_DISPLAY_REV);
-        }
-      }
-    ];
-#else
-    // Clear old prefs and reprompt
-    Services.prefs.clearUserPref(self._PREF_TELEMETRY_DISPLAYED);
-    Services.prefs.clearUserPref(self._PREF_TELEMETRY_ENABLED);
-    Services.prefs.clearUserPref(self._PREF_TELEMETRY_REJECTED);
-
-    message = Strings.browser.formatStringFromName("telemetry.optin.message2",
-                                                  [serverOwner, brandShortName], 2);
-    buttons = [
-      {
-        label: Strings.browser.GetStringFromName("telemetry.optin.send"),
-        callback: function () {
-          Services.prefs.setIntPref(self._PREF_TELEMETRY_DISPLAYED, self._TELEMETRY_DISPLAY_REV);
-          Services.prefs.setBoolPref(self._PREF_TELEMETRY_ENABLED, true);
-        }
-      },
-      {
-        label: Strings.browser.GetStringFromName("telemetry.optin.dontSend"),
-        callback: function () {
-          Services.prefs.setIntPref(self._PREF_TELEMETRY_DISPLAYED, self._TELEMETRY_DISPLAY_REV);
-          Services.prefs.setBoolPref(self._PREF_TELEMETRY_REJECTED, true);
-        }
-      }
-    ];
-#endif
-    let learnMoreLabel = Strings.browser.GetStringFromName("telemetry.optin.learnMore");
-    let learnMoreUrl = Services.urlFormatter.formatURLPref("app.support.baseURL");
-    learnMoreUrl += "how-can-i-help-submitting-performance-data";
-    let options = {
-      link: {
-        label: learnMoreLabel,
-        url: learnMoreUrl
-      }
-    };
-    NativeWindow.doorhanger.show(message, "telemetry-prompt", buttons, BrowserApp.selectedTab.id, options);
   },
 };
 

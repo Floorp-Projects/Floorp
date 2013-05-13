@@ -56,7 +56,7 @@ pk11_setAttributes(PK11SlotInfo *slot, CK_OBJECT_HANDLE id,
  * if target object is not given, create it.
  */
 static SECStatus
-pk11_copyAttributes(PRArenaPool *arena, 
+pk11_copyAttributes(PLArenaPool *arena,
 	PK11SlotInfo *targetSlot, CK_OBJECT_HANDLE targetID,
 	PK11SlotInfo *sourceSlot, CK_OBJECT_HANDLE sourceID,
 	CK_ATTRIBUTE *copyTemplate, CK_ULONG copyTemplateCount)
@@ -82,7 +82,7 @@ pk11_copyAttributes(PRArenaPool *arena,
  * look for a matching object across tokens.
  */
 static SECStatus
-pk11_matchAcrossTokens(PRArenaPool *arena, PK11SlotInfo *targetSlot, 
+pk11_matchAcrossTokens(PLArenaPool *arena, PK11SlotInfo *targetSlot,
 		       PK11SlotInfo *sourceSlot,
 		       CK_ATTRIBUTE *template, CK_ULONG tsize, 
 		       CK_OBJECT_HANDLE id, CK_OBJECT_HANDLE *peer)
@@ -202,7 +202,7 @@ pk11_mergePrivateKey(PK11SlotInfo *targetSlot, PK11SlotInfo *sourceSlot,
     SECItem nickItem;
     SECItem pwitem;
     SECItem publicValue;
-    PRArenaPool *arena = NULL;
+    PLArenaPool *arena = NULL;
     SECStatus rv = SECSuccess;
     unsigned int keyUsage;
     unsigned char randomData[SHA1_LENGTH];
@@ -331,7 +331,7 @@ done:
  *    CKA_ID the it has returned in the passed.
  */
 static SECStatus
-pk11_incrementID(PRArenaPool *arena, CK_ATTRIBUTE *ptemplate)
+pk11_incrementID(PLArenaPool *arena, CK_ATTRIBUTE *ptemplate)
 {
     unsigned char *buf = ptemplate->pValue;
     CK_ULONG len = ptemplate->ulValueLen;
@@ -433,7 +433,7 @@ pk11_mergeSecretKey(PK11SlotInfo *targetSlot, PK11SlotInfo *sourceSlot,
     SECItem input;
     CK_OBJECT_HANDLE targetKeyID;
     CK_FLAGS flags;
-    PRArenaPool *arena = NULL;
+    PLArenaPool *arena = NULL;
     SECStatus rv = SECSuccess;
     CK_MECHANISM_TYPE keyMechType, cryptoMechType;
     CK_KEY_TYPE sourceKeyType, targetKeyType;
@@ -607,7 +607,7 @@ pk11_mergePublicKey(PK11SlotInfo *targetSlot, PK11SlotInfo *sourceSlot,
 {
     SECKEYPublicKey *sourceKey = NULL;
     CK_OBJECT_HANDLE targetKeyID;
-    PRArenaPool *arena = NULL;
+    PLArenaPool *arena = NULL;
     SECStatus rv = SECSuccess;
     CK_ATTRIBUTE pubTemplate[] = {
 	{ CKA_ID, NULL, 0 },
@@ -746,7 +746,7 @@ pk11_mergeCert(PK11SlotInfo *targetSlot, PK11SlotInfo *sourceSlot,
     CK_OBJECT_HANDLE targetCertID = CK_INVALID_HANDLE;
     char *nickname = NULL;
     SECStatus rv = SECSuccess;
-    PRArenaPool *arena = NULL;
+    PLArenaPool *arena = NULL;
     CK_ATTRIBUTE sourceCKAID = {CKA_ID, NULL, 0};
     CK_ATTRIBUTE targetCKAID = {CKA_ID, NULL, 0};
     SECStatus lrv = SECSuccess;
@@ -882,7 +882,7 @@ pk11_mergeCrl(PK11SlotInfo *targetSlot, PK11SlotInfo *sourceSlot,
 		CK_OBJECT_HANDLE id, void *targetPwArg, void *sourcePwArg)
 {
     CK_OBJECT_HANDLE targetCrlID;
-    PRArenaPool *arena = NULL;
+    PLArenaPool *arena = NULL;
     SECStatus rv = SECSuccess;
     CK_ATTRIBUTE crlTemplate[] = {
 	{ CKA_SUBJECT, NULL, 0 },
@@ -944,7 +944,7 @@ pk11_mergeSmime(PK11SlotInfo *targetSlot, PK11SlotInfo *sourceSlot,
 		CK_OBJECT_HANDLE id, void *targetPwArg, void *sourcePwArg)
 {
     CK_OBJECT_HANDLE targetSmimeID;
-    PRArenaPool *arena = NULL;
+    PLArenaPool *arena = NULL;
     SECStatus rv = SECSuccess;
     CK_ATTRIBUTE smimeTemplate[] = {
 	{ CKA_SUBJECT, NULL, 0 },
@@ -1064,7 +1064,7 @@ pk11_mergeTrust(PK11SlotInfo *targetSlot, PK11SlotInfo *sourceSlot,
 		CK_OBJECT_HANDLE id, void *targetPwArg, void *sourcePwArg)
 {
     CK_OBJECT_HANDLE targetTrustID;
-    PRArenaPool *arena = NULL;
+    PLArenaPool *arena = NULL;
     SECStatus rv = SECSuccess;
     int error = 0;
     CK_ATTRIBUTE trustTemplate[] = {
@@ -1228,7 +1228,7 @@ pk11_mergeObject(PK11SlotInfo *targetSlot, PK11SlotInfo *sourceSlot,
 }
 
 PK11MergeLogNode *
-pk11_newMergeLogNode(PRArenaPool *arena, 
+pk11_newMergeLogNode(PLArenaPool *arena,
 		     PK11SlotInfo *slot, CK_OBJECT_HANDLE id, int error)
 {
     PK11MergeLogNode *newLog;
@@ -1392,7 +1392,7 @@ loser:
 PK11MergeLog *
 PK11_CreateMergeLog(void)
 {
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     PK11MergeLog *log;
 
     arena = PORT_NewArena( DER_DEFAULT_CHUNKSIZE);

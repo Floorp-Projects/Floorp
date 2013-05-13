@@ -360,6 +360,8 @@ nsContainerFrame::BuildDisplayListForNonBlockChildren(nsDisplayListBuilder*   aB
 /* virtual */ void
 nsContainerFrame::ChildIsDirty(nsIFrame* aChild)
 {
+  NS_ASSERTION(NS_SUBTREE_DIRTY(aChild), "child isn't actually dirty");
+
   AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
 }
 

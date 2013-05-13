@@ -98,8 +98,7 @@ toolbarbutton[type="menu-button"][disabled="true"]:hover:active {
 }
 
 .toolbarbutton-menubutton-dropmarker[disabled="true"] {
-  list-style-image: url("chrome://global/skin/arrow/arrow-dn-dis.png") !important;
-  padding: 0 !important;
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn-dis.png");
 }
 
 toolbarbutton.tabbable {

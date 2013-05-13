@@ -2314,19 +2314,6 @@ PresShell::CheckVisibilityContent(nsIContent* aNode, int16_t aStartOffset,
 
 //end implementations nsISelectionController
 
-
-void
-PresShell::StyleChangeReflow()
-{
-  nsIFrame* rootFrame = mFrameConstructor->GetRootFrame();
-  // At the moment at least, we don't have a root frame before the initial
-  // reflow; it's safe to just ignore the request in that case
-  if (!rootFrame)
-    return;
-
-  FrameNeedsReflow(rootFrame, eStyleChange, NS_FRAME_IS_DIRTY);
-}
-
 nsIFrame*
 nsIPresShell::GetRootFrameExternal() const
 {

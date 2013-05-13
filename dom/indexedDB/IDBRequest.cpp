@@ -342,7 +342,7 @@ IDBOpenDBRequest::~IDBOpenDBRequest()
 already_AddRefed<IDBOpenDBRequest>
 IDBOpenDBRequest::Create(IDBFactory* aFactory,
                          nsPIDOMWindow* aOwner,
-                         JSObject* aScriptOwner,
+                         JS::Handle<JSObject*> aScriptOwner,
                          JSContext* aCallingCx)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
