@@ -14,6 +14,14 @@ LIBRARY_NAME	= printingui_s
 EXPORT_LIBRARY	= ..
 LIBXUL_LIBRARY	= 1
 
+
+CPPSRCS		= \
+      nsPrintingPromptService.cpp \
+      nsPrintProgressParams.cpp \
+      nsPrintProgress.cpp \
+      nsPrintDialogUtil.cpp \
+      $(NULL)
+
 # we don't want the shared lib, but we want to force the creation of a
 # static lib.
 FORCE_STATIC_LIB = 1

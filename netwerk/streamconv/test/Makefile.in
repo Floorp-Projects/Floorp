@@ -11,6 +11,11 @@ FAIL_ON_WARNINGS := 1
 
 include $(DEPTH)/config/autoconf.mk
 
+CPPSRCS		= \
+		Converters.cpp \
+		TestStreamConv.cpp \
+		$(NULL)
+
 LIBS		= \
 		$(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
 		$(XPCOM_LIBS) \

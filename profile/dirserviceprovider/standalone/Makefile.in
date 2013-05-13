@@ -12,6 +12,8 @@ include $(srcdir)/../src/objs.mk
 
 LIBRARY_NAME	= profdirserviceprovidersa_s
 
+CPPSRCS		= $(MODULES_PROFILEDIRSERVICE_SRC_LCSRCS)
+
 # we don't want the shared lib
 FORCE_STATIC_LIB = 1
 

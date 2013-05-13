@@ -25,41 +25,6 @@ if CONFIG['MOZ_B2G_BT']:
         'nsIDOMBluetoothDeviceEvent.idl'
     ]
 
-    CPP_SOURCES += [
-        'BluetoothService.cpp',
-        'BluetoothManager.cpp',
-        'BluetoothAdapter.cpp',
-        'BluetoothDevice.cpp',
-        'BluetoothReplyRunnable.cpp',
-        'BluetoothPropertyContainer.cpp',
-        'BluetoothUtils.cpp',
-        'BluetoothChild.cpp',
-        'BluetoothParent.cpp',
-        'BluetoothServiceChildProcess.cpp',
-        'BluetoothUnixSocketConnector.cpp',
-        'BluetoothHfpManager.cpp',
-        'BluetoothOppManager.cpp',
-        'ObexBase.cpp',
-        'BluetoothUuid.cpp',
-        'BluetoothSocket.cpp',
-    ]
-
-    if CONFIG['MOZ_B2G_RIL']:
-        CPP_SOURCES += [
-            'BluetoothTelephonyListener.cpp',
-        ]
-
-    if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-        CPP_SOURCES += [
-            'BluetoothDBusService.cpp',
-            'BluetoothGonkService.cpp',
-        ]
-    else:
-        if CONFIG['MOZ_ENABLE_DBUS']:
-            CPP_SOURCES += [
-                'BluetoothDBusService.cpp',
-            ]
-
 EXPORTS.mozilla.dom.bluetooth.ipc += [
     'BluetoothMessageUtils.h',
 ]

@@ -32,6 +32,8 @@ endif
 
 # MSVC doesn't like the paths in _SOURCES, so strip off the prefix
 # and leave bare filenames
+CPPSRCS = $(subst $($(_NS)_BASE)/src/,,$(_SOURCES))
+
 FORCE_STATIC_LIB = 1
 FORCE_USE_PIC = 1
 

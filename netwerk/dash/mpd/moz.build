@@ -6,15 +6,3 @@
 
 MODULE = 'necko'
 
-CPP_SOURCES += [
-    'AdaptationSet.cpp',
-    'IMPDManager.cpp',
-    'MPD.cpp',
-    'Period.cpp',
-    'Representation.cpp',
-    'SegmentBase.cpp',
-    'nsDASHMPDParser.cpp',
-    'nsDASHWebMODManager.cpp',
-    'nsDASHWebMODParser.cpp',
-]
-

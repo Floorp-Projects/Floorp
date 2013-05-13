@@ -6,7 +6,3 @@
 
 MODULE = 'browser'
 
-CPP_SOURCES += [
-    'nsBrowserStatusFilter.cpp',
-]
-

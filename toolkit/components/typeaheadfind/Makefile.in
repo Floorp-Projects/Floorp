@@ -13,4 +13,8 @@ LIBRARY_NAME = fastfind_s
 FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1
 
+CPPSRCS = \
+  nsTypeAheadFind.cpp \
+  $(NULL)
+
 include $(topsrcdir)/config/rules.mk

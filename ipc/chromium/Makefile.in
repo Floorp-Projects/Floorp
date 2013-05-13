@@ -41,10 +41,142 @@ vpath %.mm \
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
+CPPSRCS += \
+  at_exit.cc \
+  base_paths.cc \
+  base_switches.cc \
+  command_line.cc \
+  debug_util.cc \
+  file_path.cc \
+  file_util.cc \
+  histogram.cc \
+  lazy_instance.cc \
+  lock.cc \
+  logging.cc \
+  memory_debug.cc \
+  message_loop.cc \
+  message_pump_default.cc \
+  non_thread_safe.cc \
+  path_service.cc \
+  pickle.cc \
+  rand_util.cc \
+  ref_counted.cc \
+  revocable_store.cc \
+  scoped_temp_dir.cc \
+  simple_thread.cc \
+  stats_table.cc \
+  string_escape.cc \
+  string_piece.cc \
+  string_util.cc \
+  system_monitor.cc \
+  thread.cc \
+  thread_collision_warner.cc \
+  time.cc \
+  timer.cc \
+  trace_event.cc \
+  tracked.cc \
+  tracked_objects.cc \
+  child_process.cc \
+  child_process_host.cc \
+  child_process_info.cc \
+  child_thread.cc \
+  chrome_counters.cc \
+  chrome_paths.cc \
+  chrome_switches.cc \
+  debug_flags.cc \
+  env_vars.cc \
+  ipc_channel_proxy.cc \
+  ipc_logging.cc \
+  ipc_message.cc \
+  ipc_message_utils.cc \
+  ipc_sync_channel.cc \
+  ipc_sync_message.cc \
+  message_router.cc \
+  notification_service.cc \
+  task_queue.cc \
+  $(NULL)
+
+ifdef OS_WIN # {
+
+CPPSRCS += \
+  base_paths_win.cc \
+  cpu.cc \
+  condition_variable_win.cc \
+  debug_util_win.cc \
+  event_recorder.cc \
+  file_util_win.cc \
+  file_version_info.cc \
+  lock_impl_win.cc \
+  idle_timer.cc \
+  message_pump_win.cc \
+  object_watcher.cc \
+  platform_file_win.cc \
+  platform_thread_win.cc \
+  process_util_win.cc \
+  process_win.cc \
+  rand_util_win.cc \
+  registry.cc \
+  shared_memory_win.cc \
+  sys_info_win.cc \
+  sys_string_conversions_win.cc \
+  system_monitor_win.cc \
+  thread_local_storage_win.cc \
+  thread_local_win.cc \
+  time_win.cc \
+  waitable_event_watcher_win.cc \
+  waitable_event_win.cc \
+  win_util.cc \
+  chrome_paths_win.cc \
+  chrome_constants.cc \
+  ipc_channel_win.cc \
+  process_watcher_win.cc \
+  transport_dib_win.cc \
+  $(NULL)
+
+endif # } OS_WIN
+
+ifdef _MSC_VER # {
+
+CPPSRCS += \
+  debug_on_start.cc
+
+endif # }
+
 ifdef OS_POSIX # {
+
+CPPSRCS += \
+  condition_variable_posix.cc \
+  debug_util_posix.cc \
+  event_recorder_stubs.cc \
+  file_descriptor_shuffle.cc \
+  file_util_posix.cc \
+  lock_impl_posix.cc \
+  message_pump_libevent.cc \
+  platform_file_posix.cc \
+  platform_thread_posix.cc \
+  process_posix.cc \
+  process_util_posix.cc \
+  rand_util_posix.cc \
+  shared_memory_posix.cc \
+  string16.cc \
+  system_monitor_posix.cc \
+  sys_info_posix.cc \
+  thread_local_posix.cc \
+  thread_local_storage_posix.cc \
+  waitable_event_posix.cc \
+  waitable_event_watcher_posix.cc \
+  file_descriptor_set_posix.cc \
+  ipc_channel_posix.cc \
+  process_watcher_posix_sigchld.cc \
+  $(NULL)
+
 ifeq ($(OS_TARGET),Android)
 DEFINES += -DANDROID -D_POSIX_MONOTONIC_CLOCK=0
+CPPSRCS += \
+  message_pump_android.cc \
+  $(NULL)
 endif # Android
+
 endif # } OS_POSIX
 
 ifdef OS_MACOSX # {
@@ -66,7 +198,74 @@ CMMSRCS += \
   chrome_application_mac.mm \
   $(NULL)
 
+CPPSRCS += \
+  debug_util_mac.cc \
+  hmac_mac.cc \
+  idle_timer.cc \
+  sys_info_mac.cc \
+  time_mac.cc \
+  mach_message_source_mac.cc \
+  transport_dib_mac.cc \
+  $(NULL)
+
 endif # } OS_MACOSX
+
+ifdef OS_LINUX # {
+
+CPPSRCS += \
+  atomicops_internals_x86_gcc.cc \
+  base_paths_linux.cc \
+  file_version_info_linux.cc \
+  idle_timer_none.cc \
+  process_util_linux.cc \
+  time_posix.cc \
+  $(NULL)
+
+ifdef MOZ_ENABLE_GTK2
+CPPSRCS += \
+  message_pump_glib.cc \
+  $(NULL)
+endif
+
+ifdef MOZ_ENABLE_QT
+MOCSRCS = \
+  moc_message_pump_qt.cc \
+  $(NULL)
+
+CPPSRCS += \
+  $(MOCSRCS) \
+  message_pump_qt.cc \
+  $(NULL)
+endif
+
+endif # } OS_LINUX
+
+ifdef OS_BSD # {
+
+CPPSRCS += \
+  atomicops_internals_x86_gcc.cc \
+  process_util_bsd.cc \
+  time_posix.cc \
+  $(NULL)
+
+ifdef MOZ_ENABLE_GTK2
+CPPSRCS += \
+  message_pump_glib.cc \
+  $(NULL)
+endif
+
+ifdef MOZ_ENABLE_QT
+MOCSRCS = \
+  moc_message_pump_qt.cc \
+  $(NULL)
+
+CPPSRCS += \
+  $(MOCSRCS) \
+  message_pump_qt.cc \
+  $(NULL)
+endif
+
+endif # } OS_BSD
 
 # libevent
 
@@ -128,6 +327,15 @@ endif # }
 
 endif # }
 
+endif # }
+
+ifneq (86,$(findstring 86,$(OS_TEST))) # {
+ifneq (arm,$(findstring arm,$(OS_TEST))) # {
+ifneq (mips,$(findstring mips,$(OS_TEST))) # {
+# Use mutex-backed atomics
+CPPSRCS += atomicops_internals_mutex.cc
+endif # }
+endif # }
 endif # }
 
 OS_CXXFLAGS += $(TK_CFLAGS)

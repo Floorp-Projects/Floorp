@@ -16,6 +16,10 @@ FAIL_ON_WARNINGS = 1
 
 FORCE_STATIC_LIB = 1
 
+CPPSRCS = \
+  nsResProtocolHandler.cpp \
+  $(NULL)
+
 LOCAL_INCLUDES = \
   -I$(topsrcdir)/netwerk/base/src \
   $(NULL)

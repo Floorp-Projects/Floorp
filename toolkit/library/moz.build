@@ -9,32 +9,3 @@ if CONFIG['MOZ_METRO'] and CONFIG['OS_ARCH'] == 'WINNT':
 
 MODULE = 'libxul'
 
-CPP_SOURCES += [
-    '$(INTL_UNICHARUTIL_UTIL_LCPPSRCS)',
-    '$(RDF_UTIL_SRC_LCPPSRCS)',
-    'nsStaticXULComponents.cpp',
-]
-
-if CONFIG['OS_ARCH'] == 'WINNT':
-    CPP_SOURCES += [
-        'nsDllMain.cpp',
-    ]
-    if not CONFIG['GNU_CC']:
-        CPP_SOURCES += [
-            'dlldeps-xul.cpp',
-            'nsGFXDeps.cpp',
-        ]
-        if not CONFIG['MOZ_NATIVE_ZLIB']:
-            CPP_SOURCES += [
-                'dlldeps-zlib.cpp',
-            ]
-
-if CONFIG['OS_ARCH'] == 'OS2':
-    CPP_SOURCES += [
-        'dlldeps-xul.cpp',
-        'nsGFXDeps.cpp',
-    ]
-    if not CONFIG['MOZ_NATIVE_ZLIB']:
-        CPP_SOURCES += [
-            'dlldeps-zlib.cpp',
-        ]

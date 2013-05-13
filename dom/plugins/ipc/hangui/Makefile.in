@@ -10,6 +10,11 @@ FAIL_ON_WARNINGS := 1
 
 include $(DEPTH)/config/autoconf.mk
 
+CPPSRCS = \
+  MiniShmChild.cpp \
+  PluginHangUIChild.cpp \
+  $(NULL)
+
 OS_LIBS = $(call EXPAND_LIBNAME,comctl32)
 
 RCINCLUDE = HangUIDlg.rc

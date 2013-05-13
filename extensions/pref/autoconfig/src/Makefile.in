@@ -18,6 +18,12 @@ LIBXUL_LIBRARY   = 1
 
 include $(topsrcdir)/config/config.mk
 
+CPPSRCS          = nsReadConfig.cpp    \
+                   nsAutoConfig.cpp    \
+                   nsConfigFactory.cpp \
+                   nsJSConfigTriggers.cpp \
+                   $(NULL)
+
 AUTOCFG_JS_EXPORTS = \
 		$(srcdir)/prefcalls.js \
 		$(NULL)

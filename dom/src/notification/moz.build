@@ -11,8 +11,3 @@ EXPORTS.mozilla.dom += [
     'Notification.h',
 ]
 
-CPP_SOURCES += [
-    'DesktopNotification.cpp',
-    'Notification.cpp',
-]
-

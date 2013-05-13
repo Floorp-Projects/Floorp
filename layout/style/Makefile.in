@@ -18,6 +18,53 @@ OS_CFLAGS := $(OS_CFLAGS) -Wshadow
 OS_CXXFLAGS := $(OS_CXXFLAGS) -Wshadow
 endif
 
+CPPSRCS		= \
+		AnimationCommon.cpp \
+		CSS.cpp \
+		nsCSSAnonBoxes.cpp \
+		nsCSSDataBlock.cpp \
+		Declaration.cpp \
+		ErrorReporter.cpp \
+		nsCSSKeywords.cpp \
+		ImageLoader.cpp \
+		Loader.cpp \
+		nsAnimationManager.cpp \
+		nsCSSParser.cpp \
+		nsCSSProps.cpp \
+		nsCSSPseudoClasses.cpp \
+		nsCSSPseudoElements.cpp \
+		nsCSSRuleProcessor.cpp \
+		nsCSSRules.cpp \
+		nsCSSScanner.cpp \
+		nsCSSStyleSheet.cpp \
+		nsCSSValue.cpp \
+		nsComputedDOMStyle.cpp \
+		nsDOMCSSAttrDeclaration.cpp \
+		nsDOMCSSDeclaration.cpp \
+		nsDOMCSSRGBColor.cpp \
+		nsDOMCSSRect.cpp \
+		nsDOMCSSValueList.cpp \
+		nsDOMMediaQueryList.cpp \
+		nsFontFaceLoader.cpp \
+		nsHTMLCSSStyleSheet.cpp \
+		nsHTMLStyleSheet.cpp \
+		nsLayoutStylesheetCache.cpp \
+		nsMediaFeatures.cpp \
+		nsNthIndexCache.cpp \
+		nsROCSSPrimitiveValue.cpp \
+		nsRuleData.cpp \
+		nsRuleNode.cpp \
+		nsStyleAnimation.cpp \
+		nsStyleContext.cpp \
+		nsStyleCoord.cpp \
+		nsStyleSet.cpp \
+		nsStyleStruct.cpp \
+		nsStyleTransformMatrix.cpp \
+		nsStyleUtil.cpp \
+		nsTransitionManager.cpp \
+		StyleRule.cpp \
+		$(NULL)
+
 FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk

@@ -12,15 +12,3 @@ XPIDL_MODULE = 'toolkitremote'
 
 MODULE = 'toolkitcomps'
 
-CPP_SOURCES += [
-    'nsXRemoteService.cpp',
-]
-
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk2':
-    CPP_SOURCES += [
-        'nsGTKRemoteService.cpp',
-    ]
-elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
-    CPP_SOURCES += [
-        'nsQtRemoteService.cpp',
-    ]

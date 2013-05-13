@@ -18,5 +18,13 @@ MODULE_NAME	= nsTransactionManagerModule
 LIBXUL_LIBRARY	= 1
 
 
+CPPSRCS		= \
+		nsTransactionItem.cpp \
+		nsTransactionList.cpp \
+		nsTransactionManager.cpp \
+		nsTransactionManagerFactory.cpp \
+		nsTransactionStack.cpp \
+		$(NULL)
+
 include $(topsrcdir)/config/rules.mk
 

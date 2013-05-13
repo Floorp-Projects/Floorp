@@ -22,68 +22,7 @@ if CONFIG['MOZ_INSTRUMENT_EVENT_LOOP']:
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     EXPORTS += ['nsWindowsDllInterceptor.h']
-    CPP_SOURCES += [
-        'nsNativeAppSupportWin.cpp',
-        'nsWindowsDllBlocklist.cpp',
-    ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     EXPORTS += ['MacQuirks.h']
-    CPP_SOURCES += [
-        'nsCommandLineServiceMac.cpp',
-    ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
     EXPORTS += ['nsQAppInstance.h']
-    CPP_SOURCES += [
-        'moc_nsNativeAppSupportQt.cpp',
-        'nsNativeAppSupportQt.cpp',
-        'nsQAppInstance.cpp',
-    ]
-elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'os2':
-    CPP_SOURCES += [
-        'nsNativeAppSupportOS2.cpp',
-    ]
-elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk2':
-    CPP_SOURCES += [
-        'nsNativeAppSupportUnix.cpp',
-    ]
-else:
-    CPP_SOURCES += [
-        'nsNativeAppSupportDefault.cpp',
-    ]
-
-if CONFIG['MOZ_X11']:
-    CPP_SOURCES += [
-        'nsX11ErrorHandler.cpp',
-    ]
-
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
-    CPP_SOURCES += [
-        'nsAndroidStartup.cpp',
-    ]
-
-CPP_SOURCES += [
-    'CreateAppData.cpp',
-    'ProfileReset.cpp',
-    'nsAppRunner.cpp',
-    'nsConsoleWriter.cpp',
-    'nsEmbedFunctions.cpp',
-    'nsNativeAppSupportBase.cpp',
-    'nsSigHandlers.cpp',
-    'nsXREDirProvider.cpp',
-]
-
-if CONFIG['MOZ_GL_DEFAULT_PROVIDER'] == 'GLX':
-    CPP_SOURCES += [
-        'glxtest.cpp',
-    ]
-
-if CONFIG['MOZ_INSTRUMENT_EVENT_LOOP']:
-    CPP_SOURCES += [
-        'EventTracer.cpp',
-    ]
-
-if CONFIG['MOZ_UPDATER']:
-    if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
-        CPP_SOURCES += [
-            'nsUpdateDriver.cpp',
-        ]

@@ -49,19 +49,10 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'os2':
     EXPORTS += ['nsLocalFileOS2.h']
-    CPP_SOURCES += [
-        'nsLocalFileOS2.cpp',
-    ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     EXPORTS += ['nsLocalFileWin.h']
-    CPP_SOURCES += [
-        'nsLocalFileWin.cpp',
-    ]
 else:
     EXPORTS += ['nsLocalFileUnix.h']
-    CPP_SOURCES += [
-        'nsLocalFileUnix.cpp',
-    ]
 
 XPIDL_MODULE = 'xpcom_io'
 
@@ -88,30 +79,5 @@ EXPORTS += [
 
 EXPORTS.mozilla += [
     'Base64.h',
-]
-
-CPP_SOURCES += [
-    'Base64.cpp',
-    'SpecialSystemDirectory.cpp',
-    'nsAnonymousTemporaryFile.cpp',
-    'nsAppFileLocationProvider.cpp',
-    'nsBinaryStream.cpp',
-    'nsDirectoryService.cpp',
-    'nsEscape.cpp',
-    'nsIOUtil.cpp',
-    'nsInputStreamTee.cpp',
-    'nsLinebreakConverter.cpp',
-    'nsLocalFileCommon.cpp',
-    'nsMultiplexInputStream.cpp',
-    'nsNativeCharsetUtils.cpp',
-    'nsPipe3.cpp',
-    'nsScriptableBase64Encoder.cpp',
-    'nsScriptableInputStream.cpp',
-    'nsSegmentedBuffer.cpp',
-    'nsStorageStream.cpp',
-    'nsStreamUtils.cpp',
-    'nsStringStream.cpp',
-    'nsUnicharInputStream.cpp',
-    'nsWildCard.cpp',
 ]
 

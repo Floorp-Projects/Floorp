@@ -14,6 +14,19 @@ LIBRARY_NAME	= xpcomthreads_s
 MOZILLA_INTERNAL_API = 1
 LIBXUL_LIBRARY = 1
 
+CPPSRCS		= \
+		nsEventQueue.cpp \
+		nsEnvironment.cpp \
+		nsThread.cpp \
+		nsThreadManager.cpp \
+		nsThreadPool.cpp \
+		nsProcessCommon.cpp \
+		nsTimerImpl.cpp \
+		TimerThread.cpp \
+		HangMonitor.cpp \
+		LazyIdleThread.cpp \
+		$(NULL)
+
 LOCAL_INCLUDES	= -I$(srcdir)/../components
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

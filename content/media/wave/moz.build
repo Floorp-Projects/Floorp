@@ -11,8 +11,3 @@ EXPORTS += [
     'WaveReader.h',
 ]
 
-CPP_SOURCES += [
-    'WaveDecoder.cpp',
-    'WaveReader.cpp',
-]
-

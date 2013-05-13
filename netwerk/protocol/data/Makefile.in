@@ -16,6 +16,11 @@ LIBXUL_LIBRARY = 1
 
 FORCE_STATIC_LIB = 1
 
+CPPSRCS = \
+  nsDataHandler.cpp \
+  nsDataChannel.cpp \
+  $(NULL)
+
 LOCAL_INCLUDES = \
   -I$(srcdir)/../../base/src \
   $(NULL)

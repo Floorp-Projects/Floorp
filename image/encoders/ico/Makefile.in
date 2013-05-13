@@ -20,6 +20,8 @@ LOCAL_INCLUDES += -I$(topsrcdir)/image/src/
 LOCAL_INCLUDES += -I$(topsrcdir)/image/encoders/bmp/
 LOCAL_INCLUDES += -I$(topsrcdir)/image/encoders/png/
 
+CPPSRCS		= nsICOEncoder.cpp
+
 include $(topsrcdir)/config/rules.mk
 
 

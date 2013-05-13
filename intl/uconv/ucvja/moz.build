@@ -11,11 +11,3 @@ EXPORTS += [
     'nsUCVJACID.h',
 ]
 
-CPP_SOURCES += [
-    'nsJapaneseToUnicode.cpp',
-    'nsUnicodeToEUCJP.cpp',
-    'nsUnicodeToISO2022JP.cpp',
-    'nsUnicodeToJISx0201.cpp',
-    'nsUnicodeToSJIS.cpp',
-]
-

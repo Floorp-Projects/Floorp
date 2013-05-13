@@ -29,17 +29,45 @@ LIBRARY_NAME     = dombluetooth_s
 LIBXUL_LIBRARY   = 1
 FORCE_STATIC_LIB = 1
 
+CPPSRCS += \
+  BluetoothService.cpp \
+  BluetoothManager.cpp \
+  BluetoothAdapter.cpp \
+  BluetoothDevice.cpp \
+  BluetoothReplyRunnable.cpp \
+  BluetoothPropertyContainer.cpp \
+  BluetoothUtils.cpp \
+  BluetoothChild.cpp \
+  BluetoothParent.cpp \
+  BluetoothServiceChildProcess.cpp \
+  BluetoothUnixSocketConnector.cpp \
+  BluetoothHfpManager.cpp \
+  BluetoothOppManager.cpp \
+  ObexBase.cpp \
+  BluetoothUuid.cpp \
+  BluetoothSocket.cpp \
+  $(NULL)
+
+ifdef MOZ_B2G_RIL
+CPPSRCS += BluetoothTelephonyListener.cpp
+endif
+
 ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
 VPATH += \
   $(srcdir)/linux \
   $(srcdir)/gonk \
   $(NULL)
 LOCAL_INCLUDES += $(MOZ_DBUS_CFLAGS)
+CPPSRCS += \
+  BluetoothDBusService.cpp \
+  BluetoothGonkService.cpp \
+  $(NULL)
 DEFINES += -DMOZ_BLUETOOTH_GONK
 else
 ifdef MOZ_ENABLE_DBUS
 VPATH += $(srcdir)/linux
 LOCAL_INCLUDES += $(MOZ_DBUS_CFLAGS)
+CPPSRCS += BluetoothDBusService.cpp
 CFLAGS += $(MOZ_DBUS_GLIB_CFLAGS)
 CXXFLAGS += $(MOZ_DBUS_GLIB_CFLAGS) -DHAVE_PTHREADS
 DEFINES += -DMOZ_BLUETOOTH_DBUS

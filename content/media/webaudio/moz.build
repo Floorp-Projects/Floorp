@@ -38,27 +38,3 @@ EXPORTS.mozilla.dom += [
     'ScriptProcessorNode.h',
 ]
 
-CPP_SOURCES += [
-    'AnalyserNode.cpp',
-    'AudioBuffer.cpp',
-    'AudioBufferSourceNode.cpp',
-    'AudioContext.cpp',
-    'AudioDestinationNode.cpp',
-    'AudioListener.cpp',
-    'AudioNode.cpp',
-    'AudioParam.cpp',
-    'AudioProcessingEvent.cpp',
-    'BiquadFilterNode.cpp',
-    'ChannelMergerNode.cpp',
-    'ChannelSplitterNode.cpp',
-    'DelayNode.cpp',
-    'DynamicsCompressorNode.cpp',
-    'EnableWebAudioCheck.cpp',
-    'GainNode.cpp',
-    'MediaBufferDecoder.cpp',
-    'PannerNode.cpp',
-    'ScriptProcessorNode.cpp',
-    'ThreeDPoint.cpp',
-    'WebAudioUtils.cpp',
-]
-

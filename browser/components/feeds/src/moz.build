@@ -6,7 +6,3 @@
 
 MODULE = 'browser_feeds'
 
-CPP_SOURCES += [
-    'nsFeedSniffer.cpp',
-]
-

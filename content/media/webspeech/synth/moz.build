@@ -26,14 +26,3 @@ EXPORTS.mozilla.dom += [
     'nsSynthVoiceRegistry.h',
 ]
 
-CPP_SOURCES += [
-    'EnableSpeechSynthesisCheck.cpp',
-    'SpeechSynthesis.cpp',
-    'SpeechSynthesisChild.cpp',
-    'SpeechSynthesisParent.cpp',
-    'SpeechSynthesisUtterance.cpp',
-    'SpeechSynthesisVoice.cpp',
-    'nsSpeechTask.cpp',
-    'nsSynthVoiceRegistry.cpp',
-]
-

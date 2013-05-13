@@ -8,12 +8,3 @@ TEST_DIRS += ['tests']
 
 MODULE = 'editor'
 
-CPP_SOURCES += [
-    'nsInternetCiter.cpp',
-    'nsPlaintextDataTransfer.cpp',
-    'nsPlaintextEditor.cpp',
-    'nsTextEditRules.cpp',
-    'nsTextEditRulesBidi.cpp',
-    'nsTextEditUtils.cpp',
-]
-

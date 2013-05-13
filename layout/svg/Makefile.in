@@ -15,6 +15,44 @@ LIBXUL_LIBRARY	= 1
 FAIL_ON_WARNINGS = 1
 
 
+CPPSRCS		= \
+		nsSVGAFrame.cpp \
+		nsSVGClipPathFrame.cpp \
+		nsSVGContainerFrame.cpp \
+		nsSVGEffects.cpp \
+		SVGFEContainerFrame.cpp \
+		SVGFEImageFrame.cpp \
+		SVGFELeafFrame.cpp \
+		SVGFEUnstyledLeafFrame.cpp \
+		nsSVGFilterFrame.cpp \
+		nsSVGFilterInstance.cpp \
+		nsSVGForeignObjectFrame.cpp \
+		nsSVGGFrame.cpp \
+		nsSVGGenericContainerFrame.cpp \
+		nsSVGGeometryFrame.cpp \
+		nsSVGGlyphFrame.cpp \
+		nsSVGGradientFrame.cpp \
+		nsSVGImageFrame.cpp \
+		nsSVGInnerSVGFrame.cpp \
+		nsSVGIntegrationUtils.cpp \
+		nsSVGMarkerFrame.cpp \
+		nsSVGMaskFrame.cpp \
+		nsSVGOuterSVGFrame.cpp \
+		nsSVGPaintServerFrame.cpp \
+		nsSVGPathGeometryFrame.cpp \
+		nsSVGPatternFrame.cpp \
+		nsSVGStopFrame.cpp \
+		nsSVGSwitchFrame.cpp \
+		nsSVGTextContainerFrame.cpp \
+		nsSVGTextFrame.cpp \
+		nsSVGTextFrame2.cpp \
+		nsSVGTextPathFrame.cpp \
+		nsSVGTSpanFrame.cpp \
+		nsSVGUseFrame.cpp \
+		SVGViewFrame.cpp \
+		nsSVGUtils.cpp \
+		$(NULL)
+
 include $(topsrcdir)/config/config.mk
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

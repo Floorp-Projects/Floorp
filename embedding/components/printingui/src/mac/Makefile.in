@@ -18,6 +18,11 @@ LIBXUL_LIBRARY	= 1
 
 CMMSRCS = nsPrintingPromptServiceX.mm
 
+CPPSRCS		= \
+      nsPrintProgressParams.cpp \
+      nsPrintProgress.cpp \
+      $(NULL)
+
 LOCAL_INCLUDES	= \
 		$(NULL)
 

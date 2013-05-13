@@ -6,12 +6,3 @@
 
 MODULE = 'zipwriter'
 
-CPP_SOURCES += [
-    'StreamFunctions.cpp',
-    'ZipWriterModule.cpp',
-    'nsDeflateConverter.cpp',
-    'nsZipDataStream.cpp',
-    'nsZipHeader.cpp',
-    'nsZipWriter.cpp',
-]
-

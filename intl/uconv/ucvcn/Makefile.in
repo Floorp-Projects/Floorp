@@ -15,6 +15,17 @@ FORCE_STATIC_LIB=1
 LIBXUL_LIBRARY = 1
 
 
+CPPSRCS		= \
+		nsUnicodeToGB2312V2.cpp \
+		nsGBKToUnicode.cpp \
+		nsUnicodeToGBK.cpp \
+		nsISO2022CNToUnicode.cpp \
+		nsUnicodeToISO2022CN.cpp \
+		nsHZToUnicode.cpp \
+		nsUnicodeToHZ.cpp \
+		nsGBKConvUtil.cpp \
+		$(NULL)
+
 LOCAL_INCLUDES = -I$(srcdir)/../util
 
 include $(topsrcdir)/config/rules.mk

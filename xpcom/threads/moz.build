@@ -34,16 +34,3 @@ EXPORTS.mozilla += [
     'SyncRunnable.h',
 ]
 
-CPP_SOURCES += [
-    'HangMonitor.cpp',
-    'LazyIdleThread.cpp',
-    'TimerThread.cpp',
-    'nsEnvironment.cpp',
-    'nsEventQueue.cpp',
-    'nsProcessCommon.cpp',
-    'nsThread.cpp',
-    'nsThreadManager.cpp',
-    'nsThreadPool.cpp',
-    'nsTimerImpl.cpp',
-]
-

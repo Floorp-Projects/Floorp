@@ -12,7 +12,3 @@ XPIDL_SOURCES += [
 
 MODULE = 'jsinspector'
 
-CPP_SOURCES += [
-    'nsJSInspector.cpp',
-]
-

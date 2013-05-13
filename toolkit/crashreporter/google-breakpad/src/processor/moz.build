@@ -6,20 +6,3 @@
 
 MODULE = 'breakpad_sps_common'
 
-CPP_SOURCES += [
-    'basic_code_modules.cc',
-    'basic_source_line_resolver.cc',
-    'call_stack.cc',
-    'cfi_frame_info.cc',
-    'minidump.cc',
-    'source_line_resolver_base.cc',
-    'stack_frame_symbolizer.cc',
-    'stackwalker.cc',
-    'stackwalker_amd64.cc',
-    'stackwalker_arm.cc',
-    'stackwalker_ppc.cc',
-    'stackwalker_sparc.cc',
-    'stackwalker_x86.cc',
-    'tokenize.cc',
-]
-

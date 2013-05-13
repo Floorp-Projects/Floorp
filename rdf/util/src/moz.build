@@ -8,7 +8,3 @@ DIRS += ['internal']
 
 MODULE = 'rdfutil'
 
-CPP_SOURCES += [
-    '$(RDF_UTIL_SRC_LCPPSRCS)',
-]
-

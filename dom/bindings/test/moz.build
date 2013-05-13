@@ -6,7 +6,3 @@
 
 MODULE = 'dom'
 
-CPP_SOURCES += [
-    '$(subst .webidl,Binding.cpp,$(test_webidl_files))',
-]
-

@@ -42,6 +42,15 @@ globalgen_targets := \
   UnionConversions.h \
   $(NULL)
 
+CPPSRCS = \
+  $(linked_binding_cpp_files) \
+  $(filter %.cpp, $(globalgen_targets)) \
+  BindingUtils.cpp \
+  CallbackInterface.cpp \
+  CallbackObject.cpp \
+  DOMJSProxyHandler.cpp \
+  $(NULL)
+
 LOCAL_INCLUDES += -I$(topsrcdir)/js/xpconnect/src \
   -I$(topsrcdir)/js/xpconnect/wrappers \
   -I$(topsrcdir)/content/canvas/src \

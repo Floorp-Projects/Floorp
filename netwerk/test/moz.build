@@ -13,22 +13,3 @@ XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 # FIXME/bug 575918: out-of-process xpcshell is broken on OS X
 if CONFIG['OS_ARCH'] != 'Darwin':
     XPCSHELL_TESTS_MANIFESTS += ['unit_ipc/xpcshell.ini']
-
-CPP_SOURCES += [
-    'PropertiesTest.cpp',
-    'ReadNTLM.cpp',
-    'TestBlockingSocket.cpp',
-    'TestCallbacks.cpp',
-    'TestCookie.cpp',
-    'TestDNS.cpp',
-    'TestIncrementalDownload.cpp',
-    'TestOpen.cpp',
-    'TestPageLoad.cpp',
-    'TestProtocols.cpp',
-    'TestServ.cpp',
-    'TestStandardURL.cpp',
-    'TestStreamLoader.cpp',
-    'TestURLParser.cpp',
-    'TestUpload.cpp',
-    'urltest.cpp',
-]

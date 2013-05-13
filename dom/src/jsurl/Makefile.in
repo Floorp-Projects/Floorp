@@ -16,6 +16,8 @@ FORCE_STATIC_LIB = 1
 MODULE_NAME	= javascript__protocol
 LIBXUL_LIBRARY	= 1
 
+CPPSRCS		= nsJSProtocolHandler.cpp
+
 LOCAL_INCLUDES += \
 		-I$(srcdir) \
 		-I$(topsrcdir)/dom/base \

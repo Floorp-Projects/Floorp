@@ -10,7 +10,4 @@ if CONFIG['MOZ_XUL'] and \
         XPIDL_SOURCES += [
             'nsIFileView.idl',
         ]
-        CPP_SOURCES += [
-            'nsFileView.cpp',
-        ]
 

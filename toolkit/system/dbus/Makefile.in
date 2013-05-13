@@ -21,6 +21,12 @@ EXTRA_DSO_LDOPTS = \
 	$(MOZ_DBUS_GLIB_LIBS) \
 	$(NULL)
                 
+CPPSRCS =   \
+  nsDBusModule.cpp             \
+  nsDBusService.cpp            \
+  nsNetworkManagerListener.cpp \
+  $(NULL)
+
 include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS += $(TK_CFLAGS) $(MOZ_DBUS_GLIB_CFLAGS)

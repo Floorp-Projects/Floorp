@@ -17,17 +17,3 @@ XPIDL_SOURCES += [
 
 MODULE = 'url-classifier'
 
-CPP_SOURCES += [
-    'ChunkSet.cpp',
-    'Classifier.cpp',
-    'HashStore.cpp',
-    'LookupCache.cpp',
-    'ProtocolParser.cpp',
-    'nsCheckSummedOutputStream.cpp',
-    'nsUrlClassifierDBService.cpp',
-    'nsUrlClassifierPrefixSet.cpp',
-    'nsUrlClassifierProxies.cpp',
-    'nsUrlClassifierStreamUpdater.cpp',
-    'nsUrlClassifierUtils.cpp',
-]
-

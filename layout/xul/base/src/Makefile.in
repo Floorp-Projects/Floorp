@@ -13,6 +13,56 @@ LIBRARY_NAME	= gkxulbase_s
 LIBXUL_LIBRARY	= 1
 FAIL_ON_WARNINGS = 1
 
+CPPSRCS		= \
+		nsScrollBoxFrame.cpp \
+		nsRootBoxFrame.cpp \
+		nsBox.cpp \
+		nsBoxFrame.cpp \
+		nsBoxLayoutState.cpp \
+		nsSprocketLayout.cpp \
+		nsStackFrame.cpp \
+		nsStackLayout.cpp \
+		nsBoxLayout.cpp \
+		nsScrollbarFrame.cpp \
+		nsScrollbarButtonFrame.cpp \
+		nsButtonBoxFrame.cpp \
+		nsSliderFrame.cpp \
+		nsRepeatService.cpp \
+		nsXULTooltipListener.cpp \
+		$(NULL)
+
+ifdef MOZ_XUL
+CPPSRCS		+= \
+		nsScrollBoxObject.cpp \
+		nsContainerBoxObject.cpp \
+		nsMenuBoxObject.cpp \
+		nsPopupBoxObject.cpp \
+		nsListBoxObject.cpp \
+		nsBoxObject.cpp \
+		nsImageBoxFrame.cpp \
+		nsDocElementBoxFrame.cpp \
+		nsLeafBoxFrame.cpp \
+		nsTextBoxFrame.cpp \
+		nsGroupBoxFrame.cpp \
+		nsSplitterFrame.cpp \
+		nsDeckFrame.cpp \
+		nsProgressMeterFrame.cpp \
+		nsMenuPopupFrame.cpp \
+		nsMenuFrame.cpp \
+		nsMenuBarFrame.cpp \
+		nsMenuBarListener.cpp \
+		nsPopupSetFrame.cpp \
+		nsTitleBarFrame.cpp \
+		nsResizerFrame.cpp \
+		nsListBoxBodyFrame.cpp \
+		nsListItemFrame.cpp \
+		nsListBoxLayout.cpp \
+		nsXULLabelFrame.cpp \
+		nsXULPopupManager.cpp \
+		$(NULL)
+
+endif
+
 include $(topsrcdir)/config/config.mk
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

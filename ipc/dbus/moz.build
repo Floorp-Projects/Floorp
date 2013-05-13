@@ -12,9 +12,3 @@ EXPORTS.mozilla.ipc += [
     'RawDBusConnection.h',
 ]
 
-CPP_SOURCES += [
-    'DBusThread.cpp',
-    'DBusUtils.cpp',
-    'RawDBusConnection.cpp',
-]
-

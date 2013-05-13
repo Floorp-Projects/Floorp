@@ -10,7 +10,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-SIMPLE_PROGRAMS	= stub_test
+CPPSRCS		= stub_test.cpp #invoke_test.cpp
+SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
 include $(topsrcdir)/config/rules.mk
 

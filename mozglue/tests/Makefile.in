@@ -10,7 +10,11 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 ifdef MOZ_LINKER
-SIMPLE_PROGRAMS := TestZip$(BIN_SUFFIX)
+CPPSRCS = \
+  TestZip.cpp \
+  $(NULL)
+
+SIMPLE_PROGRAMS := $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 NO_DIST_INSTALL = 1
 STL_FLAGS =
 

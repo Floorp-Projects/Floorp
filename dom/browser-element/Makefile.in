@@ -16,6 +16,12 @@ FAIL_ON_WARNINGS := 1
 
 include $(topsrcdir)/dom/dom-config.mk
 
+CPPSRCS = \
+  nsOpenWindowEventDetail.cpp \
+  nsAsyncScrollEventDetail.cpp \
+  BrowserElementParent.cpp \
+  $(NULL)
+
 EXTRA_COMPONENTS = \
   BrowserElementParent.js \
   BrowserElementParent.manifest \

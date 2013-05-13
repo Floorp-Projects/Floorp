@@ -19,7 +19,3 @@ EXPORTS.mozilla += [
     'TelemetryHistogramEnums.h',
 ]
 
-CPP_SOURCES += [
-    'Telemetry.cpp',
-]
-

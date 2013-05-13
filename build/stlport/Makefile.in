@@ -20,6 +20,7 @@ LIBRARY = $(LIB_PREFIX)$(LIBRARY_NAME).$(LIB_SUFFIX)
 
 VPATH += $(STLPORT_SOURCES)/src
 
+CPPSRCS = $(notdir $(wildcard $(STLPORT_SOURCES)/src/*.cpp))
 CSRCS = $(notdir $(wildcard $(STLPORT_SOURCES)/src/*.c))
 
 include $(topsrcdir)/config/rules.mk

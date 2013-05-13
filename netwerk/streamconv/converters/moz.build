@@ -6,24 +6,3 @@
 
 MODULE = 'necko'
 
-CPP_SOURCES += [
-    'mozTXTToHTMLConv.cpp',
-    'nsDirIndex.cpp',
-    'nsDirIndexParser.cpp',
-    'nsHTTPCompressConv.cpp',
-    'nsIndexedToHTML.cpp',
-    'nsMultiMixedConv.cpp',
-    'nsTXTToHTMLConv.cpp',
-    'nsUnknownDecoder.cpp',
-]
-
-if CONFIG['NECKO_PROTOCOLS'].find('ftp') != -1:
-    CPP_SOURCES += [
-        'ParseFTPList.cpp',
-        'nsFTPDirListingConv.cpp',
-    ]
-
-if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'cocoa':
-    CPP_SOURCES += [
-        'nsBinHexDecoder.cpp',
-    ]

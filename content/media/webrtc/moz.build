@@ -13,13 +13,3 @@ EXPORTS += [
 
 if CONFIG['MOZ_WEBRTC']:
     EXPORTS += ['MediaEngineWebRTC.h']
-    CPP_SOURCES += [
-        'MediaEngineWebRTC.cpp',
-        'MediaEngineWebRTCVideo.cpp',
-        'MediaEngineWebRTCAudio.cpp',
-    ]
-
-CPP_SOURCES += [
-    'MediaEngineDefault.cpp',
-]
-

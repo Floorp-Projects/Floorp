@@ -16,6 +16,15 @@ LIBRARY_NAME	= gkconxulcon_s
 LIBXUL_LIBRARY	= 1
 endif
 
+
+ifdef MOZ_XUL
+CPPSRCS		+= \
+		nsXULElement.cpp \
+		nsXULPopupListener.cpp \
+		nsXULContextMenuBuilder.cpp \
+		$(NULL)
+endif
+
 # we don't want the shared lib, but we want to force the creation of a
 # static lib.
 FORCE_STATIC_LIB = 1

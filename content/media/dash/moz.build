@@ -13,9 +13,3 @@ EXPORTS += [
     'DASHRepReader.h',
 ]
 
-CPP_SOURCES += [
-    'DASHDecoder.cpp',
-    'DASHReader.cpp',
-    'DASHRepDecoder.cpp',
-]
-

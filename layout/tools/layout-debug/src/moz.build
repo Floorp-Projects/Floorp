@@ -15,10 +15,3 @@ EXPORTS += [
     'nsLayoutDebugCIID.h',
 ]
 
-CPP_SOURCES += [
-    'nsDebugFactory.cpp',
-    'nsLayoutDebugCLH.cpp',
-    'nsLayoutDebuggingTools.cpp',
-    'nsRegressionTester.cpp',
-]
-

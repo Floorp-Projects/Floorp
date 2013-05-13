@@ -14,8 +14,23 @@ LIBRARY_NAME = appstartup_s
 FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1
 
+CPPSRCS = \
+  nsAppStartup.cpp \
+  StartupTimeline.cpp \
+  $(NULL)
+
+ifeq (os2,$(MOZ_WIDGET_TOOLKIT))
+CPPSRCS += nsUserInfoOS2.cpp
+else
+ifeq ($(OS_ARCH),WINNT)
+CPPSRCS += nsUserInfoWin.cpp
+else
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 CMMSRCS += nsUserInfoMac.mm
+else
+CPPSRCS += nsUserInfoUnix.cpp
+endif
+endif
 endif
 
 DISABLED_XPCSHELL_TESTS = tests/unit

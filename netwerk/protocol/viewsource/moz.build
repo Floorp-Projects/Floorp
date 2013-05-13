@@ -16,8 +16,3 @@ XPIDL_FLAGS += [
 
 MODULE = 'necko'
 
-CPP_SOURCES += [
-    'nsViewSourceChannel.cpp',
-    'nsViewSourceHandler.cpp',
-]
-

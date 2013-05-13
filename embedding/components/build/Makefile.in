@@ -15,6 +15,8 @@ IS_COMPONENT	= 1
 MODULE_NAME	= embedcomponents
 LIBXUL_LIBRARY	= 1
 
+CPPSRCS		= nsEmbeddingModule.cpp
+
 SHARED_LIBRARY_LIBS = \
 	../windowwatcher/src/$(LIB_PREFIX)windowwatcher_s.$(LIB_SUFFIX) \
 	../appstartup/src/$(LIB_PREFIX)appstartupnotifier_s.$(LIB_SUFFIX) \

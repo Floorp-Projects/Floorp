@@ -15,6 +15,15 @@ FAIL_ON_WARNINGS := 1
 
 DEFINES += -DDLL_PREFIX=\"$(DLL_PREFIX)\" -DDLL_SUFFIX=\"$(DLL_SUFFIX)\"
 
+CPPSRCS     = \
+  nsDeviceSensors.cpp \
+  OSFileConstants.cpp \
+  $(NULL)
+
+ifdef MOZ_GAMEPAD
+CPPSRCS += GamepadService.cpp
+endif
+
 # We fire the nsDOMDeviceAcceleration
 LOCAL_INCLUDES += \
   -I$(topsrcdir)/content/events/src \

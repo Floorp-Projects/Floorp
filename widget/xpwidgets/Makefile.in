@@ -17,6 +17,47 @@ DEFINES += \
   -D_IMPL_NS_WIDGET \
   $(NULL)
 
+CPPSRCS		= \
+		nsBaseAppShell.cpp \
+		nsBaseScreen.cpp \
+		nsBaseWidget.cpp \
+		nsTransferable.cpp \
+		nsHTMLFormatConverter.cpp \
+		nsBaseDragService.cpp \
+		nsPrimitiveHelpers.cpp \
+		nsXPLookAndFeel.cpp \
+		nsClipboardHelper.cpp \
+		nsPrintOptionsImpl.cpp \
+		nsPrintSettingsImpl.cpp \
+		nsPrintSession.cpp \
+		nsIdleService.cpp \
+		nsClipboardPrivacyHandler.cpp \
+		GfxInfoWebGL.cpp \
+                GfxDriverInfo.cpp \
+                GfxInfoBase.cpp \
+		PuppetWidget.cpp \
+		nsFilePickerProxy.cpp \
+		WidgetUtils.cpp \
+		InputData.cpp \
+		$(NULL)
+
+ifdef MOZ_X11
+CPPSRCS		+= \
+		GfxInfoX11.cpp
+endif
+
+ifneq (,$(filter os2 cocoa windows,$(MOZ_WIDGET_TOOLKIT)))
+CPPSRCS += nsBaseClipboard.cpp
+endif
+
+ifneq (,$(filter qt gtk2 os2 cocoa windows android gonk,$(MOZ_WIDGET_TOOLKIT)))
+CPPSRCS += nsBaseFilePicker.cpp
+endif
+
+ifneq (,$(filter qt gtk2 windows cocoa,$(MOZ_WIDGET_TOOLKIT)))
+CPPSRCS += nsNativeTheme.cpp
+endif
+
 SHARED_LIBRARY_LIBS = ../shared/$(LIB_PREFIX)widget_shared.$(LIB_SUFFIX)
 ifdef MOZ_X11
 SHARED_LIBRARY_LIBS += ../shared/x11/$(LIB_PREFIX)widget_shared_x11.$(LIB_SUFFIX)

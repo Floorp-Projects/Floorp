@@ -29,37 +29,3 @@ EXPORTS += [
     'GonkNativeWindowClient.h',
 ]
 
-CPP_SOURCES += [
-    'CameraControlImpl.cpp',
-    'CameraPreviewMediaStream.cpp',
-    'CameraRecorderProfiles.cpp',
-    'DOMCameraCapabilities.cpp',
-    'DOMCameraControl.cpp',
-    'DOMCameraManager.cpp',
-    'DOMCameraPreview.cpp',
-]
-
-if CONFIG['MOZ_B2G_CAMERA']:
-    CPP_SOURCES += [
-        'GonkCameraManager.cpp',
-        'GonkCameraControl.cpp',
-        'GonkCameraHwMgr.cpp',
-        'GonkNativeWindow.cpp',
-        'GonkNativeWindowClient.cpp',
-        'GonkRecorder.cpp',
-        'GonkCameraSource.cpp',
-        'AudioParameter.cpp',
-        'GonkRecorderProfiles.cpp',
-    ]
-elif CONFIG['MOZ_OMX_DECODER']:
-    CPP_SOURCES += [
-        'FallbackCameraManager.cpp',
-        'FallbackCameraControl.cpp',
-        'GonkNativeWindow.cpp',
-        'GonkNativeWindowClient.cpp',
-    ]
-else:
-    CPP_SOURCES += [
-        'FallbackCameraManager.cpp',
-        'FallbackCameraControl.cpp',
-    ]

@@ -17,6 +17,11 @@ MOZILLA_INTERNAL_API = 1
 LIBRARY_NAME	= rdfdsds
 IS_COMPONENT	= 1
 
+CPPSRCS		= \
+		nsRDFDataSourceDS.cpp \
+		nsRDFDataSourceFactory.cpp \
+		$(NULL)
+
 SAMPLES_DIR	= $(DIST)/bin/res/samples/rdf
 
 RESOURCE_SAMPLES = \

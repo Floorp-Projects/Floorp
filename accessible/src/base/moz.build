@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-include('../shared.mozbuild')
-
 MODULE = 'accessibility'
 
 EXPORTS += [
@@ -27,36 +25,4 @@ EXPORTS.mozilla.a11y += [
 if CONFIG['MOZ_DEBUG']:
     EXPORTS.mozilla.a11y += [
         'Logging.h',
-    ]
-
-CPP_SOURCES += [
-    'AccCollector.cpp',
-    'AccEvent.cpp',
-    'AccGroupInfo.cpp',
-    'AccIterator.cpp',
-    'ARIAMap.cpp',
-    'ARIAStateMap.cpp',
-    'DocManager.cpp',
-    'EventQueue.cpp',
-    'Filters.cpp',
-    'FocusManager.cpp',
-    'NotificationController.cpp',
-    'nsAccessibilityService.cpp',
-    'nsAccessiblePivot.cpp',
-    'nsAccessNode.cpp',
-    'nsAccUtils.cpp',
-    'nsCoreUtils.cpp',
-    'nsEventShell.cpp',
-    'nsTextEquivUtils.cpp',
-    'RoleAsserts.cpp',
-    'SelectionManager.cpp',
-    'StyleInfo.cpp',
-    'TextAttrs.cpp',
-    'TextUpdater.cpp',
-    'TreeWalker.cpp',
-]
-
-if a11y_log:
-    CPP_SOURCES += [
-        'Logging.cpp',
     ]

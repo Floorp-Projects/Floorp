@@ -20,12 +20,3 @@ EXPORTS.mozilla.docshell += [
     'OfflineCacheUpdateParent.h',
 ]
 
-CPP_SOURCES += [
-    'OfflineCacheUpdateChild.cpp',
-    'OfflineCacheUpdateGlue.cpp',
-    'OfflineCacheUpdateParent.cpp',
-    'nsOfflineCacheUpdate.cpp',
-    'nsOfflineCacheUpdateService.cpp',
-    'nsPrefetchService.cpp',
-]
-

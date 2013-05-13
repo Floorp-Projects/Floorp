@@ -6,31 +6,3 @@
 
 MODULE = 'universalchardet_s'
 
-CPP_SOURCES += [
-    'CharDistribution.cpp',
-    'JpCntx.cpp',
-    'LangBulgarianModel.cpp',
-    'LangCyrillicModel.cpp',
-    'LangGreekModel.cpp',
-    'LangHebrewModel.cpp',
-    'LangHungarianModel.cpp',
-    'LangThaiModel.cpp',
-    'nsBig5Prober.cpp',
-    'nsCharSetProber.cpp',
-    'nsEUCJPProber.cpp',
-    'nsEUCKRProber.cpp',
-    'nsEUCTWProber.cpp',
-    'nsEscCharsetProber.cpp',
-    'nsEscSM.cpp',
-    'nsGB2312Prober.cpp',
-    'nsHebrewProber.cpp',
-    'nsLatin1Prober.cpp',
-    'nsMBCSGroupProber.cpp',
-    'nsMBCSSM.cpp',
-    'nsSBCSGroupProber.cpp',
-    'nsSBCharSetProber.cpp',
-    'nsSJISProber.cpp',
-    'nsUTF8Prober.cpp',
-    'nsUniversalDetector.cpp',
-]
-

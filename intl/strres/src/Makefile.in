@@ -15,4 +15,10 @@ FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY  = 1
 
 
+CPPSRCS		= \
+		nsStringBundle.cpp \
+		nsStringBundleTextOverride.cpp \
+		$(NULL)
+
+
 include $(topsrcdir)/config/rules.mk

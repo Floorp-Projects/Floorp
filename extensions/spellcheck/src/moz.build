@@ -6,14 +6,3 @@
 
 MODULE = 'spellchecker'
 
-CPP_SOURCES += [
-    'mozEnglishWordUtils.cpp',
-    'mozGenericWordUtils.cpp',
-    'mozInlineSpellChecker.cpp',
-    'mozInlineSpellWordUtil.cpp',
-    'mozPersonalDictionary.cpp',
-    'mozSpellChecker.cpp',
-    'mozSpellCheckerFactory.cpp',
-    'mozSpellI18NManager.cpp',
-]
-

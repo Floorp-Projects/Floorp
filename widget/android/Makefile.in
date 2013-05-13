@@ -23,6 +23,27 @@ ifdef MOZ_WEBSMS_BACKEND
 DEFINES += -DMOZ_WEBSMS_BACKEND
 endif
 
+CPPSRCS	= \
+	GfxInfo.cpp \
+	nsWidgetFactory.cpp \
+	nsAppShell.cpp \
+	AndroidJavaWrappers.cpp \
+	AndroidBridge.cpp \
+	AndroidDirectTexture.cpp \
+	AndroidGraphicBuffer.cpp \
+	AndroidJNI.cpp \
+	AndroidJNIWrapper.cpp \
+	nsWindow.cpp \
+	nsLookAndFeel.cpp \
+	nsScreenManagerAndroid.cpp \
+	nsIdleServiceAndroid.cpp \
+	nsClipboard.cpp \
+	nsFilePicker.cpp \
+	nsIMEPicker.cpp \
+	nsDeviceContextAndroid.cpp \
+	nsPrintOptionsAndroid.cpp \
+	$(NULL)
+
 NOT_THERE_YET_CPPSRCS = \
 	nsQtKeyUtils.cpp \
 	nsBidiKeyboard.cpp \

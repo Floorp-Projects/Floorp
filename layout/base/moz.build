@@ -17,20 +17,6 @@ if not CONFIG['MOZ_XUL']:
     EXPORTS    += [
         'nsPIBoxObject.h',
     ]
-    CPP_SOURCES += [
-        'nsBoxObject.cpp',
-    ]
-
-if CONFIG['IBMBIDI']:
-    CPP_SOURCES += [
-        'nsBidiPresUtils.cpp',
-        'nsBidi.cpp',
-    ]
-
-if CONFIG['MOZ_DEBUG']:
-    CPP_SOURCES += [
-        'nsAutoLayoutPhase.cpp',
-    ]
 
 XPIDL_MODULE = 'layout_base'
 
@@ -73,40 +59,5 @@ EXPORTS += [
 
 EXPORTS.mozilla += [
     'PaintTracker.h',
-]
-
-CPP_SOURCES += [
-    'DisplayItemClip.cpp',
-    'DisplayListClipState.cpp',
-    'FrameLayerBuilder.cpp',
-    'FramePropertyTable.cpp',
-    'MaskLayerImageCache.cpp',
-    'PaintTracker.cpp',
-    'PositionedEventTargeting.cpp',
-    'RestyleTracker.cpp',
-    'StackArena.cpp',
-    'nsCSSColorUtils.cpp',
-    'nsCSSFrameConstructor.cpp',
-    'nsCSSRendering.cpp',
-    'nsCSSRenderingBorders.cpp',
-    'nsCaret.cpp',
-    'nsChildIterator.cpp',
-    'nsCounterManager.cpp',
-    'nsDisplayList.cpp',
-    'nsDisplayListInvalidation.cpp',
-    'nsDocumentViewer.cpp',
-    'nsFrameManager.cpp',
-    'nsFrameTraversal.cpp',
-    'nsGenConList.cpp',
-    'nsLayoutDebugger.cpp',
-    'nsLayoutHistoryState.cpp',
-    'nsLayoutUtils.cpp',
-    'nsPresArena.cpp',
-    'nsPresContext.cpp',
-    'nsPresShell.cpp',
-    'nsQuoteList.cpp',
-    'nsRefreshDriver.cpp',
-    'nsStyleChangeList.cpp',
-    'nsStyleSheetService.cpp',
 ]
 

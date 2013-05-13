@@ -13,6 +13,21 @@ LIBRARY_NAME = accessibility_toolkit_ia2_s
 EXPORT_LIBRARY = 1
 LIBXUL_LIBRARY = 1
 
+
+CPPSRCS += \
+  ia2AccessibleAction.cpp \
+  ia2AccessibleComponent.cpp \
+  ia2AccessibleEditableText.cpp \
+  ia2AccessibleHyperlink.cpp \
+  ia2AccessibleHypertext.cpp \
+  ia2AccessibleImage.cpp \
+  ia2AccessibleRelation.cpp \
+  ia2AccessibleTable.cpp \
+  ia2AccessibleTableCell.cpp \
+  ia2AccessibleText.cpp \
+  ia2AccessibleValue.cpp \
+  $(NULL)
+
 # The midl generated code include Windows headers which defines min and max
 # macros which conflicts with std::min/max.  Suppress the macros:
 OS_CXXFLAGS += -DNOMINMAX

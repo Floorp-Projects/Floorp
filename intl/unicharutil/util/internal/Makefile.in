@@ -27,6 +27,8 @@ LOCAL_INCLUDES	+= -I$(srcdir)/.. \
   -I$(srcdir)/../../src
 
 
+CPPSRCS	= $(INTL_UNICHARUTIL_UTIL_LCPPSRCS)
+
 FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
