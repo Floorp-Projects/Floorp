@@ -126,9 +126,6 @@ struct THEBES_API gfxFontStyle {
     // Say that this font is used for print or print preview.
     bool printerFont : 1;
 
-    // whether kerning is enabled or not (true by default, can be disabled)
-    bool kerning : 1;
-
     // The style of font (normal, italic, oblique)
     uint8_t style : 2;
 
@@ -160,7 +157,6 @@ struct THEBES_API gfxFontStyle {
             (language == other.language) &&
             (*reinterpret_cast<const uint32_t*>(&sizeAdjust) ==
              *reinterpret_cast<const uint32_t*>(&other.sizeAdjust)) &&
-            (kerning == other.kerning) &&
             (featureSettings == other.featureSettings) &&
             (languageOverride == other.languageOverride) &&
             (alternateValues == other.alternateValues) &&
@@ -1600,6 +1596,10 @@ public:
 
     virtual mozilla::TemporaryRef<mozilla::gfx::ScaledFont> GetScaledFont(mozilla::gfx::DrawTarget *aTarget)
     { return gfxPlatform::GetPlatform()->GetScaledFontForFont(aTarget, this); }
+
+    bool KerningDisabled() {
+        return mKerningSet && !mKerningEnabled;
+    }
 
 protected:
 
