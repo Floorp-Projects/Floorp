@@ -38,10 +38,6 @@
 #include "vm/Debugger.h"
 #include "vm/Shape.h"
 
-#ifdef JS_METHODJIT
-#include "methodjit/MethodJIT.h"
-#include "methodjit/Logging.h"
-#endif
 #include "ion/Ion.h"
 #include "ion/BaselineJIT.h"
 
@@ -298,9 +294,6 @@ js::RunScript(JSContext *cx, StackFrame *fp)
 
     JS_ASSERT_IF(!fp->isGeneratorFrame(), cx->regs().pc == script->code);
     JS_ASSERT_IF(fp->isEvalFrame(), script->isActiveEval);
-#ifdef JS_METHODJIT_SPEW
-    JMCheckLogging();
-#endif
 
     JS_CHECK_RECURSION(cx, return false);
 
@@ -367,17 +360,6 @@ js::RunScript(JSContext *cx, StackFrame *fp)
             return !IsErrorStatus(status);
         }
     }
-#endif
-
-#ifdef JS_METHODJIT
-    mjit::CompileStatus status;
-    status = mjit::CanMethodJIT(cx, script, script->code, fp->isConstructing(),
-                                mjit::CompileRequest_Interpreter, fp);
-    if (status == mjit::Compile_Error)
-        return false;
-
-    if (status == mjit::Compile_Okay)
-        return mjit::JaegerStatusToSuccess(mjit::JaegerShot(cx, false));
 #endif
 
     return Interpret(cx, fp) != Interpret_Error;
@@ -1082,25 +1064,6 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode, bool
 #define LOAD_DOUBLE(PCOFF, dbl)                                               \
     (dbl = script->getConst(GET_UINT32_INDEX(regs.pc + (PCOFF))).toDouble())
 
-#ifdef JS_METHODJIT
-
-#define CHECK_PARTIAL_METHODJIT(status)                                       \
-    JS_BEGIN_MACRO                                                            \
-        switch (status) {                                                     \
-          case mjit::Jaeger_UnfinishedAtTrap:                                 \
-            interpMode = JSINTERP_SKIP_TRAP;                                  \
-            /* FALLTHROUGH */                                                 \
-          case mjit::Jaeger_Unfinished:                                       \
-            op = (JSOp) *regs.pc;                                             \
-            SET_SCRIPT(regs.fp()->script());                                  \
-            if (cx->isExceptionPending())                                     \
-                goto error;                                                   \
-            DO_OP();                                                          \
-          default:;                                                           \
-        }                                                                     \
-    JS_END_MACRO
-#endif
-
     /*
      * Prepare to call a user-supplied branch handler, and abort the script
      * if it returns false.
@@ -1384,35 +1347,6 @@ END_CASE(JSOP_LABEL)
 check_backedge:
 {
     CHECK_BRANCH();
-    if (op != JSOP_LOOPHEAD)
-        DO_OP();
-
-#ifdef JS_METHODJIT
-    // Attempt on-stack replacement with JaegerMonkey code, which is keyed to
-    // the interpreter state at the JSOP_LOOPHEAD at the start of the loop.
-    // Unlike IonMonkey, this requires two different code fragments to perform
-    // hoisting.
-    mjit::CompileStatus status =
-        mjit::CanMethodJIT(cx, script, regs.pc, regs.fp()->isConstructing(),
-                           mjit::CompileRequest_Interpreter, regs.fp());
-    if (status == mjit::Compile_Error)
-        goto error;
-    if (status == mjit::Compile_Okay) {
-        void *ncode =
-            script->nativeCodeForPC(regs.fp()->isConstructing(), regs.pc);
-        JS_ASSERT(ncode);
-        mjit::JaegerStatus status = mjit::JaegerShotAtSafePoint(cx, ncode, true);
-        if (status == mjit::Jaeger_ThrowBeforeEnter)
-            goto error;
-        CHECK_PARTIAL_METHODJIT(status);
-        interpReturnOK = (status == mjit::Jaeger_Returned);
-        if (entryFrame != regs.fp())
-            goto jit_return;
-        regs.fp()->setFinishedInInterpreter();
-        goto leave_on_safe_point;
-    }
-#endif /* JS_METHODJIT */
-
     DO_OP();
 }
 
@@ -1556,13 +1490,11 @@ BEGIN_CASE(JSOP_STOP)
             Probes::exitScript(cx, script, script->function(), regs.fp());
 
         /* The JIT inlines the epilogue. */
-#if defined(JS_METHODJIT) || defined(JS_ION)
+#if defined(JS_ION)
   jit_return:
 #endif
 
         /* The results of lowered call/apply frames need to be shifted. */
-        bool shiftResult = regs.fp()->loweredCallOrApply();
-
         cx->stack.popInlineFrame(regs);
         SET_SCRIPT(regs.fp()->script());
 
@@ -1571,11 +1503,6 @@ BEGIN_CASE(JSOP_STOP)
         /* Resume execution in the calling frame. */
         if (JS_LIKELY(interpReturnOK)) {
             TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
-
-            if (shiftResult) {
-                regs.sp[-2] = regs.sp[-1];
-                regs.sp--;
-            }
 
             len = JSOP_CALL_LENGTH;
             DO_NEXT_OP(len);
@@ -2448,24 +2375,6 @@ BEGIN_CASE(JSOP_FUNCALL)
             JS_ASSERT(exec != ion::IonExec_Bailout);
 
             interpReturnOK = !IsErrorStatus(exec);
-            goto jit_return;
-        }
-    }
-#endif
-
-#ifdef JS_METHODJIT
-    if (!newType && cx->methodJitEnabled) {
-        /* Try to ensure methods are method JIT'd.  */
-        mjit::CompileStatus status = mjit::CanMethodJIT(cx, script, script->code,
-                                                        construct,
-                                                        mjit::CompileRequest_Interpreter,
-                                                        regs.fp());
-        if (status == mjit::Compile_Error)
-            goto error;
-        if (status == mjit::Compile_Okay) {
-            mjit::JaegerStatus status = mjit::JaegerShot(cx, true);
-            CHECK_PARTIAL_METHODJIT(status);
-            interpReturnOK = mjit::JaegerStatusToSuccess(status);
             goto jit_return;
         }
     }
@@ -3396,7 +3305,7 @@ END_CASE(JSOP_ARRAYPUSH)
 
     gc::MaybeVerifyBarriers(cx, true);
 
-#ifdef JS_METHODJIT
+#ifdef JS_ION
     /*
      * This path is used when it's guaranteed the method can be finished
      * inside the JIT.

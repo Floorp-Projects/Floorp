@@ -5,7 +5,6 @@ function tryItOut(code) {
     f = eval("(function(){" + code + "})")
     for (e in f()) {}
 }
-mjitChunkLimit(25)
 tryItOut("\
     for each(x in[0,0,0,0,0,0,0]) {\
         function f(b) {\

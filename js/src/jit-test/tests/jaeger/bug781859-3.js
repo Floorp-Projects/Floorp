@@ -1,4 +1,3 @@
-mjitChunkLimit(10);
 function e() {
     try {
         var t = undefined;

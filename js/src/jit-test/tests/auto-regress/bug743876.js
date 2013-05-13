@@ -5,7 +5,7 @@
 var lfcode = new Array();
 lfcode.push("3");
 lfcode.push("\
-evaluate(\"mjitChunkLimit(5)\");\
+evaluate(\"\");\
 function slice(a, b) {\
     return slice(index, ++(ArrayBuffer));\
 }\
