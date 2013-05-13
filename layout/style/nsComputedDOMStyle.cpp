@@ -1333,6 +1333,16 @@ nsComputedDOMStyle::DoGetFontFeatureSettings()
 }
 
 CSSValue*
+nsComputedDOMStyle::DoGetFontKerning()
+{
+  nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+  val->SetIdent(
+    nsCSSProps::ValueToKeywordEnum(StyleFont()->mFont.kerning,
+                                   nsCSSProps::kFontKerningKTable));
+  return val;
+}
+
+CSSValue*
 nsComputedDOMStyle::DoGetFontLanguageOverride()
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
@@ -1345,6 +1355,126 @@ nsComputedDOMStyle::DoGetFontLanguageOverride()
     nsStyleUtil::AppendEscapedCSSString(font->mFont.languageOverride, str);
     val->SetString(str);
   }
+  return val;
+}
+
+CSSValue*
+nsComputedDOMStyle::DoGetFontSynthesis()
+{
+  nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+
+  int32_t intValue = StyleFont()->mFont.synthesis;
+
+  if (0 == intValue) {
+    val->SetIdent(eCSSKeyword_none);
+  } else {
+    nsAutoString valueStr;
+
+    nsStyleUtil::AppendBitmaskCSSValue(eCSSProperty_font_synthesis,
+      intValue, NS_FONT_SYNTHESIS_WEIGHT,
+      NS_FONT_SYNTHESIS_STYLE, valueStr);
+    val->SetString(valueStr);
+  }
+
+  return val;
+}
+
+CSSValue*
+nsComputedDOMStyle::DoGetFontVariantCaps()
+{
+  nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+
+  int32_t intValue = StyleFont()->mFont.variantCaps;
+
+  if (0 == intValue) {
+    val->SetIdent(eCSSKeyword_normal);
+  } else {
+    val->SetIdent(
+      nsCSSProps::ValueToKeywordEnum(intValue,
+                                     nsCSSProps::kFontVariantCapsKTable));
+  }
+
+  return val;
+}
+
+CSSValue*
+nsComputedDOMStyle::DoGetFontVariantEastAsian()
+{
+  nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+
+  int32_t intValue = StyleFont()->mFont.variantEastAsian;
+
+  if (0 == intValue) {
+    val->SetIdent(eCSSKeyword_normal);
+  } else {
+    nsAutoString valueStr;
+
+    nsStyleUtil::AppendBitmaskCSSValue(eCSSProperty_font_variant_east_asian,
+      intValue, NS_FONT_VARIANT_EAST_ASIAN_JIS78,
+      NS_FONT_VARIANT_EAST_ASIAN_RUBY, valueStr);
+    val->SetString(valueStr);
+  }
+
+  return val;
+}
+
+CSSValue*
+nsComputedDOMStyle::DoGetFontVariantLigatures()
+{
+  nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+
+  int32_t intValue = StyleFont()->mFont.variantLigatures;
+
+  if (0 == intValue) {
+    val->SetIdent(eCSSKeyword_normal);
+  } else {
+    nsAutoString valueStr;
+
+    nsStyleUtil::AppendBitmaskCSSValue(eCSSProperty_font_variant_ligatures,
+      intValue, NS_FONT_VARIANT_LIGATURES_COMMON,
+      NS_FONT_VARIANT_LIGATURES_NO_CONTEXTUAL, valueStr);
+    val->SetString(valueStr);
+  }
+
+  return val;
+}
+
+CSSValue*
+nsComputedDOMStyle::DoGetFontVariantNumeric()
+{
+  nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+
+  int32_t intValue = StyleFont()->mFont.variantNumeric;
+
+  if (0 == intValue) {
+    val->SetIdent(eCSSKeyword_normal);
+  } else {
+    nsAutoString valueStr;
+
+    nsStyleUtil::AppendBitmaskCSSValue(eCSSProperty_font_variant_numeric,
+      intValue, NS_FONT_VARIANT_NUMERIC_LINING,
+      NS_FONT_VARIANT_NUMERIC_ORDINAL, valueStr);
+    val->SetString(valueStr);
+  }
+
+  return val;
+}
+
+CSSValue*
+nsComputedDOMStyle::DoGetFontVariantPosition()
+{
+  nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+
+  int32_t intValue = StyleFont()->mFont.variantPosition;
+
+  if (0 == intValue) {
+    val->SetIdent(eCSSKeyword_normal);
+  } else {
+    val->SetIdent(
+      nsCSSProps::ValueToKeywordEnum(intValue,
+                                     nsCSSProps::kFontVariantPositionKTable));
+  }
+
   return val;
 }
 
@@ -4761,11 +4891,18 @@ nsComputedDOMStyle::GetQueryablePropertyMap(uint32_t* aLength)
     COMPUTED_STYLE_MAP_ENTRY(float,                         Float),
     //// COMPUTED_STYLE_MAP_ENTRY(font,                     Font),
     COMPUTED_STYLE_MAP_ENTRY(font_family,                   FontFamily),
+    COMPUTED_STYLE_MAP_ENTRY(font_kerning,                  FontKerning),
     COMPUTED_STYLE_MAP_ENTRY(font_size,                     FontSize),
     COMPUTED_STYLE_MAP_ENTRY(font_size_adjust,              FontSizeAdjust),
     COMPUTED_STYLE_MAP_ENTRY(font_stretch,                  FontStretch),
     COMPUTED_STYLE_MAP_ENTRY(font_style,                    FontStyle),
+    COMPUTED_STYLE_MAP_ENTRY(font_synthesis,                FontSynthesis),
     COMPUTED_STYLE_MAP_ENTRY(font_variant,                  FontVariant),
+    COMPUTED_STYLE_MAP_ENTRY(font_variant_caps,             FontVariantCaps),
+    COMPUTED_STYLE_MAP_ENTRY(font_variant_east_asian,       FontVariantEastAsian),
+    COMPUTED_STYLE_MAP_ENTRY(font_variant_ligatures,        FontVariantLigatures),
+    COMPUTED_STYLE_MAP_ENTRY(font_variant_numeric,          FontVariantNumeric),
+    COMPUTED_STYLE_MAP_ENTRY(font_variant_position,         FontVariantPosition),
     COMPUTED_STYLE_MAP_ENTRY(font_weight,                   FontWeight),
     COMPUTED_STYLE_MAP_ENTRY_LAYOUT(height,                 Height),
     COMPUTED_STYLE_MAP_ENTRY(ime_mode,                      IMEMode),

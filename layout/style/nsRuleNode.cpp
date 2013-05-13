@@ -3273,6 +3273,62 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
     aFont->mScriptLevel = 0;
   }
 
+  // font-kerning: enum, inherit, initial, -moz-system-font
+  SetDiscrete(*aRuleData->ValueForFontKerning(),
+              aFont->mFont.kerning, aCanStoreInRuleTree,
+              SETDSC_ENUMERATED | SETDSC_SYSTEM_FONT,
+              aParentFont->mFont.kerning,
+              defaultVariableFont->kerning,
+              0, 0, 0, systemFont.kerning);
+
+  // font-synthesis: enum (bit field), inherit, initial
+  SetDiscrete(*aRuleData->ValueForFontSynthesis(),
+              aFont->mFont.synthesis, aCanStoreInRuleTree,
+              SETDSC_NONE | SETDSC_ENUMERATED | SETDSC_SYSTEM_FONT,
+              aParentFont->mFont.synthesis,
+              defaultVariableFont->synthesis,
+              0, 0, 0, systemFont.synthesis);
+
+  // font-variant-caps: enum, inherit, initial
+  SetDiscrete(*aRuleData->ValueForFontVariantCaps(),
+              aFont->mFont.variantCaps, aCanStoreInRuleTree,
+              SETDSC_NORMAL | SETDSC_ENUMERATED | SETDSC_SYSTEM_FONT,
+              aParentFont->mFont.variantCaps,
+              defaultVariableFont->variantCaps,
+              0, 0, 0, systemFont.variantCaps);
+
+  // font-variant-east-asian: enum (bit field), inherit, initial
+  SetDiscrete(*aRuleData->ValueForFontVariantEastAsian(),
+              aFont->mFont.variantEastAsian, aCanStoreInRuleTree,
+              SETDSC_NORMAL | SETDSC_ENUMERATED | SETDSC_SYSTEM_FONT,
+              aParentFont->mFont.variantEastAsian,
+              defaultVariableFont->variantEastAsian,
+              0, 0, 0, systemFont.variantEastAsian);
+
+  // font-variant-ligatures: enum (bit field), inherit, initial
+  SetDiscrete(*aRuleData->ValueForFontVariantLigatures(),
+              aFont->mFont.variantLigatures, aCanStoreInRuleTree,
+              SETDSC_NORMAL | SETDSC_ENUMERATED | SETDSC_SYSTEM_FONT,
+              aParentFont->mFont.variantLigatures,
+              defaultVariableFont->variantLigatures,
+              0, 0, 0, systemFont.variantLigatures);
+
+  // font-variant-numeric: enum (bit field), inherit, initial
+  SetDiscrete(*aRuleData->ValueForFontVariantNumeric(),
+              aFont->mFont.variantNumeric, aCanStoreInRuleTree,
+              SETDSC_NORMAL | SETDSC_ENUMERATED | SETDSC_SYSTEM_FONT,
+              aParentFont->mFont.variantNumeric,
+              defaultVariableFont->variantNumeric,
+              0, 0, 0, systemFont.variantNumeric);
+
+  // font-variant-position: enum, inherit, initial
+  SetDiscrete(*aRuleData->ValueForFontVariantPosition(),
+              aFont->mFont.variantPosition, aCanStoreInRuleTree,
+              SETDSC_NORMAL | SETDSC_ENUMERATED | SETDSC_SYSTEM_FONT,
+              aParentFont->mFont.variantPosition,
+              defaultVariableFont->variantPosition,
+              0, 0, 0, systemFont.variantPosition);
+
   // font-feature-settings
   const nsCSSValue* featureSettingsValue =
     aRuleData->ValueForFontFeatureSettings();

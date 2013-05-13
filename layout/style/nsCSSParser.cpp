@@ -562,6 +562,12 @@ protected:
   bool ParseCounterData(nsCSSProperty aPropID);
   bool ParseCursor();
   bool ParseFont();
+  bool ParseFontSynthesis(nsCSSValue& aValue);
+  bool ParseBitmaskValues(nsCSSValue& aValue, const int32_t aKeywordTable[],
+                          const int32_t aMasks[]);
+  bool ParseFontVariantEastAsian(nsCSSValue& aValue);
+  bool ParseFontVariantLigatures(nsCSSValue& aValue);
+  bool ParseFontVariantNumeric(nsCSSValue& aValue);
   bool ParseFontWeight(nsCSSValue& aValue);
   bool ParseOneFamily(nsAString& aFamily, bool& aOneKeyword);
   bool ParseFamily(nsCSSValue& aValue);
@@ -6370,6 +6376,14 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
     switch (aPropID) {
       case eCSSProperty_font_family:
         return ParseFamily(aValue);
+      case eCSSProperty_font_synthesis:
+        return ParseFontSynthesis(aValue);
+      case eCSSProperty_font_variant_east_asian:
+        return ParseFontVariantEastAsian(aValue);
+      case eCSSProperty_font_variant_ligatures:
+        return ParseFontVariantLigatures(aValue);
+      case eCSSProperty_font_variant_numeric:
+        return ParseFontVariantNumeric(aValue);
       case eCSSProperty_font_feature_settings:
         return ParseFontFeatureSettings(aValue);
       case eCSSProperty_font_weight:
@@ -8303,6 +8317,13 @@ CSSParserImpl::ParseFont()
         AppendValue(eCSSProperty_font_size_adjust, family);
         AppendValue(eCSSProperty_font_feature_settings, family);
         AppendValue(eCSSProperty_font_language_override, family);
+        AppendValue(eCSSProperty_font_kerning, family);
+        AppendValue(eCSSProperty_font_synthesis, family);
+        AppendValue(eCSSProperty_font_variant_caps, family);
+        AppendValue(eCSSProperty_font_variant_east_asian, family);
+        AppendValue(eCSSProperty_font_variant_ligatures, family);
+        AppendValue(eCSSProperty_font_variant_numeric, family);
+        AppendValue(eCSSProperty_font_variant_position, family);
       }
       else {
         AppendValue(eCSSProperty__x_system_font, family);
@@ -8317,6 +8338,13 @@ CSSParserImpl::ParseFont()
         AppendValue(eCSSProperty_font_size_adjust, systemFont);
         AppendValue(eCSSProperty_font_feature_settings, systemFont);
         AppendValue(eCSSProperty_font_language_override, systemFont);
+        AppendValue(eCSSProperty_font_kerning, systemFont);
+        AppendValue(eCSSProperty_font_synthesis, systemFont);
+        AppendValue(eCSSProperty_font_variant_caps, systemFont);
+        AppendValue(eCSSProperty_font_variant_east_asian, systemFont);
+        AppendValue(eCSSProperty_font_variant_ligatures, systemFont);
+        AppendValue(eCSSProperty_font_variant_numeric, systemFont);
+        AppendValue(eCSSProperty_font_variant_position, systemFont);
       }
       return true;
     }
@@ -8380,10 +8408,168 @@ CSSParserImpl::ParseFont()
       AppendValue(eCSSProperty_font_size_adjust, nsCSSValue(eCSSUnit_None));
       AppendValue(eCSSProperty_font_feature_settings, nsCSSValue(eCSSUnit_Normal));
       AppendValue(eCSSProperty_font_language_override, nsCSSValue(eCSSUnit_Normal));
+      AppendValue(eCSSProperty_font_kerning,
+                  nsCSSValue(NS_FONT_KERNING_AUTO, eCSSUnit_Enumerated));
+      AppendValue(eCSSProperty_font_synthesis,
+                  nsCSSValue(NS_FONT_SYNTHESIS_WEIGHT | NS_FONT_SYNTHESIS_STYLE,
+                             eCSSUnit_Enumerated));
+      AppendValue(eCSSProperty_font_variant_caps, nsCSSValue(eCSSUnit_Normal));
+      AppendValue(eCSSProperty_font_variant_east_asian,
+                  nsCSSValue(eCSSUnit_Normal));
+      AppendValue(eCSSProperty_font_variant_ligatures,
+                  nsCSSValue(eCSSUnit_Normal));
+      AppendValue(eCSSProperty_font_variant_numeric,
+                  nsCSSValue(eCSSUnit_Normal));
+      AppendValue(eCSSProperty_font_variant_position,
+                  nsCSSValue(eCSSUnit_Normal));
       return true;
     }
   }
   return false;
+}
+
+bool
+CSSParserImpl::ParseFontSynthesis(nsCSSValue& aValue)
+{
+  if (!ParseVariant(aValue, VARIANT_HK | VARIANT_NONE,
+                    nsCSSProps::kFontSynthesisKTable)) {
+    return false;
+  }
+
+  // first value 'none' ==> done
+  if (eCSSUnit_None == aValue.GetUnit() ||
+      eCSSUnit_Initial == aValue.GetUnit() ||
+      eCSSUnit_Inherit == aValue.GetUnit())
+  {
+    return true;
+  }
+
+  // look for a second value
+  int32_t intValue = aValue.GetIntValue();
+  nsCSSValue  nextValue;
+
+  if (ParseEnum(nextValue, nsCSSProps::kFontSynthesisKTable)) {
+    int32_t nextIntValue = nextValue.GetIntValue();
+    if (nextIntValue == 0 || nextIntValue & intValue) {
+      return false;
+    }
+    aValue.SetIntValue(nextIntValue | intValue, eCSSUnit_Enumerated);
+  }
+
+  return true;
+}
+
+#define MASK_END_VALUE  -1
+
+// aMasks - array of masks for mutually-exclusive property values,
+//          e.g. proportial-nums, tabular-nums
+
+bool
+CSSParserImpl::ParseBitmaskValues(nsCSSValue& aValue,
+                                  const int32_t aKeywordTable[],
+                                  const int32_t aMasks[])
+{
+  if (!ParseVariant(aValue, VARIANT_HMK, aKeywordTable)) {
+    return false;
+  }
+
+  // first value 'normal', 'inherit', 'initial' ==> done
+  if (eCSSUnit_Normal == aValue.GetUnit() ||
+      eCSSUnit_Initial == aValue.GetUnit() ||
+      eCSSUnit_Inherit == aValue.GetUnit())
+  {
+    return true;
+  }
+
+  // look for more values
+  nsCSSValue  nextValue;
+  int32_t     mergedValue = aValue.GetIntValue();
+
+  while (ParseEnum(nextValue, aKeywordTable))
+  {
+    int32_t nextIntValue = nextValue.GetIntValue();
+
+    // check to make sure value not already set
+    if (nextIntValue & mergedValue) {
+      return false;
+    }
+
+    const int32_t *m = aMasks;
+    int32_t c = 0;
+    int32_t other = ~nextIntValue & mergedValue;
+
+    while (*m != MASK_END_VALUE) {
+      if (*m & nextIntValue) {
+        c = other & *m;
+        break;
+      }
+      m++;
+    }
+
+    if (c) {
+      return false;
+    }
+
+    mergedValue |= nextIntValue;
+  }
+
+  aValue.SetIntValue(mergedValue, eCSSUnit_Enumerated);
+
+  return true;
+}
+
+const int32_t maskEastAsian[] = {
+  NS_FONT_VARIANT_EAST_ASIAN_VARIANT_MASK,
+  NS_FONT_VARIANT_EAST_ASIAN_WIDTH_MASK,
+  MASK_END_VALUE
+};
+
+bool
+CSSParserImpl::ParseFontVariantEastAsian(nsCSSValue& aValue)
+{
+  NS_ASSERTION(maskEastAsian[NS_ARRAY_LENGTH(maskEastAsian) - 1] ==
+                 MASK_END_VALUE,
+               "incorrectly terminated array");
+
+  return ParseBitmaskValues(aValue, nsCSSProps::kFontVariantEastAsianKTable,
+                            maskEastAsian);
+}
+
+const int32_t maskLigatures[] = {
+  NS_FONT_VARIANT_LIGATURES_COMMON_MASK,
+  NS_FONT_VARIANT_LIGATURES_DISCRETIONARY_MASK,
+  NS_FONT_VARIANT_LIGATURES_HISTORICAL_MASK,
+  NS_FONT_VARIANT_LIGATURES_CONTEXTUAL_MASK,
+  MASK_END_VALUE
+};
+
+bool
+CSSParserImpl::ParseFontVariantLigatures(nsCSSValue& aValue)
+{
+  NS_ASSERTION(maskLigatures[NS_ARRAY_LENGTH(maskLigatures) - 1] ==
+                 MASK_END_VALUE,
+               "incorrectly terminated array");
+
+  return ParseBitmaskValues(aValue, nsCSSProps::kFontVariantLigaturesKTable,
+                            maskLigatures);
+}
+
+const int32_t maskNumeric[] = {
+  NS_FONT_VARIANT_NUMERIC_FIGURE_MASK,
+  NS_FONT_VARIANT_NUMERIC_SPACING_MASK,
+  NS_FONT_VARIANT_NUMERIC_FRACTION_MASK,
+  MASK_END_VALUE
+};
+
+bool
+CSSParserImpl::ParseFontVariantNumeric(nsCSSValue& aValue)
+{
+  NS_ASSERTION(maskNumeric[NS_ARRAY_LENGTH(maskNumeric) - 1] ==
+                 MASK_END_VALUE,
+               "incorrectly terminated array");
+
+  return ParseBitmaskValues(aValue, nsCSSProps::kFontVariantNumericKTable,
+                            maskNumeric);
 }
 
 bool

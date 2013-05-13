@@ -4257,6 +4257,85 @@ if (SpecialPowers.getBoolPref("layout.css.flexbox.enabled")) {
 	gCSSProperties["display"].other_values.push("inline-flex");
 }
 
+if (SpecialPowers.getBoolPref("layout.css.font-features.enabled")) {
+	var fontFeatureProperties = {
+		"font-kerning": {
+			domProp: "fontKerning",
+			inherited: true,
+			type: CSS_TYPE_LONGHAND,
+			initial_values: [ "auto" ],
+			other_values: [ "normal", "none" ],
+			invalid_values: [ "on" ]
+		},
+	 	"font-variant-caps": {
+			domProp: "fontVariantCaps",
+			inherited: true,
+			type: CSS_TYPE_LONGHAND,
+			initial_values: [ "normal" ],
+			other_values: [ "small-caps", "all-small-caps", "petite-caps", "all-petite-caps", "titling-caps", "unicase" ],
+			invalid_values: []
+		},
+		"font-variant-east-asian": {
+			domProp: "fontVariantEastAsian",
+			inherited: true,
+			type: CSS_TYPE_LONGHAND,
+			initial_values: [ "normal" ],
+			other_values: [ "jis78", "jis83", "jis90", "jis04", "simplified", "traditional", "full-width", "proportional-width", "ruby",
+			                "jis78 full-width", "jis78 full-width ruby", "simplified proportional-width", "ruby simplified" ],
+			invalid_values: [ "jis78 normal", "jis90 jis04", "simplified traditional", "full-width proportional-width",
+	                          "ruby simplified ruby", "jis78 ruby simplified" ]
+		},
+		"font-variant-ligatures": {
+			domProp: "fontVariantLigatures",
+			inherited: true,
+			type: CSS_TYPE_LONGHAND,
+			initial_values: [ "normal" ],
+			other_values: [ "common-ligatures", "no-common-ligatures", "discretionary-ligatures", "no-discretionary-ligatures",
+			                "historical-ligatures", "no-historical-ligatures", "contextual", "no-contextual",
+			                "common-ligatures no-discretionary-ligatures", "contextual no-discretionary-ligatures",
+			                "historical-ligatures no-common-ligatures", "no-historical-ligatures discretionary-ligatures",
+			                "common-ligatures no-discretionary-ligatures historical-ligatures no-contextual" ],
+			invalid_values: [ "common-ligatures normal", "common-ligatures no-common-ligatures", "common-ligatures common-ligatures",
+			                  "no-historical-ligatures historical-ligatures", "no-discretionary-ligatures discretionary-ligatures",
+			                  "no-contextual contextual", "common-ligatures no-discretionary-ligatures no-common-ligatures" ]
+		},
+		"font-variant-numeric": {
+			domProp: "fontVariantNumeric",
+			inherited: true,
+			type: CSS_TYPE_LONGHAND,
+			initial_values: [ "normal" ],
+			other_values: [ "lining-nums", "oldstyle-nums", "proportional-nums", "tabular-nums", "diagonal-fractions",
+			                "stacked-fractions", "slashed-zero", "ordinal", "lining-nums diagonal-fractions",
+			                "tabular-nums stacked-fractions", "tabular-nums slashed-zero stacked-fractions",
+			                "proportional-nums slashed-zero diagonal-fractions oldstyle-nums ordinal" ],
+			invalid_values: [ "lining-nums normal", "lining-nums oldstyle-nums", "lining-nums normal slashed-zero ordinal",
+			                  "proportional-nums tabular-nums", "diagonal-fractions stacked-fractions", "slashed-zero diagonal-fractions slashed-zero",
+			                  "lining-nums slashed-zero diagonal-fractions oldstyle-nums" ]
+		},
+		"font-variant-position": {
+			domProp: "fontVariantPosition",
+			inherited: true,
+			type: CSS_TYPE_LONGHAND,
+			initial_values: [ "normal" ],
+			other_values: [ "super", "sub" ],
+			invalid_values: [ "super sub" ]
+		},
+		"font-synthesis": {
+			domProp: "fontSynthesis",
+			inherited: true,
+			type: CSS_TYPE_LONGHAND,
+			initial_values: [ "weight style" ],
+			other_values: [ "none", "weight", "style" ],
+			invalid_values: [ "weight none", "style none", "none style", "weight 10px" ]
+		}
+	};
+	for (var prop in fontFeatureProperties) {
+		gCSSProperties[prop] = fontFeatureProperties[prop];
+	}
+	var fontAdditions = [ "font-kerning", "font-synthesis", "font-variant-caps", "font-variant-east-asian", "font-variant-ligatures", "font-variant-numeric", "font-variant-position" ];
+	gCSSProperties["font"].subproperties = gCSSProperties["font"].subproperties.concat(fontAdditions);
+}
+
 if (SpecialPowers.getBoolPref("layout.css.masking.enabled")) {
 	gCSSProperties["mask-type"] = {
 		domProp: "maskType",

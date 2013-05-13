@@ -192,6 +192,13 @@ nsChangeHint nsStyleFont::CalcFontDifference(const nsFont& aFont1, const nsFont&
       (aFont1.weight == aFont2.weight) &&
       (aFont1.stretch == aFont2.stretch) &&
       (aFont1.name == aFont2.name) &&
+      (aFont1.kerning == aFont2.kerning) &&
+      (aFont1.synthesis == aFont2.synthesis) &&
+      (aFont1.variantCaps == aFont2.variantCaps) &&
+      (aFont1.variantEastAsian == aFont2.variantEastAsian) &&
+      (aFont1.variantLigatures == aFont2.variantLigatures) &&
+      (aFont1.variantNumeric == aFont2.variantNumeric) &&
+      (aFont1.variantPosition == aFont2.variantPosition) &&
       (aFont1.fontFeatureSettings == aFont2.fontFeatureSettings) &&
       (aFont1.languageOverride == aFont2.languageOverride)) {
     if ((aFont1.decorations == aFont2.decorations)) {

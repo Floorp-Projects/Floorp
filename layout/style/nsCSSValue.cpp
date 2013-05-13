@@ -806,8 +806,10 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
     aResult.AppendInt(GetIntValue(), 10);
   }
   else if (eCSSUnit_Enumerated == unit) {
-    if (eCSSProperty_text_decoration_line == aProperty) {
-      int32_t intValue = GetIntValue();
+    int32_t intValue = GetIntValue();
+    switch(aProperty) {
+
+    case eCSSProperty_text_decoration_line:
       if (NS_STYLE_TEXT_DECORATION_LINE_NONE == intValue) {
         AppendASCIItoUTF16(nsCSSProps::LookupPropertyValue(aProperty, intValue),
                            aResult);
@@ -821,9 +823,9 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
           NS_STYLE_TEXT_DECORATION_LINE_PREF_ANCHORS,
           aResult);
       }
-    }
-    else if (eCSSProperty_marks == aProperty) {
-      int32_t intValue = GetIntValue();
+      break;
+
+    case eCSSProperty_marks:
       if (intValue == NS_STYLE_PAGE_MARKS_NONE) {
         AppendASCIItoUTF16(nsCSSProps::LookupPropertyValue(aProperty, intValue),
                            aResult);
@@ -833,17 +835,53 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
                                            NS_STYLE_PAGE_MARKS_REGISTER,
                                            aResult);
       }
-    }
-    else if (eCSSProperty_paint_order == aProperty) {
+      break;
+
+    case eCSSProperty_paint_order:
       MOZ_STATIC_ASSERT
         (NS_STYLE_PAINT_ORDER_BITWIDTH * NS_STYLE_PAINT_ORDER_LAST_VALUE <= 8,
          "SVGStyleStruct::mPaintOrder and the following cast not big enough");
       nsStyleUtil::AppendPaintOrderValue(static_cast<uint8_t>(GetIntValue()),
                                          aResult);
-    }
-    else {
-      const nsAFlatCString& name = nsCSSProps::LookupPropertyValue(aProperty, GetIntValue());
+      break;
+
+    case eCSSProperty_font_synthesis:
+      if (intValue == 0) {
+        AppendASCIItoUTF16(nsCSSProps::LookupPropertyValue(aProperty, intValue),
+                           aResult);
+      } else {
+        nsStyleUtil::AppendBitmaskCSSValue(aProperty, intValue,
+                                           NS_FONT_SYNTHESIS_WEIGHT,
+                                           NS_FONT_SYNTHESIS_STYLE,
+                                           aResult);
+      }
+      break;
+
+    case eCSSProperty_font_variant_east_asian:
+      nsStyleUtil::AppendBitmaskCSSValue(aProperty, intValue,
+                                         NS_FONT_VARIANT_EAST_ASIAN_JIS78,
+                                         NS_FONT_VARIANT_EAST_ASIAN_RUBY,
+                                         aResult);
+      break;
+
+    case eCSSProperty_font_variant_ligatures:
+      nsStyleUtil::AppendBitmaskCSSValue(aProperty, intValue,
+                                         NS_FONT_VARIANT_LIGATURES_COMMON,
+                                         NS_FONT_VARIANT_LIGATURES_NO_CONTEXTUAL,
+                                         aResult);
+      break;
+
+    case eCSSProperty_font_variant_numeric:
+      nsStyleUtil::AppendBitmaskCSSValue(aProperty, intValue,
+                                         NS_FONT_VARIANT_NUMERIC_LINING,
+                                         NS_FONT_VARIANT_NUMERIC_ORDINAL,
+                                         aResult);
+      break;
+
+    default:
+      const nsAFlatCString& name = nsCSSProps::LookupPropertyValue(aProperty, intValue);
       AppendASCIItoUTF16(name, aResult);
+      break;
     }
   }
   else if (eCSSUnit_EnumColor == unit) {
