@@ -10,6 +10,9 @@ content of web pages or be notified when the user clicks a link.
 
 The SDK provides several core modules to support this:
 
+**[context-menu](modules/sdk/context-menu.html)**<br>
+Add items to the browser's context menu.
+
 **[panel](modules/sdk/panel.html)**<br>
 Create a dialog that can host web content.
 
@@ -19,11 +22,11 @@ Retrieve a page and access its content, without displaying it to the user.
 **[page-mod](modules/sdk/page-mod.html)**<br>
 Execute scripts in the context of selected web pages.
 
+**[tabs](modules/sdk/tabs.html)**<br>
+Manipulate the browser's tabs, including the web content displayed in the tab.
+
 **[widget](modules/sdk/widget.html)**<br>
 Host an add-on's user interface, including web content.
-
-**[context-menu](modules/sdk/context-menu.html)**<br>
-Add items to the browser's context menu.
 
 Firefox is moving towards a model in which it uses separate
 processes to display the UI, handle web content, and execute add-ons. The main

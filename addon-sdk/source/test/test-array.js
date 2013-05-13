@@ -64,3 +64,24 @@ exports.testFlatten = function(test) {
   test.assertEqual(array.flatten([1, [2, [3]]]).length, 3);
   test.assertEqual(array.flatten([[1], [[2, [3]]]]).length, 3);
 };
+
+exports.testUnique = function(test) {
+  var Class = function () {};
+  var A = {};
+  var B = new Class();
+  var C = [ 1, 2, 3 ];
+  var D = {};
+  var E = new Class();
+
+  compareArray(array.unique([1,2,3,1,2]), [1,2,3]);
+  compareArray(array.unique([1,1,1,4,9,5,5]), [1,4,9,5]);
+  compareArray(array.unique([A, A, A, B, B, D]), [A,B,D]);
+  compareArray(array.unique([A, D, A, E, E, D, A, A, C]), [A, D, E, C])
+
+  function compareArray (a, b) {
+    test.assertEqual(a.length, b.length);
+    for (let i = 0; i < a.length; i++) {
+      test.assertEqual(a[i], b[i]);
+    }
+  }
+};
