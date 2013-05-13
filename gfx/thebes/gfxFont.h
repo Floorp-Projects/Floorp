@@ -73,6 +73,10 @@ struct THEBES_API gfxFontStyle {
     // or inferred from the charset
     nsRefPtr<nsIAtom> language;
 
+    // Features are composed of (1) features from style rules (2) features
+    // from feature setttings rules and (3) family-specific features.  (1) and
+    // (3) are guaranteed to be mutually exclusive
+
     // custom opentype feature settings
     nsTArray<gfxFontFeature> featureSettings;
 
@@ -112,6 +116,9 @@ struct THEBES_API gfxFontStyle {
     // Say that this font is used for print or print preview.
     bool printerFont : 1;
 
+    // whether kerning is enabled or not (true by default, can be disabled)
+    bool kerning : 1;
+
     // The style of font (normal, italic, oblique)
     uint8_t style : 2;
 
@@ -143,6 +150,7 @@ struct THEBES_API gfxFontStyle {
             (language == other.language) &&
             (*reinterpret_cast<const uint32_t*>(&sizeAdjust) ==
              *reinterpret_cast<const uint32_t*>(&other.sizeAdjust)) &&
+            (kerning == other.kerning) &&
             (featureSettings == other.featureSettings) &&
             (languageOverride == other.languageOverride);
     }
@@ -1147,7 +1155,7 @@ public:
 
     // returns true if features exist in output, false otherwise
     static bool
-    MergeFontFeatures(const nsTArray<gfxFontFeature>& aStyleRuleFeatures,
+    MergeFontFeatures(const gfxFontStyle *aStyle,
                       const nsTArray<gfxFontFeature>& aFontFeatures,
                       bool aDisableLigatures,
                       nsDataHashtable<nsUint32HashKey,uint32_t>& aMergedFeatures);

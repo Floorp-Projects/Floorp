@@ -51,6 +51,31 @@ skip-if(B2G) HTTP(..) == font-features-turkish-override-5.html font-features-tur
 HTTP(..) == font-features-order-1.html font-features-ref.html
 HTTP(..) == font-features-order-2.html font-features-noliga.html
 
+# check priority of feature settings vs. font-variant subproperty
+HTTP(..) == font-features-order-3.html font-features-noliga.html
+pref(layout.css.font-features.enabled,true) HTTP(..) == font-features-order-4.html font-features-noliga.html
+pref(layout.css.font-features.enabled,true) HTTP(..) == font-features-order-5.html font-features-hlig.html
+
+# font-variant subproperties
+# test for specific features being on and others off, based on prop values
+# (debug problems with font-variant-debug.html which displays all props)
+pref(layout.css.font-features.enabled,true) HTTP(..) == font-variant-caps.html font-variant-caps-ref.html
+pref(layout.css.font-features.enabled,true) HTTP(..) == font-variant-east-asian.html font-variant-east-asian-ref.html
+pref(layout.css.font-features.enabled,true) HTTP(..) == font-variant-ligatures.html font-variant-ligatures-ref.html
+pref(layout.css.font-features.enabled,true) HTTP(..) == font-variant-numeric.html font-variant-numeric-ref.html
+pref(layout.css.font-features.enabled,true) HTTP(..) == font-variant-position.html font-variant-position-ref.html
+
+# font-kerning
+pref(layout.css.font-features.enabled,true) HTTP(..) != font-kerning-normal.html font-kerning-none.html
+pref(layout.css.font-features.enabled,true) HTTP(..) != font-kerning-auto.html font-kerning-none.html
+pref(layout.css.font-features.enabled,true) HTTP(..) == font-kerning-auto.html font-kerning-normal.html
+pref(layout.css.font-features.enabled,true) HTTP(..) == font-kerning-normal.html font-kerning-kern.html
+pref(layout.css.font-features.enabled,true) HTTP(..) == font-kerning-none.html font-kerning-nokern.html
+pref(layout.css.font-features.enabled,true) HTTP(..) == font-kerning-1.html font-kerning-none.html
+pref(layout.css.font-features.enabled,true) HTTP(..) == font-kerning-2.html font-kerning-normal.html
+pref(layout.css.font-features.enabled,true) HTTP(..) == font-kerning-3.html font-kerning-none.html
+pref(layout.css.font-features.enabled,true) HTTP(..) != font-kerning-table-none.html font-kerning-table-normal.html
+
 # sanity check for kerning - with no spaces, kerning should occur
 HTTP(..) == kerning-sanity-check-kern.html kerning-sanity-check-default.html
 HTTP(..) != kerning-sanity-check-nokern.html kerning-sanity-check-default.html

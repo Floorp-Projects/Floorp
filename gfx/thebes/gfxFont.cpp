@@ -1374,13 +1374,16 @@ gfxFontCache::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
 
 /* static */ bool
 gfxFontShaper::MergeFontFeatures(
-    const nsTArray<gfxFontFeature>& aStyleRuleFeatures,
+    const gfxFontStyle *aStyle,
     const nsTArray<gfxFontFeature>& aFontFeatures,
     bool aDisableLigatures,
     nsDataHashtable<nsUint32HashKey,uint32_t>& aMergedFeatures)
 {
+    const nsTArray<gfxFontFeature>& styleRuleFeatures =
+        aStyle->featureSettings;
+
     // bail immediately if nothing to do
-    if (aStyleRuleFeatures.IsEmpty() &&
+    if (styleRuleFeatures.IsEmpty() &&
         aFontFeatures.IsEmpty() &&
         !aDisableLigatures) {
         return false;
@@ -1405,9 +1408,9 @@ gfxFontShaper::MergeFontFeatures(
     }
 
     // add feature values from style rules
-    count = aStyleRuleFeatures.Length();
+    count = styleRuleFeatures.Length();
     for (i = 0; i < count; i++) {
-        const gfxFontFeature& feature = aStyleRuleFeatures.ElementAt(i);
+        const gfxFontFeature& feature = styleRuleFeatures.ElementAt(i);
         aMergedFeatures.Put(feature.mTag, feature.mValue);
     }
 
@@ -4756,7 +4759,7 @@ gfxFontStyle::gfxFontStyle() :
     languageOverride(NO_FONT_LANGUAGE_OVERRIDE),
     weight(NS_FONT_WEIGHT_NORMAL), stretch(NS_FONT_STRETCH_NORMAL),
     systemFont(true), printerFont(false), 
-    style(NS_FONT_STYLE_NORMAL)
+    kerning(true), style(NS_FONT_STYLE_NORMAL)
 {
 }
 
@@ -4770,7 +4773,7 @@ gfxFontStyle::gfxFontStyle(uint8_t aStyle, uint16_t aWeight, int16_t aStretch,
     languageOverride(ParseFontLanguageOverride(aLanguageOverride)),
     weight(aWeight), stretch(aStretch),
     systemFont(aSystemFont), printerFont(aPrinterFont),
-    style(aStyle)
+    kerning(true), style(aStyle)
 {
     MOZ_ASSERT(!mozilla::IsNaN(size));
     MOZ_ASSERT(!mozilla::IsNaN(sizeAdjust));
@@ -4800,7 +4803,7 @@ gfxFontStyle::gfxFontStyle(const gfxFontStyle& aStyle) :
     languageOverride(aStyle.languageOverride),
     weight(aStyle.weight), stretch(aStyle.stretch),
     systemFont(aStyle.systemFont), printerFont(aStyle.printerFont),
-    style(aStyle.style)
+    kerning(aStyle.kerning), style(aStyle.style)
 {
     featureSettings.AppendElements(aStyle.featureSettings);
 }
