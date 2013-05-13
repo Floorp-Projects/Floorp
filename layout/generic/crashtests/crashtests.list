@@ -461,6 +461,7 @@ test-pref(layout.css.flexbox.enabled,true) load 826483-1.html
 asserts(1) test-pref(layout.css.flexbox.enabled,true) load 826532-1.html # bug 399262
 test-pref(layout.css.flexbox.enabled,true) load 827168-1.html
 load 836895.html
+load 840787.html
 load 842132-1.html
 test-pref(layout.css.flexbox.enabled,true) load 844529-1.html
 load 847130.xhtml
