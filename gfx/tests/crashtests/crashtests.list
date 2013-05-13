@@ -38,6 +38,7 @@ load 393822-1.html
 load 394384-1.html
 load 394246-1.html
 load 394246-2.html
+load 394751.xhtml
 load 395335-1.xhtml
 load 395458-1.html
 load 396321-1.svg
@@ -89,4 +90,6 @@ load 633322-1.html
 load 686190-1.html
 load 693143-1.html
 load 768079-1.html
+asserts-if(gtk2Widget,1) load 798853.html # bug 868792
+asserts-if(winWidget,0-1) load 815489.html
 load 856784-1.html

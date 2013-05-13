@@ -286,6 +286,20 @@ function FAIL(message, resultCode) {
 }
 
 /**
+ * Truncates big blobs of (data-)URIs to console-friendly sizes
+ * @param str
+ *        String to tone down
+ * @param len
+ *        Maximum length of the string to return. Defaults to the length of a tweet.
+ */
+function limitURILength(str, len) {
+  len = len || 140;
+  if (str.length > len)
+    return str.slice(0, len) + "...";
+  return str;
+}
+
+/**
  * Utilities for dealing with promises and Task.jsm
  */
 const TaskUtils = {
@@ -1470,7 +1484,7 @@ Engine.prototype = {
     if (!uri)
       return;
 
-    LOG("_setIcon: Setting icon url \"" + uri.spec + "\" for engine \""
+    LOG("_setIcon: Setting icon url \"" + limitURILength(uri.spec) + "\" for engine \""
         + this.name + "\".");
     // Only accept remote icons from http[s] or ftp
     switch (uri.scheme) {
@@ -1683,7 +1697,7 @@ Engine.prototype = {
    * @see http://opensearch.a9.com/spec/1.1/description/#image
    */
   _parseImage: function SRCH_ENG_parseImage(aElement) {
-    LOG("_parseImage: Image textContent: \"" + aElement.textContent + "\"");
+    LOG("_parseImage: Image textContent: \"" + limitURILength(aElement.textContent) + "\"");
     if (aElement.getAttribute("width")  == "16" &&
         aElement.getAttribute("height") == "16") {
       this._setIcon(aElement.textContent, true);

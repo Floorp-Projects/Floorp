@@ -166,6 +166,7 @@ load 385354.html
 load 385866-1.xhtml
 load 385880-1.xhtml
 load 386266-1.html
+load 386476.html
 load 387195-1.html
 load 387195-2.xhtml
 load 388715-1.html
@@ -194,6 +195,8 @@ load 400185-1.xul
 load 400445-1.xhtml
 load 400904-1.xhtml
 load 401589-1.xul
+load 401734-1.html
+load 401734-2.html
 needs-focus pref(accessibility.browsewithcaret,true) load 403048.html
 skip load 403175-1.html # times out occasionally, bug 473680
 load 403245-1.html
@@ -260,6 +263,7 @@ load 455623-1.html
 load 457362-1.xhtml
 load 457514.html
 asserts(0-1) load 460389-1.html # Bug 780985
+load 462392.html
 load 466763-1.html
 load 467881-1.html
 load 468491-1.html
@@ -275,6 +279,7 @@ load 468645-3.xhtml
 load 469861-1.xhtml
 load 469861-2.xhtml
 load 471594-1.xhtml
+asserts(0-1) load 474075.html # bug 847368
 load 479114-1.html
 load 477333-1.xhtml
 asserts-if(Android,6) load 477731-1.html
@@ -389,9 +394,16 @@ load 749816-1.html
 load 763223-1.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,100) load 763702.xhtml
 load 770381-1.html
+load 788360.html
+load 793848.html
 load 795646.html
+load 802902.html
 load 813372-1.html
+asserts-if(gtk2Widget,0-1) load 822865.html # bug 540078
+load 833604-1.html
+load 835056.html
 load 836990-1.html
+load 852293.html
 load 860579-1.html
 pref(layers.force-active,true) load 859526-1.html
 pref(layers.force-active,true) load 859630-1.html

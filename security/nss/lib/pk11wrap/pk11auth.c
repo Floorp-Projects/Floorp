@@ -52,7 +52,7 @@ pk11_CheckPassword(PK11SlotInfo *slot, CK_SESSION_HANDLE session,
     int len = 0;
     CK_RV crv;
     SECStatus rv;
-    int64 currtime = PR_Now();
+    PRTime currtime = PR_Now();
     PRBool mustRetry;
     int retry = 0;
 
@@ -132,7 +132,7 @@ PK11_CheckUserPassword(PK11SlotInfo *slot, const char *pw)
     int len = 0;
     CK_RV crv;
     SECStatus rv;
-    int64 currtime = PR_Now();
+    PRTime currtime = PR_Now();
 
     if (slot->protectedAuthPath) {
 	len = 0;
@@ -738,9 +738,9 @@ PK11_IsLoggedIn(PK11SlotInfo *slot,void *wincx)
 
     /* forget the password if we've been inactive too long */
     if (askpw == 1) {
-	int64 currtime = PR_Now();
-	int64 result;
-	int64 mult;
+	PRTime currtime = PR_Now();
+	PRTime result;
+	PRTime mult;
 	
 	LL_I2L(result, timeout);
 	LL_I2L(mult, 60*1000*1000);

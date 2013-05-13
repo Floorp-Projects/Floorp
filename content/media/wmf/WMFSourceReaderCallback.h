@@ -19,7 +19,7 @@ namespace mozilla {
 // WMFByteStream's underlying MediaResource is closed. This ensures that
 // the decode threads don't get stuck in a synchronous ReadSample() call
 // when the MediaResource is unexpectedly shutdown.
-class WMFSourceReaderCallback : public IMFSourceReaderCallback
+class WMFSourceReaderCallback MOZ_FINAL : public IMFSourceReaderCallback
 {
 public:
   WMFSourceReaderCallback();

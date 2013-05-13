@@ -9,6 +9,9 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+ifdef MOZ_SOCIAL
+# social is turned off for android
+
 EXTRA_JS_MODULES = \
   FrameWorker.jsm \
   MessagePortBase.jsm \
@@ -17,5 +20,7 @@ EXTRA_JS_MODULES = \
   WorkerAPI.jsm \
   MozSocialAPI.jsm \
   $(NULL)
+
+endif
 
 include $(topsrcdir)/config/rules.mk

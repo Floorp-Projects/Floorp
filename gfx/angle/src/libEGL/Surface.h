@@ -64,6 +64,8 @@ class Surface
     virtual void setBoundTexture(gl::Texture2D *texture);
     virtual gl::Texture2D *getBoundTexture() const;
 
+    void recreateAdditionalSwapChain();
+
 private:
     DISALLOW_COPY_AND_ASSIGN(Surface);
 

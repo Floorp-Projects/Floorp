@@ -989,8 +989,25 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
   // If we're not dirty (which means we'll mark everything dirty later)
   // and our width has changed, mark the lines dirty that we need to
   // mark dirty for a resize reflow.
-  if (reflowState->mFlags.mHResize)
+  if (!(GetStateBits() & NS_FRAME_IS_DIRTY) && reflowState->mFlags.mHResize) {
     PrepareResizeReflow(state);
+  }
+
+  if (GetStateBits() & NS_BLOCK_LOOK_FOR_DIRTY_FRAMES) {
+    for (line_iterator line = begin_lines(), line_end = end_lines();
+         line != line_end; ++line) {
+      int32_t n = line->GetChildCount();
+      for (nsIFrame* lineFrame = line->mFirstChild;
+           n > 0; lineFrame = lineFrame->GetNextSibling(), --n) {
+        if (NS_SUBTREE_DIRTY(lineFrame)) {
+          // NOTE:  MarkLineDirty does more than just marking the line dirty.
+          MarkLineDirty(line, &mLines);
+          break;
+        }
+      }
+    }
+    RemoveStateBits(NS_BLOCK_LOOK_FOR_DIRTY_FRAMES);
+  }
 
   mState &= ~NS_FRAME_FIRST_REFLOW;
 
@@ -6378,13 +6395,42 @@ nsBlockFrame::ChildIsDirty(nsIFrame* aChild)
     // otherwise we have an empty line list, and ReflowDirtyLines
     // will handle reflowing the bullet.
   } else {
-    // Mark the line containing the child frame dirty. We would rather do this
-    // in MarkIntrinsicWidthsDirty but that currently won't tell us which
-    // child is being dirtied.
-    bool isValid;
-    nsBlockInFlowLineIterator iter(this, aChild, &isValid);
-    if (isValid) {
-      iter.GetContainer()->MarkLineDirty(iter.GetLine(), iter.GetLineList());
+    // Note that we should go through our children to mark lines dirty
+    // before the next reflow.  Doing it now could make things O(N^2)
+    // since finding the right line is O(N).
+    // We don't need to worry about marking lines on the overflow list
+    // as dirty; we're guaranteed to reflow them if we take them off the
+    // overflow list.
+    // However, we might have gotten a float, in which case we need to
+    // reflow the line containing its placeholder.  So find the
+    // ancestor-or-self of the placeholder that's a child of the block,
+    // and mark it as NS_FRAME_HAS_DIRTY_CHILDREN too, so that we mark
+    // its line dirty when we handle NS_BLOCK_LOOK_FOR_DIRTY_FRAMES.
+    // We need to take some care to handle the case where a float is in
+    // a different continuation than its placeholder, including marking
+    // an extra block with NS_BLOCK_LOOK_FOR_DIRTY_FRAMES.
+    if (!(aChild->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
+      AddStateBits(NS_BLOCK_LOOK_FOR_DIRTY_FRAMES);
+    } else {
+      NS_ASSERTION(aChild->IsFloating(), "should be a float");
+      nsIFrame *thisFC = GetFirstContinuation();
+      nsIFrame *placeholderPath =
+        PresContext()->FrameManager()->GetPlaceholderFrameFor(aChild);
+      // SVG code sometimes sends FrameNeedsReflow notifications during
+      // frame destruction, leading to null placeholders, but we're safe
+      // ignoring those.
+      if (placeholderPath) {
+        for (;;) {
+          nsIFrame *parent = placeholderPath->GetParent();
+          if (parent->GetContent() == mContent &&
+              parent->GetFirstContinuation() == thisFC) {
+            parent->AddStateBits(NS_BLOCK_LOOK_FOR_DIRTY_FRAMES);
+            break;
+          }
+          placeholderPath = parent;
+        }
+        placeholderPath->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
+      }
     }
   }
 
@@ -6660,6 +6706,15 @@ nsBlockFrame::RenumberListsInBlock(nsPresContext* aPresContext,
     }
   } while (bifLineIter.Next());
 
+  // We need to set NS_FRAME_HAS_DIRTY_CHILDREN bits up the tree between
+  // the bullet and the caller of RenumberLists.  But the caller itself
+  // has to be responsible for setting the bit itself, since that caller
+  // might be making a FrameNeedsReflow call, which requires that the
+  // bit not be set yet.
+  if (renumberedABullet && aDepth != 0) {
+    aBlockFrame->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
+  }
+
   return renumberedABullet;
 }
 
@@ -6704,8 +6759,18 @@ nsBlockFrame::RenumberListsFor(nsPresContext* aPresContext,
         if (changed) {
           kidRenumberedABullet = true;
 
-          // The ordinal changed - mark the bullet frame dirty.
-          listItem->ChildIsDirty(bullet);
+          // The ordinal changed - mark the bullet frame, and any
+          // intermediate frames between it and the block (are there
+          // ever any?), dirty.
+          // The calling code will make the necessary FrameNeedsReflow
+          // call for the list ancestor.
+          bullet->AddStateBits(NS_FRAME_IS_DIRTY);
+          nsIFrame *f = bullet;
+          do {
+            nsIFrame *parent = f->GetParent();
+            parent->ChildIsDirty(f);
+            f = parent;
+          } while (f != listItem);
         }
       }
 

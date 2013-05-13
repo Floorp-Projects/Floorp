@@ -113,7 +113,7 @@ PKIX_PL_OcspCertID_Create(
         void *plContext)
 {
         PKIX_PL_OcspCertID *cid = NULL;
-        int64 time = 0;
+        PRTime time = 0;
 
         PKIX_ENTER(DATE, "PKIX_PL_OcspCertID_Create");
         PKIX_NULLCHECK_TWO(cert, object);
@@ -181,7 +181,7 @@ PKIX_PL_OcspCertID_GetFreshCacheStatus(
         SECErrorCodes *missingResponseError,
         void *plContext)
 {
-        int64 time = 0;
+        PRTime time = 0;
         SECStatus rv;
         SECStatus rvOcsp;
 

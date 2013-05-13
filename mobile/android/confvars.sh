@@ -5,7 +5,7 @@
 MOZ_APP_BASENAME=Fennec
 MOZ_APP_VENDOR=Mozilla
 
-MOZ_APP_VERSION=23.0a1
+MOZ_APP_VERSION=24.0a1
 MOZ_APP_UA_NAME=Firefox
 
 MOZ_BRANDING_DIRECTORY=mobile/android/branding/unofficial
@@ -34,6 +34,7 @@ fi
 MOZ_CAPTURE=1
 MOZ_RAW=1
 MOZ_PLACES=
+MOZ_SOCIAL=
 MOZ_ANDROID_HISTORY=1
 
 # Needed for building our components as part of libxul
@@ -58,3 +59,6 @@ MOZ_FOLD_LIBS=1
 
 # Enable navigator.mozPay
 MOZ_PAY=1
+
+# Enable UI for healthreporter
+MOZ_SERVICES_HEALTHREPORT=1

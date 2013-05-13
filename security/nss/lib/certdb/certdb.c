@@ -209,7 +209,7 @@ SEC_ASN1_CHOOSER_IMPLEMENT(SEC_SignedCertificateTemplate)
 SEC_ASN1_CHOOSER_IMPLEMENT(CERT_SequenceOfCertExtensionTemplate)
 
 SECStatus
-CERT_KeyFromIssuerAndSN(PRArenaPool *arena, SECItem *issuer, SECItem *sn,
+CERT_KeyFromIssuerAndSN(PLArenaPool *arena, SECItem *issuer, SECItem *sn,
 			SECItem *key)
 {
     key->len = sn->len + issuer->len;
@@ -243,7 +243,7 @@ SECStatus
 CERT_NameFromDERCert(SECItem *derCert, SECItem *derName)
 {
     int rv;
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     CERTSignedData sd;
     void *tmpptr;
     
@@ -287,7 +287,7 @@ SECStatus
 CERT_IssuerNameFromDERCert(SECItem *derCert, SECItem *derName)
 {
     int rv;
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     CERTSignedData sd;
     void *tmpptr;
     
@@ -331,7 +331,7 @@ SECStatus
 CERT_SerialNumberFromDERCert(SECItem *derCert, SECItem *derName)
 {
     int rv;
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     CERTSignedData sd;
     void *tmpptr;
     
@@ -376,7 +376,7 @@ loser:
  * DER certificate.
  */
 SECStatus
-CERT_KeyFromDERCert(PRArenaPool *reqArena, SECItem *derCert, SECItem *key)
+CERT_KeyFromDERCert(PLArenaPool *reqArena, SECItem *derCert, SECItem *key)
 {
     int rv;
     CERTSignedData sd;
@@ -744,7 +744,7 @@ CERT_DecodeDERCertificate(SECItem *derSignedCert, PRBool copyDER,
 			 char *nickname)
 {
     CERTCertificate *cert;
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     void *data;
     int rv;
     int len;
@@ -874,11 +874,11 @@ __CERT_DecodeDERCertificate(SECItem *derSignedCert, PRBool copyDER,
 
 
 CERTValidity *
-CERT_CreateValidity(int64 notBefore, int64 notAfter)
+CERT_CreateValidity(PRTime notBefore, PRTime notAfter)
 {
     CERTValidity *v;
     int rv;
-    PRArenaPool *arena;
+    PLArenaPool *arena;
 
     if (notBefore > notAfter) {
        PORT_SetError(SEC_ERROR_INVALID_ARGS);
@@ -906,7 +906,7 @@ CERT_CreateValidity(int64 notBefore, int64 notAfter)
 }
 
 SECStatus
-CERT_CopyValidity(PRArenaPool *arena, CERTValidity *to, CERTValidity *from)
+CERT_CopyValidity(PLArenaPool *arena, CERTValidity *to, CERTValidity *from)
 {
     SECStatus rv;
 
@@ -1417,7 +1417,7 @@ cert_TestHostName(char * cn, const char * hn)
 SECStatus
 cert_VerifySubjectAltName(const CERTCertificate *cert, const char *hn)
 {
-    PRArenaPool *     arena          = NULL;
+    PLArenaPool *     arena          = NULL;
     CERTGeneralName * nameList       = NULL;
     CERTGeneralName * current;
     char *            cn;
@@ -1552,7 +1552,7 @@ finish:
  *   - return value is NULL
  */
 CERTGeneralName *
-cert_GetSubjectAltNameList(const CERTCertificate *cert, PRArenaPool *arena)
+cert_GetSubjectAltNameList(const CERTCertificate *cert, PLArenaPool *arena)
 {
     CERTGeneralName * nameList       = NULL;
     SECStatus         rv             = SECFailure;
@@ -1691,7 +1691,7 @@ CERT_GetValidDNSPatternsFromCert(CERTCertificate *cert)
 {
     CERTGeneralName *generalNames;
     CERTCertNicknames *nickNames;
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     char *singleName;
     
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
@@ -1916,7 +1916,7 @@ CERT_CompareCertsForRedirection(CERTCertificate *c1, CERTCertificate *c2)
 
 
 CERTIssuerAndSN *
-CERT_GetCertIssuerAndSN(PRArenaPool *arena, CERTCertificate *cert)
+CERT_GetCertIssuerAndSN(PLArenaPool *arena, CERTCertificate *cert)
 {
     CERTIssuerAndSN *result;
     SECStatus rv;
@@ -2512,7 +2512,7 @@ CERT_ImportCerts(CERTCertDBHandle *certdb, SECCertUsage usage,
 CERTCertList *
 CERT_NewCertList(void)
 {
-    PRArenaPool *arena = NULL;
+    PLArenaPool *arena = NULL;
     CERTCertList *ret = NULL;
     
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);

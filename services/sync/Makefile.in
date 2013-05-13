@@ -10,7 +10,7 @@ VPATH     := @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 # Definitions used by constants.js.
-weave_version := 1.25.0
+weave_version := 1.26.0
 weave_id      := {340c2bbc-ce74-4362-90b5-7c26312808ef}
 
 # Preprocess files.

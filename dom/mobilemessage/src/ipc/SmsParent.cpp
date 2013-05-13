@@ -55,13 +55,13 @@ MmsAttachmentDataToJSObject(JSContext* aContext,
   }
 
   nsCOMPtr<nsIDOMBlob> blob = static_cast<BlobParent*>(aAttachment.contentParent())->GetBlob();
-  JS::Value content;
-  JS::Rooted<JSObject*> global (aContext, JS_GetGlobalForScopeChain(aContext));
+  JS::Rooted<JS::Value> content(aContext);
+  JS::Rooted<JSObject*> global(aContext, JS_GetGlobalForScopeChain(aContext));
   nsresult rv = nsContentUtils::WrapNative(aContext,
                                            global,
                                            blob,
                                            &NS_GET_IID(nsIDOMBlob),
-                                           &content);
+                                           content.address());
   NS_ENSURE_SUCCESS(rv, nullptr);
   if (!JS_DefineProperty(aContext, obj, "content", content,
                          nullptr, nullptr, 0)) {

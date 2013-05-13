@@ -30,6 +30,12 @@ const UNEXPECTED_NOTIFICATIONS = [
 
 const URL = "ftp://localhost/clearHistoryOnShutdown/";
 
+// Send the profile-after-change notification to the form history component to ensure
+// that it has been initialized.
+var formHistoryStartup = Cc["@mozilla.org/satchel/form-history-startup;1"].
+                         getService(Ci.nsIObserver);
+formHistoryStartup.observe(null, "profile-after-change", null);
+
 let notificationIndex = 0;
 
 let notificationsObserver = {

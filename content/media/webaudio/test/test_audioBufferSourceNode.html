@@ -19,6 +19,8 @@ var gTest = {
     }
 
     var source = context.createBufferSource();
+    ok("gain" in source, "AudioBufferSourceNode.gain must exist");
+    is(source.gain.value, 1, "AudioBufferSourceNode.gain's default value must be 1");
 
     var sp = context.createScriptProcessor(2048);
     source.start(0);

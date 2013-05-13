@@ -7,7 +7,7 @@
 #define nsMathMLmactionFrame_h___
 
 #include "nsCOMPtr.h"
-#include "nsMathMLContainerFrame.h"
+#include "nsMathMLSelectedFrame.h"
 #include "nsIDOMEventListener.h"
 #include "mozilla/Attributes.h"
 
@@ -15,14 +15,11 @@
 // <maction> -- bind actions to a subexpression
 //
 
-class nsMathMLmactionFrame : public nsMathMLContainerFrame {
+class nsMathMLmactionFrame : public nsMathMLSelectedFrame {
 public:
   NS_DECL_FRAMEARENA_HELPERS
 
   friend nsIFrame* NS_NewMathMLmactionFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
-
-  NS_IMETHOD
-  TransmitAutomaticData();
 
   virtual void
   Init(nsIContent*      aContent,
@@ -31,30 +28,15 @@ public:
 
   NS_IMETHOD
   SetInitialChildList(ChildListID     aListID,
-                      nsFrameList&    aChildList) MOZ_OVERRIDE;
+                      nsFrameList&    aChildList);
 
   virtual nsresult
-  ChildListChanged(int32_t aModType) MOZ_OVERRIDE;
-
-  virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                const nsRect&           aDirtyRect,
-                                const nsDisplayListSet& aLists) MOZ_OVERRIDE;
-
-  virtual nsresult
-  Place(nsRenderingContext& aRenderingContext,
-        bool                 aPlaceOrigin,
-        nsHTMLReflowMetrics& aDesiredSize) MOZ_OVERRIDE;
-
-  NS_IMETHOD
-  Reflow(nsPresContext*          aPresContext,
-         nsHTMLReflowMetrics&     aDesiredSize,
-         const nsHTMLReflowState& aReflowState,
-         nsReflowStatus&          aStatus) MOZ_OVERRIDE;
+  ChildListChanged(int32_t aModType);
 
   NS_IMETHOD
   AttributeChanged(int32_t  aNameSpaceID,
                    nsIAtom* aAttribute,
-                   int32_t  aModType) MOZ_OVERRIDE;
+                   int32_t  aModType);
 
 private:
   void MouseClick();
@@ -72,14 +54,14 @@ private:
   };
 
 protected:
-  nsMathMLmactionFrame(nsStyleContext* aContext) : nsMathMLContainerFrame(aContext) {}
+  nsMathMLmactionFrame(nsStyleContext* aContext) :
+    nsMathMLSelectedFrame(aContext) {}
   virtual ~nsMathMLmactionFrame();
   
 private:
   int32_t         mActionType;
   int32_t         mChildCount;
   int32_t         mSelection;
-  nsIFrame*       mSelectedFrame;
   nsCOMPtr<MouseListener> mListener;
 
   // helper to return the frame for the attribute selection="number"

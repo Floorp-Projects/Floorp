@@ -86,6 +86,9 @@ pref("dom.workers.enabled", true);
 // The number of workers per domain allowed to run concurrently.
 pref("dom.workers.maxPerDomain", 20);
 
+// Whether nonzero values can be returned from performance.timing.*
+pref("dom.enable_performance", true);
+
 // Fastback caching - if this pref is negative, then we calculate the number
 // of content viewers to cache based on the amount of available memory.
 pref("browser.sessionhistory.max_total_viewers", -1);
@@ -996,6 +999,10 @@ pref("network.http.rendering-critical-requests-prioritization", true);
 // IPv6 connectivity.
 pref("network.http.fast-fallback-to-IPv4", true);
 
+// The maximum amount of time the cache session lock can be held
+// before a new transaction bypasses the cache. In milliseconds.
+pref("network.http.bypass-cachelock-threshold", 250);
+
 // Try and use SPDY when using SSL
 pref("network.http.spdy.enabled", true);
 pref("network.http.spdy.enabled.v2", true);
@@ -1731,6 +1738,19 @@ pref("layout.css.supports-rule.enabled", true);
 
 // Is support for CSS Flexbox enabled?
 pref("layout.css.flexbox.enabled", true);
+
+// Is support for CSS3 Fonts features enabled?
+// (includes font-variant-*, font-kerning, font-synthesis
+// and the @font-feature-values rule)
+// Note: with this enabled, font-feature-settings is aliased
+// to -moz-font-feature-settings.  When unprefixing, this should
+// be reversed, -moz-font-feature-settings should alias to
+// font-feature-settings.
+#ifdef RELEASE_BUILD
+pref("layout.css.font-features.enabled", false);
+#else
+pref("layout.css.font-features.enabled", true);
+#endif
 
 // Are sets of prefixed properties supported?
 pref("layout.css.prefixes.border-image", true);
@@ -3272,7 +3292,7 @@ pref("font.name.serif.ko", "Charis SIL Compact");
 pref("font.name.sans-serif.ko", "Open Sans");
 pref("font.name.monospace.ko", "Droid Sans Mono");
 pref("font.name-list.serif.ko", "HYSerif");
-pref("font.name-list.sans-serif.ko", "SmartGothic, DroidSansFallback, Droid Sans Fallback");
+pref("font.name-list.sans-serif.ko", "SmartGothic, NanumGothic, DroidSansFallback, Droid Sans Fallback");
 
 pref("font.name.serif.th", "Charis SIL Compact");
 pref("font.name.sans-serif.th", "Open Sans");

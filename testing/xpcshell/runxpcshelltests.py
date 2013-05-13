@@ -578,7 +578,7 @@ class XPCShellTests(object):
 
     def testTimeout(self, test, processPID):
         self.log.error("TEST-UNEXPECTED-FAIL | %s | Test timed out" % test)
-        Automation().killAndGetStackNoScreenshot(processPID, self.appPath, None)
+        Automation().killAndGetStackNoScreenshot(processPID, self.appPath, self.debuggerInfo)
 
     def post_to_autolog(self, results, name):
         from moztest.results import TestContext, TestResult, TestResultCollection

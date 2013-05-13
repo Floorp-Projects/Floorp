@@ -1778,6 +1778,16 @@ nsOfflineCacheUpdate::Begin()
 
     mItemsInProgress = 0;
 
+    if (mState == STATE_CANCELLED) {
+      nsRefPtr<nsRunnableMethod<nsOfflineCacheUpdate> > errorNotification =
+        NS_NewRunnableMethod(this,
+                             &nsOfflineCacheUpdate::AsyncFinishWithError);
+      nsresult rv = NS_DispatchToMainThread(errorNotification);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      return NS_OK;
+    }
+
     if (mPartialUpdate) {
         mState = STATE_DOWNLOADING;
         NotifyState(nsIOfflineCacheUpdateObserver::STATE_DOWNLOADING);
@@ -2151,6 +2161,13 @@ nsOfflineCacheUpdate::Finish()
     NotifyState(nsIOfflineCacheUpdateObserver::STATE_FINISHED);
 
     return rv;
+}
+
+void
+nsOfflineCacheUpdate::AsyncFinishWithError()
+{
+    NotifyState(nsOfflineCacheUpdate::STATE_ERROR);
+    Finish();
 }
 
 static nsresult

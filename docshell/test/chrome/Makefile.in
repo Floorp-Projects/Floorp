@@ -64,6 +64,8 @@ MOCHITEST_CHROME_FILES =	\
 		bug360511_window.xul \
 		bug360511_case1.html \
 		bug360511_case2.html \
+		test_bug364461.xul \
+		bug364461_window.xul \
 		test_bug396519.xul \
 		bug396519_window.xul \
 		test_bug396649.xul \
@@ -102,12 +104,9 @@ MOCHITEST_CHROME_FILES =	\
 ifneq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 MOCHITEST_CHROME_FILES += \
 		test_bug454235.xul \
-		test_bug364461.xul \
-		bug364461_window.xul \
 		$(NULL)
 else
 $(filter disabled-temporarily--bug-684176, test_bug454235.xul)
-$(filter disabled-temporarily--bug-867745, test_bug364461.xul)
 endif
 
 include $(topsrcdir)/config/rules.mk

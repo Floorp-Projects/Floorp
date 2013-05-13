@@ -34,7 +34,7 @@ typedef struct NSSLOWCERTValidityStr                   NSSLOWCERTValidity;
 ** An X.509 validity object
 */
 struct NSSLOWCERTValidityStr {
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     SECItem notBefore;
     SECItem notAfter;
 };
@@ -61,7 +61,7 @@ struct NSSLOWCERTSignedDataStr {
 ** An X.509 subject-public-key-info object
 */
 struct NSSLOWCERTSubjectPublicKeyInfoStr {
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     SECAlgorithmID algorithm;
     SECItem subjectPublicKey;
 };
@@ -190,7 +190,7 @@ typedef struct {
     certDBEntryType type;
     unsigned int version;
     unsigned int flags;
-    PRArenaPool *arena;
+    PLArenaPool *arena;
 } certDBEntryCommon;
 
 /*

@@ -41,7 +41,7 @@ struct sec_PKCS12SafeContentsContextStr {
     SEC_PKCS12DecoderContext *p12dcx;
 
     /* memory arena to allocate space from */
-    PRArenaPool *arena;
+    PLArenaPool *arena;
 
     /* decoder context and destination for decoding safe contents */
     SEC_ASN1DecoderContext *safeContentsA1Dcx;
@@ -64,7 +64,7 @@ struct sec_PKCS12SafeContentsContextStr {
  * decode, the safe bags containing certificates and keys encountered.
  */  
 struct SEC_PKCS12DecoderContextStr {
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     PK11SlotInfo *slot;
     void *wincx;
     PRBool error;
@@ -1170,7 +1170,7 @@ SEC_PKCS12DecoderStart(SECItem *pwitem, PK11SlotInfo *slot, void *wincx,
 		       digestIOFn dRead, digestIOFn dWrite, void *dArg)
 {
     SEC_PKCS12DecoderContext *p12dcx;
-    PRArenaPool *arena;
+    PLArenaPool *arena;
 
     arena = PORT_NewArena(2048); /* different size? */
     if(!arena) {
@@ -1950,7 +1950,7 @@ sec_pkcs12_get_der_cert(sec_PKCS12SafeBag *cert)
 }
 
 struct certNickInfo {
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     unsigned int nNicks;
     SECItem **nickList;
     unsigned int error;
@@ -2041,7 +2041,7 @@ sec_pkcs12_get_existing_nick_for_dn(sec_PKCS12SafeBag *cert)
 {
     struct certNickInfo *nickArg = NULL;
     SECItem *derCert, *returnDn = NULL;
-    PRArenaPool *arena = NULL;
+    PLArenaPool *arena = NULL;
     CERTCertificate *tempCert;
 
     if(!cert) {
@@ -3508,7 +3508,7 @@ loser:
 }
 
 SEC_PKCS12DecoderContext *
-sec_PKCS12ConvertOldSafeToNew(PRArenaPool *arena, PK11SlotInfo *slot, 
+sec_PKCS12ConvertOldSafeToNew(PLArenaPool *arena, PK11SlotInfo *slot,
 			      PRBool swapUnicode, SECItem *pwitem,
 			      void *wincx, SEC_PKCS12SafeContents *safe,
 			      SEC_PKCS12Baggage *baggage)

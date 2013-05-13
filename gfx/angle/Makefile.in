@@ -17,14 +17,14 @@ endif
 
 # The below is a rough translation of build_angle.gypi:
 DEFINES += -DANGLE_DISABLE_TRACE
-DEFINES += -DANGLE_COMPILE_OPTIMIZATION_LEVEL=D3DCOMPILE_OPTIMIZATION_LEVEL0
+DEFINES += -DANGLE_COMPILE_OPTIMIZATION_LEVEL=D3DCOMPILE_OPTIMIZATION_LEVEL1
 
 # Target: 'preprocessor'
 # src/compiler/preprocessor:
 VPATH += $(srcdir)/src/compiler/preprocessor
 CPPSRCS += \
-  PreprocessorDiagnostics.cpp \
-  PreprocessorDirectiveHandler.cpp \
+  DiagnosticsBase.cpp \
+  DirectiveHandlerBase.cpp \
   DirectiveParser.cpp \
   ExpressionParser.cpp \
   Input.cpp \
@@ -48,7 +48,6 @@ DEFINES += -DCOMPILER_IMPLEMENTATION
 VPATH += $(srcdir)/src/compiler
 # src/compiler:
 CPPSRCS += \
-  ArrayBoundsClamper.cpp \
   BuiltInFunctionEmulator.cpp \
   Compiler.cpp \
   compiler_debug.cpp \
@@ -93,6 +92,12 @@ VPATH += $(srcdir)/src/compiler/timing
 CPPSRCS += \
   RestrictFragmentShaderTiming.cpp \
   RestrictVertexShaderTiming.cpp \
+  $(NULL)
+
+VPATH += $(srcdir)/src/third_party/compiler
+# src/third_party/compiler:
+CPPSRCS += \
+  ArrayBoundsClamper.cpp \
   $(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)

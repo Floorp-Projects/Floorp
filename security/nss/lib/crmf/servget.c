@@ -344,7 +344,7 @@ CRMF_POPOSigningKeyGetSignature(CRMFPOPOSigningKey *inSignKey)
 }
 
 static SECStatus 
-crmf_copy_poposigningkey(PRArenaPool        *poolp, 
+crmf_copy_poposigningkey(PLArenaPool        *poolp,
 			 CRMFPOPOSigningKey *inPopoSignKey,
 			 CRMFPOPOSigningKey *destPopoSignKey)
 {
@@ -384,7 +384,7 @@ crmf_copy_poposigningkey(PRArenaPool        *poolp,
 }
 
 static SECStatus
-crmf_copy_popoprivkey(PRArenaPool     *poolp,
+crmf_copy_popoprivkey(PLArenaPool     *poolp,
 		      CRMFPOPOPrivKey *srcPrivKey,
 		      CRMFPOPOPrivKey *destPrivKey)
 {
@@ -415,7 +415,7 @@ crmf_copy_popoprivkey(PRArenaPool     *poolp,
 }
 
 static CRMFProofOfPossession*
-crmf_copy_pop(PRArenaPool *poolp, CRMFProofOfPossession *srcPOP)
+crmf_copy_pop(PLArenaPool *poolp, CRMFProofOfPossession *srcPOP)
 {
     CRMFProofOfPossession *newPOP;
     SECStatus              rv;
@@ -468,7 +468,7 @@ static CRMFCertReqMsg*
 crmf_copy_cert_req_msg(CRMFCertReqMsg *srcReqMsg)
 {
     CRMFCertReqMsg *newReqMsg;
-    PRArenaPool    *poolp;
+    PLArenaPool    *poolp;
 
     poolp = PORT_NewArena(CRMF_DEFAULT_ARENA_SIZE);
     if (poolp == NULL) {
@@ -536,7 +536,7 @@ CRMF_CertReqMessagesGetNumMessages(CRMFCertReqMessages *inCertReqMsgs)
 CRMFCertRequest*
 CRMF_CertReqMsgGetCertRequest(CRMFCertReqMsg *inCertReqMsg)
 {
-    PRArenaPool     *poolp      = NULL;
+    PLArenaPool     *poolp      = NULL;
     CRMFCertRequest *newCertReq = NULL;
 
     PORT_Assert(inCertReqMsg != NULL);
@@ -628,7 +628,7 @@ CRMF_CertReqMsgGetPOPOSigningKey(CRMFCertReqMsg      *inCertReqMsg,
 static SECStatus
 crmf_copy_name(CERTName *destName, CERTName *srcName)
 {
-  PRArenaPool *poolp = NULL;
+  PLArenaPool *poolp = NULL;
   SECStatus rv;
 
   if (destName->arena != NULL) {

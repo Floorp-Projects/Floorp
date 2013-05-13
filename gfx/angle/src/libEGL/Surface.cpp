@@ -18,8 +18,6 @@
 #include "libEGL/main.h"
 #include "libEGL/Display.h"
 
-#include <dwmapi.h>
-
 namespace egl
 {
 
@@ -77,24 +75,6 @@ bool Surface::initialize()
 
     if (!resetSwapChain())
       return false;
-
-    // Modify present parameters for this window, if we are composited,
-    // to minimize the amount of queuing done by DWM between our calls to
-    // present and the actual screen.
-    if (mWindow && (getComparableOSVersion() >= versionWindowsVista)) {
-      BOOL isComposited;
-      HRESULT result = DwmIsCompositionEnabled(&isComposited);
-      if (SUCCEEDED(result) && isComposited) {
-        DWM_PRESENT_PARAMETERS presentParams;
-        memset(&presentParams, 0, sizeof(presentParams));
-        presentParams.cbSize = sizeof(DWM_PRESENT_PARAMETERS);
-        presentParams.cBuffer = 2;
-
-        result = DwmSetPresentParameters(mWindow, &presentParams);
-        if (FAILED(result))
-          ERR("Unable to set present parameters: 0x%08X", result);
-      }
-    }
 
     return true;
 }
@@ -341,6 +321,38 @@ bool Surface::resetSwapChain(int backbufferWidth, int backbufferHeight)
 
     mPresentIntervalDirty = false;
     return true;
+}
+
+void Surface::recreateAdditionalSwapChain()
+{
+    if (!mSwapChain)
+    {
+        return;
+    }
+
+    IDirect3DDevice9 *device = mDisplay->getDevice();
+    if (device == NULL)
+    {
+        return;
+    }
+
+    D3DPRESENT_PARAMETERS presentParameters;
+    HRESULT result = mSwapChain->GetPresentParameters(&presentParameters);
+    ASSERT(SUCCEEDED(result));
+
+    IDirect3DSwapChain9* newSwapChain = NULL;
+    result = device->CreateAdditionalSwapChain(&presentParameters, &newSwapChain);
+    if (FAILED(result))
+    {
+        return;
+    }
+
+    mSwapChain->Release();
+    mSwapChain = newSwapChain;
+
+    mBackBuffer->Release();
+    result = mSwapChain->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &mBackBuffer);
+    ASSERT(SUCCEEDED(result));
 }
 
 bool Surface::swapRect(EGLint x, EGLint y, EGLint width, EGLint height)

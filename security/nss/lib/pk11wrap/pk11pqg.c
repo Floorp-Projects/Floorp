@@ -64,8 +64,8 @@ PK11_PQG_ParamGenV2(unsigned int L, unsigned int N,
     CK_ULONG subPrimeBits = N;
     int pTemplateCount = sizeof(pTemplate)/sizeof(pTemplate[0]);
     int vTemplateCount = sizeof(vTemplate)/sizeof(vTemplate[0]);
-    PRArenaPool *parena = NULL;
-    PRArenaPool *varena = NULL;
+    PLArenaPool *parena = NULL;
+    PLArenaPool *varena = NULL;
     PQGParams *params = NULL;
     PQGVerify *verify = NULL;
     CK_ULONG seedBits = seedBytes*8;
@@ -379,7 +379,7 @@ PK11_PQG_DestroyVerify(PQGVerify *vfy) {
 extern PQGParams *
 PK11_PQG_NewParams(const SECItem * prime, const SECItem * subPrime, 
                                  		const SECItem * base) {
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     PQGParams *dest;
     SECStatus status;
 
@@ -452,7 +452,7 @@ PK11_PQG_GetBaseFromParams(const PQGParams *params, SECItem *base) {
 extern PQGVerify *
 PK11_PQG_NewVerify(unsigned int counter, const SECItem * seed, 
 							const SECItem * h) {
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     PQGVerify *  dest;
     SECStatus    status;
 

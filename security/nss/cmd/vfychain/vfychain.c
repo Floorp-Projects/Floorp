@@ -232,13 +232,13 @@ getCert(const char *name, PRBool isAscii, const char * progName)
 #define REV_METHOD_INDEX_MAX  4
 
 typedef struct RevMethodsStruct {
-    uint testType;
+    unsigned int testType;
     char *testTypeStr;
-    uint testFlags;
+    unsigned int testFlags;
     char *testFlagsStr;
-    uint methodType;
+    unsigned int methodType;
     char *methodTypeStr;
-    uint methodFlags;
+    unsigned int methodFlags;
     char *methodFlagsStr;
 } RevMethods;
 
@@ -248,7 +248,7 @@ SECStatus
 parseRevMethodsAndFlags()
 {
     int i;
-    uint testType = 0;
+    unsigned int testType = 0;
 
     for(i = 0;i < REV_METHOD_INDEX_MAX;i++) {
         /* testType */
@@ -269,7 +269,7 @@ parseRevMethodsAndFlags()
         /* testFlags */
         if (revMethodsData[i].testFlagsStr) {
             char *flagStr = revMethodsData[i].testFlagsStr;
-            uint testFlags = 0;
+            unsigned int testFlags = 0;
 
             if (PORT_Strstr(flagStr, REVCONFIG_TEST_TESTLOCALINFOFIRST_STR)) {
                 testFlags |= CERT_REV_MI_TEST_ALL_LOCAL_INFORMATION_FIRST;
@@ -282,7 +282,7 @@ parseRevMethodsAndFlags()
         /* method type */
         if (revMethodsData[i].methodTypeStr) {
             char *methodStr = revMethodsData[i].methodTypeStr;
-            uint methodType = 0;
+            unsigned int methodType = 0;
             
             if (!PORT_Strcmp(methodStr, REVCONFIG_METHOD_CRL_STR)) {
                 methodType = REVCONFIG_METHOD_CRL;
@@ -301,7 +301,7 @@ parseRevMethodsAndFlags()
         /* method flags */
         if (revMethodsData[i].methodFlagsStr) {
             char *flagStr = revMethodsData[i].methodFlagsStr;
-            uint methodFlags = 0;
+            unsigned int methodFlags = 0;
 
             if (!PORT_Strstr(flagStr, REVCONFIG_METHOD_DONOTUSEMETHOD_STR)) {
                 methodFlags |= CERT_REV_M_TEST_USING_THIS_METHOD;
@@ -331,7 +331,7 @@ SECStatus
 configureRevocationParams(CERTRevocationFlags *flags)
 {
    int i;
-   uint testType = REVCONFIG_TEST_UNDEFINED;
+   unsigned int testType = REVCONFIG_TEST_UNDEFINED;
    static CERTRevocationTests *revTests = NULL;
    PRUint64 *revFlags;
 
@@ -611,7 +611,7 @@ breakout:
                 static CERTRevocationFlags rev;
                 
                 if (oidStr) {
-                    PRArenaPool *arena;
+                    PLArenaPool *arena;
                     SECOidData od;
                     memset(&od, 0, sizeof od);
                     od.offset = SEC_OID_UNKNOWN;

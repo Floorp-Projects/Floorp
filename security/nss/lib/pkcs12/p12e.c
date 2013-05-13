@@ -62,7 +62,7 @@ typedef struct sec_pkcs12OutputBufferStr sec_pkcs12OutputBuffer;
  * PFX structure.
  */
 struct SEC_PKCS12SafeInfoStr {
-    PRArenaPool *arena;
+    PLArenaPool *arena;
 
     /* information for setting up password encryption */
     SECItem pwitem;
@@ -85,7 +85,7 @@ struct SEC_PKCS12SafeInfoStr {
  * certificates and keys through PKCS 12.
  */
 struct SEC_PKCS12ExportContextStr {
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     PK11SlotInfo *slot;
     void *wincx;
 
@@ -130,7 +130,7 @@ struct sec_pkcs12_hmac_and_output_info {
  * portion of PKCS 12. 
  */
 typedef struct sec_PKCS12EncoderContextStr {
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     SEC_PKCS12ExportContext *p12exp;
 
     /* encoder information - this is set up based on whether 
@@ -178,7 +178,7 @@ SEC_PKCS12ExportContext *
 SEC_PKCS12CreateExportContext(SECKEYGetPasswordKey pwfn, void *pwfnarg,  
 			      PK11SlotInfo *slot, void *wincx)
 {
-    PRArenaPool *arena = NULL;
+    PLArenaPool *arena = NULL;
     SEC_PKCS12ExportContext *p12ctxt = NULL;
 
     /* allocate the arena and create the context */
@@ -583,7 +583,7 @@ loser:
 
 /* creates a safe contents which safeBags will be appended to */
 sec_PKCS12SafeContents *
-sec_PKCS12CreateSafeContents(PRArenaPool *arena)
+sec_PKCS12CreateSafeContents(PLArenaPool *arena)
 {
     sec_PKCS12SafeContents *safeContents;
 
@@ -613,7 +613,7 @@ loser:
 /* appends a safe bag to a safeContents using the specified arena. 
  */
 SECStatus
-sec_pkcs12_append_bag_to_safe_contents(PRArenaPool *arena, 
+sec_pkcs12_append_bag_to_safe_contents(PLArenaPool *arena,
 				       sec_PKCS12SafeContents *safeContents,
 				       sec_PKCS12SafeBag *safeBag)
 {
@@ -774,7 +774,7 @@ loser:
  * occurs NULL is returned.
  */
 sec_PKCS12CertBag *
-sec_PKCS12NewCertBag(PRArenaPool *arena, SECOidTag certType)
+sec_PKCS12NewCertBag(PLArenaPool *arena, SECOidTag certType)
 {
     sec_PKCS12CertBag *certBag = NULL;
     SECOidData *bagType = NULL;
@@ -818,7 +818,7 @@ loser:
  * occurs NULL is returned.
  */
 sec_PKCS12CRLBag *
-sec_PKCS12NewCRLBag(PRArenaPool *arena, SECOidTag crlType)
+sec_PKCS12NewCRLBag(PLArenaPool *arena, SECOidTag crlType)
 {
     sec_PKCS12CRLBag *crlBag = NULL;
     SECOidData *bagType = NULL;

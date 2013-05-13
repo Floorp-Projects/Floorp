@@ -32,7 +32,7 @@ int NSSUTIL_DoubleEscapeSize(const char *string, char quote1, char quote2);
 char *NSSUTIL_DoubleEscape(const char *string, char quote1, char quote2);
 
 unsigned long NSSUTIL_ArgParseSlotFlags(char *label,char *params);
-struct NSSUTILPreSlotInfoStr *NSSUTIL_ArgParseSlotInfo(PRArenaPool *arena,
+struct NSSUTILPreSlotInfoStr *NSSUTIL_ArgParseSlotInfo(PLArenaPool *arena,
 					 char *slotParams, int *retCount);
 char * NSSUTIL_MkSlotString(unsigned long slotID, unsigned long defaultFlags,
                   unsigned long timeout, unsigned char askpw_in,

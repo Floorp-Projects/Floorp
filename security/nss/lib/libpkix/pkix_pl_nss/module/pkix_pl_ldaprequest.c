@@ -493,7 +493,7 @@ pkix_pl_LdapRequest_RegisterSelf(void *plContext)
  * FUNCTION: pkix_pl_LdapRequest_Create
  * DESCRIPTION:
  *
- *  This function creates an LdapRequest using the PRArenaPool pointed to by
+ *  This function creates an LdapRequest using the PLArenaPool pointed to by
  *  "arena", a message number whose value is "msgnum", a base object pointed to
  *  by "issuerDN", a scope whose value is "scope", a derefAliases flag whose
  *  value is "derefAliases", a sizeLimit whose value is "sizeLimit", a timeLimit
@@ -506,7 +506,7 @@ pkix_pl_LdapRequest_RegisterSelf(void *plContext)
  *
  * PARAMETERS
  *  "arena"
- *      The address of the PRArenaPool to be used in the encoding. Must be
+ *      The address of the PLArenaPool to be used in the encoding. Must be
  *      non-NULL.
  *  "msgnum"
  *      The UInt32 message number to be used for the messageID component of the
@@ -615,7 +615,7 @@ pkix_pl_LdapRequest_RegisterSelf(void *plContext)
  */
 PKIX_Error *
 pkix_pl_LdapRequest_Create(
-        PRArenaPool *arena,
+        PLArenaPool *arena,
         PKIX_UInt32 msgnum,
         char *issuerDN,
         ScopeType scope,

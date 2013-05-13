@@ -913,6 +913,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   NS_DEFINE_CLASSINFO_DATA(LockedFile, nsEventTargetSH,
                            EVENTTARGET_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(CSSFontFeatureValuesRule, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
 #ifdef MOZ_TIME_MANAGER
   NS_DEFINE_CLASSINFO_DATA(MozTimeManager, nsDOMGenericSH,
@@ -2304,6 +2306,10 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMLockedFile)
   DOM_CLASSINFO_MAP_END
 
+  DOM_CLASSINFO_MAP_BEGIN(CSSFontFeatureValuesRule, nsIDOMCSSFontFeatureValuesRule)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSFontFeatureValuesRule)
+  DOM_CLASSINFO_MAP_END
+
 #ifdef MOZ_TIME_MANAGER
   DOM_CLASSINFO_MAP_BEGIN(MozTimeManager, nsIDOMMozTimeManager)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozTimeManager)
@@ -3644,8 +3650,8 @@ IDBConstantGetter(JSContext *cx, JSHandleObject obj, JSHandleId id, JSMutableHan
 
   // Redefine property to remove getter
   NS_ConvertASCIItoUTF16 valStr(c.value);
-  jsval value;
-  if (!xpc::StringToJsval(cx, valStr, &value)) {
+  JS::Rooted<JS::Value> value(cx);
+  if (!xpc::StringToJsval(cx, valStr, value.address())) {
     return JS_FALSE;
   }
   if (!::JS_DefineProperty(cx, obj, c.name, value,
@@ -3660,7 +3666,7 @@ IDBConstantGetter(JSContext *cx, JSHandleObject obj, JSHandleId id, JSMutableHan
 }
 
 static nsresult
-DefineIDBInterfaceConstants(JSContext *cx, JSObject *obj, const nsIID *aIID)
+DefineIDBInterfaceConstants(JSContext *cx, JS::Handle<JSObject*> obj, const nsIID *aIID)
 {
   const char* interface;
   if (aIID->Equals(NS_GET_IID(nsIIDBCursor))) {
@@ -5545,10 +5551,11 @@ nsNodeSH::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
 NS_IMETHODIMP
 nsNodeSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                     JSObject *aObj, jsid id, uint32_t flags,
+                     JSObject *aObj, jsid aId, uint32_t flags,
                      JSObject **objp, bool *_retval)
 {
   JS::Rooted<JSObject*> obj(cx, aObj);
+  JS::Rooted<jsid> id(cx, aId);
   if (id == sOnload_id || id == sOnerror_id) {
     // Make sure that this node can't go away while waiting for a
     // network load that could fire an event handler.
@@ -6770,10 +6777,11 @@ nsHTMLDocumentSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
 NS_IMETHODIMP
 nsHTMLDocumentSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
-                              JSContext *cx, JSObject *aObj, jsid id,
+                              JSContext *cx, JSObject *aObj, jsid aId,
                               jsval *vp, bool *_retval)
 {
   JS::Rooted<JSObject*> obj(cx, aObj);
+  JS::Rooted<jsid> id(cx, aId);
   nsCOMPtr<nsISupports> result;
 
   JSAutoRequest ar(cx);
@@ -7166,9 +7174,10 @@ nsCSSRuleListSH::GetItemAt(nsISupports *aNative, uint32_t aIndex,
 
 NS_IMETHODIMP
 nsStorage2SH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                         JSObject *obj, jsid id, uint32_t flags,
+                         JSObject *obj, jsid aId, uint32_t flags,
                          JSObject **objp, bool *_retval)
 {
+  JS::Rooted<jsid> id(cx, aId);
   if (ObjectIsNativeWrapper(cx, obj)) {
     return NS_OK;
   }

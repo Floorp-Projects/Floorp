@@ -1,0 +1,76 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Test localStorage usage while in a low device storage situation</title>
+
+<script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="text/javascript" src="localStorageCommon.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<script type="text/javascript">
+
+/*
+This test does the following:
+- Stores an item in localStorage.
+- Checks the stored value.
+- Emulates a low device storage situation.
+- Gets the stored item again.
+- Removes the stored item.
+- Fails storing a new value.
+- Emulates recovering from a low device storage situation.
+- Stores a new value.
+- Checks the stored value.
+*/
+
+function lowDeviceStorage(lowStorage) {
+  var data = lowStorage ? "full" : "free";
+  os().notifyObservers(null, "disk-space-watcher", data);
+}
+
+function startTest() {
+  // Add a test item.
+  localStorage.setItem("item", "value");
+  is(localStorage.getItem("item"), "value", "getItem()");
+
+  // Emulates a low device storage situation.
+  lowDeviceStorage(true);
+
+  // Checks that we can still access to the stored item.
+  is(localStorage.getItem("item"), "value",
+     "getItem() during a device storage situation");
+
+  // Removes the stored item.
+  localStorage.removeItem("item");
+  is(localStorage.getItem("item"), undefined,
+     "getItem() after removing the item");
+
+  // Fails storing a new item.
+  try {
+    localStorage.setItem("newItem", "value");
+    ok(false, "Storing a new item is expected to fail");
+  } catch(e) {
+    ok(true, "Got an expected exception " + e);
+  } finally {
+    is(localStorage.getItem("newItem"), undefined,
+       "setItem while device storage is low");
+  }
+
+  // Emulates recovering from a low device storage situation.
+  lowDeviceStorage(false);
+
+  // Add a test item after recovering from the low device storage situation.
+  localStorage.setItem("newItem", "value");
+  is(localStorage.getItem("newItem"), "value",
+     "getItem() with available storage");
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+
+</head>
+
+<body onload="startTest();">
+</body>
+</html>

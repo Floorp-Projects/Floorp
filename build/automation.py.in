@@ -917,7 +917,7 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
        Also attempts to obtain a screenshot before killing the process."""
     if not debuggerInfo:
       self.dumpScreen(utilityPath)
-    self.killAndGetStackNoScreenshot(self, processPID, utilityPath, debuggerInfo)
+    self.killAndGetStackNoScreenshot(processPID, utilityPath, debuggerInfo)
 
   def killAndGetStackNoScreenshot(self, processPID, utilityPath, debuggerInfo):
     """Kill the process, preferrably in a way that gets us a stack trace."""
