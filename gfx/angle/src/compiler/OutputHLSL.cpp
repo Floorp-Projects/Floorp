@@ -8,14 +8,13 @@
 
 #include "common/angleutils.h"
 #include "compiler/compiler_debug.h"
-#include "compiler/DetectDiscontinuity.h"
 #include "compiler/InfoSink.h"
-#include "compiler/SearchSymbol.h"
 #include "compiler/UnfoldShortCircuit.h"
+#include "compiler/SearchSymbol.h"
+#include "compiler/DetectDiscontinuity.h"
 
-#include <algorithm>
-#include <cfloat>
 #include <stdio.h>
+#include <algorithm>
 
 namespace sh
 {
@@ -99,7 +98,7 @@ OutputHLSL::~OutputHLSL()
 
 void OutputHLSL::output()
 {
-    mContainsLoopDiscontinuity = mContext.shaderType == SH_FRAGMENT_SHADER && containsLoopDiscontinuity(mContext.treeRoot);
+    mContainsLoopDiscontinuity = containsLoopDiscontinuity(mContext.treeRoot);
 
     mContext.treeRoot->traverse(this);   // Output the body first to determine what has to go in the header
     header();
@@ -974,7 +973,7 @@ bool OutputHLSL::visitBinary(Visit visit, TIntermBinary *node)
 
                     if (element)
                     {
-                        int i = element->getIConst(0);
+                        int i = element->getUnionArrayPointer()[0].getIConst();
 
                         switch (i)
                         {
@@ -1779,7 +1778,7 @@ bool OutputHLSL::visitLoop(Visit visit, TIntermLoop *node)
 {
     bool wasDiscontinuous = mInsideDiscontinuousLoop;
 
-    if (mContainsLoopDiscontinuity && !mInsideDiscontinuousLoop)
+    if (!mInsideDiscontinuousLoop)
     {
         mInsideDiscontinuousLoop = containsLoopDiscontinuity(node);
     }
@@ -1977,7 +1976,7 @@ bool OutputHLSL::handleExcessiveLoop(TIntermLoop *node)
                         if (constant->getBasicType() == EbtInt && constant->getNominalSize() == 1)
                         {
                             index = symbol;
-                            initial = constant->getIConst(0);
+                            initial = constant->getUnionArrayPointer()[0].getIConst();
                         }
                     }
                 }
@@ -1999,7 +1998,7 @@ bool OutputHLSL::handleExcessiveLoop(TIntermLoop *node)
                 if (constant->getBasicType() == EbtInt && constant->getNominalSize() == 1)
                 {
                     comparator = test->getOp();
-                    limit = constant->getIConst(0);
+                    limit = constant->getUnionArrayPointer()[0].getIConst();
                 }
             }
         }
@@ -2020,7 +2019,7 @@ bool OutputHLSL::handleExcessiveLoop(TIntermLoop *node)
             {
                 if (constant->getBasicType() == EbtInt && constant->getNominalSize() == 1)
                 {
-                    int value = constant->getIConst(0);
+                    int value = constant->getUnionArrayPointer()[0].getIConst();
 
                     switch (op)
                     {
@@ -2566,7 +2565,7 @@ const ConstantUnion *OutputHLSL::writeConstantUnion(const TType &type, const Con
         {
             switch (constUnion->getType())
             {
-              case EbtFloat: out << std::min(FLT_MAX, std::max(-FLT_MAX, constUnion->getFConst())); break;
+              case EbtFloat: out << constUnion->getFConst(); break;
               case EbtInt:   out << constUnion->getIConst(); break;
               case EbtBool:  out << constUnion->getBConst(); break;
               default: UNREACHABLE();

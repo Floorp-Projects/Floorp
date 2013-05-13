@@ -10,8 +10,8 @@
 #include <cstdlib>
 #include <sstream>
 
-#include "DiagnosticsBase.h"
-#include "DirectiveHandlerBase.h"
+#include "Diagnostics.h"
+#include "DirectiveHandler.h"
 #include "ExpressionParser.h"
 #include "MacroExpander.h"
 #include "Token.h"

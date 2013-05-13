@@ -1,0 +1,9 @@
+Debug
+Release
+*.sdf
+*.ncb
+*.suo
+*.vcproj.*
+*.vcxproj.user
+patches-*
+*.target.mk

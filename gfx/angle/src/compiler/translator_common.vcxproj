@@ -138,6 +138,7 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ArrayBoundsClamper.cpp" />
     <ClCompile Include="BuiltInFunctionEmulator.cpp" />
     <ClCompile Include="Compiler.cpp" />
     <ClCompile Include="debug.cpp" />
@@ -173,7 +174,6 @@
     <ClCompile Include="depgraph\DependencyGraphTraverse.cpp" />
     <ClCompile Include="timing\RestrictFragmentShaderTiming.cpp" />
     <ClCompile Include="timing\RestrictVertexShaderTiming.cpp" />
-    <ClCompile Include="..\third_party\compiler\ArrayBoundsClamper.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="glslang.l">
@@ -226,6 +226,7 @@
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ArrayBoundsClamper.h" />
     <ClInclude Include="BaseTypes.h" />
     <ClInclude Include="BuiltInFunctionEmulator.h" />
     <ClInclude Include="Common.h" />
@@ -266,7 +267,6 @@
     <ClInclude Include="depgraph\DependencyGraph.h" />
     <ClInclude Include="depgraph\DependencyGraphBuilder.h" />
     <ClInclude Include="depgraph\DependencyGraphOutput.h" />
-    <ClInclude Include="..\third_party\compiler\ArrayBoundsClamper.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="preprocessor\preprocessor.vcxproj">
