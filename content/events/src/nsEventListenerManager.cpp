@@ -858,11 +858,10 @@ nsEventListenerManager::CompileEventHandlerInternal(nsListenerStruct *aListenerS
     options.setFileAndLine(url.get(), lineNo)
            .setVersion(SCRIPTVERSION_DEFAULT);
 
-    JS::RootedObject rootedNull(cx, nullptr); // See bug 781070.
-    JSObject *handlerFun = nullptr;
-    result = nsJSUtils::CompileFunction(cx, rootedNull, options,
+    JS::Rooted<JSObject*> handlerFun(cx);
+    result = nsJSUtils::CompileFunction(cx, JS::NullPtr(), options,
                                         nsAtomCString(aListenerStruct->mTypeAtom),
-                                        argCount, argNames, *body, &handlerFun);
+                                        argCount, argNames, *body, handlerFun.address());
     NS_ENSURE_SUCCESS(result, result);
     handler = handlerFun;
     NS_ENSURE_TRUE(handler, NS_ERROR_FAILURE);
