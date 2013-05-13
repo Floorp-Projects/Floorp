@@ -9,11 +9,14 @@ PARALLEL_DIRS += [
     'crypto',
 ]
 
-if CONFIG['MOZ_SERVICES_HEALTHREPORT']:
-    PARALLEL_DIRS += ['healthreport']
+if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
+    # MOZ_SERVICES_HEALTHREPORT and therefore MOZ_DATA_REPORTING are
+    # defined on Android, but these features are implemented using Java.
+    if CONFIG['MOZ_SERVICES_HEALTHREPORT']:
+        PARALLEL_DIRS += ['healthreport']
 
-if CONFIG['MOZ_DATA_REPORTING']:
-    PARALLEL_DIRS += ['datareporting']
+    if CONFIG['MOZ_DATA_REPORTING']:
+        PARALLEL_DIRS += ['datareporting']
 
 if CONFIG['MOZ_SERVICES_METRICS']:
     PARALLEL_DIRS += ['metrics']
