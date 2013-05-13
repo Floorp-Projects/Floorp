@@ -196,9 +196,21 @@ nsVolumeService::GetVolumeByPath(const nsAString& aPath, nsIVolume **aResult)
   nsCString utf8Path = NS_ConvertUTF16toUTF8(aPath);
   char realPathBuf[PATH_MAX];
 
-  if (!realpath(utf8Path.get(), realPathBuf)) {
-    ERR("GetVolumeByPath: realpath on '%s' failed: %d", utf8Path.get(), errno);
-    return NSRESULT_FOR_ERRNO();
+  while (realpath(utf8Path.get(), realPathBuf) < 0) {
+    if (errno != ENOENT) {
+      ERR("GetVolumeByPath: realpath on '%s' failed: %d", utf8Path.get(), errno);
+      return NSRESULT_FOR_ERRNO();
+    }
+    // The pathname we were passed doesn't exist, so we try stripping off trailing
+    // components until we get a successful call to realpath, or until we run out
+    // of components (if we finally get to /something then we also stop).
+    int32_t slashIndex = utf8Path.RFindChar('/');
+    if ((slashIndex == kNotFound) || (slashIndex == 0)) {
+      errno = ENOENT;
+      ERR("GetVolumeByPath: realpath on '%s' failed.", utf8Path.get());
+      return NSRESULT_FOR_ERRNO();
+    }
+    utf8Path = Substring(utf8Path, 0, slashIndex);
   }
 
   // The volume mount point is always a directory. Something like /mnt/sdcard

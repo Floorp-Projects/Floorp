@@ -226,6 +226,8 @@
     "dom/tests/mochitest/ajax/offline/test_fallback.html":"",
     "dom/tests/mochitest/ajax/offline/test_foreign.html":"",
     "dom/tests/mochitest/ajax/offline/test_identicalManifest.html":"",
+    "dom/tests/mochitest/ajax/offline/test_lowDeviceStorage.html":"",
+    "dom/tests/mochitest/ajax/offline/test_lowDeviceStorageDuringUpdate.html":"",
     "dom/tests/mochitest/ajax/offline/test_missingFile.html":"",
     "dom/tests/mochitest/ajax/offline/test_missingManifest.html":"",
     "dom/tests/mochitest/ajax/offline/test_obsolete.html":"",
