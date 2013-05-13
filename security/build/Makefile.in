@@ -495,4 +495,4 @@ endif # MOZ_FOLD_LIBS
 
 # Work around NSS build system race condition creating certdata.c in
 # security/nss/lib/ckfw/builtins. See bug #836220.
-libs-nss/lib: $(call mkdir_deps,../nss/lib/ckfw/builtins)
+libs-nss/lib$(if $(MOZ_FOLD_LIBS),/ckfw): $(call mkdir_deps,../nss/lib/ckfw/builtins)
