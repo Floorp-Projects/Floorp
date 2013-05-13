@@ -417,27 +417,33 @@ RILContentHelper.prototype = {
   },
 
   get iccInfo() {
-    return this.getRilContext().iccInfo;
+    let context = this.getRilContext();
+    return context && context.iccInfo;
   },
 
   get voiceConnectionInfo() {
-    return this.getRilContext().voiceConnectionInfo;
+    let context = this.getRilContext();
+    return context && context.voiceConnectionInfo;
   },
 
   get dataConnectionInfo() {
-    return this.getRilContext().dataConnectionInfo;
+    let context = this.getRilContext();
+    return context && context.dataConnectionInfo;
   },
 
   get cardState() {
-    return this.getRilContext().cardState;
+    let context = this.getRilContext();
+    return context && context.cardState;
   },
 
   get retryCount() {
-    return this.getRilContext().retryCount;
+    let context = this.getRilContext();
+    return context && context.retryCount;
   },
 
   get networkSelectionMode() {
-    return this.getRilContext().networkSelectionMode;
+    let context = this.getRilContext();
+    return context && context.networkSelectionMode;
   },
 
   /**
