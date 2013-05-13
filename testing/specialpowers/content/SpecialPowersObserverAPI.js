@@ -268,6 +268,18 @@ SpecialPowersObserverAPI.prototype = {
         }
         break;
 
+      case "SPObserverService":
+        switch (aMessage.json.op) {
+          case "notify":
+            let topic = aMessage.json.observerTopic;
+            let data = aMessage.json.observerData
+            Services.obs.notifyObservers(null, topic, data);
+            break;
+          default:
+            throw new SpecialPowersException("Invalid operation for SPObserverervice");
+        }
+        break;
+
       default:
         throw new SpecialPowersException("Unrecognized Special Powers API");
     }
