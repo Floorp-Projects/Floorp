@@ -282,6 +282,8 @@ BluetoothOppManager::Connect(const nsAString& aDeviceObjectPath,
     mL2capSocket = nullptr;
   }
 
+  MOZ_ASSERT(!mRunnable);
+
   mRunnable = aRunnable;
   mSocket =
     new BluetoothSocket(this, BluetoothSocketType::RFCOMM, true, true);
