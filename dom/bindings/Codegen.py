@@ -8068,6 +8068,11 @@ class CGBindingRoot(CGThing):
             return any(m.getExtendedAttribute("Pref") for m in iface.members + [iface]);
         requiresPreferences = any(descriptorRequiresPreferences(d) for d in descriptors)
         hasOwnedDescriptors = any(d.nativeOwnership == 'owned' for d in descriptors)
+        def descriptorRequiresContentUtils(desc):
+            return ((desc.concrete and not desc.proxy and
+                     not desc.workers and desc.wrapperCache) or
+                    desc.interface.hasInterfaceObject())
+        requiresContentUtils = any(descriptorRequiresContentUtils(d) for d in descriptors)
         hasWorkerStuff = len(config.getDescriptors(webIDLFile=webIDLFile,
                                                    workers=True)) != 0
         mainDictionaries = config.getDictionaries(webIDLFile=webIDLFile,
@@ -8175,14 +8180,14 @@ class CGBindingRoot(CGThing):
                           'XPCWrapper.h',
                           'nsDOMQS.h',
                           'AccessCheck.h',
-                          'nsContentUtils.h',
                           # Have to include nsDOMQS.h to get fast arg unwrapping
                           # for old-binding things with castability.
                           'nsDOMQS.h'
                           ] + (['WorkerPrivate.h',
                                 'nsThreadUtils.h'] if hasWorkerStuff else [])
                             + (['mozilla/Preferences.h'] if requiresPreferences else [])
-                            + (['mozilla/dom/NonRefcountedDOMObject.h'] if hasOwnedDescriptors else []),
+                            + (['mozilla/dom/NonRefcountedDOMObject.h'] if hasOwnedDescriptors else [])
+                            + (['nsContentUtils.h'] if requiresContentUtils else []),
                          curr,
                          config,
                          jsImplemented)
