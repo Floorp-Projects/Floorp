@@ -113,7 +113,7 @@ struct NS_GFX nsFont {
          nscoord aSize);
 
   // Initialize the font struct with a (potentially) unicode name
-  nsFont(const nsString& aName, uint8_t aStyle, uint8_t aVariant,
+  nsFont(const nsSubstring& aName, uint8_t aStyle, uint8_t aVariant,
          uint16_t aWeight, int16_t aStretch, uint8_t aDecoration,
          nscoord aSize);
 
