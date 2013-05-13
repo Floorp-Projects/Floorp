@@ -35,7 +35,7 @@ nsFont::nsFont(const char* aName, uint8_t aStyle, uint8_t aVariant,
   variantPosition = NS_FONT_VARIANT_POSITION_NORMAL;
 }
 
-nsFont::nsFont(const nsString& aName, uint8_t aStyle, uint8_t aVariant,
+nsFont::nsFont(const nsSubstring& aName, uint8_t aStyle, uint8_t aVariant,
                uint16_t aWeight, int16_t aStretch, uint8_t aDecoration,
                nscoord aSize)
   : name(aName)

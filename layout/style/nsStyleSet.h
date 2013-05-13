@@ -28,6 +28,7 @@
 class nsIURI;
 class nsCSSFontFaceRule;
 class nsCSSKeyframesRule;
+class nsCSSFontFeatureValuesRule;
 class nsCSSPageRule;
 class nsRuleWalker;
 struct ElementDependentRuleProcessorData;
@@ -137,7 +138,7 @@ class nsStyleSet
                           nsCSSPseudoElements::Type aType,
                           nsStyleContext* aParentContext,
                           TreeMatchContext& aTreeMatchContext);
-  
+
   // Get a style context for an anonymous box.  aPseudoTag is the
   // pseudo-tag to use and must be non-null.
   already_AddRefed<nsStyleContext>
@@ -164,11 +165,13 @@ class nsStyleSet
   bool AppendKeyframesRules(nsPresContext* aPresContext,
                               nsTArray<nsCSSKeyframesRule*>& aArray);
 
-  already_AddRefed<gfxFontFeatureValueSet>
-  GetFontFeatureValuesLookup()
-  {
-    return nullptr; // not implemented yet
-  }
+  // Fetch object for looking up font feature values
+  already_AddRefed<gfxFontFeatureValueSet> GetFontFeatureValuesLookup();
+
+  // Append all the currently-active font feature values rules to aArray.
+  // Return true for success and false for failure.
+  bool AppendFontFeatureValuesRules(nsPresContext* aPresContext,
+                              nsTArray<nsCSSFontFeatureValuesRule*>& aArray);
 
   // Append all the currently-active page rules to aArray.  Return
   // true for success and false for failure.
@@ -412,6 +415,7 @@ class nsStyleSet
   unsigned mInShutdown : 1;
   unsigned mAuthorStyleDisabled: 1;
   unsigned mInReconstruct : 1;
+  unsigned mInitFontFeatureValuesLookup : 1;
   unsigned mDirty : 9;  // one dirty bit is used per sheet type
 
   uint32_t mUnusedRuleNodeCount; // used to batch rule node GC
@@ -429,6 +433,9 @@ class nsStyleSet
   // BeginReconstruct and EndReconstruct, but in case of bugs that cause
   // style contexts to exist too long, may last longer.
   nsTArray<nsRuleNode*> mOldRuleTrees;
+
+  // whether font feature values lookup object needs initialization
+  nsRefPtr<gfxFontFeatureValueSet> mFontFeatureValuesLookup;
 };
 
 #ifdef _IMPL_NS_LAYOUT
