@@ -612,6 +612,12 @@ protected:
                    bool*             aKeepReflowGoing);
 
   /**
+    * If NS_BLOCK_LOOK_FOR_DIRTY_FRAMES is set, call MarkLineDirty
+    * on any line with a child frame that is dirty.
+    */
+  void LazyMarkLinesDirty();
+
+  /**
    * Mark |aLine| dirty, and, if necessary because of possible
    * pull-up, mark the previous line dirty as well. Also invalidates textruns
    * on those lines because the text in the lines might have changed due to
