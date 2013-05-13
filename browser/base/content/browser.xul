@@ -953,7 +953,6 @@
                      ondrop="DownloadsIndicatorView.onDrop(event);"
                      ondragover="DownloadsIndicatorView.onDragOver(event);"
                      ondragenter="DownloadsIndicatorView.onDragOver(event);"
-                     ondragleave="DownloadsIndicatorView.onDragLeave(event);"
                      label="&downloads.label;"
                      tooltiptext="&downloads.tooltip;"/>
 
