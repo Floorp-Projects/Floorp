@@ -27,7 +27,7 @@ function onTabViewWindowLoaded(win) {
   // Create a bunch of tabs in the group
   let bg = {inBackground: true};
   let datatext = win.gBrowser.loadOneTab("data:text/plain,bug610242", bg);
-  let datahtml = win.gBrowser.loadOneTab("data:text/html,<blink>don't blink!</blink>", bg);
+  let datahtml = win.gBrowser.loadOneTab("data:text/html,<h1>hi!</h1>", bg);
   let mozilla  = win.gBrowser.loadOneTab("about:mozilla", bg);
   let synclog   = win.gBrowser.loadOneTab("about:sync-log", bg);
   let html     = win.gBrowser.loadOneTab("http://example.com", bg);
