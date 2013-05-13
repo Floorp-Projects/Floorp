@@ -134,8 +134,8 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Diagnostics.cpp" />
-    <ClCompile Include="DirectiveHandler.cpp" />
+    <ClCompile Include="DiagnosticsBase.cpp" />
+    <ClCompile Include="DirectiveHandlerBase.cpp" />
     <ClCompile Include="DirectiveParser.cpp" />
     <ClCompile Include="ExpressionParser.cpp" />
     <ClCompile Include="Input.cpp" />
@@ -148,8 +148,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="length_limits.h" />
-    <ClInclude Include="Diagnostics.h" />
-    <ClInclude Include="DirectiveHandler.h" />
+    <ClInclude Include="DiagnosticsBase.h" />
+    <ClInclude Include="DirectiveHandlerBase.h" />
     <ClInclude Include="DirectiveParser.h" />
     <ClInclude Include="ExpressionParser.h" />
     <ClInclude Include="Input.h" />

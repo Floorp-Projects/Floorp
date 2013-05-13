@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2002-2010 The ANGLE Project Authors. All rights reserved.
+// Copyright (c) 2002-2013 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -183,7 +183,7 @@ enum TOperator {
     EOpVectorTimesScalarAssign,
     EOpMatrixTimesScalarAssign,
     EOpMatrixTimesMatrixAssign,
-    EOpDivAssign,
+    EOpDivAssign
 };
 
 extern const char* getOperatorString(TOperator op);
@@ -269,7 +269,7 @@ protected:
 enum TLoopType {
     ELoopFor,
     ELoopWhile,
-    ELoopDoWhile,
+    ELoopDoWhile
 };
 
 class TIntermLoop : public TIntermNode {
@@ -358,7 +358,10 @@ public:
     TIntermConstantUnion(ConstantUnion *unionPointer, const TType& t) : TIntermTyped(t), unionArrayPointer(unionPointer) { }
 
     ConstantUnion* getUnionArrayPointer() const { return unionArrayPointer; }
-    void setUnionArrayPointer(ConstantUnion *c) { unionArrayPointer = c; }
+    
+    int getIConst(int index) const { return unionArrayPointer ? unionArrayPointer[index].getIConst() : 0; }
+    float getFConst(int index) const { return unionArrayPointer ? unionArrayPointer[index].getFConst() : 0.0f; }
+    bool getBConst(int index) const { return unionArrayPointer ? unionArrayPointer[index].getBConst() : false; }
 
     virtual TIntermConstantUnion* getAsConstantUnion()  { return this; }
     virtual void traverse(TIntermTraverser*);

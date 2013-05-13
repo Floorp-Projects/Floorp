@@ -9,6 +9,8 @@ Name Strings
 Contributors
 
     Nicolas Capens, TransGaming
+    Daniel Koch, TransGaming
+    Shannon Woods, TransGaming
     Kenneth Russell, Google
     Vangelis Kokkevis, Google
     Gregg Tavares, Google
@@ -17,7 +19,7 @@ Contributors
 
 Contact
 
-    Daniel Koch, TransGaming (daniel 'at' transgaming.com)
+    Shannon Woods, TransGaming (shannon 'dot' woods 'at' transgaming.com)
 
 Status
 
@@ -25,8 +27,8 @@ Status
 
 Version
 
-    Last Modifed Date: June 4, 2012
-    Revision: #3
+    Last Modified Date: February 25, 2013
+    Revision: #4
 
 Number
 
@@ -89,7 +91,7 @@ Additions to Chapter 2 of the OpenGL ES 2.0 Specification (OpenGL Operation)
 
     If a vertex shader uses..."
 
-Additions to Chapter 3 of the OpenGL ES 2.0 specification (Rasterizatoin)
+Additions to Chapter 3 of the OpenGL ES 2.0 specification (Rasterization)
 
     Add the following rows to Table 3.2 (page 62):
 
@@ -219,8 +221,7 @@ Additions to Chapter 3 of the OpenGL ES 2.0 specification (Rasterizatoin)
     below. Otherwise, the texture unit operates in the normal manner.
 
     Let <D_t> be the depth texture value, provided by the shader's texture lookup
-    function. Then the effective texture value, <L_t> or <A_t> is computed
-    as follows:
+    function. Then the effective texture value is computed as follows:
             <Tau> = <D_t>
 
     If the texture image has a base internal format of DEPTH_STENCIL_OES, then
@@ -228,10 +229,10 @@ Additions to Chapter 3 of the OpenGL ES 2.0 specification (Rasterizatoin)
     not include a stencil index component, but includes only the depth
     component.
 
-    The resulting <Tau> is assigned to <L_t>. In some implementations, 
-    <Tau> is also assigned to <A_t>. Thus in table 3.12, textures with
-    depth component data behave as if their base internal format is
-    either LUMINANCE or LUMINANCE_ALPHA."
+    The resulting <Tau> is assigned to <R_t>. In some implementations, <Tau> is
+    also assigned to <G_t>, <B_t>, or <A_t>. Thus in table 3.12, textures with
+    depth component data behave as if their base internal format is RGBA, with
+    values in <G_t>, <B_t>, and <A_t> being implementation dependent."
 
     Add the following to section 3.7.11 "Mipmap Generation":
 
@@ -363,8 +364,8 @@ Issues
        RESOLVED: This extension:
          - does not support loading pre-baked depth stencil data via 
            TexImage2D or TexSubImage2D.
-         - allows variability in w-component of the sample results from
-           depth textures.
+         - allows variability in the y-, z-, and w-components of the sample
+           results from depth textures.
          - only supports one level textures.
          - explicitly lists the errors for unsupported functionality.
            Since these were not clearly specified in the OES_depth_texture
@@ -392,6 +393,8 @@ Issues
 
 Revision History
  
+    02/25/2013  swoods  revise to allow texture lookup to guarantee depth values
+                        only in red channel of sample result.
     06/04/2012  dgkoch  fix errors, disallow multi-level depth textures.
     05/30/2012  dgkoch  minor updates and add issues.
     05/23/2012  dgkoch  intial revision based on OES_depth_texture and 

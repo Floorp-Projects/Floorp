@@ -4,7 +4,7 @@
 // found in the LICENSE file.
 //
 
-#include "Diagnostics.h"
+#include "DiagnosticsBase.h"
 
 #include <cassert>
 
