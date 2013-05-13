@@ -302,12 +302,10 @@ void nsFont::AddFontFeaturesToStyle(gfxFontStyle *aStyle) const
   switch (kerning) {
     case NS_FONT_KERNING_NONE:
       setting.mValue = 0;
-      aStyle->kerning = false;
       aStyle->featureSettings.AppendElement(setting);
       break;
     case NS_FONT_KERNING_NORMAL:
       setting.mValue = 1;
-      aStyle->kerning = true;
       aStyle->featureSettings.AppendElement(setting);
       break;
     default:

@@ -965,7 +965,8 @@ gfxHarfBuzzShaper::ShapeText(gfxContext      *aContext,
     }
 
     const gfxFontStyle *style = mFont->GetStyle();
-    FontCallbackData fcd(this, aContext, style->kerning);
+    // kerning is enabled *except* when explicitly disabled (font-kerning: none)
+    FontCallbackData fcd(this, aContext, !mFont->KerningDisabled());
     hb_font_t *font = hb_font_create(mHBFace);
     hb_font_set_funcs(font, sHBFontFuncs, &fcd, nullptr);
     hb_font_set_ppem(font, mFont->GetAdjustedSize(), mFont->GetAdjustedSize());
