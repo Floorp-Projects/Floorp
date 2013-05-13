@@ -11,9 +11,6 @@ relativesrcdir = @relativesrcdir@
 
 include $(topsrcdir)/config/config.mk
 
-# Module name for xpcshell tests.
-DISABLED_XPCSHELL_TESTS = unit
-
 # Mochitest tests
 MOCHITEST_FILES = \
     test_basic_form.html \
