@@ -476,57 +476,6 @@ void imgFrame::Draw(gfxContext *aContext, gfxPattern::GraphicsFilter aFilter,
   }
 }
 
-nsresult imgFrame::Extract(const nsIntRect& aRegion, imgFrame** aResult)
-{
-  nsAutoPtr<imgFrame> subImage(new imgFrame());
-
-  // The scaling problems described in bug 468496 are especially
-  // likely to be visible for the sub-image, as at present the only
-  // user is the border-image code and border-images tend to get
-  // stretched a lot.  At the same time, the performance concerns
-  // that prevent us from just using Cairo's fallback scaler when
-  // accelerated graphics won't cut it are less relevant to such
-  // images, since they also tend to be small.  Thus, we forcibly
-  // disable the use of anything other than a client-side image
-  // surface for the sub-image; this ensures that the correct
-  // (albeit slower) Cairo fallback scaler will be used.
-  subImage->mNeverUseDeviceSurface = true;
-
-  nsresult rv = subImage->Init(0, 0, aRegion.width, aRegion.height,
-                               mFormat, mPaletteDepth);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  subImage->SetAsNonPremult(mNonPremult);
-
-  // scope to destroy ctx
-  {
-    gfxContext ctx(subImage->ThebesSurface());
-    ctx.SetOperator(gfxContext::OPERATOR_SOURCE);
-    if (mSinglePixel) {
-      ctx.SetDeviceColor(mSinglePixelColor);
-    } else {
-      // SetSource() places point (0,0) of its first argument at
-      // the coordinages given by its second argument.  We want
-      // (x,y) of the image to be (0,0) of source space, so we
-      // put (0,0) of the image at (-x,-y).
-      ctx.SetSource(this->ThebesSurface(), gfxPoint(-aRegion.x, -aRegion.y));
-    }
-    ctx.Rectangle(gfxRect(0, 0, aRegion.width, aRegion.height));
-    ctx.Fill();
-  }
-
-  nsIntRect filled(0, 0, aRegion.width, aRegion.height);
-
-  rv = subImage->ImageUpdated(filled);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  subImage->Optimize();
-
-  *aResult = subImage.forget();
-
-  return NS_OK;
-}
-
 nsresult imgFrame::ImageUpdated(const nsIntRect &aUpdateRect)
 {
   mDecoded.UnionRect(mDecoded, aUpdateRect);
