@@ -1106,6 +1106,10 @@ let BookmarkingUI = {
   },
 
   _updateToolbarStyle: function BUI__updateToolbarStyle() {
+    if (!this.button) {
+      return;
+    }
+
     let personalToolbar = document.getElementById("PersonalToolbar");
     let onPersonalToolbar = this.button.parentNode == personalToolbar ||
                             this.button.parentNode.parentNode == personalToolbar;
