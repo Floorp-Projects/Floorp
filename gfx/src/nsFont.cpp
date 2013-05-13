@@ -11,8 +11,7 @@
 
 nsFont::nsFont(const char* aName, uint8_t aStyle, uint8_t aVariant,
                uint16_t aWeight, int16_t aStretch, uint8_t aDecoration,
-               nscoord aSize, float aSizeAdjust,
-               const nsString* aLanguageOverride)
+               nscoord aSize)
 {
   NS_ASSERTION(aName && IsASCII(nsDependentCString(aName)),
                "Must only pass ASCII names here");
@@ -24,16 +23,21 @@ nsFont::nsFont(const char* aName, uint8_t aStyle, uint8_t aVariant,
   stretch = aStretch;
   decorations = aDecoration;
   size = aSize;
-  sizeAdjust = aSizeAdjust;
-  if (aLanguageOverride) {
-    languageOverride = *aLanguageOverride;
-  }
+  sizeAdjust = 0.0;
+  kerning = NS_FONT_KERNING_AUTO;
+  synthesis = NS_FONT_SYNTHESIS_WEIGHT | NS_FONT_SYNTHESIS_STYLE;
+
+  variantAlternates = 0;
+  variantCaps = NS_FONT_VARIANT_CAPS_NORMAL;
+  variantEastAsian = 0;
+  variantLigatures = 0;
+  variantNumeric = 0;
+  variantPosition = NS_FONT_VARIANT_POSITION_NORMAL;
 }
 
 nsFont::nsFont(const nsString& aName, uint8_t aStyle, uint8_t aVariant,
                uint16_t aWeight, int16_t aStretch, uint8_t aDecoration,
-               nscoord aSize, float aSizeAdjust,
-               const nsString* aLanguageOverride)
+               nscoord aSize)
   : name(aName)
 {
   style = aStyle;
@@ -43,10 +47,16 @@ nsFont::nsFont(const nsString& aName, uint8_t aStyle, uint8_t aVariant,
   stretch = aStretch;
   decorations = aDecoration;
   size = aSize;
-  sizeAdjust = aSizeAdjust;
-  if (aLanguageOverride) {
-    languageOverride = *aLanguageOverride;
-  }
+  sizeAdjust = 0.0;
+  kerning = NS_FONT_KERNING_AUTO;
+  synthesis = NS_FONT_SYNTHESIS_WEIGHT | NS_FONT_SYNTHESIS_STYLE;
+
+  variantAlternates = 0;
+  variantCaps = NS_FONT_VARIANT_CAPS_NORMAL;
+  variantEastAsian = 0;
+  variantLigatures = 0;
+  variantNumeric = 0;
+  variantPosition = NS_FONT_VARIANT_POSITION_NORMAL;
 }
 
 nsFont::nsFont(const nsFont& aOther)
@@ -60,8 +70,16 @@ nsFont::nsFont(const nsFont& aOther)
   decorations = aOther.decorations;
   size = aOther.size;
   sizeAdjust = aOther.sizeAdjust;
-  languageOverride = aOther.languageOverride;
+  kerning = aOther.kerning;
+  synthesis = aOther.synthesis;
   fontFeatureSettings = aOther.fontFeatureSettings;
+  languageOverride = aOther.languageOverride;
+  variantAlternates = aOther.variantAlternates;
+  variantCaps = aOther.variantCaps;
+  variantEastAsian = aOther.variantEastAsian;
+  variantLigatures = aOther.variantLigatures;
+  variantNumeric = aOther.variantNumeric;
+  variantPosition = aOther.variantPosition;
 }
 
 nsFont::nsFont()
@@ -81,8 +99,16 @@ bool nsFont::BaseEquals(const nsFont& aOther) const
       (size == aOther.size) &&
       (sizeAdjust == aOther.sizeAdjust) &&
       name.Equals(aOther.name, nsCaseInsensitiveStringComparator()) &&
+      (kerning == aOther.kerning) &&
+      (synthesis == aOther.synthesis) &&
+      (fontFeatureSettings == aOther.fontFeatureSettings) &&
       (languageOverride == aOther.languageOverride) &&
-      (fontFeatureSettings == aOther.fontFeatureSettings)) {
+      (variantAlternates == aOther.variantAlternates) &&
+      (variantCaps == aOther.variantCaps) &&
+      (variantEastAsian == aOther.variantEastAsian) &&
+      (variantLigatures == aOther.variantLigatures) &&
+      (variantNumeric == aOther.variantNumeric) &&
+      (variantPosition == aOther.variantPosition)) {
     return true;
   }
   return false;
@@ -109,8 +135,16 @@ nsFont& nsFont::operator=(const nsFont& aOther)
   decorations = aOther.decorations;
   size = aOther.size;
   sizeAdjust = aOther.sizeAdjust;
-  languageOverride = aOther.languageOverride;
+  kerning = aOther.kerning;
+  synthesis = aOther.synthesis;
   fontFeatureSettings = aOther.fontFeatureSettings;
+  languageOverride = aOther.languageOverride;
+  variantAlternates = aOther.variantAlternates;
+  variantCaps = aOther.variantCaps;
+  variantEastAsian = aOther.variantEastAsian;
+  variantLigatures = aOther.variantLigatures;
+  variantNumeric = aOther.variantNumeric;
+  variantPosition = aOther.variantPosition;
   return *this;
 }
 
