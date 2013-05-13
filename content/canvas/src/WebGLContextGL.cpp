@@ -4283,7 +4283,6 @@ WebGLContext::CompileShader(WebGLShader *shader)
                              SH_ENFORCE_PACKING_RESTRICTIONS;
 
         // we want to do this everywhere, but:
-//TODO: Enable on windows:
 #ifndef XP_WIN // to do this on Windows, we need ANGLE r1719, 1733, 1734.
 #ifndef XP_MACOSX // to do this on Mac, we need to do it only on Mac OSX > 10.6 as this
                   // causes the shader compiler in 10.6 to crash
@@ -4310,7 +4309,7 @@ WebGLContext::CompileShader(WebGLShader *shader)
         }
 
         if (!ShCompile(compiler, &s, 1, compileOptions)) {
-            size_t len = 0;
+            int len = 0;
             ShGetInfo(compiler, SH_INFO_LOG_LENGTH, &len);
 
             if (len) {
@@ -4326,15 +4325,15 @@ WebGLContext::CompileShader(WebGLShader *shader)
             return;
         }
 
-        size_t num_attributes = 0;
+        int num_attributes = 0;
         ShGetInfo(compiler, SH_ACTIVE_ATTRIBUTES, &num_attributes);
-        size_t num_uniforms = 0;
+        int num_uniforms = 0;
         ShGetInfo(compiler, SH_ACTIVE_UNIFORMS, &num_uniforms);
-        size_t attrib_max_length = 0;
+        int attrib_max_length = 0;
         ShGetInfo(compiler, SH_ACTIVE_ATTRIBUTE_MAX_LENGTH, &attrib_max_length);
-        size_t uniform_max_length = 0;
+        int uniform_max_length = 0;
         ShGetInfo(compiler, SH_ACTIVE_UNIFORM_MAX_LENGTH, &uniform_max_length);
-        size_t mapped_max_length = 0;
+        int mapped_max_length = 0;
         ShGetInfo(compiler, SH_MAPPED_NAME_MAX_LENGTH, &mapped_max_length);
 
         shader->mAttribMaxNameLength = attrib_max_length;
@@ -4347,11 +4346,10 @@ WebGLContext::CompileShader(WebGLShader *shader)
         nsAutoArrayPtr<char> uniform_name(new char[uniform_max_length+1]);
         nsAutoArrayPtr<char> mapped_name(new char[mapped_max_length+1]);
 
-        for (size_t i = 0; i < num_uniforms; i++) {
-            size_t length;
-            int size;
+        for (int i = 0; i < num_uniforms; i++) {
+            int length, size;
             ShDataType type;
-            ShGetActiveUniform(compiler, (int)i,
+            ShGetActiveUniform(compiler, i,
                                 &length, &size, &type,
                                 uniform_name,
                                 mapped_name);
@@ -4376,11 +4374,10 @@ WebGLContext::CompileShader(WebGLShader *shader)
 
         if (useShaderSourceTranslation) {
 
-            for (size_t i = 0; i < num_attributes; i++) {
-                size_t length;
-                int size;
+            for (int i = 0; i < num_attributes; i++) {
+                int length, size;
                 ShDataType type;
-                ShGetActiveAttrib(compiler, (int)i,
+                ShGetActiveAttrib(compiler, i,
                                   &length, &size, &type,
                                   attribute_name,
                                   mapped_name);
@@ -4389,7 +4386,7 @@ WebGLContext::CompileShader(WebGLShader *shader)
                                                     nsDependentCString(mapped_name)));
             }
 
-            size_t len = 0;
+            int len = 0;
             ShGetInfo(compiler, SH_OBJECT_CODE_LENGTH, &len);
 
             nsAutoCString translatedSrc;

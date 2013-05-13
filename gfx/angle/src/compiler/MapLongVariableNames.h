@@ -31,7 +31,7 @@ public:
     void Insert(const char* originalName, const char* mappedName);
 
     // Return the number of entries in the map.
-    size_t Size() const;
+    int Size() const;
 
 private:
     LongNameMap();

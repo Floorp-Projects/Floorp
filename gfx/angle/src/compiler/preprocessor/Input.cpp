@@ -17,24 +17,25 @@ Input::Input() : mCount(0), mString(0)
 {
 }
 
-Input::Input(size_t count, const char* const string[], const int length[]) :
+Input::Input(int count, const char* const string[], const int length[]) :
     mCount(count),
     mString(string)
 {
+    assert(mCount >= 0);
     mLength.reserve(mCount);
-    for (size_t i = 0; i < mCount; ++i)
+    for (int i = 0; i < mCount; ++i)
     {
         int len = length ? length[i] : -1;
         mLength.push_back(len < 0 ? std::strlen(mString[i]) : len);
     }
 }
 
-size_t Input::read(char* buf, size_t maxSize)
+int Input::read(char* buf, int maxSize)
 {
-    size_t nRead = 0;
+    int nRead = 0;
     while ((nRead < maxSize) && (mReadLoc.sIndex < mCount))
     {
-        size_t size = mLength[mReadLoc.sIndex] - mReadLoc.cIndex;
+        int size = mLength[mReadLoc.sIndex] - mReadLoc.cIndex;
         size = std::min(size, maxSize);
         std::memcpy(buf + nRead, mString[mReadLoc.sIndex] + mReadLoc.cIndex, size);
         nRead += size;

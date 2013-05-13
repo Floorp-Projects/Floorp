@@ -4,6 +4,7 @@
 // found in the LICENSE file.
 //
 
+#include "compiler/ArrayBoundsClamper.h"
 #include "compiler/BuiltInFunctionEmulator.h"
 #include "compiler/DetectRecursion.h"
 #include "compiler/ForLoopUnroll.h"
@@ -19,7 +20,6 @@
 #include "compiler/depgraph/DependencyGraphOutput.h"
 #include "compiler/timing/RestrictFragmentShaderTiming.h"
 #include "compiler/timing/RestrictVertexShaderTiming.h"
-#include "third_party/compiler/ArrayBoundsClamper.h"
 
 bool isWebGLBasedSpec(ShShaderSpec spec)
 {
@@ -38,7 +38,6 @@ bool InitializeSymbolTable(
     // The builtins deliberately don't specify precisions for the function
     // arguments and return types. For that reason we don't try to check them.
     TParseContext parseContext(symbolTable, extBehavior, intermediate, type, spec, 0, false, NULL, infoSink);
-    parseContext.fragmentPrecisionHigh = resources.FragmentPrecisionHigh == 1;
 
     GlobalParseContext = &parseContext;
 
@@ -103,8 +102,6 @@ TShHandleBase::~TShHandleBase() {
 TCompiler::TCompiler(ShShaderType type, ShShaderSpec spec)
     : shaderType(type),
       shaderSpec(spec),
-      fragmentPrecisionHigh(false),
-      clampingStrategy(SH_CLAMP_WITH_CLAMP_INTRINSIC),
       builtInFunctionEmulator(type)
 {
     longNameMap = LongNameMap::GetInstance();
@@ -127,13 +124,6 @@ bool TCompiler::Init(const ShBuiltInResources& resources)
     if (!InitBuiltInSymbolTable(resources))
         return false;
     InitExtensionBehavior(resources, extensionBehavior);
-    fragmentPrecisionHigh = resources.FragmentPrecisionHigh == 1;
-
-    // ArrayIndexClampingStrategy's enum starts at 1, so 0 is 'default'.
-    if (resources.ArrayIndexClampingStrategy) {
-        clampingStrategy = resources.ArrayIndexClampingStrategy;
-    }
-    arrayBoundsClamper.SetClampingStrategy(clampingStrategy);
 
     hashFunction = resources.HashFunction;
 
@@ -141,7 +131,7 @@ bool TCompiler::Init(const ShBuiltInResources& resources)
 }
 
 bool TCompiler::compile(const char* const shaderStrings[],
-                        size_t numStrings,
+                        const int numStrings,
                         int compileOptions)
 {
     TScopedPoolAllocator scopedAlloc(&allocator, true);
@@ -156,7 +146,7 @@ bool TCompiler::compile(const char* const shaderStrings[],
 
     // First string is path of source file if flag is set. The actual source follows.
     const char* sourcePath = NULL;
-    size_t firstSource = 0;
+    int firstSource = 0;
     if (compileOptions & SH_SOURCE_PATH)
     {
         sourcePath = shaderStrings[0];
@@ -167,7 +157,6 @@ bool TCompiler::compile(const char* const shaderStrings[],
     TParseContext parseContext(symbolTable, extensionBehavior, intermediate,
                                shaderType, shaderSpec, compileOptions, true,
                                sourcePath, infoSink);
-    parseContext.fragmentPrecisionHigh = fragmentPrecisionHigh;
     GlobalParseContext = &parseContext;
 
     // We preserve symbols at the built-in level from compile-to-compile.
@@ -366,17 +355,13 @@ const TExtensionBehavior& TCompiler::getExtensionBehavior() const
     return extensionBehavior;
 }
 
+const BuiltInFunctionEmulator& TCompiler::getBuiltInFunctionEmulator() const
+{
+    return builtInFunctionEmulator;
+}
+
 const ArrayBoundsClamper& TCompiler::getArrayBoundsClamper() const
 {
     return arrayBoundsClamper;
 }
 
-ShArrayIndexClampingStrategy TCompiler::getArrayIndexClampingStrategy() const
-{
-    return clampingStrategy;
-}
-
-const BuiltInFunctionEmulator& TCompiler::getBuiltInFunctionEmulator() const
-{
-    return builtInFunctionEmulator;
-}

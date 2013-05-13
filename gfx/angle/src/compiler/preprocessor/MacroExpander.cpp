@@ -9,7 +9,7 @@
 #include <algorithm>
 #include <sstream>
 
-#include "DiagnosticsBase.h"
+#include "Diagnostics.h"
 #include "Token.h"
 
 namespace pp

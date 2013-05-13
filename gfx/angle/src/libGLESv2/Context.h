@@ -509,7 +509,6 @@ class Context
     bool supportsNonPower2Texture() const;
     bool supportsInstancing() const;
     bool supportsTextureFilterAnisotropy() const;
-    bool supportsDerivativeInstructions() const;
 
     bool getCurrentReadFormatType(GLenum *format, GLenum *type);
 
@@ -576,8 +575,8 @@ class Context
     QueryMap mQueryMap;
     HandleAllocator mQueryHandleAllocator;
 
-    const char *mExtensionString;
-    const char *mRendererString;
+    std::string mExtensionString;
+    std::string mRendererString;
 
     VertexDataManager *mVertexDataManager;
     IndexDataManager *mIndexDataManager;
@@ -646,7 +645,6 @@ class Context
     bool mSupportsDepthTextures;
     bool mSupports32bitIndices;
     bool mSupportsTextureFilterAnisotropy;
-    bool mSupportsDerivativeInstructions;
     int mNumCompressedTextureFormats;
 
     // state caching flags
