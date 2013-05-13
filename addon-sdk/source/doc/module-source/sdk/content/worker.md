@@ -7,8 +7,8 @@
 This module is used in the internal implementation of SDK modules
 which use
 [content scripts to interact with web content](dev-guide/guides/content-scripts/index.html),
-such as the [`panel`](modules/sdk/panel.html) or [`page-mod`](modules/sdk/page-mod.html)
-modules.
+such as the [`tabs`](modules/sdk/tabs.html), [`panel`](modules/sdk/panel.html),
+or [`page-mod`](modules/sdk/page-mod.html) modules.
 
 It exports the `Worker` trait, which enables content
 scripts and the add-on code to exchange messages using the
@@ -121,7 +121,7 @@ error that occurs in one of the content scripts.
 
 @argument {Error}
 The event listener is passed a single argument which is an
-[Error](https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Error)
+[Error](https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/Error)
 object.
 </api>
 
@@ -129,6 +129,19 @@ object.
 @event
 This event is emitted when the document associated with this worker is unloaded
 or the worker's `destroy()` method is called.
+
+Note that you can't communicate with the content script in response to this
+event. If you try, you'll see this error:
+
+<pre>Error: Couldn't find the worker to receive this message.
+The script may not be initialized yet, or may already have been unloaded</pre>
+
+You can handle the `detach` event in the content script itself though:
+
+    // in content script
+    self.on("detach", function() {
+      window.close();
+    });
 </api>
 
 </api>
