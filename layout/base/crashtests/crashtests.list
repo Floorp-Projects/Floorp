@@ -394,6 +394,7 @@ load 749816-1.html
 load 763223-1.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,100) load 763702.xhtml
 load 770381-1.html
+load 788360.html
 load 793848.html
 load 795646.html
 load 802902.html
