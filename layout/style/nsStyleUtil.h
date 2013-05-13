@@ -57,13 +57,13 @@ public:
 
   // Append functional font-variant-alternates values to string
   static void
-  AppendFunctionalAlternates(const nsTArray<gfxAlternateValue>& aAlternates,
-                             nsAString& aResult);
+  SerializeFunctionalAlternates(const nsTArray<gfxAlternateValue>& aAlternates,
+                                nsAString& aResult);
 
   // List of functional font-variant-alternates values to feature/value pairs
   static void
-  AppendAlternateValues(const nsCSSValueList* aList,
-                        nsTArray<gfxAlternateValue>& aAlternateValues);
+  ComputeFunctionalAlternates(const nsCSSValueList* aList,
+                              nsTArray<gfxAlternateValue>& aAlternateValues);
 
   /*
    * Convert an author-provided floating point number to an integer (0

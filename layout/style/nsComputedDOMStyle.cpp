@@ -1401,8 +1401,8 @@ nsComputedDOMStyle::DoGetFontVariantAlternates()
 
   // next, include functional values if present
   if (intValue & NS_FONT_VARIANT_ALTERNATES_FUNCTIONAL_MASK) {
-    nsStyleUtil::AppendFunctionalAlternates(StyleFont()->mFont.alternateValues,
-                                            valueStr);
+    nsStyleUtil::SerializeFunctionalAlternates(StyleFont()->mFont.alternateValues,
+                                               valueStr);
   }
 
   val->SetString(valueStr);

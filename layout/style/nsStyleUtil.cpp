@@ -283,7 +283,7 @@ nsStyleUtil::GetFunctionalAlternatesName(int32_t aFeature,
 }
 
 /* static */ void
-nsStyleUtil::AppendFunctionalAlternates(
+nsStyleUtil::SerializeFunctionalAlternates(
     const nsTArray<gfxAlternateValue>& aAlternates,
     nsAString& aResult)
 {
@@ -312,12 +312,12 @@ nsStyleUtil::AppendFunctionalAlternates(
       NS_ASSERTION(!funcName.IsEmpty(), "unknown property value name");
 
       // function params
-      funcParams.Assign(v.value);
+      AppendEscapedCSSIdent(v.value, funcParams);
     } else {
       if (!funcParams.IsEmpty()) {
         funcParams.Append(NS_LITERAL_STRING(", "));
       }
-      funcParams.Append(v.value);
+      AppendEscapedCSSIdent(v.value, funcParams);
     }
   }
 
@@ -335,7 +335,7 @@ nsStyleUtil::AppendFunctionalAlternates(
 }
 
 /* static */ void
-nsStyleUtil::AppendAlternateValues(const nsCSSValueList* aList,
+nsStyleUtil::ComputeFunctionalAlternates(const nsCSSValueList* aList,
                                   nsTArray<gfxAlternateValue>& aAlternateValues)
 {
   gfxAlternateValue v;
@@ -361,7 +361,7 @@ nsStyleUtil::AppendAlternateValues(const nsCSSValueList* aList,
         !nsCSSProps::FindKeyword(key,
                                  nsCSSProps::kFontVariantAlternatesFuncsKTable,
                                  alternate)) {
-      continue;
+      NS_NOTREACHED("keyword not a font-variant-alternates value");
     }
     v.alternate = alternate;
 
