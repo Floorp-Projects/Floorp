@@ -220,6 +220,7 @@ FENNEC_JAVA_FILES = \
   gfx/TouchEventHandler.java \
   gfx/ViewTransform.java \
   gfx/VirtualLayer.java \
+  home/HomePager.java \
   widget/AboutHome.java \
   widget/AboutHomeView.java \
   widget/AboutHomeSection.java \

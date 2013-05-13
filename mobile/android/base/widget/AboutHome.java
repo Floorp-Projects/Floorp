@@ -37,10 +37,6 @@ public class AboutHome extends Fragment {
     private LoadCompleteListener mLoadCompleteListener;
     private LightweightTheme mLightweightTheme;
     private ContentObserver mTabsContentObserver;
-    private int mPaddingLeft;
-    private int mPaddingRight;
-    private int mPaddingTop;
-    private int mPaddingBottom;
     private AboutHomeView mAboutHomeView;
     private AddonsSection mAddonsSection;
     private LastTabsSection mLastTabsSection;
@@ -53,10 +49,6 @@ public class AboutHome extends Fragment {
 
     public interface LoadCompleteListener {
         public void onAboutHomeLoadComplete();
-    }
-
-    public static AboutHome newInstance() {
-        return new AboutHome();
     }
 
     @Override
@@ -113,7 +105,6 @@ public class AboutHome extends Fragment {
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        view.setPadding(mPaddingLeft, mPaddingTop, mPaddingRight, mPaddingBottom);
         ((PromoBox) view.findViewById(R.id.promo_box)).showRandomPromo();
         update(AboutHome.UpdateFlags.ALL);
 
@@ -233,27 +224,5 @@ public class AboutHome extends Fragment {
             mLastTabsSection.show();
         else
             mLastTabsSection.hide();
-    }
-
-    public void requestFocus() {
-        View view = getView();
-        if (view != null) {
-            view.requestFocus();
-        }
-    }
-
-    public void setPadding(int left, int top, int right, int bottom) {
-        View view = getView();
-        if (view != null) {
-            view.setPadding(left, top, right, bottom);
-        }
-
-        // If the padding has changed but the view hasn't been created yet,
-        // store the padding values here; they will be used later in
-        // onViewCreated().
-        mPaddingLeft = left;
-        mPaddingRight = right;
-        mPaddingTop = top;
-        mPaddingBottom = bottom;
     }
 }
