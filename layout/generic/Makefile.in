@@ -15,6 +15,58 @@ ifndef _MSC_VER
 FAIL_ON_WARNINGS = 1
 endif # !_MSC_VER
 
+CPPSRCS		= \
+		FrameChildList.cpp \
+		nsAbsoluteContainingBlock.cpp \
+		nsBRFrame.cpp \
+		nsBlockFrame.cpp \
+		nsBlockReflowContext.cpp \
+		nsBlockReflowState.cpp \
+		nsBulletFrame.cpp \
+		nsColumnSetFrame.cpp \
+		nsContainerFrame.cpp \
+		nsFirstLetterFrame.cpp \
+		nsFloatManager.cpp \
+		nsFontInflationData.cpp \
+		nsFrame.cpp \
+		nsFrameList.cpp \
+		nsFrameSetFrame.cpp \
+		nsFrameUtil.cpp \
+		nsGfxScrollFrame.cpp \
+		nsHTMLCanvasFrame.cpp \
+		nsCanvasFrame.cpp \
+		nsHTMLReflowMetrics.cpp \
+		nsHTMLReflowState.cpp \
+		nsImageFrame.cpp \
+		nsImageMap.cpp \
+		nsInlineFrame.cpp \
+		nsIntervalSet.cpp \
+		nsLeafFrame.cpp \
+		nsLineBox.cpp \
+		nsLineLayout.cpp \
+		nsObjectFrame.cpp \
+		nsPageContentFrame.cpp \
+		nsPageFrame.cpp \
+		nsPlaceholderFrame.cpp \
+		ScrollbarActivity.cpp \
+		nsSelection.cpp \
+		nsSimplePageSequence.cpp \
+		nsSplittableFrame.cpp \
+		nsSubDocumentFrame.cpp \
+		nsTextFrameThebes.cpp \
+		nsTextFrameUtils.cpp \
+		TextOverflow.cpp \
+		nsTextRunTransformations.cpp \
+		nsViewportFrame.cpp \
+		nsVideoFrame.cpp \
+		$(NULL)
+
+ifdef MOZ_FLEXBOX
+CPPSRCS		+= \
+		nsFlexContainerFrame.cpp \
+		$(NULL)
+endif
+
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 CMMSRCS		+= \
 		nsPluginUtilsOSX.mm \

@@ -24,6 +24,15 @@ VPATH += \
   $(topsrcdir)/build/ \
   $(NULL)
 
+CPPSRCS = \
+  nsTestCrasher.cpp \
+  dumputils.cpp \
+  basic_code_modules.cc \
+  logging.cc \
+  minidump.cc \
+  pathname_stripper.cc \
+  $(NULL)
+
 LOCAL_INCLUDES += \
   -I$(XPIDL_GEN_DIR) \
   -I$(srcdir)/../google-breakpad/src/ \

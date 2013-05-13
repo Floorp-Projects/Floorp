@@ -10,7 +10,3 @@ EXPORTS.mozilla.ipc += [
     'UnixSocket.h',
 ]
 
-CPP_SOURCES += [
-    'UnixSocket.cpp',
-]
-

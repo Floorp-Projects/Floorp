@@ -15,6 +15,10 @@ DISABLED_XPCSHELL_TESTS	= unit
 
 USE_STATIC_LIBS = 1
 
+CPPSRCS		= UnicharSelfTest.cpp \
+		  NormalizationTest.cpp \
+		  $(NULL)
+
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
 LIBS		= \

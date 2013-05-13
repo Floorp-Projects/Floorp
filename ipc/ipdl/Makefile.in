@@ -66,6 +66,13 @@ PROTOCOLS :=
 $(foreach IPDLDIR,$(IPDLDIRS),$(eval $(ADD_IPDLDIR)))
 
 
+CPPSRCS =					\
+  $(PROTOCOLS:%.ipdl=%Parent.cpp)		\
+  $(PROTOCOLS:%.ipdl=%Child.cpp)		\
+  $(PROTOCOLS:%.ipdl=%.cpp)			\
+  $(PROTOCOLS:%.ipdlh=%.cpp)			\
+  $(NULL)
+
 GARBAGE += $(CPPSRCS)
 
 LOCAL_INCLUDES += -I$(DEPTH)/ipc/ipdl/_ipdlheaders

@@ -16,6 +16,10 @@ IS_COMPONENT	= 1
 MODULE_NAME	= nsRDFModule
 LIBXUL_LIBRARY = 1
 
+CPPSRCS		= \
+		nsRDFModule.cpp \
+		$(NULL)
+
 # XXX Note dependencies on implementation headers for factory functions
 
 SHARED_LIBRARY_LIBS = \

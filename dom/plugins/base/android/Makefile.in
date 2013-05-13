@@ -19,6 +19,19 @@ FAIL_ON_WARNINGS := 1
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
+CPPSRCS += ANPAudio.cpp    \
+           ANPEvent.cpp    \
+           ANPMatrix.cpp   \
+           ANPSystem.cpp   \
+           ANPWindow.cpp   \
+           ANPBitmap.cpp   \
+           ANPLog.cpp      \
+           ANPNativeWindow.cpp \
+           ANPSurface.cpp  \
+           ANPVideo.cpp    \
+           ANPOpenGL.cpp   \
+           $(NULL)
+
 LOCAL_INCLUDES += \
   -I$(topsrcdir)/widget/android \
   -I$(topsrcdir)/widget/xpwidgets \

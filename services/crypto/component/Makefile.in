@@ -18,4 +18,8 @@ MODULE_NAME := nsServicesCryptoModule
 LIBXUL_LIBRARY := 1
 MOZILLA_INTERNAL_API := 1
 
+CPPSRCS := \
+  nsSyncJPAKE.cpp \
+  $(NULL)
+
 include $(topsrcdir)/config/rules.mk

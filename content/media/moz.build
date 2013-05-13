@@ -80,27 +80,3 @@ EXPORTS.mozilla.dom += [
     'VideoStreamTrack.h',
 ]
 
-CPP_SOURCES += [
-    'AudioAvailableEventManager.cpp',
-    'AudioChannelFormat.cpp',
-    'AudioNodeEngine.cpp',
-    'AudioNodeStream.cpp',
-    'AudioSegment.cpp',
-    'AudioStream.cpp',
-    'AudioStreamTrack.cpp',
-    'DecoderTraits.cpp',
-    'DOMMediaStream.cpp',
-    'FileBlockCache.cpp',
-    'MediaCache.cpp',
-    'MediaDecoder.cpp',
-    'MediaDecoderStateMachine.cpp',
-    'MediaDecoderReader.cpp',
-    'MediaResource.cpp',
-    'MediaStreamGraph.cpp',
-    'MediaStreamTrack.cpp',
-    'StreamBuffer.cpp',
-    'VideoFrameContainer.cpp',
-    'VideoSegment.cpp',
-    'VideoStreamTrack.cpp',
-    'VideoUtils.cpp',
-]

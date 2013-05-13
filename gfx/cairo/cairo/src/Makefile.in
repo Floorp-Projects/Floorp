@@ -117,6 +117,12 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 DEFINES += -DDISABLE_SOME_FLOATING_POINT
 CSRCS	+=	cairo-win32-surface.c
 
+ifdef MOZ_ENABLE_DWRITE_FONT
+CPPSRCS +=	cairo-dwrite-font.cpp
+endif
+ifdef MOZ_ENABLE_D2D_SURFACE
+CPPSRCS +=	cairo-d2d-surface.cpp
+endif
 CSRCS	+=	cairo-win32-font.c
 
 ifdef NS_PRINTING
@@ -141,6 +147,10 @@ ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 CSRCS   += cairo-quartz-surface.c cairo-quartz-image-surface.c cairo-quartz-font.c
 endif
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
+CPPSRCS += cairo-beos-surface.cpp
+endif
+
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 CSRCS   += $(PSPDF_BASE_CSRCS) $(PDF_CSRCS) $(PS_CSRCS)
 endif
@@ -150,6 +160,7 @@ CSRCS   += $(PSPDF_BASE_CSRCS) $(PDF_CSRCS)
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
+CPPSRCS += cairo-qt-surface.cpp
 CSRCS   += $(PSPDF_BASE_CSRCS) $(PDF_CSRCS) 
 OS_INCLUDES += $(MOZ_QT_CFLAGS)
 endif

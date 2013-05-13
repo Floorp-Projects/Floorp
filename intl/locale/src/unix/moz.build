@@ -6,17 +6,3 @@
 
 MODULE = 'locale'
 
-CPP_SOURCES += [
-    'nsCollationUnix.cpp',
-    'nsDateTimeFormatUnix.cpp',
-    'nsPosixLocale.cpp',
-]
-
-if CONFIG['OS_TARGET'] == 'Android':
-    CPP_SOURCES += [
-        'nsAndroidCharset.cpp',
-    ]
-else:
-    CPP_SOURCES += [
-        'nsUNIXCharset.cpp',
-    ]

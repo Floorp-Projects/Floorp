@@ -19,6 +19,21 @@ LIBXUL_LIBRARY := 1
 
 LOCAL_INCLUDES += $(VPATH:%=-I%)
 
+CPPSRCS := \
+  EnableWebSpeechRecognitionCheck.cpp \
+  SpeechGrammar.cpp \
+  SpeechGrammarList.cpp \
+  SpeechRecognitionAlternative.cpp \
+  SpeechRecognition.cpp \
+  SpeechRecognitionResult.cpp \
+  SpeechRecognitionResultList.cpp \
+  SpeechStreamListener.cpp \
+  endpointer.cc \
+  energy_endpointer.cc \
+  energy_endpointer_params.cc \
+  FakeSpeechRecognitionService.cpp \
+  $(NULL)
+
 FORCE_STATIC_LIB := 1
 
 include $(topsrcdir)/config/config.mk

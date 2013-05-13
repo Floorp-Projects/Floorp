@@ -16,7 +16,46 @@ LIBXUL_LIBRARY   = 1
 FORCE_STATIC_LIB = 1
 EXPORT_LIBRARY = 1
 
+ifeq ($(MOZ_ENABLE_QT),1)
+MOCSRCS = \
+  moc_NestedLoopTimer.cpp \
+  $(NULL)
+
+QTSRCS = \
+  NestedLoopTimer.cpp \
+  $(NULL)
+endif
+
+CPPSRCS = \
+  $(MOCSRCS) \
+  $(QTSRCS) \
+  ChildAsyncCall.cpp \
+  ChildTimer.cpp \
+  PluginMessageUtils.cpp \
+  PluginIdentifierChild.cpp \
+  PluginIdentifierParent.cpp \
+  PluginInstanceChild.cpp \
+  PluginInstanceParent.cpp \
+  PluginModuleChild.cpp \
+  PluginModuleParent.cpp \
+  PluginProcessChild.cpp \
+  PluginProcessParent.cpp \
+  PluginScriptableObjectChild.cpp \
+  PluginScriptableObjectParent.cpp \
+  BrowserStreamChild.cpp \
+  BrowserStreamParent.cpp \
+  PluginStreamChild.cpp \
+  PluginStreamParent.cpp \
+  $(NULL)
+
 ifeq (WINNT,$(OS_ARCH))
+CPPSRCS += \
+  COMMessageFilter.cpp \
+  PluginSurfaceParent.cpp \
+  MiniShmParent.cpp \
+  PluginHangUIParent.cpp \
+  $(NULL)
+
 DEFINES += \
   -DMOZ_HANGUI_PROCESS_NAME=\"plugin-hang-ui$(BIN_SUFFIX)\" \
   $(NULL)

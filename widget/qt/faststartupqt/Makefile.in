@@ -36,9 +36,22 @@ GARBAGE += $(EXPORT_SOURCES)
 export:: $(EXPORT_SOURCES)
 	$(INSTALL) $^ .
 
+MOCSRCS = \
+	moc_moziqwidget.cpp \
+	moc_nsFastStartupQt.cpp \
+	$(NULL)
+
 LOCAL_INCLUDES += \
 	$(MOZ_QT_CFLAGS) \
 	$(MOZ_PLATFORM_MAEMO_CFLAGS) \
+	$(NULL)
+
+CPPSRCS += \
+	$(MOCSRCS) \
+	mozqwidgetfast.cpp \
+	nsFastStartupQt.cpp \
+	nsQAppInstance.cpp \
+	mozqglwidgetwrapper.cpp \
 	$(NULL)
 
 DEFINES += -DLIBRARY_FILENAME="$(SHARED_LIBRARY)" -DMOZ_NO_MOZALLOC -DXPCOM_GLUE

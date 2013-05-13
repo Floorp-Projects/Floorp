@@ -6,11 +6,3 @@
 
 MODULE = 'unicharutil'
 
-CPP_SOURCES += [
-    'nsCaseConversionImp2.cpp',
-    'nsCategoryImp.cpp',
-    'nsEntityConverter.cpp',
-    'nsSaveAsCharset.cpp',
-    'nsUnicodeNormalizer.cpp',
-]
-

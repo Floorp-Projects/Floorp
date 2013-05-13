@@ -37,20 +37,9 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     EXPORTS.mozilla.ipc += [
         'Transport_win.h',
     ]
-    CPP_SOURCES += [
-        'SharedMemory_windows.cpp',
-        'Transport_win.cpp',
-        'WindowsMessageLoop.cpp',
-        'CrossProcessMutex_windows.cpp',
-    ]
 else:
     EXPORTS.mozilla.ipc += [
         'Transport_posix.h',
-    ]
-    CPP_SOURCES += [
-        'SharedMemory_posix.cpp',
-        'Transport_posix.cpp',
-        'CrossProcessMutex_unimplemented.cpp',
     ]
 
 # Android has its own,
@@ -58,41 +47,10 @@ else:
 # impl.
 if CONFIG['OS_TARGET'] == 'Android':
     EXPORTS.mozilla.ipc += ['SharedMemoryBasic_android.h']
-    CPP_SOURCES += [
-        'SharedMemoryBasic_android.cpp',
-    ]
 else:
     EXPORTS.mozilla.ipc += ['SharedMemoryBasic_chromium.h']
 
-if CONFIG['OS_ARCH'] == 'Linux':
-    CPP_SOURCES += [
-        'ProcessUtils_linux.cpp',
-    ]
-else:
-    CPP_SOURCES += [
-        'ProcessUtils_none.cpp',
-    ]
-
 EXPORTS.ipc += [
     'IPCMessageUtils.h',
-]
-
-CPP_SOURCES += [
-    'AsyncChannel.cpp',
-    'BrowserProcessSubThread.cpp',
-    'FileDescriptor.cpp',
-    'FileDescriptorUtils.cpp',
-    'GeckoChildProcessHost.cpp',
-    'InputStreamUtils.cpp',
-    'MessagePump.cpp',
-    'ProcessChild.cpp',
-    'ProtocolUtils.cpp',
-    'RPCChannel.cpp',
-    'ScopedXREEmbed.cpp',
-    'SharedMemory.cpp',
-    'Shmem.cpp',
-    'StringUtil.cpp',
-    'SyncChannel.cpp',
-    'URIUtils.cpp',
 ]
 

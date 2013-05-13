@@ -6,20 +6,3 @@
 
 MODULE = 'rdf'
 
-CPP_SOURCES += [
-    'nsCompositeDataSource.cpp',
-    'nsContainerEnumerator.cpp',
-    'nsDefaultResourceFactory.cpp',
-    'nsInMemoryDataSource.cpp',
-    'nsNameSpaceMap.cpp',
-    'nsRDFContainer.cpp',
-    'nsRDFContainerUtils.cpp',
-    'nsRDFContentSink.cpp',
-    'nsRDFService.cpp',
-    'nsRDFXMLDataSource.cpp',
-    'nsRDFXMLParser.cpp',
-    'nsRDFXMLSerializer.cpp',
-    'rdfTriplesSerializer.cpp',
-    'rdfutil.cpp',
-]
-

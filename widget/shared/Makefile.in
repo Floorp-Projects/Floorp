@@ -18,6 +18,11 @@ DEFINES += \
   -D_IMPL_NS_WIDGET \
   $(NULL)
 
+CPPSRCS		= \
+		WidgetUtils.cpp \
+		nsShmImage.cpp \
+		$(NULL)
+
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
 

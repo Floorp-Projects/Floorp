@@ -6,7 +6,3 @@
 
 MODULE = 'profdirserviceprovider'
 
-CPP_SOURCES += [
-    '$(MODULES_PROFILEDIRSERVICE_SRC_LCSRCS)',
-]
-

@@ -26,6 +26,33 @@ LOCAL_INCLUDES = \
 	-I$(srcdir)/../xul/base/src \
 	$(NULL)
 
+CPPSRCS =         nsMathMLChar.cpp		        \
+                  nsMathMLFrame.cpp		\
+                  nsMathMLContainerFrame.cpp		\
+                  nsMathMLOperators.cpp \
+                  nsMathMLTokenFrame.cpp		\
+                  nsMathMLmoFrame.cpp			\
+                  nsMathMLmrowFrame.cpp		        \
+                  nsMathMLmphantomFrame.cpp		\
+                  nsMathMLmfencedFrame.cpp		\
+                  nsMathMLmfracFrame.cpp		\
+                  nsMathMLmsupFrame.cpp			\
+                  nsMathMLmsubFrame.cpp			\
+                  nsMathMLmsubsupFrame.cpp		\
+                  nsMathMLmmultiscriptsFrame.cpp	\
+                  nsMathMLmtableFrame.cpp		\
+                  nsMathMLmunderoverFrame.cpp		\
+                  nsMathMLmpaddedFrame.cpp		\
+                  nsMathMLmspaceFrame.cpp		\
+                  nsMathMLmstyleFrame.cpp		\
+                  nsMathMLmsqrtFrame.cpp		\
+                  nsMathMLmrootFrame.cpp		\
+                  nsMathMLSelectedFrame.cpp		\
+                  nsMathMLmactionFrame.cpp		\
+                  nsMathMLmencloseFrame.cpp		\
+                  nsMathMLsemanticsFrame.cpp		\
+                  $(NULL)
+
 include $(topsrcdir)/config/config.mk
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

@@ -33,6 +33,10 @@ EXTRA_JS_MODULES = \
   TelemetryStopwatch.jsm \
   $(NULL)
 
+CPPSRCS = \
+  Telemetry.cpp \
+  $(NULL)
+
 LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/build
 LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/threads
 

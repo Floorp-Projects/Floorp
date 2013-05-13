@@ -29,6 +29,41 @@ MODULE_NAME     = nsWidgetGonkModule
 LIBXUL_LIBRARY  = 1
 
 
+CPPSRCS	= \
+	Framebuffer.cpp \
+	HWComposer.cpp \
+	HwcComposer2D.cpp \
+	nsAppShell.cpp \
+	nsWidgetFactory.cpp \
+	nsWindow.cpp \
+	nsLookAndFeel.cpp \
+	nsIdleServiceGonk.cpp \
+	OrientationObserver.cpp \
+	EventHub.cpp \
+	GonkMemoryPressureMonitoring.cpp \
+	Input.cpp \
+	InputApplication.cpp \
+	InputDispatcher.cpp \
+	InputListener.cpp \
+	InputReader.cpp \
+	InputTransport.cpp \
+	InputWindow.cpp \
+	Keyboard.cpp \
+	KeyCharacterMap.cpp \
+	KeyLayoutMap.cpp \
+	PixelFormat.cpp \
+	VirtualKeyMap.cpp \
+	PointerController.cpp \
+	SpriteController.cpp \
+	PropertyMap.cpp \
+	Unicode.cpp \
+	Timers.cpp \
+	Tokenizer.cpp \
+	String8.cpp \
+	String16.cpp \
+	Static.cpp \
+	$(NULL)
+
 SHARED_LIBRARY_LIBS = ../xpwidgets/libxpwidgets_s.a
 
 include $(topsrcdir)/config/rules.mk

@@ -5,7 +5,3 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 MODULE = 'xpcom_glue_gtest'
-
-CPP_SOURCES += [
-    'TestFileUtils.cpp',
-]

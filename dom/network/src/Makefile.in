@@ -34,6 +34,19 @@ endif
 
 include $(topsrcdir)/dom/dom-config.mk
 
+CPPSRCS = \
+  Connection.cpp \
+  Utils.cpp \
+  TCPSocketParent.cpp \
+  TCPSocketChild.cpp \
+  $(NULL)
+
+ifdef MOZ_B2G_RIL
+CPPSRCS += \
+  MobileConnection.cpp \
+  $(NULL)
+endif
+
 LOCAL_INCLUDES = \
   -I$(topsrcdir)/content/events/src \
   $(NULL)

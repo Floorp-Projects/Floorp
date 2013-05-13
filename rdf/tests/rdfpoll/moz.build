@@ -6,6 +6,3 @@
 
 PROGRAM = 'rdfpoll'
 
-CPP_SOURCES += [
-    'rdfpoll.cpp',
-]

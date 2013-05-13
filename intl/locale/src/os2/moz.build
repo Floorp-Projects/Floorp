@@ -6,10 +6,3 @@
 
 MODULE = 'locale'
 
-CPP_SOURCES += [
-    'nsCollationOS2.cpp',
-    'nsDateTimeFormatOS2.cpp',
-    'nsOS2Charset.cpp',
-    'nsOS2Locale.cpp',
-]
-

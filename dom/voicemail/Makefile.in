@@ -16,5 +16,9 @@ FAIL_ON_WARNINGS := 1
 
 include $(topsrcdir)/dom/dom-config.mk
 
+CPPSRCS = \
+  Voicemail.cpp \
+  $(NULL)
+
 include $(topsrcdir)/config/rules.mk
 

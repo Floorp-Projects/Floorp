@@ -32,6 +32,12 @@ USE_STATIC_LIBS = 1
 NO_DIST_INSTALL = 1
 NO_INSTALL = 1
 
+ifneq ($(MOZ_WIDGET_TOOLKIT),gonk)
+CPPSRCS = \
+	libstagefright_color_conversion.cpp \
+	$(NULL)
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 ifdef GNU_CXX

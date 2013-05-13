@@ -14,6 +14,33 @@ LIBRARY_NAME	= ucvibm_s
 FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1
 
+
+CPPSRCS		= \
+		nsCP850ToUnicode.cpp \
+		nsCP852ToUnicode.cpp \
+		nsCP855ToUnicode.cpp \
+		nsCP857ToUnicode.cpp \
+		nsCP862ToUnicode.cpp \
+		nsCP864ToUnicode.cpp \
+		nsUnicodeToCP850.cpp \
+		nsUnicodeToCP852.cpp \
+		nsUnicodeToCP855.cpp \
+		nsUnicodeToCP857.cpp \
+		nsUnicodeToCP862.cpp \
+		nsUnicodeToCP864.cpp \
+		$(NULL)
+
+ifeq ($(OS_ARCH),OS2)
+CPPSRCS		+= \
+		nsCP869ToUnicode.cpp \
+		nsUnicodeToCP869.cpp \
+		nsCP1125ToUnicode.cpp \
+		nsUnicodeToCP1125.cpp \
+		nsCP1131ToUnicode.cpp \
+		nsUnicodeToCP1131.cpp \
+		$(NULL)
+endif
+
 LOCAL_INCLUDES = -I$(srcdir)/../util
 
 include $(topsrcdir)/config/rules.mk

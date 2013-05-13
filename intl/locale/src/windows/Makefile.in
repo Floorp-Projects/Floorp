@@ -15,6 +15,13 @@ FORCE_STATIC_LIB	= 1
 LIBXUL_LIBRARY  = 1
 
 
+CPPSRCS		= \
+		nsCollationWin.cpp \
+		nsDateTimeFormatWin.cpp \
+		nsWin32Locale.cpp \
+		nsWinCharset.cpp \
+		$(NULL)
+
 include $(topsrcdir)/config/rules.mk
 
 INCLUDES	+= -I$(srcdir)/..

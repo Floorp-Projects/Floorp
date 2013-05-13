@@ -6,8 +6,3 @@
 
 MODULE = 'test_plugins'
 
-CPP_SOURCES += [
-    'BadPlugin.cpp',
-    'GoodPlugin.cpp',
-]
-

@@ -17,6 +17,9 @@ FORCE_SHARED_LIB = 1
 
 USE_STATIC_LIBS = 1
 
+CPPSRCS = nsModule.cpp \
+          $(NULL)
+
 ifeq ($(OS_ARCH),WINNT)
 OS_LIBS	+= $(call EXPAND_LIBNAME,ole32 shell32 shlwapi)
 endif

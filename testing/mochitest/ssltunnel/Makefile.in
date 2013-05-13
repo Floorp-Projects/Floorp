@@ -14,6 +14,8 @@ include $(DEPTH)/config/autoconf.mk
 # wrappers
 STL_FLAGS =
 
+CPPSRCS = ssltunnel.cpp
+
 LIBS = \
   $(NSPR_LIBS) \
   $(NSS_LIBS) \

@@ -10,11 +10,3 @@ EXPORTS += [
     'nsUCvKOCID.h',
 ]
 
-CPP_SOURCES += [
-    'nsCP949ToUnicode.cpp',
-    'nsISO2022KRToUnicode.cpp',
-    'nsJohabToUnicode.cpp',
-    'nsUnicodeToCP949.cpp',
-    'nsUnicodeToJohab.cpp',
-]
-

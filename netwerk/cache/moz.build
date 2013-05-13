@@ -22,23 +22,3 @@ EXPORTS += [
     'nsCacheService.h',
 ]
 
-CPP_SOURCES += [
-    'nsApplicationCacheService.cpp',
-    'nsCache.cpp',
-    'nsCacheEntry.cpp',
-    'nsCacheEntryDescriptor.cpp',
-    'nsCacheMetaData.cpp',
-    'nsCacheService.cpp',
-    'nsCacheSession.cpp',
-    'nsCacheUtils.cpp',
-    'nsDeleteDir.cpp',
-    'nsDiskCacheBinding.cpp',
-    'nsDiskCacheBlockFile.cpp',
-    'nsDiskCacheDevice.cpp',
-    'nsDiskCacheDeviceSQL.cpp',
-    'nsDiskCacheEntry.cpp',
-    'nsDiskCacheMap.cpp',
-    'nsDiskCacheStreams.cpp',
-    'nsMemoryCacheDevice.cpp',
-]
-

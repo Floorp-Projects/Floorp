@@ -15,10 +15,3 @@ EXPORTS.mozilla._ipdltest += [
     'IPDLUnitTests.h',
 ]
 
-CPP_SOURCES += [
-    '$(IPDLTESTSRCS)',
-    'IPDLUnitTestProcessChild.cpp',
-    'IPDLUnitTestSubprocess.cpp',
-    'IPDLUnitTests.cpp',
-]
-

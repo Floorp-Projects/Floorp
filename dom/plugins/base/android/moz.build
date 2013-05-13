@@ -11,17 +11,3 @@ EXPORTS += [
     'android_npapi.h',
 ]
 
-CPP_SOURCES += [
-    'ANPAudio.cpp',
-    'ANPBitmap.cpp',
-    'ANPEvent.cpp',
-    'ANPLog.cpp',
-    'ANPMatrix.cpp',
-    'ANPNativeWindow.cpp',
-    'ANPOpenGL.cpp',
-    'ANPSurface.cpp',
-    'ANPSystem.cpp',
-    'ANPVideo.cpp',
-    'ANPWindow.cpp',
-]
-

@@ -14,6 +14,12 @@ LIBRARY_NAME	= domencoding_s
 LIBXUL_LIBRARY	= 1
 FORCE_STATIC_LIB = 1
 
+CPPSRCS = \
+	EncodingUtils.cpp \
+	TextDecoder.cpp \
+	TextEncoder.cpp \
+	$(NULL)
+
 LOCAL_INCLUDES = \
 	-I$(topsrcdir)/intl/locale/src \
 	$(NULL)

@@ -16,6 +16,12 @@ LOCAL_INCLUDES 	= -I$(srcdir)/../..
 
 # not compiling http_upload.cc currently
 # since it depends on libcurl
+CPPSRCS	= \
+  dump_symbols.cc \
+  file_id.cc \
+  guid_creator.cc \
+  $(NULL)
+
 HOST_CPPSRCS = \
   dump_symbols.cc \
   file_id.cc \

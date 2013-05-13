@@ -7,12 +7,3 @@
 MODULE = 'crashreporter_test'
 
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini', 'unit_ipc/xpcshell.ini']
-
-CPP_SOURCES += [
-    'basic_code_modules.cc',
-    'dumputils.cpp',
-    'logging.cc',
-    'minidump.cc',
-    'nsTestCrasher.cpp',
-    'pathname_stripper.cc',
-]

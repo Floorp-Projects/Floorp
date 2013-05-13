@@ -6,16 +6,3 @@
 
 MODULE = 'mozglue'
 
-if CONFIG['MOZ_MEMORY'] and \
-   (CONFIG['MOZ_NATIVE_JEMALLOC'] or CONFIG['FORCE_SHARED_LIB']):
-    pass
-    # TODO: SHARED_LIBRARY_LIBS go here
-else:
-    CPP_SOURCES += [
-        'dummy.cpp',
-    ]
-
-if CONFIG['OS_TARGET'] == 'Android':
-    CPP_SOURCES += [
-        'BionicGlue.cpp',
-    ]

@@ -18,6 +18,10 @@ ifneq ($(OS_ARCH),Darwin)
 DISABLED_XPCSHELL_TESTS += unit_ipc
 endif
 
+CPPSRCS =	\
+		WriteArgument.cpp \
+		$(NULL)
+
 SIMPLE_PROGRAMS = $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
 include $(topsrcdir)/config/config.mk

@@ -15,6 +15,31 @@ ifndef _MSC_VER
 FAIL_ON_WARNINGS := 1
 endif # !_MSC_VER
 
+CPPSRCS = \
+  AudioAvailableEventManager.cpp \
+  AudioChannelFormat.cpp \
+  AudioNodeEngine.cpp \
+  AudioNodeStream.cpp \
+  AudioSegment.cpp \
+  AudioStream.cpp \
+  AudioStreamTrack.cpp \
+  DecoderTraits.cpp \
+  DOMMediaStream.cpp \
+  FileBlockCache.cpp \
+  MediaCache.cpp \
+  MediaDecoder.cpp \
+  MediaDecoderStateMachine.cpp \
+  MediaDecoderReader.cpp \
+  MediaResource.cpp \
+  MediaStreamGraph.cpp \
+  MediaStreamTrack.cpp \
+  StreamBuffer.cpp \
+  VideoFrameContainer.cpp \
+  VideoSegment.cpp \
+  VideoStreamTrack.cpp \
+  VideoUtils.cpp \
+  $(NULL)
+
 FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/config.mk

@@ -6,9 +6,3 @@
 
 MODULE = 'xul'
 
-if CONFIG['MOZ_XUL']:
-    CPP_SOURCES += [
-        'nsXULElement.cpp',
-        'nsXULPopupListener.cpp',
-        'nsXULContextMenuBuilder.cpp',
-    ]

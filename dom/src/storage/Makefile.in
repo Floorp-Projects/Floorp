@@ -14,6 +14,15 @@ include $(DEPTH)/config/autoconf.mk
 LIBRARY_NAME   = jsdomstorage_s
 LIBXUL_LIBRARY = 1
 
+CPPSRCS = \
+       DOMStorage.cpp \
+       DOMStorageCache.cpp \
+       DOMStorageDBThread.cpp \
+       DOMStorageObserver.cpp \
+       DOMStorageManager.cpp \
+       DOMStorageIPC.cpp \
+       $(NULL)
+
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
 

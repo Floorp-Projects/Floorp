@@ -5,8 +5,3 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 PROGRAM = 'CommandExecuteHandler'
-
-CPP_SOURCES += [
-    'CEHHelper.cpp',
-    'CommandExecuteHandler.cpp',
-]

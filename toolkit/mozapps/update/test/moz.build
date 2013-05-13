@@ -6,9 +6,5 @@
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
     DIRS += ['chrome']
-    CPP_SOURCES += [
-        'TestAUSReadStrings.cpp',
-        'TestAUSHelper.cpp',
-    ]
 
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']

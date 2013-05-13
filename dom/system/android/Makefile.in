@@ -20,6 +20,11 @@ FAIL_ON_WARNINGS := 1
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
+CPPSRCS     = \
+        AndroidLocationProvider.cpp \
+        nsHapticFeedback.cpp \
+        $(NULL)
+
 LOCAL_INCLUDES  += -I$(topsrcdir)/dom/src/geolocation \
                      -I$(topsrcdir)/content/events/src
                      $(NULL)

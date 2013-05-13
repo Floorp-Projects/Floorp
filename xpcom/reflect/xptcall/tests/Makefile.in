@@ -12,6 +12,8 @@ include $(DEPTH)/config/autoconf.mk
 
 SIMPLE_PROGRAMS	= TestXPTCInvoke$(BIN_SUFFIX)
 
+CPPSRCS		= TestXPTCInvoke.cpp
+
 LIBS		= \
 		$(XPCOM_GLUE_LDOPTS) \
 		$(NSPR_LIBS) \

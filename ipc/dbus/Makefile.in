@@ -18,6 +18,12 @@ ifdef MOZ_ENABLE_DBUS
 	LOCAL_INCLUDES += $(MOZ_DBUS_CFLAGS)
 endif
 
+CPPSRCS += \
+  RawDBusConnection.cpp \
+  DBusThread.cpp \
+  DBusUtils.cpp \
+  $(NULL)
+
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 

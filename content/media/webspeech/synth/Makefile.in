@@ -22,6 +22,17 @@ LIBXUL_LIBRARY  = 1
 
 LOCAL_INCLUDES += $(VPATH:%=-I%)
 
+CPPSRCS := \
+  EnableSpeechSynthesisCheck.cpp \
+  SpeechSynthesisUtterance.cpp \
+  SpeechSynthesisVoice.cpp \
+  SpeechSynthesis.cpp \
+  SpeechSynthesisChild.cpp \
+  SpeechSynthesisParent.cpp \
+  nsSynthVoiceRegistry.cpp \
+  nsSpeechTask.cpp \
+  $(NULL)
+
 FORCE_STATIC_LIB := 1
 
 include $(topsrcdir)/config/config.mk

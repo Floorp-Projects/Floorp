@@ -30,6 +30,8 @@ EXTRA_PP_COMPONENTS = \
 	$(NULL)
 
 
+CPPSRCS = nsFeedSniffer.cpp
+
 LOCAL_INCLUDES = -I$(srcdir)/../../build
 
 include $(topsrcdir)/config/rules.mk

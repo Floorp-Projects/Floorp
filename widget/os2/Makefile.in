@@ -18,6 +18,27 @@ MODULE_NAME	= nsWidgetOS2Module
 LIBXUL_LIBRARY = 1
 
 
+CPPSRCS		= \
+		nsAppShell.cpp \
+		nsBidiKeyboard.cpp \
+		nsClipboard.cpp \
+		nsFilePicker.cpp \
+		os2FrameWindow.cpp \
+		nsLookAndFeel.cpp \
+		nsOS2Uni.cpp \
+		nsPrintOS2.cpp \
+		nsSound.cpp \
+		nsWidgetFactory.cpp \
+		nsWindow.cpp \
+		nsDragService.cpp \
+		nsScreenOS2.cpp	\
+		nsScreenManagerOS2.cpp \
+		nsDeviceContextSpecOS2.cpp \
+		nsPrintOptionsOS2.cpp \
+		nsRwsService.cpp \
+		nsIdleServiceOS2.cpp \
+		$(NULL)
+
 SHARED_LIBRARY_LIBS = \
 	../xpwidgets/$(LIB_PREFIX)xpwidgets_s.$(LIB_SUFFIX) \
 	$(NULL)

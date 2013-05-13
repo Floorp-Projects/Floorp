@@ -16,6 +16,8 @@ SHORT_LIBNAME = widgetutils
 FORCE_SHARED_LIB = 1
 IS_COMPONENT = 1
 
+CPPSRCS		= nsWidgetUtils.cpp
+
 EXTRA_DSO_LDOPTS = \
 	$(XPCOM_GLUE_LDOPTS) \
 	$(NSPR_LIBS) \

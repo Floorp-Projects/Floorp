@@ -14,6 +14,23 @@ LIBRARY_NAME	= gktable_s
 LIBXUL_LIBRARY	= 1
 FAIL_ON_WARNINGS = 1
 
+
+
+CPPSRCS		= \
+		BasicTableLayoutStrategy.cpp \
+		FixedTableLayoutStrategy.cpp \
+		SpanningCellSorter.cpp \
+		nsCellMap.cpp \
+		nsTableCellFrame.cpp \
+		nsTableColFrame.cpp \
+		nsTableColGroupFrame.cpp \
+		nsTableFrame.cpp \
+		nsTableOuterFrame.cpp \
+		nsTableRowFrame.cpp \
+		nsTableRowGroupFrame.cpp \
+		nsTablePainter.cpp \
+		$(NULL)
+
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
 

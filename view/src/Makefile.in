@@ -18,6 +18,11 @@ FAIL_ON_WARNINGS := 1
 
 DEFINES += -D_IMPL_NS_LAYOUT
 
+CPPSRCS		= \
+		nsView.cpp \
+		nsViewManager.cpp \
+		$(NULL)
+
 include $(topsrcdir)/config/rules.mk
 
 LOCAL_INCLUDES  = \

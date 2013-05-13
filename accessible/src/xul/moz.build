@@ -6,18 +6,3 @@
 
 MODULE = 'accessibility'
 
-CPP_SOURCES += [
-    'XULAlertAccessible.cpp',
-    'XULColorPickerAccessible.cpp',
-    'XULComboboxAccessible.cpp',
-    'XULElementAccessibles.cpp',
-    'XULFormControlAccessible.cpp',
-    'XULListboxAccessible.cpp',
-    'XULMenuAccessible.cpp',
-    'XULSelectControlAccessible.cpp',
-    'XULSliderAccessible.cpp',
-    'XULTabAccessible.cpp',
-    'XULTreeAccessible.cpp',
-    'XULTreeGridAccessible.cpp',
-]
-

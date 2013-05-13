@@ -6,21 +6,3 @@
 
 MODULE = 'string'
 
-CPP_SOURCES += [
-    'nsDependentString.cpp',
-    'nsDependentSubstring.cpp',
-    'nsPromiseFlatString.cpp',
-    'nsReadableUtils.cpp',
-    'nsString.cpp',
-    'nsStringComparator.cpp',
-    'nsStringObsolete.cpp',
-    'nsSubstring.cpp',
-    'nsSubstringTuple.cpp',
-]
-
-# Are we targeting x86 or x86-64?  If so, compile the SSE2 functions for
-# nsUTF8Utils.cpp.
-if CONFIG['INTEL_ARCHITECTURE']:
-    CPP_SOURCES += [
-        'nsUTF8UtilsSSE2.cpp',
-    ]

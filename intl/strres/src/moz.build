@@ -6,8 +6,3 @@
 
 MODULE = 'intl'
 
-CPP_SOURCES += [
-    'nsStringBundle.cpp',
-    'nsStringBundleTextOverride.cpp',
-]
-

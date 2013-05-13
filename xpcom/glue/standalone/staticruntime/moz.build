@@ -6,9 +6,3 @@
 
 MODULE = 'xpcom'
 
-CPP_SOURCES += [
-    '$(XPCOM_GLUE_SRC_LCPPSRCS)',
-    'nsStringAPI.cpp',
-    'nsXPCOMGlue.cpp',
-]
-
