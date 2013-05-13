@@ -871,8 +871,8 @@ nsEventListenerManager::CompileEventHandlerInternal(nsListenerStruct *aListenerS
   if (handler) {
     // Bind it
     JS::Rooted<JSObject*> boundHandler(cx);
-    context->BindCompiledEventHandler(mTarget, listener->GetEventScope(),
-                                      handler, &boundHandler);
+    JS::Rooted<JSObject*> scope(cx, listener->GetEventScope());
+    context->BindCompiledEventHandler(mTarget, scope, handler, &boundHandler);
     if (listener->EventName() == nsGkAtoms::onerror && win) {
       nsRefPtr<OnErrorEventHandlerNonNull> handlerCallback =
         new OnErrorEventHandlerNonNull(boundHandler);

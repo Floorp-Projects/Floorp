@@ -146,7 +146,8 @@ the receiver listens using `port.on()`.
 
 * In the content script, `port` is a property of the global `self` object.
 * In the add-on script, you need to listen for the `onAttach` event to get
-passed an object that contains `port`.
+passed a [worker](modules/sdk/content/worker.html#Worker) object that
+contains `port`.
 
 Let's rewrite the example above to pass a message from the add-on to
 the content script. The message will contain the new content to insert into

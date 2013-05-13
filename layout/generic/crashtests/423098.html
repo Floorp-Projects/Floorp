@@ -1,0 +1,22 @@
+<html>
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  document.getElementById("b").style.position = "static";
+  document.body.offsetHeight;
+  document.getElementById("a").style.fontSize = "110%";
+}
+
+</script>
+</head>
+
+<body style="-moz-column-count: 1;" onload="boom();">
+  <div id="a" style="float: right; height: 80px;">
+    <div id="b" style="position: absolute; height: 10px;"></div>
+    <div style="height: 100px; width: 11px;"></div>
+  </div>
+</body>
+
+</html>

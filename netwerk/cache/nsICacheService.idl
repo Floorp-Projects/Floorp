@@ -67,3 +67,19 @@ interface nsICacheService : nsISupports
  */
 #define NS_CACHESERVICE_EMPTYCACHE_TOPIC_ID "cacheservice:empty-cache"
 %}
+
+[scriptable, builtinclass, uuid(d0fc8d38-db80-4928-bf1c-b0085ddfa9dc)]
+interface nsICacheServiceInternal : nsICacheService
+{
+    /**
+     * This is an internal interface. It changes so frequently that it probably
+     * went away while you were reading this.
+     */
+
+    /**
+     * Milliseconds for which the service lock has been held. 0 if unlocked.
+     */
+    readonly attribute double lockHeldTime;
+};
+
+

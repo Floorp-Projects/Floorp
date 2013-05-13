@@ -30,6 +30,12 @@ js::ArrayBufferObject::setElementsHeader(js::ObjectElements *header, uint32_t by
 }
 
 inline uint32_t
+js::ArrayBufferObject::getElementsHeaderInitializedLength(const js::ObjectElements *header)
+{
+    return header->initializedLength;
+}
+
+inline uint32_t
 js::ArrayBufferObject::byteLength() const
 {
     JS_ASSERT(isArrayBuffer());
