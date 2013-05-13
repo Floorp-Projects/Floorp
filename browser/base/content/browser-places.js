@@ -1183,7 +1183,7 @@ let BookmarkingUI = {
     this._pendingStmt = PlacesUtils.asyncGetBookmarkIds(this._uri, function (aItemIds, aURI) {
       // Safety check that the bookmarked URI equals the tracked one.
       if (!aURI.equals(this._uri)) {
-        Components.utils.reportError("BookmarksMenuButton did not receive current URI");
+        Components.utils.reportError("BookmarkingUI did not receive current URI");
         return;
       }
 
@@ -1202,7 +1202,7 @@ let BookmarkingUI = {
           PlacesUtils.addLazyBookmarkObserver(this);
           this._hasBookmarksObserver = true;
         } catch(ex) {
-          Components.utils.reportError("BookmarksMenuButton failed adding a bookmarks observer: " + ex);
+          Components.utils.reportError("BookmarkingUI failed adding a bookmarks observer: " + ex);
         }
       }
 
