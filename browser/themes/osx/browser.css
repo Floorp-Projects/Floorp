@@ -1754,7 +1754,7 @@ window[tabsontop="false"] richlistitem[type~="action"][actiontype="switchtab"][s
 
 @media (min-resolution: 2dppx) {
   #star-button {
-    list-style-image: url("chrome://browser/skin/places/star-icons.png");
+    list-style-image: url("chrome://browser/skin/places/star-icons@2x.png");
     -moz-image-region: rect(0, 32px, 32px, 0);
     width: 22px;
   }
