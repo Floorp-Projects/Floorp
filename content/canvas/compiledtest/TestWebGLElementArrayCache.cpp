@@ -48,9 +48,15 @@ T RandomInteger(T a, T b)
 template<typename T>
 GLenum GLType()
 {
-  return sizeof(T) == 1
-             ? LOCAL_GL_UNSIGNED_BYTE
-             : LOCAL_GL_UNSIGNED_SHORT;
+  switch (sizeof(T))
+  {
+    case 4:  return LOCAL_GL_UNSIGNED_INT;
+    case 2:  return LOCAL_GL_UNSIGNED_SHORT;
+    case 1:  return LOCAL_GL_UNSIGNED_BYTE;
+    default:
+      VERIFY(false);
+      return 0;
+  }
 }
 
 template<typename T>
@@ -79,6 +85,7 @@ void CheckValidate(WebGLElementArrayCache& c, size_t firstByte, size_t countByte
 {
   CheckValidateOneType<uint8_t>(c, firstByte, countBytes);
   CheckValidateOneType<uint16_t>(c, firstByte, countBytes);
+  CheckValidateOneType<uint32_t>(c, firstByte, countBytes);
 }
 
 template<typename T>
@@ -151,6 +158,7 @@ int main(int argc, char *argv[])
 
   CheckSanity<uint8_t>();
   CheckSanity<uint16_t>();
+  CheckSanity<uint32_t>();
 
   CheckUintOverflow<uint8_t>();
   CheckUintOverflow<uint16_t>();
