@@ -99,8 +99,7 @@ message from one side to the other, the sender calls `port.emit()` and
 the receiver listens using `port.on()`.
 
 * In the content script, `port` is a property of the global `self` object.
-* In the add-on script, `tab.attach()` returns a 
-[worker](modules/sdk/content/worker.html#Worker) object containing the
+* In the add-on script, `tab-attach()` returns an object containing the
 `port` property you use to send messages to the content script.
 
 Let's rewrite the example above to pass a message from the add-on to
