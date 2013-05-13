@@ -934,7 +934,7 @@ SelectorView.prototype = {
 
       if (ToolDefinitions.styleEditor.isTargetSupported(target)) {
         gDevTools.showToolbox(target, "styleeditor").then(function(toolbox) {
-          toolbox.getCurrentPanel().selectStyleSheet(styleSheet, line);
+          toolbox.getCurrentPanel().selectStyleSheet(styleSheet.href, line);
         });
       }
     } else {
