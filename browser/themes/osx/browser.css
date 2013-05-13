@@ -475,7 +475,7 @@ toolbar:not([mode="icons"]) #restore-button {
   .toolbarbutton-1:not(:hover):-moz-window-inactive > .toolbarbutton-badge-container > .toolbarbutton-icon,
   #restore-button:not(:hover):-moz-window-inactive > .toolbarbutton-icon,
   .toolbarbutton-1:not(:hover):-moz-window-inactive > .toolbarbutton-menu-dropmarker,
-  .toolbarbutton-1:not(:hover):-moz-window-inactive > .toolbarbutton-menubutton-dropmarker,
+  .toolbarbutton-1:not(:hover):-moz-window-inactive > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon,
   .toolbarbutton-1:not(:hover):-moz-window-inactive > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
     opacity: .5;
   }
