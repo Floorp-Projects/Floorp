@@ -12,51 +12,26 @@ function isActive(aWindow) {
   return docshell.isActive;
 }
 
-function oneShotListener(aElem, aType, aCallback) {
-  aElem.addEventListener(aType, function () {
-    aElem.removeEventListener(aType, arguments.callee, true);
+// We need to wait until the page from each testcase is fully loaded,
+// including all of its descendant iframes. To do that we manually count
+// how many load events should happen on that page (one for the toplevel doc
+// and one for each subframe) and wait until we receive the expected number
+// of events.
+function nShotsListener(aElem, aType, aCallback, aCount) {
+  let count = aCount;
+  aElem.addEventListener(aType, function listenerCallback() {
+    if (--count == 0) {
+      aElem.removeEventListener(aType, listenerCallback, true);
 
-    // aCallback is executed asynchronously, which is handy because load
-    // events fire before mIsDocumentLoaded is actually set to true. :(
-    executeSoon(aCallback);
+      // aCallback is executed asynchronously, which is handy because load
+      // events fire before mIsDocumentLoaded is actually set to true. :(
+      executeSoon(aCallback);
+    }
   }, true);
 }
 
-// Returns a closure that iteratively (BFS) waits for all
-// of the descendant frames of aInitialWindow to finish loading,
-// then calls aFinalCallback.
-function frameLoadWaiter(aInitialWindow, aFinalCallback) {
-
-  // The window we're currently waiting on
-  var curr = aInitialWindow;
-
-  // The windows we need to wait for
-  var waitQueue = [];
-
-  // The callback to call when we're all done
-  var finalCallback = aFinalCallback;
-
-  function frameLoadCallback() {
-
-    // Push any subframes of what we just got
-    for (var i = 0; i < curr.frames.length; ++i)
-      waitQueue.push(curr.frames[i]);
-
-    // Handle the next window in the queue
-    if (waitQueue.length >= 1) {
-      curr = waitQueue.shift();
-      if (curr.document.readyState == "complete")
-        frameLoadCallback();
-      else
-        oneShotListener(curr, "load", frameLoadCallback);
-      return;
-    }
-
-    // Otherwise, we're all done. Call the final callback
-    finalCallback();
-  }
-
-  return frameLoadCallback;
+function oneShotListener(aElem, aType, aCallback) {
+  nShotsListener(aElem, aType, aCallback, 1);
 }
 
 // Entry point from Mochikit
@@ -105,7 +80,10 @@ function step2() {
   ctx.tab2 = gBrowser.addTab(testPath + "bug343515_pg2.html");
   ctx.tab2Browser = gBrowser.getBrowserForTab(ctx.tab2);
   ctx.tab2Window = ctx.tab2Browser.contentWindow;
-  oneShotListener(ctx.tab2Browser, "load", frameLoadWaiter(ctx.tab2Window, step3));
+
+  // bug343515_pg2.html consists of a page with two iframes,
+  // which will therefore generate 3 load events.
+  nShotsListener(ctx.tab2Browser, "load", step3, 3);
 }
 
 function step3() {
@@ -126,7 +104,10 @@ function step3() {
 
   // Navigate tab 2 to a different page
   ctx.tab2Window.location = testPath + "bug343515_pg3.html";
-  oneShotListener(ctx.tab2Browser, "load", frameLoadWaiter(ctx.tab2Window, step4));
+
+  // bug343515_pg3.html consists of a page with two iframes, one of which
+  // contains another iframe, so there'll be a total of 4 load events
+  nShotsListener(ctx.tab2Browser, "load", step4, 4);
 }
 
 function step4() {
@@ -159,13 +140,12 @@ function step4() {
   ok(isActive(ctx.tab2Window.frames[1]), "Tab2 iframe 1 should be active");
 
   // Go back
-  oneShotListener(ctx.tab2Browser, "pageshow", frameLoadWaiter(ctx.tab2Window, step5));
+  oneShotListener(ctx.tab2Browser, "pageshow", step5);
   ctx.tab2Browser.goBack();
 
 }
 
 function step5() {
-
   // Check everything
   ok(!isActive(ctx.tab0Window), "Tab 0 should be inactive");
   ok(!isActive(ctx.tab1Window), "Tab 1 should be inactive");
@@ -178,7 +158,10 @@ function step5() {
 
   // Navigate to page 3
   ctx.tab1Window.location = testPath + "bug343515_pg3.html";
-  oneShotListener(ctx.tab1Browser, "load", frameLoadWaiter(ctx.tab1Window, step6));
+
+  // bug343515_pg3.html consists of a page with two iframes, one of which
+  // contains another iframe, so there'll be a total of 4 load events
+  nShotsListener(ctx.tab1Browser, "load", step6, 4);
 }
 
 function step6() {
@@ -194,7 +177,7 @@ function step6() {
   ok(!isActive(ctx.tab2Window.frames[1]), "Tab2 iframe 1 should be inactive");
 
   // Go forward on tab 2
-  oneShotListener(ctx.tab2Browser, "pageshow", frameLoadWaiter(ctx.tab2Window, step7));
+  oneShotListener(ctx.tab2Browser, "pageshow", step7);
   var tab2docshell = ctx.tab2Window.QueryInterface(Ci.nsIInterfaceRequestor)
                                    .getInterface(Ci.nsIWebNavigation);
   tab2docshell.goForward();
