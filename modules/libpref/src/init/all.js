@@ -1739,6 +1739,15 @@ pref("layout.css.supports-rule.enabled", true);
 // Is support for CSS Flexbox enabled?
 pref("layout.css.flexbox.enabled", true);
 
+// Is support for CSS3 Fonts features enabled?
+// (includes font-variant, font-kerning, font-synthesis
+// and the @font-feature-values rule)
+#ifdef RELEASE_BUILD
+pref("layout.css.font-features.enabled", false);
+#else
+pref("layout.css.font-features.enabled", true);
+#endif
+
 // Are sets of prefixed properties supported?
 pref("layout.css.prefixes.border-image", true);
 pref("layout.css.prefixes.transforms", true);
