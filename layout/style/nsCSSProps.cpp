@@ -410,7 +410,17 @@ nsCSSFontDesc
 nsCSSProps::LookupFontDesc(const nsAString& aFontDesc)
 {
   NS_ABORT_IF_FALSE(gFontDescTable, "no lookup table, needs addref");
-  return nsCSSFontDesc(gFontDescTable->Lookup(aFontDesc));
+  nsCSSFontDesc which = nsCSSFontDesc(gFontDescTable->Lookup(aFontDesc));
+
+  // check for unprefixed font-feature-settings/font-language-override
+  if (which == eCSSFontDesc_UNKNOWN &&
+      mozilla::Preferences::GetBool("layout.css.font-features.enabled")) {
+    nsAutoString prefixedProp;
+    prefixedProp.AppendLiteral("-moz-");
+    prefixedProp.Append(aFontDesc);
+    which = nsCSSFontDesc(gFontDescTable->Lookup(prefixedProp));
+  }
+  return which;
 }
 
 const nsAFlatCString&

@@ -4339,6 +4339,38 @@ if (SpecialPowers.getBoolPref("layout.css.font-features.enabled")) {
 			initial_values: [ "weight style" ],
 			other_values: [ "none", "weight", "style" ],
 			invalid_values: [ "weight none", "style none", "none style", "weight 10px", "weight weight", "style style" ]
+		},
+		// aliases for prefixed properties
+		"font-feature-settings": {
+			domProp: "fontFeatureSettings",
+			inherited: true,
+			type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+			alias_for: "-moz-font-feature-settings",
+			subproperties: [ "-moz-font-feature-settings" ],
+			initial_values: [ "normal" ],
+			other_values: [
+				"'liga' on", "'liga'", "\"liga\" 1", "'liga', 'clig' 1",
+				"\"liga\" off", "\"liga\" 0", '"cv01" 3, "cv02" 4',
+				'"cswh", "smcp" off, "salt" 4', '"cswh" 1, "smcp" off, "salt" 4',
+				'"cswh" 0, \'blah\', "liga", "smcp" off, "salt" 4',
+				'"liga"        ,"smcp" 0         , "blah"'
+			],
+			invalid_values: [
+				'liga', 'liga 1', 'liga normal', '"liga" normal', 'normal liga',
+				'normal "liga"', 'normal, "liga"', '"liga=1"', "'foobar' on",
+				'"blahblah" 0', '"liga" 3.14', '"liga" 1 3.14', '"liga" 1 normal',
+				'"liga" 1 off', '"liga" on off', '"liga" , 0 "smcp"', '"liga" "smcp"'
+			]
+		},
+		"font-language-override": {
+			domProp: "fontLanguageOverride",
+			inherited: true,
+			type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+			alias_for: "-moz-font-language-override",
+			subproperties: [ "-moz-font-language-override" ],
+			initial_values: [ "normal" ],
+			other_values: [ "'ENG'", "'TRK'", "\"TRK\"", "'N\\'Ko'" ],
+			invalid_values: [ "TRK", "ja" ]
 		}
 	};
 	for (var prop in fontFeatureProperties) {

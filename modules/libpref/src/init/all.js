@@ -1740,8 +1740,12 @@ pref("layout.css.supports-rule.enabled", true);
 pref("layout.css.flexbox.enabled", true);
 
 // Is support for CSS3 Fonts features enabled?
-// (includes font-variant, font-kerning, font-synthesis
+// (includes font-variant-*, font-kerning, font-synthesis
 // and the @font-feature-values rule)
+// Note: with this enabled, font-feature-settings is aliased
+// to -moz-font-feature-settings.  When unprefixing, this should
+// be reversed, -moz-font-feature-settings should alias to
+// font-feature-settings.
 #ifdef RELEASE_BUILD
 pref("layout.css.font-features.enabled", false);
 #else
