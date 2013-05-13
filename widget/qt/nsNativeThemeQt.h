@@ -58,8 +58,7 @@ public:
                                               uint8_t aWidgetType,
                                               nsIntMargin* aResult);
 
-  NS_IMETHOD_(bool) ThemeDrawsFocusForWidget(nsPresContext* aPresContext,
-                                               nsIFrame* aFrame, uint8_t aWidgetType);
+  NS_IMETHOD_(bool) ThemeDrawsFocusForWidget(uint8_t aWidgetType) MOZ_OVERRIDE;
 
   bool ThemeNeedsComboboxDropmarker();
 
