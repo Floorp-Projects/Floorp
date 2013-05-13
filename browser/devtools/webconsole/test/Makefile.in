@@ -125,6 +125,10 @@ MOCHITEST_BROWSER_FILES = \
 	browser_webconsole_bug_837351_securityerrors.js \
 	browser_bug_865871_variables_view_close_on_esc_key.js \
 	browser_bug_865288_repeat_different_objects.js \
+	browser_jsterm_inspect.js \
+	browser_bug_869003_inspect_cross_domain_object.js \
+	browser_bug_862916_console_dir_and_filter_off.js \
+	browser_console_native_getters.js \
 	head.js \
 	$(NULL)
 
@@ -228,6 +232,8 @@ MOCHITEST_BROWSER_FILES += \
 	test-eval-in-stackframe.html \
 	test-bug-859170-longstring-hang.html \
 	test-bug-837351-security-errors.html \
+	test-bug-869003-top-window.html \
+	test-bug-869003-iframe.html \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

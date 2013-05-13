@@ -16,6 +16,9 @@
   locale/@AB_CD@/browser/aboutFeedback.dtd        (%chrome/aboutFeedback.dtd)
   locale/@AB_CD@/browser/aboutPrivateBrowsing.dtd (%chrome/aboutPrivateBrowsing.dtd)
   locale/@AB_CD@/browser/aboutReader.properties   (%chrome/aboutReader.properties)
+#ifdef MOZ_SERVICES_HEALTHREPORT
+  locale/@AB_CD@/browser/aboutHealthReport.dtd    (%chrome/aboutHealthReport.dtd)
+#endif
   locale/@AB_CD@/browser/browser.properties       (%chrome/browser.properties)
   locale/@AB_CD@/browser/config.dtd               (%chrome/config.dtd)
   locale/@AB_CD@/browser/config.properties        (%chrome/config.properties)

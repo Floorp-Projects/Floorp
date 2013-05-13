@@ -12,7 +12,9 @@ include $(DEPTH)/config/autoconf.mk
 EXTRA_JS_MODULES = \
   LightweightThemeConsumer.jsm \
   JNI.jsm \
+  OrderedBroadcast.jsm \
   Sanitizer.jsm \
+  SharedPreferences.jsm \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
