@@ -170,7 +170,6 @@ class MinorCollectionTracer : public JSTracer
 {
   public:
     Nursery *nursery;
-    JSRuntime *runtime;
     AutoTraceSession session;
 
     /*
@@ -195,18 +194,17 @@ class MinorCollectionTracer : public JSTracer
     MinorCollectionTracer(JSRuntime *rt, Nursery *nursery)
       : JSTracer(),
         nursery(nursery),
-        runtime(rt),
-        session(runtime, MinorCollecting),
+        session(rt, MinorCollecting),
         head(NULL),
         tail(&head),
-        savedNeedsBarrier(runtime->needsBarrier()),
-        disableStrictProxyChecking(runtime)
+        savedNeedsBarrier(rt->needsBarrier()),
+        disableStrictProxyChecking(rt)
     {
-        JS_TracerInit(this, runtime, Nursery::MinorGCCallback);
+        JS_TracerInit(this, rt, Nursery::MinorGCCallback);
         eagerlyTraceWeakMaps = TraceWeakMapKeysValues;
 
-        runtime->gcNumber++;
-        runtime->setNeedsBarrier(false);
+        rt->gcNumber++;
+        rt->setNeedsBarrier(false);
         for (ZonesIter zone(rt); !zone.done(); zone.next())
             zone->saveNeedsBarrier(false);
     }
