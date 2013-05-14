@@ -231,7 +231,7 @@ nsDownloadManager::RemoveAllDownloads(nsCOMArray<nsDownload>& aDownloads)
     nsRefPtr<nsDownload> dl = aDownloads[0];
 
     nsresult result = NS_OK;
-    if (dl->IsPaused() && GetQuitBehavior() != QUIT_AND_CANCEL)
+    if (!dl->mPrivate && dl->IsPaused() && GetQuitBehavior() != QUIT_AND_CANCEL)
       aDownloads.RemoveObject(dl);
     else
       result = dl->Cancel();
@@ -2418,7 +2418,6 @@ nsDownloadManager::Observe(nsISupports *aSubject,
     // Upon leaving private browsing mode, cancel all private downloads,
     // remove all trace of them, and then blow away the private database
     // and recreate a blank one.
-    PauseAllDownloads(mCurrentPrivateDownloads, true);
     RemoveAllDownloads(mCurrentPrivateDownloads);
     InitPrivateDB();
   } else if (strcmp(aTopic, "last-pb-context-exiting") == 0) {
