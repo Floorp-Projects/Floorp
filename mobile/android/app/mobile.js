@@ -659,8 +659,8 @@ pref("reader.parse-on-load.enabled", true);
 // Allow reader mode even on low-memory platforms
 pref("reader.parse-on-load.force-enabled", false);
 
-// The default of font size in reader (1-7)
-pref("reader.font_size", 4);
+// The default of font size in reader (1-5)
+pref("reader.font_size", 3);
 
 // The default color scheme in reader (light, dark, sepia, auto)
 // auto = color automatically adjusts according to ambient light level
