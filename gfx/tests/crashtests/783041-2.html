@@ -1,0 +1,63 @@
+<html>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/.  -->
+  <head>
+    <style>
+      #el0 {
+        height: 200px ! important;
+        height: 1em;
+        width: 1em;
+        padding: 5px;
+        display: table;
+        -moz-transform:translate3d(0, 80px, 0);
+      } 
+      #el0:before {
+        display: -moz-grid;
+        content: counter(c, hiragana) attr(id);
+        counter-increment: c 694;
+      } 
+      #el0:after {
+        counter-reset: c 694;
+        content: counter(c, cjk-ideographic) attr(id);
+      } 
+      #el1 {
+        text-shadow: 0px 20px 0px, 0px -20px 10px;
+        line-height: 4px;
+        transform: translate3d(0px, -300px, 0px);
+        display: table-row-group;
+        border-spacing: 7px;
+      } 
+      #el1:after {
+        counter-reset: c;
+        display: -moz-box;
+        content: counter(c, cjk-ideographic) attr(id);
+        counter-increment: c 694;
+      }
+      #el2 {
+        display: table-row-group;
+        -moz-transform:translate3d(0, 80px, 0); 
+      }
+      #el2:after {
+        content: counter(c, cjk-ideographic) attr(id);
+      } 
+    </style>
+    <script>
+      onload = function() {
+        el0=document.createElement('div')
+        el0.setAttribute('id','el0')
+        document.body.appendChild(el0)
+        el1=document.createElement('div')
+        el1.setAttribute('id','el1')
+        el0.appendChild(el1)
+        el2=document.createElement('q')
+        el2.setAttribute('id','el2')
+        el1.appendChild(el2)
+        el0.appendChild(document.createTextNode('A'))
+        setTimeout("location.reload()", 100)
+      }
+    </script>
+  </head>
+  <body>
+  </body>
+</html>
