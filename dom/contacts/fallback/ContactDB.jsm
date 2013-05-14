@@ -454,7 +454,7 @@ ContactDB.prototype = {
       if (aContact.properties[field] && contact.search[field]) {
         for (let i = 0; i <= aContact.properties[field].length; i++) {
           if (aContact.properties[field][i]) {
-            if (field == "tel") {
+            if (field == "tel" && aContact.properties[field][i].value) {
               let number = aContact.properties.tel[i].value.toString();
               let normalized = PhoneNumberUtils.normalize(number);
               // We use an object here to avoid duplicates
