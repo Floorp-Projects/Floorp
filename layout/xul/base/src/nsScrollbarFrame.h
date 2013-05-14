@@ -26,7 +26,7 @@ public:
   NS_DECL_QUERYFRAME_TARGET(nsScrollbarFrame)
 
 #ifdef DEBUG
-  NS_IMETHOD GetFrameName(nsAString& aResult) const {
+  NS_IMETHOD GetFrameName(nsAString& aResult) const MOZ_OVERRIDE {
     return MakeFrameName(NS_LITERAL_STRING("ScrollbarFrame"), aResult);
   }
 #endif

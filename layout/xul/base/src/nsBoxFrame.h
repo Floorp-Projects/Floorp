@@ -59,23 +59,23 @@ public:
   // gets the rect inside our border and debug border. If you wish to paint inside a box
   // call this method to get the rect so you don't draw on the debug border or outer border.
 
-  virtual void SetLayoutManager(nsBoxLayout* aLayout) { mLayoutManager = aLayout; }
-  virtual nsBoxLayout* GetLayoutManager() { return mLayoutManager; }
+  virtual void SetLayoutManager(nsBoxLayout* aLayout) MOZ_OVERRIDE { mLayoutManager = aLayout; }
+  virtual nsBoxLayout* GetLayoutManager() MOZ_OVERRIDE { return mLayoutManager; }
 
-  NS_IMETHOD RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIFrame* aChild);
+  NS_IMETHOD RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIFrame* aChild) MOZ_OVERRIDE;
 
-  virtual nsSize GetPrefSize(nsBoxLayoutState& aBoxLayoutState);
-  virtual nsSize GetMinSize(nsBoxLayoutState& aBoxLayoutState);
-  virtual nsSize GetMaxSize(nsBoxLayoutState& aBoxLayoutState);
-  virtual nscoord GetFlex(nsBoxLayoutState& aBoxLayoutState);
-  virtual nscoord GetBoxAscent(nsBoxLayoutState& aBoxLayoutState);
+  virtual nsSize GetPrefSize(nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
+  virtual nsSize GetMinSize(nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
+  virtual nsSize GetMaxSize(nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
+  virtual nscoord GetFlex(nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
+  virtual nscoord GetBoxAscent(nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
 #ifdef DEBUG_LAYOUT
-  NS_IMETHOD SetDebug(nsBoxLayoutState& aBoxLayoutState, bool aDebug);
+  NS_IMETHOD SetDebug(nsBoxLayoutState& aBoxLayoutState, bool aDebug) MOZ_OVERRIDE;
   NS_IMETHOD GetDebug(bool& aDebug) MOZ_OVERRIDE;
 #endif
   virtual Valignment GetVAlign() const MOZ_OVERRIDE { return mValign; }
   virtual Halignment GetHAlign() const MOZ_OVERRIDE { return mHalign; }
-  NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);
+  NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
 
   virtual bool ComputesOwnOverflowArea() MOZ_OVERRIDE { return false; }
 
@@ -111,7 +111,7 @@ public:
   NS_IMETHOD  RemoveFrame(ChildListID     aListID,
                           nsIFrame*       aOldFrame) MOZ_OVERRIDE;
 
-  virtual nsIFrame* GetContentInsertionFrame();
+  virtual nsIFrame* GetContentInsertionFrame() MOZ_OVERRIDE;
 
   NS_IMETHOD  SetInitialChildList(ChildListID     aListID,
                                   nsFrameList&    aChildList) MOZ_OVERRIDE;
@@ -120,7 +120,7 @@ public:
 
   virtual nsIAtom* GetType() const MOZ_OVERRIDE;
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const
+  virtual bool IsFrameOfType(uint32_t aFlags) const MOZ_OVERRIDE
   {
     // record that children that are ignorable whitespace should be excluded 
     // (When content was loaded via the XUL content sink, it's already
@@ -145,7 +145,7 @@ public:
                        const nsHTMLReflowState*  aReflowState,
                        nsDidReflowStatus         aStatus) MOZ_OVERRIDE;
 
-  virtual bool HonorPrintBackgroundSettings();
+  virtual bool HonorPrintBackgroundSettings() MOZ_OVERRIDE;
 
   virtual ~nsBoxFrame();
   

@@ -31,7 +31,7 @@ public:
                          nsGUIEvent* aEvent,
                          nsEventStatus* aEventStatus) MOZ_OVERRIDE;
 
-  virtual nsIAtom* GetType() const;
+  virtual nsIAtom* GetType() const MOZ_OVERRIDE;
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
@@ -40,16 +40,16 @@ public:
   NS_DECL_QUERYFRAME
 
   // nsIAnonymousContentCreator
-  virtual nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements);
+  virtual nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements) MOZ_OVERRIDE;
   virtual void AppendAnonymousContentTo(nsBaseContentList& aElements,
                                         uint32_t aFilter) MOZ_OVERRIDE;
   virtual nsIFrame* CreateFrameFor(nsIContent* aContent) MOZ_OVERRIDE;
 
   NS_IMETHOD AttributeChanged(int32_t         aNameSpaceID,
                               nsIAtom*        aAttribute,
-                              int32_t         aModType);
+                              int32_t         aModType) MOZ_OVERRIDE;
 
-  virtual bool IsLeaf() const;
+  virtual bool IsLeaf() const MOZ_OVERRIDE;
 
   virtual nsIFrame* GetContentInsertionFrame() MOZ_OVERRIDE;
 

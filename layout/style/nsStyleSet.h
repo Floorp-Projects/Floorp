@@ -37,7 +37,7 @@ struct TreeMatchContext;
 class nsEmptyStyleRule MOZ_FINAL : public nsIStyleRule
 {
   NS_DECL_ISUPPORTS
-  virtual void MapRuleInfoInto(nsRuleData* aRuleData);
+  virtual void MapRuleInfoInto(nsRuleData* aRuleData) MOZ_OVERRIDE;
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const MOZ_OVERRIDE;
 #endif
@@ -46,7 +46,7 @@ class nsEmptyStyleRule MOZ_FINAL : public nsIStyleRule
 class nsInitialStyleRule MOZ_FINAL : public nsIStyleRule
 {
   NS_DECL_ISUPPORTS
-  virtual void MapRuleInfoInto(nsRuleData* aRuleData);
+  virtual void MapRuleInfoInto(nsRuleData* aRuleData) MOZ_OVERRIDE;
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const MOZ_OVERRIDE;
 #endif

@@ -18,7 +18,7 @@ public:
   NS_DECL_FRAMEARENA_HELPERS
 
   // nsISupports
-  virtual nsIAtom* GetType() const;
+  virtual nsIAtom* GetType() const MOZ_OVERRIDE;
   friend nsIFrame* NS_NewTableCaptionFrame(nsIPresShell* aPresShell, nsStyleContext*  aContext);
 
   virtual nsSize ComputeAutoSize(nsRenderingContext *aRenderingContext,
@@ -68,12 +68,12 @@ public:
   
   // nsIFrame overrides - see there for a description
 
-  virtual void DestroyFrom(nsIFrame* aDestructRoot);
+  virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
 
   NS_IMETHOD SetInitialChildList(ChildListID     aListID,
                                  nsFrameList&    aChildList) MOZ_OVERRIDE;
  
-  virtual const nsFrameList& GetChildList(ChildListID aListID) const;
+  virtual const nsFrameList& GetChildList(ChildListID aListID) const MOZ_OVERRIDE;
   virtual void GetChildLists(nsTArray<ChildList>* aLists) const MOZ_OVERRIDE;
 
   NS_IMETHOD AppendFrames(ChildListID     aListID,
@@ -86,7 +86,7 @@ public:
   NS_IMETHOD RemoveFrame(ChildListID     aListID,
                          nsIFrame*       aOldFrame) MOZ_OVERRIDE;
 
-  virtual nsIFrame* GetContentInsertionFrame() {
+  virtual nsIFrame* GetContentInsertionFrame() MOZ_OVERRIDE {
     return GetFirstPrincipalChild()->GetContentInsertionFrame();
   }
 
@@ -277,7 +277,7 @@ protected:
                       nscoord                  aAvailableWidth,
                       nsMargin&                aMargin);
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const
+  virtual bool IsFrameOfType(uint32_t aFlags) const MOZ_OVERRIDE
   {
     return nsContainerFrame::IsFrameOfType(aFlags &
                                            (~eCanContainOverflowContainers));

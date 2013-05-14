@@ -6,6 +6,7 @@
 #ifndef NSDISPLAYLISTINVALIDATION_H_
 #define NSDISPLAYLISTINVALIDATION_H_
 
+#include "mozilla/Attributes.h"
 #include "nsRect.h"
 
 class nsDisplayItem;
@@ -58,7 +59,7 @@ class nsDisplayItemGenericGeometry : public nsDisplayItemGeometry
 public:
   nsDisplayItemGenericGeometry(nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder);
 
-  virtual void MoveBy(const nsPoint& aOffset);
+  virtual void MoveBy(const nsPoint& aOffset) MOZ_OVERRIDE;
 
   nsRect mBorderRect;
 };
@@ -68,7 +69,7 @@ class nsDisplayItemBoundsGeometry : public nsDisplayItemGeometry
 public:
   nsDisplayItemBoundsGeometry(nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder);
 
-  virtual void MoveBy(const nsPoint& aOffset);
+  virtual void MoveBy(const nsPoint& aOffset) MOZ_OVERRIDE;
 
   bool mHasRoundedCorners;
 };
@@ -78,7 +79,7 @@ class nsDisplayBorderGeometry : public nsDisplayItemGeometry
 public:
   nsDisplayBorderGeometry(nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder);
 
-  virtual void MoveBy(const nsPoint& aOffset);
+  virtual void MoveBy(const nsPoint& aOffset) MOZ_OVERRIDE;
 
   nsRect mContentRect;
 };
@@ -88,7 +89,7 @@ class nsDisplayBackgroundGeometry : public nsDisplayItemGeometry
 public:
   nsDisplayBackgroundGeometry(nsDisplayBackgroundImage* aItem, nsDisplayListBuilder* aBuilder);
 
-  virtual void MoveBy(const nsPoint& aOffset);
+  virtual void MoveBy(const nsPoint& aOffset) MOZ_OVERRIDE;
 
   nsRect mPositioningArea;
 };
@@ -98,7 +99,7 @@ class nsDisplayBoxShadowInnerGeometry : public nsDisplayItemGeometry
 public:
   nsDisplayBoxShadowInnerGeometry(nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder);
   
-  virtual void MoveBy(const nsPoint& aOffset);
+  virtual void MoveBy(const nsPoint& aOffset) MOZ_OVERRIDE;
 
   nsRect mPaddingRect;
 };

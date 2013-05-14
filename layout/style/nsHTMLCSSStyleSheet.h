@@ -31,7 +31,7 @@ public:
   void Reset(nsIURI* aURL);
 
   // nsIStyleSheet
-  virtual nsIURI* GetSheetURI() const;
+  virtual nsIURI* GetSheetURI() const MOZ_OVERRIDE;
   virtual nsIURI* GetBaseURI() const MOZ_OVERRIDE;
   virtual void GetTitle(nsString& aTitle) const MOZ_OVERRIDE;
   virtual void GetType(nsString& aType) const MOZ_OVERRIDE;
