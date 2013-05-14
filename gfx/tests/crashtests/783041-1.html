@@ -1,0 +1,63 @@
+<html>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/.  -->
+  <head>
+    <style>
+      #el7 {
+        font-size:.92em 
+      } 
+      #el0 { 
+        height: 200px ! important; 
+        margin: 0px; 
+        display: table;
+        font-size:.92em 
+      }
+
+      #el3 { 
+        line-height: 0.5px; 
+        text-shadow: 0px 5px 5px, 0px -20px 10px;
+        display: table-row-group; 
+        transform: translate3d(-3px, -300px, 0px); 
+      }
+
+      #el5 { 
+        height:1em;
+        display:block; 
+      } 
+
+      .c4 { 
+        margin: 1em;
+        padding: 0.5em;
+      } 
+    </style>
+    <script>
+      onload = function() {
+        el7=document.createElement('iframe')
+        el7.setAttribute('id', 'el7')
+        document.body.appendChild(el7)
+
+        el0=document.createElement('span')
+        el0.setAttribute('id','el0')
+        document.body.appendChild(el0)
+        el0.appendChild(document.createTextNode('A'))
+
+        el3=document.createElement('q')
+        el3.setAttribute('id','el3')
+        el0.appendChild(el3)
+
+        el5=document.createElement('q')
+        el5.setAttribute('id','el5')
+        el3.appendChild(el5)
+
+        el0.appendChild(document.createTextNode('A'))
+
+        document.body.offsetTop
+        el0.setAttribute('class', 'c4'); 
+        el7.setAttribute('class', 'c4'); 
+      }
+    </script>
+  </head>
+  <body>
+  </body>
+</html>
