@@ -352,8 +352,6 @@
 @BINPATH@/components/BrowserElementParent.js
 @BINPATH@/components/ContactManager.js
 @BINPATH@/components/ContactManager.manifest
-@BINPATH@/components/NavigatorPropertyHelper.js
-@BINPATH@/components/NavigatorPropertyHelper.manifest
 @BINPATH@/components/PermissionSettings.js
 @BINPATH@/components/PermissionSettings.manifest
 @BINPATH@/components/PermissionPromptService.js
