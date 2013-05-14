@@ -231,7 +231,8 @@ nsDNSRecord::ReportUnusable(uint16_t aPort)
     // ignore the report.
 
     if (mHostRecord->addr_info &&
-        mIterGenCnt == mHostRecord->addr_info_gencnt) {
+        mIterGenCnt == mHostRecord->addr_info_gencnt &&
+        mIter) {
         mHostRecord->ReportUnusable(&mIter->mAddress);
     }
 
