@@ -134,9 +134,11 @@
   <string name="pref_update_autodownload_enabled">&pref_update_autodownload_enabled;</string>
 
   <string name="datareporting_notification_title">&datareporting_notification_title;</string>
+  <string name="datareporting_notification_action_long">&datareporting_notification_action_long;</string>
   <string name="datareporting_notification_action">&datareporting_notification_action;</string>
   <string name="datareporting_notification_summary">&datareporting_notification_summary;</string>
   <string name="datareporting_notification_summary_short">&datareporting_notification_summary_short;</string>
+  <string name="datareporting_notification_ticker_text">&datareporting_notification_ticker_text;</string>
 
   <string name="datareporting_telemetry_title">&datareporting_telemetry_title;</string>
   <string name="datareporting_telemetry_summary">&datareporting_telemetry_summary;</string>

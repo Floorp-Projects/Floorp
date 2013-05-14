@@ -30,6 +30,4 @@ EXTRA_JS_MODULES = \
   jsdebugger.jsm \
   $(NULL)
 
-DISABLED_XPCSHELL_TESTS = tests
-
 include $(topsrcdir)/config/rules.mk

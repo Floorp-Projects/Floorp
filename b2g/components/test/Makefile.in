@@ -13,6 +13,4 @@ FAIL_ON_WARNINGS := 1
 
 include $(DEPTH)/config/autoconf.mk
 
-DISABLED_XPCSHELL_TESTS = unit
-
 include $(topsrcdir)/config/rules.mk

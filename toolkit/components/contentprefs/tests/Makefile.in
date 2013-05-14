@@ -11,11 +11,4 @@ relativesrcdir = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DISABLED_XPCSHELL_TESTS = unit unit_cps2
-
-# FIXME/bug 575918: out-of-process xpcshell is broken on OS X
-ifneq ($(OS_ARCH),Darwin)
-DISABLED_XPCSHELL_TESTS += unit_ipc
-endif
-
 include $(topsrcdir)/config/rules.mk

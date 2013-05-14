@@ -47,6 +47,7 @@ var std_Math_floor = Math.floor;
 var std_Math_max = Math.max;
 var std_Math_min = Math.min;
 var std_Number_valueOf = Number.prototype.valueOf;
+var std_Number_POSITIVE_INFINITY = Number.POSITIVE_INFINITY;
 var std_Object_create = Object.create;
 var std_Object_defineProperty = Object.defineProperty;
 var std_Object_getOwnPropertyNames = Object.getOwnPropertyNames;

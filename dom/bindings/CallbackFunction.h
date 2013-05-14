@@ -31,7 +31,7 @@ public:
     MOZ_ASSERT(JS_ObjectIsCallable(nullptr, aCallable));
   }
 
-  JSObject* Callable() const
+  JS::Handle<JSObject*> Callable() const
   {
     return Callback();
   }

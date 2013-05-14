@@ -95,7 +95,7 @@ nsEventListenerInfo::GetJSVal(JSContext* aCx,
 
   nsCOMPtr<nsIJSEventListener> jsl = do_QueryInterface(mListener);
   if (jsl) {
-    JSObject *handler = jsl->GetHandler().Ptr()->Callable();
+    JS::Handle<JSObject*> handler(jsl->GetHandler().Ptr()->Callable());
     if (handler) {
       aAc.construct(aCx, handler);
       *aJSVal = OBJECT_TO_JSVAL(handler);
