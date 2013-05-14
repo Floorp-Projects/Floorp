@@ -8,8 +8,9 @@
 
 interface nsIDOMCameraManager;
 
-[scriptable, uuid(bbb2456a-a6c8-42c8-8f52-6de071097e4b)]
+[scriptable,
+uuid(46a5710b-8dfb-430e-8705-90bea31c55aa)]
 interface nsIDOMNavigatorCamera : nsISupports
 {
-  readonly attribute nsIDOMCameraManager mozCameras;
+  readonly attribute nsISupports mozCameras;
 };

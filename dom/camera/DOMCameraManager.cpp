@@ -18,15 +18,11 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-DOMCI_DATA(CameraManager, nsIDOMCameraManager)
-
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(nsDOMCameraManager, mWindow)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMCameraManager)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMCameraManager)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMCameraManager)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CameraManager)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
 NS_INTERFACE_MAP_END
 
@@ -103,37 +99,6 @@ nsDOMCameraManager::CheckPermissionAndCreateInstance(nsPIDOMWindow* aWindow)
   obs->AddObserver(cameraManager, "xpcom-shutdown", true);
 
   return cameraManager.forget();
-}
-
-/* [implicit_jscontext] void getCamera ([optional] in jsval aOptions, in nsICameraGetCameraCallback onSuccess, [optional] in nsICameraErrorCallback onError); */
-NS_IMETHODIMP
-nsDOMCameraManager::GetCamera(const JS::Value& aOptions, nsICameraGetCameraCallback* onSuccess, nsICameraErrorCallback* onError, JSContext* cx)
-{
-  NS_ENSURE_TRUE(onSuccess, NS_ERROR_INVALID_ARG);
-
-  uint32_t cameraId = 0;  // back (or forward-facing) camera by default
-  mozilla::idl::CameraSelector selector;
-
-  nsresult rv = selector.Init(cx, &aOptions);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (selector.camera.EqualsASCII("front")) {
-    cameraId = 1;
-  }
-
-  // reuse the same camera thread to conserve resources
-  if (!mCameraThread) {
-    rv = NS_NewThread(getter_AddRefs(mCameraThread));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  DOM_CAMERA_LOGT("%s:%d\n", __func__, __LINE__);
-
-  // Creating this object will trigger the onSuccess handler
-  nsCOMPtr<nsDOMCameraControl> cameraControl = new nsDOMCameraControl(cameraId, mCameraThread, onSuccess, onError, mWindowId);
-
-  Register(cameraControl);
-  return NS_OK;
 }
 
 void

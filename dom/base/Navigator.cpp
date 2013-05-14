@@ -1502,7 +1502,7 @@ Navigator::GetMozTime(nsIDOMMozTimeManager** aTime)
 //*****************************************************************************
 
 NS_IMETHODIMP
-Navigator::GetMozCameras(nsIDOMCameraManager** aCameraManager)
+Navigator::GetMozCameras(nsISupports** aCameraManager)
 {
   if (!mCameraManager) {
     nsCOMPtr<nsPIDOMWindow> win = do_QueryReferent(mWindow);
@@ -1516,7 +1516,7 @@ Navigator::GetMozCameras(nsIDOMCameraManager** aCameraManager)
     NS_ENSURE_TRUE(mCameraManager, NS_OK);
   }
 
-  nsRefPtr<nsDOMCameraManager> cameraManager = mCameraManager;
+  nsCOMPtr<nsIObserver> cameraManager = mCameraManager.get();
   cameraManager.forget(aCameraManager);
 
   return NS_OK;
