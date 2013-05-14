@@ -1460,14 +1460,28 @@ class MethodDefiner(PropertyDefiner):
                                  "flags": "JSPROP_ENUMERATE",
                                  "condition": MemberCondition(None, None) })
 
-        if (not descriptor.interface.parent and not static and
+        # Make sure to not stick QueryInterface on abstract interfaces that
+        # have hasXPConnectImpls (like EventTarget).  So only put it on
+        # interfaces that are concrete and all of whose ancestors are abstract.
+        def allAncestorsAbstract(iface):
+            if not iface.parent:
+                return True
+            desc = descriptor.getDescriptor(iface.parent.identifier.name)
+            if desc.concrete:
+                return False
+            return allAncestorsAbstract(iface.parent)
+        if (not static and
             descriptor.nativeOwnership == 'nsisupports' and
-            descriptor.interface.hasInterfacePrototypeObject()):
-            self.chrome.append({"name": 'QueryInterface',
-                                "methodInfo": False,
-                                "length": 1,
-                                "flags": "0",
-                                "condition": MemberCondition(None, None) })
+            descriptor.interface.hasInterfacePrototypeObject() and
+            descriptor.concrete and
+            allAncestorsAbstract(descriptor.interface)):
+            self.regular.append({"name": 'QueryInterface',
+                                 "methodInfo": False,
+                                 "length": 1,
+                                 "flags": "0",
+                                 "condition":
+                                     MemberCondition(None,
+                                                     "nsINode::IsChromeOrXBL") })
 
         if not static:
             stringifier = descriptor.operations['Stringifier']
