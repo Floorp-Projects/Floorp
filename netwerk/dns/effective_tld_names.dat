@@ -6561,6 +6561,14 @@ xxx
 // Requested by Donavan Miller <donavanm@amazon.com> 2013-03-22
 cloudfront.net
 
+// Amazon Elastic Compute Cloud: https://aws.amazon.com/ec2/
+// Requested by Osman Surkatty <osmans@amazon.com> 2013-04-02
+compute.amazonaws.com
+us-east-1.amazonaws.com
+compute-1.amazonaws.com
+*.compute.amazonaws.com
+*.compute-1.amazonaws.com
+
 // Amazon Elastic Beanstalk : https://aws.amazon.com/elasticbeanstalk/ 
 // Requested by Adam Stein <astein@amazon.com> 2013-04-02
 elasticbeanstalk.com
