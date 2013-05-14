@@ -91,12 +91,6 @@ let AboutReader = function(doc, win) {
     this._FONT_SIZE_MIN, this._FONT_SIZE_MAX, this._FONT_SIZE_STEP, Services.prefs.getIntPref("reader.font_size"),
     this._onFontSizeChange.bind(this));
 
-  let marginTitle = gStrings.GetStringFromName("aboutReader.marginTitle");
-  this._marginSize = 0;
-  this._setupStepControl("margin-size-control", marginTitle,
-    this._MARGIN_SIZE_MIN, this._MARGIN_SIZE_MAX, this._MARGIN_SIZE_STEP, Services.prefs.getIntPref("reader.margin_size"),
-    this._onMarginSizeChange.bind(this));
-
   dump("Decoding query arguments");
   let queryArgs = this._decodeQueryString(win.location.href);
 
@@ -118,9 +112,6 @@ AboutReader.prototype = {
   _FONT_SIZE_MIN: 1,
   _FONT_SIZE_MAX: 7,
   _FONT_SIZE_STEP: 1,
-  _MARGIN_SIZE_MIN: 5,
-  _MARGIN_SIZE_MAX: 25,
-  _MARGIN_SIZE_STEP: 5,
 
   _BLOCK_IMAGES_SELECTOR: ".content p > img:only-child, " +
                           ".content p > a:only-child > img:only-child, " +
@@ -296,18 +287,6 @@ AboutReader.prototype = {
       url: this._article.url,
       title: this._article.title
     });
-  },
-
-  _onMarginSizeChange: function Reader_onMarginSizeChange(newMarginSize) {
-    let doc = this._doc;
-
-    this._marginSize = newMarginSize;
-    doc.body.style.marginLeft = this._marginSize + "%";
-    doc.body.style.marginRight = this._marginSize + "%";
-
-    this._updateImageMargins();
-
-    Services.prefs.setIntPref("reader.margin_size", this._marginSize);
   },
 
   _onFontSizeChange: function Reader_onFontSizeChange(newFontSize) {
