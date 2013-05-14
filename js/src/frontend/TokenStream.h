@@ -436,7 +436,7 @@ class StrictModeGetter {
 //
 // The methods seek() and tell() allow to rescan from a previous visited
 // location of the buffer.
-class TokenStream
+class MOZ_STACK_CLASS TokenStream
 {
     /* Unicode separators that are treated as line terminators, in addition to \n, \r */
     enum {
