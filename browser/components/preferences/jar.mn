@@ -32,7 +32,7 @@ browser.jar:
     content/browser/preferences/permissions.js
 *   content/browser/preferences/preferences.xul
     content/browser/preferences/privacy.xul
-    content/browser/preferences/privacy.js
+*   content/browser/preferences/privacy.js
     content/browser/preferences/sanitize.xul
     content/browser/preferences/sanitize.js
     content/browser/preferences/security.xul
