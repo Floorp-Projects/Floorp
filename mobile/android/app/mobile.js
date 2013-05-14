@@ -700,6 +700,11 @@ pref("layout.imagevisibility.enabled", false);
 // Enable the dynamic toolbar
 pref("browser.chrome.dynamictoolbar", true);
 
+// The mode of browser titlebar
+// 0: Show a current page title.
+// 1: Show a current page url.
+pref("browser.chrome.titlebarMode", 0);
+
 #ifdef MOZ_PKG_SPECIAL
 // Disable webgl on ARMv6 because running the reftests takes
 // too long for some reason (bug 843738)

@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait"><head>
+    <meta charset="utf-8">
+    <title>Testcase for bug 750066</title>
+<style>
+iframe { -moz-transition: width 2000ms ease-out 0s; }
+</style>
+
+<script>
+function resize(w) {
+  var win = window.frames[0];
+  win.frameElement.style.width = w;
+}
+function doTest() {
+  resize('1000px'); 
+  setTimeout(function(){ 
+    resize('500px');
+    setTimeout(function(){
+      document.documentElement.removeAttribute("class");
+    },0);
+  },500);
+}
+</script>
+</head>
+<body>
+
+<iframe src="750066-iframe.html"></iframe>
+
+<script>
+window.addEventListener("MozReftestInvalidate", doTest, false);
+</script>
+
+</body>
+</html>
