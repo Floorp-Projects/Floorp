@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait"><head>
+    <meta charset="utf-8">
+    <title>Testcase for bug 756241</title>
+<script>
+function reload() {
+  this.location.reload();
+}
+// Run the test for 3 seconds
+setTimeout(function() {
+    try {
+      for (var i=0; i < window.frames.length; ++i) {
+        window.frames[i].location = 'about:blank';
+      }
+    } finally {
+      document.documentElement.removeChild(document.body);
+      document.documentElement.className = "";
+    }
+  }, 3000);
+</script>
+</head>
+<body onload="document.body.getBoundingClientRect()">
+
+<iframe onload="this.contentWindow.setTimeout(reload,1113)" src="756241-iframe.html"></iframe>
+<iframe onload="this.contentWindow.setTimeout(reload,1233)" src="756241-iframe.html"></iframe>
+<iframe onload="this.contentWindow.setTimeout(reload,1313)" src="756241-iframe.html"></iframe>
+<iframe onload="this.contentWindow.setTimeout(reload,1433)" src="756241-iframe.html"></iframe>
+<iframe onload="this.contentWindow.setTimeout(reload,1113)" src="756241-iframe.html"></iframe>
+<iframe onload="this.contentWindow.setTimeout(reload,1233)" src="756241-iframe.html"></iframe>
+<iframe onload="this.contentWindow.setTimeout(reload,1313)" src="756241-iframe.html"></iframe>
+<iframe onload="this.contentWindow.setTimeout(reload,1433)" src="756241-iframe.html"></iframe>
+<iframe onload="this.contentWindow.setTimeout(reload,1113)" src="756241-iframe.html"></iframe>
+<iframe onload="this.contentWindow.setTimeout(reload,1233)" src="756241-iframe.html"></iframe>
+<iframe onload="this.contentWindow.setTimeout(reload,1313)" src="756241-iframe.html"></iframe>
+<iframe onload="this.contentWindow.setTimeout(reload,1433)" src="756241-iframe.html"></iframe>
+
+</body>
+</html>
