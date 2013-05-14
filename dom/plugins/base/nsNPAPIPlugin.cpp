@@ -1211,7 +1211,8 @@ _getwindowobject(NPP npp)
   // Using ::JS_GetGlobalObject(cx) is ok here since the window we
   // want to return here is the outer window, *not* the inner (since
   // we don't know what the plugin will do with it).
-  return nsJSObjWrapper::GetNewOrUsed(npp, cx, ::JS_GetGlobalObject(cx));
+  JS::Rooted<JSObject*> global(cx, ::JS_GetGlobalObject(cx));
+  return nsJSObjWrapper::GetNewOrUsed(npp, cx, global);
 }
 
 NPObject* NP_CALLBACK
