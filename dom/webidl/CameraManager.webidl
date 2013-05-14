@@ -52,9 +52,19 @@ interface GetCameraCallback;
 interface CameraErrorCallback;
 
 interface CameraManager {
+    /* get a camera instance; options will be used to specify which
+       camera to get from the list returned by getListOfCameras(), e.g.:
+        {
+            camera: "front"
+        }
+    */
   [Throws]
   void getCamera(any options, GetCameraCallback callback,
                  optional CameraErrorCallback errorCallback);
+
+  /* return an array of camera   identifiers, e.g.
+     [ "front", "back" ]
+   */
   [Throws]
   sequence<DOMString> getListOfCameras();
 };
