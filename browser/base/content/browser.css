@@ -662,6 +662,12 @@ chatbar {
   max-height: 0;
 }
 
+/** See bug 872317 for why the following rule is necessary. */
+
+#downloads-indicator {
+  -moz-binding: url("chrome://browser/content/downloads/download.xml#download-toolbarbutton");
+}
+
 /* full screen chat window support */
 chatbar:-moz-full-screen-ancestor,
 chatbox:-moz-full-screen-ancestor  {
