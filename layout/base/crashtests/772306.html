@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+    var allNodes = [];
+    allNodes[5] = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
+    allNodes[5].style.setProperty("-moz-column-width", "200px", "");
+    allNodes[5].style.setProperty("height", "2em", "");
+    allNodes[7] = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
+    allNodes[7].style.setProperty("float", "left", "");
+    allNodes[30] = document.createElementNS("http://www.w3.org/1998/Math/MathML", "munder");
+    (allNodes[7] || allNodes[5] || document.body).appendChild(allNodes[30]);
+    (allNodes[5] || document.body).appendChild(allNodes[7]);
+    allNodes[17] = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
+    allNodes[17].style.setProperty("display", "inline-block", "");
+    (allNodes[5] || document.body).appendChild(allNodes[17]);
+    allNodes[20] = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
+    (allNodes[5] || document.body).appendChild(allNodes[20]);
+    allNodes[23] = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
+    allNodes[23].style.setProperty("float", "left", "");
+    allNodes[25] = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
+    allNodes[25].style.setProperty("display", "inline-block", "");
+    (allNodes[23] || allNodes[5] || document.body).appendChild(allNodes[25]);
+    (allNodes[5] || document.body).appendChild(allNodes[23]);
+    (document.body).appendChild(allNodes[5]);
+    document.documentElement.offsetHeight;
+    allNodes[34] = document.createElementNS("http://www.w3.org/1998/Math/MathML", 'maligngroup');
+    allNodes[17].appendChild(allNodes[34]);
+    document.documentElement.offsetHeight;
+    allNodes[30].setAttribute('accentunder', "false");
+}
+
+</script>
+</head>
+
+<body onload="boom();"></body>
+</html>

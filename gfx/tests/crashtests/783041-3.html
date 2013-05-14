@@ -1,0 +1,71 @@
+<html>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/.  -->
+  <head>
+    <style>
+      #el0 { 
+        height: 200px ! important; 
+        padding: 4px; 
+        white-space: pre-wrap; 
+        margin-top: 0px; 
+        display: table;
+      }
+      #el3 { 
+        line-height: 3px; 
+        text-shadow: 0px 5px 5px, 0px -20px 10px;
+      }
+      #el3:before { display: inline-block; }
+      #el3:first-of-type { transform: translate3d(-30px, -300px, 0px); }
+      #el3:first-child { display: table-row-group; }
+      #el5:before { -moz-margin-before:1em; display: list-item; content: counter(c, ethiopic-halehame-tig) attr(id); counter-increment: c 810; } 
+      #el5 { list-style-type:lower-greek } 
+      #el5 { background:red;margin:0;height:1em;display:block } 
+      #el5:nth-child(3) { -moz-svg-shadow:5px 5px 5px red; display: link; content: counter(c, asterisks) attr(id); counter-increment: c 266; } 
+
+      .c4 { 
+        margin: 1em; } 
+      #el7 { font-size:.92em } 
+      #el3 { font-size:.92em } 
+      .c4 { padding:0.4em 0.5em 0.4em 2.5em } 
+      .c4:after { margin:2px; display: -moz-box; content: counter(c, octal) attr(id); counter-increment: c 171; } 
+      .c4:before { -moz-user-drag:none; display: -moz-inline-flexbox; content: counter(c, hiragana-iroha) attr(id); counter-increment: c 209; } 
+      .c4:only-of-type { -moz-logical-height:50px; display: -moz-box; content: counter(c, binary) attr(id); counter-increment: c 871; } 
+    </style>
+    <script>
+      onload = function() {
+        el0=document.createElement('ul')
+        el0.setAttribute('id','el0')
+        document.body.appendChild(el0)
+
+        el1=document.createElement('canvas')
+        document.body.appendChild(el1)
+
+
+        el3=document.createElement('q')
+        el3.setAttribute('id','el3')
+        el0.appendChild(el3)
+
+        el4=document.createElement('progress')
+        el4.setAttribute('id','el4')
+        document.body.appendChild(el4)
+
+        el5=document.createElement('q')
+        el5.setAttribute('id','el5')
+        el3.appendChild(el5)
+
+        el0.appendChild(document.createTextNode('A'))
+
+        el7=document.createElement('iframe')
+        el7.setAttribute('id', 'el7')
+        el0.parentNode.insertBefore(el7, el0)
+        el0.setAttribute('class', 'c4'); 
+        el3.setAttribute('class', 'c4'); 
+        el7.setAttribute('class', 'c4'); 
+        setTimeout("window.close()", 5000)
+      }
+    </script>
+  </head>
+  <body>
+  </body>
+</html>
