@@ -128,6 +128,44 @@ function runTest(aCallback) {
 }
 
 /**
+ * Checks that the media stream tracks have the expected amount of tracks
+ * with the correct kind and id based on the type and constraints given.
+ *
+ * @param {Object} constraints specifies whether the stream should have
+ *                             audio, video, or both
+ * @param {String} type the type of media stream tracks being checked
+ * @param {sequence<MediaStreamTrack>} mediaStreamTracks the media stream
+ *                                     tracks being checked
+ */
+function checkMediaStreamTracksByType(constraints, type, mediaStreamTracks) {
+  if(constraints[type]) {
+    is(mediaStreamTracks.length, 1, 'One ' + type + ' track shall be present');
+
+    if(mediaStreamTracks.length) {
+      is(mediaStreamTracks[0].kind, type, 'Track kind should be ' + type);
+      ok(mediaStreamTracks[0].id, 'Track id should be defined');
+    }
+  } else {
+    is(mediaStreamTracks.length, 0, 'No ' + type + ' tracks shall be present');
+  }
+}
+
+/**
+ * Check that the given media stream contains the expected media stream
+ * tracks given the associated audio & video constraints provided.
+ *
+ * @param {Object} constraints specifies whether the stream should have
+ *                             audio, video, or both
+ * @param {MediaStream} mediaStream the media stream being checked
+ */
+function checkMediaStreamTracks(constraints, mediaStream) {
+  checkMediaStreamTracksByType(constraints, 'audio',
+    mediaStream.getAudioTracks());
+  checkMediaStreamTracksByType(constraints, 'video',
+    mediaStream.getVideoTracks());
+}
+
+/**
  * Generates a callback function fired only under unexpected circumstances
  * while running the tests. The generated function kills off the test as well
  * gracefully.

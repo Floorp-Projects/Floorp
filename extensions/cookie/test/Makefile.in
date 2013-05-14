@@ -61,12 +61,5 @@ MOCHITEST_BROWSER_FILES = \
   browser_test_favicon.js \
   $(NULL)
 
-DISABLED_XPCSHELL_TESTS = unit
-
-# FIXME/bug 575918: out-of-process xpcshell is broken on OS X
-ifneq ($(OS_ARCH),Darwin)
-DISABLED_XPCSHELL_TESTS += unit_ipc
-endif
-
 include $(topsrcdir)/config/rules.mk
 

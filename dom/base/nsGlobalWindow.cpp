@@ -1477,7 +1477,6 @@ nsGlobalWindow::FreeInnerObjects()
   }
 
   if (mScreen) {
-    mScreen->Reset();
     mScreen = nullptr;
   }
 
@@ -1754,8 +1753,8 @@ nsGlobalWindow::UnmarkGrayTimers()
       Function* f = timeout->mScriptHandler->GetCallback();
       if (f) {
         // Callable() already does xpc_UnmarkGrayObject.
-        DebugOnly<JSObject*> o = f->Callable();
-        MOZ_ASSERT(!xpc_IsGrayGCThing(o), "Should have been unmarked");
+        DebugOnly<JS::Handle<JSObject*> > o = f->Callable();
+        MOZ_ASSERT(!xpc_IsGrayGCThing(o.value), "Should have been unmarked");
       }
     }
   }
@@ -11783,7 +11782,7 @@ nsGlobalWindow::DisableNetworkEvent(uint32_t aType)
   NS_IMETHODIMP nsGlobalWindow::GetOn##name_(JSContext *cx,                  \
                                              JS::Value *vp) {                \
     EventHandlerNonNull* h = GetOn##name_();                                 \
-    vp->setObjectOrNull(h ? h->Callable() : nullptr);                        \
+    vp->setObjectOrNull(h ? h->Callable().get() : nullptr);                  \
     return NS_OK;                                                            \
   }                                                                          \
   NS_IMETHODIMP nsGlobalWindow::SetOn##name_(JSContext *cx,                  \

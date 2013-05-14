@@ -83,6 +83,8 @@ pref("browser.offline-apps.notify", true);
 pref("network.protocol-handler.warn-external.tel", false);
 pref("network.protocol-handler.warn-external.mailto", false);
 pref("network.protocol-handler.warn-external.vnd.youtube", false);
+pref("network.protocol-handler.warn-external.ms-windows-store", false);
+pref("network.protocol-handler.external.ms-windows-store", true);
 
 /* history max results display */
 pref("browser.display.history.maxresults", 100);

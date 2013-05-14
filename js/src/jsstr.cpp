@@ -3385,6 +3385,7 @@ static const JSFunctionSpec string_methods[] = {
 #else
     JS_FN("localeCompare",     str_localeCompare,     1,JSFUN_GENERIC_NATIVE),
 #endif
+         {"repeat",            {NULL, NULL},          1,0, "String_repeat"},
 
     /* Perl-ish methods (search is actually Python-esque). */
     JS_FN("match",             str_match,             1,JSFUN_GENERIC_NATIVE),

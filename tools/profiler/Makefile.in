@@ -10,8 +10,6 @@ srcdir      = @srcdir@
 VPATH       = $(srcdir)
 relativesrcdir = @relativesrcdir@
 
-DISABLED_XPCSHELL_TESTS = tests
-
 include $(DEPTH)/config/autoconf.mk
 
 ifdef MOZ_ENABLE_PROFILER_SPS

@@ -7,6 +7,30 @@
 
 var collatorCache = new Record();
 
+/* ES6 20121122 draft 15.5.4.21. */
+function String_repeat(count) {
+    // Steps 1-3.
+    CheckObjectCoercible(this);
+    var S = ToString(this);
+
+    // Steps 4-5.
+    var n = ToInteger(count);
+
+    // Steps 6-7.
+    if (n < 0 || n === std_Number_POSITIVE_INFINITY)
+        ThrowError(JSMSG_REPEAT_RANGE);
+
+    // Step 8-9.
+    if (n === 0)
+        return "";
+
+    var result = S;
+    for (var i = 1; i <= n / 2; i *= 2)
+        result += result;
+    for (; i < n; i++)
+        result += S;
+    return result;
+}
 
 /**
  * Compare this String against that String, using the locale and collation
