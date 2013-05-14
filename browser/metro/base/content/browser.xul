@@ -309,7 +309,7 @@
     </vbox>
 
     <!-- popup for content navigator helper -->
-    <vbox id="content-navigator" top="0">
+    <vbox id="content-navigator">
       <textbox id="find-helper-textbox" class="search-bar content-navigator-item" oncommand="FindHelperUI.search(this.value)" oninput="FindHelperUI.updateCommands(this.value);" type="search"/>
     </vbox>
 
