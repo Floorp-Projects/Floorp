@@ -783,8 +783,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            EVENTTARGET_SCRIPTABLE_FLAGS)
 #endif
 
-  NS_DEFINE_CLASSINFO_DATA(CameraManager, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(CameraControl, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(CameraCapabilities, nsDOMGenericSH,
@@ -1965,10 +1963,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMBluetoothDevice)
   DOM_CLASSINFO_MAP_END
 #endif
-
-  DOM_CLASSINFO_MAP_BEGIN(CameraManager, nsIDOMCameraManager)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCameraManager)
-  DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(CameraControl, nsICameraControl)
     DOM_CLASSINFO_MAP_ENTRY(nsICameraControl)

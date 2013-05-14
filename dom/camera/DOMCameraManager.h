@@ -32,16 +32,14 @@ typedef nsTArray<nsRefPtr<mozilla::nsDOMCameraControl> > CameraControls;
 typedef nsClassHashtable<nsUint64HashKey, CameraControls> WindowTable;
 
 class nsDOMCameraManager MOZ_FINAL
-  : public nsIDOMCameraManager
-  , public nsIObserver
+  : public nsIObserver
   , public nsSupportsWeakReference
   , public nsWrapperCache
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsDOMCameraManager,
-                                                         nsIDOMCameraManager)
-  NS_DECL_NSIDOMCAMERAMANAGER
+                                                         nsIObserver)
   NS_DECL_NSIOBSERVER
 
   static already_AddRefed<nsDOMCameraManager>

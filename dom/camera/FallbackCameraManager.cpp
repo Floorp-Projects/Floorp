@@ -21,13 +21,6 @@ nsDOMCameraManager::GetCameraName(uint32_t aDeviceNum, nsCString& aDeviceName)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* void getListOfCameras ([optional] out unsigned long aCount, [array, size_is (aCount), retval] out string aCameras); */
-NS_IMETHODIMP
-nsDOMCameraManager::GetListOfCameras(uint32_t *aCount, char * **aCameras)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 void
 nsDOMCameraManager::GetListOfCameras(nsTArray<nsString>& aList, ErrorResult& aRv)
 {
