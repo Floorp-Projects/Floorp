@@ -2243,14 +2243,6 @@ JS_GetFunctionPrototype(JSContext *cx, JSObject *forObj)
 }
 
 JS_PUBLIC_API(JSObject *)
-JS_GetArrayPrototype(JSContext *cx, JSObject *forObj)
-{
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, forObj);
-    return forObj->global().getOrCreateArrayPrototype(cx);
-}
-
-JS_PUBLIC_API(JSObject *)
 JS_GetGlobalForObject(JSContext *cx, JSObject *obj)
 {
     AssertHeapIsIdle(cx);
