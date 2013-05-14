@@ -85,10 +85,6 @@ namespace system {
 
 class AutoMounter;
 
-// sAutoVolumeName contains an array of the volume names that the AutoMounter will
-// try to automount. Any other volumes will be ignored.
-static const nsDependentCString sAutoVolumeName[] = { NS_LITERAL_CSTRING("sdcard") };
-
 /***************************************************************************/
 
 inline const char* SwitchStateStr(const SwitchEvent& aEvent)
@@ -174,11 +170,15 @@ public:
     VolumeManager::RegisterStateObserver(&mVolumeManagerStateObserver);
     Volume::RegisterObserver(&mVolumeEventObserver);
 
-    for (size_t i = 0; i < NS_ARRAY_LENGTH(sAutoVolumeName); i++) {
-      RefPtr<Volume> vol = VolumeManager::FindAddVolumeByName(sAutoVolumeName[i]);
+    VolumeManager::VolumeArray::size_type numVolumes = VolumeManager::NumVolumes();
+    VolumeManager::VolumeArray::index_type i;
+    for (i = 0; i < numVolumes; i++) {
+      RefPtr<Volume> vol = VolumeManager::GetVolume(i);
       if (vol) {
         vol->RegisterObserver(&mVolumeEventObserver);
-        mAutoVolume.AppendElement(vol);
+        // We need to pick up the intial value of the
+        // ums.volume.NAME.enabled setting.
+        AutoMounterSetting::CheckVolumeSettings(vol->Name());
       }
     }
 
@@ -188,10 +188,13 @@ public:
 
   ~AutoMounter()
   {
-    VolumeArray::index_type volIndex;
-    VolumeArray::size_type  numVolumes = mAutoVolume.Length();
+    VolumeManager::VolumeArray::size_type numVolumes = VolumeManager::NumVolumes();
+    VolumeManager::VolumeArray::index_type volIndex;
     for (volIndex = 0; volIndex < numVolumes; volIndex++) {
-      mAutoVolume[volIndex]->UnregisterObserver(&mVolumeEventObserver);
+      RefPtr<Volume> vol = VolumeManager::GetVolume(volIndex);
+      if (vol) {
+        vol->UnregisterObserver(&mVolumeEventObserver);
+      }
     }
     Volume::UnregisterObserver(&mVolumeEventObserver);
     VolumeManager::UnregisterStateObserver(&mVolumeManagerStateObserver);
@@ -240,13 +243,27 @@ public:
     }
   }
 
+  void SetSharingMode(const nsACString& aVolumeName, bool aAllowSharing)
+  {
+    RefPtr<Volume> vol = VolumeManager::FindVolumeByName(aVolumeName);
+    if (!vol) {
+      return;
+    }
+    if (vol->IsSharingEnabled() == aAllowSharing) {
+      return;
+    }
+    vol->SetSharingEnabled(aAllowSharing);
+    DBG("Calling UpdateState due to volume %s shareing set to %d",
+        vol->NameStr(), (int)aAllowSharing);
+    UpdateState();
+  }
+
 private:
 
   AutoVolumeEventObserver         mVolumeEventObserver;
   AutoVolumeManagerStateObserver  mVolumeManagerStateObserver;
   RefPtr<VolumeResponseCallback>  mResponseCallback;
   int32_t                         mMode;
-  VolumeArray                     mAutoVolume;
 };
 
 static StaticRefPtr<AutoMounter> sAutoMounter;
@@ -322,12 +339,6 @@ AutoMounter::UpdateState()
     return;
   }
 
-  if (mAutoVolume.Length() == 0) {
-    // No volumes of interest, nothing to do
-    LOG("UpdateState: No volumes found");
-    return;
-  }
-
   bool  umsAvail = false;
   bool  umsEnabled = false;
 
@@ -363,17 +374,18 @@ AutoMounter::UpdateState()
       umsAvail, umsEnabled, mMode, usbCablePluggedIn, tryToShare);
 
   VolumeArray::index_type volIndex;
-  VolumeArray::size_type  numVolumes = mAutoVolume.Length();
+  VolumeArray::size_type  numVolumes = VolumeManager::NumVolumes();
   for (volIndex = 0; volIndex < numVolumes; volIndex++) {
-    RefPtr<Volume>  vol = mAutoVolume[volIndex];
+    RefPtr<Volume>  vol = VolumeManager::GetVolume(volIndex);
     Volume::STATE   volState = vol->State();
 
     if (vol->State() == nsIVolume::STATE_MOUNTED) {
-      LOG("UpdateState: Volume %s is %s and %s @ %s gen %d locked %d",
+      LOG("UpdateState: Volume %s is %s and %s @ %s gen %d locked %d sharing %c",
           vol->NameStr(), vol->StateStr(),
           vol->MediaPresent() ? "inserted" : "missing",
           vol->MountPoint().get(), vol->MountGeneration(),
-          (int)vol->IsMountLocked());
+          (int)vol->IsMountLocked(),
+          vol->CanBeShared() ? (vol->IsSharingEnabled() ? 'y' : 'n') : 'x');
     } else {
       LOG("UpdateState: Volume %s is %s and %s", vol->NameStr(), vol->StateStr(),
           vol->MediaPresent() ? "inserted" : "missing");
@@ -383,7 +395,7 @@ AutoMounter::UpdateState()
       continue;
     }
 
-    if (tryToShare) {
+    if (tryToShare && vol->IsSharingEnabled()) {
       // We're going to try to unmount and share the volumes
       switch (volState) {
         case nsIVolume::STATE_MOUNTED: {
@@ -466,6 +478,15 @@ SetAutoMounterModeIOThread(const int32_t& aMode)
 }
 
 static void
+SetAutoMounterSharingModeIOThread(const nsCString& aVolumeName, const bool& aAllowSharing)
+{
+  MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
+  MOZ_ASSERT(sAutoMounter);
+
+  sAutoMounter->SetSharingMode(aVolumeName, aAllowSharing);
+}
+
+static void
 UsbCableEventIOThread()
 {
   MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
@@ -535,6 +556,15 @@ SetAutoMounterMode(int32_t aMode)
   XRE_GetIOMessageLoop()->PostTask(
       FROM_HERE,
       NewRunnableFunction(SetAutoMounterModeIOThread, aMode));
+}
+
+void
+SetAutoMounterSharingMode(const nsCString& aVolumeName, bool aAllowSharing)
+{
+  XRE_GetIOMessageLoop()->PostTask(
+      FROM_HERE,
+      NewRunnableFunction(SetAutoMounterSharingModeIOThread, 
+                          aVolumeName, aAllowSharing));
 }
 
 void

@@ -20,6 +20,8 @@ public:
 
   AutoMounterSetting();
   virtual ~AutoMounterSetting();
+
+  static void CheckVolumeSettings(const nsACString& aVolumeName);
 };
 
 }   // namespace system
