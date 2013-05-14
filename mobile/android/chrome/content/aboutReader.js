@@ -62,10 +62,10 @@ let AboutReader = function(doc, win) {
   this._setupButton("share-button", this._onShare.bind(this));
 
   let colorSchemeOptions = [
-    { name: gStrings.GetStringFromName("aboutReader.colorSchemeLight"),
-      value: "light"},
     { name: gStrings.GetStringFromName("aboutReader.colorSchemeDark"),
       value: "dark"},
+    { name: gStrings.GetStringFromName("aboutReader.colorSchemeLight"),
+      value: "light"},
     { name: gStrings.GetStringFromName("aboutReader.colorSchemeAuto"),
       value: "auto"}
   ];
@@ -74,11 +74,17 @@ let AboutReader = function(doc, win) {
   this._setupSegmentedButton("color-scheme-buttons", colorSchemeOptions, colorScheme, this._setColorSchemePref.bind(this));
   this._setColorSchemePref(colorScheme);
 
+  let fontTypeSample = gStrings.GetStringFromName("aboutReader.fontTypeSample");
   let fontTypeOptions = [
-    { name: gStrings.GetStringFromName("aboutReader.fontTypeSansSerif"),
-      value: "sans-serif"},
-    { name: gStrings.GetStringFromName("aboutReader.fontTypeSerif"),
-      value: "serif"}
+    { name: fontTypeSample,
+      description: gStrings.GetStringFromName("aboutReader.fontTypeCharis"),
+      value: "serif",
+      linkClass: "serif" },
+    { name: fontTypeSample,
+      description: gStrings.GetStringFromName("aboutReader.fontTypeOpenSans"),
+      value: "sans-serif",
+      linkClass: "sans-serif"
+    },
   ];
 
   let fontType = Services.prefs.getCharPref("reader.font_type");
@@ -580,11 +586,17 @@ AboutReader.prototype = {
 
       let item = doc.createElement("li");
       let link = doc.createElement("a");
-      link.innerHTML = option.name;
+      link.textContent = option.name;
       item.appendChild(link);
 
       if (option.linkClass !== undefined)
         link.classList.add(option.linkClass);
+
+      if (option.description !== undefined) {
+        let description = doc.createElement("div");
+        description.textContent = option.description;
+        item.appendChild(description);
+      }
 
       link.style.MozUserSelect = 'none';
       segmentedButton.appendChild(item);
