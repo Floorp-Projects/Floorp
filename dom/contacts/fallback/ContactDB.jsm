@@ -500,7 +500,7 @@ ContactDB.prototype = {
               for (let num in matchSearch) {
                 contact.search.parsedTel.push(num);
               }
-            } else if (field == "impp" || field == "email") {
+            } else if ((field == "impp" || field == "email") && aContact.properties[field][i].value) {
               let value = aContact.properties[field][i].value;
               if (value && typeof value == "string") {
                 contact.search[field].push(value.toLowerCase());

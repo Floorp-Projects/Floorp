@@ -336,7 +336,7 @@ var steps = [
     req.onerror = onFailure;
   },
   function () {
-    ok(true, "Retrieving by substring");
+    ok(true, "Retrieving by substring 1");
     var options = {filterBy: ["givenName"],
                    filterOp: "contains",
                    filterValue: properties1.givenName[1].substring(0,3)};
@@ -415,7 +415,7 @@ var steps = [
     req.onerror = onFailure;
   },
   function () {
-    ok(true, "Retrieving by substring");
+    ok(true, "Retrieving by substring 2");
     var options = {filterBy: ["givenName"],
                    filterOp: "contains",
                    filterValue: properties1.givenName[0].substring(0,3)};
@@ -441,7 +441,7 @@ var steps = [
     req.onerror = onFailure;
   },
   function () {
-    ok(true, "Retrieving by substring");
+    ok(true, "Retrieving by substring 3");
     var options = {filterBy: ["givenName"],
                    filterOp: "contains",
                    filterValue: properties1.givenName[1].substring(0,3)};
@@ -465,7 +465,7 @@ var steps = [
     req.onerror = onFailure;
   },
   function () {
-    ok(true, "Retrieving by substring");
+    ok(true, "Retrieving by substring 4");
     var options = {filterBy: ["givenName"],
                    filterOp: "contains",
                    filterValue: properties1.givenName[1].substring(0,3)};
@@ -660,7 +660,7 @@ var steps = [
     req.onerror = onFailure;
   },
   function () {
-    ok(true, "Retrieving by substring2");
+    ok(true, "Retrieving by substring 5");
     var options = {filterBy: ["givenName"],
                    filterOp: "contains",
                    filterValue: properties1.givenName[0].substring(0,3)};
@@ -675,7 +675,7 @@ var steps = [
     req.onerror = onFailure;
   },
   function () {
-    ok(true, "Retrieving by substring3");
+    ok(true, "Retrieving by substring 6");
     var options = {filterBy: ["familyName", "givenName"],
                    filterOp: "contains",
                    filterValue: properties1.givenName[0].substring(0,3)};
@@ -1398,6 +1398,28 @@ var steps = [
       });
       next();
     };
+  },
+  function () {
+    ok(true, "Adding contact with no number but carrier");
+    createResult1 = new mozContact();
+    createResult1.init({ tel: [{type: ["home"], carrier: "myCarrier"} ] });
+    req = navigator.mozContacts.save(createResult1);
+    req.onsuccess = function () {
+      ok(createResult1.id, "The contact now has an ID.");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Adding contact with email but no value");
+    createResult1 = new mozContact();
+    createResult1.init({ email: [{type: ["home"]}] });
+    req = navigator.mozContacts.save(createResult1);
+    req.onsuccess = function () {
+      ok(createResult1.id, "The contact now has an ID.");
+      next();
+    };
+    req.onerror = onFailure;
   },
   function () {
     ok(true, "Deleting database");
