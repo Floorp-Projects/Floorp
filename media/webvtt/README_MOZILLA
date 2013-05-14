@@ -3,5 +3,4 @@ c93accafb2087df7c678748e25bca21f1173979f of the git repository at
 https://github.com/mozilla/webvtt.
 
 The following CPPFLAGS are used in order to build and link in Mozilla
--DWEBVTT_NO_CONFIG_H=1 -- Prevent inclusion of generated headers
 -DWEBVTT_STATIC=1      -- Compile as a static library
