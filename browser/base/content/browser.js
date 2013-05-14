@@ -3457,11 +3457,8 @@ var XULBrowserWindow = {
   startTime: 0,
   statusText: "",
   isBusy: false,
-  // The pages in this array should be kept in sync with what pages that
-  // panelUIOverlay.xul is set to overlay in
-  // browser/components/customizableui/content/jar.mn
-  inContentWhitelist: ["about:addons", "about:downloads", "about:permissions",
-                       "about:sync-progress", "about:preferences"],
+  // Left here for add-on compatibility, see bug 752434
+  inContentWhitelist: [],
 
   QueryInterface: function (aIID) {
     if (aIID.equals(Ci.nsIWebProgressListener) ||
@@ -3751,16 +3748,12 @@ var XULBrowserWindow = {
         SocialShare.update();
       }
 
-      // Show or hide browser chrome based on the whitelist
-      if (this.hideChromeForLocation(location)) {
+      // Show or hide browser chrome for apps
+      let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
+      if (ss.getTabValue(gBrowser.selectedTab, "appOrigin"))
         document.documentElement.setAttribute("disablechrome", "true");
-      } else {
-        let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
-        if (ss.getTabValue(gBrowser.selectedTab, "appOrigin"))
-          document.documentElement.setAttribute("disablechrome", "true");
-        else
-          document.documentElement.removeAttribute("disablechrome");
-      }
+      else
+        document.documentElement.removeAttribute("disablechrome");
 
       // Utility functions for disabling find
       var shouldDisableFind = function shouldDisableFind(aDocument) {
@@ -3838,12 +3831,8 @@ var XULBrowserWindow = {
     FeedHandler.updateFeeds();
   },
 
-  hideChromeForLocation: function(aLocation) {
-    aLocation = aLocation.toLowerCase();
-    return this.inContentWhitelist.some(function(aSpec) {
-      return aSpec == aLocation;
-    });
-  },
+  // Left here for add-on compatibility, see bug 752434
+  hideChromeForLocation: function() {},
 
   onStatusChange: function (aWebProgress, aRequest, aStatus, aMessage) {
     this.status = aMessage;
