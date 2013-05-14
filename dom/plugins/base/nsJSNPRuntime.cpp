@@ -142,7 +142,7 @@ NPObjWrapper_Construct(JSContext *cx, unsigned argc, JS::Value *vp);
 
 static JSBool
 CreateNPObjectMember(NPP npp, JSContext *cx, JSObject *obj, NPObject *npobj,
-                     JS::Handle<jsid> id, NPVariant* getPropertyResult, JS::Value *vp);
+                     jsid id, NPVariant* getPropertyResult, JS::Value *vp);
 
 JSClass sNPObjectJSWrapperClass =
   {
@@ -960,7 +960,7 @@ JSObjWrapperHashMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *entry,
 
 // static
 NPObject *
-nsJSObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, JS::Handle<JSObject*> obj)
+nsJSObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, JSObject *obj)
 {
   if (!npp) {
     NS_ERROR("Null NPP passed to nsJSObjWrapper::GetNewOrUsed()!");
@@ -1084,17 +1084,16 @@ nsJSObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, JS::Handle<JSObject*> obj)
 // compartment for callers that plan to hold onto the result or do anything
 // substantial with it.
 static JSObject *
-GetNPObjectWrapper(JSContext *cx, JSObject *aObj, bool wrapResult = true)
+GetNPObjectWrapper(JSContext *cx, JSObject *obj, bool wrapResult = true)
 {
-  JS::Rooted<JSObject*> obj(cx, aObj);
   while (obj && (obj = js::CheckedUnwrap(obj))) {
     if (JS_GetClass(obj) == &sNPObjectJSWrapperClass) {
-      if (wrapResult && !JS_WrapObject(cx, obj.address())) {
+      if (wrapResult && !JS_WrapObject(cx, &obj)) {
         return NULL;
       }
       return obj;
     }
-    if (!::JS_GetPrototype(cx, obj, obj.address())) {
+    if (!::JS_GetPrototype(cx, obj, &obj)) {
       return NULL;
     }
   }
@@ -1337,7 +1336,7 @@ NPObjWrapper_GetProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, JSMut
 }
 
 static JSBool
-CallNPMethodInternal(JSContext *cx, JS::Handle<JSObject*> obj, unsigned argc,
+CallNPMethodInternal(JSContext *cx, JSObject *obj, unsigned argc,
                      JS::Value *argv, JS::Value *rval, bool ctorCall)
 {
   NPObject *npobj = GetNPObject(cx, obj);
@@ -1466,7 +1465,7 @@ CallNPMethodInternal(JSContext *cx, JS::Handle<JSObject*> obj, unsigned argc,
 static JSBool
 CallNPMethod(JSContext *cx, unsigned argc, JS::Value *vp)
 {
-  JS::Rooted<JSObject*> obj(cx, JS_THIS_OBJECT(cx, vp));
+  JSObject *obj = JS_THIS_OBJECT(cx, vp);
   if (!obj)
       return JS_FALSE;
 
@@ -1667,16 +1666,14 @@ NPObjWrapper_Finalize(JSFreeOp *fop, JSObject *obj)
 static JSBool
 NPObjWrapper_Call(JSContext *cx, unsigned argc, JS::Value *vp)
 {
-  JS::Rooted<JSObject*> obj(cx, JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)));
-  return CallNPMethodInternal(cx, obj, argc,
+  return CallNPMethodInternal(cx, JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)), argc,
                               JS_ARGV(cx, vp), vp, false);
 }
 
 static JSBool
 NPObjWrapper_Construct(JSContext *cx, unsigned argc, JS::Value *vp)
 {
-  JS::Rooted<JSObject*> obj(cx, JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)));
-  return CallNPMethodInternal(cx, obj, argc,
+  return CallNPMethodInternal(cx, JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)), argc,
                               JS_ARGV(cx, vp), vp, true);
 }
 
@@ -1963,7 +1960,7 @@ LookupNPP(NPObject *npobj)
 
 JSBool
 CreateNPObjectMember(NPP npp, JSContext *cx, JSObject *obj, NPObject* npobj,
-                     JS::Handle<jsid> id,  NPVariant* getPropertyResult, JS::Value *vp)
+                     jsid id,  NPVariant* getPropertyResult, JS::Value *vp)
 {
   NS_ENSURE_TRUE(vp, JS_FALSE);
 
