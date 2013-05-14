@@ -30,9 +30,8 @@
                          command="cmd_fullZoomReduce"
                          tooltiptext="&zoomOutButton.tooltip;"/>
           <toolbarbutton id="PanelUI-zoomReset-btn" flex="1"
-                         noautoclose="true" label="&zoomReset.label;"
-                         tooltiptext="&zoomReset.tooltip;"
-                         command="cmd_fullZoomReset"/>
+                         noautoclose="true" command="cmd_fullZoomReset"
+                         tooltiptext="&zoomReset.tooltip;"/>
           <toolbarbutton id="PanelUI-zoomIn-btn" flex="1"
                          noautoclose="true" label="&fullZoomEnlargeCmd.label;"
                          command="cmd_fullZoomEnlarge"
