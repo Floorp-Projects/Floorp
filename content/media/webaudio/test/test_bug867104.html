@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Crashtest for bug 867104</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SpecialPowers.setBoolPref("media.webaudio.enabled", true);
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  var ctx = new AudioContext();
+  var source = ctx.createBufferSource();
+  var b0 = ctx.createBuffer(32,798,22050);
+  var b1 = ctx.createBuffer(32,28,22050);
+  var sp = ctx.createScriptProcessor();
+  source.buffer = b0;
+  source.connect(sp);
+  source.start(0);
+  source.buffer = b1;
+  sp.onaudioprocess = function() {
+    ok(true, "We did not crash.");
+    sp.onaudioprocess = null;
+    SpecialPowers.clearUserPref("media.webaudio.enabled");
+    SimpleTest.finish();
+  };
+});
+
+
+</script>
+</pre>
+</body>
+</html>
