@@ -23,11 +23,12 @@ SimpleTest.waitForExplicitFinish();
 resume_geolocationProvider();
 force_prompt(true);
 
+if (SpecialPowers.isMainProcess()) {
+  SpecialPowers.Cu.import("resource://gre/modules/SettingsChangeNotifier.jsm");
+}
 
-SpecialPowers.setBoolPref("dom.mozSettings.enabled", true);
 SpecialPowers.addPermission("settings-read", true, document);
 SpecialPowers.addPermission("settings-write", true, document);
-SpecialPowers.Cu.import("resource://gre/modules/SettingsChangeNotifier.jsm");
 
 ok(navigator.geolocation, "get geolocation object");
 
