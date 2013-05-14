@@ -1039,6 +1039,10 @@ var gBrowserInit = {
     OfflineApps.init();
     IndexedDBPromptHelper.init();
     gFormSubmitObserver.init();
+    // Initialize the full zoom setting.
+    // We do this before the session restore service gets initialized so we can
+    // apply full zoom settings to tabs restored by the session restore service.
+    FullZoom.init();
     PanelUI.init();
     SocialUI.init();
     LightweightThemeListener.init();
@@ -1087,11 +1091,6 @@ var gBrowserInit = {
     // menus if global click-and-hold isn't turned on
     if (!getBoolPref("ui.click_hold_context_menus", false))
       SetClickAndHoldHandlers();
-
-    // Initialize the full zoom setting.
-    // We do this before the session restore service gets initialized so we can
-    // apply full zoom settings to tabs restored by the session restore service.
-    FullZoom.init();
 
     // Bug 666804 - NetworkPrioritizer support for e10s
     if (!gMultiProcessBrowser) {

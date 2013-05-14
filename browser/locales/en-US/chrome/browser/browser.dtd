@@ -535,8 +535,6 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY zoomInButton.tooltip           "Zoom in">
 <!ENTITY zoomControls.label             "Zoom Controls">
 <!ENTITY zoomReset.tooltip              "Reset Zoom">
-<!-- LOCALIZATION NOTE(zoomReset.label): the &#37; is the percent symbol. -->
-<!ENTITY zoomReset.label                "100&#37;">
 
 <!ENTITY quitApplicationCmdWin.label       "Exit"> 
 <!ENTITY quitApplicationCmdWin.accesskey   "x">
