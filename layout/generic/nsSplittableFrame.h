@@ -24,9 +24,9 @@ public:
                     nsIFrame*        aParent,
                     nsIFrame*        aPrevInFlow) MOZ_OVERRIDE;
   
-  virtual nsSplittableType GetSplittableType() const;
+  virtual nsSplittableType GetSplittableType() const MOZ_OVERRIDE;
 
-  virtual void DestroyFrom(nsIFrame* aDestructRoot);
+  virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
 
   /*
    * Frame continuations can be either fluid or not:
@@ -45,8 +45,8 @@ public:
   NS_IMETHOD SetNextContinuation(nsIFrame*) MOZ_OVERRIDE;
 
   // Get the first/last continuation for this frame.
-  virtual nsIFrame* GetFirstContinuation() const;
-  virtual nsIFrame* GetLastContinuation() const;
+  virtual nsIFrame* GetFirstContinuation() const MOZ_OVERRIDE;
+  virtual nsIFrame* GetLastContinuation() const MOZ_OVERRIDE;
 
 #ifdef DEBUG
   // Can aFrame2 be reached from aFrame1 by following prev/next continuations?
@@ -66,8 +66,8 @@ public:
   NS_IMETHOD  SetNextInFlow(nsIFrame*) MOZ_OVERRIDE;
 
   // Get the first/last frame in the current flow.
-  virtual nsIFrame* GetFirstInFlow() const;
-  virtual nsIFrame* GetLastInFlow() const;
+  virtual nsIFrame* GetFirstInFlow() const MOZ_OVERRIDE;
+  virtual nsIFrame* GetLastInFlow() const MOZ_OVERRIDE;
 
   // Remove the frame from the flow. Connects the frame's prev-in-flow
   // and its next-in-flow. This should only be called in frame Destroy() methods.

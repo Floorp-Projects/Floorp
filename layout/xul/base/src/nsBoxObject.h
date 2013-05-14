@@ -31,7 +31,7 @@ public:
   virtual ~nsBoxObject();
 
   // nsPIBoxObject
-  virtual nsresult Init(nsIContent* aContent);
+  virtual nsresult Init(nsIContent* aContent) MOZ_OVERRIDE;
   virtual void Clear() MOZ_OVERRIDE;
   virtual void ClearCachedValues() MOZ_OVERRIDE;
 

@@ -34,8 +34,8 @@ public:
    * Both GetMinWidth and GetPrefWidth will return whatever GetIntrinsicWidth
    * returns.
    */
-  virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext);
-  virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext);
+  virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
+  virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
 
   /**
    * Our auto size is just intrinsic width and intrinsic height.
@@ -43,7 +43,7 @@ public:
   virtual nsSize ComputeAutoSize(nsRenderingContext *aRenderingContext,
                                  nsSize aCBSize, nscoord aAvailableWidth,
                                  nsSize aMargin, nsSize aBorder,
-                                 nsSize aPadding, bool aShrinkWrap);
+                                 nsSize aPadding, bool aShrinkWrap) MOZ_OVERRIDE;
 
   /**
    * Reflow our frame.  This will use the computed width plus borderpadding for
@@ -64,7 +64,7 @@ public:
                       const nsHTMLReflowState& aReflowState,
                       nsReflowStatus&      aStatus);
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const
+  virtual bool IsFrameOfType(uint32_t aFlags) const MOZ_OVERRIDE
   {
     // We don't actually contain a block, but we do always want a
     // computed width, so tell a little white lie here.
