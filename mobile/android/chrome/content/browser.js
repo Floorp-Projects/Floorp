@@ -1054,6 +1054,7 @@ var BrowserApp = {
       // determine which ui elements to show, we need to normalize these
       // preferences to be actual booleans.
       switch (prefName) {
+        case "browser.chrome.titlebarMode":
         case "network.cookie.cookieBehavior":
         case "font.size.inflation.minTwips":
           pref.type = "string";
@@ -1144,6 +1145,7 @@ var BrowserApp = {
       // When sending to Java, we normalized special preferences that use
       // integers and strings to represent booleans. Here, we convert them back
       // to their actual types so we can store them.
+      case "browser.chrome.titlebarMode":
       case "network.cookie.cookieBehavior":
       case "font.size.inflation.minTwips":
         json.type = "int";
