@@ -5,7 +5,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(6652c4d2-6b49-424b-aaf9-91f91006fab7)]
+[scriptable, uuid(35b653f4-e679-4843-8391-89cb2f5a9ba4)]
 interface nsIDOMJSWindow : nsISupports
 {
   void                      dump(in DOMString str);
@@ -32,16 +32,6 @@ interface nsIDOMJSWindow : nsISupports
    * its implementation is a no-op
    */
   void                      setResizable(in boolean resizable);
-
-  /**
-   * @deprecated These are old Netscape 4 methods. Do not use,
-   *             the implementation is no-op.
-   */
-  void                      captureEvents(in long eventFlags);
-  void                      releaseEvents(in long eventFlags);
-  void                      routeEvent(in nsIDOMEvent evt);
-  void                      enableExternalCapture();
-  void                      disableExternalCapture();
 
   /**
    * This is the scriptable version of nsIDOMWindow::open()
