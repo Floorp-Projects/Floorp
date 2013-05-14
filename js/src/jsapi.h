@@ -2159,6 +2159,13 @@ JS_GetFunctionPrototype(JSContext *cx, JSObject *forObj);
 extern JS_PUBLIC_API(JSObject *)
 JS_GetObjectPrototype(JSContext *cx, JSObject *forObj);
 
+/*
+ * Returns the original value of |Array.prototype| from the global object in
+ * which |forObj| was created.
+ */
+extern JS_PUBLIC_API(JSObject *)
+JS_GetArrayPrototype(JSContext *cx, JSObject *forObj);
+
 extern JS_PUBLIC_API(JSObject *)
 JS_GetGlobalForObject(JSContext *cx, JSObject *obj);
 
