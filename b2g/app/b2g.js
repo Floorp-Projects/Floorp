@@ -385,6 +385,8 @@ pref("dom.sms.requestStatusReport", true); // Enabled by default.
 
 // Temporary permission hack for WebContacts
 pref("dom.mozContacts.enabled", true);
+pref("dom.navigator-property.disable.mozContacts", false);
+pref("dom.global-constructor.disable.mozContact", false);
 
 // WebAlarms
 pref("dom.mozAlarms.enabled", true);
