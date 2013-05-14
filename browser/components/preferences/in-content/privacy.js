@@ -178,8 +178,8 @@ var gPrivacyPane = {
       // select the remember forms history option
       document.getElementById("browser.formfill.enable").value = true;
 
-      // select the limit cookies option
-      document.getElementById("network.cookie.cookieBehavior").value = 3;
+      // select the allow cookies option
+      document.getElementById("network.cookie.cookieBehavior").value = 0;
       // select the cookie lifetime policy option
       document.getElementById("network.cookie.lifetimePolicy").value = 0;
 
@@ -399,11 +399,11 @@ var gPrivacyPane = {
     var accept = document.getElementById("acceptCookies");
     var acceptThirdPartyMenu = document.getElementById("acceptThirdPartyMenu");
 
-    // if we're enabling cookies, automatically select 'accept third party from visited'
+    // if we're enabling cookies, automatically select 'accept third party always'
     if (accept.checked)
-      acceptThirdPartyMenu.selectedIndex = 1;
+      acceptThirdPartyMenu.selectedIndex = 0;
 
-    return accept.checked ? 3 : 2;
+    return accept.checked ? 0 : 2;
   },
   
   /**
