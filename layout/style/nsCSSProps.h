@@ -228,6 +228,10 @@ public:
   {
     NS_ABORT_IF_FALSE(0 <= aProperty && aProperty < eCSSProperty_COUNT,
                       "out of range");
+    MOZ_ASSERT(!(aFlags & CSS_PROPERTY_PARSE_PROPERTY_MASK),
+               "The CSS_PROPERTY_PARSE_* values are not bitflags; don't pass "
+               "them to PropHasFlags.  You probably want PropertyParseType "
+               "instead.");
     return (nsCSSProps::kFlagsTable[aProperty] & aFlags) == aFlags;
   }
 
