@@ -1163,8 +1163,8 @@ UndoManager::DispatchTransactionEvent(JSContext* aCx, const nsAString& aType,
   nsCOMArray<nsIVariant> keepAlive;
   nsTArray<nsIVariant*> transactionItems;
   for (uint32_t i = 0; i < items.Length(); i++) {
-    JS::Value txVal = JS::ObjectValue(*items[i]->Callback());
-    if (!JS_WrapValue(aCx, &txVal)) {
+    JS::Rooted<JS::Value> txVal(aCx, JS::ObjectValue(*items[i]->Callback()));
+    if (!JS_WrapValue(aCx, txVal.address())) {
       aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
       return;
     }

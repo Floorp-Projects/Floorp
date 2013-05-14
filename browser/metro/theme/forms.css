@@ -11,6 +11,8 @@
   pointer-events: none;
   padding: 0;
   background-color: @appbar_color@;
+  bottom: 0;
+  position: fixed;
 }
 
 #content-navigator[type="find"],

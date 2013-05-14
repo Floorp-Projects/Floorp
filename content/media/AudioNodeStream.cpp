@@ -160,6 +160,28 @@ AudioNodeStream::SetBuffer(already_AddRefed<ThreadSharedFloatArrayBufferList> aB
 }
 
 void
+AudioNodeStream::SetRawArrayData(nsTArray<float>& aData)
+{
+  class Message : public ControlMessage {
+  public:
+    Message(AudioNodeStream* aStream,
+            nsTArray<float>& aData)
+      : ControlMessage(aStream)
+    {
+      mData.SwapElements(aData);
+    }
+    virtual void Run()
+    {
+      static_cast<AudioNodeStream*>(mStream)->Engine()->SetRawArrayData(mData);
+    }
+    nsTArray<float> mData;
+  };
+
+  MOZ_ASSERT(this);
+  GraphImpl()->AppendMessage(new Message(this, aData));
+}
+
+void
 AudioNodeStream::SetChannelMixingParameters(uint32_t aNumberOfChannels,
                                             ChannelCountMode aChannelCountMode,
                                             ChannelInterpretation aChannelInterpretation)
