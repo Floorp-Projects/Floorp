@@ -2386,7 +2386,8 @@ GetElementIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
             if (!cache.attachArgumentsElement(cx, ion, obj))
                 return false;
             attachedStub = true;
-        } else if (obj->isNative() && cache.monitoredResult()) {
+        }
+        if (!attachedStub && obj->isNative() && cache.monitoredResult()) {
             uint32_t dummy;
             if (idval.isString() && JSID_IS_ATOM(id) && !JSID_TO_ATOM(id)->isIndex(&dummy)) {
                 RootedPropertyName name(cx, JSID_TO_ATOM(id)->asPropertyName());
@@ -2394,11 +2395,13 @@ GetElementIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
                     return false;
                 attachedStub = true;
             }
-        } else if (!cache.hasDenseStub() && obj->isNative() && idval.isInt32()) {
+        }
+        if (!attachedStub && !cache.hasDenseStub() && obj->isNative() && idval.isInt32()) {
             if (!cache.attachDenseElement(cx, ion, obj, idval))
                 return false;
             attachedStub = true;
-        } else if (obj->isTypedArray()) {
+        }
+        if (!attachedStub && obj->isTypedArray()) {
             if ((idval.isInt32()) ||
                 (idval.isString() && GetIndexFromString(idval.toString()) != UINT32_MAX))
             {
