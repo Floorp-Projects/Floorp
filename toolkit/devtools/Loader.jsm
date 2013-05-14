@@ -8,13 +8,13 @@
  * Manages the addon-sdk loader instance used to load the developer tools.
  */
 
-let Cu = Components.utils;
+let { interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil", "resource://gre/modules/NetUtil.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "FileUtils", "resource://gre/modules/NetUtil.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "FileUtils", "resource://gre/modules/FileUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "console", "resource://gre/modules/devtools/Console.jsm");
 
@@ -64,7 +64,7 @@ var SrcdirProvider = {
     srcdir = OS.Path.normalize(srcdir.data.trim());
     let devtoolsDir = OS.Path.join(srcdir, "browser/devtools");
     let toolkitDir = OS.Path.join(srcdir, "toolkit/devtools");
-    let serverDir = OS.path.join(toolkitDir, "server")
+    let serverDir = OS.Path.join(toolkitDir, "server")
 
     this.loader = new loader.Loader({
       paths: {
