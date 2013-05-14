@@ -998,7 +998,6 @@ RILContentHelper.prototype = {
     if (topic == "xpcom-shutdown") {
       this.removeMessageListener();
       Services.obs.removeObserver(this, "xpcom-shutdown");
-      cpmm = null;
     }
   },
 
