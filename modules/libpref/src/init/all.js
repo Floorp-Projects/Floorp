@@ -4079,6 +4079,8 @@ pref("dom.sms.requestStatusReport", true);
 
 // WebContacts
 pref("dom.mozContacts.enabled", false);
+pref("dom.navigator-property.disable.mozContacts", true);
+pref("dom.global-constructor.disable.mozContact", true);
 
 // WebAlarms
 pref("dom.mozAlarms.enabled", false);
@@ -4091,6 +4093,7 @@ pref("dom.mozNetworkStats.enabled", false);
 
 // WebSettings
 pref("dom.mozSettings.enabled", false);
+pref("dom.navigator-property.disable.mozSettings", true);
 pref("dom.mozPermissionSettings.enabled", false);
 
 // W3C touch events

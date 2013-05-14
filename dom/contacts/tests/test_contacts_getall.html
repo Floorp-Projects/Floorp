@@ -17,16 +17,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=836519
 
 </div>
 <pre id="test">
-<script class="testbody" type="text/javascript;version=1.8">
+<script class="testbody" type="text/javascript;version=1.7">
 
 "use strict";
 
-// this shouldn't be necessary when bug 792594 is fixed
-if (!SpecialPowers.getBoolPref("dom.mozContacts.enabled")) {
-  let comp = SpecialPowers.wrap(SpecialPowers.Components);
-  comp.utils.import("resource://gre/modules/ContactService.jsm");
-  comp.utils.import("resource://gre/modules/PermissionPromptHelper.jsm");
-  SpecialPowers.setBoolPref("dom.mozContacts.enabled", true);
+if (SpecialPowers.isMainProcess()) {
+  SpecialPowers.Cu.import("resource://gre/modules/ContactService.jsm");
+  SpecialPowers.Cu.import("resource://gre/modules/PermissionPromptHelper.jsm");
 }
 
 SpecialPowers.addPermission("contacts-write", true, document);
@@ -51,8 +48,6 @@ let properties1 = {
   adr: adr1,
   email: [{type: ["work"], value: "x@y.com"}]
 };
-
-function tests() {
 
 function onFailure() {
   ok(false, "in on Failure!");
@@ -434,21 +429,8 @@ function next() {
   }
 }
 
-function permissionTest() {
-  if (gContactsEnabled) {
-    next();
-  } else {
-    is(mozContacts, null, "mozContacts is null when not enabled.");
-    SimpleTest.finish();
-  }
-}
-
-permissionTest();
-}
-
-let gContactsEnabled = SpecialPowers.getBoolPref("dom.mozContacts.enabled");
-addLoadEvent(tests);
 SimpleTest.waitForExplicitFinish();
+addLoadEvent(next);
 </script>
 </pre>
 </body>

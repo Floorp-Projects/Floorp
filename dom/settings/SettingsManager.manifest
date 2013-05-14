@@ -1,6 +1,6 @@
 component {c40b1c70-00fb-11e2-a21f-0800200c9a66} SettingsManager.js
 contract @mozilla.org/settingsManager;1 {c40b1c70-00fb-11e2-a21f-0800200c9a66}
-category JavaScript-navigator-property-maybe dom.mozSettings.enabled mozSettings,@mozilla.org/settingsManager;1
+category JavaScript-navigator-property mozSettings @mozilla.org/settingsManager;1
 
 component {60c9357c-3ae0-4222-8f55-da01428470d5} SettingsManager.js
 contract @mozilla.org/settingsLock;1 {60c9357c-3ae0-4222-8f55-da01428470d5}

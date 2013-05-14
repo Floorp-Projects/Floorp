@@ -3,15 +3,20 @@
 
 MARIONETTE_TIMEOUT = 60000;
 
-const KEY = "ril.radio.disabled";
-
 SpecialPowers.addPermission("telephony", true, document);
-SpecialPowers.addPermission("settings-write", true, document);
 
-let settings = window.navigator.mozSettings;
 let telephony = window.navigator.mozTelephony;
-let number = "112";
+let number;
+let emergency;
 let outgoing;
+
+let testCase = 0;
+let expectedResults = [
+  ["112", true],
+  ["911", true],
+  ["0912345678", false],
+  ["777", false],
+];
 
 function getExistingCalls() {
   runEmulatorCmd("gsm list", function(result) {
@@ -46,19 +51,6 @@ function cancelExistingCalls(callList) {
 }
 
 function verifyInitialState(confirmNoCalls = true) {
-  log("Turning on airplane mode");
-
-  let setLock = settings.createLock();
-  let obj = {};
-  obj[KEY] = false;
-  let setReq = setLock.set(obj);
-  setReq.addEventListener("success", function onSetSuccess() {
-    ok(true, "set '" + KEY + "' to " + obj[KEY]);
-  });
-  setReq.addEventListener("error", function onSetError() {
-    ok(false, "cannot set '" + KEY + "'");
-  });
-
   log("Verifying initial state.");
   ok(telephony);
   is(telephony.active, null);
@@ -66,18 +58,25 @@ function verifyInitialState(confirmNoCalls = true) {
   is(telephony.calls.length, 0);
   if (confirmNoCalls) {
     runEmulatorCmd("gsm list", function(result) {
-      log("Initial call list: " + result);
+    log("Initial call list: " + result);
       is(result[0], "OK");
       if (result[0] == "OK") {
         dial();
       } else {
         log("Call exists from a previous test, failing out.");
         cleanUp();
-      }
+      };
     });
   } else {
     dial();
   }
+}
+
+function createGoldenCallListResult0(number, state) {
+  //  "outbound to  xxxxxxxxxx : ringing"
+  let padPattern = "          ";
+  let pad = padPattern.substring(0, padPattern.length - number.length);
+  return "outbound to  " + number + pad + " : " + state;
 }
 
 function dial() {
@@ -96,10 +95,11 @@ function dial() {
     log("Received 'onalerting' call event.");
     is(outgoing, event.call);
     is(outgoing.state, "alerting");
+    is(outgoing.emergency, emergency);
 
     runEmulatorCmd("gsm list", function(result) {
       log("Call list is now: " + result);
-      is(result[0], "outbound to  " + number + "        : ringing");
+      is(result[0], createGoldenCallListResult0(number, "ringing"));
       is(result[1], "OK");
       answer();
     });
@@ -107,7 +107,7 @@ function dial() {
 }
 
 function answer() {
-  log("Answering the outgoing call.");
+  log("Answering the call.");
 
   // We get no "connecting" event when the remote party answers the call.
 
@@ -115,12 +115,13 @@ function answer() {
     log("Received 'connected' call event.");
     is(outgoing, event.call);
     is(outgoing.state, "connected");
+    is(outgoing.emergency, emergency);
 
     is(outgoing, telephony.active);
 
     runEmulatorCmd("gsm list", function(result) {
       log("Call list is now: " + result);
-      is(result[0], "outbound to  " + number + "        : active");
+      is(result[0], createGoldenCallListResult0(number, "active"));
       is(result[1], "OK");
       hangUp();
     });
@@ -129,7 +130,7 @@ function answer() {
 };
 
 function hangUp() {
-  log("Hanging up the outgoing call.");
+  log("Hanging up the call.");
 
   // We get no "disconnecting" event when the remote party terminates the call.
 
@@ -137,6 +138,7 @@ function hangUp() {
     log("Received 'disconnected' call event.");
     is(outgoing, event.call);
     is(outgoing.state, "disconnected");
+    is(outgoing.emergency, emergency);
 
     is(telephony.active, null);
     is(telephony.calls.length, 0);
@@ -144,7 +146,7 @@ function hangUp() {
     runEmulatorCmd("gsm list", function(result) {
       log("Call list is now: " + result);
       is(result[0], "OK");
-      cleanUp();
+      verifyNextEmergencyLabel();
     });
   };
   runEmulatorCmd("gsm cancel " + number);
@@ -152,8 +154,19 @@ function hangUp() {
 
 function cleanUp() {
   SpecialPowers.removePermission("telephony", document);
-  SpecialPowers.removePermission("settings-write", document);
   finish();
 }
 
-getExistingCalls();
+function verifyNextEmergencyLabel() {
+  if (testCase >= expectedResults.length) {
+    cleanUp();
+  } else {
+    log("Running test case: " + testCase + "/" + expectedResults.length);
+    number = expectedResults[testCase][0];
+    emergency = expectedResults[testCase][1];
+    getExistingCalls();
+    testCase++;
+  }
+}
+
+verifyNextEmergencyLabel();
