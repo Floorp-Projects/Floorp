@@ -218,6 +218,87 @@ def resolve_target_to_make(topobjdir, target):
         target = os.path.join(os.path.basename(reldir), target)
         reldir = os.path.dirname(reldir)
 
+
+class UnsortedError(Exception):
+    def __init__(self, srtd, original):
+        assert len(srtd) == len(original)
+
+        self.sorted = srtd
+        self.original = original
+
+        for i, orig in enumerate(original):
+            s = srtd[i]
+
+            if orig != s:
+                self.i = i
+                break
+
+    def __str__(self):
+        s = StringIO()
+
+        s.write('An attempt was made to add an unsorted sequence to a list. ')
+        s.write('The incoming list is unsorted starting at element %d. ' %
+            self.i)
+        s.write('We expected "%s" but got "%s"' % (
+            self.sorted[self.i], self.original[self.i]))
+
+        return s.getvalue()
+
+
+class StrictOrderingOnAppendList(list):
+    """A list specialized for moz.build environments.
+
+    We overload the assignment and append operations to require that incoming
+    elements be ordered. This enforces cleaner style in moz.build files.
+    """
+    @staticmethod
+    def ensure_sorted(l):
+        srtd = sorted(l)
+
+        if srtd != l:
+            raise UnsortedError(srtd, l)
+
+    def __init__(self, iterable=[]):
+        StrictOrderingOnAppendList.ensure_sorted(iterable)
+
+        list.__init__(self, iterable)
+
+    def extend(self, l):
+        if not isinstance(l, list):
+            raise ValueError('List can only be extended with other list instances.')
+
+        StrictOrderingOnAppendList.ensure_sorted(l)
+
+        return list.extend(self, l)
+
+    def __setslice__(self, i, j, sequence):
+        if not isinstance(sequence, list):
+            raise ValueError('List can only be sliced with other list instances.')
+
+        StrictOrderingOnAppendList.ensure_sorted(sequence)
+
+        return list.__setslice__(self, i, j, sequence)
+
+    def __add__(self, other):
+        if not isinstance(other, list):
+            raise ValueError('Only lists can be appended to lists.')
+
+        StrictOrderingOnAppendList.ensure_sorted(other)
+
+        # list.__add__ will return a new list. We "cast" it to our type.
+        return StrictOrderingOnAppendList(list.__add__(self, other))
+
+    def __iadd__(self, other):
+        if not isinstance(other, list):
+            raise ValueError('Only lists can be appended to lists.')
+
+        StrictOrderingOnAppendList.ensure_sorted(other)
+
+        list.__iadd__(self, other)
+
+        return self
+
+
 class MozbuildDeletionError(Exception):
     pass
 
@@ -241,7 +322,7 @@ class HierarchicalStringList(object):
     __slots__ = ('_strings', '_children')
 
     def __init__(self):
-        self._strings = []
+        self._strings = StrictOrderingOnAppendList()
         self._children = {}
 
     def get_children(self):
