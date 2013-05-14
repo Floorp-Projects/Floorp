@@ -7,6 +7,8 @@
 
 #include "mozilla/StandardInteger.h"
 
+class nsCString;
+
 namespace mozilla {
 namespace system {
 
@@ -24,7 +26,8 @@ namespace system {
  * of affairs (usb cable plugged in, automounter enabled, etc)
  * and try to make the state of the volumes match.
  */
-void InitAutoMounter();
+void
+InitAutoMounter();
 
 /**
  * Sets the enabled state of the automounter.
@@ -32,14 +35,26 @@ void InitAutoMounter();
  * This will in turn cause the automounter to re-evaluate
  * whether it should mount/unmount/share/unshare volumes.
  */
-void SetAutoMounterMode(int32_t aMode);
+void
+SetAutoMounterMode(int32_t aMode);
+
+/**
+ * Sets the sharing mode of an individual volume.
+ *
+ * If a volume is enabled for sharing, and the autmounter
+ * is in a state to share, then the volume will be shared
+ * with the PC.
+ */
+void
+SetAutoMounterSharingMode(const nsCString& aVolumeName, bool aAllowSharing);
 
 /**
  * Shuts down the automounter.
  *
  * This leaves the volumes in whatever state they're in.
  */
-void ShutdownAutoMounter();
+void
+ShutdownAutoMounter();
 
 } // system
 } // mozilla
