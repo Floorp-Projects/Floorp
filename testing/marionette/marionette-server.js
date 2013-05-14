@@ -4,13 +4,12 @@
 
 "use strict";
 
-/**
- * Gecko-specific actors.
- */
-
 const FRAME_SCRIPT = "chrome://marionette/content/marionette-listener.js";
 
-let {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
+// import logger
+Cu.import("resource://gre/modules/services-common/log4moz.js");
+let logger = Log4Moz.repository.getLogger("Marionette");
+logger.info('marionette-server.js loaded');
 
 let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
                .getService(Ci.mozIJSSubScriptLoader);
@@ -35,10 +34,12 @@ Cu.import("resource://gre/modules/NetUtil.jsm");
 Services.prefs.setBoolPref("marionette.contentListener", false);
 let appName = Services.appinfo.name;
 
-// import logger
-Cu.import("resource://gre/modules/services-common/log4moz.js");
-let logger = Log4Moz.repository.getLogger("Marionette");
-logger.info('marionette-actors.js loaded');
+// dumpn needed/used by dbg-transport.js
+this.dumpn = function dumpn(str) {
+  logger.trace(str);
+}
+loader.loadSubScript("resource://gre/modules/devtools/DevToolsUtils.js");
+loader.loadSubScript("resource://gre/modules/devtools/server/transport.js");
 
 let bypassOffline = false;
 
@@ -65,77 +66,13 @@ if (bypassOffline) {
 }
 
 // This is used to prevent newSession from returning before the telephony
-// API's are ready; see bug 792647.  This assumes that marionette-actors.js
+// API's are ready; see bug 792647.  This assumes that marionette-server.js
 // will be loaded before the 'system-message-listener-ready' message
 // is fired.  If this stops being true, this approach will have to change.
 let systemMessageListenerReady = false;
 Services.obs.addObserver(function() {
   systemMessageListenerReady = true;
 }, "system-message-listener-ready", false);
-
-/**
- * Creates the root actor once a connection is established
- */
-
-function createRootActor(aConnection)
-{
-  return new MarionetteRootActor(aConnection);
-}
-
-/**
- * Root actor for Marionette. Add any future actors to its actor pool.
- * Implements methods needed by resource:///modules/devtools/dbg-server.jsm
- */
-
-function MarionetteRootActor(aConnection)
-{
-  this.conn = aConnection;
-  this._marionetteActor = new MarionetteDriverActor(this.conn);
-  this._marionetteActorPool = null; //hold future actors
-
-  this._marionetteActorPool = new ActorPool(this.conn);
-  this._marionetteActorPool.addActor(this._marionetteActor);
-  this.conn.addActorPool(this._marionetteActorPool);
-}
-
-MarionetteRootActor.prototype = {
-  /**
-   * Called when a client first makes a connection
-   *
-   * @return object
-   *         returns the name of the actor, the application type, and any traits
-   */
-  sayHello: function MRA_sayHello() {
-    return { from: "root",
-             applicationType: "gecko",
-             traits: [] };
-  },
-
-  /**
-   * Called when client disconnects. Cleans up marionette driver actions.
-   */
-  disconnect: function MRA_disconnect() {
-    this._marionetteActor.deleteSession();
-  },
-
-  /**
-   * Used to get the running marionette actor, so we can issue commands
-   *
-   * @return object
-   *         Returns the ID the client can use to communicate with the
-   *         MarionetteDriverActor
-   */
-  getMarionetteID: function MRA_getMarionette() {
-    return { "from": "root",
-             "id": this._marionetteActor.actorID } ;
-  }
-};
-
-// register the calls
-MarionetteRootActor.prototype.requestTypes = {
-  "getMarionetteID": MarionetteRootActor.prototype.getMarionetteID,
-  "sayHello": MarionetteRootActor.prototype.sayHello
-};
 
 /**
  * An object representing a frame that Marionette has loaded a
@@ -173,16 +110,25 @@ function FrameSendFailureError(frame) {
 }
 
 /**
- * This actor is responsible for all marionette API calls. It gets created
+ * The server connection is responsible for all marionette API calls. It gets created
  * for each connection and manages all chrome and browser based calls. It
  * mediates content calls by issuing appropriate messages to the content process.
  */
-function MarionetteDriverActor(aConnection)
+function MarionetteServerConnection(aPrefix, aTransport, aServer)
 {
   this.uuidGen = Cc["@mozilla.org/uuid-generator;1"]
                    .getService(Ci.nsIUUIDGenerator);
 
-  this.conn = aConnection;
+  this.prefix = aPrefix;
+  this.server = aServer;
+  this.conn = aTransport;
+  this.conn.hooks = this;
+
+  // marionette uses a protocol based on the debugger server, which requires
+  // passing back "actor ids" with responses. unlike the debugger server,
+  // we don't have multiple actors, so just use a dummy value of "0" here
+  this.actorID = "0";
+
   this.globalMessageManager = Cc["@mozilla.org/globalmessagemanager;1"]
                              .getService(Ci.nsIMessageBroadcaster);
   this.messageManager = this.globalMessageManager;
@@ -206,10 +152,33 @@ function MarionetteDriverActor(aConnection)
   this.addMessageManagerListeners(this.messageManager);
 }
 
-MarionetteDriverActor.prototype = {
+MarionetteServerConnection.prototype = {
 
-  //name of the actor
-  actorPrefix: "marionette",
+  /**
+   * Debugger transport callbacks:
+   */
+  onPacket: function MSC_onPacket(aPacket) {
+    // Dispatch the request
+    if (this.requestTypes && this.requestTypes[aPacket.type]) {
+      try {
+        this.requestTypes[aPacket.type].bind(this)(aPacket);
+      } catch(e) {
+        this.conn.send({ error: ("error occurred while processing '" +
+                                 aPacket.type),
+                        message: e });
+      }
+    } else {
+      this.conn.send({ error: "unrecognizedPacketType",
+                       message: ('Marionette does not ' +
+                                 'recognize the packet type "' +
+                                 aPacket.type + '"') });
+    }
+  },
+
+  onClosed: function MSC_onClosed(aStatus) {
+    this.server._connectionClosed(this);
+    this.deleteSession();
+  },
 
   /**
    * Helper methods:
@@ -368,6 +337,16 @@ MarionetteDriverActor.prototype = {
     if (typeof(value) == 'undefined')
         value = null;
     this.sendToClient({from:this.actorID, value: value}, command_id);
+  },
+
+  sayHello: function MDA_sayHello() {
+    this.conn.send({ from: "root",
+                     applicationType: "gecko",
+                     traits: [] });
+  },
+
+  getMarionetteID: function MDA_getMarionette() {
+    this.conn.send({ "from": "root", "id": this.actorID });
   },
 
   /**
@@ -2187,60 +2166,62 @@ MarionetteDriverActor.prototype = {
   }
 };
 
-MarionetteDriverActor.prototype.requestTypes = {
-  "newSession": MarionetteDriverActor.prototype.newSession,
-  "getSessionCapabilities": MarionetteDriverActor.prototype.getSessionCapabilities,
-  "getStatus": MarionetteDriverActor.prototype.getStatus,
-  "log": MarionetteDriverActor.prototype.log,
-  "getLogs": MarionetteDriverActor.prototype.getLogs,
-  "setContext": MarionetteDriverActor.prototype.setContext,
-  "executeScript": MarionetteDriverActor.prototype.execute,
-  "setScriptTimeout": MarionetteDriverActor.prototype.setScriptTimeout,
-  "timeouts": MarionetteDriverActor.prototype.timeouts,
-  "singleTap": MarionetteDriverActor.prototype.singleTap,
-  "actionChain": MarionetteDriverActor.prototype.actionChain,
-  "multiAction": MarionetteDriverActor.prototype.multiAction,
-  "executeAsyncScript": MarionetteDriverActor.prototype.executeWithCallback,
-  "executeJSScript": MarionetteDriverActor.prototype.executeJSScript,
-  "setSearchTimeout": MarionetteDriverActor.prototype.setSearchTimeout,
-  "findElement": MarionetteDriverActor.prototype.findElement,
-  "findElements": MarionetteDriverActor.prototype.findElements,
-  "clickElement": MarionetteDriverActor.prototype.clickElement,
-  "getElementAttribute": MarionetteDriverActor.prototype.getElementAttribute,
-  "getElementText": MarionetteDriverActor.prototype.getElementText,
-  "getElementTagName": MarionetteDriverActor.prototype.getElementTagName,
-  "isElementDisplayed": MarionetteDriverActor.prototype.isElementDisplayed,
-  "getElementValueOfCssProperty": MarionetteDriverActor.prototype.getElementValueOfCssProperty,
-  "getElementSize": MarionetteDriverActor.prototype.getElementSize,
-  "isElementEnabled": MarionetteDriverActor.prototype.isElementEnabled,
-  "isElementSelected": MarionetteDriverActor.prototype.isElementSelected,
-  "sendKeysToElement": MarionetteDriverActor.prototype.sendKeysToElement,
-  "getElementPosition": MarionetteDriverActor.prototype.getElementPosition,
-  "clearElement": MarionetteDriverActor.prototype.clearElement,
-  "getTitle": MarionetteDriverActor.prototype.getTitle,
-  "getWindowType": MarionetteDriverActor.prototype.getWindowType,
-  "getPageSource": MarionetteDriverActor.prototype.getPageSource,
-  "goUrl": MarionetteDriverActor.prototype.goUrl,
-  "getUrl": MarionetteDriverActor.prototype.getUrl,
-  "goBack": MarionetteDriverActor.prototype.goBack,
-  "goForward": MarionetteDriverActor.prototype.goForward,
-  "refresh":  MarionetteDriverActor.prototype.refresh,
-  "getWindow":  MarionetteDriverActor.prototype.getWindow,
-  "getWindows":  MarionetteDriverActor.prototype.getWindows,
-  "switchToFrame": MarionetteDriverActor.prototype.switchToFrame,
-  "switchToWindow": MarionetteDriverActor.prototype.switchToWindow,
-  "deleteSession": MarionetteDriverActor.prototype.deleteSession,
-  "emulatorCmdResult": MarionetteDriverActor.prototype.emulatorCmdResult,
-  "importScript": MarionetteDriverActor.prototype.importScript,
-  "getAppCacheStatus": MarionetteDriverActor.prototype.getAppCacheStatus,
-  "closeWindow": MarionetteDriverActor.prototype.closeWindow,
-  "setTestName": MarionetteDriverActor.prototype.setTestName,
-  "screenShot": MarionetteDriverActor.prototype.screenShot,
-  "addCookie": MarionetteDriverActor.prototype.addCookie,
-  "getAllCookies": MarionetteDriverActor.prototype.getAllCookies,
-  "deleteAllCookies": MarionetteDriverActor.prototype.deleteAllCookies,
-  "deleteCookie": MarionetteDriverActor.prototype.deleteCookie,
-  "getActiveElement": MarionetteDriverActor.prototype.getActiveElement
+MarionetteServerConnection.prototype.requestTypes = {
+  "getMarionetteID": MarionetteServerConnection.prototype.getMarionetteID,
+  "sayHello": MarionetteServerConnection.prototype.sayHello,
+  "newSession": MarionetteServerConnection.prototype.newSession,
+  "getSessionCapabilities": MarionetteServerConnection.prototype.getSessionCapabilities,
+  "getStatus": MarionetteServerConnection.prototype.getStatus,
+  "log": MarionetteServerConnection.prototype.log,
+  "getLogs": MarionetteServerConnection.prototype.getLogs,
+  "setContext": MarionetteServerConnection.prototype.setContext,
+  "executeScript": MarionetteServerConnection.prototype.execute,
+  "setScriptTimeout": MarionetteServerConnection.prototype.setScriptTimeout,
+  "timeouts": MarionetteServerConnection.prototype.timeouts,
+  "singleTap": MarionetteServerConnection.prototype.singleTap,
+  "actionChain": MarionetteServerConnection.prototype.actionChain,
+  "multiAction": MarionetteServerConnection.prototype.multiAction,
+  "executeAsyncScript": MarionetteServerConnection.prototype.executeWithCallback,
+  "executeJSScript": MarionetteServerConnection.prototype.executeJSScript,
+  "setSearchTimeout": MarionetteServerConnection.prototype.setSearchTimeout,
+  "findElement": MarionetteServerConnection.prototype.findElement,
+  "findElements": MarionetteServerConnection.prototype.findElements,
+  "clickElement": MarionetteServerConnection.prototype.clickElement,
+  "getElementAttribute": MarionetteServerConnection.prototype.getElementAttribute,
+  "getElementText": MarionetteServerConnection.prototype.getElementText,
+  "getElementTagName": MarionetteServerConnection.prototype.getElementTagName,
+  "isElementDisplayed": MarionetteServerConnection.prototype.isElementDisplayed,
+  "getElementValueOfCssProperty": MarionetteServerConnection.prototype.getElementValueOfCssProperty,
+  "getElementSize": MarionetteServerConnection.prototype.getElementSize,
+  "isElementEnabled": MarionetteServerConnection.prototype.isElementEnabled,
+  "isElementSelected": MarionetteServerConnection.prototype.isElementSelected,
+  "sendKeysToElement": MarionetteServerConnection.prototype.sendKeysToElement,
+  "getElementPosition": MarionetteServerConnection.prototype.getElementPosition,
+  "clearElement": MarionetteServerConnection.prototype.clearElement,
+  "getTitle": MarionetteServerConnection.prototype.getTitle,
+  "getWindowType": MarionetteServerConnection.prototype.getWindowType,
+  "getPageSource": MarionetteServerConnection.prototype.getPageSource,
+  "goUrl": MarionetteServerConnection.prototype.goUrl,
+  "getUrl": MarionetteServerConnection.prototype.getUrl,
+  "goBack": MarionetteServerConnection.prototype.goBack,
+  "goForward": MarionetteServerConnection.prototype.goForward,
+  "refresh":  MarionetteServerConnection.prototype.refresh,
+  "getWindow":  MarionetteServerConnection.prototype.getWindow,
+  "getWindows":  MarionetteServerConnection.prototype.getWindows,
+  "switchToFrame": MarionetteServerConnection.prototype.switchToFrame,
+  "switchToWindow": MarionetteServerConnection.prototype.switchToWindow,
+  "deleteSession": MarionetteServerConnection.prototype.deleteSession,
+  "emulatorCmdResult": MarionetteServerConnection.prototype.emulatorCmdResult,
+  "importScript": MarionetteServerConnection.prototype.importScript,
+  "getAppCacheStatus": MarionetteServerConnection.prototype.getAppCacheStatus,
+  "closeWindow": MarionetteServerConnection.prototype.closeWindow,
+  "setTestName": MarionetteServerConnection.prototype.setTestName,
+  "screenShot": MarionetteServerConnection.prototype.screenShot,
+  "addCookie": MarionetteServerConnection.prototype.addCookie,
+  "getAllCookies": MarionetteServerConnection.prototype.getAllCookies,
+  "deleteAllCookies": MarionetteServerConnection.prototype.deleteAllCookies,
+  "deleteCookie": MarionetteServerConnection.prototype.deleteCookie,
+  "getActiveElement": MarionetteServerConnection.prototype.getActiveElement
 };
 
 /**
@@ -2378,3 +2359,47 @@ BrowserObj.prototype = {
     return uid;
   },
 }
+
+/**
+ * Marionette server -- this class holds a reference to a socket and creates
+ * MarionetteServerConnection objects as needed.
+ */
+this.MarionetteServer = function MarionetteServer(port, forceLocal) {
+  let flags = Ci.nsIServerSocket.KeepWhenOffline;
+  if (forceLocal) {
+    flags |= Ci.nsIServerSocket.LoopbackOnly;
+  }
+  let socket = new ServerSocket(port, flags, 4);
+  logger.info("Listening on port " + socket.port + "\n");
+  socket.asyncListen(this);
+  this.listener = socket;
+  this.nextConnId = 0;
+  this.connections = {};
+};
+
+MarionetteServer.prototype = {
+  onSocketAccepted: function(serverSocket, clientSocket)
+  {
+    logger.debug("accepted connection on " + clientSocket.host + ":" + clientSocket.port);
+
+    let input = clientSocket.openInputStream(0, 0, 0);
+    let output = clientSocket.openOutputStream(0, 0, 0);
+    let aTransport = new DebuggerTransport(input, output);
+    let connID = "conn" + this.nextConnID++ + '.';
+    let conn = new MarionetteServerConnection(connID, aTransport, this);
+    this.connections[connID] = conn;
+
+    // Create a root actor for the connection and send the hello packet.
+    conn.sayHello();
+    aTransport.ready();
+  },
+
+  closeListener: function() {
+    this.listener.close();
+    this.listener = null;
+  },
+
+  _connectionClosed: function DS_connectionClosed(aConnection) {
+    delete this.connections[aConnection.prefix];
+  }
+};
