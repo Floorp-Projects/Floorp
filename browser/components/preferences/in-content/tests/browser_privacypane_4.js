@@ -15,8 +15,8 @@ function test() {
   run_test_subset([
     test_custom_retention("acceptCookies", "remember"),
     test_custom_retention("acceptCookies", "custom"),
-    test_custom_retention("acceptThirdPartyMenu", "remember", "always"),
-    test_custom_retention("acceptThirdPartyMenu", "custom", "visited"),
+    test_custom_retention("acceptThirdPartyMenu", "remember", "visited"),
+    test_custom_retention("acceptThirdPartyMenu", "custom", "always"),
     test_custom_retention("keepCookiesUntil", "remember", 1),
     test_custom_retention("keepCookiesUntil", "custom", 2),
     test_custom_retention("keepCookiesUntil", "custom", 0),
