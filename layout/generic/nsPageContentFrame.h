@@ -25,7 +25,7 @@ public:
                      const nsHTMLReflowState& aMaxSize,
                      nsReflowStatus&      aStatus) MOZ_OVERRIDE;
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const
+  virtual bool IsFrameOfType(uint32_t aFlags) const MOZ_OVERRIDE
   {
     return ViewportFrame::IsFrameOfType(aFlags &
              ~(nsIFrame::eCanContainOverflowContainers));

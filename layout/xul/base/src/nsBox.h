@@ -6,6 +6,7 @@
 #ifndef nsBox_h___
 #define nsBox_h___
 
+#include "mozilla/Attributes.h"
 #include "nsIFrame.h"
 
 class nsITheme;
@@ -22,34 +23,34 @@ public:
 
   static void Shutdown();
 
-  virtual nsSize GetPrefSize(nsBoxLayoutState& aBoxLayoutState);
-  virtual nsSize GetMinSize(nsBoxLayoutState& aBoxLayoutState);
-  virtual nsSize GetMaxSize(nsBoxLayoutState& aBoxLayoutState);
-  virtual nscoord GetFlex(nsBoxLayoutState& aBoxLayoutState);
-  virtual nscoord GetBoxAscent(nsBoxLayoutState& aBoxLayoutState);
+  virtual nsSize GetPrefSize(nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
+  virtual nsSize GetMinSize(nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
+  virtual nsSize GetMaxSize(nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
+  virtual nscoord GetFlex(nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
+  virtual nscoord GetBoxAscent(nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
 
-  virtual nsSize GetMinSizeForScrollArea(nsBoxLayoutState& aBoxLayoutState);
+  virtual nsSize GetMinSizeForScrollArea(nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
 
-  virtual bool IsCollapsed();
+  virtual bool IsCollapsed() MOZ_OVERRIDE;
 
   virtual void SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRect,
-                         bool aRemoveOverflowAreas = false);
+                         bool aRemoveOverflowAreas = false) MOZ_OVERRIDE;
 
-  NS_IMETHOD GetBorder(nsMargin& aBorderAndPadding);
-  NS_IMETHOD GetPadding(nsMargin& aBorderAndPadding);
-  NS_IMETHOD GetMargin(nsMargin& aMargin);
+  NS_IMETHOD GetBorder(nsMargin& aBorderAndPadding) MOZ_OVERRIDE;
+  NS_IMETHOD GetPadding(nsMargin& aBorderAndPadding) MOZ_OVERRIDE;
+  NS_IMETHOD GetMargin(nsMargin& aMargin) MOZ_OVERRIDE;
 
-  virtual Valignment GetVAlign() const { return vAlign_Top; }
-  virtual Halignment GetHAlign() const { return hAlign_Left; }
+  virtual Valignment GetVAlign() const MOZ_OVERRIDE { return vAlign_Top; }
+  virtual Halignment GetHAlign() const MOZ_OVERRIDE { return hAlign_Left; }
 
-  NS_IMETHOD RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIFrame* aChild);
+  NS_IMETHOD RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIFrame* aChild) MOZ_OVERRIDE;
 
 #ifdef DEBUG_LAYOUT
   NS_IMETHOD GetDebugBoxAt(const nsPoint& aPoint, nsIFrame** aBox);
-  NS_IMETHOD GetDebug(bool& aDebug);
-  NS_IMETHOD SetDebug(nsBoxLayoutState& aState, bool aDebug);
+  NS_IMETHOD GetDebug(bool& aDebug) MOZ_OVERRIDE;
+  NS_IMETHOD SetDebug(nsBoxLayoutState& aState, bool aDebug) MOZ_OVERRIDE;
 
-  NS_IMETHOD DumpBox(FILE* out);
+  NS_IMETHOD DumpBox(FILE* out) MOZ_OVERRIDE;
   NS_HIDDEN_(void) PropagateDebug(nsBoxLayoutState& aState);
 #endif
 

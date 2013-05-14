@@ -99,8 +99,8 @@ public:
   virtual const nsFrameList& GetChildList(ChildListID aList) const MOZ_OVERRIDE;
   virtual void GetChildLists(nsTArray<ChildList>* aLists) const MOZ_OVERRIDE;
   NS_IMETHOD SetInitialChildList(ChildListID     aListID,
-                                 nsFrameList&    aChildList);
-  virtual void DestroyFrom(nsIFrame* aDestructRoot);
+                                 nsFrameList&    aChildList) MOZ_OVERRIDE;
+  virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
 
   // Overridden to prevent events from going to children of the menu.
   virtual void BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
@@ -126,7 +126,7 @@ public:
 
   NS_IMETHOD SelectMenu(bool aActivateFlag);
 
-  virtual nsIScrollableFrame* GetScrollTargetFrame();
+  virtual nsIScrollableFrame* GetScrollTargetFrame() MOZ_OVERRIDE;
 
   /**
    * NOTE: OpenMenu will open the menu asynchronously.
@@ -146,7 +146,7 @@ public:
   // otherwise null will be returned.
   nsMenuFrame* Enter(nsGUIEvent* aEvent);
 
-  virtual void SetParent(nsIFrame* aParent);
+  virtual void SetParent(nsIFrame* aParent) MOZ_OVERRIDE;
 
   virtual nsMenuParent *GetMenuParent() { return mMenuParent; }
   const nsAString& GetRadioGroupName() { return mGroupName; }

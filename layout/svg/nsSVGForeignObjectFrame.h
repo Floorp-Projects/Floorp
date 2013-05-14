@@ -79,7 +79,7 @@ public:
 
   // nsISVGChildFrame interface:
   NS_IMETHOD PaintSVG(nsRenderingContext *aContext,
-                      const nsIntRect *aDirtyRect);
+                      const nsIntRect *aDirtyRect) MOZ_OVERRIDE;
   NS_IMETHOD_(nsIFrame*) GetFrameForPoint(const nsPoint &aPoint) MOZ_OVERRIDE;
   NS_IMETHOD_(nsRect) GetCoveredRegion() MOZ_OVERRIDE;
   virtual void ReflowSVG() MOZ_OVERRIDE;

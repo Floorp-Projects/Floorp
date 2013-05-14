@@ -33,9 +33,9 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   NS_IMETHOD Layout(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
-  virtual void IntrinsicWidthsDirty(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState);
+  virtual void IntrinsicWidthsDirty(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
 
-  virtual nsGridRowGroupLayout* CastToRowGroupLayout() { return nullptr; }
+  virtual nsGridRowGroupLayout* CastToRowGroupLayout() MOZ_OVERRIDE { return nullptr; }
   virtual nsGridLayout2* CastToGridLayout() MOZ_OVERRIDE { return this; }
   virtual nsGrid* GetGrid(nsIFrame* aBox, int32_t* aIndex, nsGridRowLayout* aRequestor=nullptr) MOZ_OVERRIDE;
   virtual nsIGridPart* GetParentGridPart(nsIFrame* aBox, nsIFrame** aParentBox) MOZ_OVERRIDE {
@@ -51,15 +51,15 @@ public:
   virtual Type GetType() MOZ_OVERRIDE { return eGrid; }
   virtual void ChildrenInserted(nsIFrame* aBox, nsBoxLayoutState& aState,
                                 nsIFrame* aPrevBox,
-                                const nsFrameList::Slice& aNewChildren);
+                                const nsFrameList::Slice& aNewChildren) MOZ_OVERRIDE;
   virtual void ChildrenAppended(nsIFrame* aBox, nsBoxLayoutState& aState,
-                                const nsFrameList::Slice& aNewChildren);
+                                const nsFrameList::Slice& aNewChildren) MOZ_OVERRIDE;
   virtual void ChildrenRemoved(nsIFrame* aBox, nsBoxLayoutState& aState,
-                               nsIFrame* aChildList);
+                               nsIFrame* aChildList) MOZ_OVERRIDE;
   virtual void ChildrenSet(nsIFrame* aBox, nsBoxLayoutState& aState,
-                           nsIFrame* aChildList);
+                           nsIFrame* aChildList) MOZ_OVERRIDE;
 
-  virtual nsIGridPart* AsGridPart() { return this; }
+  virtual nsIGridPart* AsGridPart() MOZ_OVERRIDE { return this; }
 
   static void AddOffset(nsBoxLayoutState& aState, nsIFrame* aChild, nsSize& aSize);
 
