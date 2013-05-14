@@ -441,6 +441,11 @@ public:
       static_cast<CanvasRenderingContext2DUserData*>(aData);
     CanvasRenderingContext2D* context = self->mContext;
     if (self->mContext && context->mGLContext) {
+      if (self->mContext->mTarget != nullptr) {
+        // Since SkiaGL default to store drawing command until flush
+        // We will have to flush it before present.
+        self->mContext->mTarget->Flush();
+      }
       context->mGLContext->MakeCurrent();
       context->mGLContext->PublishFrame();
     }

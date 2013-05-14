@@ -57,7 +57,9 @@ Volume::Volume(const nsCSubstring& aName)
     mState(nsIVolume::STATE_INIT),
     mName(aName),
     mMountGeneration(-1),
-    mMountLocked(true)  // Needs to agree with nsVolume::nsVolume
+    mMountLocked(true),  // Needs to agree with nsVolume::nsVolume
+    mSharingEnabled(false),
+    mCanBeShared(true)
 {
   DBG("Volume %s: created", NameStr());
 }
@@ -98,6 +100,15 @@ Volume::SetMediaPresent(bool aMediaPresent)
   LOG("Volume: %s media %s", NameStr(), aMediaPresent ? "inserted" : "removed");
   mMediaPresent = aMediaPresent;
   mEventObserverList.Broadcast(this);
+}
+
+void
+Volume::SetSharingEnabled(bool aSharingEnabled)
+{
+  mSharingEnabled = aSharingEnabled;
+
+  LOG("SetSharingMode for volume %s to %d canBeShared = %d",
+      NameStr(), (int)mSharingEnabled, (int)mCanBeShared);
 }
 
 void
@@ -252,7 +263,13 @@ Volume::HandleVoldResponse(int aResponseCode, nsCWhitespaceTokenizer& aTokenizer
       SetMountPoint(mntPoint);
       nsresult errCode;
       nsCString state(aTokenizer.nextToken());
-      SetState((STATE)state.ToInteger(&errCode));
+      if (state.EqualsLiteral("X")) {
+        // Special state for creating fake volumes which can't be shared.
+        mCanBeShared = false;
+        SetState(nsIVolume::STATE_MOUNTED);
+      } else {
+        SetState((STATE)state.ToInteger(&errCode));
+      }
       break;
     }
 
