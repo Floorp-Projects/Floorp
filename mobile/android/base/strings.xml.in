@@ -144,7 +144,7 @@
   <string name="datareporting_telemetry_summary">&datareporting_telemetry_summary;</string>
   <string name="datareporting_fhr_title">&datareporting_fhr_title;</string>
   <string name="datareporting_fhr_summary">&datareporting_fhr_summary;</string>
-  <string name="datareporting_crashreporter_title">&datareporting_crashreporter_title;</string>
+  <string name="datareporting_crashreporter_title_short">&datareporting_crashreporter_title_short;</string>
   <string name="datareporting_crashreporter_summary">&datareporting_crashreporter_summary;</string>
 
   <string name="go">&go;</string>
