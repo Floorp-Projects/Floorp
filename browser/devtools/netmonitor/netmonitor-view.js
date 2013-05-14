@@ -1006,6 +1006,8 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
  */
 function NetworkDetailsView() {
   dumpn("NetworkDetailsView was instantiated");
+
+  this._onTabSelect = this._onTabSelect.bind(this);
 };
 
 create({ constructor: NetworkDetailsView, proto: MenuContainer.prototype }, {
@@ -1044,6 +1046,8 @@ create({ constructor: NetworkDetailsView, proto: MenuContainer.prototype }, {
     this._responseHeaders = L10N.getStr("responseHeaders");
     this._requestCookies = L10N.getStr("requestCookies");
     this._responseCookies = L10N.getStr("responseCookies");
+
+    $("tabpanels", this.node).addEventListener("select", this._onTabSelect);
   },
 
   /**
@@ -1065,6 +1069,14 @@ create({ constructor: NetworkDetailsView, proto: MenuContainer.prototype }, {
   },
 
   /**
+   * Hides and resets this container (removes all the networking information).
+   */
+  reset: function() {
+    this.toggle(false);
+    this._dataSrc = null;
+  },
+
+  /**
    * Populates this view with the specified data.
    *
    * @param object aData
@@ -1083,17 +1095,45 @@ create({ constructor: NetworkDetailsView, proto: MenuContainer.prototype }, {
     this._params.empty();
     this._json.empty();
 
-    if (aData) {
-      this._setSummary(aData);
-      this._setResponseHeaders(aData.responseHeaders);
-      this._setRequestHeaders(aData.requestHeaders);
-      this._setResponseCookies(aData.responseCookies);
-      this._setRequestCookies(aData.requestCookies);
-      this._setRequestGetParams(aData.url);
-      this._setRequestPostParams(aData.requestHeaders, aData.requestPostData);
-      this._setResponseBody(aData.url, aData.responseContent);
-      this._setTimingsInformation(aData.eventTimings);
+    this._dataSrc = { src: aData, populated: [] };
+    this._onTabSelect();
+  },
+
+  /**
+   * Listener handling the tab selection event.
+   */
+  _onTabSelect: function() {
+    let { src, populated } = this._dataSrc || {};
+    let tab = this.node.selectedIndex;
+
+    // Make sure the data source is valid and don't populate the same tab twice.
+    if (!src || populated[tab]) {
+      return;
     }
+
+    switch (tab) {
+      case 0: // "Headers"
+        this._setSummary(src);
+        this._setResponseHeaders(src.responseHeaders);
+        this._setRequestHeaders(src.requestHeaders);
+        break;
+      case 1: // "Cookies"
+        this._setResponseCookies(src.responseCookies);
+        this._setRequestCookies(src.requestCookies);
+        break;
+      case 2: // "Params"
+        this._setRequestGetParams(src.url);
+        this._setRequestPostParams(src.requestHeaders, src.requestPostData);
+        break;
+      case 3: // "Response"
+        this._setResponseBody(src.url, src.responseContent);
+        break;
+      case 4: // "Timings"
+        this._setTimingsInformation(src.eventTimings);
+        break;
+    }
+
+    populated[tab] = true;
   },
 
   /**
@@ -1464,6 +1504,7 @@ create({ constructor: NetworkDetailsView, proto: MenuContainer.prototype }, {
       .style.transform = "translateX(" + (scale * (blocked + dns + connect + send + wait)) + "px)";
   },
 
+  _dataSrc: null,
   _headers: null,
   _cookies: null,
   _params: null,
