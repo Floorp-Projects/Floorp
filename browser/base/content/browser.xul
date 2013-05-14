@@ -498,7 +498,7 @@
     </toolbar>
 
     <toolbar id="nav-bar" class="toolbar-primary chromeclass-toolbar"
-             toolbarname="&navbarCmd.label;" accesskey="&navbarCmd.accesskey;"
+             aria-label="&navbarCmd.label;"
              fullscreentoolbar="true" mode="icons" customizable="true"
              iconsize="large"
              defaultset="unified-back-forward-button,urlbar-container,reload-button,stop-button,search-container,webrtc-status-button,bookmarks-menu-button,downloads-button,home-button,window-controls"
