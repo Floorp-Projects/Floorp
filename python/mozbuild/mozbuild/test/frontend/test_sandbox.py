@@ -296,9 +296,9 @@ add_tier_dir('t1', 'bat', static=True)
     def test_substitute_config_files(self):
         sandbox = self.sandbox()
 
-        sandbox.exec_source('CONFIGURE_SUBST_FILES += ["foo", "bar"]',
+        sandbox.exec_source('CONFIGURE_SUBST_FILES += ["bar", "foo"]',
             'test.py')
-        self.assertEqual(sandbox['CONFIGURE_SUBST_FILES'], ['foo', 'bar'])
+        self.assertEqual(sandbox['CONFIGURE_SUBST_FILES'], ['bar', 'foo'])
 
     def test_invalid_utf8_substs(self):
         """Ensure invalid UTF-8 in substs is converted with an error."""

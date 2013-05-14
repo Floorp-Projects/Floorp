@@ -138,16 +138,24 @@ class TestRecursiveMakeBackend(BackendTester):
         lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:-1]]
 
         expected = {
-            'ASFILES': ['ASFILES += foo.asm', 'ASFILES += bar.s'],
-            'XPIDL_FLAGS': ['XPIDL_FLAGS += -Idir1',
-                            'XPIDL_FLAGS += -Idir2',
-                            'XPIDL_FLAGS += -Idir3',
-                            ],
-            'XPIDL_MODULE': ['XPIDL_MODULE := module_name'],
-            'XPIDLSRCS': ['XPIDLSRCS += foo.idl',
-                          'XPIDLSRCS += bar.idl',
-                          'XPIDLSRCS += biz.idl']
-            }
+            'ASFILES': [
+                'ASFILES += bar.s',
+                'ASFILES += foo.asm',
+            ],
+            'XPIDL_FLAGS': [
+                'XPIDL_FLAGS += -Idir1',
+                'XPIDL_FLAGS += -Idir2',
+                'XPIDL_FLAGS += -Idir3',
+            ],
+            'XPIDL_MODULE': [
+                'XPIDL_MODULE := module_name'
+            ],
+            'XPIDLSRCS': [
+                'XPIDLSRCS += bar.idl',
+                'XPIDLSRCS += biz.idl',
+                'XPIDLSRCS += foo.idl',
+            ]
+        }
 
         for var, val in expected.items():
             # print("test_variable_passthru[%s]" % (var))
