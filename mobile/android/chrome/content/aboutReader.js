@@ -85,11 +85,28 @@ let AboutReader = function(doc, win) {
   this._setupSegmentedButton("font-type-buttons", fontTypeOptions, fontType, this._setFontType.bind(this));
   this._setFontType(fontType);
 
-  let fontTitle = gStrings.GetStringFromName("aboutReader.textTitle");
-  this._fontSize = 0;
-  this._setupStepControl("font-size-control", fontTitle,
-    this._FONT_SIZE_MIN, this._FONT_SIZE_MAX, this._FONT_SIZE_STEP, Services.prefs.getIntPref("reader.font_size"),
-    this._onFontSizeChange.bind(this));
+  let fontSizeSample = gStrings.GetStringFromName("aboutReader.fontSizeSample");
+  let fontSizeOptions = [
+    { name: fontSizeSample,
+      value: 1,
+      linkClass: "font-size1-sample" },
+    { name: fontSizeSample,
+      value: 2,
+      linkClass: "font-size2-sample" },
+    { name: fontSizeSample,
+      value: 3,
+      linkClass: "font-size3-sample" },
+    { name: fontSizeSample,
+      value: 4,
+      linkClass: "font-size4-sample" },
+    { name: fontSizeSample,
+      value: 5,
+      linkClass: "font-size5-sample" }
+  ];
+
+  let fontSize = Services.prefs.getIntPref("reader.font_size");
+  this._setupSegmentedButton("font-size-buttons", fontSizeOptions, fontSize, this._setFontSize.bind(this));
+  this._setFontSize(fontSize);
 
   dump("Decoding query arguments");
   let queryArgs = this._decodeQueryString(win.location.href);
@@ -109,10 +126,6 @@ let AboutReader = function(doc, win) {
 }
 
 AboutReader.prototype = {
-  _FONT_SIZE_MIN: 1,
-  _FONT_SIZE_MAX: 7,
-  _FONT_SIZE_STEP: 1,
-
   _BLOCK_IMAGES_SELECTOR: ".content p > img:only-child, " +
                           ".content p > a:only-child > img:only-child, " +
                           ".content .wp-caption img, " +
@@ -289,7 +302,7 @@ AboutReader.prototype = {
     });
   },
 
-  _onFontSizeChange: function Reader_onFontSizeChange(newFontSize) {
+  _setFontSize: function Reader_setFontSize(newFontSize) {
     let bodyClasses = this._doc.body.classList;
 
     if (this._fontSize > 0)
@@ -558,69 +571,6 @@ AboutReader.prototype = {
     return result;
   },
 
-  _setupStepControl: function Reader_setupStepControl(id, name, min, max, step, initial, callback) {
-    let doc = this._doc;
-    let stepControl = doc.getElementById(id);
-
-    let title = this._doc.createElement("h1");
-    title.innerHTML = name;
-    stepControl.appendChild(title);
-
-    let plusButton = doc.createElement("div");
-    plusButton.className = "button plus-button";
-    stepControl.appendChild(plusButton);
-
-    let minusButton = doc.createElement("div");
-    minusButton.className = "button minus-button";
-    stepControl.appendChild(minusButton);
-
-    let updateControls = function() {
-      current = Math.max(min, Math.min(max, current));
-      if (current == min) {
-        minusButton.classList.add("disabled");
-      } else {
-        minusButton.classList.remove("disabled");
-      }
-      if (current == max) {
-        plusButton.classList.add("disabled");
-      } else {
-        plusButton.classList.remove("disabled");
-      }
-    }
-
-    let current = initial;
-    updateControls();
-
-    plusButton.addEventListener("click", function(aEvent) {
-      if (!aEvent.isTrusted)
-        return;
-
-      aEvent.stopPropagation();
-
-      if (current < max) {
-        current += step;
-        updateControls();
-        callback(current);
-      }
-    }.bind(this), true);
-
-    minusButton.addEventListener("click", function(aEvent) {
-      if (!aEvent.isTrusted)
-        return;
-
-      aEvent.stopPropagation();
-
-      if (current > min) {
-        current -= step;
-        updateControls();
-        callback(current);
-      }
-    }.bind(this), true);
-
-    // Always callback initial current setting
-    callback(current);
-  },
-
   _setupSegmentedButton: function Reader_setupSegmentedButton(id, options, initialValue, callback) {
     let doc = this._doc;
     let segmentedButton = doc.getElementById(id);
@@ -632,6 +582,9 @@ AboutReader.prototype = {
       let link = doc.createElement("a");
       link.innerHTML = option.name;
       item.appendChild(link);
+
+      if (option.linkClass !== undefined)
+        link.classList.add(option.linkClass);
 
       link.style.MozUserSelect = 'none';
       segmentedButton.appendChild(item);
