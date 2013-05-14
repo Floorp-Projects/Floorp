@@ -57,7 +57,7 @@ public:
   NS_IMETHOD ThemeChanged();
   bool ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* aFrame, uint8_t aWidgetType);
   bool WidgetIsContainer(uint8_t aWidgetType);
-  bool ThemeDrawsFocusForWidget(uint8_t aWidgetType) MOZ_OVERRIDE;
+  bool ThemeDrawsFocusForWidget(nsPresContext* aPresContext, nsIFrame* aFrame, uint8_t aWidgetType);
   bool ThemeNeedsComboboxDropmarker();
   virtual Transparency GetWidgetTransparency(nsIFrame* aFrame, uint8_t aWidgetType);
 
