@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -77,3 +77,9 @@ rm -rf ${repo_dir}
 if [ ${have_hg} -eq 0 -a -d ${start_dir}/.hg ]; then
   hg addremove ${webvtt_dir}/
 fi
+
+# apply patches
+cd ${webvtt_dir}
+patch -p3 < 868629.patch
+
+cd ${start_dir}
