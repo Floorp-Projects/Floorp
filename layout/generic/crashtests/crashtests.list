@@ -446,6 +446,7 @@ test-pref(layout.css.flexbox.enabled,true) load 737313-3.html
 test-pref(font.size.inflation.emPerLine,15) asserts(1-100) load font-inflation-762332.html # bug 762332
 load 762902.html
 load 762764-1.html
+asserts(0-200) load 767765.html # bug 407550, bug 871758, and various nscoord_MAX related asserts
 load 769303-1.html
 load 769303-2.html
 load 769120.html
