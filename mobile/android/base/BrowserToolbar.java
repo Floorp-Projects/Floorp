@@ -913,9 +913,10 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
                 title = null;
             }
 
-            if (mShowUrl && title != null) {
-                title = StringUtils.stripScheme(tab.getURL());
-                title = StringUtils.stripCommonSubdomains(title.toString());
+            String url = tab.getURL();
+            if (mShowUrl && title != null && url != null) {
+                url = StringUtils.stripScheme(url);
+                title = StringUtils.stripCommonSubdomains(url);
 
                 // highlight the domain name if we find one
                 String baseDomain = tab.getBaseDomain();
