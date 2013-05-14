@@ -975,9 +975,7 @@ add_test(function test_spn_display_condition() {
                                 expectedIsDisplayNetworkNameRequired,
                                 expectedIsDisplaySPNRequired,
                                 callback) {
-    RIL.iccInfoPrivate.SPN = {
-      spnDisplayCondition: iccDisplayCondition
-    };
+    RIL.iccInfoPrivate.spnDisplayCondition = iccDisplayCondition;
     RIL.iccInfo = {
       mcc: iccMcc,
       mnc: iccMnc
