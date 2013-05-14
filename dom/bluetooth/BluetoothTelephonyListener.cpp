@@ -31,7 +31,8 @@ TelephonyListener::CallStateChanged(uint32_t aCallIndex,
                                     uint16_t aCallState,
                                     const nsAString& aNumber,
                                     bool aIsActive,
-                                    bool aIsOutgoing)
+                                    bool aIsOutgoing,
+                                    bool aIsEmergency)
 {
   BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
   hfp->HandleCallStateChanged(aCallIndex, aCallState, aNumber,
@@ -46,6 +47,7 @@ TelephonyListener::EnumerateCallState(uint32_t aCallIndex,
                                       const nsAString_internal& aNumber,
                                       bool aIsActive,
                                       bool aIsOutgoing,
+                                      bool aIsEmergency,
                                       bool* aResult)
 {
   BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
