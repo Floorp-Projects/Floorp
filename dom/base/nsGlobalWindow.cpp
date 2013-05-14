@@ -7468,10 +7468,9 @@ nsGlobalWindow::NotifyDOMWindowThawed(nsGlobalWindow* aWindow) {
 JSObject*
 nsGlobalWindow::GetCachedXBLPrototypeHandler(nsXBLPrototypeHandler* aKey)
 {
-  AutoSafeJSContext cx;
-  JS::Rooted<JSObject*> handler(cx);
+  JSObject* handler = nullptr;
   if (mCachedXBLPrototypeHandlers.IsInitialized()) {
-    mCachedXBLPrototypeHandlers.Get(aKey, handler.address());
+    mCachedXBLPrototypeHandlers.Get(aKey, &handler);
   }
   return handler;
 }

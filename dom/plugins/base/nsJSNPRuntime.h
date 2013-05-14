@@ -37,8 +37,7 @@ class nsJSObjWrapper : public NPObject,
                        public nsJSObjWrapperKey
 {
 public:
-  static NPObject *GetNewOrUsed(NPP npp, JSContext *cx,
-                                JS::Handle<JSObject*> obj);
+  static NPObject *GetNewOrUsed(NPP npp, JSContext *cx, JSObject *obj);
 
 protected:
   nsJSObjWrapper(NPP npp);
