@@ -1170,7 +1170,7 @@ BrowserGlue.prototype = {
   },
 
   _migrateUI: function BG__migrateUI() {
-    const UI_VERSION = 13;
+    const UI_VERSION = 14;
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul#";
     let currentUIVersion = 0;
     try {
@@ -1376,6 +1376,15 @@ BrowserGlue.prototype = {
           // them to the default (large icon mode).
           this._setPersist(toolbarResource, iconsizeResource, "large");
         }
+      }
+    }
+
+    if (currentUIVersion < 14) {
+      let toolbarResource = this._rdf.GetResource(BROWSER_DOCURL + "nav-bar");
+      let collapsedResource = this._rdf.GetResource("collapsed");
+      let isCollapsed = this._getPersist(toolbarResource, collapsedResource);
+      if (isCollapsed == "true") {
+        this._setPersist(toolbarResource, collapsedResource, "false");
       }
     }
 
