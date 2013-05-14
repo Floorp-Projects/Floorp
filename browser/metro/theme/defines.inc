@@ -21,14 +21,12 @@
 %define toolbar_horizontal_spacing 20px
 %define toolbar_height 68px
 %define tabs_height 178px
-%define tray_slide_height 247px
 
 %define progress_height 3px
 %define progress_start_color #0095dd
 %define progress_end_color #97cbff
 
-%define appbar_color #FF8000
-%define appbar_top_border #BFC6CE
+%define metro_orange #FF8000
 
 %define label_height 30px
 
@@ -55,7 +53,6 @@
 %define metro_spacing_xxxnormal 30px
 %define metro_spacing_large 40px
 %define metro_spacing_xlarge 45px
-%define metro_spacing_xxxlarge 65px
 
 %define metro_border_thin 1px
 %define metro_border_thick 2px
