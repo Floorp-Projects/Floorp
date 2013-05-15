@@ -172,7 +172,7 @@ html|a {
   background-repeat: no-repeat;
 }
 
-.closeIcon:-moz-locale-dir(rtl) {
+.mainBox[chromedir="rtl"] .closeIcon {
   right: auto;
   left: 4px;
 }
