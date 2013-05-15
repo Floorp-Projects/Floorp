@@ -437,7 +437,6 @@ RES_LAYOUT = \
   res/layout/launch_app_list.xml \
   res/layout/launch_app_listitem.xml \
   res/layout/menu_action_bar.xml \
-  res/layout/menu_item.xml \
   res/layout/menu_popup.xml \
   res/layout/notification_icon_text.xml \
   res/layout/notification_progress.xml \
