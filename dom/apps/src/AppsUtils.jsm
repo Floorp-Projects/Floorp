@@ -20,13 +20,13 @@ XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
 
 // Shared code for AppsServiceChild.jsm, Webapps.jsm and Webapps.js
 
-this.EXPORTED_SYMBOLS = ["AppsUtils", "ManifestHelper"];
+this.EXPORTED_SYMBOLS = ["AppsUtils", "ManifestHelper", "isAbsoluteURI"];
 
 function debug(s) {
   //dump("-*- AppsUtils.jsm: " + s + "\n");
 }
 
-function isAbsoluteURI(aURI) {
+this.isAbsoluteURI = function(aURI) {
   let foo = Services.io.newURI("http://foo", null, null);
   let bar = Services.io.newURI("http://bar", null, null);
   return Services.io.newURI(aURI, null, foo).prePath != foo.prePath ||
@@ -92,7 +92,8 @@ this.AppsUtils = {
       installerAppId: aApp.installerAppId || Ci.nsIScriptSecurityManager.NO_APP_ID,
       installerIsBrowser: !!aApp.installerIsBrowser,
       storeId: aApp.storeId || "",
-      storeVersion: aApp.storeVersion || 0
+      storeVersion: aApp.storeVersion || 0,
+      redirects: aApp.redirects
     };
   },
 
