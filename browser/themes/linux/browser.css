@@ -1651,7 +1651,8 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 /* Tab drag and drop */
 .tab-drop-indicator {
   list-style-image: url(chrome://browser/skin/tabbrowser/tabDragIndicator.png);
-  margin-bottom: -11px;
+  margin-bottom: -9px;
+  z-index: 3;
 }
 
 /* In-tab close button */
