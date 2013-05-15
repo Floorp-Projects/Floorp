@@ -38,6 +38,7 @@
     <dimen name="doorhanger_width">400dp</dimen>
 
     <dimen name="flow_layout_spacing">6dp</dimen>
+    <dimen name="menu_item_action_icon_width">80dp</dimen>
     <dimen name="menu_item_icon">21dp</dimen>
     <dimen name="menu_item_state_icon">18dp</dimen>
     <dimen name="menu_item_row_height">44dp</dimen>
