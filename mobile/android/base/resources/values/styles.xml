@@ -157,6 +157,10 @@
         <item name="android:textColor">@color/primary_text</item>
     </style>
 
+    <style name="TextAppearance.Widget.HomePagerTabStrip" parent="TextAppearance.Small">
+        <item name="android:textColor">?android:attr/textColorHint</item>
+    </style>
+
     <!-- BrowserToolbar -->
     <style name="BrowserToolbar">
         <item name="android:layout_width">fill_parent</item>

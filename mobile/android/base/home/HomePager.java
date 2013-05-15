@@ -48,7 +48,7 @@ public class HomePager extends ViewPager {
     public void show(FragmentManager fm) {
         mLoaded = true;
         TabsAdapter adapter = new TabsAdapter(fm);
-        adapter.addTab(Page.ABOUT_HOME, AboutHome.class, null);
+        adapter.addTab(Page.ABOUT_HOME, AboutHome.class, null, "");
         setAdapter(adapter);
         setVisibility(VISIBLE);
     }
@@ -101,11 +101,13 @@ public class HomePager extends ViewPager {
             private final Page page;
             private final Class<?> clss;
             private final Bundle args;
+            private final String title;
 
-            TabInfo(Page page, Class<?> clss, Bundle args) {
+            TabInfo(Page page, Class<?> clss, Bundle args, String title) {
                 this.page = page;
                 this.clss = clss;
                 this.args = args;
+                this.title = title;
             }
         }
 
@@ -113,8 +115,8 @@ public class HomePager extends ViewPager {
             super(fm);
         }
 
-        public void addTab(Page page, Class<?> clss, Bundle args) {
-            TabInfo info = new TabInfo(page, clss, args);
+        public void addTab(Page page, Class<?> clss, Bundle args, String title) {
+            TabInfo info = new TabInfo(page, clss, args, title);
             mTabs.add(info);
             notifyDataSetChanged();
         }
@@ -128,6 +130,12 @@ public class HomePager extends ViewPager {
         public Fragment getItem(int position) {
             TabInfo info = mTabs.get(position);
             return Fragment.instantiate(mContext, info.clss.getName(), info.args);
+        }
+
+        @Override
+        public CharSequence getPageTitle(int position) {
+            TabInfo info = mTabs.get(position);
+            return info.title.toUpperCase();
         }
 
         @Override
