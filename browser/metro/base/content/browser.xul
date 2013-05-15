@@ -19,6 +19,8 @@
 %brandDTD;
 <!ENTITY % prefsDTD SYSTEM "chrome://browser/locale/preferences.dtd">
 %prefsDTD;
+<!ENTITY % aboutPanelDTD SYSTEM "chrome://browser/locale/aboutPanel.dtd">
+%aboutPanelDTD;
 #ifdef MOZ_SERVICES_SYNC
 <!ENTITY % syncDTD SYSTEM "chrome://browser/locale/sync.dtd">
 %syncDTD;
@@ -44,6 +46,7 @@
   <script type="application/javascript" src="chrome://browser/content/Util.js"/>
   <script type="application/javascript" src="chrome://browser/content/input.js"/>
   <script type="application/javascript;version=1.8" src="chrome://browser/content/appbar.js"/>
+  <script type="application/javascript" src="chrome://browser/content/aboutPanel.js"/>
 
   <broadcasterset id="broadcasterset">
     <broadcaster id="bcast_contentShowing" disabled="false"/>
@@ -377,12 +380,57 @@
               observes="cmd_back" onclick="CommandUpdater.doCommand('cmd_newTab');"></html:div>
 
     <flyoutpanel id="about-flyoutpanel" headertext="&aboutHeader.title;">
-        <label id="about-product-label" value="&aboutHeader.product.label;"/>
-        <label value="&aboutHeader.company.label;"/>
+      <label id="about-product-label" value="&aboutHeader.product.label;"/>
+      <label value="&aboutHeader.company.label;"/>
 #expand <label id="about-version-label">__MOZ_APP_VERSION__</label>
-        <label id="about-policy-label"
-               onclick="if (event.button == 0) { Browser.onAboutPolicyClick(); }"
-               class="text-link" value="&aboutHeader.policy.label;"/>
+      <vbox id="updateBox">
+#ifdef MOZ_UPDATER
+        <deck id="updateDeck" orient="vertical">
+          <hbox id="updateButtonBox" align="center">
+            <button id="updateButton" align="start"
+                    oncommand="gAppUpdater.buttonOnCommand();"/>
+            <spacer flex="1"/>
+          </hbox>
+          <hbox id="checkingForUpdates" align="center">
+            <image class="update-throbber"/><label>&update.checkingForUpdates;</label>
+          </hbox>
+          <hbox id="checkingAddonCompat" align="center">
+            <image class="update-throbber"/><label>&update.checkingAddonCompat;</label>
+          </hbox>
+          <hbox id="downloading" align="center">
+            <image class="update-throbber"/><label>&update.downloading.start;</label><label id="downloadStatus"/><label>&update.downloading.end;</label>
+          </hbox>
+          <hbox id="applying" align="center">
+            <image class="update-throbber"/><label>&update.applying;</label>
+          </hbox>
+          <hbox id="downloadFailed" align="center">
+            <label>&update.failed.start;</label><label id="failedLink" class="text-link">&update.failed.linkText;</label><label>&update.failed.end;</label>
+          </hbox>
+          <hbox id="adminDisabled" align="center">
+            <label>&update.adminDisabled;</label>
+          </hbox>
+          <hbox id="noUpdatesFound" align="center">
+            <label>&update.noUpdatesFound;</label>
+          </hbox>
+          <hbox id="otherInstanceHandlingUpdates" align="center">
+            <label>&update.otherInstanceHandlingUpdates;</label>
+          </hbox>
+          <hbox id="manualUpdate" align="center">
+            <label>&update.manual.start;</label><label id="manualLink" class="text-link"/><label>&update.manual.end;</label>
+          </hbox>
+        </deck>
+#endif
+      </vbox>
+
+#if MOZ_UPDATE_CHANNEL != release
+#ifdef MOZ_UPDATER
+      <description class="text-blurb" id="currentChannelText">&channel.description.start;<label id="currentChannel"/></description>
+      <description class="text-blurb" id="currentChannelText2">&channel.description.end;</description>
+#endif
+#endif
+      <label id="about-policy-label"
+            onclick="if (event.button == 0) { Browser.onAboutPolicyClick(); }"
+            class="text-link" value="&aboutHeader.policy.label;"/>
     </flyoutpanel>
 
     <flyoutpanel id="sync-flyoutpanel" headertext="&syncHeader.title;">
