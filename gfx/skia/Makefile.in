@@ -299,15 +299,14 @@ CPPSRCS += \
 	SkFontHost_mac_coretext.cpp \
 	SkStream_mac.cpp \
 	SkTime_Unix.cpp \
-	SkThread_pthread.cpp \
 	$(NULL)
-DEFINES += -DSK_USE_POSIX_THREADS=1
 endif
 
 ifeq (android,$(MOZ_WIDGET_TOOLKIT))
 CPPSRCS += \
 	SkDebug_android.cpp \
-	SkFontHost_cairo.cpp \
+	SkFontHost_android_old.cpp \
+	SkFontHost_FreeType.cpp \
 	SkFontHost_FreeType_common.cpp \
 	SkFontHost_tables.cpp \
 	SkMMapStream.cpp \
@@ -315,33 +314,27 @@ CPPSRCS += \
 	SkThread_pthread.cpp \
 	$(NULL)
 
+OS_CXXFLAGS += $(CAIRO_FT_CFLAGS)
 DEFINES += -DSK_USE_POSIX_THREADS=1
-EXPORTS_skia += \
-	include/ports/SkTypeface_cairo.h \
-	$(NULL)
-
-OS_CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(CAIRO_FT_CFLAGS)
 else
 CPPSRCS += \
 	SkDebug_stdio.cpp \
+	SkThread_none.cpp \
 	$(NULL)
 endif
 
 ifeq (gtk2,$(MOZ_WIDGET_TOOLKIT))
 CPPSRCS += \
-	SkFontHost_cairo.cpp \
+	SkFontHost_FreeType.cpp \
 	SkFontHost_FreeType_common.cpp \
+	SkFontHost_linux.cpp \
 	SkFontHost_tables.cpp \
 	SkTime_Unix.cpp \
 	SkMMapStream.cpp \
 	SkOSFile.cpp \
 	$(NULL)
 
-EXPORTS_skia += \
-	include/ports/SkTypeface_cairo.h \
-	$(NULL)
-
-OS_CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(CAIRO_FT_CFLAGS)
+OS_CXXFLAGS += $(MOZ_PANGO_CFLAGS)
 endif
 
 ifeq (qt,$(MOZ_WIDGET_TOOLKIT))
@@ -364,9 +357,6 @@ endif
 
 ifeq (Linux,$(OS_TARGET))
 DEFINES += -DSK_USE_POSIX_THREADS=1
-CPPSRCS += \
-	SkThread_pthread.cpp \
-	$(NULL)
 endif
 
 ifeq (windows,$(MOZ_WIDGET_TOOLKIT))
@@ -375,7 +365,6 @@ CPPSRCS += \
 	SkFontHost_tables.cpp \
 	SkFontHost_sandbox_none.cpp \
 	SkTime_win.cpp \
-	SkThread_win.cpp \
 	$(NULL)
 DEFINES += -DSKIA_IMPLEMENTATION=1 -DGR_IMPLEMENTATION=1
 endif
