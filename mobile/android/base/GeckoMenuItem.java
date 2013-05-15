@@ -61,7 +61,7 @@ public class GeckoMenuItem implements MenuItem, View.OnClickListener {
 
     public GeckoMenuItem(Context context, int id) {
         mContext = context;
-        mLayout = (MenuItemDefault) LayoutInflater.from(mContext).inflate(R.layout.menu_item, null);
+        mLayout = new MenuItemDefault(context, null);
         mLayout.setId(id);
 
         mId = id;
@@ -296,7 +296,7 @@ public class GeckoMenuItem implements MenuItem, View.OnClickListener {
             mLayout = new MenuItemActionBar(mContext, null);
         } else {
             // Change the type to default
-            mLayout = (MenuItemDefault) LayoutInflater.from(mContext).inflate(R.layout.menu_item, null);
+            mLayout = new MenuItemDefault(mContext, null);
         }
 
         mActionItem = (actionEnum > 0);         
