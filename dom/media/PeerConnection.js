@@ -153,6 +153,12 @@ RTCSessionDescription.prototype = {
   __init: function(dict) {
     this.type = dict.type;
     this.sdp  = dict.sdp;
+  },
+
+  // Bug 863402 serializer support workaround
+  toJSON: function() {
+    return { type: this.type, sdp: this.sdp,
+             __exposedProps__: { type: "rw", sdp: "rw" } };
   }
 };
 
