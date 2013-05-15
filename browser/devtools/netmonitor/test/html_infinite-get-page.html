@@ -25,11 +25,11 @@
       // Use a count parameter to defeat caching.
       var count = 0;
 
-      function performRequests() {
+      (function performRequests() {
         get("request_" + (count++), function() {
           setTimeout(performRequests, 0);
         });
-      }
+      })();
     </script>
   </body>
 
