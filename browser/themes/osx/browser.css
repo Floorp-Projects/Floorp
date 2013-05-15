@@ -26,8 +26,7 @@
   height: 2px;
   margin-top: -2px;
 }
-#navigator-toolbox[tabsontop=false]::after,
-#main-window[disablechrome] #navigator-toolbox::after {
+#navigator-toolbox[tabsontop=false]::after {
   visibility: collapse;
 }
 
