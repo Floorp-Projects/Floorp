@@ -839,6 +839,19 @@ GrallocTextureHostOGL::Unlock()
    * i.e. before the next time that we will try to acquire a write lock on the same buffer,
    * because read and write locks on gralloc buffers are mutually exclusive.
    */
+  if (mGL->Renderer() == GLContext::RendererAdrenoTM205) {
+    /* XXX This is working around a driver bug exhibited on at least the
+     * Geeksphone Peak, where retargeting to a different EGL image is very
+     * slow. See Bug 869696.
+     */
+    if (mGLTexture) {
+      mGL->MakeCurrent();
+      mGL->fDeleteTextures(1, &mGLTexture);
+      mGLTexture = 0;
+    }
+    return;
+  }
+
   mGL->MakeCurrent();
   mGL->fActiveTexture(LOCAL_GL_TEXTURE0);
   mGL->fBindTexture(mTextureTarget, mGLTexture);
