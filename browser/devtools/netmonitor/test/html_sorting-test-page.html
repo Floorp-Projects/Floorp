@@ -12,7 +12,8 @@
     <script type="text/javascript">
       function get(aAddress, aIndex, aCallback) {
         var xhr = new XMLHttpRequest();
-        xhr.open("GET" + aIndex, aAddress + "?index=" + aIndex, true);
+        // Use a random parameter to defeat caching.
+        xhr.open("GET" + aIndex, aAddress + "?index=" + aIndex + "&" + Math.random(), true);
 
         xhr.onreadystatechange = function() {
           if (this.readyState == this.DONE) {
