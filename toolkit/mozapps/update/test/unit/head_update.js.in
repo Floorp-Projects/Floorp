@@ -6,6 +6,9 @@ const INSTALL_LOCALE = "@AB_CD@";
 const APP_BIN_NAME = "@MOZ_APP_NAME@";
 const BIN_SUFFIX = "@BIN_SUFFIX@";
 
+const APP_INFO_NAME = "XPCShell";
+const APP_INFO_VENDOR = "Mozilla";
+
 #ifdef XP_UNIX
 const APP_BIN_SUFFIX = "-bin";
 #else
@@ -367,7 +370,7 @@ function setDefaultPrefs() {
  * update service stub.
  */
 function standardInit() {
-  createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1.0", "2.0");
+  createAppInfo("xpcshell@tests.mozilla.org", APP_INFO_NAME, "1.0", "2.0");
   setDefaultPrefs();
   // Initialize the update service stub component
   initUpdateServiceStub();
@@ -1857,7 +1860,7 @@ function createAppInfo(id, name, version, platformVersion) {
   const XULAPPINFO_CONTRACTID = "@mozilla.org/xre/app-info;1";
   const XULAPPINFO_CID = Components.ID("{c763b610-9d49-455a-bbd2-ede71682a1ac}");
   var XULAppInfo = {
-    vendor: "Mozilla",
+    vendor: APP_INFO_VENDOR,
     name: name,
     ID: id,
     version: version,
