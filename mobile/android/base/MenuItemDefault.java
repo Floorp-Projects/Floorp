@@ -9,6 +9,8 @@ import android.content.res.Resources;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.TextView;
 
@@ -26,10 +28,31 @@ public class MenuItemDefault extends TextView
     private boolean mChecked = false;
     private boolean mHasSubMenu = false;
 
+    public MenuItemDefault(Context context) {
+        this(context, null);
+    }
+
     public MenuItemDefault(Context context, AttributeSet attrs) {
-        super(context, attrs);
+        this(context, attrs, R.style.MenuItemDefault);
+    }
+
+    public MenuItemDefault(Context context, AttributeSet attrs, int defStyle) {
+        super(context, attrs, defStyle);
 
         Resources res = context.getResources();
+        int width = res.getDimensionPixelSize(R.dimen.menu_item_row_width);
+        int height = res.getDimensionPixelSize(R.dimen.menu_item_row_height);
+        setMinimumWidth(width);
+        setMinimumHeight(height);
+        setGravity(Gravity.CENTER_VERTICAL);
+
+        float density = res.getDisplayMetrics().density;
+        int padding = (int) (10 * density);
+        setPadding(padding, 0, padding, 0);
+
+        int drawablePadding = (int) (6 * density);
+        setCompoundDrawablePadding(drawablePadding);
+
         int stateIconSize = res.getDimensionPixelSize(R.dimen.menu_item_state_icon);
         Rect stateIconBounds = new Rect(0, 0, stateIconSize, stateIconSize);
 
