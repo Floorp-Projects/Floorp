@@ -232,10 +232,23 @@ public class GeckoMenu extends ListView
 
     @Override
     public void clear() {
+        for (GeckoMenuItem menuItem : mItems) {
+            if (menuItem.hasSubMenu()) {
+                SubMenu subMenu = menuItem.getSubMenu();
+                subMenu.clear();
+            }
+        }
+
+        mAdapter.clear();
+
+        mItems.clear();
+        mActionItems.clear();
     }
 
     @Override
     public void close() {
+        if (mMenuPresenter != null)
+            mMenuPresenter.closeMenu();
     }
 
     @Override
@@ -552,6 +565,11 @@ public class GeckoMenu extends ListView
         public void removeMenuItem(GeckoMenuItem menuItem) {
             // Remove it from the list.
             mItems.remove(menuItem);
+            notifyDataSetChanged();
+        }
+
+        public void clear() {
+            mItems.clear();
             notifyDataSetChanged();
         }
 
