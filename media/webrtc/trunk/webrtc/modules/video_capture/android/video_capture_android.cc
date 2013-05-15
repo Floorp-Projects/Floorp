@@ -394,33 +394,35 @@ VideoCaptureAndroid::~VideoCaptureAndroid() {
       }
     }
 
-    // get the method ID for the Android Java CaptureClass static
-    // DeleteVideoCaptureAndroid  method. Call this to release the camera so
-    // another application can use it.
-    jmethodID cid = env->GetStaticMethodID(
-        g_javaCmClass,
-        "DeleteVideoCaptureAndroid",
-        "(Lorg/webrtc/videoengine/VideoCaptureAndroid;)V");
-    if (cid != NULL) {
-      WEBRTC_TRACE(webrtc::kTraceDebug, webrtc::kTraceVideoCapture, -1,
-                   "%s: Call DeleteVideoCaptureAndroid", __FUNCTION__);
-      // Close the camera by calling the static destruct function.
-      env->CallStaticVoidMethod(g_javaCmClass, cid, _javaCaptureObj);
+    if (env) {
+      // get the method ID for the Android Java CaptureClass static
+      // DeleteVideoCaptureAndroid  method. Call this to release the camera so
+      // another application can use it.
+      jmethodID cid = env->GetStaticMethodID(
+          g_javaCmClass,
+          "DeleteVideoCaptureAndroid",
+          "(Lorg/webrtc/videoengine/VideoCaptureAndroid;)V");
+      if (cid != NULL) {
+        WEBRTC_TRACE(webrtc::kTraceDebug, webrtc::kTraceVideoCapture, -1,
+                     "%s: Call DeleteVideoCaptureAndroid", __FUNCTION__);
+        // Close the camera by calling the static destruct function.
+        env->CallStaticVoidMethod(g_javaCmClass, cid, _javaCaptureObj);
 
-      // Delete global object ref to the camera.
-      env->DeleteGlobalRef(_javaCaptureObj);
-      // Clean up the global class references
-      env->DeleteGlobalRef(g_javaCmClass);
-      env->DeleteGlobalRef(g_javaCmDevInfoClass);
+        // Delete global object ref to the camera.
+        env->DeleteGlobalRef(_javaCaptureObj);
+        // Clean up the global class references
+        env->DeleteGlobalRef(g_javaCmClass);
+        env->DeleteGlobalRef(g_javaCmDevInfoClass);
 
-      _javaCaptureObj = NULL;
-      VideoCaptureAndroid::g_javaCmClass = NULL;
-      VideoCaptureAndroid::g_javaCmDevInfoClass = NULL;
-    }
-    else {
-      WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, -1,
-                   "%s: Failed to find DeleteVideoCaptureAndroid id",
-                   __FUNCTION__);
+        _javaCaptureObj = NULL;
+        VideoCaptureAndroid::g_javaCmClass = NULL;
+        VideoCaptureAndroid::g_javaCmDevInfoClass = NULL;
+      }
+      else {
+        WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, -1,
+                     "%s: Failed to find DeleteVideoCaptureAndroid id",
+                     __FUNCTION__);
+      }
     }
 
     // Detach this thread if it was attached
