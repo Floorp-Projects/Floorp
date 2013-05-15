@@ -14,8 +14,8 @@
 #include "mozilla/RefPtr.h"
 
 #define NS_ICANVASRENDERINGCONTEXTINTERNAL_IID \
-{ 0x9a6a5bdf, 0x1261, 0x4057, \
-  { 0x85, 0xcc, 0xaf, 0x97, 0x6c, 0x36, 0x99, 0xa9 } }
+{ 0x8b8da863, 0xd151, 0x4014, \
+  { 0x8b, 0xdc, 0x62, 0xb5, 0x0d, 0xc0, 0x2b, 0x62 } }
 
 class gfxContext;
 class gfxASurface;
@@ -65,10 +65,6 @@ public:
   NS_IMETHOD Render(gfxContext *ctx,
                     gfxPattern::GraphicsFilter aFilter,
                     uint32_t aFlags = RenderFlagPremultAlpha) = 0;
-
-  // Creates an image buffer from the thebes surface.
-  // Returns null on failure.
-  virtual uint8_t* GetImageBuffer() = 0;
 
   // Gives you a stream containing the image represented by this context.
   // The format is given in aMimeTime, for example "image/png".

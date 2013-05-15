@@ -20,7 +20,6 @@
 #include "mozilla/dom/CanvasGradient.h"
 #include "mozilla/dom/CanvasRenderingContext2DBinding.h"
 #include "mozilla/dom/CanvasPattern.h"
-#include "imgIEncoder.h"
 
 class nsXULElement;
 
@@ -368,12 +367,6 @@ public:
   NS_IMETHOD GetInputStream(const char* aMimeType,
                             const PRUnichar* aEncoderOptions,
                             nsIInputStream **aStream);
-  static nsresult GetInputStream(int32_t aWidth,
-                                 int32_t aHeight,
-                                 uint8_t* aImageBuffer,
-                                 imgIEncoder* aEncoder,
-                                 const PRUnichar* aEncoderOptions,
-                                 nsIInputStream** aStream);
   NS_IMETHOD GetThebesSurface(gfxASurface **surface);
 
   mozilla::TemporaryRef<mozilla::gfx::SourceSurface> GetSurfaceSnapshot()
@@ -440,8 +433,6 @@ public:
   }
 
   friend class CanvasRenderingContext2DUserData;
-
-  virtual uint8_t* GetImageBuffer();
 
 protected:
   nsresult GetImageDataArray(JSContext* aCx, int32_t aX, int32_t aY,
