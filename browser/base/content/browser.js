@@ -3746,13 +3746,6 @@ var XULBrowserWindow = {
         SocialShare.update();
       }
 
-      // Show or hide browser chrome for apps
-      let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
-      if (ss.getTabValue(gBrowser.selectedTab, "appOrigin"))
-        document.documentElement.setAttribute("disablechrome", "true");
-      else
-        document.documentElement.removeAttribute("disablechrome");
-
       // Utility functions for disabling find
       var shouldDisableFind = function shouldDisableFind(aDocument) {
         let docElt = aDocument.documentElement;
