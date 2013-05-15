@@ -42,7 +42,7 @@ var MasterPassword = {
       else if (status == Ci.nsIPKCS11Slot.SLOT_READY)
         token.changePassword("", aPassword);
 
-      this.updatePref();
+      BrowserApp.notifyPrefObservers(this.pref);
       return true;
     } catch(e) {
       dump("MasterPassword.setPassword: " + e);
@@ -55,7 +55,7 @@ var MasterPassword = {
       let token = this._pk11DB.getInternalKeyToken();
       if (token.checkPassword(aOldPassword)) {
         token.changePassword(aOldPassword, "");
-        this.updatePref();
+        BrowserApp.notifyPrefObservers(this.pref);
         return true;
       }
     } catch(e) {
@@ -63,20 +63,5 @@ var MasterPassword = {
     }
     NativeWindow.toast.show(Strings.browser.GetStringFromName("masterPassword.incorrect"), "short");
     return false;
-  },
-
-  updatePref: function() {
-    var prefs = [];
-    let pref = {
-      name: this.pref,
-      type: "bool",
-      value: this.enabled
-    };
-    prefs.push(pref);
-
-    sendMessageToJava({
-      type: "Preferences:Data",
-      preferences: prefs
-    });
   }
 };
