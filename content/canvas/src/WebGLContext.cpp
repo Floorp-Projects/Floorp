@@ -196,6 +196,8 @@ WebGLContext::WebGLContext()
     mMinInUseAttribArrayLength = 0;
 
     mIsScreenCleared = false;
+
+    mDisableFragHighP = false;
 }
 
 WebGLContext::~WebGLContext()
