@@ -4595,8 +4595,10 @@ nsDocShell::Stop(uint32_t aStopFlags)
 
     if (nsIWebNavigation::STOP_CONTENT & aStopFlags) {
         // Stop the document loading
-        if (mContentViewer)
-            mContentViewer->Stop();
+        if (mContentViewer) {
+            nsCOMPtr<nsIContentViewer> cv = mContentViewer;
+            cv->Stop();
+        }
     }
 
     if (nsIWebNavigation::STOP_NETWORK & aStopFlags) {
