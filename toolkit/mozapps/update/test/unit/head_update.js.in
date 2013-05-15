@@ -929,6 +929,7 @@ function runUpdateUsingService(aInitialStatus, aExpectedStatus,
   // Override the update root directory
   gEnvUpdateRootOverride = updatesDir.path;
   gEnvAppDirOverride = getApplyDirFile(null).path;
+  gEnvSKipUpdateDirHashing = true;
 
   if (gSwitchApp) {
     // We want to set the env vars again
@@ -2141,6 +2142,7 @@ let gEnvDyldLibraryPath;
 let gEnvLdLibraryPath;
 let gEnvUpdateRootOverride = null;
 let gEnvAppDirOverride = null;
+let gEnvSKipUpdateDirHashing = false;
 
 /**
  * Sets the environment that will be used by the application process when it is
@@ -2219,6 +2221,10 @@ function setEnvironment() {
   }
 
   env.set("XPCOM_DEBUG_BREAK", "warn");
+
+  if (IS_WIN && gEnvSKipUpdateDirHashing) {
+    env.set("MOZ_UPDATE_NO_HASH_DIR", "1");
+  }
 
   if (gEnvUpdateRootOverride) {
     logTestInfo("setting the MOZ_UPDATE_ROOT_OVERRIDE environment variable to " +
