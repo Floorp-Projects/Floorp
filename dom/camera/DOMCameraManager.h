@@ -26,6 +26,9 @@ class nsPIDOMWindow;
 namespace mozilla {
   class ErrorResult;
 class nsDOMCameraControl;
+namespace dom {
+class CameraSelector;
+}
 }
 
 typedef nsTArray<nsRefPtr<mozilla::nsDOMCameraControl> > CameraControls;
@@ -53,7 +56,7 @@ public:
   nsresult GetCameraName(uint32_t aDeviceNum, nsCString& aDeviceName);
 
   // WebIDL
-  void GetCamera(JSContext* aCx, const JS::Value aOptions,
+  void GetCamera(const mozilla::dom::CameraSelector& aOptions,
                  nsICameraGetCameraCallback* aCallback,
                  const mozilla::dom::Optional<nsICameraErrorCallback*>& ErrorCallback,
                  mozilla::ErrorResult& aRv);
