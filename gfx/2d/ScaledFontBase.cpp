@@ -28,7 +28,7 @@ ScaledFontBase::~ScaledFontBase()
 #ifdef USE_SKIA
   SkSafeUnref(mTypeface);
 #endif
-#ifdef USE_CAIRO_SCALED_FONT
+#ifdef USE_CAIRO
   cairo_scaled_font_destroy(mScaledFont);
 #endif
 }
@@ -39,7 +39,7 @@ ScaledFontBase::ScaledFontBase(Float aSize)
 #ifdef USE_SKIA
   mTypeface = nullptr;
 #endif
-#ifdef USE_CAIRO_SCALED_FONT
+#ifdef USE_CAIRO
   mScaledFont = nullptr;
 #endif
 }
@@ -106,7 +106,7 @@ ScaledFontBase::CopyGlyphsToBuilder(const GlyphBuffer &aBuffer, PathBuilder *aBu
   return;
 }
 
-#ifdef USE_CAIRO_SCALED_FONT
+#ifdef USE_CAIRO
 void
 ScaledFontBase::SetCairoScaledFont(cairo_scaled_font_t* font)
 {
