@@ -216,7 +216,7 @@ let CustomizableUIInternal = {
     if (!gPlacements.has(area) && areaProperties.has("legacy")) {
       let legacyState = aToolbar.getAttribute("currentset");
       if (legacyState) {
-        legacyState = legacyState.split(",");
+        legacyState = legacyState.split(",").filter(s => s);
       }
 
       // Manually restore the state here, so the legacy state can be converted. 
