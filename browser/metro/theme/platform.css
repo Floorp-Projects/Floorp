@@ -699,21 +699,8 @@ arrowbox {
 
 .meta {
   background-color: @panel_light_color@;
-  background-image: radial-gradient(circle farthest-corner at left bottom,
-                                    rgba(255, 127, 0, 0.2) 0%,
-                                    rgba(255, 212, 0, 0) 30%),
-                    radial-gradient(circle farthest-corner at 40% 100%,
-                                    rgba(0, 120, 255, 0.15) 0%,
-                                    rgba(0, 186, 255, 0) 20%),
-                    radial-gradient(circle farthest-corner at 60% 100%,
-                                    rgba(0, 120, 255, 0.125) 0%,
-                                    rgba(0, 186, 255, 0) 20%),
-                    radial-gradient(circle farthest-corner at right bottom,
-                                    rgba(185, 17, 255, 0.1) 0%,
-                                    rgba(255, 84, 253, 0) 30%),
-                    url("chrome://browser/skin/images/firefox-watermark.png"),
-                    @panel_light_background@;
-  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, repeat;
+  background-image: url("chrome://browser/skin/images/firefox-watermark.png");
+  background-repeat: no-repeat;
   background-position: center center;
   padding: @metro_spacing_normal@ @metro_spacing_xxnormal@;
   overflow: auto;
