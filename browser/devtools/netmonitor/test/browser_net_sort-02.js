@@ -9,6 +9,10 @@ function test() {
   initNetMonitor(SORTING_URL).then(([aTab, aDebuggee, aMonitor]) => {
     info("Starting test... ");
 
+    // It seems that this test may be slow on debug builds. This could be because
+    // of the heavy dom manipulation associated with sorting.
+    requestLongerTimeout(2);
+
     let { $, L10N, NetMonitorView } = aMonitor.panelWin;
     let { RequestsMenu } = NetMonitorView;
 
@@ -172,6 +176,7 @@ function test() {
 
       verifyRequestItemTarget(RequestsMenu.getItemAtIndex(a),
         "GET1", SORTING_SJS + "?index=1", {
+          fuzzyUrl: true,
           status: 101,
           statusText: "Meh",
           type: "1",
@@ -181,6 +186,7 @@ function test() {
         });
       verifyRequestItemTarget(RequestsMenu.getItemAtIndex(b),
         "GET2", SORTING_SJS + "?index=2", {
+          fuzzyUrl: true,
           status: 200,
           statusText: "Meh",
           type: "2",
@@ -190,6 +196,7 @@ function test() {
         });
       verifyRequestItemTarget(RequestsMenu.getItemAtIndex(c),
         "GET3", SORTING_SJS + "?index=3", {
+          fuzzyUrl: true,
           status: 300,
           statusText: "Meh",
           type: "3",
@@ -199,6 +206,7 @@ function test() {
         });
       verifyRequestItemTarget(RequestsMenu.getItemAtIndex(d),
         "GET4", SORTING_SJS + "?index=4", {
+          fuzzyUrl: true,
           status: 400,
           statusText: "Meh",
           type: "4",
@@ -208,6 +216,7 @@ function test() {
         });
       verifyRequestItemTarget(RequestsMenu.getItemAtIndex(e),
         "GET5", SORTING_SJS + "?index=5", {
+          fuzzyUrl: true,
           status: 500,
           statusText: "Meh",
           type: "5",
