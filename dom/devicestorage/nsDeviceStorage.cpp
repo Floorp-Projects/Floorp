@@ -750,16 +750,17 @@ DeviceStorageFile::CreateUnique(nsAString& aFileName,
   NS_ENSURE_SUCCESS(rv, nullptr);
 
   // CreateUnique may cause the filename to change. So we need to update mPath to reflect that.
-  
-  int32_t lastSlashIndex = dsf->mPath.RFindChar('/');
-  if (lastSlashIndex == kNotFound) {
-    dsf->mPath.AssignLiteral("");
-  } else {
-    dsf->mPath = Substring(dsf->mPath, 0, lastSlashIndex);
-  }
   nsString leafName;
   dsf->mFile->GetLeafName(leafName);
-  dsf->AppendRelativePath(leafName);
+
+  int32_t lastSlashIndex = dsf->mPath.RFindChar('/');
+  if (lastSlashIndex == kNotFound) {
+    dsf->mPath.Assign(leafName);
+  } else {
+    // Include the last '/'
+    dsf->mPath = Substring(dsf->mPath, 0, lastSlashIndex + 1);
+    dsf->mPath.Append(leafName);
+  }
 
   return dsf.forget();
 }
