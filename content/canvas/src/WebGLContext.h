@@ -210,8 +210,6 @@ public:
     NS_IMETHOD Render(gfxContext *ctx,
                       gfxPattern::GraphicsFilter f,
                       uint32_t aFlags = RenderFlagPremultAlpha);
-    virtual uint8_t* GetImageBuffer()
-        { return nullptr; /* Not implemented. */ }
     NS_IMETHOD GetInputStream(const char* aMimeType,
                               const PRUnichar* aEncoderOptions,
                               nsIInputStream **aStream);
