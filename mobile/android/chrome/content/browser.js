@@ -950,10 +950,10 @@ var BrowserApp = {
 
   notifyPrefObservers: function(aPref) {
     this._prefObservers[aPref].forEach(function(aRequestId) {
-      let request = { requestId : requestId,
+      let request = { requestId : aRequestId,
                       preferences : [aPref] };
       this.getPreferences(request);
-    });
+    }, this);
   },
 
   getPreferences: function getPreferences(aPrefsRequest, aListen) {
