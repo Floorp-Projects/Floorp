@@ -164,5 +164,9 @@
         </attr>
     </declare-styleable>
 
+    <declare-styleable name="HomePagerTabStrip">
+        <attr name="tabIndicatorColor" format="color"/>
+    </declare-styleable>
+
 </resources>
 
