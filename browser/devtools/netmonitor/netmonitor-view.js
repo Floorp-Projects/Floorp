@@ -16,8 +16,9 @@ const REQUESTS_WATERFALL_HEADER_TICKS_SPACING_MIN = 60; // px
 const REQUESTS_WATERFALL_BACKGROUND_TICKS_MULTIPLE = 5; // ms
 const REQUESTS_WATERFALL_BACKGROUND_TICKS_SCALES = 3;
 const REQUESTS_WATERFALL_BACKGROUND_TICKS_SPACING_MIN = 10; // px
-const REQUESTS_WATERFALL_BACKGROUND_TICKS_OPACITY_MIN = 10; // byte
-const REQUESTS_WATERFALL_BACKGROUND_TICKS_OPACITY_ADD = 16; // byte
+const REQUESTS_WATERFALL_BACKGROUND_TICKS_COLOR_RGB = [128, 136, 144];
+const REQUESTS_WATERFALL_BACKGROUND_TICKS_OPACITY_MIN = 32; // byte
+const REQUESTS_WATERFALL_BACKGROUND_TICKS_OPACITY_ADD = 32; // byte
 const DEFAULT_HTTP_VERSION = "HTTP/1.1";
 const HEADERS_SIZE_DECIMALS = 3;
 const CONTENT_SIZE_DECIMALS = 2;
@@ -846,6 +847,7 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
 
     // Build new millisecond tick lines...
     let timingStep = REQUESTS_WATERFALL_BACKGROUND_TICKS_MULTIPLE;
+    let [r, g, b] = REQUESTS_WATERFALL_BACKGROUND_TICKS_COLOR_RGB;
     let alphaComponent = REQUESTS_WATERFALL_BACKGROUND_TICKS_OPACITY_MIN;
     let optimalTickIntervalFound = false;
 
@@ -862,7 +864,7 @@ create({ constructor: RequestsMenuView, proto: MenuContainer.prototype }, {
       for (let i = 1; i <= REQUESTS_WATERFALL_BACKGROUND_TICKS_SCALES; i++) {
         let increment = scaledStep * Math.pow(2, i);
         for (let x = 0; x < canvasWidth; x += increment) {
-          data32[x | 0] = (alphaComponent << 24) | (255 << 16) | (255 <<  8) | 255;
+          data32[x | 0] = (alphaComponent << 24) | (b << 16) | (g << 8) | r;
         }
         alphaComponent += REQUESTS_WATERFALL_BACKGROUND_TICKS_OPACITY_ADD;
       }
