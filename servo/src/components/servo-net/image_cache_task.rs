@@ -12,7 +12,7 @@ use core::cell::Cell;
 use core::comm::{Chan, Port, SharedChan, stream};
 use core::task::spawn;
 use core::to_str::ToStr;
-use core::util::replace;
+use core::util::{replace, swap};
 use std::arc::ARC;
 use std::net::url::Url;
 
@@ -382,7 +382,6 @@ impl ImageCache {
             None => ()
         }
     }
-
 
     priv fn get_image(&self, url: Url, response: Chan<ImageResponseMsg>) {
         match self.get_state(copy url) {

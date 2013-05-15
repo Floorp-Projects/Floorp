@@ -244,7 +244,7 @@ fn lend_surface(surfaces: &mut SurfaceSet, receiver: Chan<LayerBufferSet>) {
     // Now we don't have it
     surfaces.front.have = false;
     // But we (hopefully) have another!
-    surfaces.front <-> surfaces.back;
+    util::swap(&mut surfaces.front, &mut surfaces.back);
     // Let's look
     assert!(surfaces.front.have);
 }

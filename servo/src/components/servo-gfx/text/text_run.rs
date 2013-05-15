@@ -128,7 +128,7 @@ pub impl<'self> TextRun {
         return max_piece_width;
     }
 
-    fn iter_natural_lines_for_range(&self, range: &Range, f: &fn(&Range) -> bool) {
+    fn iter_natural_lines_for_range(&self, range: &Range, f: &fn(&Range) -> bool) -> bool {
         let mut clump = Range::new(range.begin(), 0);
         let mut in_clump = false;
 
@@ -151,9 +151,11 @@ pub impl<'self> TextRun {
             clump.extend_to(range.end());
             f(&clump);
         }
+
+        true
     }
 
-    fn iter_indivisible_pieces_for_range(&self, range: &Range, f: &fn(&Range) -> bool) {
+    fn iter_indivisible_pieces_for_range(&self, range: &Range, f: &fn(&Range) -> bool) -> bool {
         let mut clump = Range::new(range.begin(), 0);
 
         loop {
@@ -165,11 +167,15 @@ pub impl<'self> TextRun {
             }
 
             // now clump.end() is break-before or range.end()
-            if !f(&clump) || clump.end() == range.end() { break; }
+            if !f(&clump) || clump.end() == range.end() {
+                break
+            }
 
             // now clump includes one break-before character, or starts from range.end()
             let end = clump.end(); // FIXME: borrow checker workaround
             clump.reset(end, 1);
         }
+
+        true
     }
 }

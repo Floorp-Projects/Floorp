@@ -71,7 +71,7 @@ pub impl FontList {
 
     priv fn find_family(&self, family_name: &str) -> Option<@mut FontFamily> {
         // look up canonical name
-        let family = self.family_map.find(&str::from_slice(family_name));
+        let family = self.family_map.find_equiv(&family_name);
 
         let decision = if family.is_some() { "Found" } else { "Couldn't find" };
         debug!("FontList: %s font family with name=%s", decision, family_name);
@@ -90,15 +90,17 @@ pub struct FontFamily {
 impl FontFamily {
     pub fn new(family_name: &str) -> FontFamily {
         FontFamily {
-            family_name: str::from_slice(family_name),
+            family_name: family_name.to_str(),
             entries: ~[],
         }
     }
 
     fn load_family_variations(@mut self, list: &FontListHandle) {
-        if self.entries.len() > 0 { return; }
+        if self.entries.len() > 0 {
+            return
+        }
         list.load_variations_for_family(self);
-        assert!(self.entries.len() > 0);
+        assert!(self.entries.len() > 0)
     }
 
     pub fn find_font_for_style(@mut self, list: &FontListHandle, style: &SpecifiedFontStyle)

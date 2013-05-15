@@ -21,6 +21,7 @@ use core::io::read_whole_file;
 use core::pipes::select2i;
 use core::ptr::null;
 use core::task::{SingleThreaded, task};
+use core::local_data;
 use core::util::replace;
 use dom;
 use geom::size::Size2D;
@@ -153,7 +154,9 @@ pub fn Content(layout_task: LayoutTask,
     };
 
     cx.set_cx_private(ptr::to_unsafe_ptr(&*content) as *());
-    unsafe { local_data::local_data_set(global_content_key, cast::transmute(content)); }
+    unsafe {
+        local_data::local_data_set(global_content_key, cast::transmute(content));
+    }
 
     content
 }

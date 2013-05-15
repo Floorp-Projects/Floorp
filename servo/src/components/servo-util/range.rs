@@ -31,8 +31,14 @@ pub impl Range {
     fn begin(&self) -> uint { self.off  }
     fn length(&self) -> uint { self.len }
     fn end(&self) -> uint { self.off + self.len }
-    fn eachi(&self, cb: &fn(uint) -> bool) {
-        do uint::range(self.off, self.off + self.len) |i| { cb(i) }
+
+    fn eachi(&self, callback: &fn(uint) -> bool) -> bool {
+        for uint::range(self.off, self.off + self.len) |i| {
+            if !callback(i) {
+                break
+            }
+        }
+        true
     }
 
     fn contains(&self, i: uint) -> bool {

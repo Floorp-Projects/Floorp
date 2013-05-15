@@ -14,6 +14,7 @@ use layout::text::TextBoxData;
 use layout::text;
 
 use core::cell::Cell;
+use core::cmp::ApproxEq;
 use core::managed;
 use geom::{Point2D, Rect, Size2D};
 use gfx::display_list::{DisplayItem, DisplayList};
@@ -30,7 +31,6 @@ use servo_net::image::holder::ImageHolder;
 use servo_net::local_image_cache::LocalImageCache;
 use servo_util::range::*;
 use std::arc;
-use core::cmp::ApproxEq;
 use std::net::url::Url;
 
 /// Render boxes (`struct RenderBox`) are the leaves of the layout tree. They cannot position
