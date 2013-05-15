@@ -102,20 +102,13 @@ nsDOMCameraManager::CheckPermissionAndCreateInstance(nsPIDOMWindow* aWindow)
 }
 
 void
-nsDOMCameraManager::GetCamera(JSContext* aCx, const JS::Value aOptions,
+nsDOMCameraManager::GetCamera(const CameraSelector& aOptions,
                               nsICameraGetCameraCallback* onSuccess,
                               const Optional<nsICameraErrorCallback*>& onError,
                               ErrorResult& aRv)
 {
   uint32_t cameraId = 0;  // back (or forward-facing) camera by default
-  mozilla::idl::CameraSelector selector;
-
-  aRv = selector.Init(aCx, &aOptions);
-  if (aRv.Failed()) {
-    return;
-  }
-
-  if (selector.camera.EqualsLiteral("front")) {
+  if (aOptions.mCamera.EqualsLiteral("front")) {
     cameraId = 1;
   }
 

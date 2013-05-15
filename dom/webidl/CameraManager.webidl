@@ -51,6 +51,11 @@ dictionary CameraPictureOptions {
 interface GetCameraCallback;
 interface CameraErrorCallback;
 
+/* Select a camera to use. */
+dictionary CameraSelector {
+    DOMString camera = "back";
+};
+
 interface CameraManager {
     /* get a camera instance; options will be used to specify which
        camera to get from the list returned by getListOfCameras(), e.g.:
@@ -59,7 +64,7 @@ interface CameraManager {
         }
     */
   [Throws]
-  void getCamera(any options, GetCameraCallback callback,
+  void getCamera(CameraSelector options, GetCameraCallback callback,
                  optional CameraErrorCallback errorCallback);
 
   /* return an array of camera   identifiers, e.g.

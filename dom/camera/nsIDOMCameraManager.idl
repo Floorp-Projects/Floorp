@@ -36,11 +36,6 @@ dictionary CameraPosition {
     double timestamp;
 };
 
-/* Select a camera to use. */
-dictionary CameraSelector {
-    DOMString camera = "back";
-};
-
 [scriptable, uuid(177472c9-f83d-48b5-8782-03b43b27f25d)]
 interface nsICameraCapabilities : nsISupports
 {
