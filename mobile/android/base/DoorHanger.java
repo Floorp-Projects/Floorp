@@ -5,6 +5,8 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.widget.Divider;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;

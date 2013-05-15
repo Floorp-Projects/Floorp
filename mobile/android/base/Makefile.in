@@ -79,7 +79,6 @@ FENNEC_JAVA_FILES = \
   db/DBUtils.java \
   DataReportingNotification.java \
   Distribution.java \
-  Divider.java \
   DoorHanger.java \
   DoorHangerPopup.java \
   Favicons.java \
@@ -101,15 +100,10 @@ FENNEC_JAVA_FILES = \
   GeckoEvent.java \
   GeckoHalDefines.java \
   GeckoInputConnection.java \
-  GeckoMenu.java \
-  GeckoMenuInflater.java \
-  GeckoMenuItem.java \
   GeckoMessageReceiver.java \
-  GeckoSubMenu.java \
   GeckoPreferences.java \
   GeckoPreferenceFragment.java \
   GeckoProfile.java \
-  GeckoPopupMenu.java \
   GeckoSmsManager.java \
   GeckoThread.java \
   GeckoJavaSampler.java \
@@ -122,10 +116,6 @@ FENNEC_JAVA_FILES = \
   LightweightThemeDrawable.java \
   LinkPreference.java \
   MemoryMonitor.java \
-  MenuItemActionBar.java \
-  MenuItemDefault.java \
-  MenuPanel.java \
-  MenuPopup.java \
   MotionEventInterceptor.java \
   MultiChoicePreference.java \
   NotificationClient.java \
@@ -221,12 +211,22 @@ FENNEC_JAVA_FILES = \
   gfx/TouchEventHandler.java \
   gfx/ViewTransform.java \
   gfx/VirtualLayer.java \
+  menu/GeckoMenu.java \
+  menu/GeckoMenuInflater.java \
+  menu/GeckoMenuItem.java \
+  menu/GeckoSubMenu.java \
+  menu/MenuItemActionBar.java \
+  menu/MenuItemDefault.java \
+  menu/MenuPanel.java \
+  menu/MenuPopup.java \
   widget/AboutHome.java \
   widget/AboutHomeView.java \
   widget/AboutHomeSection.java \
   widget/AddonsSection.java \
   widget/DateTimePicker.java \
+  widget/Divider.java \
   widget/FaviconView.java \
+  widget/GeckoPopupMenu.java \
   widget/IconTabWidget.java \
   widget/LastTabsSection.java \
   widget/LinkTextView.java \
