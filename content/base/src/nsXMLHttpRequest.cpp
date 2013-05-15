@@ -2647,7 +2647,8 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
   mLoadLengthComputable = false;
   mLoadTotal = 0;
   if ((aVariant || !aBody.IsNull()) && httpChannel &&
-      !method.EqualsLiteral("GET")) {
+      !method.LowerCaseEqualsLiteral("get") &&
+      !method.LowerCaseEqualsLiteral("head")) {
 
     nsAutoCString charset;
     nsAutoCString defaultContentType;
