@@ -363,7 +363,7 @@ abstract public class BrowserApp extends GeckoApp
             }
         });
 
-        mHomePager = (HomePager) findViewById(R.id.abouthome_pager);
+        mHomePager = (HomePager) findViewById(R.id.home_pager);
 
         mBrowserToolbar = new BrowserToolbar(this);
         mBrowserToolbar.from(actionBar);

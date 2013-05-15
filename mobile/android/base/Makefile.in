@@ -221,6 +221,7 @@ FENNEC_JAVA_FILES = \
   gfx/ViewTransform.java \
   gfx/VirtualLayer.java \
   home/HomePager.java \
+  home/HomePagerTabStrip.java \
   widget/AboutHome.java \
   widget/AboutHomeView.java \
   widget/AboutHomeSection.java \
