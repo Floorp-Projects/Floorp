@@ -162,10 +162,6 @@ toolbar[printpreview="true"] {
   display: -moz-box;
 }
 
-#main-window[disablechrome] #navigator-toolbox[tabsontop="true"] > toolbar:not(#toolbar-menubar):not(#TabsToolbar) {
-  visibility: collapse;
-}
-
 #wrapper-urlbar-container #urlbar-container > #urlbar > toolbarbutton,
 #urlbar-container:not([combined]) > #urlbar > toolbarbutton,
 #urlbar-container[combined] + #reload-button + #stop-button,

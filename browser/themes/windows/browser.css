@@ -54,8 +54,7 @@
   height: 1px;
   background-color: ThreeDShadow;
 }
-#navigator-toolbox[tabsontop=false]::after,
-#main-window[disablechrome] #navigator-toolbox::after {
+#navigator-toolbox[tabsontop=false]::after {
   visibility: collapse;
 }
 

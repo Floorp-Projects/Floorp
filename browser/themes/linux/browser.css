@@ -33,7 +33,7 @@
   border-top: none;
 }
 
-#main-window:not([disablechrome]) #navigator-toolbox[tabsontop=true] {
+#navigator-toolbox[tabsontop=true] {
   border-bottom: 1px solid ThreeDShadow;
 }
 
