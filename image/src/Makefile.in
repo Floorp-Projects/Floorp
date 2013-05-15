@@ -37,7 +37,6 @@ CPPSRCS		= \
 			imgRequestProxy.cpp \
 			imgTools.cpp \
 			imgStatusTracker.cpp \
-			ImageEncoder.cpp \
 			$(NULL)
 
 # We need to instantiate the decoders
