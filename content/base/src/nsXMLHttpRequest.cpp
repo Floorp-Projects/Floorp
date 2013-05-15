@@ -324,15 +324,17 @@ nsXMLHttpRequest::~nsXMLHttpRequest()
   NS_ABORT_IF_FALSE(!(mState & XML_HTTP_REQUEST_SYNCLOOPING), "we rather crash than hang");
   mState &= ~XML_HTTP_REQUEST_SYNCLOOPING;
 
+  mResultJSON = JSVAL_VOID;
+  mResultArrayBuffer = nullptr;
+  NS_DROP_JS_OBJECTS(this, nsXMLHttpRequest);
+
   nsLayoutStatics::Release();
 }
 
 void
 nsXMLHttpRequest::RootJSResultObjects()
 {
-  nsContentUtils::PreserveWrapper(
-    static_cast<EventTarget*>(
-      static_cast<nsDOMEventTargetHelper*>(this)), this);
+  NS_HOLD_JS_OBJECTS(this, nsXMLHttpRequest);
 }
 
 /**
