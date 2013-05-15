@@ -172,12 +172,14 @@ class TestSimplePackager(unittest.TestCase):
         with errors.context('dummy', 1):
             packager.close()
         self.maxDiff = None
+        # The formatter is expected to reorder the manifest entries so that
+        # chrome entries appear before the others.
         self.assertEqual(formatter.log, [
             (('dummy', 1), 'add_base', 'qux'),
-            ((os.path.join(curdir, 'foo', 'bar.manifest'), 1),
-             'add_manifest', ManifestResource('foo', 'bar', 'bar/')),
             ((os.path.join(curdir, 'foo', 'bar.manifest'), 2),
              'add_manifest', ManifestContent('foo', 'bar', 'bar/')),
+            ((os.path.join(curdir, 'foo', 'bar.manifest'), 1),
+             'add_manifest', ManifestResource('foo', 'bar', 'bar/')),
             (('bar/baz.manifest', 1),
              'add_manifest', ManifestResource('bar', 'baz', 'baz/')),
             (('qux/qux.manifest', 1),
