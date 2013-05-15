@@ -51,8 +51,7 @@ public class testAddSearchEngine extends BaseTest {
         // Add the search engine
         mSolo.clickOnText("Add Search Engine");
         waitForText("Cancel");
-        Device device = new Device();
-        if (device.version.equals("4.x")) {
+        if (mDevice.version.equals("4.x")) {
             // If the OS is ICS the vkb is opened when the popup is triggered so we need to close it in order to click the OK button
             mActions.sendSpecialKey(Actions.SpecialKey.BACK);
             waitForText("OK"); // Make sure the OK button is visible
