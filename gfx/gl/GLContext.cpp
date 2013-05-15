@@ -352,6 +352,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
         const char *rendererMatchStrings[RendererOther] = {
                 "Adreno 200",
                 "Adreno 205",
+                "Adreno (TM) 205",
                 "Adreno (TM) 320",
                 "PowerVR SGX 530",
                 "PowerVR SGX 540"
