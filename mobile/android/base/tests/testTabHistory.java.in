@@ -26,12 +26,11 @@ public class testTabHistory extends PixelTest {
         loadAndPaint(url3);
 
         // Get the device information and create the navigation for it
-        Device device = new Device();
-        Navigation nav = new Navigation(device);
-        mAsserter.dumpLog("device type: "+device.type);
-        mAsserter.dumpLog("device version: "+device.version);
-        mAsserter.dumpLog("device width: "+device.width);
-        mAsserter.dumpLog("device height: "+device.height);
+        Navigation nav = new Navigation(mDevice);
+        mAsserter.dumpLog("device type: "+mDevice.type);
+        mAsserter.dumpLog("device version: "+mDevice.version);
+        mAsserter.dumpLog("device width: "+mDevice.width);
+        mAsserter.dumpLog("device height: "+mDevice.height);
 
         // Go to the 2nd page
         nav.back();

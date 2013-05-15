@@ -80,11 +80,8 @@ public class testSystemPages extends PixelTest {
                 verifyUrl(expectedUrls[i]);
             } else {
                 // Make sure the about: page was loaded without opening a new tab and verify the page Url
-                selectMenuItem(item);
-                waitForText("About");
-
                 paintExpecter = mActions.expectPaint(); // Set up listener to catch the page load
-                mSolo.clickOnText("About");
+                selectSettingsItem("General", "About (Fennec|Nightly|Aurora|Firefox|Firefox Beta)");
                 waitForPaint(paintExpecter); // Waiting for the page to load
                 paintExpecter.unregisterListener();
 
