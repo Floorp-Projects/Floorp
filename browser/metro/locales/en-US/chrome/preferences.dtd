@@ -2,11 +2,8 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!-- ## About Flyout Panel ## -->
-<!ENTITY aboutHeader.title                                       "About">
-<!ENTITY aboutHeader.product.label                               "&brandShortName;">
-<!ENTITY aboutHeader.company.label                               "By &vendorShortName;">
-<!ENTITY aboutHeader.policy.label                                "Read the &brandShortName; privacy policy online">
+<!-- ## Sync Flyout Panel ## -->
+<!-- see sync.dtd -->
 
 <!-- ## Options Flyout Panel ## -->
 <!ENTITY optionsHeader.title                                     "Options">
@@ -39,7 +36,3 @@
 <!ENTITY doNotTrack.options.trackingNotOkay                      "I do not want to be tracked">
 <!ENTITY doNotTrack.options.noPreference                         "Nothing about my tracking preferences">
 <!ENTITY doNotTrack.options.trackingOkay                         "I want to be tracked">
-
-
-  <!-- ## Sync Flyout Panel ## -->
-<!-- see sync.dtd -->

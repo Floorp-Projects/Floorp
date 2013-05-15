@@ -1485,23 +1485,8 @@ var SyncPanelUI = {
 };
 
 var FlyoutPanelsUI = {
-  get _aboutVersionLabel() {
-    return document.getElementById('about-version-label');
-  },
-
-  _initAboutPanel: function() {
-    // Include the build ID if this is an "a#" (nightly or aurora) build
-    let version = Services.appinfo.version;
-    if (/a\d+$/.test(version)) {
-      let buildID = Services.appinfo.appBuildID;
-      let buildDate = buildID.slice(0,4) + "-" + buildID.slice(4,6) +
-                      "-" + buildID.slice(6,8);
-      this._aboutVersionLabel.textContent +=" (" + buildDate + ")";
-    }
-  },
-
   init: function() {
-    this._initAboutPanel();
+    AboutPanelUI.init();
     PreferencesPanelView.init();
     SyncPanelUI.init();
   },

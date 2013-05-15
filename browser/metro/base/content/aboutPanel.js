@@ -2,71 +2,53 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-// Services = object with smart getters for common XPCOM services
-Components.utils.import("resource://gre/modules/Services.jsm");
+var gAppUpdater;
+var AboutPanelUI = {
+  get _aboutVersionLabel() {
+    return document.getElementById('about-version-label');
+  },
 
-const PREF_EM_HOTFIX_ID = "extensions.hotfix.id";
-
-function init(aEvent)
-{
-  if (aEvent.target != document)
-    return;
-
-  try {
-    var distroId = Services.prefs.getCharPref("distribution.id");
-    if (distroId) {
-      var distroVersion = Services.prefs.getCharPref("distribution.version");
-      var distroAbout = Services.prefs.getComplexValue("distribution.about",
-        Components.interfaces.nsISupportsString);
-
-      var distroField = document.getElementById("distribution");
-      distroField.value = distroAbout;
-      distroField.style.display = "block";
-
-      var distroIdField = document.getElementById("distributionId");
-      distroIdField.value = distroId + " - " + distroVersion;
-      distroIdField.style.display = "block";
+  init: function() {
+    // Include the build ID if this is an "a#" (nightly or aurora) build
+    let version = Services.appinfo.version;
+    if (/a\d+$/.test(version)) {
+      let buildID = Services.appinfo.appBuildID;
+      let buildDate = buildID.slice(0,4) + "-" + buildID.slice(4,6) +
+                      "-" + buildID.slice(6,8);
+      this._aboutVersionLabel.textContent +=" (" + buildDate + ")";
     }
-  }
-  catch (e) {
-    // Pref is unset
-  }
 
-  // Include the build ID and display warning if this is an "a#" (nightly or aurora) build
-  let version = Services.appinfo.version;
-  if (/a\d+$/.test(version)) {
-    let buildID = Services.appinfo.appBuildID;
-    let buildDate = buildID.slice(0,4) + "-" + buildID.slice(4,6) + "-" + buildID.slice(6,8);
-    document.getElementById("version").textContent += " (" + buildDate + ")";
-    document.getElementById("experimental").hidden = false;
-    document.getElementById("communityDesc").hidden = true;
-  }
-
-#ifdef MOZ_UPDATER
-  gAppUpdater = new appUpdater();
+    window.addEventListener('MozFlyoutPanelShowing', this, false);
 
 #if MOZ_UPDATE_CHANNEL != release
-  let defaults = Services.prefs.getDefaultBranch("");
-  let channelLabel = document.getElementById("currentChannel");
-  channelLabel.value = defaults.getCharPref("app.update.channel");
+    let defaults = Services.prefs.getDefaultBranch("");
+    let channelLabel = document.getElementById("currentChannel");
+    channelLabel.value = defaults.getCharPref("app.update.channel");
 #endif
-#endif
+  },
 
-#ifdef XP_MACOSX
-  // it may not be sized at this point, and we need its width to calculate its position
-  window.sizeToContent();
-  window.moveTo((screen.availWidth / 2) - (window.outerWidth / 2), screen.availHeight / 5);
+  handleEvent: function Appbar_handleEvent(aEvent) {
+    switch (aEvent.type) {
+      case 'MozFlyoutPanelShowing':
+#ifdef MOZ_UPDATER
+        onUnload();
+        gAppUpdater = new appUpdater();
 #endif
-}
+        break;
+    }
+  }
+};
 
 #ifdef MOZ_UPDATER
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/DownloadUtils.jsm");
 Components.utils.import("resource://gre/modules/AddonManager.jsm");
 
-var gAppUpdater;
-
 function onUnload(aEvent) {
+  if (!gAppUpdater) {
+    return;
+  }
+
   if (gAppUpdater.isChecking)
     gAppUpdater.checker.stopChecking(Components.interfaces.nsIUpdateChecker.CURRENT_CHECK);
   // Safe to call even when there isn't a download in progress.
@@ -74,17 +56,9 @@ function onUnload(aEvent) {
   gAppUpdater = null;
 }
 
-
 function appUpdater()
 {
   this.updateDeck = document.getElementById("updateDeck");
-
-  // Hide the update deck when there is already an update window open to avoid
-  // syncing issues between them.
-  if (Services.wm.getMostRecentWindow("Update:Wizard")) {
-    this.updateDeck.hidden = true;
-    return;
-  }
 
   XPCOMUtils.defineLazyServiceGetter(this, "aus",
                                      "@mozilla.org/updates/update-service;1",
@@ -595,3 +569,4 @@ appUpdater.prototype =
   }
 };
 #endif
+
