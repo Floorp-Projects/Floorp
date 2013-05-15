@@ -4255,8 +4255,13 @@ WebGLContext::CompileShader(WebGLShader *shader)
         resources.MaxTextureImageUnits = mGLMaxTextureImageUnits;
         resources.MaxFragmentUniformVectors = mGLMaxFragmentUniformVectors;
         resources.MaxDrawBuffers = 1;
+
         if (IsExtensionEnabled(OES_standard_derivatives))
             resources.OES_standard_derivatives = 1;
+
+        // Tell ANGLE to allow highp in frag shaders. (unless disabled)
+        // If underlying GLES doesn't have highp in frag shaders, it should complain anyways.
+        resources.FragmentPrecisionHigh = mDisableFragHighP ? 0 : 1;
 
         // We're storing an actual instance of StripComments because, if we don't, the 
         // cleanSource nsAString instance will be destroyed before the reference is
@@ -4677,9 +4682,19 @@ WebGLContext::GetShaderPrecisionFormat(WebGLenum shadertype, WebGLenum precision
     }
 
     MakeContextCurrent();
-
     GLint range[2], precision;
-    gl->fGetShaderPrecisionFormat(shadertype, precisiontype, range, &precision);
+
+    if (mDisableFragHighP &&
+        shadertype == LOCAL_GL_FRAGMENT_SHADER &&
+        (precisiontype == LOCAL_GL_HIGH_FLOAT ||
+         precisiontype == LOCAL_GL_HIGH_INT))
+    {
+      precision = 0;
+      range[0] = 0;
+      range[1] = 0;
+    } else {
+      gl->fGetShaderPrecisionFormat(shadertype, precisiontype, range, &precision);
+    }
 
     nsRefPtr<WebGLShaderPrecisionFormat> retShaderPrecisionFormat
         = new WebGLShaderPrecisionFormat(this, range[0], range[1], precision);
