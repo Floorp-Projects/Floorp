@@ -3088,6 +3088,8 @@ nsDOMWindowUtils::SelectAtPoint(float aX, float aY, uint32_t aSelectBehavior,
     case nsIDOMWindowUtils::SELECT_WORDNOSPACE:
       amount = eSelectWordNoSpace;
     break;
+    default:
+      return NS_ERROR_INVALID_ARG;
   }
 
   nsIPresShell* presShell = GetPresShell();
