@@ -1,1 +1,3 @@
+conformance/more/conformance/quickCheckAPI-B2.html
+conformance/more/conformance/quickCheckAPI-B3.html
 conformance/more/functions/bufferSubDataBadArgs.html
