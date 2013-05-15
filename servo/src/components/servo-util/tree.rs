@@ -62,7 +62,7 @@ pub trait TreeUtils {
     fn remove_child(&self, child: Self);
 
     /// Iterates over all children of this node.
-    fn each_child(&self, callback: &fn(Self) -> bool);
+    fn each_child(&self, callback: &fn(Self) -> bool) -> bool;
 
     /// Iterates over this node and all its descendants, in preorder.
     fn traverse_preorder(&self, callback: &fn(Self) -> bool) -> bool;
@@ -132,7 +132,7 @@ impl<NR:TreeNodeRef<N>,N:TreeNode<NR>> TreeUtils for NR {
         }
     }
 
-    fn each_child(&self, callback: &fn(NR) -> bool) {
+    fn each_child(&self, callback: &fn(NR) -> bool) -> bool {
         let mut maybe_current = self.with_base(|n| n.first_child());
         while !maybe_current.is_none() {
             let current = maybe_current.get_ref().clone();
@@ -142,6 +142,8 @@ impl<NR:TreeNodeRef<N>,N:TreeNode<NR>> TreeUtils for NR {
 
             maybe_current = current.with_base(|n| n.next_sibling());
         }
+
+        true
     }
 
     fn traverse_preorder(&self, callback: &fn(NR) -> bool) -> bool {

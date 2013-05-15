@@ -297,7 +297,7 @@ impl<'self> FlowContext {
         }
     }
 
-    pub fn iter_all_boxes(&self, cb: &fn(RenderBox) -> bool) {
+    pub fn iter_all_boxes(&self, cb: &fn(RenderBox) -> bool) -> bool {
         match *self {
             BlockFlow(block) => {
                 let block = &mut *block;
@@ -317,9 +317,12 @@ impl<'self> FlowContext {
             }
             _ => fail!(fmt!("Don't know how to iterate node's RenderBoxes for %?", self))
         }
+
+        true
     }
 
-    pub fn iter_boxes_for_node(&self, node: AbstractNode, callback: &fn(RenderBox) -> bool) {
+    pub fn iter_boxes_for_node(&self, node: AbstractNode, callback: &fn(RenderBox) -> bool)
+                               -> bool {
         for self.iter_all_boxes |box| {
             if box.node() == node {
                 if !callback(box) {
@@ -327,6 +330,8 @@ impl<'self> FlowContext {
                 }
             }
         }
+
+        true
     }
 }
 

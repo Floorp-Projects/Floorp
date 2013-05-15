@@ -70,16 +70,31 @@ impl ElementMapping {
         self.entries.push(NodeRange::new(node, range))
     }
 
-    pub fn each(&self, cb: &fn(nr: &NodeRange) -> bool) {
-        do self.entries.each |nr| { cb(nr) }
+    pub fn each(&self, callback: &fn(nr: &NodeRange) -> bool) -> bool {
+        for self.entries.each |nr| {
+            if !callback(nr) {
+                break
+            }
+        }
+        true
     }
 
-    pub fn eachi(&self, cb: &fn(i: uint, nr: &NodeRange) -> bool) {
-        do self.entries.eachi |i, nr| { cb(i, nr) }
+    pub fn eachi(&self, callback: &fn(i: uint, nr: &NodeRange) -> bool) -> bool {
+        for self.entries.eachi |i, nr| {
+            if !callback(i, nr) {
+                break
+            }
+        }
+        true
     }
 
-    pub fn eachi_mut(&self, cb: &fn(i: uint, nr: &NodeRange) -> bool) {
-        do self.entries.eachi |i, nr| { cb(i, nr) }
+    pub fn eachi_mut(&self, callback: &fn(i: uint, nr: &NodeRange) -> bool) -> bool {
+        for self.entries.eachi |i, nr| {
+            if !callback(i, nr) {
+                break
+            }
+        }
+        true
     }
 
     pub fn repair_for_box_changes(&mut self, old_boxes: &[RenderBox], new_boxes: &[RenderBox]) {
@@ -178,22 +193,22 @@ impl TextRunScanner {
         debug!("TextRunScanner: scanning %u boxes for text runs...", inline.boxes.len());
 
         let mut out_boxes = ~[];
-        for uint::range(0, inline.boxes.len()) |box_i| {
-            debug!("TextRunScanner: considering box: %?", inline.boxes[box_i].debug_str());
-            if box_i > 0 && !can_coalesce_text_nodes(inline.boxes, box_i-1, box_i) {
-                self.flush_clump_to_list(ctx, flow, inline.boxes, &mut out_boxes);
+        for uint::range(0, flow.inline().boxes.len()) |box_i| {
+            debug!("TextRunScanner: considering box: %?", flow.inline().boxes[box_i].debug_str());
+            if box_i > 0 && !can_coalesce_text_nodes(flow.inline().boxes, box_i-1, box_i) {
+                self.flush_clump_to_list(ctx, flow, &mut out_boxes);
             }
             self.clump.extend_by(1);
         }
         // handle remaining clumps
         if self.clump.length() > 0 {
-            self.flush_clump_to_list(ctx, flow, inline.boxes, &mut out_boxes);
+            self.flush_clump_to_list(ctx, flow, &mut out_boxes);
         }
 
         debug!("TextRunScanner: swapping out boxes.");
 
         // Swap out the old and new box list of the flow.
-        inline.boxes = out_boxes;
+        flow.inline().boxes = out_boxes;
 
         // A helper function.
         fn can_coalesce_text_nodes(boxes: &[RenderBox], left_i: uint, right_i: uint) -> bool {
@@ -224,8 +239,10 @@ impl TextRunScanner {
     fn flush_clump_to_list(&mut self,
                            ctx: &mut LayoutContext, 
                            flow: FlowContext,
-                           in_boxes: &[RenderBox],
                            out_boxes: &mut ~[RenderBox]) {
+        let inline = &mut *flow.inline();
+        let in_boxes = &inline.boxes;
+
         assert!(self.clump.length() > 0);
 
         debug!("TextRunScanner: flushing boxes in range=%?", self.clump);
@@ -334,7 +351,7 @@ impl TextRunScanner {
         debug!("------------------");
 
         debug!("--- Elem ranges: ---");
-        for flow.inline().elems.eachi_mut |i: uint, nr: &NodeRange| {
+        for inline.elems.eachi_mut |i: uint, nr: &NodeRange| {
             debug!("%u: %? --> %s", i, nr.range, nr.node.debug_str()); ()
         }
         debug!("--------------------");

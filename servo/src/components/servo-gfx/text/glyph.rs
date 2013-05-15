@@ -588,7 +588,7 @@ pub impl<'self> GlyphStore {
     fn iter_glyphs_for_char_index(&'self self,
                                   i: uint,
                                   cb: &fn(uint, &GlyphInfo<'self>) -> bool)
-                               -> bool {
+                                  -> bool {
         assert!(i < self.entry_buffer.len());
 
         let entry = &self.entry_buffer[i];
@@ -609,30 +609,36 @@ pub impl<'self> GlyphStore {
         true
     }
 
-    fn iter_glyphs_for_char_range(&'self self, range: &Range,
-                                  cb: &fn(uint, &GlyphInfo<'self>) -> bool) {
+    fn iter_glyphs_for_char_range(&'self self,
+                                  range: &Range,
+                                  callback: &fn(uint, &GlyphInfo<'self>) -> bool)
+                                  -> bool {
         if range.begin() >= self.entry_buffer.len() {
             error!("iter_glyphs_for_range: range.begin beyond length!");
-            return;
+            return false
         }
         if range.end() > self.entry_buffer.len() {
             error!("iter_glyphs_for_range: range.end beyond length!");
-            return;
+            return false
         }
 
         for range.eachi |i| {
-            if !self.iter_glyphs_for_char_index(i, cb) {
-                break;
+            if !self.iter_glyphs_for_char_index(i, callback) {
+                break
             }
         }
+
+        true
     }
 
-    fn iter_all_glyphs(&'self self, cb: &fn(uint, &GlyphInfo<'self>) -> bool) {
+    fn iter_all_glyphs(&'self self, cb: &fn(uint, &GlyphInfo<'self>) -> bool) -> bool {
         for uint::range(0, self.entry_buffer.len()) |i| {
             if !self.iter_glyphs_for_char_index(i, cb) {
                 break;
             }
         }
+
+        true
     }
 
     // getter methods

@@ -52,7 +52,7 @@ pub impl FontListHandle {
 
             debug!("Creating new FontEntry for face: %s", handle.face_name());
             let entry = @FontEntry::new(family, handle);
-            family.entries.push(entry);
+            family.entries.push(entry)
         }
     }
 }

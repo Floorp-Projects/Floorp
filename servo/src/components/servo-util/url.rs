@@ -59,8 +59,8 @@ mod make_url_tests {
         let file = ~"local.html";
         let url = make_url(file, None);
         debug!("url: %?", url);
-        fail_unless!(url.scheme == ~"file");
-        fail_unless!(url.path.contains(os::getcwd().to_str()));
+        assert!(url.scheme == ~"file");
+        assert!(url.path.contains(os::getcwd().to_str()));
     }
 
     #[test]
@@ -69,9 +69,9 @@ mod make_url_tests {
         let old_url = make_url(old_str, None);
         let new_str = ~"index.html";
         let new_url = make_url(new_str, Some(old_url));
-        fail_unless!(new_url.scheme == ~"http");
-        fail_unless!(new_url.host == ~"example.com");
-        fail_unless!(new_url.path == ~"/index.html");
+        assert!(new_url.scheme == ~"http");
+        assert!(new_url.host == ~"example.com");
+        assert!(new_url.path == ~"/index.html");
     }
 
     #[test]
@@ -80,9 +80,9 @@ mod make_url_tests {
         let old_url = make_url(old_str, None);
         let new_str = ~"index.html";
         let new_url = make_url(new_str, Some(old_url));
-        fail_unless!(new_url.scheme == ~"http");
-        fail_unless!(new_url.host == ~"example.com");
-        fail_unless!(new_url.path == ~"/index.html");
+        assert!(new_url.scheme == ~"http");
+        assert!(new_url.host == ~"example.com");
+        assert!(new_url.path == ~"/index.html");
     }
 
     #[test]
@@ -91,9 +91,9 @@ mod make_url_tests {
         let old_url = make_url(old_str, None);
         let new_str = ~"crumpet.html";
         let new_url = make_url(new_str, Some(old_url));
-        fail_unless!(new_url.scheme == ~"http");
-        fail_unless!(new_url.host == ~"example.com");
-        fail_unless!(new_url.path == ~"/crumpet.html");
+        assert!(new_url.scheme == ~"http");
+        assert!(new_url.host == ~"example.com");
+        assert!(new_url.path == ~"/crumpet.html");
     }
 
     #[test]
@@ -102,9 +102,9 @@ mod make_url_tests {
         let old_url = make_url(old_str, None);
         let new_str = ~"crumpet.html";
         let new_url = make_url(new_str, Some(old_url));
-        fail_unless!(new_url.scheme == ~"http");
-        fail_unless!(new_url.host == ~"example.com");
-        fail_unless!(new_url.path == ~"/snarf/crumpet.html");
+        assert!(new_url.scheme == ~"http");
+        assert!(new_url.host == ~"example.com");
+        assert!(new_url.path == ~"/snarf/crumpet.html");
     }
 
 }

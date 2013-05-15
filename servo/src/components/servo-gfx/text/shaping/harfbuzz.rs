@@ -357,19 +357,26 @@ impl Shaper {
                         probably doesn't work.");
 
                 let mut all_glyphs_are_within_cluster: bool = true;
-                do glyph_span.eachi |j| {
+                for glyph_span.eachi |j| {
                     let loc = glyph_data.byte_offset_of_glyph(j);
                     if !char_byte_span.contains(loc) {
                         all_glyphs_are_within_cluster = false;
+                        break
                     }
-                    all_glyphs_are_within_cluster // if true, keep checking. else, stop.
+
+                    // If true, keep checking. Else, stop.
+                    if !all_glyphs_are_within_cluster {
+                        break
+                    }
                 }
 
                 debug!("All glyphs within char_byte_span cluster?: %?",
                        all_glyphs_are_within_cluster);
 
                 // found a valid range; stop extending char_span.
-                if all_glyphs_are_within_cluster { break; }
+                if all_glyphs_are_within_cluster {
+                    break
+                }
             }
 
             // character/glyph clump must contain characters.
