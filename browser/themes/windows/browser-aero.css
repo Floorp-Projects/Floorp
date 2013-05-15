@@ -167,22 +167,16 @@
   }
 
   /* Toolbar shadow behind tabs */
-  #nav-bar[tabsontop=true],
-  #main-window[disablechrome] #navigator-toolbox[tabsontop=true]::after {
+  #nav-bar[tabsontop=true] {
     border-top: 1px solid @toolbarShadowColor@ !important;
     background-clip: padding-box;
-  }
-
-  #main-window[disablechrome] #navigator-toolbox[tabsontop=true]::after {
-    visibility: visible;
   }
 
   /* This code is only needed for restored windows (i.e. sizemode=normal)
      because of the border radius on the toolbar below the tab bar. */
   #main-window[sizemode=normal] #nav-bar[tabsontop=true],
   #main-window[sizemode=normal] #nav-bar[tabsontop=true][collapsed=true]:not([customizing]) + toolbar,
-  #main-window[sizemode=normal] #nav-bar[tabsontop=true][collapsed=true]:not([customizing]) + #customToolbars + #PersonalToolbar,
-  #main-window[sizemode=normal][disablechrome] #navigator-toolbox[tabsontop=true]::after {
+  #main-window[sizemode=normal] #nav-bar[tabsontop=true][collapsed=true]:not([customizing]) + #customToolbars + #PersonalToolbar {
     border-top: 1px solid @toolbarShadowColor@;
     border-top-left-radius: 2.5px;
     border-top-right-radius: 2.5px;
@@ -211,14 +205,6 @@
   #main-window[sizemode=normal] #TabsToolbar[tabsontop=false] {
     padding-left: 2px;
     padding-right: 2px;
-  }
-
-  /* Rounded corners for when chrome is disabled */
-  #main-window[sizemode=normal][disablechrome] #navigator-toolbox[tabsontop=true]:not(:-moz-lwtheme)::after {
-    visibility: visible;
-    background-color: @customToolbarColor@;
-    background-image: linear-gradient(@toolbarHighlight@, @toolbarHighlight@);
-    height: 4px;
   }
 
   /* Make the window draggable by glassed toolbars (bug 555081) */
