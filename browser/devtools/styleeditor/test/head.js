@@ -7,7 +7,7 @@ const TEST_BASE_HTTPS = "https://example.com/browser/browser/devtools/styleedito
 const TEST_HOST = 'mochi.test:8888';
 
 let tempScope = {};
-Cu.import("resource:///modules/devtools/gDevTools.jsm", tempScope);
+Cu.import("resource://gre/modules/devtools/Loader.jsm", tempScope);
 let TargetFactory = tempScope.devtools.TargetFactory;
 Components.utils.import("resource://gre/modules/devtools/Console.jsm", tempScope);
 let console = tempScope.console;
