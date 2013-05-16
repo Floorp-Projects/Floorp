@@ -13,8 +13,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MOZILLA_INTERNAL_API = 1
 
-DISABLED_XPCSHELL_TESTS = unit
-
 MOCHITEST_FILES = $(addprefix mochitest/, \
 	test_bug509244.html \
 	test_bug513439.html \

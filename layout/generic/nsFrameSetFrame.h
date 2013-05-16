@@ -83,7 +83,7 @@ public:
                     nsIFrame*        aPrevInFlow) MOZ_OVERRIDE;
 
   NS_IMETHOD SetInitialChildList(ChildListID  aListID,
-                                 nsFrameList& aChildList);
+                                 nsFrameList& aChildList) MOZ_OVERRIDE;
 
   static bool    gDragInProgress;
 

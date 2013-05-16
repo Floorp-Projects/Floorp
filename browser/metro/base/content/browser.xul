@@ -193,67 +193,6 @@
           </vbox>
         </hbox>
 
-        <!-- Main Toolbar -->
-        <hbox id="toolbar-container" observes="bcast_windowState" >
-          <toolbar id="toolbar" flex="1">
-            <observes element="bcast_windowState" attribute="*"/>
-            <observes element="bcast_urlbarState" attribute="*"/>
-            <hbox id="unified-back-forward-button" class="chromeclass-toolbar-additional"
-               observes="bcast_windowState"
-               context="backForwardMenu" removable="true"
-               forwarddisabled="true"
-               title="Back/Forward">
-              <toolbarbutton id="back-button" class="toolbarbutton"
-                             label="&back.label;"
-                             command="cmd_back"/>
-              <toolbarbutton id="forward-button" class="toolbarbutton"
-                             label="&forward.label;"
-                             command="cmd_forward"/>
-              <dummyobservertarget hidden="true"
-                                   onbroadcast="if (this.getAttribute('disabled') == 'true')
-                                                  this.parentNode.setAttribute('forwarddisabled', 'true');
-                                                else
-                                                  this.parentNode.removeAttribute('forwarddisabled');">
-                <observes element="cmd_forward" attribute="disabled"/>
-              </dummyobservertarget>
-            </hbox>
-
-            <hbox id="urlbar-container" flex="1" observes="bcast_urlbarState">
-              <hbox id="urlbar" flex="1">
-                <box id="identity-box" role="button">
-                  <hbox id="identity-box-inner" align="center" mousethrough="always">
-                    <image id="identity-icon"/>
-                  </hbox>
-                </box>
-
-                <textbox id="urlbar-edit"
-                         type="url"
-                         class="uri-element"
-                         autocompletesearch="history"
-                         autocompletepopup="start-autocomplete"
-                         completeselectedindex="true"
-                         placeholder="&urlbar.emptytext;"
-                         flex="1"
-                         ontextentered="BrowserUI.handleUrlbarEnter(param);"
-                         onkeydown="BrowserUI.navEditKeyPress();"
-                         onclick="BrowserUI._urlbarClicked(event);"
-                         onblur="BrowserUI._urlbarBlurred();"/>
-              </hbox>
-            </hbox>
-
-            <hbox id="urlbar-icons" observes="bcast_urlbarState">
-              <toolbarbutton id="tool-reload" oncommand="CommandUpdater.doCommand(event.shiftKey ? 'cmd_forceReload' : 'cmd_reload');"/>
-              <toolbarbutton id="tool-stop" command="cmd_stop"/>
-            </hbox>
-          </toolbar>
-
-          <box id="toolbar-transition" observes="bcast_windowState" >
-            <toolbarbutton id="tool-new-tab" command="cmd_newTab" label="&newtab.label;"/>
-          </box>
-        </hbox>
-
-        <hbox id="progress-control" layer="true"></hbox>
-
         <!-- Start UI -->
         <hbox id="start-container" flex="1" observes="bcast_windowState" class="meta content-height content-width" onclick="false;">
           <!-- portrait/landscape/filled view -->
@@ -309,7 +248,7 @@
     </vbox>
 
     <!-- popup for content navigator helper -->
-    <vbox id="content-navigator" top="0">
+    <vbox id="content-navigator">
       <textbox id="find-helper-textbox" class="search-bar content-navigator-item" oncommand="FindHelperUI.search(this.value)" oninput="FindHelperUI.updateCommands(this.value);" type="search"/>
     </vbox>
 
@@ -367,25 +306,61 @@
 
     <!-- Windows 8 Appbar -->
     <appbar id="appbar" mousethrough="never" observes="bcast_windowState">
-      <hbox id="contextualactions-tray" flex="1">
+      <hbox id="progress-control" layer="true"/>
+
+      <!-- Main Toolbar -->
+      <toolbar id="toolbar" observes="bcast_windowState" flex="1">
+        <observes element="bcast_windowState" attribute="*"/>
+        <observes element="bcast_urlbarState" attribute="*"/>
+
+        <toolbarbutton id="back-button" command="cmd_back"/>
+
+        <hbox id="urlbar-container" flex="1" observes="bcast_urlbarState">
+          <toolbarbutton id="forward-button" command="cmd_forward"/>
+          <hbox id="urlbar" flex="1">
+            <box id="identity-box" role="button">
+              <hbox id="identity-box-inner" align="center" mousethrough="always">
+                <image id="identity-icon"/>
+              </hbox>
+            </box>
+
+            <textbox id="urlbar-edit"
+                     type="url"
+                     class="uri-element"
+                     autocompletesearch="history"
+                     autocompletepopup="start-autocomplete"
+                     completeselectedindex="true"
+                     placeholder="&urlbar.emptytext;"
+                     flex="1"
+                     ontextentered="BrowserUI.handleUrlbarEnter(param);"
+                     onkeydown="BrowserUI.navEditKeyPress();"
+                     onclick="BrowserUI._urlbarClicked(event);"
+                     onblur="BrowserUI._urlbarBlurred();"/>
+          </hbox>
+        </hbox>
+
+        <toolbarbutton id="tool-reload" oncommand="CommandUpdater.doCommand(event.shiftKey ? 'cmd_forceReload' : 'cmd_reload');"/>
+        <toolbarbutton id="tool-stop" command="cmd_stop"/>
+
+        <!-- developer buttons -->
+        <toolbarbutton id="console-button" oncommand="Appbar.onConsoleButton()"/>
+        <toolbarbutton id="jsshell-button" oncommand="Appbar.onJSShellButton()"/>
+
+        <toolbarbutton id="download-button" oncommand="Appbar.onDownloadButton()"/>
+        <toolbarbutton id="zoomout-button" oncommand="Appbar.onZoomOutButton()"/>
+        <toolbarbutton id="zoomin-button" oncommand="Appbar.onZoomInButton()"/>
+        <toolbarbutton id="star-button" type="checkbox" oncommand="Appbar.onStarButton()"/>
+        <toolbarbutton id="pin-button" type="checkbox" oncommand="Appbar.onPinButton()"/>
+        <toolbarbutton id="more-button" onclick="Appbar.onMoreButton(event)"/>
+      </toolbar>
+
+      <toolbar id="contextualactions-tray" flex="1">
         <toolbarbutton id="delete-selected-button" hidden="true" fade="true" oncommand="Appbar.dispatchContextualAction('delete')"/>
         <toolbarbutton id="restore-selected-button" hidden="true" fade="true" oncommand="Appbar.dispatchContextualAction('restore')"/>
         <toolbarbutton id="pin-selected-button" hidden="true" fade="true" oncommand="Appbar.dispatchContextualAction('pin')"/>
         <toolbarbutton id="unpin-selected-button" hidden="true" fade="true" oncommand="Appbar.dispatchContextualAction('unpin')"/>
         <toolbarbutton id="clear-selected-button" hidden="true" fade="true" oncommand="Appbar.dispatchContextualAction('clear')"/>
-      </hbox>
-      <hbox flex="1">
-        <toolbarbutton id="download-button" oncommand="Appbar.onDownloadButton()"/>
-        <toolbarbutton id="console-button" oncommand="Appbar.onConsoleButton()"/>
-        <toolbarbutton id="jsshell-button" oncommand="Appbar.onJSShellButton()"/>
-      </hbox>
-      <hbox>
-        <toolbarbutton id="more-button" onclick="Appbar.onMoreButton(event)" />
-        <toolbarbutton id="zoomout-button" oncommand="Appbar.onZoomOutButton()"/>
-        <toolbarbutton id="zoomin-button" oncommand="Appbar.onZoomInButton()"/>
-        <toolbarbutton id="star-button" type="checkbox" oncommand="Appbar.onStarButton()"/>
-        <toolbarbutton id="pin-button" type="checkbox" oncommand="Appbar.onPinButton()"/>
-      </hbox>
+      </toolbar>
     </appbar>
 
   <!-- Selection overlay - this should be below any content that can have selectable text -->
@@ -598,17 +573,9 @@
           <richlistitem id="context-copy" type="copy" onclick="ContextCommands.copy();">
             <label value="&contextTextCopy.label;"/>
           </richlistitem>
-          <!-- only displayed if there is text on the clipboard -->
-          <richlistitem id="context-paste" type="paste" onclick="ContextCommands.paste();">
-            <label value="&contextTextPaste.label;"/>
-          </richlistitem>
           <!-- Search Bing for "(text..)", displayed on selected content text only -->
           <richlistitem id="context-search" type="selected-text,!input-text" onclick="ContextCommands.searchText(this);">
             <label id="context-search-label" value=""/>
-          </richlistitem>
-          <!-- only display if there is text on the clipboard and the target is the urlbar -->
-          <richlistitem id="context-paste-n-go" type="paste-url" onclick="ContextCommands.pasteAndGo();">
-            <label value="&contextTextPasteAndGo.label;"/>
           </richlistitem>
           <!-- only displayed in inputs with text that do not have selection -->
           <richlistitem id="context-select" type="selectable" onclick="ContextCommands.select();">
@@ -617,6 +584,14 @@
           <!-- only displayed in inputs with text that do not have selection -->
           <richlistitem id="context-select-all" type="selectable" onclick="ContextCommands.selectAll();">
             <label value="&contextTextSelectAll.label;"/>
+          </richlistitem>
+          <!-- only displayed if there is text on the clipboard -->
+          <richlistitem id="context-paste" type="paste" onclick="ContextCommands.paste();">
+            <label value="&contextTextPaste.label;"/>
+          </richlistitem>
+          <!-- only display if there is text on the clipboard and the target is the urlbar -->
+          <richlistitem id="context-paste-n-go" type="paste-url" onclick="ContextCommands.pasteAndGo();">
+            <label value="&contextTextPasteAndGo.label;"/>
           </richlistitem>
 
           <!-- Image related -->
@@ -706,14 +681,5 @@
             observes="cmd_back" onclick="CommandUpdater.doCommand('cmd_back');"></html:div>
   <html:div id="overlay-plus" class="overlay-button"
             observes="cmd_back" onclick="CommandUpdater.doCommand('cmd_newTab');"></html:div>
-
-  <svg:svg height="0">
-    <svg:clipPath id="forward-button-clip-path" clipPathUnits="objectBoundingBox">
-      <svg:path d="M 0,0 C 0.15,0.12 0.25,0.3 0.25,0.5 0.25,0.7 0.15,0.88 0,1 L 1,1 1,0 0,0 z"/>
-    </svg:clipPath>
-    <svg:clipPath id="back-button-clip-path" clipPathUnits="userSpaceOnUse">
-      <svg:path d="m -1,-5 0,4.03 C 3.6,1.8 18,21.4 0,40 l 0,27 10000,0 0,-55 L 0,-5 z" />
-    </svg:clipPath>
-  </svg:svg>
 
 </window>

@@ -630,6 +630,9 @@ Accessible::VisibilityState()
     if (view && view->GetVisibility() == nsViewVisibility_kHide)
       return states::INVISIBLE;
 
+    if (nsLayoutUtils::IsPopup(curFrame))
+      return 0;
+
     // Offscreen state for background tab content and invisible for not selected
     // deck panel.
     nsIFrame* parentFrame = curFrame->GetParent();

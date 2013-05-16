@@ -28,29 +28,11 @@ public class testAboutPage extends PixelTest {
         url = getAbsoluteUrl("/robocop/robocop_blank_01.html");
         loadUrl(url);
 
-        // Use the menu to open the Settings
-        mActions.sendSpecialKey(Actions.SpecialKey.MENU);
-
-        // Look for the 'More' menu if this device/OS uses it
-        if (mSolo.waitForText("^More$")) {
-            mAsserter.dumpLog("found More item in menu");
-            mSolo.clickOnText("^More$");
-        }
-
-        if (mSolo.waitForText("^Settings$")) {
-            mAsserter.dumpLog("found Settings item in menu");
-        }
-        mSolo.clickOnText("^Settings$");
-
         // Set up listeners to catch the page load we're about to do
         Actions.EventExpecter tabEventExpecter = mActions.expectGeckoEvent("Tab:Added");
         Actions.EventExpecter contentEventExpecter = mActions.expectGeckoEvent("DOMContentLoaded");
 
-        // Tap on the "About Xxxx" setting
-        if (mSolo.waitForText("About (Fennec|Nightly|Aurora|Firefox|Firefox Beta)")) {
-            mAsserter.dumpLog("found About... title text");
-        }
-        mSolo.clickOnText("About (Fennec|Nightly|Aurora|Firefox|Firefox Beta)");
+        selectSettingsItem("General", "About (Fennec|Nightly|Aurora|Firefox|Firefox Beta)");
 
         // Wait for the new tab and page to load
         tabEventExpecter.blockForEvent();

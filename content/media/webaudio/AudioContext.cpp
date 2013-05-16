@@ -22,6 +22,7 @@
 #include "ScriptProcessorNode.h"
 #include "ChannelMergerNode.h"
 #include "ChannelSplitterNode.h"
+#include "WaveShaperNode.h"
 #include "nsNetUtil.h"
 
 // Note that this number is an arbitrary large value to protect against OOM
@@ -193,6 +194,13 @@ AudioContext::CreateGain()
 {
   nsRefPtr<GainNode> gainNode = new GainNode(this);
   return gainNode.forget();
+}
+
+already_AddRefed<WaveShaperNode>
+AudioContext::CreateWaveShaper()
+{
+  nsRefPtr<WaveShaperNode> waveShaperNode = new WaveShaperNode(this);
+  return waveShaperNode.forget();
 }
 
 already_AddRefed<DelayNode>

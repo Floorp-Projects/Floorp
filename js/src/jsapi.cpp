@@ -87,10 +87,9 @@
 
 #if ENABLE_YARR_JIT
 #include "assembler/jit/ExecutableAllocator.h"
-#include "methodjit/Logging.h"
 #endif
 
-#ifdef JS_METHODJIT
+#ifdef JS_ION
 #include "ion/Ion.h"
 #endif
 
@@ -692,7 +691,7 @@ static const JSSecurityCallbacks NullSecurityCallbacks = { };
 static bool
 JitSupportsFloatingPoint()
 {
-#if defined(JS_METHODJIT) || defined(JS_ION)
+#if defined(JS_ION)
     if (!JSC::MacroAssembler().supportsFloatingPoint())
         return false;
 
@@ -739,9 +738,6 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     freeLifoAlloc(TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
     execAlloc_(NULL),
     bumpAlloc_(NULL),
-#ifdef JS_METHODJIT
-    jaegerRuntime_(NULL),
-#endif
     ionRuntime_(NULL),
     selfHostingGlobal_(NULL),
     nativeStackBase(0),
@@ -927,10 +923,6 @@ JSRuntime::init(uint32_t maxbytes)
 
     js::TlsPerThreadData.set(&mainThread);
 
-#ifdef JS_METHODJIT_SPEW
-    JMCheckLogging();
-#endif
-
     if (!js_InitGC(this, maxbytes))
         return false;
 
@@ -1050,13 +1042,10 @@ JSRuntime::~JSRuntime()
 
     js_delete(bumpAlloc_);
     js_delete(mathCache_);
-#ifdef JS_METHODJIT
-    js_delete(jaegerRuntime_);
-#endif
 #ifdef JS_ION
     js_delete(ionRuntime_);
 #endif
-    js_delete(execAlloc_);  /* Delete after jaegerRuntime_. */
+    js_delete(execAlloc_);  /* Delete after ionRuntime_. */
 
     if (ionPcScriptCache)
         js_delete(ionPcScriptCache);
@@ -1166,7 +1155,7 @@ JS_NewRuntime(uint32_t maxbytes, JSUseHelperThreads useHelperThreads)
     if (!rt)
         return NULL;
 
-#if defined(JS_METHODJIT) && defined(JS_ION)
+#if defined(JS_ION)
     if (!ion::InitializeIon())
         return NULL;
 #endif
@@ -2240,6 +2229,14 @@ JS_GetFunctionPrototype(JSContext *cx, JSObject *forObj)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, forObj);
     return forObj->global().getOrCreateFunctionPrototype(cx);
+}
+
+JS_PUBLIC_API(JSObject *)
+JS_GetArrayPrototype(JSContext *cx, JSObject *forObj)
+{
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, forObj);
+    return forObj->global().getOrCreateArrayPrototype(cx);
 }
 
 JS_PUBLIC_API(JSObject *)

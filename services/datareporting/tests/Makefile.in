@@ -10,7 +10,5 @@ relativesrcdir = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DISABLED_XPCSHELL_TESTS = xpcshell
-
 include $(topsrcdir)/config/rules.mk
 

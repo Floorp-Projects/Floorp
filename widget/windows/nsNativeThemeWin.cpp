@@ -2582,7 +2582,7 @@ nsNativeThemeWin::WidgetIsContainer(uint8_t aWidgetType)
 }
 
 bool
-nsNativeThemeWin::ThemeDrawsFocusForWidget(nsPresContext* aPresContext, nsIFrame* aFrame, uint8_t aWidgetType)
+nsNativeThemeWin::ThemeDrawsFocusForWidget(uint8_t aWidgetType)
 {
   return false;
 }

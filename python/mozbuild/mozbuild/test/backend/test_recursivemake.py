@@ -136,17 +136,23 @@ class TestRecursiveMakeBackend(BackendTester):
 
         backend_path = os.path.join(env.topobjdir, 'backend.mk')
         lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:-1]]
-        self.assertEqual(lines[3:6], [
-            'XPIDLSRCS += foo.idl',
-            'XPIDLSRCS += bar.idl',
-            'XPIDLSRCS += biz.idl',
-        ])
-        self.assertEqual(lines[6:9], [
-            'XPIDL_FLAGS += -Idir1',
-            'XPIDL_FLAGS += -Idir2',
-            'XPIDL_FLAGS += -Idir3',
-        ])
-        self.assertEqual(lines[9], 'XPIDL_MODULE := module_name')
+
+        expected = {
+            'ASFILES': ['ASFILES += foo.asm', 'ASFILES += bar.s'],
+            'XPIDL_FLAGS': ['XPIDL_FLAGS += -Idir1',
+                            'XPIDL_FLAGS += -Idir2',
+                            'XPIDL_FLAGS += -Idir3',
+                            ],
+            'XPIDL_MODULE': ['XPIDL_MODULE := module_name'],
+            'XPIDLSRCS': ['XPIDLSRCS += foo.idl',
+                          'XPIDLSRCS += bar.idl',
+                          'XPIDLSRCS += biz.idl']
+            }
+
+        for var, val in expected.items():
+            # print("test_variable_passthru[%s]" % (var))
+            found = [str for str in lines if str.startswith(var)]
+            self.assertEqual(found, val)
 
     def test_exports(self):
         """Ensure EXPORTS is written out correctly."""
