@@ -15,6 +15,7 @@
 #include "jsatominlines.h"
 
 #include "gc/Barrier-inl.h"
+#include "gc/Marking.h"
 #include "vm/ObjectImpl-inl.h"
 #include "vm/Shape-inl.h"
 
@@ -999,4 +1000,13 @@ js::SetElement(JSContext *cx, Handle<ObjectImpl*> obj, Handle<ObjectImpl*> recei
 
     MOZ_NOT_REACHED("buggy control flow");
     return false;
+}
+
+void
+AutoPropDescRooter::trace(JSTracer *trc)
+{
+    gc::MarkValueRoot(trc, &propDesc.pd_, "AutoPropDescRooter pd");
+    gc::MarkValueRoot(trc, &propDesc.value_, "AutoPropDescRooter value");
+    gc::MarkValueRoot(trc, &propDesc.get_, "AutoPropDescRooter get");
+    gc::MarkValueRoot(trc, &propDesc.set_, "AutoPropDescRooter set");
 }
