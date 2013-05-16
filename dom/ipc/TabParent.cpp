@@ -636,6 +636,18 @@ bool TabParent::SendRealTouchEvent(nsTouchEvent& event)
     return false;
   }
   if (event.message == NS_TOUCH_START) {
+    // Adjust the widget coordinates to be relative to our frame.
+    nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
+    if (!frameLoader) {
+      // No frame anymore?
+      sEventCapturer = nullptr;
+      return false;
+    }
+
+    mChildProcessOffsetAtTouchStart =
+        nsEventStateManager::GetChildProcessOffset(frameLoader,
+                                                   event);
+
     MOZ_ASSERT((!sEventCapturer && mEventCaptureDepth == 0) ||
                (sEventCapturer == this && mEventCaptureDepth > 0));
     // We want to capture all remaining touch events in this series
@@ -693,16 +705,8 @@ TabParent::TryCapture(const nsGUIEvent& aEvent)
     return false;
   }
 
-  // Adjust the widget coordinates to be relative to our frame.
-  nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
-
-  if (!frameLoader) {
-    // No frame anymore?
-    sEventCapturer = nullptr;
-    return false;
-  }
-
-  nsEventStateManager::MapEventCoordinatesForChildProcess(frameLoader, &event);
+  nsEventStateManager::MapEventCoordinatesForChildProcess(
+    mChildProcessOffsetAtTouchStart, &event);
 
   SendRealTouchEvent(event);
   return true;
