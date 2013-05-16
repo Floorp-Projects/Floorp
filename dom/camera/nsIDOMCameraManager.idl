@@ -420,21 +420,20 @@ interface nsICameraGetCameraCallback : nsISupports
     void handleEvent(in nsICameraControl camera);
 };
 
-[scriptable, uuid(671ee624-0336-441a-a24e-26b5319f14fe)]
+[scriptable, uuid(f01aabcd-b822-423a-b077-3d0748296428)]
 interface nsIDOMCameraManager : nsISupports
 {
     /* get a camera instance; options will be used to specify which
        camera to get from the list returned by getListOfCameras(), e.g.:
         {
-            camera: front
+            camera: "front"
         }
     */
     [implicit_jscontext]
     void getCamera([optional] in jsval aOptions, in nsICameraGetCameraCallback onSuccess, [optional] in nsICameraErrorCallback onError);
 
-    /* return a JSON array of camera   identifiers, e.g.
+    /* return an array of camera identifiers, e.g.
         [ "front", "back" ]
     */
-    [implicit_jscontext]
-    jsval getListOfCameras();
+    void getListOfCameras([optional] out unsigned long aCount, [retval, array, size_is(aCount)] out string aCameras);
 };
