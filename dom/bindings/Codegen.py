@@ -7929,8 +7929,10 @@ class CGBindingRoot(CGThing):
         # Do codegen for all the descriptors
         cgthings.extend([CGDescriptor(x) for x in descriptors])
 
-        # Do codegen for all the callback interfaces
-        cgthings.extend([CGCallbackInterface(x) for x in callbackDescriptors])
+        # Do codegen for all the callback interfaces.  Again, skip
+        # worker callbacks.
+        cgthings.extend([CGCallbackInterface(x) for x in callbackDescriptors if
+                         not x.workers])
 
         # Do codegen for JS implemented classes
         def getParentDescriptor(desc):
