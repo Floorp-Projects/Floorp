@@ -39,6 +39,7 @@ function run_test() {
     return;
   }
 
+  gEnvSKipUpdateDirHashing = true;
   let channel = Services.prefs.getCharPref(PREF_APP_UPDATE_CHANNEL);
   let patches = getLocalPatchString(null, null, null, null, null, "true",
                                     STATE_PENDING);
