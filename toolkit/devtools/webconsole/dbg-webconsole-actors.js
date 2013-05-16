@@ -56,13 +56,26 @@ function WebConsoleActor(aConnection, aParentActor)
 
   if (aParentActor instanceof BrowserTabActor &&
       aParentActor.browser instanceof Ci.nsIDOMWindow) {
-    this._window = aParentActor.browser;
+    // B2G tab actor |this.browser| points to a DOM chrome window, not
+    // a xul:browser element.
+    //
+    // TODO: bug 802246 - b2g has only one tab actor, the shell.xul, which is
+    // not properly supported by the console actor - see bug for details.
+    //
+    // Below we work around the problem: selecting the shell.xul tab actor
+    // behaves as if the user picked the global console actor.
+    //this._window = aParentActor.browser;
+    this._window = Services.wm.getMostRecentWindow("navigator:browser");
+    this._isGlobalActor = true;
   }
   else if (aParentActor instanceof BrowserTabActor &&
            aParentActor.browser instanceof Ci.nsIDOMElement) {
+    // Firefox for desktop tab actor |this.browser| points to the xul:browser
+    // element.
     this._window = aParentActor.browser.contentWindow;
   }
   else {
+    // In all other cases we should behave as the global console actor.
     this._window = Services.wm.getMostRecentWindow("navigator:browser");
     this._isGlobalActor = true;
   }
