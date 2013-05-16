@@ -34,6 +34,7 @@ EXPORTS.mozilla.dom += [
     'DynamicsCompressorNode.h',
     'EnableWebAudioCheck.h',
     'GainNode.h',
+    'OfflineAudioCompletionEvent.h',
     'PannerNode.h',
     'ScriptProcessorNode.h',
     'WaveShaperNode.h',

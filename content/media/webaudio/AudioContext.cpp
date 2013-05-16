@@ -8,6 +8,8 @@
 #include "nsContentUtils.h"
 #include "nsPIDOMWindow.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/dom/AudioContextBinding.h"
+#include "mozilla/dom/OfflineAudioContextBinding.h"
 #include "MediaStreamGraph.h"
 #include "mozilla/dom/AnalyserNode.h"
 #include "AudioDestinationNode.h"
@@ -44,8 +46,9 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 
 static uint8_t gWebAudioOutputKey;
 
-AudioContext::AudioContext(nsPIDOMWindow* aWindow)
+AudioContext::AudioContext(nsPIDOMWindow* aWindow, bool aIsOffline)
   : mDestination(new AudioDestinationNode(this, MediaStreamGraph::GetInstance()))
+  , mIsOffline(aIsOffline)
 {
   // Actually play audio
   mDestination->Stream()->AddAudioOutput(&gWebAudioOutputKey);
@@ -64,7 +67,11 @@ AudioContext::~AudioContext()
 JSObject*
 AudioContext::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return AudioContextBinding::Wrap(aCx, aScope, this);
+  if (mIsOffline) {
+    return OfflineAudioContextBinding::Wrap(aCx, aScope, this);
+  } else {
+    return AudioContextBinding::Wrap(aCx, aScope, this);
+  }
 }
 
 /* static */ already_AddRefed<AudioContext>
@@ -76,7 +83,31 @@ AudioContext::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
     return nullptr;
   }
 
-  nsRefPtr<AudioContext> object = new AudioContext(window);
+  nsRefPtr<AudioContext> object = new AudioContext(window, false);
+  window->AddAudioContext(object);
+  return object.forget();
+}
+
+/* static */ already_AddRefed<AudioContext>
+AudioContext::Constructor(const GlobalObject& aGlobal,
+                          uint32_t aNumberOfChannels,
+                          uint32_t aLength,
+                          float aSampleRate,
+                          ErrorResult& aRv)
+{
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.Get());
+  if (!window) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  if (aSampleRate != IdealAudioRate()) {
+    // TODO: Add support for running OfflineAudioContext at other sampling rates
+    aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+    return nullptr;
+  }
+
+  nsRefPtr<AudioContext> object = new AudioContext(window, true);
   window->AddAudioContext(object);
   return object.forget();
 }
