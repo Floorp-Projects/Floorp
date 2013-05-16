@@ -17,7 +17,6 @@
 
 .devtools-toolbar {
   -moz-appearance: none;
-  min-height: 34px;
   padding: 4px 3px;
   color: hsl(210,30%,85%);
   background-image: url(background-noise-toolbar.png), linear-gradient(#3e4750, #3e4750);
@@ -278,7 +277,6 @@
 
 .devtools-sidebar-tabs > tabs > tab {
   -moz-appearance: none;
-  min-height: 33px;
   /* We want to match the height of a toolbar with a toolbarbutton
    * First, we need to replicated the padding of toolbar (4px),
    * then, the padding of the button itself from toolbarbutton.css (3px),
