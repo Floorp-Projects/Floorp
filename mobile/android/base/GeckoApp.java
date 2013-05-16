@@ -114,12 +114,6 @@ abstract public class GeckoApp
 {
     private static final String LOGTAG = "GeckoApp";
 
-    public static enum StartupMode {
-        NORMAL,
-        NEW_VERSION,
-        NEW_PROFILE
-    }
-
     private static enum StartupAction {
         NORMAL,     /* normal application start */
         URL,        /* launched with a passed URL */
@@ -144,7 +138,6 @@ abstract public class GeckoApp
     static public final int RESTORE_OOM = 1;
     static public final int RESTORE_CRASH = 2;
 
-    StartupMode mStartupMode = null;
     protected RelativeLayout mMainLayout;
     protected RelativeLayout mGeckoLayout;
     public View getView() { return mGeckoLayout; }
@@ -590,22 +583,6 @@ abstract public class GeckoApp
         return super.onKeyDown(keyCode, event);
     }
 
-    protected void shareCurrentUrl() {
-        Tab tab = Tabs.getInstance().getSelectedTab();
-        if (tab == null)
-          return;
-
-        String url = tab.getURL();
-        if (url == null)
-            return;
-
-        if (ReaderModeUtils.isAboutReader(url))
-            url = ReaderModeUtils.getUrlFromAboutReader(url);
-
-        GeckoAppShell.openUriExternal(url, "text/plain", "", "",
-                                      Intent.ACTION_SEND, tab.getDisplayTitle());
-    }
-
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
@@ -644,56 +621,6 @@ abstract public class GeckoApp
 
     void handleClearHistory() {
         BrowserDB.clearHistory(getContentResolver());
-    }
-
-    /**
-     * This function might perform synchronous IO. Don't call it
-     * from the main thread.
-     */
-    public StartupMode getStartupMode() {
-
-        synchronized(this) {
-            if (mStartupMode != null)
-                return mStartupMode;
-
-            String packageName = getPackageName();
-            SharedPreferences settings = getPreferences(Activity.MODE_PRIVATE);
-
-            // This key should be profile-dependent. For now, we're simply hardcoding
-            // the "default" profile here.
-            String profileName = getDefaultProfileName();
-            if (profileName == null)
-                profileName = "default";
-            String keyName = packageName + "." + profileName + ".startup_version";
-            String appVersion = null;
-
-            try {
-                PackageInfo pkgInfo = getPackageManager().getPackageInfo(packageName, 0);
-                appVersion = pkgInfo.versionName;
-            } catch(NameNotFoundException nnfe) {
-                // If, for some reason, we can't fetch the app version
-                // we fallback to NORMAL startup mode.
-                mStartupMode = StartupMode.NORMAL;
-                return mStartupMode;
-            }
-
-            String startupVersion = settings.getString(keyName, null);
-            if (startupVersion == null) {
-                mStartupMode = StartupMode.NEW_PROFILE;
-            } else {
-                if (startupVersion.equals(appVersion))
-                    mStartupMode = StartupMode.NORMAL;
-                else
-                    mStartupMode = StartupMode.NEW_VERSION;
-            }
-
-            if (mStartupMode != StartupMode.NORMAL)
-                settings.edit().putString(keyName, appVersion).commit();
-
-            Log.i(LOGTAG, "Startup mode: " + mStartupMode);
-
-            return mStartupMode;
-        }
     }
 
     public void addTab() { }
@@ -2236,45 +2163,6 @@ abstract public class GeckoApp
         return mPromptService;
     }
 
-    @Override
-    public boolean onSearchRequested() {
-        return showAwesomebar(AwesomeBar.Target.CURRENT_TAB);
-    }
-
-    public boolean showAwesomebar(AwesomeBar.Target aTarget) {
-        return showAwesomebar(aTarget, null);
-    }
-
-    public boolean showAwesomebar(AwesomeBar.Target aTarget, String aUrl) {
-        Intent intent = new Intent(getBaseContext(), AwesomeBar.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
-        intent.putExtra(AwesomeBar.TARGET_KEY, aTarget.name());
-
-        // If we were passed in a URL, show it.
-        if (aUrl != null && !TextUtils.isEmpty(aUrl)) {
-            intent.putExtra(AwesomeBar.CURRENT_URL_KEY, aUrl);
-        } else if (aTarget == AwesomeBar.Target.CURRENT_TAB) {
-            // Otherwise, if we're editing the current tab, show its URL.
-            Tab tab = Tabs.getInstance().getSelectedTab();
-            if (tab != null) {
-                // Check to see if there's a user-entered search term, which we save
-                // whenever the user performs a search.
-                aUrl = tab.getUserSearch();
-                if (TextUtils.isEmpty(aUrl)) {
-                    aUrl = tab.getURL();
-                }
-                if (aUrl != null) {
-                    intent.putExtra(AwesomeBar.CURRENT_URL_KEY, aUrl);
-                }
-            }
-        }
-
-        int requestCode = GeckoAppShell.sActivityHelper.makeRequestCodeForAwesomebar();
-        startActivityForResult(intent, requestCode);
-        overridePendingTransition (R.anim.awesomebar_fade_in, R.anim.awesomebar_hold_still);
-        return true;
-    }
-
     public void showReadingList() {
         Intent intent = new Intent(getBaseContext(), AwesomeBar.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_NO_HISTORY);
@@ -2554,70 +2442,6 @@ abstract public class GeckoApp
             mFullScreenPluginView.onTrackballEvent(event);
             return true;
         }
-    }
-
-    @Override
-    public boolean onContextItemSelected(MenuItem item) {
-        switch(item.getItemId()) {
-            case R.id.pasteandgo: {
-                String text = GeckoAppShell.getClipboardText();
-                if (text != null && !TextUtils.isEmpty(text)) {
-                    Tabs.getInstance().loadUrl(text);
-                }
-                return true;
-            }
-            case R.id.site_settings: {
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Permissions:Get", null));
-                return true;
-            }
-            case R.id.paste: {
-                String text = GeckoAppShell.getClipboardText();
-                if (text != null && !TextUtils.isEmpty(text)) {
-                    showAwesomebar(AwesomeBar.Target.CURRENT_TAB, text);
-                }
-                return true;
-            }
-            case R.id.share: {
-                shareCurrentUrl();
-                return true;
-            }
-            case R.id.subscribe: {
-                Tab tab = Tabs.getInstance().getSelectedTab();
-                if (tab != null && tab.getFeedsEnabled()) {
-                    JSONObject args = new JSONObject();
-                    try {
-                        args.put("tabId", tab.getId());
-                    } catch (JSONException e) {
-                        Log.e(LOGTAG, "error building json arguments");
-                    }
-                    GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Feeds:Subscribe", args.toString()));
-                }
-                return true;
-            }
-            case R.id.copyurl: {
-                Tab tab = Tabs.getInstance().getSelectedTab();
-                if (tab != null) {
-                    String url = tab.getURL();
-                    if (url != null) {
-                        GeckoAppShell.setClipboardText(url);
-                    }
-                }
-                return true;
-            }
-            case R.id.add_to_launcher: {
-                Tab tab = Tabs.getInstance().getSelectedTab();
-                if (tab != null) {
-                    String url = tab.getURL();
-                    String title = tab.getDisplayTitle();
-                    Bitmap favicon = tab.getFavicon();
-                    if (url != null && title != null) {
-                        GeckoAppShell.createShortcut(title, url, url, favicon == null ? null : favicon, "");
-                    }
-                }
-                return true;
-            }
-        }
-        return false;
     }
 
     protected NotificationClient makeNotificationClient() {

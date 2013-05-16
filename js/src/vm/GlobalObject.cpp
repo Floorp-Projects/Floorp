@@ -27,10 +27,6 @@
 #include "vm/RegExpObject-inl.h"
 #include "vm/RegExpStatics-inl.h"
 
-#ifdef JS_METHODJIT
-#include "methodjit/Retcon.h"
-#endif
-
 using namespace js;
 
 JSObject *

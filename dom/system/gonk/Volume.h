@@ -45,6 +45,10 @@ public:
   int32_t MountGeneration() const     { return mMountGeneration; }
   bool IsMountLocked() const          { return mMountLocked; }
   bool MediaPresent() const           { return mMediaPresent; }
+  bool CanBeShared() const            { return mCanBeShared; }
+  bool IsSharingEnabled() const       { return mCanBeShared && mSharingEnabled; }
+
+  void SetSharingEnabled(bool aSharingEnabled);
 
   typedef mozilla::Observer<Volume *>     EventObserver;
   typedef mozilla::ObserverList<Volume *> EventObserverList;
@@ -84,6 +88,8 @@ private:
   nsCString         mMountPoint;
   int32_t           mMountGeneration;
   bool              mMountLocked;
+  bool              mSharingEnabled;
+  bool              mCanBeShared;
 
   static EventObserverList mEventObserverList;
 };

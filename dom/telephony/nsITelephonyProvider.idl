@@ -4,7 +4,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(45c5a67b-3780-4c41-a670-8abacffb4851)]
+[scriptable, uuid(bde19ba2-83c8-4df7-a014-28fe71535527)]
 interface nsITelephonyListener : nsISupports
 {
   /**
@@ -20,12 +20,15 @@ interface nsITelephonyListener : nsISupports
    *        Indicates whether this call is the currently active one.
    * @param isOutgoing
    *        Indicates whether this call is outgoing or incoming.
+   * @param isEmergency
+   *        Indicates whether this call is an emergency call.
    */
   void callStateChanged(in unsigned long callIndex,
                         in unsigned short callState,
                         in AString number,
                         in boolean isActive,
-                        in boolean isOutgoing);
+                        in boolean isOutgoing,
+                        in boolean isEmergency);
 
   /**
    * Called when nsITelephonyProvider is asked to enumerate the current
@@ -49,7 +52,8 @@ interface nsITelephonyListener : nsISupports
                              in unsigned short callState,
                              in AString number,
                              in boolean isActive,
-                             in boolean isOutgoing);
+                             in boolean isOutgoing,
+                             in boolean isEmergency);
 
   /**
    * Called when RIL error occurs.

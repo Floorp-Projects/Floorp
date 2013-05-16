@@ -3258,11 +3258,20 @@ let RIL = {
             newCall.number[0] != "+") {
           newCall.number = "+" + newCall.number;
         }
+
         if (newCall.state == CALL_STATE_INCOMING) {
           newCall.isOutgoing = false;
         } else if (newCall.state == CALL_STATE_DIALING) {
           newCall.isOutgoing = true;
         }
+
+        // Set flag for outgoing emergency call.
+        if (newCall.isOutgoing && this._isEmergencyNumber(newCall.number)) {
+          newCall.isEmergency = true;
+        } else {
+          newCall.isEmergency = false;
+        }
+
         // Add to our map.
         this.currentCalls[newCall.callIndex] = newCall;
         this._handleChangedCallState(newCall);
@@ -10161,10 +10170,7 @@ let ICCRecordHelper = {
               ", spnDisplayCondition = " + spnDisplayCondition);
       }
 
-      RIL.iccInfoPrivate.SPN = {
-        spn : spn,
-        spnDisplayCondition : spnDisplayCondition,
-      };
+      RIL.iccInfoPrivate.spnDisplayCondition = spnDisplayCondition;
       RIL.iccInfo.spn = spn;
       ICCUtilsHelper.updateDisplayCondition();
       ICCUtilsHelper.handleICCInfoChange();
@@ -11129,11 +11135,11 @@ let ICCUtilsHelper = {
     // isDisplaySpnRequired = false
     let iccInfo = RIL.iccInfo;
     let iccInfoPriv = RIL.iccInfoPrivate;
-    let iccSpn = iccInfoPriv.SPN;
+    let displayCondition = iccInfoPriv.spnDisplayCondition;
     let origIsDisplayNetworkNameRequired = iccInfo.isDisplayNetworkNameRequired;
     let origIsDisplaySPNRequired = iccInfo.isDisplaySpnRequired;
 
-    if (!iccSpn) {
+    if (displayCondition === undefined) {
       iccInfo.isDisplayNetworkNameRequired = true;
       iccInfo.isDisplaySpnRequired = false;
     } else if (RIL._isCdma) {
@@ -11144,9 +11150,9 @@ let ICCUtilsHelper = {
 
       iccInfo.isDisplayNetworkNameRequired = false;
 
-      // If display condition is false, we don't even need to check network id
+      // If display condition is 0x0, we don't even need to check network id
       // or system id.
-      if (iccSpn.spnDisplayCondition == false) {
+      if (displayCondition == 0x0) {
         iccInfo.isDisplaySpnRequired = false;
       } else {
         // CDMA SPN Display condition dosen't specify whenever network name is
@@ -11218,11 +11224,7 @@ let ICCUtilsHelper = {
         // EF_SPDI contains a list of PLMNs in which the Service Provider Name
         // shall be displayed.
         iccInfo.isDisplaySpnRequired = true;
-        if (iccSpn.spnDisplayCondition & 0x01) {
-          iccInfo.isDisplayNetworkNameRequired = true;
-        } else {
-          iccInfo.isDisplayNetworkNameRequired = false;
-        }
+        iccInfo.isDisplayNetworkNameRequired = (displayCondition & 0x01) != 0;
       } else {
         // The second bit of display condition tells us if we should display
         // registered PLMN.
@@ -11231,13 +11233,8 @@ let ICCUtilsHelper = {
         // We didn't found the requirement of displaying network name if
         // current PLMN isn't HPLMN nor one of PLMN in SPDI. So we keep
         // isDisplayNetworkNameRequired false.
-        if (iccSpn.spnDisplayCondition & 0x02) {
-          iccInfo.isDisplayNetworkNameRequired = false;
-          iccInfo.isDisplaySpnRequired = false;
-        } else {
-          iccInfo.isDisplayNetworkNameRequired = false;
-          iccInfo.isDisplaySpnRequired = true;
-        }
+        iccInfo.isDisplayNetworkNameRequired = false;
+        iccInfo.isDisplaySpnRequired = (displayCondition & 0x02) == 0;
       }
     }
 
@@ -12060,9 +12057,7 @@ let RuimRecordHelper = {
         debug("CDMA SPN: " + RIL.iccInfo.spn +
               ", Display condition: " + displayCondition);
       }
-      RIL.iccInfoPrivate.SPN = {
-        spnDisplayCondition: displayCondition
-      };
+      RIL.iccInfoPrivate.spnDisplayCondition = displayCondition;
       Buf.seekIncoming((octetLen - readLen) * PDU_HEX_OCTET_SIZE);
       Buf.readStringDelimiter(strLen);
     }

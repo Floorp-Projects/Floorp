@@ -196,6 +196,24 @@ this.DOMApplicationRegistry = {
     this._saveApps();
   },
 
+  // Ensure that the .to property in redirects is a relative URL.
+  sanitizeRedirects: function sanitizeRedirects(aSource) {
+    if (!aSource) {
+      return null;
+    }
+
+    let res = [];
+    for (let i = 0; i < aSource.length; i++) {
+      let redirect = aSource[i];
+      if (redirect.from && redirect.to &&
+          isAbsoluteURI(redirect.from) &&
+          !isAbsoluteURI(redirect.to)) {
+        res.push(redirect);
+      }
+    }
+    return res.length > 0 ? res : null;
+  },
+
   // Registers all the activities and system messages.
   registerAppsHandlers: function registerAppsHandlers(aRunUpdate) {
     this.notifyAppsRegistryStart();
@@ -211,7 +229,11 @@ this.DOMApplicationRegistry = {
       // twice
       this._readManifests(ids, (function readCSPs(aResults) {
         aResults.forEach(function registerManifest(aResult) {
-          this.webapps[aResult.id].csp = aResult.manifest.csp || "";
+          let app = this.webapps[aResult.id];
+          app.csp = aResult.manifest.csp || "";
+          if (app.appStatus >= Ci.nsIPrincipal.APP_STATUS_PRIVILEGED) {
+            app.redirects = this.sanitizeRedirects(aResult.redirects);
+          }
         }, this);
       }).bind(this));
 
@@ -241,11 +263,15 @@ this.DOMApplicationRegistry = {
 
   updateOfflineCacheForApp: function updateOfflineCacheForApp(aId) {
     let app = this.webapps[aId];
-    OfflineCacheInstaller.installCache({
-      basePath: app.basePath,
-      appId: aId,
-      origin: app.origin,
-      localId: app.localId
+    this._readManifests([{ id: aId }], function(aResult) {
+      let manifest = new ManifestHelper(aResult[0].manifest, app.origin);
+      OfflineCacheInstaller.installCache({
+        cachePath: app.cachePath,
+        appId: aId,
+        origin: Services.io.newURI(app.origin, null, null),
+        localId: app.localId,
+        appcache_path: manifest.fullAppcachePath()
+      });
     });
   },
 
@@ -298,6 +324,7 @@ this.DOMApplicationRegistry = {
       });
 
     app.installState = "installed";
+    app.cachePath = app.basePath;
     app.basePath = FileUtils.getDir(DIRECTORY_NAME, ["webapps"], true, true)
                             .path;
 
@@ -673,6 +700,9 @@ this.DOMApplicationRegistry = {
         let manifest = aResult.manifest;
         app.name = manifest.name;
         app.csp = manifest.csp || "";
+        if (app.appStatus >= Ci.nsIPrincipal.APP_STATUS_PRIVILEGED) {
+          app.redirects = this.sanitizeRedirects(manifest.redirects);
+        }
         this._registerSystemMessages(manifest, app);
         appsToRegister.push({ manifest: manifest, app: app });
       }, this);
@@ -1327,11 +1357,14 @@ this.DOMApplicationRegistry = {
     return [toHexString(hash.charCodeAt(i)) for (i in hash)].join("");
   },
 
-  // Updates the activities and system message handlers.
+  // Updates the redirect mapping, activities and system message handlers.
   // aOldManifest can be null if we don't have any handler to unregister.
   updateAppHandlers: function(aOldManifest, aNewManifest, aApp) {
     debug("updateAppHandlers: old=" + aOldManifest + " new=" + aNewManifest);
     this.notifyAppsRegistryStart();
+    if (aApp.appStatus >= Ci.nsIPrincipal.APP_STATUS_PRIVILEGED) {
+      aApp.redirects = this.sanitizeRedirects(aNewManifest.redirects);
+    }
 
     if (supportSystemMessages()) {
       if (aOldManifest) {

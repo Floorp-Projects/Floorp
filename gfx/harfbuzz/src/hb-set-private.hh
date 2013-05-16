@@ -295,7 +295,7 @@ struct hb_set_t
   {
     for (unsigned int i = 0; i < ELTS; i++)
       if (elts[i])
-	for (unsigned int j = 0; i < BITS; j++)
+	for (unsigned int j = 0; j < BITS; j++)
 	  if (elts[i] & (1 << j))
 	    return i * BITS + j;
     return SENTINEL;

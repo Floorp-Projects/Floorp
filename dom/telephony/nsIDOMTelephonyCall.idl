@@ -9,12 +9,17 @@
 
 interface nsIDOMEventListener;
 
-[scriptable, builtinclass, uuid(a6ac6941-866c-4e25-b616-045c817e04c8)]
+[scriptable, builtinclass, uuid(f0a25998-b0a9-11e2-82d2-60a44c237d2b)]
 interface nsIDOMTelephonyCall : nsIDOMEventTarget
 {
   readonly attribute DOMString number;
 
   readonly attribute DOMString state;
+
+  // The property "emergency" indicate whether the call number is an emergency
+  // number. Only the outgoing call could have a value with true and it is
+  // available after dialing state.
+  readonly attribute boolean emergency;
 
   readonly attribute nsIDOMDOMError error;
 

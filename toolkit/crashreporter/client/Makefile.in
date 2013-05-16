@@ -68,10 +68,6 @@ libs:: $(DIST)/bin/crashreporter.crt
 $(DIST)/bin/crashreporter.crt: $(topsrcdir)/security/nss/lib/ckfw/builtins/certdata.txt certdata2pem.py
 	$(PYTHON) $(srcdir)/certdata2pem.py < $< > $@
 
-# The xpcshell test case here verifies that the CA certificate list
-# works with OpenSSL.
-DISABLED_XPCSHELL_TESTS = maemo-unit
-
 else
 CPPSRCS += crashreporter_linux.cpp
 endif

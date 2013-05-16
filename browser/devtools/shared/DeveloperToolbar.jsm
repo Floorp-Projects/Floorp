@@ -31,7 +31,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
                                   "resource://gre/modules/PluralForm.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "devtools",
-                                  "resource:///modules/devtools/gDevTools.jsm");
+                                  "resource://gre/modules/devtools/Loader.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "require",
                                   "resource://gre/modules/devtools/Require.jsm");

@@ -33,7 +33,6 @@
 
 #ifdef DEBUG
 #include <stdio.h>
-//#define DEBUG_INVALIDATIONS
 //#define DEBUG_DISPLAY_ITEM_DATA
 #endif
 
@@ -822,10 +821,12 @@ InvalidatePostTransformRegion(ThebesLayer* aLayer, const nsIntRegion& aRegion,
   nsIntRegion rgn = aRegion;
   rgn.MoveBy(-aTranslation);
   aLayer->InvalidateRegion(rgn);
-#ifdef DEBUG_INVALIDATIONS
-  nsAutoCString str;
-  AppendToString(str, rgn);
-  printf("Invalidating layer %p: %s\n", aLayer, str.get());
+#ifdef MOZ_DUMP_PAINTING
+  if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
+    nsAutoCString str;
+    AppendToString(str, rgn);
+    printf("Invalidating layer %p: %s\n", aLayer, str.get());
+  }
 #endif
 }
 
@@ -980,8 +981,10 @@ FrameLayerBuilder::ProcessRemovedDisplayItems(nsRefPtrHashKey<DisplayItemData>* 
 
     ThebesLayer* t = data->mLayer->AsThebesLayer();
     if (t) {
-#ifdef DEBUG_INVALIDATIONS
-      printf("Invalidating unused display item (%i) belonging to frame %p from layer %p\n", data->mDisplayItemKey, data->mFrameList[0], t);
+#ifdef MOZ_DUMP_PAINTING
+      if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
+        printf("Invalidating unused display item (%i) belonging to frame %p from layer %p\n", data->mDisplayItemKey, data->mFrameList[0], t);
+      }
 #endif
       InvalidatePostTransformRegion(t,
                                     data->mGeometry->ComputeInvalidationRegion(),
@@ -1273,8 +1276,10 @@ ResetScrollPositionForLayerPixelAlignment(const nsIFrame* aActiveScrolledRoot)
 static void
 InvalidateEntireThebesLayer(ThebesLayer* aLayer, const nsIFrame* aActiveScrolledRoot)
 {
-#ifdef DEBUG_INVALIDATIONS
-  printf("Invalidating entire layer %p\n", aLayer);
+#ifdef MOZ_DUMP_PAINTING
+  if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
+    printf("Invalidating entire layer %p\n", aLayer);
+  }
 #endif
   nsIntRect invalidate = aLayer->GetValidRegion().GetBounds();
   aLayer->InvalidateRegion(invalidate);
@@ -1321,14 +1326,18 @@ ContainerState::CreateOrRecycleThebesLayer(const nsIFrame* aActiveScrolledRoot,
 #endif
     }
     if (!data->mRegionToInvalidate.IsEmpty()) {
-#ifdef DEBUG_INVALIDATIONS
-      printf("Invalidating deleted frame content from layer %p\n", layer.get());
+#ifdef MOZ_DUMP_PAINTING
+      if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
+        printf("Invalidating deleted frame content from layer %p\n", layer.get());
+      }
 #endif
       layer->InvalidateRegion(data->mRegionToInvalidate);
-#ifdef DEBUG_INVALIDATIONS
-      nsAutoCString str;
-      AppendToString(str, data->mRegionToInvalidate);
-      printf("Invalidating layer %p: %s\n", layer.get(), str.get());
+#ifdef MOZ_DUMP_PAINTING
+      if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
+        nsAutoCString str;
+        AppendToString(str, data->mRegionToInvalidate);
+        printf("Invalidating layer %p: %s\n", layer.get(), str.get());
+      }
 #endif
       data->mRegionToInvalidate.SetEmpty();
     }
@@ -2243,8 +2252,10 @@ ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem,
       // Note that whenever the layer's scale changes, we invalidate the whole thing,
       // so it doesn't matter whether we are using the old scale at last paint
       // or a new scale here
-#ifdef DEBUG_INVALIDATIONS
-      printf("Display item type %s(%p) changed layers %p to %p!\n", aItem->Name(), aItem->Frame(), t, aNewLayer);
+#ifdef MOZ_DUMP_PAINTING
+      if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
+        printf("Display item type %s(%p) changed layers %p to %p!\n", aItem->Name(), aItem->Frame(), t, aNewLayer);
+      }
 #endif
       InvalidatePostTransformRegion(t,
           oldGeometry->ComputeInvalidationRegion(),
@@ -2284,16 +2295,20 @@ ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem,
     // This item is being added for the first time, invalidate its entire area.
     //TODO: We call GetGeometry again in AddThebesDisplayItem, we should reuse this.
     combined = aClip.ApplyNonRoundedIntersection(aGeometry->ComputeInvalidationRegion());
-#ifdef DEBUG_INVALIDATIONS
-    printf("Display item type %s(%p) added to layer %p!\n", aItem->Name(), aItem->Frame(), aNewLayer);
+#ifdef MOZ_DUMP_PAINTING
+    if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
+      printf("Display item type %s(%p) added to layer %p!\n", aItem->Name(), aItem->Frame(), aNewLayer);
+    }
 #endif
   } else if (isInvalid || (aItem->IsInvalid(invalid) && invalid.IsEmpty())) {
     // Either layout marked item as needing repainting, invalidate the entire old and new areas.
     combined = oldClip->ApplyNonRoundedIntersection(oldGeometry->ComputeInvalidationRegion());
     combined.MoveBy(shift);
     combined.Or(combined, aClip.ApplyNonRoundedIntersection(aGeometry->ComputeInvalidationRegion()));
-#ifdef DEBUG_INVALIDATIONS
-    printf("Display item type %s(%p) (in layer %p) belongs to an invalidated frame!\n", aItem->Name(), aItem->Frame(), aNewLayer);
+#ifdef MOZ_DUMP_PAINTING
+    if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
+      printf("Display item type %s(%p) (in layer %p) belongs to an invalidated frame!\n", aItem->Name(), aItem->Frame(), aNewLayer);
+    }
 #endif
   } else {
     // Let the display item check for geometry changes and decide what needs to be
@@ -2316,9 +2331,11 @@ ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem,
     if (aClip.ComputeRegionInClips(oldClip, shift, &clip)) {
       combined.And(combined, clip);
     }
-#ifdef DEBUG_INVALIDATIONS
-    if (!combined.IsEmpty()) {
-      printf("Display item type %s(%p) (in layer %p) changed geometry!\n", aItem->Name(), aItem->Frame(), aNewLayer);
+#ifdef MOZ_DUMP_PAINTING
+    if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
+      if (!combined.IsEmpty()) {
+        printf("Display item type %s(%p) (in layer %p) changed geometry!\n", aItem->Name(), aItem->Frame(), aNewLayer);
+      }
     }
 #endif
   }
@@ -2421,8 +2438,10 @@ FrameLayerBuilder::AddThebesDisplayItem(ThebesLayer* aLayer,
                                                                         invalid.GetBounds());
       }
       if (!invalid.IsEmpty()) {
-#ifdef DEBUG_INVALIDATIONS
-        printf("Inactive LayerManager(%p) for display item %s(%p) has an invalid region - invalidating layer %p\n", tempManager.get(), aItem->Name(), aItem->Frame(), aLayer);
+#ifdef MOZ_DUMP_PAINTING
+        if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
+          printf("Inactive LayerManager(%p) for display item %s(%p) has an invalid region - invalidating layer %p\n", tempManager.get(), aItem->Name(), aItem->Frame(), aLayer);
+        }
 #endif
         if (hasClip) {
           invalid.And(invalid, intClip);
