@@ -4172,13 +4172,18 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
         return result, True, rooter
     if returnType.isDictionary():
         nullable = returnType.nullable()
-        result = CGGeneric(
-            CGDictionary.makeDictionaryName(returnType.unroll().inner,
-                                            descriptorProvider.workers) +
-            "Initializer")
+        dictName = (CGDictionary.makeDictionaryName(returnType.unroll().inner,
+                                                    descriptorProvider.workers) +
+                    "Initializer")
+        result = CGGeneric(dictName)
+        if not isMember and typeNeedsCx(returnType, descriptorProvider):
+            rooter = CGGeneric("DictionaryRooter<%s> resultRooter(cx);\n"
+                               "resultRooter.SetDictionary(&result);" % dictName)
+        else:
+            rooter = None
         if nullable:
             result = CGTemplatedType("Nullable", result)
-        return result, True, None
+        return result, True, rooter
     if returnType.isUnion():
         raise TypeError("Need to sort out ownership model for union retvals");
     if returnType.isDate():
