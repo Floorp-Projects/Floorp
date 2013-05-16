@@ -293,10 +293,14 @@ MaybeReflowForInflationScreenWidthChange(nsPresContext *aPresContext)
 {
   if (aPresContext) {
     nsIPresShell* presShell = aPresContext->GetPresShell();
-    if (presShell && nsLayoutUtils::FontSizeInflationEnabled(aPresContext) &&
+    bool fontInflationWasEnabled = presShell->FontSizeInflationEnabled();
+    presShell->NotifyFontSizeInflationEnabledIsDirty();
+    if (presShell && presShell->FontSizeInflationEnabled() &&
         presShell->FontSizeInflationMinTwips() != 0) {
       bool changed;
       aPresContext->ScreenWidthInchesForFontInflation(&changed);
+      changed = changed ||
+        (fontInflationWasEnabled != presShell->FontSizeInflationEnabled());
       if (changed) {
         nsCOMPtr<nsISupports> container = aPresContext->GetContainer();
         nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);
