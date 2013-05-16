@@ -1,0 +1,79 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf8">
+  <title>Test that WebIDL attributes with the LenientThis extended attribute
+         do not appear in the wrong objects</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript;version=1.8" src="common.js"></script>
+  <!-- Any copyright is dedicated to the Public Domain.
+     - http://creativecommons.org/publicdomain/zero/1.0/ -->
+</head>
+<body>
+<p>Test for the native getters in object actors</p>
+
+<script class="testbody" type="text/javascript;version=1.8">
+SimpleTest.waitForExplicitFinish();
+
+function startTest()
+{
+  removeEventListener("load", startTest);
+
+  attachConsole(["ConsoleAPI"], onAttach, true);
+}
+
+function onAttach(aState, aResponse)
+{
+  onConsoleCall = onConsoleCall.bind(null, aState);
+  aState.dbgClient.addListener("consoleAPICall", onConsoleCall);
+
+  let docAsProto = Object.create(document);
+
+  top.console.log("hello", docAsProto);
+}
+
+function onConsoleCall(aState, aType, aPacket)
+{
+  is(aPacket.from, aState.actor, "console API call actor");
+
+  info("checking the console API call packet");
+
+  checkConsoleAPICall(aPacket.message, {
+    level: "log",
+    filename: /test_object_actor/,
+    functionName: "onAttach",
+    arguments: ["hello", {
+      type: "object",
+      actor: /[a-z]/,
+    }],
+  });
+
+  aState.dbgClient.removeListener("consoleAPICall", onConsoleCall);
+
+  info("inspecting object properties");
+  let args = aPacket.message.arguments;
+  onProperties = onProperties.bind(null, aState);
+
+  let client = new GripClient(aState.dbgClient, args[1]);
+  client.getPrototypeAndProperties(onProperties);
+}
+
+function onProperties(aState, aResponse)
+{
+  let props = aResponse.ownProperties;
+  let keys = Object.keys(props);
+  info(keys.length + " ownProperties: " + keys);
+
+  is(keys.length, 0, "number of properties");
+  keys = Object.keys(aResponse.safeGetterValues);
+  is(keys.length, 0, "number of safe getters");
+
+  closeDebugger(aState, function() {
+    SimpleTest.finish();
+  });
+}
+
+addEventListener("load", startTest);
+</script>
+</body>
+</html>
