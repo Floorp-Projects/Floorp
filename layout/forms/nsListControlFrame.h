@@ -51,7 +51,7 @@ public:
     // nsIFrame
   NS_IMETHOD HandleEvent(nsPresContext* aPresContext,
                          nsGUIEvent* aEvent,
-                         nsEventStatus* aEventStatus);
+                         nsEventStatus* aEventStatus) MOZ_OVERRIDE;
   
   NS_IMETHOD SetInitialChildList(ChildListID     aListID,
                                  nsFrameList&    aChildList) MOZ_OVERRIDE;
@@ -70,14 +70,14 @@ public:
 
   NS_IMETHOD DidReflow(nsPresContext*           aPresContext, 
                        const nsHTMLReflowState*  aReflowState, 
-                       nsDidReflowStatus         aStatus);
+                       nsDidReflowStatus         aStatus) MOZ_OVERRIDE;
   virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) MOZ_OVERRIDE;
 
-  virtual nsIFrame* GetContentInsertionFrame();
+  virtual nsIFrame* GetContentInsertionFrame() MOZ_OVERRIDE;
 
   /**
    * Get the "type" of the frame
@@ -86,7 +86,7 @@ public:
    */
   virtual nsIAtom* GetType() const MOZ_OVERRIDE;
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const
+  virtual bool IsFrameOfType(uint32_t aFlags) const MOZ_OVERRIDE
   {
     return nsHTMLScrollFrame::IsFrameOfType(aFlags &
       ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
@@ -98,7 +98,7 @@ public:
 
     // nsIFormControlFrame
   virtual nsresult SetFormProperty(nsIAtom* aName, const nsAString& aValue) MOZ_OVERRIDE;
-  virtual void SetFocus(bool aOn = true, bool aRepaint = false);
+  virtual void SetFocus(bool aOn = true, bool aRepaint = false) MOZ_OVERRIDE;
 
   virtual nsGfxScrollFrameInner::ScrollbarStyles GetScrollbarStyles() const MOZ_OVERRIDE;
   virtual bool ShouldPropagateComputedHeightToScrolledContent() const MOZ_OVERRIDE;
@@ -109,7 +109,7 @@ public:
 #endif
 
     // nsIListControlFrame
-  virtual void SetComboboxFrame(nsIFrame* aComboboxFrame);
+  virtual void SetComboboxFrame(nsIFrame* aComboboxFrame) MOZ_OVERRIDE;
   virtual int32_t GetSelectedIndex() MOZ_OVERRIDE;
   virtual already_AddRefed<nsIContent> GetCurrentOption() MOZ_OVERRIDE;
 
@@ -144,7 +144,7 @@ public:
   virtual void OnContentReset() MOZ_OVERRIDE;
 
   // nsISelectControlFrame
-  NS_IMETHOD AddOption(int32_t index);
+  NS_IMETHOD AddOption(int32_t index) MOZ_OVERRIDE;
   NS_IMETHOD RemoveOption(int32_t index) MOZ_OVERRIDE;
   NS_IMETHOD DoneAddingChildren(bool aIsDone) MOZ_OVERRIDE;
 
@@ -238,7 +238,7 @@ public:
   /**
    * Dropdowns need views
    */
-  virtual bool NeedsView() { return IsInDropDownMode(); }
+  virtual bool NeedsView() MOZ_OVERRIDE { return IsInDropDownMode(); }
 
   /**
    * Frees statics owned by this class.

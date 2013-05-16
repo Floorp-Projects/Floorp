@@ -46,7 +46,7 @@ HistoryView.prototype = {
     for (let i = 0, addedCount = 0; i < childCount && addedCount < limit; i++) {
       let node = rootNode.getChild(i);
       let uri = node.uri;
-      let title = node.title || uri;
+      let title = (node.title && node.title.length) ? node.title : uri;
 
       // If item is marked for deletion, skip it.
       if (this._toRemove && this._toRemove.indexOf(uri) !== -1)

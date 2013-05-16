@@ -66,13 +66,6 @@ Zone::init(JSContext *cx)
 void
 Zone::setNeedsBarrier(bool needs, ShouldUpdateIon updateIon)
 {
-#ifdef JS_METHODJIT
-    /* ClearAllFrames calls compileBarriers() and needs the old value. */
-    bool old = compileBarriers();
-    if (compileBarriers(needs) != old)
-        mjit::ClearAllFrames(this);
-#endif
-
 #ifdef JS_ION
     if (updateIon == UpdateIon && needs != ionUsingBarriers_) {
         ion::ToggleBarriers(this, needs);
@@ -156,41 +149,27 @@ Zone::sweep(FreeOp *fop, bool releaseTypes)
 void
 Zone::discardJitCode(FreeOp *fop, bool discardConstraints)
 {
-#ifdef JS_METHODJIT
-    /*
-     * Kick all frames on the stack into the interpreter, and release all JIT
-     * code in the compartment unless code is being preserved, in which case
-     * purge all caches in the JIT scripts. Even if we are not releasing all
-     * JIT code, we still need to release code for scripts which are in the
-     * middle of a native or getter stub call, as these stubs will have been
-     * redirected to the interpoline.
-     */
-    mjit::ClearAllFrames(this);
-
+#ifdef JS_ION
     if (isPreservingCode()) {
         PurgeJITCaches(this);
     } else {
-# ifdef JS_ION
 
-#  ifdef DEBUG
+# ifdef DEBUG
         /* Assert no baseline scripts are marked as active. */
         for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
             JSScript *script = i.get<JSScript>();
             JS_ASSERT_IF(script->hasBaselineScript(), !script->baselineScript()->active());
         }
-#  endif
+# endif
 
         /* Mark baseline scripts on the stack as active. */
         ion::MarkActiveBaselineScripts(this);
 
         /* Only mark OSI points if code is being discarded. */
         ion::InvalidateAll(fop, this);
-# endif
+
         for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
             JSScript *script = i.get<JSScript>();
-
-            mjit::ReleaseScriptCode(fop, script);
-# ifdef JS_ION
             ion::FinishInvalidation(fop, script);
 
             /*
@@ -198,7 +177,6 @@ Zone::discardJitCode(FreeOp *fop, bool discardConstraints)
              * this also resets the active flag.
              */
             ion::FinishDiscardBaselineScript(fop, script);
-# endif
 
             /*
              * Use counts for scripts are reset on GC. After discarding code we
@@ -209,14 +187,12 @@ Zone::discardJitCode(FreeOp *fop, bool discardConstraints)
         }
 
         for (CompartmentsInZoneIter comp(this); !comp.done(); comp.next()) {
-#ifdef JS_ION
             /* Free optimized baseline stubs. */
             if (comp->ionCompartment())
                 comp->ionCompartment()->optimizedStubSpace()->free();
-#endif
 
             comp->types.sweepCompilerOutputs(fop, discardConstraints);
         }
     }
-#endif /* JS_METHODJIT */
+#endif
 }

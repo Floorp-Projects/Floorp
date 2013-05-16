@@ -68,6 +68,10 @@ public: // new functions
     virtual void SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
                                      FontCacheSizes*   aSizes) const;
 
+#ifdef USE_SKIA
+    virtual mozilla::TemporaryRef<mozilla::gfx::GlyphRenderingOptions> GetGlyphRenderingOptions();
+#endif
+
 protected:
     virtual bool ShapeText(gfxContext      *aContext,
                            const PRUnichar *aText,

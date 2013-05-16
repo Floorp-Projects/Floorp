@@ -573,17 +573,9 @@
           <richlistitem id="context-copy" type="copy" onclick="ContextCommands.copy();">
             <label value="&contextTextCopy.label;"/>
           </richlistitem>
-          <!-- only displayed if there is text on the clipboard -->
-          <richlistitem id="context-paste" type="paste" onclick="ContextCommands.paste();">
-            <label value="&contextTextPaste.label;"/>
-          </richlistitem>
           <!-- Search Bing for "(text..)", displayed on selected content text only -->
           <richlistitem id="context-search" type="selected-text,!input-text" onclick="ContextCommands.searchText(this);">
             <label id="context-search-label" value=""/>
-          </richlistitem>
-          <!-- only display if there is text on the clipboard and the target is the urlbar -->
-          <richlistitem id="context-paste-n-go" type="paste-url" onclick="ContextCommands.pasteAndGo();">
-            <label value="&contextTextPasteAndGo.label;"/>
           </richlistitem>
           <!-- only displayed in inputs with text that do not have selection -->
           <richlistitem id="context-select" type="selectable" onclick="ContextCommands.select();">
@@ -592,6 +584,14 @@
           <!-- only displayed in inputs with text that do not have selection -->
           <richlistitem id="context-select-all" type="selectable" onclick="ContextCommands.selectAll();">
             <label value="&contextTextSelectAll.label;"/>
+          </richlistitem>
+          <!-- only displayed if there is text on the clipboard -->
+          <richlistitem id="context-paste" type="paste" onclick="ContextCommands.paste();">
+            <label value="&contextTextPaste.label;"/>
+          </richlistitem>
+          <!-- only display if there is text on the clipboard and the target is the urlbar -->
+          <richlistitem id="context-paste-n-go" type="paste-url" onclick="ContextCommands.pasteAndGo();">
+            <label value="&contextTextPasteAndGo.label;"/>
           </richlistitem>
 
           <!-- Image related -->

@@ -66,7 +66,7 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
     public static final String PREF_TITLEBAR_MODE = "browser.chrome.titlebarMode";
     private GeckoRelativeLayout mLayout;
     private LayoutParams mAwesomeBarParams;
-    private View mAwesomeBarContent;
+    private View mUrlDisplayContainer;
     private View mAwesomeBarEntry;
     private ImageView mAwesomeBarRightEdge;
     private BrowserToolbarBackground mAddressBarBg;
@@ -151,10 +151,7 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
                 ThreadUtils.postToUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Tab tab = Tabs.getInstance().getSelectedTab();
-                        if (tab != null) {
-                            setTitle(tab.getDisplayTitle());
-                        }
+                        updateTitle();
                     }
                 });
             }
@@ -197,7 +194,7 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
                 inflater.inflate(R.menu.titlebar_contextmenu, menu);
 
                 String clipboard = GeckoAppShell.getClipboardText();
-                if (clipboard == null || TextUtils.isEmpty(clipboard)) {
+                if (TextUtils.isEmpty(clipboard)) {
                     menu.findItem(R.id.pasteandgo).setVisible(false);
                     menu.findItem(R.id.paste).setVisible(false);
                 }
@@ -231,7 +228,7 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
         mAddressBarBg = (BrowserToolbarBackground) mLayout.findViewById(R.id.address_bar_bg);
         mAddressBarViewOffset = mActivity.getResources().getDimensionPixelSize(R.dimen.addressbar_offset_left);
         mDefaultForwardMargin = mActivity.getResources().getDimensionPixelSize(R.dimen.forward_default_offset);
-        mAwesomeBarContent = mLayout.findViewById(R.id.awesome_bar_content);
+        mUrlDisplayContainer = mLayout.findViewById(R.id.awesome_bar_display_container);
         mAwesomeBarEntry = mLayout.findViewById(R.id.awesome_bar_entry);
 
         // This will clip the right edge's image at half of its width
@@ -446,7 +443,7 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
         switch(msg) {
             case TITLE:
                 if (Tabs.getInstance().isSelectedTab(tab)) {
-                    setTitle(tab.getDisplayTitle());
+                    updateTitle();
                 }
                 break;
             case START:
@@ -466,7 +463,7 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
                     updateForwardButton(tab.canDoForward());
                     setProgressVisibility(false);
                     // Reset the title in case we haven't navigated to a new page yet.
-                    setTitle(tab.getDisplayTitle());
+                    updateTitle();
                 }
                 break;
             case RESTORED:
@@ -898,42 +895,46 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
     }
 
     private void setTitle(CharSequence title) {
+        mTitle.setText(title);
+        mLayout.setContentDescription(title != null ? title : mTitle.getHint());
+    }
+
+    // Sets the toolbar title according to the selected tab, obeying the mShowUrl prference.
+    private void updateTitle() {
         Tab tab = Tabs.getInstance().getSelectedTab();
+        // Keep the title unchanged if there's no selected tab, or if the tab is entering reader mode.
+        if (tab == null || tab.isEnteringReaderMode()) {
+            return;
+        }
 
-        if (tab != null) {
-            // Keep the title unchanged if the tab is entering reader mode
-            if (tab.isEnteringReaderMode()) {
-                return;
-            }
+        String url = tab.getURL();
+        // Setting a null title will ensure we just see the "Enter Search or Address" placeholder text.
+        if ("about:home".equals(url) || "about:privatebrowsing".equals(url)) {
+            setTitle(null);
+            return;
+        }
 
-            // Setting a null title will ensure we just see the "Enter Search or Address"
-            // placeholder text. Because "about:home" and "about:privatebrowsing" don't
-            // have titles, their display titles will always match their URLs.
-            if ("about:home".equals(title) || "about:privatebrowsing".equals(title)) {
-                title = null;
-            }
+        // If the pref to show the URL isn't set, just use the tab's display title.
+        if (!mShowUrl || url == null) {
+            setTitle(tab.getDisplayTitle());
+            return;
+        }
 
-            if (mShowUrl && title != null) {
-                title = StringUtils.stripScheme(tab.getURL());
-                title = StringUtils.stripCommonSubdomains(title.toString());
+        url = StringUtils.stripScheme(url);
+        CharSequence title = StringUtils.stripCommonSubdomains(url);
 
-                // highlight the domain name if we find one
-                String baseDomain = tab.getBaseDomain();
-                if (!TextUtils.isEmpty(baseDomain)) {
-                    SpannableStringBuilder builder = new SpannableStringBuilder(title);
-                    int index = title.toString().indexOf(baseDomain);
-                    if (index > -1) {
-                        builder.setSpan(mUrlColor, 0, title.length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
-                        builder.setSpan(tab.isPrivate() ? mPrivateDomainColor : mDomainColor, index, index+baseDomain.length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
-
-                        title = builder;
-                    }
-                }
+        String baseDomain = tab.getBaseDomain();
+        if (!TextUtils.isEmpty(baseDomain)) {
+            SpannableStringBuilder builder = new SpannableStringBuilder(title);
+            int index = title.toString().indexOf(baseDomain);
+            if (index > -1) {
+                builder.setSpan(mUrlColor, 0, title.length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
+                builder.setSpan(tab.isPrivate() ? mPrivateDomainColor : mDomainColor, index, index+baseDomain.length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
+                title = builder;
             }
         }
 
-        mTitle.setText(title);
-        mLayout.setContentDescription(title != null ? title : mTitle.getHint());
+        setTitle(title);
     }
 
     private void setFavicon(Bitmap image) {
@@ -1034,9 +1035,9 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
                     // Set the margin before the transition when hiding the forward button. We
                     // have to do this so that the favicon isn't clipped during the transition
                     ViewGroup.MarginLayoutParams layoutParams =
-                        (ViewGroup.MarginLayoutParams)mAwesomeBarContent.getLayoutParams();
+                        (ViewGroup.MarginLayoutParams)mUrlDisplayContainer.getLayoutParams();
                     layoutParams.leftMargin = 0;
-                    mAwesomeBarContent.requestLayout();
+                    mUrlDisplayContainer.requestLayout();
                     // Note, we already translated the favicon, site security, and text field
                     // in prepareForwardAnimation, so they should appear to have not moved at
                     // all at this point.
@@ -1047,7 +1048,7 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
             public void onPropertyAnimationEnd() {
                 if (enabled) {
                     ViewGroup.MarginLayoutParams layoutParams =
-                        (ViewGroup.MarginLayoutParams)mAwesomeBarContent.getLayoutParams();
+                        (ViewGroup.MarginLayoutParams)mUrlDisplayContainer.getLayoutParams();
                     layoutParams.leftMargin = mAddressBarViewOffset;
 
                     ViewHelper.setTranslationX(mTitle, 0);
@@ -1060,7 +1061,7 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
                 layoutParams.leftMargin = mDefaultForwardMargin + (mForward.isEnabled() ? mForward.getWidth() / 2 : 0);
                 ViewHelper.setTranslationX(mForward, 0);
 
-                mAwesomeBarContent.requestLayout();
+                mUrlDisplayContainer.requestLayout();
                 mForwardAnim = null;
             }
         });
@@ -1142,8 +1143,7 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
     public void refresh() {
         Tab tab = Tabs.getInstance().getSelectedTab();
         if (tab != null) {
-            String url = tab.getURL();
-            setTitle(tab.getDisplayTitle());
+            updateTitle();
             setFavicon(tab.getFavicon());
             setProgressVisibility(tab.getState() == Tab.STATE_LOADING);
             setSecurityMode(tab.getSecurityMode());
