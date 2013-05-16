@@ -212,6 +212,7 @@ class MochiRemote(Mochitest):
         self._automation.setRemoteProfile(self.remoteProfile)
         self.remoteLog = options.remoteLogFile
         self.localLog = options.logFile
+        self._automation.deleteANRs()
 
     def cleanup(self, manifest, options):
         if self._dm.fileExists(self.remoteLog):

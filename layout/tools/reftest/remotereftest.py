@@ -255,6 +255,7 @@ class RemoteReftest(RefTest):
             self.SERVER_STARTUP_TIMEOUT = 180
         else:
             self.SERVER_STARTUP_TIMEOUT = 90
+        self.automation.deleteANRs()
 
     def findPath(self, paths, filename = None):
         for path in paths:
