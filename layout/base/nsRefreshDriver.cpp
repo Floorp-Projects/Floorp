@@ -632,11 +632,6 @@ nsRefreshDriver::RemoveImageRequest(imgIRequest* aRequest)
   mRequests.RemoveEntry(aRequest);
 }
 
-void nsRefreshDriver::ClearAllImageRequests()
-{
-  mRequests.Clear();
-}
-
 void
 nsRefreshDriver::EnsureTimerStarted(bool aAdjustingTimer)
 {
