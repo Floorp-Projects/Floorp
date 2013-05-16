@@ -241,20 +241,15 @@ gfxFontEntry::RenderSVGGlyph(gfxContext *aContext, uint32_t aGlyphId,
 bool
 gfxFontEntry::TryGetSVGData()
 {
+    if (!gfxPlatform::GetPlatform()->OpenTypeSVGEnabled()) {
+        return false;
+    }
+
     if (!mSVGInitialized) {
         mSVGInitialized = true;
 
-        bool svgEnabled;
-        nsresult rv =
-            Preferences::GetBool("gfx.font_rendering.opentype_svg.enabled",
-                                 &svgEnabled);
-
-        if (NS_FAILED(rv) || !svgEnabled) {
-            return false;
-        }
-
         FallibleTArray<uint8_t> svgTable;
-        rv = GetFontTable(TRUETYPE_TAG('S', 'V', 'G', ' '), svgTable);
+        nsresult rv = GetFontTable(TRUETYPE_TAG('S', 'V', 'G', ' '), svgTable);
         if (NS_FAILED(rv)) {
             return false;
         }
