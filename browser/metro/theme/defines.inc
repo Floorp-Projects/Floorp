@@ -22,7 +22,7 @@
 %define toolbar_height 68px
 %define tabs_height 178px
 
-%define progress_height 3px
+%define progress_height 5px
 %define progress_start_color #0095dd
 %define progress_end_color #97cbff
 
