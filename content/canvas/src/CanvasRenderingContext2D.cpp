@@ -441,6 +441,11 @@ public:
       static_cast<CanvasRenderingContext2DUserData*>(aData);
     CanvasRenderingContext2D* context = self->mContext;
     if (self->mContext && context->mGLContext) {
+      if (self->mContext->mTarget != nullptr) {
+        // Since SkiaGL default to store drawing command until flush
+        // We will have to flush it before present.
+        self->mContext->mTarget->Flush();
+      }
       context->mGLContext->MakeCurrent();
       context->mGLContext->PublishFrame();
     }
@@ -797,7 +802,12 @@ CanvasRenderingContext2D::EnsureTarget()
                                                                                  size.height),
                                                                       caps,
                                                                       mozilla::gl::GLContext::ContextFlagsNone);
-         mTarget = gfxPlatform::GetPlatform()->CreateDrawTargetForFBO(0, mGLContext, size, format);
+
+         if (mGLContext) {
+           mTarget = gfxPlatform::GetPlatform()->CreateDrawTargetForFBO(0, mGLContext, size, format);
+         } else {
+           mTarget = layerManager->CreateDrawTarget(size, format);
+         }
        } else
 #endif
          mTarget = layerManager->CreateDrawTarget(size, format);

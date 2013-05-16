@@ -50,9 +50,11 @@
                         android:defaultValue="true"
                         android:persistent="true" />
 
-    <ListPreference android:key="android.not_a_preference.privacy.titlebar"
+    <ListPreference android:key="browser.chrome.titlebarMode"
                     android:title="@string/pref_titlebar_mode"
-                    android:persistent="true" />
+                    android:entries="@array/pref_titlebar_mode_entries"
+                    android:entryValues="@array/pref_titlebar_mode_values"
+                    android:persistent="false" />
 
     <PreferenceScreen android:key="android.not_a_preference.datareporting.preferences"
                       android:title="@string/pref_category_datareporting"

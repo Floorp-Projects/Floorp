@@ -10,18 +10,6 @@ relativesrcdir	= @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DISABLED_XPCSHELL_TESTS = \
-  autocomplete \
-  bookmarks \
-  expiration \
-  favicons \
-  inline \
-  migration \
-  network \
-  queries \
-  unit \
-  $(NULL)
-
 # Files in the main "tests" folder.
 XPCSHELL_TESTS_COMMON = \
   head_common.js \

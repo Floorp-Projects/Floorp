@@ -184,7 +184,6 @@
     "dom/browser-element/mochitest/test_browserElement_inproc_CloseApp.html":"",
     "dom/browser-element/mochitest/test_browserElement_inproc_CloseFromOpener.html":"",
     "dom/browser-element/":"",
-    "dom/contacts/":"",
 
     "dom/devicestorage/test/test_basic.html":"",
     "dom/devicestorage/test/test_lastModificationFilter.html":"",

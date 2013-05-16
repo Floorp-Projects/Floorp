@@ -15,16 +15,76 @@
           src="../role.js" />
   <script type="application/javascript"
           src="../states.js" />
+  <script type="application/javascript"
+          src="../events.js" />
 
   <script type="application/javascript">
   <![CDATA[
+    function openMenu(aID, aSubID, aOffscreenSubID)
+    {
+      this.menuNode = getNode(aID);
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_FOCUS, this.menuNode)
+      ];
+
+      this.invoke = function openMenu_invoke()
+      {
+        this.menuNode.open = true;
+      }
+
+      this.finalCheck = function openMenu_finalCheck()
+      {
+        testStates(aID, 0, 0, STATE_INVISIBLE | STATE_OFFSCREEN);
+        testStates(aSubID, 0, 0, STATE_INVISIBLE | STATE_OFFSCREEN);
+        if (aOffscreenSubID)
+          testStates(aOffscreenSubID, STATE_OFFSCREEN, 0, STATE_INVISIBLE);
+      }
+
+      this.getID = function openMenu_invoke()
+      {
+        return "open menu '" + aID + "' and test states";
+      }
+    }
+
+    function closeMenu(aID, aSubID, aSub2ID)
+    {
+      this.menuNode = getNode(aID);
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_FOCUS, document)
+      ];
+
+      this.invoke = function openMenu_invoke()
+      {
+        this.menuNode.open = false;
+      }
+
+      this.finalCheck = function openMenu_finalCheck()
+      {
+        testStates(aID, 0, 0, STATE_INVISIBLE | STATE_OFFSCREEN);
+        testStates(aSubID, STATE_INVISIBLE, 0, STATE_OFFSCREEN);
+        testStates(aSub2ID, STATE_INVISIBLE, 0, STATE_OFFSCREEN);
+      }
+
+      this.getID = function openMenu_invoke()
+      {
+        return "open menu and test states";
+      }
+    }
+
+    var gQueue = null;
     function doTest()
     {
       testStates("deck_pane2", 0, 0, STATE_INVISIBLE | STATE_OFFSCREEN);
       testStates("tabs_pane1", 0, 0, STATE_INVISIBLE | STATE_OFFSCREEN);
       testStates("tabs_pane2", STATE_OFFSCREEN, 0, STATE_INVISIBLE);
 
-      SimpleTest.finish();
+      gQueue = new eventQueue();
+      gQueue.push(new openMenu("mi_file1", "mi_file1.1"));
+      gQueue.push(new openMenu("mi_file1.2", "mi_file1.2.1", "mi_file1.2.4"));
+      gQueue.push(new closeMenu("mi_file1", "mi_file1.1", "mi_file1.2.1"));
+      gQueue.invoke(); // Will call SimpleTest.finish();
     }
 
     SimpleTest.waitForExplicitFinish();
@@ -36,8 +96,13 @@
     <body xmlns="http://www.w3.org/1999/xhtml">
      <a target="_blank"
          href="https://bugzilla.mozilla.org/show_bug.cgi?id=810260"
-         title=" xul:deck hidden pages shouldn't be offscreen">
+         title="xul:deck hidden pages shouldn't be offscreen">
         Mozilla Bug 810260
+     </a>
+     <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=865591"
+         title="Visible menu item have offscreen state">
+        Mozilla Bug 865591
      </a>
 
       <p id="display"></p>
@@ -65,6 +130,21 @@
         </tabpanels>
       </tabbox>
 
+      <menubar>
+        <menu label="File" id="mi_file1">
+          <menupopup>
+            <menuitem label="SubFile" id="mi_file1.1"/>
+            <menu label="SubFile2" id="mi_file1.2">
+              <menupopup style="max-height: 5em;">
+                <menuitem label="SubSubFile" id="mi_file1.2.1"/>
+                <menuitem label="SubSubFile2" id="mi_file1.2.2"/>
+                <menuitem label="SubSubFile3" id="mi_file1.2.3"/>
+                <menuitem label="SubSubFile4" id="mi_file1.2.4"/>
+              </menupopup>
+            </menu>
+          </menupopup>
+        </menu>
+      </menubar>
     </vbox>
   </hbox>
 

@@ -256,6 +256,13 @@ bool OmxDecoder::Init() {
     // for (h.264).  So if we don't get a hardware decoder, just give
     // up.
     int flags = kHardwareCodecsOnly;
+
+    char propQemu[PROPERTY_VALUE_MAX];
+    property_get("ro.kernel.qemu", propQemu, "");
+    if (!strncmp(propQemu, "1", 1)) {
+      // If we are in emulator, allow to fall back to software.
+      flags = 0;
+    }
     videoSource = OMXCodec::Create(omx,
                                    videoTrack->getFormat(),
                                    false, // decoder
@@ -604,6 +611,9 @@ bool OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aTimeUs,
     // don't keep trying to decode if the decoder doesn't want to.
     return false;
   }
+  else if (err != OK && err != -ETIMEDOUT) {
+    return false;
+  }
 
   return true;
 }
@@ -655,6 +665,9 @@ bool OmxDecoder::ReadAudio(AudioFrame *aFrame, int64_t aSeekTimeUs)
     }
   }
   else if (err == UNKNOWN_ERROR) {
+    return false;
+  }
+  else if (err != OK && err != -ETIMEDOUT) {
     return false;
   }
 

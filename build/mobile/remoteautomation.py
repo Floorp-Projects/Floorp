@@ -89,7 +89,7 @@ class RemoteAutomation(Automation):
     def checkForJavaException(self, logcat):
         found_exception = False
         for i, line in enumerate(logcat):
-            if "REPORTING UNCAUGHT EXCEPTION" in line:
+            if "REPORTING UNCAUGHT EXCEPTION" in line or "FATAL EXCEPTION" in line:
                 # Strip away the date, time, logcat tag and pid from the next two lines and
                 # concatenate the remainder to form a concise summary of the exception. 
                 #

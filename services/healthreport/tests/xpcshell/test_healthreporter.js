@@ -413,16 +413,20 @@ add_task(function test_json_payload_multiple_days() {
     yield reporter._providerManager.registerProvider(provider);
 
     let now = new Date();
+
     let m = provider.getMeasurement("DummyMeasurement", 1);
     for (let i = 0; i < 200; i++) {
       let date = new Date(now.getTime() - i * MILLISECONDS_PER_DAY);
       yield m.incrementDailyCounter("daily-counter", date);
-      yield m.addDailyDiscreteNumeric("daily-discrete-numeric", i, date);
-      yield m.addDailyDiscreteNumeric("daily-discrete-numeric", i + 100, date);
-      yield m.addDailyDiscreteText("daily-discrete-text", "" + i, date);
-      yield m.addDailyDiscreteText("daily-discrete-text", "" + (i + 50), date);
-      yield m.setDailyLastNumeric("daily-last-numeric", date.getTime(), date);
     }
+
+    // This test could fail if we cross a UTC day boundary when running. So,
+    // we ensure this doesn't occur.
+    Object.defineProperty(reporter, "_now", {
+      value: function () {
+        return now;
+      },
+    });
 
     let payload = yield reporter.getJSONPayload();
     print(payload);

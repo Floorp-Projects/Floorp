@@ -40,9 +40,9 @@ public:
   NS_IMETHOD SetActive(bool aActiveFlag) MOZ_OVERRIDE; 
 
   virtual bool IsMenuBar() MOZ_OVERRIDE { return true; }
-  virtual bool IsContextMenu() { return false; }
+  virtual bool IsContextMenu() MOZ_OVERRIDE { return false; }
   virtual bool IsActive() MOZ_OVERRIDE { return mIsActive; }
-  virtual bool IsMenu() { return false; }
+  virtual bool IsMenu() MOZ_OVERRIDE { return false; }
   virtual bool IsOpen() MOZ_OVERRIDE { return true; } // menubars are considered always open
 
   bool IsMenuOpen() { return mCurrentMenu && mCurrentMenu->IsOpen(); }

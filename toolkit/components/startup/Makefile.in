@@ -33,6 +33,4 @@ endif
 endif
 endif
 
-DISABLED_XPCSHELL_TESTS = tests/unit
-
 include $(topsrcdir)/config/rules.mk

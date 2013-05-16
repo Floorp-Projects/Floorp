@@ -46,33 +46,4 @@ endif
 BUILD_HOSTNAME = $(shell hostname -s || hostname)
 DEFINES += -DBUILD_HOSTNAME="$(BUILD_HOSTNAME)"
 
-ifdef MOZ_TOOLKIT_SEARCH
-DEFINES += -DMOZ_TOOLKIT_SEARCH
-endif
-
-EXTRA_JS_MODULES = \
-  debug.js \
-  DeferredTask.jsm \
-  Deprecated.jsm \
-  Dict.jsm \
-  Geometry.jsm \
-  InlineSpellChecker.jsm \
-  PageMenu.jsm \
-  PopupNotifications.jsm \
-  PropertyListUtils.jsm \
-  Task.jsm \
-  PrivateBrowsingUtils.jsm \
-  $(NULL)
-
-EXTRA_PP_JS_MODULES = \
-  Services.jsm \
-  WindowDraggingUtils.jsm \
-  Troubleshoot.jsm \
-  UpdateChannel.jsm \
-  $(NULL)
-
-ifneq (Android,$(OS_TARGET))
-EXTRA_PP_JS_MODULES += LightweightThemeConsumer.jsm
-endif
-
 include $(topsrcdir)/config/rules.mk

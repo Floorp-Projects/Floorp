@@ -11,8 +11,6 @@ relativesrcdir  = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DISABLED_XPCSHELL_TESTS = unit unit_ipc
-
 LIBRARY_NAME = testcrasher
 NO_DIST_INSTALL = 1
 

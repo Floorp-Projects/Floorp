@@ -426,8 +426,6 @@ LIRGenerator::visitApplyArgs(MApplyArgs *apply)
 {
     JS_ASSERT(apply->getFunction()->type() == MIRType_Object);
 
-    JSFunction *target = apply->getSingleTarget();
-
     // Assert if we cannot build a rectifier frame.
     JS_ASSERT(CallTempReg0 != ArgumentsRectifierReg);
     JS_ASSERT(CallTempReg1 != ArgumentsRectifierReg);
@@ -447,7 +445,7 @@ LIRGenerator::visitApplyArgs(MApplyArgs *apply)
         return false;
 
     // Bailout is only needed in the case of possible non-JSFunction callee.
-    if (!target && !assignSnapshot(lir))
+    if (!apply->getSingleTarget() && !assignSnapshot(lir))
         return false;
 
     if (!defineReturn(lir, apply))

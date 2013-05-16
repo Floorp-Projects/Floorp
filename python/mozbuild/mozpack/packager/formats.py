@@ -130,7 +130,9 @@ class FlatFormatter(object):
 class JarFormatter(FlatFormatter):
     '''
     Formatter for the jar package format. Assumes manifest entries related to
-    chrome are registered before the chrome data files are added.
+    chrome are registered before the chrome data files are added. Also assumes
+    manifest entries for resources are registered after chrome manifest
+    entries.
     '''
     def __init__(self, copier, compress=True, optimize=True):
         FlatFormatter.__init__(self, copier)
