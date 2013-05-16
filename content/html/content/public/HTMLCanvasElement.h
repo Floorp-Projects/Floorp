@@ -92,7 +92,7 @@ public:
   }
   already_AddRefed<nsISupports>
   GetContext(JSContext* aCx, const nsAString& aContextId,
-             const Optional<JS::Rooted<JS::Value> >& aContextOptions,
+             const Optional<JS::Handle<JS::Value> >& aContextOptions,
              ErrorResult& aRv)
   {
     JS::Value contextOptions = aContextOptions.WasPassed()
@@ -103,7 +103,7 @@ public:
     return context.forget();
   }
   void ToDataURL(JSContext* aCx, const nsAString& aType,
-                 const Optional<JS::Rooted<JS::Value> >& aParams,
+                 const Optional<JS::Handle<JS::Value> >& aParams,
                  nsAString& aDataURL, ErrorResult& aRv)
   {
     JS::Value params = aParams.WasPassed()

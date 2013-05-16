@@ -225,16 +225,22 @@ private:
 };
 
 // Class for representing optional arguments.
-template<typename T>
-class Optional
+template<typename T, typename InternalType>
+class Optional_base
 {
 public:
-  Optional()
+  Optional_base()
   {}
 
-  explicit Optional(const T& aValue)
+  explicit Optional_base(const T& aValue)
   {
     mImpl.construct(aValue);
+  }
+
+  template<typename T1, typename T2>
+  explicit Optional_base(const T1& aValue1, const T2& aValue2)
+  {
+    mImpl.construct(aValue1, aValue2);
   }
 
   bool WasPassed() const
@@ -259,12 +265,12 @@ public:
     mImpl.construct(t1, t2);
   }
 
-  const T& Value() const
+  const InternalType& Value() const
   {
     return mImpl.ref();
   }
 
-  T& Value()
+  InternalType& Value()
   {
     return mImpl.ref();
   }
@@ -275,10 +281,37 @@ public:
 
 private:
   // Forbid copy-construction and assignment
-  Optional(const Optional& other) MOZ_DELETE;
-  const Optional &operator=(const Optional &other) MOZ_DELETE;
+  Optional_base(const Optional_base& other) MOZ_DELETE;
+  const Optional_base &operator=(const Optional_base &other) MOZ_DELETE;
 
-  Maybe<T> mImpl;
+  Maybe<InternalType> mImpl;
+};
+
+template<typename T>
+class Optional : public Optional_base<T, T>
+{
+public:
+  Optional() :
+    Optional_base<T, T>()
+  {}
+
+  explicit Optional(const T& aValue) :
+    Optional_base<T, T>(aValue)
+  {}
+};
+
+template<typename T>
+class Optional<JS::Handle<T> > :
+  public Optional_base<JS::Handle<T>, JS::Rooted<T> >
+{
+public:
+  Optional() :
+    Optional_base<JS::Handle<T>, JS::Rooted<T> >()
+  {}
+
+  Optional(JSContext* cx, const T& aValue) :
+    Optional_base<JS::Handle<T>, JS::Rooted<T> >(cx, aValue)
+  {}
 };
 
 // Specialization for strings.
