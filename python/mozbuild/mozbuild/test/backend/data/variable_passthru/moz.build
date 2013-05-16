@@ -5,3 +5,5 @@
 XPIDL_SOURCES = ['foo.idl', 'bar.idl', 'biz.idl']
 XPIDL_MODULE = 'module_name'
 XPIDL_FLAGS = ['-Idir1', '-Idir2', '-Idir3']
+
+ASFILES = ['foo.asm', 'bar.s']

@@ -107,7 +107,6 @@ public class testWebContentContextMenu extends PixelTest {
                         }
                         else {
                             if (opt.equals("Bookmark Link")) {
-                                Device mDevice = new Device();
                                 Navigation nav = new Navigation(mDevice);
 
                                 accessSection(0, opt, urls);

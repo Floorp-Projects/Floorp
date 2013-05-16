@@ -7,15 +7,14 @@
 
 #ifdef USE_CAIRO
 #include "DrawTargetCairo.h"
-#include "ScaledFontCairo.h"
+#include "ScaledFontBase.h"
 #endif
 
 #ifdef USE_SKIA
 #include "DrawTargetSkia.h"
 #include "ScaledFontBase.h"
 #ifdef MOZ_ENABLE_FREETYPE
-#define USE_SKIA_FREETYPE
-#include "ScaledFontCairo.h"
+#include "ScaledFontFreetype.h"
 #endif
 #endif
 
@@ -298,10 +297,20 @@ Factory::CreateScaledFontForNativeFont(const NativeFont &aNativeFont, Float aSiz
       return new ScaledFontMac(static_cast<CGFontRef>(aNativeFont.mFont), aSize);
     }
 #endif
-#if defined(USE_CAIRO) || defined(USE_SKIA_FREETYPE)
+#ifdef USE_SKIA
+#ifdef MOZ_ENABLE_FREETYPE
+  case NATIVE_FONT_SKIA_FONT_FACE:
+    {
+      return new ScaledFontFreetype(static_cast<FontOptions*>(aNativeFont.mFont), aSize);
+    }
+#endif
+#endif
+#ifdef USE_CAIRO
   case NATIVE_FONT_CAIRO_FONT_FACE:
     {
-      return new ScaledFontCairo(static_cast<cairo_scaled_font_t*>(aNativeFont.mFont), aSize);
+      ScaledFontBase* fontBase = new ScaledFontBase(aSize);
+      fontBase->SetCairoScaledFont(static_cast<cairo_scaled_font_t*>(aNativeFont.mFont));
+      return fontBase;
     }
 #endif
   default:
@@ -449,19 +458,6 @@ Factory::CreateSkiaDrawTargetForFBO(unsigned int aFBOID, GrContext *aGrContext, 
   return newTarget;
 }
 #endif // USE_SKIA_GPU
-
-#ifdef USE_SKIA_FREETYPE
-TemporaryRef<GlyphRenderingOptions>
-Factory::CreateCairoGlyphRenderingOptions(FontHinting aHinting, bool aAutoHinting)
-{
-  RefPtr<GlyphRenderingOptionsCairo> options =
-    new GlyphRenderingOptionsCairo();
-
-  options->SetHinting(aHinting);
-  options->SetAutoHinting(aAutoHinting);
-  return options;
-}
-#endif
 
 TemporaryRef<DrawTarget>
 Factory::CreateDrawTargetForCairoSurface(cairo_surface_t* aSurface, const IntSize& aSize)
