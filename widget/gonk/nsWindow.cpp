@@ -15,25 +15,19 @@
 
 #include "mozilla/DebugOnly.h"
 
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-
 #include <fcntl.h>
 
 #include "android/log.h"
-#include "ui/FramebufferNativeWindow.h"
 
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/Hal.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/FileUtils.h"
-#include "BootAnimation.h"
 #include "Framebuffer.h"
 #include "gfxContext.h"
 #include "gfxPlatform.h"
 #include "gfxUtils.h"
 #include "GLContextProvider.h"
-#include "HwcComposer2D.h"
 #include "LayerManagerOGL.h"
 #include "nsAutoPtr.h"
 #include "nsAppShell.h"
@@ -45,6 +39,12 @@
 #include "cutils/properties.h"
 #include "ClientLayerManager.h"
 #include "BasicLayers.h"
+#include "libdisplay/GonkDisplay.h"
+#include "pixelflinger/format.h"
+
+#if ANDROID_VERSION == 15
+#include "HwcComposer2D.h"
+#endif
 
 #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Gonk" , ## args)
 #define LOGW(args...) __android_log_print(ANDROID_LOG_WARN, "Gonk", ## args)
@@ -480,7 +480,7 @@ nsWindow::GetNativeData(uint32_t aDataType)
 {
     switch (aDataType) {
     case NS_NATIVE_WINDOW:
-        return NativeWindow();
+        return GetGonkDisplay()->GetNativeWindow();
     case NS_NATIVE_WIDGET:
         return this;
     }
@@ -541,7 +541,7 @@ nsWindow::MakeFullScreen(bool aFullScreen)
 float
 nsWindow::GetDPI()
 {
-    return NativeWindow()->xdpi;
+    return GetGonkDisplay()->xdpi;
 }
 
 double
@@ -579,8 +579,6 @@ nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
         }
         return mLayerManager;
     }
-
-    StopBootAnimation();
 
     // Set mUseLayersAcceleration here to make it consistent with
     // nsBaseWidget::GetLayerManager
@@ -707,9 +705,13 @@ nsWindow::GetComposer2D()
     if (!sUsingHwc) {
         return nullptr;
     }
+
+#if ANDROID_VERSION == 15
     if (HwcComposer2D* hwc = HwcComposer2D::GetInstance()) {
         return hwc->Initialized() ? hwc : nullptr;
     }
+#endif
+
     return nullptr;
 }
 
@@ -746,7 +748,7 @@ nsScreenGonk::GetAvailRect(int32_t *outLeft,  int32_t *outTop,
 static uint32_t
 ColorDepth()
 {
-    switch (NativeWindow()->getDevice()->format) {
+    switch (GetGonkDisplay()->surfaceformat) {
     case GGL_PIXEL_FORMAT_RGB_565:
         return 16;
     case GGL_PIXEL_FORMAT_RGBA_8888:

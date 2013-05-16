@@ -747,6 +747,10 @@ var WifiManager = (function() {
   }
 
   manager.connectionDropped = function(callback) {
+    // Reset network interface when connection drop
+    configureInterface(manager.ifname, 0, 0, 0, 0, 0, function (data) {
+    });
+
     // If we got disconnected, kill the DHCP client in preparation for
     // reconnection.
     resetConnections(manager.ifname, function() {

@@ -18,11 +18,11 @@ ifdef MOZ_UPDATER
 
 EXTRA_PP_COMPONENTS += \
   nsUpdateService.js \
+  nsUpdateServiceStub.js \
   $(NULL)
 
 EXTRA_COMPONENTS += \
   nsUpdateService.manifest \
-  nsUpdateServiceStub.js \
   $(NULL)
 
 endif

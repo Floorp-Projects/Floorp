@@ -245,6 +245,18 @@ function removeHostRoute(options) {
   libnetutils.ifc_remove_route(options.ifname, options.mmsproxy, 32, options.gateway);
 }
 
+function removeNetworkRoute(options) {
+  let ipvalue = netHelpers.stringToIP(options.ip);
+  let netmaskvalue = netHelpers.stringToIP(options.netmask);
+  let subnet = netmaskvalue & ipvalue;
+  let dst = netHelpers.ipToString(subnet);
+  let prefixLength = netHelpers.getMaskLength(netmaskvalue);
+  let gateway = "0.0.0.0";
+
+  libnetutils.ifc_remove_default_route(options.ifname);
+  libnetutils.ifc_remove_route(options.ifname, dst, prefixLength, gateway);
+}
+
 let gCommandQueue = [];
 let gCurrentCommand = null;
 let gCurrentCallback = null;
