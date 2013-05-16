@@ -2932,12 +2932,20 @@ nsDOMDeviceStorage::Available(nsIDOMDOMRequest** aRetval)
 }
 
 NS_IMETHODIMP
-nsDOMDeviceStorage::GetRootDirectory(nsIFile** aRootDirectory)
+nsDOMDeviceStorage::GetRootDirectoryForFile(const nsAString& aName, nsIFile** aRootDirectory)
 {
-  if (!mRootDirectory) {
+  nsRefPtr<nsDOMDeviceStorage> ds;
+
+  if (IsComposite()) {
+    nsString storagePath;
+    ds = GetStorage(aName, storagePath);
+  } else {
+    ds = this;
+  }
+  if (!ds || !ds->mRootDirectory) {
     return NS_ERROR_FAILURE;
   }
-  return mRootDirectory->Clone(aRootDirectory);
+  return ds->mRootDirectory->Clone(aRootDirectory);
 }
 
 NS_IMETHODIMP
