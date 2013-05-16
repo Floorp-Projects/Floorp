@@ -144,11 +144,13 @@ public:
     if (!mBuffer.IsEmpty() &&
         mLeftOverData == INT32_MIN &&
         aStream->AllInputsFinished()) {
-      mLeftOverData = static_cast<int32_t>(mCurrentDelayTime * IdealAudioRate());
+      mLeftOverData = static_cast<int32_t>(mCurrentDelayTime * IdealAudioRate()) - WEBAUDIO_BLOCK_SIZE;
 
-      nsRefPtr<PlayingRefChanged> refchanged =
-        new PlayingRefChanged(aStream, PlayingRefChanged::ADDREF);
-      NS_DispatchToMainThread(refchanged);
+      if (mLeftOverData > 0) {
+        nsRefPtr<PlayingRefChanged> refchanged =
+          new PlayingRefChanged(aStream, PlayingRefChanged::ADDREF);
+        NS_DispatchToMainThread(refchanged);
+      }
     } else if (mLeftOverData != INT32_MIN) {
       mLeftOverData -= WEBAUDIO_BLOCK_SIZE;
       if (mLeftOverData <= 0) {
