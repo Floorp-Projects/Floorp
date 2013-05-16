@@ -12,6 +12,7 @@ include $(DEPTH)/config/autoconf.mk
 include $(srcdir)/objs.mk
 
 LIBRARY_NAME	= jar$(VERSION_NUMBER)
+MSVC_ENABLE_PGO := 1
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsJarModule

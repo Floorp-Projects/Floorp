@@ -21,6 +21,7 @@ VPATH       = \
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME   = layers
+MSVC_ENABLE_PGO := 1
 LIBXUL_LIBRARY = 1
 FORCE_STATIC_LIB = 1
 
