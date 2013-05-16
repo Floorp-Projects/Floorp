@@ -114,6 +114,18 @@ public:
     , mPrivacyMode(false)
   { }
 
+  ~PseudoStack() {
+    clearMarkers();
+    if (mStackPointer != 0 || mSignalLock != false ||
+        mMarkerPointer != 0) {
+      // We're releasing the pseudostack while it's still in use.
+      // The label macros keep a non ref counted reference to the
+      // stack to avoid a TLS. If these are not all cleared we will
+      // get a use-after-free so better to crash now.
+      abort();
+    }
+  }
+
   void addMarker(const char *aMarker)
   {
     char* markerCopy = strdup(aMarker);
