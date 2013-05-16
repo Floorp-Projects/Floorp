@@ -29,8 +29,10 @@
 #include "mozilla/Attributes.h"
 #include <algorithm>
 #include "nsUnicodeProperties.h"
+#include "harfbuzz/hb.h"
 
 typedef struct _cairo_scaled_font cairo_scaled_font_t;
+typedef struct gr_face            gr_face;
 
 #ifdef DEBUG
 #include <stdio.h>
@@ -49,8 +51,6 @@ class gfxSVGGlyphs;
 class gfxTextObjectPaint;
 
 class nsILanguageAtomService;
-
-typedef struct hb_blob_t hb_blob_t;
 
 #define FONT_MAX_SIZE                  2000.0
 
@@ -237,13 +237,17 @@ public:
         mHasSpaceFeaturesKerning(false),
         mHasSpaceFeaturesNonKerning(false),
         mHasSpaceFeaturesSubDefault(false),
-        mWeight(500), mStretch(NS_FONT_STRETCH_NORMAL),
         mCheckedForGraphiteTables(false),
         mHasCmapTable(false),
+        mGrFaceInitialized(false),
+        mWeight(500), mStretch(NS_FONT_STRETCH_NORMAL),
         mUVSOffset(0), mUVSData(nullptr),
         mUserFontData(nullptr),
         mSVGGlyphs(nullptr),
-        mLanguageOverride(NO_FONT_LANGUAGE_OVERRIDE)
+        mLanguageOverride(NO_FONT_LANGUAGE_OVERRIDE),
+        mHBFace(nullptr),
+        mGrFace(nullptr),
+        mGrFaceRefCnt(0)
     {
         memset(&mHasSpaceFeaturesSub, 0, sizeof(mHasSpaceFeaturesSub));
     }
@@ -322,9 +326,46 @@ public:
         return true;
     }
 
-    virtual nsresult GetFontTable(uint32_t aTableTag, FallibleTArray<uint8_t>& aBuffer) {
-        return NS_ERROR_FAILURE; // all platform subclasses should reimplement this!
-    }
+    // Access to raw font table data (needed for Harfbuzz):
+    // returns a pointer to data owned by the fontEntry or the OS,
+    // which will remain valid until the blob is destroyed.
+    // The data MUST be treated as read-only; we may be getting a
+    // reference to a shared system font cache.
+    //
+    // The default implementation uses CopyFontTable to get the data
+    // into a byte array, and maintains a cache of loaded tables.
+    //
+    // Subclasses should override this if they can provide more efficient
+    // access than copying table data into our own buffers.
+    //
+    // Get blob that encapsulates a specific font table, or NULL if
+    // the table doesn't exist in the font.
+    //
+    // Caller is responsible to call hb_blob_destroy() on the returned blob
+    // (if non-NULL) when no longer required. For transient access to a table,
+    // use of AutoTable (below) is generally preferred.
+    virtual hb_blob_t *GetFontTable(uint32_t aTag);
+
+    // Stack-based utility to return a specified table, automatically releasing
+    // the blob when the AutoTable goes out of scope.
+    class AutoTable {
+    public:
+        AutoTable(gfxFontEntry* aFontEntry, uint32_t aTag)
+        {
+            mBlob = aFontEntry->GetFontTable(aTag);
+        }
+        ~AutoTable() {
+            if (mBlob) {
+                hb_blob_destroy(mBlob);
+            }
+        }
+        operator hb_blob_t*() const { return mBlob; }
+    private:
+        hb_blob_t* mBlob;
+        // not implemented:
+        AutoTable(const AutoTable&) MOZ_DELETE;
+        AutoTable& operator=(const AutoTable&) MOZ_DELETE;
+    };
 
     already_AddRefed<gfxFont> FindOrMakeFont(const gfxFontStyle *aStyle,
                                              bool aNeedsBold);
@@ -347,6 +388,21 @@ public:
     hb_blob_t *ShareFontTableAndGetBlob(uint32_t aTag,
                                         FallibleTArray<uint8_t>* aTable);
 
+    // Shaper face accessors:
+    // NOTE that harfbuzz and graphite handle ownership/lifetime of the face
+    // object in completely different ways.
+
+    // Get HarfBuzz face corresponding to this font file.
+    // Caller must release with hb_face_destroy() when finished with it,
+    // and the font entry will be notified via ForgetHBFace.
+    hb_face_t* GetHBFace();
+    virtual void ForgetHBFace();
+
+    // Get Graphite face corresponding to this font file.
+    // Caller must call gfxFontEntry::ReleaseGrFace when finished with it.
+    gr_face* GetGrFace();
+    virtual void ReleaseGrFace(gr_face* aFace);
+    
     // For memory reporting
     virtual void SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
                                      FontListSizes*    aSizes) const;
@@ -373,6 +429,10 @@ public:
     bool             mHasSpaceFeaturesKerning : 1;
     bool             mHasSpaceFeaturesNonKerning : 1;
     bool             mHasSpaceFeaturesSubDefault : 1;
+    bool             mHasGraphiteTables : 1;
+    bool             mCheckedForGraphiteTables : 1;
+    bool             mHasCmapTable : 1;
+    bool             mGrFaceInitialized : 1;
 
     // bitvector of substitution space features per script
     uint32_t         mHasSpaceFeaturesSub[(MOZ_NUM_SCRIPT_CODES + 31) / 32];
@@ -380,9 +440,6 @@ public:
     uint16_t         mWeight;
     int16_t          mStretch;
 
-    bool             mHasGraphiteTables;
-    bool             mCheckedForGraphiteTables;
-    bool             mHasCmapTable;
     nsRefPtr<gfxCharacterMap> mCharacterMap;
     uint32_t         mUVSOffset;
     nsAutoArrayPtr<uint8_t> mUVSData;
@@ -415,13 +472,17 @@ protected:
         mHasSpaceFeaturesKerning(false),
         mHasSpaceFeaturesNonKerning(false),
         mHasSpaceFeaturesSubDefault(false),
-        mWeight(500), mStretch(NS_FONT_STRETCH_NORMAL),
         mCheckedForGraphiteTables(false),
         mHasCmapTable(false),
+        mGrFaceInitialized(false),
+        mWeight(500), mStretch(NS_FONT_STRETCH_NORMAL),
         mUVSOffset(0), mUVSData(nullptr),
         mUserFontData(nullptr),
         mSVGGlyphs(nullptr),
-        mLanguageOverride(NO_FONT_LANGUAGE_OVERRIDE)
+        mLanguageOverride(NO_FONT_LANGUAGE_OVERRIDE),
+        mHBFace(nullptr),
+        mGrFace(nullptr),
+        mGrFaceRefCnt(0)
     { }
 
     virtual gfxFont *CreateFontInstance(const gfxFontStyle *aFontStyle, bool aNeedsBold) {
@@ -431,8 +492,52 @@ protected:
 
     virtual void CheckForGraphiteTables();
 
-private:
+    // Copy a font table into aBuffer.
+    // The caller will be responsible for ownership of the data.
+    virtual nsresult CopyFontTable(uint32_t aTableTag,
+                                   FallibleTArray<uint8_t>& aBuffer) {
+        NS_NOTREACHED("forgot to override either GetFontTable or CopyFontTable?");
+        return NS_ERROR_FAILURE;
+    }
 
+protected:
+    // Shaper-specific face objects, shared by all instantiations of the same
+    // physical font, regardless of size.
+    // Usually, only one of these will actually be created for any given font
+    // entry, depending on the font tables that are present.
+
+    // hb_face_t is refcounted internally, so each shaper that's using it will
+    // bump the ref count when it acquires the face, and "destroy" (release) it
+    // in its destructor. The font entry has only this non-owning reference to
+    // the face; when the face is deleted, it will tell the font entry to forget
+    // it, so that a new face will be created next time it is needed.
+    hb_face_t* mHBFace;
+
+    static hb_blob_t* HBGetTable(hb_face_t *face, uint32_t aTag, void *aUserData);
+
+    // Callback that the hb_face will use to tell us when it is being deleted.
+    static void HBFaceDeletedCallback(void *aUserData);
+
+    // gr_face is -not- refcounted, so it will be owned directly by the font
+    // entry, and we'll keep a count of how many references we've handed out;
+    // each shaper is responsible to call ReleaseGrFace on its entry when
+    // finished with it, so that we know when it can be deleted.
+    gr_face*   mGrFace;
+
+    // hashtable to map raw table data ptr back to its owning blob, for use by
+    // graphite table-release callback
+    nsDataHashtable<nsPtrHashKey<const void>,void*>* mGrTableMap;
+
+    // number of current users of this entry's mGrFace
+    nsrefcnt mGrFaceRefCnt;
+
+    static const void* GrGetTable(const void *aAppFaceHandle,
+                                  unsigned int aName,
+                                  size_t *aLen);
+    static void GrReleaseTable(const void *aAppFaceHandle,
+                               const void *aTableBuffer);
+
+private:
     /**
      * Font table hashtable, to support GetFontTable for harfbuzz.
      *
@@ -692,8 +797,8 @@ protected:
                                        bool anItalic, int16_t aStretch);
 
     bool ReadOtherFamilyNamesForFace(gfxPlatformFontList *aPlatformFontList,
-                                       FallibleTArray<uint8_t>& aNameTable,
-                                       bool useFullName = false);
+                                     hb_blob_t           *aNameTable,
+                                     bool                 useFullName = false);
 
     // set whether this font family is in "bad" underline offset blacklist.
     void SetBadUnderlineFonts() {
@@ -1306,21 +1411,6 @@ public:
     bool FontCanSupportGraphite() {
         return mFontEntry->HasGraphiteTables();
     }
-
-    // Access to raw font table data (needed for Harfbuzz):
-    // returns a pointer to data owned by the fontEntry or the OS,
-    // which will remain valid until released.
-    //
-    // Default implementations forward to the font entry,
-    // and maintain a shared table.
-    //
-    // Subclasses should override this if they can provide more efficient
-    // access than getting tables with mFontEntry->GetFontTable() and sharing
-    // them via the entry.
-    //
-    // Get pointer to a specific font table, or NULL if
-    // the table doesn't exist in the font
-    virtual hb_blob_t *GetFontTable(uint32_t aTag);
 
     // Subclasses may choose to look up glyph ids for characters.
     // If they do not override this, gfxHarfBuzzShaper will fetch the cmap
