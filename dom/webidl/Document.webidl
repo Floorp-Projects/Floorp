@@ -314,6 +314,9 @@ partial interface Document {
   TouchList createTouchList();
   [Creator, Func="nsGenericHTMLElement::TouchEventsEnabled"]
   TouchList createTouchList(sequence<Touch> touches);
+
+  [ChromeOnly]
+  attribute boolean styleSheetChangeEventsEnabled;
 };
 
 Document implements XPathEvaluator;

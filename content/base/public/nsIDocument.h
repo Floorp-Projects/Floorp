@@ -2096,6 +2096,16 @@ public:
   already_AddRefed<nsIDOMTouchList>
     CreateTouchList(const mozilla::dom::Sequence<mozilla::dom::OwningNonNull<mozilla::dom::Touch> >& aTouches);
 
+  void SetStyleSheetChangeEventsEnabled(bool aValue)
+  {
+    mStyleSheetChangeEventsEnabled = aValue;
+  }
+
+  bool StyleSheetChangeEventsEnabled() const
+  {
+    return mStyleSheetChangeEventsEnabled;
+  }
+
   virtual nsHTMLDocument* AsHTMLDocument() { return nullptr; }
 
   virtual JSObject* WrapObject(JSContext *aCx,
