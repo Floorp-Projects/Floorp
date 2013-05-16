@@ -29,7 +29,13 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
-  AudioBuffer* RenderedBuffer()
+  void InitEvent(AudioBuffer* aRenderedBuffer)
+  {
+    InitEvent(NS_LITERAL_STRING("complete"), false, false);
+    mRenderedBuffer = aRenderedBuffer;
+  }
+
+  AudioBuffer* RenderedBuffer() const
   {
     return mRenderedBuffer;
   }
