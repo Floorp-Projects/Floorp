@@ -24,7 +24,7 @@ public:
                          , mCacheControlNoStore(false)
                          , mCacheControlNoCache(false)
                          , mPragmaNoCache(false) {}
-    
+
     const nsHttpHeaderArray & Headers()   const { return mHeaders; }
     nsHttpHeaderArray    &Headers()             { return mHeaders; }
     nsHttpVersion         Version()       const { return mVersion; }
@@ -90,7 +90,7 @@ public:
     bool     ExpiresInPast() const;
 
     // update headers...
-    nsresult UpdateHeaders(const nsHttpHeaderArray &headers); 
+    nsresult UpdateHeaders(const nsHttpHeaderArray &headers);
 
     // reset the response head to it's initial state
     void     Reset();

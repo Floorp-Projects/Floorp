@@ -61,7 +61,7 @@ public:
     void     ClearHeader(nsHttpAtom h);
 
     // Find the location of the given header value, or null if none exists.
-    const char *FindHeaderValue(nsHttpAtom header, const char *value) const 
+    const char *FindHeaderValue(nsHttpAtom header, const char *value) const
     {
         return nsHttp::FindToken(PeekHeader(header), value,
                                  HTTP_HEADER_VALUE_SEPS);
@@ -75,7 +75,7 @@ public:
 
     nsresult VisitHeaders(nsIHttpHeaderVisitor *visitor);
 
-    // parse a header line, return the header atom and a pointer to the 
+    // parse a header line, return the header atom and a pointer to the
     // header value (the substring of the header line -- do not free).
     nsresult ParseHeaderLine(const char *line,
                              nsHttpAtom *header=nullptr,

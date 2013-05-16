@@ -72,9 +72,9 @@ interface nsIHttpActivityObserver : nsISupports
     /**
      *  When aActivityType is ACTIVITY_TYPE_SOCKET_TRANSPORT
      *  and aActivitySubtype is STATUS_SENDING_TO
-     *  aExtraSizeData will contain the count of bytes sent 
+     *  aExtraSizeData will contain the count of bytes sent
      *  There may be more than one of these activities reported
-     *  for a single http transaction, each aExtraSizeData 
+     *  for a single http transaction, each aExtraSizeData
      *  represents only that portion of the total bytes sent
      *
      *  When aActivityType is ACTIVITY_TYPE_HTTP_TRANSACTION

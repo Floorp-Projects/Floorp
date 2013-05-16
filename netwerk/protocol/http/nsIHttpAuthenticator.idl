@@ -13,7 +13,7 @@ interface nsIHttpAuthenticableChannel;
  * Interface designed to allow for pluggable HTTP authentication modules.
  * Implementations are registered under the ContractID:
  *
- *   "@mozilla.org/network/http-authenticator;1?scheme=<auth-scheme>"  
+ *   "@mozilla.org/network/http-authenticator;1?scheme=<auth-scheme>"
  *
  * where <auth-scheme> is the lower-cased value of the authentication scheme
  * found in the server challenge per the rules of RFC 2617.
@@ -104,7 +104,7 @@ interface nsIHttpAuthenticator : nsISupports
 
     /**
      * Indicates that the authenticator has used an out-of-band or internal
-     * source of identity and tells the consumer that it must not cache 
+     * source of identity and tells the consumer that it must not cache
      * the returned identity because it might not be valid and would overwrite
      * the cached identity.  See bug 542318 comment 32.
      */

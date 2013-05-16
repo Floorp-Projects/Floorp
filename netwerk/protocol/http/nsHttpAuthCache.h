@@ -17,8 +17,6 @@
 #include "nsCRT.h"
 #include "nsIObserver.h"
 
-
-
 struct nsHttpAuthPath {
     struct nsHttpAuthPath *mNext;
     char                   mPath[1];
@@ -85,9 +83,9 @@ public:
     nsHttpAuthPath *RootPath()      { return mRoot; }
 
     const nsHttpAuthIdentity &Identity() const { return mIdent; }
-            
+
     nsresult AddPath(const char *aPath);
-            
+
     nsCOMPtr<nsISupports> mMetaData;
 
 private:
@@ -221,7 +219,7 @@ public:
                         uint32_t    appId,
                         bool        inBrowserElement);
 
-    // expire all existing auth list entries including proxy auths. 
+    // expire all existing auth list entries including proxy auths.
     nsresult ClearAll();
 
 private:
@@ -250,7 +248,7 @@ private:
     };
 
     void ClearAppData(uint32_t appId, bool browserOnly);
-    
+
 private:
     PLHashTable *mDB; // "host:port" --> nsHttpAuthNode
     nsRefPtr<AppDataClearObserver> mObserver;
