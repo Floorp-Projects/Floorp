@@ -10,6 +10,7 @@ VPATH           = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME    = mozcairo
+MSVC_ENABLE_PGO := 1
 LIBXUL_LIBRARY = 1
 
 ifdef GNU_CC

@@ -18,6 +18,7 @@ LIBRARY_NAME	= mozjs
 endif
 
 STATIC_LIBRARY_NAME = js_static
+MSVC_ENABLE_PGO := 1
 LIBS		= $(NSPR_LIBS)
 
 # JavaScript must be built shared, even for static builds, as it is used by

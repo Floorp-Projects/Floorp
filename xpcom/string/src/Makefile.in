@@ -12,6 +12,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= string_s
+MSVC_ENABLE_PGO := 1
 MOZILLA_INTERNAL_API = 1
 
 

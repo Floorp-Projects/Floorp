@@ -16,6 +16,7 @@ SHELL := ksh
 endif
 
 LIBRARY_NAME	= gklayout
+MSVC_ENABLE_PGO := 1
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsLayoutModule
