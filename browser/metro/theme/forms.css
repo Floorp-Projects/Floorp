@@ -10,7 +10,9 @@
   display: none;
   pointer-events: none;
   padding: 0;
-  background-color: @appbar_color@;
+  background-color: @metro_orange@;
+  bottom: 0;
+  position: fixed;
 }
 
 #content-navigator[type="find"],

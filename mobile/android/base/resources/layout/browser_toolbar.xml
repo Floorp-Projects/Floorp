@@ -97,7 +97,7 @@
                         android:layout_marginTop="12dip"
                         android:layout_alignRight="@id/tabs"/>
 
-    <LinearLayout android:id="@+id/awesome_bar_content"
+    <LinearLayout android:id="@+id/awesome_bar_display_container"
                   style="@style/AddressBar.Button"
                   android:layout_toLeftOf="@id/tabs"
                   android:layout_marginRight="-24dp"

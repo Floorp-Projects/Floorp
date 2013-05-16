@@ -45,7 +45,7 @@ public:
                      nsBoxLayout* aLayoutManager):
     nsBoxFrame(aPresShell, aContext, aIsRoot, aLayoutManager) {}
 
-  NS_IMETHOD GetBorderAndPadding(nsMargin& aBorderAndPadding);
+  NS_IMETHOD GetBorderAndPadding(nsMargin& aBorderAndPadding) MOZ_OVERRIDE;
 
 }; // class nsGridRowLeafFrame
 

@@ -68,7 +68,7 @@ CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
 }
 
 void
-CanvasClient2D::Updated()
+CanvasClientWebGL::Updated()
 {
   mForwarder->UpdateTextureNoSwap(this, 1, mTextureClient->GetDescriptor());
 }

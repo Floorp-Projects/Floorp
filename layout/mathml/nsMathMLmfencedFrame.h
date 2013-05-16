@@ -22,9 +22,9 @@ public:
 
   virtual void
   SetAdditionalStyleContext(int32_t          aIndex, 
-                            nsStyleContext*  aStyleContext);
+                            nsStyleContext*  aStyleContext) MOZ_OVERRIDE;
   virtual nsStyleContext*
-  GetAdditionalStyleContext(int32_t aIndex) const;
+  GetAdditionalStyleContext(int32_t aIndex) const MOZ_OVERRIDE;
 
   NS_IMETHOD
   InheritAutomaticData(nsIFrame* aParent) MOZ_OVERRIDE;

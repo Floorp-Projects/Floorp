@@ -61,8 +61,17 @@ const ContentPanning = {
   },
 
   handleEvent: function cp_handleEvent(evt) {
-    if (evt.defaultPrevented || evt.multipleActionsPrevented)
+    if (evt.defaultPrevented || evt.multipleActionsPrevented) {
+      // clean up panning state even if touchend/mouseup has been preventDefault.
+      if(evt.type === 'touchend' || evt.type === 'mouseup') {
+        if (this.dragging &&
+            (this.watchedEventsType === 'mouse' ||
+             this.findPrimaryPointer(evt.changedTouches))) {
+          this._finishPanning();
+        }
+      }
       return;
+    }
 
     switch (evt.type) {
       case 'mousedown':
@@ -206,15 +215,7 @@ const ContentPanning = {
       view.addEventListener('click', this, true, true);
     }
 
-    this._resetActive();
-    this.dragging = false;
-    this.detectingScrolling = false;
-    delete this.primaryPointerId;
-    this._activationTimer.cancel();
-
-    if (this.panning) {
-      KineticPanning.start(this);
-    }
+    this._finishPanning();
   },
 
   // True when there's an async pan-zoom controll watching the
@@ -582,6 +583,18 @@ const ContentPanning = {
     let ratioH = (aRect.height / vRect.height);
 
     return (showing > 0.9 && (ratioW > 0.9 || ratioH > 0.9)); 
+  },
+
+  _finishPanning: function() {
+    this._resetActive();
+    this.dragging = false;
+    this.detectingScrolling = false;
+    delete this.primaryPointerId;
+    this._activationTimer.cancel();
+
+    if (this.panning) {
+      KineticPanning.start(this);
+    }
   }
 };
 

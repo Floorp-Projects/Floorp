@@ -17,5 +17,4 @@
 #
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
-Bug 866093 - Change in .gyp file for Android builds.
-Bug 861039 - Nuking and rebuilding gfx/angle without clobber caused: "No rule to make target `../../../../gfx/angle/src/compiler/ArrayBoundsClamper.cpp', needed by `ArrayBoundsClamper.o'. Stop."
+Bug 852687 - changing an idl without clobbering resulted test failures

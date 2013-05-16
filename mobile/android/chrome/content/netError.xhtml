@@ -282,7 +282,11 @@
         <h1 id="et_unknownSocketType">&unknownSocketType.title;</h1>
         <h1 id="et_netReset">&netReset.title;</h1>
         <h1 id="et_notCached">&notCached.title;</h1>
-        <h1 id="et_netOffline">&netOffline.title;</h1>
+       
+        <!-- Since Fennec not yet have offline mode, change the title to 
+        connectionFailure to prevent confusion -->
+        <h1 id="et_netOffline">&connectionFailure.title;</h1>
+        
         <h1 id="et_netInterrupt">&netInterrupt.title;</h1>
         <h1 id="et_deniedPortAccess">&deniedPortAccess.title;</h1>
         <h1 id="et_proxyResolveFailure">&proxyResolveFailure.title;</h1>
@@ -307,7 +311,11 @@
         <div id="ed_unknownSocketType">&unknownSocketType.longDesc;</div>
         <div id="ed_netReset">&netReset.longDesc;</div>
         <div id="ed_notCached">&notCached.longDesc;</div>
-        <div id="ed_netOffline">&netOffline.longDesc2;</div>
+        
+        <!-- Change longDesc from netOffline to connectionFailure,
+        suggesting user to check their wifi/cell_data connection -->
+        <div id="ed_netOffline">&connectionFailure.longDesc;</div>
+        
         <div id="ed_netInterrupt">&netInterrupt.longDesc;</div>
         <div id="ed_deniedPortAccess">&deniedPortAccess.longDesc;</div>
         <div id="ed_proxyResolveFailure">&proxyResolveFailure.longDesc2;</div>

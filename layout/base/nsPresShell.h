@@ -70,13 +70,13 @@ public:
   void Init(nsIDocument* aDocument, nsPresContext* aPresContext,
             nsViewManager* aViewManager, nsStyleSet* aStyleSet,
             nsCompatibility aCompatMode);
-  virtual NS_HIDDEN_(void) Destroy();
-  virtual NS_HIDDEN_(void) MakeZombie();
+  virtual NS_HIDDEN_(void) Destroy() MOZ_OVERRIDE;
+  virtual NS_HIDDEN_(void) MakeZombie() MOZ_OVERRIDE;
 
-  virtual NS_HIDDEN_(nsresult) SetPreferenceStyleRules(bool aForceReflow);
+  virtual NS_HIDDEN_(nsresult) SetPreferenceStyleRules(bool aForceReflow) MOZ_OVERRIDE;
 
   NS_IMETHOD GetSelection(SelectionType aType, nsISelection** aSelection);
-  virtual mozilla::Selection* GetCurrentSelection(SelectionType aType);
+  virtual mozilla::Selection* GetCurrentSelection(SelectionType aType) MOZ_OVERRIDE;
 
   NS_IMETHOD SetDisplaySelection(int16_t aToggle);
   NS_IMETHOD GetDisplaySelection(int16_t *aToggle);
@@ -84,135 +84,135 @@ public:
                                      int16_t aFlags);
   NS_IMETHOD RepaintSelection(SelectionType aType);
 
-  virtual NS_HIDDEN_(void) BeginObservingDocument();
-  virtual NS_HIDDEN_(void) EndObservingDocument();
-  virtual NS_HIDDEN_(nsresult) Initialize(nscoord aWidth, nscoord aHeight);
-  virtual NS_HIDDEN_(nsresult) ResizeReflow(nscoord aWidth, nscoord aHeight);
-  virtual NS_HIDDEN_(nsresult) ResizeReflowOverride(nscoord aWidth, nscoord aHeight);
-  virtual NS_HIDDEN_(nsIPageSequenceFrame*) GetPageSequenceFrame() const;
-  virtual NS_HIDDEN_(nsIFrame*) GetRealPrimaryFrameFor(nsIContent* aContent) const;
+  virtual NS_HIDDEN_(void) BeginObservingDocument() MOZ_OVERRIDE;
+  virtual NS_HIDDEN_(void) EndObservingDocument() MOZ_OVERRIDE;
+  virtual NS_HIDDEN_(nsresult) Initialize(nscoord aWidth, nscoord aHeight) MOZ_OVERRIDE;
+  virtual NS_HIDDEN_(nsresult) ResizeReflow(nscoord aWidth, nscoord aHeight) MOZ_OVERRIDE;
+  virtual NS_HIDDEN_(nsresult) ResizeReflowOverride(nscoord aWidth, nscoord aHeight) MOZ_OVERRIDE;
+  virtual NS_HIDDEN_(nsIPageSequenceFrame*) GetPageSequenceFrame() const MOZ_OVERRIDE;
+  virtual NS_HIDDEN_(nsIFrame*) GetRealPrimaryFrameFor(nsIContent* aContent) const MOZ_OVERRIDE;
 
-  virtual NS_HIDDEN_(nsIFrame*) GetPlaceholderFrameFor(nsIFrame* aFrame) const;
+  virtual NS_HIDDEN_(nsIFrame*) GetPlaceholderFrameFor(nsIFrame* aFrame) const MOZ_OVERRIDE;
   virtual NS_HIDDEN_(void) FrameNeedsReflow(nsIFrame *aFrame, IntrinsicDirty aIntrinsicDirty,
-                                            nsFrameState aBitToAdd);
-  virtual NS_HIDDEN_(void) FrameNeedsToContinueReflow(nsIFrame *aFrame);
-  virtual NS_HIDDEN_(void) CancelAllPendingReflows();
-  virtual NS_HIDDEN_(bool) IsSafeToFlush() const;
-  virtual NS_HIDDEN_(void) FlushPendingNotifications(mozFlushType aType);
-  virtual NS_HIDDEN_(void) FlushPendingNotifications(mozilla::ChangesToFlush aType);
+                                            nsFrameState aBitToAdd) MOZ_OVERRIDE;
+  virtual NS_HIDDEN_(void) FrameNeedsToContinueReflow(nsIFrame *aFrame) MOZ_OVERRIDE;
+  virtual NS_HIDDEN_(void) CancelAllPendingReflows() MOZ_OVERRIDE;
+  virtual NS_HIDDEN_(bool) IsSafeToFlush() const MOZ_OVERRIDE;
+  virtual NS_HIDDEN_(void) FlushPendingNotifications(mozFlushType aType) MOZ_OVERRIDE;
+  virtual NS_HIDDEN_(void) FlushPendingNotifications(mozilla::ChangesToFlush aType) MOZ_OVERRIDE;
 
   /**
    * Recreates the frames for a node
    */
-  virtual NS_HIDDEN_(nsresult) RecreateFramesFor(nsIContent* aContent);
+  virtual NS_HIDDEN_(nsresult) RecreateFramesFor(nsIContent* aContent) MOZ_OVERRIDE;
 
   /**
    * Post a callback that should be handled after reflow has finished.
    */
-  virtual NS_HIDDEN_(nsresult) PostReflowCallback(nsIReflowCallback* aCallback);
-  virtual NS_HIDDEN_(void) CancelReflowCallback(nsIReflowCallback* aCallback);
+  virtual NS_HIDDEN_(nsresult) PostReflowCallback(nsIReflowCallback* aCallback) MOZ_OVERRIDE;
+  virtual NS_HIDDEN_(void) CancelReflowCallback(nsIReflowCallback* aCallback) MOZ_OVERRIDE;
 
-  virtual NS_HIDDEN_(void) ClearFrameRefs(nsIFrame* aFrame);
+  virtual NS_HIDDEN_(void) ClearFrameRefs(nsIFrame* aFrame) MOZ_OVERRIDE;
   virtual NS_HIDDEN_(already_AddRefed<nsRenderingContext>) GetReferenceRenderingContext();
-  virtual NS_HIDDEN_(nsresult) GoToAnchor(const nsAString& aAnchorName, bool aScroll);
-  virtual NS_HIDDEN_(nsresult) ScrollToAnchor();
+  virtual NS_HIDDEN_(nsresult) GoToAnchor(const nsAString& aAnchorName, bool aScroll) MOZ_OVERRIDE;
+  virtual NS_HIDDEN_(nsresult) ScrollToAnchor() MOZ_OVERRIDE;
 
   virtual NS_HIDDEN_(nsresult) ScrollContentIntoView(nsIContent* aContent,
                                                      ScrollAxis  aVertical,
                                                      ScrollAxis  aHorizontal,
-                                                     uint32_t    aFlags);
+                                                     uint32_t    aFlags) MOZ_OVERRIDE;
   virtual bool ScrollFrameRectIntoView(nsIFrame*     aFrame,
                                        const nsRect& aRect,
                                        ScrollAxis    aVertical,
                                        ScrollAxis    aHorizontal,
-                                       uint32_t      aFlags);
+                                       uint32_t      aFlags) MOZ_OVERRIDE;
   virtual nsRectVisibility GetRectVisibility(nsIFrame *aFrame,
                                              const nsRect &aRect,
-                                             nscoord aMinTwips) const;
+                                             nscoord aMinTwips) const MOZ_OVERRIDE;
 
-  virtual NS_HIDDEN_(void) SetIgnoreFrameDestruction(bool aIgnore);
-  virtual NS_HIDDEN_(void) NotifyDestroyingFrame(nsIFrame* aFrame);
+  virtual NS_HIDDEN_(void) SetIgnoreFrameDestruction(bool aIgnore) MOZ_OVERRIDE;
+  virtual NS_HIDDEN_(void) NotifyDestroyingFrame(nsIFrame* aFrame) MOZ_OVERRIDE;
 
-  virtual NS_HIDDEN_(nsresult) CaptureHistoryState(nsILayoutHistoryState** aLayoutHistoryState);
+  virtual NS_HIDDEN_(nsresult) CaptureHistoryState(nsILayoutHistoryState** aLayoutHistoryState) MOZ_OVERRIDE;
 
-  virtual NS_HIDDEN_(void) UnsuppressPainting();
+  virtual NS_HIDDEN_(void) UnsuppressPainting() MOZ_OVERRIDE;
 
-  virtual nsresult GetAgentStyleSheets(nsCOMArray<nsIStyleSheet>& aSheets);
-  virtual nsresult SetAgentStyleSheets(const nsCOMArray<nsIStyleSheet>& aSheets);
+  virtual nsresult GetAgentStyleSheets(nsCOMArray<nsIStyleSheet>& aSheets) MOZ_OVERRIDE;
+  virtual nsresult SetAgentStyleSheets(const nsCOMArray<nsIStyleSheet>& aSheets) MOZ_OVERRIDE;
 
-  virtual nsresult AddOverrideStyleSheet(nsIStyleSheet *aSheet);
-  virtual nsresult RemoveOverrideStyleSheet(nsIStyleSheet *aSheet);
+  virtual nsresult AddOverrideStyleSheet(nsIStyleSheet *aSheet) MOZ_OVERRIDE;
+  virtual nsresult RemoveOverrideStyleSheet(nsIStyleSheet *aSheet) MOZ_OVERRIDE;
 
   virtual NS_HIDDEN_(nsresult) HandleEventWithTarget(nsEvent* aEvent, nsIFrame* aFrame,
                                                      nsIContent* aContent,
-                                                     nsEventStatus* aStatus);
-  virtual NS_HIDDEN_(nsIFrame*) GetEventTargetFrame();
-  virtual NS_HIDDEN_(already_AddRefed<nsIContent>) GetEventTargetContent(nsEvent* aEvent);
+                                                     nsEventStatus* aStatus) MOZ_OVERRIDE;
+  virtual NS_HIDDEN_(nsIFrame*) GetEventTargetFrame() MOZ_OVERRIDE;
+  virtual NS_HIDDEN_(already_AddRefed<nsIContent>) GetEventTargetContent(nsEvent* aEvent) MOZ_OVERRIDE;
 
 
   virtual nsresult ReconstructFrames(void);
-  virtual void Freeze();
-  virtual void Thaw();
-  virtual void FireOrClearDelayedEvents(bool aFireEvents);
+  virtual void Freeze() MOZ_OVERRIDE;
+  virtual void Thaw() MOZ_OVERRIDE;
+  virtual void FireOrClearDelayedEvents(bool aFireEvents) MOZ_OVERRIDE;
 
   virtual NS_HIDDEN_(nsresult) RenderDocument(const nsRect& aRect, uint32_t aFlags,
                                               nscolor aBackgroundColor,
-                                              gfxContext* aThebesContext);
+                                              gfxContext* aThebesContext) MOZ_OVERRIDE;
 
   virtual already_AddRefed<gfxASurface> RenderNode(nsIDOMNode* aNode,
                                                    nsIntRegion* aRegion,
                                                    nsIntPoint& aPoint,
-                                                   nsIntRect* aScreenRect);
+                                                   nsIntRect* aScreenRect) MOZ_OVERRIDE;
 
   virtual already_AddRefed<gfxASurface> RenderSelection(nsISelection* aSelection,
                                                         nsIntPoint& aPoint,
-                                                        nsIntRect* aScreenRect);
+                                                        nsIntRect* aScreenRect) MOZ_OVERRIDE;
 
-  virtual already_AddRefed<nsPIDOMWindow> GetRootWindow();
+  virtual already_AddRefed<nsPIDOMWindow> GetRootWindow() MOZ_OVERRIDE;
 
-  virtual LayerManager* GetLayerManager();
+  virtual LayerManager* GetLayerManager() MOZ_OVERRIDE;
 
-  virtual void SetIgnoreViewportScrolling(bool aIgnore);
+  virtual void SetIgnoreViewportScrolling(bool aIgnore) MOZ_OVERRIDE;
 
   virtual void SetDisplayPort(const nsRect& aDisplayPort);
 
-  virtual nsresult SetResolution(float aXResolution, float aYResolution);
+  virtual nsresult SetResolution(float aXResolution, float aYResolution) MOZ_OVERRIDE;
 
   //nsIViewObserver interface
 
   virtual void Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
-                     uint32_t aFlags);
+                     uint32_t aFlags) MOZ_OVERRIDE;
   virtual nsresult HandleEvent(nsIFrame*       aFrame,
                                nsGUIEvent*     aEvent,
                                bool            aDontRetargetEvents,
-                               nsEventStatus*  aEventStatus);
+                               nsEventStatus*  aEventStatus) MOZ_OVERRIDE;
   virtual NS_HIDDEN_(nsresult) HandleDOMEventWithTarget(nsIContent* aTargetContent,
                                                         nsEvent* aEvent,
-                                                        nsEventStatus* aStatus);
+                                                        nsEventStatus* aStatus) MOZ_OVERRIDE;
   virtual NS_HIDDEN_(nsresult) HandleDOMEventWithTarget(nsIContent* aTargetContent,
                                                         nsIDOMEvent* aEvent,
-                                                        nsEventStatus* aStatus);
-  virtual bool ShouldIgnoreInvalidation();
-  virtual void WillPaint();
-  virtual void WillPaintWindow();
-  virtual void DidPaintWindow();
-  virtual void ScheduleViewManagerFlush();
-  virtual void DispatchSynthMouseMove(nsGUIEvent *aEvent, bool aFlushOnHoverChange);
-  virtual void ClearMouseCaptureOnView(nsView* aView);
-  virtual bool IsVisible();
+                                                        nsEventStatus* aStatus) MOZ_OVERRIDE;
+  virtual bool ShouldIgnoreInvalidation() MOZ_OVERRIDE;
+  virtual void WillPaint() MOZ_OVERRIDE;
+  virtual void WillPaintWindow() MOZ_OVERRIDE;
+  virtual void DidPaintWindow() MOZ_OVERRIDE;
+  virtual void ScheduleViewManagerFlush() MOZ_OVERRIDE;
+  virtual void DispatchSynthMouseMove(nsGUIEvent *aEvent, bool aFlushOnHoverChange) MOZ_OVERRIDE;
+  virtual void ClearMouseCaptureOnView(nsView* aView) MOZ_OVERRIDE;
+  virtual bool IsVisible() MOZ_OVERRIDE;
 
   // caret handling
-  virtual NS_HIDDEN_(already_AddRefed<nsCaret>) GetCaret() const;
-  virtual NS_HIDDEN_(void) MaybeInvalidateCaretPosition();
+  virtual NS_HIDDEN_(already_AddRefed<nsCaret>) GetCaret() const MOZ_OVERRIDE;
+  virtual NS_HIDDEN_(void) MaybeInvalidateCaretPosition() MOZ_OVERRIDE;
   NS_IMETHOD SetCaretEnabled(bool aInEnable);
   NS_IMETHOD SetCaretReadOnly(bool aReadOnly);
   NS_IMETHOD GetCaretEnabled(bool *aOutEnabled);
   NS_IMETHOD SetCaretVisibilityDuringSelection(bool aVisibility);
   NS_IMETHOD GetCaretVisible(bool *_retval);
-  virtual void SetCaret(nsCaret *aNewCaret);
-  virtual void RestoreCaret();
+  virtual void SetCaret(nsCaret *aNewCaret) MOZ_OVERRIDE;
+  virtual void RestoreCaret() MOZ_OVERRIDE;
 
-  NS_IMETHOD SetSelectionFlags(int16_t aInEnable);
+  NS_IMETHOD SetSelectionFlags(int16_t aInEnable) MOZ_OVERRIDE;
   NS_IMETHOD GetSelectionFlags(int16_t *aOutEnable);
 
   // nsISelectionController
@@ -261,52 +261,52 @@ public:
 
 #ifdef MOZ_REFLOW_PERF
   virtual NS_HIDDEN_(void) DumpReflows();
-  virtual NS_HIDDEN_(void) CountReflows(const char * aName, nsIFrame * aFrame);
+  virtual NS_HIDDEN_(void) CountReflows(const char * aName, nsIFrame * aFrame) MOZ_OVERRIDE;
   virtual NS_HIDDEN_(void) PaintCount(const char * aName,
                                       nsRenderingContext* aRenderingContext,
                                       nsPresContext* aPresContext,
                                       nsIFrame * aFrame,
                                       const nsPoint& aOffset,
-                                      uint32_t aColor);
-  virtual NS_HIDDEN_(void) SetPaintFrameCount(bool aOn);
-  virtual bool IsPaintingFrameCounts();
+                                      uint32_t aColor) MOZ_OVERRIDE;
+  virtual NS_HIDDEN_(void) SetPaintFrameCount(bool aOn) MOZ_OVERRIDE;
+  virtual bool IsPaintingFrameCounts() MOZ_OVERRIDE;
 #endif
 
 #ifdef DEBUG
   virtual void ListStyleContexts(nsIFrame *aRootFrame, FILE *out,
-                                 int32_t aIndent = 0);
+                                 int32_t aIndent = 0) MOZ_OVERRIDE;
 
-  virtual void ListStyleSheets(FILE *out, int32_t aIndent = 0);
-  virtual void VerifyStyleTree();
+  virtual void ListStyleSheets(FILE *out, int32_t aIndent = 0) MOZ_OVERRIDE;
+  virtual void VerifyStyleTree() MOZ_OVERRIDE;
 #endif
 
 #ifdef PR_LOGGING
   static PRLogModuleInfo* gLog;
 #endif
 
-  virtual NS_HIDDEN_(void) DisableNonTestMouseEvents(bool aDisable);
+  virtual NS_HIDDEN_(void) DisableNonTestMouseEvents(bool aDisable) MOZ_OVERRIDE;
 
-  virtual void UpdateCanvasBackground();
+  virtual void UpdateCanvasBackground() MOZ_OVERRIDE;
 
   virtual void AddCanvasBackgroundColorItem(nsDisplayListBuilder& aBuilder,
                                             nsDisplayList& aList,
                                             nsIFrame* aFrame,
                                             const nsRect& aBounds,
                                             nscolor aBackstopColor,
-                                            uint32_t aFlags);
+                                            uint32_t aFlags) MOZ_OVERRIDE;
 
   virtual void AddPrintPreviewBackgroundItem(nsDisplayListBuilder& aBuilder,
                                              nsDisplayList& aList,
                                              nsIFrame* aFrame,
-                                             const nsRect& aBounds);
+                                             const nsRect& aBounds) MOZ_OVERRIDE;
 
-  virtual nscolor ComputeBackstopColor(nsView* aDisplayRoot);
+  virtual nscolor ComputeBackstopColor(nsView* aDisplayRoot) MOZ_OVERRIDE;
 
-  virtual NS_HIDDEN_(nsresult) SetIsActive(bool aIsActive);
+  virtual NS_HIDDEN_(nsresult) SetIsActive(bool aIsActive) MOZ_OVERRIDE;
 
-  virtual bool GetIsViewportOverridden() { return mViewportOverridden; }
+  virtual bool GetIsViewportOverridden() MOZ_OVERRIDE { return mViewportOverridden; }
 
-  virtual bool IsLayoutFlushObserver()
+  virtual bool IsLayoutFlushObserver() MOZ_OVERRIDE
   {
     return GetPresContext()->RefreshDriver()->
       IsLayoutFlushObserver(this);
@@ -317,10 +317,10 @@ public:
                            size_t *aPresShellSize,
                            size_t *aStyleSetsSize,
                            size_t *aTextRunsSize,
-                           size_t *aPresContextSize);
+                           size_t *aPresContextSize) MOZ_OVERRIDE;
   size_t SizeOfTextRuns(nsMallocSizeOfFun aMallocSizeOf) const;
 
-  virtual void AddInvalidateHiddenPresShellObserver(nsRefreshDriver *aDriver);
+  virtual void AddInvalidateHiddenPresShellObserver(nsRefreshDriver *aDriver) MOZ_OVERRIDE;
 
 
   // This data is stored as a content property (nsGkAtoms::scrolling) on
@@ -331,11 +331,11 @@ public:
     uint32_t   mContentToScrollToFlags;
   };
 
-  virtual void ScheduleImageVisibilityUpdate();
+  virtual void ScheduleImageVisibilityUpdate() MOZ_OVERRIDE;
 
-  virtual void RebuildImageVisibility(const nsDisplayList& aList);
+  virtual void RebuildImageVisibility(const nsDisplayList& aList) MOZ_OVERRIDE;
 
-  virtual void EnsureImageInVisibleList(nsIImageLoadingContent* aImage);
+  virtual void EnsureImageInVisibleList(nsIImageLoadingContent* aImage) MOZ_OVERRIDE;
 
 protected:
   virtual ~PresShell();
@@ -359,7 +359,15 @@ protected:
                           bool aTouchIsNew);
 
   void     WillDoReflow();
-  void     DidDoReflow(bool aInterruptible);
+
+  /**
+   * Callback handler for whether reflow happened.
+   *
+   * @param aInterruptible Whether or not reflow interruption is allowed.
+   * @param aWasInterrupted Whether or not the reflow was interrupted earlier.
+   *
+   */
+  void     DidDoReflow(bool aInterruptible, bool aWasInterrupted);
   // ProcessReflowCommands returns whether we processed all our dirty roots
   // without interruptions.
   bool     ProcessReflowCommands(bool aInterruptible);
@@ -687,7 +695,7 @@ protected:
   void FireBeforeResizeEvent();
   static void AsyncResizeEventCallback(nsITimer* aTimer, void* aPresShell);
 
-  virtual void SynthesizeMouseMove(bool aFromScroll);
+  virtual void SynthesizeMouseMove(bool aFromScroll) MOZ_OVERRIDE;
 
   PresShell* GetRootPresShell();
 
@@ -701,10 +709,10 @@ protected:
   bool ScheduleReflowOffTimer();
 
   // Widget notificiations
-  virtual void WindowSizeMoveDone();
-  virtual void SysColorChanged() { mPresContext->SysColorChanged(); }
-  virtual void ThemeChanged() { mPresContext->ThemeChanged(); }
-  virtual void BackingScaleFactorChanged() { mPresContext->UIResolutionChanged(); }
+  virtual void WindowSizeMoveDone() MOZ_OVERRIDE;
+  virtual void SysColorChanged() MOZ_OVERRIDE { mPresContext->SysColorChanged(); }
+  virtual void ThemeChanged() MOZ_OVERRIDE { mPresContext->ThemeChanged(); }
+  virtual void BackingScaleFactorChanged() MOZ_OVERRIDE { mPresContext->UIResolutionChanged(); }
 
   void UpdateImageVisibility();
 

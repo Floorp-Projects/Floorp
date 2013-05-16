@@ -52,6 +52,7 @@ class GainNode;
 class GlobalObject;
 class PannerNode;
 class ScriptProcessorNode;
+class WaveShaperNode;
 
 class AudioContext MOZ_FINAL : public nsDOMEventTargetHelper,
                                public EnableWebAudioCheck
@@ -125,6 +126,9 @@ public:
 
   already_AddRefed<GainNode>
   CreateGain();
+
+  already_AddRefed<WaveShaperNode>
+  CreateWaveShaper();
 
   already_AddRefed<GainNode>
   CreateGainNode()

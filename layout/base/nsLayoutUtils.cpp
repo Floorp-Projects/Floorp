@@ -114,6 +114,7 @@ typedef FrameMetrics::ViewID ViewID;
 /* static */ uint32_t nsLayoutUtils::sFontSizeInflationMaxRatio;
 /* static */ bool nsLayoutUtils::sFontSizeInflationForceEnabled;
 /* static */ bool nsLayoutUtils::sFontSizeInflationDisabledInMasterProcess;
+/* static */ bool nsLayoutUtils::sInvalidationDebuggingIsEnabled;
 
 static ViewID sScrollIdCounter = FrameMetrics::START_SCROLL_ID;
 
@@ -4979,6 +4980,8 @@ nsLayoutUtils::Initialize()
                                "font.size.inflation.forceEnabled");
   Preferences::AddBoolVarCache(&sFontSizeInflationDisabledInMasterProcess,
                                "font.size.inflation.disabledInMasterProcess");
+  Preferences::AddBoolVarCache(&sInvalidationDebuggingIsEnabled,
+                               "nglayout.debug.invalidation");
 
 #ifdef MOZ_FLEXBOX
   Preferences::RegisterCallback(FlexboxEnabledPrefChangeCallback,

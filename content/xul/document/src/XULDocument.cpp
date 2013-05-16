@@ -3653,8 +3653,9 @@ XULDocument::ExecuteScript(nsIScriptContext * aContext, JSScript* aScriptObject)
     NS_ENSURE_TRUE(mScriptGlobalObject, NS_ERROR_NOT_INITIALIZED);
 
     // Execute the precompiled script with the given version
+    JS::Rooted<JSScript*> script(aContext->GetNativeContext(), aScriptObject);
     JSObject* global = mScriptGlobalObject->GetGlobalJSObject();
-    return aContext->ExecuteScript(aScriptObject, global);
+    return aContext->ExecuteScript(script, global);
 }
 
 nsresult

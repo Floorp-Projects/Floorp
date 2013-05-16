@@ -11,8 +11,6 @@ relativesrcdir = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DISABLED_XPCSHELL_TESTS = unit
-
 CPP_UNIT_TESTS = \
   test_transaction_helper.cpp \
   test_statement_scoper.cpp \

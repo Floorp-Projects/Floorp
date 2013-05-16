@@ -5,9 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
+const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -247,7 +245,7 @@ TargetEventsHandler.prototype = {
   _onTabNavigated: function(aType, aPacket) {
     if (aType == "will-navigate") {
       NetMonitorView.RequestsMenu.reset();
-      NetMonitorView.NetworkDetails.toggle(false);
+      NetMonitorView.NetworkDetails.reset();
       window.emit("NetMonitor:TargetWillNavigate");
     }
     if (aType == "navigate") {
@@ -461,7 +459,7 @@ NetworkEventsHandler.prototype = {
    * @param object aResponse
    *        The message received from the server.
    */
-  _onEventTimings: function NEH__onEventTimings(aResponse) {
+  _onEventTimings: function(aResponse) {
     NetMonitorView.RequestsMenu.updateRequest(aResponse.from, {
       eventTimings: aResponse
     });
@@ -479,7 +477,7 @@ NetworkEventsHandler.prototype = {
    *         A promise that is resolved when the full string contents
    *         are available, or rejected if something goes wrong.
    */
-  getString: function NEH_getString(aStringGrip) {
+  getString: function(aStringGrip) {
     // Make sure this is a long string.
     if (typeof aStringGrip != "object" || aStringGrip.type != "longString") {
       return Promise.resolve(aStringGrip); // Go home string, you're drunk.

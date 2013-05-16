@@ -20,6 +20,7 @@ MOCHITEST_FILES := \
   test_bug866570.html \
   test_bug866737.html \
   test_bug867089.html \
+  test_bug867104.html \
   test_bug867174.html \
   test_bug867203.html \
   test_analyserNode.html \
@@ -61,6 +62,9 @@ MOCHITEST_FILES := \
   test_scriptProcessorNode.html \
   test_scriptProcessorNodeChannelCount.html \
   test_singleSourceDest.html \
+  test_waveShaper.html \
+  test_waveShaperNoCurve.html \
+  test_waveShaperZeroLengthCurve.html \
   ting.ogg \
   ting-expected.wav \
   ting-dualchannel44.1.ogg \

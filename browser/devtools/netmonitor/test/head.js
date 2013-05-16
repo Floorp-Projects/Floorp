@@ -6,7 +6,8 @@ const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 let { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 let { Promise } = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", {});
-let { gDevTools, devtools } = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
+let { gDevTools } = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
+let { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 let TargetFactory = devtools.TargetFactory;
 let Toolbox = devtools.Toolbox;
 
@@ -185,7 +186,7 @@ function verifyRequestItemTarget(aRequestItem, aMethod, aUrl, aData = {}) {
   info("> Verifying: " + aMethod + " " + aUrl + " " + aData.toSource());
   info("> Request: " + aRequestItem.attachment.toSource());
 
-  let { status, statusText, type, fullMimeType, size, time } = aData;
+  let { fuzzyUrl, status, statusText, type, fullMimeType, size, time } = aData;
   let { attachment, target } = aRequestItem
 
   let uri = Services.io.newURI(aUrl, null, null).QueryInterface(Ci.nsIURL);
@@ -193,19 +194,28 @@ function verifyRequestItemTarget(aRequestItem, aMethod, aUrl, aData = {}) {
   let query = uri.query;
   let hostPort = uri.hostPort;
 
-  is(attachment.method, aMethod,
-    "The attached method is incorrect.");
-
-  is(attachment.url, aUrl,
-    "The attached url is incorrect.");
+  if (fuzzyUrl) {
+    ok(attachment.method.startsWith(aMethod), "The attached method is incorrect.");
+    ok(attachment.url.startsWith(aUrl), "The attached url is incorrect.");
+  } else {
+    is(attachment.method, aMethod, "The attached method is incorrect.");
+    is(attachment.url, aUrl, "The attached url is incorrect.");
+  }
 
   is(target.querySelector(".requests-menu-method").getAttribute("value"),
     aMethod, "The displayed method is incorrect.");
 
-  is(target.querySelector(".requests-menu-file").getAttribute("value"),
-    name + (query ? "?" + query : ""), "The displayed file is incorrect.");
-  is(target.querySelector(".requests-menu-file").getAttribute("tooltiptext"),
-    name + (query ? "?" + query : ""), "The tooltip file is incorrect.");
+  if (fuzzyUrl) {
+    ok(target.querySelector(".requests-menu-file").getAttribute("value").startsWith(
+      name + (query ? "?" + query : "")), "The displayed file is incorrect.");
+    ok(target.querySelector(".requests-menu-file").getAttribute("tooltiptext").startsWith(
+      name + (query ? "?" + query : "")), "The tooltip file is incorrect.");
+  } else {
+    is(target.querySelector(".requests-menu-file").getAttribute("value"),
+      name + (query ? "?" + query : ""), "The displayed file is incorrect.");
+    is(target.querySelector(".requests-menu-file").getAttribute("tooltiptext"),
+      name + (query ? "?" + query : ""), "The tooltip file is incorrect.");
+  }
 
   is(target.querySelector(".requests-menu-domain").getAttribute("value"),
     hostPort, "The displayed domain is incorrect.");

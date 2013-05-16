@@ -365,7 +365,7 @@ HTMLFrameSetElement::IsEventAttributeName(nsIAtom *aName)
   HTMLFrameSetElement::GetOn##name_(JSContext *cx, JS::Value *vp)              \
   {                                                                            \
     getter_type_ h = forwardto_::GetOn##name_();                               \
-    vp->setObjectOrNull(h ? h->Callable() : nullptr);                          \
+    vp->setObjectOrNull(h ? h->Callable().get() : nullptr);                    \
     return NS_OK;                                                              \
   }                                                                            \
   NS_IMETHODIMP                                                                \
