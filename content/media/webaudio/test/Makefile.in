@@ -58,6 +58,7 @@ MOCHITEST_FILES := \
   test_mediaDecoding.html \
   test_mixingRules.html \
   test_nodeToParamConnection.html \
+  test_OfflineAudioContext.html \
   test_pannerNode.html \
   test_scriptProcessorNode.html \
   test_scriptProcessorNodeChannelCount.html \
