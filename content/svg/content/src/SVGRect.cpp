@@ -17,17 +17,20 @@ namespace dom {
 // implementation:
 
 SVGRect::SVGRect(nsIContent* aParent, float x, float y, float w, float h)
-  : SVGIRect(aParent), mX(x), mY(y), mWidth(w), mHeight(h)
+  : SVGIRect(), mParent(aParent), mX(x), mY(y), mWidth(w), mHeight(h)
 {
 }
 
 //----------------------------------------------------------------------
 // nsISupports methods:
 
-NS_IMPL_ADDREF(SVGRect)
-NS_IMPL_RELEASE(SVGRect)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(SVGRect, mParent)
 
-NS_INTERFACE_MAP_BEGIN(SVGRect)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(SVGRect)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(SVGRect)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SVGRect)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
