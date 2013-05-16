@@ -12,7 +12,7 @@ EXPORTS.mozilla.gfx += [
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     EXPORTS.mozilla.gfx += [
-        'SharedDIBSurface.h',
         'SharedDIBWin.h',
+        'SharedDIBSurface.h',
     ]
 

@@ -34,16 +34,6 @@ midl_enums = [
     'IA2CommonTypes',
 ]
 
-# EXPORTS expects a sorted list and adding the suffix may change sort order.
-# So ensure we are always sorted.
-headers = ['%s.h' % x for x in midl_enums]
-interfaces_h = ['%s.h' % x for x in midl_interfaces]
-interfaces_c = ['%s._i.c' % x for x in midl_interfaces]
-
-headers.sort()
-interfaces_h.sort()
-interfaces_c.sort()
-
-EXPORTS += headers
-EXPORTS += interfaces_h
-EXPORTS += interfaces_c
+EXPORTS += [x + '.h' for x in midl_enums]
+EXPORTS += [x + '.h' for x in midl_interfaces]
+EXPORTS += [x + '_i.c' for x in midl_interfaces]
