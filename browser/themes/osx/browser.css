@@ -2175,6 +2175,21 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 @media (min-resolution: 2dppx) {
+  /* image preloading hack from shared/tabs.inc.css */
+  #TabsToolbar::before {
+    background-image:
+      url(chrome://browser/skin/tabbrowser/tab-background-end@2x.png),
+      url(chrome://browser/skin/tabbrowser/tab-background-middle@2x.png),
+      url(chrome://browser/skin/tabbrowser/tab-background-start@2x.png);
+  }
+
+  .tabbrowser-tab:hover > .tab-stack > .tab-background:not([selected=true]),
+  .tabs-newtab-button:hover {
+    background-image: url(chrome://browser/skin/tabbrowser/tab-background-start@2x.png),
+                      url(chrome://browser/skin/tabbrowser/tab-background-middle@2x.png),
+                      url(chrome://browser/skin/tabbrowser/tab-background-end@2x.png);
+  }
+
   .tab-icon-image {
     list-style-image: url("chrome://mozapps/skin/places/defaultFavicon@2x.png");
     image-rendering: -moz-crisp-edges;
