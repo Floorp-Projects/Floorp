@@ -3724,6 +3724,9 @@ nsDocument::AddStyleSheetToStyleSets(nsIStyleSheet* aSheet)
 
 #define DO_STYLESHEET_NOTIFICATION(createFunc, initMethod, concreteInterface, type) \
   do {                                                                  \
+    if (!HasStyleSheetChangeEventsEnabled()) {                          \
+      break;                                                            \
+    }                                                                   \
     nsCOMPtr<nsIDOMEvent> event;                                        \
     nsresult rv = createFunc(getter_AddRefs(event), this,               \
                              mPresShell ?                               \
