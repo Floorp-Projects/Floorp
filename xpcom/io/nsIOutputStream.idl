@@ -22,9 +22,7 @@ interface nsIInputStream;
  *
  * Implementers should return the following:
  *
- * @return NS_OK and (*aReadCount > 0) if successfully provided some data
- * @return NS_OK and (*aReadCount = 0) or
- * @return <any-error> if not interested in providing any data
+ * @throws <any-error> if not interested in providing any data
  *
  * Errors are never passed to the caller of WriteSegments.
  */

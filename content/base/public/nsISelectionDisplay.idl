@@ -22,7 +22,6 @@ interface nsISelectionDisplay : nsISupports
                     This will tell the rendering engine to draw the different
                     selection types. 
 
-    @return NS_OK if successful.
    */
     void setSelectionFlags(in short toggle);
 
@@ -32,7 +31,6 @@ interface nsISelectionDisplay : nsISupports
    
     @param short *aReturn - This will be filled with DISPLAY_(TEXT,IMAGE,FRAMES,ALL) 
                             bit flags.
-    @return NS_OK if successful.
    */
     short getSelectionFlags();
 
