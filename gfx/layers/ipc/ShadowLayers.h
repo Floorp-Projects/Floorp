@@ -136,6 +136,7 @@ class ShadowLayerForwarder : public CompositableForwarder
 {
   friend class AutoOpenSurface;
   friend class TextureClientShmem;
+  friend class ContentClientIncremental;
 
 public:
   virtual ~ShadowLayerForwarder();
