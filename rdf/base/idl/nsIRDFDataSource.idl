@@ -21,7 +21,7 @@ interface nsIRDFDataSource : nsISupports
     /** Find an RDF resource that points to a given node over the
      * specified arc & truth value
      *
-     * @return NS_RDF_NO_VALUE if there is no source that leads
+     * @throws NS_RDF_NO_VALUE if there is no source that leads
      * to the target with the specified property.
      */
     nsIRDFResource GetSource(in nsIRDFResource aProperty,
@@ -31,10 +31,6 @@ interface nsIRDFDataSource : nsISupports
     /**
      * Find all RDF resources that point to a given node over the
      * specified arc & truth value
-     *
-     * @return NS_OK unless a catastrophic error occurs. If the
-     * method returns NS_OK, you may assume that nsISimpleEnumerator points
-     * to a valid (but possibly empty) cursor.
      */
     nsISimpleEnumerator GetSources(in nsIRDFResource aProperty,
                                    in nsIRDFNode     aTarget,
@@ -44,7 +40,7 @@ interface nsIRDFDataSource : nsISupports
      * Find a child of that is related to the source by the given arc
      * arc and truth value
      *
-     * @return NS_RDF_NO_VALUE if there is no target accessible from the
+     * @throws NS_RDF_NO_VALUE if there is no target accessible from the
      * source via the specified property.
      */
     nsIRDFNode GetTarget(in nsIRDFResource aSource,
@@ -54,10 +50,6 @@ interface nsIRDFDataSource : nsISupports
     /**
      * Find all children of that are related to the source by the given arc
      * arc and truth value.
-     *
-     * @return NS_OK unless a catastrophic error occurs. If the
-     * method returns NS_OK, you may assume that nsISimpleEnumerator points
-     * to a valid (but possibly empty) cursor.
      */
     nsISimpleEnumerator GetTargets(in nsIRDFResource aSource,
                                    in nsIRDFResource aProperty,
@@ -128,20 +120,12 @@ interface nsIRDFDataSource : nsISupports
 
     /**
      * Get a cursor to iterate over all the arcs that point into a node.
-     *
-     * @return NS_OK unless a catastrophic error occurs. If the method
-     * returns NS_OK, you may assume that labels points to a valid (but
-     * possible empty) nsISimpleEnumerator object.
      */
     nsISimpleEnumerator ArcLabelsIn(in nsIRDFNode aNode);
 
     /**
      * Get a cursor to iterate over all the arcs that originate in
      * a resource.
-     *
-     * @return NS_OK unless a catastrophic error occurs. If the method
-     * returns NS_OK, you may assume that labels points to a valid (but
-     * possible empty) nsISimpleEnumerator object.
      */
     nsISimpleEnumerator ArcLabelsOut(in nsIRDFResource aSource);
 

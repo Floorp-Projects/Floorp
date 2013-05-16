@@ -607,6 +607,20 @@ nsresult ChannelMediaResource::OpenChannel(nsIStreamListener** aStreamListener)
     *aStreamListener = nullptr;
   }
 
+  if (mByteRange.IsNull()) {
+    // We're not making a byte range request, so set the content length,
+    // if it's available as an HTTP header. This ensures that MediaResource
+    // wrapping objects for platform libraries that expect to know
+    // the length of a resource can get it before OnStartRequest() fires.
+    nsCOMPtr<nsIHttpChannel> hc = do_QueryInterface(mChannel);
+    if (hc) {
+      int64_t cl = -1;
+      if (NS_SUCCEEDED(hc->GetContentLength(&cl)) && cl != -1) {
+        mCacheStream.NotifyDataLength(cl);
+      }
+    }
+  }
+
   mListener = new Listener(this);
   NS_ENSURE_TRUE(mListener, NS_ERROR_OUT_OF_MEMORY);
 

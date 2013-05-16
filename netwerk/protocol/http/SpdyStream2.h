@@ -35,9 +35,9 @@ public:
 
   // returns false if called more than once
   bool GetFullyOpen() {return mFullyOpen;}
-  void SetFullyOpen() 
+  void SetFullyOpen()
   {
-    NS_ABORT_IF_FALSE(!mFullyOpen, "SetFullyOpen already open");
+    MOZ_ASSERT(!mFullyOpen);
     mFullyOpen = 1;
   }
 
@@ -93,7 +93,7 @@ private:
   void     CompressToFrame(uint16_t);
   void     CompressFlushFrame();
   void     ExecuteCompress(uint32_t);
-  
+
   // Each stream goes from syn_stream to upstream_complete, perhaps
   // looping on multiple instances of generating_request_body and
   // sending_request_body for each SPDY chunk in the upload.

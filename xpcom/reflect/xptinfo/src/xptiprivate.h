@@ -199,7 +199,7 @@ public:
     bool EnsureResolved()
         {return IsFullyResolved() ? true : Resolve();}
 
-    nsresult GetInterfaceInfo(xptiInterfaceInfo** info);
+    already_AddRefed<xptiInterfaceInfo> InterfaceInfo();
     bool     InterfaceInfoEquals(const xptiInterfaceInfo* info) const 
         {return info == mInfo;}
     

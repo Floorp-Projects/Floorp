@@ -2,8 +2,7 @@
      Any copyright is dedicated to the Public Domain.
      http://creativecommons.org/publicdomain/zero/1.0/
 -->
-<svg xmlns="http://www.w3.org/2000/svg" version="1.1"
-     onload="setTimeout(handleLoad, 0);">
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" class="reftest-wait">
 
   <title>Testcase for removing display:none from foreignObject child</title>
 
@@ -12,12 +11,14 @@
   <script type="application/ecmascript">
   <![CDATA[
 
-// This must be called using setTimeout since it was _after_ loading we failed
-
-function handleLoad(event)
+function doTest(event)
 {
   document.getElementById('div').style.display = 'block';
+  document.documentElement.removeAttribute('class');
 }
+
+document.addEventListener("MozReftestInvalidate", doTest, false);
+setTimeout(doTest, 4000); // fallback for running outside reftest
 
   ]]>
   </script>
