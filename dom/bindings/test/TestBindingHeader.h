@@ -140,9 +140,9 @@ public:
                                         JS::Handle<JSObject*>,
                                         JS::Handle<JSObject*>,
                                         const Sequence<Dict>&,
-                                        const Optional<JS::Rooted<JS::Value> >&,
-                                        const Optional<JS::Rooted<JSObject*> >&,
-                                        const Optional<JS::Rooted<JSObject*> >&,
+                                        const Optional<JS::Handle<JS::Value> >&,
+                                        const Optional<JS::Handle<JSObject*> >&,
+                                        const Optional<JS::Handle<JSObject*> >&,
                                         ErrorResult&);
 
   // Integer types
@@ -434,7 +434,7 @@ public:
   // Any types
   void PassAny(JSContext*, JS::Handle<JS::Value>);
   void PassVariadicAny(JSContext*, const Sequence<JS::Value>&);
-  void PassOptionalAny(JSContext*, const Optional<JS::Rooted<JS::Value> >&);
+  void PassOptionalAny(JSContext*, const Optional<JS::Handle<JS::Value> >&);
   void PassAnyDefaultNull(JSContext*, JS::Handle<JS::Value>);
   void PassSequenceOfAny(JSContext*, const Sequence<JS::Value>&);
   void PassNullableSequenceOfAny(JSContext*, const Nullable<Sequence<JS::Value> >&);
@@ -452,8 +452,8 @@ public:
   void PassVariadicObject(JSContext*, const Sequence<JSObject*>&);
   void PassNullableObject(JSContext*, JS::Handle<JSObject*>);
   void PassVariadicNullableObject(JSContext*, const Sequence<JSObject*>&);
-  void PassOptionalObject(JSContext*, const Optional<JS::Rooted<JSObject*> >&);
-  void PassOptionalNullableObject(JSContext*, const Optional<JS::Rooted<JSObject*> >&);
+  void PassOptionalObject(JSContext*, const Optional<JS::Handle<JSObject*> >&);
+  void PassOptionalNullableObject(JSContext*, const Optional<JS::Handle<JSObject*> >&);
   void PassOptionalNullableObjectWithDefaultValue(JSContext*, JS::Handle<JSObject*>);
   void PassSequenceOfObject(JSContext*, const Sequence<JSObject*>&);
   void PassSequenceOfNullableObject(JSContext*, const Sequence<JSObject*>&);
@@ -734,7 +734,7 @@ private:
   void PassOptionalEnum(Optional<TestEnum>&) MOZ_DELETE;
   void PassOptionalCallback(JSContext*, Optional<OwningNonNull<TestCallback> >&) MOZ_DELETE;
   void PassOptionalNullableCallback(JSContext*, Optional<nsRefPtr<TestCallback> >&) MOZ_DELETE;
-  void PassOptionalAny(Optional<JS::Rooted<JS::Value> >&) MOZ_DELETE;
+  void PassOptionalAny(Optional<JS::Handle<JS::Value> >&) MOZ_DELETE;
 
   // And test that string stuff is always const
   void PassString(nsAString&) MOZ_DELETE;
