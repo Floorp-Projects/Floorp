@@ -477,6 +477,23 @@ IsSetterPC(jsbytecode *pc)
     JSOp op = JSOp(*pc);
     return op == JSOP_SETPROP || op == JSOP_SETNAME || op == JSOP_SETGNAME;
 }
+
+static inline int32_t
+GetBytecodeInteger(jsbytecode *pc)
+{
+    switch (JSOp(*pc)) {
+      case JSOP_ZERO:   return 0;
+      case JSOP_ONE:    return 1;
+      case JSOP_UINT16: return GET_UINT16(pc);
+      case JSOP_UINT24: return GET_UINT24(pc);
+      case JSOP_INT8:   return GET_INT8(pc);
+      case JSOP_INT32:  return GET_INT32(pc);
+      default:
+        JS_NOT_REACHED("Bad op");
+        return 0;
+    }
+}
+
 /*
  * Counts accumulated for a single opcode in a script. The counts tracked vary
  * between opcodes, and this structure ensures that counts are accessed in a

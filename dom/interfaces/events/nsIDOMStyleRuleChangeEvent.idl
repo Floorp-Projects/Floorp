@@ -5,23 +5,24 @@
 
 #include "nsIDOMEvent.idl"
 
+interface nsIDOMCSSRule;
 interface nsIDOMCSSStyleSheet;
 
-[scriptable, builtinclass, uuid(05a78874-43d7-459d-be32-ba9271527153)]
-interface nsIDOMStyleSheetAddedEvent : nsIDOMEvent
+[scriptable, builtinclass, uuid(36098d39-b471-47e9-976e-33fee3d81467)]
+interface nsIDOMStyleRuleChangeEvent : nsIDOMEvent
 {
   readonly attribute nsIDOMCSSStyleSheet stylesheet;
-  readonly attribute boolean documentSheet;
-  [noscript] void initStyleSheetAddedEvent(in DOMString aTypeArg,
+  readonly attribute nsIDOMCSSRule rule;
+  [noscript] void initStyleRuleChangeEvent(in DOMString aTypeArg,
                                            in boolean aCanBubbleArg,
                                            in boolean aCancelableArg,
                                            in nsIDOMCSSStyleSheet aStyleSheet,
-                                           in boolean aDocumentSheet);
+                                           in nsIDOMCSSRule aRule);
 };
 
-dictionary StyleSheetAddedEventInit : EventInit
+dictionary StyleRuleChangeEventInit : EventInit
 {
   nsIDOMCSSStyleSheet stylesheet;
-  boolean documentSheet;
+  nsIDOMCSSRule rule;
 };
 
