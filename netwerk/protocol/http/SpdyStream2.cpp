@@ -54,7 +54,7 @@ SpdyStream2::SpdyStream2(nsAHttpTransaction *httpTransaction,
     mTotalSent(0),
     mTotalRead(0)
 {
-  NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
   LOG3(("SpdyStream2::SpdyStream2 %p", this));
 
@@ -79,7 +79,7 @@ SpdyStream2::ReadSegments(nsAHttpSegmentReader *reader,
   LOG3(("SpdyStream2 %p ReadSegments reader=%p count=%d state=%x",
         this, reader, count, mUpstreamState));
 
-  NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
   
   nsresult rv = NS_ERROR_UNEXPECTED;
   mRequestBlockedOnRead = 0;
@@ -136,8 +136,8 @@ SpdyStream2::ReadSegments(nsAHttpSegmentReader *reader,
       mSegmentReader = reader;
       rv = TransmitFrame(nullptr, nullptr, false);
       mSegmentReader = nullptr;
-      NS_ABORT_IF_FALSE(NS_FAILED(rv) || !mTxInlineFrameUsed,
-                        "Transmit Frame should be all or nothing");
+      MOZ_ASSERT(NS_FAILED(rv) || !mTxInlineFrameUsed,
+                 "Transmit Frame should be all or nothing");
       if (NS_SUCCEEDED(rv))
         ChangeState(UPSTREAM_COMPLETE);
     }
@@ -158,7 +158,7 @@ SpdyStream2::ReadSegments(nsAHttpSegmentReader *reader,
     break;
 
   default:
-    NS_ABORT_IF_FALSE(false, "SpdyStream2::ReadSegments unknown state");
+    MOZ_ASSERT(false, "SpdyStream2::ReadSegments unknown state");
     break;
   }
 
@@ -178,8 +178,8 @@ SpdyStream2::WriteSegments(nsAHttpSegmentWriter *writer,
   LOG3(("SpdyStream2::WriteSegments %p count=%d state=%x",
         this, count, mUpstreamState));
   
-  NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
-  NS_ABORT_IF_FALSE(!mSegmentWriter, "segment writer in progress");
+  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(!mSegmentWriter, "segment writer in progress");
 
   mSegmentWriter = writer;
   nsresult rv = mTransaction->WriteSegments(writer, count, countWritten);
@@ -207,8 +207,8 @@ SpdyStream2::ParseHttpRequestHeaders(const char *buf,
   // Returns NS_OK even if the headers are incomplete
   // set mSynFrameComplete flag if they are complete
 
-  NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
-  NS_ABORT_IF_FALSE(mUpstreamState == GENERATING_SYN_STREAM, "wrong state");
+  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(mUpstreamState == GENERATING_SYN_STREAM);
 
   LOG3(("SpdyStream2::ParseHttpRequestHeaders %p avail=%d state=%x",
         this, avail, mUpstreamState));
@@ -240,8 +240,8 @@ SpdyStream2::ParseHttpRequestHeaders(const char *buf,
   // be monotonically increasing amongst syn-streams on this
   // session
   mStreamID = mSession->RegisterStreamID(this);
-  NS_ABORT_IF_FALSE(mStreamID & 1,
-                    "Spdy Stream Channel ID must be odd");
+  MOZ_ASSERT(mStreamID & 1,
+             "Spdy Stream Channel ID must be odd");
 
   if (mStreamID >= 0x80000000) {
     // streamID must fit in 31 bits. This is theoretically possible
@@ -394,8 +394,8 @@ SpdyStream2::ParseHttpRequestHeaders(const char *buf,
   (reinterpret_cast<uint32_t *>(mTxInlineFrame.get()))[1] =
     PR_htonl(mTxInlineFrameUsed - 8);
 
-  NS_ABORT_IF_FALSE(!mTxInlineFrame[4],
-                    "Size greater than 24 bits");
+  MOZ_ASSERT(!mTxInlineFrame[4],
+             "Size greater than 24 bits");
   
   // Determine whether to put the fin bit on the syn stream frame or whether
   // to wait for a data packet to put it on.
@@ -492,10 +492,10 @@ SpdyStream2::TransmitFrame(const char *buf,
   // flush internal buffers that were previously blocked on writing. You can
   // of course feed new data to it as well.
 
-  NS_ABORT_IF_FALSE(mTxInlineFrameUsed, "empty stream frame in transmit");
-  NS_ABORT_IF_FALSE(mSegmentReader, "TransmitFrame with null mSegmentReader");
-  NS_ABORT_IF_FALSE((buf && countUsed) || (!buf && !countUsed),
-                    "TransmitFrame arguments inconsistent");
+  MOZ_ASSERT(mTxInlineFrameUsed, "empty stream frame in transmit");
+  MOZ_ASSERT(mSegmentReader, "TransmitFrame with null mSegmentReader");
+  MOZ_ASSERT((buf && countUsed) || (!buf && !countUsed),
+             "TransmitFrame arguments inconsistent");
 
   uint32_t transmittedCount;
   nsresult rv;
@@ -526,7 +526,7 @@ SpdyStream2::TransmitFrame(const char *buf,
                                         forceCommitment);
 
   if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
-    NS_ABORT_IF_FALSE(!forceCommitment, "forceCommitment with WOULD_BLOCK");
+    MOZ_ASSERT(!forceCommitment, "forceCommitment with WOULD_BLOCK");
     mSession->TransactionHasDataToWrite(this);
   }
   if (NS_FAILED(rv))     // this will include WOULD_BLOCK
@@ -543,14 +543,14 @@ SpdyStream2::TransmitFrame(const char *buf,
         "stream=%p result %x len=%d",
         mSession, this, rv, transmittedCount));
 
-  NS_ABORT_IF_FALSE(rv != NS_BASE_STREAM_WOULD_BLOCK,
-                    "inconsistent inline commitment result");
+  MOZ_ASSERT(rv != NS_BASE_STREAM_WOULD_BLOCK,
+             "inconsistent inline commitment result");
 
   if (NS_FAILED(rv))
     return rv;
 
-  NS_ABORT_IF_FALSE(transmittedCount == mTxInlineFrameUsed,
-                    "inconsistent inline commitment count");
+  MOZ_ASSERT(transmittedCount == mTxInlineFrameUsed,
+             "inconsistent inline commitment count");
     
   SpdySession2::LogIO(mSession, this, "Writing from Inline Buffer",
                      mTxInlineFrame, transmittedCount);
@@ -558,8 +558,8 @@ SpdyStream2::TransmitFrame(const char *buf,
   if (mTxStreamFrameSize) {
     if (!buf) {
       // this cannot happen
-      NS_ABORT_IF_FALSE(false, "Stream transmit with null buf argument to "
-                        "TransmitFrame()");
+      MOZ_ASSERT(false, "Stream transmit with null buf argument to "
+                 "TransmitFrame()");
       LOG(("Stream transmit with null buf argument to TransmitFrame()\n"));
       return NS_ERROR_UNEXPECTED;
     }
@@ -571,14 +571,14 @@ SpdyStream2::TransmitFrame(const char *buf,
           "stream=%p result %x len=%d",
           mSession, this, rv, transmittedCount));
   
-    NS_ABORT_IF_FALSE(rv != NS_BASE_STREAM_WOULD_BLOCK,
-                      "inconsistent stream commitment result");
+    MOZ_ASSERT(rv != NS_BASE_STREAM_WOULD_BLOCK,
+               "inconsistent stream commitment result");
 
     if (NS_FAILED(rv))
       return rv;
 
-    NS_ABORT_IF_FALSE(transmittedCount == mTxStreamFrameSize,
-                      "inconsistent stream commitment count");
+    MOZ_ASSERT(transmittedCount == mTxStreamFrameSize,
+               "inconsistent stream commitment count");
     
     SpdySession2::LogIO(mSession, this, "Writing from Transaction Buffer",
                        buf, transmittedCount);
@@ -610,18 +610,17 @@ SpdyStream2::GenerateDataFrameHeader(uint32_t dataLength, bool lastFrame)
   LOG3(("SpdyStream2::GenerateDataFrameHeader %p len=%d last=%d",
         this, dataLength, lastFrame));
 
-  NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
-  NS_ABORT_IF_FALSE(!mTxInlineFrameUsed, "inline frame not empty");
-  NS_ABORT_IF_FALSE(!mTxStreamFrameSize, "stream frame not empty");
-  NS_ABORT_IF_FALSE(!(dataLength & 0xff000000), "datalength > 24 bits");
+  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(!mTxInlineFrameUsed, "inline frame not empty");
+  MOZ_ASSERT(!mTxStreamFrameSize, "stream frame not empty");
+  MOZ_ASSERT(!(dataLength & 0xff000000), "datalength > 24 bits");
   
   (reinterpret_cast<uint32_t *>(mTxInlineFrame.get()))[0] = PR_htonl(mStreamID);
   (reinterpret_cast<uint32_t *>(mTxInlineFrame.get()))[1] =
     PR_htonl(dataLength);
   
-  NS_ABORT_IF_FALSE(!(mTxInlineFrame[0] & 0x80),
-                    "control bit set unexpectedly");
-  NS_ABORT_IF_FALSE(!mTxInlineFrame[4], "flag bits set unexpectedly");
+  MOZ_ASSERT(!(mTxInlineFrame[0] & 0x80), "control bit set unexpectedly");
+  MOZ_ASSERT(!mTxInlineFrame[4], "flag bits set unexpectedly");
   
   mTxInlineFrameUsed = 8;
   mTxStreamFrameSize = dataLength;
@@ -770,8 +769,8 @@ SpdyStream2::OnReadSegment(const char *buf,
   LOG3(("SpdyStream2::OnReadSegment %p count=%d state=%x",
         this, count, mUpstreamState));
 
-  NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
-  NS_ABORT_IF_FALSE(mSegmentReader, "OnReadSegment with null mSegmentReader");
+  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(mSegmentReader);
   
   nsresult rv = NS_ERROR_UNEXPECTED;
   uint32_t dataLength;
@@ -791,21 +790,18 @@ SpdyStream2::OnReadSegment(const char *buf,
     LOG3(("ParseHttpRequestHeaders %p used %d of %d. complete = %d",
           this, *countRead, count, mSynFrameComplete));
     if (mSynFrameComplete) {
-      NS_ABORT_IF_FALSE(mTxInlineFrameUsed,
-                        "OnReadSegment SynFrameComplete 0b");
+      MOZ_ASSERT(mTxInlineFrameUsed, "OnReadSegment SynFrameComplete 0b");
       rv = TransmitFrame(nullptr, nullptr, true);
       if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
         // this can't happen
-        NS_ABORT_IF_FALSE(false,
-                          "Transmit Frame SYN_FRAME must at least buffer data");
+        MOZ_ASSERT(false, "Transmit Frame SYN_FRAME must at least buffer data");
         rv = NS_ERROR_UNEXPECTED;
       }
 
       ChangeState(GENERATING_REQUEST_BODY);
       break;
     }
-    NS_ABORT_IF_FALSE(*countRead == count,
-                      "Header parsing not complete but unused data");
+    MOZ_ASSERT(*countRead == count, "Header parsing not complete but unused data");
     break;
 
   case GENERATING_REQUEST_BODY:
@@ -821,10 +817,10 @@ SpdyStream2::OnReadSegment(const char *buf,
     // NO BREAK
 
   case SENDING_REQUEST_BODY:
-    NS_ABORT_IF_FALSE(mTxInlineFrameUsed, "OnReadSegment Send Data Header 0b");
+    MOZ_ASSERT(mTxInlineFrameUsed, "OnReadSegment Send Data Header 0b");
     rv = TransmitFrame(buf, countRead, false);
-    NS_ABORT_IF_FALSE(NS_FAILED(rv) || !mTxInlineFrameUsed,
-                      "Transmit Frame should be all or nothing");
+    MOZ_ASSERT(NS_FAILED(rv) || !mTxInlineFrameUsed,
+               "Transmit Frame should be all or nothing");
 
     LOG3(("TransmitFrame() rv=%x returning %d data bytes. "
           "Header is %d Body is %d.",
@@ -842,12 +838,11 @@ SpdyStream2::OnReadSegment(const char *buf,
     break;
 
   case SENDING_FIN_STREAM:
-    NS_ABORT_IF_FALSE(false,
-                      "resuming partial fin stream out of OnReadSegment");
+    MOZ_ASSERT(false, "resuming partial fin stream out of OnReadSegment");
     break;
     
   default:
-    NS_ABORT_IF_FALSE(false, "SpdyStream2::OnReadSegment non-write state");
+    MOZ_ASSERT(false, "SpdyStream2::OnReadSegment non-write state");
     break;
   }
   
@@ -866,8 +861,8 @@ SpdyStream2::OnWriteSegment(char *buf,
   LOG3(("SpdyStream2::OnWriteSegment %p count=%d state=%x",
         this, count, mUpstreamState));
 
-  NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
-  NS_ABORT_IF_FALSE(mSegmentWriter, "OnWriteSegment with null mSegmentWriter");
+  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(mSegmentWriter, "OnWriteSegment with null mSegmentWriter");
 
   return mSegmentWriter->OnWriteSegment(buf, count, countWritten);
 }

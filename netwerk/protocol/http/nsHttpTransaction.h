@@ -282,8 +282,8 @@ private:
         int64_t ToReadBeforeRestart() { return mToReadBeforeRestart; }
         void HaveReadBeforeRestart(uint32_t amt)
         {
-            NS_ABORT_IF_FALSE(amt <= mToReadBeforeRestart,
-                              "too large of a HaveReadBeforeRestart deduction");
+            MOZ_ASSERT(amt <= mToReadBeforeRestart,
+                       "too large of a HaveReadBeforeRestart deduction");
             mToReadBeforeRestart -= amt;
         }
 
