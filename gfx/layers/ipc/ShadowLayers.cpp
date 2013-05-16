@@ -349,6 +349,25 @@ ShadowLayerForwarder::UpdateTextureRegion(CompositableClient* aCompositable,
 }
 
 void
+ShadowLayerForwarder::UpdateTextureIncremental(CompositableClient* aCompositable,
+                                               TextureIdentifier aTextureId,
+                                               SurfaceDescriptor& aDescriptor,
+                                               const nsIntRegion& aUpdatedRegion,
+                                               const nsIntRect& aBufferRect,
+                                               const nsIntPoint& aBufferRotation)
+{
+  MOZ_ASSERT(aCompositable);
+  MOZ_ASSERT(aCompositable->GetIPDLActor());
+  mTxn->AddPaint(OpPaintTextureIncremental(nullptr, aCompositable->GetIPDLActor(),
+                                           aTextureId,
+                                           aDescriptor,
+                                           aUpdatedRegion,
+                                           aBufferRect,
+                                           aBufferRotation));
+}
+
+
+void
 ShadowLayerForwarder::UpdatePictureRect(CompositableClient* aCompositable,
                                         const nsIntRect& aRect)
 {
@@ -704,6 +723,15 @@ ShadowLayerForwarder::CreatedSingleBuffer(CompositableClient* aCompositable,
                                    *aDescriptorOnWhite,
                                    aTextureInfo));
   }
+}
+
+void
+ShadowLayerForwarder::CreatedIncrementalBuffer(CompositableClient* aCompositable,
+                                               const TextureInfo& aTextureInfo,
+                                               const nsIntRect& aBufferRect)
+{
+  mTxn->AddPaint(OpCreatedIncrementalTexture(nullptr, aCompositable->GetIPDLActor(),
+                                             aTextureInfo, aBufferRect));
 }
 
 void
