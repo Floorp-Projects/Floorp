@@ -187,6 +187,7 @@ public:
   IMPL_EVENT_HANDLER(complete)
 
   uint32_t GetRate() const { return IdealAudioRate(); }
+  bool IsOffline() const { return mIsOffline; }
 
   MediaStreamGraph* Graph() const;
   MediaStream* DestinationStream() const;

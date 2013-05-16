@@ -1045,7 +1045,12 @@ MediaStreamGraphImpl::RunThread()
       ticksProcessed += TimeToTicksRoundDown(IdealAudioRate(), mStateComputedTime - prevComputedTime);
       // Terminate processing if we've produce enough non-realtime ticks.
       if (ticksProcessed >= mNonRealtimeTicksToProcess) {
-        break;
+        // Wait indefinitely when we've processed enough non-realtime ticks.
+        // We'll be woken up when the graph shuts down.
+        MonitorAutoLock lock(mMonitor);
+        PrepareUpdatesToMainThreadState();
+        mWaitState = WAITSTATE_WAITING_INDEFINITELY;
+        mMonitor.Wait(PR_INTERVAL_NO_TIMEOUT);
       }
     }
     if (ensureNextIteration || !allBlockedForever || audioStreamsActive > 0) {
@@ -1383,8 +1388,13 @@ MediaStreamGraphImpl::AppendMessage(ControlMessage* aMessage)
     if (IsEmpty()) {
       if (gGraph == this) {
         gGraph = nullptr;
-        delete this;
       }
+      delete this;
+    } else if (!mRealtime) {
+      // Make sure to mark the graph as not doing non-realtime processing,
+      // because otherwise AppendMessage will try to ensure that the graph
+      // is running, and we will never manage to release our resources.
+      mNonRealtimeProcessing = false;
     }
     return;
   }
@@ -2055,7 +2065,6 @@ MediaStreamGraph::DestroyNonRealtimeInstance(MediaStreamGraph* aGraph)
 
   MediaStreamGraphImpl* graph = static_cast<MediaStreamGraphImpl*>(aGraph);
   graph->ForceShutDown();
-  delete graph;
 }
 
 SourceMediaStream*

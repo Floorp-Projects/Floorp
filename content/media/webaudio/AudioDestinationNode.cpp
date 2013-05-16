@@ -194,6 +194,14 @@ AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
   mStream = graph->CreateAudioNodeStream(engine, MediaStreamGraph::EXTERNAL_STREAM);
 }
 
+void
+AudioDestinationNode::DestroyGraph()
+{
+  MOZ_ASSERT(Context() && Context()->IsOffline(),
+             "Should only be called on a valid OfflineAudioContext");
+  MediaStreamGraph::DestroyNonRealtimeInstance(mStream->Graph());
+}
+
 JSObject*
 AudioDestinationNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
