@@ -1051,6 +1051,22 @@ nsDOMEvent::GetEventPopupControlState(nsEvent *aEvent)
       }
     }
     break;
+  case NS_TOUCH_EVENT :
+    if (aEvent->mFlags.mIsTrusted) {
+      switch (aEvent->message) {
+      case NS_TOUCH_START :
+        if (PopupAllowedForEvent("touchstart")) {
+          abuse = openControlled;
+        }
+        break;
+      case NS_TOUCH_END :
+        if (PopupAllowedForEvent("touchend")) {
+          abuse = openControlled;
+        }
+        break;
+      }
+    }
+    break;
   case NS_MOUSE_EVENT :
     if (aEvent->mFlags.mIsTrusted &&
         static_cast<nsMouseEvent*>(aEvent)->button == nsMouseEvent::eLeftButton) {
