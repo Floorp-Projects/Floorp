@@ -21,6 +21,7 @@ function handleRequest(request, response)
   }
 
   if ("content" in query) {
+    response.setHeader("Content-Type", "text/html", false);
     response.write(unescape(query['content']));
   }
 }

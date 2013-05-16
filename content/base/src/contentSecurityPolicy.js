@@ -40,7 +40,6 @@ function ContentSecurityPolicy() {
 
   // default options "wide open" since this policy will be intersected soon
   this._policy._allowInlineScripts = true;
-  this._policy._allowInlineStyles = true;
   this._policy._allowEval = true;
 
   this._request = "";
@@ -145,14 +144,6 @@ ContentSecurityPolicy.prototype = {
     return this._reportOnlyMode || this._policy.allowsEvalInScripts;
   },
 
-  getAllowsInlineStyle: function(shouldReportViolation) {
-    // report it?
-    shouldReportViolation.value = !this._policy.allowsInlineStyles;
-
-    // allow it to execute?
-    return this._reportOnlyMode || this._policy.allowsInlineStyles;
-  },
-
   /**
    * Log policy violation on the Error Console and send a report if a report-uri
    * is present in the policy
@@ -172,12 +163,6 @@ ContentSecurityPolicy.prototype = {
     // is enabled, resulting in a call to this function. Therefore we need to
     // check that the policy was in fact violated before logging any violations
     switch (aViolationType) {
-    case Ci.nsIContentSecurityPolicy.VIOLATION_TYPE_INLINE_STYLE:
-      if (!this._policy.allowsInlineStyles)
-        this._asyncReportViolation('self',null,'inline style base restriction',
-                                   'violated base restriction: Inline Stylesheets will not apply',
-                                   aSourceFile, aScriptSample, aLineNum);
-      break;
     case Ci.nsIContentSecurityPolicy.VIOLATION_TYPE_INLINE_SCRIPT:
       if (!this._policy.allowsInlineScripts)
         this._asyncReportViolation('self',null,'inline script base restriction',

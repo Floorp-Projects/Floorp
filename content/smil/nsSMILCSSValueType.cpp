@@ -15,7 +15,6 @@
 #include "nsPresContext.h"
 #include "mozilla/dom/Element.h"
 #include "nsDebug.h"
-#include "nsStyleUtil.h"
 
 using namespace mozilla::dom;
 
@@ -389,13 +388,6 @@ nsSMILCSSValueType::ValueFromString(nsCSSProperty aPropID,
   nsPresContext* presContext = GetPresContextForElement(aTargetElement);
   if (!presContext) {
     NS_WARNING("Not parsing animation value; unable to get PresContext");
-    return;
-  }
-
-  nsIDocument* doc = aTargetElement->GetCurrentDoc();
-  if (doc && !nsStyleUtil::CSPAllowsInlineStyle(doc->NodePrincipal(),
-                                                doc->GetDocumentURI(),
-                                                0, aString, nullptr)) {
     return;
   }
 

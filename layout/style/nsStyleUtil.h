@@ -7,8 +7,6 @@
 
 #include "nsCoord.h"
 #include "nsCSSProperty.h"
-#include "nsIPrincipal.h"
-#include "nsSubstring.h"
 #include "gfxFontFeatures.h"
 
 class nsCSSValue;
@@ -92,22 +90,6 @@ public:
   static bool IsSignificantChild(nsIContent* aChild,
                                    bool aTextIsSignificant,
                                    bool aWhitespaceIsSignificant);
-  /*
-   *  Does this principal have a CSP that blocks the application of
-   *  inline styles ? Returns false if application of the style should
-   *  be blocked.
-   *
-   *  Note that the principal passed in here needs to be the principal
-   *  of the document, not of the style sheet. The document's principal
-   *  is where any Content Security Policy that should be used to
-   *  block or allow inline styles will be located.
-   */
-  static bool CSPAllowsInlineStyle(nsIPrincipal* aPrincipal,
-                                   nsIURI* aSourceURI,
-                                   uint32_t aLineNumber,
-                                   const nsSubstring& aStyleText,
-                                   nsresult* aRv);
-
 };
 
 
