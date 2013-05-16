@@ -334,7 +334,7 @@ DeviceStorageTypeChecker::GetTypeFromFile(nsIFile* aFile, nsAString& aType)
 void
 DeviceStorageTypeChecker::GetTypeFromFileName(const nsAString& aFileName, nsAString& aType)
 {
-  aType.AssignLiteral("Unknown");
+  aType.AssignLiteral(DEVICESTORAGE_SDCARD);
 
   nsString fileName(aFileName);
   int32_t dotIdx = fileName.RFindChar(PRUnichar('.'));
