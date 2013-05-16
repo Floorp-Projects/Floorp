@@ -336,6 +336,10 @@ interface TestInterface {
 
   sequence<any> receiveAnySequence();
   sequence<any>? receiveNullableAnySequence();
+  sequence<sequence<any>> receiveAnySequenceSequence();
+
+  sequence<object> receiveObjectSequence();
+  sequence<object?> receiveNullableObjectSequence();
 
   void passSequenceOfSequences(sequence<sequence<long>> arg);
   sequence<sequence<long>> receiveSequenceOfSequences();
@@ -396,16 +400,32 @@ interface TestInterface {
 
   // Any types
   void passAny(any arg);
+  void passVariadicAny(any... arg);
   void passOptionalAny(optional any arg);
   void passAnyDefaultNull(optional any arg = null);
+  void passSequenceOfAny(sequence<any> arg);
+  void passNullableSequenceOfAny(sequence<any>? arg);
+  void passOptionalSequenceOfAny(optional sequence<any> arg);
+  void passOptionalNullableSequenceOfAny(optional sequence<any>? arg);
+  void passOptionalSequenceOfAnyWithDefaultValue(optional sequence<any>? arg = null);
+  void passSequenceOfSequenceOfAny(sequence<sequence<any>> arg);
+  void passSequenceOfNullableSequenceOfAny(sequence<sequence<any>?> arg);
+  void passNullableSequenceOfNullableSequenceOfAny(sequence<sequence<any>?>? arg);
+  void passOptionalNullableSequenceOfNullableSequenceOfAny(optional sequence<sequence<any>?>? arg);
   any receiveAny();
 
   // object types
   void passObject(object arg);
+  void passVariadicObject(object... arg);
   void passNullableObject(object? arg);
+  void passVariadicNullableObject(object... arg);
   void passOptionalObject(optional object arg);
   void passOptionalNullableObject(optional object? arg);
   void passOptionalNullableObjectWithDefaultValue(optional object? arg = null);
+  void passSequenceOfObject(sequence<object> arg);
+  void passSequenceOfNullableObject(sequence<object?> arg);
+  void passOptionalNullableSequenceOfNullableSequenceOfObject(optional sequence<sequence<object>?>? arg);
+  void passOptionalNullableSequenceOfNullableSequenceOfNullableObject(optional sequence<sequence<object?>?>? arg);
   object receiveObject();
   object? receiveNullableObject();
 
@@ -449,6 +469,8 @@ interface TestInterface {
   Dict receiveDictionary();
   void passOtherDictionary(optional GrandparentDict x);
   void passSequenceOfDictionaries(sequence<Dict> x);
+  // No support for nullable dictionaries inside a sequence (nor should there be)
+  //  void passSequenceOfNullableDictionaries(sequence<Dict?> x);
   void passDictionaryOrLong(optional Dict x);
   void passDictionaryOrLong(long x);
 
@@ -657,6 +679,11 @@ dictionary DictContainingDict {
 dictionary DictContainingSequence {
   sequence<long> ourSequence;
   sequence<TestInterface> ourSequence2;
+  sequence<any> ourSequence3;
+  // XXXbz we can't make up our minds about how to represent 'object';
+  // will be fixed once we trace dictionaries.
+  //sequence<object> ourSequence4;
+  sequence<object?> ourSequence5;
 };
 
 dictionary DictForConstructor {
@@ -665,7 +692,9 @@ dictionary DictForConstructor {
   sequence<Dict> seq1;
   sequence<sequence<Dict>>? seq2;
   sequence<sequence<Dict>?> seq3;
-  // No support for sequences of "any" or "object" as return values yet.
+  sequence<any> seq4;
+  sequence<any> seq5;
+  sequence<DictContainingSequence> seq6;
   object obj1;
   object? obj2;
   any any1 = null;
