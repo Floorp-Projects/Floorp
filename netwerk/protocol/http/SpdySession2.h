@@ -46,7 +46,7 @@ public:
 
   // When the connection is active this is called every 1 second
   void ReadTimeoutTick(PRIntervalTime now);
-  
+
   // Idle time represents time since "goodput".. e.g. a data or header frame
   PRIntervalTime IdleTime();
 
@@ -57,10 +57,10 @@ public:
   const static uint8_t kFlag_Data_FIN  = 0x01;
   const static uint8_t kFlag_Data_UNI  = 0x02;
   const static uint8_t kFlag_Data_ZLIB = 0x02;
-  
+
   // The protocol document for v2 specifies that the
   // highest value (3) is the highest priority, but in
-  // reality 0 is the highest priority. 
+  // reality 0 is the highest priority.
   //
   // Draft 3 notes here https://sites.google.com/a/chromium.org/dev/spdy/spdy-protocol/
   // are the best guide to the mistake. Also see
@@ -124,11 +124,11 @@ public:
 
   const static uint32_t kDefaultMaxConcurrent = 100;
   const static uint32_t kMaxStreamID = 0x7800000;
-  
+
   // This is a sentinel for a deleted stream. It is not a valid
   // 31 bit stream ID.
   const static uint32_t kDeadStreamID = 0xffffdead;
-  
+
   static nsresult HandleSynStream(SpdySession2 *);
   static nsresult HandleSynReply(SpdySession2 *);
   static nsresult HandleRstStream(SpdySession2 *);
@@ -154,7 +154,7 @@ public:
 
   // an overload of nsAHttpSegementReader
   virtual nsresult CommitToSegmentSize(uint32_t size, bool forceCommitment);
-  
+
   void     PrintDiagnostics (nsCString &log);
 
 private:
@@ -197,7 +197,7 @@ private:
   // a wrapper for all calls to the nshttpconnection level segment writer. Used
   // to track network I/O for timeout purposes
   nsresult   NetworkRead(nsAHttpSegmentWriter *, char *, uint32_t, uint32_t *);
-  
+
   static PLDHashOperator ShutdownEnumerator(nsAHttpTransaction *,
                                             nsAutoPtr<SpdyStream2> &,
                                             void *);
@@ -256,7 +256,7 @@ private:
   uint32_t             mInputFrameBufferSize;
   uint32_t             mInputFrameBufferUsed;
   nsAutoArrayPtr<char> mInputFrameBuffer;
-  
+
   // mInputFrameDataSize/Read are used for tracking the amount of data consumed
   // in a data frame. the data itself is not buffered in spdy
   // The frame size is mInputFrameDataSize + the constant 8 byte header
@@ -268,7 +268,7 @@ private:
   // (e.g. a data frame after the stream-id has been decoded), this points
   // to the stream.
   SpdyStream2          *mInputFrameDataStream;
-  
+
   // mNeedsCleanup is a state variable to defer cleanup of a closed stream
   // If needed, It is set in session::OnWriteSegments() and acted on and
   // cleared when the stack returns to session::WriteSegments(). The stream
