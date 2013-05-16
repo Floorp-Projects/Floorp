@@ -572,11 +572,6 @@ ion::CachedShapeGuardFailure()
 
     script->failedShapeGuard = true;
 
-    // Purge JM caches in the script and all inlined script, to avoid baking in
-    // the same shape guard next time.
-    for (size_t i = 0; i < script->ionScript()->scriptEntries(); i++)
-        mjit::PurgeCaches(script->ionScript()->getScript(i));
-
     IonSpew(IonSpew_Invalidate, "Invalidating due to shape guard failure");
 
     return Invalidate(cx, script);

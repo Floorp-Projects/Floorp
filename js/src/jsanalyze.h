@@ -25,9 +25,6 @@
 
 class JSScript;
 
-/* Forward declaration of downstream register allocations computed for join points. */
-namespace js { namespace mjit { struct RegisterAllocation; } }
-
 namespace js {
 namespace analyze {
 
@@ -124,11 +121,6 @@ class Bytecode
 
     /* If this is a JSOP_LOOPHEAD or JSOP_LOOPENTRY, information about the loop. */
     LoopAnalysis *loop;
-
-    /* --------- Lifetime analysis --------- */
-
-    /* Any allocation computed downstream for this bytecode. */
-    mjit::RegisterAllocation *allocation;
 
     /* --------- SSA analysis --------- */
 
@@ -513,7 +505,7 @@ struct LifetimeVariable
         return offset;
     }
 
-#ifdef JS_METHODJIT_SPEW
+#ifdef DEBUG
     void print() const;
 #endif
 };
@@ -995,14 +987,6 @@ class ScriptAnalysis
         return v.phiNode()->uses;
     }
 
-    mjit::RegisterAllocation *&getAllocation(uint32_t offset) {
-        JS_ASSERT(offset < script_->length);
-        return getCode(offset).allocation;
-    }
-    mjit::RegisterAllocation *&getAllocation(const jsbytecode *pc) {
-        return getAllocation(pc - script_->code);
-    }
-
     LoopAnalysis *getLoop(uint32_t offset) {
         JS_ASSERT(offset < script_->length);
         return getCode(offset).loop;
@@ -1050,8 +1034,6 @@ class ScriptAnalysis
 
     void printSSA(JSContext *cx);
     void printTypes(JSContext *cx);
-
-    void clearAllocations();
 
   private:
     void setOOM(JSContext *cx) {

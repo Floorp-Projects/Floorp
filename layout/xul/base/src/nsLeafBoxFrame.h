@@ -18,8 +18,8 @@ public:
 
   friend nsIFrame* NS_NewLeafBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-  virtual nsSize GetPrefSize(nsBoxLayoutState& aState);
-  virtual nsSize GetMinSize(nsBoxLayoutState& aState);
+  virtual nsSize GetPrefSize(nsBoxLayoutState& aState) MOZ_OVERRIDE;
+  virtual nsSize GetMinSize(nsBoxLayoutState& aState) MOZ_OVERRIDE;
   virtual nsSize GetMaxSize(nsBoxLayoutState& aState) MOZ_OVERRIDE;
   virtual nscoord GetFlex(nsBoxLayoutState& aState) MOZ_OVERRIDE;
   virtual nscoord GetBoxAscent(nsBoxLayoutState& aState) MOZ_OVERRIDE;

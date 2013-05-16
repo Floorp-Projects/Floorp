@@ -1877,7 +1877,7 @@ PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight)
         DoReflow(rootFrame, true);
       }
 
-      DidDoReflow(true);
+      DidDoReflow(true, false);
     }
   }
 
@@ -2226,7 +2226,7 @@ PresShell::CompleteScroll(bool aForward)
   if (scrollFrame) {
     scrollFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1),
                           nsIScrollableFrame::WHOLE,
-                          nsIScrollableFrame::INSTANT);
+                          nsIScrollableFrame::SMOOTH);
   }
   return NS_OK;
 }
@@ -6551,6 +6551,7 @@ PresShell::HandleEventWithTarget(nsEvent* aEvent, nsIFrame* aFrame,
     NS_ASSERTION(!doc || doc->GetShell() == this, "wrong shell");
   }
 #endif
+  NS_ENSURE_STATE(!aContent || aContent->GetCurrentDoc() == mDocument);
 
   PushCurrentEventInfo(aFrame, aContent);
   nsresult rv = HandleEventInternal(aEvent, aStatus);
@@ -7627,7 +7628,7 @@ PresShell::WillDoReflow()
 }
 
 void
-PresShell::DidDoReflow(bool aInterruptible)
+PresShell::DidDoReflow(bool aInterruptible, bool aWasInterrupted)
 {
   mFrameConstructor->EndUpdate();
   
@@ -7640,6 +7641,10 @@ PresShell::DidDoReflow(bool aInterruptible)
     // the reflow.
     mCaret->InvalidateOutsideCaret();
     mCaret->UpdateCaretPosition();
+  }
+
+  if (!aWasInterrupted) {
+    ClearReflowOnZoomPending();
   }
 }
 
@@ -7933,7 +7938,7 @@ PresShell::ProcessReflowCommands(bool aInterruptible)
 
     // Exiting the scriptblocker might have killed us
     if (!mIsDestroying) {
-      DidDoReflow(aInterruptible);
+      DidDoReflow(aInterruptible, interrupted);
     }
 
     // DidDoReflow might have killed us
@@ -9476,6 +9481,7 @@ nsIPresShell::SetMaxLineBoxWidth(nscoord aMaxLineBoxWidth)
 
   if (mMaxLineBoxWidth != aMaxLineBoxWidth) {
     mMaxLineBoxWidth = aMaxLineBoxWidth;
-    FrameNeedsReflow(GetRootFrame(), eResize, NS_FRAME_IS_DIRTY);
+    mReflowOnZoomPending = true;
+    FrameNeedsReflow(GetRootFrame(), eResize, NS_FRAME_HAS_DIRTY_CHILDREN);
   }
 }

@@ -8,6 +8,7 @@ import os
 from mozpack.errors import errors
 from mozpack.chrome.manifest import (
     Manifest,
+    ManifestChrome,
     ManifestInterfaces,
     is_manifest,
     parse_manifest,
@@ -128,6 +129,8 @@ class SimplePackager(object):
         self.formatter = formatter
         # Queue for formatter.add_interfaces()/add_manifest() calls.
         self._queue = CallDeque()
+        # Queue for formatter.add_manifest() calls for ManifestChrome.
+        self._chrome_queue = CallDeque()
         # Queue for formatter.add() calls.
         self._file_queue = CallDeque()
         # All manifest paths imported.
@@ -160,8 +163,13 @@ class SimplePackager(object):
             if b.endswith('/' + path) or b == path:
                 base = os.path.normpath(b[:-len(path)])
         for e in parse_manifest(base, path, file.open()):
-            if not isinstance(e, (Manifest, ManifestInterfaces)):
+            # ManifestResources need to be given after ManifestChrome, so just
+            # put all ManifestChrome in a separate queue to make them first.
+            if isinstance(e, ManifestChrome):
                 # e.move(e.base) just returns a clone of the entry.
+                self._chrome_queue.append(self.formatter.add_manifest,
+                                          e.move(e.base))
+            elif not isinstance(e, (Manifest, ManifestInterfaces)):
                 self._queue.append(self.formatter.add_manifest, e.move(e.base))
             if isinstance(e, Manifest):
                 if e.flags:
@@ -185,6 +193,7 @@ class SimplePackager(object):
         for base in self.get_bases():
             if base:
                 self.formatter.add_base(base)
+        self._chrome_queue.execute()
         self._queue.execute()
         self._file_queue.execute()
 

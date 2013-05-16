@@ -15,15 +15,9 @@ MOCHITEST_BROWSER_FILES = \
   browser_keyevents_during_autoscrolling.js \
   browser_bug295977_autoscroll_overflow.js \
   browser_bug594509.js \
-  browser_Geometry.js \
-  browser_InlineSpellChecker.js \
   browser_save_resend_postdata.js \
   browser_browserDrop.js \
-  browser_Services.js \
-  browser_DeferredTask.js \
   browser_default_image_filename.js \
-  browser_Troubleshoot.js \
-  browser_Deprecated.js \
   browser_input_file_tooltips.js \
   $(NULL)
 

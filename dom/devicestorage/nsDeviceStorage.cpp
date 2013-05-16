@@ -1325,25 +1325,20 @@ nsDOMDeviceStorage::SetRootDirectoryForType(const nsAString& aStorageType,
 JS::Value
 InterfaceToJsval(nsPIDOMWindow* aWindow, nsISupports* aObject, const nsIID* aIID)
 {
+  AutoJSContext cx;
   nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(aWindow);
   if (!sgo) {
     return JSVAL_NULL;
   }
 
-  nsIScriptContext *scriptContext = sgo->GetScriptContext();
-  if (!scriptContext) {
-    return JSVAL_NULL;
-  }
+  JS::RootedObject scopeObj(cx, sgo->GetGlobalJSObject());
+  NS_ENSURE_TRUE(scopeObj, JSVAL_NULL);
+  JSAutoCompartment ac(cx, scopeObj);
 
-  AutoPushJSContext cx(scriptContext->GetNativeContext());
-  if (!cx) {
-    return JSVAL_NULL;
-  }
 
   JS::Rooted<JS::Value> someJsVal(cx);
-  JS::Rooted<JSObject*> global(cx, JS_GetGlobalObject(cx));
   nsresult rv = nsContentUtils::WrapNative(cx,
-                                           global,
+                                           scopeObj,
                                            aObject,
                                            aIID,
                                            someJsVal.address());
