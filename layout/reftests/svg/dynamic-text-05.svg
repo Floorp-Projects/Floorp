@@ -2,15 +2,14 @@
      Any copyright is dedicated to the Public Domain.
      http://creativecommons.org/publicdomain/zero/1.0/
 -->
-<svg xmlns="http://www.w3.org/2000/svg" class="reftest-wait" onload="startTest()">
+<svg xmlns="http://www.w3.org/2000/svg" class="reftest-wait">
 
   <title>Testcase for text removal</title>
 
   <script>
-    function startTest() {
-      document.addEventListener("MozReftestInvalidate", doTest, false);
-      setTimeout(doTest, 5000); // for non-gecko-reftest-harness viewers
-    }
+    document.addEventListener("MozReftestInvalidate", doTest, false);
+    setTimeout(doTest, 4000); // fallback for running outside reftest
+
     function doTest() {
       document.getElementById("text").firstChild.nodeValue='';
       document.documentElement.removeAttribute("class");

@@ -20,6 +20,7 @@ IS_COMPONENT = 1
 FAIL_ON_WARNINGS = 1
 
 LIBRARY_NAME = telemetry
+MSVC_ENABLE_PGO := 1
 
 EXTRA_PP_COMPONENTS = \
   TelemetryPing.js \

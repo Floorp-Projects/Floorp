@@ -9,6 +9,7 @@
 #include "nsIDOMDataContainerEvent.h"
 #include "nsDOMEvent.h"
 #include "nsInterfaceHashtable.h"
+#include "mozilla/dom/DataContainerEventBinding.h"
 
 class nsDOMDataContainerEvent : public nsDOMEvent,
                                 public nsIDOMDataContainerEvent
@@ -24,6 +25,22 @@ public:
   NS_FORWARD_TO_NSDOMEVENT
 
   NS_DECL_NSIDOMDATACONTAINEREVENT
+
+  virtual JSObject*
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
+  {
+    return mozilla::dom::DataContainerEventBinding::Wrap(aCx, aScope, this);
+  }
+
+  already_AddRefed<nsIVariant> GetData(const nsAString& aKey)
+  {
+    nsCOMPtr<nsIVariant> val;
+    GetData(aKey, getter_AddRefs(val));
+    return val.forget();
+  }
+
+  void SetData(JSContext* aCx, const nsAString& aKey, JS::Value aVal,
+               mozilla::ErrorResult& aRv);
 
 private:
   static PLDHashOperator

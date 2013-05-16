@@ -110,52 +110,69 @@ AccGroupInfo::AccGroupInfo(Accessible* aItem, role aRole) :
   if (IsConceptualParent(aRole, parentRole))
     mParent = parent;
 
-  // In the case of ARIA tree (not ARIA treegrid) a tree can be arranged by
-  // using ARIA groups to organize levels. In this case the parent of the tree
-  // item will be a group and the previous treeitem of that should be the tree
-  // item parent.
-  if (parentRole != roles::GROUPING || aRole != roles::OUTLINEITEM)
+  // ARIA tree and list can be arranged by using ARIA groups to organize levels.
+  if (parentRole != roles::GROUPING)
     return;
 
-  Accessible* parentPrevSibling = parent->PrevSibling();
-  if (!parentPrevSibling)
-    return;
-
-  roles::Role parentPrevSiblingRole = parentPrevSibling->Role();
-  if (parentPrevSiblingRole == roles::TEXT_LEAF) {
-    // XXX Sometimes an empty text accessible is in the hierarchy here,
-    // although the text does not appear to be rendered, GetRenderedText()
-    // says that it is so we need to skip past it to find the true
-    // previous sibling.
-    parentPrevSibling = parentPrevSibling->PrevSibling();
-    if (parentPrevSibling)
-      parentPrevSiblingRole = parentPrevSibling->Role();
+  // Way #1 for ARIA tree (not ARIA treegrid): previous sibling of a group is a
+  // parent. In other words the parent of the tree item will be a group and
+  // the previous tree item of the group is a conceptual parent of the tree
+  // item.
+  if (aRole == roles::OUTLINEITEM) {
+    Accessible* parentPrevSibling = parent->PrevSibling();
+    if (parentPrevSibling && parentPrevSibling->Role() == aRole) {
+      mParent = parentPrevSibling;
+      return;
+    }
   }
 
-  // Previous sibling of parent group is a tree item, this is the
-  // conceptual tree item parent.
-  if (parentPrevSiblingRole == roles::OUTLINEITEM)
-    mParent = parentPrevSibling;
+  // Way #2 for ARIA list and tree: group is a child of an item. In other words
+  // the parent of the item will be a group and containing item of the group is
+  // a conceptual parent of the item.
+  if (aRole == roles::LISTITEM || aRole == roles::OUTLINEITEM) {
+    Accessible* grandParent = parent->Parent();
+    if (grandParent && grandParent->Role() == aRole)
+      mParent = grandParent;
+  }
 }
 
 Accessible*
 AccGroupInfo::FirstItemOf(Accessible* aContainer)
 {
-  // ARIA trees can be arranged by ARIA groups, otherwise aria-level works.
+  // ARIA tree can be arranged by ARIA groups case #1 (previous sibling of a
+  // group is a parent) or by aria-level.
   a11y::role containerRole = aContainer->Role();
   Accessible* item = aContainer->NextSibling();
   if (item) {
     if (containerRole == roles::OUTLINEITEM && item->Role() == roles::GROUPING)
       item = item->FirstChild();
 
-    AccGroupInfo* itemGroupInfo = item->GetGroupInfo();
-    if (itemGroupInfo && itemGroupInfo->ConceptualParent() == aContainer)
-      return item;
+    if (item) {
+      AccGroupInfo* itemGroupInfo = item->GetGroupInfo();
+      if (itemGroupInfo && itemGroupInfo->ConceptualParent() == aContainer)
+        return item;
+    }
+  }
+
+  // ARIA list and tree can be arranged by ARIA groups case #2 (group is
+  // a child of an item).
+  item = aContainer->LastChild();
+  if (!item)
+    return nullptr;
+
+  if (item->Role() == roles::GROUPING &&
+      (containerRole == roles::LISTITEM || containerRole == roles::OUTLINEITEM)) {
+    item = item->FirstChild();
+    if (item) {
+      AccGroupInfo* itemGroupInfo = item->GetGroupInfo();
+      if (itemGroupInfo && itemGroupInfo->ConceptualParent() == aContainer)
+        return item;
+    }
   }
 
   // Otherwise it can be a direct child.
   item = aContainer->FirstChild();
-  if (item && IsConceptualParent(BaseRole(item->Role()), containerRole))
+  if (IsConceptualParent(BaseRole(item->Role()), containerRole))
     return item;
 
   return nullptr;
