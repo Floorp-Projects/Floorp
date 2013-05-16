@@ -295,33 +295,34 @@ MaybeReflowForInflationScreenWidthChange(nsPresContext *aPresContext)
     nsIPresShell* presShell = aPresContext->GetPresShell();
     bool fontInflationWasEnabled = presShell->FontSizeInflationEnabled();
     presShell->NotifyFontSizeInflationEnabledIsDirty();
+    bool changed = false;
     if (presShell && presShell->FontSizeInflationEnabled() &&
         presShell->FontSizeInflationMinTwips() != 0) {
-      bool changed;
       aPresContext->ScreenWidthInchesForFontInflation(&changed);
-      changed = changed ||
-        (fontInflationWasEnabled != presShell->FontSizeInflationEnabled());
-      if (changed) {
-        nsCOMPtr<nsISupports> container = aPresContext->GetContainer();
-        nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);
-        if (docShell) {
-          nsCOMPtr<nsIContentViewer> cv;
-          docShell->GetContentViewer(getter_AddRefs(cv));
-          nsCOMPtr<nsIMarkupDocumentViewer> mudv = do_QueryInterface(cv);
-          if (mudv) {
-            nsTArray<nsCOMPtr<nsIMarkupDocumentViewer> > array;
-            mudv->AppendSubtree(array);
-            for (uint32_t i = 0, iEnd = array.Length(); i < iEnd; ++i) {
-              nsCOMPtr<nsIPresShell> shell;
-              nsCOMPtr<nsIContentViewer> cv = do_QueryInterface(array[i]);
-              cv->GetPresShell(getter_AddRefs(shell));
-              if (shell) {
-                nsIFrame *rootFrame = shell->GetRootFrame();
-                if (rootFrame) {
-                  shell->FrameNeedsReflow(rootFrame,
-                                          nsIPresShell::eStyleChange,
-                                          NS_FRAME_IS_DIRTY);
-                }
+    }
+
+    changed = changed ||
+      (fontInflationWasEnabled != presShell->FontSizeInflationEnabled());
+    if (changed) {
+      nsCOMPtr<nsISupports> container = aPresContext->GetContainer();
+      nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);
+      if (docShell) {
+        nsCOMPtr<nsIContentViewer> cv;
+        docShell->GetContentViewer(getter_AddRefs(cv));
+        nsCOMPtr<nsIMarkupDocumentViewer> mudv = do_QueryInterface(cv);
+        if (mudv) {
+          nsTArray<nsCOMPtr<nsIMarkupDocumentViewer> > array;
+          mudv->AppendSubtree(array);
+          for (uint32_t i = 0, iEnd = array.Length(); i < iEnd; ++i) {
+            nsCOMPtr<nsIPresShell> shell;
+            nsCOMPtr<nsIContentViewer> cv = do_QueryInterface(array[i]);
+            cv->GetPresShell(getter_AddRefs(shell));
+            if (shell) {
+              nsIFrame *rootFrame = shell->GetRootFrame();
+              if (rootFrame) {
+                shell->FrameNeedsReflow(rootFrame,
+                                        nsIPresShell::eStyleChange,
+                                        NS_FRAME_IS_DIRTY);
               }
             }
           }
