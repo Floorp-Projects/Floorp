@@ -105,11 +105,11 @@ public:
     /**
      * Render the SVG glyph for |aGlyphId|
      * @param aDrawMode Whether to fill or stroke or both; see gfxFont::DrawMode
-     * @param aObjectPaint Information on outer text object paints.
-     *   See |gfxTextObjectPaint|.
+     * @param aContextPaint Information on text context paints.
+     *   See |gfxTextContextPaint|.
      */
     bool RenderGlyph(gfxContext *aContext, uint32_t aGlyphId, DrawMode aDrawMode,
-                     gfxTextObjectPaint *aObjectPaint);
+                     gfxTextContextPaint *aContextPaint);
 
     /**
      * Get the extents for the SVG glyph associated with |aGlyphId|
@@ -150,18 +150,17 @@ private:
 
 /**
  * Used for trickling down paint information through to SVG glyphs.
- * Will be extended in later patch.
  */
-class gfxTextObjectPaint
+class gfxTextContextPaint
 {
 protected:
-    gfxTextObjectPaint() { }
+    gfxTextContextPaint() { }
 
 public:
     static mozilla::gfx::UserDataKey sUserDataKey;
 
     /*
-     * Get outer text object pattern with the specified opacity value.
+     * Get text context pattern with the specified opacity value.
      * This lets us inherit paints and paint opacities (i.e. fill/stroke and
      * fill-opacity/stroke-opacity) separately.
      */
@@ -196,7 +195,7 @@ public:
         return GetStrokePattern(GetStrokeOpacity(), aCTM);
     }
 
-    virtual ~gfxTextObjectPaint() { }
+    virtual ~gfxTextContextPaint() { }
 
 private:
     FallibleTArray<gfxFloat> mDashes;
@@ -205,10 +204,10 @@ private:
 };
 
 /**
- * For passing in patterns where the outer text object has no separate pattern
+ * For passing in patterns where the text context has no separate pattern
  * opacity value.
  */
-class SimpleTextObjectPaint : public gfxTextObjectPaint
+class SimpleTextContextPaint : public gfxTextContextPaint
 {
 private:
     static const gfxRGBA sZero;
@@ -225,7 +224,7 @@ public:
         return deviceToUser * aPattern->GetMatrix();
     }
 
-    SimpleTextObjectPaint(gfxPattern *aFillPattern, gfxPattern *aStrokePattern,
+    SimpleTextContextPaint(gfxPattern *aFillPattern, gfxPattern *aStrokePattern,
                           const gfxMatrix& aCTM) :
         mFillPattern(aFillPattern ? aFillPattern : new gfxPattern(sZero)),
         mStrokePattern(aStrokePattern ? aStrokePattern : new gfxPattern(sZero))
