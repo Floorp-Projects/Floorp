@@ -58,6 +58,16 @@
   background-image: linear-gradient(@toolbarHighlight@, rgba(255,255,255,0));
 }
 
+#nav-bar[tabsontop=true],
+#nav-bar[tabsontop=true][collapsed=true]:not([customizing]) + toolbar,
+#nav-bar[tabsontop=true][collapsed=true]:not([customizing]) + #customToolbars + #PersonalToolbar {
+  box-shadow: 0 1px 0 @toolbarHighlight@ inset;
+  margin-top: -1px; /* Move up 1px into the TabsToolbar */
+  /* Position the toolbar above the bottom of background tabs */
+  position: relative;
+  z-index: 1;
+}
+
 #personal-bookmarks {
   min-height: 29px;
 }
@@ -1589,18 +1599,33 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 
 %include ../shared/tabs.inc.css
 
+#tabbrowser-tabs {
+  /* override the global style to allow the selected tab to be above the nav-bar */
+  z-index: auto;
+}
+
 #TabsToolbar {
   min-height: 0;
   padding: 0;
+  position: relative;
+}
+
+/*
+ * Draw the bottom border of the tabstrip:
+ */
+#TabsToolbar::after {
+  content: "";
+  position: absolute;
+  bottom: 1px;
+  left: 0;
+  right: 0;
+  z-index: 0;
+  border-bottom: 1px solid hsla(0,0%,0%,.3);
 }
 
 #TabsToolbar[tabsontop=true]:not(:-moz-lwtheme) {
   -moz-appearance: menubar;
   color: -moz-menubartext;
-}
-
-#TabsToolbar[tabsontop=true] {
-  box-shadow: 0 -1px 0 rgba(0,0,0,.1) inset;
 }
 
 #TabsToolbar[tabsontop=true]:not(:-moz-lwtheme):-moz-system-metric(menubar-drag) {
