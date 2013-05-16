@@ -38,7 +38,10 @@ class CompositableForwarder : public ISurfaceAllocator
   friend class TextureClientShmem;
 public:
   CompositableForwarder()
-  : mMaxTextureSize(0), mCompositorBackend(layers::LAYERS_NONE)
+  : mMaxTextureSize(0)
+  , mCompositorBackend(layers::LAYERS_NONE)
+  , mSupportsTextureBlitting(false)
+  , mSupportsPartialUploads(false)
   {}
 
   /**
@@ -134,9 +137,21 @@ public:
     return mCompositorBackend;
   }
 
+  bool SupportsTextureBlitting() const
+  {
+    return mSupportsTextureBlitting;
+  }
+
+  bool SupportsPartialUploads() const
+  {
+    return mSupportsPartialUploads;
+  }
+
 protected:
   uint32_t mMaxTextureSize;
   LayersBackend mCompositorBackend;
+  bool mSupportsTextureBlitting;
+  bool mSupportsPartialUploads;
 };
 
 } // namespace
