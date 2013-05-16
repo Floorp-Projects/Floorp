@@ -88,11 +88,17 @@ struct TextureFactoryIdentifier
 {
   LayersBackend mParentBackend;
   int32_t mMaxTextureSize;
+  bool mSupportsTextureBlitting;
+  bool mSupportsPartialUploads;
 
   TextureFactoryIdentifier(LayersBackend aLayersBackend = LAYERS_NONE,
-                           int32_t aMaxTextureSize = 0)
+                           int32_t aMaxTextureSize = 0,
+                           bool aSupportsTextureBlitting = false,
+                           bool aSupportsPartialUploads = false)
     : mParentBackend(aLayersBackend)
     , mMaxTextureSize(aMaxTextureSize)
+    , mSupportsTextureBlitting(aSupportsTextureBlitting)
+    , mSupportsPartialUploads(aSupportsPartialUploads)
   {}
 };
 

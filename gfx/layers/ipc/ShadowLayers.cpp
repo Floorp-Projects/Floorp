@@ -160,6 +160,8 @@ CompositableForwarder::IdentifyTextureHost(const TextureFactoryIdentifier& aIden
 {
   mMaxTextureSize = aIdentifier.mMaxTextureSize;
   mCompositorBackend = aIdentifier.mParentBackend;
+  mSupportsTextureBlitting = aIdentifier.mSupportsTextureBlitting;
+  mSupportsPartialUploads = aIdentifier.mSupportsPartialUploads;
 }
 
 ShadowLayerForwarder::ShadowLayerForwarder()
