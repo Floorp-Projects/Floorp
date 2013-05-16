@@ -8,8 +8,7 @@
   <script type="text/javascript">
 
 document.addEventListener("MozReftestInvalidate", go, false);
-// in case we're not gecko
-setTimeout(go, 3000);
+setTimeout(go, 4000); // fallback for running outside reftest
 
 function go() {
   document.getElementById("parent").setAttribute("rotate", "5,15,25,35,45,55");
