@@ -1311,6 +1311,25 @@ public:
     return mFontSizeInflationDisabledInMasterProcess;
   }
 
+  /**
+   * Determine if font size inflation is enabled. This value is cached until
+   * it becomes dirty.
+   *
+   * @returns true, if font size inflation is enabled; false otherwise.
+   */
+  bool FontSizeInflationEnabled();
+
+  /**
+   * Notify the pres shell that an event occurred making the current value of
+   * mFontSizeInflationEnabled invalid. This will schedule a recomputation of
+   * whether font size inflation is enabled on the next call to
+   * FontSizeInflationEnabled().
+   */
+  void NotifyFontSizeInflationEnabledIsDirty()
+  {
+    mFontSizeInflationEnabledIsDirty = true;
+  }
+
   virtual void AddInvalidateHiddenPresShellObserver(nsRefreshDriver *aDriver) = 0;
 
   void InvalidatePresShellIfHidden();
@@ -1337,6 +1356,14 @@ protected:
                                                mozFlushType aFlushType);
   bool RemoveRefreshObserverInternal(nsARefreshObserver* aObserver,
                                        mozFlushType aFlushType);
+
+  /**
+   * Do computations necessary to determine if font size inflation is enabled.
+   * This value is cached after computation, as the computation is somewhat
+   * expensive.
+   */
+  void RecomputeFontSizeInflationEnabled();
+
 public:
   bool AddRefreshObserver(nsARefreshObserver* aObserver,
                             mozFlushType aFlushType) {
@@ -1518,6 +1545,10 @@ protected:
   uint32_t mFontSizeInflationLineThreshold;
   bool mFontSizeInflationForceEnabled;
   bool mFontSizeInflationDisabledInMasterProcess;
+  bool mFontSizeInflationEnabled;
+
+  // Dirty bit indicating that mFontSizeInflationEnabled needs to be recomputed.
+  bool mFontSizeInflationEnabledIsDirty;
 
   // Flag to indicate whether or not there is a reflow on zoom event pending.
   // See IsReflowOnZoomPending() for more information.
