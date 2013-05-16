@@ -377,12 +377,12 @@ documenttab[selected] .documenttab-selection {
   list-style-image: url(chrome://browser/skin/images/identity-icons-generic.png);
 }
 
-#identity-box[mode="verifiedDomain"] > #identity-icon[pageproxystate="valid"] {
-  list-style-image: url(chrome://browser/skin/images/identity-icons-https.png);
+#identity-box-inner.verifiedDomain > #identity-icon {
+  list-style-image: url(chrome://browser/skin/images/locked-hdpi.png);
 }
- 
-#identity-box[mode="verifiedIdentity"] > #identity-icon[pageproxystate="valid"] {
-  list-style-image: url(chrome://browser/skin/identity-icons-https-ev.png);
+
+#identity-box-inner.verifiedIdentity > #identity-icon {
+  list-style-image: url(chrome://browser/skin/images/locked-hdpi.png);
 }
 
 /* Main URL textbox */
