@@ -8,7 +8,7 @@
  */
 
 dictionary RTCPeerConnectionIceEventInit : EventInit {
-  mozRTCIceCandidate? candidate;
+  mozRTCIceCandidate? candidate = null;
 };
 
 [Pref="media.peerconnection.enabled",

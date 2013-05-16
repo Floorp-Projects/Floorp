@@ -194,6 +194,7 @@ webidl_files = \
   Rect.webidl \
   RGBColor.webidl \
   RTCConfiguration.webidl \
+  RTCDataChannelEvent.webidl \
   RTCIceCandidate.webidl \
   RTCPeerConnection.webidl \
   RTCPeerConnectionIceEvent.webidl \
