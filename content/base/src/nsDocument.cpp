@@ -137,8 +137,7 @@
 #include "nsIPrompt.h"
 #include "nsIPropertyBag2.h"
 #include "nsIDOMPageTransitionEvent.h"
-#include "nsIDOMStyleSheetAddedEvent.h"
-#include "nsIDOMStyleSheetRemovedEvent.h"
+#include "nsIDOMStyleSheetChangeEvent.h"
 #include "nsJSUtils.h"
 #include "nsFrameLoader.h"
 #include "nsEscape.h"
@@ -3722,11 +3721,8 @@ nsDocument::AddStyleSheetToStyleSets(nsIStyleSheet* aSheet)
   }
 }
 
-#define DO_STYLESHEET_NOTIFICATION(createFunc, initMethod, concreteInterface, type) \
+#define DO_STYLESHEET_NOTIFICATION(createFunc, concreteInterface, initMethod, type, ...) \
   do {                                                                  \
-    if (!HasStyleSheetChangeEventsEnabled()) {                          \
-      break;                                                            \
-    }                                                                   \
     nsCOMPtr<nsIDOMEvent> event;                                        \
     nsresult rv = createFunc(getter_AddRefs(event), this,               \
                              mPresShell ?                               \
@@ -3742,7 +3738,7 @@ nsDocument::AddStyleSheetToStyleSets(nsIStyleSheet* aSheet)
     nsCOMPtr<concreteInterface> ssEvent(do_QueryInterface(event));      \
     MOZ_ASSERT(ssEvent);                                                \
     ssEvent->initMethod(NS_LITERAL_STRING(type), true, true,            \
-                        cssSheet, aDocumentSheet);                      \
+                        cssSheet, __VA_ARGS__);                         \
     event->SetTrusted(true);                                            \
     event->SetTarget(this);                                             \
     nsRefPtr<nsAsyncDOMEvent> asyncEvent = new nsAsyncDOMEvent(this, event); \
@@ -3754,20 +3750,28 @@ void
 nsDocument::NotifyStyleSheetAdded(nsIStyleSheet* aSheet, bool aDocumentSheet)
 {
   NS_DOCUMENT_NOTIFY_OBSERVERS(StyleSheetAdded, (this, aSheet, aDocumentSheet));
-  DO_STYLESHEET_NOTIFICATION(NS_NewDOMStyleSheetAddedEvent,
-                             InitStyleSheetAddedEvent,
-                             nsIDOMStyleSheetAddedEvent,
-                             "StyleSheetAdded");
+
+  if (StyleSheetChangeEventsEnabled()) {
+    DO_STYLESHEET_NOTIFICATION(NS_NewDOMStyleSheetChangeEvent,
+                               nsIDOMStyleSheetChangeEvent,
+                               InitStyleSheetChangeEvent,
+                               "StyleSheetAdded",
+                               aDocumentSheet);
+  }
 }
 
 void
 nsDocument::NotifyStyleSheetRemoved(nsIStyleSheet* aSheet, bool aDocumentSheet)
 {
   NS_DOCUMENT_NOTIFY_OBSERVERS(StyleSheetRemoved, (this, aSheet, aDocumentSheet));
-  DO_STYLESHEET_NOTIFICATION(NS_NewDOMStyleSheetRemovedEvent,
-                             InitStyleSheetRemovedEvent,
-                             nsIDOMStyleSheetRemovedEvent,
-                             "StyleSheetRemoved");
+
+  if (StyleSheetChangeEventsEnabled()) {
+    DO_STYLESHEET_NOTIFICATION(NS_NewDOMStyleSheetChangeEvent,
+                               nsIDOMStyleSheetChangeEvent,
+                               InitStyleSheetChangeEvent,
+                               "StyleSheetRemoved",
+                               aDocumentSheet);
+  }
 }
 
 #undef DO_STYLESHEET_NOTIFICATION
