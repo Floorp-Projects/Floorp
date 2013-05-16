@@ -229,7 +229,7 @@ class Build(MachCommandBase):
 
 
     @Command('configure', category='build',
-        description='Configure the tree (run configure and config.status')
+        description='Configure the tree (run configure and config.status).')
     def configure(self):
         def on_line(line):
             self.log(logging.INFO, 'build_output', {'line': line}, '{line}')
