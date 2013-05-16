@@ -36,6 +36,17 @@ enum RTCIceConnectionState {
     "closed"
 };
 
+dictionary RTCDataChannelInit {
+  boolean outOfOrderAllowed;
+  unsigned short maxRetransmitTime;
+  unsigned short maxRetransmitNum;
+  DOMString protocol;
+  boolean preset;
+  unsigned short stream;
+};
+
+interface RTCDataChannel;
+
 [Pref="media.peerconnection.enabled",
  JSImplementation="@mozilla.org/dom/peerconnection;1",
  Constructor (optional RTCConfiguration configuration,
@@ -54,8 +65,8 @@ interface mozRTCPeerConnection : EventTarget  {
   void setRemoteDescription (mozRTCSessionDescription description,
                              optional VoidFunction successCallback,
                              optional RTCPeerConnectionErrorCallback failureCallback);
-  readonly attribute mozRTCSessionDescription localDescription;
-  readonly attribute mozRTCSessionDescription remoteDescription;
+  readonly attribute mozRTCSessionDescription? localDescription;
+  readonly attribute mozRTCSessionDescription? remoteDescription;
   readonly attribute RTCSignalingState signalingState;
   void updateIce (optional RTCConfiguration configuration,
                   optional object? constraints);
@@ -80,7 +91,19 @@ interface mozRTCPeerConnection : EventTarget  {
 
 // Mozilla extensions.
 partial interface mozRTCPeerConnection {
-  // Backwards-compatible attributes
+  // Deprecated callbacks (use causes warning)
+  attribute RTCPeerConnectionErrorCallback onicechange;
+  attribute RTCPeerConnectionErrorCallback ongatheringchange;
+
+  // Deprecated attributes (use causes warning)
   readonly attribute object localStreams;
   readonly attribute object remoteStreams;
+  readonly attribute DOMString readyState;
+
+  // Data channel.
+  RTCDataChannel createDataChannel (DOMString label,
+                                    optional RTCDataChannelInit dataChannelDict);
+  attribute EventHandler ondatachannel;
+  attribute EventHandler onconnection;
+  attribute EventHandler onclosedconnection;
 };

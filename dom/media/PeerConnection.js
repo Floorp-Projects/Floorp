@@ -15,6 +15,7 @@ const PC_SESSION_CONTRACT = "@mozilla.org/dom/rtcsessiondescription;1";
 const PC_MANAGER_CONTRACT = "@mozilla.org/dom/peerconnectionmanager;1";
 const PC_ICEEVENT_CONTRACT = "@mozilla.org/dom/rtcpeerconnectioniceevent;1";
 const MSEVENT_CONTRACT = "@mozilla.org/dom/mediastreamevent;1";
+const DCEVENT_CONTRACT = "@mozilla.org/dom/datachannelevent;1";
 
 const PC_CID = Components.ID("{9878b414-afaa-4176-a887-1e02b3b047c2}");
 const PC_ICE_CID = Components.ID("{02b9970c-433d-4cc2-923d-f7028ac66073}");
@@ -22,6 +23,7 @@ const PC_SESSION_CID = Components.ID("{1775081b-b62d-4954-8ffe-a067bbf508a7}");
 const PC_MANAGER_CID = Components.ID("{7293e901-2be3-4c02-b4bd-cbef6fc24f78}");
 const PC_ICEEVENT_CID = Components.ID("{b9cd25a7-9859-4f9e-8f84-ef5181ff36c0}");
 const MSEVENT_CID = Components.ID("{a722a8a9-2290-4e99-a5ed-07b504292d08}");
+const DCEVENT_CID = Components.ID("{d5ed7fbf-01a8-4b18-af6c-861cf2aac920}");
 
 // Global list of PeerConnection objects, so they can be cleaned up when
 // a page is torn down. (Maps inner window ID to an array of PC objects).
@@ -176,6 +178,28 @@ MediaStreamEvent.prototype = {
   get stream() { return this._stream; }
 };
 
+function RTCDataChannelEvent() {
+  this.type = this._channel = null;
+}
+RTCDataChannelEvent.prototype = {
+  classDescription: "RTCDataChannelEvent",
+  classID: DCEVENT_CID,
+  contractID: DCEVENT_CONTRACT,
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports,
+                                         Ci.nsIDOMGlobalPropertyInitializer]),
+
+  init: function(win) { this._win = win; },
+
+  __init: function(type, dict) {
+    this.type = type;
+    this.__DOM_IMPL__.initEvent(type, dict.bubbles || false,
+                                dict.cancelable || false);
+    this._channel = dict.channel;
+  },
+
+  get channel() { return this._channel; }
+};
+
 function RTCPeerConnectionIceEvent() {
   this.type = this._candidate = null;
 }
@@ -192,7 +216,7 @@ RTCPeerConnectionIceEvent.prototype = {
     this.type = type;
     this.__DOM_IMPL__.initEvent(type, dict.bubbles || false,
                                 dict.cancelable || false);
-    this._candidate = dict.candidate || null;
+    this._candidate = dict.candidate;
   },
 
   get candidate() { return this._candidate; }
@@ -224,17 +248,12 @@ function RTCPeerConnection() {
    */
   this._pending = false;
 
-  // Event handlers
-  this.onopen = null;
-  this.onremovestream = null;
-  this.onstatechange = null;
-  this.ongatheringchange = null;
-  this.onicechange = null;
+  // States
+  this._iceGatheringState = this._iceConnectionState = "new";
 
-  // Data channel.
-  this.ondatachannel = null;
-  this.onconnection = null;
-  this.onclosedconnection = null;
+  // Deprecated callbacks
+  this._ongatheringchange = null;
+  this._onicechange = null;
 }
 RTCPeerConnection.prototype = {
   classDescription: "mozRTCPeerConnection",
@@ -256,6 +275,16 @@ RTCPeerConnection.prototype = {
     if (_globalPCList._networkdown) {
       throw new Components.Exception("Can't create RTCPeerConnections when the network is down");
     }
+
+    this.makeGetterSetterEH("onaddstream");
+    this.makeGetterSetterEH("onicecandidate");
+    this.makeGetterSetterEH("onnegotiationneeded");
+    this.makeGetterSetterEH("onsignalingstatechange");
+    this.makeGetterSetterEH("onremovestream");
+    this.makeGetterSetterEH("ondatachannel");
+    this.makeGetterSetterEH("onconnection");
+    this.makeGetterSetterEH("onclosedconnection");
+    this.makeGetterSetterEH("oniceconnectionstatechange");
 
     this._pc = Cc["@mozilla.org/peerconnection;1"].
              createInstance(Ci.IPeerConnection);
@@ -445,25 +474,45 @@ RTCPeerConnection.prototype = {
     this.__DOM_IMPL__.dispatchEvent(event);
   },
 
-  getEventHandler: function(type) {
+  getEH: function(type) {
     return this.__DOM_IMPL__.getEventHandler(type);
   },
 
-  setEventHandler: function(type, handler) {
+  setEH: function(type, handler) {
     this.__DOM_IMPL__.setEventHandler(type, handler);
   },
 
-  get onaddstream()    { return this.getEventHandler("onaddstream"); },
-  get onicecandidate() { return this.getEventHandler("onicecandidate"); },
+  makeGetterSetterEH: function(name) {
+    Object.defineProperty(this, name,
+                          {
+                            get:function()  { return this.getEH(name); },
+                            set:function(h) { return this.setEH(name, h); }
+                          });
+  },
 
-  set onaddstream(handler) { this.setEventHandler("onaddstream", handler); },
-  set onicecandidate(h)    { this.setEventHandler("onicecandidate", h); },
+  get onicechange()       { return this._onicechange; },
+  get ongatheringchange() { return this._ongatheringchange; },
+
+  set onicechange(cb) {
+    this.deprecated("onicechange");
+    this._onicechange = cb;
+  },
+  set ongatheringchange(cb) {
+    this.deprecated("ongatheringchange");
+    this._ongatheringchange = cb;
+  },
+
+  deprecated: function(name) {
+    dump(name + " is deprecated!\n");
+  },
 
   createOffer: function(onSuccess, onError, constraints) {
     if (!constraints) {
       constraints = {};
     }
-
+    if (!onError) {
+      this.deprecated("calling createOffer without failureCallback");
+    }
     this._mustValidateConstraints(constraints, "createOffer passed invalid constraints");
     this._onCreateOfferSuccess = onSuccess;
     this._onCreateOfferFailure = onError;
@@ -476,6 +525,9 @@ RTCPeerConnection.prototype = {
   },
 
   _createAnswer: function(onSuccess, onError, constraints, provisional) {
+    if (!onError) {
+      this.deprecated("calling createAnswer without failureCallback");
+    }
     this._onCreateAnswerSuccess = onSuccess;
     this._onCreateAnswerFailure = onError;
 
@@ -531,10 +583,12 @@ RTCPeerConnection.prototype = {
       case "answer":
         type = Ci.IPeerConnection.kActionAnswer;
         break;
+      case "pranswer":
+        throw new Components.Exception("pranswer not yet implemented",
+                                       Cr.NS_ERROR_NOT_IMPLEMENTED);
       default:
         throw new Components.Exception("Invalid type " + desc.type +
                                        " provided to setLocalDescription");
-        break;
     }
 
     this._queueOrRun({
@@ -560,10 +614,12 @@ RTCPeerConnection.prototype = {
       case "answer":
         type = Ci.IPeerConnection.kActionAnswer;
         break;
+      case "pranswer":
+        throw new Components.Exception("pranswer not yet implemented",
+                                       Cr.NS_ERROR_NOT_IMPLEMENTED);
       default:
         throw new Components.Exception("Invalid type " + desc.type +
                                        " provided to setRemoteDescription");
-        break;
     }
 
     this._queueOrRun({
@@ -575,8 +631,8 @@ RTCPeerConnection.prototype = {
   },
 
   updateIce: function(config, constraints) {
-    throw new Components.Exception ("updateIce not yet implemented",
-                                    Cr.NS_ERROR_NOT_IMPLEMENTED);
+    throw new Components.Exception("updateIce not yet implemented",
+                                   Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
 
   addIceCandidate: function(cand, onSuccess, onError) {
@@ -606,9 +662,14 @@ RTCPeerConnection.prototype = {
   },
 
   removeStream: function(stream) {
-     //Bug844295: Not implemeting this functionality.
-     throw new Components.Exception ("removeStream not yet implemented",
-                                     Cr.NS_ERROR_NOT_IMPLEMENTED);
+     //Bug 844295: Not implementing this functionality.
+     throw new Components.Exception("removeStream not yet implemented",
+                                    Cr.NS_ERROR_NOT_IMPLEMENTED);
+  },
+
+  getStreamById: function(id) {
+    throw new Components.Exception("getStreamById not yet implemented",
+                                   Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
 
   close: function() {
@@ -618,6 +679,7 @@ RTCPeerConnection.prototype = {
       wait: false
     });
     this._closed = true;
+    this.changeIceConnectionState("closed");
   },
 
   getLocalStreams: function() {
@@ -630,11 +692,15 @@ RTCPeerConnection.prototype = {
     return this._getPC().remoteStreams;
   },
 
-  // Four backwards-compatible attributes (to pass mochitests)
-  get localStreams() { return this.getLocalStreams(); },
-  get remoteStreams() { return this.getRemoteStreams(); },
-  set localDescription(desc) { this.setLocalDescription(desc); },
-  set remoteDescription(desc) { this.setLocalDescription(desc); },
+  // Backwards-compatible attributes
+  get localStreams() {
+    this.deprecated("localStreams");
+    return this.getLocalStreams();
+  },
+  get remoteStreams() {
+    this.deprecated("remoteStreams");
+    return this.getRemoteStreams();
+  },
 
   get localDescription() {
     this._checkClosed();
@@ -656,7 +722,21 @@ RTCPeerConnection.prototype = {
                                                     sdp: sdp });
   },
 
+  get signalingState()     { return "stable"; }, // not yet implemented
+  get iceGatheringState()  { return this._iceGatheringState; },
+  get iceConnectionState() { return this._iceConnectionState; },
+
+  changeIceGatheringState: function(state) {
+    this._iceGatheringState = state;
+  },
+
+  changeIceConnectionState: function(state) {
+    this._iceConnectionState = state;
+    this.dispatchEvent(new this._win.Event("iceconnectionstatechange"));
+  },
+
   get readyState() {
+    this.deprecated("readyState");
     // checking for our local pc closed indication
     // before invoking the pc methods.
     if(this._closed) {
@@ -885,23 +965,29 @@ PeerConnectionObserver.prototype = {
     }
 
     switch (this._dompc._pc.iceState) {
-      case Ci.IPeerConnection.kIceGathering:
-        this.callCB(this._dompc.ongatheringchange, "gathering");
-        break;
       case Ci.IPeerConnection.kIceWaiting:
-        this.callCB(this._dompc.onicechange, "starting");
+        this._dompc.changeIceConnectionState("completed");
+        this.callCB(this._dompc.ongatheringchange, "complete");
+        this.callCB(this._onicechange, "starting");
+        // Now that the PC is ready to go, execute any pending operations.
         this._dompc._executeNext();
         break;
       case Ci.IPeerConnection.kIceChecking:
-        this.callCB(this._dompc.onicechange, "checking");
+        this._dompc.changeIceConnectionState("checking");
+        this.callCB(this._onicechange, "checking");
+        break;
+      case Ci.IPeerConnection.kIceGathering:
+        this._dompc.changeIceGatheringState("gathering");
+        this.callCB(this._ongatheringchange, "gathering");
         break;
       case Ci.IPeerConnection.kIceConnected:
         // ICE gathering complete.
-        this.callCB(this._dompc.onicechange, "connected");
-        this.callCB(this._dompc.ongatheringchange, "complete");
+        this._dompc.changeIceConnectionState("connected");
+        this.callCB(this._onicechange, "connected");
         break;
       case Ci.IPeerConnection.kIceFailed:
-        this.callCB(this._dompc.onicechange, "failed");
+        this._dompc.changeIceConnectionState("failed");
+        this.callCB(this._onicechange, "failed");
         break;
       default:
         // Unknown state!
@@ -925,20 +1011,20 @@ PeerConnectionObserver.prototype = {
   },
 
   notifyDataChannel: function(channel) {
-    this.callCB(this._dompc.ondatachannel,
-                { channel: channel, __exposedProps__: { channel: "r" } });
+    this.dispatchEvent(new this._dompc._win.RTCDataChannelEvent("datachannel",
+                                                                { channel: channel }));
   },
 
   notifyConnection: function() {
-    this.callCB (this._dompc.onconnection);
+    this.dispatchEvent(new this._dompc._win.Event("connection"));
   },
 
   notifyClosedConnection: function() {
-    this.callCB (this._dompc.onclosedconnection);
+    this.dispatchEvent(new this._dompc._win.Event("closedconnection"));
   }
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory(
   [GlobalPCList, RTCIceCandidate, RTCSessionDescription, RTCPeerConnection,
-   RTCPeerConnectionIceEvent, MediaStreamEvent]
+   RTCPeerConnectionIceEvent, MediaStreamEvent, RTCDataChannelEvent]
 );
