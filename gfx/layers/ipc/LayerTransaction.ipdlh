@@ -251,6 +251,12 @@ struct OpCreatedTexture {
   TextureInfo textureInfo;
 };
 
+struct OpCreatedIncrementalTexture {
+  PCompositable compositable;
+  TextureInfo textureInfo;
+  nsIntRect bufferRect;
+};
+
 struct OpDestroyThebesBuffer {
   PCompositable compositable;
 };
@@ -267,6 +273,15 @@ struct OpPaintTextureRegion {
   nsIntRegion updatedRegion;
 };
 
+struct OpPaintTextureIncremental {
+  PCompositable compositable;
+  uint32_t textureId;
+  SurfaceDescriptor image;
+  nsIntRegion updatedRegion;
+  nsIntRect bufferRect;
+  nsIntPoint bufferRotation;
+};
+
 struct OpUpdatePictureRect {
   PCompositable compositable;
   nsIntRect picture;
@@ -276,10 +291,12 @@ union CompositableOperation {
   OpUpdatePictureRect;
 
   OpCreatedTexture;
+  OpCreatedIncrementalTexture;
   OpDestroyThebesBuffer;
 
   OpPaintTexture;
   OpPaintTextureRegion;
+  OpPaintTextureIncremental;
 
   OpPaintTiledLayerBuffer;
 };
