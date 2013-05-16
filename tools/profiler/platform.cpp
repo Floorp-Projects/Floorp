@@ -303,7 +303,9 @@ void mozilla_sampler_init(void* stackTop)
 #endif
                          };
   profiler_start(PROFILE_DEFAULT_ENTRY, PROFILE_DEFAULT_INTERVAL,
-                         features, sizeof(features)/sizeof(const char*));
+                         features, sizeof(features)/sizeof(const char*),
+                         // TODO Add env variable to select threads
+                         NULL, 0);
   LOG("END   mozilla_sampler_init");
 }
 
@@ -414,7 +416,9 @@ const char** mozilla_sampler_get_features()
 
 // Values are only honored on the first start
 void mozilla_sampler_start(int aProfileEntries, int aInterval,
-                           const char** aFeatures, uint32_t aFeatureCount)
+                           const char** aFeatures, uint32_t aFeatureCount,
+                           const char** aThreadNameFilters, uint32_t aFilterCount)
+
 {
   if (!stack_key_initialized)
     profiler_init(NULL);
@@ -430,7 +434,8 @@ void mozilla_sampler_start(int aProfileEntries, int aInterval,
   TableTicker* t;
   t = new TableTicker(aInterval ? aInterval : PROFILE_DEFAULT_INTERVAL,
                       aProfileEntries ? aProfileEntries : PROFILE_DEFAULT_ENTRY,
-                      aFeatures, aFeatureCount);
+                      aFeatures, aFeatureCount,
+                      aThreadNameFilters, aFilterCount);
   if (t->HasUnwinderThread()) {
     // Create the unwinder thread.  ATM there is only one.
     uwt__init();
