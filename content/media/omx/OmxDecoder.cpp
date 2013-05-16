@@ -611,6 +611,9 @@ bool OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aTimeUs,
     // don't keep trying to decode if the decoder doesn't want to.
     return false;
   }
+  else if (err != OK && err != -ETIMEDOUT) {
+    return false;
+  }
 
   return true;
 }
@@ -662,6 +665,9 @@ bool OmxDecoder::ReadAudio(AudioFrame *aFrame, int64_t aSeekTimeUs)
     }
   }
   else if (err == UNKNOWN_ERROR) {
+    return false;
+  }
+  else if (err != OK && err != -ETIMEDOUT) {
     return false;
   }
 
