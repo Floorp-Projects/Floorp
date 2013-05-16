@@ -63,8 +63,8 @@ struct SVGTextContextPaint : public gfxTextContextPaint {
 
     void SetContextPaint(gfxTextContextPaint *aContextPaint,
                          nsStyleSVGPaintType aPaintType) {
-      NS_ASSERTION(aPaintType == eStyleSVGPaintType_ObjectFill ||
-                   aPaintType == eStyleSVGPaintType_ObjectStroke,
+      NS_ASSERTION(aPaintType == eStyleSVGPaintType_ContextFill ||
+                   aPaintType == eStyleSVGPaintType_ContextStroke,
                    "Invalid context paint type");
       mPaintType = aPaintType;
       mPaintDefinition.mContextPaint = aContextPaint;

@@ -1436,8 +1436,8 @@ nsSVGUtils::GetFallbackOrPaintColor(gfxContext *aContext, nsStyleContext *aStyle
   const nsStyleSVGPaint &paint = aStyleContext->StyleSVG()->*aFillOrStroke;
   nsStyleContext *styleIfVisited = aStyleContext->GetStyleIfVisited();
   bool isServer = paint.mType == eStyleSVGPaintType_Server ||
-                  paint.mType == eStyleSVGPaintType_ObjectFill ||
-                  paint.mType == eStyleSVGPaintType_ObjectStroke;
+                  paint.mType == eStyleSVGPaintType_ContextFill ||
+                  paint.mType == eStyleSVGPaintType_ContextStroke;
   nscolor color = isServer ? paint.mFallbackColor : paint.mPaint.mColor;
   if (styleIfVisited) {
     const nsStyleSVGPaint &paintIfVisited =
@@ -1496,10 +1496,10 @@ nsSVGUtils::SetupContextPaint(gfxContext *aContext,
   }
 
   switch (aPaint.mType) {
-    case eStyleSVGPaintType_ObjectFill:
+    case eStyleSVGPaintType_ContextFill:
       pattern = aContextPaint->GetFillPattern(aOpacity, aContext->CurrentMatrix());
       break;
-    case eStyleSVGPaintType_ObjectStroke:
+    case eStyleSVGPaintType_ContextStroke:
       pattern = aContextPaint->GetStrokePattern(aOpacity, aContext->CurrentMatrix());
       break;
     default:
@@ -1591,18 +1591,18 @@ nsSVGUtils::GetOpacity(nsStyleSVGOpacitySource aOpacityType,
   case eStyleSVGOpacitySource_Normal:
     opacity = aOpacity;
     break;
-  case eStyleSVGOpacitySource_ObjectFillOpacity:
+  case eStyleSVGOpacitySource_ContextFillOpacity:
     if (aOuterContextPaint) {
       opacity = aOuterContextPaint->GetFillOpacity();
     } else {
-      NS_WARNING("objectFillOpacity used outside of an SVG glyph");
+      NS_WARNING("context-fill-opacity used outside of an SVG glyph");
     }
     break;
-  case eStyleSVGOpacitySource_ObjectStrokeOpacity:
+  case eStyleSVGOpacitySource_ContextStrokeOpacity:
     if (aOuterContextPaint) {
       opacity = aOuterContextPaint->GetStrokeOpacity();
     } else {
-      NS_WARNING("objectStrokeOpacity used outside of an SVG glyph");
+      NS_WARNING("context-stroke-opacity used outside of an SVG glyph");
     }
     break;
   default:
