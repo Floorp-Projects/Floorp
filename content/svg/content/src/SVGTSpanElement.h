@@ -30,8 +30,6 @@ public:
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const MOZ_OVERRIDE;
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
-
-  virtual bool IsEventAttributeName(nsIAtom* aName) MOZ_OVERRIDE;
 };
 
 } // namespace dom
