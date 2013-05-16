@@ -66,11 +66,11 @@
 
 typedef mozilla::dom::Element Element;
 
-mozilla::gfx::UserDataKey gfxTextObjectPaint::sUserDataKey;
+mozilla::gfx::UserDataKey gfxTextContextPaint::sUserDataKey;
 
 const float gfxSVGGlyphs::SVG_UNITS_PER_EM = 1000.0f;
 
-const gfxRGBA SimpleTextObjectPaint::sZero = gfxRGBA(0.0f, 0.0f, 0.0f, 0.0f);
+const gfxRGBA SimpleTextContextPaint::sZero = gfxRGBA(0.0f, 0.0f, 0.0f, 0.0f);
 
 gfxSVGGlyphs::gfxSVGGlyphs(FallibleTArray<uint8_t>& aSVGTable,
                            const FallibleTArray<uint8_t>& aCmapTable)
@@ -218,7 +218,7 @@ gfxSVGGlyphsDocument::FindGlyphElements(Element *aElem,
  */
 bool
 gfxSVGGlyphs::RenderGlyph(gfxContext *aContext, uint32_t aGlyphId,
-                          DrawMode aDrawMode, gfxTextObjectPaint *aObjectPaint)
+                          DrawMode aDrawMode, gfxTextContextPaint *aContextPaint)
 {
     if (aDrawMode == gfxFont::GLYPH_PATH) {
         return false;
@@ -229,7 +229,7 @@ gfxSVGGlyphs::RenderGlyph(gfxContext *aContext, uint32_t aGlyphId,
     Element *glyph = mGlyphIdMap.Get(aGlyphId);
     NS_ASSERTION(glyph, "No glyph element. Should check with HasSVGGlyph() first!");
 
-    return nsSVGUtils::PaintSVGGlyph(glyph, aContext, aDrawMode, aObjectPaint);
+    return nsSVGUtils::PaintSVGGlyph(glyph, aContext, aDrawMode, aContextPaint);
 }
 
 bool
@@ -409,6 +409,8 @@ gfxSVGGlyphsDocument::InsertGlyphId(Element *aGlyphElement)
     }
 
     mGlyphIdMap.Put(glyphId, aGlyphElement);
+
+    printf("Inserted glyph ID %d", (int)glyphId);
 }
 
 void
@@ -447,10 +449,12 @@ gfxSVGGlyphsDocument::InsertGlyphChar(Element *aGlyphElement,
     if (glyphId) {
         mGlyphIdMap.Put(glyphId, aGlyphElement);
     }
+
+    printf("Inserted glyph char %d", (int)glyphId);
 }
 
 void
-gfxTextObjectPaint::InitStrokeGeometry(gfxContext *aContext,
+gfxTextContextPaint::InitStrokeGeometry(gfxContext *aContext,
                                        float devUnitsPerSVGUnit)
 {
     mStrokeWidth = aContext->CurrentLineWidth() / devUnitsPerSVGUnit;
