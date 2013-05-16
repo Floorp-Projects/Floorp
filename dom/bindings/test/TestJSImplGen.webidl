@@ -22,9 +22,9 @@ enum MyTestEnum {
 [Constructor(DOMString str, unsigned long num, boolean? boolArg,
              TestInterface? iface, long arg1,
              DictForConstructor dict, any any1,
-             /* (BUG 856911) object obj1,*/
+             object obj1,
              object? obj2, sequence<Dict> seq, optional any any2,
-             /* (BUG 856911) optional object obj3, */
+             optional object obj3,
              optional object? obj4),
  JSImplementation="@mozilla.org/test-js-impl-interface;1"]
 interface TestJSImplInterface {
@@ -322,12 +322,9 @@ interface TestJSImplInterface {
   void passAnyDefaultNull(optional any arg = null);
   any receiveAny();
 
-  // object types.  Unfortunately, non-nullable object is inconsistently
-  // represented as either JSObject* (for callbacks) or JSObject& (for
-  // non-callbacks), so we can't handle those yet.  See bug 856911.
-  //(BUG 856911)  void passObject(object arg);
+  void passObject(object arg);
   void passNullableObject(object? arg);
-  //(BUG 856911)  void passOptionalObject(optional object arg);
+  void passOptionalObject(optional object arg);
   void passOptionalNullableObject(optional object? arg);
   void passOptionalNullableObjectWithDefaultValue(optional object? arg = null);
   object receiveObject();

@@ -241,7 +241,7 @@ public:
   }
 
   JS::Value
-  GetInterface(JSContext* cx, JSObject& aIID, ErrorResult& aRv)
+  GetInterface(JSContext* cx, JS::Handle<JSObject*> aIID, ErrorResult& aRv)
   {
     aRv.Throw(NS_ERROR_FAILURE);
     return JSVAL_NULL;
