@@ -117,9 +117,6 @@ DeviceStorageUsedSpaceCache::GetUsedSizeForType(const nsAString& aStorageType,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  printf_stderr("Getting used size for %s from cache\n",
-                NS_LossyConvertUTF16toASCII(aStorageName).get());
-
   if (aStorageType.EqualsLiteral(DEVICESTORAGE_PICTURES)) {
     *usedSize = cacheEntry->mPicturesUsedSize;
     return NS_OK;
@@ -154,9 +151,6 @@ nsresult DeviceStorageUsedSpaceCache::AccumUsedSizes(const nsAString& aStorageNa
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  printf_stderr("Getting used size for %s from cache\n",
-                NS_LossyConvertUTF16toASCII(aStorageName).get());
-
   *aPicturesSoFar += cacheEntry->mPicturesUsedSize;
   *aVideosSoFar += cacheEntry->mVideosUsedSize;
   *aMusicSoFar += cacheEntry->mMusicUsedSize;
@@ -178,9 +172,6 @@ DeviceStorageUsedSpaceCache::SetUsedSizes(const nsAString& aStorageName,
     cacheEntry->mStorageName = aStorageName;
     mCacheEntries.AppendElement(cacheEntry);
   }
-
-  printf_stderr("Setting cache of used sizes for %s\n",
-                NS_LossyConvertUTF16toASCII(aStorageName).get());
 
   cacheEntry->mPicturesUsedSize = aPictureSize;
   cacheEntry->mVideosUsedSize = aVideosSize;
@@ -1066,12 +1057,8 @@ DeviceStorageFile::AccumDiskUsage(uint64_t* aPicturesSoFar,
     }
     return;
   }
-printf_stderr("AccumDiskUsage '%s'\n",
-              NS_LossyConvertUTF16toASCII(mStorageName).get());
 
   if (!IsAvailable()) {
-printf_stderr("AccumDiskUsage Not Available '%s'\n",
-              NS_LossyConvertUTF16toASCII(mStorageName).get());
     return;
   }
 
@@ -1085,20 +1072,16 @@ printf_stderr("AccumDiskUsage Not Available '%s'\n",
                                                  aPicturesSoFar, aVideosSoFar,
                                                  aMusicSoFar, aTotalSoFar);
     if (NS_SUCCEEDED(rv)) {
-printf_stderr("Accumulated from cache\n");
       return;
     }
-printf_stderr("Not cached 1 - calling AccumDirectoryUsage\n");
     AccumDirectoryUsage(mFile, &pictureUsage, &videoUsage,
                         &musicUsage, &totalUsage);
     usedSpaceCache->SetUsedSizes(mStorageName, pictureUsage, videoUsage,
                                  musicUsage, totalUsage);
   } else {
-printf_stderr("Not cached 2 - calling AccumDirectoryUsage\n");
     AccumDirectoryUsage(mFile, &pictureUsage, &videoUsage,
                         &musicUsage, &totalUsage);
   }
-printf_stderr("p=%llu v=%llu m=%llu t=%llu\n", pictureUsage, videoUsage, musicUsage, totalUsage);
 
   *aPicturesSoFar += pictureUsage;
   *aVideosSoFar += videoUsage;
@@ -1114,7 +1097,6 @@ DeviceStorageFile::AccumDirectoryUsage(nsIFile* aFile,
                                        uint64_t* aTotalSoFar)
 {
   if (!aFile) {
-printf_stderr("AccumDirectoryUsage aFile == null\n");
     return;
   }
 
@@ -1123,7 +1105,6 @@ printf_stderr("AccumDirectoryUsage aFile == null\n");
   rv = aFile->GetDirectoryEntries(getter_AddRefs(e));
 
   if (NS_FAILED(rv) || !e) {
-printf_stderr("AccumDirectoryUsage failed to get directory entries\n");
     return;
   }
 
