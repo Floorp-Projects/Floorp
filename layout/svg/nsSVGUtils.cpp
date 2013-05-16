@@ -1484,23 +1484,23 @@ MaybeOptimizeOpacity(nsIFrame *aFrame, float aFillOrStrokeOpacity)
 }
 
 /* static */ bool
-nsSVGUtils::SetupObjectPaint(gfxContext *aContext,
-                             gfxTextObjectPaint *aObjectPaint,
-                             const nsStyleSVGPaint &aPaint,
-                             float aOpacity)
+nsSVGUtils::SetupContextPaint(gfxContext *aContext,
+                              gfxTextContextPaint *aContextPaint,
+                              const nsStyleSVGPaint &aPaint,
+                              float aOpacity)
 {
   nsRefPtr<gfxPattern> pattern;
 
-  if (!aObjectPaint) {
+  if (!aContextPaint) {
     return false;
   }
 
   switch (aPaint.mType) {
     case eStyleSVGPaintType_ObjectFill:
-      pattern = aObjectPaint->GetFillPattern(aOpacity, aContext->CurrentMatrix());
+      pattern = aContextPaint->GetFillPattern(aOpacity, aContext->CurrentMatrix());
       break;
     case eStyleSVGPaintType_ObjectStroke:
-      pattern = aObjectPaint->GetStrokePattern(aOpacity, aContext->CurrentMatrix());
+      pattern = aContextPaint->GetStrokePattern(aOpacity, aContext->CurrentMatrix());
       break;
     default:
       return false;
@@ -1517,7 +1517,7 @@ nsSVGUtils::SetupObjectPaint(gfxContext *aContext,
 
 bool
 nsSVGUtils::SetupCairoFillPaint(nsIFrame *aFrame, gfxContext* aContext,
-                                gfxTextObjectPaint *aObjectPaint)
+                                gfxTextContextPaint *aContextPaint)
 {
   const nsStyleSVG* style = aFrame->StyleSVG();
   if (style->mFill.mType == eStyleSVGPaintType_None)
@@ -1531,13 +1531,13 @@ nsSVGUtils::SetupCairoFillPaint(nsIFrame *aFrame, gfxContext* aContext,
   float opacity = MaybeOptimizeOpacity(aFrame,
                                        GetOpacity(style->mFillOpacitySource,
                                                   style->mFillOpacity,
-                                                  aObjectPaint));
+                                                  aContextPaint));
   nsSVGPaintServerFrame *ps =
     nsSVGEffects::GetPaintServer(aFrame, &style->mFill, nsSVGEffects::FillProperty());
   if (ps && ps->SetupPaintServer(aContext, aFrame, &nsStyleSVG::mFill, opacity))
     return true;
 
-  if (SetupObjectPaint(aContext, aObjectPaint, style->mFill, opacity)) {
+  if (SetupContextPaint(aContext, aContextPaint, style->mFill, opacity)) {
     return true;
   }
 
@@ -1552,7 +1552,7 @@ nsSVGUtils::SetupCairoFillPaint(nsIFrame *aFrame, gfxContext* aContext,
 
 bool
 nsSVGUtils::SetupCairoStrokePaint(nsIFrame *aFrame, gfxContext* aContext,
-                                  gfxTextObjectPaint *aObjectPaint)
+                                  gfxTextContextPaint *aContextPaint)
 {
   const nsStyleSVG* style = aFrame->StyleSVG();
   if (style->mStroke.mType == eStyleSVGPaintType_None)
@@ -1561,14 +1561,14 @@ nsSVGUtils::SetupCairoStrokePaint(nsIFrame *aFrame, gfxContext* aContext,
   float opacity = MaybeOptimizeOpacity(aFrame,
                                        GetOpacity(style->mStrokeOpacitySource,
                                                   style->mStrokeOpacity,
-                                                  aObjectPaint));
+                                                  aContextPaint));
 
   nsSVGPaintServerFrame *ps =
     nsSVGEffects::GetPaintServer(aFrame, &style->mStroke, nsSVGEffects::StrokeProperty());
   if (ps && ps->SetupPaintServer(aContext, aFrame, &nsStyleSVG::mStroke, opacity))
     return true;
 
-  if (SetupObjectPaint(aContext, aObjectPaint, style->mStroke, opacity)) {
+  if (SetupContextPaint(aContext, aContextPaint, style->mStroke, opacity)) {
     return true;
   }
 
@@ -1584,7 +1584,7 @@ nsSVGUtils::SetupCairoStrokePaint(nsIFrame *aFrame, gfxContext* aContext,
 /* static */ float
 nsSVGUtils::GetOpacity(nsStyleSVGOpacitySource aOpacityType,
                        const float& aOpacity,
-                       gfxTextObjectPaint *aOuterObjectPaint)
+                       gfxTextContextPaint *aOuterContextPaint)
 {
   float opacity = 1.0f;
   switch (aOpacityType) {
@@ -1592,15 +1592,15 @@ nsSVGUtils::GetOpacity(nsStyleSVGOpacitySource aOpacityType,
     opacity = aOpacity;
     break;
   case eStyleSVGOpacitySource_ObjectFillOpacity:
-    if (aOuterObjectPaint) {
-      opacity = aOuterObjectPaint->GetFillOpacity();
+    if (aOuterContextPaint) {
+      opacity = aOuterContextPaint->GetFillOpacity();
     } else {
       NS_WARNING("objectFillOpacity used outside of an SVG glyph");
     }
     break;
   case eStyleSVGOpacitySource_ObjectStrokeOpacity:
-    if (aOuterObjectPaint) {
-      opacity = aOuterObjectPaint->GetStrokeOpacity();
+    if (aOuterContextPaint) {
+      opacity = aOuterContextPaint->GetStrokeOpacity();
     } else {
       NS_WARNING("objectStrokeOpacity used outside of an SVG glyph");
     }
@@ -1612,20 +1612,20 @@ nsSVGUtils::GetOpacity(nsStyleSVGOpacitySource aOpacityType,
 }
 
 bool
-nsSVGUtils::HasStroke(nsIFrame* aFrame, gfxTextObjectPaint *aObjectPaint)
+nsSVGUtils::HasStroke(nsIFrame* aFrame, gfxTextContextPaint *aContextPaint)
 {
   const nsStyleSVG *style = aFrame->StyleSVG();
   return style->mStroke.mType != eStyleSVGPaintType_None &&
          style->mStrokeOpacity > 0 &&
-         GetStrokeWidth(aFrame, aObjectPaint) > 0;
+         GetStrokeWidth(aFrame, aContextPaint) > 0;
 }
 
 float
-nsSVGUtils::GetStrokeWidth(nsIFrame* aFrame, gfxTextObjectPaint *aObjectPaint)
+nsSVGUtils::GetStrokeWidth(nsIFrame* aFrame, gfxTextContextPaint *aContextPaint)
 {
   const nsStyleSVG *style = aFrame->StyleSVG();
-  if (aObjectPaint && style->mStrokeWidthFromObject) {
-    return aObjectPaint->GetStrokeWidth();
+  if (aContextPaint && style->mStrokeWidthFromObject) {
+    return aContextPaint->GetStrokeWidth();
   }
 
   nsIContent* content = aFrame->GetContent();
@@ -1642,9 +1642,9 @@ nsSVGUtils::GetStrokeWidth(nsIFrame* aFrame, gfxTextObjectPaint *aObjectPaint)
 void
 nsSVGUtils::SetupCairoStrokeBBoxGeometry(nsIFrame* aFrame,
                                          gfxContext *aContext,
-                                         gfxTextObjectPaint *aObjectPaint)
+                                         gfxTextContextPaint *aContextPaint)
 {
-  float width = GetStrokeWidth(aFrame, aObjectPaint);
+  float width = GetStrokeWidth(aFrame, aContextPaint);
   if (width <= 0)
     return;
   aContext->SetLineWidth(width);
@@ -1685,7 +1685,7 @@ static bool
 GetStrokeDashData(nsIFrame* aFrame,
                   FallibleTArray<gfxFloat>& aDashes,
                   gfxFloat* aDashOffset,
-                  gfxTextObjectPaint *aObjectPaint)
+                  gfxTextContextPaint *aContextPaint)
 {
   const nsStyleSVG* style = aFrame->StyleSVG();
   nsPresContext *presContext = aFrame->PresContext();
@@ -1695,8 +1695,8 @@ GetStrokeDashData(nsIFrame* aFrame,
      content->GetParent() : content);
 
   gfxFloat totalLength = 0.0;
-  if (aObjectPaint && style->mStrokeDasharrayFromObject) {
-    aDashes = aObjectPaint->GetStrokeDashArray();
+  if (aContextPaint && style->mStrokeDasharrayFromObject) {
+    aDashes = aContextPaint->GetStrokeDashArray();
 
     for (uint32_t i = 0; i < aDashes.Length(); i++) {
       if (aDashes[i] < 0.0) {
@@ -1734,8 +1734,8 @@ GetStrokeDashData(nsIFrame* aFrame,
     }
   }
 
-  if (aObjectPaint && style->mStrokeDashoffsetFromObject) {
-    *aDashOffset = aObjectPaint->GetStrokeDashOffset();
+  if (aContextPaint && style->mStrokeDashoffsetFromObject) {
+    *aDashOffset = aContextPaint->GetStrokeDashOffset();
   } else {
     *aDashOffset = nsSVGUtils::CoordToFloat(presContext,
                                             ctx,
@@ -1747,13 +1747,13 @@ GetStrokeDashData(nsIFrame* aFrame,
 
 void
 nsSVGUtils::SetupCairoStrokeGeometry(nsIFrame* aFrame, gfxContext* aContext,
-                                     gfxTextObjectPaint *aObjectPaint)
+                                     gfxTextContextPaint *aContextPaint)
 {
-  SetupCairoStrokeBBoxGeometry(aFrame, aContext, aObjectPaint);
+  SetupCairoStrokeBBoxGeometry(aFrame, aContext, aContextPaint);
 
   AutoFallibleTArray<gfxFloat, 10> dashes;
   gfxFloat dashOffset;
-  if (GetStrokeDashData(aFrame, dashes, &dashOffset, aObjectPaint)) {
+  if (GetStrokeDashData(aFrame, dashes, &dashOffset, aContextPaint)) {
     aContext->SetDash(dashes.Elements(), dashes.Length(), dashOffset);
   }
 }
@@ -1819,20 +1819,20 @@ nsSVGUtils::GetGeometryHitTestFlags(nsIFrame* aFrame)
 
 bool
 nsSVGUtils::SetupCairoStroke(nsIFrame* aFrame, gfxContext* aContext,
-                             gfxTextObjectPaint *aObjectPaint)
+                             gfxTextContextPaint *aContextPaint)
 {
-  if (!HasStroke(aFrame, aObjectPaint)) {
+  if (!HasStroke(aFrame, aContextPaint)) {
     return false;
   }
-  SetupCairoStrokeGeometry(aFrame, aContext, aObjectPaint);
+  SetupCairoStrokeGeometry(aFrame, aContext, aContextPaint);
 
-  return SetupCairoStrokePaint(aFrame, aContext, aObjectPaint);
+  return SetupCairoStrokePaint(aFrame, aContext, aContextPaint);
 }
 
 bool
 nsSVGUtils::PaintSVGGlyph(Element* aElement, gfxContext* aContext,
                           gfxFont::DrawMode aDrawMode,
-                          gfxTextObjectPaint* aObjectPaint)
+                          gfxTextContextPaint* aContextPaint)
 {
   nsIFrame* frame = aElement->GetPrimaryFrame();
   nsISVGChildFrame* svgFrame = do_QueryFrame(frame);
@@ -1841,7 +1841,7 @@ nsSVGUtils::PaintSVGGlyph(Element* aElement, gfxContext* aContext,
   }
   nsRenderingContext context;
   context.Init(frame->PresContext()->DeviceContext(), aContext);
-  context.AddUserData(&gfxTextObjectPaint::sUserDataKey, aObjectPaint, nullptr);
+  context.AddUserData(&gfxTextContextPaint::sUserDataKey, aContextPaint, nullptr);
   svgFrame->NotifySVGChanged(nsISVGChildFrame::TRANSFORM_CHANGED);
   nsresult rv = svgFrame->PaintSVG(&context, nullptr, frame);
   return NS_SUCCEEDED(rv);
