@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+  Make sure that the SVG glyph context-* values are not considered real values
+  when gfx.font_rendering.opentype_svg.enabled is pref'ed off.
+-->
+<head>
+  <title>Test that SVG glyph context-* values can be pref'ed off</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body>
+
+<script>
+
+var props = {
+  "fill" : "context-stroke none",
+  "stroke" : "context-fill none",
+  "fillOpacity" : "context-stroke-opacity",
+  "strokeOpacity" : "context-fill-opacity",
+  "strokeDasharray" : "context-value",
+  "strokeDashoffset" : "context-value",
+  "strokeWidth" : "context-value"
+};
+
+var origPref = SpecialPowers.getBoolPref("gfx.font_rendering.opentype_svg.enabled");
+
+SpecialPowers.setBoolPref("gfx.font_rendering.opentype_svg.enabled", true);
+
+for (var prop in props) {
+  document.body.style[prop] = props[prop];
+  is(document.body.style[prop], props[prop],
+     prop + " settable to " + props[prop]);
+  document.body.style[prop] = "";
+}
+
+SpecialPowers.setBoolPref("gfx.font_rendering.opentype_svg.enabled", false);
+
+for (var prop in props) {
+  document.body.style[prop] = props[prop];
+  is(document.body.style[prop], "",
+     prop + " not settable to " + props[prop]);
+  document.body.style[prop] = "";
+}
+
+SpecialPowers.setBoolPref("gfx.font_rendering.opentype_svg.enabled", origPref);
+
+</script>
+
+</body>
+</html>
