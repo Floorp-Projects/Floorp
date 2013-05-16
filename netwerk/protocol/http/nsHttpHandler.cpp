@@ -202,7 +202,7 @@ nsHttpHandler::nsHttpHandler()
 
     LOG(("Creating nsHttpHandler [this=%x].\n", this));
 
-    NS_ASSERTION(!gHttpHandler, "HTTP handler already created!");
+    MOZ_ASSERT(!gHttpHandler, "HTTP handler already created!");
     gHttpHandler = this;
 }
 
@@ -492,7 +492,7 @@ uint32_t
 nsHttpHandler::Get32BitsOfPseudoRandom()
 {
     // only confirm rand seeding on socket thread
-    NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
     // rand() provides different amounts of PRNG on different platforms.
     // 15 or 31 bits are common amounts.
@@ -561,9 +561,9 @@ nsHttpHandler::BuildUserAgent()
 {
     LOG(("nsHttpHandler::BuildUserAgent\n"));
 
-    NS_ASSERTION(!mLegacyAppName.IsEmpty() &&
-                 !mLegacyAppVersion.IsEmpty(),
-                 "HTTP cannot send practical requests without this much");
+    MOZ_ASSERT(!mLegacyAppName.IsEmpty() &&
+               !mLegacyAppVersion.IsEmpty(),
+               "HTTP cannot send practical requests without this much");
 
     // preallocate to worst-case size, which should always be better
     // than if we didn't preallocate at all.
@@ -657,7 +657,7 @@ nsHttpHandler::InitUserAgentComponents()
 
 #if defined(ANDROID) || defined(MOZ_PLATFORM_MAEMO) || defined(MOZ_B2G)
     nsCOMPtr<nsIPropertyBag2> infoService = do_GetService("@mozilla.org/system-info;1");
-    NS_ASSERTION(infoService, "Could not find a system info service");
+    MOZ_ASSERT(infoService, "Could not find a system info service");
 
     bool isTablet;
     nsresult rv = infoService->GetPropertyAsBool(NS_LITERAL_STRING("tablet"), &isTablet);
@@ -1440,7 +1440,7 @@ PrepareAcceptLanguages(const char *i_AcceptLanguages, nsACString &o_AcceptLangua
             q -= dec;
             p2 += wrote;
             available -= wrote;
-            NS_ASSERTION(available > 0, "allocated string not long enough");
+            MOZ_ASSERT(available > 0, "allocated string not long enough");
         }
     }
     nsCRT::free(o_Accept);
@@ -1881,7 +1881,7 @@ nsHttpsHandler::Init()
 {
     nsCOMPtr<nsIProtocolHandler> httpHandler(
             do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "http"));
-    NS_ASSERTION(httpHandler.get() != nullptr, "no http handler?");
+    MOZ_ASSERT(httpHandler.get() != nullptr);
     return NS_OK;
 }
 
@@ -1918,7 +1918,7 @@ nsHttpsHandler::NewURI(const nsACString &aSpec,
 NS_IMETHODIMP
 nsHttpsHandler::NewChannel(nsIURI *aURI, nsIChannel **_retval)
 {
-    NS_ABORT_IF_FALSE(gHttpHandler, "Should have a HTTP handler by now.");
+    MOZ_ASSERT(gHttpHandler);
     if (!gHttpHandler)
       return NS_ERROR_UNEXPECTED;
     return gHttpHandler->NewChannel(aURI, _retval);

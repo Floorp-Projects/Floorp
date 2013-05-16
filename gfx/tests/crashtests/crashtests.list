@@ -96,4 +96,5 @@ load 783041-3.html
 load 783041-4.html
 asserts-if(gtk2Widget,1) load 798853.html # bug 868792
 asserts-if(winWidget,0-1) skip-if(B2G) load 815489.html
+load 839745-1.html
 load 856784-1.html

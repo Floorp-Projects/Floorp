@@ -47,7 +47,7 @@ HttpChannelParent::HttpChannelParent(PBrowserParent* iframeEmbedding,
   // Ensure gHttpHandler is initialized: we need the atom table up and running.
   nsIHttpProtocolHandler* handler;
   CallGetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "http", &handler);
-  NS_ASSERTION(handler, "no http handler");
+  MOZ_ASSERT(handler);
 
   mTabParent = static_cast<mozilla::dom::TabParent*>(iframeEmbedding);
 }
@@ -107,7 +107,7 @@ HttpChannelParent::GetInterface(const nsIID& aIID, void **result)
 // HttpChannelParent::PHttpChannelParent
 //-----------------------------------------------------------------------------
 
-bool 
+bool
 HttpChannelParent::RecvAsyncOpen(const URIParams&           aURI,
                                  const OptionalURIParams&   aOriginalURI,
                                  const OptionalURIParams&   aDocURI,
@@ -142,7 +142,7 @@ HttpChannelParent::RecvAsyncOpen(const URIParams&           aURI,
 
   nsCString uriSpec;
   uri->GetSpec(uriSpec);
-  LOG(("HttpChannelParent RecvAsyncOpen [this=%x uri=%s]\n", 
+  LOG(("HttpChannelParent RecvAsyncOpen [this=%x uri=%s]\n",
        this, uriSpec.get()));
 
   nsresult rv;
@@ -256,7 +256,7 @@ HttpChannelParent::RecvConnectChannel(const uint32_t& channelId)
   return true;
 }
 
-bool 
+bool
 HttpChannelParent::RecvSetPriority(const uint16_t& priority)
 {
   if (mChannel) {
@@ -322,7 +322,7 @@ HttpChannelParent::RecvUpdateAssociatedContentSecurity(const int32_t& broken,
 }
 
 bool
-HttpChannelParent::RecvRedirect2Verify(const nsresult& result, 
+HttpChannelParent::RecvRedirect2Verify(const nsresult& result,
                                        const RequestHeaderTuples& changedHeaders,
                                        const OptionalURIParams&   aAPIRedirectURI)
 {
@@ -380,7 +380,7 @@ HttpChannelParent::RecvDocumentChannelCleanup()
   return true;
 }
 
-bool 
+bool
 HttpChannelParent::RecvMarkOfflineCacheEntryAsForeign()
 {
   if (mOfflineForeignMarker) {
@@ -420,7 +420,7 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
     nsCString appCacheClientId;
     appCache->GetGroupID(appCacheGroupId);
     appCache->GetClientID(appCacheClientId);
-    if (mIPCClosed || 
+    if (mIPCClosed ||
         !SendAssociateApplicationCache(appCacheGroupId, appCacheClientId))
     {
       return NS_ERROR_UNEXPECTED;
@@ -446,30 +446,30 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
   }
 
   nsHttpChannel *httpChan = static_cast<nsHttpChannel *>(mChannel.get());
-  if (mIPCClosed || 
-      !SendOnStartRequest(responseHead ? *responseHead : nsHttpResponseHead(), 
+  if (mIPCClosed ||
+      !SendOnStartRequest(responseHead ? *responseHead : nsHttpResponseHead(),
                           !!responseHead,
                           requestHead->Headers(),
                           isFromCache,
                           mCacheDescriptor ? true : false,
                           expirationTime, cachedCharset, secInfoSerialization,
-                          httpChan->GetSelfAddr(), httpChan->GetPeerAddr())) 
+                          httpChan->GetSelfAddr(), httpChan->GetPeerAddr()))
   {
-    return NS_ERROR_UNEXPECTED; 
+    return NS_ERROR_UNEXPECTED;
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP
-HttpChannelParent::OnStopRequest(nsIRequest *aRequest, 
-                                 nsISupports *aContext, 
+HttpChannelParent::OnStopRequest(nsIRequest *aRequest,
+                                 nsISupports *aContext,
                                  nsresult aStatusCode)
 {
-  LOG(("HttpChannelParent::OnStopRequest: [this=%x status=%ul]\n", 
+  LOG(("HttpChannelParent::OnStopRequest: [this=%x status=%ul]\n",
        this, aStatusCode));
 
   if (mIPCClosed || !SendOnStopRequest(aStatusCode))
-    return NS_ERROR_UNEXPECTED; 
+    return NS_ERROR_UNEXPECTED;
   return NS_OK;
 }
 
@@ -478,10 +478,10 @@ HttpChannelParent::OnStopRequest(nsIRequest *aRequest,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-HttpChannelParent::OnDataAvailable(nsIRequest *aRequest, 
-                                   nsISupports *aContext, 
-                                   nsIInputStream *aInputStream, 
-                                   uint64_t aOffset, 
+HttpChannelParent::OnDataAvailable(nsIRequest *aRequest,
+                                   nsISupports *aContext,
+                                   nsIInputStream *aInputStream,
+                                   uint64_t aOffset,
                                    uint32_t aCount)
 {
   LOG(("HttpChannelParent::OnDataAvailable [this=%x]\n", this));
@@ -508,9 +508,9 @@ HttpChannelParent::OnDataAvailable(nsIRequest *aRequest,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-HttpChannelParent::OnProgress(nsIRequest *aRequest, 
-                              nsISupports *aContext, 
-                              uint64_t aProgress, 
+HttpChannelParent::OnProgress(nsIRequest *aRequest,
+                              nsISupports *aContext,
+                              uint64_t aProgress,
                               uint64_t aProgressMax)
 {
   // OnStatus has always just set mStoredStatus. If it indicates this precedes
@@ -532,9 +532,9 @@ HttpChannelParent::OnProgress(nsIRequest *aRequest,
 }
 
 NS_IMETHODIMP
-HttpChannelParent::OnStatus(nsIRequest *aRequest, 
-                            nsISupports *aContext, 
-                            nsresult aStatus, 
+HttpChannelParent::OnStatus(nsIRequest *aRequest,
+                            nsISupports *aContext,
+                            nsresult aStatus,
                             const PRUnichar *aStatusArg)
 {
   // If this precedes OnDataAvailable, store and ODA will send to child.
