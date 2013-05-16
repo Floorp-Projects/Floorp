@@ -29,6 +29,40 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* TODO: Use libc implementation if we have one */
+
+void *
+memmem(const void *l, size_t l_len, const void *s, size_t s_len)
+{
+  register char *cur, *last;
+  const char *cl = ( const char * )l;
+  const char *cs = ( const char * )s;
+
+  /* we need something to compare */
+  if ( l_len == 0 || s_len == 0 ) {
+    return NULL;
+  }
+
+  /* "s" must be smaller or equal to "l" */
+  if ( l_len < s_len ) {
+    return NULL;
+  }
+
+  /* special case where s_len == 1 */
+  if ( s_len == 1 ) {
+    return ( void * )memchr( l, ( int )*cs, l_len );
+  }
+
+  /* the last position where its possible to find "s" in "l" */
+  last = (char *)cl + l_len - s_len;
+
+  for ( cur = ( char * )cl; cur <= last; cur++ ) {
+    if ( cur[0] == cs[0] && memcmp( cur, cs, s_len ) == 0 ) {
+      return cur;
+    }
+  }
+  return NULL;
+}
 
 static webvtt_string_data empty_string = {
   { 1 }, /* init refcount */
@@ -64,7 +98,8 @@ webvtt_create_string( webvtt_uint32 alloc, webvtt_string *result )
     return WEBVTT_INVALID_PARAM;
   }
 
-  d = ( webvtt_string_data * )webvtt_alloc( sizeof( webvtt_string_data ) + ( alloc * sizeof( webvtt_byte ) ) );
+  d = ( webvtt_string_data * )webvtt_alloc( sizeof( webvtt_string_data ) +
+                                            ( alloc * sizeof( char ) ) );
 
   if( !d ) {
     return WEBVTT_OUT_OF_MEMORY;
@@ -82,35 +117,35 @@ webvtt_create_string( webvtt_uint32 alloc, webvtt_string *result )
 }
 
 WEBVTT_EXPORT webvtt_status
-webvtt_create_string_with_text( webvtt_string *result, const webvtt_byte *init_text, int len )
+webvtt_create_string_with_text( webvtt_string *out, const char *init_text,
+                                int len )
 {
-  if( !result ) {
+  if( !out ) {
     return WEBVTT_INVALID_PARAM;
   }
-  
+
   if( !init_text ) {
-    webvtt_init_string( result );
+    webvtt_init_string( out );
     return WEBVTT_SUCCESS;
   }
 
   if( len < 0 ) {
-    len = strlen( ( const char * )init_text );
+    len = strlen( init_text );
   }
-  
-  if( len == 0 ) {
-    webvtt_init_string( result );
-    return WEBVTT_SUCCESS;
-  }
-  
+
   /**
    * initialize the string by referencing empty_string
    */
-  webvtt_init_string( result );
+  webvtt_init_string( out );
+
+  if( len == 0 ) {
+    return WEBVTT_SUCCESS;
+  }
 
   /**
    * append the appropriate data to the empty string
    */
-  return webvtt_string_append( result, init_text, len );
+  return webvtt_string_append( out, init_text, len );
 }
 
 /**
@@ -157,7 +192,8 @@ webvtt_string_detach( /* in, out */ webvtt_string *str )
     return WEBVTT_SUCCESS;
   }
 
-  d = ( webvtt_string_data * )webvtt_alloc( sizeof( webvtt_string_data ) + ( sizeof( webvtt_byte ) * str->d->alloc ) );
+  d = ( webvtt_string_data * )webvtt_alloc( sizeof( webvtt_string_data ) +
+                                           ( sizeof( char ) * str->d->alloc ) );
 
   d->refs.value = 1;
   d->text = d->array;
@@ -187,7 +223,7 @@ webvtt_copy_string( webvtt_string *left, const webvtt_string *right )
   }
 }
 
-WEBVTT_EXPORT const webvtt_byte *
+WEBVTT_EXPORT const char *
 webvtt_string_text(const webvtt_string *str)
 {
   if( !str || !str->d )
@@ -243,7 +279,7 @@ grow( webvtt_string *str, webvtt_uint need )
   }
 
   p = d = str->d;
-  grow = sizeof( *d ) + ( sizeof( webvtt_byte ) * ( d->length + need ) );
+  grow = sizeof( *d ) + ( sizeof( char ) * ( d->length + need ) );
 
   if( grow < page ) {
     n = page;
@@ -269,10 +305,10 @@ grow( webvtt_string *str, webvtt_uint need )
   }
 
   p->refs.value = 1;
-  p->alloc = ( n - sizeof( *p ) ) / sizeof( webvtt_byte );
+  p->alloc = ( n - sizeof( *p ) ) / sizeof( char );
   p->length = d->length;
   p->text = p->array;
-  memcpy( p->text, d->text, sizeof( webvtt_byte ) * p->length );
+  memcpy( p->text, d->text, sizeof( char ) * p->length );
   p->text[ p->length ] = 0;
   str->d = p;
 
@@ -284,16 +320,16 @@ grow( webvtt_string *str, webvtt_uint need )
 }
 
 WEBVTT_EXPORT int
-webvtt_string_getline( webvtt_string *src, const webvtt_byte *buffer,
+webvtt_string_getline( webvtt_string *src, const char *buffer,
                        webvtt_uint *pos, int len, int *truncate,
                        webvtt_bool finish )
 {
   int ret = 0;
   webvtt_string *str = src;
   webvtt_string_data *d = 0;
-  const webvtt_byte *s = buffer + *pos;
-  const webvtt_byte *p = s;
-  const webvtt_byte *n;
+  const char *s = buffer + *pos;
+  const char *p = s;
+  const char *n;
 
   /**
    *if this is public now, maybe we should return webvtt_status so we can
@@ -312,7 +348,7 @@ webvtt_string_getline( webvtt_string *src, const webvtt_byte *buffer,
     d = str->d;
   }
   if( len < 0 ) {
-    len = strlen( (const char *)buffer );
+    len = strlen( buffer );
   }
   n = buffer + len;
 
@@ -348,7 +384,7 @@ webvtt_string_getline( webvtt_string *src, const webvtt_byte *buffer,
 }
 
 WEBVTT_EXPORT webvtt_status
-webvtt_string_putc( webvtt_string *str, webvtt_byte to_append )
+webvtt_string_putc( webvtt_string *str, char to_append )
 {
   webvtt_status result;
 
@@ -370,7 +406,7 @@ webvtt_string_putc( webvtt_string *str, webvtt_byte to_append )
 }
 
 WEBVTT_EXPORT webvtt_bool
-webvtt_string_is_equal( const webvtt_string *str, const webvtt_byte *to_compare,
+webvtt_string_is_equal( const webvtt_string *str, const char *to_compare,
                         int len )
 {
   if( !str || !to_compare ) {
@@ -378,7 +414,7 @@ webvtt_string_is_equal( const webvtt_string *str, const webvtt_byte *to_compare,
   }
 
   if( len < 0 ) {
-    len = strlen( (const char *)to_compare );
+    len = strlen( to_compare );
   }
 
   if( str->d->length != (unsigned)len ) {
@@ -389,7 +425,7 @@ webvtt_string_is_equal( const webvtt_string *str, const webvtt_byte *to_compare,
 }
 
 WEBVTT_EXPORT webvtt_status
-webvtt_string_append( webvtt_string *str, const webvtt_byte *buffer, int len )
+webvtt_string_append( webvtt_string *str, const char *buffer, int len )
 {
   webvtt_status result;
 
@@ -401,7 +437,7 @@ webvtt_string_append( webvtt_string *str, const webvtt_byte *buffer, int len )
   }
 
   if( len < 0 ) {
-    len = strlen( ( const char * )buffer );
+    len = strlen( buffer );
   }
 
   if( len == 0 ) {
@@ -428,6 +464,73 @@ WEBVTT_EXPORT webvtt_status
   return webvtt_string_append( str, other->d->text, other->d->length );
 }
 
+WEBVTT_EXPORT webvtt_status
+webvtt_string_replace( webvtt_string *str, const char *search, int search_len,
+                       const char *replace, int replace_len )
+{
+  webvtt_status status = WEBVTT_SUCCESS;
+  char *p;
+  if( !str || !search || !replace ) {
+    return WEBVTT_INVALID_PARAM;
+  }
+
+  if( search_len < 0 ) {
+    search_len = ( int )strlen( search );
+  }
+
+  if( replace_len < 0 ) {
+    replace_len = ( int )strlen( replace );
+  }
+
+  if( ( p = (char *)memmem( str->d->text, str->d->length, search,
+                            search_len ) ) ) {
+    const char *end;
+    size_t pos = p - str->d->text;
+    if( WEBVTT_FAILED( status = grow( str, replace_len ) ) ) {
+      return status;
+    }
+    p = str->d->text + pos;
+    end = str->d->text + str->d->length - 1; /* Don't worry about the NULL
+                                              * byte. */
+    if( search_len != replace_len ) {
+      memmove( p + replace_len, p + search_len, end - p );
+    }
+    memcpy( p, replace, replace_len );
+    str->d->length = ( str->d->length - search_len ) + replace_len;
+    str->d->text[ str->d->length ] = 0;
+    status = ( webvtt_status )1;
+  }
+  return status;
+}
+
+/**
+ * webvtt_string_replace_all
+ *
+ * replace all instances of substring with replacement string
+ */
+WEBVTT_EXPORT webvtt_status
+webvtt_string_replace_all( webvtt_string *str, const char *search,
+                           int search_len, const char *replace,
+                           int replace_len )
+{
+  webvtt_status status = WEBVTT_SUCCESS;
+  if( !str || !search || !replace ) {
+    return WEBVTT_INVALID_PARAM;
+  }
+
+  if( search_len < 0 ) {
+    search_len = ( int )strlen( search );
+  }
+
+  if( replace_len < 0 ) {
+    replace_len = ( int )strlen( replace );
+  }
+
+  while( ( status = webvtt_string_replace( str, search, search_len, replace,
+                                           replace_len ) ) == 1 );
+  return status;
+}
+
 /**
  * String lists
  */
@@ -448,21 +551,21 @@ webvtt_create_stringlist( webvtt_stringlist **result )
   list->alloc = 0;
   list->length = 0;
   webvtt_ref_stringlist( list );
-  
+
   *result = list;
 
   return WEBVTT_SUCCESS;
 }
 
-WEBVTT_EXPORT void 
-webvtt_ref_stringlist( webvtt_stringlist *list ) 
+WEBVTT_EXPORT void
+webvtt_ref_stringlist( webvtt_stringlist *list )
 {
   if( list ) {
     webvtt_ref( &list->refs );
   }
 }
 
-WEBVTT_EXPORT void 
+WEBVTT_EXPORT void
 webvtt_copy_stringlist( webvtt_stringlist **left, webvtt_stringlist *right )
 {
   if( !left || !right ) {
@@ -471,6 +574,7 @@ webvtt_copy_stringlist( webvtt_stringlist **left, webvtt_stringlist *right )
   *left = right;
   webvtt_ref_stringlist( *left );
 }
+
 WEBVTT_EXPORT void
 webvtt_release_stringlist( webvtt_stringlist **list )
 {
@@ -481,13 +585,13 @@ webvtt_release_stringlist( webvtt_stringlist **list )
     return;
   }
   l = *list;
-  
+
   if( webvtt_deref( &l->refs ) == 0 ) {
     if( l->items ) {
       for( i = 0; i < l->length; i++ ) {
         webvtt_release_string( &l->items[ i ] );
       }
-      webvtt_free( l->items );      
+      webvtt_free( l->items );
     }
     webvtt_free( l );
   }
@@ -505,7 +609,8 @@ webvtt_stringlist_push( webvtt_stringlist *list, webvtt_string *str )
     webvtt_string *arr, *old;
 
     list->alloc = list->alloc == 0 ? 8 : list->alloc * 2;
-    arr = ( webvtt_string * )webvtt_alloc0( sizeof( webvtt_string ) * list->alloc );
+    arr = ( webvtt_string * )webvtt_alloc0( sizeof( webvtt_string ) *
+                                            list->alloc );
 
     if( !arr ) {
       return WEBVTT_OUT_OF_MEMORY;
@@ -525,10 +630,24 @@ webvtt_stringlist_push( webvtt_stringlist *list, webvtt_string *str )
 }
 
 WEBVTT_EXPORT webvtt_bool
-webvtt_next_utf8( const webvtt_byte **begin, const webvtt_byte *end )
+webvtt_stringlist_pop( webvtt_stringlist *list, webvtt_string *out )
+{
+  if( !list || !out || list->length < 1 ) {
+    return 0;
+  }
+
+  list->length--;
+  webvtt_copy_string( out, list->items + list->length );
+  webvtt_release_string( list->items + list->length );
+
+  return 1;
+}
+
+WEBVTT_EXPORT webvtt_bool
+webvtt_next_utf8( const char **begin, const char *end )
 {
   int c;
-  const webvtt_byte *p;
+  const char *p;
   if( !begin || !*begin || !**begin || ( end && ( end <= *begin ) ) ) {
     /* Either begin is null, or end is null, or end <= begin */
     return 0;
@@ -537,14 +656,14 @@ webvtt_next_utf8( const webvtt_byte **begin, const webvtt_byte *end )
   p = *begin;
 
   if( !end ) {
-    end = p + strlen( ( const char * )p );
+    end = p + strlen( p );
   }
 
   c = webvtt_utf8_length( p );
   if( c > 0 ) {
     p += c;
   } else if( ( *p & 0xC0 ) == 0x80 ) {
-    const webvtt_byte *pc = p + 1;
+    const char *pc = p + 1;
     while( pc < end && ( ( *pc & 0xC0 ) == 0x80 ) ) {
       ++pc;
     }
@@ -552,7 +671,7 @@ webvtt_next_utf8( const webvtt_byte **begin, const webvtt_byte *end )
       p = pc;
     }
   }
-  
+
   if( *begin != p && p <= end ) {
     *begin = p;
     return 1;
@@ -561,9 +680,9 @@ webvtt_next_utf8( const webvtt_byte **begin, const webvtt_byte *end )
 }
 
 WEBVTT_EXPORT webvtt_bool
-webvtt_skip_utf8( const webvtt_byte **begin, const webvtt_byte *end, int n_chars )
+webvtt_skip_utf8( const char **begin, const char *end, int n_chars )
 {
-  const webvtt_byte *first;
+  const char *first;
   if( !begin || !*begin ) {
     return 0;
   }
@@ -574,7 +693,7 @@ webvtt_skip_utf8( const webvtt_byte **begin, const webvtt_byte *end, int n_chars
 
   first = *begin;
   if( !end ) {
-    end = first + strlen( ( const char * )first );
+    end = first + strlen( first );
   }
 
   if( end > first ) {
@@ -583,25 +702,25 @@ webvtt_skip_utf8( const webvtt_byte **begin, const webvtt_byte *end, int n_chars
       if( webvtt_next_utf8( begin, end ) ) {
         --n_chars;
       }
-    } 
+    }
   }
 
   return n_chars == 0;
 }
 
 WEBVTT_EXPORT webvtt_uint16
-webvtt_utf8_to_utf16( const webvtt_byte *utf8, const webvtt_byte *end,
+webvtt_utf8_to_utf16( const char *utf8, const char *end,
   webvtt_uint16 *high_surrogate )
 {
   int need = 0;
   webvtt_uint32 uc = 0, min = 0;
-  
+
   /* We're missing our pointers */
   if( !utf8 ) {
     return 0;
   }
   if( !end ) {
-    end = utf8 + strlen( ( const char * )utf8 );
+    end = utf8 + strlen( utf8 );
   }
   if( utf8 >= end ) {
     return 0;
@@ -617,11 +736,11 @@ webvtt_utf8_to_utf16( const webvtt_byte *utf8, const webvtt_byte *end,
     return 0;
   }
 
-  if( *utf8 < 0x80 ) {
+  if( (unsigned char)*utf8 < 0x80 ) {
     return ( webvtt_uint32 )( *utf8 );
   }
   while( utf8 < end ) {
-    webvtt_byte ch = *utf8;
+    char ch = *utf8;
     utf8++;
     if( need ) {
       if( ( ch & 0xC0 ) == 0x80 ) {
@@ -637,7 +756,7 @@ webvtt_utf8_to_utf16( const webvtt_byte *utf8, const webvtt_byte *end,
           } else if ( ( uc < min ) || ( uc >= 0xD800 && uc <= 0xDFFF ) || nc
                       || uc >= 0x110000) {
             /* Non-character, overlong sequence, or utf16 surrogate */
-            return 0xFFFD;  
+            return 0xFFFD;
           } else {
             /* Non-surrogate */
             return uc;
@@ -668,17 +787,17 @@ webvtt_utf8_to_utf16( const webvtt_byte *utf8, const webvtt_byte *end,
 }
 
 WEBVTT_EXPORT int
-webvtt_utf8_chcount( const webvtt_byte *utf8, const webvtt_byte *end )
+webvtt_utf8_chcount( const char *utf8, const char *end )
 {
   int n = 0;
-  const webvtt_byte *p;
+  const char *p;
   if( !utf8 || !*utf8 || ( end != 0 && end < utf8 ) ) {
     return 0;
   }
   if( !end ) {
-    end = utf8 + strlen( ( const char * )utf8 );
+    end = utf8 + strlen( utf8 );
   }
-  
+
   for( p = utf8; p < end; ++n ) {
     int c = webvtt_utf8_length( p );
     if( c < 1 ) {
@@ -691,14 +810,14 @@ webvtt_utf8_chcount( const webvtt_byte *utf8, const webvtt_byte *end )
 }
 
 WEBVTT_EXPORT int
-webvtt_utf8_length( const webvtt_byte *utf8 )
+webvtt_utf8_length( const char *utf8 )
 {
-  webvtt_byte ch;
-  if( !utf8 ) { 
+  char ch;
+  if( !utf8 ) {
     return 0;
   }
   ch = *utf8;
-  if( ch < 0x80 ) {
+  if( (unsigned char)ch < 0x80 ) {
     return 1;
   } else if( ( ch & 0xE0 ) == 0xC0 ) {
     return 2;

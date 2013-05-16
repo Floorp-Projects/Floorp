@@ -65,29 +65,30 @@ webvtt_string_data_t {
   struct webvtt_refcount_t refs;
   webvtt_uint32 alloc;
   webvtt_uint32 length;
-  webvtt_byte *text;
-  webvtt_byte array[1];
+  char *text;
+  char array[1];
 };
 
 static __WEBVTT_STRING_INLINE  int
-webvtt_isalpha( webvtt_byte ch )
+webvtt_isalpha( char ch )
 {
-  return ( ( ( ch >= 'A' ) && ( ch <= 'Z' ) ) || ( ( ch >= 'a' ) && ( ch <= 'z' ) ) );
+  return ( ( ( ch >= 'A' ) && ( ch <= 'Z' ) ) || ( ( ch >= 'a' ) &&
+                                                   ( ch <= 'z' ) ) );
 }
 static __WEBVTT_STRING_INLINE int
-webvtt_isdigit( webvtt_byte ch )
+webvtt_isdigit( char ch )
 {
   return ( ( ch >= '0' ) && ( ch <= '9' ) );
 }
 
 static __WEBVTT_STRING_INLINE int
-webvtt_isalphanum( webvtt_byte ch )
+webvtt_isalphanum( char ch )
 {
   return ( webvtt_isalpha( ch ) || webvtt_isdigit( ch ) );
 }
 
 static __WEBVTT_STRING_INLINE int
-webvtt_iswhite( webvtt_byte ch )
+webvtt_iswhite( char ch )
 {
   return ( ( ch == '\r' ) || ( ch == '\n' ) || ( ch == '\f' )
            || ( ch == '\t' ) || ( ch == ' ' ) ) ;

@@ -28,14 +28,17 @@
 #include "parser_internal.h"
 
 /**
- * There are probably enough jumps and stack pops here to fill up quite a few caches but it may still
+ * There are probably enough jumps and stack pops here to fill up quite a few
+ * caches but it may still
  * be much smaller than a gigantic table-based solution.
  *
- * TODO: Replace all char literals with hex values, just in case compiling on a machine which uses an
+ * TODO: Replace all char literals with hex values, just in case compiling on a
+ * machine which uses an
  * incompatible character set
  */
 
-#define U_DIGIT case 0x30: case 0x31: case 0x32: case 0x33: case 0x34: case 0x35: case 0x36: case 0x37: case 0x38: case 0x39:
+#define U_DIGIT case 0x30: case 0x31: case 0x32: case 0x33: case 0x34: \
+                case 0x35: case 0x36: case 0x37: case 0x38: case 0x39:
 #define U_WHITESPACE case 0x0D: case 0x0A: case 0x20: case 0x09:
 #define U_SPACE case 0x20:
 #define U_TAB case 0x09:
@@ -134,15 +137,19 @@
 #define BEGIN_STATE(state) case state: { switch(c) {
 #define END_STATE DEFAULT BACKUP return BADTOKEN; } } break;
 #define END_STATE_EX } } break;
-
-#define BACKUP (*pos)--; --self->column; self->token[--self->token_pos] = 0; self->tstate = L_START;
 #define SET_STATE(X) self->tstate = X; break;
 #define RETURN(X) self->tstate = L_START; return X;
 #define SET_NEWLINE self->line++; self->column = 1; RETURN(NEWLINE)
 #define CONTINUE continue;
-
-#define RESET self->column = 1; self->bytes = self->token_pos = 0; self->tstate = L_START;
 #define BREAK break;
+
+#define BACKUP (*pos)--; \
+               --self->column; \
+               self->token[--self->token_pos] = 0; \
+               self->tstate = L_START;
+#define RESET self->column = 1; \
+              self->bytes = self->token_pos = 0; \
+              self->tstate = L_START;
 
 #define CHECK_BROKEN_TIMESTAMP \
 if(self->token_pos == sizeof(self->token) - 1 ) \
@@ -152,7 +159,8 @@ if(self->token_pos == sizeof(self->token) - 1 ) \
 }
 
 WEBVTT_INTERN webvtt_status
-webvtt_lex_word( webvtt_parser self, webvtt_string *str, const webvtt_byte *buffer, webvtt_uint *ppos, webvtt_uint length, webvtt_bool finish )
+webvtt_lex_word( webvtt_parser self, webvtt_string *str, const char *buffer,
+                 webvtt_uint *ppos, webvtt_uint length, webvtt_bool finish )
 {
   webvtt_status status = WEBVTT_SUCCESS;
   webvtt_uint pos = *ppos;
@@ -200,7 +208,7 @@ _finished:
  */
 WEBVTT_INTERN webvtt_token
 webvtt_lex_newline( webvtt_parser self, const
-  webvtt_byte *buffer, webvtt_uint *pos, webvtt_uint length,
+  char *buffer, webvtt_uint *pos, webvtt_uint length,
   webvtt_bool finish )
 {
   webvtt_uint p = *pos;
@@ -209,7 +217,7 @@ webvtt_lex_newline( webvtt_parser self, const
   DIE_IF( self->tstate != L_START && self->tstate != L_NEWLINE0 );
 
   while( p < length ) {
-    webvtt_byte c = buffer[ p++ ];
+    unsigned char c = (unsigned char)buffer[ p++ ];
     self->token[ self->token_pos++ ] = c;
     self->token[ self->token_pos ] = 0;
     self->bytes++;
@@ -270,10 +278,11 @@ backup:
 }
 
 WEBVTT_INTERN webvtt_token
-webvtt_lex( webvtt_parser self, const webvtt_byte *buffer, webvtt_uint *pos, webvtt_uint length, webvtt_bool finish )
+webvtt_lex( webvtt_parser self, const char *buffer, webvtt_uint *pos,
+            webvtt_uint length, webvtt_bool finish )
 {
   while( *pos < length ) {
-    webvtt_byte c = buffer[(*pos)++];
+    unsigned char c = (unsigned char)buffer[(*pos)++];
     self->token[ self->token_pos++ ] = c;
     self->token[ self->token_pos ] = 0;
     self->column++;
