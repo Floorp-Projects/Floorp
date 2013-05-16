@@ -562,6 +562,9 @@ class AssemblerX86Shared
 
     void jmp(const Operand &op){
         switch (op.kind()) {
+          case Operand::REG_DISP:
+            masm.jmp_m(op.disp(), op.base());
+            break;
           case Operand::SCALE:
             masm.jmp_m(op.disp(), op.base(), op.index(), op.scale());
             break;
