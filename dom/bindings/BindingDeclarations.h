@@ -31,7 +31,13 @@ class nsGlobalWindow;
 namespace mozilla {
 namespace dom {
 
-struct MainThreadDictionaryBase
+// Struct that serves as a base class for all dictionaries.  Particularly useful
+// so we can use IsBaseOf to detect dictionary template arguments.
+struct DictionaryBase
+{
+};
+
+struct MainThreadDictionaryBase : public DictionaryBase
 {
 protected:
   bool ParseJSON(JSContext *aCx, const nsAString& aJSON,
