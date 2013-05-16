@@ -140,7 +140,7 @@ public:
                                         JSObject&,
                                         JSObject*,
                                         const Sequence<Dict>&,
-                                        const Optional<LazyRootedValue>&,
+                                        const Optional<JS::Rooted<JS::Value> >&,
                                         const Optional<NonNullLazyRootedObject>&,
                                         const Optional<LazyRootedObject>&,
                                         ErrorResult&);
@@ -428,9 +428,9 @@ public:
   already_AddRefed<TestTreatAsNullCallback> GetNullableTreatAsNullCallback();
 
   // Any types
-  void PassAny(JSContext*, JS::Value);
-  void PassOptionalAny(JSContext*, const Optional<LazyRootedValue>&);
-  void PassAnyDefaultNull(JSContext*, JS::Value);
+  void PassAny(JSContext*, JS::Handle<JS::Value>);
+  void PassOptionalAny(JSContext*, const Optional<JS::Rooted<JS::Value> >&);
+  void PassAnyDefaultNull(JSContext*, JS::Handle<JS::Value>);
   JS::Value ReceiveAny(JSContext*);
 
   // object types
@@ -700,7 +700,7 @@ private:
   void PassOptionalEnum(Optional<TestEnum>&) MOZ_DELETE;
   void PassOptionalCallback(JSContext*, Optional<JSObject*>&) MOZ_DELETE;
   void PassOptionalNullableCallback(JSContext*, Optional<JSObject*>&) MOZ_DELETE;
-  void PassOptionalAny(Optional<JS::Value>&) MOZ_DELETE;
+  void PassOptionalAny(Optional<JS::Rooted<JS::Value> >&) MOZ_DELETE;
 
   // And test that string stuff is always const
   void PassString(nsAString&) MOZ_DELETE;
