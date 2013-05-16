@@ -2396,7 +2396,8 @@ class JSToNativeConversionInfo():
     An object representing information about a JS-to-native conversion.
     """
     def __init__(self, template, declType=None, holderType=None,
-                 dealWithOptional=False):
+                 dealWithOptional=False, declArgs=None,
+                 holderArgs=None):
         """
         template: A string representing the conversion code.  This will have
                   template substitution performed on it as follows:
@@ -2429,6 +2430,16 @@ class JSToNativeConversionInfo():
                           Construct() calls to be made on the Optional<>s as
                           needed.
 
+        declArgs: If not None, the arguments to pass to the ${declName}
+                  constructor.  These will have template substitution performed
+                  on them so you can use things like ${valHandle}.  This is a
+                  single string, not a list of strings.
+
+        holderArgs: If not None, the arguments to pass to the ${holderName}
+                    constructor.  These will have template substitution
+                    performed on them so you can use things like ${valHandle}.
+                    This is a single string, not a list of strings.
+
         ${declName} must be in scope before the code from 'template' is entered.
 
         If holderType is not None then ${holderName} must be in scope before
@@ -2441,6 +2452,8 @@ class JSToNativeConversionInfo():
         self.declType = declType
         self.holderType = holderType
         self.dealWithOptional = dealWithOptional
+        self.declArgs = declArgs
+        self.holderArgs = holderArgs
 
 # If this function is modified, modify CGNativeMember.getArg and
 # CGNativeMember.getRetvalInfo accordingly.  The latter cares about the decltype
@@ -3498,6 +3511,16 @@ def instantiateJSToNativeConversion(info, replacements, argcAndIndex=None):
         raise TypeError("Need to predeclare optional things, so they will be "
                         "outside the check for big enough arg count!");
 
+    if info.holderArgs is not None:
+        holderArgs = CGGeneric(string.Template(info.holderArgs).substitute(replacements))
+    else:
+        holderArgs = None
+
+    if info.declArgs is not None:
+        declArgs = CGGeneric(string.Template(info.declArgs).substitute(replacements))
+    else:
+        declArgs = None
+
     result = CGList([], "\n")
     # Make a copy of "replacements" since we may be about to start modifying it
     replacements = dict(replacements)
@@ -3506,20 +3529,30 @@ def instantiateJSToNativeConversion(info, replacements, argcAndIndex=None):
         if dealWithOptional:
             replacements["holderName"] = "%s.Value()" % originalHolderName
             holderType = CGTemplatedType("Optional", holderType)
+            holderCtorArgs = None
+        elif holderArgs is not None:
+            holderCtorArgs = CGWrapper(holderArgs, pre="(", post=")")
+        else:
+            holderCtorArgs = None
         result.append(
             CGList([holderType, CGGeneric(" "),
                     CGGeneric(originalHolderName),
-                    CGGeneric(";")]))
+                    holderCtorArgs, CGGeneric(";")]))
 
     originalDeclName = replacements["declName"]
     if declType is not None:
         if dealWithOptional:
             replacements["declName"] = "%s.Value()" % originalDeclName
             declType = CGTemplatedType("Optional", declType)
+            declCtorArgs = None
+        elif declArgs is not None:
+            declCtorArgs = CGWrapper(declArgs, pre="(", post=")")
+        else:
+            declCtorArgs = None
         result.append(
             CGList([declType, CGGeneric(" "),
                     CGGeneric(originalDeclName),
-                    CGGeneric(";")]))
+                    declCtorArgs, CGGeneric(";")]))
 
     conversion = CGGeneric(
             string.Template(templateBody).substitute(replacements)
@@ -3528,10 +3561,14 @@ def instantiateJSToNativeConversion(info, replacements, argcAndIndex=None):
     if argcAndIndex is not None:
         if dealWithOptional:
             declConstruct = CGIndenter(
-                CGGeneric("%s.Construct();" % originalDeclName))
+                CGGeneric("%s.Construct(%s);" %
+                          (originalDeclName,
+                           declArgs.define() if declArgs else "")))
             if holderType is not None:
                 holderConstruct = CGIndenter(
-                    CGGeneric("%s.Construct();" % originalHolderName))
+                    CGGeneric("%s.Construct(%s);" %
+                              (originalHolderName,
+                               holderArgs.define() if holderArgs else "")))
             else:
                 holderConstruct = None
         else:
