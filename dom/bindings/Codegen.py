@@ -3319,23 +3319,31 @@ for (uint32_t i = 0; i < length; ++i) {
     if type.isAny():
         assert not isEnforceRange and not isClamp
 
-        if isMember == "Dictionary" or not isMember:
+        declArgs = None
+        if isMember == "Dictionary":
             declType = "LazyRootedValue"
             templateBody = "${declName}.construct(cx, ${val});"
             nullHandling = "${declName}.construct(cx, JS::NullValue());"
-        elif isMember != "Variadic":
+        elif isMember == "Sequence":
             raise TypeError("Can't handle sequence member 'any'; need to sort "
                             "out rooting issues")
         else:
-            # Variadic arguments are rooted by being in argv
-            declType = "JS::Value"
+            if isMember == "Variadic":
+                # Variadic arguments are rooted by being in argv
+                declType = "JS::Value"
+            else:
+                assert not isMember
+                declType = "JS::Rooted<JS::Value>"
+                declArgs = "cx"
+
             templateBody = "${declName} = ${val};"
             nullHandling = "${declName} = JS::NullValue()"
 
         templateBody = handleDefaultNull(templateBody, nullHandling)
         return JSToNativeConversionInfo(templateBody,
                                         declType=CGGeneric(declType),
-                                        dealWithOptional=isOptional)
+                                        dealWithOptional=isOptional,
+                                        declArgs=declArgs)
 
     if type.isObject():
         assert not isEnforceRange and not isClamp
@@ -4259,7 +4267,7 @@ class MethodNotCreatorError(Exception):
 # different sequences.
 sequenceWrapLevel = 0
 
-def wrapTypeIntoCurrentCompartment(type, value):
+def wrapTypeIntoCurrentCompartment(type, value, isMember=True):
     """
     Take the thing named by "value" and if it contains "any",
     "object", or spidermonkey-interface types inside return a CGThing
@@ -4267,7 +4275,11 @@ def wrapTypeIntoCurrentCompartment(type, value):
     """
     if type.isAny():
         assert not type.nullable()
-        return CGGeneric("if (!JS_WrapValue(cx, &%s)) {\n"
+        if isMember:
+            value = "&" + value
+        else:
+            value = value + ".address()"
+        return CGGeneric("if (!JS_WrapValue(cx, %s)) {\n"
                          "  return false;\n"
                          "}" % value)
 
@@ -4327,7 +4339,7 @@ def wrapTypeIntoCurrentCompartment(type, value):
     raise TypeError("Unknown type; we don't know how to wrap it in constructor "
                     "arguments: %s" % type)
 
-def wrapArgIntoCurrentCompartment(arg, value):
+def wrapArgIntoCurrentCompartment(arg, value, isMember=True):
     """
     As wrapTypeIntoCurrentCompartment but handles things being optional
     """
@@ -4335,7 +4347,7 @@ def wrapArgIntoCurrentCompartment(arg, value):
     isOptional = arg.optional and not arg.defaultValue
     if isOptional:
         value = value + ".Value()"
-    wrap = wrapTypeIntoCurrentCompartment(arg.type, value)
+    wrap = wrapTypeIntoCurrentCompartment(arg.type, value, isMember)
     if wrap and isOptional:
         wrap = CGIfWrapper(wrap, "%s.WasPassed()" % origValue)
     return wrap
@@ -4446,7 +4458,7 @@ if (global.Failed()) {
                           "}\n"
                           "ac.construct(cx, obj);") ]
             xraySteps.extend(
-                wrapArgIntoCurrentCompartment(arg, argname)
+                wrapArgIntoCurrentCompartment(arg, argname, isMember=False)
                 for (arg, argname) in self.getArguments())
             cgThings.append(
                 CGIfWrapper(CGList(xraySteps, "\n"),
@@ -8295,11 +8307,13 @@ class CGNativeMember(ClassMethod):
             args.insert(0, Argument("const %s&" % globalObjectType, "global"))
         return args
 
-    def doGetArgType(self, type, optional, variadic, isMember):
+    def doGetArgType(self, type, optional, isMember):
         """
         The main work of getArgType.  Returns a string type decl, whether this
         is a const ref, as well as whether the type should be wrapped in
         Nullable as needed.
+
+        isMember can be false or one of the strings "Sequence" or "Variadic"
         """
         if type.isArray():
             raise TypeError("Can't handle array arguments yet")
@@ -8309,7 +8323,7 @@ class CGNativeMember(ClassMethod):
             if nullable:
                 type = type.inner
             elementType = type.inner
-            argType = self.getArgType(elementType, False, False, True)[0]
+            argType = self.getArgType(elementType, False, "Sequence")[0]
             decl = CGTemplatedType("Sequence", argType)
             return decl.define(), True, True
 
@@ -8385,10 +8399,12 @@ class CGNativeMember(ClassMethod):
 
         if type.isAny():
             # Don't do the rooting stuff for variadics for now
-            if optional and not variadic:
-                declType = "LazyRootedValue"
-            else:
+            if isMember:
                 declType = "JS::Value"
+            elif optional:
+                declType = "JS::Rooted<JS::Value>"
+            else:
+                declType = "JS::Handle<JS::Value>"
             return declType, False, False
 
         if type.isObject():
@@ -8415,18 +8431,20 @@ class CGNativeMember(ClassMethod):
 
         return builtinNames[type.tag()], False, True
 
-    def getArgType(self, type, optional, variadic, isMember):
+    def getArgType(self, type, optional, isMember):
         """
         Get the type of an argument declaration.  Returns the type CGThing, and
         whether this should be a const ref.
+
+        isMember can be False, "Sequence", or "Variadic"
         """
-        (decl, ref, handleNullable) = self.doGetArgType(type, optional, variadic,
-                                                        isMember or variadic)
+        (decl, ref, handleNullable) = self.doGetArgType(type, optional,
+                                                        isMember)
         decl = CGGeneric(decl)
         if handleNullable and type.nullable():
             decl = CGTemplatedType("Nullable", decl)
             ref = True
-        if variadic:
+        if isMember == "Variadic":
             arrayType = "Sequence" if self.variadicIsSequence else "nsTArray"
             decl = CGTemplatedType(arrayType, decl)
             ref = True
@@ -8443,8 +8461,7 @@ class CGNativeMember(ClassMethod):
         """
         (decl, ref) = self.getArgType(arg.type,
                                       arg.optional and not arg.defaultValue,
-                                      arg.variadic,
-                                      False)
+                                      "Variadic" if arg.variadic else False)
         if ref:
             decl = CGWrapper(decl, pre="const ", post="&")
 
