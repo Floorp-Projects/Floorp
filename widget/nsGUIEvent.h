@@ -401,6 +401,7 @@ enum nsEventStructType {
 
 #define NS_WEBAUDIO_EVENT_START      4350
 #define NS_AUDIO_PROCESS             (NS_WEBAUDIO_EVENT_START)
+#define NS_AUDIO_COMPLETE            (NS_WEBAUDIO_EVENT_START + 1)
 
 // script notification events
 #define NS_NOTIFYSCRIPT_START        4500

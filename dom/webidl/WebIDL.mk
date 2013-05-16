@@ -178,6 +178,8 @@ webidl_files = \
   Notification.webidl \
   NotifyAudioAvailableEvent.webidl \
   NotifyPaintEvent.webidl \
+  OfflineAudioCompletionEvent.webidl \
+  OfflineAudioContext.webidl \
   PaintRequest.webidl \
   PaintRequestList.webidl \
   PannerNode.webidl \
