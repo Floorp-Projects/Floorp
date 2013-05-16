@@ -2299,6 +2299,9 @@ protected:
 
   bool mHasHadDefaultView;
 
+  // Whether style sheet change events will be dispatched for this document
+  bool mStyleSheetChangeEventsEnabled;
+
   // The document's script global object, the object from which the
   // document can get its script context and scope. This is the
   // *inner* window object.
