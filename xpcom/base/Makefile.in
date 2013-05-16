@@ -103,6 +103,7 @@ endif
 LOCAL_INCLUDES += \
 		-I$(srcdir)/../build \
 		-I$(topsrcdir)/xpcom/ds \
+		-I$(topsrcdir)/dom/base \
 		$(NULL)
 
 # We generate ErrorListCxxDefines.h from ErrorList.h using regex.  The -n option
