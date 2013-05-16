@@ -10,6 +10,7 @@
 #include "gfxUtils.h"
 #include "gfxPlatform.h"
 #include "mozilla/layers/LayerManagerComposite.h"
+#include "gfxTeeSurface.h"
 #ifdef XP_WIN
 #include "gfxWindowsPlatform.h"
 #endif
@@ -43,7 +44,11 @@ ContentClient::CreateContentClient(CompositableForwarder* aForwarder)
   if (useDoubleBuffering || PR_GetEnv("MOZ_FORCE_DOUBLE_BUFFERING")) {
     return new ContentClientDoubleBuffered(aForwarder);
   }
+#ifdef XP_MACOSX
+  return new ContentClientIncremental(aForwarder);
+#else
   return new ContentClientSingleBuffered(aForwarder);
+#endif
 }
 
 ContentClientBasic::ContentClientBasic(CompositableForwarder* aForwarder,
@@ -537,6 +542,333 @@ ContentClientSingleBuffered::SyncFrontBufferToBackBuffer()
 
   mIsNewBuffer = false;
   mFrontAndBackBufferDiffer = false;
+}
+
+static void
+WrapRotationAxis(int32_t* aRotationPoint, int32_t aSize)
+{
+  if (*aRotationPoint < 0) {
+    *aRotationPoint += aSize;
+  } else if (*aRotationPoint >= aSize) {
+    *aRotationPoint -= aSize;
+  }
+}
+
+static void
+FillSurface(gfxASurface* aSurface, const nsIntRegion& aRegion,
+            const nsIntPoint& aOffset, const gfxRGBA& aColor)
+{
+  nsRefPtr<gfxContext> ctx = new gfxContext(aSurface);
+  ctx->Translate(-gfxPoint(aOffset.x, aOffset.y));
+  gfxUtils::ClipToRegion(ctx, aRegion);
+  ctx->SetColor(aColor);
+  ctx->Paint();
+}
+
+ThebesLayerBuffer::PaintState
+ContentClientIncremental::BeginPaintBuffer(ThebesLayer* aLayer,
+                                           ThebesLayerBuffer::ContentType aContentType,
+                                           uint32_t aFlags)
+{
+  mTextureInfo.mTextureHostFlags = 0;
+  PaintState result;
+  // We need to disable rotation if we're going to be resampled when
+  // drawing, because we might sample across the rotation boundary.
+  bool canHaveRotation =  !(aFlags & ThebesLayerBuffer::PAINT_WILL_RESAMPLE);
+
+  nsIntRegion validRegion = aLayer->GetValidRegion();
+
+  Layer::SurfaceMode mode;
+  ContentType contentType;
+  nsIntRegion neededRegion;
+  bool canReuseBuffer;
+  nsIntRect destBufferRect;
+
+  while (true) {
+    mode = aLayer->GetSurfaceMode();
+    contentType = aContentType;
+    neededRegion = aLayer->GetVisibleRegion();
+    // If we're going to resample, we need a buffer that's in clamp mode.
+    canReuseBuffer = neededRegion.GetBounds().Size() <= mBufferRect.Size() &&
+      mHasBuffer &&
+      (!(aFlags & ThebesLayerBuffer::PAINT_WILL_RESAMPLE) ||
+       !(mTextureInfo.mTextureFlags & AllowRepeat));
+
+    if (canReuseBuffer) {
+      if (mBufferRect.Contains(neededRegion.GetBounds())) {
+        // We don't need to adjust mBufferRect.
+        destBufferRect = mBufferRect;
+      } else {
+        // The buffer's big enough but doesn't contain everything that's
+        // going to be visible. We'll move it.
+        destBufferRect = nsIntRect(neededRegion.GetBounds().TopLeft(), mBufferRect.Size());
+      }
+    } else {
+      destBufferRect = neededRegion.GetBounds();
+    }
+
+    if (mode == Layer::SURFACE_COMPONENT_ALPHA) {
+#ifdef MOZ_GFX_OPTIMIZE_MOBILE
+      mode = Layer::SURFACE_SINGLE_CHANNEL_ALPHA;
+#else
+      if (!aLayer->GetParent() || !aLayer->GetParent()->SupportsComponentAlphaChildren()) {
+        mode = Layer::SURFACE_SINGLE_CHANNEL_ALPHA;
+      } else {
+        contentType = gfxASurface::CONTENT_COLOR;
+      }
+ #endif
+    }
+
+    if ((aFlags & ThebesLayerBuffer::PAINT_WILL_RESAMPLE) &&
+        (!neededRegion.GetBounds().IsEqualInterior(destBufferRect) ||
+         neededRegion.GetNumRects() > 1)) {
+      // The area we add to neededRegion might not be painted opaquely
+      if (mode == Layer::SURFACE_OPAQUE) {
+        contentType = gfxASurface::CONTENT_COLOR_ALPHA;
+        mode = Layer::SURFACE_SINGLE_CHANNEL_ALPHA;
+      }
+      // For component alpha layers, we leave contentType as CONTENT_COLOR.
+
+      // We need to validate the entire buffer, to make sure that only valid
+      // pixels are sampled
+      neededRegion = destBufferRect;
+    }
+
+    if (mHasBuffer &&
+        (mContentType != contentType ||
+         (mode == Layer::SURFACE_COMPONENT_ALPHA) != mHasBufferOnWhite)) {
+      // We're effectively clearing the valid region, so we need to draw
+      // the entire needed region now.
+      result.mRegionToInvalidate = aLayer->GetValidRegion();
+      validRegion.SetEmpty();
+      mHasBuffer = false;
+      mHasBufferOnWhite = false;
+      mBufferRect.SetRect(0, 0, 0, 0);
+      mBufferRotation.MoveTo(0, 0);
+      // Restart decision process with the cleared buffer. We can only go
+      // around the loop one more iteration, since mTexImage is null now.
+      continue;
+    }
+
+    break;
+  }
+
+  result.mRegionToDraw.Sub(neededRegion, validRegion);
+  if (result.mRegionToDraw.IsEmpty())
+    return result;
+
+  if (destBufferRect.width > mForwarder->GetMaxTextureSize() ||
+      destBufferRect.height > mForwarder->GetMaxTextureSize()) {
+    return result;
+  }
+
+  // BlitTextureImage depends on the FBO texture target being
+  // TEXTURE_2D.  This isn't the case on some older X1600-era Radeons.
+  if (!mForwarder->SupportsTextureBlitting() ||
+      !mForwarder->SupportsPartialUploads()) {
+    result.mRegionToDraw = neededRegion;
+    validRegion.SetEmpty();
+    mHasBuffer = false;
+    mHasBufferOnWhite = false;
+    mBufferRect.SetRect(0, 0, 0, 0);
+    mBufferRotation.MoveTo(0, 0);
+    canReuseBuffer = false;
+  }
+
+  nsIntRect drawBounds = result.mRegionToDraw.GetBounds();
+  bool createdBuffer = false;
+
+  uint32_t bufferFlags = canHaveRotation ? AllowRepeat : 0;
+  if (mode == Layer::SURFACE_COMPONENT_ALPHA) {
+    bufferFlags |= ComponentAlpha;
+  }
+  if (canReuseBuffer) {
+    nsIntRect keepArea;
+    if (keepArea.IntersectRect(destBufferRect, mBufferRect)) {
+      // Set mBufferRotation so that the pixels currently in mBuffer
+      // will still be rendered in the right place when mBufferRect
+      // changes to destBufferRect.
+      nsIntPoint newRotation = mBufferRotation +
+        (destBufferRect.TopLeft() - mBufferRect.TopLeft());
+      WrapRotationAxis(&newRotation.x, mBufferRect.width);
+      WrapRotationAxis(&newRotation.y, mBufferRect.height);
+      NS_ASSERTION(nsIntRect(nsIntPoint(0,0), mBufferRect.Size()).Contains(newRotation),
+                   "newRotation out of bounds");
+      int32_t xBoundary = destBufferRect.XMost() - newRotation.x;
+      int32_t yBoundary = destBufferRect.YMost() - newRotation.y;
+      if ((drawBounds.x < xBoundary && xBoundary < drawBounds.XMost()) ||
+          (drawBounds.y < yBoundary && yBoundary < drawBounds.YMost()) ||
+          (newRotation != nsIntPoint(0,0) && !canHaveRotation)) {
+        // The stuff we need to redraw will wrap around an edge of the
+        // buffer, so we will need to do a self-copy
+        // If mBufferRotation == nsIntPoint(0,0) we could do a real
+        // self-copy but we're not going to do that in GL yet.
+        // We can't do a real self-copy because the buffer is rotated.
+        // So allocate a new buffer for the destination.
+        destBufferRect = neededRegion.GetBounds();
+        createdBuffer = true;
+      } else {
+        mBufferRect = destBufferRect;
+        mBufferRotation = newRotation;
+      }
+    } else {
+      // No pixels are going to be kept. The whole visible region
+      // will be redrawn, so we don't need to copy anything, so we don't
+      // set destBuffer.
+      mBufferRect = destBufferRect;
+      mBufferRotation = nsIntPoint(0,0);
+    }
+  } else {
+    // The buffer's not big enough, so allocate a new one
+    createdBuffer = true;
+  }
+  NS_ASSERTION(!(aFlags & ThebesLayerBuffer::PAINT_WILL_RESAMPLE) ||
+               destBufferRect == neededRegion.GetBounds(),
+               "If we're resampling, we need to validate the entire buffer");
+
+  if (!createdBuffer && !mHasBuffer) {
+    return result;
+  }
+
+  if (createdBuffer) {
+    if (mHasBuffer &&
+        (mode != Layer::SURFACE_COMPONENT_ALPHA || mHasBufferOnWhite)) {
+      mTextureInfo.mTextureHostFlags = TEXTURE_HOST_COPY_PREVIOUS;
+    }
+
+    mHasBuffer = true;
+    if (mode == Layer::SURFACE_COMPONENT_ALPHA) {
+      mHasBufferOnWhite = true;
+    }
+    mBufferRect = destBufferRect;
+    mBufferRotation = nsIntPoint(0,0);
+    NotifyBufferCreated(contentType, bufferFlags);
+  }
+
+  NS_ASSERTION(canHaveRotation || mBufferRotation == nsIntPoint(0,0),
+               "Rotation disabled, but we have nonzero rotation?");
+
+  nsIntRegion invalidate;
+  invalidate.Sub(aLayer->GetValidRegion(), destBufferRect);
+  result.mRegionToInvalidate.Or(result.mRegionToInvalidate, invalidate);
+
+  // BeginUpdate is allowed to modify the given region,
+  // if it wants more to be repainted than we request.
+  if (mode == Layer::SURFACE_COMPONENT_ALPHA) {
+    nsIntRegion drawRegionCopy = result.mRegionToDraw;
+    nsRefPtr<gfxASurface> onBlack = GetUpdateSurface(BUFFER_BLACK, drawRegionCopy);
+    nsRefPtr<gfxASurface> onWhite = GetUpdateSurface(BUFFER_WHITE, result.mRegionToDraw);
+    if (onBlack && onWhite) {
+      NS_ASSERTION(result.mRegionToDraw == drawRegionCopy,
+          "BeginUpdate should always modify the draw region in the same way!");
+      FillSurface(onBlack, result.mRegionToDraw, nsIntPoint(drawBounds.x, drawBounds.y), gfxRGBA(0.0, 0.0, 0.0, 1.0));
+      FillSurface(onWhite, result.mRegionToDraw, nsIntPoint(drawBounds.x, drawBounds.y), gfxRGBA(1.0, 1.0, 1.0, 1.0));
+      gfxASurface* surfaces[2] = { onBlack.get(), onWhite.get() };
+      nsRefPtr<gfxTeeSurface> surf = new gfxTeeSurface(surfaces, ArrayLength(surfaces));
+
+      // XXX If the device offset is set on the individual surfaces instead of on
+      // the tee surface, we render in the wrong place. Why?
+      gfxPoint deviceOffset = onBlack->GetDeviceOffset();
+      onBlack->SetDeviceOffset(gfxPoint(0, 0));
+      onWhite->SetDeviceOffset(gfxPoint(0, 0));
+      surf->SetDeviceOffset(deviceOffset);
+
+      // Using this surface as a source will likely go horribly wrong, since
+      // only the onBlack surface will really be used, so alpha information will
+      // be incorrect.
+      surf->SetAllowUseAsSource(false);
+      result.mContext = new gfxContext(surf);
+    } else {
+      result.mContext = nullptr;
+    }
+  } else {
+    nsRefPtr<gfxASurface> surf = GetUpdateSurface(BUFFER_BLACK, result.mRegionToDraw);
+    result.mContext = new gfxContext(surf);
+  }
+  if (!result.mContext) {
+    NS_WARNING("unable to get context for update");
+    return result;
+  }
+  result.mContext->Translate(-gfxPoint(drawBounds.x, drawBounds.y));
+
+  // If we do partial updates, we have to clip drawing to the regionToDraw.
+  // If we don't clip, background images will be fillrect'd to the region correctly,
+  // while text or lines will paint outside of the regionToDraw. This becomes apparent
+  // with concave regions. Right now the scrollbars invalidate a narrow strip of the bar
+  // although they never cover it. This leads to two draw rects, the narow strip and the actually
+  // newly exposed area. It would be wise to fix this glitch in any way to have simpler
+  // clip and draw regions.
+  gfxUtils::ClipToRegion(result.mContext, result.mRegionToDraw);
+
+  if (mContentType == gfxASurface::CONTENT_COLOR_ALPHA) {
+    result.mContext->SetOperator(gfxContext::OPERATOR_CLEAR);
+    result.mContext->Paint();
+    result.mContext->SetOperator(gfxContext::OPERATOR_OVER);
+  }
+
+  return result;
+}
+
+void
+ContentClientIncremental::Updated(const nsIntRegion& aRegionToDraw,
+                                  const nsIntRegion& aVisibleRegion,
+                                  bool aDidSelfCopy)
+{
+  if (IsSurfaceDescriptorValid(mUpdateDescriptor)) {
+    ShadowLayerForwarder::CloseDescriptor(mUpdateDescriptor);
+
+    mForwarder->UpdateTextureIncremental(this,
+                                         TextureFront,
+                                         mUpdateDescriptor,
+                                         aRegionToDraw,
+                                         mBufferRect,
+                                         mBufferRotation);
+    mUpdateDescriptor = SurfaceDescriptor();
+  }
+  if (IsSurfaceDescriptorValid(mUpdateDescriptorOnWhite)) {
+    ShadowLayerForwarder::CloseDescriptor(mUpdateDescriptorOnWhite);
+
+    mForwarder->UpdateTextureIncremental(this,
+                                         TextureOnWhiteFront,
+                                         mUpdateDescriptorOnWhite,
+                                         aRegionToDraw,
+                                         mBufferRect,
+                                         mBufferRotation);
+    mUpdateDescriptorOnWhite = SurfaceDescriptor();
+  }
+
+}
+
+already_AddRefed<gfxASurface>
+ContentClientIncremental::GetUpdateSurface(BufferType aType,
+                                           nsIntRegion& aUpdateRegion)
+{
+  nsIntRect rgnSize = aUpdateRegion.GetBounds();
+  if (!mBufferRect.Contains(rgnSize)) {
+    NS_ERROR("update outside of image");
+    return nullptr;
+  }
+  SurfaceDescriptor desc;
+  if (!mForwarder->AllocSurfaceDescriptor(gfxIntSize(rgnSize.width, rgnSize.height),
+                                          mContentType,
+                                          &desc)) {
+    NS_WARNING("creating SurfaceDescriptor failed!");
+    return nullptr;
+  }
+
+  nsRefPtr<gfxASurface> tmpASurface =
+    ShadowLayerForwarder::OpenDescriptor(OPEN_READ_WRITE, desc);
+
+  if (aType == BUFFER_BLACK) {
+    MOZ_ASSERT(!IsSurfaceDescriptorValid(mUpdateDescriptor));
+    mUpdateDescriptor = desc;
+  } else {
+    MOZ_ASSERT(!IsSurfaceDescriptorValid(mUpdateDescriptorOnWhite));
+    MOZ_ASSERT(aType == BUFFER_WHITE);
+    mUpdateDescriptorOnWhite = desc;
+  }
+
+  return tmpASurface.forget();
 }
 
 }
