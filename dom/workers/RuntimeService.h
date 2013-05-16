@@ -12,6 +12,7 @@
 #include "nsIObserver.h"
 
 #include "jsapi.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/TimeStamp.h"
 #include "nsAutoPtr.h"
@@ -20,7 +21,6 @@
 #include "nsHashKeys.h"
 #include "nsStringGlue.h"
 #include "nsTArray.h"
-#include "mozilla/Attributes.h"
 
 class nsIThread;
 class nsITimer;
@@ -71,14 +71,7 @@ class RuntimeService MOZ_FINAL : public nsIObserver
   nsCString mDetectorName;
   nsCString mSystemCharset;
 
-  static uint32_t sDefaultJSContextOptions;
-  static uint32_t sDefaultJSRuntimeHeapSize;
-  static uint32_t sDefaultJSAllocationThreshold;
-  static int32_t sCloseHandlerTimeoutSeconds;
-
-#ifdef JS_GC_ZEAL
-  static uint8_t sDefaultGCZeal;
-#endif
+  static JSSettings sDefaultJSSettings;
 
 public:
   struct NavigatorStrings
@@ -143,80 +136,68 @@ public:
   void
   NoteIdleThread(nsIThread* aThread);
 
-  static uint32_t
-  GetDefaultJSContextOptions()
+  static void
+  GetDefaultJSSettings(JSSettings& aSettings)
   {
     AssertIsOnMainThread();
-    return sDefaultJSContextOptions;
+    aSettings = sDefaultJSSettings;
   }
 
   static void
-  SetDefaultJSContextOptions(uint32_t aOptions)
+  SetDefaultJSContextOptions(uint32_t aContentOptions, uint32_t aChromeOptions)
   {
     AssertIsOnMainThread();
-    sDefaultJSContextOptions = aOptions;
+    sDefaultJSSettings.content.options = aContentOptions;
+    sDefaultJSSettings.chrome.options = aChromeOptions;
   }
 
   void
   UpdateAllWorkerJSContextOptions();
 
-  static uint32_t
-  GetDefaultJSWorkerMemoryParameter(JSGCParamKey aKey)
-  {
-    AssertIsOnMainThread();
-    switch (aKey) {
-      case JSGC_ALLOCATION_THRESHOLD:
-        return sDefaultJSAllocationThreshold;
-      case JSGC_MAX_BYTES:
-        return sDefaultJSRuntimeHeapSize;
-      default:
-        MOZ_NOT_REACHED("Unknown Worker Memory Parameter.");
-    }
-  }
-
   static void
-  SetDefaultJSWorkerMemoryParameter(JSGCParamKey aKey, uint32_t aValue)
+  SetDefaultJSGCSettings(JSGCParamKey aKey, uint32_t aValue)
   {
     AssertIsOnMainThread();
-    switch(aKey) {
-      case JSGC_ALLOCATION_THRESHOLD:
-        sDefaultJSAllocationThreshold = aValue;
-        break;
-      case JSGC_MAX_BYTES:
-        sDefaultJSRuntimeHeapSize = aValue;
-        break;
-      default:
-        MOZ_NOT_REACHED("Unknown Worker Memory Parameter.");
-    }
+    sDefaultJSSettings.ApplyGCSetting(aKey, aValue);
   }
 
   void
-  UpdateAllWorkerMemoryParameter(JSGCParamKey aKey);
+  UpdateAllWorkerMemoryParameter(JSGCParamKey aKey, uint32_t aValue);
 
   static uint32_t
-  GetCloseHandlerTimeoutSeconds()
+  GetContentCloseHandlerTimeoutSeconds()
   {
-    return sCloseHandlerTimeoutSeconds > 0 ? sCloseHandlerTimeoutSeconds : 0;
+    return sDefaultJSSettings.content.maxScriptRuntime;
+  }
+
+  static uint32_t
+  GetChromeCloseHandlerTimeoutSeconds()
+  {
+    return sDefaultJSSettings.chrome.maxScriptRuntime;
   }
 
 #ifdef JS_GC_ZEAL
-  static uint8_t
-  GetDefaultGCZeal()
-  {
-    AssertIsOnMainThread();
-    return sDefaultGCZeal;
-  }
-
   static void
-  SetDefaultGCZeal(uint8_t aGCZeal)
+  SetDefaultGCZeal(uint8_t aGCZeal, uint32_t aFrequency)
   {
     AssertIsOnMainThread();
-    sDefaultGCZeal = aGCZeal;
+    sDefaultJSSettings.gcZeal = aGCZeal;
+    sDefaultJSSettings.gcZealFrequency = aFrequency;
   }
 
   void
   UpdateAllWorkerGCZeal();
 #endif
+
+  static void
+  SetDefaultJITHardening(bool aJITHardening)
+  {
+    AssertIsOnMainThread();
+    sDefaultJSSettings.jitHardening = aJITHardening;
+  }
+
+  void
+  UpdateAllWorkerJITHardening(bool aJITHardening);
 
   void
   GarbageCollectAllWorkers(bool aShrinking);
