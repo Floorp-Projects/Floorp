@@ -48,7 +48,7 @@ ContentClient::CreateContentClient(CompositableForwarder* aForwarder)
 
 ContentClientBasic::ContentClientBasic(CompositableForwarder* aForwarder,
                                        BasicLayerManager* aManager)
-: ContentClient(aForwarder), mManager(aManager)
+: ContentClient(aForwarder), ThebesLayerBuffer(ContainsVisibleBounds), mManager(aManager)
 {}
 
 already_AddRefed<gfxASurface>
@@ -84,7 +84,7 @@ ContentClientBasic::CreateDTBuffer(ContentType aType,
 }
 
 void
-ContentClientRemote::DestroyBuffers()
+ContentClientRemoteBuffer::DestroyBuffers()
 {
   if (!mTextureClient) {
     return;
@@ -100,7 +100,7 @@ ContentClientRemote::DestroyBuffers()
 }
 
 void
-ContentClientRemote::BeginPaint()
+ContentClientRemoteBuffer::BeginPaint()
 {
   // XXX: So we might not have a TextureClient yet.. because it will
   // only be created by CreateBuffer.. which will deliver a locked surface!.
@@ -113,7 +113,7 @@ ContentClientRemote::BeginPaint()
 }
 
 void
-ContentClientRemote::EndPaint()
+ContentClientRemoteBuffer::EndPaint()
 {
   // XXX: We might still not have a texture client if PaintThebes
   // decided we didn't need one yet because the region to draw was empty.
@@ -130,9 +130,9 @@ ContentClientRemote::EndPaint()
 }
 
 void
-ContentClientRemote::BuildTextureClients(ContentType aType,
-                                        const nsIntRect& aRect,
-                                        uint32_t aFlags)
+ContentClientRemoteBuffer::BuildTextureClients(ContentType aType,
+                                               const nsIntRect& aRect,
+                                               uint32_t aFlags)
 {
   NS_ABORT_IF_FALSE(!mIsNewBuffer,
                     "Bad! Did we create a buffer twice without painting?");
@@ -168,9 +168,9 @@ ContentClientRemote::BuildTextureClients(ContentType aType,
 }
 
 TemporaryRef<DrawTarget>
-ContentClientRemote::CreateDTBuffer(ContentType aType,
-                                    const nsIntRect& aRect,
-                                    uint32_t aFlags)
+ContentClientRemoteBuffer::CreateDTBuffer(ContentType aType,
+                                          const nsIntRect& aRect,
+                                          uint32_t aFlags)
 {
   MOZ_ASSERT(!(aFlags & BUFFER_COMPONENT_ALPHA), "We don't support component alpha here!");
   BuildTextureClients(aType, aRect, aFlags);
@@ -180,10 +180,10 @@ ContentClientRemote::CreateDTBuffer(ContentType aType,
 }
 
 already_AddRefed<gfxASurface>
-ContentClientRemote::CreateBuffer(ContentType aType,
-                                  const nsIntRect& aRect,
-                                  uint32_t aFlags,
-                                  gfxASurface** aWhiteSurface)
+ContentClientRemoteBuffer::CreateBuffer(ContentType aType,
+                                        const nsIntRect& aRect,
+                                        uint32_t aFlags,
+                                        gfxASurface** aWhiteSurface)
 {
   BuildTextureClients(aType, aRect, aFlags);
 
@@ -196,9 +196,9 @@ ContentClientRemote::CreateBuffer(ContentType aType,
 }
 
 nsIntRegion
-ContentClientRemote::GetUpdatedRegion(const nsIntRegion& aRegionToDraw,
-                                      const nsIntRegion& aVisibleRegion,
-                                      bool aDidSelfCopy)
+ContentClientRemoteBuffer::GetUpdatedRegion(const nsIntRegion& aRegionToDraw,
+                                            const nsIntRegion& aVisibleRegion,
+                                            bool aDidSelfCopy)
 {
   nsIntRegion updatedRegion;
   if (mIsNewBuffer || aDidSelfCopy) {
@@ -223,9 +223,9 @@ ContentClientRemote::GetUpdatedRegion(const nsIntRegion& aRegionToDraw,
 }
 
 void
-ContentClientRemote::Updated(const nsIntRegion& aRegionToDraw,
-                             const nsIntRegion& aVisibleRegion,
-                             bool aDidSelfCopy)
+ContentClientRemoteBuffer::Updated(const nsIntRegion& aRegionToDraw,
+                                   const nsIntRegion& aVisibleRegion,
+                                   bool aDidSelfCopy)
 {
   nsIntRegion updatedRegion = GetUpdatedRegion(aRegionToDraw,
                                                aVisibleRegion,
@@ -244,7 +244,7 @@ ContentClientRemote::Updated(const nsIntRegion& aRegionToDraw,
 }
 
 void
-ContentClientRemote::SwapBuffers(const nsIntRegion& aFrontUpdatedRegion)
+ContentClientRemoteBuffer::SwapBuffers(const nsIntRegion& aFrontUpdatedRegion)
 {
   MOZ_ASSERT(mTextureClient->GetAccessMode() == TextureClient::ACCESS_NONE);
   MOZ_ASSERT(!mTextureClientOnWhite || mTextureClientOnWhite->GetAccessMode() == TextureClient::ACCESS_NONE);
@@ -342,7 +342,7 @@ ContentClientDoubleBuffered::SwapBuffers(const nsIntRegion& aFrontUpdatedRegion)
     mFrontClientOnWhite->SetAccessMode(TextureClient::ACCESS_READ_ONLY);
   }
 
-  ContentClientRemote::SwapBuffers(aFrontUpdatedRegion);
+  ContentClientRemoteBuffer::SwapBuffers(aFrontUpdatedRegion);
 }
 
 struct AutoTextureClient {
