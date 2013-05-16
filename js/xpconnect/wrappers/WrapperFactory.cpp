@@ -547,7 +547,17 @@ WrapperFactory::WaiveXrayAndWrap(JSContext *cx, jsval *vp)
         return true;
     }
 
-    obj = WaiveXray(cx, obj);
+    // Even though waivers have no effect on access by scopes that don't subsume
+    // the underlying object, good defense-in-depth dictates that we should avoid
+    // handing out waivers to callers that can't use them. The transitive waiving
+    // machinery unconditionally calls WaiveXrayAndWrap on return values from
+    // waived functions, even though the return value might be not be same-origin
+    // with the function. So if we find ourselves trying to create a waiver for
+    // |cx|, we should check whether the caller has any business with waivers
+    // to things in |obj|'s compartment.
+    JSCompartment *target = js::GetContextCompartment(cx);
+    JSCompartment *origin = js::GetObjectCompartment(obj);
+    obj = AccessCheck::subsumes(target, origin) ? WaiveXray(cx, obj) : obj;
     if (!obj)
         return false;
 
