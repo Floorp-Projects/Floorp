@@ -37,6 +37,8 @@ public:
 
   void StartRendering();
 
+  void DestroyGraph();
+
 private:
   uint32_t mFramesToProduce;
 };

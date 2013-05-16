@@ -553,15 +553,16 @@ AudioBufferSourceNode::SendOffsetAndDurationParametersToStream(AudioNodeStream* 
 }
 
 void
-AudioBufferSourceNode::Stop(double aWhen, ErrorResult& aRv)
+AudioBufferSourceNode::Stop(double aWhen, ErrorResult& aRv, bool aShuttingDown)
 {
   if (!mStartCalled) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
 
-  if (!mBuffer) {
+  if (!mBuffer || aShuttingDown) {
     // We don't have a buffer, so the stream is never marked as finished.
+    // This can also happen if the AudioContext is being shut down.
     // Therefore we need to drop our playing ref right now.
     mPlayingRef.Drop(this);
   }
