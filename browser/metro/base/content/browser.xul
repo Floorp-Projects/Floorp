@@ -306,7 +306,9 @@
 
     <!-- Windows 8 Appbar -->
     <appbar id="appbar" mousethrough="never" observes="bcast_windowState">
-      <hbox id="progress-control" layer="true"/>
+      <hbox id="progress-container" layer="true">
+        <hbox id="progress-control" />
+      </hbox>
 
       <!-- Main Toolbar -->
       <toolbar id="toolbar" observes="bcast_windowState" flex="1">
