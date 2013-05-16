@@ -183,6 +183,13 @@ abstract public class GeckoApp
     private static final String RESTARTER_ACTION = "org.mozilla.gecko.restart";
     private static final String RESTARTER_CLASS = "org.mozilla.gecko.Restarter";
 
+    @SuppressWarnings("serial")
+    class SessionRestoreException extends Exception {
+        public SessionRestoreException(String message) {
+            super(message);
+        }
+    }
+
     void toggleChrome(final boolean aShow) { }
 
     void focusChrome() { }
@@ -1458,7 +1465,7 @@ abstract public class GeckoApp
             try {
                 String sessionString = getProfile().readSessionFile(false);
                 if (sessionString == null) {
-                    throw new IOException("could not read from session file");
+                    throw new SessionRestoreException("Could not read from session file");
                 }
 
                 // If we are doing an OOM restore, parse the session data and
@@ -1496,7 +1503,7 @@ abstract public class GeckoApp
                     if (tabs.length() > 0) {
                         sessionString = new JSONObject().put("windows", new JSONArray().put(new JSONObject().put("tabs", tabs))).toString();
                     } else {
-                        throw new Exception("No tabs could be read from session file");
+                        throw new SessionRestoreException("No tabs could be read from session file");
                     }
                 }
 
@@ -1504,7 +1511,11 @@ abstract public class GeckoApp
                 restoreData.put("restoringOOM", mRestoreMode == RESTORE_OOM);
                 restoreData.put("sessionString", sessionString);
                 restoreMessage = restoreData.toString();
-            } catch (Exception e) {
+            } catch (SessionRestoreException e) {
+                // If restore failed, do a normal startup
+                Log.e(LOGTAG, "An error occurred during restore", e);
+                mRestoreMode = RESTORE_NONE;
+            } catch (JSONException e) {
                 // If restore failed, do a normal startup
                 Log.e(LOGTAG, "An error occurred during restore", e);
                 mRestoreMode = RESTORE_NONE;
