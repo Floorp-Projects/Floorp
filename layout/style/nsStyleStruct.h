@@ -2157,14 +2157,14 @@ enum nsStyleSVGPaintType {
   eStyleSVGPaintType_None = 1,
   eStyleSVGPaintType_Color,
   eStyleSVGPaintType_Server,
-  eStyleSVGPaintType_ObjectFill,
-  eStyleSVGPaintType_ObjectStroke
+  eStyleSVGPaintType_ContextFill,
+  eStyleSVGPaintType_ContextStroke
 };
 
 enum nsStyleSVGOpacitySource {
   eStyleSVGOpacitySource_Normal,
-  eStyleSVGOpacitySource_ObjectFillOpacity,
-  eStyleSVGOpacitySource_ObjectStrokeOpacity
+  eStyleSVGOpacitySource_ContextFillOpacity,
+  eStyleSVGOpacitySource_ContextStrokeOpacity
 };
 
 struct nsStyleSVGPaint
