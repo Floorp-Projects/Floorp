@@ -1649,8 +1649,8 @@ abstract public class GeckoApp
                         flags |= (tabObject.optBoolean("desktopMode") ? Tabs.LOADURL_DESKTOP : 0);
                         flags |= (tabObject.optBoolean("isPrivate") ? Tabs.LOADURL_PRIVATE : 0);
 
-                        Tab tab = Tabs.getInstance().loadUrl(sessionTab.getSelectedUrl(), flags);
-                        tab.updateTitle(sessionTab.getSelectedTitle());
+                        Tab tab = Tabs.getInstance().loadUrl(sessionTab.getUrl(), flags);
+                        tab.updateTitle(sessionTab.getTitle());
 
                         try {
                             tabObject.put("tabId", tab.getId());
@@ -1661,9 +1661,10 @@ abstract public class GeckoApp
                     }
                 };
 
-                parser.parse(sessionString);
-                if (mPrivateBrowsingSession != null) {
-                    parser.parse(mPrivateBrowsingSession);
+                if (mPrivateBrowsingSession == null) {
+                    parser.parse(sessionString);
+                } else {
+                    parser.parse(sessionString, mPrivateBrowsingSession);
                 }
 
                 if (tabs.length() > 0) {
