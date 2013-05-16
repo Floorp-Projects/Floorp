@@ -853,6 +853,11 @@ NON_IDL_EVENT(audioprocess,
               EventNameType_None,
               NS_EVENT)
 
+NON_IDL_EVENT(complete,
+              NS_AUDIO_COMPLETE,
+              EventNameType_None,
+              NS_EVENT)
+
 #ifdef DEFINED_FORWARDED_EVENT
 #undef DEFINED_FORWARDED_EVENT
 #undef FORWARDED_EVENT
