@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 %endif
 
-%define tabHeight 30px
+%define tabHeight 31px
 %define tabCurveWidth 30px
 %define tabCurveHalfWidth 15px
 
@@ -32,10 +32,10 @@
   -moz-box-align: stretch;
 }
 
-/* The selected tab should appear above adjacent tabs and .tabs-newtab-button */
+/* The selected tab should appear above adjacent tabs, .tabs-newtab-button and the highlight of #nav-bar */
 .tabbrowser-tab[selected=true] {
   position: relative;
-  z-index: 1;
+  z-index: 2;
 }
 
 .tab-background-middle {
@@ -128,7 +128,6 @@
 .tab-background-end[selected=true]::after {
   /* position ::after on top of its parent */
   -moz-margin-start: -@tabCurveWidth@;
-  margin-bottom: -1px;
   display: -moz-box;
 }
 
