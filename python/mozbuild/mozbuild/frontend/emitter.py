@@ -77,14 +77,17 @@ class TreeMetadataEmitter(object):
         # them. We should aim to keep this set small because it violates the
         # desired abstraction of the build definition away from makefiles.
         passthru = VariablePassthru(sandbox)
-        if sandbox['MODULE']:
-            passthru.variables['MODULE'] = sandbox['MODULE']
-        if sandbox['XPIDL_SOURCES']:
-            passthru.variables['XPIDLSRCS'] = sandbox['XPIDL_SOURCES']
-        if sandbox['XPIDL_MODULE']:
-            passthru.variables['XPIDL_MODULE'] = sandbox['XPIDL_MODULE']
-        if sandbox['XPIDL_FLAGS']:
-            passthru.variables['XPIDL_FLAGS'] = sandbox['XPIDL_FLAGS']
+        varmap = dict(
+            # Makefile.in : moz.build
+            ASFILES='ASFILES',
+            MODULE='MODULE',
+            XPIDL_FLAGS='XPIDL_FLAGS',
+            XPIDL_MODULE='XPIDL_MODULE',
+            XPIDLSRCS='XPIDL_SOURCES',
+            )
+        for mak, moz in varmap.items():
+            if sandbox[moz]:
+                passthru.variables[mak] = sandbox[moz]
 
         if passthru.variables:
             yield passthru
