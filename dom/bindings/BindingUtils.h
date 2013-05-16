@@ -1353,13 +1353,6 @@ public:
 #endif
   }
 
-  T** Slot() {
-#ifdef DEBUG
-    inited = true;
-#endif
-    return &ptr;
-  }
-
   T* Ptr() {
     MOZ_ASSERT(inited);
     MOZ_ASSERT(ptr, "NonNull<T> was set to null");
@@ -1735,6 +1728,54 @@ private:
   };
 
   SequenceType mSequenceType;
+};
+
+template<typename T>
+class MOZ_STACK_CLASS DictionaryRooter : JS::CustomAutoRooter
+{
+public:
+  explicit DictionaryRooter(JSContext *cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    : JS::CustomAutoRooter(cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT),
+      mDictionaryType(eNone)
+  {
+  }
+
+  void SetDictionary(T* aDictionary)
+  {
+    mDictionary = aDictionary;
+    mDictionaryType = eDictionary;
+  }
+
+  void SetDictionary(Nullable<T>* aDictionary)
+  {
+    mNullableDictionary = aDictionary;
+    mDictionaryType = eNullableDictionary;
+  }
+
+private:
+  enum DictionaryType {
+    eDictionary,
+    eNullableDictionary,
+    eNone
+  };
+
+  virtual void trace(JSTracer *trc) MOZ_OVERRIDE {
+    if (mDictionaryType == eDictionary) {
+      mDictionary->TraceDictionary(trc);
+    } else {
+      MOZ_ASSERT(mDictionaryType == eNullableDictionary);
+      if (!mNullableDictionary->IsNull()) {
+        mNullableDictionary->Value().TraceDictionary(trc);
+      }
+    }
+  }
+
+  union {
+    T* mDictionary;
+    Nullable<T>* mNullableDictionary;
+  };
+
+  DictionaryType mDictionaryType;
 };
 
 inline bool
