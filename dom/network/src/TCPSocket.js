@@ -52,7 +52,7 @@ function createTCPError(aErrorName, aErrorType) {
  * Debug logging function
  */
 
-let debug = true;
+let debug = false;
 function LOG(msg) {
   if (debug)
     dump("TCPSocket: " + msg + "\n");
@@ -350,7 +350,7 @@ TCPSocket.prototype = {
 
     this._inChild = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime)
                        .processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
-    LOG("content process: " + (this._inChild ? "true" : "false") + "\n");
+    LOG("content process: " + (this._inChild ? "true" : "false"));
 
     // in the testing case, init won't be called and
     // hasPrivileges will be null. We want to proceed to test.
@@ -366,8 +366,8 @@ TCPSocket.prototype = {
     LOG("window init: " + that.innerWindowID);
     Services.obs.addObserver(that, "inner-window-destroyed", true);
 
-    LOG("startup called\n");
-    LOG("Host info: " + host + ":" + port + "\n");
+    LOG("startup called");
+    LOG("Host info: " + host + ":" + port);
 
     that._readyState = kCONNECTING;
     that._host = host;
@@ -381,7 +381,7 @@ TCPSocket.prototype = {
       that._binaryType = options.binaryType || that._binaryType;
     }
 
-    LOG("SSL: " + that.ssl + "\n");
+    LOG("SSL: " + that.ssl);
 
     if (this._inChild) {
       that._socketBridge = Cc["@mozilla.org/tcp-socket-child;1"]
@@ -428,7 +428,7 @@ TCPSocket.prototype = {
     if (this._readyState === kCLOSED || this._readyState === kCLOSING)
       return;
 
-    LOG("close called\n");
+    LOG("close called");
     this._readyState = kCLOSING;
 
     if (this._inChild) {
