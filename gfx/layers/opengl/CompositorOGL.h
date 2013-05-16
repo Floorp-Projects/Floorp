@@ -39,7 +39,10 @@ public:
 
   virtual TextureFactoryIdentifier GetTextureFactoryIdentifier() MOZ_OVERRIDE
   {
-    return TextureFactoryIdentifier(LAYERS_OPENGL, GetMaxTextureSize());
+    return TextureFactoryIdentifier(LAYERS_OPENGL,
+                                    GetMaxTextureSize(),
+                                    mFBOTextureTarget == LOCAL_GL_TEXTURE_2D,
+                                    SupportsPartialTextureUpdate());
   }
 
   virtual TemporaryRef<CompositingRenderTarget> 
