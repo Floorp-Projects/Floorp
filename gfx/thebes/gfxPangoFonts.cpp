@@ -315,7 +315,8 @@ public:
     gfxSystemFcFontEntry(cairo_font_face_t *aFontFace,
                          FcPattern *aFontPattern,
                          const nsAString& aName)
-        : gfxFcFontEntry(aName), mFontFace(aFontFace)
+        : gfxFcFontEntry(aName), mFontFace(aFontFace),
+          mFTFace(nullptr), mFTFaceInitialized(false)
     {
         cairo_font_face_reference(mFontFace);
         cairo_font_face_set_user_data(mFontFace, &sFontEntryKey, this, NULL);
@@ -336,9 +337,88 @@ public:
         cairo_font_face_set_user_data(mFontFace, &sFontEntryKey, NULL, NULL);
         cairo_font_face_destroy(mFontFace);
     }
+
+    virtual void ForgetHBFace();
+    virtual void ReleaseGrFace(gr_face* aFace);
+
+protected:
+    virtual nsresult
+    CopyFontTable(uint32_t aTableTag, FallibleTArray<uint8_t>& aBuffer) MOZ_OVERRIDE;
+
+    void MaybeReleaseFTFace();
+
 private:
     cairo_font_face_t *mFontFace;
+    FT_Face            mFTFace;
+    bool               mFTFaceInitialized;
 };
+
+nsresult
+gfxSystemFcFontEntry::CopyFontTable(uint32_t aTableTag,
+                                    FallibleTArray<uint8_t>& aBuffer)
+{
+    if (!mFTFaceInitialized) {
+        mFTFaceInitialized = true;
+        FcChar8 *filename;
+        if (FcPatternGetString(mPatterns[0], FC_FILE, 0, &filename) != FcResultMatch) {
+            return NS_ERROR_FAILURE;
+        }
+        int index;
+        if (FcPatternGetInteger(mPatterns[0], FC_INDEX, 0, &index) != FcResultMatch) {
+            index = 0; // default to 0 if not found in pattern
+        }
+        if (FT_New_Face(gfxPangoFontGroup::GetFTLibrary(),
+                        (const char*)filename, index, &mFTFace) != 0) {
+            return NS_ERROR_FAILURE;
+        }
+    }
+
+    if (!mFTFace) {
+        return NS_ERROR_NOT_AVAILABLE;
+    }
+
+    FT_ULong length = 0;
+    if (FT_Load_Sfnt_Table(mFTFace, aTableTag, 0, nullptr, &length) != 0) {
+        return NS_ERROR_NOT_AVAILABLE;
+    }
+    if (!aBuffer.SetLength(length)) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+    if (FT_Load_Sfnt_Table(mFTFace, aTableTag, 0, aBuffer.Elements(), &length) != 0) {
+        aBuffer.Clear();
+        return NS_ERROR_FAILURE;
+    }
+
+    return NS_OK;
+}
+
+void
+gfxSystemFcFontEntry::MaybeReleaseFTFace()
+{
+    // don't release if either HB or Gr face still exists
+    if (mHBFace || mGrFace) {
+        return;
+    }
+    if (mFTFace) {
+        FT_Done_Face(mFTFace);
+        mFTFace = nullptr;
+    }
+    mFTFaceInitialized = false;
+}
+
+void
+gfxSystemFcFontEntry::ForgetHBFace()
+{
+    gfxFontEntry::ForgetHBFace();
+    MaybeReleaseFTFace();        
+}
+
+void
+gfxSystemFcFontEntry::ReleaseGrFace(gr_face* aFace)
+{
+    gfxFontEntry::ReleaseGrFace(aFace);
+    MaybeReleaseFTFace();        
+}
 
 // A namespace for @font-face family names in FcPatterns so that fontconfig
 // aliases do not pick up families from @font-face rules and so that
@@ -514,8 +594,7 @@ public:
     // lifetime of the FontEntry.
     PangoCoverage *GetPangoCoverage();
 
-    virtual nsresult
-    GetFontTable(uint32_t aTableTag, FallibleTArray<uint8_t>& aBuffer) MOZ_OVERRIDE;
+    virtual hb_blob_t* GetFontTable(uint32_t aTableTag) MOZ_OVERRIDE;
 
 protected:
     void InitPattern();
@@ -732,27 +811,33 @@ gfxDownloadedFcFontEntry::GetPangoCoverage()
     return mPangoCoverage;
 }
 
-nsresult
-gfxDownloadedFcFontEntry::GetFontTable(uint32_t aTableTag,
-                                       FallibleTArray<uint8_t>& aBuffer)
+static int
+DirEntryCmp(const void* aKey, const void* aItem)
 {
-    FT_ULong length = 0;
-    FT_Error error = FT_Load_Sfnt_Table(mFace, aTableTag, 0, nullptr, &length);
-    if (error) {
-        return NS_ERROR_NOT_AVAILABLE;
-    }
+    int32_t tag = *static_cast<const int32_t*>(aKey);
+    const TableDirEntry* entry = static_cast<const TableDirEntry*>(aItem);
+    return tag - int32_t(entry->tag);
+}
 
-    if (!aBuffer.SetLength(length)) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
+hb_blob_t *
+gfxDownloadedFcFontEntry::GetFontTable(uint32_t aTableTag)
+{
+    // The entry already owns the (sanitized) sfnt data in mFontData,
+    // so we can just return a blob that "wraps" the appropriate chunk of it.
+    // The blob should not attempt to free its data, as the entire sfnt data
+    // will be freed when the font entry is deleted.
+    const SFNTHeader* header = reinterpret_cast<const SFNTHeader*>(mFontData);
+    const TableDirEntry* dir = reinterpret_cast<const TableDirEntry*>(header + 1);
+    dir = static_cast<const TableDirEntry*>
+        (bsearch(&aTableTag, dir, header->numTables, sizeof(TableDirEntry),
+                 DirEntryCmp));
+    if (dir) {
+        return hb_blob_create(reinterpret_cast<const char*>(mFontData) +
+                                  dir->offset, dir->length,
+                              HB_MEMORY_MODE_READONLY, nullptr, nullptr);
 
-    error = FT_Load_Sfnt_Table(mFace, aTableTag, 0, aBuffer.Elements(), &length);
-    if (error) {
-        aBuffer.Clear();
-        return NS_ERROR_FAILURE;
     }
-
-    return NS_OK;
+    return nullptr;
 }
 
 /*

@@ -143,8 +143,7 @@ public:
 
     virtual bool IsSymbolFont();
 
-    virtual nsresult GetFontTable(uint32_t aTableTag,
-                                  FallibleTArray<uint8_t>& aBuffer);
+    virtual hb_blob_t* GetFontTable(uint32_t aTableTag) MOZ_OVERRIDE;
 
     nsresult ReadCMAP();
 
@@ -162,6 +161,9 @@ protected:
     friend class gfxDWriteFont;
     friend class gfxDWriteFontList;
 
+    virtual nsresult CopyFontTable(uint32_t aTableTag,
+                                   FallibleTArray<uint8_t>& aBuffer) MOZ_OVERRIDE;
+
     virtual gfxFont *CreateFontInstance(const gfxFontStyle *aFontStyle,
                                         bool aNeedsBold);
     
@@ -177,6 +179,11 @@ protected:
      */
     nsRefPtr<IDWriteFont> mFont;
     nsRefPtr<IDWriteFontFile> mFontFile;
+
+    // font face corresponding to the mFont/mFontFile *without* any DWrite
+    // style simulations applied
+    nsRefPtr<IDWriteFontFace> mFontFace;
+
     DWRITE_FONT_FACE_TYPE mFaceType;
 
     int8_t mIsCJK;
