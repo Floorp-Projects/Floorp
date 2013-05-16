@@ -747,36 +747,6 @@ static sm_function_t fsmdef_function_table[FSMDEF_S_MAX][CC_MSG_MAX] =
     /* CC_MSG_ADDCANDIDATE     */ fsmdef_ev_addcandidate
     },
 
-/* FSMDEF_S_HAVE_REMOTE_PRANSWER  ------------------------------------------- */
-    {
-    /* CC_MSG_SETUP            */ fsmdef_ev_default,
-    /* CC_MSG_SETUP_ACK        */ fsmdef_ev_default,
-    /* CC_MSG_PROCEEDING       */ fsmdef_ev_default,
-    /* CC_MSG_ALERTING         */ fsmdef_ev_default,
-    /* CC_MSG_CONNECTED        */ fsmdef_ev_default,
-    /* CC_MSG_CONNECTED_ACK    */ fsmdef_ev_default,
-    /* CC_MSG_RELEASE          */ fsmdef_ev_default,
-    /* CC_MSG_RELEASE_COMPLETE */ fsmdef_ev_default,
-    /* CC_MSG_FEATURE          */ fsmdef_ev_default,
-    /* CC_MSG_FEATURE_ACK      */ fsmdef_ev_default,
-    /* CC_MSG_OFFHOOK          */ fsmdef_ev_default,
-    /* CC_MSG_ONHOOK           */ fsmdef_ev_onhook,
-    /* CC_MSG_LINE             */ fsmdef_ev_default,
-    /* CC_MSG_DIGIT_BEGIN      */ fsmdef_ev_default,
-    /* CC_MSG_DIGIT_END        */ fsmdef_ev_default,
-    /* CC_MSG_DIALSTRING       */ fsmdef_ev_default,
-    /* CC_MSG_MWI              */ fsmdef_ev_default,
-    /* CC_MSG_SESSION_AUDIT    */ fsmdef_ev_default,
-    /* CC_MSG_CREATEOFFER      */ fsmdef_ev_createoffer,
-    /* CC_MSG_CREATEANSWER     */ fsmdef_ev_createanswer,
-    /* CC_MSG_SETLOCALDESC     */ fsmdef_ev_default, /* Should not happen */
-    /* CC_MSG_SETREMOTEDESC    */ fsmdef_ev_setremotedesc,
-    /* CC_MSG_SETPEERCONNECTION */fsmdef_ev_default,
-    /* CC_MSG_ADDSTREAM        */ fsmdef_ev_default,
-    /* CC_MSG_REMOVESTREAM     */ fsmdef_ev_default,
-    /* CC_MSG_ADDCANDIDATE     */ fsmdef_ev_addcandidate
-    },
-
 /* FSMDEF_S_HAVE_LOCAL_PRANSWER  -------------------------------------------- */
     {
     /* CC_MSG_SETUP            */ fsmdef_ev_default,
@@ -801,6 +771,36 @@ static sm_function_t fsmdef_function_table[FSMDEF_S_MAX][CC_MSG_MAX] =
     /* CC_MSG_CREATEANSWER     */ fsmdef_ev_createanswer,
     /* CC_MSG_SETLOCALDESC     */ fsmdef_ev_setlocaldesc,
     /* CC_MSG_SETREMOTEDESC    */ fsmdef_ev_default, /* Should not happen */
+    /* CC_MSG_SETPEERCONNECTION */fsmdef_ev_default,
+    /* CC_MSG_ADDSTREAM        */ fsmdef_ev_default,
+    /* CC_MSG_REMOVESTREAM     */ fsmdef_ev_default,
+    /* CC_MSG_ADDCANDIDATE     */ fsmdef_ev_addcandidate
+    },
+
+/* FSMDEF_S_HAVE_REMOTE_PRANSWER  ------------------------------------------- */
+    {
+    /* CC_MSG_SETUP            */ fsmdef_ev_default,
+    /* CC_MSG_SETUP_ACK        */ fsmdef_ev_default,
+    /* CC_MSG_PROCEEDING       */ fsmdef_ev_default,
+    /* CC_MSG_ALERTING         */ fsmdef_ev_default,
+    /* CC_MSG_CONNECTED        */ fsmdef_ev_default,
+    /* CC_MSG_CONNECTED_ACK    */ fsmdef_ev_default,
+    /* CC_MSG_RELEASE          */ fsmdef_ev_default,
+    /* CC_MSG_RELEASE_COMPLETE */ fsmdef_ev_default,
+    /* CC_MSG_FEATURE          */ fsmdef_ev_default,
+    /* CC_MSG_FEATURE_ACK      */ fsmdef_ev_default,
+    /* CC_MSG_OFFHOOK          */ fsmdef_ev_default,
+    /* CC_MSG_ONHOOK           */ fsmdef_ev_onhook,
+    /* CC_MSG_LINE             */ fsmdef_ev_default,
+    /* CC_MSG_DIGIT_BEGIN      */ fsmdef_ev_default,
+    /* CC_MSG_DIGIT_END        */ fsmdef_ev_default,
+    /* CC_MSG_DIALSTRING       */ fsmdef_ev_default,
+    /* CC_MSG_MWI              */ fsmdef_ev_default,
+    /* CC_MSG_SESSION_AUDIT    */ fsmdef_ev_default,
+    /* CC_MSG_CREATEOFFER      */ fsmdef_ev_createoffer,
+    /* CC_MSG_CREATEANSWER     */ fsmdef_ev_createanswer,
+    /* CC_MSG_SETLOCALDESC     */ fsmdef_ev_default, /* Should not happen */
+    /* CC_MSG_SETREMOTEDESC    */ fsmdef_ev_setremotedesc,
     /* CC_MSG_SETPEERCONNECTION */fsmdef_ev_default,
     /* CC_MSG_ADDSTREAM        */ fsmdef_ev_default,
     /* CC_MSG_REMOVESTREAM     */ fsmdef_ev_default,
@@ -2416,38 +2416,39 @@ fsmdef_ev_default (sm_event_t *event)
      */
     switch (event->event) {
       case CC_MSG_CREATEOFFER:
-          ui_create_offer(evCreateOfferError, msg->line, msg->call_id,
-              dcb->caller_id.call_instance_id, strlib_empty(),
+          ui_create_offer(evCreateOfferError, fcb->state, msg->line,
+              msg->call_id, dcb->caller_id.call_instance_id, strlib_empty(),
               PC_INVALID_STATE, "Cannot create offer in state %s",
-              fsmdef_state_name(event->state));
+              fsmdef_state_name(fcb->state));
         break;
 
       case CC_MSG_CREATEANSWER:
-          ui_create_answer(evCreateAnswerError, msg->line, msg->call_id,
-              dcb->caller_id.call_instance_id, strlib_empty(),
+          ui_create_answer(evCreateAnswerError, fcb->state, msg->line,
+              msg->call_id, dcb->caller_id.call_instance_id, strlib_empty(),
               PC_INVALID_STATE, "Cannot create answer in state %s",
-              fsmdef_state_name(event->state));
+              fsmdef_state_name(fcb->state));
         break;
 
       case CC_MSG_SETLOCALDESC:
-          ui_set_local_description(evSetLocalDescError, msg->line,
+          ui_set_local_description(evSetLocalDescError, fcb->state, msg->line,
               msg->call_id, dcb->caller_id.call_instance_id, strlib_empty(),
               PC_INVALID_STATE, "Cannot set local description in state %s",
-              fsmdef_state_name(event->state));
+              fsmdef_state_name(fcb->state));
         break;
 
       case CC_MSG_SETREMOTEDESC:
-          ui_set_remote_description(evSetRemoteDescError, msg->line,
-              msg->call_id, dcb->caller_id.call_instance_id, strlib_empty(),
-              PC_INVALID_STATE, "Cannot set remote description in state %s",
-              fsmdef_state_name(event->state));
+          ui_set_remote_description(evSetRemoteDescError, fcb->state,
+              msg->line, msg->call_id, dcb->caller_id.call_instance_id,
+              strlib_empty(), PC_INVALID_STATE,
+              "Cannot set remote description in state %s",
+              fsmdef_state_name(fcb->state));
         break;
 
       case CC_MSG_ADDCANDIDATE:
-          ui_ice_candidate_add(evAddIceCandidateError, msg->line, msg->call_id,
-              dcb->caller_id.call_instance_id, strlib_empty(),
+          ui_ice_candidate_add(evAddIceCandidateError, fcb->state, msg->line,
+              msg->call_id, dcb->caller_id.call_instance_id, strlib_empty(),
               PC_INVALID_STATE, "Cannot add ICE candidate in state %s",
-              fsmdef_state_name(event->state));
+              fsmdef_state_name(fcb->state));
         break;
 
       case CC_MSG_ADDSTREAM:
@@ -2458,7 +2459,7 @@ fsmdef_ev_default (sm_event_t *event)
            * getting through anyway. */
           FSM_DEBUG_SM(DEB_L_C_F_PREFIX"Cannot add or remove streams "
               "in state %s", DEB_L_C_F_PREFIX_ARGS(FSM, dcb->line,
-              msg->call_id, __FUNCTION__), fsmdef_state_name(event->state));
+              msg->call_id, __FUNCTION__), fsmdef_state_name(fcb->state));
         break;
 
       default:
@@ -3150,14 +3151,14 @@ fsmdef_ev_createoffer (sm_event_t *event) {
 
         local_sdp = sipsdp_write_to_buf(dcb->sdp->src_sdp, &local_sdp_len);
         if (!local_sdp) {
-            ui_create_offer(evCreateOfferError, line, call_id,
+            ui_create_offer(evCreateOfferError, fcb->state, line, call_id,
                 dcb->caller_id.call_instance_id, strlib_empty(),
                 PC_INTERNAL_ERROR, "Could not re-create local SDP for offer");
             FSM_DEBUG_SM("%s", get_debug_string(FSM_DBG_SDP_BUILD_ERR));
             return (fsmdef_release(fcb, cause, FALSE));
         }
 
-        ui_create_offer(evCreateOfferSuccess, line, call_id,
+        ui_create_offer(evCreateOfferSuccess, fcb->state, line, call_id,
             dcb->caller_id.call_instance_id,
             strlib_malloc(local_sdp,-1), PC_NO_ERROR, NULL);
         free(local_sdp);
@@ -3179,7 +3180,7 @@ fsmdef_ev_createoffer (sm_event_t *event) {
     }
 
     if (!has_stream) {
-      ui_create_offer(evCreateOfferError, line, call_id,
+      ui_create_offer(evCreateOfferError, fcb->state, line, call_id,
           dcb->caller_id.call_instance_id, strlib_empty(),
           PC_INVALID_STATE, "Cannot create SDP without any streams.");
       return SM_RC_END;
@@ -3189,7 +3190,7 @@ fsmdef_ev_createoffer (sm_event_t *event) {
     if (vcm_res) {
     	FSM_DEBUG_SM(DEB_F_PREFIX"vcmGetIceParams returned an error",
             DEB_F_PREFIX_ARGS(FSM, __FUNCTION__));
-      ui_create_offer(evCreateOfferError, line, call_id,
+      ui_create_offer(evCreateOfferError, fcb->state, line, call_id,
           dcb->caller_id.call_instance_id, strlib_empty(),
           PC_INTERNAL_ERROR, "Failed to get ICE parameters for local SDP");
       return (fsmdef_release(fcb, cause, FALSE));
@@ -3221,7 +3222,7 @@ fsmdef_ev_createoffer (sm_event_t *event) {
 
     cause = gsmsdp_create_local_sdp(dcb, FALSE, TRUE, TRUE, TRUE, TRUE);
     if (cause != CC_CAUSE_OK) {
-        ui_create_offer(evCreateOfferError, line, call_id,
+        ui_create_offer(evCreateOfferError, fcb->state, line, call_id,
             dcb->caller_id.call_instance_id, strlib_empty(),
             PC_INTERNAL_ERROR, "Could not create local SDP for offer;"
                 " cause = %s", cc_cause_name(cause));
@@ -3231,7 +3232,7 @@ fsmdef_ev_createoffer (sm_event_t *event) {
 
     cause = gsmsdp_encode_sdp_and_update_version(dcb, &msg_body);
     if (cause != CC_CAUSE_OK) {
-        ui_create_offer(evCreateOfferError, line, call_id,
+        ui_create_offer(evCreateOfferError, fcb->state, line, call_id,
             dcb->caller_id.call_instance_id, strlib_empty(),
             PC_INTERNAL_ERROR, "Could not encode local SDP for offer;"
                 " cause = %s", cc_cause_name(cause));
@@ -3242,7 +3243,7 @@ fsmdef_ev_createoffer (sm_event_t *event) {
     dcb->local_sdp_complete = TRUE;
 
     /* Pass offer SDP back to UI */
-    ui_create_offer(evCreateOfferSuccess, line, call_id,
+    ui_create_offer(evCreateOfferSuccess, fcb->state, line, call_id,
         dcb->caller_id.call_instance_id,
         strlib_malloc(msg_body.parts[0].body, -1), PC_NO_ERROR, NULL);
     cc_free_msg_body_parts(&msg_body);
@@ -3305,14 +3306,14 @@ fsmdef_ev_createanswer (sm_event_t *event) {
 
         local_sdp = sipsdp_write_to_buf(dcb->sdp->src_sdp, &local_sdp_len);
         if (!local_sdp) {
-            ui_create_answer(evCreateAnswerError, line, call_id,
+            ui_create_answer(evCreateAnswerError, fcb->state, line, call_id,
                 dcb->caller_id.call_instance_id, strlib_empty(),
                 PC_INTERNAL_ERROR, "Could not re-create local SDP for answer");
             FSM_DEBUG_SM("%s", get_debug_string(FSM_DBG_SDP_BUILD_ERR));
             return (fsmdef_release(fcb, cause, FALSE));
         }
 
-        ui_create_answer(evCreateAnswerSuccess, line, call_id,
+        ui_create_answer(evCreateAnswerSuccess, fcb->state, line, call_id,
             dcb->caller_id.call_instance_id,
             strlib_malloc(local_sdp,-1), PC_NO_ERROR, NULL);
         free(local_sdp);
@@ -3331,7 +3332,7 @@ fsmdef_ev_createanswer (sm_event_t *event) {
     if (vcm_res) {
     	FSM_DEBUG_SM(DEB_F_PREFIX"vcmGetIceParams returned an error",
             DEB_F_PREFIX_ARGS(FSM, __FUNCTION__));
-      ui_create_answer(evCreateAnswerError, line, call_id,
+      ui_create_answer(evCreateAnswerError, fcb->state, line, call_id,
           dcb->caller_id.call_instance_id, strlib_empty(),
           PC_INTERNAL_ERROR, "Could not get ICE parameters for answer");
       return (fsmdef_release(fcb, cause, FALSE));
@@ -3373,7 +3374,7 @@ fsmdef_ev_createanswer (sm_event_t *event) {
      */
     cause = gsmsdp_create_local_sdp(dcb, TRUE, has_audio, has_video, has_data, FALSE);
     if (cause != CC_CAUSE_OK) {
-        ui_create_answer(evCreateAnswerError, line, call_id,
+        ui_create_answer(evCreateAnswerError, fcb->state, line, call_id,
             dcb->caller_id.call_instance_id, strlib_empty(),
             PC_INTERNAL_ERROR, "Could not create local SDP for answer;"
                 " cause = %s", cc_cause_name(cause));
@@ -3392,7 +3393,7 @@ fsmdef_ev_createanswer (sm_event_t *event) {
             /* create_answer */       TRUE);
 
     if (cause != CC_CAUSE_OK) {
-        ui_create_answer(evCreateAnswerError, line, call_id,
+        ui_create_answer(evCreateAnswerError, fcb->state, line, call_id,
             dcb->caller_id.call_instance_id, strlib_empty(),
             PC_INTERNAL_ERROR, "Could not negotiate media lines; cause = %s",
                 cc_cause_name(cause));
@@ -3401,7 +3402,7 @@ fsmdef_ev_createanswer (sm_event_t *event) {
 
     cause = gsmsdp_encode_sdp_and_update_version(dcb, &msg_body);
     if (cause != CC_CAUSE_OK) {
-        ui_create_answer(evCreateAnswerError, line, call_id,
+        ui_create_answer(evCreateAnswerError, fcb->state, line, call_id,
             dcb->caller_id.call_instance_id, strlib_empty(),
             PC_INTERNAL_ERROR, "Could not encode SDP for answer; cause = %s",
                 cc_cause_name(cause));
@@ -3412,7 +3413,7 @@ fsmdef_ev_createanswer (sm_event_t *event) {
     dcb->local_sdp_complete = TRUE;
 
     /* Pass SDP back to UI */
-    ui_create_answer(evCreateAnswerSuccess, line, call_id,
+    ui_create_answer(evCreateAnswerSuccess, fcb->state, line, call_id,
         dcb->caller_id.call_instance_id,
         strlib_malloc(msg_body.parts[0].body, -1), PC_NO_ERROR, NULL);
     cc_free_msg_body_parts(&msg_body);
@@ -3448,25 +3449,25 @@ fsmdef_ev_setlocaldesc(sm_event_t *event) {
     if (dcb == NULL) {
         FSM_DEBUG_SM(DEB_F_PREFIX"dcb is NULL.",
           DEB_F_PREFIX_ARGS(FSM, __FUNCTION__));
-        ui_set_local_description(evSetLocalDescError, line, call_id,
+        fsm_change_state(fcb, __LINE__, FSMDEF_S_CLOSED);
+        ui_set_local_description(evSetLocalDescError, fcb->state, line, call_id,
             0, strlib_empty(),
             PC_INTERNAL_ERROR, "Unrecoverable error: dcb is NULL.");
-        fsm_change_state(fcb, __LINE__, FSMDEF_S_CLOSED);
         return (SM_RC_CLEANUP);
     }
 
     config_get_value(CFGID_SDPMODE, &sdpmode, sizeof(sdpmode));
     if (!sdpmode) {
-        ui_set_local_description(evSetLocalDescError, line, call_id,
+        fsm_change_state(fcb, __LINE__, FSMDEF_S_CLOSED);
+        ui_set_local_description(evSetLocalDescError, fcb->state, line, call_id,
             dcb->caller_id.call_instance_id, strlib_empty(),
             PC_INTERNAL_ERROR, "'sdpmode' configuration is false. This should "
             "never ever happen. Run for your lives!");
-        fsm_change_state(fcb, __LINE__, FSMDEF_S_CLOSED);
         return (SM_RC_END);
     }
 
     if (!dcb->sdp) {
-        ui_set_local_description(evSetLocalDescError, line, call_id,
+        ui_set_local_description(evSetLocalDescError, fcb->state, line, call_id,
            dcb->caller_id.call_instance_id, strlib_empty(),
            PC_INTERNAL_ERROR, "Setting of local SDP before calling "
            "createOffer or createAnswer is not currently supported.");
@@ -3476,12 +3477,12 @@ fsmdef_ev_setlocaldesc(sm_event_t *event) {
     switch (action) {
 
     case JSEP_OFFER:
-        if (event->state != FSMDEF_S_STABLE &&
-            event->state != FSMDEF_S_HAVE_LOCAL_OFFER) {
-            ui_set_local_description(evSetLocalDescError, line, call_id,
-                dcb->caller_id.call_instance_id, strlib_empty(),
+        if (fcb->state != FSMDEF_S_STABLE &&
+            fcb->state != FSMDEF_S_HAVE_LOCAL_OFFER) {
+            ui_set_local_description(evSetLocalDescError, fcb->state, line,
+                call_id, dcb->caller_id.call_instance_id, strlib_empty(),
                 PC_INVALID_STATE, "Cannot set local offer in state %s",
-                fsmdef_state_name(event->state));
+                fsmdef_state_name(fcb->state));
             return (SM_RC_END);
         }
         /* TODO: Parse incoming SDP and act on it. */
@@ -3489,12 +3490,12 @@ fsmdef_ev_setlocaldesc(sm_event_t *event) {
         break;
 
     case JSEP_ANSWER:
-        if (event->state != FSMDEF_S_HAVE_REMOTE_OFFER &&
-            event->state != FSMDEF_S_HAVE_LOCAL_PRANSWER) {
-            ui_set_local_description(evSetLocalDescError, line, call_id,
-                dcb->caller_id.call_instance_id, strlib_empty(),
+        if (fcb->state != FSMDEF_S_HAVE_REMOTE_OFFER &&
+            fcb->state != FSMDEF_S_HAVE_LOCAL_PRANSWER) {
+            ui_set_local_description(evSetLocalDescError, fcb->state, line,
+            call_id, dcb->caller_id.call_instance_id, strlib_empty(),
                 PC_INVALID_STATE, "Cannot set local answer in state %s",
-                fsmdef_state_name(event->state));
+                fsmdef_state_name(fcb->state));
             return (SM_RC_END);
         }
         /* TODO: Parse incoming SDP and act on it. */
@@ -3509,8 +3510,8 @@ fsmdef_ev_setlocaldesc(sm_event_t *event) {
          */
         cause = gsmsdp_install_peer_ice_attributes(fcb);
         if (cause != CC_CAUSE_OK) {
-            ui_set_local_description(evSetLocalDescError, line, call_id,
-                dcb->caller_id.call_instance_id, strlib_empty(),
+            ui_set_local_description(evSetLocalDescError, fcb->state, line,
+            call_id, dcb->caller_id.call_instance_id, strlib_empty(),
                 PC_INTERNAL_ERROR, "Could not configure local ICE state"
                 " from SDP; cause = %s", cc_cause_name(cause));
             return (SM_RC_END);
@@ -3525,8 +3526,8 @@ fsmdef_ev_setlocaldesc(sm_event_t *event) {
         if (dcb->dsp_out_of_resources == TRUE) {
             cc_call_state(fcb->dcb->call_id, fcb->dcb->line,
                 CC_STATE_UNKNOWN, NULL);
-            ui_set_local_description(evSetLocalDescError, line, call_id,
-                dcb->caller_id.call_instance_id, strlib_empty(),
+            ui_set_local_description(evSetLocalDescError, fcb->state, line,
+                call_id, dcb->caller_id.call_instance_id, strlib_empty(),
                 PC_INTERNAL_ERROR, "Cannot start media channels; cause = %s",
                 cc_cause_name(cause));
             return (SM_RC_END);
@@ -3539,21 +3540,21 @@ fsmdef_ev_setlocaldesc(sm_event_t *event) {
         break;
 
     case JSEP_PRANSWER:
-        if (event->state != FSMDEF_S_HAVE_REMOTE_OFFER &&
-            event->state != FSMDEF_S_HAVE_LOCAL_PRANSWER) {
-            ui_set_local_description(evSetLocalDescError, line, call_id,
-                dcb->caller_id.call_instance_id, strlib_empty(),
+        if (fcb->state != FSMDEF_S_HAVE_REMOTE_OFFER &&
+            fcb->state != FSMDEF_S_HAVE_LOCAL_PRANSWER) {
+            ui_set_local_description(evSetLocalDescError, fcb->state, line,
+                call_id, dcb->caller_id.call_instance_id, strlib_empty(),
                 PC_INVALID_STATE, "Cannot set local pranswer in state %s",
-                fsmdef_state_name(event->state));
+                fsmdef_state_name(fcb->state));
             return (SM_RC_END);
         }
-        ui_set_local_description(evSetLocalDescError, msg->line,
+        ui_set_local_description(evSetLocalDescError, fcb->state, msg->line,
             msg->call_id, dcb->caller_id.call_instance_id, strlib_empty(),
             PC_INTERNAL_ERROR, "Provisional answers are not yet supported");
         return (SM_RC_END);
 
     default:
-        ui_set_local_description(evSetLocalDescError, msg->line,
+        ui_set_local_description(evSetLocalDescError, fcb->state, msg->line,
             msg->call_id, dcb->caller_id.call_instance_id, strlib_empty(),
             PC_INTERNAL_ERROR, "Unknown session description type: %d",action);
         return (SM_RC_END);
@@ -3562,16 +3563,16 @@ fsmdef_ev_setlocaldesc(sm_event_t *event) {
     /* Encode the current local SDP structure into a char buffer */
     local_sdp = sipsdp_write_to_buf(dcb->sdp->src_sdp, &local_sdp_len);
     if (!local_sdp) {
-        ui_set_local_description(evSetLocalDescError, msg->line, msg->call_id,
-            dcb->caller_id.call_instance_id, strlib_empty(),
+        ui_set_local_description(evSetLocalDescError, fcb->state, msg->line,
+            msg->call_id, dcb->caller_id.call_instance_id, strlib_empty(),
             PC_INTERNAL_ERROR, "Could not encode local SDP for local "
             "description");
         return (SM_RC_END);
     }
 
-    ui_set_local_description(evSetLocalDescSuccess, msg->line, msg->call_id,
-        dcb->caller_id.call_instance_id, strlib_malloc(local_sdp,-1),
-        PC_NO_ERROR, NULL);
+    ui_set_local_description(evSetLocalDescSuccess, fcb->state, msg->line,
+        msg->call_id, dcb->caller_id.call_instance_id,
+        strlib_malloc(local_sdp,-1), PC_NO_ERROR, NULL);
 
     free(local_sdp);
     return (SM_RC_END);
@@ -3609,20 +3610,20 @@ fsmdef_ev_setremotedesc(sm_event_t *event) {
     if (dcb == NULL) {
         FSM_DEBUG_SM(DEB_F_PREFIX"dcb is NULL.",
           DEB_F_PREFIX_ARGS(FSM, __FUNCTION__));
-        ui_set_remote_description(evSetRemoteDescError, line, call_id,
-            0, strlib_empty(),
-            PC_INTERNAL_ERROR, "Unrecoverable error: dcb is NULL.");
         fsm_change_state(fcb, __LINE__, FSMDEF_S_CLOSED);
+        ui_set_remote_description(evSetRemoteDescError, fcb->state, line,
+            call_id, 0, strlib_empty(),
+            PC_INTERNAL_ERROR, "Unrecoverable error: dcb is NULL.");
         return (SM_RC_CLEANUP);
     }
 
     config_get_value(CFGID_SDPMODE, &sdpmode, sizeof(sdpmode));
     if (!sdpmode) {
-        ui_set_remote_description(evSetRemoteDescError, line, call_id,
-            dcb->caller_id.call_instance_id, strlib_empty(),
+        fsm_change_state(fcb, __LINE__, FSMDEF_S_CLOSED);
+        ui_set_remote_description(evSetRemoteDescError, fcb->state, line,
+            call_id, dcb->caller_id.call_instance_id, strlib_empty(),
             PC_INTERNAL_ERROR, "'sdpmode' configuration is false. This should "
             "never ever happen. Run for your lives!");
-        fsm_change_state(fcb, __LINE__, FSMDEF_S_CLOSED);
         return (SM_RC_END);
     }
 
@@ -3632,8 +3633,8 @@ fsmdef_ev_setremotedesc(sm_event_t *event) {
     if (dcb->sdp && dcb->sdp->dest_sdp) {
         FSM_DEBUG_SM(DEB_F_PREFIX"Renegotiation not currently supported.",
                      DEB_F_PREFIX_ARGS(FSM, __FUNCTION__));
-        ui_set_remote_description(evSetRemoteDescError, line, call_id,
-            dcb->caller_id.call_instance_id, strlib_empty(),
+        ui_set_remote_description(evSetRemoteDescError, fcb->state, line,
+            call_id, dcb->caller_id.call_instance_id, strlib_empty(),
             PC_INVALID_STATE, "Renegotiation of session description is not "
             "currently supported. See Bug 840728 for status.");
         return (SM_RC_END);
@@ -3661,18 +3662,18 @@ fsmdef_ev_setremotedesc(sm_event_t *event) {
 
     switch (action) {
     case JSEP_OFFER:
-        if (event->state != FSMDEF_S_STABLE &&
-            event->state != FSMDEF_S_HAVE_REMOTE_OFFER) {
-            ui_set_remote_description(evSetRemoteDescError, line, call_id,
-                dcb->caller_id.call_instance_id, strlib_empty(),
+        if (fcb->state != FSMDEF_S_STABLE &&
+            fcb->state != FSMDEF_S_HAVE_REMOTE_OFFER) {
+            ui_set_remote_description(evSetRemoteDescError, fcb->state, line,
+            call_id, dcb->caller_id.call_instance_id, strlib_empty(),
                 PC_INVALID_STATE, "Cannot set remote offer in state %s",
-                fsmdef_state_name(event->state));
+                fsmdef_state_name(fcb->state));
             return (SM_RC_END);
         }
         cause = gsmsdp_process_offer_sdp(fcb, &msg_body, TRUE);
         if (cause != CC_CAUSE_OK) {
-            ui_set_remote_description(evSetRemoteDescError, line, call_id,
-                dcb->caller_id.call_instance_id, strlib_empty(),
+            ui_set_remote_description(evSetRemoteDescError, fcb->state, line,
+            call_id, dcb->caller_id.call_instance_id, strlib_empty(),
                 PC_INTERNAL_ERROR, "Could not process offer SDP; "
                 "cause = %s", cc_cause_name(cause));
             return (SM_RC_END);
@@ -3692,8 +3693,8 @@ fsmdef_ev_setremotedesc(sm_event_t *event) {
         cause = gsmsdp_create_local_sdp(dcb, TRUE, has_audio, has_video,
             has_data, FALSE);
         if (cause != CC_CAUSE_OK) {
-            ui_set_remote_description(evSetRemoteDescError, line, call_id,
-              dcb->caller_id.call_instance_id, strlib_empty(),
+            ui_set_remote_description(evSetRemoteDescError, fcb->state, line,
+              call_id, dcb->caller_id.call_instance_id, strlib_empty(),
               PC_INTERNAL_ERROR, "Could not create local SDP; cause = %s",
               cc_cause_name(cause));
             FSM_DEBUG_SM("%s", get_debug_string(FSM_DBG_SDP_BUILD_ERR));
@@ -3704,8 +3705,8 @@ fsmdef_ev_setremotedesc(sm_event_t *event) {
         cause = gsmsdp_negotiate_media_lines(fcb, dcb->sdp,
             TRUE, TRUE, TRUE, FALSE);
         if (cause != CC_CAUSE_OK) {
-            ui_set_remote_description(evSetRemoteDescError, line, call_id,
-              dcb->caller_id.call_instance_id, strlib_empty(),
+            ui_set_remote_description(evSetRemoteDescError, fcb->state, line,
+            call_id, dcb->caller_id.call_instance_id, strlib_empty(),
               PC_INTERNAL_ERROR, "Could not negotiate media lines; cause = %s",
               cc_cause_name(cause));
             return (fsmdef_release(fcb, cause, FALSE));
@@ -3717,18 +3718,18 @@ fsmdef_ev_setremotedesc(sm_event_t *event) {
         break;
 
     case JSEP_ANSWER:
-        if (event->state != FSMDEF_S_HAVE_LOCAL_OFFER &&
-            event->state != FSMDEF_S_HAVE_REMOTE_PRANSWER) {
-            ui_set_remote_description(evSetRemoteDescError, line, call_id,
-                dcb->caller_id.call_instance_id, strlib_empty(),
+        if (fcb->state != FSMDEF_S_HAVE_LOCAL_OFFER &&
+            fcb->state != FSMDEF_S_HAVE_REMOTE_PRANSWER) {
+            ui_set_remote_description(evSetRemoteDescError, fcb->state, line,
+            call_id, dcb->caller_id.call_instance_id, strlib_empty(),
                 PC_INVALID_STATE, "Cannot set remote answer in state %s",
-                fsmdef_state_name(event->state));
+                fsmdef_state_name(fcb->state));
             return (SM_RC_END);
         }
         cause = gsmsdp_negotiate_answer_sdp(fcb, &msg_body);
         if (cause != CC_CAUSE_OK) {
-            ui_set_remote_description(evSetRemoteDescError, line, call_id,
-                dcb->caller_id.call_instance_id, strlib_empty(),
+            ui_set_remote_description(evSetRemoteDescError, fcb->state, line,
+                call_id, dcb->caller_id.call_instance_id, strlib_empty(),
                 PC_INTERNAL_ERROR, "Could not negotiate answer SDP; cause = %s",
                 cc_cause_name(cause));
             return (SM_RC_END);
@@ -3740,8 +3741,8 @@ fsmdef_ev_setremotedesc(sm_event_t *event) {
          */
         cause = gsmsdp_install_peer_ice_attributes(fcb);
         if (cause != CC_CAUSE_OK) {
-            ui_set_remote_description(evSetRemoteDescError, line, call_id,
-                dcb->caller_id.call_instance_id, strlib_empty(),
+            ui_set_remote_description(evSetRemoteDescError, fcb->state, line,
+                call_id, dcb->caller_id.call_instance_id, strlib_empty(),
                 PC_INTERNAL_ERROR, "Could not configure local ICE state"
                 " from SDP; cause = %s", cc_cause_name(cause));
             return (SM_RC_END);
@@ -3759,21 +3760,21 @@ fsmdef_ev_setremotedesc(sm_event_t *event) {
         break;
 
     case JSEP_PRANSWER:
-        if (event->state != FSMDEF_S_HAVE_LOCAL_OFFER &&
-            event->state != FSMDEF_S_HAVE_REMOTE_PRANSWER) {
-            ui_set_remote_description(evSetRemoteDescError, line, call_id,
-                dcb->caller_id.call_instance_id, strlib_empty(),
+        if (fcb->state != FSMDEF_S_HAVE_LOCAL_OFFER &&
+            fcb->state != FSMDEF_S_HAVE_REMOTE_PRANSWER) {
+            ui_set_remote_description(evSetRemoteDescError, fcb->state, line,
+                call_id, dcb->caller_id.call_instance_id, strlib_empty(),
                 PC_INVALID_STATE, "Cannot set remote pranswer in state %s",
-                fsmdef_state_name(event->state));
+                fsmdef_state_name(fcb->state));
             return (SM_RC_END);
         }
-        ui_set_local_description(evSetLocalDescError, msg->line,
+        ui_set_local_description(evSetLocalDescError, fcb->state, msg->line,
             msg->call_id, dcb->caller_id.call_instance_id, strlib_empty(),
             PC_INTERNAL_ERROR, "Provisional answers are not yet supported");
         return (SM_RC_END);
 
     default:
-        ui_set_local_description(evSetLocalDescError, msg->line,
+        ui_set_local_description(evSetLocalDescError, fcb->state, msg->line,
             msg->call_id, dcb->caller_id.call_instance_id, strlib_empty(),
             PC_INTERNAL_ERROR, "Unknown session description type: %d",action);
         return (SM_RC_END);
@@ -3788,14 +3789,14 @@ fsmdef_ev_setremotedesc(sm_event_t *event) {
     remote_sdp = sipsdp_write_to_buf(dcb->sdp->dest_sdp, &remote_sdp_len);
 
     if (!remote_sdp) {
-        ui_set_remote_description(evSetRemoteDescError, line, call_id,
-            dcb->caller_id.call_instance_id, strlib_empty(),
+        ui_set_remote_description(evSetRemoteDescError, fcb->state, line,
+        call_id, dcb->caller_id.call_instance_id, strlib_empty(),
             PC_INTERNAL_ERROR, "Could not serialize remote description;"
             " cause = %s",  cc_cause_name(cause));
         return (SM_RC_END);
     }
 
-    ui_set_remote_description(evSetRemoteDescSuccess, line, call_id,
+    ui_set_remote_description(evSetRemoteDescSuccess, fcb->state, line, call_id,
         dcb->caller_id.call_instance_id, strlib_malloc(remote_sdp,-1),
         PC_NO_ERROR, NULL);
 
@@ -3979,14 +3980,14 @@ fsmdef_ev_addcandidate(sm_event_t *event) {
 
     if (!dcb) {
         FSM_DEBUG_SM(DEB_F_PREFIX"dcb is NULL.", DEB_F_PREFIX_ARGS(FSM, __FUNCTION__));
-        ui_ice_candidate_add(evAddIceCandidateError, line, call_id,
+        ui_ice_candidate_add(evAddIceCandidateError, fcb->state, line, call_id,
             0, strlib_empty(), PC_INTERNAL_ERROR, "DCB has not been created.");
         return SM_RC_CLEANUP;
     }
 
     config_get_value(CFGID_SDPMODE, &sdpmode, sizeof(sdpmode));
     if (sdpmode == FALSE) {
-        ui_ice_candidate_add(evAddIceCandidateError, line, call_id,
+        ui_ice_candidate_add(evAddIceCandidateError, fcb->state, line, call_id,
             dcb->caller_id.call_instance_id, strlib_empty(),
             PC_INTERNAL_ERROR, "'sdpmode' configuration is false. This should "
             "never ever happen. Run for your lives!");
@@ -3998,7 +3999,7 @@ fsmdef_ev_addcandidate(sm_event_t *event) {
             "remote description been set yet?\n",
             DEB_F_PREFIX_ARGS(FSM, __FUNCTION__));
 
-        ui_ice_candidate_add(evAddIceCandidateError, line, call_id,
+        ui_ice_candidate_add(evAddIceCandidateError, fcb->state, line, call_id,
             dcb->caller_id.call_instance_id, strlib_empty(),
             PC_INVALID_STATE, "Cannot add remote ICE candidates before "
                               "setting remote SDP.");
@@ -4045,14 +4046,14 @@ fsmdef_ev_addcandidate(sm_event_t *event) {
     remote_sdp = sipsdp_write_to_buf(dcb->sdp->dest_sdp, &remote_sdp_len);
 
     if (!remote_sdp) {
-        ui_ice_candidate_add(evAddIceCandidateError, line, call_id,
+        ui_ice_candidate_add(evAddIceCandidateError, fcb->state, line, call_id,
             dcb->caller_id.call_instance_id, strlib_empty(),
             PC_INTERNAL_ERROR, "Could not serialize new SDP after adding ICE "
             "candidate.");
         return (SM_RC_END);
     }
 
-    ui_ice_candidate_add(evAddIceCandidate, line, call_id,
+    ui_ice_candidate_add(evAddIceCandidate, fcb->state, line, call_id,
         dcb->caller_id.call_instance_id, strlib_malloc(remote_sdp,-1),
         PC_NO_ERROR, NULL);
 
