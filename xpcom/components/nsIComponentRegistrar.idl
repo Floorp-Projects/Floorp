@@ -62,8 +62,7 @@ interface nsIComponentRegistrar : nsISupports
      * @param aFactory : Factory previously registered to create instances of
      *                   CID aClass.
      *
-     * @return NS_OK     Unregistration was successful.
-     *         NS_ERROR* Method failure.
+     * @throws NS_ERROR* Method failure.
      */    
     void unregisterFactory(in nsCIDRef aClass, 
                            in nsIFactory aFactory);

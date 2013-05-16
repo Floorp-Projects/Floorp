@@ -24,8 +24,9 @@ simple_events = [
     'DeviceLightEvent',
     'MozApplicationEvent',
     'SmartCardEvent',
-    'StyleSheetAddedEvent',
-    'StyleSheetRemovedEvent',
+    'StyleRuleChangeEvent',
+    'StyleSheetChangeEvent',
+    'StyleSheetApplicableStateChangeEvent',
 #ifdef MOZ_B2G_BT
     'BluetoothDeviceEvent',
 #endif

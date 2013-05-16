@@ -1,11 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" version="1.1" class="reftest-wait"
-     height="0" width="0" viewBox="0 0 50 50" preserveAspectRatio="none"
-     onload="startTest()">
+     height="0" width="0" viewBox="0 0 50 50" preserveAspectRatio="none">
   <script>
-    function startTest() {
-      document.addEventListener("MozReftestInvalidate", doTest, false);
-      setTimeout(doTest, 5000); // for non-gecko-reftest-harness viewers
-    }
+    document.addEventListener("MozReftestInvalidate", doTest, false);
+    setTimeout(doTest, 4000); // fallback for running outside reftest
+
     function doTest() {
       document.documentElement.removeAttribute("width");
       document.documentElement.removeAttribute("height");

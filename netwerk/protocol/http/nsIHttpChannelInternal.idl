@@ -132,7 +132,7 @@ interface nsIHttpChannelInternal : nsISupports
     /**
      * HTTPUpgrade allows for the use of HTTP to bootstrap another protocol
      * via the RFC 2616 Upgrade request header in conjunction with a 101 level
-     * response. The nsIHttpUpgradeListener will have its 
+     * response. The nsIHttpUpgradeListener will have its
      * onTransportAvailable() method invoked if a matching 101 is processed.
      * The arguments to onTransportAvailable provide the new protocol the low
      * level tranport streams that are no longer used by HTTP.
