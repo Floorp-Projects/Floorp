@@ -30,8 +30,8 @@ if CONFIG['MOZ_X11']:
     EXPORTS += ['GLXLibrary.h']
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     EXPORTS += [
-        'WGLLibrary.h',
         'SharedSurfaceANGLE.h',
+        'WGLLibrary.h',
     ]
 if CONFIG['MOZ_ENABLE_SKIA_GPU']:
     EXPORTS += ['GLContextSkia.h']
