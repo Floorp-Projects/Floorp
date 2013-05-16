@@ -1564,6 +1564,12 @@ public:
       new (storage.addr()) T();
       return *storage.addr();
     }
+    template <typename T1, typename T2>
+    T& SetValue(const T1 &t1, const T2 &t2)
+    {
+      new (storage.addr()) T(t1, t2);
+      return *storage.addr();
+    }
     const T& Value() const {
       return *storage.addr();
     }
