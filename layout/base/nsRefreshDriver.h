@@ -123,7 +123,6 @@ public:
    */
   bool AddImageRequest(imgIRequest* aRequest);
   void RemoveImageRequest(imgIRequest* aRequest);
-  void ClearAllImageRequests();
 
   /**
    * Add / remove presshells that we should flush style and layout on
