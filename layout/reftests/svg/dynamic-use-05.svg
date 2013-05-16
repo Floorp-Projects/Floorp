@@ -18,8 +18,7 @@
     <![CDATA[
 
     document.addEventListener("MozReftestInvalidate", doTest, false);
-    // in case we're not gecko
-    setTimeout(doTest, 5000);
+    setTimeout(doTest, 4000); // fallback for running outside reftest
 
     function doTest() {
         var u = document.getElementById("u");

@@ -42,7 +42,7 @@ function hide_red_rects()
 }
 
 document.addEventListener("MozReftestInvalidate", hide_red_rects, false);
-setTimeout(hide_red_rects, 1000)
+setTimeout(hide_red_rects, 4000); // fallback for running outside reftest
 
   //]]>
   </script>

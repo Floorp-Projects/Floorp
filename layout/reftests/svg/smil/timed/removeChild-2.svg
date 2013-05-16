@@ -3,9 +3,7 @@
      time, and see what happens. -->
 <svg xmlns="http://www.w3.org/2000/svg"
      xmlns:xlink="http://www.w3.org/1999/xlink"
-     onload="setTimeout('go()', 1100);"
-     class="reftest-wait"
->
+     class="reftest-wait">
   <script>
     function go() {
       var rect1 = document.getElementById("rect1");
@@ -16,6 +14,11 @@
       // finish, if it's still going
       setTimeout('document.documentElement.removeAttribute("class")', 700);
     }
+    function delay_go() {
+      setTimeout(go, 1100);
+    }
+    document.addEventListener("MozReftestInvalidate", delay_go, false);
+    setTimeout(delay_go, 4000); // fallback for running outside reftest
   </script>
   <rect id="rect1" y="40" width="10" height="10" fill="blue">
     <animate id="anim" attributeName="x" 
