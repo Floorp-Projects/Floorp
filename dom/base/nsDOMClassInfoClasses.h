@@ -38,9 +38,6 @@ DOMCI_CLASS(DeviceMotionEvent)
 DOMCI_CLASS(DeviceAcceleration)
 DOMCI_CLASS(DeviceRotationRate)
 
-// HTML classes
-DOMCI_CLASS(HTMLDocument)
-
 // HTML element classes
 DOMCI_CLASS(HTMLFormElement)
 
