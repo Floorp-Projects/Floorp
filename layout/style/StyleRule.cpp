@@ -1386,12 +1386,13 @@ StyleRule::Clone() const
 /* virtual */ nsIDOMCSSRule*
 StyleRule::GetDOMRule()
 {
-  if (!GetStyleSheet()) {
-    // inline style rules aren't supposed to have a DOM rule object, only
-    // a declaration.
-    return nullptr;
-  }
   if (!mDOMRule) {
+    if (!GetStyleSheet()) {
+      // Inline style rules aren't supposed to have a DOM rule object, only
+      // a declaration.  But if we do have one already, from a style sheet
+      // rule that used to be in a document, we still want to return it.
+      return nullptr;
+    }
     mDOMRule = new DOMCSSStyleRule(this);
     NS_ADDREF(mDOMRule);
   }

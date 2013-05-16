@@ -259,7 +259,13 @@
             case "string":
               if (!aIgnoreNextCall) {
                 try {
-                  this["_on" + aName] = new XPCNativeWrapper.unwrap(window).Function("event", aValue);
+                  // Work around bug 872772 by wrapping the cross-compartment-
+                  // wrapped function in a function from this scope.
+                  //
+                  // NB: Make sure to wrap the constructor in parentheses to
+                  // deal with the weird precedence of |new| in JS.
+                  var contentFn = new (XPCNativeWrapper.unwrap(window).Function)("event", aValue);
+                  this["_on" + aName] = function(e) { return contentFn(e); };
                 }
                 catch(e) {
                   return false;

@@ -186,33 +186,35 @@ UnwrapObject(JSContext* cx, JSObject* obj, U& value)
 }
 
 inline bool
-IsNotDateOrRegExp(JSContext* cx, JSObject* obj)
+IsNotDateOrRegExp(JSContext* cx, JS::Handle<JSObject*> obj)
 {
   MOZ_ASSERT(obj);
   return !JS_ObjectIsDate(cx, obj) && !JS_ObjectIsRegExp(cx, obj);
 }
 
 MOZ_ALWAYS_INLINE bool
-IsArrayLike(JSContext* cx, JSObject* obj)
+IsArrayLike(JSContext* cx, JS::Handle<JSObject*> obj)
 {
   return IsNotDateOrRegExp(cx, obj);
 }
 
 MOZ_ALWAYS_INLINE bool
-IsConvertibleToDictionary(JSContext* cx, JSObject* obj)
+IsObjectValueConvertibleToDictionary(JSContext* cx,
+                                     JS::Handle<JS::Value> objVal)
 {
+  JS::Rooted<JSObject*> obj(cx, &objVal.toObject());
   return IsNotDateOrRegExp(cx, obj);
 }
 
 MOZ_ALWAYS_INLINE bool
-IsConvertibleToDictionary(JSContext* cx, JS::Value val)
+IsConvertibleToDictionary(JSContext* cx, JS::Handle<JS::Value> val)
 {
   return val.isNullOrUndefined() ||
-    (val.isObject() && IsConvertibleToDictionary(cx, &val.toObject()));
+    (val.isObject() && IsObjectValueConvertibleToDictionary(cx, val));
 }
 
 MOZ_ALWAYS_INLINE bool
-IsConvertibleToCallbackInterface(JSContext* cx, JSObject* obj)
+IsConvertibleToCallbackInterface(JSContext* cx, JS::Handle<JSObject*> obj)
 {
   return IsNotDateOrRegExp(cx, obj);
 }
