@@ -10,6 +10,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= pipboot
+MSVC_ENABLE_PGO := 1
 IS_COMPONENT	= 1
 MODULE_NAME	= BOOT
 EXPORT_LIBRARY	= 1

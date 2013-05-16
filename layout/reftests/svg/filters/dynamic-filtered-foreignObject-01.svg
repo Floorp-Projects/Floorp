@@ -13,7 +13,7 @@ function run_test() {
 }
 
 document.addEventListener("MozReftestInvalidate", run_test);
-setTimeout(run_test, 3000);
+setTimeout(run_test, 4000); // fallback for running outside reftest
 
   </script>
   <filter id="filter" x="0" y="0" width="150" height="150"

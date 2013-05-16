@@ -21,13 +21,10 @@ function handleRequest(request, response)
   if (query['scriptedreport']) {
     // spit back a script that records that the page loaded
     response.setHeader("Content-Type", "text/javascript", false);
-    response.write('netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");');
     if (query['double'])
-      response.write('window.parent.parent.parent.frameLoaded("' + query['scriptedreport'] + '", ' +
-                                                       'window.location.toString());');
+      response.write('window.parent.parent.parent.postMessage({call: "frameLoaded", testname: "' + query['scriptedreport'] + '", uri: "window.location.toString()"}, "*");');
     else
-      response.write('window.parent.parent.frameLoaded("' + query['scriptedreport'] + '", ' +
-                                                'window.location.toString());');
+      response.write('window.parent.parent.postMessage({call: "frameLoaded", testname: "' + query['scriptedreport'] + '", uri: "window.location.toString()"}, "*");');
   } else if (query['internalframe']) {
     // spit back an internal iframe (one that might be blocked)
     response.setHeader("Content-Type", "text/html", false);

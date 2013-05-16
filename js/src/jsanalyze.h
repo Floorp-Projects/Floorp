@@ -322,22 +322,6 @@ BytecodeUpdatesSlot(JSOp op)
     return (op == JSOP_SETARG || op == JSOP_SETLOCAL);
 }
 
-static inline int32_t
-GetBytecodeInteger(jsbytecode *pc)
-{
-    switch (JSOp(*pc)) {
-      case JSOP_ZERO:   return 0;
-      case JSOP_ONE:    return 1;
-      case JSOP_UINT16: return GET_UINT16(pc);
-      case JSOP_UINT24: return GET_UINT24(pc);
-      case JSOP_INT8:   return GET_INT8(pc);
-      case JSOP_INT32:  return GET_INT32(pc);
-      default:
-        JS_NOT_REACHED("Bad op");
-        return 0;
-    }
-}
-
 /*
  * Information about the lifetime of a local or argument. These form a linked
  * list describing successive intervals in the program where the variable's

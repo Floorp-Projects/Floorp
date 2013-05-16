@@ -46,6 +46,7 @@ let Elements = {};
   ["appbar",             "appbar"],
   ["contentViewport",    "content-viewport"],
   ["progress",           "progress-control"],
+  ["progressContainer",  "progress-container"],
   ["contentNavigator",   "content-navigator"],
   ["aboutFlyout",        "about-flyoutpanel"],
   ["prefsFlyout",        "prefs-flyoutpanel"],

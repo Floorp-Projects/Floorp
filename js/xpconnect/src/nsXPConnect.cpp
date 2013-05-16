@@ -1836,7 +1836,6 @@ NS_IMETHODIMP
 nsXPConnect::JSToVariant(JSContext* ctx, const jsval &value, nsIVariant** _retval)
 {
     NS_PRECONDITION(ctx, "bad param");
-    NS_PRECONDITION(value != JSVAL_NULL, "bad param");
     NS_PRECONDITION(_retval, "bad param");
 
     XPCCallContext ccx(NATIVE_CALLER, ctx);

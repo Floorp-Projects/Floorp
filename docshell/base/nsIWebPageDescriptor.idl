@@ -18,8 +18,7 @@ interface nsIWebPageDescriptor : nsISupports
  /**
   * Tells the object to load the page specified by the page descriptor
   *
-  * @return NS_OK            - 
-  *         NS_ERROR_FAILURE - 
+  * @throws NS_ERROR_FAILURE - 
   */
   void loadPage(in nsISupports aPageDescriptor, in unsigned long aDisplayType);
 
