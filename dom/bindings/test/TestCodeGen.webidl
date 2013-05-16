@@ -680,10 +680,12 @@ dictionary DictContainingSequence {
   sequence<long> ourSequence;
   sequence<TestInterface> ourSequence2;
   sequence<any> ourSequence3;
-  // XXXbz we can't make up our minds about how to represent 'object';
-  // will be fixed once we trace dictionaries.
-  //sequence<object> ourSequence4;
+  sequence<object> ourSequence4;
   sequence<object?> ourSequence5;
+  sequence<object>? ourSequence6;
+  sequence<object?>? ourSequence7;
+  sequence<object>? ourSequence8 = null;
+  sequence<object?>? ourSequence9 = null;
 };
 
 dictionary DictForConstructor {
