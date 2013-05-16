@@ -611,7 +611,7 @@ CloneObject(JSContext *cx, HandleObject srcObj, CloneMemory &clonedObjects)
                 return NULL;
         } else {
             RootedFunction fun(cx, srcObj->toFunction());
-            clone = CloneFunctionObject(cx, fun, cx->global(), fun->getAllocKind());
+            clone = CloneFunctionObject(cx, fun, cx->global(), fun->getAllocKind(), TenuredObject);
         }
     } else if (srcObj->isRegExp()) {
         RegExpObject &reobj = srcObj->asRegExp();
@@ -632,7 +632,7 @@ CloneObject(JSContext *cx, HandleObject srcObj, CloneMemory &clonedObjects)
             return NULL;
         clone = StringObject::create(cx, str);
     } else if (srcObj->isArray()) {
-        clone = NewDenseEmptyArray(cx);
+        clone = NewDenseEmptyArray(cx, NULL, TenuredObject);
     } else {
         JS_ASSERT(srcObj->isNative());
         clone = NewObjectWithGivenProto(cx, srcObj->getClass(), NULL, cx->global(),
