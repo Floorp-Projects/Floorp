@@ -10,7 +10,7 @@ interface nsIPrincipal;
 /**
  * nsIHttpAuthManager
  *
- * This service provides access to cached HTTP authentication 
+ * This service provides access to cached HTTP authentication
  * user credentials (domain, username, password) for sites
  * visited during the current browser session.
  *

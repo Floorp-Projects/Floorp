@@ -9,6 +9,7 @@ srcdir    = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME     = theora
+MSVC_ENABLE_PGO := 1
 FORCE_STATIC_LIB = 1
 ifeq (WINNT,$(OS_TARGET))
 VISIBILITY_FLAGS =

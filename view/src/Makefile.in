@@ -11,6 +11,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= gkview_s
+MSVC_ENABLE_PGO := 1
 FORCE_STATIC_LIB = 1
 MODULE_NAME	= nsViewModule
 LIBXUL_LIBRARY	= 1

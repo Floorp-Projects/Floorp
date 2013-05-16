@@ -117,11 +117,11 @@ public:
     NS_IMETHOD SetNotificationCallbacks(nsIInterfaceRequestor *aCallbacks);
     NS_IMETHOD SetLoadGroup(nsILoadGroup *aLoadGroup);
 
-public: /* internal necko use only */ 
+public: /* internal necko use only */
 
-    void InternalSetUploadStream(nsIInputStream *uploadStream) 
+    void InternalSetUploadStream(nsIInputStream *uploadStream)
       { mUploadStream = uploadStream; }
-    void SetUploadStreamHasHeaders(bool hasHeaders) 
+    void SetUploadStreamHasHeaders(bool hasHeaders)
       { mUploadStreamHasHeaders = hasHeaders; }
 
     nsresult SetReferrerInternal(nsIURI *referrer) {
@@ -248,7 +248,7 @@ private:
     nsresult OpenRedirectChannel(nsresult rv);
 
     /**
-     * A function that takes care of reading STS headers and enforcing STS 
+     * A function that takes care of reading STS headers and enforcing STS
      * load rules.  After a secure channel is erected, STS requires the channel
      * to be trusted or any STS header data on the channel is ignored.
      * This is called from ProcessResponse.

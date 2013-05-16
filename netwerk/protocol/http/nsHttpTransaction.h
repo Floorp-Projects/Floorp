@@ -53,7 +53,7 @@ public:
 
     //
     // called to initialize the transaction
-    // 
+    //
     // @param caps
     //        the transaction capabilities (see nsHttp.h)
     // @param connInfo
@@ -115,7 +115,7 @@ public:
     const mozilla::TimeStamp GetPendingTime() { return mPendingTime; }
     bool UsesPipelining() const { return mCaps & NS_HTTP_ALLOW_PIPELINING; }
 
-    void SetLoadGroupConnectionInfo(nsILoadGroupConnectionInfo *aLoadGroupCI) { mLoadGroupCI = aLoadGroupCI; } 
+    void SetLoadGroupConnectionInfo(nsILoadGroupConnectionInfo *aLoadGroupCI) { mLoadGroupCI = aLoadGroupCI; }
     nsILoadGroupConnectionInfo *LoadGroupConnectionInfo() { return mLoadGroupCI.get(); }
     void DispatchedAsBlocking();
     void RemoveDispatchedAsBlocking();
@@ -250,7 +250,7 @@ private:
     // The time when the transaction was submitted to the Connection Manager
     mozilla::TimeStamp              mPendingTime;
 
-    class RestartVerifier 
+    class RestartVerifier
     {
 
         // When a idemptotent transaction has received part of its response body
@@ -269,7 +269,7 @@ private:
             , mSetup(false)
         {}
         ~RestartVerifier() {}
-        
+
         void Set(int64_t contentLength, nsHttpResponseHead *head);
         bool Verify(int64_t contentLength, nsHttpResponseHead *head);
         bool IsDiscardingContent() { return mToReadBeforeRestart != 0; }
@@ -282,8 +282,8 @@ private:
         int64_t ToReadBeforeRestart() { return mToReadBeforeRestart; }
         void HaveReadBeforeRestart(uint32_t amt)
         {
-            NS_ABORT_IF_FALSE(amt <= mToReadBeforeRestart,
-                              "too large of a HaveReadBeforeRestart deduction");
+            MOZ_ASSERT(amt <= mToReadBeforeRestart,
+                       "too large of a HaveReadBeforeRestart deduction");
             mToReadBeforeRestart -= amt;
         }
 

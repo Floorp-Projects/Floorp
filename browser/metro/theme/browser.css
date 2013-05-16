@@ -9,23 +9,26 @@
 %define forward_width 22px
 %define forward_spacing 12px
 
-/* Sliding Toolbar/Tab Tray ------------------------------------------------- */
+/* Progress meter ------------------------------------------------- */
 
-#tray {
-  transition: transform @metro_animation_duration@ @metro_animation_easing@;
-  transform: translateY(-@tabs_height@);
-  width: 100%;
-}
-
-#progress-control {
+#progress-container {
   display: block;
   position: absolute;
   top: -@progress_height@;
   height: @progress_height@;
-  max-height: @progress_height@;
-  background: linear-gradient(to right,  @progress_start_color@,  @progress_end_color@);
+  width: 100%;
+  background-color: hsla(210,5%,80%,1);
+  box-shadow: 0 1px 0 hsla(210,5%,50%,.1) inset;
   -moz-user-focus: ignore;
+}
+
+#progress-control {
+  display: block;
+  height: @progress_height@;
+  background-image: -moz-linear-gradient(left, hsla(200,100%,83%,.5), hsla(200,100%,83%,0)), -moz-linear-gradient(top, #1ab2ff, #0091ff);
+  border-right: 1px solid #0082e5;
   transition: width .3s ease-in;
+  -moz-user-focus: ignore;
 }
 
 #progress-control:-moz-dir(rtl) {
@@ -35,6 +38,14 @@
 #progress-control[fade] {
   opacity: 0;
   transition: width .3s ease-in, .5s opacity ease-in;
+}
+
+/* Sliding Toolbar/Tab Tray ------------------------------------------------- */
+
+#tray {
+  transition: transform @metro_animation_duration@ @metro_animation_easing@;
+  transform: translateY(-@tabs_height@);
+  width: 100%;
 }
 
 /* in non-tabsonly mode the navigation bar and tab tray float over content. In
@@ -394,25 +405,7 @@ documenttab[selected] .documenttab-selection {
 }
 
 #toolbar[mode="loading"] > #tool-reload,
-#toolbar:-moz-any([mode="edit"], [mode="view"]) > #tool-stop {
-  visibility: collapse;
-}
-
-/* Hide the tab toggle if we're showing classic tabs or we're snap-viewed. */
-#toolbar[viewstate="snapped"],
-#tray[tabsonly] #toolbar {
-  background: @panel_light_color@ @panel_light_background@;
-  -moz-padding-end: 0;
-}
-
-#toolbar[viewstate="snapped"] {
-  -moz-padding-end: 0;
-}
-
-#toolbar[viewstate="snapped"] > #urlbar-container {
-  -moz-margin-end: 0;
-}
-
+#toolbar:-moz-any([mode="edit"], [mode="view"]) > #tool-stop,
 #toolbar[viewstate="snapped"] > #tool-stop ~ toolbarbutton {
   visibility: collapse;
 }
