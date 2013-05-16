@@ -75,6 +75,9 @@ CustomizeMode.prototype = {
     let window = this.window;
     let document = this.document;
 
+    let customizer = document.getElementById("customization-container");
+    customizer.hidden = false;
+
     // We don't need to switch to kAboutURI, or open a new tab at
     // kAboutURI if we're already on it.
     if (this.browser.selectedBrowser.currentURI.spec != kAboutURI) {
@@ -105,7 +108,6 @@ CustomizeMode.prototype = {
     evt.initCustomEvent("CustomizationStart", true, true, window);
     window.dispatchEvent(evt);
 
-    let customizer = document.getElementById("customization-container");
     customizer.parentNode.selectedPanel = customizer;
 
     window.PanelUI.hide();
@@ -232,6 +234,9 @@ CustomizeMode.prototype = {
         this.browser.removeTab(customizationTab);
       }
     }
+
+    let customizer = document.getElementById("customization-container");
+    customizer.hidden = true;
 
     this._changed = false;
   },
