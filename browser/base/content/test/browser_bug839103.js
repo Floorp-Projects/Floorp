@@ -13,10 +13,13 @@ function test() {
 function initialStylesheetAdded(evt) {
   gBrowser.removeEventListener("StyleSheetAdded", initialStylesheetAdded, true);
   ok(true, "received initial style sheet event");
+  is(evt.type, "StyleSheetAdded", "evt.type has expected value");
   is(evt.target, gBrowser.contentDocument, "event targets correct document");
   ok(evt.stylesheet, "evt.stylesheet is defined");
   ok(evt.stylesheet.toString().contains("CSSStyleSheet"), "evt.stylesheet is a stylesheet");
   ok(evt.documentSheet, "style sheet is a document sheet");
+  is(typeof evt.sheetIsApplicable, "boolean", "evt.sheetIsApplicable is a boolean");
+  is(evt.rule, null, "evt.rule is null");
 }
 
 function tabLoad(evt) {
@@ -54,10 +57,13 @@ function continueTest() {
 function dynamicStylesheetAdded(evt) {
   gBrowser.removeEventListener("StyleSheetAdded", dynamicStylesheetAdded, true);
   ok(true, "received dynamic style sheet event");
+  is(evt.type, "StyleSheetAdded", "evt.type has expected value");
   is(evt.target, gBrowser.contentDocument, "event targets correct document");
   ok(evt.stylesheet, "evt.stylesheet is defined");
   ok(evt.stylesheet.toString().contains("CSSStyleSheet"), "evt.stylesheet is a stylesheet");
   ok(evt.documentSheet, "style sheet is a document sheet");
+  is(typeof evt.sheetIsApplicable, "boolean", "evt.sheetIsApplicable is a boolean");
+  is(evt.rule, null, "evt.rule is null");
 
   gBrowser.addEventListener("StyleSheetRemoved", dynamicStylesheetRemoved, true);
   gBrowser.contentDocument.body.removeChild(gLinkElement);
@@ -66,10 +72,13 @@ function dynamicStylesheetAdded(evt) {
 function dynamicStylesheetRemoved(evt) {
   gBrowser.removeEventListener("StyleSheetRemoved", dynamicStylesheetRemoved, true);
   ok(true, "received dynamic style sheet removal");
+  is(evt.type, "StyleSheetRemoved", "evt.type has expected value");
   is(evt.target, gBrowser.contentDocument, "event targets correct document");
   ok(evt.stylesheet, "evt.stylesheet is defined");
   ok(evt.stylesheet.toString().contains("CSSStyleSheet"), "evt.stylesheet is a stylesheet");
   ok(evt.stylesheet.href.contains(gStyleSheet), "evt.stylesheet is the removed stylesheet");
+  is(typeof evt.sheetIsApplicable, "boolean", "evt.sheetIsApplicable is a boolean");
+  is(evt.rule, null, "evt.rule is null");
   executeSoon(concludeTest);
 }
 
