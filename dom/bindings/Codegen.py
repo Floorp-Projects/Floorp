@@ -7459,18 +7459,18 @@ class CGDictionary(CGThing):
     def declare(self):
         d = self.dictionary
         if d.parent:
-            inheritance = ": public %s " % self.makeClassName(d.parent)
+            inheritance = "%s" % self.makeClassName(d.parent)
         elif not self.workers:
-            inheritance = ": public MainThreadDictionaryBase "
+            inheritance = "MainThreadDictionaryBase"
         else:
-            inheritance = ""
+            inheritance = "DictionaryBase"
         memberDecls = ["  %s %s;" %
                        (self.getMemberType(m),
                         self.makeMemberName(m[0].identifier.name))
                        for m in self.memberInfo]
 
         return (string.Template(
-                "struct ${selfName} ${inheritance}{\n"
+                "struct ${selfName} : public ${inheritance} {\n"
                 "  ${selfName}() {}\n"
                 "  bool Init(JSContext* cx, JS::Handle<JS::Value> val);\n" +
                 ("  bool Init(const nsAString& aJSON);\n" if not self.workers else "") +
