@@ -43,7 +43,6 @@
 #include "vm/StringBuffer.h"
 
 #include "jsatominlines.h"
-#include "jsnuminlines.h"
 #include "jsobjinlines.h"
 
 #include "vm/NumberObject-inl.h"
@@ -1331,6 +1330,61 @@ js::NumberValueToStringBuffer(JSContext *cx, const Value &v, StringBuffer &sb)
     return sb.appendInflated(cstr, cstrlen);
 }
 
+static bool
+StringToNumber(JSContext *cx, JSString *str, double *result)
+{
+    size_t length = str->length();
+    const jschar *chars = str->getChars(NULL);
+    if (!chars)
+        return false;
+
+    if (length == 1) {
+        jschar c = chars[0];
+        if ('0' <= c && c <= '9') {
+            *result = c - '0';
+            return true;
+        }
+        if (unicode::IsSpace(c)) {
+            *result = 0.0;
+            return true;
+        }
+        *result = js_NaN;
+        return true;
+    }
+
+    const jschar *end = chars + length;
+    const jschar *bp = SkipSpace(chars, end);
+
+    /* ECMA doesn't allow signed hex numbers (bug 273467). */
+    if (end - bp >= 2 && bp[0] == '0' && (bp[1] == 'x' || bp[1] == 'X')) {
+        /* Looks like a hex number. */
+        const jschar *endptr;
+        double d;
+        if (!GetPrefixInteger(cx, bp + 2, end, 16, &endptr, &d) || SkipSpace(endptr, end) != end) {
+            *result = js_NaN;
+            return true;
+        }
+        *result = d;
+        return true;
+    }
+
+    /*
+     * Note that ECMA doesn't treat a string beginning with a '0' as
+     * an octal number here. This works because all such numbers will
+     * be interpreted as decimal by js_strtod.  Also, any hex numbers
+     * that have made it here (which can only be negative ones) will
+     * be treated as 0 without consuming the 'x' by js_strtod.
+     */
+    const jschar *ep;
+    double d;
+    if (!js_strtod(cx, bp, end, &ep, &d) || SkipSpace(ep, end) != end) {
+        *result = js_NaN;
+        return true;
+    }
+    *result = d;
+    return true;
+}
+
 #if defined(_MSC_VER)
 # pragma optimize("g", off)
 #endif
@@ -1365,7 +1419,7 @@ js::ToNumberSlow(JSContext *cx, Value v, double *out)
         }
       skip_int_double:
         if (v.isString())
-            return StringToNumberType<double>(cx, v.toString(), out);
+            return StringToNumber(cx, v.toString(), out);
         if (v.isBoolean()) {
             if (v.toBoolean()) {
                 *out = 1.0;
