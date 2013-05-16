@@ -391,6 +391,7 @@ interface TestJSImplInterface {
   void passDictionary(optional Dict x);
   // FIXME: Bug 863949 no dictionary return values
   //   Dict receiveDictionary();
+  //   Dict? receiveNullableDictionary();
   void passOtherDictionary(optional GrandparentDict x);
   void passSequenceOfDictionaries(sequence<Dict> x);
   // No support for nullable dictionaries inside a sequence (nor should there be)

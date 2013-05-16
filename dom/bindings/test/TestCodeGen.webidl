@@ -467,6 +467,7 @@ interface TestInterface {
 
   void passDictionary(optional Dict x);
   Dict receiveDictionary();
+  Dict? receiveNullableDictionary();
   void passOtherDictionary(optional GrandparentDict x);
   void passSequenceOfDictionaries(sequence<Dict> x);
   // No support for nullable dictionaries inside a sequence (nor should there be)
