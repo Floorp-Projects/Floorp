@@ -435,8 +435,7 @@ var Browser = {
 
   addTab: function browser_addTab(aURI, aBringFront, aOwner, aParams) {
     let params = aParams || {};
-    let newTab = new Tab(aURI, params);
-    newTab.owner = aOwner || null;
+    let newTab = new Tab(aURI, params, aOwner);
     this._tabs.push(newTab);
 
     if (aBringFront)
@@ -1382,7 +1381,7 @@ function showDownloadManager(aWindowContext, aID, aReason) {
   // TODO: select the download with aID
 }
 
-function Tab(aURI, aParams) {
+function Tab(aURI, aParams, aOwner) {
   this._id = null;
   this._browser = null;
   this._notification = null;
@@ -1391,7 +1390,7 @@ function Tab(aURI, aParams) {
   this._metadata = null;
   this._eventDeferred = null;
 
-  this.owner = null;
+  this.owner = aOwner || null;
 
   this.hostChanged = false;
   this.state = null;
@@ -1402,7 +1401,7 @@ function Tab(aURI, aParams) {
 
   // aParams is an object that contains some properties for the initial tab
   // loading like flags, a referrerURI, a charset or even a postData.
-  this.create(aURI, aParams || {});
+  this.create(aURI, aParams || {}, aOwner);
 
   // default tabs to inactive (i.e. no display port)
   this.active = false;
@@ -1526,7 +1525,7 @@ Tab.prototype = {
     return this._loading;
   },
 
-  create: function create(aURI, aParams) {
+  create: function create(aURI, aParams, aOwner) {
     this._eventDeferred = Promise.defer();
 
     this._chromeTab = Elements.tabList.addTab();
@@ -1543,6 +1542,8 @@ Tab.prototype = {
     }
     browser.addEventListener("pageshow", onPageShowEvent, true);
 
+    if (aOwner)
+      this._copyHistoryFrom(aOwner);
     this._loadUsingParams(browser, aURI, aParams);
   },
 
@@ -1574,6 +1575,17 @@ Tab.prototype = {
     browser.__SS_data = session.data;
     browser.__SS_extdata = session.extra;
     browser.__SS_restore = true;
+  },
+
+  _copyHistoryFrom: function _copyHistoryFrom(tab) {
+    let otherHistory = tab._browser._webNavigation.sessionHistory;
+    let history = this._browser._webNavigation.sessionHistory;
+
+    // Ensure that history is initialized
+    history.QueryInterface(Ci.nsISHistoryInternal);
+    
+    for (let i = 0, length = otherHistory.index; i <= length; i++)
+      history.addEntry(otherHistory.getEntryAtIndex(i, false), true);
   },
 
   _loadUsingParams: function _loadUsingParams(aBrowser, aURI, aParams) {
