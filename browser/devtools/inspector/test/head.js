@@ -9,7 +9,7 @@ let tempScope = {};
 Cu.import("resource:///modules/devtools/LayoutHelpers.jsm", tempScope);
 let LayoutHelpers = tempScope.LayoutHelpers;
 
-let {devtools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", tempScope);
+let {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", tempScope);
 let TargetFactory = devtools.TargetFactory;
 
 Components.utils.import("resource://gre/modules/devtools/Console.jsm", tempScope);

@@ -17,7 +17,7 @@ function test() {
   waitForExplicitFinish();
 
   createTab(function() {
-    let { devtools } = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
+    let { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
     let target = devtools.TargetFactory.forTab(gBrowser.selectedTab);
 
     gDevTools.showToolbox(target, "inspector").then(function(toolbox) {

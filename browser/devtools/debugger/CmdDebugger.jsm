@@ -1,19 +1,22 @@
+/* -*- Mode: javascript; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+
 this.EXPORTED_SYMBOLS = [ ];
 
 Cu.import("resource://gre/modules/devtools/gcli.jsm");
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 
 XPCOMUtils.defineLazyModuleGetter(this, "gDevTools",
-                                  "resource:///modules/devtools/gDevTools.jsm");
+  "resource:///modules/devtools/gDevTools.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "console",
-                                  "resource://gre/modules/devtools/Console.jsm");
-
+  "resource://gre/modules/devtools/Console.jsm");
 
 /**
  * 'break' command
@@ -32,8 +35,8 @@ gcli.addCommand({
   description: gcli.lookup("breaklistDesc"),
   returnType: "breakpoints",
   exec: function(args, context) {
-    let panel = getPanel(context, "jsdebugger", {ensure_opened: true});
-    return panel.then(function(dbg) {
+    let dbg = getPanel(context, "jsdebugger", { ensure_opened: true });
+    return dbg.then(function(dbg) {
       let breakpoints = [];
       for (let source in dbg.panelWin.DebuggerView.Sources) {
         for (let { attachment: breakpoint } in source) {
@@ -106,8 +109,8 @@ var breakListHtml = "" +
       "      <span class='gcli-out-shortcut'" +
       "            data-command='break del ${breakpoint.index}'" +
       "            onclick='${onclick}'" +
-      "            ondblclick='${ondblclick}'" +
-      "          >" + gcli.lookup("breaklistOutRemove") + "</span>" +
+      "            ondblclick='${ondblclick}'>" +
+      "        " + gcli.lookup("breaklistOutRemove") + "</span>" +
       "    </td>" +
       "  </tr>" +
       " </tbody>" +
@@ -138,15 +141,11 @@ gcli.addCommand({
       type: {
         name: "selection",
         data: function(args, context) {
-          let files = [];
           let dbg = getPanel(context, "jsdebugger");
           if (dbg) {
-            let sourcesView = dbg.panelWin.DebuggerView.Sources;
-            for (let item in sourcesView) {
-              files.push(item.value);
-            }
+            return dbg.panelWin.DebuggerView.Sources.values;
           }
-          return files;
+          return [];
         }
       },
       description: gcli.lookup("breakaddlineFileDesc")
@@ -165,7 +164,8 @@ gcli.addCommand({
     if (!dbg) {
       return gcli.lookup("debuggerStopped");
     }
-    var deferred = context.defer();
+
+    let deferred = context.defer();
     let position = { url: args.file, line: args.line };
     dbg.addBreakpoint(position, function(aBreakpoint, aError) {
       if (aError) {
@@ -178,7 +178,6 @@ gcli.addCommand({
   }
 });
 
-
 /**
  * 'break del' command
  */
@@ -187,15 +186,13 @@ gcli.addCommand({
   description: gcli.lookup("breakdelDesc"),
   params: [
     {
-      name: "breakid",
+      name: "breakIndex",
       type: {
         name: "number",
         min: 0,
         max: function(args, context) {
           let dbg = getPanel(context, "jsdebugger");
-          return dbg == null ?
-              null :
-              Object.keys(dbg.getAllBreakpoints()).length - 1;
+          return dbg == null ? 0 : Object.keys(dbg.getAllBreakpoints()).length - 1;
         },
       },
       description: gcli.lookup("breakdelBreakidDesc")
@@ -209,7 +206,7 @@ gcli.addCommand({
     }
 
     let breakpoints = dbg.getAllBreakpoints();
-    let id = Object.keys(breakpoints)[args.breakid];
+    let id = Object.keys(breakpoints)[args.breakIndex];
     if (!id || !(id in breakpoints)) {
       return gcli.lookup("breakNotFound");
     }
@@ -244,7 +241,7 @@ gcli.addCommand({
   description: gcli.lookup("dbgOpen"),
   params: [],
   exec: function(args, context) {
-    return gDevTools.showToolbox(context.environment.target, "jsdebugger").then(function() null);
+    return gDevTools.showToolbox(context.environment.target, "jsdebugger").then(() => null);
   }
 });
 
@@ -256,7 +253,7 @@ gcli.addCommand({
   description: gcli.lookup("dbgClose"),
   params: [],
   exec: function(args, context) {
-    return gDevTools.closeToolbox(context.environment.target).then(function() null);
+    return gDevTools.closeToolbox(context.environment.target).then(() => null);
   }
 });
 
@@ -388,6 +385,7 @@ gcli.addCommand({
     if (!dbg) {
       return gcli.lookup("debuggerClosed");
     }
+
     let sources = dbg._view.Sources.values;
     let div = createXHTMLElement(doc, "div");
     let ol = createXHTMLElement(doc, "ol");
@@ -414,16 +412,14 @@ function createXHTMLElement(document, tagname) {
  * @see |updateCommand()| and |executeCommand()|
  */
 function withCommand(element, action) {
-  var command = element.getAttribute("data-command");
+  let command = element.getAttribute("data-command");
   if (!command) {
-    command = element.querySelector("*[data-command]")
-      .getAttribute("data-command");
+    command = element.querySelector("*[data-command]").getAttribute("data-command");
   }
 
   if (command) {
     action(command);
-  }
-  else {
+  } else {
     console.warn("Missing data-command for " + util.findCssSelector(element));
   }
 }
@@ -462,18 +458,22 @@ function createExecuteHandler(context) {
 /**
  * A helper to go from a command context to a debugger panel
  */
-function getPanel(context, id, opts) {
+function getPanel(context, id, options = {}) {
   if (context == null) {
     return undefined;
   }
 
   let target = context.environment.target;
-  if (opts && opts.ensure_opened) {
+  if (options.ensure_opened) {
     return gDevTools.showToolbox(target, id).then(function(toolbox) {
       return toolbox.getPanel(id);
     });
   } else {
     let toolbox = gDevTools.getToolbox(target);
-    return toolbox && toolbox.getPanel(id);
+    if (toolbox) {
+      return toolbox.getPanel(id);
+    } else {
+      return undefined;
+    }
   }
 }

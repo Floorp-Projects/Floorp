@@ -24,7 +24,7 @@
 
     <script type="application/javascript;version=1.8">
       window.setPanel = function(panel, iframe) {
-        let {devtools} = Components.utils.import("resource:///modules/devtools/gDevTools.jsm", {});
+        let {devtools} = Components.utils.import("resource://gre/modules/devtools/Loader.jsm", {});
         let inspector = devtools.require("devtools/styleinspector/style-inspector");
         this.ruleview = new inspector.RuleViewTool(panel, window, iframe);
       }

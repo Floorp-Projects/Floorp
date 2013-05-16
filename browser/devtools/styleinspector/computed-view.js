@@ -43,7 +43,7 @@ const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 function UpdateProcess(aWin, aGenerator, aOptions)
 {
   this.win = aWin;
-  this.iter = devtools._Iterator(aGenerator);
+  this.iter = _Iterator(aGenerator);
   this.onItem = aOptions.onItem || function() {};
   this.onBatch = aOptions.onBatch || function () {};
   this.onDone = aOptions.onDone || function() {};
@@ -934,7 +934,7 @@ SelectorView.prototype = {
 
       if (ToolDefinitions.styleEditor.isTargetSupported(target)) {
         gDevTools.showToolbox(target, "styleeditor").then(function(toolbox) {
-          toolbox.getCurrentPanel().selectStyleSheet(styleSheet, line);
+          toolbox.getCurrentPanel().selectStyleSheet(styleSheet.href, line);
         });
       }
     } else {
