@@ -5,47 +5,47 @@
 -->
   <!-- R -->
   <rect x="100" y="-900" width="800" height="800" stroke-width="50"
-    fill="-moz-objectFill" stroke="-moz-objectStroke"
-    fill-opacity="-moz-objectFillOpacity"
-    stroke-opacity="-moz-objectStrokeOpacity" id="glyph52"/>
+    fill="context-fill" stroke="context-stroke"
+    fill-opacity="context-fill-opacity"
+    stroke-opacity="context-stroke-opacity" id="glyph52"/>
 
   <!-- S -->
   <rect x="100" y="-900" width="800" height="800" stroke-width="50"
-    fill="-moz-objectFill" stroke="-moz-objectStroke"
-    fill-opacity="-moz-objectStrokeOpacity"
-    stroke-opacity="-moz-objectFillOpacity" id="glyph53"/>
+    fill="context-fill" stroke="context-stroke"
+    fill-opacity="context-stroke-opacity"
+    stroke-opacity="context-fill-opacity" id="glyph53"/>
 
   <!-- T -->
   <rect x="100" y="-900" width="800" height="800" stroke-width="50"
-    fill="-moz-objectStroke" stroke="-moz-objectFill"
-    fill-opacity="-moz-objectFillOpacity"
-    stroke-opacity="-moz-objectStrokeOpacity" id="glyph54"/>
+    fill="context-stroke" stroke="context-fill"
+    fill-opacity="context-fill-opacity"
+    stroke-opacity="context-stroke-opacity" id="glyph54"/>
 
   <!-- U -->
   <!--  Test for bug where explicit `inherit' would fail for
       *-opacity="objectStrokeOpacity" or "objectFillOpacity" -->
-  <g style="fill-opacity : -moz-objectStrokeOpacity; stroke-opacity : -moz-objectFillOpacity">
+  <g style="fill-opacity : context-stroke-opacity; stroke-opacity : context-fill-opacity">
     <rect x="100" y="-900" width="800" height="800" stroke-width="50"
-      fill="-moz-objectStroke" stroke="-moz-objectFill"
+      fill="context-stroke" stroke="context-fill"
       fill-opacity="inherit" stroke-opacity="inherit" id="glyph55"/>
   </g>
 
   <!-- W -->
   <rect x="100" y="-900" width="800" height="800" stroke-width="50"
     fill="darkorchid" stroke="goldenrod"
-    fill-opacity="-moz-objectFillOpacity"
-    stroke-opacity="-moz-objectStrokeOpacity" id="glyph57"/>
+    fill-opacity="context-fill-opacity"
+    stroke-opacity="context-stroke-opacity" id="glyph57"/>
 
   <!-- X -->
   <rect x="100" y="-900" width="800" height="800" stroke-width="50"
     fill="darkorchid" stroke="goldenrod"
-    fill-opacity="-moz-objectStrokeOpacity"
-    stroke-opacity="-moz-objectFillOpacity" id="glyph58"/>
+    fill-opacity="context-stroke-opacity"
+    stroke-opacity="context-fill-opacity" id="glyph58"/>
 
   <style type="text/css"><![CDATA[
   #glyph59 {
-    fill-opacity : -moz-objectFillOpacity;
-    stroke-opacity : -moz-objectStrokeOpacity;
+    fill-opacity : context-fill-opacity;
+    stroke-opacity : context-stroke-opacity;
   }
   #ychild {
     color-interpolation : sRGB;
