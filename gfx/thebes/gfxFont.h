@@ -49,7 +49,7 @@ class gfxUserFontData;
 class gfxShapedText;
 class gfxShapedWord;
 class gfxSVGGlyphs;
-class gfxTextObjectPaint;
+class gfxTextContextPaint;
 
 class nsILanguageAtomService;
 
@@ -301,7 +301,7 @@ public:
     bool GetSVGGlyphExtents(gfxContext *aContext, uint32_t aGlyphId,
                             gfxRect *aResult);
     bool RenderSVGGlyph(gfxContext *aContext, uint32_t aGlyphId, int aDrawMode,
-                        gfxTextObjectPaint *aObjectPaint);
+                        gfxTextContextPaint *aContextPaint);
     // Call this when glyph geometry or rendering has changed
     // (e.g. animated SVG glyphs)
     void NotifyGlyphsChanged();
@@ -1512,7 +1512,7 @@ public:
      * that there is no spacing.
      * @param aDrawMode specifies whether the fill or stroke of the glyph should be
      * drawn, or if it should be drawn into the current path
-     * @param aObjectPaint information about how to construct the fill and
+     * @param aContextPaint information about how to construct the fill and
      * stroke pattern. Can be nullptr if we are not stroking the text, which
      * indicates that the current source from aContext should be used for filling
      * 
@@ -1525,7 +1525,7 @@ public:
      */
     virtual void Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
                       gfxContext *aContext, DrawMode aDrawMode, gfxPoint *aBaselineOrigin,
-                      Spacing *aSpacing, gfxTextObjectPaint *aObjectPaint,
+                      Spacing *aSpacing, gfxTextContextPaint *aContextPaint,
                       gfxTextRunDrawCallbacks *aCallbacks);
 
     /**
@@ -1962,9 +1962,9 @@ protected:
     void SanitizeMetrics(gfxFont::Metrics *aMetrics, bool aIsBadUnderlineFont);
 
     bool RenderSVGGlyph(gfxContext *aContext, gfxPoint aPoint, DrawMode aDrawMode,
-                        uint32_t aGlyphId, gfxTextObjectPaint *aObjectPaint);
+                        uint32_t aGlyphId, gfxTextContextPaint *aContextPaint);
     bool RenderSVGGlyph(gfxContext *aContext, gfxPoint aPoint, DrawMode aDrawMode,
-                        uint32_t aGlyphId, gfxTextObjectPaint *aObjectPaint,
+                        uint32_t aGlyphId, gfxTextContextPaint *aContextPaint,
                         gfxTextRunDrawCallbacks *aCallbacks,
                         bool& aEmittedGlyphs);
 
@@ -2818,7 +2818,7 @@ public:
               gfxFont::DrawMode aDrawMode,
               uint32_t aStart, uint32_t aLength,
               PropertyProvider *aProvider,
-              gfxFloat *aAdvanceWidth, gfxTextObjectPaint *aObjectPaint,
+              gfxFloat *aAdvanceWidth, gfxTextContextPaint *aContextPaint,
               gfxTextRunDrawCallbacks *aCallbacks = nullptr);
 
     /**
@@ -3245,7 +3245,7 @@ private:
     // **** drawing helper ****
     void DrawGlyphs(gfxFont *aFont, gfxContext *aContext,
                     gfxFont::DrawMode aDrawMode, gfxPoint *aPt,
-                    gfxTextObjectPaint *aObjectPaint, uint32_t aStart,
+                    gfxTextContextPaint *aContextPaint, uint32_t aStart,
                     uint32_t aEnd, PropertyProvider *aProvider,
                     uint32_t aSpacingStart, uint32_t aSpacingEnd,
                     gfxTextRunDrawCallbacks *aCallbacks);
