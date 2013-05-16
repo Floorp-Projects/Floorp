@@ -6,7 +6,8 @@ const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 let { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 let { Promise } = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", {});
-let { gDevTools, devtools } = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
+let { gDevTools } = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
+let { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 let TargetFactory = devtools.TargetFactory;
 let Toolbox = devtools.Toolbox;
 
