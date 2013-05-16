@@ -1,0 +1,42 @@
+.woff files
+===========
+
+There are three .woff files in this directory:
+ * svg.woff
+ * nosvg.woff
+ * rubbish.woff
+
+nosvg.woff
+----------
+This font is Liberation Serif with the addition of a glyph with a UVS selector
+(Liberation fonts do not come with UVS glyphs; one had to be added to test that
+SVG glyphs work with UVS selectors). It contains no 'SVG ' table.
+
+svg.woff
+--------
+This font is the same as nosvg.woff above, but with the glyphs-*.svg SVG
+documents from this directory embedded in it using the tools described below.
+
+The tools used here are insertsvg.py from [1] and sfnt2woff from [2].
+
+svg.woff can be recreated with:
+
+woff2sfnt nosvg.woff > nosvg.ttf
+insertsvg.py nosvg.ttf svg.ttf glyphs-*.svg
+sfnt2woff svg.ttf
+
+rubbish.woff
+------------
+This font is the same as nosvg.woff above, but with the addition of an 'SVG '
+table with the contents of rubbish.txt. Its purpose is to test that SVG tables
+without valid XML are ignored.
+
+A tool for creating the rubbish font can also be found at [1]; named
+`insertrubbish.py`. rubbish.woff can be created with:
+
+woff2sfnt nosvg.woff > nosvg.ttf
+insertsvg.py nosvg.ttf rubbish.ttf rubbish.txt
+sfnt2woff rubbish.ttf
+
+[1] https://github.com/edf825/SVG-OpenType-Utils
+[2] http://people.mozilla.com/~jkew/woff/
