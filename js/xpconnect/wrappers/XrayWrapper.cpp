@@ -984,11 +984,9 @@ XPCWrappedNativeXrayTraits::resolveOwnProperty(JSContext *cx, Wrapper &jsWrapper
     MOZ_ASSERT(js::IsObjectInContextCompartment(wrapper, cx));
     XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
     if (AccessCheck::isChrome(wrapper) &&
-        (((id == rt->GetStringID(XPCJSRuntime::IDX_BASEURIOBJECT) ||
+        ((id == rt->GetStringID(XPCJSRuntime::IDX_BASEURIOBJECT) ||
            id == rt->GetStringID(XPCJSRuntime::IDX_NODEPRINCIPAL)) &&
-          Is<nsINode>(wrapper)) ||
-          (id == rt->GetStringID(XPCJSRuntime::IDX_DOCUMENTURIOBJECT) &&
-          Is<nsIDocument>(wrapper))))
+          Is<nsINode>(wrapper)))
     {
         desc->obj = wrapper;
         desc->attrs = JSPROP_ENUMERATE|JSPROP_SHARED;
