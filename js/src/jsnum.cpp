@@ -1357,10 +1357,17 @@ StringToNumber(JSContext *cx, JSString *str, double *result)
 
     /* ECMA doesn't allow signed hex numbers (bug 273467). */
     if (end - bp >= 2 && bp[0] == '0' && (bp[1] == 'x' || bp[1] == 'X')) {
-        /* Looks like a hex number. */
+        /*
+         * It's probably a hex number.  Accept if there's at least one hex
+         * digit after the 0x, and if no non-whitespace characters follow all
+         * the hex digits.
+         */
         const jschar *endptr;
         double d;
-        if (!GetPrefixInteger(cx, bp + 2, end, 16, &endptr, &d) || SkipSpace(endptr, end) != end) {
+        if (!GetPrefixInteger(cx, bp + 2, end, 16, &endptr, &d) ||
+            endptr == bp + 2 ||
+            SkipSpace(endptr, end) != end)
+        {
             *result = js_NaN;
             return true;
         }
