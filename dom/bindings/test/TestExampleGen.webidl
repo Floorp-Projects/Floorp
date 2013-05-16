@@ -364,7 +364,9 @@ interface TestExampleInterface {
   attribute byte attributeRenamedFrom;
 
   void passDictionary(optional Dict x);
-  //UNSUPPORTED  Dict receiveDictionary();
+  // FIXME: Bug 863949 no dictionary return values in callbacks
+  // Dict receiveDictionary();
+  // Dict? receiveNullableDictionary();
   void passOtherDictionary(optional GrandparentDict x);
   void passSequenceOfDictionaries(sequence<Dict> x);
   // No support for nullable dictionaries inside a sequence (nor should there be)
