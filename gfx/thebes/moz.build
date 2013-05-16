@@ -98,10 +98,10 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'os2':
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
     EXPORTS += [
         'gfxFT2FontBase.h',
-        'gfxPDFSurface.h',
         'gfxQPainterSurface.h',
         'gfxQtNativeRenderer.h',
         'gfxQtPlatform.h',
+        'gfxPDFSurface.h',
     ]
 
     if CONFIG['MOZ_X11']:
@@ -115,13 +115,13 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
         EXPORTS += ['gfxFT2Fonts.h']
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     EXPORTS += [
-        'gfxD2DSurface.h',
-        'gfxDWriteFonts.h',
-        'gfxGDIFont.h',
-        'gfxGDIFontList.h',
         'gfxPDFSurface.h',
-        'gfxPlatformFontList.h',
-        'gfxWindowsNativeDrawing.h',
         'gfxWindowsPlatform.h',
         'gfxWindowsSurface.h',
+        'gfxWindowsNativeDrawing.h',
+        'gfxDWriteFonts.h',
+        'gfxD2DSurface.h',
+        'gfxGDIFont.h',
+        'gfxGDIFontList.h',
+        'gfxPlatformFontList.h',
     ]
