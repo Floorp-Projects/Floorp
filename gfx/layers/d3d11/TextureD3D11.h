@@ -144,7 +144,8 @@ public:
   }
 protected:
   virtual void UpdateImpl(const SurfaceDescriptor& aSurface,
-                          nsIntRegion* aRegion) MOZ_OVERRIDE;
+                          nsIntRegion* aRegion,
+                          nsIntPoint *aOffset = nullptr) MOZ_OVERRIDE;
 private:
 
   gfx::IntRect GetTileRect(uint32_t aID) const;
@@ -180,7 +181,8 @@ public:
 
 protected:
   virtual void UpdateImpl(const SurfaceDescriptor& aSurface,
-                          nsIntRegion* aRegion) MOZ_OVERRIDE;
+                          nsIntRegion* aRegion,
+                          nsIntPoint* aOffset = nullptr) MOZ_OVERRIDE;
 private:
   void LockTexture();
   void ReleaseTexture();
@@ -214,7 +216,8 @@ public:
 
 protected:
   virtual void UpdateImpl(const SurfaceDescriptor& aSurface,
-                          nsIntRegion* aRegion) MOZ_OVERRIDE;
+                          nsIntRegion* aRegion,
+                          nsIntPoint* aOffset = nullptr) MOZ_OVERRIDE;
 
 private:
   RefPtr<ID3D11Device> mDevice;
