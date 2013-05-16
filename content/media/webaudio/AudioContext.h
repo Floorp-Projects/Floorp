@@ -58,8 +58,12 @@ class WaveShaperNode;
 class AudioContext MOZ_FINAL : public nsDOMEventTargetHelper,
                                public EnableWebAudioCheck
 {
-  explicit AudioContext(nsPIDOMWindow* aParentWindow, bool aIsOffline);
-  virtual ~AudioContext();
+  AudioContext(nsPIDOMWindow* aParentWindow,
+               bool aIsOffline,
+               uint32_t aNumberOfChannels = 0,
+               uint32_t aLength = 0,
+               float aSampleRate = 0.0f);
+  ~AudioContext();
 
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -177,7 +181,7 @@ public:
                        const Optional<OwningNonNull<DecodeErrorCallback> >& aFailureCallback);
 
   // OfflineAudioContext methods
-  void StartRendering() {}
+  void StartRendering();
   IMPL_EVENT_HANDLER(complete)
 
   uint32_t GetRate() const { return IdealAudioRate(); }

@@ -46,8 +46,14 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 
 static uint8_t gWebAudioOutputKey;
 
-AudioContext::AudioContext(nsPIDOMWindow* aWindow, bool aIsOffline)
-  : mDestination(new AudioDestinationNode(this, MediaStreamGraph::GetInstance()))
+AudioContext::AudioContext(nsPIDOMWindow* aWindow,
+                           bool aIsOffline,
+                           uint32_t aNumberOfChannels,
+                           uint32_t aLength,
+                           float aSampleRate)
+  : mDestination(new AudioDestinationNode(this, aIsOffline,
+                                          aNumberOfChannels,
+                                          aLength, aSampleRate))
   , mIsOffline(aIsOffline)
 {
   // Actually play audio
@@ -107,7 +113,11 @@ AudioContext::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  nsRefPtr<AudioContext> object = new AudioContext(window, true);
+  nsRefPtr<AudioContext> object = new AudioContext(window,
+                                                   true,
+                                                   aNumberOfChannels,
+                                                   aLength,
+                                                   aSampleRate);
   window->AddAudioContext(object);
   return object.forget();
 }
@@ -463,6 +473,14 @@ AudioContext::GetJSContext() const
     return nullptr;
   }
   return scriptContext->GetNativeContext();
+}
+
+void
+AudioContext::StartRendering()
+{
+  MOZ_ASSERT(mIsOffline, "This should only be called on OfflineAudioContext");
+
+  mDestination->StartRendering();
 }
 
 }
