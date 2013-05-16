@@ -24,7 +24,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
- 
+
 #ifndef __WEBVTT_NODE_H__
 # define __WEBVTT_NODE_H__
 # include <webvtt/string.h>
@@ -49,14 +49,15 @@ webvtt_node_kind_t {
   WEBVTT_RUBY = 4 | WEBVTT_NODE_INTERNAL,
   WEBVTT_RUBY_TEXT = 5 | WEBVTT_NODE_INTERNAL,
   WEBVTT_VOICE = 6 | WEBVTT_NODE_INTERNAL,
+  WEBVTT_LANG = 7 | WEBVTT_NODE_INTERNAL,
 
   /**
     * This type of node has should not be rendered.
     * It is the top of the node list and only contains a list of nodes.
     */
-  WEBVTT_HEAD_NODE = 7,
+  WEBVTT_HEAD_NODE = 8,
 
-  WEBVTT_NODE_INTERNAL_END = 7,
+  WEBVTT_NODE_INTERNAL_END = 8,
 
   /**
     * Leaf Node objects
@@ -93,8 +94,8 @@ webvtt_node_t {
 
   struct webvtt_refcount_t refs;
   /**
-    * The specification asks for uni directional linked list, but we have added 
-    * a parent node in order to facilitate an iterative cue text parsing 
+    * The specification asks for uni directional linked list, but we have added
+    * a parent node in order to facilitate an iterative cue text parsing
     * solution.
     */
   struct webvtt_node_t *parent;
@@ -110,6 +111,7 @@ webvtt_node_t {
 typedef struct
 webvtt_internal_node_data_t {
   webvtt_string annotation;
+  webvtt_string lang;
   webvtt_stringlist *css_classes;
 
   webvtt_uint alloc;
@@ -117,9 +119,14 @@ webvtt_internal_node_data_t {
   webvtt_node **children;
 } webvtt_internal_node_data;
 
-WEBVTT_EXPORT void webvtt_init_node( webvtt_node **node );
-WEBVTT_EXPORT void webvtt_ref_node( webvtt_node *node );
-WEBVTT_EXPORT void webvtt_release_node( webvtt_node **node );
+WEBVTT_EXPORT void
+webvtt_init_node( webvtt_node **node );
+
+WEBVTT_EXPORT void
+webvtt_ref_node( webvtt_node *node );
+
+WEBVTT_EXPORT void
+webvtt_release_node( webvtt_node **node );
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }
