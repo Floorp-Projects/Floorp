@@ -68,7 +68,6 @@ const char* XPCJSRuntime::mStrings[] = {
     "__exposedProps__",     // IDX_EXPOSEDPROPS
     "baseURIObject",        // IDX_BASEURIOBJECT
     "nodePrincipal",        // IDX_NODEPRINCIPAL
-    "documentURIObject",    // IDX_DOCUMENTURIOBJECT
     "mozMatchesSelector"    // IDX_MOZMATCHESSELECTOR
 };
 
