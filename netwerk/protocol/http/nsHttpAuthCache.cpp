@@ -331,7 +331,7 @@ nsHttpAuthIdentity::Set(const PRUnichar *domain,
 
     int domainLen = domain ? NS_strlen(domain) : 0;
     int userLen   = user   ? NS_strlen(user)   : 0;
-    int passLen   = pass   ? NS_strlen(pass)   : 0; 
+    int passLen   = pass   ? NS_strlen(pass)   : 0;
 
     int len = userLen + 1 + passLen + 1 + domainLen + 1;
     newUser = (PRUnichar *) malloc(len * sizeof(PRUnichar));
@@ -414,7 +414,7 @@ nsHttpAuthEntry::AddPath(const char *aPath)
         tempPtr = tempPtr->mNext;
 
     }
-    
+
     //Append the aPath
     nsHttpAuthPath *newAuthPath;
     int newpathLen = strlen(aPath);
@@ -471,7 +471,7 @@ nsHttpAuthEntry::Set(const char *path,
     nsresult rv = NS_OK;
     if (ident) {
         rv = mIdent.Set(*ident);
-    } 
+    }
     else if (mIdent.IsEmpty()) {
         // If we are not given an identity and our cached identity has not been
         // initialized yet (so is currently empty), initialize it now by

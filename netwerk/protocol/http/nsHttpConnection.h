@@ -55,7 +55,7 @@ public:
     // Initialize the connection:
     //  info        - specifies the connection parameters.
     //  maxHangTime - limits the amount of time this connection can spend on a
-    //                single transaction before it should no longer be kept 
+    //                single transaction before it should no longer be kept
     //                alive.  a value of 0xffff indicates no limit.
     nsresult Init(nsHttpConnectionInfo *info, uint16_t maxHangTime,
                   nsISocketTransport *, nsIAsyncInputStream *,
@@ -123,7 +123,7 @@ public:
     static NS_METHOD ReadFromStream(nsIInputStream *, void *, const char *,
                                     uint32_t, uint32_t, uint32_t *);
 
-    // When a persistent connection is in the connection manager idle 
+    // When a persistent connection is in the connection manager idle
     // connection pool, the nsHttpConnection still reads errors and hangups
     // on the socket so that it can be proactively released if the server
     // initiates a termination. Only call on socket thread.
@@ -168,7 +168,7 @@ private:
     PRIntervalTime IdleTime();
     bool     IsAlive();
     bool     SupportsPipelining(nsHttpResponseHead *);
-    
+
     // Makes certain the SSL handshake is complete and NPN negotiation
     // has had a chance to happen
     bool     EnsureNPNComplete();

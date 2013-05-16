@@ -80,7 +80,7 @@ SpdyStream2::ReadSegments(nsAHttpSegmentReader *reader,
         this, reader, count, mUpstreamState));
 
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
-  
+
   nsresult rv = NS_ERROR_UNEXPECTED;
   mRequestBlockedOnRead = 0;
 
@@ -100,7 +100,7 @@ SpdyStream2::ReadSegments(nsAHttpSegmentReader *reader,
         mUpstreamState == GENERATING_SYN_STREAM &&
         !mSynFrameComplete)
       mSession->TransactionHasDataToWrite(this);
-    
+
     // mTxinlineFrameUsed represents any queued un-sent frame. It might
     // be 0 if there is no such frame, which is not a gurantee that we
     // don't have more request body to send - just that any data that was
@@ -146,7 +146,7 @@ SpdyStream2::ReadSegments(nsAHttpSegmentReader *reader,
       mTxInlineFrameUsed = 0;         // cancel fin data packet
       ChangeState(UPSTREAM_COMPLETE);
     }
-    
+
     *countRead = 0;
 
     // don't change OK to WOULD BLOCK. we are really done sending if OK
@@ -177,7 +177,7 @@ SpdyStream2::WriteSegments(nsAHttpSegmentWriter *writer,
 {
   LOG3(("SpdyStream2::WriteSegments %p count=%d state=%x",
         this, count, mUpstreamState));
-  
+
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
   MOZ_ASSERT(!mSegmentWriter, "segment writer in progress");
 
@@ -218,7 +218,7 @@ SpdyStream2::ParseHttpRequestHeaders(const char *buf,
   // We can use the simple double crlf because firefox is the
   // only client we are parsing
   int32_t endHeader = mFlatHttpRequestHeaders.Find("\r\n\r\n");
-  
+
   if (endHeader == kNotFound) {
     // We don't have all the headers yet
     LOG3(("SpdyStream2::ParseHttpRequestHeaders %p "
@@ -227,7 +227,7 @@ SpdyStream2::ParseHttpRequestHeaders(const char *buf,
     *countUsed = avail;
     return NS_OK;
   }
-           
+
   // We have recvd all the headers, trim the local
   // buffer of the final empty line, and set countUsed to reflect
   // the whole header has been consumed.
@@ -264,10 +264,10 @@ SpdyStream2::ParseHttpRequestHeaders(const char *buf,
   mTxInlineFrame[2] = 0;
   mTxInlineFrame[3] = SpdySession2::CONTROL_TYPE_SYN_STREAM;
   // 4 to 7 are length and flags, we'll fill that in later
-  
+
   uint32_t networkOrderID = PR_htonl(mStreamID);
   memcpy(mTxInlineFrame + 8, &networkOrderID, 4);
-  
+
   // this is the associated-to field, which is not used sending
   // from the client in the http binding
   memset (mTxInlineFrame + 12, 0, 4);
@@ -291,7 +291,7 @@ SpdyStream2::ParseHttpRequestHeaders(const char *buf,
     mTxInlineFrame[16] = SpdySession2::kPri00;
 
   mTxInlineFrame[17] = 0;                         /* unused */
-  
+
   const char *methodHeader = mTransaction->RequestHead()->Method().get();
 
   nsCString hostHeader;
@@ -304,12 +304,12 @@ SpdyStream2::ParseHttpRequestHeaders(const char *buf,
     versionHeader = NS_LITERAL_CSTRING("HTTP/1.0");
 
   nsClassHashtable<nsCStringHashKey, nsCString> hdrHash;
-  
+
   // use mRequestHead() to get a sense of how big to make the hash,
   // even though we are parsing the actual text stream because
   // it is legit to append headers.
   hdrHash.Init(1 + (mTransaction->RequestHead()->Headers().Count() * 2));
-  
+
   const char *beginBuffer = mFlatHttpRequestHeaders.BeginReading();
 
   // need to hash all the headers together to remove duplicates, special
@@ -322,12 +322,12 @@ SpdyStream2::ParseHttpRequestHeaders(const char *buf,
     crlfIndex = mFlatHttpRequestHeaders.Find("\r\n", false, startIndex);
     if (crlfIndex == -1)
       break;
-    
+
     int32_t colonIndex = mFlatHttpRequestHeaders.Find(":", false, startIndex,
                                                       crlfIndex - startIndex);
     if (colonIndex == -1)
       break;
-    
+
     nsDependentCSubstring name = Substring(beginBuffer + startIndex,
                                            beginBuffer + colonIndex);
     // all header names are lower case in spdy
@@ -342,7 +342,7 @@ SpdyStream2::ParseHttpRequestHeaders(const char *buf,
         name.Equals("connection") ||
         name.Equals("url"))
       continue;
-    
+
     nsCString *val = hdrHash.Get(name);
     if (!val) {
       val = new nsCString();
@@ -352,7 +352,7 @@ SpdyStream2::ParseHttpRequestHeaders(const char *buf,
     int32_t valueIndex = colonIndex + 1;
     while (valueIndex < crlfIndex && beginBuffer[valueIndex] == ' ')
       ++valueIndex;
-    
+
     nsDependentCSubstring v = Substring(beginBuffer + valueIndex,
                                         beginBuffer + crlfIndex);
     if (!val->IsEmpty())
@@ -365,7 +365,7 @@ SpdyStream2::ParseHttpRequestHeaders(const char *buf,
         mRequestBodyLenRemaining = len;
     }
   }
-  
+
   mTxInlineFrameUsed = 18;
 
   // Do not naively log the request headers here beacuse they might
@@ -386,17 +386,17 @@ SpdyStream2::ParseHttpRequestHeaders(const char *buf,
   CompressToFrame(mTransaction->RequestHead()->RequestURI());
   CompressToFrame(NS_LITERAL_CSTRING("version"));
   CompressToFrame(versionHeader);
-  
+
   hdrHash.Enumerate(hdrHashEnumerate, this);
   CompressFlushFrame();
-  
+
   // 4 to 7 are length and flags, which we can now fill in
   (reinterpret_cast<uint32_t *>(mTxInlineFrame.get()))[1] =
     PR_htonl(mTxInlineFrameUsed - 8);
 
   MOZ_ASSERT(!mTxInlineFrame[4],
              "Size greater than 24 bits");
-  
+
   // Determine whether to put the fin bit on the syn stream frame or whether
   // to wait for a data packet to put it on.
 
@@ -421,7 +421,7 @@ SpdyStream2::ParseHttpRequestHeaders(const char *buf,
     mSentFinOnData = 1;
     mTxInlineFrame[4] = SpdySession2::kFlag_Data_FIN;
   }
-  
+
   Telemetry::Accumulate(Telemetry::SPDY_SYN_SIZE, mTxInlineFrameUsed - 18);
 
   // The size of the input headers is approximate
@@ -429,7 +429,7 @@ SpdyStream2::ParseHttpRequestHeaders(const char *buf,
     (mTxInlineFrameUsed - 18) * 100 /
     (11 + mTransaction->RequestHead()->RequestURI().Length() +
      mFlatHttpRequestHeaders.Length());
-  
+
   Telemetry::Accumulate(Telemetry::SPDY_SYN_RATIO, ratio);
   return NS_OK;
 }
@@ -499,7 +499,7 @@ SpdyStream2::TransmitFrame(const char *buf,
 
   uint32_t transmittedCount;
   nsresult rv;
-  
+
   LOG3(("SpdyStream2::TransmitFrame %p inline=%d stream=%d",
         this, mTxInlineFrameUsed, mTxStreamFrameSize));
   if (countUsed)
@@ -536,7 +536,7 @@ SpdyStream2::TransmitFrame(const char *buf,
   // bytes through to the SpdySession2 and then the HttpConnection which calls
   // the socket write function. It will accept all of the inline and stream
   // data because of the above 'commitment' even if it has to buffer
-  
+
   rv = mSegmentReader->OnReadSegment(mTxInlineFrame, mTxInlineFrameUsed,
                                      &transmittedCount);
   LOG3(("SpdyStream2::TransmitFrame for inline session=%p "
@@ -551,7 +551,7 @@ SpdyStream2::TransmitFrame(const char *buf,
 
   MOZ_ASSERT(transmittedCount == mTxInlineFrameUsed,
              "inconsistent inline commitment count");
-    
+
   SpdySession2::LogIO(mSession, this, "Writing from Inline Buffer",
                      mTxInlineFrame, transmittedCount);
 
@@ -570,7 +570,7 @@ SpdyStream2::TransmitFrame(const char *buf,
     LOG3(("SpdyStream2::TransmitFrame for regular session=%p "
           "stream=%p result %x len=%d",
           mSession, this, rv, transmittedCount));
-  
+
     MOZ_ASSERT(rv != NS_BASE_STREAM_WOULD_BLOCK,
                "inconsistent stream commitment result");
 
@@ -579,13 +579,13 @@ SpdyStream2::TransmitFrame(const char *buf,
 
     MOZ_ASSERT(transmittedCount == mTxStreamFrameSize,
                "inconsistent stream commitment count");
-    
+
     SpdySession2::LogIO(mSession, this, "Writing from Transaction Buffer",
                        buf, transmittedCount);
 
     *countUsed += mTxStreamFrameSize;
   }
-  
+
   // calling this will trigger waiting_for if mRequestBodyLenRemaining is 0
   UpdateTransportSendEvents(mTxInlineFrameUsed + mTxStreamFrameSize);
 
@@ -614,14 +614,14 @@ SpdyStream2::GenerateDataFrameHeader(uint32_t dataLength, bool lastFrame)
   MOZ_ASSERT(!mTxInlineFrameUsed, "inline frame not empty");
   MOZ_ASSERT(!mTxStreamFrameSize, "stream frame not empty");
   MOZ_ASSERT(!(dataLength & 0xff000000), "datalength > 24 bits");
-  
+
   (reinterpret_cast<uint32_t *>(mTxInlineFrame.get()))[0] = PR_htonl(mStreamID);
   (reinterpret_cast<uint32_t *>(mTxInlineFrame.get()))[1] =
     PR_htonl(dataLength);
-  
+
   MOZ_ASSERT(!(mTxInlineFrame[0] & 0x80), "control bit set unexpectedly");
   MOZ_ASSERT(!mTxInlineFrame[4], "flag bits set unexpectedly");
-  
+
   mTxInlineFrameUsed = 8;
   mTxStreamFrameSize = dataLength;
 
@@ -645,7 +645,7 @@ SpdyStream2::CompressToFrame(const nsACString *str)
 }
 
 // Dictionary taken from
-// http://dev.chromium.org/spdy/spdy-protocol/spdy-protocol-draft2 
+// http://dev.chromium.org/spdy/spdy-protocol/spdy-protocol-draft2
 // Name/Value Header Block Format
 // spec indicates that the compression dictionary is not null terminated
 // but in reality it is. see:
@@ -710,7 +710,7 @@ SpdyStream2::CompressToFrame(uint16_t data)
 {
   // convert the data to network byte order and write that
   // to the compressed stream
-  
+
   data = PR_htons(data);
 
   mZlib->next_in = reinterpret_cast<unsigned char *> (&data);
@@ -731,12 +731,12 @@ SpdyStream2::CompressToFrame(const char *data, uint32_t len)
     len = 0xffff;
 
   uint16_t networkLen = PR_htons(len);
-  
+
   // write out the length
   mZlib->next_in = reinterpret_cast<unsigned char *> (&networkLen);
   mZlib->avail_in = 2;
   ExecuteCompress(Z_NO_FLUSH);
-  
+
   // write out the data
   mZlib->next_in = (unsigned char *)data;
   mZlib->avail_in = len;
@@ -771,7 +771,7 @@ SpdyStream2::OnReadSegment(const char *buf,
 
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
   MOZ_ASSERT(mSegmentReader);
-  
+
   nsresult rv = NS_ERROR_UNEXPECTED;
   uint32_t dataLength;
 
@@ -840,12 +840,12 @@ SpdyStream2::OnReadSegment(const char *buf,
   case SENDING_FIN_STREAM:
     MOZ_ASSERT(false, "resuming partial fin stream out of OnReadSegment");
     break;
-    
+
   default:
     MOZ_ASSERT(false, "SpdyStream2::OnReadSegment non-write state");
     break;
   }
-  
+
   return rv;
 }
 

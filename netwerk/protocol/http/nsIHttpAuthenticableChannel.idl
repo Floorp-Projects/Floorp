@@ -17,7 +17,7 @@ interface nsIHttpAuthenticableChannel : nsIProxiedChannel
      * If the channel being authenticated is using SSL.
      */
     readonly attribute boolean isSSL;
-    
+
     /**
      * Returns if the proxy HTTP method used is CONNECT. If no proxy is being
      * used it must return PR_FALSE.
@@ -72,7 +72,7 @@ interface nsIHttpAuthenticableChannel : nsIProxiedChannel
     readonly attribute ACString WWWChallenges;
 
     /**
-     * Sets the Proxy-Authorization request header. An empty string 
+     * Sets the Proxy-Authorization request header. An empty string
      * will clear it.
      */
     void setProxyCredentials(in ACString credentials);

@@ -126,7 +126,7 @@ nsHttp::CreateAtomTable()
                                                  (PL_DHashTableOperate(&sAtomTable, atoms[i], PL_DHASH_ADD));
         if (!stub)
             return NS_ERROR_OUT_OF_MEMORY;
-        
+
         MOZ_ASSERT(!stub->key, "duplicate static atom");
         stub->key = atoms[i];
     }
