@@ -69,7 +69,7 @@
                                   android:contentDescription="@string/back"
                                   android:background="@drawable/address_bar_nav_button"/>
 
-    <LinearLayout android:id="@+id/awesome_bar_content"
+    <LinearLayout android:id="@+id/awesome_bar_display_container"
                   style="@style/AddressBar.Button.Container"
                   android:layout_toRightOf="@id/back"
                   android:layout_toLeftOf="@id/menu_items">

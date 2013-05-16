@@ -36,6 +36,7 @@ CPPSRCS := \
   PannerNode.cpp \
   ScriptProcessorNode.cpp \
   ThreeDPoint.cpp \
+  WaveShaperNode.cpp \
   WebAudioUtils.cpp \
   $(NULL)
 

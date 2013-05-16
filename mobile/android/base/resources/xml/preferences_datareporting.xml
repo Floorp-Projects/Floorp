@@ -19,7 +19,7 @@
                         android:defaultValue="true" />
 
     <CheckBoxPreference android:key="datareporting.crashreporter.submitEnabled"
-                        android:title="@string/datareporting_crashreporter_title"
+                        android:title="@string/datareporting_crashreporter_title_short"
                         android:summary="@string/datareporting_crashreporter_summary"
                         android:defaultValue="false" />
 

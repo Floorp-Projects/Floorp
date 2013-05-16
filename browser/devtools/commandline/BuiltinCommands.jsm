@@ -1928,7 +1928,7 @@ const { DebuggerServer } = Cu.import("resource://gre/modules/devtools/dbg-server
 gcli.addCommand({
   name: "listen",
   description: gcli.lookup("listenDesc"),
-  manual: gcli.lookup("listenManual"),
+  manual: gcli.lookupFormat("listenManual2", [BRAND_SHORT_NAME]),
   params: [
     {
       name: "port",

@@ -8,7 +8,7 @@ function boom()
   var frame = document.getElementById("frame");
   var frameWin = frame.contentWindow;
   var frameWinner = Object.create(frameWin);
-  var v = frameWinner.captureEvents.bind(frameWinner);
+  var v = frameWinner.clearTimeout.bind(frameWinner);
   frame.src = "local-file-not-found";
   setTimeout(function() { setTimeout(finish); v(0); });
 }

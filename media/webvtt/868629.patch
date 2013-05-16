@@ -1,0 +1,61 @@
+# HG changeset patch
+# User Caitlin Potter <snowball@defpixel.com>
+# Date 1367954476 14400
+# Node ID 2becb21900559e271175e08d7ec33ed35b034967
+# Parent  41ff3b67b69232297191c8f8ef78e5facc1c1d19
+Bug 868629 - webvtt no longer needs -DWEBVTT_NO_CONFIG_H. r=rillian
+
+diff --git a/media/webvtt/include/webvtt/util.h b/media/webvtt/include/webvtt/util.h
+--- a/media/webvtt/include/webvtt/util.h
++++ b/media/webvtt/include/webvtt/util.h
+@@ -32,16 +32,21 @@
+ extern "C" {
+ #endif
+ 
+-# if defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__) || defined(__WINDOWS__)
+-#   if !WEBVTT_NO_CONFIG_H
+-#     include "webvtt-config-win32.h"
+-#   endif
++# if !defined(_MSC_VER) || _MSC_VER >= 1600
++/**
++ * For non-MSVC compilers, or MSVC2010 or later, assume we have
++ * stdint.h
++ */
++#   define WEBVTT_HAVE_STDINT 1
++#   include <stdint.h>
++# endif
++
++# if defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__) ||\
++     defined(__WINDOWS__)
+ #   define WEBVTT_OS_WIN32 1
+ #   if defined(_WIN64)
+ #     define WEBVTT_OS_WIN64 1
+ #   endif
+-# elif !WEBVTT_NO_CONFIG_H
+-#   include <webvtt/webvtt-config.h>
+ # endif
+ 
+ # if defined(_MSC_VER)
+@@ -54,12 +59,8 @@
+ #   else
+ #     define WEBVTT_EXPORT
+ #   endif
+-#   if _MSC_VER >= 1600
+-#     define WEBVTT_HAVE_STDINT 1
+-#   endif
+ # elif defined(__GNUC__)
+ #   define WEBVTT_CC_GCC 1
+-#   define WEBVTT_HAVE_STDINT 1
+ #   if WEBVTT_OS_WIN32
+ #     if WEBVTT_BUILD_LIBRARY
+ #       define WEBVTT_EXPORT __declspec(dllexport)
+@@ -96,8 +97,7 @@
+ #   define WEBVTT_INLINE __inline__
+ # endif
+ 
+-# if WEBVTT_HAVE_STDINT
+-#   include <stdint.h>
++# ifdef WEBVTT_HAVE_STDINT
+   typedef int8_t webvtt_int8;
+   typedef int16_t webvtt_int16;
+   typedef int32_t webvtt_int32;

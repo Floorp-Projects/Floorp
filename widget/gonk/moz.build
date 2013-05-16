@@ -20,3 +20,4 @@ EXPORTS += [
     'OrientationObserver.h',
 ]
 
+DIRS += ['libdisplay']

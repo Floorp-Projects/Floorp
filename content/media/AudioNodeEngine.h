@@ -188,6 +188,11 @@ public:
   {
     NS_ERROR("SetBuffer called on engine that doesn't support it");
   }
+  // This consumes the contents of aData.  aData will be emptied after this returns.
+  virtual void SetRawArrayData(nsTArray<float>& aData)
+  {
+    NS_ERROR("SetRawArrayData called on an engine that doesn't support it");
+  }
 
   /**
    * Produce the next block of audio samples, given input samples aInput

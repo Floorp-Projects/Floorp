@@ -57,6 +57,12 @@ def doc_to_paragraphs(doc):
 #
 VARIABLES = {
     # Variables controlling reading of other frontend files.
+    'ASFILES': (list, [],
+        """ Assembly file sources.
+
+        This variable contains a list of files to invoke the assembler on.
+        """),
+
     'DIRS': (list, [],
         """Child directories to descend into looking for build frontend files.
 
@@ -200,7 +206,6 @@ VARIABLES = {
         directories to search for included .idl files.
         """),
 
-#     'EXPORTS': (HierarchicalStringList, HierarchicalStringList(),
     'XPCSHELL_TESTS_MANIFESTS': (list, [],
         """XPCSHELL Test Manifest list
 

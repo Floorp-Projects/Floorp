@@ -1,0 +1,28 @@
+<style>
+p::first-letter {
+    float: left;
+    }
+p:before {
+    content: counter(e2);
+    }
+p:not([type=image]) {
+    float: left;
+    -moz-appearance: radio;
+}
+</style>
+<p id=test1><script>
+function initCF() {
+document.removeEventListener("DOMContentLoaded", initCF, false);
+test2 = test1.cloneNode(false);
+test3 = test2.cloneNode(false);
+document.documentElement.appendChild(test3);
+setTimeout("CFcrash()", 21);
+}
+document.addEventListener("DOMContentLoaded", initCF, false);
+window.onload = initCF;
+
+function CFcrash() {
+test3.appendChild(document.createTextNode(" bBCV5.3kvwoaU O8k l i!4c`Ei;N-#/ Qg QBZi$8A [8xlL#cN U4l  !%lP   S% Z9[H } {2Jk A00F8 TjQQ1KHx zf   k]F-G ,%lz8?@ 2ZB!-"));
+window.scrollBy(-463, -480);
+}
+</script>
