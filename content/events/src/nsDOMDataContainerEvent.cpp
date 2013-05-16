@@ -5,6 +5,7 @@
 
 #include "nsDOMDataContainerEvent.h"
 #include "nsDOMClassInfoID.h"
+#include "nsContentUtils.h"
 
 nsDOMDataContainerEvent::nsDOMDataContainerEvent(
                                              mozilla::dom::EventTarget* aOwner,
@@ -13,6 +14,7 @@ nsDOMDataContainerEvent::nsDOMDataContainerEvent(
   : nsDOMEvent(aOwner, aPresContext, aEvent)
 {
   mData.Init();
+  SetIsDOMBinding();
 }
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsDOMDataContainerEvent,
@@ -57,6 +59,24 @@ nsDOMDataContainerEvent::SetData(const nsAString& aKey, nsIVariant *aData)
   NS_ENSURE_STATE(mData.IsInitialized());
   mData.Put(aKey, aData);
   return NS_OK;
+}
+
+void
+nsDOMDataContainerEvent::SetData(JSContext* aCx, const nsAString& aKey,
+                                 JS::Value aVal, mozilla::ErrorResult& aRv)
+{
+  if (!nsContentUtils::XPConnect()) {
+    aRv = NS_ERROR_FAILURE;
+    return;
+  }
+  nsCOMPtr<nsIVariant> val;
+  nsresult rv =
+    nsContentUtils::XPConnect()->JSToVariant(aCx, aVal, getter_AddRefs(val));
+  if (NS_FAILED(rv)) {
+    aRv = rv;
+    return;
+  }
+  aRv = SetData(aKey, val);
 }
 
 nsresult
