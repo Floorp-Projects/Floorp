@@ -36,6 +36,7 @@ function continueTest() {
   info("continuing test");
 
   let doc = gBrowser.contentDocument;
+  doc.styleSheetChangeEventsEnabled = true;
   doc.addEventListener("StyleSheetAdded", unexpectedContentEvent, false);
   doc.addEventListener("StyleSheetRemoved", unexpectedContentEvent, false);
   doc.defaultView.addEventListener("StyleSheetAdded", unexpectedContentEvent, false);
