@@ -10,10 +10,6 @@ relativesrcdir  = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DISABLED_XPCSHELL_TESTS = \
-  unit \
-  $(NULL)
-
 MOCHITEST_FILES = \
 		test_bug_511615.html \
 		test_bug_787624.html \

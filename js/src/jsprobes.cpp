@@ -32,43 +32,6 @@ Probes::JITGranularityRequested(JSContext *cx)
     return JITREPORT_GRANULARITY_NONE;
 }
 
-#ifdef JS_METHODJIT
-
-bool
-Probes::registerMJITCode(JSContext *cx, js::mjit::JITChunk *chunk,
-                         js::mjit::JSActiveFrame *outerFrame,
-                         js::mjit::JSActiveFrame **inlineFrames)
-{
-    if (cx->runtime->spsProfiler.enabled() &&
-        !cx->runtime->spsProfiler.registerMJITCode(chunk, outerFrame, inlineFrames))
-    {
-        return false;
-    }
-
-    return true;
-}
-
-void
-Probes::discardMJITCode(FreeOp *fop, mjit::JITScript *jscr, mjit::JITChunk *chunk, void* address)
-{
-    if (fop->runtime()->spsProfiler.enabled())
-        fop->runtime()->spsProfiler.discardMJITCode(jscr, chunk, address);
-}
-
-bool
-Probes::registerICCode(JSContext *cx,
-                       mjit::JITChunk *chunk, JSScript *script, jsbytecode* pc,
-                       void *start, size_t size)
-{
-    if (cx->runtime->spsProfiler.enabled() &&
-        !cx->runtime->spsProfiler.registerICCode(chunk, script, pc, start, size))
-    {
-        return false;
-    }
-    return true;
-}
-#endif
-
 /* ICs are unregistered in a batch */
 void
 Probes::discardExecutableRegion(void *start, size_t size)

@@ -213,7 +213,6 @@ public class testHistoryTab extends PixelTest {
         mSolo.clickOnView(child);
         // nothing should happen
 
-        Actions.EventExpecter contentEventExpecter = mActions.expectGeckoEvent("DOMContentLoaded");
         mChild = null;
         boolean success = waitForTest(new BooleanTest() {
             @Override
@@ -227,14 +226,17 @@ public class testHistoryTab extends PixelTest {
             }
         }, MAX_WAIT_MS);
         if (success == true && mChild != null) {
+            Actions.EventExpecter contentEventExpecter = mActions.expectGeckoEvent("DOMContentLoaded");
             mSolo.clickOnView(mChild);
             contentEventExpecter.blockForEvent();
-            mSolo.sleep(500);
+            contentEventExpecter.unregisterListener();
+            // TODO: Find a better way to wait for update before checking
+            // awesome bar; lesser waits result in intermittent failures
+            mSolo.sleep(2000);
             verifyUrl(url);
         } else {
             mAsserter.ok(false, "waiting for history item", "history item available");
         }
-        contentEventExpecter.unregisterListener();
     }
 
     @Override

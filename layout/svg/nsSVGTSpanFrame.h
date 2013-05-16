@@ -68,7 +68,7 @@ public:
   virtual gfxMatrix GetCanvasTM(uint32_t aFor);
   
   // nsISVGGlyphFragmentNode interface:
-  virtual uint32_t GetNumberOfChars();
+  virtual uint32_t GetNumberOfChars() MOZ_OVERRIDE;
   virtual float GetComputedTextLength() MOZ_OVERRIDE;
   virtual float GetSubStringLength(uint32_t charnum, uint32_t fragmentChars) MOZ_OVERRIDE;
   virtual int32_t GetCharNumAtPosition(mozilla::nsISVGPoint *point) MOZ_OVERRIDE;

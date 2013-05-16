@@ -91,31 +91,19 @@ namespace types {
 inline
 CompilerOutput::CompilerOutput()
   : script(NULL),
-    kindInt(MethodJIT),
+    kindInt(Ion),
     constructing(false),
     barriers(false),
     chunkIndex(false)
 {
 }
 
-inline mjit::JITScript *
-CompilerOutput::mjit() const
-{
-#ifdef JS_METHODJIT
-    JS_ASSERT(kind() == MethodJIT && isValid());
-    return script->getJIT(constructing, barriers);
-#else
-    return NULL;
-#endif
-}
-
 inline ion::IonScript *
 CompilerOutput::ion() const
 {
 #ifdef JS_ION
-    JS_ASSERT(kind() != MethodJIT && isValid());
+    JS_ASSERT(isValid());
     switch (kind()) {
-      case MethodJIT: break;
       case Ion: return script->ionScript();
       case ParallelIon: return script->parallelIonScript();
     }
@@ -130,24 +118,11 @@ CompilerOutput::isValid() const
     if (!script)
         return false;
 
-#if defined(DEBUG) && (defined(JS_METHODJIT) || defined(JS_ION))
+#if defined(DEBUG) && defined(JS_ION)
     TypeCompartment &types = script->compartment()->types;
 #endif
 
     switch (kind()) {
-      case MethodJIT: {
-#ifdef JS_METHODJIT
-        mjit::JITScript *jit = script->getJIT(constructing, barriers);
-        if (!jit)
-            return false;
-        mjit::JITChunk *chunk = jit->chunkDescriptor(chunkIndex).chunk;
-        if (!chunk)
-            return false;
-        JS_ASSERT(this == chunk->recompileInfo.compilerOutput(types));
-        return true;
-#endif
-      }
-
       case Ion:
 #ifdef JS_ION
         if (script->hasIonScript()) {

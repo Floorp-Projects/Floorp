@@ -21,15 +21,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=678695
 
 "use strict";
 
-if (!SpecialPowers.getBoolPref("dom.mozSettings.enabled")) {
+if (SpecialPowers.isMainProcess()) {
   SpecialPowers.Cu.import("resource://gre/modules/SettingsChangeNotifier.jsm");
-  SpecialPowers.setBoolPref("dom.mozSettings.enabled", true);
 }
 
 SpecialPowers.addPermission("settings-write", true, document);
 SpecialPowers.addPermission("settings-read", true, document);
-
-function tests() {
 
 var screenBright = {"screen.brightness": 0.7};
 
@@ -273,23 +270,8 @@ function next() {
   index += 1;
 }
 
-function permissionTest() {
-  if (gSettingsEnabled) {
-    next();
-  } else {
-    is(mozSettings, null, "mozSettings is null when not enabled.");
-    SimpleTest.finish();
-  }
-}
-
-permissionTest();
-}
-
-var gSettingsEnabled = SpecialPowers.getBoolPref("dom.mozSettings.enabled");
-addLoadEvent(tests);
 SimpleTest.waitForExplicitFinish();
-
-ok(true, "test passed");
+addLoadEvent(next);
 </script>
 </pre>
 </body>

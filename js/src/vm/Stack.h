@@ -42,21 +42,6 @@ class StaticBlockObject;
 
 struct ScopeCoordinate;
 
-#ifdef JS_METHODJIT
-namespace mjit {
-    class CallCompiler;
-    class GetPropCompiler;
-    struct CallSite;
-    struct JITScript;
-    jsbytecode *NativeToPC(JITScript *jit, void *ncode, CallSite **pinline);
-    namespace ic { struct GetElementIC; }
-}
-typedef mjit::CallSite InlinedSite;
-#else
-struct InlinedSite {};
-#endif
-typedef size_t FrameRejoinState;
-
 namespace ion {
     class IonBailoutIterator;
     class SnapshotIterator;
@@ -278,7 +263,6 @@ class NullFramePtr : public AbstractFramePtr
 enum InitialFrameFlags {
     INITIAL_NONE           =          0,
     INITIAL_CONSTRUCT      =       0x20, /* == StackFrame::CONSTRUCTING, asserted below */
-    INITIAL_LOWERED        =    0x40000  /* == StackFrame::LOWERED_CALL_APPLY, asserted below */
 };
 
 enum ExecuteType {
@@ -324,24 +308,18 @@ class StackFrame
         HAS_PREVPC         =     0x8000,  /* frame has prevpc_ and prevInline_ set */
         HAS_BLOCKCHAIN     =    0x10000,  /* frame has blockChain_ set */
 
-        /* Method JIT state */
-        DOWN_FRAMES_EXPANDED =  0x20000,  /* inlining in down frames has been expanded */
-        LOWERED_CALL_APPLY   =  0x40000,  /* Pushed by a lowered call/apply */
-
         /* Debugger state */
-        PREV_UP_TO_DATE    =    0x80000,  /* see DebugScopes::updateLiveScopes */
+        PREV_UP_TO_DATE    =    0x20000,  /* see DebugScopes::updateLiveScopes */
 
         /* Used in tracking calls and profiling (see vm/SPSProfiler.cpp) */
-        HAS_PUSHED_SPS_FRAME = 0x100000,  /* SPS was notified of enty */
+        HAS_PUSHED_SPS_FRAME =  0x40000,  /* SPS was notified of enty */
 
         /* Ion frame state */
-        RUNNING_IN_ION     =   0x200000,  /* frame is running in Ion */
-        CALLING_INTO_ION   =   0x400000,  /* frame is calling into Ion */
-
-        JIT_REVISED_STACK  =   0x800000,  /* sp was revised by JIT for lowered apply */
+        RUNNING_IN_ION     =    0x80000,  /* frame is running in Ion */
+        CALLING_INTO_ION   =   0x100000,  /* frame is calling into Ion */
 
         /* Miscellaneous state. */
-        USE_NEW_TYPE       =  0x1000000   /* Use new type for constructed |this| object. */
+        USE_NEW_TYPE       =   0x200000   /* Use new type for constructed |this| object. */
     };
 
   private:
@@ -361,10 +339,7 @@ class StackFrame
     StaticBlockObject   *blockChain_;   /* if HAS_BLOCKCHAIN, innermost let block */
     ArgumentsObject     *argsObj_;      /* if HAS_ARGS_OBJ, the call's arguments object */
     jsbytecode          *prevpc_;       /* if HAS_PREVPC, pc of previous frame*/
-    InlinedSite         *prevInline_;   /* for a jit frame, inlined site in previous frame */
     void                *hookData_;     /* if HAS_HOOK_DATA, closure returned by call hook */
-    FrameRejoinState    rejoin_;        /* for a jit frame rejoining the interpreter
-                                         * from JIT code, state at rejoin. */
 #ifdef JS_ION
     ion::BaselineFrame  *prevBaselineFrame_; /* for an eval/debugger frame, the baseline frame
                                               * to use as prev. */
@@ -376,7 +351,6 @@ class StackFrame
     }
 
     inline void initPrev(JSContext *cx);
-    jsbytecode *prevpcSlow(InlinedSite **pinlined);
     void writeBarrierPost();
 
     /*
@@ -401,11 +375,6 @@ class StackFrame
     friend class CallObject;
     friend class ClonedBlockObject;
     friend class ArgumentsObject;
-#ifdef JS_METHODJIT
-    friend class mjit::CallCompiler;
-    friend class mjit::GetPropCompiler;
-    friend struct mjit::ic::GetElementIC;
-#endif
 
     /*
      * Frame initialization, called by ContextStack operations after acquiring
@@ -715,18 +684,9 @@ class StackFrame
     jsbytecode *pcQuadratic(const ContextStack &stack, size_t maxDepth = SIZE_MAX);
 
     /* Return the previous frame's pc. Unlike pcQuadratic, this is O(1). */
-    jsbytecode *prevpc(InlinedSite **pinlined = NULL) {
-        if (flags_ & HAS_PREVPC) {
-            if (pinlined)
-                *pinlined = prevInline_;
-            return prevpc_;
-        }
-        return prevpcSlow(pinlined);
-    }
-
-    InlinedSite *prevInline() {
+    jsbytecode *prevpc() {
         JS_ASSERT(flags_ & HAS_PREVPC);
-        return prevInline_;
+        return prevpc_;
     }
 
     /*
@@ -824,26 +784,6 @@ class StackFrame
      */
 
     inline JSCompartment *compartment() const;
-
-    /* JIT rejoin state */
-
-    FrameRejoinState rejoin() const {
-        return rejoin_;
-    }
-
-    void setRejoin(FrameRejoinState state) {
-        rejoin_ = state;
-    }
-
-    /* Down frame expansion state */
-
-    void setDownFramesExpanded() {
-        flags_ |= DOWN_FRAMES_EXPANDED;
-    }
-
-    bool downFramesExpanded() {
-        return !!(flags_ & DOWN_FRAMES_EXPANDED);
-    }
 
     /* Debugger hook data */
 
@@ -983,8 +923,7 @@ class StackFrame
     InitialFrameFlags initialFlags() const {
         JS_STATIC_ASSERT((int)INITIAL_NONE == 0);
         JS_STATIC_ASSERT((int)INITIAL_CONSTRUCT == (int)CONSTRUCTING);
-        JS_STATIC_ASSERT((int)INITIAL_LOWERED == (int)LOWERED_CALL_APPLY);
-        uint32_t mask = CONSTRUCTING | LOWERED_CALL_APPLY;
+        uint32_t mask = CONSTRUCTING;
         JS_ASSERT((flags_ & mask) != mask);
         return InitialFrameFlags(flags_ & mask);
     }
@@ -1028,16 +967,6 @@ class StackFrame
         return flags_ & USE_NEW_TYPE;
     }
 
-    /*
-     * The method JIT call/apply optimization can erase Function.{call,apply}
-     * invocations from the stack and push the callee frame directly. The base
-     * of these frames will be offset by one value, however, which the
-     * interpreter needs to account for if it ends up popping the frame.
-     */
-    bool loweredCallOrApply() const {
-        return !!(flags_ & LOWERED_CALL_APPLY);
-    }
-
     bool isDebuggerFrame() const {
         return !!(flags_ & DEBUGGER);
     }
@@ -1075,11 +1004,6 @@ class StackFrame
     }
 
   public:
-    /* Public, but only for JIT use: */
-
-    inline void resetInlinePrev(StackFrame *prevfp, jsbytecode *prevpc);
-    inline void initInlineFrame(JSFunction *fun, StackFrame *prevfp, jsbytecode *prevpc);
-
     static size_t offsetOfFlags() {
         return offsetof(StackFrame, flags_);
     }
@@ -1096,27 +1020,6 @@ class StackFrame
         return offsetof(StackFrame, scopeChain_);
     }
 
-    static size_t offsetOfPrev() {
-        return offsetof(StackFrame, prev_);
-    }
-
-    static size_t offsetOfReturnValue() {
-        return offsetof(StackFrame, rval_);
-    }
-
-    static ptrdiff_t offsetOfNcode() {
-        return offsetof(StackFrame, ncode_);
-    }
-
-    static ptrdiff_t offsetOfArgsObj() {
-        return offsetof(StackFrame, argsObj_);
-    }
-
-    static ptrdiff_t offsetOfCallee(JSFunction *fun) {
-        JS_ASSERT(fun != NULL);
-        return -(fun->nargs + 2) * sizeof(Value);
-    }
-
     static ptrdiff_t offsetOfThis(JSFunction *fun) {
         return fun == NULL
                ? -1 * ptrdiff_t(sizeof(Value))
@@ -1131,12 +1034,6 @@ class StackFrame
     static size_t offsetOfFixed(unsigned i) {
         return sizeof(StackFrame) + i * sizeof(Value);
     }
-
-#ifdef JS_METHODJIT
-    inline mjit::JITScript *jit();
-#endif
-
-    void methodjitStaticAsserts();
 
   public:
     void mark(JSTracer *trc);
@@ -1165,13 +1062,6 @@ class StackFrame
     void clearCallingIntoIon() {
         flags_ &= ~CALLING_INTO_ION;
     }
-
-    bool jitRevisedStack() const {
-        return !!(flags_ & JIT_REVISED_STACK);
-    }
-    void setJitRevisedStack() const {
-        flags_ |= JIT_REVISED_STACK;
-    }
 };
 
 static const size_t VALUES_PER_STACK_FRAME = sizeof(StackFrame) / sizeof(Value);
@@ -1194,12 +1084,6 @@ InitialFrameFlagsAreConstructing(InitialFrameFlags initial)
     return !!(initial & INITIAL_CONSTRUCT);
 }
 
-static inline bool
-InitialFrameFlagsAreLowered(InitialFrameFlags initial)
-{
-    return !!(initial & INITIAL_LOWERED);
-}
-
 inline AbstractFramePtr Valueify(JSAbstractFramePtr frame) { return AbstractFramePtr(frame); }
 static inline JSAbstractFramePtr Jsvalify(AbstractFramePtr frame)   { return JSAbstractFramePtr(frame.raw()); }
 
@@ -1211,20 +1095,9 @@ class FrameRegs
     Value *sp;
     jsbytecode *pc;
   private:
-    InlinedSite *inlined_;
     StackFrame *fp_;
   public:
     StackFrame *fp() const { return fp_; }
-    InlinedSite *inlined() const { return inlined_; }
-
-    /* For jit use (need constant): */
-    static const size_t offsetOfFp = 3 * sizeof(void *);
-    static const size_t offsetOfInlined = 2 * sizeof(void *);
-    static void staticAssert() {
-        JS_STATIC_ASSERT(offsetOfFp == offsetof(FrameRegs, fp_));
-        JS_STATIC_ASSERT(offsetOfInlined == offsetof(FrameRegs, inlined_));
-    }
-    void clearInlined() { inlined_ = NULL; }
 
     unsigned stackDepth() const {
         JS_ASSERT(sp >= fp_->base());
@@ -1241,13 +1114,12 @@ class FrameRegs
         fp_ = &to;
         sp = to.slots() + (from.sp - from.fp_->slots());
         pc = from.pc;
-        inlined_ = from.inlined_;
         JS_ASSERT(fp_);
     }
 
     /* For ContextStack: */
     void popFrame(Value *newsp) {
-        pc = fp_->prevpc(&inlined_);
+        pc = fp_->prevpc();
         sp = newsp;
         fp_ = fp_->prev();
         JS_ASSERT(fp_);
@@ -1265,17 +1137,11 @@ class FrameRegs
         fp_ = (StackFrame *) newfp;
     }
 
-    /* For EnterMethodJIT: */
-    void refreshFramePointer(StackFrame *fp) {
-        fp_ = fp;
-    }
-
     /* For stubs::CompileFunction, ContextStack: */
     void prepareToRun(StackFrame &fp, JSScript *script) {
         pc = script->code;
         sp = fp.slots() + script->nfixed;
         fp_ = &fp;
-        inlined_ = NULL;
     }
 
     void setToEndOfScript() {
@@ -1284,20 +1150,6 @@ class FrameRegs
         pc = script->code + script->length - JSOP_STOP_LENGTH;
         JS_ASSERT(*pc == JSOP_STOP);
     }
-
-    /* For expandInlineFrames: */
-    void expandInline(StackFrame *innerfp, jsbytecode *innerpc) {
-        pc = innerpc;
-        fp_ = innerfp;
-        inlined_ = NULL;
-    }
-
-#ifdef JS_METHODJIT
-    /* For LimitCheck: */
-    void updateForNcode(mjit::JITScript *jit, void *ncode) {
-        pc = mjit::NativeToPC(jit, ncode, &inlined_);
-    }
-#endif
 };
 
 /*****************************************************************************/
@@ -1693,15 +1545,6 @@ class ContextStack
 
     /* Get the scope chain for the topmost scripted call on the stack. */
     inline HandleObject currentScriptedScopeChain() const;
-
-    /*
-     * Called by the methodjit for an arity mismatch. Arity mismatch can be
-     * hot, so getFixupFrame avoids doing call setup performed by jit code when
-     * FixupArity returns.
-     */
-    StackFrame *getFixupFrame(JSContext *cx, MaybeReportError report,
-                              const CallArgs &args, JSFunction *fun, HandleScript script,
-                              void *ncode, InitialFrameFlags initial, Value **stackLimit);
 
     bool saveFrameChain();
     void restoreFrameChain();

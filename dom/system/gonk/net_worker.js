@@ -24,6 +24,9 @@ const SYS_USB_STATE_PROPERTY          = "sys.usb.state";
 const USB_FUNCTION_RNDIS  = "rndis";
 const USB_FUNCTION_ADB    = "adb";
 
+const kNetdInterfaceChangedTopic = "netd-interface-change";
+const kNetdBandwidthControlTopic = "netd-bandwidth-control";
+
 // Retry 20 times (2 seconds) for usb state transition.
 const USB_FUNCTION_RETRY_TIMES = 20;
 // Check "sys.usb.state" every 100ms.
@@ -41,10 +44,19 @@ const NETD_COMMAND_ERROR        = 500;
 // 6xx - Unsolicited broadcasts
 const NETD_COMMAND_UNSOLICITED  = 600;
 
+// Broadcast messages
+const NETD_COMMAND_INTERFACE_CHANGE     = 600;
+const NETD_COMMAND_BANDWIDTH_CONTROLLER = 601;
+
 importScripts("systemlibs.js");
 
 function netdResponseType(code) {
   return Math.floor(code/100)*100;
+}
+
+function isBroadcastMessage(code) {
+  let type = netdResponseType(code);
+  return (type == NETD_COMMAND_UNSOLICITED);
 }
 
 function isError(code) {
@@ -55,6 +67,22 @@ function isError(code) {
 function isComplete(code) {
   let type = netdResponseType(code);
   return (type != NETD_COMMAND_PROCEEDING);
+}
+
+function sendBroadcastMessage(code, reason) {
+  let topic = null;
+  switch (code) {
+    case NETD_COMMAND_INTERFACE_CHANGE:
+      topic = "netd-interface-change";
+      break;
+    case NETD_COMMAND_BANDWIDTH_CONTROLLER:
+      topic = "netd-bandwidth-control";
+      break;
+  }
+
+  if (topic) {
+    postMessage({id: 'broadcast', topic: topic, reason: reason});
+  }
 }
 
 let gWifiFailChain = [stopSoftAP,
@@ -217,6 +245,18 @@ function removeHostRoute(options) {
   libnetutils.ifc_remove_route(options.ifname, options.mmsproxy, 32, options.gateway);
 }
 
+function removeNetworkRoute(options) {
+  let ipvalue = netHelpers.stringToIP(options.ip);
+  let netmaskvalue = netHelpers.stringToIP(options.netmask);
+  let subnet = netmaskvalue & ipvalue;
+  let dst = netHelpers.ipToString(subnet);
+  let prefixLength = netHelpers.getMaskLength(netmaskvalue);
+  let gateway = "0.0.0.0";
+
+  libnetutils.ifc_remove_default_route(options.ifname);
+  libnetutils.ifc_remove_route(options.ifname, dst, prefixLength, gateway);
+}
+
 let gCommandQueue = [];
 let gCurrentCommand = null;
 let gCurrentCallback = null;
@@ -253,6 +293,12 @@ function onNetdMessage(data) {
 
   // 1xx response code regards as command is proceeding, we need to wait for
   // final response code such as 2xx, 4xx and 5xx before sending next command.
+  if (isBroadcastMessage(code)) {
+    sendBroadcastMessage(code, reason);
+    nextNetdCommand();
+    return;
+  }
+
   if (isComplete(code)) {
     gPending = false;
   }

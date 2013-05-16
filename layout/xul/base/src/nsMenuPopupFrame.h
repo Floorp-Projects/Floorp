@@ -120,7 +120,7 @@ public:
   nsMenuPopupFrame(nsIPresShell* aShell, nsStyleContext* aContext);
 
   // nsMenuParent interface
-  virtual nsMenuFrame* GetCurrentMenuItem();
+  virtual nsMenuFrame* GetCurrentMenuItem() MOZ_OVERRIDE;
   NS_IMETHOD SetCurrentMenuItem(nsMenuFrame* aMenuItem) MOZ_OVERRIDE;
   virtual void CurrentMenuIsBeingDestroyed() MOZ_OVERRIDE;
   NS_IMETHOD ChangeMenuItem(nsMenuFrame* aMenuItem, bool aSelectFirstItem) MOZ_OVERRIDE;
@@ -130,7 +130,7 @@ public:
   nsPopupState PopupState() { return mPopupState; }
   void SetPopupState(nsPopupState aPopupState) { mPopupState = aPopupState; }
 
-  NS_IMETHOD SetActive(bool aActiveFlag) { return NS_OK; } // We don't care.
+  NS_IMETHOD SetActive(bool aActiveFlag) MOZ_OVERRIDE { return NS_OK; } // We don't care.
   virtual bool IsActive() MOZ_OVERRIDE { return false; }
   virtual bool IsMenuBar() MOZ_OVERRIDE { return false; }
 
@@ -192,7 +192,7 @@ public:
   NS_IMETHOD SetInitialChildList(ChildListID     aListID,
                                  nsFrameList&    aChildList) MOZ_OVERRIDE;
 
-  virtual bool IsLeaf() const;
+  virtual bool IsLeaf() const MOZ_OVERRIDE;
 
   // layout, position and display the popup as needed
   void LayoutPopup(nsBoxLayoutState& aState, nsIFrame* aParentMenu, bool aSizedToPopup);
@@ -218,7 +218,7 @@ public:
   nsMenuFrame* Enter(nsGUIEvent* aEvent);
 
   nsPopupType PopupType() const { return mPopupType; }
-  bool IsMenu() { return mPopupType == ePopupTypeMenu; }
+  bool IsMenu() MOZ_OVERRIDE { return mPopupType == ePopupTypeMenu; }
   bool IsOpen() MOZ_OVERRIDE { return mPopupState == ePopupOpen || mPopupState == ePopupOpenAndVisible; }
 
   bool IsDragPopup() { return mIsDragPopup; }
@@ -342,7 +342,7 @@ protected:
   nsPopupLevel PopupLevel(bool aIsNoAutoHide) const;
 
   // redefine to tell the box system not to move the views.
-  virtual void GetLayoutFlags(uint32_t& aFlags);
+  virtual void GetLayoutFlags(uint32_t& aFlags) MOZ_OVERRIDE;
 
   void InitPositionFromAnchorAlign(const nsAString& aAnchor,
                                    const nsAString& aAlign);

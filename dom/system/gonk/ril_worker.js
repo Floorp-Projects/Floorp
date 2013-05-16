@@ -3258,11 +3258,20 @@ let RIL = {
             newCall.number[0] != "+") {
           newCall.number = "+" + newCall.number;
         }
+
         if (newCall.state == CALL_STATE_INCOMING) {
           newCall.isOutgoing = false;
         } else if (newCall.state == CALL_STATE_DIALING) {
           newCall.isOutgoing = true;
         }
+
+        // Set flag for outgoing emergency call.
+        if (newCall.isOutgoing && this._isEmergencyNumber(newCall.number)) {
+          newCall.isEmergency = true;
+        } else {
+          newCall.isEmergency = false;
+        }
+
         // Add to our map.
         this.currentCalls[newCall.callIndex] = newCall;
         this._handleChangedCallState(newCall);

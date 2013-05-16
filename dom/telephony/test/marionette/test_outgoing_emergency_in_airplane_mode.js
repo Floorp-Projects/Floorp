@@ -5,10 +5,6 @@ MARIONETTE_TIMEOUT = 60000;
 
 const KEY = "ril.radio.disabled";
 
-let gSettingsEnabled = SpecialPowers.getBoolPref("dom.mozSettings.enabled");
-if (!gSettingsEnabled) {
-  SpecialPowers.setBoolPref("dom.mozSettings.enabled", true);
-}
 SpecialPowers.addPermission("telephony", true, document);
 SpecialPowers.addPermission("settings-write", true, document);
 
@@ -157,7 +153,6 @@ function hangUp() {
 function cleanUp() {
   SpecialPowers.removePermission("telephony", document);
   SpecialPowers.removePermission("settings-write", document);
-  SpecialPowers.clearUserPref("dom.mozSettings.enabled");
   finish();
 }
 

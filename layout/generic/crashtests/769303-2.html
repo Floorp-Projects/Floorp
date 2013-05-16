@@ -1,0 +1,19 @@
+<foo_bar>k煬犍赜I⌕ 鰔{2O`怊턝璆굁肗笑z죒༃陥  P﷨Jf⻃傆$MN  M ?鋰  5蟣#糐選^x汵 ｧ K 8kmf箏ਰ艼 渺즺</foo_bar><ol id=test1></ol><head>
+<style>
+body:first-letter {
+    float: left;
+    }
+body {
+    float: left;
+}
+</style>
+<body style="white-space: pre-line;"><script>
+function initCF() {
+document.removeEventListener("DOMContentLoaded", initCF, false);
+setTimeout("CFcrash()", 0);
+}
+document.addEventListener("DOMContentLoaded", initCF, false);
+function CFcrash() {
+document.adoptNode(test1);
+}
+</script>

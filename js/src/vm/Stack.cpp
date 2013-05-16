@@ -9,7 +9,6 @@
 
 #include "jscntxt.h"
 #include "gc/Marking.h"
-#include "methodjit/MethodJIT.h"
 #ifdef JS_ION
 #include "ion/BaselineFrame.h"
 #include "ion/IonFrames.h"
@@ -94,7 +93,6 @@ StackFrame::initExecuteFrame(JSScript *script, StackFrame *prevLink, AbstractFra
     scopeChain_ = &scopeChain;
     prev_ = prevLink;
     prevpc_ = regs ? regs->pc : (jsbytecode *)0xbad;
-    prevInline_ = regs ? regs->inlined() : NULL;
     blockChain_ = NULL;
 
 #ifdef JS_ION
@@ -193,25 +191,6 @@ StackFrame::maybeSuspendedGenerator(JSRuntime *rt)
     JSGenerator *gen = reinterpret_cast<JSGenerator *>(p);
     JS_ASSERT(gen->fp == this);
     return gen;
-}
-
-jsbytecode *
-StackFrame::prevpcSlow(InlinedSite **pinlined)
-{
-    JS_ASSERT(!(flags_ & HAS_PREVPC));
-#if defined(JS_METHODJIT) && defined(JS_MONOIC)
-    StackFrame *p = prev();
-    mjit::JITScript *jit = p->script()->getJIT(p->isConstructing(),
-                                               p->compartment()->zone()->compileBarriers());
-    prevpc_ = jit->nativeToPC(ncode_, &prevInline_);
-    flags_ |= HAS_PREVPC;
-    if (pinlined)
-        *pinlined = prevInline_;
-    return prevpc_;
-#else
-    JS_NOT_REACHED("Unknown PC for frame");
-    return NULL;
-#endif
 }
 
 jsbytecode *
@@ -673,10 +652,6 @@ StackSpace::mark(JSTracer *trc)
 
             fp->mark(trc);
             slotsEnd = (Value *)fp;
-
-            InlinedSite *site;
-            fp->prevpc(&site);
-            JS_ASSERT_IF(fp->prev(), !site);
         }
         gc::MarkValueRootRange(trc, seg->slotsBegin(), slotsEnd, "vm_stack");
         nextSegEnd = (Value *)seg;
@@ -864,43 +839,6 @@ ContextStack::ensureOnTop(JSContext *cx, MaybeReportError report, unsigned nvars
 {
     Value *firstUnused = space().firstUnused();
     FrameRegs *regs = cx->maybeRegs();
-
-#ifdef JS_METHODJIT
-    /*
-     * The only calls made by inlined methodjit frames can be to other JIT
-     * frames associated with the same VMFrame. If we try to Invoke(),
-     * Execute() or so forth, any topmost inline frame will need to be
-     * expanded (along with other inline frames in the compartment).
-     * To avoid pathological behavior here, make sure to mark any topmost
-     * function as uninlineable, which will expand inline frames if there are
-     * any and prevent the function from being inlined in the future.
-     *
-     * Note: When called from pushBailoutFrame, error = DONT_REPORT_ERROR. Use
-     * this to deny potential invalidation, which would read from
-     * runtime->ionTop.
-     */
-    if (regs && report != DONT_REPORT_ERROR) {
-        RootedFunction fun(cx);
-        if (InlinedSite *site = regs->inlined()) {
-            mjit::JITChunk *chunk = regs->fp()->jit()->chunk(regs->pc);
-            fun = chunk->inlineFrames()[site->inlineIndex].fun;
-        } else {
-            StackFrame *fp = regs->fp();
-            if (fp->isFunctionFrame()) {
-                JSFunction *f = fp->fun();
-                if (f->isInterpreted())
-                    fun = f;
-            }
-        }
-
-        if (fun) {
-            AutoCompartment ac(cx, fun);
-            fun->nonLazyScript()->uninlineable = true;
-            types::MarkTypeObjectFlags(cx, fun, types::OBJECT_FLAG_UNINLINEABLE);
-        }
-    }
-    JS_ASSERT_IF(cx->hasfp(), !cx->regs().inlined());
-#endif
 
     if (onTop() && extend) {
         if (!space().ensureSpace(cx, report, firstUnused, nvars))
@@ -1224,13 +1162,10 @@ ScriptFrameIter::popFrame()
     JS_ASSERT(data_.seg_->contains(oldfp));
     data_.fp_ = data_.fp_->prev();
 
-    if (data_.seg_->contains(data_.fp_)) {
-        InlinedSite *inline_;
-        data_.pc_ = oldfp->prevpc(&inline_);
-        JS_ASSERT(!inline_);
-    } else {
+    if (data_.seg_->contains(data_.fp_))
+        data_.pc_ = oldfp->prevpc();
+    else
         poisonRegs();
-    }
 }
 
 void
@@ -1398,11 +1333,6 @@ ScriptFrameIter::ScriptFrameIter(JSContext *cx, SavedOption savedOption)
     , ionInlineFrames_(cx, (js::ion::IonFrameIterator*) NULL)
 #endif
 {
-#ifdef JS_METHODJIT
-    for (ZonesIter zone(cx->runtime); !zone.done(); zone.next())
-        mjit::ExpandInlineFrames(zone);
-#endif
-
     if (StackSegment *seg = cx->stack.seg_) {
         startOnSegment(seg);
         settleOnNewState();
@@ -1417,10 +1347,6 @@ ScriptFrameIter::ScriptFrameIter(JSRuntime *rt, StackSegment &seg)
     , ionInlineFrames_(seg.cx(), (js::ion::IonFrameIterator*) NULL)
 #endif
 {
-#ifdef JS_METHODJIT
-    for (ZonesIter zone(rt); !zone.done(); zone.next())
-        mjit::ExpandInlineFrames(zone);
-#endif
     startOnSegment(&seg);
     settleOnNewState();
 }

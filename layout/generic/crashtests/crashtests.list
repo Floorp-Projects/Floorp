@@ -433,9 +433,11 @@ load 683702-1.xhtml
 load 688996-1.html
 load 688996-2.html
 load 683712.html
+load 691210.html
 load text-overflow-bug713610.html
 load 700031.xhtml
 load 718516.html
+load 723108.html
 load 724978.xhtml
 load first-letter-638937.html
 load first-letter-638937-2.html
@@ -443,9 +445,18 @@ load 734777.html
 test-pref(layout.css.flexbox.enabled,true) load 737313-1.html
 test-pref(layout.css.flexbox.enabled,true) load 737313-2.html
 test-pref(layout.css.flexbox.enabled,true) load 737313-3.html
+load 747688.html
+load 750066.html
+asserts(0-10000) load 756241.html
 test-pref(font.size.inflation.emPerLine,15) asserts(1-100) load font-inflation-762332.html # bug 762332
 load 762902.html
 load 762764-1.html
+load 765409.html
+asserts(0-200) load 765621.html # bug 703550
+asserts(0-200) load 767765.html # bug 407550, bug 871758, and various nscoord_MAX related asserts
+load 769303-1.html
+load 769303-2.html
+load 769120.html
 load 786740-1.html
 asserts(0-4) test-pref(font.size.inflation.emPerLine,15) load 791601.xhtml # 3 counts of bug 871327, 1 bug 367185
 asserts(8) test-pref(layout.css.flexbox.enabled,true) load 798020-1.html

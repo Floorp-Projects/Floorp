@@ -8,7 +8,5 @@ srcdir           = @srcdir@
 VPATH            = @srcdir@
 relativesrcdir   = @relativesrcdir@
 
-DISABLED_XPCSHELL_TESTS = xpcshell
-
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk

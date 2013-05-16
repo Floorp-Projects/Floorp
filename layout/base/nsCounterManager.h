@@ -9,6 +9,7 @@
 #ifndef nsCounterManager_h_
 #define nsCounterManager_h_
 
+#include "mozilla/Attributes.h"
 #include "nsGenConList.h"
 #include "nsAutoPtr.h"
 #include "nsClassHashtable.h"
@@ -94,7 +95,7 @@ struct nsCounterUseNode : public nsCounterNode {
     }
     
     virtual bool InitTextFrame(nsGenConList* aList,
-            nsIFrame* aPseudoFrame, nsIFrame* aTextFrame);
+            nsIFrame* aPseudoFrame, nsIFrame* aTextFrame) MOZ_OVERRIDE;
 
     // assign the correct |mValueAfter| value to a node that has been inserted
     // Should be called immediately after calling |Insert|.

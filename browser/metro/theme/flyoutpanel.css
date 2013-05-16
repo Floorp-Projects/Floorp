@@ -7,10 +7,7 @@
 
 flyoutpanel {
   height: 100%;
-  border-width: 2px;
-  border-color: #d7d6d6;
   background-color: #ffffff;
-  -moz-border-start-style: solid;
   visibility: collapse;
   position: fixed;
   transition: transform @metro_animation_duration@ @metro_animation_easing@;
@@ -41,6 +38,9 @@ flyoutpanel[visible] {
 }
 
 .flyoutpanel-header {
+  border-width: 1px;
+  -moz-border-start-style: solid;
+  border-color: #1b1b1b;
   background-color: #002147;
   height: 80px;
   width: 100%;
@@ -60,6 +60,9 @@ flyoutpanel[visible] {
 }
 
 .flyoutpanel-contents {
+  border-width: 1px;
+  -moz-border-start-style: solid;
+  border-color: #c2c2c2;
   padding: 40px;
   width: 100%;
 }

@@ -57,6 +57,7 @@ public class GeckoPreferences
 
     private static boolean sIsCharEncodingEnabled = false;
     private boolean mInitialized = false;
+    private int mPrefsRequestId = 0;
 
     // These match keys in resources/xml/preferences.xml.in.
     private static String PREFS_ANNOUNCEMENTS_ENABLED = NON_PREF_PREFIX + "privacy.announcements.enabled";
@@ -66,7 +67,6 @@ public class GeckoPreferences
     private static String PREFS_MENU_CHAR_ENCODING = "browser.menu.showCharacterEncoding";
     private static String PREFS_MP_ENABLED = "privacy.masterpassword.enabled";
     private static String PREFS_UPDATER_AUTODOWNLOAD = "app.update.autodownload";
-    private static String PREFS_TITLEBAR_MODE = "android.not_a_preference.privacy.titlebar";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -135,7 +135,7 @@ public class GeckoPreferences
         mInitialized = true;
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
             PreferenceScreen screen = getPreferenceScreen();
-            setupPreferences(screen);
+            mPrefsRequestId = setupPreferences(screen);
         }
     }
 
@@ -143,6 +143,9 @@ public class GeckoPreferences
     protected void onDestroy() {
         super.onDestroy();
         unregisterEventListener("Sanitize:Finished");
+        if (mPrefsRequestId > 0) {
+            PrefsHelper.removeObserver(mPrefsRequestId);
+        }
     }
 
     @Override
@@ -182,12 +185,29 @@ public class GeckoPreferences
         }
     }
 
-    public void setupPreferences(PreferenceGroup prefs) {
+    /**
+      * Initialize all of the preferences (native of Gecko ones) for this screen.
+      *
+      * @param prefs The android.preference.PreferenceGroup to initialize
+      * @return The integer id for the PrefsHelper.PrefHandlerBase listener added
+      *         to monitor changes to Gecko prefs.
+      */
+    public int setupPreferences(PreferenceGroup prefs) {
         ArrayList<String> list = new ArrayList<String>();
         setupPreferences(prefs, list);
-        getGeckoPreferences(prefs, list);
+        return getGeckoPreferences(prefs, list);
     }
 
+    /**
+      * Recursively loop through a PreferenceGroup. Initialize native Android prefs,
+      * and build a list of Gecko preferences in the passed in prefs array
+      *
+      * @param preferences The android.preference.PreferenceGroup to initialize
+      * @param prefs An ArrayList to fill with Gecko preferences that need to be
+      *        initialized
+      * @return The integer id for the PrefsHelper.PrefHandlerBase listener added
+      *         to monitor changes to Gecko prefs.
+      */
     private void setupPreferences(PreferenceGroup preferences, ArrayList<String> prefs) {
         for (int i = 0; i < preferences.getPreferenceCount(); i++) {
             Preference pref = preferences.getPreference(i);
@@ -220,8 +240,6 @@ public class GeckoPreferences
                     preferences.removePreference(pref);
                     i--;
                     continue;
-                } else if (PREFS_TITLEBAR_MODE.equals(key)) {
-                    setupTitlebarPref((ListPreference) pref);
                 }
 
                 // Some Preference UI elements are not actually preferences,
@@ -508,10 +526,10 @@ public class GeckoPreferences
     }
 
     // Initialize preferences by requesting the preference values from Gecko
-    private void getGeckoPreferences(final PreferenceGroup screen, ArrayList<String> prefs) {
+    private int getGeckoPreferences(final PreferenceGroup screen, ArrayList<String> prefs) {
         JSONArray jsonPrefs = new JSONArray(prefs);
 
-        PrefsHelper.getPrefs(jsonPrefs, new PrefsHelper.PrefHandlerBase() {
+        return PrefsHelper.getPrefs(jsonPrefs, new PrefsHelper.PrefHandlerBase() {
             private Preference getField(String prefName) {
                 return screen.findPreference(prefName);
             }
@@ -586,6 +604,11 @@ public class GeckoPreferences
             }
 
             @Override
+            public boolean isObserver() {
+                return true;
+            }
+
+            @Override
             public void finish() {
                 // enable all preferences once we have them from gecko
                 ThreadUtils.postToUiThread(new Runnable() {
@@ -609,35 +632,5 @@ public class GeckoPreferences
     @Override
     public boolean isGeckoActivityOpened() {
         return false;
-    }
-
-    private void setupTitlebarPref(final ListPreference pref) {
-        final SharedPreferences settings = getSharedPreferences(BrowserToolbar.PREFS_NAME, 0);
-        boolean value = settings.getBoolean(BrowserToolbar.PREFS_SHOW_URL, false);
-
-        final String[] entries = new String[] {
-            getResources().getString(R.string.pref_titlebar_mode_url),
-            getResources().getString(R.string.pref_titlebar_mode_title)
-        };
-        pref.setEntries(entries);
-        pref.setEntryValues(entries);
-        pref.setValueIndex(value ? 0 : 1);
-        pref.setSummary(value ? entries[0] : entries[1]);
-
-        pref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-            @Override
-            public boolean onPreferenceChange(Preference preference, final Object newValue) {
-                ThreadUtils.postToBackgroundThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        settings.edit()
-                                .putBoolean(BrowserToolbar.PREFS_SHOW_URL, newValue.toString().equals(entries[0]))
-                                .commit();
-                    }
-                });
-                pref.setSummary(newValue.toString());
-                return true;
-            }
-        });
     }
 }

@@ -23,8 +23,6 @@ CPPSRCS = \
   nsCookieService.cpp \
   $(NULL)
 
-DISABLED_XPCSHELL_TESTS += test/unit
-
 CPPSRCS += \
 		CookieServiceParent.cpp \
 		CookieServiceChild.cpp \
@@ -34,10 +32,6 @@ LOCAL_INCLUDES	= \
 		-I$(topsrcdir)/intl/uconv/src \
 		$(NULL)
 
-# FIXME/bug 575918: out-of-process xpcshell is broken on OS X
-ifneq ($(OS_ARCH),Darwin)
-DISABLED_XPCSHELL_TESTS += test/unit_ipc
-endif
 endif
 
 
