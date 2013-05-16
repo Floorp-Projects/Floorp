@@ -342,6 +342,10 @@ AbstractFile.read = function read(path, bytes) {
 AbstractFile.writeAtomic =
      function writeAtomic(path, buffer, options = noOptions) {
 
+  // Verify that path is defined and of the correct type
+  if (typeof path != "string" || path == "") {
+    throw new TypeError("File path should be a (non-empty) string");
+  }
   let noOverwrite = options.noOverwrite;
   if (noOverwrite && OS.File.exists(path)) {
     throw OS.File.Error.exists("writeAtomic");
