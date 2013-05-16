@@ -199,9 +199,9 @@ nsHttpTransaction::Init(uint32_t caps,
 
     LOG(("nsHttpTransaction::Init [this=%x caps=%x]\n", this, caps));
 
-    NS_ASSERTION(cinfo, "ouch");
-    NS_ASSERTION(requestHead, "ouch");
-    NS_ASSERTION(target, "ouch");
+    MOZ_ASSERT(cinfo);
+    MOZ_ASSERT(requestHead);
+    MOZ_ASSERT(target);
 
     mActivityDistributor = do_GetService(NS_HTTPACTIVITYDISTRIBUTOR_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
@@ -346,7 +346,7 @@ nsHttpTransaction::Connection()
 nsHttpResponseHead *
 nsHttpTransaction::TakeResponseHead()
 {
-    NS_ABORT_IF_FALSE(!mResponseHeadTaken, "TakeResponseHead called 2x");
+    MOZ_ASSERT(!mResponseHeadTaken, "TakeResponseHead called 2x");
 
     // Lock RestartInProgress() and TakeResponseHead() against main thread
     MutexAutoLock lock(*nsHttp::GetLock());
@@ -458,7 +458,7 @@ nsHttpTransaction::OnTransportStatus(nsITransport* transport,
     if (!mTransportSink)
         return;
 
-    NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
     // Need to do this before the STATUS_RECEIVING_FROM check below, to make
     // sure that the activity distributor gets told about all status events.
@@ -495,7 +495,7 @@ nsHttpTransaction::OnTransportStatus(nsITransport* transport,
             return;
 
         nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mRequestStream);
-        NS_ASSERTION(seekable, "Request stream isn't seekable?!?");
+        MOZ_ASSERT(seekable, "Request stream isn't seekable?!?");
 
         int64_t prog = 0;
         seekable->Tell(&prog);
@@ -570,7 +570,7 @@ nsresult
 nsHttpTransaction::ReadSegments(nsAHttpSegmentReader *reader,
                                 uint32_t count, uint32_t *countRead)
 {
-    NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
     if (mTransactionDone) {
         *countRead = 0;
@@ -637,7 +637,7 @@ nsHttpTransaction::WritePipeSegment(nsIOutputStream *stream,
                               "net::http::first-read");
     }
 
-    NS_ASSERTION(*countWritten > 0, "bad writer");
+    MOZ_ASSERT(*countWritten > 0, "bad writer");
     trans->mReceivedData = true;
 
     // Let the transaction "play" with the buffer.  It is free to modify
@@ -657,7 +657,7 @@ nsresult
 nsHttpTransaction::WriteSegments(nsAHttpSegmentWriter *writer,
                                  uint32_t count, uint32_t *countWritten)
 {
-    NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
     if (mTransactionDone)
         return NS_SUCCEEDED(mStatus) ? NS_BASE_STREAM_CLOSED : mStatus;
@@ -689,7 +689,7 @@ nsHttpTransaction::Close(nsresult reason)
 {
     LOG(("nsHttpTransaction::Close [this=%x reason=%x]\n", this, reason));
 
-    NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
     if (mClosed) {
         LOG(("  already closed\n"));
@@ -878,7 +878,7 @@ nsHttpTransaction::PipelinePosition()
 nsresult
 nsHttpTransaction::RestartInProgress()
 {
-    NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
     
     if ((mRestartCount + 1) >= gHttpHandler->MaxRequestAttempts()) {
         LOG(("nsHttpTransaction::RestartInProgress() "
@@ -939,7 +939,7 @@ nsHttpTransaction::RestartInProgress()
 nsresult
 nsHttpTransaction::Restart()
 {
-    NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
     // limit the number of restart attempts - bug 92224
     if (++mRestartCount >= gHttpHandler->MaxRequestAttempts()) {
@@ -971,7 +971,7 @@ char *
 nsHttpTransaction::LocateHttpStart(char *buf, uint32_t len,
                                    bool aAllowPartialMatch)
 {
-    NS_ASSERTION(!aAllowPartialMatch || mLineBuf.IsEmpty(), "ouch");
+    MOZ_ASSERT(!aAllowPartialMatch || mLineBuf.IsEmpty());
 
     static const char HTTPHeader[] = "HTTP/1.";
     static const uint32_t HTTPHeaderLen = sizeof(HTTPHeader) - 1;
@@ -983,7 +983,7 @@ nsHttpTransaction::LocateHttpStart(char *buf, uint32_t len,
 
     // mLineBuf can contain partial match from previous search
     if (!mLineBuf.IsEmpty()) {
-        NS_ASSERTION(mLineBuf.Length() < HTTPHeaderLen, "ouch");
+        MOZ_ASSERT(mLineBuf.Length() < HTTPHeaderLen);
         int32_t checkChars = std::min(len, HTTPHeaderLen - mLineBuf.Length());
         if (PL_strncasecmp(buf, HTTPHeader + mLineBuf.Length(),
                            checkChars) == 0) {
@@ -1179,7 +1179,7 @@ nsHttpTransaction::ParseHead(char *buf,
     }
     // otherwise we can assume that we don't have a HTTP/0.9 response.
 
-    NS_ABORT_IF_FALSE (mHttpResponseMatched, "inconsistent");
+    MOZ_ASSERT (mHttpResponseMatched);
     while ((eol = static_cast<char *>(memchr(buf, '\n', count - *countRead))) != nullptr) {
         // found line in range [buf:eol]
         len = eol - buf + 1;
@@ -1344,7 +1344,7 @@ nsHttpTransaction::HandleContent(char *buf,
     *contentRead = 0;
     *contentRemaining = 0;
 
-    NS_ASSERTION(mConnection, "no connection");
+    MOZ_ASSERT(mConnection);
 
     if (!mDidContentStart) {
         rv = HandleContentStart();
@@ -1517,7 +1517,7 @@ nsHttpTransaction::ProcessData(char *buf, uint32_t count, uint32_t *countRead)
         // we may have read more than our share, in which case we must give
         // the excess bytes back to the connection
         if (mResponseIsComplete && countRemaining) {
-            NS_ASSERTION(mConnection, "no connection");
+            MOZ_ASSERT(mConnection);
             mConnection->PushBack(buf + *countRead, countRemaining);
         }
     }

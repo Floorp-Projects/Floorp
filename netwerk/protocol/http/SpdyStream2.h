@@ -37,7 +37,7 @@ public:
   bool GetFullyOpen() {return mFullyOpen;}
   void SetFullyOpen() 
   {
-    NS_ABORT_IF_FALSE(!mFullyOpen, "SetFullyOpen already open");
+    MOZ_ASSERT(!mFullyOpen);
     mFullyOpen = 1;
   }
 

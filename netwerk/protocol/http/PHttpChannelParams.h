@@ -65,7 +65,7 @@ struct ParamTraits<nsHttpAtom>
   static void Write(Message* aMsg, const paramType& aParam)
   {
     // aParam.get() cannot be null.
-    NS_ASSERTION(aParam.get(), "null nsHTTPAtom value");
+    MOZ_ASSERT(aParam.get(), "null nsHTTPAtom value");
     nsAutoCString value(aParam.get());
     WriteParam(aMsg, value);
   }
@@ -77,7 +77,7 @@ struct ParamTraits<nsHttpAtom>
       return false;
 
     *aResult = nsHttp::ResolveAtom(value.get());
-    NS_ASSERTION(aResult->get(), "atom table not initialized");
+    MOZ_ASSERT(aResult->get(), "atom table not initialized");
     return true;
   }
 };

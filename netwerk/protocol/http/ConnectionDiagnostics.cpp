@@ -24,8 +24,7 @@ nsHttpConnectionMgr::PrintDiagnostics()
 void
 nsHttpConnectionMgr::OnMsgPrintDiagnostics(int32_t, void *)
 {
-  NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
-
+  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
   nsCOMPtr<nsIConsoleService> consoleService =
     do_GetService(NS_CONSOLESERVICE_CONTRACTID);

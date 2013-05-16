@@ -24,9 +24,9 @@ ASpdySession::NewSpdySession(uint32_t version,
 {
   // This is a necko only interface, so we can enforce version
   // requests as a precondition
-  NS_ABORT_IF_FALSE(version == SpdyInformation::SPDY_VERSION_2 ||
-                    version == SpdyInformation::SPDY_VERSION_3,
-                    "Unsupported spdy version");
+  MOZ_ASSERT(version == SpdyInformation::SPDY_VERSION_2 ||
+             version == SpdyInformation::SPDY_VERSION_3,
+             "Unsupported spdy version");
 
   // Don't do a runtime check of IsSpdyV?Enabled() here because pref value
   // may have changed since starting negotiation. The selected protocol comes
@@ -62,7 +62,7 @@ SpdyInformation::ProtocolEnabled(uint32_t index)
   if (index == 1)
     return gHttpHandler->IsSpdyV2Enabled();
 
-  NS_ABORT_IF_FALSE(false, "index out of range");
+  MOZ_ASSERT(false, "index out of range");
   return false;
 }
 
