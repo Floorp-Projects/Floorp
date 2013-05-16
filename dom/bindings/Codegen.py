@@ -2618,40 +2618,43 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
 
     # A helper function for converting things that look like a JSObject*.
     def handleJSObjectType(type, isMember, failureCode):
-        if not isMember:
-            declType = CGGeneric("JS::Rooted<JSObject*>")
-            templateBody = "${declName} = &${valHandle}.toObject();"
-            setToNullCode = "${declName} = nullptr;"
-            template = wrapObjectTemplate(templateBody, type, setToNullCode,
-                                          failureCode)
-            return JSToNativeConversionInfo(template, declType=declType,
-                                            dealWithOptional=isOptional,
-                                            declArgs="cx")
-
-        if type.nullable():
-            declType = CGGeneric("LazyRootedObject")
-        else:
-            declType = CGGeneric("NonNullLazyRootedObject")
-
-        # If cx is null then LazyRootedObject will not be
-        # constructed and behave as nullptr.
-        templateBody = "${declName}.construct(cx, &${val}.toObject());"
-
-        # Cast of nullptr to (JSObject*) is required for template deduction.
-        setToNullCode = "${declName}.construct(cx, static_cast<JSObject*>(nullptr));"
-
         if isMember == "Dictionary":
+            if type.nullable():
+                declType = CGGeneric("LazyRootedObject")
+            else:
+                declType = CGGeneric("NonNullLazyRootedObject")
+
+            # If cx is null then LazyRootedObject will not be
+            # constructed and behave as nullptr.
+            templateBody = "${declName}.construct(cx, &${val}.toObject());"
+
+            # Cast of nullptr to (JSObject*) is required for template deduction.
+            setToNullCode = "${declName}.construct(cx, static_cast<JSObject*>(nullptr));"
+
             # If cx is null then LazyRootedObject will not be
             # constructed and behave as nullptr.
             templateBody = CGIfWrapper(CGGeneric(templateBody), "cx").define()
             setToNullCode = CGIfWrapper(CGGeneric(setToNullCode), "cx").define()
 
+            template = wrapObjectTemplate(templateBody, type, setToNullCode,
+                                          failureCode)
+
+            return JSToNativeConversionInfo(template, declType=declType,
+                                            dealWithOptional=isOptional)
+
+        if not isMember:
+            declType = CGGeneric("JS::Rooted<JSObject*>")
+        else:
+            assert isMember == "Sequence" or isMember == "Variadic"
+            # We'll get traced by the sequence tracer
+            declType = CGGeneric("JSObject*")
+        templateBody = "${declName} = &${valHandle}.toObject();"
+        setToNullCode = "${declName} = nullptr;"
         template = wrapObjectTemplate(templateBody, type, setToNullCode,
                                       failureCode)
-
         return JSToNativeConversionInfo(template, declType=declType,
-                                        dealWithOptional=isOptional)
-
+                                        dealWithOptional=isOptional,
+                                        declArgs="cx")
 
     assert not (isEnforceRange and isClamp) # These are mutually exclusive
 
@@ -2757,8 +2760,21 @@ for (uint32_t i = 0; i < length; ++i) {
         templateBody += "\n}"
         templateBody = wrapObjectTemplate(templateBody, type,
                                           "${declName}.SetNull()")
+        # Sequence arguments that might contain traceable things need
+        # to get traced
+        if not isMember and typeNeedsCx(elementType, descriptorProvider):
+            holderType = CGTemplatedType("SequenceRooter", elementInfo.declType)
+            templateBody = (("${holderName}.SetSequence(&%s);\n" % arrayRef) +
+                            templateBody)
+            holderArgs = "cx"
+        else:
+            holderType = None
+            holderArgs = None
+
         return JSToNativeConversionInfo(templateBody, declType=typeName,
-                                        dealWithOptional=isOptional)
+                                        holderType=holderType,
+                                        dealWithOptional=isOptional,
+                                        holderArgs=holderArgs)
 
     if type.isUnion():
         if isMember:
@@ -3333,12 +3349,9 @@ for (uint32_t i = 0; i < length; ++i) {
             declType = "LazyRootedValue"
             templateBody = "${declName}.construct(cx, ${val});"
             nullHandling = "${declName}.construct(cx, JS::NullValue());"
-        elif isMember == "Sequence":
-            raise TypeError("Can't handle sequence member 'any'; need to sort "
-                            "out rooting issues")
         else:
-            if isMember == "Variadic":
-                # Variadic arguments are rooted by being in argv
+            if isMember == "Variadic" or isMember == "Sequence":
+                # Rooting is handled by the sequence tracer.
                 declType = "JS::Value"
             else:
                 assert not isMember
@@ -3700,11 +3713,18 @@ class CGArgumentConverter(CGThing):
         replacer = dict(self.argcAndIndex, **self.replacementVariables)
         replacer["seqType"] = CGTemplatedType("AutoSequence",
                                               typeConversion.declType).define()
+        if typeNeedsCx(self.argument.type, self.descriptorProvider):
+            rooterDecl = ("SequenceRooter<%s> ${holderName}(cx);\n"
+                          "${holderName}.SetSequence(&${declName});\n" %
+                          typeConversion.declType.define())
+        else:
+            rooterDecl = ""
         replacer["elemType"] = typeConversion.declType.define()
 
         # NOTE: Keep this in sync with sequence conversions as needed
-        variadicConversion = string.Template("""${seqType} ${declName};
-if (${argc} > ${index}) {
+        variadicConversion = string.Template("${seqType} ${declName};\n" +
+                                             rooterDecl +
+                                             """if (${argc} > ${index}) {
   if (!${declName}.SetCapacity(${argc} - ${index})) {
     JS_ReportOutOfMemory(cx);
     return false;
@@ -4076,9 +4096,9 @@ def typeNeedsCx(type, descriptorProvider, retVal=False):
     if type is None:
         return False
     if type.nullable():
-        type = type.inner
+        return typeNeedsCx(type.inner, descriptorProvider, retVal)
     if type.isSequence() or type.isArray():
-        type = type.inner
+        return typeNeedsCx(type.inner, descriptorProvider, retVal)
     if type.isUnion():
         return any(typeNeedsCx(t, descriptorProvider) for t in
                    type.unroll().flatMemberTypes)
@@ -7475,6 +7495,7 @@ class CGDictionary(CGThing):
                 "  bool Init(JSContext* cx, JS::Handle<JS::Value> val);\n" +
                 ("  bool Init(const nsAString& aJSON);\n" if not self.workers else "") +
                 "  bool ToObject(JSContext* cx, JS::Handle<JSObject*> parentObject, JS::Value *vp) const;\n"
+                "  void TraceDictionary(JSTracer* trc);\n"
                 "\n" +
                 "\n".join(memberDecls) + "\n"
                 "private:\n"
@@ -7592,6 +7613,12 @@ class CGDictionary(CGThing):
             "${defineMembers}\n"
             "\n"
             "  return true;\n"
+            "}\n"
+            "\n"
+            "void\n"
+            "${selfName}::TraceDictionary(JSTracer* trc)\n"
+            "{\n"
+            "  // XXXbz Need an implementation\n"
             "}").substitute({
                 "selfName": self.makeClassName(d),
                 "initParent": CGIndenter(CGGeneric(initParent)).define(),
