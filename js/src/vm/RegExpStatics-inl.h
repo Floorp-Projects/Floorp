@@ -9,6 +9,7 @@
 
 #include "RegExpStatics.h"
 
+#include "gc/Marking.h"
 #include "vm/RegExpObject-inl.h"
 #include "vm/String-inl.h"
 
@@ -164,16 +165,16 @@ class AutoRegExpStaticsBuffer : private JS::CustomAutoRooter
   private:
     virtual void trace(JSTracer *trc) {
         if (statics.matchesInput) {
-            traceString(trc, reinterpret_cast<JSString**>(&statics.matchesInput),
-                        "AutoRegExpStaticsBuffer matchesInput");
+            MarkStringRoot(trc, reinterpret_cast<JSString**>(&statics.matchesInput),
+                                "AutoRegExpStaticsBuffer matchesInput");
         }
         if (statics.lazySource) {
-            traceString(trc, reinterpret_cast<JSString**>(&statics.lazySource),
-                        "AutoRegExpStaticsBuffer lazySource");
+            MarkStringRoot(trc, reinterpret_cast<JSString**>(&statics.lazySource),
+                                "AutoRegExpStaticsBuffer lazySource");
         }
         if (statics.pendingInput) {
-            traceString(trc, reinterpret_cast<JSString**>(&statics.pendingInput),
-                        "AutoRegExpStaticsBuffer pendingInput");
+            MarkStringRoot(trc, reinterpret_cast<JSString**>(&statics.pendingInput),
+                                "AutoRegExpStaticsBuffer pendingInput");
         }
     }
 
