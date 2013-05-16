@@ -145,7 +145,7 @@ AudioManager::Observe(nsISupports* aSubject,
                       const PRUnichar* aData)
 {
   if (!strcmp(aTopic, BLUETOOTH_SCO_STATUS_CHANGED)) {
-    if (aData) {
+    if (NS_strlen(aData) > 0) {
       String8 cmd;
       cmd.appendFormat("bt_samplerate=%d", kBtSampleRate);
       AudioSystem::setParameters(0, cmd);
