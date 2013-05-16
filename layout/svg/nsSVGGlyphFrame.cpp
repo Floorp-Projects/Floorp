@@ -1056,14 +1056,14 @@ nsSVGGlyphFrame::SetupContextPaint(gfxContext *aContext,
   const nsStyleSVG *style = StyleSVG();
   const nsStyleSVGPaint &paint = style->*aFillOrStroke;
 
-  if (paint.mType != eStyleSVGPaintType_ObjectFill &&
-      paint.mType != eStyleSVGPaintType_ObjectStroke) {
+  if (paint.mType != eStyleSVGPaintType_ContextFill &&
+      paint.mType != eStyleSVGPaintType_ContextStroke) {
     return false;
   }
 
   gfxMatrix current = aContext->CurrentMatrix();
   nsRefPtr<gfxPattern> pattern =
-    paint.mType == eStyleSVGPaintType_ObjectFill ?
+    paint.mType == eStyleSVGPaintType_ContextFill ?
       aOuterContextPaint->GetFillPattern(aOpacity, current) :
       aOuterContextPaint->GetStrokePattern(aOpacity, current);
   if (!pattern) {
@@ -1132,12 +1132,12 @@ mozilla::SVGTextContextPaint::Paint::GetPattern(float aOpacity,
     }
     pattern->SetMatrix(aCTM * mPatternMatrix);
     break;
-  case eStyleSVGPaintType_ObjectFill:
+  case eStyleSVGPaintType_ContextFill:
     pattern = mPaintDefinition.mContextPaint->GetFillPattern(aOpacity, aCTM);
     // Don't cache this. mContextPaint will have cached it anyway. If we
     // cache it, we'll have to compute mPatternMatrix, which is annoying.
     return pattern.forget();
-  case eStyleSVGPaintType_ObjectStroke:
+  case eStyleSVGPaintType_ContextStroke:
     pattern = mPaintDefinition.mContextPaint->GetStrokePattern(aOpacity, aCTM);
     // Don't cache this. mContextPaint will have cached it anyway. If we
     // cache it, we'll have to compute mPatternMatrix, which is annoying.
