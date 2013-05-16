@@ -78,7 +78,7 @@ class CommandAction(argparse.Action):
         if not values:
             raise NoCommandError()
 
-        command = values[0]
+        command = values[0].lower()
         args = values[1:]
 
         if command == 'help':

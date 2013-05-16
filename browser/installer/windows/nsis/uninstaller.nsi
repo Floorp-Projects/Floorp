@@ -61,6 +61,7 @@ VIAddVersionKey "FileDescription" "${BrandShortName} Helper"
 VIAddVersionKey "OriginalFilename" "helper.exe"
 
 !insertmacro AddDisabledDDEHandlerValues
+!insertmacro CleanUpdateDirectories
 !insertmacro CleanVirtualStore
 !insertmacro ElevateUAC
 !insertmacro GetLongPath
@@ -89,7 +90,7 @@ VIAddVersionKey "OriginalFilename" "helper.exe"
 
 !insertmacro un.ChangeMUIHeaderImage
 !insertmacro un.CheckForFilesInUse
-!insertmacro un.CleanUpdatesDir
+!insertmacro un.CleanUpdateDirectories
 !insertmacro un.CleanVirtualStore
 !insertmacro un.DeleteRelativeProfiles
 !insertmacro un.DeleteShortcuts
@@ -271,6 +272,9 @@ Section "Uninstall"
     ApplicationID::UninstallJumpLists "$AppUserModelID"
   ${EndIf}
 
+  ; Remove the updates directory for Vista and above
+  ${un.CleanUpdateDirectories} "Mozilla\Firefox" "Mozilla\updates"
+
   ; Remove any app model id's stored in the registry for this install path
   DeleteRegValue HKCU "Software\Mozilla\${AppName}\TaskBarIDs" "$INSTDIR"
   DeleteRegValue HKLM "Software\Mozilla\${AppName}\TaskBarIDs" "$INSTDIR"
@@ -397,9 +401,6 @@ Section "Uninstall"
   ${If} ${FileExists} "$INSTDIR\removed-files"
     Delete /REBOOTOK "$INSTDIR\removed-files"
   ${EndIf}
-
-  ; Remove the updates directory for Vista and above
-  ${un.CleanUpdatesDir} "Mozilla\Firefox"
 
   ; Remove files that may be left behind by the application in the
   ; VirtualStore directory.

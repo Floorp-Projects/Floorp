@@ -73,7 +73,7 @@ VIAddVersionKey "OriginalFilename" "setup.exe"
 !insertmacro AddDisabledDDEHandlerValues
 !insertmacro ChangeMUIHeaderImage
 !insertmacro CheckForFilesInUse
-!insertmacro CleanUpdatesDir
+!insertmacro CleanUpdateDirectories
 !insertmacro CopyFilesFromDir
 !insertmacro CreateRegKey
 !insertmacro GetLongPath
@@ -207,8 +207,11 @@ Section "-InstallStartCleanup"
     ClearErrors
   ${EndIf}
 
+  ; setup the application model id registration value
+  ${InitHashAppModelId} "$INSTDIR" "Software\Mozilla\${AppName}\TaskBarIDs"
+
   ; Remove the updates directory for Vista and above
-  ${CleanUpdatesDir} "Mozilla\Firefox"
+  ${CleanUpdateDirectories} "Mozilla\Firefox" "Mozilla\updates"
 
   ${RemoveDeprecatedFiles}
 
@@ -305,9 +308,6 @@ Section "-Application" APP_IDX
       WriteRegStr HKLM "Software\mozilla.org\Mozilla" "CurrentVersion" "${GREVersion}"
     ${EndIf}
   ${EndIf}
-
-  ; setup the application model id registration value
-  ${InitHashAppModelId} "$INSTDIR" "Software\Mozilla\${AppName}\TaskBarIDs"
 
 !ifdef MOZ_METRO
   ${ResetWin8MetroSplash}

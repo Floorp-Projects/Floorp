@@ -31,8 +31,6 @@ LIBXUL_LIBRARY  = 1
 
 CPPSRCS	= \
 	Framebuffer.cpp \
-	HWComposer.cpp \
-	HwcComposer2D.cpp \
 	nsAppShell.cpp \
 	nsWidgetFactory.cpp \
 	nsWindow.cpp \
@@ -64,6 +62,10 @@ CPPSRCS	= \
 	Static.cpp \
 	$(NULL)
 
+ifeq (15,$(ANDROID_VERSION))
+CPPSRCS += HwcComposer2D.cpp
+endif
+
 SHARED_LIBRARY_LIBS = ../xpwidgets/libxpwidgets_s.a
 
 include $(topsrcdir)/config/rules.mk
@@ -73,7 +75,6 @@ DEFINES += -D_IMPL_NS_WIDGET -DHAVE_OFF64_T -DSK_BUILD_FOR_ANDROID_NDK
 LOCAL_INCLUDES += \
 	-I$(ANDROID_SOURCE)/hardware/libhardware/include \
 	-I$(ANDROID_SOURCE)/hardware/libhardware_legacy/include \
-	-I$(topsrcdir)/b2g/app \
 	-I$(topsrcdir)/widget/xpwidgets \
 	-I$(topsrcdir)/widget/shared \
 	-I$(topsrcdir)/dom/system/android \
