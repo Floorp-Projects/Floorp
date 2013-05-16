@@ -11,6 +11,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= mozjpeg
+MSVC_ENABLE_PGO := 1
 
 ifeq ($(OS_ARCH),WINNT)
 VISIBILITY_FLAGS	=
