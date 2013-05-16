@@ -27,10 +27,8 @@
 
 #include "gc/Marking.h"
 #include "frontend/BytecodeEmitter.h"
-#include "methodjit/MethodJIT.h"
 #include "ion/IonCode.h"
 #include "ion/BaselineJIT.h"
-#include "methodjit/Retcon.h"
 #include "vm/Debugger.h"
 #include "vm/Shape.h"
 #include "vm/Xdr.h"
@@ -1842,10 +1840,6 @@ JSScript::fullyInitFromEmitter(JSContext *cx, Handle<JSScript*> script, Bytecode
     script->bindingsAccessedDynamically = bce->sc->bindingsAccessedDynamically();
     script->funHasExtensibleScope = funbox ? funbox->hasExtensibleScope() : false;
     script->hasSingletons = bce->hasSingletons;
-#ifdef JS_METHODJIT
-    if (cx->compartment->debugMode())
-        script->debugMode = true;
-#endif
 
     if (funbox) {
         if (funbox->argumentsHasLocalBinding()) {
@@ -1986,11 +1980,8 @@ JSScript::finalize(FreeOp *fop)
     if (types)
         types->destroy();
 
-#ifdef JS_METHODJIT
-    mjit::ReleaseScriptCode(fop, this);
-# ifdef JS_ION
+#ifdef JS_ION
     ion::DestroyIonScripts(fop, this);
-# endif
 #endif
 
     destroyScriptCounts(fop);
@@ -2510,13 +2501,6 @@ JSScript::ensureHasDebugScript(JSContext *cx)
 void
 JSScript::recompileForStepMode(FreeOp *fop)
 {
-#ifdef JS_METHODJIT
-    if (hasMJITInfo()) {
-        mjit::Recompiler::clearStackReferences(fop, this);
-        mjit::ReleaseScriptCode(fop, this);
-    }
-#endif
-
 #ifdef JS_ION
     if (hasBaselineScript())
         baseline->toggleDebugTraps(this, NULL);
@@ -2698,16 +2682,6 @@ JSScript::markChildren(JSTracer *trc)
 
     bindings.trace(trc);
 
-#ifdef JS_METHODJIT
-    for (int constructing = 0; constructing <= 1; constructing++) {
-        for (int barriers = 0; barriers <= 1; barriers++) {
-            mjit::JITScript *jit = getJIT((bool) constructing, (bool) barriers);
-            if (jit)
-                jit->trace(trc);
-        }
-    }
-#endif
-
     if (hasAnyBreakpointsOrStepMode()) {
         for (unsigned i = 0; i < length; i++) {
             BreakpointSite *site = debugScript()->breakpoints[i];
@@ -2840,14 +2814,6 @@ JSScript::argumentsOptimizationFailed(JSContext *cx, HandleScript script)
             SetFrameArgumentsObject(cx, frame, script, argsobj);
         }
     }
-
-#ifdef JS_METHODJIT
-    if (script->hasMJITInfo()) {
-        mjit::ExpandInlineFrames(cx->zone());
-        mjit::Recompiler::clearStackReferences(cx->runtime->defaultFreeOp(), script);
-        mjit::ReleaseScriptCode(cx->runtime->defaultFreeOp(), script);
-    }
-#endif
 
     if (script->hasAnalysis() && script->analysis()->ranInference()) {
         types::AutoEnterAnalysis enter(cx);

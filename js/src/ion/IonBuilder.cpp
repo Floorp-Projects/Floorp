@@ -7480,13 +7480,8 @@ IonBuilder::getPropTryInlineAccess(bool *emitted, HandlePropertyName name, Handl
         return true;
 
     Vector<Shape *> shapes(cx);
-    if (Shape *objShape = mjit::GetPICSingleShape(cx, script(), pc, info().constructing())) {
-        if (!shapes.append(objShape))
-            return false;
-    } else {
-        if (!inspector->maybeShapesForPropertyOp(pc, shapes))
-            return false;
-    }
+    if (!inspector->maybeShapesForPropertyOp(pc, shapes))
+        return false;
 
     if (shapes.empty() || !CanInlinePropertyOpShapes(shapes))
         return true;
@@ -7682,13 +7677,8 @@ IonBuilder::jsop_setprop(HandlePropertyName name)
     }
 
     Vector<Shape *> shapes(cx);
-    if (Shape *objShape = mjit::GetPICSingleShape(cx, script(), pc, info().constructing())) {
-        if (!shapes.append(objShape))
-            return false;
-    } else {
-        if (!inspector->maybeShapesForPropertyOp(pc, shapes))
-            return false;
-    }
+    if (!inspector->maybeShapesForPropertyOp(pc, shapes))
+        return false;
 
     if (!shapes.empty() && CanInlinePropertyOpShapes(shapes)) {
         if (shapes.length() == 1) {

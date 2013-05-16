@@ -14,5 +14,5 @@ function handleRequest(request, response) {
     response.setHeader("Content-Type", "text/" + index, false);
     response.write(new Array(index * 10).join(index)); // + 0.01 KB
     response.finish();
-  }, 50, Ci.nsITimer.TYPE_ONE_SHOT); // Make sure this request takes a few ms.
+  }, 10, Ci.nsITimer.TYPE_ONE_SHOT); // Make sure this request takes a few ms.
 }

@@ -28,6 +28,7 @@ CPPSRCS	= \
         Blur.cpp \
         Scale.cpp \
         ScaledFontBase.cpp \
+        ScaledFontCairo.cpp \
         DrawTargetDual.cpp \
         ImageScaling.cpp \
         SourceSurfaceRawData.cpp \
@@ -73,10 +74,8 @@ CPPSRCS += \
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),$(findstring $(MOZ_WIDGET_TOOLKIT),android gtk2 gonk qt))
-CPPSRCS	+= \
-        ScaledFontFreetype.cpp \
-        $(NULL)
 DEFINES += -DMOZ_ENABLE_FREETYPE
+OS_CXXFLAGS += $(CAIRO_FT_CFLAGS)
 endif
 
 DEFINES += -DSK_A32_SHIFT=24 -DSK_R32_SHIFT=16 -DSK_G32_SHIFT=8 -DSK_B32_SHIFT=0

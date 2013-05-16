@@ -42,7 +42,7 @@ public:
 
   // Require subclasses to implement |GetParentRule|.
   //NS_DECL_NSIDOMCSSSTYLEDECLARATION
-  NS_IMETHOD GetCssText(nsAString & aCssText);
+  NS_IMETHOD GetCssText(nsAString & aCssText) MOZ_OVERRIDE;
   NS_IMETHOD SetCssText(const nsAString & aCssText) MOZ_OVERRIDE;
   NS_IMETHOD GetPropertyValue(const nsAString & propertyName,
                               nsAString & _retval) MOZ_OVERRIDE;
@@ -51,7 +51,7 @@ public:
                         mozilla::ErrorResult& aRv) MOZ_OVERRIDE;
   using nsICSSDeclaration::GetPropertyCSSValue;
   NS_IMETHOD RemoveProperty(const nsAString & propertyName,
-                            nsAString & _retval);
+                            nsAString & _retval) MOZ_OVERRIDE;
   NS_IMETHOD GetPropertyPriority(const nsAString & propertyName,
                                  nsAString & _retval) MOZ_OVERRIDE;
   NS_IMETHOD SetProperty(const nsAString & propertyName,
@@ -90,7 +90,7 @@ public:
 #undef CSS_PROP
 #undef CSS_PROP_PUBLIC_OR_PRIVATE
 
-  virtual void IndexedGetter(uint32_t aIndex, bool& aFound, nsAString& aPropName);
+  virtual void IndexedGetter(uint32_t aIndex, bool& aFound, nsAString& aPropName) MOZ_OVERRIDE;
 
   virtual JSObject* WrapObject(JSContext *cx,
                                JS::Handle<JSObject*> scope) MOZ_OVERRIDE

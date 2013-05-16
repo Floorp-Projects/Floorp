@@ -948,6 +948,14 @@ var BrowserApp = {
     webBrowserPrint.print(printSettings, download);
   },
 
+  notifyPrefObservers: function(aPref) {
+    this._prefObservers[aPref].forEach(function(aRequestId) {
+      let request = { requestId : aRequestId,
+                      preferences : [aPref] };
+      this.getPreferences(request);
+    }, this);
+  },
+
   getPreferences: function getPreferences(aPrefsRequest, aListen) {
     let prefs = [];
 
@@ -1442,11 +1450,7 @@ var BrowserApp = {
         break;
 
       case "nsPref:changed":
-        for each (let requestId in this._prefObservers[aData]) {
-          let request = { requestId : requestId,
-                          preferences : [ aData ] };
-          this.getPreferences(request, false);
-        }
+        this.notifyPrefObservers(aData);
         break;
 
       default:

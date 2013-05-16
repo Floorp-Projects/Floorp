@@ -32,7 +32,7 @@ public:
 
   nsStackLayout();
 
-  NS_IMETHOD Layout(nsIFrame* aBox, nsBoxLayoutState& aState);
+  NS_IMETHOD Layout(nsIFrame* aBox, nsBoxLayoutState& aState) MOZ_OVERRIDE;
 
   virtual nsSize GetPrefSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
   virtual nsSize GetMinSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;

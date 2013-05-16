@@ -149,8 +149,7 @@ MacroAssemblerX86::callWithABIPre(uint32_t *stackAdjust)
     {
         // Check call alignment.
         Label good;
-        movl(esp, eax);
-        testl(eax, Imm32(StackAlignment - 1));
+        testl(esp, Imm32(StackAlignment - 1));
         j(Equal, &good);
         breakpoint();
         bind(&good);
