@@ -138,6 +138,7 @@
 #include "nsIPropertyBag2.h"
 #include "nsIDOMPageTransitionEvent.h"
 #include "nsIDOMStyleSheetChangeEvent.h"
+#include "nsIDOMStyleSheetApplicableStateChangeEvent.h"
 #include "nsJSUtils.h"
 #include "nsFrameLoader.h"
 #include "nsEscape.h"
@@ -3774,8 +3775,6 @@ nsDocument::NotifyStyleSheetRemoved(nsIStyleSheet* aSheet, bool aDocumentSheet)
   }
 }
 
-#undef DO_STYLESHEET_NOTIFICATION
-
 void
 nsDocument::AddStyleSheet(nsIStyleSheet* aSheet)
 {
@@ -3895,7 +3894,17 @@ nsDocument::SetStyleSheetApplicableState(nsIStyleSheet* aSheet,
 
   NS_DOCUMENT_NOTIFY_OBSERVERS(StyleSheetApplicableStateChanged,
                                (this, aSheet, aApplicable));
+
+  if (StyleSheetChangeEventsEnabled()) {
+    DO_STYLESHEET_NOTIFICATION(NS_NewDOMStyleSheetApplicableStateChangeEvent,
+                               nsIDOMStyleSheetApplicableStateChangeEvent,
+                               InitStyleSheetApplicableStateChangeEvent,
+                               "StyleSheetApplicableStateChanged",
+                               aApplicable);
+  }
 }
+
+#undef DO_STYLESHEET_NOTIFICATION
 
 // These three functions are a lot like the implementation of the
 // corresponding API for regular stylesheets.
