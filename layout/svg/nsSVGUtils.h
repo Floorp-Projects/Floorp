@@ -47,7 +47,7 @@ class nsSVGLength2;
 class nsSVGOuterSVGFrame;
 class nsSVGPathGeometryFrame;
 class nsTextFrame;
-class gfxTextContextPaint;
+class gfxTextObjectPaint;
 
 struct nsStyleSVG;
 struct nsStyleSVGPaint;
@@ -589,8 +589,8 @@ public:
   /**
    * Set up cairo context with an object pattern
    */
-  static bool SetupContextPaint(gfxContext *aContext,
-                               gfxTextContextPaint *aContextPaint,
+  static bool SetupObjectPaint(gfxContext *aContext,
+                               gfxTextObjectPaint *aObjectPaint,
                                const nsStyleSVGPaint& aPaint,
                                float aOpacity);
 
@@ -599,46 +599,46 @@ public:
    * for the given frame.
    */
   static bool SetupCairoFillPaint(nsIFrame* aFrame, gfxContext* aContext,
-                                  gfxTextContextPaint *aContextPaint = nullptr);
+                                  gfxTextObjectPaint *aObjectPaint = nullptr);
 
   /**
    * Sets the current paint on the specified gfxContent to be the SVG 'stroke'
    * for the given frame.
    */
   static bool SetupCairoStrokePaint(nsIFrame* aFrame, gfxContext* aContext,
-                                    gfxTextContextPaint *aContextPaint = nullptr);
+                                    gfxTextObjectPaint *aObjectPaint = nullptr);
 
   static float GetOpacity(nsStyleSVGOpacitySource aOpacityType,
                           const float& aOpacity,
-                          gfxTextContextPaint *aOuterContextPaint);
+                          gfxTextObjectPaint *aOuterObjectPaint);
 
   /*
    * @return false if there is no stroke
    */
   static bool HasStroke(nsIFrame* aFrame,
-                        gfxTextContextPaint *aContextPaint = nullptr);
+                        gfxTextObjectPaint *aObjectPaint = nullptr);
 
   static float GetStrokeWidth(nsIFrame* aFrame,
-                              gfxTextContextPaint *aContextPaint = nullptr);
+                              gfxTextObjectPaint *aObjectPaint = nullptr);
 
   /*
    * Set up a cairo context for measuring a stroked path
    */
   static void SetupCairoStrokeGeometry(nsIFrame* aFrame, gfxContext *aContext,
-                                       gfxTextContextPaint *aContextPaint = nullptr);
+                                       gfxTextObjectPaint *aObjectPaint = nullptr);
 
   /*
    * Set up a cairo context for hit testing a stroked path
    */
   static void SetupCairoStrokeHitGeometry(nsIFrame* aFrame, gfxContext *aContext,
-                                          gfxTextContextPaint *aContextPaint = nullptr);
+                                          gfxTextObjectPaint *aObjectPaint = nullptr);
 
   /*
    * Set up a cairo context for stroking, including setting up any stroke-related
    * properties such as dashing and setting the current paint on the gfxContext.
    */
   static bool SetupCairoStroke(nsIFrame* aFrame, gfxContext *aContext,
-                               gfxTextContextPaint *aContextPaint = nullptr);
+                               gfxTextObjectPaint *aObjectPaint = nullptr);
 
   /**
    * This function returns a set of bit flags indicating which parts of the
@@ -657,7 +657,7 @@ public:
    */
   static bool PaintSVGGlyph(Element* aElement, gfxContext* aContext,
                             gfxFont::DrawMode aDrawMode,
-                            gfxTextContextPaint* aContextPaint);
+                            gfxTextObjectPaint* aObjectPaint);
   /**
    * Get the extents of a SVG glyph.
    * @param aElement the SVG glyph element
