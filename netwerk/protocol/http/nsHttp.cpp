@@ -98,7 +98,7 @@ static const PLDHashTableOps ops = {
 nsresult
 nsHttp::CreateAtomTable()
 {
-    NS_ASSERTION(!sAtomTable.ops, "atom table already initialized");
+    MOZ_ASSERT(!sAtomTable.ops, "atom table already initialized");
 
     if (!sLock) {
         sLock = new Mutex("nsHttp.sLock");
@@ -126,8 +126,8 @@ nsHttp::CreateAtomTable()
                                                  (PL_DHashTableOperate(&sAtomTable, atoms[i], PL_DHASH_ADD));
         if (!stub)
             return NS_ERROR_OUT_OF_MEMORY;
-        
-        NS_ASSERTION(!stub->key, "duplicate static atom");
+
+        MOZ_ASSERT(!stub->key, "duplicate static atom");
         stub->key = atoms[i];
     }
 

@@ -183,20 +183,13 @@ XPTInterfaceInfoManager::VerifyAndAddEntryIfNew(XPTInterfaceDirectoryEntry* ifac
 static nsresult 
 EntryToInfo(xptiInterfaceEntry* entry, nsIInterfaceInfo **_retval)
 {
-    xptiInterfaceInfo* info;
-    nsresult rv;
-
     if (!entry) {
         *_retval = nullptr;
         return NS_ERROR_FAILURE;    
     }
 
-    rv = entry->GetInterfaceInfo(&info);
-    if (NS_FAILED(rv))
-        return rv;
-
-    // Transfer the AddRef done by GetInterfaceInfo.
-    *_retval = static_cast<nsIInterfaceInfo*>(info);
+    nsRefPtr<xptiInterfaceInfo> info = entry->InterfaceInfo();
+    info.forget(_retval);
     return NS_OK;    
 }
 
@@ -268,32 +261,27 @@ XPTInterfaceInfoManager::GetNameForIID(const nsIID * iid, char **_retval)
 static PLDHashOperator
 xpti_ArrayAppender(const char* name, xptiInterfaceEntry* entry, void* arg)
 {
-    nsISupportsArray* array = (nsISupportsArray*) arg;
+    nsCOMArray<nsIInterfaceInfo>* array = static_cast<nsCOMArray<nsIInterfaceInfo>*>(arg);
 
-    nsCOMPtr<nsIInterfaceInfo> ii;
-    if (NS_SUCCEEDED(EntryToInfo(entry, getter_AddRefs(ii))))
+    if (entry->GetScriptableFlag()) {
+        nsCOMPtr<nsIInterfaceInfo> ii = entry->InterfaceInfo();
         array->AppendElement(ii);
+    }
     return PL_DHASH_NEXT;
 }
 
 /* nsIEnumerator enumerateInterfaces (); */
-NS_IMETHODIMP
-XPTInterfaceInfoManager::EnumerateInterfaces(nsIEnumerator **_retval)
+void
+XPTInterfaceInfoManager::GetScriptableInterfaces(nsCOMArray<nsIInterfaceInfo>& aInterfaces)
 {
     // I didn't want to incur the size overhead of using nsHashtable just to
     // make building an enumerator easier. So, this code makes a snapshot of 
     // the table using an nsISupportsArray and builds an enumerator for that.
     // We can afford this transient cost.
 
-    nsCOMPtr<nsISupportsArray> array;
-    NS_NewISupportsArray(getter_AddRefs(array));
-    if (!array)
-        return NS_ERROR_UNEXPECTED;
-
     ReentrantMonitorAutoEnter monitor(mWorkingSet.mTableReentrantMonitor);
-    mWorkingSet.mNameTable.EnumerateRead(xpti_ArrayAppender, array);
-
-    return array->Enumerate(_retval);
+    aInterfaces.SetCapacity(mWorkingSet.mNameTable.Count());
+    mWorkingSet.mNameTable.EnumerateRead(xpti_ArrayAppender, &aInterfaces);
 }
 
 struct ArrayAndPrefix

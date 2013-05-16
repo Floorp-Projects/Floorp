@@ -113,6 +113,13 @@ var checkTestResults = function() {
   SimpleTest.finish();
 }
 
+window.addEventListener("message", receiveMessage, false);
+
+function receiveMessage(event) {
+  if (event.data.call && event.data.call == 'frameLoaded')
+    frameLoaded(event.data.testname, event.data.uri);
+}
+
 //////////////////////////////////////////////////////////////////////
 // set up and go
 window.examiner = new examiner();

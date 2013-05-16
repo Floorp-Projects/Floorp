@@ -42,7 +42,7 @@ HttpChannelParentListener::~HttpChannelParentListener()
 // HttpChannelParentListener::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS5(HttpChannelParentListener, 
+NS_IMPL_ISUPPORTS5(HttpChannelParentListener,
                    nsIInterfaceRequestor,
                    nsIStreamListener,
                    nsIRequestObserver,
@@ -64,14 +64,14 @@ HttpChannelParentListener::OnStartRequest(nsIRequest *aRequest, nsISupports *aCo
 }
 
 NS_IMETHODIMP
-HttpChannelParentListener::OnStopRequest(nsIRequest *aRequest, 
-                                          nsISupports *aContext, 
+HttpChannelParentListener::OnStopRequest(nsIRequest *aRequest,
+                                          nsISupports *aContext,
                                           nsresult aStatusCode)
 {
   if (!mActiveChannel)
     return NS_ERROR_UNEXPECTED;
 
-  LOG(("HttpChannelParentListener::OnStopRequest: [this=%x status=%ul]\n", 
+  LOG(("HttpChannelParentListener::OnStopRequest: [this=%x status=%ul]\n",
        this, aStatusCode));
   nsresult rv = mActiveChannel->OnStopRequest(aRequest, aContext, aStatusCode);
 
@@ -84,10 +84,10 @@ HttpChannelParentListener::OnStopRequest(nsIRequest *aRequest,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-HttpChannelParentListener::OnDataAvailable(nsIRequest *aRequest, 
-                                            nsISupports *aContext, 
-                                            nsIInputStream *aInputStream, 
-                                            uint64_t aOffset, 
+HttpChannelParentListener::OnDataAvailable(nsIRequest *aRequest,
+                                            nsISupports *aContext,
+                                            nsIInputStream *aInputStream,
+                                            uint64_t aOffset,
                                             uint32_t aCount)
 {
   if (!mActiveChannel)
@@ -101,7 +101,7 @@ HttpChannelParentListener::OnDataAvailable(nsIRequest *aRequest,
 // HttpChannelParentListener::nsIInterfaceRequestor
 //-----------------------------------------------------------------------------
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 HttpChannelParentListener::GetInterface(const nsIID& aIID, void **result)
 {
   if (aIID.Equals(NS_GET_IID(nsIChannelEventSink)) ||
@@ -182,7 +182,7 @@ HttpChannelParentListener::OnRedirectResult(bool succeeded)
       nsCOMPtr<nsIChannel> newChannel;
       rv = registrar->GetRegisteredChannel(mRedirectChannelId,
                                            getter_AddRefs(newChannel));
-      NS_ASSERTION(newChannel, "Already registered channel not found");
+      MOZ_ASSERT(newChannel, "Already registered channel not found");
 
       if (NS_SUCCEEDED(rv))
         newChannel->Cancel(NS_BINDING_ABORTED);
@@ -197,7 +197,7 @@ HttpChannelParentListener::OnRedirectResult(bool succeeded)
 
   nsCOMPtr<nsIParentRedirectingChannel> activeRedirectingChannel =
       do_QueryInterface(mActiveChannel);
-  NS_ABORT_IF_FALSE(activeRedirectingChannel,
+  MOZ_ASSERT(activeRedirectingChannel,
     "Channel finished a redirect response, but doesn't implement "
     "nsIParentRedirectingChannel to complete it.");
 
