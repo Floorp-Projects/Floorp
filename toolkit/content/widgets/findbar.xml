@@ -955,12 +955,15 @@
           }
 
           var doc = win.document;
-          if (!doc || !(doc instanceof HTMLDocument))
-            return textFound;
+          if (!doc || !doc.documentElement)
+           return textFound;
+
+          var body = (doc instanceof HTMLDocument && doc.body) ?
+                     doc.body : doc.documentElement;
 
           if (aHighlight) {
             var searchRange = doc.createRange();
-            searchRange.selectNodeContents(doc.body);
+             searchRange.selectNodeContents(body);
 
             var startPt = searchRange.cloneRange();
             startPt.collapse(true);
