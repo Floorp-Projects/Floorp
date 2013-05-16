@@ -33,7 +33,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "VariablesView",
                                   "resource:///modules/devtools/VariablesView.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "devtools",
-                                  "resource:///modules/devtools/gDevTools.jsm");
+                                  "resource://gre/modules/devtools/Loader.jsm");
 
 const SCRATCHPAD_CONTEXT_CONTENT = 1;
 const SCRATCHPAD_CONTEXT_BROWSER = 2;

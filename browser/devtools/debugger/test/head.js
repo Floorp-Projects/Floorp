@@ -12,6 +12,7 @@ Cu.import("resource://gre/modules/devtools/dbg-server.jsm", tempScope);
 Cu.import("resource://gre/modules/devtools/dbg-client.jsm", tempScope);
 Cu.import("resource:///modules/source-editor.jsm", tempScope);
 Cu.import("resource:///modules/devtools/gDevTools.jsm", tempScope);
+Cu.import("resource://gre/modules/devtools/Loader.jsm", tempScope);
 let Services = tempScope.Services;
 let SourceEditor = tempScope.SourceEditor;
 let DebuggerServer = tempScope.DebuggerServer;
