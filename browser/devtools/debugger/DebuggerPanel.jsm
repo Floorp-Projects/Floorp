@@ -18,7 +18,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Promise",
 XPCOMUtils.defineLazyModuleGetter(this, "DebuggerServer",
   "resource://gre/modules/devtools/dbg-server.jsm");
 
-function DebuggerPanel(iframeWindow, toolbox) {
+this.DebuggerPanel = function DebuggerPanel(iframeWindow, toolbox) {
   this.panelWin = iframeWindow;
   this._toolbox = toolbox;
 
@@ -85,5 +85,5 @@ DebuggerPanel.prototype = {
 
   getAllBreakpoints: function() {
     return this._bkp.store;
-  },
+  }
 };
