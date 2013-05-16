@@ -16,11 +16,6 @@ interface nsIEventTarget;
  *
  * @param aTimer the timer which has expired
  * @param aClosure opaque parameter passed to initWithFuncCallback
- *
- * Implementers should return the following:
- *
- * @return NS_OK
- *
  */
 class nsITimer;
 typedef void (*nsTimerCallbackFunc) (nsITimer *aTimer, void *aClosure);
