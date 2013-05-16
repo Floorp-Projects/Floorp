@@ -394,25 +394,7 @@ documenttab[selected] .documenttab-selection {
 }
 
 #toolbar[mode="loading"] > #tool-reload,
-#toolbar:-moz-any([mode="edit"], [mode="view"]) > #tool-stop {
-  visibility: collapse;
-}
-
-/* Hide the tab toggle if we're showing classic tabs or we're snap-viewed. */
-#toolbar[viewstate="snapped"],
-#tray[tabsonly] #toolbar {
-  background: @panel_light_color@ @panel_light_background@;
-  -moz-padding-end: 0;
-}
-
-#toolbar[viewstate="snapped"] {
-  -moz-padding-end: 0;
-}
-
-#toolbar[viewstate="snapped"] > #urlbar-container {
-  -moz-margin-end: 0;
-}
-
+#toolbar:-moz-any([mode="edit"], [mode="view"]) > #tool-stop,
 #toolbar[viewstate="snapped"] > #tool-stop ~ toolbarbutton {
   visibility: collapse;
 }
