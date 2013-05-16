@@ -68,12 +68,13 @@ function dynamicStylesheetAdded(evt) {
 }
 
 function dynamicStylesheetApplicableStateChanged(evt) {
+  gBrowser.removeEventListener("StyleSheetApplicableStateChanged", dynamicStylesheetApplicableStateChanged, true);
   ok(true, "received dynamic style sheet applicable state change event");
   is(evt.type, "StyleSheetApplicableStateChanged", "evt.type has expected value");
   is(evt.target, gBrowser.contentDocument, "event targets correct document");
   is(evt.stylesheet, gLinkElement.sheet, "evt.stylesheet has the right value");
   is(evt.applicable, true, "evt.applicable has the right value");
-  gBrowser.removeEventListener("StyleSheetApplicableStateChanged", dynamicStylesheetApplicableStateChanged, true);
+
   gBrowser.addEventListener("StyleSheetApplicableStateChanged", dynamicStylesheetApplicableStateChangedToFalse, true);
   gLinkElement.disabled = true;
 }
@@ -85,6 +86,7 @@ function dynamicStylesheetApplicableStateChangedToFalse(evt) {
   is(evt.target, gBrowser.contentDocument, "event targets correct document");
   is(evt.stylesheet, gLinkElement.sheet, "evt.stylesheet has the right value");
   is(evt.applicable, false, "evt.applicable has the right value");
+
   gBrowser.addEventListener("StyleSheetRemoved", dynamicStylesheetRemoved, true);
   gBrowser.contentDocument.body.removeChild(gLinkElement);
 }
@@ -97,7 +99,48 @@ function dynamicStylesheetRemoved(evt) {
   ok(evt.stylesheet, "evt.stylesheet is defined");
   ok(evt.stylesheet.toString().contains("CSSStyleSheet"), "evt.stylesheet is a stylesheet");
   ok(evt.stylesheet.href.contains(gStyleSheet), "evt.stylesheet is the removed stylesheet");
-  is(evt.rule, null, "evt.rule is null");
+
+  gBrowser.addEventListener("StyleRuleAdded", styleRuleAdded, true);
+  gBrowser.contentDocument.querySelector("style").sheet.insertRule("*{color:black}", 0);
+}
+
+function styleRuleAdded(evt) {
+  gBrowser.removeEventListener("StyleRuleAdded", styleRuleAdded, true);
+  ok(true, "received style rule added event");
+  is(evt.type, "StyleRuleAdded", "evt.type has expected value");
+  is(evt.target, gBrowser.contentDocument, "event targets correct document");
+  ok(evt.stylesheet, "evt.stylesheet is defined");
+  ok(evt.stylesheet.toString().contains("CSSStyleSheet"), "evt.stylesheet is a stylesheet");
+  ok(evt.rule, "evt.rule is defined");
+  is(evt.rule.cssText, "* { color: black; }", "evt.rule.cssText has expected value");
+
+  gBrowser.addEventListener("StyleRuleChanged", styleRuleChanged, true);
+  evt.rule.style.cssText = "color:green";
+}
+
+function styleRuleChanged(evt) {
+  gBrowser.removeEventListener("StyleRuleChanged", styleRuleChanged, true);
+  ok(true, "received style rule changed event");
+  is(evt.type, "StyleRuleChanged", "evt.type has expected value");
+  is(evt.target, gBrowser.contentDocument, "event targets correct document");
+  ok(evt.stylesheet, "evt.stylesheet is defined");
+  ok(evt.stylesheet.toString().contains("CSSStyleSheet"), "evt.stylesheet is a stylesheet");
+  ok(evt.rule, "evt.rule is defined");
+  is(evt.rule.cssText, "* { color: green; }", "evt.rule.cssText has expected value");
+
+  gBrowser.addEventListener("StyleRuleRemoved", styleRuleRemoved, true);
+  evt.stylesheet.deleteRule(0);
+}
+
+function styleRuleRemoved(evt) {
+  gBrowser.removeEventListener("StyleRuleRemoved", styleRuleRemoved, true);
+  ok(true, "received style rule removed event");
+  is(evt.type, "StyleRuleRemoved", "evt.type has expected value");
+  is(evt.target, gBrowser.contentDocument, "event targets correct document");
+  ok(evt.stylesheet, "evt.stylesheet is defined");
+  ok(evt.stylesheet.toString().contains("CSSStyleSheet"), "evt.stylesheet is a stylesheet");
+  ok(evt.rule, "evt.rule is defined");
+
   executeSoon(concludeTest);
 }
 
