@@ -137,12 +137,12 @@ public:
                                         JSContext*,
                                         const DictForConstructor&,
                                         JS::Value,
-                                        JSObject&,
-                                        JSObject*,
+                                        JS::Handle<JSObject*>,
+                                        JS::Handle<JSObject*>,
                                         const Sequence<Dict>&,
                                         const Optional<JS::Rooted<JS::Value> >&,
-                                        const Optional<NonNullLazyRootedObject>&,
-                                        const Optional<LazyRootedObject>&,
+                                        const Optional<JS::Rooted<JSObject*> >&,
+                                        const Optional<JS::Rooted<JSObject*> >&,
                                         ErrorResult&);
 
   // Integer types
@@ -434,23 +434,23 @@ public:
   JS::Value ReceiveAny(JSContext*);
 
   // object types
-  void PassObject(JSContext*, JSObject&);
-  void PassNullableObject(JSContext*, JSObject*);
-  void PassOptionalObject(JSContext*, const Optional<NonNullLazyRootedObject>&);
-  void PassOptionalNullableObject(JSContext*, const Optional<LazyRootedObject>&);
-  void PassOptionalNullableObjectWithDefaultValue(JSContext*, JSObject*);
+  void PassObject(JSContext*, JS::Handle<JSObject*>);
+  void PassNullableObject(JSContext*, JS::Handle<JSObject*>);
+  void PassOptionalObject(JSContext*, const Optional<JS::Rooted<JSObject*> >&);
+  void PassOptionalNullableObject(JSContext*, const Optional<JS::Rooted<JSObject*> >&);
+  void PassOptionalNullableObjectWithDefaultValue(JSContext*, JS::Handle<JSObject*>);
   JSObject* ReceiveObject(JSContext*);
   JSObject* ReceiveNullableObject(JSContext*);
 
   // Union types
   void PassUnion(JSContext*, const ObjectOrLong& arg);
-  void PassUnionWithNullable(JSContext*, const ObjectOrNullOrLong& arg)
+  void PassUnionWithNullable(JSContext* cx, const ObjectOrNullOrLong& arg)
   {
     ObjectOrLong returnValue;
     if (arg.IsNull()) {
     } else if (arg.IsObject()) {
-      JSObject& obj = (JSObject&)arg.GetAsObject();
-      JS_GetClass(&obj);
+      JS::Rooted<JSObject*> obj(cx, arg.GetAsObject());
+      JS_GetClass(obj);
       //returnValue.SetAsObject(&obj);
     } else {
       int32_t i = arg.GetAsLong();
@@ -698,8 +698,8 @@ private:
   void PassOptionalArrayBuffer(Optional<ArrayBuffer>&) MOZ_DELETE;
   void PassOptionalNullableArrayBuffer(Optional<ArrayBuffer*>&) MOZ_DELETE;
   void PassOptionalEnum(Optional<TestEnum>&) MOZ_DELETE;
-  void PassOptionalCallback(JSContext*, Optional<JSObject*>&) MOZ_DELETE;
-  void PassOptionalNullableCallback(JSContext*, Optional<JSObject*>&) MOZ_DELETE;
+  void PassOptionalCallback(JSContext*, Optional<OwningNonNull<TestCallback> >&) MOZ_DELETE;
+  void PassOptionalNullableCallback(JSContext*, Optional<nsRefPtr<TestCallback> >&) MOZ_DELETE;
   void PassOptionalAny(Optional<JS::Rooted<JS::Value> >&) MOZ_DELETE;
 
   // And test that string stuff is always const

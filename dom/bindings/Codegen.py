@@ -2616,9 +2616,18 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
 
         return templateBody
 
-    # A helper function for converting things that look like JSObject*
-    # when nullable and JSObject& when not nullable.
+    # A helper function for converting things that look like a JSObject*.
     def handleJSObjectType(type, isMember, failureCode):
+        if not isMember:
+            declType = CGGeneric("JS::Rooted<JSObject*>")
+            templateBody = "${declName} = &${valHandle}.toObject();"
+            setToNullCode = "${declName} = nullptr;"
+            template = wrapObjectTemplate(templateBody, type, setToNullCode,
+                                          failureCode)
+            return JSToNativeConversionInfo(template, declType=declType,
+                                            dealWithOptional=isOptional,
+                                            declArgs="cx")
+
         if type.nullable():
             declType = CGGeneric("LazyRootedObject")
         else:
@@ -4200,9 +4209,6 @@ class CGCallGenerator(CGThing):
 
         args = CGList([CGGeneric(arg) for arg in argsPre], ", ")
         for (a, name) in arguments:
-            # This is a workaround for a bug in Apple's clang.
-            if a.type.isObject() and not a.type.nullable() and not a.optional:
-                name = "(JSObject&)" + name
             arg = CGGeneric(name)
             # Now constify the things that need it
             def needsConst(a):
@@ -4210,7 +4216,12 @@ class CGCallGenerator(CGThing):
                     return True
                 if a.type.isSequence():
                     return True
-                if a.type.nullable():
+                # isObject() types are always a JS::Rooted, whether
+                # nullable or not, and it turns out a const JS::Rooted
+                # is not very helpful at all (in particular, it won't
+                # even convert to a JS::Handle).
+                # XXX bz Well, why not???
+                if a.type.nullable() and not a.type.isObject():
                     return True
                 if a.type.isString():
                     return True
@@ -4284,7 +4295,9 @@ def wrapTypeIntoCurrentCompartment(type, value, isMember=True):
                          "}" % value)
 
     if type.isObject():
-        if not type.nullable():
+        if not isMember:
+            value = value + ".address()"
+        elif not type.nullable():
             value = "%s.Slot()" % value
         else:
             value = "&%s" % value
@@ -5592,12 +5605,7 @@ def getUnionAccessorSignatureType(type, descriptorProvider):
         return CGGeneric("JS::Value")
 
     if type.isObject():
-        typeName = CGGeneric("JSObject")
-        if type.nullable():
-            typeName = CGWrapper(typeName, post="*")
-        else:
-            typeName = CGWrapper(typeName, post="&")
-        return typeName
+        return CGGeneric("JSObject*")
 
     if not type.isPrimitive():
         raise TypeError("Need native type for argument type '%s'" % str(type))
@@ -5644,7 +5652,7 @@ return true;"""
     if type.isObject():
         setter = CGGeneric("void SetToObject(JSContext* cx, JSObject* obj)\n"
                            "{\n"
-                           "  mUnion.mValue.mObject.SetValue().construct(cx, obj);\n"
+                           "  mUnion.mValue.mObject.SetValue(cx, obj);\n"
                            "  mUnion.mType = mUnion.eObject;\n"
                            "}")
     else:
@@ -5723,13 +5731,17 @@ class CGUnionStruct(CGThing):
   {
     MOZ_ASSERT(Is${name}(), "Wrong type!");
     return const_cast<${structType}&>(mValue.m${name}.Value());
-  }
-  ${structType}& SetAs${name}()
+  }"""
+        methods.extend(mapTemplate(methodTemplate, templateVars))
+        # Now have to be careful: we do not want the SetAsObject() method!
+        setterTemplate = """ ${structType}& SetAs${name}()
   {
     mType = e${name};
     return mValue.m${name}.SetValue();
   }"""
-        methods.extend(mapTemplate(methodTemplate, templateVars))
+        methods.extend(mapTemplate(setterTemplate,
+                                   filter(lambda v: v["name"] != "Object",
+                                          templateVars)))
         values = mapTemplate("UnionMember<${structType} > m${name};", templateVars)
         return string.Template("""
 class ${structName} {
@@ -5812,12 +5824,7 @@ ${doConversionsToJS}
         (templateVars, type) = arg
         assert not type.nullable() # flatMemberTypes never has nullable types
         val = "mValue.m%(name)s.Value()" % templateVars
-        if type.isObject():
-            # We'll have a NonNullLazyRootedObject while the wrapping code wants
-            # a JSObject*.  But our .ref() is a JS::Rooted<JSObject*>, which can
-            # convert to a JSObject*.
-            val = "%s.ref()" % val
-        elif type.isSpiderMonkeyInterface():
+        if type.isSpiderMonkeyInterface():
             # We have a NonNull<TypedArray> object while the wrapping code
             # wants a JSObject*.  Cheat with .get() so we don't have to
             # figure out the right reference type to cast to.
@@ -5859,11 +5866,14 @@ class CGUnionConversionStruct(CGThing):
         structName = self.type.__str__()
 
         setters.extend(mapTemplate("${setter}", templateVars))
+        # Don't generate a SetAsObject, since we don't use it
         private = "\n".join(mapTemplate("""  ${structType}& SetAs${name}()
   {
     mUnion.mType = mUnion.e${name};
     return mUnion.mValue.m${name}.SetValue();
-  }""", templateVars))
+  }""",
+                                        filter(lambda v: v["name"] != "Object",
+                                               templateVars)))
         private += "\n\n"
         holders = filter(lambda v: v["holderType"] is not None, templateVars)
         if len(holders) > 0:
@@ -8236,11 +8246,7 @@ class CGNativeMember(ClassMethod):
         if type.isAny():
             return "JS::Value", "JS::UndefinedValue()", "return ${declName};"
         if type.isObject():
-            if type.nullable():
-                returnCode = "return ${declName};"
-            else:
-                returnCode = "return ${declName}.ref();"
-            return "JSObject*", "nullptr", returnCode
+            return "JSObject*", "nullptr", "return ${declName};"
         if type.isSpiderMonkeyInterface():
             if type.nullable():
                 returnCode = "return ${declName} ? ${declName}->Obj() : nullptr;"
@@ -8408,15 +8414,12 @@ class CGNativeMember(ClassMethod):
             return declType, False, False
 
         if type.isObject():
-            if optional:
-                if type.nullable():
-                    declType = "LazyRootedObject"
-                else:
-                    declType = "NonNullLazyRootedObject"
-            elif type.nullable() or self.jsObjectsArePtr:
+            if isMember:
                 declType = "JSObject*"
+            elif optional:
+                declType = "JS::Rooted<JSObject*>"
             else:
-                declType = "JSObject&"
+                declType = "JS::Handle<JSObject*>"
             return declType, False, False
 
         if type.isDictionary():
