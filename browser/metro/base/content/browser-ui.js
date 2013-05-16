@@ -44,6 +44,7 @@ let Elements = {};
   ["toolbar",            "toolbar"],
   ["browsers",           "browsers"],
   ["appbar",             "appbar"],
+  ["contextappbar",      "contextappbar"],
   ["contentViewport",    "content-viewport"],
   ["progress",           "progress-control"],
   ["progressContainer",  "progress-container"],
