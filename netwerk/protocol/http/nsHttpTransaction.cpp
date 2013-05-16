@@ -977,6 +977,9 @@ nsHttpTransaction::LocateHttpStart(char *buf, uint32_t len,
     static const uint32_t HTTPHeaderLen = sizeof(HTTPHeader) - 1;
     static const char HTTP2Header[] = "HTTP/2.0";
     static const uint32_t HTTP2HeaderLen = sizeof(HTTP2Header) - 1;
+    // ShoutCast ICY is treated as HTTP/1.0
+    static const char ICYHeader[] = "ICY ";
+    static const uint32_t ICYHeaderLen = sizeof(ICYHeader) - 1;
 
     if (aAllowPartialMatch && (len < HTTPHeaderLen))
         return (PL_strncasecmp(buf, HTTPHeader, len) == 0) ? buf : nullptr;
@@ -1023,6 +1026,16 @@ nsHttpTransaction::LocateHttpStart(char *buf, uint32_t len,
         if (firstByte && !mInvalidResponseBytesRead && len >= HTTP2HeaderLen &&
             (PL_strncasecmp(buf, HTTP2Header, HTTP2HeaderLen) == 0)) {
             LOG(("nsHttpTransaction:: Identified HTTP/2.0 treating as 1.x\n"));
+            return buf;
+        }
+
+        // Treat ICY (AOL/Nullsoft ShoutCast) non-standard header in same fashion
+        // as HTTP/2.0 is treated above. This will allow "ICY " to be interpretted
+        // as HTTP/1.0 in nsHttpResponseHead::ParseVersion
+
+        if (firstByte && !mInvalidResponseBytesRead && len >= ICYHeaderLen &&
+            (PL_strncasecmp(buf, ICYHeader, ICYHeaderLen) == 0)) {
+            LOG(("nsHttpTransaction:: Identified ICY treating as HTTP/1.0\n"));
             return buf;
         }
 
