@@ -107,7 +107,7 @@ NS_INTERFACE_MAP_END_INHERITING(HttpBaseChannel)
 void
 HttpChannelChild::AddIPDLReference()
 {
-  NS_ABORT_IF_FALSE(!mIPCOpen, "Attempt to retain more than one IPDL reference");
+  MOZ_ASSERT(!mIPCOpen, "Attempt to retain more than one IPDL reference");
   mIPCOpen = true;
   AddRef();
 }
@@ -115,7 +115,7 @@ HttpChannelChild::AddIPDLReference()
 void
 HttpChannelChild::ReleaseIPDLReference()
 {
-  NS_ABORT_IF_FALSE(mIPCOpen, "Attempt to release nonexistent IPDL reference");
+  MOZ_ASSERT(mIPCOpen, "Attempt to release nonexistent IPDL reference");
   mIPCOpen = false;
   Release();
 }
@@ -372,9 +372,8 @@ HttpChannelChild::OnTransportAndData(const nsresult& status,
   {
     // OnStatus
     //
-    NS_ASSERTION(status == NS_NET_STATUS_RECEIVING_FROM ||
-                 status == NS_NET_STATUS_READING,
-                 "unexpected status code");
+    MOZ_ASSERT(status == NS_NET_STATUS_RECEIVING_FROM ||
+               status == NS_NET_STATUS_READING);
 
     nsAutoCString host;
     mURI->GetHost(host);
@@ -383,7 +382,7 @@ HttpChannelChild::OnTransportAndData(const nsresult& status,
     // OnProgress
     //
     if (progress > 0) {
-      NS_ASSERTION(progress <= progressMax, "unexpected progress values");
+      MOZ_ASSERT(progress <= progressMax, "unexpected progress values");
       mProgressSink->OnProgress(this, nullptr, progress, progressMax);
     }
   }
@@ -522,7 +521,7 @@ HttpChannelChild::OnProgress(const uint64_t& progress,
       !(mLoadFlags & LOAD_BACKGROUND)) 
   {
     if (progress > 0) {
-      NS_ASSERTION(progress <= progressMax, "unexpected progress values");
+      MOZ_ASSERT(progress <= progressMax, "unexpected progress values");
       mProgressSink->OnProgress(this, nullptr, progress, progressMax);
     }
   }

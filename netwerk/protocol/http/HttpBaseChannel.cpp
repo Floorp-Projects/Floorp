@@ -763,7 +763,7 @@ NS_IMPL_ISUPPORTS1(HttpBaseChannel::nsContentEncodings, nsIUTF8StringEnumerator)
 nsresult
 HttpBaseChannel::nsContentEncodings::PrepareForNext(void)
 {
-  NS_ASSERTION(mCurStart == mCurEnd, "Indeterminate state");
+  MOZ_ASSERT(mCurStart == mCurEnd, "Indeterminate state");
     
   // At this point both mCurStart and mCurEnd point to somewhere
   // past the end of the next thing we want to return

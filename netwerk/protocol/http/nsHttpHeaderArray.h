@@ -203,8 +203,8 @@ nsHttpHeaderArray::IsSuspectDuplicateHeader(nsHttpAtom header)
                      header == nsHttp::Content_Disposition    ||
                      header == nsHttp::Location;
 
-    NS_ASSERTION(!retval || IsSingletonHeader(header),
-                 "Only non-mergeable headers should be in this list\n");
+    MOZ_ASSERT(!retval || IsSingletonHeader(header),
+               "Only non-mergeable headers should be in this list\n");
 
     return retval;
 }

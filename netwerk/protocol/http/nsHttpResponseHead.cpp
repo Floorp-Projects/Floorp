@@ -238,7 +238,7 @@ nsHttpResponseHead::ComputeCurrentAge(uint32_t now,
     if (NS_SUCCEEDED(GetAgeValue(&ageValue)))
         *result = std::max(*result, ageValue);
 
-    NS_ASSERTION(now >= requestTime, "bogus request time");
+    MOZ_ASSERT(now >= requestTime, "bogus request time");
 
     // Compute current age
     *result += (now - requestTime);

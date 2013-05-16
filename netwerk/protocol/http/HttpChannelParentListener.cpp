@@ -182,7 +182,7 @@ HttpChannelParentListener::OnRedirectResult(bool succeeded)
       nsCOMPtr<nsIChannel> newChannel;
       rv = registrar->GetRegisteredChannel(mRedirectChannelId,
                                            getter_AddRefs(newChannel));
-      NS_ASSERTION(newChannel, "Already registered channel not found");
+      MOZ_ASSERT(newChannel, "Already registered channel not found");
 
       if (NS_SUCCEEDED(rv))
         newChannel->Cancel(NS_BINDING_ABORTED);
@@ -197,7 +197,7 @@ HttpChannelParentListener::OnRedirectResult(bool succeeded)
 
   nsCOMPtr<nsIParentRedirectingChannel> activeRedirectingChannel =
       do_QueryInterface(mActiveChannel);
-  NS_ABORT_IF_FALSE(activeRedirectingChannel,
+  MOZ_ASSERT(activeRedirectingChannel,
     "Channel finished a redirect response, but doesn't implement "
     "nsIParentRedirectingChannel to complete it.");
 

@@ -47,7 +47,7 @@ HttpChannelParent::HttpChannelParent(PBrowserParent* iframeEmbedding,
   // Ensure gHttpHandler is initialized: we need the atom table up and running.
   nsIHttpProtocolHandler* handler;
   CallGetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "http", &handler);
-  NS_ASSERTION(handler, "no http handler");
+  MOZ_ASSERT(handler);
 
   mTabParent = static_cast<mozilla::dom::TabParent*>(iframeEmbedding);
 }
