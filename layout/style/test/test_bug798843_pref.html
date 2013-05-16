@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+  Make sure that the SVG glyph context-* values are not considered real values
+  when gfx.font_rendering.opentype_svg.enabled is pref'ed off.
+-->
+<head>
+  <title>Test that SVG glyph context-* values can be pref'ed off</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body>
+
+<script>
+
+var props = {
+  "fill" : "context-stroke none",
+  "stroke" : "context-fill none",
+  "fillOpacity" : "context-stroke-opacity",
+  "strokeOpacity" : "context-fill-opacity",
+  "strokeDasharray" : "context-value",
+  "strokeDashoffset" : "context-value",
+  "strokeWidth" : "context-value"
+};
+
+function testDisabled() {
+  for (var p in props) {
+    document.body.style[p] = props[p];
+    is(document.body.style[p], "", p + " not settable to " + props[p]);
+    document.body.style[p] = "";
+  }
+  SimpleTest.finish();
+}
+
+function testEnabled() {
+  for (var p in props) {
+    document.body.style[p] = props[p];
+    is(document.body.style[p], props[p], p + " settable to " + props[p]);
+    document.body.style[p] = "";
+  }
+
+  SpecialPowers.pushPrefEnv(
+    {'set': [['gfx.font_rendering.opentype_svg.enabled', false]]},
+    testDisabled
+  );
+}
+
+SimpleTest.waitForExplicitFinish();
+
+SpecialPowers.pushPrefEnv(
+  {'set': [['gfx.font_rendering.opentype_svg.enabled', true]]},
+  testEnabled
+);
+
+</script>
+
+</body>
+</html>
