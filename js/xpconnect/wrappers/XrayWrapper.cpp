@@ -880,24 +880,6 @@ WrapURI(JSContext *cx, nsIURI *uri, MutableHandleValue vp)
 }
 
 static JSBool
-documentURIObject_getter(JSContext *cx, HandleObject wrapper, HandleId id, MutableHandleValue vp)
-{
-    nsCOMPtr<nsIDocument> native = do_QueryInterfaceNative(cx, wrapper);
-    if (!native) {
-        JS_ReportError(cx, "Unexpected object");
-        return false;
-    }
-
-    nsCOMPtr<nsIURI> uri = native->GetDocumentURI();
-    if (!uri) {
-        JS_ReportOutOfMemory(cx);
-        return false;
-    }
-
-    return WrapURI(cx, uri, vp);
-}
-
-static JSBool
 baseURIObject_getter(JSContext *cx, HandleObject wrapper, HandleId id, MutableHandleValue vp)
 {
     nsCOMPtr<nsINode> native = do_QueryInterfaceNative(cx, wrapper);
@@ -1012,8 +994,6 @@ XPCWrappedNativeXrayTraits::resolveOwnProperty(JSContext *cx, Wrapper &jsWrapper
         desc->attrs = JSPROP_ENUMERATE|JSPROP_SHARED;
         if (id == rt->GetStringID(XPCJSRuntime::IDX_BASEURIOBJECT))
             desc->getter = baseURIObject_getter;
-        else if (id == rt->GetStringID(XPCJSRuntime::IDX_DOCUMENTURIOBJECT))
-            desc->getter = documentURIObject_getter;
         else
             desc->getter = nodePrincipal_getter;
         desc->setter = NULL;
