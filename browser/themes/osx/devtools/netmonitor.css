@@ -19,6 +19,7 @@
 #requests-menu-toolbar {
   padding: 0;
   -moz-padding-start: 4px;
+  height: 32px;
 }
 
 .requests-menu-header:first-child {
@@ -366,7 +367,7 @@ box.requests-menu-status[code^="5"] {
 /* Responsive sidebar */
 @media (max-width: 700px) {
   #requests-menu-toolbar {
-    min-height: 24px;
+    height: 24px;
   }
 
   .requests-menu-header-button {
