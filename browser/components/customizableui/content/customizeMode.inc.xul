@@ -2,7 +2,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<hbox id="customization-container" flex="1">
+<hbox id="customization-container" flex="1" hidden="true">
   <vbox flex="1" id="customization-palette-container">
     <label id="customization-header" value="&customizeMode.menuAndToolbars.header;"/>
     <vbox id="customization-palette" flex="1"/>
