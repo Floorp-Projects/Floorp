@@ -593,6 +593,14 @@ bool mozilla_sampler_register_thread(const char* aName, void* stackTop)
 void mozilla_sampler_unregister_thread()
 {
   Sampler::UnregisterCurrentThread();
+
+  PseudoStack *stack = tlsPseudoStack.get();
+  if (!stack) {
+    ASSERT(false);
+    return;
+  }
+  delete stack;
+  tlsPseudoStack.set(nullptr);
 }
 
 double mozilla_sampler_time()
