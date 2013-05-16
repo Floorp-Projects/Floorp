@@ -374,7 +374,7 @@ public:
   static const int32_t kShapeRenderingKTable[];
   static const int32_t kStrokeLinecapKTable[];
   static const int32_t kStrokeLinejoinKTable[];
-  static const int32_t kStrokeObjectValueKTable[];
+  static const int32_t kStrokeContextValueKTable[];
   static const int32_t kVectorEffectKTable[];
   static const int32_t kTextAnchorKTable[];
   static const int32_t kTextRenderingKTable[];
@@ -421,8 +421,8 @@ public:
   static const int32_t kListStylePositionKTable[];
   static const int32_t kListStyleKTable[];
   static const int32_t kMaskTypeKTable[];
-  static const int32_t kObjectOpacityKTable[];
-  static const int32_t kObjectPatternKTable[];
+  static const int32_t kContextOpacityKTable[];
+  static const int32_t kContextPatternKTable[];
   static const int32_t kOrientKTable[];
   static const int32_t kOutlineStyleKTable[];
   static const int32_t kOutlineColorKTable[];
