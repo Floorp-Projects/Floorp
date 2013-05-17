@@ -105,7 +105,7 @@ class RemoteAutomation(Automation):
                 #
                 #   -> java.lang.NullPointerException at org.mozilla.gecko.GeckoApp$21.run(GeckoApp.java:1833)
                 found_exception = True
-                logre = re.compile(r".*\):\s(.*)")
+                logre = re.compile(r".*\): \t?(.*)")
                 m = logre.search(logcat[i+1])
                 if m and m.group(1):
                     top_frame = m.group(1)
