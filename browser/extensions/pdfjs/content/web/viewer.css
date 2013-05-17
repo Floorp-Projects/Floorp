@@ -237,12 +237,14 @@ html[dir='rtl'] #sidebarContent {
   bottom: 0;
   left: 0;
 }
+.loadingInProgress #viewerContainer {
+  top: 39px;
+}
 
 .toolbar {
-  position: absolute;
+  position: relative;
   left: 0;
   right: 0;
-  height: 32px;
   z-index: 9999;
   cursor: default;
 }
@@ -254,14 +256,7 @@ html[dir='rtl'] #sidebarContent {
 #toolbarSidebar {
   width: 200px;
   height: 32px;
-  background-image: url(images/texture.png),
-                    -webkit-linear-gradient(hsla(0,0%,30%,.99), hsla(0,0%,25%,.95));
-  background-image: url(images/texture.png),
-                    -moz-linear-gradient(hsla(0,0%,30%,.99), hsla(0,0%,25%,.95));
-  background-image: url(images/texture.png),
-                    -ms-linear-gradient(hsla(0,0%,30%,.99), hsla(0,0%,25%,.95));
-  background-image: url(images/texture.png),
-                    -o-linear-gradient(hsla(0,0%,30%,.99), hsla(0,0%,25%,.95));
+  background-color: #424242; /* fallback */
   background-image: url(images/texture.png),
                     linear-gradient(hsla(0,0%,30%,.99), hsla(0,0%,25%,.95));
   box-shadow: inset -1px 0 0 rgba(0, 0, 0, 0.25),
@@ -271,18 +266,10 @@ html[dir='rtl'] #sidebarContent {
               0 0 1px hsla(0,0%,0%,.1);
 }
 
-#toolbarViewer, .findbar {
+#toolbarContainer, .findbar {
   position: relative;
   height: 32px;
-  background-color: #474747; /* IE9 */
-  background-image: url(images/texture.png),
-                    -webkit-linear-gradient(hsla(0,0%,32%,.99), hsla(0,0%,27%,.95));
-  background-image: url(images/texture.png),
-                    -moz-linear-gradient(hsla(0,0%,32%,.99), hsla(0,0%,27%,.95));
-  background-image: url(images/texture.png),
-                    -ms-linear-gradient(hsla(0,0%,32%,.99), hsla(0,0%,27%,.95));
-  background-image: url(images/texture.png),
-                    -o-linear-gradient(hsla(0,0%,32%,.99), hsla(0,0%,27%,.95));
+  background-color: #474747; /* fallback */
   background-image: url(images/texture.png),
                     linear-gradient(hsla(0,0%,32%,.99), hsla(0,0%,27%,.95));
   box-shadow: inset 1px 0 0 hsla(0,0%,100%,.08),
@@ -290,6 +277,80 @@ html[dir='rtl'] #sidebarContent {
               inset 0 -1px 0 hsla(0,0%,100%,.05),
               0 1px 0 hsla(0,0%,0%,.15),
               0 1px 1px hsla(0,0%,0%,.1);
+}
+
+#toolbarViewer {
+  height: 32px;
+}
+
+#loadingBar {
+  position: relative;
+  width: 100%;
+  height: 6px;
+  background-color: #333;
+  border-bottom: 1px solid #333;
+}
+
+#loadingBar .progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0%;
+  height: 100%;
+  background-color: #ddd;
+  overflow: hidden;
+  -moz-transition: width 200ms;
+  -ms-transition: width 200ms;
+  -webkit-transition: width 200ms;
+  transition: width 200ms;
+}
+
+@-moz-keyframes progressIndeterminate {
+  0% { left: 0%; }
+  50% { left: 100%; }
+  100% { left: 100%; }
+}
+
+@-ms-keyframes progressIndeterminate {
+  0% { left: 0%; }
+  50% { left: 100%; }
+  100% { left: 100%; }
+}
+
+@-webkit-keyframes progressIndeterminate {
+  0% { left: 0%; }
+  50% { left: 100%; }
+  100% { left: 100%; }
+}
+
+@keyframes progressIndeterminate {
+  0% { left: 0%; }
+  50% { left: 100%; }
+  100% { left: 100%; }
+}
+
+#loadingBar .progress.indeterminate {
+  background-color: #999;
+  -moz-transition: none;
+  -ms-transition: none;
+  -webkit-transition: none;
+  transition: none;
+}
+
+#loadingBar .indeterminate .glimmer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 50px;
+
+  background-image: linear-gradient(to right, #999 0%, #fff 50%, #999 100%);
+  background-size: 100% 100% no-repeat;
+
+  -moz-animation: progressIndeterminate 2s linear infinite;
+  -ms-animation: progressIndeterminate 2s linear infinite;
+  -webkit-animation: progressIndeterminate 2s linear infinite;
+  animation: progressIndeterminate 2s linear infinite;
 }
 
 .findbar {
@@ -462,10 +523,6 @@ html[dir='rtl'] .splitToolbarButton > .toolbarButton {
 .splitToolbarButton.toggled > .toolbarButton,
 .toolbarButton.textButton {
   background-color: hsla(0,0%,0%,.12);
-  background-image: -webkit-linear-gradient(hsla(0,0%,100%,.05), hsla(0,0%,100%,0));
-  background-image: -moz-linear-gradient(hsla(0,0%,100%,.05), hsla(0,0%,100%,0));
-  background-image: -ms-linear-gradient(hsla(0,0%,100%,.05), hsla(0,0%,100%,0));
-  background-image: -o-linear-gradient(hsla(0,0%,100%,.05), hsla(0,0%,100%,0));
   background-image: linear-gradient(hsla(0,0%,100%,.05), hsla(0,0%,100%,0));
   background-clip: padding-box;
   border: 1px solid hsla(0,0%,0%,.35);
@@ -600,10 +657,6 @@ html[dir='rtl'] .dropdownToolbarButton {
 .toolbarButton:focus,
 .dropdownToolbarButton {
   background-color: hsla(0,0%,0%,.12);
-  background-image: -webkit-linear-gradient(hsla(0,0%,100%,.05), hsla(0,0%,100%,0));
-  background-image: -moz-linear-gradient(hsla(0,0%,100%,.05), hsla(0,0%,100%,0));
-  background-image: -ms-linear-gradient(hsla(0,0%,100%,.05), hsla(0,0%,100%,0));
-  background-image: -o-linear-gradient(hsla(0,0%,100%,.05), hsla(0,0%,100%,0));
   background-image: linear-gradient(hsla(0,0%,100%,.05), hsla(0,0%,100%,0));
   background-clip: padding-box;
   border: 1px solid hsla(0,0%,0%,.35);
@@ -616,10 +669,6 @@ html[dir='rtl'] .dropdownToolbarButton {
 .toolbarButton:hover:active,
 .dropdownToolbarButton:hover:active {
   background-color: hsla(0,0%,0%,.2);
-  background-image: -webkit-linear-gradient(hsla(0,0%,100%,.05), hsla(0,0%,100%,0));
-  background-image: -moz-linear-gradient(hsla(0,0%,100%,.05), hsla(0,0%,100%,0));
-  background-image: -ms-linear-gradient(hsla(0,0%,100%,.05), hsla(0,0%,100%,0));
-  background-image: -o-linear-gradient(hsla(0,0%,100%,.05), hsla(0,0%,100%,0));
   background-image: linear-gradient(hsla(0,0%,100%,.05), hsla(0,0%,100%,0));
   border-color: hsla(0,0%,0%,.35) hsla(0,0%,0%,.4) hsla(0,0%,0%,.45);
   box-shadow: 0 1px 1px hsla(0,0%,0%,.1) inset,
@@ -645,10 +694,6 @@ html[dir='rtl'] .dropdownToolbarButton {
 .toolbarButton.toggled,
 .splitToolbarButton.toggled > .toolbarButton.toggled {
   background-color: hsla(0,0%,0%,.3);
-  background-image: -webkit-linear-gradient(hsla(0,0%,100%,.05), hsla(0,0%,100%,0));
-  background-image: -moz-linear-gradient(hsla(0,0%,100%,.05), hsla(0,0%,100%,0));
-  background-image: -ms-linear-gradient(hsla(0,0%,100%,.05), hsla(0,0%,100%,0));
-  background-image: -o-linear-gradient(hsla(0,0%,100%,.05), hsla(0,0%,100%,0));
   background-image: linear-gradient(hsla(0,0%,100%,.05), hsla(0,0%,100%,0));
   border-color: hsla(0,0%,0%,.4) hsla(0,0%,0%,.45) hsla(0,0%,0%,.5);
   box-shadow: 0 1px 1px hsla(0,0%,0%,.1) inset,
@@ -820,9 +865,9 @@ html[dir='rtl'] .toolbarButton.pageDown::before {
   content: url(images/toolbarButton-zoomIn.png);
 }
 
-.toolbarButton.fullscreen::before {
+.toolbarButton.presentationMode::before {
   display: inline-block;
-  content: url(images/toolbarButton-fullscreen.png);
+  content: url(images/toolbarButton-presentationMode.png);
 }
 
 .toolbarButton.print::before {
@@ -880,7 +925,7 @@ html[dir='rtl'] .toolbarButton.pageDown::before {
   border: 1px solid transparent;
   border-radius: 2px;
   background-color: hsla(0,0%,100%,.09);
-  background-image: -moz-linear-gradient(hsla(0,0%,100%,.05), hsla(0,0%,100%,0));
+  background-image: linear-gradient(hsla(0,0%,100%,.05), hsla(0,0%,100%,0));
   background-clip: padding-box;
   border: 1px solid hsla(0,0%,0%,.35);
   border-color: hsla(0,0%,0%,.32) hsla(0,0%,0%,.38) hsla(0,0%,0%,.42);
@@ -977,7 +1022,7 @@ a:focus > .thumbnail > .thumbnailSelectionRing > .thumbnailImage,
 a:focus > .thumbnail > .thumbnailSelectionRing,
 .thumbnail:hover > .thumbnailSelectionRing {
   background-color: hsla(0,0%,100%,.15);
-  background-image: -moz-linear-gradient(hsla(0,0%,100%,.05), hsla(0,0%,100%,0));
+  background-image: linear-gradient(hsla(0,0%,100%,.05), hsla(0,0%,100%,0));
   background-clip: padding-box;
   box-shadow: 0 1px 0 hsla(0,0%,100%,.05) inset,
               0 0 1px hsla(0,0%,100%,.2) inset,
@@ -992,7 +1037,7 @@ a:focus > .thumbnail > .thumbnailSelectionRing,
 
 .thumbnail.selected > .thumbnailSelectionRing {
   background-color: hsla(0,0%,100%,.3);
-  background-image: -moz-linear-gradient(hsla(0,0%,100%,.05), hsla(0,0%,100%,0));
+  background-image: linear-gradient(hsla(0,0%,100%,.05), hsla(0,0%,100%,0));
   background-clip: padding-box;
   box-shadow: 0 1px 0 hsla(0,0%,100%,.05) inset,
               0 0 1px hsla(0,0%,100%,.1) inset,
@@ -1043,7 +1088,7 @@ html[dir='rtl'] .outlineItem > a {
 
 .outlineItem > a:hover {
   background-color: hsla(0,0%,100%,.02);
-  background-image: -moz-linear-gradient(hsla(0,0%,100%,.05), hsla(0,0%,100%,0));
+  background-image: linear-gradient(hsla(0,0%,100%,.05), hsla(0,0%,100%,0));
   background-clip: padding-box;
   box-shadow: 0 1px 0 hsla(0,0%,100%,.05) inset,
               0 0 1px hsla(0,0%,100%,.2) inset,
@@ -1053,7 +1098,7 @@ html[dir='rtl'] .outlineItem > a {
 
 .outlineItem.selected {
   background-color: hsla(0,0%,100%,.08);
-  background-image: -moz-linear-gradient(hsla(0,0%,100%,.05), hsla(0,0%,100%,0));
+  background-image: linear-gradient(hsla(0,0%,100%,.05), hsla(0,0%,100%,0));
   background-clip: padding-box;
   box-shadow: 0 1px 0 hsla(0,0%,100%,.05) inset,
               0 0 1px hsla(0,0%,100%,.1) inset,
@@ -1121,82 +1166,6 @@ canvas {
   right: 0;
   bottom: 0;
   background: url('images/loading-icon.gif') center no-repeat;
-}
-
-#loadingBox {
-  position: absolute;
-  top: 50%;
-  margin-top: -25px;
-  left: 0;
-  right: 0;
-  text-align: center;
-  color: #ddd;
-  font-size: 14px;
-}
-
-#loadingBar {
-  display: inline-block;
-  clear: both;
-  margin: 0px;
-  margin-top: 5px;
-  line-height: 0;
-  border-radius: 2px;
-  width: 200px;
-  height: 25px;
-
-  background-color: hsla(0,0%,0%,.3);
-  background-image: -moz-linear-gradient(hsla(0,0%,100%,.05), hsla(0,0%,100%,0));
-  background-image: -webkit-linear-gradient(hsla(0,0%,100%,.05), hsla(0,0%,100%,0));
-  border: 1px solid #000;
-  box-shadow: 0 1px 1px hsla(0,0%,0%,.1) inset,
-              0 0 1px hsla(0,0%,0%,.2) inset,
-              0 0 1px 1px rgba(255, 255, 255, 0.1);
-}
-
-#loadingBar .progress {
-  display: inline-block;
-  float: left;
-
-  background: #666;
-  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#b2b2b2), color-stop(100%,#898989));
-  background: -webkit-linear-gradient(top, #b2b2b2 0%,#898989 100%);
-  background: -moz-linear-gradient(top, #b2b2b2 0%,#898989 100%);
-  background: -ms-linear-gradient(top, #b2b2b2 0%,#898989 100%);
-  background: -o-linear-gradient(top, #b2b2b2 0%,#898989 100%);
-  background: linear-gradient(top, #b2b2b2 0%,#898989 100%);
-
-  border-top-left-radius: 2px;
-  border-bottom-left-radius: 2px;
-
-  width: 0%;
-  height: 100%;
-}
-
-#loadingBar .progress.full {
-  border-top-right-radius: 2px;
-  border-bottom-right-radius: 2px;
-}
-
-#loadingBar .progress.indeterminate {
-  width: 100%;
-  height: 25px;
-  background-image: -moz-linear-gradient( 30deg, #404040, #404040 15%, #898989, #404040 85%, #404040);
-  background-image: -webkit-linear-gradient( 30deg, #404040, #404040 15%, #898989, #404040 85%, #404040);
-  background-image: -ms-linear-gradient( 30deg, #404040, #404040 15%, #898989, #404040 85%, #404040);
-  background-image: -o-linear-gradient( 30deg, #404040, #404040 15%, #898989, #404040 85%, #404040);
-  background-size: 75px 25px;
-  -moz-animation: progressIndeterminate 1s linear infinite;
-  -webkit-animation: progressIndeterminate 1s linear infinite;
-}
-
-@-moz-keyframes progressIndeterminate {
-  from { background-position: 0px 0px; }
-  to { background-position: 75px 0px; }
-}
-
-@-webkit-keyframes progressIndeterminate {
-  from { background-position: 0px 0px; }
-  to { background-position: 75px 0px; }
 }
 
 .textLayer {
@@ -1280,7 +1249,6 @@ canvas {
   left: 0;
   position: absolute;
   right: 0;
-  top: 32px;
   z-index: 1000;
   padding: 3px;
   font-size: 0.8em;
@@ -1380,6 +1348,11 @@ canvas {
 }
 
 @media print {
+  /* General rules for printing. */
+  body {
+    background: transparent none;
+  }
+
   /* Rules for browsers that don't support mozPrintCallback. */
   #sidebarContainer, .toolbar, #loadingBox, #errorWrapper, .textLayer {
     display: none;
@@ -1430,8 +1403,11 @@ canvas {
 
 @media all and (max-width: 770px) {
   #sidebarContainer {
-    top: 33px;
+    top: 32px;
     z-index: 100;
+  }
+  .loadingInProgress #sidebarContainer {
+    top: 39px;
   }
   #sidebarContent {
     top: 32px;
