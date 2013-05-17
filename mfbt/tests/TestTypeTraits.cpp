@@ -8,6 +8,57 @@
 
 using mozilla::IsBaseOf;
 using mozilla::IsConvertible;
+using mozilla::IsSigned;
+using mozilla::IsUnsigned;
+
+MOZ_STATIC_ASSERT(!IsSigned<bool>::value, "bool shouldn't be signed");
+MOZ_STATIC_ASSERT(IsUnsigned<bool>::value, "bool should be unsigned");
+
+MOZ_STATIC_ASSERT(!IsSigned<const bool>::value, "const bool shouldn't be signed");
+MOZ_STATIC_ASSERT(IsUnsigned<const bool>::value, "const bool should be unsigned");
+
+MOZ_STATIC_ASSERT(!IsSigned<volatile bool>::value, "volatile bool shouldn't be signed");
+MOZ_STATIC_ASSERT(IsUnsigned<volatile bool>::value, "volatile bool should be unsigned");
+
+MOZ_STATIC_ASSERT(!IsSigned<unsigned char>::value, "unsigned char shouldn't be signed");
+MOZ_STATIC_ASSERT(IsUnsigned<unsigned char>::value, "unsigned char should be unsigned");
+MOZ_STATIC_ASSERT(IsSigned<signed char>::value, "signed char should be signed");
+MOZ_STATIC_ASSERT(!IsUnsigned<signed char>::value, "signed char shouldn't be unsigned");
+
+MOZ_STATIC_ASSERT(!IsSigned<unsigned short>::value, "unsigned short shouldn't be signed");
+MOZ_STATIC_ASSERT(IsUnsigned<unsigned short>::value, "unsigned short should be unsigned");
+MOZ_STATIC_ASSERT(IsSigned<short>::value, "short should be signed");
+MOZ_STATIC_ASSERT(!IsUnsigned<short>::value, "short shouldn't be unsigned");
+
+MOZ_STATIC_ASSERT(!IsSigned<unsigned int>::value, "unsigned int shouldn't be signed");
+MOZ_STATIC_ASSERT(IsUnsigned<unsigned int>::value, "unsigned int should be unsigned");
+MOZ_STATIC_ASSERT(IsSigned<int>::value, "int should be signed");
+MOZ_STATIC_ASSERT(!IsUnsigned<int>::value, "int shouldn't be unsigned");
+
+MOZ_STATIC_ASSERT(!IsSigned<unsigned long>::value, "unsigned long shouldn't be signed");
+MOZ_STATIC_ASSERT(IsUnsigned<unsigned long>::value, "unsigned long should be unsigned");
+MOZ_STATIC_ASSERT(IsSigned<long>::value, "long should be signed");
+MOZ_STATIC_ASSERT(!IsUnsigned<long>::value, "long shouldn't be unsigned");
+
+MOZ_STATIC_ASSERT(IsSigned<float>::value, "float should be signed");
+MOZ_STATIC_ASSERT(!IsUnsigned<float>::value, "float shouldn't be unsigned");
+
+MOZ_STATIC_ASSERT(IsSigned<const float>::value, "const float should be signed");
+MOZ_STATIC_ASSERT(!IsUnsigned<const float>::value, "const float shouldn't be unsigned");
+
+MOZ_STATIC_ASSERT(IsSigned<double>::value, "double should be signed");
+MOZ_STATIC_ASSERT(!IsUnsigned<double>::value, "double shouldn't be unsigned");
+
+MOZ_STATIC_ASSERT(IsSigned<volatile double>::value, "volatile double should be signed");
+MOZ_STATIC_ASSERT(!IsUnsigned<volatile double>::value, "volatile double shouldn't be unsigned");
+
+MOZ_STATIC_ASSERT(IsSigned<long double>::value, "long double should be signed");
+MOZ_STATIC_ASSERT(!IsUnsigned<long double>::value, "long double shouldn't be unsigned");
+
+MOZ_STATIC_ASSERT(IsSigned<const volatile long double>::value,
+                  "const volatile long double should be signed");
+MOZ_STATIC_ASSERT(!IsUnsigned<const volatile long double>::value,
+                  "const volatile long double shouldn't be unsigned");
 
 namespace CPlusPlus11IsBaseOf {
 
