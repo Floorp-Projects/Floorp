@@ -89,10 +89,17 @@ webvtt_cue_t {
   webvtt_node *node_head;
 } webvtt_cue;
 
-WEBVTT_EXPORT webvtt_status webvtt_create_cue( webvtt_cue **pcue );
-WEBVTT_EXPORT void webvtt_ref_cue( webvtt_cue *cue );
-WEBVTT_EXPORT void webvtt_release_cue( webvtt_cue **pcue );
-WEBVTT_EXPORT int webvtt_validate_cue( webvtt_cue *cue );
+WEBVTT_EXPORT webvtt_status
+webvtt_create_cue( webvtt_cue **pcue );
+
+WEBVTT_EXPORT void
+webvtt_ref_cue( webvtt_cue *cue );
+
+WEBVTT_EXPORT void
+webvtt_release_cue( webvtt_cue **pcue );
+
+WEBVTT_EXPORT int
+webvtt_validate_cue( webvtt_cue *cue );
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }

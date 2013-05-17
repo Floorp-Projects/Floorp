@@ -390,6 +390,7 @@ Preferences::Init()
   rv = observerService->AddObserver(this, "profile-before-change", true);
 
   observerService->AddObserver(this, "load-extension-defaults", true);
+  observerService->AddObserver(this, "suspend_process_notification", true);
 
   return(rv);
 }
@@ -425,6 +426,11 @@ Preferences::Observe(nsISupports *aSubject, const char *aTopic,
   } else if (!nsCRT::strcmp(aTopic, "reload-default-prefs")) {
     // Reload the default prefs from file.
     pref_InitInitialObjects();
+  } else if (!nsCRT::strcmp(aTopic, "suspend_process_notification")) {
+    // Our process is being suspended. The OS may wake our process later,
+    // or it may kill the process. In case our process is going to be killed
+    // from the suspended state, we save preferences before suspending.
+    rv = SavePrefFile(nullptr);
   }
   return rv;
 }

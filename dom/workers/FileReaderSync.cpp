@@ -71,10 +71,10 @@ FileReaderSync::Constructor(const WorkerGlobalObject& aGlobal, ErrorResult& aRv)
 }
 
 JSObject*
-FileReaderSync::ReadAsArrayBuffer(JSContext* aCx, JSObject& aBlob,
+FileReaderSync::ReadAsArrayBuffer(JSContext* aCx, JS::Handle<JSObject*> aBlob,
                                   ErrorResult& aRv)
 {
-  nsIDOMBlob* blob = file::GetDOMBlobFromJSObject(&aBlob);
+  nsIDOMBlob* blob = file::GetDOMBlobFromJSObject(aBlob);
   if (!blob) {
     aRv.Throw(NS_ERROR_INVALID_ARG);
     return nullptr;
@@ -117,10 +117,11 @@ FileReaderSync::ReadAsArrayBuffer(JSContext* aCx, JSObject& aBlob,
 }
 
 void
-FileReaderSync::ReadAsBinaryString(JSObject& aBlob, nsAString& aResult,
+FileReaderSync::ReadAsBinaryString(JS::Handle<JSObject*> aBlob,
+                                   nsAString& aResult,
                                    ErrorResult& aRv)
 {
-  nsIDOMBlob* blob = file::GetDOMBlobFromJSObject(&aBlob);
+  nsIDOMBlob* blob = file::GetDOMBlobFromJSObject(aBlob);
   if (!blob) {
     aRv.Throw(NS_ERROR_INVALID_ARG);
     return;
@@ -152,12 +153,12 @@ FileReaderSync::ReadAsBinaryString(JSObject& aBlob, nsAString& aResult,
 }
 
 void
-FileReaderSync::ReadAsText(JSObject& aBlob,
+FileReaderSync::ReadAsText(JS::Handle<JSObject*> aBlob,
                            const Optional<nsAString>& aEncoding,
                            nsAString& aResult,
                            ErrorResult& aRv)
 {
-  nsIDOMBlob* blob = file::GetDOMBlobFromJSObject(&aBlob);
+  nsIDOMBlob* blob = file::GetDOMBlobFromJSObject(aBlob);
   if (!blob) {
     aRv.Throw(NS_ERROR_INVALID_ARG);
     return;
@@ -208,10 +209,10 @@ FileReaderSync::ReadAsText(JSObject& aBlob,
 }
 
 void
-FileReaderSync::ReadAsDataURL(JSObject& aBlob, nsAString& aResult,
+FileReaderSync::ReadAsDataURL(JS::Handle<JSObject*> aBlob, nsAString& aResult,
                               ErrorResult& aRv)
 {
-  nsIDOMBlob* blob = file::GetDOMBlobFromJSObject(&aBlob);
+  nsIDOMBlob* blob = file::GetDOMBlobFromJSObject(aBlob);
   if (!blob) {
     aRv.Throw(NS_ERROR_INVALID_ARG);
     return;
