@@ -182,6 +182,7 @@ const UnsolicitedNotifications = {
   "newScript": "newScript",
   "newSource": "newSource",
   "tabDetached": "tabDetached",
+  "tabListChanged": "tabListChanged",
   "tabNavigated": "tabNavigated",
   "pageError": "pageError",
   "webappsEvent": "webappsEvent",
