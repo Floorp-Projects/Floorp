@@ -430,6 +430,22 @@ protected:
 
 } // namespace mozilla
 
+static uint32_t
+GetFirstFrameDelay(imgIRequest* req)
+{
+  nsCOMPtr<imgIContainer> container;
+  if (NS_FAILED(req->GetImage(getter_AddRefs(container))) || !container) {
+    return 0;
+  }
+
+  // If this image isn't animated, there isn't a first frame delay.
+  int32_t delay = container->GetFirstFrameDelay();
+  if (delay < 0)
+    return 0;
+
+  return static_cast<uint32_t>(delay);
+}
+
 static PreciseRefreshDriverTimer *sRegularRateTimer = nullptr;
 static InactiveRefreshDriverTimer *sThrottledRateTimer = nullptr;
 
@@ -535,6 +551,7 @@ nsRefreshDriver::nsRefreshDriver(nsPresContext* aPresContext)
   mPaintFlashing = Preferences::GetBool("nglayout.debug.paint_flashing");
 
   mRequests.Init();
+  mStartTable.Init();
 }
 
 nsRefreshDriver::~nsRefreshDriver()
@@ -618,8 +635,18 @@ nsRefreshDriver::RemoveRefreshObserver(nsARefreshObserver* aObserver,
 bool
 nsRefreshDriver::AddImageRequest(imgIRequest* aRequest)
 {
-  if (!mRequests.PutEntry(aRequest)) {
-    return false;
+  uint32_t delay = GetFirstFrameDelay(aRequest);
+  if (delay == 0) {
+    if (!mRequests.PutEntry(aRequest)) {
+      return false;
+    }
+  } else {
+    ImageStartData* start = mStartTable.Get(delay);
+    if (!start) {
+      start = new ImageStartData();
+      mStartTable.Put(delay, start);
+    }
+    start->mEntries.PutEntry(aRequest);
   }
 
   EnsureTimerStarted(false);
@@ -630,7 +657,16 @@ nsRefreshDriver::AddImageRequest(imgIRequest* aRequest)
 void
 nsRefreshDriver::RemoveImageRequest(imgIRequest* aRequest)
 {
+  // Try to remove from both places, just in case, because we can't tell
+  // whether RemoveEntry() succeeds.
   mRequests.RemoveEntry(aRequest);
+  uint32_t delay = GetFirstFrameDelay(aRequest);
+  if (delay != 0) {
+    ImageStartData* start = mStartTable.Get(delay);
+    if (start) {
+      start->mEntries.RemoveEntry(aRequest);
+    }
+  }
 }
 
 void
@@ -768,10 +804,23 @@ nsRefreshDriver::ObserverCount() const
   return sum;
 }
 
+/* static */ PLDHashOperator
+nsRefreshDriver::StartTableRequestCounter(const uint32_t& aKey,
+                                          ImageStartData* aEntry,
+                                          void* aUserArg)
+{
+  uint32_t *count = static_cast<uint32_t*>(aUserArg);
+  *count += aEntry->mEntries.Count();
+
+  return PL_DHASH_NEXT;
+}
+
 uint32_t
 nsRefreshDriver::ImageRequestCount() const
 {
-  return mRequests.Count();
+  uint32_t count = 0;
+  mStartTable.EnumerateRead(nsRefreshDriver::StartTableRequestCounter, &count);
+  return count + mRequests.Count();
 }
 
 nsRefreshDriver::ObserverArray&
@@ -844,6 +893,8 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
   if (mFrozen || !mPresContext) {
     return;
   }
+
+  TimeStamp previousRefresh = mMostRecentRefresh;
 
   mMostRecentRefresh = aNowTime;
   mMostRecentRefreshEpochTime = aNowEpoch;
@@ -966,11 +1017,14 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
    * for refresh events.
    */
 
-  ImageRequestParameters parms = {aNowTime};
+  ImageRequestParameters parms = {aNowTime, previousRefresh, &mRequests};
+
+  mStartTable.EnumerateRead(nsRefreshDriver::StartTableRefresh, &parms);
+
   if (mRequests.Count()) {
     mRequests.EnumerateEntries(nsRefreshDriver::ImageRequestEnumerator, &parms);
   }
-    
+
   for (uint32_t i = 0; i < mPresShellsToInvalidateIfHidden.Length(); i++) {
     mPresShellsToInvalidateIfHidden[i]->InvalidatePresShellIfHidden();
   }
@@ -1001,18 +1055,72 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
   }
 }
 
-PLDHashOperator
+/* static */ PLDHashOperator
 nsRefreshDriver::ImageRequestEnumerator(nsISupportsHashKey* aEntry,
                                         void* aUserArg)
 {
   ImageRequestParameters* parms =
     static_cast<ImageRequestParameters*> (aUserArg);
-  mozilla::TimeStamp mostRecentRefresh = parms->ts;
+  mozilla::TimeStamp mostRecentRefresh = parms->mCurrent;
   imgIRequest* req = static_cast<imgIRequest*>(aEntry->GetKey());
   NS_ABORT_IF_FALSE(req, "Unable to retrieve the image request");
   nsCOMPtr<imgIContainer> image;
   if (NS_SUCCEEDED(req->GetImage(getter_AddRefs(image)))) {
     image->RequestRefresh(mostRecentRefresh);
+  }
+
+  return PL_DHASH_NEXT;
+}
+
+/* static */ PLDHashOperator
+nsRefreshDriver::BeginRefreshingImages(nsISupportsHashKey* aEntry,
+                                       void* aUserArg)
+{
+  ImageRequestParameters* parms =
+    static_cast<ImageRequestParameters*> (aUserArg);
+
+  imgIRequest* req = static_cast<imgIRequest*>(aEntry->GetKey());
+  NS_ABORT_IF_FALSE(req, "Unable to retrieve the image request");
+
+  parms->mRequests->PutEntry(req);
+
+  nsCOMPtr<imgIContainer> image;
+  if (NS_SUCCEEDED(req->GetImage(getter_AddRefs(image)))) {
+    image->SetAnimationStartTime(parms->mDesired);
+  }
+
+  return PL_DHASH_REMOVE;
+}
+
+/* static */ PLDHashOperator
+nsRefreshDriver::StartTableRefresh(const uint32_t& aDelay,
+                                   ImageStartData* aData,
+                                   void* aUserArg)
+{
+  ImageRequestParameters* parms =
+    static_cast<ImageRequestParameters*> (aUserArg);
+
+  if (!aData->mStartTime.empty()) {
+    TimeStamp& start = aData->mStartTime.ref();
+    TimeDuration prev = parms->mPrevious - start;
+    TimeDuration curr = parms->mCurrent - start;
+    uint32_t prevMultiple = static_cast<uint32_t>(prev.ToMilliseconds()) / aDelay;
+
+    // We want to trigger images' refresh if we've just crossed over a multiple
+    // of the first image's start time. If so, set the animation start time to
+    // the nearest multiple of the delay and move all the images in this table
+    // to the main requests table.
+    if (prevMultiple != static_cast<uint32_t>(curr.ToMilliseconds()) / aDelay) {
+      parms->mDesired = start + TimeDuration::FromMilliseconds(prevMultiple * aDelay);
+      aData->mEntries.EnumerateEntries(nsRefreshDriver::BeginRefreshingImages, parms);
+    }
+  } else {
+    // This is the very first time we've drawn images with this time delay.
+    // Set the animation start time to "now" and move all the images in this
+    // table to the main requests table.
+    parms->mDesired = parms->mCurrent;
+    aData->mEntries.EnumerateEntries(nsRefreshDriver::BeginRefreshingImages, parms);
+    aData->mStartTime.construct(parms->mCurrent);
   }
 
   return PL_DHASH_NEXT;
