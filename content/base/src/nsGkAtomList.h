@@ -1737,7 +1737,9 @@ GK_ATOM(onMozRotateGestureUpdate, "onMozRotateGestureUpdate")
 GK_ATOM(onMozRotateGesture, "onMozRotateGesture")
 GK_ATOM(onMozTapGesture, "onMozTapGesture")
 GK_ATOM(onMozPressTapGesture, "onMozPressTapGesture")
-GK_ATOM(onMozEdgeUIGesture, "onMozEdgeUIGesture")
+GK_ATOM(onMozEdgeUIStarted, "onMozEdgeUIStarted")
+GK_ATOM(onMozEdgeUICanceled, "onMozEdgeUICanceled")
+GK_ATOM(onMozEdgeUICompleted, "onMozEdgeUICompleted")
 
 // orientation support
 GK_ATOM(ondevicemotion, "ondevicemotion")

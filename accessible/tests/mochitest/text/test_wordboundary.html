@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Word boundary text tests</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../text.js"></script>
+
+  <script type="application/javascript">
+    function doTest()
+    {
+      // "hello"
+      var ids = [ "i1", "d1", "e1" ];
+      testTextBeforeOffset(ids, BOUNDARY_WORD_START,
+                           [ [ 0, 5, "", 0, 0 ] ]);
+      testTextBeforeOffset(ids, BOUNDARY_WORD_END,
+                           [ [ 0, 5, "", 0, 0 ] ]);
+
+      testTextAtOffset(ids, BOUNDARY_WORD_START,
+                       [ [ 0, 5, "hello", 0, 5 ] ]);
+      testTextAtOffset(ids, BOUNDARY_WORD_END,
+                       [ [ 0, 5, "hello", 0, 5 ] ]);
+
+      testTextAfterOffset(ids, BOUNDARY_WORD_START,
+                          [ [ 0, 5, "", 5, 5 ] ]);
+      testTextAfterOffset(ids, BOUNDARY_WORD_END,
+                          [ [ 0, 5, "", 5, 5 ] ]);
+
+      // "hello "
+      var ids = [ "i2", "d2", "e2" ];
+      testTextBeforeOffset(ids, BOUNDARY_WORD_START,
+                           [ [ 0, 6, "", 0, 0 ] ]);
+      testTextBeforeOffset(ids, BOUNDARY_WORD_END,
+                           [ [ 0, 5, "", 0, 0 ],
+                             [ 6, 6, "hello", 0, 5,
+                               [ [6, "e2", kTodo, kOk, kTodo ] ]
+                             ]
+                           ]);
+
+      testTextAtOffset(ids, BOUNDARY_WORD_START,
+                       [ [ 0, 6, "hello ", 0, 6 ] ]);
+      testTextAtOffset(ids, BOUNDARY_WORD_END,
+                       [ [ 0, 4, "hello", 0, 5 ],
+                         [ 5, 6, " ", 5, 6,
+                           [ [ 5, "e2", kTodo, kTodo, kOk ],
+                             [ 6, "e2", kTodo, kTodo, kOk ] ]
+                         ]
+                       ]);
+
+      testTextAfterOffset(ids, BOUNDARY_WORD_START,
+                          [ [ 0, 6, "", 6, 6 ] ]);
+      testTextAfterOffset(ids, BOUNDARY_WORD_END,
+                          [ [ 0, 5, " ", 5, 6,
+                              [ [ 5, "e2", kTodo, kTodo, kOk ] ]
+                            ],
+                            [ 6, 6, "", 6, 6 ]
+                          ]);
+
+      // "hello all"
+      ids = [ "i6", "d6", "e6" ];
+      testTextAtOffset(ids, BOUNDARY_WORD_START,
+                       [ [ 0, 5, "hello ", 0, 6 ],
+                         [ 6, 9, "all", 6, 9 ] ]);
+      testTextAtOffset(ids, BOUNDARY_WORD_END,
+                       [ [ 0, 4, "hello", 0, 5 ],
+                         [ 5, 9, " all", 5, 9 ] ]);
+
+      // "hello my friend"
+      ids = [ "i7", "d7", "e7" ];
+      testTextAtOffset(ids, BOUNDARY_WORD_START,
+                       [ [ 0, 5, "hello ", 0, 6 ],
+                         [ 6, 8, "my ", 6, 9 ],
+                         [ 9, 15, "friend", 9, 15] ]);
+      testTextAtOffset(ids, BOUNDARY_WORD_END,
+                       [ [ 0, 4, "hello", 0, 5 ],
+                         [ 5, 7, " my", 5, 8 ],
+                         [ 8, 15, " friend", 8, 15] ]);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <input id="i1" value="hello"/>
+  <div id="d1">hello</div>
+  <div id="e1" contenteditable="true">hello</div>
+
+  <input id="i2" value="hello "/>
+  <pre><div id="d2">hello </div></pre>
+  <div id="e2" contenteditable="true">hello </div>
+
+  <input id="i6" value="hello all"/>
+  <div id="d6">hello all</div>
+  <div id="e6" contenteditable="true">hello all</div>
+
+  <input id="i7" value="hello my friend"/>
+  <div id="d7">hello my friend</div>
+  <div id="e7" contenteditable="true">hello my friend</div>
+
+</body>
+</html>
