@@ -13,6 +13,20 @@ browser[remote="true"] {
   -moz-binding: url("chrome://global/content/bindings/remote-browser.xml#remote-browser");
 }
 
+toolbar[customizable="true"] {
+  -moz-binding: url("chrome://browser/content/customizableui/toolbar.xml#toolbar");
+}
+
+%ifdef XP_MACOSX
+toolbar[customizable="true"]:not([nowindowdrag="true"]) {
+  -moz-binding: url("chrome://browser/content/customizableui/toolbar.xml#toolbar-drag");
+}
+%endif
+
+#toolbar-menubar[autohide="true"] {
+  -moz-binding: url("chrome://browser/content/customizableui/toolbar.xml#toolbar-menubar-autohide");
+}
+
 tabbrowser {
   -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser");
 }
@@ -39,11 +53,11 @@ tabbrowser {
 
 .tabbrowser-tab:not([pinned]) {
   -moz-box-flex: 100;
-  max-width: 250px;
+  max-width: 180px;
   min-width: 100px;
   width: 0;
   transition: min-width 200ms ease-out,
-              max-width 250ms ease-out,
+              max-width 230ms ease-out,
               opacity 50ms ease-out 20ms /* hide the tab for the first 20ms of the max-width transition */;
 }
 
@@ -52,8 +66,8 @@ tabbrowser {
   min-width: 0.1px;
   opacity: 0 !important;
   transition: min-width 200ms ease-out,
-              max-width 250ms ease-out,
-              opacity 50ms ease-out 180ms /* hide the tab for the last 20ms of the max-width transition */;
+              max-width 230ms ease-out,
+              opacity 50ms ease-out 160ms /* hide the tab for the last 20ms of the max-width transition */;
 }
 
 .tab-throbber:not([fadein]):not([pinned]),
@@ -117,10 +131,26 @@ toolbar[printpreview="true"] {
   pointer-events: none;
 }
 
-#main-window[tabsintitlebar] #appmenu-button-container,
 #main-window[tabsintitlebar] #titlebar-buttonbox {
   position: relative;
 }
+
+#titlebar-buttonbox {
+  -moz-appearance: -moz-window-button-box;
+}
+
+%ifdef XP_MACOSX
+#titlebar-fullscreen-button {
+  -moz-appearance: -moz-mac-fullscreen-button;
+}
+%endif
+
+%ifdef XP_WIN
+#main-window[sizemode="maximized"] #titlebar-buttonbox {
+  -moz-appearance: -moz-window-button-box-maximized;
+}
+%endif
+
 %endif
 
 .bookmarks-toolbar-customize,
@@ -132,19 +162,14 @@ toolbar[printpreview="true"] {
   display: -moz-box;
 }
 
-#main-window[disablechrome] #navigator-toolbox[tabsontop="true"] > toolbar:not(#toolbar-menubar):not(#TabsToolbar) {
-  visibility: collapse;
-}
-
 #wrapper-urlbar-container #urlbar-container > #urlbar > toolbarbutton,
 #urlbar-container:not([combined]) > #urlbar > toolbarbutton,
 #urlbar-container[combined] + #reload-button + #stop-button,
 #urlbar-container[combined] + #reload-button,
-toolbar:not([mode="icons"]) > #urlbar-container > #urlbar > toolbarbutton,
-toolbar[mode="icons"] > #urlbar-container > #urlbar > #urlbar-reload-button:not([displaystop]) + #urlbar-stop-button,
-toolbar[mode="icons"] > #urlbar-container > #urlbar > #urlbar-reload-button[displaystop],
-toolbar[mode="icons"] > #reload-button:not([displaystop]) + #stop-button,
-toolbar[mode="icons"] > #reload-button[displaystop] {
+#urlbar-reload-button:not([displaystop]) + #urlbar-stop-button,
+#urlbar-reload-button[displaystop],
+#reload-button:not([displaystop]) + #stop-button,
+#reload-button[displaystop] {
   visibility: collapse;
 }
 
@@ -154,6 +179,14 @@ toolbar[mode="icons"] > #reload-button[displaystop] {
 
 #feed-menu > .feed-menuitem:-moz-locale-dir(rtl) {
   direction: rtl;
+}
+
+#urlbar-container {
+  min-width: 50ch;
+}
+
+#search-container {
+  min-width: 25ch;
 }
 
 #main-window:-moz-lwtheme {
@@ -172,27 +205,6 @@ toolbar[mode="icons"] > #reload-button[displaystop] {
   background-position: bottom left;
 }
 
-splitmenu {
-  -moz-binding: url("chrome://browser/content/urlbarBindings.xml#splitmenu");
-}
-
-.splitmenu-menuitem {
-  -moz-binding: url("chrome://global/content/bindings/menu.xml#menuitem");
-  list-style-image: inherit;
-  -moz-image-region: inherit;
-}
-
-.splitmenu-menuitem[iconic="true"] {
-  -moz-binding: url("chrome://global/content/bindings/menu.xml#menuitem-iconic");
-}
-
-.splitmenu-menu > .menu-text,
-:-moz-any(.splitmenu-menu, .splitmenu-menuitem) > .menu-accel-container,
-#appmenu-editmenu > .menu-text,
-#appmenu-editmenu > .menu-accel-container {
-  display: none;
-}
-
 .menuitem-tooltip {
   -moz-binding: url("chrome://browser/content/urlbarBindings.xml#menuitem-tooltip");
 }
@@ -202,18 +214,6 @@ splitmenu {
 .menuitem-tooltip[type="radio"] {
   -moz-binding: url("chrome://browser/content/urlbarBindings.xml#menuitem-iconic-tooltip");
 }
-
-%ifdef MENUBAR_CAN_AUTOHIDE
-%ifndef CAN_DRAW_IN_TITLEBAR
-#appmenu-toolbar-button > .toolbarbutton-text {
-  display: -moz-box;
-}
-%endif
-
-#appmenu_offlineModeRecovery:not([checked=true]) {
-  display: none;
-}
-%endif
 
 /* Hide menu elements intended for keyboard access support */
 #main-menubar[openedwithkey=false] .show-only-for-keyboard {
@@ -435,14 +435,6 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
   word-wrap: break-word;
   /* We must specify a min-width, otherwise word-wrap:break-word doesn't work. Bug 630864. */
   min-width: 1px;
-}
-
-#nav-bar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-icon {
-  display: -moz-box;
-}
-
-#nav-bar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
-  display: none;
 }
 
 /* ::::: Ctrl-Tab Panel ::::: */
