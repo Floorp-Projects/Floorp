@@ -367,11 +367,16 @@
       </toolbar>
     </appbar>
 
-  <!-- Selection overlay - this should be below any content that can have selectable text -->
-  <!-- onclick addresses dom bug 835175, str in bug 832957 -->
-  <box onclick="false" class="selection-overlay-hidden" id="selection-overlay"/>
+    <!-- Selection overlay - this should be below any content that can have selectable text -->
+    <!-- onclick addresses dom bug 835175, str in bug 832957 -->
+    <box onclick="false" class="selection-overlay-hidden" id="selection-overlay"/>
 
-  <flyoutpanel id="about-flyoutpanel" headertext="&aboutHeader.title;">
+    <html:div id="overlay-back" class="overlay-button"
+              observes="cmd_back" onclick="CommandUpdater.doCommand('cmd_back');"></html:div>
+    <html:div id="overlay-plus" class="overlay-button"
+              observes="cmd_back" onclick="CommandUpdater.doCommand('cmd_newTab');"></html:div>
+
+    <flyoutpanel id="about-flyoutpanel" headertext="&aboutHeader.title;">
         <label id="about-product-label" value="&aboutHeader.product.label;"/>
         <label value="&aboutHeader.company.label;"/>
 #expand <label id="about-version-label">__MOZ_APP_VERSION__</label>
@@ -425,7 +430,6 @@
           </menulist>
         </setting>
       </settings>
-      <setting pref="browser.tabs.tabsOnly" title="&optionsHeader.tabs.title;" type="bool"/>
       <settings id="prefs-charencoding" label="&optionsHeader.char.title;">
         <setting pref="browser.menu.showCharacterEncoding" title="&optionsHeader.char.options.label;" type="bool"/>
       </settings>
@@ -680,10 +684,5 @@
       </vbox>
     </hbox>
   </stack>
-
-  <html:div id="overlay-back" class="overlay-button"
-            observes="cmd_back" onclick="CommandUpdater.doCommand('cmd_back');"></html:div>
-  <html:div id="overlay-plus" class="overlay-button"
-            observes="cmd_back" onclick="CommandUpdater.doCommand('cmd_newTab');"></html:div>
 
 </window>

@@ -162,8 +162,10 @@ function test_TestEventListeners()
   test_clicks("MozTapGesture", 3);
   test_clicks("MozPressTapGesture", 1);
 
-  // simple delivery test for edgeui gesture
-  e("MozEdgeUIGesture", 0, 0, 0);
+  // simple delivery test for edgeui gestures
+  e("MozEdgeUIStarted", 0, 0, 0);
+  e("MozEdgeUICanceled", 0, 0, 0);
+  e("MozEdgeUICompleted", 0, 0, 0);
 
   // event.shiftKey
   let modifier = Components.interfaces.nsIDOMEvent.SHIFT_MASK;

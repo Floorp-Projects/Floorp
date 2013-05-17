@@ -18,7 +18,10 @@ the Sandbox consists of, you've come to the right place.
 from __future__ import unicode_literals
 
 from collections import OrderedDict
-from mozbuild.util import HierarchicalStringList
+from mozbuild.util import (
+    HierarchicalStringList,
+    StrictOrderingOnAppendList,
+)
 
 
 def doc_to_paragraphs(doc):
@@ -57,8 +60,8 @@ def doc_to_paragraphs(doc):
 #
 VARIABLES = {
     # Variables controlling reading of other frontend files.
-    'ASFILES': (list, list, [],
-        """ Assembly file sources.
+    'ASFILES': (StrictOrderingOnAppendList, list, [],
+        """Assembly file sources.
 
         This variable contains a list of files to invoke the assembler on.
         """),
@@ -138,7 +141,7 @@ VARIABLES = {
         """Parallel version of EXTERNAL_MAKE_DIRS.
         """),
 
-    'CONFIGURE_SUBST_FILES': (list, list, [],
+    'CONFIGURE_SUBST_FILES': (StrictOrderingOnAppendList, list, [],
         """Output files that will be generated using configure-like substitution.
 
         This is a substitute for AC_OUTPUT in autoconf. For each path in this
@@ -182,7 +185,7 @@ VARIABLES = {
         """),
 
     # IDL Generation.
-    'XPIDL_SOURCES': (list, list, [],
+    'XPIDL_SOURCES': (StrictOrderingOnAppendList, list, [],
         """XPCOM Interface Definition Files (xpidl).
 
         This is a list of files that define XPCOM interface definitions.
@@ -206,7 +209,7 @@ VARIABLES = {
         directories to search for included .idl files.
         """),
 
-    'XPCSHELL_TESTS_MANIFESTS': (list, list, [],
+    'XPCSHELL_TESTS_MANIFESTS': (StrictOrderingOnAppendList, list, [],
         """XPCSHELL Test Manifest list
 
         This is a list of xpcshell.ini manifest files.
