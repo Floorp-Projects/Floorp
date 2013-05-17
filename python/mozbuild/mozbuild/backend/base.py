@@ -104,6 +104,10 @@ class BuildBackend(LoggingMixin):
         self.environment = environment
         self.summary = BackendConsumeSummary()
 
+        # Files whose modification should cause a new read and backend
+        # generation.
+        self.backend_input_files = set()
+
         self._environments = {}
         self._environments[environment.topobjdir] = environment
 
@@ -152,6 +156,9 @@ class BuildBackend(LoggingMixin):
             obj_start = time.time()
             self.consume_object(obj)
             backend_time += time.time() - obj_start
+
+            if isinstance(obj, SandboxDerived):
+                self.backend_input_files |= obj.sandbox_all_paths
 
             if isinstance(obj, ReaderSummary):
                 self.summary.mozbuild_count = obj.total_file_count
