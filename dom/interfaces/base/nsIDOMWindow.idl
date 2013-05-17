@@ -25,7 +25,7 @@ interface nsIVariant;
  * @see <http://www.whatwg.org/html/#window>
  */
 
-[scriptable, uuid(e0f33b20-72ef-415b-9ff2-8bf176f581f8)]
+[scriptable, uuid(b4cf7214-5385-4f72-aa83-f8d1ff17252b)]
 interface nsIDOMWindow : nsISupports
 {
   // the current browsing context
@@ -194,7 +194,6 @@ interface nsIDOMWindow : nsISupports
 
   void                      print();
 
-  [optional_argc]
   nsIVariant                showModalDialog(in DOMString aURI,
                                             [optional] in nsIVariant aArgs,
                                             [optional] in DOMString aOptions);
