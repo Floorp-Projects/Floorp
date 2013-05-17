@@ -173,7 +173,7 @@
       testTextBeforeOffset(9, BOUNDARY_WORD_START, "oneword\n\n", 0, 9, IDs);
       testTextBeforeOffset(13, BOUNDARY_WORD_START, "two ", 9, 13, IDs);
       testTextBeforeOffset(18, BOUNDARY_WORD_START, "two ", 9, 13, IDs);
-      testTextBeforeOffset(19, BOUNDARY_WORD_START, "words\n", 13, 19, IDs);
+      testTextBeforeOffset(19, BOUNDARY_WORD_START, "two ", 9, 13, IDs);
 
       // BOUNDARY_WORD_END
       testTextBeforeOffset(0, BOUNDARY_WORD_END, "", 0, 0, IDs);
