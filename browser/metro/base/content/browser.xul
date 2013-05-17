@@ -425,7 +425,6 @@
           </menulist>
         </setting>
       </settings>
-      <setting pref="browser.tabs.tabsOnly" title="&optionsHeader.tabs.title;" type="bool"/>
       <settings id="prefs-charencoding" label="&optionsHeader.char.title;">
         <setting pref="browser.menu.showCharacterEncoding" title="&optionsHeader.char.options.label;" type="bool"/>
       </settings>
