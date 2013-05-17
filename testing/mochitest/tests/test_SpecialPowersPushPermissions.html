@@ -1,0 +1,96 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for SpecialPowers extension</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="starttest();">
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var pm = SpecialPowers.Cc["@mozilla.org/permissionmanager;1"]
+                      .getService(SpecialPowers.Ci.nsIPermissionManager);
+const ALLOW_ACTION = pm.ALLOW_ACTION;
+const DENY_ACTION = pm.DENY_ACTION;
+const UNKNOWN_ACTION = pm.UNKNOWN_ACTION;
+const PROMPT_ACTION = pm.PROMPT_ACTION;
+
+function starttest(){
+  SpecialPowers.addPermission("pPROMPT", PROMPT_ACTION, document);
+  SpecialPowers.addPermission("pALLOW", ALLOW_ACTION, document);
+  SpecialPowers.addPermission("pDENY", DENY_ACTION, document);
+
+  setTimeout(test1, 0);
+}
+
+SimpleTest.waitForExplicitFinish();
+
+function test1() {
+  if (!SpecialPowers.testPermission('pALLOW', ALLOW_ACTION, document)) {
+    dump('/**** allow not set ****/\n');
+    setTimeout(test1, 0);
+  } else if (!SpecialPowers.testPermission('pDENY', DENY_ACTION, document)) {
+    dump('/**** deny not set ****/\n');
+    setTimeout(test1, 0);
+  } else if (!SpecialPowers.testPermission('pPROMPT', PROMPT_ACTION, document)) {
+    dump('/**** prompt not set ****/\n');
+    setTimeout(test1, 0);
+  } else {
+    test2();
+  }
+}
+
+function test2() {
+  ok(SpecialPowers.testPermission('pUNKNOWN', UNKNOWN_ACTION, document), 'pUNKNOWN value should have UNKOWN permission');
+  SpecialPowers.pushPermissions([{'type': 'pUNKNOWN', 'allow': true, 'context': document}, {'type': 'pALLOW', 'allow': false, 'context': document}, {'type': 'pDENY', 'allow': true, 'context': document}, {'type': 'pPROMPT', 'allow': true, 'context': document}], test3);
+}
+
+function test3() {
+  ok(SpecialPowers.testPermission('pUNKNOWN', ALLOW_ACTION, document), 'pUNKNOWN value should have ALLOW permission');
+  ok(SpecialPowers.testPermission('pPROMPT', ALLOW_ACTION, document), 'pUNKNOWN value should have ALLOW permission');
+  ok(SpecialPowers.testPermission('pALLOW', DENY_ACTION, document), 'pALLOW should have DENY permission');
+  ok(SpecialPowers.testPermission('pDENY', ALLOW_ACTION, document), 'pDENY should have ALLOW permission');
+  // only pPROMPT (last one) is different, the other stuff is just to see if it doesn't cause test failures
+  SpecialPowers.pushPermissions([{'type': 'pUNKNOWN', 'allow': true, 'context': document}, {'type': 'pALLOW', 'allow': false, 'context': document}, {'type': 'pDENY', 'allow': true, 'context': document}, {'type': 'pPROMPT', 'allow': false, 'context': document}], test4);
+}
+
+function test4() {
+  ok(SpecialPowers.testPermission('pPROMPT', DENY_ACTION, document), 'pPROMPT value should have DENY permission');
+  //this should reset all the permissions to before all the pushPermissions calls
+  SpecialPowers.flushPermissions(test5);
+}
+
+
+function test5() {
+  ok(SpecialPowers.testPermission('pUNKNOWN', UNKNOWN_ACTION, document), 'pUNKNOWN should have UNKNOWN permission');
+  ok(SpecialPowers.testPermission('pALLOW', ALLOW_ACTION, document), 'pALLOW should have ALLOW permission');
+  ok(SpecialPowers.testPermission('pDENY', DENY_ACTION, document), 'pDENY should have DENY permission');
+  ok(SpecialPowers.testPermission('pPROMPT', PROMPT_ACTION, document), 'pPROMPT should have PROMPT permission');
+
+  SpecialPowers.removePermission("pPROMPT", document);
+  SpecialPowers.removePermission("pALLOW", document);
+  SpecialPowers.removePermission("pDENY", document);
+
+  setTimeout(test6, 0);
+}
+
+function test6() {
+  if (!SpecialPowers.testPermission('pALLOW', UNKNOWN_ACTION, document)) {
+    dump('/**** allow still set ****/\n');
+    setTimeout(test6, 0);
+  } else if (!SpecialPowers.testPermission('pDENY', UNKNOWN_ACTION, document)) {
+    dump('/**** deny still set ****/\n');
+    setTimeout(test6, 0);
+  } else if (!SpecialPowers.testPermission('pPROMPT', UNKNOWN_ACTION, document)) {
+    dump('/**** prompt still set ****/\n');
+    setTimeout(test6, 0);
+  } else {
+    SimpleTest.finish();
+  }
+}
+</script>
+</pre>
+</body>
+</html>
+
