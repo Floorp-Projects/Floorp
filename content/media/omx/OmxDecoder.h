@@ -1,3 +1,7 @@
+#include <stagefright/foundation/ABase.h>
+#include <stagefright/foundation/AHandlerReflector.h>
+#include <stagefright/foundation/ALooper.h>
+#include <stagefright/MediaSource.h>
 #include <stagefright/DataSource.h>
 #include <stagefright/MediaSource.h>
 #include <utils/RefBase.h>
@@ -79,6 +83,10 @@ class OmxDecoder : public RefBase {
     kHardwareCodecsOnly = 16,
   };
 
+  enum {
+    kNotifyPostReleaseVideoBuffer = 'noti'
+  };
+
   AbstractMediaDecoder *mDecoder;
   nsRefPtr<MediaResource> mResource;
   sp<GonkNativeWindow> mNativeWindow;
@@ -109,6 +117,9 @@ class OmxDecoder : public RefBase {
   // OMXCodec does not accept MediaBuffer during seeking. If MediaBuffer is
   //  returned to OMXCodec during seeking, OMXCodec calls assert.
   Vector<MediaBuffer *> mPendingVideoBuffers;
+  // The lock protects mPendingVideoBuffers.
+  Mutex mPendingVideoBuffersLock;
+
   // Show if OMXCodec is seeking.
   bool mIsVideoSeeking;
   // The lock protects video MediaBuffer release()'s pending operations called
@@ -116,6 +127,16 @@ class OmxDecoder : public RefBase {
   //  seeking. Holding mSeekLock long time could affect to video rendering.
   // Holding time should be minimum.
   Mutex mSeekLock;
+
+  // ALooper is a message loop used in stagefright.
+  // It creates a thread for messages and handles messages in the thread.
+  // ALooper is a clone of Looper in android Java.
+  // http://developer.android.com/reference/android/os/Looper.html
+  sp<ALooper> mLooper;
+  // deliver a message to a wrapped object(OmxDecoder).
+  // AHandlerReflector is similar to Handler in android Java.
+  // http://developer.android.com/reference/android/os/Handler.html
+  sp<AHandlerReflector<OmxDecoder> > mReflector;
 
   // 'true' if a read from the audio stream was done while reading the metadata
   bool mAudioMetadataRead;
@@ -175,13 +196,18 @@ public:
     return mResource;
   }
 
-  bool ReleaseVideoBuffer(MediaBuffer *aBuffer);
-
   //Change decoder into a playing state
   nsresult Play();
 
   //Change decoder into a paused state
   void Pause();
+
+  // Post kNotifyPostReleaseVideoBuffer message to OmxDecoder via ALooper.
+  void PostReleaseVideoBuffer(MediaBuffer *aBuffer);
+  // Receive a message from AHandlerReflector.
+  // Called on ALooper thread.
+  void onMessageReceived(const sp<AMessage> &msg);
+
 };
 
 }
