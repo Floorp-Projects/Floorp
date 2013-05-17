@@ -160,7 +160,8 @@ public:
 
   static void CreateDeviceStoragesFor(nsPIDOMWindow* aWin,
                                       const nsAString& aType,
-                                      nsTArray<nsRefPtr<nsDOMDeviceStorage> >& aStores);
+                                      nsTArray<nsRefPtr<nsDOMDeviceStorage> >& aStores,
+                                      bool aCompositeComponent);
   void Shutdown();
 
   static void GetOrderedVolumeNames(nsTArray<nsString>& aVolumeNames);
@@ -198,8 +199,21 @@ private:
   nsString mStorageType;
   nsCOMPtr<nsIFile> mRootDirectory;
   nsString mStorageName;
+  bool mCompositeComponent;
+
+  // A composite device storage object is one which front-ends for multiple
+  // real storage objects. The real storage objects will each be stored in
+  // mStores and will each have a unique mStorageName. The composite storage
+  // object will have mStorageName == "", and mRootDirectory will be null.
+  // 
+  // Note that on desktop (or other non-gonk), composite storage areas
+  // don't exist, and mStorageName will also be "".
+  //
+  // A device storage object which is stored in mStores is considered to be
+  // a composite component.
 
   bool IsComposite() { return mStores.Length() > 0; }
+  bool IsCompositeComponent() { return mCompositeComponent; }
   nsTArray<nsRefPtr<nsDOMDeviceStorage> > mStores;
   already_AddRefed<nsDOMDeviceStorage> GetStorage(const nsAString& aCompositePath,
                                                   nsAString& aOutStoragePath);

@@ -16,7 +16,7 @@ dictionary DeviceStorageEnumerationParameters
   jsval since;
 };
 
-[scriptable, uuid(3d336180-b130-4b54-b205-ce74e36e733f), builtinclass]
+[scriptable, uuid(be690a9b-f0b4-4cde-a505-0b442abe2109), builtinclass]
 interface nsIDOMDeviceStorage : nsIDOMEventTarget
 {
     [implicit_jscontext] attribute jsval onchange;
@@ -48,5 +48,5 @@ interface nsIDOMDeviceStorage : nsIDOMEventTarget
     // include any path information.
     readonly attribute DOMString storageName;
 
-    [noscript] readonly attribute nsIFile rootDirectory;
+    [noscript] nsIFile getRootDirectoryForFile(in DOMString aName);
 };
