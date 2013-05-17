@@ -409,7 +409,7 @@ HandleException(PEXCEPTION_POINTERS exception)
 
     uint8_t **ppc = ContextToPC(context);
     uint8_t *pc = *ppc;
-	JS_ASSERT(pc == record->ExceptionAddress);
+    JS_ASSERT(pc == record->ExceptionAddress);
 
     const AsmJSModule &module = activation->module();
     if (!module.containsPC(pc))
