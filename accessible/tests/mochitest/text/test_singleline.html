@@ -147,7 +147,11 @@
       testTextBeforeOffset(9, BOUNDARY_WORD_START, "my ", 6, 9, IDs);
       testTextBeforeOffset(10, BOUNDARY_WORD_START, "my ", 6, 9, IDs);
       testTextBeforeOffset(14, BOUNDARY_WORD_START, "my ", 6, 9, IDs);
-      testTextBeforeOffset(15, BOUNDARY_WORD_START, "friend", 9, 15, IDs);
+      testTextBeforeOffset(15, BOUNDARY_WORD_START, "my ", 6, 9,
+                           "input", kOk, kOk, kOk,
+                           "div", kOk, kOk, kOk,
+                           "editable", kOk, kOk, kOk,
+                           "textarea", kTodo, kTodo, kTodo);
 
       // BOUNDARY_WORD_END
       testTextBeforeOffset(0, BOUNDARY_WORD_END, "", 0, 0, IDs);
