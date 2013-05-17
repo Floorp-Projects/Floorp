@@ -10,39 +10,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=862918
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript">
 
+  // This will be fixed in bug 860941.
+  SimpleTest.expectAssertions(0, 1);
+
   /** Test for window.showModalDialog. **/
+  window.showModalDialog('file_showModalDialog.html');
 
-  // The modal window needs to touch Cu, which means that it needs
-  // SpecialPowers. But given the semantics of modal windows, we have to
-  // do some funny stuff with postMessage to set this up.
-  window.onmessage = function(evt) {
-    is(evt.data, 'dosetup', "message from modal window is correct");
-    var win = SpecialPowers.wrap(evt.source);
-    win.wrappedJSObject.SpecialPowers = SpecialPowers;
-    win.wrappedJSObject.is = is;
-    win.wrappedJSObject.ok = ok;
-    win.wrappedJSObject.go();
-  };
-
-  var someObj = { foo: 42, bar: "hi"};
-  var xurl = location.toString()
-                     .replace('mochi.test:8888', 'example.org')
-                     .replace('test_showModal', 'file_showModal');
-  xurl = xurl.substring(0, xurl.indexOf('?'));
-  is(showModalDialog('file_showModalDialog.html'), "rv: undefined");
-  is(showModalDialog(xurl), undefined);
-  is(showModalDialog('file_showModalDialog.html', 3), "rv: 3");
-  is(showModalDialog(xurl, 3), undefined);
-  is(showModalDialog('file_showModalDialog.html', someObj), "rv: " + someObj);
-  is(showModalDialog(xurl, someObj), undefined);
-
-  // Test sequential navigations.
-  is(showModalDialog('file_showModalDialog.html?http://mochi.test:8888', 4),
-                     'rv: 4');
-  is(showModalDialog('file_showModalDialog.html?http://example.com', 4), undefined);
-  is(showModalDialog('file_showModalDialog.html?http://example.com,http://mochi.test:8888', 4), 'rv: 4');
-
-  // This test used to assert after gc. Make sure it doesn't.
+  // Blame mArguments assertion on this test.
   SpecialPowers.gc();
 
   </script>
