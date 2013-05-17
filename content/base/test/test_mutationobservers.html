@@ -18,11 +18,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=641821
 <pre id="test">
 <script type="application/javascript">
 
-if (!navigator.platform.startsWith("Win")) {
-  // for non-Windows
-  SimpleTest.expectAssertions(1);
-}
-
 /** Test for Bug 641821 **/
 
 var div = document.createElement("div");
@@ -573,12 +568,6 @@ function testExpandos() {
   m2 = null;
   if (SpecialPowers) {
     // Run GC several times to see if the expando property disappears.
-
-    // Also, garbage collecting the windows created in this test can
-    // cause assertions, so we must GC now to blame those assertions to
-    // this test.
-    // ("mArguments wasn't cleaned up properly!" in ~nsGlobalWindow,
-    // bug 600703)
 
     SpecialPowers.gc();
     SpecialPowers.gc();
