@@ -128,6 +128,7 @@ CustomizeMode.prototype = {
         target.addEventListener("dragover", self);
         target.addEventListener("dragexit", self);
         target.addEventListener("drop", self);
+        target.addEventListener("dragend", self);
         for (let child of target.children) {
           if (self.isCustomizableItem(child)) {
             self.wrapToolbarItem(child, getPlaceForItem(child));
@@ -144,6 +145,7 @@ CustomizeMode.prototype = {
     this.visiblePalette.addEventListener("dragover", this);
     this.visiblePalette.addEventListener("dragexit", this);
     this.visiblePalette.addEventListener("drop", this);
+    this.visiblePalette.addEventListener("dragend", this);
 
     document.documentElement.setAttribute("customizing", true);
     this._customizing = true;
@@ -168,6 +170,7 @@ CustomizeMode.prototype = {
     this.visiblePalette.removeEventListener("dragover", this);
     this.visiblePalette.removeEventListener("dragexit", this);
     this.visiblePalette.removeEventListener("drop", this);
+    this.visiblePalette.removeEventListener("dragend", this);
 
     let window = this.window;
     let document = this.document;
@@ -192,6 +195,7 @@ CustomizeMode.prototype = {
       target.removeEventListener("dragover", this);
       target.removeEventListener("dragexit", this);
       target.removeEventListener("drop", this);
+      target.removeEventListener("dragend", this);
     }
 
     if (this._changed) {
@@ -481,6 +485,9 @@ CustomizeMode.prototype = {
       case "dragexit":
         this._onDragExit(aEvent);
         break;
+      case "dragend":
+        this._onDragEnd(aEvent);
+        break;
       case "mousedown":
         this._onMouseDown(aEvent);
         break;
@@ -658,9 +665,27 @@ CustomizeMode.prototype = {
   },
 
   _onDragExit: function(aEvent) {
+    __dumpDragData(aEvent);
     if (this._dragOverItem) {
       this._setDragActive(this._dragOverItem, false);
     }
+  },
+
+  _onDragEnd: function(aEvent) {
+    __dumpDragData(aEvent);
+    let document = aEvent.target.ownerDocument;
+    document.documentElement.removeAttribute("customizing-movingItem");
+
+    let documentId = document.documentElement.id;
+    if (!aEvent.dataTransfer.types.contains("text/toolbarwrapper-id/"
+                                            + documentId.toLowerCase())) {
+      return;
+    }
+
+    let draggedItemId = aEvent.dataTransfer.getData("text/toolbarwrapper-id/" + documentId);
+    let draggedWrapper = document.getElementById("wrapper-" + draggedItemId);
+
+    draggedWrapper.removeAttribute("mousedown");
   },
 
   // XXXjaws Show a ghost image or blank area where the item could be added, instead of black bar
@@ -700,6 +725,9 @@ CustomizeMode.prototype = {
   },
 
   _onMouseDown: function(aEvent) {
+    LOG("_onMouseDown");
+    let doc = aEvent.target.ownerDocument;
+    doc.documentElement.setAttribute("customizing-movingItem", true);
     let item = this._getWrapper(aEvent.target);
     if (item) {
       item.setAttribute("mousedown", "true");
@@ -707,6 +735,9 @@ CustomizeMode.prototype = {
   },
 
   _onMouseUp: function(aEvent) {
+    LOG("_onMouseUp");
+    let doc = aEvent.target.ownerDocument;
+    doc.documentElement.removeAttribute("customizing-movingItem");
     let item = this._getWrapper(aEvent.target);
     if (item) {
       item.removeAttribute("mousedown");
