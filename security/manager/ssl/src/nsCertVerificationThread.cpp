@@ -4,6 +4,7 @@
 
 #include "nsCertVerificationThread.h"
 #include "nsThreadUtils.h"
+#include "nsProxyRelease.h"
 
 using namespace mozilla;
 
@@ -15,7 +16,7 @@ namespace {
 class DispatchCertVerificationResult : public nsRunnable
 {
 public:
-  DispatchCertVerificationResult(nsICertVerificationListener* aListener,
+  DispatchCertVerificationResult(const nsMainThreadPtrHandle<nsICertVerificationListener>& aListener,
                                  nsIX509Cert3* aCert,
                                  nsICertVerificationResult* aResult)
     : mListener(aListener)
@@ -29,7 +30,7 @@ public:
   }
 
 private:
-  nsCOMPtr<nsICertVerificationListener> mListener;
+  nsMainThreadPtrHandle<nsICertVerificationListener> mListener;
   nsCOMPtr<nsIX509Cert3> mCert;
   nsCOMPtr<nsICertVerificationResult> mResult;
 };
