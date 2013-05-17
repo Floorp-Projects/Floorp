@@ -21,6 +21,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "gUUIDGenerator",
                                    "@mozilla.org/uuid-generator;1",
                                    "nsIUUIDGenerator");
 
+XPCOMUtils.defineLazyServiceGetter(this, "powerManagerService",
+                                   "@mozilla.org/power/powermanagerservice;1",
+                                   "nsIPowerManagerService");
+
 // Limit the number of pending messages for a given page.
 let kMaxPendingMessages;
 try {
@@ -36,6 +40,7 @@ const kMessages =["SystemMessageManager:GetPendingMessages",
                   "SystemMessageManager:Unregister",
                   "SystemMessageManager:Message:Return:OK",
                   "SystemMessageManager:AskReadyToRegister",
+                  "SystemMessageManager:HandleMessagesDone",
                   "child-process-shutdown"]
 
 function debug(aMsg) {
@@ -59,6 +64,8 @@ function SystemMessageInternal() {
   this._webappsRegistryReady = false;
   this._bufferedSysMsgs = [];
 
+  this._cpuWakeLocks = {};
+
   Services.obs.addObserver(this, "xpcom-shutdown", false);
   Services.obs.addObserver(this, "webapps-registry-start", false);
   Services.obs.addObserver(this, "webapps-registry-ready", false);
@@ -70,6 +77,57 @@ function SystemMessageInternal() {
 }
 
 SystemMessageInternal.prototype = {
+
+  _cancelCpuWakeLock: function _cancelCpuWakeLock(aPageKey) {
+    let cpuWakeLock = this._cpuWakeLocks[aPageKey];
+    if (cpuWakeLock) {
+      debug("Releasing the CPU wake lock for page key = " + aPageKey);
+      cpuWakeLock.wakeLock.unlock();
+      cpuWakeLock.timer.cancel();
+      delete this._cpuWakeLocks[aPageKey];
+    }
+  },
+
+  _acquireCpuWakeLock: function _acquireCpuWakeLock(aPageKey) {
+    let cpuWakeLock = this._cpuWakeLocks[aPageKey];
+    if (!cpuWakeLock) {
+      // We have to ensure the CPU doesn't sleep during the process of the page
+      // handling the system messages, so that they can be handled on time.
+      debug("Acquiring a CPU wake lock for page key = " + aPageKey);
+      cpuWakeLock = this._cpuWakeLocks[aPageKey] = {
+        wakeLock: powerManagerService.newWakeLock("cpu"),
+        timer: Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer),
+        lockCount: 1
+      };
+    } else {
+      // We've already acquired the CPU wake lock for this page,
+      // so just add to the lock count and extend the timeout.
+      cpuWakeLock.lockCount++;
+    }
+
+    // Set a watchdog to avoid locking the CPU wake lock too long,
+    // because it'd exhaust the battery quickly which is very bad.
+    // This could probably happen if the app failed to launch or
+    // handle the system messages due to any unexpected reasons.
+    cpuWakeLock.timer.initWithCallback(function timerCb() {
+      debug("Releasing the CPU wake lock because the system messages " +
+            "were not handled by its registered page before time out.");
+      this._cancelCpuWakeLock(aPageKey);
+    }.bind(this), 30000, Ci.nsITimer.TYPE_ONE_SHOT);
+  },
+
+  _releaseCpuWakeLock: function _releaseCpuWakeLock(aPageKey, aHandledCount) {
+    let cpuWakeLock = this._cpuWakeLocks[aPageKey];
+    if (cpuWakeLock) {
+      cpuWakeLock.lockCount -= aHandledCount;
+      if (cpuWakeLock.lockCount <= 0) {
+        debug("Unlocking the CPU wake lock now that the system messages " +
+              "have been successfully handled by its registered page.");
+        this._cancelCpuWakeLock(aPageKey);
+      }
+    }
+  },
+
   sendMessage: function sendMessage(aType, aMessage, aPageURI, aManifestURI) {
     // Buffer system messages until the webapps' registration is ready,
     // so that we can know the correct pages registered to be sent.
@@ -224,7 +282,8 @@ SystemMessageInternal.prototype = {
          "SystemMessageManager:Unregister",
          "SystemMessageManager:GetPendingMessages",
          "SystemMessageManager:HasPendingMessages",
-         "SystemMessageManager:Message:Return:OK"].indexOf(aMessage.name) != -1) {
+         "SystemMessageManager:Message:Return:OK",
+         "SystemMessageManager:HandleMessagesDone"].indexOf(aMessage.name) != -1) {
       if (!aMessage.target.assertContainApp(msg.manifest)) {
         debug("Got message from a child process containing illegal manifest URL.");
         return null;
@@ -349,6 +408,16 @@ SystemMessageInternal.prototype = {
         }, this);
         break;
       }
+      case "SystemMessageManager:HandleMessagesDone":
+      {
+        debug("received SystemMessageManager:HandleMessagesDone " + msg.type +
+          " with " + msg.handledCount + " for " + msg.uri + " @ " + msg.manifest);
+
+        // A page has finished handling some of its system messages, so we try
+        // to release the CPU wake lock we acquired on behalf of that page.
+        this._releaseCpuWakeLock(this._createKeyForPage(msg), msg.handledCount);
+        break;
+      }
     }
   },
 
@@ -441,6 +510,11 @@ SystemMessageInternal.prototype = {
       return false;
     }
 
+    let appPageIsRunning = false;
+    let pageKey = this._createKeyForPage({ type: aType,
+                                           manifest: aManifestURI,
+                                           uri: aPageURI })
+
     let targets = this._listeners[aManifestURI];
     if (targets) {
       for (let index = 0; index < targets.length; ++index) {
@@ -450,12 +524,29 @@ SystemMessageInternal.prototype = {
         if (target.uri != aPageURI) {
           continue;
         }
+
+        appPageIsRunning = true;
+        // We need to acquire a CPU wake lock for that page and expect that
+        // we'll receive a "SystemMessageManager:HandleMessagesDone" message
+        // when the page finishes handling the system message. At that point,
+        // we'll release the lock we acquired.
+        this._acquireCpuWakeLock(pageKey);
+
         let manager = target.target;
         manager.sendAsyncMessage("SystemMessageManager:Message",
                                  { type: aType,
                                    msg: aMessage,
                                    msgID: aMessageID });
       }
+    }
+
+    if (!appPageIsRunning) {
+      // The app page isn't running and relies on the 'open-app' chrome event to
+      // wake it up. We still need to acquire a CPU wake lock for that page and
+      // expect that we will receive a "SystemMessageManager:HandleMessagesDone"
+      // message when the page finishes handling the system message with other
+      // pending messages. At that point, we'll release the lock we acquired.
+      this._acquireCpuWakeLock(pageKey);
     }
 
     return true;
