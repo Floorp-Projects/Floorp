@@ -938,6 +938,21 @@ RasterImage::GetAnimated(bool *aAnimated)
   return NS_OK;
 }
 
+//******************************************************************************
+/* [notxpcom] int32_t getFirstFrameDelay (); */
+NS_IMETHODIMP_(int32_t)
+RasterImage::GetFirstFrameDelay()
+{
+  if (mError)
+    return -1;
+
+  bool animated = false;
+  if (NS_FAILED(GetAnimated(&animated)) || !animated)
+    return -1;
+
+  return mFrames[0]->GetTimeout();
+}
+
 nsresult
 RasterImage::CopyFrame(uint32_t aWhichFrame,
                        uint32_t aFlags,

@@ -279,5 +279,11 @@ ImageWrapper::GetFrameIndex(uint32_t aWhichFrame)
   return mInnerImage->GetFrameIndex(aWhichFrame);
 }
 
+NS_IMETHODIMP_(int32_t)
+ImageWrapper::GetFirstFrameDelay()
+{
+  return mInnerImage->GetFirstFrameDelay();
+}
+
 } // namespace image
 } // namespace mozilla
