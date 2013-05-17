@@ -11452,7 +11452,7 @@ nsDocShell::EnsureScriptEnvironment()
     browserChrome->GetChromeFlags(&chromeFlags);
 
     bool isModalContentWindow = (mItemType == typeContent) &&
-        (chromeFlags & nsIWebBrowserChrome::CHROME_MODAL);
+        (chromeFlags & nsIWebBrowserChrome::CHROME_MODAL_CONTENT_WINDOW);
     // There can be various other content docshells associated with the
     // top-level window, like sidebars. Make sure that we only create an
     // nsGlobalModalWindow for the primary content shell.
