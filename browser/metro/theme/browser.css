@@ -881,34 +881,45 @@ setting[type="radio"] > vbox {
   background-position: left 6px center;
 }
 
+#stack[fullscreen] > .overlay-button,
+#appbar[visible] ~ .overlay-button,
 .overlay-button[disabled] {
   box-shadow: none;
+  visibility: collapse;
 }
 
+#stack[fullscreen] > #overlay-back:-moz-locale-dir(ltr),
+#stack[fullscreen] > #overlay-plus:-moz-locale-dir(rtl),
+#appbar[visible] ~ #overlay-back:-moz-locale-dir(ltr),
+#appbar[visible] ~ #overlay-plus:-moz-locale-dir(rtl),
 #overlay-back[disabled]:-moz-locale-dir(ltr),
 #overlay-plus[disabled]:-moz-locale-dir(rtl) {
   transform: translateX(-60px);
 }
 
+#stack[fullscreen] > #overlay-plus:-moz-locale-dir(ltr),
+#stack[fullscreen] > #overlay-back:-moz-locale-dir(rtl),
+#appbar[visible] ~ #overlay-plus:-moz-locale-dir(ltr),
+#appbar[visible] ~ #overlay-back:-moz-locale-dir(rtl),
 #overlay-plus[disabled]:-moz-locale-dir(ltr),
 #overlay-back[disabled]:-moz-locale-dir(rtl) {
   transform: translateX(60px);
 }
 
-.overlay-button:not([disabled]):hover {
+.overlay-button:hover {
   background-color: hsla(210,30%,10%,.4);
   background-size: 90px;
   border-color: hsla(0,0%,100%,.9);
 }
 
-#overlay-back:not([disabled]):-moz-locale-dir(ltr):hover,
-#overlay-plus:not([disabled]):-moz-locale-dir(rtl):hover {
+#overlay-back:-moz-locale-dir(ltr):hover,
+#overlay-plus:-moz-locale-dir(rtl):hover {
   background-position: right 12px center;
   transform: translateX(40px) scale(1.2);
 }
 
-#overlay-plus:not([disabled]):-moz-locale-dir(ltr):hover,
-#overlay-back:not([disabled]):-moz-locale-dir(rtl):hover {
+#overlay-plus:-moz-locale-dir(ltr):hover,
+#overlay-back:-moz-locale-dir(rtl):hover {
   background-position: left 12px center;
   transform: translateX(-40px) scale(1.2);
 }

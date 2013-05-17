@@ -98,12 +98,12 @@ var Browser = {
     ContentAreaObserver.init();
 
     function fullscreenHandler() {
-      if (!window.fullScreen)
-        Elements.toolbar.setAttribute("fullscreen", "true");
+      if (Browser.selectedBrowser.contentWindow.document.mozFullScreenElement)
+        Elements.stack.setAttribute("fullscreen", "true");
       else
-        Elements.toolbar.removeAttribute("fullscreen");
+        Elements.stack.removeAttribute("fullscreen");
     }
-    window.addEventListener("fullscreen", fullscreenHandler, false);
+    window.addEventListener("mozfullscreenchange", fullscreenHandler, true);
 
     BrowserUI.init();
 
