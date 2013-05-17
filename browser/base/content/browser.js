@@ -4629,14 +4629,15 @@ var TabsInTitlebar = {
 
 #ifdef CAN_DRAW_IN_TITLEBAR
 function updateTitlebarDisplay() {
-  document.getElementById("titlebar").hidden = gInPrintPreviewMode;
+  let drawInTitlebar = !gInPrintPreviewMode && window.toolbar.visible;
+  document.getElementById("titlebar").hidden = !drawInTitlebar;
 
-  if (!gInPrintPreviewMode)
+  if (drawInTitlebar)
     document.documentElement.setAttribute("chromemargin", "0,2,2,2");
   else
     document.documentElement.removeAttribute("chromemargin");
 
-  TabsInTitlebar.allowedBy("drawing-in-titlebar", !gInPrintPreviewMode);
+  TabsInTitlebar.allowedBy("drawing-in-titlebar", drawInTitlebar);
 }
 #endif
 
