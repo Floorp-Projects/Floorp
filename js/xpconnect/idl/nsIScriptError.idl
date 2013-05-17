@@ -11,7 +11,7 @@
 #include "nsISupports.idl"
 #include "nsIConsoleMessage.idl"
 
-[scriptable, uuid(cac9d8e8-0d53-4fa8-9903-bb367e4fa1fe)]
+[scriptable, uuid(ec640482-be5f-49a0-a9cb-c87eacce9291)]
 interface nsIScriptError : nsIConsoleMessage
 {
     /** pseudo-flag for default case */
@@ -41,6 +41,33 @@ interface nsIScriptError : nsIConsoleMessage
     readonly attribute uint32_t columnNumber;
     readonly attribute uint32_t flags;
 
+    /**
+     * Categories I know about -
+     * XUL javascript
+     * content javascript (both of these from nsDocShell, currently)
+     * component javascript (errors in JS components)
+     */
+    readonly attribute string category;
+
+    /*
+       The time (in milliseconds from the Epoch) that the script error instance
+       was initialised, and thus the time when the error occurred.
+       Currently used to display date and time of the message in Error console.
+       The timestamp is initialized as JS_now/1000 so that it can be
+       compared to Date.now in Javascript.
+     */
+    readonly attribute long long timeStamp;
+
+    /* Get the window id this was initialized with.  Zero will be
+       returned if init() was used instead of initWithWindowID(). */
+    readonly attribute unsigned long long outerWindowID;
+
+    /* Get the inner window id this was initialized with.  Zero will be
+       returned if init() was used instead of initWithWindowID(). */
+    readonly attribute unsigned long long innerWindowID;
+
+    readonly attribute boolean isFromPrivateWindow;
+
     void init(in AString message,
               in AString sourceName,
               in AString sourceLine,
@@ -60,11 +87,13 @@ interface nsIScriptError : nsIConsoleMessage
                           in uint32_t flags,
                           in string category,
                           in unsigned long long innerWindowID);
+
+    AUTF8String toString();
 };
 
 %{ C++
 #define NS_SCRIPTERROR_CID \
-{ 0x1950539a, 0x90f0, 0x4d22, { 0xb5, 0xaf, 0x71, 0x32, 0x9c, 0x68, 0xfa, 0x35 }}
+{ 0xe38e53b9, 0x5bb0, 0x456a, { 0xb5, 0x53, 0x57, 0x93, 0x70, 0xcb, 0x15, 0x67 }}
 
 #define NS_SCRIPTERROR_CONTRACTID "@mozilla.org/scripterror;1"
 %}

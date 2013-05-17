@@ -10,49 +10,13 @@
  * provide an object that can be qi'ed to provide more specific
  * message information.
  */
-[scriptable, uuid(c14c151b-5ea4-47ed-8e85-d392cdd3e154)]
+[scriptable, uuid(41bd8784-1dd2-11b2-9553-8606958fffe1)]
 interface nsIConsoleMessage : nsISupports
 {
-    void initMessage(in AString message, [optional] in string category, [optional] in unsigned long long innerWindowID);
-
-    /**
-     * The time (in milliseconds from the Epoch) that the message instance
-     * was initialised.
-     * The timestamp is initialized as JS_now/1000 so that it can be
-     * compared to Date.now in Javascript.
-     */
-    readonly attribute long long timeStamp;
-
-    /**
-     * Categories I know about
-     * - nsIScriptError:
-     *   XUL javascript
-     *   content javascript (both of these from nsDocShell, currently)
-     *   component javascript (errors in JS components)
-     * - nsIConsoleMessage: none yet.
-     */
-    readonly attribute string category;
-
-    /**
-     * Get the window id this was initialized with.
-     */
-    readonly attribute unsigned long long outerWindowID;
-
-    /**
-     * Get the inner window id this was initialized with.
-     */
-    readonly attribute unsigned long long innerWindowID;
-
-    readonly attribute boolean isFromPrivateWindow;
-
     [binaryname(MessageMoz)] readonly attribute wstring message;
-
-    AUTF8String toString();
 };
 
 %{ C++
 #define NS_CONSOLEMESSAGE_CID \
-{ 0x024efc9e, 0x54dc, 0x4844, { 0x80, 0x4b, 0x41, 0xd3, 0xf3, 0x69, 0x90, 0x73 }}
-
-#define NS_CONSOLEMESSAGE_CONTRACTID "@mozilla.org/consolemessage;1"
+{ 0x56c9d666, 0x1dd2, 0x11b2, { 0xb4, 0x3c, 0xa8, 0x4b, 0xf3, 0xb3, 0xec, 0xbb }}
 %}

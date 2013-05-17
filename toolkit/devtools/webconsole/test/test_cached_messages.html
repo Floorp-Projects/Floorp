@@ -95,7 +95,7 @@ function doConsoleCalls()
 <script class="testbody" type="text/javascript;version=1.8">
 SimpleTest.waitForExplicitFinish();
 
-let consoleAPIListener, consoleServiceListener;
+let consoleAPIListener, pageErrorListener;
 let consoleAPICalls = 0;
 let pageErrors = 0;
 
@@ -108,7 +108,7 @@ let handlers = {
     }
   },
 
-  onConsoleServiceMessage: function onConsoleServiceMessage()
+  onPageError: function onPageError()
   {
     pageErrors++;
     if (pageErrors == expectedPageErrors.length) {
@@ -153,16 +153,16 @@ function onCachedConsoleAPI(aState, aResponse)
   });
 
   closeDebugger(aState, function() {
-    consoleServiceListener = new ConsoleServiceListener(null, handlers);
-    consoleServiceListener.init();
+    pageErrorListener = new PageErrorListener(null, handlers);
+    pageErrorListener.init();
     doPageErrors();
   });
 }
 
 function testPageErrors()
 {
-  consoleServiceListener.destroy();
-  consoleServiceListener = null;
+  pageErrorListener.destroy();
+  pageErrorListener = null;
   attachConsole(["PageError"], onAttach2);
 }
 
