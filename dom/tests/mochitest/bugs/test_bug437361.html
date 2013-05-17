@@ -10,10 +10,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=437361
   
   <script class="testbody" type="text/javascript">
 
-  if (!navigator.platform.startsWith("Win")) {
-    SimpleTest.expectAssertions(1);
-  }
-
   /** Test for Bug 437361 **/
 
   function testModalDialogBlockedCleanly() {
@@ -57,12 +53,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=437361
 
   test(false, true, testOtherExceptionsNotTrapped,
        "Incorrectly suppressed insecure showModalDialog exception.");
-
-  // Garbage collecting the windows created in this test can cause
-  // assertions, so GC now to blame those assertions to this test.
-  // ("mArguments wasn't cleaned up properly!" in ~nsGlobalWindow,
-  // bug 600703)
-  SpecialPowers.gc();
 
   </script>
 </head>
