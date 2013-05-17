@@ -65,10 +65,7 @@ JSValIsInterfaceOfType(JSContext *cx, HandleValue v, REFNSIID iid)
     if (v.isPrimitive())
         return false;
 
-    nsCOMPtr<nsIXPConnect> xpc = nsXPConnect::GetXPConnect();
-    if (!xpc)
-        return false;
-
+    nsXPConnect* xpc = nsXPConnect::XPConnect();
     RootedObject obj(cx, &v.toObject());
     if (NS_SUCCEEDED(xpc->GetWrappedNativeOfJSObject(cx, obj, getter_AddRefs(wn))) && wn &&
         NS_SUCCEEDED(wn->Native()->QueryInterface(iid, (void**)&iface)) && iface)
@@ -2808,9 +2805,8 @@ nsXPCComponents_Utils::ReportError(const JS::Value &errorArg, JSContext *cx)
         return NS_OK;
 
     nsCOMPtr<nsIStackFrame> frame;
-    nsXPConnect *xpc = nsXPConnect::GetXPConnect();
-    if (xpc)
-        xpc->GetCurrentJSStack(getter_AddRefs(frame));
+    nsXPConnect *xpc = nsXPConnect::XPConnect();
+    xpc->GetCurrentJSStack(getter_AddRefs(frame));
 
     nsXPIDLCString fileName;
     int32_t lineNo = 0;
@@ -3482,9 +3478,7 @@ GetPrincipalOrSOP(JSContext *cx, HandleObject from, nsISupports **out)
     MOZ_ASSERT(out);
     *out = NULL;
 
-    nsCOMPtr<nsIXPConnect> xpc = nsXPConnect::GetXPConnect();
-    if (!xpc)
-        return NS_ERROR_XPC_UNEXPECTED;
+    nsXPConnect* xpc = nsXPConnect::XPConnect();
     nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
     xpc->GetWrappedNativeOfJSObject(cx, from,
                                     getter_AddRefs(wrapper));
@@ -3685,9 +3679,7 @@ AssembleSandboxMemoryReporterName(JSContext *cx, nsCString &sandboxName)
     if (sandboxName.IsEmpty())
         sandboxName = NS_LITERAL_CSTRING("[anonymous sandbox]");
 
-    nsXPConnect* xpc = nsXPConnect::GetXPConnect();
-    NS_ENSURE_TRUE(xpc, NS_ERROR_XPC_UNEXPECTED);
-
+    nsXPConnect* xpc = nsXPConnect::XPConnect();
     // Get the xpconnect native call context.
     nsAXPCNativeCallContext *cc = nullptr;
     xpc->GetCurrentNativeCallContext(&cc);
@@ -4424,9 +4416,9 @@ nsXPCComponents_Utils::Dispatch(const jsval &runnableArg, const jsval &scope,
         return NS_ERROR_INVALID_ARG;
 
     nsCOMPtr<nsIRunnable> run;
-    nsresult rv = nsXPConnect::GetXPConnect()->WrapJS(cx, &runnable.toObject(),
-                                                      NS_GET_IID(nsIRunnable),
-                                                      getter_AddRefs(run));
+    nsresult rv = nsXPConnect::XPConnect()->WrapJS(cx, &runnable.toObject(),
+                                                   NS_GET_IID(nsIRunnable),
+                                                   getter_AddRefs(run));
     NS_ENSURE_SUCCESS(rv, rv);
     MOZ_ASSERT(run);
 
@@ -4769,9 +4761,7 @@ NS_IMETHODIMP
 nsXPCComponents::GetStack(nsIStackFrame * *aStack)
 {
     nsresult rv;
-    nsXPConnect* xpc = nsXPConnect::GetXPConnect();
-    if (!xpc)
-        return NS_ERROR_FAILURE;
+    nsXPConnect* xpc = nsXPConnect::XPConnect();
     rv = xpc->GetCurrentJSStack(aStack);
     return rv;
 }
