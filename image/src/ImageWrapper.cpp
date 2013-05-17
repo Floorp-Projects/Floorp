@@ -285,5 +285,11 @@ ImageWrapper::GetFirstFrameDelay()
   return mInnerImage->GetFirstFrameDelay();
 }
 
+NS_IMETHODIMP_(void)
+ImageWrapper::SetAnimationStartTime(const mozilla::TimeStamp& aTime)
+{
+  mInnerImage->SetAnimationStartTime(aTime);
+}
+
 } // namespace image
 } // namespace mozilla
