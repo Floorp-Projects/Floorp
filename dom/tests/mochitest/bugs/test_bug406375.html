@@ -18,7 +18,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=406375
 <script type="application/javascript">
 
 if (navigator.platform.startsWith("Mac")) {
-  SimpleTest.expectAssertions(2);
+  SimpleTest.expectAssertions(3);
+} else if (navigator.platform.startsWith("Linux")) {
+  SimpleTest.expectAssertions(1);
 }
 
 /** Test for Bug 406375 **/
@@ -29,6 +31,12 @@ SimpleTest.waitForExplicitFinish();
 function runTest() {
   window.showModalDialog("file_bug406375.html");
   ok(true, "This test should not hang");
+
+  // Garbage collecting the windows created in this test can cause
+  // assertions, so GC now to blame those assertions to this test.
+  // ("mArguments wasn't cleaned up properly!" in ~nsGlobalWindow,
+  // bug 600703)
+  SpecialPowers.gc();
 
   SimpleTest.finish();
 }

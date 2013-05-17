@@ -16,6 +16,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=479143
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
+  if (!navigator.platform.startsWith("Win")) {
+    SimpleTest.expectAssertions(1);
+  }
+
   SimpleTest.waitForExplicitFinish();
 
   setTimeout(function() {
@@ -32,6 +36,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=479143
     clearInterval(interval);
 
     ok(true, "did not crash");
+
+    // Garbage collecting the windows created in this test can cause
+    // assertions, so GC now to blame those assertions to this test.
+    // ("mArguments wasn't cleaned up properly!" in ~nsGlobalWindow,
+    // bug 600703)
+    SpecialPowers.gc();
 
     SimpleTest.finish();
   }, 0);
