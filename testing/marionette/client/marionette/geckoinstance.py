@@ -31,13 +31,17 @@ class GeckoInstance(object):
         else:
             runner_class = CloneRunner
             profile_args["path_from"] = profile_path
+
+        self.gecko_log = os.path.abspath('gecko.log')
+        if os.access(self.gecko_log, os.F_OK):
+            os.remove(self.gecko_log)
         self.runner = runner_class.create(
             binary=self.bin,
             profile_args=profile_args,
             cmdargs=['-no-remote'],
             kp_kwargs={
                 'processOutputLine': [NullOutput()],
-                'logfile': os.path.abspath('gecko.log')})
+                'logfile': self.gecko_log})
         self.runner.start()
 
     def close(self):
