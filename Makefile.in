@@ -17,6 +17,8 @@ $(error GNU Make 3.80 or higher is required)
 endif
 endif
 
+export TOPLEVEL_BUILD := 1
+
 include $(DEPTH)/config/autoconf.mk
 
 default::
