@@ -705,14 +705,12 @@ private:
     // This class wraps a linked list of the elements in the purple
     // buffer.
 
-    nsCycleCollectorParams &mParams;
     uint32_t mCount;
     Block mFirstBlock;
     nsPurpleBufferEntry *mFreeList;
 
 public:
-    nsPurpleBuffer(nsCycleCollectorParams &params)
-        : mParams(params)
+    nsPurpleBuffer()
     {
         InitBlocks();
     }
@@ -863,10 +861,8 @@ public:
             block = block->mNext;
         }
 
-        // These fields are deliberately not measured:
-        // - mParams: because it only contains scalars.
-        // - mFreeList: because it points into the purple buffer, which is
-        //   within mFirstBlock and thus within |this|.
+        // mFreeList is deliberately not measured because it points into
+        // the purple buffer, which is within mFirstBlock and thus within |this|.
         //
         // We also don't measure the things pointed to by mEntries[] because
         // those pointers are non-owning.
@@ -1001,7 +997,6 @@ class nsCycleCollector
 {
     friend class GCGraphBuilder;
 
-    CCThreadingModel mModel;
     bool mCollectionInProgress;
     bool mScanInProgress;
     bool mFollowupCollection;
@@ -2513,7 +2508,6 @@ NS_IMPL_ISUPPORTS1(CycleCollectorMultiReporter, nsIMemoryMultiReporter)
 ////////////////////////////////////////////////////////////////////////
 
 nsCycleCollector::nsCycleCollector(CCThreadingModel aModel) :
-    mModel(aModel),
     mCollectionInProgress(false),
     mScanInProgress(false),
     mResults(nullptr),
@@ -2527,7 +2521,6 @@ nsCycleCollector::nsCycleCollector(CCThreadingModel aModel) :
     mBeforeUnlinkCB(nullptr),
     mForgetSkippableCB(nullptr),
     mReporter(nullptr),
-    mPurpleBuf(mParams),
     mUnmergedNeeded(0),
     mMergedInARow(0)
 {
