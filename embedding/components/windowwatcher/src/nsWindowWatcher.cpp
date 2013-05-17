@@ -519,7 +519,20 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
   nsCOMPtr<nsIScriptSecurityManager>
     sm(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
 
-  bool isCallerChrome = nsContentUtils::IsCallerChrome();
+  NS_ENSURE_TRUE(sm, NS_ERROR_FAILURE);
+
+  // Remember who's calling us. This code used to assume a null
+  // subject principal if it failed to get the principal, but that's
+  // just not safe, so bail on errors here.
+  nsCOMPtr<nsIPrincipal> callerPrincipal;
+  rv = sm->GetSubjectPrincipal(getter_AddRefs(callerPrincipal));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  bool isCallerChrome = true;
+  if (callerPrincipal) {
+    rv = sm->IsSystemPrincipal(callerPrincipal, &isCallerChrome);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   JSContext *cx = GetJSContextFromWindow(aParent);
 
@@ -733,7 +746,7 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
     nsCOMPtr<nsPIDOMWindow> piwin(do_QueryInterface(*_retval));
     NS_ENSURE_TRUE(piwin, NS_ERROR_UNEXPECTED);
 
-    rv = piwin->SetArguments(argv);
+    rv = piwin->SetArguments(argv, callerPrincipal);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
