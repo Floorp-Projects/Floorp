@@ -139,16 +139,6 @@ AccessibleWrap::HandleAccEvent(AccEvent* aEvent)
   nsresult rv = Accessible::HandleAccEvent(aEvent);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return FirePlatformEvent(aEvent);
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
-}
-
-nsresult
-AccessibleWrap::FirePlatformEvent(AccEvent* aEvent)
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
-
   uint32_t eventType = aEvent->GetEventType();
 
   // ignore everything but focus-changed, value-changed, caret and selection

@@ -188,7 +188,7 @@ function fireAppBarDisplayEvent()
 {
   let promise = waitForEvent(Elements.tray, "transitionend");
   let event = document.createEvent("Events");
-  event.initEvent("MozEdgeUIGesture", true, false);
+  event.initEvent("MozEdgeUICompleted", true, false);
   gWindow.dispatchEvent(event);
   purgeEventQueue();
   return promise;

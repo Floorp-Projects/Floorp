@@ -5,8 +5,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPIDL_SOURCES += [
-    'nsINavigatorPayment.idl',
     'nsIDOMPaymentRequestInfo.idl',
+    'nsINavigatorPayment.idl',
     'nsIPaymentFlowInfo.idl',
     'nsIPaymentUIGlue.idl',
 ]

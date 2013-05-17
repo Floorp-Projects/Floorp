@@ -38,7 +38,11 @@ class nsDOMEvent : public nsDOMEventBase,
 protected:
   nsDOMEvent(mozilla::dom::EventTarget* aOwner, nsPresContext* aPresContext,
              nsEvent* aEvent);
+  nsDOMEvent(nsPIDOMWindow* aWindow);
   virtual ~nsDOMEvent();
+private:
+  void ConstructorInit(mozilla::dom::EventTarget* aOwner,
+                       nsPresContext* aPresContext, nsEvent* aEvent);
 public:
   void GetParentObject(nsIScriptGlobalObject** aParentObject)
   {

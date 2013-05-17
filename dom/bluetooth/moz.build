@@ -18,11 +18,11 @@ if CONFIG['MOZ_B2G_BT']:
     MODULE = 'dom'
     XPIDL_MODULE = 'dom_bluetooth'
     XPIDL_SOURCES += [
-        'nsIDOMNavigatorBluetooth.idl',
-        'nsIDOMBluetoothManager.idl',
         'nsIDOMBluetoothAdapter.idl',
         'nsIDOMBluetoothDevice.idl',
-        'nsIDOMBluetoothDeviceEvent.idl'
+        'nsIDOMBluetoothDeviceEvent.idl',
+        'nsIDOMBluetoothManager.idl',
+        'nsIDOMNavigatorBluetooth.idl',
     ]
 
 EXPORTS.mozilla.dom.bluetooth.ipc += [
