@@ -99,10 +99,10 @@ public:
   struct DOMBaseVal MOZ_FINAL : public mozilla::dom::SVGIRect
   {
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_CYCLE_COLLECTION_CLASS(DOMBaseVal)
+    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMBaseVal)
 
     DOMBaseVal(nsSVGViewBox *aVal, nsSVGElement *aSVGElement)
-      : mozilla::dom::SVGIRect(aSVGElement)
+      : mozilla::dom::SVGIRect()
       , mVal(aVal)
       , mSVGElement(aSVGElement)
     {}
@@ -135,15 +135,20 @@ public:
     void SetY(float aY, mozilla::ErrorResult& aRv) MOZ_FINAL;
     void SetWidth(float aWidth, mozilla::ErrorResult& aRv) MOZ_FINAL;
     void SetHeight(float aHeight, mozilla::ErrorResult& aRv) MOZ_FINAL;
+
+    virtual nsIContent* GetParentObject() const
+    {
+      return mSVGElement;
+    }
   };
 
   struct DOMAnimVal MOZ_FINAL : public mozilla::dom::SVGIRect
   {
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_CYCLE_COLLECTION_CLASS(DOMAnimVal)
+    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMAnimVal)
 
     DOMAnimVal(nsSVGViewBox *aVal, nsSVGElement *aSVGElement)
-      : mozilla::dom::SVGIRect(aSVGElement)
+      : mozilla::dom::SVGIRect()
       , mVal(aVal)
       , mSVGElement(aSVGElement)
     {}
@@ -196,6 +201,11 @@ public:
     void SetHeight(float aHeight, mozilla::ErrorResult& aRv) MOZ_FINAL
     {
       aRv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
+    }
+
+    virtual nsIContent* GetParentObject() const
+    {
+      return mSVGElement;
     }
   };
 

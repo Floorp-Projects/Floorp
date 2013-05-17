@@ -1290,10 +1290,12 @@ inline void
 CurrentScriptFileLineOrigin(JSContext *cx, unsigned *linenop, LineOption = NOT_CALLED_FROM_JSOP_EVAL);
 
 extern JSScript *
-CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, HandleScript script);
+CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, HandleScript script,
+            NewObjectKind newKind = GenericObject);
 
 bool
-CloneFunctionScript(JSContext *cx, HandleFunction original, HandleFunction clone);
+CloneFunctionScript(JSContext *cx, HandleFunction original, HandleFunction clone,
+                    NewObjectKind newKind = GenericObject);
 
 /*
  * NB: after a successful XDR_DECODE, XDRScript callers must do any required

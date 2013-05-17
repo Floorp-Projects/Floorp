@@ -377,12 +377,12 @@ documenttab[selected] .documenttab-selection {
   list-style-image: url(chrome://browser/skin/images/identity-icons-generic.png);
 }
 
-#identity-box[mode="verifiedDomain"] > #identity-icon[pageproxystate="valid"] {
-  list-style-image: url(chrome://browser/skin/images/identity-icons-https.png);
+#identity-box-inner.verifiedDomain > #identity-icon {
+  list-style-image: url(chrome://browser/skin/images/locked-hdpi.png);
 }
- 
-#identity-box[mode="verifiedIdentity"] > #identity-icon[pageproxystate="valid"] {
-  list-style-image: url(chrome://browser/skin/identity-icons-https-ev.png);
+
+#identity-box-inner.verifiedIdentity > #identity-icon {
+  list-style-image: url(chrome://browser/skin/images/locked-hdpi.png);
 }
 
 /* Main URL textbox */
@@ -417,7 +417,7 @@ appbar {
   position: fixed;
   bottom: 0;
   width: 100%;
-  transform: translateY(@toolbar_height@);
+  transform: translateY(100%);
   transition: transform @metro_animation_duration@ @metro_animation_easing@;
   font-size: 0;
 }
@@ -444,18 +444,18 @@ appbar > toolbar > toolbarbutton[disabled] {
 }
 
 #appbar[startpage],
-#appbar[visible] {
+appbar[visible] {
   transform: none;
 }
 
-#appbar > toolbar > toolbarbutton {
+appbar > toolbar > toolbarbutton {
   list-style-image: url(chrome://browser/skin/images/appbar-icons.png);
   -moz-image-region: rect(0px, 200px, 40px, 160px); /* Gear icon is default. */
 }
-#appbar > toolbar > toolbarbutton:hover {
+appbar > toolbar > toolbarbutton:hover {
   -moz-image-region: rect(40px, 200px, 80px, 160px);
 }
-#appbar > toolbar > toolbarbutton:active {
+appbar > toolbar > toolbarbutton:active {
   -moz-image-region: rect(80px, 200px, 120px, 160px);
 }
 
@@ -523,12 +523,6 @@ appbar > toolbar > toolbarbutton[disabled] {
 #star-button:active,
 #star-button[checked] {
   -moz-image-region: rect(80px, 360px, 120px, 320px) !important;
-}
-
-/* Tile-selection-Specific */
-#appbar[contextual] > #toolbar,
-#appbar:not([contextual]) > #contextualactions-tray {
-  visibility: collapse;
 }
 
 #contextualactions-tray {

@@ -528,7 +528,7 @@ IsOrderLEQWithDOMFallback(nsIFrame* aFrame1,
     return order1 < order2;
   }
 
-  // If either frame is for generated content from :before or ::after, then
+  // If either frame is for generated content from ::before or ::after, then
   // we can't use nsContentUtils::PositionIsBefore(), since that method won't
   // recognize generated content as being an actual sibling of other nodes.
   // We know where ::before and ::after nodes *effectively* insert in the DOM
