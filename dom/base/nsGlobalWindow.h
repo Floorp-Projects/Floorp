@@ -1114,6 +1114,7 @@ protected:
   nsWeakPtr                     mOpener;
   nsCOMPtr<nsIControllers>      mControllers;
   nsCOMPtr<nsIArray>            mArguments;
+  nsCOMPtr<nsIArray>            mArgumentsLast;
   nsCOMPtr<nsIPrincipal>        mArgumentsOrigin;
   nsRefPtr<Navigator>           mNavigator;
   nsRefPtr<nsScreen>            mScreen;
