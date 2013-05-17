@@ -28,6 +28,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=650295
    * cause reentrancy in our C++ code, which we should be able to withstand.
    */
 
+  // Garbage collecting the windows created in this test can
+  // cause assertions (Bug 600703).
+  if (!navigator.platform.startsWith("Win")) {
+    SimpleTest.expectAssertions(2);
+  }
+
   function abortAndSpinEventLoop(evt, sr) {
     sr.abort();
     window.showModalDialog("javascript:window.close()");
@@ -36,9 +42,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=650295
   function doneFunc() {
     // Trigger gc now and wait some time to make sure this test gets the blame
     // for any assertions caused by showModalDialog
-    //
-    // NB - The assertions should be gone, but this looks too scary to touch
-    // during batch cleanup.
     var count = 0, GC_COUNT = 4;
 
     function triggerGCOrFinish() {

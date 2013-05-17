@@ -13,6 +13,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=391777
 <p id="display"></p>
 <script class="testbody" type="text/javascript">
 
+if (!navigator.platform.startsWith("Win")) {
+  // not Windows
+  SimpleTest.expectAssertions(1);
+}
+
 /** Test for Bug 391777 **/
 var arg = {};
 arg.testVal = "foo";
@@ -20,6 +25,11 @@ var result = window.showModalDialog("javascript:window.returnValue = window.dial
 ok(true, "We should get here without user interaction");
 is(result, "foo", "Unexpected result from showModalDialog");
 
+// Garbage collecting the windows created in this test can cause
+// assertions, so GC now to blame those assertions to this test.
+// ("mArguments wasn't cleaned up properly!" in ~nsGlobalWindow,
+// bug 600703)
+SpecialPowers.gc();
 </script>
 </body>
 </html>

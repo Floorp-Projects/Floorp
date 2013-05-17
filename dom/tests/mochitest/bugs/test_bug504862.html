@@ -12,6 +12,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=504862
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=504862">Mozilla Bug 504862</a>
 <script class="testbody" type="text/javascript">
 
+if (!navigator.platform.startsWith("Win")) {
+  SimpleTest.expectAssertions(4);
+}
+
 /** Test for Bug 504862 **/
 SimpleTest.waitForExplicitFinish();
 function onMsgRcv(event)
@@ -31,6 +35,12 @@ function runTest() {
   result = window.showModalDialog("http://test1.example.com/tests/dom/tests/mochitest/bugs/file_bug504862.html", "my args");
 
   is(result, null, "Able to see return value from cross origin dialog.");
+
+  // Garbage collecting the windows created in this test can cause
+  // assertions, so GC now to blame those assertions to this test.
+  // ("mArguments wasn't cleaned up properly!" in ~nsGlobalWindow,
+  // bug 600703)
+  SpecialPowers.gc();
 
   SimpleTest.finish();
 }
