@@ -72,6 +72,8 @@ CustomizeMode.prototype = {
       return;
     }
 
+    this.dispatchToolboxEvent("beforecustomization");
+
     let window = this.window;
     let document = this.document;
 
@@ -104,9 +106,7 @@ CustomizeMode.prototype = {
     window.PanelUI.menuButton.disabled = true;
 
     // Let everybody in this window know that we're about to customize.
-    let evt = document.createEvent("CustomEvent");
-    evt.initCustomEvent("CustomizationStart", true, true, window);
-    window.dispatchEvent(evt);
+    this.dispatchToolboxEvent("customizationstarting");
 
     customizer.parentNode.selectedPanel = customizer;
 
@@ -115,7 +115,6 @@ CustomizeMode.prototype = {
     // while customizing.
     let panelHolder = document.getElementById("customization-panelHolder");
     panelHolder.appendChild(window.PanelUI.mainView);
-
 
     let self = this;
     deck.addEventListener("transitionend", function customizeTransitionEnd() {
@@ -138,6 +137,7 @@ CustomizeMode.prototype = {
       }
 
       self.populatePalette();
+      self.dispatchToolboxEvent("customizationready");
     });
 
     this.visiblePalette.addEventListener("dragstart", this);
@@ -181,7 +181,6 @@ CustomizeMode.prototype = {
       tabViewDeck.removeEventListener("transitionend", onTransitionEnd);
       documentElement.removeAttribute("customize-exiting");
     });
-    documentElement.removeAttribute("customizing");
 
     for (let target of this.areas) {
       for (let toolbarItem of target.children) {
@@ -206,11 +205,9 @@ CustomizeMode.prototype = {
     // And drop all area references.
     this.areas = [];
 
-    // Let everybody in this window know that we're finished customizing.
-    let evt = document.createEvent("CustomEvent");
-    evt.initCustomEvent("CustomizationEnd", true, true, {changed: this._changed});
-    window.dispatchEvent(evt);
-
+    // Let everybody in this window know that we're starting to
+    // exit customization mode.
+    this.dispatchToolboxEvent("customizationending");
     window.PanelUI.replaceMainView(window.PanelUI.mainView);
 
     let browser = document.getElementById("browser");
@@ -227,18 +224,37 @@ CustomizeMode.prototype = {
         // If there's history to this tab, just go back.
         custBrowser.goBack();
       } else {
-        let customizationTab = this.browser.selectedTab;
-        if (this.browser.browsers.length == 1) {
-          this.window.BrowserOpenTab();
+        // If we can't go back, we're removing the about:customization tab.
+        // We only do this if we're the top window for this window (so not
+        // a dialog window, for example).
+        if (this.window.getTopWin(true) == this.window) {
+          let customizationTab = this.browser.selectedTab;
+          if (this.browser.browsers.length == 1) {
+            this.window.BrowserOpenTab();
+          }
+          this.browser.removeTab(customizationTab);
         }
-        this.browser.removeTab(customizationTab);
       }
     }
+
+    let deck = document.getElementById("tab-view-deck");
+    let self = this;
+    deck.addEventListener("transitionend", function customizeTransitionEnd() {
+      deck.removeEventListener("transitionend", customizeTransitionEnd);
+      self.dispatchToolboxEvent("aftercustomization");
+    });
+    documentElement.removeAttribute("customizing");
 
     let customizer = document.getElementById("customization-container");
     customizer.hidden = true;
 
     this._changed = false;
+  },
+
+  dispatchToolboxEvent: function(aEventType, aDetails={}) {
+    let evt = this.document.createEvent("CustomEvent");
+    evt.initCustomEvent(aEventType, true, true, {changed: this._changed});
+    let result = this.window.gNavToolbox.dispatchEvent(evt);
   },
 
   populatePalette: function() {
@@ -429,21 +445,26 @@ CustomizeMode.prototype = {
   },
 
   onWidgetMoved: function(aWidgetId, aArea, aOldPosition, aNewPosition) {
-    this._changed = true;
+    this._onUIChange();
   },
 
   onWidgetAdded: function(aWidgetId, aArea, aPosition) {
-    this._changed = true;
+    this._onUIChange();
   },
 
   onWidgetRemoved: function(aWidgetId, aArea) {
-    this._changed = true;
+    this._onUIChange();
   },
 
   onWidgetCreated: function(aWidgetId) {
   },
 
   onWidgetDestroyed: function(aWidgetId) {
+  },
+
+  _onUIChange: function() {
+    this._changed = true;
+    this.dispatchToolboxEvent("customizationchange");
   },
 
   handleEvent: function(aEvent) {
