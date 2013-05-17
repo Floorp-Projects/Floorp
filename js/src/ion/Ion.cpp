@@ -1944,8 +1944,6 @@ EnterIon(JSContext *cx, StackFrame *fp, void *jitcode)
 
     void *calleeToken;
     if (fp->isFunctionFrame()) {
-        fp->cleanupTornValues();
-
         // CountArgSlot include |this| and the |scopeChain| and maybe |argumentsObj|.
         // Keep |this|, but discard the others.
         maxArgc = CountArgSlots(fp->script(), fp->fun()) - StartArgSlot(fp->script(), fp->fun());
