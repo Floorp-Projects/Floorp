@@ -535,6 +535,16 @@ nsPIDOMWindow::nsPIDOMWindow(nsPIDOMWindow *aOuterWindow)
 
 nsPIDOMWindow::~nsPIDOMWindow() {}
 
+// DialogValueHolder CC goop.
+NS_IMPL_CYCLE_COLLECTION_1(DialogValueHolder, mValue)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DialogValueHolder)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(DialogValueHolder)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(DialogValueHolder)
+
 //*****************************************************************************
 // nsOuterWindowProxy: Outer Window Proxy
 //*****************************************************************************
@@ -1402,7 +1412,7 @@ nsGlobalWindow::CleanUp(bool aIgnoreModalDialog)
 
   mInnerWindowHolder = nullptr;
   mArguments = nullptr;
-  mArgumentsOrigin = nullptr;
+  mDialogArguments = nullptr;
 
   CleanupCachedXBLHandlers(this);
 
@@ -1630,6 +1640,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindow)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mControllers)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mArguments)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDialogArguments)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPerformance)
 
@@ -1676,6 +1687,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mControllers)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mArguments)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDialogArguments)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPerformance)
 
@@ -2514,11 +2526,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
     if (mArguments) {
       newInnerWindow->DefineArgumentsProperty(mArguments);
-      newInnerWindow->mArguments = mArguments;
-      newInnerWindow->mArgumentsOrigin = mArgumentsOrigin;
-
       mArguments = nullptr;
-      mArgumentsOrigin = nullptr;
     }
 
     // Give the new inner window our chrome event handler (since it
@@ -3139,49 +3147,49 @@ nsGlobalWindow::SetScriptsEnabled(bool aEnabled, bool aFireTimeouts)
 }
 
 nsresult
-nsGlobalWindow::SetArguments(nsIArray *aArguments, nsIPrincipal *aOrigin)
+nsGlobalWindow::SetArguments(nsIArray *aArguments)
 {
-  FORWARD_TO_OUTER(SetArguments, (aArguments, aOrigin),
+  FORWARD_TO_OUTER(SetArguments, (aArguments),
                    NS_ERROR_NOT_INITIALIZED);
+  nsresult rv;
 
-  // Hold on to the arguments so that we can re-set them once the next
-  // document is loaded.
-  mArguments = aArguments;
-  mArgumentsOrigin = aOrigin;
-
+  // Historically, we've used the same machinery to handle openDialog arguments
+  // (exposed via window.arguments) and showModalDialog arguments (exposed via
+  // window.dialogArguments), even though the former is XUL-only and uses an XPCOM
+  // array while the latter is web-exposed and uses an arbitrary JS value.
+  // Moreover, per-spec |dialogArguments| is a property of the browsing context
+  // (outer), whereas |arguments| lives on the inner.
+  //
+  // We've now mostly separated them, but the difference is still opaque to
+  // nsWindowWatcher (the caller of SetArguments in this little back-and-forth
+  // embedding waltz we do here).
+  //
+  // So we need to demultiplex the two cases here.
   nsGlobalWindow *currentInner = GetCurrentInnerWindowInternal();
-
-  if (mIsModalContentWindow && currentInner) {
-    // SetArguments() is being called on a modal content window that
-    // already has an inner window. This can happen when loading
-    // javascript: URIs as modal content dialogs. In this case, we'll
-    // set up the dialog window, both inner and outer, before we call
-    // SetArguments() on the window, so to deal with that, make sure
-    // here that the arguments are propagated to the inner window.
-
-    currentInner->mArguments = aArguments;
-    currentInner->mArgumentsOrigin = aOrigin;
+  if (mIsModalContentWindow) {
+    // nsWindowWatcher blindly converts the original nsISupports into an array
+    // of length 1. We need to recover it, and then cast it back to the concrete
+    // object we know it to be.
+    nsCOMPtr<nsISupports> supports = do_QueryElementAt(aArguments, 0, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    mDialogArguments = static_cast<DialogValueHolder*>(supports.get());
+  } else {
+    mArguments = aArguments;
+    rv = currentInner->DefineArgumentsProperty(aArguments);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  return currentInner ?
-    currentInner->DefineArgumentsProperty(aArguments) : NS_OK;
+  return NS_OK;
 }
 
 nsresult
 nsGlobalWindow::DefineArgumentsProperty(nsIArray *aArguments)
 {
+  MOZ_ASSERT(!mIsModalContentWindow); // Handled separately.
   nsIScriptContext *ctx = GetOuterWindowInternal()->mContext;
   NS_ENSURE_TRUE(aArguments && ctx, NS_ERROR_NOT_INITIALIZED);
   AutoPushJSContext cx(ctx->GetNativeContext());
   NS_ENSURE_TRUE(cx, NS_ERROR_NOT_INITIALIZED);
-
-  if (mIsModalContentWindow) {
-    // Modal content windows don't have an "arguments" property, they
-    // have a "dialogArguments" property which is handled
-    // separately. See nsWindowSH::NewResolve().
-
-    return NS_OK;
-  }
 
   JS::Rooted<JSObject*> obj(cx, mJSObject);
   return GetContextInternal()->SetProperty(obj, "arguments", aArguments);
@@ -7642,6 +7650,9 @@ nsGlobalWindow::ShowModalDialog(const nsAString& aURI, nsIVariant *aArgs,
   if (Preferences::GetBool("dom.disable_window_showModalDialog", false))
     return NS_ERROR_NOT_AVAILABLE;
 
+  nsRefPtr<DialogValueHolder> argHolder =
+    new DialogValueHolder(nsContentUtils::GetSubjectPrincipal(), aArgs);
+
   // Before bringing up the window/dialog, unsuppress painting and flush
   // pending reflows.
   EnsureReflowFlushAndPaint();
@@ -7671,8 +7682,8 @@ nsGlobalWindow::ShowModalDialog(const nsAString& aURI, nsIVariant *aArgs,
                              true,           // aCalledNoScript
                              true,           // aDoJSFixups
                              true,           // aNavigate
-                             nullptr, aArgs, // args
-                             GetPrincipal(),    // aCalleePrincipal
+                             nullptr, argHolder, // args
+                             GetPrincipal(),     // aCalleePrincipal
                              nullptr,            // aJSCallerContext
                              getter_AddRefs(dlgWin));
   nsContentUtils::SetMicroTaskLevel(oldMicroTaskLevel);
@@ -11616,21 +11627,14 @@ NS_IMPL_RELEASE_INHERITED(nsGlobalModalWindow, nsGlobalWindow)
 
 
 NS_IMETHODIMP
-nsGlobalModalWindow::GetDialogArguments(nsIArray **aArguments)
+nsGlobalModalWindow::GetDialogArguments(nsIVariant **aArguments)
 {
-  FORWARD_TO_INNER_MODAL_CONTENT_WINDOW(GetDialogArguments, (aArguments),
+  FORWARD_TO_OUTER_MODAL_CONTENT_WINDOW(GetDialogArguments, (aArguments),
                                         NS_ERROR_NOT_INITIALIZED);
 
-  bool subsumes = false;
-  nsIPrincipal *self = GetPrincipal();
-  if (self && NS_SUCCEEDED(self->Subsumes(mArgumentsOrigin, &subsumes)) &&
-      subsumes) {
-    NS_IF_ADDREF(*aArguments = mArguments);
-  } else {
-    *aArguments = nullptr;
-  }
-
-  return NS_OK;
+  // This does an internal origin check, and returns undefined if the subject
+  // does not subsumes the origin of the arguments.
+  return mDialogArguments->Get(nsContentUtils::GetSubjectPrincipal(), aArguments);
 }
 
 NS_IMETHODIMP
