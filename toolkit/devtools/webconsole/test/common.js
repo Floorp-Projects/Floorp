@@ -106,7 +106,10 @@ function checkObject(aObject, aExpected)
 
 function checkValue(aName, aValue, aExpected)
 {
-  if (aValue === undefined) {
+  if (aExpected === null) {
+    ok(!aValue, "'" + aName + "' is null");
+  }
+  else if (aValue === undefined) {
     ok(false, "'" + aName + "' is undefined");
   }
   else if (typeof aExpected == "string" || typeof aExpected == "number" ||
