@@ -638,11 +638,12 @@ RasterImage::AdvanceFrame(TimeStamp aTime, nsIntRect* aDirtyRect)
 NS_IMETHODIMP_(void)
 RasterImage::RequestRefresh(const mozilla::TimeStamp& aTime)
 {
-  if (!mAnimating || !ShouldAnimate()) {
+  if (!ShouldAnimate()) {
     return;
   }
 
   EnsureAnimExists();
+  EvaluateAnimation();
 
   // only advance the frame if the current time is greater than or
   // equal to the current frame's end time.
@@ -1314,9 +1315,6 @@ RasterImage::InternalAddFrame(uint32_t framenum,
 
   rv = InternalAddFrameHelper(framenum, frame.forget(), imageData, imageLength,
                               paletteData, paletteLength, aRetFrame);
-
-  // We may be able to start animating, if we now have enough frames
-  EvaluateAnimation();
 
   return rv;
 }
