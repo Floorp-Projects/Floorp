@@ -16,6 +16,11 @@ const WebProgress = {
     messageManager.addMessageListener("Content:LocationChange", this);
     messageManager.addMessageListener("Content:SecurityChange", this);
     Elements.progress.addEventListener("transitionend", this._progressTransEnd, true);
+    Elements.tabList.addEventListener("TabSelect", this._onTabSelect, true);
+
+    let urlBar = document.getElementById("urlbar-edit");
+    urlBar.addEventListener("input", this._onUrlBarInput, false);
+
     return this;
   },
 
@@ -58,12 +63,17 @@ const WebProgress = {
   },
 
   _securityChange: function _securityChange(aJson, aTab) {
-    // Don't need to do anything if the data we use to update the UI hasn't changed
-    if (aTab.state == aJson.state && !aTab.hostChanged)
-      return;
+    let state = aJson.state;
+    let identityBox = document.getElementById("identity-box-inner");
+    let nsIWebProgressListener = Ci.nsIWebProgressListener;
 
-    aTab.hostChanged = false;
-    aTab.state = aJson.state;
+    if (state & nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL) {
+      aTab._identityState = identityBox.className = "verifiedIdentity";
+    } else if (state & nsIWebProgressListener.STATE_IS_SECURE) {
+      aTab._identityState = identityBox.className = "verifiedDomain";
+    } else {
+      aTab._identityState = identityBox.className = "";
+    }
   },
 
   _locationChange: function _locationChange(aJson, aTab) {
@@ -77,7 +87,6 @@ const WebProgress = {
     if (locationHasChanged) {
       Browser.getNotificationBox(aTab.browser).removeTransientNotifications();
       aTab.resetZoomLevel();
-      aTab.hostChanged = true;
       aTab.browser.lastLocation = location;
       aTab.browser.userTypedValue = "";
       aTab.browser.appIcon = { href: null, size:-1 };
@@ -204,6 +213,15 @@ const WebProgress = {
       Elements.progressContainer.setAttribute("collapsed", true);
     }
   },
+
+  _onTabSelect: function(aEvent) {
+    let identityBox = document.getElementById("identity-box-inner");
+    let tab = Browser.getTabFromChrome(aEvent.originalTarget);
+    identityBox.className = tab._identityState || "";
+  },
+
+  _onUrlBarInput: function(aEvent) {
+    let identityBox = document.getElementById("identity-box-inner");
+    Browser.selectedTab._identityState = identityBox.className = "";
+  },
 };
-
-

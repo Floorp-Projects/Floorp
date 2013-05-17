@@ -355,7 +355,9 @@
         <toolbarbutton id="pin-button" type="checkbox" oncommand="Appbar.onPinButton()"/>
         <toolbarbutton id="more-button" onclick="Appbar.onMoreButton(event)"/>
       </toolbar>
+    </appbar>
 
+    <appbar id="contextappbar">
       <toolbar id="contextualactions-tray" flex="1">
         <toolbarbutton id="delete-selected-button" hidden="true" fade="true" oncommand="Appbar.dispatchContextualAction('delete')"/>
         <toolbarbutton id="restore-selected-button" hidden="true" fade="true" oncommand="Appbar.dispatchContextualAction('restore')"/>

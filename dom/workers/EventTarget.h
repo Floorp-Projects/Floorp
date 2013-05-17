@@ -46,9 +46,9 @@ public:
                       bool aCapture, ErrorResult& aRv);
 
   bool
-  DispatchEvent(JSObject& aEvent, ErrorResult& aRv) const
+  DispatchEvent(JS::Handle<JSObject*> aEvent, ErrorResult& aRv) const
   {
-    return mListenerManager.DispatchEvent(GetJSContext(), *this, &aEvent, aRv);
+    return mListenerManager.DispatchEvent(GetJSContext(), *this, aEvent, aRv);
   }
 
   JSObject*

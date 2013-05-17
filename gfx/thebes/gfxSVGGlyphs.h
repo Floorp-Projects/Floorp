@@ -65,8 +65,8 @@ class gfxSVGGlyphsDocument
     typedef gfxFont::DrawMode DrawMode;
 
 public:
-    gfxSVGGlyphsDocument(uint8_t *aBuffer, uint32_t aBufLen,
-                         const FallibleTArray<uint8_t>& aCmapTable);
+    gfxSVGGlyphsDocument(const uint8_t *aBuffer, uint32_t aBufLen,
+                         hb_blob_t *aCmapTable);
 
     Element *GetGlyphElement(uint32_t aGlyphId);
 
@@ -77,16 +77,14 @@ public:
     }
 
 private:
-    nsresult ParseDocument(uint8_t *aBuffer, uint32_t aBufLen);
+    nsresult ParseDocument(const uint8_t *aBuffer, uint32_t aBufLen);
 
     nsresult SetupPresentation();
 
-    void FindGlyphElements(Element *aElement,
-                           const FallibleTArray<uint8_t> &aCmapTable);
+    void FindGlyphElements(Element *aElement, hb_blob_t *aCmapTable);
 
     void InsertGlyphId(Element *aGlyphElement);
-    void InsertGlyphChar(Element *aGlyphElement,
-                         const FallibleTArray<uint8_t> &aCmapTable);
+    void InsertGlyphChar(Element *aGlyphElement, hb_blob_t *aCmapTable);
 
     nsCOMPtr<nsIDocument> mDocument;
     nsCOMPtr<nsIContentViewer> mViewer;
@@ -113,14 +111,17 @@ public:
     /**
      * @param aSVGTable The SVG table from the OpenType font
      * @param aCmapTable The CMAP table from the OpenType font
+     *
+     * The gfxSVGGlyphs object takes over ownership of the blob references
+     * that are passed in, and will hb_blob_destroy() them when finished;
+     * the caller should -not- destroy these references.
      */
-    gfxSVGGlyphs(FallibleTArray<uint8_t>& aSVGTable,
-                 const FallibleTArray<uint8_t>& aCmapTable);
+    gfxSVGGlyphs(hb_blob_t *aSVGTable, hb_blob_t *aCmapTable);
 
     /**
-     * Big- to little-endian conversion for headers
+     * Releases our references to the SVG and cmap tables.
      */
-    void UnmangleHeaders();
+    ~gfxSVGGlyphs();
 
     /**
      * Find the |gfxSVGGlyphsDocument| containing an SVG glyph for |aGlyphId|.
@@ -157,19 +158,19 @@ private:
     nsClassHashtable<nsUint32HashKey, gfxSVGGlyphsDocument> mGlyphDocs;
     nsBaseHashtable<nsUint32HashKey, Element*, Element*> mGlyphIdMap;
 
-    FallibleTArray<uint8_t> mSVGData;
-    FallibleTArray<uint8_t> mCmapData;
+    hb_blob_t *mSVGData;
+    hb_blob_t *mCmapData;
 
-    struct Header {
-        uint16_t mVersion;
-        uint16_t mIndexLength;
+    const struct Header {
+        mozilla::AutoSwap_PRUint16 mVersion;
+        mozilla::AutoSwap_PRUint16 mIndexLength;
     } *mHeader;
 
-    struct IndexEntry {
-        uint16_t mStartGlyph;
-        uint16_t mEndGlyph;
-        uint32_t mDocOffset;
-        uint32_t mDocLength;
+    const struct IndexEntry {
+        mozilla::AutoSwap_PRUint16 mStartGlyph;
+        mozilla::AutoSwap_PRUint16 mEndGlyph;
+        mozilla::AutoSwap_PRUint32 mDocOffset;
+        mozilla::AutoSwap_PRUint32 mDocLength;
     } *mIndex;
 
     static int CompareIndexEntries(const void *_a, const void *_b);

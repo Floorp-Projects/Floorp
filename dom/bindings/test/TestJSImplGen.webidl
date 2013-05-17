@@ -22,9 +22,9 @@ enum MyTestEnum {
 [Constructor(DOMString str, unsigned long num, boolean? boolArg,
              TestInterface? iface, long arg1,
              DictForConstructor dict, any any1,
-             /* (BUG 856911) object obj1,*/
+             object obj1,
              object? obj2, sequence<Dict> seq, optional any any2,
-             /* (BUG 856911) optional object obj3, */
+             optional object obj3,
              optional object? obj4),
  JSImplementation="@mozilla.org/test-js-impl-interface;1"]
 interface TestJSImplInterface {
@@ -252,9 +252,13 @@ interface TestJSImplInterface {
   sequence<DOMString> receiveStringSequence();
   // Callback interface problem.  See bug 843261.
   //void passStringSequence(sequence<DOMString> arg);
-  // "Can't handle sequence member 'any'; need to sort out rooting issues"
-  //sequence<any> receiveAnySequence();
-  //sequence<any>? receiveNullableAnySequence();
+  sequence<any> receiveAnySequence();
+  sequence<any>? receiveNullableAnySequence();
+  //XXXbz No support for sequence of sequence return values yet.
+  //sequence<sequence<any>> receiveAnySequenceSequence();
+
+  sequence<object> receiveObjectSequence();
+  sequence<object?> receiveNullableObjectSequence();
 
   void passSequenceOfSequences(sequence<sequence<long>> arg);
   //sequence<sequence<long>> receiveSequenceOfSequences();
@@ -318,18 +322,31 @@ interface TestJSImplInterface {
 
   // Any types
   void passAny(any arg);
+  void passVariadicAny(any... arg);
   void passOptionalAny(optional any arg);
   void passAnyDefaultNull(optional any arg = null);
+  void passSequenceOfAny(sequence<any> arg);
+  void passNullableSequenceOfAny(sequence<any>? arg);
+  void passOptionalSequenceOfAny(optional sequence<any> arg);
+  void passOptionalNullableSequenceOfAny(optional sequence<any>? arg);
+  void passOptionalSequenceOfAnyWithDefaultValue(optional sequence<any>? arg = null);
+  void passSequenceOfSequenceOfAny(sequence<sequence<any>> arg);
+  void passSequenceOfNullableSequenceOfAny(sequence<sequence<any>?> arg);
+  void passNullableSequenceOfNullableSequenceOfAny(sequence<sequence<any>?>? arg);
+  void passOptionalNullableSequenceOfNullableSequenceOfAny(optional sequence<sequence<any>?>? arg);
   any receiveAny();
 
-  // object types.  Unfortunately, non-nullable object is inconsistently
-  // represented as either JSObject* (for callbacks) or JSObject& (for
-  // non-callbacks), so we can't handle those yet.  See bug 856911.
-  //(BUG 856911)  void passObject(object arg);
+  void passObject(object arg);
+  void passVariadicObject(object... arg);
   void passNullableObject(object? arg);
-  //(BUG 856911)  void passOptionalObject(optional object arg);
+  void passVariadicNullableObject(object... arg);
+  void passOptionalObject(optional object arg);
   void passOptionalNullableObject(optional object? arg);
   void passOptionalNullableObjectWithDefaultValue(optional object? arg = null);
+  void passSequenceOfObject(sequence<object> arg);
+  void passSequenceOfNullableObject(sequence<object?> arg);
+  void passOptionalNullableSequenceOfNullableSequenceOfObject(optional sequence<sequence<object>?>? arg);
+  void passOptionalNullableSequenceOfNullableSequenceOfNullableObject(optional sequence<sequence<object?>?>? arg);
   object receiveObject();
   object? receiveNullableObject();
 
@@ -374,8 +391,11 @@ interface TestJSImplInterface {
   void passDictionary(optional Dict x);
   // FIXME: Bug 863949 no dictionary return values
   //   Dict receiveDictionary();
+  //   Dict? receiveNullableDictionary();
   void passOtherDictionary(optional GrandparentDict x);
   void passSequenceOfDictionaries(sequence<Dict> x);
+  // No support for nullable dictionaries inside a sequence (nor should there be)
+  //  void passSequenceOfNullableDictionaries(sequence<Dict?> x);
   void passDictionaryOrLong(optional Dict x);
   void passDictionaryOrLong(long x);
 

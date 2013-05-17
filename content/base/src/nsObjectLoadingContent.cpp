@@ -804,6 +804,10 @@ nsObjectLoadingContent::InstantiatePluginInstance(bool aIsLoading)
   nsIFrame* frame = thisContent->GetPrimaryFrame();
   if (frame && mInstanceOwner) {
     mInstanceOwner->SetFrame(static_cast<nsObjectFrame*>(frame));
+
+    // Bug 870216 - Adobe Reader renders with incorrect dimensions until it gets
+    // a second SetWindow call. This is otherwise redundant.
+    mInstanceOwner->CallSetWindow();
   }
 
   // Set up scripting interfaces.

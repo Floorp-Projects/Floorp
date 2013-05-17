@@ -167,8 +167,6 @@ public:
     return nsDocument::GetElementById(aElementId);
   }
 
-  virtual nsXPCClassInfo* GetClassInfo();
-
   virtual void DocSizeOfExcludingThis(nsWindowSizes* aWindowSizes) const;
   // DocSizeOfIncludingThis is inherited from nsIDocument.
 
