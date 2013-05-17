@@ -343,42 +343,7 @@ nsFileControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                      const nsRect&           aDirtyRect,
                                      const nsDisplayListSet& aLists)
 {
-  // box-shadow
-  if (StyleBorder()->mBoxShadow) {
-    aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
-      nsDisplayBoxShadowOuter(aBuilder, this));
-  }
-
-  // Clip height only
-  nsRect clipRect(aBuilder->ToReferenceFrame(this), GetSize());
-  clipRect.width = GetVisualOverflowRect().XMost();
-
-  nsDisplayListCollection tempList;
-  {
-    DisplayListClipState::AutoSaveRestore clipState(aBuilder);
-    clipState.ClipContainingBlockDescendants(clipRect, nullptr);
-
-    // Our background is inherited to the text input, and we don't really want to
-    // paint it or out padding and borders (which we never have anyway, per
-    // styles in forms.css) -- doing it just makes us look ugly in some cases and
-    // has no effect in others.
-    nsBlockFrame::BuildDisplayList(aBuilder, aDirtyRect, tempList);
-  }
-
-  tempList.BorderBackground()->DeleteAll();
-
-  tempList.MoveTo(aLists);
-
-  // Disabled file controls don't pass mouse events to their children, so we
-  // put an invisible item in the display list above the children
-  // just to catch events
-  nsEventStates eventStates = mContent->AsElement()->State();
-  if (eventStates.HasState(NS_EVENT_STATE_DISABLED) && IsVisibleForPainting(aBuilder)) {
-    aLists.Content()->AppendNewToTop(
-      new (aBuilder) nsDisplayEventReceiver(aBuilder, this));
-  }
-
-  DisplaySelectionOverlay(aBuilder, aLists.Content());
+  BuildDisplayListForInline(aBuilder, aDirtyRect, aLists);
 }
 
 #ifdef ACCESSIBILITY
