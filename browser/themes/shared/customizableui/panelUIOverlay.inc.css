@@ -220,6 +220,8 @@ panelsubview toolbarbutton:not([disabled]):-moz-any([open],[checked],:hover:acti
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
 }
 
+.PanelUI-footer.panel-multiview-anchor,
+.PanelUI-footer.panel-multiview-anchor > #PanelUI-help-btn,
 toolbarbutton.panel-multiview-anchor {
   background-color: Highlight;
   background-image: linear-gradient(rgba(255,255,255,0.3), rgba(255,255,255,0));
