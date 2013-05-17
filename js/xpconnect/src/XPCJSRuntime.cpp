@@ -608,9 +608,8 @@ XPCJSRuntime::UnmarkSkippableJSHolders()
 void
 xpc_UnmarkSkippableJSHolders()
 {
-    if (nsXPConnect::GetXPConnect() &&
-        nsXPConnect::GetXPConnect()->GetRuntime()) {
-        nsXPConnect::GetXPConnect()->GetRuntime()->UnmarkSkippableJSHolders();
+    if (nsXPConnect::XPConnect()->GetRuntime()) {
+        nsXPConnect::XPConnect()->GetRuntime()->UnmarkSkippableJSHolders();
     }
 }
 
@@ -2259,7 +2258,7 @@ class XPCJSRuntimeStats : public JS::RuntimeStats
 
     virtual void initExtraZoneStats(JS::Zone *zone, JS::ZoneStats *zStats) MOZ_OVERRIDE {
         // Get the compartment's global.
-        nsXPConnect *xpc = nsXPConnect::GetXPConnect();
+        nsXPConnect *xpc = nsXPConnect::XPConnect();
         AutoSafeJSContext cx;
         JSCompartment *comp = js::GetAnyCompartmentInZone(zone);
         xpc::ZoneStatsExtras *extras = new xpc::ZoneStatsExtras;
@@ -2292,7 +2291,7 @@ class XPCJSRuntimeStats : public JS::RuntimeStats
         GetCompartmentName(c, cName, true);
 
         // Get the compartment's global.
-        nsXPConnect *xpc = nsXPConnect::GetXPConnect();
+        nsXPConnect *xpc = nsXPConnect::XPConnect();
         AutoSafeJSContext cx;
         bool needZone = true;
         RootedObject global(cx, JS_GetGlobalForCompartmentOrNull(cx, c));
@@ -3004,8 +3003,8 @@ XPCRootSetElem::AddToRootSet(XPCLock *lock, XPCRootSetElem **listHead)
 void
 XPCRootSetElem::RemoveFromRootSet(XPCLock *lock)
 {
-    if (nsXPConnect *xpc = nsXPConnect::GetXPConnect())
-        JS::PokeGC(xpc->GetRuntime()->GetJSRuntime());
+    nsXPConnect *xpc = nsXPConnect::XPConnect();
+    JS::PokeGC(xpc->GetRuntime()->GetJSRuntime());
 
     NS_ASSERTION(mSelfp, "Must be linked");
 
