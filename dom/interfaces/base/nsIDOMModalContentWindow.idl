@@ -8,15 +8,14 @@
 interface nsIVariant;
 interface nsIArray;
 
-[scriptable, uuid(3f4cb2d0-5f7e-44a9-9f4f-370945f8db08)]
+[scriptable, uuid(51aebd45-b979-4ec6-9d11-3a3fd3d5d59e)]
 interface nsIDOMModalContentWindow : nsISupports
 {
   /**
-   * Readonly attribute containing an arbitrary JS value passed by the
-   * code that opened the modal content window. A security check is
-   * performed at access time, per spec.
+   * Readonly attribute containing an array of arguments that was
+   * passed to the code that opened this modal content window.
    */
-  readonly attribute nsIVariant            dialogArguments;
+  readonly attribute nsIArray            dialogArguments;
 
   /**
    * The return value that will be returned to the function that
