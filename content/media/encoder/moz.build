@@ -15,3 +15,6 @@ CPP_SOURCES += [
     'TrackEncoder.cpp',
 ]
 
+if CONFIG['MOZ_OPUS']:
+    EXPORTS += ['OpusTrackEncoder.h']
+    CPP_SOURCES += ['OpusTrackEncoder.cpp']
