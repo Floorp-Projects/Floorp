@@ -1090,9 +1090,7 @@ var ContextUI = {
     Elements.browsers.addEventListener("mousedown", this, true);
     Elements.browsers.addEventListener("touchstart", this, true);
     Elements.browsers.addEventListener("AlertActive", this, true);
-    window.addEventListener("MozEdgeUIStarted", this, true);
-    window.addEventListener("MozEdgeUICanceled", this, true);
-    window.addEventListener("MozEdgeUICompleted", this, true);
+    window.addEventListener("MozEdgeUIGesture", this, true);
     window.addEventListener("keypress", this, true);
     window.addEventListener("KeyboardChanged", this, false);
 
@@ -1285,29 +1283,7 @@ var ContextUI = {
    * Events
    */
 
-  _onEdgeUIStarted: function(aEvent) {
-    this._hasEdgeSwipeStarted = true;
-    this._clearDelayedTimeout();
-
-    if (StartUI.hide()) {
-      this.dismiss();
-      return;
-    }
-    this.toggle();
-  },
-
-  _onEdgeUICanceled: function(aEvent) {
-    this._hasEdgeSwipeStarted = false;
-    StartUI.hide();
-    this.dismiss();
-  },
-
-  _onEdgeUICompleted: function(aEvent) {
-    if (this._hasEdgeSwipeStarted) {
-      this._hasEdgeSwipeStarted = false;
-      return;
-    }
-
+  _onEdgeUIEvent: function _onEdgeUIEvent(aEvent) {
     this._clearDelayedTimeout();
     if (StartUI.hide()) {
       this.dismiss();
@@ -1318,14 +1294,8 @@ var ContextUI = {
 
   handleEvent: function handleEvent(aEvent) {
     switch (aEvent.type) {
-      case "MozEdgeUIStarted":
-        this._onEdgeUIStarted(aEvent);
-        break;
-      case "MozEdgeUICanceled":
-        this._onEdgeUICanceled(aEvent);
-        break;
-      case "MozEdgeUICompleted":
-        this._onEdgeUICompleted(aEvent);
+      case "MozEdgeUIGesture":
+        this._onEdgeUIEvent(aEvent);
         break;
       case "mousedown":
         if (aEvent.button == 0 && this.isVisible)
@@ -1471,7 +1441,7 @@ var StartUI = {
         break;
       case "contextmenu":
         let event = document.createEvent("Events");
-        event.initEvent("MozEdgeUICompleted", true, false);
+        event.initEvent("MozEdgeUIGesture", true, false);
         window.dispatchEvent(event);
         break;
     }
