@@ -20,7 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=437361
     is(true, SpecialPowers.getBoolPref("dom.disable_open_during_load"), "mozprefs sanity check");
     var rv = window.showModalDialog( // should be blocked without exception
       "data:text/html,<html><body onload='close(); returnValue = 1;' /></html>");
-    is(rv, null, "Modal dialog opened unexpectedly.");
+    is(rv, undefined, "Modal dialog opened unexpectedly.");
   }
   
   function testModalDialogAllowed() {

@@ -252,6 +252,9 @@ CreateVoidVariant()
 // However, we need to track both the caller-passed value as well as the
 // caller's, so that we can do an origin check (even for primitives) when the
 // value is accessed. This class encapsulates that magic.
+//
+// We also use the same machinery for |returnValue|, which needs similar origin
+// checks.
 class DialogValueHolder : public nsISupports
 {
 public:
@@ -1334,7 +1337,8 @@ public:
                                               bool aForceReuseInnerWindow);
 
 protected:
-  nsCOMPtr<nsIVariant> mReturnValue;
+  // For use by outer windows only.
+  nsRefPtr<DialogValueHolder> mReturnValue;
 };
 
 /* factory function */
