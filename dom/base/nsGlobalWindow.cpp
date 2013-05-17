@@ -7638,11 +7638,11 @@ ConvertDialogOptions(const nsAString& aOptions, nsAString& aResult)
 }
 
 NS_IMETHODIMP
-nsGlobalWindow::ShowModalDialog(const nsAString& aURI, nsIVariant *aArgs_,
-                                const nsAString& aOptions, uint8_t aArgc,
+nsGlobalWindow::ShowModalDialog(const nsAString& aURI, nsIVariant *aArgs,
+                                const nsAString& aOptions,
                                 nsIVariant **aRetVal)
 {
-  FORWARD_TO_OUTER(ShowModalDialog, (aURI, aArgs_, aOptions, aArgc, aRetVal),
+  FORWARD_TO_OUTER(ShowModalDialog, (aURI, aArgs, aOptions, aRetVal),
                    NS_ERROR_NOT_INITIALIZED);
 
   *aRetVal = nullptr;
@@ -7650,13 +7650,6 @@ nsGlobalWindow::ShowModalDialog(const nsAString& aURI, nsIVariant *aArgs_,
   if (Preferences::GetBool("dom.disable_window_showModalDialog", false))
     return NS_ERROR_NOT_AVAILABLE;
 
-  // Per-spec the |arguments| parameter is supposed to pass through unmodified.
-  // However, XPConnect default-initializes variants to null, rather than
-  // undefined. Fix this up here.
-  nsCOMPtr<nsIVariant> aArgs = aArgs_;
-  if (aArgc < 1) {
-    aArgs = CreateVoidVariant();
-  }
   nsRefPtr<DialogValueHolder> argHolder =
     new DialogValueHolder(nsContentUtils::GetSubjectPrincipal(), aArgs);
 
