@@ -1248,8 +1248,8 @@ var gBrowserInit = {
     window.addEventListener("mousemove", MousePosTracker, false);
     window.addEventListener("dragover", MousePosTracker, false);
 
-    window.addEventListener("CustomizationStart", CustomizationHandler, false);
-    window.addEventListener("CustomizationEnd", CustomizationHandler, false);
+    gNavToolbox.addEventListener("customizationstarting", CustomizationHandler);
+    gNavToolbox.addEventListener("customizationending", CustomizationHandler);
 
     gCustomizeMode.init();
 

@@ -5,22 +5,22 @@
 
 /**
  * Customization handler prepares this browser window for entering and exiting
- * customization mode by handling CustomizationStart and CustomizationEnd
+ * customization mode by handling customizationstarting and customizationending
  * events.
  */
 let CustomizationHandler = {
   handleEvent: function(aEvent) {
     switch(aEvent.type) {
-      case "CustomizationStart":
-        this._customizationStart();
+      case "customizationstarting":
+        this._customizationStarting();
         break;
-      case "CustomizationEnd":
-        this._customizationEnd(aEvent.detail);
+      case "customizationending":
+        this._customizationEnding(aEvent.detail);
         break;
     }
   },
 
-  _customizationStart: function() {
+  _customizationStarting: function() {
     // Disable the toolbar context menu items
     let menubar = document.getElementById("main-menubar");
     for (let childNode of menubar.childNodes)
@@ -41,7 +41,7 @@ let CustomizationHandler = {
     TabsInTitlebar.allowedBy("customizing-toolbars", false);
   },
 
-  _customizationEnd: function(aDetails) {
+  _customizationEnding: function(aDetails) {
     // Update global UI elements that may have been added or removed
     if (aDetails.changed) {
       gURLBar = document.getElementById("urlbar");
