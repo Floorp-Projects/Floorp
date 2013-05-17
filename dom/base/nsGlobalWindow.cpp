@@ -2738,6 +2738,13 @@ nsGlobalWindow::DetachFromDocShell()
 
   mChromeEventHandler = nullptr; // force release now
 
+  if (mArguments) { 
+    // We got no new document after someone called
+    // SetArguments(), drop our reference to the arguments.
+    mArguments = nullptr;
+    mArgumentsOrigin = nullptr;
+  }
+
   if (mContext) {
     mContext->GC(JS::gcreason::SET_DOC_SHELL);
     mContext = nullptr;
