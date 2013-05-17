@@ -585,7 +585,7 @@ xpc_ForcePropertyResolve(JSContext* cx, JSObject* obj, jsid id)
 inline jsid
 GetRTIdByIndex(JSContext *cx, unsigned index)
 {
-  XPCJSRuntime *rt = nsXPConnect::FastGetXPConnect()->GetRuntime();
+  XPCJSRuntime *rt = nsXPConnect::XPConnect()->GetRuntime();
   return rt->GetStringID(index);
 }
 

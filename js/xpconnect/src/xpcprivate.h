@@ -488,7 +488,6 @@ public:
         return gSelf;
     }
 
-    static nsXPConnect*  FastGetXPConnect() { return gSelf ? gSelf : XPConnect(); }
     static XPCJSRuntime* GetRuntimeInstance();
     XPCJSRuntime* GetRuntime() {return mRuntime;}
 
@@ -658,7 +657,6 @@ public:
     static XPCJSRuntime* Get() { return nsXPConnect::XPConnect()->GetRuntime(); }
 
     JSRuntime*     GetJSRuntime() const {return mJSRuntime;}
-    nsXPConnect*   GetXPConnect() const {return mXPConnect;}
 
     XPCJSContextStack* GetJSContextStack() {return mJSContextStack;}
     void DestroyJSContextStack();
@@ -913,7 +911,6 @@ private:
     jsid mStrIDs[IDX_TOTAL_COUNT];
     jsval mStrJSVals[IDX_TOTAL_COUNT];
 
-    nsXPConnect*             mXPConnect;
     JSRuntime*               mJSRuntime;
     XPCJSContextStack*       mJSContextStack;
     XPCCallContext*          mCallContext;
@@ -1061,7 +1058,7 @@ public:
                     return mSecurityManager;
             } else {
                 nsIXPCSecurityManager* mgr;
-                nsXPConnect* xpc = mRuntime->GetXPConnect();
+                nsXPConnect* xpc = nsXPConnect::XPConnect();
                 mgr = xpc->GetDefaultSecurityManager();
                 if (mgr && (flags & xpc->GetDefaultSecurityManagerFlags()))
                     return mgr;
