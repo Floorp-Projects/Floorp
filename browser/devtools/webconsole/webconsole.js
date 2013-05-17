@@ -956,11 +956,14 @@ WebConsoleFrame.prototype = {
     aRemoteMessages.forEach(function(aMessage) {
       switch (aMessage._type) {
         case "PageError": {
-          let category = Utils.categoryForScriptError(aMessage);
+          let category = Utils.categoryForConsoleMessage(aMessage);
           this.outputMessage(category, this.reportPageError,
                              [category, aMessage]);
           break;
         }
+        case "LogMessage":
+          this.handleLogMessage(aMessage);
+          break;
         case "ConsoleAPI":
           this.outputMessage(CATEGORY_WEBDEV, this.logConsoleAPIMessage,
                              [aMessage]);
@@ -1188,8 +1191,24 @@ WebConsoleFrame.prototype = {
    */
   handlePageError: function WCF_handlePageError(aPageError)
   {
-    let category = Utils.categoryForScriptError(aPageError);
+    let category = Utils.categoryForConsoleMessage(aPageError);
     this.outputMessage(category, this.reportPageError, [category, aPageError]);
+  },
+
+  /**
+   * Handle log messages received from the server. This method outputs the given
+   * message.
+   *
+   * @param object aPacket
+   *        The message packet received from the server.
+   */
+  handleLogMessage: function WCF_handleLogMessage(aPacket)
+  {
+    let category = Utils.categoryForConsoleMessage(aPacket.category);
+    this.outputMessage(category, () => {
+      return this.createMessageNode(category, SEVERITY_LOG, aPacket.message,
+                                    null, null, null, null, aPacket.timeStamp);
+    });
   },
 
   /**
@@ -4337,17 +4356,17 @@ var Utils = {
   },
 
   /**
-   * Determine the category of a given nsIScriptError.
+   * Determine the category of a given nsIConsoleMessage.
    *
-   * @param nsIScriptError aScriptError
-   *        The script error you want to determine the category for.
+   * @param nsIConsoleMessage aMessage
+   *        The message you want to determine the category for.
    * @return CATEGORY_JS|CATEGORY_CSS|CATEGORY_SECURITY
-   *         Depending on the script error CATEGORY_JS, CATEGORY_CSS, or
+   *         Depending on the message kind CATEGORY_JS, CATEGORY_CSS, or
    *         CATEGORY_SECURITY can be returned.
    */
-  categoryForScriptError: function Utils_categoryForScriptError(aScriptError)
+  categoryForConsoleMessage: function Utils_categoryForConsoleMessage(aMessage)
   {
-    switch (aScriptError.category) {
+    switch (aMessage.category) {
       case "CSS Parser":
       case "CSS Loader":
         return CATEGORY_CSS;
@@ -4508,6 +4527,7 @@ function WebConsoleConnectionProxy(aWebConsole, aTarget)
   this.target = aTarget;
 
   this._onPageError = this._onPageError.bind(this);
+  this._onLogMessage = this._onLogMessage.bind(this);
   this._onConsoleAPICall = this._onConsoleAPICall.bind(this);
   this._onNetworkEvent = this._onNetworkEvent.bind(this);
   this._onNetworkEventUpdate = this._onNetworkEventUpdate.bind(this);
@@ -4611,6 +4631,7 @@ WebConsoleConnectionProxy.prototype = {
 
     let client = this.client = this.target.client;
 
+    client.addListener("logMessage", this._onLogMessage);
     client.addListener("pageError", this._onPageError);
     client.addListener("consoleAPICall", this._onConsoleAPICall);
     client.addListener("networkEvent", this._onNetworkEvent);
@@ -4728,6 +4749,23 @@ WebConsoleConnectionProxy.prototype = {
   {
     if (this.owner && aPacket.from == this._consoleActor) {
       this.owner.handlePageError(aPacket.pageError);
+    }
+  },
+
+  /**
+   * The "logMessage" message type handler. We redirect any message to the UI
+   * for displaying.
+   *
+   * @private
+   * @param string aType
+   *        Message type.
+   * @param object aPacket
+   *        The message received from the server.
+   */
+  _onLogMessage: function WCCP__onLogMessage(aType, aPacket)
+  {
+    if (this.owner && aPacket.from == this._consoleActor) {
+      this.owner.handleLogMessage(aPacket);
     }
   },
 
@@ -4858,6 +4896,7 @@ WebConsoleConnectionProxy.prototype = {
     }
 
     this.client.removeListener("pageError", this._onPageError);
+    this.client.removeListener("logMessage", this._onLogMessage);
     this.client.removeListener("consoleAPICall", this._onConsoleAPICall);
     this.client.removeListener("networkEvent", this._onNetworkEvent);
     this.client.removeListener("networkEventUpdate", this._onNetworkEventUpdate);
