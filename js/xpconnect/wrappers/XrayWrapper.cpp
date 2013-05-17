@@ -872,9 +872,9 @@ WrapURI(JSContext *cx, nsIURI *uri, MutableHandleValue vp)
 {
     RootedObject scope(cx, JS_GetGlobalForScopeChain(cx));
     nsresult rv =
-        nsXPConnect::FastGetXPConnect()->WrapNativeToJSVal(cx, scope, uri, nullptr,
-                                                           &NS_GET_IID(nsIURI), true,
-                                                           vp.address(), nullptr);
+        nsXPConnect::XPConnect()->WrapNativeToJSVal(cx, scope, uri, nullptr,
+                                                    &NS_GET_IID(nsIURI), true,
+                                                    vp.address(), nullptr);
     if (NS_FAILED(rv)) {
         XPCThrower::Throw(rv, cx);
         return false;
@@ -911,9 +911,9 @@ nodePrincipal_getter(JSContext *cx, HandleObject wrapper, HandleId id, MutableHa
 
     RootedObject scope(cx, JS_GetGlobalForScopeChain(cx));
     nsresult rv =
-        nsXPConnect::FastGetXPConnect()->WrapNativeToJSVal(cx, scope, node->NodePrincipal(), nullptr,
-                                                           &NS_GET_IID(nsIPrincipal), true,
-                                                           vp.address(), nullptr);
+        nsXPConnect::XPConnect()->WrapNativeToJSVal(cx, scope, node->NodePrincipal(), nullptr,
+                                                    &NS_GET_IID(nsIPrincipal), true,
+                                                    vp.address(), nullptr);
     if (NS_FAILED(rv)) {
         XPCThrower::Throw(rv, cx);
         return false;

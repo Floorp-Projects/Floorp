@@ -2991,9 +2991,7 @@ XPCWrappedNative::GetObjectPrincipal() const
 NS_IMETHODIMP XPCWrappedNative::GetXPConnect(nsIXPConnect * *aXPConnect)
 {
     if (IsValid()) {
-        nsIXPConnect* temp = GetRuntime()->GetXPConnect();
-        NS_IF_ADDREF(temp);
-        *aXPConnect = temp;
+        NS_IF_ADDREF(*aXPConnect = nsXPConnect::XPConnect());
     } else
         *aXPConnect = nullptr;
     return NS_OK;
