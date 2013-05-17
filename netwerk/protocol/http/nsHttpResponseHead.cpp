@@ -578,6 +578,12 @@ nsHttpResponseHead::ParseVersion(const char *str)
 
     // make sure we have HTTP at the beginning
     if (PL_strncasecmp(str, "HTTP", 4) != 0) {
+        if (PL_strncasecmp(str, "ICY ", 4) == 0) {
+            // ShoutCast ICY is HTTP/1.0-like. Assume it is HTTP/1.0.
+            LOG(("Treating ICY as HTTP 1.0\n"));
+            mVersion = NS_HTTP_VERSION_1_0;
+            return;
+        }
         LOG(("looks like a HTTP/0.9 response\n"));
         mVersion = NS_HTTP_VERSION_0_9;
         return;

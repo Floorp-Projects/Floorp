@@ -1353,13 +1353,6 @@ public:
 #endif
   }
 
-  T** Slot() {
-#ifdef DEBUG
-    inited = true;
-#endif
-    return &ptr;
-  }
-
   T* Ptr() {
     MOZ_ASSERT(inited);
     MOZ_ASSERT(ptr, "NonNull<T> was set to null");
@@ -1564,6 +1557,12 @@ public:
       new (storage.addr()) T();
       return *storage.addr();
     }
+    template <typename T1, typename T2>
+    T& SetValue(const T1 &t1, const T2 &t2)
+    {
+      new (storage.addr()) T(t1, t2);
+      return *storage.addr();
+    }
     const T& Value() const {
       return *storage.addr();
     }
@@ -1571,6 +1570,11 @@ public:
       storage.addr()->~T();
     }
 };
+
+template<typename T>
+void DoTraceSequence(JSTracer* trc, FallibleTArray<T>& seq);
+template<typename T>
+void DoTraceSequence(JSTracer* trc, InfallibleTArray<T>& seq);
 
 // Class for simple sequence arguments, only used internally by codegen.
 template<typename T>
@@ -1584,6 +1588,222 @@ public:
   operator const Sequence<T>&() const {
     return *reinterpret_cast<const Sequence<T>*>(this);
   }
+};
+
+// Class used to trace sequences, with specializations for various
+// sequence types.
+template<typename T, bool isDictionary=IsBaseOf<DictionaryBase, T>::value>
+class SequenceTracer
+{
+  explicit SequenceTracer() MOZ_DELETE; // Should never be instantiated
+};
+
+// sequence<object> or sequence<object?>
+template<>
+class SequenceTracer<JSObject*, false>
+{
+  explicit SequenceTracer() MOZ_DELETE; // Should never be instantiated
+
+public:
+  static void TraceSequence(JSTracer* trc, JSObject** objp, JSObject** end) {
+    for ( ; objp != end; ++objp) {
+      JS_CallObjectTracer(trc, objp, "sequence<object>");
+    }
+  }
+};
+
+// sequence<any>
+template<>
+class SequenceTracer<JS::Value, false>
+{
+  explicit SequenceTracer() MOZ_DELETE; // Should never be instantiated
+
+public:
+  static void TraceSequence(JSTracer* trc, JS::Value* valp, JS::Value* end) {
+    for ( ; valp != end; ++valp) {
+      JS_CallValueTracer(trc, valp, "sequence<any>");
+    }
+  }
+};
+
+// sequence<sequence<T>>
+template<typename T>
+class SequenceTracer<Sequence<T>, false>
+{
+  explicit SequenceTracer() MOZ_DELETE; // Should never be instantiated
+
+public:
+  static void TraceSequence(JSTracer* trc, Sequence<T>* seqp, Sequence<T>* end) {
+    for ( ; seqp != end; ++seqp) {
+      DoTraceSequence(trc, *seqp);
+    }
+  }
+};
+
+// sequence<sequence<T>> as return value
+template<typename T>
+class SequenceTracer<nsTArray<T>, false>
+{
+  explicit SequenceTracer() MOZ_DELETE; // Should never be instantiated
+
+public:
+  static void TraceSequence(JSTracer* trc, nsTArray<T>* seqp, nsTArray<T>* end) {
+    for ( ; seqp != end; ++seqp) {
+      DoTraceSequence(trc, *seqp);
+    }
+  }
+};
+
+// sequence<someDictionary>
+template<typename T>
+class SequenceTracer<T, true>
+{
+  explicit SequenceTracer() MOZ_DELETE; // Should never be instantiated
+
+public:
+  static void TraceSequence(JSTracer* trc, T* dictp, T* end) {
+    for ( ; dictp != end; ++dictp) {
+      dictp->TraceDictionary(trc);
+    }
+  }
+};
+
+// sequence<sequence<T>?>
+template<typename T>
+class SequenceTracer<Nullable<Sequence<T> >, false>
+{
+  explicit SequenceTracer() MOZ_DELETE; // Should never be instantiated
+
+public:
+  static void TraceSequence(JSTracer* trc, Nullable<Sequence<T> >* seqp,
+                            Nullable<Sequence<T> >* end) {
+    for ( ; seqp != end; ++seqp) {
+      if (!seqp->IsNull()) {
+        DoTraceSequence(trc, seqp->Value());
+      }
+    }
+  }
+};
+
+template<typename T>
+void DoTraceSequence(JSTracer* trc, FallibleTArray<T>& seq)
+{
+  SequenceTracer<T>::TraceSequence(trc, seq.Elements(),
+                                   seq.Elements() + seq.Length());
+}
+
+template<typename T>
+void DoTraceSequence(JSTracer* trc, InfallibleTArray<T>& seq)
+{
+  SequenceTracer<T>::TraceSequence(trc, seq.Elements(),
+                                   seq.Elements() + seq.Length());
+}
+
+// Rooter class for sequences; this is what we mostly use in the codegen
+template<typename T>
+class MOZ_STACK_CLASS SequenceRooter : private JS::CustomAutoRooter
+{
+public:
+  explicit SequenceRooter(JSContext *cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    : JS::CustomAutoRooter(cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT),
+      mSequenceType(eNone)
+  {
+  }
+
+  void SetSequence(FallibleTArray<T>* aSequence)
+  {
+    mFallibleArray = aSequence;
+    mSequenceType = eFallibleArray;
+  }
+
+  void SetSequence(InfallibleTArray<T>* aSequence)
+  {
+    mInfallibleArray = aSequence;
+    mSequenceType = eInfallibleArray;
+  }
+
+  void SetSequence(Nullable<nsTArray<T>>* aSequence)
+  {
+    mNullableArray = aSequence;
+    mSequenceType = eNullableArray;
+  }
+
+ private:
+  enum SequenceType {
+    eNone,
+    eInfallibleArray,
+    eFallibleArray,
+    eNullableArray
+  };
+
+  virtual void trace(JSTracer *trc) MOZ_OVERRIDE
+  {
+    if (mSequenceType == eFallibleArray) {
+      DoTraceSequence(trc, *mFallibleArray);
+    } else if (mSequenceType == eInfallibleArray) {
+      DoTraceSequence(trc, *mInfallibleArray);
+    } else if (mSequenceType == eNullableArray) {
+      if (!mNullableArray->IsNull()) {
+        DoTraceSequence(trc, mNullableArray->Value());
+      }
+    }
+  }
+
+  union {
+    InfallibleTArray<T>* mInfallibleArray;
+    FallibleTArray<T>* mFallibleArray;
+    Nullable<nsTArray<T> >* mNullableArray;
+  };
+
+  SequenceType mSequenceType;
+};
+
+template<typename T>
+class MOZ_STACK_CLASS DictionaryRooter : JS::CustomAutoRooter
+{
+public:
+  explicit DictionaryRooter(JSContext *cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    : JS::CustomAutoRooter(cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT),
+      mDictionaryType(eNone)
+  {
+  }
+
+  void SetDictionary(T* aDictionary)
+  {
+    mDictionary = aDictionary;
+    mDictionaryType = eDictionary;
+  }
+
+  void SetDictionary(Nullable<T>* aDictionary)
+  {
+    mNullableDictionary = aDictionary;
+    mDictionaryType = eNullableDictionary;
+  }
+
+private:
+  enum DictionaryType {
+    eDictionary,
+    eNullableDictionary,
+    eNone
+  };
+
+  virtual void trace(JSTracer *trc) MOZ_OVERRIDE {
+    if (mDictionaryType == eDictionary) {
+      mDictionary->TraceDictionary(trc);
+    } else {
+      MOZ_ASSERT(mDictionaryType == eNullableDictionary);
+      if (!mNullableDictionary->IsNull()) {
+        mNullableDictionary->Value().TraceDictionary(trc);
+      }
+    }
+  }
+
+  union {
+    T* mDictionary;
+    Nullable<T>* mNullableDictionary;
+  };
+
+  DictionaryType mDictionaryType;
 };
 
 inline bool

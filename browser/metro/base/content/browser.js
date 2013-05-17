@@ -1392,9 +1392,6 @@ function Tab(aURI, aParams, aOwner) {
 
   this.owner = aOwner || null;
 
-  this.hostChanged = false;
-  this.state = null;
-
   // Set to 0 since new tabs that have not been viewed yet are good tabs to
   // toss if app needs more memory.
   this.lastSelected = 0;

@@ -68,6 +68,7 @@ js::Nursery::allocate(size_t size)
 {
     JS_ASSERT(size % ThingAlignment == 0);
     JS_ASSERT(position() % ThingAlignment == 0);
+    JS_ASSERT(!runtime()->isHeapBusy());
 
     if (position() + size > end())
         return NULL;
