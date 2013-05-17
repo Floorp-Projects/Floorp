@@ -109,47 +109,12 @@ StackFrame::initCallFrame(JSContext *cx, JSFunction &callee,
     exec.fun = &callee;
     u.nactual = nactual;
     scopeChain_ = callee.environment();
-    ncode_ = NULL;
     initPrev(cx);
     blockChain_= NULL;
     JS_ASSERT(!hasBlockChain());
     JS_ASSERT(!hasHookData());
 
     initVarsToUndefined();
-}
-
-/*
- * Reinitialize the StackFrame fields that have been initialized up to the
- * point of FixupArity in the function prologue.
- */
-inline void
-StackFrame::initFixupFrame(StackFrame *prev, StackFrame::Flags flags, void *ncode, unsigned nactual)
-{
-    JS_ASSERT((flags & ~(CONSTRUCTING |
-                         FUNCTION |
-                         OVERFLOW_ARGS |
-                         UNDERFLOW_ARGS)) == 0);
-
-    flags_ = FUNCTION | flags;
-    prev_ = prev;
-    ncode_ = ncode;
-    u.nactual = nactual;
-}
-
-inline bool
-StackFrame::jitHeavyweightFunctionPrologue(JSContext *cx)
-{
-    JS_ASSERT(isNonEvalFunctionFrame());
-    JS_ASSERT(fun()->isHeavyweight());
-
-    CallObject *callobj = CallObject::createForFunction(cx, this);
-    if (!callobj)
-        return false;
-
-    pushOnScopeChain(*callobj);
-    flags_ |= HAS_CALL_OBJ;
-
-    return true;
 }
 
 inline void
@@ -336,16 +301,6 @@ StackSpace::ensureSpace(JSContext *cx, MaybeReportError report, Value *from, ptr
     return true;
 }
 
-inline Value *
-StackSpace::getStackLimit(JSContext *cx, MaybeReportError report)
-{
-    FrameRegs &regs = cx->regs();
-    unsigned nvals = regs.fp()->script()->nslots + STACK_JIT_EXTRA;
-    return ensureSpace(cx, report, regs.sp, nvals)
-           ? conservativeEnd_
-           : NULL;
-}
-
 /*****************************************************************************/
 
 JS_ALWAYS_INLINE StackFrame *
@@ -358,8 +313,7 @@ ContextStack::getCallFrame(JSContext *cx, MaybeReportError report, const CallArg
     Value *firstUnused = args.end();
     JS_ASSERT(firstUnused == space().firstUnused());
 
-    /* Include extra space to satisfy the method-jit stackLimit invariant. */
-    unsigned nvals = VALUES_PER_STACK_FRAME + script->nslots + StackSpace::STACK_JIT_EXTRA;
+    unsigned nvals = VALUES_PER_STACK_FRAME + script->nslots;
 
     /* Maintain layout invariant: &formals[0] == ((Value *)fp) - nformal. */
 
@@ -437,15 +391,6 @@ ContextStack::popInlineFrame(FrameRegs &regs)
 
     newsp[-1] = fp->returnValue();
     regs.popFrame(newsp);
-}
-
-inline void
-ContextStack::popFrameAfterOverflow()
-{
-    /* Restore the regs to what they were on entry to JSOP_CALL. */
-    FrameRegs &regs = seg_->regs();
-    StackFrame *fp = regs.fp();
-    regs.popFrame(fp->actuals() + fp->numActualArgs());
 }
 
 inline JSScript *

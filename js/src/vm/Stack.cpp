@@ -102,7 +102,6 @@ StackFrame::initExecuteFrame(JSScript *script, StackFrame *prevLink, AbstractFra
 #endif
 
 #ifdef DEBUG
-    ncode_ = (void *)0xbad;
     Debug_SetValueRangeToCrashOnTouch(&rval_, 1);
     hookData_ = (void *)0xbad;
 #endif
@@ -226,24 +225,6 @@ StackFrame::copyRawFrameSlots(AutoValueVector *vec)
     PodCopy(vec->begin(), formals(), numFormalArgs());
     PodCopy(vec->begin() + numFormalArgs(), slots(), script()->nfixed);
     return true;
-}
-
-static void
-CleanupTornValue(StackFrame *fp, Value *vp)
-{
-    if (vp->isObject() && !vp->toGCThing())
-        vp->setObject(fp->global());
-    if (vp->isString() && !vp->toGCThing())
-        vp->setString(fp->compartment()->rt->emptyString);
-}
-
-void
-StackFrame::cleanupTornValues()
-{
-    for (size_t i = 0; i < numFormalArgs(); i++)
-        CleanupTornValue(this, &formals()[i]);
-    for (size_t i = 0; i < script()->nfixed; i++)
-        CleanupTornValue(this, &slots()[i]);
 }
 
 static inline void
@@ -387,19 +368,6 @@ StackFrame::epilogue(JSContext *cx)
 
     if (isConstructing() && thisValue().isObject() && returnValue().isPrimitive())
         setReturnValue(ObjectValue(constructorThis()));
-}
-
-bool
-StackFrame::jitStrictEvalPrologue(JSContext *cx)
-{
-    JS_ASSERT(isStrictEvalFrame());
-    CallObject *callobj = CallObject::createForStrictEval(cx, this);
-    if (!callobj)
-        return false;
-
-    pushOnScopeChain(*callobj);
-    flags_ |= HAS_CALL_OBJ;
-    return true;
 }
 
 bool
@@ -717,15 +685,6 @@ StackSpace::ensureSpaceSlow(JSContext *cx, MaybeReportError report, Value *from,
     }
 #endif
 
-    return true;
-}
-
-bool
-StackSpace::tryBumpLimit(JSContext *cx, Value *from, unsigned nvals, Value **limit)
-{
-    if (!ensureSpace(cx, REPORT_ERROR, from, nvals))
-        return false;
-    *limit = conservativeEnd_;
     return true;
 }
 
