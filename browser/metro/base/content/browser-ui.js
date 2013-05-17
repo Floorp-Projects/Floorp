@@ -96,7 +96,6 @@ var BrowserUI = {
     window.addEventListener("MozPrecisePointer", this, true);
     window.addEventListener("MozImprecisePointer", this, true);
 
-    Services.prefs.addObserver("browser.tabs.tabsOnly", this, false);
     Services.prefs.addObserver("browser.cache.disk_cache_ssl", this, false);
     Services.obs.addObserver(this, "metro_viewstate_changed", false);
 
@@ -143,7 +142,6 @@ var BrowserUI = {
       messageManager.addMessageListener("Browser:MozApplicationManifest", OfflineApps);
 
       try {
-        BrowserUI._updateTabsOnly();
         Downloads.init();
         DialogUI.init();
         FormHelperUI.init();
@@ -402,23 +400,18 @@ var BrowserUI = {
   },
 
   animateClosingTab: function animateClosingTab(tabToClose) {
-    if (this.isTabsOnly) {
-      Browser.closeTab(tabToClose, { forceClose: true } );
-    } else {
-      // Trigger closing animation
-      tabToClose.chromeTab.setAttribute("closing", "true");
+    tabToClose.chromeTab.setAttribute("closing", "true");
 
-      let wasCollapsed = !ContextUI.isExpanded;
-      if (wasCollapsed) {
-        ContextUI.displayTabs();
-      }
+    let wasCollapsed = !ContextUI.isExpanded;
+    if (wasCollapsed) {
+      ContextUI.displayTabs();
+    }
 
-      this.setOnTabAnimationEnd(function() {
-	Browser.closeTab(tabToClose, { forceClose: true } );
+    this.setOnTabAnimationEnd(function() {
+	    Browser.closeTab(tabToClose, { forceClose: true } );
         if (wasCollapsed)
           ContextUI.dismissWithDelay(kNewTabAnimationDelayMsec);
-      });
-    }
+    });
   },
 
   /**
@@ -525,32 +518,10 @@ var BrowserUI = {
     ContextUI.cancelDismiss();
   },
 
-
-  /*********************************
-   * Conventional tabs
-   */
-
-  // Tabsonly displays the url bar with conventional tabs. Also
-  // the tray does not auto hide.
-  get isTabsOnly() {
-    return Services.prefs.getBoolPref("browser.tabs.tabsOnly");
-  },
-
-  _updateTabsOnly: function _updateTabsOnly() {
-    if (this.isTabsOnly) {
-      Elements.windowState.setAttribute("tabsonly", "true");
-    } else {
-      Elements.windowState.removeAttribute("tabsonly");
-    }
-  },
-
   observe: function BrowserUI_observe(aSubject, aTopic, aData) {
     switch (aTopic) {
       case "nsPref:changed":
         switch (aData) {
-          case "browser.tabs.tabsOnly":
-            this._updateTabsOnly();
-            break;
           case "browser.cache.disk_cache_ssl":
             this._sslDiskCacheEnabled = Services.prefs.getBoolPref(aData);
             break;
@@ -1284,8 +1255,7 @@ var ContextUI = {
 
   // tab tray state
   _setIsExpanded: function _setIsExpanded(aFlag, setSilently) {
-    // if the tray can't be expanded because we're in
-    // tabsonly mode, don't expand it.
+    // if the tray can't be expanded, don't expand it.
     if (!this.isExpandable || this.isExpanded == aFlag)
       return;
 
