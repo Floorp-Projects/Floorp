@@ -114,7 +114,7 @@ var DebuggerServer = {
 
     this.xpcInspector = Cc["@mozilla.org/jsinspector;1"].getService(Ci.nsIJSInspector);
     this.initTransport(aAllowConnectionCallback);
-    this.addActors("resource://gre/modules/devtools/server/actors/script.js");
+    this.addActors("resource://gre/modules/devtools/server/actors/root.js");
 
     this._initialized = true;
   },
@@ -183,6 +183,7 @@ var DebuggerServer = {
    */
   addBrowserActors: function DS_addBrowserActors() {
     this.addActors("resource://gre/modules/devtools/server/actors/webbrowser.js");
+    this.addActors("resource://gre/modules/devtools/server/actors/script.js");
     this.addGlobalActor(this.ChromeDebuggerActor, "chromeDebugger");
     this.addActors("resource://gre/modules/devtools/server/actors/webconsole.js");
     this.addActors("resource://gre/modules/devtools/server/actors/gcli.js");
@@ -270,7 +271,6 @@ var DebuggerServer = {
 
     return clientTransport;
   },
-
 
   // nsIServerSocketListener implementation
 
@@ -441,7 +441,7 @@ ActorPool.prototype = {
    *
    * @param aActor object
    *        The actor implementation.  If the object has a
-   *        'disconnected' property, it will be called when the actor
+   *        'disconnect' property, it will be called when the actor
    *        pool is cleaned up.
    */
   addActor: function AP_addActor(aActor) {
