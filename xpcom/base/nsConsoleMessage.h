@@ -22,11 +22,6 @@ public:
 private:
     ~nsConsoleMessage() {}
 
-    int64_t mTimeStamp;
-    nsCString mCategory;
-    uint64_t mOuterWindowID;
-    uint64_t mInnerWindowID;
-    bool mIsFromPrivateWindow;
     nsString mMessage;
 };
 

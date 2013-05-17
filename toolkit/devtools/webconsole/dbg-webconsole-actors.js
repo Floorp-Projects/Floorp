@@ -18,7 +18,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Services",
 XPCOMUtils.defineLazyModuleGetter(this, "WebConsoleUtils",
                                   "resource://gre/modules/devtools/WebConsoleUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "ConsoleServiceListener",
+XPCOMUtils.defineLazyModuleGetter(this, "PageErrorListener",
                                   "resource://gre/modules/devtools/WebConsoleUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "ConsoleAPIListener",
@@ -165,10 +165,10 @@ WebConsoleActor.prototype =
   _window: null,
 
   /**
-   * The ConsoleServiceListener instance.
+   * The PageErrorListener instance.
    * @type object
    */
-  consoleServiceListener: null,
+  pageErrorListener: null,
 
   /**
    * The ConsoleAPIListener instance.
@@ -211,9 +211,9 @@ WebConsoleActor.prototype =
    */
   disconnect: function WCA_disconnect()
   {
-    if (this.consoleServiceListener) {
-      this.consoleServiceListener.destroy();
-      this.consoleServiceListener = null;
+    if (this.pageErrorListener) {
+      this.pageErrorListener.destroy();
+      this.pageErrorListener = null;
     }
     if (this.consoleAPIListener) {
       this.consoleAPIListener.destroy();
@@ -363,10 +363,10 @@ WebConsoleActor.prototype =
       let listener = aRequest.listeners.shift();
       switch (listener) {
         case "PageError":
-          if (!this.consoleServiceListener) {
-            this.consoleServiceListener =
-              new ConsoleServiceListener(window, this);
-            this.consoleServiceListener.init();
+          if (!this.pageErrorListener) {
+            this.pageErrorListener =
+              new PageErrorListener(window, this);
+            this.pageErrorListener.init();
           }
           startedListeners.push(listener);
           break;
@@ -426,9 +426,9 @@ WebConsoleActor.prototype =
       let listener = toDetach.shift();
       switch (listener) {
         case "PageError":
-          if (this.consoleServiceListener) {
-            this.consoleServiceListener.destroy();
-            this.consoleServiceListener = null;
+          if (this.pageErrorListener) {
+            this.pageErrorListener.destroy();
+            this.pageErrorListener = null;
           }
           stoppedListeners.push(listener);
           break;
@@ -495,24 +495,13 @@ WebConsoleActor.prototype =
           }
           break;
         case "PageError":
-          if (this.consoleServiceListener) {
-            let cache = this.consoleServiceListener.getCachedMessages();
-            cache.forEach((aMessage) => {
-              let message = null;
-              if (aMessage instanceof Ci.nsIScriptError) {
-                message = this.preparePageErrorForRemote(aMessage);
-                message._type = type;
-              }
-              else {
-                message = {
-                  _type: "LogMessage",
-                  message: aMessage.message,
-                  timeStamp: aMessage.timeStamp,
-                  category: aMessage.category,
-                };
-              }
+          if (this.pageErrorListener) {
+            let cache = this.pageErrorListener.getCachedMessages();
+            cache.forEach(function(aMessage) {
+              let message = this.preparePageErrorForRemote(aMessage);
+              message._type = type;
               messages.push(message);
-            });
+            }, this);
           }
           break;
       }
@@ -606,10 +595,6 @@ WebConsoleActor.prototype =
     let windowId = !this._isGlobalActor ?
                    WebConsoleUtils.getInnerWindowId(this.window) : null;
     ConsoleAPIStorage.clearEvents(windowId);
-    if (this._isGlobalActor) {
-      Services.console.logStringMessage(null); // for the Error Console
-      Services.console.reset();
-    }
     return {};
   },
 
@@ -867,31 +852,19 @@ WebConsoleActor.prototype =
   //////////////////
 
   /**
-   * Handler for messages received from the ConsoleServiceListener. This method
-   * sends the nsIConsoleMessage to the remote Web Console client.
+   * Handler for page errors received from the PageErrorListener. This method
+   * sends the nsIScriptError to the remote Web Console client.
    *
-   * @param nsIConsoleMessage aMessage
-   *        The message we need to send to the client.
+   * @param nsIScriptError aPageError
+   *        The page error we need to send to the client.
    */
-  onConsoleServiceMessage: function WCA_onConsoleServiceMessage(aMessage)
+  onPageError: function WCA_onPageError(aPageError)
   {
-    let packet;
-    if (aMessage instanceof Ci.nsIScriptError) {
-      packet = {
-        from: this.actorID,
-        type: "pageError",
-        pageError: this.preparePageErrorForRemote(aMessage),
-      };
-    }
-    else {
-      packet = {
-        from: this.actorID,
-        type: "logMessage",
-        message: aMessage.message,
-        timeStamp: aMessage.timeStamp,
-        category: aMessage.category,
-      };
-    }
+    let packet = {
+      from: this.actorID,
+      type: "pageError",
+      pageError: this.preparePageErrorForRemote(aPageError),
+    };
     this.conn.send(packet);
   },
 
