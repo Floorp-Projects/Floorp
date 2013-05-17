@@ -74,10 +74,6 @@ SystemMessageManager.prototype = {
 
     aHandler.handleMessage(wrapped ? aMessage
                                    : ObjectWrapper.wrap(aMessage, this._window));
-
-    Services.obs.notifyObservers(/* aSubject */ null,
-                                 "SystemMessageManager:HandleMessageDone",
-                                 /* aData */ null);
   },
 
   mozSetMessageHandler: function sysMessMgr_setMessageHandler(aType, aHandler) {
@@ -151,6 +147,16 @@ SystemMessageManager.prototype = {
                             innerWindowID: this.innerWindowID });
   },
 
+  // Possible messages:
+  //
+  //   - SystemMessageManager:Message
+  //     This one will only be received when the child process is alive when
+  //     the message is initially sent.
+  //
+  //   - SystemMessageManager:GetPendingMessages:Return
+  //     This one will be received when the starting child process wants to
+  //     retrieve the pending system messages from the parent (i.e. after
+  //     sending SystemMessageManager:GetPendingMessages).
   receiveMessage: function sysMessMgr_receiveMessage(aMessage) {
     debug("receiveMessage " + aMessage.name + " for [" + aMessage.data.type + "] " +
           "with manifest = " + this._manifest + " and uri = " + this._uri);
@@ -167,19 +173,30 @@ SystemMessageManager.prototype = {
                               msgID: msg.msgID });
     }
 
-    // Bail out if we have no handlers registered for this type.
-    if (!(msg.type in this._handlers)) {
-      debug("No handler for this type");
-      return;
-    }
-
     let messages = (aMessage.name == "SystemMessageManager:Message")
                    ? [msg.msg]
                    : msg.msgQueue;
 
-    messages.forEach(function(aMsg) {
-      this._dispatchMessage(msg.type, this._handlers[msg.type], aMsg);
-    }, this);
+    // We only dispatch messages when a handler is registered.
+    let handler = this._handlers[msg.type];
+    if (handler) {
+      messages.forEach(function(aMsg) {
+        this._dispatchMessage(msg.type, handler, aMsg);
+      }, this);
+    }
+
+    // We need to notify the parent the system messages have been handled,
+    // even if there are no handlers registered for them, so the parent can
+    // release the CPU wake lock it took on our behalf.
+    cpmm.sendAsyncMessage("SystemMessageManager:HandleMessagesDone",
+                          { type: msg.type,
+                            manifest: this._manifest,
+                            uri: this._uri,
+                            handledCount: messages.length });
+
+    Services.obs.notifyObservers(/* aSubject */ null,
+                                 "handle-system-messages-done",
+                                 /* aData */ null);
   },
 
   // nsIDOMGlobalPropertyInitializer implementation.
