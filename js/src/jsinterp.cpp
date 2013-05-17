@@ -3381,7 +3381,7 @@ js::GetScopeNameForTypeOf(JSContext *cx, HandleObject scopeChain, HandleProperty
 JSObject *
 js::Lambda(JSContext *cx, HandleFunction fun, HandleObject parent)
 {
-    RootedObject clone(cx, CloneFunctionObjectIfNotSingleton(cx, fun, parent));
+    RootedObject clone(cx, CloneFunctionObjectIfNotSingleton(cx, fun, parent, TenuredObject));
     if (!clone)
         return NULL;
 

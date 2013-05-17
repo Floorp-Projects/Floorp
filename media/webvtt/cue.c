@@ -96,7 +96,7 @@ webvtt_validate_cue( webvtt_cue *cue )
 {
   if( cue ) {
     /**
-     * validate cue-times (Can't do checks against previously parsed cuetimes. 
+     * validate cue-times (Can't do checks against previously parsed cuetimes.
      * That's the applications responsibility
      */
     if( BAD_TIMESTAMP(cue->from) || BAD_TIMESTAMP(cue->until) ) {

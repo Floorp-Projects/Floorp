@@ -128,12 +128,13 @@
           </menupopup>
         </toolbarbutton>
 
+        <toolbarbutton class="webconsole-clear-console-button devtools-toolbarbutton"
+                       label="&btnClear.label;" tooltiptext="&btnClear.tooltip;"/>
+
         <spacer flex="1"/>
 
         <textbox class="compact hud-filter-box devtools-searchinput" type="search"
                  placeholder="&filterOutput.placeholder;"/>
-        <toolbarbutton class="webconsole-clear-console-button devtools-toolbarbutton"
-                       label="&btnClear.label;" tooltiptext="&btnClear.tooltip;"/>
       </toolbar>
 
       <richlistbox class="hud-output-node" orient="vertical" flex="1"
