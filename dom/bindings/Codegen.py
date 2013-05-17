@@ -4376,7 +4376,7 @@ def wrapTypeIntoCurrentCompartment(type, value, isMember=True):
                         "arguments yet")
 
     if (type.isString() or type.isPrimitive() or type.isEnum() or
-        type.isGeckoInterface() or type.isCallback()):
+        type.isGeckoInterface() or type.isCallback() or type.isDate()):
         # All of these don't need wrapping
         return None
 
