@@ -26,7 +26,15 @@
  * along with C++0x support.
  */
 #if defined(__clang__)
-#  if (__cplusplus >= 201103L || defined(__GXX_EXPERIMENTAL_CXX0X__)) && \
+   /*
+    * clang doesn't like libstdc++'s version of <atomic> before GCC 4.7,
+    * due to the loose typing of the __sync_* family of functions done by
+    * GCC.  We do not have a particularly good way to detect this sort of
+    * case at this point, so just assume that if we're on a Linux system,
+    * we can't use the system's <atomic>.
+    */
+#  if !defined(__linux__) && \
+      (__cplusplus >= 201103L || defined(__GXX_EXPERIMENTAL_CXX0X__)) && \
       __has_include(<atomic>)
 #    define MOZ_HAVE_CXX11_ATOMICS
 #  endif
