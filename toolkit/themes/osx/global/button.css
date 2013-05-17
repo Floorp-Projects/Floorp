@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace xbl "http://www.mozilla.org/xbl";
 
 button {
   -moz-appearance: button;
@@ -83,17 +84,28 @@ button[dlgtype="help"]:-moz-focusring {
   -moz-outline-radius: 10000px;
 }
 
-button[dlgtype="help"] > .button-box > .button-icon {
+button[dlgtype="help"] > .button-box > .button-icon,
+/* Due to XBL refactoring changes, default content in a binding is
+   contained in a <xbl:children> element and thus the selector above
+   will not match the help button icon. When the XBL refactoring is
+   shipped (bug 653881), the selector above may be removed. */
+button[dlgtype="help"] > .button-box > xbl|children > .button-icon {
   list-style-image: url("chrome://global/skin/icons/question-mark.png");
   -moz-image-region: rect(0 24px 24px 0);
   padding: 0;
   margin: 0;
 }
 
-button[dlgtype="help"]:active > .button-box > .button-icon {
+button[dlgtype="help"]:active > .button-box > .button-icon,
+/* When the XBL refactoring is shipped (bug 653881),
+   the selector above may be removed. */
+button[dlgtype="help"]:active > .button-box > xbl|children > .button-icon {
   -moz-image-region: rect(0 48px 24px 24px);
 }
 
-button[dlgtype="help"] > .button-box > .button-text {
+button[dlgtype="help"] > .button-box > .button-text,
+/* When the XBL refactoring is shipped (bug 653881),
+   the selector above may be removed. */
+button[dlgtype="help"] > .button-box > xbl|children > .button-text {
   display: none;
 }
