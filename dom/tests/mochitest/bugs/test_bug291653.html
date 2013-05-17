@@ -17,10 +17,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=291653
 <pre id="test">
 <script type="application/javascript">
 
-if (!navigator.platform.startsWith("Win")) {
-  SimpleTest.expectAssertions(1);
-}
-
 /** Test for Bug 291653 **/
 SimpleTest.waitForExplicitFinish();
 
@@ -35,13 +31,6 @@ function closeTest() {
 
 function finish() {
   ok(!secondListenerDidRun, "Shouldn't have run second listener!");
-
-  // Garbage collecting the windows created in this test can cause
-  // assertions, so GC now to blame those assertions to this test.
-  // ("mArguments wasn't cleaned up properly!" in ~nsGlobalWindow,
-  // bug 600703)
-  SpecialPowers.gc();
-
   SimpleTest.finish();
 }
 
