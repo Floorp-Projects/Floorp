@@ -1154,7 +1154,7 @@ abstract public class BrowserApp extends GeckoApp
             return;
         }
 
-        final String url = mBrowserToolbar.stopEditing();
+        final String url = mBrowserToolbar.commitEdit();
         animateHideHomePager();
 
         int flags = Tabs.LOADURL_USER_ENTERED;
@@ -1172,7 +1172,7 @@ abstract public class BrowserApp extends GeckoApp
             return false;
         }
 
-        final String url = mBrowserToolbar.stopEditing();
+        mBrowserToolbar.cancelEdit();
         animateHideHomePager();
 
         return true;
@@ -1732,7 +1732,7 @@ abstract public class BrowserApp extends GeckoApp
         }
 
         Tabs.getInstance().loadUrl(url, flags);
-        mBrowserToolbar.stopEditing();
+        mBrowserToolbar.cancelEdit();
     }
 
     @Override

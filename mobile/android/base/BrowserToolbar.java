@@ -1244,17 +1244,32 @@ public class BrowserToolbar implements TextWatcher,
         contentAnimator.start();
     }
 
-    public String stopEditing() {
-        final String url = mUrlEditText.getText().toString();
+    /**
+     * Exits edit mode without updating the toolbar title.
+     *
+     * @return the url that was entered
+     */
+    public String cancelEdit() {
+        return stopEditing();
+    }
 
+    /**
+     * Exits edit mode, updating the toolbar title with the url that was just entered.
+     *
+     * @return the url that was entered
+     */
+    public String commitEdit() {
+        final String url = stopEditing();
+        if (!TextUtils.isEmpty(url)) {
+            setTitle(url);
+        }
+        return url;
+    }
+
+    private String stopEditing() {
+        final String url = mUrlEditText.getText().toString();
         if (!isEditing()) {
             return url;
-        }
-
-        // Update the title with the url that was just entered. Don't update the title if
-        // the AwesomeBar activity was cancelled, or if the user entered an empty string.
-        if (url != null && url.length() > 0) {
-            setTitle(url);
         }
 
         hideUrlEditContainer();
