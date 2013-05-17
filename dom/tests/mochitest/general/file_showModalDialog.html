@@ -2,34 +2,18 @@
 <html>
 <head>
 <script>
+  ok = window.opener.ok;
+  is = window.opener.is;
+  SpecialPowers = window.opener.SpecialPowers;
   function go() {
-    is(SpecialPowers.wrap(window).location.toString(), location.toString(), "sanity");
     is(SpecialPowers.Cu.getClassName(window, /* aUnwrap = */ true), "ModalContentWindow", "We are modal");
     var iwin = document.getElementById('ifr').contentWindow;
     is(SpecialPowers.Cu.getClassName(iwin, /* aUnwrap = */ true), "Window", "Descendant frames should not be modal");
-
-    if (location.origin != "http://mochi.test:8888") {
-      is(window.dialogArguments, undefined,
-        "dialogArguments should be undefined cross-origin: " + location.origin);
-    }
-
-    window.returnValue = "rv: " + window.dialogArguments;
-
-    // Allow for testing navigations in series.
-    if (location.search == "") {
-      window.close();
-    } else {
-      var origins = location.search.split('?')[1].split(',');
-      var newsearch = '?' + origins.splice(1).join(',');
-      var newurl = location.toString().replace(location.origin, origins[0])
-                                      .replace(location.search, newsearch);
-      location = newurl;
-    }
-
+    window.close();
   }
 </script>
 </head>
-<body onload="opener.postMessage('dosetup', '*');">
+<body onload="go();">
 <iframe id="ifr"></iframe>
 </body>
 </html>
