@@ -116,7 +116,33 @@ class RemoteAutomation(Automation):
                 break
         return found_exception
 
+    def deleteANRs(self):
+        # delete ANR traces.txt file; usually need root permissions
+        traces = "/data/anr/traces.txt"
+        try:
+            self._devicemanager.shellCheckOutput(['rm', traces], root=True)
+        except DMError:
+            print "Error deleting %s" % traces
+            pass
+
+    def checkForANRs(self):
+        traces = "/data/anr/traces.txt"
+        if self._devicemanager.fileExists(traces):
+            try:
+                t = self._devicemanager.pullFile(traces)
+                print "Contents of %s:" % traces
+                print t
+                # Once reported, delete traces
+                self.deleteANRs()
+            except DMError:
+                print "Error pulling %s" % traces
+                pass
+        else:
+            print "%s not found" % traces
+
     def checkForCrashes(self, directory, symbolsPath):
+        self.checkForANRs()
+
         logcat = self._devicemanager.getLogcat(filterOutRegexps=fennecLogcatFilters)
         javaException = self.checkForJavaException(logcat)
         if javaException:

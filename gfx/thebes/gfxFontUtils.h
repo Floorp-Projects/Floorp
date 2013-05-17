@@ -33,6 +33,8 @@
 #undef max
 #endif
 
+typedef struct hb_blob_t hb_blob_t;
+
 class gfxSparseBitSet {
 private:
     enum { BLOCK_SIZE = 32 };   // ==> 256 codepoints per block
@@ -829,12 +831,12 @@ public:
     // helper to get fullname from name table, constructing from family+style
     // if no explicit fullname is present
     static nsresult
-    GetFullNameFromTable(FallibleTArray<uint8_t>& aNameTable,
+    GetFullNameFromTable(hb_blob_t *aNameTable,
                          nsAString& aFullName);
 
     // helper to get family name from name table
     static nsresult
-    GetFamilyNameFromTable(FallibleTArray<uint8_t>& aNameTable,
+    GetFamilyNameFromTable(hb_blob_t *aNameTable,
                            nsAString& aFamilyName);
 
     // create a new name table and build a new font with that name table
@@ -845,20 +847,20 @@ public:
     
     // read all names matching aNameID, returning in aNames array
     static nsresult
-    ReadNames(FallibleTArray<uint8_t>& aNameTable, uint32_t aNameID, 
+    ReadNames(hb_blob_t *aNameTable, uint32_t aNameID, 
               int32_t aPlatformID, nsTArray<nsString>& aNames);
       
     // reads English or first name matching aNameID, returning in aName
     // platform based on OS
     static nsresult
-    ReadCanonicalName(FallibleTArray<uint8_t>& aNameTable, uint32_t aNameID, 
+    ReadCanonicalName(hb_blob_t *aNameTable, uint32_t aNameID, 
                       nsString& aName);
       
     // convert a name from the raw name table data into an nsString,
     // provided we know how; return true if successful, or false
     // if we can't handle the encoding
     static bool
-    DecodeFontName(const uint8_t *aBuf, int32_t aLength, 
+    DecodeFontName(const char *aBuf, int32_t aLength, 
                    uint32_t aPlatformCode, uint32_t aScriptCode,
                    uint32_t aLangCode, nsAString& dest);
 
@@ -934,7 +936,7 @@ public:
 
 protected:
     static nsresult
-    ReadNames(FallibleTArray<uint8_t>& aNameTable, uint32_t aNameID, 
+    ReadNames(hb_blob_t *aNameTable, uint32_t aNameID, 
               int32_t aLangID, int32_t aPlatformID, nsTArray<nsString>& aNames);
 
     // convert opentype name-table platform/encoding/language values to a charset name
