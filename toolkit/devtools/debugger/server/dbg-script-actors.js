@@ -1573,12 +1573,16 @@ ObjectActor.prototype = {
           } else if ("yield" in result) {
             getterValue = result.yield;
           }
-          safeGetterValues[name] = {
-            getterValue: this.threadActor.createValueGrip(getterValue),
-            getterPrototypeLevel: level,
-            enumerable: desc.enumerable,
-            writable: level == 0 ? desc.writable : true,
-          };
+          // WebIDL attributes specified with the LenientThis extended attribute
+          // return undefined and should be ignored.
+          if (getterValue !== undefined) {
+            safeGetterValues[name] = {
+              getterValue: this.threadActor.createValueGrip(getterValue),
+              getterPrototypeLevel: level,
+              enumerable: desc.enumerable,
+              writable: level == 0 ? desc.writable : true,
+            };
+          }
         }
       }
 

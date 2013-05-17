@@ -282,7 +282,8 @@ nsDOMCameraControl::StartRecording(const JS::Value& aOptions, nsIDOMDeviceStorag
   #endif
 
   nsCOMPtr<nsIFile> folder;
-  storageArea->GetRootDirectory(getter_AddRefs(folder));
+  rv = storageArea->GetRootDirectoryForFile(filename, getter_AddRefs(folder));
+  NS_ENSURE_SUCCESS(rv, rv);
   return mCameraControl->StartRecording(&options, folder, filename, onSuccess, onError);
 }
 
