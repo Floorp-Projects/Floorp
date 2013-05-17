@@ -10,9 +10,15 @@
   transition-timing-function: ease-out;
 }
 
-#main-window[customizing] .customization-target {
-  border: 1px dashed #bbb;
+#main-window[customizing] .customization-target,
+#main-window[customizing] #customization-panelHolder > #PanelUI-mainView {
+  border: 1px dashed transparent;
   margin: 3px;
+}
+
+#main-window[customizing-movingItem] .customization-target,
+#main-window[customizing-movingItem] #customization-panelHolder > #PanelUI-mainView {
+  border-color: #bbb;
 }
 
 #main-window[customizing] .customization-target {
