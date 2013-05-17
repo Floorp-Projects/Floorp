@@ -6,6 +6,9 @@ const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+// Ensure history is enabled.
+Services.prefs.setBoolPref("places.history.enabled", true);
+
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
   "resource://gre/modules/commonjs/sdk/core/promise.js");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
