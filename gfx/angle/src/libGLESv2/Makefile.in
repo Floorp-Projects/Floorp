@@ -21,7 +21,7 @@ STL_FLAGS =
 # support
 ENABLE_CXX_EXCEPTIONS = 1
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+ifndef GNU_CC
 # Enable unwind semantics for exception handlers in response to warning C4530.
 OS_CPPFLAGS += -EHsc
 endif
