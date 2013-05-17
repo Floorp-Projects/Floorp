@@ -1948,7 +1948,7 @@ nsXPCComponents_Exception::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
     if (!ccx.IsValid())
         return ThrowAndFail(NS_ERROR_XPC_UNEXPECTED, cx, _retval);
 
-    nsXPConnect* xpc = ccx.GetXPConnect();
+    nsXPConnect* xpc = nsXPConnect::XPConnect();
     XPCContext* xpcc = ccx.GetXPCContext();
 
     // Do the security check if necessary
@@ -2223,7 +2223,7 @@ nsXPCConstructor::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,JSContext *
     if (!ccx.IsValid())
         return ThrowAndFail(NS_ERROR_XPC_UNEXPECTED, cx, _retval);
 
-    nsXPConnect* xpc = ccx.GetXPConnect();
+    nsXPConnect* xpc = nsXPConnect::XPConnect();
 
     // security check not required because we are going to call through the
     // code which is reflected into JS which will do that for us later.
@@ -2457,7 +2457,7 @@ nsXPCComponents_Constructor::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
     if (!ccx.IsValid())
         return ThrowAndFail(NS_ERROR_XPC_UNEXPECTED, cx, _retval);
 
-    nsXPConnect* xpc = ccx.GetXPConnect();
+    nsXPConnect* xpc = nsXPConnect::XPConnect();
     XPCContext* xpcc = ccx.GetXPCContext();
     XPCWrappedNativeScope* scope = GetObjectScope(obj);
     nsXPCComponents* comp;

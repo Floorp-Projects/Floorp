@@ -1143,7 +1143,6 @@ public:
 
     inline JSBool                       IsValid() const ;
 
-    inline nsXPConnect*                 GetXPConnect() const ;
     inline XPCJSRuntime*                GetRuntime() const ;
     inline XPCContext*                  GetXPCContext() const ;
     inline JSContext*                   GetJSContext() const ;
