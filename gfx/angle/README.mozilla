@@ -31,6 +31,9 @@ In this order:
     Fixes TCompiler::Init to treat `resources.ArrayIndexClampingStrategy`
     as a request for the default strategy.
 
+  angle-cross-compilation.patch
+    Fixes cross compilation on case sensitive OSes.
+
 In addition to these patches, the Makefile.in files are ours, they're not present in
 upsteam ANGLE. Therefore, changes made to the Makefile.in files should not be stored
 in the local .patch files.
