@@ -34,18 +34,19 @@ I'm a test of hiding animation
 </section>
 
 <script>
-var x = document.getElementById('details');
 var kNumIterations = 5;
 var currentIteration = 0;
+var inrval;
 
 function doe() {
-  x.classList.toggle('hide');
   if (++currentIteration >= kNumIterations) {
     clearInterval(inrval);
     document.documentElement.removeAttribute('class');
+  } else {
+    document.getElementById('details').classList.toggle('hide');
   }
 }
-var inrval = setInterval(doe, 800);
+document.addEventListener("MozReftestInvalidate", function(){ inrval = setInterval(doe, 1000); }, false);
 </script>
 </body>
 </html>
