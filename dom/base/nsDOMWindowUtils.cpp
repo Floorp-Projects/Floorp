@@ -856,11 +856,11 @@ nsDOMWindowUtils::SendTouchEvent(const nsAString& aType,
   event.touches.SetCapacity(aCount);
   for (uint32_t i = 0; i < aCount; ++i) {
     nsIntPoint pt = ToWidgetPoint(aXs[i], aYs[i], offset, presContext);
-    nsCOMPtr<nsIDOMTouch> t(new Touch(aIdentifiers[i],
-                                      pt,
-                                      nsIntPoint(aRxs[i], aRys[i]),
-                                      aRotationAngles[i],
-                                      aForces[i]));
+    nsRefPtr<Touch> t = new Touch(aIdentifiers[i],
+                                  pt,
+                                  nsIntPoint(aRxs[i], aRys[i]),
+                                  aRotationAngles[i],
+                                  aForces[i]);
     event.touches.AppendElement(t);
   }
 
