@@ -1728,6 +1728,11 @@ $(foreach category,$(PP_TARGETS),						\
    )										\
  )
 
+# Pull in non-recursive targets if this is a partial tree build.
+ifndef TOPLEVEL_BUILD
+include $(topsrcdir)/config/makefiles/nonrecursive.mk
+endif
+
 ################################################################################
 # Special gmake rules.
 ################################################################################
