@@ -121,6 +121,10 @@ public:
   static
   already_AddRefed<TestInterface>
     Constructor(const GlobalObject&, uint32_t, IndirectlyImplementedInterface&, ErrorResult&);
+
+  static
+  already_AddRefed<TestInterface>
+    Constructor(const GlobalObject&, Date&, ErrorResult&);
   /*  static
   already_AddRefed<TestInterface>
     Constructor(const GlobalObject&, uint32_t, uint32_t,
