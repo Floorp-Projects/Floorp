@@ -57,7 +57,7 @@ native nsSize(nsSize);
  *
  * Internally, imgIContainer also manages animation of images.
  */
-[scriptable, builtinclass, uuid(e385f907-9a59-419b-8e15-e2a96d8ce044)]
+[scriptable, builtinclass, uuid(4c04b27c-7a4b-4676-b04f-402ace3c3dca)]
 interface imgIContainer : nsISupports
 {
   /**
@@ -293,4 +293,14 @@ interface imgIContainer : nsISupports
    * @param aWhichFrame Frame specifier of the FRAME_* variety.
    */
   [notxpcom] float getFrameIndex(in uint32_t aWhichFrame);
+
+  /*
+   * Returns the delay, in ms, between the first and second frame. If this
+   * returns 0, there is no delay between first and second frame (i.e., this
+   * image could render differently whenever it draws).
+   *
+   * If this image is not animated, or not known to be animated (see attribute
+   * animated), returns -1.
+   */
+  [notxpcom] int32_t getFirstFrameDelay();
 };
