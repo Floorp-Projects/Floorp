@@ -1,4 +1,4 @@
 . "$topsrcdir/build/mozconfig.common"
 
-CC=/tools/gcc-4.5-0moz3/bin/gcc
-CXX=/tools/gcc-4.5-0moz3/bin/g++
+CC="/tools/gcc-4.7.2-0moz1/bin/gcc"
+CXX="/tools/gcc-4.7.2-0moz1/bin/g++"
