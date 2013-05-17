@@ -1,0 +1,126 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf8">
+  <title>Test for nsIConsoleMessages</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript;version=1.8" src="common.js"></script>
+  <!-- Any copyright is dedicated to the Public Domain.
+     - http://creativecommons.org/publicdomain/zero/1.0/ -->
+</head>
+<body>
+<p>Make sure that nsIConsoleMessages are logged. See bug 859756.</p>
+
+<script class="testbody" type="text/javascript;version=1.8">
+SimpleTest.waitForExplicitFinish();
+
+let expectedMessages = [];
+let testingTabActor = false;
+
+function sendConsoleMessage(aMessage, aCategory, aWindowId)
+{
+  let consoleMsg = Cc["@mozilla.org/consolemessage;1"]
+                   .createInstance(Ci.nsIConsoleMessage);
+  consoleMsg.initMessage(aMessage, aCategory, aWindowId);
+  Services.console.logMessage(consoleMsg);
+}
+
+function sendMessages()
+{
+  expectedMessages = [
+    {
+      message: "hello world! bug859756",
+      category: null,
+      timeStamp: /^\d+$/,
+    },
+    {
+      message: "foobarz",
+      category: null,
+      timeStamp: /^\d+$/,
+    },
+    {
+      message: "boom",
+      category: "cat7",
+      timeStamp: /^\d+$/,
+    },
+    {
+      message: "windowfun",
+      category: "cat9",
+      timeStamp: /^\d+$/,
+    },
+  ];
+
+  Services.console.logStringMessage("hello world! bug859756");
+  sendConsoleMessage("foobarz");
+  sendConsoleMessage("boom", "cat7");
+  sendConsoleMessage("windowfun", "cat9", Date.now());
+}
+
+function sendMessagesForTab()
+{
+  sendMessages();
+  expectedMessages = [
+    {
+      message: "windowfun3",
+      category: "cat10",
+      timeStamp: /^\d+$/,
+    },
+  ];
+
+  let windowID = WebConsoleUtils.getInnerWindowId(top);
+  sendConsoleMessage("windowfun3", "cat10", windowID);
+}
+
+function startTest()
+{
+  removeEventListener("load", startTest);
+  attachConsole(["PageError"], onAttach);
+}
+
+function onAttach(aState, aResponse)
+{
+  window.onLogMessage_ = onLogMessage.bind(null, aState);
+  aState.dbgClient.addListener("logMessage", onLogMessage_);
+
+  if (!testingTabActor) {
+    sendMessages();
+  } else {
+    sendMessagesForTab();
+  }
+
+  info("waiting for messages");
+}
+
+let receivedMessages = [];
+
+function onLogMessage(aState, aType, aPacket)
+{
+  is(aPacket.from, aState.actor, "packet actor");
+
+  receivedMessages.push(aPacket);
+  if (receivedMessages.length != expectedMessages.length) {
+    return;
+  }
+
+  aState.dbgClient.removeListener("logMessage", onLogMessage_);
+
+  checkObject(receivedMessages, expectedMessages);
+
+  receivedMessages = expectedMessages = [];
+  window.onLogMessage_ = null;
+
+  closeDebugger(aState, () => {
+    if (!testingTabActor) {
+      testingTabActor = true;
+      info("start tab actor test");
+      attachConsole(["PageError"], onAttach, true);
+    } else {
+      SimpleTest.finish();
+    }
+  });
+}
+
+addEventListener("load", startTest);
+</script>
+</body>
+</html>

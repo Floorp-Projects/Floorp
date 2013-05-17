@@ -187,7 +187,9 @@ function log(aThing) {
         i++;
       }
     }
-    else if (type.match("Error$") || aThing.name == "NS_ERROR_FAILURE") {
+    else if (type.match("Error$") ||
+             (typeof aThing.name == "string" &&
+              aThing.name.match("NS_ERROR_"))) {
       reply += "  Message: " + aThing + "\n";
       if (aThing.stack) {
         reply += "  Stack:\n";

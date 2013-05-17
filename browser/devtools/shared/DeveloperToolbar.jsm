@@ -9,6 +9,8 @@ this.EXPORTED_SYMBOLS = [ "DeveloperToolbar", "CommandUtils" ];
 const NS_XHTML = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
+const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
+
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource:///modules/devtools/Commands.jsm");
@@ -24,7 +26,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "gcli",
 XPCOMUtils.defineLazyModuleGetter(this, "CmdCommands",
                                   "resource:///modules/devtools/BuiltinCommands.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "PageErrorListener",
+XPCOMUtils.defineLazyModuleGetter(this, "ConsoleServiceListener",
                                   "resource://gre/modules/devtools/WebConsoleUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
@@ -435,8 +437,8 @@ DeveloperToolbar.prototype._initErrorsCount = function DT__initErrorsCount(aTab)
   }
 
   let window = aTab.linkedBrowser.contentWindow;
-  let listener = new PageErrorListener(window, {
-    onPageError: this._onPageError.bind(this, tabId),
+  let listener = new ConsoleServiceListener(window, {
+    onConsoleServiceMessage: this._onPageError.bind(this, tabId),
   });
   listener.init();
 
@@ -593,7 +595,8 @@ DeveloperToolbar.prototype.handleEvent = function DT_handleEvent(aEvent)
 DeveloperToolbar.prototype._onPageError =
 function DT__onPageError(aTabId, aPageError)
 {
-  if (aPageError.category == "CSS Parser" ||
+  if (!(aPageError instanceof Ci.nsIScriptError) ||
+      aPageError.category == "CSS Parser" ||
       aPageError.category == "CSS Loader") {
     return;
   }

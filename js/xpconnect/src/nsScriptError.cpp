@@ -93,6 +93,16 @@ nsScriptError::GetCategory(char **result) {
     return NS_OK;
 }
 
+// nsIConsoleMessage method
+NS_IMETHODIMP
+nsScriptError::InitMessage(const nsAString& message,
+                           const char *category,
+                           uint64_t innerWindowID)
+{
+    return InitWithWindowID(message, EmptyString(), EmptyString(), 0, 0, 0,
+                            category, innerWindowID);
+}
+
 NS_IMETHODIMP
 nsScriptError::Init(const nsAString& message,
                     const nsAString& sourceName,

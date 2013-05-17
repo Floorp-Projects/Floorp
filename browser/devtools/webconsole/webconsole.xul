@@ -37,7 +37,7 @@
     <command id="cmd_fullZoomEnlarge" oncommand="goDoCommand('cmd_fontSizeEnlarge');"/>
     <command id="cmd_fullZoomReduce" oncommand="goDoCommand('cmd_fontSizeReduce');"/>
     <command id="cmd_fullZoomReset" oncommand="goDoCommand('cmd_fontSizeReset');"/>
-    <command id="cmd_close" oncommand="goDoCommand('cmd_close');"/>
+    <command id="cmd_close" oncommand="goDoCommand('cmd_close');" disabled="true"/>
   </commandset>
   <keyset id="consoleKeys">
     <key id="key_fullZoomReduce"  key="&fullZoomReduceCmd.commandkey;" command="cmd_fullZoomReduce"  modifiers="accel"/>
