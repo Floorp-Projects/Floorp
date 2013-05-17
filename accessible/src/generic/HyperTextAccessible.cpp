@@ -1014,32 +1014,24 @@ HyperTextAccessible::GetTextBeforeOffset(int32_t aOffset,
       return NS_OK;
 
     case BOUNDARY_WORD_START: {
-      if (offset == 0) { // no word before 0 offset
-        *aStartOffset = *aEndOffset = 0;
-        return NS_OK;
+      // If the offset is a word start (except text length offset) then move
+      // backward to find a start offset (end offset is the given offset).
+      // Otherwise move backward twice to find both start and end offsets.
+      if (offset == CharacterCount()) {
+        *aEndOffset = FindWordBoundary(offset, eDirPrevious, eStartWord);
+        *aStartOffset = FindWordBoundary(*aEndOffset, eDirPrevious, eStartWord);
+      } else {
+        *aStartOffset = FindWordBoundary(offset, eDirPrevious, eStartWord);
+        *aEndOffset = FindWordBoundary(*aStartOffset, eDirNext, eStartWord);
+        if (*aEndOffset != offset) {
+          *aEndOffset = *aStartOffset;
+          *aStartOffset = FindWordBoundary(*aEndOffset, eDirPrevious, eStartWord);
+        }
       }
-
-      // If the offset is a word start then move backward to find start offset
-      // (end offset is the given offset). Otherwise move backward twice to find
-      // both start and end offsets.
-      int32_t midOffset = FindWordBoundary(offset, eDirPrevious, eStartWord);
-      *aEndOffset = FindWordBoundary(midOffset, eDirNext, eStartWord);
-      if (*aEndOffset == offset) {
-        *aStartOffset = midOffset;
-        return GetText(*aStartOffset, *aEndOffset, aText);
-      }
-
-      *aStartOffset = FindWordBoundary(midOffset, eDirPrevious, eStartWord);
-      *aEndOffset = midOffset;
       return GetText(*aStartOffset, *aEndOffset, aText);
     }
 
     case BOUNDARY_WORD_END: {
-      if (offset == 0) { // no word before 0 offset
-        *aStartOffset = *aEndOffset = 0;
-        return NS_OK;
-      }
-
       // Move word backward twice to find start and end offsets.
       *aEndOffset = FindWordBoundary(offset, eDirPrevious, eEndWord);
       *aStartOffset = FindWordBoundary(*aEndOffset, eDirPrevious, eEndWord);
