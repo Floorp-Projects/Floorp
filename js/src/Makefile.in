@@ -243,9 +243,7 @@ CPPSRCS +=	MIR.cpp \
 		AsmJSLink.cpp \
 		AsmJSSignalHandlers.cpp \
 		$(NULL)
-endif #ENABLE_ION
 ifeq (86, $(findstring 86,$(TARGET_CPU)))
-ifdef ENABLE_ION
 CPPSRCS +=	CodeGenerator-x86-shared.cpp
 CPPSRCS +=	IonFrames-x86-shared.cpp
 CPPSRCS +=	MoveEmitter-x86-shared.cpp
@@ -253,20 +251,7 @@ CPPSRCS +=	Assembler-x86-shared.cpp
 CPPSRCS +=	Lowering-x86-shared.cpp
 CPPSRCS +=	BaselineCompiler-x86-shared.cpp
 CPPSRCS +=	BaselineIC-x86-shared.cpp
-endif #ENABLE_ION
 ifeq (x86_64, $(TARGET_CPU))
-ifdef _MSC_VER
-ASFILES +=	TrampolineMasmX64.asm
-endif
-ifeq ($(OS_ARCH),WINNT)
-ifdef GNU_CC
-ASFILES +=	TrampolineMingwX64.s
-endif
-endif
-ifdef SOLARIS_SUNPRO_CXX
-ASFILES +=	TrampolineSUNWX64.s
-endif
-ifdef ENABLE_ION
 VPATH +=	$(srcdir)/ion/x64
 CPPSRCS += 	Lowering-x64.cpp \
 		CodeGenerator-x64.cpp \
@@ -277,9 +262,7 @@ CPPSRCS += 	Lowering-x64.cpp \
 		BaselineCompiler-x64.cpp \
 		BaselineIC-x64.cpp \
 		$(NULL)
-endif #ENABLE_ION
 else
-ifdef ENABLE_ION
 VPATH +=	$(srcdir)/ion/x86
 CPPSRCS +=	Lowering-x86.cpp \
 		CodeGenerator-x86.cpp \
@@ -290,15 +273,9 @@ CPPSRCS +=	Lowering-x86.cpp \
 		BaselineCompiler-x86.cpp \
 		BaselineIC-x86.cpp \
 		$(NULL)
-endif #ENABLE_ION
-ifdef SOLARIS_SUNPRO_CXX
-ASFILES +=	TrampolineSUNWX86.s
 endif
 endif
-endif
-ifdef ENABLE_ION
 ifeq (arm, $(findstring arm, $(TARGET_CPU)))
-ifdef ENABLE_ION
 VPATH +=	$(srcdir)/ion/arm
 CPPSRCS +=	Lowering-arm.cpp \
 		CodeGenerator-arm.cpp \
@@ -312,7 +289,6 @@ CPPSRCS +=	Lowering-arm.cpp \
 		BaselineCompiler-arm.cpp \
 		BaselineIC-arm.cpp \
 		$(NULL)
-endif #ENABLE_ION
 endif
 endif #ENABLE_ION
 
