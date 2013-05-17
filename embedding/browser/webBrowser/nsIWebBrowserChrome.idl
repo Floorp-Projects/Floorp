@@ -77,9 +77,6 @@ interface nsIWebBrowserChrome : nsISupports
     const unsigned long CHROME_NON_PRIVATE_WINDOW     = 0x00020000;
     const unsigned long CHROME_PRIVATE_LIFETIME       = 0x00040000;
 
-    // Whether this was opened by nsGlobalWindow::ShowModalDialog.
-    const unsigned long CHROME_MODAL_CONTENT_WINDOW   = 0x00080000;
-
     // Prevents new window animations on Mac OS X Lion.  Ignored on other
     // platforms.
     const unsigned long CHROME_MAC_SUPPRESS_ANIMATION = 0x01000000;
