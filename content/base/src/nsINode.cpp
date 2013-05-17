@@ -2397,7 +2397,7 @@ nsINode::WrapObject(JSContext *aCx, JS::Handle<JSObject*> aScope)
   JS::Rooted<JSObject*> obj(aCx, WrapNode(aCx, aScope));
   if (obj && ChromeOnlyAccess() &&
       !nsContentUtils::IsSystemPrincipal(NodePrincipal()) &&
-      xpc::AllowXBLScope(js::GetContextCompartment(aCx)))
+      xpc::AllowXBLScope(js::GetObjectCompartment(obj)))
   {
     // Create a new wrapper and cache it.
     JSAutoCompartment ac(aCx, obj);

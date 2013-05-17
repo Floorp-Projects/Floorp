@@ -953,6 +953,15 @@ MediaStreamGraphImpl::RunThread()
   NS_ASSERTION(!messageQueue.IsEmpty(),
                "Shouldn't have started a graph with empty message queue!");
 
+  uint32_t ticksProcessed = 0;
+  if (!mRealtime) {
+    NS_ASSERTION(!mNonRealtimeIsRunning,
+                 "We should not be running in non-realtime mode already");
+    NS_ASSERTION(mNonRealtimeTicksToProcess,
+                 "We should have a non-zero number of ticks to process");
+    mNonRealtimeIsRunning = true;
+  }
+
   for (;;) {
     // Update mCurrentTime to the min of the playing audio times, or using the
     // wall-clock time change if no audio is playing.
@@ -1032,6 +1041,18 @@ MediaStreamGraphImpl::RunThread()
         allBlockedForever = false;
       }
     }
+    if (!mRealtime) {
+      ticksProcessed += TimeToTicksRoundDown(IdealAudioRate(), mStateComputedTime - prevComputedTime);
+      // Terminate processing if we've produce enough non-realtime ticks.
+      if (ticksProcessed >= mNonRealtimeTicksToProcess) {
+        // Wait indefinitely when we've processed enough non-realtime ticks.
+        // We'll be woken up when the graph shuts down.
+        MonitorAutoLock lock(mMonitor);
+        PrepareUpdatesToMainThreadState();
+        mWaitState = WAITSTATE_WAITING_INDEFINITELY;
+        mMonitor.Wait(PR_INTERVAL_NO_TIMEOUT);
+      }
+    }
     if (ensureNextIteration || !allBlockedForever || audioStreamsActive > 0) {
       EnsureNextIteration();
     }
@@ -1081,6 +1102,10 @@ MediaStreamGraphImpl::RunThread()
       mNeedAnotherIteration = false;
       messageQueue.SwapElements(mMessageQueue);
     }
+  }
+
+  if (!mRealtime) {
+    mNonRealtimeIsRunning = false;
   }
 }
 
@@ -1363,14 +1388,23 @@ MediaStreamGraphImpl::AppendMessage(ControlMessage* aMessage)
     if (IsEmpty()) {
       if (gGraph == this) {
         gGraph = nullptr;
-        delete this;
       }
+      delete this;
+    } else if (!mRealtime) {
+      // Make sure to mark the graph as not doing non-realtime processing,
+      // because otherwise AppendMessage will try to ensure that the graph
+      // is running, and we will never manage to release our resources.
+      mNonRealtimeProcessing = false;
     }
     return;
   }
 
   mCurrentTaskMessageQueue.AppendElement(aMessage);
-  EnsureRunInStableState();
+  // Do not start running the non-realtime graph unless processing has
+  // explicitly started.
+  if (mRealtime || mNonRealtimeProcessing) {
+    EnsureRunInStableState();
+  }
 }
 
 void
@@ -1958,12 +1992,15 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(bool aRealtime)
   , mMonitor("MediaStreamGraphImpl")
   , mLifecycleState(LIFECYCLE_THREAD_NOT_STARTED)
   , mWaitState(WAITSTATE_RUNNING)
+  , mNonRealtimeTicksToProcess(0)
   , mNeedAnotherIteration(false)
   , mForceShutDown(false)
   , mPostedRunInStableStateEvent(false)
+  , mNonRealtimeIsRunning(false)
   , mDetectedNotRunning(false)
   , mPostedRunInStableState(false)
   , mRealtime(aRealtime)
+  , mNonRealtimeProcessing(false)
 {
 #ifdef PR_LOGGING
   if (!gMediaStreamGraphLog) {
@@ -2028,7 +2065,6 @@ MediaStreamGraph::DestroyNonRealtimeInstance(MediaStreamGraph* aGraph)
 
   MediaStreamGraphImpl* graph = static_cast<MediaStreamGraphImpl*>(aGraph);
   graph->ForceShutDown();
-  delete graph;
 }
 
 SourceMediaStream*
@@ -2069,6 +2105,21 @@ MediaStreamGraph::CreateAudioNodeStream(AudioNodeEngine* aEngine,
   }
   graph->AppendMessage(new CreateMessage(stream));
   return stream;
+}
+
+void
+MediaStreamGraph::StartNonRealtimeProcessing(uint32_t aTicksToProcess)
+{
+  NS_ASSERTION(NS_IsMainThread(), "main thread only");
+
+  MediaStreamGraphImpl* graph = static_cast<MediaStreamGraphImpl*>(this);
+  NS_ASSERTION(!graph->mRealtime, "non-realtime only");
+
+  if (graph->mNonRealtimeProcessing)
+    return;
+  graph->mNonRealtimeTicksToProcess = aTicksToProcess;
+  graph->mNonRealtimeProcessing = true;
+  graph->EnsureRunInStableState();
 }
 
 }

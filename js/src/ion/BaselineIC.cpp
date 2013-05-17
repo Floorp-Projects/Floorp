@@ -2541,7 +2541,7 @@ DoBinaryArithFallback(JSContext *cx, BaselineFrame *frame, ICBinaryArith_Fallbac
     return true;
 }
 #if defined(_MSC_VER)
-# pragma optimize("g", on)
+# pragma optimize("", on)
 #endif
 
 typedef bool (*DoBinaryArithFallbackFn)(JSContext *, BaselineFrame *, ICBinaryArith_Fallback *,
@@ -2956,7 +2956,7 @@ DoUnaryArithFallback(JSContext *cx, BaselineFrame *frame, ICUnaryArith_Fallback 
     return true;
 }
 #if defined(_MSC_VER)
-# pragma optimize("g", on)
+# pragma optimize("", on)
 #endif
 
 typedef bool (*DoUnaryArithFallbackFn)(JSContext *, BaselineFrame *, ICUnaryArith_Fallback *,

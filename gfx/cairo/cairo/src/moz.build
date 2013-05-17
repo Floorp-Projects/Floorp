@@ -20,8 +20,8 @@ EXPORTS.cairo += [
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     EXPORTS.cairo += [
-        'cairo-win32.h',
         'cairo-pdf.h',
+        'cairo-win32.h',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'os2':
     EXPORTS.cairo += [
@@ -31,8 +31,8 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'os2':
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     EXPORTS.cairo += [
-        'cairo-quartz.h',
         'cairo-quartz-image.h',
+        'cairo-quartz.h',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'beos':
     EXPORTS.cairo += [
@@ -49,8 +49,8 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gonk'):
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
     EXPORTS.cairo += [
-        'cairo-qt.h',
         'cairo-pdf.h',
+        'cairo-qt.h',
     ]
 
 if CONFIG['BUILD_CAIRO_SVG']:

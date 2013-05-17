@@ -73,8 +73,6 @@ public: // construction, destruction
 
 protected:
 
-  virtual nsresult FirePlatformEvent(AccEvent* aEvent);
-
   /**
    * Return true if the parent doesn't have children to expose to AT.
    */

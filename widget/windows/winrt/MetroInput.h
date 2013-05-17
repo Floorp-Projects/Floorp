@@ -132,6 +132,10 @@ public:
 
   // The Edge gesture event is special.  It does not come from our window
   // or from our GestureRecognizer.
+  HRESULT OnEdgeGestureStarted(IEdgeGesture* aSender,
+                               IEdgeGestureEventArgs* aArgs);
+  HRESULT OnEdgeGestureCanceled(IEdgeGesture* aSender,
+                                IEdgeGestureEventArgs* aArgs);
   HRESULT OnEdgeGestureCompleted(IEdgeGesture* aSender,
                                  IEdgeGestureEventArgs* aArgs);
 
@@ -263,9 +267,11 @@ private:
   // using this token.
   EventRegistrationToken mTokenAcceleratorKeyActivated;
 
-  // When we register ourselves to handle the edge gesture, we receive a
-  // token.  When we unregister ourselves, we must use the token we received.
-  EventRegistrationToken mTokenEdgeGesture;
+  // When we register ourselves to handle edge gestures, we receive a
+  // token. To we unregister ourselves, we must use the token we received.
+  EventRegistrationToken mTokenEdgeStarted;
+  EventRegistrationToken mTokenEdgeCanceled;
+  EventRegistrationToken mTokenEdgeCompleted;
 
   // These registration tokens are set when we register ourselves to receive
   // events from our GestureRecognizer.  It's probably not a huge deal if we
