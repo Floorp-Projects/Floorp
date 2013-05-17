@@ -1505,15 +1505,6 @@ AccessibleWrap::HandleAccEvent(AccEvent* aEvent)
   nsresult rv = Accessible::HandleAccEvent(aEvent);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return FirePlatformEvent(aEvent);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// AccessibleWrap
-
-nsresult
-AccessibleWrap::FirePlatformEvent(AccEvent* aEvent)
-{
   // Don't fire native MSAA events or mess with the system caret
   // when running in metro mode. This confuses input focus tracking
   // in metro's UIA implementation.
@@ -1582,6 +1573,9 @@ AccessibleWrap::FirePlatformEvent(AccEvent* aEvent)
 
   return NS_OK;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// AccessibleWrap
 
 //------- Helper methods ---------
 
