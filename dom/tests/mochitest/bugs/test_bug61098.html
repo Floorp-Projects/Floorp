@@ -21,12 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=61098
 <script class="testbody" type="text/javascript">
 /** Test for Bug 61098 **/
 
-if (!navigator.platform.startsWith("Win")) {
-  SimpleTest.expectAssertions(9);
-} else {
-  SimpleTest.expectAssertions(8);
-}
-
+SimpleTest.expectAssertions(8);
 SimpleTest.waitForExplicitFinish();
 
 var mockPromptServiceRegisterer, mockPromptFactoryRegisterer;
@@ -350,12 +345,6 @@ function runtests()
 
   mockPromptFactoryRegisterer.unregister();
   mockPromptServiceRegisterer.unregister();
-
-  // Garbage collecting the windows created in this test can cause
-  // assertions, so GC now to blame those assertions to this test.
-  // ("mArguments wasn't cleaned up properly!" in ~nsGlobalWindow,
-  // bug 600703)
-  SpecialPowers.gc();
 
   SimpleTest.finish();
 }
