@@ -7695,19 +7695,57 @@ nsGlobalWindow::ShowModalDialog(const nsAString& aURI, nsIVariant *aArgs_,
                              getter_AddRefs(dlgWin));
   nsContentUtils::SetMicroTaskLevel(oldMicroTaskLevel);
   LeaveModalState(callerWin);
-  NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIDOMModalContentWindow> dialog = do_QueryInterface(dlgWin);
-  if (dialog) {
-    rv = dialog->GetReturnValue(aRetVal);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-    nsGlobalModalWindow *win = static_cast<nsGlobalModalWindow*>(dialog.get());
-    if (win->mCallCleanUpAfterModalDialogCloses) {
-      win->mCallCleanUpAfterModalDialogCloses = false;
-      win->CleanUp(true);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  if (dlgWin) {
+    nsCOMPtr<nsIPrincipal> subjectPrincipal;
+    rv = nsContentUtils::GetSecurityManager()->
+      GetSubjectPrincipal(getter_AddRefs(subjectPrincipal));
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    bool canAccess = true;
+
+    if (subjectPrincipal) {
+      nsCOMPtr<nsIScriptObjectPrincipal> objPrincipal =
+        do_QueryInterface(dlgWin);
+      nsCOMPtr<nsIPrincipal> dialogPrincipal;
+
+      if (objPrincipal) {
+        dialogPrincipal = objPrincipal->GetPrincipal();
+
+        rv = subjectPrincipal->Subsumes(dialogPrincipal, &canAccess);
+        NS_ENSURE_SUCCESS(rv, rv);
+      } else {
+        // Uh, not sure what kind of dialog this is. Prevent access to
+        // be on the safe side...
+
+        canAccess = false;
+      }
+    }
+
+    nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(dlgWin));
+
+    if (canAccess) {
+      nsPIDOMWindow *inner = win->GetCurrentInnerWindow();
+
+      nsCOMPtr<nsIDOMModalContentWindow> dlgInner(do_QueryInterface(inner));
+
+      if (dlgInner) {
+        dlgInner->GetReturnValue(aRetVal);
+      }
+    }
+
+    nsRefPtr<nsGlobalWindow> winInternal =
+      static_cast<nsGlobalWindow*>(win.get());
+    if (winInternal->mCallCleanUpAfterModalDialogCloses) {
+      winInternal->mCallCleanUpAfterModalDialogCloses = false;
+      winInternal->CleanUp(true);
     }
   }
-
+  
   return NS_OK;
 }
 
@@ -11611,13 +11649,9 @@ nsGlobalModalWindow::GetReturnValue(nsIVariant **aRetVal)
 {
   FORWARD_TO_OUTER_MODAL_CONTENT_WINDOW(GetReturnValue, (aRetVal), NS_OK);
 
-  nsCOMPtr<nsIVariant> result;
-  if (!mReturnValue) {
-    nsCOMPtr<nsIVariant> variant = CreateVoidVariant();
-    variant.forget(aRetVal);
-    return NS_OK;
-  }
-  return mReturnValue->Get(nsContentUtils::GetSubjectPrincipal(), aRetVal);
+  NS_IF_ADDREF(*aRetVal = mReturnValue);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -11625,8 +11659,8 @@ nsGlobalModalWindow::SetReturnValue(nsIVariant *aRetVal)
 {
   FORWARD_TO_OUTER_MODAL_CONTENT_WINDOW(SetReturnValue, (aRetVal), NS_OK);
 
-  mReturnValue = new DialogValueHolder(nsContentUtils::GetSubjectPrincipal(),
-                                       aRetVal);
+  mReturnValue = aRetVal;
+
   return NS_OK;
 }
 
