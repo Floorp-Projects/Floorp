@@ -47,8 +47,8 @@ EXPORTS += [
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     if CONFIG['MOZ_ENABLE_D3D9_LAYER']:
         EXPORTS += [
-            'LayerManagerD3D9.h',
             'DeviceManagerD3D9.h',
+            'LayerManagerD3D9.h',
         ]
     if CONFIG['MOZ_ENABLE_D3D10_LAYER']:
         EXPORTS += [

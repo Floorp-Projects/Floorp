@@ -2288,20 +2288,6 @@ nsLayoutUtils::GetAllInFlowRects(nsIFrame* aFrame, nsIFrame* aRelativeTo,
   GetAllInFlowBoxes(aFrame, &converter);
 }
 
-static nsSize
-GetFramePaddingSize(nsIFrame* aFrame)
-{
-  return aFrame->GetPaddingRect().Size();
-}
-
-void
-nsLayoutUtils::GetAllInFlowPaddingRects(nsIFrame* aFrame, nsIFrame* aRelativeTo,
-                                        RectCallback* aCallback, uint32_t aFlags)
-{
-  BoxToRect converter(aRelativeTo, aCallback, aFlags, &GetFramePaddingSize);
-  GetAllInFlowBoxes(aFrame, &converter);
-}
-
 nsLayoutUtils::RectAccumulator::RectAccumulator() : mSeenFirstRect(false) {}
 
 void nsLayoutUtils::RectAccumulator::AddRect(const nsRect& aRect) {
@@ -2334,17 +2320,6 @@ nsLayoutUtils::GetAllInFlowRectsUnion(nsIFrame* aFrame, nsIFrame* aRelativeTo,
                                       uint32_t aFlags) {
   RectAccumulator accumulator;
   GetAllInFlowRects(aFrame, aRelativeTo, &accumulator, aFlags);
-  return accumulator.mResultRect.IsEmpty() ? accumulator.mFirstRect
-          : accumulator.mResultRect;
-}
-
-nsRect
-nsLayoutUtils::GetAllInFlowPaddingRectsUnion(nsIFrame* aFrame,
-                                             nsIFrame* aRelativeTo,
-                                             uint32_t aFlags)
-{
-  RectAccumulator accumulator;
-  GetAllInFlowPaddingRects(aFrame, aRelativeTo, &accumulator, aFlags);
   return accumulator.mResultRect.IsEmpty() ? accumulator.mFirstRect
           : accumulator.mResultRect;
 }

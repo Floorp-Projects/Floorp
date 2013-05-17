@@ -4569,14 +4569,6 @@ NS_IMETHODIMP
 nsXPCComponents_Utils::GetDOMClassInfo(const nsAString& aClassName,
                                        nsIClassInfo** aClassInfo)
 {
-#ifdef MOZ_WEBRTC
-    if (aClassName.EqualsLiteral("RTCPeerConnection")) {
-        NS_ADDREF(*aClassInfo =
-                  NS_GetDOMClassInfoInstance(eDOMClassInfo_RTCPeerConnection_id));
-        return NS_OK;
-    }
-#endif
-
     *aClassInfo = nullptr;
     return NS_ERROR_NOT_AVAILABLE;
 }
