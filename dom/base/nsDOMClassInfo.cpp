@@ -1008,7 +1008,6 @@ jsid nsDOMClassInfo::sToolbar_id         = JSID_VOID;
 jsid nsDOMClassInfo::sLocationbar_id     = JSID_VOID;
 jsid nsDOMClassInfo::sPersonalbar_id     = JSID_VOID;
 jsid nsDOMClassInfo::sStatusbar_id       = JSID_VOID;
-jsid nsDOMClassInfo::sDialogArguments_id = JSID_VOID;
 jsid nsDOMClassInfo::sControllers_id     = JSID_VOID;
 jsid nsDOMClassInfo::sLength_id          = JSID_VOID;
 jsid nsDOMClassInfo::sScrollX_id         = JSID_VOID;
@@ -1268,7 +1267,6 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   SET_JSID_TO_STRING(sLocationbar_id,     cx, "locationbar");
   SET_JSID_TO_STRING(sPersonalbar_id,     cx, "personalbar");
   SET_JSID_TO_STRING(sStatusbar_id,       cx, "statusbar");
-  SET_JSID_TO_STRING(sDialogArguments_id, cx, "dialogArguments");
   SET_JSID_TO_STRING(sControllers_id,     cx, "controllers");
   SET_JSID_TO_STRING(sLength_id,          cx, "length");
   SET_JSID_TO_STRING(sScrollX_id,         cx, "scrollX");
@@ -2980,7 +2978,6 @@ nsDOMClassInfo::ShutDown()
   sLocationbar_id     = JSID_VOID;
   sPersonalbar_id     = JSID_VOID;
   sStatusbar_id       = JSID_VOID;
-  sDialogArguments_id = JSID_VOID;
   sControllers_id     = JSID_VOID;
   sLength_id          = JSID_VOID;
   sScrollX_id         = JSID_VOID;
@@ -5085,23 +5082,6 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
         if (!*_retval) {
           return NS_ERROR_UNEXPECTED;
         }
-      }
-
-      return NS_OK;
-    }
-
-    if (sDialogArguments_id == id && win->IsModalContentWindow()) {
-      nsCOMPtr<nsIArray> args;
-      ((nsGlobalModalWindow *)win)->GetDialogArguments(getter_AddRefs(args));
-
-      nsIScriptContext *script_cx = win->GetContext();
-      if (script_cx) {
-        // Make nsJSContext::SetProperty()'s magic argument array
-        // handling happen.
-        rv = script_cx->SetProperty(obj, "dialogArguments", args);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        *objp = obj;
       }
 
       return NS_OK;
