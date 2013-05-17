@@ -11630,6 +11630,21 @@ nsGlobalModalWindow::SetReturnValue(nsIVariant *aRetVal)
   return NS_OK;
 }
 
+nsresult
+nsGlobalModalWindow::SetNewDocument(nsIDocument *aDocument,
+                                    nsISupports *aState,
+                                    bool aForceReuseInnerWindow)
+{
+  MOZ_ASSERT(aDocument);
+
+  // If we're loading a new document into a modal dialog, clear the
+  // return value that was set, if any, by the current document.
+  mReturnValue = nullptr;
+
+  return nsGlobalWindow::SetNewDocument(aDocument, aState,
+                                        aForceReuseInnerWindow);
+}
+
 void
 nsGlobalWindow::SetHasAudioAvailableEventListeners()
 {
