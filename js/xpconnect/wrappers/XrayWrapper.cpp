@@ -1947,7 +1947,7 @@ do_QueryInterfaceNative(JSContext* cx, HandleObject wrapper)
             nativeSupports = wn->Native();
         }
     } else {
-        nsIXPConnect *xpc = nsXPConnect::GetXPConnect();
+        nsIXPConnect *xpc = nsXPConnect::XPConnect();
         nativeSupports = xpc->GetNativeOfWrapper(cx, wrapper);
     }
 
