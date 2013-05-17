@@ -138,7 +138,6 @@ _BROWSER_FILES = \
                  browser_bug596687.js \
                  browser_bug597218.js \
                  browser_bug598923.js \
-                 browser_bug599325.js \
                  browser_bug609700.js \
                  browser_bug623155.js \
                  browser_bug623893.js \
@@ -167,7 +166,6 @@ _BROWSER_FILES = \
                  browser_bug832435.js \
                  browser_bug839103.js \
                  browser_canonizeURL.js \
-                 browser_customize.js \
                  browser_findbarClose.js \
                  browser_homeDrop.js \
                  browser_keywordBookmarklets.js \

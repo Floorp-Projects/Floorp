@@ -79,7 +79,7 @@ let gDefaultPlacements = new Map([
     "stop-button",
     "search-container",
     "webrtc-status-button",
-    "bookmarks-menu-button-container",
+    "bookmarks-menu-button",
     "downloads-button",
     "home-button",
     "social-toolbar-button",
@@ -493,7 +493,7 @@ let CustomizableUIInternal = {
   handleEvent: function(aEvent) {
     switch (aEvent.type) {
       case "unload": {
-        let window = aEvent.target;
+        let window = aEvent.currentTarget;
         window.removeEventListener("unload", this);
         this.unregisterBuildWindow(window);
         break;
