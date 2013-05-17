@@ -1232,16 +1232,9 @@ nsGlobalWindow::~nsGlobalWindow()
 
   mDoc = nullptr;
 
-  // Outer windows are always supposed to call CleanUp before letting themselves
-  // be destroyed. And while CleanUp generally seems to be intended to clean up
-  // outers, we've historically called it for both. Changing this would probably
-  // involve auditing all of the references that inners and outers can have, and
-  // separating the handling into CleanUp() and FreeInnerObjects.
-  if (IsInnerWindow()) {
-    CleanUp(true);
-  } else {
-    MOZ_ASSERT(mCleanedUp);
-  }
+  NS_ASSERTION(!mArguments, "mArguments wasn't cleaned up properly!");
+
+  CleanUp(true);
 
   nsCOMPtr<nsIDeviceSensors> ac = do_GetService(NS_DEVICE_SENSORS_CONTRACTID);
   if (ac)
