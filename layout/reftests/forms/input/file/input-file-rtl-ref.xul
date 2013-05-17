@@ -3,14 +3,14 @@
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml">
   <vbox>
+    <html:style>
+      vbox {
+       margin-right: 8px;
+      }
+    </html:style>
     <html:div dir='rtl'>
       <html:div class='file' dir='rtl'>
         <html:button>Browse&#8230;</html:button><label value="No file selected."/>
-      </html:div>
-    </html:div>
-    <html:div dir='rtl'>
-      <html:div class='file' dir='rtl'>
-        <html:button>Browse&#8230;</html:button><label value="No files selected."/>
       </html:div>
     </html:div>
   </vbox>

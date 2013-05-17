@@ -411,20 +411,22 @@ input[type="image"]:-moz-focusring {
 
 /* file selector */
 input[type="file"] {
-  -moz-appearance: none;
+  display: inline-block;
   white-space: nowrap;
-  cursor: default;
+  overflow:hidden;
+
+  /* Revert rules which apply on all inputs. */
+  -moz-appearance: none;
   -moz-binding: none;
+  cursor: default;
 
   border: none;
   background-color: transparent;
-
-  /* TODO: check why. */
-  padding: 0 !important;
+  padding: 0;
 }
 
 input[type="file"] > xul|label {
-  width: 12em;
+  min-width: 12em;
   -moz-padding-start: 5px;
 
   color: inherit;
