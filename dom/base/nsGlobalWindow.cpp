@@ -1395,6 +1395,7 @@ nsGlobalWindow::CleanUp(bool aIgnoreModalDialog)
 
   mInnerWindowHolder = nullptr;
   mArguments = nullptr;
+  mArgumentsLast = nullptr;
   mArgumentsOrigin = nullptr;
 
   CleanupCachedXBLHandlers(this);
@@ -1623,6 +1624,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindow)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mControllers)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mArguments)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mArgumentsLast)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPerformance)
 
@@ -1669,6 +1671,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mControllers)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mArguments)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mArgumentsLast)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPerformance)
 
@@ -2735,6 +2738,7 @@ nsGlobalWindow::DetachFromDocShell()
     // We got no new document after someone called
     // SetArguments(), drop our reference to the arguments.
     mArguments = nullptr;
+    mArgumentsLast = nullptr;
     mArgumentsOrigin = nullptr;
   }
 
@@ -3151,7 +3155,9 @@ nsGlobalWindow::SetArguments(nsIArray *aArguments, nsIPrincipal *aOrigin)
 
   nsGlobalWindow *currentInner = GetCurrentInnerWindowInternal();
 
-  if (mIsModalContentWindow && currentInner) {
+  if (!mIsModalContentWindow) {
+    mArgumentsLast = aArguments;
+  } else if (currentInner) {
     // SetArguments() is being called on a modal content window that
     // already has an inner window. This can happen when loading
     // javascript: URIs as modal content dialogs. In this case, we'll
