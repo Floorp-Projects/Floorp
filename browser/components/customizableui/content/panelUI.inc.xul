@@ -44,8 +44,10 @@
       <vbox id="PanelUI-mainView-spring" flex="1"/>
 
       <footer class="PanelUI-footer" align="center">
+        <!-- The parentNode is used so that the footer is presented as the anchor
+             instead of just the button being the anchor. -->
         <toolbarbutton id="PanelUI-help-btn" label="&helpMenu.label;"
-                       command="openHelpLink('firefox-help');"/>
+                       onclick="PanelUI.showHelpView(this.parentNode);"/>
         <spacer flex="1"/>
         <toolbarbutton id="PanelUI-customize-btn" label="&appMenuCustomize.label;"
                        command="cmd_CustomizeToolbars"/>
@@ -59,6 +61,11 @@
              id="PanelUI-historyMore"
              class="text-link"
              onclick="PlacesCommandHook.showPlacesOrganizer('History'); PanelUI.hide();"/>
+    </panelsubview>
+
+    <panelsubview id="PanelUI-help" flex="1">
+      <label value="&helpMenu.label;"/>
+      <vbox id="PanelUI-helpItems"/>
     </panelsubview>
   </panelmultiview>
 </panel>

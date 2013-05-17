@@ -20,6 +20,7 @@ const PanelUI = {
       contents: "PanelUI-contents",
       mainView: "PanelUI-mainView",
       multiView: "PanelUI-multiView",
+      helpView: "PanelUI-help",
       menuButton: "PanelUI-menu-button",
       panel: "PanelUI-popup",
       zoomResetButton: "PanelUI-zoomReset-btn"
@@ -46,12 +47,17 @@ const PanelUI = {
     Services.obs.addObserver(this, "browser-fullZoom:zoomReset", false);
 
     this._updateZoomResetButton();
+
+    this.helpView.addEventListener("ViewShowing", this._onHelpViewShow, false);
+    this.helpView.addEventListener("ViewHiding", this._onHelpViewHide, false);
   },
 
   uninit: function() {
     for (let event of this.kEvents) {
       this.panel.removeEventListener(event, this);
     }
+    this.helpView.removeEventListener("ViewShowing", this._onHelpViewShow);
+    this.helpView.removeEventListener("ViewHiding", this._onHelpViewHide);
     Services.obs.removeObserver(this, "browser-fullZoom:zoomChange");
     Services.obs.removeObserver(this, "browser-fullZoom:zoomReset");
   },
@@ -138,6 +144,14 @@ const PanelUI = {
   },
 
   /**
+   * Switch the panel to the help view if it's not already
+   * in that view.
+   */
+  showHelpView: function(aAnchor) {
+    this.multiView.showSubView("PanelUI-help", aAnchor);
+  },
+
+  /**
    * Shows a subview in the panel with a given ID.
    *
    * @param aViewId the ID of the subview to show.
@@ -192,5 +206,50 @@ const PanelUI = {
   _updateZoomResetButton: function() {
     this.zoomResetButton.setAttribute("label", gNavigatorBundle
       .getFormattedString("zoomReset.label", [Math.floor(ZoomManager.zoom * 100)]));
+  },
+
+  // Button onclick handler which hides the whole PanelUI
+  _onHelpViewClick: function(aEvent) {
+    if (aEvent.button == 0 && !aEvent.target.hasAttribute("disabled")) {
+      PanelUI.hide();
+    }
+  },
+
+  _onHelpViewShow: function(aEvent) {
+    // Call global menu setup function
+    buildHelpMenu();
+
+    let helpMenu = document.getElementById("menu_HelpPopup");
+    let items = this.getElementsByTagName("vbox")[0];
+    let attrs = ["oncommand", "onclick", "label", "key", "disabled"];
+    let NSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
+    // Remove all buttons from the view
+    while (items.firstChild) {
+      items.removeChild(items.firstChild);
+    }
+
+    // Add the current set of menuitems of the Help menu to this view
+    let menuItems = Array.prototype.slice.call(helpMenu.getElementsByTagName("menuitem"));
+    let fragment = document.createDocumentFragment();
+    for (let node of menuItems) {
+      if (node.hidden)
+        continue;
+      let button = document.createElementNS(NSXUL, "toolbarbutton");
+      // Copy specific attributes from a menuitem of the Help menu
+      for (let attrName of attrs) {
+        if (!node.hasAttribute(attrName))
+          continue;
+        button.setAttribute(attrName, node.getAttribute(attrName));
+      }
+      fragment.appendChild(button);
+    }
+    items.appendChild(fragment);
+
+    this.addEventListener("click", PanelUI._onHelpViewClick, false);
+  },
+
+  _onHelpViewHide: function(aEvent) {
+    this.removeEventListener("click", PanelUI._onHelpViewClick);
   }
 };
