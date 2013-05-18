@@ -58,6 +58,7 @@ webidl_files = \
   DocumentFragment.webidl \
   DocumentType.webidl \
   DOMCursor.webidl \
+  DOMError.webidl \
   DOMImplementation.webidl \
   DOMParser.webidl \
   DOMRequest.webidl \

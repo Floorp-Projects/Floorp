@@ -228,7 +228,6 @@ DOMCI_CLASS(CameraManager)
 DOMCI_CLASS(CameraControl)
 DOMCI_CLASS(CameraCapabilities)
 
-DOMCI_CLASS(DOMError)
 DOMCI_CLASS(OpenWindowEventDetail)
 DOMCI_CLASS(AsyncScrollEventDetail)
 

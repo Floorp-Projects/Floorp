@@ -212,7 +212,7 @@ nsDOMFileReader::GetResult(JSContext* aCx, JS::Value* aResult)
 }
 
 NS_IMETHODIMP
-nsDOMFileReader::GetError(nsIDOMDOMError** aError)
+nsDOMFileReader::GetError(nsISupports** aError)
 {
   NS_IF_ADDREF(*aError = GetError());
   return NS_OK;

@@ -108,7 +108,7 @@ DOMRequest::GetResult(JS::Value* aResult)
 }
 
 NS_IMETHODIMP
-DOMRequest::GetError(nsIDOMDOMError** aError)
+DOMRequest::GetError(nsISupports** aError)
 {
   NS_IF_ADDREF(*aError = GetError());
   return NS_OK;
@@ -138,7 +138,7 @@ DOMRequest::FireError(const nsAString& aError)
   NS_ASSERTION(mResult == JSVAL_VOID, "mResult shouldn't have been set!");
 
   mDone = true;
-  mError = DOMError::CreateWithName(aError);
+  mError = new DOMError(GetOwner(), aError);
 
   FireEvent(NS_LITERAL_STRING("error"), true, true);
 }
@@ -151,7 +151,7 @@ DOMRequest::FireError(nsresult aError)
   NS_ASSERTION(mResult == JSVAL_VOID, "mResult shouldn't have been set!");
 
   mDone = true;
-  mError = DOMError::CreateForNSResult(aError);
+  mError = new DOMError(GetOwner(), aError);
 
   FireEvent(NS_LITERAL_STRING("error"), true, true);
 }
