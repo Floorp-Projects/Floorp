@@ -386,6 +386,7 @@ load 570160.html
 load 570289-1.html
 load 571618-1.svg
 asserts(1) load 571975-1.html # bug 574889
+asserts(7) load 571995.xhtml # 761848
 load 574958.xhtml
 asserts(0-4) load 578977.html # bug 757305
 load 580504-1.xhtml
