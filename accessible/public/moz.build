@@ -11,6 +11,7 @@ XPIDL_SOURCES += [
     'nsIAccessible.idl',
     'nsIAccessibleApplication.idl',
     'nsIAccessibleCaretMoveEvent.idl',
+    'nsIAccessibleCursorable.idl',
     'nsIAccessibleDocument.idl',
     'nsIAccessibleEditableText.idl',
     'nsIAccessibleEvent.idl',
