@@ -1704,33 +1704,32 @@ template<typename T>
 class MOZ_STACK_CLASS SequenceRooter : private JS::CustomAutoRooter
 {
 public:
-  explicit SequenceRooter(JSContext *cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-    : JS::CustomAutoRooter(cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT),
-      mSequenceType(eNone)
+  SequenceRooter(JSContext *aCx, FallibleTArray<T>* aSequence
+                 MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    : JS::CustomAutoRooter(aCx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT),
+      mFallibleArray(aSequence),
+      mSequenceType(eFallibleArray)
   {
   }
 
-  void SetSequence(FallibleTArray<T>* aSequence)
+  SequenceRooter(JSContext *aCx, InfallibleTArray<T>* aSequence
+                 MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    : JS::CustomAutoRooter(aCx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT),
+      mInfallibleArray(aSequence),
+      mSequenceType(eInfallibleArray)
   {
-    mFallibleArray = aSequence;
-    mSequenceType = eFallibleArray;
   }
 
-  void SetSequence(InfallibleTArray<T>* aSequence)
+  SequenceRooter(JSContext *aCx, Nullable<nsTArray<T> >* aSequence
+                 MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    : JS::CustomAutoRooter(aCx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT),
+      mNullableArray(aSequence),
+      mSequenceType(eNullableArray)
   {
-    mInfallibleArray = aSequence;
-    mSequenceType = eInfallibleArray;
-  }
-
-  void SetSequence(Nullable<nsTArray<T> >* aSequence)
-  {
-    mNullableArray = aSequence;
-    mSequenceType = eNullableArray;
   }
 
  private:
   enum SequenceType {
-    eNone,
     eInfallibleArray,
     eFallibleArray,
     eNullableArray
@@ -1742,7 +1741,8 @@ public:
       DoTraceSequence(trc, *mFallibleArray);
     } else if (mSequenceType == eInfallibleArray) {
       DoTraceSequence(trc, *mInfallibleArray);
-    } else if (mSequenceType == eNullableArray) {
+    } else {
+      MOZ_ASSERT(mSequenceType == eNullableArray);
       if (!mNullableArray->IsNull()) {
         DoTraceSequence(trc, mNullableArray->Value());
       }
@@ -1762,29 +1762,26 @@ template<typename T>
 class MOZ_STACK_CLASS DictionaryRooter : JS::CustomAutoRooter
 {
 public:
-  explicit DictionaryRooter(JSContext *cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-    : JS::CustomAutoRooter(cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT),
-      mDictionaryType(eNone)
+  DictionaryRooter(JSContext *aCx, T* aDictionary
+                   MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    : JS::CustomAutoRooter(aCx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT),
+      mDictionary(aDictionary),
+      mDictionaryType(eDictionary)
   {
   }
 
-  void SetDictionary(T* aDictionary)
+  DictionaryRooter(JSContext *aCx, Nullable<T>* aDictionary
+                   MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    : JS::CustomAutoRooter(aCx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT),
+      mNullableDictionary(aDictionary),
+      mDictionaryType(eNullableDictionary)
   {
-    mDictionary = aDictionary;
-    mDictionaryType = eDictionary;
-  }
-
-  void SetDictionary(Nullable<T>* aDictionary)
-  {
-    mNullableDictionary = aDictionary;
-    mDictionaryType = eNullableDictionary;
   }
 
 private:
   enum DictionaryType {
     eDictionary,
-    eNullableDictionary,
-    eNone
+    eNullableDictionary
   };
 
   virtual void trace(JSTracer *trc) MOZ_OVERRIDE {
