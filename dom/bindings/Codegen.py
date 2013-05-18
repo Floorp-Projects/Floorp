@@ -2555,7 +2555,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
     def onFailureBadType(failureCode, typeName):
         return CGWrapper(CGGeneric(
                 failureCode or
-                ('ThrowErrorMessage(cx, MSG_DOES_NOT_IMPLEMENT_INTERFACE, "%s");'
+                ('ThrowErrorMessage(cx, MSG_DOES_NOT_IMPLEMENT_INTERFACE, "%s");\n'
                  '%s' % (typeName, exceptionCode))), post="\n")
     def onFailureNotCallable(failureCode):
         return CGWrapper(CGGeneric(
@@ -2742,7 +2742,7 @@ for (uint32_t i = 0; i < length; ++i) {
 
         templateBody += "\n}"
         templateBody = wrapObjectTemplate(templateBody, type,
-                                          "${declName}.SetNull()")
+                                          "${declName}.SetNull()", notSequence)
         # Sequence arguments that might contain traceable things need
         # to get traced
         if not isMember and typeNeedsCx(elementType, descriptorProvider):
@@ -3089,7 +3089,8 @@ for (uint32_t i = 0; i < length; ++i) {
 
         templateBody = wrapObjectTemplate(templateBody, type,
                                           "${declName} = nullptr",
-                                          failureCode)
+                                          onFailureBadType(failureCode,
+                                                           descriptor.interface.identifier.name).define())
 
         declType = CGGeneric(declType)
         if holderType is not None:
@@ -3448,7 +3449,7 @@ for (uint32_t i = 0; i < length; ++i) {
             (dateVal, CGIndenter(CGGeneric(notDate)).define()))
 
         conversion = wrapObjectTemplate(conversion, type,
-                                        "${declName}.SetNull()")
+                                        "${declName}.SetNull()", notDate)
         return JSToNativeConversionInfo(conversion,
                                         declType=declType,
                                         dealWithOptional=isOptional)
