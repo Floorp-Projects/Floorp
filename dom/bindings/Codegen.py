@@ -2747,9 +2747,7 @@ for (uint32_t i = 0; i < length; ++i) {
         # to get traced
         if not isMember and typeNeedsCx(elementType, descriptorProvider):
             holderType = CGTemplatedType("SequenceRooter", elementInfo.declType)
-            templateBody = (("${holderName}.SetSequence(&%s);\n" % arrayRef) +
-                            templateBody)
-            holderArgs = "cx"
+            holderArgs = "cx, &%s" % arrayRef
         else:
             holderType = None
             holderArgs = None
@@ -2771,7 +2769,7 @@ for (uint32_t i = 0; i < length; ++i) {
                (isinstance(defaultValue, IDLNullValue) and nullable))
 
         unionArgumentObj = "${holderName}"
-        if isOptional or nullable:
+        if nullable:
             unionArgumentObj += ".ref()"
 
         memberTypes = type.flatMemberTypes
@@ -2920,24 +2918,28 @@ for (uint32_t i = 0; i < length; ++i) {
 
         declType = CGGeneric(typeName)
         holderType = CGGeneric(argumentTypeName)
-        if isOptional:
-            mutableDecl = "${declName}.Value()"
-            declType = CGTemplatedType("Optional", declType)
+
+        # If we're isOptional and not nullable the normal optional handling will
+        # handle lazy construction of our holder.  If we're nullable we do it
+        # all by hand because we do not want our holder constructed if we're
+        # null.
+        declLoc = "${declName}"
+        constructDecl = None
+        if nullable:
+            if isOptional:
+                holderArgs = "${declName}.Value().SetValue()"
+                declType = CGTemplatedType("Optional", declType)
+                constructDecl = CGGeneric("${declName}.Construct();")
+                declLoc = "${declName}.Value()"
+            else:
+                holderArgs = "${declName}.SetValue()"
             holderType = CGTemplatedType("Maybe", holderType)
-            constructDecl = CGGeneric("${declName}.Construct();")
-            if nullable:
-                constructHolder = CGGeneric("${holderName}.construct(%s.SetValue());" % mutableDecl)
-            else:
-                constructHolder = CGGeneric("${holderName}.construct(${declName}.Value());")
+            constructHolder = CGGeneric("${holderName}.construct(%s);" % holderArgs)
+            # Don't need to pass those args when the holder is being constructed
+            holderArgs = None
         else:
-            mutableDecl = "${declName}"
-            constructDecl = None
-            if nullable:
-                holderType = CGTemplatedType("Maybe", holderType)
-                constructHolder = CGGeneric("${holderName}.construct(%s.SetValue());" % mutableDecl)
-            else:
-                constructHolder = CGWrapper(holderType, post=" ${holderName}(${declName});")
-                holderType = None
+            holderArgs = "${declName}"
+            constructHolder = None
 
         templateBody = CGList([constructHolder, templateBody], "\n")
         if nullable:
@@ -2946,13 +2948,15 @@ for (uint32_t i = 0; i < length; ++i) {
                 valueMissing = "!(${haveValue}) || "
             else:
                 valueMissing = ""
-            templateBody = handleNull(templateBody, mutableDecl,
+            templateBody = handleNull(templateBody, declLoc,
                                       extraConditionForNull=valueMissing)
         templateBody = CGList([constructDecl, templateBody], "\n")
 
         return JSToNativeConversionInfo(templateBody.define(),
                                         declType=declType,
-                                        holderType=holderType)
+                                        holderType=holderType,
+                                        holderArgs=holderArgs,
+                                        dealWithOptional=isOptional and not nullable)
 
     if type.isGeckoInterface():
         assert not isEnforceRange and not isClamp
@@ -3402,9 +3406,7 @@ for (uint32_t i = 0; i < length; ++i) {
         # traced
         if not isMember and typeNeedsCx(type, descriptorProvider):
             holderType = CGTemplatedType("DictionaryRooter", declType);
-            template = ("${holderName}.SetDictionary(&${declName});\n" +
-                        template)
-            holderArgs = "cx"
+            holderArgs = "cx, &${declName}"
         else:
             holderType = None
             holderArgs = None
@@ -3538,48 +3540,46 @@ def instantiateJSToNativeConversion(info, replacements, argcAndIndex=None):
         raise TypeError("Need to predeclare optional things, so they will be "
                         "outside the check for big enough arg count!");
 
-    if info.holderArgs is not None:
-        holderArgs = CGGeneric(string.Template(info.holderArgs).substitute(replacements))
-    else:
-        holderArgs = None
-
-    if info.declArgs is not None:
-        declArgs = CGGeneric(string.Template(info.declArgs).substitute(replacements))
-    else:
-        declArgs = None
+    # We can't precompute our holder constructor arguments, since
+    # those might depend on ${declName}, which we change below.  Just
+    # compute arguments at the point when we need them as we go.
+    def getArgsCGThing(args):
+        return CGGeneric(string.Template(args).substitute(replacements))
 
     result = CGList([], "\n")
     # Make a copy of "replacements" since we may be about to start modifying it
     replacements = dict(replacements)
-    originalHolderName = replacements["holderName"]
-    if holderType is not None:
-        if dealWithOptional:
-            replacements["holderName"] = "%s.ref()" % originalHolderName
-            holderType = CGTemplatedType("Maybe", holderType)
-            holderCtorArgs = None
-        elif holderArgs is not None:
-            holderCtorArgs = CGWrapper(holderArgs, pre="(", post=")")
-        else:
-            holderCtorArgs = None
-        result.append(
-            CGList([holderType, CGGeneric(" "),
-                    CGGeneric(originalHolderName),
-                    holderCtorArgs, CGGeneric(";")]))
-
     originalDeclName = replacements["declName"]
     if declType is not None:
         if dealWithOptional:
             replacements["declName"] = "%s.Value()" % originalDeclName
             declType = CGTemplatedType("Optional", declType)
             declCtorArgs = None
-        elif declArgs is not None:
-            declCtorArgs = CGWrapper(declArgs, pre="(", post=")")
+        elif info.declArgs is not None:
+            declCtorArgs = CGWrapper(getArgsCGThing(info.declArgs),
+                                     pre="(", post=")")
         else:
             declCtorArgs = None
         result.append(
             CGList([declType, CGGeneric(" "),
                     CGGeneric(originalDeclName),
                     declCtorArgs, CGGeneric(";")]))
+
+    originalHolderName = replacements["holderName"]
+    if holderType is not None:
+        if dealWithOptional:
+            replacements["holderName"] = "%s.ref()" % originalHolderName
+            holderType = CGTemplatedType("Maybe", holderType)
+            holderCtorArgs = None
+        elif info.holderArgs is not None:
+            holderCtorArgs = CGWrapper(getArgsCGThing(info.holderArgs),
+                                       pre="(", post=")")
+        else:
+            holderCtorArgs = None
+        result.append(
+            CGList([holderType, CGGeneric(" "),
+                    CGGeneric(originalHolderName),
+                    holderCtorArgs, CGGeneric(";")]))
 
     conversion = CGGeneric(
             string.Template(templateBody).substitute(replacements)
@@ -3590,12 +3590,14 @@ def instantiateJSToNativeConversion(info, replacements, argcAndIndex=None):
             declConstruct = CGIndenter(
                 CGGeneric("%s.Construct(%s);" %
                           (originalDeclName,
-                           declArgs.define() if declArgs else "")))
+                           getArgsCGThing(info.declArgs).define() if
+                           info.declArgs else "")))
             if holderType is not None:
                 holderConstruct = CGIndenter(
                     CGGeneric("%s.construct(%s);" %
                               (originalHolderName,
-                               holderArgs.define() if holderArgs else "")))
+                               getArgsCGThing(info.holderArgs).define() if
+                               info.holderArgs else "")))
             else:
                 holderConstruct = None
         else:
@@ -3711,8 +3713,7 @@ class CGArgumentConverter(CGThing):
         replacer["seqType"] = CGTemplatedType("AutoSequence",
                                               typeConversion.declType).define()
         if typeNeedsCx(self.argument.type, self.descriptorProvider):
-            rooterDecl = ("SequenceRooter<%s> ${holderName}(cx);\n"
-                          "${holderName}.SetSequence(&${declName});\n" %
+            rooterDecl = ("SequenceRooter<%s> ${holderName}(cx, &${declName});\n" %
                           typeConversion.declType.define())
         else:
             rooterDecl = ""
@@ -4172,8 +4173,7 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
                                                      isMember="Sequence")
         # While we have our inner type, set up our rooter, if needed
         if not isMember and typeNeedsCx(returnType, descriptorProvider):
-            rooter = CGGeneric("SequenceRooter<%s > resultRooter(cx);\n"
-                               "resultRooter.SetSequence(&result);" %
+            rooter = CGGeneric("SequenceRooter<%s > resultRooter(cx, &result);" %
                                result.define())
         else:
             rooter = None
@@ -4188,8 +4188,8 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
                     "Initializer")
         result = CGGeneric(dictName)
         if not isMember and typeNeedsCx(returnType, descriptorProvider):
-            rooter = CGGeneric("DictionaryRooter<%s> resultRooter(cx);\n"
-                               "resultRooter.SetDictionary(&result);" % dictName)
+            rooter = CGGeneric("DictionaryRooter<%s> resultRooter(cx, &result);\n" %
+                               dictName)
         else:
             rooter = None
         if nullable:
