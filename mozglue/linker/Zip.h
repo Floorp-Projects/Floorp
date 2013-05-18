@@ -26,7 +26,7 @@ class ZipCollection;
  * libraries from Zip archives, there is no interest in making this code
  * safe, since the libraries could contain malicious code anyways.
  */
-class Zip: public mozilla::RefCounted<Zip>
+class Zip: public mozilla::AtomicRefCounted<Zip>
 {
 public:
   /**
