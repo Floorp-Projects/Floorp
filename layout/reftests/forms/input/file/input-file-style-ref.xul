@@ -2,15 +2,24 @@
 <?xml-stylesheet href="style.css" type="text/css"?>
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml">
-  <html:style>
-    window {
-      background-color: blue;
-    }
-  </html:style>
+  <hbox>
+    <html:style>
+      .file {
+        background-color: blue;
+        border: 1px red solid;
+        width: 400px;
+        padding: 2px;
+        margin: 5px;
+        display: inline-block;
+      }
 
-  <vbox>
+      .file > label {
+        /* color only applies to the label */
+        color: white;
+      }
+    </html:style>
     <html:div class='file'>
       <html:button>Browse&#8230;</html:button><label value="No file selected."/>
     </html:div>
-  </vbox>
+  </hbox>
 </window>

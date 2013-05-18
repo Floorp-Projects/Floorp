@@ -611,6 +611,17 @@ HOST_OUTOPTION = -o # eol
 endif
 ################################################################################
 
+# Regenerate the build backend if it is out of date. We only check this once
+# per traversal, hence the ifdef and the export. This rule needs to come before
+# other rules for the default target or else it may not run in time.
+ifndef MOZBUILD_BACKEND_CHECKED
+default::
+	$(MAKE) -C $(DEPTH) backend.RecursiveMakeBackend.built
+
+export MOZBUILD_BACKEND_CHECKED=1
+endif
+
+
 # SUBMAKEFILES: List of Makefiles for next level down.
 #   This is used to update or create the Makefiles before invoking them.
 SUBMAKEFILES += $(addsuffix /Makefile, $(DIRS) $(TOOL_DIRS) $(PARALLEL_DIRS))
@@ -1190,26 +1201,6 @@ GARBAGE_DIRS += $(_JAVA_DIR)
 # Update Files Managed by Build Backend
 ###############################################################################
 
-ifdef MOZBUILD_DERIVED
-
-# If this Makefile is derived from moz.build files, substitution for all .in
-# files is handled by SUBSTITUTE_FILES. This includes Makefile.in.
-ifneq ($(SUBSTITUTE_FILES),,)
-$(SUBSTITUTE_FILES): % : $(srcdir)/%.in $(DEPTH)/config/autoconf.mk
-	@$(PYTHON) $(DEPTH)/config.status -n --file=$@
-	@$(TOUCH) $@
-endif
-
-# Detect when the backend.mk needs rebuilt. This will cause a full scan and
-# rebuild. While relatively expensive, it should only occur once per recursion.
-ifneq ($(BACKEND_INPUT_FILES),,)
-backend.mk: $(BACKEND_INPUT_FILES)
-	@$(PYTHON) $(DEPTH)/config.status -n
-	@$(TOUCH) $@
-endif
-
-endif # MOZBUILD_DERIVED
-
 ifndef NO_MAKEFILE_RULE
 Makefile: Makefile.in
 	@$(PYTHON) $(DEPTH)/config.status -n --file=Makefile
@@ -1727,6 +1718,11 @@ $(foreach category,$(PP_TARGETS),						\
                   $($(category)_FLAGS)))					\
    )										\
  )
+
+# Pull in non-recursive targets if this is a partial tree build.
+ifndef TOPLEVEL_BUILD
+include $(topsrcdir)/config/makefiles/nonrecursive.mk
+endif
 
 ################################################################################
 # Special gmake rules.

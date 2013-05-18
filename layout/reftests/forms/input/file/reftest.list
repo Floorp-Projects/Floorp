@@ -1,4 +1,7 @@
-fails-if(B2G) fuzzy-if(OSX==10.6,8,128) == input-file-simple.html input-file-simple-ref.xul # b2g failure is bug 855352
-fails-if(B2G) fuzzy-if(OSX==10.6,8,114) == input-file-rtl.html input-file-rtl-ref.xul # b2g failure is bug 855352
-fails-if(B2G) fuzzy-if(OSX==10.6,8,128) == input-file-size.html input-file-simple-ref.xul # b2g failure is bug 855352
-fails-if(B2G) fuzzy-if(OSX==10.6,8,128) == input-file-background.html input-file-background-ref.xul # b2g failure is bug 855352
+# B2G failures: bug 855352.
+fails-if(B2G) fuzzy-if(OSX==10.6,8,128) == input-file-simple.html input-file-simple-ref.xul
+fails-if(B2G) fuzzy-if(OSX==10.6,8,64) == input-file-rtl.html input-file-rtl-ref.xul
+fails-if(B2G) fuzzy-if(OSX==10.6,8,128) == input-file-size.html input-file-simple-ref.xul
+fails-if(B2G) fuzzy-if(OSX==10.6,8,64) == input-file-background.html input-file-background-ref.xul
+fails-if(B2G) == input-file-style.html input-file-style-ref.xul
+!= input-file-width-clip.html input-file-width-clip-ref.html

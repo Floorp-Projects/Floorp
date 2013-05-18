@@ -1722,7 +1722,7 @@ public:
     mSequenceType = eInfallibleArray;
   }
 
-  void SetSequence(Nullable<nsTArray<T>>* aSequence)
+  void SetSequence(Nullable<nsTArray<T> >* aSequence)
   {
     mNullableArray = aSequence;
     mSequenceType = eNullableArray;

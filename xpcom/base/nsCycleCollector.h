@@ -15,9 +15,11 @@ class nsCycleCollectorResults
 {
 public:
     nsCycleCollectorResults() :
-        mForcedGC(false), mVisitedRefCounted(0), mVisitedGCed(0),
+        mForcedGC(false), mMergedZones(false),
+        mVisitedRefCounted(0), mVisitedGCed(0),
         mFreedRefCounted(0), mFreedGCed(0) {}
     bool mForcedGC;
+    bool mMergedZones;
     uint32_t mVisitedRefCounted;
     uint32_t mVisitedGCed;
     uint32_t mFreedRefCounted;
@@ -41,7 +43,7 @@ void nsCycleCollector_setForgetSkippableCallback(CC_ForgetSkippableCallback aCB)
 
 void nsCycleCollector_forgetSkippable(bool aRemoveChildlessNodes = false);
 
-void nsCycleCollector_collect(bool aMergeCompartments,
+void nsCycleCollector_collect(bool aManuallyTriggered,
                               nsCycleCollectorResults *aResults,
                               nsICycleCollectorListener *aListener);
 uint32_t nsCycleCollector_suspectedCount();
