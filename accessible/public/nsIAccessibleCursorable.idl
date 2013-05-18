@@ -1,0 +1,26 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIAccessiblePivot;
+
+/**
+ * An interface implemented by an accessible object that has an associated
+ * virtual cursor. Typically, a top-level application or content document.
+ * A virtual cursor is an implementation of nsIAccessiblePivot that provides an
+ * exclusive spot in the cursorable's subtree, this could be used to create a
+ * pseudo-focus or caret browsing experience that is centered around the
+ * accessibility API.
+ */
+[scriptable, uuid(5452dea5-d235-496f-8757-3ca016ff49ff)]
+interface nsIAccessibleCursorable : nsISupports
+{
+  /**
+   * The virtual cursor pivot this object manages.
+   */
+  readonly attribute nsIAccessiblePivot virtualCursor;
+};
