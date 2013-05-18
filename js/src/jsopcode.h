@@ -67,10 +67,9 @@ typedef enum JSOp {
 #define JOF_MODEMASK      (7U<<5) /* mask for above addressing modes */
 #define JOF_SET           (1U<<8) /* set (i.e., assignment) operation */
 /* (1U<<9) is unused*/
-#define JOF_DEC          (1U<<10) /* decrement (--, not ++) opcode */
-#define JOF_INC          (2U<<10) /* increment (++, not --) opcode */
-#define JOF_INCDEC       (3U<<10) /* increment or decrement opcode */
-#define JOF_POST         (1U<<12) /* postorder increment or decrement */
+/* (1U<<10) is unused*/
+/* (1U<<11) is unused*/
+/* (1U<<12) is unused*/
 /* (1U<<13) is unused*/
 #define JOF_DETECTING    (1U<<14) /* object detection for warning-quelling */
 /* (1U<<15) is unused*/
@@ -93,9 +92,7 @@ typedef enum JSOp {
 /* (1U<<24) is unused */
 #define JOF_GNAME        (1U<<25) /* predicted global name */
 #define JOF_TYPESET      (1U<<26) /* has an entry in a script's type sets */
-#define JOF_DECOMPOSE    (1U<<27) /* followed by an equivalent decomposed
-                                   * version of the opcode */
-#define JOF_ARITH        (1U<<28) /* unary or binary arithmetic opcode */
+#define JOF_ARITH        (1U<<27) /* unary or binary arithmetic opcode */
 
 /* Shorthands for type from format and type from opcode. */
 #define JOF_TYPE(fmt)   ((fmt) & JOF_TYPEMASK)
@@ -550,7 +547,7 @@ class PCCounts
             return true;
         int format = js_CodeSpec[op].format;
         return !!(format & (JOF_NAME | JOF_GNAME | JOF_ELEM | JOF_PROP))
-            && !(format & (JOF_SET | JOF_INCDEC));
+            && !(format & JOF_SET);
     }
 
     enum ElementCounts {
@@ -593,7 +590,7 @@ class PCCounts
     };
 
     static bool arithOp(JSOp op) {
-        return !!(js_CodeSpec[op].format & (JOF_INCDEC | JOF_ARITH));
+        return !!(js_CodeSpec[op].format & JOF_ARITH);
     }
 
     static size_t numCounts(JSOp op)
