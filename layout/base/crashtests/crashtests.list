@@ -401,7 +401,7 @@ load 788360.html
 load 793848.html
 load 795646.html
 load 802902.html
-load 813372-1.html
+skip-if(winWidget) load 813372-1.html # bug 873083
 asserts-if(gtk2Widget,0-1) load 822865.html # bug 540078
 load 833604-1.html
 load 835056.html
