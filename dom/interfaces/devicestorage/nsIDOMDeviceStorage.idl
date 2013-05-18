@@ -11,11 +11,6 @@ interface nsIDOMDeviceStorageChangeEvent;
 interface nsIDOMEventListener;
 interface nsIFile;
 
-dictionary DeviceStorageEnumerationParameters
-{
-  jsval since;
-};
-
 [scriptable, uuid(be690a9b-f0b4-4cde-a505-0b442abe2109), builtinclass]
 interface nsIDOMDeviceStorage : nsIDOMEventTarget
 {

@@ -14,6 +14,9 @@
 #include "DictionaryHelpers.h"
 #include "nsJSUtils.h"
 #include "nsContentUtils.h"
+#include "mozilla/dom/MobileMessageManagerBinding.h"
+#include "mozilla/dom/MozMmsMessageBinding.h"
+#include "mozilla/dom/BindingUtils.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::dom::mobilemessage;
@@ -174,75 +177,39 @@ GetSendMmsMessageRequestFromParams(const JS::Value& aParam,
   }
 
   mozilla::AutoJSContext cx;
-  mozilla::idl::MmsParameters params;
-  nsresult rv = params.Init(cx, &aParam);
-  NS_ENSURE_SUCCESS(rv, false);
-
-  uint32_t len;
+  JS::Rooted<JS::Value> param(cx, aParam);
+  RootedDictionary<MmsParameters> params(cx);
+  if (!params.Init(cx, param)) {
+    return false;
+  }
 
   // SendMobileMessageRequest.receivers
-  if (!params.receivers.isObject()) {
+  if (!params.mReceivers.WasPassed()) {
     return false;
   }
-  JS::Rooted<JSObject*> receiversObj(cx, &params.receivers.toObject());
-  if (!JS_GetArrayLength(cx, receiversObj, &len)) {
-    return false;
-  }
-
-  request.receivers().SetCapacity(len);
-
-  for (uint32_t i = 0; i < len; i++) {
-    JS::Rooted<JS::Value> val(cx);
-    if (!JS_GetElement(cx, receiversObj, i, val.address())) {
-      return false;
-    }
-
-    if (!val.isString()) {
-      return false;
-    }
-
-    nsDependentJSString str;
-    if (!str.init(cx, val.toString())) {
-      return false;
-    }
-
-    request.receivers().AppendElement(str);
-  }
+  request.receivers().AppendElements(params.mReceivers.Value());
 
   // SendMobileMessageRequest.attachments
   mozilla::dom::ContentChild* cc = mozilla::dom::ContentChild::GetSingleton();
 
-  if (!params.attachments.isObject()) {
+  if (!params.mAttachments.WasPassed()) {
     return false;
   }
-  JS::Rooted<JSObject*> attachmentsObj(cx, &params.attachments.toObject());
-  if (!JS_GetArrayLength(cx, attachmentsObj, &len)) {
-    return false;
-  }
-  request.attachments().SetCapacity(len);
 
-  for (uint32_t i = 0; i < len; i++) {
-    JS::Rooted<JS::Value> val(cx);
-    if (!JS_GetElement(cx, attachmentsObj, i, val.address())) {
-      return false;
-    }
-
-    mozilla::idl::MmsAttachment attachment;
-    rv = attachment.Init(cx, val.address());
-    NS_ENSURE_SUCCESS(rv, false);
-
+  for (uint32_t i = 0; i < params.mAttachments.Value().Length(); i++) {
+    MmsAttachment& attachment = params.mAttachments.Value()[i];
     MmsAttachmentData mmsAttachment;
-    mmsAttachment.id().Assign(attachment.id);
-    mmsAttachment.location().Assign(attachment.location);
-    mmsAttachment.contentChild() = cc->GetOrCreateActorForBlob(attachment.content);
+    mmsAttachment.id().Assign(attachment.mId);
+    mmsAttachment.location().Assign(attachment.mLocation);
+    mmsAttachment.contentChild() = cc->GetOrCreateActorForBlob(attachment.mContent);
     if (!mmsAttachment.contentChild()) {
       return false;
     }
     request.attachments().AppendElement(mmsAttachment);
   }
 
-  request.smil() = params.smil;
-  request.subject() = params.subject;
+  request.smil() = params.mSmil;
+  request.subject() = params.mSubject;
 
   return true;
 }

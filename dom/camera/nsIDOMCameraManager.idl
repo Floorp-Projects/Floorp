@@ -115,47 +115,6 @@ interface nsICameraCapabilities : nsISupports
     readonly attribute jsval        recorderProfiles;
 };
 
-/* These properties only affect the captured image;
-   invalid property settings are ignored. */
-dictionary CameraPictureOptions
-{
-    /* an object with a combination of 'height' and 'width' properties
-       chosen from nsICameraCapabilities.pictureSizes */
-    jsval     pictureSize;
-
-    /* one of the file formats chosen from
-       nsICameraCapabilities.fileFormats */
-    DOMString fileFormat;
-
-    /* the rotation of the image in degrees, from 0 to 270 in
-       steps of 90; this doesn't affect the image, only the
-       rotation recorded in the image header.*/
-    long      rotation;
-
-    /* an object containing any or all of 'latitude', 'longitude',
-       'altitude', and 'timestamp', used to record when and where
-       the image was taken.  e.g.
-        {
-            latitude:  43.647118,
-            longitude: -79.3943,
-            altitude:  500
-            // timestamp not specified, in this case, and
-            // won't be included in the image header
-        }
-
-        can be null in the case where position information isn't
-        available/desired.
-
-        'altitude' is in metres; 'timestamp' is UTC, in seconds from
-        January 1, 1970.
-    */
-    jsval     position;
-
-    /* the number of seconds from January 1, 1970 UTC.  This can be
-       different from the positional timestamp (above). */
-    long long dateTime;
-};
-
 /* These properties affect the video recording preview, e.g.
       {
          profile: "1080p",
