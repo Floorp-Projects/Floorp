@@ -68,14 +68,16 @@ __dl_munmap(void *handle, void *addr, size_t length);
 class LibHandle;
 
 namespace mozilla {
+namespace detail {
 
-template <> inline void RefCounted<LibHandle>::Release();
+template <> inline void RefCounted<LibHandle, NonAtomicRefCount>::Release();
 
-template <> inline RefCounted<LibHandle>::~RefCounted()
+template <> inline RefCounted<LibHandle, NonAtomicRefCount>::~RefCounted()
 {
   MOZ_ASSERT(refCnt == 0x7fffdead);
 }
 
+} /* namespace detail */
 } /* namespace mozilla */
 
 /* Forward declaration */
@@ -213,8 +215,9 @@ private:
  * would mean too many Releases from within the destructor.
  */
 namespace mozilla {
+namespace detail {
 
-template <> inline void RefCounted<LibHandle>::Release() {
+template <> inline void RefCounted<LibHandle, NonAtomicRefCount>::Release() {
 #ifdef DEBUG
   if (refCnt > 0x7fff0000)
     MOZ_ASSERT(refCnt > 0x7fffdead);
@@ -232,6 +235,7 @@ template <> inline void RefCounted<LibHandle>::Release() {
   }
 }
 
+} /* namespace detail */
 } /* namespace mozilla */
 
 /**
