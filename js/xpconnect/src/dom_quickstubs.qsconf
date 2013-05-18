@@ -114,8 +114,6 @@ members = [
     'nsIIDBVersionChangeEvent.*',
     'nsIIndexedDatabaseManager.*',
 
-    'nsIDOMDOMError.*',
-
     # dom/file
     'nsIDOMLockedFile.*',
 

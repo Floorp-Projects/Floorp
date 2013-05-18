@@ -4,50 +4,72 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "DOMError.h"
-
-#include "nsDOMClassInfo.h"
+#include "mozilla/dom/DOMError.h"
+#include "mozilla/dom/DOMErrorBinding.h"
+#include "nsContentUtils.h"
 #include "nsDOMException.h"
+#include "nsPIDOMWindow.h"
 
-using mozilla::dom::DOMError;
+namespace mozilla {
+namespace dom {
 
-namespace {
-
-struct NameMap
-{
-  uint16_t code;
-  const char* name;
-};
-
-} // anonymous namespace
-
-// static
-already_AddRefed<nsIDOMDOMError>
-DOMError::CreateForNSResult(nsresult aRv)
-{
-  const char* name;
-  const char* message;
-  aRv = NS_GetNameAndMessageForDOMNSResult(aRv, &name, &message);
-  if (NS_FAILED(aRv) || !name) {
-    return nullptr;
-  }
-  return CreateWithName(NS_ConvertASCIItoUTF16(name));
-}
-
-NS_IMPL_ADDREF(DOMError)
-NS_IMPL_RELEASE(DOMError)
-
-NS_INTERFACE_MAP_BEGIN(DOMError)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(DOMError)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMDOMError)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(DOMError, mWindow)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMError)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMError)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMError)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-DOMCI_DATA(DOMError, DOMError)
-
-NS_IMETHODIMP
-DOMError::GetName(nsAString& aName)
+DOMError::DOMError(nsPIDOMWindow* aWindow, nsresult aValue)
+  : mWindow(aWindow)
 {
-  aName = mName;
-  return NS_OK;
+  const char *name, *message;
+  NS_GetNameAndMessageForDOMNSResult(aValue, &name, &message);
+
+  mName = NS_ConvertASCIItoUTF16(name);
+  mMessage = NS_ConvertASCIItoUTF16(message);
+
+  SetIsDOMBinding();
 }
+
+DOMError::DOMError(nsPIDOMWindow* aWindow, const nsAString& aName)
+  : mWindow(aWindow)
+  , mName(aName)
+{
+  SetIsDOMBinding();
+}
+
+DOMError::DOMError(nsPIDOMWindow* aWindow, const nsAString& aName,
+                   const nsAString& aMessage)
+  : mWindow(aWindow)
+  , mName(aName)
+  , mMessage(aMessage)
+{
+  SetIsDOMBinding();
+}
+
+DOMError::~DOMError()
+{
+}
+
+JSObject*
+DOMError::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+{
+  return DOMErrorBinding::Wrap(aCx, aScope, this);
+}
+
+/* static */ already_AddRefed<DOMError>
+DOMError::Constructor(const GlobalObject& aGlobal, const nsAString& aName,
+                      const nsAString& aMessage, ErrorResult& aRv)
+{
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.Get());
+
+  // Window is null for chrome code.
+
+  nsRefPtr<DOMError> ret = new DOMError(window, aName, aMessage);
+  return ret.forget();
+}
+
+} // namespace dom
+} // namespace mozilla
