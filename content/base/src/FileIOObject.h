@@ -43,7 +43,7 @@ public:
   {
     return mReadyState;
   }
-  nsIDOMDOMError* GetError() const
+  DOMError* GetError() const
   {
     return mError;
   }
@@ -92,7 +92,7 @@ protected:
   bool mProgressEventWasDelayed;
   bool mTimerIsActive;
 
-  nsCOMPtr<nsIDOMDOMError> mError;
+  nsRefPtr<DOMError> mError;
   nsCOMPtr<nsIChannel> mChannel;
 
   uint16_t mReadyState;

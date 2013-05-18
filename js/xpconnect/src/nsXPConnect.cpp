@@ -37,6 +37,7 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/TextDecoderBinding.h"
 #include "mozilla/dom/TextEncoderBinding.h"
+#include "mozilla/dom/DOMErrorBinding.h"
 
 #include "nsWrapperCacheInlines.h"
 #include "nsCycleCollector.h"
@@ -1096,7 +1097,8 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
 
     // Init WebIDL binding constructors wanted on all XPConnect globals.
     if (!TextDecoderBinding::GetConstructorObject(aJSContext, global) ||
-        !TextEncoderBinding::GetConstructorObject(aJSContext, global)) {
+        !TextEncoderBinding::GetConstructorObject(aJSContext, global) ||
+        !DOMErrorBinding::GetConstructorObject(aJSContext, global)) {
         return UnexpectedFailure(NS_ERROR_FAILURE);
     }
 

@@ -318,7 +318,6 @@ using mozilla::dom::workers::ResolveWorkerClasses;
 #include "DOMCameraManager.h"
 #include "DOMCameraControl.h"
 #include "DOMCameraCapabilities.h"
-#include "DOMError.h"
 #include "nsIOpenWindowEventDetail.h"
 #include "nsIAsyncScrollEventDetail.h"
 #include "nsIDOMGlobalObjectConstructor.h"
@@ -891,9 +890,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(CameraControl, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(CameraCapabilities, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-
-  NS_DEFINE_CLASSINFO_DATA(DOMError, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(OpenWindowEventDetail, nsDOMGenericSH,
@@ -2265,10 +2261,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(CameraCapabilities, nsICameraCapabilities)
     DOM_CLASSINFO_MAP_ENTRY(nsICameraCapabilities)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(DOMError, nsIDOMDOMError)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDOMError)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(OpenWindowEventDetail, nsIOpenWindowEventDetail)

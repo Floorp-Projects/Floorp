@@ -10,6 +10,7 @@
 #include "TelephonyCommon.h"
 
 #include "nsIDOMTelephonyCall.h"
+#include "mozilla/dom/DOMError.h"
 
 class nsPIDOMWindow;
 
@@ -23,7 +24,7 @@ class TelephonyCall : public nsDOMEventTargetHelper,
   nsString mNumber;
   nsString mState;
   bool mEmergency;
-  nsCOMPtr<nsIDOMDOMError> mError;
+  nsRefPtr<mozilla::dom::DOMError> mError;
 
   uint32_t mCallIndex;
   uint16_t mCallState;
