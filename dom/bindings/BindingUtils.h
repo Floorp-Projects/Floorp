@@ -1759,48 +1759,39 @@ public:
 };
 
 template<typename T>
-class MOZ_STACK_CLASS DictionaryRooter : JS::CustomAutoRooter
+class MOZ_STACK_CLASS RootedDictionary : public T,
+                                         private JS::CustomAutoRooter
 {
 public:
-  DictionaryRooter(JSContext *aCx, T* aDictionary
-                   MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-    : JS::CustomAutoRooter(aCx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT),
-      mDictionary(aDictionary),
-      mDictionaryType(eDictionary)
+  RootedDictionary(JSContext* cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM) :
+    T(),
+    JS::CustomAutoRooter(cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT)
   {
   }
 
-  DictionaryRooter(JSContext *aCx, Nullable<T>* aDictionary
-                   MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-    : JS::CustomAutoRooter(aCx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT),
-      mNullableDictionary(aDictionary),
-      mDictionaryType(eNullableDictionary)
+  virtual void trace(JSTracer *trc) MOZ_OVERRIDE
+  {
+    this->TraceDictionary(trc);
+  }
+};
+
+template<typename T>
+class MOZ_STACK_CLASS NullableRootedDictionary : public Nullable<T>,
+                                                 private JS::CustomAutoRooter
+{
+public:
+  NullableRootedDictionary(JSContext* cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM) :
+    Nullable<T>(),
+    JS::CustomAutoRooter(cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT)
   {
   }
 
-private:
-  enum DictionaryType {
-    eDictionary,
-    eNullableDictionary
-  };
-
-  virtual void trace(JSTracer *trc) MOZ_OVERRIDE {
-    if (mDictionaryType == eDictionary) {
-      mDictionary->TraceDictionary(trc);
-    } else {
-      MOZ_ASSERT(mDictionaryType == eNullableDictionary);
-      if (!mNullableDictionary->IsNull()) {
-        mNullableDictionary->Value().TraceDictionary(trc);
-      }
+  virtual void trace(JSTracer *trc) MOZ_OVERRIDE
+  {
+    if (!this->IsNull()) {
+      this->Value().TraceDictionary(trc);
     }
   }
-
-  union {
-    T* mDictionary;
-    Nullable<T>* mNullableDictionary;
-  };
-
-  DictionaryType mDictionaryType;
 };
 
 inline bool

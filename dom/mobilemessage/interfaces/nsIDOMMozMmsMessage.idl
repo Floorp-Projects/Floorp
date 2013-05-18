@@ -6,6 +6,7 @@
 
 interface nsIDOMBlob;
 
+// If this is changed, change the WebIDL dictionary as well.
 dictionary MmsAttachment
 {
   DOMString? id;

@@ -5076,8 +5076,7 @@ nsDocument::Register(const nsAString& aName, const JS::Value& aOptions,
                      JSContext* aCx, uint8_t aOptionalArgc,
                      jsval* aConstructor /* out param */)
 {
-  ElementRegistrationOptions options;
-  DictionaryRooter<ElementRegistrationOptions> optionsRooter(aCx, &options);
+  RootedDictionary<ElementRegistrationOptions> options(aCx);
   if (aOptionalArgc > 0) {
     JSAutoCompartment ac(aCx, GetWrapper());
     JS::Rooted<JS::Value> opts(aCx, aOptions);
