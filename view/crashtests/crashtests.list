@@ -4,5 +4,6 @@ load 281743-1.html
 load 323497-1.html
 asserts-if(gtk2Widget,0-2) load 382756-1.xul # Bug 540078
 asserts-if(gtk2Widget,0-2) load 387745-1.svg # Bug 540078
+load 399852.html
 load 429315-1.html
 load 507563-1.html
