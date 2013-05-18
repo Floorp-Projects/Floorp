@@ -146,11 +146,26 @@ let CustomizableUIInternal = {
     this._defineBuiltInWidgets();
     this.loadSavedState();
 
-    this.registerArea(CustomizableUI.AREA_PANEL);
-    this.registerArea(CustomizableUI.AREA_NAVBAR, ["legacy"]);
-    this.registerArea(CustomizableUI.AREA_MENUBAR, ["legacy"]);
-    this.registerArea(CustomizableUI.AREA_TABSTRIP, ["legacy"]);
-    this.registerArea(CustomizableUI.AREA_BOOKMARKS, ["legacy"]);
+    this.registerArea(CustomizableUI.AREA_PANEL, {
+      anchor: "PanelUI-menu-button",
+      type: CustomizableUI.TYPE_MENU_PANEL
+    });
+    this.registerArea(CustomizableUI.AREA_NAVBAR, {
+      legacy: true,
+      type: CustomizableUI.TYPE_TOOLBAR
+    });
+    this.registerArea(CustomizableUI.AREA_MENUBAR, {
+      legacy: true,
+      type: CustomizableUI.TYPE_TOOLBAR
+    });
+    this.registerArea(CustomizableUI.AREA_TABSTRIP, {
+      legacy: true,
+      type: CustomizableUI.TYPE_TOOLBAR
+    });
+    this.registerArea(CustomizableUI.AREA_BOOKMARKS, {
+      legacy: true,
+      type: CustomizableUI.TYPE_TOOLBAR
+    });
   },
 
   _defineBuiltInWidgets: function() {
@@ -187,10 +202,13 @@ let CustomizableUIInternal = {
       throw new Error("Area already registered");
     }
 
-    let props = new Set(aProperties);
+    let props = new Map();
+    for (let key in aProperties) {
+      props.set(key, aProperties[key]);
+    }
     gAreas.set(aName, props);
 
-    if (props.has("legacy")) {
+    if (props.get("legacy")) {
       // Guarantee this area exists in gFuturePlacements, to avoid checking it in
       // various places elsewhere.
       gFuturePlacements.set(aName, new Set());
@@ -247,6 +265,7 @@ let CustomizableUIInternal = {
     for (let id of aPlacements) {
       if (currentNode && currentNode.id == id) {
         this._addParentFlex(currentNode);
+        this.setLocationAttributes(currentNode, container, aArea);
         currentNode = currentNode.nextSibling;
         continue;
       }
@@ -261,8 +280,7 @@ let CustomizableUIInternal = {
           aArea == CustomizableUI.AREA_PANEL) {
         this.ensureButtonClosesPanel(node);
       }
-
-      container.insertBefore(node, currentNode);
+      this.insertWidgetBefore(node, currentNode, container, aArea);
       this._addParentFlex(node);
     }
 
@@ -282,6 +300,8 @@ let CustomizableUIInternal = {
           } else {
             container.removeChild(node);
           }
+        } else {
+          this.setLocationAttributes(currentNode, container, aArea);
         }
         node = previousSibling;
       }
@@ -396,7 +416,7 @@ let CustomizableUIInternal = {
 
       let nextNode = nextNodeId ? container.querySelector(idToSelector(nextNodeId))
                                 : null;
-      container.insertBefore(widgetNode, nextNode);
+      this.insertWidgetBefore(aNode, aNextNode, container, aArea);
       this._addParentFlex(widgetNode);
     }
   },
@@ -420,6 +440,7 @@ let CustomizableUIInternal = {
       if (gPalette.has(aWidgetId) || this.isSpecialWidget(aWidgetId)) {
         container.removeChild(widgetNode);
       } else {
+        this.removeLocationAttributes(widgetNode);
         areaNode.toolbox.palette.appendChild(widgetNode);
       }
     }
@@ -452,7 +473,7 @@ let CustomizableUIInternal = {
 
       let nextNode = nextNodeId ? container.querySelector(idToSelector(nextNodeId))
                                 : null;
-      container.insertBefore(widgetNode, nextNode);
+      this.insertWidgetBefore(widgetNode, nextNode, container, aArea);
     }
   },
 
@@ -488,6 +509,27 @@ let CustomizableUIInternal = {
 
     for (let [,widget] of gPalette)
       widget.instances.delete(document);
+  },
+
+  setLocationAttributes: function(aNode, aContainer, aArea) {
+    let props = gAreas.get(aArea);
+    if (!props) {
+      throw new Error("Expected area " + aArea + " to have a properties Map " +
+                      "associated with it.");
+    }
+
+    aNode.setAttribute("customizableui-areatype", props.get("type") || "");
+    aNode.setAttribute("customizableui-anchorid", props.get("anchor") || "");
+  },
+
+  removeLocationAttributes: function(aNode) {
+    aNode.removeAttribute("customizableui-areatype");
+    aNode.removeAttribute("customizableui-anchorid");
+  },
+
+  insertWidgetBefore: function(aNode, aNextNode, aContainer, aArea) {
+    this.setLocationAttributes(aNode, aContainer, aArea);
+    aContainer.insertBefore(aNode, aNextNode);
   },
 
   handleEvent: function(aEvent) {
@@ -1338,6 +1380,8 @@ this.CustomizableUI = {
   get SOURCE_EXTERNAL() "external",
 
   get TYPE_BUTTON() "button",
+  get TYPE_MENU_PANEL() "menu-panel",
+  get TYPE_TOOLBAR() "toolbar",
 
   addListener: function(aListener) {
     CustomizableUIInternal.addListener(aListener);
@@ -1494,6 +1538,17 @@ function WidgetSingleWrapper(aWidget, aNode) {
     aNode.disabled = !!aValue;
   });
 
+  this.__defineGetter__("anchor", function() {
+    let anchorId = aNode.getAttribute("customizableui-anchorid");
+    return anchorId ? aNode.ownerDocument.getElementById(anchorId)
+                    : aNode;
+  });
+
+  this.__defineGetter__("areaType", function() {
+    return aNode.getAttribute("customizableui-areatype") || "";
+  });
+
+
   Object.freeze(this);
 }
 
@@ -1552,6 +1607,16 @@ function XULWidgetSingleWrapper(aWidgetId, aNode) {
   this.provider = CustomizableUI.PROVIDER_XUL;
 
   this.node = aNode;
+
+  this.__defineGetter__("anchor", function() {
+    let anchorId = aNode.getAttribute("customizableui-anchorid");
+    return anchorId ? aNode.ownerDocument.getElementById(anchorId)
+                    : aNode;
+  });
+
+  this.__defineGetter__("areaType", function() {
+    return aNode.getAttribute("customizableui-areatype") || "";
+  });
 
   Object.freeze(this);
 }
