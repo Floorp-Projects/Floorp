@@ -832,14 +832,14 @@ MarkIonExitFrame(JSTracer *trc, const IonFrameIterator &frame)
     if (frame.isDOMExit()) {
         IonDOMExitFrameLayout *dom = frame.exitFrame()->DOMExit();
         gc::MarkObjectRoot(trc, dom->thisObjAddress(), "ion-dom-args");
-        if (dom->isMethodFrame()) {
+        if (dom->isSetterFrame()) {
+            gc::MarkValueRoot(trc, dom->vp(), "ion-dom-args");
+        } else if (dom->isMethodFrame()) {
             IonDOMMethodExitFrameLayout *method =
                 reinterpret_cast<IonDOMMethodExitFrameLayout *>(dom);
             size_t len = method->argc() + 2;
             Value *vp = method->vp();
             gc::MarkValueRootRange(trc, len, vp, "ion-dom-args");
-        } else {
-            gc::MarkValueRoot(trc, dom->vp(), "ion-dom-args");
         }
         return;
     }
