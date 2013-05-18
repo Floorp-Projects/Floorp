@@ -1419,6 +1419,21 @@ def overloadLength(arguments):
 def methodLength(method):
     signatures = method.signatures()
     return min(overloadLength(arguments) for (retType, arguments) in signatures)
+def requiresQueryInterfaceMethod(descriptor):
+    # Make sure to not stick QueryInterface on abstract interfaces that
+    # have hasXPConnectImpls (like EventTarget).  So only put it on
+    # interfaces that are concrete and all of whose ancestors are abstract.
+    def allAncestorsAbstract(iface):
+        if not iface.parent:
+            return True
+        desc = descriptor.getDescriptor(iface.parent.identifier.name)
+        if desc.concrete:
+            return False
+        return allAncestorsAbstract(iface.parent)
+    return (descriptor.nativeOwnership == 'nsisupports' and
+            descriptor.interface.hasInterfacePrototypeObject() and
+            descriptor.concrete and
+            allAncestorsAbstract(descriptor.interface))
 
 class MethodDefiner(PropertyDefiner):
     """
@@ -1460,21 +1475,7 @@ class MethodDefiner(PropertyDefiner):
                                  "flags": "JSPROP_ENUMERATE",
                                  "condition": MemberCondition(None, None) })
 
-        # Make sure to not stick QueryInterface on abstract interfaces that
-        # have hasXPConnectImpls (like EventTarget).  So only put it on
-        # interfaces that are concrete and all of whose ancestors are abstract.
-        def allAncestorsAbstract(iface):
-            if not iface.parent:
-                return True
-            desc = descriptor.getDescriptor(iface.parent.identifier.name)
-            if desc.concrete:
-                return False
-            return allAncestorsAbstract(iface.parent)
-        if (not static and
-            descriptor.nativeOwnership == 'nsisupports' and
-            descriptor.interface.hasInterfacePrototypeObject() and
-            descriptor.concrete and
-            allAncestorsAbstract(descriptor.interface)):
+        if not static and requiresQueryInterfaceMethod(descriptor):
             self.regular.append({"name": 'QueryInterface',
                                  "methodInfo": False,
                                  "length": 1,
@@ -4375,7 +4376,7 @@ def wrapTypeIntoCurrentCompartment(type, value, isMember=True):
                         "arguments yet")
 
     if (type.isString() or type.isPrimitive() or type.isEnum() or
-        type.isGeckoInterface() or type.isCallback()):
+        type.isGeckoInterface() or type.isCallback() or type.isDate()):
         # All of these don't need wrapping
         return None
 
@@ -8068,6 +8069,14 @@ class CGBindingRoot(CGThing):
             return any(m.getExtendedAttribute("Pref") for m in iface.members + [iface]);
         requiresPreferences = any(descriptorRequiresPreferences(d) for d in descriptors)
         hasOwnedDescriptors = any(d.nativeOwnership == 'owned' for d in descriptors)
+        def descriptorRequiresContentUtils(desc):
+            return ((desc.concrete and not desc.proxy and
+                     not desc.workers and desc.wrapperCache) or
+                    desc.interface.hasInterfaceObject())
+        requiresContentUtils = any(descriptorRequiresContentUtils(d) for d in descriptors)
+        def descriptorHasChromeOnlyMembers(desc):
+            return any(isChromeOnly(a) for a in desc.interface.members)
+        hasChromeOnlyMembers = any(descriptorHasChromeOnlyMembers(d) for d in descriptors)
         hasWorkerStuff = len(config.getDescriptors(webIDLFile=webIDLFile,
                                                    workers=True)) != 0
         mainDictionaries = config.getDictionaries(webIDLFile=webIDLFile,
@@ -8173,16 +8182,17 @@ class CGBindingRoot(CGThing):
                           'PrimitiveConversions.h',
                           'XPCQuickStubs.h',
                           'XPCWrapper.h',
+                          'WrapperFactory.h',
                           'nsDOMQS.h',
-                          'AccessCheck.h',
-                          'nsContentUtils.h',
                           # Have to include nsDOMQS.h to get fast arg unwrapping
                           # for old-binding things with castability.
                           'nsDOMQS.h'
                           ] + (['WorkerPrivate.h',
                                 'nsThreadUtils.h'] if hasWorkerStuff else [])
                             + (['mozilla/Preferences.h'] if requiresPreferences else [])
-                            + (['mozilla/dom/NonRefcountedDOMObject.h'] if hasOwnedDescriptors else []),
+                            + (['mozilla/dom/NonRefcountedDOMObject.h'] if hasOwnedDescriptors else [])
+                            + (['nsContentUtils.h'] if requiresContentUtils else [])
+                            + (['AccessCheck.h'] if hasChromeOnlyMembers else []),
                          curr,
                          config,
                          jsImplemented)

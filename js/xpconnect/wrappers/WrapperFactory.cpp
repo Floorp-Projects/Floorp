@@ -11,6 +11,7 @@
 #include "AccessCheck.h"
 #include "XPCWrapper.h"
 #include "ChromeObjectWrapper.h"
+#include "WrapperFactory.h"
 
 #include "xpcprivate.h"
 #include "XPCMaps.h"

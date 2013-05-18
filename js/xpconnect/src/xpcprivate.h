@@ -524,6 +524,7 @@ public:
     virtual void NotifyEnterMainThread();
     virtual nsresult BeginCycleCollection(nsCycleCollectionTraversalCallback &cb);
     virtual nsCycleCollectionParticipant *GetParticipant();
+    virtual bool UsefulToMergeZones();
     virtual void FixWeakMappingGrayBits();
     virtual bool NeedCollect();
     virtual void Collect(uint32_t reason);

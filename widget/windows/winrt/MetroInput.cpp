@@ -131,7 +131,7 @@ namespace {
   /**
    * This function is for use with mTouches.Enumerate.  It will
    * append each element it encounters to the {@link nsTArray}
-   * of {@link nsIDOMTouch}es passed in through the third (void*)
+   * of {@link mozilla::dom::Touch}es passed in through the third (void*)
    * parameter.
    *
    * NOTE: This function will set the `mChanged` member of each
@@ -145,11 +145,11 @@ namespace {
    */
   PLDHashOperator
   AppendToTouchList(const unsigned int& aKey,
-                    nsCOMPtr<nsIDOMTouch>& aData,
+                    nsRefPtr<Touch>& aData,
                     void *aTouchList)
   {
-    nsTArray<nsCOMPtr<nsIDOMTouch> > *touches =
-              static_cast<nsTArray<nsCOMPtr<nsIDOMTouch> > *>(aTouchList);
+    nsTArray<nsRefPtr<Touch> > *touches =
+              static_cast<nsTArray<nsRefPtr<Touch> > *>(aTouchList);
     touches->AppendElement(aData);
     aData->mChanged = false;
     return PL_DHASH_NEXT;
@@ -805,7 +805,7 @@ MetroInput::OnPointerPressed(UI::Core::ICoreWindow* aSender,
   // Create the new touch point and add it to our event.
   uint32_t pointerId;
   currentPoint->get_PointerId(&pointerId);
-  nsCOMPtr<nsIDOMTouch> touch = CreateDOMTouch(currentPoint.Get());
+  nsRefPtr<Touch> touch = CreateDOMTouch(currentPoint.Get());
   touch->mChanged = true;
   mTouches.Put(pointerId, touch);
   mTouchEvent.message = NS_TOUCH_START;
@@ -864,7 +864,7 @@ MetroInput::OnPointerReleased(UI::Core::ICoreWindow* aSender,
   // Get the touch associated with this touch point.
   uint32_t pointerId;
   currentPoint->get_PointerId(&pointerId);
-  nsCOMPtr<nsIDOMTouch> touch = mTouches.Get(pointerId);
+  nsRefPtr<Touch> touch = mTouches.Get(pointerId);
 
   // We are about to dispatch a touchend.  Before we do that, we should make
   // sure that we don't have a touchmove or touchstart sitting around for this
@@ -933,7 +933,7 @@ MetroInput::OnPointerMoved(UI::Core::ICoreWindow* aSender,
   // Get the touch associated with this touch point.
   uint32_t pointerId;
   currentPoint->get_PointerId(&pointerId);
-  nsCOMPtr<nsIDOMTouch> touch = mTouches.Get(pointerId);
+  nsRefPtr<Touch> touch = mTouches.Get(pointerId);
 
   // Some old drivers cause us to receive a PointerMoved event for a touchId
   // after we've already received a PointerReleased event for that touchId.
