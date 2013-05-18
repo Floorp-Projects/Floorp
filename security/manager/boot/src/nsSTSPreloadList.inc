@@ -8,7 +8,7 @@
 /*****************************************************************************/
 
 #include "mozilla/StandardInteger.h"
-const PRTime gPreloadListExpirationTime = INT64_C(1378548805558000);
+const PRTime gPreloadListExpirationTime = INT64_C(1379758102034000);
 
 class nsSTSPreload
 {
@@ -35,13 +35,12 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "csawctf.poly.edu", true },
   { "developer.mydigipass.com", false },
   { "dist.torproject.org", false },
-  { "dm.lookout.com", false },
-  { "dm.mylookout.com", false },
   { "ebanking.indovinabank.com.vn", false },
   { "entropia.de", false },
   { "espra.com", true },
   { "factor.cc", false },
   { "gocardless.com", true },
+  { "grc.com", false },
   { "howrandom.org", true },
   { "id.mayfirst.org", false },
   { "intercom.io", false },
@@ -52,7 +51,6 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "logentries.com", false },
   { "login.persona.org", true },
   { "login.sapo.pt", true },
-  { "lookout.com", false },
   { "luneta.nearbuysystems.com", false },
   { "makeyourlaws.org", false },
   { "mattmccutchen.net", true },
@@ -60,7 +58,6 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "members.mayfirst.org", false },
   { "members.nearlyfreespeech.net", false },
   { "my.onlime.ch", false },
-  { "mylookout.com", false },
   { "neg9.org", false },
   { "passwd.io", true },
   { "pay.gigahost.dk", true },
@@ -72,7 +69,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "roundcube.mayfirst.org", false },
   { "sandbox.mydigipass.com", false },
   { "serverdensity.io", true },
-  { "silentcircle.com", true },
+  { "silentcircle.com", false },
   { "simple.com", false },
   { "stocktrade.de", false },
   { "stripe.com", true },
@@ -91,11 +88,11 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "www.cueup.com", false },
   { "www.entropia.de", false },
   { "www.gov.uk", false },
+  { "www.grc.com", false },
   { "www.intercom.io", false },
   { "www.irccloud.com", false },
   { "www.lookout.com", false },
   { "www.mydigipass.com", false },
-  { "www.mylookout.com", false },
   { "www.noisebridge.net", false },
   { "www.simple.com", false },
   { "www.surfeasy.com", false },
