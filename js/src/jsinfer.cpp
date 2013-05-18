@@ -3025,8 +3025,6 @@ TypeCompartment::markSetsUnknown(JSContext *cx, TypeObject *target)
                 if (!script->analysis()->maybeCode(i))
                     continue;
                 jsbytecode *pc = script->code + i;
-                if (js_CodeSpec[*pc].format & JOF_DECOMPOSE)
-                    continue;
                 unsigned defCount = GetDefCount(script, i);
                 if (ExtendedDef(pc))
                     defCount++;
@@ -4089,13 +4087,6 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset, TypeInferen
             newv++;
         }
     }
-
-    /*
-     * Treat decomposed ops as no-ops, we will analyze the decomposed version
-     * instead. (We do, however, need to look at introduced phi nodes).
-     */
-    if (js_CodeSpec[*pc].format & JOF_DECOMPOSE)
-        return true;
 
     for (unsigned i = 0; i < defCount; i++) {
         InferSpew(ISpewOps, "typeSet: %sT%p%s pushed%u #%u:%05u",
@@ -5418,9 +5409,6 @@ ScriptAnalysis::printTypes(JSContext *cx)
 
         jsbytecode *pc = script_->code + offset;
 
-        if (js_CodeSpec[*pc].format & JOF_DECOMPOSE)
-            continue;
-
         unsigned defCount = GetDefCount(script_, offset);
         if (!defCount)
             continue;
@@ -5498,9 +5486,6 @@ ScriptAnalysis::printTypes(JSContext *cx)
         jsbytecode *pc = script_->code + offset;
 
         PrintBytecode(cx, script, pc);
-
-        if (js_CodeSpec[*pc].format & JOF_DECOMPOSE)
-            continue;
 
         if (js_CodeSpec[*pc].format & JOF_TYPESET) {
             TypeSet *types = TypeScript::BytecodeTypes(script_, pc);

@@ -571,9 +571,6 @@ BaselineCompiler::emitBody()
 
         switch (op) {
           default:
-            // Ignore fat opcodes, we compile the decomposed version instead.
-            if (js_CodeSpec[op].format & JOF_DECOMPOSE)
-                break;
             IonSpew(IonSpew_BaselineAbort, "Unhandled op: %s", js_CodeName[op]);
             return Method_CantCompile;
 
