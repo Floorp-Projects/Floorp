@@ -168,15 +168,7 @@ ExtendedDef(jsbytecode *pc)
 {
     switch ((JSOp)*pc) {
       case JSOP_SETARG:
-      case JSOP_INCARG:
-      case JSOP_DECARG:
-      case JSOP_ARGINC:
-      case JSOP_ARGDEC:
       case JSOP_SETLOCAL:
-      case JSOP_INCLOCAL:
-      case JSOP_DECLOCAL:
-      case JSOP_LOCALINC:
-      case JSOP_LOCALDEC:
         return true;
       default:
         return false;
@@ -449,26 +441,6 @@ struct LifetimeVariable
     }
     uint32_t firstWrite(LoopAnalysis *loop) const {
         return firstWrite(loop->head, loop->backedge);
-    }
-
-    /* Return true if the variable cannot decrease during the body of a loop. */
-    bool nonDecreasing(JSScript *script, LoopAnalysis *loop) const {
-        Lifetime *segment = lifetime ? lifetime : saved;
-        while (segment && segment->start <= loop->backedge) {
-            if (segment->start >= loop->head && segment->write) {
-                switch (JSOp(script->code[segment->start])) {
-                  case JSOP_INCLOCAL:
-                  case JSOP_LOCALINC:
-                  case JSOP_INCARG:
-                  case JSOP_ARGINC:
-                    break;
-                  default:
-                    return false;
-                }
-            }
-            segment = segment->next;
-        }
-        return true;
     }
 
     /*
@@ -850,11 +822,6 @@ class ScriptAnalysis
     bool popGuaranteed(jsbytecode *pc) {
         jsbytecode *next = pc + GetBytecodeLength(pc);
         return JSOp(*next) == JSOP_POP && !jumpTarget(next);
-    }
-
-    bool incrementInitialValueObserved(jsbytecode *pc) {
-        const JSCodeSpec *cs = &js_CodeSpec[*pc];
-        return (cs->format & JOF_POST) && !popGuaranteed(pc);
     }
 
     const SSAValue &poppedValue(uint32_t offset, uint32_t which) {

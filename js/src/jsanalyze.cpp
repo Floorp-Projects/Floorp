@@ -254,18 +254,12 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
         if (!forwardJump)
             code->unconditional = true;
 
-        /*
-         * Treat decompose ops as no-ops which do not adjust the stack. We will
-         * pick up the stack depths as we go through the decomposed version.
-         */
-        if (!(js_CodeSpec[op].format & JOF_DECOMPOSE)) {
-            unsigned nuses = GetUseCount(script_, offset);
-            unsigned ndefs = GetDefCount(script_, offset);
+        unsigned nuses = GetUseCount(script_, offset);
+        unsigned ndefs = GetDefCount(script_, offset);
 
-            JS_ASSERT(stackDepth >= nuses);
-            stackDepth -= nuses;
-            stackDepth += ndefs;
-        }
+        JS_ASSERT(stackDepth >= nuses);
+        stackDepth -= nuses;
+        stackDepth += ndefs;
 
         switch (op) {
 
@@ -533,10 +527,8 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
             break;
 
           default:
-            if (!(js_CodeSpec[op].format & JOF_DECOMPOSE)) {
-                isJaegerCompileable = false;
-                isJaegerInlineable = isIonInlineable = false;
-            }
+            isJaegerCompileable = false;
+            isJaegerInlineable = isIonInlineable = false;
             break;
         }
 
@@ -1270,11 +1262,6 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
                 values[v.slot].v = v.value;
             }
             freezeNewValues(cx, offset);
-        }
-
-        if (js_CodeSpec[op].format & JOF_DECOMPOSE) {
-            offset = successorOffset;
-            continue;
         }
 
         unsigned nuses = GetUseCount(script_, offset);
