@@ -347,6 +347,7 @@ load 576649-1.html
 load 579655.html
 load 580494-1.html
 load 580834-1.xhtml
+asserts(0-13) load 589787.html # bug 574889
 load 595039-1.html
 load 597924-1.html
 load 606432-1.html
