@@ -21,6 +21,7 @@
 #include "nsIDOMFile.h"
 #include "mozilla/dom/ipc/Blob.h"
 #include "mozilla/dom/ContentParent.h"
+#include "nsContentUtils.h"
 #include "nsTArrayHelpers.h"
 
 namespace mozilla {

@@ -234,6 +234,53 @@ struct IdleObserverHolder
   }
 };
 
+static inline already_AddRefed<nsIVariant>
+CreateVoidVariant()
+{
+  nsCOMPtr<nsIWritableVariant> writable =
+    do_CreateInstance(NS_VARIANT_CONTRACTID);
+  writable->SetAsVoid();
+  return writable.forget();
+}
+
+// Helper class to manage modal dialog arguments and all their quirks.
+//
+// Given our clunky embedding APIs, modal dialog arguments need to be passed
+// as an nsISupports parameter to WindowWatcher, get stuck inside an array of
+// length 1, and then passed back to the newly-created dialog.
+//
+// However, we need to track both the caller-passed value as well as the
+// caller's, so that we can do an origin check (even for primitives) when the
+// value is accessed. This class encapsulates that magic.
+//
+// We also use the same machinery for |returnValue|, which needs similar origin
+// checks.
+class DialogValueHolder : public nsISupports
+{
+public:
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(DialogValueHolder)
+
+  DialogValueHolder(nsIPrincipal* aSubject, nsIVariant* aValue)
+    : mOrigin(aSubject)
+    , mValue(aValue) {}
+  nsresult Get(nsIPrincipal* aSubject, nsIVariant** aResult)
+  {
+    nsCOMPtr<nsIVariant> result;
+    if (aSubject->Subsumes(mOrigin)) {
+      result = mValue;
+    } else {
+      result = CreateVoidVariant();
+    }
+    result.forget(aResult);
+    return NS_OK;
+  }
+  virtual ~DialogValueHolder() {}
+private:
+  nsCOMPtr<nsIPrincipal> mOrigin;
+  nsCOMPtr<nsIVariant> mValue;
+};
+
 //*****************************************************************************
 // nsGlobalWindow: Global Object for Scripting
 //*****************************************************************************
@@ -571,7 +618,7 @@ public:
   virtual void DisableNetworkEvent(uint32_t aType);
 #endif // MOZ_B2G
 
-  virtual nsresult SetArguments(nsIArray *aArguments, nsIPrincipal *aOrigin);
+  virtual nsresult SetArguments(nsIArray *aArguments);
 
   static bool DOMWindowDumpEnabled();
 
@@ -1113,9 +1160,13 @@ protected:
   nsCOMPtr<nsIScriptContext>    mContext;
   nsWeakPtr                     mOpener;
   nsCOMPtr<nsIControllers>      mControllers;
+
+  // For |window.arguments|, via |openDialog|.
   nsCOMPtr<nsIArray>            mArguments;
-  nsCOMPtr<nsIArray>            mArgumentsLast;
-  nsCOMPtr<nsIPrincipal>        mArgumentsOrigin;
+
+  // For |window.dialogArguments|, via |showModalDialog|.
+  nsRefPtr<DialogValueHolder> mDialogArguments;
+
   nsRefPtr<Navigator>           mNavigator;
   nsRefPtr<nsScreen>            mScreen;
   nsRefPtr<nsDOMWindowList>     mFrames;
@@ -1281,12 +1332,9 @@ public:
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsGlobalModalWindow, nsGlobalWindow)
 
-  virtual NS_HIDDEN_(nsresult) SetNewDocument(nsIDocument *aDocument,
-                                              nsISupports *aState,
-                                              bool aForceReuseInnerWindow);
-
 protected:
-  nsCOMPtr<nsIVariant> mReturnValue;
+  // For use by outer windows only.
+  nsRefPtr<DialogValueHolder> mReturnValue;
 };
 
 /* factory function */

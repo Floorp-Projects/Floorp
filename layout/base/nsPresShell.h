@@ -352,7 +352,6 @@ protected:
   nsresult DidCauseReflow();
   friend class nsAutoCauseReflowNotifier;
 
-  bool TouchesAreEqual(nsIDOMTouch *aTouch1, nsIDOMTouch *aTouch2);
   void DispatchTouchEvent(nsEvent *aEvent,
                           nsEventStatus* aStatus,
                           nsPresShellEventCB* aEventCB,

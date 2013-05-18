@@ -2,7 +2,6 @@
 == checkbox-label-dynamic.html checkbox-label-dynamic-ref.html
 skip-if(B2G) fails-if(Android) == checkbox-radio-stretched.html checkbox-radio-stretched-ref.html # test for bug 464589
 
-skip-if(B2G) == input-file-width-clip-1.html input-file-width-clip-ref.html # test for bug 409587
 == input-hidden-border.html about:blank
 == input-text-bounds-1.html input-text-bounds-1-ref.html
 == input-text-size-1.html input-text-size-1-ref.html

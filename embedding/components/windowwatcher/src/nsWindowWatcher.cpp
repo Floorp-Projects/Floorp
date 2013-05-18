@@ -504,6 +504,12 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
       WinHasOption(features.get(), "-moz-internal-modal", 0, nullptr)) {
     windowIsModalContentDialog = true;
 
+    // CHROME_MODAL gets inherited by dependent windows, which affects various
+    // platform-specific window state (especially on OSX). So we need some way
+    // to determine that this window was actually opened by nsGlobalWindow::
+    // ShowModalDialog(), and that somebody is actually going to be watching
+    // for return values and all that.
+    chromeFlags |= nsIWebBrowserChrome::CHROME_MODAL_CONTENT_WINDOW;
     chromeFlags |= nsIWebBrowserChrome::CHROME_MODAL;
   }
 
@@ -513,20 +519,7 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
   nsCOMPtr<nsIScriptSecurityManager>
     sm(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
 
-  NS_ENSURE_TRUE(sm, NS_ERROR_FAILURE);
-
-  // Remember who's calling us. This code used to assume a null
-  // subject principal if it failed to get the principal, but that's
-  // just not safe, so bail on errors here.
-  nsCOMPtr<nsIPrincipal> callerPrincipal;
-  rv = sm->GetSubjectPrincipal(getter_AddRefs(callerPrincipal));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  bool isCallerChrome = true;
-  if (callerPrincipal) {
-    rv = sm->IsSystemPrincipal(callerPrincipal, &isCallerChrome);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  bool isCallerChrome = nsContentUtils::IsCallerChrome();
 
   JSContext *cx = GetJSContextFromWindow(aParent);
 
@@ -740,7 +733,7 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
     nsCOMPtr<nsPIDOMWindow> piwin(do_QueryInterface(*_retval));
     NS_ENSURE_TRUE(piwin, NS_ERROR_UNEXPECTED);
 
-    rv = piwin->SetArguments(argv, callerPrincipal);
+    rv = piwin->SetArguments(argv);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

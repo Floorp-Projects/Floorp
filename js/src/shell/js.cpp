@@ -3880,6 +3880,10 @@ static JSFunctionSpecWithHelp shell_functions[] = {
 "  Return a new object obj for which typeof obj === \"undefined\", obj == null\n"
 "  and obj == undefined (and vice versa for !=), and ToBoolean(obj) === false.\n"),
 
+    JS_FS_HELP_END
+};
+
+static JSFunctionSpecWithHelp self_hosting_functions[] = {
     JS_FN_HELP("getSelfHostedValue", GetSelfHostedValue, 1, 0,
 "getSelfHostedValue()",
 "  Get a self-hosted value by its name. Note that these values don't get \n"
@@ -3887,6 +3891,7 @@ static JSFunctionSpecWithHelp shell_functions[] = {
 
     JS_FS_HELP_END
 };
+
 #ifdef MOZ_PROFILING
 # define PROFILING_FUNCTION_COUNT 5
 # ifdef MOZ_CALLGRIND
@@ -4819,11 +4824,18 @@ NewGlobalObject(JSContext *cx, JSObject *sameZoneAs)
         if (!JS::RegisterPerfMeasurement(cx, glob))
             return NULL;
         if (!JS_DefineFunctionsWithHelp(cx, glob, shell_functions) ||
-            !JS_DefineProfilingFunctions(cx, glob)) {
+            !JS_DefineProfilingFunctions(cx, glob))
+        {
             return NULL;
         }
         if (!js::DefineTestingFunctions(cx, glob))
             return NULL;
+
+        if (getenv("MOZ_SELFHOSTEDJS") &&
+            !JS_DefineFunctionsWithHelp(cx, glob, self_hosting_functions))
+        {
+            return NULL;
+        }
 
         RootedObject it(cx, JS_DefineObject(cx, glob, "it", &its_class, NULL, 0));
         if (!it)
@@ -4842,7 +4854,9 @@ NewGlobalObject(JSContext *cx, JSObject *sameZoneAs)
                                (JSPropertyOp)its_get_customNative,
                                (JSStrictPropertyOp)its_set_customNative,
                                JSPROP_NATIVE_ACCESSORS))
+        {
             return NULL;
+        }
 
         /* Initialize FakeDOMObject. */
         static js::DOMCallbacks DOMcallbacks = {
