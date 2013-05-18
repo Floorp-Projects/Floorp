@@ -17,9 +17,11 @@
 #include "DOMCameraCapabilities.h"
 #include "DOMCameraControl.h"
 #include "CameraCommon.h"
+#include "mozilla/dom/CameraManagerBinding.h"
+#include "mozilla/dom/BindingUtils.h"
 
 using namespace mozilla;
-using namespace dom;
+using namespace mozilla::dom;
 
 DOMCI_DATA(CameraControl, nsICameraControl)
 
@@ -350,14 +352,16 @@ nsDOMCameraControl::TakePicture(const JS::Value& aOptions, nsICameraTakePictureC
 {
   NS_ENSURE_TRUE(onSuccess, NS_ERROR_INVALID_ARG);
 
-  mozilla::idl::CameraPictureOptions options;
+  RootedDictionary<CameraPictureOptions> options(cx);
   mozilla::idl::CameraSize           size;
   mozilla::idl::CameraPosition       pos;
 
-  nsresult rv = options.Init(cx, &aOptions);
-  NS_ENSURE_SUCCESS(rv, rv);
+  JS::Rooted<JS::Value> optionVal(cx, aOptions);
+  if (!options.Init(cx, optionVal)) {
+    return NS_ERROR_FAILURE;
+  }
 
-  rv = size.Init(cx, &options.pictureSize);
+  nsresult rv = size.Init(cx, &options.mPictureSize);
   NS_ENSURE_SUCCESS(rv, rv);
 
   /**
@@ -368,10 +372,10 @@ nsDOMCameraControl::TakePicture(const JS::Value& aOptions, nsICameraTakePictureC
   pos.longitude = NAN;
   pos.altitude = NAN;
   pos.timestamp = NAN;
-  rv = pos.Init(cx, &options.position);
+  rv = pos.Init(cx, &options.mPosition);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return mCameraControl->TakePicture(size, options.rotation, options.fileFormat, pos, options.dateTime, onSuccess, onError);
+  return mCameraControl->TakePicture(size, options.mRotation, options.mFileFormat, pos, options.mDateTime, onSuccess, onError);
 }
 
 /* [implicit_jscontext] void GetPreviewStreamVideoMode (in jsval aOptions, in nsICameraPreviewStreamCallback onSuccess, [optional] in nsICameraErrorCallback onError); */

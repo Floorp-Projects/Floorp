@@ -47,6 +47,8 @@
 #include "nsIStringBundle.h"
 #include <algorithm>
 
+#include "mozilla/dom/DeviceStorageBinding.h"
+
 // Microsoft's API Name hackery sucks
 #undef CreateEvent
 
@@ -1586,7 +1588,9 @@ ContinueCursorEvent::Run()
   nsRefPtr<DeviceStorageFile> file = GetNextFile();
 
   nsDOMDeviceStorageCursor* cursor = static_cast<nsDOMDeviceStorageCursor*>(mRequest.get());
-  JS::Value val = nsIFileToJsval(cursor->GetOwner(), file);
+
+  AutoJSContext cx;
+  JS::Rooted<JS::Value> val(cx, nsIFileToJsval(cursor->GetOwner(), file));
 
   if (file) {
     cursor->mOkToCallContinue = true;
@@ -1803,7 +1807,8 @@ public:
       mFile->GetStatus(state);
     }
 
-    JS::Value result = StringToJsval(mRequest->GetOwner(), state);
+    AutoJSContext cx;
+    JS::Rooted<JS::Value> result(cx, StringToJsval(mRequest->GetOwner(), state));
     mRequest->FireSuccess(result);
     mRequest = nullptr;
     return NS_OK;
@@ -1841,7 +1846,8 @@ public:
   {
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-    JS::Value result = JSVAL_NULL;
+    AutoJSContext cx;
+    JS::Rooted<JS::Value> result(cx, JSVAL_NULL);
     nsPIDOMWindow* window = mRequest->GetOwner();
 
     if (mFile) {
@@ -3040,21 +3046,20 @@ nsDOMDeviceStorage::EnumerateEditable(const JS::Value & aName,
 }
 
 
-static PRTime
-ExtractDateFromOptions(JSContext* aCx, const JS::Value& aOptions)
+static bool
+ExtractDateFromOptions(JSContext* aCx, const JS::Value& aOptions, PRTime* aTime)
 {
-  PRTime result = 0;
-  mozilla::idl::DeviceStorageEnumerationParameters params;
-  if (!JSVAL_IS_VOID(aOptions) && !aOptions.isNull()) {
-    nsresult rv = params.Init(aCx, &aOptions);
-    if (NS_SUCCEEDED(rv) && !JSVAL_IS_VOID(params.since) && !params.since.isNull() && params.since.isObject()) {
-      JS::Rooted<JSObject*> obj(aCx, JSVAL_TO_OBJECT(params.since));
-      if (JS_ObjectIsDate(aCx, obj) && js_DateIsValid(obj)) {
-        result = js_DateGetMsecSinceEpoch(obj);
-      }
-    }
+  JS::Rooted<JS::Value> options(aCx, aOptions);
+  RootedDictionary<DeviceStorageEnumerationParameters> params(aCx);
+  if (!params.Init(aCx, options)) {
+    return false;
   }
-  return result;
+  if (params.mSince.WasPassed() && !params.mSince.Value().IsUndefined()) {
+    *aTime = params.mSince.Value().TimeStamp();
+  } else {
+    *aTime = 0;
+  }
+  return true;
 }
 
 nsresult
@@ -3082,7 +3087,9 @@ nsDOMDeviceStorage::EnumerateInternal(const JS::Value & aName,
       path.Assign(jspath);
     } else if (!JSVAL_IS_PRIMITIVE(aName)) {
       // it also might be an options object
-      since = ExtractDateFromOptions(aCx, aName);
+      if (!ExtractDateFromOptions(aCx, aName, &since)) {
+        return NS_ERROR_FAILURE;
+      }
     } else {
       return NS_ERROR_FAILURE;
     }
@@ -3090,7 +3097,9 @@ nsDOMDeviceStorage::EnumerateInternal(const JS::Value & aName,
     if (aArgc == 2 && (JSVAL_IS_VOID(aOptions) || aOptions.isNull() || !aOptions.isObject())) {
       return NS_ERROR_FAILURE;
     }
-    since = ExtractDateFromOptions(aCx, aOptions);
+    if (!ExtractDateFromOptions(aCx, aOptions, &since)) {
+      return NS_ERROR_FAILURE;
+    }
   }
 
   nsRefPtr<DeviceStorageFile> dsf = new DeviceStorageFile(mStorageType,

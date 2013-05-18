@@ -69,7 +69,7 @@ public:
   IMPL_EVENT_HANDLER(error)
 
 
-  void FireSuccess(JS::Value aResult);
+  void FireSuccess(JS::Handle<JS::Value> aResult);
   void FireError(const nsAString& aError);
   void FireError(nsresult aError);
 

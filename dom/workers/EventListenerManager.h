@@ -60,7 +60,8 @@ public:
   };
 
   void
-  AddEventListener(JSContext* aCx, const jsid& aType, JSObject* aListener,
+  AddEventListener(JSContext* aCx, const jsid& aType,
+                   JS::Handle<JSObject*> aListener,
                    bool aCapturing, bool aWantsUntrusted, ErrorResult& aRv)
   {
     Add(aCx, aType, aListener, aCapturing ? Capturing : Bubbling,
@@ -68,8 +69,8 @@ public:
   }
 
   void
-  RemoveEventListener(JSContext* aCx, const jsid& aType, JSObject* aListener,
-                      bool aCapturing)
+  RemoveEventListener(JSContext* aCx, const jsid& aType,
+                      JS::Handle<JSObject*> aListener, bool aCapturing)
   {
     if (mCollections.isEmpty()) {
       return;
@@ -85,10 +86,11 @@ public:
   GetEventListener(const jsid& aType) const;
 
   void
-  SetEventListener(JSContext* aCx, const jsid& aType, JSObject* aListener,
+  SetEventListener(JSContext* aCx, const jsid& aType,
+                   JS::Handle<JSObject*> aListener,
                    ErrorResult& aRv)
   {
-    JSObject* existing = GetEventListener(aType);
+    JS::Rooted<JSObject*> existing(aCx, GetEventListener(aType));
     if (existing) {
       Remove(aCx, aType, existing, Onfoo, false);
     }
@@ -118,12 +120,12 @@ private:
   FinalizeInternal(JSFreeOp* aFop);
 
   void
-  Add(JSContext* aCx, const jsid& aType, JSObject* aListener, Phase aPhase,
-      bool aWantsUntrusted, ErrorResult& aRv);
+  Add(JSContext* aCx, const jsid& aType, JS::Handle<JSObject*> aListener,
+      Phase aPhase, bool aWantsUntrusted, ErrorResult& aRv);
 
   void
-  Remove(JSContext* aCx, const jsid& aType, JSObject* aListener, Phase aPhase,
-         bool aClearEmpty);
+  Remove(JSContext* aCx, const jsid& aType, JS::Handle<JSObject*> aListener,
+         Phase aPhase, bool aClearEmpty);
 
   bool
   HasListenersForTypeInternal(JSContext* aCx, const jsid& aType) const;

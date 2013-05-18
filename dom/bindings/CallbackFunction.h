@@ -28,7 +28,7 @@ public:
   explicit CallbackFunction(JSObject* aCallable)
     : CallbackObject(aCallable)
   {
-    MOZ_ASSERT(JS_ObjectIsCallable(nullptr, aCallable));
+    MOZ_ASSERT(JS_ObjectIsCallable(nullptr, mCallback));
   }
 
   JS::Handle<JSObject*> Callable() const

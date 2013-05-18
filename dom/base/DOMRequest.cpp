@@ -115,7 +115,7 @@ DOMRequest::GetError(nsIDOMDOMError** aError)
 }
 
 void
-DOMRequest::FireSuccess(JS::Value aResult)
+DOMRequest::FireSuccess(JS::Handle<JS::Value> aResult)
 {
   NS_ASSERTION(!mDone, "mDone shouldn't have been set to true already!");
   NS_ASSERTION(!mError, "mError shouldn't have been set!");
@@ -222,7 +222,8 @@ DOMRequestService::FireSuccess(nsIDOMDOMRequest* aRequest,
                                const JS::Value& aResult)
 {
   NS_ENSURE_STATE(aRequest);
-  static_cast<DOMRequest*>(aRequest)->FireSuccess(aResult);
+  static_cast<DOMRequest*>(aRequest)->
+    FireSuccess(JS::Handle<JS::Value>::fromMarkedLocation(&aResult));
 
   return NS_OK;
 }
@@ -289,7 +290,7 @@ public:
   NS_IMETHODIMP
   Run()
   {
-    mReq->FireSuccess(mResult);
+    mReq->FireSuccess(JS::Handle<JS::Value>::fromMarkedLocation(&mResult));
     return NS_OK;
   }
 
