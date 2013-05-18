@@ -16,7 +16,6 @@ XPIDL_SOURCES = [
 TEST_DIRS += ['test']
 
 EXPORTS.mozilla.dom += [
-    'EnableWebSpeechRecognitionCheck.h',
     'FakeSpeechRecognitionService.h',
     'SpeechGrammar.h',
     'SpeechGrammarList.h',
@@ -25,8 +24,5 @@ EXPORTS.mozilla.dom += [
     'SpeechRecognitionResult.h',
     'SpeechRecognitionResultList.h',
     'SpeechStreamListener.h',
-    'endpointer.h',
-    'energy_endpointer.h',
-    'energy_endpointer_params.h',
 ]
 
