@@ -6,12 +6,13 @@
 #ifndef mozilla_dom_Touch_h
 #define mozilla_dom_Touch_h
 
-#include "nsDOMUIEvent.h"
 #include "nsIDOMTouchEvent.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "mozilla/Attributes.h"
 #include "nsJSEnvironment.h"
+#include "nsWrapperCache.h"
+#include "mozilla/dom/EventTarget.h"
 
 namespace mozilla {
 namespace dom {
