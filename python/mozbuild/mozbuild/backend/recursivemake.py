@@ -223,9 +223,9 @@ class RecursiveMakeBackend(BuildBackend):
         # Write out a dependency file used to determine whether a config.status
         # re-run is needed.
         backend_built_path = os.path.join(self.environment.topobjdir,
-            'backend.%s.built' % self.__class__.__name__)
+            'backend.%s.built' % self.__class__.__name__).replace(os.sep, '/')
         backend_deps = FileAvoidWrite('%s.pp' % backend_built_path)
-        inputs = sorted(self.backend_input_files)
+        inputs = sorted(p.replace(os.sep, '/') for p in self.backend_input_files)
         backend_deps.write('%s: %s\n' % (backend_built_path, ' '.join(inputs)))
         for path in inputs:
             backend_deps.write('%s:\n' % path)
