@@ -153,14 +153,14 @@ HTTP(../..) == simple-transform-rotate.svg simple-transform-rotate-ref.svg
 
 # text and masks
 HTTP(../..) == mask-applied.svg mask-applied-ref.svg
-fails HTTP(../..) == mask-content.svg mask-content-ref.svg  # fails due to invalidation problem - bug 873806
+# HTTP(../..) == mask-content.svg mask-content-ref.svg  # disabled due to infinite invalidation loop bug
 
 # text and clipPaths
 HTTP(../..) == clipPath-applied.svg clipPath-applied-ref.svg
-fails HTTP(../..) == clipPath-content.svg clipPath-content-ref.svg  # fails due to invalidation problem - bug 873806
+# HTTP(../..) == clipPath-content.svg clipPath-content-ref.svg  # disabled due to infinite invalidation loop bug
 
 # text and patterns
-== pattern-content.svg pattern-content-ref.svg
+# == pattern-content.svg pattern-content-ref.svg  # disabled due to infinite invalidation loop bug
 
 # text and filters
 HTTP(../..) == filter-applied.svg filter-applied-ref.svg
