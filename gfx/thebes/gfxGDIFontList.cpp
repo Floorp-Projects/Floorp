@@ -199,7 +199,7 @@ GDIFontEntry::ReadCMAP()
     nsresult rv;
 
     AutoFallibleTArray<uint8_t,16384> cmap;
-    rv = CopyFontTable(kCMAP, cmap);
+    rv = GetFontTable(kCMAP, cmap);
 
     bool unicodeFont = false, symbolFont = false; // currently ignored
 
@@ -263,8 +263,8 @@ GDIFontEntry::CreateFontInstance(const gfxFontStyle* aFontStyle, bool aNeedsBold
 }
 
 nsresult
-GDIFontEntry::CopyFontTable(uint32_t aTableTag,
-                            FallibleTArray<uint8_t>& aBuffer)
+GDIFontEntry::GetFontTable(uint32_t aTableTag,
+                           FallibleTArray<uint8_t>& aBuffer)
 {
     if (!IsTrueType()) {
         return NS_ERROR_FAILURE;

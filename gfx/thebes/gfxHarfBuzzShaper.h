@@ -18,15 +18,6 @@ public:
     gfxHarfBuzzShaper(gfxFont *aFont);
     virtual ~gfxHarfBuzzShaper();
 
-    /*
-     * For HarfBuzz font callback functions, font_data is a ptr to a
-     * FontCallbackData struct
-     */
-    struct FontCallbackData {
-        gfxHarfBuzzShaper *mShaper;
-        gfxContext        *mContext;
-    };
-
     virtual bool ShapeText(gfxContext      *aContext,
                            const PRUnichar *aText,
                            uint32_t         aOffset,
@@ -63,14 +54,8 @@ protected:
                               nsTArray<nsPoint>& aPositions,
                               uint32_t aAppUnitsPerDevUnit);
 
-    // harfbuzz face object: we acquire a reference from the font entry
-    // on shaper creation, and release it in our destructor
+    // harfbuzz face object, created on first use (caches font tables)
     hb_face_t         *mHBFace;
-
-    // size-specific font object, owned by the gfxHarfBuzzShaper
-    hb_font_t         *mHBFont;
-
-    FontCallbackData   mCallbackData;
 
     // Following table references etc are declared "mutable" because the
     // harfbuzz callback functions take a const ptr to the shaper, but
@@ -102,8 +87,6 @@ protected:
     // Whether the font implements GetGlyphWidth, or we should read tables
     // directly to get ideal widths
     bool mUseFontGlyphWidths;
-
-    bool mInitialized;
 };
 
 #endif /* GFX_HARFBUZZSHAPER_H */
