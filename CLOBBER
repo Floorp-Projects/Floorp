@@ -17,7 +17,7 @@
 #
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
-Bug 549861 backout, on Windows due to bug 873809, tests due to...
+Landing bug 865806
 
 Alternative to clobber is to run ./config.status from the objdir and to
 touch the CLOBBER file in the objdir.
