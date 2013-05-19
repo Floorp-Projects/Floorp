@@ -15,5 +15,5 @@
       </g>
     </pattern>
   </defs>
-  <rect width="200" height="200" fill="url(#p)" transform="scale(2)"/>
+  <rect width="200" height="200" fill="url(#p)" transform="scale(2,1)"/>
 </svg>
