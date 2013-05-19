@@ -68,6 +68,7 @@ load 434458-1.xul
 load 460900-1.xul
 load 464149-1.xul
 asserts-if(winWidget,1) load 464407-1.xhtml # Bug 450974
+load 467080.xul
 load 467481-1.xul
 load 470063-1.html
 load 470272.html
