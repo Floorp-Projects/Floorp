@@ -806,10 +806,8 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
     aResult.AppendInt(GetIntValue(), 10);
   }
   else if (eCSSUnit_Enumerated == unit) {
-    int32_t intValue = GetIntValue();
-    switch(aProperty) {
-
-    case eCSSProperty_text_decoration_line:
+    if (eCSSProperty_text_decoration_line == aProperty) {
+      int32_t intValue = GetIntValue();
       if (NS_STYLE_TEXT_DECORATION_LINE_NONE == intValue) {
         AppendASCIItoUTF16(nsCSSProps::LookupPropertyValue(aProperty, intValue),
                            aResult);
@@ -823,9 +821,9 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
           NS_STYLE_TEXT_DECORATION_LINE_PREF_ANCHORS,
           aResult);
       }
-      break;
-
-    case eCSSProperty_marks:
+    }
+    else if (eCSSProperty_marks == aProperty) {
+      int32_t intValue = GetIntValue();
       if (intValue == NS_STYLE_PAGE_MARKS_NONE) {
         AppendASCIItoUTF16(nsCSSProps::LookupPropertyValue(aProperty, intValue),
                            aResult);
@@ -835,48 +833,17 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
                                            NS_STYLE_PAGE_MARKS_REGISTER,
                                            aResult);
       }
-      break;
-
-    case eCSSProperty_paint_order:
+    }
+    else if (eCSSProperty_paint_order == aProperty) {
       MOZ_STATIC_ASSERT
         (NS_STYLE_PAINT_ORDER_BITWIDTH * NS_STYLE_PAINT_ORDER_LAST_VALUE <= 8,
          "SVGStyleStruct::mPaintOrder and the following cast not big enough");
       nsStyleUtil::AppendPaintOrderValue(static_cast<uint8_t>(GetIntValue()),
                                          aResult);
-      break;
-
-    case eCSSProperty_font_synthesis:
-      nsStyleUtil::AppendBitmaskCSSValue(aProperty, intValue,
-                                         NS_FONT_SYNTHESIS_WEIGHT,
-                                         NS_FONT_SYNTHESIS_STYLE,
-                                         aResult);
-      break;
-
-    case eCSSProperty_font_variant_east_asian:
-      nsStyleUtil::AppendBitmaskCSSValue(aProperty, intValue,
-                                         NS_FONT_VARIANT_EAST_ASIAN_JIS78,
-                                         NS_FONT_VARIANT_EAST_ASIAN_RUBY,
-                                         aResult);
-      break;
-
-    case eCSSProperty_font_variant_ligatures:
-      nsStyleUtil::AppendBitmaskCSSValue(aProperty, intValue,
-                                         NS_FONT_VARIANT_LIGATURES_COMMON,
-                                         NS_FONT_VARIANT_LIGATURES_NO_CONTEXTUAL,
-                                         aResult);
-      break;
-
-    case eCSSProperty_font_variant_numeric:
-      nsStyleUtil::AppendBitmaskCSSValue(aProperty, intValue,
-                                         NS_FONT_VARIANT_NUMERIC_LINING,
-                                         NS_FONT_VARIANT_NUMERIC_ORDINAL,
-                                         aResult);
-      break;
-
-    default:
-      const nsAFlatCString& name = nsCSSProps::LookupPropertyValue(aProperty, intValue);
+    }
+    else {
+      const nsAFlatCString& name = nsCSSProps::LookupPropertyValue(aProperty, GetIntValue());
       AppendASCIItoUTF16(name, aResult);
-      break;
     }
   }
   else if (eCSSUnit_EnumColor == unit) {
@@ -1090,27 +1057,7 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
 
     aResult.AppendLiteral(")");
   } else if (eCSSUnit_Pair == unit) {
-    if (eCSSProperty_font_variant_alternates == aProperty) {
-      int32_t intValue = GetPairValue().mXValue.GetIntValue();
-      nsAutoString out;
-
-      // simple, enumerated values
-      nsStyleUtil::AppendBitmaskCSSValue(aProperty,
-          intValue & NS_FONT_VARIANT_ALTERNATES_ENUMERATED_MASK,
-          NS_FONT_VARIANT_ALTERNATES_HISTORICAL,
-          NS_FONT_VARIANT_ALTERNATES_HISTORICAL,
-          out);
-
-      // functional values
-      const nsCSSValueList *list = GetPairValue().mYValue.GetListValue();
-      nsAutoTArray<gfxAlternateValue,8> altValues;
-
-      nsStyleUtil::ComputeFunctionalAlternates(list, altValues);
-      nsStyleUtil::SerializeFunctionalAlternates(altValues, out);
-      aResult.Append(out);
-    } else {
-      GetPairValue().AppendToString(aProperty, aResult);
-    }
+    GetPairValue().AppendToString(aProperty, aResult);
   } else if (eCSSUnit_Triplet == unit) {
     GetTripletValue().AppendToString(aProperty, aResult);
   } else if (eCSSUnit_Rect == unit) {

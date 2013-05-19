@@ -32,7 +32,6 @@ interface nsIDOMCSSRule : nsISupports
   const unsigned short      MOZ_KEYFRAME_RULE              = 8;
   const unsigned short      NAMESPACE_RULE                 = 10;
   const unsigned short      SUPPORTS_RULE                  = 12;
-  const unsigned short      FONT_FEATURE_VALUES_RULE       = 14;
 
   readonly attribute unsigned short      type;
            attribute DOMString           cssText;

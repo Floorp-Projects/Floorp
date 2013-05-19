@@ -1372,111 +1372,17 @@ gfxFontCache::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
     SizeOfExcludingThis(aMallocSizeOf, aSizes);
 }
 
-#define MAX_SSXX_VALUE 99
-#define MAX_CVXX_VALUE 99
-
-static void
-LookupAlternateValues(gfxFontFeatureValueSet *featureLookup,
-                      const nsAString& aFamily,
-                      const nsTArray<gfxAlternateValue>& altValue,
-                      nsTArray<gfxFontFeature>& aFontFeatures)
-{
-    uint32_t numAlternates = altValue.Length();
-    for (uint32_t i = 0; i < numAlternates; i++) {
-        const gfxAlternateValue& av = altValue.ElementAt(i);
-        nsAutoTArray<uint32_t,4> values;
-
-        // map <family, name, feature> ==> <values>
-        bool found =
-            featureLookup->GetFontFeatureValuesFor(aFamily, av.alternate,
-                                                   av.value, values);
-        uint32_t numValues = values.Length();
-
-        // nothing defined, skip
-        if (!found || numValues == 0) {
-            continue;
-        }
-
-        gfxFontFeature feature;
-        if (av.alternate == NS_FONT_VARIANT_ALTERNATES_CHARACTER_VARIANT) {
-            NS_ASSERTION(numValues <= 2,
-                         "too many values allowed for character-variant");
-            // character-variant(12 3) ==> 'cv12' = 3
-            uint32_t nn = values.ElementAt(0);
-            // ignore values greater than 99
-            if (nn == 0 || nn > MAX_CVXX_VALUE) {
-                continue;
-            }
-            feature.mValue = 1;
-            if (numValues > 1) {
-                feature.mValue = values.ElementAt(1);
-            }
-            feature.mTag = HB_TAG('c','v',('0' + nn / 10), ('0' + nn % 10));
-            aFontFeatures.AppendElement(feature);
-
-        } else if (av.alternate == NS_FONT_VARIANT_ALTERNATES_STYLESET) {
-            // styleset(1 2 7) ==> 'ss01' = 1, 'ss02' = 1, 'ss07' = 1
-            feature.mValue = 1;
-            for (uint32_t v = 0; v < numValues; v++) {
-                uint32_t nn = values.ElementAt(v);
-                if (nn == 0 || nn > MAX_SSXX_VALUE) {
-                    continue;
-                }
-                feature.mTag = HB_TAG('s','s',('0' + nn / 10), ('0' + nn % 10));
-                aFontFeatures.AppendElement(feature);
-            }
-
-        } else {
-            NS_ASSERTION(numValues == 1,
-                   "too many values for font-specific font-variant-alternates");
-            feature.mValue = values.ElementAt(0);
-
-            switch (av.alternate) {
-                case NS_FONT_VARIANT_ALTERNATES_STYLISTIC:  // salt
-                    feature.mTag = HB_TAG('s','a','l','t');
-                    break;
-                case NS_FONT_VARIANT_ALTERNATES_SWASH:  // swsh, cswh
-                    feature.mTag = HB_TAG('s','w','s','h');
-                    aFontFeatures.AppendElement(feature);
-                    feature.mTag = HB_TAG('c','s','w','h');
-                    break;
-                case NS_FONT_VARIANT_ALTERNATES_ORNAMENTS: // ornm
-                    feature.mTag = HB_TAG('o','r','n','m');
-                    break;
-                case NS_FONT_VARIANT_ALTERNATES_ANNOTATION: // nalt
-                    feature.mTag = HB_TAG('n','a','l','t');
-                    break;
-                default:
-                    feature.mTag = 0;
-                    break;
-            }
-
-            NS_ASSERTION(feature.mTag, "unsupported alternate type");
-            if (!feature.mTag) {
-                continue;
-            }
-            aFontFeatures.AppendElement(feature);
-        }
-    }
-}
-
 /* static */ bool
 gfxFontShaper::MergeFontFeatures(
-    const gfxFontStyle *aStyle,
+    const nsTArray<gfxFontFeature>& aStyleRuleFeatures,
     const nsTArray<gfxFontFeature>& aFontFeatures,
     bool aDisableLigatures,
-    const nsAString& aFamilyName,
     nsDataHashtable<nsUint32HashKey,uint32_t>& aMergedFeatures)
 {
-    uint32_t numAlts = aStyle->alternateValues.Length();
-    const nsTArray<gfxFontFeature>& styleRuleFeatures =
-        aStyle->featureSettings;
-
     // bail immediately if nothing to do
-    if (styleRuleFeatures.IsEmpty() &&
+    if (aStyleRuleFeatures.IsEmpty() &&
         aFontFeatures.IsEmpty() &&
-        !aDisableLigatures &&
-        numAlts == 0) {
+        !aDisableLigatures) {
         return false;
     }
 
@@ -1498,25 +1404,10 @@ gfxFontShaper::MergeFontFeatures(
         aMergedFeatures.Put(feature.mTag, feature.mValue);
     }
 
-    // add font-specific feature values from style rules
-    if (aStyle->featureValueLookup && numAlts > 0) {
-        nsAutoTArray<gfxFontFeature,4> featureList;
-
-        // insert list of alternate feature settings
-        LookupAlternateValues(aStyle->featureValueLookup, aFamilyName,
-                              aStyle->alternateValues, featureList);
-
-        count = featureList.Length();
-        for (i = 0; i < count; i++) {
-            const gfxFontFeature& feature = featureList.ElementAt(i);
-            aMergedFeatures.Put(feature.mTag, feature.mValue);
-        }
-    }
-
     // add feature values from style rules
-    count = styleRuleFeatures.Length();
+    count = aStyleRuleFeatures.Length();
     for (i = 0; i < count; i++) {
-        const gfxFontFeature& feature = styleRuleFeatures.ElementAt(i);
+        const gfxFontFeature& feature = aStyleRuleFeatures.ElementAt(i);
         aMergedFeatures.Put(feature.mTag, feature.mValue);
     }
 
@@ -4905,7 +4796,6 @@ gfxFontStyle::gfxFontStyle(uint8_t aStyle, uint16_t aWeight, int16_t aStretch,
 
 gfxFontStyle::gfxFontStyle(const gfxFontStyle& aStyle) :
     language(aStyle.language),
-    featureValueLookup(aStyle.featureValueLookup),
     size(aStyle.size), sizeAdjust(aStyle.sizeAdjust),
     languageOverride(aStyle.languageOverride),
     weight(aStyle.weight), stretch(aStyle.stretch),
@@ -4913,7 +4803,6 @@ gfxFontStyle::gfxFontStyle(const gfxFontStyle& aStyle) :
     style(aStyle.style)
 {
     featureSettings.AppendElements(aStyle.featureSettings);
-    alternateValues.AppendElements(aStyle.alternateValues);
 }
 
 int8_t

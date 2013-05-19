@@ -188,21 +188,13 @@ private:
   mozilla::dom::CSSValue* DoGetColor();
   mozilla::dom::CSSValue* DoGetFontFamily();
   mozilla::dom::CSSValue* DoGetFontFeatureSettings();
-  mozilla::dom::CSSValue* DoGetFontKerning();
   mozilla::dom::CSSValue* DoGetFontLanguageOverride();
   mozilla::dom::CSSValue* DoGetFontSize();
   mozilla::dom::CSSValue* DoGetFontSizeAdjust();
   mozilla::dom::CSSValue* DoGetFontStretch();
   mozilla::dom::CSSValue* DoGetFontStyle();
-  mozilla::dom::CSSValue* DoGetFontSynthesis();
-  mozilla::dom::CSSValue* DoGetFontVariant();
-  mozilla::dom::CSSValue* DoGetFontVariantAlternates();
-  mozilla::dom::CSSValue* DoGetFontVariantCaps();
-  mozilla::dom::CSSValue* DoGetFontVariantEastAsian();
-  mozilla::dom::CSSValue* DoGetFontVariantLigatures();
-  mozilla::dom::CSSValue* DoGetFontVariantNumeric();
-  mozilla::dom::CSSValue* DoGetFontVariantPosition();
   mozilla::dom::CSSValue* DoGetFontWeight();
+  mozilla::dom::CSSValue* DoGetFontVariant();
 
   /* Background properties */
   mozilla::dom::CSSValue* DoGetBackgroundAttachment();
