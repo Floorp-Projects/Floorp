@@ -10,6 +10,7 @@
 #include "nsReadableUtils.h"
 #include "nsCSSProps.h"
 #include "nsRuleNode.h"
+#include "nsIContentSecurityPolicy.h"
 
 using namespace mozilla;
 
@@ -303,3 +304,61 @@ nsStyleUtil::IsSignificantChild(nsIContent* aChild, bool aTextIsSignificant,
           !aChild->TextIsOnlyWhitespace());
 }
 
+/* static */ bool
+nsStyleUtil::CSPAllowsInlineStyle(nsIPrincipal* aPrincipal,
+                                  nsIURI* aSourceURI,
+                                  uint32_t aLineNumber,
+                                  const nsSubstring& aStyleText,
+                                  nsresult* aRv)
+{
+  nsresult rv;
+
+  if (aRv) {
+    *aRv = NS_OK;
+  }
+
+  nsCOMPtr<nsIContentSecurityPolicy> csp;
+  rv = aPrincipal->GetCsp(getter_AddRefs(csp));
+
+  if (NS_FAILED(rv)) {
+    if (aRv)
+      *aRv = rv;
+    return false;
+  }
+
+  if (csp) {
+    bool inlineOK = true;
+    bool reportViolation = false;
+    rv = csp->GetAllowsInlineStyle(&reportViolation, &inlineOK);
+    if (NS_FAILED(rv)) {
+      if (aRv)
+        *aRv = rv;
+      return false;
+    }
+
+    if (reportViolation) {
+      // Inline styles are not allowed by CSP, so report the violation
+      nsAutoCString asciiSpec;
+      aSourceURI->GetAsciiSpec(asciiSpec);
+      nsAutoString styleText(aStyleText);
+
+      // cap the length of the style sample at 40 chars.
+      if (styleText.Length() > 40) {
+        styleText.Truncate(40);
+        styleText.Append(NS_LITERAL_STRING("..."));
+      }
+
+      csp->LogViolationDetails(nsIContentSecurityPolicy::VIOLATION_TYPE_INLINE_STYLE,
+                              NS_ConvertUTF8toUTF16(asciiSpec),
+                              aStyleText,
+                              aLineNumber);
+    }
+
+    if (!inlineOK) {
+        // The inline style should be blocked.
+        return false;
+    }
+  }
+  // No CSP or a CSP that allows inline styles.
+  return true;
+}

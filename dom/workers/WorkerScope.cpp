@@ -186,8 +186,9 @@ private:
     }
 
     ErrorResult rv;
+    JS::Rooted<JSObject*> listenerObj(aCx, JSVAL_TO_OBJECT(aVp));
     scope->SetEventListener(NS_ConvertASCIItoUTF16(name + 2),
-                            JSVAL_TO_OBJECT(aVp), rv);
+                            listenerObj, rv);
     if (rv.Failed()) {
       JS_ReportError(aCx, "Failed to set event listener!");
       return false;
@@ -360,7 +361,7 @@ private:
       return false;
     }
 
-    JSObject* listener = JS_GetFunctionObject(adaptor);
+    JS::Rooted<JSObject*> listener(aCx, JS_GetFunctionObject(adaptor));
     if (!listener) {
       return false;
     }
@@ -776,8 +777,9 @@ private:
 
     ErrorResult rv;
 
+    JS::Rooted<JSObject*> listenerObj(aCx, JSVAL_TO_OBJECT(aVp));
     scope->SetEventListener(NS_ConvertASCIItoUTF16(name + 2),
-                            JSVAL_TO_OBJECT(aVp), rv);
+                            listenerObj, rv);
 
     if (rv.Failed()) {
       JS_ReportError(aCx, "Failed to set event listener!");

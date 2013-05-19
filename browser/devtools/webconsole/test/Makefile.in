@@ -129,6 +129,7 @@ MOCHITEST_BROWSER_FILES = \
 	browser_bug_869003_inspect_cross_domain_object.js \
 	browser_bug_862916_console_dir_and_filter_off.js \
 	browser_console_native_getters.js \
+	browser_bug_871156_ctrlw_close_tab.js \
 	head.js \
 	$(NULL)
 

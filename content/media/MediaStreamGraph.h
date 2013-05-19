@@ -939,6 +939,10 @@ public:
    * in main-thread stream state.
    */
   int64_t GetCurrentGraphUpdateIndex() { return mGraphUpdatesSent; }
+  /**
+   * Start processing non-realtime for a specific number of ticks.
+   */
+  void StartNonRealtimeProcessing(uint32_t aTicksToProcess);
 
   /**
    * Media graph thread only.

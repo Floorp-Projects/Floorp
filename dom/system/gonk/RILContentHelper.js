@@ -417,27 +417,33 @@ RILContentHelper.prototype = {
   },
 
   get iccInfo() {
-    return this.getRilContext().iccInfo;
+    let context = this.getRilContext();
+    return context && context.iccInfo;
   },
 
   get voiceConnectionInfo() {
-    return this.getRilContext().voiceConnectionInfo;
+    let context = this.getRilContext();
+    return context && context.voiceConnectionInfo;
   },
 
   get dataConnectionInfo() {
-    return this.getRilContext().dataConnectionInfo;
+    let context = this.getRilContext();
+    return context && context.dataConnectionInfo;
   },
 
   get cardState() {
-    return this.getRilContext().cardState;
+    let context = this.getRilContext();
+    return context && context.cardState;
   },
 
   get retryCount() {
-    return this.getRilContext().retryCount;
+    let context = this.getRilContext();
+    return context && context.retryCount;
   },
 
   get networkSelectionMode() {
-    return this.getRilContext().networkSelectionMode;
+    let context = this.getRilContext();
+    return context && context.networkSelectionMode;
   },
 
   /**
@@ -706,6 +712,14 @@ RILContentHelper.prototype = {
 
     if (contact.tel) {
       iccContact.number = contact.tel[0].value;
+    }
+
+    if (contact.email) {
+      iccContact.email = contact.email[0].value;
+    }
+
+    if (contact.tel.length > 1) {
+      iccContact.anr = contact.tel.slice(1);
     }
 
     cpmm.sendAsyncMessage("RIL:UpdateIccContact", {requestId: requestId,
@@ -984,7 +998,6 @@ RILContentHelper.prototype = {
     if (topic == "xpcom-shutdown") {
       this.removeMessageListener();
       Services.obs.removeObserver(this, "xpcom-shutdown");
-      cpmm = null;
     }
   },
 
@@ -1090,7 +1103,7 @@ RILContentHelper.prototype = {
                            "callStateChanged",
                            [msg.json.callIndex, msg.json.state,
                             msg.json.number, msg.json.isActive,
-                            msg.json.isOutgoing]);
+                            msg.json.isOutgoing, msg.json.isEmergency]);
         break;
       case "RIL:CallError":
         this._deliverEvent("_telephonyListeners",
@@ -1199,7 +1212,8 @@ RILContentHelper.prototype = {
       try {
         keepGoing =
           callback.enumerateCallState(call.callIndex, call.state, call.number,
-                                      call.isActive, call.isOutgoing);
+                                      call.isActive, call.isOutgoing,
+                                      call.isEmergency);
       } catch (e) {
         debug("callback handler for 'enumerateCallState' threw an " +
               " exception: " + e);

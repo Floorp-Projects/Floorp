@@ -44,6 +44,7 @@ include ../../js/xpconnect/crashtests/crashtests.list
 include ../../layout/base/crashtests/crashtests.list
 include ../../layout/forms/crashtests/crashtests.list
 include ../../layout/generic/crashtests/crashtests.list
+include ../../layout/printing/crashtests/crashtests.list
 include ../../layout/mathml/crashtests/crashtests.list
 include ../../layout/style/crashtests/crashtests.list
 include ../../layout/svg/crashtests/crashtests.list

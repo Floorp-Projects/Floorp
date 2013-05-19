@@ -3,7 +3,7 @@
      http://creativecommons.org/publicdomain/zero/1.0/
 -->
 <svg xmlns="http://www.w3.org/2000/svg" version="1.1"
-     onload="startTest()" class="reftest-wait">
+     class="reftest-wait">
 
   <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=708155 -->
 
@@ -11,11 +11,8 @@
 
   <script>
 
-  function startTest() {
-    document.addEventListener("MozReftestInvalidate", doTest, false);
-    // in case we're not gecko
-    setTimeout(doTest, 5000);
-  }
+  document.addEventListener("MozReftestInvalidate", doTest, false);
+  setTimeout(doTest, 4000); // fallback for running outside reftest
 
   function doTest() {
     document.getElementById('fo').style.opacity = '1';

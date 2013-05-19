@@ -137,8 +137,9 @@
 #include "nsIPrompt.h"
 #include "nsIPropertyBag2.h"
 #include "nsIDOMPageTransitionEvent.h"
-#include "nsIDOMStyleSheetAddedEvent.h"
-#include "nsIDOMStyleSheetRemovedEvent.h"
+#include "nsIDOMStyleRuleChangeEvent.h"
+#include "nsIDOMStyleSheetChangeEvent.h"
+#include "nsIDOMStyleSheetApplicableStateChangeEvent.h"
 #include "nsJSUtils.h"
 #include "nsFrameLoader.h"
 #include "nsEscape.h"
@@ -202,6 +203,8 @@
 #include "nsITextControlElement.h"
 #include "nsIDOMNSEditableElement.h"
 #include "nsIEditor.h"
+#include "nsIDOMCSSStyleRule.h"
+#include "mozilla/css/Rule.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -3722,7 +3725,7 @@ nsDocument::AddStyleSheetToStyleSets(nsIStyleSheet* aSheet)
   }
 }
 
-#define DO_STYLESHEET_NOTIFICATION(createFunc, initMethod, concreteInterface, type) \
+#define DO_STYLESHEET_NOTIFICATION(createFunc, concreteInterface, initMethod, type, ...) \
   do {                                                                  \
     nsCOMPtr<nsIDOMEvent> event;                                        \
     nsresult rv = createFunc(getter_AddRefs(event), this,               \
@@ -3739,7 +3742,7 @@ nsDocument::AddStyleSheetToStyleSets(nsIStyleSheet* aSheet)
     nsCOMPtr<concreteInterface> ssEvent(do_QueryInterface(event));      \
     MOZ_ASSERT(ssEvent);                                                \
     ssEvent->initMethod(NS_LITERAL_STRING(type), true, true,            \
-                        cssSheet, aDocumentSheet);                      \
+                        cssSheet, __VA_ARGS__);                         \
     event->SetTrusted(true);                                            \
     event->SetTarget(this);                                             \
     nsRefPtr<nsAsyncDOMEvent> asyncEvent = new nsAsyncDOMEvent(this, event); \
@@ -3751,23 +3754,29 @@ void
 nsDocument::NotifyStyleSheetAdded(nsIStyleSheet* aSheet, bool aDocumentSheet)
 {
   NS_DOCUMENT_NOTIFY_OBSERVERS(StyleSheetAdded, (this, aSheet, aDocumentSheet));
-  DO_STYLESHEET_NOTIFICATION(NS_NewDOMStyleSheetAddedEvent,
-                             InitStyleSheetAddedEvent,
-                             nsIDOMStyleSheetAddedEvent,
-                             "StyleSheetAdded");
+
+  if (StyleSheetChangeEventsEnabled()) {
+    DO_STYLESHEET_NOTIFICATION(NS_NewDOMStyleSheetChangeEvent,
+                               nsIDOMStyleSheetChangeEvent,
+                               InitStyleSheetChangeEvent,
+                               "StyleSheetAdded",
+                               aDocumentSheet);
+  }
 }
 
 void
 nsDocument::NotifyStyleSheetRemoved(nsIStyleSheet* aSheet, bool aDocumentSheet)
 {
   NS_DOCUMENT_NOTIFY_OBSERVERS(StyleSheetRemoved, (this, aSheet, aDocumentSheet));
-  DO_STYLESHEET_NOTIFICATION(NS_NewDOMStyleSheetRemovedEvent,
-                             InitStyleSheetRemovedEvent,
-                             nsIDOMStyleSheetRemovedEvent,
-                             "StyleSheetRemoved");
-}
 
-#undef DO_STYLESHEET_NOTIFICATION
+  if (StyleSheetChangeEventsEnabled()) {
+    DO_STYLESHEET_NOTIFICATION(NS_NewDOMStyleSheetChangeEvent,
+                               nsIDOMStyleSheetChangeEvent,
+                               InitStyleSheetChangeEvent,
+                               "StyleSheetRemoved",
+                               aDocumentSheet);
+  }
+}
 
 void
 nsDocument::AddStyleSheet(nsIStyleSheet* aSheet)
@@ -3888,6 +3897,14 @@ nsDocument::SetStyleSheetApplicableState(nsIStyleSheet* aSheet,
 
   NS_DOCUMENT_NOTIFY_OBSERVERS(StyleSheetApplicableStateChanged,
                                (this, aSheet, aApplicable));
+
+  if (StyleSheetChangeEventsEnabled()) {
+    DO_STYLESHEET_NOTIFICATION(NS_NewDOMStyleSheetApplicableStateChangeEvent,
+                               nsIDOMStyleSheetApplicableStateChangeEvent,
+                               InitStyleSheetApplicableStateChangeEvent,
+                               "StyleSheetApplicableStateChanged",
+                               aApplicable);
+  }
 }
 
 // These three functions are a lot like the implementation of the
@@ -4617,30 +4634,59 @@ nsDocument::DocumentStatesChanged(nsEventStates aStateMask)
 }
 
 void
-nsDocument::StyleRuleChanged(nsIStyleSheet* aStyleSheet,
+nsDocument::StyleRuleChanged(nsIStyleSheet* aSheet,
                              nsIStyleRule* aOldStyleRule,
                              nsIStyleRule* aNewStyleRule)
 {
   NS_DOCUMENT_NOTIFY_OBSERVERS(StyleRuleChanged,
-                               (this, aStyleSheet,
+                               (this, aSheet,
                                 aOldStyleRule, aNewStyleRule));
+
+  if (StyleSheetChangeEventsEnabled()) {
+    nsCOMPtr<css::Rule> rule = do_QueryInterface(aNewStyleRule);
+    DO_STYLESHEET_NOTIFICATION(NS_NewDOMStyleRuleChangeEvent,
+                               nsIDOMStyleRuleChangeEvent,
+                               InitStyleRuleChangeEvent,
+                               "StyleRuleChanged",
+                               rule ? rule->GetDOMRule() : nullptr);
+  }
 }
 
 void
-nsDocument::StyleRuleAdded(nsIStyleSheet* aStyleSheet,
+nsDocument::StyleRuleAdded(nsIStyleSheet* aSheet,
                            nsIStyleRule* aStyleRule)
 {
   NS_DOCUMENT_NOTIFY_OBSERVERS(StyleRuleAdded,
-                               (this, aStyleSheet, aStyleRule));
+                               (this, aSheet, aStyleRule));
+
+  if (StyleSheetChangeEventsEnabled()) {
+    nsCOMPtr<css::Rule> rule = do_QueryInterface(aStyleRule);
+    DO_STYLESHEET_NOTIFICATION(NS_NewDOMStyleRuleChangeEvent,
+                               nsIDOMStyleRuleChangeEvent,
+                               InitStyleRuleChangeEvent,
+                               "StyleRuleAdded",
+                               rule ? rule->GetDOMRule() : nullptr);
+  }
 }
 
 void
-nsDocument::StyleRuleRemoved(nsIStyleSheet* aStyleSheet,
+nsDocument::StyleRuleRemoved(nsIStyleSheet* aSheet,
                              nsIStyleRule* aStyleRule)
 {
   NS_DOCUMENT_NOTIFY_OBSERVERS(StyleRuleRemoved,
-                               (this, aStyleSheet, aStyleRule));
+                               (this, aSheet, aStyleRule));
+
+  if (StyleSheetChangeEventsEnabled()) {
+    nsCOMPtr<css::Rule> rule = do_QueryInterface(aStyleRule);
+    DO_STYLESHEET_NOTIFICATION(NS_NewDOMStyleRuleChangeEvent,
+                               nsIDOMStyleRuleChangeEvent,
+                               InitStyleRuleChangeEvent,
+                               "StyleRuleRemoved",
+                               rule ? rule->GetDOMRule() : nullptr);
+  }
 }
+
+#undef DO_STYLESHEET_NOTIFICATION
 
 
 //
@@ -5030,7 +5076,7 @@ nsDocument::Register(const nsAString& aName, const JS::Value& aOptions,
                      JSContext* aCx, uint8_t aOptionalArgc,
                      jsval* aConstructor /* out param */)
 {
-  ElementRegistrationOptions options;
+  RootedDictionary<ElementRegistrationOptions> options(aCx);
   if (aOptionalArgc > 0) {
     JSAutoCompartment ac(aCx, GetWrapper());
     JS::Rooted<JS::Value> opts(aCx, aOptions);
@@ -7977,6 +8023,17 @@ NotifyPageHide(nsIDocument* aDocument, void* aData)
   return true;
 }
 
+static void
+DispatchFullScreenChange(nsIDocument* aTarget)
+{
+  nsRefPtr<nsAsyncDOMEvent> e =
+    new nsAsyncDOMEvent(aTarget,
+                        NS_LITERAL_STRING("mozfullscreenchange"),
+                        true,
+                        false);
+  e->PostDOMEvent();
+}
+
 void
 nsDocument::OnPageHide(bool aPersisted,
                        EventTarget* aDispatchStartTarget)
@@ -8050,6 +8107,10 @@ nsDocument::OnPageHide(bool aPersisted,
     // so calling CleanupFullscreenState() here will ensure all hidden
     // documents have their fullscreen state reset.
     CleanupFullscreenState();
+
+    // If anyone was listening to this document's state, advertizing the state
+    // change would be the least of the politeness.
+    DispatchFullScreenChange(this);
   }
 }
 
@@ -9201,7 +9262,7 @@ nsDocument::CreateTouchList(nsIVariant* aPoints,
       aPoints->GetAsISupports(getter_AddRefs(data));
       nsCOMPtr<nsIDOMTouch> point = do_QueryInterface(data);
       if (point) {
-        retval->Append(point);
+        retval->Append(static_cast<Touch*>(point.get()));
       }
     } else if (type == nsIDataType::VTYPE_ARRAY) {
       uint16_t valueType;
@@ -9216,7 +9277,7 @@ nsDocument::CreateTouchList(nsIVariant* aPoints,
           nsCOMPtr<nsISupports> supports = dont_AddRef(values[i]);
           nsCOMPtr<nsIDOMTouch> point = do_QueryInterface(supports);
           if (point) {
-            retval->Append(point);
+            retval->Append(static_cast<Touch*>(point.get()));
           }
         }
       }
@@ -9481,17 +9542,6 @@ void
 nsDocument::SetFullscreenRoot(nsIDocument* aRoot)
 {
   mFullscreenRoot = do_GetWeakReference(aRoot);
-}
-
-static void
-DispatchFullScreenChange(nsIDocument* aTarget)
-{
-  nsRefPtr<nsAsyncDOMEvent> e =
-    new nsAsyncDOMEvent(aTarget,
-                        NS_LITERAL_STRING("mozfullscreenchange"),
-                        true,
-                        false);
-  e->PostDOMEvent();
 }
 
 NS_IMETHODIMP

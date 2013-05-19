@@ -17,7 +17,13 @@ class AudioContext;
 class AudioDestinationNode : public AudioNode
 {
 public:
-  AudioDestinationNode(AudioContext* aContext, MediaStreamGraph* aGraph);
+  // This node type knows what MediaStreamGraph to use based on
+  // whether it's in offline mode.
+  AudioDestinationNode(AudioContext* aContext,
+                       bool aIsOffline,
+                       uint32_t aNumberOfChannels = 0,
+                       uint32_t aLength = 0,
+                       float aSampleRate = 0.0f);
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -29,6 +35,12 @@ public:
     return 0;
   }
 
+  void StartRendering();
+
+  void DestroyGraph();
+
+private:
+  uint32_t mFramesToProduce;
 };
 
 }

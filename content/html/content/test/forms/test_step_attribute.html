@@ -406,6 +406,13 @@ for (var test of data) {
       input.value = 2;
       checkValidity(input, false, apply, {low: 1, high: 3});
 
+      // Rounding issues.
+      input = getFreshElement(test.type);
+      input.min = 0.1;
+      input.step = 0.2;
+      input.value = 0.3;
+      checkValidity(input, true, apply);
+
       // Check that when the higher value is higher than max, we don't show it.
       input = getFreshElement(test.type);
       input.step = '2';

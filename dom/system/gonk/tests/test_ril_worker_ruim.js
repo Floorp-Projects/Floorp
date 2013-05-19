@@ -143,7 +143,7 @@ add_test(function test_read_cdmaspn() {
 
     worker.RuimRecordHelper.readSPN();
     do_check_eq(worker.RIL.iccInfo.spn, expectedSpn);
-    do_check_eq(worker.RIL.iccInfoPrivate.SPN.spnDisplayCondition,
+    do_check_eq(worker.RIL.iccInfoPrivate.spnDisplayCondition,
                 expectedDisplayCondition);
   }
 
@@ -156,7 +156,7 @@ add_test(function test_read_cdmaspn() {
               String.fromCharCode(0x592a) +
               String.fromCharCode(0x96fb) +
               String.fromCharCode(0x4fe1),
-              true);
+              0x1);
 
   // Test when there's no tailing 0xff in spn string.
   testReadSpn([0x01, 0x04, 0x06, 0x4e, 0x9e, 0x59, 0x2a, 0x96,
@@ -165,7 +165,7 @@ add_test(function test_read_cdmaspn() {
               String.fromCharCode(0x592a) +
               String.fromCharCode(0x96fb) +
               String.fromCharCode(0x4fe1),
-              true);
+              0x1);
 
   run_next_test();
 });
@@ -199,9 +199,7 @@ add_test(function test_cdma_spn_display_condition() {
                                 currentSystemId, currentNetworkId,
                                 expectUpdateDisplayCondition,
                                 expectIsDisplaySPNRequired) {
-    RIL.iccInfoPrivate.SPN = {
-      spnDisplayCondition: ruimDisplayCondition
-    };
+    RIL.iccInfoPrivate.spnDisplayCondition = ruimDisplayCondition;
     RIL.cdmaHome = {
       systemId: homeSystemIds,
       networkId: homeNetworkIds
@@ -217,16 +215,16 @@ add_test(function test_cdma_spn_display_condition() {
   };
 
   // SPN is not required when ruimDisplayCondition is false.
-  testDisplayCondition(false, [123], [345], 123, 345, true, false);
+  testDisplayCondition(0x0, [123], [345], 123, 345, true, false);
 
   // System id and network id are all match.
-  testDisplayCondition(true, [123], [345], 123, 345, true, true);
+  testDisplayCondition(0x1, [123], [345], 123, 345, true, true);
 
   // Network is 65535, we should only need to match system id.
-  testDisplayCondition(true, [123], [65535], 123, 345, false, true);
+  testDisplayCondition(0x1, [123], [65535], 123, 345, false, true);
 
   // Not match.
-  testDisplayCondition(true, [123], [456], 123, 345, true, false);
+  testDisplayCondition(0x1, [123], [456], 123, 345, true, false);
 
   run_next_test();
 });

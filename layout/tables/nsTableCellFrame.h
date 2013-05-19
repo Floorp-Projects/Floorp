@@ -60,10 +60,10 @@ public:
 
   NS_IMETHOD  AttributeChanged(int32_t         aNameSpaceID,
                                nsIAtom*        aAttribute,
-                               int32_t         aModType);
+                               int32_t         aModType) MOZ_OVERRIDE;
 
   /** @see nsIFrame::DidSetStyleContext */
-  virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext);
+  virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) MOZ_OVERRIDE;
 
   // table cells contain a block frame which does most of the work, and
   // so these functions should never be called. They assert and return
@@ -76,13 +76,13 @@ public:
   NS_IMETHOD RemoveFrame(ChildListID     aListID,
                          nsIFrame*       aOldFrame) MOZ_OVERRIDE;
 
-  virtual nsIFrame* GetContentInsertionFrame() {
+  virtual nsIFrame* GetContentInsertionFrame() MOZ_OVERRIDE {
     return GetFirstPrincipalChild()->GetContentInsertionFrame();
   }
 
-  virtual nsMargin GetUsedMargin() const;
+  virtual nsMargin GetUsedMargin() const MOZ_OVERRIDE;
 
-  virtual void NotifyPercentHeight(const nsHTMLReflowState& aReflowState);
+  virtual void NotifyPercentHeight(const nsHTMLReflowState& aReflowState) MOZ_OVERRIDE;
 
   virtual bool NeedsToObserve(const nsHTMLReflowState& aReflowState) MOZ_OVERRIDE;
 
@@ -101,25 +101,25 @@ public:
                            const nsRect& aDirtyRect, nsPoint aPt,
                            uint32_t aFlags);
 
-  virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext);
-  virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext);
+  virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
+  virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
   virtual IntrinsicWidthOffsetData
-    IntrinsicWidthOffsets(nsRenderingContext* aRenderingContext);
+    IntrinsicWidthOffsets(nsRenderingContext* aRenderingContext) MOZ_OVERRIDE;
 
   NS_IMETHOD Reflow(nsPresContext*      aPresContext,
                     nsHTMLReflowMetrics& aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&      aStatus);
+                    nsReflowStatus&      aStatus) MOZ_OVERRIDE;
 
   /**
    * Get the "type" of the frame
    *
    * @see nsLayoutAtoms::tableCellFrame
    */
-  virtual nsIAtom* GetType() const;
+  virtual nsIAtom* GetType() const MOZ_OVERRIDE;
 
 #ifdef DEBUG
-  NS_IMETHOD GetFrameName(nsAString& aResult) const;
+  NS_IMETHOD GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
 #endif
 
   void VerticallyAlignChild(nscoord aMaxAscent);
@@ -162,7 +162,7 @@ public:
    * for continued cell frames the row index is that of the cell's first-in-flow
    * and the column index (starting at 0 for the first column
    */
-  NS_IMETHOD GetCellIndexes(int32_t &aRowIndex, int32_t &aColIndex);
+  NS_IMETHOD GetCellIndexes(int32_t &aRowIndex, int32_t &aColIndex) MOZ_OVERRIDE;
 
   /** return the mapped cell's row index (starting at 0 for the first row) */
   virtual nsresult GetRowIndex(int32_t &aRowIndex) const MOZ_OVERRIDE;
@@ -209,9 +209,9 @@ public:
   void DecorateForSelection(nsRenderingContext& aRenderingContext,
                             nsPoint              aPt);
 
-  virtual bool UpdateOverflow();
+  virtual bool UpdateOverflow() MOZ_OVERRIDE;
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const
+  virtual bool IsFrameOfType(uint32_t aFlags) const MOZ_OVERRIDE
   {
     return nsContainerFrame::IsFrameOfType(aFlags & ~(nsIFrame::eTablePart));
   }
@@ -297,8 +297,8 @@ public:
 
   virtual nsIAtom* GetType() const MOZ_OVERRIDE;
 
-  virtual nsMargin GetUsedBorder() const;
-  virtual bool GetBorderRadii(nscoord aRadii[8]) const;
+  virtual nsMargin GetUsedBorder() const MOZ_OVERRIDE;
+  virtual bool GetBorderRadii(nscoord aRadii[8]) const MOZ_OVERRIDE;
 
   // Get the *inner half of the border only*, in twips.
   virtual nsMargin* GetBorderWidth(nsMargin& aBorder) const MOZ_OVERRIDE;

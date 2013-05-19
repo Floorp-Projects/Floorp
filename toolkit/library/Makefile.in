@@ -13,6 +13,7 @@ include $(topsrcdir)/rdf/util/src/objs.mk
 include $(topsrcdir)/intl/unicharutil/util/objs.mk
 
 LIBRARY_NAME = xul
+MSVC_ENABLE_PGO := 1
 FORCE_SHARED_LIB = 1
 MOZILLA_INTERNAL_API = 1
 
@@ -41,6 +42,32 @@ SHARED_LIBRARY_LIBS += \
   $(DEPTH)/toolkit/components/osfile/$(LIB_PREFIX)osfile_s.$(LIB_SUFFIX) \
   $(DEPTH)/toolkit/xre/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX) \
   $(NULL)
+
+ifdef ACCESSIBILITY
+SHARED_LIBRARY_LIBS += \
+  $(DEPTH)/accessible/src/base/$(LIB_PREFIX)accessibility_base_s.$(LIB_SUFFIX) \
+  $(DEPTH)/accessible/src/generic/$(LIB_PREFIX)accessibility_generic_s.$(LIB_SUFFIX) \
+  $(DEPTH)/accessible/src/html/$(LIB_PREFIX)accessibility_html_s.$(LIB_SUFFIX) \
+  $(DEPTH)/accessible/src/xpcom/$(LIB_PREFIX)accessibility_xpcom_s.$(LIB_SUFFIX) \
+  $(NULL)
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+SHARED_LIBRARY_LIBS += \
+  $(DEPTH)/accessible/src/windows/msaa/$(LIB_PREFIX)accessibility_toolkit_msaa_s.$(LIB_SUFFIX) \
+  $(DEPTH)/accessible/src/windows/ia2/$(LIB_PREFIX)accessibility_toolkit_ia2_s.$(LIB_SUFFIX) \
+  $(DEPTH)/accessible/src/windows/sdn/$(LIB_PREFIX)accessibility_toolkit_sdn_s.$(LIB_SUFFIX) \
+  $(DEPTH)/accessible/src/windows/uia/$(LIB_PREFIX)accessibility_toolkit_uia_s.$(LIB_SUFFIX) \
+  $(NULL)
+else
+SHARED_LIBRARY_LIBS += \
+  $(DEPTH)/accessible/src/$(LIB_PREFIX)accessibility_toolkit_s.$(LIB_SUFFIX) \
+  $(NULL)
+endif
+
+ifdef MOZ_XUL
+SHARED_LIBRARY_LIBS += $(DEPTH)/accessible/src/xul/$(LIB_PREFIX)accessibility_xul_s.$(LIB_SUFFIX)
+endif
+endif
 
 SHARED_LIBRARY_LIBS += \
   $(foreach component,$(COMPONENT_LIBS),$(DEPTH)/staticlib/components/$(LIB_PREFIX)$(component).$(LIB_SUFFIX)) \
@@ -328,10 +355,6 @@ ifeq (qt,$(MOZ_WIDGET_TOOLKIT))
 COMPONENT_LIBS += widget_qt
 endif
 
-ifdef ACCESSIBILITY
-COMPONENT_LIBS += accessibility
-endif
-
 ifdef MOZ_ENABLE_XREMOTE
 COMPONENT_LIBS += remoteservice
 endif
@@ -464,6 +487,7 @@ OS_LIBS += \
   -lsensorservice \
   -ldbus \
   -lstagefright \
+  -lstagefright_foundation \
   -lstagefright_omx \
   -lbinder \
   -lgui \

@@ -202,6 +202,8 @@
 #include "nsIAppShellService.h"
 #include "nsAppShellCID.h"
 
+#include "nsIAppsService.h"
+
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,
                      NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
@@ -4003,6 +4005,7 @@ nsDocShell::LoadURI(const PRUnichar * aURI,
       return NS_OK; // JS may not handle returning of an error code
     }
     nsCOMPtr<nsIURI> uri;
+    nsCOMPtr<nsIInputStream> postStream(aPostStream);
     nsresult rv = NS_OK;
 
     // Create a URI from our string; if that succeeds, we want to
@@ -4034,6 +4037,7 @@ nsDocShell::LoadURI(const PRUnichar * aURI,
           fixupFlags |= nsIURIFixup::FIXUP_FLAG_USE_UTF8;
         }
         rv = sURIFixup->CreateFixupURI(uriString, fixupFlags,
+                                       getter_AddRefs(postStream),
                                        getter_AddRefs(uri));
     }
     // else no fixup service so just use the URI we created and see
@@ -4067,7 +4071,7 @@ nsDocShell::LoadURI(const PRUnichar * aURI,
     
     uint32_t loadType = MAKE_LOAD_TYPE(LOAD_NORMAL, aLoadFlags);
     loadInfo->SetLoadType(ConvertLoadTypeToDocShellLoadInfo(loadType));
-    loadInfo->SetPostDataStream(aPostStream);
+    loadInfo->SetPostDataStream(postStream);
     loadInfo->SetReferrer(aReferringURI);
     loadInfo->SetHeadersStream(aHeaderStream);
 
@@ -4595,8 +4599,10 @@ nsDocShell::Stop(uint32_t aStopFlags)
 
     if (nsIWebNavigation::STOP_CONTENT & aStopFlags) {
         // Stop the document loading
-        if (mContentViewer)
-            mContentViewer->Stop();
+        if (mContentViewer) {
+            nsCOMPtr<nsIContentViewer> cv = mContentViewer;
+            cv->Stop();
+        }
     }
 
     if (nsIWebNavigation::STOP_NETWORK & aStopFlags) {
@@ -6436,6 +6442,30 @@ nsDocShell::OnRedirectStateChange(nsIChannel* aOldChannel,
     if (!oldURI || !newURI) {
         return;
     }
+
+    // Check if we have a redirect registered for this url.
+    uint32_t appId;
+    nsresult rv = GetAppId(&appId);
+    if (NS_FAILED(rv)) {
+      return;
+    }
+
+    if (appId != nsIScriptSecurityManager::NO_APP_ID &&
+        appId != nsIScriptSecurityManager::UNKNOWN_APP_ID) {
+      nsCOMPtr<nsIAppsService> appsService =
+        do_GetService(APPS_SERVICE_CONTRACTID);
+      NS_ASSERTION(appsService, "No AppsService available");
+      nsCOMPtr<nsIURI> redirect;
+      rv = appsService->GetRedirect(appId, newURI, getter_AddRefs(redirect));
+      if (NS_SUCCEEDED(rv) && redirect) {
+        aNewChannel->Cancel(NS_BINDING_ABORTED);
+        rv = LoadURI(redirect, nullptr, 0, false);
+        if (NS_SUCCEEDED(rv)) {
+          return;
+        }
+      }
+    }
+
     // On session restore we get a redirect from page to itself. Don't count it.
     bool equals = false;
     if (mTiming &&
@@ -6656,6 +6686,7 @@ nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
             // Try and make an alternative URI from the old one
             //
             nsCOMPtr<nsIURI> newURI;
+            nsCOMPtr<nsIInputStream> newPostData;
 
             nsAutoCString oldSpec;
             url->GetSpec(oldSpec);
@@ -6696,6 +6727,7 @@ nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
                     // only send non-qualified hosts to the keyword server
                     if (!mOriginalUriString.IsEmpty()) {
                         sURIFixup->KeywordToURI(mOriginalUriString,
+                                                getter_AddRefs(newPostData),
                                                 getter_AddRefs(newURI));
                     }
                     else {
@@ -6715,11 +6747,15 @@ nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
                             do_GetService(NS_IDNSERVICE_CONTRACTID);
                         if (idnSrv &&
                             NS_SUCCEEDED(idnSrv->IsACE(host, &isACE)) && isACE &&
-                            NS_SUCCEEDED(idnSrv->ConvertACEtoUTF8(host, utf8Host)))
+                            NS_SUCCEEDED(idnSrv->ConvertACEtoUTF8(host, utf8Host))) {
                             sURIFixup->KeywordToURI(utf8Host,
+                                                    getter_AddRefs(newPostData),
                                                     getter_AddRefs(newURI));
-                        else
-                            sURIFixup->KeywordToURI(host, getter_AddRefs(newURI));
+                        } else {
+                            sURIFixup->KeywordToURI(host,
+                                                    getter_AddRefs(newPostData),
+                                                    getter_AddRefs(newURI));
+                        }
                     }
                 } // end keywordsEnabled
             }
@@ -6752,8 +6788,10 @@ nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
                 }
                 if (doCreateAlternate) {
                     newURI = nullptr;
+                    newPostData = nullptr;
                     sURIFixup->CreateFixupURI(oldSpec,
                       nsIURIFixup::FIXUP_FLAGS_MAKE_ALTERNATE_URI,
+                                              getter_AddRefs(newPostData),
                                               getter_AddRefs(newURI));
                 }
             }
@@ -6774,7 +6812,7 @@ nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
                     return LoadURI(newSpecW.get(),  // URI string
                                    LOAD_FLAGS_NONE, // Load flags
                                    nullptr,          // Referring URI
-                                   nullptr,          // Post data stream
+                                   newPostData,      // Post data stream
                                    nullptr);         // Headers stream
                 }
             }
@@ -10499,6 +10537,7 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI, nsIChannel * aChannel,
                 shContainer->GetChildAt(i, getter_AddRefs(child));
                 shContainer->RemoveChild(child);
             }  // for
+            entry->AbandonBFCacheEntry();
         }  // shContainer
     }
 
@@ -11413,7 +11452,7 @@ nsDocShell::EnsureScriptEnvironment()
     browserChrome->GetChromeFlags(&chromeFlags);
 
     bool isModalContentWindow = (mItemType == typeContent) &&
-        (chromeFlags & nsIWebBrowserChrome::CHROME_MODAL);
+        (chromeFlags & nsIWebBrowserChrome::CHROME_MODAL_CONTENT_WINDOW);
     // There can be various other content docshells associated with the
     // top-level window, like sidebars. Make sure that we only create an
     // nsGlobalModalWindow for the primary content shell.

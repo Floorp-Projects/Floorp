@@ -423,34 +423,28 @@ void GStreamerReader::NotifyBytesConsumed()
   mLastReportedByteOffset = mByteOffset;
 }
 
-bool GStreamerReader::WaitForDecodedData(int* aCounter)
-{
-  ReentrantMonitorAutoEnter mon(mGstThreadsMonitor);
-
-  /* Report consumed bytes from here as we can't do it from gst threads */
-  NotifyBytesConsumed();
-  while(*aCounter == 0) {
-    if (mReachedEos) {
-      return false;
-    }
-    mon.Wait();
-    NotifyBytesConsumed();
-  }
-  (*aCounter)--;
-
-  return true;
-}
-
 bool GStreamerReader::DecodeAudioData()
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
 
-  if (!WaitForDecodedData(&mAudioSinkBufferCount)) {
-    mAudioQueue.Finish();
-    return false;
+  GstBuffer *buffer = nullptr;
+
+  {
+    ReentrantMonitorAutoEnter mon(mGstThreadsMonitor);
+
+    if (mReachedEos) {
+      mAudioQueue.Finish();
+      return false;
+    }
+
+    if (!mAudioSinkBufferCount) {
+      return true;
+    }
+
+    buffer = gst_app_sink_pull_buffer(mAudioAppSink);
+    mAudioSinkBufferCount--;
   }
 
-  GstBuffer* buffer = gst_app_sink_pull_buffer(mAudioAppSink);
   int64_t timestamp = GST_BUFFER_TIMESTAMP(buffer);
   timestamp = gst_segment_to_stream_time(&mAudioSegment,
       GST_FORMAT_TIME, timestamp);
@@ -479,49 +473,53 @@ bool GStreamerReader::DecodeVideoFrame(bool &aKeyFrameSkip,
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
 
-  GstBuffer* buffer = nullptr;
-  int64_t timestamp, nextTimestamp;
-  while (true)
+  GstBuffer *buffer = nullptr;
+
   {
-    if (!WaitForDecodedData(&mVideoSinkBufferCount)) {
+    ReentrantMonitorAutoEnter mon(mGstThreadsMonitor);
+
+    if (mReachedEos) {
       mVideoQueue.Finish();
-      break;
+      return false;
     }
+
+    if (!mVideoSinkBufferCount) {
+      return true;
+    }
+
     mDecoder->NotifyDecodedFrames(0, 1);
 
     buffer = gst_app_sink_pull_buffer(mVideoAppSink);
-    bool isKeyframe = !GST_BUFFER_FLAG_IS_SET(buffer, GST_BUFFER_FLAG_DISCONT);
-    if ((aKeyFrameSkip && !isKeyframe)) {
-      gst_buffer_unref(buffer);
-      buffer = nullptr;
-      continue;
-    }
+    mVideoSinkBufferCount--;
+  }
 
-    timestamp = GST_BUFFER_TIMESTAMP(buffer);
-    {
-      ReentrantMonitorAutoEnter mon(mGstThreadsMonitor);
-      timestamp = gst_segment_to_stream_time(&mVideoSegment,
-          GST_FORMAT_TIME, timestamp);
-    }
-    NS_ASSERTION(GST_CLOCK_TIME_IS_VALID(timestamp),
-        "frame has invalid timestamp");
-    timestamp = nextTimestamp = GST_TIME_AS_USECONDS(timestamp);
-    if (GST_CLOCK_TIME_IS_VALID(GST_BUFFER_DURATION(buffer)))
-      nextTimestamp += GST_TIME_AS_USECONDS(GST_BUFFER_DURATION(buffer));
-    else if (fpsNum && fpsDen)
-      /* add 1-frame duration */
-      nextTimestamp += gst_util_uint64_scale(GST_USECOND, fpsNum, fpsDen);
+  bool isKeyframe = !GST_BUFFER_FLAG_IS_SET(buffer, GST_BUFFER_FLAG_DISCONT);
+  if ((aKeyFrameSkip && !isKeyframe)) {
+    gst_buffer_unref(buffer);
+    return true;
+  }
 
-    if (timestamp < aTimeThreshold) {
-      LOG(PR_LOG_DEBUG, ("skipping frame %" GST_TIME_FORMAT
-            " threshold %" GST_TIME_FORMAT,
-            GST_TIME_ARGS(timestamp), GST_TIME_ARGS(aTimeThreshold)));
-      gst_buffer_unref(buffer);
-      buffer = nullptr;
-      continue;
-    }
+  int64_t timestamp = GST_BUFFER_TIMESTAMP(buffer);
+  {
+    ReentrantMonitorAutoEnter mon(mGstThreadsMonitor);
+    timestamp = gst_segment_to_stream_time(&mVideoSegment,
+                                           GST_FORMAT_TIME, timestamp);
+  }
+  NS_ASSERTION(GST_CLOCK_TIME_IS_VALID(timestamp),
+               "frame has invalid timestamp");
+  int64_t nextTimestamp = timestamp = GST_TIME_AS_USECONDS(timestamp);
+  if (GST_CLOCK_TIME_IS_VALID(GST_BUFFER_DURATION(buffer)))
+    nextTimestamp += GST_TIME_AS_USECONDS(GST_BUFFER_DURATION(buffer));
+  else if (fpsNum && fpsDen)
+    /* add 1-frame duration */
+    nextTimestamp += gst_util_uint64_scale(GST_USECOND, fpsNum, fpsDen);
 
-    break;
+  if (timestamp < aTimeThreshold) {
+    LOG(PR_LOG_DEBUG, ("skipping frame %" GST_TIME_FORMAT
+                       " threshold %" GST_TIME_FORMAT,
+                       GST_TIME_ARGS(timestamp), GST_TIME_ARGS(aTimeThreshold)));
+    gst_buffer_unref(buffer);
+    return true;
   }
 
   if (!buffer)
@@ -570,8 +568,7 @@ bool GStreamerReader::DecodeVideoFrame(bool &aKeyFrameSkip,
     b.mPlanes[i].mSkip = 0;
   }
 
-  bool isKeyframe = !GST_BUFFER_FLAG_IS_SET(buffer,
-      GST_BUFFER_FLAG_DELTA_UNIT);
+  isKeyframe = !GST_BUFFER_FLAG_IS_SET(buffer, GST_BUFFER_FLAG_DELTA_UNIT);
   /* XXX ? */
   int64_t offset = 0;
   VideoData* video = VideoData::Create(mInfo, image, offset,

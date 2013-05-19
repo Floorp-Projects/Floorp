@@ -5,18 +5,23 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsIDOMEventTarget.idl"
-#include "nsIDOMDOMError.idl"
 
 interface nsIDOMEventListener;
 
-[scriptable, builtinclass, uuid(a6ac6941-866c-4e25-b616-045c817e04c8)]
+[scriptable, builtinclass, uuid(22e44e8c-cb74-44f2-abe6-b37e9f42ea79)]
 interface nsIDOMTelephonyCall : nsIDOMEventTarget
 {
   readonly attribute DOMString number;
 
   readonly attribute DOMString state;
 
-  readonly attribute nsIDOMDOMError error;
+  // The property "emergency" indicate whether the call number is an emergency
+  // number. Only the outgoing call could have a value with true and it is
+  // available after dialing state.
+  readonly attribute boolean emergency;
+
+  // This is a DOMError
+  readonly attribute nsISupports error;
 
   void answer();
   void hangUp();

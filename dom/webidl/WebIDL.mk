@@ -38,6 +38,7 @@ webidl_files = \
   ClientRect.webidl \
   ClientRectList.webidl \
   ClipboardEvent.webidl \
+  CameraManager.webidl \
   CommandEvent.webidl \
   Comment.webidl \
   CompositionEvent.webidl \
@@ -48,13 +49,16 @@ webidl_files = \
   CSSStyleSheet.webidl \
   CSSValue.webidl \
   CSSValueList.webidl \
+  DataContainerEvent.webidl \
   DelayNode.webidl \
   DesktopNotification.webidl \
   DeviceMotionEvent.webidl \
+  DeviceStorage.webidl \
   Document.webidl \
   DocumentFragment.webidl \
   DocumentType.webidl \
   DOMCursor.webidl \
+  DOMError.webidl \
   DOMImplementation.webidl \
   DOMParser.webidl \
   DOMRequest.webidl \
@@ -150,22 +154,27 @@ webidl_files = \
   HTMLTitleElement.webidl \
   HTMLUListElement.webidl \
   HTMLVideoElement.webidl \
+  IDBDatabase.webidl \
   IDBFactory.webidl \
   IDBVersionChangeEvent.webidl \
   ImageData.webidl \
   ImageDocument.webidl \
   InspectorUtils.webidl \
   KeyboardEvent.webidl \
+  KeyEvent.webidl \
   LinkStyle.webidl \
   LocalMediaStream.webidl \
   Location.webidl \
   MediaError.webidl \
   MediaStream.webidl \
+  MediaStreamEvent.webidl \
   MediaStreamTrack.webidl \
   MessageEvent.webidl \
+  MobileMessageManager.webidl \
   MouseEvent.webidl \
   MouseScrollEvent.webidl \
   MozActivity.webidl \
+  MozMmsMessage.webidl \
   MozNamedAttrMap.webidl \
   MutationEvent.webidl \
   MutationObserver.webidl \
@@ -177,6 +186,8 @@ webidl_files = \
   Notification.webidl \
   NotifyAudioAvailableEvent.webidl \
   NotifyPaintEvent.webidl \
+  OfflineAudioCompletionEvent.webidl \
+  OfflineAudioContext.webidl \
   PaintRequest.webidl \
   PaintRequestList.webidl \
   PannerNode.webidl \
@@ -190,6 +201,11 @@ webidl_files = \
   Rect.webidl \
   RGBColor.webidl \
   RTCConfiguration.webidl \
+  RTCDataChannelEvent.webidl \
+  RTCIceCandidate.webidl \
+  RTCPeerConnection.webidl \
+  RTCPeerConnectionIceEvent.webidl \
+  RTCSessionDescription.webidl \
   Screen.webidl \
   ScriptProcessorNode.webidl \
   ScrollAreaEvent.webidl \
@@ -315,6 +331,7 @@ webidl_files = \
   URLUtils.webidl \
   USSDReceivedEvent.webidl \
   VideoStreamTrack.webidl \
+  WaveShaperNode.webidl \
   Window.webidl \
   XMLDocument.webidl \
   XMLHttpRequest.webidl \

@@ -13,6 +13,6 @@ EXPORTS += [
 
 if CONFIG['MOZ_REPLACE_MALLOC']:
     EXPORTS += [
-        'replace_malloc.h',
         'malloc_decls.h',
+        'replace_malloc.h',
     ]

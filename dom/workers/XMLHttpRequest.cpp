@@ -665,6 +665,8 @@ public:
     }
 
     XMLHttpRequest::StateData state;
+    // XXXbz there is no AutoValueRooter anymore?
+    JS::AutoArrayRooter rooter(aCx, 1, &state.mResponse);
 
     state.mResponseTextResult = mResponseTextResult;
     state.mResponseText = mResponseText;

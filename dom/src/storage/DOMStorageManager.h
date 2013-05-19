@@ -87,6 +87,12 @@ private:
   nsTHashtable<DOMStorageCacheHashKey> mCaches;
   const nsPIDOMStorage::StorageType mType;
 
+  // If mLowDiskSpace is true it indicates a low device storage situation and
+  // so no localStorage writes are allowed. sessionStorage writes are still
+  // allowed.
+  bool mLowDiskSpace;
+  bool IsLowDiskSpace() const { return mLowDiskSpace; };
+
   static PLDHashOperator ClearCacheEnumerator(DOMStorageCacheHashKey* aCache,
                                               void* aClosure);
 

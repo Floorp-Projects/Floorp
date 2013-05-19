@@ -1,19 +1,42 @@
 From: Jacek Caban <jacek@codeweavers.com>
-Fixed ANGLE cross compilation on case sensitive OSes
+Bug 840577 - Fix ANGLE cross compilation on case sensitive OSes, relanded
 
 
+diff --git a/gfx/angle/src/common/system.h b/gfx/angle/src/common/system.h
+index f071a05..74f659b 100644
+--- a/gfx/angle/src/common/system.h
++++ b/gfx/angle/src/common/system.h
+@@ -10,17 +10,17 @@
+ #define COMMON_SYSTEM_H
+ 
+ #if !defined(WIN32_LEAN_AND_MEAN)
+ #define WIN32_LEAN_AND_MEAN
+ #endif
+ 
+ #include <windows.h>
+ #include <d3d9.h>
+-#include <D3Dcompiler.h>
++#include <d3dcompiler.h>
+ #include <d3d9types.h>
+ #include <mmsystem.h>
+ 
+ #if defined(min)
+ #undef min
+ #endif
+ 
+ #if defined(max)
 diff --git a/gfx/angle/src/libEGL/Display.h b/gfx/angle/src/libEGL/Display.h
-index aedc8e7..2162265 100644
+index 5859cf2..a1a7870 100644
 --- a/gfx/angle/src/libEGL/Display.h
 +++ b/gfx/angle/src/libEGL/Display.h
-@@ -11,17 +11,17 @@
+@@ -8,17 +8,17 @@
+ // display on which graphics are drawn. Implements EGLDisplay.
+ // [EGL 1.4] section 2.1.2 page 3.
+ 
  #ifndef LIBEGL_DISPLAY_H_
  #define LIBEGL_DISPLAY_H_
  
- #ifndef WIN32_LEAN_AND_MEAN
- #define WIN32_LEAN_AND_MEAN
- #endif
- #include <windows.h>
+ #include "common/system.h"
  #include <d3d9.h>
 -#include <D3Dcompiler.h>
 +#include <d3dcompiler.h>

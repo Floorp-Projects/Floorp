@@ -484,22 +484,7 @@ case "$target" in
             AC_MSG_ERROR([The major versions of \$CC and \$CXX do not match.])
         fi
 
-        if test "$_CC_MAJOR_VERSION" = "14"; then
-            dnl Require VC8SP1 or newer.
-            dnl VC8 is 14.00.50727.42, VC8SP1 is 14.00.50727.762.
-            if test "$_CC_RELEASE" -lt 50727 -o \
-                    \( "$_CC_RELEASE" -eq 50727 -a "$_CC_BUILD" -lt 762 \); then
-              AC_MSG_ERROR([This version ($CC_VERSION) of the MSVC compiler is unsupported. You probably need to install Service Pack 1 of Visual Studio 2005. See https://developer.mozilla.org/en/Windows_Build_Prerequisites.])
-            fi
-
-            _CC_SUITE=8
-            AC_DEFINE(_CRT_SECURE_NO_DEPRECATE)
-            AC_DEFINE(_CRT_NONSTDC_NO_DEPRECATE)
-        elif test "$_CC_MAJOR_VERSION" = "15"; then
-            _CC_SUITE=9
-            AC_DEFINE(_CRT_SECURE_NO_WARNINGS)
-            AC_DEFINE(_CRT_NONSTDC_NO_WARNINGS)
-        elif test "$_CC_MAJOR_VERSION" = "16"; then
+        if test "$_CC_MAJOR_VERSION" = "16"; then
             _CC_SUITE=10
             AC_DEFINE(_CRT_SECURE_NO_WARNINGS)
             AC_DEFINE(_CRT_NONSTDC_NO_WARNINGS)
@@ -2167,23 +2152,6 @@ esac
 MOZ_ARG_DISABLE_BOOL(ion,
 [  --disable-ion      Disable use of the IonMonkey JIT],
   ENABLE_ION= )
-
-MOZ_ARG_DISABLE_BOOL(methodjit,
-[  --disable-methodjit           Disable method JIT support],
-  ENABLE_METHODJIT= )
-
-MOZ_ARG_DISABLE_BOOL(monoic,
-[  --disable-monoic      Disable use of MICs by JIT compiler],
-  ENABLE_MONOIC= )
-
-MOZ_ARG_DISABLE_BOOL(polyic,
-[  --disable-polyic      Disable use of PICs by JIT compiler],
-  ENABLE_POLYIC= )
-
-MOZ_ARG_ENABLE_BOOL(methodjit-spew,
-[  --enable-methodjit-spew      Enable method JIT spew support],
-  ENABLE_METHODJIT_SPEW=1,
-  ENABLE_METHODJIT_SPEW= )
 
 MOZ_ARG_DISABLE_BOOL(yarr-jit,
 [  --disable-yarr-jit    Disable YARR JIT support],

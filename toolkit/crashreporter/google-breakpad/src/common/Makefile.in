@@ -10,6 +10,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= breakpad_common_s
+MSVC_ENABLE_PGO := 1
 ifneq (WINNT,$(OS_TARGET))
 ifdef MOZ_CRASHREPORTER
 HOST_LIBRARY_NAME = host_breakpad_common_s

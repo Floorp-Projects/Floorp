@@ -80,6 +80,7 @@ static const char *sExtensionNames[] = {
     "GL_OES_EGL_sync",
     "GL_OES_EGL_image_external",
     "GL_EXT_packed_depth_stencil",
+    "GL_OES_element_index_uint",
     nullptr
 };
 
@@ -1786,14 +1787,8 @@ GLContext::BlitTextureImage(TextureImage *aSrc, const nsIntRect& aSrcRect,
     if (aSrcRect.IsEmpty() || aDstRect.IsEmpty())
         return;
 
-    // only save/restore this stuff on Qualcomm Adreno, to work
-    // around an apparent bug
     int savedFb = 0;
-    if (mWorkAroundDriverBugs &&
-        mVendor == VendorQualcomm)
-    {
-        fGetIntegerv(LOCAL_GL_FRAMEBUFFER_BINDING, &savedFb);
-    }
+    fGetIntegerv(LOCAL_GL_FRAMEBUFFER_BINDING, &savedFb);
 
     fDisable(LOCAL_GL_SCISSOR_TEST);
     fDisable(LOCAL_GL_BLEND);
@@ -1920,16 +1915,7 @@ GLContext::BlitTextureImage(TextureImage *aSrc, const nsIntRect& aSrcRect,
     // unbind the previous texture from the framebuffer
     SetBlitFramebufferForDestTexture(0);
 
-    // then put back the previous framebuffer, and don't
-    // enable stencil if it wasn't enabled on entry to work
-    // around Adreno 200 bug that causes us to crash if
-    // we enable scissor test while the current FBO is invalid
-    // (which it will be, once we assign texture 0 to the color
-    // attachment)
-    if (mWorkAroundDriverBugs &&
-        mVendor == VendorQualcomm) {
-        fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, savedFb);
-    }
+    fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, savedFb);
 
     fEnable(LOCAL_GL_SCISSOR_TEST);
     fEnable(LOCAL_GL_BLEND);

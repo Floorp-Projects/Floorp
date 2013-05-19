@@ -1,0 +1,16 @@
+<html class="reftest-wait">
+<head>
+<script>
+function doe() {
+document.body.removeAttribute('style');
+document.documentElement.offsetHeight;
+document.documentElement.removeAttribute("class");
+}
+setTimeout(doe,100);
+</script>
+</head>
+<body style="position: fixed; -moz-column-count: 2; min-height: 100%; top: 50%; bottom: 50%; font-size: 900px;">
+m m
+<span style=" position: fixed;"></span>
+</body>
+</html>

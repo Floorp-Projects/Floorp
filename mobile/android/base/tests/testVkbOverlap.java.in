@@ -22,11 +22,10 @@ public class testVkbOverlap extends PixelTest {
     }
 
     public void testVkbOverlap() {
-        Device device = new Device();
         blockForGeckoReady();
         testSetup("initial-scale=1.0, user-scalable=no", false);
         testSetup("initial-scale=1.0", false);
-        testSetup("", "phone".equals(device.type));
+        testSetup("", "phone".equals(mDevice.type));
     }
 
     private void testSetup(String viewport, boolean shouldZoom) {

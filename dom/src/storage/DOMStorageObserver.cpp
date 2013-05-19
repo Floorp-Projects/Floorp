@@ -68,6 +68,9 @@ DOMStorageObserver::Init()
   obs->AddObserver(sSelf, "profile-before-change", true);
   obs->AddObserver(sSelf, "xpcom-shutdown", true);
 
+  // Observe low device storage notifications.
+  obs->AddObserver(sSelf, "disk-space-watcher", true);
+
 #ifdef DOM_STORAGE_TESTS
   // Testing
   obs->AddObserver(sSelf, "domstorage-test-flush-force", true);
@@ -295,6 +298,16 @@ DOMStorageObserver::Observe(nsISupports* aSubject,
     rv = DOMStorageCache::StopDatabase();
     if (NS_FAILED(rv)) {
       NS_WARNING("Error while stopping DOMStorage DB background thread");
+    }
+
+    return NS_OK;
+  }
+
+  if (!strcmp(aTopic, "disk-space-watcher")) {
+    if (NS_LITERAL_STRING("full").Equals(aData)) {
+      Notify("low-disk-space");
+    } else if (NS_LITERAL_STRING("free").Equals(aData)) {
+      Notify("no-low-disk-space");
     }
 
     return NS_OK;

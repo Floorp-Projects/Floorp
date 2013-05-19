@@ -27,8 +27,6 @@ EXTRA_COMPONENTS += \
                    $(NULL)
 endif
 
-DISABLED_XPCSHELL_TESTS = test
-
 TESTING_JS_MODULES = httpd.js
 
 include $(topsrcdir)/config/rules.mk

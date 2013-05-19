@@ -857,6 +857,7 @@ protected:
     bool mCanLoseContextInForeground;
     bool mShouldPresent;
     bool mIsScreenCleared;
+    bool mDisableFragHighP;
 
     template<typename WebGLObjectType>
     void DeleteWebGLObjectsArray(nsTArray<WebGLObjectType>& array);
@@ -912,6 +913,7 @@ protected:
     // extensions
     enum WebGLExtensionID {
         EXT_texture_filter_anisotropic,
+        OES_element_index_uint,
         OES_standard_derivatives,
         OES_texture_float,
         WEBGL_compressed_texture_atc,

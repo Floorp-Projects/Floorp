@@ -6,7 +6,7 @@ FRAGMENT(jsid, simple) {
   JS::Rooted<jsid> string_id(cx, INTERNED_STRING_TO_JSID(cx, interned));
   jsid int_id = INT_TO_JSID(1729);
   jsid void_id = JSID_VOID;
-  JS::Rooted<jsid> object_id(cx, OBJECT_TO_JSID(JS_GetGlobalObject(cx)));
+  JS::Rooted<jsid> object_id(cx, OBJECT_TO_JSID(JS_GetGlobalForScopeChain(cx)));
 
   breakpoint();
 

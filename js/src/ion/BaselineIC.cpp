@@ -2541,7 +2541,7 @@ DoBinaryArithFallback(JSContext *cx, BaselineFrame *frame, ICBinaryArith_Fallbac
     return true;
 }
 #if defined(_MSC_VER)
-# pragma optimize("g", on)
+# pragma optimize("", on)
 #endif
 
 typedef bool (*DoBinaryArithFallbackFn)(JSContext *, BaselineFrame *, ICBinaryArith_Fallback *,
@@ -2956,7 +2956,7 @@ DoUnaryArithFallback(JSContext *cx, BaselineFrame *frame, ICUnaryArith_Fallback 
     return true;
 }
 #if defined(_MSC_VER)
-# pragma optimize("g", on)
+# pragma optimize("", on)
 #endif
 
 typedef bool (*DoUnaryArithFallbackFn)(JSContext *, BaselineFrame *, ICUnaryArith_Fallback *,
@@ -7178,8 +7178,23 @@ ICCallScriptedCompiler::generateStubCode(MacroAssembler &masm)
         Label skipThisReplace;
         masm.branchTestObject(Assembler::Equal, JSReturnOperand, &skipThisReplace);
 
+        Register scratchReg = JSReturnOperand.scratchReg();
+
         // Current stack: [ ARGVALS..., ThisVal, ActualArgc, Callee, Descriptor ]
-        masm.loadValue(Address(BaselineStackReg, 3*sizeof(size_t)), JSReturnOperand);
+        // However, we can't use this ThisVal, because it hasn't been traced.  We need to use
+        // The ThisVal higher up the stack:
+        // Current stack: [ ThisVal, ARGVALS..., ...STUB FRAME...,
+        //                  ARGVALS..., ThisVal, ActualArgc, Callee, Descriptor ]
+        masm.loadPtr(Address(BaselineStackReg, 2*sizeof(size_t)), scratchReg);
+
+        // scratchReg now contains actualArgCount.  Double it to account for skipping past two
+        // pushed copies of argument values.  Additionally, we need to add:
+        // STUB_FRAME_SIZE + sizeof(ThisVal) + sizeof(size_t) + sizeof(void *) + sizoef(size_t)
+        // for: stub frame, this value, actual argc, callee, and descriptor
+        masm.lshiftPtr(Imm32(1), scratchReg);
+        BaseIndex reloadThisSlot(BaselineStackReg, scratchReg, TimesEight,
+                                 STUB_FRAME_SIZE + sizeof(Value) + 3*sizeof(size_t));
+        masm.loadValue(reloadThisSlot, JSReturnOperand);
 #ifdef DEBUG
         masm.branchTestObject(Assembler::Equal, JSReturnOperand, &skipThisReplace);
         masm.breakpoint();

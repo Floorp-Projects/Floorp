@@ -9,6 +9,7 @@
 #define mozilla_RefPtr_h_
 
 #include "mozilla/Assertions.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/TypeTraits.h"
 
@@ -41,13 +42,19 @@ template<typename T> OutParamRef<T> byRef(RefPtr<T>&);
  * state distinguishes use-before-ref (refcount==0) from
  * use-after-destroy (refcount==0xffffdead).
  */
-#ifdef DEBUG
 namespace detail {
+#ifdef DEBUG
 static const int DEAD = 0xffffdead;
-}
 #endif
 
-template<typename T>
+// This is used WeakPtr.h as well as this file.
+enum RefCountAtomicity
+{
+  AtomicRefCount,
+  NonAtomicRefCount
+};
+
+template<typename T, RefCountAtomicity Atomicity>
 class RefCounted
 {
     friend class RefPtr<T>;
@@ -56,8 +63,6 @@ class RefCounted
     RefCounted() : refCnt(0) { }
     ~RefCounted() {
       MOZ_ASSERT(refCnt == detail::DEAD);
-      MOZ_STATIC_ASSERT((IsBaseOf<RefCounted<T>, T>::value),
-                        "T must derive from RefCounted<T>");
     }
 
   public:
@@ -87,7 +92,33 @@ class RefCounted
     }
 
   private:
-    int refCnt;
+    typename Conditional<Atomicity == AtomicRefCount, Atomic<int>, int>::Type refCnt;
+};
+
+}
+
+template<typename T>
+class RefCounted : public detail::RefCounted<T, detail::NonAtomicRefCount>
+{
+  public:
+    ~RefCounted() {
+      MOZ_STATIC_ASSERT((IsBaseOf<RefCounted, T>::value),
+                        "T must derive from RefCounted<T>");
+    }
+};
+
+/**
+ * AtomicRefCounted<T> is like RefCounted<T>, with an atomically updated
+ * reference counter.
+ */
+template<typename T>
+class AtomicRefCounted : public detail::RefCounted<T, detail::AtomicRefCount>
+{
+  public:
+    ~AtomicRefCounted() {
+      MOZ_STATIC_ASSERT((IsBaseOf<AtomicRefCounted, T>::value),
+                        "T must derive from AtomicRefCounted<T>");
+    }
 };
 
 /**

@@ -1,0 +1,10 @@
+<html class="reftest-print"><head>
+<title>Crash [@ nsViewManager::CreateView][@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal] on closing print preview with -moz-transform, position: fixed table displays</title>
+</head><body>
+<div style="position: fixed;">
+<div style="display: table-header-group; -moz-transform: rotate(1deg);">
+<div style="position: relative;"></div>
+<div style="display: table-row;page-break-before: always;"></div>
+</div>
+</body>
+</html>

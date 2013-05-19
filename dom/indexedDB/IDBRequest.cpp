@@ -23,7 +23,6 @@
 #include "IDBEvents.h"
 #include "IDBFactory.h"
 #include "IDBTransaction.h"
-#include "DOMError.h"
 
 namespace {
 
@@ -164,7 +163,7 @@ IDBRequest::SetError(nsresult aRv)
   NS_ASSERTION(!mError, "Already have an error?");
 
   mHaveResultOrErrorCode = true;
-  mError = DOMError::CreateForNSResult(aRv);
+  mError = new mozilla::dom::DOMError(GetOwner(), aRv);
   mErrorCode = aRv;
 
   mResultVal = JSVAL_VOID;
@@ -278,17 +277,26 @@ IDBRequest::GetResult(jsval* aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-IDBRequest::GetError(nsIDOMDOMError** aError)
+mozilla::dom::DOMError*
+IDBRequest::GetError(mozilla::ErrorResult& aRv)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   if (!mHaveResultOrErrorCode) {
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
   }
 
-  NS_IF_ADDREF(*aError = mError);
-  return NS_OK;
+  return mError;
+}
+
+NS_IMETHODIMP
+IDBRequest::GetError(nsISupports** aError)
+{
+  ErrorResult rv;
+  *aError = GetError(rv);
+  NS_IF_ADDREF(*aError);
+  return rv.ErrorCode();
 }
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBRequest, IDBWrapperCache)

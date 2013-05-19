@@ -38,8 +38,8 @@ extern "C" {
   {
     /* There was a problem allocating something */
     WEBVTT_ALLOCATION_FAILED = 0,
-    /** 
-     * 'WEBVTT' is not the first 6 characters in the file 
+    /**
+     * 'WEBVTT' is not the first 6 characters in the file
      * (not counting UTF8 BOM)
      */
     WEBVTT_MALFORMED_TAG,

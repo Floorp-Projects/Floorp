@@ -160,6 +160,8 @@ CompositableForwarder::IdentifyTextureHost(const TextureFactoryIdentifier& aIden
 {
   mMaxTextureSize = aIdentifier.mMaxTextureSize;
   mCompositorBackend = aIdentifier.mParentBackend;
+  mSupportsTextureBlitting = aIdentifier.mSupportsTextureBlitting;
+  mSupportsPartialUploads = aIdentifier.mSupportsPartialUploads;
 }
 
 ShadowLayerForwarder::ShadowLayerForwarder()
@@ -345,6 +347,25 @@ ShadowLayerForwarder::UpdateTextureRegion(CompositableClient* aCompositable,
                                       aThebesBufferData,
                                       aUpdatedRegion));
 }
+
+void
+ShadowLayerForwarder::UpdateTextureIncremental(CompositableClient* aCompositable,
+                                               TextureIdentifier aTextureId,
+                                               SurfaceDescriptor& aDescriptor,
+                                               const nsIntRegion& aUpdatedRegion,
+                                               const nsIntRect& aBufferRect,
+                                               const nsIntPoint& aBufferRotation)
+{
+  MOZ_ASSERT(aCompositable);
+  MOZ_ASSERT(aCompositable->GetIPDLActor());
+  mTxn->AddPaint(OpPaintTextureIncremental(nullptr, aCompositable->GetIPDLActor(),
+                                           aTextureId,
+                                           aDescriptor,
+                                           aUpdatedRegion,
+                                           aBufferRect,
+                                           aBufferRotation));
+}
+
 
 void
 ShadowLayerForwarder::UpdatePictureRect(CompositableClient* aCompositable,
@@ -702,6 +723,15 @@ ShadowLayerForwarder::CreatedSingleBuffer(CompositableClient* aCompositable,
                                    *aDescriptorOnWhite,
                                    aTextureInfo));
   }
+}
+
+void
+ShadowLayerForwarder::CreatedIncrementalBuffer(CompositableClient* aCompositable,
+                                               const TextureInfo& aTextureInfo,
+                                               const nsIntRect& aBufferRect)
+{
+  mTxn->AddPaint(OpCreatedIncrementalTexture(nullptr, aCompositable->GetIPDLActor(),
+                                             aTextureInfo, aBufferRect));
 }
 
 void

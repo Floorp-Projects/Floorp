@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait"><head>
+    <meta charset="utf-8">
+    <title>Testcase for bug 555462</title>
+<script>
+function f1() {
+  window.frames[0].frameElement.removeAttribute("onload");
+  window.frames[0].location.reload();
+  setTimeout(f2,200); 
+}
+function f2() { window.frames[0].location.reload(); setTimeout(done,400); }
+function done() { document.documentElement.removeAttribute("class"); }
+</script>
+</head>
+<body>
+
+<iframe src="555462-iframe.html" onload="setTimeout(f1,100)"></iframe>
+
+
+</body>
+</html>

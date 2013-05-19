@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script type="text/javascript">
+    function doTest()
+    {
+      var editor1 = document.getElementById("editor1");
+      editor1.focus();
+      editor1.blur();
+      document.getSelection().selectAllChildren(document.body);
+      var editor2 = document.getElementById("editor2");
+      var editorBody = editor2.contentDocument.body;
+      editor2.contentDocument.getSelection().selectAllChildren(editorBody);
+      editor2.focus();
+      editor2.blur();
+    }
+  </script>
+</head>
+<body>
+<p>normal text</p>
+<div id="editor1" contenteditable>content editable</div>
+<iframe id="editor2" onload="doTest();"
+  src="data:text/html,<script>document.designMode='on';</script><body>editable text</body>"></iframe>
+</body>
+</html>
+

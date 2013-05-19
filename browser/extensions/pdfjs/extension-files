@@ -2,6 +2,7 @@ chrome.manifest
 components/PdfRedirector.js
 components/PdfStreamConverter.js
 content/build/pdf.js
+content/network.js
 content/PdfJs.jsm
 content/web/debugger.js
 content/web/images/annotation-check.svg
@@ -22,13 +23,13 @@ content/web/images/shadow.png
 content/web/images/texture.png
 content/web/images/toolbarButton-bookmark.png
 content/web/images/toolbarButton-download.png
-content/web/images/toolbarButton-fullscreen.png
 content/web/images/toolbarButton-menuArrows.png
 content/web/images/toolbarButton-openFile.png
 content/web/images/toolbarButton-pageDown-rtl.png
 content/web/images/toolbarButton-pageDown.png
 content/web/images/toolbarButton-pageUp-rtl.png
 content/web/images/toolbarButton-pageUp.png
+content/web/images/toolbarButton-presentationMode.png
 content/web/images/toolbarButton-print.png
 content/web/images/toolbarButton-search.png
 content/web/images/toolbarButton-sidebarToggle.png

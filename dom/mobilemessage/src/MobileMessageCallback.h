@@ -29,7 +29,7 @@ private:
 
   nsRefPtr<DOMRequest> mDOMRequest;
 
-  nsresult NotifySuccess(const JS::Value& aResult);
+  nsresult NotifySuccess(JS::Handle<JS::Value> aResult);
   nsresult NotifySuccess(nsISupports *aMessage);
   nsresult NotifyError(int32_t aError);
 };

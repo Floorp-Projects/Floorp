@@ -45,7 +45,7 @@ public:
 
   // When the connection is active this is called every 1 second
   void ReadTimeoutTick(PRIntervalTime now);
-  
+
   // Idle time represents time since "goodput".. e.g. a data or header frame
   PRIntervalTime IdleTime();
 
@@ -57,7 +57,7 @@ public:
 
   const static uint8_t kFlag_Data_FIN  = 0x01;
   const static uint8_t kFlag_Data_UNI  = 0x02;
-  
+
   enum
   {
     CONTROL_TYPE_FIRST = 0,
@@ -170,7 +170,7 @@ public:
 
   // an overload of nsAHttpSegementReader
   virtual nsresult CommitToSegmentSize(uint32_t size, bool forceCommitment);
-  
+
   uint32_t GetServerInitialWindow() { return mServerInitialWindow; }
 
   void     PrintDiagnostics (nsCString &log);
@@ -215,7 +215,7 @@ private:
   // a wrapper for all calls to the nshttpconnection level segment writer. Used
   // to track network I/O for timeout purposes
   nsresult   NetworkRead(nsAHttpSegmentWriter *, char *, uint32_t, uint32_t *);
-  
+
   static PLDHashOperator ShutdownEnumerator(nsAHttpTransaction *,
                                             nsAutoPtr<SpdyStream3> &,
                                             void *);
@@ -273,7 +273,7 @@ private:
   uint32_t             mInputFrameBufferSize;
   uint32_t             mInputFrameBufferUsed;
   nsAutoArrayPtr<char> mInputFrameBuffer;
-  
+
   // mInputFrameDataSize/Read are used for tracking the amount of data consumed
   // in a data frame. the data itself is not buffered in spdy
   // The frame size is mInputFrameDataSize + the constant 8 byte header
@@ -285,7 +285,7 @@ private:
   // (e.g. a data frame after the stream-id has been decoded), this points
   // to the stream.
   SpdyStream3          *mInputFrameDataStream;
-  
+
   // mNeedsCleanup is a state variable to defer cleanup of a closed stream
   // If needed, It is set in session::OnWriteSegments() and acted on and
   // cleared when the stack returns to session::WriteSegments(). The stream
