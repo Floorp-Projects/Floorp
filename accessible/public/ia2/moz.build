@@ -10,18 +10,22 @@ MODULE = 'accessibility'
 # is ported over.
 midl_interfaces = [
     'Accessible2',
+    'Accessible2_2',
     'AccessibleAction',
     'AccessibleApplication',
     'AccessibleComponent',
+    'AccessibleDocument',
     'AccessibleEditableText',
     'AccessibleHyperlink',
     'AccessibleHypertext',
+    'AccessibleHypertext2',
     'AccessibleImage',
     'AccessibleRelation',
     'AccessibleTable',
     'AccessibleTable2',
     'AccessibleTableCell',
     'AccessibleText',
+    'AccessibleText2',
     'AccessibleValue',
 ]
 
