@@ -48,6 +48,8 @@ public:
 
     void GetMetrics(gfxFont::Metrics* aMetrics, uint32_t* aSpaceGlyph);
 
+    bool GetFontTable(uint32_t aTag, FallibleTArray<uint8_t>& aBuffer);
+
     // A scale factor for use in converting horizontal metrics from font units
     // to pixels.
     gfxFloat XScale()

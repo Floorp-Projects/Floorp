@@ -60,7 +60,6 @@
 #include "nsIPrincipal.h"
 #include "Element.h"
 #include "nsSVGUtils.h"
-#include "harfbuzz/hb.h"
 
 #define SVG_CONTENT_TYPE NS_LITERAL_CSTRING("image/svg+xml")
 #define UTF8_CHARSET NS_LITERAL_CSTRING("utf-8")
@@ -73,23 +72,32 @@ const float gfxSVGGlyphs::SVG_UNITS_PER_EM = 1000.0f;
 
 const gfxRGBA SimpleTextObjectPaint::sZero = gfxRGBA(0.0f, 0.0f, 0.0f, 0.0f);
 
-gfxSVGGlyphs::gfxSVGGlyphs(hb_blob_t *aSVGTable, hb_blob_t *aCmapTable)
+gfxSVGGlyphs::gfxSVGGlyphs(FallibleTArray<uint8_t>& aSVGTable,
+                           const FallibleTArray<uint8_t>& aCmapTable)
 {
-    mSVGData = aSVGTable;
+    mSVGData.SwapElements(aSVGTable);
 
-    const char* svgData = hb_blob_get_data(mSVGData, nullptr);
-    mHeader = reinterpret_cast<const Header*>(svgData);
-    mIndex = reinterpret_cast<const IndexEntry*>(svgData + sizeof(Header));
+    mHeader = reinterpret_cast<Header*>(mSVGData.Elements());
+    UnmangleHeaders();
 
     mGlyphDocs.Init();
     mGlyphIdMap.Init();
     mCmapData = aCmapTable;
 }
 
-gfxSVGGlyphs::~gfxSVGGlyphs()
+void
+gfxSVGGlyphs::UnmangleHeaders()
 {
-    hb_blob_destroy(mSVGData);
-    hb_blob_destroy(mCmapData);
+    mHeader->mIndexLength = mozilla::NativeEndian::swapFromBigEndian(mHeader->mIndexLength);
+
+    mIndex = reinterpret_cast<IndexEntry*>(mSVGData.Elements() + sizeof(Header));
+
+    for (uint16_t i = 0; i < mHeader->mIndexLength; i++) {
+        mIndex[i].mStartGlyph = mozilla::NativeEndian::swapFromBigEndian(mIndex[i].mStartGlyph);
+        mIndex[i].mEndGlyph = mozilla::NativeEndian::swapFromBigEndian(mIndex[i].mEndGlyph);
+        mIndex[i].mDocOffset = mozilla::NativeEndian::swapFromBigEndian(mIndex[i].mDocOffset);
+        mIndex[i].mDocLength = mozilla::NativeEndian::swapFromBigEndian(mIndex[i].mDocLength);
+    }
 }
 
 /*
@@ -109,8 +117,8 @@ gfxSVGGlyphs::CompareIndexEntries(const void *_key, const void *_entry)
     const uint32_t key = *(uint32_t*)_key;
     const IndexEntry *entry = (const IndexEntry*)_entry;
 
-    if (key < uint16_t(entry->mStartGlyph)) return -1;
-    if (key >= uint16_t(entry->mEndGlyph)) return 1;
+    if (key < entry->mStartGlyph) return -1;
+    if (key >= entry->mEndGlyph) return 1;
     return 0;
 }
 
@@ -118,7 +126,7 @@ gfxSVGGlyphsDocument *
 gfxSVGGlyphs::FindOrCreateGlyphsDocument(uint32_t aGlyphId)
 {
     IndexEntry *entry = (IndexEntry*)bsearch(&aGlyphId, mIndex,
-                                             uint16_t(mHeader->mIndexLength),
+                                             mHeader->mIndexLength,
                                              sizeof(IndexEntry),
                                              CompareIndexEntries);
     if (!entry) {
@@ -128,8 +136,7 @@ gfxSVGGlyphs::FindOrCreateGlyphsDocument(uint32_t aGlyphId)
     gfxSVGGlyphsDocument *result = mGlyphDocs.Get(entry->mDocOffset);
 
     if (!result) {
-        const uint8_t *data = (const uint8_t*)hb_blob_get_data(mSVGData, nullptr);
-        result = new gfxSVGGlyphsDocument(data + entry->mDocOffset,
+        result = new gfxSVGGlyphsDocument(mSVGData.Elements() + entry->mDocOffset,
                                           entry->mDocLength, mCmapData);
         mGlyphDocs.Put(entry->mDocOffset, result);
     }
@@ -186,7 +193,8 @@ gfxSVGGlyphsDocument::SetupPresentation()
  * @param aCmapTable Buffer containing the raw cmap table data
  */
 void
-gfxSVGGlyphsDocument::FindGlyphElements(Element *aElem, hb_blob_t *aCmapTable)
+gfxSVGGlyphsDocument::FindGlyphElements(Element *aElem,
+                                        const FallibleTArray<uint8_t> &aCmapTable)
 {
     for (nsIContent *child = aElem->GetLastChild(); child;
             child = child->GetPreviousSibling()) {
@@ -262,8 +270,8 @@ gfxSVGGlyphsDocument::GetGlyphElement(uint32_t aGlyphId)
     return mGlyphIdMap.Get(aGlyphId);
 }
 
-gfxSVGGlyphsDocument::gfxSVGGlyphsDocument(const uint8_t *aBuffer, uint32_t aBufLen,
-                                           hb_blob_t *aCmapTable)
+gfxSVGGlyphsDocument::gfxSVGGlyphsDocument(uint8_t *aBuffer, uint32_t aBufLen,
+                                           const FallibleTArray<uint8_t>& aCmapTable)
 {
     mGlyphIdMap.Init();
     ParseDocument(aBuffer, aBufLen);
@@ -288,7 +296,7 @@ gfxSVGGlyphsDocument::gfxSVGGlyphsDocument(const uint8_t *aBuffer, uint32_t aBuf
 }
 
 static nsresult
-CreateBufferedStream(const uint8_t *aBuffer, uint32_t aBufLen,
+CreateBufferedStream(uint8_t *aBuffer, uint32_t aBufLen,
                      nsCOMPtr<nsIInputStream> &aResult)
 {
     nsCOMPtr<nsIInputStream> stream;
@@ -310,7 +318,7 @@ CreateBufferedStream(const uint8_t *aBuffer, uint32_t aBufLen,
 }
 
 nsresult
-gfxSVGGlyphsDocument::ParseDocument(const uint8_t *aBuffer, uint32_t aBufLen)
+gfxSVGGlyphsDocument::ParseDocument(uint8_t *aBuffer, uint32_t aBufLen)
 {
     // Mostly pulled from nsDOMParser::ParseFromStream
 
@@ -404,7 +412,8 @@ gfxSVGGlyphsDocument::InsertGlyphId(Element *aGlyphElement)
 }
 
 void
-gfxSVGGlyphsDocument::InsertGlyphChar(Element *aGlyphElement, hb_blob_t *aCmapTable)
+gfxSVGGlyphsDocument::InsertGlyphChar(Element *aGlyphElement,
+                                      const FallibleTArray<uint8_t> &aCmapTable)
 {
     nsAutoString glyphChar;
     if (!aGlyphElement->GetAttr(kNameSpaceID_None, nsGkAtoms::glyphchar, glyphChar)) {
@@ -413,8 +422,6 @@ gfxSVGGlyphsDocument::InsertGlyphChar(Element *aGlyphElement, hb_blob_t *aCmapTa
 
     uint32_t varSelector;
 
-    // XXX jfkthame
-    // This will not handle surrogate pairs properly!
     switch (glyphChar.Length()) {
         case 0:
             NS_WARNING("glyphchar is empty");
@@ -432,9 +439,8 @@ gfxSVGGlyphsDocument::InsertGlyphChar(Element *aGlyphElement, hb_blob_t *aCmapTa
             return;
     }
 
-    uint32_t len;
-    const uint8_t *data = (const uint8_t*)hb_blob_get_data(aCmapTable, &len);
-    uint32_t glyphId = gfxFontUtils::MapCharToGlyph(data, len,
+    uint32_t glyphId = gfxFontUtils::MapCharToGlyph(aCmapTable.Elements(),
+                                                    aCmapTable.Length(),
                                                     glyphChar.CharAt(0),
                                                     varSelector);
 

@@ -416,7 +416,7 @@ FT2FontEntry::ReadCMAP()
     nsRefPtr<gfxCharacterMap> charmap = new gfxCharacterMap();
 
     AutoFallibleTArray<uint8_t,16384> buffer;
-    nsresult rv = CopyFontTable(TTAG_cmap, buffer);
+    nsresult rv = GetFontTable(TTAG_cmap, buffer);
     
     if (NS_SUCCEEDED(rv)) {
         bool unicodeFont;
@@ -438,8 +438,8 @@ FT2FontEntry::ReadCMAP()
 }
 
 nsresult
-FT2FontEntry::CopyFontTable(uint32_t aTableTag,
-                            FallibleTArray<uint8_t>& aBuffer)
+FT2FontEntry::GetFontTable(uint32_t aTableTag,
+                           FallibleTArray<uint8_t>& aBuffer)
 {
     AutoFTFace face(this);
     if (!face) {
