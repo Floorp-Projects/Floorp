@@ -1,12 +1,10 @@
 /*************************************************************************
  *
- *  File Name (AccessibleImage.idl)
+ *  File Name (AccessibleDocument.idl)
  * 
  *  IAccessible2 IDL Specification 
  * 
- *  Copyright (c) 2007, 2010 Linux Foundation 
- *  Copyright (c) 2006 IBM Corporation 
- *  Copyright (c) 2000, 2006 Sun Microsystems, Inc. 
+ *  Copyright (c) 2013 Linux Foundation 
  *  All rights reserved. 
  *   
  *   
@@ -54,58 +52,27 @@
 import "objidl.idl";
 import "oaidl.idl";
 import "oleacc.idl";
-import "IA2CommonTypes.idl";
 
-/** @brief This interface represents images and icons.
+/** @brief This interface represents documents.
 
- This interface is used for a representation of images like icons on buttons.
-  %IAccessibleImage only needs to be implemented in certain situations.  Some
-  examples are:
-  <ol>
-   <li>The accessible name and description are not enough to fully
-    describe the image, e.g. when the accessible description is used to define the
-    behavior of an actionable image and the image itself conveys semantically
-    significant information.
-   <li>The user can edit the content that includes an
-    image and therefore the user needs to be able to review the image's position.
-  </ol>
+ This interface is used for a representation of documents.
 */
-[object, uuid(FE5ABB3D-615E-4f7b-909F-5F0EDA9E8DDE)]
-interface IAccessibleImage : IUnknown
+[object, uuid(C48C7FCF-4AB5-4056-AFA6-902D6E1D1149)]
+interface IAccessibleDocument : IUnknown
 {
-  /** @brief Returns the localized description of the image.          
-   @param [out] description
+  /** @brief Returns the most recently used anchor target within a document.
+  
+   A document's most recently targeted in-page anchor is returned.  A typical use
+    of this method is to fetch the anchor target within an HTML document.  In this
+    case anchor targets are those which has been defined with the <a> tag.  
+
+   @param [out] accessible
    @retval S_OK
-   @retval S_FALSE if there is nothing to return, [out] value is NULL
+   @retval S_FALSE if there are no existing valid anchor targets, [out] value is NULL.
   */
-  [propget] HRESULT description
+  [propget] HRESULT anchorTarget
     (
-     [out, retval] BSTR *description
+     [out, retval] IUnknown **accessible
     );
 
-  /** @brief Returns the coordinates of the image.
-   @param [in] coordinateType
-    Specifies whether the returned coordinates should be relative to the screen or the parent object.
-   @param [out] x
-   @param [out] y
-   @retval S_OK
-  */
-  [propget] HRESULT imagePosition
-    (
-	 [in] enum IA2CoordinateType coordinateType,
-	 [out] long *x,
-     [out, retval] long *y
-    );
-
-  /** @brief Returns the size of the image in units specified by parent's coordinate system.
-   @param [out] height
-   @param [out] width
-   @retval S_OK
-  */
-
-  [propget] HRESULT imageSize
-    (
-     [out] long *height,
-	 [out, retval] long *width
-    );
 }

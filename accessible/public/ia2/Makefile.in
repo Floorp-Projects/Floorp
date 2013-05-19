@@ -26,18 +26,22 @@ SRCS_IN_OBJDIR   = 1
 # Makefile is ported over.
 MIDL_INTERFACES = \
   Accessible2.idl \
+  Accessible2_2.idl \
   AccessibleAction.idl \
   AccessibleApplication.idl \
   AccessibleComponent.idl \
+  AccessibleDocument.idl \
   AccessibleEditableText.idl \
   AccessibleHyperlink.idl \
   AccessibleHypertext.idl \
+  AccessibleHypertext2.idl \
   AccessibleImage.idl \
   AccessibleRelation.idl \
   AccessibleTable.idl \
   AccessibleTable2.idl \
   AccessibleTableCell.idl \
   AccessibleText.idl \
+  AccessibleText2.idl \
   AccessibleValue.idl \
   $(NULL)
 

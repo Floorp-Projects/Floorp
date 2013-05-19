@@ -1,10 +1,10 @@
 /*************************************************************************
  *
- *  File Name (AccessibleImage.idl)
+ *  File Name (AccessibleText2.idl)
  * 
  *  IAccessible2 IDL Specification 
  * 
- *  Copyright (c) 2007, 2010 Linux Foundation 
+ *  Copyright (c) 2007, 2013 Linux Foundation 
  *  Copyright (c) 2006 IBM Corporation 
  *  Copyright (c) 2000, 2006 Sun Microsystems, Inc. 
  *  All rights reserved. 
@@ -55,57 +55,44 @@ import "objidl.idl";
 import "oaidl.idl";
 import "oleacc.idl";
 import "IA2CommonTypes.idl";
+import "AccessibleText.idl";
 
-/** @brief This interface represents images and icons.
+/** @brief This interface gives read-only access to text.
 
- This interface is used for a representation of images like icons on buttons.
-  %IAccessibleImage only needs to be implemented in certain situations.  Some
-  examples are:
-  <ol>
-   <li>The accessible name and description are not enough to fully
-    describe the image, e.g. when the accessible description is used to define the
-    behavior of an actionable image and the image itself conveys semantically
-    significant information.
-   <li>The user can edit the content that includes an
-    image and therefore the user needs to be able to review the image's position.
-  </ol>
+ The %IAccessibleText2 interface extends the functionality of the
+ %IAccessibleText interface.
 */
-[object, uuid(FE5ABB3D-615E-4f7b-909F-5F0EDA9E8DDE)]
-interface IAccessibleImage : IUnknown
+[object, uuid(9690A9CC-5C80-4DF5-852E-2D5AE4189A54)]
+interface IAccessibleText2 : IAccessibleText
 {
-  /** @brief Returns the localized description of the image.          
-   @param [out] description
+
+  /** @brief Returns the range and of the specified set of attributes.
+
+   Return the range (start and end offsets) and text attributes that correspond
+    to the given attributes filter at the given offset.
+
+   @param [in] offset
+    The offset at which to search for the attributes specified in the filter.
+   @param [in] filter
+    The requested attribute names.  The filter format is "attribute1, attribute2".
+   @param [out] startOffset
+    The starting (0-based) offset of the text containing the specified attributes.
+   @param [out] endOffset
+    The (0-based) offset one past the last character of the text containing the
+    specified attributes.
+   @param [out] attributeValues
+    The values of the requested attributes.
    @retval S_OK
-   @retval S_FALSE if there is nothing to return, [out] value is NULL
-  */
-  [propget] HRESULT description
+   @retval S_FALSE if nothing to return, [out] values are -1, -1, NULL respectively.
+   @retval E_INVALIDARG if bad [in] passed.
+   */
+  [propget] HRESULT attributeRange
     (
-     [out, retval] BSTR *description
+     [in] long offset,
+     [in] BSTR filter,
+     [out] long *startOffset,
+     [out] long *endOffset,	
+     [out, retval] BSTR *attributeValues
     );
 
-  /** @brief Returns the coordinates of the image.
-   @param [in] coordinateType
-    Specifies whether the returned coordinates should be relative to the screen or the parent object.
-   @param [out] x
-   @param [out] y
-   @retval S_OK
-  */
-  [propget] HRESULT imagePosition
-    (
-	 [in] enum IA2CoordinateType coordinateType,
-	 [out] long *x,
-     [out, retval] long *y
-    );
-
-  /** @brief Returns the size of the image in units specified by parent's coordinate system.
-   @param [out] height
-   @param [out] width
-   @retval S_OK
-  */
-
-  [propget] HRESULT imageSize
-    (
-     [out] long *height,
-	 [out, retval] long *width
-    );
 }
