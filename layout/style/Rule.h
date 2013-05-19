@@ -65,8 +65,7 @@ public:
     KEYFRAME_RULE,
     KEYFRAMES_RULE,
     DOCUMENT_RULE,
-    SUPPORTS_RULE,
-    FONT_FEATURE_VALUES_RULE
+    SUPPORTS_RULE
   };
 
   virtual int32_t GetType() const = 0;

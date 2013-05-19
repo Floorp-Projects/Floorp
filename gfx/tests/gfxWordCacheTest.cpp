@@ -124,6 +124,7 @@ main (int argc, char **argv) {
                            NS_NewPermanentAtom(NS_LITERAL_STRING("en")),
                            0.0,
                            false, false, false,
+                           NS_LITERAL_STRING(""),
                            NS_LITERAL_STRING(""));
 
        nsRefPtr<gfxFontGroup> fontGroup =

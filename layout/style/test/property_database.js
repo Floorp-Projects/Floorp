@@ -2491,7 +2491,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "normal" ],
 		other_values: [ "small-caps" ],
-		invalid_values: [ "small-caps normal" ]
+		invalid_values: []
 	},
 	"font-weight": {
 		domProp: "fontWeight",
@@ -4255,129 +4255,6 @@ if (SpecialPowers.getBoolPref("layout.css.flexbox.enabled")) {
 	}
 	gCSSProperties["display"].other_values.push("flex");
 	gCSSProperties["display"].other_values.push("inline-flex");
-}
-
-if (SpecialPowers.getBoolPref("layout.css.font-features.enabled")) {
-	var fontFeatureProperties = {
-		"font-kerning": {
-			domProp: "fontKerning",
-			inherited: true,
-			type: CSS_TYPE_LONGHAND,
-			initial_values: [ "auto" ],
-			other_values: [ "normal", "none" ],
-			invalid_values: [ "on" ]
-		},
-		"font-variant-alternates": {
-			domProp: "fontVariantAlternates",
-			inherited: true,
-			type: CSS_TYPE_LONGHAND,
-			initial_values: [ "normal" ],
-			other_values: [ "historical-forms",
-	                        "styleset(alt-a, alt-b)", "character-variant(a, b, c)", "annotation(circled)",
-	                        "swash(squishy)", "styleset(complex\\ blob, a)", "annotation(\\62 lah)" ],
-			invalid_values: [ "historical-forms normal", "historical-forms historical-forms",
-	                          "swash", "swash(3)", "annotation(a, b)", "ornaments(a,b)",
-	                          "styleset(1234blah)", "annotation(a), annotation(b)", "annotation(a) normal" ]
-		},
-	 	"font-variant-caps": {
-			domProp: "fontVariantCaps",
-			inherited: true,
-			type: CSS_TYPE_LONGHAND,
-			initial_values: [ "normal" ],
-			other_values: [ "small-caps", "all-small-caps", "petite-caps", "all-petite-caps", "titling-caps", "unicase" ],
-			invalid_values: [ "normal small-caps", "petite-caps normal", "unicase unicase" ]
-		},
-		"font-variant-east-asian": {
-			domProp: "fontVariantEastAsian",
-			inherited: true,
-			type: CSS_TYPE_LONGHAND,
-			initial_values: [ "normal" ],
-			other_values: [ "jis78", "jis83", "jis90", "jis04", "simplified", "traditional", "full-width", "proportional-width", "ruby",
-			                "jis78 full-width", "jis78 full-width ruby", "simplified proportional-width", "ruby simplified" ],
-			invalid_values: [ "jis78 normal", "jis90 jis04", "simplified traditional", "full-width proportional-width",
-	                          "ruby simplified ruby", "jis78 ruby simplified" ]
-		},
-		"font-variant-ligatures": {
-			domProp: "fontVariantLigatures",
-			inherited: true,
-			type: CSS_TYPE_LONGHAND,
-			initial_values: [ "normal" ],
-			other_values: [ "common-ligatures", "no-common-ligatures", "discretionary-ligatures", "no-discretionary-ligatures",
-			                "historical-ligatures", "no-historical-ligatures", "contextual", "no-contextual",
-			                "common-ligatures no-discretionary-ligatures", "contextual no-discretionary-ligatures",
-			                "historical-ligatures no-common-ligatures", "no-historical-ligatures discretionary-ligatures",
-			                "common-ligatures no-discretionary-ligatures historical-ligatures no-contextual" ],
-			invalid_values: [ "common-ligatures normal", "common-ligatures no-common-ligatures", "common-ligatures common-ligatures",
-			                  "no-historical-ligatures historical-ligatures", "no-discretionary-ligatures discretionary-ligatures",
-			                  "no-contextual contextual", "common-ligatures no-discretionary-ligatures no-common-ligatures" ]
-		},
-		"font-variant-numeric": {
-			domProp: "fontVariantNumeric",
-			inherited: true,
-			type: CSS_TYPE_LONGHAND,
-			initial_values: [ "normal" ],
-			other_values: [ "lining-nums", "oldstyle-nums", "proportional-nums", "tabular-nums", "diagonal-fractions",
-			                "stacked-fractions", "slashed-zero", "ordinal", "lining-nums diagonal-fractions",
-			                "tabular-nums stacked-fractions", "tabular-nums slashed-zero stacked-fractions",
-			                "proportional-nums slashed-zero diagonal-fractions oldstyle-nums ordinal" ],
-			invalid_values: [ "lining-nums normal", "lining-nums oldstyle-nums", "lining-nums normal slashed-zero ordinal",
-			                  "proportional-nums tabular-nums", "diagonal-fractions stacked-fractions", "slashed-zero diagonal-fractions slashed-zero",
-			                  "lining-nums slashed-zero diagonal-fractions oldstyle-nums", "diagonal-fractions diagonal-fractions" ]
-		},
-		"font-variant-position": {
-			domProp: "fontVariantPosition",
-			inherited: true,
-			type: CSS_TYPE_LONGHAND,
-			initial_values: [ "normal" ],
-			other_values: [ "super", "sub" ],
-			invalid_values: [ "normal sub", "super sub" ]
-		},
-		"font-synthesis": {
-			domProp: "fontSynthesis",
-			inherited: true,
-			type: CSS_TYPE_LONGHAND,
-			initial_values: [ "weight style" ],
-			other_values: [ "none", "weight", "style" ],
-			invalid_values: [ "weight none", "style none", "none style", "weight 10px", "weight weight", "style style" ]
-		},
-		// aliases for prefixed properties
-		"font-feature-settings": {
-			domProp: "fontFeatureSettings",
-			inherited: true,
-			type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-			alias_for: "-moz-font-feature-settings",
-			subproperties: [ "-moz-font-feature-settings" ],
-			initial_values: [ "normal" ],
-			other_values: [
-				"'liga' on", "'liga'", "\"liga\" 1", "'liga', 'clig' 1",
-				"\"liga\" off", "\"liga\" 0", '"cv01" 3, "cv02" 4',
-				'"cswh", "smcp" off, "salt" 4', '"cswh" 1, "smcp" off, "salt" 4',
-				'"cswh" 0, \'blah\', "liga", "smcp" off, "salt" 4',
-				'"liga"        ,"smcp" 0         , "blah"'
-			],
-			invalid_values: [
-				'liga', 'liga 1', 'liga normal', '"liga" normal', 'normal liga',
-				'normal "liga"', 'normal, "liga"', '"liga=1"', "'foobar' on",
-				'"blahblah" 0', '"liga" 3.14', '"liga" 1 3.14', '"liga" 1 normal',
-				'"liga" 1 off', '"liga" on off', '"liga" , 0 "smcp"', '"liga" "smcp"'
-			]
-		},
-		"font-language-override": {
-			domProp: "fontLanguageOverride",
-			inherited: true,
-			type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-			alias_for: "-moz-font-language-override",
-			subproperties: [ "-moz-font-language-override" ],
-			initial_values: [ "normal" ],
-			other_values: [ "'ENG'", "'TRK'", "\"TRK\"", "'N\\'Ko'" ],
-			invalid_values: [ "TRK", "ja" ]
-		}
-	};
-	for (var prop in fontFeatureProperties) {
-		gCSSProperties[prop] = fontFeatureProperties[prop];
-	}
-	var fontAdditions = [ "font-kerning", "font-synthesis", "font-variant-alternates", "font-variant-caps", "font-variant-east-asian", "font-variant-ligatures", "font-variant-numeric", "font-variant-position" ];
-	gCSSProperties["font"].subproperties = gCSSProperties["font"].subproperties.concat(fontAdditions);
 }
 
 if (SpecialPowers.getBoolPref("layout.css.masking.enabled")) {

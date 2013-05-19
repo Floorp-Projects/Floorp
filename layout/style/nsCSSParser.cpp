@@ -375,9 +375,6 @@ protected:
                         void* aProcessData);
 
   bool ParseFontFaceRule(RuleAppendFunc aAppendFunc, void* aProcessData);
-  bool ParseFontFeatureValuesRule(RuleAppendFunc aAppendFunc,
-                                  void* aProcessData);
-  bool ParseFontFeatureValueSet(nsCSSFontFeatureValuesRule *aRule);
   bool ParseFontDescriptor(nsCSSFontFaceRule* aRule);
   bool ParseFontDescriptorValue(nsCSSFontDesc aDescID,
                                 nsCSSValue& aValue);
@@ -565,14 +562,6 @@ protected:
   bool ParseCounterData(nsCSSProperty aPropID);
   bool ParseCursor();
   bool ParseFont();
-  bool ParseFontSynthesis(nsCSSValue& aValue);
-  bool ParseSingleAlternate(int32_t& aWhichFeature, nsCSSValue& aValue);
-  bool ParseFontVariantAlternates(nsCSSValue& aValue);
-  bool ParseBitmaskValues(nsCSSValue& aValue, const int32_t aKeywordTable[],
-                          const int32_t aMasks[]);
-  bool ParseFontVariantEastAsian(nsCSSValue& aValue);
-  bool ParseFontVariantLigatures(nsCSSValue& aValue);
-  bool ParseFontVariantNumeric(nsCSSValue& aValue);
   bool ParseFontWeight(nsCSSValue& aValue);
   bool ParseOneFamily(nsAString& aFamily, bool& aOneKeyword);
   bool ParseFamily(nsCSSValue& aValue);
@@ -676,13 +665,12 @@ protected:
   /* Functions for transform Parsing */
   bool ParseSingleTransform(bool aIsPrefixed, nsCSSValue& aValue, bool& aIs3D);
   bool ParseFunction(const nsString &aFunction, const int32_t aAllowedTypes[],
-                     int32_t aVariantMaskAll, uint16_t aMinElems,
-                     uint16_t aMaxElems, nsCSSValue &aValue);
+                       uint16_t aMinElems, uint16_t aMaxElems,
+                       nsCSSValue &aValue);
   bool ParseFunctionInternals(const int32_t aVariantMask[],
-                              int32_t aVariantMaskAll,
-                              uint16_t aMinElems,
-                              uint16_t aMaxElems,
-                              InfallibleTArray<nsCSSValue>& aOutput);
+                                uint16_t aMinElems,
+                                uint16_t aMaxElems,
+                                InfallibleTArray<nsCSSValue>& aOutput);
 
   /* Functions for transform-origin/perspective-origin Parsing */
   bool ParseTransformOrigin(bool aPerspective);
@@ -1638,11 +1626,6 @@ CSSParserImpl::ParseAtRule(RuleAppendFunc aAppendFunc,
     parseFunc = &CSSParserImpl::ParseFontFaceRule;
     newSection = eCSSSection_General;
 
-  } else if (mToken.mIdent.LowerCaseEqualsLiteral("font-feature-values") &&
-             nsCSSFontFeatureValuesRule::PrefEnabled()) {
-    parseFunc = &CSSParserImpl::ParseFontFeatureValuesRule;
-    newSection = eCSSSection_General;
-
   } else if (mToken.mIdent.LowerCaseEqualsLiteral("page")) {
     parseFunc = &CSSParserImpl::ParsePageRule;
     newSection = eCSSSection_General;
@@ -2368,233 +2351,6 @@ CSSParserImpl::ParseFontDescriptor(nsCSSFontFaceRule* aRule)
   return true;
 }
 
-// @font-feature-values <font-family># {
-//   @<feature-type> {
-//     <feature-ident> : <feature-index>+;
-//     <feature-ident> : <feature-index>+;
-//     ...
-//   }
-//   ...
-// }
-
-bool
-CSSParserImpl::ParseFontFeatureValuesRule(RuleAppendFunc aAppendFunc,
-                                          void* aData)
-{
-  nsRefPtr<nsCSSFontFeatureValuesRule>
-               valuesRule(new nsCSSFontFeatureValuesRule());
-
-  // parse family list
-  nsCSSValue familyValue;
-
-  if (!ParseFamily(familyValue) ||
-      familyValue.GetUnit() != eCSSUnit_Families)
-  {
-    REPORT_UNEXPECTED_TOKEN(PEFFVNoFamily);
-    return false;
-  }
-
-  // add family to rule
-  nsAutoString familyList;
-  bool hasGeneric;
-  familyValue.GetStringValue(familyList);
-  valuesRule->SetFamilyList(familyList, hasGeneric);
-
-  // family list has generic ==> parse error
-  if (hasGeneric) {
-    REPORT_UNEXPECTED_TOKEN(PEFFVGenericInFamilyList);
-    return false;
-  }
-
-  // open brace
-  if (!ExpectSymbol('{', true)) {
-    REPORT_UNEXPECTED_TOKEN(PEFFVBlockStart);
-    return false;
-  }
-
-  // list of sets of feature values, each set bound to a specific
-  // feature-type (e.g. swash, annotation)
-  for (;;) {
-    if (!GetToken(true)) {
-      REPORT_UNEXPECTED_EOF(PEFFVUnexpectedEOF);
-      break;
-    }
-    if (mToken.IsSymbol('}')) { // done!
-      UngetToken();
-      break;
-    }
-
-    if (!ParseFontFeatureValueSet(valuesRule)) {
-      if (!SkipAtRule(false)) {
-        break;
-      }
-    }
-  }
-  if (!ExpectSymbol('}', true)) {
-    REPORT_UNEXPECTED_TOKEN(PEFFVUnexpectedBlockEnd);
-    SkipUntil('}');
-    return false;
-  }
-
-  (*aAppendFunc)(valuesRule, aData);
-  return true;
-}
-
-#define NUMVALUES_NO_LIMIT  0xFFFF
-
-// parse a single value set containing name-value pairs for a single feature type
-//   @<feature-type> { [ <feature-ident> : <feature-index>+ ; ]* }
-//   Ex: @swash { flowing: 1; delicate: 2; }
-bool
-CSSParserImpl::ParseFontFeatureValueSet(nsCSSFontFeatureValuesRule
-                                                            *aFeatureValuesRule)
-{
-  // -- @keyword (e.g. swash, styleset)
-  if (eCSSToken_AtKeyword != mToken.mType) {
-    REPORT_UNEXPECTED_TOKEN(PEFontFeatureValuesNoAt);
-    OUTPUT_ERROR();
-    UngetToken();
-    return false;
-  }
-
-  // which font-specific variant of font-variant-alternates
-  int32_t whichVariant;
-  nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(mToken.mIdent);
-  if (keyword == eCSSKeyword_UNKNOWN ||
-      !nsCSSProps::FindKeyword(keyword,
-                               nsCSSProps::kFontVariantAlternatesFuncsKTable,
-                               whichVariant))
-  {
-    if (!NonMozillaVendorIdentifier(mToken.mIdent)) {
-      REPORT_UNEXPECTED_TOKEN(PEFFVUnknownFontVariantPropValue);
-      OUTPUT_ERROR();
-    }
-    UngetToken();
-    return false;
-  }
-
-  nsAutoString featureType(mToken.mIdent);
-
-  // open brace
-  if (!ExpectSymbol('{', true)) {
-    REPORT_UNEXPECTED_TOKEN(PEFFVValueSetStart);
-    return false;
-  }
-
-  // styleset and character-variant can be multi-valued, otherwise single value
-  int32_t limitNumValues;
-
-  switch (keyword) {
-    case eCSSKeyword_styleset:
-      limitNumValues = NUMVALUES_NO_LIMIT;
-      break;
-    case eCSSKeyword_character_variant:
-      limitNumValues = 2;
-      break;
-    default:
-      limitNumValues = 1;
-      break;
-  }
-
-  // -- ident integer+ [, ident integer+]
-  nsAutoTArray<gfxFontFeatureValueSet::ValueList, 5> values;
-
-  // list of font-feature-values-declaration's
-  for (;;) {
-    nsAutoString valueId;
-
-    if (!GetToken(true)) {
-      REPORT_UNEXPECTED_EOF(PEFFVUnexpectedEOF);
-      break;
-    }
-
-    // ignore extra semicolons
-    if (mToken.IsSymbol(';')) {
-      continue;
-    }
-
-    // close brace ==> done
-    if (mToken.IsSymbol('}')) {
-      break;
-    }
-
-    // ident
-    if (eCSSToken_Ident != mToken.mType) {
-      REPORT_UNEXPECTED_TOKEN(PEFFVExpectedIdent);
-      if (!SkipDeclaration(true)) {
-        break;
-      }
-      continue;
-    }
-
-    valueId.Assign(mToken.mIdent);
-
-    // colon
-    if (!ExpectSymbol(':', true)) {
-      REPORT_UNEXPECTED_TOKEN(PEParseDeclarationNoColon);
-      OUTPUT_ERROR();
-      if (!SkipDeclaration(true)) {
-        break;
-      }
-      continue;
-    }
-
-    // value list
-    nsAutoTArray<uint32_t,4>   featureSelectors;
-
-    nsCSSValue intValue;
-    while (ParseNonNegativeVariant(intValue, VARIANT_INTEGER, nullptr)) {
-      featureSelectors.AppendElement(uint32_t(intValue.GetIntValue()));
-    }
-
-    int32_t numValues = featureSelectors.Length();
-
-    if (numValues == 0) {
-      REPORT_UNEXPECTED_TOKEN(PEFFVExpectedValue);
-      OUTPUT_ERROR();
-      if (!SkipDeclaration(true)) {
-        break;
-      }
-      continue;
-    }
-
-    if (numValues > limitNumValues) {
-      REPORT_UNEXPECTED_P(PEFFVTooManyValues, featureType);
-      OUTPUT_ERROR();
-      if (!SkipDeclaration(true)) {
-        break;
-      }
-      continue;
-    }
-
-    if (!GetToken(true)) {
-      REPORT_UNEXPECTED_EOF(PEFFVUnexpectedEOF);
-      gfxFontFeatureValueSet::ValueList v(valueId, featureSelectors);
-      values.AppendElement(v);
-      break;
-    }
-
-    // ';' or '}' to end definition
-    if (!mToken.IsSymbol(';') && !mToken.IsSymbol('}')) {
-      REPORT_UNEXPECTED_TOKEN(PEFFVValueDefinitionTrailing);
-      OUTPUT_ERROR();
-      if (!SkipDeclaration(true)) {
-        break;
-      }
-      continue;
-    }
-
-    gfxFontFeatureValueSet::ValueList v(valueId, featureSelectors);
-    values.AppendElement(v);
-
-    if (mToken.IsSymbol('}')) {
-      break;
-    }
- }
-
-  aFeatureValuesRule->AddValueList(whichVariant, values);
-  return true;
-}
 
 bool
 CSSParserImpl::ParseKeyframesRule(RuleAppendFunc aAppendFunc, void* aData)
@@ -6614,16 +6370,6 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
     switch (aPropID) {
       case eCSSProperty_font_family:
         return ParseFamily(aValue);
-      case eCSSProperty_font_synthesis:
-        return ParseFontSynthesis(aValue);
-      case eCSSProperty_font_variant_alternates:
-        return ParseFontVariantAlternates(aValue);
-      case eCSSProperty_font_variant_east_asian:
-        return ParseFontVariantEastAsian(aValue);
-      case eCSSProperty_font_variant_ligatures:
-        return ParseFontVariantLigatures(aValue);
-      case eCSSProperty_font_variant_numeric:
-        return ParseFontVariantNumeric(aValue);
       case eCSSProperty_font_feature_settings:
         return ParseFontFeatureSettings(aValue);
       case eCSSProperty_font_weight:
@@ -8247,7 +7993,7 @@ CSSParserImpl::ParseCalcTerm(nsCSSValue& aValue, int32_t& aVariantMask)
   // ... or just a value
   UngetToken();
   // Always pass VARIANT_NUMBER to ParseVariant so that unitless zero
-  // always gets picked up
+  // always gets picked up 
   if (!ParseVariant(aValue, aVariantMask | VARIANT_NUMBER, nullptr)) {
     return false;
   }
@@ -8557,14 +8303,6 @@ CSSParserImpl::ParseFont()
         AppendValue(eCSSProperty_font_size_adjust, family);
         AppendValue(eCSSProperty_font_feature_settings, family);
         AppendValue(eCSSProperty_font_language_override, family);
-        AppendValue(eCSSProperty_font_kerning, family);
-        AppendValue(eCSSProperty_font_synthesis, family);
-        AppendValue(eCSSProperty_font_variant_alternates, family);
-        AppendValue(eCSSProperty_font_variant_caps, family);
-        AppendValue(eCSSProperty_font_variant_east_asian, family);
-        AppendValue(eCSSProperty_font_variant_ligatures, family);
-        AppendValue(eCSSProperty_font_variant_numeric, family);
-        AppendValue(eCSSProperty_font_variant_position, family);
       }
       else {
         AppendValue(eCSSProperty__x_system_font, family);
@@ -8579,14 +8317,6 @@ CSSParserImpl::ParseFont()
         AppendValue(eCSSProperty_font_size_adjust, systemFont);
         AppendValue(eCSSProperty_font_feature_settings, systemFont);
         AppendValue(eCSSProperty_font_language_override, systemFont);
-        AppendValue(eCSSProperty_font_kerning, systemFont);
-        AppendValue(eCSSProperty_font_synthesis, systemFont);
-        AppendValue(eCSSProperty_font_variant_alternates, systemFont);
-        AppendValue(eCSSProperty_font_variant_caps, systemFont);
-        AppendValue(eCSSProperty_font_variant_east_asian, systemFont);
-        AppendValue(eCSSProperty_font_variant_ligatures, systemFont);
-        AppendValue(eCSSProperty_font_variant_numeric, systemFont);
-        AppendValue(eCSSProperty_font_variant_position, systemFont);
       }
       return true;
     }
@@ -8650,285 +8380,10 @@ CSSParserImpl::ParseFont()
       AppendValue(eCSSProperty_font_size_adjust, nsCSSValue(eCSSUnit_None));
       AppendValue(eCSSProperty_font_feature_settings, nsCSSValue(eCSSUnit_Normal));
       AppendValue(eCSSProperty_font_language_override, nsCSSValue(eCSSUnit_Normal));
-      AppendValue(eCSSProperty_font_kerning,
-                  nsCSSValue(NS_FONT_KERNING_AUTO, eCSSUnit_Enumerated));
-      AppendValue(eCSSProperty_font_synthesis,
-                  nsCSSValue(NS_FONT_SYNTHESIS_WEIGHT | NS_FONT_SYNTHESIS_STYLE,
-                             eCSSUnit_Enumerated));
-      AppendValue(eCSSProperty_font_variant_alternates,
-                  nsCSSValue(eCSSUnit_Normal));
-      AppendValue(eCSSProperty_font_variant_caps, nsCSSValue(eCSSUnit_Normal));
-      AppendValue(eCSSProperty_font_variant_east_asian,
-                  nsCSSValue(eCSSUnit_Normal));
-      AppendValue(eCSSProperty_font_variant_ligatures,
-                  nsCSSValue(eCSSUnit_Normal));
-      AppendValue(eCSSProperty_font_variant_numeric,
-                  nsCSSValue(eCSSUnit_Normal));
-      AppendValue(eCSSProperty_font_variant_position,
-                  nsCSSValue(eCSSUnit_Normal));
       return true;
     }
   }
   return false;
-}
-
-bool
-CSSParserImpl::ParseFontSynthesis(nsCSSValue& aValue)
-{
-  if (!ParseVariant(aValue, VARIANT_HK | VARIANT_NONE,
-                    nsCSSProps::kFontSynthesisKTable)) {
-    return false;
-  }
-
-  // first value 'none' ==> done
-  if (eCSSUnit_None == aValue.GetUnit() ||
-      eCSSUnit_Initial == aValue.GetUnit() ||
-      eCSSUnit_Inherit == aValue.GetUnit())
-  {
-    return true;
-  }
-
-  // look for a second value
-  int32_t intValue = aValue.GetIntValue();
-  nsCSSValue nextValue;
-
-  if (ParseEnum(nextValue, nsCSSProps::kFontSynthesisKTable)) {
-    int32_t nextIntValue = nextValue.GetIntValue();
-    if (nextIntValue & intValue) {
-      return false;
-    }
-    aValue.SetIntValue(nextIntValue | intValue, eCSSUnit_Enumerated);
-  }
-
-  return true;
-}
-
-// font-variant-alternates allows for a combination of multiple
-// simple enumerated values and functional values.  Functional values have
-// parameter lists with one or more idents which are later resolved
-// based on values defined in @font-feature-value rules.
-//
-// font-variant-alternates: swash(flowing), historical-forms, styleset(alt-g, alt-m);
-//
-// So for this the nsCSSValue is set to a pair value, with one
-// value for a bitmask of both simple and functional property values
-// and another value containing a ValuePairList with lists of idents
-// for each functional property value.
-//
-// pairValue
-//   o intValue
-//       NS_FONT_VARIANT_ALTERNATES_SWASH |
-//       NS_FONT_VARIANT_ALTERNATES_STYLESET
-//   o valuePairList, each element with
-//     - intValue - indicates which alternate
-//     - string or valueList of strings
-//
-// Note: when only 'historical-forms' is specified, there are no
-// functional values to store, in which case the valuePairList is a
-// single element dummy list.  In all other cases, the length of the
-// list will match the number of functional values.
-
-#define MAX_ALLOWED_FEATURES 512
-
-bool
-CSSParserImpl::ParseSingleAlternate(int32_t& aWhichFeature,
-                                    nsCSSValue& aValue)
-{
-  if (!GetToken(true)) {
-    return false;
-  }
-
-  bool isIdent = (mToken.mType == eCSSToken_Ident);
-  if (mToken.mType != eCSSToken_Function && !isIdent) {
-    UngetToken();
-    return false;
-  }
-
-  // ident ==> simple enumerated prop val (e.g. historical-forms)
-  // function ==> e.g. swash(flowing) styleset(alt-g, alt-m)
-
-  nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(mToken.mIdent);
-  if (!(eCSSKeyword_UNKNOWN < keyword &&
-        nsCSSProps::FindKeyword(keyword,
-                                (isIdent ?
-                                 nsCSSProps::kFontVariantAlternatesKTable :
-                                 nsCSSProps::kFontVariantAlternatesFuncsKTable),
-                                aWhichFeature)))
-  {
-    // failed, pop token
-    UngetToken();
-    return false;
-  }
-
-  if (isIdent) {
-    aValue.SetIntValue(aWhichFeature, eCSSUnit_Enumerated);
-    return true;
-  }
-
-  uint16_t maxElems = 1;
-  if (keyword == eCSSKeyword_styleset ||
-      keyword == eCSSKeyword_character_variant) {
-    maxElems = MAX_ALLOWED_FEATURES;
-  }
-  return ParseFunction(mToken.mIdent, nullptr, VARIANT_IDENTIFIER,
-                       1, maxElems, aValue);
-}
-
-bool
-CSSParserImpl::ParseFontVariantAlternates(nsCSSValue& aValue)
-{
-  if (ParseVariant(aValue, VARIANT_INHERIT | VARIANT_NORMAL, nullptr)) {
-    return true;
-  }
-
-  // iterate through parameters
-  nsCSSValue listValue;
-  int32_t feature, featureFlags = 0;
-
-  // if no functional values, this may be a list with a single, unused element
-  listValue.SetListValue();
-
-  nsCSSValueList* list = nullptr;
-  nsCSSValue value;
-  while (ParseSingleAlternate(feature, value)) {
-
-    // check to make sure value not already set
-    if (feature == 0 ||
-        feature & featureFlags) {
-      return false;
-    }
-
-    featureFlags |= feature;
-
-    // if function, need to add to the list of functions
-    if (value.GetUnit() == eCSSUnit_Function) {
-      if (!list) {
-        list = listValue.GetListValue();
-      } else {
-        list->mNext = new nsCSSValueList;
-        list = list->mNext;
-      }
-      list->mValue = value;
-    }
-  }
-
-  nsCSSValue featureValue;
-  featureValue.SetIntValue(featureFlags, eCSSUnit_Enumerated);
-  aValue.SetPairValue(featureValue, listValue);
-
-  return true;
-}
-
-#define MASK_END_VALUE  -1
-
-// aMasks - array of masks for mutually-exclusive property values,
-//          e.g. proportial-nums, tabular-nums
-
-bool
-CSSParserImpl::ParseBitmaskValues(nsCSSValue& aValue,
-                                  const int32_t aKeywordTable[],
-                                  const int32_t aMasks[])
-{
-  if (!ParseVariant(aValue, VARIANT_HMK, aKeywordTable)) {
-    return false;
-  }
-
-  // first value 'normal', 'inherit', 'initial' ==> done
-  if (eCSSUnit_Normal == aValue.GetUnit() ||
-      eCSSUnit_Initial == aValue.GetUnit() ||
-      eCSSUnit_Inherit == aValue.GetUnit())
-  {
-    return true;
-  }
-
-  // look for more values
-  nsCSSValue nextValue;
-  int32_t mergedValue = aValue.GetIntValue();
-
-  while (ParseEnum(nextValue, aKeywordTable))
-  {
-    int32_t nextIntValue = nextValue.GetIntValue();
-
-    // check to make sure value not already set
-    if (nextIntValue & mergedValue) {
-      return false;
-    }
-
-    const int32_t *m = aMasks;
-    int32_t c = 0;
-
-    while (*m != MASK_END_VALUE) {
-      if (*m & nextIntValue) {
-        c = mergedValue & *m;
-        break;
-      }
-      m++;
-    }
-
-    if (c) {
-      return false;
-    }
-
-    mergedValue |= nextIntValue;
-  }
-
-  aValue.SetIntValue(mergedValue, eCSSUnit_Enumerated);
-
-  return true;
-}
-
-static const int32_t maskEastAsian[] = {
-  NS_FONT_VARIANT_EAST_ASIAN_VARIANT_MASK,
-  NS_FONT_VARIANT_EAST_ASIAN_WIDTH_MASK,
-  MASK_END_VALUE
-};
-
-bool
-CSSParserImpl::ParseFontVariantEastAsian(nsCSSValue& aValue)
-{
-  NS_ASSERTION(maskEastAsian[NS_ARRAY_LENGTH(maskEastAsian) - 1] ==
-                 MASK_END_VALUE,
-               "incorrectly terminated array");
-
-  return ParseBitmaskValues(aValue, nsCSSProps::kFontVariantEastAsianKTable,
-                            maskEastAsian);
-}
-
-static const int32_t maskLigatures[] = {
-  NS_FONT_VARIANT_LIGATURES_COMMON_MASK,
-  NS_FONT_VARIANT_LIGATURES_DISCRETIONARY_MASK,
-  NS_FONT_VARIANT_LIGATURES_HISTORICAL_MASK,
-  NS_FONT_VARIANT_LIGATURES_CONTEXTUAL_MASK,
-  MASK_END_VALUE
-};
-
-bool
-CSSParserImpl::ParseFontVariantLigatures(nsCSSValue& aValue)
-{
-  NS_ASSERTION(maskLigatures[NS_ARRAY_LENGTH(maskLigatures) - 1] ==
-                 MASK_END_VALUE,
-               "incorrectly terminated array");
-
-  return ParseBitmaskValues(aValue, nsCSSProps::kFontVariantLigaturesKTable,
-                            maskLigatures);
-}
-
-static const int32_t maskNumeric[] = {
-  NS_FONT_VARIANT_NUMERIC_FIGURE_MASK,
-  NS_FONT_VARIANT_NUMERIC_SPACING_MASK,
-  NS_FONT_VARIANT_NUMERIC_FRACTION_MASK,
-  MASK_END_VALUE
-};
-
-bool
-CSSParserImpl::ParseFontVariantNumeric(nsCSSValue& aValue)
-{
-  NS_ASSERTION(maskNumeric[NS_ARRAY_LENGTH(maskNumeric) - 1] ==
-                 MASK_END_VALUE,
-               "incorrectly terminated array");
-
-  return ParseBitmaskValues(aValue, nsCSSProps::kFontVariantNumericKTable,
-                            maskNumeric);
 }
 
 bool
@@ -9702,21 +9157,14 @@ CSSParserImpl::ParseTextOverflow(nsCSSValue& aValue)
  */
 bool
 CSSParserImpl::ParseFunctionInternals(const int32_t aVariantMask[],
-                                      int32_t aVariantMaskAll,
                                       uint16_t aMinElems,
                                       uint16_t aMaxElems,
                                       InfallibleTArray<nsCSSValue> &aOutput)
 {
-  NS_ASSERTION((aVariantMask && !aVariantMaskAll) ||
-               (!aVariantMask && aVariantMaskAll),
-               "only one of the two variant mask parameters can be set");
-
   for (uint16_t index = 0; index < aMaxElems; ++index) {
     nsCSSValue newValue;
-    int32_t m = aVariantMaskAll ? aVariantMaskAll : aVariantMask[index];
-    if (!ParseVariant(newValue, m, nullptr)) {
+    if (!ParseVariant(newValue, aVariantMask[index], nullptr))
       return false;
-    }
 
     aOutput.AppendElement(newValue);
 
@@ -9744,8 +9192,7 @@ CSSParserImpl::ParseFunctionInternals(const int32_t aVariantMask[],
  *        types for each element in the function.  The zeroth element in the
  *        array corresponds to the first function parameter, etc.  The length
  *        of this array _must_ be greater than or equal to aMaxElems or the
- *        behavior is undefined.  If not null, aAllowTypesAll must be 0.
- * @param aAllowedTypesAll If set, every element tested for these types
+ *        behavior is undefined.
  * @param aMinElems Minimum number of elements to read.  Reading fewer than
  *        this many elements will result in the function failing.
  * @param aMaxElems Maximum number of elements to read.  Reading more than
@@ -9755,13 +9202,9 @@ CSSParserImpl::ParseFunctionInternals(const int32_t aVariantMask[],
 bool
 CSSParserImpl::ParseFunction(const nsString &aFunction,
                              const int32_t aAllowedTypes[],
-                             int32_t aAllowedTypesAll,
                              uint16_t aMinElems, uint16_t aMaxElems,
                              nsCSSValue &aValue)
 {
-  NS_ASSERTION((aAllowedTypes && !aAllowedTypesAll) ||
-               (!aAllowedTypes && aAllowedTypesAll),
-               "only one of the two allowed type parameter can be set");
   typedef InfallibleTArray<nsCSSValue>::size_type arrlen_t;
 
   /* 2^16 - 2, so that if we have 2^16 - 2 transforms, we have 2^16 - 1
@@ -9779,10 +9222,9 @@ CSSParserImpl::ParseFunction(const nsString &aFunction,
    * it's out of bounds.
    */
   InfallibleTArray<nsCSSValue> foundValues;
-  if (!ParseFunctionInternals(aAllowedTypes, aAllowedTypesAll, aMinElems,
-                              aMaxElems, foundValues)) {
+  if (!ParseFunctionInternals(aAllowedTypes, aMinElems, aMaxElems,
+                              foundValues))
     return false;
-  }
 
   /* Now, convert this array into an nsCSSValue::Array object.
    * We'll need N + 1 spots, one for the function name and the rest for the
@@ -10057,8 +9499,7 @@ CSSParserImpl::ParseSingleTransform(bool aIsPrefixed,
       break;
   }
 
-  return ParseFunction(mToken.mIdent, variantMask, 0, minElems,
-                       maxElems, aValue);
+  return ParseFunction(mToken.mIdent, variantMask, minElems, maxElems, aValue);
 }
 
 /* Parses a transform property list by continuously reading in properties
