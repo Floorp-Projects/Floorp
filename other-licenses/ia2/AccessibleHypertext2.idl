@@ -1,10 +1,10 @@
 /*************************************************************************
  *
- *  File Name (AccessibleHypertext.idl)
+ *  File Name (AccessibleHypertext2.idl)
  * 
  *  IAccessible2 IDL Specification 
  * 
- *  Copyright (c) 2007, 2010 Linux Foundation 
+ *  Copyright (c) 2007, 2013 Linux Foundation 
  *  Copyright (c) 2006 IBM Corporation 
  *  Copyright (c) 2000, 2006 Sun Microsystems, Inc. 
  *  All rights reserved. 
@@ -54,70 +54,34 @@
 import "objidl.idl";
 import "oaidl.idl";
 import "oleacc.idl";
-import "AccessibleText.idl";
+import "AccessibleHypertext.idl";
 import "AccessibleHyperlink.idl";
 
 /** @brief This interface exposes information about hypertext in a document.
 
- The %IAccessibleHypertext interface is the main interface to expose
-  hyperlinks in a document, typically a text document, that are used 
-  to reference other documents.  A typical implementation is to implement 
-  this interface on the smallest text object such as a paragraph of text.
+ The %IAccessibleHypertext2 interface extends the functinality of the
+ %IAccessibleHypertext inteface.
 */
-[object, uuid(6B4F8BBF-F1F2-418a-B35E-A195BC4103B9)]
-interface IAccessibleHypertext : IAccessibleText
+[object, uuid(CF64D89F-8287-4B44-8501-A827453A6077)]
+interface IAccessibleHypertext2 : IAccessibleHypertext
 {
 
-  /** @brief Returns the number of links and link groups contained within this hypertext 
-    paragraph.
-   @param [out] hyperlinkCount
-    The number of links and link groups within this hypertext paragraph.  
-    Returns 0 if there is no link.
-   @retval S_OK
-  */
-  [propget] HRESULT nHyperlinks
-    (
-     [out, retval] long *hyperlinkCount
-    );
+ /** @brief Returns the links for this object.
 
-  /** @brief Returns the specified link.
-    
-   The returned IAccessibleHyperlink object encapsulates the hyperlink and 
+   The returned IAccessibleHyperlink objects encapsulate the hyperlink and 
     provides several kinds of information describing it.
-   @param [in] index
-    This 0 based index specifies the hyperlink to return.
-   @param [out] hyperlink
-    If the given index is valid, i.e. lies in the interval from 0 to the number 
-    of links minus one, a reference to the specified hyperlink object is returned.  
-    If the index is invalid then a NULL pointer is returned.
-   @retval S_OK
-   @retval E_INVALIDARG if bad [in] passed
-  */
-  [propget] HRESULT hyperlink
-    (
-     [in] long index,
-     [out, retval] IAccessibleHyperlink **hyperlink
-    );
 
-  /** @brief Returns the index of the hyperlink that is associated with this character index.
-        
-   This is the case when a link spans the given character index.
-   @param [in] charIndex
-    A 0 based index of the character for which to return the link index.  If 
-	IAccessibleText is used to represent the text containing the link, then the 
-	character index is only  valid if it is greater than or equal to zero and 
-	lower than the number of characters in the text.
-   @param [out] hyperlinkIndex
-    Returns the 0 based index of the hyperlink that is associated with this 
-	character index, or -1 if charIndex is not on a link.
+   @param [out] hyperlinks
+    This array is allocated by the server.  The client must free it with CoTaskMemFree.
+   @param [out] nHyperlinks
+    The number of links returned; the size of the returned array.
    @retval S_OK
-   @retval S_FALSE if there is nothing to return, [out] value is -1
-   @retval E_INVALIDARG if bad [in] passed
+   @retval S_FALSE if there are no links, [out] values are NULL and 0 respectively
   */
-  [propget] HRESULT hyperlinkIndex
+  [propget] HRESULT hyperlinks
     (
-     [in] long charIndex,
-     [out, retval] long *hyperlinkIndex
+     [out, size_is(,*nHyperlinks)] IAccessibleHyperlink ***hyperlinks,
+     [out, retval] long *nHyperlinks
     );
 
 }

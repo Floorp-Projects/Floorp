@@ -2,31 +2,83 @@
  *
  *  File Name (AccessibleAction.idl)
  *
- *  IAccessible2 IDL Specification
+ *  IAccessible2 IDL Specification 
+ * 
+ *  Copyright (c) 2007, 2013 Linux Foundation 
+ *  Copyright (c) 2006 IBM Corporation 
+ *  Copyright (c) 2000, 2006 Sun Microsystems, Inc. 
+ *  All rights reserved. 
+ *   
+ *   
+ *  Redistribution and use in source and binary forms, with or without 
+ *  modification, are permitted provided that the following conditions 
+ *  are met: 
+ *   
+ *   1. Redistributions of source code must retain the above copyright 
+ *      notice, this list of conditions and the following disclaimer. 
+ *   
+ *   2. Redistributions in binary form must reproduce the above 
+ *      copyright notice, this list of conditions and the following 
+ *      disclaimer in the documentation and/or other materials 
+ *      provided with the distribution. 
  *
- *  Copyright (c) Linux Foundation 2007, 2008
- *  Copyright (c) IBM Corp. 2006
- *  Copyright (c) Sun Microsystems, Inc. 2000, 2006
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License version 2.1, as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- *
- ************************************************************************/
+ *   3. Neither the name of the Linux Foundation nor the names of its 
+ *      contributors may be used to endorse or promote products 
+ *      derived from this software without specific prior written 
+ *      permission. 
+ *   
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND 
+ *  CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, 
+ *  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+ *  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+ *  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR 
+ *  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+ *  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT 
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
+ *  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+ *  HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+ *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
+ *  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, 
+ *  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ *   
+ *  This BSD License conforms to the Open Source Initiative "Simplified 
+ *  BSD License" as published at: 
+ *  http://www.opensource.org/licenses/bsd-license.php 
+ *   
+ *  IAccessible2 is a trademark of the Linux Foundation. The IAccessible2 
+ *  mark may be used in accordance with the Linux Foundation Trademark 
+ *  Policy to indicate compliance with the IAccessible2 specification. 
+ * 
+ ************************************************************************/ 
 
 import "objidl.idl";
 import "oaidl.idl";
 import "oleacc.idl";
+
+/** This enum defines values which are predefined actions for use when implementing
+ support for media.
+
+ This enum is used when specifying an action for IAccessibleAction::doAction.
+*/
+
+enum IA2Actions {
+  IA2_ACTION_OPEN = -1,         /**< Used to inform the server that the client will
+                                signal via IA2_ACTION_COMPLETE when it has consumed
+                                the content provided by the object.  This action
+                                allows the object's server to wait for all clients
+                                to signal their readiness for additional content.
+                                Any form of content generation that requires
+                                synchronization with an AT would require use of this
+                                action.  One example is the generation of text describing
+                                visual content not obvious from a video's sound track.
+                                In this scenario the Text to Speech or Braille output
+                                may take more time than the related length of silence
+                                in the video's sound track. */
+  IA2_ACTION_COMPLETE = -2,  	/**< Used by the client to inform the server that it has
+                                consumed the most recent content provided by this object. */
+  IA2_ACTION_CLOSE = -3         /**< Used to inform the server that the client no longer
+                                requires synchronization. */
+};
         
 /** @brief This interface gives access to actions that can be executed
   for accessible objects.
@@ -70,7 +122,9 @@ interface IAccessibleAction : IUnknown
     0 based index specifying the action to perform.  If it lies outside
     the valid range no action is performed.
    @retval S_OK
-   @retval E_INVALIDARG if bad [in] passed 
+   @retval S_FALSE if action could not be performed
+   @retval E_INVALIDARG if bad [in] passed
+   @note If implementing support for media, refer to the predefined constants in the ::IA2Actions enum.
     */
   HRESULT doAction
     (
@@ -85,7 +139,7 @@ interface IAccessibleAction : IUnknown
     The returned value is a localized string of the specified action.
    @retval S_OK
    @retval S_FALSE if there is nothing to return, [out] value is NULL 
-   @retval E_INVALIDARG if bad [in] passed, [out] value is NULL 
+   @retval E_INVALIDARG if bad [in] passed
     */
   [propget] HRESULT description
     (
@@ -120,12 +174,12 @@ interface IAccessibleAction : IUnknown
 	"Special Consideration when using Arrays" for more details.
    @param [out] keyBindings
     An array of BSTRs, allocated by the server, one for each key binding.
-	Free it with CoTaskMemFree.
+	The client must free it with CoTaskMemFree.
    @param [out] nBindings
     The number of key bindings returned; the size of the returned array.
    @retval S_OK
-   @retval S_FALSE if there are no relations, [out] values are NULL and 0 respectively 
-   @retval E_INVALIDARG if bad [in] passed, [out] values are NULL and 0 respectively 
+   @retval S_FALSE if there are no key bindings, [out] values are NULL and 0 respectively 
+   @retval E_INVALIDARG if bad [in] passed
 	*/
   [propget] HRESULT keyBinding
     (
@@ -141,7 +195,7 @@ interface IAccessibleAction : IUnknown
    @param [out] name
    @retval S_OK
    @retval S_FALSE if there is nothing to return, [out] value is NULL 
-   @retval E_INVALIDARG if bad [in] passed, [out] value is NULL 
+   @retval E_INVALIDARG if bad [in] passed
    */
   [propget] HRESULT name
     (
@@ -155,7 +209,7 @@ interface IAccessibleAction : IUnknown
    @param [out] localizedName
    @retval S_OK
    @retval S_FALSE if there is nothing to return, [out] value is NULL 
-   @retval E_INVALIDARG if bad [in] passed, [out] value is NULL 
+   @retval E_INVALIDARG if bad [in] passed
    */
   [propget] HRESULT localizedName
     (
