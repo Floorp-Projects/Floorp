@@ -416,7 +416,7 @@ let CustomizableUIInternal = {
 
       let nextNode = nextNodeId ? container.querySelector(idToSelector(nextNodeId))
                                 : null;
-      this.insertWidgetBefore(aNode, aNextNode, container, aArea);
+      this.insertWidgetBefore(widgetNode, nextNode, container, aArea);
       this._addParentFlex(widgetNode);
     }
   },
