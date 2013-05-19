@@ -4778,32 +4778,45 @@ nsSVGTextFrame2::UpdateGlyphPositioning(bool aForceGlobalTransform)
   if (!kid)
     return;
 
-  bool needsReflow =
-    (mState & (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN));
-
   NS_ASSERTION(!(kid->GetStateBits() & NS_FRAME_IN_REFLOW),
                "should not be in reflow when about to reflow again");
 
-  if (!needsReflow)
-    return;
-
-  if (mState & NS_FRAME_IS_DIRTY) {
-    // If we require a full reflow, ensure our kid is marked fully dirty.
-    kid->AddStateBits(NS_FRAME_IS_DIRTY);
-  }
-
-  if (needsReflow) {
+  if (mState & (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN)) {
+    if (mState & NS_FRAME_IS_DIRTY) {
+      // If we require a full reflow, ensure our kid is marked fully dirty.
+      // (Note that our anonymous nsBlockFrame is not an nsISVGChildFrame, so
+      // even when we are called via our ReflowSVG this will not be done for us
+      // by nsSVGDisplayContainerFrame::ReflowSVG.)
+      kid->AddStateBits(NS_FRAME_IS_DIRTY);
+    }
     nsPresContext::InterruptPreventer noInterrupts(PresContext());
     DoReflow(aForceGlobalTransform);
   }
 
-  DoGlyphPositioning();
+  if (mPositioningDirty) {
+    DoGlyphPositioning();
+  }
 }
 
 void
 nsSVGTextFrame2::DoReflow(bool aForceGlobalTransform)
 {
+  // Since we are going to reflow the anonymous block frame, we will
+  // need to update mPositions.
   mPositioningDirty = true;
+
+  if (mState & NS_STATE_SVG_NONDISPLAY_CHILD) {
+    // Normally, this flag would be cleared in ReflowSVG(), but that doesn't
+    // get called for non-display frames. We don't want to reflow our
+    // descendants every time nsSVGTextFrame2::PaintSVG makes sure that we have
+    // valid positions by calling UpdateGlyphPositioning(), so we need to clear
+    // these dirty bits. Note that this also breaks an invalidation loop where
+    // our descendants invalidate as they reflow, which invalidates rendering
+    // observers, which reschedules the frame that is currently painting by
+    // referencing us to paint again. See bug 839958 comment 7. Hopefully we
+    // will break that loop more convincingly at some point.
+    mState &= ~(NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN);
+  }
 
   nsPresContext *presContext = PresContext();
   nsIFrame* kid = GetFirstPrincipalChild();
