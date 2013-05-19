@@ -2307,14 +2307,14 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
             macRect.size.width -= 4;
           }
         }
-        const BOOL isOnTopOfDarkBackground = IsDarkBackground(aFrame);
+        const BOOL isOnTopOfBrightBackground = YES; // TODO: detect this properly
         CUIDraw([NSWindow coreUIRenderer], macRect, cgContext,
                 (CFDictionaryRef)[NSDictionary dictionaryWithObjectsAndKeys:
                   @"kCUIWidgetOverlayScrollBar", @"widget",
                   @"regular", @"size",
                   (isRolledOver ? @"rollover" : @""), @"state",
                   (isHorizontal ? @"kCUIOrientHorizontal" : @"kCUIOrientVertical"), @"kCUIOrientationKey",
-                  (isOnTopOfDarkBackground ? @"kCUIVariantWhite" : @""), @"kCUIVariantKey",
+                  (isOnTopOfBrightBackground ? @"" : @"kCUIVariantWhite"), @"kCUIVariantKey",
                   [NSNumber numberWithBool:YES], @"indiconly",
                   [NSNumber numberWithBool:YES], @"kCUIThumbProportionKey",
                   [NSNumber numberWithBool:YES], @"is.flipped",
@@ -2342,13 +2342,13 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
             nsLookAndFeel::eIntID_UseOverlayScrollbars) != 0 &&
           CheckBooleanAttr(GetParentScrollbarFrame(aFrame), nsGkAtoms::hover)) {
         BOOL isHorizontal = (aWidgetType == NS_THEME_SCROLLBAR_TRACK_HORIZONTAL);
-        const BOOL isOnTopOfDarkBackground = IsDarkBackground(aFrame);
+        const BOOL isOnTopOfBrightBackground = YES; // TODO: detect this properly
         CUIDraw([NSWindow coreUIRenderer], macRect, cgContext,
                 (CFDictionaryRef)[NSDictionary dictionaryWithObjectsAndKeys:
                   @"kCUIWidgetOverlayScrollBar", @"widget",
                   @"regular", @"size",
                   (isHorizontal ? @"kCUIOrientHorizontal" : @"kCUIOrientVertical"), @"kCUIOrientationKey",
-                  (isOnTopOfDarkBackground ? @"kCUIVariantWhite" : @""), @"kCUIVariantKey",
+                  (isOnTopOfBrightBackground ? @"" : @"kCUIVariantWhite"), @"kCUIVariantKey",
                   [NSNumber numberWithBool:YES], @"noindicator",
                   [NSNumber numberWithBool:YES], @"kCUIThumbProportionKey",
                   [NSNumber numberWithBool:YES], @"is.flipped",
