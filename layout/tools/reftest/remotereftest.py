@@ -335,6 +335,29 @@ user_pref("toolkit.telemetry.prompted", 999);
 user_pref("toolkit.telemetry.notifiedOptOut", 999);
 user_pref("reftest.uri", "%s");
 user_pref("datareporting.policy.dataSubmissionPolicyBypassAcceptance", true);
+
+// Point the url-classifier to the local testing server for fast failures
+user_pref("browser.safebrowsing.gethashURL", "http://127.0.0.1:8888/safebrowsing-dummy/gethash");
+user_pref("browser.safebrowsing.keyURL", "http://127.0.0.1:8888/safebrowsing-dummy/newkey");
+user_pref("browser.safebrowsing.updateURL", "http://127.0.0.1:8888/safebrowsing-dummy/update");
+// Point update checks to the local testing server for fast failures
+user_pref("extensions.update.url", "http://127.0.0.1:8888/extensions-dummy/updateURL");
+user_pref("extensions.update.background.url", "http://127.0.0.1:8888/extensions-dummy/updateBackgroundURL");
+user_pref("extensions.blocklist.url", "http://127.0.0.1:8888/extensions-dummy/blocklistURL");
+user_pref("extensions.hotfix.url", "http://127.0.0.1:8888/extensions-dummy/hotfixURL");
+// Turn off extension updates so they don't bother tests
+user_pref("extensions.update.enabled", false);
+// Make sure opening about:addons won't hit the network
+user_pref("extensions.webservice.discoverURL", "http://127.0.0.1:8888/extensions-dummy/discoveryURL");
+// Make sure AddonRepository won't hit the network
+user_pref("extensions.getAddons.maxResults", 0);
+user_pref("extensions.getAddons.get.url", "http://127.0.0.1:8888/extensions-dummy/repositoryGetURL");
+user_pref("extensions.getAddons.getWithPerformance.url", "http://127.0.0.1:8888/extensions-dummy/repositoryGetWithPerformanceURL");
+user_pref("extensions.getAddons.search.browseURL", "http://127.0.0.1:8888/extensions-dummy/repositoryBrowseURL");
+user_pref("extensions.getAddons.search.url", "http://127.0.0.1:8888/extensions-dummy/repositorySearchURL");
+// Make sure that opening the plugins check page won't hit the network
+user_pref("plugins.update.url", "http://127.0.0.1:8888/plugins-dummy/updateCheckURL");
+
 """ % reftestlist)
 
         #workaround for jsreftests.
