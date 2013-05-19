@@ -280,8 +280,8 @@ protected:
 
     virtual gfxFont *CreateFontInstance(const gfxFontStyle *aFontStyle, bool aNeedsBold);
 
-    virtual nsresult CopyFontTable(uint32_t aTableTag,
-                                   FallibleTArray<uint8_t>& aBuffer) MOZ_OVERRIDE;
+    virtual nsresult GetFontTable(uint32_t aTableTag,
+                                  FallibleTArray<uint8_t>& aBuffer);
 
     LOGFONTW mLogFont;
 };

@@ -533,7 +533,6 @@ hb_buffer_set_script
 hb_buffer_set_unicode_funcs
 hb_face_create_for_tables
 hb_face_destroy
-hb_face_reference
 hb_font_create
 hb_font_destroy
 hb_font_funcs_create

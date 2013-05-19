@@ -20,8 +20,6 @@
 #include "nsMemory.h"
 #include "nsICharsetConverterManager.h"
 
-#include "harfbuzz/hb.h"
-
 #include "plbase64.h"
 #include "prlog.h"
 
@@ -1217,18 +1215,17 @@ gfxFontUtils::GetFullNameFromSFNT(const uint8_t* aFontData, uint32_t aLength,
     uint32_t len = dirEntry->length;
     NS_ENSURE_TRUE(aLength > len && aLength - len >= dirEntry->offset,
                    NS_ERROR_UNEXPECTED);
+    FallibleTArray<uint8_t> nameTable;
+    if (!nameTable.SetLength(len)) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+    memcpy(nameTable.Elements(), aFontData + dirEntry->offset, len);
 
-    hb_blob_t *nameBlob =
-        hb_blob_create((const char*)aFontData + dirEntry->offset, len,
-                       HB_MEMORY_MODE_READONLY, nullptr, nullptr);
-    nsresult rv = GetFullNameFromTable(nameBlob, aFullName);
-    hb_blob_destroy(nameBlob);
-
-    return rv;
+    return GetFullNameFromTable(nameTable, aFullName);
 }
 
 nsresult
-gfxFontUtils::GetFullNameFromTable(hb_blob_t *aNameTable,
+gfxFontUtils::GetFullNameFromTable(FallibleTArray<uint8_t>& aNameTable,
                                    nsAString& aFullName)
 {
     nsAutoString name;
@@ -1260,7 +1257,7 @@ gfxFontUtils::GetFullNameFromTable(hb_blob_t *aNameTable,
 }
 
 nsresult
-gfxFontUtils::GetFamilyNameFromTable(hb_blob_t *aNameTable,
+gfxFontUtils::GetFamilyNameFromTable(FallibleTArray<uint8_t>& aNameTable,
                                      nsAString& aFullName)
 {
     nsAutoString name;
@@ -1286,14 +1283,14 @@ enum {
 };    
 
 nsresult
-gfxFontUtils::ReadNames(hb_blob_t *aNameTable, uint32_t aNameID, 
+gfxFontUtils::ReadNames(FallibleTArray<uint8_t>& aNameTable, uint32_t aNameID, 
                         int32_t aPlatformID, nsTArray<nsString>& aNames)
 {
     return ReadNames(aNameTable, aNameID, LANG_ALL, aPlatformID, aNames);
 }
 
 nsresult
-gfxFontUtils::ReadCanonicalName(hb_blob_t *aNameTable, uint32_t aNameID, 
+gfxFontUtils::ReadCanonicalName(FallibleTArray<uint8_t>& aNameTable, uint32_t aNameID, 
                                 nsString& aName)
 {
     nsresult rv;
@@ -1461,7 +1458,7 @@ gfxFontUtils::GetCharsetForFontName(uint16_t aPlatform, uint16_t aScript, uint16
 // convert a raw name from the name table to an nsString, if possible;
 // return value indicates whether conversion succeeded
 bool
-gfxFontUtils::DecodeFontName(const char *aNameData, int32_t aByteLen, 
+gfxFontUtils::DecodeFontName(const uint8_t *aNameData, int32_t aByteLen, 
                              uint32_t aPlatformCode, uint32_t aScriptCode,
                              uint32_t aLangCode, nsAString& aName)
 {
@@ -1511,7 +1508,7 @@ gfxFontUtils::DecodeFontName(const char *aNameData, int32_t aByteLen,
     }
 
     int32_t destLength;
-    rv = decoder->GetMaxLength(aNameData, aByteLen, &destLength);
+    rv = decoder->GetMaxLength(reinterpret_cast<const char*>(aNameData), aByteLen, &destLength);
     if (NS_FAILED(rv)) {
         NS_WARNING("decoder->GetMaxLength failed, invalid font name?");
         return false;
@@ -1519,7 +1516,7 @@ gfxFontUtils::DecodeFontName(const char *aNameData, int32_t aByteLen,
 
     // make space for the converted string
     aName.SetLength(destLength);
-    rv = decoder->Convert(aNameData, &aByteLen,
+    rv = decoder->Convert(reinterpret_cast<const char*>(aNameData), &aByteLen,
                           aName.BeginWriting(), &destLength);
     if (NS_FAILED(rv)) {
         NS_WARNING("decoder->Convert failed, invalid font name?");
@@ -1531,17 +1528,17 @@ gfxFontUtils::DecodeFontName(const char *aNameData, int32_t aByteLen,
 }
 
 nsresult
-gfxFontUtils::ReadNames(hb_blob_t *aNameTable, uint32_t aNameID, 
+gfxFontUtils::ReadNames(FallibleTArray<uint8_t>& aNameTable, uint32_t aNameID, 
                         int32_t aLangID, int32_t aPlatformID,
                         nsTArray<nsString>& aNames)
 {
-    uint32_t nameTableLen;
-    const char *nameTable = hb_blob_get_data(aNameTable, &nameTableLen);
+    uint32_t nameTableLen = aNameTable.Length();
     NS_ASSERTION(nameTableLen != 0, "null name table");
 
-    if (!nameTableLen) {
+    if (nameTableLen == 0)
         return NS_ERROR_FAILURE;
-    }
+
+    uint8_t *nameTable = aNameTable.Elements();
 
     // -- name table data
     const NameHeader *nameHeader = reinterpret_cast<const NameHeader*>(nameTable);
