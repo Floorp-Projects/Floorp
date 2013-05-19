@@ -18,8 +18,8 @@ contract @mozilla.org/contactFindOptions;1 {28ce07d0-45d9-4b7a-8843-521df4edd8bc
 
 component {72a5ee28-81d8-4af8-90b3-ae935396cc66} ContactManager.js
 contract @mozilla.org/contact;1 {72a5ee28-81d8-4af8-90b3-ae935396cc66}
-category JavaScript-global-constructor-maybe dom.mozContacts.enabled mozContact,@mozilla.org/contact;1
+category JavaScript-global-constructor mozContact @mozilla.org/contact;1
 
 component {7bfb6481-f946-4254-afc5-d7fe9f5c45a3} ContactManager.js
 contract @mozilla.org/contactManager;1 {7bfb6481-f946-4254-afc5-d7fe9f5c45a3}
-category JavaScript-navigator-property-maybe dom.mozContacts.enabled mozContacts,@mozilla.org/contactManager;1
+category JavaScript-navigator-property mozContacts @mozilla.org/contactManager;1

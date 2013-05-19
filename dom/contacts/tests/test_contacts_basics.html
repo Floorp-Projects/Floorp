@@ -21,14 +21,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=674720
 
 "use strict";
 
-// this shouldn't be necessary when bug 792594 is fixed
-if (!SpecialPowers.getBoolPref("dom.mozContacts.enabled")) {
-  ok(!("mozContacts" in navigator), "navigator.mozContacts is not exposed");
-  ok(!("mozContact" in window), "mozContact is not exposed");
-  var comp = SpecialPowers.wrap(SpecialPowers.Components);
-  comp.utils.import("resource://gre/modules/ContactService.jsm");
-  comp.utils.import("resource://gre/modules/PermissionPromptHelper.jsm");
-  SpecialPowers.setBoolPref("dom.mozContacts.enabled", true);
+if (SpecialPowers.isMainProcess()) {
+  SpecialPowers.Cu.import("resource://gre/modules/ContactService.jsm");
+  SpecialPowers.Cu.import("resource://gre/modules/PermissionPromptHelper.jsm");
 }
 
 SpecialPowers.addPermission("contacts-write", true, document);
@@ -241,8 +236,6 @@ function checkContacts(contact1, contact2) {
   }
 }
 
-function tests() {
-
 var req;
 var index = 0;
 
@@ -343,7 +336,7 @@ var steps = [
     req.onerror = onFailure;
   },
   function () {
-    ok(true, "Retrieving by substring");
+    ok(true, "Retrieving by substring 1");
     var options = {filterBy: ["givenName"],
                    filterOp: "contains",
                    filterValue: properties1.givenName[1].substring(0,3)};
@@ -422,7 +415,7 @@ var steps = [
     req.onerror = onFailure;
   },
   function () {
-    ok(true, "Retrieving by substring");
+    ok(true, "Retrieving by substring 2");
     var options = {filterBy: ["givenName"],
                    filterOp: "contains",
                    filterValue: properties1.givenName[0].substring(0,3)};
@@ -448,7 +441,7 @@ var steps = [
     req.onerror = onFailure;
   },
   function () {
-    ok(true, "Retrieving by substring");
+    ok(true, "Retrieving by substring 3");
     var options = {filterBy: ["givenName"],
                    filterOp: "contains",
                    filterValue: properties1.givenName[1].substring(0,3)};
@@ -472,7 +465,7 @@ var steps = [
     req.onerror = onFailure;
   },
   function () {
-    ok(true, "Retrieving by substring");
+    ok(true, "Retrieving by substring 4");
     var options = {filterBy: ["givenName"],
                    filterOp: "contains",
                    filterValue: properties1.givenName[1].substring(0,3)};
@@ -667,7 +660,7 @@ var steps = [
     req.onerror = onFailure;
   },
   function () {
-    ok(true, "Retrieving by substring2");
+    ok(true, "Retrieving by substring 5");
     var options = {filterBy: ["givenName"],
                    filterOp: "contains",
                    filterValue: properties1.givenName[0].substring(0,3)};
@@ -682,7 +675,7 @@ var steps = [
     req.onerror = onFailure;
   },
   function () {
-    ok(true, "Retrieving by substring3");
+    ok(true, "Retrieving by substring 6");
     var options = {filterBy: ["familyName", "givenName"],
                    filterOp: "contains",
                    filterValue: properties1.givenName[0].substring(0,3)};
@@ -1407,6 +1400,28 @@ var steps = [
     };
   },
   function () {
+    ok(true, "Adding contact with no number but carrier");
+    createResult1 = new mozContact();
+    createResult1.init({ tel: [{type: ["home"], carrier: "myCarrier"} ] });
+    req = navigator.mozContacts.save(createResult1);
+    req.onsuccess = function () {
+      ok(createResult1.id, "The contact now has an ID.");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Adding contact with email but no value");
+    createResult1 = new mozContact();
+    createResult1.init({ email: [{type: ["home"]}] });
+    req = navigator.mozContacts.save(createResult1);
+    req.onsuccess = function () {
+      ok(createResult1.id, "The contact now has an ID.");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
     ok(true, "Deleting database");
     req = mozContacts.clear()
     req.onsuccess = function () {
@@ -1437,21 +1452,8 @@ function next() {
   index += 1;
 }
 
-function permissionTest() {
-  if (gContactsEnabled) {
-    next();
-  } else {
-    is(mozContacts, null, "mozContacts is null when not enabled.");
-    SimpleTest.finish();
-  }
-}
-
-permissionTest();
-};
-
-var gContactsEnabled = SpecialPowers.getBoolPref("dom.mozContacts.enabled");
-addLoadEvent(tests);
 SimpleTest.waitForExplicitFinish();
+addLoadEvent(next);
 </script>
 </pre>
 </body>

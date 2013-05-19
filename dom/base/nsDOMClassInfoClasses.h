@@ -28,7 +28,6 @@ DOMCI_CLASS(MouseScrollEvent)
 DOMCI_CLASS(WheelEvent)
 DOMCI_CLASS(DragEvent)
 DOMCI_CLASS(ClipboardEvent)
-DOMCI_CLASS(KeyboardEvent)
 DOMCI_CLASS(CompositionEvent)
 #define MOZ_GENERATED_EVENT_LIST
 #define MOZ_GENERATED_EVENT(_event_interface) DOMCI_CLASS(_event_interface)
@@ -37,9 +36,6 @@ DOMCI_CLASS(CompositionEvent)
 DOMCI_CLASS(DeviceMotionEvent)
 DOMCI_CLASS(DeviceAcceleration)
 DOMCI_CLASS(DeviceRotationRate)
-
-// HTML classes
-DOMCI_CLASS(HTMLDocument)
 
 // HTML element classes
 DOMCI_CLASS(HTMLFormElement)
@@ -231,7 +227,6 @@ DOMCI_CLASS(CameraManager)
 DOMCI_CLASS(CameraControl)
 DOMCI_CLASS(CameraCapabilities)
 
-DOMCI_CLASS(DOMError)
 DOMCI_CLASS(OpenWindowEventDetail)
 DOMCI_CLASS(AsyncScrollEventDetail)
 
@@ -243,5 +238,4 @@ DOMCI_CLASS(MozTimeManager)
 
 #ifdef MOZ_WEBRTC
 DOMCI_CLASS(DataChannel)
-DOMCI_CLASS(RTCPeerConnection)
 #endif

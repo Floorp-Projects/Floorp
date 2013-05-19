@@ -7,6 +7,8 @@ const REMOTE_ENABLED = "devtools.debugger.remote-enabled";
 
 Cu.import("resource:///modules/devtools/gDevTools.jsm", temp);
 let gDevTools = temp.gDevTools;
+
+Cu.import("resource://gre/modules/devtools/Loader.jsm", temp);
 let TargetFactory = temp.devtools.TargetFactory;
 
 Cu.import("resource://gre/modules/devtools/dbg-server.jsm", temp);

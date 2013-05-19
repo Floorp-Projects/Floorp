@@ -12,24 +12,24 @@ include $(DEPTH)/config/autoconf.mk
 
 BROWSER_TESTS = \
   head.js \
-  browser_test.js \
+  browser_bookmarks.js \
   browser_canonizeURL.js \
-  browser_context_ui.js \
-  browser_tiles.js \
-  browser_tilegrid.xul \
-  browser_onscreen_keyboard.js \
-  browser_onscreen_keyboard.html \
-  browser_remotetabs.js \
-  browser_downloads.js \
   browser_context_menu_tests.js \
   browser_context_menu_tests_01.html \
   browser_context_menu_tests_02.html \
   browser_context_menu_tests_03.html \
-  browser_prefs_ui.js \
-  browser_topsites.js \
-  browser_tabs.js \
-  browser_bookmarks.js \
+  browser_context_ui.js \
+  browser_downloads.js \
   browser_history.js \
+  browser_onscreen_keyboard.js \
+  browser_onscreen_keyboard.html \
+  browser_prefs_ui.js \
+  browser_remotetabs.js \
+  browser_tabs.js \
+  browser_test.js \
+  browser_tiles.js \
+  browser_tilegrid.xul \
+  browser_topsites.js \
   $(NULL)
 
 # disabled due to timeouts and lack of plugin support.
@@ -58,6 +58,7 @@ BROWSER_TEST_RESOURCES = \
   res/image01.png \
   res/textblock01.html \
   res/textinput01.html \
+  res/textarea01.html \
   $(NULL)
 
 libs:: $(BROWSER_TESTS)

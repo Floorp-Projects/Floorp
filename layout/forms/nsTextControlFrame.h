@@ -44,14 +44,14 @@ public:
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
 
-  virtual nsIScrollableFrame* GetScrollTargetFrame() {
+  virtual nsIScrollableFrame* GetScrollTargetFrame() MOZ_OVERRIDE {
     if (!IsScrollable())
       return nullptr;
     return do_QueryFrame(GetFirstPrincipalChild());
   }
 
-  virtual nscoord GetMinWidth(nsRenderingContext* aRenderingContext);
-  virtual nscoord GetPrefWidth(nsRenderingContext* aRenderingContext);
+  virtual nscoord GetMinWidth(nsRenderingContext* aRenderingContext) MOZ_OVERRIDE;
+  virtual nscoord GetPrefWidth(nsRenderingContext* aRenderingContext) MOZ_OVERRIDE;
 
   virtual nsSize ComputeAutoSize(nsRenderingContext *aRenderingContext,
                                  nsSize aCBSize, nscoord aAvailableWidth,
@@ -61,26 +61,26 @@ public:
   NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&          aStatus);
+                    nsReflowStatus&          aStatus) MOZ_OVERRIDE;
 
-  virtual nsSize GetMinSize(nsBoxLayoutState& aBoxLayoutState);
-  virtual bool IsCollapsed();
+  virtual nsSize GetMinSize(nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
+  virtual bool IsCollapsed() MOZ_OVERRIDE;
 
-  virtual bool IsLeaf() const;
+  virtual bool IsLeaf() const MOZ_OVERRIDE;
   
 #ifdef ACCESSIBILITY
   virtual mozilla::a11y::AccType AccessibleType() MOZ_OVERRIDE;
 #endif
 
 #ifdef DEBUG
-  NS_IMETHOD GetFrameName(nsAString& aResult) const
+  NS_IMETHOD GetFrameName(nsAString& aResult) const MOZ_OVERRIDE
   {
     aResult.AssignLiteral("nsTextControlFrame");
     return NS_OK;
   }
 #endif
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const
+  virtual bool IsFrameOfType(uint32_t aFlags) const MOZ_OVERRIDE
   {
     // nsStackFrame is already both of these, but that's somewhat bogus,
     // and we really mean it.
@@ -103,8 +103,8 @@ public:
                                 const nsDisplayListSet& aLists) MOZ_OVERRIDE;
 
 //==== BEGIN NSIFORMCONTROLFRAME
-  virtual void SetFocus(bool aOn , bool aRepaint); 
-  virtual nsresult SetFormProperty(nsIAtom* aName, const nsAString& aValue);
+  virtual void SetFocus(bool aOn , bool aRepaint) MOZ_OVERRIDE; 
+  virtual nsresult SetFormProperty(nsIAtom* aName, const nsAString& aValue) MOZ_OVERRIDE;
 
 //==== END NSIFORMCONTROLFRAME
 
@@ -141,16 +141,16 @@ public:
 //=== END NSISTATEFULFRAME
 
 //==== OVERLOAD of nsIFrame
-  virtual nsIAtom* GetType() const;
+  virtual nsIAtom* GetType() const MOZ_OVERRIDE;
 
   /** handler for attribute changes to mContent */
   NS_IMETHOD AttributeChanged(int32_t         aNameSpaceID,
                               nsIAtom*        aAttribute,
-                              int32_t         aModType);
+                              int32_t         aModType) MOZ_OVERRIDE;
 
   nsresult GetText(nsString& aText);
 
-  NS_IMETHOD PeekOffset(nsPeekOffsetStruct *aPos);
+  NS_IMETHOD PeekOffset(nsPeekOffsetStruct *aPos) MOZ_OVERRIDE;
 
   NS_DECL_QUERYFRAME
 

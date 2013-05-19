@@ -22,7 +22,11 @@ WHICH GENERATES THE GLSL ES preprocessor expression parser.
 
 #if defined(__GNUC__)
 // Triggered by the auto-generated pplval variable.
+#if !defined(__clang__) && ((__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 7))
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#else
 #pragma GCC diagnostic ignored "-Wuninitialized"
+#endif
 #elif defined(_MSC_VER)
 #pragma warning(disable: 4065 4701)
 #endif
@@ -32,7 +36,7 @@ WHICH GENERATES THE GLSL ES preprocessor expression parser.
 #include <cassert>
 #include <sstream>
 
-#include "Diagnostics.h"
+#include "DiagnosticsBase.h"
 #include "Lexer.h"
 #include "Token.h"
 
@@ -42,6 +46,8 @@ typedef __int64 YYSTYPE;
 #include <stdint.h>
 typedef intmax_t YYSTYPE;
 #endif  // _MSC_VER
+#define YYENABLE_NLS 0
+#define YYLTYPE_IS_TRIVIAL 1
 #define YYSTYPE_IS_TRIVIAL 1
 #define YYSTYPE_IS_DECLARED 1
 

@@ -220,7 +220,7 @@ class MOZ_STACK_CLASS Handle : public js::HandleBase<T>
      */
     template <typename S>
     inline
-    Handle(Rooted<S> &root,
+    Handle(const Rooted<S> &root,
            typename mozilla::EnableIf<mozilla::IsConvertible<S, T>::value, int>::Type dummy = 0);
 
     /* Construct a read only handle from a mutable handle. */
@@ -743,7 +743,7 @@ namespace JS {
 
 template <typename T> template <typename S>
 inline
-Handle<T>::Handle(Rooted<S> &root,
+Handle<T>::Handle(const Rooted<S> &root,
                   typename mozilla::EnableIf<mozilla::IsConvertible<S, T>::value, int>::Type dummy)
 {
     ptr = reinterpret_cast<const T *>(root.address());

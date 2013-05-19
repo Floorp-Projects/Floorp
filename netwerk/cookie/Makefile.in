@@ -16,14 +16,13 @@ FAIL_ON_WARNINGS := 1
 
 ifdef NECKO_COOKIES
 LIBRARY_NAME     = neckocookie_s
+MSVC_ENABLE_PGO := 1
 LIBXUL_LIBRARY   = 1
 FORCE_STATIC_LIB = 1
 CPPSRCS = \
   nsCookie.cpp \
   nsCookieService.cpp \
   $(NULL)
-
-DISABLED_XPCSHELL_TESTS += test/unit
 
 CPPSRCS += \
 		CookieServiceParent.cpp \
@@ -34,10 +33,6 @@ LOCAL_INCLUDES	= \
 		-I$(topsrcdir)/intl/uconv/src \
 		$(NULL)
 
-# FIXME/bug 575918: out-of-process xpcshell is broken on OS X
-ifneq ($(OS_ARCH),Darwin)
-DISABLED_XPCSHELL_TESTS += test/unit_ipc
-endif
 endif
 
 

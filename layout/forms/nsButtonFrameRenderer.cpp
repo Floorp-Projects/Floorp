@@ -168,7 +168,7 @@ void nsDisplayButtonForeground::Paint(nsDisplayListBuilder* aBuilder,
   nsPresContext *presContext = mFrame->PresContext();
   const nsStyleDisplay *disp = mFrame->StyleDisplay();
   if (!mFrame->IsThemed(disp) ||
-      !presContext->GetTheme()->ThemeDrawsFocusForWidget(presContext, mFrame, disp->mAppearance)) {
+      !presContext->GetTheme()->ThemeDrawsFocusForWidget(disp->mAppearance)) {
     // draw the focus and outline borders
     nsRect r = nsRect(ToReferenceFrame(), mFrame->GetSize());
     mBFR->PaintOutlineAndFocusBorders(presContext, *aCtx, mVisibleRect, r);

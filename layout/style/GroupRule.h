@@ -11,6 +11,7 @@
 #ifndef mozilla_css_GroupRule_h__
 #define mozilla_css_GroupRule_h__
 
+#include "mozilla/Attributes.h"
 #include "mozilla/css/Rule.h"
 #include "nsCOMArray.h"
 #include "nsAutoPtr.h"
@@ -43,7 +44,7 @@ public:
 
   // to help implement nsIStyleRule
 #ifdef DEBUG
-  virtual void List(FILE* out = stdout, int32_t aIndent = 0) const;
+  virtual void List(FILE* out = stdout, int32_t aIndent = 0) const MOZ_OVERRIDE;
 #endif
 
 public:

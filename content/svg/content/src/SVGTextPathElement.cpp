@@ -9,7 +9,6 @@
 #include "nsGkAtoms.h"
 #include "nsIFrame.h"
 #include "nsError.h"
-#include "nsContentUtils.h"
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(TextPath)
 
@@ -113,13 +112,6 @@ SVGTextPathElement::IsAttributeMapped(const nsIAtom* name) const
 
   return FindAttributeDependence(name, map) ||
     SVGTextPathElementBase::IsAttributeMapped(name);
-}
-
-
-bool
-SVGTextPathElement::IsEventAttributeName(nsIAtom* aName)
-{
-  return nsContentUtils::IsEventAttributeName(aName, EventNameType_SVGGraphic);
 }
 
 //----------------------------------------------------------------------

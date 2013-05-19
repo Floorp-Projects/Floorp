@@ -128,6 +128,7 @@ function run_test() {
   // Don't attempt to show a prompt when the update is finished.
   Services.prefs.setBoolPref(PREF_APP_UPDATE_SILENT, true);
 
+  gEnvSKipUpdateDirHashing = true;
   let channel = Services.prefs.getCharPref(PREF_APP_UPDATE_CHANNEL);
   let patches = getLocalPatchString(null, null, null, null, null, "true",
                                     STATE_PENDING_SVC);

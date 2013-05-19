@@ -385,6 +385,8 @@ pref("dom.sms.requestStatusReport", true); // Enabled by default.
 
 // Temporary permission hack for WebContacts
 pref("dom.mozContacts.enabled", true);
+pref("dom.navigator-property.disable.mozContacts", false);
+pref("dom.global-constructor.disable.mozContact", false);
 
 // WebAlarms
 pref("dom.mozAlarms.enabled", true);
@@ -394,12 +396,13 @@ pref("services.push.enabled", true);
 // serverURL to be assigned by services team
 pref("services.push.serverURL", "");
 pref("services.push.userAgentID", "");
-// exponential back-off start is 5 seconds like in HTTP/1.1
+// Exponential back-off start is 5 seconds like in HTTP/1.1.
+// Maximum back-off is pingInterval.
 pref("services.push.retryBaseInterval", 5000);
-// WebSocket level ping transmit interval in seconds.
-pref("services.push.websocketPingInterval", 55);
-// exponential back-off end is 20 minutes
-pref("services.push.maxRetryInterval", 1200000);
+// Interval at which to ping PushServer to check connection status. In
+// milliseconds. If no reply is received within requestTimeout, the connection
+// is considered closed.
+pref("services.push.pingInterval", 1800000); // 30 minutes
 // How long before a DOMRequest errors as timeout
 pref("services.push.requestTimeout", 10000);
 // enable udp wakeup support
@@ -415,6 +418,7 @@ pref("ril.lastKnownMcc", "724");
 
 // WebSettings
 pref("dom.mozSettings.enabled", true);
+pref("dom.navigator-property.disable.mozSettings", false);
 pref("dom.mozPermissionSettings.enabled", true);
 
 // controls if we want camera support
@@ -589,7 +593,7 @@ pref("hal.processPriorityManager.gonk.FOREGROUND.Nice", 1);
 
 pref("hal.processPriorityManager.gonk.BACKGROUND_PERCEIVABLE.OomScoreAdjust", 200);
 pref("hal.processPriorityManager.gonk.BACKGROUND_PERCEIVABLE.KillUnderMB", 7);
-pref("hal.processPriorityManager.gonk.BACKGROUND_PERCEIVABLE.Nice", 10);
+pref("hal.processPriorityManager.gonk.BACKGROUND_PERCEIVABLE.Nice", 7);
 
 pref("hal.processPriorityManager.gonk.BACKGROUND_HOMESCREEN.OomScoreAdjust", 267);
 pref("hal.processPriorityManager.gonk.BACKGROUND_HOMESCREEN.KillUnderMB", 8);

@@ -34,6 +34,7 @@
 #include "nsDOMClassInfoID.h"
 #include "nsDOMEventTargetHelper.h"
 #include "nsPIWindowRoot.h"
+#include "nsGlobalWindow.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -43,6 +44,18 @@ static char *sPopupAllowedEvents;
 
 nsDOMEvent::nsDOMEvent(mozilla::dom::EventTarget* aOwner,
                        nsPresContext* aPresContext, nsEvent* aEvent)
+{
+  ConstructorInit(aOwner, aPresContext, aEvent);
+}
+
+nsDOMEvent::nsDOMEvent(nsPIDOMWindow* aParent)
+{
+  ConstructorInit(static_cast<nsGlobalWindow *>(aParent), nullptr, nullptr);
+  SetIsDOMBinding();
+}
+
+void nsDOMEvent::ConstructorInit(mozilla::dom::EventTarget* aOwner,
+                                 nsPresContext* aPresContext, nsEvent* aEvent)
 {
   SetOwner(aOwner);
 
@@ -1034,6 +1047,22 @@ nsDOMEvent::GetEventPopupControlState(nsEvent *aEvent)
       case NS_KEY_DOWN :
         if (::PopupAllowedForEvent("keydown"))
           abuse = openControlled;
+        break;
+      }
+    }
+    break;
+  case NS_TOUCH_EVENT :
+    if (aEvent->mFlags.mIsTrusted) {
+      switch (aEvent->message) {
+      case NS_TOUCH_START :
+        if (PopupAllowedForEvent("touchstart")) {
+          abuse = openControlled;
+        }
+        break;
+      case NS_TOUCH_END :
+        if (PopupAllowedForEvent("touchend")) {
+          abuse = openControlled;
+        }
         break;
       }
     }

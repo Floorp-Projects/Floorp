@@ -21,12 +21,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=674720
 
 "use strict";
 
-// this shouldn't be necessary when bug 792594 is fixed
-if (!SpecialPowers.getBoolPref("dom.mozContacts.enabled")) {
-  var comp = SpecialPowers.wrap(SpecialPowers.Components);
-  comp.utils.import("resource://gre/modules/ContactService.jsm");
-  comp.utils.import("resource://gre/modules/PermissionPromptHelper.jsm");
-  SpecialPowers.setBoolPref("dom.mozContacts.enabled", true);
+if (SpecialPowers.isMainProcess()) {
+  SpecialPowers.Cu.import("resource://gre/modules/ContactService.jsm");
+  SpecialPowers.Cu.import("resource://gre/modules/PermissionPromptHelper.jsm");
 }
 
 SpecialPowers.addPermission("contacts-write", true, document);
@@ -34,8 +31,6 @@ SpecialPowers.addPermission("contacts-read", true, document);
 SpecialPowers.addPermission("contacts-create", true, document);
 
 var utils = SpecialPowers.getDOMWindowUtils(window);
-
-function tests() {
 
 function getView(size)
 {
@@ -306,23 +301,8 @@ function next() {
   index += 1;
 }
 
-function permissionTest() {
-  if (gContactsEnabled) {
-    next();
-  } else {
-    is(mozContacts, null, "mozContacts is null when not enabled.");
-    SimpleTest.finish();
-  }
-}
-
-permissionTest();
-}
-
-var gContactsEnabled = SpecialPowers.getBoolPref("dom.mozContacts.enabled");
-addLoadEvent(tests);
 SimpleTest.waitForExplicitFinish();
-
-ok(true, "test passed");
+addLoadEvent(next);
 </script>
 </pre>
 </body>

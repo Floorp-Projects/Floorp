@@ -31,6 +31,9 @@ using namespace mozilla;
 
 using js::PropertyDescriptor;
 using js::Wrapper;
+using js::IsCrossCompartmentWrapper;
+using js::UncheckedUnwrap;
+using js::CheckedUnwrap;
 
 namespace xpc {
 
@@ -880,24 +883,6 @@ WrapURI(JSContext *cx, nsIURI *uri, MutableHandleValue vp)
 }
 
 static JSBool
-documentURIObject_getter(JSContext *cx, HandleObject wrapper, HandleId id, MutableHandleValue vp)
-{
-    nsCOMPtr<nsIDocument> native = do_QueryInterfaceNative(cx, wrapper);
-    if (!native) {
-        JS_ReportError(cx, "Unexpected object");
-        return false;
-    }
-
-    nsCOMPtr<nsIURI> uri = native->GetDocumentURI();
-    if (!uri) {
-        JS_ReportOutOfMemory(cx);
-        return false;
-    }
-
-    return WrapURI(cx, uri, vp);
-}
-
-static JSBool
 baseURIObject_getter(JSContext *cx, HandleObject wrapper, HandleId id, MutableHandleValue vp)
 {
     nsCOMPtr<nsINode> native = do_QueryInterfaceNative(cx, wrapper);
@@ -1002,18 +987,14 @@ XPCWrappedNativeXrayTraits::resolveOwnProperty(JSContext *cx, Wrapper &jsWrapper
     MOZ_ASSERT(js::IsObjectInContextCompartment(wrapper, cx));
     XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
     if (AccessCheck::isChrome(wrapper) &&
-        (((id == rt->GetStringID(XPCJSRuntime::IDX_BASEURIOBJECT) ||
+        ((id == rt->GetStringID(XPCJSRuntime::IDX_BASEURIOBJECT) ||
            id == rt->GetStringID(XPCJSRuntime::IDX_NODEPRINCIPAL)) &&
-          Is<nsINode>(wrapper)) ||
-          (id == rt->GetStringID(XPCJSRuntime::IDX_DOCUMENTURIOBJECT) &&
-          Is<nsIDocument>(wrapper))))
+          Is<nsINode>(wrapper)))
     {
         desc->obj = wrapper;
         desc->attrs = JSPROP_ENUMERATE|JSPROP_SHARED;
         if (id == rt->GetStringID(XPCJSRuntime::IDX_BASEURIOBJECT))
             desc->getter = baseURIObject_getter;
-        else if (id == rt->GetStringID(XPCJSRuntime::IDX_DOCUMENTURIOBJECT))
-            desc->getter = documentURIObject_getter;
         else
             desc->getter = nodePrincipal_getter;
         desc->setter = NULL;
@@ -1661,6 +1642,63 @@ XrayWrapper<Base, Traits>::getOwnPropertyDescriptor(JSContext *cx, HandleObject 
     return true;
 }
 
+// Consider what happens when chrome does |xray.expando = xray.wrappedJSObject|.
+//
+// Since the expando comes from the target compartment, wrapping it back into
+// the target compartment to define it on the expando object ends up stripping
+// off the Xray waiver that gives |xray| and |xray.wrappedJSObject| different
+// identities. This is generally the right thing to do when wrapping across
+// compartments, but is incorrect in the special case of the Xray expando
+// object. Manually re-apply Xrays if necessary.
+//
+// NB: In order to satisfy the invariants of WaiveXray, we need to pass
+// in an object sans security wrapper, which means we need to strip off any
+// potential same-compartment security wrapper that may have been applied
+// to the content object. This is ok, because the the expando object is only
+// ever accessed by code across the compartment boundary.
+static bool
+RecreateLostWaivers(JSContext *cx, PropertyDescriptor *orig,
+                    MutableHandle<PropertyDescriptor> wrapped)
+{
+    // Compute whether the original objects were waived, and implicitly, whether
+    // they were objects at all.
+    bool valueWasWaived =
+        orig->value.isObject() &&
+        WrapperFactory::HasWaiveXrayFlag(&orig->value.toObject());
+    bool getterWasWaived =
+        (orig->attrs & JSPROP_GETTER) &&
+        WrapperFactory::HasWaiveXrayFlag(JS_FUNC_TO_DATA_PTR(JSObject*, orig->getter));
+    bool setterWasWaived =
+        (orig->attrs & JSPROP_SETTER) &&
+        WrapperFactory::HasWaiveXrayFlag(JS_FUNC_TO_DATA_PTR(JSObject*, orig->setter));
+
+    // Recreate waivers. Note that for value, we need an extra UncheckedUnwrap
+    // to handle same-compartment security wrappers (see above). This should
+    // never happen for getters/setters.
+
+    RootedObject rewaived(cx);
+    if (valueWasWaived && !IsCrossCompartmentWrapper(&wrapped.value().toObject())) {
+        rewaived = &wrapped.value().toObject();
+        rewaived = WrapperFactory::WaiveXray(cx, UncheckedUnwrap(rewaived));
+        NS_ENSURE_TRUE(rewaived, false);
+        wrapped.value().set(ObjectValue(*rewaived));
+    }
+    if (getterWasWaived && !IsCrossCompartmentWrapper(wrapped.getterObject())) {
+        MOZ_ASSERT(CheckedUnwrap(wrapped.getterObject()));
+        rewaived = WrapperFactory::WaiveXray(cx, wrapped.getterObject());
+        NS_ENSURE_TRUE(rewaived, false);
+        wrapped.setGetterObject(rewaived);
+    }
+    if (setterWasWaived && !IsCrossCompartmentWrapper(wrapped.setterObject())) {
+        MOZ_ASSERT(CheckedUnwrap(wrapped.setterObject()));
+        rewaived = WrapperFactory::WaiveXray(cx, wrapped.setterObject());
+        NS_ENSURE_TRUE(rewaived, false);
+        wrapped.setSetterObject(rewaived);
+    }
+
+    return true;
+}
+
 template <typename Base, typename Traits>
 bool
 XrayWrapper<Base, Traits>::defineProperty(JSContext *cx, HandleObject wrapper,
@@ -1697,6 +1735,10 @@ XrayWrapper<Base, Traits>::defineProperty(JSContext *cx, HandleObject wrapper,
     // Wrap the property descriptor for the target compartment.
     Rooted<PropertyDescriptor> wrappedDesc(cx, *desc);
     if (!JS_WrapPropertyDescriptor(cx, wrappedDesc.address()))
+        return false;
+
+    // Fix up Xray waivers.
+    if (!RecreateLostWaivers(cx, desc, &wrappedDesc))
         return false;
 
     return JS_DefinePropertyById(cx, expandoObject, id, wrappedDesc.value(),

@@ -481,6 +481,10 @@ public:
   };
   WaitState mWaitState;
   /**
+   * How many non-realtime ticks the graph should process.
+   */
+  uint32_t mNonRealtimeTicksToProcess;
+  /**
    * True when another iteration of the control loop is required.
    */
   bool mNeedAnotherIteration;
@@ -493,6 +497,13 @@ public:
    * RunInStableState() and the event hasn't run yet.
    */
   bool mPostedRunInStableStateEvent;
+  /**
+   * True when the non-realtime graph thread is processing, as a result of
+   * a request from the main thread.  When processing is finished, we post
+   * a message to the main thread in order to set mNonRealtimeProcessing
+   * back to false.
+   */
+  bool mNonRealtimeIsRunning;
 
   // Main thread only
 
@@ -519,6 +530,11 @@ public:
    * audio.
    */
   bool mRealtime;
+  /**
+   * True when a non-realtime MediaStreamGraph has started to process input.  This
+   * value is only accessed on the main thread.
+   */
+  bool mNonRealtimeProcessing;
 };
 
 }

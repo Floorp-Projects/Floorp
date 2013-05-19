@@ -96,7 +96,7 @@ SideMenuWidget.prototype = {
    * @return nsIDOMNode
    *         The element associated with the displayed item.
    */
-  insertItemAt: function SMW_insertItemAt(aIndex, aContents, aTooltip = "", aGroup = "") {
+  insertItemAt: function(aIndex, aContents, aTooltip = "", aGroup = "") {
     // Invalidate any notices set on this widget.
     this.removeAttribute("notice");
 
@@ -105,8 +105,8 @@ SideMenuWidget.prototype = {
       (aIndex < 0 || aIndex >= this._orderedMenuElementsArray.length) &&
       (this._list.scrollTop + this._list.clientHeight >= this._list.scrollHeight);
 
-    let group = this._getGroupForName(aGroup);
-    let item = this._getItemForGroup(group, aContents, aTooltip);
+    let group = this._getMenuGroupForName(aGroup);
+    let item = this._getMenuItemForGroup(group, aContents, aTooltip);
     let element = item.insertSelfAt(aIndex);
 
     if (this.maintainSelectionVisible) {
@@ -127,7 +127,7 @@ SideMenuWidget.prototype = {
    * @return nsIDOMNode
    *         The element associated with the displayed item.
    */
-  getItemAtIndex: function SMW_getItemAtIndex(aIndex) {
+  getItemAtIndex: function(aIndex) {
     return this._orderedMenuElementsArray[aIndex];
   },
 
@@ -137,7 +137,7 @@ SideMenuWidget.prototype = {
    * @param nsIDOMNode aChild
    *        The element associated with the displayed item.
    */
-  removeChild: function SMW_removeChild(aChild) {
+  removeChild: function(aChild) {
     if (aChild.className == "side-menu-widget-item-contents") {
       // Remove the item itself, not the contents.
       aChild.parentNode.remove();
@@ -157,7 +157,7 @@ SideMenuWidget.prototype = {
   /**
    * Removes all of the child nodes from this container.
    */
-  removeAllItems: function SMW_removeAllItems() {
+  removeAllItems: function() {
     let parent = this._parent;
     let list = this._list;
 
@@ -208,7 +208,7 @@ SideMenuWidget.prototype = {
    * Ensures the selected element is visible.
    * @see SideMenuWidget.prototype.ensureElementIsVisible.
    */
-  ensureSelectionIsVisible: function SMW_ensureSelectionIsVisible(aFlags) {
+  ensureSelectionIsVisible: function(aFlags) {
     this.ensureElementIsVisible(this.selectedItem, aFlags);
   },
 
@@ -222,7 +222,7 @@ SideMenuWidget.prototype = {
    *        - withGroup: true if the group header should also be made visible, if possible
    *        - delayed: wait a few cycles before ensuring the selection is visible
    */
-  ensureElementIsVisible: function SMW_ensureElementIsVisible(aElement, aFlags = {}) {
+  ensureElementIsVisible: function(aElement, aFlags = {}) {
     if (!aElement) {
       return;
     }
@@ -248,7 +248,7 @@ SideMenuWidget.prototype = {
   /**
    * Shows all the groups, even the ones with no visible children.
    */
-  showEmptyGroups: function SMW_showEmptyGroups() {
+  showEmptyGroups: function() {
     for (let group of this._orderedGroupElementsArray) {
       group.hidden = false;
     }
@@ -257,7 +257,7 @@ SideMenuWidget.prototype = {
   /**
    * Hides all the groups which have no visible children.
    */
-  hideEmptyGroups: function SMW_hideEmptyGroups() {
+  hideEmptyGroups: function() {
     let visibleChildNodes = ".side-menu-widget-item-contents:not([hidden=true])";
 
     for (let group of this._orderedGroupElementsArray) {
@@ -276,7 +276,7 @@ SideMenuWidget.prototype = {
    * @return string
    *         The current attribute value.
    */
-  getAttribute: function SMW_getAttribute(aName) {
+  getAttribute: function(aName) {
     return this._parent.getAttribute(aName);
   },
 
@@ -288,7 +288,7 @@ SideMenuWidget.prototype = {
    * @param string aValue
    *        The desired attribute value.
    */
-  setAttribute: function SMW_setAttribute(aName, aValue) {
+  setAttribute: function(aName, aValue) {
     this._parent.setAttribute(aName, aValue);
 
     if (aName == "notice") {
@@ -302,7 +302,7 @@ SideMenuWidget.prototype = {
    * @param string aName
    *        The name of the attribute.
    */
-  removeAttribute: function SMW_removeAttribute(aName) {
+  removeAttribute: function(aName) {
     this._parent.removeAttribute(aName);
 
     if (aName == "notice") {
@@ -325,7 +325,7 @@ SideMenuWidget.prototype = {
   /**
    * Creates and appends a label representing a notice in this container.
    */
-  _appendNotice: function DVSL__appendNotice() {
+  _appendNotice: function() {
     if (this._noticeTextNode || !this._noticeTextValue) {
       return;
     }
@@ -347,7 +347,7 @@ SideMenuWidget.prototype = {
   /**
    * Removes the label representing a notice in this container.
    */
-  _removeNotice: function DVSL__removeNotice() {
+  _removeNotice: function() {
     if (!this._noticeTextNode) {
       return;
     }
@@ -366,7 +366,7 @@ SideMenuWidget.prototype = {
    * @return SideMenuGroup
    *         The newly created group.
    */
-  _getGroupForName: function SMW__getGroupForName(aName) {
+  _getMenuGroupForName: function(aName) {
     let cachedGroup = this._groupsByName.get(aName);
     if (cachedGroup) {
       return cachedGroup;
@@ -380,7 +380,7 @@ SideMenuWidget.prototype = {
 
   /**
    * Gets a menu item to be displayed inside a group.
-   * @see SideMenuWidget.prototype._getGroupForName
+   * @see SideMenuWidget.prototype._getMenuGroupForName
    *
    * @param SideMenuGroup aGroup
    *        The group to contain the menu item.
@@ -389,7 +389,7 @@ SideMenuWidget.prototype = {
    * @param string aTooltip [optional]
    *        A tooltip attribute for the displayed item.
    */
-  _getItemForGroup: function SMW__getItemForGroup(aGroup, aContents, aTooltip) {
+  _getMenuItemForGroup: function(aGroup, aContents, aTooltip) {
     return new SideMenuItem(aGroup, aContents, aTooltip, this._showArrows);
   },
 
@@ -464,7 +464,7 @@ SideMenuGroup.prototype = {
    * @param number aIndex
    *        The position in the container intended for this group.
    */
-  insertSelfAt: function SMG_insertSelfAt(aIndex) {
+  insertSelfAt: function(aIndex) {
     let ownerList = this.ownerView._list;
     let groupsArray = this._orderedGroupElementsArray;
 
@@ -483,7 +483,7 @@ SideMenuGroup.prototype = {
    * @return number
    *         The expected index.
    */
-  findExpectedIndexForSelf: function SMG_findExpectedIndexForSelf() {
+  findExpectedIndexForSelf: function() {
     let identifier = this.identifier;
     let groupsArray = this._orderedGroupElementsArray;
 
@@ -561,7 +561,7 @@ SideMenuItem.prototype = {
    * @return nsIDOMNode
    *         The element associated with the displayed item.
    */
-  insertSelfAt: function SMI_insertSelfAt(aIndex) {
+  insertSelfAt: function(aIndex) {
     let ownerList = this.ownerView._list;
     let menuArray = this._orderedMenuElementsArray;
 

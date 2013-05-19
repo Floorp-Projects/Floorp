@@ -8,7 +8,6 @@ TEST_DIRS += ['test']
 
 XPIDL_SOURCES += [
     'nsIDOMDOMCursor.idl',
-    'nsIDOMDOMError.idl',
     'nsIDOMDOMRequest.idl',
     'nsIEntropyCollector.idl',
     'nsIScriptChannel.idl',

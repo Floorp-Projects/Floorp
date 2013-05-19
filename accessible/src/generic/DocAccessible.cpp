@@ -130,8 +130,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(DocAccessible)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsIAccessiblePivotObserver)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIAccessibleDocument)
-  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIAccessibleCursorable,
-                                     (mDocFlags & eCursorable))
     foundInterface = 0;
 
   nsresult status;
@@ -477,7 +475,6 @@ DocAccessible::GetChildDocumentAt(uint32_t aIndex,
   return *aDocument ? NS_OK : NS_ERROR_INVALID_ARG;
 }
 
-// nsIAccessibleVirtualCursor method
 NS_IMETHODIMP
 DocAccessible::GetVirtualCursor(nsIAccessiblePivot** aVirtualCursor)
 {
@@ -486,9 +483,6 @@ DocAccessible::GetVirtualCursor(nsIAccessiblePivot** aVirtualCursor)
 
   if (IsDefunct())
     return NS_ERROR_FAILURE;
-
-  if (!(mDocFlags & eCursorable))
-    return NS_OK;
 
   if (!mVirtualCursor) {
     mVirtualCursor = new nsAccessiblePivot(this);
@@ -1464,10 +1458,6 @@ DocAccessible::DoInitialUpdate()
 {
   if (nsCoreUtils::IsTabDocument(mDocumentNode))
     mDocFlags |= eTabDocument;
-
-  // We provide a virtual cursor if this is a root doc or if it's a tab doc.
-  if (!mDocumentNode->GetParentDocument() || (mDocFlags & eTabDocument))
-    mDocFlags |= eCursorable;
 
   mLoadState |= eTreeConstructed;
 

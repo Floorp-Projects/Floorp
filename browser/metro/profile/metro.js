@@ -51,11 +51,9 @@ pref("toolkit.browser.cacheRatioHeight", 3000);
 // expires.
 pref("toolkit.browser.contentViewExpire", 3000);
 
+
 pref("toolkit.defaultChromeURI", "chrome://browser/content/browser.xul");
 pref("browser.chromeURL", "chrome://browser/content/");
-
-// When true, always show the tab strip and use desktop-style tabs (no thumbnails)
-pref("browser.tabs.tabsOnly", false);
 
 pref("browser.tabs.remote", false);
 
@@ -83,6 +81,8 @@ pref("browser.offline-apps.notify", true);
 pref("network.protocol-handler.warn-external.tel", false);
 pref("network.protocol-handler.warn-external.mailto", false);
 pref("network.protocol-handler.warn-external.vnd.youtube", false);
+pref("network.protocol-handler.warn-external.ms-windows-store", false);
+pref("network.protocol-handler.external.ms-windows-store", true);
 
 /* history max results display */
 pref("browser.display.history.maxresults", 100);

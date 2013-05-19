@@ -1,4 +1,3 @@
-mjitChunkLimit(42);
 Function("\
     switch (/x/) {\
         case 8:\

@@ -579,11 +579,18 @@ pref("network.protocol-handler.external.mailto", true); // for mail
 pref("network.protocol-handler.external.news", true);   // for news
 pref("network.protocol-handler.external.snews", true);  // for secure news
 pref("network.protocol-handler.external.nntp", true);   // also news
+#ifdef XP_WIN
+pref("network.protocol-handler.external.ms-windows-store", true);
+#endif
+
 // ...without warning dialogs
 pref("network.protocol-handler.warn-external.mailto", false);
 pref("network.protocol-handler.warn-external.news", false);
 pref("network.protocol-handler.warn-external.snews", false);
 pref("network.protocol-handler.warn-external.nntp", false);
+#ifdef XP_WIN
+pref("network.protocol-handler.warn-external.ms-windows-store", false);
+#endif
 
 // By default, all protocol handlers are exposed.  This means that
 // the browser will respond to openURL commands for all URL types.
@@ -1222,6 +1229,9 @@ pref("social.sidebar.unload_timeout_ms", 10000);
 pref("social.toast-notifications.enabled", true);
 
 pref("dom.identity.enabled", false);
+
+// Turn on the CSP 1.0 parser for Content Security Policy headers
+pref("security.csp.speccompliant", true);
 
 // Block insecure active content on https pages
 pref("security.mixed_content.block_active_content", true);

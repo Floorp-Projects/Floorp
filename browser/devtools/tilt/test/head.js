@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-let {devtools} = Components.utils.import("resource:///modules/devtools/gDevTools.jsm", {});
+let {devtools} = Components.utils.import("resource://gre/modules/devtools/Loader.jsm", {});
 let TiltManager = devtools.require("devtools/tilt/tilt").TiltManager;
 let TiltGL = devtools.require("devtools/tilt/tilt-gl");
 let {EPSILON, TiltMath, vec3, mat3, mat4, quat4} = devtools.require("devtools/tilt/tilt-math");

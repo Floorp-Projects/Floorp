@@ -50,13 +50,19 @@ class DelayNode;
 class DynamicsCompressorNode;
 class GainNode;
 class GlobalObject;
+class OfflineRenderSuccessCallback;
 class PannerNode;
 class ScriptProcessorNode;
+class WaveShaperNode;
 
 class AudioContext MOZ_FINAL : public nsDOMEventTargetHelper,
                                public EnableWebAudioCheck
 {
-  explicit AudioContext(nsPIDOMWindow* aParentWindow);
+  AudioContext(nsPIDOMWindow* aParentWindow,
+               bool aIsOffline,
+               uint32_t aNumberOfChannels = 0,
+               uint32_t aLength = 0,
+               float aSampleRate = 0.0f);
   ~AudioContext();
 
 public:
@@ -76,8 +82,21 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
+  using nsDOMEventTargetHelper::DispatchTrustedEvent;
+
+  // Constructor for regular AudioContext
   static already_AddRefed<AudioContext>
   Constructor(const GlobalObject& aGlobal, ErrorResult& aRv);
+
+  // Constructor for offline AudioContext
+  static already_AddRefed<AudioContext>
+  Constructor(const GlobalObject& aGlobal,
+              uint32_t aNumberOfChannels,
+              uint32_t aLength,
+              float aSampleRate,
+              ErrorResult& aRv);
+
+  // AudioContext methods
 
   AudioDestinationNode* Destination() const
   {
@@ -126,6 +145,9 @@ public:
   already_AddRefed<GainNode>
   CreateGain();
 
+  already_AddRefed<WaveShaperNode>
+  CreateWaveShaper();
+
   already_AddRefed<GainNode>
   CreateGainNode()
   {
@@ -160,7 +182,12 @@ public:
                        DecodeSuccessCallback& aSuccessCallback,
                        const Optional<OwningNonNull<DecodeErrorCallback> >& aFailureCallback);
 
+  // OfflineAudioContext methods
+  void StartRendering();
+  IMPL_EVENT_HANDLER(complete)
+
   uint32_t GetRate() const { return IdealAudioRate(); }
+  bool IsOffline() const { return mIsOffline; }
 
   MediaStreamGraph* Graph() const;
   MediaStream* DestinationStream() const;
@@ -189,6 +216,7 @@ private:
   // Hashset containing all ScriptProcessorNodes in order to stop them.
   // These are all weak pointers.
   nsTHashtable<nsPtrHashKey<ScriptProcessorNode> > mScriptProcessorNodes;
+  bool mIsOffline;
 };
 
 }

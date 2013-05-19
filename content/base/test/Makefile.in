@@ -17,16 +17,6 @@ CPP_UNIT_TESTS = \
                  TestPlainTextSerializer.cpp \
                  $(NULL)
 
-
-DISABLED_XPCSHELL_TESTS = \
-               unit \
-               $(NULL)
-# FIXME/bug 575918: out-of-process xpcshell is broken on OS X
-ifneq ($(OS_ARCH),Darwin)
-DISABLED_XPCSHELL_TESTS += unit_ipc
-endif
-
-
 # Split files arbitrarily in three groups to not run into too-long command lines
 # which break on Windows (see bug 563151 and bug 831989)
 MOCHITEST_FILES_A = \
@@ -349,6 +339,7 @@ MOCHITEST_FILES_B = \
 		test_viewport_scroll.html \
 		test_CSP.html \
 		file_CSP.sjs \
+		file_CSP.css \
 		file_CSP_main.html \
 		file_CSP_main.html^headers^ \
 		file_CSP_main_spec_compliant.html \
@@ -378,6 +369,13 @@ MOCHITEST_FILES_B = \
 	 	file_CSP_evalscript_main_spec_compliant.html^headers^ \
 		file_CSP_evalscript_main_spec_compliant_allowed.html \
 		file_CSP_evalscript_main_spec_compliant_allowed.html^headers^ \
+		test_CSP_inlinestyle.html \
+		file_CSP_inlinestyle_main.html \
+		file_CSP_inlinestyle_main.html^headers^ \
+		file_CSP_inlinestyle_main_spec_compliant.html \
+		file_CSP_inlinestyle_main_spec_compliant.html^headers^ \
+		file_CSP_inlinestyle_main_spec_compliant_allowed.html \
+		file_CSP_inlinestyle_main_spec_compliant_allowed.html^headers^ \
 		file_csp_bug768029.html \
 		file_csp_bug768029.sjs \
 		file_csp_bug773891.html \
@@ -625,6 +623,7 @@ MOCHITEST_FILES_C= \
 		badMessageEvent2.eventsource \
 		badMessageEvent2.eventsource^headers^ \
 		test_object.html \
+		test_bug869006.html \
 		$(NULL)
 
 # OOP tests don't work on Windows (bug 763081) or native-fennec

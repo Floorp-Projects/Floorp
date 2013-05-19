@@ -1090,10 +1090,6 @@ IonBuilder::snoopControlFlow(JSOp op)
 bool
 IonBuilder::inspectOpcode(JSOp op)
 {
-    // Don't compile fat opcodes, run the decomposed version instead.
-    if (js_CodeSpec[op].format & JOF_DECOMPOSE)
-        return true;
-
     switch (op) {
       case JSOP_NOP:
       case JSOP_LINENO:
@@ -7480,13 +7476,8 @@ IonBuilder::getPropTryInlineAccess(bool *emitted, HandlePropertyName name, Handl
         return true;
 
     Vector<Shape *> shapes(cx);
-    if (Shape *objShape = mjit::GetPICSingleShape(cx, script(), pc, info().constructing())) {
-        if (!shapes.append(objShape))
-            return false;
-    } else {
-        if (!inspector->maybeShapesForPropertyOp(pc, shapes))
-            return false;
-    }
+    if (!inspector->maybeShapesForPropertyOp(pc, shapes))
+        return false;
 
     if (shapes.empty() || !CanInlinePropertyOpShapes(shapes))
         return true;
@@ -7682,13 +7673,8 @@ IonBuilder::jsop_setprop(HandlePropertyName name)
     }
 
     Vector<Shape *> shapes(cx);
-    if (Shape *objShape = mjit::GetPICSingleShape(cx, script(), pc, info().constructing())) {
-        if (!shapes.append(objShape))
-            return false;
-    } else {
-        if (!inspector->maybeShapesForPropertyOp(pc, shapes))
-            return false;
-    }
+    if (!inspector->maybeShapesForPropertyOp(pc, shapes))
+        return false;
 
     if (!shapes.empty() && CanInlinePropertyOpShapes(shapes)) {
         if (shapes.length() == 1) {

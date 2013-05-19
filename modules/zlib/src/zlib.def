@@ -16,6 +16,7 @@ EXPORTS
     MOZ_Z_deflatePending
     MOZ_Z_deflatePrime
     MOZ_Z_deflateSetHeader
+    MOZ_Z_inflateGetDictionary
     MOZ_Z_inflateSetDictionary
     MOZ_Z_inflateSync
     MOZ_Z_inflateCopy
@@ -39,6 +40,7 @@ EXPORTS
     MOZ_Z_gzread
     MOZ_Z_gzwrite
     MOZ_Z_gzprintf
+    MOZ_Z_gzvprintf
     MOZ_Z_gzputs
     MOZ_Z_gzgets
     MOZ_Z_gzputc

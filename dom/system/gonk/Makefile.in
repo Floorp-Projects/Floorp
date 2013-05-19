@@ -76,10 +76,6 @@ EXTRA_JS_MODULES = \
   systemlibs.js \
   $(NULL)
 
-ifdef ENABLE_TESTS
-DISABLED_XPCSHELL_TESTS = tests
-endif
-
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 

@@ -113,3 +113,12 @@ user_pref("datareporting.healthreport.documentServerURI", "http://%(server)s/hea
 
 // Make sure CSS error reporting is enabled for tests
 user_pref("layout.css.report_errors", true);
+
+// Enable mozContacts
+user_pref("dom.mozContacts.enabled", true);
+user_pref("dom.navigator-property.disable.mozContacts", false);
+user_pref("dom.global-constructor.disable.mozContact", false);
+
+// Enable mozSettings
+user_pref("dom.mozSettings.enabled", true);
+user_pref("dom.navigator-property.disable.mozSettings", false);

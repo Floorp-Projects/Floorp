@@ -38,6 +38,19 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
 
       break;
     }
+    case CompositableOperation::TOpCreatedIncrementalTexture: {
+      MOZ_LAYERS_LOG(("[ParentSide] Created texture"));
+      const OpCreatedIncrementalTexture& op = aEdit.get_OpCreatedIncrementalTexture();
+
+      CompositableParent* compositableParent =
+        static_cast<CompositableParent*>(op.compositableParent());
+      CompositableHost* compositable = compositableParent->GetCompositableHost();
+
+      compositable->EnsureTextureHost(compositableParent->GetCompositableManager(),
+                                      op.textureInfo(),
+                                      op.bufferRect());
+      break;
+    }
     case CompositableOperation::TOpDestroyThebesBuffer: {
       MOZ_LAYERS_LOG(("[ParentSide] Created double buffer"));
       const OpDestroyThebesBuffer& op = aEdit.get_OpDestroyThebesBuffer();
@@ -126,6 +139,24 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
         OpContentBufferSwap(compositableParent, nullptr, frontUpdatedRegion));
 
       RenderTraceInvalidateEnd(thebes, "FF00FF");
+      break;
+    }
+    case CompositableOperation::TOpPaintTextureIncremental: {
+      MOZ_LAYERS_LOG(("[ParentSide] Paint ThebesLayer"));
+
+      const OpPaintTextureIncremental& op = aEdit.get_OpPaintTextureIncremental();
+
+      CompositableParent* compositableParent = static_cast<CompositableParent*>(op.compositableParent());
+      CompositableHost* compositable =
+        compositableParent->GetCompositableHost();
+
+      SurfaceDescriptor desc = op.image();
+
+      compositable->UpdateIncremental(op.textureId(),
+                                      desc,
+                                      op.updatedRegion(),
+                                      op.bufferRect(),
+                                      op.bufferRotation());
       break;
     }
     case CompositableOperation::TOpUpdatePictureRect: {

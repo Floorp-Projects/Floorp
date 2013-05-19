@@ -621,8 +621,8 @@ HistoryMenu.prototype = {
       let m = document.createElement("menuitem");
       m.setAttribute("label", menuLabel);
       let selectedTab = undoItem.tabs[undoItem.selected - 1];
-      if (selectedTab.attributes.image) {
-        let iconURL = selectedTab.attributes.image;
+      if (selectedTab.image) {
+        let iconURL = selectedTab.image;
         // don't initiate a connection just to fetch a favicon (see bug 467828)
         if (/^https?:/.test(iconURL))
           iconURL = "moz-anno:favicon:" + iconURL;
@@ -1106,6 +1106,10 @@ let BookmarkingUI = {
   },
 
   _updateToolbarStyle: function BUI__updateToolbarStyle() {
+    if (!this.button) {
+      return;
+    }
+
     let personalToolbar = document.getElementById("PersonalToolbar");
     let onPersonalToolbar = this.button.parentNode == personalToolbar ||
                             this.button.parentNode.parentNode == personalToolbar;
@@ -1179,7 +1183,7 @@ let BookmarkingUI = {
     this._pendingStmt = PlacesUtils.asyncGetBookmarkIds(this._uri, function (aItemIds, aURI) {
       // Safety check that the bookmarked URI equals the tracked one.
       if (!aURI.equals(this._uri)) {
-        Components.utils.reportError("BookmarksMenuButton did not receive current URI");
+        Components.utils.reportError("BookmarkingUI did not receive current URI");
         return;
       }
 
@@ -1198,7 +1202,7 @@ let BookmarkingUI = {
           PlacesUtils.addLazyBookmarkObserver(this);
           this._hasBookmarksObserver = true;
         } catch(ex) {
-          Components.utils.reportError("BookmarksMenuButton failed adding a bookmarks observer: " + ex);
+          Components.utils.reportError("BookmarkingUI failed adding a bookmarks observer: " + ex);
         }
       }
 

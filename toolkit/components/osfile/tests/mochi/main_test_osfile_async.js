@@ -479,6 +479,27 @@ let test_read_write_all = maketest("read_write_all", function read_write_all(tes
     // Cleanup.
     OS.File.remove(pathDest);
 
+    // Check that writeAtomic fails when destination path is undefined
+    try {
+      let path = undefined;
+      let options = {tmpPath: tmpPath};
+      yield OS.File.writeAtomic(path, contents, options);
+      test.fail("With file path undefined, writeAtomic should have failed");
+    } catch (err) {
+      test.ok(err.message == "TypeError: File path should be a (non-empty) string",
+              "With file path undefined, writeAtomic correctly failed");
+    }
+
+    // Check that writeAtomic fails when destination path is an empty string
+    try {
+      let path = "";
+      let options = {tmpPath: tmpPath};
+      yield OS.File.writeAtomic(path, contents, options);
+      test.fail("With file path an empty string, writeAtomic should have failed");
+    } catch (err) {
+      test.ok(err.message == "TypeError: File path should be a (non-empty) string",
+              "With file path an empty string, writeAtomic correctly failed");
+    }
   });
 });
 

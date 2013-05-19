@@ -235,8 +235,9 @@ void Shader::initializeCompiler()
             resources.MaxTextureImageUnits = MAX_TEXTURE_IMAGE_UNITS;
             resources.MaxFragmentUniformVectors = context->getMaximumFragmentUniformVectors();
             resources.MaxDrawBuffers = MAX_DRAW_BUFFERS;
-            resources.OES_standard_derivatives = 1;
+            resources.OES_standard_derivatives = context->supportsDerivativeInstructions() ? 1 : 0;
             // resources.OES_EGL_image_external = getDisplay()->isD3d9ExDevice() ? 1 : 0; // TODO: commented out until the extension is actually supported.
+            resources.FragmentPrecisionHigh = 1;   // Shader Model 2+ always supports FP24 (s16e7) which corresponds to highp
 
             mFragmentCompiler = ShConstructCompiler(SH_FRAGMENT_SHADER, SH_GLES2_SPEC, SH_HLSL_OUTPUT, &resources);
             mVertexCompiler = ShConstructCompiler(SH_VERTEX_SHADER, SH_GLES2_SPEC, SH_HLSL_OUTPUT, &resources);
@@ -351,14 +352,14 @@ void Shader::compileToHLSL(void *compiler)
 
     if (result)
     {
-        int objCodeLen = 0;
+        size_t objCodeLen = 0;
         ShGetInfo(compiler, SH_OBJECT_CODE_LENGTH, &objCodeLen);
         mHlsl = new char[objCodeLen];
         ShGetObjectCode(compiler, mHlsl);
     }
     else
     {
-        int infoLogLen = 0;
+        size_t infoLogLen = 0;
         ShGetInfo(compiler, SH_INFO_LOG_LENGTH, &infoLogLen);
         mInfoLog = new char[infoLogLen];
         ShGetInfoLog(compiler, mInfoLog);

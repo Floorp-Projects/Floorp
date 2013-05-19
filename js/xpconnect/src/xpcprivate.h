@@ -524,6 +524,7 @@ public:
     virtual void NotifyEnterMainThread();
     virtual nsresult BeginCycleCollection(nsCycleCollectionTraversalCallback &cb);
     virtual nsCycleCollectionParticipant *GetParticipant();
+    virtual bool UsefulToMergeZones();
     virtual void FixWeakMappingGrayBits();
     virtual bool NeedCollect();
     virtual void Collect(uint32_t reason);
@@ -762,7 +763,6 @@ public:
         IDX_EXPOSEDPROPS            ,
         IDX_BASEURIOBJECT           ,
         IDX_NODEPRINCIPAL           ,
-        IDX_DOCUMENTURIOBJECT       ,
         IDX_MOZMATCHESSELECTOR      ,
         IDX_TOTAL_COUNT // just a count of the above
     };

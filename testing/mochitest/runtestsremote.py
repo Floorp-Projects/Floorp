@@ -80,24 +80,14 @@ class RemoteOptions(MochitestOptions):
                     help = "name of the pidfile to generate")
         defaults["pidFile"] = ""
 
-        self.add_option("--robocop-ini", action = "store",
-                    type = "string", dest = "robocopIni",
-                    help = "name of the .ini file containing the list of tests to run")
-        defaults["robocopIni"] = ""
-
         self.add_option("--robocop", action = "store",
                     type = "string", dest = "robocop",
-                    help = "name of the .ini file containing the list of tests to run. [DEPRECATED- please use --robocop-ini")
+                    help = "name of the .ini file containing the list of tests to run")
         defaults["robocop"] = ""
-
-        self.add_option("--robocop-apk", action = "store",
-                    type = "string", dest = "robocopApk",
-                    help = "name of the Robocop APK to use for ADB test running")
-        defaults["robocopApk"] = ""
 
         self.add_option("--robocop-path", action = "store",
                     type = "string", dest = "robocopPath",
-                    help = "Path to the folder where robocop.apk is located at.  Primarily used for ADB test running. [DEPRECATED- please use --robocop-apk]")
+                    help = "Path to the folder where robocop.apk is located at.  Primarily used for ADB test running")
         defaults["robocopPath"] = ""
 
         self.add_option("--robocop-ids", action = "store",
@@ -168,37 +158,22 @@ class RemoteOptions(MochitestOptions):
             f.write("%s" % os.getpid())
             f.close()
 
-        # Robocop specific deprecated options.
-        if options.robocop:
-            if options.robocopIni:
-                print "ERROR: can not use deprecated --robocop and replacement --robocop-ini together"
-                return None
-            options.robocopIni = options.robocop
-            del options.robocop
-
-        if options.robocopPath:
-            if options.robocopApk:
-                print "ERROR: can not use deprecated --robocop-path and replacement --robocop-apk together"
-                return None
-            options.robocopApk = os.path.join(options.robocopPath, 'robocop.apk')
-            del options.robocopPath
-
         # Robocop specific options
-        if options.robocopIni != "":
-            if not os.path.exists(options.robocopIni):
-                print "ERROR: Unable to find specified robocop .ini manifest '%s'" % options.robocopIni
+        if options.robocop != "":
+            if not os.path.exists(options.robocop):
+                print "ERROR: Unable to find specified manifest '%s'" % options.robocop
                 return None
-            options.robocopIni = os.path.abspath(options.robocopIni)
+            options.robocop = os.path.abspath(options.robocop)
 
-        if options.robocopApk != "":
-            if not os.path.exists(options.robocopApk):
-                print "ERROR: Unable to find robocop APK '%s'" % options.robocopApk
+        if options.robocopPath != "":
+            if not os.path.exists(os.path.join(options.robocopPath, 'robocop.apk')):
+                print "ERROR: Unable to find robocop.apk in path '%s'" % options.robocopPath
                 return None
-            options.robocopApk = os.path.abspath(options.robocopApk)
+            options.robocopPath = os.path.abspath(options.robocopPath)
 
         if options.robocopIds != "":
             if not os.path.exists(options.robocopIds):
-                print "ERROR: Unable to find specified robocop IDs file '%s'" % options.robocopIds
+                print "ERROR: Unable to find specified IDs file '%s'" % options.robocopIds
                 return None
             options.robocopIds = os.path.abspath(options.robocopIds)
 
@@ -237,6 +212,7 @@ class MochiRemote(Mochitest):
         self._automation.setRemoteProfile(self.remoteProfile)
         self.remoteLog = options.remoteLogFile
         self.localLog = options.logFile
+        self._automation.deleteANRs()
 
     def cleanup(self, manifest, options):
         if self._dm.fileExists(self.remoteLog):
@@ -333,7 +309,7 @@ class MochiRemote(Mochitest):
         self._dm.removeDir(self.remoteProfile)
 
         # we do not need this for robotium based tests, lets save a LOT of time
-        if options.robocopIni:
+        if options.robocop:
             shutil.rmtree(os.path.join(options.profilePath, 'webapps'))
             shutil.rmtree(os.path.join(options.profilePath, 'extensions', 'staged', 'mochikit@mozilla.org'))
             shutil.rmtree(os.path.join(options.profilePath, 'extensions', 'staged', 'worker-test@mozilla.org'))
@@ -360,7 +336,7 @@ class MochiRemote(Mochitest):
         env["MOZ_HIDE_RESULTS_TABLE"] = "1"
         retVal = Mochitest.buildURLOptions(self, options, env)
 
-        if not options.robocopIni:
+        if not options.robocop:
             #we really need testConfig.js (for browser chrome)
             try:
                 self._dm.pushDir(options.profilePath, self.remoteProfile)
@@ -515,7 +491,6 @@ def main():
     auto = RemoteAutomation(None, "fennec")
     parser = RemoteOptions(auto, scriptdir)
     options, args = parser.parse_args()
-
     if (options.dm_trans == "adb"):
         if (options.deviceIP):
             dm = droid.DroidADB(options.deviceIP, options.devicePort, deviceRoot=options.remoteTestRoot)
@@ -552,12 +527,12 @@ def main():
     if (dm.processExist(procName)):
         dm.killProcess(procName)
 
-    if options.robocopIni != "":
+    if options.robocop != "":
         # sut may wait up to 300 s for a robocop am process before returning
         dm.default_timeout = 320
         mp = manifestparser.TestManifest(strict=False)
         # TODO: pull this in dynamically
-        mp.read(options.robocopIni)
+        mp.read(options.robocop)
         robocop_tests = mp.active_tests(exists=False)
         tests = []
         my_tests = tests
@@ -585,8 +560,8 @@ def main():
         options.extraPrefs.append('browser.viewport.scaleRatio=100')
         options.extraPrefs.append('browser.chrome.dynamictoolbar=false')
 
-        if (options.dm_trans == 'adb' and options.robocopApk):
-          dm._checkCmd(["install", "-r", options.robocopApk])
+        if (options.dm_trans == 'adb' and options.robocopPath):
+          dm._checkCmd(["install", "-r", os.path.join(options.robocopPath, "robocop.apk")])
 
         retVal = None
         for test in robocop_tests:

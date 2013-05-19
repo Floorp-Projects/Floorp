@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<meta charset="UTF-8">
+<script>
+"use strict";
+
+var i = 0;
+var x;
+var fixedDiv;
+var sheet;
+
+function start()
+{
+  clearChildren(document.documentElement);
+
+  for (var j = 0; j < 10; ++j) {
+    document.documentElement.appendChild(document.createElement("div"));
+  }
+  x = document.getElementsByTagName("div")[0];
+
+  fixedDiv = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
+  fixedDiv.style.setProperty("position", "fixed", "");
+
+  setTimeout(makeChanges, 10);
+}
+
+function makeChanges()
+{
+  ++i;
+  x.appendChild(fixedDiv);
+  sheet = document.createElement("style");
+  sheet.appendChild(document.createTextNode("* { transform: matrix(1, 2, 3, 4, 5, 6); }"));
+  document.documentElement.appendChild(sheet);
+  if (i >= 200) {
+    document.documentElement.removeAttribute("class");
+    return;
+  }
+  setTimeout(revertChanges, 10);
+}
+
+function revertChanges()
+{
+  x.removeChild(fixedDiv);
+  document.documentElement.removeChild(sheet);
+  bounceDE();
+  setTimeout(makeChanges, 10);
+}
+
+
+function bounceDE()
+{
+  var de = document.documentElement;
+  document.removeChild(de);
+  document.appendChild(de);
+}
+
+function clearChildren(root)
+{
+  while(root.firstChild) { root.removeChild(root.firstChild); }
+}
+
+</script>
+</head>
+
+<body onload="start();"></body>
+</html>

@@ -17,7 +17,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "gDevTools",
     "resource:///modules/devtools/gDevTools.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "devtools",
-    "resource:///modules/devtools/gDevTools.jsm");
+    "resource://gre/modules/devtools/Loader.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
     "resource://gre/modules/Services.jsm");
@@ -547,6 +547,10 @@ ViewHelpers.create({ constructor: BrowserConsole, proto: WebConsole.prototype },
     this._bc_init = this.$init().then((aReason) => {
       let title = this.ui.rootElement.getAttribute("browserConsoleTitle");
       this.ui.rootElement.setAttribute("title", title);
+
+      let cmd_close = this.ui.document.getElementById("cmd_close");
+      cmd_close.removeAttribute("disabled");
+
       return aReason;
     });
 

@@ -10,6 +10,7 @@
 #include "TelephonyCommon.h"
 
 #include "nsIDOMTelephonyCall.h"
+#include "mozilla/dom/DOMError.h"
 
 class nsPIDOMWindow;
 
@@ -22,7 +23,8 @@ class TelephonyCall : public nsDOMEventTargetHelper,
 
   nsString mNumber;
   nsString mState;
-  nsCOMPtr<nsIDOMDOMError> mError;
+  bool mEmergency;
+  nsRefPtr<mozilla::dom::DOMError> mError;
 
   uint32_t mCallIndex;
   uint16_t mCallState;
@@ -38,7 +40,8 @@ public:
 
   static already_AddRefed<TelephonyCall>
   Create(Telephony* aTelephony, const nsAString& aNumber, uint16_t aCallState,
-         uint32_t aCallIndex = kOutgoingPlaceholderCallIndex);
+         uint32_t aCallIndex = kOutgoingPlaceholderCallIndex,
+         bool aEmergency = false);
 
   nsISupports*
   ToISupports()
@@ -70,6 +73,12 @@ public:
   CallState() const
   {
     return mCallState;
+  }
+
+  void
+  UpdateEmergency(bool aEmergency)
+  {
+    mEmergency = aEmergency;
   }
 
   bool
