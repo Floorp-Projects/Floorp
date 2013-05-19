@@ -442,6 +442,8 @@ pref("plugin.disable", false);
 pref("dom.ipc.plugins.enabled", false);
 
 pref("plugins.click_to_play", true);
+// The default value for nsIPluginTag.enabledState (STATE_CLICKTOPLAY = 1)
+pref("plugin.default.state", 1);
 
 // product URLs
 // The breakpad report server to link to in about:crashes
@@ -659,11 +661,8 @@ pref("reader.parse-on-load.enabled", true);
 // Allow reader mode even on low-memory platforms
 pref("reader.parse-on-load.force-enabled", false);
 
-// The default of font size in reader (1-7)
-pref("reader.font_size", 4);
-
-// The default of margin size in reader (5%-25%)
-pref("reader.margin_size", 5);
+// The default of font size in reader (1-5)
+pref("reader.font_size", 3);
 
 // The default color scheme in reader (light, dark, sepia, auto)
 // auto = color automatically adjusts according to ambient light level
@@ -699,6 +698,11 @@ pref("layout.imagevisibility.enabled", false);
 
 // Enable the dynamic toolbar
 pref("browser.chrome.dynamictoolbar", true);
+
+// The mode of browser titlebar
+// 0: Show a current page title.
+// 1: Show a current page url.
+pref("browser.chrome.titlebarMode", 0);
 
 #ifdef MOZ_PKG_SPECIAL
 // Disable webgl on ARMv6 because running the reftests takes

@@ -1072,12 +1072,16 @@ struct ParamTraits<mozilla::layers::TextureFactoryIdentifier>
   {
     WriteParam(aMsg, aParam.mParentBackend);
     WriteParam(aMsg, aParam.mMaxTextureSize);
+    WriteParam(aMsg, aParam.mSupportsTextureBlitting);
+    WriteParam(aMsg, aParam.mSupportsPartialUploads);
   }
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
     return ReadParam(aMsg, aIter, &aResult->mParentBackend) &&
-           ReadParam(aMsg, aIter, &aResult->mMaxTextureSize);
+           ReadParam(aMsg, aIter, &aResult->mMaxTextureSize) &&
+           ReadParam(aMsg, aIter, &aResult->mSupportsTextureBlitting) &&
+           ReadParam(aMsg, aIter, &aResult->mSupportsPartialUploads);
   }
 };
 

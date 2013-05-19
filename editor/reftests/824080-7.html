@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script type="text/javascript">
+    function doTest()
+    {
+      document.getSelection().selectAllChildren(document.body);
+      var editor = document.getElementById("editor");
+      editor.focus();
+      editor.selectionStart = 2;
+      editor.selectionEnd = 4;
+      editor.blur();
+      editor.focus();
+    }
+  </script>
+</head>
+<body onload="doTest()">
+<p>normal text</p>
+<textarea id="editor">textarea</textarea>
+</body>
+</html>
+

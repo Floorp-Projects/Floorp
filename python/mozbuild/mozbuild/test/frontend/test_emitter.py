@@ -124,16 +124,20 @@ class TestEmitterBasic(unittest.TestCase):
         self.assertIsInstance(objs[0], DirectoryTraversal)
         self.assertIsInstance(objs[1], VariablePassthru)
 
+        wanted = dict(
+            ASFILES=['fans.asm', 'tans.s'],
+            XPIDLSRCS=['bar.idl', 'biz.idl', 'foo.idl'],
+            XPIDL_MODULE='module_name',
+            XPIDL_FLAGS=['-Idir1', '-Idir2', '-Idir3'],
+            )
+
         variables = objs[1].variables
-        self.assertEqual(len(variables), 3)
-        self.assertIn('XPIDLSRCS', variables)
-        self.assertEqual(variables['XPIDLSRCS'],
-            ['foo.idl', 'bar.idl', 'biz.idl'])
-        self.assertIn('XPIDL_MODULE', variables)
-        self.assertEqual(variables['XPIDL_MODULE'], 'module_name')
-        self.assertIn('XPIDL_FLAGS', variables)
-        self.assertEqual(variables['XPIDL_FLAGS'],
-            ['-Idir1', '-Idir2', '-Idir3'])
+        self.assertEqual(len(variables), len(wanted))
+
+        for var, val in wanted.items():
+            # print("test_variable_passthru[%s]" % var)
+            self.assertIn(var, variables)
+            self.assertEqual(variables[var], val)
 
     def test_exports(self):
         reader = self.reader('exports')

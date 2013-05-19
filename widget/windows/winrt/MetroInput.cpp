@@ -131,7 +131,7 @@ namespace {
   /**
    * This function is for use with mTouches.Enumerate.  It will
    * append each element it encounters to the {@link nsTArray}
-   * of {@link nsIDOMTouch}es passed in through the third (void*)
+   * of {@link mozilla::dom::Touch}es passed in through the third (void*)
    * parameter.
    *
    * NOTE: This function will set the `mChanged` member of each
@@ -145,11 +145,11 @@ namespace {
    */
   PLDHashOperator
   AppendToTouchList(const unsigned int& aKey,
-                    nsCOMPtr<nsIDOMTouch>& aData,
+                    nsRefPtr<Touch>& aData,
                     void *aTouchList)
   {
-    nsTArray<nsCOMPtr<nsIDOMTouch> > *touches =
-              static_cast<nsTArray<nsCOMPtr<nsIDOMTouch> > *>(aTouchList);
+    nsTArray<nsRefPtr<Touch> > *touches =
+              static_cast<nsTArray<nsRefPtr<Touch> > *>(aTouchList);
     touches->AppendElement(aData);
     aData->mChanged = false;
     return PL_DHASH_NEXT;
@@ -291,7 +291,9 @@ MetroInput::MetroInput(MetroWidget* aWidget,
   mTokenPointerExited.value = 0;
   mTokenPointerWheelChanged.value = 0;
   mTokenAcceleratorKeyActivated.value = 0;
-  mTokenEdgeGesture.value = 0;
+  mTokenEdgeStarted.value = 0;
+  mTokenEdgeCanceled.value = 0;
+  mTokenEdgeCompleted.value = 0;
   mTokenManipulationStarted.value = 0;
   mTokenManipulationUpdated.value = 0;
   mTokenManipulationCompleted.value = 0;
@@ -365,11 +367,75 @@ MetroInput::OnAcceleratorKeyActivated(UI::Core::ICoreDispatcher* sender,
   return S_OK;
 }
 
-// "Edge Gesture" event.  This indicates that the user has swiped in from the
-// top or bottom of the screen and means we should show our context UI.  This
-// event can also be triggered through keyboard input.
-// According to MSDN, this event will only be received through touch
-// (user swipes in from edge) or from keyboard (user presses Win+Z)
+/**
+ * When the user swipes her/his finger in from the top of the screen,
+ * we receive this event.
+ *
+ * @param sender the CoreDispatcher that fired this event
+ * @param aArgs the event-specific args we use when processing this event
+ * @returns S_OK
+ */
+HRESULT
+MetroInput::OnEdgeGestureStarted(UI::Input::IEdgeGesture* sender,
+                                 UI::Input::IEdgeGestureEventArgs* aArgs)
+{
+#ifdef DEBUG_INPUT
+  LogFunction();
+#endif
+  nsSimpleGestureEvent geckoEvent(true,
+                                  NS_SIMPLE_GESTURE_EDGE_STARTED,
+                                  mWidget.Get(),
+                                  0,
+                                  0.0);
+  mModifierKeyState.Update();
+  mModifierKeyState.InitInputEvent(geckoEvent);
+  geckoEvent.time = ::GetMessageTime();
+
+  geckoEvent.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
+
+  DispatchEventIgnoreStatus(&geckoEvent);
+  return S_OK;
+}
+
+/**
+ * This event can be received if the user swipes her/his finger back to
+ * the top of the screen, or continues moving her/his finger such that
+ * the movement is interpreted as a "grab this window" gesture
+ *
+ * @param sender the CoreDispatcher that fired this event
+ * @param aArgs the event-specific args we use when processing this event
+ * @returns S_OK
+ */
+HRESULT
+MetroInput::OnEdgeGestureCanceled(UI::Input::IEdgeGesture* sender,
+                                  UI::Input::IEdgeGestureEventArgs* aArgs)
+{
+#ifdef DEBUG_INPUT
+  LogFunction();
+#endif
+  nsSimpleGestureEvent geckoEvent(true,
+                                  NS_SIMPLE_GESTURE_EDGE_CANCELED,
+                                  mWidget.Get(),
+                                  0,
+                                  0.0);
+  mModifierKeyState.Update();
+  mModifierKeyState.InitInputEvent(geckoEvent);
+  geckoEvent.time = ::GetMessageTime();
+
+  geckoEvent.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
+
+  DispatchEventIgnoreStatus(&geckoEvent);
+  return S_OK;
+}
+
+/**
+ * This event is received if the user presses ctrl+Z or lifts her/his
+ * finger after causing an EdgeGestureStarting event to fire.
+ *
+ * @param sender the CoreDispatcher that fired this event
+ * @param aArgs the event-specific args we use when processing this event
+ * @returns S_OK
+ */
 HRESULT
 MetroInput::OnEdgeGestureCompleted(UI::Input::IEdgeGesture* sender,
                                    UI::Input::IEdgeGestureEventArgs* aArgs)
@@ -378,7 +444,7 @@ MetroInput::OnEdgeGestureCompleted(UI::Input::IEdgeGesture* sender,
   LogFunction();
 #endif
   nsSimpleGestureEvent geckoEvent(true,
-                                  NS_SIMPLE_GESTURE_EDGEUI,
+                                  NS_SIMPLE_GESTURE_EDGE_COMPLETED,
                                   mWidget.Get(),
                                   0,
                                   0.0);
@@ -739,7 +805,7 @@ MetroInput::OnPointerPressed(UI::Core::ICoreWindow* aSender,
   // Create the new touch point and add it to our event.
   uint32_t pointerId;
   currentPoint->get_PointerId(&pointerId);
-  nsCOMPtr<nsIDOMTouch> touch = CreateDOMTouch(currentPoint.Get());
+  nsRefPtr<Touch> touch = CreateDOMTouch(currentPoint.Get());
   touch->mChanged = true;
   mTouches.Put(pointerId, touch);
   mTouchEvent.message = NS_TOUCH_START;
@@ -798,7 +864,7 @@ MetroInput::OnPointerReleased(UI::Core::ICoreWindow* aSender,
   // Get the touch associated with this touch point.
   uint32_t pointerId;
   currentPoint->get_PointerId(&pointerId);
-  nsCOMPtr<nsIDOMTouch> touch = mTouches.Get(pointerId);
+  nsRefPtr<Touch> touch = mTouches.Get(pointerId);
 
   // We are about to dispatch a touchend.  Before we do that, we should make
   // sure that we don't have a touchmove or touchstart sitting around for this
@@ -867,7 +933,7 @@ MetroInput::OnPointerMoved(UI::Core::ICoreWindow* aSender,
   // Get the touch associated with this touch point.
   uint32_t pointerId;
   currentPoint->get_PointerId(&pointerId);
-  nsCOMPtr<nsIDOMTouch> touch = mTouches.Get(pointerId);
+  nsRefPtr<Touch> touch = mTouches.Get(pointerId);
 
   // Some old drivers cause us to receive a PointerMoved event for a touchId
   // after we've already received a PointerReleased event for that touchId.
@@ -1367,7 +1433,9 @@ MetroInput::UnregisterInputEvents() {
       edgeStatics.GetAddressOf()))) {
     WRL::ComPtr<UI::Input::IEdgeGesture> edge;
     if (SUCCEEDED(edgeStatics->GetForCurrentView(edge.GetAddressOf()))) {
-      edge->remove_Completed(mTokenEdgeGesture);
+      edge->remove_Starting(mTokenEdgeStarted);
+      edge->remove_Canceled(mTokenEdgeCanceled);
+      edge->remove_Completed(mTokenEdgeCompleted);
     }
   }
 
@@ -1694,11 +1762,23 @@ MetroInput::RegisterInputEvents()
   WRL::ComPtr<UI::Input::IEdgeGesture> edge;
   edgeStatics->GetForCurrentView(edge.GetAddressOf());
 
+  edge->add_Starting(
+      WRL::Callback<EdgeGestureHandler>(
+                                  this,
+                                  &MetroInput::OnEdgeGestureStarted).Get(),
+      &mTokenEdgeStarted);
+
+  edge->add_Canceled(
+      WRL::Callback<EdgeGestureHandler>(
+                                  this,
+                                  &MetroInput::OnEdgeGestureCanceled).Get(),
+      &mTokenEdgeCanceled);
+
   edge->add_Completed(
       WRL::Callback<EdgeGestureHandler>(
                                   this,
                                   &MetroInput::OnEdgeGestureCompleted).Get(),
-      &mTokenEdgeGesture);
+      &mTokenEdgeCompleted);
 
   // Set up our Gesture Recognizer to raise events for the gestures we
   // care about

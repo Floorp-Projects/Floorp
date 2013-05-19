@@ -69,9 +69,11 @@ load 366021-1.xhtml
 load 366667-1.html
 load 366952-1.html
 load 367246-1.html
+load 367360.html
 load 368330-1.html
 load 368461-1.xhtml
 load 368568.html
+load 368752.html
 load 368860-1.html
 load 368863-1.html
 load 369038-1.xhtml
@@ -332,12 +334,15 @@ load 489462-1.html
 load 489480-1.xhtml
 load 493111-1.html
 load 493118-1.html
+load 493649.html
 load 494283-1.xhtml
 load 494283-2.html
 load 494300-1.xul
 load 494332-1.html
 load 495875-1.html
 load 495875-2.html
+load 496742.html
+load 499138.html
 load 499862-1.html
 load 499857-1.html
 asserts(10-90) asserts-if(winWidget,3-108) load 499885-1.xhtml # nscoord_MAX assertions (bug 575011), plus bug 570436 on some versions of windows
@@ -361,6 +366,7 @@ load 517968.html
 load 519031.xhtml
 load 520340.html
 load 522170-1.html
+load 526217.html
 load 533379-1.html
 load 533379-2.html
 load 534082-1.html
@@ -383,6 +389,7 @@ load 570160.html
 load 570289-1.html
 load 571618-1.svg
 asserts(1) load 571975-1.html # bug 574889
+asserts(7) load 571995.xhtml # 761848
 load 574958.xhtml
 asserts(0-4) load 578977.html # bug 757305
 load 580504-1.xhtml
@@ -405,6 +412,7 @@ load 604314-1.html
 load 604843.html
 load 605340.html
 load 606642.xhtml
+load 619021.html
 load 621424-1.html
 load 621841-1.html
 load 645072-1.html
@@ -433,9 +441,11 @@ load 683702-1.xhtml
 load 688996-1.html
 load 688996-2.html
 load 683712.html
+load 691210.html
 load text-overflow-bug713610.html
 load 700031.xhtml
 load 718516.html
+load 723108.html
 load 724978.xhtml
 load first-letter-638937.html
 load first-letter-638937-2.html
@@ -443,10 +453,20 @@ load 734777.html
 test-pref(layout.css.flexbox.enabled,true) load 737313-1.html
 test-pref(layout.css.flexbox.enabled,true) load 737313-2.html
 test-pref(layout.css.flexbox.enabled,true) load 737313-3.html
+load 747688.html
+load 750066.html
+asserts(0-10000) load 756241.html
 test-pref(font.size.inflation.emPerLine,15) asserts(1-100) load font-inflation-762332.html # bug 762332
 load 762902.html
 load 762764-1.html
+load 765409.html
+asserts(0-200) load 765621.html # bug 703550
+asserts(0-200) load 767765.html # bug 407550, bug 871758, and various nscoord_MAX related asserts
+load 769303-1.html
+load 769303-2.html
+load 769120.html
 load 786740-1.html
+asserts(0-4) test-pref(font.size.inflation.emPerLine,15) load 791601.xhtml # 3 counts of bug 871327, 1 bug 367185
 asserts(8) test-pref(layout.css.flexbox.enabled,true) load 798020-1.html
 test-pref(layout.css.flexbox.enabled,true) load 798235-1.html
 test-pref(layout.css.flexbox.enabled,true) load 799207-1.html
@@ -454,6 +474,7 @@ asserts(12) test-pref(layout.css.flexbox.enabled,true) load 799207-2.html
 test-pref(layout.css.flexbox.enabled,true) load 801268-1.html
 test-pref(layout.css.flexbox.enabled,true) load 804089-1.xhtml
 load 810726.html
+test-pref(layout.css.flexbox.enabled,true) load 827076.html
 load 840818.html
 test-pref(layout.css.flexbox.enabled,true) load 812822-1.html
 asserts(1) test-pref(layout.css.flexbox.enabled,true) load 824297-1.html # bug 399262
@@ -461,6 +482,7 @@ test-pref(layout.css.flexbox.enabled,true) load 826483-1.html
 asserts(1) test-pref(layout.css.flexbox.enabled,true) load 826532-1.html # bug 399262
 test-pref(layout.css.flexbox.enabled,true) load 827168-1.html
 load 836895.html
+load 840787.html
 load 842132-1.html
 test-pref(layout.css.flexbox.enabled,true) load 844529-1.html
 load 847130.xhtml

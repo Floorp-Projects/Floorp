@@ -2551,9 +2551,9 @@ nsNativeThemeCocoa::GetWidgetBorder(nsDeviceContext* aContext,
       if (nsLookAndFeel::GetInt(
             nsLookAndFeel::eIntID_UseOverlayScrollbars) != 0) {
         if (isHorizontal) {
-          aResult->SizeTo(1, 2, 1, 1);
-        } else {
           aResult->SizeTo(2, 1, 1, 1);
+        } else {
+          aResult->SizeTo(1, 1, 1, 2);
         }
       }
 
@@ -3068,7 +3068,7 @@ nsNativeThemeCocoa::WidgetIsContainer(uint8_t aWidgetType)
 }
 
 bool
-nsNativeThemeCocoa::ThemeDrawsFocusForWidget(nsPresContext* aPresContext, nsIFrame* aFrame, uint8_t aWidgetType)
+nsNativeThemeCocoa::ThemeDrawsFocusForWidget(uint8_t aWidgetType)
 {
   if (aWidgetType == NS_THEME_DROPDOWN ||
       aWidgetType == NS_THEME_DROPDOWN_TEXTFIELD ||

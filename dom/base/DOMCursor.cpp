@@ -55,7 +55,7 @@ DOMCursor::FireDone()
 {
   Reset();
   mFinished = true;
-  FireSuccess(JSVAL_VOID);
+  FireSuccess(JS::UndefinedHandleValue);
 }
 
 NS_IMETHODIMP

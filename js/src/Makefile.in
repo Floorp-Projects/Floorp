@@ -8,6 +8,8 @@ DEPTH		= @DEPTH@
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 
+TOPLEVEL_BUILD := 1
+
 run_for_side_effects := $(shell echo "MAKE: $(MAKE)")
 include $(DEPTH)/config/autoconf.mk
 
@@ -18,6 +20,7 @@ LIBRARY_NAME	= mozjs
 endif
 
 STATIC_LIBRARY_NAME = js_static
+MSVC_ENABLE_PGO := 1
 LIBS		= $(NSPR_LIBS)
 
 # JavaScript must be built shared, even for static builds, as it is used by
@@ -184,30 +187,6 @@ CPPSRCS += 	TraceLogging.cpp
 
 endif
 
-ifdef ENABLE_METHODJIT
-
-###############################################
-# BEGIN include sources for the method JIT
-#
-VPATH += 	$(srcdir)/methodjit
-
-CPPSRCS += 	MethodJIT.cpp \
-		StubCalls.cpp \
-		Compiler.cpp \
-		FrameState.cpp \
-		FastArithmetic.cpp \
-		FastBuiltins.cpp \
-		FastOps.cpp \
-		LoopState.cpp \
-		StubCompiler.cpp \
-		MonoIC.cpp \
-		PolyIC.cpp \
-		ImmutableSync.cpp \
-		InvokeHelpers.cpp \
-		Retcon.cpp \
-		TrampolineCompiler.cpp \
-		$(NULL)
-
 # Ion
 ifdef ENABLE_ION
 VPATH +=	$(srcdir)/ion
@@ -264,9 +243,7 @@ CPPSRCS +=	MIR.cpp \
 		AsmJSLink.cpp \
 		AsmJSSignalHandlers.cpp \
 		$(NULL)
-endif #ENABLE_ION
 ifeq (86, $(findstring 86,$(TARGET_CPU)))
-ifdef ENABLE_ION
 CPPSRCS +=	CodeGenerator-x86-shared.cpp
 CPPSRCS +=	IonFrames-x86-shared.cpp
 CPPSRCS +=	MoveEmitter-x86-shared.cpp
@@ -274,20 +251,7 @@ CPPSRCS +=	Assembler-x86-shared.cpp
 CPPSRCS +=	Lowering-x86-shared.cpp
 CPPSRCS +=	BaselineCompiler-x86-shared.cpp
 CPPSRCS +=	BaselineIC-x86-shared.cpp
-endif #ENABLE_ION
 ifeq (x86_64, $(TARGET_CPU))
-ifdef _MSC_VER
-ASFILES +=	TrampolineMasmX64.asm
-endif
-ifeq ($(OS_ARCH),WINNT)
-ifdef GNU_CC
-ASFILES +=	TrampolineMingwX64.s
-endif
-endif
-ifdef SOLARIS_SUNPRO_CXX
-ASFILES +=	TrampolineSUNWX64.s
-endif
-ifdef ENABLE_ION
 VPATH +=	$(srcdir)/ion/x64
 CPPSRCS += 	Lowering-x64.cpp \
 		CodeGenerator-x64.cpp \
@@ -298,9 +262,7 @@ CPPSRCS += 	Lowering-x64.cpp \
 		BaselineCompiler-x64.cpp \
 		BaselineIC-x64.cpp \
 		$(NULL)
-endif #ENABLE_ION
 else
-ifdef ENABLE_ION
 VPATH +=	$(srcdir)/ion/x86
 CPPSRCS +=	Lowering-x86.cpp \
 		CodeGenerator-x86.cpp \
@@ -311,15 +273,9 @@ CPPSRCS +=	Lowering-x86.cpp \
 		BaselineCompiler-x86.cpp \
 		BaselineIC-x86.cpp \
 		$(NULL)
-endif #ENABLE_ION
-ifdef SOLARIS_SUNPRO_CXX
-ASFILES +=	TrampolineSUNWX86.s
 endif
 endif
-endif
-ifdef ENABLE_ION
 ifeq (arm, $(findstring arm, $(TARGET_CPU)))
-ifdef ENABLE_ION
 VPATH +=	$(srcdir)/ion/arm
 CPPSRCS +=	Lowering-arm.cpp \
 		CodeGenerator-arm.cpp \
@@ -333,20 +289,8 @@ CPPSRCS +=	Lowering-arm.cpp \
 		BaselineCompiler-arm.cpp \
 		BaselineIC-arm.cpp \
 		$(NULL)
-endif #ENABLE_ION
 endif
 endif #ENABLE_ION
-ifeq (sparc, $(findstring sparc,$(TARGET_CPU)))
-ASFILES +=	TrampolineSparc.s
-endif
-ifeq (mips, $(findstring mips,$(TARGET_CPU)))
-CPPSRCS +=	TrampolineMIPS.cpp
-endif
-#
-# END enclude sources for the method JIT
-#############################################
-
-endif
 
 ###############################################
 # BEGIN include sources for the Nitro assembler
@@ -366,10 +310,6 @@ CPPSRCS += 	ExecutableAllocator.cpp \
 		YarrCanonicalizeUCS2.cpp \
 		$(NONE)
 
-ifdef ENABLE_METHODJIT_SPEW
-CPPSRCS += Logging.cpp
-endif
-
 ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
 CPPSRCS += ExecutableAllocatorPosix.cpp \
            OSAllocatorPosix.cpp \
@@ -386,9 +326,8 @@ CPPSRCS += ExecutableAllocatorOS2.cpp \
            $(NONE)
 endif
 
-ifneq (,$(ENABLE_METHODJIT)$(ENABLE_ION)$(ENABLE_YARR_JIT))
+ifneq (,$(ENABLE_ION)$(ENABLE_YARR_JIT))
 VPATH += 	$(srcdir)/assembler/assembler \
-		$(srcdir)/methodjit \
 		$(NONE)
 
 CPPSRCS +=	ARMAssembler.cpp \
@@ -983,7 +922,6 @@ selfhosting_srcs := \
 
 selfhosted_out_h_deps := \
   $(selfhosting_srcs) \
-  $(srcdir)/builtin/ParallelArrayCommonOps.js \
   $(srcdir)/js.msg \
   $(srcdir)/builtin/embedjs.py \
   $(NULL)
@@ -1001,33 +939,11 @@ selfhosted.out.h: $(selfhosted_out_h_deps)
 # the code in js/src/assembler.
 CXXFLAGS += -DUSE_SYSTEM_MALLOC=1 -DENABLE_ASSEMBLER=1
 
-ifneq (,$(ENABLE_YARR_JIT)$(ENABLE_METHODJIT))
+ifneq (,$(ENABLE_YARR_JIT))
 CXXFLAGS +=  -DENABLE_JIT=1
 endif
 
 INCLUDES +=	-I$(srcdir)/assembler -I$(srcdir)/yarr
-
-ifdef ENABLE_METHODJIT
-# Build a standalone test program that exercises the assembler
-# sources a bit.
-TESTMAIN_OBJS = \
-		Assertions.$(OBJ_SUFFIX) \
-		ExecutableAllocator.$(OBJ_SUFFIX) \
-		ARMAssembler.$(OBJ_SUFFIX) \
-		MacroAssemblerARM.$(OBJ_SUFFIX) \
-		TestMain.$(OBJ_SUFFIX) \
-		jsutil.$(OBJ_SUFFIX) \
-		jslog2.$(OBJ_SUFFIX)
-
-ifeq ($(OS_ARCH),WINNT)
-TESTMAIN_OBJS += ExecutableAllocatorWin.$(OBJ_SUFFIX)
-else
-TESTMAIN_OBJS += ExecutableAllocatorPosix.$(OBJ_SUFFIX)
-endif
-
-TestMain$(HOST_BIN_SUFFIX): $(TESTMAIN_OBJS)
-	$(CXX) -o TestMain$(HOST_BIN_SUFFIX) $(TESTMAIN_OBJS)
-endif
 
 #
 # END kludges for the Nitro assembler

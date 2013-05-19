@@ -135,6 +135,7 @@ function checkGarbageValues()
         var caught = false;
         element.valueAsDate = value;
       } catch(e) {
+        is(e.name, "TypeError", "Exception should be 'TypeError'.");
         caught = true;
       }
       ok(caught, "Assigning " + value + " to .valueAsDate should throw");
@@ -333,8 +334,6 @@ function checkWithBustedPrototype()
     var element = document.createElement('input');
     element.type = type;
 
-    var witnessDate = new Date();
-
     var backupPrototype = {};
     backupPrototype.getUTCFullYear = Date.prototype.getUTCFullYear;
     backupPrototype.getUTCMonth = Date.prototype.getUTCMonth;
@@ -351,8 +350,22 @@ function checkWithBustedPrototype()
     element.valueAsDate = new Date();
 
     isnot(element.valueAsDate, null, ".valueAsDate should not return null");
-    // TODO: check the Date object value (UTCFullYear, UTCMonth and UTCDate)
-    // when .valueAsDate will stop returning null.
+    // The object returned by element.valueAsDate should return a Date object
+    // with the same prototype:
+    is(element.valueAsDate.getUTCFullYear, Date.prototype.getUTCFullYear,
+       "prototype is the same");
+    is(element.valueAsDate.getUTCMonth, Date.prototype.getUTCMonth,
+       "prototype is the same");
+    is(element.valueAsDate.getUTCDate, Date.prototype.getUTCDate,
+       "prototype is the same");
+    is(element.valueAsDate.getTime, Date.prototype.getTime,
+       "prototype is the same");
+    is(element.valueAsDate.setUTCFullYear, Date.prototype.setUTCFullYear,
+       "prototype is the same");
+
+    // However the Date should have the correct information.
+    var witnessDate = new Date(element.valueAsNumber);
+    is(element.valueAsDate.valueOf(), witnessDate.valueOf(), "correct Date");
 
     // Same test as above but using NaN instead of {}.
 
@@ -365,8 +378,22 @@ function checkWithBustedPrototype()
     element.valueAsDate = new Date();
 
     isnot(element.valueAsDate, null, ".valueAsDate should not return null");
-    // TODO: check the Date object value (UTCFullYear, UTCMonth and UTCDate)
-    // when .valueAsDate will stop returning null.
+    // The object returned by element.valueAsDate should return a Date object
+    // with the same prototype:
+    is(element.valueAsDate.getUTCFullYear, Date.prototype.getUTCFullYear,
+       "prototype is the same");
+    is(element.valueAsDate.getUTCMonth, Date.prototype.getUTCMonth,
+       "prototype is the same");
+    is(element.valueAsDate.getUTCDate, Date.prototype.getUTCDate,
+       "prototype is the same");
+    is(element.valueAsDate.getTime, Date.prototype.getTime,
+       "prototype is the same");
+    is(element.valueAsDate.setUTCFullYear, Date.prototype.setUTCFullYear,
+       "prototype is the same");
+
+    // However the Date should have the correct information.
+    var witnessDate = new Date(element.valueAsNumber);
+    is(element.valueAsDate.valueOf(), witnessDate.valueOf(), "correct Date");
 
     Date.prototype.getUTCFullYear = backupPrototype.getUTCFullYear;
     Date.prototype.getUTCMonth = backupPrototype.getUTCMonth;

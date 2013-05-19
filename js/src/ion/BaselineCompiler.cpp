@@ -190,23 +190,6 @@ BaselineCompiler::compile()
     return Method_Compiled;
 }
 
-#ifdef DEBUG
-#define SPEW_OPCODE()                                                         \
-    JS_BEGIN_MACRO                                                            \
-        if (IsJaegerSpewChannelActive(JSpew_JSOps)) {                         \
-            Sprinter sprinter(cx);                                            \
-            sprinter.init();                                                  \
-            RootedScript script_(cx, script);                                 \
-            js_Disassemble1(cx, script_, pc, pc - script_->code,              \
-                            JS_TRUE, &sprinter);                              \
-            JaegerSpew(JSpew_JSOps, "    %2u %s",                             \
-                       (unsigned)frame.stackDepth(), sprinter.string());      \
-        }                                                                     \
-    JS_END_MACRO;
-#else
-#define SPEW_OPCODE()
-#endif /* DEBUG */
-
 bool
 BaselineCompiler::emitPrologue()
 {
@@ -539,7 +522,6 @@ BaselineCompiler::emitBody()
     uint32_t emittedOps = 0;
 
     while (true) {
-        SPEW_OPCODE();
         JSOp op = JSOp(*pc);
         IonSpew(IonSpew_BaselineOp, "Compiling op @ %d: %s",
                 int(pc - script->code), js_CodeName[op]);
@@ -589,9 +571,6 @@ BaselineCompiler::emitBody()
 
         switch (op) {
           default:
-            // Ignore fat opcodes, we compile the decomposed version instead.
-            if (js_CodeSpec[op].format & JOF_DECOMPOSE)
-                break;
             IonSpew(IonSpew_BaselineAbort, "Unhandled op: %s", js_CodeName[op]);
             return Method_CantCompile;
 

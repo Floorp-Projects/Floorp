@@ -157,24 +157,6 @@ JSScript::global() const
     return *compartment()->maybeGlobal();
 }
 
-#ifdef JS_METHODJIT
-inline bool
-JSScript::ensureHasMJITInfo(JSContext *cx)
-{
-    if (mJITInfo)
-        return true;
-    mJITInfo = cx->new_<JITScriptSet>();
-    return mJITInfo != NULL;
-}
-
-inline void
-JSScript::destroyMJITInfo(js::FreeOp *fop)
-{
-    fop->delete_(mJITInfo);
-    mJITInfo = NULL;
-}
-#endif /* JS_METHODJIT */
-
 inline void
 JSScript::writeBarrierPre(JSScript *script)
 {

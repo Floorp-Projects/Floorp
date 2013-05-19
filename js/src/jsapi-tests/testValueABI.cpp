@@ -29,7 +29,7 @@ C_jsvalAlignmentTest();
 
 BEGIN_TEST(testValueABI_retparam)
 {
-    JS::RootedObject obj(cx, JS_GetGlobalObject(cx));
+    JS::RootedObject obj(cx, JS_GetGlobalForScopeChain(cx));
     jsval v = OBJECT_TO_JSVAL(obj);
     obj = NULL;
     CHECK(C_ValueToObject(cx, v, obj.address()));

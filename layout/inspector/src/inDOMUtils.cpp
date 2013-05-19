@@ -389,8 +389,8 @@ inDOMUtils::GetCSSPropertyNames(uint32_t aFlags, uint32_t* aCount,
   // we've put into props so far.
   uint32_t prop = 0, propCount = 0;
   for ( ; prop < eCSSProperty_COUNT_no_shorthands; ++prop) {
-    if (!nsCSSProps::PropHasFlags(nsCSSProperty(prop),
-                                  CSS_PROPERTY_PARSE_INACCESSIBLE)) {
+    if (nsCSSProps::PropertyParseType(nsCSSProperty(prop)) !=
+        CSS_PROPERTY_PARSE_INACCESSIBLE) {
       DO_PROP(prop);
     }
   }

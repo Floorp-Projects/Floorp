@@ -1,0 +1,21 @@
+<html  class="reftest-wait"><hx id=hx1>><style>
+.class1 { white-space: pre-wrap; letter-spacing: 54138.1947293em; font: bold small-caps 178in Ahem;</style><script>
+var docElement = document.documentElement;
+function initCF() {
+document.removeEventListener("DOMContentLoaded", initCF, false);
+test = document.createElementNS("http://www.w3.org/1998/Math/MathML", "mstyle");
+test.setAttribute("class", "class1");
+docElement.appendChild(test);
+text1 = document.createTextNode("FLAj  *uaRk}|/zee   aCb  o =  $l xQ-gGF[(})+/1 {c:K   4A}mj}}AOc] 	^v  Q |Vsqx5.VN,3 *5o:f N[- } EaT  , BaPj }6 x{#d5 G[ J");
+text2 = document.createTextNode("!n! I	}?|uXva%e I  vRg4Ahq%HGWExC N*B~OyW E%KcuS	LO1C|I[?DtW c	$9 4Ij`xX	|4V ;sML3ZQF f` +g _");
+setTimeout("CFcrash()", 291);
+}
+document.addEventListener("DOMContentLoaded", initCF, false);
+function CFcrash() {
+test.appendChild(hx1);
+test.appendChild(text2);
+docElement.offsetTop;
+hx1.appendChild(text1);
+document.documentElement.offsetHeight;
+document.documentElement.removeAttribute("class");
+}</script>>

@@ -2420,10 +2420,10 @@ OpenDatabaseHelper::DispatchErrorEvent()
     return;
   }
 
-  nsCOMPtr<nsIDOMDOMError> error;
-  DebugOnly<nsresult> rv =
-    mOpenDBRequest->GetError(getter_AddRefs(error));
-  NS_ASSERTION(NS_SUCCEEDED(rv), "This shouldn't be failing at this point!");
+  ErrorResult rv;
+  nsRefPtr<DOMError> error = mOpenDBRequest->GetError(rv);
+
+  NS_ASSERTION(!rv.Failed(), "This shouldn't be failing at this point!");
   if (!error) {
     mOpenDBRequest->SetError(mResultCode);
   }

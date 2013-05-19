@@ -83,7 +83,7 @@ public:
 #endif
 
 private:
-  virtual mozilla::layout::FrameChildListID GetAbsoluteListID() const { return kFixedList; }
+  virtual mozilla::layout::FrameChildListID GetAbsoluteListID() const MOZ_OVERRIDE { return kFixedList; }
 
 protected:
   /**

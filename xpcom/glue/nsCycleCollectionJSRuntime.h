@@ -32,6 +32,11 @@ struct nsCycleCollectionJSRuntime
   virtual void FixWeakMappingGrayBits() = 0;
 
   /**
+   * Return true if merging content zones may greatly reduce the size of the CC graph.
+   */
+  virtual bool UsefulToMergeZones() = 0;
+
+  /**
    * Should we force a JavaScript GC before a CC?
    */
   virtual bool NeedCollect() = 0;

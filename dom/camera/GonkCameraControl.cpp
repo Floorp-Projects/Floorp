@@ -34,6 +34,8 @@
 #include <media/mediaplayer.h>
 #include "nsPrintfCString.h"
 #include "nsIObserverService.h"
+#include "nsIVolume.h"
+#include "nsIVolumeService.h"
 #include "DOMCameraManager.h"
 #include "GonkCameraHwMgr.h"
 #include "DOMCameraCapabilities.h"
@@ -905,7 +907,22 @@ nsGonkCameraControl::StartRecordingImpl(StartRecordingTask* aStartRecording)
    */
   nsCOMPtr<nsIFile> filename = aStartRecording->mFolder;
   filename->AppendRelativePath(aStartRecording->mFilename);
+
+  nsString fullpath;
+  filename->GetPath(fullpath);
+
+  nsCOMPtr<nsIVolumeService> vs = do_GetService(NS_VOLUMESERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(vs, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIVolume> vol;
+  nsresult rv = vs->GetVolumeByPath(fullpath, getter_AddRefs(vol));
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_INVALID_ARG);
+
+  nsString volName;
+  vol->GetName(volName);
+
   mVideoFile = new DeviceStorageFile(NS_LITERAL_STRING("videos"),
+                                     volName,
                                      aStartRecording->mFilename);
 
   nsAutoCString nativeFilename;
@@ -923,7 +940,7 @@ nsGonkCameraControl::StartRecordingImpl(StartRecordingTask* aStartRecording)
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv = SetupRecording(fd, aStartRecording->mOptions.rotation, aStartRecording->mOptions.maxFileSizeBytes, aStartRecording->mOptions.maxVideoLengthMs);
+  rv = SetupRecording(fd, aStartRecording->mOptions.rotation, aStartRecording->mOptions.maxFileSizeBytes, aStartRecording->mOptions.maxVideoLengthMs);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mRecorder->start() != OK) {
@@ -1019,6 +1036,18 @@ nsGonkCameraControl::TakePictureComplete(uint8_t* aData, uint32_t aLength)
   nsresult rv = NS_DispatchToMainThread(takePictureResult);
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to dispatch takePicture() onSuccess callback to main thread!");
+  }
+}
+
+void
+nsGonkCameraControl::TakePictureError()
+{
+  nsCOMPtr<nsIRunnable> takePictureError = new CameraErrorResult(mTakePictureOnErrorCb, NS_LITERAL_STRING("FAILURE"), mWindowId);
+  mTakePictureOnSuccessCb = nullptr;
+  mTakePictureOnErrorCb = nullptr;
+  nsresult rv = NS_DispatchToMainThread(takePictureError);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to dispatch takePicture() onError callback to main thread!");
   }
 }
 
@@ -1436,6 +1465,12 @@ void
 ReceiveImage(nsGonkCameraControl* gc, uint8_t* aData, uint32_t aLength)
 {
   gc->TakePictureComplete(aData, aLength);
+}
+
+void
+ReceiveImageError(nsGonkCameraControl* gc)
+{
+  gc->TakePictureError();
 }
 
 void

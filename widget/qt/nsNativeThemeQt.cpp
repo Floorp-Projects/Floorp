@@ -575,7 +575,7 @@ nsNativeThemeQt::WidgetIsContainer(uint8_t aWidgetType)
 }
 
 bool
-nsNativeThemeQt::ThemeDrawsFocusForWidget(nsPresContext* aPresContext, nsIFrame* aFrame, uint8_t aWidgetType)
+nsNativeThemeQt::ThemeDrawsFocusForWidget(uint8_t aWidgetType)
 {
     if (aWidgetType == NS_THEME_DROPDOWN ||
         aWidgetType == NS_THEME_BUTTON || 

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+    function f(event) {
+        document.removeEventListener("DOMAttrModified", f, false);
+
+        // dumpln(event.attrChange); /* 2 (MutationEvent.ADDITION) */
+        // dumpln(event.attrName); /* "curpos" */
+        // dumpln(event.newValue); /* "0" */
+
+        // (gdb) break nsGlobalWindow::Dump
+        dump("[[[[DOMAttrModified\n");
+        document.removeChild(svgUse);
+        dump("]]]]\n");
+    }
+
+    var svgUse = document.createElementNS("http://www.w3.org/2000/svg", "use");
+    document.removeChild(document.documentElement);
+    document.addEventListener("DOMAttrModified", f, false);
+    document.appendChild(svgUse);
+
+</script>
+</head>
+
+<body onload="boom();"></body>
+</html>

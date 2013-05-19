@@ -139,7 +139,7 @@ var shell = {
       if (Services.prefs.getBoolPref('app.reportCrashes')) {
         this.submitCrash(crashID);
       } else {
-        debugCrashReport('app.reportCrashes is disabled');
+        this.deleteCrash(crashID);
       }
     } catch (e) {
       debugCrashReport('Can\'t fetch app.reportCrashes. Exception: ' + e);
@@ -154,6 +154,13 @@ var shell = {
         crashID: crashID,
         chrome: isChrome
       });
+    }
+  },
+
+  deleteCrash: function shell_deleteCrash(aCrashID) {
+    if (aCrashID) {
+      debugCrashReport('Deleting pending crash: ' + aCrashID);
+      shell.CrashSubmit.delete(aCrashID);
     }
   },
 
@@ -1096,7 +1103,11 @@ window.addEventListener('ContentStart', function cr_onContentStart() {
   let content = shell.contentBrowser.contentWindow;
   content.addEventListener("mozContentEvent", function cr_onMozContentEvent(e) {
     if (e.detail.type == "submit-crash" && e.detail.crashID) {
+      debugCrashReport("submitting crash at user request ", e.detail.crashID);
       shell.submitCrash(e.detail.crashID);
+    } else if (e.detail.type == "delete-crash" && e.detail.crashID) {
+      debugCrashReport("deleting crash at user request ", e.detail.crashID);
+      shell.deleteCrash(e.detail.crashID);
     }
   });
 });
@@ -1198,3 +1209,19 @@ Services.obs.addObserver(function(aSubject, aTopic, aData) {
     pageURL: data.pageURL
   });
 }, "activity-done", false);
+
+#ifdef MOZ_WIDGET_GONK
+// Devices don't have all the same partition size for /cache where we
+// store the http cache.
+(function setHTTPCacheSize() {
+  let path = Services.prefs.getCharPref("browser.cache.disk.parent_directory");
+  let volumeService = Cc["@mozilla.org/telephony/volume-service;1"]
+                        .getService(Ci.nsIVolumeService);
+
+  let stats = volumeService.createOrGetVolumeByPath(path).getStats();
+
+  // We must set the size in KB, and keep a bit of free space.
+  let size = Math.floor(stats.totalBytes / 1024) - 1024;
+  Services.prefs.setIntPref("browser.cache.disk.capacity", size);
+}) ()
+#endif

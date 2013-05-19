@@ -77,6 +77,7 @@
 
 #if defined(MOZ_WIDGET_GONK)
 #include "nsVolume.h"
+#include "nsVolumeService.h"
 #endif
 
 #ifdef XP_WIN
@@ -1162,9 +1163,12 @@ ContentChild::RecvLastPrivateDocShellDestroyed()
 }
 
 bool
-ContentChild::RecvFilePathUpdate(const nsString& type, const nsString& path, const nsCString& aReason)
+ContentChild::RecvFilePathUpdate(const nsString& aStorageType,
+                                 const nsString& aStorageName,
+                                 const nsString& aPath,
+                                 const nsCString& aReason)
 {
-    nsRefPtr<DeviceStorageFile> dsf = new DeviceStorageFile(type, path);
+    nsRefPtr<DeviceStorageFile> dsf = new DeviceStorageFile(aStorageType, aStorageName, aPath);
 
     nsString reason;
     CopyASCIItoUTF16(aReason, reason);
@@ -1175,21 +1179,22 @@ ContentChild::RecvFilePathUpdate(const nsString& type, const nsString& path, con
 
 bool
 ContentChild::RecvFileSystemUpdate(const nsString& aFsName,
-                                   const nsString& aName,
+                                   const nsString& aVolumeName,
                                    const int32_t& aState,
                                    const int32_t& aMountGeneration)
 {
 #ifdef MOZ_WIDGET_GONK
-    nsRefPtr<nsVolume> volume = new nsVolume(aFsName, aName, aState,
+    nsRefPtr<nsVolume> volume = new nsVolume(aFsName, aVolumeName, aState,
                                              aMountGeneration);
 
-    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-    NS_ConvertUTF8toUTF16 stateStr(volume->StateStr());
-    obs->NotifyObservers(volume, NS_VOLUME_STATE_CHANGED, stateStr.get());
+    nsRefPtr<nsVolumeService> vs = nsVolumeService::GetSingleton();
+    if (vs) {
+        vs->UpdateVolume(volume);
+    }
 #else
     // Remove warnings about unused arguments
     unused << aFsName;
-    unused << aName;
+    unused << aVolumeName;
     unused << aState;
     unused << aMountGeneration;
 #endif

@@ -108,6 +108,14 @@
         <item>enabled</item>
         <item>wifi</item>
         <item>disabled</item>
+     </string-array>
+    <string-array name="pref_titlebar_mode_entries">
+        <item>@string/pref_titlebar_mode_title</item>
+        <item>@string/pref_titlebar_mode_url</item>
+    </string-array>
+    <string-array name="pref_titlebar_mode_values">
+        <item>0</item>
+        <item>1</item>
     </string-array>
     <string-array name="tabs_panel_spinner">
         <item>@string/tabs_normal</item>

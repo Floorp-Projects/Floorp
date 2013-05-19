@@ -897,45 +897,7 @@ nsEditorEventListener::Blur(nsIDOMEvent* aEvent)
   if (element)
     return NS_OK;
 
-  // turn off selection and caret
-  nsCOMPtr<nsISelectionController>selCon;
-  mEditor->GetSelectionController(getter_AddRefs(selCon));
-  if (selCon)
-  {
-    nsCOMPtr<nsISelection> selection;
-    selCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
-                         getter_AddRefs(selection));
-
-    nsCOMPtr<nsISelectionPrivate> selectionPrivate =
-      do_QueryInterface(selection);
-    if (selectionPrivate) {
-      selectionPrivate->SetAncestorLimiter(nullptr);
-    }
-
-    nsCOMPtr<nsIPresShell> presShell = GetPresShell();
-    if (presShell) {
-      nsRefPtr<nsCaret> caret = presShell->GetCaret();
-      if (caret) {
-        caret->SetIgnoreUserModify(true);
-      }
-    }
-
-    selCon->SetCaretEnabled(false);
-
-    if(mEditor->IsFormWidget() || mEditor->IsPasswordEditor() ||
-       mEditor->IsReadonly() || mEditor->IsDisabled() ||
-       mEditor->IsInputFiltered())
-    {
-      selCon->SetDisplaySelection(nsISelectionController::SELECTION_HIDDEN);//hide but do NOT turn off
-    }
-    else
-    {
-      selCon->SetDisplaySelection(nsISelectionController::SELECTION_DISABLED);
-    }
-
-    selCon->RepaintSelection(nsISelectionController::SELECTION_NORMAL);
-  }
-
+  mEditor->FinalizeSelection();
   return NS_OK;
 }
 

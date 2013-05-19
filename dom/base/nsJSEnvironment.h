@@ -129,7 +129,7 @@ public:
   // called even if the previous collection was GC.
   static void CycleCollectNow(nsICycleCollectorListener *aListener = nullptr,
                               int32_t aExtraForgetSkippableCalls = 0,
-                              bool aForced = true);
+                              bool aManuallyTriggered = true);
 
   static void PokeGC(JS::gcreason::Reason aReason, int aDelay = 0);
   static void KillGCTimer();

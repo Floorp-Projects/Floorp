@@ -8,8 +8,8 @@
 
 %{C++
 #define NS_WINDOWMEDIATOR_CID \
-{ 0x808b2fa3, 0x8a02, 0x49ca, \
-  { 0x91, 0x04, 0x5f, 0x77, 0x29, 0x9e, 0x09, 0x0b } }
+{ 0x79a2b7cc, 0xf05b, 0x4605, \
+  { 0xbf, 0xa0, 0xfa, 0xc5, 0x4f, 0x27, 0xee, 0xc8 } }
 
 #define NS_WINDOWMEDIATOR_CONTRACTID \
   "@mozilla.org/appshell/window-mediator;1"
@@ -20,7 +20,7 @@ interface nsIWidget;
 interface nsIDOMWindow;
 interface nsIWindowMediatorListener;
 
-[scriptable, uuid(808b2fa3-8a02-49ca-9104-5f77299e090b)]
+[scriptable, uuid(30cda5a1-a6df-4f32-9a73-0e59a32928c5)]
 interface nsIWindowMediator: nsISupports
 {
   /** Return an enumerator which iterates over all windows of type aWindowType
@@ -73,6 +73,13 @@ interface nsIWindowMediator: nsISupports
    * Return the outer window with the given ID, if any.  Can return null.
    */
   nsIDOMWindow getOuterWindowWithId(in unsigned long long aOuterWindowID);
+
+  /**
+    * Return the outer window with the given current window ID, if any.
+    * Can return null if no inner window with the ID exists or if it's not
+    * a current inner anymore.
+    */
+  nsIDOMWindow getCurrentInnerWindowWithId(in unsigned long long aInnerWindowID);
 
   /** Add the window to the list of known windows. Listeners (see
     * addListener) will be notified through their onOpenWindow method.

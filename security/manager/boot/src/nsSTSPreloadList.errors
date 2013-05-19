@@ -20,6 +20,8 @@ codereview.appspot.com: did not receive HSTS header
 codereview.chromium.org: did not receive HSTS header
 crypto.is: did not receive HSTS header
 dl.google.com: did not receive HSTS header
+dm.lookout.com: did not receive HSTS header
+dm.mylookout.com: did not receive HSTS header
 docs.google.com: did not receive HSTS header
 download.jitsi.org: did not receive HSTS header
 drive.google.com: did not receive HSTS header
@@ -27,6 +29,7 @@ dropcam.com: did not receive HSTS header
 emailprivacytester.com: max-age too low: 8640000
 encrypted.google.com: did not receive HSTS header
 epoxate.com: max-age too low: 259200
+espra.com: could not connect to host
 fatzebra.com.au: did not receive HSTS header
 fj.simple.com: did not receive HSTS header
 gmail.com: did not receive HSTS header
@@ -46,10 +49,12 @@ kiwiirc.com: max-age too low: 5256000
 ledgerscope.net: max-age too low: 86400
 linx.net: did not receive HSTS header
 lists.mayfirst.org: did not receive HSTS header
+lookout.com: did not receive HSTS header
 mail.google.com: did not receive HSTS header
 market.android.com: did not receive HSTS header
 my.alfresco.com: did not receive HSTS header
 mydigipass.com: did not receive HSTS header
+mylookout.com: did not receive HSTS header
 neonisi.com: could not connect to host
 openshift.redhat.com: did not receive HSTS header
 ottospora.nl: could not connect to host
@@ -58,6 +63,7 @@ plus.google.com: did not receive HSTS header
 plus.sandbox.google.com: did not receive HSTS header
 profiles.google.com: did not receive HSTS header
 romab.com: max-age too low: 2628000
+sah3.net: could not connect to host
 script.google.com: did not receive HSTS header
 shops.neonisi.com: could not connect to host
 silentcircle.org: could not connect to host
@@ -65,6 +71,7 @@ simon.butcher.name: max-age too low: 2629743
 sites.google.com: did not receive HSTS header
 sol.io: could not connect to host
 spreadsheets.google.com: did not receive HSTS header
+square.com: max-age too low: 1296000
 squareup.com: max-age too low: 1296000
 ssl.google-analytics.com: did not receive HSTS header
 ssl.panoramio.com: did not receive HSTS header
@@ -85,6 +92,7 @@ www.ledgerscope.net: max-age too low: 86400
 www.logentries.com: did not receive HSTS header
 www.makeyourlaws.org: did not receive HSTS header
 www.moneybookers.com: did not receive HSTS header
+www.mylookout.com: did not receive HSTS header
 www.neonisi.com: could not connect to host
 www.paycheckrecords.com: did not receive HSTS header
 www.paypal.com: max-age too low: 14400

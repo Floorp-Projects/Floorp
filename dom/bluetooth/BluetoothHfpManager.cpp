@@ -658,6 +658,19 @@ BluetoothHfpManager::HandleVoiceConnectionChanged()
   NS_ENSURE_TRUE(network, NS_ERROR_FAILURE);
   network->GetLongName(mOperatorName);
 
+  // According to GSM 07.07, "<format> indicates if the format is alphanumeric
+  // or numeric; long alphanumeric format can be upto 16 characters long and
+  // short format up to 8 characters (refer GSM MoU SE.13 [9])..."
+  // However, we found that the operator name may sometimes be longer than 16
+  // characters. After discussion, we decided to fix this here but not in RIL
+  // or modem.
+  //
+  // Please see Bug 871366 for more information.
+  if (mOperatorName.Length() > 16) {
+    NS_WARNING("The operator name was longer than 16 characters. We cut it.");
+    mOperatorName.Left(mOperatorName, 16);
+  }
+
   return NS_OK;
 }
 
@@ -1011,6 +1024,8 @@ BluetoothHfpManager::Connect(const nsAString& aDevicePath,
     mHeadsetSocket->Disconnect();
     mHeadsetSocket = nullptr;
   }
+
+  MOZ_ASSERT(!mRunnable);
 
   mRunnable = aRunnable;
   mSocket =

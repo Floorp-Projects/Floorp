@@ -36,11 +36,11 @@ inline uintptr_t mozPoisonValue()
  */
 inline void mozWritePoison(void* aPtr, size_t aSize)
 {
-  MOZ_ASSERT((uintptr_t)aPtr % sizeof(uintptr_t) == 0, "bad alignment");
-  MOZ_ASSERT(aSize >= sizeof(uintptr_t), "poisoning this object has no effect");
   const uintptr_t POISON = mozPoisonValue();
   char* p = (char*)aPtr;
   char* limit = p + aSize;
+  MOZ_ASSERT((uintptr_t)aPtr % sizeof(uintptr_t) == 0, "bad alignment");
+  MOZ_ASSERT(aSize >= sizeof(uintptr_t), "poisoning this object has no effect");
   for (; p < limit; p += sizeof(uintptr_t)) {
     *((uintptr_t*)p) = POISON;
   }

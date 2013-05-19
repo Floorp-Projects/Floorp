@@ -90,6 +90,9 @@ using namespace mozilla::dom;
 #define XML_HTTP_REQUEST_ARRAYBUFFER_MAX_GROWTH (32*1024*1024)
 // start at 32k to avoid lots of doubling right at the start
 #define XML_HTTP_REQUEST_ARRAYBUFFER_MIN_SIZE (32*1024)
+// the maximum Content-Length that we'll preallocate.  1GB.  Must fit
+// in an int32_t!
+#define XML_HTTP_REQUEST_MAX_CONTENT_LENGTH_PREALLOCATE (1*1024*1024*1024LL)
 
 #define LOAD_STR "load"
 #define ERROR_STR "error"
@@ -324,15 +327,17 @@ nsXMLHttpRequest::~nsXMLHttpRequest()
   NS_ABORT_IF_FALSE(!(mState & XML_HTTP_REQUEST_SYNCLOOPING), "we rather crash than hang");
   mState &= ~XML_HTTP_REQUEST_SYNCLOOPING;
 
+  mResultJSON = JSVAL_VOID;
+  mResultArrayBuffer = nullptr;
+  NS_DROP_JS_OBJECTS(this, nsXMLHttpRequest);
+
   nsLayoutStatics::Release();
 }
 
 void
 nsXMLHttpRequest::RootJSResultObjects()
 {
-  nsContentUtils::PreserveWrapper(
-    static_cast<EventTarget*>(
-      static_cast<nsDOMEventTargetHelper*>(this)), this);
+  NS_HOLD_JS_OBJECTS(this, nsXMLHttpRequest);
 }
 
 /**
@@ -427,6 +432,7 @@ nsXMLHttpRequest::ResetResponse()
   mDOMFile = nullptr;
   mBlobSet = nullptr;
   mResultArrayBuffer = nullptr;
+  mArrayBufferBuilder.reset();
   mResultJSON = JSVAL_VOID;
   mLoadTransferred = 0;
   mResponseBodyDecodedPos = 0;
@@ -478,6 +484,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsXMLHttpRequest,
                                                 nsXHREventTarget)
   tmp->mResultArrayBuffer = nullptr;
+  tmp->mArrayBufferBuilder.reset();
   tmp->mResultJSON = JSVAL_VOID;
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mContext)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mChannel)
@@ -1750,7 +1757,7 @@ nsXMLHttpRequest::StreamReaderFunc(nsIInputStream* in,
              xmlHttpRequest->mResponseType == XML_HTTP_RESPONSE_TYPE_CHUNKED_ARRAYBUFFER) {
     // get the initial capacity to something reasonable to avoid a bunch of reallocs right
     // at the start
-    if (xmlHttpRequest->mArrayBufferBuilder.length() == 0)
+    if (xmlHttpRequest->mArrayBufferBuilder.capacity() == 0)
       xmlHttpRequest->mArrayBufferBuilder.setCapacity(PR_MAX(count, XML_HTTP_REQUEST_ARRAYBUFFER_MIN_SIZE));
 
     xmlHttpRequest->mArrayBufferBuilder.append(reinterpret_cast<const uint8_t*>(fromRawSegment), count,
@@ -1946,6 +1953,17 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
   }
 
   DetectCharset();
+
+  // Set up arraybuffer
+  if (mResponseType == XML_HTTP_RESPONSE_TYPE_ARRAYBUFFER && NS_SUCCEEDED(status)) {
+    int64_t contentLength;
+    rv = channel->GetContentLength(&contentLength);
+    if (NS_SUCCEEDED(rv) &&
+        contentLength > 0 &&
+        contentLength < XML_HTTP_REQUEST_MAX_CONTENT_LENGTH_PREALLOCATE) {
+      mArrayBufferBuilder.setCapacity(static_cast<int32_t>(contentLength));
+    }
+  }
 
   // Set up responseXML
   bool parseBody = mResponseType == XML_HTTP_RESPONSE_TYPE_DEFAULT ||
@@ -2300,12 +2318,8 @@ GetRequestBody(nsIDOMDocument* aDoc, nsIInputStream** aResult,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Make sure to use the encoding we'll send
-  {
-    nsCxPusher pusher;
-    pusher.PushNull();
-    rv = serializer->SerializeToStream(aDoc, output, aCharset);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  rv = serializer->SerializeToStream(aDoc, output, aCharset);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   output->Close();
 
@@ -2645,7 +2659,8 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
   mLoadLengthComputable = false;
   mLoadTotal = 0;
   if ((aVariant || !aBody.IsNull()) && httpChannel &&
-      !method.EqualsLiteral("GET")) {
+      !method.LowerCaseEqualsLiteral("get") &&
+      !method.LowerCaseEqualsLiteral("head")) {
 
     nsAutoCString charset;
     nsAutoCString defaultContentType;

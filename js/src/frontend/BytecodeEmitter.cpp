@@ -196,14 +196,6 @@ UpdateDepth(JSContext *cx, BytecodeEmitter *bce, ptrdiff_t target)
         bce->maxStackDepth = bce->stackDepth;
 }
 
-static inline void
-UpdateDecomposeLength(BytecodeEmitter *bce, unsigned start)
-{
-    unsigned end = bce->offset();
-    JS_ASSERT(unsigned(end - start) < 256);
-    bce->code(start)[-1] = end - start;
-}
-
 ptrdiff_t
 frontend::Emit1(JSContext *cx, BytecodeEmitter *bce, JSOp op)
 {
@@ -768,30 +760,6 @@ EmitAtomOp(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
 }
 
 static bool
-EmitAtomIncDec(JSContext *cx, JSAtom *atom, JSOp op, BytecodeEmitter *bce)
-{
-    JS_ASSERT(JOF_OPTYPE(op) == JOF_ATOM);
-    JS_ASSERT(js_CodeSpec[op].format & (JOF_INC | JOF_DEC));
-
-    jsatomid index;
-    if (!bce->makeAtomIndex(atom, &index))
-        return false;
-
-    const size_t len = 1 + UINT32_INDEX_LEN + 1;
-    JS_ASSERT(size_t(js_CodeSpec[op].length) == len);
-    ptrdiff_t offset = EmitCheck(cx, bce, len);
-    if (offset < 0)
-        return false;
-
-    jsbytecode *code = bce->code(offset);
-    code[0] = jsbytecode(op);
-    SET_UINT32_INDEX(code, index);
-    UpdateDepth(cx, bce, offset);
-    CheckTypeSet(cx, bce, op);
-    return true;
-}
-
-static bool
 EmitObjectOp(JSContext *cx, ObjectBox *objbox, JSOp op, BytecodeEmitter *bce)
 {
     JS_ASSERT(JOF_OPTYPE(op) == JOF_OBJECT);
@@ -831,8 +799,7 @@ EmitAliasedVarOp(JSContext *cx, JSOp op, ScopeCoordinate sc, BytecodeEmitter *bc
     if (bce->blockChain)
         maybeBlockIndex = bce->objectList.indexOf(bce->blockChain);
 
-    bool decomposed = js_CodeSpec[op].format & JOF_DECOMPOSE;
-    unsigned n = 2 * sizeof(uint16_t) + sizeof(uint32_t) + (decomposed ? 1 : 0);
+    unsigned n = 2 * sizeof(uint16_t) + sizeof(uint32_t);
     JS_ASSERT(int(n) + 1 /* op */ == js_CodeSpec[op].length);
 
     ptrdiff_t off = EmitN(cx, bce, op, n);
@@ -950,39 +917,35 @@ EmitVarOp(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
       case JSOP_GETARG: case JSOP_GETLOCAL: op = JSOP_GETALIASEDVAR; break;
       case JSOP_SETARG: case JSOP_SETLOCAL: op = JSOP_SETALIASEDVAR; break;
       case JSOP_CALLARG: case JSOP_CALLLOCAL: op = JSOP_CALLALIASEDVAR; break;
-      case JSOP_INCARG: case JSOP_INCLOCAL: op = JSOP_INCALIASEDVAR; break;
-      case JSOP_ARGINC: case JSOP_LOCALINC: op = JSOP_ALIASEDVARINC; break;
-      case JSOP_DECARG: case JSOP_DECLOCAL: op = JSOP_DECALIASEDVAR; break;
-      case JSOP_ARGDEC: case JSOP_LOCALDEC: op = JSOP_ALIASEDVARDEC; break;
       default: JS_NOT_REACHED("unexpected var op");
     }
 
     return EmitAliasedVarOp(cx, op, pn, bce);
 }
 
-static bool
-EmitVarIncDec(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
+static JSOp
+GetIncDecInfo(ParseNodeKind kind, bool *post)
 {
-    JS_ASSERT(pn->isKind(PNK_NAME));
-    JS_ASSERT(IsArgOp(op) || IsLocalOp(op));
-    JS_ASSERT(js_CodeSpec[op].format & (JOF_INC | JOF_DEC));
-    JS_ASSERT(!pn->pn_cookie.isFree());
+    JS_ASSERT(kind == PNK_POSTINCREMENT || kind == PNK_PREINCREMENT ||
+              kind == PNK_POSTDECREMENT || kind == PNK_PREDECREMENT);
+    *post = kind == PNK_POSTINCREMENT || kind == PNK_POSTDECREMENT;
+    return (kind == PNK_POSTINCREMENT || kind == PNK_PREINCREMENT) ? JSOP_ADD : JSOP_SUB;
+}
 
-    if (!EmitVarOp(cx, pn, op, bce))
-        return false;
+static bool
+EmitVarIncDec(JSContext *cx, ParseNode *pn, BytecodeEmitter *bce)
+{
+    JSOp op = pn->pn_kid->getOp();
+    JS_ASSERT(IsLocalOp(op) || IsArgOp(op));
+    JS_ASSERT(pn->pn_kid->isKind(PNK_NAME));
+    JS_ASSERT(!pn->pn_kid->pn_cookie.isFree());
 
-    /* Remove the result to restore the stack depth before the INCALIASEDVAR. */
-    bce->stackDepth--;
-
-    int start = bce->offset();
-
-    const JSCodeSpec &cs = js_CodeSpec[op];
-    bool post = (cs.format & JOF_POST);
-    JSOp binop = (cs.format & JOF_INC) ? JSOP_ADD : JSOP_SUB;
+    bool post;
+    JSOp binop = GetIncDecInfo(pn->getKind(), &post);
     JSOp getOp = IsLocalOp(op) ? JSOP_GETLOCAL : JSOP_GETARG;
     JSOp setOp = IsLocalOp(op) ? JSOP_SETLOCAL : JSOP_SETARG;
 
-    if (!EmitVarOp(cx, pn, getOp, bce))                      // V
+    if (!EmitVarOp(cx, pn->pn_kid, getOp, bce))              // V
         return false;
     if (Emit1(cx, bce, JSOP_POS) < 0)                        // N
         return false;
@@ -992,12 +955,11 @@ EmitVarIncDec(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
         return false;
     if (Emit1(cx, bce, binop) < 0)                           // N? N+1
         return false;
-    if (!EmitVarOp(cx, pn, setOp, bce))                      // N? N+1
+    if (!EmitVarOp(cx, pn->pn_kid, setOp, bce))              // N? N+1
         return false;
     if (post && Emit1(cx, bce, JSOP_POP) < 0)                // RESULT
         return false;
 
-    UpdateDecomposeLength(bce, start);
     return true;
 }
 
@@ -1161,10 +1123,6 @@ TryConvertToGname(BytecodeEmitter *bce, ParseNode *pn, JSOp *op)
         switch (*op) {
           case JSOP_NAME:     *op = JSOP_GETGNAME; break;
           case JSOP_SETNAME:  *op = JSOP_SETGNAME; break;
-          case JSOP_INCNAME:  *op = JSOP_INCGNAME; break;
-          case JSOP_NAMEINC:  *op = JSOP_GNAMEINC; break;
-          case JSOP_DECNAME:  *op = JSOP_DECGNAME; break;
-          case JSOP_NAMEDEC:  *op = JSOP_GNAMEDEC; break;
           case JSOP_SETCONST:
             /* Not supported. */
             return false;
@@ -1318,10 +1276,6 @@ BindNameToSlotHelper(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         switch (op) {
           case JSOP_NAME:     op = JSOP_GETARG; break;
           case JSOP_SETNAME:  op = JSOP_SETARG; break;
-          case JSOP_INCNAME:  op = JSOP_INCARG; break;
-          case JSOP_NAMEINC:  op = JSOP_ARGINC; break;
-          case JSOP_DECNAME:  op = JSOP_DECARG; break;
-          case JSOP_NAMEDEC:  op = JSOP_ARGDEC; break;
           default: JS_NOT_REACHED("arg");
         }
         JS_ASSERT(!pn->isConst());
@@ -1334,10 +1288,6 @@ BindNameToSlotHelper(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
           case JSOP_NAME:     op = JSOP_GETLOCAL; break;
           case JSOP_SETNAME:  op = JSOP_SETLOCAL; break;
           case JSOP_SETCONST: op = JSOP_SETLOCAL; break;
-          case JSOP_INCNAME:  op = JSOP_INCLOCAL; break;
-          case JSOP_NAMEINC:  op = JSOP_LOCALINC; break;
-          case JSOP_DECNAME:  op = JSOP_DECLOCAL; break;
-          case JSOP_NAMEDEC:  op = JSOP_LOCALDEC; break;
           default: JS_NOT_REACHED("local");
         }
         break;
@@ -1820,19 +1770,15 @@ EmitElemOpBase(JSContext *cx, BytecodeEmitter *bce, JSOp op)
 }
 
 static bool
-EmitPropOp(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce, bool callContext)
+EmitPropLHS(JSContext *cx, ParseNode *pn, JSOp *op, BytecodeEmitter *bce, bool callContext)
 {
-    ParseNode *pn2, *pndot, *pnup, *pndown;
-    ptrdiff_t top;
-
-    JS_ASSERT(pn->isArity(PN_NAME));
-    pn2 = pn->maybeExpr();
+    ParseNode *pn2 = pn->maybeExpr();
 
     if (callContext) {
         JS_ASSERT(pn->isKind(PNK_DOT));
-        JS_ASSERT(op == JSOP_GETPROP);
-        op = JSOP_CALLPROP;
-    } else if (op == JSOP_GETPROP && pn->isKind(PNK_DOT)) {
+        JS_ASSERT(*op == JSOP_GETPROP);
+        *op = JSOP_CALLPROP;
+    } else if (*op == JSOP_GETPROP && pn->isKind(PNK_DOT)) {
         if (pn2->isKind(PNK_NAME)) {
             if (!BindNameToSlot(cx, bce, pn2))
                 return false;
@@ -1845,9 +1791,9 @@ EmitPropOp(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce, bool cal
      * bottom up (reversing again as we go), to avoid excessive recursion.
      */
     if (pn2->isKind(PNK_DOT)) {
-        pndot = pn2;
-        pnup = NULL;
-        top = bce->offset();
+        ParseNode *pndot = pn2;
+        ParseNode *pnup = NULL, *pndown;
+        ptrdiff_t top = bce->offset();
         for (;;) {
             /* Reverse pndot->pn_expr to point up, not down. */
             pndot->pn_offset = top;
@@ -1878,6 +1824,17 @@ EmitPropOp(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce, bool cal
         if (!EmitTree(cx, bce, pn2))
             return false;
     }
+    return true;
+}
+
+static bool
+EmitPropOp(JSContext *cx, ParseNode *pn, JSOp requested, BytecodeEmitter *bce, bool callContext)
+{
+    JS_ASSERT(pn->isArity(PN_NAME));
+
+    JSOp op = requested;
+    if (!EmitPropLHS(cx, pn, &op, bce, callContext))
+        return false;
 
     if (op == JSOP_CALLPROP && Emit1(cx, bce, JSOP_DUP) < 0)
         return false;
@@ -1895,28 +1852,20 @@ EmitPropOp(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce, bool cal
 }
 
 static bool
-EmitPropIncDec(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
+EmitPropIncDec(JSContext *cx, ParseNode *pn, BytecodeEmitter *bce)
 {
-    if (!EmitPropOp(cx, pn, op, bce, false))
+    JS_ASSERT(pn->pn_kid->getKind() == PNK_DOT);
+
+    bool post;
+    JSOp binop = GetIncDecInfo(pn->getKind(), &post);
+
+    JSOp get = JSOP_GETPROP;
+    if (!EmitPropLHS(cx, pn->pn_kid, &get, bce, false)) // OBJ
         return false;
-
-    /*
-     * The stack is the same depth before/after INCPROP, so no balancing to do
-     * before the decomposed version.
-     */
-    int start = bce->offset();
-
-    const JSCodeSpec *cs = &js_CodeSpec[op];
-    JS_ASSERT(cs->format & JOF_PROP);
-    JS_ASSERT(cs->format & (JOF_INC | JOF_DEC));
-
-    bool post = (cs->format & JOF_POST);
-    JSOp binop = (cs->format & JOF_INC) ? JSOP_ADD : JSOP_SUB;
-
-                                                    // OBJ
+    JS_ASSERT(get == JSOP_GETPROP);
     if (Emit1(cx, bce, JSOP_DUP) < 0)               // OBJ OBJ
         return false;
-    if (!EmitAtomOp(cx, pn, JSOP_GETPROP, bce))     // OBJ V
+    if (!EmitAtomOp(cx, pn->pn_kid, JSOP_GETPROP, bce)) // OBJ V
         return false;
     if (Emit1(cx, bce, JSOP_POS) < 0)               // OBJ N
         return false;
@@ -1934,39 +1883,26 @@ EmitPropIncDec(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
             return false;
     }
 
-    if (!EmitAtomOp(cx, pn, JSOP_SETPROP, bce))     // N? N+1
+    if (!EmitAtomOp(cx, pn->pn_kid, JSOP_SETPROP, bce))     // N? N+1
         return false;
     if (post && Emit1(cx, bce, JSOP_POP) < 0)       // RESULT
         return false;
-
-    UpdateDecomposeLength(bce, start);
 
     return true;
 }
 
 static bool
-EmitNameIncDec(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
+EmitNameIncDec(JSContext *cx, ParseNode *pn, BytecodeEmitter *bce)
 {
-    /* Emit the composite op, including the slack byte at the end. */
-    if (!EmitAtomIncDec(cx, pn->pn_atom, op, bce))
-        return false;
-
-    /* Remove the result to restore the stack depth before the INCNAME. */
-    bce->stackDepth--;
-
-    int start = bce->offset();
-
-    const JSCodeSpec *cs = &js_CodeSpec[op];
-    JS_ASSERT((cs->format & JOF_NAME) || (cs->format & JOF_GNAME));
-    JS_ASSERT(cs->format & (JOF_INC | JOF_DEC));
+    const JSCodeSpec *cs = &js_CodeSpec[pn->pn_kid->getOp()];
 
     bool global = (cs->format & JOF_GNAME);
-    bool post = (cs->format & JOF_POST);
-    JSOp binop = (cs->format & JOF_INC) ? JSOP_ADD : JSOP_SUB;
+    bool post;
+    JSOp binop = GetIncDecInfo(pn->getKind(), &post);
 
-    if (!EmitAtomOp(cx, pn, global ? JSOP_BINDGNAME : JSOP_BINDNAME, bce))  // OBJ
+    if (!EmitAtomOp(cx, pn->pn_kid, global ? JSOP_BINDGNAME : JSOP_BINDNAME, bce))  // OBJ
         return false;
-    if (!EmitAtomOp(cx, pn, global ? JSOP_GETGNAME : JSOP_NAME, bce))       // OBJ V
+    if (!EmitAtomOp(cx, pn->pn_kid, global ? JSOP_GETGNAME : JSOP_NAME, bce))       // OBJ V
         return false;
     if (Emit1(cx, bce, JSOP_POS) < 0)               // OBJ N
         return false;
@@ -1984,18 +1920,16 @@ EmitNameIncDec(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
             return false;
     }
 
-    if (!EmitAtomOp(cx, pn, global ? JSOP_SETGNAME : JSOP_SETNAME, bce))    // N? N+1
+    if (!EmitAtomOp(cx, pn->pn_kid, global ? JSOP_SETGNAME : JSOP_SETNAME, bce)) // N? N+1
         return false;
     if (post && Emit1(cx, bce, JSOP_POP) < 0)       // RESULT
         return false;
 
-    UpdateDecomposeLength(bce, start);
-
     return true;
 }
 
-bool
-frontend::EmitElemOp(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
+static bool
+EmitElemOperands(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
 {
     ParseNode *left, *right;
 
@@ -2041,33 +1975,26 @@ frontend::EmitElemOp(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce
 
     if (!EmitTree(cx, bce, right))
         return false;
-    return EmitElemOpBase(cx, bce, op);
+
+    return true;
 }
 
 static bool
-EmitElemIncDec(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
+EmitElemOp(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
 {
-    if (pn) {
-        if (!EmitElemOp(cx, pn, op, bce))
-            return false;
-    } else {
-        if (!EmitElemOpBase(cx, bce, op))
-            return false;
-    }
-    if (Emit1(cx, bce, JSOP_NOP) < 0)
+    return EmitElemOperands(cx, pn, op, bce) && EmitElemOpBase(cx, bce, op);
+}
+
+static bool
+EmitElemIncDec(JSContext *cx, ParseNode *pn, BytecodeEmitter *bce)
+{
+    JS_ASSERT(pn->pn_kid->getKind() == PNK_ELEM);
+
+    if (!EmitElemOperands(cx, pn->pn_kid, JSOP_GETELEM, bce))
         return false;
 
-    /* INCELEM pops two values and pushes one, so restore the initial depth. */
-    bce->stackDepth++;
-
-    int start = bce->offset();
-
-    const JSCodeSpec *cs = &js_CodeSpec[op];
-    JS_ASSERT(cs->format & JOF_ELEM);
-    JS_ASSERT(cs->format & (JOF_INC | JOF_DEC));
-
-    bool post = (cs->format & JOF_POST);
-    JSOp binop = (cs->format & JOF_INC) ? JSOP_ADD : JSOP_SUB;
+    bool post;
+    JSOp binop = GetIncDecInfo(pn->getKind(), &post);
 
     /*
      * We need to convert the key to an object id first, so that we do not do
@@ -2102,8 +2029,6 @@ EmitElemIncDec(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
         return false;
     if (post && Emit1(cx, bce, JSOP_POP) < 0)       // RESULT
         return false;
-
-    UpdateDecomposeLength(bce, start);
 
     return true;
 }
@@ -5111,45 +5036,44 @@ EmitIncOrDec(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
     /* Emit lvalue-specialized code for ++/-- operators. */
     ParseNode *pn2 = pn->pn_kid;
-    JSOp op = pn->getOp();
     switch (pn2->getKind()) {
       case PNK_DOT:
-        if (!EmitPropIncDec(cx, pn2, op, bce))
+        if (!EmitPropIncDec(cx, pn, bce))
             return false;
         break;
       case PNK_ELEM:
-        if (!EmitElemIncDec(cx, pn2, op, bce))
+        if (!EmitElemIncDec(cx, pn, bce))
             return false;
         break;
       case PNK_CALL:
         if (!EmitTree(cx, bce, pn2))
-            return false;
-        if (Emit1(cx, bce, op) < 0)
-            return false;
-        /*
-         * This is dead code for the decompiler, don't generate
-         * a decomposed version of the opcode. We do need to balance
-         * the stacks in the decomposed version.
-         */
-        JS_ASSERT(js_CodeSpec[op].format & JOF_DECOMPOSE);
-        JS_ASSERT(js_CodeSpec[op].format & JOF_ELEM);
-        if (Emit1(cx, bce, (JSOp)1) < 0)
             return false;
         if (Emit1(cx, bce, JSOP_POP) < 0)
             return false;
         break;
       default:
         JS_ASSERT(pn2->isKind(PNK_NAME));
-        pn2->setOp(op);
+        pn2->setOp(JSOP_SETNAME);
         if (!BindNameToSlot(cx, bce, pn2))
             return false;
-        op = pn2->getOp();
+        JSOp op = pn2->getOp();
+        bool maySet;
+        switch (op) {
+          case JSOP_SETLOCAL:
+          case JSOP_SETARG:
+          case JSOP_SETNAME:
+          case JSOP_SETGNAME:
+            maySet = true;
+            break;
+          default:
+            maySet = false;
+        }
         if (op == JSOP_CALLEE) {
             if (Emit1(cx, bce, op) < 0)
                 return false;
         } else if (!pn2->pn_cookie.isFree()) {
-            if (js_CodeSpec[op].format & (JOF_INC | JOF_DEC)) {
-                if (!EmitVarIncDec(cx, pn2, op, bce))
+            if (maySet) {
+                if (!EmitVarIncDec(cx, pn, bce))
                     return false;
             } else {
                 if (!EmitVarOp(cx, pn2, op, bce))
@@ -5157,8 +5081,8 @@ EmitIncOrDec(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             }
         } else {
             JS_ASSERT(JOF_OPTYPE(op) == JOF_ATOM);
-            if (js_CodeSpec[op].format & (JOF_INC | JOF_DEC)) {
-                if (!EmitNameIncDec(cx, pn2, op, bce))
+            if (maySet) {
+                if (!EmitNameIncDec(cx, pn, bce))
                     return false;
             } else {
                 if (!EmitAtomOp(cx, pn2, op, bce))
@@ -5169,12 +5093,12 @@ EmitIncOrDec(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         if (pn2->isConst()) {
             if (Emit1(cx, bce, JSOP_POS) < 0)
                 return false;
-            op = pn->getOp();
-            if (!(js_CodeSpec[op].format & JOF_POST)) {
+            bool post;
+            JSOp binop = GetIncDecInfo(pn->getKind(), &post);
+            if (!post) {
                 if (Emit1(cx, bce, JSOP_ONE) < 0)
                     return false;
-                op = (js_CodeSpec[op].format & JOF_INC) ? JSOP_ADD : JSOP_SUB;
-                if (Emit1(cx, bce, op) < 0)
+                if (Emit1(cx, bce, binop) < 0)
                     return false;
             }
         }

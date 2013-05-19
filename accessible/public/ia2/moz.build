@@ -10,18 +10,22 @@ MODULE = 'accessibility'
 # is ported over.
 midl_interfaces = [
     'Accessible2',
+    'Accessible2_2',
     'AccessibleAction',
     'AccessibleApplication',
     'AccessibleComponent',
+    'AccessibleDocument',
     'AccessibleEditableText',
     'AccessibleHyperlink',
     'AccessibleHypertext',
+    'AccessibleHypertext2',
     'AccessibleImage',
     'AccessibleRelation',
     'AccessibleTable',
     'AccessibleTable2',
     'AccessibleTableCell',
     'AccessibleText',
+    'AccessibleText2',
     'AccessibleValue',
 ]
 
@@ -34,6 +38,13 @@ midl_enums = [
     'IA2CommonTypes',
 ]
 
-EXPORTS += [x + '.h' for x in midl_enums]
-EXPORTS += [x + '.h' for x in midl_interfaces]
-EXPORTS += [x + '_i.c' for x in midl_interfaces]
+headers = ['%s.h' % x for x in midl_enums]
+interfaces_h = ['%s.h' % x for x in midl_interfaces]
+interfaces_c = ['%s_i.c' % x for x in midl_interfaces]
+
+# The underscore throws off sorting and EXPORTS expects sorted lists.
+interfaces_c.sort()
+
+EXPORTS += headers
+EXPORTS += interfaces_h
+EXPORTS += interfaces_c

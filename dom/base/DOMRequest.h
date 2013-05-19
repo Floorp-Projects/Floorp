@@ -8,9 +8,9 @@
 #define mozilla_dom_domrequest_h__
 
 #include "nsIDOMDOMRequest.h"
-#include "nsIDOMDOMError.h"
 #include "nsDOMEventTargetHelper.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/DOMError.h"
 #include "mozilla/dom/DOMRequestBinding.h"
 
 #include "nsCOMPtr.h"
@@ -23,7 +23,7 @@ class DOMRequest : public nsDOMEventTargetHelper,
 {
 protected:
   JS::Value mResult;
-  nsCOMPtr<nsIDOMDOMError> mError;
+  nsRefPtr<DOMError> mError;
   bool mDone;
   bool mRooted;
 
@@ -58,7 +58,7 @@ public:
     return mResult;
   }
 
-  nsIDOMDOMError* GetError() const
+  DOMError* GetError() const
   {
     NS_ASSERTION(mDone || !mError,
                  "Error should be null when pending");
@@ -69,7 +69,7 @@ public:
   IMPL_EVENT_HANDLER(error)
 
 
-  void FireSuccess(JS::Value aResult);
+  void FireSuccess(JS::Handle<JS::Value> aResult);
   void FireError(const nsAString& aError);
   void FireError(nsresult aError);
 

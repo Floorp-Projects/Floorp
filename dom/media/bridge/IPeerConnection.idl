@@ -54,7 +54,7 @@ interface IPeerConnectionObserver : nsISupports
   void onStateChange(in unsigned long state);
 
   /* Changes to MediaStreams */
-  void onAddStream(in nsIDOMMediaStream stream, in string type);
+  void onAddStream(in nsIDOMMediaStream stream);
   void onRemoveStream();
   void onAddTrack();
   void onRemoveTrack();

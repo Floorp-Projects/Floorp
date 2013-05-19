@@ -22,6 +22,7 @@
 #include "nsIURI.h"
 #include "nsJSEnvironment.h"
 #include "nsThreadUtils.h"
+#include "nsDOMJSUtils.h"
 
 #include "XrayWrapper.h"
 #include "WrapperFactory.h"
@@ -36,6 +37,7 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/TextDecoderBinding.h"
 #include "mozilla/dom/TextEncoderBinding.h"
+#include "mozilla/dom/DOMErrorBinding.h"
 
 #include "nsWrapperCacheInlines.h"
 #include "nsCycleCollector.h"
@@ -533,6 +535,36 @@ nsXPConnect::NotifyEnterMainThread()
 {
     NS_ABORT_IF_FALSE(NS_IsMainThread(), "Off main thread");
     JS_SetRuntimeThread(mRuntime->GetJSRuntime());
+}
+
+/*
+ * Return true if there exists a JSContext with a default global whose current
+ * inner is gray. The intent is to look for JS Object windows. We don't merge
+ * system compartments, so we don't use them to trigger merging CCs.
+ */
+bool
+nsXPConnect::UsefulToMergeZones()
+{
+    JSContext *iter = nullptr;
+    JSContext *cx;
+    while ((cx = JS_ContextIterator(GetRuntime()->GetJSRuntime(), &iter))) {
+        // Skip anything without an nsIScriptContext, as well as any scx whose
+        // NativeGlobal() is not an outer window (this happens with XUL Prototype
+        // compilation scopes, for example, which we're not interested in).
+        nsIScriptContext *scx = GetScriptContextFromJSContext(cx);
+        JS::RootedObject global(cx, scx ? scx->GetNativeGlobal() : nullptr);
+        if (!global || !js::GetObjectParent(global)) {
+            continue;
+        }
+        // Grab the inner from the outer.
+        global = JS_ObjectToInnerObject(cx, global);
+        MOZ_ASSERT(!js::GetObjectParent(global));
+        if (JS::GCThingIsMarkedGray(global) &&
+            !js::IsSystemCompartment(js::GetObjectCompartment(global))) {
+            return true;
+        }
+    }
+    return false;
 }
 
 class nsXPConnectParticipant: public nsCycleCollectionParticipant
@@ -1065,7 +1097,8 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
 
     // Init WebIDL binding constructors wanted on all XPConnect globals.
     if (!TextDecoderBinding::GetConstructorObject(aJSContext, global) ||
-        !TextEncoderBinding::GetConstructorObject(aJSContext, global)) {
+        !TextEncoderBinding::GetConstructorObject(aJSContext, global) ||
+        !DOMErrorBinding::GetConstructorObject(aJSContext, global)) {
         return UnexpectedFailure(NS_ERROR_FAILURE);
     }
 
@@ -1836,7 +1869,6 @@ NS_IMETHODIMP
 nsXPConnect::JSToVariant(JSContext* ctx, const jsval &value, nsIVariant** _retval)
 {
     NS_PRECONDITION(ctx, "bad param");
-    NS_PRECONDITION(value != JSVAL_NULL, "bad param");
     NS_PRECONDITION(_retval, "bad param");
 
     XPCCallContext ccx(NATIVE_CALLER, ctx);

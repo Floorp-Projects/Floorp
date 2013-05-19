@@ -1,0 +1,28 @@
+From: Jeff Gilbert <jgilbert@mozilla.com>
+
+diff --git a/gfx/angle/src/libEGL/Display.cpp b/gfx/angle/src/libEGL/Display.cpp
+--- a/gfx/angle/src/libEGL/Display.cpp
++++ b/gfx/angle/src/libEGL/Display.cpp
+@@ -26,16 +26,22 @@
+ // The "Debug This Pixel..." feature in PIX often fails when using the
+ // D3D9Ex interfaces.  In order to get debug pixel to work on a Vista/Win 7
+ // machine, define "ANGLE_ENABLE_D3D9EX=0" in your project file.
+ #if !defined(ANGLE_ENABLE_D3D9EX)
+ // Enables use of the IDirect3D9Ex interface, when available
+ #define ANGLE_ENABLE_D3D9EX 1
+ #endif // !defined(ANGLE_ENABLE_D3D9EX)
+ 
++#define ANGLE_PRELOADED_D3DCOMPILER_MODULE_NAMES \
++    {                                            \
++        TEXT("d3dcompiler_46.dll"),              \
++        TEXT("d3dcompiler_43.dll")               \
++    }
++
+ namespace egl
+ {
+ namespace
+ {
+     typedef std::map<EGLNativeDisplayType, Display*> DisplayMap; 
+     DisplayMap displays;
+ }
+ 

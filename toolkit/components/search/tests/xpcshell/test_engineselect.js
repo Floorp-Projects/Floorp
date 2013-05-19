@@ -12,14 +12,29 @@ const Ci = Components.interfaces;
 
 Components.utils.import("resource://testing-common/httpd.js");
 
+let waitForEngines = {
+  "Test search engine": 1,
+  "A second test engine": 1
+};
+
 function search_observer(aSubject, aTopic, aData) {
   let engine = aSubject.QueryInterface(Ci.nsISearchEngine);
   do_print("Observer: " + aData + " for " + engine.name);
 
-  if (aData != "engine-added")
+  if (aData != "engine-added") {
     return;
+  }
 
-  if (engine.name != "A second test engine")
+  // If the engine is defined in `waitForEngines`, remove it from the list
+  if (waitForEngines[engine.name]) {
+    delete waitForEngines[engine.name];
+  } else {
+    // This engine is not one we're waiting for, so bail out early.
+    return;
+  }
+
+  // Only continue when both engines have been loaded.
+  if (Object.keys(waitForEngines).length)
     return;
 
   let search = Services.search;

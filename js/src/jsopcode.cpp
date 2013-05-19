@@ -1314,32 +1314,8 @@ ExpressionDecompiler::decompilePC(jsbytecode *pc)
       case JSOP_INT8:
       case JSOP_UINT16:
       case JSOP_UINT24:
-      case JSOP_INT32: {
-        int32_t i;
-        switch (op) {
-          case JSOP_ZERO:
-            i = 0;
-            break;
-          case JSOP_ONE:
-            i = 1;
-            break;
-          case JSOP_INT8:
-            i = GET_INT8(pc);
-            break;
-          case JSOP_UINT16:
-            i = GET_UINT16(pc);
-            break;
-          case JSOP_UINT24:
-            i = GET_UINT24(pc);
-            break;
-          case JSOP_INT32:
-            i = GET_INT32(pc);
-            break;
-          default:
-            JS_NOT_REACHED("wat?");
-        }
-        return sprinter.printf("%d", i) >= 0;
-      }
+      case JSOP_INT32:
+        return sprinter.printf("%d", GetBytecodeInteger(pc)) >= 0;
       case JSOP_STRING:
         return quote(loadAtom(pc), '"');
       case JSOP_UNDEFINED:
@@ -1490,9 +1466,6 @@ FindStartPC(JSContext *cx, ScriptFrameIter &iter, int spindex, int skipStackHits
      * may be for the previous pc (see bug 831120).
      */
     if (iter.isIonOptimizedJS())
-        return true;
-
-    if (!iter.isIonBaselineJS() && iter.interpFrame()->jitRevisedStack())
         return true;
 
     *valuepc = NULL;
@@ -1716,9 +1689,6 @@ static int
 SimulateOp(JSScript *script, JSOp op, const JSCodeSpec *cs,
            jsbytecode *pc, jsbytecode **pcstack, unsigned &pcdepth)
 {
-    if (cs->format & JOF_DECOMPOSE)
-        return pcdepth;
-
     unsigned nuses = StackUses(script, pc);
     unsigned ndefs = StackDefs(script, pc);
     LOCAL_ASSERT(pcdepth >= nuses);

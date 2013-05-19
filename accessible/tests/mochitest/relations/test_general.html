@@ -73,11 +73,19 @@
       testRelation("treeitem5", RELATION_NODE_CHILD_OF, "treeitem4");
       testRelation("treeitem6", RELATION_NODE_CHILD_OF, "tree");
       testRelation("treeitem7", RELATION_NODE_CHILD_OF, "treeitem6");
+      testRelation("tree2_ti1", RELATION_NODE_CHILD_OF, "tree2");
+      testRelation("tree2_ti1a", RELATION_NODE_CHILD_OF, "tree2_ti1");
+      testRelation("tree2_ti1b", RELATION_NODE_CHILD_OF, "tree2_ti1");
 
       // 'node child of' relation for row role of treegrid
       testRelation("treegridrow1", RELATION_NODE_CHILD_OF, "treegrid");
       testRelation("treegridrow2", RELATION_NODE_CHILD_OF, "treegrid");
       testRelation("treegridrow3", RELATION_NODE_CHILD_OF, "treegridrow2");
+
+      // 'node child of' relation for lists organized by groups
+      testRelation("listitem1", RELATION_NODE_CHILD_OF, "list");
+      testRelation("listitem1.1", RELATION_NODE_CHILD_OF, "listitem1");
+      testRelation("listitem1.2", RELATION_NODE_CHILD_OF, "listitem1");
 
       // 'node child of' relation for the document having window, returns
       // direct accessible parent (fixed in bug 419770).
@@ -95,10 +103,19 @@
                    "treeitem5"); // aria-level
       testRelation("treeitem6", RELATION_NODE_PARENT_OF,
                    "treeitem7"); // // group role
+      testRelation("tree2", RELATION_NODE_PARENT_OF, "tree2_ti1"); // group role
+      testRelation("tree2_ti1", RELATION_NODE_PARENT_OF,
+                   ["tree2_ti1a", "tree2_ti1b"]); // group role
 
       testRelation("treegridrow2", RELATION_NODE_PARENT_OF, "treegridrow3");
       testRelation("treegrid", RELATION_NODE_PARENT_OF,
                    ["treegridrow1", "treegridrow2"]);
+
+      // 'node parent of' relation on ARIA list structured by groups
+      testRelation("list", RELATION_NODE_PARENT_OF,
+                   "listitem1");
+      testRelation("listitem1", RELATION_NODE_PARENT_OF,
+                   [ "listitem1.1", "listitem1.2" ]);
 
       // aria-controls
       getAccessible("tab");
@@ -178,6 +195,11 @@
      title="HTML select options gets relation from containing label">
     Bug 687393
   </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=864224"
+     title="Support nested ARIA listitems structured by role='group'">
+    Bug 864224
+  </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
@@ -253,6 +275,15 @@
     </div>
   </div>
 
+  <ul role="tree" id="tree2">
+    <li role="treeitem" id="tree2_ti1">Item 1
+      <ul role="group">
+        <li role="treeitem" id="tree2_ti1a">Item 1A</li>
+        <li role="treeitem" id="tree2_ti1b">Item 1B</li>
+      </ul>
+    </li>
+  </ul>
+
   <div role="treegrid" id="treegrid">
     <div role="row" id="treegridrow1">
       <span role="gridcell">cell1</span><span role="gridcell">cell2</span>
@@ -262,6 +293,15 @@
     </div>
     <div role="row" id="treegridrow3" aria-level="2">
       <span role="gridcell">cell5</span><span role="gridcell">cell6</span>
+    </div>
+  </div>
+
+  <div role="list" id="list">
+    <div role="listitem" id="listitem1">Item 1
+      <div role="group">
+        <div role="listitem" id="listitem1.1">Item 1A</div>
+        <div role="listitem" id="listitem1.2">Item 1B</div>
+      </div>
     </div>
   </div>
 

@@ -424,8 +424,9 @@ IsQuirkContainingBlockHeight(const nsHTMLReflowState* rs, nsIAtom* aFrameType)
 void
 nsHTMLReflowState::InitResizeFlags(nsPresContext* aPresContext, nsIAtom* aFrameType)
 {
-  bool isHResize = frame->GetSize().width !=
-                     mComputedWidth + mComputedBorderPadding.LeftRight();
+  bool isHResize = (frame->GetSize().width !=
+                     mComputedWidth + mComputedBorderPadding.LeftRight()) ||
+                     aPresContext->PresShell()->IsReflowOnZoomPending();
 
   if ((frame->GetStateBits() & NS_FRAME_FONT_INFLATION_FLOW_ROOT) &&
       nsLayoutUtils::FontSizeInflationEnabled(aPresContext)) {

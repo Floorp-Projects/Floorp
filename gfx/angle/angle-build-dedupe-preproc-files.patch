@@ -1,8 +1,0 @@
-From: Jeff Gilbert <jgilbert@mozilla.com>
-
-diff --git a/gfx/angle/src/compiler/preprocessor/Diagnostics.cpp b/gfx/angle/src/compiler/preprocessor/PreprocessorDiagnostics.cpp
-rename from gfx/angle/src/compiler/preprocessor/Diagnostics.cpp
-rename to gfx/angle/src/compiler/preprocessor/PreprocessorDiagnostics.cpp
-diff --git a/gfx/angle/src/compiler/preprocessor/DirectiveHandler.cpp b/gfx/angle/src/compiler/preprocessor/PreprocessorDirectiveHandler.cpp
-rename from gfx/angle/src/compiler/preprocessor/DirectiveHandler.cpp
-rename to gfx/angle/src/compiler/preprocessor/PreprocessorDirectiveHandler.cpp

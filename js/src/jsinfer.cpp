@@ -26,8 +26,6 @@
 #endif
 #include "gc/Marking.h"
 #include "js/MemoryMetrics.h"
-#include "methodjit/MethodJIT.h"
-#include "methodjit/Retcon.h"
 #include "vm/Shape.h"
 
 #include "jsatominlines.h"
@@ -2343,32 +2341,6 @@ JITCodeHasCheck(JSScript *script, jsbytecode *pc, RecompileKind kind)
     if (kind == RECOMPILE_NONE)
         return false;
 
-#ifdef JS_METHODJIT
-    for (int constructing = 0; constructing <= 1; constructing++) {
-        for (int barriers = 0; barriers <= 1; barriers++) {
-            mjit::JITScript *jit = script->getJIT((bool) constructing, (bool) barriers);
-            if (!jit)
-                continue;
-            mjit::JITChunk *chunk = jit->chunk(pc);
-            if (!chunk)
-                continue;
-            bool found = false;
-            uint32_t count = (kind == RECOMPILE_CHECK_MONITORED)
-                             ? chunk->nMonitoredBytecodes
-                             : chunk->nTypeBarrierBytecodes;
-            uint32_t *bytecodes = (kind == RECOMPILE_CHECK_MONITORED)
-                                  ? chunk->monitoredBytecodes()
-                                  : chunk->typeBarrierBytecodes();
-            for (size_t i = 0; i < count; i++) {
-                if (bytecodes[i] == uint32_t(pc - script->code))
-                    found = true;
-            }
-            if (!found)
-                return false;
-        }
-    }
-#endif
-
     if (script->hasAnyIonScript() || script->isIonCompilingOffThread())
         return false;
 
@@ -2404,8 +2376,6 @@ AddPendingRecompile(JSContext *cx, JSScript *script, jsbytecode *pc,
             return;
         }
         switch (co->kind()) {
-          case CompilerOutput::MethodJIT:
-            break;
           case CompilerOutput::Ion:
           case CompilerOutput::ParallelIon:
             if (co->script == script)
@@ -2818,19 +2788,10 @@ TypeCompartment::processPendingRecompiles(FreeOp *fop)
 
     JS_ASSERT(!pending->empty());
 
-#ifdef JS_METHODJIT
-
-    mjit::ExpandInlineFrames(compartment()->zone());
-
+#ifdef JS_ION
     for (unsigned i = 0; i < pending->length(); i++) {
         CompilerOutput &co = *(*pending)[i].compilerOutput(*this);
         switch (co.kind()) {
-          case CompilerOutput::MethodJIT:
-            JS_ASSERT(co.isValid());
-            mjit::Recompiler::clearStackReferences(fop, co.script);
-            co.mjit()->destroyChunk(fop, co.chunkIndex);
-            JS_ASSERT(co.script == NULL);
-            break;
           case CompilerOutput::Ion:
           case CompilerOutput::ParallelIon:
 # ifdef JS_THREADSAFE
@@ -2848,10 +2809,8 @@ TypeCompartment::processPendingRecompiles(FreeOp *fop)
         }
     }
 
-# ifdef JS_ION
     ion::Invalidate(*this, fop, *pending);
-# endif
-#endif /* JS_METHODJIT */
+#endif /* JS_ION */
 
     fop->delete_(pending);
 }
@@ -2898,23 +2857,16 @@ TypeZone::nukeTypes(FreeOp *fop)
 
     inferenceEnabled = false;
 
-#ifdef JS_METHODJIT
-    mjit::ExpandInlineFrames(zone());
-    mjit::ClearAllFrames(zone());
-# ifdef JS_ION
+#ifdef JS_ION
     ion::InvalidateAll(fop, zone());
-# endif
 
     /* Throw away all JIT code in the compartment, but leave everything else alone. */
 
     for (gc::CellIter i(zone(), gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
-        mjit::ReleaseScriptCode(fop, script);
-# ifdef JS_ION
         ion::FinishInvalidation(fop, script);
-# endif
     }
-#endif /* JS_METHODJIT */
+#endif /* JS_ION */
 
     pendingNukeTypes = false;
 }
@@ -2937,15 +2889,8 @@ TypeCompartment::addPendingRecompile(JSContext *cx, const RecompileInfo &info)
         return;
     }
 
-#ifdef JS_METHODJIT
-    mjit::JITScript *jit = co->script->getJIT(co->constructing, co->barriers);
-    bool hasJITCode = jit && jit->chunkDescriptor(co->chunkIndex).chunk;
-
-# if defined(JS_ION)
-    hasJITCode |= !!co->script->hasAnyIonScript();
-# endif
-
-    if (!hasJITCode) {
+#if defined(JS_ION)
+    if (!co->script->hasAnyIonScript()) {
         /* Scripts which haven't been compiled yet don't need to be recompiled. */
         return;
     }
@@ -2981,29 +2926,7 @@ TypeCompartment::addPendingRecompile(JSContext *cx, JSScript *script, jsbytecode
     if (!constrainedOutputs)
         return;
 
-#ifdef JS_METHODJIT
-    for (int constructing = 0; constructing <= 1; constructing++) {
-        for (int barriers = 0; barriers <= 1; barriers++) {
-            mjit::JITScript *jit = script->getJIT((bool) constructing, (bool) barriers);
-            if (!jit)
-                continue;
-
-            if (pc) {
-                unsigned int chunkIndex = jit->chunkIndex(pc);
-                mjit::JITChunk *chunk = jit->chunkDescriptor(chunkIndex).chunk;
-                if (chunk)
-                    addPendingRecompile(cx, chunk->recompileInfo);
-            } else {
-                for (size_t chunkIndex = 0; chunkIndex < jit->nchunks; chunkIndex++) {
-                    mjit::JITChunk *chunk = jit->chunkDescriptor(chunkIndex).chunk;
-                    if (chunk)
-                        addPendingRecompile(cx, chunk->recompileInfo);
-                }
-            }
-        }
-    }
-
-# ifdef JS_ION
+#ifdef JS_ION
     CancelOffThreadIonCompile(cx->compartment, script);
 
     // Let the script warm up again before attempting another compile.
@@ -3015,7 +2938,6 @@ TypeCompartment::addPendingRecompile(JSContext *cx, JSScript *script, jsbytecode
 
     if (script->hasParallelIonScript())
         addPendingRecompile(cx, script->parallelIonScript()->recompileInfo());
-# endif
 #endif
 }
 
@@ -3103,8 +3025,6 @@ TypeCompartment::markSetsUnknown(JSContext *cx, TypeObject *target)
                 if (!script->analysis()->maybeCode(i))
                     continue;
                 jsbytecode *pc = script->code + i;
-                if (js_CodeSpec[*pc].format & JOF_DECOMPOSE)
-                    continue;
                 unsigned defCount = GetDefCount(script, i);
                 if (ExtendedDef(pc))
                     defCount++;
@@ -4167,13 +4087,6 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset, TypeInferen
             newv++;
         }
     }
-
-    /*
-     * Treat decomposed ops as no-ops, we will analyze the decomposed version
-     * instead. (We do, however, need to look at introduced phi nodes).
-     */
-    if (js_CodeSpec[*pc].format & JOF_DECOMPOSE)
-        return true;
 
     for (unsigned i = 0; i < defCount; i++) {
         InferSpew(ISpewOps, "typeSet: %sT%p%s pushed%u #%u:%05u",
@@ -5496,9 +5409,6 @@ ScriptAnalysis::printTypes(JSContext *cx)
 
         jsbytecode *pc = script_->code + offset;
 
-        if (js_CodeSpec[*pc].format & JOF_DECOMPOSE)
-            continue;
-
         unsigned defCount = GetDefCount(script_, offset);
         if (!defCount)
             continue;
@@ -5576,9 +5486,6 @@ ScriptAnalysis::printTypes(JSContext *cx)
         jsbytecode *pc = script_->code + offset;
 
         PrintBytecode(cx, script, pc);
-
-        if (js_CodeSpec[*pc].format & JOF_DECOMPOSE)
-            continue;
 
         if (js_CodeSpec[*pc].format & JOF_TYPESET) {
             TypeSet *types = TypeScript::BytecodeTypes(script_, pc);

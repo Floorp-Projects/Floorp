@@ -56,7 +56,6 @@ class BasicLayerManager;
  * SwapBuffers is called in repsonse to the transaction reply from the compositor.
  */
 class ContentClient : public CompositableClient
-                    , protected ThebesLayerBuffer
 {
 public:
   /**
@@ -68,26 +67,15 @@ public:
 
   ContentClient(CompositableForwarder* aForwarder)
   : CompositableClient(aForwarder)
-  , ThebesLayerBuffer(ContainsVisibleBounds)
   {}
   virtual ~ContentClient()
   {}
 
-  typedef ThebesLayerBuffer::PaintState PaintState;
-  typedef ThebesLayerBuffer::ContentType ContentType;
 
-  virtual void Clear() { ThebesLayerBuffer::Clear(); }
-  PaintState BeginPaintBuffer(ThebesLayer* aLayer, ContentType aContentType,
-                              uint32_t aFlags)
-  {
-    return ThebesLayerBuffer::BeginPaint(aLayer, aContentType, aFlags);
-  }
-
-  virtual void DrawTo(ThebesLayer* aLayer, gfxContext* aTarget, float aOpacity,
-                      gfxASurface* aMask, const gfxMatrix* aMaskTransform)
-  {
-    ThebesLayerBuffer::DrawTo(aLayer, aTarget, aOpacity, aMask, aMaskTransform);
-  }
+  virtual void Clear() = 0;
+  virtual ThebesLayerBuffer::PaintState BeginPaintBuffer(ThebesLayer* aLayer,
+                                                         ThebesLayerBuffer::ContentType aContentType,
+                                                         uint32_t aFlags) = 0;
 
   // Sync front/back buffers content
   // After executing, the new back buffer has the same (interesting) pixels as
@@ -105,12 +93,44 @@ public:
   virtual void EndPaint() {}
 };
 
+/**
+ * A ContentClient for use with OMTC.
+ */
+class ContentClientRemote : public ContentClient
+{
+public:
+  ContentClientRemote(CompositableForwarder* aForwarder)
+    : ContentClient(aForwarder)
+  {}
+
+  virtual void Updated(const nsIntRegion& aRegionToDraw,
+                       const nsIntRegion& aVisibleRegion,
+                       bool aDidSelfCopy) = 0;
+};
+
 // thin wrapper around BasicThebesLayerBuffer, for on-mtc
 class ContentClientBasic : public ContentClient
+                         , protected ThebesLayerBuffer
 {
 public:
   ContentClientBasic(CompositableForwarder* aForwarder,
                      BasicLayerManager* aManager);
+
+  typedef ThebesLayerBuffer::PaintState PaintState;
+  typedef ThebesLayerBuffer::ContentType ContentType;
+
+  virtual void Clear() { ThebesLayerBuffer::Clear(); }
+  PaintState BeginPaintBuffer(ThebesLayer* aLayer, ContentType aContentType,
+                              uint32_t aFlags)
+  {
+    return ThebesLayerBuffer::BeginPaint(aLayer, aContentType, aFlags);
+  }
+
+  void DrawTo(ThebesLayer* aLayer, gfxContext* aTarget, float aOpacity,
+              gfxASurface* aMask, const gfxMatrix* aMaskTransform)
+  {
+    ThebesLayerBuffer::DrawTo(aLayer, aTarget, aOpacity, aMask, aMaskTransform);
+  }
 
   virtual already_AddRefed<gfxASurface> CreateBuffer(ContentType aType,
                                                      const nsIntRect& aRect,
@@ -125,13 +145,13 @@ public:
     return TextureInfo();
   }
 
-
 private:
   BasicLayerManager* mManager;
 };
 
 /**
- * A ContentClient for use with OMTC.
+ * A ContentClientRemote backed by a ThebesLayerBuffer.
+ *
  * When using a ContentClientRemote, SurfaceDescriptors are created on
  * the rendering side and destroyed on the compositing side. They are only
  * passed from one side to the other when the TextureClient/Hosts are created.
@@ -144,18 +164,30 @@ private:
  * If the size or type of our buffer(s) change(s), then we simply destroy and
  * create them.
  */
-class ContentClientRemote : public ContentClient
+class ContentClientRemoteBuffer : public ContentClientRemote
+                                , protected ThebesLayerBuffer
 {
   using ThebesLayerBuffer::BufferRect;
   using ThebesLayerBuffer::BufferRotation;
 public:
-  ContentClientRemote(CompositableForwarder* aForwarder)
-    : ContentClient(aForwarder)
+  ContentClientRemoteBuffer(CompositableForwarder* aForwarder)
+    : ContentClientRemote(aForwarder)
+    , ThebesLayerBuffer(ContainsVisibleBounds)
     , mTextureClient(nullptr)
     , mIsNewBuffer(false)
     , mFrontAndBackBufferDiffer(false)
     , mContentType(gfxASurface::CONTENT_COLOR_ALPHA)
   {}
+
+  typedef ThebesLayerBuffer::PaintState PaintState;
+  typedef ThebesLayerBuffer::ContentType ContentType;
+
+  virtual void Clear() { ThebesLayerBuffer::Clear(); }
+  PaintState BeginPaintBuffer(ThebesLayer* aLayer, ContentType aContentType,
+                              uint32_t aFlags)
+  {
+    return ThebesLayerBuffer::BeginPaint(aLayer, aContentType, aFlags);
+  }
 
   /**
    * Begin/End Paint map a gfxASurface from the texture client
@@ -246,11 +278,11 @@ protected:
  * references. In repsonse to the compositor's reply we swap our references
  * (in SwapBuffers).
  */
-class ContentClientDoubleBuffered : public ContentClientRemote
+class ContentClientDoubleBuffered : public ContentClientRemoteBuffer
 {
 public:
   ContentClientDoubleBuffered(CompositableForwarder* aFwd)
-    : ContentClientRemote(aFwd)
+    : ContentClientRemoteBuffer(aFwd)
   {
     mTextureInfo.mCompositableType = BUFFER_CONTENT_DIRECT;
   }
@@ -284,11 +316,11 @@ private:
  * kind. We are free to modify the TextureClient once we receive reply from
  * the compositor.
  */
-class ContentClientSingleBuffered : public ContentClientRemote
+class ContentClientSingleBuffered : public ContentClientRemoteBuffer
 {
 public:
   ContentClientSingleBuffered(CompositableForwarder* aFwd)
-    : ContentClientRemote(aFwd)
+    : ContentClientRemoteBuffer(aFwd)
   {
     mTextureInfo.mCompositableType = BUFFER_CONTENT;    
   }
@@ -298,6 +330,89 @@ public:
 
 protected:
   virtual void CreateFrontBufferAndNotify(const nsIntRect& aBufferRect) MOZ_OVERRIDE;
+};
+
+/**
+ * A single buffered ContentClient that creates temporary buffers which are 
+ * used to update the host-side texture. The ownership of the buffers is
+ * passed to the host side during the transaction, and we need to create
+ * new ones each frame.
+ */
+class ContentClientIncremental : public ContentClientRemote
+{
+public:
+  ContentClientIncremental(CompositableForwarder* aFwd)
+    : ContentClientRemote(aFwd)
+    , mContentType(gfxASurface::CONTENT_COLOR_ALPHA)
+    , mHasBuffer(false)
+    , mHasBufferOnWhite(false)
+  {
+    mTextureInfo.mCompositableType = BUFFER_CONTENT_INC;
+  }
+
+  typedef ThebesLayerBuffer::PaintState PaintState;
+  typedef ThebesLayerBuffer::ContentType ContentType;
+
+  virtual TextureInfo GetTextureInfo() const
+  {
+    return mTextureInfo;
+  }
+
+  virtual void Clear()
+  {
+    mBufferRect.SetEmpty();
+    mHasBuffer = false;
+    mHasBufferOnWhite = false;
+  }
+  virtual ThebesLayerBuffer::PaintState BeginPaintBuffer(ThebesLayer* aLayer,
+                                                         ThebesLayerBuffer::ContentType aContentType,
+                                                         uint32_t aFlags);
+
+  virtual void Updated(const nsIntRegion& aRegionToDraw,
+                       const nsIntRegion& aVisibleRegion,
+                       bool aDidSelfCopy);
+
+  virtual void EndPaint()
+  {
+    if (IsSurfaceDescriptorValid(mUpdateDescriptor)) {
+      mForwarder->DestroySharedSurface(&mUpdateDescriptor);
+    }
+    if (IsSurfaceDescriptorValid(mUpdateDescriptorOnWhite)) {
+      mForwarder->DestroySharedSurface(&mUpdateDescriptorOnWhite);
+    }
+  }
+
+private:
+
+  enum BufferType{
+    BUFFER_BLACK,
+    BUFFER_WHITE
+  };
+
+  void NotifyBufferCreated(ContentType aType, uint32_t aFlags)
+  {
+    mTextureInfo.mTextureFlags = aFlags | HostRelease;
+    mContentType = aType;
+
+    mForwarder->CreatedIncrementalBuffer(this,
+                                         mTextureInfo,
+                                         mBufferRect);
+
+  }
+
+  already_AddRefed<gfxASurface> GetUpdateSurface(BufferType aType, nsIntRegion& aUpdateRegion);
+
+  TextureInfo mTextureInfo;
+  nsIntRect mBufferRect;
+  nsIntPoint mBufferRotation;
+
+  SurfaceDescriptor mUpdateDescriptor;
+  SurfaceDescriptor mUpdateDescriptorOnWhite;
+
+  ContentType mContentType;
+
+  bool mHasBuffer;
+  bool mHasBufferOnWhite;
 };
 
 }

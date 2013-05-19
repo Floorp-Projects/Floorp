@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=871887
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 871887</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript;version=1.7">
+
+  /** Test for Bug 871887 **/
+  SimpleTest.waitForExplicitFinish();
+
+  function checkpoint() {
+    ok(true, "onstart called");
+    $('llama').loop = 1;
+    $('llama').scrollDelay = 1;
+    $('llama').scrollAmount = 500;
+  }
+
+  function done() {
+    ok(true, "onfinish called");
+    SimpleTest.finish();
+  }
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=871887">Mozilla Bug 871887</a>
+<p id="display"></p>
+<div id="content">
+<marquee id="llama" onstart="checkpoint();" onfinish="done();">Watch the Llama</marquee>
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
