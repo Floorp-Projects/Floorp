@@ -18,7 +18,7 @@ extern PRLogModuleInfo* GetDataChannelLog();
 #define LOG(args) PR_LOG(GetDataChannelLog(), PR_LOG_DEBUG, args)
 
 
-#include "nsDOMDataChannel.h"
+#include "nsDOMDataChannelDeclarations.h"
 #include "nsIDOMFile.h"
 #include "nsIJSNativeInitializer.h"
 #include "nsIDOMDataChannel.h"
