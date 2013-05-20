@@ -227,8 +227,6 @@ protected:
   NS_IMETHOD StopImmediatePropagation(void) { return _to StopImmediatePropagation(); } \
   NS_IMETHOD GetOriginalTarget(nsIDOMEventTarget** aOriginalTarget) { return _to GetOriginalTarget(aOriginalTarget); } \
   NS_IMETHOD GetExplicitOriginalTarget(nsIDOMEventTarget** aExplicitOriginalTarget) { return _to GetExplicitOriginalTarget(aExplicitOriginalTarget); } \
-  NS_IMETHOD PreventBubble() { return _to PreventBubble(); } \
-  NS_IMETHOD PreventCapture() { return _to PreventCapture(); } \
   NS_IMETHOD GetPreventDefault(bool* aRetval) { return _to GetPreventDefault(aRetval); } \
   NS_IMETHOD GetIsTrusted(bool* aIsTrusted) { return _to GetIsTrusted(aIsTrusted); } \
   NS_IMETHOD SetTarget(nsIDOMEventTarget *aTarget) { return _to SetTarget(aTarget); } \
