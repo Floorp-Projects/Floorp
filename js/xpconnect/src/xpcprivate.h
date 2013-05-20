@@ -3147,12 +3147,6 @@ public:
     nsISomeInterface* GetXPTCStub() { return mXPTCStub; }
 
     /**
-     * This getter clears the gray bit before handing out the JSObject which
-     * means that the object is guaranteed to be kept alive past the next CC.
-     */
-    JSObject* GetJSObject() const {return xpc_UnmarkGrayObject(mJSObj);}
-
-    /**
      * This getter does not change the color of the JSObject meaning that the
      * object returned is not guaranteed to be kept alive past the next CC.
      *

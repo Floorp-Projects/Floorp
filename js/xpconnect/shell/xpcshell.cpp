@@ -204,7 +204,6 @@ GetLocationProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, JSMutableH
 
         if (location) {
             nsCOMPtr<nsIXPConnectJSObjectHolder> locationHolder;
-            JS::Rooted<JSObject*> locationObj(cx, nullptr);
 
             bool symlink;
             // don't normalize symlinks, because that's kind of confusing
@@ -216,8 +215,8 @@ GetLocationProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, JSMutableH
                                  getter_AddRefs(locationHolder));
 
             if (NS_SUCCEEDED(rv) &&
-                NS_SUCCEEDED(locationHolder->GetJSObject(locationObj.address()))) {
-                vp.set(OBJECT_TO_JSVAL(locationObj));
+                locationHolder->GetJSObject()) {
+                vp.set(OBJECT_TO_JSVAL(locationHolder->GetJSObject()));
             }
         }
     }
@@ -1692,7 +1691,6 @@ main(int argc, char **argv, char **envp)
 #endif
     JSRuntime *rt;
     JSContext *cx;
-    JSObject *glob, *envobj;
     int result;
     nsresult rv;
 
@@ -1820,6 +1818,9 @@ main(int argc, char **argv, char **envp)
             return 1;
         }
 
+        JS::Rooted<JSObject*> glob(cx);
+        JS::Rooted<JSObject*> envobj(cx);
+
         argc--;
         argv++;
         ProcessArgsForCompartment(cx, argv, argc);
@@ -1893,9 +1894,8 @@ main(int argc, char **argv, char **envp)
         if (NS_FAILED(rv))
             return 1;
 
-        rv = holder->GetJSObject(&glob);
-        if (NS_FAILED(rv)) {
-            NS_ASSERTION(glob == nullptr, "bad GetJSObject?");
+        glob = holder->GetJSObject();
+        if (!glob) {
             return 1;
         }
 
@@ -1931,8 +1931,7 @@ main(int argc, char **argv, char **envp)
             JS_DefineProperty(cx, glob, "__LOCATION__", JSVAL_VOID,
                               GetLocationProperty, NULL, 0);
 
-            JS::Rooted<JSObject*> rootedGlob(cx, glob);
-            result = ProcessArgs(cx, rootedGlob, argv, argc, &dirprovider);
+            result = ProcessArgs(cx, glob, argv, argc, &dirprovider);
 
             JS_DropPrincipals(rt, gJSPrincipals);
             JS_SetAllNonReservedSlotsToUndefined(cx, glob);

@@ -2294,8 +2294,8 @@ nsScriptSecurityManager::CheckXPCPermissions(JSContext* cx,
                     do_QueryInterface(aObj);
                 if (xpcwrappedjs)
                 {
-                    rv = xpcwrappedjs->GetJSObject(jsObject.address());
-                    NS_ENSURE_SUCCESS(rv, rv);
+                    jsObject = xpcwrappedjs->GetJSObject();
+                    NS_ENSURE_STATE(jsObject);
                 }
             }
 
