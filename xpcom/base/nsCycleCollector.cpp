@@ -2538,6 +2538,7 @@ nsCycleCollector::nsCycleCollector(CCThreadingModel aModel) :
 
 nsCycleCollector::~nsCycleCollector()
 {
+    NS_ASSERTION(!mRunner, "Destroying cycle collector without destroying its runner, may leak");
     NS_UnregisterMemoryMultiReporter(mReporter);
 }
 
