@@ -7,3 +7,6 @@ http://code.google.com/p/robotium/
 We are including robotium-solo-3.6.jar as a binary and are not modifying it in any way 
 from the original download found at: 
 http://code.google.com/p/robotium/
+
+Firefox for Android developers should read the documentation in
+mobile/android/base/tests/README.rst.
