@@ -5262,7 +5262,6 @@ main(int argc, char **argv, char **envp)
         || !op.addBoolOption('D', "dump-bytecode", "Dump bytecode with exec count for all scripts")
         || !op.addBoolOption('b', "print-timing", "Print sub-ms runtime for each file that's run")
 #ifdef DEBUG
-        || !op.addIntOption('A', "oom-after", "COUNT", "Trigger OOM after COUNT allocations", -1)
         || !op.addBoolOption('O', "print-alloc", "Print the number of allocations at exit")
 #endif
         || !op.addOptionalStringArg("script", "A script to execute (after all options)")
@@ -5344,8 +5343,6 @@ main(int argc, char **argv, char **envp)
      * Process OOM options as early as possible so that we can observe as many
      * allocations as possible.
      */
-    if (op.getIntOption('A') >= 0)
-        OOM_maxAllocations = op.getIntOption('A');
     if (op.getBoolOption('O'))
         OOM_printAllocationCount = true;
 

@@ -731,6 +731,29 @@ CountHeap(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
+#ifdef DEBUG
+static JSBool
+OOMAfterAllocations(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (args.length() != 1) {
+        JS_ReportError(cx, "count argument required");
+        return false;
+    }
+
+    int32_t count;
+    if (!JS_ValueToInt32(cx, args[0], &count))
+        return false;
+    if (count <= 0) {
+        JS_ReportError(cx, "count argument must be positive");
+        return false;
+    }
+
+    OOM_maxAllocations = OOM_counter + count;
+    return true;
+}
+#endif
+
 static unsigned finalizeCount = 0;
 
 static void
@@ -918,6 +941,13 @@ static JSFunctionSpecWithHelp TestingFunctions[] = {
 "  start when it is given and is not null. kind is either 'all' (default) to\n"
 "  count all things or one of 'object', 'double', 'string', 'function'\n"
 "  to count only things of that kind."),
+
+#ifdef DEBUG
+    JS_FN_HELP("oomAfterAllocations", OOMAfterAllocations, 1, 0,
+"oomAfterAllocations(count)",
+"  After 'count' js_malloc memory allocations, fail every following allocation\n"
+"  (return NULL)."),
+#endif
 
     JS_FN_HELP("makeFinalizeObserver", MakeFinalizeObserver, 0, 0,
 "makeFinalizeObserver()",
