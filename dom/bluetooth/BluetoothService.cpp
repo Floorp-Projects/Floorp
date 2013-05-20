@@ -751,7 +751,7 @@ BluetoothService::Observe(nsISupports* aSubject, const char* aTopic,
 void
 BluetoothService::Notify(const BluetoothSignal& aData)
 {
-  nsString type;
+  nsString type = NS_LITERAL_STRING("bluetooth-pairing-request");
 
   JSContext* cx = nsContentUtils::GetSafeJSContext();
   NS_ASSERTION(!::JS_IsExceptionPending(cx),
@@ -772,17 +772,14 @@ BluetoothService::Notify(const BluetoothSignal& aData)
   BT_LOG("[S] %s: %s", __FUNCTION__, NS_ConvertUTF16toUTF8(aData.name()).get());
 
   if (aData.name().EqualsLiteral("RequestConfirmation")) {
-    NS_ASSERTION(aData.value().get_ArrayOfBluetoothNamedValue().Length() == 3,
+    NS_ASSERTION(aData.value().get_ArrayOfBluetoothNamedValue().Length() == 4,
       "RequestConfirmation: Wrong length of parameters");
-    type.AssignLiteral("bluetooth-requestconfirmation");
   } else if (aData.name().EqualsLiteral("RequestPinCode")) {
-    NS_ASSERTION(aData.value().get_ArrayOfBluetoothNamedValue().Length() == 2,
+    NS_ASSERTION(aData.value().get_ArrayOfBluetoothNamedValue().Length() == 3,
       "RequestPinCode: Wrong length of parameters");
-    type.AssignLiteral("bluetooth-requestpincode");
   } else if (aData.name().EqualsLiteral("RequestPasskey")) {
-    NS_ASSERTION(aData.value().get_ArrayOfBluetoothNamedValue().Length() == 2,
+    NS_ASSERTION(aData.value().get_ArrayOfBluetoothNamedValue().Length() == 3,
       "RequestPinCode: Wrong length of parameters");
-    type.AssignLiteral("bluetooth-requestpasskey");
   } else if (aData.name().EqualsLiteral("Authorize")) {
     NS_ASSERTION(aData.value().get_ArrayOfBluetoothNamedValue().Length() == 2,
       "Authorize: Wrong length of parameters");
@@ -796,12 +793,11 @@ BluetoothService::Notify(const BluetoothSignal& aData)
       "PairedStatusChagned: Wrong length of parameters");
     type.AssignLiteral("bluetooth-pairedstatuschanged");
   } else {
-#ifdef DEBUG
     nsCString warningMsg;
     warningMsg.AssignLiteral("Not handling service signal: ");
     warningMsg.Append(NS_ConvertUTF16toUTF8(aData.name()));
     NS_WARNING(warningMsg.get());
-#endif
+    return;
   }
 
   nsCOMPtr<nsISystemMessagesInternal> systemMessenger =
