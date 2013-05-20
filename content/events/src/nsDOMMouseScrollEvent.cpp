@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsDOMMouseScrollEvent.h"
-#include "nsDOMClassInfoID.h"
 
 nsDOMMouseScrollEvent::nsDOMMouseScrollEvent(mozilla::dom::EventTarget* aOwner,
                                              nsPresContext* aPresContext,
@@ -46,11 +45,8 @@ nsDOMMouseScrollEvent::~nsDOMMouseScrollEvent()
 NS_IMPL_ADDREF_INHERITED(nsDOMMouseScrollEvent, nsDOMMouseEvent)
 NS_IMPL_RELEASE_INHERITED(nsDOMMouseScrollEvent, nsDOMMouseEvent)
 
-DOMCI_DATA(MouseScrollEvent, nsDOMMouseScrollEvent)
-
 NS_INTERFACE_MAP_BEGIN(nsDOMMouseScrollEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMouseScrollEvent)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MouseScrollEvent)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMMouseEvent)
 
 NS_IMETHODIMP
