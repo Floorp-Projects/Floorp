@@ -37,10 +37,11 @@ D3D9SurfaceImage::SetData(const Data& aData)
   // DXVA surfaces aren't created sharable, so we need to copy the surface
   // to a sharable texture to that it's accessible to the layer manager's
   // device.
+  const nsIntRect& region = aData.mRegion;
   RefPtr<IDirect3DTexture9> texture;
   HANDLE shareHandle = NULL;
-  hr = device->CreateTexture(desc.Width,
-                             desc.Height,
+  hr = device->CreateTexture(region.width,
+                             region.height,
                              1,
                              D3DUSAGE_RENDERTARGET,
                              D3DFMT_X8R8G8B8,
@@ -57,7 +58,8 @@ D3D9SurfaceImage::SetData(const Data& aData)
   // Stash the surface description for later use.
   textureSurface->GetDesc(&mDesc);
 
-  hr = device->StretchRect(surface, NULL, textureSurface, NULL, D3DTEXF_NONE);
+  RECT src = { region.x, region.y, region.x+region.width, region.y+region.height };
+  hr = device->StretchRect(surface, &src, textureSurface, NULL, D3DTEXF_NONE);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   // Flush the draw command now, so that by the time we come to draw this
@@ -71,7 +73,7 @@ D3D9SurfaceImage::SetData(const Data& aData)
 
   mTexture = texture;
   mShareHandle = shareHandle;
-  mSize = gfxIntSize(aData.mSize.width, aData.mSize.height);
+  mSize = gfxIntSize(region.width, region.height);
   mQuery = query;
 
   return S_OK;
