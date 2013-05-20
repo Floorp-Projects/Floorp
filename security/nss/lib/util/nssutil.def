@@ -266,6 +266,7 @@ NSSUTIL_QuoteSize;
 SECITEM_AllocArray;
 SECITEM_DupArray;
 SECITEM_FreeArray;
+SECITEM_ReallocItemV2;
 SECITEM_ZfreeArray;
 ;+    local:
 ;+       *;
