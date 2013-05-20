@@ -6027,17 +6027,6 @@ public:
   {
   }
 
-  NS_IMETHOD_(void) NoteXPCOMRoot(nsISupports *root)
-  {
-  }
-  NS_IMETHOD_(void) NoteJSRoot(void* root)
-  {
-  }
-  NS_IMETHOD_(void) NoteNativeRoot(void* root,
-                                   nsCycleCollectionParticipant* helper)
-  {
-  }
-
   NS_IMETHOD_(void) NoteJSChild(void* child)
   {
     if (child == mWrapper) {
@@ -6053,10 +6042,6 @@ public:
   }
 
   NS_IMETHOD_(void) NoteNextEdgeName(const char* name)
-  {
-  }
-
-  NS_IMETHOD_(void) NoteWeakMapping(void* map, void* key, void* kdelegate, void* val)
   {
   }
 
