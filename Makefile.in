@@ -77,11 +77,7 @@ backend.RecursiveMakeBackend.built:
 	@echo "Updating build backend because of moz.build changes."
 	@$(PYTHON) ./config.status
 
-ifdef .PYMAKE
-includedeps backend.RecursiveMakeBackend.built.pp
-else
 include backend.RecursiveMakeBackend.built.pp
-endif
 
 export MOZBUILD_BACKEND_CHECKED=1
 

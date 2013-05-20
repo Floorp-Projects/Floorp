@@ -23,7 +23,6 @@ public:
                          cairo_text_extents_t* aExtents);
     virtual const gfxFont::Metrics& GetMetrics();
     virtual uint32_t GetSpaceGlyph();
-    virtual hb_blob_t *GetFontTable(uint32_t aTag);
     virtual bool ProvidesGetGlyph() const { return true; }
     virtual uint32_t GetGlyph(uint32_t unicode, uint32_t variation_selector);
     virtual bool ProvidesGlyphWidths() { return true; }

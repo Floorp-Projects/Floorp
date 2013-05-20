@@ -80,12 +80,15 @@ public:
                               bool aDoSetAttr);
   void GetBaseValueString(nsAString& aValue) const;
 
-  nsresult ToDOMAnimatedRect(mozilla::dom::SVGAnimatedRect **aResult,
-                             nsSVGElement *aSVGElement);
-  nsresult ToDOMBaseVal(mozilla::dom::SVGIRect **aResult,
-                        nsSVGElement* aSVGElement);
-  nsresult ToDOMAnimVal(mozilla::dom::SVGIRect **aResult,
-                        nsSVGElement* aSVGElement);
+  already_AddRefed<mozilla::dom::SVGAnimatedRect>
+  ToSVGAnimatedRect(nsSVGElement *aSVGElement);
+
+  already_AddRefed<mozilla::dom::SVGIRect>
+  ToDOMBaseVal(nsSVGElement* aSVGElement);
+
+  already_AddRefed<mozilla::dom::SVGIRect>
+  ToDOMAnimVal(nsSVGElement* aSVGElement);
+
   // Returns a new nsISMILAttr object that the caller must delete
   nsISMILAttr* ToSMILAttr(nsSVGElement* aSVGElement);
 
