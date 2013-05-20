@@ -6057,7 +6057,7 @@ class ClassMethod(ClassItem):
 ${className}::${name}(${args})${const}
 {
 ${body}
-}\n
+}
 """).substitute({ 'templateClause': templateClause,
                   'decorators': self.getDecorators(False),
                   'returnType': self.returnType,
@@ -6096,7 +6096,7 @@ class ClassConstructor(ClassItem):
         self.inline = inline or bodyInHeader
         self.bodyInHeader = bodyInHeader
         self.explicit = explicit
-        self.baseConstructors = baseConstructors
+        self.baseConstructors = baseConstructors or []
         self.body = body
         ClassItem.__init__(self, None, visibility)
 
@@ -6114,7 +6114,7 @@ class ClassConstructor(ClassItem):
         items = [str(c) for c in self.baseConstructors]
         for m in cgClass.members:
             if not m.static:
-                initialize = m.getBody()
+                initialize = m.body
                 if initialize:
                     items.append(m.name + "(" + initialize + ")")
             
@@ -6155,7 +6155,7 @@ class ClassConstructor(ClassItem):
 
         return string.Template("""${decorators}
 ${className}::${className}(${args})${initializationList}
-{${body}}\n
+{${body}}
 """).substitute({ 'decorators': self.getDecorators(False),
                   'className': cgClass.getNameString(),
                   'args': args,
@@ -6225,7 +6225,7 @@ class ClassDestructor(ClassItem):
 
         return string.Template("""${decorators}
 ${className}::~${className}()
-{${body}}\n
+{${body}}
 """).substitute({ 'decorators': self.getDecorators(False),
                   'className': cgClass.getNameString(),
                   'body': body })
@@ -6289,7 +6289,8 @@ class CGClass(CGThing):
     def __init__(self, name, bases=[], members=[], constructors=[],
                  destructor=None, methods=[],
                  typedefs = [], enums=[], templateArgs=[],
-                 templateSpecialization=[], isStruct=False, indent='',
+                 templateSpecialization=[], isStruct=False,
+                 disallowCopyConstruction=False, indent='',
                  decorators='',
                  extradeclarations='',
                  extradefinitions=''):
@@ -6307,6 +6308,7 @@ class CGClass(CGThing):
         self.templateArgs = templateArgs
         self.templateSpecialization = templateSpecialization
         self.isStruct = isStruct
+        self.disallowCopyConstruction = disallowCopyConstruction
         self.indent = indent
         self.defaultVisibility ='public' if isStruct else 'private'
         self.decorators = decorators
@@ -6392,9 +6394,20 @@ class CGClass(CGThing):
                     lastVisibility = visibility
             return (result, lastVisibility, itemCount)
 
+        if self.disallowCopyConstruction:
+            class DisallowedCopyConstructor(object):
+                def __init__(self):
+                    self.visibility = "private"
+                def declare(self, cgClass):
+                    name = cgClass.getNameString()
+                    return "%s(const %s&) MOZ_DELETE;\n" % (name, name)
+            disallowedCopyConstructors = [DisallowedCopyConstructor()]
+        else:
+            disallowedCopyConstructors = []
+
         order = [(self.enums, ''), (self.typedefs, ''), (self.members, ''),
-                 (self.constructors, '\n'), (self.destructors, '\n'),
-                 (self.methods, '\n')]
+                 (self.constructors + disallowedCopyConstructors, '\n'),
+                 (self.destructors, '\n'), (self.methods, '\n')]
 
         lastVisibility = self.defaultVisibility
         itemCount = 0
@@ -6416,11 +6429,14 @@ class CGClass(CGThing):
             for member in memberList:
                 if itemCount != 0:
                     result = result + separator
-                result = result + member.define(cgClass)
-                itemCount = itemCount + 1
+                definition = member.define(cgClass)
+                if definition:
+                    # Member variables would only produce empty lines here.
+                    result += definition
+                    itemCount += 1
             return (result, itemCount)
 
-        order = [(self.members, '\n'), (self.constructors, '\n'),
+        order = [(self.members, ''), (self.constructors, '\n'),
                  (self.destructors, '\n'), (self.methods, '\n')]
 
         result = self.extradefinitions
