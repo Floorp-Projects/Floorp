@@ -6242,8 +6242,9 @@ CodeGenerator::visitGetDOMProperty(LGetDOMProperty *ins)
 
     masm.checkStackAlignment();
 
-    /* Make Space for the outparam */
-    masm.adjustStack(-int32_t(sizeof(Value)));
+    // Make space for the outparam.  Pre-initialize it to UndefinedValue so we
+    // can trace it at GC time.
+    masm.Push(UndefinedValue());
     masm.movePtr(StackPointer, ValueReg);
 
     masm.Push(ObjectReg);
@@ -6307,7 +6308,7 @@ CodeGenerator::visitSetDOMProperty(LSetDOMProperty *ins)
 
     masm.checkStackAlignment();
 
-    // Push thei argument. Rooting will happen at GC time.
+    // Push the argument. Rooting will happen at GC time.
     ValueOperand argVal = ToValue(ins, LSetDOMProperty::Value);
     masm.Push(argVal);
     masm.movePtr(StackPointer, ValueReg);

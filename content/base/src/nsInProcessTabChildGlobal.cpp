@@ -38,7 +38,8 @@ nsInProcessTabChildGlobal::DoSendSyncMessage(const nsAString& aMessage,
   }
   if (mChromeMessageManager) {
     nsRefPtr<nsFrameMessageManager> mm = mChromeMessageManager;
-    mm->ReceiveMessage(mOwner, aMessage, true, &aData, nullptr, aJSONRetVal);
+    mm->ReceiveMessage(mOwner, aMessage, true, &aData, JS::NullPtr(),
+                       aJSONRetVal);
   }
   return true;
 }
@@ -73,7 +74,7 @@ public:
 
       nsRefPtr<nsFrameMessageManager> mm = mTabChild->mChromeMessageManager;
       mm->ReceiveMessage(mTabChild->mOwner, mMessage, false, &data,
-                         nullptr, nullptr, nullptr);
+                         JS::NullPtr(), nullptr, nullptr);
     }
     return NS_OK;
   }

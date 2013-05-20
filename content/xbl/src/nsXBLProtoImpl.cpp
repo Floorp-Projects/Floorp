@@ -83,8 +83,8 @@ nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aPrototypeBinding,
   if (!targetObjectIsNew)
     return NS_OK;
 
-  JS::Rooted<JSObject*> targetScriptObject(context->GetNativeContext());
-  holder->GetJSObject(targetScriptObject.address());
+  JS::Rooted<JSObject*> targetScriptObject(context->GetNativeContext(),
+                                           holder->GetJSObject());
 
   AutoPushJSContext cx(context->GetNativeContext());
   JSAutoRequest ar(cx);

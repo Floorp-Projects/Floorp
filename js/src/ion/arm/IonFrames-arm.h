@@ -397,9 +397,6 @@ class IonDOMExitFrameLayout
     inline JSObject **thisObjAddress() {
         return &thisObj;
     }
-    inline bool isSetterFrame() {
-        return footer_.ionCode() == ION_FRAME_DOMSETTER;
-    }
     inline bool isMethodFrame() {
         return footer_.ionCode() == ION_FRAME_DOMMETHOD;
     }

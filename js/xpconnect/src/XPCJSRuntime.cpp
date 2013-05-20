@@ -2601,7 +2601,8 @@ ReadSourceFromFilename(JSContext *cx, const char *filename, jschar **src, uint32
   function. See the comment in the XPCJSRuntime constructor.
 */
 static bool
-SourceHook(JSContext *cx, JSScript *script, jschar **src, uint32_t *length)
+SourceHook(JSContext *cx, JS::Handle<JSScript*> script, jschar **src,
+           uint32_t *length)
 {
   *src = NULL;
   *length = 0;

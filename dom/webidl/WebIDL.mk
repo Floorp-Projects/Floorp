@@ -161,6 +161,7 @@ webidl_files = \
   ImageDocument.webidl \
   InspectorUtils.webidl \
   KeyboardEvent.webidl \
+  KeyEvent.webidl \
   LinkStyle.webidl \
   LocalMediaStream.webidl \
   Location.webidl \
@@ -358,6 +359,7 @@ endif
 
 ifdef MOZ_WEBRTC
 webidl_files += \
+  DataChannel.webidl \
   MediaStreamList.webidl \
   $(NULL)
 endif
