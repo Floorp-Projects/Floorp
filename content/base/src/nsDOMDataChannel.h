@@ -7,6 +7,8 @@
 #ifndef nsDOMDataChannel_h
 #define nsDOMDataChannel_h
 
+#include "mozilla/dom/DataChannelBinding.h"
+#include "mozilla/dom/TypedArray.h"
 #include "mozilla/net/DataChannel.h"
 #include "nsDOMEventTargetHelper.h"
 #include "nsIDOMDataChannel.h"
@@ -33,6 +35,42 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsDOMDataChannel,
                                            nsDOMEventTargetHelper)
 
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+    MOZ_OVERRIDE;
+  nsPIDOMWindow* GetParentObject() const
+  {
+    return GetOwner();
+  }
+
+  // WebIDL
+  // Uses XPIDL GetLabel.
+  bool Reliable() const;
+  mozilla::dom::RTCDataChannelState ReadyState() const;
+  uint32_t BufferedAmount() const;
+  IMPL_EVENT_HANDLER(open)
+  IMPL_EVENT_HANDLER(error)
+  IMPL_EVENT_HANDLER(close)
+  // Uses XPIDL Close.
+  IMPL_EVENT_HANDLER(message)
+  mozilla::dom::RTCDataChannelType BinaryType() const
+  {
+    return static_cast<mozilla::dom::RTCDataChannelType>(
+      static_cast<int>(mBinaryType));
+  }
+  void SetBinaryType(mozilla::dom::RTCDataChannelType aType)
+  {
+    mBinaryType = static_cast<DataChannelBinaryType>(
+      static_cast<int>(aType));
+  }
+  void Send(const nsAString& aData, mozilla::ErrorResult& aRv);
+  void Send(nsIDOMBlob* aData, mozilla::ErrorResult& aRv);
+  void Send(mozilla::dom::ArrayBuffer& aData, mozilla::ErrorResult& aRv);
+  void Send(mozilla::dom::ArrayBufferView& aData, mozilla::ErrorResult& aRv);
+
+  // Uses XPIDL GetProtocol.
+  bool Ordered() const;
+  uint16_t Stream() const;
+
   nsresult
   DoOnMessageAvailable(const nsACString& aMessage, bool aBinary);
 
@@ -54,19 +92,17 @@ public:
   AppReady();
 
 private:
-  // Get msg info out of JS variable being sent (string, arraybuffer, blob)
-  nsresult GetSendParams(nsIVariant *aData, nsCString &aStringOut,
-                         nsCOMPtr<nsIInputStream> &aStreamOut,
-                         bool &aIsBinary, uint32_t &aOutgoingLength);
+  void Send(nsIInputStream* aMsgStream, const nsACString& aMsgString,
+            uint32_t aMsgLength, bool aIsBinary, mozilla::ErrorResult& aRv);
 
   // Owning reference
   nsRefPtr<mozilla::DataChannel> mDataChannel;
   nsString  mOrigin;
-  enum
-  {
+  enum DataChannelBinaryType {
     DC_BINARY_TYPE_ARRAYBUFFER,
     DC_BINARY_TYPE_BLOB,
-  } mBinaryType;
+  };
+  DataChannelBinaryType mBinaryType;
 };
 
 #endif // nsDOMDataChannel_h
