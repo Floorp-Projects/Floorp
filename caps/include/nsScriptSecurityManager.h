@@ -383,10 +383,11 @@ private:
 
     // Returns null if a principal cannot be found; generally callers
     // should error out at that point.
-    static nsIPrincipal* doGetObjectPrincipal(JSObject *obj);
+    static nsIPrincipal* doGetObjectPrincipal(JS::Handle<JSObject*> obj);
 #ifdef DEBUG
     static nsIPrincipal*
-    old_doGetObjectPrincipal(JSObject *obj, bool aAllowShortCircuit = true);
+    old_doGetObjectPrincipal(JS::Handle<JSObject*> obj,
+                             bool aAllowShortCircuit = true);
 #endif
 
     // Returns null if a principal cannot be found.  Note that rv can be NS_OK
