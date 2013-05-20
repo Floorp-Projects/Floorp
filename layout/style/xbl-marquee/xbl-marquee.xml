@@ -265,7 +265,7 @@
                   // NB: Make sure to wrap the constructor in parentheses to
                   // deal with the weird precedence of |new| in JS.
                   var contentFn = new (XPCNativeWrapper.unwrap(window).Function)("event", aValue);
-                  this["_on" + aName] = function(e) { return contentFn(e); };
+                  this["_on" + aName] = function(e) { return contentFn.call(this, e); };
                 }
                 catch(e) {
                   return false;
