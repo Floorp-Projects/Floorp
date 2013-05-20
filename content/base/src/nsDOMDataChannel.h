@@ -21,7 +21,9 @@ public:
   nsDOMDataChannel(already_AddRefed<mozilla::DataChannel> aDataChannel)
     : mDataChannel(aDataChannel)
     , mBinaryType(DC_BINARY_TYPE_BLOB)
-  {}
+  {
+    SetIsDOMBinding();
+  }
 
   ~nsDOMDataChannel();
 
