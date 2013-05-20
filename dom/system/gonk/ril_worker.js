@@ -5264,6 +5264,7 @@ RIL[UNSOLICITED_RESPONSE_RADIO_STATE_CHANGED] = function UNSOLICITED_RESPONSE_RA
     }
     this.getBasebandVersion();
     this.updateCellBroadcastConfig();
+    this.setPreferredNetworkType();
   }
 
   this.radioState = newState;
@@ -5464,8 +5465,6 @@ RIL[UNSOLICITED_RIL_CONNECTED] = function UNSOLICITED_RIL_CONNECTED(length) {
   }
 
   this.initRILState();
-
-  this.setPreferredNetworkType();
 };
 
 /**
