@@ -6057,7 +6057,7 @@ class ClassMethod(ClassItem):
 ${className}::${name}(${args})${const}
 {
 ${body}
-}\n
+}
 """).substitute({ 'templateClause': templateClause,
                   'decorators': self.getDecorators(False),
                   'returnType': self.returnType,
@@ -6096,7 +6096,7 @@ class ClassConstructor(ClassItem):
         self.inline = inline or bodyInHeader
         self.bodyInHeader = bodyInHeader
         self.explicit = explicit
-        self.baseConstructors = baseConstructors
+        self.baseConstructors = baseConstructors or []
         self.body = body
         ClassItem.__init__(self, None, visibility)
 
@@ -6114,7 +6114,7 @@ class ClassConstructor(ClassItem):
         items = [str(c) for c in self.baseConstructors]
         for m in cgClass.members:
             if not m.static:
-                initialize = m.getBody()
+                initialize = m.body
                 if initialize:
                     items.append(m.name + "(" + initialize + ")")
             
@@ -6155,7 +6155,7 @@ class ClassConstructor(ClassItem):
 
         return string.Template("""${decorators}
 ${className}::${className}(${args})${initializationList}
-{${body}}\n
+{${body}}
 """).substitute({ 'decorators': self.getDecorators(False),
                   'className': cgClass.getNameString(),
                   'args': args,
@@ -6225,7 +6225,7 @@ class ClassDestructor(ClassItem):
 
         return string.Template("""${decorators}
 ${className}::~${className}()
-{${body}}\n
+{${body}}
 """).substitute({ 'decorators': self.getDecorators(False),
                   'className': cgClass.getNameString(),
                   'body': body })
@@ -6289,7 +6289,8 @@ class CGClass(CGThing):
     def __init__(self, name, bases=[], members=[], constructors=[],
                  destructor=None, methods=[],
                  typedefs = [], enums=[], templateArgs=[],
-                 templateSpecialization=[], isStruct=False, indent='',
+                 templateSpecialization=[], isStruct=False,
+                 disallowCopyConstruction=False, indent='',
                  decorators='',
                  extradeclarations='',
                  extradefinitions=''):
@@ -6307,6 +6308,7 @@ class CGClass(CGThing):
         self.templateArgs = templateArgs
         self.templateSpecialization = templateSpecialization
         self.isStruct = isStruct
+        self.disallowCopyConstruction = disallowCopyConstruction
         self.indent = indent
         self.defaultVisibility ='public' if isStruct else 'private'
         self.decorators = decorators
@@ -6392,9 +6394,20 @@ class CGClass(CGThing):
                     lastVisibility = visibility
             return (result, lastVisibility, itemCount)
 
+        if self.disallowCopyConstruction:
+            class DisallowedCopyConstructor(object):
+                def __init__(self):
+                    self.visibility = "private"
+                def declare(self, cgClass):
+                    name = cgClass.getNameString()
+                    return "%s(const %s&) MOZ_DELETE;\n" % (name, name)
+            disallowedCopyConstructors = [DisallowedCopyConstructor()]
+        else:
+            disallowedCopyConstructors = []
+
         order = [(self.enums, ''), (self.typedefs, ''), (self.members, ''),
-                 (self.constructors, '\n'), (self.destructors, '\n'),
-                 (self.methods, '\n')]
+                 (self.constructors + disallowedCopyConstructors, '\n'),
+                 (self.destructors, '\n'), (self.methods, '\n')]
 
         lastVisibility = self.defaultVisibility
         itemCount = 0
@@ -6416,11 +6429,14 @@ class CGClass(CGThing):
             for member in memberList:
                 if itemCount != 0:
                     result = result + separator
-                result = result + member.define(cgClass)
-                itemCount = itemCount + 1
+                definition = member.define(cgClass)
+                if definition:
+                    # Member variables would only produce empty lines here.
+                    result += definition
+                    itemCount += 1
             return (result, itemCount)
 
-        order = [(self.members, '\n'), (self.constructors, '\n'),
+        order = [(self.members, ''), (self.constructors, '\n'),
                  (self.destructors, '\n'), (self.methods, '\n')]
 
         result = self.extradefinitions
@@ -7492,6 +7508,7 @@ class CGDictionary(CGThing):
         self.dictionary = dictionary
         self.descriptorProvider = descriptorProvider
         self.workers = descriptorProvider.workers
+        # NOTE: jsids are per-runtime, so don't use them in workers
         self.needToInitIds = not self.workers and len(dictionary.members) > 0
         self.memberInfo = [
             (member,
@@ -7501,169 +7518,194 @@ class CGDictionary(CGThing):
                                          isOptional=(not member.defaultValue),
                                          defaultValue=member.defaultValue))
             for member in dictionary.members ]
+        self.structs = self.getStructs()
 
     def declare(self):
-        d = self.dictionary
-        if d.parent:
-            inheritance = "%s" % self.makeClassName(d.parent)
-        elif not self.workers:
-            inheritance = "MainThreadDictionaryBase"
-        else:
-            inheritance = "DictionaryBase"
-        memberDecls = ["  %s %s;" %
-                       (self.getMemberType(m),
-                        self.makeMemberName(m[0].identifier.name))
-                       for m in self.memberInfo]
-
-        return (string.Template(
-                "struct ${selfName} : public ${inheritance} {\n"
-                "  ${selfName}() {}\n"
-                "  bool Init(JSContext* cx, JS::Handle<JS::Value> val);\n" +
-                ("  bool Init(const nsAString& aJSON);\n" if not self.workers else "") +
-                "  bool ToObject(JSContext* cx, JS::Handle<JSObject*> parentObject, JS::Value *vp) const;\n"
-                "  void TraceDictionary(JSTracer* trc);\n"
-                "\n" +
-                "\n".join(memberDecls) + "\n"
-                "private:\n"
-                "  // Disallow copy-construction\n"
-                "  ${selfName}(const ${selfName}&) MOZ_DELETE;\n" +
-                # NOTE: jsids are per-runtime, so don't use them in workers
-                ("  static bool InitIds(JSContext* cx);\n"
-                 "  static bool initedIds;\n" if self.needToInitIds else "") +
-                "\n".join("  static jsid " +
-                          self.makeIdName(m.identifier.name) + ";" for
-                          m in d.members) + "\n"
-                "};\n"
-                "struct ${selfName}Initializer : public ${selfName} {\n"
-                "  ${selfName}Initializer() {\n"
-                "    // Safe to pass a null context if we pass a null value\n"
-                "    Init(nullptr, JS::NullHandleValue);\n"
-                "  }\n"
-                "};").substitute( { "selfName": self.makeClassName(d),
-                                    "inheritance": inheritance }))
+        return self.structs.declare()
 
     def define(self):
-        d = self.dictionary
-        if d.parent:
-            initParent = ("// Per spec, we init the parent's members first\n"
-                          "if (!%s::Init(cx, val)) {\n"
-                          "  return false;\n"
-                          "}\n" % self.makeClassName(d.parent))
-            toObjectParent = ("// Per spec, we define the parent's members first\n"
-                              "if (!%s::ToObject(cx, parentObject, vp)) {\n"
-                              "  return false;\n"
-                              "}\n" % self.makeClassName(d.parent))
-            ensureObject = "JS::Rooted<JSObject*> obj(cx, &vp->toObject());\n"
-            traceParent = ("%s::TraceDictionary(trc);\n" %
-                           self.makeClassName(d.parent))
-        else:
-            initParent = ""
-            toObjectParent = ""
-            ensureObject = ("JS::Rooted<JSObject*> obj(cx, JS_NewObject(cx, nullptr, nullptr, nullptr));\n"
-                            "if (!obj) {\n"
-                            "  return false;\n"
-                            "}\n"
-                            "*vp = JS::ObjectValue(*obj);\n")
-            traceParent = ""
+        return self.structs.define()
 
-        memberInits = [CGIndenter(self.getMemberConversion(m)).define()
+    def base(self):
+        if self.dictionary.parent:
+            return self.makeClassName(self.dictionary.parent)
+        if not self.workers:
+            return "MainThreadDictionaryBase"
+        return "DictionaryBase"
+
+    def initMethod(self):
+        body = (
+            "// Passing a null JSContext is OK only if we're initing from null,\n"
+            "// Since in that case we will not have to do any property gets\n"
+            "MOZ_ASSERT_IF(!cx, val.isNull());\n")
+
+        if self.needToInitIds:
+            body += (
+                "if (cx && !initedIds && !InitIds(cx)) {\n"
+                "  return false;\n"
+                "}\n")
+
+        if self.dictionary.parent:
+            body += (
+                "// Per spec, we init the parent's members first\n"
+                "if (!%s::Init(cx, val)) {\n"
+                "  return false;\n"
+                "}\n") % self.makeClassName(self.dictionary.parent)
+
+        memberInits = [self.getMemberConversion(m).define()
                        for m in self.memberInfo]
+        if memberInits:
+            body += (
+                "JSBool found;\n"
+                "JS::Rooted<JS::Value> temp(cx);\n"
+                "bool isNull = val.isNullOrUndefined();\n")
+
+        body += (
+            "if (!IsConvertibleToDictionary(cx, val)) {\n"
+            "  return ThrowErrorMessage(cx, MSG_NOT_DICTIONARY);\n"
+            "}\n"
+            "\n")
+
+        if memberInits:
+            body += "\n\n".join(memberInits) + "\n"
+
+        body += "return true;"
+
+        return ClassMethod("Init", "bool", [
+            Argument('JSContext*', 'cx'),
+            Argument('JS::Handle<JS::Value>', 'val'),
+        ], body=body)
+
+    def initFromJSONMethod(self):
+        assert not self.workers
+        return ClassMethod("Init", "bool", [
+                Argument('const nsAString&', 'aJSON'),
+            ], body=(
+                "AutoSafeJSContext cx;\n"
+                "JSAutoRequest ar(cx);\n"
+                "JS::Rooted<JS::Value> json(cx);\n"
+                "bool ok = ParseJSON(cx, aJSON, &json);\n"
+                "NS_ENSURE_TRUE(ok, false);\n"
+                "return Init(cx, json);"
+            ))
+
+    def toObjectMethod(self):
+        body = ""
+        if self.needToInitIds:
+            body += (
+                "if (!initedIds && !InitIds(cx)) {\n"
+                "  return false;\n"
+                "}\n")
+
+        if self.dictionary.parent:
+            body += (
+                "// Per spec, we define the parent's members first\n"
+                "if (!%s::ToObject(cx, parentObject, vp)) {\n"
+                "  return false;\n"
+                "}\n"
+                "JS::Rooted<JSObject*> obj(cx, &vp->toObject());\n"
+                "\n") % self.makeClassName(self.dictionary.parent)
+        else:
+            body += (
+                "JS::Rooted<JSObject*> obj(cx, JS_NewObject(cx, nullptr, nullptr, nullptr));\n"
+                "if (!obj) {\n"
+                "  return false;\n"
+                "}\n"
+                "*vp = JS::ObjectValue(*obj);\n"
+                "\n")
+
+        body += "\n\n".join(self.getMemberDefinition(m).define()
+                            for m in self.memberInfo)
+        body += "\n\nreturn true;"
+
+        return ClassMethod("ToObject", "bool", [
+            Argument('JSContext*', 'cx'),
+            Argument('JS::Handle<JSObject*>', 'parentObject'),
+            Argument('JS::Value*', 'vp'),
+        ], const=True, body=body)
+
+    def initIdsMethod(self):
+        assert self.needToInitIds
         idinit = [CGGeneric('!InternJSString(cx, %s, "%s")' %
                             (m.identifier.name + "_id", m.identifier.name))
-                  for m in d.members]
+                  for m in self.dictionary.members]
         idinit = CGList(idinit, " ||\n")
         idinit = CGWrapper(idinit, pre="if (",
                            post=(") {\n"
                                  "  return false;\n"
                                  "}"),
                            reindent=True)
-        memberDefines = [CGIndenter(self.getMemberDefinition(m)).define()
-                         for m in self.memberInfo]
-        memberTraces = [CGIndenter(self.getMemberTrace(m)).define()
+        body = (
+           "MOZ_ASSERT(!initedIds);\n"
+           "%s\n"
+           "initedIds = true;\n"
+           "return true;") % idinit.define()
+
+        return ClassMethod("InitIds", "bool", [
+            Argument("JSContext*", "cx"),
+        ], static=True, body=body, visibility="private")
+
+    def traceDictionaryMethod(self):
+        body = ""
+        if self.dictionary.parent:
+            cls = self.makeClassName(self.dictionary.parent)
+            body += "%s::TraceDictionary(trc);\n" % cls
+
+        memberTraces = [self.getMemberTrace(m)
                         for m in self.dictionary.members
                         if typeNeedsCx(m.type, self.descriptorProvider)]
 
-        return string.Template(
-            # NOTE: jsids are per-runtime, so don't use them in workers
-            ("bool ${selfName}::initedIds = false;\n" +
-             "\n".join("jsid ${selfName}::%s = JSID_VOID;" %
-                       self.makeIdName(m.identifier.name)
-                       for m in d.members) + "\n"
-             "\n"
-             "bool\n"
-             "${selfName}::InitIds(JSContext* cx)\n"
-             "{\n"
-             "  MOZ_ASSERT(!initedIds);\n"
-             "${idInit}\n"
-             "  initedIds = true;\n"
-             "  return true;\n"
-             "}\n"
-             "\n" if self.needToInitIds else "") +
-            "bool\n"
-            "${selfName}::Init(JSContext* cx, JS::Handle<JS::Value> val)\n"
-            "{\n"
-            "  // Passing a null JSContext is OK only if we're initing from null,\n"
-            "  // Since in that case we will not have to do any property gets\n"
-            "  MOZ_ASSERT_IF(!cx, val.isNull());\n" +
-            # NOTE: jsids are per-runtime, so don't use them in workers
-            ("  if (cx && !initedIds && !InitIds(cx)) {\n"
-             "    return false;\n"
-             "  }\n" if self.needToInitIds else "") +
-            "${initParent}" +
-            ("  JSBool found;\n"
-             "  JS::Rooted<JS::Value> temp(cx);\n"
-             "  bool isNull = val.isNullOrUndefined();\n" if len(memberInits) > 0 else "") +
-            "  if (!IsConvertibleToDictionary(cx, val)) {\n"
-            "    return ThrowErrorMessage(cx, MSG_NOT_DICTIONARY);\n"
-            "  }\n"
-            "\n"
-            "${initMembers}\n"
-            "  return true;\n"
-            "}\n"
-            "\n" +
-            ("bool\n"
-             "${selfName}::Init(const nsAString& aJSON)\n"
-             "{\n"
-             "  AutoSafeJSContext cx;\n"
-             "  JSAutoRequest ar(cx);\n"
-             "  JS::Rooted<JS::Value> json(cx);\n"
-             "  bool ok = ParseJSON(cx, aJSON, &json);\n"
-             "  NS_ENSURE_TRUE(ok, false);\n"
-             "  return Init(cx, json);\n"
-             "}\n" if not self.workers else "") +
-            "\n"
-            "bool\n"
-            "${selfName}::ToObject(JSContext* cx, JS::Handle<JSObject*> parentObject, JS::Value *vp) const\n"
-            "{\n" +
-            # NOTE: jsids are per-runtime, so don't use them in workers
-            ("  if (!initedIds && !InitIds(cx)) {\n"
-             "    return false;\n"
-             "  }\n" if self.needToInitIds else "") +
-            "${toObjectParent}"
-            "${ensureObject}"
-            "\n"
-            "${defineMembers}\n"
-            "\n"
-            "  return true;\n"
-            "}\n"
-            "\n"
-            "void\n"
-            "${selfName}::TraceDictionary(JSTracer* trc)\n"
-            "{\n"
-            "${traceParent}"
-            "${traceMembers}\n"
-            "}").substitute({
-                "selfName": self.makeClassName(d),
-                "initParent": CGIndenter(CGGeneric(initParent)).define(),
-                "initMembers": "\n\n".join(memberInits),
-                "idInit": CGIndenter(idinit).define(),
-                "isMainThread": toStringBool(not self.workers),
-                "toObjectParent": CGIndenter(CGGeneric(toObjectParent)).define(),
-                "ensureObject": CGIndenter(CGGeneric(ensureObject)).define(),
-                "traceMembers": "\n\n".join(memberTraces),
-                "traceParent": CGIndenter(CGGeneric(traceParent)).define(),
-                "defineMembers": "\n\n".join(memberDefines)
-                })
+        body += "\n\n".join(memberTraces)
+
+        return ClassMethod("TraceDictionary", "void", [
+            Argument("JSTracer*", "trc"),
+        ], body=body)
+
+    def getStructs(self):
+        d = self.dictionary
+        selfName = self.makeClassName(d)
+        members = [ClassMember(self.makeMemberName(m[0].identifier.name),
+                               self.getMemberType(m),
+                               visibility="public") for m in self.memberInfo]
+        ctor = ClassConstructor([], bodyInHeader=True, visibility="public")
+        methods = []
+
+        if self.needToInitIds:
+            methods.append(self.initIdsMethod())
+            members.append(ClassMember("initedIds", "bool", static=True, body="false"))
+            members.extend(
+                ClassMember(self.makeIdName(m.identifier.name), "jsid", static=True, body="JSID_VOID")
+                for m in d.members)
+
+        methods.append(self.initMethod())
+
+        if not self.workers:
+            methods.append(self.initFromJSONMethod())
+
+        methods.append(self.toObjectMethod())
+        methods.append(self.traceDictionaryMethod())
+
+        struct = CGClass(selfName,
+            bases=[ClassBase(self.base())],
+            members=members,
+            constructors=[ctor],
+            methods=methods,
+            isStruct=True,
+            disallowCopyConstruction=True)
+
+
+        initializerCtor = ClassConstructor([],
+            bodyInHeader=True,
+            visibility="public",
+            body=(
+                "// Safe to pass a null context if we pass a null value\n"
+                "Init(nullptr, JS::NullHandleValue);"))
+        initializerStruct = CGClass(selfName + "Initializer",
+            bases=[ClassBase(selfName)],
+            constructors=[initializerCtor],
+            isStruct=True)
+
+        return CGList([struct, initializerStruct])
 
     def deps(self):
         return self.dictionary.getDeps()
@@ -7843,7 +7885,7 @@ class CGDictionary(CGThing):
         if not member.defaultValue:
             trace = CGIfWrapper(trace, "%s.WasPassed()" % memberLoc)
 
-        return trace
+        return trace.define()
 
     @staticmethod
     def makeIdName(name):
