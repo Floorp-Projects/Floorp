@@ -17,7 +17,7 @@
                        android:layout_centerVertical="true"
                        android:minWidth="@dimen/favicon_bg"
                        android:minHeight="@dimen/favicon_bg"
-                       android:background="@drawable/favicon_bg"/>
+                       android:background="@drawable/favicon"/>
 
     <Gecko.TextView android:id="@+id/last_tab_title"
                     android:layout_width="wrap_content"
