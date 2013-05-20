@@ -52,7 +52,7 @@ CustomizeMode.prototype = {
   _customizing: false,
 
   get resetButton() {
-    return this.document.getElementById("customization-restore-button");
+    return this.document.getElementById("customization-reset-button");
   },
 
   init: function() {
