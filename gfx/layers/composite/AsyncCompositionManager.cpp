@@ -313,7 +313,6 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
                          c->GetInheritedYScale(),
                          1);
       }
-      NS_ASSERTION(!aLayer->GetIsFixedPosition(), "Can't animate transforms on fixed-position layers");
       layerComposite->SetShadowTransform(matrix);
       layerComposite->SetShadowTransformSetByAnimation(true);
       break;

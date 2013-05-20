@@ -13,11 +13,10 @@ using namespace mozilla;
 nsresult
 XBL_SerializeFunction(nsIScriptContext* aContext,
                       nsIObjectOutputStream* aStream,
-                      JSObject* aFunctionObject)
+                      JS::Handle<JSObject*> aFunction)
 {
   AutoPushJSContext cx(aContext->GetNativeContext());
-  JS::RootedObject function(cx, aFunctionObject);
-  return nsContentUtils::XPConnect()->WriteFunction(aStream, cx, function);
+  return nsContentUtils::XPConnect()->WriteFunction(aStream, cx, aFunction);
 }
 
 nsresult

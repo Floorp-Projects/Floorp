@@ -7,9 +7,9 @@
 
 #include "nsCoord.h"
 #include "nsCSSProperty.h"
+#include "gfxFontFeatures.h"
 #include "nsIPrincipal.h"
 #include "nsSubstring.h"
-#include "gfxFontFeatures.h"
 
 class nsCSSValue;
 class nsStringComparator;

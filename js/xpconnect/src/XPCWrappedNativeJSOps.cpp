@@ -146,8 +146,8 @@ GetDoubleWrappedJSObject(XPCCallContext& ccx, XPCWrappedNative* wrapper)
     nsCOMPtr<nsIXPConnectWrappedJS>
         underware = do_QueryInterface(wrapper->GetIdentityObject());
     if (underware) {
-        RootedObject mainObj(ccx);
-        if (NS_SUCCEEDED(underware->GetJSObject(mainObj.address())) && mainObj) {
+        RootedObject mainObj(ccx, underware->GetJSObject());
+        if (mainObj) {
             RootedId id(ccx, ccx.GetRuntime()->
                             GetStringID(XPCJSRuntime::IDX_WRAPPED_JSOBJECT));
 
