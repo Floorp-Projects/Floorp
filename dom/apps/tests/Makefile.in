@@ -12,13 +12,22 @@ relativesrcdir   = @relativesrcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_FILES = \
-  test_app_update.html \
   file_app.sjs \
   file_app.template.html \
-  file_hosted_app.template.webapp \
   file_cached_app.template.webapp \
   file_cached_app.template.appcache \
+  file_hosted_app.template.webapp \
+  test_app_update.html \
   $(NULL)
+
+ifdef MOZ_B2G
+MOCHITEST_FILES += \
+  file_packaged_app.sjs \
+  file_packaged_app.template.webapp \
+  file_packaged_app.template.html \
+  test_packaged_app_install.html \
+  $(NULL)
+endif
 
 MOCHITEST_CHROME_FILES = \
   test_apps_service.xul \
