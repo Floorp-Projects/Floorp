@@ -165,7 +165,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsDOMEventTargetHelper,
     return GetEventHandler(nsGkAtoms::on##_event);                        \
   }                                                                       \
   inline void SetOn##_event(mozilla::dom::EventHandlerNonNull* aCallback, \
-                            ErrorResult& aRv)                             \
+                            mozilla::ErrorResult& aRv)                    \
   {                                                                       \
     SetEventHandler(nsGkAtoms::on##_event, aCallback, aRv);               \
   }
