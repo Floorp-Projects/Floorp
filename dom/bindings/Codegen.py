@@ -8997,7 +8997,8 @@ def genConstructorBody(descriptor, initCall=""):
       aRv.Throw(NS_ERROR_FAILURE);
       return nullptr;
     }
-    if (NS_FAILED(implWrapped->GetJSObject(jsImplObj.address()))) {
+    jsImplObj = implWrapped->GetJSObject();
+    if (!jsImplObj) {
       aRv.Throw(NS_ERROR_FAILURE);
       return nullptr;
     }
