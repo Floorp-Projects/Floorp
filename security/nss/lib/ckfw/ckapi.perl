@@ -74,6 +74,10 @@ print <<EOD
 #ifndef NSSCKG_H
 #define NSSCKG_H
 
+#ifdef DEBUG
+static const char NSSCKG_CVS_ID[] = "$g{CVS_ID} ; $cvs_id";
+#endif /* DEBUG */
+
 /*
  * nssckg.h
  *
@@ -113,6 +117,10 @@ print $copyright;
 print <<EOD
 #ifndef NSSCKFT_H
 #define NSSCKFT_H
+
+#ifdef DEBUG
+static const char NSSCKFT_CVS_ID[] = "$g{CVS_ID} ; $cvs_id";
+#endif /* DEBUG */
 
 /*
  * nssckft.h
@@ -154,6 +162,10 @@ print <<EOD
 #ifndef NSSCKEPV_H
 #define NSSCKEPV_H
 
+#ifdef DEBUG
+static const char NSSCKEPV_CVS_ID[] = "$g{CVS_ID} ; $cvs_id";
+#endif /* DEBUG */
+
 /*
  * nssckepv.h
  *
@@ -193,6 +205,10 @@ select API;
 
 print $copyright;
 print <<EOD
+
+#ifdef DEBUG
+static const char NSSCKAPI_CVS_ID[] = "$g{CVS_ID} ; $cvs_id";
+#endif /* DEBUG */
 
 /*
  * nssck.api
