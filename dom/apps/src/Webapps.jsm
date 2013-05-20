@@ -1854,8 +1854,16 @@ this.DOMApplicationRegistry = {
           app.etag = xhr.getResponseHeader("Etag");
           app.manifestHash = this.computeManifestHash(manifest);
           debug("at install package got app etag=" + app.etag);
-          Services.obs.notifyObservers(aMm, "webapps-ask-install",
-                                       JSON.stringify(aData));
+          // We allow bypassing the install confirmation process to facilitate
+          // automation.
+          let prefName = "dom.mozApps.auto_confirm_install";
+          if (Services.prefs.prefHasUserValue(prefName) &&
+              Services.prefs.getBoolPref(prefName)) {
+            this.confirmInstall(aData);
+          } else {
+            Services.obs.notifyObservers(aMm, "webapps-ask-install",
+                                         JSON.stringify(aData));
+          }
         }
       }
       else {
