@@ -4292,13 +4292,10 @@ WebGLContext::CompileShader(WebGLShader *shader)
         int compileOptions = SH_ATTRIBUTES_UNIFORMS |
                              SH_ENFORCE_PACKING_RESTRICTIONS;
 
-        // we want to do this everywhere, but:
-//TODO: Enable on windows:
-#ifndef XP_WIN // to do this on Windows, we need ANGLE r1719, 1733, 1734.
-#ifndef XP_MACOSX // to do this on Mac, we need to do it only on Mac OSX > 10.6 as this
+        // We want to do this everywhere, but:
+#ifndef XP_MACOSX // To do this on Mac, we need to do it only on Mac OSX > 10.6 as this
                   // causes the shader compiler in 10.6 to crash
         compileOptions |= SH_CLAMP_INDIRECT_ARRAY_BOUNDS;
-#endif
 #endif
 
         if (useShaderSourceTranslation) {

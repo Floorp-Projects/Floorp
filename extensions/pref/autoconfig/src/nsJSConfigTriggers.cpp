@@ -57,8 +57,8 @@ nsresult CentralizedAdminPrefManagerInit()
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Unwrap, store and root the sandbox.
-    rv = sandbox->GetJSObject(&autoconfigSb);
-    NS_ENSURE_SUCCESS(rv, rv);
+    autoconfigSb = sandbox->GetJSObject();
+    NS_ENSURE_STATE(autoconfigSb);
     autoconfigSb = js::UncheckedUnwrap(autoconfigSb);
     JSAutoCompartment ac(cx, autoconfigSb);
     if (!JS_AddNamedObjectRoot(cx, &autoconfigSb, "AutoConfig Sandbox"))

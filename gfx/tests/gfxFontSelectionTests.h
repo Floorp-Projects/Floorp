@@ -80,7 +80,6 @@ SetupTests()
                                           NS_NewPermanentAtom(NS_LITERAL_STRING("en")),
                                           0.0,
                                           false, false, false,
-                                          NS_LITERAL_STRING(""),
                                           NS_LITERAL_STRING(""));
 
     gfxFontStyle style_western_bold_16 (FONT_STYLE_NORMAL,
@@ -90,7 +89,6 @@ SetupTests()
                                         NS_NewPermanentAtom(NS_LITERAL_STRING("en")),
                                         0.0,
                                         false, false, false,
-                                        NS_LITERAL_STRING(""),
                                         NS_LITERAL_STRING(""));
 
     /* Test 0 */

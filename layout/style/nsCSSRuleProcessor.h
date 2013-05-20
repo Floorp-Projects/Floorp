@@ -128,6 +128,9 @@ public:
   bool AppendPageRules(nsPresContext* aPresContext,
                        nsTArray<nsCSSPageRule*>& aArray);
 
+  bool AppendFontFeatureValuesRules(nsPresContext* aPresContext,
+                              nsTArray<nsCSSFontFeatureValuesRule*>& aArray);
+
   /**
    * Returns the scope element for the scoped style sheets this rule
    * processor is for.  If this is not a rule processor for scoped style

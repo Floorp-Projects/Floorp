@@ -236,9 +236,13 @@ public:
 
     void Set(JSScript* aObject);
 
-    JSScript *GetScriptObject()
+    // It's safe to return a handle because we trace mScriptObject, no one ever
+    // uses the handle (or the script object) past the point at which the
+    // nsXULPrototypeScript dies, and we can't get memmoved so the
+    // &mScriptObject pointer can't go stale.
+    JS::Handle<JSScript*> GetScriptObject()
     {
-        return mScriptObject;
+        return JS::Handle<JSScript*>::fromMarkedLocation(&mScriptObject);
     }
 
     void TraceScriptObject(JSTracer* aTrc)
