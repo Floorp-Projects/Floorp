@@ -251,8 +251,8 @@ XPCThrower::ThrowExceptionObject(JSContext* cx, nsIException* e)
                                           NS_GET_IID(nsIException),
                                           getter_AddRefs(holder));
             if (NS_SUCCEEDED(rv) && holder) {
-                JS::RootedObject obj(cx);
-                if (NS_SUCCEEDED(holder->GetJSObject(obj.address()))) {
+                JS::RootedObject obj(cx, holder->GetJSObject());
+                if (obj) {
                     JS_SetPendingException(cx, OBJECT_TO_JSVAL(obj));
                     success = true;
                 }

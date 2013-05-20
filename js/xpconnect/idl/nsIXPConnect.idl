@@ -63,10 +63,10 @@ class nsScriptObjectTracer;
 %}
 
 /***************************************************************************/
-[uuid(8916a320-d118-11d3-8f3a-0010a4e73d9a)]
+[uuid(909e8641-7c54-4dff-9b94-ba631f057b33)]
 interface nsIXPConnectJSObjectHolder : nsISupports
 {
-    readonly attribute JSObjectPtr      JSObject;
+    [notxpcom, nostdcall] JSObjectPtr GetJSObject();
 };
 
 [uuid(92e98688-0154-4b65-971b-0d4afe8fd7cb)]

@@ -2130,7 +2130,7 @@ CreateNativeGlobalForInner(JSContext* aCx,
   NS_ENSURE_SUCCESS(rv, rv);
 
   MOZ_ASSERT(jsholder);
-  jsholder->GetJSObject(aNativeGlobal);
+  *aNativeGlobal = jsholder->GetJSObject();
   jsholder.forget(aHolder);
 
   // Set the location information for the new global, so that tools like

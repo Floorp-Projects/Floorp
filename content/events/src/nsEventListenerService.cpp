@@ -84,8 +84,8 @@ nsEventListenerInfo::GetJSVal(JSContext* aCx,
   *aJSVal = JSVAL_NULL;
   nsCOMPtr<nsIXPConnectWrappedJS> wrappedJS = do_QueryInterface(mListener);
   if (wrappedJS) {
-    JS::Rooted<JSObject*> object(aCx, nullptr);
-    if (NS_FAILED(wrappedJS->GetJSObject(object.address()))) {
+    JS::Rooted<JSObject*> object(aCx, wrappedJS->GetJSObject());
+    if (!object) {
       return false;
     }
     aAc.construct(aCx, object);
