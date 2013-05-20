@@ -426,12 +426,13 @@ public class Tab {
         GeckoAppShell.sendEventToGecko(e);
     }
 
-    public void readerMode() {
-        if (!mReaderEnabled)
-            return;
-
-        mEnteringReaderMode = true;
-        Tabs.getInstance().loadUrl(ReaderModeUtils.getAboutReaderForUrl(getURL(), mId, mReadingListItem));
+    public void toggleReaderMode() {
+        if (ReaderModeUtils.isAboutReader(mUrl)) {
+            Tabs.getInstance().loadUrl(ReaderModeUtils.getUrlForAboutReader(mUrl));
+        } else if (mReaderEnabled) {
+            mEnteringReaderMode = true;
+            Tabs.getInstance().loadUrl(ReaderModeUtils.getAboutReaderForUrl(mUrl, mId, mReadingListItem));
+        }
     }
 
     public boolean isEnteringReaderMode() {
