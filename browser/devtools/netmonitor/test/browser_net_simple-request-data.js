@@ -166,7 +166,7 @@ function test() {
       verifyRequestItemTarget(requestItem, "GET", SIMPLE_SJS, {
         type: "plain",
         fullMimeType: "text/plain; charset=utf-8",
-        size: L10N.getFormatStr("networkMenu.sizeKB", 0.01),
+        size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.01),
       });
     });
 
@@ -185,7 +185,7 @@ function test() {
       verifyRequestItemTarget(requestItem, "GET", SIMPLE_SJS, {
         type: "plain",
         fullMimeType: "text/plain; charset=utf-8",
-        size: L10N.getFormatStr("networkMenu.sizeKB", 0.01),
+        size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.01),
       });
     });
 
