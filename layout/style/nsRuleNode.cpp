@@ -39,6 +39,7 @@
 #include "CSSCalc.h"
 #include "nsPrintfCString.h"
 #include "nsRenderingContext.h"
+#include "nsStyleUtil.h"
 
 #include "mozilla/LookAndFeel.h"
 
@@ -3272,6 +3273,109 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
   else if (eCSSUnit_Initial == scriptLevelValue->GetUnit()) {
     aFont->mScriptLevel = 0;
   }
+
+  // font-kerning: none, enum, inherit, initial, -moz-system-font
+  SetDiscrete(*aRuleData->ValueForFontKerning(),
+              aFont->mFont.kerning, aCanStoreInRuleTree,
+              SETDSC_ENUMERATED | SETDSC_SYSTEM_FONT,
+              aParentFont->mFont.kerning,
+              defaultVariableFont->kerning,
+              0, 0, 0, systemFont.kerning);
+
+  // font-synthesis: none, enum (bit field), inherit, initial, -moz-system-font
+  SetDiscrete(*aRuleData->ValueForFontSynthesis(),
+              aFont->mFont.synthesis, aCanStoreInRuleTree,
+              SETDSC_NONE | SETDSC_ENUMERATED | SETDSC_SYSTEM_FONT,
+              aParentFont->mFont.synthesis,
+              defaultVariableFont->synthesis,
+              0, 0, 0, systemFont.synthesis);
+
+  // font-variant-alternates: normal, enum (bit field) + functions, inherit,
+  //                          initial, -moz-system-font
+  const nsCSSValue* variantAlternatesValue =
+    aRuleData->ValueForFontVariantAlternates();
+  int32_t variantAlternates = 0;
+
+  switch (variantAlternatesValue->GetUnit()) {
+  case eCSSUnit_Inherit:
+    aFont->mFont.CopyAlternates(aParentFont->mFont);
+    aCanStoreInRuleTree = false;
+    break;
+
+  case eCSSUnit_Initial:
+  case eCSSUnit_Normal:
+    aFont->mFont.variantAlternates = 0;
+    aFont->mFont.alternateValues.Clear();
+    aFont->mFont.featureValueLookup = nullptr;
+    break;
+
+  case eCSSUnit_Pair:
+    NS_ASSERTION(variantAlternatesValue->GetPairValue().mXValue.GetUnit() ==
+                   eCSSUnit_Enumerated, "strange unit for variantAlternates");
+    variantAlternates =
+      variantAlternatesValue->GetPairValue().mXValue.GetIntValue();
+    aFont->mFont.variantAlternates = variantAlternates;
+
+    if (variantAlternates & NS_FONT_VARIANT_ALTERNATES_FUNCTIONAL_MASK) {
+      // fetch the feature lookup object from the styleset
+      aFont->mFont.featureValueLookup =
+        aPresContext->StyleSet()->GetFontFeatureValuesLookup();
+
+      NS_ASSERTION(variantAlternatesValue->GetPairValue().mYValue.GetUnit() ==
+                   eCSSUnit_List, "function list not a list value");
+      nsStyleUtil::ComputeFunctionalAlternates(
+        variantAlternatesValue->GetPairValue().mYValue.GetListValue(),
+        aFont->mFont.alternateValues);
+    }
+    break;
+
+  default:
+    break;
+  }
+
+  // font-variant-caps: normal, enum, inherit, initial, -moz-system-font
+  SetDiscrete(*aRuleData->ValueForFontVariantCaps(),
+              aFont->mFont.variantCaps, aCanStoreInRuleTree,
+              SETDSC_NORMAL | SETDSC_ENUMERATED | SETDSC_SYSTEM_FONT,
+              aParentFont->mFont.variantCaps,
+              defaultVariableFont->variantCaps,
+              0, 0, 0, systemFont.variantCaps);
+
+  // font-variant-east-asian: normal, enum (bit field), inherit, initial,
+  //                          -moz-system-font
+  SetDiscrete(*aRuleData->ValueForFontVariantEastAsian(),
+              aFont->mFont.variantEastAsian, aCanStoreInRuleTree,
+              SETDSC_NORMAL | SETDSC_ENUMERATED | SETDSC_SYSTEM_FONT,
+              aParentFont->mFont.variantEastAsian,
+              defaultVariableFont->variantEastAsian,
+              0, 0, 0, systemFont.variantEastAsian);
+
+  // font-variant-ligatures: normal, enum (bit field), inherit, initial,
+  //                         -moz-system-font
+  SetDiscrete(*aRuleData->ValueForFontVariantLigatures(),
+              aFont->mFont.variantLigatures, aCanStoreInRuleTree,
+              SETDSC_NORMAL | SETDSC_ENUMERATED | SETDSC_SYSTEM_FONT,
+              aParentFont->mFont.variantLigatures,
+              defaultVariableFont->variantLigatures,
+              0, 0, 0, systemFont.variantLigatures);
+
+  // font-variant-numeric: normal, enum (bit field), inherit, initial,
+  //                       -moz-system-font
+  SetDiscrete(*aRuleData->ValueForFontVariantNumeric(),
+              aFont->mFont.variantNumeric, aCanStoreInRuleTree,
+              SETDSC_NORMAL | SETDSC_ENUMERATED | SETDSC_SYSTEM_FONT,
+              aParentFont->mFont.variantNumeric,
+              defaultVariableFont->variantNumeric,
+              0, 0, 0, systemFont.variantNumeric);
+
+  // font-variant-position: normal, enum, inherit, initial,
+  //                        -moz-system-font
+  SetDiscrete(*aRuleData->ValueForFontVariantPosition(),
+              aFont->mFont.variantPosition, aCanStoreInRuleTree,
+              SETDSC_NORMAL | SETDSC_ENUMERATED | SETDSC_SYSTEM_FONT,
+              aParentFont->mFont.variantPosition,
+              defaultVariableFont->variantPosition,
+              0, 0, 0, systemFont.variantPosition);
 
   // font-feature-settings
   const nsCSSValue* featureSettingsValue =
