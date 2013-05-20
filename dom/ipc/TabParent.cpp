@@ -1102,7 +1102,7 @@ TabParent::ReceiveMessage(const nsString& aMessage,
     uint32_t len = 0; //TODO: obtain a real value in bug 572685
     // Because we want JS messages to have always the same properties,
     // create array even if len == 0.
-    JSObject* objectsArray = JS_NewArrayObject(ctx, len, NULL);
+    JS::Rooted<JSObject*> objectsArray(ctx, JS_NewArrayObject(ctx, len, NULL));
     if (!objectsArray) {
       return false;
     }

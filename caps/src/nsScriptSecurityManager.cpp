@@ -1633,7 +1633,7 @@ nsScriptSecurityManager::CheckFunctionAccess(JSContext *aCx, void *aFunObj,
     /*
     ** Get origin of subject and object and compare.
     */
-    JSObject* obj = (JSObject*)aTargetObj;
+    JS::Rooted<JSObject*> obj(aCx, (JSObject*)aTargetObj);
     nsIPrincipal* object = doGetObjectPrincipal(obj);
 
     if (!object)
@@ -2023,7 +2023,8 @@ NS_IMETHODIMP
 nsScriptSecurityManager::GetObjectPrincipal(JSContext *aCx, JSObject *aObj,
                                             nsIPrincipal **result)
 {
-    *result = doGetObjectPrincipal(aObj);
+    JS::Rooted<JSObject*> obj(aCx, aObj);
+    *result = doGetObjectPrincipal(obj);
     if (!*result)
         return NS_ERROR_FAILURE;
     NS_ADDREF(*result);
@@ -2032,7 +2033,7 @@ nsScriptSecurityManager::GetObjectPrincipal(JSContext *aCx, JSObject *aObj,
 
 // static
 nsIPrincipal*
-nsScriptSecurityManager::doGetObjectPrincipal(JSObject *aObj)
+nsScriptSecurityManager::doGetObjectPrincipal(JS::Handle<JSObject*> aObj)
 {
     JSCompartment *compartment = js::GetObjectCompartment(aObj);
     JSPrincipals *principals = JS_GetCompartmentPrincipals(compartment);
@@ -2052,14 +2053,15 @@ nsScriptSecurityManager::doGetObjectPrincipal(JSObject *aObj)
 #ifdef DEBUG
 // static
 nsIPrincipal*
-nsScriptSecurityManager::old_doGetObjectPrincipal(JSObject *aObj,
+nsScriptSecurityManager::old_doGetObjectPrincipal(JS::Handle<JSObject*> aObj,
                                                   bool aAllowShortCircuit)
 {
     NS_ASSERTION(aObj, "Bad call to doGetObjectPrincipal()!");
     nsIPrincipal* result = nullptr;
 
-    JS::RootedObject obj(sXPConnect->GetCurrentJSContext(), aObj);
-    JSObject* origObj = obj;
+    JSContext* cx = sXPConnect->GetCurrentJSContext();
+    JS::RootedObject obj(cx, aObj);
+    JS::RootedObject origObj(cx, obj);
     js::Class *jsClass = js::GetObjectClass(obj);
 
     // A common case seen in this code is that we enter this function

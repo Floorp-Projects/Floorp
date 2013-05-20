@@ -2526,7 +2526,7 @@ nsXULPrototypeScript::DeserializeOutOfLine(nsIObjectInputStream* aInput,
                     bool isChrome = false;
                     mSrcURI->SchemeIs("chrome", &isChrome);
                     if (isChrome)
-                        cache->PutScript(mSrcURI, mScriptObject);
+                        cache->PutScript(mSrcURI, GetScriptObject());
                 }
                 cache->FinishInputStream(mSrcURI);
             } else {
@@ -2628,9 +2628,9 @@ nsXULPrototypeScript::Set(JSScript* aObject)
         return;
     }
 
+    mScriptObject = aObject;
     nsContentUtils::HoldJSObjects(
         this, NS_CYCLE_COLLECTION_PARTICIPANT(nsXULPrototypeNode));
-    mScriptObject = aObject;
 }
 
 //----------------------------------------------------------------------
