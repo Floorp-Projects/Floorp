@@ -15,6 +15,7 @@ MODULE = 'xpcom'
 
 EXPORTS += [
     'nsCycleCollectionNoteChild.h',
+    'nsCycleCollectionNoteRootCallback.h',
     'nsCycleCollectionTraversalCallback.h',
     'nsCycleCollectorUtils.h',
     'nsProxyRelease.h',
