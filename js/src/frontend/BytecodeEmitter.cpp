@@ -5856,6 +5856,8 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         break;
 
       case PNK_DEBUGGER:
+        if (!UpdateSourceCoordNotes(cx, bce, pn->pn_pos.begin))
+            return false;
         if (Emit1(cx, bce, JSOP_DEBUGGER) < 0)
             return false;
         break;
