@@ -1033,8 +1033,7 @@ misalignBuffer(PLArenaPool *arena, bltestIO *io, int off)
     ptrdiff_t offset = (ptrdiff_t)io->buf.data % WORDSIZE;
     int length = io->buf.len;
     if (offset != off) {
-	SECITEM_ReallocItem(arena, &io->buf, length, length + 2*WORDSIZE);
-	io->buf.len = length + 2*WORDSIZE; /* why doesn't realloc do this? */
+	SECITEM_ReallocItemV2(arena, &io->buf, length + 2*WORDSIZE);
 	/* offset may have changed? */
 	offset = (ptrdiff_t)io->buf.data % WORDSIZE;
 	if (offset != off) {
