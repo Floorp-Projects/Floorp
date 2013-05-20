@@ -67,9 +67,7 @@ SVGViewElement::SetZoomAndPan(uint16_t aZoomAndPan, ErrorResult& rv)
 already_AddRefed<SVGAnimatedRect>
 SVGViewElement::ViewBox()
 {
-  nsRefPtr<SVGAnimatedRect> box;
-  mViewBox.ToDOMAnimatedRect(getter_AddRefs(box), this);
-  return box.forget();
+  return mViewBox.ToSVGAnimatedRect(this);
 }
 
 already_AddRefed<DOMSVGAnimatedPreserveAspectRatio>
