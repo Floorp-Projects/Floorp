@@ -472,50 +472,6 @@ nsDOMEvent::StopImmediatePropagation()
   return NS_OK;
 }
 
-static nsIDocument* GetDocumentForReport(nsEvent* aEvent)
-{
-  EventTarget* target = aEvent->currentTarget;
-  if (nsCOMPtr<nsINode> node = do_QueryInterface(target)) {
-    return node->OwnerDoc();
-  }
-
-  if (nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(target)) {
-    return window->GetExtantDoc();
-  }
-
-  return nullptr;
-}
-
-static void
-ReportUseOfDeprecatedMethod(nsEvent* aEvent, nsIDOMEvent* aDOMEvent,
-                            const char* aWarning)
-{
-  nsCOMPtr<nsIDocument> doc(GetDocumentForReport(aEvent));
-
-  nsAutoString type;
-  aDOMEvent->GetType(type);
-  const PRUnichar *strings[] = { type.get() };
-  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                  "DOM Events", doc,
-                                  nsContentUtils::eDOM_PROPERTIES,
-                                  aWarning,
-                                  strings, ArrayLength(strings));
-}
-
-NS_IMETHODIMP
-nsDOMEvent::PreventBubble()
-{
-  ReportUseOfDeprecatedMethod(mEvent, this, "UseOfPreventBubbleWarning");
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMEvent::PreventCapture()
-{
-  ReportUseOfDeprecatedMethod(mEvent, this, "UseOfPreventCaptureWarning");
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsDOMEvent::GetIsTrusted(bool *aIsTrusted)
 {
