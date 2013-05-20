@@ -3,6 +3,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+my $cvs_id = '@(#) $RCSfile$ $Revision$ $Date$';
 use strict;
 
 my %constants;
@@ -10,6 +11,7 @@ my $count = 0;
 my $o;
 my @objects = ();
 my @objsize;
+my $cvsid;
 
 $constants{CKO_DATA} = "static const CK_OBJECT_CLASS cko_data = CKO_DATA;\n";
 $constants{CK_TRUE} = "static const CK_BBOOL ck_true = CK_TRUE;\n";
@@ -21,6 +23,21 @@ while(<>) {
 
   s/^((?:[^"#]+|"[^"]*")*)(\s*#.*$)/$1/;
   next if (/^\s*$/);
+
+  if( /(^CVS_ID\s+)(.*)/ ) {
+    $cvsid = $2 . "\"; $cvs_id\"";
+    my $scratch = $cvsid;
+    $size = 1 + $scratch =~ s/[^"\n]//g;
+    @{$objects[0][0]} = ( "CKA_CLASS", "&cko_data", "sizeof(CK_OBJECT_CLASS)" );
+    @{$objects[0][1]} = ( "CKA_TOKEN", "&ck_true", "sizeof(CK_BBOOL)" );
+    @{$objects[0][2]} = ( "CKA_PRIVATE", "&ck_false", "sizeof(CK_BBOOL)" );
+    @{$objects[0][3]} = ( "CKA_MODIFIABLE", "&ck_false", "sizeof(CK_BBOOL)" );
+    @{$objects[0][4]} = ( "CKA_LABEL", "\"CVS ID\"", "7" );
+    @{$objects[0][5]} = ( "CKA_APPLICATION", "\"NSS\"", "4" );
+    @{$objects[0][6]} = ( "CKA_VALUE", $cvsid, "$size" );
+    $objsize[0] = 7;
+    next;
+  }
 
   # This was taken from the perl faq #4.
   my $text = $_;
@@ -93,7 +110,7 @@ doprint();
 
 sub dudump {
 my $i;
-for( $i = 1; $i <= $count; $i++ ) {
+for( $i = 0; $i <= $count; $i++ ) {
   print "\n";
   $o = $objects[$i];
   my @ob = @{$o};
@@ -116,6 +133,9 @@ print <<EOD
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+#ifdef DEBUG
+static const char CVS_ID[] = $cvsid;
+#endif /* DEBUG */
 
 #ifndef BUILTINS_H
 #include "builtins.h"
@@ -128,7 +148,11 @@ foreach $b (sort values(%constants)) {
   print $b;
 }
 
-for( $i = 1; $i <= $count; $i++ ) {
+for( $i = 0; $i <= $count; $i++ ) {
+  if( 0 == $i ) {
+    print "#ifdef DEBUG\n";
+  }
+
   print "static const CK_ATTRIBUTE_TYPE nss_builtins_types_$i [] = {\n";
   $o = $objects[$i];
   my @ob = @{$o};
@@ -142,9 +166,17 @@ for( $i = 1; $i <= $count; $i++ ) {
     }
   }
   print "\n};\n";
+
+  if( 0 == $i ) {
+    print "#endif /* DEBUG */\n";
+  }
 }
 
-for( $i = 1; $i <= $count; $i++ ) {
+for( $i = 0; $i <= $count; $i++ ) {
+  if( 0 == $i ) {
+    print "#ifdef DEBUG\n";
+  }
+
   print "static const NSSItem nss_builtins_items_$i [] = {\n";
   $o = $objects[$i];
   my @ob = @{$o};
@@ -160,22 +192,40 @@ for( $i = 1; $i <= $count; $i++ ) {
     }
   }
   print "};\n";
+
+  if( 0 == $i ) {
+    print "#endif /* DEBUG */\n";
+  }
 }
 
 print "\nbuiltinsInternalObject\n";
 print "nss_builtins_data[] = {\n";
 
-for( $i = 1; $i <= $count; $i++ ) {
+for( $i = 0; $i <= $count; $i++ ) {
+
+  if( 0 == $i ) {
+    print "#ifdef DEBUG\n";
+  }
+
   print "  { $objsize[$i], nss_builtins_types_$i, nss_builtins_items_$i, {NULL} }";
+
   if( $i == $count ) {
     print "\n";
   } else {
     print ",\n";
+  }
+
+  if( 0 == $i ) {
+    print "#endif /* DEBUG */\n";
   }
 }
 
 print "};\n";
 
 print "const PRUint32\n";
-print "nss_builtins_nObjects = $count;\n";
+print "#ifdef DEBUG\n";
+print "  nss_builtins_nObjects = $count+1;\n";
+print "#else\n";
+print "  nss_builtins_nObjects = $count;\n";
+print "#endif /* DEBUG */\n";
 }
