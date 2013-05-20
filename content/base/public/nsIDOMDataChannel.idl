@@ -2,6 +2,13 @@
 
 #include "nsIDOMEventTarget.idl"
 
+%{C++
+#ifdef GetBinaryType
+// Windows apparently has a #define for GetBinaryType...
+#undef GetBinaryType
+#endif
+%}
+
 interface nsIVariant;
 
 [scriptable, builtinclass, uuid(1aed816d-1156-414e-8fe2-f01daa6021f0)]

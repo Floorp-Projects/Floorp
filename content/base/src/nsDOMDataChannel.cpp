@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsDOMDataChannel.h"
+
 #ifdef MOZ_LOGGING
 #define FORCE_PR_LOG
 #endif
@@ -39,80 +41,19 @@ extern PRLogModuleInfo* GetDataChannelLog();
 
 #include "DataChannel.h"
 
-#ifdef GetBinaryType
-// Windows apparently has a #define for GetBinaryType...
-#undef GetBinaryType
-#endif
-
 using namespace mozilla;
 
-class nsDOMDataChannel : public nsDOMEventTargetHelper,
-                         public nsIDOMDataChannel,
-                         public mozilla::DataChannelListener
-{
-public:
-  nsDOMDataChannel(already_AddRefed<mozilla::DataChannel> aDataChannel)
-    : mDataChannel(aDataChannel)
-    , mBinaryType(DC_BINARY_TYPE_BLOB)
-  {}
-
-  ~nsDOMDataChannel()
-  {
-    // Don't call us anymore!  Likely isn't an issue (or maybe just less of
-    // one) once we block GC until all the (appropriate) onXxxx handlers
-    // are dropped. (See WebRTC spec)
-    LOG(("Close()ing %p", mDataChannel.get()));
-    mDataChannel->SetListener(nullptr, nullptr);
-    mDataChannel->Close();
-  }
-
-  nsresult Init(nsPIDOMWindow* aDOMWindow);
-
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMDATACHANNEL
-
-  NS_REALLY_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetHelper)
-
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsDOMDataChannel,
-                                           nsDOMEventTargetHelper)
-
-  nsresult
-  DoOnMessageAvailable(const nsACString& aMessage, bool aBinary);
-
-  virtual nsresult
-  OnMessageAvailable(nsISupports* aContext, const nsACString& aMessage);
-
-  virtual nsresult
-  OnBinaryMessageAvailable(nsISupports* aContext, const nsACString& aMessage);
-
-  virtual nsresult OnSimpleEvent(nsISupports* aContext, const nsAString& aName);
-
-  virtual nsresult
-  OnChannelConnected(nsISupports* aContext);
-
-  virtual nsresult
-  OnChannelClosed(nsISupports* aContext);
-
-  virtual void
-  AppReady();
-
-private:
-  // Get msg info out of JS variable being sent (string, arraybuffer, blob)
-  nsresult GetSendParams(nsIVariant *aData, nsCString &aStringOut,
-                         nsCOMPtr<nsIInputStream> &aStreamOut,
-                         bool &aIsBinary, uint32_t &aOutgoingLength);
-
-  // Owning reference
-  nsRefPtr<mozilla::DataChannel> mDataChannel;
-  nsString  mOrigin;
-  enum
-  {
-    DC_BINARY_TYPE_ARRAYBUFFER,
-    DC_BINARY_TYPE_BLOB,
-  } mBinaryType;
-};
-
 DOMCI_DATA(DataChannel, nsDOMDataChannel)
+
+nsDOMDataChannel::~nsDOMDataChannel()
+{
+  // Don't call us anymore!  Likely isn't an issue (or maybe just less of
+  // one) once we block GC until all the (appropriate) onXxxx handlers
+  // are dropped. (See WebRTC spec)
+  LOG(("Close()ing %p", mDataChannel.get()));
+  mDataChannel->SetListener(nullptr, nullptr);
+  mDataChannel->Close();
+}
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsDOMDataChannel,
                                                   nsDOMEventTargetHelper)
