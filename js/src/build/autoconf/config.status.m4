@@ -88,7 +88,7 @@ if not os.path.isabs(topsrcdir):
     rel = os.path.join(os.path.dirname(<<<__file__>>>), topsrcdir)
     topsrcdir = os.path.normpath(os.path.abspath(rel))
 
-topobjdir = os.path.dirname(<<<__file__>>>)
+topobjdir = os.path.abspath(os.path.dirname(<<<__file__>>>))
 
 dnl All defines and substs are stored with an additional space at the beginning
 dnl and at the end of the string, to avoid any problem with values starting or
