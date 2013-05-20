@@ -626,7 +626,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
                                       const nsAString& aMessage,
                                       bool aSync,
                                       const StructuredCloneData* aCloneData,
-                                      JSObject* aObjectsArray,
+                                      JS::Handle<JSObject*> aObjectsArray,
                                       InfallibleTArray<nsString>* aJSONRetVal,
                                       JSContext* aContext)
 {
@@ -1206,7 +1206,7 @@ public:
 
       nsRefPtr<nsFrameMessageManager> ppm = nsFrameMessageManager::sChildProcessManager;
       ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()), mMessage,
-                          false, &data, nullptr, nullptr, nullptr);
+                          false, &data, JS::NullPtr(), nullptr, nullptr);
     }
     return NS_OK;
   }
@@ -1336,7 +1336,7 @@ public:
       nsRefPtr<nsFrameMessageManager> ppm =
         nsFrameMessageManager::sSameProcessParentManager;
       ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()),
-                          mMessage, false, &data, nullptr, nullptr, nullptr);
+                          mMessage, false, &data, JS::NullPtr(), nullptr, nullptr);
      }
      return NS_OK;
   }
@@ -1376,7 +1376,7 @@ public:
     if (nsFrameMessageManager::sSameProcessParentManager) {
       nsRefPtr<nsFrameMessageManager> ppm = nsFrameMessageManager::sSameProcessParentManager;
       ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()), aMessage,
-                          true, &aData, nullptr, aJSONRetVal);
+                          true, &aData, JS::NullPtr(), aJSONRetVal);
     }
     return true;
   }

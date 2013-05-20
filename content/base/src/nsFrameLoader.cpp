@@ -2204,7 +2204,7 @@ public:
 
       nsRefPtr<nsFrameMessageManager> mm = tabChild->GetInnerManager();
       mm->ReceiveMessage(static_cast<EventTarget*>(tabChild), mMessage,
-                         false, &data, nullptr, nullptr, nullptr);
+                         false, &data, JS::NullPtr(), nullptr, nullptr);
     }
     return NS_OK;
   }
