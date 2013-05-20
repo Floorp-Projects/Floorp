@@ -530,7 +530,7 @@ SECU_ReadDERFromFile(SECItem *der, PRFileDesc *inFile, PRBool ascii)
 	    }
 	} else {
 	    /* need one additional byte for zero terminator */
-	    rv = SECITEM_ReallocItem(NULL, &filedata, filedata.len, filedata.len+1);
+	    rv = SECITEM_ReallocItemV2(NULL, &filedata, filedata.len+1);
 	    if (rv != SECSuccess) {
 		PORT_Free(filedata.data);
 		return rv;

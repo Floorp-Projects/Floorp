@@ -321,13 +321,13 @@ ssl_DupSocket(sslSocket *os)
 		if (oc->serverKeyPair && !sc->serverKeyPair)
 		    goto loser;
 	        sc->serverKeyBits = oc->serverKeyBits;
+		ss->certStatusArray[i] = !os->certStatusArray[i] ? NULL :
+				SECITEM_DupArray(NULL, os->certStatusArray[i]);
 	    }
 	    ss->stepDownKeyPair = !os->stepDownKeyPair ? NULL :
 		                  ssl3_GetKeyPairRef(os->stepDownKeyPair);
 	    ss->ephemeralECDHKeyPair = !os->ephemeralECDHKeyPair ? NULL :
 		                  ssl3_GetKeyPairRef(os->ephemeralECDHKeyPair);
-	    ss->certStatusArray = !os->certStatusArray ? NULL :
-				  SECITEM_DupArray(NULL, os->certStatusArray);
 /*
  * XXX the preceding CERT_ and SECKEY_ functions can fail and return NULL.
  * XXX We should detect this, and not just march on with NULL pointers.
@@ -430,6 +430,10 @@ ssl_DestroySocketContents(sslSocket *ss)
 	    CERT_DestroyCertificateList(sc->serverCertChain);
 	if (sc->serverKeyPair != NULL)
 	    ssl3_FreeKeyPair(sc->serverKeyPair);
+	if (ss->certStatusArray[i] != NULL) {
+	    SECITEM_FreeArray(ss->certStatusArray[i], PR_TRUE);
+	    ss->certStatusArray[i] = NULL;
+	}
     }
     if (ss->stepDownKeyPair) {
 	ssl3_FreeKeyPair(ss->stepDownKeyPair);
@@ -438,10 +442,6 @@ ssl_DestroySocketContents(sslSocket *ss)
     if (ss->ephemeralECDHKeyPair) {
 	ssl3_FreeKeyPair(ss->ephemeralECDHKeyPair);
 	ss->ephemeralECDHKeyPair = NULL;
-    }
-    if (ss->certStatusArray) {
-	SECITEM_FreeArray(ss->certStatusArray, PR_TRUE);
-	ss->certStatusArray = NULL;
     }
     SECITEM_FreeItem(&ss->opt.nextProtoNego, PR_FALSE);
     PORT_Assert(!ss->xtnData.sniNameArr);
@@ -1668,6 +1668,15 @@ SSL_ReconfigFD(PRFileDesc *model, PRFileDesc *fd)
             sc->serverCertChain = CERT_DupCertList(mc->serverCertChain);
             if (!sc->serverCertChain)
                 goto loser;
+	    if (sm->certStatusArray[i]) {
+		if (ss->certStatusArray[i]) {
+		    SECITEM_FreeArray(ss->certStatusArray[i], PR_TRUE);
+		    ss->certStatusArray[i] = NULL;
+		}
+		ss->certStatusArray[i] = SECITEM_DupArray(NULL, sm->certStatusArray[i]);
+		if (!ss->certStatusArray[i])
+		    goto loser;
+	    }
         }
         if (mc->serverKeyPair) {
             if (sc->serverKeyPair) {
@@ -1689,13 +1698,6 @@ SSL_ReconfigFD(PRFileDesc *model, PRFileDesc *fd)
         }
         ss->ephemeralECDHKeyPair =
             ssl3_GetKeyPairRef(sm->ephemeralECDHKeyPair);
-    }
-    if (sm->certStatusArray) {
-	if (ss->certStatusArray) {
-	    SECITEM_FreeArray(ss->certStatusArray, PR_TRUE);
-	    ss->certStatusArray = NULL;
-	}
-	ss->certStatusArray = SECITEM_DupArray(NULL, sm->certStatusArray);
     }
     /* copy trust anchor names */
     if (sm->ssl3.ca_list) {
@@ -2229,8 +2231,8 @@ ssl_GetSockName(PRFileDesc *fd, PRNetAddr *name)
 }
 
 SECStatus
-SSL_SetStapledOCSPResponses(PRFileDesc *fd, SECItemArray *responses,
-			    PRBool takeOwnership)
+SSL_SetStapledOCSPResponses(PRFileDesc *fd, const SECItemArray *responses,
+			    SSLKEAType kea)
 {
     sslSocket *ss;
 
@@ -2241,19 +2243,20 @@ SSL_SetStapledOCSPResponses(PRFileDesc *fd, SECItemArray *responses,
 	return SECFailure;
     }
 
-    if (ss->certStatusArray) {
-        SECITEM_FreeArray(ss->certStatusArray, PR_TRUE);
-        ss->certStatusArray = NULL;
+    if ( kea <= 0 || kea >= kt_kea_size) {
+	SSL_DBG(("%d: SSL[%d]: invalid key in SSL_SetStapledOCSPResponses",
+		 SSL_GETPID(), fd));
+	return SECFailure;
+    }
+
+    if (ss->certStatusArray[kea]) {
+        SECITEM_FreeArray(ss->certStatusArray[kea], PR_TRUE);
+        ss->certStatusArray[kea] = NULL;
     }
     if (responses) {
-	if (takeOwnership) {
-	    ss->certStatusArray = responses;
-	}
-	else {
-	    ss->certStatusArray = SECITEM_DupArray(NULL, responses);
-	}
+	ss->certStatusArray[kea] = SECITEM_DupArray(NULL, responses);
     }
-    return (ss->certStatusArray || !responses) ? SECSuccess : SECFailure;
+    return (ss->certStatusArray[kea] || !responses) ? SECSuccess : SECFailure;
 }
 
 SECStatus
@@ -2953,10 +2956,10 @@ ssl_NewSocket(PRBool makeLocks, SSLProtocolVariant protocolVariant)
 	    sc->serverCertChain = NULL;
 	    sc->serverKeyPair   = NULL;
 	    sc->serverKeyBits   = 0;
+	    ss->certStatusArray[i] = NULL;
 	}
 	ss->stepDownKeyPair    = NULL;
 	ss->dbHandle           = CERT_GetDefaultCertDB();
-	ss->certStatusArray    = NULL;
 
 	/* Provide default implementation of hooks */
 	ss->authCertificate    = SSL_AuthCertificate;
