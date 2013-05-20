@@ -410,7 +410,7 @@ public:
 
   void GetLabel(nsAString& aLabel) { CopyUTF8toUTF16(mLabel, aLabel); }
   void GetProtocol(nsAString& aProtocol) { CopyUTF8toUTF16(mProtocol, aProtocol); }
-  void GetStream(uint16_t *aStream) { *aStream = mStream; }
+  uint16_t GetStream() { return mStream; }
 
   void AppReady();
 
