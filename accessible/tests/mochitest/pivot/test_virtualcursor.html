@@ -26,27 +26,17 @@
 
     function doTest()
     {
-      var rootAcc = getRootAccessible(browserWindow().document);
-      try {
-        rootAcc.QueryInterface(nsIAccessibleCursorable);
-      } catch (e) {
-        ok(false, "Root accessible does not support nsIAccessibleCursorable");
-      }
+      var rootAcc = getAccessible(browserDocument(), [nsIAccessibleDocument]);
+      ok(rootAcc.virtualCursor,
+         "root document does not have virtualCursor");
+
       var doc = currentTabDocument();
-      var docAcc = getAccessible(doc, [nsIAccessibleDocument,
-                                       nsIAccessibleCursorable]);
+      var docAcc = getAccessible(doc, [nsIAccessibleDocument]);
 
-      // Test that embedded documents don't have their own virtual cursor.
+      // Test that embedded documents have their own virtual cursor.
       is(docAcc.childDocumentCount, 1, "Expecting one child document");
-      var childDoc = docAcc.getChildDocumentAt(0);
-      var supportsVC = true;
-      try {
-        childDoc.QueryInterface(nsIAccessibleCursorable);
-      } catch (e) {
-        supportsVC = false;
-      }
-
-      ok(!supportsVC, "no nsIAccessibleCursorable support in child document");
+      ok(docAcc.getChildDocumentAt(0).virtualCursor,
+         "child document does not have virtualCursor");
 
       gQueue = new eventQueue();
 

@@ -90,9 +90,8 @@ PlaceInfo::GetVisits(JSContext* aContext,
                                   getter_AddRefs(wrapper));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    JS::Rooted<JSObject*> jsobj(aContext);
-    rv = wrapper->GetJSObject(jsobj.address());
-    NS_ENSURE_SUCCESS(rv, rv);
+    JS::Rooted<JSObject*> jsobj(aContext, wrapper->GetJSObject());
+    NS_ENSURE_STATE(jsobj);
     JS::Value wrappedVisit = OBJECT_TO_JSVAL(jsobj);
 
     JSBool rc = JS_SetElement(aContext, visits, idx, &wrappedVisit);

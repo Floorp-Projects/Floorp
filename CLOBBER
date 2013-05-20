@@ -17,7 +17,7 @@
 #
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
-Bug 848530 - Added a dependency file for moz.build traversal.
+Landing bug 865806
 
 Alternative to clobber is to run ./config.status from the objdir and to
 touch the CLOBBER file in the objdir.

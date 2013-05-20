@@ -6,6 +6,7 @@
 #include "nsISupports.idl"
 
 interface nsIAccessible;
+interface nsIAccessiblePivot;
 interface nsIDOMDocument;
 interface nsIDOMNode;
 interface nsIDOMWindow;
@@ -21,7 +22,7 @@ interface nsIDOMWindow;
  * nsIAccessible::GetAccessibleDocument() or 
  * nsIAccessibleEvent::GetAccessibleDocument()
  */
-[scriptable, uuid(451242bd-8a0c-4198-ae88-c053609a4e5d)]
+[scriptable, uuid(fe5b3886-2b6a-491a-80cd-a3e6342c451d)]
 interface nsIAccessibleDocument : nsISupports
 {
   /**
@@ -74,6 +75,11 @@ interface nsIAccessibleDocument : nsISupports
    * Return the count of child document accessibles.
    */
   readonly attribute unsigned long childDocumentCount;
+
+  /**
+   * The virtual cursor pivot this document manages.
+   */
+  readonly attribute nsIAccessiblePivot virtualCursor;
 
   /**
    * Return the child document accessible at the given index.
