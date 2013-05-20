@@ -2946,8 +2946,12 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
 
 - (CGFloat)titlebarHeight
 {
+  // We use the original content rect here, not what we return from
+  // [self contentRectForFrameRect:], because that would give us a
+  // titlebarHeight of zero in drawsContentsIntoWindowFrame mode.
   NSRect frameRect = [self frame];
-  return frameRect.size.height - [self contentRectForFrameRect:frameRect].size.height;
+  NSRect originalContentRect = [NSWindow contentRectForFrameRect:frameRect styleMask:[self styleMask]];
+  return NSMaxY(frameRect) - NSMaxY(originalContentRect);
 }
 
 // Stores the complete height of titlebar + toolbar.
@@ -2959,10 +2963,7 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
   mUnifiedToolbarHeight = aHeight;
 
   // Update sheet positioning hint
-  NSRect frameRect = [self frame];
-  NSRect originalContentRect = [NSWindow contentRectForFrameRect:frameRect styleMask:[self styleMask]];
-  CGFloat originalTitlebarHeight = NSMaxY(frameRect) - NSMaxY(originalContentRect);
-  CGFloat topMargin = mUnifiedToolbarHeight - originalTitlebarHeight;
+  CGFloat topMargin = mUnifiedToolbarHeight - [self titlebarHeight];
   [self setContentBorderThickness:topMargin forEdge:NSMaxYEdge];
 
   // Redraw the title bar. If we're inside painting, we'll do it right now,
