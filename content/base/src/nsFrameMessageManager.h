@@ -182,7 +182,7 @@ public:
 
   nsresult ReceiveMessage(nsISupports* aTarget, const nsAString& aMessage,
                           bool aSync, const StructuredCloneData* aCloneData,
-                          JSObject* aObjectsArray,
+                          JS::Handle<JSObject*> aObjectsArray,
                           InfallibleTArray<nsString>* aJSONRetVal,
                           JSContext* aContext = nullptr);
 

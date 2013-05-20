@@ -1854,8 +1854,16 @@ this.DOMApplicationRegistry = {
           app.etag = xhr.getResponseHeader("Etag");
           app.manifestHash = this.computeManifestHash(manifest);
           debug("at install package got app etag=" + app.etag);
-          Services.obs.notifyObservers(aMm, "webapps-ask-install",
-                                       JSON.stringify(aData));
+          // We allow bypassing the install confirmation process to facilitate
+          // automation.
+          let prefName = "dom.mozApps.auto_confirm_install";
+          if (Services.prefs.prefHasUserValue(prefName) &&
+              Services.prefs.getBoolPref(prefName)) {
+            this.confirmInstall(aData);
+          } else {
+            Services.obs.notifyObservers(aMm, "webapps-ask-install",
+                                         JSON.stringify(aData));
+          }
         }
       }
       else {
@@ -2011,19 +2019,18 @@ this.DOMApplicationRegistry = {
       offlineCacheObserver: aOfflineCacheObserver
     }
 
-    let postFirstInstallTask = (function () {
-      // Only executed on install not involving sync.
-      this.broadcastMessage("Webapps:AddApp", { id: id, app: appObject });
-      this.broadcastMessage("Webapps:Install:Return:OK", aData);
-      Services.obs.notifyObservers(this, "webapps-sync-install", appNote);
-    }).bind(this);
+    // We notify about the successful installation via mgmt.oninstall and the
+    // corresponging DOMRequest.onsuccess event as soon as the app is properly
+    // saved in the registry.
+    if (!aFromSync) {
+      this._saveApps((function() {
+        this.broadcastMessage("Webapps:AddApp", { id: id, app: appObject });
+        this.broadcastMessage("Webapps:Install:Return:OK", aData);
+        Services.obs.notifyObservers(this, "webapps-sync-install", appNote);
+      }).bind(this));
+    }
 
     if (!aData.isPackage) {
-      if (!aFromSync) {
-        this._saveApps((function() {
-          postFirstInstallTask();
-        }).bind(this));
-      }
       this.updateAppHandlers(null, app.manifest, app);
       if (aInstallSuccessCallback) {
         aInstallSuccessCallback(manifest);
@@ -2067,9 +2074,6 @@ this.DOMApplicationRegistry = {
                                   manifestURL: appObject.manifestURL,
                                   app: app,
                                   manifest: aManifest });
-          if (!aFromSync) {
-            postFirstInstallTask();
-          }
           if (aInstallSuccessCallback) {
             aInstallSuccessCallback(aManifest);
           }

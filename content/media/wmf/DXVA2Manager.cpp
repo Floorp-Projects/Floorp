@@ -26,8 +26,10 @@ public:
 
   IUnknown* GetDXVADeviceManager() MOZ_OVERRIDE;
 
+  // Copies a region (aRegion) of the video frame stored in aVideoSample
+  // into an image which is returned by aOutImage.
   HRESULT CopyToImage(IMFSample* aVideoSample,
-                      const nsIntSize& aSize,
+                      const nsIntRect& aRegion,
                       ImageContainer* aContainer,
                       Image** aOutImage) MOZ_OVERRIDE;
 
@@ -137,7 +139,7 @@ D3D9DXVA2Manager::Init()
 
 HRESULT
 D3D9DXVA2Manager::CopyToImage(IMFSample* aSample,
-                              const nsIntSize& aSize,
+                              const nsIntRect& aRegion,
                               ImageContainer* aImageContainer,
                               Image** aOutImage)
 {
@@ -159,7 +161,7 @@ D3D9DXVA2Manager::CopyToImage(IMFSample* aSample,
                "Wrong format?");
 
   D3D9SurfaceImage* videoImage = static_cast<D3D9SurfaceImage*>(image.get());
-  hr = videoImage->SetData(D3D9SurfaceImage::Data(surface, aSize));
+  hr = videoImage->SetData(D3D9SurfaceImage::Data(surface, aRegion));
 
   image.forget(aOutImage);
 

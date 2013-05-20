@@ -69,7 +69,7 @@ public:
     nsresult PutPrototype(nsXULPrototypeDocument* aDocument);
 
     JSScript* GetScript(nsIURI* aURI);
-    nsresult PutScript(nsIURI* aURI, JSScript* aScriptObject);
+    nsresult PutScript(nsIURI* aURI, JS::Handle<JSScript*> aScriptObject);
 
     nsXBLDocumentInfo* GetXBLDocumentInfo(nsIURI* aURL) {
         return mXBLDocTable.GetWeak(aURL);
