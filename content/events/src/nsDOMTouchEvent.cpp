@@ -5,9 +5,6 @@
 
 #include "nsDOMTouchEvent.h"
 #include "nsGUIEvent.h"
-#include "nsDOMClassInfoID.h"
-#include "nsIClassInfo.h"
-#include "nsIXPCScriptable.h"
 #include "nsContentUtils.h"
 #include "mozilla/Preferences.h"
 #include "nsPresContext.h"
@@ -109,11 +106,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsDOMTouchEvent, nsDOMUIEvent)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChangedTouches)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-DOMCI_DATA(TouchEvent, nsDOMTouchEvent)
-
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsDOMTouchEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMTouchEvent)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(TouchEvent)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMUIEvent)
 
 NS_IMPL_ADDREF_INHERITED(nsDOMTouchEvent, nsDOMUIEvent)

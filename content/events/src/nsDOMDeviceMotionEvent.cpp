@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsDOMClassInfoID.h"
 #include "nsDOMDeviceMotionEvent.h"
+#include "nsDOMClassInfoID.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -23,11 +23,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_ADDREF_INHERITED(nsDOMDeviceMotionEvent, nsDOMEvent)
 NS_IMPL_RELEASE_INHERITED(nsDOMDeviceMotionEvent, nsDOMEvent)
 
-DOMCI_DATA(DeviceMotionEvent, nsDOMDeviceMotionEvent)
-
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsDOMDeviceMotionEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDeviceMotionEvent)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(DeviceMotionEvent)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
 
 NS_IMETHODIMP

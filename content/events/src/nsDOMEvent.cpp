@@ -128,7 +128,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMEvent)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEvent)
-  NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIJSNativeInitializer, !IsDOMBinding())
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Event)
 NS_INTERFACE_MAP_END
 
@@ -329,6 +329,7 @@ NS_IMETHODIMP
 nsDOMEvent::Initialize(nsISupports* aOwner, JSContext* aCx, JSObject* aObj,
                        const JS::CallArgs& aArgs)
 {
+  MOZ_ASSERT(!IsDOMBinding());
   NS_ENSURE_TRUE(aArgs.length() >= 1, NS_ERROR_XPC_NOT_ENOUGH_ARGS);
 
   bool trusted = false;
