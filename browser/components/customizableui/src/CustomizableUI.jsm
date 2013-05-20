@@ -1361,6 +1361,24 @@ let CustomizableUIInternal = {
       let elementFlex = parseInt(aElement.getAttribute("flex"), 10);
       parent.setAttribute("flex", Math.max(0, parentFlex - elementFlex));
     }
+  },
+
+  get inDefaultState() {
+    for (let [areaId, defaultPlacements] of gDefaultPlacements) {
+      let currentPlacements = gPlacements.get(areaId);
+
+      if (currentPlacements.length != defaultPlacements.length) {
+        return false;
+      }
+
+      for (let i = 0; i < currentPlacements.length; ++i) {
+        if (currentPlacements[i] != defaultPlacements[i]) {
+          return false;
+        }
+      }
+    }
+
+    return true;
   }
 };
 Object.freeze(CustomizableUIInternal);
@@ -1455,6 +1473,9 @@ this.CustomizableUI = {
   },
   getPlacementOfWidget: function(aWidgetId) {
     return CustomizableUIInternal.getPlacementOfWidget(aWidgetId);
+  },
+  get inDefaultState() {
+    return CustomizableUIInternal.inDefaultState;
   }
 };
 Object.freeze(this.CustomizableUI);
