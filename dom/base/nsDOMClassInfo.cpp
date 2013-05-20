@@ -143,10 +143,6 @@
 #include "nsIDOMPermissionSettings.h"
 #include "nsIDOMApplicationRegistry.h"
 
-#ifdef MOZ_B2G_RIL
-#include "nsIWifi.h"
-#endif
-
 // includes needed for the prototype chain interfaces
 #include "nsIDOMNavigator.h"
 #include "nsIDOMBarProp.h"
@@ -873,10 +869,6 @@ static const nsConstructorFuncMapData kConstructorFuncMap[] =
 {
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(Blob, nsDOMMultipartFile::NewBlob)
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(File, nsDOMMultipartFile::NewFile)
-#ifdef MOZ_B2G_RIL
-  NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(MozWifiStatusChangeEvent)
-  NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(MozWifiConnectionInfoEvent)
-#endif
 #define MOZ_GENERATED_EVENT_LIST
 #define MOZ_GENERATED_EVENT(_event_interface) \
   NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(_event_interface)
@@ -1974,16 +1966,6 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_END
 
 #ifdef MOZ_B2G_RIL
-  DOM_CLASSINFO_MAP_BEGIN(MozWifiStatusChangeEvent, nsIDOMMozWifiStatusChangeEvent)
-     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozWifiStatusChangeEvent)
-     DOM_CLASSINFO_EVENT_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(MozWifiConnectionInfoEvent, nsIDOMMozWifiConnectionInfoEvent)
-     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozWifiConnectionInfoEvent)
-     DOM_CLASSINFO_EVENT_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
   DOM_CLASSINFO_MAP_BEGIN(Telephony, nsIDOMTelephony)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMTelephony)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
