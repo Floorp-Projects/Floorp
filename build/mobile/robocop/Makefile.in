@@ -64,7 +64,6 @@ robocop_DEST    := $(CURDIR)
 robocop_FILES   := \
   $(TESTPATH)/robocop.ini \
   $(TESTPATH)/robocop_autophone.ini \
-  $(srcdir)/parse_ids.py \
   $(NULL)
 robocop-deps := $(notdir $(robocop_FILES))
 
