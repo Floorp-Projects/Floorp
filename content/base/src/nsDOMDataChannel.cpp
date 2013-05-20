@@ -22,28 +22,22 @@ extern PRLogModuleInfo* GetDataChannelLog();
 
 #include "nsDOMDataChannelDeclarations.h"
 #include "nsIDOMFile.h"
-#include "nsIJSNativeInitializer.h"
 #include "nsIDOMDataChannel.h"
 #include "nsIDOMMessageEvent.h"
-#include "nsDOMClassInfo.h"
 #include "nsDOMEventTargetHelper.h"
-
-#include "js/Value.h"
 
 #include "nsError.h"
 #include "nsAutoPtr.h"
 #include "nsContentUtils.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIScriptObjectPrincipal.h"
-#include "nsJSUtils.h"
 #include "nsNetUtil.h"
 #include "nsDOMFile.h"
 
 #include "DataChannel.h"
 
 using namespace mozilla;
-
-DOMCI_DATA(DataChannel, nsDOMDataChannel)
+using namespace mozilla::dom;
 
 nsDOMDataChannel::~nsDOMDataChannel()
 {
@@ -53,6 +47,12 @@ nsDOMDataChannel::~nsDOMDataChannel()
   LOG(("Close()ing %p", mDataChannel.get()));
   mDataChannel->SetListener(nullptr, nullptr);
   mDataChannel->Close();
+}
+
+/* virtual */ JSObject*
+nsDOMDataChannel::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+{
+  return DataChannelBinding::Wrap(aCx, aScope, this);
 }
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsDOMDataChannel,
@@ -68,7 +68,6 @@ NS_IMPL_RELEASE_INHERITED(nsDOMDataChannel, nsDOMEventTargetHelper)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsDOMDataChannel)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDataChannel)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(DataChannel)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 
 nsresult
@@ -126,27 +125,52 @@ nsDOMDataChannel::GetProtocol(nsAString& aProtocol)
   return NS_OK;
 }
 
+uint16_t
+nsDOMDataChannel::Stream() const
+{
+  return mDataChannel->GetStream();
+}
+
 NS_IMETHODIMP
 nsDOMDataChannel::GetStream(uint16_t *aStream)
 {
-  mDataChannel->GetStream(aStream);
+  *aStream = Stream();
   return NS_OK;
 }
 
 // XXX should be GetType()?  Open question for the spec
+bool
+nsDOMDataChannel::Reliable() const
+{
+  return mDataChannel->GetType() == mozilla::DataChannelConnection::RELIABLE;
+}
+
 NS_IMETHODIMP
 nsDOMDataChannel::GetReliable(bool* aReliable)
 {
-  *aReliable = (mDataChannel->GetType() == mozilla::DataChannelConnection::RELIABLE);
+  *aReliable = Reliable();
   return NS_OK;
+}
+
+bool
+nsDOMDataChannel::Ordered() const
+{
+  return mDataChannel->GetOrdered();
 }
 
 NS_IMETHODIMP
 nsDOMDataChannel::GetOrdered(bool* aOrdered)
 {
-  *aOrdered = mDataChannel->GetOrdered();
+  *aOrdered = Ordered();
   return NS_OK;
 }
+
+RTCDataChannelState
+nsDOMDataChannel::ReadyState() const
+{
+  return static_cast<RTCDataChannelState>(mDataChannel->GetReadyState());
+}
+
 
 NS_IMETHODIMP
 nsDOMDataChannel::GetReadyState(nsAString& aReadyState)
@@ -166,10 +190,16 @@ nsDOMDataChannel::GetReadyState(nsAString& aReadyState)
   return NS_OK;
 }
 
+uint32_t
+nsDOMDataChannel::BufferedAmount() const
+{
+  return mDataChannel->GetBufferedAmount();
+}
+
 NS_IMETHODIMP
 nsDOMDataChannel::GetBufferedAmount(uint32_t* aBufferedAmount)
 {
-  *aBufferedAmount = mDataChannel->GetBufferedAmount();
+  *aBufferedAmount = BufferedAmount();
   return NS_OK;
 }
 
@@ -208,9 +238,73 @@ nsDOMDataChannel::Close()
   return NS_OK;
 }
 
-// Almost a clone of nsWebSocketChannel::Send()
-NS_IMETHODIMP
-nsDOMDataChannel::Send(nsIVariant* aData)
+// All of the following is copy/pasted from WebSocket.cpp.
+void
+nsDOMDataChannel::Send(const nsAString& aData, ErrorResult& aRv)
+{
+  NS_ConvertUTF16toUTF8 msgString(aData);
+  Send(nullptr, msgString, msgString.Length(), false, aRv);
+}
+
+void
+nsDOMDataChannel::Send(nsIDOMBlob* aData, ErrorResult& aRv)
+{
+  NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
+
+  nsCOMPtr<nsIInputStream> msgStream;
+  nsresult rv = aData->GetInternalStream(getter_AddRefs(msgStream));
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+    return;
+  }
+
+  uint64_t msgLength;
+  rv = aData->GetSize(&msgLength);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+    return;
+  }
+
+  if (msgLength > UINT32_MAX) {
+    aRv.Throw(NS_ERROR_FILE_TOO_BIG);
+    return;
+  }
+
+  Send(msgStream, EmptyCString(), msgLength, true, aRv);
+}
+
+void
+nsDOMDataChannel::Send(ArrayBuffer& aData, ErrorResult& aRv)
+{
+  NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
+
+  MOZ_ASSERT(sizeof(*aData.Data()) == 1);
+  uint32_t len = aData.Length();
+  char* data = reinterpret_cast<char*>(aData.Data());
+
+  nsDependentCSubstring msgString(data, len);
+  Send(nullptr, msgString, len, true, aRv);
+}
+
+void
+nsDOMDataChannel::Send(ArrayBufferView& aData, ErrorResult& aRv)
+{
+  NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
+
+  MOZ_ASSERT(sizeof(*aData.Data()) == 1);
+  uint32_t len = aData.Length();
+  char* data = reinterpret_cast<char*>(aData.Data());
+
+  nsDependentCSubstring msgString(data, len);
+  Send(nullptr, msgString, len, true, aRv);
+}
+
+void
+nsDOMDataChannel::Send(nsIInputStream* aMsgStream,
+                       const nsACString& aMsgString,
+                       uint32_t aMsgLength,
+                       bool aIsBinary,
+                       ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread());
   uint16_t state = mDataChannel->GetReadyState();
@@ -218,110 +312,31 @@ nsDOMDataChannel::Send(nsIVariant* aData)
   // In reality, the DataChannel protocol allows this, but we want it to
   // look like WebSockets
   if (state == mozilla::DataChannel::CONNECTING) {
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
   }
-
-  nsCString msgString;
-  nsCOMPtr<nsIInputStream> msgStream;
-  bool isBinary;
-  uint32_t msgLen;
-  nsresult rv = GetSendParams(aData, msgString, msgStream, isBinary, msgLen);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   if (state == mozilla::DataChannel::CLOSING ||
       state == mozilla::DataChannel::CLOSED) {
-    return NS_OK;
+    return;
   }
 
   MOZ_ASSERT(state == mozilla::DataChannel::OPEN,
-             "Unknown state in nsWebSocket::Send");
+             "Unknown state in nsDOMDataChannel::Send");
 
   int32_t sent;
-  if (msgStream) {
-    sent = mDataChannel->SendBinaryStream(msgStream, msgLen);
+  if (aMsgStream) {
+    sent = mDataChannel->SendBinaryStream(aMsgStream, aMsgLength);
   } else {
-    if (isBinary) {
-      sent = mDataChannel->SendBinaryMsg(msgString);
+    if (aIsBinary) {
+      sent = mDataChannel->SendBinaryMsg(aMsgString);
     } else {
-      sent = mDataChannel->SendMsg(msgString);
+      sent = mDataChannel->SendMsg(aMsgString);
     }
   }
-  return sent >= 0 ? NS_OK : NS_ERROR_FAILURE;
-}
-
-// XXX Exact clone of nsWebSocketChannel::GetSendParams() - find a way to share!
-nsresult
-nsDOMDataChannel::GetSendParams(nsIVariant* aData, nsCString& aStringOut,
-                                nsCOMPtr<nsIInputStream>& aStreamOut,
-                                bool& aIsBinary, uint32_t& aOutgoingLength)
-{
-  // Get type of data (arraybuffer, blob, or string)
-  uint16_t dataType;
-  nsresult rv = aData->GetDataType(&dataType);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (dataType == nsIDataType::VTYPE_INTERFACE ||
-      dataType == nsIDataType::VTYPE_INTERFACE_IS) {
-    nsCOMPtr<nsISupports> supports;
-    nsID* iid;
-    rv = aData->GetAsInterface(&iid, getter_AddRefs(supports));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsMemory::Free(iid);
-
-    AutoSafeJSContext cx;
-    // ArrayBuffer?
-    JS::Rooted<JS::Value> realVal(cx);
-    JS::Rooted<JSObject*> obj(cx);
-    nsresult rv = aData->GetAsJSVal(realVal.address());
-    if (NS_SUCCEEDED(rv) && !JSVAL_IS_PRIMITIVE(realVal) &&
-        (obj = JSVAL_TO_OBJECT(realVal)) &&
-        (JS_IsArrayBufferObject(obj))) {
-      int32_t len = JS_GetArrayBufferByteLength(obj);
-      char* data = reinterpret_cast<char*>(JS_GetArrayBufferData(obj));
-
-      aStringOut.Assign(data, len);
-      aIsBinary = true;
-      aOutgoingLength = len;
-      return NS_OK;
-    }
-
-    // Blob?
-    nsCOMPtr<nsIDOMBlob> blob = do_QueryInterface(supports);
-    if (blob) {
-      rv = blob->GetInternalStream(getter_AddRefs(aStreamOut));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      // GetSize() should not perform blocking I/O (unlike Available())
-      uint64_t blobLen;
-      rv = blob->GetSize(&blobLen);
-      NS_ENSURE_SUCCESS(rv, rv);
-      if (blobLen > UINT32_MAX) {
-        return NS_ERROR_FILE_TOO_BIG;
-      }
-      aOutgoingLength = static_cast<uint32_t>(blobLen);
-
-      aIsBinary = true;
-      return NS_OK;
-    }
+  if (sent < 0) {
+    aRv.Throw(NS_ERROR_FAILURE);
   }
-
-  // Text message: if not already a string, turn it into one.
-  // TODO: bug 704444: Correctly coerce any JS type to string
-  //
-  PRUnichar* data = nullptr;
-  uint32_t len = 0;
-  rv = aData->GetAsWStringWithSize(&len, &data);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsString text;
-  text.Adopt(data, len);
-
-  CopyUTF16toUTF8(text, aStringOut);
-
-  aIsBinary = false;
-  aOutgoingLength = aStringOut.Length();
-  return NS_OK;
 }
 
 nsresult
