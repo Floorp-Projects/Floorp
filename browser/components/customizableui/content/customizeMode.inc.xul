@@ -7,7 +7,7 @@
     <label id="customization-header" value="&customizeMode.menuAndToolbars.header;"/>
     <vbox id="customization-palette" flex="1"/>
     <hbox pack="start">
-      <button oncommand="gCustomizeMode.reset();" label="&customizeMode.restoreDefaults;" class="customizationmode-button"/>
+      <button id="customization-reset-button" oncommand="gCustomizeMode.reset();" label="&customizeMode.restoreDefaults;" class="customizationmode-button"/>
     </hbox>
   </vbox>
   <vbox id="customization-panel-container">
