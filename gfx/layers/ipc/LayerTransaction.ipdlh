@@ -167,7 +167,7 @@ struct Animation {
   // startTime, the direction, the duration, and the current time.
   // The segments must uniquely cover the portion from 0.0 to 1.0
   AnimationSegment[] segments;
-  // How many times to repeat the animation.  < 0 means "forever".
+  // How many times to repeat the animation.  -1 means "forever".
   float numIterations;
   // This uses the NS_STYLE_ANIMATION_DIRECTION_* constants.
   int32_t direction;
