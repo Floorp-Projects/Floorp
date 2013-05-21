@@ -521,11 +521,6 @@ WebRtc_Word32 VideoCaptureAndroid::StartCapture(
     }
   }
 
-  // I guess the libyuv rotate is CCW vs Android being CW,
-  // so we need to invert.
-  // Note that SetCaptureRotation calls SetDisplayOrientation,
-  // but we don't use a visible Surface so we can ignore that one.
-  rotation = (360 - rotation) % 360;
   switch (rotation) {
     case 90:
       SetCaptureRotation(kCameraRotate90);
