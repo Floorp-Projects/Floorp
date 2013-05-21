@@ -181,7 +181,7 @@ function test() {
           statusText: "Meh",
           type: "1",
           fullMimeType: "text/1",
-          size: L10N.getFormatStr("networkMenu.sizeKB", 0),
+          size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0),
           time: true
         });
       verifyRequestItemTarget(RequestsMenu.getItemAtIndex(b),
@@ -191,7 +191,7 @@ function test() {
           statusText: "Meh",
           type: "2",
           fullMimeType: "text/2",
-          size: L10N.getFormatStr("networkMenu.sizeKB", 0.01),
+          size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.01),
           time: true
         });
       verifyRequestItemTarget(RequestsMenu.getItemAtIndex(c),
@@ -201,7 +201,7 @@ function test() {
           statusText: "Meh",
           type: "3",
           fullMimeType: "text/3",
-          size: L10N.getFormatStr("networkMenu.sizeKB", 0.02),
+          size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.02),
           time: true
         });
       verifyRequestItemTarget(RequestsMenu.getItemAtIndex(d),
@@ -211,7 +211,7 @@ function test() {
           statusText: "Meh",
           type: "4",
           fullMimeType: "text/4",
-          size: L10N.getFormatStr("networkMenu.sizeKB", 0.03),
+          size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.03),
           time: true
         });
       verifyRequestItemTarget(RequestsMenu.getItemAtIndex(e),
@@ -221,7 +221,7 @@ function test() {
           statusText: "Meh",
           type: "5",
           fullMimeType: "text/5",
-          size: L10N.getFormatStr("networkMenu.sizeKB", 0.04),
+          size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.04),
           time: true
         });
 

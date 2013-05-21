@@ -70,19 +70,20 @@ function addTab(aURL, aOnload, aWindow) {
   targetBrowser.selectedTab = targetBrowser.addTab(aURL);
 
   let tab = targetBrowser.selectedTab;
-  let win = tab.linkedBrowser.contentWindow;
+  let browser = tab.linkedBrowser;
+  let win = browser.contentWindow;
   let expectedReadyState = aURL == "about:blank" ? ["interactive", "complete"] : ["complete"];
 
   if (aOnload) {
     let handler = function() {
-      if (tab.linkedBrowser.currentURI.spec != aURL ||
+      if (browser.currentURI.spec != aURL ||
           expectedReadyState.indexOf((win.document || {}).readyState) == -1) {
         return;
       }
-      tab.removeEventListener("load", handler, false);
+      browser.removeEventListener("load", handler, true);
       executeSoon(aOnload);
     }
-    tab.addEventListener("load", handler, false);
+    browser.addEventListener("load", handler, true);
   }
 
   return tab;
