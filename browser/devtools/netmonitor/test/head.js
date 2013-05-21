@@ -52,9 +52,10 @@ function addTab(aUrl, aWindow) {
 
   targetWindow.focus();
   let tab = targetBrowser.selectedTab = targetBrowser.addTab(aUrl);
+  let browser = tab.linkedBrowser;
 
-  tab.addEventListener("load", function onLoad() {
-    tab.removeEventListener("load", onLoad, true);
+  browser.addEventListener("load", function onLoad() {
+    browser.removeEventListener("load", onLoad, true);
     deferred.resolve(tab);
   }, true);
 

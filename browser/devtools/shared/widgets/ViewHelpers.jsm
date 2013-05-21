@@ -204,6 +204,20 @@ ViewHelpers.L10N.prototype = {
   },
 
   /**
+   * L10N shortcut function for numeric arguments that need to be formatted.
+   * All numeric arguments will be fixed to 2 decimals and given a localized
+   * decimal separator. Other arguments will be left alone.
+   * @param string aName
+   * @param array aArgs
+   * @return string
+   */
+  getFormatStrWithNumbers: function(aName, ...aArgs) {
+    let newArgs = aArgs.map(x => (typeof x == 'number' ?
+                                  this.numberWithDecimals(x, 2) : x));
+    return this.stringBundle.formatStringFromName(aName, newArgs, newArgs.length);
+  },
+
+  /**
    * Converts a number to a locale-aware string format and keeps a certain
    * number of decimals.
    *
