@@ -11,8 +11,8 @@ const BOUNDARY_ATTRIBUTE_RANGE = nsIAccessibleText.BOUNDARY_ATTRIBUTE_RANGE;
 const kTextEndOffset = nsIAccessibleText.TEXT_OFFSET_END_OF_TEXT;
 const kCaretOffset = nsIAccessibleText.TEXT_OFFSET_CARET;
 
-const kTodo = 1;
-const kOk = 2;
+const kTodo = 1; // a test is expected to fail
+const kOk = 2; // a test doesn't fail
 
 /**
  * Test characterCount for the given array of accessibles.
