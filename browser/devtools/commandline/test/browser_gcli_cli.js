@@ -63,7 +63,7 @@ exports.testBlank = function(options) {
         status: 'ERROR'
       },
       post: function() {
-        assert.is(undefined, requisition.commandAssignment.value);
+        assert.is(requisition.commandAssignment.value, undefined);
       }
     },
     {
@@ -77,7 +77,7 @@ exports.testBlank = function(options) {
         status: 'ERROR'
       },
       post: function() {
-        assert.is(undefined, requisition.commandAssignment.value);
+        assert.is(requisition.commandAssignment.value, undefined);
       }
     },
     {
@@ -94,7 +94,7 @@ exports.testBlank = function(options) {
         status: 'ERROR'
       },
       post: function() {
-        assert.is(undefined, requisition.commandAssignment.value);
+        assert.is(requisition.commandAssignment.value, undefined);
       }
     }
   ]);
@@ -531,7 +531,6 @@ exports.testSingleString = function(options) {
         cursor: 3,
         current: '__command',
         status: 'ERROR',
-        predictions: [ ],
         unassigned: [ ],
         args: {
           command: { name: 'tsr' },
