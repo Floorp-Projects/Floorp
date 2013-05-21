@@ -175,8 +175,8 @@
   /* This code is only needed for restored windows (i.e. sizemode=normal)
      because of the border radius on the toolbar below the tab bar. */
   #main-window[sizemode=normal] #nav-bar[tabsontop=true],
-  #main-window[sizemode=normal] #nav-bar[tabsontop=true][collapsed=true]:not([customizing]) + toolbar,
-  #main-window[sizemode=normal] #nav-bar[tabsontop=true][collapsed=true]:not([customizing]) + #customToolbars + #PersonalToolbar {
+  #main-window[sizemode=normal] #nav-bar[tabsontop=true][collapsed=true] + toolbar,
+  #main-window[sizemode=normal] #nav-bar[tabsontop=true][collapsed=true] + #customToolbars + #PersonalToolbar {
     border-top: 1px solid @toolbarShadowColor@;
     border-top-left-radius: 2.5px;
     border-top-right-radius: 2.5px;
