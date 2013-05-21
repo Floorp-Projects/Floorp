@@ -3887,7 +3887,6 @@ struct JS_PUBLIC_API(CompileOptions) {
     bool forEval;
     bool noScriptRval;
     bool selfHostingMode;
-    bool userBit;
     enum SourcePolicy {
         NO_SOURCE,
         LAZY_SOURCE,
@@ -3906,7 +3905,6 @@ struct JS_PUBLIC_API(CompileOptions) {
     CompileOptions &setForEval(bool eval) { forEval = eval; return *this; }
     CompileOptions &setNoScriptRval(bool nsr) { noScriptRval = nsr; return *this; }
     CompileOptions &setSelfHostingMode(bool shm) { selfHostingMode = shm; return *this; }
-    CompileOptions &setUserBit(bool bit) { userBit = bit; return *this; }
     CompileOptions &setSourcePolicy(SourcePolicy sp) { sourcePolicy = sp; return *this; }
 };
 

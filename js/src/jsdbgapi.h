@@ -225,12 +225,6 @@ extern JS_PUBLIC_API(JSVersion)
 JS_GetScriptVersion(JSContext *cx, JSScript *script);
 
 extern JS_PUBLIC_API(bool)
-JS_GetScriptUserBit(JSScript *script);
-
-extern JS_PUBLIC_API(void)
-JS_SetScriptUserBit(JSScript *script, bool b);
-
-extern JS_PUBLIC_API(bool)
 JS_GetScriptIsSelfHosted(JSScript *script);
 
 /************************************************************************/
