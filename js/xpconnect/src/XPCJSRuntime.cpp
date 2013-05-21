@@ -1078,6 +1078,18 @@ class AutoLockWatchdog {
     }
 };
 
+bool
+XPCJSRuntime::IsRuntimeActive()
+{
+    return mRuntimeState == RUNTIME_ACTIVE;
+}
+
+PRTime
+XPCJSRuntime::TimeSinceLastRuntimeStateChange()
+{
+    return PR_Now() - mTimeAtLastRuntimeStateChange;
+}
+
 //static
 void
 XPCJSRuntime::WatchdogMain(void *arg)
@@ -1092,14 +1104,19 @@ XPCJSRuntime::WatchdogMain(void *arg)
     PRIntervalTime sleepInterval;
     while (self->mWatchdogThread) {
         // Sleep only 1 second if recently (or currently) active; otherwise, hibernate
-        if (self->mLastActiveTime == -1 || PR_Now() - self->mLastActiveTime <= PRTime(2*PR_USEC_PER_SEC))
+        if (self->IsRuntimeActive() || self->TimeSinceLastRuntimeStateChange() <= PRTime(2*PR_USEC_PER_SEC))
             sleepInterval = PR_TicksPerSecond();
         else {
             sleepInterval = PR_INTERVAL_NO_TIMEOUT;
             self->mWatchdogHibernating = true;
         }
         MOZ_ALWAYS_TRUE(PR_WaitCondVar(self->mWatchdogWakeup, sleepInterval) == PR_SUCCESS);
-        JS_TriggerOperationCallback(self->mJSRuntime);
+
+        // Don't trigger the operation callback if activity started less than one second ago.
+        // The callback is only used for detecting long running scripts, and triggering the
+        // callback from off the main thread can be expensive.
+        if (self->IsRuntimeActive() && self->TimeSinceLastRuntimeStateChange() >= PRTime(PR_USEC_PER_SEC))
+            JS_TriggerOperationCallback(self->mJSRuntime);
     }
 
     /* Wake up the main thread waiting for the watchdog to terminate. */
@@ -1113,15 +1130,14 @@ XPCJSRuntime::ActivityCallback(void *arg, JSBool active)
     XPCJSRuntime* self = static_cast<XPCJSRuntime*>(arg);
 
     AutoLockWatchdog lock(self);
-    
-    if (active) {
-        self->mLastActiveTime = -1;
-        if (self->mWatchdogHibernating) {
-            self->mWatchdogHibernating = false;
-            PR_NotifyCondVar(self->mWatchdogWakeup);
-        }
-    } else {
-        self->mLastActiveTime = PR_Now();
+
+    self->mTimeAtLastRuntimeStateChange = PR_Now();
+    self->mRuntimeState = active ? RUNTIME_ACTIVE : RUNTIME_INACTIVE;
+
+    // Wake the watchdog up if it is hibernating due to a long period of inactivity.
+    if (active && self->mWatchdogHibernating) {
+        self->mWatchdogHibernating = false;
+        PR_NotifyCondVar(self->mWatchdogWakeup);
     }
 }
 
@@ -2653,7 +2669,8 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
    mWatchdogWakeup(nullptr),
    mWatchdogThread(nullptr),
    mWatchdogHibernating(false),
-   mLastActiveTime(-1),
+   mRuntimeState(RUNTIME_INACTIVE),
+   mTimeAtLastRuntimeStateChange(PR_Now()),
    mJunkScope(nullptr),
    mExceptionManagerNotAvailable(false)
 #ifdef DEBUG
