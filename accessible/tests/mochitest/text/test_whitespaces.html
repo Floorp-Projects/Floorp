@@ -19,23 +19,6 @@
       //  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21
 
       ////////////////////////////////////////////////////////////////////////
-      // characterCount
-
-      testCharacterCount(["input", "div", "editable"], 22);
-      testCharacterCount(["textarea"], 23);
-
-      ////////////////////////////////////////////////////////////////////////
-      // getText
-
-      var IDs = ["input", "div", "editable", "textarea"];
-
-      testText(IDs, 0, 1, "B");
-      testText(IDs, 5, 6, " ");
-      testText(IDs, 9, 11, "  ");
-      testText(IDs, 16, 19, "   ");
-      testText(IDs, 0, 22, "Brave Sir  Robin   ran");
-
-      ////////////////////////////////////////////////////////////////////////
       // getTextAfterOffset
 
       var IDs = [ "input", "div", "editable", "textarea" ];
