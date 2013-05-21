@@ -2668,7 +2668,7 @@ vcmCreateTransportFlow(sipcc::PeerConnectionImpl *pc, int level, bool rtcp,
 
 
     ScopedDeletePtr<TransportLayerIce> ice(
-        new TransportLayerIce("flow", pc->media()->ice_ctx(),
+        new TransportLayerIce(pc->GetHandle(), pc->media()->ice_ctx(),
                               pc->media()->ice_media_stream(level-1),
                               rtcp ? 2 : 1));
 
