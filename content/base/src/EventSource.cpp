@@ -61,6 +61,7 @@ EventSource::EventSource() :
   mGoingToDispatchAllMessages(false),
   mWithCredentials(false),
   mWaitingForOnStopRequest(false),
+  mInterrupted(false),
   mLastConvertionResult(NS_OK),
   mReadyState(CONNECTING),
   mScriptLine(0),
@@ -340,6 +341,16 @@ EventSource::OnStartRequest(nsIRequest *aRequest,
   bool requestSucceeded;
   rv = httpChannel->GetRequestSucceeded(&requestSucceeded);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  uint32_t status;
+  rv = httpChannel->GetResponseStatus(&status);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (status == 204) {
+    mInterrupted = true;
+    DispatchFailConnection();
+    return NS_ERROR_ABORT;
+  }
 
   nsAutoCString contentType;
   rv = httpChannel->GetContentType(contentType);
@@ -970,7 +981,7 @@ EventSource::ConsoleError()
   NS_ConvertUTF8toUTF16 specUTF16(targetSpec);
   const PRUnichar *formatStrings[] = { specUTF16.get() };
 
-  if (mReadyState == CONNECTING) {
+  if (mReadyState == CONNECTING && !mInterrupted) {
     rv = PrintErrorOnConsole("chrome://global/locale/appstrings.properties",
                              NS_LITERAL_STRING("connectionFailure").get(),
                              formatStrings, ArrayLength(formatStrings));

@@ -493,6 +493,8 @@ MOCHITEST_FILES_B = \
 		accesscontrol.resource^headers^ \
 		invalid_accesscontrol.resource \
 		invalid_accesscontrol.resource^headers^ \
+		file_bug869432.eventsource \
+		file_bug869432.eventsource^headers^ \
 		$(NULL)
 
 MOCHITEST_FILES_C= \
