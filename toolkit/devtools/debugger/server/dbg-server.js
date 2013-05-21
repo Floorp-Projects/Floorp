@@ -178,20 +178,12 @@ var DebuggerServer = {
    */
   addBrowserActors: function DS_addBrowserActors() {
     this.addActors("chrome://global/content/devtools/dbg-browser-actors.js");
-#ifndef MOZ_WIDGET_GONK
     this.addActors("chrome://global/content/devtools/dbg-webconsole-actors.js");
-    this.addTabActor(this.WebConsoleActor, "consoleActor");
-    this.addGlobalActor(this.WebConsoleActor, "consoleActor");
-
     this.addActors("chrome://global/content/devtools/dbg-gcli-actors.js");
-    this.addTabActor(this.GcliActor, "gcliActor");
-    this.addGlobalActor(this.GcliActor, "gcliActor");
-#endif
     if ("nsIProfiler" in Ci)
       this.addActors("chrome://global/content/devtools/dbg-profiler-actors.js");
 
     this.addActors("chrome://global/content/devtools/dbg-styleeditor-actors.js");
-    this.addTabActor(this.StyleEditorActor, "styleEditorActor");
   },
 
   /**
