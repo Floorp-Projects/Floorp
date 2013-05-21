@@ -14,6 +14,7 @@
 </div>
 
 <pre id="test">
+<script type="text/javascript" src="use_large_cache.js"></script>
 <script class="testbody" type="text/javascript">
   function loadedmetadata(event) {
     is(event.type, "loadedmetadata", "checking event type");
@@ -24,14 +25,12 @@
 
   var audio = document.getElementById("audio");
 
-  SpecialPowers.pushPrefEnv({"set": [["media.cache_size", 40000]]}, startTest);
-  function startTest() {
-    // Kick off test once audio has loaded.
-    audio.addEventListener("loadedmetadata", loadedmetadata, false);
-    audio.src = "audio.wav";
-  }
+  // Kick off test once audio has loaded.
+  audio.addEventListener("loadedmetadata", loadedmetadata, false);
+  audio.src = "audio.wav";
 
   SimpleTest.waitForExplicitFinish();
+
 </script>
 </pre>
 </body>

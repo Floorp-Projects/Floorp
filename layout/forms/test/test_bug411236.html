@@ -24,6 +24,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=411236
 window.oTarget = null;
 window.fileInputGotClick = false;
 
+// accessibility.tabfocus must be set to value 7 before running test also
+// on a mac.
+function setOrRestoreTabFocus(newValue) {
+  const prefSvcContractID = "@mozilla.org/preferences-service;1";
+  const prefSvcIID = SpecialPowers.Ci.nsIPrefService;
+  var prefs = SpecialPowers.Cc[prefSvcContractID].getService(prefSvcIID)
+                                                   .getBranch("accessibility.");
+  if (!newValue) {
+    prefs.clearUserPref("tabfocus");
+  } else {
+    prefs.setIntPref("tabfocus", newValue);
+  }
+}
+
 function tab() {
   var utils = SpecialPowers.DOMWindowUtils;
   // Send tab key events.
@@ -43,6 +57,7 @@ function test() {
 
   if (i >= 100) {
     ok(false, "Couldn't find an input element!");
+    setOrRestoreTabFocus(0);
     SimpleTest.finish();
     return;
   }
@@ -55,25 +70,22 @@ function test() {
   SpecialPowers.wrap(window.oTarget).dispatchEvent(e);
   ok(window.fileInputGotClick,
      "File input should have got a click event, but not open the file dialog.");
+  setOrRestoreTabFocus(0);
   SimpleTest.finish();
 }
 
-function beginTest() {
-  // accessibility.tabfocus must be set to value 7 before running test also
-  // on a mac.
-  SpecialPowers.pushPrefEnv({"set": [["accessibility.tabfocus", 7]]}, do_test);
-}
-
 function do_test() {
+  setOrRestoreTabFocus(7);
   window.focus();
   document.getElementById('fileinput').focus();
   setTimeout(test, 100);
 }
 
 SimpleTest.waitForExplicitFinish();
-addLoadEvent(beginTest);
+addLoadEvent(do_test);
 
 </script>
 </pre>
 </body>
 </html>
+
