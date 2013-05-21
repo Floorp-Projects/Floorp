@@ -1,0 +1,189 @@
+diff --git a/cmd/bltest/blapitest.c b/cmd/bltest/blapitest.c
+--- a/cmd/bltest/blapitest.c
++++ b/cmd/bltest/blapitest.c
+@@ -1028,17 +1028,18 @@ bltestCopyIO(PLArenaPool *arena, bltestI
+ }
+ 
+ void
+ misalignBuffer(PLArenaPool *arena, bltestIO *io, int off)
+ {
+     ptrdiff_t offset = (ptrdiff_t)io->buf.data % WORDSIZE;
+     int length = io->buf.len;
+     if (offset != off) {
+-	SECITEM_ReallocItemV2(arena, &io->buf, length + 2*WORDSIZE);
++	SECITEM_ReallocItem(arena, &io->buf, length, length + 2*WORDSIZE);
++	io->buf.len = length + 2*WORDSIZE; /* why doesn't realloc do this? */
+ 	/* offset may have changed? */
+ 	offset = (ptrdiff_t)io->buf.data % WORDSIZE;
+ 	if (offset != off) {
+ 	    memmove(io->buf.data + off, io->buf.data, length);
+ 	    io->pBuf.data = io->buf.data + off;
+ 	    io->pBuf.len = length;
+ 	} else {
+ 	    io->pBuf.data = io->buf.data;
+diff --git a/cmd/lib/secutil.c b/cmd/lib/secutil.c
+--- a/cmd/lib/secutil.c
++++ b/cmd/lib/secutil.c
+@@ -525,17 +525,17 @@ SECU_ReadDERFromFile(SECItem *der, PRFil
+ 		*trailer = '\0';
+ 	    if (!body || !trailer) {
+ 		fprintf(stderr, "input has header but no trailer\n");
+ 		PORT_Free(filedata.data);
+ 		return SECFailure;
+ 	    }
+ 	} else {
+ 	    /* need one additional byte for zero terminator */
+-	    rv = SECITEM_ReallocItemV2(NULL, &filedata, filedata.len+1);
++	    rv = SECITEM_ReallocItem(NULL, &filedata, filedata.len, filedata.len+1);
+ 	    if (rv != SECSuccess) {
+ 		PORT_Free(filedata.data);
+ 		return rv;
+ 	    }
+ 	    body = (char*)filedata.data;
+ 	    body[filedata.len-1] = '\0';
+ 	}
+      
+diff --git a/lib/util/nssutil.def b/lib/util/nssutil.def
+--- a/lib/util/nssutil.def
++++ b/lib/util/nssutil.def
+@@ -261,13 +261,12 @@ NSSUTIL_QuoteSize;
+ ;+    local:
+ ;+       *;
+ ;+};
+ ;+NSSUTIL_3.15 {         # NSS Utilities 3.15 release
+ ;+    global:
+ SECITEM_AllocArray;
+ SECITEM_DupArray;
+ SECITEM_FreeArray;
+-SECITEM_ReallocItemV2;
+ SECITEM_ZfreeArray;
+ ;+    local:
+ ;+       *;
+ ;+};
+diff --git a/lib/util/secitem.c b/lib/util/secitem.c
+--- a/lib/util/secitem.c
++++ b/lib/util/secitem.c
+@@ -110,73 +110,16 @@ SECITEM_ReallocItem(PLArenaPool *arena, 
+ 
+     if (item->data == NULL) {
+ 	return SECFailure;
+     }
+ 
+     return SECSuccess;
+ }
+ 
+-SECStatus
+-SECITEM_ReallocItemV2(PLArenaPool *arena, SECItem *item, unsigned int newlen)
+-{
+-    unsigned char *newdata = NULL;
+-
+-    PORT_Assert(item);
+-    if (!item) {
+-	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+-	return SECFailure;
+-    }
+-    
+-    if (item->len == newlen) {
+-	return SECSuccess;
+-    }
+-
+-    if (!newlen) {
+-	SECITEM_FreeItem(item, PR_FALSE);
+-	return SECSuccess;
+-    }
+-    
+-    if (!item->len) {
+-	/* allocate fresh block of memory */
+-	PORT_Assert(!item->data);
+-	if (arena) {
+-	    newdata = PORT_ArenaAlloc(arena, newlen);
+-	} else {
+-	    newdata = PORT_Alloc(newlen);
+-	}
+-    } else {
+-	/* reallocate or adjust existing block of memory */
+-	if (arena) {
+-	    if (item->len > newlen) {
+-		/* There's no need to realloc a shorter block from the arena,
+-		 * because it would result in using even more memory!
+-		 * Therefore we'll continue to use the old block and 
+-		 * set the item to the shorter size.
+-		 */
+-		item->len = newlen;
+-		return SECSuccess;
+-	    } else {
+-		newdata = PORT_ArenaGrow(arena, item->data, item->len, newlen);
+-	    }
+-	} else {
+-	    newdata = PORT_Realloc(item->data, newlen);
+-	}
+-    }
+-
+-    if (!newdata) {
+-	PORT_SetError(SEC_ERROR_NO_MEMORY);
+-	return SECFailure;
+-    }
+-
+-    item->len = newlen;
+-    item->data = newdata;
+-    return SECSuccess;
+-}
+-
+ SECComparison
+ SECITEM_CompareItem(const SECItem *a, const SECItem *b)
+ {
+     unsigned m;
+     int rv;
+ 
+     if (a == b)
+     	return SECEqual;
+diff --git a/lib/util/secitem.h b/lib/util/secitem.h
+--- a/lib/util/secitem.h
++++ b/lib/util/secitem.h
+@@ -31,45 +31,27 @@ SEC_BEGIN_PROTOS
+ **
+ ** XXX This probably should take a SECItemType, but since that is mostly
+ ** unused and our improved APIs (aka Stan) are looming, I left it out.
+ */
+ extern SECItem *SECITEM_AllocItem(PLArenaPool *arena, SECItem *item,
+ 				  unsigned int len);
+ 
+ /*
+-** This is a legacy function containing bugs. It doesn't update item->len,
+-** and it has other issues as described in bug 298649 and bug 298938.
+-** However, the function is  kept unchanged for consumers that might depend 
+-** on the broken behaviour. New code should call SECITEM_ReallocItemV2.
+-**
+ ** Reallocate the data for the specified "item".  If "arena" is not NULL,
+ ** then reallocate from there, otherwise reallocate from the heap.
+ ** In the case where oldlen is 0, the data is allocated (not reallocated).
+ ** In any case, "item" is expected to be a valid SECItem pointer;
+ ** SECFailure is returned if it is not.  If the allocation succeeds,
+ ** SECSuccess is returned.
+ */
+-extern SECStatus SECITEM_ReallocItem( /* deprecated function */
+-				     PLArenaPool *arena, SECItem *item,
++extern SECStatus SECITEM_ReallocItem(PLArenaPool *arena, SECItem *item,
+ 				     unsigned int oldlen, unsigned int newlen);
+ 
+ /*
+-** Reallocate the data for the specified "item".  If "arena" is not NULL,
+-** then reallocate from there, otherwise reallocate from the heap.
+-** If the item already has at least the request new size,
+-** then the item is kept unchanged and SECSuccess is returned.
+-** In any case, "item" is expected to be a valid SECItem pointer;
+-** SECFailure is returned if it is not, and the item will remain unchanged.
+-** If the allocation succeeds, the item is updated and SECSuccess is returned.
+- */
+-extern SECStatus SECITEM_ReallocItemV2(PLArenaPool *arena, SECItem *item,
+-				       unsigned int newlen);
+-
+-/*
+ ** Compare two items returning the difference between them.
+ */
+ extern SECComparison SECITEM_CompareItem(const SECItem *a, const SECItem *b);
+ 
+ /*
+ ** Compare two items -- if they are the same, return true; otherwise false.
+ */
+ extern PRBool SECITEM_ItemsAreEqual(const SECItem *a, const SECItem *b);
