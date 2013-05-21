@@ -682,11 +682,14 @@ nsNativeTheme::IsRangeHorizontal(nsIFrame* aFrame)
 bool
 nsNativeTheme::IsDarkBackground(nsIFrame* aFrame)
 {
-  nsIScrollableFrame* scrollFrame = aFrame->GetScrollTargetFrame();
+  nsIScrollableFrame* scrollFrame = nullptr;
   while (!scrollFrame && aFrame) {
-    aFrame = aFrame->GetParent();
     scrollFrame = aFrame->GetScrollTargetFrame();
+    aFrame = aFrame->GetParent();
   }
+  if (!scrollFrame)
+    return false;
+
   nsIFrame* frame = scrollFrame->GetScrolledFrame();
   nsStyleContext* bgSC;
   if (nsCSSRendering::FindBackground(frame, &bgSC)) {
