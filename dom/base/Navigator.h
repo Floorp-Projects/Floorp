@@ -23,6 +23,7 @@
 #include "nsINavigatorMobileConnection.h"
 #include "nsINavigatorCellBroadcast.h"
 #include "nsINavigatorVoicemail.h"
+#include "nsINavigatorIccManager.h"
 #endif
 #include "nsAutoPtr.h"
 #include "nsIDOMNavigatorTime.h"
@@ -73,6 +74,12 @@ class DesktopNotificationCenter;
 class SmsManager;
 class MobileMessageManager;
 
+namespace icc {
+#ifdef MOZ_B2G_RIL
+class IccManager;
+#endif
+}
+
 namespace network {
 class Connection;
 #ifdef MOZ_B2G_RIL
@@ -114,6 +121,7 @@ class Navigator : public nsIDOMNavigator
                 , public nsIMozNavigatorMobileConnection
                 , public nsIMozNavigatorCellBroadcast
                 , public nsIMozNavigatorVoicemail
+                , public nsIMozNavigatorIccManager
 #endif
 #ifdef MOZ_B2G_BT
                 , public nsIDOMNavigatorBluetooth
@@ -152,6 +160,7 @@ public:
   NS_DECL_NSIMOZNAVIGATORMOBILECONNECTION
   NS_DECL_NSIMOZNAVIGATORCELLBROADCAST
   NS_DECL_NSIMOZNAVIGATORVOICEMAIL
+  NS_DECL_NSIMOZNAVIGATORICCMANAGER
 #endif
 
 #ifdef MOZ_B2G_BT
@@ -210,6 +219,7 @@ private:
 #ifdef MOZ_B2G_RIL
   nsRefPtr<network::MobileConnection> mMobileConnection;
   nsCOMPtr<nsIDOMMozCellBroadcast> mCellBroadcast;
+  nsRefPtr<icc::IccManager> mIccManager;
 #endif
 #ifdef MOZ_B2G_BT
   nsCOMPtr<nsIDOMBluetoothManager> mBluetooth;

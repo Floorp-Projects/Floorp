@@ -33,6 +33,7 @@ var setTimeout = Components.utils.import("resource://gre/modules/Timer.jsm", {})
 var clearTimeout = Components.utils.import("resource://gre/modules/Timer.jsm", {}).clearTimeout;
 var Node = Components.interfaces.nsIDOMNode;
 var HTMLElement = Components.interfaces.nsIDOMHTMLElement;
+var Event = Components.interfaces.nsIDOMEvent;
 
 /*
  * Copyright 2012, Mozilla Foundation and contributors
@@ -103,7 +104,7 @@ var mozl10n = {};
 
 })(mozl10n);
 
-define('gcli/index', ['require', 'exports', 'module' , 'gcli/types/basic', 'gcli/types/selection', 'gcli/types/command', 'gcli/types/javascript', 'gcli/types/node', 'gcli/types/resource', 'gcli/types/setting', 'gcli/settings', 'gcli/ui/intro', 'gcli/ui/focus', 'gcli/ui/fields/basic', 'gcli/ui/fields/javascript', 'gcli/ui/fields/selection', 'gcli/commands/connect', 'gcli/commands/context', 'gcli/commands/help', 'gcli/commands/pref', 'gcli/canon', 'gcli/converters', 'gcli/ui/ffdisplay'], function(require, exports, module) {
+define('gcli/index', ['require', 'exports', 'module' , 'gcli/types/basic', 'gcli/types/selection', 'gcli/types/command', 'gcli/types/date', 'gcli/types/javascript', 'gcli/types/node', 'gcli/types/resource', 'gcli/types/setting', 'gcli/settings', 'gcli/ui/intro', 'gcli/ui/focus', 'gcli/ui/fields/basic', 'gcli/ui/fields/javascript', 'gcli/ui/fields/selection', 'gcli/commands/connect', 'gcli/commands/context', 'gcli/commands/help', 'gcli/commands/pref', 'gcli/canon', 'gcli/converters', 'gcli/ui/ffdisplay'], function(require, exports, module) {
 
   'use strict';
 
@@ -113,6 +114,7 @@ define('gcli/index', ['require', 'exports', 'module' , 'gcli/types/basic', 'gcli
   require('gcli/types/selection').startup();
 
   require('gcli/types/command').startup();
+  require('gcli/types/date').startup();
   require('gcli/types/javascript').startup();
   require('gcli/types/node').startup();
   require('gcli/types/resource').startup();
@@ -225,9 +227,19 @@ exports.shutdown = function() {
 
 
 /**
- * 'string' the most basic string type that doesn't need to convert
+ * 'string' the most basic string type where all we need to do is to take care
+ * of converting escaped characters like \t, \n, etc. For the full list see
+ * https://developer.mozilla.org/en-US/docs/JavaScript/Guide/Values,_variables,_and_literals
+ *
+ * The exception is that we ignore \b because replacing '\b' characters in
+ * stringify() with their escaped version injects '\\b' all over the place and
+ * the need to support \b seems low)
+ *
+ * @param typeSpec Options object, currently obeys only one parameter:
+ * - allowBlank: Allow a blank string to be counted as valid
  */
 function StringType(typeSpec) {
+  this._allowBlank = !!typeSpec.allowBlank;
 }
 
 StringType.prototype = Object.create(Type.prototype);
@@ -236,14 +248,50 @@ StringType.prototype.stringify = function(value, context) {
   if (value == null) {
     return '';
   }
-  return value.toString();
+
+  return value
+       .replace(/\\/g, '\\\\')
+       .replace(/\f/g, '\\f')
+       .replace(/\n/g, '\\n')
+       .replace(/\r/g, '\\r')
+       .replace(/\t/g, '\\t')
+       .replace(/\v/g, '\\v')
+       .replace(/\n/g, '\\n')
+       .replace(/\r/g, '\\r')
+       .replace(/ /g, '\\ ')
+       .replace(/'/g, '\\\'')
+       .replace(/"/g, '\\"')
+       .replace(/{/g, '\\{')
+       .replace(/}/g, '\\}');
 };
 
 StringType.prototype.parse = function(arg, context) {
-  if (arg.text == null || arg.text === '') {
+  if (!this._allowBlank && (arg.text == null || arg.text === '')) {
     return Promise.resolve(new Conversion(undefined, arg, Status.INCOMPLETE, ''));
   }
-  return Promise.resolve(new Conversion(arg.text, arg));
+
+  // The string '\\' (i.e. an escaped \ (represented here as '\\\\' because it
+  // is double escaped)) is first converted to a private unicode character and
+  // then at the end from \uF000 to a single '\' to avoid the string \\n being
+  // converted first to \n and then to a <LF>
+
+  var value = arg.text
+       .replace(/\\\\/g, '\uF000')
+       .replace(/\\f/g, '\f')
+       .replace(/\\n/g, '\n')
+       .replace(/\\r/g, '\r')
+       .replace(/\\t/g, '\t')
+       .replace(/\\v/g, '\v')
+       .replace(/\\n/g, '\n')
+       .replace(/\\r/g, '\r')
+       .replace(/\\ /g, ' ')
+       .replace(/\\'/g, '\'')
+       .replace(/\\"/g, '"')
+       .replace(/\\{/g, '{')
+       .replace(/\\}/g, '}')
+       .replace(/\uF000/g, '\\');
+
+  return Promise.resolve(new Conversion(value, arg));
 };
 
 StringType.prototype.name = 'string';
@@ -284,10 +332,10 @@ NumberType.prototype.stringify = function(value, context) {
   return '' + value;
 };
 
-NumberType.prototype.getMin = function() {
+NumberType.prototype.getMin = function(context) {
   if (this._min) {
     if (typeof this._min === 'function') {
-      return this._min();
+      return this._min(context);
     }
     if (typeof this._min === 'number') {
       return this._min;
@@ -296,10 +344,10 @@ NumberType.prototype.getMin = function() {
   return undefined;
 };
 
-NumberType.prototype.getMax = function() {
+NumberType.prototype.getMax = function(context) {
   if (this._max) {
     if (typeof this._max === 'function') {
-      return this._max();
+      return this._max(context);
     }
     if (typeof this._max === 'number') {
       return this._max;
@@ -331,13 +379,13 @@ NumberType.prototype.parse = function(arg, context) {
     return Promise.resolve(new Conversion(undefined, arg, Status.ERROR, message));
   }
 
-  var max = this.getMax();
+  var max = this.getMax(context);
   if (max != null && value > max) {
     var message = l10n.lookupFormat('typesNumberMax', [ value, max ]);
     return Promise.resolve(new Conversion(undefined, arg, Status.ERROR, message));
   }
 
-  var min = this.getMin();
+  var min = this.getMin(context);
   if (min != null && value < min) {
     var message = l10n.lookupFormat('typesNumberMin', [ value, min ]);
     return Promise.resolve(new Conversion(undefined, arg, Status.ERROR, message));
@@ -348,26 +396,26 @@ NumberType.prototype.parse = function(arg, context) {
 
 NumberType.prototype.decrement = function(value, context) {
   if (typeof value !== 'number' || isNaN(value)) {
-    return this.getMax() || 1;
+    return this.getMax(context) || 1;
   }
   var newValue = value - this._step;
   // Snap to the nearest incremental of the step
   newValue = Math.ceil(newValue / this._step) * this._step;
-  return this._boundsCheck(newValue);
+  return this._boundsCheck(newValue, context);
 };
 
 NumberType.prototype.increment = function(value, context) {
   if (typeof value !== 'number' || isNaN(value)) {
-    var min = this.getMin();
+    var min = this.getMin(context);
     return min != null ? min : 0;
   }
   var newValue = value + this._step;
   // Snap to the nearest incremental of the step
   newValue = Math.floor(newValue / this._step) * this._step;
-  if (this.getMax() == null) {
+  if (this.getMax(context) == null) {
     return newValue;
   }
-  return this._boundsCheck(newValue);
+  return this._boundsCheck(newValue, context);
 };
 
 /**
@@ -375,12 +423,12 @@ NumberType.prototype.increment = function(value, context) {
  * lower than the minimum, return the minimum. If it is bigger than the maximum
  * then return the maximum.
  */
-NumberType.prototype._boundsCheck = function(value) {
-  var min = this.getMin();
+NumberType.prototype._boundsCheck = function(value, context) {
+  var min = this.getMin(context);
   if (min != null && value < min) {
     return min;
   }
-  var max = this.getMax();
+  var max = this.getMax(context);
   if (max != null && value > max) {
     return max;
   }
@@ -430,7 +478,7 @@ BooleanType.prototype.stringify = function(value, context) {
   return '' + value;
 };
 
-BooleanType.prototype.getBlank = function() {
+BooleanType.prototype.getBlank = function(context) {
   return new Conversion(false, new BlankArgument(), Status.VALID, '',
                         Promise.resolve(this.lookup));
 };
@@ -578,7 +626,7 @@ ArrayType.prototype.parse = function(arg, context) {
   });
 };
 
-ArrayType.prototype.getBlank = function(values) {
+ArrayType.prototype.getBlank = function(context) {
   return new ArrayConversion([], new ArrayArgument());
 };
 
@@ -1969,7 +2017,7 @@ Type.prototype.decrement = function(value, context) {
  * 'undefined'.
  * 2 known examples of this are boolean -> false and array -> []
  */
-Type.prototype.getBlank = function() {
+Type.prototype.getBlank = function(context) {
   return new Conversion(undefined, new BlankArgument(), Status.INCOMPLETE, '');
 };
 
@@ -2779,7 +2827,7 @@ SelectionType.prototype.stringify = function(value, context) {
 
   try {
     var name = null;
-    var lookup = util.synchronize(this.getLookup());
+    var lookup = util.synchronize(this.getLookup(context));
     lookup.some(function(item) {
       if (item.value === value) {
         name = item.name;
@@ -2810,21 +2858,21 @@ SelectionType.prototype.clearCache = function() {
  * single function.
  * @return An array of objects with name and value properties.
  */
-SelectionType.prototype.getLookup = function() {
+SelectionType.prototype.getLookup = function(context) {
   if (this._cachedLookup != null) {
     return this._cachedLookup;
   }
 
   var reply;
   if (this.lookup == null) {
-    reply = resolve(this.data, this.neverForceAsync).then(dataToLookup);
+    reply = resolve(this.data, context, this.neverForceAsync).then(dataToLookup);
   }
   else {
     var lookup = (typeof this.lookup === 'function') ?
             this.lookup.bind(this) :
             this.lookup;
 
-    reply = resolve(lookup, this.neverForceAsync);
+    reply = resolve(lookup, context, this.neverForceAsync);
   }
 
   if (this.cacheable && !forceAsync) {
@@ -2842,7 +2890,7 @@ var forceAsync = false;
  * function which returns a promise of real data, etc. This takes a thing and
  * returns a promise of actual values.
  */
-function resolve(thing, neverForceAsync) {
+function resolve(thing, context, neverForceAsync) {
   if (forceAsync && !neverForceAsync) {
     var deferred = Promise.defer();
     setTimeout(function() {
@@ -2859,7 +2907,7 @@ function resolve(thing, neverForceAsync) {
 
   return Promise.resolve(thing).then(function(resolved) {
     if (typeof resolved === 'function') {
-      return resolve(resolved(), neverForceAsync);
+      return resolve(resolved(context), context, neverForceAsync);
     }
     return resolved;
   });
@@ -2885,8 +2933,8 @@ function dataToLookup(data) {
  * @param arg The initial input to match
  * @return A trimmed array of string:value pairs
  */
-SelectionType.prototype._findPredictions = function(arg) {
-  return Promise.resolve(this.getLookup()).then(function(lookup) {
+SelectionType.prototype._findPredictions = function(arg, context) {
+  return Promise.resolve(this.getLookup(context)).then(function(lookup) {
     var predictions = [];
     var i, option;
     var maxPredictions = Conversion.maxPredictions;
@@ -2977,7 +3025,7 @@ SelectionType.prototype._addToPredictions = function(predictions, option, arg) {
 };
 
 SelectionType.prototype.parse = function(arg, context) {
-  return this._findPredictions(arg).then(function(predictions) {
+  return this._findPredictions(arg, context).then(function(predictions) {
     if (predictions.length === 0) {
       var msg = l10n.lookupFormat('typesSelectionNomatch', [ arg.text ]);
       return new Conversion(undefined, arg, Status.ERROR, msg,
@@ -2995,9 +3043,9 @@ SelectionType.prototype.parse = function(arg, context) {
   }.bind(this));
 };
 
-SelectionType.prototype.getBlank = function() {
+SelectionType.prototype.getBlank = function(context) {
   var predictFunc = function() {
-    return Promise.resolve(this.getLookup()).then(function(lookup) {
+    return Promise.resolve(this.getLookup(context)).then(function(lookup) {
       return lookup.filter(function(option) {
         return !option.value.hidden;
       }).slice(0, Conversion.maxPredictions - 1);
@@ -3016,7 +3064,7 @@ SelectionType.prototype.getBlank = function() {
  * Sorry.
  */
 SelectionType.prototype.decrement = function(value, context) {
-  var lookup = util.synchronize(this.getLookup());
+  var lookup = util.synchronize(this.getLookup(context));
   var index = this._findValue(lookup, value);
   if (index === -1) {
     index = 0;
@@ -3032,7 +3080,7 @@ SelectionType.prototype.decrement = function(value, context) {
  * See note on SelectionType.decrement()
  */
 SelectionType.prototype.increment = function(value, context) {
-  var lookup = util.synchronize(this.getLookup());
+  var lookup = util.synchronize(this.getLookup(context));
   var index = this._findValue(lookup, value);
   if (index === -1) {
     // For an increment operation when there is nothing to start from, we
@@ -3619,15 +3667,6 @@ Parameter.prototype.isKnownAs = function(name) {
 };
 
 /**
- * Read the default value for this parameter either from the parameter itself
- * (if this function has been over-ridden) or from the type, or from calling
- * parseString on an empty string
- */
-Parameter.prototype.getBlank = function() {
-  return this.type.getBlank();
-};
-
-/**
  * Resolve the manual for this parameter, by looking in the paramSpec
  * and doing a l10n lookup
  */
@@ -3900,6 +3939,237 @@ function CommandOutputManager() {
 }
 
 exports.CommandOutputManager = CommandOutputManager;
+
+
+});
+/*
+ * Copyright 2009-2011 Mozilla Foundation and contributors
+ * Licensed under the New BSD license. See LICENSE.txt or:
+ * http://opensource.org/licenses/BSD-3-Clause
+ */
+
+define('gcli/types/date', ['require', 'exports', 'module' , 'util/promise', 'util/l10n', 'gcli/types'], function(require, exports, module) {
+
+'use strict';
+
+var Promise = require('util/promise');
+var l10n = require('util/l10n');
+
+var types = require('gcli/types');
+var Type = require('gcli/types').Type;
+var Status = require('gcli/types').Status;
+var Conversion = require('gcli/types').Conversion;
+
+
+function DateType(typeSpec) {
+  // ECMA 5.1 §15.9.1.1
+  // @see http://stackoverflow.com/questions/11526504/minimum-and-maximum-date
+  typeSpec = typeSpec || {};
+
+  this._step = typeSpec.step || 1;
+  this._min = new Date(-8640000000000000);
+  this._max = new Date(8640000000000000);
+
+  if (typeSpec.min != null) {
+    if (typeof typeSpec.min === 'string') {
+      this._min = toDate(typeSpec.min);
+    }
+    else if (isDate(typeSpec.min) || typeof typeSpec.min === 'function') {
+      this._min = typeSpec.min;
+    }
+    else {
+      throw new Error('date min value must be a string a date or a function');
+    }
+  }
+
+  if (typeSpec.max != null) {
+    if (typeof typeSpec.max === 'string') {
+      this._max = toDate(typeSpec.max);
+    }
+    else if (isDate(typeSpec.max) || typeof typeSpec.max === 'function') {
+      this._max = typeSpec.max;
+    }
+    else {
+      throw new Error('date max value must be a string a date or a function');
+    }
+  }
+}
+
+DateType.prototype = Object.create(Type.prototype);
+
+/**
+ * Helper for stringify() to left pad a single digit number with a single '0'
+ * so 1 -> '01', 42 -> '42', etc.
+ */
+function pad(number) {
+  var r = String(number);
+  return r.length === 1 ? '0' + r : r;
+}
+
+DateType.prototype.stringify = function(value) {
+  if (!isDate(value)) {
+    return '';
+  }
+
+  var str = pad(value.getFullYear()) + '-' +
+            pad(value.getMonth() + 1) + '-' +
+            pad(value.getDate());
+
+  // Only add in the time if it's not midnight
+  if (value.getHours() !== 0 || value.getMinutes() !== 0 ||
+      value.getSeconds() !== 0 || value.getMilliseconds() !== 0) {
+
+    // What string should we use to separate the date from the time?
+    // There are 3 options:
+    // 'T': This is the standard from ISO8601. i.e. 2013-05-20T11:05
+    //      The good news - it's a standard. The bad news - it's weird and
+    //      alien to many if not most users
+    // ' ': This looks nicest, but needs escaping (which GCLI will do
+    //      automatically) so it would look like: '2013-05-20 11:05'
+    //      Good news: looks best, bad news: on completion we place the cursor
+    //      after the final ', so repeated increment/decrement doesn't work
+    // '\ ': It's possible that we could find a way to use a \ to escape the
+    //      space, so the output would look like: 2013-05-20\ 11:05
+    //      This would involve changes to a number of parts, and is probably
+    //      too complex a solution for this problem for now
+    // In the short term I'm going for ' ', and raising the priority of cursor
+    // positioning on actions like increment/decrement/tab.
+
+    str += ' ' + pad(value.getHours());
+    str += ':' + pad(value.getMinutes());
+
+    // Only add in seconds/milliseconds if there is anything to report
+    if (value.getSeconds() !== 0 || value.getMilliseconds() !== 0) {
+      str += ':' + pad(value.getSeconds());
+      if (value.getMilliseconds() !== 0) {
+        str += '.' + String((value.getUTCMilliseconds()/1000).toFixed(3)).slice(2, 5);
+      }
+    }
+  }
+
+  return str;
+};
+
+DateType.prototype.getMin = function(context) {
+  if (typeof this._min === 'function') {
+    return this._min(context);
+  }
+  if (isDate(this._min)) {
+    return this._min;
+  }
+  return undefined;
+};
+
+DateType.prototype.getMax = function(context) {
+  if (typeof this._max === 'function') {
+    return this._max(context);
+  }
+  if (isDate(this._max)) {
+    return this._max;
+  }
+  return undefined;
+};
+
+DateType.prototype.parse = function(arg, context) {
+  var value;
+
+  if (arg.text.replace(/\s/g, '').length === 0) {
+    return Promise.resolve(new Conversion(undefined, arg, Status.INCOMPLETE, ''));
+  }
+
+  // Lots of room for improvement here: 1h ago, in two days, etc.
+  // Should "1h ago" dynamically update the step?
+  if (arg.text === 'now') {
+    value = new Date();
+  }
+  else if (arg.text === 'yesterday') {
+    value = new Date().setDate(new Date().getDate() - 1);
+  }
+  else if (arg.text === 'tomorrow') {
+    value = new Date().setDate(new Date().getDate() + 1);
+  }
+  else {
+    var millis = Date.parse(arg.text);
+
+    if (isNaN(millis)) {
+      var msg = l10n.lookupFormat('typesDateNan', [ arg.text ]);
+      return Promise.resolve(new Conversion(undefined, arg, Status.ERROR, msg));
+    }
+
+    value = new Date(millis);
+  }
+
+  return Promise.resolve(new Conversion(value, arg));
+};
+
+DateType.prototype.decrement = function(value, context) {
+  if (!isDate(value)) {
+    return new Date();
+  }
+
+  var newValue = new Date(value);
+  newValue.setDate(value.getDate() - this._step);
+
+  if (newValue >= this.getMin(context)) {
+    return newValue;
+  }
+  else {
+    return this.getMin(context);
+  }
+};
+
+DateType.prototype.increment = function(value, context) {
+  if (!isDate(value)) {
+    return new Date();
+  }
+
+  var newValue = new Date(value);
+  newValue.setDate(value.getDate() + this._step);
+
+  if (newValue <= this.getMax(context)) {
+    return newValue;
+  }
+  else {
+    return this.getMax();
+  }
+};
+
+DateType.prototype.name = 'date';
+
+
+/**
+ * Utility to convert a string to a date, throwing if the date can't be
+ * parsed rather than having an invalid date
+ */
+function toDate(str) {
+  var millis = Date.parse(str);
+  if (isNaN(millis)) {
+    throw new Error(l10n.lookupFormat('typesDateNan', [ str ]));
+  }
+  return new Date(millis);
+}
+
+/**
+ * Is |thing| a valid date?
+ * @see http://stackoverflow.com/questions/1353684/detecting-an-invalid-date-date-instance-in-javascript
+ */
+function isDate(thing) {
+  return Object.prototype.toString.call(thing) === '[object Date]'
+          && !isNaN(thing.getTime());
+};
+
+
+/**
+ * Registration and de-registration.
+ */
+exports.startup = function() {
+  types.addType(DateType);
+};
+
+exports.shutdown = function() {
+  types.removeType(DateType);
+};
+
 
 
 });
@@ -4629,7 +4899,7 @@ function NodeListType(typeSpec) {
 
 NodeListType.prototype = Object.create(Type.prototype);
 
-NodeListType.prototype.getBlank = function() {
+NodeListType.prototype.getBlank = function(context) {
   return new Conversion(exports._empty, new BlankArgument(), Status.VALID);
 };
 
@@ -6390,7 +6660,8 @@ Requisition.prototype.setAssignment = function(assignment, arg, options) {
   }
 
   if (arg == null) {
-    setAssignmentInternal(assignment.param.type.getBlank());
+    var blank = assignment.param.type.getBlank(this.executionContext);
+    setAssignmentInternal(blank);
   }
   else if (typeof arg.getStatus === 'function') {
     setAssignmentInternal(arg);
@@ -7050,35 +7321,25 @@ exports.tokenize = function(typed) {
 
   var mode = In.WHITESPACE;
 
-  // First we un-escape. This list was taken from:
-  // https://developer.mozilla.org/en/Core_JavaScript_1.5_Guide/Core_Language_Features#Unicode
-  // We are generally converting to their real values except for the strings
-  // '\'', '\"', '\ ', '{' and '}' which we are converting to unicode private
-  // characters so we can distinguish them from '"', ' ', '{', '}' and ''',
-  // which are special. They need swapping back post-split - see unescape2()
+  // First we swap out escaped characters that are special to the tokenizer.
+  // So a backslash followed by any of ['"{} ] is turned into a unicode private
+  // char so we can swap back later
   typed = typed
-      .replace(/\\\\/g, '\\')
-      .replace(/\\b/g, '\b')
-      .replace(/\\f/g, '\f')
-      .replace(/\\n/g, '\n')
-      .replace(/\\r/g, '\r')
-      .replace(/\\t/g, '\t')
-      .replace(/\\v/g, '\v')
-      .replace(/\\n/g, '\n')
-      .replace(/\\r/g, '\r')
-      .replace(/\\ /g, '\uF000')
-      .replace(/\\'/g, '\uF001')
-      .replace(/\\"/g, '\uF002')
-      .replace(/\\{/g, '\uF003')
-      .replace(/\\}/g, '\uF004');
+      .replace(/\\\\/g, '\uF000')
+      .replace(/\\ /g, '\uF001')
+      .replace(/\\'/g, '\uF002')
+      .replace(/\\"/g, '\uF003')
+      .replace(/\\{/g, '\uF004')
+      .replace(/\\}/g, '\uF005');
 
   function unescape2(escaped) {
     return escaped
-        .replace(/\uF000/g, ' ')
-        .replace(/\uF001/g, '\'')
-        .replace(/\uF002/g, '"')
-        .replace(/\uF003/g, '{')
-        .replace(/\uF004/g, '}');
+        .replace(/\uF000/g, '\\\\')
+        .replace(/\uF001/g, '\\ ')
+        .replace(/\uF002/g, '\\\'')
+        .replace(/\uF003/g, '\\\"')
+        .replace(/\uF004/g, '\\\{')
+        .replace(/\uF005/g, '\\\}');
   }
 
   var i = 0;          // The index of the current character
@@ -7283,13 +7544,16 @@ Requisition.prototype._split = function(args) {
     argsUsed++;
   }
 
+  // This could probably be re-written to consume args as we go
   for (var i = 0; i < argsUsed; i++) {
     args.shift();
   }
 
-  return this.setAssignment(this.commandAssignment, conversion, noArgUp);
+  // Warning: we're returning a promise (from setAssignment) which tells us
+  // when we're done setting the current command, but mutating the args array
+  // as we go, so we're conflicted on when we're done
 
-  // This could probably be re-written to consume args as we go
+  return this.setAssignment(this.commandAssignment, conversion, noArgUp);
 };
 
 /**
@@ -8033,7 +8297,7 @@ StringField.prototype.setConversion = function(conversion) {
 StringField.prototype.getConversion = function() {
   // This tweaks the prefix/suffix of the argument to fit
   this.arg = this.arg.beget({ text: this.element.value, prefixSpace: true });
-  return this.type.parse(this.arg, this.requisition.context);
+  return this.type.parse(this.arg, this.requisition.executionContext);
 };
 
 StringField.claim = function(type, context) {
@@ -8088,7 +8352,7 @@ NumberField.prototype.setConversion = function(conversion) {
 
 NumberField.prototype.getConversion = function() {
   this.arg = this.arg.beget({ text: this.element.value, prefixSpace: true });
-  return this.type.parse(this.arg, this.requisition.context);
+  return this.type.parse(this.arg, this.requisition.executionContext);
 };
 
 
@@ -8140,7 +8404,7 @@ BooleanField.prototype.getConversion = function() {
   else {
     arg = new Argument(' ' + this.element.checked);
   }
-  return this.type.parse(arg, this.requisition.context);
+  return this.type.parse(arg, this.requisition.executionContext);
 };
 
 
@@ -8518,7 +8782,7 @@ exports.getField = function(type, options) {
   var ctor;
   var highestClaim = -1;
   fieldCtors.forEach(function(fieldCtor) {
-    var claim = fieldCtor.claim(type, options.requisition.context);
+    var claim = fieldCtor.claim(type, options.requisition.executionContext);
     if (claim > highestClaim) {
       highestClaim = claim;
       ctor = fieldCtor;
@@ -8561,7 +8825,7 @@ BlankField.prototype.setConversion = function(conversion) {
 };
 
 BlankField.prototype.getConversion = function() {
-  return this.type.parse(new Argument(), this.requisition.context);
+  return this.type.parse(new Argument(), this.requisition.executionContext);
 };
 
 exports.addField(BlankField);
@@ -8697,7 +8961,7 @@ JavascriptField.prototype.setConversion = function(conversion) {
 };
 
 JavascriptField.prototype.itemClicked = function(ev) {
-  var parsed = this.type.parse(ev.arg, this.requisition.context);
+  var parsed = this.type.parse(ev.arg, this.requisition.executionContext);
   Promise.resolve(parsed).then(function(conversion) {
     this.onFieldChange({ conversion: conversion });
     this.setMessage(conversion.message);
@@ -8715,7 +8979,7 @@ JavascriptField.prototype.onInputChange = function(ev) {
 JavascriptField.prototype.getConversion = function() {
   // This tweaks the prefix/suffix of the argument to fit
   this.arg = new ScriptArgument(this.input.value, '{ ', ' }');
-  return this.type.parse(this.arg, this.requisition.context);
+  return this.type.parse(this.arg, this.requisition.executionContext);
 };
 
 JavascriptField.DEFAULT_VALUE = '__JavascriptField.DEFAULT_VALUE';
@@ -9139,7 +9403,7 @@ SelectionTooltipField.prototype.setConversion = function(conversion) {
 };
 
 SelectionTooltipField.prototype.itemClicked = function(ev) {
-  var parsed = this.type.parse(ev.arg, this.requisition.context);
+  var parsed = this.type.parse(ev.arg, this.requisition.executionContext);
   Promise.resolve(parsed).then(function(conversion) {
     this.onFieldChange({ conversion: conversion });
     this.setMessage(conversion.message);
@@ -9157,7 +9421,7 @@ SelectionTooltipField.prototype.onInputChange = function(ev) {
 SelectionTooltipField.prototype.getConversion = function() {
   // This tweaks the prefix/suffix of the argument to fit
   this.arg = this.arg.beget({ text: this.input.value });
-  return this.type.parse(this.arg, this.requisition.context);
+  return this.type.parse(this.arg, this.requisition.executionContext);
 };
 
 /**
@@ -9665,9 +9929,22 @@ var commandConverterSpec = {
             input = l10n.lookup('helpManOptional');
           }
           else {
-            input = param.defaultValue;
+            var defaultValue = param.type.stringify(param.defaultValue);
+            input = l10n.lookupFormat('helpManDefault', [ defaultValue ]);
           }
           return '(' + param.type.name + ', ' + input + ')';
+        },
+        getSynopsis: function(param) {
+          if (param.isPositionalAllowed) {
+            return param.defaultValue !== undefined ?
+                '[' + param.name + ']' :
+                '<' + param.name + '>';
+          }
+          else {
+            return param.type.name === 'boolean' ?
+                '[--' + param.name + ']' :
+                '[--' + param.name + '=...]';
+          }
         },
         command: commandData.command,
         subcommands: commandData.subcommands
@@ -10115,9 +10392,7 @@ define("text!gcli/commands/help_man.html", [], "\n" +
   "    ${l10n.helpManSynopsis}:\n" +
   "    <span class=\"gcli-out-shortcut\" onclick=\"${onclick}\" data-command=\"${command.name}\">\n" +
   "      ${command.name}\n" +
-  "      <span foreach=\"param in ${command.params}\">\n" +
-  "        ${param.defaultValue !== undefined ? '[' + param.name + ']' : param.name}\n" +
-  "      </span>\n" +
+  "      <span foreach=\"param in ${command.params}\">${getSynopsis(param)} </span>\n" +
   "    </span>\n" +
   "  </h4>\n" +
   "\n" +
@@ -10946,6 +11221,7 @@ Inputter.prototype._checkAssignment = function(start) {
  * result of a keyboard event on this.element or bug 676520 could be triggered.
  */
 Inputter.prototype.setInput = function(str) {
+  this._caretChange = Caret.TO_END;
   return this.requisition.update(str);
 };
 
@@ -11069,7 +11345,8 @@ Inputter.prototype.handleKeyUp = function(ev) {
     else {
       // See notes above for the UP key
       if (this.assignment.getStatus() === Status.VALID) {
-        this.requisition.decrement(this.assignment, this.requisition.context);
+        this.requisition.decrement(this.assignment,
+                                   this.requisition.executionContext);
         // See notes on focusManager.onInputChange in onKeyDown
         if (this.focusManager) {
           this.focusManager.onInputChange();
@@ -11481,7 +11758,7 @@ Completer.prototype._getCompleterTemplateData = function() {
         // There's no prediction, but if this is a named argument that needs a
         // value (that is without any) then we need to show that one is needed
         // For example 'git commit --message ', clearly needs some more text
-        if (cArg.type === 'NamedArgument' && cArg.text === '') {
+        if (cArg.type === 'NamedArgument' && cArg.valueArg == null) {
           emptyParameters.push('<' + current.param.type.name + '>\u00a0');
         }
       }

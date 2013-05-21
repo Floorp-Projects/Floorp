@@ -1506,6 +1506,7 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIMozNavigatorMobileConnection)
     DOM_CLASSINFO_MAP_ENTRY(nsIMozNavigatorCellBroadcast)
     DOM_CLASSINFO_MAP_ENTRY(nsIMozNavigatorVoicemail)
+    DOM_CLASSINFO_MAP_ENTRY(nsIMozNavigatorIccManager)
 #endif
 #ifdef MOZ_B2G_BT
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNavigatorBluetooth)
