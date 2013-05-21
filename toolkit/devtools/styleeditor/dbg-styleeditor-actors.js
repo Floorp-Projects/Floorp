@@ -733,6 +733,7 @@ StyleSheetActor.prototype.requestTypes = {
   "update": StyleSheetActor.prototype.onUpdate
 };
 
+DebuggerServer.addTabActor(StyleEditorActor, "styleEditorActor");
 
 XPCOMUtils.defineLazyGetter(this, "DOMUtils", function () {
   return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);

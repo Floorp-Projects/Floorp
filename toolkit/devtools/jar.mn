@@ -4,7 +4,7 @@
 
 toolkit.jar:
   content/global/devtools/dbg-transport.js        (debugger/dbg-transport.js)
-* content/global/devtools/dbg-server.js           (debugger/server/dbg-server.js)
+  content/global/devtools/dbg-server.js           (debugger/server/dbg-server.js)
   content/global/devtools/dbg-script-actors.js    (debugger/server/dbg-script-actors.js)
   content/global/devtools/dbg-browser-actors.js   (debugger/server/dbg-browser-actors.js)
   content/global/devtools/dbg-gcli-actors.js      (gcli/dbg-gcli-actors.js)

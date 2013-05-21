@@ -70,3 +70,6 @@ GcliActor.prototype.requestTypes = {
   getCommandSpecs: GcliActor.prototype.getCommandSpecs,
   execute: GcliActor.prototype.execute,
 };
+
+addTabActor(GcliActor, "gcliActor");
+addGlobalActor(GcliActor, "gcliActor");
