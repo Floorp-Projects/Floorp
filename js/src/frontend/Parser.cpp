@@ -59,9 +59,7 @@
 
 using namespace js;
 using namespace js::gc;
-
-namespace js {
-namespace frontend {
+using namespace js::frontend;
 
 typedef Rooted<StaticBlockObject*> RootedStaticBlockObject;
 typedef Handle<StaticBlockObject*> HandleStaticBlockObject;
@@ -83,7 +81,7 @@ typedef MutableHandle<PropertyName*> MutableHandlePropertyName;
 
 template <typename ParseHandler>
 bool
-GenerateBlockId(ParseContext<ParseHandler> *pc, uint32_t &blockid)
+frontend::GenerateBlockId(ParseContext<ParseHandler> *pc, uint32_t &blockid)
 {
     if (pc->blockidGen == JS_BIT(20)) {
         JS_ReportErrorNumber(pc->sc->context, js_GetErrorMessage, NULL, JSMSG_NEED_DIET, "program");
@@ -95,10 +93,10 @@ GenerateBlockId(ParseContext<ParseHandler> *pc, uint32_t &blockid)
 }
 
 template bool
-GenerateBlockId(ParseContext<SyntaxParseHandler> *pc, uint32_t &blockid);
+frontend::GenerateBlockId(ParseContext<SyntaxParseHandler> *pc, uint32_t &blockid);
 
 template bool
-GenerateBlockId(ParseContext<FullParseHandler> *pc, uint32_t &blockid);
+frontend::GenerateBlockId(ParseContext<FullParseHandler> *pc, uint32_t &blockid);
 
 template <typename ParseHandler>
 static void
@@ -1133,7 +1131,7 @@ Parser<FullParseHandler>::makeDefIntoUse(Definition *dn, ParseNode *pn, JSAtom *
  */
 
 template <typename ParseHandler>
-struct BindData
+struct frontend::BindData
 {
     BindData(JSContext *cx) : let(cx) {}
 
@@ -5159,7 +5157,7 @@ Parser<ParseHandler>::unaryExpr()
  * NB: This is not a general tree transplanter -- it knows in particular that
  * the one or more bindings induced by V have not yet been created.
  */
-class CompExprTransplanter
+class frontend::CompExprTransplanter
 {
     ParseNode       *root;
     Parser<FullParseHandler> *parser;
@@ -5201,7 +5199,7 @@ class CompExprTransplanter
  * - maybeNoteGenerator() if this *did not* turn out to be a generator expression
  */
 template <typename ParseHandler>
-class GenexpGuard
+class frontend::GenexpGuard
 {
     Parser<ParseHandler> *parser;
     uint32_t startYieldCount;
@@ -6685,8 +6683,5 @@ Parser<ParseHandler>::parenExpr(bool *genexp)
     return pn;
 }
 
-template class Parser<FullParseHandler>;
-template class Parser<SyntaxParseHandler>;
-
-} /* namespace frontend */
-} /* namespace js */
+template class js::frontend::Parser<FullParseHandler>;
+template class js::frontend::Parser<SyntaxParseHandler>;
