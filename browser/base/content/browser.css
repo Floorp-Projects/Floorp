@@ -108,15 +108,6 @@ toolbar[printpreview="true"] {
   -moz-box-ordinal-group: 50;
 }
 
-toolbar[overflowable] > .customization-target {
-  overflow: hidden;
-}
-
-toolbar[customizing][overflowable] > .overflow-button,
-toolbar[overflowable]:not([overflowing]) > .overflow-button {
-  display: none;
-}
-
 #TabsToolbar {
   -moz-box-ordinal-group: 100;
 }

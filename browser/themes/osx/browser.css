@@ -112,22 +112,6 @@ toolbox[tabsontop=true] > toolbar:not(#TabsToolbar):not(#nav-bar):not(:-moz-lwth
   background-color: -moz-mac-chrome-inactive;
 }
 
-#nav-bar-overflow-button {
-  -moz-image-region: rect(-5px, 12px, 11px, -4px);
-}
-
-#widget-overflow-list > .overflowedItem {
-  width: 100%;
-  min-height: 36px;
-  background-repeat: no-repeat;
-  background-position: 0 center;
-}
-
-#widget-overflow-list > .overflowedItem > .toolbarbutton-text {
-  -moz-padding-start: 10px;
-  text-align: start;
-}
-
 /* ----- BOOKMARK TOOLBAR ----- */
 
 #personal-bookmarks {
