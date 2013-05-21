@@ -16,16 +16,8 @@ EditAggregateTxn::EditAggregateTxn()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(EditAggregateTxn, EditTxn)
-  tmp->mChildren.Clear();
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(EditAggregateTxn, EditTxn)
-  for (uint32_t i = 0; i < tmp->mChildren.Length(); ++i) {
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mChildren[i]");
-    cb.NoteXPCOMChild(static_cast<nsITransaction*>(tmp->mChildren[i]));
-  }
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_INHERITED_1(EditAggregateTxn, EditTxn,
+                                     mChildren)
 
 NS_IMPL_ADDREF_INHERITED(EditAggregateTxn, EditTxn)
 NS_IMPL_RELEASE_INHERITED(EditAggregateTxn, EditTxn)
