@@ -148,6 +148,11 @@ protected:
     // this needs to be a Maybe.
     Maybe<XPCAutoRequest> mAr;
 
+    // We construct our JS::Rooted right after our JSAutoRequest; let's just
+    // hope that the change in ordering wrt the mCxPusher constructor here is
+    // ok.
+    Maybe<JS::Rooted<JSObject*> > mRootedCallable;
+
     nsCxPusher mCxPusher;
 
     // Can't construct a JSAutoCompartment without a JSContext either.  Also,
