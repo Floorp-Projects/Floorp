@@ -310,7 +310,7 @@ exports.testTsv = function(options) {
         status: 'ERROR',
         predictions: [ ],
         unassigned: [ ],
-        tooltipState: 'true:isError',
+        tooltipState: 'false:default',
         args: {
           command: { name: 'tsv' },
           optionType: {
