@@ -32,20 +32,17 @@ window.onload = function() {
      we've got the first frame.
 */
 
-var resource = getPlayableVideo(gSeekTests);
 
-SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({"set": [["media.cache_size", 40000]]}, beginTest);
-function beginTest() {
-  if (resource != null) {
-    for (var i=0; i<20; ++i) {
-      var v = document.createElement("video");
-      v.src = resource.name;
-      document.body.appendChild(v);
-    }
-  } else {
-    todo(false, "No types supported");
+var resource = getPlayableVideo(gSeekTests);
+if (resource != null) {
+  for (var i=0; i<20; ++i) {
+    var v = document.createElement("video");
+    v.src = resource.name;
+    document.body.appendChild(v);
   }
+  SimpleTest.waitForExplicitFinish();
+} else {
+  todo(false, "No types supported");
 }
 </script>
 
