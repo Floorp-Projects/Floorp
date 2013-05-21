@@ -860,7 +860,9 @@ toolbarbutton.bookmark-item > menupopup {
 
 /* history sidebar button */
 
-#history-button {
+#history-button,
+toolbar > .customization-target > #history-panelmenu,
+toolbar > .customization-target > toolbarpaletteitem > #history-panelmenu {
   -moz-image-region: rect(0, 160px, 20px, 140px);
 }
 

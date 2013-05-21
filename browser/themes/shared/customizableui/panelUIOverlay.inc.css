@@ -126,14 +126,19 @@ panelsubview toolbarbutton > .toolbarbutton-text,
   max-width: 7em;
   height: 6em;
   max-height: 6em;
+  list-style-image: url(chrome://browser/skin/customizableui/menuPanel-icons.png);
+}
+
+/* These smaller icons have different styling between the panel and the toolbar,
+   hence not referencing toolbar.png for these icons. */
+.panel-combined-button {
+  list-style-image: url(chrome://browser/skin/customizableui/menuPanel-small-icons.png);
 }
 
 #PanelUI-contents[type="grid"] toolbarbutton > .toolbarbutton-icon,
 #customization-palette toolbarbutton > .toolbarbutton-icon {
   min-width: calc(8em / 3);
-  max-width: calc(8em / 3);
   min-height: calc(8em / 3);
-  max-height: calc(8em / 3);
   margin: calc(5em / 12);
 }
 
@@ -228,4 +233,184 @@ toolbarbutton.panel-multiview-anchor {
   background-image: linear-gradient(rgba(255,255,255,0.3), rgba(255,255,255,0));
   background-repeat: repeat-x;
   color: HighlightText;
+}
+
+#PanelUI-contents[type="grid"] #new-window-button,
+#customization-palette #new-window-button {
+  -moz-image-region: rect(0 64px 32px 32px);
+}
+
+#PanelUI-contents[type="grid"] #privatebrowsing-button,
+#customization-palette #privatebrowsing-button {
+  -moz-image-region: rect(0 96px 32px 64px);
+}
+
+#PanelUI-contents[type="grid"] #open-file-button,
+#customization-palette #open-file-button {
+  -moz-image-region: rect(32px 32px 64px 0);
+}
+
+#PanelUI-contents[type="grid"] #save-page-button,
+#customization-palette #save-page-button {
+  -moz-image-region: rect(32px 64px 64px 32px);
+}
+
+#PanelUI-contents[type="grid"] #bookmarks-menu-button,
+#customization-palette #bookmarks-menu-button {
+  -moz-image-region: rect(32px 96px 64px 64px);
+}
+
+#PanelUI-contents[type="grid"] #bookmarks-menu-button > .toolbarbutton-menu-dropmarker,
+#customization-palette #bookmarks-menu-button > .toolbarbutton-menu-dropmarker {
+  display: none;
+}
+
+#PanelUI-contents[type="grid"] #history-button,
+#customization-palette #history-button,
+#PanelUI-contents[type="grid"] #history-panelmenu,
+#customization-palette #history-panelmenu {
+  -moz-image-region: rect(64px 32px 96px 0);
+}
+
+#PanelUI-contents[type="grid"] #add-ons-button,
+#customization-palette #add-ons-button {
+  -moz-image-region: rect(64px 64px 96px 32px);
+}
+
+#PanelUI-contents[type="grid"] #downloads-button,
+#customization-palette #downloads-button {
+  -moz-image-region: rect(64px 96px 96px 64px);
+}
+
+#PanelUI-contents[type="grid"] #sync-button,
+#customization-palette #sync-button {
+  -moz-image-region: rect(96px 32px 128px 0);
+}
+
+#PanelUI-contents[type="grid"] #print-button,
+#customization-palette #print-button {
+  -moz-image-region: rect(96px 64px 128px 32px);
+}
+
+#PanelUI-contents[type="grid"] #fullscreen-button,
+#customization-palette #fullscreen-button {
+  -moz-image-region: rect(96px 96px 128px 64px);
+}
+
+#PanelUI-contents[type="grid"] #feed-button,
+#customization-palette #feed-button {
+  -moz-image-region: rect(128px 32px 160px 0);
+}
+
+#PanelUI-contents[type="grid"] #find-button,
+#customization-palette #find-button {
+  -moz-image-region: rect(128px 64px 160px 32px);
+}
+
+#PanelUI-contents[type="grid"] #developer-button,
+#customization-palette #developer-button {
+  -moz-image-region: rect(128px 96px 160px 64px);
+}
+
+#PanelUI-contents[type="grid"] #tabview-button,
+#customization-palette #tabview-button {
+  -moz-image-region: rect(160px 32px 192px 0);
+}
+
+#PanelUI-contents[type="grid"] #preferences-button,
+#customization-palette #preferences-button {
+  -moz-image-region: rect(160px 64px 192px 32px);
+}
+
+#PanelUI-contents[type="grid"] #home-button,
+#customization-palette #home-button {
+  -moz-image-region: rect(160px 96px 192px 64px);
+}
+
+#PanelUI-contents[type="grid"] #reload-button,
+#customization-palette #reload-button {
+  -moz-image-region: rect(192px 32px 224px 0);
+}
+
+#PanelUI-contents[type="grid"] #stop-button,
+#customization-palette #stop-button {
+  -moz-image-region: rect(192px 64px 224px 32px);
+}
+
+#PanelUI-cut-btn {
+  -moz-image-region: rect(0 16px 16px 0);
+}
+
+#PanelUI-copy-btn {
+  -moz-image-region: rect(0 32px 16px 16px);
+}
+
+#PanelUI-paste-btn {
+  -moz-image-region: rect(0 48px 16px 32px);
+}
+
+#PanelUI-zoomOut-btn {
+  -moz-image-region: rect(0 64px 16px 48px);
+}
+
+#PanelUI-zoomReset-btn {
+  list-style-image: none;
+}
+
+#PanelUI-zoomIn-btn {
+  -moz-image-region: rect(0 80px 16px 64px);
+}
+
+/* These icons are missing from Toolbar.png, so this is a temporary
+   hack until they are added. */
+toolbar > .customization-target > #find-button,
+toolbar > .customization-target > #open-file-button,
+toolbar > .customization-target > #developer-button,
+toolbar > .customization-target > #privatebrowsing-button,
+toolbar > .customization-target > #save-page-button,
+toolbar > .customization-target > #add-ons-button,
+toolbar > .customization-target > #preferences-button,
+toolbar > .customization-target > toolbarpaletteitem > #find-button,
+toolbar > .customization-target > toolbarpaletteitem > #open-file-button,
+toolbar > .customization-target > toolbarpaletteitem > #developer-button,
+toolbar > .customization-target > toolbarpaletteitem > #privatebrowsing-button,
+toolbar > .customization-target > toolbarpaletteitem > #save-page-button,
+toolbar > .customization-target > toolbarpaletteitem > #add-ons-button,
+toolbar > .customization-target > toolbarpaletteitem > #preferences-button {
+  list-style-image: url(chrome://browser/skin/customizableui/menuPanel-icons.png);
+}
+
+toolbar > .customization-target > #find-button,
+toolbar > .customization-target > toolbarpaletteitem > #find-button {
+  -moz-image-region: rect(128px 64px 160px 32px);
+}
+
+toolbar > .customization-target > #open-file-button,
+toolbar > .customization-target > toolbarpaletteitem > #open-file-button {
+  -moz-image-region: rect(32px 32px 64px 0);
+}
+
+toolbar > .customization-target > #developer-button,
+toolbar > .customization-target > toolbarpaletteitem > #developer-button {
+  -moz-image-region: rect(128px 96px 160px 64px);
+}
+
+toolbar > .customization-target > #privatebrowsing-button,
+toolbar > .customization-target > toolbarpaletteitem > #privatebrowsing-button {
+  -moz-image-region: rect(0 96px 32px 64px);
+}
+
+toolbar > .customization-target > #save-page-button,
+toolbar > .customization-target > toolbarpaletteitem > #save-page-button {
+  -moz-image-region: rect(32px 64px 64px 32px);
+}
+
+toolbar > .customization-target > #add-ons-button,
+toolbar > .customization-target > toolbarpaletteitem > #add-ons-button {
+  -moz-image-region: rect(64px 64px 96px 32px);
+}
+
+toolbar > .customization-target > #preferences-button,
+toolbar > .customization-target > toolbarpaletteitem > #preferences-button {
+  -moz-image-region: rect(160px 64px 192px 32px);
 }

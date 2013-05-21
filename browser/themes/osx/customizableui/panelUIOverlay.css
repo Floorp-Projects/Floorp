@@ -7,8 +7,132 @@
 
 %include ../../shared/customizableui/panelUIOverlay.inc.css
 
-.PanelUI-pageControls toolbarbutton {
-  list-style-image: url("chrome://browser/skin/Toolbar.png");
+@media (min-resolution: 2dppx) {
+  #PanelUI-contents[type="grid"] toolbarbutton,
+  #customization-palette toolbarbutton {
+    list-style-image: url(chrome://browser/skin/customizableui/menuPanel-icons@2x.png);
+  }
+
+  #PanelUI-popup .panel-combined-button {
+    list-style-image: url(chrome://browser/skin/customizableui/menuPanel-small-icons@2x.png);
+  }
+
+  #PanelUI-contents[type="grid"] #new-window-button,
+  #customization-palette #new-window-button {
+    -moz-image-region: rect(0 128px 64px 64px);
+  }
+
+  #PanelUI-contents[type="grid"] #privatebrowsing-button,
+  #customization-palette #privatebrowsing-button {
+    -moz-image-region: rect(0 192px 64px 128px);
+  }
+
+  #PanelUI-contents[type="grid"] #open-file-button,
+  #customization-palette #open-file-button {
+    -moz-image-region: rect(64px 64px 128px 0);
+  }
+
+  #PanelUI-contents[type="grid"] #save-page-button,
+  #customization-palette #save-page-button {
+    -moz-image-region: rect(64px 128px 128px 64px);
+  }
+
+  #PanelUI-contents[type="grid"] #bookmarks-menu-button,
+  #customization-palette #bookmarks-menu-button {
+    -moz-image-region: rect(64px 192px 128px 128px);
+  }
+
+  #PanelUI-contents[type="grid"] #history-button,
+  #customization-palette #history-button,
+  #PanelUI-contents[type="grid"] #history-panelmenu,
+  #customization-palette #history-panelmenu {
+    -moz-image-region: rect(128px 64px 192px 0);
+  }
+
+  #PanelUI-contents[type="grid"] #add-ons-button,
+  #customization-palette #add-ons-button {
+    -moz-image-region: rect(128px 128px 192px 64px);
+  }
+
+  #PanelUI-contents[type="grid"] #downloads-button,
+  #customization-palette #downloads-button {
+    -moz-image-region: rect(128px 192px 192px 128px);
+  }
+
+  #PanelUI-contents[type="grid"] #sync-button,
+  #customization-palette #sync-button {
+    -moz-image-region: rect(192px 64px 256px 0);
+  }
+
+  #PanelUI-contents[type="grid"] #print-button,
+  #customization-palette #print-button {
+    -moz-image-region: rect(192px 128px 256px 64px);
+  }
+
+  #PanelUI-contents[type="grid"] #fullscreen-button,
+  #customization-palette #fullscreen-button {
+    -moz-image-region: rect(192px 192px 256px 128px);
+  }
+
+  #PanelUI-contents[type="grid"] #feed-button,
+  #customization-palette #feed-button {
+    -moz-image-region: rect(256px 64px 320px 0);
+  }
+
+  #PanelUI-contents[type="grid"] #find-button,
+  #customization-palette #find-button {
+    -moz-image-region: rect(256px 128px 320px 64px);
+  }
+
+  #PanelUI-contents[type="grid"] #developer-button,
+  #customization-palette #developer-button {
+    -moz-image-region: rect(256px 192px 320px 128px);
+  }
+
+  #PanelUI-contents[type="grid"] #tabview-button,
+  #customization-palette #tabview-button {
+    -moz-image-region: rect(320px 64px 384px 0);
+  }
+
+  #PanelUI-contents[type="grid"] #preferences-button,
+  #customization-palette #preferences-button {
+    -moz-image-region: rect(320px 128px 384px 64px);
+  }
+
+  #PanelUI-contents[type="grid"] #home-button,
+  #customization-palette #home-button {
+    -moz-image-region: rect(320px 192px 384px 128px);
+  }
+
+  #PanelUI-contents[type="grid"] #reload-button,
+  #customization-palette #reload-button {
+    -moz-image-region: rect(384px 64px 448px 0);
+  }
+
+  #PanelUI-contents[type="grid"] #stop-button,
+  #customization-palette #stop-button {
+    -moz-image-region: rect(384px 128px 448px 64px);
+  }
+
+  #PanelUI-popup #PanelUI-cut-btn {
+    -moz-image-region: rect(0 32px 32px 0);
+  }
+
+  #PanelUI-popup #PanelUI-copy-btn {
+    -moz-image-region: rect(0 64px 32px 32px);
+  }
+
+  #PanelUI-popup #PanelUI-paste-btn {
+    -moz-image-region: rect(0 96px 32px 64px);
+  }
+
+  #PanelUI-popup #PanelUI-zoomOut-btn {
+    -moz-image-region: rect(0 128px 32px 96px);
+  }
+
+  #PanelUI-popup #PanelUI-zoomIn-btn {
+    -moz-image-region: rect(0 160px 32px 128px);
+  }
 }
 
 .PanelUI-pageControls toolbarbutton:not(:first-child) {
@@ -22,23 +146,8 @@
   margin-right: 0;
 }
 
-#PanelUI-cut-btn {
-  -moz-image-region: rect(0, 260px, 20px, 240px);
-}
-#PanelUI-copy-btn {
-  -moz-image-region: rect(0, 280px, 20px, 260px);
-}
-#PanelUI-paste-btn {
-  -moz-image-region: rect(0, 300px, 20px, 280px);
-}
-
+#PanelUI-zoomIn-btn,
 #PanelUI-zoomOut-btn {
-  -moz-image-region: rect(0, 400px, 20px, 380px);
-  padding-left: 12px;
-  padding-right: 12px;
-}
-#PanelUI-zoomIn-btn {
-  -moz-image-region: rect(0, 420px, 20px, 400px);
   padding-left: 12px;
   padding-right: 12px;
 }
