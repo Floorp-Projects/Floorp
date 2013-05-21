@@ -1257,8 +1257,6 @@ RasterImage::InternalAddFrame(uint32_t framenum,
   nsAutoPtr<imgFrame> frame(new imgFrame());
 
   nsresult rv = frame->Init(aX, aY, aWidth, aHeight, aFormat, aPaletteDepth);
-  MOZ_ASSERT(mSize.width > 0 && mSize.height > 0, "Shouldn't call InternalAddFrame with zero size");
-  MOZ_ASSERT(NS_SUCCEEDED(rv), "imgFrame::Init should succeed");
   NS_ENSURE_SUCCESS(rv, rv);
 
   // We know we are in a decoder. Therefore, we must unlock the previous frame
