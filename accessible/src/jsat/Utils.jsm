@@ -37,6 +37,9 @@ this.Utils = {
   },
 
   get win() {
+    if (!this._win) {
+      return null;
+    }
     return this._win.get();
   },
 
@@ -90,6 +93,9 @@ this.Utils = {
   },
 
   get BrowserApp() {
+    if (!this.win) {
+      return null;
+    }
     switch (this.MozBuildApp) {
       case 'mobile/android':
         return this.win.BrowserApp;
@@ -103,6 +109,9 @@ this.Utils = {
   },
 
   get CurrentBrowser() {
+    if (!this.BrowserApp) {
+      return null;
+    }
     if (this.MozBuildApp == 'b2g')
       return this.BrowserApp.contentBrowser;
     return this.BrowserApp.selectedBrowser;
@@ -228,9 +237,10 @@ this.Logger = {
 
   logException: function logException(aException) {
     try {
-      this.error(
-        aException.message,
-        '(' + aException.fileName + ':' + aException.lineNumber + ')');
+      let args = [aException.message];
+      args.push.apply(args, aException.stack ? ['\n', aException.stack] :
+        ['(' + aException.fileName + ':' + aException.lineNumber + ')']);
+      this.error.apply(this, args);
     } catch (x) {
       this.error(x);
     }
