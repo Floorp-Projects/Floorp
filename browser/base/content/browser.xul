@@ -502,15 +502,17 @@
              aria-label="&navbarCmd.label;"
              fullscreentoolbar="true" mode="icons" customizable="true"
              iconsize="large"
-             defaultset="unified-back-forward-button,urlbar-container,reload-button,stop-button,search-container,webrtc-status-button,bookmarks-menu-button,downloads-button,home-button,window-controls"
+             defaultset="unified-back-forward-button,urlbar-container,reload-button,stop-button,search-container,webrtc-status-button,bookmarks-menu-button,downloads-button,home-button"
              customizationtarget="nav-bar-customizationtarget"
+             overflowbutton="nav-bar-overflow-button"
              context="toolbar-context-menu">
 
-      <hbox id="nav-bar-customizationtarget" class="customization-target" flex="0">
+      <hbox id="nav-bar-customizationtarget" class="customization-target" flex="1">
         <toolbaritem id="unified-back-forward-button" class="chromeclass-toolbar-additional"
                      context="backForwardMenu" removable="true"
                      forwarddisabled="true"
-                     title="&backForwardItem.title;">
+                     title="&backForwardItem.title;"
+                     nooverflow="true">
           <toolbarbutton id="back-button" class="toolbarbutton-1"
                          label="&backCmd.label;"
                          command="Browser:BackOrBackDuplicate"
@@ -531,7 +533,7 @@
         </toolbaritem>
 
         <toolbaritem id="urlbar-container" align="center" flex="400" persist="width" combined="true"
-                     title="&locationItem.title;" class="chromeclass-location" removable="true">
+                     title="&locationItem.title;" class="chromeclass-location" removable="true" nooverflow="true">
           <textbox id="urlbar" flex="1"
                    placeholder="&urlbar.placeholder2;"
                    type="autocomplete"
@@ -623,12 +625,14 @@
                        label="&reloadCmd.label;" removable="true"
                        command="Browser:ReloadOrDuplicate"
                        onclick="checkForMiddleClick(this, event);"
-                       tooltiptext="&reloadButton.tooltip;"/>
+                       tooltiptext="&reloadButton.tooltip;"
+                       nooverflow="true"/>
 
         <toolbarbutton id="stop-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                        label="&stopCmd.label;" removable="true"
                        command="Browser:Stop"
-                       tooltiptext="&stopButton.tooltip;"/>
+                       tooltiptext="&stopButton.tooltip;"
+                       nooverflow="true"/>
 
         <toolbarbutton id="webrtc-status-button"
                        class="toolbarbutton-1 chromeclass-toolbar-additional"
@@ -636,7 +640,8 @@
                        hidden="true"
                        orient="horizontal"
                        label="&webrtcIndicatorButton.label;"
-                       tooltiptext="&webrtcIndicatorButton.tooltip;">
+                       tooltiptext="&webrtcIndicatorButton.tooltip;"
+                       nooverflow="true">
           <menupopup onpopupshowing="WebrtcIndicator.fillPopup(this);"
                      onpopuphiding="WebrtcIndicator.clearPopup(this);"
                      oncommand="WebrtcIndicator.menuCommand(event.target);"/>
@@ -702,6 +707,11 @@
                          command="Social:TogglePageMark"/>
         </toolbaritem>
       </hbox>
+
+      <toolbarbutton id="nav-bar-overflow-button"
+                     class="toolbarbutton-1 chromeclass-toolbar-additional chevron overflow-button"
+                     skipintoolbarset="true"
+                     tooltiptext="&navbarOverflow.label;"/>
 
       <toolbaritem id="PanelUI-button"
                    class="chromeclass-toolbar-additional"
@@ -859,7 +869,7 @@
 
       <toolbaritem id="search-container" title="&searchItem.title;"
                    align="center" class="chromeclass-toolbar-additional"
-                   flex="100" persist="width" removable="true">
+                   flex="100" persist="width" removable="true" noautoclose="true">
         <searchbar id="searchbar" flex="1"/>
       </toolbaritem>
 

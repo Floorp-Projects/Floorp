@@ -153,6 +153,10 @@ CustomizeMode.prototype = {
 
     this.resetButton.hidden = CustomizableUI.inDefaultState;
 
+    let customizableToolbars = document.querySelectorAll("toolbar[customizable=true]:not([autohide=true])");
+    for (let toolbar of customizableToolbars)
+      toolbar.setAttribute("customizing", true);
+
     document.documentElement.setAttribute("customizing", true);
     this._customizing = true;
   },
@@ -254,6 +258,10 @@ CustomizeMode.prototype = {
       self.dispatchToolboxEvent("aftercustomization");
     });
     documentElement.removeAttribute("customizing");
+
+    let customizableToolbars = document.querySelectorAll("toolbar[customizable=true]:not([autohide=true])");
+    for (let toolbar of customizableToolbars)
+      toolbar.removeAttribute("customizing");
 
     let customizer = document.getElementById("customization-container");
     customizer.hidden = true;
