@@ -59,7 +59,12 @@ function virtualCursorControl(aMessage) {
       }
       break;
     case 'moveToPoint':
-      moved = vc.moveToPoint(rule, details.x, details.y, true);
+      if (!this._ppcp) {
+        this._ppcp = Utils.getPixelsPerCSSPixel(content);
+      }
+      moved = vc.moveToPoint(rule,
+                             details.x * this._ppcp, details.y * this._ppcp,
+                             true);
       break;
     case 'whereIsIt':
       if (!forwardMessage(vc, aMessage)) {
@@ -97,10 +102,12 @@ function forwardMessage(aVirtualCursor, aMessage) {
       let mm = Utils.getMessageManager(acc.DOMNode);
       mm.addMessageListener(aMessage.name, virtualCursorControl);
       aMessage.json.origin = 'parent';
-      // XXX: OOP content's screen offset is 0,
-      // so we remove the real screen offset here.
-      aMessage.json.x -= content.mozInnerScreenX;
-      aMessage.json.y -= content.mozInnerScreenY;
+      if (Utils.isContentProcess) {
+        // XXX: OOP content's screen offset is 0,
+        // so we remove the real screen offset here.
+        aMessage.json.x -= content.mozInnerScreenX;
+        aMessage.json.y -= content.mozInnerScreenY;
+      }
       mm.sendAsyncMessage(aMessage.name, aMessage.json);
       return true;
     }

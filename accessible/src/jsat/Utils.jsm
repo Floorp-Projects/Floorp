@@ -131,13 +131,25 @@ this.Utils = {
     let document = this.CurrentContentDoc;
 
     if (document) {
-      let remoteframes = document.querySelectorAll('iframe[remote=true]');
+      let remoteframes = document.querySelectorAll('iframe');
 
-      for (let i = 0; i < remoteframes.length; ++i)
-        messageManagers.push(this.getMessageManager(remoteframes[i]));
+      for (let i = 0; i < remoteframes.length; ++i) {
+        let mm = this.getMessageManager(remoteframes[i]);
+        if (mm) {
+          messageManagers.push(mm);
+        }
+      }
+
     }
 
     return messageManagers;
+  },
+
+  get isContentProcess() {
+    delete this.isContentProcess;
+    this.isContentProcess =
+      Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT;
+    return this.isContentProcess;
   },
 
   getMessageManager: function getMessageManager(aBrowser) {
@@ -173,15 +185,12 @@ this.Utils = {
     let doc = (aDocument instanceof Ci.nsIAccessible) ? aDocument :
       this.AccRetrieval.getAccessibleFor(aDocument);
 
-    while (doc) {
-      try {
-        return doc.QueryInterface(Ci.nsIAccessibleCursorable).virtualCursor;
-      } catch (x) {
-        doc = doc.parentDocument;
-      }
-    }
+    return doc.QueryInterface(Ci.nsIAccessibleDocument).virtualCursor;
+  },
 
-    return null;
+  getPixelsPerCSSPixel: function getPixelsPerCSSPixel(aWindow) {
+    return aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIDOMWindowUtils).screenPixelsPerCSSPixel;
   }
 };
 
@@ -402,15 +411,7 @@ PivotContext.prototype = {
 
       this._accessible.getBounds(objX, objY, objW, objH);
 
-      // XXX: OOP content provides a screen offset of 0, while in-process provides a real
-      // offset. Removing the offset and using content-relative coords normalizes this.
-      let docX = {}, docY = {};
-      let docRoot = this._accessible.rootDocument.
-        QueryInterface(Ci.nsIAccessible);
-      docRoot.getBounds(docX, docY, {}, {});
-
-      this._bounds = new Rect(objX.value, objY.value, objW.value, objH.value).
-        translate(-docX.value, -docY.value);
+      this._bounds = new Rect(objX.value, objY.value, objW.value, objH.value);
     }
 
     return this._bounds.clone();
