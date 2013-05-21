@@ -35,9 +35,9 @@ NS_IMPL_RELEASE_INHERITED(HTMLAudioElement, HTMLMediaElement)
 
 NS_INTERFACE_TABLE_HEAD(HTMLAudioElement)
   NS_HTML_CONTENT_INTERFACES(HTMLMediaElement)
-NS_HTML_CONTENT_INTERFACE_TABLE4(HTMLAudioElement, nsIDOMHTMLMediaElement,
-                                 nsIDOMHTMLAudioElement, nsITimerCallback,
-                                 nsIAudioChannelAgentCallback)
+  NS_INTERFACE_TABLE_INHERITED4(HTMLAudioElement, nsIDOMHTMLMediaElement,
+                                nsIDOMHTMLAudioElement, nsITimerCallback,
+                                nsIAudioChannelAgentCallback)
 NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLAudioElement,
                                              HTMLMediaElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END

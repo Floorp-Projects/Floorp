@@ -29,8 +29,8 @@ NS_IMPL_RELEASE_INHERITED(HTMLDataListElement, Element)
 
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLDataListElement)
   NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE1(HTMLDataListElement,
-                                   nsIDOMHTMLDataListElement)
+  NS_INTERFACE_TABLE_INHERITED1(HTMLDataListElement,
+                                nsIDOMHTMLDataListElement)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLDataListElement,
                                                nsGenericHTMLElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END

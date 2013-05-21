@@ -32,8 +32,8 @@ NS_IMPL_RELEASE_INHERITED(HTMLTableCaptionElement, Element)
 // QueryInterface implementation for HTMLTableCaptionElement
 NS_INTERFACE_TABLE_HEAD(HTMLTableCaptionElement)
   NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE1(HTMLTableCaptionElement,
-                                   nsIDOMHTMLTableCaptionElement)
+  NS_INTERFACE_TABLE_INHERITED1(HTMLTableCaptionElement,
+                                nsIDOMHTMLTableCaptionElement)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLTableCaptionElement,
                                                nsGenericHTMLElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END

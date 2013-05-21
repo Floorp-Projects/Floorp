@@ -55,10 +55,10 @@ NS_IMPL_RELEASE_INHERITED(HTMLOutputElement, Element)
 
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLOutputElement)
   NS_HTML_CONTENT_INTERFACES(nsGenericHTMLFormElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE3(HTMLOutputElement,
-                                   nsIDOMHTMLOutputElement,
-                                   nsIMutationObserver,
-                                   nsIConstraintValidation)
+  NS_INTERFACE_TABLE_INHERITED3(HTMLOutputElement,
+                                nsIDOMHTMLOutputElement,
+                                nsIMutationObserver,
+                                nsIConstraintValidation)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLOutputElement,
                                                nsGenericHTMLFormElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
