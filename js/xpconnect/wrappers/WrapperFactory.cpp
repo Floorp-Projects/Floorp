@@ -172,8 +172,12 @@ WrapperFactory::PrepareForWrapping(JSContext *cx, HandleObject scope,
     // COW(obj) => COW(foo) => COW(bar) => contentWin.StandardClass.prototype
     //
     // NB: We now remap all non-subsuming access of standard prototypes.
-    bool subsumes = AccessCheck::subsumes(js::GetContextCompartment(cx),
-                                          js::GetObjectCompartment(obj));
+    //
+    // NB: We need to ignore domain here so that the security relationship we
+    // compute here can't change over time. See the comment above the other
+    // subsumesIgnoringDomain call below.
+    bool subsumes = AccessCheck::subsumesIgnoringDomain(js::GetContextCompartment(cx),
+                                                        js::GetObjectCompartment(obj));
     XrayType xrayType = GetXrayType(obj);
     if (!subsumes && xrayType == NotXray) {
         JSProtoKey key = JSProto_Null;
