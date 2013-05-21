@@ -175,12 +175,10 @@ panelsubview toolbarbutton > .toolbarbutton-text,
 panelmainview toolbarbutton,
 panelsubview toolbarbutton,
 #customizationui-widget-panel toolbarbutton,
-#widget-overflow-list > toolbarbutton,
 .customizationmode-button {
   -moz-appearance: none;
   padding: 2px 6px;
-  background-color: hsla(210,32%,93%,0);
-  background-clip: padding-box;
+  background: hsla(210,32%,93%,0) padding-box;
   border-radius: 2px;
   border: 1px solid;
   border-color: hsla(210,54%,20%,0) hsla(210,54%,20%,0) hsla(210,54%,20%,0);
@@ -194,7 +192,6 @@ panelsubview toolbarbutton,
 panelmainview toolbarbutton:not([disabled]):not([checked]):not([open]):not(:active):hover,
 panelsubview toolbarbutton:not([disabled]):not([checked]):not([open]):not(:active):hover,
 #customizationui-widget-panel toolbarbutton:not([disabled]):not([checked]):not([open]):not(:active):hover,
-#widget-overflow-list > toolbarbutton:not([disabled]):not([checked]):not([open]):not(:active):hover,
 #PanelUI-mainView .PanelUI-pageControls toolbarbutton,
 .customizationmode-button,
 #PanelUI-mainView #PanelUI-customize-btn {
@@ -208,8 +205,7 @@ panelsubview toolbarbutton:not([disabled]):not([checked]):not([open]):not(:activ
 panelmainview toolbarbutton:not([disabled]):-moz-any([open],[checked],:hover:active),
 panelsubview toolbarbutton:not([disabled]):-moz-any([open],[checked],:hover:active),
 .customizationmode-button:hover:active,
-#customizationui-widget-panel toolbarbutton:not([disabled]):-moz-any([open],[checked],:hover:active),
-#widget-overflow-list > toolbarbutton:not([disabled]):-moz-any([open],[checked],:hover:active) {
+#customizationui-widget-panel toolbarbutton:not([disabled]):-moz-any([open],[checked],:hover:active) {
   background-image: -moz-linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,100%,.1));
   background-color: hsla(210,54%,20%,.15);
   border-color: hsla(210,54%,20%,.3) hsla(210,54%,20%,.35) hsla(210,54%,20%,.4);

@@ -13,8 +13,6 @@ Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "CustomizableWidgets",
   "resource:///modules/CustomizableWidgets.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "DeferredTask",
-  "resource://gre/modules/DeferredTask.jsm");
 
 const kNSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
@@ -152,8 +150,7 @@ let CustomizableUIInternal = {
     });
     this.registerArea(CustomizableUI.AREA_NAVBAR, {
       legacy: true,
-      type: CustomizableUI.TYPE_TOOLBAR,
-      overflowable: true
+      type: CustomizableUI.TYPE_TOOLBAR
     });
     this.registerArea(CustomizableUI.AREA_MENUBAR, {
       legacy: true,
@@ -240,10 +237,6 @@ let CustomizableUIInternal = {
 
       // Manually restore the state here, so the legacy state can be converted. 
       this.restoreStateForArea(area, legacyState);
-    }
-
-    if (areaProperties.has("overflowable")) {
-      aToolbar.overflowable = new OverflowableToolbar(aToolbar);
     }
 
     this.registerBuildArea(area, aToolbar);
@@ -505,12 +498,6 @@ let CustomizableUIInternal = {
     let document = aWindow.document;
 
     for (let [, area] of gBuildAreas) {
-      let areaProperties = gAreas.get(area);
-      if (areaProperties.has("overflowable")) {
-        let toolbar = document.getElementById(area);
-        toolbar.overflowable.uninit();
-      }
-
       for (let node of area) {
         if (node.ownerDocument == document) {
           area.delete(node);
@@ -1652,179 +1639,6 @@ function XULWidgetSingleWrapper(aWidgetId, aNode) {
 
   Object.freeze(this);
 }
-
-const LAZY_RESIZE_INTERVAL_MS = 20;
-
-function OverflowableToolbar(aToolbarNode) {
-  this._toolbar = aToolbarNode;
-  this._target = aToolbarNode.customizationTarget;
-  let chevronId = this._toolbar.getAttribute("overflowbutton");
-  let doc = this._toolbar.ownerDocument;
-  this._chevron = doc.getElementById(chevronId);
-  this._panel = doc.getElementById("widget-overflow");
-  this._list = doc.getElementById("widget-overflow-list");
-  this._collapsed = [];
-  this._enabled = true;
-
-  this._toolbar.setAttribute("overflowable", "true");
-  this._toolbar.customizationTarget.addEventListener("overflow", this);
-  let window = doc.defaultView;
-  window.addEventListener("resize", this);
-  window.gNavToolbox.addEventListener("customizationstarting", this);
-  window.gNavToolbox.addEventListener("aftercustomization", this);
-  this._chevron.addEventListener("command", this);
-  this._panel.addEventListener("popuphiding", this);
-
-  // The toolbar could initialize in an overflowed state, in which case
-  // the 'overflow' event may have been fired before the handler was registered.
-  this._onOverflow();
-}
-
-OverflowableToolbar.prototype = {
-
-  uninit: function() {
-    this._disable();
-
-    this._toolbar.removeAttribute("overflowable");
-    this._toolbar.customizationTarget.removeEventListener("overflow", this);
-    let window = this._toolbar.ownerDocument.defaultView;
-    window.removeEventListener("resize", this);
-    window.gNavToolbox.removeEventListener("customizationstarting", this);
-    window.gNavToolbox.removeEventListener("aftercustomization", this);
-    this._chevron.removeEventListener("command", this);
-    this._panel.removeEventListener("popuphiding", this);
-  },
-
-  handleEvent: function(aEvent) {
-    switch(aEvent.type) {
-      case "overflow":
-        this._onOverflow();
-        break;
-      case "resize":
-        this._onResize(aEvent);
-        break;
-      case "command":
-        this._onClickChevron(aEvent);
-        break;
-      case "popuphiding":
-        this._onPanelHiding(aEvent);
-        break;
-      case "mouseup":
-      case "keypress":
-        this._maybeAutoHidePanel(aEvent);
-        break;
-      case "customizationstarting":
-        this._disable();
-        break;
-      case "aftercustomization":
-        this._enable();
-        break;
-    }
-  },
-
-  _onClickChevron: function(aEvent) {
-    if (this._chevron.open)
-      this._panel.hidePopup();
-    else {
-      let doc = aEvent.target.ownerDocument;
-      let anchor = doc.getAnonymousElementByAttribute(this._chevron, "class", "toolbarbutton-icon");
-      this._panel.openPopup(anchor || this._chevron, "bottomcenter topright");
-    }
-    this._chevron.open = !this._chevron.open;
-  },
-
-  _onPanelHiding: function(aEvent) {
-    this._chevron.open = false;
-  },
-
-  _onOverflow: function() {
-    if (!this._enabled)
-      return;
-
-    let child = this._target.lastChild;
-
-    while(child && this._target.clientWidth < this._target.scrollWidth) {
-      let prevChild = child.previousSibling;
-
-      if (!child.hasAttribute("nooverflow")) {
-        this._collapsed.push({child: child, minSize: this._target.clientWidth});
-        child.classList.add("overflowedItem");
-
-        child.addEventListener("mouseup", this);
-        child.addEventListener("keypress", this);
-
-        this._list.insertBefore(child, this._list.firstChild);
-        this._toolbar.setAttribute("overflowing", "true");
-      }
-      child = prevChild;
-    };
-  },
-
-  _maybeAutoHidePanel: function(aEvent) {
-    LOG("_maybeAutoHidePanel: " + aEvent.type);
-
-    if (aEvent.currentTarget.hasAttribute("noautoclose"))
-      return;
-
-    if (aEvent.type == "keypress" &&
-        !(aEvent.keyCode == aEvent.DOM_VK_ENTER ||
-          aEvent.keyCode == aEvent.DOM_VK_RETURN)) {
-      return;
-    }
-
-    if (aEvent.type == "mouseup" && aEvent.button != 0) {
-      return;
-    }
-
-    this._panel.hidePopup();
-  },
-
-  _onResize: function(aEvent) {
-    if (!this._lazyResizeHandler) {
-      this._lazyResizeHandler = new DeferredTask(this._onLazyResize.bind(this),
-                                                 LAZY_RESIZE_INTERVAL_MS);
-    }
-    this._lazyResizeHandler.start();
-  },
-
-  _moveItemsBackToTheirOrigin: function(shouldMoveAllItems) {
-    for (let i = this._collapsed.length - 1; i >= 0; i--) {
-      let {child, minSize} = this._collapsed[i];
-
-      if (!shouldMoveAllItems &&
-          this._target.clientWidth <= minSize) {
-        return;
-      }
-
-      this._collapsed.pop();
-      this._target.appendChild(child);
-      child.classList.remove("overflowedItem");
-      child.removeEventListener("mouseup", this);
-      child.removeEventListener("keypress", this);
-    }
-
-    if (!this._collapsed.length) {
-      this._toolbar.removeAttribute("overflowing");
-    }
-  },
-
-  _onLazyResize: function() {
-    if (!this._enabled)
-      return;
-
-    this._moveItemsBackToTheirOrigin();
-  },
-
-  _disable: function() {
-    this._enabled = false;
-    this._moveItemsBackToTheirOrigin(true);
-  },
-
-  _enable: function() {
-    this._enabled = true;
-    this._onOverflow();
-  }
-};
 
 // When IDs contain special characters, we need to escape them for use with querySelector:
 function idToSelector(aId) {
