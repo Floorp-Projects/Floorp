@@ -14,7 +14,7 @@ this.EXPORTED_SYMBOLS = [ "CmdAddonFlags", "CmdCommands", "DEFAULT_DEBUG_PORT", 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
-Cu.import("resource://gre/modules/osfile.jsm")
+Cu.import("resource://gre/modules/osfile.jsm");
 
 Cu.import("resource://gre/modules/devtools/gcli.jsm");
 Cu.import("resource:///modules/devtools/shared/event-emitter.js");
@@ -174,8 +174,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "AppCacheUtils",
                 gcli.lookup("addonListOutEnable")
             };
           }),
-          onclick: createUpdateHandler(context),
-          ondblclick: createExecuteHandler(context)
+          onclick: context.update,
+          ondblclick: context.updateExec
         }
       });
     }
@@ -343,56 +343,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "AppCacheUtils",
     module.CmdAddonFlags.addonsLoaded = true;
     Services.obs.notifyObservers(null, "gcli_addon_commands_ready", null);
   });
-
-  /**
-   * Helper to find the 'data-command' attribute and call some action on it.
-   * @see |updateCommand()| and |executeCommand()|
-   */
-  function withCommand(element, action) {
-    var command = element.getAttribute("data-command");
-    if (!command) {
-      command = element.querySelector("*[data-command]")
-        .getAttribute("data-command");
-    }
-
-    if (command) {
-      action(command);
-    }
-    else {
-      console.warn("Missing data-command for " + util.findCssSelector(element));
-    }
-  }
-
-  /**
-   * Create a handler to update the requisition to contain the text held in the
-   * first matching data-command attribute under the currentTarget of the event.
-   * @param context Either a Requisition or an ExecutionContext or another object
-   * that contains an |update()| function that follows a similar contract.
-   */
-  function createUpdateHandler(context) {
-    return function(ev) {
-      withCommand(ev.currentTarget, function(command) {
-        context.update(command);
-      });
-    }
-  }
-
-  /**
-   * Create a handler to execute the text held in the data-command attribute
-   * under the currentTarget of the event.
-   * @param context Either a Requisition or an ExecutionContext or another object
-   * that contains an |update()| function that follows a similar contract.
-   */
-  function createExecuteHandler(context) {
-    return function(ev) {
-      withCommand(ev.currentTarget, function(command) {
-        context.exec({
-          visible: true,
-          typed: command
-        });
-      });
-    }
-  }
 
 }(this));
 
@@ -926,8 +876,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "AppCacheUtils",
         data: {
           options: { allowEval: true },
           cookies: cookies,
-          onclick: createUpdateHandler(context),
-          ondblclick: createExecuteHandler(context),
+          onclick: context.update,
+          ondblclick: context.updateExec
         }
       });
     }
@@ -1105,56 +1055,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "AppCacheUtils",
                     time);
     }
   });
-
-  /**
-   * Helper to find the 'data-command' attribute and call some action on it.
-   * @see |updateCommand()| and |executeCommand()|
-   */
-  function withCommand(element, action) {
-    let command = element.getAttribute("data-command");
-    if (!command) {
-      command = element.querySelector("*[data-command]")
-              .getAttribute("data-command");
-    }
-
-    if (command) {
-      action(command);
-    }
-    else {
-      console.warn("Missing data-command for " + util.findCssSelector(element));
-    }
-  }
-
-  /**
-   * Create a handler to update the requisition to contain the text held in the
-   * first matching data-command attribute under the currentTarget of the event.
-   * @param context Either a Requisition or an ExecutionContext or another object
-   * that contains an |update()| function that follows a similar contract.
-   */
-  function createUpdateHandler(context) {
-    return function(ev) {
-      withCommand(ev.currentTarget, function(command) {
-        context.update(command);
-      });
-    }
-  }
-
-  /**
-   * Create a handler to execute the text held in the data-command attribute
-   * under the currentTarget of the event.
-   * @param context Either a Requisition or an ExecutionContext or another object
-   * that contains an |update()| function that follows a similar contract.
-   */
-  function createExecuteHandler(context) {
-    return function(ev) {
-      withCommand(ev.currentTarget, function(command) {
-        context.exec({
-          visible: true,
-          typed: command
-        });
-      });
-    }
-  }
 }(this));
 
 /* CmdExport --------------------------------------------------------------- */
@@ -2207,8 +2107,8 @@ gcli.addCommand({
         html: appcacheListEntries,
         data: {
           entries: entries,
-          onclick: createUpdateHandler(context),
-          ondblclick: createExecuteHandler(context),
+          onclick: context.update,
+          ondblclick: context.updateExec
         }
       });
     }
@@ -2253,54 +2153,4 @@ gcli.addCommand({
       return utils.viewEntry(args.key);
     }
   });
-
-  /**
-   * Helper to find the 'data-command' attribute and call some action on it.
-   * @see |updateCommand()| and |executeCommand()|
-   */
-  function withCommand(element, action) {
-    let command = element.getAttribute("data-command");
-    if (!command) {
-      command = element.querySelector("*[data-command]")
-              .getAttribute("data-command");
-    }
-
-    if (command) {
-      action(command);
-    }
-    else {
-      console.warn("Missing data-command for " + util.findCssSelector(element));
-    }
-  }
-
-  /**
-   * Create a handler to update the requisition to contain the text held in the
-   * first matching data-command attribute under the currentTarget of the event.
-   * @param context Either a Requisition or an ExecutionContext or another object
-   * that contains an |update()| function that follows a similar contract.
-   */
-  function createUpdateHandler(context) {
-    return function(ev) {
-      withCommand(ev.currentTarget, function(command) {
-        context.update(command);
-      });
-    }
-  }
-
-  /**
-   * Create a handler to execute the text held in the data-command attribute
-   * under the currentTarget of the event.
-   * @param context Either a Requisition or an ExecutionContext or another object
-   * that contains an |update()| function that follows a similar contract.
-   */
-  function createExecuteHandler(context) {
-    return function(ev) {
-      withCommand(ev.currentTarget, function(command) {
-        context.exec({
-          visible: true,
-          typed: command
-        });
-      });
-    }
-  }
 }(this));
