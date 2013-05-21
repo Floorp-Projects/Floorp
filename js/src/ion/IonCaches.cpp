@@ -626,7 +626,7 @@ EmitLoadSlot(MacroAssembler &masm, JSObject *holder, Shape *shape, Register hold
 static void
 GenerateListBaseChecks(JSContext *cx, MacroAssembler &masm, JSObject *obj,
                        PropertyName *name, Register object, Label *stubFailure,
-                       bool skipExpandoCheck=false)
+                       bool skipExpandoCheck = false)
 {
     MOZ_ASSERT(IsCacheableListBase(obj));
 
