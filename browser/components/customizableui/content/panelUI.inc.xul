@@ -75,3 +75,12 @@
     </panelsubview>
   </panelmultiview>
 </panel>
+
+<panel id="widget-overflow"
+       role="group"
+       type="arrow"
+       level="top"
+       consumeoutsideclicks="true">
+  <vbox id="widget-overflow-list">
+  </vbox>
+</panel>

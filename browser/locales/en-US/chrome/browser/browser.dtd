@@ -16,6 +16,7 @@
 <!ENTITY mainWindow.titlePrivateBrowsingSuffix "(Private Browsing)">
 
 <!ENTITY appmenu.title                       "Customize and Control &brandFullName;">
+<!ENTITY navbarOverflow.label                "More tools…">
 
 <!-- Tab context menu -->
 <!ENTITY  reloadTab.label                    "Reload Tab">
