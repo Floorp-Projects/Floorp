@@ -34,8 +34,7 @@ NS_INTERFACE_TABLE_HEAD(HTMLAreaElement)
                                 nsIDOMHTMLAreaElement,
                                 nsILink,
                                 Link)
-  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLAreaElement,
-                                               nsGenericHTMLElement)
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
