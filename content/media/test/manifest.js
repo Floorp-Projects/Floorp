@@ -558,7 +558,8 @@ function MediaTestManager() {
     this.numTestsRunning = 0;
     // Always wait for explicit finish.
     SimpleTest.waitForExplicitFinish();
-    this.nextTest();
+
+    SpecialPowers.pushPrefEnv({"set": [["media.preload.default", 2], ["media.preload.auto", 3], ["media.opus.enabled", true]]}, function(aThis) {aThis.nextTest();}(this));
   }
   
   // Registers that the test corresponding to 'token' has been started.
@@ -646,31 +647,3 @@ function mediaTestCleanup() {
     }
     SpecialPowers.forceGC();
 }
-
-(function() {
-  // Ensure that preload preferences are comsistent
-  var prefService = SpecialPowers.wrap(SpecialPowers.Components)
-                                 .classes["@mozilla.org/preferences-service;1"]
-                                 .getService(SpecialPowers.Ci.nsIPrefService);
-  var branch = prefService.getBranch("media.");
-  var oldDefault = 2;
-  var oldAuto = 3;
-  var oldOpus = undefined;
-  try {
-    oldDefault = branch.getIntPref("preload.default");
-    oldAuto    = branch.getIntPref("preload.auto");
-    oldOpus    = branch.getBoolPref("opus.enabled");
-  } catch(ex) { }
-  branch.setIntPref("preload.default", 2); // preload_metadata
-  branch.setIntPref("preload.auto", 3); // preload_enough
-  // test opus playback iff the pref exists
-  if (oldOpus !== undefined)
-    branch.setBoolPref("opus.enabled", true);
-
-  window.addEventListener("unload", function() {
-    branch.setIntPref("preload.default", oldDefault);
-    branch.setIntPref("preload.auto", oldAuto);
-    if (oldOpus !== undefined)
-      branch.setBoolPref("opus.enabled", oldOpus);
-  }, false);
- })();
