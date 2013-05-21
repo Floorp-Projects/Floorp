@@ -97,6 +97,16 @@ var tsr = {
   exec: createExec('tsr')
 };
 
+var tsrsrsr = {
+  name: 'tsrsrsr',
+  params: [
+    { name: 'p1', type: 'string' },
+    { name: 'p2', type: 'string' },
+    { name: 'p3', type: 'string' },
+  ],
+  exec: createExec('tsrsrsr')
+};
+
 var tso = {
   name: 'tso',
   params: [ { name: 'text', type: 'string', defaultValue: null } ],
@@ -476,6 +486,7 @@ mockCommands.setup = function(opts) {
 
   mockCommands.commands.tsv = canon.addCommand(tsv);
   mockCommands.commands.tsr = canon.addCommand(tsr);
+  mockCommands.commands.tsrsrsr = canon.addCommand(tsrsrsr);
   mockCommands.commands.tso = canon.addCommand(tso);
   mockCommands.commands.tse = canon.addCommand(tse);
   mockCommands.commands.tsj = canon.addCommand(tsj);
@@ -505,6 +516,7 @@ mockCommands.setup = function(opts) {
 mockCommands.shutdown = function(opts) {
   canon.removeCommand(tsv);
   canon.removeCommand(tsr);
+  canon.removeCommand(tsrsrsr);
   canon.removeCommand(tso);
   canon.removeCommand(tse);
   canon.removeCommand(tsj);
