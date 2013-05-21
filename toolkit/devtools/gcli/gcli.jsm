@@ -225,7 +225,13 @@ exports.shutdown = function() {
 
 
 /**
- * 'string' the most basic string type that doesn't need to convert
+ * 'string' the most basic string type where all we need to do is to take care
+ * of converting escaped characters like \t, \n, etc. For the full list see
+ * https://developer.mozilla.org/en-US/docs/JavaScript/Guide/Values,_variables,_and_literals
+ *
+ * The exception is that we ignore \b because replacing '\b' characters in
+ * stringify() with their escaped version injects '\\b' all over the place and
+ * the need to support \b seems low)
  */
 function StringType(typeSpec) {
 }
@@ -236,14 +242,50 @@ StringType.prototype.stringify = function(value, context) {
   if (value == null) {
     return '';
   }
-  return value.toString();
+
+  return value
+       .replace(/\\/g, '\\\\')
+       .replace(/\f/g, '\\f')
+       .replace(/\n/g, '\\n')
+       .replace(/\r/g, '\\r')
+       .replace(/\t/g, '\\t')
+       .replace(/\v/g, '\\v')
+       .replace(/\n/g, '\\n')
+       .replace(/\r/g, '\\r')
+       .replace(/ /g, '\\ ')
+       .replace(/'/g, '\\\'')
+       .replace(/"/g, '\\"')
+       .replace(/{/g, '\\{')
+       .replace(/}/g, '\\}');
 };
 
 StringType.prototype.parse = function(arg, context) {
   if (arg.text == null || arg.text === '') {
     return Promise.resolve(new Conversion(undefined, arg, Status.INCOMPLETE, ''));
   }
-  return Promise.resolve(new Conversion(arg.text, arg));
+
+  // The string '\\' (i.e. an escaped \ (represented here as '\\\\' because it
+  // is double escaped)) is first converted to a private unicode character and
+  // then at the end from \uF000 to a single '\' to avoid the string \\n being
+  // converted first to \n and then to a <LF>
+
+  var value = arg.text
+       .replace(/\\\\/g, '\uF000')
+       .replace(/\\f/g, '\f')
+       .replace(/\\n/g, '\n')
+       .replace(/\\r/g, '\r')
+       .replace(/\\t/g, '\t')
+       .replace(/\\v/g, '\v')
+       .replace(/\\n/g, '\n')
+       .replace(/\\r/g, '\r')
+       .replace(/\\ /g, ' ')
+       .replace(/\\'/g, '\'')
+       .replace(/\\"/g, '"')
+       .replace(/\\{/g, '{')
+       .replace(/\\}/g, '}')
+       .replace(/\uF000/g, '\\');
+
+  return Promise.resolve(new Conversion(value, arg));
 };
 
 StringType.prototype.name = 'string';
@@ -7050,35 +7092,25 @@ exports.tokenize = function(typed) {
 
   var mode = In.WHITESPACE;
 
-  // First we un-escape. This list was taken from:
-  // https://developer.mozilla.org/en/Core_JavaScript_1.5_Guide/Core_Language_Features#Unicode
-  // We are generally converting to their real values except for the strings
-  // '\'', '\"', '\ ', '{' and '}' which we are converting to unicode private
-  // characters so we can distinguish them from '"', ' ', '{', '}' and ''',
-  // which are special. They need swapping back post-split - see unescape2()
+  // First we swap out escaped characters that are special to the tokenizer.
+  // So a backslash followed by any of ['"{} ] is turned into a unicode private
+  // char so we can swap back later
   typed = typed
-      .replace(/\\\\/g, '\\')
-      .replace(/\\b/g, '\b')
-      .replace(/\\f/g, '\f')
-      .replace(/\\n/g, '\n')
-      .replace(/\\r/g, '\r')
-      .replace(/\\t/g, '\t')
-      .replace(/\\v/g, '\v')
-      .replace(/\\n/g, '\n')
-      .replace(/\\r/g, '\r')
-      .replace(/\\ /g, '\uF000')
-      .replace(/\\'/g, '\uF001')
-      .replace(/\\"/g, '\uF002')
-      .replace(/\\{/g, '\uF003')
-      .replace(/\\}/g, '\uF004');
+      .replace(/\\\\/g, '\uF000')
+      .replace(/\\ /g, '\uF001')
+      .replace(/\\'/g, '\uF002')
+      .replace(/\\"/g, '\uF003')
+      .replace(/\\{/g, '\uF004')
+      .replace(/\\}/g, '\uF005');
 
   function unescape2(escaped) {
     return escaped
-        .replace(/\uF000/g, ' ')
-        .replace(/\uF001/g, '\'')
-        .replace(/\uF002/g, '"')
-        .replace(/\uF003/g, '{')
-        .replace(/\uF004/g, '}');
+        .replace(/\uF000/g, '\\\\')
+        .replace(/\uF001/g, '\\ ')
+        .replace(/\uF002/g, '\\\'')
+        .replace(/\uF003/g, '\\\"')
+        .replace(/\uF004/g, '\\\{')
+        .replace(/\uF005/g, '\\\}');
   }
 
   var i = 0;          // The index of the current character
@@ -7283,13 +7315,16 @@ Requisition.prototype._split = function(args) {
     argsUsed++;
   }
 
+  // This could probably be re-written to consume args as we go
   for (var i = 0; i < argsUsed; i++) {
     args.shift();
   }
 
-  return this.setAssignment(this.commandAssignment, conversion, noArgUp);
+  // Warning: we're returning a promise (from setAssignment) which tells us
+  // when we're done setting the current command, but mutating the args array
+  // as we go, so we're conflicted on when we're done
 
-  // This could probably be re-written to consume args as we go
+  return this.setAssignment(this.commandAssignment, conversion, noArgUp);
 };
 
 /**
