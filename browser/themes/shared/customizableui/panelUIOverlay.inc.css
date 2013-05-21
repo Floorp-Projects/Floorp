@@ -53,6 +53,7 @@ panelmultiview > panelsubview:not([current]) {
 }
 
 #PanelUI-popup > .panel-arrowcontainer > .panel-arrowcontent {
+  overflow: hidden;
   padding: 0;
 }
 
