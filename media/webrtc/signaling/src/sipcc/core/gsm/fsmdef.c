@@ -3516,6 +3516,10 @@ fsmdef_ev_setpeerconnection(sm_event_t *event) {
     sstrncpy(dcb->peerconnection, msg->data.pc.pc_handle, sizeof(dcb->peerconnection));
     dcb->peerconnection_set = TRUE;
 
+    FSM_DEBUG_SM(DEB_F_PREFIX"Setting peerconnection handle for (%d/%d) to %s",
+                 DEB_F_PREFIX_ARGS(FSM, __FUNCTION__),
+                 line, call_id, dcb->peerconnection);
+
     return (SM_RC_END);
 }
 
