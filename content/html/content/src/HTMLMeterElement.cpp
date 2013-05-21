@@ -34,8 +34,7 @@ NS_INTERFACE_TABLE_HEAD(HTMLMeterElement)
   NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
   NS_INTERFACE_TABLE_INHERITED1(HTMLMeterElement,
                                 nsIDOMHTMLMeterElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLMeterElement,
-                                               nsGenericHTMLElement)
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
 NS_IMPL_ELEMENT_CLONE(HTMLMeterElement)

@@ -40,8 +40,7 @@ NS_INTERFACE_TABLE_HEAD(HTMLIFrameElement)
   NS_INTERFACE_TABLE_INHERITED2(HTMLIFrameElement,
                                 nsIDOMHTMLIFrameElement,
                                 nsIDOMGetSVGDocument)
-  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLIFrameElement,
-                                               nsGenericHTMLFrameElement)
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
 NS_IMPL_ELEMENT_CLONE(HTMLIFrameElement)

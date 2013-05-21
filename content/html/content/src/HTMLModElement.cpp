@@ -31,8 +31,7 @@ NS_INTERFACE_TABLE_HEAD(HTMLModElement)
   NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
   NS_INTERFACE_TABLE_INHERITED1(HTMLModElement,
                                 nsIDOMHTMLModElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLModElement,
-                                               nsGenericHTMLElement)
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
 

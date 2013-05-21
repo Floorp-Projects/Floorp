@@ -39,8 +39,7 @@ NS_INTERFACE_TABLE_HEAD(HTMLLabelElement)
   NS_HTML_CONTENT_INTERFACES(nsGenericHTMLFormElement)
   NS_INTERFACE_TABLE_INHERITED1(HTMLLabelElement,
                                 nsIDOMHTMLLabelElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLLabelElement,
-                                               nsGenericHTMLFormElement)
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
 

@@ -31,8 +31,7 @@ NS_INTERFACE_TABLE_HEAD(HTMLFrameSetElement)
   NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
   NS_INTERFACE_TABLE_INHERITED1(HTMLFrameSetElement,
                                 nsIDOMHTMLFrameSetElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLFrameSetElement,
-                                               nsGenericHTMLElement)
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
 

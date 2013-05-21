@@ -1440,10 +1440,6 @@ protected:
  * QueryInterface() implementation helper macros
  */
 
-#define NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE_AMBIGUOUS(_class, _base, \
-                                                               _base_if)      \
-  NS_INTERFACE_TABLE_TO_MAP_SEGUE
-
 #define NS_HTML_CONTENT_INTERFACES_AMBIGUOUS(_base, _base_if)                 \
   {                                                                           \
     nsresult html_rv = _base::QueryInterface(aIID, aInstancePtr);             \
@@ -1458,10 +1454,6 @@ protected:
 
 #define NS_HTML_CONTENT_INTERFACES(_base)                                     \
   NS_HTML_CONTENT_INTERFACES_AMBIGUOUS(_base, nsIDOMHTMLElement)
-
-#define NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(_class, _base)           \
-  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE_AMBIGUOUS(_class, _base,       \
-                                                         nsIDOMHTMLElement)
 
 #define NS_HTML_CONTENT_INTERFACE_MAP_END                                     \
   NS_ELEMENT_INTERFACE_MAP_END
