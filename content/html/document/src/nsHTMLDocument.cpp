@@ -202,33 +202,17 @@ nsHTMLDocument::nsHTMLDocument()
 }
 
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLDocument, nsDocument)
-  NS_ASSERTION(!nsCCUncollectableMarker::InGeneration(cb, tmp->GetMarkedCCGeneration()),
-               "Shouldn't traverse nsHTMLDocument!");
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mImages)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mApplets)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEmbeds)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLinks)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAnchors)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mScripts)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mForms)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFormControls)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWyciwygChannel)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMidasCommandManager)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsHTMLDocument, nsDocument)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mImages)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mApplets)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mEmbeds)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mLinks)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mAnchors)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mScripts)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mForms)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFormControls)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mWyciwygChannel)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mMidasCommandManager)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_INHERITED_10(nsHTMLDocument, nsDocument,
+                                      mImages,
+                                      mApplets,
+                                      mEmbeds,
+                                      mLinks,
+                                      mAnchors,
+                                      mScripts,
+                                      mForms,
+                                      mFormControls,
+                                      mWyciwygChannel,
+                                      mMidasCommandManager)
 
 NS_IMPL_ADDREF_INHERITED(nsHTMLDocument, nsDocument)
 NS_IMPL_RELEASE_INHERITED(nsHTMLDocument, nsDocument)
