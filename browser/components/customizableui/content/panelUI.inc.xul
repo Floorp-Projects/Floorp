@@ -14,27 +14,33 @@
           <toolbarbutton id="PanelUI-cut-btn" flex="1"
                          label="&cutCmd.label;"
                          tooltiptext="&cutButton.tooltip;"
+                         class="panel-combined-button"
                          command="cmd_cut"/>
           <toolbarbutton id="PanelUI-copy-btn" flex="1"
                          label="&copyCmd.label;"
                          tooltiptext="&copyButton.tooltip;"
+                         class="panel-combined-button"
                          command="cmd_copy"/>
           <toolbarbutton id="PanelUI-paste-btn" flex="1"
                          label="&pasteCmd.label;"
                          tooltiptext="&pasteButton.tooltip;"
+                         class="panel-combined-button"
                          command="cmd_paste"/>
         </hbox>
         <hbox class="PanelUI-zoomControls">
           <toolbarbutton id="PanelUI-zoomOut-btn" flex="1"
                          noautoclose="true" label="&fullZoomReduceCmd.label;"
                          command="cmd_fullZoomReduce"
+                         class="panel-combined-button"
                          tooltiptext="&zoomOutButton.tooltip;"/>
           <toolbarbutton id="PanelUI-zoomReset-btn" flex="1"
                          noautoclose="true" command="cmd_fullZoomReset"
+                         class="panel-combined-button"
                          tooltiptext="&zoomReset.tooltip;"/>
           <toolbarbutton id="PanelUI-zoomIn-btn" flex="1"
                          noautoclose="true" label="&fullZoomEnlargeCmd.label;"
                          command="cmd_fullZoomEnlarge"
+                         class="panel-combined-button"
                          tooltiptext="&zoomInButton.tooltip;"/>
         </hbox>
       </vbox>

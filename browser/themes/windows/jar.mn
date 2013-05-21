@@ -28,6 +28,8 @@ browser.jar:
         skin/classic/browser/customizableui/customizeMode-gridTexture.png  (customizableui/customizeMode-gridTexture.png)
         skin/classic/browser/customizableui/customizeMode-separatorHorizontal.png  (customizableui/customizeMode-separatorHorizontal.png)
         skin/classic/browser/customizableui/customizeMode-separatorVertical.png  (customizableui/customizeMode-separatorVertical.png)
+        skin/classic/browser/customizableui/menuPanel-icons.png        (customizableui/menuPanel-icons.png)
+        skin/classic/browser/customizableui/menuPanel-small-icons.png  (customizableui/menuPanel-small-icons.png)
 *       skin/classic/browser/engineManager.css
         skin/classic/browser/Geolocation-16.png
         skin/classic/browser/Geolocation-64.png
@@ -295,6 +297,8 @@ browser.jar:
         skin/classic/aero/browser/customizableui/customizeMode-gridTexture.png  (customizableui/customizeMode-gridTexture.png)
         skin/classic/aero/browser/customizableui/customizeMode-separatorHorizontal.png  (customizableui/customizeMode-separatorHorizontal.png)
         skin/classic/aero/browser/customizableui/customizeMode-separatorVertical.png  (customizableui/customizeMode-separatorVertical.png)
+        skin/classic/aero/browser/customizableui/menuPanel-icons.png        (customizableui/menuPanel-icons.png)
+        skin/classic/aero/browser/customizableui/menuPanel-small-icons.png  (customizableui/menuPanel-small-icons.png)
 *       skin/classic/aero/browser/engineManager.css
         skin/classic/aero/browser/Geolocation-16.png
         skin/classic/aero/browser/Geolocation-64.png
