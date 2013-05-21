@@ -5,8 +5,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Original author: ekr@rtfm.com
-#include <prlog.h>
-
 #include "logging.h"
 #include "transportflow.h"
 #include "transportlayer.h"

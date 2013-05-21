@@ -776,7 +776,6 @@ JS_CONFIG_SUBSTITUTIONS=\
 	-Dexec_prefix="$(exec_prefix)" \
 	-Dincludedir="$(includedir)" \
 	-Dlibdir="$(libdir)" \
-	-DMODULE="$(MODULE)" \
 	-DMOZILLA_VERSION="$(MOZILLA_VERSION)" \
 	-DLIBRARY_NAME="$(LIBRARY_NAME)" \
 	-DJS_CONFIG_LIBS="$(JS_CONFIG_LIBS)" \
@@ -814,7 +813,7 @@ install:: $(LIBRARY_NAME).pc
 # The overall directory structure of the installed headers looks like so:
 #
 #   $(includedir)/
-#      $(MODULE)/
+#      $(LIBRARY_NAME)/
 #        jsapi.h, jspubtd.h, etc. (all of EXPORTS)
 #        js/
 #          js/public/* headers (all are public)
@@ -827,13 +826,13 @@ install:: $(LIBRARY_NAME).pc
 #
 
 install:: $(EXPORTS)
-	$(SYSINSTALL) $^ $(DESTDIR)$(includedir)/$(MODULE)
+	$(SYSINSTALL) $^ $(DESTDIR)$(includedir)/$(LIBRARY_NAME)
 
 install:: $(EXPORTS_js)
-	$(SYSINSTALL) $^ $(DESTDIR)$(includedir)/$(MODULE)/js
+	$(SYSINSTALL) $^ $(DESTDIR)$(includedir)/$(LIBRARY_NAME)/js
 
 install:: $(EXPORTS_mozilla)
-	$(SYSINSTALL) $^ $(DESTDIR)$(includedir)/$(MODULE)/mozilla
+	$(SYSINSTALL) $^ $(DESTDIR)$(includedir)/$(LIBRARY_NAME)/mozilla
 
 #
 # END SpiderMonkey header installation

@@ -64,7 +64,6 @@ robocop_DEST    := $(CURDIR)
 robocop_FILES   := \
   $(TESTPATH)/robocop.ini \
   $(TESTPATH)/robocop_autophone.ini \
-  $(srcdir)/parse_ids.py \
   $(NULL)
 robocop-deps := $(notdir $(robocop_FILES))
 
@@ -81,10 +80,9 @@ GARBAGE += \
   $(java-tests-dep) \
   $(_JAVA_HARNESS) \
   classes.dex \
-  robocop.apk \
   robocop.ap_ \
-  robocop-unsigned-unaligned.apk \
-  robocop-unaligned.apk \
+  robocop-debug-signed.apk \
+  robocop-debug-signed-unaligned.apk \
   $(robocop-deps) \
   $(NULL)
 
@@ -101,7 +99,7 @@ include $(topsrcdir)/config/android-common.mk
 
 GENERATED_DIRS_tools = classes $(dir-tests)
 
-tools:: $(robocop-deps) robocop.apk
+libs:: robocop-debug-signed.apk
 
 classes.dex: robocop.ap_
 classes.dex: $(robocop-deps)
@@ -110,9 +108,14 @@ classes.dex: $(java-tests-dep)
 	$(JAVAC) $(JAVAC_FLAGS) -d classes $(JAVAFILES) $(_JAVA_HARNESS) $(java-tests-dep)
 	$(DX) --dex --output=$@ classes $(ROBOTIUM_PATH) $(ANDROID_COMPT_LIB)
 
-robocop.apk: $(robocop-deps) robocop.ap_ classes.dex
 robocop.ap_: AndroidManifest.xml $(TESTPATH)/assets/*
 	$(AAPT) package -f -M $< -I $(ANDROID_SDK)/android.jar -I . -S res -A $(TESTPATH)/assets -F $@ -J ./
+
+robocop-debug-signed-unaligned.apk: robocop.ap_ classes.dex
+	$(APKBUILDER) $@ -v $(APKBUILDER_FLAGS) -z robocop.ap_ -f classes.dex
+
+robocop-debug-signed.apk: robocop-debug-signed-unaligned.apk
+	$(ZIPALIGN) -f -v 4 $^ $@
 
 # PP_java-tests not fully usable here
 # Intermediate step toward a library rule.

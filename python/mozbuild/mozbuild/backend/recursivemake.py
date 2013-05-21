@@ -226,7 +226,12 @@ class RecursiveMakeBackend(BuildBackend):
             'backend.%s.built' % self.__class__.__name__).replace(os.sep, '/')
         backend_deps = FileAvoidWrite('%s.pp' % backend_built_path)
         inputs = sorted(p.replace(os.sep, '/') for p in self.backend_input_files)
-        backend_deps.write('%s: %s\n' % (backend_built_path, ' '.join(inputs)))
+
+        # We need to use $(DEPTH) so the target here matches what's in
+        # rules.mk. If they are different, the dependencies don't get pulled in
+        # properly.
+        backend_deps.write('$(DEPTH)/backend.RecursiveMakeBackend.built: %s\n' %
+            ' '.join(inputs))
         for path in inputs:
             backend_deps.write('%s:\n' % path)
 

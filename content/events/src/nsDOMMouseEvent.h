@@ -34,9 +34,6 @@ public:
     return mozilla::dom::MouseEventBinding::Wrap(aCx, aScope, this);
   }
 
-  virtual nsresult InitFromCtor(const nsAString& aType,
-                                JSContext* aCx, JS::Value* aVal);
-
   // Web IDL binding methods
   virtual uint32_t Which() MOZ_OVERRIDE
   {

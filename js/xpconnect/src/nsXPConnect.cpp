@@ -40,6 +40,7 @@
 #include "mozilla/dom/DOMErrorBinding.h"
 
 #include "nsWrapperCacheInlines.h"
+#include "nsCycleCollectionNoteRootCallback.h"
 #include "nsCycleCollector.h"
 #include "nsCycleCollectorUtils.h"
 #include "nsDOMMutationObserver.h"
@@ -328,11 +329,11 @@ nsXPConnect::GarbageCollect(uint32_t reason)
 
 struct NoteWeakMapChildrenTracer : public JSTracer
 {
-    NoteWeakMapChildrenTracer(nsCycleCollectionTraversalCallback &cb)
+    NoteWeakMapChildrenTracer(nsCycleCollectionNoteRootCallback &cb)
         : mCb(cb)
     {
     }
-    nsCycleCollectionTraversalCallback &mCb;
+    nsCycleCollectionNoteRootCallback &mCb;
     bool mTracedAny;
     JSObject *mMap;
     void *mKey;
@@ -361,12 +362,12 @@ TraceWeakMappingChild(JSTracer *trc, void **thingp, JSGCTraceKind kind)
 struct NoteWeakMapsTracer : public js::WeakMapTracer
 {
     NoteWeakMapsTracer(JSRuntime *rt, js::WeakMapTraceCallback cb,
-                       nsCycleCollectionTraversalCallback &cccb)
+                       nsCycleCollectionNoteRootCallback &cccb)
       : js::WeakMapTracer(rt, cb), mCb(cccb), mChildTracer(cccb)
     {
         JS_TracerInit(&mChildTracer, rt, TraceWeakMappingChild);
     }
-    nsCycleCollectionTraversalCallback &mCb;
+    nsCycleCollectionNoteRootCallback &mCb;
     NoteWeakMapChildrenTracer mChildTracer;
 };
 
@@ -486,7 +487,7 @@ nsXPConnect::FixWeakMappingGrayBits()
 }
 
 nsresult
-nsXPConnect::BeginCycleCollection(nsCycleCollectionTraversalCallback &cb)
+nsXPConnect::BeginCycleCollection(nsCycleCollectionNoteRootCallback &cb)
 {
     JSRuntime* rt = GetRuntime()->GetJSRuntime();
     static bool gcHasRun = false;

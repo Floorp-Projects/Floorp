@@ -10,7 +10,6 @@
 #include "nsClientRect.h"
 #include "nsPaintRequest.h"
 #include "nsIFrame.h"
-#include "nsDOMClassInfoID.h"
 
 nsDOMNotifyPaintEvent::nsDOMNotifyPaintEvent(mozilla::dom::EventTarget* aOwner,
                                              nsPresContext* aPresContext,
@@ -28,11 +27,8 @@ nsDOMNotifyPaintEvent::nsDOMNotifyPaintEvent(mozilla::dom::EventTarget* aOwner,
   SetIsDOMBinding();
 }
 
-DOMCI_DATA(NotifyPaintEvent, nsDOMNotifyPaintEvent)
-
 NS_INTERFACE_MAP_BEGIN(nsDOMNotifyPaintEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNotifyPaintEvent)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(NotifyPaintEvent)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
 
 NS_IMPL_ADDREF_INHERITED(nsDOMNotifyPaintEvent, nsDOMEvent)

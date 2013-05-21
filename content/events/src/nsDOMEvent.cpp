@@ -128,7 +128,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMEvent)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEvent)
-  NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIJSNativeInitializer, !IsDOMBinding())
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Event)
 NS_INTERFACE_MAP_END
 
@@ -329,6 +329,7 @@ NS_IMETHODIMP
 nsDOMEvent::Initialize(nsISupports* aOwner, JSContext* aCx, JSObject* aObj,
                        const JS::CallArgs& aArgs)
 {
+  MOZ_ASSERT(!IsDOMBinding());
   NS_ENSURE_TRUE(aArgs.length() >= 1, NS_ERROR_XPC_NOT_ENOUGH_ARGS);
 
   bool trusted = false;
@@ -468,50 +469,6 @@ nsDOMEvent::StopImmediatePropagation()
 {
   mEvent->mFlags.mPropagationStopped = true;
   mEvent->mFlags.mImmediatePropagationStopped = true;
-  return NS_OK;
-}
-
-static nsIDocument* GetDocumentForReport(nsEvent* aEvent)
-{
-  EventTarget* target = aEvent->currentTarget;
-  if (nsCOMPtr<nsINode> node = do_QueryInterface(target)) {
-    return node->OwnerDoc();
-  }
-
-  if (nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(target)) {
-    return window->GetExtantDoc();
-  }
-
-  return nullptr;
-}
-
-static void
-ReportUseOfDeprecatedMethod(nsEvent* aEvent, nsIDOMEvent* aDOMEvent,
-                            const char* aWarning)
-{
-  nsCOMPtr<nsIDocument> doc(GetDocumentForReport(aEvent));
-
-  nsAutoString type;
-  aDOMEvent->GetType(type);
-  const PRUnichar *strings[] = { type.get() };
-  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                  "DOM Events", doc,
-                                  nsContentUtils::eDOM_PROPERTIES,
-                                  aWarning,
-                                  strings, ArrayLength(strings));
-}
-
-NS_IMETHODIMP
-nsDOMEvent::PreventBubble()
-{
-  ReportUseOfDeprecatedMethod(mEvent, this, "UseOfPreventBubbleWarning");
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMEvent::PreventCapture()
-{
-  ReportUseOfDeprecatedMethod(mEvent, this, "UseOfPreventCaptureWarning");
   return NS_OK;
 }
 

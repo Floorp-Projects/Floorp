@@ -5,6 +5,7 @@
  "content/base/test/test_bug338583.html": "",
  "content/base/test/test_bug466080.html": "",
  "content/base/test/test_bug475156.html": "bug 855762",
+ "content/base/test/test_bug482935.html": "bug 855762",
  "content/base/test/test_bug503481.html": "TIMED_OUT",
  "content/base/test/test_bug503481b.html": "TIMED_OUT",
  "content/base/test/test_bug505783.html": "TIMED_OUT",

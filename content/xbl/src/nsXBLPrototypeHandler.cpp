@@ -384,8 +384,7 @@ nsXBLPrototypeHandler::EnsureEventHandler(nsIScriptGlobalObject* aGlobal,
   JSAutoCompartment ac(cx, scopeObject);
   JS::CompileOptions options(cx);
   options.setFileAndLine(bindingURI.get(), mLineNumber)
-         .setVersion(JSVERSION_LATEST)
-         .setUserBit(true); // Flag us as XBL
+         .setVersion(JSVERSION_LATEST);
 
   JS::Rooted<JSObject*> rootedNull(cx); // See bug 781070.
   JS::Rooted<JSObject*> handlerFun(cx);

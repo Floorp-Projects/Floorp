@@ -6,7 +6,6 @@
 
 #include "nsError.h"
 #include "nsDOMNotifyAudioAvailableEvent.h"
-#include "nsDOMClassInfoID.h" // DOMCI_DATA, NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO
 #include "nsContentUtils.h" // NS_DROP_JS_OBJECTS
 #include "jsfriendapi.h"
 
@@ -34,8 +33,6 @@ nsDOMNotifyAudioAvailableEvent::nsDOMNotifyAudioAvailableEvent(EventTarget* aOwn
   SetIsDOMBinding();
 }
 
-DOMCI_DATA(NotifyAudioAvailableEvent, nsDOMNotifyAudioAvailableEvent)
-
 NS_IMPL_ADDREF_INHERITED(nsDOMNotifyAudioAvailableEvent, nsDOMEvent)
 NS_IMPL_RELEASE_INHERITED(nsDOMNotifyAudioAvailableEvent, nsDOMEvent)
 
@@ -55,7 +52,6 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsDOMNotifyAudioAvailableEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNotifyAudioAvailableEvent)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(NotifyAudioAvailableEvent)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
 
 nsDOMNotifyAudioAvailableEvent::~nsDOMNotifyAudioAvailableEvent()

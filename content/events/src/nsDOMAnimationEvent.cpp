@@ -5,9 +5,6 @@
 
 #include "nsDOMAnimationEvent.h"
 #include "nsGUIEvent.h"
-#include "nsDOMClassInfoID.h"
-#include "nsIClassInfo.h"
-#include "nsIXPCScriptable.h"
 
 nsDOMAnimationEvent::nsDOMAnimationEvent(mozilla::dom::EventTarget* aOwner,
                                          nsPresContext *aPresContext,
@@ -36,11 +33,8 @@ nsDOMAnimationEvent::~nsDOMAnimationEvent()
   }
 }
 
-DOMCI_DATA(AnimationEvent, nsDOMAnimationEvent)
-
 NS_INTERFACE_MAP_BEGIN(nsDOMAnimationEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMAnimationEvent)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(AnimationEvent)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
 
 NS_IMPL_ADDREF_INHERITED(nsDOMAnimationEvent, nsDOMEvent)

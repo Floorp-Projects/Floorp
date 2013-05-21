@@ -81,11 +81,27 @@ let snapshotFormatters = {
 
     function localizedMsg(msgArray) {
       let nameOrMsg = msgArray.shift();
-      try {
-        return strings.formatStringFromName(nameOrMsg, msgArray,
-                                            msgArray.length);
+      if (msgArray.length) {
+        // formatStringFromName logs an NS_ASSERTION failure otherwise that says
+        // "use GetStringFromName".  Lame.
+        try {
+          return strings.formatStringFromName(nameOrMsg, msgArray,
+                                              msgArray.length);
+        }
+        catch (err) {
+          // Throws if nameOrMsg is not a name in the bundle.  This shouldn't
+          // actually happen though, since msgArray.length > 1 => nameOrMsg is a
+          // name in the bundle, not a message, and the remaining msgArray
+          // elements are parameters.
+          return nameOrMsg;
+        }
       }
-      catch (err) {}
+      try {
+        return strings.GetStringFromName(nameOrMsg);
+      }
+      catch (err) {
+        // Throws if nameOrMsg is not a name in the bundle.
+      }
       return nameOrMsg;
     }
 
@@ -311,15 +327,8 @@ function copyContentsToClipboard() {
 // Return the plain text representation of an element.  Do a little bit
 // of pretty-printing to make it human-readable.
 function createTextForElement(elem) {
-  // Generate the initial text.
-  let textFragmentAccumulator = [];
-  generateTextForElement(elem, "", textFragmentAccumulator);
-  let text = textFragmentAccumulator.join("");
-
-  // Trim extraneous whitespace before newlines, then squash extraneous
-  // blank lines.
-  text = text.replace(/[ \t]+\n/g, "\n");
-  text = text.replace(/\n\n\n+/g, "\n\n");
+  let serializer = new Serializer();
+  let text = serializer.serialize(elem);
 
   // Actual CR/LF pairs are needed for some Windows text editors.
 #ifdef XP_WIN
@@ -329,44 +338,160 @@ function createTextForElement(elem) {
   return text;
 }
 
-function generateTextForElement(elem, indent, textFragmentAccumulator) {
-  if (elem.classList.contains("no-copy"))
-    return;
-
-  // Add a little extra spacing around most elements.
-  if (elem.tagName != "td")
-    textFragmentAccumulator.push("\n");
-
-  // Generate the text representation for each child node.
-  let node = elem.firstChild;
-  while (node) {
-
-    if (node.nodeType == Node.TEXT_NODE) {
-      // Text belonging to this element uses its indentation level.
-      generateTextForTextNode(node, indent, textFragmentAccumulator);
-    }
-    else if (node.nodeType == Node.ELEMENT_NODE) {
-      // Recurse on the child element with an extra level of indentation.
-      generateTextForElement(node, indent + "  ", textFragmentAccumulator);
-    }
-
-    // Advance!
-    node = node.nextSibling;
-  }
+function Serializer() {
 }
 
-function generateTextForTextNode(node, indent, textFragmentAccumulator) {
-  // If the text node is the first of a run of text nodes, then start
-  // a new line and add the initial indentation.
-  let prevNode = node.previousSibling;
-  if (!prevNode || prevNode.nodeType == Node.TEXT_NODE)
-    textFragmentAccumulator.push("\n" + indent);
+Serializer.prototype = {
 
-  // Trim the text node's text content and add proper indentation after
-  // any internal line breaks.
-  let text = node.textContent.trim().replace("\n", "\n" + indent, "g");
-  textFragmentAccumulator.push(text);
-}
+  serialize: function (rootElem) {
+    this._lines = [];
+    this._startNewLine();
+    this._serializeElement(rootElem);
+    this._startNewLine();
+    return this._lines.join("\n").trim() + "\n";
+  },
+
+  // The current line is always the line that writing will start at next.  When
+  // an element is serialized, the current line is updated to be the line at
+  // which the next element should be written.
+  get _currentLine() {
+    return this._lines.length ? this._lines[this._lines.length - 1] : null;
+  },
+
+  set _currentLine(val) {
+    return this._lines[this._lines.length - 1] = val;
+  },
+
+  _serializeElement: function (elem) {
+    if (this._ignoreElement(elem))
+      return;
+
+    // table
+    if (elem.localName == "table") {
+      this._serializeTable(elem);
+      return;
+    }
+
+    // all other elements
+
+    let hasText = false;
+    for (let child of elem.childNodes) {
+      if (child.nodeType == Node.TEXT_NODE) {
+        let text = this._nodeText(child);
+        this._appendText(text);
+        hasText = hasText || !!text.trim();
+      }
+      else if (child.nodeType == Node.ELEMENT_NODE)
+        this._serializeElement(child);
+    }
+
+    // For headings, draw a "line" underneath them so they stand out.
+    if (/^h[0-9]+$/.test(elem.localName)) {
+      let headerText = (this._currentLine || "").trim();
+      if (headerText) {
+        this._startNewLine();
+        this._appendText("-".repeat(headerText.length));
+      }
+    }
+
+    // Add a blank line underneath block elements but only if they contain text.
+    if (hasText) {
+      let display = window.getComputedStyle(elem).getPropertyValue("display");
+      if (display == "block") {
+        this._startNewLine();
+        this._startNewLine();
+      }
+    }
+  },
+
+  _startNewLine: function (lines) {
+    let currLine = this._currentLine;
+    if (currLine) {
+      // The current line is not empty.  Trim it.
+      this._currentLine = currLine.trim();
+      if (!this._currentLine)
+        // The current line became empty.  Discard it.
+        this._lines.pop();
+    }
+    this._lines.push("");
+  },
+
+  _appendText: function (text, lines) {
+    this._currentLine += text;
+  },
+
+  _serializeTable: function (table) {
+    // Collect the table's column headings if in fact there are any.  First
+    // check thead.  If there's no thead, check the first tr.
+    let colHeadings = {};
+    let tableHeadingElem = table.querySelector("thead");
+    if (!tableHeadingElem)
+      tableHeadingElem = table.querySelector("tr");
+    if (tableHeadingElem) {
+      let tableHeadingCols = tableHeadingElem.querySelectorAll("th,td");
+      // If there's a contiguous run of th's in the children starting from the
+      // rightmost child, then consider them to be column headings.
+      for (let i = tableHeadingCols.length - 1; i >= 0; i--) {
+        if (tableHeadingCols[i].localName != "th")
+          break;
+        colHeadings[i] = this._nodeText(tableHeadingCols[i]).trim();
+      }
+    }
+    let hasColHeadings = Object.keys(colHeadings).length > 0;
+    if (!hasColHeadings)
+      tableHeadingElem = null;
+
+    let trs = table.querySelectorAll("table > tr, tbody > tr");
+    let startRow =
+      tableHeadingElem && tableHeadingElem.localName == "tr" ? 1 : 0;
+
+    if (startRow >= trs.length)
+      // The table's empty.
+      return;
+
+    if (hasColHeadings && !this._ignoreElement(tableHeadingElem)) {
+      // Use column headings.  Print each tr as a multi-line chunk like:
+      //   Heading 1: Column 1 value
+      //   Heading 2: Column 2 value
+      for (let i = startRow; i < trs.length; i++) {
+        if (this._ignoreElement(trs[i]))
+          continue;
+        let children = trs[i].querySelectorAll("td");
+        for (let j = 0; j < children.length; j++) {
+          let text = "";
+          if (colHeadings[j])
+            text += colHeadings[j] + ": ";
+          text += this._nodeText(children[j]).trim();
+          this._appendText(text);
+          this._startNewLine();
+        }
+        this._startNewLine();
+      }
+      return;
+    }
+
+    // Don't use column headings.  Assume the table has only two columns and
+    // print each tr in a single line like:
+    //   Column 1 value: Column 2 value
+    for (let i = startRow; i < trs.length; i++) {
+      if (this._ignoreElement(trs[i]))
+        continue;
+      let children = trs[i].querySelectorAll("th,td");
+      let rowHeading = this._nodeText(children[0]).trim();
+      this._appendText(rowHeading + ": " + this._nodeText(children[1]).trim());
+      this._startNewLine();
+    }
+    this._startNewLine();
+  },
+
+  _ignoreElement: function (elem) {
+    return elem.classList.contains("no-copy");
+  },
+
+  _nodeText: function (node) {
+    return node.textContent.replace(/\s+/g, " ");
+  },
+};
 
 function openProfileDirectory() {
   // Get the profile directory.

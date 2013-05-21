@@ -981,6 +981,7 @@ js::RemapWrapper(JSContext *cx, JSObject *wobjArg, JSObject *newTargetArg)
 
     // Update the entry in the compartment's wrapper map to point to the old
     // wrapper, which has now been updated (via reuse or swap).
+    JS_ASSERT(wobj->isWrapper());
     wcompartment->putWrapper(ObjectValue(*newTarget), ObjectValue(*wobj));
     return true;
 }

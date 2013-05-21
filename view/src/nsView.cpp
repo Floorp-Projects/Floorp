@@ -132,6 +132,14 @@ nsView* nsView::GetViewFor(nsIWidget* aWidget)
 
 void nsView::Destroy()
 {
+#if 1 // XXXmats temporary investigation of bug 850571
+  if (mFrame) {
+    if (uintptr_t(mFrame) == mozPoisonValue()) {
+      NS_RUNTIMEABORT("bug 850571: poisoned frame");
+    }
+    NS_RUNTIMEABORT("bug 850571: have frame");
+  }
+#endif
   this->~nsView();
   mozWritePoison(this, sizeof(*this));
   nsView::operator delete(this);
