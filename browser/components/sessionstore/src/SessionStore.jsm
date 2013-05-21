@@ -1075,7 +1075,7 @@ let SessionStoreInternal = {
     this._forEachBrowserWindow(function(aWindow) {
       Array.forEach(aWindow.gBrowser.tabs, aTab => {
         RestoringTabsData.remove(aTab.linkedBrowser);
-        delete aTab.linkedBrowser.__SS_formDataSaved;
+        FormDataCache.remove(aTab.linkedBrowser);
         delete aTab.linkedBrowser.__SS_hostSchemeData;
         if (TabRestoreStates.has(aTab.linkedBrowser))
           this._resetTabRestoringState(aTab);
@@ -1265,8 +1265,8 @@ let SessionStoreInternal = {
     let mm = browser.messageManager;
     MESSAGES.forEach(msg => mm.removeMessageListener(msg, this));
 
-    RestoringTabsData.remove(aTab.linkedBrowser);
-    delete browser.__SS_formDataSaved;
+    RestoringTabsData.remove(browser);
+    FormDataCache.remove(browser);
     delete browser.__SS_hostSchemeData;
 
     // If this tab was in the middle of restoring or still needs to be restored,
@@ -1305,7 +1305,7 @@ let SessionStoreInternal = {
 
     // make sure that the tab related data is up-to-date
     var tabState = this._collectTabData(aTab);
-    this._updateTextAndScrollDataForTab(aWindow, aTab.linkedBrowser, tabState);
+    this._updateTextAndScrollDataForTab(aTab.linkedBrowser, tabState);
 
     // store closed-tab data for undo
     if (this._shouldSaveTabState(tabState)) {
@@ -1342,7 +1342,7 @@ let SessionStoreInternal = {
     }
 
     RestoringTabsData.remove(aBrowser);
-    delete aBrowser.__SS_formDataSaved;
+    FormDataCache.remove(aBrowser);
     this.saveStateDelayed(aWindow);
 
     // attempt to update the current URL we send in a crash report
@@ -1357,9 +1357,7 @@ let SessionStoreInternal = {
    *        Browser reference
    */
   onTabInput: function ssi_onTabInput(aWindow, aBrowser) {
-    // deleting __SS_formDataSaved will cause us to recollect form data
-    delete aBrowser.__SS_formDataSaved;
-
+    FormDataCache.remove(aBrowser);
     this.saveStateDelayed(aWindow, 3000);
   },
 
@@ -1479,10 +1477,7 @@ let SessionStoreInternal = {
       throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
 
     var tabState = this._collectTabData(aTab);
-
-    var window = aTab.ownerDocument.defaultView;
-    this._updateTextAndScrollDataForTab(window, aTab.linkedBrowser, tabState);
-
+    this._updateTextAndScrollDataForTab(aTab.linkedBrowser, tabState);
     return this._toJSONString(tabState);
   },
 
@@ -1502,8 +1497,7 @@ let SessionStoreInternal = {
       throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
 
     var tabState = this._collectTabData(aTab, true);
-    var sourceWindow = aTab.ownerDocument.defaultView;
-    this._updateTextAndScrollDataForTab(sourceWindow, aTab.linkedBrowser, tabState, true);
+    this._updateTextAndScrollDataForTab(aTab.linkedBrowser, tabState, true);
     tabState.index += aDelta;
     tabState.index = Math.max(1, Math.min(tabState.index, tabState.entries.length));
     tabState.pinned = false;
@@ -2170,7 +2164,7 @@ let SessionStoreInternal = {
     var browsers = aWindow.gBrowser.browsers;
     this._windows[aWindow.__SSi].tabs.forEach(function (tabData, i) {
       try {
-        this._updateTextAndScrollDataForTab(aWindow, browsers[i], tabData);
+        this._updateTextAndScrollDataForTab(browsers[i], tabData);
       }
       catch (ex) { debug(ex); } // get as much data as possible, ignore failures (might succeed the next time)
     }, this);
@@ -2179,8 +2173,6 @@ let SessionStoreInternal = {
   /**
    * go through all frames and store the current scroll positions
    * and innerHTML content of WYSIWYG editors
-   * @param aWindow
-   *        Window reference
    * @param aBrowser
    *        single browser reference
    * @param aTabData
@@ -2189,7 +2181,7 @@ let SessionStoreInternal = {
    *        always return privacy sensitive data (use with care)
    */
   _updateTextAndScrollDataForTab:
-    function ssi_updateTextAndScrollDataForTab(aWindow, aBrowser, aTabData, aFullData) {
+    function ssi_updateTextAndScrollDataForTab(aBrowser, aTabData, aFullData) {
     // we shouldn't update data for incompletely initialized tabs
     if (RestoringTabsData.has(aBrowser))
       return;
@@ -2206,11 +2198,10 @@ let SessionStoreInternal = {
     else if (aTabData.pageStyle)
       delete aTabData.pageStyle;
 
-    this._updateTextAndScrollDataForFrame(aWindow, aBrowser.contentWindow,
+    this._updateTextAndScrollDataForFrame(aBrowser, aBrowser.contentWindow,
                                           aTabData.entries[tabIndex],
-                                          !aBrowser.__SS_formDataSaved, aFullData,
-                                          !!aTabData.pinned);
-    aBrowser.__SS_formDataSaved = true;
+                                          aFullData, !!aTabData.pinned);
+
     if (aBrowser.currentURI.spec == "about:config")
       aTabData.entries[tabIndex].formdata = {
         id: {
@@ -2223,8 +2214,8 @@ let SessionStoreInternal = {
   /**
    * go through all subframes and store all form data, the current
    * scroll positions and innerHTML content of WYSIWYG editors
-   * @param aWindow
-   *        Window reference
+   * @param aBrowser
+   *        single browser reference
    * @param aContent
    *        frame reference
    * @param aData
@@ -2237,19 +2228,19 @@ let SessionStoreInternal = {
    *        the tab is pinned and should be treated differently for privacy
    */
   _updateTextAndScrollDataForFrame:
-    function ssi_updateTextAndScrollDataForFrame(aWindow, aContent, aData,
-                                                 aUpdateFormData, aFullData, aIsPinned) {
+    function ssi_updateTextAndScrollDataForFrame(aBrowser, aContent, aData,
+                                                 aFullData, aIsPinned) {
     for (var i = 0; i < aContent.frames.length; i++) {
       if (aData.children && aData.children[i])
-        this._updateTextAndScrollDataForFrame(aWindow, aContent.frames[i],
-                                              aData.children[i], aUpdateFormData,
-                                              aFullData, aIsPinned);
+        this._updateTextAndScrollDataForFrame(aBrowser, aContent.frames[i],
+                                              aData.children[i], aFullData,
+                                              aIsPinned);
     }
     var isHTTPS = this._getURIFromString((aContent.parent || aContent).
                                          document.location.href).schemeIs("https");
     let isAboutSR = aContent.top.document.location.href == "about:sessionrestore";
     if (aFullData || this.checkPrivacyLevel(isHTTPS, aIsPinned) || isAboutSR) {
-      if (aFullData || aUpdateFormData) {
+      if (aFullData || !FormDataCache.has(aBrowser, aContent)) {
         let formData = DocumentUtils.getFormData(aContent.document);
 
         // We want to avoid saving data for about:sessionrestore as a string.
@@ -2261,9 +2252,18 @@ let SessionStoreInternal = {
 
         if (Object.keys(formData.id).length ||
             Object.keys(formData.xpath).length) {
-          aData.formdata = formData;
-        } else if (aData.formdata) {
-          delete aData.formdata;
+          aData.formdata = formData
+        } else {
+          formData = null;
+        }
+
+        // Store form data in cache.
+        FormDataCache.set(aBrowser, aContent, formData);
+      } else {
+        // Copy from form data cache.
+        let cached = FormDataCache.get(aBrowser, aContent);
+        if (cached) {
+          aData.formdata = cached;
         }
       }
 
@@ -4717,6 +4717,39 @@ let TabRestoreStates = {
 
   remove: function (browser) {
     this._states.delete(browser);
+  }
+};
+
+// A map storing cached form data belonging to browsers. Each browser itself
+// has a WeakMap assigned that holds the form data of its main and subframes.
+let FormDataCache = {
+  // Form data is cached using a nested data structure
+  // of type WeakMap<browser, WeakMap<frame, data>>.
+  _cache: new WeakMap(),
+
+  has: function (browser, frame) {
+    return this._cache.has(browser) && this._cache.get(browser).has(frame);
+  },
+
+  get: function (browser, frame) {
+    return this._cache.get(browser).get(frame);
+  },
+
+  set: function (browser, frame, data = {}) {
+    if (!this._cache.has(browser)) {
+      this._cache.set(browser, new WeakMap());
+    }
+
+    // The object is frozen so that clients cannot mutate cached data.
+    if (data && typeof data === "object") {
+      Object.freeze(data);
+    }
+
+    this._cache.get(browser).set(frame, data);
+  },
+
+  remove: function (browser) {
+    this._cache.delete(browser);
   }
 };
 
