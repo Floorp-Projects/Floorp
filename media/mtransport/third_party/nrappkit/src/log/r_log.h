@@ -68,10 +68,6 @@ int r_log_nr(int facility,int level,int r,const char *fmt,...)
 #endif
 ;
 
-#ifdef __GNUC__
-#pragma GCC diagnostic error "-Wformat"
-#endif
-
 int r_vlog_nr(int facility,int level,int r,const char *fmt,va_list ap);
 
 int r_log_register(char *tipename,int *facility);
