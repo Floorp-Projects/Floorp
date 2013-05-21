@@ -425,8 +425,7 @@ nsXBLProtoImplField::InstallField(nsIScriptContext* aContext,
   JS::Rooted<JS::Value> result(cx);
   JS::CompileOptions options(cx);
   options.setFileAndLine(uriSpec.get(), mLineNumber)
-         .setVersion(JSVERSION_LATEST)
-         .setUserBit(true); // Flag us as XBL
+         .setVersion(JSVERSION_LATEST);
   rv = context->EvaluateString(nsDependentString(mFieldText,
                                                  mFieldTextLength),
                                wrappedNode, options,
