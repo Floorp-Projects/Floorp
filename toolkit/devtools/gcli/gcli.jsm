@@ -9929,9 +9929,22 @@ var commandConverterSpec = {
             input = l10n.lookup('helpManOptional');
           }
           else {
-            input = param.defaultValue;
+            var defaultValue = param.type.stringify(param.defaultValue);
+            input = l10n.lookupFormat('helpManDefault', [ defaultValue ]);
           }
           return '(' + param.type.name + ', ' + input + ')';
+        },
+        getSynopsis: function(param) {
+          if (param.isPositionalAllowed) {
+            return param.defaultValue !== undefined ?
+                '[' + param.name + ']' :
+                '<' + param.name + '>';
+          }
+          else {
+            return param.type.name === 'boolean' ?
+                '[--' + param.name + ']' :
+                '[--' + param.name + '=...]';
+          }
         },
         command: commandData.command,
         subcommands: commandData.subcommands
@@ -10379,9 +10392,7 @@ define("text!gcli/commands/help_man.html", [], "\n" +
   "    ${l10n.helpManSynopsis}:\n" +
   "    <span class=\"gcli-out-shortcut\" onclick=\"${onclick}\" data-command=\"${command.name}\">\n" +
   "      ${command.name}\n" +
-  "      <span foreach=\"param in ${command.params}\">\n" +
-  "        ${param.defaultValue !== undefined ? '[' + param.name + ']' : param.name}\n" +
-  "      </span>\n" +
+  "      <span foreach=\"param in ${command.params}\">${getSynopsis(param)} </span>\n" +
   "    </span>\n" +
   "  </h4>\n" +
   "\n" +
