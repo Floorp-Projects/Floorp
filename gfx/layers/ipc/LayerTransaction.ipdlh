@@ -100,7 +100,6 @@ struct Scale {
   float y;
   float z;
 };
-struct Skew { float x; float y; };
 struct SkewX { float x; };
 struct SkewY { float y; };
 struct TransformMatrix { gfx3DMatrix value; };
@@ -118,7 +117,6 @@ union TransformFunction {
   Rotation;
   Rotation3D;
   Scale;
-  Skew;
   SkewX;
   SkewY;
   Translation;
