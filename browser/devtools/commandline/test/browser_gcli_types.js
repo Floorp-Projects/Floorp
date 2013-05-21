@@ -75,7 +75,8 @@ exports.testDefault = function(options) {
   }
 
   forEachType(options, {}, function(type) {
-    var blank = type.getBlank().value;
+    var context = options.display.requisition.executionContext;
+    var blank = type.getBlank(context).value;
 
     // boolean and array types are exempt from needing undefined blank values
     if (type.name === 'boolean') {
