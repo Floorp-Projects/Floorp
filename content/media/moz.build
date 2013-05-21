@@ -71,6 +71,7 @@ EXPORTS += [
     'SharedBuffer.h',
     'StreamBuffer.h',
     'TimeVarying.h',
+    'TrackUnionStream.h',
     'VideoFrameContainer.h',
     'VideoSegment.h',
     'VideoUtils.h',

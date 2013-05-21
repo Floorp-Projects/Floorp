@@ -26,6 +26,7 @@ class TrackUnionStream : public ProcessedMediaStream {
 public:
   TrackUnionStream(DOMMediaStream* aWrapper) :
     ProcessedMediaStream(aWrapper),
+    mFilterCallback(nullptr),
     mMaxTrackID(0) {}
 
   virtual void RemoveInput(MediaInputPort* aPort)
@@ -75,7 +76,7 @@ public:
             break;
           }
         }
-        if (!found) {
+        if (!found && (!mFilterCallback || mFilterCallback(tracks.get()))) {
           bool trackFinished = false;
           uint32_t mapIndex = AddTrack(mInputs[i], tracks.get(), aFrom);
           CopyTrackData(tracks.get(), mapIndex, aFrom, aTo, &trackFinished);
@@ -107,7 +108,16 @@ public:
     }
   }
 
+  // Consumers may specify a filtering callback to apply to every input track.
+  // Returns true to allow the track to act as an input; false to reject it entirely.
+  typedef bool (*TrackIDFilterCallback)(StreamBuffer::Track*);
+  void SetTrackIDFilter(TrackIDFilterCallback aCallback) {
+    mFilterCallback = aCallback;
+  }
+
 protected:
+  TrackIDFilterCallback mFilterCallback;
+
   // Only non-ended tracks are allowed to persist in this map.
   struct TrackMapEntry {
     MediaInputPort* mInputPort;
