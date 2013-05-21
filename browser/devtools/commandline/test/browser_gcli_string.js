@@ -142,11 +142,152 @@ exports.testEscape = function(options) {
   ]);
 };
 
+exports.testBlank = function(options) {
+  helpers.audit(options, [
+    {
+      setup:    'tsrsrsr a "" c',
+      check: {
+        input:  'tsrsrsr a "" c',
+        hints:                '',
+        markup: 'VVVVVVVVVVVVVV',
+        cursor: 14,
+        current: 'p3',
+        status: 'ERROR',
+        message: '',
+        args: {
+          command: { name: 'tsrsrsr' },
+          p1: {
+            value: 'a',
+            arg: ' a',
+            status: 'VALID',
+            message: ''
+          },
+          p2: {
+            value: undefined,
+            arg: ' ""',
+            status: 'INCOMPLETE',
+            message: ''
+          },
+          p3: {
+            value: 'c',
+            arg: ' c',
+            status: 'VALID',
+            message: ''
+          }
+        }
+      }
+    },
+    {
+      setup:    'tsrsrsr a b ""',
+      check: {
+        input:  'tsrsrsr a b ""',
+        hints:                '',
+        markup: 'VVVVVVVVVVVVVV',
+        cursor: 14,
+        current: 'p3',
+        status: 'VALID',
+        message: '',
+        args: {
+          command: { name: 'tsrsrsr' },
+          p1: {
+            value: 'a',
+            arg: ' a',
+            status:'VALID',
+            message: '' },
+          p2: {
+            value: 'b',
+            arg: ' b',
+            status: 'VALID',
+            message: ''
+          },
+          p3: {
+            value: '',
+            arg: ' ""',
+            status: 'VALID',
+            message: ''
+          }
+        }
+      }
+    }
+  ]);
+};
+
+exports.testBlankWithParam = function(options) {
+  helpers.audit(options, [
+    {
+      setup:    'tsrsrsr  a --p3',
+      check: {
+        input:  'tsrsrsr  a --p3',
+        hints:                 ' <string> <p2>',
+        markup: 'VVVVVVVVVVVVVVV',
+        cursor: 15,
+        current: 'p3',
+        status: 'ERROR',
+        message: '',
+        args: {
+          command: { name: 'tsrsrsr' },
+          p1: { value: 'a', arg: '  a', status: 'VALID', message: '' },
+          p2: { value: undefined, arg: '', status: 'INCOMPLETE', message: '' },
+          p3: { value: '', arg: ' --p3', status: 'VALID', message: '' },
+        }
+      }
+    },
+    {
+      setup:    'tsrsrsr  a --p3 ',
+      check: {
+        input:  'tsrsrsr  a --p3 ',
+        hints:                  '<string> <p2>',
+        markup: 'VVVVVVVVVVVVVVVV',
+        cursor: 16,
+        current: 'p3',
+        status: 'ERROR',
+        message: '',
+        args: {
+          command: { name: 'tsrsrsr' },
+          p1: { value: 'a', arg: '  a', status: 'VALID', message: '' },
+          p2: { value: undefined, arg: '', status: 'INCOMPLETE', message: '' },
+          p3: { value: '', arg: ' --p3 ', status: 'VALID', message: '' },
+        }
+      }
+    },
+    {
+      setup:    'tsrsrsr  a --p3 "',
+      check: {
+        input:  'tsrsrsr  a --p3 "',
+        hints:                   ' <p2>',
+        markup: 'VVVVVVVVVVVVVVVVV',
+        cursor: 17,
+        current: 'p3',
+        status: 'ERROR',
+        message: '',
+        args: {
+          command: { name: 'tsrsrsr' },
+          p1: { value: 'a', arg: '  a', status: 'VALID', message: '' },
+          p2: { value: undefined, arg: '', status: 'INCOMPLETE', message: '' },
+          p3: { value: '', arg: ' --p3 "', status: 'VALID', message: '' },
+        }
+      }
+    },
+    {
+      setup:    'tsrsrsr  a --p3 ""',
+      check: {
+        input:  'tsrsrsr  a --p3 ""',
+        hints:                    ' <p2>',
+        markup: 'VVVVVVVVVVVVVVVVVV',
+        cursor: 18,
+        current: 'p3',
+        status: 'ERROR',
+        message: '',
+        args: {
+          command: { name: 'tsrsrsr' },
+          p1: { value: 'a', arg: '  a', status: 'VALID', message: '' },
+          p2: { value: undefined, arg: '', status: 'INCOMPLETE', message: '' },
+          p3: { value: '', arg: ' --p3 ""', status: 'VALID', message: '' },
+        }
+      }
+    }
+  ]);
+};
 
 
-/*
-
-
-
-*/
 // });
