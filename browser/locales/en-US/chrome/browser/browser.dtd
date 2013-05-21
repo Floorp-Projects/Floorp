@@ -322,7 +322,9 @@ These should match what Safari and other Apple applications use on OS X Lion. --
 <!ENTITY appMenuCustomize.label "Customize">
 <!ENTITY appMenuBookmarks.label "Bookmarks">
 <!ENTITY appMenuHistory.label "History">
-<!ENTITY appMenuHistoryMore.label "More…">
+<!ENTITY appMenuHistory.moreLabel "Show All History">
+<!ENTITY appMenuHistory.clearRecentLabel "Clear Recent History…">
+<!ENTITY appMenuHistory.restoreSession "Restore Previous Session">
 
 <!ENTITY openCmd.commandkey           "l">
 <!ENTITY urlbar.placeholder2          "Search or enter address">
