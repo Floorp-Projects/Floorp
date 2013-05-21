@@ -232,18 +232,20 @@ MacOSFontEntry::ReadCMAP()
     uint32_t kCMAP = TRUETYPE_TAG('c','m','a','p');
 
     AutoTable cmapTable(this, kCMAP);
-    if (!cmapTable) {
-        return NS_OK; // leave it empty
+    nsresult rv;
+
+    if (cmapTable) {
+        bool unicodeFont = false, symbolFont = false; // currently ignored
+
+        uint32_t cmapLen;
+        const char* cmapData = hb_blob_get_data(cmapTable, &cmapLen);
+        rv = gfxFontUtils::ReadCMAP((const uint8_t*)cmapData, cmapLen,
+                                    *charmap, mUVSOffset,
+                                    unicodeFont, symbolFont);
+    } else {
+        rv = NS_ERROR_NOT_AVAILABLE;
     }
 
-    bool unicodeFont = false, symbolFont = false; // currently ignored
-
-    uint32_t cmapLen;
-    const char* cmapData = hb_blob_get_data(cmapTable, &cmapLen);
-    nsresult rv = gfxFontUtils::ReadCMAP((const uint8_t*)cmapData, cmapLen,
-                                         *charmap, mUVSOffset,
-                                         unicodeFont, symbolFont);
-  
     if (NS_SUCCEEDED(rv) && !HasGraphiteTables()) {
         // We assume a Graphite font knows what it's doing,
         // and provides whatever shaping is needed for the
