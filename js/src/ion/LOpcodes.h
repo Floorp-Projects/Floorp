@@ -139,8 +139,6 @@
     _(ParDump)                      \
     _(TypeBarrier)                  \
     _(MonitorTypes)                 \
-    _(PostWriteBarrierO)            \
-    _(PostWriteBarrierV)            \
     _(InitializedLength)            \
     _(SetInitializedLength)         \
     _(BoundsCheck)                  \

@@ -531,10 +531,6 @@ void GetDynamicName(JSContext *cx, JSObject *scopeChain, JSString *str, Value *v
 
 JSBool FilterArguments(JSContext *cx, JSString *str);
 
-#ifdef JSGC_GENERATIONAL
-void PostWriteBarrier(JSRuntime *rt, JSObject *obj);
-#endif
-
 uint32_t GetIndexFromString(JSString *str);
 
 bool DebugPrologue(JSContext *cx, BaselineFrame *frame, JSBool *mustReturn);

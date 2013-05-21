@@ -291,10 +291,10 @@ AllocationIntegrityState::checkSafepointAllocation(LInstruction *ins,
         JS_ASSERT(safepoint->hasGcPointer(alloc));
         break;
 #ifdef JS_NUNBOX32
-      // Do not assert that safepoint information for nunbox types is complete,
+      // Do not assert that safepoint information for nunboxes is complete,
       // as if a vreg for a value's components are copied in multiple places
-      // then the safepoint information may not reflect all copies. All copies
-      // of payloads must be reflected, however, for generational GC.
+      // then the safepoint information may not reflect all copies.
+      // See SafepointWriter::writeNunboxParts.
       case LDefinition::TYPE:
         if (populateSafepoints) {
             IonSpew(IonSpew_RegAlloc, "Safepoint type v%u i%u %s",
@@ -310,7 +310,6 @@ AllocationIntegrityState::checkSafepointAllocation(LInstruction *ins,
             if (!safepoint->addNunboxPayload(vreg, alloc))
                 return false;
         }
-        JS_ASSERT(safepoint->hasNunboxPayload(alloc));
         break;
 #else
       case LDefinition::BOX:

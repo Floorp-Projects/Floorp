@@ -20,7 +20,6 @@
 #include "ParallelFunctions.h"
 #include "ExecutionModeInlines.h"
 #include "builtin/Eval.h"
-#include "gc/Nursery.h"
 #include "vm/ForkJoin.h"
 
 #include "vm/StringObject-inl.h"
@@ -1160,138 +1159,6 @@ CodeGenerator::visitMonitorTypes(LMonitorTypes *lir)
     if (!bailoutFrom(&miss, lir->snapshot()))
         return false;
     masm.bind(&matched);
-    return true;
-}
-
-#ifdef JSGC_GENERATIONAL
-// Out-of-line path to update the store buffer.
-class OutOfLineCallPostWriteBarrier : public OutOfLineCodeBase<CodeGenerator>
-{
-    LInstruction *lir_;
-    const LAllocation *object_;
-
-  public:
-    OutOfLineCallPostWriteBarrier(LInstruction *lir, const LAllocation *object)
-      : lir_(lir), object_(object)
-    { }
-
-    bool accept(CodeGenerator *codegen) {
-        return codegen->visitOutOfLineCallPostWriteBarrier(this);
-    }
-
-    LInstruction *lir() const {
-        return lir_;
-    }
-    const LAllocation *object() const {
-        return object_;
-    }
-};
-
-bool
-CodeGenerator::visitOutOfLineCallPostWriteBarrier(OutOfLineCallPostWriteBarrier *ool)
-{
-    saveLive(ool->lir());
-
-    const LAllocation *obj = ool->object();
-
-    GeneralRegisterSet regs;
-    regs.add(CallTempReg0);
-    regs.add(CallTempReg1);
-    regs.add(CallTempReg2);
-
-    Register objreg;
-    if (obj->isConstant()) {
-        objreg = regs.takeAny();
-        masm.movePtr(ImmGCPtr(&obj->toConstant()->toObject()), objreg);
-    } else {
-        objreg = ToRegister(obj);
-        if (regs.has(objreg))
-            regs.take(objreg);
-    }
-
-    Register runtimereg = regs.takeAny();
-    masm.mov(ImmWord(GetIonContext()->compartment->rt), runtimereg);
-
-    masm.setupUnalignedABICall(2, regs.takeAny());
-    masm.passABIArg(runtimereg);
-    masm.passABIArg(objreg);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, PostWriteBarrier));
-
-    restoreLive(ool->lir());
-
-    masm.jump(ool->rejoin());
-    return true;
-}
-#endif
-
-bool
-CodeGenerator::visitPostWriteBarrierO(LPostWriteBarrierO *lir)
-{
-#ifdef JSGC_GENERATIONAL
-    OutOfLineCallPostWriteBarrier *ool = new OutOfLineCallPostWriteBarrier(lir, lir->object());
-    if (!addOutOfLineCode(ool))
-        return false;
-
-    Nursery &nursery = GetIonContext()->compartment->rt->gcNursery;
-
-    if (lir->object()->isConstant()) {
-        JSObject *obj = &lir->object()->toConstant()->toObject();
-        JS_ASSERT(!nursery.isInside(obj));
-        /*
-        if (nursery.isInside(obj))
-            return true;
-        */
-    } else {
-        Label tenured;
-        Register objreg = ToRegister(lir->object());
-        masm.branchPtr(Assembler::Below, objreg, ImmWord(nursery.start()), &tenured);
-        masm.branchPtr(Assembler::Below, objreg, ImmWord(nursery.end()), ool->rejoin());
-        masm.bind(&tenured);
-    }
-
-    Register valuereg = ToRegister(lir->value());
-    masm.branchPtr(Assembler::Below, valuereg, ImmWord(nursery.start()), ool->rejoin());
-    masm.branchPtr(Assembler::Below, valuereg, ImmWord(nursery.end()), ool->entry());
-
-    masm.bind(ool->rejoin());
-#endif
-    return true;
-}
-
-bool
-CodeGenerator::visitPostWriteBarrierV(LPostWriteBarrierV *lir)
-{
-#ifdef JSGC_GENERATIONAL
-    OutOfLineCallPostWriteBarrier *ool = new OutOfLineCallPostWriteBarrier(lir, lir->object());
-    if (!addOutOfLineCode(ool))
-        return false;
-
-    ValueOperand value = ToValue(lir, LPostWriteBarrierV::Input);
-    masm.branchTestObject(Assembler::NotEqual, value, ool->rejoin());
-
-    Nursery &nursery = GetIonContext()->compartment->rt->gcNursery;
-
-    if (lir->object()->isConstant()) {
-        JSObject *obj = &lir->object()->toConstant()->toObject();
-        JS_ASSERT(!nursery.isInside(obj));
-        /*
-        if (nursery.isInside(obj))
-            return true;
-        */
-    } else {
-        Label tenured;
-        Register objreg = ToRegister(lir->object());
-        masm.branchPtr(Assembler::Below, objreg, ImmWord(nursery.start()), &tenured);
-        masm.branchPtr(Assembler::Below, objreg, ImmWord(nursery.end()), ool->rejoin());
-        masm.bind(&tenured);
-    }
-
-    Register valuereg = masm.extractObject(value, ToRegister(lir->temp()));
-    masm.branchPtr(Assembler::Below, valuereg, ImmWord(nursery.start()), ool->rejoin());
-    masm.branchPtr(Assembler::Below, valuereg, ImmWord(nursery.end()), ool->entry());
-
-    masm.bind(ool->rejoin());
-#endif
     return true;
 }
 
@@ -4813,13 +4680,6 @@ CodeGenerator::visitIteratorStart(LIteratorStart *lir)
     // Write barrier for stores to the iterator. We only need to take a write
     // barrier if NativeIterator::obj is actually going to change.
     {
-#ifdef JSGC_GENERATIONAL
-        // Bug 867815: When using a nursery, we unconditionally take this out-
-        // of-line so that we do not have to post-barrier the store to
-        // NativeIter::obj. This just needs JIT support for the Cell* buffer.
-        Address objAddr(niTemp, offsetof(NativeIterator, obj));
-        masm.branchPtr(Assembler::NotEqual, objAddr, obj, ool->entry());
-#else
         Label noBarrier;
         masm.branchTestNeedsBarrier(Assembler::Zero, temp1, &noBarrier);
 
@@ -4827,7 +4687,6 @@ CodeGenerator::visitIteratorStart(LIteratorStart *lir)
         masm.branchPtr(Assembler::NotEqual, objAddr, obj, ool->entry());
 
         masm.bind(&noBarrier);
-#endif // !JSGC_GENERATIONAL
     }
 
     // Mark iterator as active.
