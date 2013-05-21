@@ -118,7 +118,6 @@ MOCHITEST_FILES = \
 		test_too_many_elements.html \
 		test_volume.html \
 		test_video_to_canvas.html \
-		use_large_cache.js \
 		test_audiowrite.html \
 		test_mozHasAudio.html \
 		test_source_media.html \
