@@ -5407,8 +5407,6 @@ ScriptAnalysis::printTypes(JSContext *cx)
         if (!maybeCode(offset))
             continue;
 
-        jsbytecode *pc = script_->code + offset;
-
         unsigned defCount = GetDefCount(script_, offset);
         if (!defCount)
             continue;
