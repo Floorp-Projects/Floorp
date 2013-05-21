@@ -128,6 +128,14 @@ IonFrameIterator::isOOLPropertyOp() const
 }
 
 bool
+IonFrameIterator::isOOLProxyGet() const
+{
+    if (type_ != IonFrame_Exit)
+        return false;
+    return exitFrame()->footer()->ionCode() == ION_FRAME_OOL_PROXY_GET;
+}
+
+bool
 IonFrameIterator::isDOMExit() const
 {
     if (type_ != IonFrame_Exit)
@@ -826,6 +834,16 @@ MarkIonExitFrame(JSTracer *trc, const IonFrameIterator &frame)
         gc::MarkValueRoot(trc, oolgetter->vp(), "ion-ool-property-op-vp");
         gc::MarkIdRoot(trc, oolgetter->id(), "ion-ool-property-op-id");
         gc::MarkObjectRoot(trc, oolgetter->obj(), "ion-ool-property-op-obj");
+        return;
+    }
+
+    if (frame.isOOLProxyGet()) {
+        IonOOLProxyGetExitFrameLayout *oolproxyget = frame.exitFrame()->oolProxyGetExit();
+        gc::MarkIonCodeRoot(trc, oolproxyget->stubCode(), "ion-ool-proxy-get-code");
+        gc::MarkValueRoot(trc, oolproxyget->vp(), "ion-ool-proxy-get-vp");
+        gc::MarkIdRoot(trc, oolproxyget->id(), "ion-ool-proxy-get-id");
+        gc::MarkObjectRoot(trc, oolproxyget->proxy(), "ion-ool-proxy-get-proxy");
+        gc::MarkObjectRoot(trc, oolproxyget->receiver(), "ion-ool-proxy-get-receiver");
         return;
     }
 
