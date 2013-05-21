@@ -4356,8 +4356,7 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                .setCompileAndGo(parent->compileAndGo)
                .setSelfHostingMode(parent->selfHosted)
                .setNoScriptRval(false)
-               .setVersion(parent->getVersion())
-               .setUserBit(parent->userBit);
+               .setVersion(parent->getVersion());
 
         bool generateBytecode = true;
 #ifdef JS_ION
