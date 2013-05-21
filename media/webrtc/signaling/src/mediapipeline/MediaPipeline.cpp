@@ -4,6 +4,7 @@
 
 // Original author: ekr@rtfm.com
 
+#include "logging.h"
 #include "MediaPipeline.h"
 
 #ifndef USE_FAKE_MEDIA_STREAMS
@@ -13,7 +14,6 @@
 #include <math.h>
 
 #include "nspr.h"
-#include <prlog.h>
 #include "srtp.h"
 
 #ifdef MOZILLA_INTERNAL_API
@@ -27,7 +27,6 @@
 #endif
 #endif
 
-#include "logging.h"
 #include "nsError.h"
 #include "AudioSegment.h"
 #include "MediaSegment.h"
@@ -36,7 +35,6 @@
 #include "transportlayer.h"
 #include "transportlayerdtls.h"
 #include "transportlayerice.h"
-
 #include "runnable_utils.h"
 
 using namespace mozilla;
@@ -47,7 +45,6 @@ using namespace mozilla;
 #else
 #define MP_LOG_INFO PR_LOG_DEBUG
 #endif
-
 
 // Logging context
 MOZ_MTLOG_MODULE("mediapipeline")
