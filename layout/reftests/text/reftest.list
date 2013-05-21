@@ -157,6 +157,7 @@ skip-if(B2G) fails-if(cocoaWidget) HTTP(..) == arabic-fallback-1.html arabic-fal
 fails-if(cocoaWidget) HTTP(..) == arabic-fallback-2.html arabic-fallback-2-ref.html
 fails-if(cocoaWidget) HTTP(..) == arabic-fallback-3.html arabic-fallback-3-ref.html
 fails-if(!cocoaWidget) HTTP(..) != arabic-fallback-4.html arabic-fallback-4-notref.html
+== arabic-marks-1.html arabic-marks-1-ref.html
 
 == 726392-1.html 726392-1-ref.html
 == 726392-2.html 726392-2-ref.html
